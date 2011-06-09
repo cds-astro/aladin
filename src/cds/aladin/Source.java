@@ -1,0 +1,1220 @@
+// Copyright 2010 - UDS/CNRS
+// The Aladin program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin.
+//
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
+//
+
+
+package cds.aladin;
+
+import java.awt.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.*;
+
+import cds.image.EPSGraphics;
+import cds.tools.Util;
+import cds.xml.Field;
+
+
+/**
+ * Objet graphique correspondant a une source d'un catalogue
+ *
+ * @author Pierre Fernique [CDS]
+ * @version 1.0 : (5 mai 99) Toilettage du code
+ * @version 0.9 : (??) creation
+ */
+public class Source extends Position implements Comparator {
+
+   static final int MDS = DS/2;      // demi-taille des poignees de selection
+   static final int L = 3;          // demi-taille de la source
+
+   // Gestion des formes en fonction du nombre d'elements
+   static final int [] LIMIT =      { 3,     10,       100,      250,   500,   1000,       2000,   5000,          13000, 100000 };
+   static final String [] TYPENAME= { "oval","square","circle","rhomb","cross","triangle","plus","small circle","dot","microdot" };
+
+   protected byte sourceType=SQUARE;    //Type de representation de la source par défaut (CARRE, ...)
+   protected String info;       // Information supplementaire associee a la source (en plus de id)
+   protected Legende leg;       // La legende associee a la source
+   private String oid=null;     // L'OID de la source s'il a ete defini
+
+   /**** variables liés aux filtres ****/
+   // TODO : à remplacer par un objet, ce qui éviterait d'avoir 4 double pour chaque Source si on en utilise que 2 par exemple
+   // stockage de valeurs pour les filtres (Thomas)
+   // values[i][j][k] est la keme valeur pour la jeme action du filtre numero i
+   protected double[][][] values;
+   // isSelected[i]==true si la source est selectionnee par le filtre numero i
+   protected boolean[] isSelected;
+   // actions associee a la source lorsque les filtres sont actifs
+   // null si aucune action associee (draw classique)
+   // action[i][j] = j_eme action pour le PlanFilter numero i
+   protected Action[][] actions;
+
+   /**** objet wrappant les infos relatives au footprint associé à la source ****/
+   private SourceFootprint sourceFootprint;
+
+   /** For plugin */
+   protected Source() {}
+
+  /** Creation d'un objet source
+   * @param plan plan d'appartenance de la ligne
+   * @param raj,dej  coordonnees de l'objet
+   * @param id       identificateur de l'objet
+   * @param info     information supplementaire
+   */
+   protected Source(Plan plan, double raj, double dej, String id, String info) {
+      super(plan,null,0.,0.,raj,dej,RADE,id);
+      this.info = info;
+      sourceType=(byte)plan.sourceType;
+      fixInfo();
+   }
+
+  /** Creation d'un objet source
+   * @param plan plan d'appartenance de la ligne
+   * @param raj,dej  coordonnees de l'objet
+   * @param id       identificateur de l'objet
+   * @param info     information supplementaire
+   */
+   protected Source(Plan plan, double raj, double dej, String id,
+                    String info, Legende leg) {
+      super(plan,null,0.,0.,raj,dej,RADE,id);
+      this.info = info;
+      this.leg = leg;
+      sourceType=(byte)plan.sourceType;
+
+      fixInfo();
+   }
+
+  /** Creation d'un objet source (methode generale)
+   * @param plan plan d'appartenance de la ligne
+   * @param x,y  coordonnees de l'objet
+   * @param raj,dej  coordonnees de l'objet
+   * @param methode (Voir position.class)
+   * @param id       identificateur de l'objet
+   * @param info     information supplementaire
+   */
+   protected Source(Plan plan,
+                    double x, double y, double raj,double dej, int methode,
+                    String id, String info, Legende leg) {
+      super(plan,null,x,y,raj,dej,methode,id);
+      this.info = info;
+      this.leg = leg;
+      sourceType=(byte)plan.sourceType;
+
+      fixInfo();
+
+   }
+
+   /** Projection de la source => calcul (x,y).
+    * @param proj la projection a utiliser
+    */
+    protected void projection(ViewSimple v) {
+
+       if( v.isPlotView() ) {
+          double [] xy = v.plot.getXY(this);
+          xv[v.n] = xy[0];
+          yv[v.n] = xy[1];
+
+       } else {
+           super.projection(v);
+       }
+    }
+
+   /** Positionne le flag de tag */
+   final protected void setTag(boolean tag) {
+      if( plan!=null && tag ) plan.aladin.calque.taggedSrc=true;
+      if( tag ) flags |= TAG;
+      else flags &= ~TAG;
+   }
+
+   /** Retourne true si la source est taguée */
+   final protected boolean isTagged() { return (flags & TAG) !=0; /* == TAG;*/ }
+
+   /** Positionne le flag de mise en évidence temporaire */
+   final protected void setHighlight(boolean fl) {
+      if( fl ) flags |= HIGHLIGHT;
+      else flags &= ~HIGHLIGHT;
+   }
+
+   /** Retourne true si la source est mise en évidence temporairement */
+   final protected boolean isHighlighted() { return (flags & HIGHLIGHT) !=0; /* == HIGHLIGHT;*/ }
+
+   /** Retourne true si l'objet contient des informations de photométrie  */
+   public boolean hasPhot() { return leg.hasGroup(); }
+
+   /** Retourne le nom de la forme en fonction de l'indice */
+   static protected final String getShape(int i) { return TYPENAME[i]; }
+
+   /** Retourne l'indice de la forme en fonction de son nom, -1 si introuvable */
+   static protected final int getShapeIndex(String shape) {
+      for( int i=0; i<TYPENAME.length; i++ ) if( shape.equalsIgnoreCase(TYPENAME[i]) ) return i;
+      return -1;
+   }
+
+   /** fix for the AVO demo : sometimes, info is shorter than leg ! */
+   protected void fixInfo() {
+       if( leg==null || leg.field==null || info==null ) return;
+
+       StringTokenizer st = new StringTokenizer(this.info,"\t");
+       int nbInfo = st.countTokens()-1; // skip du triangle
+
+       int nbFields = leg.field.length;
+
+       while( nbInfo<nbFields ) {
+           this.info = new String(this.info)+"\t ";
+           nbInfo++;
+           if( Aladin.levelTrace>=3) System.out.println("Source.fixInfo pour "+id);
+       }
+   }
+
+   /**
+    * Retourne l'identificateur unique de la source, fourni par une application
+    * externe tel VOPlot. S'il ne s'agit pas d'un objet de ce type, retourne
+    * simplement null
+    */
+   protected String getOID() { return oid; }
+
+   /**
+    * Positionnement d'un OID sur cette source
+    * @param oid
+    */
+   protected void setOID(String oid ) { this.oid = oid; }
+
+   /**
+    * Generation automatique d'un OID, unique pour la session
+    * IL VA FALLOIR FAIRE GAFFE, SI UN UTLISATEUR CHARGE UN VOTABLE AVEC DES OID
+    * AYANT ETE GENERES A LA SESSION PRECEDENTE. IL PEUT Y AVOIR DES
+    * MELANGES !!!
+    * @return l'OID genere
+    */
+   static int NOID=0;
+   protected String setOID() {
+      NOID++;
+      oid = "Aladin."+NOID;
+      return oid;
+   }
+
+/*
+   // Affichage sur sortie standard des infos concernant l'objet
+   void debug() {
+      super.debug();
+      String s;
+      s=Coord.getSexa(raj,dej,":");
+      System.out.println("   .coordonnees J2000    : "+raj+","+dej+" (cad "+s+")");
+      System.out.println("   .representation       : "+TYPENAME[sourceType]);
+      System.out.println("   .information          : "+info);
+      System.out.println("   .taille               : "+L);
+      System.out.println("   .affiche avec label   : "+withlabel);
+      System.out.println("   .montre par inversion : "+show);
+   }
+*/
+
+  /** Representation par defaut.
+   * Retourne le type de representation de la source en fonction du nombre de source.
+   * Le principe est tres simple, plus il y a de sources concernees, plus
+   * la representation sera petite.
+   *
+   * @param nombre nombre de sources concernees
+   * @return numero de la representation (ex: Source.CARRE)
+   */
+   protected static int getDefaultType(int nombre) {
+      int i;
+      for( i=0; i<LIMIT.length && nombre>LIMIT[i]; i++ );
+      if( i>=LIMIT.length ) i=LIMIT.length-1;
+      return i;
+   }
+
+  /** Modification de l'identificateur
+   * @param id nouvel identificateur de la source
+   */
+   protected void setText(String id) {
+      super.setText(id);
+   }
+
+  /** Modification de l'information associee a la source
+   * @param info la nouvelle info supplementaire
+   */
+   protected void setInfo(String info) { this.info = info; oid=""; }
+
+  /** Modification de la legende associee a la source
+   * @param leg la nouvelle legende
+   */
+   protected void setLegende(Legende leg) { this.leg = leg; oid=""; }
+
+   // Affichage de l'info lie a la source
+   protected void info(Aladin aladin) { aladin.mesure.setInfo(this); }
+
+  /** Affichage l'info lie a l'objet
+   * Affiche l'identifacteur dans le statut de l'objet aladin
+   * @param aladin reference
+   */
+   protected void status(Aladin aladin) {
+      aladin.status.setText(id+" "+aladin.view.HCLIC);
+   }
+
+  /** Modification de la position (absolue)
+   * @param x,y nouvelle position
+   */
+   protected void setPosition(ViewSimple v,double x, double y) { }
+
+  /** Modification de l'identificateur
+   * @param id nouvel identificateur
+   */
+   protected void deltaPosition(ViewSimple v,double dx, double dy) {
+      if( plan==null || !plan.recalibrating ) return;
+      xv[v.n] += dx;
+      yv[v.n] += dy;
+//      resetVP();
+   }
+
+   static private Rectangle box = new Rectangle();      // Box qui contient le label + la source
+
+   // Calcul le decalage du label en fct de la font
+   // et de la taille de la source. On utilise une variable statique pour éviter
+   // les allocations inutiles
+   private Rectangle setBox() {
+      int dx,dy,dw,dh;
+      FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(DF);
+      dw=dx = (byte)(m.stringWidth(id)/2);
+      dh=dy = (byte)(HF/2);
+      if( dx>L ) { dx=L-1; dw+=(dw-dx); }
+      if( dy>L ) { dy=L-1; dh+=(dh-dy); }
+      box.x=dx; box.y=dy; box.width=dw; box.height=dh;
+      return box;
+   }
+
+
+  /** Test d'appartenance.
+   * Retourne vrai si le point (x,y) de l'image se trouve dans l'objet
+   * @param x,y le point a tester
+   * @param z zoom courant
+   * @return <I>true</I> si on est dedans, <I>false</I> sinon
+   */
+   protected boolean inside(ViewSimple v,double x, double y) {
+      double l=L/v.getZoom();
+      double xc = xv[v.n];
+      double yc = yv[v.n];
+      return(xc<=x+l && xc>=x-l && yc<=y+l && yc>=y-l);
+   }
+
+  /** Generation d'un clip englobant.
+   * Retourne un rectangle qui englobe l'objet
+   * @param zoomview reference au zoom courant
+   * @return         le rectangle enblobant
+   */
+//   protected Rectangle getClip(ViewSimple v) {
+//      if( !visible ) return null;
+//      Point p = getViewCoord(v,L*2,L*2);
+//      if( p==null ) return null;
+//      if( !withlabel ) {
+//         if( select ) return new Rectangle(p.x-L-MDS,p.y-L-MDS, L*2+DS, L*2+DS);
+//         else return new Rectangle(p.x-L,p.y-L, L*2, L*2);
+//      } else {
+//         setBox();
+//         if( select ) return new Rectangle(p.x-L-MDS,p.y-L-box.height-MDS, box.width+L*2+DS,box.height+L*2+DS);
+//         else return new Rectangle(p.x-L,p.y-L-box.height, box.width+L*2,box.height+L*2);
+//      }
+//   }
+
+   /** Extension d'un clip pour ajouter la zone de l'objet
+    * A l'avantage de ne pas faire d'allocation
+    */
+   protected Rectangle extendClip(ViewSimple v,Rectangle clip) {
+      if( !isVisible() ) return clip;
+      Point p = getViewCoord(v,L*2,L*2);
+      if( p==null ) return clip;
+      if( !isWithLabel() ) {
+         if( isSelected() ) return unionRect(clip, p.x-L-MDS,p.y-L-MDS, L*2+DS, L*2+DS);
+         else return unionRect(clip, p.x-L,p.y-L, L*2, L*2);
+      } else {
+         setBox();
+         if( isSelected() ) return unionRect(clip, p.x-L-MDS,p.y-L-box.height-MDS, box.width+L*2+DS,box.height+L*2+DS);
+         return unionRect(clip, p.x-L,p.y-L-box.height, box.width+L*2,box.height+L*2);
+      }
+   }
+
+   /** Teste l'intersection même partielle avec le clip */
+   protected boolean inClip(ViewSimple v,Rectangle clip) {
+      if( !isVisible() ) return false;
+      Point p = getViewCoord(v,L*2,L*2);
+      if( p==null ) return false;
+      int x,y,w,h;
+      if( !isWithLabel() ) {
+         if( isSelected() ) { x=p.x-L-MDS; y=p.y-L-MDS; w=h=L*2+DS; }
+         else { x=p.x-L; y=p.y-L; w=h=L*2; }
+      } else {
+         setBox();
+         if( isSelected() ) { x=p.x-L-MDS; y=p.y-L-box.height-MDS; w=box.width+L*2+DS; h=box.height+L*2+DS; }
+         else { x=p.x-L; y=p.y-L-box.height; w=box.width+L*2; h=box.height+L*2; }
+      }
+      return Obj.intersectRect(clip,x,y,w,h);
+   }
+
+   // Tracage d'un carre
+   void drawCarre(Graphics g,Point p) {
+      if( !isWithLabel() ) g.drawRect(p.x-L,p.y-L, L*2, L*2);
+      else {
+         setBox();
+         g.drawLine(p.x+L,p.y-L+box.y+2,  p.x+L,p.y+L);
+         g.drawLine(p.x-L,p.y+L, p.x+L,p.y+L);
+         g.drawLine(p.x-L,p.y+L, p.x-L,p.y-L);
+         g.drawLine(p.x-L,p.y-L, p.x+L-box.x-2,p.y-L);
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   final static int R=8;
+   final static int LR=6;
+   final static int SR=4;
+
+   // Tracage d'un cercle
+   void drawCircleS(Graphics g,Point p) {
+      if( g instanceof EPSGraphics ) g.drawOval(p.x-SR/2, p.y-SR/2, SR, SR);
+      else Util.drawCircle5(g,p.x,p.y);
+
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   // Tracage d'un cercle
+   void drawOval(Graphics g,Point p) {
+      g.drawOval(p.x-R/2, p.y-R/3, R, (2*R)/3);
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   // Tracage d'un cercle
+   void drawCircle(Graphics g,Point p) {
+      if( g instanceof EPSGraphics )  g.drawOval(p.x-LR/2, p.y-LR/2, LR, LR);
+      else Util.drawCircle7(g,p.x,p.y);
+
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   // Tracage d'un losange
+   void drawLosange(Graphics g,Point p) {
+      g.drawLine(p.x,p.y-L, p.x+L,p.y);
+      g.drawLine(p.x+L,p.y, p.x,p.y+L);
+      g.drawLine(p.x,p.y+L, p.x-L,p.y);
+      g.drawLine(p.x-L,p.y, p.x,p.y-L);
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   // Tracage d'un triangle
+   void drawTriangle(Graphics g,Point p) {
+      g.drawLine(p.x-L,p.y+L/3, p.x+L,p.y+L/3);
+      g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
+      g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x,p.y-L+box.y);
+      }
+   }
+
+   // Tracage d'une croix (vertical/horizontal)
+   void drawPlus(Graphics g,Point p) {
+      g.drawLine(p.x-L,p.y, p.x+L,p.y );
+      g.drawLine(p.x,p.y-L, p.x,p.y+L );
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L-box.x/2,p.y-L+box.y/2);
+      }
+   }
+
+   // Tracage d'une croix (45 degres)
+   void drawCroix(Graphics g,Point p) {
+      g.drawLine(p.x-L,p.y-L, p.x+L,p.y+L );
+      g.drawLine(p.x-L,p.y+L, p.x+L,p.y-L );
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+L,p.y+box.y/2);
+      }
+   }
+
+   // Tracage d'un point
+   void drawPoint(Graphics g,Point p) {
+      g.drawLine(p.x-1,p.y, p.x+1,p.y );
+      g.drawLine(p.x,p.y-1, p.x,p.y+1 );
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+2-box.x/2,p.y-2+box.y/2);
+      }
+   }
+
+   // Tracage d'un dot
+   void drawDot(Graphics g,Point p) {
+      g.drawLine(p.x,p.y, p.x,p.y );
+      if( isWithLabel() ) {
+         setBox();
+         g.drawString(id,p.x+2-box.x/2,p.y-2+box.y/2);
+      }
+   }
+
+  /** Dessine la source pour la legende
+   * @param g   le contexte graphique
+   * param x,y	position
+   */
+   protected void print(Graphics g,int x, int y) {
+      Point p = new Point(x,y);
+
+      // Memorisation des parametres
+      boolean mwithlabel = isWithLabel();
+      setWithLabel(false);
+
+      g.setColor( plan.c );
+      switch(sourceType) {
+         case SQUARE:  drawCarre(g,p);   break;
+         case CROSS:   drawCroix(g,p);   break;
+         case PLUS:    drawPlus(g,p);    break;
+         case RHOMB:   drawLosange(g,p); break;
+         case POINT:   drawPoint(g,p);   break;
+         case DOT:     drawDot(g,p);     break;
+      }
+
+      setWithLabel(mwithlabel);
+   }
+
+   /** retourne true si la source est selectionnee par l'un des filtres actif */
+   protected boolean isSelectedInFilter() {
+      PlanFilter pf;
+      for(int i=0;i<PlanFilter.allFilters.length;i++) {
+         pf = PlanFilter.allFilters[i];
+         if(pf.isOn() && isSelected!=null && isSelected[pf.numero]) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /** retourne true si la source n'est sous l'influence d'aucun filtre (ie pas concernee ou concernee mais filtre off) */
+   protected boolean noFilterInfluence() {
+      PlanFilter pf;
+      for( int i=0;i<PlanFilter.allFilters.length;i++) {
+         pf = PlanFilter.allFilters[i];
+         if( !pf.isOn() ) {
+            continue;
+         }
+         if( pf.numero<plan.influence.length && plan.influence[pf.numero]) return false;
+      }
+      return true;
+   }
+
+   /** retourne le nombre de filtres ON et flagOk qui influencent la source */
+   private int nbFiltersOk() {
+      int nb=0;
+      PlanFilter pf;
+      for( int i=0;i<PlanFilter.allFilters.length;i++) {
+         pf = PlanFilter.allFilters[i];
+         if( !pf.isOn() || !pf.flagOk ) {
+            continue;
+         }
+         if(plan.influence[pf.numero]) nb++;
+      }
+
+      return nb;
+   }
+
+   /** Ecriture d'info ASCII permettant de construire des links html
+    * pour une carte cliquable */
+   protected void writeLinkFlex(OutputStream o,ViewSimple v) throws Exception {
+      PointD p = getViewCoordDouble(v,L,L);
+      if( p==null ) return;  // hors champ
+      o.write((plan.label+"\t"+(id!=null?id:"-")+"\t"+p.x+"\t"+p.y+"\t"+getFirstLink()+"\n").getBytes());
+   }
+
+   /** Ecriture d'info ASCII permettant de construire des links html
+    * pour une carte cliquable */
+   protected void writeLink(OutputStream o,ViewSimple v) throws Exception {
+      Point p = getViewCoord(v,L,L);
+      if( p==null ) return;  // hors champ
+      o.write((plan.label+"\t"+(id!=null?id:"-")+"\t"+p.x+"\t"+p.y+"\t"+getFirstLink()+"\n").getBytes());
+   }
+
+   /** Retourne le premier link associée à la source si il existe, sinon retourne "-" */
+   protected String getFirstLink() {
+      if( leg==null ) return "-";
+      int i = leg.getFirstLink();
+      if( i<0 ) return "-";
+      String s;
+      try {
+         s = getCodedValue(i);
+         int pipe = s.indexOf('|');
+         int blanc = s.indexOf(' ');
+         int sup = s.lastIndexOf('>');
+         String id = s.substring(2,blanc>0?blanc:pipe>0?pipe:sup);
+         String param = blanc>0?s.substring(blanc+1,pipe>0?pipe:sup):"";
+
+         boolean flagEncode = id.equals("Http");
+         URL url = plan.aladin.glu.getURL(id,param,flagEncode,false);  // Resolution GLU
+         return url.toString();
+      }
+      catch( Exception e ) { return "-"; }
+   }
+
+
+  /** Dessine la source
+   * @param g        le contexte graphique
+   * @param v reference à la vue où on dessine
+   */
+   protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
+      //System.out.println("On repaint");
+      Point p = getViewCoord(v,L,L);
+      if( p==null ) return false;
+      p.x+=dx; p.y+=dy;
+      if( plan.aladin.view.flagHighlight && !isHighlighted() ) return false;
+
+      boolean iAmSelected = isSelectedInFilter();
+
+      // si filtre==ON on n'affiche le rectangle vert encadrant la source
+      // selectionnee que si la source a ete selectionnee
+      boolean noInfluence = noFilterInfluence();
+      if( /* !plan.aladin.view.flagHighlight && */ isSelected() ) {
+	  	//System.out.println("la source est selectionnee");
+      	 if( noInfluence || iAmSelected ) {
+            g.setColor( isTagged() ? Color.magenta : Color.green);
+            g.drawRect(p.x-L-1,p.y-L-1, L*2+2, L*2+2);
+         }
+      }
+
+      int nbFiltersOk = nbFiltersOk();
+
+      // if the source is in the filter selection, we proceed the action associated with the active filter
+      if( !noInfluence && iAmSelected ) {
+      	  drawAssociatedFootprint(g,v,dx,dy);
+          // si aucun des plans dont la source subit l'influence n'est pret
+          // on dessine la source comme d'habitude
+          if( nbFiltersOk == 0 ) {
+             doDraw(g, p, plan.c);
+          }
+          // on applique les differentes actions associees aux differents filtres
+          else {
+              boolean success = drawWithFilter(g, v, p, dx, dy);
+              if ( ! success ) return false;
+		           }
+                }
+
+      // pour les sources qui ne sont sous l'influence d'aucun filtre
+      else if(noInfluence) {
+         doDraw(g, p, plan.c);
+         drawAssociatedFootprint(g,v,dx,dy);
+      }
+      else if(!iAmSelected && nbFiltersOk==0) {
+         doDraw(g, p, plan.c);
+         drawAssociatedFootprint(g,v,dx,dy);
+      }
+      return true;
+   }
+
+    private boolean drawWithFilter(Graphics g, ViewSimple v, Point p, int dx, int dy) {
+        PlanFilter pf;
+        // boucle sur les filtres
+        for (int i = 0; i < PlanFilter.allFilters.length; i++) {
+            pf = PlanFilter.allFilters[i];
+
+            if (pf.isOn() && plan.influence[pf.numero] && isSelected[pf.numero]
+                    && pf.flagOk) {
+                // boucle sur les actions
+                if (actions[pf.numero] == null) {
+                    return false;
+                }
+                for (int j = 0; j < actions[pf.numero].length; j++) {
+                    this.actions[pf.numero][j].action(this, g, v, p, pf.numero, j, dx, dy);
+                }
+            }
+        }
+        return true;
+    }
+
+    private void drawAssociatedFootprint(Graphics g, ViewSimple v, int dx, int dy) {
+        // dessin du FoV éventuellement associé à la source
+        PlanField footprint;
+        if (    sourceFootprint != null
+            && (footprint = sourceFootprint.getFootprint()) != null
+            && showFootprint()) {
+            footprint.c = plan.c;
+            footprint.reset(ViewSimple.MOVECENTER);
+            footprint.pcat.draw(g, null, v, true, dx, dy);
+        }
+    }
+
+   /** Dessine la source en inversant sa couleur (ne concerne que les surcharges dues aux filtres)
+    * @param g        le contexte graphique
+    * @param v        référence à la vue sur laquelle on doit dessiner
+    */
+   /*
+    protected void drawReverse(Graphics g,ViewSimple v,int dx,int dy) {
+       //System.out.println("On repaint");
+       Point p = getViewCoord(v,L,L);
+       if( p.x<0 ) return;
+       p.x+=dx; p.y+=dy;
+
+       boolean iAmSelected = isSelected();
+
+       boolean noInfluence = noFilterInfluence();
+
+       int nbFiltersOk = nbFiltersOk();
+
+       // if the source is in the filter selection, we proceed the action associated with the active filter
+       if( !noInfluence && iAmSelected ) {
+
+           if( nbFiltersOk == 0 ) {
+           }
+           // on applique les differentes actions associees aux differents filtres
+           else {
+              PlanFilter pf;
+              // boucle sur les filtres
+              for(int i=0;i<PlanFilter.allFilters.length;i++) {
+                 pf = PlanFilter.allFilters[i];
+
+                 if( pf.isOn() && plan.influence[pf.numero] && isSelected[pf.numero] && pf.flagOk ) {
+                    // boucle sur les actions
+                    if( actions[pf.numero]==null ) return;
+ 		           for(int j=0;j<actions[pf.numero].length;j++) {
+       	      	      this.actions[pf.numero][j].drawReverse(this,g,v,p,pf.numero,j,false);
+ 		           }
+                 }
+              }
+           }
+       }
+
+       // pour les sources qui ne sont sous l'influence d'aucun filtre
+       else if(noInfluence) {
+       }
+       else if(!iAmSelected && nbFiltersOk==0) {
+       }
+    }
+    */
+
+   /** method that actually draws the source */
+   protected void doDraw(Graphics g, Point p, Color c) {
+
+
+    	if( c==null ) g.setColor(plan.c);
+		else g.setColor( c );
+//      	show=false;                // Le reaffichage supprime le caractere show
+      	switch(sourceType) {
+           case OVAL:    drawOval(g,p);   break;
+           case SQUARE:  drawCarre(g,p);   break;
+           case CROSS:   drawCroix(g,p);   break;
+           case PLUS:    drawPlus(g,p);    break;
+           case RHOMB:   drawLosange(g,p); break;
+           case TRIANGLE:drawTriangle(g,p);break;
+           case CIRCLES: drawCircleS(g,p); break;
+           case CIRCLE:  drawCircle(g,p);  break;
+           case POINT:   drawPoint(g,p);   break;
+           case DOT:     drawDot(g,p);     break;
+      	}
+   }
+
+   ////////////////////////////////////////////////////////
+   // thomas (below this point are thomas modifications)///
+   ////////////////////////////////////////////////////////
+
+
+   /**
+    * @param mask mask used for the comparison
+    * @param word string to compare
+    * @param wildcard if true, wildcards ('*' and '?') are taken into account
+    * @return true if word matches the mask
+    * @see #findUCD(String)
+    * @see #findColumn(String)
+    */
+   private boolean match(String mask, String word, boolean wildcard) {
+      if( wildcard ) return Util.matchMask(mask, word);
+      else return word.equals(mask);
+   }
+
+   /** findUCD returns the position of ucd in the leg.fields array
+    *  @param         ucd - the ucd we are looking for. May contain '*' or '?'
+    *  wildcard  ; in this case, returns the position of the 1st match
+    *  Use "\*" to search character '*'
+    *  @return the position of ucd in leg.fields array, -1 if not found
+	*  if the last character of ucd is a star "*", it returns the position of the first column with prefix equals to the string before the star
+    */
+   protected int findUCD(String ucd) {
+    	int curPos;
+    	String curUCD = null;
+
+    	Field[] fields = leg.field;
+    	// ucd contient-elle des wildcards ?
+    	boolean wildcard = useWildcard(ucd);
+
+		//	thomas (AVO 2005)
+		ucd = MetaDataTree.replace(ucd, "\\*", "*", -1);
+
+		ucd = ucd.toUpperCase();
+
+    	for(curPos=0; curPos<fields.length; curPos++) {
+    	    curUCD = fields[curPos].ucd;
+    	    if( curUCD!=null ) curUCD = curUCD.toUpperCase();
+    	    String myVal;
+			// pour eviter les cas ou l'on prend en compte un UCD avec une valeur vide alors qu il en existerait un "bon"
+			if( curUCD == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
+			if( match(ucd, curUCD, wildcard) ) return curPos;
+    	}
+    	return -1;
+   }
+
+   protected int findUtype(String utype) {
+       int curPos;
+       String curUtype = null;
+
+       Field[] fields = leg.field;
+       // utype contient-il des wildcards ?
+       boolean wildcard = useWildcard(utype);
+
+       utype = MetaDataTree.replace(utype, "\\*", "*", -1);
+
+       utype = utype.toUpperCase();
+
+       for(curPos=0; curPos<fields.length; curPos++) {
+           curUtype = fields[curPos].utype;
+           if( curUtype!=null ) curUtype = curUtype.toUpperCase();
+           String myVal;
+           // pour eviter les cas ou l'on prend en compte un utype avec une valeur vide alors qu il en existerait un "bon"
+           if( curUtype == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
+           if( match(utype, curUtype, wildcard) ) return curPos;
+       }
+       return -1;
+  }
+
+/*
+   protected int findUtype(String utype) {
+       int curPos;
+       String curUtype = null;
+
+       Field[] fields = leg.field;
+       // utype contient-elle des wildcards ?
+       boolean wildcard = useWildcard(utype);
+
+       utype = MetaDataTree.replace(utype, "\\*", "*", -1);
+
+       utype = utype.toUpperCase();
+
+       for(curPos=0; curPos<fields.length; curPos++) {
+           curUtype = fields[curPos].unit;
+           if( curUtype!=null ) curUtype = curUtype.toUpperCase();
+           String myVal;
+           // pour eviter les cas ou l'on prend en compte un utype avec une valeur vide alors qu il en existerait un "bon"
+           if( curUtype == null || ( wildcard && ( (myVal=this.getValue(curPos))==null || myVal.trim().length()==0 ) ) ) continue;
+           if( match(utype, curUtype, wildcard) ) return curPos;
+       }
+       return -1;
+  }
+*/
+
+   /** findColumn returns the position of this column name in the leg.fields array
+    *  @param name - the column name we are looking for. May contain '*'
+    *  or '?' wildcard ; in such a case, returns the position of the 1st match
+    *  Use "\*" to search character '*'
+    *  @return the position of name in leg.fields array, -1 if not found
+    */
+   protected int findColumn(String name) {
+    	int curPos;
+    	String curName = null;
+
+        // replace ajouté pour la démo AVO
+        name = MetaDataTree.replace(name, " ", "", -1);
+
+
+    	Field[] fields = leg.field;
+    	// name contient-elle des wildcards ?
+		boolean wildcard = useWildcard(name);
+
+		//	thomas (AVO 2005)
+		name = MetaDataTree.replace(name, "\\*", "*", -1);
+
+    	for(curPos=0; curPos<fields.length; curPos++) {
+            // replace ajouté pour la démo
+    	    curName = MetaDataTree.replace(fields[curPos].name.trim(), " ", "", -1);
+    	    if(curName == null) continue;
+			if( match(name, curName, wildcard) ) return curPos;
+    	}
+    	return -1;
+   }
+
+   /** Retourne true si s contient '?' ou ('*' non précédé de '\')
+    *
+    * @param s la chaine testée
+    * @return boolean
+    */
+   static protected boolean useWildcard(String s) {
+      char curChar,oldChar;
+      oldChar=' ';
+
+      int n = s.length();
+      for( int i=0; i<n; i++ ) {
+         curChar = s.charAt(i);
+         if( curChar=='?' ) return true;
+         if( curChar=='*' && oldChar!='\\' ) return true;
+         oldChar = curChar;
+      }
+      return false;
+
+   }
+
+
+    /** Returns the catalog name for the source */
+    protected String getCatalogue() {
+        if( info!=null) {
+            int tab = info.indexOf("\t");
+            if(tab<0) return null;
+            String name = info.substring(0,tab);
+            // on vire les marques GLU
+            if( name.startsWith("<&") ) {
+              int a = name.indexOf('|');
+              if( a>0 ) {
+                 int b = name.indexOf('>',a+1);
+                 if( b>=0 ) name=name.substring(a+1,b);
+              }
+           }
+           return name;
+        }
+        else return null;
+    }
+
+    /** Retourne la valeur du champ à la position index (avec un éventuel
+     * tag GLU pour les liens
+     */
+    protected String getCodedValue(int index) throws NoSuchElementException {
+       StringTokenizer st = new StringTokenizer(this.info,"\t");
+       st.nextElement();     // skip the triangle
+       for(int i=0;i<index;i++) st.nextElement();
+       return st.nextElement().toString();
+    }
+
+
+   /** Returns the value of the field at position index
+    *	@param index - the position of the field one wants
+    *	@return the value of the field at position index, <b>null</b> if not found
+    */
+    protected String getValue(int index) {
+    	String ret;
+      	try {
+      	   ret = getCodedValue(index);
+
+           // Pierre: En cas de marques GLU
+           if( ret.startsWith("<&") ) {
+              int a = ret.indexOf('|');
+              if( a>0 ) {
+                 int b = ret.indexOf('>',a+1);
+                 if( b>=0 ) ret=ret.substring(a+1,b);
+              }
+           }
+      	} catch(NoSuchElementException e) {return null;}
+
+      	return ret.trim();
+    }
+
+    /** Retourne le type d'objet */
+    public String getObjType() { return "Source"; }
+
+    /** Retourne un tableau de chaines contenant les valeurs de chaque champ */
+    public String [] getValues() {
+       StringTokenizer st = new StringTokenizer(info,"\t");
+
+       // Si on connait le nombre de champ, on alloue immédiatement le tableau
+       // sinon on passe par un Vector temporaire et on recopie à la fin
+       String [] v = null;
+       Vector tmp=null;
+       if( leg.field.length>0 ) v = new String[ leg.field.length ];
+       else tmp = new Vector();
+
+       st.nextElement();  // Skip le triangle
+       boolean encore;
+       for( int i=0; (encore=st.hasMoreTokens()) ||  (v!=null && i<v.length) ; i++ ) {
+         String ret = encore?st.nextToken():"";
+          // Pierre: En cas de marques GLU
+          if( ret.startsWith("<&") ) {
+             int a = ret.indexOf('|');
+             if( a>0 ) {
+                int b = ret.indexOf('>',a+1);
+                if( b>=0 ) ret=ret.substring(a+1,b);
+             }
+          }
+          if( v!=null ) v[i]=ret;
+          else tmp.add(ret);
+       }
+
+       // Recopie nécessaire ?
+       if( v==null ) {
+          v = new String[ tmp.size() ];
+          Enumeration e=tmp.elements();
+          for( int i=0; i<v.length; i++) v[i] = (String)e.nextElement();
+       }
+
+       return v;
+    }
+
+    /** Modify the value of the specifical column
+     * @param index column index eventually greater than the current dimension
+     * @param value new value
+     */
+    public boolean setValue(int index,String value) {
+       StringTokenizer st = new StringTokenizer(info,"\t");
+       StringBuffer nInfo=null;
+       boolean encore;
+       index++;
+       for( int i=0; (encore=st.hasMoreTokens()) || i<=index; i++ ) {
+          String s = encore ? st.nextToken() : "";
+          if( i==index ) s=value;
+          if( i==0 ) nInfo = new StringBuffer(s);
+          else nInfo.append("\t"+s);
+       }
+       info = nInfo.toString();
+       return true;
+    }
+
+    /** Set the drawing shape
+     * @param sourceType Obj.OVAL, SQUARE, CIRCLE, RHOMB, PLUS, CROSS, TRIANGLE, CIRCLES, POINT, DOT
+     */
+     public void setShape(int shape) { setSourceType(shape); }
+     protected void setSourceType(int sourceType) { this.sourceType = (byte)sourceType; }
+
+     /** Highlight or unhighlight the source */
+     public void setHighlighted(boolean flag) { plan.aladin.view.setHighlighted(this,flag); }
+
+    /**
+     * Set metadata for a specifical column (name, unit, ucd, display width).
+     * null or <0 values are not modified.
+     * If the index is greater than the number of columns, the additionnal columns
+     * are automatically created and all other sources using the same legende
+     * will be size fixed.
+     * @param index number of column (0 is the first one)
+     * @param name new name or null for no modification
+     * @param datatype new datatype or null for no modification
+     * @param unit new unit or null
+     * @param ucd new ucd or null
+     * @param width new width or -1. 0 to use the default display width.
+     */
+    public void setColumn(int index, String name,String unit,String ucd,int width) {
+       setColumn(index,name,null,unit,ucd,width);
+    }
+    public void setColumn(int index, String name,String datatype,String unit,String ucd,int width) {
+       if( leg==null ) leg = new Legende();
+       int newCol = leg.setField(index,name,datatype,unit,ucd,width);
+       if( newCol>0 && plan!=null && plan.pcat!=null ) plan.pcat.fixInfo(leg);
+    }
+
+    /** Return the index of a column (Source object). Proceed in 2 steps,
+     * Look into the column name, if there is no match, look into the ucd.
+     * If nothing match, return -1.
+     * The string key can use wilcards (* and ?).
+     * @param key name or ucd to find
+     * @return index of first column matching the key
+     */
+    public int indexOf(String key) {
+       if( leg==null ) return -1;
+       for( int i=0; i<leg.field.length; i++ ) {
+          if( Util.matchMask(key,leg.field[i].name) ) return i;
+       }
+       for( int i=0; i<leg.field.length; i++ ) {
+          if( Util.matchMask(key,leg.field[i].ucd) ) return i;
+       }
+       return -1;
+    }
+
+    /** Return the number of columns associated to this object */
+    public int getSize() {
+       if( leg!=null ) return leg.getSize();
+       if( info==null ) return 0;
+       return new StringTokenizer(info,"\t").countTokens();
+    }
+
+    /** Retourne la liste des noms de chaque valeur */
+    public String [] getNames() { return getMeta(0); }
+
+    /** Retourne la liste des unités de chaque valeur */
+    public String [] getUnits() { return getMeta(1); }
+
+    /** Retourne la liste des UCDs pour chaque valeur */
+    public String [] getUCDs() { return getMeta(2); }
+
+    /** Retourne la liste des Datatypes pour chaque valeur */
+    public String [] getDataTypes() { return getMeta(3); }
+
+    /** Retourne la liste des Arraysizes pour chaque valeur */
+    public String [] getArraysizes() { return getMeta(4); }
+
+    /** Retourne la liste des Widths pour chaque valeur */
+    public String [] getWidths() { return getMeta(5); }
+
+    /** Retourne la liste des Precisions pour chaque valeur */
+    public String [] getPrecisions() { return getMeta(6); }
+
+    /** Retourne la liste d'une metadata particulière associée aux valeurs
+     *  @param m 0:label, 1:unit,  2:ucd
+     */
+    private String [] getMeta(int m) {
+       if( leg==null ) return new String[0];
+       String [] u = new String[leg.getSize()];
+       for( int i=0; i<u.length; i++ ) {
+          switch(m) {
+             case 0: u[i]=leg.field[i].name; break;
+             case 1: u[i]=leg.field[i].unit; break;
+             case 2: u[i]=leg.field[i].ucd;  break;
+             case 3: u[i]=leg.field[i].datatype;  break;
+             case 4: u[i]=leg.field[i].arraysize;  break;
+             case 5: u[i]=leg.field[i].width;  break;
+             case 6: u[i]=leg.field[i].precision;  break;
+          }
+       }
+       return u;
+    }
+
+
+   /** Returns the unit for the field at position pos */
+   protected String getUnit(int pos) {
+    	if(pos<0) return "";
+    	return leg.field[pos].unit;
+   }
+
+   /** VOTable just for this source */
+   public InputStream getVOTable() throws Exception {
+      return plan.aladin.writeObjectInVOTable(null, this, null, true, false, false).getInputStream();
+   }
+
+  /**
+    * Crée l'objet sourceFootprint s'il n'a pas déja été créé
+    *
+    */
+   private void createSourceFootprint() {
+      if( sourceFootprint==null ) sourceFootprint = new SourceFootprint();
+   }
+
+   /** Retourne le footprint attaché à la source (peut être <i>null</i>) */
+   protected PlanField getFootprint() {
+      return sourceFootprint==null?null:sourceFootprint.getFootprint();
+   }
+
+   /** Attache un footprint donné à la source */
+   protected void setFootprint(PlanField footprint) {
+   	  createSourceFootprint();
+   	  sourceFootprint.setFootprint(footprint);
+   }
+
+   /**
+    * Switch the state (on/off) of the associated footprint
+    *
+    */
+   protected void switchFootprint() {
+      setShowFootprint(!showFootprint());
+   }
+
+   /**
+    *
+    * @return Returns <i>true</i> if the associated footprint is currently visible, <i>false</i> otherwise
+    */
+   protected boolean showFootprint() {
+      return sourceFootprint==null?false:sourceFootprint.showFootprint();
+   }
+
+   /**
+    * Shows/hides the footprint associated to a source
+    * @param show
+    */
+   protected void setShowFootprint(boolean show) {
+   	  createSourceFootprint();
+   	  sourceFootprint.setShowFootprint(show);
+   	  plan.aladin.calque.repaintAll();
+   }
+
+   /**
+    * @return Retourne l'index du footprint associé (valeur par défaut : -1)
+    */
+   protected int getIdxFootprint() {
+      return sourceFootprint==null?-1:sourceFootprint.getIdxFootprint();
+   }
+
+   /**
+    * @param idxFootprint valeur à donner à l'index du footprint associé
+    */
+   public void setIdxFootprint(int idxFootprint) {
+      createSourceFootprint();
+      sourceFootprint.setIdxFootprint(idxFootprint);
+   }
+
+   // Variables mémorisant le mode de tri courant
+   static private Source sortSource;    // La source étalon utilisé pour les comparaisons
+   static private int sortNField;       // Le numéro du champ concerné
+   static private boolean sortNumeric;  // true si le tri est numérique, alphabétique sinon
+   static private int sortSens;         // 1:ascendant, -1:descendant
+
+   public int compare(Object a1, Object b1) {
+      Source a = (Source)a1;
+      Source b = (Source)b1;
+      if( sortSource==null || a==null || b==null ) return 0;
+      if( sortNField==-1 ) {
+         if( a.isTagged()==b.isTagged() ) return 0;
+         else return a.isTagged() ? -sortSens : sortSens;
+      }
+
+      // Il s'agit d'une source non concernée, on met à la fin
+      if( a.leg!=sortSource.leg ) return 1;
+      if( b.leg!=sortSource.leg ) return -1;
+
+      String aVal = a.getValue(sortNField);
+      String bVal = b.getValue(sortNField);
+      if( !sortNumeric ) {
+         if( sortSens==1 ) return aVal.compareTo(bVal);
+         else return bVal.compareTo(aVal);
+      } else {
+         double aNVal,bNVal;
+         if( aVal.length()==0 ) aNVal=Double.MAX_VALUE;
+         else aNVal = Double.valueOf(aVal).doubleValue();
+         if( bVal.length()==0 ) bNVal=Double.MAX_VALUE;
+         else bNVal = Double.valueOf(bVal).doubleValue();
+         if( aNVal==bNVal ) return 0;
+         return aNVal>bNVal ? sortSens : -sortSens;
+      }
+   }
+
+   /** Retourne la source utilisée pour effectuer les comparaisons */
+   static protected Comparator getComparator() { return sortSource; }
+
+   /**
+    * Positionne les paramètres pour un tri ultérieur.
+    * Tri sur le champ d'indice nField toutes les sources de même légende que
+    * celle passée en paramètre. On utilise un tri par très performant mais
+    * qui simplifie le traitement pour les enregistrements non concernés.
+    * @param s la source de référence
+    * @param nField l'indice du champ clé de tri
+    * @param sens 1 - ascendant, -1 descendant
+    */
+   static protected void setSort(Source s, int nField, int sens) {
+      sortNumeric = s.leg.isNumField(nField);
+      sortSource  = s;
+      sortNField  = nField;
+      sortSens    = sens;
+      Aladin.trace(1,"Measurement "+(sortNumeric?"numerical ":"alphanumerical ")
+            +(sens==1?"ascending":"descending")+" sort on "
+            +(s.leg==null||nField==-1?"field "+nField:"${"+s.leg.field[nField].name)+"}");
+
+   }
+
+
+}
