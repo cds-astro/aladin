@@ -1,0 +1,519 @@
+#
+# Additional GLU dictionary for Aladin Java
+# Version 2 - P. Fernique [CDS]
+#
+# PLEASE, DON'T MODIFY THIS RECORD, THEY ARE VERY APPLICATION DEPENDENT !!
+# SEE THE END OF FILE FOR YOUR OWN SERVER DEFINITIONS
+#
+
+%A Aladin.java.home
+%D Get when the user clics on the CDS logo
+%O CDS'aladin
+%U http://aladin.u-strasbg.fr/
+
+%A AlaU
+%D Aladin generical URL prefix
+%O CDS'aladin
+%I AlaU.fr:5
+%I AlaU.us:0
+%I AlaU.ca:2
+%I AlaU.uk:3
+%I AlaU.jp:4
+%I AlaU.iucaa:1
+
+%A AlaU.ca
+%D Aladin URL prefix for CADC (Victoria Canada)
+%O CDS'aladin
+%L http://vizier.hia.nrc.ca/viz-bin
+
+%A AlaU.fr
+%D Aladin URL prefix for CDS (Strasbourg France)
+%O CDS'aladin
+%L http://aladin.u-strasbg.fr/java
+
+%A AlaU.iucaa
+%D Aladin URL prefix for IUCAA (UCAA/Pune, India)
+%O CDS'aladin
+%L http://vizier.iucaa.ernet.in/viz-bin
+#%L http://urania.iucaa.ernet.in/viz-bin
+
+%A AlaU.jp
+%D Aladin URL prefix for ADAC (ADAC, Tokyo)
+%O CDS'aladin
+%L http://vizier.nao.ac.jp/viz-bin
+
+%A AlaU.uk
+%D Aladin URL prefix for UKADC (Cambridge, UK)
+%O CDS'aladin
+%L http://archive.ast.cam.ac.uk/viz-bin
+
+%A AlaU.us
+%D Aladin URL prefix for CFA (Harvard USA)
+%O CDS'aladin
+%L http://vizier.cfa.harvard.edu/viz-bin
+
+%A Aladin.java.gludic
+%D Provides Glu records in Aladin domain from the closest Aladin site
+%O CDS'aladin
+%U <&AlaU>/nph-aladin.pl?frame=gludic
+
+
+#----------------- ADDITIONNAL SERVERS ------------------------------
+#---------- see the FAQ or the manual to have more explanations -----
+
+#%ActionName        Foo
+#%Description       My own server definition
+#%Aladin.Label      MyServer
+#%Aladin.Menu       Others...
+#%Aladin.LabelPlane MyServer $1/$2
+#%DistribDomain     ALADIN
+#%Owner             CDS'aladin
+#%Url               http://xxxx/yyy?ra=$1&dec=$2&radius=$3&color=$4...
+#%Param.Description $1=Right Ascension
+#%Param.Description $2=Declination
+#%Param.Description $3=Radius
+#%Param.Description $4=Color
+#%Param.DataType    $1=Target(RA)
+#%Param.DataType    $2=Target(DE)
+#%Param.DataType    $3=Field(RADIUS)
+#%Param.Value       $3=14.1 arcmin
+#%Param.Value       $4=Red
+#%Param.Value       $4=Blue
+#%Param.Value       $4=Infrared
+#%ResultDataType    Mime(image/fits)
+
+
+%A DefQual1
+%U http://aladin.u-strasbg.fr/java/alapre-new.pl?out=defqual&-c=$1&qual=$2
+
+%A Image1
+%U http://aladin.u-strasbg.fr/java/alapre-new.pl?-c=$1&out=image&fmt=$2&resolution=$3&qual=$4
+
+%A Aladin.qualifierServer1
+%U http://aladin.u-strasbg.fr/cgi-bin/nph-Aladin++dev.cgi?position=$1&radius=$2&out=qualifier&mode=xml_votable_idha
+
+%A SimbadXML1
+%U http://simbad.u-strasbg.fr/simbad/sim-all?Ident=$1&Radius=$2&\Radius.unit=arcmin&Votable=main_id,otype,ra(s),dec(s),\coo_err_maja,coo_err_mina,coo_err_angle,pmra,pmdec,flux(B),\flux(V),sp,dim_majaxis,dim_minaxis,dim_angle,bibcodelist(N)
+#%U http://cdsweb.u-strasbg.fr/simsearch/simbad-cs.py?target=$1&SR=$2&format=votable-tsv&SRUNIT=arcmin
+
+%A ConvertToJpg
+%U http://cdsweb.u-strasbg.fr/~boch-bin/format-conversion/convert-img.py?img-url=
+
+#TEST
+
+%A IVOAdic
+%D VO registry GLU gateway result
+%O CDS'aladin
+%U http://alasky.u-strasbg.fr/aladin/VO/IVOARegistry.dic
+
+#--------------------- à copier dans Aladin.dic -----------------
+
+#%A    SimbadGlu
+#%D    Simbad astronomical database
+#%O    CDS'aladin
+#%Z    ALADIN
+#%U    http://cdsweb.u-strasbg.fr/simsearch/simbad-cs.py?RA=$1&DEC=$2&SR=$3&format=votable-tsv&SRUNIT=arcmin
+#%P.D  1:Target RA
+#%P.D  2:Target DE
+#%P.D  3:Radius
+#%P.K  1:Target(RAd)
+#%P.K  2:Target(DEd)
+#%P.K  3:Field(RADIUS)
+#%R    Mime(text/xml)
+#%F.U  http://simbad.u-strasbg.fr/guide/ch15.htx
+#%M.V  The SIMBAD astronomical database provides basic data, cross-identifications and bibliography for astronomical objects outside the solar system.
+#%Aladin.LabelPlane Simbad
+#%Aladin.Logo SimbadLogo.gif
+#%Aladin.profile >10 beta
+#%Aladin.Filter #All objects\nfilter All {(${OTYPE}="Star" || ${OTYPE}="*\**") && (${B}!=0 || ${V}!=0 || ${R}!=0 || ${J}!=0 || ${K}!=0) { draw pm(${PMRA},${PMDEC});draw circle(-$[phot.mag*],3,15) }\n(${OTYPE}="Star" ||${OTYPE}="*\**") && ${B}="" && ${V}="" && ${R}="" && ${J}="" && ${K}="" { draw pm(${PMRA},${PMDEC});draw circle(3) }\n(${OTYPE}="G*" || ${OTYPE}="*G") && ${GALDIM_MAJAXIS}!=0 {draw ellipse(0.5*${GALDIM_MAJAXIS},0.5*${GALDIM_MINAXIS},${GALDIM_ANGLE})}\n(${OTYPE}="G*" || ${OTYPE}="*G")) && ${GALDIM_MAJAXIS}=="" {draw oval}\n${OTYPE}="Radio*" || ${OTYPE}="Maser" || ${OTYPE}="HI" { draw triangle }\n${OTYPE}="UV" {draw cross;draw plus}\n${OTYPE}="IR" || ${OTYPE}="Red*" {draw rhomb}\n${OTYPE}="Neb"  || ${OTYPE}="PN*" || ${OTYPE}="SNR*" {draw square}\n${OTYPE}="HII" { draw dot }" +\n${OTYPE}="X" { draw cross }\n${OTYPE}!="Unknown" { draw ${OTYPE} }\n{ draw dot } }
+#%Aladin.Filter #Star\nfilter Star {(${OTYPE}="Star" || ${OTYPE}="*\**") && (${B}!=0 || ${V}!=0 || ${R}!=0 || ${J}!=0 || ${K}!=0) {draw pm(${PMRA},${PMDEC});draw circle(-$[phot.mag*],3,15)}\n(${OTYPE}="Star" ||${OTYPE}="*\**") && ${B}="" && ${V}="" && ${R}="" && ${J}="" && ${K}="" { draw pm(${PMRA},${PMDEC});draw circle(3)}}
+#%Aladin.Filter #Galaxy\nfilter Galaxy {(${OTYPE}="G*" || ${OTYPE}="*G") && ${GALDIM_MAJAXIS}!=0 {draw ellipse(0.5*${GALDIM_MAJAXIS},0.5*${GALDIM_MINAXIS},${GALDIM_ANGLE})}\n(${OTYPE}="G*" || ${OTYPE}="*G")) && ${GALDIM_MAJAXIS}=="" {draw oval}}
+#%Aladin.Filter #Radio\nfilter Radio {${OTYPE}="Radio*" || ${OTYPE}="Maser" || ${OTYPE}="HI" { draw triangle }}
+#%Aladin.Filter #UV\nfilter UV {${OTYPE}="UV" {draw cross;draw plus}}
+#%Aladin.Filter #IR\nfilter IR {${OTYPE}="IR" || ${OTYPE}="Red*" {draw rhomb}}
+#%Aladin.Filter #Neb\nfilter Neb {${OTYPE}="Neb"  || ${OTYPE}="PN*" || ${OTYPE}="SNR*" {draw square}}
+#%Aladin.Filter #HII\nfilter HII {${OTYPE}="HII" { draw dot }}
+#%Aladin.Filter #X\nfilter X {${OTYPE}="X" { draw cross }}
+
+#%A Astrometry.net
+#%D Astrometry.net facility (v0.2)
+#%O aladin
+#%Z ALADIN
+#%Z CDS
+#%U http://cds-dev-tb.u-strasbg.fr:8080/astrometry/cgi-bin/solve-image.py?imageurl=$1&scale-low=$2&scale-high=$3
+#%P.D 1:Image reference
+#%P.D 2:Scale low
+#%P.D 3:Scale high
+#%P.K 1:Input(ALLIMG)
+#%R Mime(image/fits)
+#%R Mime(application/image)
+#%M.V This form allows to query remotely the Astrometry.net solve-field program on your current image in order to provide an astrometry (WCS) to your image
+#%F.U http://www.astrometry.net/
+#%Aladin.Profile >=10 beta
+#%Aladin.Label Astro.net
+#%Aladin.LabelPlane Astrometry $1
+#%Aladin.Logo AstrometryDotNet.gif
+
+%ActionName         GALEX
+%Description        Galaxy Evolution Explorer Catalog (STScI)
+%Owner              STSCI
+%DistribDomain      ALADIN
+%VersionNumber      1  2007/03/06 15:58:00
+%Url                http://galex.stsci.edu/gxws/ConeSearch/ConeSearch.asmx/ConeSearchToVOTable?RA=$1&DEC=$2&SR=$3&VERB=1
+%Param.Description  $1=Right Ascension
+%Param.Description  $2=Declination
+%Param.Description  $3=Radius (arcmin)
+%Param.DataType     $1=Target(RAd)
+%Param.DataType     $2=Target(DEd)
+%Param.DataType     $3=Field(RADIUSd)
+%ResultDataType     Mime(text/xml)
+%Doc.User           http://galex.stsci.edu/GR1/
+%Aladin.Label       GALEX (STScI)
+%Aladin.Menu        Others..
+%Aladin.LabelPlane  GALEX $1 $2 $3
+
+%A Default.bkm
+%D Default Aladin bookmarks
+%O CDS'aladin
+%Z ALADIN
+%U http://aladin.u-strasbg.fr/java/Bookmarks.ajs
+%Aladin.Bookmarks Allsky opt,Allsky IR,DSS,Simbad,2MASS,PPMX,NED
+%Aladin.Profile >=6.033
+
+
+%ActionName GenericSIA
+%Description Generic SIA query
+%U $4POS=$1,$2&SIZE=$3&FORMAT=image/fits
+%Param.Description $4=Base URL (incl. '?')
+%Param.Description $1=Right Ascension
+%Param.Description $2=Declination
+%Param.Description $3=Radius in deg
+%Param.DataType $1=Target(RAd)
+%Param.DataType $2=Target(DEd)
+%Param.DataType $3=Field(RADIUSd)
+%Param.Value $3=0.17
+%ResultDataType Mime(sia/xml)
+%Aladin.Menu Others...
+%Aladin.XLabel Generic SIA query
+%Aladin.LabelPlane SIA $4
+%Aladin.Profile >6.909
+%DistribDomain ALADIN
+
+#### Cartes biblio ####
+
+%A SimbadDensityMap
+%D Simbad map generation
+%O CDS'aladin
+%Z Aladin
+%U http://alasky.u-strasbg.fr/cgi/hpx-maps-generation/generate-simbad-map.py?nside=$4&type=$1&constraints=$3&predefined_constraints=$2
+%P.D 4:NSIDE
+%P.D 1:Map type
+%P.D 2:Predefined constraints
+%P.D 3:Free constraints
+%P.V 4:64 - very low resolution
+%P.V 4:128 - low resolution
+%P.V 4:256 - average resolution
+%P.V 4:512 - good resolution
+%P.V 4:1024 - very good resolution
+%P.V 2: - None
+%P.V 2:bright - Bright stars (B<6)
+%P.V 2:red - Red objects (J-K>2)
+%P.V 2:stars - Stars only
+%P.V 2:galaxies - Galaxies only
+%P.V 2:HII - HII sources
+%P.V 1:biblio - Count of biblio. references
+%P.V 1:count - Objects count
+%R Mime(image/fits)
+%Aladin.Label Simbad\nmap
+%Aladin.XLabelPlane Simbad map
+%Aladin.Menu Proto...
+%Aladin.Profile proto
+
+%A SimbadADSMap
+%D Simbad-ADS map generation
+%Aladin.Profile >=10
+%O CDS'aladin
+%Z Aladin
+%U http://alasky.u-strasbg.fr/cgi/hpx-maps-generation/generate-simbad-ads-map.py?nside=$4&start_year=$1&end_year=$2&authors=$3
+%P.D 4:NSIDE
+%P.D 1:Start year
+%P.D 2:End year
+%P.D 3:Authors
+%P.V 4:64 - very low resolution
+%P.V 4:128 - low resolution
+%P.V 4:256 - average resolution
+%P.V 4:512 - good resolution
+%P.V 4:1024 - very good resolution
+%R Mime(image/fits)
+%Aladin.XLabel Simbad-ADS\nmap
+%Aladin.LabelPlane Simbad-ADS map
+%Aladin.Menu Proto...
+%Aladin.Profile proto
+
+
+
+########################################### Outreach records ####################################
+
+%A MellingerRGB.hpx.outreach
+%D Mellinger optical survey, color
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/MellingerRGB
+%M.C (c) Axel Mellinger. Permission is granted for use in research and personal,non-commercial use. Please contact Axel Mellinger for permission for other use
+%Aladin.Profile >=6.912 undergraduate
+%Aladin.XLabel Mellinger colored
+%Aladin.MenuNumber B11
+%Aladin.HpxParam 4 color
+%Copyright.Url http://home.arcor.de/axel.mellinger/
+
+%A DssColor.hpx.outreach
+%D Survey en JPEG couleur
+%M.C Digitized Sky Survey - STScI/NASA
+%O aladin
+%Z ALADIN
+%M.C DSS consortium & STScI/NASA
+%U http://alasky.u-strasbg.fr/DssColor
+%Aladin.Profile >=6.912 undergraduate
+%Aladin.XLabel DSS colored
+%Aladin.MenuNumber B1
+%Aladin.HpxParam 9 color equatorial
+
+%A IRIS100.hpx.outreach
+%D IRIS 100Mu in HEALPIX access
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/IRIS_4
+%Aladin.Profile >=6.912 undergraduate
+%Aladin.XLabel IRAS-IRIS - 100MU
+%Aladin.MenuNumber B3
+%Aladin.HpxParam 3 v1
+
+%A IRISColor.hpx.outreach
+%D IRIS 134 survey in HEALPIX access
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/IRISColor
+%Aladin.Profile >=6.912 undergraduate
+%Aladin.XLabel IRAS-IRIS colored
+%Aladin.MenuNumber B2
+%Aladin.HpxParam 3 color v1
+
+%A GLM.hpx.outreach
+%D GLIMPSE colored survey
+%O CDS'aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/GLIMPSEColor
+%M.C Spitzer mission - JPL/NASA
+%Aladin.Profile >=6.912 undergraduate
+%Aladin.XLabel GLIMPSE colored
+%Aladin.MenuNumber B4
+%Aladin.HpxParam 7 color equatorial
+
+%A HST-PR.outreach
+%D Hubble press release images
+%Z ALADIN
+%O aladin
+%U http://hubblesite.org/cgi-bin/sia/hst_pr_sia.pl?POS=$1,$2&SIZE=$3
+%P.D 1:Right Ascension
+%P.D 2:Declination
+%P.D 3:Radius in deg
+%P.K 1:Target(RAd)
+%P.K 2:Target(DEd)
+%P.K 3:Field(RADIUSd)
+%P.V 3:0.17
+%R Mime(sia/xml)
+#%F.U http://hubblesite.org
+%Aladin.Profile undergraduate
+%Aladin.Logo HubbleLogo.gif
+%Aladin.LabelPlane HST-PR $1/$2
+
+%A NVSS.outreach
+%D Radio : NVSS (NRAO/United States)
+%O aladin
+%Z ALADIN
+%U http://www.cv.nrao.edu/cgi-bin/postage.pl?Equinox=J2000&PolType=I&RA=$1&Dec=$2&Size=$3+$3&Cells=$4+$4&MAPROJ=TAN&Type=application/octet-stream
+%P.D 1:Right Ascension
+%P.D 2:Declination
+%P.D 3:Image Size (deg)
+%P.D 4:Pixel size (arcsec)
+%P.K 1:Target(RAb)
+%P.K 2:Target(DEb)
+%P.V 3:0.25
+%P.V 4:15.0
+%R Mime(image/fits)
+%F.U http://www.cv.nrao.edu/nvss/postage.shtml
+%Aladin.Profile undergraduate
+%Aladin.Logo RadioLogo.gif
+%Aladin.LabelPlane $query NVSS/NRAO
+
+%A 2MASS.Aladin.outreach
+%D Infrared : 2MASS (CDS/Strasbourg/France )
+%O CDS'aladin
+%Z ALADIN
+%U http://aladin.u-strasbg.fr/java/alapre-ok.pl?-c=$1&out=image&fmt=FITS&resolution=MOSAIC&qual=$2+_____
+%P.D 1:Target
+%P.D 2:Survey
+%P.K 1:Target(COOd|SIMBAD)
+%P.V 2:2MASS J
+%P.V 2:2MASS K
+%P.V 2:2MASS H
+%R Mime(image/fits)
+%Aladin.Profile undergraduate
+%Aladin.Logo IRLogo.gif
+%Aladin.LabelPlane $query $2/CDS
+
+%A DSS.ESO.outreach
+%D Optical : DSS (ESO/Garching/Germany)
+%O aladin
+%Z ALADIN
+%U http://archive.eso.org/dss/dss/image?ra=$2&dec=$3&equinox=J2000&x=$4&y=$5&Sky-Survey=$1&mime-type=download-gz-fits
+%P.D 1:Sky Survey
+%P.D 2:RA
+%P.D 3:DE
+%P.D 4:Height (arcmin)
+%P.D 5:Width (arcmin)
+%P.K 2:Target(RA)
+%P.K 3:Target(DE)
+%P.K 4:Radius(RA)
+%P.K 5:Radius(DE)
+%P.V 1:DSS1 - POSS1 Red and UKSTU Blue
+%P.V 1:DSS2-red - POSS2 UKSTU Red
+%P.V 1:DSS2-blue - POSS2 UKSTU Blue
+%P.V 1:DSS2-infrared - POSS2 UKSTU IR
+%P.V 4:15
+%P.V 5:15
+%R Mime(image/gfits)
+%F.U http://archive.eso.org
+%Aladin.Profile undergraduate
+%Aladin.Logo OptLogo.gif
+%Aladin.LabelPlane $query DSS/ESO
+
+%A Default.bkm.outreach
+%D Default Aladin bookmarks
+%O CDS'aladin
+%Z ALADIN
+%U http://aladin.u-strasbg.fr/java/Bookmarks.ajs
+%Aladin.Bookmarks Optical,Infrared
+%Aladin.Profile >=6.037 undergraduate
+
+##################### Healpix surveys in test ###########################
+
+%ActionName      SAGEC2D.hpx
+%Description     SAGEC2D hierarchical
+%Url             http://alasky.u-strasbg.fr/SAGEC2D
+%Aladin.Profile >6.1 proto
+%Aladin.HpxParam 9 cache
+%Aladin.Tree     Test
+%Aladin.XLabel    SAGEC2D
+%VerboseDesc     SAGE C2E GLIMPSE and Taurus 2
+
+%ActionName      VTSS
+%Description     VTSS - The Virginia Tech Spectral-Line Survey
+%Url             http://alasky.u-strasbg.fr/VTSS
+%Aladin.Profile  >6.1 proto
+%Aladin.HpxParam 3 jpeg fits
+%Aladin.Tree     Test
+%Aladin.XLabel    VTSS
+%VerboseDesc     The VTSS is a wide-field image survey of the Galaxy's warm ionized
+                 interstellar medium (WIM, a 10,000 K plasma). The instrumentation used is the Virginia Tech
+                 Spectral Line Imaging Camera (SLIC), specially designed for obtaining sensitive,
+                 arcminute-resolution, 10-degree wide images of the 6563Å H-alpha recombination line of hydrogen,
+                 and the [SII]6717,6731Å doublet emission of singly ionized sulfur.
+                 This survey will cover the northern hemisphere (declinations greater than -15 degrees)
+%Institute       Virginia Tech institute
+
+
+%ActionName      SDSS.hpx
+%Description     SDSS hierarchical
+%Url             http://alasky2.u-strasbg.fr/SDSS
+%Aladin.Profile  >6.1 proto
+%Aladin.HpxParam 11 nocache
+%Aladin.Tree     Test
+%Aladin.XLabel    SDSS
+%VerboseDesc     SDSS 
+
+##################### Healpix progressive catalogs in test ###########################
+
+
+%A C2D.hpx
+%D C2D hierarchical
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/cats/C2D
+%Aladin.Profile >=6.1
+%Aladin.HpxParam 8 cat
+%Aladin.XLabel C2D
+%Aladin.Tree  Progressive catalog
+%VerboseDesc C2D hierarchical access
+
+%A SAGE_LMC.hpx
+%D SAGE-LMC hierarchical
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/cats/SAGELMC
+%Aladin.Profile >=6.1
+%Aladin.HpxParam 9 cat
+%Aladin.XLabel SAGE-LMC
+%Aladin.Tree  Progressive catalog
+%VerboseDesc SAGE-LMC hierarchical access
+
+%A GLIMPSE.hpx
+%D GLIMPSE hierarchical
+%O aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/cats/GLIMPSE
+%Aladin.Profile >=6.1
+%Aladin.HpxParam 9 cat
+%Aladin.XLabel GLIMPSE
+%Aladin.Tree  Progressive catalog
+%VerboseDesc GLIMPSE hierarchical access
+
+
+############################ Planets (Tests) ###############################
+
+%A Mars.hpx
+%D Mars
+%O CDS'aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/healpix-maps/planets/mars512.hpx.gz
+%Aladin.Profile >6.1 proto
+%Aladin.XLabel Mars topographic map
+%Aladin.Tree Test/Planet
+%Aladin.HpxParam map
+%VerboseDesc Mars topographic map. Data origin : http://ode.rsl.wustl.edu/mars/indexproductsearch.aspx
+
+%A Moon.hpx
+%D Moon
+%O CDS'aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/healpix-maps/planets/moon512.hpx.gz
+%Aladin.Profile >6.1 proto
+%Aladin.XLabel Moon topographic map
+%Aladin.Tree Test/Planet
+%Aladin.HpxParam map
+%VerboseDesc Moon topographic map. Data origin : https://www.soac.selene.isas.jaxa.jp/archive/index.html.en
+
+%A Earth.hpx
+%D Earth
+%O CDS'aladin
+%Z ALADIN
+%U http://alasky.u-strasbg.fr/healpix-maps/planets/earth512.hpx.gz
+%Aladin.Profile >6.1 proto
+%Aladin.XLabel Earth topographic map
+%Aladin.Tree Test/Planet
+%Aladin.HpxParam map
+%VerboseDesc Earth topographic map. Data origin : http://topex.ucsd.edu/cgi-bin/get_data.cgi
+
+
+
+
+
+
+
+
+
+
+
+
+
+

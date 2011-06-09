@@ -23,11 +23,7 @@ package cds.aladin;
 import cds.tools.Util;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.*;
-
-import com.sun.media.sound.Toolkit;
 
 /**
  * Gestion d'un plan image Blink

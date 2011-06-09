@@ -1,0 +1,2011 @@
+#
+# Aladin strings not so frequently used
+#
+
+# UCD1
+AT	Atomic Data
+AT_COLL	Atomic Collisional Quantities
+AT_COLL_EXCIT-RATE	Collisional Excitation Rate
+AT_COLL_STRENGTH	Collisional strength
+AT_CONFIG	Electronic Configuration
+AT_CONSTANT	Atomic Constant
+AT_DAMPING	Atomic Damping Quantities
+AT_DAMPING_VDWAALS	Van der Waals damping
+AT_DATA	Various Atomic data
+AT_DEGENERACY	Atomic Degeneracy Parameter
+AT_DIPOLE	Atomic Dipole
+AT_DIPOLE_MISC	Atomic Dipole
+AT_DIPOLE_MOMENT	Atomic Dipole Momentum
+AT_EIGENVECTOR	Atomic Eigenvector
+AT_ELEC-COEFF	Atomic Electric Coefficient
+AT_ELEMENT	Atomic Element Name
+AT_EMISSIVITY	Atomic Emissivity
+AT_ENERGY	Atomic Energy or Potential
+AT_ENERGY_BAND	Atomic (molecular) Energy Band
+AT_ENERGY_DIFF	Energy difference between experimental and calculated quantities
+AT_ENERGY_EXCIT	Excitation Energy
+AT_ENERGY_IONIZ	Ionization Energy or Potential
+AT_ENERGY_LEVEL	Energy Level
+AT_ENERGY_POTENTIAL	Atomic Energy or Potential
+AT_ENERGY_ROTATION	Rotation Energy
+AT_ENERGY_FORMATION	Formation energy (or heat for molecules)
+AT_FREQUENCY	Transition Frequency
+AT_FREQUENCY_NU	Transition Frequency at rest
+AT_FREQUENCY_ROTAT	Rotation Frequency
+AT_FS	Fine Structure Quantities
+AT_FS_COLL-STR	Fine Structure Collision Strength
+AT_FS_CONSTANT	Fine Structure Constant
+AT_FS_CONTRIB	Fine Structure Contribution to Line Profile
+AT_FS_SPLIT	Fine Structure Splitting
+AT_GA	Atomic ga value
+AT_INTENSITY	Line Intensity
+AT_ION	Ions
+AT_ION_ID	Ion Identification
+AT_ION_STAGE	Ionization Stage
+AT_LANDE-FACT	Lande Factor (gf)
+AT_LEVEL	Level Identification
+AT_LIFETIME	Radiative Lifetime
+AT_LINE	Atomic or Molecular Lines
+AT_LINE_EMISSIVITY	Line Emissivity
+AT_LINE_FLUOR-YIELD	Line Fluorescence Yield
+AT_LINE_ID	Line Identification
+AT_LINE_STRENGTH	Line Strength
+AT_MAIN-TERM	Main Term
+AT_MOL	Quantities Related to Molecules
+AT_MOL_DIEL-FN	Molecular Dielectric Function
+AT_MOL_DISS-ENRGY	Molecular Dissociation Energy
+AT_MOL_ID	Molecule Identification
+AT_MOL_LEVEL	Molecule Transition Level
+AT_MULTIPLET	Quantities Related to Multiplets
+AT_MULTIPLET_ID	Multiplet Identification
+AT_MULTIPLET_N	Multiplet Number element
+AT_NUMBER	Atomic Number
+AT_OSC	Oscillator Related Quantities
+AT_OSC_STRENGTH	Oscillator Strength
+AT_PARITY	Atomic Parity
+AT_Q-N	Atomic Structure, Quantum Numbers
+AT_Q-N_ANG-MOM	Angular Momentum Quantum Number
+AT_Q-N_K	K quantum number
+AT_Q-N_MISC	Atomic Structure Quantum Number
+AT_Q-N_ORBITAL	Orbital Quantum Number
+AT_Q-N_PRINCIPAL	Principal Quantum Number
+AT_Q-N_PRINCIPAL_FIRST	First Principal Quantum Number
+AT_Q-N_PRINCIPAL_SECOND	Second Principal Quantum Number
+AT_Q-N_ROTATIONAL	Rotational Quantum Number
+AT_Q-N_TORSIONAL	Torsional Quantum Number
+AT_Q-N_VIBRATIONAL	Vibrational Quantum Number
+AT_REACTION	Atomic Reaction
+AT_SHELL-NUMBER	Shell Quantum Numbers
+AT_SPECIES	Atomic Species Participating in a Reaction
+AT_STARK	Stark Effect
+AT_STARK_BROAD	Broadening due to Stark Effect
+AT_STARK_INTENSITY	Intensity due to Stark Effect
+AT_STAT-WEIGHT	Statistical Weight
+AT_STRENGTH-PARAM	Strength Parameter or Expect Width
+AT_TRANS	Quantities Related to Transitions
+AT_TRANS_ENERGY	Transition Energy (or wavenumber)
+AT_TRANS_ID	Transition Identification
+AT_TRANS_LEVELS	Transition Level
+AT_TRANS_PROB	Transition Probability
+AT_TRANS_STRENGTH	Transition Strength
+AT_TRANS_TYPE	Transition Type
+AT_TRANS_RECOMBIN	Recombination coefficients in atomic transitions
+AT_WAVELENGTH	Line Wavelength
+AT_WEIGHT	Atomic Weight
+CLASS	Various Classification Descriptors
+CLASS_CODE	Classification Code
+CLASS_COLOR	Color Classification
+CLASS_DISTANCE	Abell Distance Class
+CLASS_MISC	Various Classification Descriptors
+CLASS_OBJECT	Object Type Classification
+CLASS_RICHNESS	Abell Richness Class
+CLASS_STAR/GALAXY	Star galaxy discriminator or classification.
+CLASS_STRUCT	Structure Classification (e.g. cluster Bautz-Morgan classification)
+CODE	Codes or Flags
+CODE_ERROR	Flag denoting uncertainty about a given quantity
+CODE_LIMIT	Lower or Upper limit Flag
+CODE_MEMB	Membership Code
+CODE_MISC	Miscellaneous Codes or Flags
+CODE_MULT_FLAG	A code or flag indicating a multiplicity of binarity
+CODE_MULT_FREQUENCY	Multiplicity Frequency Code
+CODE_MULT_INDEX	Multiplicity Index Code
+CODE_QUALITY	Quality Code
+CODE_VARIAB	Variability Code or Flag
+DATA	Quantities Related to the Data
+DATA_FACTOR-EXP	Scale Factor Exponent (Base 10)
+DATA_SCALE-FACTOR	Factor to Convert a Data Column to a normal value
+DATA_TYPE	Data Type
+CLASS_BRIGHT	Brightness class or code
+DYN	Dynamic Data Quantities (mixed column content)
+DYN_QUANTITY	Used when a Column means more than one thing.
+DYN_VALUE	Identification of a Dynamic Value
+ERROR	Error or Uncertainty in Measurements
+EXTENSION	Quantities used to describe the extension in the sky of objects
+EXTENSION_AREA	Angular Area Covered by an Object
+EXTENSION_DEC	Angular Extension in Declination
+EXTENSION_DIAM	Angular Diameter or Size of the Major Axis
+EXTENSION_FWHM	Angular Full Width at Half Maximum (FWHM)
+EXTENSION_FWHM_CIRC	Angular Full Width at Half Maximum (FWHM)
+EXTENSION_FWHM_MAJ	Angular FWHM along the Major Axis
+EXTENSION_FWHM_MIN	Angular FWHM along the Minor Axis
+EXTENSION_HALFINT	Angular Size at Half Intensity
+EXTENSION_MIN	Angular Diameter of an object along the Minor Axis
+EXTENSION_NORM	Angular diameter normalized to beam size
+EXTENSION_RA	Angular extension in right ascension
+EXTENSION_RAD	Angular radius of an object or Semi-major axis
+EXTENSION_SC-LENGTH	Angular Scale Length (bulge or disk)
+EXTENSION_SMIN	Angular size of Semi-Minor Axis
+FIT	Fits of Models to Observational Data
+FIT_ERROR	Fit Error
+FIT_GOODNESS	Fit Goodness
+FIT_ID	Identification of the fit or solution
+FIT_LF_GENERAL	Fit of Luminosity Function
+FIT_LF_MAG	Magnitudes related to the LF
+FIT_LF_MAG_MAX	Magnitude interval upper limit
+FIT_LF_MAG_MIN	Magnitude interval lower limit
+FIT_RATIO	Ratio of Measurement to Theoretical Value
+FIT_PARAM_COVAR	Covariance of the fitting parameter
+FIT_PARAM_ID	Fit Parameter Identification
+FIT_PARAM_VALUE	Miscellaneous fit parameters
+FIT_RESIDUAL	Fit Residual
+FIT_CHI2	Chi-square Fit Measurement
+FIT_STDEV	Fit's Standard Deviation
+FIT_TYPE	Fit or Solution Type
+FIT_ZP	Fit Zero Point (mostly in linear fits)
+ID	Fields Used as Identifiers
+ID_ALTERNATIVE	Alternative identification
+ID_AREA	Area Identification (usually in a photographic plate)
+ID_VERSION	Identification of the software version
+ID_ASSOCIATED	Identification of Associated Object (counterpart)
+ID_AUTHOR	Author Name
+ID_CANDIDATE	Candidate Identification
+ID_CATALOG	Catalog Identification
+ID_CHART	Finding Chart Identification
+ID_COMPARISON	Name of a Comparison Object
+ID_CONSTEL	Constellation Name
+ID_CROSSID	Cross Identification (counterpart)
+ID_DATABASE	Database Identification
+ID_DATASET	Data-Set Identification
+ID_EXPOSURE	Exposure Identification
+ID_FIBER	Fiber Optics Identification (for M.O.S.)
+ID_FIELD	Field Identification
+ID_FIGURE	Figure Identification Number
+ID_FILE	File Identification
+ID_FRAME	Frame Identification
+ID_GROUP	Group Identification
+ID_HUMAN	Identification of Discoverer or Observer
+ID_IDENTIFIER	Identification of a source or object, incomplete or for internal use
+ID_IMAGE	Image Identification
+ID_MAIN	Main Identifier of a Celestial Object
+ID_MAIN:1	First component of an identification field.
+ID_MAIN:2	Second component of an identification field.
+ID_MAIN:3	Third component of an identification field.
+ID_MAP	Map Identification
+ID_NUMBER	Numeric Identification (usually sequential)
+ID_PARENT	Parent Identification (galaxy, cluster, nebulae)
+ID_PLATE	Plate Identification
+ID_REGION	Region or Zone Identification (not necessarily sky region)
+ID_SET	Set or Subset Identification
+ID_SITE	Site/Location/Observatory/City/Country identifier
+ID_SLIT	Slit Identification (usually in the context of M.O.S.)
+ID_SURVEY	Survey Identification
+ID_TABLE	Table Identification
+ID_TARGET	Target Indentifier
+ID_PARAM	Identification or name of a parameter, or the name of a column in a table
+ID_VARIAB	Variable Object Identification
+INST	Instrumental Quantities
+INST_ANG	Angular Properties of the Instruments/Telescopes
+INST_ANG_OFFAXIS	Off-axis angle respect to main direction of observation
+INST_ANG_PHASE	Satellite phase angle
+INST_ANG_RESOL	Angular resolution of instrument
+INST_ANG_VEL	Satellite angular velocity
+INST_ANTENNA-TEMP	Antenna temperature
+INST_APERT	Instrument/telescope aperture
+INST_AREA	Collecting area or detector area
+INST_BACKGROUND	Background contribution
+INST_BAND	Instrumental Band quantities
+INST_BAND_DRIFT	Band's drift rate
+INST_BAND_PASS	Bandpass
+INST_BANDWIDTH	Spectral window used for the observation
+INST_BASELINE	Baseline (interferometry)
+INST_BEAM	Beam properties
+INST_BEAM_MISC	Miscellaneous beam properties
+INST_BEAM_SIZE	Beam width or size
+INST_BEAM_TEMP	Beam temperature
+INST_CALIB	Intstrument calibration quantities
+INST_CALIB_ERROR	Instrument calibration error
+INST_CALIB_MISC	Miscellaneous instrument calibration quantities
+INST_CALIB_PARAM	Calibration parameter
+INST_CORR-FACTOR	Correction factor
+INST_DET	Detector parameters
+INST_DET_LIMIT	Detector limit
+INST_DET_MISC	Miscellaneous quantities related to the detector (plate or CCD)
+INST_DET_SIZE	Detector size
+INST_DISPERSION	Dispersion scale in a spectrograph
+INST_EFFICIENCY	Instrument efficiency
+INST_ERROR	Errors associated to the instrument
+INST_FILTER	Filter characteristics
+INST_FILTER_CODE	Filter characteristics type/code
+INST_FILTER_FWHM	FWHM of the used filter (also bandpass)
+INST_FILTER_TRANSM	Transmission characteristics of the filter (response)
+INST_ID	Instrument/Detector Identification
+INST_LINE-WIDTH	Instrumental Line-Width
+INST_NOISE	Detector/Instrument noise level rms
+INST_PARAM	Various Instrumental Parameters
+INST_PIXSIZE	Pixel Size
+INST_PLATE	Quantities related to Photographic Plates
+INST_PLATE_DIMENSION	Size or plate dimension
+INST_PLATE_DIST	Distance measurement on a plate
+INST_PLATE_EMULSION	Plate Emulsion Type
+INST_PLATE_EXTENSION	Extension of an object in a plate (in plate units)
+INST_POS	Position on a detector or M.O.S template
+INST_PRECISION	Instrumental Precision
+INST_PSF	Detector's Point Spread Function (PSF)
+INST_QE	Detector's Quantum Efficiency
+INST_S/N	Instrumental signal to noise ratio (S/N)
+INST_SAMP-TIME	Instrumental Sampling Time
+INST_SCALE	Instrumental Scale (ccd or plate)
+INST_SEEING	Seeing or fwhm of PSF
+INST_SENSITIVITY	Detector's Sensitivity (Flux limit)
+INST_SETUP	Instrument configuration or setup
+INST_SKY_SIGMA	Sigma of sky value distribution
+INST_SKY_LEVEL	Local Sky Level
+INST_SKY_TEMP	Sky Temperature
+INST_SPECT	Spectroscopic instruments' quantities
+INST_SPECT_BAND	Spectroscopic observation band
+INST_SPECT_ORDER	Spectral Order
+INST_SPECT_SLIT-LENGTH	Slit Length
+INST_SPECT_SLIT-WIDTH	Slit Width
+INST_TEMP	Instrument Temperature (radio regime)
+INST_TEMP_SYST	System Temperature
+INST_TRIGGER	Detector's triggering Threshold
+INST_TYPE	Instrument Type
+INST_VELOC	Velocity Quantities at the Instrumental Level
+INST_VELOC_CENTRAL	Instrumental Central Velocity
+INST_VELOC_SPACING	Instrumental Velocity Channel Spacing
+INST_VELOC_WINDOW	Detector's Velocity Range
+INST_WAVELENGTH	Observation's Wavelength properties
+INST_WAVELENGTH_COVERAGE	Instrument's Wavelength Range
+INST_WAVELENGTH_EFFECTIVE	Observation's Effective Wavelength
+INST_SPECT_CODE	Spectroscopic instrument specification (prism, grism, grating)
+LUNAR-OCCULT	Lunar Occultation related quantities
+LUNAR-OCCULT_ANGLE	Lunar Occultaion Contact Angle
+LUNAR-OCCULT_LIMB-SLOPE	Lunar Occultation Limb Slope
+MODEL	Quantities generated by Models
+MODEL_CONTINUUM	Continuum level
+MODEL_CORRECTION	Correction or adjustment
+MODEL_DRIFT-VELOC	Terminal drift velocity
+MODEL_DYN-TRIAX	Dynamical triaxiality
+MODEL_ENERGY	Energy modelled quantities
+MODEL_ENERGY_DIST	Energy distribution
+MODEL_EOS	Equation of state
+MODEL_EOS_ID	Name of used equation of state
+MODEL_EXTINCTION	Insterstellar extinction quantitites
+MODEL_EXTINCTION_COEFF	Interstellar extinction coefficient
+MODEL_FEATURE	Model Feature
+MODEL_FLUX	Modelled Flux
+MODEL_ID	Model Identification
+MODEL_LINE-FLUX	Model Spectral Line Flux
+MODEL_MAG	Model-generated Magnitude
+MODEL_MAG_CORR	Magnitude Correction or Difference
+MODEL_PARAM	Model Parameter
+MODEL_POP-SYNTHESIS	Population Synthesis Quantity
+MODEL_RESIDUAL	Model Residual
+MODEL_RESULT	Model Solution Value
+MODEL_TYPE	Model Type
+MODEL_ZEEMAN	Zeeman Effect Quantities
+MODEL_ZEEMAN_COEFF	Zeeman Effect Coefficient
+MORPH	Morphology of celestial objects
+MORPH_ARMS	Spiral Arms Structure (galaxies)
+MORPH_ARMS_RATIO	Ratio of Spiral Arm (galaxies)
+MORPH_ARMS_WOUND	Wound Parameter of a spiral arm galaxy
+MORPH_ASYMMETRY	Asymmetry Induced by Rotation
+MORPH_BAR	Presence or detection of a bar in a galaxy
+MORPH_CODE	Code refering to a morphological property
+MORPH_PARAM	Morphological (geometrical) parameter
+MORPH_TYPE	Morphological Type
+NOTE	A Note related to a certain quantity or value
+NUMBER	Number Of ``things'' (stars, observations, etc.)
+NUTATION	Earth's Nutation Related Quantities
+NUTATION_PARAM	Nutation Parameter
+OBS	Observational Quantities
+OBS_ANG-SIZE	Observational angular size
+OBS_BAND	Band or Filter used for the observation
+OBS_CALIB	Calibrations related to observations
+OBS_CALIB_CONST	Calibration's Constant
+OBS_CALIB_FACTOR	Calibration conversion factor
+OBS_CODE	Observation code for observing run
+OBS_CONDITIONS	Observation condition
+OBS_DETECT-LIMIT	Detection Limit
+OBS_DETECT-SIGNIF	Detection Significance
+OBS_DIFF	Observations' offset, difference, or deviation
+OBS_DRIFT	Positional drift during the observation
+OBS_FREQUENCY	Frequency of the observation
+OBS_ID	Observation identification
+OBS_LW	Observed gaussian line-width
+OBS_METHOD	Observational Method/Technique
+OBS_OTHER	Other Measurements
+OBS_PARAM	Additional Observational Parameters
+OBS_PLATE	Quantities related to measurements on plates
+OBS_PLATE_APERT	Plate (Circular) Aperture
+OBS_PLATE_EXTENSION	Linear diameter of an object measured on a Plate
+OBS_PRED/OBS	Fraction of predicted to observed quantities
+OBS_RUN	Observation run
+OBS_SIZE	Observed size
+OBS_SIZE_DEC	Observed size in declination
+OBS_SLIT	Spectroscopic slit properties
+OBS_SLIT_OFFSET	Slit offset respect to the nucleus of galaxy
+OBS_SLIT_ORIENT	Slit orientation
+OBS_SPECTRUM	Spectral observations
+OBS_TYPE	Type of observation
+OBSTY	Data on Observatories
+OBSTY_ALTITUDE	Observatory Altitude
+OBSTY_CODE	Observatory Code
+OBSTY_ID	Observatory Identification/Name
+ORBIT	Orbital elements (planets, double stars, galaxies)
+ORBIT_ASC-NODE	Longitude of ascending node
+ORBIT_COMETS	Cometary orbit parameter
+ORBIT_CONV-ANGLE	Convergence angle
+ORBIT_DISTANCE	Distance, perihelion, or separation between components
+ORBIT_ECCENTRICITY	Orbital eccentricity
+ORBIT_ELONGATION	Elongation of radiant
+ORBIT_FREQUENCY	Orbital frequency (orbital angular velocity)
+ORBIT_MEAN-ANOMALY	Mean anomaly
+ORBIT_P-ASTRON	Quantities related to the Periastron
+ORBIT_P-ASTRON_ARG	Periastron argument or longitude
+ORBIT_P-ASTRON_DATE	Date of occurance of periastron
+ORBIT_P-ASTRON_RATE	Rate of periastron advance
+ORBIT_P-HELION	Perihelion argument or longitude
+ORBIT_PARAM	Orbital parameter
+ORBIT_PERIOD	Orbital period
+ORBIT_PERIOD_DERIVATIVE	Time derivative of orbital period
+ORBIT_PHASE-ANGLE	Orbital phase angle
+ORBIT_RV	Orbital radial velocity properties
+ORBIT_RV_S-AMPLITUDE	Semi amplitude of radial velocity curve
+ORBIT_SEPARATION	Orbital Separation (angular distance)
+ORBIT_SIZE	Orbital size
+ORBIT_SIZE_RADIUS	Orbital radius (binary stars)
+ORBIT_SIZE_SMAJ	Semi-major axis of the orbit
+PHOT	Photometry, extending to several wavelength regimes (X to Radio)
+PHOT_13C	13 color system (Stellar Applications) GCPD#66
+PHOT_13C_33-52	Color index 33-52 (13C)
+PHOT_13C_35-52	Color index 35-52 (13C)
+PHOT_13C_37-52	Color index 37-52 (13C)
+PHOT_13C_40-52	Color index 40-52 (13C)
+PHOT_13C_45-52	Color index 45-52 (13C)
+PHOT_13C_52	Magnitude 52 (13C)
+PHOT_13C_52-110	Color index 52-110 (13C)
+PHOT_13C_52-58	Color index 52-58 (13C)
+PHOT_13C_52-63	Color index 52-63 (13C)
+PHOT_13C_52-72	Color index 52-72 (13C)
+PHOT_13C_52-80	Color index 52-80 (13C)
+PHOT_13C_52-86	Color index 52-86 (13C)
+PHOT_13C_52-99	Color index 52-99 (13C)
+PHOT_ABS-MAG	Absolute magnitude
+PHOT_ABS-MAG_BAND	Absolute magnitude in a band, regardless of band
+PHOT_ABS-MAG_BOL	Bolometric absolute magnitude
+PHOT_ATM	Earth Atmosphere Parameters Linked to Photometry
+PHOT_ATM_AIRMASS	Air mass
+PHOT_ATM_EXT	Atmospheric extinction coefficient
+PHOT_BOL	Bolometric Quantities
+PHOT_BOL_CORR	Bolometric correction
+PHOT_BOL_FLUX	Bolometric Flux
+PHOT_BOL_LUMINOSITY	Bolometric luminosity
+PHOT_BOL_MAG	Bolometric magnitude
+PHOT_BRIGHTNESS-SLOPE	Spatial brightness distribution slope
+PHOT_CI	Color index in unspecified system
+PHOT_CI_102-C220	Color index 102-C220
+PHOT_CI_B-R	Color index B-r
+PHOT_CI_B-V	Color index B-V in a non-conventional system
+PHOT_CI_BETA	Color index beta or h-beta
+PHOT_CI_B-I	Color index B-I from heterogeneous photometric systems
+PHOT_CI_B-K	Color index B-K from heterogeneous photometric systems
+PHOT_SDSS_U-G	Color index u'-g' from SDSS (Sloan Digital Sky Survey)
+PHOT_SDSS_G-R	Color index g'-r' from SDSS (Sloan Digital Sky Survey)
+PHOT_SDSS_R-I	Color index r'-i' from SDSS (Sloan Digital Sky Survey)
+PHOT_CI_CN-TIO	Color index CN-TiO
+PHOT_CI_CODE	Codes associated with color index
+PHOT_CI_GB-GV	Color index gb-gv
+PHOT_CI_GU-GB	Color index gu-gb
+PHOT_CI_IR-OPT	Color index Infrared minus optical
+PHOT_CI_M-51	Color index M-51
+PHOT_CI_R-HALPHA	Color index R minus Halpha
+PHOT_CI_R-I	Color index R-I
+PHOT_CI_U-B	Color index u-B
+PHOT_SDSS_I-Z	Color index i'-z' in  Sloan Digital Sky Survey system (1996AJ....111.1748F)
+PHOT_CI_U-R	Color index u-r
+PHOT_CI_UNDEF	Color index in unspecified system
+PHOT_CI_UV-OPT	Color index uv minus Optical (UV-OPT)
+PHOT_CI_V-I	Color index V-I (no standard system specified)
+PHOT_CI_V-R	Color index V-R (no standard system specified)
+PHOT_CLASS	Classification of photometry
+PHOT_COLOR	Quantities related to color indices
+PHOT_COLOR_EXCESS	Color excess (not just E(B-V))
+PHOT_COUNT-RATE	Count rates in several wavelength regimes
+PHOT_COUNT-RATE_UV	Count rate in ultraviolet
+PHOT_COUNT-RATE_X	Count rate in x-ray
+PHOT_COUNTS	Count measured in the detector
+PHOT_COUNTS_IUE	Count from IUE
+PHOT_COUNTS_MISC	Count measurement in the detector
+PHOT_COUNTS_RADIO	Counts in radio regime
+PHOT_COUNTS_GAMMA	Count in gamma-ray regime
+PHOT_COUNT-RATE_GAMMA	Count rate of gamma photons
+PHOT_COUNTS_RATIO	Ratio of photon counts, or relative counts
+PHOT_COUNTS_X	Counts in X-ray
+PHOT_COUS	Cousins photometric system GCPD#54
+PHOT_COUS_I	Cousins magnitude I COUS
+PHOT_COUS_R	Cousins magnitude R COUS
+PHOT_COUS_R-I	Cousins R-I color index COUS
+PHOT_COUS_V-I	(Kron-)Cousins V-I color index COUS
+PHOT_COUS_V-R	(Kron-)Cousins V-I color index
+PHOT_DDO	DDO Photometric System GCPD#12
+PHOT_DDO_48-51	Color index 48-51 in DDO
+PHOT_DDO_38-41	Color index 38-41 DDO
+PHOT_DDO_41-42	Color index 41-42 DDO
+PHOT_DDO_42-45	Color index 42-45 DDO
+PHOT_DDO_42-48	Color index 42-48 DDO
+PHOT_DDO_45-48	Color index 45-48 DDO
+PHOT_DDO_M48	Magnitude m48 DDO
+PHOT_DIFF	Differences or differential quantities
+PHOT_DIFF_CI	Difference in color index
+PHOT_DIFF_MAG	Difference in or differential magnitude
+PHOT_DIFF_SB	Difference in surface brightness
+PHOT_DIST-MOD	Distance Modulus
+PHOT_EXTINCTION	Extinction total to differential
+PHOT_EXTINCTION_GAL	Galactic extinction
+PHOT_EXTINCTION_INT	Internal extinction
+PHOT_EXTINCTION_ISM	Interstellar Absorption
+PHOT_EXTINCTION_R	Interstellar extinction (ratio total to differential)
+PHOT_EXTINCTION_TOTAL	Total Extinction
+PHOT_FLUENCE	Fluence
+PHOT_FLUX	Flux
+PHOT_FLUX_DENSITY	Flux density
+PHOT_FLUX_GAMMA	Flux in gamma rays
+PHOT_FLUX_HALPHA	H-Alpha Flux
+PHOT_FLUX_IR_15	IR flux around 15{mu}m
+PHOT_FLUX_IR	IR flux (IRAS or others)
+PHOT_FLUX_IR_100	Flux density (IRAS) at 100 microns
+PHOT_FLUX_IR_12	Flux density (IRAS) at 12 microns
+PHOT_FLUX_IR_25	Flux density (IRAS) at 25 microns
+PHOT_FLUX_IR_3.5	Flux density at 3.5 microns
+PHOT_FLUX_IR_60	Flux density (IRAS) at 60 microns
+PHOT_FLUX_IR_FAR	Far Infrared flux
+PHOT_FLUX_IR_H	Flux Density in Johnson's H Band
+PHOT_FLUX_IR_L	Flux Density in Johnson's L Band
+PHOT_FLUX_IR_MISC	Miscellaneous IR fluxes
+PHOT_FLUX_NORM	Normalized Flux, always dimensionless
+PHOT_FLUX_OPTICAL	Flux in the Optical (unspecified system and/or units)
+PHOT_FLUX_RADIO	Flux density at radio frequencies
+PHOT_FLUX_RADIO_22M	Radio Flux density around 22MHz (13.6m)
+PHOT_FLUX_RADIO_31M	Radio flux density around 31MHz (9.7m)
+PHOT_FLUX_RADIO_43M	Radio flux density around 43MHz (7.0m)
+PHOT_FLUX_RADIO_61M	Radio flux density around 61MHz (4.9m)
+PHOT_FLUX_RADIO_87M	Radio flux density around 87MHz (3.5m)
+PHOT_FLUX_RADIO_110M	Radio flux density around 110MHz (2.7m)
+PHOT_FLUX_RADIO_150M	Radio flux density around 150MHz (2.0m)
+PHOT_FLUX_RADIO_175M	Radio flux density around 175MHz (1.7m)
+PHOT_FLUX_RADIO_250M	Radio flux density around 250MHz (1.2m)
+PHOT_FLUX_RADIO_325M	Radio flux density around 325MHz (92cm)
+PHOT_FLUX_RADIO_365M	Radio flux density around 365MHz (82cm)
+PHOT_FLUX_RADIO_400M	Radio flux density around 400MHz (75cm)
+PHOT_FLUX_RADIO_500M	Radio flux density around 500MHz (60cm)
+PHOT_FLUX_RADIO_600M	Radio flux density around 600MHz (50cm)
+PHOT_FLUX_RADIO_700M	Radio flux density around 700MHz (43cm)
+PHOT_FLUX_RADIO_850M	Radio flux density around 850MHz (35cm)
+PHOT_FLUX_RADIO_1G	Radio flux density around 1GHz (30cm)
+PHOT_FLUX_RADIO_1.4G	Radio flux density around 1.4GHz (21cm)
+PHOT_FLUX_RADIO_1.6G	Radio flux density around 1.6GHz (19cm) (OH maser)
+PHOT_FLUX_RADIO_2G	Radio flux density around 2GHz (15cm)
+PHOT_FLUX_RADIO_2.7G	Radio flux density around 2.7GHz (11cm)
+PHOT_FLUX_RADIO_3.9G	Radio flux density around 3.9GHz (7.7cm)
+PHOT_FLUX_RADIO_5G	Radio flux density around 5GHz (6cm)
+PHOT_FLUX_RADIO_7.5G	Radio flux density around 7.5GHz (4cm)
+PHOT_FLUX_RADIO_8.4G	Radio flux density around 8.4GHz (3.6cm)
+PHOT_FLUX_RADIO_10.7G	Radio flux density around 10.7GHz (2.8cm)
+PHOT_FLUX_RADIO_15G	Radio flux density around 15GHz (2cm)
+PHOT_FLUX_RADIO_22G	Radio flux density around 22GHz (13.6mm) (H2O maser)
+PHOT_FLUX_RADIO_36G	Radio flux density around 36GHz (8.3mm)
+PHOT_FLUX_RADIO_43G	Radio flux density around 43GHz (7.0mm)
+PHOT_FLUX_RADIO_63G	Radio flux density around 63GHz (4.8mm)
+PHOT_FLUX_RADIO_90G	Radio flux density around 90GHz (3.3mm)
+PHOT_FLUX_RADIO_125G	Radio flux density around 125GHz (2.4mm)
+PHOT_FLUX_RADIO_180G	Radio flux density around 180GHz (1.7mm)
+PHOT_FLUX_RADIO_250G	Radio flux density around 250GHz (1.2mm)
+PHOT_FLUX_RADIO_350G	Radio flux density around 350GHz (860um)
+PHOT_FLUX_RADIO_500G	Radio flux density around 500GHz (600um)
+AT_ENERGY_TOTAL	Total Energy
+AT_TRANS_BRNCH-RATIO	Transition branching ratio
+DATA_LINK	Link to correlated data
+DATA_MAXIMUM	Maximal value of some parameter in an array or series
+INST_WAVELENGTH_VALUE	Instrumentation wavelength
+MODEL_MAG_VALUE	magnitude from a model
+PHOT_DDO_35-38	Color index 35-38 in DDO system
+PHOT_FLUX_HBETA	Flux in H-beta line
+PHOT_FLUX_RADIO_700G	Radio flux density around 700GHz (430um)
+PHOT_HST_CI_R-I	HST Color Index close to R-I, e.g. F675W-F814W
+PHOT_CI_ALPHA	Color index based on H-alpha line
+PHOT_CI_BALMER	Color index using the Balmer lines Hgamma or higher
+PHOT_INT-BAND_U	Intermediate photometry bands in near-UV (300-400nm)
+PHOT_INT-BAND_B	Intermediate photometry bands in blue region (400-500nm)
+PHOT_INT-BAND_V	Intermediate photometry bands in visible region (500-600nm)
+PHOT_INT-BAND_R	Intermediate photometry bands in red region (600-800nm)
+PHOT_INT-BAND_I	Intermediate photometry bands in near-IR region (800-1000nm)
+PHOT_INT-MAG_K	Integrated, total or isophotal, K magnitude
+PHOT_INT-MAG_H	Integrated, total or isophotal, H magnitude
+PHOT_INT-MAG_J	Integrated, total or isophotal, K magnitude
+PHOT_INT-MAG_U	Integrated, total or isophotal, U magnitude
+PHOT_INT-MAG_I	Integrated, total or isophotal, I magnitude
+REDSHIFT_PHOT	Photometric redshift
+SPECT_LINE_DIFF-FREQ	Differential frequency between two lines (usually in radio)
+PHOT_FLUX_RADIO_MISC	Miscellaneous Radio flux density, e.g. Frequency given in another column
+PHOT_FLUX_RADIO_SIO-MASER	SiO maser peak radio flux
+PHOT_FLUX_RATIO	Flux ratio
+PHOT_FLUX_REL	Relative (normalized) flux
+PHOT_FLUX_UV	Ultraviolet flux (uv far-uv euv)
+PHOT_FLUX_X	X-ray flux
+PHOT_GEN_MISC	Miscellaneous Geneva Photometry indices
+PHOT_GEN_B-V	Geneva color index B-V (GEN)
+PHOT_GEN_B1-B	Geneva color index B1-B (GEN)
+PHOT_GEN_B1-B2	Geneva color index B1-B2
+PHOT_GEN_B2-B	Geneva color index B2-B (GEN)
+PHOT_GEN_DELTA	Geneva photometric index Delta = (U-B2) - 0.832(B2-G)
+PHOT_GEN_G-B	Geneva color index G-B (GEN)
+PHOT_GEN_M2	Geneva photometric index m2 = (B1-B2) - 0.457(B2-V1)
+PHOT_GEN_U-B	Geneva color index U-B (GEN)
+PHOT_GEN_V	Geneva magnitude filter V (GEN)
+PHOT_GEN_V-B	Geneva color index V-B (GEN)
+PHOT_GEN_V1-B	Geneva color index V1-B (GEN)
+PHOT_GEN_V1-G	Geneva color index V1-G
+PHOT_GUNN	Gunn Photometric System GCPD#38
+PHOT_GUNN_G	Magnitude g (GUNN)
+PHOT_GUNN_G-I	Color index g-i (GUNN)
+PHOT_GUNN_G-R	Color index g-r (GUNN)
+PHOT_GUNN_I	Magnitude i (GUNN)
+PHOT_GUNN_I-Z	Color index I-z (GUNN)
+PHOT_GUNN_R	Magnitude R (GUNN)
+PHOT_GUNN_R-I	Color index R-I (GUNN)
+PHOT_GUNN_V	Magnitude v (GUNN)
+PHOT_GUNN_V-R	Color index V-R (GUNN)
+PHOT_GUNN_Z	Magnitude z (GUNN)
+PHOT_HEI	Heidelberg s Photometric System (HEI)
+PHOT_HEI_U-B	Heidelberg photometry U-B (HEI)
+PHOT_HIPPAR	Hipparcos' photometry system
+PHOT_HST	HST Photometric System (by filter name) (HST)
+PHOT_HST_F1042M	Magnitude F1042M (HST)
+PHOT_HST_F140W	Magnitude M104W (HST)
+PHOT_HST_CI_IR	HST Color Index from IR filters, e.g. F140W-F210W
+PHOT_HST_CI_U-B	HST Color Index close to U-B, e.g. F336W-F430W
+PHOT_HST_F170W	Magnitude F170W (HST)
+PHOT_HST_F175W	Magnitude F175W (HST)
+PHOT_HST_F220W	Magnitude F220W (HST)
+PHOT_HST_F255W	Magnitude F255W (HST)
+PHOT_HST_F275W	Magnitude F275W (HST)
+PHOT_HST_F300W	Ultraviolet Magnitude F300W (HST)
+PHOT_HST_CI_U-V	HST Color Index close to U-V, e.g. F336W-F555W
+PHOT_HST_F342W	Ultraviolet Magnitude in filters F330W or F342W (HST)
+PHOT_HST_F430W	Ultraviolet magnitude F430W or F439W (HST)
+PHOT_HST_CI_B-V	HST Color Index close to B-V, e.g. F430W-F555W
+PHOT_HST_F450W	Ultraviolet Magnitude F450W (HST)
+PHOT_HST_F480LP	Magnitude F480LP (HST)
+PHOT_HST_F547M	Magnitude F547M (HST)
+PHOT_HST_F555W	Magnitude F555W (HST)
+PHOT_HST_CI_B-R	HST Color Index close to B-R, e.g. F430W-F675W
+PHOT_HST_CI_V-R	HST Color Index close to V-R, e.g. F555W-F675W
+PHOT_HST_F569W	Magnitude F569W (HST)
+PHOT_HST_F606W	Magnitude F606W (HST)
+PHOT_HST_CI_V-I	HST Color Index close to V-I, e.g. F555W-F814W
+PHOT_HST_F622W	Magnitude F622W (HST)
+PHOT_HST_F675W	Magnitude F675W (HST)
+PHOT_HST_F702W	Magnitude F702W (HST)
+PHOT_HST_F725LP	Magnitude F725LP (HST)
+PHOT_HST_F785LP	Magnitude F785LP (HST)
+PHOT_HST_F791W	Magnitude F791W (HST)
+PHOT_HST_F814W	Magnitude F814W (HST)
+PHOT_HST_F850LP	Magnitude F850LP (HST)
+PHOT_HST_V	Magnitude V (visual) HST (unspecified filter name)
+PHOT_INDX	Photometric index (usually in narrow bands)
+PHOT_INDX_HI	Neutral hydrogen HI photometry index
+PHOT_INT-MAG	Integrated magnitudes
+PHOT_INT-MAG_B	Integrated, total or isophotal, B magnitude
+PHOT_INT-MAG_MISC	Integrated (total or isophotal) magnitude
+PHOT_INT-MAG_R	Integrated, total or isophotal, R magnitude
+PHOT_INT-MAG_V	Integrated, total or isophotal, V magnitude
+PHOT_INTENSITY	Intensity
+PHOT_INTENSITY_ADU	Intensity expressed in ADU (analog to digital units)
+PHOT_INTENSITY_ESTIMATED	Estimated intensity
+PHOT_INTENSITY_MISC	Miscellaneous Intensity
+PHOT_INTENSITY_NORMALIZED	Normalized intensity
+PHOT_INTENSITY_PROFILE	Intensity profile
+PHOT_INTENSITY_RATIO	Intensity ratio
+PHOT_IR	Infrared magnitudes (not well inserted in photometric systems)
+PHOT_IR_12-25	Infrared color index 12-25 (IRAS)
+PHOT_IR_2.29	CO band index magnitude at 2.29 micron
+PHOT_IR_25-60	Infrared IRAS color index 25-60 microns
+PHOT_IR_3.4	Infrared magnitude at 3.4 microns
+PHOT_IR_4.2	Infrared magnitude at 4.2 micron
+PHOT_CI_IR	Various far IR color indices (e.g. with IRAS bands)
+PHOT_IR_BGAMMA	Infrared Bracket Gamma magnitude
+PHOT_IR_K-10	Infrared color index K-10 (K minus 10 microns)
+PHOT_IR_K-100	Infrared color index K-100 (K minus 100 microns)
+PHOT_IR_K-12	Infrared color index K-12 (K minus 12 microns)
+PHOT_IR_K-25	Infrared color index K-25 (K minus 25 microns)
+PHOT_IR_K-60	Infrared color index K-60 (K minus 60 microns)
+PHOT_IR_L0	Infrared magnitude L at 3.7 micron
+PHOT_IR_MAG	Far infrared magnitude mfir (may include IRAS bands)
+PHOT_IR_N1:8.38	Infrared magnitude at 8.38 microns
+PHOT_IR_N2:9.69	Infrared magnitude at 9.69 microns
+PHOT_IR_N3:12.89	Infrared magnitude at 12.89 microns
+PHOT_IR_N:10.4	Infrared magnitude N at 10.4 microns
+PHOT_IR_Q:18.06	Infrared magnitude at 18.06 microns
+PHOT_JHN	Johnson's Photometric system GCPD#8 GCPD#9
+PHOT_JHN_B	Johnson magnitude B (JHN)
+PHOT_JHN_B-H	Johnson color index B-H (JHN)
+PHOT_JHN_B-I	Johnson color index B-I (JHN)
+PHOT_JHN_B-K	Johnson color index B-K (JHN)
+PHOT_JHN_B-K'	Johnson color index B-K' (JHN)
+PHOT_JHN_B-R	Johnson color index B-R (JHN)
+PHOT_JHN_B-V	Johnson color index B-V (JHN)
+PHOT_JHN_H	Johnson magnitude H (JHN)
+PHOT_JHN_H-K	Johnson color index H-K (JHN)
+PHOT_JHN_I	Johnson magnitude I (JHN)
+PHOT_JHN_I-K	Johnson color index I-K (JHN)
+PHOT_JHN_J	Johnson magnitude J (JHN)
+PHOT_JHN_J-H	Johnson color index J-H (JHN)
+PHOT_JHN_J-K	Johnson color index J-K (JHN)
+PHOT_JHN_K	Johnson magnitude K (JHN)
+PHOT_JHN_K'	Johnson magnitude K' (JHN)
+PHOT_JHN_K-L	Johnson color index K-L (JHN)
+PHOT_JHN_K-L'	Johnson color index K-L' (JHN)
+PHOT_JHN_K-M	Johnson color index K-M (JHN)
+PHOT_JHN_K-N	Johnson color index K-N (JHN)
+PHOT_JHN_K-Q	Johnson color index K-Q (JHN)
+PHOT_JHN_L	Johnson magnitude L (JHN)
+PHOT_JHN_L'	Johnson magnitude L' (JHN)
+PHOT_JHN_L-M	Johnson color index L-M (JHN)
+PHOT_JHN_M	Johnson magnitude M (JHN)
+PHOT_JHN_MISC	Johnson Photometric system GCPD#8 GCPD#9
+PHOT_JHN_N	Johnson flux magnitude N (JHN)
+PHOT_JHN_R	Johnson magnitude R (JHN)
+PHOT_JHN_R-H	Johnson color index R-H (JHN)
+PHOT_JHN_R-I	Johnson color index R-I (JHN)
+PHOT_JHN_R-K	Johnson color index R-K
+PHOT_JHN_U	Johnson magnitude U (JHN)
+PHOT_JHN_U-B	Johnson color index U-B (JHN)
+PHOT_JHN_U-V	Johnson color index U-V (JHN)
+PHOT_JHN_V	Johnson magnitude V (JHN)
+PHOT_JHN_V-H	Johnson color index V-H (JHN)
+PHOT_JHN_V-I	Johnson color index V-I (JHN)
+PHOT_JHN_V-J	Johnson color index V-J (JHN)
+PHOT_JHN_V-K	Johnson color index V-K (JHN)
+PHOT_JHN_V-L	Johnson color index V-L (JHN)
+PHOT_JHN_V-M	Johnson color index V-M (JHN)
+PHOT_JHN_V-N	Johnson color index V-N (JHN)
+PHOT_JHN_V-R	Johnson color index V-R (JHN)
+PHOT_K-CORRECTION	K correction
+PHOT_LCKWD	Lockwood photometric system GCPD#30
+PHOT_LCKWD_81-78	Color index 81-78 LCKWD
+PHOT_MAG	Magnitude of uncertain origin
+PHOT_MAG_5007	Magnitude O III lambda 5007
+PHOT_MAG_J	Near-Infrared magnitude around 1.2um (undefined or non-conventional system)
+PHOT_MAG_B	Blue B magnitude
+PHOT_MAG_CENTR	Central magnitude
+PHOT_MAG_CORR	Magnitude correction
+PHOT_MAG_H	Near-Infrared magnitude around 1.6um (undefined or non-conventional system)
+PHOT_MAG_DROP	Drop in magnitude
+PHOT_MAG_EYE	Eye estimated magnitude
+PHOT_MAG_HI	Magnitude associated with neutral hidrogen
+PHOT_MAG_I	Near-Infrared magnitude (undefined system)
+PHOT_MAG_LIMIT	Magnitude limit
+PHOT_MAG_OFFST	Magnitude offset
+PHOT_MAG_OPTICAL	Optical magnitude
+PHOT_MAG_R	Red (R) magnitude
+PHOT_MAG_K	Near-Infrared magnitude around 2.2um (undefined or non-conventional system)
+PHOT_MAG_U	U' magnitude (3402 A)
+PHOT_MAG_UNDEF	Magnitude of uncertain origin or different bands in same column
+PHOT_MAG_UV	Ultraviolet magnitude
+PHOT_MAG_V	Visual magnitude
+PHOT_PAL	Palomar Photometric System
+PHOT_PHG_V-R	Photographic color index V-R (or g-r)
+PHOT_PHG	Photographic magnitude Quantities
+PHOT_PHG_B	Photographic blue magnitude B (includes the O magnitude of POSS)
+PHOT_PHG_B-R	Photographic color index B-R (includes the O-E color index from POSS)
+PHOT_PHG_B-V	Photographic color index B-V
+PHOT_PHG_BJ	Photographic magnitude Bj
+PHOT_PHG_BJ-RF	Photographic color index Bj-Rf
+PHOT_PHG_F	Photographic magnitude F
+PHOT_PHG_I	Photographic magnitude I
+PHOT_PHG_U-B	Photographic color index U-B
+PHOT_PHG_MAG	Photographic magnitude in unidentified band
+PHOT_PHG_U	Ultraviolet photographic magnitude
+PHOT_PHG_U-V	Photographic color index U-V
+PHOT_PHG_R	Photographic red band magnitude R (includes E magnitude from POSS)
+PHOT_PHG_R-I	Photographic color index R-I
+PHOT_PHG_V	Photographic visual magnitude V
+PHOT_PROFILE	Light distribution profile
+PHOT_PROFILE_PAR	Light distribution's profile parameter
+PHOT_RF_MISC	Miscellaneous reddening-free photometric indices
+PHOT_RF_B-L	B-L extinction free color
+PHOT_RF_B-U	B-U extinction free color
+PHOT_RF_Q	Reddening free Q parameter
+PHOT_RF_STR	Reddening free indices in the Stroemgren system
+PHOT_RF_STR_C0	Dereddened color index parameter c0
+PHOT_RF_STR_M0	Dereddened color index parameter m0
+PHOT_RF_U-W	U-W extinction free color
+PHOT_RF_V	Reddening free magnitude v
+PHOT_RF_X	Reddening free geneva photometry parameter
+PHOT_RF_Y	Reddening free geneva photometry parameter
+PHOT_RF_Z	Reddening free geneva photometry parameter
+PHOT_SB	Surface Brightness quantities
+PHOT_SB_CI	Color index differential surface brightness
+PHOT_SB_CODE	Encoded Surface Brightness
+PHOT_SB_GENERAL	Surface Brightness (in general)
+PHOT_SB_GUNN-G	Surface Brightness in Gunn G
+PHOT_SB_IR-100	Surface Brightness at 100 micron
+PHOT_SB_JHN	Surface Brightness in Johnson's System
+PHOT_SB_JHN_B	Surface Brightness in Johnson B
+PHOT_SB_JHN_B-R	Surface brightness Johnson's color B-R
+PHOT_SB_JHN_H	Surface Brightness in Johnson H
+PHOT_SB_JHN_I	Surface Brightness in Johnson I
+PHOT_SB_JHN_J	Surface Brightness in Johnson J
+PHOT_SB_JHN_K	Surface Brightness in Johnson K
+PHOT_SB_JHN_K'	Surface Brightness in Johnson K'
+PHOT_SB_JHN_R	Surface Brightness in Johnson R
+PHOT_SB_JHN_U	Surface Brightness in Johnson U
+PHOT_SB_JHN_U-R	Surface Brightness color idex U-R
+PHOT_SB_JHN_V	Surface Brightness in johnson V
+PHOT_SB_LIMIT	Surface Brightness Limit
+PHOT_SB_RATIO	Surface Brightness Ratio, typically bulge/total for a galaxy
+PHOT_SB_SKY	Sky Surface Brightness
+PHOT_SD/B-BRIGHT	Surface Density To Brightness Ratio
+PHOT_SPHOT	Spectrophotometric quantities (narrow bands)
+PHOT_SPHOT_FLUX	Flux measured (in physical units) in a narrow-band filter (optical, near-IR or near-UV)
+PHOT_SPHOT_CONT-GRAD	Pseudo Continuum Gradient
+PHOT_SPHOT_CORR-FACT	Spectrophotometry Correction Factor
+PHOT_SPHOT_INDEX	Spectrophotometric Index defined by various combinations of narrow-band fluxes
+PHOT_SPHOT_INT-ENERGY	Intrinsic Energy in Narrow Spectral Band
+PHOT_SPHOT_MAG	Normalized magnitude in a narrow spectral band
+PHOT_STR	Stroemgren Photometric System GCPD#4
+PHOT_STR_B	Stroemgren Magnitude b (STR)
+PHOT_STR_B-R	Stroemgren Color Index b-r (STR)
+PHOT_STR_B-V	Stroemgren Color Index b-v (STR)
+PHOT_STR_B-Y	Stroemgren Color Index b-y (STR)
+PHOT_STR_C1	Stroemgren Color Index c1 (STR)
+PHOT_STR_HBETA	Stroemgren Beta Value
+PHOT_STR_M1	Stroemgren Color Index m1 (STR)
+PHOT_STR_U	Stroemgren Magnitude u (STR)
+PHOT_STR_U-B	Stroemgren Color Index u-b (STR)
+PHOT_STR_U-V	Stroemgren Color Index u-v (STR)
+PHOT_STR_V	Stroemgren Magnitude v (STR)
+PHOT_STR_V-B	Stroemgren Color Index v-b (STR)
+PHOT_STR_V-Y	Stroemgren Color Index v-y (STR)
+PHOT_STR_Y	Stroemgren Magnitude y (STR)
+PHOT_SYS-ID	Identification of the Photometric System in use
+PHOT_TOT-BRIGHT/B-BRIGHT	Total blue magnitude to Brightness ratio
+PHOT_TYCHO	Tycho Photometric System
+PHOT_TYCHO_B	Tycho Magnitude B_T_
+PHOT_TYCHO_V	Tycho Magnitude V_T_
+PHOT_UBVR20	UBVr20 Photometric System GCPD#69
+PHOT_UBVR20_B-V20	Color Index B-V20 (UBVr20)
+PHOT_UBVR20_U-B20	Color Index U-B20 (UBVr20)
+PHOT_UBVR20_V-R20	Color Index V-r20 (UBVr20)
+PHOT_UV	UV Magnitude Photometry number # <= Lambda_central < #+100
+PHOT_UV_1300	Far UV Magnitude 1300 to 1400 Angstrom UV
+PHOT_UV_1400	Far UV Magnitude 1400 to 1500 Angstrom UV
+PHOT_UV_1500	Far UV Magnitude 1500 to 1600 Angstrom UV
+PHOT_UV_1600	Far UV Magnitude 1600 to 1700 Angstrom UV
+PHOT_UV_1700	UV Magnitude 1700 to 1800 Angstrom UV
+PHOT_UV_1800	UV Magnitude 1800 to 1900 Angstrom UV
+PHOT_UV_1900	UV Magnitude 1900 to 2000 Angstrom UV
+PHOT_UV_2000	UV Magnitude 2000 to 2100 Angstrom UV
+PHOT_UV_2200	UV Magnitude 2200 to 2300 Angstrom UV
+PHOT_UV_2300	UV Magnitude 2300 to 2400 Angstrom UV
+PHOT_UV_2400	Near UV Magnitude 2400 to 2500 Angstrom UV
+PHOT_UV_2500	Near UV Magnitude 2500 to 2600 Angstrom UV
+PHOT_UV_2700	Near UV Magnitude 2700 to 2800 Angstrom UV
+PHOT_UV_2945	Near UV Magnitude 2900 to 3000 Angstrom UV
+PHOT_UV_3150	Near UV Magnitude 3100 to 3200 Angstrom UV
+PHOT_UV_3300	Near UV Magnitude 3300 to 3400 Angstrom UV
+PHOT_UV_4250	Near UV Magnitude 4200 to 4300 Angstrom UV
+PHOT_UV_COLOR	Ultraviolet Color Index (no bands specified)
+PHOT_UV_GENERAL	UV Magnitude unspecified band
+PHOT_UVBGRI	UVBGRI Photometric System GCPD#6
+PHOT_UVBGRI_B	Filter Blue Magnitude UVBGRI
+PHOT_UVBGRI_G	Filter Green Magnitude UVBGRI
+PHOT_UVBGRI_I	Filter Infra Magnitude UVBGRI
+PHOT_UVBGRI_R	Filter Red Magnitude UVBGRI
+PHOT_UVBGRI_U	Filter Ultra Magnitude UVBGRI
+PHOT_UVBGRI_V	Filter Violet Magnitude UVBGRI
+PHOT_VIL	Vilnius Photometric System GCPD#21
+PHOT_VIL_P-X	Vilnius Color Index p-x (VIL)
+PHOT_VIL_S-V	Vilnius Color Index s-v (VIL)
+PHOT_VIL_U-P	Vilnius Color Index u-p (VIL)
+PHOT_VIL_U-V	Vilnius Color Index u-v (VIL)
+PHOT_VIL_V	Magnitude V Vilnius (VIL)
+PHOT_VIL_V-P	Vilnius Color Index v-p (VIL)
+PHOT_VIL_V-S	Vilnius Color Index v-s (VIL)
+PHOT_VIL_V-W	Vilnius Color Index v-w
+PHOT_VIL_V-X	Vilnius Color Index v-x (VIL)
+PHOT_VIL_V-Z	Vilnius Color Index v-z (VIL)
+PHOT_VIL_X	Magnitude X Vilnius (VIL)
+PHOT_VIL_X-Y	Vilnius Color Index x-y (VIL)
+PHOT_VIL_Y-Z	Vilnius Color Index y-z (VIL)
+PHOT_VIL_Z-V	Vilnius Color Index z-v (VIL)
+PHOT_WASH	Washington Photometric System GCPD#48
+PHOT_WASH_C-M	Washington Color Index c-m (WASH)
+PHOT_WASH_C-T1	Washington Color Index c-t1 (WASH)
+PHOT_WASH_D	Washington Abundance Indicator D (WASH)
+PHOT_WASH_M-T1	Washington Color Index m-t1 (WASH)
+PHOT_WASH_M-T2	Washington Color Index m-t2 (WASH)
+PHOT_WASH_T1	Washington Magnitude t1 (WASH)
+PHOT_WLRV	Walraven Photometric System GCPD#11
+PHOT_WLRV_B	Walraven Magnitude (flux intensity) B (WLRV)
+PHOT_WLRV_B-L	Walraven Color Index B-L (WLRV)
+PHOT_WLRV_B-U	Walraven Color Index B-U (WLRV)
+PHOT_WLRV_B-W	Walraven Color Index B-W (WLRV)
+PHOT_WLRV_L	Walraven Magnitude (Flux Intensity) L (WLRV)
+PHOT_WLRV_U	Walraven Magnitude (Flux Intensity) U (WLRV)
+PHOT_WLRV_U-W	Walraven Color Index U-W (WLRV)
+PHOT_WLRV_V	Walraven Magnitude (Flux Intensity) V (WLRV)
+PHOT_WLRV_V-B	Walraven Color Index V-B (WLRV)
+PHOT_WLRV_W	Walraven Magnitude (Flux Intensity) W (WLRV)
+PHOT_ZP	Zero point coefficient for the photometric system
+PHYS	Physical Quantities
+PHYS_ABUND	Abundances
+PHYS_ABUND_MISC	Abundance (other than H, He, and Fe)
+PHYS_ABUND_X	Hydrogen Abundance (X)
+PHYS_ABUND_Y	Helium Abundance (Y)
+PHYS_ABUND_Z	Metal Abundance Z (metallicity)
+PHYS_ABUND_[FE/H]	Fe to H Abundance (Metallicity)
+PHYS_ALBEDO	Albedo
+PHYS_ANG-MOMENTUM	Angular Momentum
+PHYS_AREA	Physical quantities related to Area
+PHYS_AREA_CR-SECT	Cross Section
+PHYS_AREA_GENERAL	Area (in general)
+PHYS_AXIS-RATIO	Axis Ratio
+PHYS_BRIGHT	Object's brightness quantities
+PHYS_BRIGHT_CHANGE	Brightness Change
+PHYS_COLUMN	Line Of Sight Column Properties
+PHYS_COLUMN_DENSITY	Column Density (by number of particles)
+PHYS_COLUMN_MASS-DENSITY	Mass Column Density
+PHYS_COMPACTNESS	Compactness Indicator
+PHYS_CONCENT	Concentration Indicators
+PHYS_CONCENT_INDEX	Concentration Index
+PHYS_DENSITY	Density (various flavours)
+PHYS_DENSITY_ELECT	Electron Density
+PHYS_DENSITY_ENERGY	Energy Density
+PHYS_DENSITY_MASS	Mass Density
+PHYS_DENSITY_MASS_SURF	Surface Mass-Density
+PHYS_DENSITY_MASS_VOL	Volume Mass-Density
+PHYS_DENSITY_NUMBER	Number Density
+PHYS_DENSITY_RATIO	Density Ratio
+PHYS_DENSITY_SURFACE	Surface Density
+PHYS_DISP-MEASURE	Dispersion Measure
+PHYS_DISTANCE	Distance and related quantities
+PHYS_DISTANCE_DIFF	Distance Difference
+PHYS_DISTANCE_NORM	Relative or Normalized Distance
+PHYS_DISTANCE_PROJ	Projected Distance
+PHYS_DISTANCE_RATIO	Distance Fraction or Ratio
+PHYS_DISTANCE_RELATIVE	Relative Distance
+PHYS_DISTANCE_TRUE	Distance (true, linear distance)
+PHYS_ECCENTRICITY	Eccentricity
+PHYS_ELLIPTICITY	Ellipticity
+PHYS_EM-MEASURE	Emission Measure
+PHYS_ENERGY	Energy and related quantities
+PHYS_ENERGY_CONTRIB	Energy Contribution
+PHYS_ENERGY_GENERAL	Energy in general
+PHYS_ENERGY_INDEX	Energy Index
+PHYS_ENERGY_ION	Ion Energy
+PHYS_ENERGY_LOSS-RATE	Energy Loss Rate
+PHYS_ENERGY_X	X-ray or Gamma-ray Energy
+PHYS_EXCITATION	Excitation in the Context of Ionizing Photons
+PHYS_EXCITATION_PARAM	Excitation Parameter
+PHYS_FLOW	Matter Flow or Outflows Quantities
+PHYS_FLOW_POLARITY	Flow Polarity
+PHYS_GRADIENT	Gradients (usually on galaxy context)
+PHYS_GRADIENT_CHEMICAL	Chemical Gradient
+PHYS_GRADIENT_CI	Color Index Gradient
+PHYS_GRADIENT_GENERAL	General gradients (usually on galaxy context)
+PHYS_GRADIENT_SB	Surface Brightness Gradient
+PHYS_GRADIENT_TEMP	Temperature Gradient
+PHYS_GRADIENT_VELOCITY	Velocity Gradient
+PHYS_GRAVITY	Gravity and related properties
+PHYS_GRAVITY_POTENTIAL	Gravitational Potential
+PHYS_GRAVITY_PRESS	Gravitational pressure
+PHYS_GRAVITY_SURFACE	Surface Gravity
+PHYS_HEIGHT	Height or depth (usually in an atmospheric context)
+PHYS_IMPACT-PAR	Impact Parameter
+PHYS_INV-COMPTON-BEAM-FACT	Inverse Compton Effect Beam Factor
+PHYS_IONIZATION	Ionization quantities (in stellar/interstellar environments)
+PHYS_IONIZATION_PARAM	Ionization Parameter
+PHYS_IONIZATION_PHOTONS	Ionizing Photons
+PHYS_IONIZATION_PHOTONS_RATIO	Ionizing Photon Ratio
+PHYS_IONIZATION_PHOTONS_TOTAL	Total ionizing Photons
+PHYS_LENGTH	Length related quantities
+PHYS_LENGTH_RATIO	Length Ratio
+PHYS_LIMB-DARK	Limb Darkening Phenomena
+PHYS_LIMB-DARK_COEFF	Limb Darkening Coefficient
+PHYS_LUMINOSITY	Luminosity, in different bands and types
+PHYS_LUMINOSITY_B	Luminosity in blue light
+PHYS_LUMINOSITY_CARBON	Carbon luminosity
+PHYS_LUMINOSITY_CONTINUUM	Continuum luminosity
+PHYS_LUMINOSITY_DENSITY	Luminosity density
+PHYS_LUMINOSITY_R	Luminosity in red light
+PHYS_LUMINOSITY_GENERAL	Luminosity in general
+PHYS_LUMINOSITY_H2O	Water maser luminosity
+PHYS_LUMINOSITY_HALPHA	H alpha luminosity
+PHYS_LUMINOSITY_HBETA	H beta luminosity
+PHYS_LUMINOSITY_HE	Helium luminosity
+PHYS_LUMINOSITY_HYDROG	Hydrogen luminosity
+PHYS_LUMINOSITY_IR	Infrared luminosity
+PHYS_LUMINOSITY_IR_100	Luminosity at 100 micron
+PHYS_LUMINOSITY_IR_12	Luminosity at 12 micron
+PHYS_LUMINOSITY_IR_25	Luminosity at 25 micron
+PHYS_LUMINOSITY_IR_60	Luminosity at 60 micron
+PHYS_LUMINOSITY_IR_MISC	Infrared luminosity in general
+PHYS_LUMINOSITY_MASER	Maser luminosity
+PHYS_LUMINOSITY_NU	Neutrino luminosity
+PHYS_LUMINOSITY_OH	OH luminosity
+PHYS_LUMINOSITY_PROFILE	Luminosity profile
+PHYS_LUMINOSITY_RADIO	Radio luminosity
+PHYS_LUMINOSITY_RATIO	Luminosity ratio
+PHYS_LUMINOSITY_SURFACE	Surface luminosity
+PHYS_LUMINOSITY_UV	Ultraviolet luminosity
+PHYS_LUMINOSITY_UV_LYA	Ionizing ultraviolet luminosity in lyman alpha
+PHYS_LUMINOSITY_UV_MISC	Ultraviolet luminosity
+PHYS_LUMINOSITY_X	X-ray luminosity
+PHYS_MAG-FIELD	Magnetic Field
+PHYS_MASS	Mass and related quantities
+PHYS_MASS_ABS-COEFF	Mass Absorption Coefficient
+PHYS_MASS_FUNCTION	Function of mass, typically in spectroscopic binaries (M2*sini)^3^/(M1+M2)^2^
+PHYS_MASS_FLUX	Mass flux or flow
+PHYS_MASS_FRACTIONAL	Fractional Mass
+PHYS_MASS_LOSS	Mass Loss
+PHYS_MASS_MISC	Mass
+PHYS_MASS_RATIO	Mass Ratio
+PHYS_MASS_YIELD	Mass yield associated to a given element
+PHYS_MASS/LIGHT	Mass to Light Ratio
+PHYS_OPACITY	Opacity
+PHYS_OPTICAL-DEPTH	Optical Depth
+PHYS_OUTFLOW	Outflows related quantities
+PHYS_OUTFLOW_PARAM	Outflow Parameter Factor
+PHYS_PLASMA_PARAM	Plasma Physics Parameters
+PHYS_PLASMA_GAUNT-FACT	Plasma Physics Gaunt Factor
+PHYS_PRESS	Pressure and related quantities
+PHYS_PRESS_ELECT	Electron Pressure
+PHYS_PRESS_GAS	Gas Pressure
+PHYS_RAD-MAX-ROT-VEL	Radius at which maximum rotational velocity occurs
+PHYS_RADIATIVE-ACCEL	Radiative Acceleration
+PHYS_REFLECTANCE	Reflectance
+PHYS_REFRACT-INDX	Refraction Index
+PHYS_ROTATION-MEASURE	Rotation Measure
+PHYS_SCALE	Quantities Representing a Scale
+PHYS_SCALE_HEIGHT	Scale Height
+PHYS_SCALE_LENGTH	Scale Length
+PHYS_SEPARATION	Pair Separation (in non-angular units)
+PHYS_SIZE	Size (in non-angular units)
+PHYS_SIZE_DIAM	Diameter
+PHYS_SIZE_MAJ	Size (diameter) measured along the major axis
+PHYS_SIZE_MIN	Size (diameter) measured along the minor axis
+PHYS_SIZE_RADIUS	Radius and related quantities
+PHYS_SIZE_RADIUS_GENERAL	Linear Radius
+PHYS_SIZE_RADIUS_NORM	Normalized Radius
+PHYS_SIZE_RATIO	Size Ratio
+PHYS_SIZE_SMAJ	Size Of The Semi Major Axis
+PHYS_SIZE_SMAJ_GENERAL	Size Of The Semi Major Axis
+PHYS_SIZE_SMAJ_NORM	Normalized Size of the Major Axis
+PHYS_SIZE_SMIN	Size of the Semi Minor Axis
+PHYS_SIZE_SMIN_NORM	Normalized Size of the Minor Axis
+PHYS_STAR-FORM	Star Formation Related Quantities
+PHYS_STAR-FORM_RATE	Star Formation Rate
+PHYS_SUN	Solar Related Quantities
+PHYS_SUN_ATM	Quantities Related to the Solar Atmosphere
+PHYS_SUN_ATM_ABS-COEFF	Solar Spectral Absorption Coefficient
+PHYS_SUN_ATM_PARAM	Solar Atmosphere Parameter
+PHYS_SUN_HARM/FUN-BAND-FREQ-RATIO	Harmonic to Fundamental Frequency Ratio
+PHYS_TANG-DOPPLER-FACT	Tangential Doppler Effect Factor
+PHYS_TEMP	Temperature and related quantities
+PHYS_TEMP_DIFF	Temperature Amplitude or difference
+PHYS_TEMP_EFFEC	Effective Temperature
+PHYS_TEMP_ELECT	Electron Temperature
+PHYS_TEMP_EXCIT	Excitation Temperature
+PHYS_TEMP_F-F	Free-free or Bremsstrahlung Temperature
+PHYS_TEMP_KINETIC	Kinetic Temperature
+PHYS_TEMP_MISC	Temperature in general
+PHYS_TEMP_PLASMA	Plasma Temperature
+PHYS_TEMP_THETA	Effective temperature theta (5040/Teff)
+PHYS_TEMP_XRAY	X Ray temperature
+PHYS_TYPE	Type of Phenomenon or Event
+PHYS_VOLUME	Volume
+PHYS_VOLUME_RATIO	Volume Ratio
+PHYS_WIND	Stellar or Solar Wind Properties
+PHYS_WIND_LUMINOSITY	Wind Luminosity
+POL	Polarization Related Quantities
+POL_DEGREE	Degree of Polarization
+POL_DEGREE_CIRC	Degree of Circular polarization
+POL_DEGREE_LINEAR	Degree of Linear polarisation
+POL_DEGREE_MISC	Degree of Polarization (unspecified type)
+POL_FLUX	Polarized Flux (two flavours)
+POL_FLUX_LCP	Left Circular Polarization Flux
+POL_FLUX_LINEAR	Linear polarized flux density
+POL_FLUX_RCP	Right Circular Polarization Flux
+POL_INDEX	Polarization Index
+POL_LAMBDA-MAX	Maximum Polarization's Wavelength
+POL_LINEAR/CIRC	Ratio of Linear to Circular Polarization
+POL_PA	A vector's Position Angle
+POL_PA_EQ	Position Angle in Equatorial Coordinates
+POL_PA_GAL	Position Angle in Galactic Coordinates
+POL_PA_MISC	Vector's Position Angle in unspecified coordinate system
+POL_STOKES_Q	Stokes parameter Q (absolute, or relative Q/I) [horizontal/vertical component]
+POL_STOKES_I	Stokes parameter I (total power)
+POL_SENSE	Sense of (circular) Polarization
+POL_SLOPE	Polarimetry Slope
+POL_STOKES_U	Stokes parameter U (absolute, or relative U/I) [diagonal component]
+POL_STOKES	Reduced Stokes Parameter U
+POL_STOKES_V	Stokes parameter V (absolute, or relative V/I) [circular component]
+POS	Position Related Quantities
+POS_ANG	Angular Position
+POS_ANG_DIST	Angular Distance and related quantities
+POS_ANG_DIST_GENERAL	Angular Distance Or Separation
+POS_ANG_DIST_REL	Relative Angular Distance
+POS_ANG_DIST_SQ	Quadratic Angular Distance
+POS_ANG_VEL	Rate Of Position Change (drift motion, angular velocity)
+POS_CCD	Positions Related To CCD's
+POS_CCD_X	CCD Position Along the X Axis
+POS_CCD_Y	CCD Position Along the Y Axis
+POS_DETECTOR	Position Related to the Detector
+POS_DETECTOR_DIST	Distance Or Position In Detector Units
+POS_DETECTOR_RADIUS	Radius of an Object Expressed In Detector's Unit
+POS_DIR-COSINE	Direction Cosine
+POS_EARTH	Positions On The Earth
+POS_EARTH_LAT	Earth's Latitude
+POS_EARTH_LAT_MAIN	Earth's Latitude
+POS_EARTH_LAT_VAR	Variation of Local Latitude
+POS_EARTH_LOCATION	Earth Location
+POS_EARTH_LON	Earth Longitude
+POS_EC	Ecliptic Coordinates and derivates
+POS_EC_LAT	Ecliptic Latitude
+POS_EC_LON	Ecliptic Longitude
+POS_EQ	Equatorial Coordinates and related quantities
+POS_EQ_A-V-PRECESS	Annual Variation of Precession in RA
+POS_EQ_DEC	Declination related quantities
+POS_EQ_DEC_3T	Third Term in Declination
+POS_EQ_DEC_MAIN	Declination
+POS_EQ_DEC_OFF	Declination Offset Difference
+POS_EQ_DEC_OTHER	Declination in Non-Standard Units or partial values
+POS_EQ_DEC_PRECESS	Precession Variation in Declination
+POS_EQ_DEC_REL	Relative Declination in a Special Scale
+POS_EQ_PLX	Relations between Parallax and RA and Dec
+POS_EQ_PLX_FACTOR	Parallax Factor in Declination
+POS_EQ_PM	Total proper motion (can be in non-equatorial frame)
+POS_EQ_PMRA	Proper Motion in Right Ascension (pmra)
+POS_EQ_PMDEC	Proper Motion in Declination (pmdec)
+POS_EQ_PM-PA	Position angle (North through East) of Proper Motion vector
+POS_EQ_X	X component of equatorial position: x=cos(Dec)cos(RA)
+POS_EQ_Y	Y component of equatorial position: y=cos(Dec)sin(RA)
+POS_EQ_Z	Z component of equatorial position: z=sin(Dec)
+POS_EQ_PREC	Annual Precession Quantities
+POS_EQ_PREC_DEC	Annual Precession In Declination
+POS_EQ_PREC_RA	Precession Variation In RA
+POS_EQ_RA	Right Ascension related quantities
+POS_EQ_RA_2T	Second Component in right Ascension
+POS_EQ_RA_3T	Third Term In Right Ascension
+POS_EQ_RA_CORR	Correction in Right Ascension
+POS_EQ_RA_MAIN	Right Ascension
+POS_EQ_RA_OFF	RA Offset or Residual In Right Ascension
+POS_EQ_RA_OTHER	Right Ascension in Non-Standard Units or partial values
+POS_EQ_RA_REL	Relative Right Ascension in a Special Scale
+POS_GAL	Galactic Coordinates and related quantities
+POS_GAL_COSEC-B	Cosecant of galactic latitude
+POS_GAL_LAT	Galactic Latitude
+POS_GAL_LON	Galactic Longitude
+POS_GAL_GC	Galactocentric Distance
+POS_GENERAL	Position in general
+POS_GEO	Geocentric Quantities
+POS_GEO_ANGLE	Angle Of The Geocenter
+POS_GEO_DEC	Geocentric declination
+POS_GEO_RA	Geocentric Right Ascension
+POS_HA	Hour Angle
+POS_HC_X	Heliocentric X
+POS_HC_Y	Heliocentric Y
+POS_HC_Z	Heliocentric Z
+POS_INCLIN	Inclination angles
+POS_INCLIN_EC	Inclination Respect to the ecliptic
+POS_INCLIN_GP	Inclination Respect to the Galactic Plane
+POS_INCLIN_LOS	Inclination Respect to the Line Of Sight
+POS_JOVIC	Jovicentric Coordinates (Jupiter's Phenomena)
+POS_JOVIC_X	Jovicentric X
+POS_JOVIC_Y	Jovicentric Y
+POS_GAL_HC	Heliocentric Distance
+POS_GAL_X	X coordinate of object in Galactic Plane: x=r.cos(GLAT)cos(GLON)
+POS_GAL_Y	Y coordinate of object in Galactic Plane: y=r.cos(GLAT)sin(GLON)
+POS_GAL_Z	Z coordinate of object above Galactic Plane: z=r.sin(GLAT)
+POS_LIMIT	Position Limit to an Observation
+POS_LITERAL	Literal Alpha-Delta Identification of a Position
+POS_LOCATION	Location of certain events not easily expressed in other categories
+POS_MAP	Quantity Measurement on a Contour Map
+POS_OCCULT	Quantity related to the lunar occultations
+POS_OCCULT_DIR	Direction of lunar motion
+POS_OCCULT_POS	Quantity related to the lunar occultations
+POS_OCCULT_SLOPE	Lunar Slope
+POS_OFFSET	Positional offsets, usually a string
+POS_PAR-ANG	Parallactic Angle
+POS_PARLX	Parallax and related quantities
+POS_PARLX_DYN	Dynamical Parallax
+POS_PARLX_PHOT	Photometric Parallax
+POS_PARLX_RADIO	Radio Parallax
+POS_PARLX_SPEC	Spectroscopic Parallax
+POS_PARLX_TRIG	Trigonometric Parallax
+POS_PLANETARY	Coordinates in a System Related Non-Jovian Planets
+POS_PLATE	Positions measured in photographic plates
+POS_PLATE_DIFF	Difference in position or separation between objects
+POS_PLATE_X	X Coordinate on a Plate
+POS_PLATE_Y	Y Coordinate on a Plate
+POS_PM	Proper Motion (non-equatorial) and related quantities
+POS_PM_DIFF	Difference In Proper Motion
+POS_PM_NON-EQ	Proper Motion (non-equatorial)
+POS_PM_PA	Polar Angle of Proper Motion Vector in a non-equatorial frame
+POS_POS-ANG	Position Angle (PA) of a certain vector
+POS_PRECESSION	Precession
+POS_RADIUS	Radius Used To Calculate Other Quantity
+POS_REFERENCE-SYSTEM	Used Reference System
+POS_SG	Super Galactic Coordinates
+POS_SG_LAT	Supergalactic Latitude
+POS_SG_LON	Supergalactic Longitude
+POS_SG_X	Supergalactic X coordinate
+POS_SG_Y	Supergalactic Y coordinate
+POS_SG_Z	Supergalactic Z coordinate
+POS_SOLAR	Solar Positions
+POS_SOLAR_ELEVAT	Solar Elevation
+POS_SOLAR_ELONG	Solar Elongation
+POS_TANG-PLANE	Tangent Plane Position or a system attached to an object
+POS_TOPO	Topocentric Positions
+POS_TOPO_DEC	Topocentric Declination
+POS_TOPO_RA	Topocentric right ascension
+POS_VAR	Positional Variations
+POS_VAR_RATE	Rate of Variation of positional quantities
+POS_ZD	Zenith Distance and related quantities
+POS_ZD_MAIN	Zenith Distance
+POS_ZD_RES	Residual In Zenith Distance
+RECORD	Record Number
+REDSHIFT	Redshift
+REDSHIFT_DIFF	Difference in redshift (usually between companions or nearby objects)
+REDSHIFT_GC	Galactocentric Redshift
+REDSHIFT_HC	Redshift (normally heliocentric)
+REDUCT	Quantities Associated with the Reduction Process
+REDUCT_EXTR-RAD	Extraction Radius
+REDUCT_METHOD	Reduction Method or Technique
+REDUCT_PARAM	Reduction Parameter
+REFER	References
+REFER_BIBCODE	Reference Bibliographic Code
+REFER_CODE	References (or reference code)
+REFER_TEXT	Text related to a reference, may include author, journal, editor, publisher,...
+REFER_JOURN	Journal/Publication
+REFER_PAGE	Page Number
+REFER_VOL	Volume Number or Identification
+REMARKS	Remark or Comments
+SPECT	Spectroscopy and related quantities
+SPECT_BALMER	Properties of hydrogen balmer series
+SPECT_BALMER_DEC	Balmer Decrement
+SPECT_BALMER_JUMP	Balmer Jump
+SPECT_CONTINUUM	Continuum Properties
+SPECT_CONTINUUM_CORR-FACT	Continuum Correction Factor
+SPECT_CONTINUUM_DEPTH	Continuum Depth
+SPECT_CONTINUUM_INDICATOR	Continuum Indicator
+SPECT_CONTINUUM_PROP	Continuum Properties
+SPECT_DOPPLER-PAR	Doppler Parameter
+SPECT_EMISSIVITY	Emissivity In A Certain Waveband
+SPECT_EQ-WIDTH	Equivalent Width
+SPECT_FEATURE	Spectroscopic Feature properties
+SPECT_FEATURE_PROP	Spectroscopic Feature properties
+SPECT_FEATURE_WIDTH	Equivalent Width of a given Feature
+SPECT_FLUX	Flux, usually in a narrow spectral band
+SPECT_FLUX_NORM	Normalized Flux, usually in a narrow spectral band
+SPECT_FLUX_RATIO	Spectroscopic flux ratio
+SPECT_FLUX_UV	Spectroscopy line flux in the uv
+SPECT_FLUX_VALUE	Flux, usually in a narrow spectral band
+SPECT_GENERAL	Spectroscopy in general
+SPECT_HARDNESS-RATIO	Hardness ratio usually in X-ray
+SPECT_ID	Spectral identification
+SPECT_INDEX	Spectroscopic index
+SPECT_INDEX_BANDPASS	Spectroscopic index bandpass
+SPECT_INDEX_HBETA	H Beta spectroscopic index
+SPECT_INDEX_MISC	Miscellaneous spectroscopic index
+SPECT_INTEGRAL	Integral spectrum
+SPECT_INTENSITY	Spectral Intensity
+SPECT_INTENSITY_ESTIMATED	Estimated Intensity
+SPECT_INTENSITY_FR-DROP	Intensity Drop Fraction
+SPECT_INTENSITY_HBETA-NORM	Hbeta Normalized Intensity
+SPECT_INTENSITY_INST-UNIT	Intensity In Instrumental Units
+SPECT_INTENSITY_MAIN	Spectral Intensity
+SPECT_INTENSITY_RATIO	Intensity Ratio
+SPECT_INTENSITY_REL	Relative Intensity
+SPECT_LINE	Spectral Line Properties
+SPECT_LINE_BROADENING	Line Broadening
+SPECT_LINE_CENT	Line Central Position
+SPECT_LINE_DEPTH	Line Depth
+SPECT_LINE_DEPTH_DIFF	Difference In Line Depth
+SPECT_LINE_DEPTH_VALUE	Line Depth
+SPECT_LINE_ENERGY	Line Energy
+SPECT_LINE_FREQUENCY	Line Frequency (usually in radio)
+SPECT_LINE_FWHM	Line Full Width Half Maximum (FWHM)
+SPECT_LINE_ID	Line Identification
+SPECT_LINE_INTENSITY	Line Intensity
+SPECT_LINE_MOMENT	Line Moment
+SPECT_LINE_RATIO	Line Ratio
+SPECT_LINE_STRENGTH	Line Strength
+SPECT_LINE_TEMP	Line temperature
+SPECT_LINE_WIDTH	Line Width
+SPECT_LUM-CLASS	Luminosity Classification
+SPECT_LUM/WVLNGTH-INT	Luminosity per Wavelength Interval
+SPECT_LUMINOSITY	Monochromatic Luminosity
+SPECT_NORMALIZED	Normalized Spectrum
+SPECT_PECUL	Spectral Peculiarities
+SPECT_POWER	Spectral Power
+SPECT_RANGE	Spectral Range
+SPECT_RESOLUTION	Spectral Resolution
+SPECT_S/N	Spectrum Signal To Noise Ratio
+SPECT_SENSITIVITY	Spectral sensitivity
+SPECT_SOFTNESS-RATIO	Softness ratio usual in x ray
+SPECT_SP+INDEX	Spectral Index = d(Log F)/d(Log nu)
+SPECT_SP-INDEX	Spectral Index = -d(Log F)/d(Log nu)
+SPECT_STARK	Stark effect related quantities
+SPECT_SUN	Solar Spectrum
+SPECT_TYPE	Spectrum Classification
+SPECT_TYPE_GENERAL	Spectrum Classification
+SPECT_TYPE_MK	MK Spectral Classification
+SPECT_TYPE_RADIO	Radio Spectral Type
+SPECT_VELOC	Velocity (associated with lines)
+SPECT_VELOC_VALUE	Velocity (associated with lines)
+SPECT_VELOC_WIDTH	Velocity width
+SPECT_WAVELENGTH	Wavelength (associated to lines)
+SPECT_WAVELENGTH_CENTRAL	Central wavelength
+SPECT_WAVELENGTH_DIFF	Difference in Wavelength
+SPECT_WAVELENGTH_MISC	Wavelength (associated to lines)
+STAT	Statistical Properties
+STAT_%REJECT	Percent of Rejection
+STAT_COMPLETENESS	Degree of Completeness of a Sample
+STAT_CORRELATION	Correlation
+STAT_LIKELIHOOD	Maximum Likelihood of existence or occurance
+STAT_LIKELIHOOD-RATIO	Likelihood Ratio
+STAT_MEAN	Statistics Mean Value
+STAT_MEDIAN	Statistics Median Value
+STAT_N-DOF	Degrees of Freedom
+STAT_PARAM	Statistic Parameter or Factor
+STAT_PROBABILITY	Probability
+STAT_PROP	Statistical Properties
+STAT_SAMP-FACTOR	Sampling Factor
+STAT_SIGNIFICANCE	Statistical Significance
+TEL	Telescopes
+TEL_SIZE	Telescope size (dimension)
+TEL_FOCAL-LENGTH	Focal Length
+TEL_ID	Telescope Identification
+TIME	Time and related Quantities
+TIME_AGE	Age
+TIME_CROSSING	Crossing Time
+TIME_CYCLE	Cycle number of a variable object.
+TIME_DATE	Date (Julian Date or Heliocentric Julian date)
+TIME_DELAY	Time Delay
+TIME_DIFF	Time Difference O-C Residual
+TIME_DP/DT	Period Rate Of Change
+TIME_EPOCH	Epoch
+TIME_EQUINOX	Equinox
+TIME_EVOLUTION	Evolution Time
+TIME_EXPTIME	Exposure Time
+TIME_INTERVAL	Time Interval
+TIME_LIMIT	Time Limit
+TIME_MISC	Time in general
+TIME_PERIOD	Period
+TIME_PHASE	Phase (in the context of periodic variable objects)
+TIME_RATE	Rate Of Certain Phenomenon
+TIME_RELAXATION	Relaxation Time
+TIME_RESOLUTION	Time resolution
+TIME_SCALE	Time Scale
+TIME_ZONE	Time Zone
+UNITS	Units in which a quantity is measurement
+VAR	Quantities related to variable objects
+VAR_AMPLITUDE	Amplitude of variation and related quantities
+VAR_AMPLITUDE_RATIO	Amplitude Ratio
+VAR_AMPLITUDE_VALUE	Amplitude of variation
+VAR_CLASS	Type of variability
+VAR_DF/DT2	2nd time derivative of barycentric rotation frequency in seconds
+VAR_DF/DT3	3rd time derivative of barycentric rotation frequency in seconds
+VAR_ECL-CYC-N	Eclipse Cycle Number
+VAR_FRACT-LIGHT	Fraction Light
+VAR_INDEX	Variability Index
+VAR_LIGHT-DROP	Light Drop
+VAR_MAG-RANGE	Magnitude Range
+VAR_MEAN	Quantity at stage of mean
+VAR_MODEL-FIT	Variability Fit Parameter
+VAR_PERIOD	Period of Variability and related quantities
+VAR_PERIOD_VAR	Period Variations
+VAR_PRIM-MIN	Primary Minimum Importance
+VAR_PROBABILITY	Probability of Variability
+VAR_PULSE	Quantities related to pulses (pulsars)
+VAR_PULSE_EQ-WIDTH	Pulse Equivalent Width
+VAR_PULSE_WIDTH	Pulse Width
+VAR_RAD-OSCILL	Radial Oscillation Parameter
+VAR_RRLYRA-FREQ	Frequency Of RR Lyrae
+VAR_SEC-MIN	Secondary Minimum Importance
+VELOC	Velocity
+VELOC_BARYCENTER	Barycenter Velocity
+VELOC_CM	Velocity Refered to a Co-Moving System
+VELOC_CM_X	Comoving Velocity Along X Eastward
+VELOC_CM_Y	Comoving Velocity Along Y Northward
+VELOC_CM_Z	Comoving Velocity Along the Line of Sight
+VELOC_CMB	Radial Velocity respect to the 3k CMB
+VELOC_CORR	Velocity Correction
+VELOC_DIFF	Velocity Difference
+VELOC_DISP	Velocity Dispersion
+VELOC_ESCAPE	Escape Velocity
+VELOC_EXPANSION	Expansion Velocity
+VELOC_GAL	Space Velocity In Galactic Coordinates
+VELOC_GAL_PHI	Space Velocity In Galactic Coordinate Phi Component
+VELOC_GAL_RHO	Space Velocity In Galactic Coordinate Rho Component
+VELOC_GAL_U	Space Velocity In Galactic Coordinate U Component
+VELOC_GAL_V	Space Velocity In Galactic Coordinate V Component
+VELOC_GAL_W	Space Velocity In Galactic Coordinate W Component
+VELOC_GC	Galactocentric Radial Velocity
+VELOC_GEOC	Geocentric Radial Velocity
+VELOC_HC	Heliocentric Radial Velocity
+VELOC_LG	Local Group Radial Velocity
+VELOC_LSR	Radial Velocity Respect to the Local Standard of Rest
+VELOC_MAX	Maximum or Terminal Velocity
+VELOC_MEAN	Mean Velocity
+VELOC_MICRO-TURB	Microturbulence Velocity
+VELOC_MISC	Velocity in general
+VELOC_OBS	Observed velocity (without corrections)
+VELOC_OCCULT	Occultation Velocity
+VELOC_ORBIT	Orbital Velocity
+VELOC_PECULIAR	Peculiar Velocity
+VELOC_PRE-ENTRY	Pre-Entry Velocity (meteorites)
+VELOC_PULSAT	Pulsation Velocity
+VELOC_RANGE	Velocity Range
+VELOC_RELAT	Relative Velocity
+VELOC_RESID	Residual velocity (any component or system)
+VELOC_RMS	Velocity RMS
+VELOC_ROTAT	Rotational Velocity
+VELOC_SPACE	Space Velocity
+VELOC_SPACE_X	Space Velocity X Component
+VELOC_SPACE_Y	Space Velocity Y Component
+VELOC_SPACE_Z	Space Velocity Z Component
+VELOC_SYST	Systemic Velocity
+VELOC_SYST_HC	Heliocentric Systemic Velocity
+VELOC_SYST_MISC	Systemic Velocity
+VELOC_TANG	Tangential Velocities
+VELOC_TANG_GAL	Tangential Velocity in Galactic Frame
+VELOC_TANG_MISC	Tangential Velocity
+VELOC_TANG_PEC	Peculiar Tangential Velocity
+VELOC_TOTAL	Total Velocity
+VELOC_WIND	Wind Velocity
+WEIGHT	Statisctical Weight Associated to Data Fits
+PHYS_ELEC-FIELD	Electric (electrostatic) Field
+PHOT_FLUX_IR_6	Flux density around 6 microns (e.g. ISO at 6.7 microns)
+POS_PM_DISP	Dispersion in proper motions (typically in clusters)
+SPECT_INDEX_HALPHA	Spectroscopic index H{alpha}
+SPECT_INDEX_HGAMMA	Spectroscopic index H{gamma}
+PHOT_SDSS_U	Magnitude in u' filter of Sloan Digital Sky Survey (1996AJ....111.1748F)
+PHOT_SDSS_G	Magnitude in g' filter of Sloan Digital Sky Survey (1996AJ....111.1748F)
+PHOT_SDSS_R	Magnitude in r' filter of Sloan Digital Sky Survey (1996AJ....111.1748F)
+PHOT_SDSS_I	Magnitude in i' filter of Sloan Digital Sky Survey (1996AJ....111.1748F)
+PHOT_SDSS_Z	Magnitude in z' filter of Sloan Digital Sky Survey (1996AJ....111.1748F)
+PHOT_FLUX_IR_9	Flux density around 9 microns
+PHOT_FLUX_IR_170	Far infra-red Flux density around 170um (1750GHz)
+PHOT_FLUX_IR_300	Far infra-red Flux density around 300um (3000GHz)
+PHOT_TRANSF_PARAM	Parameter used in photometric transformations
+POS_TRANSF_PARAM	Parameter used in astrometric transformations, e.g. WCS constants
+POS_LAMBERT	Coordinates in the Lambert Projection
+POS_LAMBERT_R	Lambert Polar Distance
+POS_LAMBERT_X	Lambert X Coordinate
+POS_LAMBERT_Y	Lambert Y Coordinate
+VELOC_GAL_MISC	Miscellaneous Velocities, like Total or Tangent velocity
+STAT_COVAR	Statistical covariance parameter
+STAT_STDEV	Statistical standard deviation (square root of the variance)
+STAT_VAR	Statistical variance (squared standard deviation)
+
+# UCD 1+ (en lowercase pour les noms des UCD)
+arith	Arithmetic quantities
+arith.diff	Difference between two quantities described by the same UCD
+arith.factor	Numerical factor
+arith.grad	Gradient
+arith.rate	Rate (per time unit)
+arith.ratio	Ratio between two quantities described by the same UCD
+arith.zp	Zero point
+em	Electromagnetic spectrum
+em.ir	Infrared part of the spectrum
+em.ir.15-30um	Infrared between 15 and 30 micron
+em.ir.3-4um	Infrared between 3 and 4 micron
+em.ir.30-60um	Infrared between 30 and 60 micron
+em.ir.4-8um	Infrared between 4 and 8 micron
+em.ir.60-100um	Infrared between 60 and 100 micron
+em.ir.8-15um	Infrared between 8 and 15 micron
+em.ir.h	Infrared between 1.5 and 2 micron
+em.ir.j	Infrared between 1.0 and 1.5 micron
+em.ir.k	Infrared between 2 and 3 micron
+em.uv	Ultraviolet part of the spectrum
+em.uv.10-50nm	Ultraviolet between 10 and 50 nm
+em.uv.100-200nm	Ultraviolet between 100 and 200 nm
+em.uv.200-300nm	Ultraviolet between 200 and 300 nm
+em.uv.50-100nm	Ultraviolet between 50 and 100 nm
+em.x-ray	X-ray part of the spectrum
+em.x-ray.hard	Hard X-ray (12 - 120 keV)
+em.x-ray.medium	Medium X-ray (2 - 12 keV)
+em.x-ray.soft	Soft X-ray (0.12 - 2 keV)
+em.energy	Energy value in the em frame
+em.freq	Frequency value in the em frame
+em.gamma	Gamma rays part of the spectrum
+em.gamma.hard	Hard gamma ray (>500 keV)
+em.gamma.soft	Soft gamma ray (120 - 500 keV)
+em.line	Designation of major atomic lines
+em.line.brgamma	Bracket gamma line
+em.line.hi	21cm hydrogen line
+em.line.halpha	H-alpha line
+em.line.hbeta	H-beta line
+em.line.hgamma	H-gamma line
+em.line.oiii	[OIII] line
+em.mm	Millimetric part of the spectrum
+em.mm.100-200ghz	Millimetric between 100 and 200 GHz
+em.mm.1500-3000ghz	Millimetric between 1500 and 3000 GHz
+em.mm.200-400ghz	Millimetric between 200 and 400 GHz
+em.mm.30-50ghz	Millimetric between 30 and 50 GHz
+em.mm.400-750ghz	Millimetric between 400 and 750 GHz
+em.mm.50-100ghz	Millimetric between 50 and 100 GHz
+em.mm.750-1500ghz	Millimetric between 750 and 1500 GHz
+em.opt	Optical part of the spectrum
+em.opt.b	Optical band between 400 and 500 nm
+em.opt.i	Optical band between 750 and 1000 nm
+em.opt.r	Optical band between 600 and 750 nm
+em.opt.u	Optical band between 300 and 400 nm
+em.opt.v	Optical band between 500 and 600 nm
+em.radio	Radio part of the spectrum
+em.radio.100-200mhz	Radio between 100 and 200 MHz
+em.radio.12-30ghz	Radio between 12 and 30 GHz
+em.radio.1500-3000mhz	Radio between 1500 and 3000 MHz
+em.radio.20-100mhz	Radio between 20 and 100 MHz
+em.radio.200-400mhz	Radio between 200 and 400 MHz
+em.radio.3-6ghz	Radio between 3 and 6 GHz
+em.radio.400-750mhz	Radio between 400 and 750 MHz
+em.radio.6-12ghz	Radio between 6 and 12 GHz
+em.radio.750-1500mhz	Radio between 750 and 1500 MHz
+em.wavenumber	Wavenumber value in the em frame
+em.wl	Wavelength value in the em frame
+em.wl.central	Central wavelength
+em.wl.effective	Effective wavelength
+instr	Instrument
+instr.background	Instrumental background
+instr.bandpass	Bandpass (e.g.: band name) of instrument
+instr.bandwidth	Bandwidth of the instrument
+instr.baseline	Baseline for interferometry
+instr.beam	Beam
+instr.calib	Calibration parameter
+instr.det	Detector
+instr.det.noise	Instrument noise
+instr.det.psf	Point Spread Function
+instr.det.qe	Quantum efficiency
+instr.dispersion	Dispersion of a spectrograph
+instr.filter	Filter
+instr.fov	Field of view
+instr.obsty	Observatory, satellite, mission
+instr.obsty.seeing	Seeing
+instr.offset	Offset angle respect to main direction of observation
+instr.order	Spectral order in a spectrograph
+instr.param	Various instrumental parameters
+instr.pixel	Pixel (default size: angular)
+instr.plate	Photographic plate
+instr.plate.emulsion	Plate emulsion
+instr.precision	Instrument precision
+instr.saturation	Instrument saturation threshold
+instr.scale	Instrument scale (for CCD, plate, image)
+instr.sensitivity	Instrument sensitivity, detection threshold
+instr.setup	Instrument configuration or setup
+instr.skylevel	Sky level
+instr.skytemp	Sky temperature
+instr.tel	Telescope
+instr.tel.focallength	Telescope focal length
+meta	Metadata
+meta.bib	Bibliographic reference
+meta.bib.author	Author name
+meta.bib.bibcode	Bibcode
+meta.bib.fig	Figure in a paper
+meta.bib.journal	Journal name
+meta.bib.page	Page number
+meta.bib.volume	Volume number
+meta.code	Code or flag
+meta.code.class	Classification code
+meta.code.error	limit uncertainty error flag
+meta.code.member	Membership code
+meta.code.mime	MIME type
+meta.code.multip	Multiplicity or binarity flag
+meta.code.qual	Quality, precision, reliability flag or code
+meta.cryptic	Unknown or impossible to understand quantity
+meta.curation	Identity of man/organization responsible for the data
+meta.dataset	Dataset
+meta.file	File
+meta.fits	FITS standard
+meta.id	Identifier, name or designation
+meta.id.assoc	Identifier of associated counterpart
+meta.id.cross	Cross identification
+meta.id.parent	Identification of parent source
+meta.id.part	Part of identifier, suffix or sub-component
+meta.main	Main value of something
+meta.modelled	Quantity was produced by a model
+meta.note	Note or remark (longer than a code or flag)
+meta.number	Number (of things; e.g. nb of object in an image)
+meta.record	Record number
+meta.ref	Reference, or origin
+meta.ref.url	URL, web address
+meta.software	Software used in generating data
+meta.table	Table or catalogue
+meta.title	Title or explanation
+meta.ucd	UCD
+meta.unit	Unit
+meta.version	Version
+obs	Observation
+obs.airmass	Airmass
+obs.atmos	Atmosphere
+obs.atmos.extinction	Atmospheric extinction
+obs.atmos.refractangle	Atmospheric refraction angle
+obs.calib	Calibration observation
+obs.field	Region covered by the observation
+obs.image	Image
+obs.observer	Observer, discoverer
+obs.param	Various observation or reduction parameter
+phot	Photometry
+phot.antennatemp	Antenna temperature
+phot.calib	Photometric calibration
+phot.color	Color index or magnitude difference
+phot.color.excess	Color excess
+phot.color.reddfree	Dereddened color
+phot.count	Flux expressed in counts
+phot.fluence	Fluence
+phot.flux	Photon flux
+phot.flux.bol	Bolometric flux
+phot.flux.density	Flux density (per wl/freq/energy interval)
+phot.flux.density.sb	Flux density surface brightness
+phot.flux.sb	Flux surface brightness
+phot.limbdark	Limb-darkening coefficients
+phot.mag	Photometric magnitude
+phot.mag.bc	Bolometric correction
+phot.mag.bol	Bolometric magnitude
+phot.mag.distmod	Distance modulus
+phot.mag.reddfree	Dereddened magnitude
+phot.mag.sb	Surface brightness in magnitude units
+phys	Physical quantities
+phys.sfr	Star formation rate
+phys.absorption	Extinction or absorption along the line of sight
+phys.absorption.coeff	Absorption coefficient (e.g. in a spectral line)
+phys.absorption.gal	Galactic extinction
+phys.absorption.opticaldepth	Optical depth
+phys.abund	Abundance
+phys.abund.fe	Fe/H abundance
+phys.abund.x	Hydrogen abundance
+phys.abund.y	Helium abundance
+phys.abund.z	Metallicity abundance
+phys.acceleration	Acceleration
+phys.albedo	Albedo or reflectance
+phys.angarea	Angular area
+phys.angmomentum	Angular momentum
+phys.angsize	Angular size width diameter dimension extension major minor axis extraction radius
+phys.angsize.smajaxis	Angular size extent or extension of semi-major axis
+phys.angsize.sminaxis	Angular size extent or extension of semi-minor axis
+phys.area	Area (in linear units)
+phys.atmol	Atomic and molecular physics
+phys.atmol.branchingratio	Branching ratio
+phys.atmol.collstrength	Collisional strength
+phys.atmol.collisional	Related to collisions
+phys.atmol.configuration	Configuration
+phys.atmol.crosssection	Atomic / molecular cross-section
+phys.atmol.damping	Atomic damping quantities (van der Waals)
+phys.atmol.element	Element
+phys.atmol.excitation	Atomic molecular excitation parameter
+phys.atmol.final	Quantity refers to atomic/molecular final/ground state, level, ecc.
+phys.atmol.initial	Quantity refers to atomic/molecular initial state, level, ecc.
+phys.atmol.ionstage	Ion
+phys.atmol.ionization	Related to ionization
+phys.atmol.lande	Lande factor
+phys.atmol.level	Atomic level
+phys.atmol.lifetime	Lifetime of a level
+phys.atmol.lineshift	Line shifting coefficient
+phys.atmol.number	Atomic number Z
+phys.atmol.oscstrength	Oscillator strength
+phys.atmol.parity	Parity
+phys.atmol.qn	Atomic quantum number
+phys.atmol.qn.i	Nuclear spin quantum number
+phys.atmol.radiationtype	Type of radiation characterizing atomic lines (electric dipole/quadrupole, magnetic dipole)
+phys.atmol.sweight	Statistical weight
+phys.atmol.term	Atomic term
+phys.atmol.transprob	Atomic transition probability, Einstein A coefficient
+phys.atmol.transition	Transition between states
+phys.atmol.woscstrength	Weighted oscillator strength
+phys.atmol.weight	Atomic weight
+phys.columndensity	Column density
+phys.composition	Quantities related to composition of objects
+phys.composition.masslightratio	Mass to light ratio
+phys.composition.yield	Mass yield
+phys.density	Density (of mass, electron, ...)
+phys.dielectric	Complex dielectric function
+phys.dispmeasure	Dispersion measure
+phys.electfield	Electric field
+phys.electron	Electron
+phys.electron.degen	Electron degeneracy parameter
+phys.emissmeasure	Emission measure
+phys.emissivity	Emissivity
+phys.energy	Energy
+phys.energy.density	Energy-density
+phys.eos	Equation of state
+phys.excitparam	Excitation parameter U
+phys.gauntfactor	Gaunt factor/correction
+phys.gravity	Gravity
+phys.ionizparam	Ionization parameter
+phys.ionizparam.coll	Collisional ionization
+phys.ionizparam.rad	Radiative ionization
+phys.luminosity	Luminosity
+phys.luminosity.fun	Luminosity function
+phys.magabs	Absolute magnitude
+phys.magabs.bol	Bolometric absolute magnitude
+phys.magfield	Magnetic field
+phys.mass	Mass
+phys.mass.loss	Mass loss
+phys.mol	Molecular data
+phys.mol.dipole	Molecular dipole
+phys.mol.dipole.electric	Molecular electric dipole moment
+phys.mol.dipole.magnetic	Molecular magnetic dipole moment
+phys.mol.dissociation	Molecular dissociation
+phys.mol.formationheat	Formation heat for molecules
+phys.mol.qn	Molecular quantum numbers
+phys.mol.quadrupole	Molecular quadrupole
+phys.mol.quadrupole.electric	Molecular electric quadrupole moment
+phys.mol.rotation	Molecular rotation
+phys.mol.vibration	Molecular vibration
+phys.polarization	Polarization degree (or percentage)
+phys.polarization.circular	Circular polarization
+phys.polarization.linear	Linear polarization
+phys.polarization.rotmeasure	Rotation measure polarization
+phys.polarization.stokes	Stokes polarization
+phys.pressure	Pressure
+phys.recombination.coeff	Recombination coefficient
+phys.refractindex	Refraction index
+phys.size	Size (not angular)
+phys.size.axisratio	Axis ratio (a/b) or (b/a)
+phys.size.diameter	Diameter
+phys.size.radius	Radius
+phys.size.smajaxis	Linear semi major axis
+phys.size.sminaxis	Linear semi minor axis
+phys.temperature	Temperature
+phys.temperature.effective	Effective temperature
+phys.temperature.electron	Electron temperature
+phys.transmission	Transmission (of filter, instrument, ...)
+phys.veloc	Space velocity
+phys.veloc.ang	Angular velocity
+phys.veloc.dispersion	Velocity dispersion
+phys.veloc.escape	Escape velocity
+phys.veloc.expansion	Expansion velocity
+phys.veloc.microturb	Microturbulence velocity
+phys.veloc.orbital	Orbital velocity
+phys.veloc.pulsat	Pulsational velocity
+phys.veloc.rotat	Rotational velocity
+phys.veloc.transverse	Transverse / tangential velocity
+pos	Position and coordinates
+pos.angdistance	Angular distance, elongation
+pos.angresolution	Angular resolution
+pos.az	Position in alt-azimutal frame
+pos.az.alt	Alt-azimutal altitude
+pos.az.azi	Alt-azimutal azimut
+pos.az.zd	Alt-azimutal zenith distance
+pos.barycenter	Barycenter
+pos.bodyrc	Body related coordinates
+pos.bodyrc.alt	Body related coordinate (altitude on the body)
+pos.bodyrc.lat	Body related coordinate (latitude on the body)
+pos.bodyrc.long	Body related coordinate (longitude on the body)
+pos.cartesian	Cartesian (rectangular) coordinates
+pos.cartesian.x	Cartesian coordinate along the x-axis
+pos.cartesian.y	Cartesian coordinate along the y-axis
+pos.cartesian.z	Cartesian coordinate along the z-axis
+pos.cmb	Cosmic Microwave Background reference frame
+pos.dircos	Direction cosine
+pos.distance	Linear distance
+pos.earth	Coordinates related to Earth
+pos.earth.altitude	Altitude, height on Earth  above sea level
+pos.earth.lat	Latitude on Earth
+pos.earth.lon	Longitude on Earth
+pos.ecliptic	Ecliptic coordinates
+pos.ecliptic.lat	Ecliptic latitude
+pos.ecliptic.lon	Ecliptic longitude
+pos.eop	Earth orientation parameters
+pos.eop.nutation	Earth nutation
+pos.ephem	Ephemeris
+pos.eq	Equatorial coordinates
+pos.eq.dec	Declination in equatorial coordinates
+pos.eq.ha	Hour-angle
+pos.eq.ra	Right ascension in equatorial coordinates
+pos.eq.spd	South polar distance in equatorial coordinates
+pos.errorellipse	Positional error ellipse
+pos.frame	Reference frame used for positions
+pos.galactic	Galactic coordinates
+pos.galactic.lat	Latitude in galactic coordinates
+pos.galactic.lon	Longitude in galactic coordinates
+pos.galactocentric	Galactocentric coordinate system
+pos.geocentric	Geocentric coordinate system
+pos.healpix	Hierarchical Equal Area IsoLatitude Pixelization
+pos.heliocentric	Heliocentric position coordinate (solar system bodies)
+pos.htm	Hierarchical Triangular Mesh
+pos.lambert	Lambert projection
+pos.lg	Local Group reference frame
+pos.lsr	Local Standard of Rest reference frame
+pos.lunar	Lunar coordinates
+pos.lunar.occult	Occultation by lunar limb
+pos.parallax	Parallax
+pos.parallax.dyn	Dynamical parallax
+pos.parallax.phot	Photometric parallaxes
+pos.parallax.spect	Spectroscopic parallax
+pos.parallax.trig	Trigonometric parallax
+pos.phaseang	Phase angle, e.g. elongation of earth from sun as seen from a third cel. object
+pos.pm	Proper motion
+pos.posang	Position angle of a given vector
+pos.precess	Precession (in equatorial coordinates)
+pos.supergalactic	Supergalactic coordinates
+pos.supergalactic.lat	Latitude in supergalactic coordinates
+pos.supergalactic.lon	Longitude in supergalactic coordinates
+pos.wcs	WCS keywords
+pos.wcs.cdmatrix	WCS CDMATRIX
+pos.wcs.crpix	WCS CRPIX
+pos.wcs.crval	WCS CRVAL
+pos.wcs.ctype	WCS CTYPE
+pos.wcs.naxes	WCS NAXES
+pos.wcs.naxis	WCS NAXIS
+pos.wcs.scale	WCS scale or scale of an image
+spect	Spectroscopy
+spect.dopplerparam	Doppler parameter b
+spect.dopplerveloc	Radial velocity, derived from the shift of some spectral feature
+spect.dopplerveloc.opt	Radial velocity derived from a wavelength shift using the optical convention
+spect.dopplerveloc.radio	Radial velocity derived from a frequency shift using the radio convention
+spect.index	Spectral index
+spect.line	Spectral line
+spect.line.asymmetry	Line asymmetry
+spect.line.broad	Spectral line broadening
+spect.line.broad.stark	Stark line broadening coefficient
+spect.line.broad.zeeman	Zeeman broadening
+spect.line.eqwidth	Line equivalent width
+spect.line.intensity	Line intensity
+spect.line.profile	Line profile
+spect.line.width	Spectral line fwhm
+spect.resolution	Spectral (or velocity) resolution
+src	Observed source viewed on the sky
+src.class	Source classification (star, galaxy, cluster...)
+src.class.color	Color classification
+src.class.distance	Distance class e.g. Abell
+src.class.luminosity	Luminosity class
+src.class.richness	Richness class e.g. Abell
+src.class.stargalaxy	Star/galaxy discriminator, stellarity index
+src.class.struct	Structure classification e.g. Bautz-Morgan
+src.density	Density of sources
+src.ellipticity	Source ellipticity
+src.impactparam	Impact parameter
+src.morph	Morphology structure
+src.morph.param	Morphological parameter
+src.morph.sclength	Scale length for a galactic component (disc or bulge)
+src.morph.type	Hubble morphological type (galaxies)
+src.orbital	Orbital parameters
+src.orbital.eccentricity	Orbit eccentricity
+src.orbital.inclination	Orbit inclination
+src.orbital.meananomaly	Orbit mean anomaly
+src.orbital.meanmotion	Mean motion
+src.orbital.node	Ascending node
+src.orbital.periastron	Periastron
+src.redshift	Redshift
+src.redshift.phot	Photometric redshift
+src.sample	Sample
+src.sptype	Spectral type MK
+src.var	Variability of source
+src.var.amplitude	Amplitude of variation
+src.var.index	Variability index
+src.var.pulse	Pulse
+src.veloc.hc Heliocentric radial velocity
+stat	Statistical parameters
+stat.fourier	Fourier coefficient
+stat.fourier.amplitude	Amplitude Fourier coefficient
+stat.correlation	Correlation between two parameters
+stat.covariance	Covariance between two parameters
+stat.error	Statistical error
+stat.error.sys	Systematic error
+stat.fit	Fit
+stat.fit.chi2	Chi2
+stat.fit.dof	Degrees of freedom
+stat.fit.goodness	Goodness or significance of fit
+stat.fit.omc	Observed minus computed
+stat.fit.param	Parameter of fit
+stat.fit.residual	Residual fit
+stat.likelihood	Likelihood
+stat.max	Maximum or upper limit
+stat.mean	Mean, average value
+stat.median	Median value
+stat.min	Minimum or lowest limit
+stat.param	Parameter
+stat.snr	Signal to noise ratio
+stat.stdev	Standard deviation
+stat.value	Miscellaneous value
+stat.variance	Variance
+stat.weight	Statistical weight
+time	Time
+time.age	Age
+time.crossing	Crossing time
+time.epoch	Epoch, julian date
+time.equinox	Equinox
+time.event	Duration of an event or phenomenon
+time.event.end	End time of event or phenomenon
+time.event.start	Start time of event or phenomenon
+time.expo	Exposure on-time, duration
+time.expo.end	End time of exposure
+time.expo.start	Start time of exposure
+time.interval	Interval of time
+time.lifetime	Lifetime
+time.obs	Observation on-time, duration
+time.obs.end	End time of observation
+time.obs.start	Start time of observation
+time.period	Period
+time.phase	Phase
+time.relax	Relaxation time
+time.resolution	Time resolution
+time.scale	Timescale
+
+
+#
+# The strings not very often used
+#
+FMSCRIPTEX	# load SuperCOSMOS H-alpha image\n$3_halpha = get SHS(H-alpha) $1 $2 5'\n# load SuperCOSMOS Short Red image\n$3_red = get SHS(Red) $1 $2 5'\n# wait for the images to be loaded\nsync\n# normalize each image\n$3_halpha_norm = norm -cut $3_halpha\nsync\n$3_red_norm = norm -cut $3_red\nsync\n# compute H-alpha minus Red\nresult_$3 = $3_halpha_norm - $3_red_norm\nsync\ncm fire\nrm $3_halpha_norm\nrm $3_red_norm\nrm $3_halpha\nrm $3_red\nsync\nzoom 2/3x
+FMPARAMSEX	07 55 55.5	-33 46 00	PHR0755-3346\n08 25 46.3	-40 13 52	PHR0825-4013\n16 02 20.2	-41 27 11	PHR1602-4127\n17 18 44.9	-33 15 24	PPA1718-3315\n18 18 59.2	-15 26 21	PHR1818-1526
+#Aladin.AUTEURS	* Authors: Pierre Fernique, Thomas Boch, François Bonnarel, Anaïs Oberto\n \n   and A.Schaaff [CDS]: VizieR access, VOTable/XML parsing - F.Ochsenbein [CDS]: Coordinate manipulation - D.Egret, O.Bienayme, M.Allen, C.Bot [CDS], D.Durand [CADC]: Documentation\n \n* Contributions:\n   N.N.Samus [INASAN] - Russian translation, C.Cui [NAOC] - simplified Chinese translation,  Chi-Hung Yan - traditional Chinese translation, M.Taylor [Astrogrid] - PLASTIC/SAMP hubs, T.West - BMP writer original java code, R.White & P.Dowler - Hdecomp original C code and java code, N.Kuropatkin - java Healpix library\n \n* Copyright: UDS/CNRS\n   Portions of the code (WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, Plastic integration) has been developed in the framework of the EuroVO VOTech project (2005-2008). The contours, filters, data tree, column calculator and Xmatcher have been developed in the framework of the Astrophysical Virtual Observatory (AVO), an EC RTD project 2002-2004. The RGB feature has been developed in the framework of the IDHA project (ACI GRID of the French Ministere de la Recherche).\n \n* Contact:\nquestion@simbad.u-strasbg.fr\n \n  If the Aladin sky atlas was helpful for your research work, the following acknowledgment would be appreciated: "This research has made use of Aladin" or cite the following article 2000A&AS..143...33B.
+#Aladin.AUTEURS.fr	* Auteurs: Pierre Fernique, Thomas Boch, François Bonnarel, Anaïs Oberto\n \n   et A.Schaaff [CDS]: accès à VizieR, traitement VOTable/XML - F.Ochsenbein [CDS]: Manipulation des coordonnées - D.Egret, O.Bienayme, M.Allen, C.Bot [CDS], D.Durand [CADC]: Documentation\n \n* Contributions:\n   N.N.Samus [INASAN] - traduction russe, C.Cui [NAOC] - traduction chinois simplifié, Chi-Hung Yan - traduction chinois traditionel, M.Taylor [AstroGrid] - Hubs Plastic/SAMP, T.West - Code java original pour l'écriture des BMP, R.White & P.Dowler - Code original de la méthode Hdecomp, N.Kuropatkin - Librairie java Healpix\n \n* Tous droits réservés: UDS/CNRS\n   Des portions du code (WCS dans les JPEG, SIA étendu, passerelle IDL, intégration avancée des FoV, cubes FITS, cross-corrélateur par ellipses, intégration Plastic) ont été développés dans le cadre du projet EuroVO/VOTech (2005-2008). Les contours, filtres, Arbre des métadonnées, calculateur de colonnes et cross-corrélateur ont été développés dans le cadre du projet Astrophysical Virtual Observatory (AVO), un EC RTD project 2002-2004. La fonctionnalité RGB a été développé dans le cadre du project IDHA (ACI GRID du Ministère Français de la Recherche).\n \n* Contact:\nquestion@simbad.u-strasbg.fr\n \n   Si l'atlas du ciel Aladin a facilité votre travail de recherche, nous vous remercions de le mentionner en faisant par exemple référence à l'article suivant 2000A&AS..143...33B  ou à l'aide de la phrase suivante : "Ces travaux de recherche ont utilisé Aladin".
+Help.HELP	!Help on line\n*Just move the mouse on any Aladin components\n*for which you want some explanations.\n \n \n*To quit the help mode, click anywhere\n \n!Interface vocabulary\n- View window: the main window in the center of the Aladin window,\n- Plane stack: window on the right side of the Aladin window with the eye logo,\n- Tool bar: the set of the logos between the View window and the Plane stack,\n-Zoom window: the square window at the right-bottom corner,\n- Measurement window: the rectangular window at the bottom of the Aladin window with the scrollbar,\n- Status window: the rectangular area between the View window and the measurement window.\n
+Help.HELP.fr	!Aide interactive\n*Déplacez simplement votre souris\n*sur n'importe quelle composante d'Aladin\n*pour obtenir de l'aide.\n \n \n*Pour quitter l'aide intéractive, cliquez n'importe où\n \n!Vocabulaire\n- Fenêtre des vues: le panneau principal au centre de la fenêtre Aladin,\n- La pile des plans: le panneau à droite avec le logo en forme d'oeil,\n- la barre d'outils: les boutons entre le panneau des vues et la pile,\n- Le panneau du zoom: le carré en bas à droite,\n- Les mesures: le panneau en bas de la fenêtre,\n- Le status: le bandeau entre la vue et les mesures.
+View.HELP	!View window\nDisplays the current view(s) (images + catalogs and graphical overlays) according to the status of the "Plane stacks" and the "Zoom window".\n \nThe mouse position in astronomical coordinates is given at the top of the window.  If the mouse position is on a catalog source, its name is given in the ``status window''.\n \nYou can select an individual source by clicking on it, or several sources by delimiting a rectangular area with a clik-and-drag mouse operation. All measurements and links associated to these sources will be displayed in the "Measurement window".\n \nIn the same way, you can select one or several additional graphic symbols that you can subsequently move or delete.\n \nThe "view frame" can be splitted in 2, 4, 9 or 16 panels, each one containing its own view. See the "Multiview controler" at the left-bottom side
+View.HELP.fr	!Fenêtre de vue\nProjette la ou les vues courantes (images + catalogues + surcharges graphiques) en fonction de l'état de la "pile des plans" et du zoom.\n \nLes coordonnées astronomiques correspondantes à la position de la souris sont indiquées au-dessus de la fenêtre. Si la souris se trouve sur un objet issu d'un catalogue, son nom s'affiche dans le bandeau du statut.\n \nVous pouvez sélectionner individuellement des objets en cliquant simplement dessus, ou en les englobant dans une sélection rectangulaire. Toutes les mesures et liens associés seront alors affichés dans le "Panneau des mesures".\n \nVous pouvez également sélectionner des surcharges graphiques pour les déplacer ou les supprimer.\n \nLa "Fenêtre de vue" peut être subdivisée en 2, 4, 9 ou 16 panneaux, chacun contenant sa propre vue. Voir le "Controleur de multivues" en bas à gauche.
+LCoord.HELP	!Localization window\nDisplays the coordinates and the pixel value corresponding to the current position of the mouse in the "View window".\nYou can choose the coordinate reference system from the menu on the left of the coordinates. Also, you can specify if Aladin will display the true pixel value or only the grey 8 bit level.\n \nYou can copy/paste the last position pointed in the view, respectively the pixel value. Click into the view, and "catch/copy" the value which has been memorized into the position window (respectively the pixel window).\n \nThe position window can be also used for executing a script command (see menu "Help -> Help on Aladin script commands"). And notably, you can write an object name or coordinates to move the reticle to the corresponding location.
+LCoord.HELP.fr	!Bandeau de localisation\nAffiche les coordonnées et la valeur du pixel correspondant à la position courante de la souris dans la "Fenêtre de vue".\nVous pouvez modifier le système de coordonnées au moyen du menu déroulant qui se trouve sur la gauche (J2000, B1950...). De même vous pouvez demandez l'affichage de la vraie valeur du pixel ou simplement le niveau de gris 8 bits.\n \nVous pouvez à tout moment Copier/Coller la dernière position, respectivement valeur de pixel, pointée dans la vue. Cliquez dans la vue, puis attraper/copier la valeur qui a été mémorisée en vous déplacement sur le bandeau de position, puis en cliquant dessus.\n \nLe rectangle où apparaît la coordonnées courantes peut servir de manière alternative à passer une commande script (voir Menu "Aide -> Aide sur les commandes en ligne"). Entre autres vous pouvez saisir directement un nom d'objet ou des coordonnées pour demander à Aladin de déplacer le réticule à la position correspondante.
+MCanvas.HELP	!Measurement window\nDisplay associated data on the sources selected in the "View window".\n \nIn the "View window", you can select an individual source by clicking on it, or several sources by delimiting a rectangular area with a click-and-drag mouse operation.\n \nIn the "Measurement window" :- Move the mouse to each data component to see its label and some explanations (in the "Status window"), and to see  its corresponding source (blinking in the "View window").\n \n- Click on colored triangles at the beginning of each line to launch a Web browser and to receive explanations on the origin of the data.\n \n- Click on blue underlined components to learn more about the source.\n \nTo free this window, you have to deselect the sources by clicking in the "View window" away from all sources.\n \nTo select all the sources in a source plane, you can use the dedicated popup-menu from the "plane stack".\n \nFor your help, you can underline a measure line just by clicking on in order to easily read a long line.
+MCanvas.HELP.fr	!Panneau des mesures\nAffiche les informations associées aux objets sélectionnés dans la "fenêtre de vue".\n \nDans la "fenêtre de vue", vous pouvez sélectionner individuellement un objet en cliquant dessus, ou en sélectionner plusieurs en les englobant dans une zone rectangulaire.\n \nDans le "panneau des mesures" :-Déplacez la souris sur chaque élément afin d'en connaître l'intitulé et l'unité (dans le "bandeau de statut") et visualiser la source correspondante (clignote dans la "fenêtre de vue").\n \n- Cliquez sur le tirangles colorés au début de chaque ligne afin d'afficher dans votre navigateur une page détaillant l'origine des données.\n \n- Cliquez sur les éléments en bleu soulignés afin d'ouvrir votre navigateur Web avec des informations associées.\n \nPour libérer la fenêtre vous devez simplement déselectionner les objets en cliquant sur une zone vide dans la vue.\n \nPour sélectionner tous les objets dans plan catalogue, vous disposez d'un menu contextuel dans la "Pile".\n \nVous pouvez souligner une ligne de mesure en cliquant dessus afin de pouvoir aisément lire une longue ligne.
+Select.HELP	!Plane stack\nControl the views of planes. A plane can be an image, a data chart, can memorize graphical overlays, iso-contour drawings, FoV or even filters. The eye of the observer is at the top of the stack and sees the projection of all active planes in the "view window" The status of a plane is specified by a little colored signal to the right of its name.\n \n- Click on a plane icon to activate it in all compatible views.\n- Click on a plane name to select it; then the tool buttons which are authorized for this kind of plane are activated. Maintain the Shift key to select several planes together\n- Click and drag the plane icons to change the order of the display in the stack. if the image is on the top, the sources are not visible but can always be selected.\n \nIn multiview mode (see "multiview controller") you can create several views of one or several planes by clicking/moving the plane icon from the "stack" into the selected view, especially a image plane.\n \nYou can organize the "stack" by using folders (popup menu available by pressing the right mouse button in the stack).\n \nYou can totally free the "Stack" by pressing the SHIFT key and simultaneously by clicking the "Del" button.
+Select.HELP.fr	!La Pile\nPermet le contrôle des vues de plans. Un plan peut être une image, une carte de champs, peut contenir des élements graphiques, des iso-contours, des champs instrumentaux ou même encore des filtres. L'oeil de l'observateur se trouve en haut de la pile et visualise la projection de tous les plans dans la "fenêtre de vue". Le statut de chaque plan est indiqué par une petite "balle" colorée à droite du nom du plan.\n \n- Cliquez sur l'icône du plan (à gauche du nom) pour l'activer (resp. le désactiver) dans tous les vues compatibles.\n- Cliquez sur le nom du plan pour le sélectionner; les boutons des outils compatibles avec ce type de plan sont alors disponibles. Maintenez la touche MAJ pour sélectionner simultanément plusieurs plans.\n- Cliquez et déplacer l'icône d'un plan pour changer son ordre dans la pile. Si l'image est au-dessus, les objets ne sont plus visibles dans la vue associée, mais toujours sélectionnables.\n \nLorsque le mode multivue est actif (voir le "Controleur multivue"), vous pouvez créer plusieurs vues, d'un ou plusieurs plans, en cliquant-glissant l'icône du plan dans le panneau de la vue souhaitée, typiquement une image.\n \nVous pouvez organiser la "Pile" en utilisant des répertoires (menu contextuel accessible par le bouton droit de la souris)\n \n.Vous pouvez vider totalement la "Pile" en maintenant la touche MAJ appuyée et en cliquant sur le bouton "Suppr".
+#Split.HELP	!Split functionality\nClick on it to split the Aladin interface in two separated windows.\nThis functionality can help you for browsing long object lists.\n \nClick again to re-merge in one window the Aladin interface.
+#Split.HELP.fr	!Séparation des fenêtre\nCliquez sur ce logo pour qu'Aladin se découpe en deux fenêtres.\nCette fonctionnalité est particulièrement pratique pour lister des longues listes d'objets.\n \nCliquez à nouveau sur le logo pour restituer l'interface d'origine.
+Status.HELP	!Status window\nDepending on the current position of the mouse, this window displays corresponding information and/or the status, such as :\n \n- the task associated with a tool button,\n- the identifier of a source,\n- the status of a plane,\n- the size of a vector,\n- the legend associated with a measurement,\n- ...
+Status.HELP.fr	!Bandeau de statut\nCe bandeau affiche de l'information en fonction de la position courante de la souris. Ainsi :\n \n- la tâche associée à chaque bouton d'outil,\n- l'identificateur d'un objet,\n - le statut d'un plan,\n- la taille d'un segment de mesure,\n la légende associée à une ligne de mesure,\n- ...
+ZoomView.HELP	!Zoom window\nDisplay a thumbnail of the image current view.\nThe blue rectangle shows the visible area in the view in the "View window".\n \nYou can change the zoom factor with the little menu, or directly in the "View window" if the "Zoom" button is actived.\n \nBy dragging this rectangle, you can change the displayed area. If you press simultaneously the SHIFT key, all compatible views will display the same area (only in multiview mode).\n \nBy pressing simultaneously the CTRL key and clicking in the zoom panel, Aladin will automatically adjust the zoom factor for displaying all the image.
+ZoomView.HELP.fr	!Le Zoom\nAffiche une vignette de l'image de la vue courante.\nLe rectangle bleu visualise la portion visible dans la "Fenêtre de vue".\n \nVous pouvez changer le facteur de zoom grâce au menu, ou directement dans la "Fenêtre de vue" si le bouton "Zoom" est activé.\n \nEn cliquant/glissant ce rectangle bleu, vous déplacez la zone visible. De plus, si vous appuyez simultanément sur la touche MAJ, toutes les vues compatibles vont afficher la même zone (en mode multivue uniquement).\n \nEn pressant simultanément la touche CTRL et en cliquant dans le panneau du zoom, Aladin va automatiquement ajuster le facteur du zoom pour afficher la totalité de l'image dans sa vue.
+Search.HELP	!Search/select field\nAllows the user to select the astronomical sources in the activated catalog planes for which the search string is found in their associated measurements. The two small arrows allows to highlight each sources (highlighted line + reticle position)\n \nWithout validating the search string by ENTER, you can highlight specifical sources amongst the sources previously selected.\n \nFor focusing, the string can be precedded by a column name followed by a boolean operator (=,!=,>,<,>=,<=), and possibly embedded between abs. character (|). A column name and/or a string can used "*" and "?" wildcards. The search is case insensitive.\n \nA few examples:\n \n star    : select sources containing the word "star"\n otype=uv : same but restricted to "otype" column, "ub" value\n mag*>=12 : column name starting with 'mag", value >= 12\n |pm*|<5  : column name starting with "pm", absolute value only considered\n type!=g* : "type" column for which the values do not start with "g"\n bmag!="" : none empty "bmag" column 
+Search.HELP.fr !Champ de recherche/sélection\nPermet à l'utilisateur de sélectionner, parmi tous les plans catalogues déjà chargés et activés, les sources astronomiques qui contiennent dans leurs mesures la chaine de texte indiquée. Les deux flêches de part et d'autre du champ de saisie permettent de repérer/montrer chaque source (surbrillance+déplacement du réticule).\n \nIl est possible de saisir une chaine de recherche sans la valider (par ENTER) permettant ainsi de repérer/montrer des sources particulières parmi celles déjà présentes dans la table.\n \nPour affiner la recherche, le texte peut être précédé d'un nom de colonne suivi d'un opérateur booléen (=,!=,>,<,>=,<=), et éventuellement encadré par des barres de valeur absolue (|). Un nom de colonne ou une chaine de recherche peut utiliser les jokers "*" et "?". Il n'y a pas de distinction majuscules/minuscules.\n \nQuelques exemples:\n \n star     : sélection des sources contenant le mot "star"\n otype=uv : idem pour une colonne "otype" de valeur "uv"\n mag*>=12 : nom de colonne commençant par "mag" de valeur > 12\n |pm*]<5  : nom de colonne commençant par "pm", calcul en val.absolue\n type!=g* : la valeur de la colonne "type" ne doit pas commencer par "g"\n bmag!="" : colonne "bmag" non vide
+Lock.HELP	!Lock on reticle\nClick on this icon to lock the view on the reticle.\n \nThe "lock" behavior is interesting notably in multiview mode or if the view does not show all the image (depending of the zoom factor and the image size and the Aladin frame size in the screen). In this case, a locked view will always try to display the current reticle (large magenta cross) at the center of the view by moving the field of view automatically.\n \nAssociated with the usage of the measurement search function, it provides a powerfull mechanism to quickly browse a list of targets.
+Lock.HELP.fr	!Verrouillage sur le réticule\En cliquant sur cette icône, vous verrouillez la vue courante sur le réticule\n \nLa fonction "lock" est particulièrement intéressante en mode multivue ou dans le cas où la vue ne montre qu'une portion de l'image (fonction du facteur du zoom, de la taille de l'image et de la taille de la fenêtre Aladin). Une vue verrouillée se centrera automatiquement sur la position courante du réticule (dans la mesure du possible).\n \nSon usage conjoint avec la fonction de recherche dans les mesures fournit un outil très puissant pour passer en revue rapidement une liste de sources.
+Grid.HELP	!Coordinate grid\nClick on this icon to activate or unactivate a grid of coordinates. The grid is drawn according to the current astronomical reference frame (Position selector just behind the Aladin menu)
+Grid.HELP.fr	!Grille de coordonnées\nCliquez sur cette icône pour activer ou désactivez l'affichage d'une grille de coordonnées. La grille est tracée en fonction du système du référence courant (sélecteur "Position" juste en-dessous du menu Aladin).
+ViewControl.HELP	!Multiview controller\nAllows you to slip the "View Window" in 2, 4, 9 or 16 sub-panels.\n \nEach subpanel can display a specifical views (images and/or catalogs..) with its own zoom factor. \n - To put an image into a view, just clic and drag the logo from the Aladin stack (at the right of the Aladin window) into the panel\n - You select a view just by clicking into its panel (SHIFT clic to select several views). A blue border shows the current view(s).\n - If you move the mouse on the stack or on the panel views, a green border around the panels and a small green triangle in the stack shows the associations.
+ViewControl.HELP.fr	!Controleur du multivue\nVous permet de diviser la "Fenêtre de vue" en 2, 4, 9 ou 16 panneaux.\n \nChaque panneau peut afficher une vue spécifique (images et/ou catalogues...) avec sont propre facteur de zoom.\n - Pour mettre une image dans une vue, cliquez simplement dans le logo du plan dans la pile (à droite) puis déplacez-le dans le panneau.\n - La sélection d'un vue se fait simplement en cliquant dans son panneau (maintenez la touche MAJ pour sélectionner simultanément plusieurs vues). Un bord bleu visualise la (ou les) vue courante.\n - Lorsque vous déplacez la souris sur la pile ou sur les panneaux des vues, un bord vert autour des panneaux et un petit triangle vert dans la pile montre les associations.
+Sync.HELP	!View synchronisation\nThis tool can be only used in multiview mode.\n \nThe icon drawn with a green background specifies that at least two views have a common sky area. By clicking on the icon, all compatible views will be automatically adjusted for displaying the field of the current view (same center and zoom factor adjusted for displaying the same sky area).\n \nThe icon will be drawn with a red background specifying that all compatible views are currently selected and can be manipulated together for zooming, panning.... Click again the icon for deselecting the other views.
+Sync.HELP.fr	!Synchronisation des vues\nCet outil ne peut être utilisé qu'en mode multivue.\n \nL'icône verte indique qu'au moins deux vues ont une portion du ciel en commun. En cliquant sur l'icône, toutes les vues compatibles vont s'ajuster pour montrer le même champ de vue que celui de la vue courante (même centre et facteur de zoom ajusté pour afficher la même portion du ciel).\n \nL'icône passe en rouge pour indiquer que toutes les vues compatibles sont actuellement sélectionnées et peuvent être manipulées en groupe (zoom, pan...). Cliquez à nouveau sur l'icône pour desélectionner les vues additionnelles.
+ToolBox.HELP1	!Tool bar\nDisplay all of Aladin tools. Depending on the selected plane in the "plane stack", only the tools adaptated to this plane type will be activated. If there are several "selected planes", only tools adaptated to all of them will be activated. The "Select" tool is activated by default.
+ToolBox.HELP1.fr	!Barre d'outils\nAffiche tous les outils Aladin. En fonction du plan sélectionné dans la "pile", seuls les outils adaptés à ce type de plan seront activés. S'il y a plusieurs plans sélectionnés, seuls les outils adaptés à tous ces plans seront activés.  Le bouton "Select" s'active par défaut.
+ToolBox.HELP2	!Proportion modifier\nBy dragging this logo, you can alter the relative proportions of Aladin components. You can also use the "Split" button to detach totally the "measurement frame".
+ToolBox.HELP2.fr	!Modificateur de proportion\nEn déplaçant ce logo, vous pouvez modifiez les proportions relatives des différents composantes d'Aladin. Vous pouvez également utiliser le bouton "Split" pour détacher totalement le "panneau des mesures".
+Tool.select	The "selector" is the default tool. It's goal is to allow you to select one or several objects in a "view". To do so, just click on an object (catalog source or graphic symbol) or enclose them with a rectangle. For all selected sources, the associated measurements are displayed in the "Measurement window".\nYou can modify the current selection by holding down the SHIFT key during a new selection.\nTo unselect all current objects, just click on a blank area.\n \nSelected graphic symbols can be moved by clicking again and dragging the mouse. Also, some FoV can rotate. For that, move the mouse on one angle of the FoV, thus, clic&drag.\n \nBy pressing the Alt key, you will temporarely switch into the Pan mode allowing you to move the visible area by clicking and dragging.
+Tool.select.fr	Le "sélecteur" est l'outil actif par défaut. Il vous permet de sélectionner un ou plusieurs objets dans une "vue". Cliquez sur un objet (provenant d'un catalogue ou d'une surcharge graphique) ou englobez-le dans un rectangle. Pour chaque objet sélectionné, les mesures associées sont affichées dans le "panneau des mesures".\nVous pouvez modifier la sélection courante en maintenant appuyé la touche MAJ durant la nouvelle sélection.\nPour déselectionner les objets en cours de sélection, cliquez simplement sur une zone vide.\n \nLes surcharges graphiques peuvent être déplacées par glisser/déposer. De même certains champs instrumentaux (FoV) peuvent être pivotés. Pour cela, placez la souris sur un angle du champ instrumental, puis cliquez/glissez.\n \nSi En appuyant sur la touche Alt, vous activez temporairement le mode Dépl. (Pan) afin de vous permettre de déplacer le champ de vue par un cliquer-déplacer.
+Tool.draw	The "Overplot drawer" allows you to draw lines to the "views".\n \nHolding down the mouse button during drawing creates a curve; simply clicking at the beginning creates a polyline until your mouse exits the "View window".
+Tool.dessin.fr	L'outil "dessin" vous permet de tracer des lignes ou des courbes sur les "vues".\n \nEn gardant appuyé le bouton de la souris durant le tracé, vous dessinerez une courbe; en cliquant simplement de proche en proche, une poly-ligne jusqu'à ce que la souris sorte de la fenêtre des "vues"
+#Tool.text	The "Overplot text editor" allows you to add text in a view.\n \nClick on the desired position in the "View window" and type the text.
+#Tool.texte.fr	L'outil de texte vous permet de placer du texte dans une vue.\n \nCliquez à l'emplacement désiré dans la vue puis saississez le texte.
+Tool.phot	The "photometry marker" allows you to compute photometric estimations. A simple mouse clic draws an ellipse centered on the closest sources. Simultaneously, the extraction parameters are displayed in the measurement frame. A clic-and-drag during the marker creation will provide some statistics concerning the pixels embedded in the generated circle.
+Tool.phot.fr	L'outil de "Photométrie" vous permet de faire des mesures photométriques localisées. Un simple clic crée une ellipse centrée sur la source la plus proche et fait apparaître dans la fenêtre des mesures les paramètres de l'extraction correspondante. Au contriaire, un cliquer-déplacer lors de la création de la mesure fournira des valeurs statistiques sur les pixels englobés par le cercle généré.
+Tool.tag	The "Overplot marker" allows you to annotate your "View window". A simple mouse clic creates a simple tag. A clic-and-drag during the creation will allow you to insert a label. These tags can be selected and moved. Background, border, font size, and reticle type can be modified via the mouse wheel or via the small control handles.
+Tool.marq.fr	L'outil de "Marquage" vous permet d'annoter vos vues. Le placement d'une marque simple s'effectue par un clic souris. Un cliquer-déplacer lors de la création permet d'insérer un label associé à la marque. Ces marques peuvent être sélectionnées et déplacées. Le fond, le bord, la taille et le type de réticule sont modifiable soit par la molette de la souris soit par les poignées de contrôle.
+Tool.dist	The "Overplot measurer and Cut graph" allows you to draw vectors in the "View window".\n \nThe length of the vector is given in the "Status window" (delta RA, delta DE, size in arcmin, Angle from the North). \n \nIn parallel, a cut graph is drawn in the "zoom window" (right bottom panel) showning the pixel distribution on the vector.
+Tool.dist.fr	L'outil de mesure vous premet de dessiner des segments dans les vues.\n \nLa taille du segment s'affiche dans le "bandeau de statut" (delta RA, delta DE, taille en minutes d'arcs et angles depuis le Nord).\n \nEn parallèle, une "coupe de pixels" s'affiche dans le panneau du zoom (en bas à droite) dessinant le graphe de répartition des pixels le long du segment.
+Tool.del	This tool allows you to delete selected objects (see SELECT button). Only graphic symbols can be deleted ; the sources can't be cleared individually. If there are no selected objects, the current view is deleted. And if the current view is already empty or if you clicked directly on the name plane in the stack, the selected plane(s) is deleted (see the "plane stack").\n \nWith the SHIFT key pressed, all the views (respectively all the planes) are deleted\n \nWarning: there is no "undo" function.
+Tool.suppr.fr	Cet outil vous permet de supprimer les objets sélectionnés (voir le bouton SELECT). Seules les surcharges graphiques peuvent être supprimés; les objets de catalogues ne peuvent être effacés individuellement. S'il n'y a pas d'objet sélectionné c'est la (ou les) vue sélectionné qui sera effacée. De même si la vue courante est vide ou que vous avez directement cliqué sur le nom d'un plan dans la pile, c'est le (ou les) plans sélectionnés qui sera supprimé (voir la "pile").\n \nEn appuyant simultanément la touche MAJ et le bouton SUPPR, toutes les vues (respectivement tous les plans seront effacés\n \nAvertissement : Il n'y a pas de fonction "Défaire/Undo".
+Tool.mglss	This tool actives the magnifying glass around the mouse. The "Zoom window" window shows the region in the vicinity of the mouse when it is in the "View window".\nYou can use the arrow keys to focus the pointer and the RETURN key to validate the new position (reticle)
+Tool.loupe.fr	Cet outil active la loupe à l'emplacement de la souris. Le "panneau de zoom" sera utilisé pour montrer la portion zoomée lorsque la souris est dans la "fenêtre de vue".\nVous pouvez utiliser les touches de flêches pour pointer précisément une position et appuyer ENTER pour valider la nouveau position (déplacement du réticule)
+Tool.prop	Opens windows with the properties of the selected planes.\nThe property window allow you to modify the plane label, the color and the shape for the sources and all other parameters associated to the plane.
+Tool.prop.fr	Ouvre les fenêtres des propriétés des plans sélectionnés.\nLa fenêtre des propriété vous permet de modifier le nom du plan, la couleur et la forme des objets et tout autre paramètre associé au plan.
+Tool.pan	This tool allows you to move the visible area of the image by a simple click-and-drag. A click-and-drag-and-throw (a la google earth) initiate an automatical scrolling.\n \nPressing the SHIFT key will synchronize all views by adjusting their zoom factor and position in order to display the same sky area.\n \nAs the "select" tool, the mouse wheel allows you to change the current zoom factor.
+Tool.depl.fr	Cet outil permet de déplacer la partie visible de l'image dans la vue par un simple cliquer-déplacer. Il est également possible d'initier un déplacement automatique par un cliquer-déplacer-jeter (à la google earth).\n \nL'usage de la touche MAJ entraînera la synchronisation des vues qui ajusteront leur facteur de zoom et leur position pour afficher la même zone du ciel.\n \nComme pour l'outil "Select", la molette de la souris permet de modifier le facteur de zoom. 
+Tool.zoom	This tool allows you to zoom in the view. By using the left button, you will zoom forward on the mouse position, by clicking the right button, you will zoom backward
+Tool.zoom.fr	Cet outil vous permet de zoomer dans la vue. Le cliquet de gauche augmente le facteur de zoom et centre la région sur la position de la souris. Le cliquet de droit diminue le facteur de zoom.
+Tool.pixel	This tool allows you to enhance the current image by modifying the dynamic of the color map :\n.Use the transfer functions (log, sqrt, linear, sqr) for modifying globally the contrast.\n.Move the left triangle towards the right to suppress the background noise\n.Move the right triangle towards the left to enhance the objects\n.Adjust the last triangle according to the gray histogram to enhance the intermediate gray levels\n.Reverse the gray levels by pressing the REVERSE button or choose another color map.\n \nYou can also modify the min and max pixel range.
+Tool.pixel.fr	Cet outil vous permet d'améliorer l'image courante en modifiant la dynamique de sa table des couleur:\n.Utilisez les fonctions de transfert (log, sqrt, linear, sqr) pour modifier globalement le contraste.\n.Déplacez le petit triangle de contrôle de gauche pour supprimer le bruit de fond.\n.Déplacez le petit triangle de contrôle de droite pour améliorer le rendu des objets\n.Ajuster le triangle du milieu pour améliorer les niveaux de gris intermédiaires.\n.Inversez les pixels en activant le bouton "Inverse" ou appliquez une autre table des couleurs.\n \nVous pouvez également modifier la limite minimale et maximale des pixels pris en compte.
+Tool.cross	This tool allows you to cross-match sources of two catalogues loaded in the Aladin stack. The cross-match can be done either by distance or by cross-ID or by positional ellipses. This operation will generate a new catalogue plane containing the cross-matched sources associated with the original catalog selected fields. One million source cross-match is not a problem and will take one or two minutes.
+Tool.corr.fr	Cet outil vous permet de corréler les sources de deux catalogues préalablement chargés dans la pile Aladin. La corrélation peut être basée soit sur la distance entre les sources, soit par recouvrement des ellipses positionnels, ou encore par valeur d'une champ particulier. A l'issu de cette opération, un plan catalogue résultat est généré contenant les sources corrélées associées aux champs des deux tables d'origines qui auront été retenus. La corrélation d'un million de sources ne pose pas de problème particulier et est effectuée en quelques dizaines de secondes.
+#Tool.rsamp	This tool allows you to resample all selected images according to an unique astrometrical solution. For each resampled image, a new plane is automatically created and the original one can be kept.
+#Tool.rsamp.fr	Cet outil vous permet de rééchantillonner toutes les images sélectionnées en fonction d'une même solution astrométrique. Pour chaque image créée, un nouveau plan est automatiquement inséré dans la pile. Le plan de l'image originale peut être conservé.
+Tool.rgb	This tool allows you to create a colored RGB image. An RGB image is a composed image built with three other images already loaded in the plane stack.\nThe resampling used to do that is based on the nearest pixel position.
+Tool.rvb.fr	Cet outil vous permet de créer une image couleur RVB. Une image RVB est une image composite construite à partir de trois autres images déjà chargées dans la pile.\nLe rééchantillonnage utilisé pour effectuer cette composition est basé sur l'algorithme du plus proche pixel.
+Tool.cont	This tool allows you to plot contours in the image according to the grey levels you choose.
+Tool.cont.fr	Cet outil vous permet de calculer et tracer les iso-contours de l'image courante en fonction des niveaux de gris que vous aurez choisis.
+Tool.filter	This tool allows you to constraints the overlayed object characteristics (shape, color, hidden/shown,...) by defining a "filter" plane.
+Tool.filtre.fr	Cet outil vous permet de contraindre la manière dont les objets issus de catalogues vont être affichés (forme, couleur, caché/montré) en définissant un plan "filter"
+Tool.assoc	This tools allows you to create an image association: either a blinking sequence or a mosaic of images. This association is composed of several images built with 2 or more images already loaded in the stack.\n \nAll images will be resampled on a same astrometrical solution.
+Tool.assoc.fr	Cet outil vous permet de créer une assocation d'images : soit une séquence animée, soit une mosaique. Il s'agit d'afficher 2 ou plusieurs images dans une même vue. Ces images doivent avoir été au préalable chargées dans la pile.\n \nToutes les images de l'association vont être rééchantillonnées en fonction d'une unique solution astrométrique.
+Tutorial.Show-me-how-to-load-an-image	demo on \n info First of all press the "Open" button in the menu bar, and after that fill in the image server form displayed when you click on an image server button (left side), for example "Aladin" \n get Aladin(SERC/S/MAMA) M16 \n demo end\n
+Tutorial.Show-me-how-to-display-catalogs-on-an-image	demo on \n info We will work on a DSS image of M101 coming from SkyView image server \n get SkyView(DSS2,600) M101; sync ; zoom 2x \n info And now we will query Simbad for this field \n get Simbad M101; sync \n info Perhaps there are also NED data ? \n get Ned M101 \n info And for the end, let's load the GSC1.2 catalog and the HST log from VizieR server \n get Vizier(GSC1.2) M101 \n get VizieR(HST) M101; sync \n now you can select any object just by clicking on it. You will see the corresponding measurements for each of them. \n info If you click on the blue underlined words in the measurements, Aladin will open your favorite navigator to show you additionnal information (full record, related bibliography,...) \n info In case of a log mission such as HST, you will be able to load directly image previews via a button directly inserted in the measurement \n demo end\n
+Tutorial.Show-me-how-to-play-with-the-Aladin-stack	demo on \n info Let's work on M104 object... \n demo off \n get aladin(low) M104; get aladin M104; get Simbad M104; get NED M104; get Vizier(2MASS) M104; get VizieR(USNO2) M104; sync \n demo on \n info Each result arrives in an indidual "plane". You will see the full result as a "stack" of slides \n info You can switch off/on each of them just by clicking on the logo in front of the plane label \n hide Simbad \n hide NED \n hide Lw-* \n hide USNO2 \n show USNO2 \n info you can change the background image also by clicking on its plane logo\n show Lw-* \n pause 1 \n show DSS* \n pause 1 \n show Lw-* \n pause 1 \n show DSS* \n info You can set together some planes in a folder via the stack popup menu \n md MyFolder  \n mv DSS* MyFolder \n mv Simbad MyFolder \n mv NED MyFolder \n info Have a look in this stack popup menu by right clicking anywhere in the stack panel. \n demo end\n
+Tutorial.Show-me-how-to-use-the-multiview-mode	demo on \n info Aladin can visualize several views in parallel. For example, we will load a DSS image of M101... \n demo off \n get aladin M101; sync \n demo on \n info Now we will split the view frame in several panels just by clicking on the corresponding multiview controller logo (bottom left)... \n modeview 4 \n info You can create a new view of the same image... Just click and drag the plane logo of the image in the aladin stack to a free view panel \ncreateview 1 A2\n14:03:45.94 +54:21:51.6\nzoom 2x\n info By default, each new image loaded in Aladin will be displayed in a new view panel \n demo off \n get NVSS ; sync \n demo on \n info If you select simultaneously several panels by shift-clicking them, a zoom modification (position or factor) will be applied simultaneously on each view \n select A2 B1\n zoom 4x\n pause 2\n zoom 2x\n info Notice that you can use more than the visible panels. Use the left scrolling bar to access additional panels...\n info All graphical overlays will be simultaneously drawn on each view. Suppose that we extract a contour on the first image... \n demo off \n select 1; contour \n demo on \n Have a look on the Aladin manual for other multiview facilities \n demo end\n
+Tutorial.Show-me-how-to-do-a-contour	demo on \n info How to do a contour ? \n info First of all, load an image.. \n get aladin m101 \n sync \n info and press the "Cont" button in the tool bar... \n contour \n demo end\n
+Tutorial.Show-me-how-to-create-a-colored-image	demo on \n info How to create a colored image ? \n info You need at least 2 images \n get aladin(POSSI/E/DSS1) M101 \n get aladin(POSSII/J/DSS2) M101 \n get aladin(POSSII/N/DSS2) M101 \n sync \n info Now press the RGB button in the Aladin toolbar... \n rgb 1 2 3 \n sync \n info You can eventually adjust the constrast of each color component by the "Hist" button. \n demo end\n
+Tutorial.Show-me-how-to-control-the-image-contrast	demo on \n info We are going to load an image \n get aladin M88 \n info You have to press the "Hist" button in the Aladin toolbar \n info and adjust the constrast by the transfer functions (log, linear...) or other available possibilities \n info For example, we can change the color map and reverse the video \n cm BB \n reverse off \n demo end\n
+Tutorial.What-is-a-filter	demo on \n info A filter in Aladin allows you to constraint the object overlay display \n info First of all, we are going to load USNO objects on NGC6946 field \n demo off \n get Aladin NGC6946 \n get VizieR(USNO-B1) NGC6946 ; sync \n demo on \n info Now we are going to keep only the objects for which the magnitude are less than 16 \n info To do that, we will create this filter \n filter MyFirstFilter { ${B1mag}<16 { draw } } \n demo off \n hide 1 \n pause 1 \n show 1 \n pause 1 \n hide 1 \n pause 1 \n show 1 \n demo on\n info A filter is based on this syntax: "condition { action }" \n info You can prefer to use UCD column designations instead of the column names in order to use this filter with several heterogeneous catalogs \n info For example, if we load GSC2.2 catalog... \n get Vizier(GSC2.2) NGC6946 \n demo off \n mv GSC2.2 MyFirstFilter \n demo on \n info As you can see, this filter can not match the GSC catalog as the magnitude column has not the same name \n demo off \n hide MyFirstFilter \n pause 1 \n show MyFirstFilter \n pause 1 \n hide MyFirstFilter \n pause 1 \n show MyFirstFilter \n demo on \n info Now, rewrite this filter with the UCD associated to the magnitude $[PHOT*] \n demo off \n rm MyFirstFilter \n demo on \n filter MyUCDFilter { $[PHOT*]<16 { draw } } \n info As you can see, this filter matches both GSC and USNO catalog \n hide 1 \n pause 1 \n show 1 \n pause 1 \n show 1 \n You can know all column names and all available UCDs via a popup menu in the filter text field (right click) \n info The filter actions can be more complex than a simple "draw". Try a circle \n demo off \n rm MyUCDFilter \n demo on \n filter MyCircleFilter { $[PHOT*]<16 { draw circle(10) } } \n info The action can have variable parameters, for example, a circle proportional to the magnitude \n demo off \n rm MyCircleFilter \n demo on \n filter MyPropCircleFilter { $[PHOT*]<16 { draw circle(-$[PHOT*]) } } \n info You can see the available actions in the filter popup menu.\n info You can also choose one of the predefined filters for drawing ellipses, proper motion arrows... \n demo off \n get simbad NGC6946 \n MyPropCircleFilter \n filter Prop.Motions { $[PHOT*]<18 { draw pm(0.2*$[pos.pm;pos.eq.ra], 0.2*$[pos.pm;pos.eq.dec]) } } \n filter Ellipses { { draw ellipse(0.5*$[phys.angSize.smajAxis],0.5*$[phys.angSize.smajAxis],$[pos.posAng]) } } \n filter on \n demo on \n info A not so trivial syntax but for a powerful tool, isn't it ? \n demo end\n
+Tutorial.Show-me-how-to-play-with-the-metadata-lists-and-trees	demo on \n info Some image servers can provide lists of available images for a given field (called "meta data" information) \n info Let's work on Trifid region \n demo off \n get aladin(MAMA,S,PLATE) Trifid \n zoom 1/2x \n demo on \n info You can ask the Aladin server to provide all available images around a position as a list or a tree\n get aladin(2MASS/J) 18 02 19.5 -22 51 06.8 \n info When you move your mouse through this list, you see on the current view the field covered by the other images \n info Aladin can also dynamically scan a directory of your disk to build a list or tree of your own available images and catalogs \n info Let's see your current directory \n get Local(.) \n info Aladin can also display as a tree (or list) the history of your queries \n info Click on the "History" item in the File menu... \n demo end\n
+Help.[name=]	#n:Plane name advanced usage#s:planeName = command...#d:Some Aladin script commands can be preceded by a plane name. In this condition the result of a such command will be stored in a new plane called by the specified "name". If this plane is already existing, the result will overwrite the previous plane contain.\n \nUsing these plane mechanism, you are able to use Aladin as a "processor" for which the "variables" are the planes.#e:A = @get ESO(dss1) m1\nB = @conv A edge\nC = B @- A\nC = @flipflop C
+Help.get	#n:_get_ - call a remote image or tabular data server#s:@[name=] get Server([paramname=]keyword,...) [Target] [RadiusUnit]#d:Allows one to query remote data providers. The result (images or tabular data) will be memorized in an Aladin stack plane and a view of this plane is automatically created. The get syntax is flexible in order to cover all kinds of servers.\n   - Server:  Aladin, Simbad, VizieR, NED, SkyView, DSS.ESO, DSS.STScI, ..., or even Fov or File (or any other server names displayed in the server frame). Each server name can be followed by a comma separated keyword list in parentheses (optionally precedeed by "paramName="). The number and order of the keywords does not matter. Aladin tries to automatically associate the keywords with the server query vocabulary. \n   -Target: astronomical object identifier or J2000 coordinates in sexagesimal syntax (with blank separator). By default, Aladin takes into account the last specified target.\n   -Radius: must be specified with units (deg,arcmin,arcsec or ° ' ") with no blanks between the figures or the units. By default, Aladin takes the most appropriate radius according to the current view.#e:get Aladin M99#e:get ESO(DSS2,FITS) M1 10'#e:get SkyView(pixels=800,Survey=2MASS) M1#e:foo=get File(http://myserver/myfile)#g:@load, @show, @cview, @setconf timeout=...
+Help.load	#n:_load_ - load a file#s:@[name=] load filename#s:@[name=] load url#d:Allows loading of a local or remote file containing either an image, a catalog or any other data type used by Aladin.\n \nThe contents of the file is automatically detected by Aladin. The file may be gzipped.\n \nIf the filename specifies a directory, Aladin automatically creates a MetaData Tree describing all the data in the directory and its sub-directories.\nA "metadata file" describes a set of data\n \nThe supported formats are:\n   -Images: FITS, Jpeg, PNG, MEF, Healpix maps\n   -Tabular data: TSV, CSV, VOTable, FITS, S-extractor, ASCII\n   -MetaData tree: SIA, IDHA\n   -Script: Aladin script (AJS extension)\n   -Backup: Aladin stack backup (AJ extension)\n   -Healpix dir: directory containing Aladin Healpix tree\n   -Glu dic: GLU server form description#e:load DSS1-M1.fits.gz#g:@get, @export, @save, @backup
+Help.save	#n:_save_ - save the current view#s:save [-eps|-jpg[NN]|-png] [-lk] [WxH] [filename]#d:Save the current view (image+overlays) in a file (BMP format by default or EPS, JPEG or PNG). The parameter -eps (resp. -jpg or -png) is optional if the proper filename extension is used (.eps, .jpg or .png). The jpg parameter can be followed by a quality indicator [0..100]. The astrometrical calibration is conserved for FITS, JPEG and PNG. In multiview mode, only the selected view will be saved.\nThe -lk parameter generates an associated Tab-Separated-Value file (extension ".lk") containing the XY image coordinates, identifier and HTTP url for each overlaying astronomical source. This feature is dedicated for creating a clickable web map" page (see FAQ)\n \nThe dimension of the output image can be specified (in pixels) only in "nogui" mode (Aladin session with no graphical interface (-nogui command line parameter). Use -1x-1 for avoiding any resizing. Also in nogui mode, if there is no filename, the result is written on the standard output.\n#t:BMP is a simple bitmap format, JPEG is a lossy compressed format, PNG is a lossless compressed format, EPS (Encapsulated Postscript) is dedicated for publications (notably in latex documents).#e:save m1.eps#e:save -lk \home\img.png#e:save -jpg97 300x300#g:@load, @export, @backup
+Help.export	#n:_export_ - save images or tabular data#s:export [-fmt] x filename#s:export -ROI filename#d:Export the plane "x" in the specify filename.\n \nThe optional "-fmt" parameter modifies the default format\n -Tables: default TSV, can be replaced by VOTable (-votable or ".xml" extension) \n -images: default FITS, can be replaced by JPEG (-jpg or ".jpg" extension)\nThe "-ROI" parameter allows you to save in several FITS files (prefixed by "filename") the ROI views.\n \nNotice : The image pixels will be truncated to 8 bits if the original pixels are not available. Also, the recorded WCS calibration will be the last one used for this image.\nThe Blink plane cannot be exported.#e:export DSS1.V.SERC C:\DSS2image.fits#e:export -votable GSC1.2 /home/gsc1.2.dat#e:export RGBimg m1RGB.fits#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#g:@load, @save, @backup, @thumbnail, @rm -ROI
+Help.backup	#n:_backup_ - backup the Aladin stack#s:backup filename#d:Generate a backup of the Aladin plane stack in the specified file. The usual extension for this kind of file is ".AJ". The internal format is Aladin proprietary (XML syntax). Only image, tabular data and graphical overlays will be taken into account. The original pixels are lost: only the 8bit pixel values will be kept.#e:backup /home/M1.aj#g:@load, @export, @save
+Help.zoom	#n:_zoom_ - change the zoom factor#s:zoom 1/64x|...|64x#s:zoom -|+#s:zoom radius#d:Change the zoom factor on the current view\nThe available factors are the powers of two (1/64x ... 64x) plus the 2/3 factor\n \nThe parameter + (resp. -) selects the next (resp. previous) zoom factor.\n \nIt is also possible to specify a radius with a unit (deg,arcmin,arcsec - by default in arcmin). In this case, the resulting zoom factor will be the closest available zoom factor covering this celestian area#t:The zoom command can only be applied on the current view(s)#e:zoom 2x#e:zoom 1/4x#e:zoom +#e:zoom 2 arcmin#g:select
+#Help.reverse	#n:_reverse_ (un)reverse the image#s:reverse [on/off]#d:Reverse (or unreverse) the image of the current view. By default Aladin loads images with the reverse mode activated.\n \nIn case of @RGB image, the produced image will take the complementary colors.\n \nThis command is not available for @blink planes.
+Help.flipflop	#n:_flipflop_ - vertical or horizontal mirroring#s:@[name=] flipflop [x|v] [V|H|VH]#d:Apply a vertical or horizontal mirroring of the specified image. The astrometrical solution is adapted accordingly.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:flipflop H#e:foo=flipflop DSS1* VH#g:@copy, @mosaic, @crop
+Help.mv	#n:_mv_ - move planes or views#s:mv x1 x2            - for stack manipulation#s:mv v1 v2            - for multiview manipulation#s:mv x1 [x2...] name  - for folder manipulation#d:The "mv" command behaviour depends of the nature of its parameters.\n \nIf the parameters describe two planes (x1 and x2), Aladin will move x1 plane behind the x2 plane in the Aladin stack.\n \nIf the parameters describes two views (v1 and v2) in multiview mode, Aladin will move the view v1 to the v2 place. The v2 view place will be overiden by v1 even if v2 was not empty.\n \nIf the parameters describe planes and the last parameter describes a folder, the planes will be move into the folder.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@md, @cview
+Help.select	#n:_select_ - select views and/or planes#s:1. select x1|v1 [x2|v2] ...#s:2. select [x|v] frame=nn#s:3. select -tag#d:1. Select planes or views by their identifier in order to apply a function to them (see also section)\nA plane identifier can be the number of the plane in the Aladin stack (the bottom one is 1). It can be also the label of the plane, allowing use of the wildcard "*". In this case, the first plane matching the identifier will be taken into account.\n In multiview mode, you may select a view by its coordinates: a letter for the column and a digit for the line, (ex: B2).\nIf a plane containing catalog sources is selected, its sources will be selected also.\n \n2. Select a particular frame for a cube.\n \n3. Select sources previously tagged.#e:select DSS1.V.SERC#e:select A1 A3 C2 1 3 4 DSS1*#e:select (unselect the previous selection)#e:select frame=10#e:select -tag#g:@cview, @tag, @cplane, @thumbnail
+Help.tag  #n:_tag_ - tag all selected sources#s:tag#d:This command tags all current selected sources (the sources shown in the measurement frame). \n \nWhen a tagged catalog source is selected, it is displayed with a dedicated magenta color and its associated measurements shown a validated checkbox at the beginning of the line.\n \nUsed with the @search, @select -tag and @createplane commands, it provides a flexible method for generating catalog samples.#e:search Star\ntag\nsearch UV\ntag\nselect -tag\ncplane#g:@untag, @search, @select, @cplane
+Help.untag  #n:_untag_ - untag all tagged sources#s:tag#d:This command removes all tags previously set on sources via the @tag command (corresponding to the checkbox in source measurement line).#g:@tag, @select
+Help.hide	#n:_hide_ - hide planes#s:hide [x1] [x2..]#d:Hide the specified planes (or the selected planes if there is no parameter).#e:hide DSS1.V.SERC#e:hide  (hide the selected planes):#e:hide 1 2 DSS2*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#g:@show, @select
+Help.show	#n:_show_ - show planes#s:show [x1] [x2..]#d:Show the specified planes (or the selected planes if there is no parameter).\n \nIf there is no view of a specified plane, a view will be created automatically. Also, if there is an existing view of the plane but it is not visible (outside the scroll panel), the view scroll bar will be automatically adapted to show it.#e:show DSS1.V.SERC#e:hide  (hide the selected planes):#e:hide 1 2 DSS2*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#g:@hide, @select
+Help.collapse	#n:_collapse_ - collapse folders#s:collapse [FolderName1] [FolderName2...] #d:Collapse the specified folders in the Aladin stack. Without FolderName, the current selected folder is collapsed.#e:collapse FoldA "Folder 1"#g:@expand, @md, @hide, @show, @mv, @rm
+Help.expand	#n:_expand_ - expand folders#s:expand [FolderName1] [FolderName2...] #d:Expand the specified folders in the Aladin stack. Without FolderName, the current selected folder is expanded.#e:expand FoldA "Folder 1"#g:@collapse, @md, @hide, @show, @mv, @rm
+Help.md	#n:_md_ - create a folder#s:md [-localscope] [name]#d:Create a folder on the top of the Aladin stack. The name can be omitted, in this case it will be automatically created following this syntax: "Fold~nn".\n \nThe -localscope parameter means that the planes in the folder, and only these planes, can be projected on images in the same folder (useful in multiview mode only).\n \nYou can move planes into a folder with the @mv command.#e:md M1-folder#g:@mv, @rm, @hide, @show
+Help.cm	#n:_cm_ - set the color map and/or the cut parameters#s:cm [x1|v1 ...] [colorMap | cutParams ...]#d:Modify the colormap and/or the pixel cut parameters of the specified images.\n \nThe color maps are:\n   .gray: 256 gray levels (default color map)\n   .BB: 256 orange levels (useful to improve contrast impression)\n   .A: equal color areas\n   .stern: helping for the distinction of hight pixel values\n   .rainbow: RAINBOW color map from IDL\n   .eosb: Eos B color map from IDL\n   .fire: Fire color map from ImageJ\n \nThe cut parameters are:\n   log|sqrt|linear|pow2: transfer function\n   reverse|noreverse: video mode\n   autocut|noautocut:autocut apply or not\n   min..max|all: original pixel range or all pixels.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:cm stern#e:cm DSS2* log#e:cm A1 B1 noreverse log 10..100 autocut
+Help.rm	#n:_rm_ - delete planes or views#s:rm [x1] [x2..]      - for stack manipulation#s:rm [v1] [v2..]      - for multiview manipulation#s:rm name             - for folder manipulation#s:rm -ROI|-all          - for specifical usage#d:The "rm" command behaviour depends of the nature of its parameters.\n \nIf the parameters describe planes (x1...), Aladin will remove these planes in the Aladin stack and all the associated views.\n \nIf the parameters describe views (v1...), Aladin will remove these views.\n \nIf the parameter is the "-ROI" reserved keyword, Aladin will remove all ROI views (see @thumbnail ). The "-all" parameter will remove all planes and all views.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@get, @cview, @thumbnail
+Help.+	#n:_+_ Image addition#s:@[name=] [x1] + x2#s:@[name=] [x1] + value#d:The "+" command allows you to add two images or one image and a specifical value. The addition will be done pixel per pixel. The resulting image will be coded in Float 32 bits.\n \nIf the images do not have the same astrometrical solution, Aladin will resample the second image in the astrometrical solution of the first one (bilinear method) before adding the pixels.\n \nIf the first operand is omitted, Aladin assumes the first operand is the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:DSS1.ESO.R + DSS2.SERC.J#e:foo = \@1 + 100#e:+ 2MASS.J#g:@-, @*, @/, @norm, @conv
+Help.-	#n:_-_ Image subtraction#s:@[name=] [x1] - x2#s:@[name=] [x1] - value#d:The "-" command allows you to subtract two images or one image and a specifical value. The subtraction will be done pixel per pixel. The resulting image will be coded in Float 32 bits.\n \nIf the images do not have the same astrometrical solution, Aladin will resample the second image in the astrometrical solution of the first one (bilinear method) before subtracting the pixels.\n \nIf the first operand is omitted, Aladin assumes the first operand is the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:DSS1.ESO.R - DSS2.SERC.J#e:foo = \@1 - 100#e:- 2MASS.J#g:@+, @*, @/, @norm, @conv
+Help.*	#n:_*_ Image multiplication#s:@[name=] [x1] * x2#s:@[name=] [x1] * value#d:The "*" command allows you to multiply two images or one image and a specifical value. The multiplication will be done pixel per pixel. The resulting image will be coded in Float 32 bits.\n \nIf the images do not have the same astrometrical solution, Aladin will resample the second image in the astrometrical solution of the first one (bilinear method) before multiplying the pixels.\n \nIf the first operand is omitted, Aladin assumes the first operand is the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:DSS1.ESO.R * DSS2.SERC.J#e:foo = \@1 * 100#e:* 2MASS.J#g:@+, @-, @/, @norm, @conv
+Help./	#n:_/_ Image division#s:@[name=] [x1] / x2#s:@[name=] [x1] / value#d:The "/" command allows you to divide two images or one image and a specifical value. The division will be done pixel per pixel. The resulting image will be coded in Float 32 bits.\n \nIf the images do not have the same astrometrical solution, Aladin will resample the second image in the astrometrical solution of the first one (bilinear method) before dividing the pixels.\n \nIf the first operand is omitted, Aladin assumes the first operand is the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:DSS1.ESO.R + DSS2.SERC.J#e:foo = \@1 + 100#e:+ 2MASS.J#g:@+, @-, @*, @norm, @conv
+Help.norm	#n:_norm_ - Image pixel normalisation#s:@[name=] norm [-cut] [x]#d:The "norm" command normalizes the image pixels between 0 and 1 (float 32bits format). With the "-cut" parameter, the normalisation takes into account the min and max pixel values used by the current pixel mapping (see @cm ), otherwise all original pixel range will be considered.\n \nIf the image designation is omitted, Aladin will work on the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:norm#e:norm DSS1.SERC.J#e:foo = norm -cut \@1#g:@+, @-, @*, @/, @conv
+Help.conv	#n:_conv_ - Image pixel convolution#s:@[name=] conv [x] kernelName#s:@[name=] conv [x] gauss({fwhm|sigma}=angle[,radius=nn])#s:@[name=] conv [x] n00 n01 n02... n10 n11 n12...#d:The "conv" command applies a convolution on the specified image.\nThe kernel can be designated either by its name, or a gaussian filter, or a specifical matrix. See @kernel command for details.\n \nIf the image designation is omitted, Aladin will work on the current image.#t:This command can be prefixed by "PlaneName=" meaning that the result will be saved in this specifical plane. If this plane is already existing, it will be overwritten by the result.\n #t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).#e:conv Gauss2.5#e:foo = conv \@1 Mex5#g:@kernel, @+, @-, @*, @/, @norm
+Help.kernel	#n:_kernel_ - Convolution kernel definition#s:kernel name=n00 n01 n02... n10 n11 n12...#s:kernel name=gauss({fwhm|sigma}=angle[,radius=nn])#s:kernel [mask]#d:The "kernel" command allows you to define new convolution kernels which can be used on images via the @conv command. The matrix can be fully provided (line after line), or defined by a gaussian filter. In this case, it is possible to specify the FWHM or the sigma (by default in arcmin but any angle unit can be added); The matrix radius can also be specified. If it is omitted, Aladin will find it automatically at 3 x sigma. A name must precede the matrix definition.\n \nWithout matrix definition, kernel command displays the list of already available kernels or, if a specifical kernel name is given, the associated matrix.#t:Aladin has a list of predefined kernels.#e:kernel myShift=1 0 0 0 0 0 0 0 0#e:kernel mygauss=gauss(fwhm=30')#e:kernel mygauss*#g:@conv, @+, @-, @*, @/, @norm
+Help.reset	#n:_reset_ - reset Aladin#s:reset#d:Reset Aladin by removing all views and all planes. Restore one view mode and clean the memory.#g:@rm
+Help.copy	#n:_copy_ - copy planes or views#s:1. copy [x] [foo]#s:2. copy v1 v2#d:1. Allow one to create a copy of the plane x (the selected one by default) to a new plane called "foo". Another syntax for the same command can be "foo=x" (see @[name=] for details).\n #d:2. Allow one to create a copy of the view v1 to v2 place (see multiview mode: @mview). Notice that each view can have is own zoom factor but still share the same image properties notably the colormap.\n \nCopying a plane rather than a view allows one to modify the images independently (colormap, cropping...) but use more memory.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:copy "DSS2.J.SERC" foo#e:copy inOtherPlane#e:copy A2 C3#g:@cview, @mv, @cm, @crop, @zoom
+Help.rgb	#n:_RGB_ - create a RGB image#s:@[name=] RGB [x1|v1 x2|v2 x3|v3]#d:Create a colored composed image from three images. The images can be specified by their plane or by their view (in multiview mode). The first image provides the Red component, the second image provides the Green component and the last image the Blue component. Each image is resampled according to the astrometrical solution of the first image.#e:RGB \@2 \@3 4#e:RGB DSS1* DSS2* MAMA*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@RGBdiff, @blink, @resamp, @mosaic
+Help.rgbdiff	#n:_RGBdiff_ - create a RGB image with the difference of two images#s:@[name=] RGBdiff [x1|v1 x2|v2]#d:Create a colored composed image from the subtraction of two images. The images can be specified by their plane or by their view (in multiview mode). The resulting pixels greater than zero are displayed in red color, the other pixels are displayed in green color. The second image is resampled according to the astrometrical solution of the first image.#e:RGBdiff \@2 \@3#e:RGBdiff DSS1* DSS2*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@RGB, @blink, @resamp, @mosaic
+Help.blink	#n:_blink_ - create a blink sequence of images#s:@[name=] blink [x1|v1] [x2|v2...]#d:Create a blink sequence of several images (at least 2 images). The images can be specified by their plane or by their view (in multiview mode). Each image is resampled according to the astrometrical solution of the first image.#e:blink 2 3 4 5#e:blink DSS1* DSS2*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@RGB, @resamp, @mosaic
+Help.mosaic	#n:_mosaic_ - create a mosaic image#s:@[name=] mosaic [x1|v1] [x2|v2...]#d:Create a mosaic image of several images. The images can be specified by their plane or by their view (in multiview mode). Each image is resampled according to the astrometrical solution of the first image (closest pixel algorithm). The overlaying pixels will be averaged. The mosaic uses the 8 bits pixels of each image (take into account the cut level process). It is not possible to create mosaics from the original pixels. #e:mosaic \@2 \@3 \@4 \@5#e:mosaic DSS1* DSS2*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@blink, @RGB, @resamp, @crop
+Help.crop	#n:_crop_ - Image cropping#s:@[name=] crop [x|v] [[X,Y] WxH]#d:Crop the specified image to the area defined by the X,Y,W,H parameters, where X,Y determines the up-left corner and W,H determines the size. If X,Y is omitted, the area is centered on the reticle location. If both X,Y and W,H are omitted, the current zoom area is used. If the area is partially outside the image, the area is automatically adjust to the intersection.#e:crop DSS2.J.SERC 100,50 300x200#e:crop 300x400#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@copy, @mosaic, @flipflop
+Help.grey	#n:_grey_ - color image conversion#s:grey#d:Convert the current RGB image selected in the stack into a monochromatic image (grey levels)#e:grey#g:@cm, @RGB
+Help.resamp	#n:_resamp_ - create a resampled image#s:@[name=] resamp x1|v1 x2|v2 [8|Full] [Closest|Bilinear]#d:Resample a image according to the astrometrical solution of another image.\n \nAvailable parameters:\n   -8: only on visual pixels (8 bits depth) - default\n   -(F)ull:on the real pixels if they are avaiable\n   -(C)losest: Closest pixel algorithm (the fastest)\n   -(B)ilinear: Bilinear interpolation algorithm (better) - default#e:resamp 2 3#e:resamp DSS1* MAMA*#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#g:@RGB, @blink
+Help.grid	#n:_grid_ - coordinate grid management#s:grid [on/off]#d:Switch the coordinate grid on or off#e:grid on#g:@setconf overlays=..., @reticle, @overlay
+Help.reticle	#n:_reticle_ - reticle management#s:reticle [on|off|large]#d:Switch on or off the reticle designating the last click position.\nThe reticle is displayed as a large magenta colored cross or two magenta (vertical & horizontal) lines. In this last case, you have to specify the "large" parameter instead of "on".#t:- An astronomical object or sexagesimal J2000 coordinates simply written instead of an Aladin script command will automatically move the target (and the reticle) to the corresponding position#g:@lock, @setconf overlays=..., @grid, @overlay
+Help.overlay	#n:_overlay_ - Overlay information management#s:overlay [on/off]#d:Switch on or off the overlay information on the views (scale, plane name, North direction, field size).#g:@setconf overlays=..., @grid, @reticle
+Help.draw	#n:_draw_ - graphical overlay commands:draw fct(param)#s:. draw fct(param...)\n. draw mode(XY|RADEC)\n. draw newtool[(name)]#d:Allows one to manually add graphical overlays on views. There are six graphical functions available:\n   .string(x,y,text)\n   .tag(x,y[,label,distance,angle,type,fontSize])\n   .line(x1,y1,x2,y2[,text])\n   .circle(x,y,r)\n   .arc(x,y,r,PA,angle)\n   .pickle(x,y,r1,r2,PA,angle)\n   .phot(x,y,r)\n \nThe x,y coordinates can be in RADEC coordinates (default mode) or in the XY image reference. For this, the "draw mode(XY)" command must be set before.\n \nBy default, Aladin puts the new object in the last drawing plane in the stack. It is possible to create manually a new one by the "draw newtool(name)" command.\n \nThe tag types are: reticle, bigreticle, smallcircle, circle, bigcircle, arrow, bigarrow, nopole#t:The parameter separator can be the comma or the space. In case of coordinates use the colon to group the subfields or quote them (see examples).#e:draw string(300,200,"my favourite galaxy")#e:draw mode(RADEC)\ndraw tag(10:12:13,+2:3:4,"Big galaxy",100,30,circle,22)#e:draw circle("1 2 3" "+4 5 6" 3arcmin)
+Help.status	#n:_status_ - Aladin stack/views status#s:status [{stack|views|x1 [x2...]}]#d:display the stack status, or view status or the status of specified planes or views on the standard output (all planes and views by default).#e:status\n \nPlaneID Simbad\nPlaneNb 2\nType    Catalog\nStatus  shown \nUrl     http://simbad.u-strasbg.fr/cgi-bin/simbad-xml.pl?Ident=m1\nTarget  05:34:31.97 +22:00:52.1\nNbObj   43\nShape   dot\nColor   blue\n \nViewID  A1\nCentre  05:34:31.61 +22:00:52.1\nSize    28.06' x 28.0'\nZoom    1x\nProj    [Simbad] TANGENTIAL\nStatus  selected#g:@set
+Help.hist	#n:_hist_ - history#s:hist [n]#d:Display the script command history in the Aladin console and on the standard output. By default, the last 10 commands are displayed.#e:hist 20#g:@status
+Help.info	#n:_info_ - message status#s:info msg#d:Print a message in the status window (between the main frame and the measurement frame). If the @demo mode is activated, the message will be displayed in a separated window#g:demo
+Help.help	#n:_help_ - in line help#s:help [cmd|all|off]#d:display this help for each command and a resume of all available commands if there is no parameter.\n \nThe "off" parameter allows one to display the current view again.\n \nThe "all" parameter allows one to print on the console help about all Aladin script commands.
+Help.pause	#n:_pause_ - script pause#s:pause [nn.nnn]#d:wait nn.nnn seconds, 1 by default. Very useful for demonstration...
+Help.sync	#n:_sync_ - manual plane synchronization#s:sync#d:Wait explicitely until all planes are ready (corresponding to a "not blinking status plane").\n \nBy default Aladin is running in auto sync mode meaning that script commands requiring previous results will automatically wait until all planes in the stack are ready. However, this @sync command can force a synchronisation at any time or if the user has removed the auto sync mode via the @setconf syncproperty.#e:setconf sync=off; A=get ESO M1; sync; A = A/2#g:@setconf
+#Help.timeout	#n:_timeout_ - timeout control#s:timeout nn|off#d:This command is related to the @get command. By default a get command will be stopped after 15mn if there is no activity from the remote server. With the timeout command you may increase or decrease this limit, or suppress it at all together.#e:timeout 30#e:timeout off#g:@get
+Help.mem	#n:_mem_ - memory status#s:mem#d:Display the java memory used (after a garbage collector).
+Help.quit	#n:_quit_ - end of Aladin session#s:quit#d:Stop Aladin
+Help.mview	#n:_mview_ - multiview controler#s:mview [1|2|4|9|16] [n]#d:Specify the number of simultaneous views and the number of the first one (the first is 1)#e:mview 9#e:mview 4 3#g:@cview, @show
+Help.cview	#n:_cview_ - creation of view#s:cview [[x] v]#s:cview -plot x(columnName,columnName) [v]#d:This command can only be used in multiview mode. It allows one to manually create a view at the position "v" of the Aladin plane stack "x".\n \nThe "-plot" param allows you to create a scatter plot instead of a sky view. It is only relevant for catalogue planes. if a scatter plot is already existing in the specified view, Aladin will add the new catalogue to the existing plot.#t:"x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1).\n"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:cview DSS1.V.SERC C3#e:cview 2   (use a default view place for the plane number 2)#e:cview -plot Simbad(PMRA,PMDEC)#g:@mview, @mv, @copy, @rm
+Help.lock	#n:_lock_ - lock the view#s:lock [v1] [v2...]#d:The "lock" behavior is interesting notably in multiview mode and if the view does not show all the image (depending of the zoom factor and the image size and the Aladin frame size in the screen). In this case, the zoom factor and the central position of a such view are locked until you @unlock it#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:lock A2 C3#g:@unlock, @stick, @unstick, @zoom, @reticle
+Help.unlock	#n:_unlock_ - Unlock views from the reticule position#s:unlock [v1] [v2...]#d:The "lock" behavior is interesting notably in multiview mode and if the view does not show all the image (depending of the zoom factor and the image size and the Aladin frame size in the screen). In this case, the zoom factor and the central position of a such view are locked until you @unlock it#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:unlock C1#g:@lock, @stick, @unstick, @zoom, @reticle
+Help.stick	#n:_stick_ - view "sticking"#s:stick [v1] [v2...]#d:By default, an Aladin view can be scrolled (according to the current multiview mode). A view may be sticked to keep it in the same place even if you scroll the view panels.\n \nThis funtion is very useful in multiview mode in order to easely select a set of views amongst many views (typically generated by the ROI extraction mechanism), by moving the interesting view into a "sticked" view#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:stick A1 A2 A3#g:@unstick, @lock, @unlock, @cview, @mv, @thumbnail
+Help.unstick	#n:_unstick_ - view "unsticking"#s:unstick [v1] [v2...]#d:By default, an Aladin view can be scrolled (according to the current multiview mode). You can stick a view to keep it in the same place even if you scroll the view panels.\n See @stick command.#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:unstick B2#e:unstick    (unstick all views)#g:@stick, @lock, @unlock, @cview, @mv, @thumbnail
+Help.northup	#n:_northup_ - view north oriented#s:northup [v1] [v2...]#d:By default, an Aladin view is drawn according to the astrometrical solution of the reference plane (generally the background image). This function will force the view to draw North up, East left.#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:northup#g:@unnorthup, @cview, @grid
+Help.unnorthup	#n:_unnorthup_ - view default oriented#s:unnorthup [v1] [v2...]#d:Re-use the default orientation of the view according to the astrometrical solution of the reference plane (generally the background image).#t:"v" is the grid coordinate of a view with a letter for the column and a digit for the line, ex: B2#e:unnorthup B2#e:unnorthup#g:@northup, @cview
+Help.search	#n:_search_ - Search and select specifical catalog sources#s:search [-|+]expression#s:search {-|+}#d:The search command selects all sources matching the parameter expression. The search is done amongst all sources in the stack catalog planes.\n \nWith the prefix '+', the matched sources will be appended to a previous selection, with the prefix '-', the matched sources will be removed of the previous selection\n \nThe expression can be\n   .a keyword\n   .a column name followed by a boolean expression (ex:Type=Star)\n   .a column name embedeed in abs. characters followed by a boolean expression (ex: |PM|>10)\n \n The + or - parameter without any expression moves the reticle on the next source (resp. the previous source) of the previous search.\nWith a hight zoom value, it provides a powerful tool for browsing quickly a list of sources.#e:search |Mag|>=10#e:search -OTYP*!=UV#e:search +#g:@zoom, @select, @tag, @cplane
+Help.cplane	#n:_cplane_ - source plane creation#s:cplane [name]#d:Create a new catalog plane in the Aladin stack with the current selected sources.\n \nThis command is useful to extract a set of objets after applying a @filter, or to merge two catalog planes together (select x1 x2; cplane).#t:Notice that the @select command on a catalog plane also selects its sources. The typical sequence could be:\n   gsc = get Vizier(GSC2.2) HD1\n   filter mag { $[phot.mag*]<16.5 || $[phot.mag*]>17 { hide } }\n   filter mag on\n   select gsc\n   cplane MySelection#g:@select, @get, @export
+Help.thumbnail	#n:_thumbnail_ - Thumbnail view generator#s:thumbnail [npixels|radius"]#d:Allows one to automatically create zoomed views around the current selected objects/sources for the selected images (one or more). In this way, it is possible to rapidly browse and/or compare a large set of objects.\nThe size of the zoom views can be determined either in pixels (default 40) or in arcsec (do not forget to mention the " unit). The generated views are automatically locked: you will not be able to modify the position and the zoom factor of them.#t:The typical usage should be\n   mview 4\n   Img1=get aladin(dss2) hd2\n   Img2=get aladin(dss1)\n   Cat=get vizier(gsc2.2)\n   filter mag{  $[phot.mag*]>8 && $[phot.mag*]<13 { draw } }\n   filter on\n   select Img1 Img2 Cat\n   thumbnail 30"#e:thumbnail#g:@select
+#Help.rename	#n:_rename_ - name or rename plane#s:rename [x] name#d:Allow one to name or rename the plane "x" (or by default, the first selected plane).\n \nIf the name is already used in the stack, Aladin will automatically append an extension "~n".#t: - The @get command automatically sets a name to the resulting plane. The usage of "rename" command allows one to override this default name.#t: - "x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1)#g:@get, @select
+Help.set	#n:_set_ - modify a plane property#s:set [x1] [x2...] prop=value#s:set x/component prop=value#s:set x FITS:keyword=value#d:Allow one to modify a propertie of the planes specified by "x" (or by default, the selected planes).The "prop" is a keyword describing a plane propertie. The keyword list for a given type of plane can be obtained by the status script command on this plane.\n \nIf the propertie is concerning only a component of the plane (for instance a sub-FoV of a Field plane), the plane designation has to be suffixed by the component name (with / separator).\nThe dedicated "FITS:" value prefix allows one to modify directly the FITS header associated to a plane, and by this way it is possible to modify the WCS keywords and the associated astrometrical calibration#t: - Notice that the "value" can not contain the character "=".#t: - "x" can be the plane label (allowing use of "*" wildcard) or the plane number in the stack prefixed by \@ (the bottom one is \@1)#e:set Sim* PlaneID=MyPlane #e:set Simbad filter=All objects#e:set HST/FGS2 Status=hide#e:set DSS1* FITS:CRPIX1=400#g:@status, @setconf
+Help.setconf	#n:_setconf_ - modify a session property#s:setconf prop=value#d:Allow one to modify a configuration propertie.\nThe available properties are:\n \n.frame      coordinate frame (ICRS|ICRSd|J2000|J2000d|B1950|B1950d\n            |Ecliptic|Gal|SGAL|XY image|XY linear);\n.bookmarks  function name list\n            (comma separated possibly precedeed by + or -);\n.overlays   overlay list (scale,label,size,NE,grid,reticle,target,pixel)\n            (comma separated possibly precedeed by + or -);\n.colormap   pixel mapping (autocut|noautocut reverse|noreverse)\n            gray|BB|linear|stern|rainbow|eosb|fire\n            log|sqrt|linear|pow2);\n.dedicatedfilter dedicated filters (on|off);\n.fir        default directory;\n.CSV        character separator for CSV parsing\n.sync       auto sync mode (on|off)\n.timeout    plane loading timeout (in mn|off)#e:setconf Dir=/home/mydir#e:setconf frame=Gal#e:setconf bookmarks=DSS,Simbad,NED#e:setconf CSV=:#e:setconf colormap=autocut BB noreverse#e:setconf overlays=-NE#g:@set, @sync, @function, @call, @list, @overlay
+Help.macro	#n:_macro_ - execute a macro#s:macro scriptFile paramFile#d:Allow one to launch a macro via a script command (see manual for macro details). The scriptfile contains the list of commands, one per line. Use $1, $2 as parameters. The paramFile contains the list of parameters for each macro execution. The parameters for the first execution are provided by the first line, the parameters must be separated by "TAB" character. The second line contains the list of parameters for the second macro execution, etc.\n \nscriptFile and paramFile can be pathfile or url (remote access via web)#e:macro myscript.ajs myparams.txt#e:macro myscript.ajs http://myserver.org/getParamFor?M1
+Help.function	#n:_function_ - script function definition#s:function name[($param,...)] {\n   code...\n}#d:For defining a script function callable by the @call command. The function name can be followed by a parameter list (syntax: $xxxx,$yyy,...) which will be subsituted by the call(xxx,yyy,...) values.\n \nVia the @setconf bookmarks=[+|-]functionName,... any function can be used for defining a bookmark appearing in the Aladin bookmark bar. #t:The dedicated parameter names $TARGET and $RADIUS will be substituted by the current view area parameters if these values are not specified in the @call command.#e:function data($TARGET) { get simbad $TARGET;get NED $TARGET }#g:@call, @list, @setconf
+Help.call	#n:_call_ - script function call#s:call fonctionName[(param,...)]#d:For calling a script function previously defined via the @function command#e:call data(m1)#g:@function, @list, @setconf
+Help.list	#n:_list_ - function list and function edition#s:list#s:list functionNameMask#d:Provides the list of defined functions. If a functionNameMask is specified (with possible * and ? wilcards), the matching functions are totally edited#e:list#e:list data#g:@function, @call, @setconf
+Help.print	#n:_print_ - print function#s:print#d:Allow one to print the current views. In case of multiview mode, the visible views will be printed on the same page#t:Unfortunately, Java Printer method opens automatically a stupid driver window before printing. So this command CANNOT REALLY BE USED as a "script" command.
+Help.demo	#n:_demo_ - demonstration mode#s:demo [on|off|end]#d:Switch on or off the demonstration mode. If the demonstration mode is activated, the script commands will be "demonstrated" by explaining step by step how to obtain the same result with the Aladin graphical interface.\n \nA typical usage:\n   demo on\n   get Aladin(MAMA) galactic center#t:Not all script command have a "demo" mode implemented. In this case, the command is simply executed.
+Help.filter	#n:_filter_ - Define and activate a filter#s:filter name {\n  condition1 { draw|hide [color] [action1] }\n  condition2 { draw|hide [color] [action2] }\n   :\n}#s:filter [name] {on|off}#d:A filter is a special plane constraining how the sources of the catalog planes beneath it in the Aladin stack will be displayed.\n \nThe first syntax allows to define a new filter, the second syntax allows switching the specified filter on or off.\n \n Available operators are +,-,*,/,^(power).\nAvailable functions are "abs" (absolute value), "cos" (cosinus), "deg2rad" (degrees to radians), "exp" (exponential), "ln" (natural logarithm), "log" (base 10 logarithm), "rad2deg" (radians to degrees), "sin" (sinus), "tan" (tangent). \n \nThe available actions are: square, cross, rhomb, plus, dot, microdot, circle(param,[min radius size, max radius size]), fillcircle(param,[min radius size, max radius size]), ellipse(semi-major axis,semi-minor axis,pos angle), pm(proper motion RA,proper motion Dec), rainbow(param)\n \n@moreOnFilter...
+Help.moreOnFilter	#n:_filter_ - continuation...\n \nThe column references can be specified by their name: syntax ${name} or by the UCD associated to: syntax $[UCD]. The wildcard "*" can be used both for column name or UCD designation. In the case of multiple matching columns, the first one will be taken into account.#e:filter star { $[CLASS_OBJECT]="Star" { draw } }#e:\nfilter flux {\n   ${flux}>1000000 Jy/s {\n      draw cyan plus\n      draw circle(-$[PHOT*])\n   }\n}#t:Refer to the Filters manual for more details.
+Help.addcol	#n:_addcol_ - column generator#s:addcol [plane index or plane name],[new column name],[expr of new col],[unit for new col],[UCD for new col],[nb of decimals to keep]#d:Allow one to generate a new column for a tabular data plane. The new column will appear in red color in the measurement frame.\nThe column references can be specified by their name: syntax ${name} or by the UCD associated to: syntax $[UCD].\nAvailable operators are +,-,*,/,^(power).\nAvailable functions are "abs" (absolute value), "cos" (cosinus), "deg2rad" (degrees to radians), "exp" (exponential), "ln" (natural logarithm), "log" (base 10 logarithm), "rad2deg" (radians to degrees), "sin" (sinus), "tan" (tangent).\nUCD and unit parameters are optional and can be left blank.\n#e:addcol GSC2.2,B-V,${Bmag}-${Vmag},,PHOT_MAG\naddcol 1,flux,10^(0.4*(8.46-${Imag}))
+Help.xmatch	#n:_xmatch_ - Cross match tool#s:@[name=] xmatch x1 x2 [max dist in arcsec] [allmatch|bestmatch|nomatch]\nxmatch x1[(RAcol1,DECcol1)] x2[(RAcol2,DECcol2)] ...#d:Allows one to cross match two tabular data planes. The result will be set in a new catalogue plane, including a column with the separation (in arcsec) between the 2 matching sources in arcsec, and all fields of both planes x1 and x2.\n \nThe cross-match is positionnal. x1 contains the reference objects, for which we seek counterparts in x2. One object of x1 is considering match with an object of x2 if they are separated by a distance <="max dist". If the max distance is not set, a default value of 4 arcsec is used.\n \n- In "allmatch" mode, if an object in x1 has several matches in x2, all matches will be kept in the result plane.\n- In "bestmatch" mode, only the closest match will be kept.\n- In "nomatch" mode, we keep only sources of x1 having no match in x2.\nBy default, the "bestmatch" mode is taken into account\n \nCoordinate fields are found according to proper UCDs (pos.eq.ra  and pos.eq.dec for UCD1+, POS_EQ_RA and POS_EQ_DEC for UCD1).\nOptional parameters allow you to specify for each plane which coordinate fields should be used for the cross-match.\nIf nothing is specified, and if proper UCDs are not found, we try in last resort to make a guess on the basis of the field names.\n \n@moreOnXmatch...
+Help.moreOnXmatch	#n:_xmatch_ - continuation...\n \n#t:"x1" and "x2" can be either a plane label (allowing use of "*" wildcard) or a plane number in the Aladin stack (the bottom one is 1).\n \n#e:xmatch 1 2\nxmatch Simbad GSC2.2 10 allmatch\nxmatch 2MASS MyTable(colRA,colDEC) 15\nxmatch T1(RA2000_tab2, DE2000_tab2) T2(RA_tab2, DE_tab2) 10 nomatch
+Help.contour	#n:_contour_ - Draw isocontours of the current image#s:@[name=] contour [ nn [nosmooth] [zoom] ]#d:Draw nn isocontours for the current selected image.\nThe result is set in a new plane which can be overlaid on other images of the same field.\n \nnn sets the number of contours to draw. If not defined, 4 contours are plotted by default.\n \nThe parameter nosmooth allows one to switch the smoothing feature off. Smoothing allows a faster computation and reduces the number of control points. It is activated by default.\n \nThe parameter zoom restricts the computation to the current view of the selected image plane. By default, contours are computed over the whole image.
+Help.coord	#n:_coord_|_object_ - show a specifical position#s:hh mm ss {+|-}dd mm ss   - sexagesimal notation#s:dd.dddd  {+|-}dd.dddd    - decimal notation#s:xxxx                     - astronomical object identifier#d:Show the specified position by moving the reticle (large magenta colored cross) on it. If the user indicates an astronomical object instead of coordinates, Aladin will automatically query CDS sesame resolver to have the corresponding coordinates.#e: 05 34 31.97 +22 00 52.1#e: 083.63131 +22.01160#e: M1#g:@lock, @reticle
+Help.object	#n:_coord_|_object_ - show a specifical position#s:hh mm ss {+|-}dd mm ss   - sexagesimal notation#s:dd.dddd  {+|-}dd.dddd    - decimal notation#s:xxxx                     - astronomical object identifier#d:Show the specified position by moving the reticle (large magenta colored cross) on it. If the user indicates an astronomical object instead of coordinates, Aladin will automatically query CDS sesame resolver to have the corresponding coordinates.#e: 05 34 31.97 +22 00 52.1#e: 083.63131 +22.01160#e: M1#g:@lock, @reticle
+Help.trace	#n:_trace_ - turn on (resp. off) the debug verbose mode#s:trace {1|2|3|off}#d:Aladin supports 3 trace mode levels. The trace messages are displaying in the Aladin console windows and on the standard output, typically the xterm or the window console in which you launched Aladin.
+Help.test	#n:_test_ - developement tests #s:testimg width height raj dej pxsize proj bitpix#s:testcat width height raj dej pxsize#s:test width height raj dej pxsize proj bitpix#s:testscript#s:testlang#s:testperf [path]#d:1) Generate an image or/and a table for testing formats, calibration...\n   .width height: image size in pixels\n   .raj dej: coordinates of central pixel\n   .pxsize: pixel size in arcsec\n   .proj SIN, TAN, ARC, AIT, ZEA, STG, CAR, NCP, ZPN\n   .bitpix: pixel FITS coding (8,16,32,-32,-64)\nNote: Two files are generated Test.fits and Text.txt and reloaded in Aladin. The image is a simple pixel grid with a astrometrical calibration corresponding to the parameters . The table contains objects which should be matching the image grid (one object each five pixels in both direction).\n \n2) testscript launchs a script testing all script commands. The result should be\nhttp://aladin.u-strasbg.fr/java/testscript.jpg\n \n3) testlang verify the current translation\n \n4) testperf tests the disk and CPU performances (see stdout for the results)#e:test 500 300 0 +0 60 SIN 8#e:testscript#e:testperf /export/home
