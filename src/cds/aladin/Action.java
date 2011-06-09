@@ -17,7 +17,6 @@
 //    along with Aladin.
 //
 
-
 package cds.aladin;
 
 import java.awt.*;
