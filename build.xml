@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!-- 
+ Very simple ANT build.xml file for compiling and generating Aladin.jar file
+ * Author : P.Fernique [CDS]
+ * Date   : June 2011
+-->
+
+<project name="Aladin" default="main" basedir="."> 
+
+   <description>Aladin Sky Atlas</description> 
+	   <property name="bin" value="${basedir}/bin"/>
+	   <property name="src" value="${basedir}/src"/>
+	   <property name="lib" value="${basedir}/lib"/>
+   
+   <target name="compil" description="source compilation" >
+     <mkdir dir="${bin}"/>
+     <javac srcdir="${src}" destdir="${bin}"
+	    encoding="Cp1252" source="1.5" target="1.5" deprecation="off" >
+     <classpath>
+          <pathelement path="${java.class.path}/"/>
+          <pathelement path="${lib}/jsamp.jar"/>
+          <pathelement path="${lib}/microhub.jar"/>
+      </classpath>
+     </javac>
+   </target>
+   
+   <target name="main" depends="compil" description="jar generation" >
+      <jar destfile="Aladin.jar" duplicate="preserve">
+        <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/jsamp.jar"/>
+	    <zipfileset src="${lib}/microhub.jar"/>
+	    <fileset dir="${src}" includes="*.gif,*.jpg,Ala*.*"/>
+        <manifest>
+           <attribute name="Main-Class" value="cds.aladin.Aladin" />
+        </manifest>
+      </jar>
+   </target>
+   
+   <target name="clean" description="Remove building directory" >
+      <delete includeEmptyDirs="true" quiet="true">
+	     <fileset dir="${bin}" />
+      </delete>
+   </target>
+   
+</project>
+
