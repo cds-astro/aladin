@@ -29,7 +29,6 @@
         <fileset dir="${bin}"/>
 	    <zipfileset src="${lib}/jsamp.jar"/>
 	    <zipfileset src="${lib}/microhub.jar"/>
-	    <fileset dir="${src}" includes="*.gif,*.jpg,Ala*.*"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
         </manifest>
