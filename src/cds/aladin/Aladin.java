@@ -66,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> RGB FITS image with any BITPIX value now supported
  * @beta    <LI> Print improvements (Graphics2D support, automatic scale,...)
  * @beta    <LI> Support of HTTPS connections
  * @beta    <LI> New "macro" script command to launch a macro from a script
@@ -115,7 +116,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.045";
+    static public final    String VERSION = "v7.046";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2319,18 +2320,17 @@ public class Aladin extends JApplet
    synchronized protected void setCurrentVersion(String s )  {
        currentVersion = s;
 
-       // Doit-on nettoyer le cache ?
-       String lastCurrentVersion = configuration.getOfficialVersion();
-       if( currentVersion!=null && currentVersion.length()!=0 &&
-             (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
-          cache.clear();
-          configuration.setOfficialVersion(currentVersion);
-       }
-
        // On en profite pour tester le numero de version ainsi
        // que l'affichage d'un reseau non trouve
        if( !isApplet() && TESTRELEASE ) testVersion();
 
+       // Doit-on nettoyer le cache ?
+       String lastCurrentVersion = configuration.getOfficialVersion();
+       if( currentVersion!=null && currentVersion.length()!=0 &&
+             (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
+          configuration.setOfficialVersion(currentVersion);
+          cache.clear();
+       }
     }
 
    /** Indication de l'etat de l'impression */

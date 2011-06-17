@@ -243,12 +243,13 @@ Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
 
-      bitpix = 8;
+      bitpix = headerFits.getIntFromHeader("BITPIX");
+      if( bitpix!=8 && !isARGB ) aladin.command.toStdoutAndConsole("RGB BITPIX!=8 => autocutting each color component !\n");
       naxis1=width = headerFits.getIntFromHeader("NAXIS1");
       if (width  <= 0) return false;
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");
       if (height  <= 0) return false;
-      npix = 1;
+      npix = Math.abs(bitpix)/8;
       taille=width*height*3;	// Nombre d'octets
       setPourcent(0);
 Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+" => size="+taille);
@@ -288,10 +289,11 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+
          
       // mode RGB => les valeurs des composantes sont rangées dans trois tableaux consécutifs R, G et B
       } else {
+         
          byte [] buf;
          for( i=0; i<3; i++ ) {
             buf = i==0 ? red : i==1 ? green : blue;
-            dis.readFully(buf);
+            readColor(buf,dis,width,height,bitpix);
             setPourcent(pourcent+33);
          }
       }
@@ -310,6 +312,18 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       cm = ColorModel.getRGBdefault();
       setPourcent(99);
       return true;
+   }
+   
+   // Lecture d'une couleur
+   private void readColor(byte [] pOut, MyInputStream dis, int width, int height, int bitpix) throws Exception {
+      if( bitpix==8 ) dis.readFully(pOut);
+      else {
+         int taille = width*height * Math.abs(bitpix)/8;
+         byte [] pIn = new byte[taille];
+         dis.readFully(pIn);
+         getPix8Bits(pOut,pIn,bitpix,width,height,0.,0.,true);
+         pIn=null;
+      }
    }
 
    /**
@@ -372,7 +386,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    /** Retourne la chaine d'explication de la taille et du codage de l'image
     * d'origine */
    protected String getSizeInfo() {
-      return width + "x" + height +"x3 pixels (8bits kept)" ;
+      return width + "x" + height +"x3 pixels" ;
    }
 
 //   /** Crée les tableaux des composantes en fonction de l'image courante */

@@ -1977,7 +1977,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       boolean flagCut=(ntest>0 || minCut!=0. && maxCut!=0.);
 
 //    Recherche du min et du max
-      if( !(this instanceof PlanImageCube) ) setPourcent(75);
+      if( !(this instanceof PlanImageCube) && !(this instanceof PlanImageRGB) ) setPourcent(75);
       double max = 0, max1 = 0;
       double min = 0, min1 = 0;
 
@@ -2034,7 +2034,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       }
 
       if( autocut ) {
-         if( !(this instanceof PlanImageCube || this instanceof PlanImageHuge) ) setPourcent(80);
+         if( !(this instanceof PlanImageCube || this instanceof PlanImageHuge || this instanceof PlanImageRGB) ) setPourcent(80);
 
 //       Histogramme
          int nbean = 10000;
