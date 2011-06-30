@@ -637,7 +637,7 @@ public class ViewSimple extends JComponent
          pi.setLabel(label);
          pi.pourcent=1;
          pi.flagOk=false;
-         pi.type=Plan.IMAGE;
+         if( !(pref instanceof PlanImageRGB) ) pi.type=Plan.IMAGE;
          boolean picked= pref instanceof PlanImageBlink;
          if( picked ) ((PlanImageBlink)pref).activePixelsOrigin(this,pi);
          boolean cropped;
@@ -662,7 +662,7 @@ public class ViewSimple extends JComponent
          pi.ref=false;
          pi.selected=false;
          pi.setOpacityLevel(1f);
-         pi.reverse();
+         if( !(pref instanceof PlanImageRGB) ) pi.reverse();
          
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }

@@ -767,7 +767,7 @@ public class Fits {
       for( int y=0; y<height; y++) {
          for( int x=0; x<width; x++ ) {
             double pixIn = getPixelDouble(x,y);
-            byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
+            byte pixOut = (byte)( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
                   0xff : (int)( ((pixIn-min)*r) ) & 0xff);
             setPix8(x,y,pixOut);
          }
@@ -783,7 +783,7 @@ public class Fits {
       for( int y=0; y<height; y++) {
          for( int x=0; x<width; x++ ) {
             double pixIn = getPixelDouble(x,y);
-            int pix = ( pixIn<=min?0x00:pixIn>=max ?
+            int pix = ( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
                   0xff : (int)( ((pixIn-min)*r) ) & 0xff);
             byte pixOut =(byte) cm.getBlue(pix);
             setPix8(x,y,pixOut);

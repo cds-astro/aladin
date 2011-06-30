@@ -191,7 +191,7 @@ public class AllskyTask implements Runnable{
 
 	public void doInBackground() throws Exception {
 	   order = allsky.getOrder();
-	   System.out.println("doInBackGround => order="+order);
+//	   System.out.println("doInBackGround => order="+order);
 	   if (order==-1) order = 3;
 	   output = allsky.getOutputPath();
 	   input = allsky.getInputPath();

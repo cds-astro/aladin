@@ -199,9 +199,10 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       p.flagBlue=flagBlue;
       p.diff=diff;
       p.mustResample=mustResample;
+      p.cm = cm;
    }
 
-   protected boolean crop(int x,int y, int w, int h,boolean repaint) {
+   protected boolean crop(double x,double y, double w, double h,boolean repaint) {
 
       // En cas de hors image
       int test=0;
@@ -210,21 +211,21 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       if( x+w>=width ) { w = width-x; test++; }
       if( y+h>=height ) { h = height-y; test++; }
 
-      // inutile, le zoom couvre toute l'image
+      // inutile, le crop couvre toute l'image
       if( test==4 ) return false;
 
       // Extraction des pixelsRGB
-      int [] npixelsRGB = new int[w*h];
+      int [] npixelsRGB = new int[(int)(w*h)];
       for( int j=0; j<h; j++ ) {
-         int srcPos = (y+j)*width+x;
-         int destPos = j*w;
-         System.arraycopy(pixelsRGB, srcPos, npixelsRGB, destPos, w);
+         int srcPos = (int)( (y+j)*width+x );
+         int destPos = (int)( j*w );
+         System.arraycopy(pixelsRGB, srcPos, npixelsRGB, destPos, (int)w);
       }
       pixelsRGB = npixelsRGB;
 
       // On perd la référence aux pixels d'origine (A VOIR ?)
       red = green = blue = null;
-      flagRed = flagGreen = flagBlue = false;
+//      flagRed = flagGreen = flagBlue = false;
 
       crop1(x,y,w,h,repaint);
       return true;

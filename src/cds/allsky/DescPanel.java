@@ -151,9 +151,9 @@ public class DescPanel extends JPanel implements ActionListener {
       pCenter.add(resetCheckbox, c);
       c.gridy++;
       JPanel pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      pTiles.add(keepRadio);      keepRadio.setEnabled(false);
-      pTiles.add(overwriteRadio); overwriteRadio.setEnabled(false);
-      pTiles.add(coaddRadio);     coaddRadio.setEnabled(false);
+      pTiles.add(keepRadio);      //keepRadio.setEnabled(false);
+      pTiles.add(overwriteRadio); //overwriteRadio.setEnabled(false);
+      pTiles.add(coaddRadio);     //coaddRadio.setEnabled(false);
       pCenter.add(pTiles, c);
       
       c.gridx=2;
@@ -277,6 +277,7 @@ public class DescPanel extends JPanel implements ActionListener {
       overwriteRadio = new JRadioButton(OVERWRITEALLSKY); tilesGroup.add(overwriteRadio);
       coaddRadio = new JRadioButton(COADDALLSKY); tilesGroup.add(coaddRadio);
       keepRadio.setSelected(true);
+      
       specifCheckbox = new JCheckBox(SPECIFALLSKY); specifCheckbox.setSelected(false);
       specifTextField = new JTextField(30);
       blankCheckbox = new JCheckBox(BLANKALLSKY); blankCheckbox.setSelected(false);
@@ -284,7 +285,7 @@ public class DescPanel extends JPanel implements ActionListener {
 
       resetCheckbox.setText(REP_DEST_RESET);
       resetCheckbox.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
+         public void actionPerformed(ActionEvent e) { 
             if (resetCheckbox.isSelected()) {
                parentPanel.setRestart();
                coaddRadio.setSelected(false);
@@ -464,6 +465,7 @@ public class DescPanel extends JPanel implements ActionListener {
       keepRadio.setEnabled(!b);
       coaddRadio.setEnabled(!b);
       overwriteRadio.setEnabled(!b);
+      System.out.println("setResetSelected : keepRadio.isEnabled()="+!keepRadio.isEnabled());
       // resetHpx.setSelected(b);
    }
 
@@ -481,6 +483,8 @@ public class DescPanel extends JPanel implements ActionListener {
       keepRadio.setEnabled(enable);
       coaddRadio.setEnabled(enable);
       overwriteRadio.setEnabled(enable);
+      System.out.println("setResetEnable : keepRadio.isEnabled()="+!keepRadio.isEnabled());
+
       // resetHpx.setEnabled(enable);
    }
 

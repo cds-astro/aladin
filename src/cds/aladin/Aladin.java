@@ -80,13 +80,15 @@ import cds.xml.XMLParser;
  * @beta       <LI> HTTP URL direct access
  * @beta       <LI> Crop full resolution has been improved (bilinear, faster) </UL>
  * @beta    <LI> GROUP VOTable export
- * @beta    <LI> Mollweide projection support
+ * @beta    <LI> New projections (Mollweide, TNX and SIP as TAN)
  * @beta    <LI> PDS image support (not compressed, header inside)
  * @beta    <LI> Last measurement panel height kept in configuration file
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Rice decomp for 16 and 8 BITPIX (only 32 was previously supported)
+ * @beta    <LI> Crop on RGB is now working fine
  * @beta    <LI> BMP saving bug fixed
  * @beta    <LI> FITS binary table bug fixed (double bit mask error)
  * @beta    <LI> Huge image mode available even via network (required very good bandwidth)
@@ -116,7 +118,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.046";
+    static public final    String VERSION = "v7.048";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

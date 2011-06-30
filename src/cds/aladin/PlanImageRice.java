@@ -104,6 +104,7 @@ System.out.println("heap size="+buf.length);
                int len = getInt(table,row*8);
                int pos = getInt(table,row*8+4);
                decomp(buf,pos,pixelsOrigin,offset,tile,32,bitpix);
+//               decomp_short(buf,pos,pixelsOrigin,offset,tile,32,bitpix);
                offset+=tile;
             }
             
@@ -165,26 +166,13 @@ System.out.println("heap size="+buf.length);
   }
    
    public static void decomp(byte buf[],int pos,byte array[], int offset,int nx,int nblock,int bitpix) throws Exception {
-      int bsize, i, k, imax;
+      int i, k, imax;
       int nbits, nzero, fs;
       int b, diff, lastpix;
       int bytevalue;
       int fsmax, fsbits, bbits;
-
-      /*
-       * Original size of each pixel (bsize, bytes) and coding block
-       * size (nblock, pixels)
-       * Could make bsize a parameter to allow more efficient
-       * compression of short & byte images.
-       */
-      bsize = 4;
-      /*    nblock = 32; */
-      /*
-       * From bsize derive:
-       * FSBITS = # bits required to store FS
-       * FSMAX = maximum value for FS
-       * BBITS = bits/pixel for direct coding
-       */
+      
+      int bsize = bitpix/8;
       switch (bsize) {
          case 1:
             fsbits = 3;
@@ -198,7 +186,7 @@ System.out.println("heap size="+buf.length);
             fsbits = 5;
             fsmax = 25;
             break;
-         default: throw new Exception("Rice.decomp error: bsize must be 1, 2, or 4 bytes");
+         default: throw new Exception("Rice.decomp error: bitpix must be 8, 16 or 32");
       }
       bbits = 1<<fsbits;
    
@@ -220,20 +208,12 @@ System.out.println("heap size="+buf.length);
       /*
        * Decode in blocks of nblock pixels
        */
-
-      /* first 4 bytes of input buffer contain the value of the first */
-      /* 4 byte integer value, without any encoding */
-
-//      lastpix = getInt(buf,pos+=4);
-      lastpix = 0;      
-      bytevalue = 0xFF & (int)buf[pos++];
-      lastpix = lastpix | (bytevalue<<24);
-      bytevalue = 0xFF & (int)buf[pos++];
-      lastpix = lastpix | (bytevalue<<16);
-      bytevalue = 0xFF & (int)buf[pos++];
-      lastpix = lastpix | (bytevalue<<8);
-      bytevalue = 0xFF & (int)buf[pos++];
-      lastpix = lastpix | bytevalue;
+      
+      lastpix = 0;
+      for( i=0; i<bsize; i++ ) {
+         bytevalue = 0xFF & (int)buf[pos++];
+         lastpix = (lastpix<<8) | bytevalue;
+      }
 
       b = 0xFF & (int)buf[pos++];         /* bit buffer           */
       nbits = 8;                 /* number of bits remaining in b    */
@@ -311,13 +291,9 @@ System.out.println("heap size="+buf.length);
                }
                lastpix = diff+lastpix;
                setPixVal(array,bitpix,i+offset,lastpix);
-
             }
          }
       }
    }
-
-
-
 }
  

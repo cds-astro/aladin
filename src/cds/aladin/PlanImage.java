@@ -461,10 +461,14 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
        PlanImage p = (PlanImage)p1;
 
        // Attention, on ne duplique que les données 8 bits, les pixels originaux sont partagés
-       if( getBufPixels8()!=null  ) {
-          p.setBufPixels8(new byte[getBufPixels8().length]);
-          System.arraycopy(getBufPixels8(),0,p.getBufPixels8(),0,getBufPixels8().length);
-       } else setBufPixels8(null);
+       try {
+         if( getBufPixels8()!=null  ) {
+             p.setBufPixels8(new byte[getBufPixels8().length]);
+             System.arraycopy(getBufPixels8(),0,p.getBufPixels8(),0,getBufPixels8().length);
+          } else setBufPixels8(null);
+      } catch( Exception e ) {
+         setBufPixels8(null);
+      }
        p.pixelsOrigin=pixelsOrigin;
        
        p.projD = null;

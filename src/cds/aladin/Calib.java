@@ -124,10 +124,19 @@ import java.util.*;
        String [] array = projType;
        String s = s1.toUpperCase();
        for( i=1; i<array.length; i++ ) {
+          
+          // En attendant de supporter TANSIP
           if( s.indexOf(array[i])>=0 ) {
              Aladin.aladin.command.toStdoutAndConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
              return i;
           }
+       }
+       
+       // En attendant de supporter TNX
+       if( s.indexOf("TNX")>=0 || s.indexOf("COE")>=0 ) {
+          i=TAN;
+          Aladin.aladin.command.toStdoutAndConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
+          return i;
        }
        return -1;
     }
