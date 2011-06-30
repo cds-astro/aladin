@@ -370,7 +370,7 @@ long t1,t;
       // Les FoV
       if( !Aladin.OUTREACH ) {
           sv.addElement(fovServer = new ServerFoV(aladin));
-          sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
+          if( Aladin.PROTO ) sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
       }
 
       // Les serveurs d'application via GLU
