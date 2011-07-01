@@ -841,7 +841,7 @@ public String getUrl() {
    
    // Si la map n'est pas profonde, les losanges Allsky feront l'affaire */
    protected HealpixKey getHealpixFromAllSky(int order,long npix) {
-      if( order==3 ) {
+      if( order==3 && allsky!=null ) {
          int orderLosange= getLosangeOrder();
          if( orderLosange!=-1 && orderLosange <= getAllSkyOrder() ) {
             HealpixKey healpix = (allsky.getPixList())[ (int)npix ];

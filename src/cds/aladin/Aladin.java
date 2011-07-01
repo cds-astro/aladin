@@ -87,6 +87,8 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
+ * @beta    <LI> Upgrade test bug fixed
  * @beta    <LI> Rice decomp for 16 and 8 BITPIX (only 32 was previously supported)
  * @beta    <LI> Crop on RGB is now working fine
  * @beta    <LI> BMP saving bug fixed
@@ -118,7 +120,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.048";
+    static public final    String VERSION = "v7.049";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -141,7 +143,7 @@ public class Aladin extends JApplet
     static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
                                              // créé, "" si impossible à créer
 
-    static protected final String FOVURL = "http://"+Aladin.ALADINMAINSITE+"/java/FOVs.xml";
+    static protected final String FOVURL  = "http://"+Aladin.ALADINMAINSITE+"/java/FOVs.xml";
     static protected final String TREEURL = "http://"+Aladin.ALADINMAINSITE+"/java/Tree.dic";
     static protected final String LANGURL = "http://"+Aladin.ALADINMAINSITE+"/java/nph-aladin.pl?frame=getLang";
 
@@ -2318,22 +2320,37 @@ public class Aladin extends JApplet
  Aladin.trace(3,"Remove cache directory: "+cacheDir);
     }
 
-   /** Memorisation de la derniere version disponible (transmis par Glu.log) */
-   synchronized protected void setCurrentVersion(String s )  {
+   /** Memorisation de la derniere version disponible (transmis par Glu.log)
+    * En cas de modification, on efface le cache, notamment le dico GLU */
+   protected void setCurrentVersion(String s )  {
        currentVersion = s;
-
-       // On en profite pour tester le numero de version ainsi
-       // que l'affichage d'un reseau non trouve
-       if( !isApplet() && TESTRELEASE ) testVersion();
+       testUpgrade();
 
        // Doit-on nettoyer le cache ?
        String lastCurrentVersion = configuration.getOfficialVersion();
        if( currentVersion!=null && currentVersion.length()!=0 &&
              (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
           configuration.setOfficialVersion(currentVersion);
+          trace(1,"Resetting GLU records (=> clear local cache)...");
           cache.clear();
        }
     }
+   
+   /** Vérifie s'il est nécessaire de demander à l'utilisateur l'installation
+    * de la nouvelle version */
+   private void testUpgrade() {
+      if( NOGUI || isApplet() || !TESTRELEASE ) return;
+      
+      (new Thread("testUpgrade"){
+         @Override
+         public void run() { 
+            try {
+               Thread.currentThread().sleep(5000);
+               testVersion();
+            } catch( Exception e) { }
+         }
+      }).start();
+   }
 
    /** Indication de l'etat de l'impression */
    synchronized void setFlagPrint(boolean print) { this.print = print;  }
@@ -2419,7 +2436,6 @@ public class Aladin extends JApplet
        String s = chaine.getString("MAJOR")
           +"!Aladin Java "+currentVersion
           +chaine.getString("MAJOR1");
-       Util.pause(5000);
        if( !confirmation(s) ) return;
        glu.showDocument("AladinJava.SA","");
     }

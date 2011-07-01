@@ -307,11 +307,11 @@ public class DBBuilder  {
 			if (fils[i] != null && !found) found = true;
 		}
 		if (!found) return null;
-		for( int i =0; i<4; i++ ) {
-			// s'il y a au moins un fils, on met les autres à vides et pas null
-			// pour pouvoir quand meme construire le parent (tronqué)
-			if (fils[i] == null) fils[i] = new Fits(SIDE,SIDE,bitpix);
-		}
+//		for( int i =0; i<4; i++ ) {
+//			// s'il y a au moins un fils, on met les autres à vides et pas null
+//			// pour pouvoir quand meme construire le parent (tronqué)
+//			if (fils[i] == null) fils[i] = new Fits(SIDE,SIDE,bitpix);
+//		}
 		return createNodeHpx(file,path,order,npix,fils);
 	}
 	
@@ -479,12 +479,13 @@ public class DBBuilder  {
 	Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
 	   
 	   int w=SIDE;
+	   double blank = getBlank();
 	   
        boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
 	   if( !inTree ) return findFits(file+".fits");
 	   
 	   Fits out = new Fits(w,w,bitpix);
-	   out.setBlank(getBlank());
+	   out.setBlank(blank);
 	   if (getBscale() != Double.NaN && getBzero() != Double.NaN) { 
 	      out.setBscale(getBscale());
 	      out.setBzero(getBzero());
@@ -496,24 +497,39 @@ public class DBBuilder  {
 	         in = fils[quad];
 	         int offX = (dg*w)>>>1;
 	         int offY = ((1-hb)*w)>>>1;
-	         double pix,p1,p2=0,p3=0,p4=0;
+//	         double pix=0;
+//	         double p1,p2,p3,p4;
 	         
 	         for( int y=0; y<w; y+=2 ) {
 	            for( int x=0; x<w; x+=2 ) {
+	               
+	               // On prend la moyenne des 4
+	               double pix=0;
+	               boolean ok=false;
+	               if( in!=null ) {
+	                  for( int i=0;i<4; i++ ) {
+	                     int gx = i==1 || i==3 ? 1 : 0;
+	                     int gy = i>1 ? 1 : 0;
+	                     double p = in.getPixelDouble(x+gx,y+gy);
+	                     if( !in.isBlankPixel(p) ) { pix+=p/4; ok=true; }
+	                  }
+	               }
+	               if( !ok ) pix=blank;  // aucune valeur => BLANK
 
-	               p1=in.getPixelDouble(x,y);
-	               p2=in.getPixelDouble(x+1,y);
-	               p3=in.getPixelDouble(x,y+1);
-	               p4=in.getPixelDouble(x+1,y+1);
+                   // On garde la valeur médiane
+//                 if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
+//                 else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
+//                 else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
+//                 else pix=p4;
+                   
+//	               p1=in.getPixelDouble(x,y);
+//	               p2=in.getPixelDouble(x+1,y);
+//	               p3=in.getPixelDouble(x,y+1);
+//	               p4=in.getPixelDouble(x+1,y+1);
+//	               
+//	               // On prend la moyenne
+//	               pix = p1/4 + p2/4 + p3/4 + p4/4;
 	               
-	               // On garde la valeur médiane
-//	               if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-//	               else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-//	               else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-//	               else pix=p4;
-	               
-	               // On prend la moyenne
-	               pix = p1/4 + p2/4 + p3/4 + p4/4;
 	               out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
 	            }
 	         }
@@ -524,7 +540,9 @@ public class DBBuilder  {
 	   out.writeFITS(file+".fits");
        if (npix%1000 == 0 || DEBUG) Aladin.trace(4,"DBDuilber.createNodeHpx("+order+"/"+npix+") "+file+"... ");
 
-	   for( int i=0; i<4; i++ ) fils[i].free();
+	   for( int i=0; i<4; i++ ) {
+	      if( fils[i]!=null ) fils[i].free();
+	   }
 	   return out;
 	}
 

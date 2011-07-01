@@ -117,60 +117,60 @@ public class HpxBuilder {
 	 * @throws Exception
 	 * @deprecated
 	 */
-	Fits buildDoubleHealpix(int nside_file, long npix_file, int nside)
-			throws Exception {
-		boolean empty = true;
-		long min;
-		long index;
-		double point[] = new double[2];
-		double radec[] = new double[2];
-		Coord coo;
-		Fits file;
-
-		// cherche les numéros de pixels Healpix dans ce losange
-		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-
-		// initialisation de la liste des fichiers originaux pour ce losange
-		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
-		
-		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-		PixTools.PolarToRaDec(point, radec);
-
-		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
-			return null;
-
-		Fits out = new Fits(SIDE, SIDE, bitpix);
-		out.setBlank(getBlank());
-		if (bscale != Double.NaN && bzero != Double.NaN)  { 
-			out.setBscale(getBscale());
-			out.setBzero(getBzero());
-		}
-		// cherche la valeur à affecter dans chacun des pixels healpix
-		for (int y = 0; y < out.height; y++) {
-			for (int x = 0; x < out.width; x++) {
-				index = min + xy2hpx(y * out.width + x);
-				// recherche les coordonnées du pixels HPX
-				point = CDSHealpix.pix2ang_nest(nside, index);
-				PixTools.PolarToRaDec(point, radec);
-
-				coo = new Coord(radec[0], radec[1]);
-
-				// recherche dans mes fichiers downloadé
-				if ((file = searchDownloaded(downFiles,coo, recouvrement)) != null) {
-					out.setPixelDouble(x, y, file.getPixelDouble((int) coo.x,
-							file.height - 1 - (int) coo.y));
-					empty = false;
-				}
-				// si rien trouvé
-				else {
-					out.setPixelDouble(x, y, Double.NaN);
-					// out.setPixelDouble(x, y, -1);
-				}
-			}
-		}
-		// System.out.println("search + setPixel=> "+(System.currentTimeMillis()-t)+"ms");
-		return (!empty) ? out : null;
-	}
+//	Fits buildDoubleHealpix(int nside_file, long npix_file, int nside)
+//			throws Exception {
+//		boolean empty = true;
+//		long min;
+//		long index;
+//		double point[] = new double[2];
+//		double radec[] = new double[2];
+//		Coord coo;
+//		Fits file;
+//
+//		// cherche les numéros de pixels Healpix dans ce losange
+//		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
+//
+//		// initialisation de la liste des fichiers originaux pour ce losange
+//		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
+//		
+//		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
+//		PixTools.PolarToRaDec(point, radec);
+//
+//		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
+//			return null;
+//
+//		Fits out = new Fits(SIDE, SIDE, bitpix);
+//		out.setBlank(getBlank());
+//		if (bscale != Double.NaN && bzero != Double.NaN)  { 
+//			out.setBscale(getBscale());
+//			out.setBzero(getBzero());
+//		}
+//		// cherche la valeur à affecter dans chacun des pixels healpix
+//		for (int y = 0; y < out.height; y++) {
+//			for (int x = 0; x < out.width; x++) {
+//				index = min + xy2hpx(y * out.width + x);
+//				// recherche les coordonnées du pixels HPX
+//				point = CDSHealpix.pix2ang_nest(nside, index);
+//				PixTools.PolarToRaDec(point, radec);
+//
+//				coo = new Coord(radec[0], radec[1]);
+//
+//				// recherche dans mes fichiers downloadé
+//				if ((file = searchDownloaded(downFiles,coo, recouvrement)) != null) {
+//					out.setPixelDouble(x, y, file.getPixelDouble((int) coo.x,
+//							file.height - 1 - (int) coo.y));
+//					empty = false;
+//				}
+//				// si rien trouvé
+//				else {
+//					out.setPixelDouble(x, y, Double.NaN);
+//					// out.setPixelDouble(x, y, -1);
+//				}
+//			}
+//		}
+//		// System.out.println("search + setPixel=> "+(System.currentTimeMillis()-t)+"ms");
+//		return (!empty) ? out : null;
+//	}
 	
 	
     /**
@@ -584,64 +584,64 @@ public class HpxBuilder {
 	 * @throws Exception
 	 * @deprecated
 	 */
-	Fits buildIntHealpix(int nside_file, long npix_file, int nside)
-			throws Exception {
-		boolean empty = true;
-		long min;
-		long index;
-		double point[] = new double[2];
-		double radec[] = new double[2];
-		Coord coo;
-		Fits file = null;
-
-		// initialisation de la liste des fichiers originaux pour ce losange
-		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
-//		downFiles.clear();
-
-		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
-			return null;
-		
-		// cherche les numéros de pixels Healpix dans ce losange
-		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-		
-		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-		PixTools.PolarToRaDec(point, radec);
-		Fits out = new Fits(SIDE, SIDE, bitpix);
-		out.setBlank(getBlank());
-		if (bscale != Double.NaN && bzero != Double.NaN) { 
-			out.setBscale(getBscale());
-			out.setBzero(getBzero());
-		}
-		// cherche la valeur à affecter dans chacun des pixels healpix
-		for (int y = 0; y < out.height; y++) {
-			for (int x = 0; x < out.width; x++) {
-				index = min + xy2hpx(y * out.width + x);
-				// recherche les coordonnées du pixels HPX
-				point = CDSHealpix.pix2ang_nest(nside, index);
-				PixTools.PolarToRaDec(point, radec);
-				coo = new Coord(radec[0], radec[1]);
-
-				// recherche simple depuis l'ancien gagnant
-				file = searchDownloaded(downFiles,coo, recouvrement);
-				if (file != null) {
-					out.setPixelInt(x, y, file.getPixelInt((int) coo.x,
-							file.height - 1 - (int) coo.y));
-					empty = false;
-				}
-				// si rien trouvé
-				else {
-				   if( out.hasBlank() ) out.setPixelInt(x,y,(int)out.getBlank());
-				   else {
-				      out.setPixelInt(x, y, Integer.MIN_VALUE);
-				      out.setBlank(Integer.MIN_VALUE);
-				   }
-//                   out.setPixelInt(x, y, -1);
-				}
-
-			}
-		}
-		return (!empty) ? out : null;
-	}
+//	Fits buildIntHealpix(int nside_file, long npix_file, int nside)
+//			throws Exception {
+//		boolean empty = true;
+//		long min;
+//		long index;
+//		double point[] = new double[2];
+//		double radec[] = new double[2];
+//		Coord coo;
+//		Fits file = null;
+//
+//		// initialisation de la liste des fichiers originaux pour ce losange
+//		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
+////		downFiles.clear();
+//
+//		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
+//			return null;
+//		
+//		// cherche les numéros de pixels Healpix dans ce losange
+//		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
+//		
+//		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
+//		PixTools.PolarToRaDec(point, radec);
+//		Fits out = new Fits(SIDE, SIDE, bitpix);
+//		out.setBlank(getBlank());
+//		if (bscale != Double.NaN && bzero != Double.NaN) { 
+//			out.setBscale(getBscale());
+//			out.setBzero(getBzero());
+//		}
+//		// cherche la valeur à affecter dans chacun des pixels healpix
+//		for (int y = 0; y < out.height; y++) {
+//			for (int x = 0; x < out.width; x++) {
+//				index = min + xy2hpx(y * out.width + x);
+//				// recherche les coordonnées du pixels HPX
+//				point = CDSHealpix.pix2ang_nest(nside, index);
+//				PixTools.PolarToRaDec(point, radec);
+//				coo = new Coord(radec[0], radec[1]);
+//
+//				// recherche simple depuis l'ancien gagnant
+//				file = searchDownloaded(downFiles,coo, recouvrement);
+//				if (file != null) {
+//					out.setPixelInt(x, y, file.getPixelInt((int) coo.x,
+//							file.height - 1 - (int) coo.y));
+//					empty = false;
+//				}
+//				// si rien trouvé
+//				else {
+//				   if( out.hasBlank() ) out.setPixelInt(x,y,(int)out.getBlank());
+//				   else {
+//				      out.setPixelInt(x, y, Integer.MIN_VALUE);
+//				      out.setBlank(Integer.MIN_VALUE);
+//				   }
+////                   out.setPixelInt(x, y, -1);
+//				}
+//
+//			}
+//		}
+//		return (!empty) ? out : null;
+//	}
 
 	/**
 	 * This method does the actual GET
