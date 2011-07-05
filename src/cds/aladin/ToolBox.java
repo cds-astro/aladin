@@ -68,12 +68,13 @@ public final class ToolBox extends JComponent implements
    static final int XMATCH= 17;
    static final int RESAMP= 18;
    static final int CROP  = 19;
+   static final int PLOT  = 20;
 
-   static int NBTOOL = 20;        // Nombre d'outils existants
+   static int NBTOOL = 21;        // Nombre d'outils existants
 
    // Ordre d'apparition des boutons
    private int [] drawn = {SELECT,PAN,ZOOM,DIST,PHOT,DRAW,TAG,
-                         FILTER,XMATCH,RGB,BLINK,CROP,CONTOUR,WEN,HIST,PROP,
+                         FILTER,XMATCH,PLOT,RGB,BLINK,CROP,CONTOUR,HIST,PROP,
                          DEL };
 
    // Ordre d'apparition des boutons
@@ -92,15 +93,15 @@ public final class ToolBox extends JComponent implements
    static int [] forTool = { DRAW,TAG,PHOT,DIST };
 
    // liste des boutons toujours up (simple clic)
-   static int [] up = { BNOTE,DEL,PROP,FILTER };
+   static int [] up = { BNOTE,DEL,PROP,FILTER,PLOT };
 
    // Liste des tools non-autorisees en fonction du type de plan
-   static int [] imgmode  = { /*DRAW,TAG,PHOT,DIST*//*, LABEL */ };   // pour Image
-   static int [] imghugemode  = { /*DRAW,TAG,PHOT,DIST,*/RGB,BLINK,/*RESAMP,*/WEN};   // pour Image huge
-   static int [] contourmode = { HIST,DRAW,TAG,PHOT,DIST,CROP/* ,LABEL */ }; // pour un PlanContour
-   static int [] toolmode = { HIST,CROP };                       // pour Tool
+   static int [] imgmode  = { /*DRAW,TAG,PHOT,DIST*//*, LABEL */ PLOT};   // pour Image
+   static int [] imghugemode  = { /*DRAW,TAG,PHOT,DIST,*/RGB,BLINK,/*RESAMP,*/WEN,PLOT};   // pour Image huge
+   static int [] contourmode = { HIST,DRAW,TAG,PHOT,DIST,CROP/* ,LABEL */,PLOT }; // pour un PlanContour
+   static int [] toolmode = { HIST,CROP,PLOT };                       // pour Tool
    static int [] catmode  = { HIST,CROP /*,DRAW,TAG,PHOT,DIST*/ };         // pour Catalogue
-   static int [] fieldmode= { HIST,CROP /*,DRAW,TAG,PHOT,DIST,HIST*/ };   // pour Field
+   static int [] fieldmode= { HIST,CROP,PLOT /*,DRAW,TAG,PHOT,DIST,HIST*/ };   // pour Field
 
 
    // Les parametres generaux
@@ -401,6 +402,9 @@ public final class ToolBox extends JComponent implements
         case XMATCH :
            if( tool[i].mode==Tool.DOWN ) aladin.xmatch();
            else if( aladin.frameCDSXMatch!=null ) aladin.frameCDSXMatch.setVisible(false);
+           break;
+        case PLOT :
+           if( tool[i].mode==Tool.DOWN ) aladin.createPlotCat();
            break;
 //        case RESAMP :
 //           new FrameResample(aladin);

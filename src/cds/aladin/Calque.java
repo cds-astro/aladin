@@ -879,7 +879,6 @@ public final class Calque extends JPanel implements Runnable {
          // Pas le même scope
          if( folder!=getMyScopeFolder(plan[i]) ) continue;
 
-//         Enumeration e = plan[i].pcat.setMultiSelect(v,r).elements();
          Enumeration<Obj> e = plan[i].setMultiSelect(v,r).elements();
          while( e.hasMoreElements() ) res.addElement(e.nextElement());
       }

@@ -1236,6 +1236,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    	  // Sinon on retourne la prochaine case libre
       int n = getNextNumView();
 
+      // Si ce n'est pas possible, on prend la dernière case qui n'est pas un scatter plot
+      if( n==-1 ) {
+         for( int i=modeView-1; i>=0; i--) if( !viewSimple[i].isPlotView() ) { n=i; break; }
+      }
+      
       // Si c'est pas possible, on écrase la dernière case
       if( n==-1 ) return modeView-1;
 

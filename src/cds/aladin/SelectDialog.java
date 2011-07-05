@@ -26,6 +26,12 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetListener;
 
 import javax.swing.JPanel;
 
@@ -59,7 +65,7 @@ public final class SelectDialog extends JPanel {
       gbl.setConstraints(mp,gbc);
       add(mp);
    }
-
+   
    public Insets getInsets() { return new Insets(dw,dw,5,5); }
 
    public void paintComponent(Graphics g) {

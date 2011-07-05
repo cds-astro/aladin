@@ -372,12 +372,13 @@ public class Plan implements Runnable {
 
       Vector<Obj> res = new Vector<Obj>(5000);
 
-      Iterator<Obj> it = iterator();
+      Iterator<Obj> it = iterator(v);
       while( it!=null && it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Position) ) continue;
          Position p = (Position)o;
-         if (/* p.plan instanceof PlanContour || */ p.plan.type==Plan.FOV || p instanceof Forme) continue;
+         if( p.plan.type==Plan.FOV || p instanceof Forme) continue;
+         
          // on ne sélectionne que les sources "filtrées"
          if( p.inRectangle(v,r) &&
                 ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
@@ -407,7 +408,7 @@ public class Plan implements Runnable {
 
        Vector<Obj> res = new Vector<Obj>(500);
 
-       Iterator<Obj> it = iterator();
+       Iterator<Obj> it = iterator(v);
        if( type==Plan.APERTURE ) {
           for( i=0; it.hasNext() ; i++ ) {
              Obj o = it.next();
@@ -417,7 +418,7 @@ public class Plan implements Runnable {
                    res.addElement(o);
                 } else {
                    aladin.calque.planRotCenter=null;
-                   Iterator<Obj> it1 = iterator();
+                   Iterator<Obj> it1 = iterator(v);
                    while( it1.hasNext() ) res.addElement(it1.next());
                 }
                 break;
@@ -1620,5 +1621,8 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
    // Recupération d'un itérator sur les Obj
    protected Iterator<Obj> iterator() { return pcat==null ? null : pcat.iterator(); }
+   
+   // Recupération d'un itérator sur les objets visible dans la vue v (voir spécificité PlanBGCat)
+   protected Iterator<Obj> iterator(ViewSimple v) { return iterator(); }
 
 }

@@ -21,11 +21,29 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.*;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -44,7 +62,8 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  */
 public final class ServerDialog extends JFrame
-             implements WidgetFinder, Runnable, ActionListener {
+             implements WidgetFinder, Runnable, ActionListener,
+                        DropTargetListener, DragSourceListener, DragGestureListener {
 	static final int MAXSERVER = 10;
 
 	// Les indices des serveurs
@@ -599,12 +618,31 @@ long t1,t;
       Aladin.makeAdd(ct, buttonTop, "North");
       Aladin.makeAdd(ct, milieu, "Center");
       Aladin.makeAdd(ct, bas, "South");
+      
+      aladin.manageDrop();
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
 //      Thread th = new Thread(this,"AladinServerPack");
 //      th.start();
       run();
    }
+   
+   public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
+   public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
+      dropTargetDragEvent.acceptDrag (DnDConstants.ACTION_COPY_OR_MOVE);
+   }
+   public void dragExit (DropTargetEvent dropTargetEvent) {}
+   public void dragOver (DropTargetDragEvent dropTargetDragEvent) {}
+   public void dropActionChanged (DropTargetDragEvent dropTargetDragEvent){}
+   public void dragDropEnd(DragSourceDropEvent DragSourceDropEvent){}
+   public void dragEnter(DragSourceDragEvent DragSourceDragEvent){}
+   public void dragExit(DragSourceEvent DragSourceEvent){}
+   public void dragOver(DragSourceDragEvent DragSourceDragEvent){}
+   public void dropActionChanged(DragSourceDragEvent DragSourceDragEvent){}
+   public synchronized void drop(DropTargetDropEvent dropTargetDropEvent) {
+      aladin.drop(dropTargetDropEvent);
+   }
+
 
    // Juste pour gagner qq secondes
    public void run() {

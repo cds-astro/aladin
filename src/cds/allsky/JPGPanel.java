@@ -1,6 +1,7 @@
 package cds.allsky;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -42,13 +43,16 @@ public class JPGPanel extends JPanel implements ActionListener {
    private JTextField tCutMin = new JTextField(10);
    private JTextField tCutMax = new JTextField(10);
    private JRadioButton radioManual;                      // selected si on est en mode manuel
+   private JRadioButton radioAllsky;                      // selected si on est en mode allsky
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
 
    JButton ok = new JButton(OK);
 //   private JButton bHelp = new JButton();
    protected JButton bNext = new JButton();
+   protected JButton bPrevious = new JButton();
    JProgressBar progressJpg = new JProgressBar(0,100);
    private String NEXT;
+   private String PREVIOUS;
 
    double[] cut = new double[4];
    private final AllskyPanel allsky;
@@ -58,6 +62,9 @@ public class JPGPanel extends JPanel implements ActionListener {
    public JPGPanel(final AllskyPanel parent) {
       super(new BorderLayout());
       createChaine(Aladin.getChaine());
+      bPrevious = new JButton(PREVIOUS);
+      bPrevious.setEnabled(false);
+      bPrevious.addActionListener(this);
       bNext = new JButton(NEXT);
       bNext.setEnabled(false);
       bNext.addActionListener(this);
@@ -130,7 +137,7 @@ public class JPGPanel extends JPanel implements ActionListener {
       c.gridy++;
       int m=c.insets.top;
       c.insets.top=20;
-      rb = new JRadioButton(getString("JPEGCUTALLSKY"));
+      radioAllsky = rb = new JRadioButton(getString("JPEGCUTALLSKY"));
       rb.setSelected(!manualSelected);
       rb.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -175,6 +182,7 @@ public class JPGPanel extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
+      pBtn.add(bPrevious);
       ok.setText(getString("JPEGBUILDALLSKY"));
       pBtn.add(ok);
       pBtn.add(Box.createRigidArea(new Dimension(10,0)));
@@ -191,8 +199,22 @@ public class JPGPanel extends JPanel implements ActionListener {
 
    private void createChaine(Chaine chaine) {
       NEXT = chaine.getString("NEXT");
+      PREVIOUS = chaine.getString("PREVIOUS");
    }
-
+   
+   protected void resumeWidgetsStatus() {
+      boolean readyToDo = allsky.isExistingAllskyDir();
+      boolean isRunning = allsky.isRunning();
+      bPrevious.setEnabled(readyToDo && !isRunning);
+      bNext.setEnabled(readyToDo && !isRunning );
+      tCutMin.setEnabled(readyToDo);
+      tCutMax.setEnabled(readyToDo);
+      radioManual.setEnabled(readyToDo);
+      radioAllsky.setEnabled(readyToDo);
+      progressJpg.setEnabled(readyToDo);
+      ok.setEnabled(readyToDo);
+      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
+   }
 
    public void clearForms() {
       tCutMin.setText("");
@@ -248,7 +270,11 @@ public class JPGPanel extends JPanel implements ActionListener {
    //		transfertFct = fct;
    //	}
 
-   public void show() { updateCurrentCM(); super.show();  }
+   public void show() {
+      updateCurrentCM();
+      resumeWidgetsStatus();
+      super.show(); 
+   }
 
    public boolean updateCurrentCM() {
       boolean rep=true;
@@ -295,6 +321,9 @@ public class JPGPanel extends JPanel implements ActionListener {
          
       } else if (e.getSource() == bNext) {
          allsky.showPublish();
+         
+      } else if (e.getSource() == bPrevious) {
+         allsky.showBuild();
       }
    }
 

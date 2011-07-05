@@ -23,6 +23,7 @@ import static cds.allsky.AllskyConst.INDEX;
 import static cds.allsky.AllskyConst.TESS;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -60,6 +61,7 @@ public class BuildPanel extends JPanel implements ActionListener {
    protected JButton b_pause;
    protected JButton b_ok;
 //   protected JButton b_help;
+   protected JButton b_previous;
    protected JButton b_next;
 
    private static JTable tab = null;
@@ -101,7 +103,7 @@ public class BuildPanel extends JPanel implements ActionListener {
    private JLabel bitpixLabel = new JLabel();
    private JLabel resoLabel;
 
-   private String OK,RESTART,RESUME,STOP,DONE, NEXT;
+   private String OK,RESTART,RESUME,STOP,DONE, PREVIOUS, NEXT;
    private String canceltip;
    AllskyPanel allskyPanel;
 
@@ -115,6 +117,7 @@ public class BuildPanel extends JPanel implements ActionListener {
       RESTART = getString("RE_START");
       canceltip = getString("TIPCANCALLSKY");
       NEXT = getString("NEXT");
+      PREVIOUS = getString("PREVIOUS");
    }
 
    private String getString(String k) { return allskyPanel.aladin.getChaine().getString(k); }
@@ -261,6 +264,7 @@ public class BuildPanel extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
+      pBtn.add(b_previous);
       pBtn.add(b_ok);
       pBtn.add(b_cancel);
       //		pBtn.add(b_close);
@@ -299,6 +303,9 @@ public class BuildPanel extends JPanel implements ActionListener {
    }
 
    private void initBtn() {
+      b_previous = new JButton(PREVIOUS);
+      b_previous.addActionListener(this);
+      b_previous.setEnabled(false);
       b_ok = new JButton(OK);
       b_ok.addActionListener(this);
       b_ok.setEnabled(false);
@@ -359,6 +366,33 @@ public class BuildPanel extends JPanel implements ActionListener {
    void setMainPanel(AllskyPanel panel) {
       allskyPanel = panel;
    }
+   
+   public void show() {
+      super.show();
+      resumeWidgetsStatus();
+   }
+   
+   protected void resumeWidgetsStatus() {
+      boolean readyToDo = allskyPanel.isExistingDir() && allskyPanel.pDesc.dir_D.getText().trim().length()>0;
+      boolean isRunning = allskyPanel.isRunning();
+      b_previous.setEnabled(readyToDo && !isRunning);
+      b_next.setEnabled(readyToDo && !isRunning && allskyPanel.isExistingAllskyDir() );
+      b_ok.setEnabled(readyToDo && !isRunning);
+      b_cancel.setEnabled(readyToDo && isRunning);
+      
+      bit8.setEnabled(readyToDo && !isRunning);
+      bit16.setEnabled(readyToDo && !isRunning);
+      bit32.setEnabled(readyToDo && !isRunning);
+      bit_32.setEnabled(readyToDo && !isRunning);
+      bit_64.setEnabled(readyToDo && !isRunning);
+      samplFast.setEnabled(readyToDo && !isRunning);
+      overlayFast.setEnabled(readyToDo && !isRunning);
+      samplBest.setEnabled(readyToDo && !isRunning);
+      overlayBest.setEnabled(readyToDo && !isRunning);
+      fading.setEnabled(readyToDo && !isRunning);
+      tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
+      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
+   }
 
    public void clearForms() {
       bitpixO = -1;
@@ -374,6 +408,7 @@ public class BuildPanel extends JPanel implements ActionListener {
       overlayBest.setSelected(true);
       fading.setSelected(true);
       ((TableNside) tab).reset();
+      resumeWidgetsStatus();
    }
 
    public int setSelectedOrder(int val) {
@@ -550,6 +585,7 @@ public class BuildPanel extends JPanel implements ActionListener {
          //			}
 
          // initialisation correcte des barres de progression et boutons
+         
          allskyPanel.resetProgress();
 
          b_ok.setEnabled(false);
@@ -610,6 +646,9 @@ public class BuildPanel extends JPanel implements ActionListener {
          //			allskyPanel.close();
       } else if (e.getSource() == b_next) {
          allskyPanel.showDisplay();
+         
+      } else if (e.getSource() == b_previous) {
+         allskyPanel.showDesc();
       }
 
    }

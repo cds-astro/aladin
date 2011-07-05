@@ -189,12 +189,12 @@ public class AllskyPanel extends JPanel implements ActionListener {
       if (path == null || "".equals(path)) {
          path = getOutputPath();
          convertCut=false;
+      } else {
+         Fits file = Fits.getFits(path);
+         double[] cut = ThreadAutoCut.run(file);
+         pDisplay.setCut(cut);
       }
-      Fits file = Fits.getFits(path);
-      double[] cut = ThreadAutoCut.run(file);
-      pDisplay.setCut(cut);
-      if (convertCut)
-         convertCut(pBuild.getBitpix());
+      if (convertCut) convertCut(pBuild.getBitpix());
    }
    private int setSelectedOrder(int val) {
       return pBuild.setSelectedOrder(val);
@@ -247,10 +247,12 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
 
    protected String getInputPath() {
+      if( pDesc==null ) return null;
       return pDesc.getInputPath();
    }
 
    public String getOutputPath() {
+      if( pDesc==null ) return null;
       return pDesc.getOutputPath();
    }
    
@@ -265,6 +267,10 @@ public class AllskyPanel extends JPanel implements ActionListener {
       HpixTree hpixTree = new HpixTree(s);
       if( hpixTree.getSize()==0 ) return null;
       return hpixTree;
+   }
+
+   public void showDesc() {
+      pTab.setSelectedComponent(pDesc);
    }
 
    public void showPublish() {
@@ -305,39 +311,54 @@ public class AllskyPanel extends JPanel implements ActionListener {
       // si un repertoire de sortie ALLSKY existe déjà, on change le nom du
       // bouton START
       setStart();
-      if (pDesc.getInputPath() != null
-            && (new File(pDesc.getInputPath())).exists()
-            && (new File(pDesc.getOutputPath())).exists()) {
-         // met le bouton Reset utilisable, mais pas selectionné
-         setResume();
-         preview(0);
-      } else if ((new File(pDesc.getOutputPath())).exists()) {
-         // met les boutons "Start" des autres onglets/actions utilisables
-         setStartEnabled(true);
-         preview(0);
-      }
+      pDesc.resumeWidgetsStatus();
+      if( isExistingAllskyDir() ) preview(0);
+      
+//      if (pDesc.getInputPath() != null
+//            && (new File(pDesc.getInputPath())).exists()
+//            && (new File(pDesc.getOutputPath())).exists()) {
+//         // met le bouton Reset utilisable, mais pas selectionné
+//         setResume();
+//         preview(0);
+//      } else if ((new File(pDesc.getOutputPath())).exists()) {
+//         // met les boutons "Start" des autres onglets/actions utilisables
+//         setStartEnabled(true);
+//         preview(0);
+//      }
    }
+   
+   protected boolean isExistingDir() {
+      return pDesc!=null && pDesc.getInputPath() != null && (new File(pDesc.getInputPath())).exists();
+   }
+
+   protected boolean isExistingAllskyDir() {
+      return pDesc!=null && pDesc.getOutputPath() != null && (new File(pDesc.getOutputPath())).exists();
+   }
+   
+   private boolean isRunning=false;
+   protected boolean isRunning() { return isRunning; }
+   protected void setIsRunning(boolean flag) { isRunning=flag; }
 
    public void setRestart() {
       displayReStart();
-      pDesc.setResetEnable(true);
-      pDesc.setResetSelected(true);
+//      pDesc.setResetEnable(true);
+//      pDesc.setResetSelected(true);
    }
    public void setResume() {
       displayResume();
-      pDesc.setResetEnable(true);
-      pDesc.setResetSelected(false);
+//      pDesc.setResetEnable(true);
+//      pDesc.setResetSelected(false);
       setStartEnabled(true);
    }
    public void setDone() {
       displayDone();
-      pDesc.setResetEnable(false);
-      pDesc.setResetSelected(false);
+//      pDesc.setResetEnable(false);
+//      pDesc.setResetSelected(false);
    }
    public void setStart() {
       displayStart();
-      pDesc.setResetEnable(false);
-      pDesc.setResetSelected(false);
+//      pDesc.setResetEnable(false);
+//      pDesc.setResetSelected(false);
       setStartEnabled(false);
    }
 
@@ -350,11 +371,10 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
 
    public void toReset() {
-      if (pDesc.toReset()) {
-         resetIndex();
-         resetHpx();
-      }
+      if( pDesc.isResetIndex() ) resetIndex();
+      if (pDesc.isResetHpx()) resetHpx();
    }
+   
    public void resetIndex() {
       cds.tools.Util.deleteDir(new File(getOutputPath()
             + AllskyConst.HPX_FINDER));
@@ -398,8 +418,8 @@ public class AllskyPanel extends JPanel implements ActionListener {
 
    public void displayStart() {
       pBuild.displayStart();
-      pDesc.setResetEnable(false);
-      pDesc.setResetSelected(false);
+//      pDesc.setResetEnable(false);
+//      pDesc.setResetSelected(false);
    }
    public void displayReStart() {
       pBuild.displayReStart();
@@ -445,7 +465,7 @@ public class AllskyPanel extends JPanel implements ActionListener {
       pBuild.displayNext();
       pDisplay.setStartEnabled(b);
       pPublish.setStartEnabled(b);
-      pRGB.setStartEnabled(b);
+      if( pRGB!=null ) pRGB.setStartEnabled(b);
    }
 
    /**

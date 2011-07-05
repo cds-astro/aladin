@@ -3055,7 +3055,7 @@ public class ViewSimple extends JComponent
                                      || plan.type==Plan.TOOL);
 
             // Determination du nombre d'objet sous la souris
-            Iterator<Obj> it = plan.iterator();
+            Iterator<Obj> it = plan.iterator(this);
             for( int j=0; it!=null && it.hasNext(); j++ ) {
                Obj o = it.next();
                if( o.in(vs,p.x,p.y) ) {
@@ -4064,7 +4064,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                } catch( Exception e ) { return true; }
 
                // Totalement en dehors de l'image
-               if( pixels!=null && pixels.length==0 ) { imgFlagDraw=false;  System.out.println("Outside !"); return true;}
+               if( pixels!=null && pixels.length==0 ) { imgFlagDraw=false;  return true;}
                else imgFlagDraw=true;
             }
 

@@ -20,6 +20,7 @@
 package cds.allsky;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -52,6 +53,7 @@ public class DescPanel extends JPanel implements ActionListener {
    private String REP_SOURCE;
    private String REP_DEST;
    private String REP_DEST_RESET;
+   private String INDEX_RESET;
 
    private JLabel infoLabel;
    private JLabel destLabel;
@@ -73,11 +75,12 @@ public class DescPanel extends JPanel implements ActionListener {
    private JTextField specifTextField;
    protected JTextField blankTextField;
 
-   private JCheckBox resetCheckbox = new JCheckBox();
+   private JCheckBox resetHpx = new JCheckBox();
+   private JCheckBox resetIndex = new JCheckBox();
    private JButton browse_S = new JButton();
    private JButton browse_D = new JButton();
    private JTextField dir_S = new JTextField(30); 
-   private JTextField dir_D = new JTextField(30);
+   protected JTextField dir_D = new JTextField(30);
    private JTextField textFieldAllsky = new JTextField(30);
    private String defaultDirectory;
    private AllskyPanel parentPanel;
@@ -148,7 +151,9 @@ public class DescPanel extends JPanel implements ActionListener {
       pCenter.add(Util.getHelpButton(this, getString("HELPPARAMALLSKY")),c);
       c.gridx++;
       c.gridwidth=2;
-      pCenter.add(resetCheckbox, c);
+      pCenter.add(resetIndex, c);
+      c.gridy++;
+      pCenter.add(resetHpx, c);
       c.gridy++;
       JPanel pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       pTiles.add(keepRadio);      //keepRadio.setEnabled(false);
@@ -164,13 +169,13 @@ public class DescPanel extends JPanel implements ActionListener {
       c.insets.left=60;
       JPanel pSpecif = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       pSpecif.add(specifTextField);
-      JButton gridButton = new JButton(getString("HPXGRID"));
-      gridButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            parentPanel.aladin.switchHpxGrid();
-         }
-      });
-      pSpecif.add(gridButton);
+//      gridButton = new JButton(getString("HPXGRID"));
+//      gridButton.addActionListener(new ActionListener() {
+//         public void actionPerformed(ActionEvent e) {
+//            parentPanel.aladin.switchHpxGrid();
+//         }
+//      });
+//      pSpecif.add(gridButton);
       specifTextField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             specifCheckbox.setSelected( specifTextField.getText().trim().length()>0 );
@@ -221,6 +226,7 @@ public class DescPanel extends JPanel implements ActionListener {
       BROWSE = getString("FILEBROWSE");
       REP_DEST = getString("REPDALLSKY");
       REP_DEST_RESET = getString("REPRESALLSKY");
+      INDEX_RESET = getString("INDEXRESETALLSKY");
       LABELALLSKY = getString("LABELALLSKY");
       NEXT = getString("NEXT");
       titlehelp = getString("HHELP");
@@ -283,34 +289,20 @@ public class DescPanel extends JPanel implements ActionListener {
       blankCheckbox = new JCheckBox(BLANKALLSKY); blankCheckbox.setSelected(false);
       blankTextField = new JTextField(18);
 
-      resetCheckbox.setText(REP_DEST_RESET);
-      resetCheckbox.addActionListener(new ActionListener() {
+      resetHpx.setText(REP_DEST_RESET);
+      resetHpx.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { 
-            if (resetCheckbox.isSelected()) {
-               parentPanel.setRestart();
-               coaddRadio.setSelected(false);
-               coaddRadio.setEnabled(false);
-            }
-            else {
-               // if (!resetHpx.isSelected())
-               parentPanel.setResume();
-               keepRadio.setEnabled(true);
-               overwriteRadio.setEnabled(true);
-               coaddRadio.setEnabled(true);
-            }
+            resumeWidgetsStatus();
          }
       });
-      // resetHpx.setText(s_hpxfiles);
-      // resetHpx.addActionListener(new ActionListener() {
-      // public void actionPerformed(ActionEvent e) {
-      // if (resetHpx.isSelected())
-      // parentPanel.aladin.frameAllsky.setRestart();
-      // else if (!resetIndex.isSelected())
-      // parentPanel.aladin.frameAllsky.setResume();
-      // }
-      // });
-      setResetSelected(false);
-      setResetEnable(false);
+
+      resetIndex.setText(INDEX_RESET);
+      resetIndex.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            resumeWidgetsStatus();
+         }
+      });
+
 
       b_next = new JButton(NEXT);
       b_next.addActionListener(new ActionListener() {
@@ -320,19 +312,54 @@ public class DescPanel extends JPanel implements ActionListener {
       });
 //      b_help = Util.getHelpButton(this, help);
 
+      resetHpx.setSelected(false);
+      resetIndex.setSelected(true);
+      resumeWidgetsStatus();
+  }
+   
+   public void show() {
+      super.show();
+      resumeWidgetsStatus();
+   }
+   
+   protected void resumeWidgetsStatus() {
+      boolean allskyExist = parentPanel.isExistingAllskyDir();
+      boolean isRunning = parentPanel.isRunning();
+      resetHpx.setEnabled(allskyExist && !isRunning);
+      resetIndex.setEnabled(allskyExist && !isRunning);
+
+      boolean flag = !resetHpx.isSelected() && resetHpx.isEnabled();
+      keepRadio.setEnabled(flag);
+      overwriteRadio.setEnabled(flag);
+      coaddRadio.setEnabled(flag);
+      
+      if( resetHpx.isSelected() && resetHpx.isEnabled() && resetIndex.isSelected() && resetIndex.isEnabled()) parentPanel.setRestart();
+      else if( resetHpx.isSelected() && resetHpx.isEnabled() || resetIndex.isSelected() && resetIndex.isEnabled() ) parentPanel.setResume();
+      else parentPanel.setStart();
+      
+      boolean isExistingDir = parentPanel.isExistingDir();
+      parentPanel.setStartEnabled(isExistingDir);
+      
+      boolean ready = isExistingDir && dir_D.getText().trim().length()>0;
+      b_next.setEnabled(ready);
+      blankCheckbox.setEnabled(ready && !isRunning);
+      blankTextField.setEnabled(ready && !isRunning);
+      specifCheckbox.setEnabled(ready && !isRunning);
+      specifTextField.setEnabled(ready && !isRunning);
+      dir_S.setEnabled(!isRunning);
+      dir_D.setEnabled(!isRunning);
+      textFieldAllsky.setEnabled(!isRunning);
+      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
    }
 
    public void clearForms() {
       dir_S.setText("");
       dir_D.setText("");
-      parentPanel.actionPerformed(new ActionEvent("", -1, "dirBrowser Action"));
+      if( parentPanel!=null ) parentPanel.actionPerformed(new ActionEvent("", -1, "dirBrowser Action"));
       textFieldAllsky.setText("");
-      // desc.setText("");
-      // descfull.setText("");
-      // copyright.setText("");
-      // origin.setText("");
-      setResetSelected(false);
-      setResetEnable(false);
+      resetHpx.setSelected(false);
+      resetIndex.setSelected(true);
+      resumeWidgetsStatus();
    }
 
    private void dirBrowser(JTextField dir) {
@@ -355,10 +382,11 @@ public class DescPanel extends JPanel implements ActionListener {
    static final int KEEP = 0;
    static final int OVERWRITE = 1;
    static final int AVERAGE = 2;
-   static final String [] COADDMODE = { "keep","overwrite","average" };
+   static final int REPLACETILE = 3;
+   static final String [] COADDMODE = { "keep","overwrite","average","replaceTile" };
 
    public int getCoaddMode() {
-      return resetCheckbox.isSelected() ? OVERWRITE : 
+      return resetHpx.isSelected() || !resetHpx.isEnabled()? REPLACETILE : 
             keepRadio.isSelected() ? KEEP 
             :overwriteRadio.isSelected() ? OVERWRITE : AVERAGE;
    }
@@ -460,33 +488,21 @@ public class DescPanel extends JPanel implements ActionListener {
       dir_D.repaint();
    }
 
-   public void setResetSelected(boolean b) {
-      resetCheckbox.setSelected(b);
-      keepRadio.setEnabled(!b);
-      coaddRadio.setEnabled(!b);
-      overwriteRadio.setEnabled(!b);
-      System.out.println("setResetSelected : keepRadio.isEnabled()="+!keepRadio.isEnabled());
-      // resetHpx.setSelected(b);
+
+   public boolean isResetHpx() {
+      return resetHpx.isSelected() && resetHpx.isEnabled();
    }
 
-   public boolean toReset() {
-      return resetCheckbox.isSelected();
+   public boolean isResetIndex() {
+      return resetIndex.isSelected() && resetIndex.isEnabled();
    }
 
-   // public boolean toResetHpx() {
-   // return resetHpx.isSelected();
-   // }
-
-   public void setResetEnable(boolean enable) {
-      // resetLabel.setEnabled(enable);
-      resetCheckbox.setEnabled(enable);
-      keepRadio.setEnabled(enable);
-      coaddRadio.setEnabled(enable);
-      overwriteRadio.setEnabled(enable);
-      System.out.println("setResetEnable : keepRadio.isEnabled()="+!keepRadio.isEnabled());
-
-      // resetHpx.setEnabled(enable);
-   }
+//   public void setResetEnable(boolean enable) {
+//      // resetLabel.setEnabled(enable);
+//      resetHpx.setEnabled(enable);
+//      resetIndex.setEnabled(enable);
+//      enableUpdate();
+//   }
 
    public void help() {
       JOptionPane.showMessageDialog(this, help, titlehelp,

@@ -390,6 +390,7 @@ NORTHUP	north
 BLINK	assoc
 RSAMP	rsamp
 CROP	crop
+PLOT	x-y
 
 SELECT.fr	select
 DRAW.fr	dessin
@@ -412,6 +413,7 @@ NORTHUP.fr	nord
 BLINK.fr	assoc
 RSAMP.fr	rsamp
 CROP.fr	coupe
+PLOT.fr	x-y
 
 #Zoom
 ZINFO	Adjust the visible area (clic&drag + mouse wheel)
@@ -455,6 +457,7 @@ HBLINK	Create a image association (mosaic or blink sequence)
 HRSAMP	Resample selected images
 HXMATCH	Cross match two catalogue sources
 HCROP	Image cropping
+HPLOT	Scatter plot for catalog sources
 
 HSELECT.fr	Sélecteur de vues ou d'objets - cliquer/étendre avec ou sans la touche MAJ
 HDRAW.fr	Dessin - cliquer en continue, ou point à point pour ajouter des lignes
@@ -477,6 +480,7 @@ HBLINK.fr	Crée une association d'images (soit une mosaïque, soit une séquence an
 HRSAMP.fr	Rééchantillonne les images sélectionnées
 HXMATCH.fr	Corrèle les sources de 2 catalogues 
 HCROP.fr	Copie une portion de l'image
+HPLOT.fr	Trace un diagramme de dispersion pour des sources de catalogues
 
 # ToolBox.java strings
 TBBAR	Change the screen area proportions (drag it)
@@ -2111,6 +2115,8 @@ STOP STOP
 STOP.fr STOP
 NEXT Next >
 NEXT.fr Suivant >
+PREVIOUS < Previous
+PREVIOUS.fr < Précédent
 RE_START RE START
 RE_START2 <html><b>RE</b>START</html>
 RE_START.fr RE-LANCER
@@ -2139,8 +2145,10 @@ PARAMALLSKY Advanced parameters:
 PARAMALLSKY.fr Paramètres avancés:
 REPRESALLSKY Clear all pre-existing target tiles
 REPRESALLSKY.fr Supprimer toutes les tuiles pré-existantes
-KEEPALLSKY keep pre-existing tiles
-KEEPALLSKY.fr conserver les tuiles pré-existantes
+INDEXRESETALLSKY The set of the source images has been modified
+INDEXRESETALLSKY.fr Le jeu d'images sources a été modifié
+KEEPALLSKY keep already-computed pixel values
+KEEPALLSKY.fr conserver les valeurs des pixels déjà calculés
 COADDALLSKY average
 COADDALLSKY.fr moyenner
 OVERWRITEALLSKY overwrite

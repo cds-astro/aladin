@@ -404,7 +404,7 @@ public class DBBuilder  {
 	private double blank;
 	private double[] datacut;
 	private HpixTree hpixTree=null;
-	private int coaddMode=DescPanel.KEEP;
+	private int coaddMode=DescPanel.REPLACETILE;
     
 	// Crée une série de threads de calcul
 	private void createThread(int nbThreads,String outpath,int ordermin,int ordermax,boolean fast, boolean fading, boolean keepBB) {
@@ -775,7 +775,7 @@ public class DBBuilder  {
 		
 		Fits oldOut=null;
 		boolean isInList = isInList(order,npix);
-		if( !isInList || coaddMode==DescPanel.KEEP ) {
+		if( !isInList /* || coaddMode==DescPanel.KEEP */ ) {
 		   oldOut = findFits(file+".fits");
 		   if( !(oldOut==null && isDescendant(order,npix) ) ) return oldOut;
 		}
@@ -788,25 +788,30 @@ public class DBBuilder  {
 		if( DSS ) out = hpx.buildDSSHealpix(nside_file, npix, nside);
         else out = hpx.buildHealpix(nside_file, npix, nside, fast,fading);
         
-        if( coaddMode==DescPanel.AVERAGE ) {
-           if( oldOut==null ) oldOut = findFits(file+".fits");
-           if( out!=null && oldOut!=null ) out.coadd(oldOut);
-        }
-        
 		if( out !=null ) {
-			cds.tools.Util.createPath(file);
-			
-			// écrit les vrais pixels
-			if (bitpix!=0) out.writeFITS(file+".fits");
-				
-		    // écrit les pixels couleurs
-			else {
-				out.inverseYColor();
-				out.writeJPEG(file+".jpg");
-			}
+		   
+		   if( coaddMode!=DescPanel.REPLACETILE ) {
+		      if( oldOut==null ) oldOut = findFits(file+".fits");
+		      if( oldOut!=null ) {
+		         if( coaddMode==DescPanel.AVERAGE ) out.coadd(oldOut);
+		         else if( coaddMode==DescPanel.KEEP ) out.mergeOnNaN(oldOut);
+		         else if( coaddMode==DescPanel.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+		      }
+		   }
+		   cds.tools.Util.createPath(file);
+
+		   // écrit les vrais pixels
+		   if (bitpix!=0) out.writeFITS(file+".fits");
+
+		   // écrit les pixels couleurs
+		   else {
+		      out.inverseYColor();
+		      out.writeJPEG(file+".jpg");
+		   }
+		   
+		   if( npix%10 == 0 || DEBUG ) Aladin.trace(4,"DBBuilder.createLeaveHpx("+order+"/"+npix+") "+DescPanel.COADDMODE[coaddMode]+" in "+(System.currentTimeMillis()-t)+"ms");
 		}
 
-		if( out!=null && (npix%10 == 0 || DEBUG) ) Aladin.trace(4,"DBBuilder.createLeaveHpx("+order+"/"+npix+") "+DescPanel.COADDMODE[coaddMode]+" in "+(System.currentTimeMillis()-t)+"ms");
 		return out;
 	}
 	

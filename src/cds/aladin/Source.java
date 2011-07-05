@@ -297,7 +297,6 @@ public class Source extends Position implements Comparator {
       return box;
    }
 
-
   /** Test d'appartenance.
    * Retourne vrai si le point (x,y) de l'image se trouve dans l'objet
    * @param x,y le point a tester
@@ -605,17 +604,17 @@ public class Source extends Position implements Comparator {
       // if the source is in the filter selection, we proceed the action associated with the active filter
       if( !noInfluence && iAmSelected ) {
       	  drawAssociatedFootprint(g,v,dx,dy);
-          // si aucun des plans dont la source subit l'influence n'est pret
-          // on dessine la source comme d'habitude
-          if( nbFiltersOk == 0 ) {
-             doDraw(g, p, plan.c);
-          }
-          // on applique les differentes actions associees aux differents filtres
-          else {
-              boolean success = drawWithFilter(g, v, p, dx, dy);
-              if ( ! success ) return false;
-		           }
-                }
+      	  // si aucun des plans dont la source subit l'influence n'est pret
+      	  // on dessine la source comme d'habitude
+      	  if( nbFiltersOk == 0 ) {
+      	     doDraw(g, p, plan.c);
+      	  }
+      	  // on applique les differentes actions associees aux differents filtres
+      	  else {
+      	     boolean success = drawWithFilter(g, v, p, dx, dy);
+      	     if ( ! success ) return false;
+      	  }
+      }
 
       // pour les sources qui ne sont sous l'influence d'aucun filtre
       else if(noInfluence) {

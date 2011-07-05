@@ -105,6 +105,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    JPanel panelScroll;
    JScrollPane scroll;
    JSlider opacityLevel;
+   JSlider gapOrder;
    
    JSlider scalingFactor; // facteur d'échelle pour les filtres des plans CATALOG
 
@@ -920,12 +921,19 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             }
          }
       }
+      
+      
+      boolean filet=false; 
+      
       if( plan.isCatalog() ) {
-          addFilet(p, g, c);
+          if( !filet ) addFilet(p, g, c); filet=true;
           scalingFactor = new JSlider(0, 300);
           scalingFactor.setMinimumSize(scalingFactor.getPreferredSize());
           scalingFactor.setValue((int)plan.getScalingFactor()*100);
+          scalingFactor.setMajorTickSpacing(50);
+          scalingFactor.setPaintLabels(true);
           scalingFactor.setPaintTicks(true);
+          scalingFactor.setPaintTrack(true);
           scalingFactor.addChangeListener(this);
           addCouple(p, SCALINGFACTOR, scalingFactor, g, c);
       }
@@ -933,8 +941,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       
       // niveau d'opacité des images et des footprints
       if( aladin.calque.canBeTransparent(plan) ) {
-          addFilet(p,g,c);
-          addSectionTitle(p, OPACITY, g, c);
+         if( !filet ) addFilet(p, g, c); filet=true;
           JPanel pTransp = new JPanel(new FlowLayout());
           opacityLevel = new JSlider(0, 100);
           opacityLevel.setValue((int)(100*plan.getOpacityLevel()));
@@ -945,8 +952,24 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           opacityLevel.setToolTipText(OPACITYLEVEL+" : "+opacityLevel.getValue());
           opacityLevel.addChangeListener(this);
           pTransp.add(opacityLevel);
-          addCouple(p,"", pTransp, g,c);
+          addCouple(p,OPACITY, pTransp, g,c);
       }
+      
+      // Ajustement de l'ordre max
+      if( plan instanceof PlanBGCat ) {
+         if( !filet ) addFilet(p, g, c); filet=true;
+          JPanel pGapOrder = new JPanel(new FlowLayout());
+          gapOrder = new JSlider(-PlanBGCat.MAXGAPORDER, PlanBGCat.MAXGAPORDER);
+          gapOrder.setValue(((PlanBGCat)plan).getGapOrder());
+          gapOrder.setMajorTickSpacing(1);
+          gapOrder.setPaintLabels(true);
+          gapOrder.setPaintTicks(true);
+          gapOrder.setPaintTrack(true);
+          gapOrder.addChangeListener(this);
+          pGapOrder.add(gapOrder);
+          addCouple(p,"Density correction", pGapOrder, g,c);
+      }
+
 
       // Couleur de fond pour une image couleur
       if( plan.ref && !(plan instanceof PlanBG) ) {
@@ -1038,17 +1061,23 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
        Object src = e.getSource();
 
        // modification du niveau de transparence
-        if (src == opacityLevel) {
-            float level = (float) (opacityLevel.getValue() / 100.0);
-            plan.setOpacityLevel(level);
-            opacityLevel.setToolTipText(OPACITYLEVEL + " : "  + (int) (level * 100));
-            aladin.calque.repaintAll();
-        }
+       if (src == opacityLevel) {
+          float level = (float) (opacityLevel.getValue() / 100.0);
+          plan.setOpacityLevel(level);
+          opacityLevel.setToolTipText(OPACITYLEVEL + " : "  + (int) (level * 100));
+          aladin.calque.repaintAll();
+       }
+       // Modification de la correction de densité pour un catalogue progressif
+       else if( src == gapOrder ) {
+          int v = gapOrder.getValue();
+          ((PlanBGCat)plan).setGapOrder(v);
+          aladin.calque.repaintAll();
+       }
        // modification de la taille des segments de polarisation
        else if (src==polaSegmentLen) {
-           float factor = (float)(polaSegmentLen.getValue()/100.0);
-           ((PlanBG)plan).setSegmentLenFactor(factor);
-           aladin.calque.repaintAll();
+          float factor = (float)(polaSegmentLen.getValue()/100.0);
+          ((PlanBG)plan).setSegmentLenFactor(factor);
+          aladin.calque.repaintAll();
        }
        // modification de l'épaisseur des segments de polarisation
        else if (src==polaSegmentThickness) {

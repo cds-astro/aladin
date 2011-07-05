@@ -66,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Plan transparency control by the mouse wheel
  * @beta    <LI> RGB FITS image with any BITPIX value now supported
  * @beta    <LI> Print improvements (Graphics2D support, automatic scale,...)
  * @beta    <LI> Support of HTTPS connections
@@ -73,6 +74,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> Overlay color map tool (for pixels or rainbow filter function)
  * @beta    <LI> Colored FITS cubes support (COLORMOD = ARGB)
  * @beta    <LI> Healpix allsky new features:<UL>
+ * @beta       <LI> Progressive catalogue density control 
  * @beta       <LI> Better performances (required RAM reduced, faster display) 
  * @beta       <LI> Rhomb time loading has been reduced 
  * @beta       <LI> Healpix Multi-Order Coverage Map support (TXT and FITS (NUNIQ-compressed) ) 
@@ -87,6 +89,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
  * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
  * @beta    <LI> Upgrade test bug fixed
  * @beta    <LI> Rice decomp for 16 and 8 BITPIX (only 32 was previously supported)
@@ -120,7 +123,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.049";
+    static public final    String VERSION = "v7.050";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2009,16 +2012,8 @@ public class Aladin extends JApplet
           warningRestricted = true;
           warning(chaine.getString("RESTRICTED"));
        }
-
-       // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
-       // PLANTE LE BROWSER LORSQUE L'ON FAIT UN DETACH() SI LA FRAME EST DRAG&DROP
-       if( !( isApplet() && osName.startsWith("Linux")) ) {
-
-          // Pour gérer le DnD de fichiers externes
-          new DropTarget (this, this);
-          DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
-                this, DnDConstants.ACTION_COPY_OR_MOVE, this);
-       }
+       
+       manageDrop();
 
        if( !aladin.NOGUI ) {
           (new Thread("Start"){
@@ -2028,6 +2023,18 @@ public class Aladin extends JApplet
                 localisation.infoStart();
              }
           }).start();
+       }
+    }
+    
+    protected void manageDrop() {
+       // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
+       // PLANTE LE BROWSER LORSQUE L'ON FAIT UN DETACH() SI LA FRAME EST DRAG&DROP
+       if( !( isApplet() && osName.startsWith("Linux")) ) {
+
+          // Pour gérer le DnD de fichiers externes
+          new DropTarget (this, this);
+          DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
+                this, DnDConstants.ACTION_COPY_OR_MOVE, this);
        }
     }
     
@@ -2126,10 +2133,6 @@ public class Aladin extends JApplet
        try {
           DataFlavor uriList = new DataFlavor("text/uri-list; class=java.lang.String");
           Transferable tr = dropTargetDropEvent.getTransferable();
-//          DataFlavor df[] = tr.getTransferDataFlavors();
-//          for( int i=0; i<df.length; i++ ) {
-//             System.out.println("DataFlavor "+i+": "+df[i]);
-//          }
 
           // On préfère tout d'abord charger via une URL si possible
           // car cela évite de planter sur les caches de Firefox
@@ -2140,7 +2143,6 @@ public class Aladin extends JApplet
              StringTokenizer st = new StringTokenizer(s,"\n\r");
              while( st.hasMoreTokens() ) {
                 String f = st.nextToken();
-//                System.out.println("["+f+"]");
                 if( f.trim().length()==0 ) continue;
                 calque.newPlan(f,null,null);
                 console.setCommand("load "+f);
@@ -2154,7 +2156,6 @@ public class Aladin extends JApplet
              Iterator iterator = fileList.iterator();
              while( iterator.hasNext() ) {
                 File file = (File) iterator.next();
-//                ((LocalServer)dialog.server[ServerDialog.LOCAL]).creatLocalPlane(file.getAbsolutePath(),file.getName(),null);
                 calque.newPlan(file.getAbsolutePath(),file.getName(),null);
                 console.setCommand("load "+file.getAbsolutePath());
              }

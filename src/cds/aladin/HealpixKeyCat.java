@@ -174,8 +174,6 @@ public class HealpixKeyCat extends HealpixKey {
       resetTimer();
       resetTimeAskRepaint();
       
-//      drawLosangeBorder(g,b);
-      
       return pcat.getCounts();
    }
    

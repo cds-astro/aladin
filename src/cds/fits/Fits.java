@@ -1282,7 +1282,7 @@ public String toString() {
          for( int i=0; i<taille; i++) {
             double v1 = getPixValDouble(pixels,bitpix,i);
             double v2 = a.getPixValDouble(a.pixels,bitpix,i);
-            double v = (v1+v2)/2;
+            double v = isBlankPixel(v1) ? v2 :  a.isBlankPixel(v2) ? v1 : (v1+v2)/2;
             setPixValDouble(pixels, bitpix, i, v);
          }
       }
@@ -1300,6 +1300,42 @@ public String toString() {
          }
       }
    }
+
+   /** Remplace les pixels (pix8[], pixels[] et rgb[] pour les nouvelles valeurs != NaN */
+   public void overwriteWith(Fits a) throws Exception {
+      int taille=width*height;
+      
+      if( a.pixels!=null && pixels!=null ) {
+         for( int i=0; i<taille; i++) {
+            double v = a.getPixValDouble(pixels,bitpix,i);
+            if( a.isBlankPixel(v) ) v=-100; //continue;
+            
+            setPixValDouble(pixels, bitpix, i, v);
+            
+            if( a.pix8!=null && pix8!=null ) pix8[i] = a.pix8[i];
+            if( a.rgb!=null && rgb!=null ) rgb[i] = a.rgb[i];
+         }
+      }
+   }
+
+   /** Ajoute les pixels (pix8[], pixels[] et rgb[] sur les valeurs NaN */
+   public void mergeOnNaN(Fits a) throws Exception {
+      int taille=width*height;
+      
+      if( a.pixels!=null && pixels!=null ) {
+         for( int i=0; i<taille; i++) {
+            double v1 = getPixValDouble(pixels,bitpix,i);
+            if( !isBlankPixel(v1) ) continue;
+            
+            double v = a.getPixValDouble(a.pixels,bitpix,i);
+            setPixValDouble(pixels, bitpix, i, v);
+            
+            if( a.pix8!=null && pix8!=null ) pix8[i] = a.pix8[i];
+            if( a.rgb!=null && rgb!=null ) rgb[i] = a.rgb[i];
+         }
+      }
+   }
+
 
    /**
     * Cherche un fichier de type FITS dans le répertoire donné

@@ -44,7 +44,7 @@ import cds.tools.Util;
  */
 public final class Select extends JComponent  implements
              AdjustmentListener,ActionListener,
-             MouseMotionListener, MouseListener,
+             MouseMotionListener, MouseListener, MouseWheelListener, 
              Runnable, WidgetFinder {
 
    String HSTACK,HEYE,WAITMIN,NOPROJ,MSELECT,MBROADCASTALL,MALLAPPS,MBROADCASTTABLE,MBROADCASTIMAGE,
@@ -146,11 +146,35 @@ public final class Select extends JComponent  implements
       createChaine();
       addMouseMotionListener(this);
       addMouseListener(this);
+      addMouseWheelListener(this);
 
       // Calcule des tailles
       hs=Aladin.LSCREEN?291:200;   // Hauteur du canvas
       hsp= hs-eyeHeight-gapB;      // Hauteur de la portion pour les plans
       createPopupMenu();
+   }
+   
+   
+   private long lastMouseWheelEventTime = -1;
+   
+   /** Modification de la transparence du plan sous la souris par action sur la molette */
+   public void mouseWheelMoved(MouseWheelEvent e) {
+      if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
+      int sens = e.getWheelRotation();
+      Plan p = getPlan(e.getY());
+      if( p==null || !a.calque.canBeTransparent(p) ) return;
+      float opacity = p.getOpacityLevel();
+      float oOpacity=opacity;
+      long delta = e.getWhen()-lastMouseWheelEventTime;
+      lastMouseWheelEventTime = e.getWhen();
+      float acc = delta<50 ? 0.4f : delta<100 ? 0.2f : delta<200 ? 0.1f : 0.05f;
+      opacity += sens*acc;
+      if( opacity<0 ) opacity=0f;
+      else if( opacity>1 ) opacity=1f;
+      if( opacity==oOpacity ) return;
+      p.setOpacityLevel( opacity );
+      Properties.majProp(p);
+      a.calque.repaintAll();
    }
 
    public Dimension getPreferredSize() { return new Dimension(ws,hs); }

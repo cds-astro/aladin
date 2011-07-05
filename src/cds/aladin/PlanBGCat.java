@@ -33,6 +33,10 @@ import cds.tools.Util;
 
 
 public class PlanBGCat extends PlanBG {
+   
+   
+   static final protected int MAXGAPORDER = 3;  // Décalage maximal autorisé
+   private int gapOrder=0;                      // Décalage de l'ordre Max => changement de densité
 
    protected PlanBGCat(Aladin aladin) {
       super(aladin);
@@ -41,6 +45,12 @@ public class PlanBGCat extends PlanBG {
    protected PlanBGCat(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius) {
       super(aladin,gluSky,label, c,radius);
       aladin.log(Plan.Tp[type],label);
+   }
+   
+   protected int getGapOrder() { return gapOrder; }
+   protected void setGapOrder(int gapOrder) {
+      if( Math.abs(gapOrder)>MAXGAPORDER ) return;
+      this.gapOrder=gapOrder;
    }
    
    protected void setSpecificParams(TreeNodeAllsky gluSky) {
@@ -127,10 +137,13 @@ public class PlanBGCat extends PlanBG {
       }
       return hasDrawnSomething;
    }
+   
+   /** Retourne l'order max du dernier affichage */ 
+   protected int getCurrentMaxOrder(ViewSimple v) { return Math.max(2,Math.min(maxOrder(v)+gapOrder,maxOrder)); } 
 
    protected void draw(Graphics g,ViewSimple v) {
       long [] pix=null;
-      int order = Math.min(maxOrder(v),maxOrder);
+      int order = getCurrentMaxOrder(v);
       int nb=0;
 
       hasDrawnSomething=drawAllSky(g, v,  2);
@@ -285,12 +298,21 @@ public class PlanBGCat extends PlanBG {
       return obj;
    }
 
-//    Recupération d'un itérator sur les objets
-   protected Iterator<Obj> iterator() { return new ObjIterator(); }
+   // Recupération d'un itérator sur les objets
+   protected Iterator<Obj> iterator() { return new ObjIterator(null); }
+
+   // Recupération d'un itérator sur les objets visible dans la vue v
+   protected Iterator<Obj> iterator(ViewSimple v) { return new ObjIterator(v); }
 
    class ObjIterator implements Iterator<Obj> {
       Enumeration<HealpixKey> e = null;
       Iterator<Obj> it = null;
+      int order;
+      
+      ObjIterator(ViewSimple v) {
+         super();
+         order = v!=null ? getCurrentMaxOrder(v) : -1;
+      }
 
       public boolean hasNext() {
          while( it==null || !it.hasNext() ) {
@@ -298,6 +320,10 @@ public class PlanBGCat extends PlanBG {
             if( !e.hasMoreElements() ) return false;
             HealpixKeyCat healpix = (HealpixKeyCat)e.nextElement();
             if( healpix.getStatus()!=HealpixKey.READY ) continue;
+            if( order!=-1 && healpix.order>order ) {
+//               System.out.println("ne prend plus en compte (order="+healpix.order+" maxOrder="+order+") "+healpix);
+               continue;
+            }
             it = healpix.pcat.iterator();
          }
          return it.hasNext();
@@ -310,6 +336,7 @@ public class PlanBGCat extends PlanBG {
             if( !e.hasMoreElements() ) return null;
             HealpixKeyCat healpix = (HealpixKeyCat)e.nextElement();
             if( healpix.getStatus()!=HealpixKey.READY ) continue;
+            if( order!=-1 && healpix.order>order ) continue;
             it = healpix.pcat.iterator();
          }
          return it.next();

@@ -49,7 +49,7 @@ public class AllskyTask implements Runnable{
 	private int bitpix;
 	private boolean keepBB = false;
 	private HpixTree hpixTree = null;
-	private int coaddMode = DescPanel.KEEP;
+	private int coaddMode = DescPanel.REPLACETILE;
 //	private double[] cut;
 //	private int fct; // fonction de transfert
 	private ThreadProgressBar progressBar;
@@ -88,8 +88,9 @@ public class AllskyTask implements Runnable{
 	      progressBar.stop();
 	   }
 	}
-
+	
 	public void run() {
+	   allsky.setIsRunning(true);
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
@@ -147,6 +148,7 @@ public class AllskyTask implements Runnable{
 	         createAllSky();
 	      }
 	      allskyOk=true;
+	      allsky.setIsRunning(false);
 
 	      allsky.done();
 	      runner = null;
