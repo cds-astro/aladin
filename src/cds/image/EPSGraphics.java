@@ -232,9 +232,10 @@ public class EPSGraphics extends Graphics {
          int []pixel = (int[])pg.getPixels();
          out.print(
                "gsave\n" +
-               x+" "+y+" translate\n" +
                width+" "+height+" scale\n" +
+               x+" "+y+" translate\n" +
                width+" "+height+" 8 ["+width+" 0 0 "+height+" 0 0]\n" +
+//               width+" "+height+" 8 ["+width+" 0 0 "+-height+" 0 "+height+"]\n" +
                "{ currentfile "+(3*width)+" string readhexstring pop } bind\n" +
                "false 3 colorimage\n" 
                 );
@@ -486,8 +487,7 @@ public class EPSGraphics extends Graphics {
    }
 
    public void translate(int x, int y) {
-      // TODO Auto-generated method stub
-
+      out.print(x+" "+y+" translate\n");
    }
 
 }

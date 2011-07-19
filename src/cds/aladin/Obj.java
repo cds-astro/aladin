@@ -127,6 +127,11 @@ public abstract class Obj {
    }
    static private Coord ca=new Coord(), cb=new Coord();
 
+   /** Return XML meta information associated to this object (GROUP meta definitions)
+    * @return XML string, or null
+    */
+   public String getXMLMetaData() { return null; }
+
    /** Return the values associated to the object (Source object)
     * @return String array containing each field value
     */

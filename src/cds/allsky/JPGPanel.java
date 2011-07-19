@@ -315,7 +315,7 @@ public class JPGPanel extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         JPGBuild jpgThread = new JPGBuild(getCut(), getCM() , allsky.getOutputPath());
+         JPGBuild jpgThread = new JPGBuild(getCut(), getCM() , allsky );
          jpgThread.start();
          (new ThreadProgressBar(jpgThread)).start();
          
@@ -333,7 +333,7 @@ public class JPGPanel extends JPanel implements ActionListener {
          thread = source;
       }
 
-      public synchronized void start(){
+      public void start(){
          // lance en arrière plan le travail
          (new Thread(this)).start();
       }
@@ -343,7 +343,7 @@ public class JPGPanel extends JPanel implements ActionListener {
             value = (int)((JPGBuild)thread).getProgress();
             setProgress(value);
             try {
-               Thread.sleep(200);
+               Thread.currentThread().sleep(200);
             } catch (InterruptedException e) {
             }
          }

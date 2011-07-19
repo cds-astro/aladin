@@ -37,7 +37,7 @@ public class DBBuilder  {
    
     static public boolean DSS = false;
     final static public int ORDER = 9; // 2^9 = 512 = SIDE
-    final static private int SIDE = 512;
+    final static public int SIDE = 512;
 
 	protected int ordermin = 3;
 	protected long nummin = 0;

@@ -208,7 +208,7 @@ public final class MyInputStream extends FilterInputStream {
       }
       
       // Healpix
-      if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null)) ) type |= HPXMOC;
+      if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("NUNIQ",null)) ) type |= HPXMOC;
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING")) 
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HPX;
 

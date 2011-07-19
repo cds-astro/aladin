@@ -40,6 +40,10 @@ public class RGBBuild implements Runnable {
 		(new Thread(this)).start();
 	}
 	
+//    private String ext= ".fits";
+    private String ext= ".jpg";
+	
+	
 	public void run() {
 
 		PlanBG planBG = null;
@@ -84,40 +88,36 @@ public class RGBBuild implements Runnable {
 		
 		// pour chaque fichier fits de l'arborescence
 		for (int order = 3 ; order <= orderLimit ; order++) {
-			long npixmax = cds.tools.pixtools.Util.getMax(order)+1;
-		for (int npix = 0 ; npix < npixmax ; npix++) {
-			// va chercher le meme fichier fits dans chacune des 2/3 arboresences
-			String fRouge = (pathRouge!=null)?cds.tools.pixtools.Util.getFilePath(pathRouge, order, npix)+".fits":null;
-			String fVert = (pathVert!=null)?cds.tools.pixtools.Util.getFilePath(pathVert, order, npix)+".fits":null;
-			String fBleu = (pathBleu!=null)?cds.tools.pixtools.Util.getFilePath(pathBleu, order, npix)+".fits":null;
+		   long npixmax = cds.tools.pixtools.Util.getMax(order)+1;
+		   
+		   for (int npix = 0 ; npix < npixmax ; npix++) {
+		      // va chercher le meme fichier dans chacune des 2/3 arboresences
+		      String fRouge = (pathRouge!=null)?cds.tools.pixtools.Util.getFilePath(pathRouge, order, npix)+ext:null;
+		      String fVert = (pathVert!=null)?cds.tools.pixtools.Util.getFilePath(pathVert, order, npix)+ext:null;
+		      String fBleu = (pathBleu!=null)?cds.tools.pixtools.Util.getFilePath(pathBleu, order, npix)+ext:null;
 
-			if (fRouge != null && !(new File(fRouge)).exists())
-				fRouge=null;
-			if (fVert != null && !(new File(fVert)).exists())
-				fVert=null;
-			if (fBleu != null && !(new File(fBleu)).exists())
-				fBleu=null;
-			
-			if (fRouge == null && fVert == null && fBleu == null)
-				continue;
-			
-			// combinaison couleur classique Aladin
-			PlanImageRGB rgb;
-			try {
-				rgb = new PlanImageRGB(aladin,
-						fRouge,mmRouge,fVert,mmVert,fBleu,mmBleu);
-				String pathRGB = cds.tools.pixtools.Util.getFilePath(output, order, npix)+".jpg";
-				(new File(pathRGB.substring(0, pathRGB.lastIndexOf(Util.FS)))).mkdirs();
-				aladin.save.saveImageColor(pathRGB, rgb, 2);
-			} catch (FileNotFoundException e) {
-				Aladin.trace(3, e.getMessage());
-			} catch (Exception e) {
-				Aladin.trace(3, e.getMessage());
-			}
-			progress = (int) (100*((float)npix/npixmax)/(1+orderLimit-3));
-			if (order == 3 && npix%100==0)
-				preview(output,npix);
-		}
+		      if (fRouge != null && !(new File(fRouge)).exists()) fRouge=null;
+		      if (fVert != null && !(new File(fVert)).exists()) fVert=null;
+		      if (fBleu != null && !(new File(fBleu)).exists()) fBleu=null;
+
+		      if (fRouge == null && fVert == null && fBleu == null) continue;
+
+		      // combinaison couleur classique Aladin
+		      PlanImageRGB rgb;
+		      try {
+		         rgb = new PlanImageRGB(aladin, fRouge,mmRouge,fVert,mmVert,fBleu,mmBleu);
+		         String pathRGB = cds.tools.pixtools.Util.getFilePath(output, order, npix)+".jpg";
+		         (new File(pathRGB.substring(0, pathRGB.lastIndexOf(Util.FS)))).mkdirs();
+		         aladin.save.saveImageColor(pathRGB, rgb, 2);
+		      } catch (FileNotFoundException e) {
+		         Aladin.trace(3, e.getMessage());
+		      } catch (Exception e) {
+		         Aladin.trace(3, e.getMessage());
+		      }
+		      progress = (int) (100*((float)npix/npixmax)/(1+orderLimit-3));
+		      if (order == 3 && npix%100==0)
+		         preview(output,npix);
+		   }
 		}
 		preview(output,0);
 		progress = 100;

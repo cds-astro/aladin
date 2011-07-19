@@ -110,6 +110,7 @@ final public class TableParser implements XMLConsumer {
    private Hashtable<String,String> coosys;          // Liste des systèmes de coordonnées trouvés dans la VOTable
    private Hashtable<String,String> cooepoch;        // Liste des epoques trouvés dans la VOTable
    private Hashtable<String,String> cooequinox;      // Liste des équinoxes trouvés dans la VOTable
+   private Hashtable<String,String> cooFieldref;     // Liste des références de FIELD pour un coosys partitulier
    private boolean inAstroCoords;     // true si on est dans un GROUP de définition d'un système de coordonnées
    private String astroCoordsID;      // Dernier ID d'une définition d'un système de coordonnées
    private Astroframe srcAstroFrame = null;     // Systeme de coord initial
@@ -759,6 +760,8 @@ final public class TableParser implements XMLConsumer {
       coosys = new Hashtable<String,String>(10);
       cooepoch = new Hashtable<String,String>(10);
       cooequinox = new Hashtable<String,String>(10);
+      cooFieldref = new Hashtable<String,String>(10);
+      
       return (xmlparser.parse(dis,endTag) && error==null /* && nField>1 */ );
     }
    
@@ -814,6 +817,8 @@ final public class TableParser implements XMLConsumer {
       System.err.println("TableParser.resetGroupe => FIELD GROUP not yet supported => remove all GROUP definition !");
       consumer.setTableInfo("GROUP",null);
    }
+   
+   static private int ASTROID=1;
       
    /** XMLparser interface.
     * Pour accélerer le parsing, on se base sur la profondeur du document XML pour
@@ -821,6 +826,7 @@ final public class TableParser implements XMLConsumer {
     */
    public void startElement (String name, Hashtable atts) {
       String att;
+      String v;
 //      int depth = xmlparser.getStack().size();
       int depth = xmlparser.getDepth(); 
       
@@ -839,11 +845,11 @@ final public class TableParser implements XMLConsumer {
          // <GROUP ID="id" utype="stc:AstroCoords" ref="ivo://STClib/CoordSys#UTC-ICRS-TOPO"...>
          att =  (String)atts.get("utype");
          if( att!=null && (att.equalsIgnoreCase("stc:AstroCoords") 
-                        || att.equalsIgnoreCase("stc:AstroCoordSystem")) ) {
+               || att.equalsIgnoreCase("stc:AstroCoordSystem") || att.equalsIgnoreCase("stc:CatalogEntryLocation")) ) {
             inAstroCoords=true;
             astroCoordsID = (String)atts.get("ID");
-            att = (String)atts.get("ref");
-            if( att!=null && astroCoordsID!=null ) coosys.put(astroCoordsID,att);
+            v = (String)atts.get("ref");
+            if( v!=null && astroCoordsID!=null ) coosys.put(astroCoordsID,v);
          }
          return;
       }      
@@ -851,26 +857,64 @@ final public class TableParser implements XMLConsumer {
       
       // Support systèmes de coordonnées du genre:
       // <GROUP ID="Coo1" utype="stc:AstroCoords" >
-      //    <PARAM ... utype="stc:AstroCoords.coord_sys_id" value="UTC-ICRS-TOPO" />
-      if( inAstroCoords && name.equalsIgnoreCase("PARAM") ) {
-         att =  (String)atts.get("utype");
+      //    <PARAM ... utype="stc:AstroCoords.coord_system_id" value="UTC-ICRS-TOPO" />
+      // ou bien
+      // <GROUP utype="stc:CatalogEntryLocation">
+      //    <PARAM ... />
+      //    <FIELDref ref="ra" utype="stc:AstroCoords.Position2D.Value2.C1" />
+      if( inAstroCoords ) {
          
-         if( att!=null && (att.equalsIgnoreCase("stc:AstroCoords.coord_sys_id")
-               || att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame")) ) {
-            att = (String)atts.get("value");
-            if( att!=null && astroCoordsID!=null ) coosys.put(astroCoordsID,att);
+         // Pas d'ID pour le système de coord, on en invente un
+         if( astroCoordsID==null ) {
+            astroCoordsID = "_ASTROID_"+(ASTROID++);
          }
          
-         if( att!=null && att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch") ) {
-            att = (String)atts.get("value");
-            if( att!=null && astroCoordsID!=null ) cooepoch.put(astroCoordsID,att);
-         }
+         if( name.equalsIgnoreCase("PARAM") ) {
+            att =  (String)atts.get("utype");
 
-         if( att!=null && att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame.Equinox") ) {
-            att = (String)atts.get("value");
-            if( att!=null && astroCoordsID!=null ) cooequinox.put(astroCoordsID,att);
-         }
+            if( att!=null && (att.equalsIgnoreCase("stc:AstroCoords.coord_sys_id")
+                  || att.equalsIgnoreCase("stc:AstroCoords.coord_system_id")
+                  || att.equalsIgnoreCase("stc:AstroCoordSystem.href")
+                  || att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame")) ) {
+               v = (String)atts.get("value");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  coosys.put(astroCoordsID,v);
+               }
+            }
 
+            else if( att!=null &&
+                  (att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch") || att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch") )) {
+               v = (String)atts.get("value");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  cooepoch.put(astroCoordsID,v);
+               }
+            }
+
+            else if( att!=null && att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame.Equinox") ) {
+               v = (String)atts.get("value");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  cooequinox.put(astroCoordsID,v);
+               }
+            }
+
+            else if( att!=null ) consumer.tableParserInfo("      *** AstroCoord PARAM utype unknown => ignored: ["+att+"]");
+            
+         } else if( name.equalsIgnoreCase("FIELDref") ) {
+            att =  (String)atts.get("utype");
+            if( att!=null && att.startsWith("stc:AstroCoords.Position2D.Value2") ) {
+               v = (String)atts.get("ref");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => ref="+v);
+                  cooFieldref.put(v,astroCoordsID);
+               }
+            }
+
+            else if( att!=null ) consumer.tableParserInfo("      *** AstroCoord FIELDref utype unknown => ignored: ["+att+"]");
+
+         }
       }
       
       // Traitement de quelques balises qui peuvent avoir des profondeurs diverses
@@ -1038,8 +1082,6 @@ final public class TableParser implements XMLConsumer {
       else if( nRA>=0 ) {
          consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal":" in degrees"))+
                " (column "+(nRA+1)+" for RA and "+(nDEC+1)+" for DEC)");
-//         consumer.tableParserInfo("   -assuming RADEC"+(!knowFormat?" " : (flagSexa?" in sexagesimal":" in degrees"))+
-//               " (column "+(nRA+1)+" for RA and "+(nDEC+1)+" for DEC)");
       }
       consumer.tableParserInfo("      [RA="+nRA+" ("+qualRA+") DE="+nDEC+" ("+qualDEC+") "+
             "X="+nX+" ("+qualX+") Y="+nY+" ("+qualY+")]");
@@ -1058,9 +1100,19 @@ final public class TableParser implements XMLConsumer {
          }
          
          try {
-            Field f = memoField.elementAt(nRA);
-            setSourceAstroFrame(f.ref,null,null,0);
+            Field f = memoField.elementAt(nRA);      
+            
+            // Assignation du système de coord par "ref" classique
+            if( f.ref!=null ) setSourceAstroFrame(f.ref,null,null,0);
+            
+            // Assignation du système de coord par FIELDref (voir startElement())
+            else {
+               String coosysID = (String)cooFieldref.get(f.ID);
+               if( coosysID!=null ) setSourceAstroFrame(coosysID,null,null,0);
+            }
          } catch( Exception e) {
+            
+            // Pas de désignation du système, mais un seul système défini => on le prend
             if( coosys.size()==1 ) {
                try { setSourceAstroFrame(coosys.keys().nextElement(),null,null,0); }
                catch( Exception e1 ) {}

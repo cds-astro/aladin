@@ -82,6 +82,7 @@ import cds.xml.XMLParser;
  * @beta       <LI> HTTP URL direct access
  * @beta       <LI> Crop full resolution has been improved (bilinear, faster) </UL>
  * @beta    <LI> GROUP VOTable export
+ * @beta    <LI> VOTable 1.2 STC coordinate reference support ("Referencing STC in VOTable" - IVOA Note 2010-06-18)
  * @beta    <LI> New projections (Mollweide, TNX and SIP as TAN)
  * @beta    <LI> PDS image support (not compressed, header inside)
  * @beta    <LI> Last measurement panel height kept in configuration file
@@ -123,7 +124,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.050";
+    static public final    String VERSION = "v7.051";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

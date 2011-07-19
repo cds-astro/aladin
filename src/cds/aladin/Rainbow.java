@@ -360,8 +360,13 @@ public class Rainbow {
       g.setFont(g.getFont().deriveFont(Font.ITALIC));
       double z = getZoom();
       FontMetrics fm = g.getFontMetrics();
-      int h = fm.getDescent();
-      g.drawString(title,(int)(r.x/z), (int)(r.y/z-h*2));
+      int size =fm.stringWidth(title);
+      int d = fm.getDescent();
+      int h = fm.getHeight();
+      int x = (int)( r.x/z );
+      int y = (int)( r.y/z-d*2 );
+      Util.drawCartouche(g, x, y-h+2, size, h, 0.5f, null, Color.white);
+      g.drawString(title,x,y);
    }
    
    protected void drawOverlays(Graphics g) {

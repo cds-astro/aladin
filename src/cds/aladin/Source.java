@@ -1084,7 +1084,13 @@ public class Source extends Position implements Comparator {
        }
        return u;
     }
-
+    
+    /** Return XML meta information associated to this object
+     * @return XML string, or null
+     */
+    public String getXMLMetaData() {
+       return leg.getGroup();
+    }
 
    /** Returns the unit for the field at position pos */
    protected String getUnit(int pos) {
