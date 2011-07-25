@@ -572,7 +572,6 @@ public class Fits {
     * @param val
     */
    public void setPixelDoubleFromBitpix(int x, int y, double val, int oldbitpix, double[] oldminmax) {
-	   double[] minmax = {0,0};
 
 	   if (oldbitpix == bitpix || isBlankPixel(val) ) {
 		   setPixelDouble(x,y,val);

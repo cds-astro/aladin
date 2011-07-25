@@ -843,7 +843,7 @@ public String getUrl() {
    protected HealpixKey getHealpixFromAllSky(int order,long npix) {
       if( order==3 && allsky!=null ) {
          int orderLosange= getLosangeOrder();
-         if( orderLosange!=-1 && orderLosange <= getAllSkyOrder() ) {
+         if( orderLosange>0 && orderLosange <= getAllSkyOrder() ) {
             HealpixKey healpix = (allsky.getPixList())[ (int)npix ];
             
             if( healpix!=null ) {

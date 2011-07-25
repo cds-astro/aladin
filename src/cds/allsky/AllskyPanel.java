@@ -238,8 +238,8 @@ public class AllskyPanel extends JPanel implements ActionListener {
       double blank = pBuild.getBlank();
       String s="";
       try { 
-         s = pDesc.getBlank();
-         if( s!=null ) blank = Double.parseDouble(s);
+         s = pDesc.getBlank().trim();
+         if( s.length()>0 ) blank = Double.parseDouble(s);
       } catch( Exception e ) {
          pDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }

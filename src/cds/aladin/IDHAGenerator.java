@@ -329,7 +329,8 @@ public class IDHAGenerator extends JFrame {
 			mis = mis.startRead();
 			long type = mis.getType();
             //System.out.println("type de "+file.getName()+" : "+MyInputStream.decodeType(type));
-
+			mis.close();
+			
             return (type&keptMask) != 0;
 		}
 		catch(IOException e) {return false;}
@@ -482,6 +483,7 @@ public class IDHAGenerator extends JFrame {
             MyInputStream myStream = new MyInputStream(new FileInputStream(image.file));
             myStream = myStream.startRead();
             hf = new HeaderFits(myStream);
+            myStream.close();
 	    }
 	    catch(Exception e) {Aladin.trace(3,"Error : could not create HeaderFits object");return;}
 

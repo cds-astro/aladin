@@ -851,7 +851,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          addSectionTitle(p, "HEALPix tesselation properties", g, c);
          addCouple(p, "Best pixel resolution", new JLabel(pbg.getMaxResolution()), g, c);
          addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
-         addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
+         if( ord>0 ) addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
          addCouple(p, "HEALPix NSide:",  new JLabel((long)CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
          if( pbg.inFits && pbg.inJPEG ) {
             JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");

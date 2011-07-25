@@ -27,6 +27,7 @@ import java.awt.image.ColorModel;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
@@ -239,19 +240,31 @@ public class ServerFile extends Server implements XMLConsumer {
          // Analyse du contenu d'un répertoire local
          if( is==null && !(f.startsWith("http:") || f.startsWith("https:"))) {
             try {
-               File x = new File(f);
+               final File x = new File(f);
                if( x.isDirectory() ) {
                   setSync(true);
                   Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
                   if( PlanBG.isPlanBG(f) ) n=aladin.calque.newPlanBG(f,label,null,null);
                   else {
-                     aladin.log("load", "dir");
-                     updateMetaData(new MyInputStream((new IDHAGenerator()).getStream(x,this)),this,"",null);
+                     final ServerFile th = this;
+                     (new Thread(){
+                        public void run() {
+                           try {
+                              aladin.log("load", "dir");
+                              MyInputStream mi = new MyInputStream((new IDHAGenerator()).getStream(x,th)); 
+                              updateMetaData(mi,th,"",null);
+                              mi.close();
+                           } catch( IOException e ) {
+                              e.printStackTrace();
+                           }
+                           defaultCursor();
+                        }
+                     }).start();
                   }
-                  defaultCursor();
                   return n;
                }
             } catch( Exception e) {
+               defaultCursor();
                e.printStackTrace();
                return n;
             }

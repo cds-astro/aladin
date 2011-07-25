@@ -77,8 +77,14 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
       int pcount=headerFits.getIntFromHeader("PCOUNT");    // nombres d'octets a lire en tout
       int tile = headerFits.getIntFromHeader("ZTILE1");
       boolean cut = aladin.configuration.getCMCut();
+      
+      int nblock=32;
+      try { nblock = headerFits.getIntFromHeader("ZVAL1"); } catch( Exception e ) {}
 
-      Aladin.trace(2,"Loading RICE FITS image extension");
+      int bsize=4;
+      try { bsize = headerFits.getIntFromHeader("ZVAL2"); } catch( Exception e ) {}
+      
+      Aladin.trace(2,"Loading RICE FITS image extension (NBLOCK="+nblock+" BSIZE="+bsize+")");
       
       setBufPixels8(new byte[width*height]);
       
@@ -96,23 +102,16 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
             dis.readFully(table);
             dis.readFully(buf);
             
-System.out.println("table size="+table.length);
-System.out.println("heap size="+buf.length);
-            
             int offset=0;
             for( int row=0; row<nnaxis2; row++ ) {
-               int len = getInt(table,row*8);
                int pos = getInt(table,row*8+4);
-               decomp(buf,pos,pixelsOrigin,offset,tile,32,bitpix);
-//               decomp_short(buf,pos,pixelsOrigin,offset,tile,32,bitpix);
+               decomp(buf,pos,pixelsOrigin,offset,tile,bsize,nblock,bitpix);
                offset+=tile;
             }
-            
          }catch (Exception e ) { e.printStackTrace(); }
 
          findMinMax(pixelsOrigin,bitpix,width,height,dataMinFits,dataMaxFits,cut,0);
-         to8bits(getBufPixels8(),0,pixelsOrigin,width*height,bitpix,
-               /*isBlank,blank,*/pixelMin,pixelMax,true);
+         to8bits(getBufPixels8(),0,pixelsOrigin,width*height,bitpix, pixelMin,pixelMax,true);
       } 
       
       
@@ -165,14 +164,13 @@ System.out.println("heap size="+buf.length);
      }
   }
    
-   public static void decomp(byte buf[],int pos,byte array[], int offset,int nx,int nblock,int bitpix) throws Exception {
+   public static void decomp(byte buf[],int pos,byte array[], int offset,int nx,int bsize,int nblock,int bitpix) throws Exception {
       int i, k, imax;
       int nbits, nzero, fs;
       int b, diff, lastpix;
       int bytevalue;
       int fsmax, fsbits, bbits;
       
-      int bsize = bitpix/8;
       switch (bsize) {
          case 1:
             fsbits = 3;
