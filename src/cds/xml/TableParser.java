@@ -334,6 +334,11 @@ final public class TableParser implements XMLConsumer {
             try { s = headerFits.getStringFromHeader("TUNIT"+(i+1)); } catch( Exception e1 ) {}
             if( s!=null ) f.unit=s;
 
+            // Récupération d'une éventuelle descriptino
+            s=null;
+            try { s = headerFits.getStringFromHeader("TCOMM"+(i+1)); } catch( Exception e1 ) {}
+            if( s!=null ) f.description=s;
+
             // Récupération d'un éventuel TZERO
             x=0;
             try { x = headerFits.getDoubleFromHeader("TZERO"+(i+1)); } catch( Exception e1 ) {}
@@ -360,7 +365,6 @@ final public class TableParser implements XMLConsumer {
 //System.out.println("TZERO"+(i+1)+"="+tzero[i]+" TSCAL"+(i+1)+"="+tscal[i]
 //                      +(tnull[i]!=null?" TNULL"+(i+1)+"="+tnull[i] : ""));                      
             
-            
             // Récupération du format. Dans le cas de l'ASCII, donne le format de sortie
             // alors que dans le cas du binaire, donne le format d'entrée
             s=null;
@@ -369,7 +373,8 @@ final public class TableParser implements XMLConsumer {
                
                // Mode ASCII
                if( !flagBin ){
-                  f.datatype="BIJFED".indexOf(s.charAt(0))>=0 ? "D":"A";
+//                  f.datatype="BIJFKED".indexOf(s.charAt(0))>=0 ? "D":"A";
+                  f.datatype=s.charAt(0)+"";
                  
                   // Détermination de la taille du champ
                   int k = s.indexOf('.');
@@ -404,14 +409,14 @@ final public class TableParser implements XMLConsumer {
                   type[i] = s.charAt(k);
                   pos[i] = i==0 ? 0 : pos[i-1]+binSizeOf(type[i-1],len[i-1]);
 //System.out.println("TFORM"+(i+1)+" len="+len[i]+" type="+type[i]+" pos="+pos[i]);    
-                  f.datatype="FBIJEDK".indexOf(type[i])>=0 ? "D":"A";   // Si TDISPn n'est pas donné
+//                  f.datatype="FBIJEDK".indexOf(type[i])>=0 ? "D":"A";   // Si TDISPn n'est pas donné
                }
             }
             
             // Petites particularités BINAIRE
             if( flagBin ) {
-//               prec[i]=-1;  // 6
-               if( f.datatype==null ) f.datatype="FGBIJEDK".indexOf(type[i])>=0 ? "D":"A";  // BIZARRE ! MAIS CA NE MANGE PAS DE PAIN
+//               if( f.datatype==null ) f.datatype="FGBIJEDK".indexOf(type[i])>=0 ? "D":"A";  // BIZARRE ! MAIS CA NE MANGE PAS DE PAIN
+               if( f.datatype==null ) f.datatype=type[i]+"";
             }
             
             // Récupération du display dans le cas BINAIRE
@@ -501,10 +506,12 @@ final public class TableParser implements XMLConsumer {
                      
                      // cas BINAIRE
                   } else {
-                     record[j] = getBinField(buf,offset+pos[j],len[j],type[j],prec[j],
+//                     String val = 
+                        record[j] = getBinField(buf,offset+pos[j],len[j],type[j],prec[j],
                            flagTzeroTscal?tzero[j]:0.,
                                  flagTzeroTscal?tscal[j]:1.,
                                        tnull[j]!=null,tinull[j]);                  
+//                     System.out.println("Lecture champ "+(j+1)+" pos="+pos[j]+" type="+len[j]+type[j]+" => "+val);
                   }
                }
                
@@ -543,6 +550,7 @@ final public class TableParser implements XMLConsumer {
             type=='B'? 1:
             type=='I'? 2:
             type=='J'? 4:
+            type=='K'? 8:
             type=='A'? 1:
             type=='E'? 4:
             type=='D'? 8:
@@ -580,6 +588,13 @@ final public class TableParser implements XMLConsumer {
       return a+"";
    }
    
+   final private String getBinField(byte t[],int i, char type,int p,double z,double s,
+         boolean hasNull, int n) {
+      
+      String a = getBinField1(t,i,type,p,z,s,hasNull,n);
+      return a;
+   }
+   
    /**
     * Conversion d'un champ d'octets en valeur sont la forme d'un String
     * @param t le tableau des octets
@@ -592,7 +607,7 @@ final public class TableParser implements XMLConsumer {
     * @param n valeur indéfinie (uniquement pour les types B,I, et J
     * @return la chaine correspondante à la valeur
     */
-   final private String getBinField(byte t[],int i, char type,int p,double z,double s,
+   final private String getBinField1(byte t[],int i, char type,int p,double z,double s,
                   boolean hasNull, int n) {
       long a,b;
       int c;
@@ -602,6 +617,9 @@ final public class TableParser implements XMLConsumer {
          case 'B': return fmt( ((t[i])&0xFF),p,z,s,hasNull,n);
          case 'I': return fmt( getShort(t,i),p,z,s,hasNull,n);
          case 'J': return fmt( getInt(t,i),p,z,s,hasNull,n);
+         case 'K': a = (((long)getInt(t,i))<<32) 
+                          | (((long)getInt(t,i+4))&0xFFFFFFFFL);
+                   return fmt(a,p,z,s,hasNull,n);
          case 'E': return fmt( Float.intBitsToFloat( getInt(t,i) ),p,z,s );
          case 'D': a = (((long)getInt(t,i))<<32)
                           | (((long)getInt(t,i+4))& 0xFFFFFFFFL);
@@ -622,6 +640,7 @@ final public class TableParser implements XMLConsumer {
       }
    }   
    
+   
    /**
     * Mise en forme d'un entier
     * @param x l'entier à traiter
@@ -632,7 +651,7 @@ final public class TableParser implements XMLConsumer {
     * @param tnull la valeur pour non définie
     * @return la valeur formatée
     */
-   final private String fmt(int x,int prec,double tzero,double tscale,
+   final private String fmt(long x,int prec,double tzero,double tscale,
                             boolean hasNull,int tnull)  {
       if( hasNull && tnull==x ) return "";
       double y=x;

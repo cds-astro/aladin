@@ -90,10 +90,11 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Support for 64 bit integer binary tables (FITS & VOTable)
  * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
  * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
  * @beta    <LI> Upgrade test bug fixed
- * @beta    <LI> Rice decomp for 16 and 8 BITPIX (only 32 was previously supported)
+ * @beta    <LI> Rice decomp for 16 and 8 BSIZE (only 32 was previously supported)
  * @beta    <LI> Crop on RGB is now working fine
  * @beta    <LI> BMP saving bug fixed
  * @beta    <LI> FITS binary table bug fixed (double bit mask error)
@@ -124,7 +125,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.051";
+    static public final    String VERSION = "v7.052";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

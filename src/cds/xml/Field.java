@@ -58,7 +58,7 @@ final public class Field {
    /** UCD associated with the field */
    public String ucd;
 
-   /** Datatype of field value (F-float, D-double, I-integer, S-short, A-ascii,
+   /** Datatype of field value (F-float, D-double, K-long, I-integer, S-short, A-ascii,
        L-boolean (logical), E-exponential) */
    public String datatype;
 
