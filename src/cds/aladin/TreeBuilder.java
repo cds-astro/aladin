@@ -247,7 +247,7 @@ public class TreeBuilder {
         createSavotParser();
     }
 
-    protected boolean couldBeSSA(SavotVOTable vot) {
+    protected boolean mayBeSSA(SavotVOTable vot) {
         SavotResource firstRes = (SavotResource)vot.getResources().getItemAt(0);
 
         // detection de SSA
@@ -323,7 +323,7 @@ public class TreeBuilder {
         }
 
         // detection de SSA
-        if( couldBeSSA(savotParser.getVOTable()) ) {
+        if( mayBeSSA(savotParser.getVOTable()) ) {
             type = SSA;
             return;
         }
@@ -1578,11 +1578,13 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 					catch(Exception e) {}
 				}
 				// END FOR NEW for AVO
+
+
             }
-            /*System.out.println(xVal);
-            System.out.println(yVal);
-            System.out.println(alphaVal);
-            System.out.println(deltaVal);*/
+//            System.out.println(xVal);
+//            System.out.println(yVal);
+//            System.out.println(alphaVal);
+//            System.out.println(deltaVal);
 
         }
 
@@ -1713,9 +1715,9 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 	    String[] criteria = new String[nbTR];
 	    String[] value = new String[nbTR];
 	    // map nom critère --> valeur
-        Hashtable critVal = new Hashtable();
+        Hashtable<String, String> critVal = new Hashtable<String, String>();
         // map nom critère --> SavotResource avec infos
-        Hashtable infoVal = new Hashtable();
+        Hashtable<String, SavotResource> infoVal = new Hashtable<String, SavotResource>();
         SavotResource storageMapping = null;
         SavotResource storedImage = null;
         SavotResource processedObs = null;
@@ -2588,6 +2590,10 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         // A REPRENDRE !!
         if( (xValTab==null || yValTab==null) && (Double.isNaN(xVal) || Double.isNaN(yVal)) && !isSpectra ) {
         	return;
+        }
+
+        if (Double.isNaN(angleVal)) {
+            angleVal = 0;
         }
 
         // voir alphaVal et compagnie pour ne pas créer le fov si non nécessaire
