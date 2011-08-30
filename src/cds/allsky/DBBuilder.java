@@ -178,6 +178,8 @@ public class DBBuilder  {
 	   long heapsize = Runtime.getRuntime().maxMemory();
 	   int nbThread = (int) ( (heapsize / 512000 < nbProc)?heapsize / 512000:nbProc);
 	   if (nbThread==0) nbThread=1;
+	   
+	   
 	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+heapsize/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
 
 	   // Lancement des threads de calcul

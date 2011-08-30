@@ -272,6 +272,12 @@ public class HpxBuilder {
 	            	out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
 	            }
 	         }
+	         
+             for( int i=downFiles.size()-1; i>=0 ; i-- ) {
+                file = downFiles.get(i);
+                if( file.fitsfile!=null ) file.fitsfile.free();
+             }
+
 	      }
 	   } catch( Exception e ) { }
 	   return (!empty) ? out : null;
