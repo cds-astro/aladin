@@ -66,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Footprint display by STS-S definition
  * @beta    <LI> Plan transparency control by the mouse wheel
  * @beta    <LI> RGB FITS image with any BITPIX value now supported
  * @beta    <LI> Print improvements (Graphics2D support, automatic scale,...)
@@ -125,7 +126,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.052";
+    static public final    String VERSION = "v7.053";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
