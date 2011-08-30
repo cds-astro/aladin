@@ -28,13 +28,12 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cds.aladin.PlanBG.HealpixLoader;
 import cds.tools.Util;
 
 
 public class PlanBGCat extends PlanBG {
-   
-   
+
+
    static final protected int MAXGAPORDER = 3;  // Décalage maximal autorisé
    private int gapOrder=0;                      // Décalage de l'ordre Max => changement de densité
 
@@ -46,25 +45,25 @@ public class PlanBGCat extends PlanBG {
       super(aladin,gluSky,label, c,radius);
       aladin.log(Plan.Tp[type],label);
    }
-   
+
    protected int getGapOrder() { return gapOrder; }
    protected void setGapOrder(int gapOrder) {
       if( Math.abs(gapOrder)>MAXGAPORDER ) return;
       this.gapOrder=gapOrder;
    }
-   
+
    protected void setSpecificParams(TreeNodeAllsky gluSky) {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
    }
-   
+
    protected void suiteSpecific() {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
    }
-   
+
    protected void log() { }
 
    protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op) {
@@ -92,7 +91,7 @@ public class PlanBGCat extends PlanBG {
 
    @Override
    protected void clearBuf() { }
-   
+
    // Pas supporté pour les catalogues
    protected HealpixKey getHealpixFromAllSky(int order,long npix) { return null; }
 
@@ -137,9 +136,9 @@ public class PlanBGCat extends PlanBG {
       }
       return hasDrawnSomething;
    }
-   
-   /** Retourne l'order max du dernier affichage */ 
-   protected int getCurrentMaxOrder(ViewSimple v) { return Math.max(2,Math.min(maxOrder(v)+gapOrder,maxOrder)); } 
+
+   /** Retourne l'order max du dernier affichage */
+   protected int getCurrentMaxOrder(ViewSimple v) { return Math.max(2,Math.min(maxOrder(v)+gapOrder,maxOrder)); }
 
    protected void draw(Graphics g,ViewSimple v) {
       long [] pix=null;
@@ -308,7 +307,7 @@ public class PlanBGCat extends PlanBG {
       Enumeration<HealpixKey> e = null;
       Iterator<Obj> it = null;
       int order;
-      
+
       ObjIterator(ViewSimple v) {
          super();
          order = v!=null ? getCurrentMaxOrder(v) : -1;
@@ -316,7 +315,12 @@ public class PlanBGCat extends PlanBG {
 
       public boolean hasNext() {
          while( it==null || !it.hasNext() ) {
-            if( e==null ) e = pixList.elements();
+            if( e==null ) {
+                if (pixList==null) {
+                    return false;
+                }
+                e = pixList.elements();
+            }
             if( !e.hasMoreElements() ) return false;
             HealpixKeyCat healpix = (HealpixKeyCat)e.nextElement();
             if( healpix.getStatus()!=HealpixKey.READY ) continue;
