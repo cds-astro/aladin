@@ -20,7 +20,11 @@
 
 package cds.aladin;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
 
 // TODO : supprimer cette classe au profit de PlanField
 
@@ -147,8 +151,7 @@ public class PlanFov extends Plan {
 	 */
 	private void suite() {
         setOpacityLevel(Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL);
-        
-        PointD[] bords;
+
         PointD curPoint;
         Fov curFov;
         Ligne curLine;
@@ -174,7 +177,7 @@ public class PlanFov extends Plan {
             	// TODO : à simplifier pour limiter la création denouveaux objets
             	pf = new PlanField(aladin, curFov.fpBean, curFov.key);
         		pf.make(curFov.alpha,curFov.delta,curFov.angle);
-            	
+
                 Iterator<Obj> it = pf.pcat.iterator();
                 while( it.hasNext() ) {
                    Obj o = it.next();
@@ -183,27 +186,54 @@ public class PlanFov extends Plan {
                 }
 
             }
-            
-            bords = curFov.getPoints();
-	    	curPoint = bords[bords.length-1];
 
-	    	if( curPoint==null ) continue;
-	    	// on initialise curLine
-	    	curLine = new Ligne(this);
-            curLine.raj = curPoint.x;
-            curLine.dej = curPoint.y;
-            pcat.setObjet(curLine);
+            ArrayList<PointD[]> polygons = new ArrayList<PointD[]>();
+            if (curFov.getStcObjects() != null) {
+                Iterator<STCObj> itStcObjs = curFov.getStcObjects().iterator();
+                while (itStcObjs.hasNext()) {
+                    STCObj stcObj = itStcObjs.next();
+                    if (stcObj.getShapeType() != STCObj.ShapeType.POLYGON) {
+                        continue;
+                    }
+                    STCPolygon stcPolygon = (STCPolygon) stcObj;
 
-	    	// boucle sur les n points du FoV
-	    	for( int j=0; j<bords.length; j++ ) {
-	        	curPoint = bords[j];
-            	Ligne newLine = new Ligne(this);
-                newLine.raj = curPoint.x;
-                newLine.dej = curPoint.y;
-                newLine.debligne = curLine;
-	        	pcat.setObjet(newLine);
-	        	curLine = newLine;
-	    	}
+                    PointD[] polygonBords = new PointD[stcPolygon.getxCorners().size()];
+                    for (int k=0; k<polygonBords.length; k++) {
+                        polygonBords[k] = new PointD(stcPolygon.getxCorners().get(k), stcPolygon.getyCorners().get(k));
+                    }
+
+                    polygons.add(polygonBords);
+                }
+            }
+            else {
+                polygons.add(curFov.getPoints());
+            }
+
+            // boucle sur chaque polygone du fov
+            Iterator<PointD[]> itPoly = polygons.iterator();
+            while (itPoly.hasNext()) {
+                PointD[] polygon = itPoly.next();
+
+                curPoint = polygon[polygon.length-1];
+
+                if( curPoint==null ) continue;
+                // on initialise curLine
+                curLine = new Ligne(this);
+                curLine.raj = curPoint.x;
+                curLine.dej = curPoint.y;
+                pcat.setObjet(curLine);
+
+                // boucle sur les n points du FoV
+                for( int j=0; j<polygon.length; j++ ) {
+                    curPoint = polygon[j];
+                    Ligne newLine = new Ligne(this);
+                    newLine.raj = curPoint.x;
+                    newLine.dej = curPoint.y;
+                    newLine.debligne = curLine;
+                    pcat.setObjet(newLine);
+                    curLine = newLine;
+                }
+            }
         }
 	}
 

@@ -21,7 +21,12 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
+import cds.aladin.stc.STCFrame;
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCPolygon;
 import cds.tools.Util;
 
 /** Field Of View affiché pour une branche d'un MetaDataTree
@@ -54,7 +59,16 @@ public class Fov {
 
 	protected PlanField pf;
 
+	// TODO : merger stcObjects avec bords ??
+	private List<STCObj> stcObjects;
+
 	// Constructeurs
+
+	Fov(double alpha, double delta, List<STCObj> stcObjects) {
+	    this.alpha = alpha;
+	    this.delta = delta;
+	    this.stcObjects = stcObjects;
+	}
 
 	/**
 	 * @param alpha RA du centre du fov
@@ -88,6 +102,10 @@ public class Fov {
         bords[1] = new PointD(minRADec[0], maxRADec[1]);
         bords[2] = new PointD(maxRADec[0], maxRADec[1]);
         bords[3] = new PointD(maxRADec[0], minRADec[1]);
+    }
+
+    Fov(double alpha, double delta, ArrayList<PointD[]> polygons) {
+
     }
 
     /**
@@ -229,8 +247,8 @@ public class Fov {
 	 *  @param zv le zoomview courant
 	 *  Modif PF 02/05 - return null si Exception
 	 */
-    protected Point[] getBorders(Projection proj, ViewSimple v) {
-		Point[] tab = new Point[bords.length];
+    protected Point[] getBorders(PointD[] borders, Projection proj, ViewSimple v) {
+		Point[] tab = new Point[borders.length];
         Coord coord;
         // recherche des coordonnees du centre dans le repere courant (nécessaire pour la rotation)
 		coord = new Coord(alpha,delta);
@@ -239,8 +257,8 @@ public class Fov {
            if( Double.isNaN(coord.x) ) return null;
 
       		// calcul des n bords
-      		for( int i=0;i<bords.length;i++ ) {
-              	coord = new Coord(bords[i].x,bords[i].y);
+      		for( int i=0;i<borders.length;i++ ) {
+              	coord = new Coord(borders[i].x,borders[i].y);
               	coord = proj.getXY(coord);
               	if( Double.isNaN(coord.x) ) return null;
 
@@ -304,7 +322,11 @@ public class Fov {
         return tab;
 	}
 
-//    private int SPEC_PIX_SIZE = 10;
+    protected  List<STCObj> getStcObjects() {
+        return stcObjects;
+    }
+
+    //    private int SPEC_PIX_SIZE = 10;
 	/** Dessine le fov dans le contexte graphique g
 	 *	@param proj la projection du plan de référence
 	 *	@param zv zoomview courant
@@ -316,16 +338,18 @@ public class Fov {
 	 */
 	protected void draw(Projection proj, ViewSimple v, Graphics g, int dx, int dy, Color col) {
 
-        // pour les spectres
+	    g.setColor(col!=null?col:color);
+
+	    ///////////////////////////////////////////////////////////////////////
+        // cas 1 : fov associé à un spectre                                  //
+        ///////////////////////////////////////////////////////////////////////
         if( spectrumFov ) {
-            PointD[] bordsXY = getBordersSpectrum(proj,v);
-            //System.out.println(bordsXY[0].x);
+//            PointD[] bordsXY = getBordersSpectrum(proj,v);
 //            PointD center = new PointD((bordsXY[0].x+bordsXY[2].x)/2, (bordsXY[0].y+bordsXY[2].y)/2);
 //            double xLen, yLen;
 //            double l = Math.sqrt(Math.pow(bordsXY[0].x-center.x,2)+Math.pow(bordsXY[0].y-center.y,2));
 //            xLen = ((bordsXY[0].x-center.x)*SPEC_PIX_SIZE/l);
 //            yLen = ((bordsXY[0].y-center.y)*SPEC_PIX_SIZE/l);
-            g.setColor(col!=null?col:color);
             g.setFont(Aladin.BOLD);
             Coord coord = new Coord(alpha,delta);
 
@@ -338,57 +362,88 @@ public class Fov {
             return;
         }
 
-        // dessin pour le PlanField
+        ///////////////////////////////////////////////////////////////////////
+        // cas 2 : PlanField contenu dans notre fov                          //
+        ///////////////////////////////////////////////////////////////////////
         if( pf!=null ) {
         	pf.c = this.color;
     	    pf.pcat.draw(g,null,v,true,dx,dy);
         	return;
         }
 
-		Point[] bordsXY = getBorders(proj,v);
-		if( bordsXY==null ) return;
 
+        ///////////////////////////////////////////////////////////////////////
+        // cas 3 : fov défini par une série de STCObj                        //
+        ///////////////////////////////////////////////////////////////////////
+        if (stcObjects != null) {
+            ArrayList<PointD[]> polygons = new ArrayList<PointD[]>();
+            for (STCObj stcObj : this.stcObjects) {
+                if ( stcObj.getShapeType() != STCObj.ShapeType.POLYGON ) {
+                    continue;
+                }
 
-		g.setColor(col!=null?col:color);
-		/*
-		System.out.println(alpha);
-		System.out.println(delta);
-		System.out.println(x);
-        System.out.println(y);
-        */
+                STCPolygon stcPolygon = (STCPolygon)stcObj;
+                STCFrame frame = stcPolygon.getFrame();
+                // currently, we only support FK5, ICRS and J2000 frames
+                if ( ! (frame==STCFrame.FK5 || frame==STCFrame.ICRS || frame==STCFrame.J2000)) {
+                    continue;
+                }
+                PointD[] polygonBords = new PointD[stcPolygon.getxCorners().size()];
+                for (int i=0; i<polygonBords.length; i++) {
+                    polygonBords[i] = new PointD(stcPolygon.getxCorners().get(i), stcPolygon.getyCorners().get(i));
+                }
 
-		int[] xCoord = new int[bordsXY.length];
-		int[] yCoord = new int[bordsXY.length];
+                polygons.add(polygonBords);
+            }
+            doDraw(polygons, proj, v, g, dx, dy, col);
+            return;
+        }
+        ///////////////////////////////////////////////////////////////////////
+        // cas 4 : fov défini par this.bords                                 //
+        ///////////////////////////////////////////////////////////////////////
+        else {
+            ArrayList<PointD[]> polygons = new ArrayList<PointD[]>();
+            polygons.add(this.bords);
+            doDraw(polygons, proj, v, g, dx, dy, col);
+        }
+	}
 
-		for( int i=0 ; i<bordsXY.length ; i++ ) {
-			xCoord[i] = bordsXY[i].x+dx;
-			yCoord[i] = bordsXY[i].y+dy;
-		}
+	private void doDraw(List<PointD[]> polygons, Projection proj, ViewSimple v, Graphics g, int dx, int dy, Color col) {
+	    for (PointD[] polygon : polygons) {
+	        Point[] bordsXY = getBorders(polygon, proj,v);
+	        if( bordsXY==null ) continue;
 
-		// gestion de la transparence
-		if( Aladin.ENABLE_FOOTPRINT_OPACITY && g instanceof Graphics2D ) {
-			   Graphics2D g2d=null;
-			   Composite saveComposite=null;
-			   g2d = (Graphics2D)g;
-			   saveComposite = g2d.getComposite();
-			   Composite myComposite = Util.getFootprintComposite(Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL);
-			   g2d.setComposite(myComposite);
+	        int[] xCoord = new int[bordsXY.length];
+	        int[] yCoord = new int[bordsXY.length];
 
-			   // fill FoV polygon
-			   g2d.fill(new Polygon(xCoord, yCoord, xCoord.length));
+	        for( int i=0 ; i<bordsXY.length ; i++ ) {
+	            xCoord[i] = bordsXY[i].x+dx;
+	            yCoord[i] = bordsXY[i].y+dy;
+	        }
 
+	        // affichage en transparence
+	        if( Aladin.ENABLE_FOOTPRINT_OPACITY && g instanceof Graphics2D ) {
+	               Graphics2D g2d=null;
+	               Composite saveComposite=null;
+	               g2d = (Graphics2D)g;
+	               saveComposite = g2d.getComposite();
+	               Composite myComposite = Util.getFootprintComposite(Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL);
+	               g2d.setComposite(myComposite);
 
-			   // restore previous composite
-			   g2d.setComposite(saveComposite);
+	               // fill FoV polygon
+	               g2d.fill(new Polygon(xCoord, yCoord, xCoord.length));
 
-		}
-		// fin gestion de la transparence
+	               // restore previous composite
+	               g2d.setComposite(saveComposite);
+	        }
 
-		int iNext;
-		for( int i=0; i<bordsXY.length; i++ ) {
-			iNext = (i+1)%bordsXY.length;
-			g.drawLine(xCoord[i], yCoord[i], xCoord[iNext], yCoord[iNext]);
-		}
+	        // affichage en "fil de fer"
+	        int iNext;
+	        for( int i=0; i<bordsXY.length; i++ ) {
+	            iNext = (i+1)%bordsXY.length;
+	            g.drawLine(xCoord[i], yCoord[i], xCoord[iNext], yCoord[iNext]);
+	        }
+        }
 	}
 
     /** teste si le point (x,y) tombe dans le fov
@@ -408,7 +463,7 @@ public class Fov {
         int[] cx = new int[bords.length];
         int[] cy = new int[bords.length];
 
-		Point[] bordsXY = getBorders(v.getProj(),v);
+		Point[] bordsXY = getBorders(this.bords, v.getProj(),v);
 		if( bordsXY==null ) return false;
 		for( int i=0; i<bords.length; i++ ) {
 			cx[i] = bordsXY[i].x;

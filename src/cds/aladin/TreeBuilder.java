@@ -41,11 +41,10 @@ package cds.aladin;
 import java.awt.Color;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCStringParser;
 import cds.astro.Astrocoo;
 import cds.astro.Coo;
 import cds.savot.model.*;
@@ -1214,8 +1213,8 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         String[] allUnits = new String[nbTd];
         String[] descStr = new String[desc.length];
         String[] originalExpla = new String[nbTd];
-        String naxis,scale,imgFormat,color,survey,machine,resol,plateNumber,ssaAxes,ssaUnits,ssaDimeq,ssaScaleq;
-        ssaAxes=ssaUnits=ssaDimeq=ssaScaleq=plateNumber=resol=machine=survey=color=imgFormat=naxis=scale=null;
+        String naxis,scale,imgFormat,color,survey,machine,resol,plateNumber,ssaAxes,ssaUnits,ssaDimeq,ssaScaleq,stcRegion;
+        ssaAxes=ssaUnits=ssaDimeq=ssaScaleq=stcRegion=plateNumber=resol=machine=survey=color=imgFormat=naxis=scale=null;
         int index = -1;
         int indexSpatialLocation,indexRA,indexDE,indexLocation,indexNaxis,indexScale,indexImgFormat,indexOrigin,idxAngleVal;
         indexSpatialLocation=idxAngleVal=indexOrigin=indexImgFormat=indexScale = indexNaxis = indexLocation=indexRA=indexDE = -1;
@@ -1335,6 +1334,10 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 					ssaScaleq = expla[i];
 				}
 
+                // STC region
+				else if (descId[i].equals("regionSTCS") || descStr[i].equals("stcs") || descStr[i].equals("position_bounds")) {
+				    stcRegion = expla[i];
+				}
 
                 // récupération de la couleur (filtre) (pour bidouille Aladin)
                 else if( ucd.equalsIgnoreCase(SIAP_BANDPASS_ID) ) {
@@ -1626,7 +1629,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         setDistanceToCenter(node, alphaVal, deltaVal);
 
         // Attention : cette méthode doit absolument être appelé APRES l'acquisition de angleVal
-        createFov(node);
+        createFov(node, stcRegion);
 
 
         // pour permettre le tri par champ
@@ -1940,7 +1943,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                 angleVal = angleValSave[intIndexFather];
                 pixSize = fatherSubObs.getPixSizeDeg();
 
-                createFov(subObs);
+                createFov(subObs, null);
                 maxSize = -1.0;
             }
         } // fin Traitement Storage Mapping
@@ -2143,7 +2146,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                 curNode.isLeaf = true;
                 father.addChild(curNode);
                 nodes.put(curNode.name, curNode);
-                createFov(curNode);
+                createFov(curNode, null);
             }
             //System.out.println(curNode.refNumber);
         }
@@ -2285,7 +2288,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
                         String location = td.getContent();
                         if( location!=null && location.length()>0 )
                             curNode.location = location;
-                            System.out.println(curNode.name + " " + location);
+//                            System.out.println(curNode.name + " " + location);
                     }
                     if( descStr.equalsIgnoreCase(GLULINK) ) {
                         String gluLink = td.getContent();
@@ -2582,13 +2585,13 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         return Color.getHSBColor((float)(factor-Math.floor(factor)),0.7f,1f);
     }
 
-    private void createFov(ResourceNode node) {
+    private void createFov(ResourceNode node, String stcRegion) {
         // pour un spectre, on crée un FoV particulier
         boolean isSpectra = node.type==ResourceNode.SPECTRUM;
 
         // on ne crée pas un FoV inutilement
         // A REPRENDRE !!
-        if( (xValTab==null || yValTab==null) && (Double.isNaN(xVal) || Double.isNaN(yVal)) && !isSpectra ) {
+        if( (xValTab==null || yValTab==null) && (Double.isNaN(xVal) || Double.isNaN(yVal)) && !isSpectra && stcRegion==null ) {
         	return;
         }
 
@@ -2596,9 +2599,15 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             angleVal = 0;
         }
 
+        if (stcRegion != null) {
+            Aladin.trace(3, "Creating FoV from STC-S description for node "+node.name);
+            STCStringParser parser = new STCStringParser();
+            List<STCObj> stcObjs = parser.parse(stcRegion);
+            node.setFov(new Fov(alphaVal, deltaVal, stcObjs));
+        }
         // voir alphaVal et compagnie pour ne pas créer le fov si non nécessaire
         // Création d'un Fov aux formes complexes (cas des images HST)
-        if( xValTab!=null && yValTab!=null) {
+        else if( xValTab!=null && yValTab!=null) {
             node.setFov(new Fov(alphaVal, deltaVal, xValTab, yValTab, angleVal, xVal, yVal));
         }
         else if( isSpectra ) {
