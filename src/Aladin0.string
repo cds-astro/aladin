@@ -2102,8 +2102,8 @@ MPUBLISH -4- Publish result
 MPUBLISH.fr -4- Publication
 MTIPPUBLISH Share your Allsky view
 MTIPPUBLISH.fr Partager votre allsky
-MRGB Generate RGB
-MRGB.fr Construction RVB
+MRGBA Generate RGB
+MRGBA.fr Construction RVB
 MTIPRGB Color composition with allskys
 MTIPRGB.fr Composition couleur
 
