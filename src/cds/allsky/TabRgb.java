@@ -34,7 +34,7 @@ import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.tools.Util;
 
-public class RGBPanel extends JPanel implements ActionListener {
+public class TabRgb extends JPanel implements ActionListener {
 
 	private static String B;
 	private static String G;
@@ -61,7 +61,7 @@ public class RGBPanel extends JPanel implements ActionListener {
 	private final Aladin aladin;
 	private String titlehelp;
 
-	public RGBPanel(Aladin aladin) {
+	public TabRgb(Aladin aladin) {
 		super(new BorderLayout());
 		this.aladin = aladin;
 		createChaine(Aladin.getChaine());
@@ -208,9 +208,9 @@ public class RGBPanel extends JPanel implements ActionListener {
 			
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			bOk.setEnabled(false);
-			RGBBuild thread = new RGBBuild(aladin,plans,dir.getText());
-			thread.start();
-			(new ThreadProgressBar(thread)).start();
+			BuilderRgb builderRgb = new BuilderRgb(aladin,plans,dir.getText());
+			builderRgb.start();
+			(new ThreadProgressBar(builderRgb)).start();
 		}
 	}
 
@@ -258,9 +258,9 @@ public class RGBPanel extends JPanel implements ActionListener {
 	}
 	
 	class ThreadProgressBar implements Runnable {
-		Object thread;
+		Object rgbBuilder;
 		public ThreadProgressBar(Object source) {
-			thread = source;
+			rgbBuilder = source;
 		}
 
 		public synchronized void start(){
@@ -269,8 +269,8 @@ public class RGBPanel extends JPanel implements ActionListener {
 		}
 		public void run() {
 			int value = 0;
-			while(thread != null && value < 99) {
-				value = (int)((RGBBuild)thread).getProgress();
+			while(rgbBuilder != null && value < 99) {
+				value = (int)((BuilderRgb)rgbBuilder).getProgress();
 				setProgress(value);
 				try {
 					Thread.sleep(200);

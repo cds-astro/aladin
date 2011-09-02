@@ -1428,7 +1428,7 @@ public class PlanHealpix extends PlanBG {
                                 if (fitsOut == null
                                         && idxTFormToRead != POLA_SEGMENT_MAGIC_CODE) {
                                     fitsOut = new Fits(fitsU.width,
-                                            fitsU.height, -32);
+                                            fitsU.heightCell, -32);
                                 }
                                 computePolarisation(fitsOut, fitsQ, fitsU,
                                         norder, npix, false, dataMinPola,
@@ -1685,7 +1685,7 @@ public class PlanHealpix extends PlanBG {
 
                     for( int y1=0; y1<gap; y1++ ) {
                        for( int x1=0; x1<gap; x1++) {
-                          int offsetY = isARGB ? y*gap+y1 : in.height-1-(y*gap+y1);
+                          int offsetY = isARGB ? y*gap+y1 : in.heightCell-1-(y*gap+y1);
                           pix = in.getPixelDouble(x*gap+x1,offsetY) ;
 
                           if( mode==FIRST ) break;
@@ -1727,7 +1727,7 @@ public class PlanHealpix extends PlanBG {
                    int xOut= xLosange*outLosangeWidth + x;
                    int yOut = yLosange*outLosangeWidth +y;
 
-                   out.setPixelDouble(xOut, out.height-1-yOut, pix);
+                   out.setPixelDouble(xOut, out.heightCell-1-yOut, pix);
                 }
              }
 

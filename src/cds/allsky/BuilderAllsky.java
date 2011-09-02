@@ -29,12 +29,12 @@ import cds.tools.pixtools.Util;
 /**
  * Création d'un fichier Allsky.fits ou Allsky.jpg à partir des losanges individuels
  */
-final public class SkyGenerator {
+final public class BuilderAllsky {
    
    private static final String FS = System.getProperty("file.separator");
    private double progress = 0;
    
-   public SkyGenerator() {}
+   public BuilderAllsky() {}
    
     /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée
@@ -191,7 +191,7 @@ final public class SkyGenerator {
    public static void main(String[] args) {
       
       try {
-         SkyGenerator sg = new SkyGenerator();
+         BuilderAllsky sg = new BuilderAllsky();
          boolean color = false;
          String path="";
          int order=3;

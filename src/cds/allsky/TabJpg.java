@@ -34,7 +34,7 @@ import cds.aladin.Tool;
 import cds.aladin.ToolBox;
 import cds.tools.Util;
 
-public class JPGPanel extends JPanel implements ActionListener {
+public class TabJpg extends JPanel implements ActionListener {
 
    private static final String OK = "Build JPGs";
 
@@ -55,11 +55,11 @@ public class JPGPanel extends JPanel implements ActionListener {
    private String PREVIOUS;
 
    double[] cut = new double[4];
-   private final AllskyPanel allsky;
+   private final MainPanel mainPanel;
 
-   private String getString(String k) { return allsky.aladin.getChaine().getString(k); }
+   private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
-   public JPGPanel(final AllskyPanel parent) {
+   public TabJpg(final MainPanel parent) {
       super(new BorderLayout());
       createChaine(Aladin.getChaine());
       bPrevious = new JButton(PREVIOUS);
@@ -72,7 +72,7 @@ public class JPGPanel extends JPanel implements ActionListener {
       JRadioButton rb;
       ButtonGroup bg = new ButtonGroup();
 
-      allsky = parent;
+      mainPanel = parent;
       JLabel label;
       GridBagConstraints c = new GridBagConstraints();
       c.gridx = 0;
@@ -203,8 +203,8 @@ public class JPGPanel extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
-      boolean readyToDo = allsky.isExistingAllskyDir();
-      boolean isRunning = allsky.isRunning();
+      boolean readyToDo = mainPanel.isExistingAllskyDir();
+      boolean isRunning = mainPanel.isRunning();
       bPrevious.setEnabled(readyToDo && !isRunning);
       bNext.setEnabled(readyToDo && !isRunning );
       tCutMin.setEnabled(readyToDo);
@@ -230,7 +230,7 @@ public class JPGPanel extends JPanel implements ActionListener {
 
    public void setCut(double[] cut) {
       // affiche les valeurs réelles avec bscale et bzero
-      double[] bb = allsky.getBScaleBZero();
+      double[] bb = mainPanel.getBScaleBZero();
       tCutMin.setText(Util.myRound(cut[0]*bb[0]+bb[1]));
       tCutMax.setText(Util.myRound(cut[1]*bb[0]+bb[1]));
       this.cut = cut;
@@ -242,7 +242,7 @@ public class JPGPanel extends JPanel implements ActionListener {
       if( radioManual.isSelected() ) {
          String s = tCutMin.getText();
          // convertit pour garder les valeurs codées sans bscale et bzero
-         double[] bb = allsky.getBScaleBZero();
+         double[] bb = mainPanel.getBScaleBZero();
          try {
             cut[0] = (Double.parseDouble(s)-bb[1])/bb[0];
             s = tCutMax.getText();
@@ -253,7 +253,7 @@ public class JPGPanel extends JPanel implements ActionListener {
 
          // Sinon il faut chercher le min..max dans le plan de la vue courante
       } else {
-         Plan p = allsky.aladin.calque.getPlanBase();
+         Plan p = mainPanel.aladin.calque.getPlanBase();
          cut[0]= ((PlanImage)p).getCutMin();
          cut[1]= ((PlanImage)p).getCutMax();
       }
@@ -263,7 +263,7 @@ public class JPGPanel extends JPanel implements ActionListener {
    /** Retourne la table des couleurs de la vue courante, ou null si le mode de cut est positionné manuellement */
    public ColorModel getCM() {
       if( radioManual.isSelected() ) return null;
-      return ((PlanImage) allsky.aladin.calque.getPlanBase() ).getCM();
+      return ((PlanImage) mainPanel.aladin.calque.getPlanBase() ).getCM();
    }
 
    //	public void setTransfertFct(int fct) {
@@ -280,7 +280,7 @@ public class JPGPanel extends JPanel implements ActionListener {
       boolean rep=true;
       String s;
       try {
-         PlanBG p = (PlanBG) allsky.aladin.calque.getPlanBase();
+         PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
          if( !p.isTruePixels() ) throw new Exception();
          s="<html><i>"+"Pixels:<b> "+p.getPixelMinInfo()+" .. "+p.getPixelMaxInfo()+"</b> from "+p.getDataMinInfo()+" .. "+p.getDataMaxInfo()+" - " +
          "Transfert function: <b>"+p.getTransfertFctInfo()+"</b></i>";
@@ -307,30 +307,30 @@ public class JPGPanel extends JPanel implements ActionListener {
          // Juste pour vérifier qu'on a bien un plan all-sky valable en cours de visualisation
          if( !radioManual.isSelected() ) {
             try {
-               PlanBG p = (PlanBG) allsky.aladin.calque.getPlanBase();
+               PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
                if( !p.isTruePixels() ) throw new Exception();
             } catch( Exception e1 ) {
-               allsky.aladin.warning(allsky,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
+               mainPanel.aladin.warning(mainPanel,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
                return;
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         JPGBuild jpgThread = new JPGBuild(getCut(), getCM() , allsky );
-         jpgThread.start();
-         (new ThreadProgressBar(jpgThread)).start();
+         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM() , mainPanel );
+         builderJpg.start();
+         (new ThreadProgressBar(builderJpg)).start();
          
       } else if (e.getSource() == bNext) {
-         allsky.showPublish();
+         mainPanel.showPubTab();
          
       } else if (e.getSource() == bPrevious) {
-         allsky.showBuild();
+         mainPanel.showBuildTab();
       }
    }
 
    class ThreadProgressBar implements Runnable {
-      Object thread;
+      Object builderJpg;
       public ThreadProgressBar(Object source) {
-         thread = source;
+         builderJpg = source;
       }
 
       public void start(){
@@ -339,8 +339,8 @@ public class JPGPanel extends JPanel implements ActionListener {
       }
       public void run() {
          int value = 0;
-         while(thread != null && value < 99) {
-            value = (int)((JPGBuild)thread).getProgress();
+         while(builderJpg != null && value < 99) {
+            value = (int)((BuilderJpg)builderJpg).getProgress();
             setProgress(value);
             try {
                Thread.currentThread().sleep(200);
@@ -349,7 +349,7 @@ public class JPGPanel extends JPanel implements ActionListener {
          }
          setProgress(100);
          setCursor(null);
-         allsky.showPublish();
+         mainPanel.showPubTab();
       }
    }
 

@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.imageio.IIOImage;
@@ -45,7 +46,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
-import cds.allsky.AllskyConst;
+import cds.allsky.Constante;
 import cds.image.Hdecomp;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -60,12 +61,18 @@ public class Fits {
 	public HeaderFits headerFits;    // header Fits
 	public byte [] pixels;           // Pixels d'origine "fullbits" (y compté depuis le bas)
 	public int bitpix;               // Profondeur des pixels (codage FITS 8,16,32,-32,-64)
-	public int width;                // Largeur de l'image
-	public int height;               // Hauteur de l'image
+	public int width;               // Largeur totale de l'image
+	public int height;               // Hauteur totale de l'image
 	public double bzero=DEFAULT_BZERO;	// BZERO Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
 	public double bscale=DEFAULT_BSCALE;	// BSCALE Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
 	public double blank=DEFAULT_BLANK;  // valeur BLANK
 	public boolean flagARGB=false;   // true s'il s'agit d'un FITS couleur ARGB
+
+	// Dans le cas où il s'agit d'une cellule sur l'image (seule une portion de l'image sera accessible)
+    public int xCell;                // Position X à partir du coin haut gauche de la cellule de l'image (par défaut 0)
+    public int yCell;                // Position Y à partir du coin haut gauche de la cellule de l'image (par défaut 0)
+    public int widthCell;                // Largeur de la cellule de l'image (par défaut = naxis1)
+    public int heightCell;                // Hauteur de la cellule de l'image (par défaut = naxis2)
 
 	public Coord center;             // Coord J2000 du centre de l'image
 	public byte [] pix8;             // Pixels 8 bits en vue d'une sauvegarde JPEG (y compté depuis le haut)
@@ -99,9 +106,10 @@ public class Fits {
     * @param bitpix Profondeur des pixels (codage FITS 8,16,32,-32,-64  ou 0 pour RGB)
     */
    public Fits(int width,int height,int bitpix) {
-      this.width=width;
-      this.height=height;
+      this.width=this.widthCell=width;
+      this.height=this.heightCell=height;
       this.bitpix=bitpix;
+      xCell=yCell=0;
       if( bitpix==0 ) {
          rgb = new int[width*height];
       } else {
@@ -117,29 +125,39 @@ public class Fits {
    }
 
 
-   public double raMin=0,raMax=0,deMin=0,deMax=0;
-
+//   public double raMin=0,raMax=0,deMin=0,deMax=0;
+   
    /** Positionnement d'une calibration => initialisation de la coordonnée
     * centrale de l'image (cf center)
     */
    public void setCalib(Calib c) {
       calib=c;
+      initCenter();
+   }
+   
+   public void initCenter() {
       try {
          center = new Coord();
-         center.x = width/2.;
-         center.y = height/2.;
+         center.x = xCell+widthCell/2.;
+         center.y = height-(yCell+heightCell/2.);
          calib.GetCoord(center);
-
-         Coord coo = new Coord();
-         for( int i=0; i<4; i++ ) {
-            coo.x= i==0 || i==3 ? 24 : width-24;
-            coo.y= i<2 ? 24 : height-24;
-            calib.GetCoord(coo);
-            if( i==0 || (coo.al<raMin && Math.abs(coo.al-raMin)<300) ) raMin=coo.al;
-            if( i==0 || (coo.al>raMax && Math.abs(coo.al-raMax)<300) ) raMax=coo.al;
-            if( i==0 || (coo.del<deMin && Math.abs(coo.del-deMin)<300) ) deMin=coo.del;
-            if( i==0 || (coo.del>deMax && Math.abs(coo.del-deMax)<300) ) deMax=coo.del;
-         }
+         
+//         int margex = width/20;
+//         int margey = height/20;
+//         if( margex>=widthCell ) margex=widthCell/2;
+//         if( margey>=heightCell ) margey=heightCell/2;
+//
+//         Coord coo = new Coord();
+//         for( int i=0; i<4; i++ ) {
+//            
+//            coo.x= i==0  || i==3 ? (xCell==0?margex:0) : widthCell-(widthCell==width?margex:0);
+//            coo.y= i<2 ? (yCell==0?margey:0) : heightCell-(heightCell==height?margey:0);
+//            calib.GetCoord(coo);
+//            if( i==0 || (coo.al<raMin && Math.abs(coo.al-raMin)<300) ) raMin=coo.al;
+//            if( i==0 || (coo.al>raMax && Math.abs(coo.al-raMax)<300) ) raMax=coo.al;
+//            if( i==0 || (coo.del<deMin && Math.abs(coo.del-deMin)<300) ) deMin=coo.del;
+//            if( i==0 || (coo.del>deMax && Math.abs(coo.del-deMax)<300) ) deMax=coo.del;
+//         }
       } catch( Exception e ) { e.printStackTrace(); }
    }
 
@@ -162,11 +180,12 @@ public class Fits {
             encore=false;
          } catch( InterruptedException e ) { }
       }
-      width =img.getWidth(observer);
-      height=img.getHeight(observer);
+      width=widthCell =img.getWidth(observer);
+      height=heightCell=img.getHeight(observer);
+      xCell=yCell=0;
       bitpix= flagColor ? 0 : 8;
       
-      BufferedImage imgBuf = new BufferedImage(width,height, 
+      BufferedImage imgBuf = new BufferedImage(widthCell,heightCell, 
             flagColor ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY);
       Graphics g = imgBuf.getGraphics();
       g.drawImage(img,0,0,observer);
@@ -190,7 +209,7 @@ public class Fits {
       imgBuf.flush(); imgBuf=null;
       img.flush(); img=null;
       if( bitpix==8 ) {
-         pix8 = new byte[width*height];
+         pix8 = new byte[widthCell*heightCell];
          initPix8();
       }
    }
@@ -205,43 +224,110 @@ public class Fits {
       is.close();
       this.setFilename(filename);
    }
+   
+   
+   // Extraction de la définition d'une cellule FITS pour une ouverture d'un fichier FITS en mode "mosaic"
+   // le filename doit être suffixé par [x,y-wxh] (sans aucun blanc).
+   // => met à jour les variables xCell, yCell, widthCell et heigthCell
+   // S'il n'y a pas de définition de cellule, laisse xCell et yCell à 0 et widthCell et heightCell à -1
+   // @return le nom de fichier sans le suffixe
+   private String parseCell(String filename) throws Exception {
+      xCell=yCell=0;
+      widthCell=heightCell=-1;
+      int deb = filename.lastIndexOf('[');
+      if( deb==-1 ) return filename;
+      int fin = filename.indexOf(']',deb);
+      if( fin==-1 ) return filename;
+      StringTokenizer st = new StringTokenizer(filename.substring(deb+1, fin),",-x");
+      try {
+         xCell = Integer.parseInt(st.nextToken());
+         yCell = Integer.parseInt(st.nextToken());
+         widthCell = Integer.parseInt(st.nextToken());
+         heightCell = Integer.parseInt(st.nextToken());
+      } catch( Exception e ) {
+         throw new Exception("Bad cell mosaic FITS definition => "+filename); 
+      }
+      return filename.substring(0,deb);
+   }
 
 
    /** Chargement d'une image FITS N&B depuis un fichier */
    public void loadFITS(String filename) throws Exception {loadFITS(filename,false);}
    public void loadFITS(String filename, boolean color) throws Exception {
+      filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       is = is.startRead();
-      if( color ) loadFITSColor(is);
-      else loadFITS(is);
+      if( color ) {
+         if( widthCell<0 ) throw new Exception("Mosaic mode not supported yet for FITS color file");
+         loadFITSColor(is);
+      }
+      else loadFITS(is,xCell,yCell,widthCell,heightCell);
       is.close();
       this.setFilename(filename);
    }
-
+   
    /** Chargement d'une image FITS */
    public void loadFITS(MyInputStream dis) throws Exception {
+      loadFITS(dis,0,0,-1,-1);
+   }
+
+   /** Chargement d'une cellule d'une image FITS */
+   public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception {
 	   dis = dis.startRead();
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
 	   width  = headerFits.getIntFromHeader("NAXIS1");
 	   height = headerFits.getIntFromHeader("NAXIS2");
-	   pixels = new byte[width*height * (Math.abs(bitpix)/8)];
+	   
+	   // Ouverture complète de l'image
+	   if( w==-1 ) {
+	      widthCell=width;
+	      heightCell=height;
+	      xCell=yCell=0;
+	      
+	   // Ouverture juste d'une cellule de l'image
+	   } else {
+	      if( x<0 || y<0 || x+w>width || y+h>height ) throw new Exception("Mosaic cell outside the image ("+width+"x"+height+") cell=["+x+","+y+" "+w+"x"+h+"]");
+	      widthCell=w;
+	      heightCell=h;
+	      xCell=x;
+	      yCell=y;
+	   }
+	   int n = (Math.abs(bitpix)/8);
+	   pixels = new byte[widthCell*heightCell * n];
 	   try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
 	   if (headerFits.isHCOMP()) pixels = Hdecomp.decomp(dis);
-	   else dis.readFully(pixels);
+	   else {
+	      
+	      // Lecture d'un coup
+	      if( w==-1 ) dis.readFully(pixels);
+	      
+	      // Lecture ligne à ligne pour mémoriser uniquement la cellule
+	      else {
+	         dis.skip( yCell*width*n);
+	         byte [] buf = new byte[width * n];  // une ligne complète
+	         for( int lig=0; lig<heightCell; lig++ ) {
+	            dis.readFully(buf);
+	            System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+	         }
+	         dis.skip( (height-(yCell+heightCell) )*width * n);
+	      }
+
+	   }
 	   try { bscale = headerFits.getIntFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
 	   try { bzero  = headerFits.getIntFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
 	   try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
-	   pix8 = new byte[width*height];
+	   pix8 = new byte[widthCell*heightCell];
 	   if( bitpix==8 ) initPix8();
    }
    
    /** Chargement d'une image FITS couleur mode ARGB */
    public void loadFITSARGB(MyInputStream dis) throws Exception {
       headerFits = new HeaderFits(dis);
-      width  = headerFits.getIntFromHeader("NAXIS1");
-      height = headerFits.getIntFromHeader("NAXIS2");
-      pixels = new byte[width*height*32];
+      width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
+      height=heightCell = headerFits.getIntFromHeader("NAXIS2");
+      xCell=yCell=0;
+      pixels = new byte[widthCell*heightCell*32];
       dis.readFully(pixels);
       setARGB();
       try { setCalib(new Calib(headerFits)); }
@@ -252,25 +338,23 @@ public class Fits {
    public void loadFITSColor(MyInputStream dis) throws Exception {
       headerFits = new HeaderFits(dis);
       bitpix = headerFits.getIntFromHeader("BITPIX");
-      width  = headerFits.getIntFromHeader("NAXIS1");
-      height = headerFits.getIntFromHeader("NAXIS2");
-      pixels = new byte[width*height];
-      if (headerFits.isHCOMP()) {
-    		  pixels = Hdecomp.decomp(dis);
-      }
+      width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
+      height=heightCell = headerFits.getIntFromHeader("NAXIS2");
+      xCell=yCell=0;
+      pixels = new byte[widthCell*heightCell];
+      if (headerFits.isHCOMP()) pixels = Hdecomp.decomp(dis);
       else dis.readFully(pixels);
 
-      byte[] t2 = new byte[width*height];
+      byte[] t2 = new byte[widthCell*heightCell];
       dis.readFully(t2);
-      byte[] t3 = new byte[width*height];
+      byte[] t3 = new byte[widthCell*heightCell];
       dis.readFully(t3);
-      rgb = new int[width*height];
-	   for( int i=0; i<height*width; i++ ){
-			   int val = 0;
-			   val = 0 | (((pixels[i])&0xFF)<<16)
-	              | (((t2[i])&0xFF)<<8) | (t3[i])&0xFF;
-			   rgb[i] = val;
-	   }
+      rgb = new int[widthCell*heightCell];
+      for( int i=0; i<heightCell*widthCell; i++ ){
+         int val = 0;
+         val = 0 | (((pixels[i])&0xFF)<<16) | (((t2[i])&0xFF)<<8) | (t3[i])&0xFF;
+         rgb[i] = val;
+      }
       try { bscale = headerFits.getIntFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
       try { bzero  = headerFits.getIntFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
       try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
@@ -289,8 +373,9 @@ public class Fits {
     	  bitpix = 0;
       }
 //      if( bitpix!=0 ) bitpix = headerFits.getIntFromHeader("BITPIX");
-      width  = headerFits.getIntFromHeader("NAXIS1");
-      height = headerFits.getIntFromHeader("NAXIS2");
+      width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
+      height=heightCell = headerFits.getIntFromHeader("NAXIS2");
+      xCell=yCell=0;
       try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
       try { bscale = headerFits.getIntFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
       try { bzero  = headerFits.getIntFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
@@ -299,19 +384,6 @@ public class Fits {
       this.setFilename(filename);
    }
 
-   public void setHeaderFrom(double center_ra, double center_dec, double incA) {
-	   headerFits.setKeyValue("CRVAL1", String.valueOf(center_ra));
-	   headerFits.setKeyValue("CRVAL2", String.valueOf(center_dec));
-	   headerFits.setKeyValue("CRPIX1", String.valueOf((width+1)/2.));
-	   headerFits.setKeyValue("CRPIX2", String.valueOf((height+1)/2.));
-	   headerFits.setKeyValue("CDELT1", String.valueOf(-incA));
-	   headerFits.setKeyValue("CDELT2", String.valueOf(incA));
-	   headerFits.setKeyValue("CTYPE1", "RA---TAN");
-	   headerFits.setKeyValue("CTYPE2", "DEC--TAN");
-//	   headerFits.setKeyValue("CROTA1", String.valueOf(-135));
-	   headerFits.setKeyValue("CROTA2", String.valueOf(-135));
-   }
-   
    /** Retourne la valeur BSCALE (1 si non définie) */
    public double getBscale() { return bscale; }
    
@@ -350,11 +422,11 @@ public class Fits {
       if( headerFits!=null ) headerFits.setKeyValue("COLORMOD", "ARGB");
 
       // Génération du tableau rgb[] à partir des pixels ARGB stockés dans pixels[]
-      rgb = new int[width*height];
-      for( int y=0; y<height; y++ ) {
-         for( int x=0; x<width; x++ ) {
-            int i = y*width+x;
-            int offset = reverse ? (height-y-1)*width+x : i;
+      rgb = new int[widthCell*heightCell];
+      for( int y=0; y<heightCell; y++ ) {
+         for( int x=0; x<widthCell; x++ ) {
+            int i = y*widthCell+x;
+            int offset = reverse ? (heightCell-y-1)*widthCell+x : i;
             rgb[offset] = (pixels[i*4]   & 0xFF)  << 24
             | (pixels[i*4+1] & 0xFF)  << 16
             | (pixels[i*4+2] & 0xFF)  << 8
@@ -477,15 +549,13 @@ public class Fits {
 
    public void writeJPEG(OutputStream os) throws Exception { writeJPEG(os,0.95f); }
    public void writeJPEG(OutputStream os,float qual) throws Exception {
-//	   if (bitpix==0)
-//		   inverseYColor();
       Image img = Toolkit.getDefaultToolkit().createImage(
-            bitpix==0 ? new MemoryImageSource(width,height, rgb, 0,width)
-                       : new MemoryImageSource(width,height,getCM(), pix8, 0,width));
+            bitpix==0 ? new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell)
+                       : new MemoryImageSource(widthCell,heightCell,getCM(), pix8, 0,widthCell));
 
       BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
       Graphics g = bufferedImage.createGraphics();
-      g.drawImage(img,0,0,null);
+      g.drawImage(img,xCell,yCell,null);
       g.dispose();
 
       ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
@@ -508,57 +578,83 @@ public class Fits {
       cm = new IndexColorModel(8,256,r,r,r);
       return cm;
    }
-
-
+   
+   
    /** Retourne la valeur RGB du pixel dans le cas d'une image couleur RGB
     * => le facteur ALPHA est mis à zéro */
    public int getPixelRGB(int x, int y) {
-      return 0x00FFFFFF & rgb[y*width+x];
+      return 0x00FFFFFF & rgb[ (y-yCell)*widthCell + (x-xCell) ];
+   }
+   
+   
+   /** Retourne la description de la cellule courante selon la syntaxe [x,y-wxh]
+    * ou "" si le fichier n'a pas été ouvert en mode mosaic */
+   public String getCellSuffix() throws Exception {
+      if( !hasCell() ) return "";
+      return "["+xCell+","+yCell+"-"+widthCell+"x"+heightCell+"]";
+   }
+   
+   /** Retourne true si le fichier a été ouvert en mode mosaic */
+   public boolean hasCell() { return widthCell!=width || heightCell!=height; }
+   
+   /** Retourne true s'il y a un pixel connu à la position x,y.
+    * Cela concerne le mode mosaic FITS, où l'on peut ouvrir juste une cellule sur le fichier
+    * Dans le cas général, cette méthode retournera true dès que le pixel désigné est dans l'image */
+   public boolean isInCell(int x,int y) {
+      return x>=xCell && x<xCell+widthCell && y>=yCell && y<yCell+heightCell;
    }
 
    /** Retourne la valeur physique (bscale*pix+bzero) du pixel en (x,y) (y compté à partir du bas) sous forme d'un double */
    public double getPixelFull(int x,int y) {
-      return bscale*getPixValDouble(pixels,bitpix,y*width+x) + bzero;
+      return bscale*getPixValDouble(pixels,bitpix,(y-yCell)*widthCell + (x-xCell)) + bzero;
    }
 
    /** Retourne la valeur du pixel en (x,y) (y compté à partir du bas) sous forme d'un double */
    public double getPixelDouble(int x,int y) {
-      return getPixValDouble(pixels,bitpix,y*width+x);
+      return getPixValDouble(pixels,bitpix,(y-yCell)*widthCell + (x-xCell));
    }
 
    /** Retourne la valeur du pixel en (x,y) (y compté à partir du bas) sous forme d'un entier */
    public int getPixelInt(int x,int y) {
-      return getPixValInt(pixels,bitpix,y*width+x);
+      return getPixValInt(pixels,bitpix,(y-yCell)*widthCell + (x-xCell));
    }
 
-   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
+   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du haut)
     * exprimé en byte => destiné à être sauvegardé en JPEG  */
    protected int getPix8FromTop(int x,int y) {
-      return getPixValInt(pix8,8, y*width+x);
+      return getPixValInt(pix8,8, (y-yCell)*widthCell + (x-xCell));
+   }
+   
+   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
+    * exprimé en byte => destiné à être sauvegardé en JPEG  */
+   public int getPix8(int x,int y) {
+      return getPixValInt(pix8,8, ((height-y-1)-yCell)*widthCell+(x-xCell));
    }
 
    /** Positionne la valeur du pixel RGB en (x,y) (y compté à partir du bas) exprimé en ARGB
     * Le facteur Alpha est forcé à 0xFF (pas de transparence) */
    public void setPixelRGB(int x, int y, int val) {
-      rgb[y*width+x]=0xFF000000 | val;
+      rgb[(y-yCell)*widthCell + (x-xCell)]=0xFF000000 | val;
    }
 
    /** Positionne la valeur du pixel en (x,y) (y compté à partir du bas) exprimé en double */
    public void setPixelDouble(int x,int y, double val) {
-      setPixValDouble(pixels,bitpix, y*width+x, val);
+      setPixValDouble(pixels,bitpix, (y-yCell)*widthCell + (x-xCell), val);
    }
 
    /** Positionne la valeur du pixel en (x,y) (y compté à partir du bas) exprimé en entier */
    public void setPixelInt(int x,int y, int val) {
-      setPixValInt(pixels,bitpix, y*width+x, val);
+      setPixValInt(pixels,bitpix, (y-yCell)*widthCell + (x-xCell), val);
    }
 
    /** Positionne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
     * exprimé en byte => destiné à être sauvegardé en JPEG  */
    public void setPix8(int x,int y, int val) {
-      setPixValInt(pix8,8, (height-y-1)*width+x, val);
+      setPixValInt(pix8,8, ((height-y-1)-yCell)*widthCell+x, val);
 //      setPixValInt(pix8,8, y*width+x, val);
    }
+   
+   
    
    /**
     * Convertit la valeur double donnée dans le type du bitpix et l'affecte
@@ -593,20 +689,14 @@ public class Fits {
    }
 
    static private double[] getBitpixRange(int bitpix) {
-	   switch (bitpix) {
-	   case 8 :	return minmax8;
-	   case 16 : return minmax16;
-	   case 32 : return minmax32;
-	   case -32 : return minmax_32;
-	   case -64 : return minmax_64;
-	   default : return null;
-	   }
-}
-
-/** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
-    * exprimé en byte => destiné à être sauvegardé en JPEG  */
-   public int getPix8(int x,int y) {
-      return getPixValInt(pix8,8, (height-y-1)*width+x);
+      switch (bitpix) {
+         case 8 :	return minmax8;
+         case 16 : return minmax16;
+         case 32 : return minmax32;
+         case -32 : return minmax_32;
+         case -64 : return minmax_64;
+         default : return null;
+      }
    }
 
    /** Retourne les coordonnées célestes en J2000 de (x,y) (y compté à partir du bas)
@@ -673,15 +763,6 @@ public class Fits {
       double [] range = findAutocutRange();
       toPix8(range[0],range[1]);
    }
-   /** 
-    * Effectue un autocut linéaire des pixels "fullbits" (modifie pixels). 
-    * Utilise la méthode "à la Aladin" pour déterminer le meilleur intervalle.
-    */
-   public void autocut() throws Exception {
-      double [] range = findAutocutRange();
-//      System.out.println("RANGE = " +range[0] + " " + range[1]);
-      cutOut(range[0],range[1]);
-   }
 
    /** Calcule un autocut linéaire des pixels "fullbits"
     * Utilise la méthode "à la Aladin" pour déterminer
@@ -693,69 +774,11 @@ public class Fits {
       return f.findAutocutRange();
    }
 
-   /** Ecrase le tableau des pixels (pixels) selon l'intervalle [min..max]
-    * depuis les valeurs des pixels originaux suivant une fonction linéaire
-    * et les étend entre [0;999]
-    * */
-   public void cutOut(double min, double max) {
-	   double[] oldrange = findMinMax();
-	   double r = 1000./(oldrange[1]-oldrange[0]);
-	   if (bitpix>0) {
-		   for( int y=0; y<height; y++) {
-			   for( int x=0; x<width; x++ ) {
-				   int pixIn = getPixelInt(x,y);
-				   int pixOut = pixIn<=min?0:pixIn>=max ?
-						   999 : (int)((pixIn-min+1)*r);
-				   setPixelInt(x,y,pixOut);
-			   }
-		   }
-	   }
-	   else {
-		   for( int y=0; y<height; y++) {
-			   for( int x=0; x<width; x++ ) {
-				   double pixIn = getPixelFull(x,y);
-				   double pixOut = pixIn<=min?0:pixIn>=max ?
-						   999 : (pixIn-min+1)*r;
-				   setPixelDouble(x,y,pixOut);
-			   }
-		   }
-	   }
-   }
-
-   /** Ecrase le tableau des pixels (pixels) sur 256 niveaux en fonction de l'intervalle
-    * des valeurs des pixels originaux [min..max] suivant une fonction logarithme
-    * */
-   /*
-   public void cutOutLog(double min, double max) {
-	   double r = 256./Math.log( (max-min) +1 );
-	   if (bitpix>0) {
-		   for( int y=0; y<height; y++) {
-	    		  for( int x=0; x<width; x++ ) {
-	    			  int pixIn = getPixelInt(x,y);
-	    			  int pixOut = ( pixIn<=min?0:pixIn>=max ?
-	    					  255 : (int) (Math.log( (pixIn-min+1) )*r) );
-	    			  setPixelInt(x,y,pixOut);
-	    		  }
-	    	  }
-	      }
-	      else {
-	       	  for( int y=0; y<height; y++) {
-	    		  for( int x=0; x<width; x++ ) {
-	    			  double pixIn = getPixelDouble(x,y);
-	    			  double pixOut = ( pixIn<=min?0:pixIn>=max ?
-	    					  255 : Math.log( (pixIn-min+1) )*r );
-	    			  setPixelDouble(x,y,pixOut);
-	    		  }
-	    	  }
-	      }
-   }
-   */
 
    /** Remplit le tableau des pixels 8 bits (pix8)  */
    public void toPix8() {
 	   double[] minmax = findMinMax();
 	   toPix8(minmax[0], minmax[1]);
-//	   toPix8(0, 256);
    }
 
 
@@ -763,12 +786,12 @@ public class Fits {
     * des valeurs des pixels originaux [min..max] linéairement */
    public void toPix8(double min, double max) {
       double r = 256./(max - min);
-      for( int y=0; y<height; y++) {
-         for( int x=0; x<width; x++ ) {
-            double pixIn = getPixelDouble(x,y);
+      for( int y=0; y<heightCell; y++) {
+         for( int x=0; x<widthCell; x++ ) {
+            double pixIn = getPixelDouble(x+xCell,y+yCell);
             byte pixOut = (byte)( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
                   0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-            setPix8(x,y,pixOut);
+            setPix8(x+xCell,y+yCell,pixOut);
          }
       }
    }
@@ -779,89 +802,19 @@ public class Fits {
     * Si la table cm n'est pas monochrome, l'algo travaille uniquement sur la composante bleue */
    public void toPix8(double min, double max, ColorModel cm) {
       double r = 256./(max - min);
-      for( int y=0; y<height; y++) {
-         for( int x=0; x<width; x++ ) {
-            double pixIn = getPixelDouble(x,y);
+      
+      for( int y=0; y<heightCell; y++) {
+         for( int x=0; x<widthCell; x++ ) {
+            double pixIn = getPixelDouble(x+xCell,y+yCell);
             int pix = ( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
                   0xff : (int)( ((pixIn-min)*r) ) & 0xff);
             byte pixOut =(byte) cm.getBlue(pix);
-            setPix8(x,y,pixOut);
+            setPix8(x+xCell,y+yCell,pixOut);
          }
       }
    }
 
    
-//   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-//    * des valeurs des pixels originaux [min..max] suivant une fonction logarithme */
-//   public void toPix8Log(double min, double max) {
-//	   double r = 256./Math.log( (max-min) +1 );
-//	   for( int y=0; y<height; y++) {
-//		   for( int x=0; x<width; x++ ) {
-//			   double pixIn = getPixelDouble(x,y);
-//			   byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
-//					   0xff : (int)( Math.log((pixIn/10.+1-min))*r ) & 0xff);
-//			   setPix8(x,y,pixOut);
-//		   }
-//	   }
-//   }
-//   
-
-//   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-//    * des valeurs des pixels originaux [min..max] suivant une fonction logarithme */
-//   public void toPix8Pow(double min, double max) {
-//	   double r = 256./Math.pow( (max-min),2 );
-//	   for( int y=0; y<height; y++) {
-//		   for( int x=0; x<width; x++ ) {
-//			   double pixIn = getPixelDouble(x,y);
-//			   byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
-//					   0xff : (int)( Math.pow((pixIn-min),2)*r ) & 0xff);
-//			   setPix8(x,y,pixOut);
-//		   }
-//	   }
-//   }
-//
-//   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-//    * des valeurs des pixels originaux [min..max] suivant une fonction logarithme */
-//   public void toPix8Sqrt(double min, double max) {
-//	   double r = 256./Math.sqrt( (max-min));
-//	   for( int y=0; y<height; y++) {
-//		   for( int x=0; x<width; x++ ) {
-//			   double pixIn = getPixelDouble(x,y);
-//			   byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
-//					   0xff : (int)( Math.sqrt((pixIn/10.-min))*r ) & 0xff);
-//			   setPix8(x,y,pixOut);
-//		   }
-//	   }
-//   }
-//
-//   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-//    * des valeurs des pixels originaux [min..max] suivant une fonction logarithme */
-//   public void toPix8ASinH(double min, double max) {
-//	   double r = 256./Math.log( (max-min) + Math.sqrt(Math.pow((max-min), 2.)+1) );
-//	   for( int y=0; y<height; y++) {
-//		   for( int x=0; x<width; x++ ) {
-//			   double pixIn = getPixelDouble(x,y);
-//			   byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
-//					   0xff : (int)(
-//							   Math.log((pixIn/10.-min)+Math.sqrt(Math.pow((pixIn/10.-min), 2.)+1))*r 
-//							   ) & 0xff);
-//			   setPix8(x,y,pixOut);
-//		   }
-//	   }
-//   }
-   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-    * des valeurs des pixels originaux [min..max] linéairement */
-   public void toFullPix8(double min, double max) {
-      double r = 256./(max - min);
-      for( int y=0; y<height; y++) {
-         for( int x=0; x<width; x++ ) {
-            double pixIn = getPixelFull(x,y);
-            byte pixOut = (byte)( pixIn<=min?0x00:pixIn>=max ?
-                  0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-            setPix8(x,y,pixOut);
-         }
-      }
-   }
 
    /** Remplit le tableau des pixels 8 bits (pix8) à partir des pixels
     * fullbits (uniquement si bitpix==8) avec inversion des lignes */
@@ -878,8 +831,8 @@ public class Fits {
    }
 
    private void initPix(byte src[],byte dst[]) {
-      for( int h=0; h<height; h++ ){
-         System.arraycopy(src,h*width, dst,(height-h-1)*width, width);
+      for( int h=0; h<heightCell; h++ ){
+         System.arraycopy(src,h*widthCell, dst,(heightCell-h-1)*widthCell, widthCell);
       }
    }
 
@@ -910,7 +863,7 @@ public class Fits {
    public double [] findAutocutRange(double min, double max) throws Exception {
       double [] range = new double[4];
       try {
-         findMinMax(range,pixels,bitpix,width,height,min,max,true,0);
+         findMinMax(range,pixels,bitpix,widthCell,heightCell,min,max,true,0);
       } catch (Exception e) {
          System.err.println("Erreur  MinMax");
          range[0] = range[2] = min;
@@ -952,46 +905,7 @@ public class Fits {
 	}
 
 
-   /** Creation des tableaux de correspondance indice Healpix <=> indice XY */
-   static private void createHealpixOrder(int order) {
-      int nsize = (int)CDSHealpix.pow2(order);
-      xy2hpx = new int[nsize*nsize];
-      hpx2xy = new int[nsize*nsize];
-      fillUp(xy2hpx,nsize,null);
-      for( int i=0; i<xy2hpx.length; i++ ) hpx2xy[ xy2hpx[i] ] = i;
-   }
-
-   /** Retourne l'indice XY en fonction d'un indice Healpix
-    * => nécessité d'initialiser au préalable avec createHealpixOrdre(int) */
-   static final public int hpx2xy(int hpxOffset) {
-      return xy2hpx[hpxOffset];
-   }
-
-   /** Retourne l'indice Healpix en fonction d'un indice XY
-    * => nécessité d'initialiser au préalable avec createHealpixOrdre(int) */
-   static final public int xy2hpx (int xyOffset) {
-      return hpx2xy[xyOffset];
-   }
-
-   static private int [] xy2hpx = null;
-   static private int [] hpx2xy = null;
-
-   /** Méthode récursive utilisée par createHealpixOrder */
-   static private void fillUp(int [] npix, int nsize, int [] pos) {
-      int size = nsize*nsize;
-      int [][] fils = new int[4][size/4];
-      int [] nb = new int[4];
-      for( int i=0; i<size; i++ ) {
-         int dg = (i%nsize) < (nsize/2) ? 0 : 1;
-         int bh = i<(size/2) ? 0 : 1;
-         int quad = (bh<<1) | dg;
-         int j = pos==null ? i : pos[i];
-         npix[j] = npix[j]<<2 | quad;
-         fils[quad][ nb[quad]++ ] = j;
-      }
-      if( size>4 )  for( int i=0; i<4; i++ ) fillUp(npix, nsize/2, fils[i]);
-   }
-
+   /** Creation des tabl
 
 	/** Pour aider le GC */
    public void free() {
@@ -1001,11 +915,12 @@ public class Fits {
       center=null;
       headerFits=null;
       width=height=bitpix=0;
+      widthCell=heightCell=xCell=yCell=0;
    }
 
    @Override
-public String toString() {
-      return "Fits file: "+width+"x"+height+" bitpix="+bitpix;
+   public String toString() {
+      return "Fits file: "+width+"x"+height+" bitpix="+bitpix+ " ["+xCell+","+yCell+" "+widthCell+"x"+heightCell+"]";
    }
 
    // -------------------- C'est privé --------------------------
@@ -1267,15 +1182,15 @@ public String toString() {
     */
    public void inverseYColor() {
 	   int[] tmp = new int[rgb.length];
-	   for( int h=0; h<height; h++ ){
-		   System.arraycopy(rgb,h*width, tmp,(height-h-1)*width, width);
+	   for( int h=0; h<heightCell; h++ ){
+		   System.arraycopy(rgb,h*widthCell, tmp,(heightCell-h-1)*widthCell, widthCell);
 	   }
 	   rgb = tmp;
    }
    
    /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
    public void coadd(Fits a) throws Exception {
-      int taille=width*height;
+      int taille=widthCell*heightCell;
       
       if( a.pixels!=null && pixels!=null ) {
          for( int i=0; i<taille; i++) {
@@ -1302,7 +1217,7 @@ public String toString() {
 
    /** Remplace les pixels (pix8[], pixels[] et rgb[] pour les nouvelles valeurs != NaN */
    public void overwriteWith(Fits a) throws Exception {
-      int taille=width*height;
+      int taille=widthCell*heightCell;
       
       if( a.pixels!=null && pixels!=null ) {
          for( int i=0; i<taille; i++) {
@@ -1319,7 +1234,7 @@ public String toString() {
 
    /** Ajoute les pixels (pix8[], pixels[] et rgb[] sur les valeurs NaN */
    public void mergeOnNaN(Fits a) throws Exception {
-      int taille=width*height;
+      int taille=widthCell*heightCell;
       
       if( a.pixels!=null && pixels!=null ) {
          for( int i=0; i<taille; i++) {
@@ -1335,55 +1250,63 @@ public String toString() {
       }
    }
 
-
-   /**
-    * Cherche un fichier de type FITS dans le répertoire donné
-    * @param aladinTree
-    * @return null s'il y a eu une erreur ou le chemin du 1er fichier fits trouvé
-    */
-   public static Fits getFits(String rootpath) {
-	   File main = new File(rootpath);
-	   Fits fitsfile = new Fits();
-	   String[] list = main.list();
-	   String path = rootpath;
-	   if (list==null)
-		   return null;
-	   for (int f = 0 ; f < list.length ; f++) {
-		   if (!rootpath.endsWith(FS)) {
-			   rootpath = rootpath+FS;
-		   }
-		   path = rootpath+list[f];
-		   if ((new File(path)).isDirectory()) {
-			   if (!list[f].equals(AllskyConst.SURVEY)) {
-				   Fits f1 = getFits(path);
-				   if( f1!=null ) return f1;
-			   }
-			   else {
-				   continue;
-			   }
-		   }
-		   try {
-			   // essaye de lire l'entete du fichier comme un fits
-			   fitsfile.loadHeaderFITS(path);
-			   // il n'y a pas eu d'erreur, donc c'est bien un FITS
-			   fitsfile.loadFITS(path);
-			   return fitsfile;
-		   }  catch (Exception e) {
-//			   e.printStackTrace();
-			   System.err.println("Fits header error : " + path);
-			   continue;
-		   }
-	   }
-	   return null;
+   public void setFilename(String filename) {
+      if( filename==null ) { this.filename=null; return; }
+      int p = filename.lastIndexOf('[');
+      if( p>=0 ) filename=filename.substring(0,p);
+      this.filename = filename;
    }
 
-public void setFilename(String filename) {
-	this.filename = filename;
-}
+   public String getFilename() {
+      return filename;
+   }
 
-public String getFilename() {
-	return filename;
-}
-   
+   public static void main(String[] args) {
+      try {
+         Fits f = new Fits();
+         f.loadFITS("C:/Test.fits");
+         System.out.println("lecture de "+f.getFilename()+" => "+f+" center="+f.center);
+         int x= 33;
+         int y= 25;
+         int x1=1;
+         int y1=2;
+         int x2=7;
+         int y2=27;
+         double pix = f.isInCell(x,y) ? f.getPixelFull(x,y) : Double.NaN;
+         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
+         double pix1 = f.isInCell(x1,y1) ? f.getPixelFull(x1,y1) : Double.NaN;
+         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
+         double pix2 = f.isInCell(x2,y2) ? f.getPixelFull(x2,y2) : Double.NaN;
+         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
+         f.free();
+         
+         Fits g = new Fits();
+         g.loadFITS("C:/Test.fits[1,0-10x18]");
+         System.out.println("lecture de "+g.getFilename()+" => "+g+" center="+g.center);
+         pix = g.isInCell(x,y) ? g.getPixelFull(x,y) : Double.NaN;
+         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
+         pix1 = g.isInCell(x1,y1) ? g.getPixelFull(x1,y1) : Double.NaN;
+         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
+         pix2 = g.isInCell(x2,y2) ? g.getPixelFull(x2,y2) : Double.NaN;
+         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
+         g.free();
+         
+         Fits h = new Fits();
+         h.loadFITS("C:/Test.fits[24,22-10x5]");
+         System.out.println("lecture de "+h.getFilename()+" => "+h+" center="+h.center);
+         pix = h.isInCell(x,y) ? h.getPixelFull(x,y) : Double.NaN;
+         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
+         pix1 = h.isInCell(x1,y1) ? h.getPixelFull(x1,y1) : Double.NaN;
+         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
+         pix2 = h.isInCell(x2,y2) ? h.getPixelFull(x2,y2) : Double.NaN;
+         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
+         h.free();
+         
+
+
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
 
 }

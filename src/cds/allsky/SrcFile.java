@@ -25,11 +25,11 @@ package cds.allsky;
 import cds.aladin.Calib;
 import cds.fits.Fits;
 
-class DownFile {
+class SrcFile {
 	Fits fitsfile;
 	Calib calib;
 	
-	DownFile() { }
+	SrcFile() { }
 	
 	static final int PROP=6;        // Proportion pour le fadding
 	static final int BORD=768;

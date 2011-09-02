@@ -67,13 +67,14 @@ public final class Localisation extends MyBox {
    static final public int GAL    = 7;
    static final public int SGAL   = 8;
    static final public int XY     = 9;
-   static final public int XYLINEAR  = 10;
+   static final public int XYNAT  = 10;
+   static final public int XYLINEAR  = 11;
   
    // Le label pour chaque repere (dans l'ordre des constantes ci-dessus)
    static final String [] REPERE = {
       "ICRS","ICRSd","J2000","J2000d","B1950",
       "B1950d","Ecliptic","Gal","SGal",
-      "XY image","XY linear",
+      "XY Fits","XY native","XY linear"
    };
    
    // Les différents Frames possibles (mode AllSky)
@@ -345,11 +346,17 @@ public final class Localisation extends MyBox {
       PointD p   = v.getPosition(x,y);
       String s=null;
       
-      // Position (X,Y) simplement
+      // Position (X,Y) simplement (mode FITS)
       if( i==XY || proj!=null && proj.modeCalib==Projection.NO ) {
          if( plan.isImage() )  s=Util.myRound(""+(p.x+0.5),4)
                       +"  "+Util.myRound(""+(((PlanImage)plan).naxis2-p.y+0.5),4);
          else s="";
+
+         // Position (X,Y) simplement (mode Natif)
+      } else if( i==XYNAT || proj!=null && proj.modeCalib==Projection.NO ) {
+            if( plan.isImage() )  s=Util.myRound(""+p.x,0)
+                         +"  "+Util.myRound(""+p.y,0);
+            else s="";
 
       // Calcul de la projection 
       } else {

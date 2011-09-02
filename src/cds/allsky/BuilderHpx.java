@@ -37,35 +37,39 @@ import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.PixTools;
 import cds.tools.pixtools.Util;
 
-public class HpxBuilder {
+public class BuilderHpx {
 
 	public static final int ORDER = 9;
 	private static final int SIDE = 512;
 	private int bitpix;
 	private boolean keepBB = true;
-
-	public int getBitpix() {
-		return bitpix;
-	}
+	
+	private MainPanel mainPanel;
 
 	private double blank = Fits.DEFAULT_BLANK;
 	private double bscale = Fits.DEFAULT_BSCALE;
 	private double bzero = Fits.DEFAULT_BZERO;
-	private int coaddFlagMode = DescPanel.KEEP;
+	private int coaddFlagMode = TabDesc.KEEP;
 	String localServer = null;
 
+	public BuilderHpx(MainPanel mainPanel) { this.mainPanel = mainPanel; }
+
+	public int getBitpix() {
+	   return bitpix;
+	}
+
 	public String getLocalServer() {
-		return localServer;
+	   return localServer;
 	}
 
 	public void setLocalServer(String localServer) {
-		this.localServer = localServer;
+	   this.localServer = localServer;
 	}
 
-//	HpxBuilder(int bitpix, String path, boolean keepBB) {
-//		this.bitpix = bitpix;
-//		this.localServer = path;
-//		this.keepBB = keepBB;
+	//	HpxBuilder(int bitpix, String path, boolean keepBB) {
+	//		this.bitpix = bitpix;
+	//		this.localServer = path;
+	//		this.keepBB = keepBB;
 //	}
 //	HpxBuilder(double bscale, double bzero, double blank, int bitpix, String path, boolean keepBB) {
 //		this(bitpix,path,keepBB);
@@ -74,8 +78,6 @@ public class HpxBuilder {
 //		this.blank = blank;
 //	}
 
-	public HpxBuilder() {
-	}
 /*
 	Fits buildHealpix(int nside_file, long l, int nside) {
 		try {
@@ -188,7 +190,7 @@ public class HpxBuilder {
 	   double point[] = new double[2];
 	   double radec[] = new double[2];
 	   Coord coo = new Coord();
-	   DownFile file = null;
+	   SrcFile file = null;
 	   Fits out=null;
 
 	   try {
@@ -196,7 +198,7 @@ public class HpxBuilder {
 	      min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
 	      // initialisation de la liste des fichiers originaux pour ce losange
-	      ArrayList<DownFile> downFiles = new ArrayList<DownFile>(20);
+	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
 	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
 	      PixTools.PolarToRaDec(point, radec);
 
@@ -218,6 +220,7 @@ public class HpxBuilder {
 	            point = CDSHealpix.pix2ang_nest(nside, index);
 	            PixTools.PolarToRaDec(point, radec);
 
+	            // Methode au plus proche
 	            if (fast) {
 	            	Fits fitsfile;
 	            	coo.al = radec[0]; coo.del = radec[1];
@@ -235,19 +238,30 @@ public class HpxBuilder {
 					else {
 						out.setPixelDouble(x, y, blank);
 					}
-	            }
-	            else  {
+					
+			    // Méthode bilinéaire
+	            } else  {
 	            	radec = Calib.GalacticToRaDec(radec[0], radec[1]);
 	            	coo.al = radec[0]; coo.del = radec[1];
 	            	// Moyenne des pixels pour toutes les images trouvées
 	            	double pixelFinal=0;
 	            	int nbPix=0;
 	            	double totalCoef=0;
+	            	String lastFitsFile=null;
+	            	double lastX=-1,lastY=-1;
 	            	for( int i=downFiles.size()-1; i>=0 && nbPix<pixval.length; i-- ) {
 						file = downFiles.get(i);
-	            		file.calib.GetXY(coo);
-	            		coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
-	            		coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+						
+						// Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
+						if( lastFitsFile!=null && lastFitsFile.equals(file.fitsfile.getFilename()) ) { coo.y=lastY; coo.x=lastX; }
+						
+						// Détermination du pixel dans l'image à traiter
+						else {
+						   file.calib.GetXY(coo);
+						   lastY=coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
+						   lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+						   lastFitsFile=file.fitsfile.getFilename();
+						}
 	            		double pix = getBilinearPixel(file.fitsfile,coo);
 	            		if( Double.isNaN(pix) ) continue;
 	            		pixval[nbPix]=pix;
@@ -272,12 +286,6 @@ public class HpxBuilder {
 	            	out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
 	            }
 	         }
-	         
-             for( int i=downFiles.size()-1; i>=0 ; i-- ) {
-                file = downFiles.get(i);
-                if( file.fitsfile!=null ) file.fitsfile.free();
-             }
-
 	      }
 	   } catch( Exception e ) { }
 	   return (!empty) ? out : null;
@@ -288,7 +296,7 @@ public class HpxBuilder {
 	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
 	                                     {"ee","eg","ge","gg"}, {"nn","no","on","oo"} };
 
-	private void calculeDSSMin(double [] min,DownFile file) {
+	private void calculeDSSMin(double [] min,SrcFile file) {
 
 	   try {
 	      // Autour des imagettes 67 - 6m, m7 - mm
@@ -362,7 +370,7 @@ public class HpxBuilder {
 	static private double [][] DSSMin = new double[1500][6];
 	static { for( int i=0; i<DSSMin.length; i++) DSSMin[i][5]=Double.NaN; }
 	
-	private double [] getDSSMin(DownFile file) {
+	private double [] getDSSMin(SrcFile file) {
 	   int nPlaque = file.getDSSPlaque();
 	   double [] min = DSSMin[nPlaque];
 	   if( Double.isNaN(min[5]) ) calculeDSSMin(min,file);
@@ -401,7 +409,7 @@ public class HpxBuilder {
 	      min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
 	      // initialisation de la liste des fichiers originaux pour ce losange
-	      ArrayList<DownFile> downFiles = new ArrayList<DownFile>(20);
+	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
 	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
 	      PixTools.PolarToRaDec(point, radec);
 
@@ -432,7 +440,7 @@ public class HpxBuilder {
 	            int nbPix=0;
 	            double totalCoef=0;
 	            for( int i=downFiles.size()-1; i>=0 && nbPix<pixval.length; i-- ) {
-	               DownFile file = downFiles.get(i);
+	               SrcFile file = downFiles.get(i);
 	               file.calib.GetXY(coo);
 	               coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
 	               coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
@@ -463,16 +471,16 @@ public class HpxBuilder {
 	}
 
 	// Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
-	private double getCoef1(Fits f,Coord coo,double proportion) {
-	   double mx = f.width/proportion;
-	   double my = f.height/proportion;
-	   double coefx=1, coefy=1;
-	   if( coo.x<mx ) coefx =  coo.x/mx;
-	   else if( coo.x>f.width-mx ) coefx = (f.width-coo.x)/mx;
-       if( coo.y<my ) coefy =  coo.y/my;
-       else if( coo.y>f.height-my ) coefy = (f.height-coo.y)/my;
-       return Math.min(coefx,coefy);
-	}
+//	private double getCoef(Fits f,Coord coo,double proportion) {
+//	   double mx = f.width/proportion;
+//	   double my = f.height/proportion;
+//	   double coefx=1, coefy=1;
+//	   if( coo.x<mx ) coefx =  coo.x/mx;
+//	   else if( coo.x>f.width-mx ) coefx = (f.width-coo.x)/mx;
+//       if( coo.y<my ) coefy =  coo.y/my;
+//       else if( coo.y>f.height-my ) coefy = (f.height-coo.y)/my;
+//       return Math.min(coefx,coefy);
+//	}
 	
 	   // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au centre 
     private double getCoef(Fits f,Coord coo,double proportion) {
@@ -491,7 +499,8 @@ public class HpxBuilder {
        
        int x1 = (int)x;
        int y1 = (int)y;
-       if( x1<0 || y1<0 || x1>=f.width || y1>= f.height ) return Double.NaN;
+       
+       if( !f.isInCell(x1, y1) ) return Double.NaN;
        
        int x2=x1+1;
        int y2=y1+1;
@@ -500,8 +509,8 @@ public class HpxBuilder {
        int oy2= y2;
        
        // Sur le bord, on dédouble le dernier pixel
-       if( ox2==f.width ) ox2--;
-       if( oy2==f.height ) oy2--;
+       if( ox2==f.xCell+f.widthCell ) ox2--;
+       if( oy2==f.yCell+f.heightCell ) oy2--;
        
        double a0 = getPixelDouble(f,x1,y1);
        double a1 = getPixelDouble(f,ox2,y1);
@@ -526,10 +535,8 @@ public class HpxBuilder {
     }
     
 	private double getPixelDouble(Fits f, int x, int y) {
-		if (!keepBB)
-			return f.getPixelFull(x, y);
-		else
-			return f.getPixelDouble(x, y);
+		if (!keepBB) return f.getPixelFull(x, y);
+		else return f.getPixelDouble(x, y);
 	}
 
 	/**
@@ -728,7 +735,7 @@ public class HpxBuilder {
 	 * @param order
 	 * @return
 	 */
-    boolean askLocalFinder(ArrayList<DownFile> downFiles,String path, long npix, int order,double blank) {
+    boolean askLocalFinder(ArrayList<SrcFile> downFiles,String path, long npix, int order,double blank) {
 		String hpxfilename = path + cds.tools.Util.FS + Util.getFilePath("", order - ORDER, npix);
 		File f = new File(hpxfilename);
 		String fitsfilename = null;
@@ -740,19 +747,25 @@ public class HpxBuilder {
 				try {
 //					récupère l'image
 					Fits fitsfile = new Fits();
+					
+					// Mode JPEG + entête extente .hhh
 					if (fitsfilename.endsWith("hhh")) {
 						fitsfile.loadHeaderFITS(fitsfilename);
 						fitsfilename=fitsfilename.replaceAll("hhh$", "jpg");
 						fitsfile.loadJpeg(fitsfilename,true);
 						fitsfile.inverseYColor();
 					}
+					
+					// Mode FITS couleur
 					else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true);
+					
+					// Mode FITS classique
 					else fitsfile.loadFITS(fitsfilename);
 
 					fitsfile.setFilename(fitsfilename);
 					if( !Double.isNaN(blank) ) fitsfile.setBlank(blank);
 
-					DownFile file = new DownFile();
+					SrcFile file = new SrcFile();
 					file.fitsfile = fitsfile;
 					file.calib = fitsfile.getCalib();
 					
@@ -794,27 +807,21 @@ public class HpxBuilder {
 		} catch (NullPointerException e) {
 		}
 		if (skyval != 0) {
-			for( int y=0; y<f.height; y++ ) {
-				for( int x=0; x<f.width; x++ ) {
+			for( int y=0; y<f.heightCell; y++ ) {
+				for( int x=0; x<f.widthCell; x++ ) {
 					// applique un nettoyage pour enlever les valeurs aberrantes
-					if (f.getPixelFull(x, y) < skyval)
-						f.setPixelInt(x, y, (int)blank);
+					if (f.getPixelFull(x+f.xCell, y+f.yCell) < skyval)
+						f.setPixelInt(x+f.xCell, y+f.yCell, (int)blank);
 					else
-						f.setPixelInt(x, y, f.getPixelInt(x, y)-skyval);
+						f.setPixelInt(x+f.xCell, y+f.yCell, f.getPixelInt(x+f.xCell, y+f.yCell)-skyval);
 				}
 			}
 		}
-		// else
-		// on n'a pas de valeur de fond à enlever
-//		// on fait un autocut
-//		for( int y=0; y<f.height; y++ ) {
-//			for( int x=0; x<f.width; x++ ) {
-//				f.autocut();
-//			}
-//		}
 
 	}
+	
 int n =0;
+
 	/**
 	 * Cherche dans la liste des fichiers récupérés sur Aladin si les
 	 * coordonnées y sont, et renvoie sa position dans l'objet de Coordonnées
@@ -822,7 +829,7 @@ int n =0;
 	 * @return l'accès au fichier FITS lu
 	 * @see Calib#GetXY(Coord)
 	 */
-	private Fits searchDownloaded(ArrayList<DownFile> downFiles, Coord coo_gal, int recouvrement) {
+	private Fits searchDownloaded(ArrayList<SrcFile> downFiles, Coord coo_gal, int recouvrement) {
 		if (downFiles == null)
 			return null;
 
@@ -830,14 +837,14 @@ int n =0;
 		for (int i = 0 ; i<nfiles ; i++,gagnant++) {
 			if( gagnant>=nfiles ) gagnant=0;
 			// cherche d'abord dans l'ancien gagnant
-			DownFile file = downFiles.get(gagnant);
+			SrcFile file = downFiles.get(gagnant);
 			Calib calib = file.calib;
 			// transforme les coordonnées en ICRS
 			double[]radec = Calib.GalacticToRaDec(coo_gal.al,coo_gal.del);
 			Coord c = new Coord(radec[0],radec[1]);
 			
 			if (isInFile(c, recouvrement, calib)) {
-			   double pix = file.fitsfile.getPixelDouble((int)c.x, file.fitsfile.height-1-(int)c.y);
+			   double pix = file.fitsfile.getPixelDouble((int)c.x, file.fitsfile.heightCell-1-(int)c.y);
 			   coo_gal.x = c.x;
 			   coo_gal.y = c.y;
 			   if( !file.fitsfile.isBlankPixel(pix ) ) return file.fitsfile;

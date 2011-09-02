@@ -28,6 +28,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -41,7 +42,7 @@ import javax.swing.border.EmptyBorder;
 import cds.aladin.Aladin;
 import cds.tools.Util;
 
-public class PublishPanel extends JPanel implements ActionListener {
+public class TabPub extends JPanel implements ActionListener {
 
 	private static String NEXT, PUBLISH, EXPORT, OPEN;
     private static String LOCAL_FULL;
@@ -55,10 +56,10 @@ public class PublishPanel extends JPanel implements ActionListener {
 	JProgressBar progressHpx = new JProgressBar(0,100);
 	
 	private Aladin aladin;
-	AllskyPanel allsky;
+	MainPanel allsky;
 	private String mapfile;
 	
-	public PublishPanel(Aladin a,AllskyPanel allskyPanel) {
+	public TabPub(Aladin a,MainPanel allskyPanel) {
 		super(new BorderLayout());
 		aladin = a;
 		allsky = allskyPanel;
@@ -196,7 +197,7 @@ public class PublishPanel extends JPanel implements ActionListener {
 	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand() == PUBLISH) {
-		   new AllskyGlu(aladin,allsky.getOrder(),allsky.hasJpg());
+		   new FrameGlu(aladin,allsky.getOrder(),allsky.hasJpg());
 		}
 		else if (ae.getSource() == bExport) {
 			mapfile = dirBrowserHPX();
@@ -210,7 +211,7 @@ public class PublishPanel extends JPanel implements ActionListener {
 
 		}
 		else if (ae.getSource() == bNext) {
-			allsky.showRGB();
+			allsky.showRgbTab();
 		}
 	}
 
@@ -266,4 +267,36 @@ public class PublishPanel extends JPanel implements ActionListener {
 			bExport.setSelected(false);
 		}
 	}
+	
+    class ExportThread implements Runnable {
+	    String outfile;
+	    MainPanel allsky;
+	    int progress=0;
+	    
+	    public ExportThread(MainPanel allsky, String filename) {
+	        this.allsky=allsky;
+	        outfile = filename;
+	    }
+
+	    public int getProgress() {
+	        File f = new File(outfile);
+	        if (!f.exists())
+	            return 0;
+	        long size = f.length()/1024/1024;
+	        // la taille d'un fichier avec nside=4096 et bitpix=-32 est 768M
+	        long sizeFin = 4096*4096*12*(Math.abs(allsky.getBitpix()/8))/1024/1024;
+	        return (int) (100*size/sizeFin);
+	    }
+
+	    public synchronized void start(){
+	        (new Thread(this)).start();
+	    }
+	    
+	    public void run() {
+	        File f = new File(outfile);
+	        f.delete();
+	        allsky.export(outfile);
+	    }
+	}
+
 }

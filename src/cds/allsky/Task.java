@@ -19,27 +19,23 @@
 
 package cds.allsky;
 
-import static cds.allsky.AllskyConst.INDEX;
-import static cds.allsky.AllskyConst.JPG;
-import static cds.allsky.AllskyConst.TESS;
+import static cds.allsky.Constante.INDEX;
+import static cds.allsky.Constante.JPG;
+import static cds.allsky.Constante.TESS;
 import cds.aladin.Aladin;
 import cds.aladin.Plan;
 import cds.tools.pixtools.HpixTree;
 
-public class AllskyTask implements Runnable{
+public class Task implements Runnable{
 
 	
-	AllskyPanel allsky;
-	InitLocalAccess initializer = new InitLocalAccess();
-	SkyGenerator sg = new SkyGenerator();
-	DBBuilder builder = new DBBuilder();
+	MainPanel mainPanel;
+	BuilderIndex builderIndex;
+	BuilderAllsky builderAllsky;
+	BuilderController builder;
     int mode = -1;
     boolean allskyOk;  // true si le allsky généré l'a bien été à la fin du processus de construction et pas en cours de ce processus
 	
-    public AllskyTask(AllskyPanel allskyPanel) {
-       allsky = allskyPanel;
-    }
-
 	private volatile Thread runner = null;
 
 	private int order;
@@ -49,7 +45,7 @@ public class AllskyTask implements Runnable{
 	private int bitpix;
 	private boolean keepBB = false;
 	private HpixTree hpixTree = null;
-	private int coaddMode = DescPanel.REPLACETILE;
+	private int coaddMode = TabDesc.REPLACETILE;
 //	private double[] cut;
 //	private int fct; // fonction de transfert
 	private ThreadProgressBar progressBar;
@@ -59,9 +55,17 @@ public class AllskyTask implements Runnable{
 	private double bscale;
 
 //	private Plan planPreview;
+	
+    public Task(MainPanel mainPanel) {
+       this.mainPanel = mainPanel;
+       builderIndex = new BuilderIndex(mainPanel);
+       builderAllsky = new BuilderAllsky();
+       builder = new BuilderController(mainPanel);
+    }
+
 
 	public Plan getPlanPreview() {
-	   return allsky.aladin.calque.getPlan(allsky.pDesc.getLabel());
+	   return mainPanel.aladin.calque.getPlan(mainPanel.tabDesc.getLabel());
 	}
 
 	public synchronized void startThread(){
@@ -82,7 +86,7 @@ public class AllskyTask implements Runnable{
 	      runner = null;
 	      Aladin.trace(2,"STOP ON "+mode);
 	      switch (mode) {
-	         case INDEX : initializer.stop();
+	         case INDEX : builderIndex.stop();
 	         case TESS : builder.stop();
 	      }
 	      progressBar.stop();
@@ -90,19 +94,19 @@ public class AllskyTask implements Runnable{
 	}
 	
 	public void run() {
-	   allsky.setIsRunning(true);
+	   mainPanel.setIsRunning(true);
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
-	      boolean fast = allsky.toFast();
-	      boolean fading = allsky.toFading();
+	      boolean fast = mainPanel.toFast();
+	      boolean fading = mainPanel.toFading();
 
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
 	      if (mode<=INDEX) {
 	         Aladin.trace(2,"Launch Index");
-	         followProgress(mode,initializer);
-	         boolean init = initializer.build(input,output,order);
+	         followProgress(mode,builderIndex);
+	         boolean init = builderIndex.build(input,output,order);
 	         // si le thread a été interrompu, on sort direct
 	         if (runner != Thread.currentThread()) {
 	            progressBar.stop();
@@ -112,7 +116,7 @@ public class AllskyTask implements Runnable{
 	         else Aladin.trace(2,"Allsky... => Use previous Index");
 	         setProgress(mode,100);
 	         progressBar.stop();
-	         allsky.enableProgress(false,INDEX);
+	         mainPanel.enableProgress(false,INDEX);
 	      }
 	      // Création des fichiers healpix fits et jpg
 	      if (mode <= TESS) {
@@ -140,7 +144,7 @@ public class AllskyTask implements Runnable{
 	         Aladin.trace(2,"Allsky... => Hpx files built");
 	         setProgress(mode,100);
 	         progressBar.stop();
-	         allsky.enableProgress(false,TESS);
+	         mainPanel.enableProgress(false,TESS);
 	      }
 	      // création du fichier allsky
 	      if (mode <= JPG) {
@@ -148,9 +152,9 @@ public class AllskyTask implements Runnable{
 	         createAllSky();
 	      }
 	      allskyOk=true;
-	      allsky.setIsRunning(false);
+	      mainPanel.setIsRunning(false);
 
-	      allsky.done();
+	      mainPanel.done();
 	      runner = null;
 	      mode = -1;
 	      Aladin.trace(2,"DONE");
@@ -166,11 +170,11 @@ public class AllskyTask implements Runnable{
 	   //          followProgress(mode,sg);
 	   //          String path = Util.concatDir(output,AllskyConst.SURVEY);
 	   try {
-	      if( bitpix==0 ) sg.createAllSkyJpgColor(output,3,64);
+	      if( bitpix==0 ) builderAllsky.createAllSkyJpgColor(output,3,64);
 	      else {
-	         double[] cut = allsky.getCut();
-	         if( cut==null ) sg.createAllSky(output,3,64,0,0, keepBB);
-	         else sg.createAllSky(output,3,64,cut[0],cut[1],keepBB);
+	         double[] cut = mainPanel.getCut();
+	         if( cut==null ) builderAllsky.createAllSky(output,3,64,0,0, keepBB);
+	         else builderAllsky.createAllSky(output,3,64,cut[0],cut[1],keepBB);
 	      }
 
 	   } catch (Exception e) {
@@ -179,11 +183,11 @@ public class AllskyTask implements Runnable{
 	}
 
 	void setInitDir(String txt) {
-	   allsky.setInitDir(txt);		
+	   mainPanel.setInitDir(txt);		
 	}
 
 	void setProgress(int stepMode, int i) {
-	   allsky.setProgress(stepMode, i);
+	   mainPanel.setProgress(stepMode, i);
 	}
 
 	private void followProgress(int stepMode, Object o) {
@@ -192,30 +196,30 @@ public class AllskyTask implements Runnable{
 	}
 
 	public void doInBackground() throws Exception {
-	   order = allsky.getOrder();
+	   order = mainPanel.getOrder();
 //	   System.out.println("doInBackGround => order="+order);
 	   if (order==-1) order = 3;
-	   output = allsky.getOutputPath();
-	   input = allsky.getInputPath();
+	   output = mainPanel.getOutputPath();
+	   input = mainPanel.getInputPath();
 
 	   if (input == null || input.equals("")) {
 	      System.err.println("No input directory given");
-	      allsky.stop();
+	      mainPanel.stop();
 	      return ;
 	   }
 	   // récupère le bitpix dans le formulaire
-	   bitpix = allsky.getBitpix();
-	   keepBB = allsky.isKeepBB();
-	   hpixTree = allsky.getHpixTree();
-	   coaddMode = allsky.getCoAddMode();
-	   double bb[] = allsky.getBScaleBZero();
+	   bitpix = mainPanel.getBitpix();
+	   keepBB = mainPanel.isKeepBB();
+	   hpixTree = mainPanel.getHpixTree();
+	   coaddMode = mainPanel.getCoAddMode();
+	   double bb[] = mainPanel.getBScaleBZero();
 	   bscale = bb[0];
 	   bzero = bb[1];
-	   blank = allsky.getBlank();
+	   blank = mainPanel.getBlank();
 	   // si le bitpix change
-	   if (allsky.getOriginalBitpix() != bitpix)
+	   if (mainPanel.getOriginalBitpix() != bitpix)
 	      // on change aussi les bornes
-	      allsky.convertCut(bitpix);
+	      mainPanel.convertCut(bitpix);
 	   //		cut = allsky.getCut();
 	   //		fct = allsky.getMethod();
 
@@ -245,33 +249,26 @@ public class AllskyTask implements Runnable{
 	}
 
 	public void setLastN3(int lastN3) {
-	   allsky.setLastN3(lastN3);
+	   mainPanel.setLastN3(lastN3);
 	}
-
-	public int getLastN3() {
-	   return allsky.getLastN3();
-	}
-
-
-
 }
 
 class ThreadProgressBar implements Runnable {
 
-   public static final int INDEX = AllskyConst.INDEX;
-   public static final int TESS = AllskyConst.TESS;
+   public static final int INDEX = Constante.INDEX;
+   public static final int TESS = Constante.TESS;
    //	public static final int JPG = AllskyConst.JPG;
 
    //	private volatile Thread th_progress = null;
    private boolean stopped = false;
    int last = -1;
-   Object thread;
-   AllskyTask tasks;
+   Object builder;
+   Task tasks;
 
    int mode ;
-   public ThreadProgressBar(int stepMode, Object source, AllskyTask allskyTask) {
+   public ThreadProgressBar(int stepMode, Object source, Task allskyTask) {
       mode=stepMode;
-      thread = source;
+      builder = source;
       tasks = allskyTask;
    }
    public synchronized void start(){
@@ -291,20 +288,20 @@ class ThreadProgressBar implements Runnable {
    public void run() {
       int value = 0;
       String txt = "";
-      while(thread != null && !stopped) {// && value < 99) {
+      while(builder != null && !stopped) {// && value < 99) {
          switch (mode) {
             case INDEX :
-               value = (int)((InitLocalAccess)thread).getProgress();
-               txt = ((InitLocalAccess)thread).getCurrentpath();
+               value = (int)((BuilderIndex)builder).getProgress();
+               txt = ((BuilderIndex)builder).getCurrentpath();
                tasks.setInitDir(txt);
                break;
             case TESS : 
-               value = (int)((DBBuilder)thread).getProgress();
-               int n3 = ((DBBuilder)thread).getLastN3();
+               value = (int)((BuilderController)builder).getProgress();
+               int n3 = ((BuilderController)builder).getLastN3();
                if (n3!=-1 && last!=n3) {
                   tasks.createAllSky();
-                  tasks.allsky.preview(n3);
-                  tasks.setLastN3(n3);
+                  tasks.mainPanel.preview(n3);
+                  tasks.mainPanel.setLastN3(n3);
                   last = n3;
                }
                break;
@@ -321,10 +318,10 @@ class ThreadProgressBar implements Runnable {
       stopped = true;
       switch (mode) {
          case INDEX :
-            value = (int)((InitLocalAccess)thread).getProgress();
+            value = (int)((BuilderIndex)builder).getProgress();
             break;
          case TESS : 
-            value = (int)((DBBuilder)thread).getProgress();
+            value = (int)((BuilderController)builder).getProgress();
       }
       tasks.setProgress(mode,value);
    }

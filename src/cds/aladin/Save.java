@@ -694,7 +694,7 @@ public final class Save extends JFrame implements ActionListener {
    * @return la prochaine position a remplir dans b[]
    */
    public static int get64(byte [] b, int k,
-                              char [] a, int start, int length) {
+         char [] a, int start, int length) {
       char [] tab = B64.toCharArray();
       int  c, c3, i,j, colno, lineno;
       boolean skip_line;
@@ -704,8 +704,8 @@ public final class Save extends JFrame implements ActionListener {
       if( b642a==null ) {
          b642a = new int[256];
          for( i=0; i<b642a.length; i++ ) b642a[i]=0x40;
-	 for (i=0; i<tab.length; i++) b642a[tab[i]] = i ;
-	 b642a['='] = 0xff ;
+         for (i=0; i<tab.length; i++) b642a[tab[i]] = i ;
+         b642a['='] = 0xff ;
       }
 
       colno = 0;
@@ -714,63 +714,63 @@ public final class Save extends JFrame implements ActionListener {
       j=start;
       while( j<length ) {
          c = a[j++];
-	 colno++;
-	 if( skip_line ) System.err.print(c);
-	 if( c==' ' || c=='\t' || c=='\n' || c=='\r') {
-	    if( c=='\n' || c=='\r') { lineno++; colno=0; skip_line=false; }
-	    continue;
-	 }
-	 if( skip_line ) continue;
-	 c3 = b642a[c&0xff];
-	 if( (c3&0x40)!=0 ) {
-	    if( colno==1 ) {
-	       skip_line = true;
-	       System.err.println("++++Ignore line: "+c);
-	       continue;
-	    }
-	    System.err.println("****Bad input char "+((char)c)+
-                               " line "+lineno+", col "+colno);
-	    continue;
-	 }
-	 c3 <<= 6;
+         colno++;
+         if( skip_line ) System.err.print(c);
+         if( c==' ' || c=='\t' || c=='\n' || c=='\r') {
+            if( c=='\n' || c=='\r') { lineno++; colno=0; skip_line=false; }
+            continue;
+         }
+         if( skip_line ) continue;
+         c3 = b642a[c&0xff];
+         if( (c3&0x40)!=0 ) {
+            if( colno==1 ) {
+               skip_line = true;
+               System.err.println("++++Ignore line: "+c);
+               continue;
+            }
+            System.err.println("****Bad input char "+((char)c)+
+                  " line "+lineno+", col "+colno);
+            continue;
+         }
+         c3 <<= 6;
 
-	 c = (a[j++]) & 0xff;
+         c = (a[j++]) & 0xff;
          colno++ ;
-	 i = b642a[c&0xff];
-	 if( (i&0x40)!=0 ) {
-	    System.err.println("****Bad input char "+((char)c)+
-                               " line "+lineno+", col "+colno);
-	     c3 >>= 4;
+         i = b642a[c&0xff];
+         if( (i&0x40)!=0 ) {
+            System.err.println("****Bad input char "+((char)c)+
+                  " line "+lineno+", col "+colno);
+            c3 >>= 4;
 
-             if( k>=size ) return k;
-             b[k++]=(byte)c3;
-	     continue;
-	 }
-	 c3 |= i;
-	 c3 <<= 6;
+         if( k>=size ) return k;
+         b[k++]=(byte)c3;
+         continue;
+         }
+         c3 |= i;
+         c3 <<= 6;
 
-	 c = (a[j++]) & 0xff;
+         c = (a[j++]) & 0xff;
          colno++ ;
-	 i = b642a[c&0xff];
-	 if( (i&0x40)!=0 ) {		/* 2 characters to issue */
-	    if( i!=0xff ) System.err.println("****Bad input char "+((char)c)+
-                               " line "+lineno+", col "+colno);
-	    c3 >>= 2;
-            if( k>=size ) return k;
-            b[k++]=(byte)(c3>>8);
-            if( k>=size ) return k;
-            b[k++]=(byte)c3;
-	    continue ;
-	 }
-	 c3 |= i;
-	 c3 <<= 6;
+         i = b642a[c&0xff];
+         if( (i&0x40)!=0 ) {		/* 2 characters to issue */
+            if( i!=0xff ) System.err.println("****Bad input char "+((char)c)+
+                  " line "+lineno+", col "+colno);
+            c3 >>= 2;
+         if( k>=size ) return k;
+         b[k++]=(byte)(c3>>8);
+         if( k>=size ) return k;
+         b[k++]=(byte)c3;
+         continue ;
+         }
+         c3 |= i;
+         c3 <<= 6;
 
-	 c = (a[j++]) & 0xff;
+         c = (a[j++]) & 0xff;
          colno++ ;
-	 i = b642a[c&0xff] ;
-	 if( (i&0x40)!=0 && i!=0xff ) System.err.println("****Bad input char "+((char)c)+
-                               " line "+lineno+", col "+colno);
-	 else c3 |= i;
+         i = b642a[c&0xff] ;
+         if( (i&0x40)!=0 && i!=0xff ) System.err.println("****Bad input char "+((char)c)+
+               " line "+lineno+", col "+colno);
+         else c3 |= i;
          if( k>=size ) return k;
          b[k++]=(byte)(c3>>16);
          if( k>=size ) return k;
@@ -791,30 +791,30 @@ public final class Save extends JFrame implements ActionListener {
 
       nb = 0;
       while( i<p.length ) {
-          c = p[i++]&0xff;
-          c3 = c<<16;
-          b4[2] = b4[3] = '=';
+         c = p[i++]&0xff;
+         c3 = c<<16;
+         b4[2] = b4[3] = '=';
 
-          if( i<p.length ) {
-             c = p[i++]&0xff;
-             c3 |= (c<<8);
-             b4[2]=0;
-             if( i<p.length ) {
-                c = p[i++]&0xff;
-                c3 |=  c;
-                b4[3]=0;
-             }
-          }
-          if( b4[3]==0 ) b4[3] = tab[c3&63];
-          c3 >>= 6;
-          if( b4[2]==0 ) b4[2] = tab[c3&63];
-          c3 >>= 6;
-          b4[1] = tab[c3&63];
-          c3 >>= 6;
-          b4[0] = tab[c3&63];
-          append(b4);
-          nb += 4;
-          if( (nb%76)==0 ) append(CR);
+         if( i<p.length ) {
+            c = p[i++]&0xff;
+            c3 |= (c<<8);
+            b4[2]=0;
+            if( i<p.length ) {
+               c = p[i++]&0xff;
+               c3 |=  c;
+               b4[3]=0;
+            }
+         }
+         if( b4[3]==0 ) b4[3] = tab[c3&63];
+         c3 >>= 6;
+            if( b4[2]==0 ) b4[2] = tab[c3&63];
+            c3 >>= 6;
+            b4[1] = tab[c3&63];
+            c3 >>= 6;
+         b4[0] = tab[c3&63];
+         append(b4);
+         nb += 4;
+         if( (nb%76)==0 ) append(CR);
       }
    }
 

@@ -29,11 +29,11 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cds.allsky.DBBuilder;
+import cds.allsky.BuilderController;
 import cds.fits.Fits;
 import cds.tools.Util;
 
-public class DBBuilderSpecif extends DBBuilder {
+public class DBBuilderSpecif extends BuilderController {
 	
 	static String SURVEY = null;
 	HashMap<String, double[]> cuts = null;

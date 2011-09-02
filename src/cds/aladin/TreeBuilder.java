@@ -2928,7 +2928,7 @@ protected SavotField[] createDescription(FieldSet fs) {
 
     /** Affichage dans la bonne unite.
      * Retourne un angle dont l'unité est unit sous forme de chaine dans la bonne unite
-     * @param x l'angle
+     * @param xCell l'angle
      * @param unit l'unité de x
      * @return l'angle dans une unite coherente + l'unite utilisee
      */

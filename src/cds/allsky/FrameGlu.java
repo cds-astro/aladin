@@ -58,7 +58,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 - janvier 2011
  */
-public class AllskyGlu extends JFrame implements KeyListener {
+public class FrameGlu extends JFrame implements KeyListener {
 
    // décrit les 4 champs de GLUPARAM[]
    static private final int REQUIRED=0, LABEL=1, FIELD=2, VALUE=3, INFO=4;
@@ -87,7 +87,7 @@ public class AllskyGlu extends JFrame implements KeyListener {
    private boolean isJpg;
 
    /** Crée et affiche la JFrame qui contient le formulaire */
-   public AllskyGlu(Aladin aladin, int order, boolean jpg) {
+   public FrameGlu(Aladin aladin, int order, boolean jpg) {
       this.aladin = aladin;
       this.orderMax = order;
       this.isJpg = jpg;

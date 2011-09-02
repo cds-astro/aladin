@@ -33,11 +33,13 @@ import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
 
-public class DBBuilder  {
+public class BuilderController  {
    
     static public boolean DSS = false;
     final static public int ORDER = 9; // 2^9 = 512 = SIDE
     final static public int SIDE = 512;
+    
+    private MainPanel mainPanel;
 
 	protected int ordermin = 3;
 	protected long nummin = 0;
@@ -59,93 +61,69 @@ public class DBBuilder  {
 	private boolean stopped = false;
 
 	static { FS = System.getProperty("file.separator"); }
+	
+	   // Pour les stat
+    private int statNbThreadRunning=-1;     // Nombre de Thread qui sont en train de calculer
+    private int statNbThread;               // Nombre max de Thread de calcul
+    private int statNbTile;                 // Nombre de tuiles terminales déjà calculés
+    private long statMinTime,statMaxTime,statTotalTime,statAvgTime;
+    private int statNodeTile;                 // Nombre de tuiles "intermédiaires" déjà calculés
+    private long statNodeTotalTime,statNodeAvgTime;
+    private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
 
 	
+    public BuilderController() {}
+    public BuilderController(MainPanel mainPanel) { this.mainPanel=mainPanel; }
+    
+    // Suppression des statistiques
+    private void resetStat() { statNbThread=-1; }
+    
+    // Initialisation des statistiques
+    private void initStat(int nbThread) {
+       statNbThread=nbThread; statNbThreadRunning=0; 
+       statNbTile=statNodeTile=0;
+       statTotalTime=statNodeTotalTime=0L;
+    }
+    
+    // Mise à jour des stats
+    private void updateStat(int deltaNbThread,int deltaTile,long timeTile,int deltaNodeTile,long timeNodeTile) {
+       statNbThreadRunning+=deltaNbThread;
+       statNbTile+=deltaTile;
+       statNodeTile+=deltaNodeTile;
+       if( timeTile>0 ) {
+          if( statNbTile==1 || timeTile<statMinTime ) statMinTime=timeTile;
+          if( statNbTile==1 || timeTile>statMaxTime ) statMaxTime=timeTile;
+          if( deltaTile==1 ) {
+             statTotalTime+=timeTile;
+             statAvgTime = statTotalTime/statNbTile;
+          }
+       }
+       if( timeNodeTile>0 ) {
+          if( deltaNodeTile==1 ) {
+             statNodeTotalTime+=timeNodeTile;
+             statNodeAvgTime = statNodeTotalTime/statNodeTile;
+          }
+       }
+       long t = System.currentTimeMillis();
+       if( t-statLastShowTime < 1000 ) return;
+       statLastShowTime=t;
+       showStat();
+    }
+    
+    // Demande d'affichage des stats (dans le TabBuild)
+    private void showStat() {
+       if( mainPanel==null ) return;
+       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread);
+       mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
+             statMinTime,statMaxTime,statAvgTime);
+       mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
+             statNodeAvgTime);
+    }
+	
 	public void build(int ordermax, String outpath, int mybitpix,boolean fast, boolean fading, boolean keepBB) throws Exception {
-		localServer = outpath + AllskyConst.HPX_FINDER;
+		localServer = outpath + Constante.HPX_FINDER;
 		build(ordermax, outpath, mybitpix, fast, fading, localServer, keepBB);
 	}
-//	public void build(int ordermax, String outpath, int mybitpix, boolean overwrite, boolean fast,String hpxfinder) throws Exception {
-//		progress = 0;
-//		this.ordermax = ordermax;
-//		long t = System.currentTimeMillis();
-//		localServer = hpxfinder;
-//		bitpix = mybitpix; 
-////		hpx = new HpxBuilder(mybitpix, localServer);
-//		hpx.setBitpix(mybitpix);
-//		hpx.setLocalServer(localServer);
-//
-//		outpath += FS; 
-//		hpx.createHealpixOrder(ORDER);
-////		boolean rebuild = false;
-//		
-//		
-//		//rebuild=Boolean.parseBoolean(args[9]);
-//		
-//		
-//		// récupère les numéros des losanges du niveau haut (ordermin)
-//		searchMinMax();
-////		npix_list = new ArrayList<Long>((int) (nummax-nummin));
-////		for (int i = 0; i < nummax-nummin ; i++) {
-////			npix_list.add(i+nummin);
-////		}
-//
-//		// TODO cherche à définir l'ordre si ce n'est pas déjà imposé
-//		if (ordermax==-1) {
-//			ordermax=4;
-//		}
-//
-//		// pour chaque losange sélectionné
-//		NMAX = npix_list.size();
-//
-//		Thread thisThread = Thread.currentThread();
-//		for (int n = 0 ; thread == thisThread && n < npix_list.size() ; n++) {
-//			progress++;
-//			createHpx(outpath, ordermin, ordermax, npix_list.get(n), overwrite,fast);
-//		}
-//		System.out.println(">> Build in "+(System.currentTimeMillis()-t)/1000+"s");
-//	}
-	
-//	public void build(int ordermax, String outpath, int mybitpix, boolean overwrite, boolean fast,String hpxfinder) throws Exception {
-//		progress = 0;
-//		this.ordermax = ordermax;
-//		long t = System.currentTimeMillis();
-//		localServer = hpxfinder;
-//		bitpix = mybitpix; 
-////		hpx = new HpxBuilder(mybitpix, localServer);
-//		hpx.setBitpix(mybitpix);
-//		hpx.setLocalServer(localServer);
-//
-//		outpath += FS; 
-//		hpx.createHealpixOrder(ORDER);
-////		boolean rebuild = false;
-//		
-//		
-//		//rebuild=Boolean.parseBoolean(args[9]);
-//		
-//		
-//		// récupère les numéros des losanges du niveau haut (ordermin)
-//		searchMinMax();
-////		npix_list = new ArrayList<Long>((int) (nummax-nummin));
-////		for (int i = 0; i < nummax-nummin ; i++) {
-////			npix_list.add(i+nummin);
-////		}
-//
-//		// TODO cherche à définir l'ordre si ce n'est pas déjà imposé
-//		if (ordermax==-1) {
-//			ordermax=4;
-//		}
-//
-//		// pour chaque losange sélectionné
-//		NMAX = npix_list.size();
-//
-//		Thread thisThread = Thread.currentThread();
-//		for (int n = 0 ; thread == thisThread && n < npix_list.size() ; n++) {
-//			progress++;
-//			createHpx(outpath, ordermin, ordermax, npix_list.get(n), overwrite,fast);
-//		}
-//		System.out.println(">> Build in "+(System.currentTimeMillis()-t)/1000+"s");
-//	}
 	
 	public void build(int ordermax, String outpath, int mybitpix, boolean fast, boolean fading,
 			String hpxfinder, boolean keepBB) throws Exception {
@@ -176,84 +154,28 @@ public class DBBuilder  {
 
 	   int nbProc = Runtime.getRuntime().availableProcessors();
 	   long heapsize = Runtime.getRuntime().maxMemory();
-	   int nbThread = (int) ( (heapsize / 512000 < nbProc)?heapsize / 512000:nbProc);
-	   if (nbThread==0) nbThread=1;
 	   
+	   long maxMemPerThread = Constante.MAXMBPERTHREAD*1024*1024L;
+	   int nbThread = (int) (heapsize / maxMemPerThread);
+	   if (nbThread==0) nbThread=1;
+	   if( nbThread>nbProc ) nbThread=nbProc;
 	   
 	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+heapsize/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
 
 	   // Lancement des threads de calcul
-	   createThread(nbThread,outpath,ordermin,ordermax,fast, fading, keepBB);
+	   launchThreadBuilderHpx(nbThread,outpath,ordermin,ordermax,fast, fading, keepBB);
 
 	   // Attente de la fin du travail
 	   while( stillAlive() ) {
-	      if( stopped ) { destroyThread(); return; }
+	      if( stopped ) { destroyThreadBuilderHpx(); return; }
 	      cds.tools.Util.pause(1000);
 	   }
-	   //	   createPropertiesFile(outpath);
+
+       initStat(-1);
+       showStat();
 	   Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
 	}
-/*
-	private void createPropertiesFile(String dir) {
-		 // the properties file will be used to check the file modification date
-	    // and to store other parameters
-	        Properties prop = new Properties();
-	        prop.setProperty(KEY_ORIGINAL_PATH, originalPath);
-	        if (isLocal) {
-	            try {
-	                String modifDate = new File(originalPath).lastModified() + "";
-	                prop.setProperty(KEY_LAST_MODIFICATON_DATE, modifDate);
-	            } catch (Exception e) {}
-	        }
-	        prop.setProperty(KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
-	        prop.setProperty(KEY_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
-	        prop.setProperty(KEY_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
 
-	        prop.setProperty(KEY_ORDER_GENERATED_IMGS, hpxOrderGeneratedImgs+"");
-
-	        prop.setProperty(KEY_ORDERING, ordering);
-
-	        prop.setProperty(KEY_TFIELDS, nField+"");
-
-	        prop.setProperty(KEY_TTYPES, Util.join(tfieldNames, ','));
-
-	        prop.setProperty(KEY_LOCAL_DATA, isLocal+"");
-
-	        prop.setProperty(KEY_GZ, isGZ+"");
-
-	        prop.setProperty(KEY_OFFSET, initialOffsetHpx+"");
-
-	        prop.setProperty(KEY_SIZERECORD, sizeRecord+"");
-
-	        prop.setProperty(KEY_ISPARTIAL, isPartial+"");
-
-	        prop.setProperty(KEY_ARGB, isARGB+"");
-
-	        prop.setProperty(KEY_NBPIXGENERATEDIMAGE, nbPixGeneratedImage+"");
-
-	        prop.setProperty(KEY_CURTFORMBITPIX, curTFormBitpix+"");
-
-	        prop.setProperty(KEY_COORDSYS, coordsys+"");
-
-	        prop.setProperty(KEY_LENHPX, Util.join(lenHpx, ','));
-
-	        prop.setProperty(KEY_TYPEHPX, Util.join(typeHpx, ','));
-
-	        prop.setProperty(KEY_ALADINVERSION, aladin.VERSION);
-
-
-	        try {
-	            prop.store(new FileOutputStream(propertiesFile(dir)), null);
-	        } catch (FileNotFoundException e) {
-	            return false;
-	        } catch (IOException e) {
-	            return false;
-	        }
-
-	        return true;
-	    }
-	}
-	*/
 	private void searchMinMax() {
 	   
 	   long max = Util.nbrPix(Util.nside(ordermin));
@@ -293,7 +215,7 @@ public class DBBuilder  {
 	 * @param fading true si on utilise un fading sur les bords des images
 	 * @return Le losange
 	 */
-	Fits createHpx(HpxBuilder hpx, String path,int order, int maxOrder, long npix,boolean fast,boolean fading) throws Exception {
+	Fits createHpx(BuilderHpx hpx, String path,int order, int maxOrder, long npix,boolean fast,boolean fading) throws Exception {
 		String file = Util.getFilePath(path,order,npix);
 		
 		// si le process a été arrêté on essaie de ressortir au plus vite
@@ -309,11 +231,6 @@ public class DBBuilder  {
 			if (fils[i] != null && !found) found = true;
 		}
 		if (!found) return null;
-//		for( int i =0; i<4; i++ ) {
-//			// s'il y a au moins un fils, on met les autres à vides et pas null
-//			// pour pouvoir quand meme construire le parent (tronqué)
-//			if (fils[i] == null) fils[i] = new Fits(SIDE,SIDE,bitpix);
-//		}
 		return createNodeHpx(file,path,order,npix,fils);
 	}
 	
@@ -325,7 +242,7 @@ public class DBBuilder  {
        int ordermax;
        boolean fast;
        boolean fading;
-       HpxBuilder hpx;
+       BuilderHpx hpx;
        static final int WAIT=0;
        static final int EXEC=1;
        static final int DIED=2;
@@ -333,7 +250,7 @@ public class DBBuilder  {
        private int mode=WAIT;
        private boolean encore=true;
        
-       public ThreadBuilder(String name,String outpath, HpxBuilder hpx, int ordermin,int ordermax,boolean fast,boolean fading) {
+       public ThreadBuilder(String name,String outpath, BuilderHpx hpx, int ordermin,int ordermax,boolean fast,boolean fading) {
           super(name);
           this.outpath = outpath;
           this.ordermin = ordermin;
@@ -355,6 +272,7 @@ public class DBBuilder  {
        
        public void run() {
           mode=EXEC;
+          updateStat(+1,0,0,0,0);
           while( encore ) {
              long npix = getNextNpix();
              if( npix==-1 ) break;
@@ -362,9 +280,7 @@ public class DBBuilder  {
 //                System.out.println(Thread.currentThread().getName()+" process tree "+npix+"/"+NMAX+"...");
 
          		// si le process a été arrêté on essaie de ressortir au plus vite
-         		if (stopped) {
-         			break;
-         		}
+         		if (stopped) break;
          		
                 Fits f = createHpx(hpx, outpath, ordermin, ordermax, npix, fast,fading);
                 if (f!=null) {
@@ -373,6 +289,7 @@ public class DBBuilder  {
                 progress++;
              } catch( Throwable e ) { e.printStackTrace(); }
           }
+          updateStat(-1,0,0,0,0);
           mode=DIED;
           Aladin.trace(3,Thread.currentThread().getName()+" died !");
        }
@@ -406,12 +323,15 @@ public class DBBuilder  {
 	private double blank;
 	private double[] datacut;
 	private HpixTree hpixTree=null;
-	private int coaddMode=DescPanel.REPLACETILE;
+	private int coaddMode=TabDesc.REPLACETILE;
     
 	// Crée une série de threads de calcul
-	private void createThread(int nbThreads,String outpath,int ordermin,int ordermax,boolean fast, boolean fading, boolean keepBB) {
+	private void launchThreadBuilderHpx(int nbThreads,String outpath,int ordermin,int ordermax,boolean fast, boolean fading, boolean keepBB) {
+	   
+	   initStat(nbThreads);
+	   
 	   for( int i=0; i<nbThreads; i++ ) {
-	      HpxBuilder hpx = new HpxBuilder();
+	      BuilderHpx hpx = new BuilderHpx(mainPanel);
 	      hpx.setBitpix(bitpix, keepBB);
 	      hpx.setLocalServer(localServer);
 	      hpx.createHealpixOrder(ORDER);
@@ -427,7 +347,7 @@ public class DBBuilder  {
 	}
 
 	// Demande l'arrêt de tous les threads de calcul
-	void destroyThread() {
+	void destroyThreadBuilderHpx() {
 	   Iterator<ThreadBuilder> it = threadList.iterator();
 	   while( it.hasNext() ) it.next().tue();
 	}
@@ -439,14 +359,6 @@ public class DBBuilder  {
 	   return false;
 	}
 	
-	
-	private boolean isInTree(int order,long npix) {
-       if( hpixTree==null ) return true;
-       int diffOrder = order-3;
-       long perePix = npix / (long)Math.pow(4,diffOrder);
-       Hpix hpix = new Hpix(3,perePix);
-       return hpixTree.isAscendant(hpix) || hpixTree.isIn(hpix);
-    }
 	private boolean isAscendant(int order,long npix) {
 	   if( hpixTree==null ) return true;
        Hpix hpix = new Hpix(order,npix);
@@ -459,12 +371,6 @@ public class DBBuilder  {
        return hpixTree.isDescendant(hpix);
     }
     
-    private boolean isBrother(int order,long npix) {
-       if( hpixTree==null ) return true;
-       Hpix hpix = new Hpix(order,npix);
-       return hpixTree.isBrother(hpix);
-    }
-
     private boolean isInList(int order,long npix) {
        if( hpixTree==null ) return true;
        Hpix hpix = new Hpix(order,npix);
@@ -479,7 +385,7 @@ public class DBBuilder  {
 	 * @param fils les 4 fils du losange
 	 */
 	Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
-	   
+	   long t = System.currentTimeMillis();
 	   int w=SIDE;
 	   double blank = getBlank();
 	   
@@ -499,8 +405,6 @@ public class DBBuilder  {
 	         in = fils[quad];
 	         int offX = (dg*w)>>>1;
 	         int offY = ((1-hb)*w)>>>1;
-//	         double pix=0;
-//	         double p1,p2,p3,p4;
 	         
 	         for( int y=0; y<w; y+=2 ) {
 	            for( int x=0; x<w; x+=2 ) {
@@ -517,21 +421,6 @@ public class DBBuilder  {
 	                  }
 	               }
 	               if( !ok ) pix=blank;  // aucune valeur => BLANK
-
-                   // On garde la valeur médiane
-//                 if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-//                 else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-//                 else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-//                 else pix=p4;
-                   
-//	               p1=in.getPixelDouble(x,y);
-//	               p2=in.getPixelDouble(x+1,y);
-//	               p3=in.getPixelDouble(x,y+1);
-//	               p4=in.getPixelDouble(x+1,y+1);
-//	               
-//	               // On prend la moyenne
-//	               pix = p1/4 + p2/4 + p3/4 + p4/4;
-	               
 	               out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
 	            }
 	         }
@@ -540,7 +429,10 @@ public class DBBuilder  {
 	   
 	   // écrit les vrais pixels en FITS
 	   out.writeFITS(file+".fits");
-       if (npix%1000 == 0 || DEBUG) Aladin.trace(4,"DBDuilber.createNodeHpx("+order+"/"+npix+") "+file+"... ");
+	   long duree = System.currentTimeMillis() -t;
+       if (npix%1000 == 0 || DEBUG) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") in "+duree+"ms "+file+"... ");
+       
+       updateStat(0,0,0,1,duree);
 
 	   for( int i=0; i<4; i++ ) {
 	      if( fils[i]!=null ) fils[i].free();
@@ -772,7 +664,7 @@ public class DBBuilder  {
 	 * @param fading utilisation d'un fading pour les bords/recouvrements d'images
 	 * @return null si rien trouvé pour construire ce fichier
 	 */
-	Fits createLeaveHpx(HpxBuilder hpx, String file,int order,long npix,boolean fast,boolean fading) throws Exception {
+	Fits createLeaveHpx(BuilderHpx hpx, String file,int order,long npix,boolean fast,boolean fading) throws Exception {
 		long t = System.currentTimeMillis();
 		
 		Fits oldOut=null;
@@ -792,12 +684,12 @@ public class DBBuilder  {
         
 		if( out !=null ) {
 		   
-		   if( coaddMode!=DescPanel.REPLACETILE ) {
+		   if( coaddMode!=TabDesc.REPLACETILE ) {
 		      if( oldOut==null ) oldOut = findFits(file+".fits");
 		      if( oldOut!=null ) {
-		         if( coaddMode==DescPanel.AVERAGE ) out.coadd(oldOut);
-		         else if( coaddMode==DescPanel.KEEP ) out.mergeOnNaN(oldOut);
-		         else if( coaddMode==DescPanel.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+		         if( coaddMode==TabDesc.AVERAGE ) out.coadd(oldOut);
+		         else if( coaddMode==TabDesc.KEEP ) out.mergeOnNaN(oldOut);
+		         else if( coaddMode==TabDesc.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
 		      }
 		   }
 		   cds.tools.Util.createPath(file);
@@ -811,7 +703,10 @@ public class DBBuilder  {
 		      out.writeJPEG(file+".jpg");
 		   }
 		   
-		   if( npix%10 == 0 || DEBUG ) Aladin.trace(4,"DBBuilder.createLeaveHpx("+order+"/"+npix+") "+DescPanel.COADDMODE[coaddMode]+" in "+(System.currentTimeMillis()-t)+"ms");
+		   long duree = System.currentTimeMillis()-t;
+		   if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+TabDesc.COADDMODE[coaddMode]+" in "+duree+"ms");
+		   
+	       updateStat(0,1,duree,0,0);
 		}
 
 		return out;
@@ -948,7 +843,7 @@ public class DBBuilder  {
 	
 	public void stop() {
 		stopped = true;
-		destroyThread();
+		destroyThreadBuilderHpx();
 		
 	}
 

@@ -331,8 +331,8 @@ public class Fov {
 	 *	@param proj la projection du plan de référence
 	 *	@param zv zoomview courant
 	 *	@param g contexte graphique où dessiner
-	 *	@param x décalage en x
-	 *	@param y décalage en y
+	 *	@param xCell décalage en x
+	 *	@param yCell décalage en y
 	 *	@param col si on veut préciser la couleur
 	 *MODIF PF 02/05 return immédiat si bordsXY==null
 	 */

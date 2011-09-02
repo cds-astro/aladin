@@ -85,7 +85,7 @@ public final class Words implements Runnable {
    * Determine s'il s'agit d'un tag GLU, d'un repere (triangle) ou
    * d'une simple sequence.
    * @param tag La sequence
-   * @param width le nombre de caracteres d'affichage
+   * @param naxis1 le nombre de caracteres d'affichage
    * @param align le type d'alignement
    * @param computed s'agit-il d'un champ calculé ?
    */

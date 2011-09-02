@@ -35,7 +35,7 @@ import cds.aladin.Coord;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
-public class TableNside extends JTable {
+public class BuildTable extends JTable {
 
    static int  DEFAULT_BITPIX = -32;
    private int 	bitpix = DEFAULT_BITPIX; // bitpix par défaut pour les calculs d'espace disque
@@ -64,7 +64,7 @@ public class TableNside extends JTable {
       "Disk space used at the end of the process"
    };
 
-   TableNside() {
+   BuildTable() {
       super(createData(DEFAULT_BITPIX),columnNames);
       setAutoscrolls(true);
       for( int i=0; i<columnSize.length; i++ )  getColumnModel().getColumn(i).setPreferredWidth( columnSize[i]);
@@ -95,7 +95,7 @@ public class TableNside extends JTable {
    }
    
    public static void setDiskHeader(int bitpix) {
-      columnToolTips[VOL_IDX] = TableNside.getDiskHeader(bitpix);
+      columnToolTips[VOL_IDX] = BuildTable.getDiskHeader(bitpix);
    }
 
    int defaultRow = -1;
@@ -149,12 +149,12 @@ public class TableNside extends JTable {
       data = new Object[MAXHEALPIXORDER-3][5];
 
       double surface = 4. * Math.PI * (180. / Math.PI) * (180. / Math.PI);
-      long pixelPerFile = (long)Math.pow(4,DBBuilder.ORDER);
+      long pixelPerFile = (long)Math.pow(4,BuilderController.ORDER);
       long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
 
       // colonne des checkbox
       for (int i = 0; i < data.length; i++) {
-         int order = i+3+DBBuilder.ORDER;
+         int order = i+3+BuilderController.ORDER;
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
 
@@ -190,7 +190,7 @@ public class TableNside extends JTable {
    public void updateData() {
       long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
       for (int i = 0; i < this.getRowCount(); i++) {
-         int order = i+3+DBBuilder.ORDER;
+         int order = i+3+BuilderController.ORDER;
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
          this.setValueAt( Util.getUnitDisk(nbPixel*nbBytePerPixel) ,i,VOL_IDX);

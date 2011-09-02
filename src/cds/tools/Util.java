@@ -1426,13 +1426,13 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     	String unites[] = {"","K","M","G","T"};
     	while (val >= 1024 && unit<unites.length-1) {
     		unit++;
-    		val /= 1024.0;
+    		val /= 1024L;
     	}
-//    	String str =String.valueOf(val);
     	NumberFormat nf = NumberFormat.getInstance();
     	nf.setMaximumFractionDigits(format);
     	return nf.format(val)+unites[unit];
     }
+    
 	public static ArrayList<File> getFiles(String path, final String suffix) {
 //		FilenameFilter filter = new FilenameFilter() {
 //			public boolean accept(File dir, String name) {

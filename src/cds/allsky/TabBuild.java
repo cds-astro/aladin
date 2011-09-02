@@ -19,8 +19,8 @@
 
 package cds.allsky;
 
-import static cds.allsky.AllskyConst.INDEX;
-import static cds.allsky.AllskyConst.TESS;
+import static cds.allsky.Constante.INDEX;
+import static cds.allsky.Constante.TESS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -53,7 +53,7 @@ import cds.aladin.Chaine;
 import cds.fits.Fits;
 import cds.tools.Util;
 
-public class BuildPanel extends JPanel implements ActionListener {
+public class TabBuild extends JPanel implements ActionListener {
    protected static final String BEST = "best";
    protected static final String FIRST = "first";
 
@@ -105,9 +105,10 @@ public class BuildPanel extends JPanel implements ActionListener {
 
    private String OK,RESTART,RESUME,STOP,DONE, PREVIOUS, NEXT;
    private String canceltip;
-   AllskyPanel allskyPanel;
+   MainPanel mainPanel;
+   Task task;
 
-   AllskyStepsPanel pSteps;
+   protected BuildProgressPanel buildProgressPanel;
 
    private void createChaine() {
       STOP = getString("STOP");
@@ -120,9 +121,9 @@ public class BuildPanel extends JPanel implements ActionListener {
       PREVIOUS = getString("PREVIOUS");
    }
 
-   private String getString(String k) { return allskyPanel.aladin.getChaine().getString(k); }
+   private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
-   public BuildPanel(AllskyPanel panel) {
+   public TabBuild(MainPanel panel) {
       super(new BorderLayout());
       setMainPanel(panel);
       createChaine();
@@ -202,6 +203,7 @@ public class BuildPanel extends JPanel implements ActionListener {
 //      		pCenter.add(new JSeparator(JSeparator.HORIZONTAL), c);
 //      		c.fill = GridBagConstraints.NONE;
 
+      /* JE N'AFFICHE PLUS LES PARAMETRES SUR LE CHOIX DU RESAMPLING 
       c.anchor = GridBagConstraints.WEST;
       c.fill = GridBagConstraints.NONE;
       c.insets.top=15;
@@ -249,14 +251,17 @@ public class BuildPanel extends JPanel implements ActionListener {
       fading.setText(getString("FADINGALLSKY"));
       p1.add(fading); fading.setSelected(true);		
       pCenter.add(p1, c);
+      
+      */
 
+      
       // barres de progression
       c.insets.top=15;
       c.fill = GridBagConstraints.HORIZONTAL;
       c.gridwidth = GridBagConstraints.REMAINDER;
       c.gridy++;c.gridx=0;
-      pSteps = new AllskyStepsPanel();
-      pCenter.add(pSteps, c);
+      buildProgressPanel = new BuildProgressPanel();
+      pCenter.add(buildProgressPanel, c);
 
       // boutons
       JPanel fin = new JPanel(new BorderLayout());
@@ -281,7 +286,7 @@ public class BuildPanel extends JPanel implements ActionListener {
    }
 
    public void init() {
-      tab = new TableNside();
+      tab = new BuildTable();
       resoLabel = new JLabel();
       resoLabel.setFont(resoLabel.getFont().deriveFont(Font.BOLD));
 
@@ -363,8 +368,8 @@ public class BuildPanel extends JPanel implements ActionListener {
       groupBitpix.add(bit_64);
    }
 
-   void setMainPanel(AllskyPanel panel) {
-      allskyPanel = panel;
+   void setMainPanel(MainPanel panel) {
+      mainPanel = panel;
    }
    
    public void show() {
@@ -373,10 +378,10 @@ public class BuildPanel extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
-      boolean readyToDo = allskyPanel.isExistingDir() && allskyPanel.pDesc.dir_D.getText().trim().length()>0;
-      boolean isRunning = allskyPanel.isRunning();
+      boolean readyToDo = mainPanel.isExistingDir() && mainPanel.tabDesc.dir_D.getText().trim().length()>0;
+      boolean isRunning = mainPanel.isRunning();
       b_previous.setEnabled(readyToDo && !isRunning);
-      b_next.setEnabled(readyToDo && !isRunning && allskyPanel.isExistingAllskyDir() );
+      b_next.setEnabled(readyToDo && !isRunning && mainPanel.isExistingAllskyDir() );
       b_ok.setEnabled(readyToDo && !isRunning);
       b_cancel.setEnabled(readyToDo && isRunning);
       
@@ -407,13 +412,13 @@ public class BuildPanel extends JPanel implements ActionListener {
       samplBest.setSelected(true);
       overlayBest.setSelected(true);
       fading.setSelected(true);
-      ((TableNside) tab).reset();
+      ((BuildTable) tab).reset();
       resumeWidgetsStatus();
    }
 
    public int setSelectedOrder(int val) {
-      int i = ((TableNside) tab).setSelectedOrder(val);
-      ((TableNside) tab).setDefaultRow(i);
+      int i = ((BuildTable) tab).setSelectedOrder(val);
+      ((BuildTable) tab).setDefaultRow(i);
       tab.repaint();
       return i;
    }
@@ -423,7 +428,7 @@ public class BuildPanel extends JPanel implements ActionListener {
     * @return order choisi ou -1 s'il doit etre calculé
     */
    public int getOrder() {
-      return ((TableNside) tab).getOrder();
+      return ((BuildTable) tab).getOrder();
    }
 
    public void setBScaleBZero(double bscale, double bzero) {
@@ -505,7 +510,7 @@ public class BuildPanel extends JPanel implements ActionListener {
     */
    public int getBitpix() {
       ButtonModel b = groupBitpix.getSelection();
-      int i = TableNside.DEFAULT_BITPIX;
+      int i = BuildTable.DEFAULT_BITPIX;
       try {
          i = Integer.parseInt(b.getActionCommand());
       } catch (NumberFormatException e) {
@@ -542,7 +547,7 @@ public class BuildPanel extends JPanel implements ActionListener {
       b_cancel.setEnabled(false);
       displayNext();
       setCursor(null);
-      allskyPanel.pDesc.setFieldEnabled(true);
+      mainPanel.tabDesc.setFieldEnabled(true);
    }
    public void displayNext() {
       b_next.setEnabled(true);
@@ -551,27 +556,26 @@ public class BuildPanel extends JPanel implements ActionListener {
    protected void setProgress(int mode, int value) {
       switch (mode) {
          case INDEX:
-            pSteps.setProgressIndex(value);
+            buildProgressPanel.setProgressIndex(value);
             break;
          case TESS:
-            pSteps.setProgressTess(value);
+            buildProgressPanel.setProgressTess(value);
             break;
       }
    }
 
    protected void enableProgress(boolean selected, int mode) {
-      pSteps.select(selected, mode);
+      buildProgressPanel.select(selected, mode);
    }
 
    protected void setInitDir(String txt) {
-      pSteps.setProgressIndexTxt(txt);
+      buildProgressPanel.setProgressIndexTxt(txt);
    }
 
-   AllskyTask task;
    public void actionPerformed(ActionEvent e) {
       // on applique aussi la modification dans le tableau (calcul des volumes
       // disques)
-      ((TableNside) tab).setBitpix(getBitpix());
+      ((BuildTable) tab).setBitpix(getBitpix());
 
       // START / RESTART / RESUME 
       if (e.getSource() == b_ok) {
@@ -586,24 +590,24 @@ public class BuildPanel extends JPanel implements ActionListener {
 
          // initialisation correcte des barres de progression et boutons
          
-         allskyPanel.resetProgress();
+         mainPanel.resetProgress();
 
          b_ok.setEnabled(false);
          b_cancel.setEnabled(true);
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
          // bloque les champs texte
-         allskyPanel.pDesc.setFieldEnabled(false);
+         mainPanel.tabDesc.setFieldEnabled(false);
 
          if (getBitpix() == -1) {
-            allskyPanel.init();
+            mainPanel.init();
          }
 
          // effectue le nettoyage selon les "reset" cochés
-         allskyPanel.toReset();
+         mainPanel.toReset();
 
          //lance les taches en arrière plan
-         task = new AllskyTask(allskyPanel);
+         task = new Task(mainPanel);
          if (task.isDone()) {
             try {
                task.doInBackground();
@@ -639,29 +643,29 @@ public class BuildPanel extends JPanel implements ActionListener {
             task.stopThread();
          stop();
          // se prépare à relancer le process
-         allskyPanel.setResume();
+         mainPanel.setResume();
 
          //		} else if (e.getSource() == b_close) {
          //			// ferme juste la frame
          //			allskyPanel.close();
       } else if (e.getSource() == b_next) {
-         allskyPanel.showDisplay();
+         mainPanel.showJpgTab();
          
       } else if (e.getSource() == b_previous) {
-         allskyPanel.showDesc();
+         mainPanel.showDescTab();
       }
 
    }
 
    public void stop() {
-      allskyPanel.setResume();
+      mainPanel.setResume();
       b_cancel.setEnabled(false);
       setCursor(null);
-      allskyPanel.pDesc.setFieldEnabled(true);
+      mainPanel.tabDesc.setFieldEnabled(true);
    }
 
    class BitpixListener implements ActionListener {
-      int defaultBitpix = TableNside.DEFAULT_BITPIX;
+      int defaultBitpix = BuildTable.DEFAULT_BITPIX;
 
       public BitpixListener(JCheckBox keepCheckBox) {
          check = keepCheckBox;

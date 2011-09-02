@@ -150,7 +150,7 @@ public final class Mesure extends JPanel implements Runnable {
     }
     
     /** Extrait un tableau de valeurs sous la forme de doubles
-     * @param x Le tableau à remplir ou null s'il faut le régénérer
+     * @param xCell Le tableau à remplir ou null s'il faut le régénérer
      * @param o l'objet qui sert d'étalon pour connaitre le type de Source
      * @param nField l'indice du champ
      * @return le tableau x ou sa regénération si x==null au préalable ou x.length modifié
@@ -185,7 +185,7 @@ public final class Mesure extends JPanel implements Runnable {
     }
     
     /** Extrait un tableau de valeurs sous la forme de Chaine
-     * @param x Le tableau à remplir ou null s'il faut le régénérer
+     * @param xCell Le tableau à remplir ou null s'il faut le régénérer
      * @param o l'objet qui sert d'étalon pour connaitre le type de Source
      * @param nField l'indice du champ
      * @return le tableau x ou sa regénération si x==null au préalable ou x.length modifié

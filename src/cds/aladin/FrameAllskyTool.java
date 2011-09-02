@@ -27,13 +27,13 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import cds.allsky.AllskyPanel;
+import cds.allsky.MainPanel;
 import cds.tools.Util;
 
 public class FrameAllskyTool extends JFrame {
 
 	public Aladin aladin;
-	public AllskyPanel allskyPanel;
+	public MainPanel allskyPanel;
 
 	private String title;
 
@@ -66,7 +66,7 @@ public class FrameAllskyTool extends JFrame {
 
 	private JPanel createPanel() {
 		JPanel p = new JPanel(new BorderLayout(1, 1));
-		allskyPanel = new AllskyPanel(aladin);
+		allskyPanel = new MainPanel(aladin);
 		p.add(allskyPanel, BorderLayout.CENTER);
 		return p;
 	}
@@ -105,11 +105,11 @@ public class FrameAllskyTool extends JFrame {
 	}
 
 	public void showPublish() {
-		allskyPanel.showPublish();
+		allskyPanel.showPubTab();
 	}
 
 	public void showDisplay() {
-		allskyPanel.showDisplay();
+		allskyPanel.showJpgTab();
 	}
 
 //    public void setCut(double[] cut, int transfertFct)  {

@@ -19,8 +19,8 @@
 
 package cds.allsky;
 
-import static cds.allsky.AllskyConst.INDEX;
-import static cds.allsky.AllskyConst.TESS;
+import static cds.allsky.Constante.INDEX;
+import static cds.allsky.Constante.TESS;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -37,7 +37,6 @@ import javax.swing.event.ChangeListener;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
-import cds.aladin.Chaine;
 import cds.aladin.Coord;
 import cds.aladin.PlanBG;
 import cds.fits.Fits;
@@ -45,31 +44,23 @@ import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
-public class AllskyPanel extends JPanel implements ActionListener {
-   //	private AllskyStepsPanel pSteps = null;
-
-   private String s_DESC, s_BUILD, s_DISP, s_PUBLISH, s_RGB, s_ERR,
-   s_ERRFITS;
-   private String tipDesc, tipBuild, tipDisplay, tipPublish, tipRGB;
-   BuildPanel pBuild = null;
-   private PublishPanel pPublish;
-   private JPGPanel pDisplay;
-   private RGBPanel pRGB;
-   //	private CleanPanel pClean;
+/**
+ * Gère le formulaire de génération des surveys HEALPix
+ * @author Anaïs Oberto + Pierre Fernique
+ */
+public class MainPanel extends JPanel implements ActionListener {
 
    protected Aladin aladin;
-
-   BorderLayout bLay = new BorderLayout(20, 10);
-   DescPanel pDesc;
-   //	JPanel pBuildAll;
-
-   // Onglet Open
-   JTextField field;
-   JTextArea glu;
-   JPanel pView;
-   private int bitpix = -1;
-   private int order;
-   private JTabbedPane pTab;
+   
+   private String s_ERR, s_ERRFITS;
+   
+   // Le formulaire multi-tab
+   private JTabbedPane pTab;              // Le panel principale
+   protected TabDesc  tabDesc;            // Le tab de la description du survey
+   protected TabBuild tabBuild = null;    // Le tab de la construction HEALPix
+   protected TabJpg   tabJpg;             // Le tab de la génération des JPEG associés
+   protected TabPub   tabPub;             // Le tab pour la publication du survey HEALPix
+   protected TabRgb   tabRgb;             // Le tab pour la génération d'un survey RGB HEALPix
 
    private int lastN3 = 0;
    private PlanBG planPreview;
@@ -83,66 +74,105 @@ public class AllskyPanel extends JPanel implements ActionListener {
       this.lastN3 = lastN3;
    }
 
-   public AllskyPanel(Aladin a) {
+   public MainPanel(Aladin aladin) {
       super();
-      aladin = a;
+      this.aladin = aladin;
       createChaine();
       createPanel();
-      DBBuilder.DEBUG = (Aladin.levelTrace > 0) ? true : false;
+      BuilderController.DEBUG = (Aladin.levelTrace > 0) ? true : false;
 
    }
 
    private void createPanel() {
       pTab = new JTabbedPane();
-      pBuild = new BuildPanel(this);
-      pDisplay = new JPGPanel(this);
-      pPublish = new PublishPanel(aladin,this);
+      
+      tabBuild= new TabBuild(this);
+      tabJpg  = new TabJpg(this);
+      tabPub  = new TabPub(aladin,this);
+      tabRgb  = new TabRgb(aladin);
+      tabDesc = new TabDesc(aladin.getDefaultDirectory(), this);
+      tabDesc.getSourceDirField().addActionListener(this);
 
-      pDesc = new DescPanel(aladin.getDefaultDirectory(), this);
-      pDesc.getSourceDirField().addActionListener(this);
+      pTab.addTab( getString("MDESC"),   null, tabDesc,  null);
+      pTab.addTab( getString("MBUILD"),  null, tabBuild, getString("MTIPBUILD"));
+      pTab.addTab( getString("MDISPLAY"),null, tabJpg,   null);
+      pTab.addTab( getString("MPUBLISH"),null, tabPub,   getString("MTIPPUBLISH"));
 
-      pRGB = new RGBPanel(aladin);
-
-      // ----
-      // ajoute l'onglet dans le panel
-      pTab.addTab(s_DESC, null, pDesc, tipDesc);
-      pTab.addTab(s_BUILD, null, pBuild, tipBuild);
-      pTab.addTab(s_DISP, null, pDisplay, tipDisplay);
-      pTab.addTab(s_PUBLISH, null, pPublish, tipPublish);
-
-      if (pRGB!=null) {
-         pTab.addTab(s_RGB, null, pRGB, tipRGB);
-         pTab.addChangeListener(new ChangeListener() {
-
-            public void stateChanged(ChangeEvent e) {
-               if (pTab.getSelectedComponent() == pRGB)
-                  pRGB.init();
-            }
-         });		
-      }
+      pTab.addTab( getString("MRGBA"), null, tabRgb, getString("MTIPRGB"));
+      pTab.addChangeListener(new ChangeListener() {
+         public void stateChanged(ChangeEvent e) {
+            if (pTab.getSelectedComponent() == tabRgb)
+               tabRgb.init();
+         }
+      });		
 
       add(pTab, BorderLayout.CENTER);
-
    }
 
    private void createChaine() {
-      s_RGB = getString("MRGB");
-      s_DESC = getString("MDESC");
-      s_BUILD = getString("MBUILD");
-      s_DISP = getString("MDISPLAY");
-      s_PUBLISH = getString("MPUBLISH");
-      s_ERRFITS = getString("ERRFITS");
-      s_ERR = getString("ERROR");
-      tipBuild = getString("MTIPBUILD");
-      tipPublish = getString("MTIPPUBLISH");
-      tipRGB = getString("MTIPRGB");
+      s_ERRFITS= getString("ERRFITS");
+      s_ERR    = getString("ERROR");
    }
    
    private String getString(String k) { return aladin.getChaine().getString(k); }
 
    public void actionPerformed(ActionEvent e) {
-      if (e.getSource() == pDesc.getSourceDirField()) init();
+      if (e.getSource() == tabDesc.getSourceDirField()) init();
    }
+   
+   private Fits lastOneFits = null;
+   private String lastRootPath=null;
+   
+   /**
+    * Cherche un fichier de type FITS dans le répertoire donné.
+    * Utilise un cache une case pour éviter les recherches redondantes
+    * @param aladinTree
+    * @return null s'il y a eu une erreur ou le chemin du 1er fichier fits trouvé
+    */
+   private Fits getFits(String rootPath) {
+      if( lastRootPath!=null && lastRootPath.equals(rootPath) ) return lastOneFits;
+      lastOneFits = getFits1(rootPath);
+      aladin.trace(2, "Will use this Fits file as reference => "+lastOneFits.getFilename());
+      lastRootPath=rootPath;
+      return lastOneFits;
+   }
+   
+    private Fits getFits1(String rootPath) {
+       File main = new File(rootPath);
+       Fits fitsfile = new Fits();
+       String[] list = main.list();
+       String path = rootPath;
+       if (list==null)
+           return null;
+       for (int f = 0 ; f < list.length ; f++) {
+           if (!rootPath.endsWith(Util.FS)) {
+               rootPath = rootPath+Util.FS;
+           }
+           path = rootPath+list[f];
+           if ((new File(path)).isDirectory()) {
+               if (!list[f].equals(Constante.SURVEY)) {
+                   Fits f1 = getFits1(path);
+                   if( f1!=null ) return f1;
+               }
+               else {
+                   continue;
+               }
+           }
+           try {
+               // essaye de lire l'entete du fichier comme un fits
+               fitsfile.loadHeaderFITS(path);
+               // il n'y a pas eu d'erreur, donc c'est bien un FITS
+               fitsfile.loadFITS(path);
+               return fitsfile;
+           }  catch (Exception e) {
+//               System.err.println("Not a FITS file : " + path);
+               continue;
+           }
+       }
+       return null;
+   }
+   
+
 
    /**
     * Cherche un fichier fits dans l'arborescence et itialise les variables
@@ -152,30 +182,28 @@ public class AllskyPanel extends JPanel implements ActionListener {
     * @param text
     */
    public void init() {
-      String text = pDesc.getInputPath().trim();
+      String text = tabDesc.getInputPath().trim();
       if (text != null && !text.equals("")) {
          try {
             // lit un fichier FITS dans le réperoire sélectionné
-            Fits file = Fits.getFits(text);
+            Fits file = getFits(text);
             if (file == null || file.getCalib() == null) {
                JOptionPane.showMessageDialog(this, s_ERRFITS + text,
                      s_ERR, JOptionPane.ERROR_MESSAGE);
                return;
             }
             // récupère le bitpix
-            bitpix = file.bitpix;
-            pBuild.setOriginalBitpix(bitpix);
+            tabBuild.setOriginalBitpix(file.bitpix);
             // récupère le bscale/bzero
-            pBuild.setBScaleBZero(file.bscale, file.bzero);
+            tabBuild.setBScaleBZero(file.bscale, file.bzero);
             // récupère le blank
-            pBuild.setBlank(file.blank);
+            tabBuild.setBlank(file.blank);
             // récupère le min max pour le cut
             initCut();
             // calcule le meilleur nside
             long nside = healpix.core.HealpixIndex.calculateNSide(file
                   .getCalib().GetResol()[0] * 3600.);
-            order = (int) Util.order((int)nside);
-            setSelectedOrder(order - HpxBuilder.ORDER);
+            setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
 
          } catch (Exception e1) {
             //				e1.printStackTrace();
@@ -185,45 +213,50 @@ public class AllskyPanel extends JPanel implements ActionListener {
 
    protected void initCut() {
       String path = getInputPath();
-      convertCut = (pBuild.getBitpix() != getOriginalBitpix());
-      if (path == null || "".equals(path)) {
+      convertCut = (tabBuild.getBitpix() != getOriginalBitpix());
+      if( path == null || "".equals(path)) {
          path = getOutputPath();
          convertCut=false;
       } else {
-         Fits file = Fits.getFits(path);
+         Fits file = getFits(path);
          double[] cut = ThreadAutoCut.run(file);
-         pDisplay.setCut(cut);
+         setCut(cut);
       }
-      if (convertCut) convertCut(pBuild.getBitpix());
+      if (convertCut) convertCut(tabBuild.getBitpix());
    }
    private int setSelectedOrder(int val) {
-      return pBuild.setSelectedOrder(val);
+      return tabBuild.setSelectedOrder(val);
    }
 
    protected double[] getCut() {
-      return pDisplay.getCut();
+      return tabJpg.getCut();
+   }
+   
+   protected void setCut(double [] cut) {
+      tabJpg.setCut(cut);
    }
 
    protected void convertCut(int bitpix) {
-      double[] cut = pDisplay.getCut();
+      double[] cut = tabJpg.getCut();
       double [] oldminmax = new double[] {cut[2],cut[3]};
       cut[0] = Fits.toBitpixRange(cut[0], bitpix, oldminmax);
       cut[1] = Fits.toBitpixRange(cut[1], bitpix, oldminmax);
-      pDisplay.setCut(cut);
+      setCut(cut);
    }
 
-   public void updateCurrentCM() { pDisplay.updateCurrentCM(); }
+   public void updateCurrentCM() { tabJpg.updateCurrentCM(); }
 
    protected double[] getBScaleBZero() {
-      return new double[]{pBuild.getBscale(), pBuild.getBzero()};
+      return new double[]{tabBuild.getBscale(), tabBuild.getBzero()};
    }
+   
    /**
     * 
     * @return order choisi ou -1 s'il doit etre calculé
     */
    protected int getOrder() {
-      if (pBuild.getOrder() != -1) {
-         return pBuild.getOrder();
+      if (tabBuild.getOrder() != -1) {
+         return tabBuild.getOrder();
       }
       if (planPreview != null)
          return planPreview.getMaxHealpixOrder();
@@ -231,62 +264,62 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
    
    protected int getBitpix() {
-      return pBuild.getBitpix();
+      return tabBuild.getBitpix();
    }
 
    protected double getBlank() {
-      double blank = pBuild.getBlank();
+      double blank = tabBuild.getBlank();
       String s="";
       try { 
-         s = pDesc.getBlank().trim();
+         s = tabDesc.getBlank().trim();
          if( s.length()>0 ) blank = Double.parseDouble(s);
       } catch( Exception e ) {
-         pDesc.blankTextField.setText("Unknown value => ["+s+"]");
+         tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }
       return blank;
    }
 
    protected String getInputPath() {
-      if( pDesc==null ) return null;
-      return pDesc.getInputPath();
+      if( tabDesc==null ) return null;
+      return tabDesc.getInputPath();
    }
 
    public String getOutputPath() {
-      if( pDesc==null ) return null;
-      return pDesc.getOutputPath();
+      if( tabDesc==null ) return null;
+      return tabDesc.getOutputPath();
    }
    
    public int getCoAddMode() {
-      return pDesc.getCoaddMode();
+      return tabDesc.getCoaddMode();
    }
    
    /** Retourne la liste des losanges HEALPix spécifiquement à traiter, null si tout le ciel */
    public HpixTree getHpixTree() {
-      String s = pDesc.getSpecifNpix().trim();
+      String s = tabDesc.getSpecifNpix().trim();
       if( s.length()==0 ) return null;
       HpixTree hpixTree = new HpixTree(s);
       if( hpixTree.getSize()==0 ) return null;
       return hpixTree;
    }
 
-   public void showDesc() {
-      pTab.setSelectedComponent(pDesc);
+   public void showDescTab() {
+      pTab.setSelectedComponent(tabDesc);
    }
 
-   public void showPublish() {
-      pTab.setSelectedComponent(pPublish);
+   public void showBuildTab() {
+      pTab.setSelectedComponent(tabBuild);
    }
 
-   public void showRGB() {
-      if (pRGB != null) // version beta
-         pTab.setSelectedComponent(pRGB);
+   public void showJpgTab() {
+      pTab.setSelectedComponent(tabJpg);
+   }
+   
+   public void showPubTab() {
+      pTab.setSelectedComponent(tabPub);
    }
 
-   public void showDisplay() {
-      pTab.setSelectedComponent(pDisplay);
-   }
-   public void showBuild() {
-      pTab.setSelectedComponent(pBuild);
+   public void showRgbTab() {
+      pTab.setSelectedComponent(tabRgb);
    }
 
    public void resetProgress() {
@@ -297,42 +330,30 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
 
    protected void enableProgress(boolean selected, int mode) {
-      pBuild.enableProgress(selected, mode);
+      tabBuild.enableProgress(selected, mode);
    }
    protected void setProgress(int mode, int value) {
-      pBuild.setProgress(mode, value);
+      tabBuild.setProgress(mode, value);
    }
    public String getLabel() {
-      return pDesc.getLabel();
+      return tabDesc.getLabel();
    }
 
    protected void newAllskyDir() {
-      pPublish.newAllskyDir(AllskyConst.SURVEY);
+      tabPub.newAllskyDir(Constante.SURVEY);
       // si un repertoire de sortie ALLSKY existe déjà, on change le nom du
       // bouton START
       setStart();
-      pDesc.resumeWidgetsStatus();
+      tabDesc.resumeWidgetsStatus();
       if( isExistingAllskyDir() ) preview(0);
-      
-//      if (pDesc.getInputPath() != null
-//            && (new File(pDesc.getInputPath())).exists()
-//            && (new File(pDesc.getOutputPath())).exists()) {
-//         // met le bouton Reset utilisable, mais pas selectionné
-//         setResume();
-//         preview(0);
-//      } else if ((new File(pDesc.getOutputPath())).exists()) {
-//         // met les boutons "Start" des autres onglets/actions utilisables
-//         setStartEnabled(true);
-//         preview(0);
-//      }
    }
    
    protected boolean isExistingDir() {
-      return pDesc!=null && pDesc.getInputPath() != null && (new File(pDesc.getInputPath())).exists();
+      return tabDesc!=null && tabDesc.getInputPath() != null && (new File(tabDesc.getInputPath())).exists();
    }
 
    protected boolean isExistingAllskyDir() {
-      return pDesc!=null && pDesc.getOutputPath() != null && (new File(pDesc.getOutputPath())).exists();
+      return tabDesc!=null && tabDesc.getOutputPath() != null && (new File(tabDesc.getOutputPath())).exists();
    }
    
    private boolean isRunning=false;
@@ -367,17 +388,17 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
 
    public void stop() {
-      pBuild.stop();
+      tabBuild.stop();
    }
 
    public void toReset() {
-      if( pDesc.isResetIndex() ) resetIndex();
-      if (pDesc.isResetHpx()) resetHpx();
+      if( tabDesc.isResetIndex() ) resetIndex();
+      if (tabDesc.isResetHpx()) resetHpx();
    }
    
    public void resetIndex() {
       cds.tools.Util.deleteDir(new File(getOutputPath()
-            + AllskyConst.HPX_FINDER));
+            + Constante.HPX_FINDER));
    }
    public void resetHpx() {
       File dir = new File(getOutputPath());
@@ -394,52 +415,52 @@ public class AllskyPanel extends JPanel implements ActionListener {
    //		cds.tools.Util.deleteDir(new File(getOutputPath()),".*\\.jpg$");
    //	}
    protected boolean toFast() {
-      return pBuild.toFast();
+      return tabBuild.toFast();
    }
 
    protected boolean toFading() {
-      return pBuild.toFading();
+      return tabBuild.toFading();
    }
 
    protected void setInitDir(String txt) {
-      pBuild.setInitDir(txt);
+      tabBuild.setInitDir(txt);
    }
 
    /**
     * @return the keepBB
     */
    protected boolean isKeepBB() {
-      return pBuild.isKeepBB();
+      return tabBuild.isKeepBB();
    }
 
    protected int getOriginalBitpix() {
-      return pBuild.getOriginalBitpix();
+      return tabBuild.getOriginalBitpix();
    }
 
    public void displayStart() {
-      pBuild.displayStart();
+      tabBuild.displayStart();
 //      pDesc.setResetEnable(false);
 //      pDesc.setResetSelected(false);
    }
    public void displayReStart() {
-      pBuild.displayReStart();
+      tabBuild.displayReStart();
    }
 
    public void displayResume() {
-      pBuild.displayResume();
+      tabBuild.displayResume();
    }
 
    public void displayDone() {
-      pBuild.displayDone();
+      tabBuild.displayDone();
    }
 
    protected void clearForms() {
-      AllskyConst.SURVEY = AllskyConst.ALLSKY;
-      pDesc.clearForms();
-      pBuild.clearForms();
+      Constante.SURVEY = Constante.ALLSKY;
+      tabDesc.clearForms();
+      tabBuild.clearForms();
 
-      pDisplay.clearForms();
-      pPublish.clearForms();
+      tabJpg.clearForms();
+      tabPub.clearForms();
       setStart();
    }
 
@@ -448,7 +469,7 @@ public class AllskyPanel extends JPanel implements ActionListener {
    }
 
    public void done() {
-      showDisplay();
+      showJpgTab();
       setDone();
    }
 
@@ -462,10 +483,10 @@ public class AllskyPanel extends JPanel implements ActionListener {
 
    public void setStartEnabled(boolean b) {
       initCut();
-      pBuild.displayNext();
-      pDisplay.setStartEnabled(b);
-      pPublish.setStartEnabled(b);
-      if( pRGB!=null ) pRGB.setStartEnabled(b);
+      tabBuild.displayNext();
+      tabJpg.setStartEnabled(b);
+      tabPub.setStartEnabled(b);
+      if( tabRgb!=null ) tabRgb.setStartEnabled(b);
    }
 
    /**
@@ -474,12 +495,11 @@ public class AllskyPanel extends JPanel implements ActionListener {
     * @param last
     * */
    void preview(int last) {
-      String mysky = pDesc.getLabel();
+      String mysky = tabDesc.getLabel();
       try {
          planPreview = (PlanBG) aladin.calque.getPlan(mysky);
          if (planPreview == null || planPreview.isFree() || planPreview.hasError() ) {
-            double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util
-                  .nside(3), last);
+            double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), last);
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0],
                   res[1] });
             radec = Calib.GalacticToRaDec(radec[0], radec[1]);

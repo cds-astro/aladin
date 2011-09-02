@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
@@ -40,28 +41,70 @@ import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-public class InitLocalAccess {
+public class BuilderIndex {
 
-
+   private MainPanel mainPanel;
+   
 	private double progress = 0;
 	private String initpath = null;
 	private String currentfile = null;
 	private String pausepath = null;
 	private String currentpath = "";
 	
+	// Pour les stat
+	private int statNbFile;                 // Nombre de fichiers sources
+	private long statMemFile;               // Taille totale des fichiers sources (en octets)
+	private long statMaxSize;               // taille du plus gros fichier trouvé
+	private int statMaxWidth,statMaxHeight,statMaxNbyte; // info sur le plus gros fichier trouvé
+	private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
+	
 	boolean stopped = false;
+	
+    public BuilderIndex() { }
+    
+    public BuilderIndex(MainPanel mainPanel) {
+       this.mainPanel = mainPanel;
+    }
+    
+	// Suppression des statistiques
+    private void resetStat() { statNbFile=-1; }
+    
+    // Initialisation des statistiques
+    private void initStat() { statNbFile=0; statMemFile=0; statMaxSize=-1; }
+    
+    // Mise à jour des stats
+	private void updateStat(File f,int width,int height,int nbyte) {
+	   statNbFile++;
+	   long size = f.length();
+	   statMemFile += size;
+	   if( statMaxSize<size ) {
+	      statMaxSize=size;
+	      statMaxWidth=width; statMaxHeight=height; statMaxNbyte=nbyte;
+	   }
+	   long t = System.currentTimeMillis();
+	   if( t-statLastShowTime < 1000 ) return;
+	   statLastShowTime=t;
+	   showStat();
+	}
+	
+	// Demande d'affichage des stats (dans le TabBuild)
+	private void showStat() {
+	   if( mainPanel==null ) return;
+	   mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
+	}
 	
 	public boolean build(String input, String output, int order) {
 		return build(input, output, order,null);
 	}
+	
 	public boolean build(String input, String output, int order, String regex) {
-	   //output += FS + AllskyConst.SURVEY;
+	   initStat();
+	   
 	   File f = new File(output);
 	   if (!f.exists()) f.mkdir();
-	   String pathDest = output + FS + AllskyConst.HPX_FINDER;
+	   String pathDest = output + FS + Constante.HPX_FINDER;
 	   stopped = false;
 
-	   //		NMAX = Util.getMax(order);
 	   progress = 0;
 	   f = new File(pathDest+FS+"Norder"+order);
 	   pausepath = pathDest+FS+"Norder"+order+FS+"pause";
@@ -83,48 +126,23 @@ public class InitLocalAccess {
 	         progress=100;
 	         return false;
 	      }
-	      //			cds.tools.Util.deleteDir(f);
 	   }
 	   create(input, pathDest, regex, order);
 
 	   // s'il ya eu une interruption -> sortie rapide
-	   if (stopped) return false;
-	   else {
-	      progress=100;
-	      File fpause = new File(pausepath);
-	      fpause.delete();
-	   }
+	   if (stopped) {
+	      resetStat();
+	      showStat();
+	      return false;
+	   } 
+	   
+	   progress=100;
+	   File fpause = new File(pausepath);
+	   fpause.delete();
+	   showStat();
 	   return true;
 	}
 
-	/**
-	 * @param args
-	 */
-	/*
-	public static void main(String[] args) {
-		long t=System.currentTimeMillis();
-		String pathSource = args[0]+ FS;
-		String pathDest = pathSource + HPX_FINDER;
-		String regex = args[1];
-		int order =   Integer.parseInt(args[2]);
-		
-		create(pathSource, pathDest, regex, order);
-		System.out.println("done => "+(System.currentTimeMillis()-t)+"ms");
-	
-	}*/
-
-//	/** Création si nécessaire des répertoires et sous-répertoire du fichier 
-//	 * passé en paramètre 
-//	 */
-//	public static void createPath(String filename) {
-//		for( int pos=filename.indexOf(FS,3); pos>=0; pos=filename.indexOf(FS,pos+1)) {
-//			File f = new File( filename.substring(0,pos) );
-//			if( !f.exists() ) {
-//				f.mkdir();
-//			}
-//		}
-//	}
-	
 
 	/** Création si nécessaire du fichier passé en paramètre
 	 * et ouverture en écriture 
@@ -140,7 +158,6 @@ public class InitLocalAccess {
 	}
 	
 	/** Writes a String to a local file
-     * 
      * @param outfile the file to write to
      * @param content the contents of the file
      * @exception IOException 
@@ -154,18 +171,11 @@ public class InitLocalAccess {
 
 	/**
 	 * Pour chaque fichiers FITS, cherche la liste des losanges couvrant la zone.
-	 * Créé (ou complète) un fichier HPX text contenant le
+	 * Créé (ou complète) un fichier HPX texte contenant le
 	 * chemin vers les fichiers FITS 
-	 *
 	 */
 	public void create(String pathSource, String pathDest, String regex, int order) {
 
-		String hpxname;
-		FileOutputStream out;
-		long npix;
-		long[] npixs = null;
-//		double radius = 0;
-		Fits fitsfile = new Fits();
 		
 		// pour chaque fichier dans le sous répertoire
 		File main = new File(pathSource);
@@ -181,10 +191,11 @@ public class InitLocalAccess {
 			progress = f*100./(list.length-1);
 			
 			currentfile = pathSource+FS+list[f];
+			
+			File file = new File(currentfile); 
 
-			if ((new File(currentfile)).isDirectory() && !list[f].equals(AllskyConst.SURVEY)) {
+			if (file.isDirectory() && !list[f].equals(Constante.SURVEY)) {
 				System.out.println("Look into dir " + currentfile);
-//				currentpath = currentfile;
 				create(currentfile, pathDest, regex, order);
 				currentpath = pathSource;
 			}
@@ -197,62 +208,94 @@ public class InitLocalAccess {
 					else continue;
 				}
 
+				Fits fitsfile = new Fits();
+				int cellSize = Constante.FITSCELLSIZE;   // permet à un Thread de travailler au max avec 500Mo pour 6 recouvrements en 32 bits
+
+				// L'image sera mosaiquée en cellSize x cellSize  pour éviter de saturer la mémoire par la suite
 				try {
-					try {
-						fitsfile.loadHeaderFITS(currentfile);
-					}  catch (Exception e) {
-						Aladin.trace(3,e.getMessage() + " " + currentfile);
-						continue;
-					}
-
-					// transforme les coordonnées du point de ref de l'image en GAL
-					Coord centerGAL;
-					double[] aldel = Calib.RaDecToGalactic(
-							fitsfile.center.al, fitsfile.center.del);
-					centerGAL = new Coord(aldel[0], aldel[1]);
-
-					double[] inc = fitsfile.getCalib().GetResol();
-					double radius = Math.max(
-							Math.abs(inc[0]) * fitsfile.width/2.,
-							Math.abs(inc[1]) * fitsfile.height/2.)
-							;
-					// rayon jusqu'à l'angle, au pire * sqrt(2)
-					radius *= Math.sqrt(2.);
-
-					npixs = getNpixList(order, centerGAL, radius);
-
-					// pour chacun des losanges concernés
-					for (int i = 0; i < npixs.length; i++) {
-						npix = npixs[i];
-						// vérifie la validité du losange trouvé
-						if (!isInImage(fitsfile.getCalib(),Util.getCorners(order, npix))) continue;
-						
-						// initialise les chemins
-						if (!pathDest.endsWith(FS)) {
-							pathDest = pathDest + FS;
-						}
-						hpxname = pathDest+ Util.getFilePath("", order,npix);
-						cds.tools.Util.createPath(hpxname);
-						out = openFile(hpxname);
-						// ajoute le chemin du fichier Source FITS
-						createAFile(out, currentfile+"\n");
-					}
-
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-					System.err.println(currentfile);
-					return;
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.err.println(currentfile);
-					return;
+				   fitsfile.loadHeaderFITS(currentfile);
+				   
+                   int width = fitsfile.width;
+                   int height = fitsfile.height;
+                   
+                   updateStat(file,width,height,Math.abs(fitsfile.bitpix)/8);;
+                   
+                   try {
+                      for( int x=0; x<width; x+=cellSize ) {
+                         for( int y=0; y<height; y+=cellSize ) {
+                            fitsfile.widthCell = x+cellSize>width ? width-x : cellSize;
+                            fitsfile.heightCell = y+cellSize>height ? height-y : cellSize;
+                            fitsfile.xCell=x;
+                            fitsfile.yCell=y;
+                            String currentCell = fitsfile.getCellSuffix();
+                            fitsfile.initCenter();        // pour forcer le recalcul du center et des RAmin-max...
+                            testAndInsert(fitsfile,pathDest,currentfile,currentCell,order);
+                         }
+                      }
+                   } catch (FileNotFoundException e) {
+                      e.printStackTrace();
+                      System.err.println(currentfile);
+				      return;
+				   } catch (Exception e) {
+				      e.printStackTrace();
+				      System.err.println(currentfile);
+				      return;
+				   }
+				}  catch (Exception e) {
+				   Aladin.trace(3,e.getMessage() + " " + currentfile);
+				   continue;
 				}
+
+
 			}
 		}
 
 		if (!stopped) progress = 100;
 	}
-	
+
+	private void testAndInsert(Fits fitsfile,String pathDest,String currentFile,String currentCell,int order) throws Exception {
+       String hpxname;
+       FileOutputStream out;
+       long npix;
+       long[] npixs = null;
+       
+	   // transforme les coordonnées du point de ref de l'image en GAL
+	   Coord centerGAL;
+	   double[] aldel = Calib.RaDecToGalactic(
+	         fitsfile.center.al, fitsfile.center.del);
+	   centerGAL = new Coord(aldel[0], aldel[1]);
+
+	   double[] inc = fitsfile.getCalib().GetResol();
+	   double radius = Math.max(
+	         Math.abs(inc[0]) * fitsfile.widthCell/2.,
+	         Math.abs(inc[1]) * fitsfile.heightCell/2.)
+	         ;
+	   // rayon jusqu'à l'angle, au pire * sqrt(2)
+	   radius *= Math.sqrt(2.);
+
+	   npixs = getNpixList(order, centerGAL, radius);
+
+	   // pour chacun des losanges concernés
+	   for (int i = 0; i < npixs.length; i++) {
+	      npix = npixs[i];
+	      
+	      // vérifie la validité du losange trouvé
+	      if (!isInImage(fitsfile,Util.getCorners(order, npix))) continue;
+
+	      // initialise les chemins
+	      if (!pathDest.endsWith(FS)) {
+	         pathDest = pathDest + FS;
+	      }
+	      hpxname = pathDest+ Util.getFilePath("", order,npix);
+	      cds.tools.Util.createPath(hpxname);
+	      out = openFile(hpxname);
+	      
+	      // ajoute le chemin du fichier Source FITS, 
+	      // suivi éventuellement de la définition de la cellule en question (mode mosaic)
+	      createAFile(out, currentFile+(currentCell==null?"":currentCell)+"\n");
+	   }
+	}
+
 	public String getCurrentpath() {
 		return currentpath;
 	}
@@ -294,47 +337,45 @@ public class InitLocalAccess {
 		} 
 	}
 
-	static boolean isInImage(Calib calib, Coord[] corners) {
-		int signeX = 0;
-		int signeY = 0;
-		try {
-			int marge = 2;
-//			Coord coo = new Coord();
-//			coo.al=ra; coo.del=dec;
-			for (int i = 0; i < corners.length; i++) {
-				Coord coo = corners[i];
-				double[] radec = Calib.GalacticToRaDec(coo.al, coo.del);
-				coo.al=radec[0]; coo.del = radec[1];
-				calib.GetXY(coo);
-				if( Double.isNaN(coo.x) ) continue;
-				int width = calib.getImgSize().width+marge;
-				int height = calib.getImgSize().height+marge;
-				if(coo.x>=-marge && coo.x<width && coo.y>=-marge && coo.y<height) {
-					return true;
-				}
-				// tous d'un coté => x/y tous du meme signe
-				signeX += (coo.x>=width)?1:(coo.x<-marge)?-1:0;
-				signeY += (coo.y>=height)?1:(coo.y<-marge)?-1:0;
-				
-			}
-		} catch (Exception e) {return false;}
+	private boolean isInImage(Fits f, Coord[] corners) {
+	   int signeX = 0;
+	   int signeY = 0;
+	   try {
+	      int marge = 2;
+	      for (int i = 0; i < corners.length; i++) {
+	         Coord coo = corners[i];
+	         double[] radec = Calib.GalacticToRaDec(coo.al, coo.del);
+	         coo.al=radec[0]; coo.del = radec[1];
+	         f.getCalib().GetXY(coo);
+	         if( Double.isNaN(coo.x) ) continue;
+	         coo.y = f.height - coo.y -1;
+	         int width = f.widthCell+marge;
+	         int height = f.heightCell+marge;
+	         if(coo.x>=f.xCell-marge && coo.x<f.xCell+width && coo.y>=f.yCell-marge && coo.y<f.yCell+height) {
+	            return true;
+	         }
+	         // tous d'un coté => x/y tous du meme signe
+	         signeX += (coo.x>=f.xCell+width)?1:(coo.x<f.xCell-marge)?-1:0;
+	         signeY += (coo.y>=f.yCell+height)?1:(coo.y<f.yCell-marge)?-1:0;
 
-		if (Math.abs(signeX) == Math.abs(corners.length) || Math.abs(signeY) == Math.abs(corners.length))
-			return false;
-		
-		return true;
+	      }
+	   } catch (Exception e) {return false;}
 
+	   if (Math.abs(signeX) == Math.abs(corners.length) || Math.abs(signeY) == Math.abs(corners.length))
+	      return false;
+
+	   return true;
 	}
-	 
+
+
 	public double getProgress() {
-		return progress;
+	   return progress;
 	}
 
 	public static int getNbNpix(String output, int order) {
 		return Util.computeNFiles(new File(output 
-					+FS+ AllskyConst.HPX_FINDER
+					+FS+ Constante.HPX_FINDER
 					+FS +"Norder"+order ));
-		
 	}
 
 	public void stop() {

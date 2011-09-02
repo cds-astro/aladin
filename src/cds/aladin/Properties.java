@@ -350,6 +350,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
   /** Ajoute dans le JPanel un couple d'elements titre: valeur
+   * @param frame  Le frame de référence (pour savoir où afficher le help, null sinon)
    * @param p      Le panel sur lequel on travaille
    * @param titre  Le titre de l'element que l'on va ajouter
    * @param valeur L'element (Component) a ajouter
@@ -397,7 +398,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    }
 
-   protected static void addCouple(JPanel p, Object titre, Component valeur,
+   public static void addCouple(JPanel p, Object titre, Component valeur,
          GridBagLayout g, GridBagConstraints c) {
      addCouple(null, p, titre, null, valeur, g, c, GridBagConstraints.WEST);
  }

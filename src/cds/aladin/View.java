@@ -3076,25 +3076,27 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     * Si la vue courante dispose d'une astrométrie, les coordonnées ra,dec
     * sont calculées en fonction, sinon elles sont laissées à 0
     */
-   private Coord coordXY(String s) throws Exception {
+   private Coord coordXY(String s) throws Exception { return coordXY1(s,true); }
+   private Coord coordXYNat(String s) throws Exception {return coordXY1(s,false); }
+   private Coord coordXY1(String s,boolean modeFits) throws Exception {
       StringTokenizer st = new StringTokenizer(s," :,");
       Coord c = new Coord();
-      c.x = Double.parseDouble( st.nextToken() )-0.5;
-      c.y = Double.parseDouble( st.nextToken() )-0.5;
+      c.x = Double.parseDouble( st.nextToken() )- (modeFits?0.5:0);
+      c.y = Double.parseDouble( st.nextToken() )- (modeFits?0.5:0);
       ViewSimple v = getCurrentView();
-      if( v.pref.isImage() ) c.y = ((PlanImage)v.pref).naxis2 - c.y;
+      if( v.pref.isImage() && modeFits ) c.y = ((PlanImage)v.pref).naxis2 - c.y;
       if( Projection.isOk(v.pref.projd) ) {
          v.pref.projd.getCoord(c);
       }
 
-      if( Aladin.levelTrace>=3 ) {
-         System.out.println("["+s+"] calibration : "+v.pref.projd.getName());
-         System.out.println("   XY=>RADEC : c.x="+c.x+" c.y="+c.y+" => "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+")");
-         double x1=c.x,y1=c.y;
-         v.pref.projd.getXY(c);
-         System.out.println("   RADEC=>XY : "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+") => c.x="+c.x+" c.y="+c.y);
-         System.out.println("   décalage en X="+(c.x-x1)+" en Y="+(c.y-y1));
-      }
+//      if( Aladin.levelTrace>=3 ) {
+//         System.out.println("["+s+"] calibration : "+v.pref.projd.getName());
+//         System.out.println("   XY=>RADEC : c.x="+c.x+" c.y="+c.y+" => "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+")");
+//         double x1=c.x,y1=c.y;
+//         v.pref.projd.getXY(c);
+//         System.out.println("   RADEC=>XY : "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+") => c.x="+c.x+" c.y="+c.y);
+//         System.out.println("   décalage en X="+(c.x-x1)+" en Y="+(c.y-y1));
+//      }
       return c;
    }
 
@@ -3103,6 +3105,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       try {
          Coord c=null;
          switch( aladin.localisation.getFrame() ) {
+            case Localisation.XYNAT:
+               c = coordXYNat(saisie);
+               break;
             case Localisation.XY:
                c = coordXY(saisie);
                break;

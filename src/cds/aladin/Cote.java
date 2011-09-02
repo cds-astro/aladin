@@ -157,7 +157,7 @@ public final class Cote extends Ligne {
       if( v==null ) return;
       
       int frame = plan.aladin.localisation.getFrame();
-      if( frame!=Localisation.XY && frame!=Localisation.XYLINEAR ) {
+      if( frame!=Localisation.XY && frame!=Localisation.XYNAT && frame!=Localisation.XYLINEAR ) {
          try {
             if( Projection.isOk( v.getProj() ) ) {
                Coord  c1 = new Coord(p1.raj,p1.dej);
@@ -218,7 +218,7 @@ public final class Cote extends Ligne {
       int a = (p1.x+p2.x)/2;
       int b = (p1.y+p2.y)/2;
       int frame = plan.aladin.localisation.getFrame();
-      String s = raj==Double.NaN || (frame==Localisation.XY || frame==Localisation.XYLINEAR )? Util.myRound(dist+"", 2) : Coord.getUnit(dist);
+      String s = raj==Double.NaN || (frame==Localisation.XY || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )? Util.myRound(dist+"", 2) : Coord.getUnit(dist);
       int x = a+3;
       int y = b+((p2.y-p1.y)*(p2.x-p1.x)>0?-2:12);
       int w = g.getFontMetrics().stringWidth(s);

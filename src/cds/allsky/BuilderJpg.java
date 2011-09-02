@@ -9,7 +9,7 @@ import cds.aladin.PlanImage;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
-public class JPGBuild implements Runnable {
+public class BuilderJpg implements Runnable {
 
 	double[] cutminmax;
 	int maxOrder;
@@ -21,12 +21,12 @@ public class JPGBuild implements Runnable {
 	int width;
 	double blank,bscale,bzero;
 
-	public JPGBuild(double[] cut, final ColorModel cm, AllskyPanel allsky) {
+	public BuilderJpg(double[] cut, final ColorModel cm, MainPanel allsky) {
 	   dirpath=allsky.getOutputPath();
 	   maxOrder = allsky.getOrder();
 	   bitpix = allsky.getBitpix();
 	   blank = allsky.getBlank();
-	   width=DBBuilder.SIDE;
+	   width=BuilderController.SIDE;
 	   double bb[] = allsky.getBScaleBZero();
 	   bscale=bb[0];
 	   bzero=bb[1];
@@ -122,7 +122,7 @@ public class JPGBuild implements Runnable {
 	         createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
-	      (new SkyGenerator()).createAllSkyJpgColor(dirpath,3,64);
+	      (new BuilderAllsky()).createAllSkyJpgColor(dirpath,3,64);
 	      progress=100;
 	   } catch( Exception e ) {
 	      e.printStackTrace();

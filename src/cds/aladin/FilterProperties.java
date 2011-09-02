@@ -401,7 +401,7 @@ public final class FilterProperties extends Properties implements MouseListener,
          return p;
      }
 
-     protected static void addCouple(JPanel p, Object titre, Component valeur,
+     public static void addCouple(JPanel p, Object titre, Component valeur,
             GridBagLayout g, GridBagConstraints c) {
 
         Component t;

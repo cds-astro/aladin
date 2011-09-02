@@ -20,9 +20,9 @@
 
 package cds.allsky.appli;
 
-import cds.allsky.InitLocalAccess;
+import cds.allsky.BuilderIndex;
 
-public class InitLocalAccessSpecif extends InitLocalAccess {
+public class InitLocalAccessSpecif extends BuilderIndex {
 
 
 	/**
@@ -40,7 +40,7 @@ public class InitLocalAccessSpecif extends InitLocalAccess {
 		String regex = args[1];
 		int order =   Integer.parseInt(args[2]);
 
-		InitLocalAccess init = new InitLocalAccess();
+		BuilderIndex init = new BuilderIndex();
 		init.build(pathSource, pathDest, order, regex);
 		System.out.println("done => "+(System.currentTimeMillis()-t)+"ms");
 	}

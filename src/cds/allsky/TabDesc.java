@@ -48,7 +48,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Chaine;
 import cds.tools.Util;
 
-public class DescPanel extends JPanel implements ActionListener {
+public class TabDesc extends JPanel implements ActionListener {
 
    private String REP_SOURCE;
    private String REP_DEST;
@@ -83,14 +83,14 @@ public class DescPanel extends JPanel implements ActionListener {
    protected JTextField dir_D = new JTextField(30);
    private JTextField textFieldAllsky = new JTextField(30);
    private String defaultDirectory;
-   private AllskyPanel parentPanel;
+   private MainPanel mainPanel;
    private String BROWSE;
    private JButton b_next;
    private String help, titlehelp;
 
-   public DescPanel(String defaultDir, AllskyPanel parent) {
+   public TabDesc(String defaultDir, MainPanel mainPanel) {
       super(new BorderLayout());
-      this.parentPanel = parent;
+      this.mainPanel = mainPanel;
       createChaine();
       init();
       
@@ -199,7 +199,7 @@ public class DescPanel extends JPanel implements ActionListener {
          final JCheckBox cb = new JCheckBox("DSS Schmidt plates", false);
          cb.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               DBBuilder.DSS = cb.isSelected();
+               BuilderController.DSS = cb.isSelected();
             }
          });
          c.gridy++;
@@ -239,7 +239,7 @@ public class DescPanel extends JPanel implements ActionListener {
       BLANKALLSKY  = getString("BLANKALLSKY");
    }
    
-   private String getString(String k) { return parentPanel.aladin.getChaine().getString(k); }
+   private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
    public void init() {
       infoLabel = new JLabel(Util.fold(INFOALLSKY,100,true));
@@ -307,7 +307,7 @@ public class DescPanel extends JPanel implements ActionListener {
       b_next = new JButton(NEXT);
       b_next.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            parentPanel.showBuild();
+            mainPanel.showBuildTab();
          }
       });
 //      b_help = Util.getHelpButton(this, help);
@@ -323,8 +323,8 @@ public class DescPanel extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
-      boolean allskyExist = parentPanel.isExistingAllskyDir();
-      boolean isRunning = parentPanel.isRunning();
+      boolean allskyExist = mainPanel.isExistingAllskyDir();
+      boolean isRunning = mainPanel.isRunning();
       resetHpx.setEnabled(allskyExist && !isRunning);
       resetIndex.setEnabled(allskyExist && !isRunning);
 
@@ -333,12 +333,12 @@ public class DescPanel extends JPanel implements ActionListener {
       overwriteRadio.setEnabled(flag);
       coaddRadio.setEnabled(flag);
       
-      if( resetHpx.isSelected() && resetHpx.isEnabled() && resetIndex.isSelected() && resetIndex.isEnabled()) parentPanel.setRestart();
-      else if( resetHpx.isSelected() && resetHpx.isEnabled() || resetIndex.isSelected() && resetIndex.isEnabled() ) parentPanel.setResume();
-      else parentPanel.setStart();
+      if( resetHpx.isSelected() && resetHpx.isEnabled() && resetIndex.isSelected() && resetIndex.isEnabled()) mainPanel.setRestart();
+      else if( resetHpx.isSelected() && resetHpx.isEnabled() || resetIndex.isSelected() && resetIndex.isEnabled() ) mainPanel.setResume();
+      else mainPanel.setStart();
       
-      boolean isExistingDir = parentPanel.isExistingDir();
-      parentPanel.setStartEnabled(isExistingDir);
+      boolean isExistingDir = mainPanel.isExistingDir();
+      mainPanel.setStartEnabled(isExistingDir);
       
       boolean ready = isExistingDir && dir_D.getText().trim().length()>0;
       b_next.setEnabled(ready);
@@ -355,7 +355,7 @@ public class DescPanel extends JPanel implements ActionListener {
    public void clearForms() {
       dir_S.setText("");
       dir_D.setText("");
-      if( parentPanel!=null ) parentPanel.actionPerformed(new ActionEvent("", -1, "dirBrowser Action"));
+      if( mainPanel!=null ) mainPanel.actionPerformed(new ActionEvent("", -1, "dirBrowser Action"));
       textFieldAllsky.setText("");
       resetHpx.setSelected(false);
       resetIndex.setSelected(true);
@@ -368,7 +368,7 @@ public class DescPanel extends JPanel implements ActionListener {
       String s = Util.dirBrowser(this, currentDirectoryPath);
       if( s==null ) return;
       dir.setText(s);
-      parentPanel.actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
+      mainPanel.actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
    }
 
    public String getInputPath() {
@@ -468,24 +468,23 @@ public class DescPanel extends JPanel implements ActionListener {
       if (str.equals("")) {
          // réinitalise le répertoire SURVEY et l'utilise
          initDirD();
-         parentPanel.newAllskyDir();
+         mainPanel.newAllskyDir();
          return;
       }
       // cherche le dernier mot
-      AllskyConst.SURVEY = str.substring(str.lastIndexOf(Util.FS) + 1);
+      Constante.SURVEY = str.substring(str.lastIndexOf(Util.FS) + 1);
 
-      parentPanel.newAllskyDir();
+      mainPanel.newAllskyDir();
    }
 
    private void initDirD() {
-      AllskyConst.SURVEY = getLabel() + AllskyConst.ALLSKY;
+      Constante.SURVEY = getLabel() + Constante.ALLSKY;
       String path = dir_S.getText();
       // enlève les multiples FS à la fin
       while (path.endsWith(Util.FS))
          path = path.substring(0, path.lastIndexOf(Util.FS));
 
-      dir_D.setText(path + AllskyConst.ALLSKY + Util.FS);
-      dir_D.repaint();
+      dir_D.setText(path + Constante.ALLSKY + Util.FS);
    }
 
 

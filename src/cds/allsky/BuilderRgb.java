@@ -13,11 +13,11 @@ import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-public class RGBBuild implements Runnable {
+public class BuilderRgb implements Runnable {
 	private int progress;
 	private PlanBG[] p;
 	private final Aladin aladin;
-	private SkyGenerator sg;
+	private BuilderAllsky builderAllsky;
 	private String path;
     private int width=-1;
     private double [] blank;
@@ -28,9 +28,9 @@ public class RGBBuild implements Runnable {
     private int maxOrder = 100;
     private int missing=-1;
 
-    public RGBBuild(Aladin aladin, Object[] plans, String path) {
+    public BuilderRgb(Aladin aladin, Object[] plans, String path) {
        this.aladin = aladin;
-       sg = new SkyGenerator();
+       builderAllsky = new BuilderAllsky();
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -44,7 +44,7 @@ public class RGBBuild implements Runnable {
        // recherche la meilleure résolution commune
        for( int c=0; c<3; c++) {
           if( p[c]==null ) { missing=c; continue; }
-          int order = p[c].getMaxHealpixOrder()-DBBuilder.ORDER;
+          int order = p[c].getMaxHealpixOrder()-BuilderController.ORDER;
           if( maxOrder > order)  maxOrder = order;
        }
     }
@@ -306,7 +306,7 @@ public class RGBBuild implements Runnable {
 	void preview(String path, int last) {
 	   try {
           try {
-        	  sg.createAllSkyJpgColor(path,3,64);
+        	  builderAllsky.createAllSkyJpgColor(path,3,64);
           } catch (Exception e) {
         	  Aladin.trace(3,e.getMessage());
           }
