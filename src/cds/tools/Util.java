@@ -1355,12 +1355,13 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     }
 
     /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
-    static public String getTemps(long ms) {
+    static public String getTemps(long ms) { return getTemps(ms,false);  }
+    static public String getTemps(long ms,boolean round) {
        StringBuffer s = new StringBuffer();
        if( ms>86400000 ) { long j = ms/86400000; ms -= j*86400000; s.append(j+"j"); }
        if( ms>3600000 ) { long h = ms/3600000; ms -= h*3600000; if( s.length()>0 ) s.append(' '); s.append(h+"h"); }
        if( ms>60000 ) { long m = ms/60000; ms -= m*60000; if( s.length()>0 ) s.append(' '); s.append(m+"m"); }
-       if( s.length()>0 ) s.append(' '); s.append(ms/1000.+"s");
+       if( s.length()>0 ) s.append(' '); s.append( (round ? ""+ms/1000 : ""+ms/1000.)+"s");
        return s.toString();
     }
 

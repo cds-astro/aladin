@@ -66,113 +66,10 @@ public class BuilderHpx {
 	   this.localServer = localServer;
 	}
 
-	//	HpxBuilder(int bitpix, String path, boolean keepBB) {
-	//		this.bitpix = bitpix;
-	//		this.localServer = path;
-	//		this.keepBB = keepBB;
-//	}
-//	HpxBuilder(double bscale, double bzero, double blank, int bitpix, String path, boolean keepBB) {
-//		this(bitpix,path,keepBB);
-//		this.bscale = bscale;
-//		this.bzero = bzero;
-//		this.blank = blank;
-//	}
-
-/*
-	Fits buildHealpix(int nside_file, long l, int nside) {
-		try {
-			switch (bitpix) {
-			case 8:
-			case 16:
-			case 32:
-				return buildIntHealpix(nside_file, l, nside);
-			case -32:
-			case -64:
-				return buildDoubleHealpix(nside_file, l, nside);
-			case 0:
-				return buildColorHealpix(nside_file, l, nside);
-			}
-		} catch (Exception e) {
-		    StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-		    Aladin.trace(2, sw.toString());
-			return null;
-		}
-		return null;
-	}
-*/
 	private int recouvrement = 0;
 	private boolean filter = false;
 
 
-//	/**
-//	 * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
-//	 * donné
-//	 * 
-//	 * @param nside_file
-//	 * @param npix_file
-//	 * @param nside
-//	 * @param pixels
-//	 * @return
-//	 * @throws Exception
-//	 * @deprecated
-//	 */
-//	Fits buildDoubleHealpix(int nside_file, long npix_file, int nside)
-//			throws Exception {
-//		boolean empty = true;
-//		long min;
-//		long index;
-//		double point[] = new double[2];
-//		double radec[] = new double[2];
-//		Coord coo;
-//		Fits file;
-//
-//		// cherche les numéros de pixels Healpix dans ce losange
-//		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-//
-//		// initialisation de la liste des fichiers originaux pour ce losange
-//		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
-//		
-//		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-//		PixTools.PolarToRaDec(point, radec);
-//
-//		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
-//			return null;
-//
-//		Fits out = new Fits(SIDE, SIDE, bitpix);
-//		out.setBlank(getBlank());
-//		if (bscale != Double.NaN && bzero != Double.NaN)  { 
-//			out.setBscale(getBscale());
-//			out.setBzero(getBzero());
-//		}
-//		// cherche la valeur à affecter dans chacun des pixels healpix
-//		for (int y = 0; y < out.height; y++) {
-//			for (int x = 0; x < out.width; x++) {
-//				index = min + xy2hpx(y * out.width + x);
-//				// recherche les coordonnées du pixels HPX
-//				point = CDSHealpix.pix2ang_nest(nside, index);
-//				PixTools.PolarToRaDec(point, radec);
-//
-//				coo = new Coord(radec[0], radec[1]);
-//
-//				// recherche dans mes fichiers downloadé
-//				if ((file = searchDownloaded(downFiles,coo, recouvrement)) != null) {
-//					out.setPixelDouble(x, y, file.getPixelDouble((int) coo.x,
-//							file.height - 1 - (int) coo.y));
-//					empty = false;
-//				}
-//				// si rien trouvé
-//				else {
-//					out.setPixelDouble(x, y, Double.NaN);
-//					// out.setPixelDouble(x, y, -1);
-//				}
-//			}
-//		}
-//		// System.out.println("search + setPixel=> "+(System.currentTimeMillis()-t)+"ms");
-//		return (!empty) ? out : null;
-//	}
-	
     /**
      * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
      * donné
@@ -540,148 +437,10 @@ public class BuilderHpx {
 	}
 
 	/**
-	 * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
-	 * donné
-	 * 
-	 * @param nside_file
-	 * @param npix_file
-	 * @param nside
-	 * @param pixels
-	 * @return
-	 * @throws Exception
-	 * @deprecated
-	 */
-//	Fits buildColorHealpix(int nside_file, long npix_file, int nside)
-//			throws Exception {
-//		boolean empty = true;
-//		long min;
-//		long index;
-//		double point[] = new double[2];
-//		double radec[] = new double[2];
-//		Coord coo;
-//		Fits file;
-//
-//		// cherche les numéros de pixels Healpix dans ce losange
-//		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-//
-//		// initialisation de la liste des fichiers originaux pour ce losange
-//		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
-//		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-//		PixTools.PolarToRaDec(point, radec);
-//
-//		double blank = getBlank();
-//		if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside),blank))
-//			return null;
-//
-//		Fits out = new Fits(SIDE, SIDE, bitpix);
-//		out.setBlank(blank);
-//		if (bscale != Double.NaN && bzero != Double.NaN)  { 
-//			out.setBscale(getBscale());
-//			out.setBzero(getBzero());
-//		}
-//		// cherche la valeur à affecter dans chacun des pixels healpix
-//		for (int y = 0; y < out.height; y++) {
-//			for (int x = 0; x < out.width; x++) {
-//				index = min + xy2hpx(y * out.width + x);
-//				// recherche les coordonnées du pixels HPX
-//				point = CDSHealpix.pix2ang_nest(nside, index);
-//				PixTools.PolarToRaDec(point, radec);
-//				coo = new Coord(radec[0], radec[1]);
-//
-//				// recherche dans mes fichiers downloadé
-//				if ((file = searchDownloaded(downFiles,coo, recouvrement)) != null) {
-//					out.setPixelRGB(x, y, file.getPixelRGB((int) coo.x,
-//							file.height - 1 - (int) coo.y));
-//					empty = false;
-//				}
-//				// si rien trouvé
-//				else {
-//					out.setPixelRGB(x, y, -1);
-//				}
-//			}
-//		}
-//		// System.out.println("search + setPixel=> "+(System.currentTimeMillis()-t)+"ms");
-//		return (!empty) ? out : null;
-//	}
-
-	/**
-	 * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
-	 * donné
-	 * 
-	 * @param nside_file
-	 * @param npix_file
-	 * @param nside
-	 * @param pixels
-	 * @return true si des pixels ont été écrits
-	 * @throws Exception
-	 * @deprecated
-	 */
-//	Fits buildIntHealpix(int nside_file, long npix_file, int nside)
-//			throws Exception {
-//		boolean empty = true;
-//		long min;
-//		long index;
-//		double point[] = new double[2];
-//		double radec[] = new double[2];
-//		Coord coo;
-//		Fits file = null;
-//
-//		// initialisation de la liste des fichiers originaux pour ce losange
-//		ArrayList<DownFile> downFiles = new ArrayList<DownFile>();
-////		downFiles.clear();
-//
-//		if (!askLocalFinder(downFiles, localServer, npix_file, Util.order(nside)))
-//			return null;
-//		
-//		// cherche les numéros de pixels Healpix dans ce losange
-//		min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-//		
-//		point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-//		PixTools.PolarToRaDec(point, radec);
-//		Fits out = new Fits(SIDE, SIDE, bitpix);
-//		out.setBlank(getBlank());
-//		if (bscale != Double.NaN && bzero != Double.NaN) { 
-//			out.setBscale(getBscale());
-//			out.setBzero(getBzero());
-//		}
-//		// cherche la valeur à affecter dans chacun des pixels healpix
-//		for (int y = 0; y < out.height; y++) {
-//			for (int x = 0; x < out.width; x++) {
-//				index = min + xy2hpx(y * out.width + x);
-//				// recherche les coordonnées du pixels HPX
-//				point = CDSHealpix.pix2ang_nest(nside, index);
-//				PixTools.PolarToRaDec(point, radec);
-//				coo = new Coord(radec[0], radec[1]);
-//
-//				// recherche simple depuis l'ancien gagnant
-//				file = searchDownloaded(downFiles,coo, recouvrement);
-//				if (file != null) {
-//					out.setPixelInt(x, y, file.getPixelInt((int) coo.x,
-//							file.height - 1 - (int) coo.y));
-//					empty = false;
-//				}
-//				// si rien trouvé
-//				else {
-//				   if( out.hasBlank() ) out.setPixelInt(x,y,(int)out.getBlank());
-//				   else {
-//				      out.setPixelInt(x, y, Integer.MIN_VALUE);
-//				      out.setBlank(Integer.MIN_VALUE);
-//				   }
-////                   out.setPixelInt(x, y, -1);
-//				}
-//
-//			}
-//		}
-//		return (!empty) ? out : null;
-//	}
-
-	/**
 	 * This method does the actual GET
 	 * 
-	 * @param theUrl
-	 *            The URL to retrieve
-	 * @param filename
-	 *            the local file to save to
+	 * @param theUrl The URL to retrieve
+	 * @param filename the local file to save to
 	 * @exception IOException
 	 */
 	public void get(String theUrl, String filename) throws IOException {
@@ -710,10 +469,8 @@ public class BuilderHpx {
 	/**
 	 * Writes a String to a local file
 	 * 
-	 * @param outfile
-	 *            the file to write to
-	 * @param content
-	 *            the contents of the file
+	 * @param outfile the file to write to
+	 * @param content the contents of the file
 	 * @exception IOException
 	 */
 	private static void createAFile(String outfile, String content)

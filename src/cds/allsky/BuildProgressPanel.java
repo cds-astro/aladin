@@ -79,7 +79,6 @@ public class BuildProgressPanel extends JPanel {
 
       String s= (nbRunningThread==-1?"":nbRunningThread+" / "+nbThread+" thread"+(nbRunningThread>1?"s":""))
       + " using "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
-
       memStat.setText(s);
    }
 
@@ -88,9 +87,8 @@ public class BuildProgressPanel extends JPanel {
       if( nbTile==-1 ) s="";
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
-          + " using "+Util.getUnitDisk(sizeTile*nbTile)
+          + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - processing time: min:"+Util.getTemps(minTime)+" / max:"+Util.getTemps(maxTime)+" / avg:"+Util.getTemps(avgTime);
-
       lowTileStat.setText(s);
    }
    
@@ -99,13 +97,19 @@ public class BuildProgressPanel extends JPanel {
       if( nbTile==-1 ) s="";
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
-          + " using "+Util.getUnitDisk(sizeTile*nbTile)
+          + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - avg processing time: "+Util.getTemps(avgTime);
-
       nodeTileStat.setText(s);
    }
    
-   private JLabel srcFileStat,memStat,lowTileStat,nodeTileStat;
+   protected void setTimeStat(long time) {
+      String s;
+      if( time==-1 ) s="";
+      else s= Util.getTemps(time,true);
+      timeStat.setText(s);
+   }
+   
+   private JLabel srcFileStat,memStat,lowTileStat,nodeTileStat,timeStat;
 
    private JPanel createStatPanel() {
       GridBagLayout g = new GridBagLayout();
@@ -125,6 +129,9 @@ public class BuildProgressPanel extends JPanel {
 
       nodeTileStat = new JLabel("--");
       Properties.addCouple(p, ".Tree tiles: ", nodeTileStat, g, c);           
+
+      timeStat = new JLabel("--");
+      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
 
       return p;
    }

@@ -110,7 +110,7 @@ final public class BuilderAllsky {
       cds.tools.Util.createPath(filename);
       out.writeFITS(filename+".fits");
       
-      Aladin.trace(4,"SkyGenerator.createAllSky()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+      Aladin.trace(4,"BuilderAllsky.createAllSky()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
    }
    

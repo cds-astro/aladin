@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.ColorModel;
@@ -30,6 +31,7 @@ import cds.aladin.Chaine;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
+import cds.aladin.Properties;
 import cds.aladin.Tool;
 import cds.aladin.ToolBox;
 import cds.tools.Util;
@@ -174,9 +176,10 @@ public class TabJpg extends JPanel implements ActionListener {
       c.gridwidth = GridBagConstraints.REMAINDER;
       c.gridy++;c.gridx=0;
       JPanel pProgress = new JPanel(new BorderLayout());
-      pProgress.setBorder(new EmptyBorder(0, 55, 20, 55));
-      pProgress.add(progressJpg);
-
+      pProgress.setBorder(new EmptyBorder(0, 55, 15, 55));
+      pProgress.add(progressJpg,BorderLayout.CENTER);
+      pProgress.add(createStatPanel(),BorderLayout.SOUTH);
+      
       // boutons
       JPanel fin = new JPanel(new BorderLayout());
       JPanel pBtn = new JPanel();
@@ -200,6 +203,34 @@ public class TabJpg extends JPanel implements ActionListener {
    private void createChaine(Chaine chaine) {
       NEXT = chaine.getString("NEXT");
       PREVIOUS = chaine.getString("PREVIOUS");
+   }
+   
+   private JLabel tileStat,timeStat;
+   
+   private JPanel createStatPanel() {
+      GridBagLayout g = new GridBagLayout();
+      GridBagConstraints c = new GridBagConstraints();
+      c.fill = GridBagConstraints.BOTH;
+      c.insets = new Insets(2,10,2,2);
+      JPanel p = new JPanel(g);
+
+      tileStat = new JLabel("--");
+      Properties.addCouple(p, ".Jpeg tiles: ", tileStat, g, c);           
+
+      timeStat = new JLabel("--");
+      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
+
+      return p;
+   }
+   
+   protected void setStat(int nbTile,long sizeTile,long time) {
+      String s;
+      if( nbTile==-1 ) s="";
+      else s= nbTile+" tile"+(nbTile>1?"s":"") + " for "+Util.getUnitDisk(sizeTile);
+      tileStat.setText(s);
+      if( time==-1 ) s="";
+      else s= Util.getTemps(time,true);
+      timeStat.setText(s);
    }
    
    protected void resumeWidgetsStatus() {

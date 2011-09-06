@@ -69,6 +69,8 @@ public class BuilderController  {
     private long statMinTime,statMaxTime,statTotalTime,statAvgTime;
     private int statNodeTile;                 // Nombre de tuiles "intermédiaires" déjà calculés
     private long statNodeTotalTime,statNodeAvgTime;
+    private long startTime;                 // Date de lancement du calcul
+    private long totalTime;                 // Temps depuis le début du calcul
     private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
 
 	
@@ -76,13 +78,15 @@ public class BuilderController  {
     public BuilderController(MainPanel mainPanel) { this.mainPanel=mainPanel; }
     
     // Suppression des statistiques
-    private void resetStat() { statNbThread=-1; }
+    private void resetStat() { statNbThread=-1; totalTime=-1; }
     
     // Initialisation des statistiques
     private void initStat(int nbThread) {
        statNbThread=nbThread; statNbThreadRunning=0; 
        statNbTile=statNodeTile=0;
        statTotalTime=statNodeTotalTime=0L;
+       startTime = System.currentTimeMillis();
+       totalTime=0L;
     }
     
     // Mise à jour des stats
@@ -106,6 +110,7 @@ public class BuilderController  {
        }
        long t = System.currentTimeMillis();
        if( t-statLastShowTime < 1000 ) return;
+       totalTime=System.currentTimeMillis()-startTime;
        statLastShowTime=t;
        showStat();
     }
@@ -114,6 +119,7 @@ public class BuilderController  {
     private void showStat() {
        if( mainPanel==null ) return;
        mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread);
+       mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
        mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
              statMinTime,statMaxTime,statAvgTime);
        mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
@@ -171,7 +177,6 @@ public class BuilderController  {
 	      cds.tools.Util.pause(1000);
 	   }
 
-       initStat(-1);
        showStat();
 	   Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
 	}

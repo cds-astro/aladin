@@ -9,79 +9,78 @@ import cds.aladin.PlanImage;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
+/** Construction de la hiérarchie des tuiles JPEG à partir des tuiles FITS de plus bas
+ * niveau. La méthode employée est la médiane pour passer des 4 pixels de niveau
+ * inférieur au pixel de niveau supérieur (fait disparaitre peu à peu les étoiles
+ * faibles). Le passage en 8 bits se fait, soit par une table de couleur (cm) fournie,
+ * soit par une intervalle (cut[]).
+ * @author Anaïs Oberto & Pierre Fernique
+ */
 public class BuilderJpg implements Runnable {
 
-	double[] cutminmax;
-	int maxOrder;
-	String dirpath;
-	int progress=0;
-	float progressFactor;
-	ColorModel cm;
-	int bitpix;
-	int width;
-	double blank,bscale,bzero;
+	private double[] cutminmax;
+	private int maxOrder;
+	private String dirpath;
+	private int progress=0;
+	private float progressFactor;
+	private ColorModel cm;
+	private int bitpix;
+	private int width;
+	private double blank,bscale,bzero;
+	private MainPanel mainPanel;
+	
+	private int statNbFile;
+	private long statSize;
+	private long startTime,totalTime;
+	private long statLastShowTime;
 
-	public BuilderJpg(double[] cut, final ColorModel cm, MainPanel allsky) {
-	   dirpath=allsky.getOutputPath();
-	   maxOrder = allsky.getOrder();
-	   bitpix = allsky.getBitpix();
-	   blank = allsky.getBlank();
+	/**
+	 * Création du générateur JPEG.
+	 * @param cut borne de l'intervalle pour le passage en 8 bits (uniquement si cm==null)
+	 * @param cm table des couleurs pour le passage en 8 bits (prioritaire sur cut), 
+	 * @param mainPanel
+	 */
+	public BuilderJpg(double[] cut, final ColorModel cm, MainPanel mainPanel) {
+	   this.mainPanel = mainPanel;
+	   dirpath=mainPanel.getOutputPath();
+	   maxOrder = getMaxOrder();
+	   bitpix = mainPanel.getBitpix();
+	   blank = mainPanel.getBlank();
 	   width=BuilderController.SIDE;
-	   double bb[] = allsky.getBScaleBZero();
+	   double bb[] = mainPanel.getBScaleBZero();
 	   bscale=bb[0];
 	   bzero=bb[1];
 	   cutminmax=cut;
 	   this.cm = cm;
 	}
 	
-	/**
-	 * Lance l'écriture JPG de tous les fichiers FITS trouvés dans la hiérarchie
-	 * @param cut
-	 * @param dir
-	 */
-//	private void toJPG(double[] cut, final ColorModel cm, /*final int tFct,*/ File dir) {
-//		File[] children = dir.listFiles(new FilenameFilter() {
-//			
-//			public boolean accept(File dir, String name) {
-//				return name.startsWith("Dir") || name.startsWith("Npix");
-//			}
-//		});
-//		for (int i=0; i<children.length; i++) {
-//			if (children[i].isDirectory()) {
-//				toJPG(cut,cm,/*tFct,*/children[i]);
-//				progress+=(int)(100*((i+1)/children.length)*progressFactor);
-//			}
-//			else {
-//				String filename = children[i].getPath();
-//				filename = filename.substring(0, filename.lastIndexOf("."));
-//				toJPG(cut, cm, /*tFct,*/ filename);
-//				if (progressFactor==1)
-//					progress+=(int)(100.*((i+1.)/children.length));
-//			}
-//		}
-//	}
-
-	/**
-	 * Ouvre une image fits et la convertit en JPG au meme endroit
-	 * @param cut
-	 * @param filename
-	 */
-//	private void toJPG(final double[] cut, final ColorModel cm, final String filename) {
-//		Fits file = new Fits();
-//		try {
-//			file.loadFITS(filename+".fits");
-//			
-//			// Cut et Ecriture du JPEG 8 bits
-//			if( cm==null ) file.toPix8(cut[0],cut[1]);
-//			else file.toPix8(cut[0],cut[1],cm);
-//			
-//			file.writeJPEG(filename+".jpg");
-//			
-//		} catch (Exception e) {
-//			Aladin.trace(3,e.getMessage());
-//		}
-//	}
+	private void initStat() { statNbFile=0; statSize=0; statLastShowTime=-1; startTime = System.currentTimeMillis(); }
 	
+    // Mise à jour des stats
+    private void updateStat(File f) {
+       statNbFile++;
+       statSize += f.length();
+       long t = System.currentTimeMillis();
+       if( t-statLastShowTime < 1000 ) return;
+       totalTime = System.currentTimeMillis()-startTime;
+       statLastShowTime=t;
+       showStat();
+    }
+    
+    // Demande d'affichage des stats (dans le TabJpeg)
+    private void showStat() {
+       if( mainPanel==null ) return;
+       mainPanel.tabJpg.setStat(statNbFile, statSize, totalTime);
+    }
+
+    // Détermine le niveau terminal en recherchant les répertoires Norder
+    private int getMaxOrder() {
+       for( int order=3; true; order++ ) {
+          File f = new File(dirpath+Util.FS+"Norder"+order);
+          if( !f.isDirectory() ) return order-1;
+       }
+    }
+    
 	public int getProgress() {
 		return progress;
 	}
@@ -90,32 +89,11 @@ public class BuilderJpg implements Runnable {
 		(new Thread(this)).start();
 	}
 	
-//	public void run() {
-//		File dir = new File(dirpath);
-//		if (dir.isDirectory()) {
-//			File[] children = dir.listFiles(new FilenameFilter() {
-//				
-//				public boolean accept(File dir, String name) {
-//					return name.startsWith("Norder");
-//				}
-//			});
-//			progressFactor = 1.F/(float)children.length; 
-//			// pour tous répertoires Norder du répertoire principal
-//			double fct = 100./children.length;
-//			for (int i=0; i<children.length; i++) {
-//				toJPG(cutminmax,cm/*transfertFct*/,children[i]);
-//				progress = (int) ((i+1)*fct);
-//			}
-//			// convertit le Allsky
-//			toJPG(cutminmax,cm/*transfertFct*/,dirpath+Util.FS+"Norder3"+Util.FS+"Allsky");
-//		}
-//	}
-	
-	
 	private boolean stopped = false;
 	
 	public void run() {
 	   try {
+	      initStat();
 	      progressFactor = 100f/768f;
 	      progress=0;
 	      for( int i=0; i<768; i++ ) {
@@ -129,8 +107,11 @@ public class BuilderJpg implements Runnable {
 	   }
 	}
 	
-    Fits createJpg(String path,int order, long npix ) throws Exception {
+	/** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
+	 * de plus bas niveau. La méthode employée est la médiane sur les 4 pixels de niveau inférieurs */
+    private Fits createJpg(String path,int order, long npix ) throws Exception {
         String file = Util.getFilePath(path,order,npix);
+        
         
         // si le process a été arrêté on essaie de ressortir au plus vite
         if( stopped ) return null;
@@ -139,10 +120,8 @@ public class BuilderJpg implements Runnable {
         if( !new File(file+".fits").exists() ) return null;
         
         Fits out = null;
-        if( order==maxOrder ) {
-           out = new Fits();
-           out.loadFITS(file+".fits");    
-        } else {
+        if( order==maxOrder ) out = createLeaveJpg(file);
+        else {
            Fits fils[] = new Fits[4];
            boolean found = false;
            for( int i =0; !stopped && i<4; i++ ) {
@@ -155,12 +134,26 @@ public class BuilderJpg implements Runnable {
            if( cm==null ) out.toPix8(cutminmax[0],cutminmax[1]);
            else out.toPix8(cutminmax[0],cutminmax[1],cm);
            out.writeJPEG(file+".jpg");
+           
+           File f = new File(file+".jpg");
+           updateStat(f);
         }
         return out;
     }
+    
+    /** Construction d'une tuile terminale. De fait, simple chargement
+     * du fichier FITS correspondant. */
+    private Fits createLeaveJpg(String file)  {
+       Fits out = null;
+       try {
+          out = new Fits();
+          out.loadFITS(file+".fits");
+      } catch( Exception e ) { out=null; }
+      return out;
+    }
 
-	
-    Fits createNodeJpg(Fits fils[]) throws Exception {
+	/** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
+    private Fits createNodeJpg(Fits fils[]) throws Exception {
        Fits out = new Fits(width,width,bitpix);
        out.setBlank(blank);
        out.setBscale(bscale);
@@ -199,7 +192,6 @@ public class BuilderJpg implements Runnable {
        for( int i=0; i<4; i++ ) {
           if( fils[i]!=null ) fils[i].free();
        }
-       
        return out;
     }
 }
