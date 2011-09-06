@@ -46,6 +46,7 @@ public class BuilderIndex {
    private MainPanel mainPanel;
    
 	private double progress = 0;
+	private int [] borderSize= {0,0,0,0};
 	private String initpath = null;
 	private String currentfile = null;
 	private String pausepath = null;
@@ -70,7 +71,10 @@ public class BuilderIndex {
     private void resetStat() { statNbFile=-1; }
     
     // Initialisation des statistiques
-    private void initStat() { statNbFile=0; statMemFile=0; statMaxSize=-1; }
+    private void initStat() {
+       statNbFile=0; statMemFile=0; statMaxSize=-1; 
+       borderSize = mainPanel.getBorderSize();
+    }
     
     // Mise à jour des stats
 	private void updateStat(File f,int width,int height,int nbyte) {
@@ -215,14 +219,14 @@ public class BuilderIndex {
 				try {
 				   fitsfile.loadHeaderFITS(currentfile);
 				   
-                   int width = fitsfile.width;
-                   int height = fitsfile.height;
+                   int width = fitsfile.width - borderSize[3];
+                   int height = fitsfile.height - borderSize[2];
                    
                    updateStat(file,width,height,Math.abs(fitsfile.bitpix)/8);;
                    
                    try {
-                      for( int x=0; x<width; x+=cellSize ) {
-                         for( int y=0; y<height; y+=cellSize ) {
+                      for( int x=borderSize[1]; x<width; x+=cellSize ) {
+                         for( int y=borderSize[0]; y<height; y+=cellSize ) {
                             fitsfile.widthCell = x+cellSize>width ? width-x : cellSize;
                             fitsfile.heightCell = y+cellSize>height ? height-y : cellSize;
                             fitsfile.xCell=x;

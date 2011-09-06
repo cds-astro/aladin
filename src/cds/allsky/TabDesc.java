@@ -64,16 +64,18 @@ public class TabDesc extends JPanel implements ActionListener {
    private String INFOALLSKY;
    private String PARAMALLSKY;
    private String KEEPALLSKY,COADDALLSKY,OVERWRITEALLSKY;
-   private String SPECIFALLSKY,BLANKALLSKY ;
+   private String SPECIFALLSKY,BLANKALLSKY,BORDERALLSKY ;
 
    
    private JLabel paramLabel;
    private JRadioButton keepRadio,coaddRadio,overwriteRadio;
    private JCheckBox specifCheckbox;
    private JCheckBox blankCheckbox;
+   private JCheckBox borderCheckbox;
    private ButtonGroup tilesGroup;
    private JTextField specifTextField;
    protected JTextField blankTextField;
+   protected JTextField borderTextField;
 
    private JCheckBox resetHpx = new JCheckBox();
    private JCheckBox resetIndex = new JCheckBox();
@@ -195,6 +197,17 @@ public class TabDesc extends JPanel implements ActionListener {
       pBlank.add(blankTextField);
       pCenter.add(pBlank,c); 
 
+      c.gridy++;
+      JPanel pBorder = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      borderTextField.addKeyListener(new KeyAdapter() {
+         public void keyReleased(KeyEvent e) {
+            borderCheckbox.setSelected( borderTextField.getText().trim().length()>0 );
+         }
+      });
+      pBorder.add(borderCheckbox);
+      pBorder.add(borderTextField);
+      pCenter.add(pBorder,c); 
+
       if (Aladin.PROTO) {
          final JCheckBox cb = new JCheckBox("DSS Schmidt plates", false);
          cb.addActionListener(new ActionListener() {
@@ -237,6 +250,7 @@ public class TabDesc extends JPanel implements ActionListener {
       OVERWRITEALLSKY = getString("OVERWRITEALLSKY");
       SPECIFALLSKY  = getString("SPECIFALLSKY");
       BLANKALLSKY  = getString("BLANKALLSKY");
+      BORDERALLSKY  = getString("BORDERALLSKY");
    }
    
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
@@ -288,6 +302,8 @@ public class TabDesc extends JPanel implements ActionListener {
       specifTextField = new JTextField(30);
       blankCheckbox = new JCheckBox(BLANKALLSKY); blankCheckbox.setSelected(false);
       blankTextField = new JTextField(18);
+      borderCheckbox = new JCheckBox(BORDERALLSKY); borderCheckbox.setSelected(false);
+      borderTextField = new JTextField(10);
 
       resetHpx.setText(REP_DEST_RESET);
       resetHpx.addActionListener(new ActionListener() {
@@ -344,6 +360,8 @@ public class TabDesc extends JPanel implements ActionListener {
       b_next.setEnabled(ready);
       blankCheckbox.setEnabled(ready && !isRunning);
       blankTextField.setEnabled(ready && !isRunning);
+      borderCheckbox.setEnabled(ready && !isRunning);
+      borderTextField.setEnabled(ready && !isRunning);
       specifCheckbox.setEnabled(ready && !isRunning);
       specifTextField.setEnabled(ready && !isRunning);
       dir_S.setEnabled(!isRunning);
@@ -453,7 +471,11 @@ public class TabDesc extends JPanel implements ActionListener {
       if( !blankCheckbox.isSelected() ) return "";
       return blankTextField.getText();
    }
-
+   
+   public String getBorderSize() {
+      if( !borderCheckbox.isSelected() ) return "0";
+      return borderTextField.getText();
+   }
 
    /**
     * Applique les modifications si le nom du répertoire DESTINATION change

@@ -46,6 +46,7 @@ public class BuilderHpx {
 	
 	private MainPanel mainPanel;
 
+	private int [] borderSize = null;
 	private double blank = Fits.DEFAULT_BLANK;
 	private double bscale = Fits.DEFAULT_BSCALE;
 	private double bzero = Fits.DEFAULT_BZERO;
@@ -80,7 +81,7 @@ public class BuilderHpx {
      * @param pixels
      * @return
      */
-	Fits buildHealpix(int nside_file, long npix_file, int nside, boolean fast,boolean fading) {
+	Fits buildHealpix(int nside_file, long npix_file, int nside, boolean fading) {
 	   boolean empty = true;
 	   long min;
 	   long index;
@@ -117,71 +118,56 @@ public class BuilderHpx {
 	            point = CDSHealpix.pix2ang_nest(nside, index);
 	            PixTools.PolarToRaDec(point, radec);
 
-	            // Methode au plus proche
-	            if (fast) {
-	            	Fits fitsfile;
-	            	coo.al = radec[0]; coo.del = radec[1];
-					// recherche dans mes fichiers downloadé
-					if ((fitsfile = searchDownloaded(downFiles,coo, recouvrement)) != null) {
-						double pixelDouble = fitsfile.getPixelDouble((int) coo.x,
-								fitsfile.height - 1 - (int) coo.y);
-						if (!keepBB)
-							pixelDouble = fitsfile.getPixelFull((int) coo.x,
-									fitsfile.height - 1 - (int) coo.y);
-						out.setPixelDoubleFromBitpix(x, y, pixelDouble,fitsfile.bitpix, dataminmax);
-						empty = false;
-					}
-					// si rien trouvé
-					else {
-						out.setPixelDouble(x, y, blank);
-					}
-					
-			    // Méthode bilinéaire
-	            } else  {
-	            	radec = Calib.GalacticToRaDec(radec[0], radec[1]);
-	            	coo.al = radec[0]; coo.del = radec[1];
-	            	// Moyenne des pixels pour toutes les images trouvées
-	            	double pixelFinal=0;
-	            	int nbPix=0;
-	            	double totalCoef=0;
-	            	String lastFitsFile=null;
-	            	double lastX=-1,lastY=-1;
-	            	for( int i=downFiles.size()-1; i>=0 && nbPix<pixval.length; i-- ) {
-						file = downFiles.get(i);
-						
-						// Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
-						if( lastFitsFile!=null && lastFitsFile.equals(file.fitsfile.getFilename()) ) { coo.y=lastY; coo.x=lastX; }
-						
-						// Détermination du pixel dans l'image à traiter
-						else {
-						   file.calib.GetXY(coo);
-						   lastY=coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
-						   lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
-						   lastFitsFile=file.fitsfile.getFilename();
-						}
-	            		double pix = getBilinearPixel(file.fitsfile,coo);
-	            		if( Double.isNaN(pix) ) continue;
-	            		pixval[nbPix]=pix;
-	            		totalCoef+= pixcoef[nbPix] = fading ? getCoef(file.fitsfile,coo,10.) : 1;
-	            		nbPix++;
-	            	}
-	            	if( nbPix==0 ) pixelFinal = blank;
-	            	else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
-	            	else {
-	            		empty=false;
-	            		for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
-	            	}
-	            	
-	            	// Juste pour vérifier
-//	            	if( nbPix==0 ) pixelFinal = -1;
-//	            	else if( totalCoef==0 )  { empty=false; pixelFinal = -2; }
-//	            	else {
-//	            	   empty=false;
-//	            	   pixelFinal = totalCoef;
-//	            	}
+	            // Méthode bilinéaire
+	            radec = Calib.GalacticToRaDec(radec[0], radec[1]);
+	            coo.al = radec[0]; coo.del = radec[1];
+	            // Moyenne des pixels pour toutes les images trouvées
+	            double pixelFinal=0;
+	            int nbPix=0;
+	            double totalCoef=0;
+	            String lastFitsFile=null;
+	            double lastX=-1,lastY=-1;
+	            for( int i=downFiles.size()-1; i>=0 && nbPix<pixval.length; i-- ) {
+	               file = downFiles.get(i);
 
-	            	out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
+	               // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
+	               if( lastFitsFile!=null && lastFitsFile.equals(file.fitsfile.getFilename()) ) { coo.y=lastY; coo.x=lastX; }
+
+	               // Détermination du pixel dans l'image à traiter
+	               else {
+	                  file.calib.GetXY(coo);
+	                  lastY=coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
+	                  lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+	                  lastFitsFile=file.fitsfile.getFilename();
+	               }
+	               
+	               // Dans la bordure à enlever ?
+	               if( borderSize!=null &&
+	                     (coo.x<borderSize[1] || coo.x>=file.fitsfile.width-borderSize[3] 
+	                    || coo.y<borderSize[0] || coo.y>=file.fitsfile.height-borderSize[2]) ) continue;
+	               
+	               double pix = getBilinearPixel(file.fitsfile,coo);
+	               if( Double.isNaN(pix) ) continue;
+	               pixval[nbPix]=pix;
+	               totalCoef+= pixcoef[nbPix] = fading ? getCoef(file.fitsfile,coo,10.) : 1;
+	               nbPix++;
 	            }
+	            if( nbPix==0 ) pixelFinal = blank;
+	            else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
+	            else {
+	               empty=false;
+	               for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
+	            }
+
+	            // Juste pour vérifier
+	            //	            	if( nbPix==0 ) pixelFinal = -1;
+	            //	            	else if( totalCoef==0 )  { empty=false; pixelFinal = -2; }
+	            //	            	else {
+	            //	            	   empty=false;
+	            //	            	   pixelFinal = totalCoef;
+	            //	            	}
+
+	            out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
 	         }
 	      }
 	   } catch( Exception e ) { }
@@ -788,6 +774,22 @@ int n =0;
     public void setCoadd(int coaddMode) {
         this.coaddFlagMode = coaddMode;
     }
+    
+    /**
+     * @param blank the blank to set
+     */
+    public void setBorderSize(int [] borderSize) {
+        this.borderSize = borderSize;
+    }
+
+    /**
+     * @return the blank
+     */
+    public int [] getBorderSize() {
+        return borderSize;
+    }
+
+
 
     /**
      * @param blank the blank to set

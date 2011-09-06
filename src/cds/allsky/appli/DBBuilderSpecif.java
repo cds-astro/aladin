@@ -74,9 +74,9 @@ public class DBBuilderSpecif extends BuilderController {
 			if (args.length>=12) db.readLocalCut(args[11]);
 		}
 		if (db.localServer != null)
-			db.build(ordermax, path, bitpix, true, true, db.localServer,true);
+			db.build(ordermax, path, bitpix, true, db.localServer,true);
 		else
-			db.build(ordermax, path, bitpix,true, true, true);
+			db.build(ordermax, path, bitpix, true, true);
 	}
 	
 

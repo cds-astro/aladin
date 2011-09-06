@@ -126,12 +126,12 @@ public class BuilderController  {
              statNodeAvgTime);
     }
 	
-	public void build(int ordermax, String outpath, int mybitpix,boolean fast, boolean fading, boolean keepBB) throws Exception {
+	public void build(int ordermax, String outpath, int mybitpix,boolean fading, boolean keepBB) throws Exception {
 		localServer = outpath + Constante.HPX_FINDER;
-		build(ordermax, outpath, mybitpix, fast, fading, localServer, keepBB);
+		build(ordermax, outpath, mybitpix, fading, localServer, keepBB);
 	}
 	
-	public void build(int ordermax, String outpath, int mybitpix, boolean fast, boolean fading,
+	public void build(int ordermax, String outpath, int mybitpix, boolean fading,
 			String hpxfinder, boolean keepBB) throws Exception {
 		progress = 0;
 		this.ordermax = ordermax;
@@ -169,7 +169,7 @@ public class BuilderController  {
 	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+heapsize/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
 
 	   // Lancement des threads de calcul
-	   launchThreadBuilderHpx(nbThread,outpath,ordermin,ordermax,fast, fading, keepBB);
+	   launchThreadBuilderHpx(nbThread,outpath,ordermin,ordermax, fading, keepBB);
 
 	   // Attente de la fin du travail
 	   while( stillAlive() ) {
@@ -220,19 +220,19 @@ public class BuilderController  {
 	 * @param fading true si on utilise un fading sur les bords des images
 	 * @return Le losange
 	 */
-	Fits createHpx(BuilderHpx hpx, String path,int order, int maxOrder, long npix,boolean fast,boolean fading) throws Exception {
+	Fits createHpx(BuilderHpx hpx, String path,int order, int maxOrder, long npix,boolean fading) throws Exception {
 		String file = Util.getFilePath(path,order,npix);
 		
 		// si le process a été arrêté on essaie de ressortir au plus vite
 		if (stopped) return null;
 		
 		if( order==maxOrder ) {
-		   return createLeaveHpx(hpx,file,order,npix, fast,fading);      
+		   return createLeaveHpx(hpx,file,order,npix,fading);      
 		}
 		Fits fils[] = new Fits[4];
 		boolean found = false;
 		for( int i =0; !stopped && i<4; i++ ) {
-			fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i,fast,fading);
+			fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i,fading);
 			if (fils[i] != null && !found) found = true;
 		}
 		if (!found) return null;
@@ -245,7 +245,6 @@ public class BuilderController  {
        String outpath;
        int ordermin;
        int ordermax;
-       boolean fast;
        boolean fading;
        BuilderHpx hpx;
        static final int WAIT=0;
@@ -255,12 +254,11 @@ public class BuilderController  {
        private int mode=WAIT;
        private boolean encore=true;
        
-       public ThreadBuilder(String name,String outpath, BuilderHpx hpx, int ordermin,int ordermax,boolean fast,boolean fading) {
+       public ThreadBuilder(String name,String outpath, BuilderHpx hpx, int ordermin,int ordermax,boolean fading) {
           super(name);
           this.outpath = outpath;
           this.ordermin = ordermin;
           this.ordermax = ordermax;
-          this.fast = fast;
           this.fading = fading;
           this.hpx = hpx;
           Aladin.trace(3,"Creating "+getName());
@@ -287,7 +285,7 @@ public class BuilderController  {
          		// si le process a été arrêté on essaie de ressortir au plus vite
          		if (stopped) break;
          		
-                Fits f = createHpx(hpx, outpath, ordermin, ordermax, npix, fast,fading);
+                Fits f = createHpx(hpx, outpath, ordermin, ordermax, npix,fading);
                 if (f!=null) {
                 	lastN3 = (int)npix;
                 }
@@ -326,12 +324,13 @@ public class BuilderController  {
 	private double bscale;
 	private double bzero;
 	private double blank;
+	private int [] borderSize;
 	private double[] datacut;
 	private HpixTree hpixTree=null;
 	private int coaddMode=TabDesc.REPLACETILE;
     
 	// Crée une série de threads de calcul
-	private void launchThreadBuilderHpx(int nbThreads,String outpath,int ordermin,int ordermax,boolean fast, boolean fading, boolean keepBB) {
+	private void launchThreadBuilderHpx(int nbThreads,String outpath,int ordermin,int ordermax,boolean fading, boolean keepBB) {
 	   
 	   initStat(nbThreads);
 	   
@@ -343,9 +342,10 @@ public class BuilderController  {
 	      hpx.setBscale(bscale);
 	      hpx.setBzero(bzero);
 	      hpx.setBlank(blank);
+	      hpx.setBorderSize(borderSize);
 	      hpx.setDataCut(datacut);
 	      hpx.setCoadd(coaddMode);
-	      ThreadBuilder t = new ThreadBuilder("Builder"+i,outpath, hpx,ordermin,ordermax,fast,fading);
+	      ThreadBuilder t = new ThreadBuilder("Builder"+i,outpath, hpx,ordermin,ordermax,fading);
 	      threadList.add( t );
 	      t.start();
 	   }
@@ -665,11 +665,10 @@ public class BuilderController  {
 	 * @param file Nom du fichier de destination (complet mais sans l'extension)
 	 * @param order Ordre healpix du losange
 	 * @param npix Numéro Healpix du losange
-	 * @param fast méthode rapide (non biblinéaire, non moyennée)
 	 * @param fading utilisation d'un fading pour les bords/recouvrements d'images
 	 * @return null si rien trouvé pour construire ce fichier
 	 */
-	Fits createLeaveHpx(BuilderHpx hpx, String file,int order,long npix,boolean fast,boolean fading) throws Exception {
+	Fits createLeaveHpx(BuilderHpx hpx, String file,int order,long npix,boolean fading) throws Exception {
 		long t = System.currentTimeMillis();
 		
 		Fits oldOut=null;
@@ -683,9 +682,8 @@ public class BuilderController  {
 		int nside = Util.nside(order+ORDER);
 		
 		Fits out;
-//		out = hpx.buildTestHealpix(nside_file, npix, nside); else
 		if( DSS ) out = hpx.buildDSSHealpix(nside_file, npix, nside);
-        else out = hpx.buildHealpix(nside_file, npix, nside, fast,fading);
+        else out = hpx.buildHealpix(nside_file, npix, nside, fading);
         
 		if( out !=null ) {
 		   
@@ -805,6 +803,10 @@ public class BuilderController  {
 	
 	public void setBlank(double blank) {
 		this.blank = blank;
+	}
+	
+	public void setBorderSize(int [] borderSize) {
+	   this.borderSize = borderSize;
 	}
 	
 	/**

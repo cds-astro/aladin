@@ -468,10 +468,6 @@ public class TabBuild extends JPanel implements ActionListener {
       return keepBB.isSelected();
    }
 
-   public boolean toFast() {
-      return samplFast.isSelected();
-   }
-
    public boolean toFading() {
       return samplBest.isSelected() && fading.isSelected();
    }

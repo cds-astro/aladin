@@ -51,6 +51,7 @@ public class Task implements Runnable{
 	private ThreadProgressBar progressBar;
 
 	private double blank;
+	private int [] borderSize;
 	private double bzero;
 	private double bscale;
 
@@ -98,7 +99,6 @@ public class Task implements Runnable{
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
-	      boolean fast = mainPanel.toFast();
 	      boolean fading = mainPanel.toFading();
 
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
@@ -121,7 +121,7 @@ public class Task implements Runnable{
 	      // Création des fichiers healpix fits et jpg
 	      if (mode <= TESS) {
 	         mode = TESS;
-	         Aladin.trace(2,"Launch Tess ("+(fast?"fast":"best")+(!fast && !fading ? "-nofading":"")+" method)");
+	         Aladin.trace(2,"Launch Tess "+(!fading ? "(nofading)":""));
 	         //				builder.setThread(runner);
 	         followProgress(mode, builder);
 	         try {
@@ -129,10 +129,11 @@ public class Task implements Runnable{
 	            //						cut = new double[] {0,0,0,0};
 	            //					builder.setAutoCut(cut, fct);
 	            builder.setBlank(blank);
+	            builder.setBorderSize(borderSize);
 	            builder.setBScaleBZero(bscale,bzero);
 	            builder.setHpixTree(hpixTree);
 	            builder.setCoadd(coaddMode);
-	            builder.build(order, output, bitpix, fast, fading, keepBB);
+	            builder.build(order, output, bitpix, fading, keepBB);
 	            // si le thread a été interrompu, on sort direct
 	            if (runner != Thread.currentThread()) {
 	               progressBar.stop();
@@ -216,6 +217,7 @@ public class Task implements Runnable{
 	   bscale = bb[0];
 	   bzero = bb[1];
 	   blank = mainPanel.getBlank();
+	   borderSize = mainPanel.getBorderSize();
 	   // si le bitpix change
 	   if (mainPanel.getOriginalBitpix() != bitpix)
 	      // on change aussi les bornes

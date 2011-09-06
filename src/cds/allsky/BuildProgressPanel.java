@@ -88,7 +88,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - processing time: min:"+Util.getTemps(minTime)+" / max:"+Util.getTemps(maxTime)+" / avg:"+Util.getTemps(avgTime);
+          + " - proc.time: min:"+Util.getTemps(minTime)+" / max:"+Util.getTemps(maxTime)+" / avg:"+Util.getTemps(avgTime);
       lowTileStat.setText(s);
    }
    
@@ -98,7 +98,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - avg processing time: "+Util.getTemps(avgTime);
+          + " - avg proc.time: "+Util.getTemps(avgTime);
       nodeTileStat.setText(s);
    }
    

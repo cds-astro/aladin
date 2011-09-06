@@ -26,6 +26,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -279,6 +280,24 @@ public class MainPanel extends JPanel implements ActionListener {
       return blank;
    }
 
+   protected int [] getBorderSize() {
+      int [] border = { 0,0,0,0 };
+      String s="";
+      try { 
+         s = tabDesc.getBorderSize().trim();
+         StringTokenizer st = new StringTokenizer(s," ,;-");
+         for( int i=0; i<4 && st.hasMoreTokens(); i++ ) {
+            String s1 = st.nextToken();
+            border[i] = Integer.parseInt(s1);
+            
+         }
+         int x = border[0]; border[0] = border[2]; border[2] = x;  // Permutations pour respecter l'ordre North West South East
+      } catch( Exception e ) {
+         tabDesc.borderTextField.setText("value error => ["+s+"]");
+      }
+      return border;
+   }
+
    protected String getInputPath() {
       if( tabDesc==null ) return null;
       return tabDesc.getInputPath();
@@ -410,12 +429,6 @@ public class MainPanel extends JPanel implements ActionListener {
             cds.tools.Util.deleteDir(children[i]);
          }
       }
-   }
-   //	public void resetJpg() {
-   //		cds.tools.Util.deleteDir(new File(getOutputPath()),".*\\.jpg$");
-   //	}
-   protected boolean toFast() {
-      return tabBuild.toFast();
    }
 
    protected boolean toFading() {
