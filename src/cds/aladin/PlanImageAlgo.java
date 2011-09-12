@@ -448,7 +448,6 @@ public class PlanImageAlgo extends PlanImage {
       flagProcessing=false;
       if( fmt==JPEG ) fmt=UNKNOWN;   // Pour éviter une permutation des lignes (voir reUseOriginalPixels()
       if( headerFits!=null ) {
-         System.out.println("BSCALE="+bScale+" BZERO="+bZero);
          headerFits.setKeyValue("BSCALE", bScale+"");
          headerFits.setKeyValue("BZERO", bZero+"");
       }
