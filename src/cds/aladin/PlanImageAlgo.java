@@ -230,11 +230,6 @@ public class PlanImageAlgo extends PlanImage {
       isBlank = false;
       dataMinFits = dataMaxFits = 0.;
       
-      if( headerFits!=null ) {
-         headerFits.setKeyValue("BSCALE", 1+"");
-         headerFits.setKeyValue("BZERO", 0+"");
-      }
-      
       aladin.trace(4,"PlanImageAlgo.compute(): Target image: "+width+"x"+height+" bitpix="+bitpix);
       
       pixelsOrigin = new byte[width*height*npix];
@@ -270,6 +265,8 @@ public class PlanImageAlgo extends PlanImage {
                if( Aladin.isSlow ) Util.pause(10);
             }
          }
+         bZero=pMin-minCoding;
+         bScale=1/coef;
          pixelMin=dataMin = minCoding;
          pixelMax=dataMax = maxCoding;
       }
@@ -450,6 +447,11 @@ public class PlanImageAlgo extends PlanImage {
       
       flagProcessing=false;
       if( fmt==JPEG ) fmt=UNKNOWN;   // Pour éviter une permutation des lignes (voir reUseOriginalPixels()
+      if( headerFits!=null ) {
+         System.out.println("BSCALE="+bScale+" BZERO="+bZero);
+         headerFits.setKeyValue("BSCALE", bScale+"");
+         headerFits.setKeyValue("BZERO", bZero+"");
+      }
       reUseOriginalPixels();
       if( flagNorm ) { dataMin=0; dataMax=1; }
       selected = active = true;
