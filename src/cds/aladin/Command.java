@@ -106,6 +106,7 @@ public final class Command implements Runnable {
       "   @flipflop [x|v] [V|H]           @tag|@untag\n\n" +
       "   @contour [nn] [nosmooth] [zoom] @select -tag\n" +
       "   @grey\n" +
+      "   @bitpix [-cut] [x] BITPIX\n" +
       "  \n" +
       "#GRAPHIC# #TOOL:#                   #FOLDER:#\n" +
       "   @draw fct(param)                @md [-localscope] [name]\n" +
@@ -129,7 +130,7 @@ public final class Command implements Runnable {
 
    // Liste des commandes scripts documentés
    static final String CMD[] = {
-      "addcol","backup","blink","call","cm","collapse","conv","contour","coord","copy",
+      "addcol","backup","bitpix","blink","call","cm","collapse","conv","contour","coord","copy",
       "cplane","cview","crop","demo","draw","expand","export","filter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem",
@@ -2428,6 +2429,30 @@ if( Aladin.levelTrace==2 ) {
             else conv=param;
             a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.CONV,0,conv,0);
         } catch( Exception e ) { toStdoutAndConsole("!!! conv error: "+e.getMessage()); return "error"; }
+      }
+      else if( cmd.equalsIgnoreCase("bitpix") ) {
+         try {
+//            st = new Tok(param);
+//            String v1 = st.nextToken();
+//            String bitpix=null;
+//            PlanImage p1 = (PlanImage)getPlanFromParam(v1,0,true);
+//            if( p1!=null ) bitpix = param.substring(v1.length()).trim();
+//            else bitpix=param;
+//            a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.BITPIX,0,bitpix,0);
+
+            fct = PlanImageAlgo.BITPIX;
+            st = new Tok(param);
+            String v1 = st.nextToken();
+            String v2 = st.hasMoreTokens() ? st.nextToken() : null;
+            String v3 = st.hasMoreTokens() ? st.nextToken() : null;
+            PlanImage p1=null;
+            if( v1!=null && v1.equals("-cut") ) { fct=PlanImageAlgo.BITPIXCUT; v1=v2; v2=v3;}
+            p1 = (PlanImage)getPlanFromParam(v1,0,true);
+            if( p1!=null ) v1=v2;
+            String bitpix=v1;
+            a.calque.newPlanImageAlgo(label,p1,null,fct,0,bitpix,0);
+            
+         } catch( Exception e ) { toStdoutAndConsole("!!! bitpix error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("RGB") ) {
                PlanImage p[] = getPlanImage(param);

@@ -40,6 +40,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.PlanBG;
+import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
@@ -65,6 +66,7 @@ public class MainPanel extends JPanel implements ActionListener {
 
    private int lastN3 = 0;
    private PlanBG planPreview;
+   protected CacheFits cacheFits;
    private boolean convertCut;
 
    protected int getLastN3() {
@@ -81,7 +83,6 @@ public class MainPanel extends JPanel implements ActionListener {
       createChaine();
       createPanel();
       BuilderController.DEBUG = (Aladin.levelTrace > 0) ? true : false;
-
    }
 
    private void createPanel() {
@@ -219,9 +220,24 @@ public class MainPanel extends JPanel implements ActionListener {
          path = getOutputPath();
          convertCut=false;
       } else {
-         Fits file = getFits(path);
-         double[] cut = ThreadAutoCut.run(file);
-         setCut(cut);
+         try {
+            final Fits file = getFits(path);
+            (new Thread("Autocut"){
+               public void run() {
+                  //               double[] cut = ThreadAutoCut.run(file);
+                  double[] cut;
+                  try {
+                     cut = file.findAutocutRange();
+                     setCut(cut);
+                  } catch( Exception e ) {
+                     e.printStackTrace();
+                  }
+               }
+            }).start();
+         } catch( Throwable e1 ) {
+            e1.printStackTrace();
+            return;
+         }
       }
       if (convertCut) convertCut(tabBuild.getBitpix());
    }
@@ -280,6 +296,9 @@ public class MainPanel extends JPanel implements ActionListener {
       return blank;
    }
 
+   /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
+    * soit une seule valeur appliquée à tous les bords,
+    * soit 4 valeurs affectées à la java de la manière suivante : Nord, Ouest, Sud, Est */
    protected int [] getBorderSize() {
       int [] border = { 0,0,0,0 };
       String s="";
@@ -289,11 +308,11 @@ public class MainPanel extends JPanel implements ActionListener {
          for( int i=0; i<4 && st.hasMoreTokens(); i++ ) {
             String s1 = st.nextToken();
             border[i] = Integer.parseInt(s1);
-            
+            if( i==0 ) border[3]=border[2]=border[1]=border[0];
          }
          int x = border[0]; border[0] = border[2]; border[2] = x;  // Permutations pour respecter l'ordre North West South East
       } catch( Exception e ) {
-         tabDesc.borderTextField.setText("value error => ["+s+"]");
+         tabDesc.borderTextField.setText("Border error => assume 0");
       }
       return border;
    }
@@ -501,10 +520,18 @@ public class MainPanel extends JPanel implements ActionListener {
       tabPub.setStartEnabled(b);
       if( tabRgb!=null ) tabRgb.setStartEnabled(b);
    }
+   
+   // Récupération des valeurs cutmin, cutmax de l'affichage
+   protected void updateCut() {
+      if( planPreview==null ) return;
+      double cutmin = planPreview.getCutMin();
+      double cutmax = planPreview.getCutMax();
+      System.out.println("Positionnement cutmin,cutmax = "+cutmin+".."+cutmax+")");
+      setCut(new double[]{cutmin,cutmax});
+   }
 
    /**
     * Création/rafraichissemnt d'un allsky (en l'état) et affichage
-    * 
     * @param last
     * */
    void preview(int last) {
@@ -518,13 +545,14 @@ public class MainPanel extends JPanel implements ActionListener {
             radec = Calib.GalacticToRaDec(radec[0], radec[1]);
             int n = aladin.calque.newPlanBG(getOutputPath(), "="+mysky,
                   Coord.getSexa(radec[0], radec[1]), "30");
-            Aladin.trace(4, "AllskyTask.preview: create "+mysky);
+            Aladin.trace(4, "MainPanel.preview: create "+mysky);
             planPreview = (PlanBG) aladin.calque.getPlan(n);
             setStartEnabled(true);
          } else {
             planPreview.forceReload();
+            
             aladin.calque.repaintAll();
-            Aladin.trace(4, "AllskyTask.preview: update "+mysky);
+            Aladin.trace(4, "MainPanel.preview: update "+mysky);
 
          }
       } catch (Exception e) {

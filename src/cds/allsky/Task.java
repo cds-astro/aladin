@@ -148,25 +148,32 @@ public class Task implements Runnable{
 	         mainPanel.enableProgress(false,TESS);
 	      }
 	      // création du fichier allsky
-	      if (mode <= JPG) {
-	         mode = JPG;
-	         createAllSky();
-	      }
+	      if (mode <= JPG) mode = JPG;
+	      createAllSky();
 	      allskyOk=true;
 	      mainPanel.setIsRunning(false);
 
 	      mainPanel.done();
 	      runner = null;
 	      mode = -1;
-	      Aladin.trace(2,"DONE");
+	      Aladin.trace(2,"Allsky... done!");
 	   } catch (Exception e) {
 	      e.printStackTrace();
 	   }
 	}
+	
+	private long lastCreatedAllSky=-1L;
 
 	// création des fichiers allsky
-	public void createAllSky() {
-	   if( allskyOk ) return;      // déjà fait
+    public boolean  createAllSky() { return createAllSky(true); }
+    public boolean  createAllSky(boolean force) {
+//	   if( allskyOk ) return;      // déjà fait
+	   
+	   if( !force ) {
+	      long now = System.currentTimeMillis();
+	      if( now-lastCreatedAllSky<15000 ) return false;  // déjà fait il n'y a pas bien longtemps
+	      lastCreatedAllSky = now;
+	   }
 
 	   //          followProgress(mode,sg);
 	   //          String path = Util.concatDir(output,AllskyConst.SURVEY);
@@ -181,6 +188,7 @@ public class Task implements Runnable{
 	   } catch (Exception e) {
 	      e.printStackTrace();
 	   }
+	   return true;
 	}
 
 	void setInitDir(String txt) {
@@ -301,8 +309,7 @@ class ThreadProgressBar implements Runnable {
                value = (int)((BuilderController)builder).getProgress();
                int n3 = ((BuilderController)builder).getLastN3();
                if (n3!=-1 && last!=n3) {
-                  tasks.createAllSky();
-                  tasks.mainPanel.preview(n3);
+                  if( tasks.createAllSky(false) ) tasks.mainPanel.preview(n3);
                   tasks.mainPanel.setLastN3(n3);
                   last = n3;
                }

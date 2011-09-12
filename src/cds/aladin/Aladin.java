@@ -66,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Bitpix image re-encoding support
  * @beta    <LI> Footprint display by STS-S definition
  * @beta    <LI> Plan transparency control by the mouse wheel
  * @beta    <LI> RGB FITS image with any BITPIX value now supported
@@ -126,7 +127,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.054";
+    static public final    String VERSION = "v7.056";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -327,6 +328,7 @@ public class Aladin extends JApplet
     FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
     FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
     FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
+    FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
     FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
     FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
     FrameCDSXMatch frameCDSXMatch;// Gere la fenetre pour le x-match
@@ -391,7 +393,7 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup,miHistory,
-                      miInFold,miConv,miArithm,miHealpixArithm,miNorm,miHead,miFlip,
+                      miInFold,miConv,miArithm,miHealpixArithm,miNorm,miBitpix,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
     JButton ExportYourWork,searchData,avant,apres;
@@ -449,7 +451,7 @@ public class Aladin extends JApplet
            PANEL1,PANEL2,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
-           CONV,NORM,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
+           CONV,NORM,BITPIX,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
            HPXCREATE,HPXGRID,HPXDUMP,HPXGENERATE,GETOBJ;
     String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
@@ -837,6 +839,7 @@ public class Aladin extends JApplet
 //       MUL     = chaine.getString("MMUL");
 //       DIV     = chaine.getString("MDIV");
        NORM    = chaine.getString("MNORM");
+       BITPIX  = chaine.getString("MBITPIX");
        CONV    = chaine.getString("MCONV");
        HEAD    = chaine.getString("MHEAD");
        FLIP    = chaine.getString("PROPFLIPFLOP");
@@ -984,7 +987,7 @@ public class Aladin extends JApplet
                 {},{TRANSP},{"?"+TRANSPON},
                 {},{RGB},{GREY},{MOSAIC},{BLINK},
                 {},{RSAMP},{CALIMG},
-                {},{FLIP,TOPBOTTOM,RIGHTLEFT},{ARITHM},{HEALPIXARITHM},{CONV},{NORM},
+                {},{FLIP,TOPBOTTOM,RIGHTLEFT},{ARITHM},{HEALPIXARITHM},{CONV},{NORM},{BITPIX},
                 {},{COPY},{CROP},{HPXCREATE},
              },
              { {MCATALOG},
@@ -1597,6 +1600,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
        else if( isMenu(m,NORM) )   miNorm    = ji;
+       else if( isMenu(m,BITPIX) ) miBitpix  = ji;
        else if( isMenu(m,CONV) )   miConv    = ji;
        else if( isMenu(m,HEAD) )   miHead    = ji;
        else if( isMenu(m,FLIP) )   miFlip    = ji;
@@ -2843,6 +2847,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,CONV) )  { updateConvolution();
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
       } else if( isMenu(s,NORM) )  { norm();
+      } else if( isMenu(s,BITPIX) )  { updateBitpix();
       } else if( isMenu(s,HEAD) )  { header();
       } else if( isMenu(s,HPXGENERATE)){ buildAllsky();
       } else if( isMenu(s,TOPBOTTOM) )  { flip(0);
@@ -2951,6 +2956,7 @@ public class Aladin extends JApplet
 //       return true;
 //    }
 
+    
     /** Exécute une normalisation sur le plan de base */
     protected void norm() {
        command.execLater("norm");
@@ -3414,6 +3420,17 @@ public class Aladin extends JApplet
        }
        frameHealpixArithm.maj();
     }
+    
+    /** Mise à jour de la fenêtre pour les operations arithmetiques */
+    protected void updateBitpix() {
+       if( frameBitpix==null ) {
+          trace(1,"Creating the Bitpix window");
+          frameBitpix = new FrameBitpix(aladin);
+       }
+       frameBitpix.maj();
+    }
+
+
 
     /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
     protected void blink(int mode) {
@@ -3498,6 +3515,11 @@ public class Aladin extends JApplet
           // Sauvegarde config utilisateur
           console.setInfo("Aladin stopped");
           saveConfig();
+          
+          // Arrêt d'un éventuel calcul de allsky
+          try {
+            if( frameAllsky!=null && frameAllsky.mainPanel!=null ) frameAllsky.mainPanel.stop();
+         } catch( Exception e1 ) { }
 
           // Suppression d'un cache éventuel
           trace(3,"Cache cleaning...");
@@ -4261,6 +4283,7 @@ public void setLocation(Point p) {
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);
+         if( miBitpix!=null ) miBitpix.setEnabled(hasPixels && !isCube);
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
          if( miCreateHpx!=null ) miCreateHpx.setEnabled(hasPixels /*&& v.pref.type!=Plan.IMAGERGB*/);
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );

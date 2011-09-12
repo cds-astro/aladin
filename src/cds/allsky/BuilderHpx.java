@@ -37,7 +37,7 @@ import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.PixTools;
 import cds.tools.pixtools.Util;
 
-public class BuilderHpx {
+final public class BuilderHpx {
 
 	public static final int ORDER = 9;
 	private static final int SIDE = 512;
@@ -141,10 +141,11 @@ public class BuilderHpx {
 	                  lastFitsFile=file.fitsfile.getFilename();
 	               }
 	               
+	               // INUTILE, DEJA SUPPRIMER LORS DE L'OUVERTURE EN MODE MOSAIC
 	               // Dans la bordure à enlever ?
-	               if( borderSize!=null &&
-	                     (coo.x<borderSize[1] || coo.x>=file.fitsfile.width-borderSize[3] 
-	                    || coo.y<borderSize[0] || coo.y>=file.fitsfile.height-borderSize[2]) ) continue;
+//	               if( borderSize!=null &&
+//	                     (coo.x<borderSize[1] || coo.x>=file.fitsfile.width-borderSize[3] 
+//	                    || coo.y<borderSize[0] || coo.y>=file.fitsfile.height-borderSize[2]) ) continue;
 	               
 	               double pix = getBilinearPixel(file.fitsfile,coo);
 	               if( Double.isNaN(pix) ) continue;
@@ -503,7 +504,10 @@ public class BuilderHpx {
 					else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true);
 					
 					// Mode FITS classique
-					else fitsfile.loadFITS(fitsfilename);
+					else {
+					   fitsfile=mainPanel.cacheFits.getFits(fitsfilename);   // Utilisation d'un cache de fichiers Fits déjà ouvert
+//					   fitsfile.loadFITS(fitsfilename);
+					}
 
 					fitsfile.setFilename(fitsfilename);
 					if( !Double.isNaN(blank) ) fitsfile.setBlank(blank);
@@ -519,7 +523,7 @@ public class BuilderHpx {
 
 				} catch (Exception e) {
 					System.err.println("Erreur de chargement de : " + fitsfilename);
-					e.printStackTrace();
+//					e.printStackTrace();
 					continue;
 				}
 			}

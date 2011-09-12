@@ -1424,7 +1424,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     }
     static final public String getUnitDisk(double val, int format) {
     	int unit = 0;
-    	String unites[] = {"","K","M","G","T"};
+    	String unites[] = {"","KB","MB","GB","TB"};
     	while (val >= 1024 && unit<unites.length-1) {
     		unit++;
     		val /= 1024L;

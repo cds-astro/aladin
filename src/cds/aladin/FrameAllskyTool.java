@@ -33,7 +33,7 @@ import cds.tools.Util;
 public class FrameAllskyTool extends JFrame {
 
 	public Aladin aladin;
-	public MainPanel allskyPanel;
+	public MainPanel mainPanel;
 
 	private String title;
 
@@ -66,14 +66,13 @@ public class FrameAllskyTool extends JFrame {
 
 	private JPanel createPanel() {
 		JPanel p = new JPanel(new BorderLayout(1, 1));
-		allskyPanel = new MainPanel(aladin);
-		p.add(allskyPanel, BorderLayout.CENTER);
+		mainPanel = new MainPanel(aladin);
+		p.add(mainPanel, BorderLayout.CENTER);
 		return p;
 	}
 
 	public static void display(Aladin aladin) {
-		if (aladin.frameAllsky == null)
-			aladin.frameAllsky = new FrameAllskyTool(aladin);
+		if (aladin.frameAllsky == null) aladin.frameAllsky = new FrameAllskyTool(aladin);
 		aladin.frameAllsky.setVisible(true);
 	}
 
@@ -83,7 +82,7 @@ public class FrameAllskyTool extends JFrame {
 	}
 
 	public void export(PlanBG plan, String exportpath) {
-		String path = allskyPanel.getOutputPath();
+		String path = mainPanel.getOutputPath();
 //		Plan plan;
 //		int n = aladin.calque.newPlanBG(path, allskyPanel.getLabel(), null,
 //				null);
@@ -105,18 +104,18 @@ public class FrameAllskyTool extends JFrame {
 	}
 
 	public void showPublish() {
-		allskyPanel.showPubTab();
+		mainPanel.showPubTab();
 	}
 
 	public void showDisplay() {
-		allskyPanel.showJpgTab();
+		mainPanel.showJpgTab();
 	}
 
 //    public void setCut(double[] cut, int transfertFct)  {
 //       allskyPanel.setCut(cut,transfertFct);
 //   }
     public void updateCurrentCM()  {
-       allskyPanel.updateCurrentCM();
+       mainPanel.updateCurrentCM();
    }
 //	public void setRestart() {
 ////		allskyPanel.displayReStart();

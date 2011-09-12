@@ -188,37 +188,37 @@ final public class BuilderAllsky {
    /** Simulation d'un traitement de génération d'une image à partir d'une autre
     * comme le fera SkyBrowser pour la génération de la base Healpix
     */
-   public static void main(String[] args) {
-      
-      try {
-         BuilderAllsky sg = new BuilderAllsky();
-         boolean color = false;
-         String path="";
-         int order=3;
-         int size=64;
-         double pixelMin=0,pixelMax=0;
-
-         for( int i=0; i<args.length; i++ ) {
-            if( args[i].equals("-color") ) color=true;
-            else if( args[i].startsWith("-order=") ) order = Integer.parseInt(args[i].substring(7));
-            else if( args[i].startsWith("-size=") )  size = Integer.parseInt(args[i].substring(6));
-            else if( args[i].startsWith("-cut=") )   {
-               String s = args[i].substring(5);
-               int j = s.indexOf(',');
-               pixelMin = Double.parseDouble(s.substring(0,j));
-               pixelMax = Double.parseDouble(s.substring(j+1));
-            }
-            else path = args[i];
-         }
-         
-         if( color ) sg.createAllSkyJpgColor(path, order, size);
-         else sg.createAllSky(path,order,size,pixelMin,pixelMax,true);
-
-      } catch( Exception e) {
-         e.printStackTrace();
-         System.out.println("Usage: [-color] [-order=nn] [-size=xx] [-cut=pixelMin,pixelMax] /Path/Survey");
-      }
-   }
+//   public static void main(String[] args) {
+//      
+//      try {
+//         BuilderAllsky sg = new BuilderAllsky();
+//         boolean color = false;
+//         String path="";
+//         int order=3;
+//         int size=64;
+//         double pixelMin=0,pixelMax=0;
+//
+//         for( int i=0; i<args.length; i++ ) {
+//            if( args[i].equals("-color") ) color=true;
+//            else if( args[i].startsWith("-order=") ) order = Integer.parseInt(args[i].substring(7));
+//            else if( args[i].startsWith("-size=") )  size = Integer.parseInt(args[i].substring(6));
+//            else if( args[i].startsWith("-cut=") )   {
+//               String s = args[i].substring(5);
+//               int j = s.indexOf(',');
+//               pixelMin = Double.parseDouble(s.substring(0,j));
+//               pixelMax = Double.parseDouble(s.substring(j+1));
+//            }
+//            else path = args[i];
+//         }
+//         
+//         if( color ) sg.createAllSkyJpgColor(path, order, size);
+//         else sg.createAllSky(path,order,size,pixelMin,pixelMax,true);
+//
+//      } catch( Exception e) {
+//         e.printStackTrace();
+//         System.out.println("Usage: [-color] [-order=nn] [-size=xx] [-cut=pixelMin,pixelMax] /Path/Survey");
+//      }
+//   }
 
 
    public double getProgress() {

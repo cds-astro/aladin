@@ -38,16 +38,18 @@ public class PlanImageAlgo extends PlanImage {
    static final protected int NORM  = 4;    // Normalisation [min..max] par division par la moyenne
    static final protected int NORMCUT=5;    // Normalisation [minCut..maxCut]  par division par la moyenne
    static final protected int CONV   =6;    // Convolution
-   static final protected int CONVG  =7;   // Convolution par une gaussienne
+   static final protected int CONVG  =7;    // Convolution par une gaussienne
+   static final protected int BITPIX =8;    // Conversion du BITPIX
+   static final protected int BITPIXCUT =9;    // Conversion du BITPIX
    
-   static protected String NAME[] = { "Add","Sub","Mul","Div","Norm","NormC","Conv","ConvG" };
+   static protected String NAME[] = { "Add","Sub","Mul","Div","Norm","NormC","Conv","ConvG","Bitpix","BitpixC" };
 
    
    private PlanImage p1=null; // Le plan Image première opérande (ou null)
    private PlanImage p2=null; // Le plan Image deuxième opérande (ou null)
    private int fct; // la fonction +,-,*,/ (0,1,2 ou 3)
    private double coef; // Le coefficent ou NaN si inutilisé
-   private String conv; // Le nom de la convolution ou le kernel ou null si inutilisé
+   private String param; // Le nom de la convolution ou le kernel ou null si inutilisé
    
    // Mode de calcul
    protected int methode;                 // Méthode du resampling si nécessaire
@@ -89,10 +91,11 @@ public class PlanImageAlgo extends PlanImage {
     * @param p2 plan de la deuxième image opérande
     * @param fct type de calcul (ADD,SUB,MUL,ADD,NORM,NORMCUT,CONV
     * @param coef coefficient d'un calcul (p2 doit être alors égale à null)
-    * @param conv nom de la convolution prédéfinie ou matrice particulière
+    * @param param nom de la convolution prédéfinie ou matrice particulière (pour CONV et CONVG)
+    *              BITPIX cible pour bitpix
     * @param methode PPV ou BILINEAIRE
     */
-   protected void launchAlgo(PlanImage p1,PlanImage p2,int fct, double coef, String conv,int methode) {
+   protected void launchAlgo(PlanImage p1,PlanImage p2,int fct, double coef, String param,int methode) {
       this.methode=methode;
       
       
@@ -103,7 +106,7 @@ public class PlanImageAlgo extends PlanImage {
       
       this.fct = fct;
       this.coef = coef;
-      this.conv = conv;
+      this.param = param;
       
       from = "Computed by Aladin";
       param = "Computed: "+getFonction();
@@ -128,7 +131,9 @@ public class PlanImageAlgo extends PlanImage {
     * Exemple : DSS2 * DSS1 */
    protected String getFonction() {
       return (p1!= null ? p1.label : p2!=null ? coef+"" : "") +
-             " "+(fct==CONV ? "conv "+conv+"" 
+             " "+(fct==CONV ? "conv "+param+"" 
+                   : fct==BITPIX  ? "bitpix "+param+""
+                   : fct==BITPIXCUT  ? "bitpix -cut "+param+""
                    : getFct(fct) + (p2!=null ? p2.label : coef+""))+" " ;
    }
    
@@ -207,7 +212,6 @@ public class PlanImageAlgo extends PlanImage {
       }
       
       // On prépare le tableau des pixels résultats dans le bitpix le plus représentatif
-//      bitpix = -32;
       int bitpix1 = p1==null ? 8 : p1.bitpix;
       int bitpix2 = p2==null ? 8 : p2.bitpix;
       bitpix = Math.max(Math.abs(bitpix1),Math.abs(bitpix2));
@@ -217,6 +221,9 @@ public class PlanImageAlgo extends PlanImage {
       // Dans le cas de la présence d'un BSCALE ou BZERO je passe en floattant
       if( (p1!=null && (p1.bScale!=1 || p1.bZero!=0) ) 
        || (p2!=null && (p2.bScale!=1 || p2.bZero!=0) ) ) if( bitpix!=-64 ) bitpix=-32;
+      
+      // Dans le cas d'une conversion de BIPITX, y a pas le choix
+      if( fct==BITPIX  || fct==BITPIXCUT ) bitpix = Integer.parseInt(param);
       
       npix = Math.abs(bitpix)/8;
       bZero=0; bScale=1;
@@ -233,12 +240,46 @@ public class PlanImageAlgo extends PlanImage {
       pixelsOrigin = new byte[width*height*npix];
       double pixval;
       
+      // Convertion ?
+      if( fct==BITPIX || fct==BITPIXCUT ) {
+         double maxCoding = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+               : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+         double minCoding = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+               : bitpix==64?Long.MIN_VALUE : bitpix==32?Integer.MIN_VALUE : bitpix==16?Short.MIN_VALUE:0;
+         double pMin=p1.getPixelMin();
+         double pMax=p1.getPixelMax();
+         double coef = (maxCoding-minCoding)/(pMax-pMin);
+         for( y=0; y<height; y++ ) {
+            for( x=0; x<width; x++ ) { 
+               pixval = p1.getPixel(x, y);
+               if( fct==BITPIXCUT ) {
+                  if( pixval<pMin ) pixval=pMin;
+                  else if( pixval>pMax ) pixval=pMax;
+                  pixval =(pixval-pMin)*coef + minCoding;
+               } else {
+                  if( pixval>maxCoding ) pixval=maxCoding;
+                  else if( pixval<minCoding ) pixval=minCoding;
+               }
+               setPixelOriginInDouble(x,y,pixval);
+            }
+            // Pour laisser la main aux autres threads
+            // et pouvoir afficher le changement de pourcentage
+            if( y % 100 == 0 ) {
+               if( type==NO ) break;  // En cas de suppression inopinée du plan
+               pourcent=x*y * 100 / p1.getBufPixels8().length;
+               if( Aladin.isSlow ) Util.pause(10);
+            }
+         }
+         pixelMin=dataMin = minCoding;
+         pixelMax=dataMax = maxCoding;
+      }
+      
       // Convolution ?
-      if( fct==CONV ) {
+      else if( fct==CONV ) {
          double pixRes=1/3600.;
          try { pixRes=projd.getPixResDelta(); } catch( Exception e) {}
          Kernel k = null;
-         try { k=aladin.kernelList.getKernel(conv,pixRes); }
+         try { k=aladin.kernelList.getKernel(param,pixRes); }
          catch( Exception e ) { 
             if( aladin.levelTrace>=3 ) e.printStackTrace();
             error=e.getMessage();

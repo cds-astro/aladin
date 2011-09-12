@@ -27,6 +27,7 @@ import java.util.Iterator;
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.aladin.PlanImage;
+import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.Hpix;
 import cds.tools.pixtools.HpixTree;
@@ -72,7 +73,6 @@ public class BuilderController  {
     private long startTime;                 // Date de lancement du calcul
     private long totalTime;                 // Temps depuis le début du calcul
     private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
-
 	
     public BuilderController() {}
     public BuilderController(MainPanel mainPanel) { this.mainPanel=mainPanel; }
@@ -159,14 +159,20 @@ public class BuilderController  {
 	   NCURRENT = 0;
 
 	   int nbProc = Runtime.getRuntime().availableProcessors();
-	   long heapsize = Runtime.getRuntime().maxMemory();
+	   
+	   // On utilisera 2/3 de la mémoire pour les threads et le reste pour le cacheFits
+	   long size = Runtime.getRuntime().maxMemory();
+	   long sizeCache = (size/3)/(1024L*1024L);
+	   size -=sizeCache;
+	   mainPanel.aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
+	   mainPanel.cacheFits = new CacheFits(sizeCache, 100000);
 	   
 	   long maxMemPerThread = Constante.MAXMBPERTHREAD*1024*1024L;
-	   int nbThread = (int) (heapsize / maxMemPerThread);
+	   int nbThread = (int) (size / maxMemPerThread);
 	   if (nbThread==0) nbThread=1;
 	   if( nbThread>nbProc ) nbThread=nbProc;
 	   
-	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+heapsize/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
+	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
 
 	   // Lancement des threads de calcul
 	   launchThreadBuilderHpx(nbThread,outpath,ordermin,ordermax, fading, keepBB);
@@ -178,6 +184,7 @@ public class BuilderController  {
 	   }
 
        showStat();
+       Aladin.trace(3,"Cache stated: "+mainPanel.cacheFits);
 	   Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
 	}
 

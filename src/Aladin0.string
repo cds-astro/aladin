@@ -86,6 +86,7 @@ MHEALPIXARITHM HEALPix arithmetic operations...
 #MMUL	Multiplication
 #MDIV	Division
 MNORM	Pixel normalisation (div. by avg)
+MBITPIX	Bitpix convert...
 MCONV	Convolution...
 MHEAD	Fits header...
 MBKGD	All sky
@@ -174,6 +175,7 @@ MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MMUL.fr	Multiplication
 #MDIV.fr	Division
 MNORM.fr	Normalisation des pixels (div. by avg)
+MBITPIX.fr	Conversion Bitpix...
 MCONV.fr	Convolution...
 MHEAD.fr	Entête Fits...
 MBKGD.fr	Ciel complet
@@ -800,6 +802,22 @@ ARITHINFO.fr	Désignez 2 plans images ou 1 plan image et une valeur\nainsi que l'
 ARITHPLANE.fr	Plan
 ARITHPLANEVALUE.fr Plan ou Valeur
 ARITHHELP.fr	Note 1: Après avoir effectué l'opération arithmétique, Aladin ajuste automatique le contraste de l'image résultante. Il n'est donc pas anormal que l'aspect de l'image puisse ne pas changer.\n \nNote 2: Les opérations arithmétiques ne peuvent s'appliquer sur les images pour lesquelles Aladin ne dispose pas des vraies valeurs de pixels, typiquement les images 8 bits JPEG.
+
+
+# FrameBitpix.java strings
+BITPIXTITLE	Bitpix image conversion
+BITPIXINFO	Specify an image plane\n choose the new pixel encoded format and\npress the CREATE button to generate the resulting image.\n
+BITPIXCUTLABEL	Method:
+BITPIXCUT	Adjust pixel dynamic
+BITPIXCAST	Simple cast
+BITPIXHELP	Note 1: After computing the image, Aladin autocuts the pixels.\n \nNote 2: Arithmetic operations are available only with images for which Aladin can have full pixel values (for instance : not JPEG 8bit images).
+
+BITPIXTITLE.fr	Bitpix image conversion
+BITPIXINFO.fr	Désignez un plan image\nainsi que le nouveau format d'encodage puis\nappuyez sur le bouton CREER pour générer l'image résultante.
+BITPIXCUTLABEL.fr	Méthode:
+BITPIXCUT.fr	Ajustement de la dynamique des pixels
+BITPIXCAST.fr	Cast simple
+BITPIXHELP.fr	Note 1: Après avoir effectué la conversion, Aladin ajuste automatique le contraste de l'image résultante. \n \nNote 2: L'opération de conversion ne peut s'appliquer que sur les images pour lesquelles Aladin ne dispose pas des vraies valeurs de pixels, typiquement les images 8 bits JPEG.
 
 # FrameConvolution.java strings
 CONVTITLE Convolution
@@ -2201,8 +2219,8 @@ HELPDIRTRGALLSKY Target folder for the generated HEALPix tile tree (ensure enoug
 HELPDIRTRGALLSKY.fr Répertoire où va être généré l'arborescence des tuiles HEALPix (prévoir suffisamment de place - cf. formulaire 2)
 HELPLABELALLSKY Name/identifier of survey (e.g: DSS, 2MASS...)
 HELPLABELALLSKY.fr Nom/identificateur du relevé (ex: DSS, 2MASS...)
-HELPPARAMALLSKY Specify the strategy in case of restarting process
-HELPPARAMALLSKY.fr Définit la stratégie en cas de relance d'un calcul déjà entamé.
+HELPPARAMALLSKY Defines advanced parameters:\n 1) The first three lines define the strategy for resuming a previous calculation, due to an interruption, or a data addition\n 2) Limits the computation to an HEALPix area determined by cells numbers (eg, order/order number/start-end ...) \n 3) Specifies a BLANK  pixel value, especially if it is not specified in the FITS header of the original files \n 4) Indicates to ignore an edge in the source images, by a single value (in pixels) to cut off four sides, or by four values in the order North, West, South, East.
+HELPPARAMALLSKY.fr Définit les paramètres avancées :\n 1) Les 3 premières lignes déterminent la stratégie à adopter dans le cas d'une reprise d'un calcul précédent, soit à cause d'une interruption, soit à cause d'un ajout de données\n2) Limite le calcul à une zone HEALPix déterminée par des numéros des cellules (ex: ordre/numero order/deb-fin ...)\n3) Spécifie une valeur de pixel non valide, notamment dans le cas où celle-ci n'est pas spécifiée dans l'entête FITS des fichiers originaux\n4) Indique une bordure à ignorer dans les images sources, soit par une seule valeur (en pixels) retranchée aux 4 côtés, soit par 4 valeurs données dans l'ordre Nord, Ouest, Sud, Est.
 HELPBITPIXALLSKY Specify the pixel depth (in bits)
 HELPBITPIXALLSKY.fr Détermine la profondeur du pixel (en bits).
 HELPRESOALLSKY Provide the correspondance between the angular pixel resolution and the size of the generated data. The blue row highlights the more appropriated choice in regard to the original images. It is possible to over/sub-sample

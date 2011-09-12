@@ -32,5 +32,5 @@ public class Constante {
 	public static final int FITSCELLSIZE = 4096; 
 	
 	// Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
-	public static final int MAXMBPERTHREAD = 512;
+	public static final int MAXMBPERTHREAD = 400;
 }

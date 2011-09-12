@@ -859,7 +859,15 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
          } catch( Exception e ) {}
          File f = new File(cacheID);
          RandomAccessFile rf = new RandomAccessFile(f,"rw");
-         rf.write(buf);
+         
+         //  Si on écrite d'un coup un trop grop fichier, ça explose la mémoire (pb précédure native !!)
+//         rf.write(buf);
+         int bloc=4*1024*1024;
+         for( int pos=0,len=0; pos<buf.length; pos+=len ) {
+            len = buf.length-pos<bloc ? buf.length-pos : bloc;
+            rf.write(buf,pos,len);
+         }
+
          aladin.setInCache(buf.length);
 Aladin.trace(3,"Original pixels saved in cache ["+cacheID+"]");
          return rf;
@@ -877,7 +885,14 @@ Aladin.trace(3,"Original pixels saved in cache ["+cacheID+"]");
          openCache();
          fCache.seek(cacheOffset);
          pixelsOrigin = new byte[width*height*npix];
-         fCache.readFully(pixelsOrigin);
+         
+         //  Si on lit d'un coup un trop grop fichier, ça explose la mémoire (pb précédure native !!)
+//         fCache.readFully(pixelsOrigin);  
+         int bloc=4*1024*1024;
+         for( int pos=0,len=0; pos<pixelsOrigin.length; pos+=len ) {
+            len = pixelsOrigin.length-pos<bloc ? pixelsOrigin.length-pos : bloc;
+            fCache.readFully(pixelsOrigin,pos,len);
+         }
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
 Aladin.trace(3,"Original pixels lost ["+cacheID+"]");
@@ -2180,21 +2195,17 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
    /** Retourne la chaine d'explication du mode de codage des pixels d'origine */
    protected String getPixelCodingInfo(int bitpix) {
-      switch(bitpix) {
-         case 8:   return "(byte - 8bits)";
-         case 16:  return "(short - 16bits)";
-         case 32:  return "(integer - 32bits)";
-         case 64:  return "(integer - 64bits)";
-         case -32: return "(float - 32 bits)";
-         case -64: return "(double - 64 bits)";
-      }
-      return "(pixel coding unknown ["+bitpix+"])";
+      String s = bitpix==-64?"double" : bitpix==-32?"real"
+            :bitpix==64?"long" :bitpix==32?"integer"
+                  :bitpix==16?"short" : bitpix==8?"byte" : "unknown";
+      return s+" (bitpix="+bitpix+")";
    }
 
    /** Retourne la chaine d'explication de la taille et du codage de l'image
     * d'origine */
    protected String getSizeInfo() {
-      return naxis1 + "x" + naxis2 +" pixels "+getPixelCodingInfo(bitpix);
+      return naxis1 + "x" + naxis2 +" / encoding:"+getPixelCodingInfo(bitpix)+" / "
+      + Util.getUnitDisk(naxis1*naxis2*npix);
    }
 
    // Pour pouvoir charger juste un pixel d'origine

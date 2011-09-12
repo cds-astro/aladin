@@ -54,7 +54,7 @@ import cds.tools.pixtools.Util;
 /**
  * Classe de manipulation d'un fichier image FITS
  */
-public class Fits {
+final public class Fits {
 	public static final double DEFAULT_BLANK = Double.NaN;
 	public static final double DEFAULT_BSCALE = 1.;
 	public static final double DEFAULT_BZERO = 0.;
