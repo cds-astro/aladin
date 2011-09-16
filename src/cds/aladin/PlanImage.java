@@ -1784,15 +1784,37 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    // Conversion byte[] en entier 32
    // Recupere sous la forme d'un entier 32bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
-   static final protected int getInt(byte[] t,int i) {
-      return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
-   }
-
+//   static final protected int getInt(byte[] t,int i) {
+//      return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
+//   }
    // Conversion byte[] en entier 16
    // Recupere sous la forme d'un entier 16bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
-   static final protected int getShort(byte[] t,int i) {
-      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
+//   static final protected int getShort(byte[] t,int i) {
+//      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
+//   }
+   
+   static final protected byte getByte (byte[] t, int i) {
+      return (byte)(t[i]&0xFF);
+   }
+   static final protected int getShort(byte[] t, int i) { 
+      return (t[i]<<8) | t[i+1]&0xFF; 
+   }
+   static final protected int getInt(byte[] t, int i) {
+      return ((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF);
+   }
+   static final protected long getLong(byte[] t, int i) {
+      return (((long)((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF))<<32)
+      | ((((t[i+4]<<24) | ((t[i+5]&0xFF)<<16) | ((t[i+6]&0xFF)<<8) | t[i+7]&0xFF)) & 0xFFFFFFFFL);
+   }
+   static final protected double getFloat(byte[] t, int i) {
+      return Float.intBitsToFloat(((t[i]<<24) | ((t[i+1]&0xFF)<<16) 
+            | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF));
+   }
+   static final protected double getDouble(byte[] t, int i) {
+      long a = (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
+      | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
+      return Double.longBitsToDouble(a);
    }
 
    /**
@@ -1805,22 +1827,37 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    static final protected double getPixVal(byte[] t,int bitpix,int i) {
       try {
          switch(bitpix) {
-            case   8: return ((t[i])&0xFF);
-            case  16: i*=2; return ( ((t[i])<<8) | (t[i+1])&0xFF );
-            case  32: i*=4; return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
-            case  64: i*=8; 
-                      return (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
-                             | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
-            case -32: i*=4; return Float.intBitsToFloat((((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF));
-            case -64: i*=8;
-                      long a = (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
-                            | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
-                       return Double.longBitsToDouble(a);
+            case   8: return getByte(t,i);
+            case  16: return getShort(t,i*2);
+            case  32: return getInt(t,i*4);
+            case  64: return getLong(t,i*8);
+            case -32: return getFloat(t,i*4);
+            case -64: return getDouble(t,i*8);
          }
          return 0.;
       } catch( Exception e ) { return Double.NaN; }
 
    }
+
+//   static final protected double getPixVal(byte[] t,int bitpix,int i) {
+//      try {
+//         switch(bitpix) {
+//            case   8: return ((t[i])&0xFF);
+//            case  16: i*=2; return ( ((t[i])<<8) | (t[i+1])&0xFF );
+//            case  32: i*=4; return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
+//            case  64: i*=8; 
+//                      return (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
+//                             | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
+//            case -32: i*=4; return Float.intBitsToFloat((((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF));
+//            case -64: i*=8;
+//                      long a = (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
+//                            | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
+//                       return Double.longBitsToDouble(a);
+//         }
+//         return 0.;
+//      } catch( Exception e ) { return Double.NaN; }
+//
+//   }
 
    // Conversion entier 32 en byte dans le tableau t[] à partir de l'emplacement i
    static final protected void setInt(byte[] t,int i,int val) {

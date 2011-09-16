@@ -23,6 +23,7 @@ import static cds.allsky.Constante.INDEX;
 import static cds.allsky.Constante.TESS;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -33,6 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -119,20 +121,27 @@ public class MainPanel extends JPanel implements ActionListener {
    private String getString(String k) { return aladin.getChaine().getString(k); }
 
    public void actionPerformed(ActionEvent e) {
-      if (e.getSource() == tabDesc.getSourceDirField()) init();
+      if (e.getSource() == tabDesc.getSourceDirField()) {
+         init();
+      }
    }
    
    private Fits lastOneFits = null;
    private String lastRootPath=null;
    
+   // Retourne true si on a déjà trouvé le fichier "étalon"
+   private boolean alreadyHasFits(String rootPath) {
+      return lastRootPath!=null && lastRootPath.equals(rootPath);
+   }
+   
    /**
-    * Cherche un fichier de type FITS dans le répertoire donné.
+    * Cherche un fichier de type FITS dans le répertoire donné => va servir d'étalon
     * Utilise un cache une case pour éviter les recherches redondantes
     * @param aladinTree
     * @return null s'il y a eu une erreur ou le chemin du 1er fichier fits trouvé
     */
    private Fits getFits(String rootPath) {
-      if( lastRootPath!=null && lastRootPath.equals(rootPath) ) return lastOneFits;
+      if( alreadyHasFits(rootPath) ) return lastOneFits;
       lastOneFits = getFits1(rootPath);
       aladin.trace(2, "Will use this Fits file as reference => "+lastOneFits.getFilename());
       lastRootPath=rootPath;
@@ -176,6 +185,8 @@ public class MainPanel extends JPanel implements ActionListener {
    
 
 
+    private boolean debugPierre=false;   // BEURK - sinon le repaint Swing doit attendre la fin du init() ci-dessous
+    
    /**
     * Cherche un fichier fits dans l'arborescence et itialise les variables
     * bitpix et le cut avec Cherche aussi le meilleur nside pour la résolution
@@ -184,28 +195,39 @@ public class MainPanel extends JPanel implements ActionListener {
     * @param text
     */
    public void init() {
-      String text = tabDesc.getInputPath().trim();
+      final String text = tabDesc.getInputPath().trim();
+      debugPierre=true;
       if (text != null && !text.equals("")) {
          try {
-            // lit un fichier FITS dans le réperoire sélectionné
-            Fits file = getFits(text);
-            if (file == null || file.getCalib() == null) {
-               JOptionPane.showMessageDialog(this, s_ERRFITS + text,
-                     s_ERR, JOptionPane.ERROR_MESSAGE);
-               return;
-            }
-            // récupère le bitpix
-            tabBuild.setOriginalBitpix(file.bitpix);
-            // récupère le bscale/bzero
-            tabBuild.setBScaleBZero(file.bscale, file.bzero);
-            // récupère le blank
-            tabBuild.setBlank(file.blank);
-            // récupère le min max pour le cut
-            initCut();
-            // calcule le meilleur nside
-            long nside = healpix.core.HealpixIndex.calculateNSide(file
-                  .getCalib().GetResol()[0] * 3600.);
-            setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
+          (new Thread("Autocut"){
+             public void run() {
+                cds.tools.Util.pause(100);
+                tabDesc.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                // lit un fichier FITS dans le réperoire sélectionné
+                Fits file = getFits(text);
+                if (file == null || file.getCalib() == null) {
+                   System.err.println(s_ERRFITS + text);
+                   //                     JOptionPane.showMessageDialog(this, s_ERRFITS + text,
+                   //                           s_ERR, JOptionPane.ERROR_MESSAGE);
+                   return;
+                }
+                // récupère le bitpix
+                tabBuild.setOriginalBitpix(file.bitpix);
+                // récupère le bscale/bzero
+                tabBuild.setBScaleBZero(file.bscale, file.bzero);
+                // récupère le blank
+                tabBuild.setBlank(file.blank);
+                // récupère le min max pour le cut
+                initCut();
+                // calcule le meilleur nside
+                long nside = healpix.core.HealpixIndex.calculateNSide(file
+                      .getCalib().GetResol()[0] * 3600.);
+                setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
+                debugPierre=false;
+                tabDesc.setCursor(Cursor.getDefaultCursor());
+                newAllskyDir();
+             }
+          }).start();
 
          } catch (Exception e1) {
             //				e1.printStackTrace();
@@ -220,11 +242,12 @@ public class MainPanel extends JPanel implements ActionListener {
          path = getOutputPath();
          convertCut=false;
       } else {
+         final String finalPath=path;
          try {
-            final Fits file = getFits(path);
-            (new Thread("Autocut"){
-               public void run() {
+//            (new Thread("Autocut"){
+//               public void run() {
                   //               double[] cut = ThreadAutoCut.run(file);
+                  final Fits file = getFits(finalPath);
                   double[] cut;
                   try {
                      cut = file.findAutocutRange();
@@ -232,8 +255,8 @@ public class MainPanel extends JPanel implements ActionListener {
                   } catch( Exception e ) {
                      e.printStackTrace();
                   }
-               }
-            }).start();
+//               }
+//            }).start();
          } catch( Throwable e1 ) {
             e1.printStackTrace();
             return;
@@ -379,8 +402,9 @@ public class MainPanel extends JPanel implements ActionListener {
 
    protected void newAllskyDir() {
       tabPub.newAllskyDir(Constante.SURVEY);
-      // si un repertoire de sortie ALLSKY existe déjà, on change le nom du
-      // bouton START
+//      // si un repertoire de sortie ALLSKY existe déjà, on change le nom du
+//      // bouton START
+      if( debugPierre ) return;
       setStart();
       tabDesc.resumeWidgetsStatus();
       if( isExistingAllskyDir() ) preview(0);
@@ -550,7 +574,6 @@ public class MainPanel extends JPanel implements ActionListener {
             setStartEnabled(true);
          } else {
             planPreview.forceReload();
-            
             aladin.calque.repaintAll();
             Aladin.trace(4, "MainPanel.preview: update "+mysky);
 

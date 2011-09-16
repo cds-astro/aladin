@@ -96,6 +96,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
  * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
  * @beta    <LI> Upgrade test bug fixed
+ * @beta    <LI> Rice ZSCALE, ZZERO and UNCOMPRESSED_DATA support
  * @beta    <LI> Rice decomp for 16 and 8 BSIZE (only 32 was previously supported)
  * @beta    <LI> Crop on RGB is now working fine
  * @beta    <LI> BMP saving bug fixed
@@ -127,7 +128,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.056";
+    static public final    String VERSION = "v7.057";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

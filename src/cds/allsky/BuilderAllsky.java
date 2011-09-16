@@ -21,6 +21,7 @@ package cds.allsky;
 
 import cds.aladin.Aladin;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
@@ -35,6 +36,11 @@ final public class BuilderAllsky {
    private double progress = 0;
    
    public BuilderAllsky() {}
+   
+   public void createMoc(String path) throws Exception {
+      HealpixMoc moc = new HealpixMoc();
+      
+   }
    
     /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée

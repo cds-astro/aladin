@@ -11,6 +11,7 @@
 	   <property name="bin" value="${basedir}/bin"/>
 	   <property name="src" value="${basedir}/src"/>
 	   <property name="lib" value="${basedir}/lib"/>
+	   <property name="mocjar" value="${basedir}/../Moc/Moc.jar"/>
    
    <target name="compil" description="source compilation" >
      <mkdir dir="${bin}"/>
@@ -19,7 +20,8 @@
      <classpath>
           <pathelement path="${java.class.path}/"/>
           <pathelement path="${lib}/jsamp.jar"/>
-          <pathelement path="${lib}/microhub.jar"/>
+        <pathelement path="${lib}/microhub.jar"/>
+        <pathelement path="${Mocjar}"/>
       </classpath>
      </javac>
    </target>
@@ -29,6 +31,7 @@
         <fileset dir="${bin}"/>
 	    <zipfileset src="${lib}/jsamp.jar"/>
 	    <zipfileset src="${lib}/microhub.jar"/>
+	    <zipfileset src="${mocjar}"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
         </manifest>

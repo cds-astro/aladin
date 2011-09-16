@@ -35,6 +35,7 @@ import java.util.*;
  * Plan dedie a une image RICE
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.1 : sept 2011 - Prise en compte ZSCALE, et ZZERO
  * @version 1.0 : mars 2008 - creation
  */
 public class PlanImageRice extends PlanImage {
@@ -84,7 +85,6 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
       int bsize=4;
       try { bsize = headerFits.getIntFromHeader("ZVAL2"); } catch( Exception e ) {}
       
-      Aladin.trace(2,"Loading RICE FITS image extension (NBLOCK="+nblock+" BSIZE="+bsize+")");
       
       setBufPixels8(new byte[width*height]);
       
@@ -93,19 +93,52 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
       
       } else {
                   
+         Aladin.trace(2,"Loading RICE FITS image extension (NBLOCK="+nblock+" BSIZE="+bsize+")");
+         
+         int posCompress=0;
+         int posZscale=-1;
+         int posZzero=-1;
+         int posUncompress=-1;
+         
+         int tfields = headerFits.getIntFromHeader("TFIELDS");
+         for( int i=1,pos=0; i<=tfields; i++ ) {
+            String type = headerFits.getStringFromHeader("TTYPE"+i);
+            if( type.equals("COMPRESSED_DATA") ) posCompress = pos;
+            if( type.equals("ZSCALE") ) posZscale = pos;
+            if( type.equals("ZZERO") ) posZzero = pos;
+            if( type.equals("UNCOMPRESSED_DATA") ) posUncompress = pos;
+            String form = headerFits.getStringFromHeader("TFORM"+i);
+            pos+=Util.binSizeOf(form);
+         }
+         Aladin.trace(2,"Loading RICE FITS image extension (TFIELDS="+tfields+" NBLOCK="+nblock+" BSIZE="+bsize+")");
+         
          pixelsOrigin = new byte[taille];
          
-         byte [] table = new byte[nnaxis2*4*2];
-         byte [] buf = new byte[pcount];
+         byte [] table = new byte[nnaxis1*nnaxis2];
+         byte [] heap = new byte[pcount];
          
          try {
             dis.readFully(table);
-            dis.readFully(buf);
+            dis.skip(theap - nnaxis1*nnaxis2);  
+            dis.readFully(heap);
             
             int offset=0;
             for( int row=0; row<nnaxis2; row++ ) {
-               int pos = getInt(table,row*8+4);
-               decomp(buf,pos,pixelsOrigin,offset,tile,bsize,nblock,bitpix);
+               int offsetRec = row*nnaxis1;
+               int size = getInt(table,offsetRec+posCompress);
+               int pos = getInt(table,offsetRec+posCompress+4);
+               double bzero = posZscale<0 ? 0 : getDouble(table,offsetRec+posZzero);
+               double bscale = posZscale<0 ? 1 : getDouble(table,offsetRec+posZscale);
+               
+               // Non compressé
+               if( size==0 && posUncompress>=0 ) {
+                  size = getInt(table,offsetRec+posUncompress);
+                  pos  = getInt(table,offsetRec+posUncompress);
+                  direct(heap,pos,pixelsOrigin,offset,tile,bitpix,bzero,bscale);
+                  
+               // Compressé
+               } else decomp(heap,pos,pixelsOrigin,offset,tile,bsize,nblock,bitpix,bzero,bscale);
+               
                offset+=tile;
             }
          }catch (Exception e ) { e.printStackTrace(); }
@@ -163,8 +196,18 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
                   break;
      }
   }
+  
+  public static void direct(byte buf[],int pos,byte array[], int offset,int nx,
+        int bitpix,double bzero,double bscale) throws Exception {
+     int size = Math.abs(bitpix)/8;
+     for( int i=0; i<nx; i+=size ) {
+        double val = getPixVal(buf, bitpix, pos+i);
+        setPixVal(array, bitpix, offset+i, val*bscale+bzero);
+     }
+  }
    
-   public static void decomp(byte buf[],int pos,byte array[], int offset,int nx,int bsize,int nblock,int bitpix) throws Exception {
+   public static void decomp(byte buf[],int pos,byte array[], int offset,int nx,int bsize,int nblock,
+         int bitpix,double bzero,double bscale) throws Exception {
       int i, k, imax;
       int nbits, nzero, fs;
       int b, diff, lastpix;
@@ -230,7 +273,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
          if (imax > nx) imax = nx;
          if (fs<0) {
             /* low-entropy case, all zero differences */
-            for ( ; i<imax; i++) setPixVal(array,bitpix,i+offset,lastpix);
+            for ( ; i<imax; i++) setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
          } else if (fs==fsmax) {
             /* high-entropy case, directly coded pixel values */
             for ( ; i<imax; i++) {
@@ -259,7 +302,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
                   diff = ~(diff>>>1);
                }
                lastpix = diff+lastpix;
-               setPixVal(array,bitpix,i+offset,lastpix);
+               setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
             }
          } else {
             /* normal case, Rice coding */
@@ -288,7 +331,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
                   diff = ~(diff>>>1);
                }
                lastpix = diff+lastpix;
-               setPixVal(array,bitpix,i+offset,lastpix);
+               setPixVal(array,bitpix,i+offset,lastpix*bscale+bzero);
             }
          }
       }

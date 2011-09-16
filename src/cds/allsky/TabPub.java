@@ -56,13 +56,13 @@ public class TabPub extends JPanel implements ActionListener {
 	JProgressBar progressHpx = new JProgressBar(0,100);
 	
 	private Aladin aladin;
-	MainPanel allsky;
+	MainPanel mainPanel;
 	private String mapfile;
 	
-	public TabPub(Aladin a,MainPanel allskyPanel) {
+	public TabPub(Aladin a,MainPanel mainPanel) {
 		super(new BorderLayout());
 		aladin = a;
-		allsky = allskyPanel;
+		this.mainPanel = mainPanel;
 		createChaine();
 		
 		Border emptyBorder = BorderFactory.createEmptyBorder(20, 0, 0, 0);
@@ -182,22 +182,18 @@ public class TabPub extends JPanel implements ActionListener {
 		EXPORT = getString("EXPORTALLSKY");
 	}
 
-	private String getString(String k) { return allsky.aladin.getChaine().getString(k); }
+	private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
 	public void newAllskyDir(String dir) {
 	    url.setText("http://servername.org/"+dir);
 	    url.repaint();
-	    if (allsky == null)
-	    	pathLocal.setText(dir);
-	    else
-	    	pathLocal.setText(allsky.getOutputPath());
-	    	
-	    url.repaint();
+	    if (mainPanel == null) pathLocal.setText(dir);
+	    else pathLocal.setText(mainPanel.getOutputPath());
 	}
 	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand() == PUBLISH) {
-		   new FrameGlu(aladin,allsky.getOrder(),allsky.hasJpg());
+		   new FrameGlu(aladin,mainPanel.getOrder(),mainPanel.hasJpg());
 		}
 		else if (ae.getSource() == bExport) {
 			mapfile = dirBrowserHPX();
@@ -205,13 +201,13 @@ public class TabPub extends JPanel implements ActionListener {
 			bExport.setSelected(true);
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			mapfile=aladin.getFullFileName(mapfile);
-			ExportThread hpxThread = new ExportThread(allsky, mapfile);
+			ExportThread hpxThread = new ExportThread(mainPanel, mapfile);
 			hpxThread.start();
 			(new ThreadProgressBar(hpxThread)).start();
 
 		}
 		else if (ae.getSource() == bNext) {
-			allsky.showRgbTab();
+			mainPanel.showRgbTab();
 		}
 	}
 
@@ -220,7 +216,7 @@ public class TabPub extends JPanel implements ActionListener {
 	 * */
 	private String dirBrowserHPX() {
 		FileDialog fd = new FileDialog(aladin.frameAllsky,"Running directory selection",FileDialog.SAVE);
-		fd.setDirectory(allsky.getOutputPath());
+		fd.setDirectory(mainPanel.getOutputPath());
 //		fd.setFile("Allsky.hpx");
 		fd.setVisible(true);
 		if( fd.getFile()==null ) return null;

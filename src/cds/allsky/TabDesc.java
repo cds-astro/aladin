@@ -419,7 +419,6 @@ public class TabDesc extends JPanel implements ActionListener {
    }
 
    public void actionPerformed(ActionEvent e) {
-
       if (e.getSource() == dir_S) {
          initTxt();
       } else if (e.getSource() == browse_S) {
@@ -508,7 +507,6 @@ public class TabDesc extends JPanel implements ActionListener {
 
       dir_D.setText(path + Constante.ALLSKY + Util.FS);
    }
-
 
    public boolean isResetHpx() {
       return resetHpx.isSelected() && resetHpx.isEnabled();

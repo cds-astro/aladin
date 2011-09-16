@@ -1391,6 +1391,28 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        // DES QU'ON NE SUPPORTERA PLUS JAV 1.4
 //       return System.nanoTime()/1000000;
     }
+    
+    /** Retourne la lettre code d'un champ TFORM FITS nD */
+    static final public char getFitsType(String form) {
+       int l=form.indexOf('(');
+       if( l==-1 ) l=form.length();
+       return form.charAt(l-1);
+    }
+    
+    /** retourne la taille du champs FITS exprimé sous la forme nD(xxx) ou nPD(xxx) */
+    static final public int binSizeOf(String form) throws Exception {
+       try {
+         int l=form.indexOf('(');
+          if( l==-1 ) l=form.length();
+          if( l==1 ) return binSizeOf(form.charAt(0),1);
+          if( l>1 && form.charAt(l-2)=='P' ) return 8;
+          int n = Integer.parseInt( form.substring(0,l-1) );
+          return binSizeOf(form.charAt(l-1),n);
+      } catch( Exception e ) {
+         System.err.println("Pb pour "+form);
+         throw e;
+      }
+    }
 
     /** Retourne le nombre d'octets d'un champ BINTABLE
      * @param n le nombre d'items
