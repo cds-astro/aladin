@@ -37,30 +37,32 @@ import cds.tools.pixtools.CDSHealpix;
  *
  */
 public class PlanHealpix extends PlanBG {
+   
+   static final public String PROPERTIES = "properties";
 
     // noms des clés utilisés dans le fichier properties
-    static final String KEY_ORIGINAL_PATH = "dataPath";
-    static final String KEY_LOCAL_DATA = "localData";
-    static final String KEY_GZ = "gzipped";
-    static final String KEY_OFFSET = "offset";
-    static final String KEY_SIZERECORD = "sizeRecord";
-    static final String KEY_PROCESSING_DATE = "processingDate";
-    static final String KEY_LAST_MODIFICATON_DATE = "lastModified";
-    static final String KEY_NSIDE_PIXEL = "nsidePixel";
-    static final String KEY_NSIDE_FILE = "nsideFile";
-    static final String KEY_ORDER_GENERATED_IMGS = "orderGeneratedImgs";
-    static final String KEY_TFIELDS = "tfields";
-    static final String KEY_TTYPES = "ttypes";
-    static final String KEY_LENHPX = "lenhpx";
-    static final String KEY_TYPEHPX = "typehpx";
-    static final String KEY_ISPARTIAL = "isPartial";
-    static final String KEY_ARGB = "ARGB";
-    static final String KEY_ORDERING = "ordering";
-    static final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
-    static final String KEY_CURTFORMBITPIX = "curTFormBitpix";
-    static final String KEY_COORDSYS = "coordsys";
+    static public final String KEY_ORIGINAL_PATH = "dataPath";
+    static public final String KEY_LOCAL_DATA = "localData";
+    static public final String KEY_GZ = "gzipped";
+    static public final String KEY_OFFSET = "offset";
+    static public final String KEY_SIZERECORD = "sizeRecord";
+    static public final String KEY_PROCESSING_DATE = "processingDate";
+    static public final String KEY_LAST_MODIFICATON_DATE = "lastModified";
+    static public final String KEY_NSIDE_PIXEL = "nsidePixel";
+    static public final String KEY_NSIDE_FILE = "nsideFile";
+    static public final String KEY_ORDER_GENERATED_IMGS = "orderGeneratedImgs";
+    static public final String KEY_TFIELDS = "tfields";
+    static public final String KEY_TTYPES = "ttypes";
+    static public final String KEY_LENHPX = "lenhpx";
+    static public final String KEY_TYPEHPX = "typehpx";
+    static public final String KEY_ISPARTIAL = "isPartial";
+    static public final String KEY_ARGB = "ARGB";
+    static public final String KEY_ORDERING = "ordering";
+    static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
+    static public final String KEY_CURTFORMBITPIX = "curTFormBitpix";
+    static public final String KEY_COORDSYS = "coordsys";
     // Aladin version used to generate the properties file
-    static final String KEY_ALADINVERSION = "aladinVersion";
+    static public final String KEY_ALADINVERSION = "aladinVersion";
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;
     static final int POLA_AMPLITUDE_MAGIC_CODE = -41;
@@ -820,7 +822,7 @@ public class PlanHealpix extends PlanBG {
     }
 
     private File propertiesFile(String dir) {
-        return new File(getCacheDir()+Util.FS+dir+Util.FS+"properties");
+        return new File(getCacheDir()+Util.FS+dir+Util.FS+PROPERTIES);
     }
 
     private int getBitpixFromFormat(char t) {

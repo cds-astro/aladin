@@ -317,7 +317,7 @@ public final class Localisation extends MyBox {
    
    /** Retourne le nom du frame passé en paramètre */
    protected String getFrameName() { return getFrameName(frame); }
-   protected String getFrameName(int frame) { return frame<0 ? "" : REPERE[frame]; }
+   static public String getFrameName(int frame) { return frame<0 ? "" : REPERE[frame]; }
 
    /** Retourne la position du menu deroulant */
    protected int getFrame() { return frame; }

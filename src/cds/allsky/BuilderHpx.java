@@ -119,7 +119,7 @@ final public class BuilderHpx {
 	            PixTools.PolarToRaDec(point, radec);
 
 	            // Méthode bilinéaire
-	            radec = Calib.GalacticToRaDec(radec[0], radec[1]);
+	            radec = mainPanel.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 	            // Moyenne des pixels pour toutes les images trouvées
 	            double pixelFinal=0;
@@ -316,7 +316,7 @@ final public class BuilderHpx {
 	            // recherche les coordonnées du pixels HPX
 	            point = CDSHealpix.pix2ang_nest(nside, index);
 	            PixTools.PolarToRaDec(point, radec);
-	            radec = Calib.GalacticToRaDec(radec[0], radec[1]);
+	            radec = mainPanel.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 
 	            // Moyenne des pixels pour toutes les images trouvées
@@ -587,7 +587,7 @@ int n =0;
 			SrcFile file = downFiles.get(gagnant);
 			Calib calib = file.calib;
 			// transforme les coordonnées en ICRS
-			double[]radec = Calib.GalacticToRaDec(coo_gal.al,coo_gal.del);
+			double[] radec = mainPanel.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
 			Coord c = new Coord(radec[0],radec[1]);
 			
 			if (isInFile(c, recouvrement, calib)) {

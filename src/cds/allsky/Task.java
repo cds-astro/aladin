@@ -60,7 +60,7 @@ public class Task implements Runnable{
     public Task(MainPanel mainPanel) {
        this.mainPanel = mainPanel;
        builderIndex = new BuilderIndex(mainPanel);
-       builderAllsky = new BuilderAllsky();
+       builderAllsky = new BuilderAllsky(mainPanel);
        builder = new BuilderController(mainPanel);
     }
 
@@ -104,7 +104,7 @@ public class Task implements Runnable{
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
 	      if (mode<=INDEX) {
-	         Aladin.trace(2,"Launch Index");
+	         Aladin.trace(2,"Launch Index (frame="+mainPanel.getFrameName()+")");
 	         followProgress(mode,builderIndex);
 	         boolean init = builderIndex.build(input,output,order);
 	         // si le thread a été interrompu, on sort direct
@@ -121,7 +121,7 @@ public class Task implements Runnable{
 	      // Création des fichiers healpix fits et jpg
 	      if (mode <= TESS) {
 	         mode = TESS;
-	         Aladin.trace(2,"Launch Tess "+(!fading ? "(nofading)":""));
+	         Aladin.trace(2,"Launch Tess (frame="+mainPanel.getFrameName()+") "+(!fading ? "(nofading)":""));
 	         //				builder.setThread(runner);
 	         followProgress(mode, builder);
 	         try {

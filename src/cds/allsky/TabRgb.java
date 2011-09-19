@@ -59,11 +59,13 @@ public class TabRgb extends JPanel implements ActionListener {
 	private JButton bOk = new JButton(OK);
 	private JButton bHelp = new JButton();
 	private final Aladin aladin;
+	private MainPanel mainPanel;
 	private String titlehelp;
 
-	public TabRgb(Aladin aladin) {
+	public TabRgb(Aladin aladin,MainPanel mainPanel) {
 		super(new BorderLayout());
 		this.aladin = aladin;
+		this.mainPanel = mainPanel;
 		createChaine(Aladin.getChaine());
 		bHelp = Util.getHelpButton(this,HELP);
 		
@@ -208,7 +210,7 @@ public class TabRgb extends JPanel implements ActionListener {
 			
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			bOk.setEnabled(false);
-			BuilderRgb builderRgb = new BuilderRgb(aladin,plans,dir.getText());
+			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel,plans,dir.getText());
 			builderRgb.start();
 			(new ThreadProgressBar(builderRgb)).start();
 		}

@@ -79,7 +79,7 @@ public class PlanMoc extends PlanBGCat {
          Iterator<long[]> it = hpix.iterator();
          while( it.hasNext() ) {
             long [] hpix = it.next();
-            hpixList[n++] = new Hpix((int)hpix[0],hpix[1]);
+            hpixList[n++] = new Hpix((int)hpix[0],hpix[1],frameOrigin);
          }
       }
       return hpixList;

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import cds.aladin.Aladin;
-import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
@@ -17,6 +16,7 @@ public class BuilderRgb implements Runnable {
 	private int progress;
 	private PlanBG[] p;
 	private final Aladin aladin;
+	private MainPanel mainPanel;
 	private BuilderAllsky builderAllsky;
 	private String path;
     private int width=-1;
@@ -28,9 +28,10 @@ public class BuilderRgb implements Runnable {
     private int maxOrder = 100;
     private int missing=-1;
 
-    public BuilderRgb(Aladin aladin, Object[] plans, String path) {
+    public BuilderRgb(Aladin aladin, MainPanel mainPanel, Object[] plans, String path) {
        this.aladin = aladin;
-       builderAllsky = new BuilderAllsky();
+       this.mainPanel = mainPanel;
+       builderAllsky = new BuilderAllsky(mainPanel);
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -315,7 +316,7 @@ public class BuilderRgb implements Runnable {
           if( planPreview==null || planPreview.isFree() ) {
              double[] res = CDSHealpix.pix2ang_nest(Util.nside(3), last);
              double[] radec = CDSHealpix.polarToRadec(new double[] {res[0],res[1]});
-             radec = Calib.GalacticToRaDec(radec[0],radec[1]);
+             radec = mainPanel.gal2ICRSIfRequired(radec);
              int n = aladin.calque.newPlanBG(path, "=MySkyColor", Coord.getSexa(radec[0],radec[1]), "30" );
              aladin.trace(4,"RGBGuild: Create MySky");
              planPreview = aladin.calque.getPlan(n);

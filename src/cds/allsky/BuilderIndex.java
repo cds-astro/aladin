@@ -35,8 +35,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import cds.aladin.Aladin;
-import cds.aladin.Calib;
 import cds.aladin.Coord;
+import cds.aladin.Localisation;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -263,9 +263,9 @@ public class BuilderIndex {
        long npix;
        long[] npixs = null;
        
-	   // transforme les coordonnées du point de ref de l'image en GAL
+	   // transforme les coordonnées du point de ref dans le bon frame
 	   Coord centerGAL;
-	   double[] aldel = Calib.RaDecToGalactic(
+	   double[] aldel = mainPanel.ICRS2galIfRequired(
 	         fitsfile.center.al, fitsfile.center.del);
 	   centerGAL = new Coord(aldel[0], aldel[1]);
 
@@ -348,8 +348,10 @@ public class BuilderIndex {
 	      int marge = 2;
 	      for (int i = 0; i < corners.length; i++) {
 	         Coord coo = corners[i];
-	         double[] radec = Calib.GalacticToRaDec(coo.al, coo.del);
-	         coo.al=radec[0]; coo.del = radec[1];
+	         if( mainPanel.getFrame()!=Localisation.ICRS ) {
+	            double[] radec = mainPanel.gal2ICRSIfRequired(coo.al, coo.del);
+	            coo.al=radec[0]; coo.del = radec[1];
+	         }
 	         f.getCalib().GetXY(coo);
 	         if( Double.isNaN(coo.x) ) continue;
 	         coo.y = f.height - coo.y -1;

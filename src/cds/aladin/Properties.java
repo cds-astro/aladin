@@ -888,6 +888,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          addCouple(p,"Drawing method",p1,g,c);
       }
       
+      if( plan instanceof PlanBG ) {
+         addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(((PlanBG)plan).frameOrigin)), g, c);
+      }
+      
       if( plan.flagOk && (plan.isSimpleCatalog() || plan instanceof PlanBG) ) {
          
          JPanel p1 = aladin.view.getPlotControlPanelForPlan(plan);

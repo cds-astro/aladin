@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 import cds.aladin.FrameHeaderFits;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
@@ -110,9 +111,9 @@ public final class HpixTree extends HealpixMoc {
       frameHeaderFits = new FrameHeaderFits();
       frameHeaderFits.makeTA();
       header.readHeader(mis);       // On mange la première entête FITS
-      String signature = header.getStringFromHeader(SIGNATURE);
-      if( signature==null ) signature = header.getStringFromHeader(SIGNATURE+"M");
-      if( signature==null ) throw new Exception("Not an HEALPix Multi-Level Fits map ("+SIGNATURE+" not found)");
+//      String signature = header.getStringFromHeader(SIGNATURE);
+//      if( signature==null ) signature = header.getStringFromHeader(SIGNATURE+"M");
+//      if( signature==null ) throw new Exception("Not an HEALPix Multi-Level Fits map ("+SIGNATURE+" not found)");
 
       clear();
       try {
@@ -120,8 +121,9 @@ public final class HpixTree extends HealpixMoc {
          int naxis1 = header.getIntFromHeader("NAXIS1");
          int naxis2 = header.getIntFromHeader("NAXIS2");
          String tform = header.getStringFromHeader("TFORM1");
-//         String numbering = header.getStringFromHeader("ORDERING");
-//         if( !numbering.equals("UNIQ") && !numbering.equals("NUNIQ")) throw new Exception("Healpix MOC support only NUNIQ ordering");
+         String coordsys = header.getStringFromHeader("COORDSYS");
+         frame=Localisation.GAL;
+         if( coordsys!=null && coordsys.charAt(0)=='C' ) frame=Localisation.ICRS;
          int nbyte= tform.indexOf('K')>=0 ? 8 : tform.indexOf('J')>=0 ? 4 : -1;   // entier 64 bits, sinon 32
          if( nbyte<=0 ) throw new Exception("HEALPix Multi Order Coverage Map only requieres integers (32bits or 64bits)");
          byte [] buf = new byte[naxis1*naxis2];

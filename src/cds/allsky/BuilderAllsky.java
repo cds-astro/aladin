@@ -19,7 +19,17 @@
 
 package cds.allsky;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Properties;
+
 import cds.aladin.Aladin;
+import cds.aladin.Localisation;
+import cds.aladin.PlanHealpix;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
@@ -35,14 +45,36 @@ final public class BuilderAllsky {
    private static final String FS = System.getProperty("file.separator");
    private double progress = 0;
    
-   public BuilderAllsky() {}
+   final private MainPanel mainPanel;
+   
+   public BuilderAllsky(MainPanel mainPanel) {
+      this.mainPanel=mainPanel;
+   }
    
    public void createMoc(String path) throws Exception {
       HealpixMoc moc = new HealpixMoc();
       
    }
    
-    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
+   /** Ecriture du fichier des Properties associées au survey
+    * On reprend quelques mots clés issus de PlanHealpix utilisés par Thomas B. */
+   private void writePropertiesFile(String path) throws Exception {
+      Properties prop = new Properties();
+      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      
+      int frame = mainPanel.getFrame();
+      char coordsys = frame==Localisation.ICRS ? 'C' : frame==Localisation.ECLIPTIC ? 'E' : 'G';
+      prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
+      prop.setProperty(PlanHealpix.KEY_ALADINVERSION, mainPanel.aladin.VERSION);
+
+      prop.store(new FileOutputStream(propertiesFile(path)), null);
+   }
+
+   private File propertiesFile(String path) {
+      return new File(path+Util.FS+PlanHealpix.PROPERTIES);
+   }
+
+   /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée
     * @param path Emplacement du survey
     * @param order order Healpix
@@ -56,6 +88,9 @@ final public class BuilderAllsky {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
+      
+      // Ecriture du fichier des propriétés à la racine du survey
+      writePropertiesFile(path);
       
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
@@ -134,7 +169,10 @@ final public class BuilderAllsky {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
-      
+     
+      // Ecriture du fichier des propriétés à la racine du survey
+      writePropertiesFile(path);
+
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
 //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");

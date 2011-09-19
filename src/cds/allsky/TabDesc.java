@@ -46,6 +46,7 @@ import javax.swing.border.Border;
 
 import cds.aladin.Aladin;
 import cds.aladin.Chaine;
+import cds.aladin.Localisation;
 import cds.tools.Util;
 
 public class TabDesc extends JPanel implements ActionListener {
@@ -85,14 +86,14 @@ public class TabDesc extends JPanel implements ActionListener {
    protected JTextField dir_D = new JTextField(30);
    private JTextField textFieldAllsky = new JTextField(30);
    private String defaultDirectory;
-   private MainPanel mainPanel;
+   final private MainPanel mainPanel;
    private String BROWSE;
    private JButton b_next;
    private String help, titlehelp;
 
-   public TabDesc(String defaultDir, MainPanel mainPanel) {
+   public TabDesc(String defaultDir, MainPanel mPanel) {
       super(new BorderLayout());
-      this.mainPanel = mainPanel;
+      mainPanel = mPanel;
       createChaine();
       init();
       
@@ -209,6 +210,15 @@ public class TabDesc extends JPanel implements ActionListener {
       pCenter.add(pBorder,c); 
 
       if (Aladin.PROTO) {
+         final JCheckBox cb1 = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
+         cb1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               mainPanel.setFrame(cb1.isSelected() ? Localisation.GAL : Localisation.ICRS);
+            }
+         });
+         c.gridy++;
+         pCenter.add(cb1, c);
+         
          final JCheckBox cb = new JCheckBox("DSS Schmidt plates", false);
          cb.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

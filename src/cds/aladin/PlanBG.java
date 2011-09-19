@@ -35,6 +35,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ImageObserver;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.*;
@@ -113,7 +115,7 @@ import cds.tools.pixtools.PixTools;
  * @author Pierre Fernique + Anaïs Oberto [CDS]
  */
 public class PlanBG extends PlanImage {
-
+   
    static final boolean NOALLSKY = false;
    static final boolean TEST = true;
 
@@ -217,6 +219,19 @@ public class PlanBG extends PlanImage {
       color = gluSky.isColored();
    }
    
+   protected void loadProperties(InputStream in) throws Exception {
+      java.util.Properties prop = new java.util.Properties();
+      prop.load(in);
+      
+      // recherche du frame Healpix
+      String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
+      char c1 = strFrame.charAt(0);
+      if( c1=='C' ) frameOrigin=Localisation.ICRS;
+      else if( c1=='E' ) frameOrigin=Localisation.ECLIPTIC;
+      else if( c1=='G' ) frameOrigin=Localisation.GAL;
+
+   }
+   
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
       super(aladin);
       initCache();
@@ -235,6 +250,14 @@ public class PlanBG extends PlanImage {
       frameOrigin=Localisation.GAL;
       color = false;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
+      
+      
+      // Chargement d'un éventuel fichier de Properties
+      try {
+         InputStream in = new FileInputStream( new File(path+Util.FS+PlanHealpix.PROPERTIES));
+         loadProperties(in);
+      } catch( Exception e) { }
+      
 
       File f3=null;
       
@@ -273,7 +296,7 @@ public class PlanBG extends PlanImage {
             e.printStackTrace();
          }
 
-         aladin.trace(3,"AllSky local... "+this+(c!=null ? " around "+c:""));
+         aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
       }
 
       suite(c,radius);
@@ -298,6 +321,13 @@ public class PlanBG extends PlanImage {
       color = false;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
 //      for( int npix=450; Util.isUrlResponding(HealpixKey.getFilePath(url, maxOrder, npix)+".jpg"); npix*=4, maxOrder++ );
+      
+      // Chargement d'un éventuel fichier de Properties
+      try {
+         InputStream in = (new URL(url+"/Properties")).openStream();
+         loadProperties(in);
+      } catch( Exception e) { aladin.trace(4,"PlanBG: Properties file not found ["+url+"/Properties]"); }
+
       for( int n=3; true; n++ ) {
          if( !Util.isUrlResponding(url+"/Norder"+n) ) break;
          maxOrder=n;

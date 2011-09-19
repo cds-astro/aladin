@@ -39,9 +39,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.Aladin;
-import cds.aladin.Calib;
 import cds.aladin.Coord;
+import cds.aladin.Localisation;
 import cds.aladin.PlanBG;
+import cds.astro.Astrocoo;
+import cds.astro.Astroframe;
+import cds.astro.Galactic;
+import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
@@ -52,7 +56,7 @@ import cds.tools.pixtools.Util;
  * Gère le formulaire de génération des surveys HEALPix
  * @author Anaïs Oberto + Pierre Fernique
  */
-public class MainPanel extends JPanel implements ActionListener {
+final public class MainPanel extends JPanel implements ActionListener {
 
    protected Aladin aladin;
    
@@ -93,7 +97,7 @@ public class MainPanel extends JPanel implements ActionListener {
       tabBuild= new TabBuild(this);
       tabJpg  = new TabJpg(this);
       tabPub  = new TabPub(aladin,this);
-      tabRgb  = new TabRgb(aladin);
+      tabRgb  = new TabRgb(aladin,this);
       tabDesc = new TabDesc(aladin.getDefaultDirectory(), this);
       tabDesc.getSourceDirField().addActionListener(this);
 
@@ -564,9 +568,8 @@ public class MainPanel extends JPanel implements ActionListener {
          planPreview = (PlanBG) aladin.calque.getPlan(mysky);
          if (planPreview == null || planPreview.isFree() || planPreview.hasError() ) {
             double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), last);
-            double[] radec = CDSHealpix.polarToRadec(new double[] { res[0],
-                  res[1] });
-            radec = Calib.GalacticToRaDec(radec[0], radec[1]);
+            double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
+            radec = gal2ICRSIfRequired(radec);
             int n = aladin.calque.newPlanBG(getOutputPath(), "="+mysky,
                   Coord.getSexa(radec[0], radec[1]), "30");
             Aladin.trace(4, "MainPanel.preview: create "+mysky);
@@ -582,25 +585,58 @@ public class MainPanel extends JPanel implements ActionListener {
          e.printStackTrace();
       }
    }
+   
+   private int frame = Localisation.ICRS;
+   public void setFrame(int frame) { this.frame=frame; }
+   public int getFrame() { return frame; }
+   public String getFrameName() { return Localisation.getFrameName(frame); }
+
+   static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
+   static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
+   static private Astroframe AF_GAL1 = new Galactic();
+   static private Astroframe AF_ICRS1 = new ICRS();
+   
+   protected double[] gal2ICRSIfRequired(double al, double del) { return new double[]{al,del}; }
+   protected double[] gal2ICRSIfRequired(double [] aldel) {
+      if( frame==Localisation.ICRS ) return aldel;
+      Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
+      coo.set(aldel[0],aldel[1]);
+      coo.convertTo(AF_ICRS1);
+      aldel[0] = coo.getLon();
+      aldel[1] = coo.getLat();
+      return aldel;
+   }
+   protected double[] ICRS2galIfRequired(double al, double del) { return new double[]{al,del}; }
+   protected double[] ICRS2galIfRequired(double [] aldel) {
+      if( frame==Localisation.ICRS ) return aldel;
+      Astrocoo coo = (Astrocoo) COO_EQU.clone(); 
+      coo.set(aldel[0], aldel[1]);
+      coo.convertTo(AF_GAL1);
+      aldel[0] = coo.getLon();
+      aldel[1] = coo.getLat();
+      return aldel;
+   }
+   
+
 }
 
-class ThreadAutoCut extends Thread {
-   static Fits file = null;
-   static double[] cut = null;
-
-   protected static double[] run(Fits file) {
-      ThreadAutoCut.file = file;
-      (new ThreadAutoCut()).run();
-      return cut;
-   }
-
-
-   public void run() {
-      try {
-         cut = file.findAutocutRange();
-      } catch (Exception e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-}
+//class ThreadAutoCut extends Thread {
+//   static Fits file = null;
+//   static double[] cut = null;
+//
+//   protected static double[] run(Fits file) {
+//      ThreadAutoCut.file = file;
+//      (new ThreadAutoCut()).run();
+//      return cut;
+//   }
+//
+//
+//   public void run() {
+//      try {
+//         cut = file.findAutocutRange();
+//      } catch (Exception e) {
+//         // TODO Auto-generated catch block
+//         e.printStackTrace();
+//      }
+//   }
+//}

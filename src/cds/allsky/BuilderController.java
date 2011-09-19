@@ -21,12 +21,18 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import cds.aladin.Aladin;
+import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.PlanImage;
+import cds.astro.Astrocoo;
+import cds.astro.Astroframe;
+import cds.astro.Galactic;
+import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.Hpix;
@@ -866,9 +872,9 @@ public class BuilderController  {
 	}
 
 	public int getLastN3() {
-		return lastN3;
+	   return lastN3;
 	}
-	
+
 	/*
 	public void testVitesse() throws Exception {
 		String outpath = "/tmp/";
