@@ -45,10 +45,15 @@ final public class BuilderAllsky {
    private static final String FS = System.getProperty("file.separator");
    private double progress = 0;
    
+   private int frame;
    final private MainPanel mainPanel;
    
-   public BuilderAllsky(MainPanel mainPanel) {
+   /**
+    * si frame==-1, utilisera le frame spécifié par l'utilisateur
+    */
+   public BuilderAllsky(MainPanel mainPanel,int frame) {
       this.mainPanel=mainPanel;
+      this.frame=frame;
    }
    
    public void createMoc(String path) throws Exception {
@@ -62,7 +67,7 @@ final public class BuilderAllsky {
       Properties prop = new Properties();
       prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       
-      int frame = mainPanel.getFrame();
+      int frame = this.frame==-1 ? mainPanel.getFrame() : this.frame;
       char coordsys = frame==Localisation.ICRS ? 'C' : frame==Localisation.ECLIPTIC ? 'E' : 'G';
       prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
       prop.setProperty(PlanHealpix.KEY_ALADINVERSION, mainPanel.aladin.VERSION);

@@ -27,11 +27,15 @@ public class BuilderRgb implements Runnable {
     private boolean stopped=false;
     private int maxOrder = 100;
     private int missing=-1;
+    
+    private int statNbFile;
+    private long statSize;
+    private long startTime,totalTime;
+    private long statLastShowTime;
 
     public BuilderRgb(Aladin aladin, MainPanel mainPanel, Object[] plans, String path) {
        this.aladin = aladin;
        this.mainPanel = mainPanel;
-       builderAllsky = new BuilderAllsky(mainPanel);
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -43,21 +47,49 @@ public class BuilderRgb implements Runnable {
        bscale = new double[3];
 
        // recherche la meilleure résolution commune
+       int frame=-1;
        for( int c=0; c<3; c++) {
           if( p[c]==null ) { missing=c; continue; }
-          int order = p[c].getMaxHealpixOrder()-BuilderController.ORDER;
+          if( frame==-1 ) frame = p[c].getFrameOrigin();
+          else if( frame!=p[c].getFrameOrigin() ) {
+             aladin.warning(mainPanel, "All components must be used the same HEALPix coordinate system !");
+             return;
+          }
+          int order = p[c].getMaxFileOrder();
           if( maxOrder > order)  maxOrder = order;
        }
+       builderAllsky = new BuilderAllsky(mainPanel,frame);
+       
+       aladin.trace(3,"BuilderRgb maxOrder="+maxOrder+" => "+path);
     }
 
-	public int getProgress() {
-		return progress;
-	}
+    public int getProgress() {
+       return progress;
+    }
 
-	public synchronized void start(){
-		(new Thread(this)).start();
-	}
-	
+    private void initStat() { statNbFile=0; statSize=0; statLastShowTime=-1; startTime = System.currentTimeMillis(); }
+
+    // Mise à jour des stats
+    private void updateStat(File f) {
+       statNbFile++;
+       statSize += f.length();
+       long t = System.currentTimeMillis();
+       if( t-statLastShowTime < 1000 ) return;
+       totalTime = System.currentTimeMillis()-startTime;
+       statLastShowTime=t;
+       showStat();
+    }
+
+    // Demande d'affichage des stats (dans le TabRgb)
+    private void showStat() {
+       if( mainPanel==null ) return;
+       mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
+    }
+
+    public synchronized void start(){
+       (new Thread(this)).start();
+    }
+
 	// Génération des RGB récursivement en repartant du niveau de meilleure résolution
 	// afin de pouvoir utiliser un calcul de médiane sur chacune des composantes R,G et B
 	private Fits [] createRGB(int order, long npix) throws Exception {
@@ -150,29 +182,34 @@ public class BuilderRgb implements Runnable {
     }
 
     // Génération d'une feuille terminale (=> simple chargement des composantes)
-    private Fits [] createLeaveRGB(int order, long npix) throws Exception {
-       Fits [] out = new Fits[3];
-       
-       // Chargement des 3 (ou éventuellement 2) composantes
-       for( int c=0; c<3; c++ ) {
-          if( c==missing ) continue;
-          out[c] = new Fits();
-          out[c].loadFITS( Util.getFilePath( p[c].getUrl(),order, npix)+".fits");
-          
-          // Initialisation des constantes pour cette composante
-          if( bitpix[c]==0 ) {
-             bitpix[c]=out[c].bitpix;
-             blank[c]=out[c].blank;
-             bscale[c]=out[c].bscale;
-             bzero[c]=out[c].bzero;
-             if( width==-1 ) width = out[c].width;  // La largeur d'un losange est la même qq soit la couleur
-          }
-       }
-       
-       // Génération de la couleur
-       generateRGB(out,order,npix);
-       return out;
-    }
+	private Fits [] createLeaveRGB(int order, long npix) throws Exception {
+	   Fits[] out =null;
+	   try {
+	      out = new Fits[3];
+
+	      // Chargement des 3 (ou éventuellement 2) composantes
+	      for( int c=0; c<3; c++ ) {
+	         if( c==missing ) continue;
+	         out[c] = new Fits();
+	         out[c].loadFITS( Util.getFilePath( p[c].getUrl(),order, npix)+".fits");
+
+	         // Initialisation des constantes pour cette composante
+	         if( bitpix[c]==0 ) {
+	            bitpix[c]=out[c].bitpix;
+	            blank[c]=out[c].blank;
+	            bscale[c]=out[c].bscale;
+	            bzero[c]=out[c].bzero;
+	            if( width==-1 ) width = out[c].width;  // La largeur d'un losange est la même qq soit la couleur
+	         }
+	      }
+
+//	      // Génération de la couleur
+//	      generateRGB(out,order,npix);
+	   } catch( Exception e ) {
+	      e.printStackTrace();
+	   }
+	   return out;
+	}
 	
     // génération du RGB à partir des composantes
     private void generateRGB(Fits [] out, int order, long npix) throws Exception {
@@ -201,6 +238,9 @@ public class BuilderRgb implements Runnable {
        cds.tools.Util.createPath(file);
        rgb.writeJPEG(file);
        rgb.free();
+       
+       File f = new File(file);
+       updateStat(f);
     }
     
     private long t=0;
@@ -208,6 +248,7 @@ public class BuilderRgb implements Runnable {
     public void run() {
 
        try {
+          initStat();
           double progressFactor = 100f/768f;
           progress=0;
           for( int i=0; !stopped && i<768; i++ ) {
@@ -302,6 +343,7 @@ public class BuilderRgb implements Runnable {
 //		preview(output,0);
 //		progress = 100;
 //	}
+    
 
 	/** Création/rafraichissemnt d'un allsky (en l'état) et affichage */
 	void preview(String path, int last) {

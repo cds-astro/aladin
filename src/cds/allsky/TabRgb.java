@@ -27,11 +27,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
 
 import cds.aladin.Aladin;
 import cds.aladin.Chaine;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
+import cds.aladin.Properties;
 import cds.tools.Util;
 
 public class TabRgb extends JPanel implements ActionListener {
@@ -135,10 +137,22 @@ public class TabRgb extends JPanel implements ActionListener {
 		bOk.addActionListener(this);
 		pCenter.add(bOk,c);
 		
+//		// barre de progression
+//		progressBar.setStringPainted(true);
+//		c.insets.top=70;
+//		pCenter.add(progressBar,c);
+		
 		// barre de progression
 		progressBar.setStringPainted(true);
-		c.insets.top=70;
-		pCenter.add(progressBar,c);
+//		c.insets.top=70;
+//		c.fill = GridBagConstraints.HORIZONTAL;
+//		c.gridwidth = GridBagConstraints.REMAINDER;
+//		c.gridy++;c.gridx=0;
+		JPanel pProgress = new JPanel(new BorderLayout());
+		pProgress.setBorder(new EmptyBorder(50, 0, 15, 0));
+		pProgress.add(progressBar,BorderLayout.CENTER);
+		pProgress.add(createStatPanel(),BorderLayout.SOUTH);
+        pCenter.add(pProgress,c);
 
 		JPanel fin = new JPanel(new BorderLayout());
 		JPanel pBtn = new JPanel();
@@ -195,6 +209,36 @@ public class TabRgb extends JPanel implements ActionListener {
         return new PlanBG[]{};
       }
 	}
+	
+	   private JLabel tileStat,timeStat;
+	   
+	   private JPanel createStatPanel() {
+	      GridBagLayout g = new GridBagLayout();
+	      GridBagConstraints c = new GridBagConstraints();
+	      c.fill = GridBagConstraints.BOTH;
+	      c.insets = new Insets(2,10,2,2);
+	      JPanel p = new JPanel(g);
+
+	      tileStat = new JLabel("--");
+	      Properties.addCouple(p, ".RGB tiles: ", tileStat, g, c);           
+
+	      timeStat = new JLabel("--");
+	      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
+
+	      return p;
+	   }
+	   
+	   protected void setStat(int nbTile,long sizeTile,long time) {
+	      String s;
+	      if( nbTile==-1 ) s="";
+	      else s= nbTile+" tile"+(nbTile>1?"s":"") + " for "+Util.getUnitDisk(sizeTile);
+	      tileStat.setText(s);
+	      if( time==-1 ) s="";
+	      else s= Util.getTemps(time,true);
+	      timeStat.setText(s);
+	   }
+	   
+
 
 	public void setProgress(int value) {
 		progressBar.setValue(value);

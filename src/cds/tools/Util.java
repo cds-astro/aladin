@@ -1136,10 +1136,11 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        imgBuf.flush(); imgBuf=null;
        for( int i=0;i<taille; i++ ) {
           int p = rgb[i];
-          if( ((p >> 16) & 0xFF) != ((p >> 8) & 0xFF)
-           || ((p >> 8) & 0xFF) != (p & 0xFF) ) return true;
+          int red = ((p >>> 16) & 0xFF);
+          int green = ((p >>> 8) & 0xFF);
+          int blue = (p & 0xFF);
+          if( red!=green || green!=blue ) return true;
        }
-
        return false;
     }
 

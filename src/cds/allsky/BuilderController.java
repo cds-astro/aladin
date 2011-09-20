@@ -299,9 +299,7 @@ public class BuilderController  {
          		if (stopped) break;
          		
                 Fits f = createHpx(hpx, outpath, ordermin, ordermax, npix,fading);
-                if (f!=null) {
-                	lastN3 = (int)npix;
-                }
+                if (f!=null) lastN3 = (int)npix;
                 progress++;
              } catch( Throwable e ) { e.printStackTrace(); }
           }

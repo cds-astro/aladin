@@ -56,6 +56,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_LENHPX = "lenhpx";
     static public final String KEY_TYPEHPX = "typehpx";
     static public final String KEY_ISPARTIAL = "isPartial";
+    static public final String KEY_ISCOLOR = "isColored";
     static public final String KEY_ARGB = "ARGB";
     static public final String KEY_ORDERING = "ordering";
     static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
@@ -377,7 +378,7 @@ public class PlanHealpix extends PlanBG {
        Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
        objet = co+"";
        Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
-       p.frame = getFrame();
+       p.frame = getCurrentFrameDrawing();
 
        setNewProjD(p);
        initZoom=1./ (Aladin.OUTREACH?64:32);

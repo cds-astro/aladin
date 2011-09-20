@@ -60,7 +60,7 @@ public class Task implements Runnable{
     public Task(MainPanel mainPanel) {
        this.mainPanel = mainPanel;
        builderIndex = new BuilderIndex(mainPanel);
-       builderAllsky = new BuilderAllsky(mainPanel);
+       builderAllsky = new BuilderAllsky(mainPanel,-1);
        builder = new BuilderController(mainPanel);
     }
 

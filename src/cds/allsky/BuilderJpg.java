@@ -100,7 +100,7 @@ public class BuilderJpg implements Runnable {
 	         createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
-	      (new BuilderAllsky(mainPanel)).createAllSkyJpgColor(dirpath,3,64);
+	      (new BuilderAllsky(mainPanel,-1)).createAllSkyJpgColor(dirpath,3,64);
 	      progress=100;
 	   } catch( Exception e ) {
 	      e.printStackTrace();

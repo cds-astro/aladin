@@ -75,10 +75,6 @@ public final class HeaderFits {
     }
 
   /** Creation du header.
-   * Rq: si gzis est !=null, ce sera ce flux qui sera pris, sinon dis
-   * @param dis le flux en entree
-   * @param gzis le flux en entree (gzip)
-   * @param flagHCOMP true s'il s'agit de FITS HCOMP
    */
     public HeaderFits(MyInputStream dis) throws Exception {
       readHeader(dis);
@@ -218,21 +214,11 @@ public final class HeaderFits {
          }
 
         // Test s'il s'agit de FITS Hcompresse (on ne teste que le premier
-        // code magic car JAVA 1.0 ne permet pas le unread de plus d'1 octet
         if( (dis.getType() & MyInputStream.HCOMP)!=0 ) {
            flagHCOMP=true;
            return true;
         } else flagHCOMP=false;
-/*
-        int a=0;
-        if( (a=dis.read())!=0xDD ) dis.unread(a);
-        else {
-           flagHCOMP=true;
-           dis.unread(a);
-           return true;
-        }
-        flagHCOMP=false;
-*/
+        
          // On passe le bourrage eventuel
          int bourrage = blocksize - sizeHeader%blocksize;
          if( bourrage!=blocksize ) {

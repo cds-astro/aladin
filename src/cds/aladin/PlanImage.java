@@ -2938,7 +2938,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
       setBufPixels8(new byte[width*height]);
 
       // Lecture HCompress
-      if( headerFits.isHCOMP() ) {
+      if( (dis.getType() & MyInputStream.HCOMP) !=0 ) {
 Aladin.trace(2,"Hdecompressing");
          fmt=HFITS;			// On force le format
          pixelsOrigin=Hdecomp.decomp(dis);

@@ -141,12 +141,6 @@ final public class BuilderHpx {
 	                  lastFitsFile=file.fitsfile.getFilename();
 	               }
 	               
-	               // INUTILE, DEJA SUPPRIMER LORS DE L'OUVERTURE EN MODE MOSAIC
-	               // Dans la bordure à enlever ?
-//	               if( borderSize!=null &&
-//	                     (coo.x<borderSize[1] || coo.x>=file.fitsfile.width-borderSize[3] 
-//	                    || coo.y<borderSize[0] || coo.y>=file.fitsfile.height-borderSize[2]) ) continue;
-	               
 	               double pix = getBilinearPixel(file.fitsfile,coo);
 	               if( Double.isNaN(pix) ) continue;
 	               pixval[nbPix]=pix;

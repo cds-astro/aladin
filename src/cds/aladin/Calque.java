@@ -983,8 +983,8 @@ public final class Calque extends JPanel implements Runnable {
          if( plan[i].type==Plan.NO ) continue;
          if( plan[i].type==Plan.TOOL ) ((PlanTool)plan[i]).setIdAgain();
          if( plan[i] instanceof PlanBG && Projection.isOk(plan[i].projd)) {
-            if( plan[i].projd.frame != ((PlanBG)plan[i]).getFrame() ) {
-               plan[i].projd.frame = ((PlanBG)plan[i]).getFrame();
+            if( plan[i].projd.frame != ((PlanBG)plan[i]).getCurrentFrameDrawing() ) {
+               plan[i].projd.frame = ((PlanBG)plan[i]).getCurrentFrameDrawing();
                plan[i].resetProj();
             }
          }

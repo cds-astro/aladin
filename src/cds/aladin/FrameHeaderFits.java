@@ -58,7 +58,6 @@ public class FrameHeaderFits extends JFrame {
    private StringBuffer	memoHeaderFits = null;	// Memorisation de l'entete FITS telle quelle (en Strings)
    private JTextPane ta;
    private JTextField ts;
-   private boolean flagHCOMP;
    static String CLOSE,CLEAR;
    private DefaultStyledDocument df;
    private JButton clear;
@@ -76,10 +75,7 @@ public class FrameHeaderFits extends JFrame {
    }
 
   /** Creation du header.
-   * Rq: si gzis est !=null, ce sera ce flux qui sera pris, sinon dis
    * @param dis le flux en entree
-   * @param gzis le flux en entree (gzip)
-   * @param flagHCOMP true s'il s'agit de FITS HCOMP
    */
    protected FrameHeaderFits(MyInputStream dis) throws Exception {
       super("FITS header");
@@ -227,8 +223,8 @@ public class FrameHeaderFits extends JFrame {
       super.processWindowEvent(e);
    }
 
-  /** Retourne Vrai s'il s'agit d'un FITS Hcompresse */
-   protected boolean isHCOMP() { return flagHCOMP; }
+//  /** Retourne Vrai s'il s'agit d'un FITS Hcompresse */
+//   protected boolean isHCOMP() { return flagHCOMP; }
 
   /** Visualise le header FITS */
    protected void seeHeaderFits() {

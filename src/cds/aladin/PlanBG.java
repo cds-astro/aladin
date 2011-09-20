@@ -219,6 +219,8 @@ public class PlanBG extends PlanImage {
       color = gluSky.isColored();
    }
    
+   private boolean foundColorProp=false;
+   
    protected void loadProperties(InputStream in) throws Exception {
       java.util.Properties prop = new java.util.Properties();
       prop.load(in);
@@ -229,7 +231,6 @@ public class PlanBG extends PlanImage {
       if( c1=='C' ) frameOrigin=Localisation.ICRS;
       else if( c1=='E' ) frameOrigin=Localisation.ECLIPTIC;
       else if( c1=='G' ) frameOrigin=Localisation.GAL;
-
    }
    
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
@@ -347,11 +348,11 @@ public class PlanBG extends PlanImage {
    protected void setFrameDrawing(int frame) {
       frameDrawing=frame;
 //      System.out.println("PlanBG.setFrameDrawing("+Localisation.FRAME[frame]+")..");
-      if( projd.frame!=getFrame() ) {
+      if( projd.frame!=getCurrentFrameDrawing() ) {
 //         System.out.println("PlanBG.setFrameDrawing: => new proj = "+Localisation.REPERE[getFrame()]);
          ViewSimple v = aladin.view.getView(this);
          Coord c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
-         projd.frame = getFrame();
+         projd.frame = getCurrentFrameDrawing();
          aladin.view.newView(1);
          v.goToAllSky(c);
          aladin.view.repaintAll();
@@ -359,12 +360,13 @@ public class PlanBG extends PlanImage {
    }
    
    /** Retourne le frame courant en fonction du sélecteur du frame d'affichage */
-   protected int getFrame() {
+   protected int getCurrentFrameDrawing() {
       if( frameDrawing==0 ) return aladin.localisation.getFrame();
       return Util.indexInArrayOf(Localisation.FRAME[frameDrawing], Localisation.REPERE);
    }
    
-
+   /** retourne le systeme de coordonnée natif de la boule Healpix */
+   public int getFrameOrigin() { return frameOrigin; }
    
    static protected boolean isPlanBG(String path) {
       String s = path+Util.FS+"Norder3";
@@ -390,7 +392,7 @@ public class PlanBG extends PlanImage {
       aladin.view.setRepere1(co);
       objet = co+"";
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
-      p.frame = getFrame();
+      p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
       setDefaultZoom(c,radius);
@@ -1384,6 +1386,9 @@ public String getUrl() {
    protected String getMaxResolution() {
       return Coord.getUnit( getPixelResolution() );
    }
+   
+   /** Retourne l'ordre "fichier" maximal (plus grand répertoire NOrderNN) */
+   public int getMaxFileOrder() { return maxOrder; }
    
    /** Retourne l'ordre Healpix max */
    public int getMaxHealpixOrder() {
