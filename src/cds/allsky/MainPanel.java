@@ -147,7 +147,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    private Fits getFits(String rootPath) {
       if( alreadyHasFits(rootPath) ) return lastOneFits;
       lastOneFits = getFits1(rootPath);
-      aladin.trace(2, "Will use this Fits file as reference => "+lastOneFits.getFilename());
+      if( lastOneFits!=null ) aladin.trace(2, "Will use this Fits file as reference => "+lastOneFits.getFilename());
       lastRootPath=rootPath;
       return lastOneFits;
    }

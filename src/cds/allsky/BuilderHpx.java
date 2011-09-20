@@ -517,7 +517,7 @@ final public class BuilderHpx {
 
 				} catch (Exception e) {
 					System.err.println("Erreur de chargement de : " + fitsfilename);
-//					e.printStackTrace();
+					e.printStackTrace();
 					continue;
 				}
 			}

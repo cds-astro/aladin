@@ -219,7 +219,7 @@ public final class MyInputStream extends FilterInputStream {
       //System.out.println("FITS Data magic code "+c0+" "+c1);
       if( c0==221 && c1==153 ) type |= HCOMP;
    }
-
+   
   /**
    * Determine le type de fichier.
    * Met a jour un champ de bit ou chaque bit decrit un type.

@@ -59,7 +59,6 @@ import cds.tools.Util;
  * @version 0.9 : (18 mai 99) Creation
  */
 public final class HeaderFits {
-   private boolean flagHCOMP;
 
   /** Les elements de l'entete */
    protected Hashtable header;
@@ -87,9 +86,6 @@ public final class HeaderFits {
     public HeaderFits(MyInputStream dis,FrameHeaderFits frameHeaderFits) throws Exception {
        readHeader(dis,frameHeaderFits);
     }
-
-  /** Retourne Vrai s'il s'agit d'un FITS Hcompresse */
-    public boolean isHCOMP() { return flagHCOMP; }
 
   /** Taille en octets de l'entete FITS.
    * Uniquemenent mis a jour apres readHeader()
@@ -213,11 +209,12 @@ public final class HeaderFits {
             keysOrder.addElement(key);
          }
 
-        // Test s'il s'agit de FITS Hcompresse (on ne teste que le premier
+        // Test s'il s'agit de FITS Hcompresse 
         if( (dis.getType() & MyInputStream.HCOMP)!=0 ) {
-           flagHCOMP=true;
+//           flagHCOMP=true;
            return true;
-        } else flagHCOMP=false;
+        } 
+//        else flagHCOMP=false;
         
          // On passe le bourrage eventuel
          int bourrage = blocksize - sizeHeader%blocksize;

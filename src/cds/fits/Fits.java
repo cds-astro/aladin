@@ -274,13 +274,15 @@ final public class Fits {
    /** Chargement d'une cellule d'une image FITS */
    public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception {
 	   dis = dis.startRead();
+	   boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
 	   width  = headerFits.getIntFromHeader("NAXIS1");
 	   height = headerFits.getIntFromHeader("NAXIS2");
 	   
+	   
 	   // Ouverture complète de l'image
-	   if( w==-1 ) {
+	   if( w==-1 || flagHComp ) {
 	      widthCell=width;
 	      heightCell=height;
 	      xCell=yCell=0;
@@ -293,11 +295,11 @@ final public class Fits {
 	      xCell=x;
 	      yCell=y;
 	   }
-	   int n = (Math.abs(bitpix)/8);
-	   pixels = new byte[widthCell*heightCell * n];
 	   try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
-	   if (headerFits.isHCOMP()) pixels = Hdecomp.decomp(dis);
+	   if( flagHComp ) pixels = Hdecomp.decomp(dis);
 	   else {
+	      int n = (Math.abs(bitpix)/8);
+	      pixels = new byte[widthCell*heightCell * n];
 	      
 	      // Lecture d'un coup
 	      if( w==-1 ) dis.readFully(pixels);
@@ -342,8 +344,7 @@ final public class Fits {
       height=heightCell = headerFits.getIntFromHeader("NAXIS2");
       xCell=yCell=0;
       pixels = new byte[widthCell*heightCell];
-      if (headerFits.isHCOMP()) pixels = Hdecomp.decomp(dis);
-      else dis.readFully(pixels);
+      dis.readFully(pixels);
 
       byte[] t2 = new byte[widthCell*heightCell];
       dis.readFully(t2);
