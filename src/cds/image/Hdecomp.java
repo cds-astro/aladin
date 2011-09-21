@@ -444,8 +444,9 @@ public final class Hdecomp {
 
       /* make sure there is an EOF symbol (nybble=0) at end */
       if (input_nbits(4) != 0) {
-         System.err.println("dodecode: bad bit plane values\n");
-         System.exit(-1);
+    	  throw new IOException("dodecode: bad bit plane values\n");
+//         System.err.println("dodecode: bad bit plane values\n");
+//         System.exit(-1);
       }
 
       /* now get the sign bits - Re-initialize bit input*/
