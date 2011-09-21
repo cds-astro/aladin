@@ -226,9 +226,9 @@ public class TabDesc extends JPanel implements ActionListener {
             }
          });
          final JCheckBox cb2MASS = new JCheckBox("2MASS skyval filter", false);
-         cb.addActionListener(new ActionListener() {
+         cb2MASS.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               BuilderController.DSS = cb.isSelected();
+               BuilderController._2MASS = cb2MASS.isSelected();
             }
          });
          c.gridy++;
