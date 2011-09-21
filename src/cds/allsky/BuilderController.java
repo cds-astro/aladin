@@ -43,6 +43,7 @@ import cds.tools.pixtools.Util;
 public class BuilderController  {
    
     static public boolean DSS = false;
+    static public boolean _2MASS = false;
     final static public int ORDER = 9; // 2^9 = 512 = SIDE
     final static public int SIDE = 512;
     
@@ -356,6 +357,7 @@ public class BuilderController  {
 	      hpx.setBorderSize(borderSize);
 	      hpx.setDataCut(datacut);
 	      hpx.setCoadd(coaddMode);
+	      hpx.setFilter(_2MASS);
 	      ThreadBuilder t = new ThreadBuilder("Builder"+i,outpath, hpx,ordermin,ordermax,fading);
 	      threadList.add( t );
 	      t.start();
