@@ -75,8 +75,6 @@ public class CacheFits {
       sortedMap = new TreeMap<String, FitsFile>( new ValueComparator(map) );
    }
    
-   public void skyvalSub(boolean flag) { }
-   
    /**
     * Récupération d'un Fits spécifié par son nom de fichier. 
     * @param fileName Nom du fichier Fits à accéder (supporte le mode mosaic nomfichier[x,y-wxh])
