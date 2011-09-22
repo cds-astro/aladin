@@ -47,6 +47,8 @@ public class CacheFits {
    private long mem;        // mémoire courante (en octets)
    private int file;        // Nombre de fichiers gérés
    private int nextId;      // prochain identificateur unique de fichier
+   private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
+   					//de la mise dans le cache
    private HashMap<String, FitsFile> map;      // Table des fichiers
    TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    
@@ -109,6 +111,9 @@ public class CacheFits {
       FitsFile f = new FitsFile();
       f.fits = new Fits();
       f.fits.loadFITS(name);
+      // applique un filtre spécial
+      if (skyvalSub() ) delSkyval(f.fits);
+		
       map.put(name, f);
       mem+=f.getMem(); ;
       file++;
@@ -144,6 +149,58 @@ public class CacheFits {
 //         System.out.println("clean.remove "+key );
       }
    }
+   
+   public boolean skyvalSub() {
+	   return skyvalSub;
+   }
+   
+   public void skyvalSub(boolean substract) {
+	   skyvalSub = substract;
+   }
+   
+   /**
+    * Applique un filtre (soustraction du skyval)
+    * sur les pixels avant de les mettre dans le cache
+    * @param f fitsfile
+    */
+	private void delSkyval(Fits f) {
+		// enlève le fond de ciel
+		double skyval = 0;
+		double newval = f.blank;
+		try {
+//			skyval = (int)f.headerFits.getDoubleFromHeader("SOFTBIAS");
+			try {
+				skyval = f.headerFits.getDoubleFromHeader("SKYVAL");
+			} catch (NullPointerException e) {
+				skyval = f.headerFits.getDoubleFromHeader("SKY");
+			}
+		} catch (NullPointerException e) {
+		}
+		if (skyval != 0) {
+			skyval -= 1;
+			for( int y=0; y<f.heightCell; y++ ) {
+				for( int x=0; x<f.widthCell; x++ ) {
+					// applique un nettoyage pour enlever les valeurs aberrantes
+					if (f.getPixelFull(x+f.xCell, y+f.yCell) < skyval)
+						newval = f.blank;
+					else
+						newval = f.getPixelFull(x+f.xCell, y+f.yCell)-skyval;
+					
+					switch (f.bitpix) {
+					case 8 :
+					case 16:
+					case 32 :
+						f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval);
+					case -32:
+					case -64 :
+						f.setPixelDouble(x+f.xCell, y+f.yCell, newval);	
+					}
+				}
+			}
+		}
+
+	}
+	
    
    public String toString() { return "CacheFits: "+file+" file(s) for "+Util.getUnitDisk(mem)+" opened="+statNbOpen+" found="+statNbFind; }
    
