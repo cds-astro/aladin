@@ -280,9 +280,8 @@ final public class Fits {
 	   width  = headerFits.getIntFromHeader("NAXIS1");
 	   height = headerFits.getIntFromHeader("NAXIS2");
 	   
-	   
 	   // Ouverture complète de l'image
-	   if( w==-1 || flagHComp ) {
+	   if( w==-1 ) {
 	      widthCell=width;
 	      heightCell=height;
 	      xCell=yCell=0;
@@ -296,26 +295,36 @@ final public class Fits {
 	      yCell=y;
 	   }
 	   try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
-	   if( flagHComp ) pixels = Hdecomp.decomp(dis);
-	   else {
-	      int n = (Math.abs(bitpix)/8);
-	      pixels = new byte[widthCell*heightCell * n];
-	      
-	      // Lecture d'un coup
-	      if( w==-1 ) dis.readFully(pixels);
-	      
-	      // Lecture ligne à ligne pour mémoriser uniquement la cellule
-	      else {
-	         dis.skip( yCell*width*n);
-	         byte [] buf = new byte[width * n];  // une ligne complète
-	         for( int lig=0; lig<heightCell; lig++ ) {
-	            dis.readFully(buf);
-	            System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
-	         }
-	         dis.skip( (height-(yCell+heightCell) )*width * n);
-	      }
+	   
+       int n = (Math.abs(bitpix)/8);
+	   
+	   // Pas le choix, il faut d'abord tout lire, puis ne garder que la cellule si nécessaire
+       if( flagHComp ) {
+          byte [] buf = Hdecomp.decomp(dis);
+          if( w==-1 ) pixels=buf;
+          else {
+             pixels = new byte[widthCell*heightCell * n];
+             for( int lig=0; lig<heightCell; lig++) System.arraycopy(buf, (lig*width+xCell)*n, pixels, lig*widthCell*n, widthCell*n);
+          }
+          
+       } else {
+          pixels = new byte[widthCell*heightCell * n];
 
-	   }
+          // Lecture d'un coup
+          if( w==-1 ) dis.readFully(pixels);
+
+          // Lecture ligne à ligne pour mémoriser uniquement la cellule
+          else {
+             dis.skip( yCell*width*n);
+             byte [] buf = new byte[width * n];  // une ligne complète
+             for( int lig=0; lig<heightCell; lig++ ) {
+                dis.readFully(buf);
+                System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+             }
+             dis.skip( (height-(yCell+heightCell) )*width * n);
+          }
+
+       }
 	   try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
 	   try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
 	   try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }

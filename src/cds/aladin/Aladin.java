@@ -92,6 +92,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Better manual astrometrical calibration
  * @beta    <LI> Support for 64 bit integer binary tables (FITS & VOTable)
  * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
  * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
@@ -128,7 +129,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.059";
+    static public final    String VERSION = "v7.060";
     static protected final String AUTHORS = "P.Fernique, T.Boch, F.Bonnarel, A.Oberto";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
