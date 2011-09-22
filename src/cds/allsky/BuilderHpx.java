@@ -510,9 +510,6 @@ final public class BuilderHpx {
 					file.fitsfile = fitsfile;
 					file.calib = fitsfile.getCalib();
 					
-					// applique un filtre spécial
-					if (isFilter() ) filter(fitsfile);
-					
 					downFiles.add(file);
 
 				} catch (Exception e) {
@@ -534,33 +531,6 @@ final public class BuilderHpx {
 		}
 	}
 
-	private void filter(Fits f) {
-		// enlève le fond de ciel
-		int skyval = 0;
-		
-		try {
-//			skyval = (int)f.headerFits.getDoubleFromHeader("SOFTBIAS");
-			try {
-				skyval = (int)f.headerFits.getDoubleFromHeader("SKYVAL");
-			} catch (NullPointerException e) {
-				skyval = (int)f.headerFits.getDoubleFromHeader("SKY");
-			}
-		} catch (NullPointerException e) {
-		}
-		if (skyval != 0) {
-			for( int y=0; y<f.heightCell; y++ ) {
-				for( int x=0; x<f.widthCell; x++ ) {
-					// applique un nettoyage pour enlever les valeurs aberrantes
-					if (f.getPixelFull(x+f.xCell, y+f.yCell) < skyval)
-						f.setPixelInt(x+f.xCell, y+f.yCell, (int)blank);
-					else
-						f.setPixelInt(x+f.xCell, y+f.yCell, f.getPixelInt(x+f.xCell, y+f.yCell)-skyval);
-				}
-			}
-		}
-
-	}
-	
 int n =0;
 
 	/**
