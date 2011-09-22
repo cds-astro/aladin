@@ -30,17 +30,20 @@ public class InitLocalAccessSpecif extends BuilderIndex {
 	 * Le chemin de sortie est celui donné en entrée + ALLSKY + répertoire HpxFinder
 	 * on peut passer une expression régulière pour définir les fichiers à traiter
 	 * (utlisée via Pattern.matches)
-	 * @param args chemin_entrée regex order
+	 * @param args chemin_entrée regex order [chemin_sortie]
 	 * @see #AllskyConst.HPX_FINDER
 	 */
 	public static void main(String[] args) {
 		long t=System.currentTimeMillis();
 		String pathSource = args[0]+ "/";
 		String pathDest = pathSource;
+		if (args.length>3)
+			pathDest = args[3];
 		String regex = args[1];
 		int order =   Integer.parseInt(args[2]);
 
 		BuilderIndex init = new BuilderIndex();
+		System.out.println("using regex : "+regex);
 		init.build(pathSource, pathDest, order, regex);
 		System.out.println("done => "+(System.currentTimeMillis()-t)+"ms");
 	}
