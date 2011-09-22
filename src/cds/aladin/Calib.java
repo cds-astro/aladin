@@ -334,7 +334,7 @@ import java.lang.*;
             sdelz = Math.sin(deltai*deg_to_rad);
             aladin =0;
          }
-         System.out.println("CD "+CD[0][0]+" "+CD[1][0]+" "+CD[0][1]+" "+CD[1][1]);
+//         System.out.println("CD "+CD[0][0]+" "+CD[1][0]+" "+CD[0][1]+" "+CD[1][1]);
          
        double  inx = coo[0].dx ;
        double  iny = coo[0].dy ;
@@ -354,12 +354,12 @@ import java.lang.*;
            {
            AAx +=  (-iny*(coo[i].xstand)+ inX*(coo[i].dy))/Detx;
            BBx += (-(coo[i].dx)*inX +(coo[i].xstand)*inx)/Detx ;
-           System.out.println("AAx "+AAx+" "+BBx);
+//           System.out.println("AAx "+AAx+" "+BBx);
            Dety = (coo[i].dx)*iny -(coo[i].dy)*inx ;
            AAy +=  (inY*(coo[i].dx) - inx*(coo[i].ystand))/Dety;
            BBy += ((coo[i].ystand)*iny -(coo[i].dy)*inY)/Dety ;
            
-           System.out.println("AAy "+AAy+" "+BBy);
+//           System.out.println("AAy "+AAy+" "+BBy);
            }
      //      DX = coo[i].xstand -inX ;
      //      DY = coo[i].ystand -inY ;
@@ -374,10 +374,10 @@ import java.lang.*;
          else sign1 = 1 ;
          if (AAy < 0) sign2 = -1 ;
          else sign2 = 1 ;
-         System.out.println("sign "+sign1+" "+sign2);
+//         System.out.println("sign "+sign1+" "+sign2);
          for (i =1 ; i < coo.length ; i++) {
              GetXYstand(coo[i]) ;
-                     System.out.println("coo "+coo[i].dx+" "+coo[i].dy+" "+coo[i].xstand +" "+coo[i].ystand);
+//                     System.out.println("coo "+coo[i].dx+" "+coo[i].dy+" "+coo[i].xstand +" "+coo[i].ystand);
            // x  -= (CD[0][0]/Math.abs(CD[0][0]))*coo[i].dx;
            // y  -= (CD[1][1]/Math.abs(CD[1][1]))*coo[i].dy;
            // x  -= coo[i].dx;
@@ -3153,25 +3153,4 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
       } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
       return toutestbon;
    }
-  // 
-  // static final Astrocoo COO_EQU = new Astrocoo(new ICRS());
-  // static final Astrocoo COO_GAL = new Astrocoo(new Galactic());
-  // public static double[] RaDecToGalactic(double ra, double dec) {
-	//   double[] res = new double[2];
-	//   Astrocoo coo = (Astrocoo) COO_EQU.clone(); 
-	//   coo.set(ra, dec);
-	//   coo.convertTo(AF_GAL);
-	//   res[0] = coo.getLon();
-	//   res[1] = coo.getLat();
-	//   return res;
-  // }
-  // public static double[] GalacticToRaDec(double al, double del) {
-//	   double[] res = new double[2];
-//	   Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
-//	   coo.set(al,del);
-//	   coo.convertTo(AF_ICRS);
-//	   res[0] = coo.getLon();
-//	   res[1] = coo.getLat();
-//	   return res;
- //  }
 }
