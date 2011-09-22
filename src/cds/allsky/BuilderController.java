@@ -173,6 +173,7 @@ public class BuilderController  {
 	   size -=sizeCache;
 	   mainPanel.aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
 	   mainPanel.cacheFits = new CacheFits(sizeCache, 100000);
+	   mainPanel.cacheFits.skyvalSub(_2MASS);
 	   
 	   long maxMemPerThread = Constante.MAXMBPERTHREAD*1024*1024L;
 	   int nbThread = (int) (size / maxMemPerThread);
@@ -357,7 +358,6 @@ public class BuilderController  {
 	      hpx.setBorderSize(borderSize);
 	      hpx.setDataCut(datacut);
 	      hpx.setCoadd(coaddMode);
-	      hpx.setFilter(_2MASS);
 	      ThreadBuilder t = new ThreadBuilder("Builder"+i,outpath, hpx,ordermin,ordermax,fading);
 	      threadList.add( t );
 	      t.start();
