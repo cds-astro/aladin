@@ -189,10 +189,14 @@ public class TabBuild extends JPanel implements ActionListener {
       c.gridy++;
       c.anchor = GridBagConstraints.CENTER;
       c.gridwidth = GridBagConstraints.REMAINDER;
-      tab.setPreferredScrollableViewportSize(new Dimension(500,100));
+      tab.setPreferredScrollableViewportSize(new Dimension(500,120));
       tab.setRowSelectionAllowed(false);
       JScrollPane pane = new JScrollPane(tab);
       pCenter.add(pane, c);
+      c.gridy++;
+      c.anchor = GridBagConstraints.EAST;
+      JLabel l = new JLabel("<html><i>(*) whole sky</i></html>");
+      pCenter.add(l,c);
 
       // méthode fast=plus proche / best=bilinéaire
 //      		c.gridx = 0;

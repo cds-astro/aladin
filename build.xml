@@ -20,7 +20,8 @@
 	    encoding="Cp1252" source="1.5" target="1.5" deprecation="off" >
      <classpath>
           <pathelement path="${java.class.path}/"/>
-          <pathelement path="${lib}/jsamp.jar"/>
+        <pathelement path="${lib}/jsamp.jar"/>
+        <pathelement path="${lib}/jhealpixSmall.jar"/>
         <pathelement path="${lib}/microhub.jar"/>
         <pathelement path="${Mocjar}"/>
       </classpath>
@@ -31,6 +32,7 @@
       <jar destfile="Aladin.jar" duplicate="preserve">
         <fileset dir="${bin}"/>
 	    <zipfileset src="${lib}/jsamp.jar"/>
+	    <zipfileset src="${lib}/jhealpixSmall.jar"/>
 	    <zipfileset src="${lib}/microhub.jar"/>
 	    <zipfileset src="${mocjar}"/>
         <manifest>

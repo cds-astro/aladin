@@ -2498,8 +2498,11 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
 
      public  double [] GetResol() {
                     double inc[] = new double[2];
-                    inc[0]= incA ;
-                    inc[1]= incD ;
+// Pierre - sept 2011 : depuis la dernière mouture de Calib, il peut y avoir des valeurs négatives
+//                    inc[0]= incA ;
+//                    inc[1]= incD ;
+                    inc[0]= Math.abs(incA) ;
+                    inc[1]= Math.abs(incD) ;
                     return inc;
                    }
 

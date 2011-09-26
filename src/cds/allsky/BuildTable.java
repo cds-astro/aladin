@@ -31,6 +31,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -40,7 +41,7 @@ public class BuildTable extends JTable {
    static int  DEFAULT_BITPIX = -32;
    private int 	bitpix = DEFAULT_BITPIX; // bitpix par défaut pour les calculs d'espace disque
    
-   static final private int MAXHEALPIXORDER = 15;
+   static final private int MAXHEALPIXORDER = 21;
 
    private static final int CHECK_IDX = 0;
    private static final int RES_IDX   = 1;
@@ -52,9 +53,9 @@ public class BuildTable extends JTable {
    static private String[] columnNames = {
       "",
       "<html>Pixel angular<br>resolution</html>",
-      "<html>HEALPix<br>order / NSIDE</html>",
-      "<html>Depth / Nb tiles<br><i>(for a full sky)</i></html>",
-      "<html>Space<br>required</html>"
+      "<html>HEALPix:<br>order / NSIDE</html>",
+      "<html>Tiles: (*)<br>Depth / Nb</html>",
+      "<html>Space<br>required (*)</html>"
    };
    static private String[] columnToolTips = {
       "Your choice",
@@ -162,7 +163,7 @@ public class BuildTable extends JTable {
          data[i][RES_IDX]   = Coord.getUnit( Math.sqrt(surface/nbPixel) );
          data[i][NSIDE_IDX] = order+" / "+nside;
          data[i][TILES_IDX] = (i+3)+" / "+(nbPixel/pixelPerFile);
-         data[i][VOL_IDX]   = Util.getUnitDisk(nbPixel*nbBytePerPixel);
+         data[i][VOL_IDX]   = Util.getUnitDisk((double)nbPixel*nbBytePerPixel);
       }
       return data;
    }

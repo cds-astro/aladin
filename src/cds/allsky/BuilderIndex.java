@@ -319,12 +319,14 @@ public class BuilderIndex {
 			
 			// --- calcule la taille réel de la plus grande diagonale du pixel
 			// récupère le pixel central
-			double[] thetaphi = Util.RaDecToPolar(new double[]{center.al,center.del});
+//			double[] thetaphi = Util.RaDecToPolar(new double[]{center.al,center.del});
+			double [] thetaphi = CDSHealpix.radecToPolar(new double[]{center.al,center.del});
 			long n = CDSHealpix.ang2pix_nest(nside, thetaphi[0], thetaphi[1]);
 			// calcule ses 4 coins et son centre
 			Coord[] corners = Util.getCorners(order,n);
 			double[] c = CDSHealpix.pix2ang_nest(nside, n);
-			c = Util.PolarToRaDec(c);
+//			c = Util.PolarToRaDec(c);
+			c = CDSHealpix.polarToRadec(c);
 			Coord c1 = new Coord(c[0],c[1]);
 			// cherche la plus grande distance entre le centre et chaque coin
 			double dist = 0;

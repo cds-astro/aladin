@@ -103,7 +103,7 @@ public final class Logo extends JComponent implements MouseListener {
 
   /** Changement du niveau de trace */
    public void consumeKey(char key) {
-      if( key=='h' ) PlanBG.switchHealpixMode();
+//      if( key=='h' ) PlanBG.switchHealpixMode();
       if( key=='d' ) {
          int n=Aladin.levelTrace;
          n++;

@@ -140,16 +140,16 @@ public final class Coord {
    public static String getUnit(double x) { return getUnit(x,false,false); }
    public static String getUnit(double x,boolean entier,boolean flagSurface) {
       String s=null;
-//      boolean flagCeil=true;
       double fct = flagSurface ? 3600 : 60;
+      double fct1 = flagSurface ? 100000 : 1000;
       if( Math.abs(x)>=1.0 ) s="°";
       if( Math.abs(x)<1.0 ) { s="'"; x=x*fct; }
-      if( Math.abs(x)<1.0 ) { s="\""; x=x*fct; /* flagCeil=false;*/ }
+      if( Math.abs(x)<1.0 ) { s="\""; x=x*fct; }
+      if( Math.abs(x)<1.0 ) { s="mas"; x=x*fct1; }
+      if( Math.abs(x)<1.0 ) { s="µas"; x=x*fct1; }
       
       if( entier && ((int)x)!=0 ) return ((int)x)+s;
       
-//      if( flagCeil ) x=Math.ceil(x*100.0)/100.0;
-//      else x=Math.ceil(x*10000.0)/10000.0;
       s=Util.myRound(x)+s;
 
       return s;

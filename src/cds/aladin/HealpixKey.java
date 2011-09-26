@@ -36,7 +36,6 @@ import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
@@ -56,7 +55,6 @@ import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
-import cds.tools.pixtools.PixTools;
 
 /**
   * Gère un losange Healpix pour un PlanBG
@@ -797,7 +795,7 @@ public class HealpixKey {
     */
    protected double getPixelValue(long healpixIdxPixel,int mode) {
       long startIdx =  npix * (long)width * (long)width;
-      int order = (int)PixTools.log2(width);
+      int order = (int)CDSHealpix.log2(width);
       if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) planBG.createHealpixOrder(order);
       int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
       
@@ -1804,49 +1802,54 @@ public class HealpixKey {
 //         ((Graphics2D)g).setStroke(st);
 //      }
    }
-
-   /** Affichage de controle de la position du losange */
-   protected void drawCtrl(Graphics g, ViewSimple v) {
-      PointD[] b = getProjViewCorners(v);
-      if( b==null  ) return;
-      drawControl(g,b);
+   
+   /** Tracé des bords du losange Healpix (au plus juste) */
+   protected void drawRealBorders(Graphics g, ViewSimple v) {
+      try {
+         Projection proj = v.getProj();
+         double x [][] = CDSHealpix.borders(CDSHealpix.pow2(order), npix, 50);
+         for( int i=0; i<x.length; i++ ) {
+            Coord c = new Coord(x[i][0],x[i][1]);
+            int frame = hpix.getFrame();
+            if( frame!=Localisation.ICRS ) {
+               c=Localisation.frameToFrame(c,frame,Localisation.ICRS);
+            }
+            proj.getXY(c);
+            if( Double.isNaN(c.x) ) continue;
+            PointD p=v.getViewCoordDble(c.x,c.y);
+            g.drawLine((int)p.x,(int)p.y,(int)p.x,(int)p.y);
+         }
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
   }
 
-   /** Tracé des bordures du losange et numérotation de ses sommets pour debuging */
-   private void drawControl(Graphics g1,PointD b[]) {
+
+   /** Affichage de controle de la position du losange */
+   protected void drawCtrl(Graphics g1, ViewSimple v) {
       Graphics2D g = (Graphics2D)g1;
 
       Color c = g.getColor();
-
-      // Si le rapport des dimensions est trop différent
-      // le losange va passer "derrière" le ciel (projection ciel complet)
-      double rap = Math.abs(b[2].x-b[1].x)/Math.abs(b[3].y-b[0].y);
-      if( rap>RAPPORT || rap<1/RAPPORT ) return;
-
-      Polygon p = new Polygon(new int[]{ (int)b[0].x,(int)b[1].x,(int)b[3].x,(int)b[2].x},
-                              new int[]{ (int)b[0].y,(int)b[1].y,(int)b[3].y,(int)b[2].y},
-                              4);
       g.setColor(Color.red);
       Stroke st = g.getStroke();
       g.setStroke(new BasicStroke(2f));
-      g.drawPolygon(p);
+      drawRealBorders(g, v);
       g.setStroke(st);
 
+      PointD[] b = getProjViewCorners(v);
+      if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null) return;
       String s=getStringNumber();
       g.setFont(Aladin.PLAIN);
+      try {
+         s = s+" ("+CDSHealpix.nest2ring(CDSHealpix.pow2(order-parente), npix/(long)Math.pow(4,parente))+")";
+      } catch( Exception e ) { }
       int size=g.getFontMetrics().stringWidth(s);
-      if( Math.abs(b[2].x-b[1].x)>size+18 ) {
-         int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4;
-         int y = (int)(b[0].y+b[1].y+b[2].y+b[3].y)/4+7;
-
-         if( Math.abs(b[2].x-b[1].x)>100) {
-            try {
-               s = s+" ("+CDSHealpix.nest2ring(CDSHealpix.pow2(order-parente), npix/(long)Math.pow(4,parente))+")";
-            } catch( Exception e ) { }
-            size=g.getFontMetrics().stringWidth(s);
-         }
-         g.drawString(s, x-size/2,y+3);
+      int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4;
+      int y = (int)(b[0].y+b[1].y+b[2].y+b[3].y)/4+7;
+      if( Math.abs(b[2].x-b[1].x)<size+18 ) {
+         y=(int)Math.min(Math.min(b[0].y, b[1].y),Math.min(b[2].y, b[3].y))-10;
       }
+      g.drawString(s, x-size/2,y+3);
 
 //      // Les indices des coins
 //      if( Math.abs(b[2].x-b[1].x)>30 ) {
@@ -1874,8 +1877,6 @@ public class HealpixKey {
       pixChild[3]= npix*4 +3;
       return pixChild;
    }
-
-   int frame=-1;
 
    /** Retourne les coordonnées des pixels d'angle du losange */
    protected Coord [] getCorners() {

@@ -1436,18 +1436,18 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           0;
        return sizeOf * n;
     }
-
+    
     /**
      * Affiche le chiffre donné avec une unité de volume disque (K M T)
      * @param val taille en octets
      * @return le volume disque dans une unite coherente + l'unite utilisee
      */
+    static final public String unites[] = {"","KB","MB","GB","TB","PB","EB","ZB"};
     static final public String getUnitDisk(double val) {
     	return getUnitDisk(val, 2);
     }
     static final public String getUnitDisk(double val, int format) {
     	int unit = 0;
-    	String unites[] = {"","KB","MB","GB","TB"};
     	while (val >= 1024 && unit<unites.length-1) {
     		unit++;
     		val /= 1024L;

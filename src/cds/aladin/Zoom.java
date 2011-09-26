@@ -50,7 +50,7 @@ public final class Zoom extends JPanel {
    static int mzn[] = {    1,   1,  1,   1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
    static int mzd[] = { 2048,1024,512, 256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   static final int MAXZOOM=15;   // en puissance de 2, valeur maximal du zoom
+   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
 
    // Les conposantes de l'objet
    ZoomView   zoomView;          // Le canvas associe au Zoom

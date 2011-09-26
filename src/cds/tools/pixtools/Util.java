@@ -35,62 +35,64 @@ public class Util {
    private static double twothird = 2. / 3.;
 
 /** Retourne le numéro du pixel père (pour l'order précédent) */
-   static public long getFather(long npix) { return npix/4; }
+//   static public long getFather(long npix) { return npix/4; }
    
    /** Retourne les numéros des 4 pixels fils 
     * nota Utiliser pixChild[]!=null pour éviter les allocations */
-   static public long [] getChildren(long npix) { return getChildren(null,npix); }
-   static public long [] getChildren(long [] pixChild,long npix) {
-      if( pixChild==null ) pixChild = new long[4];
-      pixChild[0]= npix*4;
-      pixChild[1]= npix*4 +1;
-      pixChild[2]= npix*4 +2;
-      pixChild[3]= npix*4 +3;
-      return pixChild;
-   }
+//   static public long [] getChildren(long npix) { return getChildren(null,npix); }
+//   static public long [] getChildren(long [] pixChild,long npix) {
+//      if( pixChild==null ) pixChild = new long[4];
+//      pixChild[0]= npix*4;
+//      pixChild[1]= npix*4 +1;
+//      pixChild[2]= npix*4 +2;
+//      pixChild[3]= npix*4 +3;
+//      return pixChild;
+//   }
    
-   /** Approximation des coordonnées RA,DEC des 4 angles du losange HEALPIX
-    * d'order "order" et de numéro "npix".
-    * Le buffer "Coord [4] corners" peut être fourni pour éviter les allocations
-    * Les coordonnées calculées sont corners[0].al, corners[0].del ...
-    * 
-    * Méthode : Je recherche les coord (centrales) des losanges des 4 coins dans
-    * la résolution Healpix maximal
-    */
-   static public Coord [] getCorners(int order, long npix) {
+   static public Coord [] getCorners(int order, long npix) throws Exception {
       return getCorners(null,order,npix);
    }
-   static public Coord [] getCorners(Coord [] corners,int order, long npix) {
+   
+   static public Coord [] getCorners(Coord [] corners,int order, long npix) throws Exception {
+      long nside = CDSHealpix.pow2(order);
+      double [][] x = CDSHealpix.corners(nside, npix);
       if( corners==null ) corners = new Coord[4];
-      int orderFile = 20-order;  // Je ne dois pas dépasser la limite Healpix de 2^20
-      long nSidePix = CDSHealpix.pow2(orderFile);
-      
-      // Numéro des pixels des 4 coins
-      long c0,c1,c2,c3;
-      c0=c1=c2= 0;
-      c3 = (nSidePix*nSidePix)-1;
-      for( int i=0; i<orderFile; i++ ) c1 = (c1 << 2) | 1;
-      for( int i=0; i<orderFile; i++ ) c2 = (c2 << 2) | 2;
-      
-      // Chaque pixel "Fichier" va être remplacé par nsidePix*nsidePix pixels
-      // d'où l'offset suivant
-      long offset = npix * nSidePix*nSidePix;
-      c0+=offset; c1+=offset; c2+=offset; c3+=offset;
-      
-      long nSideFile = CDSHealpix.pow2(order+orderFile);
-      
-      double x [];
-      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c0) );
-      corners[0] = new Coord(x[0],x[1]);
-      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c1) );
-      corners[1] = new Coord(x[0],x[1]);
-      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c2) );
-      corners[2] = new Coord(x[0],x[1]);
-      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c3) );
-      corners[3] = new Coord(x[0],x[1]);
-      
+      for( int i=0; i<4; i++ ) {
+         corners[i] = new Coord(x[i][0],x[i][1]);  
+      }
       return corners;
    }
+//   static protected Coord [] getCorners(Coord [] corners,int order, long npix) {
+//      if( corners==null ) corners = new Coord[4];
+//      int orderFile = 20-order;  // Je ne dois pas dépasser la limite Healpix de 2^20
+//      long nSidePix = CDSHealpix.pow2(orderFile);
+//      
+//      // Numéro des pixels des 4 coins
+//      long c0,c1,c2,c3;
+//      c0=c1=c2= 0;
+//      c3 = (nSidePix*nSidePix)-1;
+//      for( int i=0; i<orderFile; i++ ) c1 = (c1 << 2) | 1;
+//      for( int i=0; i<orderFile; i++ ) c2 = (c2 << 2) | 2;
+//      
+//      // Chaque pixel "Fichier" va être remplacé par nsidePix*nsidePix pixels
+//      // d'où l'offset suivant
+//      long offset = npix * nSidePix*nSidePix;
+//      c0+=offset; c1+=offset; c2+=offset; c3+=offset;
+//      
+//      long nSideFile = CDSHealpix.pow2(order+orderFile);
+//      
+//      double x [];
+//      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c0) );
+//      corners[0] = new Coord(x[0],x[1]);
+//      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c1) );
+//      corners[1] = new Coord(x[0],x[1]);
+//      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c2) );
+//      corners[2] = new Coord(x[0],x[1]);
+//      x=PixTools.PolarToRaDec( PixTools.pix2ang_nest(nSideFile, c3) );
+//      corners[3] = new Coord(x[0],x[1]);
+//      
+//      return corners;
+//   }
    
    /**
     * Donne le chemin d'un fichier selon la base Healpix
@@ -186,12 +188,12 @@ public class Util {
 	 * nside1<nside2
 	 * n begins to 0
 	 */
-	static long getHealpixParentFromNside(int nside1, long n, int nside2) {
-		return (long) Math.ceil( 
-				(n+1)/
-					Math.pow(4,(PixTools.log2(nside2) - PixTools.log2(nside1))) 
-				) -1;
-	}
+//	static long getHealpixParentFromNside(int nside1, long n, int nside2) {
+//		return (long) Math.ceil( 
+//				(n+1)/
+//					Math.pow(4,(CDSHealpix.log2(nside2) - CDSHealpix.log2(nside1))) 
+//				) -1;
+//	}
 
 	/**
 	 * Donne le numero de pixel parent de la resolution nside1
@@ -199,12 +201,12 @@ public class Util {
 	 * order1<order2
 	 * n begins to 0
 	 */
-	public static long getHealpixParentFromOrder(int order1, long n, int order2) {
-		return (long) Math.ceil( 
-				(n+1)/
-					Math.pow(4,order2 - order1) 
-				) -1;
-	}
+//	public static long getHealpixParentFromOrder(int order1, long n, int order2) {
+//		return (long) Math.ceil( 
+//				(n+1)/
+//					Math.pow(4,order2 - order1) 
+//				) -1;
+//	}
 
 
 	/**
@@ -213,19 +215,19 @@ public class Util {
 	 * order2<order1
 	 * n begins to 0
 	 */
-	public static ArrayList<Long> getHealpixChildrenFromOrder(int order1, long n, int order2) {
-		
-		long f = (long) Math.ceil( 
-				n*Math.pow(4,order2 - order1));
-		long nb = (long)Math.pow(4,order2 - order1);
-		ArrayList<Long> r = new ArrayList<Long> ();
-		
-		for (long i = f ; i < f+nb ; i++) {
-			r.add(new Long(i));
-		}
-		
-		return r;
-	}
+//	public static ArrayList<Long> getHealpixChildrenFromOrder(int order1, long n, int order2) {
+//		
+//		long f = (long) Math.ceil( 
+//				n*Math.pow(4,order2 - order1));
+//		long nb = (long)Math.pow(4,order2 - order1);
+//		ArrayList<Long> r = new ArrayList<Long> ();
+//		
+//		for (long i = f ; i < f+nb ; i++) {
+//			r.add(new Long(i));
+//		}
+//		
+//		return r;
+//	}
 
 	
 	/**
@@ -236,9 +238,9 @@ public class Util {
 	 */
 	public static long getHealpixMax(int n1, long n, int n2, boolean nside) {
 		if (nside)
-			return (n+1)*(long)(Math.pow(4,(PixTools.log2(n2) - PixTools.log2(n1))/PixTools.log2(2))) -1;
+			return (n+1)*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2))) -1;
 		else
-			return (n+1)*(long)(Math.pow(4,(n2 - n1)/PixTools.log2(2))) -1;
+			return (n+1)*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2))) -1;
 	}
 
 	/**
@@ -248,9 +250,9 @@ public class Util {
 	 */
 	public static long getHealpixMin(int n1, long n, int n2, boolean nside) {
 		if (nside)
-			return n*(long)(Math.pow(4,(PixTools.log2(n2) - PixTools.log2(n1))/PixTools.log2(2)));
+			return n*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2)));
 		else
-			return n*(long)(Math.pow(4,(n2 - n1)/PixTools.log2(2)));
+			return n*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2)));
 	}
 
 	/**
@@ -506,18 +508,18 @@ public class Util {
      * @return res double array containing theta and phi in radians
      *             res[0] = theta res[1] = phi
      */
-    public static double[] RaDecToPolar(double[] radec) {
-    	double[] res = {0.0,0.0};
-    	
-			double ra =  radec[0];
-			double dec =  radec[1];
-			double theta = Math.PI/2. - Math.toRadians(dec);
-			double phi = Math.toRadians(ra);
-			res[0] = theta;
-			res[1] = phi;
-    	
-    	return res;
-    }
+//    public static double[] RaDecToPolar(double[] radec) {
+//    	double[] res = {0.0,0.0};
+//    	
+//			double ra =  radec[0];
+//			double dec =  radec[1];
+//			double theta = Math.PI/2. - Math.toRadians(dec);
+//			double phi = Math.toRadians(ra);
+//			res[0] = theta;
+//			res[1] = phi;
+//    	
+//    	return res;
+//    }
     /**
      * returns ra, dec in degrees given polar coordinates in radians
      * @param polar double array polar[0] = theta in radians
@@ -525,17 +527,17 @@ public class Util {
      * @return double array radec radec[0] = ra in degrees
      *                radec[1] = dec in degrees
      */
-    public static double[] PolarToRaDec(double[] polar) {
-    	double[] radec = {0.0,0.0};
-			double phi =  polar[1];
-			double theta = polar[0];
-			double dec = Math.toDegrees(Math.PI/2. - theta);
-			double ra = Math.toDegrees(phi);
-			radec[0] = ra;
-			radec[1] = dec;
-    	
-    	return radec;
-    }
+//    public static double[] PolarToRaDec(double[] polar) {
+//    	double[] radec = {0.0,0.0};
+//			double phi =  polar[1];
+//			double theta = polar[0];
+//			double dec = Math.toDegrees(Math.PI/2. - theta);
+//			double ra = Math.toDegrees(phi);
+//			radec[0] = ra;
+//			radec[1] = dec;
+//    	
+//    	return radec;
+//    }
  
     public static final int nside(int order){ return 1<<order;}
     public static final int order(int nside){ int i=0; while((nside>>(++i))>0); return --i; }

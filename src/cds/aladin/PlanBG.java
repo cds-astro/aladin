@@ -37,18 +37,14 @@ import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.*;
 
-import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 
 import cds.astro.Coo;
-import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.PixTools;
 
 /**
  * Gestion d'un plan image pour l'affichage du ciel de fond
@@ -905,21 +901,21 @@ public String getUrl() {
    static protected String CURRENTMODE="";
    static protected boolean DEBUGMODE=false;
 
-   static protected void switchHealpixMode() {
-      CURRENTMODE = "Current HEALPix library => " + CDSHealpix.switchMode();
-      DEBUGMODE = CDSHealpix.getMode()>0;
-      System.out.println(CURRENTMODE);
-      try {
-         Aladin.aladin.status.setText(CURRENTMODE);
-         ViewSimple v = Aladin.aladin.view.getCurrentView();
-         final PlanBG p = (PlanBG)v.pref;
-         p.FreePixList();
-         p.pixDebugIn = new long[0];
-         SwingUtilities.invokeLater(new Runnable() {
-            public void run() { p.askForRepaint();  }
-         });
-      } catch( Exception e ) {}
-   }
+//   static protected void switchHealpixMode() {
+//      CURRENTMODE = "Current HEALPix library => " + CDSHealpix.switchMode();
+//      DEBUGMODE = CDSHealpix.getMode()>0;
+//      System.out.println(CURRENTMODE);
+//      try {
+//         Aladin.aladin.status.setText(CURRENTMODE);
+//         ViewSimple v = Aladin.aladin.view.getCurrentView();
+//         final PlanBG p = (PlanBG)v.pref;
+//         p.FreePixList();
+//         p.pixDebugIn = new long[0];
+//         SwingUtilities.invokeLater(new Runnable() {
+//            public void run() { p.askForRepaint();  }
+//         });
+//      } catch( Exception e ) {}
+//   }
 
    static long [] getNpixListCompare(int order, Coord center, double radius) throws Exception {
       long nside = CDSHealpix.pow2(order);
@@ -1215,17 +1211,21 @@ public String getUrl() {
          long nside = (long)h.width * CDSHealpix.pow2(h.order);
          long npixPixel = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
          
-         List<Long> voisins = CDSHealpix.neighbours_nest(nside,npixPixel);
+//         List<Long> voisins = CDSHealpix.neighbours_nest(nside,npixPixel);
+         long [] voisins = CDSHealpix.neighbours(nside,npixPixel);
          
          // On ne va prendre 3 voisins (S,SW,W) + le pixel en question
          // pour l'interpolation
-         voisins.add(0, npixPixel);
+//         voisins.add(0, npixPixel);
          int m = 4;
+         for( int i=m; i>=1; i-- ) voisins[i] = voisins[i-1];
+         voisins[0]=npixPixel;
          double totalPixel=0,totalCoef=0;
          HealpixKey h1;
          for( int i=0; i<m; i++ ) {
             h1=h;
-            long nlpix = voisins.get(i).longValue();
+//            long nlpix = voisins.get(i).longValue();
+            long nlpix = voisins[i];
             
             // Test au cas où l'on déborde du HealpixKey courant
             long startIdx =  h.npix * (long)h.width * (long)h.width;
@@ -1971,9 +1971,10 @@ System.out.println("Wakeup for loading remote Allsky...");
          long npix = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
          HealpixKey hk = new HealpixKey(this,norder,npix,HealpixKey.NOLOAD);
          hk.drawCtrl(g, v);
+//         hk.drawRealBorders(g, v);
          
          if( DEBUGMODE  ) {
-            double [][] corners = CDSHealpix.corners_nest(nside, npix);
+            double [][] corners = CDSHealpix.corners(nside, npix);
             for( int i=0; i<4; i++ ) {
                coo = new Coord(corners[i][0],corners[i][1]);
                coo = Localisation.frameToFrame(coo,frameOrigin,Localisation.ICRS);

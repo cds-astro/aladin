@@ -34,7 +34,6 @@ import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.PixTools;
 import cds.tools.pixtools.Util;
 
 final public class BuilderHpx {
@@ -98,7 +97,7 @@ final public class BuilderHpx {
 	      // initialisation de la liste des fichiers originaux pour ce losange
 	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
 	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-	      PixTools.PolarToRaDec(point, radec);
+	      CDSHealpix.polarToRadec(point, radec);
 
 	      double blank = getBlank();
 	      if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
@@ -116,7 +115,7 @@ final public class BuilderHpx {
 	            index = min + xy2hpx(y * out.width + x);
 	            // recherche les coordonnées du pixels HPX
 	            point = CDSHealpix.pix2ang_nest(nside, index);
-	            PixTools.PolarToRaDec(point, radec);
+	            CDSHealpix.polarToRadec(point, radec);
 
 	            // Méthode bilinéaire
 	            radec = mainPanel.gal2ICRSIfRequired(radec);
@@ -289,7 +288,7 @@ final public class BuilderHpx {
 	      // initialisation de la liste des fichiers originaux pour ce losange
 	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
 	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-	      PixTools.PolarToRaDec(point, radec);
+	      CDSHealpix.polarToRadec(point, radec);
 
 	      double blank = getBlank();
 	      if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
@@ -309,7 +308,7 @@ final public class BuilderHpx {
 	            index = min + xy2hpx(y * out.width + x);
 	            // recherche les coordonnées du pixels HPX
 	            point = CDSHealpix.pix2ang_nest(nside, index);
-	            PixTools.PolarToRaDec(point, radec);
+	            CDSHealpix.polarToRadec(point, radec);
 	            radec = mainPanel.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 
