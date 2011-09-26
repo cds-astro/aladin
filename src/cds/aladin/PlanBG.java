@@ -321,9 +321,9 @@ public class PlanBG extends PlanImage {
       
       // Chargement d'un éventuel fichier de Properties
       try {
-         InputStream in = (new URL(url+"/Properties")).openStream();
+         InputStream in = (new URL(url+"/"+PlanHealpix.PROPERTIES)).openStream();
          loadProperties(in);
-      } catch( Exception e) { aladin.trace(4,"PlanBG: Properties file not found ["+url+"/Properties]"); }
+      } catch( Exception e) { aladin.trace(4,"PlanBG: Properties file not found ["+url+"/"+PlanHealpix.PROPERTIES+"]"); }
 
       for( int n=3; true; n++ ) {
          if( !Util.isUrlResponding(url+"/Norder"+n) ) break;
