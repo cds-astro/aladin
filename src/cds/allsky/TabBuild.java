@@ -509,6 +509,7 @@ public class TabBuild extends JPanel implements ActionListener {
     * @return
     */
    public int getBitpix() {
+      if( bitpixO==0 ) return 0;
       ButtonModel b = groupBitpix.getSelection();
       int i = BuildTable.DEFAULT_BITPIX;
       try {

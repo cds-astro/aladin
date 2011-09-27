@@ -376,7 +376,16 @@ final public class Fits {
       MyInputStream is = new MyInputStream(
             new FileInputStream(filename));
       is = is.startRead();
-      headerFits = new HeaderFits(is);
+      
+      // Cas spécial d'un fichier .hhhh
+      if( filename.endsWith(".hhh") ) {
+         byte [] buf = is.readFully();
+         headerFits = new HeaderFits();
+         headerFits.readFreeHeader(new String(buf), true, null);
+         
+      // Cas habituel
+      } else headerFits = new HeaderFits(is);
+      
       try {
     	  bitpix = headerFits.getIntFromHeader("BITPIX");
       } catch (Exception e1) {
@@ -450,10 +459,11 @@ final public class Fits {
     * @param filename
     */
    private void createDir(String filename) {
-       File dir = new File(filename).getParentFile();
-       if( !dir.exists() ) {
-           dir.mkdirs();
-       }
+      cds.tools.Util.createPath(filename);
+//       File dir = new File(filename).getParentFile();
+//       if( !dir.exists() ) {
+//           dir.mkdirs();
+//       }
    }
 
    /** Génération d'un fichier FITS (sans calibration) */
@@ -551,6 +561,7 @@ final public class Fits {
     */
    public void writeJPEG(String file) throws Exception { writeJPEG(file,0.95f); }
    public void writeJPEG(String file,float qual) throws Exception {
+      createDir(file);
       FileOutputStream fos = new FileOutputStream(new File(file));
       writeJPEG( fos,qual);
       fos.close();
@@ -596,7 +607,11 @@ final public class Fits {
       return 0x00FFFFFF & rgb[ (y-yCell)*widthCell + (x-xCell) ];
    }
    
+   public int getPixelRGBJPG(int x, int y) {
+      return 0x00FFFFFF & rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell) ];
+   }
    
+  
    /** Retourne la description de la cellule courante selon la syntaxe [x,y-wxh]
     * ou "" si le fichier n'a pas été ouvert en mode mosaic */
    public String getCellSuffix() throws Exception {
@@ -645,6 +660,10 @@ final public class Fits {
     * Le facteur Alpha est forcé à 0xFF (pas de transparence) */
    public void setPixelRGB(int x, int y, int val) {
       rgb[(y-yCell)*widthCell + (x-xCell)]=0xFF000000 | val;
+   }
+   
+   public void setPixelRGBJPG(int x,int y, int val) {
+      rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell)]=0xFF000000 | val;
    }
 
    /** Positionne la valeur du pixel en (x,y) (y compté à partir du bas) exprimé en double */
@@ -1191,11 +1210,11 @@ final public class Fits {
     * Inverse les lignes d'une image couleur (tableau rgb)
     */
    public void inverseYColor() {
-	   int[] tmp = new int[rgb.length];
-	   for( int h=0; h<heightCell; h++ ){
-		   System.arraycopy(rgb,h*widthCell, tmp,(heightCell-h-1)*widthCell, widthCell);
-	   }
-	   rgb = tmp;
+//	   int[] tmp = new int[rgb.length];
+//	   for( int h=0; h<heightCell; h++ ){
+//		   System.arraycopy(rgb,h*widthCell, tmp,(heightCell-h-1)*widthCell, widthCell);
+//	   }
+//	   rgb = tmp;
    }
    
    /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */

@@ -227,6 +227,10 @@ public class PlanBG extends PlanImage {
       if( c1=='C' ) frameOrigin=Localisation.ICRS;
       else if( c1=='E' ) frameOrigin=Localisation.ECLIPTIC;
       else if( c1=='G' ) frameOrigin=Localisation.GAL;
+      
+      // Est-il en couleur
+      color = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCOLOR,"True"));
+      System.out.println("Color="+color);
    }
    
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
@@ -284,7 +288,7 @@ public class PlanBG extends PlanImage {
                if( name.equals("Allsky.fits") ) inFits=true;
                if( name.equals("Allsky.jpg") ) {
                   inJPEG=true;
-                  color = Util.isJPEGColored(sf[i].getAbsolutePath());
+                  if( !color ) color = Util.isJPEGColored(sf[i].getAbsolutePath());
                   aladin.trace(4,"PlanBG: "+sf[i].getAbsolutePath()+" color="+color);
                }
             }

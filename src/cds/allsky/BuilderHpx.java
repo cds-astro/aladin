@@ -99,16 +99,20 @@ final public class BuilderHpx {
 	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
 	      CDSHealpix.polarToRadec(point, radec);
 
-	      double blank = getBlank();
+	      double blank = bitpix==0 ? 0 : getBlank();
 	      if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
 
 	      out = new Fits(SIDE, SIDE, bitpix);
-	      out.setBlank(blank);
-	      out.setBscale(getBscale());
-	      out.setBzero(getBzero());
+	      if( bitpix!=0 ) {
+	         out.setBlank(blank);
+	         out.setBscale(getBscale());
+	         out.setBzero(getBzero());
+	      }
 	      
 	      // cherche la valeur à affecter dans chacun des pixels healpix
           double pixval[] = new double[100];   // on va éviter de passer par le total afin d'éviter un débordement
+          double pixvalG[] = new double[100];
+          double pixvalB[] = new double[100];
           double pixcoef[] = new double[100];  
 	      for (int y = 0; y < out.height; y++) {
 	         for (int x = 0; x < out.width; x++) {
@@ -121,7 +125,6 @@ final public class BuilderHpx {
 	            radec = context.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 	            // Moyenne des pixels pour toutes les images trouvées
-	            double pixelFinal=0;
 	            int nbPix=0;
 	            double totalCoef=0;
 	            String lastFitsFile=null;
@@ -140,31 +143,63 @@ final public class BuilderHpx {
 	                  lastFitsFile=file.fitsfile.getFilename();
 	               }
 	               
-	               double pix = getBilinearPixel(file.fitsfile,coo);
-	               if( Double.isNaN(pix) ) continue;
-	               pixval[nbPix]=pix;
+	               // Cas RGB
+	               if( bitpix==0 ) {
+	                  if( coo.x<0 || coo.x>=file.fitsfile.width || coo.y<0 || coo.y>=file.fitsfile.height ) continue;
+	                  int pixelRGB = file.fitsfile.getPixelRGBJPG( (int)coo.x, (int)coo.y);
+	                  pixval[nbPix] = 0xFF & (pixelRGB>>16);
+                      pixvalG[nbPix] = 0xFF & (pixelRGB>>8);
+                      pixvalB[nbPix] = 0xFF & pixelRGB;
+	                  empty=false;
+	                  
+	               // Cas normal
+	               } else {
+	                  double pix = getBilinearPixel(file.fitsfile,coo);
+	                  if( Double.isNaN(pix) ) continue;
+	                  pixval[nbPix]=pix;
+	               }
 	               totalCoef+= pixcoef[nbPix] = fading ? getCoef(file.fitsfile,coo,10.) : 1;
 	               nbPix++;
 	            }
-	            if( nbPix==0 ) pixelFinal = blank;
-	            else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
-	            else {
-	               empty=false;
-	               for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
+	            
+	            if( bitpix==0 ) {
+	               int pixelFinal=0;
+	               if( nbPix!=0 ) {
+	                  if( totalCoef==0 ) pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
+	                  else {
+	                     double r=0,g=0,b=0;
+	                     for( int i=0; i<nbPix; i++ ) {
+                            r += (pixval[i]*pixcoef[i])/totalCoef;
+                            g += (pixvalG[i]*pixcoef[i])/totalCoef;
+                            b += (pixvalB[i]*pixcoef[i])/totalCoef;
+	                     }
+	                     pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
+	                  }
+	               }
+	               out.setPixelRGBJPG(x, y, pixelFinal);
 	            }
+	            else {
+	               double pixelFinal=0;
+	               if( nbPix==0 ) pixelFinal = blank;
+	               else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
+	               else {
+	                  empty=false;
+	                  for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
+	               }
 
-	            // Juste pour vérifier
-	            //	            	if( nbPix==0 ) pixelFinal = -1;
-	            //	            	else if( totalCoef==0 )  { empty=false; pixelFinal = -2; }
-	            //	            	else {
-	            //	            	   empty=false;
-	            //	            	   pixelFinal = totalCoef;
-	            //	            	}
+	               // Juste pour vérifier
+	               //	            	if( nbPix==0 ) pixelFinal = -1;
+	               //	            	else if( totalCoef==0 )  { empty=false; pixelFinal = -2; }
+	               //	            	else {
+	               //	            	   empty=false;
+	               //	            	   pixelFinal = totalCoef;
+	               //	            	}
 
-	            out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
+	               out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
+	            }
 	         }
 	      }
-	   } catch( Exception e ) { }
+	} catch( Exception e ) { }
 	   return (!empty) ? out : null;
 	}
 	

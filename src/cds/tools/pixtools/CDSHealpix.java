@@ -24,7 +24,7 @@ import healpix.core.Pointing;
 import healpix.core.Scheme;
 import healpix.core.Vec3;
 import healpix.core.base.set.LongRangeSet;
-import healpix.tools.SpatialVector;
+import healpix.core.SpatialVector;
 
 import java.util.ArrayList;
 import java.util.Iterator;

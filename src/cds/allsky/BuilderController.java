@@ -328,7 +328,7 @@ public class BuilderController  {
 	private double[] datacut;
 	private HpixTree hpixTree=null;
 	private int coaddMode=TabDesc.REPLACETILE;
-	
+    
 	private Context context;
     
 	// Crée une série de threads de calcul
@@ -397,13 +397,15 @@ public class BuilderController  {
 	   double blank = getBlank();
 	   
        boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
-	   if( !inTree ) return findFits(file+".fits");
+	   if( !inTree ) return bitpix==0 ? null : findFits(file+".fits");
 	   
 	   Fits out = new Fits(w,w,bitpix);
-	   out.setBlank(blank);
-	   if (getBscale() != Double.NaN && getBzero() != Double.NaN) { 
-	      out.setBscale(getBscale());
-	      out.setBzero(getBzero());
+	   if( bitpix!=0 ) {
+	      out.setBlank(blank);
+	      if (getBscale() != Double.NaN && getBzero() != Double.NaN) { 
+	         out.setBscale(getBscale());
+	         out.setBzero(getBzero());
+	      }
 	   }
 	   Fits in;
 	   for( int dg=0; dg<2; dg++ ) {
@@ -416,26 +418,48 @@ public class BuilderController  {
 	         for( int y=0; y<w; y+=2 ) {
 	            for( int x=0; x<w; x+=2 ) {
 	               
-	               // On prend la moyenne des 4
-	               double pix=0;
-	               boolean ok=false;
-	               if( in!=null ) {
-	                  for( int i=0;i<4; i++ ) {
-	                     int gx = i==1 || i==3 ? 1 : 0;
-	                     int gy = i>1 ? 1 : 0;
-	                     double p = in.getPixelDouble(x+gx,y+gy);
-	                     if( !in.isBlankPixel(p) ) { pix+=p/4; ok=true; }
+	               // Couleur
+	               if( bitpix==0 ) {
+	                  int pix=0;
+	                  if( in!=null ) {
+	                     for( int i=0;i<4; i++ ) {
+	                        int gx = i==1 || i==3 ? 1 : 0;
+	                        int gy = i>1 ? 1 : 0;
+	                        int p = in.getPixelRGBJPG(x+gx,y+gy);
+	                        pix=p;
+	                        break;
+//	                        pix+=p/4;
+	                     }
 	                  }
+	                  out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
+	                  
+	               // Normal
+	               } else {
+
+	                  // On prend la moyenne des 4
+	                  double pix=0;
+	                  boolean ok=false;
+	                  if( in!=null ) {
+	                     for( int i=0;i<4; i++ ) {
+	                        int gx = i==1 || i==3 ? 1 : 0;
+	                        int gy = i>1 ? 1 : 0;
+	                        double p = in.getPixelDouble(x+gx,y+gy);
+	                        if( !in.isBlankPixel(p) ) { pix+=p/4; ok=true; }
+	                     }
+	                  }
+	                  if( !ok ) pix=blank;  // aucune valeur => BLANK
+	                  out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
 	               }
-	               if( !ok ) pix=blank;  // aucune valeur => BLANK
-	               out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
 	            }
 	         }
 	      }
 	   }
 	   
-	   // écrit les vrais pixels en FITS
-	   out.writeFITS(file+".fits");
+	   if( bitpix==0 ) {
+	      out.inverseYColor();
+	      out.writeJPEG(file+".jpg");
+	   } else out.writeFITS(file+".fits");
+	   
 	   long duree = System.currentTimeMillis() -t;
        if (npix%1000 == 0 || DEBUG) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") in "+duree+"ms "+file+"... ");
        

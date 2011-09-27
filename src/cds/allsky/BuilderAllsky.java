@@ -70,6 +70,7 @@ final public class BuilderAllsky {
       int frame = this.frame==-1 ? context.getFrame() : this.frame;
       char coordsys = frame==Localisation.ICRS ? 'C' : frame==Localisation.ECLIPTIC ? 'E' : 'G';
       prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
+      prop.setProperty(PlanHealpix.KEY_ISCOLOR, (context.getBitpix()==0)+"");
       prop.setProperty(PlanHealpix.KEY_ALADINVERSION, Aladin.VERSION);
 
       prop.store(new FileOutputStream(propertiesFile(path)), null);

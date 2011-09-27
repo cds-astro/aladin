@@ -60,7 +60,7 @@ final public class MainPanel extends JPanel implements ActionListener {
 
    protected Aladin aladin;
    protected Context context;
-
+   
    private String s_ERR, s_ERRFITS;
    
    // Le formulaire multi-tab
@@ -116,7 +116,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       s_ERRFITS= getString("ERRFITS");
       s_ERR    = getString("ERROR");
    }
-
+   
    private String getString(String k) { return Aladin.getChaine().getString(k); }
 
    public void actionPerformed(ActionEvent e) {
@@ -172,7 +172,7 @@ final public class MainPanel extends JPanel implements ActionListener {
                // essaye de lire l'entete du fichier comme un fits
                fitsfile.loadHeaderFITS(path);
                // il n'y a pas eu d'erreur, donc c'est bien un FITS
-               fitsfile.loadFITS(path);
+               if( fitsfile.bitpix!=0 ) fitsfile.loadFITS(path);
                return fitsfile;
            }  catch (Exception e) {
 //               System.err.println("Not a FITS file : " + path);
@@ -305,7 +305,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected String getBorderSize() {
 	   if( tabDesc==null ) return null;
          return tabDesc.getBorderSize().trim();
-   }
+         }
 
    protected String getInputPath() {
       if( tabDesc==null ) return null;
