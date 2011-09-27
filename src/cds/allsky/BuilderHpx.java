@@ -43,7 +43,7 @@ final public class BuilderHpx {
 	private int bitpix;
 	private boolean keepBB = true;
 	
-	private MainPanel mainPanel;
+	private Context context;
 
 	private int [] borderSize = null;
 	private double blank = Fits.DEFAULT_BLANK;
@@ -52,7 +52,7 @@ final public class BuilderHpx {
 	private int coaddFlagMode = TabDesc.KEEP;
 	String localServer = null;
 
-	public BuilderHpx(MainPanel mainPanel) { this.mainPanel = mainPanel; }
+	public BuilderHpx(Context context) { this.context = context; }
 
 	public int getBitpix() {
 	   return bitpix;
@@ -118,7 +118,7 @@ final public class BuilderHpx {
 	            CDSHealpix.polarToRadec(point, radec);
 
 	            // Méthode bilinéaire
-	            radec = mainPanel.gal2ICRSIfRequired(radec);
+	            radec = context.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 	            // Moyenne des pixels pour toutes les images trouvées
 	            double pixelFinal=0;
@@ -309,7 +309,7 @@ final public class BuilderHpx {
 	            // recherche les coordonnées du pixels HPX
 	            point = CDSHealpix.pix2ang_nest(nside, index);
 	            CDSHealpix.polarToRadec(point, radec);
-	            radec = mainPanel.gal2ICRSIfRequired(radec);
+	            radec = context.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 
 	            // Moyenne des pixels pour toutes les images trouvées
@@ -498,7 +498,7 @@ final public class BuilderHpx {
 					
 					// Mode FITS classique
 					else {
-					   fitsfile=mainPanel.cacheFits.getFits(fitsfilename);   // Utilisation d'un cache de fichiers Fits déjà ouvert
+					   fitsfile=context.cacheFits.getFits(fitsfilename);   // Utilisation d'un cache de fichiers Fits déjà ouvert
 //					   fitsfile.loadFITS(fitsfilename);
 					}
 
@@ -550,7 +550,7 @@ int n =0;
 			SrcFile file = downFiles.get(gagnant);
 			Calib calib = file.calib;
 			// transforme les coordonnées en ICRS
-			double[] radec = mainPanel.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
+			double[] radec = context.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
 			Coord c = new Coord(radec[0],radec[1]);
 			
 			if (isInFile(c, recouvrement, calib)) {

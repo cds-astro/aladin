@@ -607,7 +607,7 @@ public class TabBuild extends JPanel implements ActionListener {
          mainPanel.toReset();
 
          //lance les taches en arrière plan
-         task = new Task(mainPanel);
+         task = new Task(mainPanel.context);
          if (task.isDone()) {
             try {
                task.doInBackground();

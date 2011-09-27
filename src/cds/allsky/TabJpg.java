@@ -346,7 +346,7 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM() , mainPanel );
+         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM() , mainPanel.context );
          builderJpg.start();
          (new ThreadProgressBar(builderJpg)).start();
          

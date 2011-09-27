@@ -16,7 +16,7 @@ public class BuilderRgb implements Runnable {
 	private int progress;
 	private PlanBG[] p;
 	private final Aladin aladin;
-	private MainPanel mainPanel;
+	private Context context;
 	private BuilderAllsky builderAllsky;
 	private String path;
     private int width=-1;
@@ -33,9 +33,9 @@ public class BuilderRgb implements Runnable {
     private long startTime,totalTime;
     private long statLastShowTime;
 
-    public BuilderRgb(Aladin aladin, MainPanel mainPanel, Object[] plans, String path) {
+    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path) {
        this.aladin = aladin;
-       this.mainPanel = mainPanel;
+       this.context = context;
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -52,15 +52,15 @@ public class BuilderRgb implements Runnable {
           if( p[c]==null ) { missing=c; continue; }
           if( frame==-1 ) frame = p[c].getFrameOrigin();
           else if( frame!=p[c].getFrameOrigin() ) {
-             aladin.warning(mainPanel, "All components must be used the same HEALPix coordinate system !");
+             context.warning("All components must be used the same HEALPix coordinate system !");
              return;
           }
           int order = p[c].getMaxFileOrder();
           if( maxOrder > order)  maxOrder = order;
        }
-       builderAllsky = new BuilderAllsky(mainPanel,frame);
+       builderAllsky = new BuilderAllsky(context,frame);
        
-       aladin.trace(3,"BuilderRgb maxOrder="+maxOrder+" => "+path);
+       Aladin.trace(3,"BuilderRgb maxOrder="+maxOrder+" => "+path);
     }
 
     public int getProgress() {
@@ -82,8 +82,7 @@ public class BuilderRgb implements Runnable {
 
     // Demande d'affichage des stats (dans le TabRgb)
     private void showStat() {
-       if( mainPanel==null ) return;
-       mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
+       context.showRgbStat(statNbFile, statSize, totalTime);
     }
 
     public synchronized void start(){
@@ -358,14 +357,14 @@ public class BuilderRgb implements Runnable {
           if( planPreview==null || planPreview.isFree() ) {
              double[] res = CDSHealpix.pix2ang_nest(Util.nside(3), last);
              double[] radec = CDSHealpix.polarToRadec(new double[] {res[0],res[1]});
-             radec = mainPanel.gal2ICRSIfRequired(radec);
+             radec = context.gal2ICRSIfRequired(radec);
              int n = aladin.calque.newPlanBG(path, "=MySkyColor", Coord.getSexa(radec[0],radec[1]), "30" );
-             aladin.trace(4,"RGBGuild: Create MySky");
+             Aladin.trace(4,"RGBGuild: Create MySky");
              planPreview = aladin.calque.getPlan(n);
           } else {
              ((PlanBG)planPreview).forceReload();
              aladin.calque.repaintAll();
-             aladin.trace(4,"RGBGuild: Create MySky");
+             Aladin.trace(4,"RGBGuild: Create MySky");
              
           }
       } catch( Exception e ) {e.printStackTrace(); }

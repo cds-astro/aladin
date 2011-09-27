@@ -43,12 +43,9 @@ import cds.tools.pixtools.Util;
 public class BuilderController  {
    
     static public boolean DSS = false;
-    static public boolean _2MASS = false;
     final static public int ORDER = 9; // 2^9 = 512 = SIDE
     final static public int SIDE = 512;
     
-    private MainPanel mainPanel;
-
 	protected int ordermin = 3;
 	protected long nummin = 0;
 	protected long nummax = 0;
@@ -82,7 +79,7 @@ public class BuilderController  {
     private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
 	
     public BuilderController() {}
-    public BuilderController(MainPanel mainPanel) { this.mainPanel=mainPanel; }
+    public BuilderController(Context context) { this.context=context; }
     
     // Suppression des statistiques
     private void resetStat() { statNbThread=-1; totalTime=-1; }
@@ -119,19 +116,10 @@ public class BuilderController  {
        if( t-statLastShowTime < 1000 ) return;
        totalTime=System.currentTimeMillis()-startTime;
        statLastShowTime=t;
-       showStat();
+       context.showBuildStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statNodeTile,
+    		   statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
     }
     
-    // Demande d'affichage des stats (dans le TabBuild)
-    private void showStat() {
-       if( mainPanel==null ) return;
-       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread);
-       mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
-       mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
-             statMinTime,statMaxTime,statAvgTime);
-       mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,(long)( SIDE*SIDE*Math.abs(mainPanel.getBitpix())/8),
-             statNodeAvgTime);
-    }
 	
 	public void build(int ordermax, String outpath, int mybitpix,boolean fading, boolean keepBB) throws Exception {
 		localServer = outpath + Constante.HPX_FINDER;
@@ -171,9 +159,8 @@ public class BuilderController  {
 	   long size = Runtime.getRuntime().maxMemory();
 	   long sizeCache = (size/3)/(1024L*1024L);
 	   size -=sizeCache;
-	   mainPanel.aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
-	   mainPanel.cacheFits = new CacheFits(sizeCache, 100000);
-	   mainPanel.cacheFits.skyvalSub(_2MASS);
+	   Aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
+	   context.setCache(new CacheFits(sizeCache, 100000));
 	   
 	   long maxMemPerThread = Constante.MAXMBPERTHREAD*1024*1024L;
 	   int nbThread = (int) (size / maxMemPerThread);
@@ -191,8 +178,9 @@ public class BuilderController  {
 	      cds.tools.Util.pause(1000);
 	   }
 
-       showStat();
-       Aladin.trace(3,"Cache stated: "+mainPanel.cacheFits);
+       context.showBuildStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statNodeTile,
+    		   statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
+       Aladin.trace(3,"Cache stated: "+ context.cacheFits);
 	   Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
 	}
 
@@ -337,10 +325,11 @@ public class BuilderController  {
 	private double bscale;
 	private double bzero;
 	private double blank;
-	private int [] borderSize;
 	private double[] datacut;
 	private HpixTree hpixTree=null;
 	private int coaddMode=TabDesc.REPLACETILE;
+	
+	private Context context;
     
 	// Crée une série de threads de calcul
 	private void launchThreadBuilderHpx(int nbThreads,String outpath,int ordermin,int ordermax,boolean fading, boolean keepBB) {
@@ -348,14 +337,14 @@ public class BuilderController  {
 	   initStat(nbThreads);
 	   
 	   for( int i=0; i<nbThreads; i++ ) {
-	      BuilderHpx hpx = new BuilderHpx(mainPanel);
+	      BuilderHpx hpx = new BuilderHpx(context);
 	      hpx.setBitpix(bitpix, keepBB);
 	      hpx.setLocalServer(localServer);
 	      hpx.createHealpixOrder(ORDER);
 	      hpx.setBscale(bscale);
 	      hpx.setBzero(bzero);
 	      hpx.setBlank(blank);
-	      hpx.setBorderSize(borderSize);
+	      hpx.setBorderSize(context.getBorderSize());
 	      hpx.setDataCut(datacut);
 	      hpx.setCoadd(coaddMode);
 	      ThreadBuilder t = new ThreadBuilder("Builder"+i,outpath, hpx,ordermin,ordermax,fading);
@@ -818,9 +807,6 @@ public class BuilderController  {
 		this.blank = blank;
 	}
 	
-	public void setBorderSize(int [] borderSize) {
-	   this.borderSize = borderSize;
-	}
 	
 	/**
 	 * @return the bscale
@@ -836,6 +822,10 @@ public class BuilderController  {
 		return bzero;
 	}
 
+	public void setContext(Context context) {
+		this.context = context;
+	}
+	
 	/**
 	 * @param automin the automin to set
 	 */

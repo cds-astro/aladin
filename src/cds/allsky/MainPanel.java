@@ -59,7 +59,8 @@ import cds.tools.pixtools.Util;
 final public class MainPanel extends JPanel implements ActionListener {
 
    protected Aladin aladin;
-   
+   protected Context context;
+
    private String s_ERR, s_ERRFITS;
    
    // Le formulaire multi-tab
@@ -70,18 +71,8 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected TabPub   tabPub;             // Le tab pour la publication du survey HEALPix
    protected TabRgb   tabRgb;             // Le tab pour la génération d'un survey RGB HEALPix
 
-   private int lastN3 = 0;
-   private PlanBG planPreview;
-   protected CacheFits cacheFits;
+   PlanBG planPreview;
    private boolean convertCut;
-
-   protected int getLastN3() {
-      return lastN3;
-   }
-
-   protected void setLastN3(int lastN3) {
-      this.lastN3 = lastN3;
-   }
 
    public MainPanel(Aladin aladin) {
       super();
@@ -89,6 +80,10 @@ final public class MainPanel extends JPanel implements ActionListener {
       createChaine();
       createPanel();
       BuilderController.DEBUG = (Aladin.levelTrace > 0) ? true : false;
+   }
+
+   public void initContext() {
+	   context = new Context(this);
    }
 
    private void createPanel() {
@@ -121,8 +116,8 @@ final public class MainPanel extends JPanel implements ActionListener {
       s_ERRFITS= getString("ERRFITS");
       s_ERR    = getString("ERROR");
    }
-   
-   private String getString(String k) { return aladin.getChaine().getString(k); }
+
+   private String getString(String k) { return Aladin.getChaine().getString(k); }
 
    public void actionPerformed(ActionEvent e) {
       if (e.getSource() == tabDesc.getSourceDirField()) {
@@ -199,7 +194,7 @@ final public class MainPanel extends JPanel implements ActionListener {
     * @param text
     */
    public void init() {
-      final String text = tabDesc.getInputPath().trim();
+      final String text = getInputPath().trim();
       debugPierre=true;
       if (text != null && !text.equals("")) {
          try {
@@ -241,7 +236,7 @@ final public class MainPanel extends JPanel implements ActionListener {
 
    protected void initCut() {
       String path = getInputPath();
-      convertCut = (tabBuild.getBitpix() != getOriginalBitpix());
+      convertCut = (tabBuild.getBitpix() != tabBuild.getOriginalBitpix());
       if( path == null || "".equals(path)) {
          path = getOutputPath();
          convertCut=false;
@@ -255,7 +250,7 @@ final public class MainPanel extends JPanel implements ActionListener {
                   double[] cut;
                   try {
                      cut = file.findAutocutRange();
-                     setCut(cut);
+                     context.setCut(cut);
                   } catch( Exception e ) {
                      e.printStackTrace();
                   }
@@ -266,26 +261,10 @@ final public class MainPanel extends JPanel implements ActionListener {
             return;
          }
       }
-      if (convertCut) convertCut(tabBuild.getBitpix());
+      if (convertCut) context.convertCut(tabBuild.getBitpix());
    }
    private int setSelectedOrder(int val) {
       return tabBuild.setSelectedOrder(val);
-   }
-
-   protected double[] getCut() {
-      return tabJpg.getCut();
-   }
-   
-   protected void setCut(double [] cut) {
-      tabJpg.setCut(cut);
-   }
-
-   protected void convertCut(int bitpix) {
-      double[] cut = tabJpg.getCut();
-      double [] oldminmax = new double[] {cut[2],cut[3]};
-      cut[0] = Fits.toBitpixRange(cut[0], bitpix, oldminmax);
-      cut[1] = Fits.toBitpixRange(cut[1], bitpix, oldminmax);
-      setCut(cut);
    }
 
    public void updateCurrentCM() { tabJpg.updateCurrentCM(); }
@@ -323,25 +302,9 @@ final public class MainPanel extends JPanel implements ActionListener {
       return blank;
    }
 
-   /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
-    * soit une seule valeur appliquée à tous les bords,
-    * soit 4 valeurs affectées à la java de la manière suivante : Nord, Ouest, Sud, Est */
-   protected int [] getBorderSize() {
-      int [] border = { 0,0,0,0 };
-      String s="";
-      try { 
-         s = tabDesc.getBorderSize().trim();
-         StringTokenizer st = new StringTokenizer(s," ,;-");
-         for( int i=0; i<4 && st.hasMoreTokens(); i++ ) {
-            String s1 = st.nextToken();
-            border[i] = Integer.parseInt(s1);
-            if( i==0 ) border[3]=border[2]=border[1]=border[0];
-         }
-         int x = border[0]; border[0] = border[2]; border[2] = x;  // Permutations pour respecter l'ordre North West South East
-      } catch( Exception e ) {
-         tabDesc.borderTextField.setText("Border error => assume 0");
-      }
-      return border;
+   protected String getBorderSize() {
+	   if( tabDesc==null ) return null;
+         return tabDesc.getBorderSize().trim();
    }
 
    protected String getInputPath() {
@@ -424,7 +387,11 @@ final public class MainPanel extends JPanel implements ActionListener {
    
    private boolean isRunning=false;
    protected boolean isRunning() { return isRunning; }
-   protected void setIsRunning(boolean flag) { isRunning=flag; }
+   protected void setIsRunning(boolean flag) { 
+	   isRunning=flag;
+	   if (!isRunning)
+	      context.mainPanel.done();
+   }
 
    public void setRestart() {
       displayReStart();
@@ -486,17 +453,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       tabBuild.setInitDir(txt);
    }
 
-   /**
-    * @return the keepBB
-    */
-   protected boolean isKeepBB() {
-      return tabBuild.isKeepBB();
-   }
-
-   protected int getOriginalBitpix() {
-      return tabBuild.getOriginalBitpix();
-   }
-
    public void displayStart() {
       tabBuild.displayStart();
 //      pDesc.setResetEnable(false);
@@ -555,7 +511,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       double cutmin = planPreview.getCutMin();
       double cutmax = planPreview.getCutMax();
       System.out.println("Positionnement cutmin,cutmax = "+cutmin+".."+cutmax+")");
-      setCut(new double[]{cutmin,cutmax});
+      context.setCut(new double[]{cutmin,cutmax});
    }
 
    /**
@@ -569,7 +525,7 @@ final public class MainPanel extends JPanel implements ActionListener {
          if (planPreview == null || planPreview.isFree() || planPreview.hasError() ) {
             double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), last);
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
-            radec = gal2ICRSIfRequired(radec);
+            radec = context.gal2ICRSIfRequired(radec);
             int n = aladin.calque.newPlanBG(getOutputPath(), "="+mysky,
                   Coord.getSexa(radec[0], radec[1]), "30");
             Aladin.trace(4, "MainPanel.preview: create "+mysky);
@@ -584,37 +540,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       } catch (Exception e) {
          e.printStackTrace();
       }
-   }
-   
-   private int frame = Localisation.ICRS;
-   public void setFrame(int frame) { this.frame=frame; }
-   public int getFrame() { return frame; }
-   public String getFrameName() { return Localisation.getFrameName(frame); }
-
-   static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
-   static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
-   static private Astroframe AF_GAL1 = new Galactic();
-   static private Astroframe AF_ICRS1 = new ICRS();
-   
-   protected double[] gal2ICRSIfRequired(double al, double del) { return new double[]{al,del}; }
-   protected double[] gal2ICRSIfRequired(double [] aldel) {
-      if( frame==Localisation.ICRS ) return aldel;
-      Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
-      coo.set(aldel[0],aldel[1]);
-      coo.convertTo(AF_ICRS1);
-      aldel[0] = coo.getLon();
-      aldel[1] = coo.getLat();
-      return aldel;
-   }
-   protected double[] ICRS2galIfRequired(double al, double del) { return new double[]{al,del}; }
-   protected double[] ICRS2galIfRequired(double [] aldel) {
-      if( frame==Localisation.ICRS ) return aldel;
-      Astrocoo coo = (Astrocoo) COO_EQU.clone(); 
-      coo.set(aldel[0], aldel[1]);
-      coo.convertTo(AF_GAL1);
-      aldel[0] = coo.getLon();
-      aldel[1] = coo.getLat();
-      return aldel;
    }
    
 

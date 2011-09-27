@@ -46,13 +46,13 @@ final public class BuilderAllsky {
    private double progress = 0;
    
    private int frame;
-   final private MainPanel mainPanel;
+   final private Context context;
    
    /**
     * si frame==-1, utilisera le frame spécifié par l'utilisateur
     */
-   public BuilderAllsky(MainPanel mainPanel,int frame) {
-      this.mainPanel=mainPanel;
+   public BuilderAllsky(Context context,int frame) {
+      this.context=context;
       this.frame=frame;
    }
    
@@ -67,10 +67,10 @@ final public class BuilderAllsky {
       Properties prop = new Properties();
       prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       
-      int frame = this.frame==-1 ? mainPanel.getFrame() : this.frame;
+      int frame = this.frame==-1 ? context.getFrame() : this.frame;
       char coordsys = frame==Localisation.ICRS ? 'C' : frame==Localisation.ECLIPTIC ? 'E' : 'G';
       prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
-      prop.setProperty(PlanHealpix.KEY_ALADINVERSION, mainPanel.aladin.VERSION);
+      prop.setProperty(PlanHealpix.KEY_ALADINVERSION, Aladin.VERSION);
 
       prop.store(new FileOutputStream(propertiesFile(path)), null);
    }

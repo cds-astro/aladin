@@ -29,7 +29,7 @@ import cds.tools.pixtools.HpixTree;
 public class Task implements Runnable{
 
 	
-	MainPanel mainPanel;
+	Context context;
 	BuilderIndex builderIndex;
 	BuilderAllsky builderAllsky;
 	BuilderController builder;
@@ -51,23 +51,24 @@ public class Task implements Runnable{
 	private ThreadProgressBar progressBar;
 
 	private double blank;
-	private int [] borderSize;
+//	private int [] borderSize;
 	private double bzero;
 	private double bscale;
 
 //	private Plan planPreview;
 	
-    public Task(MainPanel mainPanel) {
-       this.mainPanel = mainPanel;
-       builderIndex = new BuilderIndex(mainPanel);
-       builderAllsky = new BuilderAllsky(mainPanel,-1);
-       builder = new BuilderController(mainPanel);
+    public Task(Context context) {
+       this.context = context;
+       builderIndex = new BuilderIndex(context);
+       builderAllsky = new BuilderAllsky(context,-1);
+       builder = new BuilderController(context);
+       builder.setContext(context);
     }
 
 
-	public Plan getPlanPreview() {
-	   return mainPanel.aladin.calque.getPlan(mainPanel.tabDesc.getLabel());
-	}
+//	public Plan getPlanPreview() {
+//	   return config.aladin.calque.getPlan(config.getLabel());
+//	}
 
 	public synchronized void startThread(){
 	   if(runner == null){
@@ -95,16 +96,16 @@ public class Task implements Runnable{
 	}
 	
 	public void run() {
-	   mainPanel.setIsRunning(true);
+	   context.setIsRunning(true);
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
-	      boolean fading = mainPanel.toFading();
+	      boolean fading = context.toFading();
 
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
 	      if (mode<=INDEX) {
-	         Aladin.trace(2,"Launch Index (frame="+mainPanel.getFrameName()+")");
+	         Aladin.trace(2,"Launch Index (frame="+context.getFrameName()+")");
 	         followProgress(mode,builderIndex);
 	         boolean init = builderIndex.build(input,output,order);
 	         // si le thread a été interrompu, on sort direct
@@ -116,12 +117,12 @@ public class Task implements Runnable{
 	         else Aladin.trace(2,"Allsky... => Use previous Index");
 	         setProgress(mode,100);
 	         progressBar.stop();
-	         mainPanel.enableProgress(false,INDEX);
+	         context.enableProgress(false,INDEX);
 	      }
 	      // Création des fichiers healpix fits et jpg
 	      if (mode <= TESS) {
 	         mode = TESS;
-	         Aladin.trace(2,"Launch Tess (frame="+mainPanel.getFrameName()+") "+(!fading ? "(nofading)":""));
+	         Aladin.trace(2,"Launch Tess (frame="+context.getFrameName()+") "+(!fading ? "(nofading)":""));
 	         //				builder.setThread(runner);
 	         followProgress(mode, builder);
 	         try {
@@ -129,11 +130,11 @@ public class Task implements Runnable{
 	            //						cut = new double[] {0,0,0,0};
 	            //					builder.setAutoCut(cut, fct);
 	            builder.setBlank(blank);
-	            builder.setBorderSize(borderSize);
+//	            builder.setBorderSize(borderSize);
 	            builder.setBScaleBZero(bscale,bzero);
 	            builder.setHpixTree(hpixTree);
 	            builder.setCoadd(coaddMode);
-	            builder.build(order, output, bitpix, fading, keepBB);
+	            builder.build(order, output, context.getBitpix(), fading, keepBB);
 	            // si le thread a été interrompu, on sort direct
 	            if (runner != Thread.currentThread()) {
 	               progressBar.stop();
@@ -145,15 +146,14 @@ public class Task implements Runnable{
 	         Aladin.trace(2,"Allsky... => Hpx files built");
 	         setProgress(mode,100);
 	         progressBar.stop();
-	         mainPanel.enableProgress(false,TESS);
+	         context.enableProgress(false,TESS);
 	      }
 	      // création du fichier allsky
 	      if (mode <= JPG) mode = JPG;
 	      createAllSky();
 	      allskyOk=true;
-	      mainPanel.setIsRunning(false);
+	      context.setIsRunning(false);
 
-	      mainPanel.done();
 	      runner = null;
 	      mode = -1;
 	      Aladin.trace(2,"Allsky... done!");
@@ -178,9 +178,9 @@ public class Task implements Runnable{
 	   //          followProgress(mode,sg);
 	   //          String path = Util.concatDir(output,AllskyConst.SURVEY);
 	   try {
-	      if( bitpix==0 ) builderAllsky.createAllSkyJpgColor(output,3,64);
+	      if( context.getBitpix()==0 ) builderAllsky.createAllSkyJpgColor(output,3,64);
 	      else {
-	         double[] cut = mainPanel.getCut();
+	         double[] cut = context.getCut();
 	         if( cut==null ) builderAllsky.createAllSky(output,3,64,0,0, keepBB);
 	         else builderAllsky.createAllSky(output,3,64,cut[0],cut[1],keepBB);
 	      }
@@ -192,11 +192,11 @@ public class Task implements Runnable{
 	}
 
 	void setInitDir(String txt) {
-	   mainPanel.setInitDir(txt);		
+	   context.setInitDir(txt);		
 	}
 
 	void setProgress(int stepMode, int i) {
-	   mainPanel.setProgress(stepMode, i);
+	   context.setProgress(stepMode, i);
 	}
 
 	private void followProgress(int stepMode, Object o) {
@@ -205,31 +205,31 @@ public class Task implements Runnable{
 	}
 
 	public void doInBackground() throws Exception {
-	   order = mainPanel.getOrder();
+	   order = context.getOrder();
 //	   System.out.println("doInBackGround => order="+order);
 	   if (order==-1) order = 3;
-	   output = mainPanel.getOutputPath();
-	   input = mainPanel.getInputPath();
+	   output = context.getOutputPath();
+	   input = context.getInputPath();
 
 	   if (input == null || input.equals("")) {
 	      System.err.println("No input directory given");
-	      mainPanel.stop();
+	      context.stop();
 	      return ;
 	   }
 	   // récupère le bitpix dans le formulaire
-	   bitpix = mainPanel.getBitpix();
-	   keepBB = mainPanel.isKeepBB();
-	   hpixTree = mainPanel.getHpixTree();
-	   coaddMode = mainPanel.getCoAddMode();
-	   double bb[] = mainPanel.getBScaleBZero();
+	   bitpix = context.getBitpix();
+	   keepBB = context.isKeepBB();
+	   hpixTree = context.getHpixTree();
+	   coaddMode = context.getCoAddMode();
+	   double bb[] = context.getBScaleBZero();
 	   bscale = bb[0];
 	   bzero = bb[1];
-	   blank = mainPanel.getBlank();
-	   borderSize = mainPanel.getBorderSize();
+	   blank = context.getBlank();
+//	   borderSize = mainPanel.getBorderSize();
 	   // si le bitpix change
-	   if (mainPanel.getOriginalBitpix() != bitpix)
+	   if (context.getOriginalBitpix() != context.getBitpix())
 	      // on change aussi les bornes
-	      mainPanel.convertCut(bitpix);
+	      context.convertCut(context.getBitpix());
 	   //		cut = allsky.getCut();
 	   //		fct = allsky.getMethod();
 
@@ -258,9 +258,9 @@ public class Task implements Runnable{
 	   //		return runner != Thread.currentThread();
 	}
 
-	public void setLastN3(int lastN3) {
-	   mainPanel.setLastN3(lastN3);
-	}
+//	public void setLastN3(int lastN3) {
+//	   config.setLastN3(lastN3);
+//	}
 }
 
 class ThreadProgressBar implements Runnable {
@@ -309,8 +309,8 @@ class ThreadProgressBar implements Runnable {
                value = (int)((BuilderController)builder).getProgress();
                int n3 = ((BuilderController)builder).getLastN3();
                if (n3!=-1 && last!=n3) {
-                  if( tasks.createAllSky(false) ) tasks.mainPanel.preview(n3);
-                  tasks.mainPanel.setLastN3(n3);
+                  if( tasks.createAllSky(false) ) tasks.context.preview(n3);
+//                  tasks.config.setLastN3(n3);
                   last = n3;
                }
                break;

@@ -254,7 +254,7 @@ public class TabRgb extends JPanel implements ActionListener {
 			
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			bOk.setEnabled(false);
-			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel,plans,dir.getText());
+			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel.context,plans,dir.getText());
 			builderRgb.start();
 			(new ThreadProgressBar(builderRgb)).start();
 		}

@@ -27,7 +27,7 @@ public class BuilderJpg implements Runnable {
 	private int bitpix;
 	private int width;
 	private double blank,bscale,bzero;
-	private MainPanel mainPanel;
+	private Context context;
 	
 	private int statNbFile;
 	private long statSize;
@@ -38,16 +38,16 @@ public class BuilderJpg implements Runnable {
 	 * Création du générateur JPEG.
 	 * @param cut borne de l'intervalle pour le passage en 8 bits (uniquement si cm==null)
 	 * @param cm table des couleurs pour le passage en 8 bits (prioritaire sur cut), 
-	 * @param mainPanel
+	 * @param context
 	 */
-	public BuilderJpg(double[] cut, final ColorModel cm, MainPanel mainPanel) {
-	   this.mainPanel = mainPanel;
-	   dirpath=mainPanel.getOutputPath();
+	public BuilderJpg(double[] cut, final ColorModel cm, Context context) {
+	   this.context = context;
+	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
-	   bitpix = mainPanel.getBitpix();
-	   blank = mainPanel.getBlank();
+	   bitpix = context.getBitpix();
+	   blank = context.getBlank();
 	   width=BuilderController.SIDE;
-	   double bb[] = mainPanel.getBScaleBZero();
+	   double bb[] = context.getBScaleBZero();
 	   bscale=bb[0];
 	   bzero=bb[1];
 	   cutminmax=cut;
@@ -67,10 +67,9 @@ public class BuilderJpg implements Runnable {
        showStat();
     }
     
-    // Demande d'affichage des stats (dans le TabJpeg)
+    // Demande d'affichage des stats
     private void showStat() {
-       if( mainPanel==null ) return;
-       mainPanel.tabJpg.setStat(statNbFile, statSize, totalTime);
+       context.showJpgStat(statNbFile, statSize, totalTime);
     }
 
     // Détermine le niveau terminal en recherchant les répertoires Norder
@@ -100,7 +99,7 @@ public class BuilderJpg implements Runnable {
 	         createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
-	      (new BuilderAllsky(mainPanel,-1)).createAllSkyJpgColor(dirpath,3,64);
+	      (new BuilderAllsky(context,-1)).createAllSkyJpgColor(dirpath,3,64);
 	      progress=100;
 	   } catch( Exception e ) {
 	      e.printStackTrace();

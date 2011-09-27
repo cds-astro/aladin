@@ -213,7 +213,7 @@ public class TabDesc extends JPanel implements ActionListener {
          final JCheckBox cb1 = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
          cb1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               mainPanel.setFrame(cb1.isSelected() ? Localisation.GAL : Localisation.ICRS);
+               mainPanel.context.setFrame(cb1.isSelected() ? Localisation.GAL : Localisation.ICRS);
             }
          });
          c.gridy++;
@@ -228,7 +228,7 @@ public class TabDesc extends JPanel implements ActionListener {
          final JCheckBox cb2MASS = new JCheckBox("2MASS skyval filter", false);
          cb2MASS.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-               BuilderController._2MASS = cb2MASS.isSelected();
+               mainPanel.context.skySub(cb2MASS.isSelected());
             }
          });
          c.gridy++;
