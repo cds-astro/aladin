@@ -47,11 +47,11 @@ public class CacheFits {
    private long mem;        // mémoire courante (en octets)
    private int file;        // Nombre de fichiers gérés
    private int nextId;      // prochain identificateur unique de fichier
-   private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
-   					//de la mise dans le cache
-   private HashMap<String, FitsFile> map;      // Table des fichiers
+  private HashMap<String, FitsFile> map;      // Table des fichiers
    TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
-   
+   private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
+	//de la mise dans le cache
+
    private int statNbOpen,statNbFind;
    
    /**
@@ -110,7 +110,7 @@ public class CacheFits {
       f.fits = new Fits();
       f.fits.loadFITS(name);
       // applique un filtre spécial
-      if (skyvalSub() ) delSkyval(f.fits);
+      if (skyvalSub) delSkyval(f.fits);
 		
       map.put(name, f);
       mem+=f.getMem(); ;
@@ -147,12 +147,7 @@ public class CacheFits {
 //         System.out.println("clean.remove "+key );
       }
    }
-   
-   public boolean skyvalSub() {
-	   return skyvalSub;
-   }
-   
-   public void skyvalSub(boolean substract) {
+   public void skySub(boolean substract) {
 	   skyvalSub = substract;
    }
    
