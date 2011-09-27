@@ -421,6 +421,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    public void stop() {
+	  context.setIsRunning(false);
       tabBuild.stop();
    }
 

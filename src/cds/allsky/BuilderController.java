@@ -878,7 +878,7 @@ public class BuilderController  {
 	public void stop() {
 		stopped = true;
 		destroyThreadBuilderHpx();
-		
+		context.stop();
 	}
 
 	public void reset(String path) {

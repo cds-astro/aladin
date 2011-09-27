@@ -88,8 +88,8 @@ public class Task implements Runnable{
 	      runner = null;
 	      Aladin.trace(2,"STOP ON "+mode);
 	      switch (mode) {
-	         case INDEX : builderIndex.stop();
-	         case TESS : builder.stop();
+	         case INDEX : builderIndex.stop();break;
+	         case TESS : builder.stop();break;
 	      }
 	      progressBar.stop();
 	   }
