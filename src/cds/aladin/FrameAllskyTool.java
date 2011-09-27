@@ -27,6 +27,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import cds.allsky.Context;
 import cds.allsky.MainPanel;
 import cds.tools.Util;
 
@@ -34,7 +35,7 @@ public class FrameAllskyTool extends JFrame {
 
 	public Aladin aladin;
 	public MainPanel mainPanel;
-
+	
 	private String title;
 
 	private FrameAllskyTool(Aladin aladin) {
@@ -67,6 +68,7 @@ public class FrameAllskyTool extends JFrame {
 	private JPanel createPanel() {
 		JPanel p = new JPanel(new BorderLayout(1, 1));
 		mainPanel = new MainPanel(aladin);
+		mainPanel.initContext();
 		p.add(mainPanel, BorderLayout.CENTER);
 		return p;
 	}
