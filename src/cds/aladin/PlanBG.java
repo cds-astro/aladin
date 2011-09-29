@@ -230,7 +230,6 @@ public class PlanBG extends PlanImage {
       
       // Est-il en couleur
       color = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCOLOR,"True"));
-      System.out.println("Color="+color);
    }
    
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
@@ -252,37 +251,23 @@ public class PlanBG extends PlanImage {
       color = false;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       
-      
       // Chargement d'un éventuel fichier de Properties
       try {
          InputStream in = new FileInputStream( new File(path+Util.FS+PlanHealpix.PROPERTIES));
          loadProperties(in);
       } catch( Exception e) { }
       
-
-      File f3=null;
-      
-      // Recherche des répertoires NorderX et détermination du maxOrder
-      File [] sf = f.listFiles();
-      if( sf!=null ) {
-         for( int i=0; i<sf.length; i++ ) {
-            if( !sf[i].isDirectory() ) continue;
-            String name = sf[i].getName();
-            if( name.equals("Norder3") ) f3=sf[i];
-            if( name.startsWith("Norder") ) {
-               int n = Integer.parseInt(name.substring(6));
-               if( n>maxOrder ) maxOrder=n;
-            }
-         }
-      }
+      // Recherche des répertoires NorderX max
+      maxOrder = cds.tools.pixtools.Util.getMaxOrderByPath(path);
 
       // Détermination du mode couleur
-      if( f3==null ) {
+      File f3= new File(path+Util.FS+"Norder3");
+      if( !(f3.exists() && f3.isDirectory()) ) {
          if( this.label==null ) setLabel(path);
          aladin.error = error ="Not an HEALPix Aladin survey directory !";
       } else {
          try {
-            sf = f3.listFiles();
+            File [] sf = f3.listFiles();
             for( int i=0; i<sf.length; i++ ) {
                String name = sf[i].getName();
                if( name.equals("Allsky.fits") ) inFits=true;

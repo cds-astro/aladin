@@ -1794,8 +1794,8 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 //      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
 //   }
    
-   static final protected byte getByte (byte[] t, int i) {
-      return (byte)(t[i]&0xFF);
+   static final protected int getByte (byte[] t, int i) {
+      return (int)(t[i]&0xFF);
    }
    static final protected int getShort(byte[] t, int i) { 
       return (t[i]<<8) | t[i+1]&0xFF; 

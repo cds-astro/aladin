@@ -145,12 +145,11 @@ final public class BuilderHpx {
 	               
 	               // Cas RGB
 	               if( bitpix==0 ) {
-	                  if( coo.x<0 || coo.x>=file.fitsfile.width || coo.y<0 || coo.y>=file.fitsfile.height ) continue;
-	                  int pixelRGB = file.fitsfile.getPixelRGBJPG( (int)coo.x, (int)coo.y);
-	                  pixval[nbPix] = 0xFF & (pixelRGB>>16);
-                      pixvalG[nbPix] = 0xFF & (pixelRGB>>8);
-                      pixvalB[nbPix] = 0xFF & pixelRGB;
-	                  empty=false;
+	                  int pix = getBilinearPixelRGB(file.fitsfile,coo);
+	                  if( pix==0 ) continue;
+                      pixval[nbPix] = 0xFF & (pix>>16);
+                      pixvalG[nbPix] = 0xFF & (pix>>8);
+                      pixvalB[nbPix] = 0xFF & pix;
 	                  
 	               // Cas normal
 	               } else {
@@ -162,23 +161,25 @@ final public class BuilderHpx {
 	               nbPix++;
 	            }
 	            
+	            // cas RGB
 	            if( bitpix==0 ) {
 	               int pixelFinal=0;
-	               if( nbPix!=0 ) {
-	                  if( totalCoef==0 ) pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
-	                  else {
-	                     double r=0,g=0,b=0;
-	                     for( int i=0; i<nbPix; i++ ) {
-                            r += (pixval[i]*pixcoef[i])/totalCoef;
-                            g += (pixvalG[i]*pixcoef[i])/totalCoef;
-                            b += (pixvalB[i]*pixcoef[i])/totalCoef;
-	                     }
-	                     pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
-	                  }
+	               if( nbPix==0 ) pixelFinal=0;
+	               else if( totalCoef==0 )  pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
+	               else {
+                      double r=0,g=0,b=0;
+                      for( int i=0; i<nbPix; i++ ) {
+                         r += (pixval[i]*pixcoef[i])/totalCoef;
+                         g += (pixvalG[i]*pixcoef[i])/totalCoef;
+                         b += (pixvalB[i]*pixcoef[i])/totalCoef;
+                      }
+                      pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
 	               }
+	               if( pixelFinal!=0 ) empty=false;
 	               out.setPixelRGBJPG(x, y, pixelFinal);
-	            }
-	            else {
+	               
+	            // Cas normal
+	            }  else {
 	               double pixelFinal=0;
 	               if( nbPix==0 ) pixelFinal = blank;
 	               else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
@@ -186,15 +187,6 @@ final public class BuilderHpx {
 	                  empty=false;
 	                  for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
 	               }
-
-	               // Juste pour vérifier
-	               //	            	if( nbPix==0 ) pixelFinal = -1;
-	               //	            	else if( totalCoef==0 )  { empty=false; pixelFinal = -2; }
-	               //	            	else {
-	               //	            	   empty=false;
-	               //	            	   pixelFinal = totalCoef;
-	               //	            	}
-
 	               out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
 	            }
 	         }
@@ -204,90 +196,36 @@ final public class BuilderHpx {
 	}
 	
 	
-	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
-	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
-	                                     {"ee","eg","ge","gg"}, {"nn","no","on","oo"} };
-
-	private void calculeDSSMin(double [] min,SrcFile file) {
-
-	   try {
-	      // Autour des imagettes 67 - 6m, m7 - mm
-	      String filename = file.fitsfile.getFilename();
-	      int index = filename.lastIndexOf('.');
-	      index = filename.lastIndexOf('.',index-1);
-	      String subname = filename.substring(0,index);
-	      for( int i=0; i<DSSEXT.length; i++ ) {
-	         double m=0;
-	         for( int j=0; j<4; j++ ) {
-	            String name = subname + "." + DSSEXT[i][j] + ".fits";
-	            Fits f = new Fits();
-	            f.loadFITS(name);
-	            m += f.findAutocutRange()[0];
-	         }
-	         min[i] = m/4;
-	      }
-	      System.out.println("calculeDSSMin pour "+subname+" => "+min[0]+","+min[1]+","+min[2]+","+min[3]+" c="+min[4]+","+min[5]);
-
-	   } catch( Exception e ) {
-	      e.printStackTrace();
-	   }
-	}
-
-	
-//	   private final String [] DSSEXT = { "67","6m","ef","m7","mm" };
+//	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
+//	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
+//	                                     {"ee","eg","ge","gg"}, {"nn","no","on","oo"} };
 //
-//	   private void calculeDSSMinMax(double [] minMax,DownFile file) {
+//	private void calculeDSSMin(double [] min,SrcFile file) {
 //
-//	      minMax[0]=0;
-//	      minMax[1]=10000;
-//
-//	      try {
-//	         // Imagettes 67 - 6m, ef, m7 - mm
-//	         String filename = file.fitsfile.getFilename();
-//	         int index = filename.lastIndexOf('.');
-//	         index = filename.lastIndexOf('.',index-1);
-//	         String subname = filename.substring(0,index);
-//	         Fits [] f = new Fits[DSSEXT.length];
-//	         int width=0;
-//	         for( int i=0; i<DSSEXT.length; i++ ) {
-//	            String name = subname + "." + DSSEXT[i] + ".fits";
-//	            f[i] = new Fits();
-//	            f[i].loadFITS(name);
-//	            width += f[i].width;
+//	   try {
+//	      // Autour des imagettes 67 - 6m, m7 - mm
+//	      String filename = file.fitsfile.getFilename();
+//	      int index = filename.lastIndexOf('.');
+//	      index = filename.lastIndexOf('.',index-1);
+//	      String subname = filename.substring(0,index);
+//	      for( int i=0; i<DSSEXT.length; i++ ) {
+//	         double m=0;
+//	         for( int j=0; j<4; j++ ) {
+//	            String name = subname + "." + DSSEXT[i][j] + ".fits";
+//	            Fits f = new Fits();
+//	            f.loadFITS(name);
+//	            m += f.findAutocutRange()[0];
 //	         }
-//	         int height = f[0].height;
-//	         int bitpix = f[0].bitpix;
-//	         Fits f1 = new Fits(width, height, bitpix);
-//	         f1.setBlank(f[0].getBlank());
-//	         f1.setBscale(f[0].getBscale());
-//	         f1.setBzero(f[0].getBzero());
-//	         int offset=0;
-//	         for( int i=0; i<DSSEXT.length; i++ ) {
-//	            System.arraycopy(f[i].pixels, 0, f1.pixels, offset, f[i].pixels.length);
-//	            offset+=f[i].pixels.length;
-//	            f[i].free();
-//	         }
-//	         double range [] = f1.findAutocutRange();
-//	         f1.free();
-//	         minMax[0] = range[0];
-//	         minMax[1] = range[1];
-//	         System.out.println("calculeDSSMinMax pour "+subname+" => "+minMax[0]+" .. "+minMax[1]);
-//
-//	      } catch( Exception e ) {
-//	         e.printStackTrace();
+//	         min[i] = m/4;
 //	      }
+//	      System.out.println("calculeDSSMin pour "+subname+" => "+min[0]+","+min[1]+","+min[2]+","+min[3]+" c="+min[4]+","+min[5]);
 //
+//	   } catch( Exception e ) {
+//	      e.printStackTrace();
 //	   }
+//	}
+
 	
-	static private double [][] DSSMin = new double[1500][6];
-	static { for( int i=0; i<DSSMin.length; i++) DSSMin[i][5]=Double.NaN; }
-	
-	private double [] getDSSMin(SrcFile file) {
-	   int nPlaque = file.getDSSPlaque();
-	   double [] min = DSSMin[nPlaque];
-	   if( Double.isNaN(min[5]) ) calculeDSSMin(min,file);
-	   return min;
-	}
 	
 	// Juste pour des tests
 //    Fits buildTestHealpix(int nside_file, long npix_file, int nside) {
@@ -306,81 +244,6 @@ final public class BuilderHpx {
 //       return out;
 //    }
 
-	// Pour le DSS explicitement
-	Fits buildDSSHealpix(int nside_file, long npix_file, int nside) {
-	   boolean empty = true;
-	   long min;
-	   long index;
-	   double point[] = new double[2];
-	   double radec[] = new double[2];
-	   Coord coo = new Coord();
-	   Fits out=null;
-
-	   try {
-	      // cherche les numéros de pixels Healpix dans ce losange
-	      min = Util.getHealpixMin(nside_file, npix_file, nside, true);
-
-	      // initialisation de la liste des fichiers originaux pour ce losange
-	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
-	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-	      CDSHealpix.polarToRadec(point, radec);
-
-	      double blank = getBlank();
-	      if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
-
-	      out = new Fits(SIDE, SIDE, bitpix);
-	      out.setBlank(blank);
-	      if (bscale != Double.NaN && bzero != Double.NaN)  { 
-	         out.setBscale(getBscale());
-	         out.setBzero(getBzero());
-	      }
-
-	      // cherche la valeur à affecter dans chacun des pixels healpix
-	      double pixval[] = new double[100];   // on va éviter de passer par le total afin d'éviter un débordement
-	      double pixcoef[] = new double[100];  
-	      for (int y = 0; y < out.height; y++) {
-	         for (int x = 0; x < out.width; x++) {
-	            index = min + xy2hpx(y * out.width + x);
-	            // recherche les coordonnées du pixels HPX
-	            point = CDSHealpix.pix2ang_nest(nside, index);
-	            CDSHealpix.polarToRadec(point, radec);
-	            radec = context.gal2ICRSIfRequired(radec);
-	            coo.al = radec[0]; coo.del = radec[1];
-
-	            // Moyenne des pixels pour toutes les images trouvées
-	            double pixelFinal=0;
-	            int nbPix=0;
-	            double totalCoef=0;
-	            for( int i=downFiles.size()-1; i>=0 && nbPix<pixval.length; i-- ) {
-	               SrcFile file = downFiles.get(i);
-	               file.calib.GetXY(coo);
-	               coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
-	               coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
-	               if( !file.inDSS(coo.x,coo.y) ) continue;
-	               
-	               double pix = getBilinearPixel(file.fitsfile,coo);
-	               if( Double.isNaN(pix) ) continue;
-	               
-	               double [] minCorr = getDSSMin(file);
-	               pix = file.getDSSCorrection(pix,coo.x,coo.y,minCorr);
-	               pixval[nbPix]=pix;
-	               totalCoef+= pixcoef[nbPix] = file.getDSSFading(coo.x,coo.y);
-	               nbPix++;
-	            }
-	            if( nbPix==0 ) pixelFinal = Double.NaN;
-//	            else { empty=false; pixelFinal=totalCoef*1000; }   // Juste pour voir le fading
-
-	            else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
-	            else {
-	               empty=false;
-	               for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
-	            }
-            	out.setPixelDouble(x, y, pixelFinal);
-	         }
-	      }
-	   } catch( Exception e ) { }
-	   return (!empty) ? out : null;
-	}
 
 	// Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
 //	private double getCoef(Fits f,Coord coo,double proportion) {
@@ -434,6 +297,50 @@ final public class BuilderHpx {
        if( f.isBlankPixel(a2) ) a2=a0;
        if( f.isBlankPixel(a3) ) a3=a0;
        
+       return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
+    }
+    
+    private int getBilinearPixelRGB(Fits f,Coord coo) {
+       double x = coo.x;
+       double y = coo.y;
+       
+       int x1 = (int)x;
+       int y1 = (int)y;
+       
+       if( !f.isInCell(x1, y1) ) return 0;
+       
+       int x2=x1+1;
+       int y2=y1+1;
+       
+       int ox2= x2;
+       int oy2= y2;
+       
+       // Sur le bord, on dédouble le dernier pixel
+       if( ox2==f.xCell+f.widthCell ) ox2--;
+       if( oy2==f.yCell+f.heightCell ) oy2--;
+       
+       int b0 = f.getPixelRGBJPG(x1,y1);
+       int b1 = f.getPixelRGBJPG(ox2,y1);
+       int b2 = f.getPixelRGBJPG(x1,oy2);
+       int b3 = f.getPixelRGBJPG(ox2,oy2);
+       
+       if( b0==0 ) return 0;
+       if( b1==0 ) b1=b0;
+       if( b2==0 ) b2=b0;
+       if( b3==0 ) b3=b0;
+       
+       int pix=0;
+       for( int i=16; i>=0; i-=8 ) {
+          double a0 = 0xFF & (b0>>i);
+          double a1 = 0xFF & (b1>>i);
+          double a2 = 0xFF & (b2>>i);
+          double a3 = 0xFF & (b3>>i);
+          pix = (pix<<8) | (int)bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
+       }
+       return pix;
+    }
+    
+    private double bilineaire(int x1,int y1,int x2,int y2, double x, double y, double a0, double a1, double a2, double a3 ) {
        double d0,d1,d2,d3,pA,pB;
        if( x==x1 ) { d0=1; d1=0; }
        else if( x==x2 ) { d0=0; d1=1; }
@@ -446,6 +353,7 @@ final public class BuilderHpx {
        return (pA*d2+pB*d3)/(d2+d3);
     }
     
+
 	private double getPixelDouble(Fits f, int x, int y) {
 		if (!keepBB) return f.getPixelFull(x, y);
 		else return f.getPixelDouble(x, y);

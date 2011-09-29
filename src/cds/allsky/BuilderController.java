@@ -42,7 +42,6 @@ import cds.tools.pixtools.Util;
 
 public class BuilderController  {
    
-    static public boolean DSS = false;
     final static public int ORDER = 9; // 2^9 = 512 = SIDE
     final static public int SIDE = 512;
     
@@ -707,9 +706,7 @@ public class BuilderController  {
 		int nside_file = Util.nside(order);
 		int nside = Util.nside(order+ORDER);
 		
-		Fits out;
-		if( DSS ) out = hpx.buildDSSHealpix(nside_file, npix, nside);
-        else out = hpx.buildHealpix(nside_file, npix, nside, fading);
+		Fits out = hpx.buildHealpix(nside_file, npix, nside, fading);
         
 		if( out !=null ) {
 		   

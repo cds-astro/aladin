@@ -56,11 +56,6 @@ final public class BuilderAllsky {
       this.frame=frame;
    }
    
-   public void createMoc(String path) throws Exception {
-      HealpixMoc moc = new HealpixMoc();
-      
-   }
-   
    /** Ecriture du fichier des Properties associées au survey
     * On reprend quelques mots clés issus de PlanHealpix utilisés par Thomas B. */
    private void writePropertiesFile(String path) throws Exception {

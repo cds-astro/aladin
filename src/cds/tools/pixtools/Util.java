@@ -135,16 +135,22 @@ public class Util {
    }
 
    static public int getNpixFromPath(String filename) {
-	   int fromIndex = filename.indexOf("Npix");
-	   if (fromIndex == -1)
-		   return -1;
-		int npix = Integer.parseInt(
-				filename.substring(
-						fromIndex+4, 
-						filename.indexOf(".", fromIndex)
-				)
-			);
-		return npix;
+      int fromIndex = filename.lastIndexOf("Npix");
+      if( fromIndex<0 ) return -1;
+      int lastIndex = filename.indexOf('.',fromIndex);
+      if( lastIndex<0 ) lastIndex = filename.length();
+      return Integer.parseInt( filename.substring(fromIndex+4,lastIndex) );
+      
+//	   int fromIndex = filename.indexOf("Npix");
+//	   if (fromIndex == -1)
+//		   return -1;
+//		int npix = Integer.parseInt(
+//				filename.substring(
+//						fromIndex+4, 
+//						filename.indexOf(".", fromIndex)
+//				)
+//			);
+//		return npix;
    }
    
 
@@ -159,6 +165,24 @@ public class Util {
 		return npix;
    }
    
+   /** retourne le plus grand order d'une distribution Healpix à la CDS
+    * en scannant le nom des répertoire Nordernn, -1 si problème */
+   static public int getMaxOrderByPath(String path) {
+      int maxOrder=-1;
+      File f = new File(path);
+      File [] sf = f.listFiles();
+      if( sf!=null ) {
+         for( int i=0; i<sf.length; i++ ) {
+            if( !sf[i].isDirectory() ) continue;
+            String name = sf[i].getName();
+             if( name.startsWith("Norder") ) {
+               int n = Integer.parseInt(name.substring(6));
+               if( n>maxOrder ) maxOrder=n;
+            }
+         }
+      }
+      return maxOrder;
+   }
 
 	/**
 	 * Calcule de facon récursive le nombre de fichier finaux Npix... d'un répertoire

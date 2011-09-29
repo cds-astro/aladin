@@ -219,20 +219,12 @@ public class TabDesc extends JPanel implements ActionListener {
          c.gridy++;
          pCenter.add(cb1, c);
          
-         final JCheckBox cb = new JCheckBox("DSS Schmidt plates", false);
-         cb.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               BuilderController.DSS = cb.isSelected();
-            }
-         });
          final JCheckBox cb2MASS = new JCheckBox("2MASS skyval filter", false);
          cb2MASS.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                mainPanel.context.skySub(cb2MASS.isSelected());
             }
          });
-         c.gridy++;
-         pCenter.add(cb, c);
          c.gridy++;
          pCenter.add(cb2MASS, c);
       }
@@ -357,9 +349,10 @@ public class TabDesc extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
+      boolean color = mainPanel.context!=null && mainPanel.context.getBitpix()==0;
       boolean allskyExist = mainPanel.isExistingAllskyDir();
       boolean isRunning = mainPanel.isRunning();
-      resetHpx.setEnabled(allskyExist && !isRunning);
+      resetHpx.setEnabled(allskyExist && !isRunning && !color);
       resetIndex.setEnabled(allskyExist && !isRunning);
 
       boolean flag = !resetHpx.isSelected() && resetHpx.isEnabled();
@@ -376,8 +369,8 @@ public class TabDesc extends JPanel implements ActionListener {
       
       boolean ready = isExistingDir && dir_D.getText().trim().length()>0;
       b_next.setEnabled(ready);
-      blankCheckbox.setEnabled(ready && !isRunning);
-      blankTextField.setEnabled(ready && !isRunning);
+      blankCheckbox.setEnabled(ready && !isRunning && !color);
+      blankTextField.setEnabled(ready && !isRunning && !color);
       borderCheckbox.setEnabled(ready && !isRunning);
       borderTextField.setEnabled(ready && !isRunning);
       specifCheckbox.setEnabled(ready && !isRunning);

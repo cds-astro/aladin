@@ -38,6 +38,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -151,6 +152,9 @@ public class BuilderIndex {
 	      showStat();
 	      return false;
 	   } 
+	   
+	   // On en profite pour créer le Moc associé à l'index
+	   (new BuilderMoc()).createMoc(output);
 	   
 	   progress=100;
 	   File fpause = new File(pausepath);

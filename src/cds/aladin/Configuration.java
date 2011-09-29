@@ -20,9 +20,7 @@
 
 package cds.aladin;
 
-import cds.aladin.Legende.MyRenderer;
 import cds.tools.*;
-import cds.xml.Field;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -30,10 +28,8 @@ import java.io.*;
 import java.net.URL;
 import java.util.*;
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.AbstractTableModel;
 
 /**
  * Gestion du fichier de configuration Aladin. Il va être enregistré dans
