@@ -459,11 +459,10 @@ final public class Fits {
     * @param filename
     */
    private void createDir(String filename) {
-      cds.tools.Util.createPath(filename);
-//       File dir = new File(filename).getParentFile();
-//       if( !dir.exists() ) {
-//           dir.mkdirs();
-//       }
+       File dir = new File(filename).getParentFile();
+       if( !dir.exists() ) {
+           dir.mkdirs();
+       }
    }
 
    /** Génération d'un fichier FITS (sans calibration) */
