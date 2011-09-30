@@ -63,6 +63,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
 import java.io.*;
 import java.lang.reflect.Method;
@@ -498,6 +499,19 @@ public final class Util {
 	   }
 	   if( html ) res.append("</html>");
 	   return res.toString();
+	}
+	
+	/** Extrait la table des couleurs pour une composante sous la forme d'un tableau de 256 bytes
+	 * @param cm Le modèle de couleur
+	 * @param component 0-Rouge, 1-Vert, 2-Bleu
+	 * @return les 256 valeurs de la table pour la composante indiquée
+	 */
+	static public byte [] getTableCM(ColorModel cm,int component) {
+	   byte [] tcm = new byte[256];
+	   for( int i=0; i<tcm.length; i++ ) {
+	      tcm[i] = (byte) (0xFF & ( component==0 ? cm.getRed(i) : component==1 ? cm.getGreen(i) : cm.getBlue(i) ));
+	   }
+	   return tcm;
 	}
 
 	/**
@@ -1233,20 +1247,24 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 	/** Création si nécessaire des répertoires et sous-répertoire du fichier
 	 * passé en paramètre
 	 */
-	public static void createPath(String filename) {
-	   File f;
-	   String FS = filename.indexOf('/')>=0 ? "/" : "\\";
-
-	   // Pour accélerer, on teste d'abord l'existence éventuelle du dernier répertoire
-	   int i = filename.lastIndexOf(FS);
-	   if( i<0 ) return;
-	   f = new File( filename.substring(0,i) ) ;
-	   if( f.exists() ) return;
-
-	   for( int pos=filename.indexOf(FS,3); pos>=0; pos=filename.indexOf(FS,pos+1)) {
-	      f = new File( filename.substring(0,pos) );
-	      if( !f.exists() ) f.mkdir();
-	   }
+	public static void createPath(String filename) throws Exception {
+	   File f = new File(new File(filename).getParent());
+	   f.mkdirs();
+	   if( !f.exists() ) throw new Exception("Cannot create directory for "+filename);
+	   
+//	   File f;
+//	   String FS = filename.indexOf('/')>=0 ? "/" : "\\";
+//
+//	   // Pour accélerer, on teste d'abord l'existence éventuelle du dernier répertoire
+//	   int i = filename.lastIndexOf(FS);
+//	   if( i<0 ) return;
+//	   f = new File( filename.substring(0,i) ) ;
+//	   if( f.exists() ) return;
+//
+//	   for( int pos=filename.indexOf(FS,3); pos>=0; pos=filename.indexOf(FS,pos+1)) {
+//	      f = new File( filename.substring(0,pos) );
+//	      if( !f.exists() ) f.mkdir();
+//	   }
 	}
 
 	/** Permet le choix d'un répertoire */

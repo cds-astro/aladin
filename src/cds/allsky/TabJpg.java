@@ -46,6 +46,7 @@ public class TabJpg extends JPanel implements ActionListener {
    private JTextField tCutMax = new JTextField(10);
    private JRadioButton radioManual;                      // selected si on est en mode manuel
    private JRadioButton radioAllsky;                      // selected si on est en mode allsky
+   private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
 
    JButton ok = new JButton(OK);
@@ -152,14 +153,34 @@ public class TabJpg extends JPanel implements ActionListener {
       rb.setSelected(true);
       bg.add(rb);
       pCenter.add(rb,c);
+      
       c.gridx++;
       c.gridwidth=GridBagConstraints.REMAINDER;
       pCenter.add(Util.getHelpButton(this,getString("HELPJPEGCUTALLSKY")),c);
       c.insets.top=m;
-
+      
       c.gridx = 0;
       c.gridy++;
       pCenter.add(currentCM,c);
+
+      c.gridx=0;
+      c.gridy++;
+      m=c.insets.top;
+      c.insets.top=20;
+      JPanel p = new JPanel();
+      JLabel l = new JLabel(getString("METHODJPG"));
+      l.setFont(l.getFont().deriveFont(Font.BOLD));
+      p.add(l);
+      ButtonGroup bg1 = new ButtonGroup();
+      radioMediane = rb = new JRadioButton(getString("MEDIANJPG"));
+      rb.setSelected(true);
+      bg1.add(rb);
+      p.add(rb);
+      rb = new JRadioButton(getString("AVERAGEJPG"));
+      bg1.add(rb);
+      p.add(rb);
+      pCenter.add(p,c);
+      c.insets.top=m;
 
       c.gridwidth=1;
       c.gridx=0;
@@ -296,6 +317,12 @@ public class TabJpg extends JPanel implements ActionListener {
       if( radioManual.isSelected() ) return null;
       return ((PlanImage) mainPanel.aladin.calque.getPlanBase() ).getCM();
    }
+   
+   /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
+   public int getMethod() {
+      if( radioMediane.isSelected() ) return BuilderJpg.MEDIANE;
+      return BuilderJpg.MOYENNE;
+   }
 
    //	public void setTransfertFct(int fct) {
    //		transfertFct = fct;
@@ -346,7 +373,7 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM() , mainPanel.context );
+         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM(), getMethod(), mainPanel.context );
          builderJpg.start();
          (new ThreadProgressBar(builderJpg)).start();
          

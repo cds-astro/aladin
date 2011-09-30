@@ -2806,7 +2806,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(rateLoadCache(),2)+"ms"
       +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(rateWriteCache(),2)+"ms";
    }
-
+   
    /** Retourne le temps moyen pour le chargement réseau d'une image, sa décompression JPEG, l'extraction des pixels */
    protected String streamJpegPixel() {
       if( nbLoadNet==0 ) return "";

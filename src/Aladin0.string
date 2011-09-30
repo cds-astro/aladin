@@ -2239,6 +2239,12 @@ HELPJPEGCUTALLSKY Take into account the cut parameters presently used in the con
 HELPJPEGCUTALLSKY.fr Va prendre en compte les paramètres de seuillage actuellement utilisés dans la vue de contrôle. Cette méthode est plus performante que la précédente car elle n'est pas nécessairement linéaire. 
 JPEGBUILDALLSKY Build JPEG
 JPEGBUILDALLSKY.fr Génération des JPEG
+METHODJPG Computing method:
+METHODJPG.fr Méthode de calcul :
+MEDIANJPG median
+MEDIANJPG.fr médiane
+AVERAGEJPG average
+AVERAGEJPG.fr moyenne
 PUBFORYOUALLSKY Only for you:
 PUBFORYOUALLSKY.fr Juste pour vous :
 OPENALLSKY You can load whenever you want the allsky by opening the target directory

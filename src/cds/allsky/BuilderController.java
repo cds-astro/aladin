@@ -454,10 +454,8 @@ public class BuilderController  {
 	      }
 	   }
 	   
-	   if( bitpix==0 ) {
-	      out.inverseYColor();
-	      out.writeJPEG(file+".jpg");
-	   } else out.writeFITS(file+".fits");
+	   if( bitpix==0 ) out.writeJPEG(file+".jpg");
+	   else out.writeFITS(file+".fits");
 	   
 	   long duree = System.currentTimeMillis() -t;
        if (npix%1000 == 0 || DEBUG) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") in "+duree+"ms "+file+"... ");
@@ -718,16 +716,12 @@ public class BuilderController  {
 		         else if( coaddMode==TabDesc.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
 		      }
 		   }
-		   cds.tools.Util.createPath(file);
 
 		   // écrit les vrais pixels
 		   if (bitpix!=0) out.writeFITS(file+".fits");
 
 		   // écrit les pixels couleurs
-		   else {
-		      out.inverseYColor();
-		      out.writeJPEG(file+".jpg");
-		   }
+		   else out.writeJPEG(file+".jpg");
 		   
 		   long duree = System.currentTimeMillis()-t;
 		   if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+TabDesc.COADDMODE[coaddMode]+" in "+duree+"ms");

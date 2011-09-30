@@ -100,7 +100,7 @@ public class PlanImage extends Plan {
    public static final String TRANSFERTFCT[] = { "Asinh", "Log","Sqrt","Linear","Pow2"," -- " };
 
    protected RandomAccessFile fCache; // L'accès au fichier cache
-   private byte [] pixels;		      // Tableau des pixels de l'image (sur 8 bits)
+   protected byte [] pixels;		  // Tableau des pixels de l'image (sur 8 bits)
    protected byte [] pixelsZoom;      // Tabluea des pixels de l'image vignette (8 bits) pour le ZoomView
    protected byte[] pixelsOrigin;     // Tableau des pixels d'origine (LIGNES NON INVERSEES - format FITS)
    protected ColorModel cm;			  // La table des couleurs associee a l'image

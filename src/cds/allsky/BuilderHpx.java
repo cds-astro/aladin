@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
@@ -94,12 +95,10 @@ final public class BuilderHpx {
 	      // cherche les numéros de pixels Healpix dans ce losange
 	      min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
+	      double blank = bitpix==0 ? 0 : getBlank();
+	      
 	      // initialisation de la liste des fichiers originaux pour ce losange
 	      ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(20);
-	      point = CDSHealpix.pix2ang_nest(nside_file, npix_file);
-	      CDSHealpix.polarToRadec(point, radec);
-
-	      double blank = bitpix==0 ? 0 : getBlank();
 	      if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
 
 	      out = new Fits(SIDE, SIDE, bitpix);
@@ -122,7 +121,7 @@ final public class BuilderHpx {
 	            CDSHealpix.polarToRadec(point, radec);
 
 	            // Méthode bilinéaire
-	            radec = context.gal2ICRSIfRequired(radec);
+ 	            radec = context.gal2ICRSIfRequired(radec);
 	            coo.al = radec[0]; coo.del = radec[1];
 	            // Moyenne des pixels pour toutes les images trouvées
 	            int nbPix=0;
@@ -191,7 +190,7 @@ final public class BuilderHpx {
 	            }
 	         }
 	      }
-	} catch( Exception e ) { }
+	   } catch( Exception e ) { e.printStackTrace(); }
 	   return (!empty) ? out : null;
 	}
 	
@@ -433,7 +432,6 @@ final public class BuilderHpx {
 						fitsfile.loadHeaderFITS(fitsfilename);
 						fitsfilename=fitsfilename.replaceAll("hhh$", "jpg");
 						fitsfile.loadJpeg(fitsfilename,true);
-						fitsfile.inverseYColor();
 					}
 					
 					// Mode FITS couleur

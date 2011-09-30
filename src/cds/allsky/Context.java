@@ -5,13 +5,16 @@ import java.text.ParseException;
 import java.util.StringTokenizer;
 
 import cds.aladin.Aladin;
+import cds.aladin.Coord;
 import cds.aladin.Localisation;
+import cds.aladin.PlanBG;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
 
 /**
@@ -152,10 +155,10 @@ public class Context {
 	}
 
 	// Demande d'affichage des stats (dans le TabBuild)
-	protected void showIndexStat(int statNbFile, long statMemFile, long statMaxSize, 
+	protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
 			int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
 		if( mainPanel==null ) return;
-		mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
+		mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statNbZipFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
 	}
 
 
@@ -197,7 +200,7 @@ public class Context {
 	static private Astroframe AF_GAL1 = new Galactic();
 	static private Astroframe AF_ICRS1 = new ICRS();
 
-	protected double[] gal2ICRSIfRequired(double al, double del) { return new double[]{al,del}; }
+	protected double[] gal2ICRSIfRequired(double al, double del) { return gal2ICRSIfRequired(new double[]{al,del}); }
 	protected double[] gal2ICRSIfRequired(double [] aldel) {
 		if( frame==Localisation.ICRS ) return aldel;
 		Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
@@ -207,7 +210,7 @@ public class Context {
 		aldel[1] = coo.getLat();
 		return aldel;
 	}
-	protected double[] ICRS2galIfRequired(double al, double del) { return new double[]{al,del}; }
+	protected double[] ICRS2galIfRequired(double al, double del) { return ICRS2galIfRequired(new double[]{al,del}); }
 	protected double[] ICRS2galIfRequired(double [] aldel) {
 		if( frame==Localisation.ICRS ) return aldel;
 		Astrocoo coo = (Astrocoo) COO_EQU.clone(); 

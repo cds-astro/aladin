@@ -60,13 +60,14 @@ public class BuildProgressPanel extends JPanel {
    }
 
 
-   protected void setSrcStat(int nbFile,long totalSize,long maxSize,int maxWidth,int maxHeight,int maxNbyte) {
+   protected void setSrcStat(int nbFile,int nbZipFile, long totalSize,long maxSize,int maxWidth,int maxHeight,int maxNbyte) {
       String s;
       if( nbFile==-1 ) s = "--";
       else {
          s= nbFile+" file"+(nbFile>1?"s":"")
+         + (nbZipFile==nbFile ? " (all gzipped)" : nbZipFile>0 ? " ("+nbZipFile+" gzipped)":"")
          + " using "+Util.getUnitDisk(totalSize)
-         + (nbFile>1 && maxSize<0 ? "" : " (biggest file:"+Util.getUnitDisk(maxSize)+" => ["+maxWidth+"x"+maxHeight+"x"+maxNbyte+"])");
+         + (nbFile>1 && maxSize<0 ? "" : " (biggest: ["+maxWidth+"x"+maxHeight+"x"+maxNbyte+"])");
       }
       srcFileStat.setText(s);
    }
@@ -88,7 +89,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - proc.time: min:"+Util.getTemps(minTime)+" / max:"+Util.getTemps(maxTime)+" / avg:"+Util.getTemps(avgTime);
+          + " - avg.proc.time: "+Util.getTemps(avgTime)+" (["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"])";
       lowTileStat.setText(s);
    }
    

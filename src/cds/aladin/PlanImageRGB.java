@@ -51,7 +51,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
    protected int [] pi = new int[3];
    protected String [] labels = new String[3];
    protected String labelRed,labelGreen,labelBlue; // Temporaires lors du chargement via un fichier AJ
-   protected PlanImage planRed,planGreen,planBlue,Ref; // Les plans d'origines
+   protected PlanImage planRed,planGreen,planBlue,pRef; // Les plans d'origines
    protected boolean flagRed,flagGreen,flagBlue;  // true si la composante est donnée
    protected boolean diff;	// true s'il s'agit d'une difference sur 2 plans
 
@@ -95,11 +95,11 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
          }
       }
 
-      Ref=ref;
+      pRef=ref;
       diff=d;
 
       // Initialisation des parametres communs
-      init(label,Ref);
+      init(label,pRef);
 
       synchronized( this ) {
          runme = new Thread(this,"AladinBuildRGB");
@@ -121,13 +121,13 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       flagRed = planRed!=null;
       flagGreen = planGreen!=null;
       flagBlue = planBlue!=null;
-      Ref=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
+      pRef=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
       if( flagRed && minMaxRed!=null ) planRed.recut(minMaxRed[0], minMaxRed[1], false);
       if( flagGreen && minMaxGreen!=null ) planGreen.recut(minMaxGreen[0], minMaxGreen[1], false);
       if( flagBlue && minMaxBlue!=null ) planBlue.recut(minMaxBlue[0], minMaxBlue[1], false);
-      if( !flagRed ) Ref=planGreen;
+      if( !flagRed ) pRef=planGreen;
       diff=false;
-      init("RGB",Ref);
+      init("RGB",pRef);
       mustResample=true;
       waitForPlan();
    }
@@ -588,47 +588,53 @@ Aladin.trace(3," => Reading in "+temps+" ms");
          return true;
       }
 
-      Aladin.trace(3,"Resampling (R:"+labels[0]+",G:"+labels[1]+",B:"+labels[2]+" astro from "+Ref.label+")...");
+      Aladin.trace(3,"Resampling (R:"+labels[0]+",G:"+labels[1]+",B:"+labels[2]+" astro from "+pRef.label+")...");
       int tR=0,tA=1,tB=2;
       PlanImage pA=null,pB=null;
+      byte [] refCm,pACm,pBCm;
 
-           if( Ref==planRed )   { pA=planGreen; pB=planBlue;  tR=0; tA=1; tB=2; }
-      else if( Ref==planGreen ) { pA=planRed;   pB=planBlue;  tR=1; tA=0; tB=2; }
-      else if( Ref==planBlue )  { pA=planRed;   pB=planGreen; tR=2; tA=0; tB=1; }
+           if( pRef==planRed )   { pA=planGreen; pB=planBlue;  tR=0; tA=1; tB=2; }
+      else if( pRef==planGreen ) { pA=planRed;   pB=planBlue;  tR=1; tA=0; tB=2; }
+      else if( pRef==planBlue )  { pA=planRed;   pB=planGreen; tR=2; tA=0; tB=1; }
 
      //Reechantillonage
       Coord coo = new Coord();
       int x=0,y=0;
-      int w = Ref.width;
+      int w = pRef.width;
       int i;
 
-      pixelsRGB = new int[ Ref.width*Ref.height ];
+      pixelsRGB = new int[ pRef.width*pRef.height ];
       for( i=0; i<pixelsRGB.length; i++ ) pixelsRGB[i]=0xFF000000;
 
       // Pour s'eviter des calculs inutiles
       boolean pAeqRef=true, pBeqRef=true;
-      if( !( pA!=null && !Projection.isOk(pA.projd) || pB!=null && !Projection.isOk(pB.projd) || !Projection.isOk(Ref.projd) ) ) {
-         pAeqRef = pA!=null && Ref.projd.c.TheSame(pA.projd.c);
-         pBeqRef = pB!=null && Ref.projd.c.TheSame(pB.projd.c);
+      if( !( pA!=null && !Projection.isOk(pA.projd) || pB!=null && !Projection.isOk(pB.projd) || !Projection.isOk(pRef.projd) ) ) {
+         pAeqRef = pA!=null && pRef.projd.c.TheSame(pA.projd.c);
+         pBeqRef = pB!=null && pRef.projd.c.TheSame(pB.projd.c);
       }
 
       // Pour inverser les pixels le cas échéant
-      boolean refRev = Ref.video==PlanImage.VIDEO_INVERSE;
+      boolean refRev = pRef.video==PlanImage.VIDEO_INVERSE;
       boolean pARev = pA!=null && pA.video==PlanImage.VIDEO_INVERSE;
       boolean pBRev = pB!=null && pB.video==PlanImage.VIDEO_INVERSE;
+      
+      // Pour accélérer l'accès aux tables des couleurs
+      refCm = pRef==null ? null : Util.getTableCM(pRef.cm, 2);
+      pACm  = pA==null   ? null : Util.getTableCM(pA.cm, 2);
+      pBCm  = pB==null   ? null : Util.getTableCM(pB.cm, 2);
 
-      for( i=0; i<Ref.getBufPixels8().length; i++ ) setPixRGB( pixelsRGB, i, tR,
-            refRev ? 255-Ref.cm.getBlue(0xff & Ref.getBufPixels8()[i]) : Ref.cm.getBlue(0xff & Ref.getBufPixels8()[i]) );
-      if( pAeqRef && pA!=null ) for( i=0; i<pA.getBufPixels8().length; i++ ) setPixRGB( pixelsRGB, i, tA,
-            pARev ? 255-pA.cm.getBlue(0xff & pA.getBufPixels8()[i]) : pA.cm.getBlue(0xff & pA.getBufPixels8()[i])) ;
-      if( pBeqRef && pB!=null ) for( i=0; i<pB.getBufPixels8().length; i++ ) setPixRGB( pixelsRGB, i, tB,
-            pBRev ? 255-pB.cm.getBlue(0xff & pB.getBufPixels8()[i]) : pB.cm.getBlue(0xff & pB.getBufPixels8()[i]) );
+      for( i=0; i<pRef.pixels.length; i++ ) setPixRGB( pixelsRGB, i, tR,
+            refRev ? 255-refCm[0xff & pRef.pixels[i]] : refCm[0xff & pRef.pixels[i]] );
+      if( pAeqRef && pA!=null ) for( i=0; i<pA.pixels.length; i++ ) setPixRGB( pixelsRGB, i, tA,
+            pARev ? 255-pACm[0xff & pA.pixels[i]] : pACm[0xff & pA.pixels[i]]) ;
+      if( pBeqRef && pB!=null ) for( i=0; i<pB.pixels.length; i++ ) setPixRGB( pixelsRGB, i, tB,
+            pBRev ? 255-pBCm[0xff & pB.pixels[i]] : pBCm[0xff & pB.pixels[i]] );
 
       if( !pAeqRef || !pBeqRef ) {
-         for( i=0; i<Ref.getBufPixels8().length; i++ ) {
+         for( i=0; i<pRef.pixels.length; i++ ) {
             coo.x = i%w;
             coo.y = i/w;
-            Ref.projd.getCoord(coo);
+            pRef.projd.getCoord(coo);
             if( Double.isNaN(coo.al) ) continue;
 
             if( !pAeqRef ) {
@@ -639,8 +645,8 @@ Aladin.trace(3," => Reading in "+temps+" ms");
                      y=(int)Math.round(coo.y);
                      if( x>=0 && x<pA.width && y>=0 && y<pA.height )
                         setPixRGB( pixelsRGB, i, tA,
-                              pARev ? 255-pA.cm.getBlue(0xff & pA.getBufPixels8()[y*pA.width+x])
-                                    : pA.cm.getBlue(0xff & pA.getBufPixels8()[y*pA.width+x]) );
+                              pARev ? 255-pACm[0xff & pA.pixels[y*pA.width+x]]
+                                    : pACm[0xff & pA.pixels[y*pA.width+x]] );
                   }
                }
             }
@@ -653,8 +659,8 @@ Aladin.trace(3," => Reading in "+temps+" ms");
                      y=(int)Math.round(coo.y);
                      if( x>=0 && x<pB.width && y>=0 && y<pB.height )
                         setPixRGB( pixelsRGB, i, tB,
-                              pBRev ? 255-pB.cm.getBlue(0xff & pB.getBufPixels8()[y*pB.width+x])
-                                    : pB.cm.getBlue(0xff & pB.getBufPixels8()[y*pB.width+x]) );
+                              pBRev ? 255-pBCm[0xff & pB.pixels[y*pB.width+x]]
+                                    : pBCm[0xff & pB.pixels[y*pB.width+x]] );
                   }
                }
             }
@@ -662,7 +668,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
             // Pour laisser la main aux autres threads
             // et pouvoir afficher le changement de pourcentage
             if( i%10000==0 ) {
-               setPourcent(i*100L/Ref.getBufPixels8().length);
+               setPourcent(i*100L/pRef.pixels.length);
                if( Aladin.isSlow ) Util.pause(10);
             }
          }

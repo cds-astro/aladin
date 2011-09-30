@@ -23,6 +23,7 @@ public class BuilderRgb implements Runnable {
     private double [] blank;
     private double [] bscale;
     private double [] bzero;
+    private byte [][] tcm;
     private int [] bitpix;
     private boolean stopped=false;
     private int maxOrder = 100;
@@ -45,6 +46,7 @@ public class BuilderRgb implements Runnable {
        blank = new double[3];
        bzero = new double[3];
        bscale = new double[3];
+       tcm = new byte[3][];
 
        // recherche la meilleure résolution commune
        int frame=-1;
@@ -55,6 +57,7 @@ public class BuilderRgb implements Runnable {
              context.warning("All components must be used the same HEALPix coordinate system !");
              return;
           }
+          tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
           int order = p[c].getMaxFileOrder();
           if( maxOrder > order)  maxOrder = order;
        }
@@ -216,7 +219,8 @@ public class BuilderRgb implements Runnable {
        // Passage en 8 bits pour chaque composante
        for( int c=0; c<3; c++ ) {
           if( c==missing ) continue;
-          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
+//          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
+          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c]);
        }
        
        Fits rgb = new Fits(width,width,0);
@@ -234,7 +238,6 @@ public class BuilderRgb implements Runnable {
           rgb.rgb[i]=pix;
        }
        String file = Util.getFilePath(path,order, npix)+".jpg";
-       cds.tools.Util.createPath(file);
        rgb.writeJPEG(file);
        rgb.free();
        

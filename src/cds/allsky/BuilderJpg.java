@@ -23,7 +23,7 @@ public class BuilderJpg implements Runnable {
 	private String dirpath;
 	private int progress=0;
 	private float progressFactor;
-	private ColorModel cm;
+	private byte [] tcm;
 	private int bitpix;
 	private int width;
 	private double blank,bscale,bzero;
@@ -33,6 +33,10 @@ public class BuilderJpg implements Runnable {
 	private long statSize;
 	private long startTime,totalTime;
 	private long statLastShowTime;
+	
+	static public final int MEDIANE = 0;
+	static public final int MOYENNE = 1;
+	private int method;
 
 	/**
 	 * Création du générateur JPEG.
@@ -40,7 +44,7 @@ public class BuilderJpg implements Runnable {
 	 * @param cm table des couleurs pour le passage en 8 bits (prioritaire sur cut), 
 	 * @param context
 	 */
-	public BuilderJpg(double[] cut, final ColorModel cm, Context context) {
+	public BuilderJpg(double[] cut, final ColorModel cm, int method, Context context) {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
@@ -51,7 +55,8 @@ public class BuilderJpg implements Runnable {
 	   bscale=bb[0];
 	   bzero=bb[1];
 	   cutminmax=cut;
-	   this.cm = cm;
+	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
+	   this.method=method;
 	}
 	
 	private void initStat() { statNbFile=0; statSize=0; statLastShowTime=-1; startTime = System.currentTimeMillis(); }
@@ -130,8 +135,8 @@ public class BuilderJpg implements Runnable {
            if( found ) out = createNodeJpg(fils);
         }
         if( out!=null ) {
-           if( cm==null ) out.toPix8(cutminmax[0],cutminmax[1]);
-           else out.toPix8(cutminmax[0],cutminmax[1],cm);
+           if( tcm==null ) out.toPix8(cutminmax[0],cutminmax[1]);
+           else out.toPix8(cutminmax[0],cutminmax[1],tcm);
            out.writeJPEG(file+".jpg");
            
            File f = new File(file+".jpg");
@@ -159,6 +164,9 @@ public class BuilderJpg implements Runnable {
        out.setBzero(bzero);
        
        Fits in;
+       double p[] = new double[4];
+       double coef[] = new double[4];
+       
        for( int dg=0; dg<2; dg++ ) {
           for( int hb=0; hb<2; hb++ ) {
              int quad = dg<<1 | hb;
@@ -171,17 +179,39 @@ public class BuilderJpg implements Runnable {
                    
                    double pix=blank;
                    if( in!=null ) {
-                      double p1 = in.getPixelDouble(x,y);
-                      double p2 = in.getPixelDouble(x+1,y);
-                      double p3 = in.getPixelDouble(x,y+1);
-                      double p4 = in.getPixelDouble(x+1,y+1);
 
-                      // On garde la valeur médiane
-                      if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-                      else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-                      else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-                      else pix=p4;
+                       // On prend la moyenne (sans prendre en compte les BLANK)
+                      if( method==MOYENNE ) {
+                         double totalCoef=0;
+                         for( int i=0; i<4; i++ ) {
+                            int dx = i==1 || i==3 ? 1 : 0;
+                            int dy = i>=2 ? 1 : 0;
+                            p[i] = in.getPixelDouble(x+dx,y+dy);
+                            if( out.isBlankPixel(p[i]) ) coef[i]=0;
+                            else coef[i]=1;
+                            totalCoef+=coef[i];
+                         }
+                         if( totalCoef!=0 ) {
+                            for( int i=0; i<4; i++ ) {
+                               if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
+                            }
+                         }
+                         
+                      // On garde la valeur médiane (les BLANK seront automatiquement non retenus)
+                      } else {
+
+                         double p1 = in.getPixelDouble(x,y);
+                         double p2 = in.getPixelDouble(x+1,y);
+                         double p3 = in.getPixelDouble(x,y+1);
+                         double p4 = in.getPixelDouble(x+1,y+1);
+
+                         if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
+                         else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
+                         else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
+                         else pix=p4;
+                      }
                    }
+                   
                    out.setPixelDouble(offX+(x/2), offY+(y/2), pix);
                 }
              }

@@ -370,11 +370,20 @@ final public class Fits {
       try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
 
    }
+   
+   static final public int GZIP = 1;
+   static final public int HHH = 1<<1;
+   static final public int COLOR = 1<<2;
+   
 
-   /** Chargement de l'entete d'une image FITS depuis un fichier */
-   public void loadHeaderFITS(String filename) throws Exception {
+   /** Chargement de l'entete d'une image FITS depuis un fichier 
+    * @return un code GZIP|HHH|COLOR pour savoir de quoi il s'agit
+    */
+   public int loadHeaderFITS(String filename) throws Exception {
+      int code=0;
       MyInputStream is = new MyInputStream(
             new FileInputStream(filename));
+      if( is.isGZ() ) code |= GZIP; 
       is = is.startRead();
       
       // Cas spécial d'un fichier .hhhh
@@ -382,6 +391,7 @@ final public class Fits {
          byte [] buf = is.readFully();
          headerFits = new HeaderFits();
          headerFits.readFreeHeader(new String(buf), true, null);
+         code |= HHH;
          
       // Cas habituel
       } else headerFits = new HeaderFits(is);
@@ -391,6 +401,8 @@ final public class Fits {
       } catch (Exception e1) {
     	  bitpix = 0;
       }
+      if( bitpix==0 ) code |= COLOR;
+      
 //      if( bitpix!=0 ) bitpix = headerFits.getIntFromHeader("BITPIX");
       width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
       height=heightCell = headerFits.getIntFromHeader("NAXIS2");
@@ -401,6 +413,7 @@ final public class Fits {
       try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
       is.close();
       this.setFilename(filename);
+      return code;
    }
 
    /** Retourne la valeur BSCALE (1 si non définie) */
@@ -458,11 +471,12 @@ final public class Fits {
     * Crée si nécessaire le répertoire correspondant au filename
     * @param filename
     */
-   private void createDir(String filename) {
-       File dir = new File(filename).getParentFile();
-       if( !dir.exists() ) {
-           dir.mkdirs();
-       }
+   private void createDir(String filename) throws Exception {
+      cds.tools.Util.createPath(filename);
+//       File dir = new File(filename).getParentFile();
+//       if( !dir.exists() ) {
+//           dir.mkdirs();
+//       }
    }
 
    /** Génération d'un fichier FITS (sans calibration) */
@@ -824,11 +838,30 @@ final public class Fits {
       }
    }
    
+// VOIR REMARQUE DANS toPix8(double,double,byte[]);
+//   /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
+//    * des valeurs des pixels originaux [min..max] et de la table des couleurs cm.
+//    * S'il y a usage d'une fonction de transfert, elle est déjà appliquée à la table cm (rien à faire de plus)
+//    * Si la table cm n'est pas monochrome, l'algo travaille uniquement sur la composante bleue */
+//   public void toPix8(double min, double max, ColorModel cm) {
+//      double r = 256./(max - min);
+//      
+//      for( int y=0; y<heightCell; y++) {
+//         for( int x=0; x<widthCell; x++ ) {
+//            double pixIn = getPixelDouble(x+xCell,y+yCell);
+//            int pix = ( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
+//                  0xff : (int)( ((pixIn-min)*r) ) & 0xff);
+//            byte pixOut =(byte) cm.getBlue(pix);
+//            setPix8(x+xCell,y+yCell,pixOut);
+//         }
+//      }
+//   }
+
    /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
-    * des valeurs des pixels originaux [min..max] et de la table des couleurs cm.
-    * S'il y a usage d'une fonction de transfert, elle est déjà appliquée à la table cm (rien à faire de plus)
-    * Si la table cm n'est pas monochrome, l'algo travaille uniquement sur la composante bleue */
-   public void toPix8(double min, double max, ColorModel cm) {
+    * des valeurs des pixels originaux [min..max] et de la table des couleurs tcm.
+    * S'il y a usage d'une fonction de transfert, elle est déjà appliquée à la table tcm (rien à faire de plus)
+    * Il est préférable de travailler sur byte[] tcm plutot que sur ColorModel directement, c'est trop lent */
+   public void toPix8(double min, double max, byte [] tcm) {
       double r = 256./(max - min);
       
       for( int y=0; y<heightCell; y++) {
@@ -836,13 +869,13 @@ final public class Fits {
             double pixIn = getPixelDouble(x+xCell,y+yCell);
             int pix = ( pixIn<=min || isBlankPixel(pixIn) ?0x00:pixIn>=max ?
                   0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-            byte pixOut =(byte) cm.getBlue(pix);
+            byte pixOut = tcm[pix];
             setPix8(x+xCell,y+yCell,pixOut);
          }
       }
    }
 
-   
+
 
    /** Remplit le tableau des pixels 8 bits (pix8) à partir des pixels
     * fullbits (uniquement si bitpix==8) avec inversion des lignes */

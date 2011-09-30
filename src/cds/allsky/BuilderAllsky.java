@@ -149,7 +149,6 @@ final public class BuilderAllsky {
       
       // Ecriture du FITS (true bits)
       String filename = path+FS+"Norder"+order+FS+"Allsky";
-      cds.tools.Util.createPath(filename);
       out.writeFITS(filename+".fits");
       
       Aladin.trace(4,"BuilderAllsky.createAllSky()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
@@ -205,7 +204,6 @@ final public class BuilderAllsky {
 //      if( out==null ) throw new Exception("createAllSkyJpgColor error: null output file !");
 
       String filename = path+FS+"Norder"+order+FS+"Allsky";
-      cds.tools.Util.createPath(filename);
       out.writeJPEG(filename+".jpg");
       
       Aladin.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
