@@ -274,7 +274,8 @@ final public class Fits {
    /** Chargement d'une cellule d'une image FITS */
    public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception {
 	   dis = dis.startRead();
-	   boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
+//       boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
+       boolean flagHComp = dis.isHCOMP();
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
 	   width  = headerFits.getIntFromHeader("NAXIS1");
@@ -935,7 +936,7 @@ final public class Fits {
    
    /** Retourne true si la valeur du pixel est blank ou NaN */
    public boolean isBlankPixel(double pix) {
-      return Double.isNaN(pix) || !Double.isNaN(blank) && pix==blank;
+      return Double.isNaN(pix) || /* !Double.isNaN(blank) &&*/  pix==blank;
    }
 
    public double[] findMinMax() {

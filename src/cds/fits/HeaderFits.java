@@ -210,11 +210,7 @@ public final class HeaderFits {
          }
 
         // Test s'il s'agit de FITS Hcompresse 
-        if( (dis.getType() & MyInputStream.HCOMP)!=0 ) {
-//           flagHCOMP=true;
-           return true;
-        } 
-//        else flagHCOMP=false;
+        if( dis.isHCOMP() ) return true;
         
          // On passe le bourrage eventuel
          int bourrage = blocksize - sizeHeader%blocksize;

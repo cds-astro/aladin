@@ -167,7 +167,8 @@ public class Context {
 			int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
 			long statNodeAvgTime) {
 		if( mainPanel==null ) return;
-		mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread);
+		
+		mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
 		mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
 		mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,
 				(long)( BuilderController.SIDE*BuilderController.SIDE*Math.abs(bitpix)/8),

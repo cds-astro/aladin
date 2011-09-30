@@ -34,6 +34,7 @@ import javax.swing.JProgressBar;
 import javax.swing.border.Border;
 
 import cds.aladin.Properties;
+import cds.fits.CacheFits;
 import cds.tools.Util;
 
 public class BuildProgressPanel extends JPanel {
@@ -67,19 +68,21 @@ public class BuildProgressPanel extends JPanel {
          s= nbFile+" file"+(nbFile>1?"s":"")
          + (nbZipFile==nbFile ? " (all gzipped)" : nbZipFile>0 ? " ("+nbZipFile+" gzipped)":"")
          + " using "+Util.getUnitDisk(totalSize)
-         + (nbFile>1 && maxSize<0 ? "" : " (biggest: ["+maxWidth+"x"+maxHeight+"x"+maxNbyte+"])");
+         + (nbFile>1 && maxSize<0 ? "" : " => biggest: ["+maxWidth+"x"+maxHeight+"x"+maxNbyte+"]");
       }
       srcFileStat.setText(s);
    }
 
-   protected void setMemStat(int nbRunningThread,int nbThread) {
+   protected void setMemStat(int nbRunningThread,int nbThread,CacheFits cacheFits) {
       long maxMem = Runtime.getRuntime().maxMemory();
       long totalMem = Runtime.getRuntime().totalMemory();
       long freeMem = Runtime.getRuntime().freeMemory();
       long usedMem = totalMem-freeMem;
 
       String s= (nbRunningThread==-1?"":nbRunningThread+" / "+nbThread+" thread"+(nbRunningThread>1?"s":""))
-      + " using "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
+      + " using "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
+      + " - Fits cache: "+Util.getUnitDisk(cacheFits.getStatMem())
+           +" (rd:"+cacheFits.getStatNbFind()+" op:"+cacheFits.getStatNbOpen()+" rm:"+cacheFits.getStatNbFree()+")";
       memStat.setText(s);
    }
 
@@ -89,7 +92,7 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - avg.proc.time: "+Util.getTemps(avgTime)+" (["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"])";
+          + " - avg.proc.time: "+Util.getTemps(avgTime)+" ["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"]";
       lowTileStat.setText(s);
    }
    

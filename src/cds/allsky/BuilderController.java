@@ -154,9 +154,9 @@ public class BuilderController  {
 
 	   int nbProc = Runtime.getRuntime().availableProcessors();
 	   
-	   // On utilisera 2/3 de la mémoire pour les threads et le reste pour le cacheFits
+	   // On utilisera 1/2 de la mémoire pour les threads et le reste pour le cacheFits
 	   long size = Runtime.getRuntime().maxMemory();
-	   long sizeCache = (size/3)/(1024L*1024L);
+	   long sizeCache = (size/2L)/(1024L*1024L);
 	   size -=sizeCache;
 	   Aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
 	   context.setCache(new CacheFits(sizeCache, 100000));

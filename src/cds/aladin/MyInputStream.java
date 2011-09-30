@@ -155,6 +155,33 @@ public final class MyInputStream extends FilterInputStream {
       type = (type & GZ) | (type & XFITS);
       flagGetType = alreadyRead = false;
    }
+   
+   private boolean alreadyHCOMPtested=false;
+   private boolean previousHCOMPtest;
+   
+   /** Juste pour tester rapidement s'il s'agit d'un FITS HCOMP */
+   public boolean isHCOMP() {
+      if( alreadyHCOMPtested ) return previousHCOMPtest;
+
+      // le type de stream a deja ete detecte
+      if( flagGetType ) previousHCOMPtest = (type&HCOMP)==HCOMP;
+      else {
+         try {
+            // Detection de HCOMP
+            int n = findFitsEnd();
+            int c0 =  (cache[n]) & 0xFF;
+            int c1 =  (cache[n+1]) & 0xFF;
+
+            //System.out.println("FITS Data magic code "+c0+" "+c1);
+            previousHCOMPtest = (c0==221 && c1==153);
+         } catch( Exception e ) {
+            previousHCOMPtest=false;
+         }
+      }
+      alreadyHCOMPtested=true;
+      return previousHCOMPtest;
+
+   }
 
    /** Juste pour tester s'il s'agit d'un flux gzipé */
    public boolean isGZ() throws IOException {
