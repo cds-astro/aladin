@@ -148,7 +148,7 @@ public class CacheFits {
          //         System.out.println("clean.remove "+key );
       }
    }
-   public void skySub(boolean substract) {
+   public void setSkySub(boolean substract) {
       skyvalSub = substract;
    }
 

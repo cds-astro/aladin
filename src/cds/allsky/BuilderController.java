@@ -154,11 +154,11 @@ public class BuilderController  {
 
 	   int nbProc = Runtime.getRuntime().availableProcessors();
 	   
-	   // On utilisera 1/2 de la mémoire pour les threads et le reste pour le cacheFits
+	   // On utilisera 2/3 de la mémoire pour les threads et le reste pour le cacheFits
 	   long size = Runtime.getRuntime().maxMemory();
-	   long sizeCache = (size/2L)/(1024L*1024L);
+	   long sizeCache = (size/3L)/(1024L*1024L);
 	   size -=sizeCache;
-	   Aladin.trace(4,"BuildController.build() sizeCache="+sizeCache+"Mo");
+	   Aladin.trace(4,"BuildController.build() cacheFits.size="+sizeCache+"Mo");
 	   context.setCache(new CacheFits(sizeCache, 100000));
 	   
 	   long maxMemPerThread = Constante.MAXMBPERTHREAD*1024*1024L;
@@ -166,7 +166,7 @@ public class BuilderController  {
 	   if (nbThread==0) nbThread=1;
 	   if( nbThread>nbProc ) nbThread=nbProc;
 	   
-	   Aladin.trace(3,"Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
+	   Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
 
 	   // Lancement des threads de calcul
 	   launchThreadBuilderHpx(nbThread,outpath,ordermin,ordermax, fading, keepBB);

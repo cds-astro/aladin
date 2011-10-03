@@ -44,6 +44,8 @@ import cds.tools.pixtools.Util;
  */
 final public class BuilderMoc {
    
+   public static final String MOCNAME = "Moc.fits";
+   
    private HealpixMoc moc;
    
    public BuilderMoc() {
@@ -68,7 +70,7 @@ final public class BuilderMoc {
         }
         HealpixMoc moc = bdMoc.getMoc();
         moc.sort();
-        moc.write(path+FS+"Moc.fits", HealpixMoc.FITS);
+        moc.write(path+FS+MOCNAME, HealpixMoc.FITS);
 //        moc.write(path+FS+"Moc.txt", HealpixMoc.ASCII);
      } catch( Exception e ) {
         e.printStackTrace();

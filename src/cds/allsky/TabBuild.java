@@ -33,6 +33,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -63,6 +64,7 @@ public class TabBuild extends JPanel implements ActionListener {
 //   protected JButton b_help;
    protected JButton b_previous;
    protected JButton b_next;
+   protected JButton b_moc;
 
    private static JTable tab = null;
 
@@ -125,7 +127,7 @@ public class TabBuild extends JPanel implements ActionListener {
 
    public TabBuild(MainPanel panel) {
       super(new BorderLayout());
-      setMainPanel(panel);
+      mainPanel = panel;
       createChaine();
 
       JPanel pCenter = new JPanel();
@@ -276,6 +278,7 @@ public class TabBuild extends JPanel implements ActionListener {
       pBtn.add(b_previous);
       pBtn.add(b_ok);
       pBtn.add(b_cancel);
+      pBtn.add(b_moc);
       //		pBtn.add(b_close);
       pBtn.add(Box.createRigidArea(new Dimension(10,0)));
       pBtn.add(b_next);
@@ -312,20 +315,30 @@ public class TabBuild extends JPanel implements ActionListener {
    }
 
    private void initBtn() {
-      b_previous = new JButton(PREVIOUS);
-      b_previous.addActionListener(this);
-      b_previous.setEnabled(false);
-      b_ok = new JButton(OK);
-      b_ok.addActionListener(this);
-      b_ok.setEnabled(false);
-      b_cancel = new JButton(STOP);
-      b_cancel.addActionListener(this);
-      b_cancel.setToolTipText(canceltip);
-      b_cancel.setEnabled(false);
+      JButton bt;
+      b_previous = bt=new JButton(PREVIOUS);
+      bt.addActionListener(this); bt.setEnabled(false);
+      
+      b_moc = bt=new JButton(getString("LOADMOC"));
+      bt.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { loadMoc(); }
+      });
+      
+      b_ok = bt=new JButton(OK);  
+      bt.addActionListener(this); bt.setEnabled(false);
+      
+      b_cancel = bt=new JButton(STOP);
+      bt.addActionListener(this); bt.setToolTipText(canceltip); bt.setEnabled(false);
+      
 //      b_help = Util.getHelpButton(this,help);
-      b_next = new JButton(NEXT);
-      b_next.addActionListener(this);
-      b_next.setEnabled(false);
+      
+      b_next = bt=new JButton(NEXT);
+      bt.addActionListener(this); bt.setEnabled(false);
+   }
+   
+   private void loadMoc() {
+      String mocFile = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 
    private void initMethods() {
@@ -372,18 +385,20 @@ public class TabBuild extends JPanel implements ActionListener {
       groupBitpix.add(bit_64);
    }
 
-   void setMainPanel(MainPanel panel) {
-      mainPanel = panel;
-   }
-   
    public void show() {
       super.show();
       resumeWidgetsStatus();
    }
    
+   private boolean isExistingMoc() {
+      String moc = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      return  moc!=null && (new File(moc)).exists();
+   }
+
    protected void resumeWidgetsStatus() {
       boolean readyToDo = mainPanel.isExistingDir() && mainPanel.tabDesc.dir_D.getText().trim().length()>0;
       boolean isRunning = mainPanel.isRunning();
+      b_moc.setEnabled(isExistingMoc());
       b_previous.setEnabled(readyToDo && !isRunning);
       b_next.setEnabled(readyToDo && !isRunning && mainPanel.isExistingAllskyDir() );
       b_ok.setEnabled(readyToDo && !isRunning);
@@ -472,7 +487,7 @@ public class TabBuild extends JPanel implements ActionListener {
       return keepBB.isSelected();
    }
 
-   public boolean toFading() {
+   public boolean isFading() {
       return samplBest.isSelected() && fading.isSelected();
    }
 
@@ -563,14 +578,18 @@ public class TabBuild extends JPanel implements ActionListener {
             buildProgressPanel.setProgressTess(value);
             break;
       }
+      b_moc.setEnabled(isExistingMoc());
+
    }
 
    protected void enableProgress(boolean selected, int mode) {
       buildProgressPanel.select(selected, mode);
    }
 
-   protected void setInitDir(String txt) {
-      buildProgressPanel.setProgressIndexTxt(txt);
+   /** Spécifie le répertoire en cours d'indexation */
+   protected void setProgressIndexDir(String txt) {
+      buildProgressPanel.setProgressIndexDir(txt);
+      b_moc.setEnabled(isExistingMoc());
    }
 
    public void actionPerformed(ActionEvent e) {

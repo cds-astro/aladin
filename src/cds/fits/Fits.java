@@ -382,8 +382,7 @@ final public class Fits {
     */
    public int loadHeaderFITS(String filename) throws Exception {
       int code=0;
-      MyInputStream is = new MyInputStream(
-            new FileInputStream(filename));
+      MyInputStream is = new MyInputStream( new FileInputStream(filename));
       if( is.isGZ() ) code |= GZIP; 
       is = is.startRead();
       
@@ -1239,17 +1238,6 @@ final public class Fits {
               | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
    }
 
-   /**
-    * Inverse les lignes d'une image couleur (tableau rgb)
-    */
-   public void inverseYColor() {
-//	   int[] tmp = new int[rgb.length];
-//	   for( int h=0; h<heightCell; h++ ){
-//		   System.arraycopy(rgb,h*widthCell, tmp,(heightCell-h-1)*widthCell, widthCell);
-//	   }
-//	   rgb = tmp;
-   }
-   
    /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
    public void coadd(Fits a) throws Exception {
       int taille=widthCell*heightCell;

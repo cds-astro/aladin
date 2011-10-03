@@ -187,7 +187,6 @@ public final class HeaderFits {
       sizeHeader=0;
       boolean firstLine=true;
 
-
 //Aladin.trace(3,"Reading FITS header");
       byte[] buffer = new byte[fieldsize];
 

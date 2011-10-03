@@ -48,7 +48,7 @@ public class PlanMoc extends PlanBGCat {
    protected boolean isLoading() { return false; }
    protected boolean isSync() { return isReady(); }
    
-   private boolean wireFrame=false;
+   private boolean wireFrame=true;
    public void setWireFrame(boolean flag) { wireFrame=flag; }
    public boolean getWireFrame() { return wireFrame; }
    

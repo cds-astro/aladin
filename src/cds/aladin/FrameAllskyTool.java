@@ -28,6 +28,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import cds.allsky.Context;
+import cds.allsky.ContextGui;
 import cds.allsky.MainPanel;
 import cds.tools.Util;
 
@@ -35,6 +36,7 @@ public class FrameAllskyTool extends JFrame {
 
 	public Aladin aladin;
 	public MainPanel mainPanel;
+	public ContextGui context;
 	
 	private String title;
 
@@ -44,6 +46,7 @@ public class FrameAllskyTool extends JFrame {
 		this.aladin = aladin;
 		createChaine(Aladin.getChaine());
 		setTitle(title);
+		context = new ContextGui();
 
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		Util.setCloseShortcut(this, false, aladin);
@@ -59,6 +62,7 @@ public class FrameAllskyTool extends JFrame {
 
 		setLocation(500, 100);
 		pack();
+		
 	}
 
 	private void createChaine(Chaine chaine) {
@@ -67,8 +71,7 @@ public class FrameAllskyTool extends JFrame {
 
 	private JPanel createPanel() {
 		JPanel p = new JPanel(new BorderLayout(1, 1));
-		mainPanel = new MainPanel(aladin);
-		mainPanel.initContext();
+		mainPanel = new MainPanel(aladin,context);
 		p.add(mainPanel, BorderLayout.CENTER);
 		return p;
 	}

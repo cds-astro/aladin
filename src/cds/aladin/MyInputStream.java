@@ -160,28 +160,31 @@ public final class MyInputStream extends FilterInputStream {
    private boolean previousHCOMPtest;
    
    /** Juste pour tester rapidement s'il s'agit d'un FITS HCOMP */
-   public boolean isHCOMP() {
-      if( alreadyHCOMPtested ) return previousHCOMPtest;
-
-      // le type de stream a deja ete detecte
-      if( flagGetType ) previousHCOMPtest = (type&HCOMP)==HCOMP;
-      else {
-         try {
-            // Detection de HCOMP
-            int n = findFitsEnd();
-            int c0 =  (cache[n]) & 0xFF;
-            int c1 =  (cache[n+1]) & 0xFF;
-
-            //System.out.println("FITS Data magic code "+c0+" "+c1);
-            previousHCOMPtest = (c0==221 && c1==153);
-         } catch( Exception e ) {
-            previousHCOMPtest=false;
-         }
-      }
-      alreadyHCOMPtested=true;
-      return previousHCOMPtest;
+   public boolean isHCOMP() throws Exception {
+      return (getType() & HCOMP) != 0;
+      
+//      if( alreadyHCOMPtested ) return previousHCOMPtest;
+//
+//      // le type de stream a deja ete detecte
+//      if( flagGetType ) previousHCOMPtest = (type&HCOMP)==HCOMP;
+//      else {
+//         try {
+//            // Detection de HCOMP
+//            int n = findFitsEnd();
+//            int c0 =  (cache[n]) & 0xFF;
+//            int c1 =  (cache[n+1]) & 0xFF;
+//
+//            //System.out.println("FITS Data magic code "+c0+" "+c1);
+//            previousHCOMPtest = (c0==221 && c1==153);
+//         } catch( Exception e ) {
+//            previousHCOMPtest=false;
+//         }
+//      }
+//      alreadyHCOMPtested=true;
+//      return previousHCOMPtest;
 
    }
+   
 
    /** Juste pour tester s'il s'agit d'un flux gzipé */
    public boolean isGZ() throws IOException {
@@ -190,7 +193,6 @@ public final class MyInputStream extends FilterInputStream {
 
       // Le stream a deja ete entame, impossible de determine le type
       if( alreadyRead ) return false;
-
 
       int c[] = new int[2];
       // On charge qq octets dans le tampon si nécessaire

@@ -100,7 +100,7 @@ public class Task implements Runnable{
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
-	      boolean fading = context.toFading();
+	      boolean fading = context.isFading();
 
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
@@ -219,15 +219,15 @@ public class Task implements Runnable{
 	   // récupère le bitpix dans le formulaire
 	   bitpix = context.getBitpix();
 	   keepBB = context.isKeepBB();
-	   hpixTree = context.getHpixTree();
-	   coaddMode = context.getCoAddMode();
+	   hpixTree = context.getMoc();
+	   coaddMode = context.getCoAdd();
 	   double bb[] = context.getBScaleBZero();
 	   bscale = bb[0];
 	   bzero = bb[1];
 	   blank = context.getBlank();
 //	   borderSize = mainPanel.getBorderSize();
 	   // si le bitpix change
-	   if (context.getOriginalBitpix() != context.getBitpix())
+	   if (context.getBitpixOrig() != context.getBitpix())
 	      // on change aussi les bornes
 	      context.convertCut(context.getBitpix());
 	   //		cut = allsky.getCut();

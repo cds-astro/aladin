@@ -60,7 +60,6 @@ public class BuildProgressPanel extends JPanel {
       add( createStatPanel(),BorderLayout.CENTER );
    }
 
-
    protected void setSrcStat(int nbFile,int nbZipFile, long totalSize,long maxSize,int maxWidth,int maxHeight,int maxNbyte) {
       String s;
       if( nbFile==-1 ) s = "--";
@@ -79,10 +78,11 @@ public class BuildProgressPanel extends JPanel {
       long freeMem = Runtime.getRuntime().freeMemory();
       long usedMem = totalMem-freeMem;
 
-      String s= (nbRunningThread==-1?"":nbRunningThread+" / "+nbThread+" thread"+(nbRunningThread>1?"s":""))
-      + " using "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
-      + " - Fits cache: "+Util.getUnitDisk(cacheFits.getStatMem())
-           +" (rd:"+cacheFits.getStatNbFind()+" op:"+cacheFits.getStatNbOpen()+" rm:"+cacheFits.getStatNbFree()+")";
+      String s= "thread: "+(nbRunningThread==-1?"":nbRunningThread+" / "+nbThread)
+      + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
+           +" (ram:"+cacheFits.getStatNbFind()
+           +" disk:"+cacheFits.getStatNbOpen()+" rmram:"+cacheFits.getStatNbFree()+")"
+      + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
       memStat.setText(s);
    }
 
@@ -209,7 +209,7 @@ public class BuildProgressPanel extends JPanel {
    }
 
 
-   public void setProgressIndexTxt(String txt) {
+   public void setProgressIndexDir(String txt) {
       labelIndex.setText(string1+" "+txt);
       labelIndex.setPreferredSize(labelIndex.getSize());
    }
