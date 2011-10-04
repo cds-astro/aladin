@@ -81,7 +81,7 @@ public class BuildProgressPanel extends JPanel {
       String s= "thread: "+(nbRunningThread==-1?"":nbRunningThread+" / "+nbThread)
       + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
            +" (ram:"+cacheFits.getStatNbFind()
-           +" disk:"+cacheFits.getStatNbOpen()+" rmram:"+cacheFits.getStatNbFree()+")"
+           +" disk:"+cacheFits.getStatNbOpen()+" free:"+cacheFits.getStatNbFree()+")"
       + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
       memStat.setText(s);
    }

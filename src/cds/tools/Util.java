@@ -1026,7 +1026,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        s.delete(0,n);
     }
 
-    /** Concéténation de paths.
+    /** Concaténation de paths.
      * et insère le séparateur / uniquement si c'est nécessaire.
      * Remplace les \ éventuelles par / (et réciproquement)
      */

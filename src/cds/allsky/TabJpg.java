@@ -46,7 +46,9 @@ public class TabJpg extends JPanel implements ActionListener {
    private JTextField tCutMax = new JTextField(10);
    private JRadioButton radioManual;                      // selected si on est en mode manuel
    private JRadioButton radioAllsky;                      // selected si on est en mode allsky
+   private JLabel labelMethod;                            // Texte décrivant la méthode à utiliser
    private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
+   private JRadioButton radioMoyenne;                     // selected si on est en calcul selon la moyenne
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
 
    JButton ok = new JButton(OK);
@@ -168,7 +170,8 @@ public class TabJpg extends JPanel implements ActionListener {
       m=c.insets.top;
       c.insets.top=20;
       JPanel p = new JPanel();
-      JLabel l = new JLabel(getString("METHODJPG"));
+      JLabel l;
+      labelMethod = l = new JLabel(getString("METHODJPG"));
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       p.add(l);
       ButtonGroup bg1 = new ButtonGroup();
@@ -176,7 +179,7 @@ public class TabJpg extends JPanel implements ActionListener {
       rb.setSelected(true);
       bg1.add(rb);
       p.add(rb);
-      rb = new JRadioButton(getString("AVERAGEJPG"));
+      radioMoyenne = rb = new JRadioButton(getString("AVERAGEJPG"));
       bg1.add(rb);
       p.add(rb);
       pCenter.add(p,c);
@@ -255,16 +258,20 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
-      boolean readyToDo = mainPanel.isExistingAllskyDir();
+      boolean hasData = mainPanel.isExistingDir();
+      boolean readyToDo = hasData && mainPanel.isExistingAllskyDir();
       boolean isRunning = mainPanel.isRunning();
-      bPrevious.setEnabled(readyToDo && !isRunning);
-      bNext.setEnabled(readyToDo && !isRunning );
-      tCutMin.setEnabled(readyToDo);
-      tCutMax.setEnabled(readyToDo);
-      radioManual.setEnabled(readyToDo);
-      radioAllsky.setEnabled(readyToDo);
-      progressJpg.setEnabled(readyToDo);
-      ok.setEnabled(readyToDo);
+      bPrevious.setEnabled(hasData && !isRunning);
+      bNext.setEnabled(readyToDo && !isRunning);
+      tCutMin.setEnabled(hasData && !isRunning);
+      tCutMax.setEnabled(hasData && !isRunning);
+      radioManual.setEnabled(readyToDo && !isRunning);
+      labelMethod.setEnabled(readyToDo && !isRunning);
+      radioAllsky.setEnabled(readyToDo && !isRunning);
+      radioMediane.setEnabled(readyToDo && !isRunning);
+      radioMoyenne.setEnabled(readyToDo && !isRunning);
+      progressJpg.setEnabled(readyToDo && !isRunning);
+      ok.setEnabled(readyToDo && !isRunning);
       setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
    }
 

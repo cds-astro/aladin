@@ -30,7 +30,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
@@ -39,39 +38,28 @@ import cds.tools.pixtools.Util;
 
 final public class BuilderHpx {
 
-   public static final int ORDER = 9;
-   private static final int SIDE = 512;
-   private static final int MAXOVERLAY = 6;          // Nombre max de recouvrement pris en compte
+   private Context context;
 
    private int bitpix;
    private boolean keepBB = true;
-
-   private Context context;
-
-   private int [] borderSize = null;
    private double blank = Fits.DEFAULT_BLANK;
    private double bscale = Fits.DEFAULT_BSCALE;
    private double bzero = Fits.DEFAULT_BZERO;
-   private int coaddFlagMode = TabDesc.KEEP;
-   String localServer = null;
+   private String hpxFinderPath = null;
+   private boolean fading;
 
-   public BuilderHpx(Context context) { this.context = context; }
-
-   public int getBitpix() {
-      return bitpix;
+   public BuilderHpx(Context context) {
+      this.context = context;
+      
+      bitpix=context.getBitpix();
+      keepBB=context.isKeepBB();
+      fading=context.isFading();
+      double [] bb = context.getBScaleBZero(); bscale = bb[0]; bzero = bb[1];
+      blank=context.getBlank();
+      cut=context.getCut();
+      hpxFinderPath = context.getHpxFinderPath();
+      createHealpixOrder(Constante.ORDER);
    }
-
-   public String getLocalServer() {
-      return localServer;
-   }
-
-   public void setLocalServer(String localServer) {
-      this.localServer = localServer;
-   }
-
-   private boolean filter = false;
-   
-
 
    /**
     * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
@@ -83,7 +71,7 @@ final public class BuilderHpx {
     * @param pixels
     * @return
     */
-   Fits buildHealpix(int nside_file, long npix_file, int nside, boolean fading) {
+   Fits buildHealpix(int nside_file, long npix_file, int nside) {
       boolean empty = true;
       long min;
       long index;
@@ -97,24 +85,24 @@ final public class BuilderHpx {
          // cherche les numéros de pixels Healpix dans ce losange
          min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
-         double blank = bitpix==0 ? 0 : getBlank();
+         double blank = bitpix==0 ? 0 : this.blank;
 
          // initialisation de la liste des fichiers originaux pour ce losange
-         ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(MAXOVERLAY);
-         if (!askLocalFinder(downFiles,localServer, npix_file, Util.order(nside), blank)) return null;
+         ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
+         if (!askLocalFinder(downFiles,hpxFinderPath, npix_file, Util.order(nside), blank)) return null;
 
-         out = new Fits(SIDE, SIDE, bitpix);
+         out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
          if( bitpix!=0 ) {
             out.setBlank(blank);
-            out.setBscale(getBscale());
-            out.setBzero(getBzero());
+            out.setBscale(bscale);
+            out.setBzero(bzero);
          }
 
          // cherche la valeur à affecter dans chacun des pixels healpix
-         double pixval[] = new double[MAXOVERLAY];   // on va éviter de passer par le total afin d'éviter un débordement
-         double pixcoef[] = new double[MAXOVERLAY];  
+         double pixval[] = new double[Constante.MAXOVERLAY];   // on va éviter de passer par le total afin d'éviter un débordement
+         double pixcoef[] = new double[Constante.MAXOVERLAY];  
          double [] pixvalG=null,pixvalB=null;
-         if( bitpix== 0 ) { pixvalG = new double[MAXOVERLAY]; pixvalB = new double[MAXOVERLAY]; }
+         if( bitpix== 0 ) { pixvalG = new double[Constante.MAXOVERLAY]; pixvalB = new double[Constante.MAXOVERLAY]; }
          
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
@@ -131,7 +119,7 @@ final public class BuilderHpx {
                double totalCoef=0;
                String lastFitsFile=null;
                double lastX=-1,lastY=-1;
-               for( int i=downFiles.size()-1; i>=0 && nbPix<MAXOVERLAY; i-- ) {
+               for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
                   file = downFiles.get(i);
 
                   // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
@@ -189,7 +177,7 @@ final public class BuilderHpx {
                      empty=false;
                      for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
                   }
-                  out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,dataminmax);
+                  out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,cut);
                }
             }
          }
@@ -418,14 +406,14 @@ final public class BuilderHpx {
     * @return
     */
    boolean askLocalFinder(ArrayList<SrcFile> downFiles,String path, long npix, int order,double blank) {
-      String hpxfilename = path + cds.tools.Util.FS + Util.getFilePath("", order - ORDER, npix);
+      String hpxfilename = path + cds.tools.Util.FS + Util.getFilePath("", order - Constante.ORDER, npix);
       File f = new File(hpxfilename);
       String fitsfilename = null;
       if (f.exists()) {
          BufferedReader reader;
          try {
             reader = new BufferedReader(new FileReader(f));
-            for( int i=0; i<MAXOVERLAY && (fitsfilename = reader.readLine()) != null; i++) {
+            for( int i=0; (fitsfilename = reader.readLine()) != null; i++) {
                try {
                   //					récupère l'image
                   Fits fitsfile = new Fits();
@@ -476,87 +464,87 @@ final public class BuilderHpx {
 
    int n =0;
 
-   /**
-    * Cherche dans la liste des fichiers récupérés sur Aladin si les
-    * coordonnées y sont, et renvoie sa position dans l'objet de Coordonnées
-    * @param coo_gal coordonnée d'entrée en ra,dec (en GAL), où le x,y est enregistré
-    * @return l'accès au fichier FITS lu
-    * @see Calib#GetXY(Coord)
-    */
-   private Fits searchDownloaded(ArrayList<SrcFile> downFiles, Coord coo_gal, int recouvrement) {
-      if (downFiles == null)
-         return null;
+//   /**
+//    * Cherche dans la liste des fichiers récupérés sur Aladin si les
+//    * coordonnées y sont, et renvoie sa position dans l'objet de Coordonnées
+//    * @param coo_gal coordonnée d'entrée en ra,dec (en GAL), où le x,y est enregistré
+//    * @return l'accès au fichier FITS lu
+//    * @see Calib#GetXY(Coord)
+//    */
+//   private Fits searchDownloaded(ArrayList<SrcFile> downFiles, Coord coo_gal, int recouvrement) {
+//      if (downFiles == null)
+//         return null;
+//
+//      int nfiles = downFiles.size();
+//      for (int i = 0 ; i<nfiles ; i++,gagnant++) {
+//         if( gagnant>=nfiles ) gagnant=0;
+//         // cherche d'abord dans l'ancien gagnant
+//         SrcFile file = downFiles.get(gagnant);
+//         Calib calib = file.calib;
+//         // transforme les coordonnées en ICRS
+//         double[] radec = context.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
+//         Coord c = new Coord(radec[0],radec[1]);
+//
+//         if (isInFile(c, recouvrement, calib)) {
+//            double pix = file.fitsfile.getPixelDouble((int)c.x, file.fitsfile.heightCell-1-(int)c.y);
+//            coo_gal.x = c.x;
+//            coo_gal.y = c.y;
+//            if( !file.fitsfile.isBlankPixel(pix ) ) return file.fitsfile;
+//
+//         }
+//
+//         //			else
+//         //				System.out.println("\t inutile : " + downFiles.get(gagnant).fitsfile.filename);
+//      }
+//      return null;
+//   }
 
-      int nfiles = downFiles.size();
-      for (int i = 0 ; i<nfiles ; i++,gagnant++) {
-         if( gagnant>=nfiles ) gagnant=0;
-         // cherche d'abord dans l'ancien gagnant
-         SrcFile file = downFiles.get(gagnant);
-         Calib calib = file.calib;
-         // transforme les coordonnées en ICRS
-         double[] radec = context.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
-         Coord c = new Coord(radec[0],radec[1]);
-
-         if (isInFile(c, recouvrement, calib)) {
-            double pix = file.fitsfile.getPixelDouble((int)c.x, file.fitsfile.heightCell-1-(int)c.y);
-            coo_gal.x = c.x;
-            coo_gal.y = c.y;
-            if( !file.fitsfile.isBlankPixel(pix ) ) return file.fitsfile;
-
-         }
-
-         //			else
-         //				System.out.println("\t inutile : " + downFiles.get(gagnant).fitsfile.filename);
-      }
-      return null;
-   }
-
-   /**
-    * sans recouvrement si elle est un tout petit peu sur le bord on copie la
-    * valeur
-    * 
-    * @param c
-    *            coordonnées en ICRS (x,y modifiés)
-    */
-   private boolean isInFile(Coord c, int recouvrement, Calib calib) {
-      try {
-         calib.GetXY(c);
-      } catch (Exception e) {
-         e.printStackTrace();
-         return false;
-      }
-      // si la coordonnée est bien dedans
-      double xnpix = calib.getImgSize().getWidth();
-      double ynpix = calib.getImgSize().getHeight();
-      if (c.x >= recouvrement && c.x <= xnpix - 1 - recouvrement
-            && c.y >= recouvrement && c.y <= ynpix - 1 - recouvrement) {
-
-         return true;
-      }
-      // sans recouvrement si elle est un tout petit peu sur le bord on copie la valeur
-      if (recouvrement==0 &&
-            c.x >= -2 && c.x <= xnpix+1
-            && c.y >= -2 && c.y <= ynpix+1
-      ) {
-         if (c.x >=-2 && c.x < 0) {
-            c.x = 0;
-         }
-         if (c.x > xnpix-1 && c.x <= xnpix+2) {
-            c.x = xnpix-1;
-         }
-         if (c.y >= -2 && c.y < 0) {
-            c.y = 0;
-         }
-         if (c.y > ynpix-1 && c.y <= ynpix+2) {
-            c.y = ynpix-1;
-         }
-
-         return true;
-      }
-      return false;
-   }
-
-   int gagnant=0;
+//   /**
+//    * sans recouvrement si elle est un tout petit peu sur le bord on copie la
+//    * valeur
+//    * 
+//    * @param c
+//    *            coordonnées en ICRS (x,y modifiés)
+//    */
+//   private boolean isInFile(Coord c, int recouvrement, Calib calib) {
+//      try {
+//         calib.GetXY(c);
+//      } catch (Exception e) {
+//         e.printStackTrace();
+//         return false;
+//      }
+//      // si la coordonnée est bien dedans
+//      double xnpix = calib.getImgSize().getWidth();
+//      double ynpix = calib.getImgSize().getHeight();
+//      if (c.x >= recouvrement && c.x <= xnpix - 1 - recouvrement
+//            && c.y >= recouvrement && c.y <= ynpix - 1 - recouvrement) {
+//
+//         return true;
+//      }
+//      // sans recouvrement si elle est un tout petit peu sur le bord on copie la valeur
+//      if (recouvrement==0 &&
+//            c.x >= -2 && c.x <= xnpix+1
+//            && c.y >= -2 && c.y <= ynpix+1
+//      ) {
+//         if (c.x >=-2 && c.x < 0) {
+//            c.x = 0;
+//         }
+//         if (c.x > xnpix-1 && c.x <= xnpix+2) {
+//            c.x = xnpix-1;
+//         }
+//         if (c.y >= -2 && c.y < 0) {
+//            c.y = 0;
+//         }
+//         if (c.y > ynpix-1 && c.y <= ynpix+2) {
+//            c.y = ynpix-1;
+//         }
+//
+//         return true;
+//      }
+//      return false;
+//   }
+//
+//   int gagnant=0;
 
    /**
     * Ecrit les pixels dans un fichier .hpx avec notre format Healpix
@@ -572,14 +560,14 @@ final public class BuilderHpx {
          int nside, Fits out) throws Exception {
 
       // prépare l'entete
-      double incA = -(90./nside_file)/(SIDE);
-      double incD = (90./nside_file)/(SIDE);
+      double incA = -(90./nside_file)/(Constante.SIDE);
+      double incD = (90./nside_file)/(Constante.SIDE);
       double[] proj_center = new double[2];
       proj_center = CDSHealpix.pix2ang_nest(nside_file,npix);
       out.setCalib( new Calib(
             proj_center[0],proj_center[1],
-            (SIDE+1)/2,(SIDE+1)/2,
-            SIDE,SIDE,
+            (Constante.SIDE+1)/2,(Constante.SIDE+1)/2,
+            Constante.SIDE,Constante.SIDE,
             incA,incD,0,Calib.TAN,false,Calib.FK5));
 
       out.headerFits.setKeyValue("ORDERING", "CDSHEALPIX");
@@ -601,7 +589,7 @@ final public class BuilderHpx {
 
    private int[] xy2hpx = null;
    private int[] hpx2xy = null;
-   private double[] dataminmax = new double[2];
+   private double[] cut = new double[2];
 
    /** Méthode récursive utilisée par createHealpixOrder */
    private void fillUp(int[] npix, int nsize, int[] pos) {
@@ -647,14 +635,6 @@ final public class BuilderHpx {
       return hpx2xy[xyOffset];
    }
 
-   public void setBitpix(int bitpix, boolean keepBB) {
-      this.bitpix = bitpix;
-      this.keepBB = keepBB;
-   }
-
-   public void setDataCut(double[] minmax) {
-      dataminmax = minmax;
-   }
    /*
 	public static void main(String[] args) {
 		long t= System.currentTimeMillis();
@@ -678,84 +658,5 @@ final public class BuilderHpx {
 		System.out.println((System.currentTimeMillis()-t)+"ms");
 	}
     */
-
-   /**
-    * @param Positionne le flag de co-addition avec des losanges pré-existants 
-    */
-   public void setCoadd(int coaddMode) {
-      this.coaddFlagMode = coaddMode;
-   }
-
-   /**
-    * @param blank the blank to set
-    */
-   public void setBorderSize(int [] borderSize) {
-      this.borderSize = borderSize;
-   }
-
-   /**
-    * @return the blank
-    */
-   public int [] getBorderSize() {
-      return borderSize;
-   }
-
-
-
-   /**
-    * @param blank the blank to set
-    */
-   public void setBlank(double blank) {
-      this.blank = blank;
-   }
-
-   /**
-    * @return the blank
-    */
-   public double getBlank() {
-      return blank;
-   }
-
-   /**
-    * @param bscale the bscale to set
-    */
-   public void setBscale(double bscale) {
-      this.bscale = bscale;
-   }
-
-   /**
-    * @return the bscale
-    */
-   public double getBscale() {
-      return bscale;
-   }
-
-   /**
-    * @param bzero the bzero to set
-    */
-   public void setBzero(double bzero) {
-      this.bzero = bzero;
-   }
-
-   /**
-    * @return the bzero
-    */
-   public double getBzero() {
-      return bzero;
-   }
-
-   /**
-    * @param filter the filter to set
-    */
-   public void setFilter(boolean filter) {
-      this.filter = filter;
-   }
-
-   /**
-    * @return the filter
-    */
-   public boolean isFilter() {
-      return filter;
-   }
 
 }

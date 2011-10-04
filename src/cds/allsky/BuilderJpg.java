@@ -50,7 +50,7 @@ public class BuilderJpg implements Runnable {
 	   maxOrder = getMaxOrder();
 	   bitpix = context.getBitpix();
 	   blank = context.getBlank();
-	   width=BuilderController.SIDE;
+	   width=Constante.SIDE;
 	   double bb[] = context.getBScaleBZero();
 	   bscale=bb[0];
 	   bzero=bb[1];

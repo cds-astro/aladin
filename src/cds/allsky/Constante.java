@@ -20,17 +20,24 @@
 package cds.allsky;
 
 public class Constante {
-    public static final int INDEX = 0;
-    public static final int TESS = 1;
-	public static final int JPG = 2;
-	public static final String ALLSKY = "ALLSKY";
-	public static String SURVEY = ALLSKY; // sous répertoire final contenant la hierarchie healpix
-	public static final String HPX_FINDER = "HpxFinder";
-	
-    // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
-	// => voir cds.fits.loadFits(InputStream,x,y,w,h)
-	public static final int FITSCELLSIZE = 4096; 
-	
-	// Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
-	public static final int MAXMBPERTHREAD = 400;
+   public static final int INDEX = 0;
+   public static final int TESS = 1;
+   public static final int JPG = 2;
+   public static final String ALLSKY = "ALLSKY";
+   public static String SURVEY = ALLSKY; // sous répertoire final contenant la hierarchie healpix
+   public static final String HPX_FINDER = "HpxFinder";
+
+   // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
+   // => voir cds.fits.loadFits(InputStream,x,y,w,h)
+   public static final int FITSCELLSIZE = 4096; 
+
+   // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
+   public static final int MAXMBPERTHREAD = 400;
+
+   // Taille des imagettes HEALPix
+   final static public int SIDE = 512;
+   final static public int ORDER = 9; // 2^9 = 512 = SIDE
+
+   // Nombre max de recouvrement pris en compte
+   public static final int MAXOVERLAY = 6; 
 }

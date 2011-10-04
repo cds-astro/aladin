@@ -62,6 +62,7 @@ public class TabDesc extends JPanel implements ActionListener {
    private JLabel labelAllsky;
    private String LABELALLSKY;
    private String NEXT;
+   private String SEE;
    private String INFOALLSKY;
    private String PARAMALLSKY;
    private String KEEPALLSKY,COADDALLSKY,OVERWRITEALLSKY;
@@ -88,7 +89,7 @@ public class TabDesc extends JPanel implements ActionListener {
    private String defaultDirectory;
    final private MainPanel mainPanel;
    private String BROWSE;
-   private JButton b_next;
+   private JButton b_next,b_see;
    private String help, titlehelp;
 
    public TabDesc(String defaultDir, MainPanel mPanel) {
@@ -234,6 +235,7 @@ public class TabDesc extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
+      pBtn.add(b_see);
       pBtn.add(b_next);
       pBtn.add(Box.createHorizontalGlue());
       fin.add(pBtn, BorderLayout.CENTER);
@@ -251,6 +253,7 @@ public class TabDesc extends JPanel implements ActionListener {
       REP_DEST_RESET = getString("REPRESALLSKY");
       INDEX_RESET = getString("INDEXRESETALLSKY");
       LABELALLSKY = getString("LABELALLSKY");
+      SEE = getString("SEE");
       NEXT = getString("NEXT");
       titlehelp = getString("HHELP");
       INFOALLSKY = getString("INFOALLSKY");
@@ -329,6 +332,13 @@ public class TabDesc extends JPanel implements ActionListener {
          }
       });
 
+      b_see = new JButton(SEE);
+      b_see.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            loadImgEtalon();
+         }
+      });
+
 
       b_next = new JButton(NEXT);
       b_next.addActionListener(new ActionListener() {
@@ -342,6 +352,12 @@ public class TabDesc extends JPanel implements ActionListener {
       resetIndex.setSelected(true);
       resumeWidgetsStatus();
   }
+   
+   // Chargement dans Aladin de l'image "étalon"
+   private void loadImgEtalon() {
+      String fileName = mainPanel.context.getImgEtalon();
+      mainPanel.aladin.execAsyncCommand("load "+fileName);
+   }
    
    public void show() {
       super.show();
@@ -368,6 +384,7 @@ public class TabDesc extends JPanel implements ActionListener {
       mainPanel.setStartEnabled(isExistingDir);
       
       boolean ready = isExistingDir && dir_D.getText().trim().length()>0;
+      b_see.setEnabled(mainPanel.context!=null && mainPanel.context.getImgEtalon()!=null);
       b_next.setEnabled(ready);
       blankCheckbox.setEnabled(ready && !isRunning && !color);
       blankTextField.setEnabled(ready && !isRunning && !color);

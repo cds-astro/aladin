@@ -72,7 +72,6 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected TabRgb   tabRgb;             // Le tab pour la génération d'un survey RGB HEALPix
 
    PlanBG planPreview;
-   private boolean convertCut;
 
    public MainPanel(Aladin aladin,ContextGui context) {
       super();
@@ -123,67 +122,37 @@ final public class MainPanel extends JPanel implements ActionListener {
       }
    }
 
-   private Fits lastOneFits = null;
-   private String lastRootPath=null;
-
-   // Retourne true si on a déjà trouvé le fichier "étalon"
-   private boolean alreadyHasFits(String rootPath) {
-      return lastRootPath!=null && lastRootPath.equals(rootPath);
-   }
-
    /**
-    * Cherche un fichier de type FITS dans le répertoire donné => va servir d'étalon
+    * Sélectionne un fichier de type FITS (ou équivalent) dans le répertoire donné => va servir d'étalon
     * Utilise un cache une case pour éviter les recherches redondantes
-    * @param aladinTree
-    * @return null s'il y a eu une erreur ou le chemin du 1er fichier fits trouvé
+    * @return true si trouvé
     */
-   private Fits getFits(String rootPath) {
-      if( alreadyHasFits(rootPath) ) return lastOneFits;
-      lastOneFits = getFits1(rootPath);
-      if( lastOneFits!=null ) aladin.trace(2, "Will use this Fits file as reference => "+lastOneFits.getFilename());
-      lastRootPath=rootPath;
-      return lastOneFits;
-   }
-
-   private Fits getFits1(String rootPath) {
-      Aladin.trace(4, "MainPanel.getFits1: in progress...");
-
+   private boolean findImgEtalon(String rootPath) {
       File main = new File(rootPath);
       Fits fitsfile = new Fits();
       String[] list = main.list();
+      if( list==null ) return false;
       String path = rootPath;
-      if (list==null) return null;
-      for (int f = 0 ; f < list.length ; f++) {
-         if (!rootPath.endsWith(Util.FS)) {
-            rootPath = rootPath+Util.FS;
-         }
+      for( int f = 0 ; f < list.length ; f++ ) {
+         if( !rootPath.endsWith(Util.FS) ) rootPath = rootPath+Util.FS;
          path = rootPath+list[f];
-         if ((new File(path)).isDirectory()) {
-            if (!list[f].equals(Constante.SURVEY)) {
-               Fits f1 = getFits1(path);
-               if( f1!=null ) return f1;
-            } else continue;
+         if( (new File(path)).isDirectory() ) {
+            if( list[f].equals(Constante.SURVEY) ) continue;
+            return findImgEtalon(path);
          }
+         
+         // essaye de lire l'entete fits du fichier
+         // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
-            Aladin.trace(4, "MainPanel.getFits1: loading header "+path+"...");
-            // essaye de lire l'entete du fichier comme un fits
+            Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
             fitsfile.loadHeaderFITS(path);
-            // il n'y a pas eu d'erreur, donc c'est bien un FITS
-            Aladin.trace(4, "MainPanel.getFits1: loading "+path+"...");
-            if( fitsfile.bitpix!=0 ) fitsfile.loadFITS(path);
-            Aladin.trace(4, "MainPanel;getFits1: getFits1 done !");
-            return fitsfile;
-         }  catch (Exception e) {
-            //               System.err.println("Not a FITS file : " + path);
-            continue;
-         }
+            context.setImgEtalon(path);
+            return true;
+            
+         }  catch (Exception e) { continue; }
       }
-      return null;
+      return false;
    }
-
-
-
-   private boolean debugPierre=false;   // BEURK - sinon le repaint Swing doit attendre la fin du init() ci-dessous
 
    /**
     * Cherche un fichier fits dans l'arborescence et itialise les variables
@@ -193,75 +162,124 @@ final public class MainPanel extends JPanel implements ActionListener {
     * @param text
     */
    public void init() {
-      final String text = getInputPath().trim();
-      debugPierre=true;
-      if (text != null && !text.equals("")) {
-         try {
-            (new Thread("Autocut"){
-               public void run() {
-                  cds.tools.Util.pause(100);
-                  tabDesc.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                  // lit un fichier FITS dans le réperoire sélectionné
-                  Fits file = getFits(text);
-                  if (file == null || file.getCalib() == null) {
-                     System.err.println(s_ERRFITS + text);
-                     //                     JOptionPane.showMessageDialog(this, s_ERRFITS + text,
-                     //                           s_ERR, JOptionPane.ERROR_MESSAGE);
-                     return;
-                  }
-                  // récupère le bitpix
-                  tabBuild.setOriginalBitpix(file.bitpix);
-                  // récupère le bscale/bzero
-                  tabBuild.setBScaleBZero(file.bscale, file.bzero);
-                  // récupère le blank
-                  tabBuild.setBlank(file.blank);
-                  // récupère le min max pour le cut
-                  initCut();
-                  // calcule le meilleur nside
-                  long nside = healpix.core.HealpixIndex.calculateNSide(file
-                        .getCalib().GetResol()[0] * 3600.);
-                  setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
-                  debugPierre=false;
-                  tabDesc.setCursor(Cursor.getDefaultCursor());
-                  newAllskyDir();
-               }
-            }).start();
-
-         } catch (Exception e1) {
-            //				e1.printStackTrace();
-         }
-      }
-   }
-
-   protected void initCut() {
       String path = getInputPath();
-      convertCut = (tabBuild.getBitpix() != tabBuild.getOriginalBitpix());
-      if( path == null || "".equals(path)) {
-         path = getOutputPath();
-         convertCut=false;
-      } else {
-         final String finalPath=path;
-         try {
-            //            (new Thread("Autocut"){
-            //               public void run() {
-            //               double[] cut = ThreadAutoCut.run(file);
-            final Fits file = getFits(finalPath);
-            double[] cut;
-            try {
-               cut = file.findAutocutRange();
-               context.setCut(cut);
-            } catch( Exception e ) {
-               e.printStackTrace();
-            }
-            //               }
-         //            }).start();
-         } catch( Throwable e1 ) {
-            e1.printStackTrace();
-            return;
-         }
+      boolean found = findImgEtalon(path);
+      if( !found ) {
+         context.warning("There is no available images in source directory !\n"+s_ERRFITS+path);
+         return;
       }
-      if (convertCut) context.convertCut(tabBuild.getBitpix());
+      String filename = context.getImgEtalon();
+      Fits file = new Fits();
+      try { file.loadHeaderFITS(filename); } 
+      catch( Exception e ) { e.printStackTrace(); }
+      
+      tabBuild.setOriginalBitpix(file.bitpix);
+      tabBuild.setBScaleBZero(file.bscale, file.bzero);
+      tabBuild.setBlank(file.blank);
+      
+      // calcule le meilleur nside
+      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+      setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
+      
+      initCut(file);
+
+      newAllskyDir();
    }
+   
+   protected void initCut(Fits file) {
+      int w = file.width;
+      int h = file.height;
+      if( w>1024 ) w=1024;
+      if( h>1024 ) h=1024;
+      try {
+         file.loadFITS(file.getFilename(),0,0,w,h); 
+         double [] cut = file.findAutocutRange();
+         context.setCut( cut );
+      } catch( Exception e ) { e.printStackTrace(); }
+   }
+
+
+
+//   private boolean debugPierre=false;   // BEURK - sinon le repaint Swing doit attendre la fin du init() ci-dessous
+//
+//   /**
+//    * Cherche un fichier fits dans l'arborescence et itialise les variables
+//    * bitpix et le cut avec Cherche aussi le meilleur nside pour la résolution
+//    * du fichier trouvé
+//    * 
+//    * @param text
+//    */
+//   public void init() {
+//      final String text = getInputPath().trim();
+//      debugPierre=true;
+//      if (text != null && !text.equals("")) {
+//         try {
+//            (new Thread("Autocut"){
+//               public void run() {
+//                  cds.tools.Util.pause(100);
+//                  tabDesc.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//                  // lit un fichier FITS dans le réperoire sélectionné
+//                  Fits file = findImgEtalon(text);
+//                  if (file == null || file.getCalib() == null) {
+//                     System.err.println(s_ERRFITS + text);
+//                     //                     JOptionPane.showMessageDialog(this, s_ERRFITS + text,
+//                     //                           s_ERR, JOptionPane.ERROR_MESSAGE);
+//                     return;
+//                  }
+//                  // récupère le bitpix
+//                  tabBuild.setOriginalBitpix(file.bitpix);
+//                  // récupère le bscale/bzero
+//                  tabBuild.setBScaleBZero(file.bscale, file.bzero);
+//                  // récupère le blank
+//                  tabBuild.setBlank(file.blank);
+//                  // récupère le min max pour le cut
+//                  initCut();
+//                  // calcule le meilleur nside
+//                  long nside = healpix.core.HealpixIndex.calculateNSide(file
+//                        .getCalib().GetResol()[0] * 3600.);
+//                  setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
+//                  debugPierre=false;
+//                  tabDesc.setCursor(Cursor.getDefaultCursor());
+//                  newAllskyDir();
+//               }
+//            }).start();
+//
+//         } catch (Exception e1) {
+//            //				e1.printStackTrace();
+//         }
+//      }
+//   }
+
+//   protected void initCut() {
+//      String path = getInputPath();
+//      boolean convertCut = (tabBuild.getBitpix() != tabBuild.getOriginalBitpix());
+//      if( path == null || "".equals(path)) {
+//         path = getOutputPath();
+//         convertCut=false;
+//      } else {
+//         final String finalPath=path;
+//         try {
+//            //            (new Thread("Autocut"){
+//            //               public void run() {
+//            //               double[] cut = ThreadAutoCut.run(file);
+//            final Fits file = findImgEtalon(finalPath);
+//            double[] cut;
+//            try {
+//               cut = file.findAutocutRange();
+//               context.setCut(cut);
+//            } catch( Exception e ) {
+//               e.printStackTrace();
+//            }
+//            //               }
+//         //            }).start();
+//         } catch( Throwable e1 ) {
+//            e1.printStackTrace();
+//            return;
+//         }
+//      }
+//      if (convertCut) context.convertCut(tabBuild.getBitpix());
+//   }
+   
    private int setSelectedOrder(int val) {
       return tabBuild.setSelectedOrder(val);
    }
@@ -370,7 +388,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       tabPub.newAllskyDir(Constante.SURVEY);
       //      // si un repertoire de sortie ALLSKY existe déjà, on change le nom du
       //      // bouton START
-      if( debugPierre ) return;
       setStart();
       tabDesc.resumeWidgetsStatus();
       if( isExistingAllskyDir() ) preview(0);
@@ -484,6 +501,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    public void done() {
+      tabBuild.resumeWidgetsStatus();
       showJpgTab();
       setDone();
    }
@@ -497,7 +515,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    public void setStartEnabled(boolean b) {
-      initCut();
+//      initCut();
       tabBuild.displayNext();
       tabJpg.setStartEnabled(b);
       tabPub.setStartEnabled(b);

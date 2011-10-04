@@ -45,10 +45,10 @@ public class ContextGui extends Context {
 		mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
 		mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
 		mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,
-				(long)( BuilderController.SIDE*BuilderController.SIDE*Math.abs(bitpix)/8),
+				(long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
 				statMinTime,statMaxTime,statAvgTime);
 		mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,
-				(long)( BuilderController.SIDE*BuilderController.SIDE*Math.abs(bitpix)/8),
+				(long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
 				statNodeAvgTime);
 	}
 
@@ -74,7 +74,7 @@ public class ContextGui extends Context {
 		return mainPanel.getOutputPath();
 	}
 
-	public void setOutput(String output) {
+	public void setOutputPath(String output) {
 		this.outputPath = output;
 	}
 

@@ -251,7 +251,8 @@ final public class Fits {
    }
 
 
-   /** Chargement d'une image FITS N&B depuis un fichier */
+   /** Chargement d'une image FITS depuis un fichier */
+   public void loadFITS(String filename,int x, int y, int w, int h) throws Exception { loadFITS(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
    public void loadFITS(String filename) throws Exception {loadFITS(filename,false);}
    public void loadFITS(String filename, boolean color) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
@@ -270,7 +271,7 @@ final public class Fits {
    public void loadFITS(MyInputStream dis) throws Exception {
       loadFITS(dis,0,0,-1,-1);
    }
-
+   
    /** Chargement d'une cellule d'une image FITS */
    public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception {
 	   dis = dis.startRead();

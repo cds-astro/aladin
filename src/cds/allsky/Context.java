@@ -14,6 +14,7 @@ import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
 
@@ -29,8 +30,10 @@ public class Context {
    protected String label;                   // Nom du survey
    protected String inputPath;               // Répertoire des images origales
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
+   protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
+   protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
-   protected double[] bScaleBZero;                    // Valeurs BZERO & BSCALE d'origine
+   protected double[] bScaleBZero;           // Valeurs BZERO & BSCALE d'origine
    protected int bitpixOrig = -1;            // BITPIX des images originales
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank;                   // Valeur du BLANK en entrée et en sortie
@@ -41,7 +44,7 @@ public class Context {
    protected boolean fading = false;         // true pour appliquer un "fondu-enchainé" sur les recouvrements
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
    protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
-   protected HpixTree moc = null;       // Zone du ciel à traiter (décrite par un MOC)
+   protected HpixTree moc = null;            // Zone du ciel à traiter (décrite par un MOC)
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected boolean isRunning=false;        // true s'il y a un processus de calcul en cours
    
@@ -56,6 +59,8 @@ public class Context {
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
+   public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
+   public String getImgEtalon() { return imgEtalon; }
    public int getCoAdd() { return coAdd; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return this.bitpix; }
@@ -74,8 +79,10 @@ public class Context {
    public void setOrder(int order) { this.order = order; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFrame(int frame) { this.frame=frame; }
-   public void setInput(String input) { this.inputPath = input; }
-   public void setOutput(String output) { this.outputPath = output; }
+   public void setInputPath(String path) { this.inputPath = path; }
+   public void setOutputPath(String path) { this.outputPath = path; }
+   public void sethpxFinderPath(String path) { hpxFinderPath = path; }
+   public void setImgEtalon(String filename) { imgEtalon = filename; }
    public void setInitDir(String txt) { }
    public void setCoAdd(int coAdd) { this.coAdd = coAdd; }
    public void setBScaleBZero(double[] bScaleBZero) { this.bScaleBZero = bScaleBZero; }
@@ -83,7 +90,6 @@ public class Context {
    public void setBlank(double blank) { this.blank = blank; }
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
-   
    
    public void setSkySub(boolean skySub) {
       this.skySub = skySub;
@@ -113,9 +119,6 @@ public class Context {
        }
        return border;
    }
-
-
-
 
    protected void stop() { }
    

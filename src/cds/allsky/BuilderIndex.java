@@ -31,10 +31,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
 import cds.aladin.Aladin;
+import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.Fits;
@@ -116,7 +118,7 @@ public class BuilderIndex {
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();
-      String pathDest = output + FS + Constante.HPX_FINDER;
+      String pathDest = context.getHpxFinderPath();
       stopped = false;
 
       progress = 0;
@@ -127,8 +129,7 @@ public class BuilderIndex {
          if (fpause.exists()) {
             BufferedReader r;
             try {
-               r = new BufferedReader(new InputStreamReader(
-                     (new FileInputStream(fpause))));
+               r = new BufferedReader(new InputStreamReader( (new FileInputStream(fpause))));
                initpath = r.readLine();
 
             } catch (FileNotFoundException e) {
@@ -268,51 +269,95 @@ public class BuilderIndex {
       if (!stopped) progress = 100;
    }
 
-   private void testAndInsert(Fits fitsfile, String pathDest,
-         String currentFile, String currentCell, int order) throws Exception {
+   private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, String currentCell, int order) throws Exception {
       String hpxname;
       FileOutputStream out;
-      long npix;
-      long[] npixs = null;
-
-      // transforme les coordonnées du point de ref dans le bon frame
-      Coord centerGAL;
-      double[] aldel = context.ICRS2galIfRequired(fitsfile.center.al, fitsfile.center.del);
-      centerGAL = new Coord(aldel[0], aldel[1]);
-
-      double[] inc = fitsfile.getCalib().GetResol();
-      double radius = Math.max(Math.abs(inc[0]) * fitsfile.widthCell / 2.,
-                               Math.abs(inc[1]) * fitsfile.heightCell / 2.);
-      // rayon jusqu'à l'angle, au pire * sqrt(2)
-      radius *= Math.sqrt(2.);
-
-      npixs = getNpixList(order, centerGAL, radius);
-
-      // pour chacun des losanges concernés
-      for (int i = 0; i < npixs.length; i++) {
-         npix = npixs[i];
-
-         // vérifie la validité du losange trouvé
-         if (!isInImage(fitsfile, Util.getCorners(order, npix))) continue;
-
-         // initialise les chemins
-         if (!pathDest.endsWith(FS)) {
-            pathDest = pathDest + FS;
+      
+      try {
+         // Recherche les 4 coins de l'image
+         Calib c = fitsfile.getCalib();
+         ArrayList<double[]> cooList = new ArrayList<double[]>(4);
+         Coord coo = new Coord();
+         for( int i=0; i<4; i++ ) {
+            coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
+            coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
+            coo.y = fitsfile.height - coo.y -1;
+            c.GetCoord(coo);
+            cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
          }
-         hpxname = pathDest+ Util.getFilePath("", order,npix);
-         cds.tools.Util.createPath(hpxname);
-         out = openFile(hpxname);
 
-         // ajoute le chemin du fichier Source FITS, 
-         // suivi éventuellement de la définition de la cellule en question
-         // (mode mosaic)
-         createAFile(out, currentFile + (currentCell == null ? "" : currentCell) + "\n");
+         long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
+
+         // pour chacun des losanges concernés
+         for (int i = 0; i < npixs.length; i++) {
+            long npix = npixs[i];
+
+            // vérifie la validité du losange trouvé
+            if (!isInImage(fitsfile, Util.getCorners(order, npix))) continue;
+
+            hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
+            cds.tools.Util.createPath(hpxname);
+            out = openFile(hpxname);
+
+            // ajoute le chemin du fichier Source FITS, 
+            // suivi éventuellement de la définition de la cellule en question
+            // (mode mosaic)
+            String filename = currentFile + (currentCell == null ? "" : currentCell);
+            createAFile(out, filename + "\n");
+         }
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
+
    }
+
+
+//   private void testAndInsert(Fits fitsfile, String pathDest,
+//         String currentFile, String currentCell, int order) throws Exception {
+//      String hpxname;
+//      FileOutputStream out;
+//      long npix;
+//      long[] npixs = null;
+//
+//      // transforme les coordonnées du point de ref dans le bon frame
+//      Coord centerGAL;
+//      double[] aldel = context.ICRS2galIfRequired(fitsfile.center.al, fitsfile.center.del);
+//      centerGAL = new Coord(aldel[0], aldel[1]);
+//
+//      double[] inc = fitsfile.getCalib().GetResol();
+//      double radius = Math.max(Math.abs(inc[0]) * fitsfile.widthCell / 2.,
+//                               Math.abs(inc[1]) * fitsfile.heightCell / 2.);
+//      // rayon jusqu'à l'angle, au pire * sqrt(2)
+//      radius *= Math.sqrt(2.);
+//
+//      npixs = getNpixList(order, centerGAL, radius);
+//
+//      // pour chacun des losanges concernés
+//      for (int i = 0; i < npixs.length; i++) {
+//         npix = npixs[i];
+//
+//         // vérifie la validité du losange trouvé
+//         if (!isInImage(fitsfile, Util.getCorners(order, npix))) continue;
+//
+//         // initialise les chemins
+//         if (!pathDest.endsWith(FS)) {
+//            pathDest = pathDest + FS;
+//         }
+//         hpxname = pathDest+ Util.getFilePath("", order,npix);
+//         cds.tools.Util.createPath(hpxname);
+//         out = openFile(hpxname);
+//
+//         // ajoute le chemin du fichier Source FITS, 
+//         // suivi éventuellement de la définition de la cellule en question
+//         // (mode mosaic)
+//         createAFile(out, currentFile + (currentCell == null ? "" : currentCell) + "\n");
+//      }
+//   }
 
    public String getCurrentpath() {
       return currentpath;
    }
+   
    /**
     * Récupère la liste des numéros de pixels healpix dans un cercle
     * 
@@ -323,42 +368,42 @@ public class BuilderIndex {
     *            rayon de la recherche (sera agrandi) en degrés
     * @return
     */
-   static long [] getNpixList(int order, Coord center, double radius) {
-      long nside = CDSHealpix.pow2(order);
-      try {
-         // augmente le rayon de la taille d'un demi pixel en plus de
-         // l'option inclusive => +1 pixel
-         //			long[] npix = CDSHealpix.query_disc(nside,center.al,center.del,
-         //					Math.toRadians(radius)+Math.PI/(4.*nside),true);
-
-         // --- calcule la taille réel de la plus grande diagonale du pixel
-         // récupère le pixel central
-         // double[] thetaphi = Util.RaDecToPolar(new
-         // double[]{center.al,center.del});
-         double[] thetaphi = CDSHealpix.radecToPolar(new double[] {
-               center.al, center.del });
-         long n = CDSHealpix.ang2pix_nest(nside, thetaphi[0], thetaphi[1]);
-         // calcule ses 4 coins et son centre
-         Coord[] corners = Util.getCorners(order,n);
-         double[] c = CDSHealpix.pix2ang_nest(nside, n);
-         //			c = Util.PolarToRaDec(c);
-         c = CDSHealpix.polarToRadec(c);
-         Coord c1 = new Coord(c[0],c[1]);
-         // cherche la plus grande distance entre le centre et chaque coin
-         double dist = 0;
-         for (int i = 0 ; i < 4 ; i++)
-            dist = Math.max(dist, Coord.getDist(c1, corners[i]));
-
-         long[] npix = CDSHealpix.query_disc(nside, center.al, center.del,
-               Math.toRadians(radius + dist), true);
-
-         return npix;
-      } catch (Exception e1) {
-         // TODO Auto-generated catch block
-         e1.printStackTrace();
-         return null;
-      } 
-   }
+//   static long [] getNpixList(int order, Coord center, double radius) {
+//      long nside = CDSHealpix.pow2(order);
+//      try {
+//         // augmente le rayon de la taille d'un demi pixel en plus de
+//         // l'option inclusive => +1 pixel
+//         //			long[] npix = CDSHealpix.query_disc(nside,center.al,center.del,
+//         //					Math.toRadians(radius)+Math.PI/(4.*nside),true);
+//
+//         // --- calcule la taille réel de la plus grande diagonale du pixel
+//         // récupère le pixel central
+//         // double[] thetaphi = Util.RaDecToPolar(new
+//         // double[]{center.al,center.del});
+//         double[] thetaphi = CDSHealpix.radecToPolar(new double[] {
+//               center.al, center.del });
+//         long n = CDSHealpix.ang2pix_nest(nside, thetaphi[0], thetaphi[1]);
+//         // calcule ses 4 coins et son centre
+//         Coord[] corners = Util.getCorners(order,n);
+//         double[] c = CDSHealpix.pix2ang_nest(nside, n);
+//         //			c = Util.PolarToRaDec(c);
+//         c = CDSHealpix.polarToRadec(c);
+//         Coord c1 = new Coord(c[0],c[1]);
+//         // cherche la plus grande distance entre le centre et chaque coin
+//         double dist = 0;
+//         for (int i = 0 ; i < 4 ; i++)
+//            dist = Math.max(dist, Coord.getDist(c1, corners[i]));
+//
+//         long[] npix = CDSHealpix.query_disc(nside, center.al, center.del,
+//               Math.toRadians(radius + dist), true);
+//
+//         return npix;
+//      } catch (Exception e1) {
+//         // TODO Auto-generated catch block
+//         e1.printStackTrace();
+//         return null;
+//      } 
+//   }
 
    private boolean isInImage(Fits f, Coord[] corners) {
       int signeX = 0;
@@ -373,8 +418,7 @@ public class BuilderIndex {
                coo.del = radec[1];
             }
             f.getCalib().GetXY(coo);
-            if (Double.isNaN(coo.x))
-               continue;
+            if (Double.isNaN(coo.x)) continue;
             coo.y = f.height - coo.y -1;
             int width = f.widthCell+marge;
             int height = f.heightCell+marge;
@@ -383,10 +427,8 @@ public class BuilderIndex {
                return true;
             }
             // tous d'un coté => x/y tous du meme signe
-            signeX += (coo.x >= f.xCell + width) ? 1 : (coo.x < f.xCell
-                  - marge) ? -1 : 0;
-            signeY += (coo.y >= f.yCell + height) ? 1 : (coo.y < f.yCell
-                  - marge) ? -1 : 0;
+            signeX += (coo.x >= f.xCell + width) ? 1 : (coo.x < f.xCell - marge) ? -1 : 0;
+            signeY += (coo.y >= f.yCell + height) ? 1 : (coo.y < f.yCell - marge) ? -1 : 0;
 
          }
       } catch (Exception e) {

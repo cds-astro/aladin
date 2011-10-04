@@ -100,7 +100,6 @@ public class Task implements Runnable{
 	   try {
 	      mode = INDEX;
 	      //			if (allsky.toReset()) builder.reset(output);
-	      boolean fading = context.isFading();
 
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
@@ -122,7 +121,7 @@ public class Task implements Runnable{
 	      // Création des fichiers healpix fits et jpg
 	      if (mode <= TESS) {
 	         mode = TESS;
-	         Aladin.trace(2,"Launch Tess (frame="+context.getFrameName()+") "+(!fading ? "(nofading)":""));
+	         Aladin.trace(2,"Launch Tess (frame="+context.getFrameName()+")");
 	         //				builder.setThread(runner);
 	         followProgress(mode, builder);
 	         try {
@@ -134,7 +133,7 @@ public class Task implements Runnable{
 	            builder.setBScaleBZero(bscale,bzero);
 	            builder.setHpixTree(hpixTree);
 	            builder.setCoadd(coaddMode);
-	            builder.build(order, output, context.getBitpix(), fading, keepBB);
+	            builder.build(order, output, context.getBitpix(), keepBB);
 	            // si le thread a été interrompu, on sort direct
 	            if (runner != Thread.currentThread()) {
 	               progressBar.stop();

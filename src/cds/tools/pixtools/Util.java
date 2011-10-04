@@ -103,9 +103,12 @@ public class Util {
     * @return
     */
    static public String getFilePath(String survey,int order, long npix) {
-      return
-      (survey!=null && survey.length()>0 ? survey + FS : "") +
-      getFilePath(order,npix);
+      String prefix = survey!=null && survey.length()>0 ? survey : "";
+      String suffix = getFilePath(order,npix);
+      return cds.tools.Util.concatDir(prefix, suffix);
+      
+//      return (survey!=null && survey.length()>0 ? survey + FS : "") +
+//      getFilePath(order,npix);
    }
 
    /**

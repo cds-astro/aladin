@@ -150,12 +150,12 @@ public class BuildTable extends JTable {
       data = new Object[MAXHEALPIXORDER-3][5];
 
       double surface = 4. * Math.PI * (180. / Math.PI) * (180. / Math.PI);
-      long pixelPerFile = (long)Math.pow(4,BuilderController.ORDER);
+      long pixelPerFile = (long)Math.pow(4,Constante.ORDER);
       long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
 
       // colonne des checkbox
       for (int i = 0; i < data.length; i++) {
-         int order = i+3+BuilderController.ORDER;
+         int order = i+3+Constante.ORDER;
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
 
@@ -191,7 +191,7 @@ public class BuildTable extends JTable {
    public void updateData() {
       long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
       for (int i = 0; i < this.getRowCount(); i++) {
-         int order = i+3+BuilderController.ORDER;
+         int order = i+3+Constante.ORDER;
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
          this.setValueAt( Util.getUnitDisk(nbPixel*nbBytePerPixel) ,i,VOL_IDX);

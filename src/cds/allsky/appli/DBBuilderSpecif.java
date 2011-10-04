@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cds.allsky.BuilderController;
+import cds.allsky.Context;
 import cds.fits.Fits;
 import cds.tools.Util;
 
@@ -38,9 +39,12 @@ public class DBBuilderSpecif extends BuilderController {
 	static String SURVEY = null;
 	HashMap<String, double[]> cuts = null;
 	private boolean filter;
+	
+	public DBBuilderSpecif(Context context) { super(context);  }
+	
 	public static void main(String[] args) throws Exception {
 		
-		DBBuilderSpecif db = new DBBuilderSpecif();
+		DBBuilderSpecif db = new DBBuilderSpecif( new Context() );
 		
 		if (args.length<9) {
 			System.out.println("Usage : survey color ordermin ordermax nummin nummax outpath bitpix [-local path] [cutfile]");
@@ -63,6 +67,8 @@ public class DBBuilderSpecif extends BuilderController {
 		SURVEY = survey;
 		path = path+SURVEY;
 		
+		db.context.setOutputPath(path);
+		
 //		if (SURVEY.startsWith("SDSS"))
 //			db.setFilter(true);
 		
@@ -70,13 +76,10 @@ public class DBBuilderSpecif extends BuilderController {
 //		HpxBuilder.setBitpix(bitpix);
 		
 		if (args.length>=10 && args[9].startsWith("-local")) {
-			db.localServer = args[10];
+			db.context.sethpxFinderPath(args[10]);
 			if (args.length>=12) db.readLocalCut(args[11]);
 		}
-		if (db.localServer != null)
-			db.build(ordermax, path, bitpix, true, db.localServer,true);
-		else
-			db.build(ordermax, path, bitpix, true, true);
+		else db.build(ordermax, path, bitpix, true);
 	}
 	
 
