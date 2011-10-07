@@ -45,7 +45,7 @@ final public class BuilderHpx {
    private boolean flagColor;
    private double bScale;
    private double bZero;
-   private boolean keepBB = true;
+//   private boolean keepBB = true;
    private String hpxFinderPath = null;
    private boolean fading;
    private double[] cutOrig;
@@ -58,7 +58,7 @@ final public class BuilderHpx {
       flagColor = context.isColor();
       bZero = context.getBZero();
       bScale = context.getBScale();
-      keepBB=context.isKeepBB();
+//      keepBB=context.isKeepBB();
       fading=context.isFading();
       cutOrig=context.getCutOrig();
       cut=context.getCut();
@@ -363,10 +363,10 @@ final public class BuilderHpx {
    }
 
 
-   private double getPixelDouble(Fits f, int x, int y) {
-      if (!keepBB) return f.getPixelFull(x, y);
-      else return f.getPixelDouble(x, y);
-   }
+//   private double getPixelDouble(Fits f, int x, int y) {
+//      if (!keepBB) return f.getPixelFull(x, y);
+//      else return f.getPixelDouble(x, y);
+//   }
 
    /**
     * This method does the actual GET
