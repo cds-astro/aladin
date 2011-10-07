@@ -3,6 +3,9 @@ package cds.allsky;
 import java.text.ParseException;
 
 import cds.aladin.Aladin;
+import cds.aladin.Plan;
+import cds.aladin.PlanImage;
+import cds.tools.Util;
 import cds.tools.pixtools.HpixTree;
 
 /**
@@ -11,138 +14,159 @@ import cds.tools.pixtools.HpixTree;
  */
 public class ContextGui extends Context {
 
-	private MainPanel mainPanel;       // Référence à l'interface graphique
-	
-	/** Positionnement de l'interface graphique associée au traitement */
-	public void setMainPanel(MainPanel mainPanel) { this.mainPanel=mainPanel; }
-	
-	public int[] getBorderSize() {
-	   try {
-	      setBorderSize(mainPanel.getBorderSize());
-	   } catch (ParseException e) {
-	      mainPanel.tabDesc.borderTextField.setText("Border error => assume 0");
-	      e.printStackTrace();
-	   }
-	   return borderSize;
-	}
+   private MainPanel mainPanel;       // Référence à l'interface graphique
 
-	public int getOrder() {
-	   if (mainPanel.tabBuild.getOrder() != -1)  return mainPanel.tabBuild.getOrder();
-	   if (mainPanel.planPreview != null) return mainPanel.planPreview.getMaxHealpixOrder();
-	   return -1;
-	}
+   /** Positionnement de l'interface graphique associée au traitement */
+   public void setMainPanel(MainPanel mainPanel) { this.mainPanel=mainPanel; }
 
-	// Demande d'affichage des stats (dans le TabBuild)
-	protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
-			int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
-		mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statNbZipFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
-	}
+   public int[] getBorderSize() {
+      try {
+         setBorderSize(mainPanel.getBorderSize());
+      } catch (ParseException e) {
+         mainPanel.tabDesc.borderTextField.setText("Border error => assume 0");
+         e.printStackTrace();
+      }
+      return borderSize;
+   }
 
-	// Demande d'affichage des stats (dans le TabBuild)
-	protected void showBuildStat(int statNbThreadRunning, int statNbThread, long totalTime, 
-			int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
-			long statNodeAvgTime) {
-		mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
-		mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
-		mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,
-				(long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
-				statMinTime,statMaxTime,statAvgTime);
-		mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,
-				(long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
-				statNodeAvgTime);
-	}
+   public int getOrder() {
+      if (mainPanel.tabBuild.getOrder() != -1)  return mainPanel.tabBuild.getOrder();
+      if (mainPanel.planPreview != null) return mainPanel.planPreview.getMaxHealpixOrder();
+      return -1;
+   }
 
-    // Demande d'affichage des stats (dans le TabJpeg)
-    protected void showJpgStat(int statNbFile, long statSize, long totalTime) {
-       mainPanel.tabJpg.setStat(statNbFile, statSize, totalTime);
-    }
+   // Demande d'affichage des stats (dans le TabBuild)
+   protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
+         int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
+      mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statNbZipFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
+   }
 
-    // Demande d'affichage des stats (dans le TabRgb)
-    protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
-       mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
-    }
-    
-    protected void stop() {
-    	mainPanel.stop();
-    }
+   // Demande d'affichage des stats (dans le TabBuild)
+   protected void showBuildStat(int statNbThreadRunning, int statNbThread, long totalTime, 
+         int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
+         long statNodeAvgTime) {
+      mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
+      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
+      mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,
+            (long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
+            statMinTime,statMaxTime,statAvgTime);
+      mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,
+            (long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
+            statNodeAvgTime);
+   }
 
-    public String getInputPath() {
-		return mainPanel.getInputPath();
-	}
+   // Demande d'affichage des stats (dans le TabJpeg)
+   protected void showJpgStat(int statNbFile, long statSize, long totalTime) {
+      mainPanel.tabJpg.setStat(statNbFile, statSize, totalTime);
+   }
 
-	public String getOutputPath() {
-		return mainPanel.getOutputPath();
-	}
+   // Demande d'affichage des stats (dans le TabRgb)
+   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
+      mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
+   }
 
-	public void setOutputPath(String output) {
-		this.outputPath = output;
-	}
+   protected void stop() {
+      mainPanel.stop();
+   }
 
-	public void setInitDir(String txt) {
-		mainPanel.setProgressIndexDir(txt);
-	}
+   public String getInputPath() {
+      return mainPanel.getInputPath();
+   }
+
+   public String getOutputPath() {
+      return mainPanel.getOutputPath();
+   }
+
+   public void setOutputPath(String output) {
+      this.outputPath = output;
+   }
+
+   public void setInitDir(String txt) {
+      mainPanel.setProgressIndexDir(txt);
+   }
 
 
-	public int getCoAdd() {
-		return mainPanel.getCoAddMode();
-	}
+   public int getCoAdd() {
+      return mainPanel.getCoAddMode();
+   }
 
-	public boolean isKeepBB() {
-		return mainPanel.tabBuild.isKeepBB();
-	}
+   public boolean isKeepBB() {
+      return mainPanel.tabBuild.isKeepBB();
+   }
 
-	public int getBitpixOrig() {
-		return mainPanel.tabBuild.getOriginalBitpix();
-	}
-	
-	public double[] getBScaleBZero() {
-		return mainPanel.getBScaleBZero();
-	}
+   public int getBitpixOrig() {
+      return mainPanel.tabBuild.getOriginalBitpix();
+   }
 
-	public int getBitpix() {
-		return mainPanel.getBitpix();
-	}
+   public double[] getBScaleBZeroOrig() {
+      return mainPanel.getBScaleBZero();
+   }
 
-	public double getBlank() {
-		return mainPanel.getBlank();
-	}
+   public int getBitpix() {
+      return mainPanel.getBitpix();
+   }
 
-	public HpixTree getMoc() {
-		return mainPanel.getHpixTree();
-	}
-	
-	public void setIsRunning(boolean flag) { 
-	   super.setIsRunning(flag);
-	   mainPanel.setIsRunning(flag);
-	}
+   public double getBlankOrig() {
+      return mainPanel.getBlank();
+   }
 
-	protected void enableProgress(boolean selected, int mode) {
-		mainPanel.enableProgress(selected, mode);
-	}
-	
-	protected void setProgress(int mode, int value) {
-		mainPanel.setProgress(mode, value);
-	}
-	
-	protected void preview (int n3) {
-		mainPanel.preview(n3);
-	}
-	
-	public String getLabel() {
-		return mainPanel.getLabel();
-	}
+   public HpixTree getMoc() {
+      return mainPanel.getHpixTree();
+   }
 
-	public double[] getCut() {
-		return mainPanel.tabJpg.getCut();
-	}
+   public void setIsRunning(boolean flag) { 
+      super.setIsRunning(flag);
+      mainPanel.setIsRunning(flag);
+   }
 
-	public void setCut(double [] cut) {
-	   super.setCut(cut);
-	   mainPanel.tabJpg.setCut(cut);
-	}
+   protected void enableProgress(boolean selected, int mode) {
+      mainPanel.enableProgress(selected, mode);
+   }
 
-	public void warning(String string) {
-		Aladin.warning(mainPanel, string);
-	}
+   protected void setProgress(int mode, int value) {
+      mainPanel.setProgress(mode, value);
+   }
+
+   protected void preview (int n3) {
+      mainPanel.preview(n3);
+   }
+
+   public String getLabel() {
+      return mainPanel.getLabel();
+   }
+
+   public double[] getCutOrig() {
+      try {
+         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
+            Plan p = mainPanel.aladin.calque.getPlanBase();
+            cutOrig[0]= ((PlanImage)p).getCutMin();
+            cutOrig[1]= ((PlanImage)p).getCutMax();
+            cutOrig[2]= ((PlanImage)p).getDataMin();
+            cutOrig[3]= ((PlanImage)p).getDataMax();
+
+         } else {
+            String cutMin = mainPanel.tabJpg.getCutMin();
+            String cutMax = mainPanel.tabJpg.getCutMax();
+            cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
+            cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
+         }
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         cutOrig[0] = cutOrig[2] = 0;
+         cutOrig[1] = cutOrig[3] = 1;
+      }
+
+      return cutOrig;
+   }
+
+   public void setCutOrig(double [] c) {
+      super.setCutOrig(c);
+      mainPanel.tabJpg.setCutMin( Util.myRound(c[0]*bScaleOrig+bZeroOrig) );
+      mainPanel.tabJpg.setCutMax( Util.myRound(c[1]*bScaleOrig+bZeroOrig) );
+   }
+
+   public void warning(String string) {
+      Aladin.warning(mainPanel, string);
+   }
 
 }

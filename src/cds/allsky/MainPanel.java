@@ -194,7 +194,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       try {
          file.loadFITS(file.getFilename(),0,0,w,h); 
          double [] cut = file.findAutocutRange();
-         context.setCut( cut );
+         context.setCutOrig( cut );
       } catch( Exception e ) { e.printStackTrace(); }
    }
 
@@ -515,7 +515,6 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    public void setStartEnabled(boolean b) {
-//      initCut();
       tabBuild.displayNext();
       tabJpg.setStartEnabled(b);
       tabPub.setStartEnabled(b);
@@ -523,12 +522,14 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    // Récupération des valeurs cutmin, cutmax de l'affichage
-   protected void updateCut() {
+   protected void setCutFromPreview() {
       if( planPreview==null ) return;
       double cutmin = planPreview.getCutMin();
-      double cutmax = planPreview.getCutMax();
-      System.out.println("Positionnement cutmin,cutmax = "+cutmin+".."+cutmax+")");
-      context.setCut(new double[]{cutmin,cutmax});
+      double cutmax = planPreview.getDataMin();
+      double datamin = planPreview.getDataMin();
+      double datamax = planPreview.getDataMax();
+      Aladin.trace(4,"MainPanel.setCutFromPreview: cutmin,cutmax = ["+cutmin+".."+cutmax+"] datamin,datamax = ["+datamin+".."+datamax+"] ");
+      context.setCut(new double[]{cutmin,cutmax,datamin,datamax});
    }
 
    /**

@@ -74,7 +74,7 @@ final public class Fits {
     public int widthCell;                // Largeur de la cellule de l'image (par défaut = naxis1)
     public int heightCell;                // Hauteur de la cellule de l'image (par défaut = naxis2)
 
-	public Coord center;             // Coord J2000 du centre de l'image
+//	public Coord center;             // Coord J2000 du centre de l'image
 	public byte [] pix8;             // Pixels 8 bits en vue d'une sauvegarde JPEG (y compté depuis le haut)
 	public int [] rgb;               // pixels dans le cas d'une image couleur RGB
 	//    (y compté depuis le haut) => bitpix==0
@@ -84,18 +84,18 @@ final public class Fits {
 
 	public static String FS = System.getProperty("file.separator");
 	
-	static double [] minmax8;
-	static double [] minmax16;
-	static double [] minmax32;
-	static double [] minmax_32;
-	static double [] minmax_64;
-	static {
-		minmax8 = new double[] {0, 255};
-		minmax16 = new double[] {0, Short.MAX_VALUE}; 
-		minmax32 = new double[] {0, Short.MAX_VALUE}; 
-		minmax_32 = new double[] {0, 10000};
-		minmax_64 = new double[] {0, 10000};
-	}
+//	static double [] minmax8;
+//	static double [] minmax16;
+//	static double [] minmax32;
+//	static double [] minmax_32;
+//	static double [] minmax_64;
+//	static {
+//		minmax8 = new double[] {0, 255};
+//		minmax16 = new double[] {0, Short.MAX_VALUE}; 
+//		minmax32 = new double[] {0, Short.MAX_VALUE}; 
+//		minmax_32 = new double[] {0, 10000};
+//		minmax_64 = new double[] {0, 10000};
+//	}
 
    /** Création en vue d'une lecture */
    public Fits() { }
@@ -132,34 +132,17 @@ final public class Fits {
     */
    public void setCalib(Calib c) {
       calib=c;
-      initCenter();
+//      initCenter();
    }
    
-   public void initCenter() {
-      try {
-         center = new Coord();
-         center.x = xCell+widthCell/2.;
-         center.y = height-(yCell+heightCell/2.);
-         calib.GetCoord(center);
-         
-//         int margex = width/20;
-//         int margey = height/20;
-//         if( margex>=widthCell ) margex=widthCell/2;
-//         if( margey>=heightCell ) margey=heightCell/2;
-//
-//         Coord coo = new Coord();
-//         for( int i=0; i<4; i++ ) {
-//            
-//            coo.x= i==0  || i==3 ? (xCell==0?margex:0) : widthCell-(widthCell==width?margex:0);
-//            coo.y= i<2 ? (yCell==0?margey:0) : heightCell-(heightCell==height?margey:0);
-//            calib.GetCoord(coo);
-//            if( i==0 || (coo.al<raMin && Math.abs(coo.al-raMin)<300) ) raMin=coo.al;
-//            if( i==0 || (coo.al>raMax && Math.abs(coo.al-raMax)<300) ) raMax=coo.al;
-//            if( i==0 || (coo.del<deMin && Math.abs(coo.del-deMin)<300) ) deMin=coo.del;
-//            if( i==0 || (coo.del>deMax && Math.abs(coo.del-deMax)<300) ) deMax=coo.del;
-//         }
-      } catch( Exception e ) { e.printStackTrace(); }
-   }
+//   public void initCenter() {
+//      try {
+//         center = new Coord();
+//         center.x = xCell+widthCell/2.;
+//         center.y = height-(yCell+heightCell/2.);
+//         calib.GetCoord(center);
+//      } catch( Exception e ) { e.printStackTrace(); }
+//   }
 
    /** Retourne la calib ou null */
    public Calib getCalib() { return calib; }
@@ -699,48 +682,48 @@ final public class Fits {
    
    
    
-   /**
-    * Convertit la valeur double donnée dans le type du bitpix et l'affecte
-    * 8 : 0 255
-    * 16 : 0 32767
-    * 32 : 0 32767
-    * -32 : 0 10000
-    * -64 : 0 10000
-    * @param x
-    * @param y
-    * @param val
-    */
-   public void setPixelDoubleFromBitpix(int x, int y, double val, int oldbitpix, double[] oldminmax) {
-
-	   if (oldbitpix == bitpix || isBlankPixel(val) ) {
-		   setPixelDouble(x,y,val);
-		   return;
-	   }
-	   
-	   double newval = toBitpixRange(val, bitpix, oldminmax);
-	   setPixelDouble(x,y,newval);
-
-   }
-
-   public static double toBitpixRange(double val, int bitpix, double[] oldminmax) {
-	   double[] minmax = new double[2];
-	   minmax = getBitpixRange(bitpix);
-
-	   double r = (minmax[1]-minmax[0])/(oldminmax[1]-oldminmax[0]);
-	   double newval = (val-oldminmax[0])*r + minmax[0];
-	   return newval;
-   }
-
-   static private double[] getBitpixRange(int bitpix) {
-      switch (bitpix) {
-         case 8 :	return minmax8;
-         case 16 : return minmax16;
-         case 32 : return minmax32;
-         case -32 : return minmax_32;
-         case -64 : return minmax_64;
-         default : return null;
-      }
-   }
+//   /**
+//    * Convertit la valeur double donnée dans le type du bitpix et l'affecte
+//    * 8 : 0 255
+//    * 16 : 0 32767
+//    * 32 : 0 32767
+//    * -32 : 0 10000
+//    * -64 : 0 10000
+//    * @param x
+//    * @param y
+//    * @param val
+//    */
+//   public void setPixelDoubleFromBitpix(int x, int y, double val, int oldbitpix, double[] oldminmax) {
+//
+//	   if (oldbitpix == bitpix || isBlankPixel(val) ) {
+//		   setPixelDouble(x,y,val);
+//		   return;
+//	   }
+//	   
+//	   double newval = toBitpixRange(val, bitpix, oldminmax);
+//	   setPixelDouble(x,y,newval);
+//
+//   }
+//
+//   public static double toBitpixRange(double val, int bitpix, double[] oldminmax) {
+//	   double[] minmax = new double[2];
+//	   minmax = getBitpixRange(bitpix);
+//
+//	   double r = (minmax[1]-minmax[0])/(oldminmax[1]-oldminmax[0]);
+//	   double newval = (val-oldminmax[0])*r + minmax[0];
+//	   return newval;
+//   }
+//
+//   static private double[] getBitpixRange(int bitpix) {
+//      switch (bitpix) {
+//         case 8 :	return minmax8;
+//         case 16 : return minmax16;
+//         case 32 : return minmax32;
+//         case -32 : return minmax_32;
+//         case -64 : return minmax_64;
+//         default : return null;
+//      }
+//   }
 
    /** Retourne les coordonnées célestes en J2000 de (x,y) (y compté à partir du bas)
     * Le buffer "c" peut être fourni pour éviter des allocations inutiles, null sinon */
@@ -974,7 +957,7 @@ final public class Fits {
       pixels =null;
       pix8 = null;
       calib=null;
-      center=null;
+//      center=null;
       headerFits=null;
       width=height=bitpix=0;
       widthCell=heightCell=xCell=yCell=0;
@@ -1316,7 +1299,7 @@ final public class Fits {
       try {
          Fits f = new Fits();
          f.loadFITS("C:/Test.fits");
-         System.out.println("lecture de "+f.getFilename()+" => "+f+" center="+f.center);
+         System.out.println("lecture de "+f.getFilename()+" => "+f);
          int x= 33;
          int y= 25;
          int x1=1;
@@ -1333,7 +1316,7 @@ final public class Fits {
          
          Fits g = new Fits();
          g.loadFITS("C:/Test.fits[1,0-10x18]");
-         System.out.println("lecture de "+g.getFilename()+" => "+g+" center="+g.center);
+         System.out.println("lecture de "+g.getFilename()+" => "+g);
          pix = g.isInCell(x,y) ? g.getPixelFull(x,y) : Double.NaN;
          System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
          pix1 = g.isInCell(x1,y1) ? g.getPixelFull(x1,y1) : Double.NaN;
@@ -1344,7 +1327,7 @@ final public class Fits {
          
          Fits h = new Fits();
          h.loadFITS("C:/Test.fits[24,22-10x5]");
-         System.out.println("lecture de "+h.getFilename()+" => "+h+" center="+h.center);
+         System.out.println("lecture de "+h.getFilename()+" => "+h);
          pix = h.isInCell(x,y) ? h.getPixelFull(x,y) : Double.NaN;
          System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
          pix1 = h.isInCell(x1,y1) ? h.getPixelFull(x1,y1) : Double.NaN;

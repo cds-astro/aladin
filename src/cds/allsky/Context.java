@@ -33,14 +33,19 @@ public class Context {
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
-   protected double[] bScaleBZero;           // Valeurs BZERO & BSCALE d'origine
    protected int bitpixOrig = -1;            // BITPIX des images originales
+   protected double blankOrig;               // Valeur du BLANK en entrée
+   protected double bZeroOrig=0;             // Valeur BZERO d'origine
+   protected double bScaleOrig=1;            // Valeur BSCALE d'origine
+   protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int bitpix = -1;                // BITPIX de sortie
-   protected double blank;                   // Valeur du BLANK en entrée et en sortie
-   protected double[] cut;                   // Valeurs min et max des pixels (pour le passage en 8 bits par exemple)
+   protected double blank;                   // Valeur du BLANK en sortie
+   protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
+   protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
+   protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected int coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
-   protected boolean keepBB = false;         // true pour conserver le BITPIX,BZERO et BSCALE originaux
+   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
    protected boolean fading = false;         // true pour appliquer un "fondu-enchainé" sur les recouvrements
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
    protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
@@ -53,7 +58,7 @@ public class Context {
    // Getters
    public String getLabel() { return label; }
    public int[] getBorderSize() { return borderSize; }
-   public int getOrder() { return order; }
+   public int getOrder() { return order<0 ? 3 : order; }
    public int getFrame() { return frame; }
    public String getFrameName() { return Localisation.getFrameName(frame); }
    public CacheFits getCache() { return cacheFits; }
@@ -63,15 +68,21 @@ public class Context {
    public String getImgEtalon() { return imgEtalon; }
    public int getCoAdd() { return coAdd; }
    public int getBitpixOrig() { return bitpixOrig; }
-   public int getBitpix() { return this.bitpix; }
-   public double[] getBScaleBZero() { return bScaleBZero; }
+   public int getBitpix() { return bitpix; }
+   public double getBScaleOrig() { return bScaleOrig; }
+   public double getBZeroOrig() { return bZeroOrig; }
+   public double getBZero() { return bZero; }
+   public double getBScale() { return bScale; }
    public double getBlank() { return blank; }
+   public double getBlankOrig() { return blankOrig; }
    public HpixTree getMoc() { return moc; }
    public double[] getCut() { return cut; }
+   public double[] getCutOrig() { return cutOrig; }
    public boolean isFading() { return fading; }
    public boolean isSkySub() { return skySub; }
    public boolean isRunning() { return isRunning; }
    public boolean isKeepBB() { return keepBB; }
+   public boolean isColor() { return bitpix==0; }
    
    // Setters
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
@@ -85,11 +96,36 @@ public class Context {
    public void setImgEtalon(String filename) { imgEtalon = filename; }
    public void setInitDir(String txt) { }
    public void setCoAdd(int coAdd) { this.coAdd = coAdd; }
-   public void setBScaleBZero(double[] bScaleBZero) { this.bScaleBZero = bScaleBZero; }
+   public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
+   public void setBZero(double x) { bZero = bZeroOrig = x; }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
-   public void setBlank(double blank) { this.blank = blank; }
+   public void setBlankOrig(double blankOrig) { this.blank = this.blankOrig = blankOrig; }
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
+   
+   public void setCutOrig(double [] cutOrig) {
+      this.cutOrig=cutOrig;
+      cut = new double[cutOrig.length];
+      System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
+   }
+   
+   protected double coef;
+   
+   public void initChangeBitpix() {
+      int bitpix = getBitpix();
+      cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+      cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+            : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+      coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+      
+      cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
+      cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
+      
+      blank = bitpix<0 ? Double.NaN : bitpix==32 ? Integer.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
+      bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
+      bScale = bScaleOrig/coef;
+   }
    
    public void setSkySub(boolean skySub) {
       this.skySub = skySub;
@@ -152,13 +188,13 @@ public class Context {
    // Demande d'affichage des stats (dans le TabRgb)
    protected void showRgbStat(int statNbFile, long statSize, long totalTime) { }
    
-   public void convertCut(int bitpix) {
-      double[] cut = getCut();
-      double [] oldminmax = new double[] {cut[2],cut[3]};
-      cut[0] = Fits.toBitpixRange(cut[0], bitpix, oldminmax);
-      cut[1] = Fits.toBitpixRange(cut[1], bitpix, oldminmax);
-      setCut(cut);
-   }
+//   public void convertCut(int bitpix) {
+//      double[] cut = getCut();
+//      double [] oldminmax = new double[] {cut[2],cut[3]};
+//      cut[0] = Fits.toBitpixRange(cut[0], bitpix, oldminmax);
+//      cut[1] = Fits.toBitpixRange(cut[1], bitpix, oldminmax);
+//      setCut(cut);
+//   }
 
    public void warning(String string) {
       Aladin.warning(string);

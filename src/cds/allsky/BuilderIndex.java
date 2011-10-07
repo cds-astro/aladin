@@ -65,8 +65,7 @@ public class BuilderIndex {
 
    private Context context;
 
-   public BuilderIndex() {
-   }
+   public BuilderIndex() { }
 
    public BuilderIndex(Context context) {
       this.context = context;
@@ -251,7 +250,7 @@ public class BuilderIndex {
                         fitsfile.xCell=x;
                         fitsfile.yCell=y;
                         String currentCell = fitsfile.getCellSuffix();
-                        fitsfile.initCenter(); // pour forcer le recalcul du center et des RAmin-max...
+//                        fitsfile.initCenter(); // pour forcer le recalcul du center et des RAmin-max...
                         testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                      }
                   }

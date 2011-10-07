@@ -26,8 +26,7 @@ import cds.allsky.Context;
 import cds.allsky.BuilderIndex;
 
 public class InitLocalAccessSpecif extends BuilderIndex {
-
-
+   
 	/**
 	 * Lance l'initialisation de l'index healpix pour des besoins particuliers
 	 * Le chemin de sortie est celui donné en entrée + ALLSKY + répertoire HpxFinder

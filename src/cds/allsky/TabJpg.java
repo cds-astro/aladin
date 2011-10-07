@@ -59,12 +59,11 @@ public class TabJpg extends JPanel implements ActionListener {
    private String NEXT;
    private String PREVIOUS;
 
-   double[] cut = new double[4];
    private final MainPanel mainPanel;
 
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
-   public TabJpg(final MainPanel parent) {
+   public TabJpg(final MainPanel mainPanel) {
       super(new BorderLayout());
       createChaine(Aladin.getChaine());
       bPrevious = new JButton(PREVIOUS);
@@ -77,7 +76,7 @@ public class TabJpg extends JPanel implements ActionListener {
       JRadioButton rb;
       ButtonGroup bg = new ButtonGroup();
 
-      mainPanel = parent;
+      this.mainPanel = mainPanel;
       JLabel label;
       GridBagConstraints c = new GridBagConstraints();
       c.gridx = 0;
@@ -257,6 +256,26 @@ public class TabJpg extends JPanel implements ActionListener {
       timeStat.setText(s);
    }
    
+   public void setCutMin(String s) { tCutMin.setText(s); }
+   public void setCutMax(String s) { tCutMax.setText(s); }
+
+   public String getCutMin() { return tCutMin.getText().trim(); }
+   public String getCutMax() { return tCutMax.getText().trim(); }
+   
+   public boolean isCutFromPlanBase() { return !radioManual.isSelected(); }
+
+   /** Retourne la table des couleurs de la vue courante, ou null si le mode de cut est positionné manuellement */
+   public ColorModel getCM() {
+      if( radioManual.isSelected() ) return null;
+      return ((PlanImage) mainPanel.aladin.calque.getPlanBase() ).getCM();
+   }
+   
+   /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
+   public int getMethod() {
+      if( radioMediane.isSelected() ) return BuilderJpg.MEDIANE;
+      return BuilderJpg.MOYENNE;
+   }
+   
    protected void resumeWidgetsStatus() {
       boolean hasData = mainPanel.isExistingDir();
       boolean readyToDo = hasData && mainPanel.isExistingAllskyDir();
@@ -278,7 +297,8 @@ public class TabJpg extends JPanel implements ActionListener {
    public void clearForms() {
       tCutMin.setText("");
       tCutMax.setText("");
-      cut = new double[4];
+      radioManual.setSelected(true);
+      radioMediane.setSelected(true);
       progressJpg.setValue(0);
    }
 
@@ -286,55 +306,7 @@ public class TabJpg extends JPanel implements ActionListener {
       ok.setEnabled(enabled);
       bNext.setEnabled(enabled);
    }
-
-   public void setCut(double[] cut) {
-      // affiche les valeurs réelles avec bscale et bzero
-      double[] bb = mainPanel.getBScaleBZero();
-      tCutMin.setText(Util.myRound(cut[0]*bb[0]+bb[1]));
-      tCutMax.setText(Util.myRound(cut[1]*bb[0]+bb[1]));
-      this.cut = cut;
-   }
-
-   public double[] getCut() {
-
-      // Manuellement, il faut récupérer les valeurs dans les champs de saisie
-      if( radioManual.isSelected() ) {
-         String s = tCutMin.getText();
-         // convertit pour garder les valeurs codées sans bscale et bzero
-         double[] bb = mainPanel.getBScaleBZero();
-         try {
-            cut[0] = (Double.parseDouble(s)-bb[1])/bb[0];
-            s = tCutMax.getText();
-            cut[1] = (Double.parseDouble(s)-bb[1])/bb[0];
-         } catch (NumberFormatException e) {
-            cut[0] = 0; cut[1] = 0;
-         }
-
-         // Sinon il faut chercher le min..max dans le plan de la vue courante
-      } else {
-         Plan p = mainPanel.aladin.calque.getPlanBase();
-         cut[0]= ((PlanImage)p).getCutMin();
-         cut[1]= ((PlanImage)p).getCutMax();
-      }
-      return cut;
-   }
-
-   /** Retourne la table des couleurs de la vue courante, ou null si le mode de cut est positionné manuellement */
-   public ColorModel getCM() {
-      if( radioManual.isSelected() ) return null;
-      return ((PlanImage) mainPanel.aladin.calque.getPlanBase() ).getCM();
-   }
    
-   /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
-   public int getMethod() {
-      if( radioMediane.isSelected() ) return BuilderJpg.MEDIANE;
-      return BuilderJpg.MOYENNE;
-   }
-
-   //	public void setTransfertFct(int fct) {
-   //		transfertFct = fct;
-   //	}
-
    public void show() {
       updateCurrentCM();
       resumeWidgetsStatus();
@@ -357,11 +329,6 @@ public class TabJpg extends JPanel implements ActionListener {
       return rep;
    }
 
-   protected JComponent noBold(JComponent c) {
-      c.setFont(c.getFont().deriveFont(Font.PLAIN));
-      return c;
-   }
-
    public void setProgress(int value) {
       progressJpg.setValue(value);
    }
@@ -380,7 +347,7 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         BuilderJpg builderJpg = new BuilderJpg(getCut(), getCM(), getMethod(), mainPanel.context );
+         BuilderJpg builderJpg = new BuilderJpg(mainPanel.context.getCut(), getCM(), getMethod(), mainPanel.context );
          builderJpg.start();
          (new ThreadProgressBar(builderJpg)).start();
          

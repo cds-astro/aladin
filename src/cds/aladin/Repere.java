@@ -352,6 +352,7 @@ public class Repere extends Position {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
                double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
                if( Double.isNaN(pix) ) continue;
+               pix = pix*pbg.bScale+pbg.bZero;
                double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
                polar = CDSHealpix.polarToRadec(polar);
                coo.al = polar[0]; coo.del = polar[1];
@@ -434,6 +435,7 @@ public class Repere extends Position {
             long npixFile = npix[i]/(nsideLosange*nsideLosange);
             double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
             if( Double.isNaN(pix) ) continue;
+            pix = pix*pbg.bScale+pbg.bZero;
             nombre++;
             total+=pix;
             carre+=pix*pix;

@@ -47,6 +47,8 @@ public class PlanMoc extends PlanBGCat {
    protected void suiteSpecific() { }
    protected boolean isLoading() { return false; }
    protected boolean isSync() { return isReady(); }
+   protected void reallocObjetCache() { }
+
    
    private boolean wireFrame=true;
    public void setWireFrame(boolean flag) { wireFrame=flag; }

@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
@@ -41,21 +42,25 @@ final public class BuilderHpx {
    private Context context;
 
    private int bitpix;
+   private boolean flagColor;
+   private double bScale;
+   private double bZero;
    private boolean keepBB = true;
-   private double blank = Fits.DEFAULT_BLANK;
-   private double bscale = Fits.DEFAULT_BSCALE;
-   private double bzero = Fits.DEFAULT_BZERO;
    private String hpxFinderPath = null;
    private boolean fading;
+   private double[] cutOrig;
+   private double[] cut;
 
    public BuilderHpx(Context context) {
       this.context = context;
       
       bitpix=context.getBitpix();
+      flagColor = context.isColor();
+      bZero = context.getBZero();
+      bScale = context.getBScale();
       keepBB=context.isKeepBB();
       fading=context.isFading();
-      double [] bb = context.getBScaleBZero(); bscale = bb[0]; bzero = bb[1];
-      blank=context.getBlank();
+      cutOrig=context.getCutOrig();
       cut=context.getCut();
       hpxFinderPath = context.getHpxFinderPath();
       createHealpixOrder(Constante.ORDER);
@@ -85,24 +90,25 @@ final public class BuilderHpx {
          // cherche les numéros de pixels Healpix dans ce losange
          min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
-         double blank = bitpix==0 ? 0 : this.blank;
+         double blank = flagColor ? 0 : context.getBlank();
+         boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
 
          // initialisation de la liste des fichiers originaux pour ce losange
          ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
          if (!askLocalFinder(downFiles,hpxFinderPath, npix_file, Util.order(nside), blank)) return null;
 
          out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
-         if( bitpix!=0 ) {
+         if( !flagColor ) {
             out.setBlank(blank);
-            out.setBscale(bscale);
-            out.setBzero(bzero);
+            out.setBzero(bZero);
+            out.setBscale(bScale);
          }
 
          // cherche la valeur à affecter dans chacun des pixels healpix
          double pixval[] = new double[Constante.MAXOVERLAY];   // on va éviter de passer par le total afin d'éviter un débordement
          double pixcoef[] = new double[Constante.MAXOVERLAY];  
          double [] pixvalG=null,pixvalB=null;
-         if( bitpix== 0 ) { pixvalG = new double[Constante.MAXOVERLAY]; pixvalB = new double[Constante.MAXOVERLAY]; }
+         if( flagColor ) { pixvalG = new double[Constante.MAXOVERLAY]; pixvalB = new double[Constante.MAXOVERLAY]; }
          
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
@@ -134,7 +140,7 @@ final public class BuilderHpx {
                   }
 
                   // Cas RGB
-                  if( bitpix==0 ) {
+                  if( flagColor ) {
                      int pix = getBilinearPixelRGB(file.fitsfile,coo);
                      if( pix==0 ) continue;
                      pixval[nbPix] = 0xFF & (pix>>16);
@@ -152,7 +158,7 @@ final public class BuilderHpx {
                }
 
                // cas RGB
-               if( bitpix==0 ) {
+               if( flagColor ) {
                   int pixelFinal=0;
                   if( nbPix==0 ) pixelFinal=0;
                   else if( totalCoef==0 )  pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
@@ -171,21 +177,29 @@ final public class BuilderHpx {
                   // Cas normal
                }  else {
                   double pixelFinal=0;
-                  if( nbPix==0 ) pixelFinal = blank;
+                  if( nbPix==0 ) pixelFinal = Double.NaN;
                   else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
                   else {
                      empty=false;
                      for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
                   }
-                  out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,cut);
+                  
+//                  out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,cut);
+                  // Changement de bitpix ?
+                  if( flagModifBitpix ) {
+                     pixelFinal = Double.isNaN(pixelFinal) ? blank
+                                : pixelFinal<=cutOrig[2] ? cut[2]
+                                : pixelFinal>=cutOrig[3] ? cut[3]
+                                : (pixelFinal-cutOrig[2])*context.coef + cut[2];
+                  }
+                  out.setPixelDouble(x,y,pixelFinal);
                }
             }
          }
       } catch( Exception e ) { e.printStackTrace(); }
       return (!empty) ? out : null;
    }
-
-
+   
    //	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
    //	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
    //	                                     {"ee","eg","ge","gg"}, {"nn","no","on","oo"} };
@@ -277,10 +291,15 @@ final public class BuilderHpx {
       if( ox2==f.xCell+f.widthCell ) ox2--;
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
-      double a0 = getPixelDouble(f,x1,y1);
-      double a1 = getPixelDouble(f,ox2,y1);
-      double a2 = getPixelDouble(f,x1,oy2);
-      double a3 = getPixelDouble(f,ox2,oy2);
+//      double a0 = getPixelDouble(f,x1,y1);
+//      double a1 = getPixelDouble(f,ox2,y1);
+//      double a2 = getPixelDouble(f,x1,oy2);
+//      double a3 = getPixelDouble(f,ox2,oy2);
+
+      double a0 = f.getPixelDouble(x1,y1);
+      double a1 = f.getPixelDouble(ox2,y1);
+      double a2 = f.getPixelDouble(x1,oy2);
+      double a3 = f.getPixelDouble(ox2,oy2);
 
       if( f.isBlankPixel(a0) ) return Double.NaN;
       if( f.isBlankPixel(a1) ) a1=a0;
@@ -589,7 +608,6 @@ final public class BuilderHpx {
 
    private int[] xy2hpx = null;
    private int[] hpx2xy = null;
-   private double[] cut = new double[2];
 
    /** Méthode récursive utilisée par createHealpixOrder */
    private void fillUp(int[] npix, int nsize, int[] pos) {

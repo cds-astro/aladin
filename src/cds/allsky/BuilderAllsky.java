@@ -81,7 +81,7 @@ final public class BuilderAllsky {
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSky(String path,int order,int outLosangeWidth,double pixelMin,double pixelMax, boolean keepBB) throws Exception {
+   public void createAllSky(String path,int order,int outLosangeWidth) throws Exception {
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -123,9 +123,7 @@ final public class BuilderAllsky {
             int gap = in.width/outLosangeWidth;
             for( int y=0; y<in.width/gap; y++ ) {
                for( int x=0; x<in.width/gap; x++ ) {
-                  double p;
-                  if (keepBB) p = in.getPixelFull(x*gap,in.height-1-y*gap);
-                  else p=in.getPixelDouble(x*gap,in.height-1-y*gap);
+                  double p = in.getPixelDouble(x*gap,in.height-1-y*gap);
 
                   int xOut= xLosange*outLosangeWidth + x;
                   int yOut = yLosange*outLosangeWidth +y;
@@ -137,15 +135,14 @@ final public class BuilderAllsky {
       
       // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
       if( out==null ) throw new Exception("createAllSky error: null output file !");
-      double range [] = out.findAutocutRange();
+      double cut [] = context.getCut();
       
-      // Indication du pixelmin et pixelmax par l'utilisateur ?
-      if( pixelMin!=0 || pixelMax!=0 ) { range[0]=pixelMin; range[1]=pixelMax; }
-      
-      out.headerFits.setKeyValue("PIXELMIN", range[0]+"");
-      out.headerFits.setKeyValue("PIXELMAX", range[1]+"");
-      out.headerFits.setKeyValue("DATAMIN",  range[2]+"");
-      out.headerFits.setKeyValue("DATAMAX",  range[3]+"");
+      out.headerFits.setKeyValue("BZERO", ""+context.getBZero());
+      out.headerFits.setKeyValue("BSCALE", ""+context.getBScale());
+      out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
+      out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
+      out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
+      out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
       
       // Ecriture du FITS (true bits)
       String filename = path+FS+"Norder"+order+FS+"Allsky";

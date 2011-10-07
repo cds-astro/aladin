@@ -49,11 +49,10 @@ public class BuilderJpg implements Runnable {
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
 	   bitpix = context.getBitpix();
-	   blank = context.getBlank();
+	   blank = context.getBlankOrig();
 	   width=Constante.SIDE;
-	   double bb[] = context.getBScaleBZero();
-	   bscale=bb[0];
-	   bzero=bb[1];
+	   bscale=context.getBScaleOrig();
+	   bzero=context.getBZeroOrig();
 	   cutminmax=cut;
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
 	   this.method=method;

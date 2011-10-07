@@ -573,10 +573,7 @@ public class ViewSimple extends JComponent
          RectangleD rview = new RectangleD(p.x,p.y,pi.width,pi.height);
 
          if( pref.hasOriginalPixels() ) {
-            pi.pixelsOrigin = pref.getCurrentBufPixels((Plan)pi,rcrop,zoomFct,resMult,fullRes);
-            pi.setBufPixels8(pi.getPix8Bits(null,pi.pixelsOrigin,pi.bitpix,pi.width,pi.height,pi.pixelMin,pi.pixelMax,false));
-            pi.invImageLine(pi.width,pi.height,pi.getBufPixels8());
-            pi.colorBackground=Color.white;
+            pref.getCurrentBufPixels(pi,rcrop,zoomFct,resMult,fullRes);
             
          } else if( ((PlanBG)pref).color ) {
             pi.type=Plan.IMAGERGB;

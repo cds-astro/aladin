@@ -781,7 +781,8 @@ public class HealpixKey {
       int pos,len;
       int n=head.length/80;
       for( int i=0; i<n; i++) {
-         if( !(new String(head,i*80,8).equals(key)) ) continue;
+         String k = new String(head,i*80,8).trim();
+         if( !(k.equals(key)) ) continue;
          for( pos=i*80+9; head[pos]==' '; pos++);
          for( len=0; Character.isDigit( (char)head[pos+len]) || (char)head[pos+len]=='-'
             || (char)head[pos+len]=='.' || Character.toUpperCase((char)head[pos+len])=='E'; len++ );
@@ -805,7 +806,7 @@ public class HealpixKey {
       double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
             : getPixValDouble(pixelsOrigin,planBG.bitpix,idx);
       if( planBG.isBlank(pix) ) pix = Double.NaN;
-      else pix = planBG.bScale * pix + planBG.bZero;
+//      else pix = planBG.bScale * pix + planBG.bZero;
       return pix;
    }
       
@@ -896,9 +897,9 @@ public class HealpixKey {
       double pixelMin=planBG.pixelMin;
       double pixelMax=planBG.pixelMax;
       try {
-         width  = (int)getValue(head,"NAXIS1  ");
-         height = (int)getValue(head,"NAXIS2  ");
-         bitpix = (int)getValue(head,"BITPIX  ");
+         width  = (int)getValue(head,"NAXIS1");
+         height = (int)getValue(head,"NAXIS2");
+         bitpix = (int)getValue(head,"BITPIX");
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
             System.out.println("HealpixKey FITS in ARGB");
@@ -939,16 +940,24 @@ public class HealpixKey {
          
          if( this instanceof HealpixAllsky && !planBG.flagRecut ) {
             try {
+               planBG.bScale = getValue(head,"BSCALE");
+               planBG.bZero = getValue(head,"BZERO");
+            } catch( Exception e ) { 
+               planBG.bScale=1;
+               planBG.bZero=0;
+            }
+            try {
                planBG.pixelMin = getValue(head,"PIXELMIN");
                planBG.pixelMax = getValue(head,"PIXELMAX");
-               planBG.dataMin  = getValue(head,"DATAMIN ");
-               planBG.dataMax  = getValue(head,"DATAMAX ");
+               planBG.dataMin  = getValue(head,"DATAMIN");
+               planBG.dataMax  = getValue(head,"DATAMAX");
                try {
-                  planBG.blank    = getValue(head,"BLANK   ");
+                  planBG.blank    = getValue(head,"BLANK");
                   planBG.isBlank = true;
                } catch( Exception e ) { planBG.isBlank = false; }
                planBG.aladin.trace(3,"Pixel range found in AllSky.fits => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
-                                                 "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]"+(planBG.isBlank?" Blank="+planBG.blank:""));
+                                                 "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]"+(planBG.isBlank?" Blank="+planBG.blank:"")
+                                                 +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
             } catch( Exception e1 ) {
                Fits tmp = new Fits(width,height,bitpix);
                tmp.pixels = in;

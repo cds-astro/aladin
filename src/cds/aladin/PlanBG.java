@@ -1063,8 +1063,6 @@ public String getUrl() {
       int mynpix = Math.abs(bitpix)/8;
       
       byte onePixelOrigin[] = new byte[mynpix];
-//      if( onePixelOrigin==null || onePixelOrigin.length!=mynpix) onePixelOrigin = new byte[mynpix];
-      
       if( !getOnePixelFromCache(onePixelOrigin,x,y) ) return Double.NaN;
       return getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
    }
@@ -1352,7 +1350,7 @@ public String getUrl() {
          if( inFits ) return "FITS RGB color";
          else return "JPEG color";
       }
-      if( truePixels ) return "FITS true pixels";
+      if( truePixels ) return "FITS true pixels (BITPIX="+bitpix+")";
       else return "JPEG 8 bits pixels";
    }
    
@@ -1773,14 +1771,15 @@ System.out.println("Wakeup for loading remote Allsky...");
    protected Vector<HealpixKey> redraw = new Vector<HealpixKey>(1000);
 
    /** Retourne un tableau de pixels d'origine couvrant la vue courante */
-   protected byte [] getCurrentBufPixels(Plan pi,RectangleD rcrop, double zoom,double resMult,boolean fullRes) {
+   protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, double zoom,double resMult,boolean fullRes) {
       int w = (int)Math.round(rcrop.width*zoom);
       int h = (int)Math.round(rcrop.height*zoom);
+      int bitpix= getBitpix()==-64 ? -64 : -32;
+      int npix = Math.abs(bitpix)/8;
       byte [] pixelsOrigin = new byte[w*h*npix];
       byte [] onePixelOrigin = new byte[npix];
-      int bitpix = getBitpix();
-      
-      double blank = bitpix>0 ? (double) Integer.MIN_VALUE : Double.NaN;
+            
+      double blank = Double.NaN;
       
       boolean flagClosest = maxOrder()*resMult>maxOrder+4;
       int order = fullRes ? maxOrder : (int)(getOrder()*resMult);
@@ -1788,7 +1787,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       if( order<3 ) order=3;
       else if( order>maxOrder ) order=maxOrder;
       
-      aladin.trace(4,"PlanBG.getCurrentBufPixels(resMult="+resMult+",fullRes="+fullRes+")" +
+      aladin.trace(4,"PlanBG.getCurrentBufPixels(bitpix="+bitpix+" resMult="+resMult+",fullRes="+fullRes+")" +
       		(flagClosest?" closest":" bilinear")+" order="+a+(a!=order?" ==> "+order:""));
       
       int offset=0;
@@ -1826,7 +1825,10 @@ System.out.println("Wakeup for loading remote Allsky...");
 //                  if( ((PlanImage)pi).headerFits==null ) ((PlanImage)pi).headerFits = new FrameHeaderFits();
                   if( bitpix>0 && ((PlanImage)pi).headerFits!=null) ((PlanImage)pi).headerFits.setKeyValue("BLANK", blank+"");
                }
-            } else setPixVal(onePixelOrigin, bitpix, 0, val);
+            } else {
+               val = val*bScale+bZero;
+               setPixVal(onePixelOrigin, bitpix, 0, val);
+            }
 
             System.arraycopy(onePixelOrigin, 0, pixelsOrigin, offset, npix);
             offset+=npix;
@@ -1834,7 +1836,18 @@ System.out.println("Wakeup for loading remote Allsky...");
          }
       }
 
-      return pixelsOrigin;
+      // Ajustement des variables en fonction du changement de bitpix
+      pi.bitpix = bitpix;
+      pi.pixelsOrigin = pixelsOrigin;
+      pi.dataMin = dataMin*bScale+bZero;
+      pi.dataMax = dataMax*bScale+bZero;
+      pi.pixelMin = pixelMin*bScale+bZero;
+      pi.pixelMax = pixelMax*bScale+bZero;
+      pi.bScale=1; pi.bZero=0;
+      pi.pixels = getPix8Bits(null,pi.pixelsOrigin,pi.bitpix,pi.width,pi.height,pi.pixelMin,pi.pixelMax,false);
+      pi.invImageLine(pi.width,pi.height,pi.pixels);
+      pi.colorBackground=Color.white;
+
    }
    
    boolean first1=false; //Aladin.PROTO;

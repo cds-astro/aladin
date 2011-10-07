@@ -68,18 +68,16 @@ public class DBBuilderSpecif extends BuilderController {
 		path = path+SURVEY;
 		
 		db.context.setOutputPath(path);
+		db.context.setBitpix( Integer.parseInt(args[8]) );
 		
 //		if (SURVEY.startsWith("SDSS"))
 //			db.setFilter(true);
-		
-		int bitpix = Integer.parseInt(args[8]);
-//		HpxBuilder.setBitpix(bitpix);
 		
 		if (args.length>=10 && args[9].startsWith("-local")) {
 			db.context.sethpxFinderPath(args[10]);
 			if (args.length>=12) db.readLocalCut(args[11]);
 		}
-		else db.build(ordermax, path, bitpix, true);
+		else db.build(ordermax);
 	}
 	
 

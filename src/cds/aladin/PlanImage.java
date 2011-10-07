@@ -2157,7 +2157,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     * @param bitpix codage FITS du tableau d'origine
     * @param transfertFct fonction de transfert
     * @param isBlank true si une valeur NULL est définie
-    * @param blank valeur des valeur non définies si isBlank==true
+    * @param blankOrig valeur des valeur non définies si isBlank==true
     * @param min valeur min pour la normalisation (avant application fct de transfert)
     * @param max valeur max pour la normalisation (avant application fct de transfert)
     */
@@ -2255,6 +2255,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     */
    protected String getPixelInfo(int x,int y,int mode) {
       if( !flagOk || y<0 || y>=height || x<0 || x>=width ) return "";
+      
       switch(mode) {
           case View.LEVEL:
              return Util.align3(getBufPixels8()[y*width+x] & 0xFF)/*+" / 255"*/;
@@ -2394,12 +2395,6 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    /** Retourne la valeur du pixel maximale pour le cut (bcale et bzero ont été déjà appliqué) */
    public double getPixelMax() { return pixelMax*bScale + bZero; }
 
-   /** Retourne la plus petite valeur de pixel dans le fichier (bcale et bzero ont été déjà appliqué) */
-   public double getDataMin() { return dataMin*bScale + bZero; }
-
-   /** Retourne la plus grande valeur de pixel dans le fichier (bcale et bzero ont été déjà appliqué) */
-   public double getDataMax() { return dataMax*bScale + bZero; }
-   
    /** Retourne le bitpix */
    protected int getBitpix() { return bitpix; }
    
@@ -2408,6 +2403,13 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
    /** Retourne la valeur du cut max, sans appliquer le BSCALE et BZERO */
    public double getCutMax() {return pixelMax; }
+   
+   /** Retourne la plus petite valeur de pixel dans le fichier, sans appliquer le BSCALE et BZERO */
+   public double getDataMin() { return dataMin; }
+
+   /** Retourne la plus grande valeur de pixel dans le fichier, sans appliquer le BSCALE et BZERO */
+   public double getDataMax() { return dataMax; }
+
 
    /** Retourne sous forme d'une chaine editable
     *  la valeur du pixel dans le mode courant en fonction
