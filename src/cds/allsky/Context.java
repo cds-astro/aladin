@@ -87,7 +87,7 @@ public class Context {
    public boolean isSkySub() { return skySub; }
    public boolean isRunning() { return isRunning; }
 //   public boolean isKeepBB() { return keepBB; }
-   public boolean isColor() { return bitpix==0; }
+   public boolean isColor() { return bitpixOrig==0; }
    
    // Setters
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
@@ -102,8 +102,8 @@ public class Context {
    public void setInitDir(String txt) { }
 //   public void setCoAdd(int coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
-   public void setBZero(double x) { bZero = bZeroOrig = x; }
-   public void setBitpix(int bitpix) { this.bitpix = bitpix; }
+   public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
+   public void setBitpixOrig(int bitpix) { bitpixOrig = this.bitpix = bitpix; }
    public void setBlankOrig(double blankOrig) { this.blank = this.blankOrig = blankOrig; }
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }

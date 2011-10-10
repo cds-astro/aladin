@@ -26,6 +26,7 @@ import cds.xml.*;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.image.*;
+import cds.moc.HealpixMoc;
 
 import healpix.core.HealpixIndex;
 
@@ -300,7 +301,7 @@ public final class Save extends JFrame implements ActionListener {
       boolean res=true;	// Resultat final des sauvegardes
       boolean flagFits=false;	// True si on a sauvegarde au-moins 1 FITS
       File f;
-
+      String s;
       errorFile="";
 
       for( int i=0; i<nbSavePlan; i++ ) {
@@ -309,6 +310,10 @@ public final class Save extends JFrame implements ActionListener {
          f = new File(directory.getText(),fileSavePlan[i].getText());
          aladin.console.setCommand("export "+Tok.quote(p.label)+" "+f.getAbsolutePath());
          switch( p.type ) {
+            case Plan.ALLSKYMOC:
+               s = directory.getText()+Util.FS+fileSavePlan[i].getText();
+               res &= saveMoc(s,(PlanMoc)p);
+               break;
             case Plan.TOOL:
                res&= tsvCb.isSelected() || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
                break;
@@ -321,7 +326,7 @@ public final class Save extends JFrame implements ActionListener {
             case Plan.IMAGEALGO:
             case Plan.IMAGERGB:
             case Plan.IMAGEMOSAIC:
-               String s = directory.getText()+Util.FS+fileSavePlan[i].getText();
+               s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res&=saveImage(s,p,pngCb!=null && pngCb.isSelected() ? 3 :
                                   jpgCb!=null && jpgCb.isSelected() ? 2 : 0 );
                break;
@@ -361,8 +366,8 @@ public final class Save extends JFrame implements ActionListener {
       Plan [] allPlan = aladin.calque.getPlans();
       for( i=0; i<allPlan.length; i++ ) {
          Plan pl =allPlan[i];
-         if( pl.type==Plan.NO || pl.type==Plan.APERTURE || pl instanceof PlanBG || pl instanceof PlanBGCat
-               || pl.type==Plan.FOLDER || !pl.flagOk ) continue;
+         if( pl.type==Plan.NO || pl.type==Plan.APERTURE  || pl.type==Plan.FOLDER || !pl.flagOk ) continue;
+         if( pl instanceof PlanBG && pl.type!=Plan.ALLSKYMOC ) continue;
          if( pl.isSimpleCatalog() && noCatalog ) noCatalog = false;
          if( pl.isImage() && noImage) noImage = false;
          listPlan[j]=pl;
@@ -379,7 +384,7 @@ public final class Save extends JFrame implements ActionListener {
          file=file.replace(':','-');
          file=file.replace('[','-');
          file=file.replace(']','-');
-         if( pl.isImage() ) {
+         if( pl.isImage() || pl.type==Plan.ALLSKYMOC ) {
             if( !file.endsWith(".fits") ) file=file+".fits";
          } else file=file+".txt";
          fileSavePlan[j] = new JTextField(file,20);
@@ -1607,6 +1612,17 @@ public final class Save extends JFrame implements ActionListener {
       return saveImageFITS(file,w,h,a,null);
    }
    */
+   
+   protected boolean saveMoc(String filename, PlanMoc p) {
+      try {
+         HealpixMoc moc = p.getMoc();
+         moc.write(filename, HealpixMoc.FITS);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>3 ) e.printStackTrace();
+         return false;
+      }
+      return true;
+   }
 
    protected boolean saveImageBMP(String filename,Plan p1) {
       PlanImage p = (PlanImage)p1;

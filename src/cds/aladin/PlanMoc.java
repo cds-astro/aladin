@@ -20,9 +20,11 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import cds.fits.HeaderFits;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.Hpix;
 import cds.tools.pixtools.HpixTree;
@@ -43,6 +45,9 @@ public class PlanMoc extends PlanBGCat {
       aladin.trace(3,"AllSky creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
       suite(c,radius);
    }
+   
+   /** Retourne le Moc */
+   protected HealpixMoc getMoc() { return hpix; }
    
    protected void suiteSpecific() { }
    protected boolean isLoading() { return false; }
@@ -71,41 +76,64 @@ public class PlanMoc extends PlanBGCat {
    protected Iterator<Obj> iterator() { return null; }
    protected void resetProj(int n) { }
    protected boolean isDrawn() { return true; }
-   protected boolean hasMoreDetails() { return false; }
+   
+   private HealpixMoc getViewMoc(ViewSimple v,int order) {
+      Coord center = getCooCentre(v);
+      long [] pix = getPixList(v,center,order);
+
+      HealpixMoc moc = new HealpixMoc();
+      moc.setCoordSys(hpix.getCoordSys());
+      for( int i=0; i<pix.length; i++ ) moc.add(order,pix[i]);
+      moc.sort();
+      return moc;
+   }
    
    private Hpix [] hpixList = null;
-   private Hpix [] getHpixList() {
+   private Hpix [] getHpixList(ViewSimple v) {
       if( hpixList==null ) {
          hpixList = new Hpix[hpix.getSize()];
          int n=0;
          Iterator<long[]> it = hpix.iterator();
          while( it.hasNext() ) {
-            long [] hpix = it.next();
-            hpixList[n++] = new Hpix((int)hpix[0],hpix[1],frameOrigin);
+            long [] h = it.next();
+            hpixList[n++] = new Hpix((int)h[0],h[1],frameOrigin);
          }
       }
       return hpixList;
-
    }
    
+   private boolean oDrawAll=false; // dernier état connu pour le voyant d'état de la pile
+   private boolean drawAll=true;  // true si la totalité de ce qui doit être dessiné l'a été
+   
+   /** Retourne true si tout a été dessinée, sinon false */
+   protected boolean hasMoreDetails() { oDrawAll = drawAll; return !drawAll; }
+
    protected void draw(Graphics g,ViewSimple v) {
-      // JE POURRAIS EGALEMENT RECUPERER LES PIXELS QUI RECOUVRE LE CHAMP VISIBLE
-      // POUR NE PRENDRE QUE LES Hpix QUI TOMBENT DEDANS (COMME POUR LES IMAGES)
       long t1 = Util.getTime();
-//      int maxOrder = getOrder()+4;
       g.setColor(c);
-      Hpix [] hpixList = getHpixList();
-      for( int i=0; i<hpixList.length; i++ ) {
+      int max = Math.min(maxOrder(v),maxOrder)+1;
+      int tLimit = mustDrawFast() ? 20 : 150;
+      
+      HealpixMoc moc = v.isAllSky() ? null : getViewMoc(v,max);
+      Hpix [] hpixList = getHpixList(v);
+      int r=0,d=0;
+      int order=0;
+      long t=0;
+      int i;
+      for( i=0; i<hpixList.length  && (t<tLimit || order<max+5); i++ ) {
          Hpix p = hpixList[i];
-//         if( p.getOrder()>maxOrder ) break;
-         if( !p.isOutView(v) ) {
-            if( wireFrame ) p.draw(g, v);
-            else p.fill(g, v);
-         }
+         order=p.getOrder();
+         if( moc!=null && !moc.isIntersect(order, p.getNpix())) { r++; continue; }
+         if( p.isOutView(v) ) continue;
+         if( wireFrame ) p.draw(g, v);
+         else p.fill(g, v);
+         d++;
+         if( d%100==0 ) t=Util.getTime()-t1;
       }
+      drawAll = i==hpixList.length;
+      if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
       statTimeDisplay = Util.getTime()-t1;
+//      System.out.println("draw "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
    }
-
-
 }
 

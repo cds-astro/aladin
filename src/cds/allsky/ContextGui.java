@@ -86,20 +86,8 @@ public class ContextGui extends Context {
    }
 
 
-   public int getCoAdd() {
-      return mainPanel.getCoAddMode();
-   }
-
-   public boolean isKeepBB() {
-      return mainPanel.tabBuild.isKeepBB();
-   }
-
    public int getBitpixOrig() {
       return mainPanel.tabBuild.getOriginalBitpix();
-   }
-
-   public double[] getBScaleBZeroOrig() {
-      return mainPanel.getBScaleBZero();
    }
 
    public int getBitpix() {
@@ -107,7 +95,15 @@ public class ContextGui extends Context {
    }
 
    public double getBlankOrig() {
-      return mainPanel.getBlank();
+      double blank = blankOrig;
+      String s="";
+      try { 
+         s = mainPanel.tabDesc.getBlank().trim();
+         if( s.length()>0 ) blank = Double.parseDouble(s);
+      } catch( Exception e ) {
+         mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
+      }
+      return blank;
    }
 
    public HpixTree getMoc() {

@@ -3176,7 +3176,8 @@ public class ViewSimple extends JComponent
 //      calque.zoom.redraw((int)(x),(int)(y+0.5));
       calque.zoom.redrawWen(x,y);
       
-      if( flagHealpixMouse )  repaint();
+      // Pour desssiner le losange de controle Healpix sous la souris
+      if( aladin.getOrder()>=0 ) repaint();
 
       return;
    }
@@ -4332,6 +4333,25 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    }
    
+   /** Retourne les coordonnées des 4 coins dans le sens HG,HD,BD,BG */
+  protected Coord [] getCooCorners() {
+     Projection proj=null;
+     if( isFree() || !Projection.isOk(proj=pref.projd) ) return null;
+     Coord coo[] = new Coord[4];
+     for( int i=0; i<4;i++ ) {
+        double x = i==0 || i==3 ? 0 : rv.width;
+        double y = i<2 ? 0 : rv.height;
+        PointD p = getPosition(x,y);
+        coo[i] = new Coord();
+        coo[i].x = p.x;
+        coo[i].y = p.y;
+        proj.getCoord(coo[i]);
+     }
+     return coo;
+
+  }
+  
+
    private Coord [] couverture = null;
    private short oCouverture = -1;
    
@@ -6030,8 +6050,6 @@ g.drawString(s,10,100);
       timeForPaint  = (Util.getTime() - t);
 //      System.out.println("ViewSimple paint "+timeForPaint+"ms");
    }
-   
-   boolean flagHealpixMouse=true;
    
    private void drawHealpixMouse(Graphics g) {
       if( !(pref instanceof PlanBG) ) return;

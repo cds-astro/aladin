@@ -159,6 +159,7 @@ public class PlanBG extends PlanImage {
    public boolean truePixels=false; // true si le survey est fourni en true pixels (FITS)
    protected boolean inFits=false;  // true: Les losanges originaux peuvent être fournis en FITS
    protected boolean inJPEG=false;  // true: Les losanges originaux peuvent être fournis en JPEG
+   private boolean hasMoc=false;   // true si on on peut disposer du MOC correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=0;   // Frame de tracé, 0 si utilisation du repère général
    
@@ -324,6 +325,24 @@ public class PlanBG extends PlanImage {
       aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
 
       suite(c,radius);
+   }
+   
+   private boolean testMoc=false; // true : la présence d'un MOC a été testé
+   
+   /** Retourne true si le survey dispose d'un Moc associé. Il doit être sur la racine
+    * et avoir le nom Moc.fits */
+   protected boolean hasMoc() {
+      if( hasMoc || testMoc ) return hasMoc;
+      String moc = url+"/Moc.fits";
+      hasMoc = localAllSky ? (new File(moc)).exists() : Util.isUrlResponding(moc);
+      testMoc=true;
+      return hasMoc;
+   }
+   
+   /** Chargement du Moc associé au survey */
+   protected void loadMoc() {
+      String moc = url+"/Moc.fits";
+      aladin.execAsyncCommand("load "+moc);
    }
    
    /** Retourne le frame d'affichage, 0 si utilisation du frame général */
@@ -846,30 +865,36 @@ public String getUrl() {
     * et si flagLoad=true, demande en plus son chargement si nécessaire */
    protected HealpixKey getHealpix(int order,long npix,boolean flagLoad) {
       
-      // Peut être peut-on se servir du allsky.fits|.jpeg ?
-      HealpixKey healpix = getHealpixFromAllSky(order,npix);
+//      HealpixKey healpix = getHealpixFromAllSky(order,npix);
+//      if( healpix!=null ) return healpix;
+      
+      HealpixKey healpix =  pixList.get( key(order,npix) );
       if( healpix!=null ) return healpix;
       
-      healpix =  pixList.get( key(order,npix) );
-      if( healpix!=null ) return healpix;
+      // Peut être peut-on se servir du allsky.fits|.jpeg ?
+      if( healpix==null ) {
+         healpix = getHealpixFromAllSky(order,npix);
+         if( healpix!=null ) return healpix;
+      }
+      
       if( flagLoad ) return askForHealpix(order,npix);
       return null;
    }
    
    // Si la map n'est pas profonde, les losanges Allsky feront l'affaire */
    protected HealpixKey getHealpixFromAllSky(int order,long npix) {
-      if( order==3 && allsky!=null ) {
-         int orderLosange= getLosangeOrder();
-         if( orderLosange>0 && orderLosange <= getAllSkyOrder() ) {
-            HealpixKey healpix = (allsky.getPixList())[ (int)npix ];
-            
-            if( healpix!=null ) {
-               if( firstSubtil ) {
-                  aladin.trace(4,"PlanBG.getHealpix "+label+" will use Allsky for order 3 diamonds!");
-                  firstSubtil=false;
-               }
-               return healpix;
+      if( order!=3 || allsky==null ) return null;
+      
+      int orderLosange= getLosangeOrder();
+      if( orderLosange>0 && orderLosange <= getAllSkyOrder() ) {
+         HealpixKey healpix = (allsky.getPixList())[ (int)npix ];
+
+         if( healpix!=null ) {
+            if( firstSubtil ) {
+               aladin.trace(4,"PlanBG.getHealpix "+label+" will use Allsky for order 3 diamonds!");
+               firstSubtil=false;
             }
+            return healpix;
          }
       }
       return null;
@@ -883,37 +908,14 @@ public String getUrl() {
 //   }
 
    static long [] getNpixList(int order, Coord center, double radius) throws Exception {
-      long [] npix = getNpixListCompare(order,center,radius);
-      return npix;
+      return CDSHealpix.query_disc(CDSHealpix.pow2(order),center.al, center.del, Math.toRadians(radius));
    }
 
    static protected String CURRENTMODE="";
    static protected boolean DEBUGMODE=false;
 
-//   static protected void switchHealpixMode() {
-//      CURRENTMODE = "Current HEALPix library => " + CDSHealpix.switchMode();
-//      DEBUGMODE = CDSHealpix.getMode()>0;
-//      System.out.println(CURRENTMODE);
-//      try {
-//         Aladin.aladin.status.setText(CURRENTMODE);
-//         ViewSimple v = Aladin.aladin.view.getCurrentView();
-//         final PlanBG p = (PlanBG)v.pref;
-//         p.FreePixList();
-//         p.pixDebugIn = new long[0];
-//         SwingUtilities.invokeLater(new Runnable() {
-//            public void run() { p.askForRepaint();  }
-//         });
-//      } catch( Exception e ) {}
-//   }
-
-   static long [] getNpixListCompare(int order, Coord center, double radius) throws Exception {
-      long nside = CDSHealpix.pow2(order);
-      long [] list1 = CDSHealpix.query_disc(nside,center.al, center.del, Math.toRadians(radius));
-      return list1;
-   }
-
    /** Retourne le centre de la vue. */
-   private Coord getCooCentre(ViewSimple v) {
+   protected Coord getCooCentre(ViewSimple v) {
       Coord center = v.getCooCentre();
       if( center==null ) return null;
       center = Localisation.frameToFrame(center,Localisation.ICRS,frameOrigin);
@@ -951,7 +953,7 @@ public String getUrl() {
    }
 
    /** Retourne la liste des losanges susceptibles de recouvrir la vue pour un order donné */
-   private long [] getPixList(ViewSimple v, Coord center, int order) {
+   protected long [] getPixList(ViewSimple v, Coord center, int order) {
 
       long nside = CDSHealpix.pow2(order);
       double r1 = CDSHealpix.pixRes(nside)/3600;
@@ -963,21 +965,6 @@ public String getUrl() {
          return getNpixList(order,center,radius);
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
    }
-
-//   /** Retourne true si la taille du pixel HEALPIX à l'ordre order est plus
-//    * petite que la taille du pixel dans la vue */
-//   private double lastRes=0;
-//   private int lastOrder=-1;
-//   private boolean tooSmall(ViewSimple v,int order) {
-//      if( order!=lastOrder ) {
-//         double nside = Math.pow(2,order+getLosangeOrder());
-//         lastRes = CDSHealpix.pixRes((long)nside)/3600;
-//         lastOrder=order;
-//      }
-//      double pixSize = v.getPixelSize();
-////System.out.println("Resolution pixel order="+order+" => "+Coord.getUnit(lastRes)+" / "+ Coord.getUnit(pixSize));
-//      return lastRes<pixSize;
-//   }
 
    private double RES[]=null;
    
@@ -1334,7 +1321,7 @@ public String getUrl() {
       if( RES==null ) {
          RES = new double[20];
          for( lastMaxOrder=0; lastMaxOrder<20; lastMaxOrder++ ) {
-            long nside = CDSHealpix.pow2(lastMaxOrder+getLosangeOrder()/*+1*/);
+            long nside = CDSHealpix.pow2(lastMaxOrder+getLosangeOrder()+1);
             RES[lastMaxOrder]=CDSHealpix.pixRes(nside)/3600;
          }
       }
@@ -1973,7 +1960,6 @@ System.out.println("Wakeup for loading remote Allsky...");
          long npix = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
          HealpixKey hk = new HealpixKey(this,norder,npix,HealpixKey.NOLOAD);
          hk.drawCtrl(g, v);
-//         hk.drawRealBorders(g, v);
          
          if( DEBUGMODE  ) {
             double [][] corners = CDSHealpix.corners(nside, npix);
@@ -2171,8 +2157,7 @@ System.out.println("Wakeup for loading remote Allsky...");
             if( healpix==null && (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                pix[i]=-1; continue;
             }
-            if( healpix==null || !healpix.isOutView(v) 
-                  && healpix.status!=HealpixKey.READY ) {
+            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY ) {
                allKeyReady=false;
                break;
             }

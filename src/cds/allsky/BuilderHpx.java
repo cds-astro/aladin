@@ -56,12 +56,14 @@ final public class BuilderHpx {
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
-      bZero = context.getBZero();
-      bScale = context.getBScale();
-//      keepBB=context.isKeepBB();
       fading=context.isFading();
-      cutOrig=context.getCutOrig();
-      cut=context.getCut();
+      if( !flagColor ) {
+         //      keepBB=context.isKeepBB();
+         bZero = context.getBZero();
+         bScale = context.getBScale();
+         cutOrig=context.getCutOrig();
+         cut=context.getCut();
+      }
       hpxFinderPath = context.getHpxFinderPath();
       createHealpixOrder(Constante.ORDER);
    }

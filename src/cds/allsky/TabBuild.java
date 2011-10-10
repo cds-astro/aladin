@@ -98,9 +98,9 @@ public class TabBuild extends JPanel implements ActionListener {
    private JRadioButton 	bit_32 = new JRadioButton(BIT_32, false);
    private JRadioButton 	bit_64 = new JRadioButton(BIT64, false);
 
-   private double bscale;
-   private double bzero;
-   private double blank;
+//   private double bscale;
+//   private double bzero;
+//   private double blank;
    private int bitpixO = -1;
    private JLabel bitpixLabel = new JLabel();
    private JLabel resoLabel;
@@ -404,11 +404,11 @@ public class TabBuild extends JPanel implements ActionListener {
       b_ok.setEnabled(readyToDo && !isRunning);
       b_cancel.setEnabled(readyToDo && isRunning);
       
-      bit8.setEnabled(readyToDo && !isRunning);
-      bit16.setEnabled(readyToDo && !isRunning);
-      bit32.setEnabled(readyToDo && !isRunning);
-      bit_32.setEnabled(readyToDo && !isRunning);
-      bit_64.setEnabled(readyToDo && !isRunning);
+      bit8.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
+      bit16.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
+      bit32.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
+      bit_32.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
+      bit_64.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
       samplFast.setEnabled(readyToDo && !isRunning);
       overlayFast.setEnabled(readyToDo && !isRunning);
       samplBest.setEnabled(readyToDo && !isRunning);
@@ -425,9 +425,9 @@ public class TabBuild extends JPanel implements ActionListener {
       bit32.setSelected(true);
       bit_32.setSelected(false);
       bit_64.setSelected(false);
-      blank = Fits.DEFAULT_BLANK;
-      bscale = Fits.DEFAULT_BSCALE;
-      bzero = Fits.DEFAULT_BZERO;
+//      blank = Fits.DEFAULT_BLANK;
+//      bscale = Fits.DEFAULT_BSCALE;
+//      bzero = Fits.DEFAULT_BZERO;
       samplBest.setSelected(true);
       overlayBest.setSelected(true);
       fading.setSelected(true);
@@ -450,51 +450,54 @@ public class TabBuild extends JPanel implements ActionListener {
       return ((BuildTable) tab).getOrder();
    }
 
-   public void setBScaleBZero(double bscale, double bzero) {
-      this.bscale = bscale;
-      this.bzero = bzero;
-   }
-
-   public void setBlank(double blank) {
-      this.blank = blank;
-   }
-
-   public double getBscale() {
-      // si ce n'est pas le bitpix original
-      // on renvoie une valeur par défaut
-      if (this.bitpixO != getBitpix())
-         return Fits.DEFAULT_BSCALE;
-      return bscale;
-   }
-
-   public double getBzero() {
-      // si ce n'est pas le bitpix original
-      // on renvoie une valeur par défaut
-      if (this.bitpixO != getBitpix())
-         return Fits.DEFAULT_BZERO;
-      return bzero;
-   }
-
-   public double getBlank() {
-      // si ce n'est pas le bitpix original
-      // on renvoie une valeur par défaut
-      if (this.bitpixO != getBitpix())
-         return Fits.DEFAULT_BLANK;
-      return blank;
-   }
-
-   public boolean isKeepBB() {
-      return keepBB.isSelected();
-   }
-
-   public boolean isFading() {
-      return samplBest.isSelected() && fading.isSelected();
-   }
+//   public void setBScaleBZero(double bscale, double bzero) {
+//      this.bscale = bscale;
+//      this.bzero = bzero;
+//   }
+//
+//   public void setBlank(double blank) {
+//      this.blank = blank;
+//   }
+//
+//   public double getBscale() {
+//      // si ce n'est pas le bitpix original
+//      // on renvoie une valeur par défaut
+//      if (this.bitpixO != getBitpix())
+//         return Fits.DEFAULT_BSCALE;
+//      return bscale;
+//   }
+//
+//   public double getBzero() {
+//      // si ce n'est pas le bitpix original
+//      // on renvoie une valeur par défaut
+//      if (this.bitpixO != getBitpix())
+//         return Fits.DEFAULT_BZERO;
+//      return bzero;
+//   }
+//
+//   public double getBlank() {
+//      // si ce n'est pas le bitpix original
+//      // on renvoie une valeur par défaut
+//      if (this.bitpixO != getBitpix())
+//         return Fits.DEFAULT_BLANK;
+//      return blank;
+//   }
+//
+//   public boolean isKeepBB() {
+//      return keepBB.isSelected();
+//   }
+//
+//   public boolean isFading() {
+//      return samplBest.isSelected() && fading.isSelected();
+//   }
 
    public void setOriginalBitpix(int bitpix) {
       this.bitpixO = bitpix;
       ((BitpixListener) bitpixListener).setDefault(bitpix);
       switch (bitpix) {
+         case 0:
+            keepBB.doClick();
+            break;
          case 8:
             bit8.doClick();
             break;

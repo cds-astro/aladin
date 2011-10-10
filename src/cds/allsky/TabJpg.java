@@ -280,17 +280,18 @@ public class TabJpg extends JPanel implements ActionListener {
       boolean hasData = mainPanel.isExistingDir();
       boolean readyToDo = hasData && mainPanel.isExistingAllskyDir();
       boolean isRunning = mainPanel.isRunning();
+      boolean isColor = mainPanel.context.isColor();
       bPrevious.setEnabled(hasData && !isRunning);
       bNext.setEnabled(readyToDo && !isRunning);
-      tCutMin.setEnabled(hasData && !isRunning);
-      tCutMax.setEnabled(hasData && !isRunning);
-      radioManual.setEnabled(readyToDo && !isRunning);
-      labelMethod.setEnabled(readyToDo && !isRunning);
-      radioAllsky.setEnabled(readyToDo && !isRunning);
-      radioMediane.setEnabled(readyToDo && !isRunning);
-      radioMoyenne.setEnabled(readyToDo && !isRunning);
-      progressJpg.setEnabled(readyToDo && !isRunning);
-      ok.setEnabled(readyToDo && !isRunning);
+      tCutMin.setEnabled(hasData && !isRunning && !isColor);
+      tCutMax.setEnabled(hasData && !isRunning && !isColor);
+      radioManual.setEnabled(readyToDo && !isRunning && !isColor);
+      labelMethod.setEnabled(readyToDo && !isRunning && !isColor);
+      radioAllsky.setEnabled(readyToDo && !isRunning && !isColor);
+      radioMediane.setEnabled(readyToDo && !isRunning && !isColor);
+      radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
+      progressJpg.setEnabled(readyToDo && !isRunning && !isColor);
+      ok.setEnabled(readyToDo && !isRunning && !isColor);
       setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
    }
 

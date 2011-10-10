@@ -51,6 +51,7 @@ import java.io.RandomAccessFile;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import cds.allsky.Constante;
 import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -156,8 +157,6 @@ public class HealpixKey {
     * @param npix   numéro healpix du pixel à l'ordre indiqué
     * @param mode : NOLOAD - pas de chargement, ASYNC - chargement asynchrone, SYNC - chargement synchrone, 
     *               SYNCONLYIFLOCAL - chargement synchrone si accès local, sinon asynchrone
-    * @param temporaire true si ce losange n'est créé que pour un usage positionnel (pas de pixels à mémoriser)
-    *                   afin de déterminer s'il appartient à un champ (isOutOfView())
     */
    protected HealpixKey(PlanBG planBG,int order, long npix,int mode) {
       this.planBG = planBG;

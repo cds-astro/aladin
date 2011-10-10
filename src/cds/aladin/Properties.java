@@ -889,7 +889,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
       
       if( plan instanceof PlanBG ) {
-         addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(((PlanBG)plan).frameOrigin)), g, c);
+         final PlanBG pbg = (PlanBG) plan;
+         addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
+         if( pbg.hasMoc() ) {
+            JButton bt = new JButton("Load it");
+            bt.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) { pbg.loadMoc(); }
+            });
+            addCouple(p,"Coverage map:",bt,g,c);
+         }
       }
       
       if( plan.flagOk && (plan.isSimpleCatalog() || plan instanceof PlanBG) ) {

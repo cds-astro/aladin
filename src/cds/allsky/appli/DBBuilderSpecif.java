@@ -68,7 +68,7 @@ public class DBBuilderSpecif extends BuilderController {
 		path = path+SURVEY;
 		
 		db.context.setOutputPath(path);
-		db.context.setBitpix( Integer.parseInt(args[8]) );
+		db.context.setBitpixOrig( Integer.parseInt(args[8]) );
 		
 //		if (SURVEY.startsWith("SDSS"))
 //			db.setFilter(true);

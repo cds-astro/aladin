@@ -172,10 +172,16 @@ final public class MainPanel extends JPanel implements ActionListener {
       Fits file = new Fits();
       try { file.loadHeaderFITS(filename); } 
       catch( Exception e ) { e.printStackTrace(); }
-      
+      context.setBitpixOrig(file.bitpix);
       tabBuild.setOriginalBitpix(file.bitpix);
-      tabBuild.setBScaleBZero(file.bscale, file.bzero);
-      tabBuild.setBlank(file.blank);
+      if( !context.isColor() ) {
+         context.setBZeroOrig(file.bzero);
+         context.setBScaleOrig(file.bscale);
+         context.setBlankOrig(file.blank);
+      }
+      
+//      tabBuild.setBScaleBZero(file.bscale, file.bzero);
+//      tabBuild.setBlank(file.blank);
       
       // calcule le meilleur nside
       long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
@@ -286,10 +292,6 @@ final public class MainPanel extends JPanel implements ActionListener {
 
    public void updateCurrentCM() { tabJpg.updateCurrentCM(); }
 
-   protected double[] getBScaleBZero() {
-      return new double[]{tabBuild.getBscale(), tabBuild.getBzero()};
-   }
-
    /**
     * 
     * @return order choisi ou -1 s'il doit etre calculé
@@ -307,17 +309,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       return tabBuild.getBitpix();
    }
 
-   protected double getBlank() {
-      double blank = tabBuild.getBlank();
-      String s="";
-      try { 
-         s = tabDesc.getBlank().trim();
-         if( s.length()>0 ) blank = Double.parseDouble(s);
-      } catch( Exception e ) {
-         tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
-      }
-      return blank;
-   }
 
    protected String getBorderSize() {
       if( tabDesc==null ) return null;
@@ -459,10 +450,6 @@ final public class MainPanel extends JPanel implements ActionListener {
             cds.tools.Util.deleteDir(children[i]);
          }
       }
-   }
-
-   protected boolean isFading() {
-      return tabBuild.isFading();
    }
 
    protected void setProgressIndexDir(String txt) {
