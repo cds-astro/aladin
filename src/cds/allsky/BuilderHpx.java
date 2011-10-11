@@ -42,6 +42,7 @@ final public class BuilderHpx {
    private Context context;
 
    private int bitpix;
+   double blankOrig;
    private boolean flagColor;
    private double bScale;
    private double bZero;
@@ -63,6 +64,7 @@ final public class BuilderHpx {
          bScale = context.getBScale();
          cutOrig=context.getCutOrig();
          cut=context.getCut();
+         blankOrig=context.getBlankOrig();
       }
       hpxFinderPath = context.getHpxFinderPath();
       createHealpixOrder(Constante.ORDER);
@@ -105,7 +107,7 @@ final public class BuilderHpx {
             out.setBzero(bZero);
             out.setBscale(bScale);
          }
-
+         
          // cherche la valeur à affecter dans chacun des pixels healpix
          double pixval[] = new double[Constante.MAXOVERLAY];   // on va éviter de passer par le total afin d'éviter un débordement
          double pixcoef[] = new double[Constante.MAXOVERLAY];  
@@ -119,10 +121,9 @@ final public class BuilderHpx {
                point = CDSHealpix.pix2ang_nest(nside, index);
                CDSHealpix.polarToRadec(point, radec);
 
-               // Méthode bilinéaire
                radec = context.gal2ICRSIfRequired(radec);
                coo.al = radec[0]; coo.del = radec[1];
-
+               
                int nbPix=0;
                double totalCoef=0;
                String lastFitsFile=null;
@@ -162,16 +163,17 @@ final public class BuilderHpx {
                // cas RGB
                if( flagColor ) {
                   int pixelFinal=0;
-                  if( nbPix==0 ) pixelFinal=0;
-                  else if( totalCoef==0 )  pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
-                  else {
-                     double r=0,g=0,b=0;
-                     for( int i=0; i<nbPix; i++ ) {
-                        r += (pixval[i]*pixcoef[i])/totalCoef;
-                        g += (pixvalG[i]*pixcoef[i])/totalCoef;
-                        b += (pixvalB[i]*pixcoef[i])/totalCoef;
+                  if( nbPix!=0 ) {
+                     if( totalCoef==0 )  pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
+                     else {
+                        double r=0,g=0,b=0;
+                        for( int i=0; i<nbPix; i++ ) {
+                           r += (pixval[i]*pixcoef[i])/totalCoef;
+                           g += (pixvalG[i]*pixcoef[i])/totalCoef;
+                           b += (pixvalB[i]*pixcoef[i])/totalCoef;
+                        }
+                        pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
                      }
-                     pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
                   }
                   if( pixelFinal!=0 ) empty=false;
                   out.setPixelRGBJPG(x, y, pixelFinal);
@@ -186,7 +188,6 @@ final public class BuilderHpx {
                      for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
                   }
                   
-//                  out.setPixelDoubleFromBitpix(x, y, pixelFinal,file.fitsfile.bitpix,cut);
                   // Changement de bitpix ?
                   if( flagModifBitpix ) {
                      pixelFinal = Double.isNaN(pixelFinal) ? blank
@@ -200,6 +201,10 @@ final public class BuilderHpx {
          }
       } catch( Exception e ) { e.printStackTrace(); }
       return (!empty) ? out : null;
+   }
+   
+   private boolean isBlankPixel(double pix) {
+      return Double.isNaN(pix) || pix==blankOrig;
    }
    
    //	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
@@ -277,36 +282,35 @@ final public class BuilderHpx {
    private double getBilinearPixel(Fits f,Coord coo) {
       double x = coo.x;
       double y = coo.y;
-
-      int x1 = (int)x;
-      int y1 = (int)y;
-
-      if( !f.isInCell(x1, y1) ) return Double.NaN;
-
+      
+      int x1 = (int)Math.floor(x);
+      int y1 = (int)Math.floor(y);
       int x2=x1+1;
       int y2=y1+1;
 
+      int ox1= x1;
+      int oy1= y1;
       int ox2= x2;
       int oy2= y2;
+      
+    if( x2<f.xCell || y2<f.yCell ||
+        x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return Double.NaN;
 
       // Sur le bord, on dédouble le dernier pixel
+      if( ox1==f.xCell-1 ) ox1++;
+      if( oy1==f.yCell-1 ) oy1++;
       if( ox2==f.xCell+f.widthCell ) ox2--;
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
-//      double a0 = getPixelDouble(f,x1,y1);
-//      double a1 = getPixelDouble(f,ox2,y1);
-//      double a2 = getPixelDouble(f,x1,oy2);
-//      double a3 = getPixelDouble(f,ox2,oy2);
-
-      double a0 = f.getPixelDouble(x1,y1);
-      double a1 = f.getPixelDouble(ox2,y1);
-      double a2 = f.getPixelDouble(x1,oy2);
+      double a0 = f.getPixelDouble(ox1,oy1);
+      double a1 = f.getPixelDouble(ox2,oy1);
+      double a2 = f.getPixelDouble(ox1,oy2);
       double a3 = f.getPixelDouble(ox2,oy2);
 
-      if( f.isBlankPixel(a0) ) return Double.NaN;
-      if( f.isBlankPixel(a1) ) a1=a0;
-      if( f.isBlankPixel(a2) ) a2=a0;
-      if( f.isBlankPixel(a3) ) a3=a0;
+      if( isBlankPixel(a0) ) return Double.NaN;
+      if( isBlankPixel(a1) ) a1=a0;
+      if( isBlankPixel(a2) ) a2=a0;
+      if( isBlankPixel(a3) ) a3=a0;
 
       return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
    }
@@ -315,30 +319,29 @@ final public class BuilderHpx {
       double x = coo.x;
       double y = coo.y;
 
-      int x1 = (int)x;
-      int y1 = (int)y;
-
-      if( !f.isInCell(x1, y1) ) return 0;
-
+      int x1 = (int)Math.floor(x);
+      int y1 = (int)Math.floor(y);
       int x2=x1+1;
       int y2=y1+1;
 
+      int ox1= x1;
+      int oy1= y1;
       int ox2= x2;
       int oy2= y2;
+      
+    if( x2<f.xCell || y2<f.yCell ||
+        x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return 0;
 
       // Sur le bord, on dédouble le dernier pixel
+      if( ox1==f.xCell-1 ) ox1++;
+      if( oy1==f.yCell-1 ) oy1++;
       if( ox2==f.xCell+f.widthCell ) ox2--;
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
-      int b0 = f.getPixelRGBJPG(x1,y1);
-      int b1 = f.getPixelRGBJPG(ox2,y1);
-      int b2 = f.getPixelRGBJPG(x1,oy2);
+      int b0 = f.getPixelRGBJPG(ox1,oy1);
+      int b1 = f.getPixelRGBJPG(ox2,oy1);
+      int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
-
-      if( b0==0 ) return 0;
-      if( b1==0 ) b1=b0;
-      if( b2==0 ) b2=b0;
-      if( b3==0 ) b3=b0;
 
       int pix=0;
       for( int i=16; i>=0; i-=8 ) {
@@ -363,12 +366,6 @@ final public class BuilderHpx {
       pB = (a2*d0+a3*d1)/(d0+d1);
       return (pA*d2+pB*d3)/(d2+d3);
    }
-
-
-//   private double getPixelDouble(Fits f, int x, int y) {
-//      if (!keepBB) return f.getPixelFull(x, y);
-//      else return f.getPixelDouble(x, y);
-//   }
 
    /**
     * This method does the actual GET

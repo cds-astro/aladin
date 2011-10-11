@@ -201,7 +201,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size
         int bitpix,double bzero,double bscale) throws Exception {
      int size = Math.abs(bitpix)/8;
      for( int i=0; i<nx; i+=size ) {
-        double val = getPixVal(buf, bitpix, pos+i);
+        double val = getPixVal1(buf, bitpix, pos+i);
         setPixVal(array, bitpix, offset+i, val*bscale+bzero);
      }
   }

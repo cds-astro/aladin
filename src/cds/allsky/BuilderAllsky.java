@@ -58,14 +58,14 @@ final public class BuilderAllsky {
    
    /** Ecriture du fichier des Properties associées au survey
     * On reprend quelques mots clés issus de PlanHealpix utilisés par Thomas B. */
-   private void writePropertiesFile(String path) throws Exception {
+   private void writePropertiesFile(String path,boolean flagColor) throws Exception {
       Properties prop = new Properties();
       prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       
       int frame = this.frame==-1 ? context.getFrame() : this.frame;
       char coordsys = frame==Localisation.ICRS ? 'C' : frame==Localisation.ECLIPTIC ? 'E' : 'G';
       prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
-      prop.setProperty(PlanHealpix.KEY_ISCOLOR, (context.isColor())+"");
+      prop.setProperty(PlanHealpix.KEY_ISCOLOR, flagColor+"");
       prop.setProperty(PlanHealpix.KEY_ALADINVERSION, Aladin.VERSION);
 
       prop.store(new FileOutputStream(propertiesFile(path)), null);
@@ -91,12 +91,14 @@ final public class BuilderAllsky {
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       
       // Ecriture du fichier des propriétés à la racine du survey
-      writePropertiesFile(path);
+      writePropertiesFile(path,context.isColor());
       
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
 //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
       Fits out = null;
+      
+      double blank = context.getBlank();
       
       for( int npix=0; npix<n; npix++ ) {
          progress = npix*100./n;
@@ -107,14 +109,14 @@ final public class BuilderAllsky {
             in.loadFITS(filename+".fits");
             if( out==null ) {
                out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,in.bitpix);
-               if( in.hasBlank() ) out.setBlank( in.getBlank() );
-               out.setBscale( in.getBscale() );
-               out.setBzero( in.getBzero() );
+               
                // initilialise toutes les valeurs à Blank
-               for( int y=0; y<out.height; y++ ) {
-            	   for( int x=0; x<out.width; x++ ) {
-            		   out.setPixelDouble(x, out.height-1-y, out.getBlank());
-            	   }
+               if( blank!=0 ) {
+                  for( int y=0; y<out.height; y++ ) {
+                     for( int x=0; x<out.width; x++ ) {
+                        out.setPixelDouble(x, out.height-1-y, blank);
+                     }
+                  }
                }
             }
                     
@@ -137,8 +139,9 @@ final public class BuilderAllsky {
       if( out==null ) throw new Exception("createAllSky error: null output file !");
       double cut [] = context.getCut();
       
-      out.headerFits.setKeyValue("BZERO", ""+context.getBZero());
-      out.headerFits.setKeyValue("BSCALE", ""+context.getBScale());
+      out.setBlank(blank);
+      out.setBzero(context.getBZero());
+      out.setBscale(context.getBScale());
       out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
       out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
       out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
@@ -168,7 +171,7 @@ final public class BuilderAllsky {
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
      
       // Ecriture du fichier des propriétés à la racine du survey
-      writePropertiesFile(path);
+      writePropertiesFile(path,true);
 
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight

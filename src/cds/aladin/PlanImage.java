@@ -586,7 +586,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
 
            for( int j=0; j<len; j++ ) {
               double c = getPixVal(buf,bitpix,j);
-              if( Double.isNaN(c) || isBlank && c==blank ) { getBufPixels8()[pos++] = 0; continue; }
+              if( Double.isNaN(c) ) { getBufPixels8()[pos++] = 0; continue; }
               getBufPixels8()[pos++] = (byte)( c<=pixelMin?0x00:c>=pixelMax?0xff
                     :(int)( ((c-pixelMin)*r) ) & 0xff);
            }
@@ -1824,7 +1824,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     * @param i la position du pixel (sans tenir compte de la taille du pixel)
     * @return
     */
-   static final protected double getPixVal(byte[] t,int bitpix,int i) {
+   static final protected double getPixVal1(byte[] t,int bitpix,int i) {
       try {
          switch(bitpix) {
             case   8: return getByte(t,i);
@@ -1838,6 +1838,13 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       } catch( Exception e ) { return Double.NaN; }
 
    }
+   
+   final protected double getPixVal(byte[] t,int bitpix,int i) {
+      double pix = getPixVal1(t,bitpix,i);
+      if( isBlank && pix==blank ) return Double.NaN;
+      return pix;
+   }
+
 
 //   static final protected double getPixVal(byte[] t,int bitpix,int i) {
 //      try {
@@ -2061,7 +2068,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
                c = getPixVal(pIn,bitpix,i*width+j);
 
 //             On ecarte les valeurs sans signification
-               if( Double.isNaN(c) || isBlank && c==blank ) continue;
+               if( Double.isNaN(c) ) continue;
 
                if( flagCut ) {
                   if( c<minCut || c>maxCut ) continue;
@@ -2100,6 +2107,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
          for( i=MARGEH; i<height-MARGEH; i++ ) {
             for( k=MARGEW; k<width-MARGEW; k++) {
                c = getPixVal(pIn,bitpix,i*width+k);
+               if( Double.isNaN(c)) continue;
 
                j = (int)((c-min)/l);
                if( j==bean.length ) j--;
@@ -2169,8 +2177,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       for( int i = 0; i < len; i++) {
          double c = getPixVal(pIn,bitpix,i);
 
-         if( isBlank(c) ) { pOut[i+offsetOut] = 0; continue; }
-//         if( Double.isNaN(c) || isBlank && c==blank ) { pOut[i+offsetOut] = 0; continue; }
+         if( Double.isNaN(c) ) { pOut[i+offsetOut] = 0; continue; }
 
          // Pour info dans les properties
          if( memoMinMax ) {
@@ -2287,7 +2294,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
       try {
          double pix = getPixVal(pixelsOrigin,bitpix,y*width+x);
-         if( isBlank(pix) ) return Double.NaN;
+         if( Double.isNaN(pix) ) return Double.NaN;
          return pix*bScale+bZero;
       } catch( Exception e ) { return Double.NaN; }
    }

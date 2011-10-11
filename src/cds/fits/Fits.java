@@ -409,19 +409,16 @@ final public class Fits {
    /** Retourne la valeur BLANK si elle existe (tester avec hasBlank() */
    public double getBlank() { return blank; }
    
-   /** Vrai la valeur BLANK a été définie explicitement */
-   public boolean hasBlank() { return !Double.isNaN(blank); }
-
    /** Positionement d'une valeur BSCALE - si égale à 1, supprime le mot clé du header fits */
    public void setBscale(double bscale) {
       this.bscale=bscale;
-      if( headerFits!=null ) headerFits.setKeyValue("BSCALE", bscale+"" );
+      if( headerFits!=null ) headerFits.setKeyValue("BSCALE", bscale==1 ? (String)null : bscale+"" );
    }
    
    /** Positionement d'une valeur BZERO - si égale à 0, supprime le mot clé du header fits */
    public void setBzero(double bzero) {
       this.bzero=bzero;
-      if( headerFits!=null ) headerFits.setKeyValue("BZERO", bzero+"" );
+      if( headerFits!=null ) headerFits.setKeyValue("BZERO", bzero==0 ? (String)null : bzero+"" );
    }
    
    /** Positionement d'une valeur BLANK. Double.NaN est supporté */

@@ -71,7 +71,6 @@ public class Context {
    public String getOutputPath() { return outputPath; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
    public String getImgEtalon() { return imgEtalon; }
-//   public int getCoAdd() { return coAdd; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return bitpix; }
    public double getBScaleOrig() { return bScaleOrig; }
@@ -86,7 +85,6 @@ public class Context {
    public boolean isFading() { return fading; }
    public boolean isSkySub() { return skySub; }
    public boolean isRunning() { return isRunning; }
-//   public boolean isKeepBB() { return keepBB; }
    public boolean isColor() { return bitpixOrig==0; }
    
    // Setters

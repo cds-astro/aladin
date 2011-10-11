@@ -395,7 +395,7 @@ public class AladinData {
     * @return the double pixel representation
     */
    static public double CodedPixelsToDouble(byte [] codedPixels, int bitpix, int pos) {
-      return PlanImage.getPixVal(codedPixels,bitpix,pos);
+      return PlanImage.getPixVal1(codedPixels,bitpix,pos);
    }
 
    /**

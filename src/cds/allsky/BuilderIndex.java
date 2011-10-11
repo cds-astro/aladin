@@ -151,7 +151,7 @@ public class BuilderIndex {
       } 
 
       // On en profite pour créer le Moc associé à l'index
-      (new BuilderMoc()).createMoc(output);
+      (new BuilderMoc()).createMoc(pathDest,context.getOutputPath());
 
       progress=100;
       File fpause = new File(pausepath);

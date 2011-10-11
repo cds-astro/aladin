@@ -356,6 +356,8 @@ public class TabDesc extends JPanel implements ActionListener {
    // Chargement dans Aladin de l'image "étalon"
    private void loadImgEtalon() {
       String fileName = mainPanel.context.getImgEtalon();
+      if( fileName.endsWith(".hhh") ) fileName=fileName.substring(0,fileName.length()-4)+".jpg";
+
       mainPanel.aladin.execAsyncCommand("load "+fileName);
    }
    

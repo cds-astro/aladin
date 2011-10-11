@@ -118,6 +118,8 @@ public class Task implements Runnable {
 	      // création du fichier allsky
 	      if (mode <= JPG) mode = JPG;
 	      createAllSky();
+	      createMoc();
+	      context.preview(0);
 	      context.setIsRunning(false);
 
 	      runner = null;
@@ -129,6 +131,10 @@ public class Task implements Runnable {
 	}
 	
 	private long lastCreatedAllSky=-1L;
+	
+	private void createMoc() {
+	   (new BuilderMoc()).createMoc(context.getOutputPath());
+	}
 
 	// création des fichiers allsky
     public boolean  createAllSky() { return createAllSky(true); }
@@ -140,20 +146,10 @@ public class Task implements Runnable {
 	      lastCreatedAllSky = now;
 	   }
 
-	   //          followProgress(mode,sg);
-	   //          String path = Util.concatDir(output,AllskyConst.SURVEY);
 	   try {
 	      String output = context.getOutputPath();
 	      if( context.getBitpix()==0 ) builderAllsky.createAllSkyJpgColor(output,3,64);
-	      else {
-	         /* double[] cut = context.getCut();
-	         if( cut!=null ) {
-	            double bScale = context.getBScale();
-	            double bZero = context.getBZero();
-	            builderAllsky.createAllSky(output,3,64,(cut[0]-bZero)/bScale,(cut[1]-bZero)/bScale);
-	            
-	         } else */ builderAllsky.createAllSky(output,3,64);
-	      }
+	      else builderAllsky.createAllSky(output,3,64);
 
 	   } catch (Exception e) {
 	      e.printStackTrace();

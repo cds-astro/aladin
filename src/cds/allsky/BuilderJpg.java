@@ -49,10 +49,10 @@ public class BuilderJpg implements Runnable {
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
 	   bitpix = context.getBitpix();
-	   blank = context.getBlankOrig();
+	   blank = context.getBlank();
 	   width=Constante.SIDE;
-	   bscale=context.getBScaleOrig();
-	   bzero=context.getBZeroOrig();
+	   bscale=context.getBScale();
+	   bzero=context.getBZero();
 	   cutminmax=cut;
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
 	   this.method=method;
@@ -186,7 +186,7 @@ public class BuilderJpg implements Runnable {
                             int dx = i==1 || i==3 ? 1 : 0;
                             int dy = i>=2 ? 1 : 0;
                             p[i] = in.getPixelDouble(x+dx,y+dy);
-                            if( out.isBlankPixel(p[i]) ) coef[i]=0;
+                            if( in.isBlankPixel(p[i]) ) coef[i]=0;
                             else coef[i]=1;
                             totalCoef+=coef[i];
                          }
@@ -200,9 +200,13 @@ public class BuilderJpg implements Runnable {
                       } else {
 
                          double p1 = in.getPixelDouble(x,y);
+                         if( in.isBlankPixel(p1) ) p1=Double.NaN;
                          double p2 = in.getPixelDouble(x+1,y);
+                         if( in.isBlankPixel(p2) ) p1=Double.NaN;
                          double p3 = in.getPixelDouble(x,y+1);
+                         if( in.isBlankPixel(p3) ) p1=Double.NaN;
                          double p4 = in.getPixelDouble(x+1,y+1);
+                         if( in.isBlankPixel(p4) ) p1=Double.NaN;
 
                          if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
                          else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;

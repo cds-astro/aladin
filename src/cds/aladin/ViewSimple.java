@@ -2920,7 +2920,7 @@ public class ViewSimple extends JComponent
       if( ((PlanImage)pref).pixelsOriginFromDisk() ) return false;
       return ((PlanImage)pref).pixelsOriginFromCache();
    }
-
+   
    private int oc=Aladin.DEFAULT;
 
    public void mouseMoved(MouseEvent e) { mouseMoved1(e.getX(),e.getY(),e); }
@@ -2974,26 +2974,20 @@ public class ViewSimple extends JComponent
 
       // Affichage de la position et de la valeur du pixel
       aladin.localisation.setPos(vs,x,y);
-      
-// JE PREFERE UN VRAI REPAINT SINON CA CLIGNOTE UN MAX
       Projection proj = vs.getProj();
-      if( aladin.calque.hasPixel() && Projection.isOk(proj) ) {
-//         Projection proj = getProj();
-//         if( /* !view.isMultiView() || */ !Projection.isOk(proj) ) {
-//            if( aladin.pixel.setPixel(this,x,y) ) {
-//               quickInfo=true;
-//               repaint();
-//            }
-//         } else {
-            PointD p = lastMove;
+      if( aladin.calque.hasPixel() ) {
+         if( Projection.isOk(proj) ) {
             Coord coo = new Coord();
-            coo.x = p.x; coo.y=p.y;
+            coo.x = lastMove.x; coo.y=lastMove.y;
             proj.getCoord(coo);
-            aladin.view.setPixel(coo);
-//         }
+            aladin.view.setPixelInfo(coo);
+         } else {
+            String s = ((PlanImage)pref).getPixelInfo( floor(lastMove.x), floor(lastMove.y), view.getPixelMode());
+            if( s==PlanImage.UNK ) s="";
+            setPixelInfo(s);
+         }
       }
-//      updateInfo();
-      
+
 
       // (thomas) affichage dans l'arbre des images disponibles
       if( tool==ToolBox.SELECT ) vs.showAvailableImages(x,y);
@@ -3191,7 +3185,7 @@ public class ViewSimple extends JComponent
       int a=imgbuf.getWidth(this)-w;
       g.setClip(a,3,w-20,13);
       g.drawImage(imgbuf,0,0,this);
-      drawPixelAndPos(g);
+      drawPixelInfo(g);
       g.dispose();
    }
 
@@ -3254,7 +3248,7 @@ public class ViewSimple extends JComponent
       aladin.localisation.setUndef();
       
       // Arrêt de l'affichage du pixel
-      aladin.view.setPixel(null);
+      aladin.view.setPixelInfo(null);
    }
 
    public String toString() {
@@ -6033,7 +6027,7 @@ g.drawString(s,10,100);
       if( !rainbowUsed()  ) {
 
          // Dessin en sur impression de la valeur de pixel, et de la position pour FullScreen
-         if( pref!=null && aladin.calque.hasPixel() ) drawPixelAndPos(g);
+         if( pref!=null && aladin.calque.hasPixel() ) drawPixelInfo(g);
          quickInfo=false;
       }
 
@@ -6090,9 +6084,17 @@ g.drawString(s,10,100);
    
    protected String lastPixel="";
    
+   /** Passage de la valeur du pixel qu'il faut afficher en surimpression de l'image */
+   protected void setPixelInfo(String s) {
+      if( lastPixel!=null && lastPixel.equals(s) ) return;  // pas de changement
+      lastPixel=s;
+      quickInfo=true;
+      repaint();
+   }
+   
    /** Affichage en surimpression en haut à droite de la coordonnée
     * et de la valeur du pixel sous la souris */
-   protected void drawPixelAndPos(Graphics g) {
+   protected void drawPixelInfo(Graphics g) {
       try {
          //      if( !isFullScreen() ) return;
 //         if( aladin.view.getMouseView()!=this || ) return;

@@ -20,12 +20,14 @@ import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
@@ -54,6 +56,11 @@ public class TabRgb extends JPanel implements ActionListener {
 	private JLabel		dirLabel = new JLabel();
 	private JButton 	browse = new JButton();
 	private JTextField 	dir = new JTextField(30);
+	private JLabel labelMethod;
+	
+	private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
+	private JRadioButton radioMoyenne;                     // selected si on est en calcul selon la moyenne
+
 	
 	JProgressBar progressBar = new JProgressBar(0,100);
 
@@ -132,6 +139,26 @@ public class TabRgb extends JPanel implements ActionListener {
 		c.gridwidth=GridBagConstraints.REMAINDER;
 		c.fill=GridBagConstraints.HORIZONTAL;
 		
+		int m=c.insets.top;
+		c.insets.top=20;
+		JPanel p = new JPanel();
+		JLabel l;
+		JRadioButton rb;
+		labelMethod = l = new JLabel(getString("METHODJPG"));
+		l.setFont(l.getFont().deriveFont(Font.BOLD));
+		p.add(l);
+		ButtonGroup bg1 = new ButtonGroup();
+		radioMediane = rb = new JRadioButton(getString("MEDIANJPG"));
+		rb.setSelected(true);
+		bg1.add(rb);
+		p.add(rb);
+		radioMoyenne = rb = new JRadioButton(getString("AVERAGEJPG"));
+		bg1.add(rb);
+		p.add(rb);
+		pCenter.add(p,c);
+		c.insets.top=m;
+
+		
 		// bouton OK
 		bOk.setEnabled(false);
 		bOk.addActionListener(this);
@@ -179,16 +206,24 @@ public class TabRgb extends JPanel implements ActionListener {
 	
 
 	private void createChaine(Chaine chaine) {
-		BROWSE = chaine.getString("FILEBROWSE");
-		REP_DEST = chaine.getString("REPDALLSKY");
-		RGBALLSKY = chaine.getString("RGBALLSKY");
-//		HELP = txt;//chaine.getString("ALLSKYRGBHELP");
-		HELP = chaine.getString("HELPRGBALLSKY");
-		titlehelp = chaine.getString("HHELP");
-        R = chaine.getString("RGBRED");
-        G = chaine.getString("RGBGREEN");
-        B = chaine.getString("RGBBLUE");
+		BROWSE = getString("FILEBROWSE");
+		REP_DEST = getString("REPDALLSKY");
+		RGBALLSKY = getString("RGBALLSKY");
+//		HELP = txt;//getString("ALLSKYRGBHELP");
+		HELP = getString("HELPRGBALLSKY");
+		titlehelp = getString("HHELP");
+        R = getString("RGBRED");
+        G = getString("RGBGREEN");
+        B = getString("RGBBLUE");
 	}
+	
+    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
+    
+    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
+    public int getMethod() {
+       if( radioMediane.isSelected() ) return BuilderRgb.MEDIANE;
+       return BuilderRgb.MOYENNE;
+    }
 	
 	/** Recupere la liste des plans Allsky valides */
 	protected PlanBG[] getPlan() {
@@ -254,7 +289,7 @@ public class TabRgb extends JPanel implements ActionListener {
 			
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			bOk.setEnabled(false);
-			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel.context,plans,dir.getText());
+			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel.context,plans,dir.getText(), getMethod());
 			builderRgb.start();
 			(new ThreadProgressBar(builderRgb)).start();
 		}

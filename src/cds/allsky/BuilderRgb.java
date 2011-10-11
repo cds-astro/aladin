@@ -29,12 +29,16 @@ public class BuilderRgb implements Runnable {
     private int maxOrder = 100;
     private int missing=-1;
     
+    static public final int MEDIANE = 0;
+    static public final int MOYENNE = 1;
+    private int method;
+    
     private int statNbFile;
     private long statSize;
     private long startTime,totalTime;
     private long statLastShowTime;
 
-    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path) {
+    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path,int method) {
        this.aladin = aladin;
        this.context = context;
        p = new PlanBG[3];
@@ -47,6 +51,7 @@ public class BuilderRgb implements Runnable {
        bzero = new double[3];
        bscale = new double[3];
        tcm = new byte[3][];
+       this.method=method;
 
        // recherche la meilleure résolution commune
        int frame=-1;
@@ -65,7 +70,7 @@ public class BuilderRgb implements Runnable {
        
        Aladin.trace(3,"BuilderRgb maxOrder="+maxOrder+" => "+path);
     }
-
+    
     public int getProgress() {
        return progress;
     }
@@ -149,23 +154,51 @@ public class BuilderRgb implements Runnable {
              for( int c=0; c<3; c++ ) {
                 if( c==missing ) continue;
                 Fits in = fils[quad]==null ? null : fils[quad][c];
+                double p[] = new double[4];
+                double coef[] = new double[4];
                 
                 for( int y=0; y<width; y+=2 ) {
                    for( int x=0; x<width; x+=2 ) {
-
+                      
                       double pix=blank[c];
                       if( in!=null ) {
-                         double p1 = in.getPixelDouble(x,y);
-                         double p2 = in.getPixelDouble(x+1,y);
-                         double p3 = in.getPixelDouble(x,y+1);
-                         double p4 = in.getPixelDouble(x+1,y+1);
 
-                         // On garde la valeur médiane
-                         if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-                         else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-                         else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-                         else pix=p4;
+                          // On prend la moyenne (sans prendre en compte les BLANK)
+                         if( method==MOYENNE ) {
+                            double totalCoef=0;
+                            for( int i=0; i<4; i++ ) {
+                               int dx = i==1 || i==3 ? 1 : 0;
+                               int dy = i>=2 ? 1 : 0;
+                               p[i] = in.getPixelDouble(x+dx,y+dy);
+                               if( in.isBlankPixel(p[i]) ) coef[i]=0;
+                               else coef[i]=1;
+                               totalCoef+=coef[i];
+                            }
+                            if( totalCoef!=0 ) {
+                               for( int i=0; i<4; i++ ) {
+                                  if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
+                               }
+                            }
+                            
+                         // On garde la valeur médiane (les BLANK seront automatiquement non retenus)
+                         } else {
+
+                            double p1 = in.getPixelDouble(x,y);
+                            if( in.isBlankPixel(p1) ) p1=Double.NaN;
+                            double p2 = in.getPixelDouble(x+1,y);
+                            if( in.isBlankPixel(p2) ) p1=Double.NaN;
+                            double p3 = in.getPixelDouble(x,y+1);
+                            if( in.isBlankPixel(p3) ) p1=Double.NaN;
+                            double p4 = in.getPixelDouble(x+1,y+1);
+                            if( in.isBlankPixel(p4) ) p1=Double.NaN;
+
+                            if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
+                            else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
+                            else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
+                            else pix=p4;
+                         }
                       }
+
                       out[c].setPixelDouble(offX+(x/2), offY+(y/2), pix);
                    }
                 }

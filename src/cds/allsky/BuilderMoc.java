@@ -56,25 +56,20 @@ final public class BuilderMoc {
    public HealpixMoc getMoc() { return moc; }
    
    /** Création d'un Moc associé à l'arborescence de l'index HPX_FINDER
-    * Si celui-ci n'existe pas/plus, se sera sur le répertoire lui-même
-    * puis écriture sur le disque à la racine
+    * ou du répertoire lui-même puis écriture sur le disque à la racine
     */
-   public void createMoc(String path) {
+   public void createMoc(String path) { createMoc(path,path); }
+   public void createMoc(String path,String output) {
       try {
-        BuilderMoc bdMoc = new BuilderMoc();
-        try {
-           bdMoc.generateMoc(path + FS + Constante.HPX_FINDER);
-        } catch( Exception e ) {
-           System.err.println("CreateMoc: "+Constante.HPX_FINDER+" not found => inspect the base directory");
-           bdMoc.generateMoc(path);
-        }
-        HealpixMoc moc = bdMoc.getMoc();
-        moc.sort();
-        moc.write(path+FS+MOCNAME, HealpixMoc.FITS);
-//        moc.write(path+FS+"Moc.txt", HealpixMoc.ASCII);
-     } catch( Exception e ) {
-        e.printStackTrace();
-     }
+         BuilderMoc bdMoc = new BuilderMoc();
+         bdMoc.generateMoc(path);
+         HealpixMoc moc = bdMoc.getMoc();
+         moc.sort();
+         moc.write(output+FS+MOCNAME, HealpixMoc.FITS);
+         //        moc.write(path+FS+"Moc.txt", HealpixMoc.ASCII);
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
    }
    
    public void generateMoc(String path) throws Exception {

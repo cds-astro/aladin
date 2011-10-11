@@ -90,13 +90,9 @@ public class BuilderController  {
 
    public BuilderController(Context context) {
       this.context=context;
-      flagColor = context.isColor();
-      bitpix = context.getBitpix();
-      bScale = context.getBScale();
-      bZero = context.getBZero();
-      moc = context.getMoc();
+      
    }
-
+   
    // Suppression des statistiques
    private void resetStat() { statNbThread=-1; totalTime=-1; }
 
@@ -155,7 +151,7 @@ public class BuilderController  {
       if (ordermax==-1) ordermax=4;
 
       // pour chaque losange sélectionné
-      NMAX = npix_list.size();
+      NMAX = npix_list.size();      
 
       // Y a-t-il un changement de bitpix ?
       if( context.getBitpix() != context.getBitpixOrig() ) {
@@ -164,6 +160,16 @@ public class BuilderController  {
          Aladin.trace(3,"Map original pixel range ["+context.getCutOrig()[2]+" .. "+context.getCutOrig()[3]+"] " +
          		        "to ["+context.getCut()[2]+" .. "+context.getCut()[3]+"]");
          Aladin.trace(3,"Change BZERO,BSCALE="+context.getBZeroOrig()+","+context.getBScaleOrig()+" to "+context.getBZero()+","+context.getBScale());
+      }
+      
+      // Initialisation des variables 
+      flagColor = context.isColor();
+      bitpix = context.getBitpix();
+      moc = context.getMoc();
+      if( !flagColor ) {
+         bZero = context.getBZero();
+         bScale = context.getBScale();
+         blank = context.getBlank();
       }
 
       // Numéro courant dans la liste npix_list
@@ -193,7 +199,7 @@ public class BuilderController  {
          if( stopped ) { destroyThreadBuilderHpx(); return; }
          cds.tools.Util.pause(1000);
       }
-
+      
       context.showBuildStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statNodeTile,
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
       Aladin.trace(3,"Cache stated: "+ context.cacheFits);
@@ -386,6 +392,8 @@ public class BuilderController  {
    Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
       long t = System.currentTimeMillis();
       int w=Constante.SIDE;
+      double px[] = new double[4];
+
 
       boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
       if( !inTree ) return flagColor ? null : findFits(file+".fits");
@@ -395,11 +403,6 @@ public class BuilderController  {
          out.setBlank(blank);
          out.setBscale(bScale);
          out.setBzero(bZero);
-         
-//         if (getBscale() != Double.NaN && getBzero() != Double.NaN) { 
-//            out.setBscale(getBscale());
-//            out.setBzero(getBzero());
-//         }
       }
       Fits in;
       for( int dg=0; dg<2; dg++ ) {
@@ -409,43 +412,47 @@ public class BuilderController  {
             int offX = (dg*w)>>>1;
             int offY = ((1-hb)*w)>>>1;
 
-      for( int y=0; y<w; y+=2 ) {
-         for( int x=0; x<w; x+=2 ) {
+            for( int y=0; y<w; y+=2 ) {
+               for( int x=0; x<w; x+=2 ) {
 
-            // Couleur
-            if( flagColor ) {
-               int pix=0;
-               if( in!=null ) {
-                  for( int i=0;i<4; i++ ) {
-                     int gx = i==1 || i==3 ? 1 : 0;
-                     int gy = i>1 ? 1 : 0;
-                     int p = in.getPixelRGBJPG(x+gx,y+gy);
-                     pix=p;
-                     break;
-                     //	                        pix+=p/4;
+                  // Couleur
+                  if( flagColor ) {
+                     int pix=0;
+                     if( in!=null ) {
+                        for( int i=0;i<4; i++ ) {
+                           int gx = i==1 || i==3 ? 1 : 0;
+                           int gy = i>1 ? 1 : 0;
+                           int p = in.getPixelRGBJPG(x+gx,y+gy);
+                           pix=p;
+                           break;
+                           //	                        pix+=p/4;
+                        }
+                     }
+                     out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
+
+                     // Normal
+                  } else {
+
+                     // On prend la moyenne des 4
+                     double pix=0;
+                     boolean ok=false;
+                     int nbPix=0;
+                     if( in!=null ) {
+                        for( int i=0;i<4; i++ ) {
+                           int gx = i==1 || i==3 ? 1 : 0;
+                           int gy = i>1 ? 1 : 0;
+                           px[i] = in.getPixelDouble(x+gx,y+gy);
+                           if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
+                        }
+                     }
+                     for( int i=0; i<4; i++ ) {
+                        if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
+                     }
+                     if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
+                     out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
                   }
                }
-               out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
-
-               // Normal
-            } else {
-
-               // On prend la moyenne des 4
-               double pix=0;
-               boolean ok=false;
-               if( in!=null ) {
-                  for( int i=0;i<4; i++ ) {
-                     int gx = i==1 || i==3 ? 1 : 0;
-                     int gy = i>1 ? 1 : 0;
-                     double p = in.getPixelDouble(x+gx,y+gy);
-                     if( !in.isBlankPixel(p) ) { pix+=p/4; ok=true; }
-                  }
-               }
-               if( !ok ) pix=blank;  // aucune valeur => BLANK
-               out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
             }
-         }
-      }
          }
       }
 
@@ -462,7 +469,7 @@ public class BuilderController  {
       }
       return out;
    }
-
+   
    /** Création d'un losange par concaténation de ses 4 fils
     * et suppression des fichiers 8bits FITS des fils en question
     * puisque désormais inutiles.

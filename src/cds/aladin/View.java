@@ -1803,7 +1803,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
      /** Mémorise la valeur du pixel courante dans chaque ViewSimple pour la coordonnée indiquée
       * afin 'être affichée en surimpression de l'image */
-      protected void setPixel(Coord coo) {
+      protected void setPixelInfo(Coord coo) {
          String s;
          for( int i=0; i<aladin.view.modeView; i++ ) {
             ViewSimple v = aladin.view.viewSimple[i];
@@ -1818,10 +1818,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                   if( s==PlanImage.UNK ) s="";
                }
             }
-            if( v.lastPixel!=null && v.lastPixel.equals(s) ) continue;  // pas de changement
-            v.lastPixel=s;
-            v.quickInfo=true;
-            v.repaint();
+            v.setPixelInfo(s);
          }
       }
 
