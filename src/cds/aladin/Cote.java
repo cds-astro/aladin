@@ -20,15 +20,12 @@
 
 package cds.aladin;
 
-import cds.astro.*;
-import cds.image.EPSGraphics;
-import cds.tools.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import cds.astro.AstroMath;
+import cds.tools.Util;
 
 /**
  * Objet graphique pour une Cote
@@ -82,7 +79,7 @@ public final class Cote extends Ligne {
    * @param debcote  premier bout de la cote
    */
    protected Cote(Plan plan,ViewSimple v, double x, double y, String id,Cote debcote) {
-      super(plan,v,x,y,id,(Ligne)debcote);
+      super(plan,v,x,y,id,debcote);
       bout=2;
    }
 
@@ -112,33 +109,33 @@ public final class Cote extends Ligne {
    /** Retourne la dernière distance angulaire calculée
     * ou -1 si non encore calculée */
    protected double getDist() { return dist; }
-   
+
    /** Retourne la dernière distance angulaire calculée
     * ou -1 si non encore calculée */
    protected double getDistXY() { return distXY; }
-   
+
    protected void deltaPosition(ViewSimple v,double x, double y) {
       super.deltaPosition(v,x,y);
       if( finligne!=null ) ((Cote)finligne).setId();
-      else setId(); 
+      else setId();
    }
-   
+
    protected void deltaRaDec(double dra, double dde) {
       super.deltaRaDec(dra,dde);
       if( finligne!=null ) ((Cote)finligne).setId();
-      else setId(); 
+      else setId();
    }
-   
+
    protected void setPosition(ViewSimple v,double x, double y) {
       super.setPosition(v,x,y);
       if( finligne!=null ) ((Cote)finligne).setId();
       setId();
    }
-   
+
    // Juste pour éviter de les ré-allouer tout le temps.
    private Coord c1 = new Coord();
    private Coord c2 = new Coord();
-   
+
    /** Mise en place de l'ID.
     * En fonction du plan de reference courant, positionne id avec la
     * longueur courante de la cote
@@ -147,15 +144,15 @@ public final class Cote extends Ligne {
       Position p1,p2;
       double dx,dy;
       if( debligne!=null ) {
-         p2 = (Position)this;
-         p1 = (Position)debligne;
+         p2 = this;
+         p1 = debligne;
       } else {
-         p2 = (Position)finligne;
-         p1 = (Position)this;
+         p2 = finligne;
+         p1 = this;
       }
       ViewSimple v = plan.aladin.view.getCurrentView();
       if( v==null ) return;
-      
+
       int frame = plan.aladin.localisation.getFrame();
       if( frame!=Localisation.XY && frame!=Localisation.XYNAT && frame!=Localisation.XYLINEAR ) {
          try {
@@ -212,7 +209,7 @@ public final class Cote extends Ligne {
       else { autreCote=debligne; bout=this; }
       return bout.in(v,x,y) && !autreCote.nearArrow(v,x,y);
    }
-   
+
    protected void drawID(Graphics g ,Point p1,Point p2) {
       if( !isCoteSelected() ) return;
       int a = (p1.x+p2.x)/2;
@@ -228,20 +225,20 @@ public final class Cote extends Ligne {
       g.drawString(s,x,y);
       g.setColor(c);
    }
-   
+
    private boolean isCoteSelected() {
-      if( debligne!=null ) return isSelected() || debligne.isSelected(); 
+      if( debligne!=null ) return isSelected() || debligne.isSelected();
       return isSelected() || finligne.isSelected();
    }
 
-   protected int clipXId() { return !isCoteSelected()?0 : 12*Coord.getUnit(dist).length(); } 
+   protected int clipXId() { return !isCoteSelected()?0 : 12*Coord.getUnit(dist).length(); }
    protected int clipYId() { return !isCoteSelected()?0 : 15; }
 
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !isVisible() ) return false;
       if( !super.draw(g,v,dx,dy) ) { cutOff(); return false; }
-      
-      if( (isSelected() || debligne!=null && debligne.isSelected() 
+
+      if( (isSelected() || debligne!=null && debligne.isSelected()
                             || finligne!=null && finligne.isSelected())
             && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
       else cutOff();
@@ -253,7 +250,7 @@ public final class Cote extends Ligne {
     */
    protected void cutOff() { plan.aladin.calque.zoom.zoomView.cutOff(this); }
 
-   
+
    /** Passage d'une coupe du segment au zoomView
     * => affichage d'un histogramme dans le zoomView en surimpression
     * de la vignette courante.
@@ -264,7 +261,7 @@ public final class Cote extends Ligne {
       if( !rep ) plan.aladin.calque.zoom.zoomView.setCut(null);
       return rep;
    }
-   
+
    protected boolean cutOn1() {
       ViewSimple v=plan.aladin.view.getCurrentView();
       if( Aladin.OUTREACH ) return false;
@@ -281,8 +278,8 @@ public final class Cote extends Ligne {
          x1=(int)debligne.xv[v.n]; y1=(int)debligne.yv[v.n];
          x2=(int)xv[v.n]; y2=(int)yv[v.n];
       }
-      
-      if( x1!=x2 || y1!=y2 ) { 
+
+      if( x1!=x2 || y1!=y2 ) {
          if( v.northUp || v.isProjSync() ) {
             PointD p1 = new PointD(x1,y1);
             p1 = v.northOrSyncToRealPosition(p1);
@@ -291,14 +288,14 @@ public final class Cote extends Ligne {
             p1 = v.northOrSyncToRealPosition(p1);
             x2=(int)p1.x; y2=(int)p1.y;
          }
-      
+
          int[] res = bresenham(pi,x1,y1,x2,y2);
          int mode = pi.type==Plan.IMAGERGB || pi.type==Plan.IMAGECUBERGB ? ZoomView.CUTRGB : ZoomView.CUTNORMAL;
          plan.aladin.calque.zoom.zoomView.setCut(this,res,mode);
       }
       return true;
    }
-   
+
 
    private int [] vBresenham=null;    //Tableau temporaire des valeurs qui vont etre retournees
    private int [] repBresenham=null;
@@ -335,7 +332,7 @@ public final class Cote extends Ligne {
       // Allocation d'un tableau assez grand pour recevoir les valeurs des pixels
       if( vBresenham==null || vBresenham.length!=dx+dy+2 )  vBresenham = new int[dx+dy+2];
       n=0;
-      
+
       boolean inverse=false;
 
       if( dx>dy ) {
@@ -396,9 +393,9 @@ public final class Cote extends Ligne {
       return repBresenham;
 
    }
-   
+
 //   private double deb=-1,fin=-1;
-//   
+//
 //   /** Positionnement du segment à colorier en vert pour repérer sur la cote
 //    * la portion repéré dans le Cut
 //    * @param deb debut du segment coloré (en nombre de pixels images)
@@ -419,14 +416,14 @@ public final class Cote extends Ligne {
     * @param y2 ord du deuxieme point
     */
 //   protected void droite(Graphics g,ViewSimple v,int x1,int y1,int x2,int y2) {
-//      
+//
 //      if( g instanceof EPSGraphics ) { g.drawLine(x1,y1,x2,y2); return; }
 //
 //      // Variables pour l'algo de Bresenham
 //      int dx = Math.abs(x2-x1);
 //      int dy = Math.abs(y2-y1);
 //      int e,x,y,xend,yend,horiz,diago,verti;
-//      
+//
 //      int deb = (int)Math.round(this.deb*v.zoom);
 //      int fin = (int)Math.round(this.fin*v.zoom);
 //
