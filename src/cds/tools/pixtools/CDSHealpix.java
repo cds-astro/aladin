@@ -34,7 +34,7 @@ import java.util.Iterator;
  */
 public final class CDSHealpix {
    
-   static final private int MAXORDER=29;
+   static final public int MAXORDER=29;
    
    static private HealpixBase hpxBase[] = new HealpixBase[MAXORDER+1];  // Objet HealpixBase pour chaque nside utilisé
 
@@ -45,9 +45,6 @@ public final class CDSHealpix {
       return order;
    }
    
-   /** Retourne l'ordre maximum supporté par la librairie */
-   static public int getMaxOrder() { return MAXORDER; }
-
    static public double[] pix2ang_nest(long nside,long ipix) throws Exception {
       Pointing res = hpxBase[ init(nside) ].pix2ang(ipix);
       return new double[]{ res.theta, res.phi };

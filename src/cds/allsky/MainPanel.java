@@ -39,6 +39,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.Aladin;
+import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.PlanBG;
@@ -141,11 +142,12 @@ final public class MainPanel extends JPanel implements ActionListener {
             return findImgEtalon(path);
          }
          
-         // essaye de lire l'entete fits du fichier
+         // essaye de lire l'entete fits du fichier et tente d'en extraire une calib.
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
             Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
             fitsfile.loadHeaderFITS(path);
+            fitsfile.getCalib();
             context.setImgEtalon(path);
             return true;
             

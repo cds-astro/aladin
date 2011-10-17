@@ -277,14 +277,13 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgetsStatus() {
-      boolean hasData = mainPanel.isExistingDir();
-      boolean readyToDo = hasData && mainPanel.isExistingAllskyDir();
+      boolean readyToDo = mainPanel.isExistingDir() || mainPanel.isExistingAllskyDir();
       boolean isRunning = mainPanel.isRunning();
       boolean isColor = mainPanel.context.isColor();
-      bPrevious.setEnabled(hasData && !isRunning);
+      bPrevious.setEnabled(!isRunning);
       bNext.setEnabled(readyToDo && !isRunning);
-      tCutMin.setEnabled(hasData && !isRunning && !isColor);
-      tCutMax.setEnabled(hasData && !isRunning && !isColor);
+      tCutMin.setEnabled(readyToDo && !isRunning && !isColor);
+      tCutMax.setEnabled(readyToDo && !isRunning && !isColor);
       radioManual.setEnabled(readyToDo && !isRunning && !isColor);
       labelMethod.setEnabled(readyToDo && !isRunning && !isColor);
       radioAllsky.setEnabled(readyToDo && !isRunning && !isColor);
@@ -348,7 +347,7 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         BuilderJpg builderJpg = new BuilderJpg(mainPanel.context.getCut(), getCM(), getMethod(), mainPanel.context );
+         BuilderJpg builderJpg = new BuilderJpg(getCM(), getMethod(), mainPanel.context );
          builderJpg.start();
          (new ThreadProgressBar(builderJpg)).start();
          

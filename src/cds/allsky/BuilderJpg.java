@@ -18,7 +18,7 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderJpg implements Runnable {
 
-	private double[] cutminmax;
+	private double[] cut;
 	private int maxOrder;
 	private String dirpath;
 	private int progress=0;
@@ -44,7 +44,7 @@ public class BuilderJpg implements Runnable {
 	 * @param cm table des couleurs pour le passage en 8 bits (prioritaire sur cut), 
 	 * @param context
 	 */
-	public BuilderJpg(double[] cut, final ColorModel cm, int method, Context context) {
+	public BuilderJpg(final ColorModel cm, int method, Context context) {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
@@ -53,7 +53,7 @@ public class BuilderJpg implements Runnable {
 	   width=Constante.SIDE;
 	   bscale=context.getBScale();
 	   bzero=context.getBZero();
-	   cutminmax=cut;
+	   cut=context.getCutOrig();
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
 	   this.method=method;
 	}
@@ -103,7 +103,7 @@ public class BuilderJpg implements Runnable {
 	         createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
-	      (new BuilderAllsky(context,-1)).createAllSkyJpgColor(dirpath,3,64);
+	      (new BuilderAllsky(context,-1)).createAllSkyJpgColor(dirpath,3,64,false);
 	      progress=100;
 	   } catch( Exception e ) {
 	      e.printStackTrace();
@@ -134,8 +134,8 @@ public class BuilderJpg implements Runnable {
            if( found ) out = createNodeJpg(fils);
         }
         if( out!=null ) {
-           if( tcm==null ) out.toPix8(cutminmax[0],cutminmax[1]);
-           else out.toPix8(cutminmax[0],cutminmax[1],tcm);
+           if( tcm==null ) out.toPix8(cut[0],cut[1]);
+           else out.toPix8(cut[0],cut[1],tcm);
            out.writeJPEG(file+".jpg");
            
            File f = new File(file+".jpg");

@@ -148,7 +148,7 @@ public class Task implements Runnable {
 
 	   try {
 	      String output = context.getOutputPath();
-	      if( context.getBitpix()==0 ) builderAllsky.createAllSkyJpgColor(output,3,64);
+	      if( context.isColor() ) builderAllsky.createAllSkyJpgColor(output,3,64,true);
 	      else builderAllsky.createAllSky(output,3,64);
 
 	   } catch (Exception e) {

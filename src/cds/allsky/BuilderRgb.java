@@ -384,7 +384,7 @@ public class BuilderRgb implements Runnable {
 	void preview(String path, int last) {
 	   try {
           try {
-        	  builderAllsky.createAllSkyJpgColor(path,3,64);
+        	  builderAllsky.createAllSkyJpgColor(path,3,64,true);
           } catch (Exception e) {
         	  Aladin.trace(3,e.getMessage());
           }

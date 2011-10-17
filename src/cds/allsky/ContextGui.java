@@ -132,6 +132,7 @@ public class ContextGui extends Context {
    }
 
    public double[] getCutOrig() {
+      if( cutOrig==null ) cutOrig = new double[4];
       try {
          if( mainPanel.tabJpg.isCutFromPlanBase() ) {
             Plan p = mainPanel.aladin.calque.getPlanBase();

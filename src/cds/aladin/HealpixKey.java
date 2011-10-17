@@ -1353,7 +1353,7 @@ public class HealpixKey {
    private int drawFils(Graphics g, ViewSimple v) { return drawFils(g,v,1); }
    private int drawFils(Graphics g, ViewSimple v,int maxParente) {
       int n=0;
-      int limitOrder = CDSHealpix.getMaxOrder()-10;
+      int limitOrder = CDSHealpix.MAXORDER-10;
       if( width>1 && order<limitOrder && parente<maxParente ) {
          fils = getChild();
          if( fils!=null ) {

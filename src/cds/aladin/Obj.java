@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import cds.tools.pixtools.CDSHealpix;
+
 /**
  * Interface pour la manipulation d'un objet graphique affichable dans la vue
  *
@@ -71,7 +73,7 @@ public abstract class Obj {
 
    /** J2000 DEC coordinate */
    public double dej;
-
+   
    public String id;         // Object id
    protected byte flags = VISIBLE;  // Le tableau de flags
 
@@ -268,6 +270,19 @@ public abstract class Obj {
       double z = v.getZoom();
       return z>0 ? 2/z : 1+6/z;
    }
+   
+   // Pixel Healpix order max (29)
+//   public long hpxPos=-1;
+//   static final long MAXNSIDE = CDSHealpix.pow2(CDSHealpix.MAXORDER);
+//
+//   public long getHpxPos() {
+//      if( hpxPos==-1 ) {
+//         double polar[] = CDSHealpix.radecToPolar(new double[]{raj,dej});
+//         try { hpxPos = CDSHealpix.ang2pix_nest(MAXNSIDE, polar[0], polar[1]); } 
+//         catch( Exception e ) { }
+//      }
+//      return hpxPos;
+//   }
 
    // Extension d'un rectangle, création si nécessaire
    static final protected Rectangle unionRect(Rectangle r,Rectangle r1) {

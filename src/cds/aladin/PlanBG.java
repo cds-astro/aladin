@@ -2180,7 +2180,7 @@ System.out.println("Wakeup for loading remote Allsky...");
 
       resetPriority();
       redraw.clear();
-
+      HealpixKey healpix = null;
       int nOut=0;
       int cmin = allKeyReady ? max : min; // Math.max(min,max-2); 
       for( int order=cmin; order<=max; order++ ) {
@@ -2223,7 +2223,7 @@ System.out.println("Wakeup for loading remote Allsky...");
 
          for( int i=0; i<pix.length; i++ ) {
 
-            HealpixKey healpix = getHealpix(order,pix[i], false);
+            healpix = getHealpix(order,pix[i], false);
             HealpixKey testIn = healpix!=null ? healpix : new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
             
             if( !allKeyReady && testIn.isOutView(v) ) {
@@ -2265,10 +2265,10 @@ System.out.println("Wakeup for loading remote Allsky...");
 
             nb+=healpix.draw(g,v);
 
-//            setBufPixels8(healpix.pixels);   // Pour que l'histogramme soit à jour
 
          }
       }
+      if( healpix!=null ) pixels = healpix.pixels;// Pour que l'histogramme soit à jour
 
       nb+=redraw(g,v,t1);
       hasDrawnSomething=nb>0;

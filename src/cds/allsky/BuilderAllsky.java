@@ -161,7 +161,7 @@ final public class BuilderAllsky {
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSkyJpgColor(String path,int order,int outLosangeWidth) throws Exception {
+   public void createAllSkyJpgColor(String path,int order,int outLosangeWidth,boolean withProp) throws Exception {
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -171,7 +171,7 @@ final public class BuilderAllsky {
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
      
       // Ecriture du fichier des propriétés à la racine du survey
-      writePropertiesFile(path,true);
+      if( withProp ) writePropertiesFile(path,true);
 
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight

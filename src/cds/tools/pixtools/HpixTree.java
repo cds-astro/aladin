@@ -28,6 +28,7 @@ import cds.aladin.FrameHeaderFits;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.fits.HeaderFits;
+import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 
 /** Gestion d'un ensemble de pixels Healpix, d'ordres variables
@@ -111,9 +112,6 @@ public final class HpixTree extends HealpixMoc {
       frameHeaderFits = new FrameHeaderFits();
       frameHeaderFits.makeTA();
       header.readHeader(mis);       // On mange la première entête FITS
-//      String signature = header.getStringFromHeader(SIGNATURE);
-//      if( signature==null ) signature = header.getStringFromHeader(SIGNATURE+"M");
-//      if( signature==null ) throw new Exception("Not an HEALPix Multi-Level Fits map ("+SIGNATURE+" not found)");
 
       clear();
       try {
@@ -131,6 +129,33 @@ public final class HpixTree extends HealpixMoc {
          createUniq((naxis1*naxis2)/nbyte,nbyte,buf);
       } catch( EOFException e ) { }
    }
+   
+   private void createUniq(int nval,int nbyte,byte [] t) {
+      int i=0;
+      long [] hpix = null;
+      long oval=-1;
+      for( int k=0; k<nval; k++ ) {
+         long val=0;
+
+         int a =   ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF;
+         if( nbyte==4 ) val = a;
+         else {
+            int b = ((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF;
+            val = (((long)a)<<32) | ((b)& 0xFFFFFFFFL);
+         }
+         i+=nbyte;
+
+         long min = val;
+         if( val<0 ) { min = oval+1; val=-val; }
+         for( long v = min ; v<=val; v++) {
+            hpix = Healpix.uniq2hpix(v,hpix);
+            int order = (int)hpix[0];
+            add( order, hpix[1]);
+         }
+         oval=val;
+      }
+   }
+
    
    /** Retourne true si le pixel est un ascendant */
    public boolean isAscendant(Hpix hpix) { return isAscendant(hpix.getOrder(),hpix.getNpix()); }

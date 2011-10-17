@@ -72,6 +72,8 @@ public final class Command implements Runnable {
    JFrame robotInfo;
    String curTuto;
    JTextArea infoTxt;
+   
+   HashMap<String, String> var  = new HashMap<String, String>(100);
 
    MyRobot robot;
    
@@ -3058,12 +3060,21 @@ if( Aladin.levelTrace==2 ) {
          String p [] = st.getStrings();
          return a.plugins.execPluginByScript(cmd,p);
       }
+           
+      // S'agit-il d'un traitement d'une variable
+      else if( execVar(s) ) return "";
 
       // Bon on va donc simplement activer Sesame et déplacer le repere
       else { 
          return execGetCmd(s,label,false);
       }
       return "";
+   }
+   
+   // Traitement d'une commande propre a une variable (genre A = A+1)
+   // PAS ENCORE IMPLANTE
+   private boolean execVar(String s) {
+      return false;
    }
 
    /** Retourne un tableau de ViewSimple correspondant aux identificateurs
