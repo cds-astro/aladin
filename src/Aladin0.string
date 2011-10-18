@@ -974,6 +974,7 @@ PROPSCALINGFACTOR Scaling factor (for filters)
 PROPDEFCATPROJ	Used projection
 PROPOPACITY	Overlay opacity/transparency
 PROPOPACITYLEVEL	Opacity level
+PROPDENSITY	Density correction
 PROPRELOAD	Reload
 PROPAUTO	Automatic
 PROPWHITE	White
@@ -1048,6 +1049,7 @@ PROPSCALINGFACTOR.fr Facteur d'échelle (pour les filtres)
 PROPDEFCATPROJ.fr	Projection utilisée
 PROPOPACITY.fr	Niveau d'Opacité/Transparence
 PROPOPACITYLEVEL.fr	Niveau d'opacité
+PROPDENSITY.fr	Correction de la densité
 PROPRELOAD.fr	Recharger
 PROPAUTO.fr	Automatique
 PROPWHITE.fr	Blanc

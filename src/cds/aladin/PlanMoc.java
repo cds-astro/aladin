@@ -20,8 +20,14 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import javax.swing.RepaintManager;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
@@ -107,12 +113,16 @@ public class PlanMoc extends PlanBGCat {
    
    /** Retourne true si tout a été dessinée, sinon false */
    protected boolean hasMoreDetails() { oDrawAll = drawAll; return !drawAll; }
-
+   
+   
+   protected boolean mustDrawFast() { return aladin.view.mustDrawFast(); }
+   
    protected void draw(Graphics g,ViewSimple v) {
       long t1 = Util.getTime();
       g.setColor(c);
       int max = Math.min(maxOrder(v),maxOrder)+1;
-      int tLimit = mustDrawFast() ? 20 : 150;
+      boolean mustDrawFast = mustDrawFast();
+      int tLimit = mustDrawFast ? 30 : 75;
       
       HealpixMoc moc = v.isAllSky() ? null : getViewMoc(v,max);
       Hpix [] hpixList = getHpixList(v);
@@ -120,7 +130,11 @@ public class PlanMoc extends PlanBGCat {
       int order=0;
       long t=0;
       int i;
-      for( i=0; i<hpixList.length  && (t<tLimit || order<max+5); i++ ) {
+      long delai = Util.getTime()-lastDrawAll;
+      boolean canDrawAll = !mustDrawFast && delai>300;
+//      System.out.println("mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
+      for( i=0; i<hpixList.length; i++ ) {
+         if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
          Hpix p = hpixList[i];
          order=p.getOrder();
          if( moc!=null && !moc.isIntersect(order, p.getNpix())) { r++; continue; }
@@ -131,9 +145,14 @@ public class PlanMoc extends PlanBGCat {
          if( d%100==0 ) t=Util.getTime()-t1;
       }
       drawAll = i==hpixList.length;
+      t = Util.getTime();
+      statTimeDisplay = t-t1;
+      if( drawAll ) lastDrawAll=t;
       if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
-      statTimeDisplay = Util.getTime()-t1;
 //      System.out.println("draw "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
    }
+   
+   private long lastDrawAll=0L;
+   
 }
 

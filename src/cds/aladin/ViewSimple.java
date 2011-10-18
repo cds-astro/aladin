@@ -5910,6 +5910,7 @@ g.drawString(s,10,100);
       }
       unlockRepaint("paintComponent");
       resetClip();
+      aladin.view.setPaintTimer();
       aladin.command.syncNeedRepaint=false;
    }
    

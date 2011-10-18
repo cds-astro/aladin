@@ -2965,7 +2965,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
       ViewSimple v = getCurrentView();
+//      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;
+   }
+   
+   private long lastRepaint=0;
+   
+   /** Positionne la date du dernier repaint */
+   protected void setPaintTimer() {
+      lastRepaint = Util.getTime();
+   }
+   
+   /** Indique qu'il est possible de prendre son temps pour tracer */
+   protected boolean canDrawAll() {
+      if( mustDrawFast() ) return false;
+      long lastDelai = Util.getTime() - lastRepaint;
+      return lastDelai > 500;
    }
 
   /** Action sur le ENTER dans la boite de localisation */

@@ -50,7 +50,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           TITLE,BANNER,APPLY,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
           LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,FRAME,DELAY,
           ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
-          LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
+          LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
           GENERATEPOLAAMP,GENERATEPOLAANG,CURRENTFIELD,POLAOPTIONS,SEGMENTLEN,SEGMENTTHICK,SEGMENTDENSITY,
           SCALINGFACTOR;
 
@@ -176,6 +176,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       HSCOPE = aladin.chaine.getString("PROPHSCOPE");
       OPACITY = aladin.chaine.getString("PROPOPACITY");
       OPACITYLEVEL = aladin.chaine.getString("PROPOPACITYLEVEL");
+      DENSITY = aladin.chaine.getString("PROPDENSITY");
       AUTO = aladin.chaine.getString("PROPAUTO");
       WHITE = aladin.chaine.getString("PROPWHITE");
       BLACK = aladin.chaine.getString("PROPBLACK");
@@ -969,7 +970,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
       
       // Ajustement de l'ordre max
-      if( plan instanceof PlanBGCat ) {
+      if( plan instanceof PlanBGCat && !(plan instanceof PlanMoc)) {
          if( !filet ) addFilet(p, g, c); filet=true;
           JPanel pGapOrder = new JPanel(new FlowLayout());
           gapOrder = new JSlider(-PlanBGCat.MAXGAPORDER, PlanBGCat.MAXGAPORDER);
@@ -980,7 +981,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           gapOrder.setPaintTrack(true);
           gapOrder.addChangeListener(this);
           pGapOrder.add(gapOrder);
-          addCouple(p,"Density correction", pGapOrder, g,c);
+          addCouple(p,DENSITY, pGapOrder, g,c);
       }
 
 
