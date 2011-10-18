@@ -52,7 +52,7 @@ public class BuilderController  {
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
    //   private int fct = PlanImage.LINEAR;
-   private int coaddMode=TabDesc.REPLACETILE;
+   private CoAddMode coaddMode=CoAddMode.REPLACETILE;
 
    public Context context;
 
@@ -710,12 +710,12 @@ public class BuilderController  {
 
       if( out !=null ) {
 
-         if( coaddMode!=TabDesc.REPLACETILE ) {
+         if( coaddMode!=CoAddMode.REPLACETILE ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
             if( oldOut!=null ) {
-               if( coaddMode==TabDesc.AVERAGE ) out.coadd(oldOut);
-               else if( coaddMode==TabDesc.KEEP ) out.mergeOnNaN(oldOut);
-               else if( coaddMode==TabDesc.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+               if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
+               else if( coaddMode==CoAddMode.KEEP ) out.mergeOnNaN(oldOut);
+               else if( coaddMode==CoAddMode.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
             }
          }
 
@@ -724,7 +724,7 @@ public class BuilderController  {
 
 
          long duree = System.currentTimeMillis()-t;
-         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+TabDesc.COADDMODE[coaddMode]+" in "+duree+"ms");
+         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
 
          updateStat(0,1,duree,0,0);
       }
@@ -805,7 +805,7 @@ public class BuilderController  {
       return (int) (progress*100./NMAX);
    }
 
-   public void setCoadd(int coaddMode) {
+   public void setCoadd(CoAddMode coaddMode) {
       this.coaddMode = coaddMode;
    }
 

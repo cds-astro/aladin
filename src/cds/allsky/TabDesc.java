@@ -426,17 +426,11 @@ public class TabDesc extends JPanel implements ActionListener {
    public String getOutputPath() {
       return dir_D.getText();
    }
-   
-   static final int KEEP = 0;
-   static final int OVERWRITE = 1;
-   static final int AVERAGE = 2;
-   static final int REPLACETILE = 3;
-   static final String [] COADDMODE = { "keep","overwrite","average","replaceTile" };
 
-   public int getCoaddMode() {
-      return resetHpx.isSelected() || !resetHpx.isEnabled()? REPLACETILE : 
-            keepRadio.isSelected() ? KEEP 
-            :overwriteRadio.isSelected() ? OVERWRITE : AVERAGE;
+   public CoAddMode getCoaddMode() {
+      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACETILE : 
+            keepRadio.isSelected() ? CoAddMode.KEEP 
+            :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
    }
 
    public JTextField getSourceDirField() {

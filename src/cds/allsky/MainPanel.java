@@ -39,7 +39,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.Aladin;
-import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.PlanBG;
@@ -165,129 +164,32 @@ final public class MainPanel extends JPanel implements ActionListener {
     */
    public void init() {
       String path = getInputPath();
-      boolean found = findImgEtalon(path);
-      if( !found ) {
-         context.warning("There is no available images in source directory !\n"+s_ERRFITS+path);
+      boolean found = context.findImgEtalon(path);
+      if (!found) {
+         context.warning("There is no available images in source directory !\n"
+               + s_ERRFITS + path);
          return;
       }
       String filename = context.getImgEtalon();
       Fits file = new Fits();
-      try { file.loadHeaderFITS(filename); } 
-      catch( Exception e ) { e.printStackTrace(); }
-      context.setBitpixOrig(file.bitpix);
-      tabBuild.setOriginalBitpix(file.bitpix);
-      if( !context.isColor() ) {
-         context.setBZeroOrig(file.bzero);
-         context.setBScaleOrig(file.bscale);
-         context.setBlankOrig(file.blank);
+      try {
+         file.loadHeaderFITS(filename);
+      } catch (Exception e) {
+         e.printStackTrace();
       }
-      
-//      tabBuild.setBScaleBZero(file.bscale, file.bzero);
-//      tabBuild.setBlank(file.blank);
-      
+      tabBuild.setOriginalBitpix(file.bitpix);
+
+      // tabBuild.setBScaleBZero(file.bscale, file.bzero);
+      // tabBuild.setBlank(file.blank);
+
       // calcule le meilleur nside
-      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-      setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
-      
-      initCut(file);
+      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib()
+            .GetResol()[0] * 3600.);
+      setSelectedOrder((int) Util.order((int) nside) - Constante.ORDER);
 
       newAllskyDir();
    }
-   
-   protected void initCut(Fits file) {
-      int w = file.width;
-      int h = file.height;
-      if( w>1024 ) w=1024;
-      if( h>1024 ) h=1024;
-      try {
-         file.loadFITS(file.getFilename(),0,0,w,h); 
-         double [] cut = file.findAutocutRange();
-         context.setCutOrig( cut );
-      } catch( Exception e ) { e.printStackTrace(); }
-   }
 
-
-
-//   private boolean debugPierre=false;   // BEURK - sinon le repaint Swing doit attendre la fin du init() ci-dessous
-//
-//   /**
-//    * Cherche un fichier fits dans l'arborescence et itialise les variables
-//    * bitpix et le cut avec Cherche aussi le meilleur nside pour la résolution
-//    * du fichier trouvé
-//    * 
-//    * @param text
-//    */
-//   public void init() {
-//      final String text = getInputPath().trim();
-//      debugPierre=true;
-//      if (text != null && !text.equals("")) {
-//         try {
-//            (new Thread("Autocut"){
-//               public void run() {
-//                  cds.tools.Util.pause(100);
-//                  tabDesc.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//                  // lit un fichier FITS dans le réperoire sélectionné
-//                  Fits file = findImgEtalon(text);
-//                  if (file == null || file.getCalib() == null) {
-//                     System.err.println(s_ERRFITS + text);
-//                     //                     JOptionPane.showMessageDialog(this, s_ERRFITS + text,
-//                     //                           s_ERR, JOptionPane.ERROR_MESSAGE);
-//                     return;
-//                  }
-//                  // récupère le bitpix
-//                  tabBuild.setOriginalBitpix(file.bitpix);
-//                  // récupère le bscale/bzero
-//                  tabBuild.setBScaleBZero(file.bscale, file.bzero);
-//                  // récupère le blank
-//                  tabBuild.setBlank(file.blank);
-//                  // récupère le min max pour le cut
-//                  initCut();
-//                  // calcule le meilleur nside
-//                  long nside = healpix.core.HealpixIndex.calculateNSide(file
-//                        .getCalib().GetResol()[0] * 3600.);
-//                  setSelectedOrder((int) Util.order((int)nside) - BuilderHpx.ORDER);
-//                  debugPierre=false;
-//                  tabDesc.setCursor(Cursor.getDefaultCursor());
-//                  newAllskyDir();
-//               }
-//            }).start();
-//
-//         } catch (Exception e1) {
-//            //				e1.printStackTrace();
-//         }
-//      }
-//   }
-
-//   protected void initCut() {
-//      String path = getInputPath();
-//      boolean convertCut = (tabBuild.getBitpix() != tabBuild.getOriginalBitpix());
-//      if( path == null || "".equals(path)) {
-//         path = getOutputPath();
-//         convertCut=false;
-//      } else {
-//         final String finalPath=path;
-//         try {
-//            //            (new Thread("Autocut"){
-//            //               public void run() {
-//            //               double[] cut = ThreadAutoCut.run(file);
-//            final Fits file = findImgEtalon(finalPath);
-//            double[] cut;
-//            try {
-//               cut = file.findAutocutRange();
-//               context.setCut(cut);
-//            } catch( Exception e ) {
-//               e.printStackTrace();
-//            }
-//            //               }
-//         //            }).start();
-//         } catch( Throwable e1 ) {
-//            e1.printStackTrace();
-//            return;
-//         }
-//      }
-//      if (convertCut) context.convertCut(tabBuild.getBitpix());
-//   }
-   
    private int setSelectedOrder(int val) {
       return tabBuild.setSelectedOrder(val);
    }
@@ -327,7 +229,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       return tabDesc.getOutputPath();
    }
 
-   public int getCoAddMode() {
+   public CoAddMode getCoAddMode() {
       return tabDesc.getCoaddMode();
    }
 
@@ -370,6 +272,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected void enableProgress(boolean selected, int mode) {
       tabBuild.enableProgress(selected, mode);
    }
+
    protected void setProgress(int mode, int value) {
       tabBuild.setProgress(mode, value);
    }
@@ -514,11 +417,13 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected void setCutFromPreview() {
       if( planPreview==null ) return;
       double cutmin = planPreview.getCutMin();
-      double cutmax = planPreview.getDataMin();
+      double cutmax = planPreview.getCutMax();
       double datamin = planPreview.getDataMin();
       double datamax = planPreview.getDataMax();
-      Aladin.trace(4,"MainPanel.setCutFromPreview: cutmin,cutmax = ["+cutmin+".."+cutmax+"] datamin,datamax = ["+datamin+".."+datamax+"] ");
-      context.setCut(new double[]{cutmin,cutmax,datamin,datamax});
+      Aladin.trace(4, "MainPanel.setCutFromPreview: cutmin,cutmax = ["
+            + cutmin + ".." + cutmax + "] datamin,datamax = [" + datamin
+            + ".." + datamax + "] ");
+      context.setCut(new double[] { cutmin, cutmax, datamin, datamax });
    }
 
    /**
@@ -552,23 +457,23 @@ final public class MainPanel extends JPanel implements ActionListener {
 
 }
 
-//class ThreadAutoCut extends Thread {
-//   static Fits file = null;
-//   static double[] cut = null;
+// class ThreadAutoCut extends Thread {
+// static Fits file = null;
+// static double[] cut = null;
 //
-//   protected static double[] run(Fits file) {
-//      ThreadAutoCut.file = file;
-//      (new ThreadAutoCut()).run();
-//      return cut;
-//   }
+// protected static double[] run(Fits file) {
+// ThreadAutoCut.file = file;
+// (new ThreadAutoCut()).run();
+// return cut;
+// }
 //
 //
-//   public void run() {
-//      try {
-//         cut = file.findAutocutRange();
-//      } catch (Exception e) {
-//         // TODO Auto-generated catch block
-//         e.printStackTrace();
-//      }
-//   }
-//}
+// public void run() {
+// try {
+// cut = file.findAutocutRange();
+// } catch (Exception e) {
+// // TODO Auto-generated catch block
+// e.printStackTrace();
+// }
+// }
+// }

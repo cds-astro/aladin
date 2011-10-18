@@ -34,6 +34,8 @@ public class Context {
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
+   protected String regex = "*.fits";        // Expression régulière à appliquer pour sélectionner les images à traiter
+   
    protected int bitpixOrig = -1;            // BITPIX des images originales
    protected double blankOrig;               // Valeur du BLANK en entrée
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
@@ -54,8 +56,9 @@ public class Context {
    protected HpixTree moc = null;            // Zone du ciel à traiter (décrite par un MOC)
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected boolean isRunning=false;        // true s'il y a un processus de calcul en cours
+//   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
    
-//   protected int coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
+   protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
 //   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
    
    public Context() {}
@@ -65,6 +68,7 @@ public class Context {
    public int[] getBorderSize() { return borderSize; }
    public int getOrder() { return order<0 ? 3 : order; }
    public int getFrame() { return frame; }
+   public String getRegex() { return regex; }
    public String getFrameName() { return Localisation.getFrameName(frame); }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
@@ -80,6 +84,7 @@ public class Context {
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
    public HpixTree getMoc() { return moc; }
+   public CoAddMode getCoAddMode() { return coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
    public boolean isFading() { return fading; }
@@ -93,19 +98,41 @@ public class Context {
    public void setOrder(int order) { this.order = order; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFrame(int frame) { this.frame=frame; }
+   public void setRegex(String regex) { this.regex = regex; }
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
    public void setImgEtalon(String filename) { imgEtalon = filename; }
    public void setInitDir(String txt) { }
-//   public void setCoAdd(int coAdd) { this.coAdd = coAdd; }
+   public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
    public void setBitpixOrig(int bitpix) { bitpixOrig = this.bitpix = bitpix; }
+   public void setBitpix(int bitpix) { this.bitpix = bitpix; }
    public void setBlankOrig(double blankOrig) { this.blank = this.blankOrig = blankOrig; }
+   public void setBlank(double blank) { this.blank = blank;}
+   public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
+   public void setCut(String cut) {
+	   String vals[] = cut.split(" ");
+	   if (vals.length==2)
+		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),0,0};
+	   else if (vals.length==4)
+		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
+			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+   }
    
+   public void setCutData(String cut) {
+	   String vals[] = cut.split(" ");
+	   if (vals.length==2 && this.cut.length != 0)
+		   this.cut = new double[] {this.cut[0],this.cut[1],Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+	   else if (vals.length==4)
+		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
+			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+
+   }
+
    public void setCutOrig(double [] cutOrig) {
       this.cutOrig=cutOrig;
       cut = new double[cutOrig.length];
@@ -113,19 +140,74 @@ public class Context {
    }
    
    protected double coef;
-   
+
+   protected void initCut(Fits file) {
+	   int w = file.width;
+	   int h = file.height;
+	   if (w > 1024)
+		   w = 1024;
+	   if (h > 1024)
+		   h = 1024;
+	   try {
+		   file.loadFITS(file.getFilename(), 0, 0, w, h);
+		   double[] cut = file.findAutocutRange();
+		   setCutOrig(cut);
+	   } catch (Exception e) {
+		   e.printStackTrace();
+	   }
+   }
+
+   /**
+    * Sélectionne un fichier de type FITS (ou équivalent) dans le répertoire donné => va servir d'étalon
+    * Utilise un cache une case pour éviter les recherches redondantes
+    * @return true si trouvé
+    */
+   boolean findImgEtalon(String rootPath) {
+      File main = new File(rootPath);
+      Fits fitsfile = new Fits();
+      String[] list = main.list();
+      if( list==null ) return false;
+      String path = rootPath;
+      for( int f = 0 ; f < list.length ; f++ ) {
+         if( !rootPath.endsWith(Util.FS) ) rootPath = rootPath+Util.FS;
+         path = rootPath+list[f];
+         if( (new File(path)).isDirectory() ) {
+            if( list[f].equals(Constante.SURVEY) ) continue;
+            return findImgEtalon(path);
+         }
+         
+         // essaye de lire l'entete fits du fichier
+         // s'il n'y a pas eu d'erreur ça peut servir d'étalon
+         try {
+            Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
+            fitsfile.loadHeaderFITS(path);
+            setImgEtalon(path);
+            setBitpixOrig(fitsfile.bitpix);
+            if( !isColor() ) {
+               setBZeroOrig(fitsfile.bzero);
+               setBScaleOrig(fitsfile.bscale);
+               setBlankOrig(fitsfile.blank);
+            }
+            initCut(fitsfile);
+            return true;
+            
+         }  catch (Exception e) { continue; }
+      }
+      return false;
+   }
+
    public void initChangeBitpix() {
       int bitpix = getBitpix();
       cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
-            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
       cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-            : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+            : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
       coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
       
       cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
       cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
       
-      blank = bitpix<0 ? Double.NaN : bitpix==32 ? Integer.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
+      blank = bitpix<0 ? Double.NaN : bitpix==32 ? Double.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
       bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
       bScale = bScaleOrig/coef;
    }
