@@ -22,6 +22,7 @@ package cds.allsky;
 import static cds.tools.Util.FS;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -74,6 +75,7 @@ final public class BuilderMoc {
    
    public void generateMoc(String path) throws Exception {
       moc.clear();
+      moc.setCoordSys( getFrame(path) );
       int order = Util.getMaxOrderByPath(path);
       File f = new File(path+Util.FS+"Norder"+order);      
       
@@ -87,6 +89,16 @@ final public class BuilderMoc {
             add(order,npix);
          }
       }
+   }
+   
+   private String getFrame(String path) {
+      try {
+         File f = new File(path+Util.FS+PlanHealpix.PROPERTIES);
+         Properties prop = new java.util.Properties();
+         prop.load(new FileInputStream(f));
+         return prop.getProperty(PlanHealpix.KEY_COORDSYS,"C");
+      } catch( Exception e ) { }
+      return "C";
    }
    
    private void add(int order, int npix) {
