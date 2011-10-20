@@ -49,7 +49,11 @@ public class CacheFits {
    private int nextId;      // prochain identificateur unique de fichier
    private HashMap<String, FitsFile> map;             // Table des fichiers
    private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
-   private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
+   String skyvalName;          // Nom du champ pour soustraire le fond au moment 
+   //de la mise dans le cache
+
+
+   //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
    //de la mise dans le cache
 
    private int statNbOpen,statNbFind,statNbFree;
@@ -110,7 +114,7 @@ public class CacheFits {
       f.fits = new Fits();
       f.fits.loadFITS(name);
       // applique un filtre spécial
-      if (skyvalSub) delSkyval(f.fits);
+      if (skyvalName!=null) delSkyval(f.fits);
 
       map.put(name, f);
       mem+=f.getMem(); ;
@@ -148,8 +152,8 @@ public class CacheFits {
          //         System.out.println("clean.remove "+key );
       }
    }
-   public void setSkySub(boolean substract) {
-      skyvalSub = substract;
+   public void setSkySub(String key) {
+      skyvalName = key;
    }
 
    /**
@@ -163,11 +167,7 @@ public class CacheFits {
       double newval = f.blank;
       try {
          //			skyval = (int)f.headerFits.getDoubleFromHeader("SOFTBIAS");
-         try {
-            skyval = f.headerFits.getDoubleFromHeader("SKYVAL");
-         } catch (NullPointerException e) {
-            skyval = f.headerFits.getDoubleFromHeader("SKY");
-         }
+    	  skyval = f.headerFits.getDoubleFromHeader(skyvalName);
       } catch (NullPointerException e) {
       }
       if (skyval != 0) {
