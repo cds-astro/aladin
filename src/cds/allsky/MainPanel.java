@@ -61,7 +61,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected Aladin aladin;
    protected ContextGui context;
 
-   private String s_ERR, s_ERRFITS;
+   private String s_ERRFITS;
 
    // Le formulaire multi-tab
    private JTabbedPane pTab;              // Le panel principale
@@ -111,7 +111,6 @@ final public class MainPanel extends JPanel implements ActionListener {
 
    private void createChaine() {
       s_ERRFITS= getString("ERRFITS");
-      s_ERR    = getString("ERROR");
    }
 
    private String getString(String k) { return Aladin.getChaine().getString(k); }
@@ -236,10 +235,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    /** Retourne la liste des losanges HEALPix spécifiquement à traiter, null si tout le ciel */
    public HpixTree getHpixTree() {
       String s = tabDesc.getSpecifNpix().trim();
-      if( s.length()==0 ) return null;
-      HpixTree hpixTree = new HpixTree(s);
-      if( hpixTree.getSize()==0 ) return null;
-      return hpixTree;
+      return context.setRegion(s);
    }
 
    public void showDescTab() {

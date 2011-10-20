@@ -66,7 +66,7 @@ public class TabDesc extends JPanel implements ActionListener {
    private String INFOALLSKY;
    private String PARAMALLSKY;
    private String KEEPALLSKY,COADDALLSKY,OVERWRITEALLSKY;
-   private String SPECIFALLSKY,BLANKALLSKY,BORDERALLSKY ;
+   private String SPECIFALLSKY,BLANKALLSKY,BORDERALLSKY, SKYVALALLSKY ;
 
    
    private JLabel paramLabel;
@@ -74,10 +74,13 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox specifCheckbox;
    private JCheckBox blankCheckbox;
    private JCheckBox borderCheckbox;
+   private JCheckBox skyvalCheckbox;
+   
    private ButtonGroup tilesGroup;
    private JTextField specifTextField;
    protected JTextField blankTextField;
    protected JTextField borderTextField;
+   private JTextField skyvalTextField;
 
    private JCheckBox resetHpx = new JCheckBox();
    private JCheckBox resetIndex = new JCheckBox();
@@ -209,6 +212,17 @@ public class TabDesc extends JPanel implements ActionListener {
       pBorder.add(borderCheckbox);
       pBorder.add(borderTextField);
       pCenter.add(pBorder,c); 
+      
+      c.gridy++;
+      JPanel pSkyval = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      skyvalTextField.addKeyListener(new KeyAdapter() {
+    	  public void keyReleased(ActionEvent e) {
+    		  skyvalCheckbox.setSelected( skyvalTextField.getText().trim().length()>0 );
+    	  }
+      });
+      pSkyval.add(skyvalCheckbox);
+      pSkyval.add(skyvalTextField);
+      pCenter.add(pSkyval, c);
 
       if (Aladin.PROTO) {
          final JCheckBox cb1 = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
@@ -219,15 +233,6 @@ public class TabDesc extends JPanel implements ActionListener {
          });
          c.gridy++;
          pCenter.add(cb1, c);
-         
-         final JCheckBox cb2MASS = new JCheckBox("2MASS skyval filter", false);
-         cb2MASS.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               mainPanel.context.setSkySub(cb2MASS.isSelected());
-            }
-         });
-         c.gridy++;
-         pCenter.add(cb2MASS, c);
       }
      
       // boutons
@@ -264,6 +269,7 @@ public class TabDesc extends JPanel implements ActionListener {
       SPECIFALLSKY  = getString("SPECIFALLSKY");
       BLANKALLSKY  = getString("BLANKALLSKY");
       BORDERALLSKY  = getString("BORDERALLSKY");
+      SKYVALALLSKY  = getString("SKYVALALLSKY");
    }
    
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
@@ -317,6 +323,8 @@ public class TabDesc extends JPanel implements ActionListener {
       blankTextField = new JTextField(18);
       borderCheckbox = new JCheckBox(BORDERALLSKY); borderCheckbox.setSelected(false);
       borderTextField = new JTextField(10);
+      skyvalCheckbox = new JCheckBox(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
+      skyvalTextField = new JTextField(10);
 
       resetHpx.setText(REP_DEST_RESET);
       resetHpx.addActionListener(new ActionListener() {
@@ -392,6 +400,8 @@ public class TabDesc extends JPanel implements ActionListener {
       blankTextField.setEnabled(ready && !isRunning && !color);
       borderCheckbox.setEnabled(ready && !isRunning);
       borderTextField.setEnabled(ready && !isRunning);
+      skyvalCheckbox.setEnabled(ready && !isRunning);
+      skyvalTextField.setEnabled(ready && !isRunning);
       specifCheckbox.setEnabled(ready && !isRunning);
       specifTextField.setEnabled(ready && !isRunning);
       dir_S.setEnabled(!isRunning);
@@ -428,7 +438,7 @@ public class TabDesc extends JPanel implements ActionListener {
    }
 
    public CoAddMode getCoaddMode() {
-      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACETILE : 
+      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACE : 
             keepRadio.isSelected() ? CoAddMode.KEEP 
             :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
    }
@@ -500,6 +510,11 @@ public class TabDesc extends JPanel implements ActionListener {
       return borderTextField.getText();
    }
 
+   public String getSkyval() {
+	   if( !skyvalCheckbox.isSelected() ) return null;
+	   return skyvalTextField.getText();
+   }
+   
    /**
     * Applique les modifications si le nom du répertoire DESTINATION change
     */

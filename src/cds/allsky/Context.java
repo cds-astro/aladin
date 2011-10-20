@@ -42,13 +42,15 @@ public class Context {
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
-   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
+//   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
+   private String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank;                   // Valeur du BLANK en sortie
    protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
    protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
+   private HpixTree region;                  // Definition des losanges à traiter sous forme Norder/Npix
    
    protected boolean fading = false;         // true pour appliquer un "fondu-enchainé" sur les recouvrements
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
@@ -60,7 +62,8 @@ public class Context {
    
    protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
 //   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
-   
+
+
    public Context() {}
 
    // Getters
@@ -88,7 +91,7 @@ public class Context {
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
    public boolean isFading() { return fading; }
-   public boolean isSkySub() { return skySub; }
+   public boolean isSkySub() { return skyvalName!=null; }
    public boolean isRunning() { return isRunning; }
    public boolean isColor() { return bitpixOrig==0; }
    
@@ -98,12 +101,13 @@ public class Context {
    public void setOrder(int order) { this.order = order; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFrame(int frame) { this.frame=frame; }
+   public void setFrameName(String frame) { this.frame=
+	   (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setRegex(String regex) { this.regex = regex; }
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
    public void setImgEtalon(String filename) { imgEtalon = filename; }
-   public void setInitDir(String txt) { }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
@@ -140,6 +144,7 @@ public class Context {
    }
    
    protected double coef;
+
 
    protected void initCut(Fits file) {
 	   int w = file.width;
@@ -212,13 +217,17 @@ public class Context {
       bScale = bScaleOrig/coef;
    }
    
-   public void setSkySub(boolean skySub) {
-      this.skySub = skySub;
-      if (cacheFits != null) cacheFits.setSkySub(skySub);
+   public void setSkyval(String fieldName) {
+	   this.skyvalName = fieldName;
+	   if (cacheFits != null) cacheFits.setSkySub(skyvalName);
    }
+//   public void setSkySub(boolean skySub) {
+//      this.skySub = skySub;
+//      if (cacheFits != null) cacheFits.setSkySub(skySub);
+//   }
    public void setCache(CacheFits cache) {
       this.cacheFits = cache;
-      if (skySub) cache.setSkySub(true);
+      cache.setSkySub(skyvalName);
    }
 
    /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
@@ -282,9 +291,10 @@ public class Context {
 //   }
 
    public void warning(String string) {
-      Aladin.warning(string);
+	   String s_WARN    = "WARNING";//Aladin.getChaine().getString("WARNING");
+	   System.out.println(s_WARN+" "+string);
    }
-
+   
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
    static private Astroframe AF_GAL1 = new Galactic();
@@ -310,6 +320,22 @@ public class Context {
       aldel[1] = coo.getLat();
       return aldel;
    }
+
+   protected HpixTree setRegion(String s) {
+	   if( s.length()==0 ) return null;
+	   HpixTree hpixTree = new HpixTree(s);
+	   if( hpixTree.getSize()==0 ) return null;
+	   this.region = hpixTree;
+	   return hpixTree;
+   }
+
+   /**
+    * @param region the region to set
+    */
+   public void setRegion(HpixTree region) {
+	   this.region = region;
+   }
+
 
 
 }

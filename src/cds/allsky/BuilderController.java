@@ -52,7 +52,7 @@ public class BuilderController  {
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
    //   private int fct = PlanImage.LINEAR;
-   private CoAddMode coaddMode=CoAddMode.REPLACETILE;
+   private CoAddMode coaddMode=CoAddMode.REPLACE;
 
    public Context context;
 
@@ -710,7 +710,7 @@ public class BuilderController  {
 
       if( out !=null ) {
 
-         if( coaddMode!=CoAddMode.REPLACETILE ) {
+         if( coaddMode!=CoAddMode.REPLACE ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
             if( oldOut!=null ) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
