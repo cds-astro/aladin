@@ -44,6 +44,7 @@ public class Context {
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
 //   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
    private String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   private String initDir;                   // Nom du répertoire actuellement lu pour l'indexation
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank;                   // Valeur du BLANK en sortie
@@ -61,6 +62,7 @@ public class Context {
 //   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
    
    protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
+
 //   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
 
 
@@ -104,6 +106,7 @@ public class Context {
    public void setFrameName(String frame) { this.frame=
 	   (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setRegex(String regex) { this.regex = regex; }
+   public void setInitDir(String txt) { this.initDir = txt;}
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
@@ -118,23 +121,26 @@ public class Context {
    public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
-   public void setCut(String cut) {
+   public void setPixelCut(String cut) {
 	   String vals[] = cut.split(" ");
-	   if (vals.length==2)
-		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),0,0};
+	   if (vals.length==2 && this.cut !=null) {
+		   this.cut[0] = Double.parseDouble(vals[0]);
+		   this.cut[1] = Double.parseDouble(vals[1]);
+	   }
 	   else if (vals.length==4)
 		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
 			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
    }
    
-   public void setCutData(String cut) {
+   public void setDataCut(String cut) {
 	   String vals[] = cut.split(" ");
-	   if (vals.length==2 && this.cut.length != 0)
-		   this.cut = new double[] {this.cut[0],this.cut[1],Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+	   if (vals.length==2 && this.cut != null) {
+		   this.cut[2] = Double.parseDouble(vals[0]);
+		   this.cut[3] = Double.parseDouble(vals[1]);
+	   }
 	   else if (vals.length==4)
 		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
 			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
-
    }
 
    public void setCutOrig(double [] cutOrig) {
