@@ -159,9 +159,9 @@ public class SkyGen {
 				context.setBorderSize(val);
 			} catch (ParseException e) {System.err.println(e.getMessage());}
 		else if (opt.equalsIgnoreCase("pixelCut"))
-			context.setCut(val);
+			context.setPixelCut(val);
 		else if (opt.equalsIgnoreCase("dataCut")) {
-			context.setCutData(val);
+			context.setDataCut(val);
 		}
 		else if (opt.equalsIgnoreCase("color"))
 			context.setColor(Boolean.parseBoolean(val));

@@ -227,7 +227,7 @@ public class Plan implements Runnable {
       ; }
 
    /** Retourne true s'il s'agit d'un plan qui a des pixels */
-   final protected boolean hasAvailablePixels() {
+   final public boolean hasAvailablePixels() {
       return isImage() ||  type==IMAGEBLINK || type==IMAGECUBE
       || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
    }

@@ -237,9 +237,6 @@ public class BuilderRgb implements Runnable {
 	            if( width==-1 ) width = out[c].width;  // La largeur d'un losange est la même qq soit la couleur
 	         }
 	      }
-
-//	      // Génération de la couleur
-//	      generateRGB(out,order,npix);
 	   } catch( Exception e ) {
 	      e.printStackTrace();
 	   }

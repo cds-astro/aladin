@@ -920,31 +920,31 @@ final public class Fits {
    }
 
    public double[] findMinMax() {
-		 boolean first=true;
-        long nmin=0,nmax=0;
-        double c;
-        double max = 0, max1 = 0;
-        double min = 0, min1 = 0;
-        int n = pixels.length/ (Math.abs(bitpix)/8);
-        for(int i=0; i<n; i++ ) {
-           c = getPixValDouble(pixels,bitpix,i);
-           if( isBlankPixel(c) ) continue;
+      boolean first=true;
+      long nmin=0,nmax=0;
+      double c;
+      double max = 0, max1 = 0;
+      double min = 0, min1 = 0;
+      int n = pixels.length/ (Math.abs(bitpix)/8);
+      for(int i=0; i<n; i++ ) {
+         c = getPixValDouble(pixels,bitpix,i);
+         if( isBlankPixel(c) ) continue;
 
-           if( first ) { max=max1=min=min1=c; first=false; }
+         if( first ) { max=max1=min=min1=c; first=false; }
 
-           if( min>c ) { min=c; nmin=1; }
-           else if( max<c ) { max=c; nmax=1; }
-           else {
-              if( c==min ) nmin++;
-              if( c==max ) nmax++;
-           }
+         if( min>c ) { min=c; nmin=1; }
+         else if( max<c ) { max=c; nmax=1; }
+         else {
+            if( c==min ) nmin++;
+            if( c==max ) nmax++;
+         }
 
-           if( c<min1 && c>min || min1==min && c<max1 ) min1=c;
-           else if( c>max1 && c<max || max1==max && c>min1 ) max1=c;
-        }
-        double[] minmax= new double[] {min,max};
-		return minmax;
-	}
+         if( c<min1 && c>min || min1==min && c<max1 ) min1=c;
+         else if( c>max1 && c<max || max1==max && c>min1 ) max1=c;
+      }
+      double[] minmax= new double[] {min,max};
+      return minmax;
+   }
 
 
    /** Creation des tabl

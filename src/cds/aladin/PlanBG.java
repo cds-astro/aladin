@@ -2268,7 +2268,7 @@ System.out.println("Wakeup for loading remote Allsky...");
 
          }
       }
-      if( healpix!=null ) pixels = healpix.pixels;// Pour que l'histogramme soit à jour
+//      if( healpix!=null ) pixels = healpix.pixels;// Pour que l'histogramme soit à jour
 
       nb+=redraw(g,v,t1);
       hasDrawnSomething=nb>0;

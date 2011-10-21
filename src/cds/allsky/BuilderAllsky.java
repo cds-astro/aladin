@@ -138,10 +138,13 @@ final public class BuilderAllsky {
       // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
       if( out==null ) throw new Exception("createAllSky error: null output file !");
       double cut [] = context.getCut();
+      double bzero = context.getBZero();
+      double bscale = context.getBScale();
+//      double cut [] = out.findAutocutRange();
       
       out.setBlank(blank);
-      out.setBzero(context.getBZero());
-      out.setBscale(context.getBScale());
+      out.setBzero(bzero);
+      out.setBscale(bscale);
       out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
       out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
       out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
@@ -151,7 +154,8 @@ final public class BuilderAllsky {
       String filename = path+FS+"Norder"+order+FS+"Allsky";
       out.writeFITS(filename+".fits");
       
-      Aladin.trace(4,"BuilderAllsky.createAllSky()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+      Aladin.trace(3,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
+            +" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
    }
    
@@ -210,24 +214,6 @@ final public class BuilderAllsky {
       progress=100;
    }
    
-   private void createMOC(HpixTree moc,String path,int order, long npix) {
-      String cfile = Util.getFilePath(order, npix);
-      
-   }
-
-//   public void createMOC(String path) throws Exception {
-//      long t=System.currentTimeMillis();
-//      
-//      // Parcours des répertoires de niveau le plus haut Norder3
-//      // Pour chaque Npixnnn de niveau N, s'il manque un fils, je recommence récursivement
-//     
-//
-//      String filename = path+FS+"Norder"+order+FS+"Allsky";
-//      
-//      Aladin.trace(4,"SkyGenerator.createMOC()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
-//      progress=100;
-//   }
-
    /** Simulation d'un traitement de génération d'une image à partir d'une autre
     * comme le fera SkyBrowser pour la génération de la base Healpix
     */

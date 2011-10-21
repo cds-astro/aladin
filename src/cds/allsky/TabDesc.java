@@ -86,9 +86,9 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox resetIndex = new JCheckBox();
    private JButton browse_S = new JButton();
    private JButton browse_D = new JButton();
-   private JTextField dir_S = new JTextField(30); 
-   protected JTextField dir_D = new JTextField(30);
-   private JTextField textFieldAllsky = new JTextField(30);
+   private JTextField dir_S = new JTextField(35); 
+   protected JTextField dir_D = new JTextField(35);
+   private JTextField textFieldAllsky = new JTextField(35);
    private String defaultDirectory;
    final private MainPanel mainPanel;
    private String BROWSE;
@@ -101,12 +101,14 @@ public class TabDesc extends JPanel implements ActionListener {
       createChaine();
       init();
       
+      JPanel px;
       JPanel pCenter = new JPanel(new GridBagLayout());
       this.defaultDirectory = defaultDir;
 
       GridBagConstraints c = new GridBagConstraints();
-      c.insets = new Insets(1, 5, 1, 5);
+      c.insets = new Insets(1, 3, 1, 3);
       c.anchor = GridBagConstraints.NORTHWEST;
+      c.fill = GridBagConstraints.HORIZONTAL;
       
       // Baratin explicatif
       c.gridy = 0;
@@ -169,69 +171,61 @@ public class TabDesc extends JPanel implements ActionListener {
       pCenter.add(pTiles, c);
       
       c.gridx=2;
+      
       c.gridy++;
-      pCenter.add(specifCheckbox,c); 
-
-      c.gridy++;
-      c.insets.left=60;
-      JPanel pSpecif = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      pSpecif.add(specifTextField);
-//      gridButton = new JButton(getString("HPXGRID"));
-//      gridButton.addActionListener(new ActionListener() {
-//         public void actionPerformed(ActionEvent e) {
-//            parentPanel.aladin.switchHpxGrid();
-//         }
-//      });
-//      pSpecif.add(gridButton);
-      specifTextField.addKeyListener(new KeyAdapter() {
-         public void keyReleased(KeyEvent e) {
-            specifCheckbox.setSelected( specifTextField.getText().trim().length()>0 );
-         }
-      });
-      pCenter.add(pSpecif, c);
-      c.insets.left=1;
-
-      c.gridy++;
-      JPanel pBlank = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      px = new JPanel( new BorderLayout(0,0));
       blankTextField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             blankCheckbox.setSelected( blankTextField.getText().trim().length()>0 );
          }
       });
-      pBlank.add(blankCheckbox);
-      pBlank.add(blankTextField);
-      pCenter.add(pBlank,c); 
+      px.add(blankCheckbox,BorderLayout.WEST);
+      px.add(blankTextField,BorderLayout.CENTER);
+      pCenter.add(px,c); 
 
       c.gridy++;
-      JPanel pBorder = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      px = new JPanel( new BorderLayout(0,0));
+      skyvalTextField.addKeyListener(new KeyAdapter() {
+          public void keyReleased(ActionEvent e) {
+              skyvalCheckbox.setSelected( skyvalTextField.getText().trim().length()>0 );
+          }
+      });
+      px.add(skyvalCheckbox,BorderLayout.WEST);
+      px.add(skyvalTextField,BorderLayout.CENTER);
+      pCenter.add(px, c);
+
+      c.gridy++;
+      px = new JPanel( new BorderLayout(0,0));
       borderTextField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             borderCheckbox.setSelected( borderTextField.getText().trim().length()>0 );
          }
       });
-      pBorder.add(borderCheckbox);
-      pBorder.add(borderTextField);
-      pCenter.add(pBorder,c); 
+      px.add(borderCheckbox,BorderLayout.WEST);
+      px.add(borderTextField,BorderLayout.CENTER);
+      pCenter.add(px,c); 
       
       c.gridy++;
-      JPanel pSkyval = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-      skyvalTextField.addKeyListener(new KeyAdapter() {
-    	  public void keyReleased(ActionEvent e) {
-    		  skyvalCheckbox.setSelected( skyvalTextField.getText().trim().length()>0 );
-    	  }
+      px = new JPanel( new BorderLayout(0,0));
+      px.add(specifCheckbox,BorderLayout.WEST);
+      px.add(specifTextField,BorderLayout.CENTER);
+      specifTextField.addKeyListener(new KeyAdapter() {
+         public void keyReleased(KeyEvent e) {
+            specifCheckbox.setSelected( specifTextField.getText().trim().length()>0 );
+         }
       });
-      pSkyval.add(skyvalCheckbox);
-      pSkyval.add(skyvalTextField);
-      pCenter.add(pSkyval, c);
+      pCenter.add(px,c);
+      
 
+      
       if (Aladin.PROTO) {
+         c.gridy++;
          final JCheckBox cb1 = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
          cb1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                mainPanel.context.setFrame(cb1.isSelected() ? Localisation.GAL : Localisation.ICRS);
             }
          });
-         c.gridy++;
          pCenter.add(cb1, c);
       }
      
@@ -318,13 +312,13 @@ public class TabDesc extends JPanel implements ActionListener {
       keepRadio.setSelected(true);
       
       specifCheckbox = new JCheckBox(SPECIFALLSKY); specifCheckbox.setSelected(false);
-      specifTextField = new JTextField(30);
+      specifTextField = new JTextField();
       blankCheckbox = new JCheckBox(BLANKALLSKY); blankCheckbox.setSelected(false);
-      blankTextField = new JTextField(18);
+      blankTextField = new JTextField();
       borderCheckbox = new JCheckBox(BORDERALLSKY); borderCheckbox.setSelected(false);
-      borderTextField = new JTextField(10);
+      borderTextField = new JTextField();
       skyvalCheckbox = new JCheckBox(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
-      skyvalTextField = new JTextField(10);
+      skyvalTextField = new JTextField();
 
       resetHpx.setText(REP_DEST_RESET);
       resetHpx.addActionListener(new ActionListener() {

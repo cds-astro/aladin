@@ -317,12 +317,13 @@ public class TabJpg extends JPanel implements ActionListener {
       boolean rep=true;
       String s;
       try {
-         PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
-         if( !p.isTruePixels() ) throw new Exception();
+         PlanImage p = (PlanImage) mainPanel.aladin.calque.getPlanBase();
+//         if( !p.isTruePixels() ) throw new Exception();
+         if( !p.hasAvailablePixels() ) throw new Exception();
          s="<html><i>"+"Pixels:<b> "+p.getPixelMinInfo()+" .. "+p.getPixelMaxInfo()+"</b> from "+p.getDataMinInfo()+" .. "+p.getDataMaxInfo()+" - " +
          "Transfert function: <b>"+p.getTransfertFctInfo()+"</b></i>";
       } catch( Exception e1 ) {
-         s="<html><i>No allsky presently displayed !</i>";
+         s="<html><i>No compatible image/survey presently displayed !</i>";
          rep=false;
       }
       currentCM.setText(s);

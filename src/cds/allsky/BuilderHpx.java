@@ -67,7 +67,6 @@ final public class BuilderHpx {
          blankOrig=context.getBlankOrig();
       }
       hpxFinderPath = context.getHpxFinderPath();
-      createHealpixOrder(Constante.ORDER);
    }
 
    /**
@@ -116,7 +115,7 @@ final public class BuilderHpx {
          
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
-               index = min + xy2hpx(y * out.width + x);
+               index = min + context.xy2hpx(y * out.width + x);
                // recherche les coordonnées du pixels HPX
                point = CDSHealpix.pix2ang_nest(nside, index);
                CDSHealpix.polarToRadec(point, radec);
@@ -603,53 +602,6 @@ final public class BuilderHpx {
       out.writeFITS(filename_base);
       System.out.println("file " + filename_base + " written !!");
 
-   }
-
-   private int[] xy2hpx = null;
-   private int[] hpx2xy = null;
-
-   /** Méthode récursive utilisée par createHealpixOrder */
-   private void fillUp(int[] npix, int nsize, int[] pos) {
-      int size = nsize * nsize;
-      int[][] fils = new int[4][size / 4];
-      int[] nb = new int[4];
-      for (int i = 0; i < size; i++) {
-         int dg = (i % nsize) < (nsize / 2) ? 0 : 1;
-         int bh = i < (size / 2) ? 1 : 0;
-         int quad = (dg << 1) | bh;
-         int j = pos == null ? i : pos[i];
-         npix[j] = npix[j] << 2 | quad;
-         fils[quad][nb[quad]++] = j;
-      }
-      if (size > 4)
-         for (int i = 0; i < 4; i++)
-            fillUp(npix, nsize / 2, fils[i]);
-   }
-
-   /** Creation des tableaux de correspondance indice Healpix <=> indice XY */
-   void createHealpixOrder(int order) {
-      int nsize = (int) CDSHealpix.pow2(order);
-      xy2hpx = new int[nsize * nsize];
-      hpx2xy = new int[nsize * nsize];
-      fillUp(xy2hpx, nsize, null);
-      for (int i = 0; i < xy2hpx.length; i++)
-         hpx2xy[xy2hpx[i]] = i;
-   }
-
-   /**
-    * Retourne l'indice XY en fonction d'un indice Healpix => nécessité
-    * d'initialiser au préalable avec createHealpixOrdre(int)
-    */
-   final public int xy2hpx(int hpxOffset) {
-      return xy2hpx[hpxOffset];
-   }
-
-   /**
-    * Retourne l'indice XY en fonction d'un indice Healpix => nécessité
-    * d'initialiser au préalable avec createHealpixOrdre(int)
-    */
-   final public int hpx2xy(int xyOffset) {
-      return hpx2xy[xyOffset];
    }
 
    /*

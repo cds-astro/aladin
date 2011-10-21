@@ -342,6 +342,7 @@ public class BuilderController  {
    private void launchThreadBuilderHpx(int nbThreads,int ordermin,int ordermax) {
 
       initStat(nbThreads);
+      context.createHealpixOrder(Constante.ORDER);
 
       for( int i=0; i<nbThreads; i++ ) {
          BuilderHpx hpx = new BuilderHpx(context);

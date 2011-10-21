@@ -123,8 +123,8 @@ public class PlanImage extends Plan {
    protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSACLE et BZERO
    protected boolean isBlank;         // True s'il y a une valeur consideree comme BLANK
    protected double blank;            // La valeur BLANK si elle existe
-   protected double bZero;            // La valeur BZERO si elle existe
-   protected double bScale=1.;        // La valeur BSCALE si elle existe
+   public double bZero;            // La valeur BZERO si elle existe
+   public double bScale=1.;        // La valeur BSCALE si elle existe
 
    // Les caracteristiques du plan Image
    Obj o=null;		   // La source associee a une image archive

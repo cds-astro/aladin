@@ -44,12 +44,12 @@ public class Context {
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
 //   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
    private String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
-   private String initDir;                   // Nom du répertoire actuellement lu pour l'indexation
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank;                   // Valeur du BLANK en sortie
-   protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
-   protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
+   protected double bZero;                   // Valeur BZERO de la boule Healpix à générer
+   protected double bScale;                  // Valeur BSCALE de la boule HEALPix à générer
+   protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    private HpixTree region;                  // Definition des losanges à traiter sous forme Norder/Npix
    
@@ -62,10 +62,8 @@ public class Context {
 //   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
    
    protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
-
 //   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
-
-
+   
    public Context() {}
 
    // Getters
@@ -96,6 +94,7 @@ public class Context {
    public boolean isSkySub() { return skyvalName!=null; }
    public boolean isRunning() { return isRunning; }
    public boolean isColor() { return bitpixOrig==0; }
+   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
    
    // Setters
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
@@ -104,9 +103,9 @@ public class Context {
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame=
-	   (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
+       (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setRegex(String regex) { this.regex = regex; }
-   public void setInitDir(String txt) { this.initDir = txt;}
+   public void setInitDir(String txt) { }
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
@@ -114,6 +113,8 @@ public class Context {
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
+   public void setBScale(double x) { bScale = x; bscaleBzeroSet=true; }
+   public void setBZero(double x) { bZero = x; bscaleBzeroSet=true; }
    public void setBitpixOrig(int bitpix) { bitpixOrig = this.bitpix = bitpix; }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
    public void setBlankOrig(double blankOrig) { this.blank = this.blankOrig = blankOrig; }
@@ -122,25 +123,26 @@ public class Context {
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
    public void setPixelCut(String cut) {
-	   String vals[] = cut.split(" ");
+       String vals[] = cut.split(" ");
 	   if (vals.length==2 && this.cut !=null) {
 		   this.cut[0] = Double.parseDouble(vals[0]);
 		   this.cut[1] = Double.parseDouble(vals[1]);
 	   }
-	   else if (vals.length==4)
-		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
-			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+       else if (vals.length==4)
+           this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
+               Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
    }
    
    public void setDataCut(String cut) {
-	   String vals[] = cut.split(" ");
+       String vals[] = cut.split(" ");
 	   if (vals.length==2 && this.cut != null) {
 		   this.cut[2] = Double.parseDouble(vals[0]);
 		   this.cut[3] = Double.parseDouble(vals[1]);
 	   }
-	   else if (vals.length==4)
-		   this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
-			   Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+       else if (vals.length==4)
+           this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
+               Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+
    }
 
    public void setCutOrig(double [] cutOrig) {
@@ -150,22 +152,20 @@ public class Context {
    }
    
    protected double coef;
-
+   
 
    protected void initCut(Fits file) {
-	   int w = file.width;
-	   int h = file.height;
-	   if (w > 1024)
-		   w = 1024;
-	   if (h > 1024)
-		   h = 1024;
-	   try {
-		   file.loadFITS(file.getFilename(), 0, 0, w, h);
-		   double[] cut = file.findAutocutRange();
-		   setCutOrig(cut);
-	   } catch (Exception e) {
-		   e.printStackTrace();
-	   }
+       int w = file.width;
+       int h = file.height;
+       if (w > 1024) w = 1024;
+       if (h > 1024) h = 1024;
+       try {
+           file.loadFITS(file.getFilename(), 0, 0, w, h);
+           double[] cut = file.findAutocutRange();
+           setCutOrig(cut);
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
    }
 
    /**
@@ -219,13 +219,13 @@ public class Context {
       cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
       
       blank = bitpix<0 ? Double.NaN : bitpix==32 ? Double.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
-      bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
-      bScale = bScaleOrig/coef;
+      setBZero( bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef) );
+      setBScale( bScaleOrig/coef );
    }
    
    public void setSkyval(String fieldName) {
-	   this.skyvalName = fieldName;
-	   if (cacheFits != null) cacheFits.setSkySub(skyvalName);
+       this.skyvalName = fieldName;
+       if (cacheFits != null) cacheFits.setSkySub(skyvalName);
    }
 //   public void setSkySub(boolean skySub) {
 //      this.skySub = skySub;
@@ -297,10 +297,10 @@ public class Context {
 //   }
 
    public void warning(String string) {
-	   String s_WARN    = "WARNING";//Aladin.getChaine().getString("WARNING");
-	   System.out.println(s_WARN+" "+string);
+       String s_WARN    = "WARNING";//Aladin.getChaine().getString("WARNING");
+       System.out.println(s_WARN+" "+string);
    }
-   
+
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
    static private Astroframe AF_GAL1 = new Galactic();
@@ -326,20 +326,69 @@ public class Context {
       aldel[1] = coo.getLat();
       return aldel;
    }
+   
+   private int[] xy2hpx = null;
+   private int[] hpx2xy = null;
+
+   /** Méthode récursive utilisée par createHealpixOrder */
+   private void fillUp(int[] npix, int nsize, int[] pos) {
+      int size = nsize * nsize;
+      int[][] fils = new int[4][size / 4];
+      int[] nb = new int[4];
+      for (int i = 0; i < size; i++) {
+         int dg = (i % nsize) < (nsize / 2) ? 0 : 1;
+         int bh = i < (size / 2) ? 1 : 0;
+         int quad = (dg << 1) | bh;
+         int j = pos == null ? i : pos[i];
+         npix[j] = npix[j] << 2 | quad;
+         fils[quad][nb[quad]++] = j;
+      }
+      if (size > 4)
+         for (int i = 0; i < 4; i++)
+            fillUp(npix, nsize / 2, fils[i]);
+   }
+
+   /** Creation des tableaux de correspondance indice Healpix <=> indice XY */
+   public void createHealpixOrder(int order) {
+      int nsize = (int) CDSHealpix.pow2(order);
+      xy2hpx = new int[nsize * nsize];
+      hpx2xy = new int[nsize * nsize];
+      fillUp(xy2hpx, nsize, null);
+      for (int i = 0; i < xy2hpx.length; i++)
+         hpx2xy[xy2hpx[i]] = i;
+   }
+
+   /**
+    * Retourne l'indice XY en fonction d'un indice Healpix => nécessité
+    * d'initialiser au préalable avec createHealpixOrdre(int)
+    */
+   final public int xy2hpx(int hpxOffset) {
+      return xy2hpx[hpxOffset];
+   }
+
+   /**
+    * Retourne l'indice XY en fonction d'un indice Healpix => nécessité
+    * d'initialiser au préalable avec createHealpixOrdre(int)
+    */
+   final public int hpx2xy(int xyOffset) {
+      return hpx2xy[xyOffset];
+   }
+
+
 
    protected HpixTree setRegion(String s) {
-	   if( s.length()==0 ) return null;
-	   HpixTree hpixTree = new HpixTree(s);
-	   if( hpixTree.getSize()==0 ) return null;
-	   this.region = hpixTree;
-	   return hpixTree;
+       if( s.length()==0 ) return null;
+       HpixTree hpixTree = new HpixTree(s);
+       if( hpixTree.getSize()==0 ) return null;
+       this.region = hpixTree;
+       return hpixTree;
    }
 
    /**
     * @param region the region to set
     */
    public void setRegion(HpixTree region) {
-	   this.region = region;
+       this.region = region;
    }
 
 

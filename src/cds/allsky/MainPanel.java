@@ -23,30 +23,18 @@ import static cds.allsky.Constante.INDEX;
 import static cds.allsky.Constante.TESS;
 
 import java.awt.BorderLayout;
-import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.StringTokenizer;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
-import cds.aladin.Localisation;
 import cds.aladin.PlanBG;
-import cds.astro.Astrocoo;
-import cds.astro.Astroframe;
-import cds.astro.Galactic;
-import cds.astro.ICRS;
-import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.HpixTree;
@@ -164,7 +152,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    public void init() {
       String path = getInputPath();
       boolean found = context.findImgEtalon(path);
-      if (!found) {
+      if( !found ) {
          context.warning("There is no available images in source directory !\n"
                + s_ERRFITS + path);
          return;
@@ -177,18 +165,18 @@ final public class MainPanel extends JPanel implements ActionListener {
          e.printStackTrace();
       }
       tabBuild.setOriginalBitpix(file.bitpix);
-
-      // tabBuild.setBScaleBZero(file.bscale, file.bzero);
-      // tabBuild.setBlank(file.blank);
-
+      
+//      tabBuild.setBScaleBZero(file.bscale, file.bzero);
+//      tabBuild.setBlank(file.blank);
+      
       // calcule le meilleur nside
       long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib()
             .GetResol()[0] * 3600.);
-      setSelectedOrder((int) Util.order((int) nside) - Constante.ORDER);
-
+      setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
+      
       newAllskyDir();
    }
-
+   
    private int setSelectedOrder(int val) {
       return tabBuild.setSelectedOrder(val);
    }
@@ -268,7 +256,6 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected void enableProgress(boolean selected, int mode) {
       tabBuild.enableProgress(selected, mode);
    }
-
    protected void setProgress(int mode, int value) {
       tabBuild.setProgress(mode, value);
    }
@@ -419,7 +406,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       Aladin.trace(4, "MainPanel.setCutFromPreview: cutmin,cutmax = ["
             + cutmin + ".." + cutmax + "] datamin,datamax = [" + datamin
             + ".." + datamax + "] ");
-      context.setCut(new double[] { cutmin, cutmax, datamin, datamax });
+      context.setCut(new double[]{cutmin,cutmax,datamin,datamax});
    }
 
    /**
@@ -442,6 +429,7 @@ final public class MainPanel extends JPanel implements ActionListener {
          } else {
             planPreview.forceReload();
             aladin.calque.repaintAll();
+//            setCutFromPreview();
             Aladin.trace(4, "MainPanel.preview: update "+mysky);
 
          }
@@ -453,23 +441,23 @@ final public class MainPanel extends JPanel implements ActionListener {
 
 }
 
-// class ThreadAutoCut extends Thread {
-// static Fits file = null;
-// static double[] cut = null;
+//class ThreadAutoCut extends Thread {
+//   static Fits file = null;
+//   static double[] cut = null;
 //
-// protected static double[] run(Fits file) {
-// ThreadAutoCut.file = file;
-// (new ThreadAutoCut()).run();
-// return cut;
-// }
+//   protected static double[] run(Fits file) {
+//      ThreadAutoCut.file = file;
+//      (new ThreadAutoCut()).run();
+//      return cut;
+//   }
 //
 //
-// public void run() {
-// try {
-// cut = file.findAutocutRange();
-// } catch (Exception e) {
-// // TODO Auto-generated catch block
-// e.printStackTrace();
-// }
-// }
-// }
+//   public void run() {
+//      try {
+//         cut = file.findAutocutRange();
+//      } catch (Exception e) {
+//         // TODO Auto-generated catch block
+//         e.printStackTrace();
+//      }
+//   }
+//}

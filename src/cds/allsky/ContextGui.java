@@ -130,7 +130,33 @@ public class ContextGui extends Context {
    public String getLabel() {
       return mainPanel.getLabel();
    }
+   
+   public double[] getCut() {
+      if( cut==null ) cut = new double[4];
+      try {
+         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
+            PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
+            cut[0]= p.getCutMin();
+            cut[1]= p.getCutMax();
+            cut[2]= p.getDataMin();
+            cut[3]= p.getDataMax();
+            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bZero)/bScale;
 
+         } else {
+            String cutMin = mainPanel.tabJpg.getCutMin();
+            String cutMax = mainPanel.tabJpg.getCutMax();
+            cut[0] = (Double.parseDouble(cutMin)-bZero)/bScale;
+            cut[1] = (Double.parseDouble(cutMax)-bZero)/bScale;
+         }
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         cut[0] = cut[2] = 0;
+         cut[1] = cut[3] = 1;
+      }
+
+      return cut;
+   }
+   
    public double[] getCutOrig() {
       if( cutOrig==null ) cutOrig = new double[4];
       try {

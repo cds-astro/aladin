@@ -48,14 +48,35 @@ public class BuilderJpg implements Runnable {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
-	   bitpix = context.getBitpix();
-	   blank = context.getBlank();
-	   width=Constante.SIDE;
-	   bscale=context.getBScale();
-	   bzero=context.getBZero();
-	   cut=context.getCutOrig();
+	   initBscaleBzeroFromNpixFits(dirpath);
+	   cut=context.getCut();
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
 	   this.method=method;
+	}
+	
+	// Initialise la valeur du BSCALE BZERO de sortie en fonction du premier fichier Npixxxx.fits trouvé dans Norder3/Dir0
+	// Nécessaire dans le cas de relance juste pour le calcul des JPEG car ces valeurs n'ont 
+	// jamais été initialisées dans ce cas.
+	private void initBscaleBzeroFromNpixFits(String path) {
+	   if( context.isBScaleBZeroSet() ) return; // inutile
+	   try {
+	      File f1 = null;
+	      for( int i=0; i<768; i++ ) {
+	         f1 = new File( Util.getFilePath(path, 3, i)+".fits" );
+	         if( f1.exists() ) break;
+	      }
+	      Fits f = new Fits();
+	      f.loadHeaderFITS(f1.getAbsolutePath());
+	      double bscale=1;
+	      double bzero=0;
+	      try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }
+	      try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
+	      Aladin.trace(4,"BuilderJpg.initBscaleBzeroFromNpixFits()... reinit target BZERO="+bzero+", BSCALE="+bscale);
+	      context.setBScale(bscale);
+	      context.setBZero(bzero);
+	   } catch( Exception e ) {
+	      e.printStackTrace();
+	   }
 	}
 	
 	private void initStat() { statNbFile=0; statSize=0; statLastShowTime=-1; startTime = System.currentTimeMillis(); }
@@ -134,6 +155,13 @@ public class BuilderJpg implements Runnable {
            if( found ) out = createNodeJpg(fils);
         }
         if( out!=null ) {
+           if( debugFlag ) {
+              debugFlag=false;
+              Aladin.trace(3,"Creating JPEG tiles: method="+(method==MOYENNE?"average":"median")
+                    +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
+                    +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
+                    +" tcm="+(tcm==null?"null":"provided"));
+           }
            if( tcm==null ) out.toPix8(cut[0],cut[1]);
            else out.toPix8(cut[0],cut[1],tcm);
            out.writeJPEG(file+".jpg");
@@ -144,6 +172,8 @@ public class BuilderJpg implements Runnable {
         return out;
     }
     
+    private boolean debugFlag=true;
+    
     /** Construction d'une tuile terminale. De fait, simple chargement
      * du fichier FITS correspondant. */
     private Fits createLeaveJpg(String file)  {
@@ -151,8 +181,18 @@ public class BuilderJpg implements Runnable {
        try {
           out = new Fits();
           out.loadFITS(file+".fits");
+          if( first ) { first=false; setConstantes(out); }
       } catch( Exception e ) { out=null; }
       return out;
+    }
+    
+    private boolean first=true;
+    private void setConstantes(Fits f) {
+       bitpix = f.bitpix;
+       blank  = f.blank;
+       bscale = f.bscale;
+       bzero  = f.bzero;
+       width  = f.width;
     }
 
 	/** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
