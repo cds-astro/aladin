@@ -51,7 +51,6 @@ public class Context {
    protected double bScale;                  // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
-   private HpixTree region;                  // Definition des losanges à traiter sous forme Norder/Npix
    
    protected boolean fading = false;         // true pour appliquer un "fondu-enchainé" sur les recouvrements
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
@@ -95,6 +94,9 @@ public class Context {
    public boolean isRunning() { return isRunning; }
    public boolean isColor() { return bitpixOrig==0; }
    public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
+   public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isInTree(order,npix); }
+   public boolean isInMocLevel(int order,long npix) { return moc==null || moc.isIn(order,npix); }
+   public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    
    // Setters
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
@@ -236,6 +238,22 @@ public class Context {
       cache.setSkySub(skyvalName);
    }
 
+   protected HpixTree setMoc(String s) {
+      if( s.length()==0 ) return null;
+      HpixTree hpixTree = new HpixTree(s);
+      if( hpixTree.getSize()==0 ) return null;
+      moc = hpixTree;
+      return hpixTree;
+   }
+
+   public void setMoc(HpixTree region) {
+      moc = region;
+   }
+   
+   /** Initialisation des paramètres (ne sert que pour contextGui) */
+   public void initParamFromGui() {}
+
+
    /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
     * soit une seule valeur appliquée à tous les bords,
     * soit 4 valeurs affectées à la java de la manière suivante : Nord, Ouest, Sud, Est 
@@ -372,23 +390,6 @@ public class Context {
     */
    final public int hpx2xy(int xyOffset) {
       return hpx2xy[xyOffset];
-   }
-
-
-
-   protected HpixTree setRegion(String s) {
-       if( s.length()==0 ) return null;
-       HpixTree hpixTree = new HpixTree(s);
-       if( hpixTree.getSize()==0 ) return null;
-       this.region = hpixTree;
-       return hpixTree;
-   }
-
-   /**
-    * @param region the region to set
-    */
-   public void setRegion(HpixTree region) {
-       this.region = region;
    }
 
 

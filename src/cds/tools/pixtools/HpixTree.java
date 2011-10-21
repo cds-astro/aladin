@@ -155,16 +155,6 @@ public final class HpixTree extends HealpixMoc {
          oval=val;
       }
    }
-
-   
-   /** Retourne true si le pixel est un ascendant */
-   public boolean isAscendant(Hpix hpix) { return isAscendant(hpix.getOrder(),hpix.getNpix()); }
-   
-   /** Retourne true si le pixel est un descendant */
-   public boolean isDescendant(Hpix hpix) { return isDescendant(hpix.getOrder(),hpix.getNpix()); }
-   
-   /** Retourne true si le pixel est présent */
-   public boolean isIn(Hpix hpix) { return isIn(hpix.getOrder(),hpix.getNpix()); }
    
    /** Retourne true si le pixel est présent, lui, ou l'un de ses frères */
    public boolean isBrother(Hpix hpix) {

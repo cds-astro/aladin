@@ -47,7 +47,7 @@ public class BuilderController  {
    private double bZero;
    private double bScale;
    private double blank;
-   private HpixTree moc=null;
+//   private HpixTree moc=null;
    
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
@@ -151,7 +151,10 @@ public class BuilderController  {
       if (ordermax==-1) ordermax=4;
 
       // pour chaque losange sélectionné
-      NMAX = npix_list.size();      
+      NMAX = npix_list.size();     
+      
+      // Initialisation du Moc
+      context.initParamFromGui();
 
       // Y a-t-il un changement de bitpix ?
       if( context.getBitpix() != context.getBitpixOrig() ) {
@@ -165,7 +168,7 @@ public class BuilderController  {
       // Initialisation des variables 
       flagColor = context.isColor();
       bitpix = context.getBitpix();
-      moc = context.getMoc();
+//      moc = context.getMoc();
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
@@ -365,24 +368,21 @@ public class BuilderController  {
       return false;
    }
 
-   private boolean isAscendant(int order,long npix) {
-      if( moc==null ) return true;
-      Hpix hpix = new Hpix(order,npix);
-      return moc.isAscendant(hpix);
-   }
-
-   private boolean isDescendant(int order,long npix) {
-      if( moc==null ) return true;
-      Hpix hpix = new Hpix(order,npix);
-      return moc.isDescendant(hpix);
-   }
-
-   private boolean isInList(int order,long npix) {
-      if( moc==null ) return true;
-      Hpix hpix = new Hpix(order,npix);
-      return moc.isIn(hpix);
-   }
-
+//   private boolean isAscendant(int order,long npix) {
+//      if( moc==null ) return true;
+//      return moc.isAscendant(order,npix);
+//   }
+//
+//   private boolean isDescendant(int order,long npix) {
+//      if( moc==null ) return true;
+//      return moc.isDescendant(order,npix);
+//   }
+//
+//   private boolean isInList(int order,long npix) {
+//      if( moc==null ) return true;
+//      return moc.isIn(order,npix);
+//   }
+   
    /** Création d'un losange par concaténation de ses 4 fils
     * @param file Nom du fichier complet, mais sans l'extension
     * @param path Path de la base
@@ -395,8 +395,8 @@ public class BuilderController  {
       int w=Constante.SIDE;
       double px[] = new double[4];
 
-
-      boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
+//      boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
+      boolean inTree = context.isInMocTree(order,npix);
       if( !inTree ) return flagColor ? null : findFits(file+".fits");
 
       Fits out = new Fits(w,w,bitpix);
@@ -698,10 +698,12 @@ public class BuilderController  {
       long t = System.currentTimeMillis();
 
       Fits oldOut=null;
-      boolean isInList = isInList(order,npix);
-      if( !isInList /* || coaddMode==DescPanel.KEEP */ ) {
+      boolean isInList = context.isInMocLevel(order,npix);
+//      boolean isInList = isInList(order,npix);
+      if( !isInList ) {
          oldOut = findFits(file+".fits");
-         if( !(oldOut==null && isDescendant(order,npix) ) ) return oldOut;
+         if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) return oldOut;
+//         if( !(oldOut==null && isDescendant(order,npix) ) ) return oldOut;
       }
 
       int nside_file = Util.nside(order);
@@ -768,7 +770,7 @@ public class BuilderController  {
     *  Retourne null si non trouvé
     * @param filefits Nom du fichier fits (complet avec extension)
     */
-   Fits findFits(String filefits) throws Exception {
+   static public Fits findFits(String filefits) throws Exception {
       File f = new File(filefits);
       if( !f.exists() ) return null;
       Fits out = new Fits();

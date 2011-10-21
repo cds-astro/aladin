@@ -221,9 +221,13 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    /** Retourne la liste des losanges HEALPix spécifiquement à traiter, null si tout le ciel */
-   public HpixTree getHpixTree() {
-      String s = tabDesc.getSpecifNpix().trim();
-      return context.setRegion(s);
+//   public HpixTree getMoc() {
+//      String s = tabDesc.getSpecifNpix().trim();
+//      return context.setMoc(s);
+//   }
+   
+   public String getMoc() {
+      return tabDesc.getSpecifNpix().trim();
    }
 
    public void showDescTab() {

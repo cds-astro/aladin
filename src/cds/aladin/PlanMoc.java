@@ -137,7 +137,7 @@ public class PlanMoc extends PlanBGCat {
          if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
          Hpix p = hpixList[i];
          order=p.getOrder();
-         if( moc!=null && !moc.isIntersect(order, p.getNpix())) { r++; continue; }
+         if( moc!=null && !moc.isInTree(order, p.getNpix())) { r++; continue; }
          if( p.isOutView(v) ) continue;
          if( wireFrame ) p.draw(g, v);
          else p.fill(g, v);

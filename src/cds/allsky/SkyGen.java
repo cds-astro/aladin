@@ -149,7 +149,7 @@ public class SkyGen {
 		else if (opt.equalsIgnoreCase("bitpix"))
 			context.setBitpix(Integer.parseInt(val));
 		else if (opt.equalsIgnoreCase("region"))
-			context.setRegion(val);
+			context.setMoc(val);
 		else if (opt.equalsIgnoreCase("frame"))
 			context.setFrameName(val);
 		else if (opt.equalsIgnoreCase("skyval"))

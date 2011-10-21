@@ -105,10 +105,15 @@ public class ContextGui extends Context {
       }
       return blank;
    }
-
-   public HpixTree getMoc() {
-      return mainPanel.getHpixTree();
+   
+   /** Initialisation des paramètres (ne sert que pour contextGui) */
+   public void initParamFromGui() {
+      setMoc( mainPanel.getMoc() );
    }
+
+//   public HpixTree getMoc() {
+//      return mainPanel.getMoc();
+//   }
 
    public void setIsRunning(boolean flag) { 
       super.setIsRunning(flag);

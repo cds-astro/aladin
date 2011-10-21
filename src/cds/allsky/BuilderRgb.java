@@ -41,6 +41,7 @@ public class BuilderRgb implements Runnable {
     public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path,int method) {
        this.aladin = aladin;
        this.context = context;
+       context.initParamFromGui();
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -128,7 +129,7 @@ public class BuilderRgb implements Runnable {
 	      }
 	      if( found ) out = createNodeRGB(fils);
 	   }
-	   if( out!=null ) generateRGB(out, order, npix);
+	   if( out!=null && context.isInMocTree(order,npix) ) generateRGB(out, order, npix);
 	   return out;
 	}
 

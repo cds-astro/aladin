@@ -48,6 +48,7 @@ public class BuilderJpg implements Runnable {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
+	   context.initParamFromGui();
 	   initBscaleBzeroFromNpixFits(dirpath);
 	   cut=context.getCut();
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
@@ -121,7 +122,7 @@ public class BuilderJpg implements Runnable {
 	      progressFactor = 100f/768f;
 	      progress=0;
 	      for( int i=0; i<768; i++ ) {
-	         createJpg(dirpath,3,i);
+	         if( context.isInMocTree(3, i) ) createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
 	      (new BuilderAllsky(context,-1)).createAllSkyJpgColor(dirpath,3,64,false);
@@ -154,7 +155,7 @@ public class BuilderJpg implements Runnable {
            }
            if( found ) out = createNodeJpg(fils);
         }
-        if( out!=null ) {
+        if( out!=null && context.isInMocTree(order,npix) ) {
            if( debugFlag ) {
               debugFlag=false;
               Aladin.trace(3,"Creating JPEG tiles: method="+(method==MOYENNE?"average":"median")
