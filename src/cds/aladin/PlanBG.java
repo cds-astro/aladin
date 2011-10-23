@@ -2167,15 +2167,15 @@ System.out.println("Wakeup for loading remote Allsky...");
 
       // j'affiche le allsky comme fond soit parce que je suis au niveau 3
       // soit parceque tous les losanges ne sont pas prêts, 
+      boolean pochoir = !aladin.calque.hasHpxGrid();
       if( !allKeyReady  ) {
-         boolean pochoir = !aladin.calque.hasHpxGrid();
          if( pochoir ) drawBackground(g, v);
-         if( (hasDrawnSomething= drawAllSky(g,v)) ) {
-            if( pochoir ) drawForeground(g,v);
-            nb=1;
-         }
+         if( drawAllSky(g,v) ) nb=1;
+//         if( (hasDrawnSomething= drawAllSky(g,v)) ) {
+//            if( pochoir ) drawForeground(g,v);
+//            nb=1;
+//         }
       }
-//      if( max>=min ) setMem();
       
 
       resetPriority();
@@ -2272,6 +2272,7 @@ System.out.println("Wakeup for loading remote Allsky...");
 
       nb+=redraw(g,v,t1);
       hasDrawnSomething=nb>0;
+      if( hasDrawnSomething && pochoir ) drawForeground(g,v);
 
       tryWakeUp();
 //      long t2 = Util.getTime();
