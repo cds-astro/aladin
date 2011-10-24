@@ -81,11 +81,13 @@ final public class BuilderAllsky {
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
    public void createAllSky(int order,int outLosangeWidth) throws Exception {
+	   createAllSky(context.getOutputPath(), order, outLosangeWidth);
+   }   
+   public void createAllSky(String path, int order,int outLosangeWidth) throws Exception {
 	  if( context.isColor() )
 		  createAllSkyJpgColor(order, outLosangeWidth, true);
 	  
 	  
-	  String path = context.getOutputPath();
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
