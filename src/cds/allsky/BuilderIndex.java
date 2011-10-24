@@ -44,7 +44,7 @@ import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-public class BuilderIndex {
+public class BuilderIndex implements Progressive {
 
    private double progress = 0;
    private int [] borderSize= {0,0,0,0};
@@ -440,8 +440,8 @@ public class BuilderIndex {
    }
 
 
-   public double getProgress() {
-      return progress;
+   public int getProgress() {
+      return (int) progress;
    }
 
    public static int getNbNpix(String output, int order) {

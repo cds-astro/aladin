@@ -40,7 +40,7 @@ import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
 
-public class BuilderController  {
+public class BuilderController implements Progressive {
 
    private boolean flagColor;
    private int bitpix;
@@ -171,6 +171,7 @@ public class BuilderController  {
       flagColor = context.isColor();
       bitpix = context.getBitpix();
       context.getSkyval();
+      coaddMode = context.getCoAddMode();
 //      moc = context.getMoc();
       if( !flagColor ) {
          bZero = context.getBZero();

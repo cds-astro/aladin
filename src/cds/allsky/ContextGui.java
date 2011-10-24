@@ -18,7 +18,7 @@ public class ContextGui extends Context {
 
    /** Positionnement de l'interface graphique associée au traitement */
    public void setMainPanel(MainPanel mainPanel) { this.mainPanel=mainPanel; }
-
+   public CoAddMode getCoAddMode() { coAdd = mainPanel.tabDesc.getCoaddMode(); return coAdd;}
    public int[] getBorderSize() {
       try {
          setBorderSize(mainPanel.getBorderSize());

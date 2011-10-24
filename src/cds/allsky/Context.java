@@ -291,20 +291,48 @@ public class Context {
    }
 
    protected void enableProgress(boolean selected, int mode) { }
-   protected void setProgress(int mode, int value) { }
+   protected void setProgress(int value) { System.out.print("*");}
+   protected void setProgress(int mode, int value) { System.out.println(value+"%");}
    protected void preview (int n3) { }
 
-
+   private long statTime = System.currentTimeMillis();
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
          int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
-	   System.out.println();
+	   // affiche sur la sortie standard toutes les 3 sec
+	   if ((System.currentTimeMillis()-statTime)>3000) {
+		   String s;
+		   if( statNbFile==-1 ) s = "--";
+		   else {
+			   s= statNbFile+" file"+(statNbFile>1?"s":"")
+			   + (statNbZipFile==statNbFile ? " (all gzipped)" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
+			   + " using "+Util.getUnitDisk(statMemFile)
+			   + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight+"x"+statMaxNbyte+"]");
+		   }
+		   System.out.println(s);
+		   statTime = System.currentTimeMillis();
+	   }
    }
 
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showBuildStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
          long statNodeAvgTime) {
+	// affiche sur la sortie standard toutes les 3 sec
+	   if ((System.currentTimeMillis()-statTime)>3000) {
+		      long maxMem = Runtime.getRuntime().maxMemory();
+		      long totalMem = Runtime.getRuntime().totalMemory();
+		      long freeMem = Runtime.getRuntime().freeMemory();
+		      long usedMem = totalMem-freeMem;
+
+		      String s= "thread: "+(statNbThreadRunning==-1?"":statNbThreadRunning+" / "+statNbThread)
+		      + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
+		           +" (ram:"+cacheFits.getStatNbFind()
+		           +" disk:"+cacheFits.getStatNbOpen()+" free:"+cacheFits.getStatNbFree()+")"
+		      + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
+		      System.out.println(s);
+			   statTime = System.currentTimeMillis();
+	   }
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)

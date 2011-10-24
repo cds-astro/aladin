@@ -162,7 +162,7 @@ public class Task implements Runnable {
 	   context.setProgress(stepMode, i);
 	}
 
-	private void followProgress(int stepMode, Object o) {
+	private void followProgress(int stepMode, Progressive o) {
 	   progressBar = new ThreadProgressBar(stepMode,o, this);
 	   progressBar.start();
 	}
@@ -210,11 +210,11 @@ public class Task implements Runnable {
 
 	   private boolean stopped = false;
 	   int last = -1;
-	   Object builder;
+	   Progressive builder;
 	   Task tasks;
 
 	   int mode ;
-	   public ThreadProgressBar(int stepMode, Object source, Task allskyTask) {
+	   public ThreadProgressBar(int stepMode, Progressive source, Task allskyTask) {
 	      mode=stepMode;
 	      builder = source;
 	      tasks = allskyTask;
@@ -237,12 +237,12 @@ public class Task implements Runnable {
 	      while(builder != null && !stopped) {// && value < 99) {
 	         switch (mode) {
 	            case INDEX :
-	               value = (int)((BuilderIndex)builder).getProgress();
+	               value = builder.getProgress();
 	               txt = ((BuilderIndex)builder).getCurrentpath();
 	               tasks.setInitDir(txt);
 	               break;
 	            case TESS : 
-	               value = (int)((BuilderController)builder).getProgress();
+	               value = builder.getProgress();
 	               int n3 = ((BuilderController)builder).getLastN3();
 	               if (n3!=-1 && last!=n3) {
 	                  if( tasks.createAllSky(false) ) context.preview(n3);
@@ -261,13 +261,7 @@ public class Task implements Runnable {
 	         }
 	      }
 	      stopped = true;
-	      switch (mode) {
-	         case INDEX :
-	            value = (int)((BuilderIndex)builder).getProgress();
-	            break;
-	         case TESS : 
-	            value = (int)((BuilderController)builder).getProgress();
-	      }
+	      value = builder.getProgress();
 	      tasks.setProgress(mode,value);
 	   }
 

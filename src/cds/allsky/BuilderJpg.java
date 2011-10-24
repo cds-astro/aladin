@@ -16,7 +16,7 @@ import cds.tools.pixtools.Util;
  * soit par une intervalle (cut[]).
  * @author Anaïs Oberto & Pierre Fernique
  */
-public class BuilderJpg implements Runnable {
+public class BuilderJpg implements Progressive, Runnable {
 
 	private double[] cut;
 	private int maxOrder;
