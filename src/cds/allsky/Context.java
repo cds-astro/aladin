@@ -41,7 +41,7 @@ public class Context {
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
 //   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
-   private String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   protected String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank;                   // Valeur du BLANK en sortie
@@ -84,6 +84,7 @@ public class Context {
    public CoAddMode getCoAddMode() { return coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
+   public String getSkyval() { return skyvalName; }
    public boolean isSkySub() { return skyvalName!=null; }
    public boolean isRunning() { return isRunning; }
    public boolean isColor() { return bitpixOrig==0; }

@@ -170,6 +170,7 @@ public class BuilderController  {
       // Initialisation des variables 
       flagColor = context.isColor();
       bitpix = context.getBitpix();
+      context.getSkyval();
 //      moc = context.getMoc();
       if( !flagColor ) {
          bZero = context.getBZero();

@@ -110,6 +110,11 @@ public class ContextGui extends Context {
    public void initParamFromGui() {
       setMoc( mainPanel.getMoc() );
    }
+   
+   public String getSkyval() {
+	   skyvalName = mainPanel.tabDesc.getSkyval();
+	   return skyvalName;
+   }
 
 //   public HpixTree getMoc() {
 //      return mainPanel.getMoc();
