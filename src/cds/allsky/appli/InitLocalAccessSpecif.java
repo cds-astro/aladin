@@ -24,6 +24,7 @@ import java.text.ParseException;
 
 import cds.allsky.Context;
 import cds.allsky.BuilderIndex;
+import cds.tools.Util;
 
 public class InitLocalAccessSpecif extends BuilderIndex {
    
@@ -32,21 +33,20 @@ public class InitLocalAccessSpecif extends BuilderIndex {
 	 * Le chemin de sortie est celui donné en entrée + ALLSKY + répertoire HpxFinder
 	 * on peut passer une expression régulière pour définir les fichiers à traiter
 	 * (utlisée via Pattern.matches)
-	 * @param args chemin_entrée regex order 'N W S E' chemin_sortie
+	 * @param args chemin_entrée order 'N W S E' chemin_sortie
 	 * @see #AllskyConst.HPX_FINDER
 	 */
 	public static void main(String[] args) {
 		long t=System.currentTimeMillis();
 		if (args.length<3) {
-			System.out.println("Usage : chemin_entrée regex order 'N W S E' chemin_sortie");
+			System.out.println("Usage : chemin_entrée order 'N W S E' chemin_sortie");
 			System.exit(0);
 		}
-		String pathSource = args[0]+ "/";
+		String pathSource = args[0]+ Util.FS;
 		String pathDest = pathSource;
-		pathDest = args[4];
-		String regex = args[1];
-		String border = args[3];
-		int order = Integer.parseInt(args[2]);
+		pathDest = args[3];
+		String border = args[2];
+		int order = Integer.parseInt(args[1]);
 
 		Context allsky = new Context();
 		try {
@@ -57,8 +57,7 @@ public class InitLocalAccessSpecif extends BuilderIndex {
 		allsky.setOrder(order);
 		
 		BuilderIndex init = new BuilderIndex(allsky);
-		System.out.println("using regex : "+regex);
-		init.build(pathSource, pathDest, order, regex);
+		init.build();
 		System.out.println("done => "+(System.currentTimeMillis()-t)+"ms");
 	}
 }
