@@ -67,6 +67,7 @@ public class DBBuilderSpecif extends BuilderController {
 		SURVEY = survey;
 		path = path+SURVEY;
 		
+		db.context.setOrder(ordermax);
 		db.context.setOutputPath(path);
 		db.context.setBitpixOrig( Integer.parseInt(args[8]) );
 		
@@ -77,7 +78,7 @@ public class DBBuilderSpecif extends BuilderController {
 			db.context.sethpxFinderPath(args[10]);
 			if (args.length>=12) db.readLocalCut(args[11]);
 		}
-		else db.build(ordermax);
+		else db.build();
 	}
 	
 
