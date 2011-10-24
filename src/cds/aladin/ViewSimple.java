@@ -1420,7 +1420,7 @@ public class ViewSimple extends JComponent
       fillBackground(g);
       paintOverlays(g,null,0,0);
       drawCredit(g, 0, 0);
-      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
+//      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
 //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
       return img;
    }
@@ -4245,6 +4245,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    /** Spécification du crédit */
    protected void drawCredit(Graphics g, int dx, int dy ) { 
+      if( !aladin.CREDIT ) return;
       g.setColor(Aladin.GREEN);
       g.setFont(Aladin.SITALIC);
       g.drawString(CREDIT,dx+4, dy+rv.height-2);

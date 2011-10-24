@@ -282,11 +282,11 @@ public class TabJpg extends JPanel implements ActionListener {
       boolean isColor = mainPanel.context.isColor();
       bPrevious.setEnabled(!isRunning);
       bNext.setEnabled(readyToDo && !isRunning);
-      tCutMin.setEnabled(readyToDo && !isRunning && !isColor);
-      tCutMax.setEnabled(readyToDo && !isRunning && !isColor);
-      radioManual.setEnabled(readyToDo && !isRunning && !isColor);
-      labelMethod.setEnabled(readyToDo && !isRunning && !isColor);
-      radioAllsky.setEnabled(readyToDo && !isRunning && !isColor);
+      tCutMin.setEnabled(readyToDo && !isColor);
+      tCutMax.setEnabled(readyToDo && !isColor);
+      radioManual.setEnabled(readyToDo && !isColor);
+      labelMethod.setEnabled(readyToDo && !isColor);
+      radioAllsky.setEnabled(readyToDo && !isColor);
       radioMediane.setEnabled(readyToDo && !isRunning && !isColor);
       radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
       progressJpg.setEnabled(readyToDo && !isRunning && !isColor);

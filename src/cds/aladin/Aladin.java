@@ -219,6 +219,9 @@ public class Aladin extends JApplet
     // true si on affiche le banner
     static boolean BANNER=true;
 
+    // true si on affiche le copyright sur les sorties PNG,JPG EPS et autres
+    static boolean CREDIT=true;
+
     // true si on charge les bookmarks
     static boolean BOOKMARKS=true;
 
@@ -4553,6 +4556,7 @@ public void show() {
          else if( args[i].equals("-nogui") || args[i].equals("-script")) { NOGUI=true; BOOKMARKS=false; NOHUB=true; NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-local") )       { NETWORK=false; lastArg=i+1; }
          else if( args[i].equals("-nobanner") )    { BANNER=false; lastArg=i+1; }
+         else if( args[i].equals("-nocredit") )    { CREDIT=false; lastArg=i+1; }
          else if( args[i].equals("-nobookmarks") ) { BOOKMARKS=false; lastArg=i+1; }
          else if( args[i].equals("-bookmarks") )   { BOOKMARKS=true; lastArg=i+1; }
          else if( args[i].equals("-samp") )        { USE_SAMP_REQUESTED=true; lastArg=i+1; }
