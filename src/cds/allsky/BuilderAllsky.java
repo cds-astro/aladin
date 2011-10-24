@@ -77,11 +77,15 @@ final public class BuilderAllsky {
 
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée
-    * @param path Emplacement du survey
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSky(String path,int order,int outLosangeWidth) throws Exception {
+   public void createAllSky(int order,int outLosangeWidth) throws Exception {
+	  if( context.isColor() )
+		  createAllSkyJpgColor(order, outLosangeWidth, true);
+	  
+	  
+	  String path = context.getOutputPath();
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -161,11 +165,11 @@ final public class BuilderAllsky {
    
    /** Création d'un AllSky JPEG couleur à partir des images JPEG à l'ordre indiqué
     * Rq : seule la méthode FIRST est supportée
-    * @param path Emplacement du survey
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSkyJpgColor(String path,int order,int outLosangeWidth,boolean withProp) throws Exception {
+   public void createAllSkyJpgColor(int order,int outLosangeWidth,boolean withProp) throws Exception {
+	  String path = context.getOutputPath();
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;

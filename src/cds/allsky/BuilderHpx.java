@@ -48,7 +48,6 @@ final public class BuilderHpx {
    private double bZero;
 //   private boolean keepBB = true;
    private String hpxFinderPath = null;
-   private boolean fading;
    private double[] cutOrig;
    private double[] cut;
 
@@ -57,7 +56,6 @@ final public class BuilderHpx {
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
-      fading=context.isFading();
       if( !flagColor ) {
          //      keepBB=context.isKeepBB();
          bZero = context.getBZero();
@@ -155,7 +153,8 @@ final public class BuilderHpx {
                      if( Double.isNaN(pix) ) continue;
                      pixval[nbPix]=pix;
                   }
-                  totalCoef+= pixcoef[nbPix] = fading ? getCoef(file.fitsfile,coo) : 1;
+                  // fading
+                  totalCoef+= pixcoef[nbPix] = getCoef(file.fitsfile,coo);
                   nbPix++;
                }
 

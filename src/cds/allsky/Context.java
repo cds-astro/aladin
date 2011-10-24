@@ -34,8 +34,6 @@ public class Context {
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
-   protected String regex = "*.fits";        // Expression régulière à appliquer pour sélectionner les images à traiter
-   
    protected int bitpixOrig = -1;            // BITPIX des images originales
    protected double blankOrig;               // Valeur du BLANK en entrée
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
@@ -52,7 +50,6 @@ public class Context {
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    
-   protected boolean fading = false;         // true pour appliquer un "fondu-enchainé" sur les recouvrements
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
    protected HpixTree moc = null;            // Zone du ciel à traiter (décrite par un MOC)
@@ -61,7 +58,6 @@ public class Context {
 //   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
    
    protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
-//   protected boolean keepBB = false;         // true pour conserver le BZERO et BSCALE originaux
    
    public Context() {}
 
@@ -70,7 +66,6 @@ public class Context {
    public int[] getBorderSize() { return borderSize; }
    public int getOrder() { return order<0 ? 3 : order; }
    public int getFrame() { return frame; }
-   public String getRegex() { return regex; }
    public String getFrameName() { return Localisation.getFrameName(frame); }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
@@ -89,7 +84,6 @@ public class Context {
    public CoAddMode getCoAddMode() { return coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
-   public boolean isFading() { return fading; }
    public boolean isSkySub() { return skyvalName!=null; }
    public boolean isRunning() { return isRunning; }
    public boolean isColor() { return bitpixOrig==0; }
@@ -102,16 +96,14 @@ public class Context {
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
-   public void setFading(boolean fading) { this.fading = fading; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame=
        (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
-   public void setRegex(String regex) { this.regex = regex; }
    public void setInitDir(String txt) { }
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
-   public void setImgEtalon(String filename) { imgEtalon = filename; }
+   public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon();}
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
@@ -156,6 +148,28 @@ public class Context {
    protected double coef;
    
 
+   /**
+    * Lit l'image etalon, et affecte les données d'origines (bitpix, bscale, bzero, blank, cut)
+    * @throws Exception s'il y a une erreur à la lecture du fichier
+    */
+   protected void initFromImgEtalon() throws Exception {
+	   String path = imgEtalon;
+	   Fits fitsfile = new Fits();
+
+	   fitsfile.loadHeaderFITS(path);
+       setBitpixOrig(fitsfile.bitpix);
+       if( !isColor() ) {
+          setBZeroOrig(fitsfile.bzero);
+          setBScaleOrig(fitsfile.bscale);
+          setBlankOrig(fitsfile.blank);
+       }
+       initCut(fitsfile);
+   }
+   
+   /**
+    * Lit l'image et calcul son autocut : affecte les datacut et pixelcut *Origines*
+    * @param file
+    */
    protected void initCut(Fits file) {
        int w = file.width;
        int h = file.height;
@@ -177,7 +191,6 @@ public class Context {
     */
    boolean findImgEtalon(String rootPath) {
       File main = new File(rootPath);
-      Fits fitsfile = new Fits();
       String[] list = main.list();
       if( list==null ) return false;
       String path = rootPath;
@@ -193,15 +206,7 @@ public class Context {
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
             Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
-            fitsfile.loadHeaderFITS(path);
             setImgEtalon(path);
-            setBitpixOrig(fitsfile.bitpix);
-            if( !isColor() ) {
-               setBZeroOrig(fitsfile.bzero);
-               setBScaleOrig(fitsfile.bscale);
-               setBlankOrig(fitsfile.blank);
-            }
-            initCut(fitsfile);
             return true;
             
          }  catch (Exception e) { continue; }
@@ -292,6 +297,7 @@ public class Context {
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
          int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
+	   System.out.println();
    }
 
    // Demande d'affichage des stats (dans le TabBuild)
@@ -315,7 +321,7 @@ public class Context {
 //   }
 
    public void warning(String string) {
-       String s_WARN    = "WARNING";//Aladin.getChaine().getString("WARNING");
+       String s_WARN    = "WARNING :";//Aladin.getChaine().getString("WARNING");
        System.out.println(s_WARN+" "+string);
    }
 

@@ -132,8 +132,10 @@ public class BuilderController  {
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
    }
 
-
-   public void build(int ordermax) throws Exception {
+   public void build() throws Exception {
+	   build(context.getOrder());
+   }
+   private void build(int ordermax) throws Exception {
       progress = 0;
       this.ordermax = ordermax;
       long t = System.currentTimeMillis();

@@ -108,11 +108,10 @@ public class BuilderIndex {
             statMaxWidth, statMaxHeight, statMaxNbyte);
    }
 
-   public boolean build(String input, String output, int order) {
-      return build(input, output, order,null);
+   public boolean build() {
+	   return build(context.getInputPath(),context.getOutputPath(),context.getOrder());
    }
-
-   public boolean build(String input, String output, int order, String regex) {
+   protected boolean build(String input, String output, int order) {
       initStat();
 
       File f = new File(output);
@@ -141,7 +140,7 @@ public class BuilderIndex {
             return false;
          }
       }
-      create(input, pathDest, regex, order);
+      create(input, pathDest, order);
 
       // s'il ya eu une interruption -> sortie rapide
       if (stopped) {
@@ -197,8 +196,7 @@ public class BuilderIndex {
     * zone. Créé (ou complète) un fichier HPX texte contenant le chemin vers
     * les fichiers FITS
     */
-   public void create(String pathSource, String pathDest, String regex,
-         int order) {
+   public void create(String pathSource, String pathDest, int order) {
 
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
@@ -219,9 +217,9 @@ public class BuilderIndex {
 
          if (file.isDirectory() && !list[f].equals(Constante.SURVEY)) {
 //            System.out.println("Look into dir " + currentfile);
-            create(currentfile, pathDest, regex, order);
+            create(currentfile, pathDest, order);
             currentpath = pathSource;
-         } else if (regex == null || currentfile.matches(regex)) {
+         } else {
             // en cas de reprise, saute jusqu'au dernier fichier utilisé
             if (initpath != null) { 
                if (initpath.equals(currentfile))  initpath=null;

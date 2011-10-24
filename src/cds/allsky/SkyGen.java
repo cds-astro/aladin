@@ -33,6 +33,12 @@ public class SkyGen {
 
 	}
 	
+	/**
+	 * Analyse le fichier contenant les paramètres de config de la construction du allsky
+	 * sous le format :
+	 * option = valeur 
+	 * @throws Exception si l'erreur dans le parsing des options nécessite une interrption du programme
+	 */
 	private void parseConfig() throws Exception {
 		
 		// Extrait toutes les options du fichier
@@ -66,7 +72,8 @@ public class SkyGen {
 	}
 
 	/**
-	 * @throws Exception
+	 * Lance quelques vérifications de cohérence entre les options données
+	 * @throws Exception si une incohérence des options nécessite une interrption du programme
 	 */
 	private void validateContext() throws Exception {
 		// ---- Qq vérifications
@@ -83,27 +90,27 @@ public class SkyGen {
 			
 		// données déjà présentes ?
 		if (!context.isExistingDir()) {
-			throw new Exception("Le répertoire d'entrée n'existe pas");
+			throw new Exception("Input dir does NOT exists : " + context.getInputPath());
 		}
 		if (context.isExistingAllskyDir()) {
-			context.warning("Le répertoire de sortie existe déjà");
+			context.warning("Output dir already exists");
 			if (context.getCoAddMode()==null) {
-				context.warning("Comportement par défaut pour les pixels déjà présents "+CoAddMode.getDefault());
+				context.warning("Default behaviour for computing pixels already computed : "+CoAddMode.getDefault());
 				context.setCoAddMode(CoAddMode.getDefault());
 			}
 		}
 		// à l'inverse, si il y a l'option "pixel" 
 		// ca laisse sous entendre que l'utilisateur pensait avoir dejà des données
 		else if (context.getCoAddMode()!=null) {
-			context.warning("Il n'y a pas de données pré-existantes, option "+
-					context.getCoAddMode()+" ignorée");
+			context.warning("There is NO already computed tiles, so option "+
+					context.getCoAddMode()+" ignored");
 		}
 		
 		// si on n'a pas d'image etalon, on la cherche + initialise avec
 		if (context.getImgEtalon()==null) {
 			boolean found = context.findImgEtalon(context.getInputPath());
 			if( !found ) {
-				String msg = "There is no available images in source directory !\n"+context.getInputPath();
+				String msg = "There is no available images in source directory : "+context.getInputPath();
 				context.warning(msg);
 				throw new Exception(msg);
 			}
@@ -119,20 +126,20 @@ public class SkyGen {
 		// si le numéro d'order donné est différent de celui calculé
 		// attenion n'utilise pas la méthode getOrder car elle a un default à 3
 		if (order != context.order && -1 != context.order ) {
-			context.warning("Order lu (" + context.getOrder() +") != auto (" + order + ")");
+			context.warning("Order given (" + context.getOrder() +") != auto (" + order + ")");
 		}
 		// si le bitpix donné est différent de celui calculé
 		if (context.getBitpix() != context.getBitpixOrig() ) {
-			context.warning("Bitpix lu (" + context.getBitpix() +") != auto (" + context.getBitpixOrig() + ")");
+			context.warning("Bitpix given (" + context.getBitpix() +") != auto (" + context.getBitpixOrig() + ")");
 		}
 	}
 
 	/**
-	 * @param order
-	 * @param opt
-	 * @param val
-	 * @return
-	 * @throws Exception 
+	 * Affecte à un objet Context l'option de configuration donnée
+	 * 
+	 * @param opt nom de l'option
+	 * @param val valeur de l'option
+	 * @throws Exception si l'interprétation de la valeur nécessite une interrption du programme
 	 */
 	private void setContextFromOptions(String opt, String val) throws Exception {
 		//System.out.println(opt +" === " +val);
@@ -140,8 +147,8 @@ public class SkyGen {
 			context.setInputPath(val);
 		else if (opt.equalsIgnoreCase("output"))
 			context.setOutputPath(val);
-		else if (opt.equalsIgnoreCase("regex"))
-			context.setRegex(val);
+		else if (opt.equalsIgnoreCase("blank"))
+			context.setBlank(Double.parseDouble(val));
 		else if (opt.equalsIgnoreCase("order"))
 			context.setOrder(Integer.parseInt(val));
 		else if (opt.equalsIgnoreCase("pixel"))
@@ -165,15 +172,13 @@ public class SkyGen {
 		}
 		else if (opt.equalsIgnoreCase("color"))
 			context.setColor(Boolean.parseBoolean(val));
-		else if (opt.equalsIgnoreCase("fading"))
-			context.setFading(Boolean.parseBoolean(val));
 		else if (opt.equalsIgnoreCase("img")) {
 			context.setImgEtalon(val);
 		}
 
 	}
 
-	enum Action {FINDER,TILES,JPEG,MOC}
+	enum Action {FINDER,TILES,JPEG,MOC,ALLSKY}
 	
 	public static void main(String[] args) {
 		Aladin a = new Aladin();
@@ -192,13 +197,8 @@ public class SkyGen {
 				generator.setConfigFile(arg.substring(param.length()));
 				continue;
 			}
-			param = "-action=";
-			if (arg.startsWith(param)) {
-				generator.action = Action.valueOf((arg.substring(param.length())).toUpperCase());
-				continue;
-			}
 			// toutes les autres options écrasent les précédentes
-			if (arg.contains("=")) {
+			else if (arg.contains("=")) {
 				String[] opts = arg.split("=");
 				try {
 					// si il y a un - on l'enlève
@@ -209,6 +209,10 @@ public class SkyGen {
 					e.printStackTrace();
 					return;
 				}
+			}
+			// les autres mots sont supposées des actions (si +ieurs, seule la dernière est gardée)
+			else if (arg.startsWith(param)) {
+				generator.action = Action.valueOf(arg.toUpperCase());
 			}
 			
 		}
@@ -225,7 +229,7 @@ public class SkyGen {
 
 	private void start() {
 		if (action==null) {
-			// aucun action définis -> on fait la totale
+			// aucune action définie -> on fait la totale
 			action = Action.FINDER;
 			start();
 			action = Action.TILES;
@@ -234,14 +238,45 @@ public class SkyGen {
 			start();
 			action = Action.MOC;
 			start();
+			action = Action.ALLSKY;
+			start();
 			return;
 		}
 		// TODO 
 		switch (action) {
-		case FINDER : System.out.println("lancement du HpxFinder"); break;
-		case JPEG : System.out.println("lancement des jpg"); break;
-		case MOC : System.out.println("lancement du MOC"); break;
-		case TILES : System.out.println("lancement du HpxBuilder"); break;
+		case FINDER : 
+//			System.out.println("lancement du HpxFinder");
+			BuilderIndex init = new BuilderIndex(context);
+			init.build();
+			break;
+		case JPEG : 
+			System.out.println("lancement des jpg"); 
+			break;
+		case MOC : 
+			System.out.println("lancement du MOC"); 
+			break;
+		case TILES : {
+			System.out.println("lancement du HpxBuilder");
+			BuilderController builder = new BuilderController(context);
+			try {
+				builder.build();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+			break;
+		}
+		case ALLSKY : {
+			System.out.println("création du Allsky");
+			BuilderAllsky builder = new BuilderAllsky(context, -1);
+			try {
+				builder.createAllSky(3, 64);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+			break;
+		}
 		}
 	}
 

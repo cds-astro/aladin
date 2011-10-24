@@ -80,7 +80,7 @@ public class Task implements Runnable {
 	         Aladin.trace(2,"Launch Index (frame="+context.getFrameName()+")");
 	         followProgress(mode,builderIndex);
 	         
-	         boolean init = builderIndex.build(context.getInputPath() ,context.getOutputPath() , context.getOrder());
+	         boolean init = builderIndex.build();
 	         // si le thread a été interrompu, on sort direct
 	         if (runner != Thread.currentThread()) {
 	            progressBar.stop();
@@ -100,7 +100,7 @@ public class Task implements Runnable {
 	         followProgress(mode, builder);
 	         
 	         try {
-	            builder.build( context.getOrder() );
+	            builder.build();
 	            
 	            // si le thread a été interrompu, on sort direct
 	            if (runner != Thread.currentThread()) {
@@ -147,10 +147,7 @@ public class Task implements Runnable {
 	   }
 
 	   try {
-	      String output = context.getOutputPath();
-	      if( context.isColor() ) builderAllsky.createAllSkyJpgColor(output,3,64,true);
-	      else builderAllsky.createAllSky(output,3,64);
-
+	      builderAllsky.createAllSky(3,64);
 	   } catch (Exception e) {
 	      e.printStackTrace();
 	   }
