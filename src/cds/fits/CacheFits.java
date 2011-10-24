@@ -166,7 +166,6 @@ public class CacheFits {
       double skyval = 0;
       double newval = f.blank;
       try {
-         //			skyval = (int)f.headerFits.getDoubleFromHeader("SOFTBIAS");
     	  skyval = f.headerFits.getDoubleFromHeader(skyvalName);
       } catch (NullPointerException e) {
       }
