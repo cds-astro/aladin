@@ -186,7 +186,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridy++;
       px = new JPanel( new BorderLayout(0,0));
       skyvalTextField.addKeyListener(new KeyAdapter() {
-          public void keyReleased(ActionEvent e) {
+          public void keyReleased(KeyEvent e) {
               skyvalCheckbox.setSelected( skyvalTextField.getText().trim().length()>0 );
           }
       });
