@@ -22,13 +22,6 @@ public class SkyGen {
 		this.context = new Context();
 	}
 
-	public SkyGen(String configfile) throws Exception {
-
-		this.file = new File(configfile);
-		this.context = new Context();
-		parseConfig();
-
-	}
 
 	/**
 	 * Analyse le fichier contenant les paramètres de config de la construction
@@ -50,8 +43,10 @@ public class SkyGen {
 		String line = null;
 		while ((line = inputStream.readLine()) != null) {
 			StringTokenizer st = new StringTokenizer(line, "=");
-			if (st.countTokens() != 2)
+			if (st.countTokens() != 2) {
+				System.err.println("Error reading line : "+line);
 				continue;
+			}
 			// extrait le nom de l'option
 			String opt = st.nextToken().trim();
 			// extrait la/les valeurs
@@ -125,20 +120,23 @@ public class SkyGen {
 			Fits file = new Fits();
 			try {
 				file.loadHeaderFITS(context.getImgEtalon());
+				// calcule le meilleur nside/norder
+				long nside = healpix.core.HealpixIndex.calculateNSide(file
+						.getCalib().GetResol()[0] * 3600.);
+				order = ((int) Util.order((int) nside) - Constante.ORDER);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			// calcule le meilleur nside
-			long nside = healpix.core.HealpixIndex.calculateNSide(file
-					.getCalib().GetResol()[0] * 3600.);
-			order = ((int) Util.order((int) nside) - Constante.ORDER);
 		}
 
 		// si le numéro d'order donné est différent de celui calculé
-		// attenion n'utilise pas la méthode getOrder car elle a un default à 3
+		// attention n'utilise pas la méthode context.getOrder car elle a un default à 3
 		if (order != context.order && -1 != context.order) {
 			context.warning("Order given (" + context.getOrder()
 					+ ") != auto (" + order + ")");
+		}
+		else {
+			context.setOrder(order);
 		}
 		// si le bitpix donné est différent de celui calculé
 		if (context.getBitpix() != context.getBitpixOrig()) {
@@ -159,6 +157,11 @@ public class SkyGen {
 	 *             programme
 	 */
 	private void setContextFromOptions(String opt, String val) throws Exception {
+		// enlève des éventuels apostrophes ou guillemets
+		val = val.replace("\'", "");
+		val = val.replace("\"", "");
+		System.out.println(opt + " = " + val);
+
 		// System.out.println(opt +" === " +val);
 		if (opt.equalsIgnoreCase("input"))
 			context.setInputPath(val);
@@ -209,11 +212,15 @@ public class SkyGen {
 		}
 		// extrait les options en ligne de commande, et les analyse
 		for (String arg : args) {
-			System.out.println(arg + " ");
 			// si c'est dans un fichier
 			String param = "-param=";
 			if (arg.startsWith(param)) {
-				generator.setConfigFile(arg.substring(param.length()));
+				try {
+					generator.setConfigFile(arg.substring(param.length()));
+				} catch (Exception e) {
+					e.printStackTrace();
+					return;
+				}
 				continue;
 			}
 			// toutes les autres options écrasent les précédentes
@@ -343,8 +350,9 @@ public class SkyGen {
 
 	}
 
-	private void setConfigFile(String configfile) {
+	private void setConfigFile(String configfile) throws Exception {
 		this.file = new File(configfile);
+		parseConfig();
 	}
 
 	class ThreadProgressBar implements Runnable {

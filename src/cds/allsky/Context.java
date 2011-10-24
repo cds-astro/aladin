@@ -44,7 +44,7 @@ public class Context {
    protected String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    
    protected int bitpix = -1;                // BITPIX de sortie
-   protected double blank;                   // Valeur du BLANK en sortie
+   protected double blank = Double.NaN;      // Valeur du BLANK en sortie
    protected double bZero;                   // Valeur BZERO de la boule Healpix à générer
    protected double bScale;                  // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
@@ -110,9 +110,17 @@ public class Context {
    public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
    public void setBScale(double x) { bScale = x; bscaleBzeroSet=true; }
    public void setBZero(double x) { bZero = x; bscaleBzeroSet=true; }
-   public void setBitpixOrig(int bitpix) { bitpixOrig = this.bitpix = bitpix; }
+   public void setBitpixOrig(int bitpixO) { 
+	   this.bitpixOrig = bitpixO; 
+	   if (this.bitpix==-1) 
+		   this.bitpix = bitpixO;
+   }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
-   public void setBlankOrig(double blankOrig) { this.blank = this.blankOrig = blankOrig; }
+   public void setBlankOrig(double blankOrig) { 
+	   this.blankOrig = blankOrig;
+	   if (this.blank == Double.NaN)
+		   this.blank = blankOrig;
+   }
    public void setBlank(double blank) { this.blank = blank;}
    public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }

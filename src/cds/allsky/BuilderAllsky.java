@@ -84,8 +84,10 @@ final public class BuilderAllsky {
 	   createAllSky(context.getOutputPath(), order, outLosangeWidth);
    }   
    public void createAllSky(String path, int order,int outLosangeWidth) throws Exception {
-	  if( context.isColor() )
-		  createAllSkyJpgColor(order, outLosangeWidth, true);
+	  if( context.isColor() ) {
+		  createAllSkyJpgColor(path, order, outLosangeWidth, true);
+		  return;
+	  }
 	  
 	  
       long t=System.currentTimeMillis();
@@ -171,7 +173,7 @@ final public class BuilderAllsky {
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
    public void createAllSkyJpgColor(int order,int outLosangeWidth,boolean withProp) throws Exception {
-	   createAllSky(context.getOutputPath(), order, outLosangeWidth);
+	   createAllSkyJpgColor(context.getOutputPath(), order, outLosangeWidth, withProp);
    }
    public void createAllSkyJpgColor(String path, int order,int outLosangeWidth,boolean withProp) throws Exception {
       long t=System.currentTimeMillis();
