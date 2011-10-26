@@ -37,9 +37,8 @@ import org.apache.xmlrpc.WebServer;
 import org.apache.xmlrpc.XmlRpcClient;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.XmlRpcHandler;
-import org.astrogrid.samp.hub.BasicHubService;
-import org.astrogrid.samp.xmlrpc.HubRunner;
-import org.astrogrid.samp.xmlrpc.XmlRpcKit;
+import org.astrogrid.samp.hub.Hub;
+import org.astrogrid.samp.hub.HubServiceMode;
 
 import cds.tools.Util;
 
@@ -713,7 +712,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
     }
 
     // référence au hub interne
-    private HubRunner internalHub;
+    private Hub internalHub;
 
     public static final String LOCALHOST_PROP = "samp.localhost";
     // if the user has not specified the localhost IP through the samp.localhost system property, force it to 127.0.0.1
@@ -735,8 +734,6 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
             // by default, no message logging
             Logger.getLogger("org.astrogrid.samp").setLevel(Level.OFF);
 
-            XmlRpcKit xmlrpc = XmlRpcKit.getInstance();
-
             String localhost = getLocalhost();
             // set samp.localhost property, so that the JSAMP toolkit use this URL for its hub
             System.setProperty(LOCALHOST_PROP, localhost);
@@ -744,9 +741,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
             trace("Hub IP set to "+localhost);
 
 
-            internalHub = new HubRunner(xmlrpc.getClientFactory(), xmlrpc.getServerFactory(),
-                               new BasicHubService(new Random()),  getLockFile());
-            internalHub.start();
+            internalHub = Hub.runHub(HubServiceMode.NO_GUI);
         }
         catch(Exception e) {
             e.printStackTrace();
