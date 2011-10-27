@@ -74,6 +74,10 @@ public class FrameHeaderFits extends JFrame {
       headerFits = new HeaderFits();
    }
 
+   public FrameHeaderFits(HeaderFits headerFits) {
+      this.headerFits = headerFits;
+   }
+
   /** Creation du header.
    * @param dis le flux en entree
    */

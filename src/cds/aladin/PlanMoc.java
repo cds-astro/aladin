@@ -68,9 +68,7 @@ public class PlanMoc extends PlanBGCat {
    protected boolean waitForPlan() {
       try {
          hpix = new HpixTree(dis);
-         headerFits = hpix.getHeaderFits();
          frameOrigin = hpix.getFrame();
-//         if( hpix.getOrdering()!=HpixTree.NESTED ) throw new Exception("ORDERING=RING is not supported");
       }
       catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

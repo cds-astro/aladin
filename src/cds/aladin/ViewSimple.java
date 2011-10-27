@@ -470,7 +470,7 @@ public class ViewSimple extends JComponent
    
    /** Retourne true si la vue est synchronisée */
    protected boolean isSync() {
-      if( isFree() || !(pref instanceof PlanBG) ) return true;
+      if( isFree() || !(pref.type==Plan.ALLSKYIMG) ) return true;
       return ovizBG==iz;
    }
    
