@@ -108,7 +108,8 @@ public class SkyGen {
 		}
 
 		// si on n'a pas d'image etalon, on la cherche + initialise avec
-		if (context.getImgEtalon() == null) {
+		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY) 
+				&& (context.getImgEtalon()==null) ) {
 			boolean found = context.findImgEtalon(context.getInputPath());
 			if (!found) {
 				String msg = "There is no available images in source directory : "
@@ -181,7 +182,7 @@ public class SkyGen {
 			context.setFrameName(val);
 		else if (opt.equalsIgnoreCase("skyval"))
 			context.setSkyval(val);
-		else if (opt.equalsIgnoreCase("borders"))
+		else if (opt.equalsIgnoreCase("border"))
 			try {
 				context.setBorderSize(val);
 			} catch (ParseException e) {
@@ -191,11 +192,13 @@ public class SkyGen {
 			context.setPixelCut(val);
 		else if (opt.equalsIgnoreCase("dataCut")) {
 			context.setDataCut(val);
-		} else if (opt.equalsIgnoreCase("color"))
+		}
+		else if (opt.equalsIgnoreCase("color"))
 			context.setColor(Boolean.parseBoolean(val));
 		else if (opt.equalsIgnoreCase("img")) {
 			context.setImgEtalon(val);
 		}
+		else System.err.println("Error : unknown " + opt);
 
 	}
 
