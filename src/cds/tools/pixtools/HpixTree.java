@@ -48,16 +48,16 @@ public final class HpixTree extends HealpixMoc {
    }
    
    /** Ajout d'un pixel */
-   public void add(int order,long npix) {
+   public boolean add(int order,long npix) {
       
       // On n'accepte pas en dessous de l'ordre 3 => sinon impossible à tracer
       // On insère les fils d'ordre 3 équivalents
       if( order<3 ) {
          npix *=4;
          for( int i=0; i<4; i++ ) add(order+1,npix+i);
-         return;
+         return true;
       }
-      super.add(order,npix);
+      return super.add(order,npix);
    }
    
    
