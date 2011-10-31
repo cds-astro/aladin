@@ -127,7 +127,10 @@ public class Context {
    public void setCut(double [] cut) { this.cut=cut; }
    public void setPixelCut(String cut) {
        String vals[] = cut.split(" ");
-	   if (vals.length==2 && this.cut !=null) {
+       if (this.cut==null) {
+    	   this.cut = new double[4];
+       }
+	   if (vals.length==2) {
 		   this.cut[0] = Double.parseDouble(vals[0]);
 		   this.cut[1] = Double.parseDouble(vals[1]);
 	   }
@@ -214,7 +217,7 @@ public class Context {
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
-            Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
+            Aladin.trace(4, "Context.findImgEtalon: loading header "+path+"...");
             setImgEtalon(path);
             return true;
             
