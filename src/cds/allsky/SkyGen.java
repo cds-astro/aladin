@@ -144,6 +144,10 @@ public class SkyGen {
 			context.warning("Bitpix given (" + context.getBitpix()
 					+ ") != auto (" + context.getBitpixOrig() + ")");
 		}
+		
+		// il faut au moins un cut (ou img) pour construire des JPEG
+		if (context.getCut()==null && action==Action.JPEG)
+			throw new Exception("You hav to give at least option img= or cut= for Jpeg construction");
 	}
 
 	/**
@@ -198,7 +202,7 @@ public class SkyGen {
 		else if (opt.equalsIgnoreCase("img")) {
 			context.setImgEtalon(val);
 		}
-		else System.err.println("Error : unknown " + opt);
+		else System.err.println("Error : unknown option " + opt);
 
 	}
 
@@ -255,7 +259,8 @@ public class SkyGen {
 		try {
 			generator.validateContext();
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.err.println(e);
+//			e.printStackTrace();
 			return;
 		}
 		// lance les calculs
@@ -265,16 +270,12 @@ public class SkyGen {
 	private void start() {
 		context.setIsRunning(true);
 		if (action==null) {
-			// aucune action définie -> on fait la totale
+			// aucune action définie -> on fait la totale (sauf jpg)
 			action = Action.FINDER;
 			start();
 			action = Action.TILES;
 			start();
-			action = Action.JPEG;
-			start();
 			action = Action.MOC;
-			start();
-			action = Action.ALLSKY;
 			start();
 			return;
 		}
@@ -289,7 +290,11 @@ public class SkyGen {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
 			}
-			builder.build();
+			File f = new File(context.getHpxFinderPath()+Util.FS+"Norder"+order);
+			if (f.exists())
+				context.warning("  Using previous");
+			else
+				builder.build();
 			progressBar.stop();
 			break;
 		}
@@ -331,6 +336,8 @@ public class SkyGen {
 			} finally {
 				progressBar.stop();
 			}
+			action = Action.ALLSKY;
+			start();
 			break;
 		}
 		case ALLSKY : {
