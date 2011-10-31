@@ -125,7 +125,7 @@ public class BuilderJpg implements Progressive, Runnable {
 	         if( context.isInMocTree(3, i) ) createJpg(dirpath,3,i);
 	         progress = (int)(i*progressFactor);
 	      }
-	      (new BuilderAllsky(context,-1)).createAllSky(dirpath,3,64);
+	      (new BuilderAllsky(context,-1)).createAllSkyJpgColor(3,64,false);
 	      progress=100;
 	   } catch( Exception e ) {
 	      e.printStackTrace();
