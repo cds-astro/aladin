@@ -159,12 +159,25 @@ final public class BuilderAllsky {
       out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
       
       // Ecriture du FITS (true bits)
-      String filename = path+FS+"Norder"+order+FS+"Allsky";
+      String filename = getFileName(path, order);
       out.writeFITS(filename+".fits");
       
       Aladin.trace(3,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
             +" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
+   }
+
+   /**
+    * Construit le chemin pour 
+    * @param path
+    * @param order
+    * @return
+    */
+   protected String getFileName(int order) {
+	   return getFileName(context.getOutputPath(), order);
+   }
+   protected String getFileName(String path, int order) {
+	   return path+FS+"Norder"+order+FS+"Allsky";
    }
    
    /** Création d'un AllSky JPEG couleur à partir des images JPEG à l'ordre indiqué
@@ -217,7 +230,7 @@ final public class BuilderAllsky {
       
 //      if( out==null ) throw new Exception("createAllSkyJpgColor error: null output file !");
 
-      String filename = path+FS+"Norder"+order+FS+"Allsky";
+      String filename = getFileName(path, order);
       out.writeJPEG(filename+".jpg");
       
       Aladin.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
