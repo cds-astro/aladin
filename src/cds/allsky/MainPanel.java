@@ -110,39 +110,6 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    /**
-    * Sélectionne un fichier de type FITS (ou équivalent) dans le répertoire donné => va servir d'étalon
-    * Utilise un cache une case pour éviter les recherches redondantes
-    * @return true si trouvé
-    */
-   private boolean findImgEtalon(String rootPath) {
-      File main = new File(rootPath);
-      Fits fitsfile = new Fits();
-      String[] list = main.list();
-      if( list==null ) return false;
-      String path = rootPath;
-      for( int f = 0 ; f < list.length ; f++ ) {
-         if( !rootPath.endsWith(Util.FS) ) rootPath = rootPath+Util.FS;
-         path = rootPath+list[f];
-         if( (new File(path)).isDirectory() ) {
-            if( list[f].equals(Constante.SURVEY) ) continue;
-            return findImgEtalon(path);
-         }
-         
-         // essaye de lire l'entete fits du fichier et tente d'en extraire une calib.
-         // s'il n'y a pas eu d'erreur ça peut servir d'étalon
-         try {
-            Aladin.trace(4, "MainPanel.findImgEtalon: loading header "+path+"...");
-            fitsfile.loadHeaderFITS(path);
-            fitsfile.getCalib();
-            context.setImgEtalon(path);
-            return true;
-            
-         }  catch (Exception e) { continue; }
-      }
-      return false;
-   }
-
-   /**
     * Cherche un fichier fits dans l'arborescence et itialise les variables
     * bitpix et le cut avec Cherche aussi le meilleur nside pour la résolution
     * du fichier trouvé

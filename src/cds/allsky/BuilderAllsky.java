@@ -233,7 +233,7 @@ final public class BuilderAllsky {
       String filename = getFileName(path, order);
       out.writeJPEG(filename+".jpg");
       
-      Aladin.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+      context.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
    }
    

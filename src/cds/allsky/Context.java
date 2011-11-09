@@ -27,6 +27,7 @@ import cds.tools.pixtools.HpixTree;
  */
 public class Context {
 
+	protected int trace=0;					// Niveau de debugging
    protected String label;                   // Nom du survey
    
    protected String inputPath;               // Répertoire des images origales
@@ -118,7 +119,7 @@ public class Context {
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
    public void setBlankOrig(double blankOrig) { 
 	   this.blankOrig = blankOrig;
-	   if (this.blank == Double.NaN)
+	   if (Double.isNaN(this.blank))
 		   this.blank = blankOrig;
    }
    public void setBlank(double blank) { this.blank = blank;}
@@ -359,6 +360,15 @@ public class Context {
 //      cut[1] = Fits.toBitpixRange(cut[1], bitpix, oldminmax);
 //      setCut(cut);
 //   }
+
+   
+   public void trace(int i, String string) {
+	   if (trace>=i)
+	   System.out.println(string);
+   }
+   public void setTrace(int trace) {
+	   this.trace = trace;
+   }
 
    public void warning(String string) {
        String s_WARN    = "WARNING :";//Aladin.getChaine().getString("WARNING");

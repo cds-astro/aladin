@@ -150,8 +150,10 @@ public class BuilderIndex implements Progressive {
       } 
 
       // On en profite pour créer le Moc associé à l'index
-      (new BuilderMoc()).createMoc(pathDest,context.getOutputPath());
+      BuilderMoc builderMoc = new BuilderMoc();
+      builderMoc.createMoc(pathDest,context.getOutputPath());
 
+      
       progress=100;
       File fpause = new File(pausepath);
       fpause.delete();

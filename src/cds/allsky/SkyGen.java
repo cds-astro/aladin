@@ -168,7 +168,9 @@ public class SkyGen {
 		System.out.println(opt + " = " + val);
 
 		// System.out.println(opt +" === " +val);
-		if (opt.equalsIgnoreCase("input"))
+		if(opt.equalsIgnoreCase("h"))
+			usage();
+		else if (opt.equalsIgnoreCase("input"))
 			context.setInputPath(val);
 		else if (opt.equalsIgnoreCase("output"))
 			context.setOutputPath(val);
@@ -229,6 +231,10 @@ public class SkyGen {
 					return;
 				}
 				continue;
+			}
+			else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
+				SkyGen.usage();
+				return;
 			}
 			// toutes les autres options écrasent les précédentes
 			else if (arg.contains("=")) {
@@ -345,6 +351,8 @@ public class SkyGen {
 			BuilderAllsky builder = new BuilderAllsky(context, -1);
 			try {
 				builder.createAllSky(3, 64);
+				if (context.getCut()!=null)
+					builder.createAllSkyJpgColor(3,64,false);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(0);
@@ -356,8 +364,29 @@ public class SkyGen {
 	}
 
 	private static void usage() {
-		System.out.println("SkyGen -param=configfile");
-
+		System.out.println("SkyGen -param=configfile\n");
+		System.out.println("This configfile must contains these following options, or use them in comand line :");
+		System.out.println(
+				"input     Directory of original images (fits or jpg+hhh - default current dir)" + "\n" +
+				"output    Target directory (default $PWD+\"ALLSKY\")" + "\n" +
+				"pixel     keep|overwrite|average - in case of already computed values (default overwrite)" + "\n" +
+				"region    Healpix region to compute (ex: 3/34-38 50 53)" + "\n" +
+				"blank     BLANK value alternative (use of FITS header by default)" + "\n" +
+				"border    Margins to ignore in the original images (N W S E or constant)" + "\n" +
+				"frame     Healpix frame (C or G - default C for ICRS)" + "\n" +
+				"skyval    Fits key to use for removing sky background" + "\n" +
+				"bitpix    Target bitpix (default is original one)" + "\n" +
+				"order     Number of Healpix Order (default computed from the original resolution)" + "\n" +
+				"pixelCut  Display range cut (BSCALE,BZERO applied)(required JPEG 8 bits conversion - ex: \"120 140\")" + "\n" +
+				"dataCut   Range for pixel vals (BSCALE,BZERO applied)(required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
+				"color       True if your input images are colored jpeg" + "\n" +
+				"img      Image path to use for initialization" + "\n");
+		System.out.println("\nUse one of these actions at end of command line :" + "\n" +
+				"finder    Build finder index" + "\n" +
+				"tiles     Build Healpix tiles" + "\n" +
+				"jpeg      Build JPEG tiles from original tiles" + "\n" +
+				"moc       Build MOC from finder Index or from target directory" + "\n" +
+				"allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)");
 	}
 
 	private void setConfigFile(String configfile) throws Exception {

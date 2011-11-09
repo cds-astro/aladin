@@ -103,6 +103,7 @@ public class ContextGui extends Context {
       } catch( Exception e ) {
          mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }
+      setBlankOrig(blank);
       return blank;
    }
    
@@ -202,4 +203,7 @@ public class ContextGui extends Context {
       Aladin.warning(mainPanel, string);
    }
 
+   public void trace(int i, String string) {
+	   Aladin.trace(i, string);
+   }
 }

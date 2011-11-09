@@ -64,9 +64,7 @@ final public class BuilderMoc {
    public void createMoc(String path) { createMoc(path,path); }
    public void createMoc(String path,String output) {
       try {
-         BuilderMoc bdMoc = new BuilderMoc();
-         bdMoc.generateMoc(path);
-         HealpixMoc moc = bdMoc.getMoc();
+         generateMoc(path);
          moc.sort();
          moc.write(output+FS+MOCNAME, HealpixMoc.FITS);
 //         moc.write(output+FS+"Moc.txt", HealpixMoc.ASCII);
