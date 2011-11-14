@@ -3055,10 +3055,12 @@ public final class Calque extends JPanel implements Runnable {
       double rad=getRadiusBG(target,radius);
       
       launchPlanBG();
-      Plan p = plan[n] = path!=null ? new PlanBG(aladin, path, label, c, rad)
-                 : url!=null ? new PlanBG(aladin, url, label, c, rad)
-                 : gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad)
-                 : new PlanBG(aladin, gSky, label, c,rad);
+      Plan p;
+      if( gSky!=null ) {
+         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad) : new PlanBG(aladin, gSky, label, c,rad);
+      } else {
+         plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad) : new PlanBG(aladin, url, label, c, rad);
+      }
       n=bestPlace(n);
       suiteNew(p);
       return n;

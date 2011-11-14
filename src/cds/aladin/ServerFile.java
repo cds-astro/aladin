@@ -244,7 +244,16 @@ public class ServerFile extends Server implements XMLConsumer {
                if( x.isDirectory() ) {
                   setSync(true);
                   Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
-                  if( PlanBG.isPlanBG(f) ) n=aladin.calque.newPlanBG(f,label,null,null);
+                  if( PlanBG.isPlanBG(f) ) {
+                     
+                     // Catalogue ?
+                     if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                        TreeNodeAllsky gSky = new TreeNodeAllsky(aladin, null, null,null, label, null, null, null, null, null, f, "15 cat");
+                        n=aladin.calque.newPlanBG(gSky,label,null,null);
+                        
+                     // ou Image
+                     } else n=aladin.calque.newPlanBG(f,label,null,null);
+                  }
                   else {
                      final ServerFile th = this;
                      (new Thread(){
@@ -396,9 +405,17 @@ public class ServerFile extends Server implements XMLConsumer {
 
             // C'est peut être un planBG via HTTP
          } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
-            u = new URL(f+"/Norder3/Allsky.jpg");
-            if( Util.isUrlResponding(u)
+            
+            // images ?
+            if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.jpg"))
                   || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.fits")) ) n=aladin.calque.newPlanBG(new URL(f),label,null,null);
+            
+            // ou catalogue ?
+            else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
+               TreeNodeAllsky gSky = new TreeNodeAllsky(aladin, null, null, f, label, null, null, null, null, null, null, "15 cat");
+               n=aladin.calque.newPlanBG(gSky,label,null,null);
+            }
+            
             else throw new Exception("Data format not recognized");
 
          } else {

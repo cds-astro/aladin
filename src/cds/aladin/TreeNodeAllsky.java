@@ -25,6 +25,10 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -55,6 +59,29 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean cat=false;    // true s'il s'agit d'un catalogue hiérarchique
    private boolean map=false;    // true s'il s'agit d'une map HEALPix FITS
    public int frame=Localisation.GAL;  // Frame d'indexation
+   
+//   public TreeNodeAllsky(Aladin aladin,String pathOrUrl) throws Exception {
+//      this.aladin = aladin;
+//      url=pathOrUrl;
+//      try {
+//         URL u = new URL(pathOrUrl+Util.FS+PlanHealpix.PROPERTIES);
+//         InputStream in = u.openStream();
+//         java.util.Properties prop = new java.util.Properties();
+//         prop.load(in);
+//
+//         // recherche du frame Healpix
+//         String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
+//         char c1 = strFrame.charAt(0);
+//         if( c1=='C' ) frame=Localisation.ICRS;
+//         else if( c1=='E' ) frame=Localisation.ECLIPTIC;
+//         else if( c1=='G' ) frame=Localisation.GAL;
+//
+//         color = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCOLOR,"True"));
+//         cat = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCAT,"True"));
+//         maxOrder = new Integer(prop.getProperty(PlanHealpix.KEY_MAXORDER,"15"));
+//         minOrder = new Integer(prop.getProperty(PlanHealpix.KEY_MINORDER, cat ? "2" : "3"));
+//      } catch( Exception e ) { if( aladin.levelTrace>=3) e.printStackTrace(); }
+//   }
    
    public TreeNodeAllsky(Aladin aladin,String actionName,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String aladinProfile,String copyright,String copyrightUrl,String path,
@@ -161,6 +188,7 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** retourne l'URL de base pour accéder au serveur HTTP */
    protected String getUrl() {
+      if( id==null ) return null;
       if( url==null ) url = aladin.glu.getURL(id)+"";
       return url;
    }

@@ -57,6 +57,9 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_TYPEHPX = "typehpx";
     static public final String KEY_ISPARTIAL = "isPartial";
     static public final String KEY_ISCOLOR = "isColored";
+    static public final String KEY_ISCAT = "isCatalog";
+    static public final String KEY_MAXORDER = "maxOrder";
+    static public final String KEY_MINORDER = "minOrder";
     static public final String KEY_ARGB = "ARGB";
     static public final String KEY_ORDERING = "ordering";
     static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
