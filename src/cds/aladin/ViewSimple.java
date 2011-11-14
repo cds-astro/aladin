@@ -6036,7 +6036,7 @@ g.drawString(s,10,100);
       if( fullScreen )  {
          aladin.fullScreen.drawMesures(g);
          aladin.fullScreen.drawIcons(g);
-         //         drawOverlayControls(g);
+//                  drawOverlayControls(g);
       }
 
       // Affichage du buffer

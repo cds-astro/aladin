@@ -2961,7 +2961,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repere.dej=coo.del;
 //      aladin.sendObserver();
    }
-
+   
+   
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
       ViewSimple v = getCurrentView();
@@ -4100,7 +4101,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
       if( aladin.isFullScreen() ) { aladin.fullScreen.repaint(); return; }
       repaintAll1(1);
    }
-
+   
    /**
     *
     * @param mode 0 repaintAll, 1 - quickRepaintAll, 2- updateAll

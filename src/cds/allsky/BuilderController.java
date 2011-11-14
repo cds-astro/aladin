@@ -308,7 +308,7 @@ public class BuilderController implements Progressive {
             long npix = getNextNpix();
             if( npix==-1 ) break;
             try { 
-               Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"/"+NMAX+"...");
+//               Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"/"+NMAX+"...");
 
                // si le process a été arrêté on essaie de ressortir au plus vite
                if (stopped) break;
@@ -460,12 +460,21 @@ public class BuilderController implements Progressive {
             }
          }
       }
+      
+      if( coaddMode!=CoAddMode.REPLACE ) {
+         Fits oldOut = findFits(file+".fits");
+         if( oldOut!=null ) {
+            if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
+            else if( coaddMode==CoAddMode.KEEP ) out.mergeOnNaN(oldOut);
+            else if( coaddMode==CoAddMode.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+         }
+      }
 
       if( flagColor ) out.writeJPEG(file+".jpg");
       else out.writeFITS(file+".fits");
 
       long duree = System.currentTimeMillis() -t;
-      if (npix%1000 == 0 || DEBUG) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") in "+duree+"ms "+file+"... ");
+      if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
 
       updateStat(0,0,0,1,duree);
 

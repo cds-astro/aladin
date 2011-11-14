@@ -871,6 +871,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       
       if( plan.type==Plan.ALLSKYMOC ) {
          final PlanMoc pmoc = (PlanMoc)plan;
+         
+         addCouple(p,"Size",new JLabel(pmoc.getMoc().getSize()+" cells"),g,c);
+         addCouple(p,"Best Moc resolution",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
+               +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
+         
          boolean wireFrame = pmoc.getWireFrame();
          ButtonGroup bg = new ButtonGroup();
          final JCheckBox b1 = new JCheckBox("wire frame");
@@ -887,6 +892,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          bg.add(b1); bg.add(b2);
          p1.add(b1); p1.add(b2);
          addCouple(p,"Drawing method",p1,g,c);
+         
+         
       }
       
       if( plan instanceof PlanBG ) {

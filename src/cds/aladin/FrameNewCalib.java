@@ -763,11 +763,11 @@ e.printStackTrace();
             if( coo==null ) return;
             if( flagModif ) p=oldp;
             else {
-//               if( plan.projd!=null ) p = plan.projd.copy();
-//               else {
+               if( plan.projd!=null ) p = plan.projd.copy();
+               else {
                   p=new Projection(label,Projection.SIMPLE,
-                     coo[0].al,coo[0].del,cx,cy,coo[0].x,coo[0].y,cx*2,cy*2,0,false,Calib.TAN,system);
-//               }
+                        coo[0].al,coo[0].del,cx,cy,coo[0].x,coo[0].y,cx*2,cy*2,0,false,Calib.TAN,system);
+               }
             }
             p.modify(label,coo);
 
