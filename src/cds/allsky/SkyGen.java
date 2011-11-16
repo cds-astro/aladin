@@ -170,6 +170,8 @@ public class SkyGen {
 		// System.out.println(opt +" === " +val);
 		if(opt.equalsIgnoreCase("h"))
 			usage();
+		else if (opt.equalsIgnoreCase("verbose"))
+			Context.setVerbose(Integer.parseInt(val));
 		else if (opt.equalsIgnoreCase("input"))
 			context.setInputPath(val);
 		else if (opt.equalsIgnoreCase("output"))
@@ -379,8 +381,9 @@ public class SkyGen {
 				"order     Number of Healpix Order (default computed from the original resolution)" + "\n" +
 				"pixelCut  Display range cut (BSCALE,BZERO applied)(required JPEG 8 bits conversion - ex: \"120 140\")" + "\n" +
 				"dataCut   Range for pixel vals (BSCALE,BZERO applied)(required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
-				"color       True if your input images are colored jpeg" + "\n" +
-				"img      Image path to use for initialization" + "\n");
+				"color     True if your input images are colored jpeg" + "\n" +
+				"img       Image path to use for initialization" + "\n" +
+				"verbose   Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n");
 		System.out.println("\nUse one of these actions at end of command line :" + "\n" +
 				"finder    Build finder index" + "\n" +
 				"tiles     Build Healpix tiles" + "\n" +

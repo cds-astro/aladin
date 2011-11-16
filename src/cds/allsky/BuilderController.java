@@ -728,22 +728,25 @@ public class BuilderController implements Progressive {
 
          if( coaddMode!=CoAddMode.REPLACE ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
-            if( oldOut!=null ) {
+            if( oldOut!=null && out!=null) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.KEEP ) out.mergeOnNaN(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
             }
+//            else { // si on a *que* une ancienne version, on la garde telle que
+//            	out = oldOut;
+            }
          }
 
-         if( flagColor ) out.writeJPEG(file+".jpg");
-         else out.writeFITS(file+".fits");
+         if (out!=null) {
+             if( flagColor ) out.writeJPEG(file+".jpg");
+             else out.writeFITS(file+".fits");
+             long duree = System.currentTimeMillis()-t;
+             if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
+             
+             updateStat(0,1,duree,0,0);
+         }
 
-
-         long duree = System.currentTimeMillis()-t;
-         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
-
-         updateStat(0,1,duree,0,0);
-      }
 
       return out;
    }

@@ -27,6 +27,7 @@ import cds.tools.pixtools.HpixTree;
  */
 public class Context {
 
+	private static boolean verbose = false;
 	protected int trace=0;					// Niveau de debugging
    protected String label;                   // Nom du survey
    
@@ -330,8 +331,8 @@ public class Context {
    protected void showBuildStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
          long statNodeAvgTime) {
-	// affiche sur la sortie standard toutes les 3 sec
-	   if ((System.currentTimeMillis()-statTime)>3000) {
+	// affiche sur la sortie standard toutes les 30 sec
+	   if (verbose && (System.currentTimeMillis()-statTime)>30000) {
 		      long maxMem = Runtime.getRuntime().maxMemory();
 		      long totalMem = Runtime.getRuntime().totalMemory();
 		      long freeMem = Runtime.getRuntime().freeMemory();
@@ -370,7 +371,32 @@ public class Context {
 	   this.trace = trace;
    }
 
-   public void warning(String string) {
+   /**
+    * @param verbose the verbose to set
+    */
+   public static void setVerbose(boolean verbose) {
+	   Context.verbose = verbose;
+   }
+
+   /**
+    * Niveau de verbosité : 
+    * -1    rien
+    * 0     stats
+    * 1-4   traces habituelles d'Aladin
+    * @param verbose the verbose to set
+    */
+   public static void setVerbose(int level) {
+	   if (level>=0) {
+		   Context.verbose = true;
+		   Aladin.aladin.setTraceLevel(level);
+	   }
+	   else {
+		   Context.verbose = false;
+		   Aladin.aladin.setTraceLevel(0);
+	   }
+   }
+
+public void warning(String string) {
        String s_WARN    = "WARNING :";//Aladin.getChaine().getString("WARNING");
        System.out.println(s_WARN+" "+string);
    }
