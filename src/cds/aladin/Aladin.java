@@ -5935,7 +5935,7 @@ public boolean handleEvent(Event e) {
   }
 
    /** Changement du niveau de trace */
-   protected void setTraceLevel(int n) {
+   public void setTraceLevel(int n) {
       levelTrace=n;
 //      if( n>0 ) pixel.addDebugItem();   // ajout de la possibilité Pixel FITS value
       if( n==0 ) command.toStdoutln("Trace off");
