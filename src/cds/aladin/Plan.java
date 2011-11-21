@@ -88,6 +88,7 @@ public class Plan implements Runnable {
    protected String label;       // Label du plan; (celui qui apparait dans le "plane stack"
    protected String param;       // Les parametres d'interrogation du serveur
    protected String info=null;   // De l'information sur le plan
+   protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation
                                  // ou null si non encore calcule
 //   protected Thread	sr;	         // Thread pour la resolution Simbad */

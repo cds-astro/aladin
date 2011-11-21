@@ -262,12 +262,12 @@ public class BuilderController implements Progressive {
          return createLeaveHpx(hpx,file,order,npix);      
       }
       Fits fils[] = new Fits[4];
-      boolean found = false;
+//      boolean found = false;
       for( int i =0; !stopped && i<4; i++ ) {
          fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
-         if (fils[i] != null && !found) found = true;
+//         if (fils[i] != null && !found) found = true;
       }
-      if (!found) return null;
+//      if( !found ) return null;
       return createNodeHpx(file,path,order,npix,fils);
    }
 
@@ -399,9 +399,9 @@ public class BuilderController implements Progressive {
       int w=Constante.SIDE;
       double px[] = new double[4];
 
-//      boolean inTree = isInList(order,npix) || isAscendant(order,npix) || isDescendant(order,npix);
       boolean inTree = context.isInMocTree(order,npix);
-      if( !inTree ) return flagColor ? null : findFits(file+".fits");
+      if( !inTree || 
+            fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) return flagColor ? null : findFits(file+".fits");
 
       Fits out = new Fits(w,w,bitpix);
       if( !flagColor ) {
@@ -712,11 +712,9 @@ public class BuilderController implements Progressive {
 
       Fits oldOut=null;
       boolean isInList = context.isInMocLevel(order,npix);
-//      boolean isInList = isInList(order,npix);
       if( !isInList ) {
          oldOut = findFits(file+".fits");
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) return oldOut;
-//         if( !(oldOut==null && isDescendant(order,npix) ) ) return oldOut;
       }
 
       int nside_file = Util.nside(order);

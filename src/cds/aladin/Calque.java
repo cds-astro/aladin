@@ -3001,7 +3001,7 @@ public final class Calque extends JPanel implements Runnable {
    }
    
    // Détermination du target de démarrage pour un plan BG
-   private Coord getTargetBG(String target) {
+   private Coord getTargetBG(String target,TreeNodeAllsky gSky) {
       Coord c=null;
       if( target!=null && target.length()>0) {
          try {
@@ -3010,13 +3010,16 @@ public final class Calque extends JPanel implements Runnable {
          } catch( Exception e ) { e.printStackTrace(); }
          
       } else {
-         if( !aladin.view.isFree() && aladin.view.repere!=null && !Double.isNaN(aladin.view.repere.raj) ) c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+         if( gSky!=null && gSky.getTarget()!=null ) c=gSky.getTarget();
+         else {
+            if( !aladin.view.isFree() && aladin.view.repere!=null && !Double.isNaN(aladin.view.repere.raj) ) c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+         }
       }
       return c;
    }
    
    // Détermination du radius de démarrage pour un plan BG
-   private double getRadiusBG(String target,String radius) {
+   private double getRadiusBG(String target,String radius,TreeNodeAllsky gSky) {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {
@@ -3024,7 +3027,8 @@ public final class Calque extends JPanel implements Runnable {
             rad /= 60;
          } catch( Exception e ) { e.printStackTrace(); }
       }
-      if( target==null && rad==-1 ) {
+      else if( gSky!=null && gSky.getRadius()!=-1 ) rad=gSky.getRadius();
+      else if( target==null && rad==-1 ) {
          try {
             rad = aladin.view.getCurrentView().getTaille();
          } catch( Exception e ) { }
@@ -3036,8 +3040,8 @@ public final class Calque extends JPanel implements Runnable {
    protected int newPlanHpxMOCM(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      Coord c=getTargetBG(null);
-      double rad=getRadiusBG(null,null);
+      Coord c=getTargetBG(null,null);
+      double rad=getRadiusBG(null,null,null);
       plan[n] = new PlanMoc(aladin,in,label,c,rad);
       n=bestPlace(n);
       suiteNew(plan[n]);
@@ -3051,8 +3055,8 @@ public final class Calque extends JPanel implements Runnable {
    protected int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
-      Coord c=getTargetBG(target);
-      double rad=getRadiusBG(target,radius);
+      Coord c=getTargetBG(target,gSky);
+      double rad=getRadiusBG(target,radius,gSky);
       
       launchPlanBG();
       Plan p;

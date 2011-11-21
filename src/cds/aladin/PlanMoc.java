@@ -48,8 +48,10 @@ public class PlanMoc extends PlanBGCat {
       setOpacityLevel(1.0f);
       if( label==null ) label="Hpx coverage map";
       setLabel(label);
+      co=c;
+      coRadius=radius;
       aladin.trace(3,"AllSky creation: "+Plan.Tp[type]+(c!=null ? " around "+c:""));
-      suite(c,radius);
+      suite();
    }
    
    /** Retourne le Moc */

@@ -56,17 +56,26 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_LENHPX = "lenhpx";
     static public final String KEY_TYPEHPX = "typehpx";
     static public final String KEY_ISPARTIAL = "isPartial";
-    static public final String KEY_ISCOLOR = "isColored";
-    static public final String KEY_ISCAT = "isCatalog";
-    static public final String KEY_MAXORDER = "maxOrder";
-    static public final String KEY_MINORDER = "minOrder";
     static public final String KEY_ARGB = "ARGB";
     static public final String KEY_ORDERING = "ordering";
     static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
     static public final String KEY_CURTFORMBITPIX = "curTFormBitpix";
-    static public final String KEY_COORDSYS = "coordsys";
-    // Aladin version used to generate the properties file
     static public final String KEY_ALADINVERSION = "aladinVersion";
+    
+    static public final String KEY_COORDSYS = "coordsys";
+    static public final String KEY_ISCOLOR = "isColored";
+    static public final String KEY_ISCAT = "isCatalog";
+    static public final String KEY_MAXORDER = "maxOrder";
+    static public final String KEY_FORMAT = "format";
+    static public final String KEY_LABEL = "label";
+    static public final String KEY_DESCRIPTION = "description";
+    static public final String KEY_DESCRIPTION_VERBOSE = "descriptionVerbose";
+    static public final String KEY_COPYRIGHT = "copyright";
+    static public final String KEY_COPYRIGHT_URL = "copyrightUrl";
+    static public final String KEY_NSIDE = "nside";
+    static public final String KEY_TARGET = "target";
+    static public final String KEY_TARGETRADIUS = "targetRadius";
+    static public final String KEY_USECACHE = "useCache";
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;
     static final int POLA_AMPLITUDE_MAGIC_CODE = -41;
@@ -297,7 +306,7 @@ public class PlanHealpix extends PlanBG {
             startHealpixCreation();
             if (needProcessing) writePropertiesFile(this.dirName);
 
-            suite();
+            suiteSpecif();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -364,7 +373,7 @@ public class PlanHealpix extends PlanBG {
         return true;
     }
 
-    private void suite() {
+    private void suiteSpecif() {
 
        url = getCacheDir()+Util.FS+survey;
        minOrder = 3;

@@ -315,7 +315,7 @@ public final class Save extends JFrame implements ActionListener {
                res &= saveMoc(s,(PlanMoc)p);
                break;
             case Plan.TOOL:
-               res&= tsvCb.isSelected() || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
+               res&= (tsvCb!=null && tsvCb.isSelected()) || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
                break;
             case Plan.ALLSKYCAT:
             case Plan.CATALOG:

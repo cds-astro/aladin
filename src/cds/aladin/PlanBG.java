@@ -162,7 +162,9 @@ public class PlanBG extends PlanImage {
    private boolean hasMoc=false;   // true si on on peut disposer du MOC correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=0;   // Frame de tracé, 0 si utilisation du repère général
-   
+   protected boolean localAllSky=false;
+
+
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
    static volatile long cacheSize=-1;   // Taille actuelle du cache
@@ -204,7 +206,7 @@ public class PlanBG extends PlanImage {
       from=gluSky.copyright!=null && gluSky.copyright.length()>0 ? gluSky.copyright : url;
       setSpecificParams(gluSky);
       aladin.trace(3,"AllSky creation: "+gluSky.toString1()+(c!=null ? " around "+c:""));
-      suite(c,radius);
+      suite();
    }
    
    protected void setSpecificParams(TreeNodeAllsky gluSky) {
@@ -216,22 +218,22 @@ public class PlanBG extends PlanImage {
       color = gluSky.isColored();
    }
    
-   private boolean foundColorProp=false;
-   
-   protected void loadProperties(InputStream in) throws Exception {
-      java.util.Properties prop = new java.util.Properties();
-      prop.load(in);
-      
-      // recherche du frame Healpix
-      String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
-      char c1 = strFrame.charAt(0);
-      if( c1=='C' ) frameOrigin=Localisation.ICRS;
-      else if( c1=='E' ) frameOrigin=Localisation.ECLIPTIC;
-      else if( c1=='G' ) frameOrigin=Localisation.GAL;
-      
-      // Est-il en couleur
-      color = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCOLOR,"True"));
-   }
+//   private boolean foundColorProp=false;
+//   
+//   protected void loadProperties(InputStream in) throws Exception {
+//      java.util.Properties prop = new java.util.Properties();
+//      prop.load(in);
+//      
+//      // recherche du frame Healpix
+//      String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
+//      char c1 = strFrame.charAt(0);
+//      if( c1=='C' ) frameOrigin=Localisation.ICRS;
+//      else if( c1=='E' ) frameOrigin=Localisation.ECLIPTIC;
+//      else if( c1=='G' ) frameOrigin=Localisation.GAL;
+//      
+//      // Est-il en couleur
+//      color = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCOLOR,"True"));
+//   }
    
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
       super(aladin);
@@ -245,48 +247,53 @@ public class PlanBG extends PlanImage {
       File f = new File(path);
       url = f.getAbsolutePath();
       survey = f.getName();
-      maxOrder=minOrder = 3;
+//      minOrder = 3;
+      maxOrder=3;
       useCache = false;
-      localAllSky = true;
-      frameOrigin=Localisation.GAL;
-      color = false;
-      if( label!=null && label.trim().length()>0 ) setLabel(label);
+//      localAllSky = true;
+      this.label=label;
+//      frameOrigin=Localisation.GAL;
+//      color = false;
       
-      // Chargement d'un éventuel fichier de Properties
-      try {
-         InputStream in = new FileInputStream( new File(path+Util.FS+PlanHealpix.PROPERTIES));
-         loadProperties(in);
-      } catch( Exception e) { }
-      
-      // Recherche des répertoires NorderX max
-      maxOrder = cds.tools.pixtools.Util.getMaxOrderByPath(path);
+      paramByTreeNode(new TreeNodeAllsky(aladin, url), c, radius);
 
-      // Détermination du mode couleur
-      File f3= new File(path+Util.FS+"Norder3");
-      if( !(f3.exists() && f3.isDirectory()) ) {
-         if( this.label==null ) setLabel(path);
-         aladin.error = error ="Not an HEALPix Aladin survey directory !";
-      } else {
-         try {
-            File [] sf = f3.listFiles();
-            for( int i=0; i<sf.length; i++ ) {
-               String name = sf[i].getName();
-               if( name.equals("Allsky.fits") ) inFits=true;
-               if( name.equals("Allsky.jpg") ) {
-                  inJPEG=true;
-                  if( !color ) color = Util.isJPEGColored(sf[i].getAbsolutePath());
-                  aladin.trace(4,"PlanBG: "+sf[i].getAbsolutePath()+" color="+color);
-               }
-            }
-            truePixels = inFits;
-         } catch( Exception e ) {
-            e.printStackTrace();
-         }
+//      // Chargement d'un éventuel fichier de Properties
+//      try {
+//         InputStream in = new FileInputStream( new File(path+Util.FS+PlanHealpix.PROPERTIES));
+//         loadProperties(in);
+//      } catch( Exception e) { }
+//      
+//      // Recherche des répertoires NorderX max
+//      maxOrder = cds.tools.pixtools.Util.getMaxOrderByPath(path);
+//
+//      // Détermination du mode couleur
+//      File f3= new File(path+Util.FS+"Norder3");
+//      if( !(f3.exists() && f3.isDirectory()) ) {
+//         if( this.label==null ) setLabel(path);
+//         aladin.error = error ="Not an HEALPix Aladin survey directory !";
+//      } else {
+//         try {
+//            File [] sf = f3.listFiles();
+//            for( int i=0; i<sf.length; i++ ) {
+//               String name = sf[i].getName();
+//               if( name.equals("Allsky.fits") ) inFits=true;
+//               if( name.equals("Allsky.jpg") ) {
+//                  inJPEG=true;
+//                  if( !color ) color = Util.isJPEGColored(sf[i].getAbsolutePath());
+//                  aladin.trace(4,"PlanBG: "+sf[i].getAbsolutePath()+" color="+color);
+//               }
+//            }
+//            truePixels = inFits;
+//         } catch( Exception e ) {
+//            e.printStackTrace();
+//         }
+//
+//         aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
+//      }
+      aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
 
-         aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
-      }
 
-      suite(c,radius);
+      suite();
    }
    
    protected PlanBG(Aladin aladin, URL u, String label, Coord c, double radius) {
@@ -300,31 +307,52 @@ public class PlanBG extends PlanImage {
 
       url = u.toString();
       survey = url.substring(url.lastIndexOf('/')+1);;
-      maxOrder=minOrder = 3;
+//      minOrder = 3;
+      maxOrder = 3;
       useCache = true;
       localAllSky = false;
-      frameOrigin=Localisation.GAL;
-      colorUnknown = true;
-      color = false;
-      if( label!=null && label.trim().length()>0 ) setLabel(label);
-//      for( int npix=450; Util.isUrlResponding(HealpixKey.getFilePath(url, maxOrder, npix)+".jpg"); npix*=4, maxOrder++ );
+      this.label=label;
       
-      // Chargement d'un éventuel fichier de Properties
-      try {
-         InputStream in = (new URL(url+"/"+PlanHealpix.PROPERTIES)).openStream();
-         loadProperties(in);
-      } catch( Exception e) { aladin.trace(4,"PlanBG: Properties file not found ["+url+"/"+PlanHealpix.PROPERTIES+"]"); }
+      paramByTreeNode(new TreeNodeAllsky(aladin, url),c,radius);
 
-      for( int n=3; true; n++ ) {
-         if( !Util.isUrlResponding(url+"/Norder"+n) ) break;
-         maxOrder=n;
-      }
-      inJPEG = Util.isUrlResponding(url+"/Norder3/Allsky.jpg");
-      inFits = Util.isUrlResponding(url+"/Norder3/Allsky.fits");
-      truePixels = !inJPEG;
+//      frameOrigin=Localisation.GAL;
+//      colorUnknown = true;
+//      color = false;
+//      if( label!=null && label.trim().length()>0 ) setLabel(label);
+////      for( int npix=450; Util.isUrlResponding(HealpixKey.getFilePath(url, maxOrder, npix)+".jpg"); npix*=4, maxOrder++ );
+//      
+//      // Chargement d'un éventuel fichier de Properties
+//      try {
+//         InputStream in = (new URL(url+"/"+PlanHealpix.PROPERTIES)).openStream();
+//         loadProperties(in);
+//      } catch( Exception e) { aladin.trace(4,"PlanBG: Properties file not found ["+url+"/"+PlanHealpix.PROPERTIES+"]"); }
+//
+//      for( int n=3; true; n++ ) {
+//         if( !Util.isUrlResponding(url+"/Norder"+n) ) break;
+//         maxOrder=n;
+//      }
+//      inJPEG = Util.isUrlResponding(url+"/Norder3/Allsky.jpg");
+//      inFits = Util.isUrlResponding(url+"/Norder3/Allsky.fits");
+//      truePixels = !inJPEG;
       aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
 
-      suite(c,radius);
+      suite();
+   }
+   
+   private void paramByTreeNode(TreeNodeAllsky gSky, Coord c, double radius) {
+      if( label!=null && label.trim().length()>0 ) setLabel(label);
+      else setLabel(gSky.label);
+      maxOrder=gSky.getMaxOrder();
+      inFits=gSky.isFits();
+      inJPEG=gSky.isJPEG();
+      truePixels=inFits;
+      color=gSky.isColored();
+      frameOrigin=gSky.getFrame();
+      losangeOrder=gSky.getLosangeOrder();
+      localAllSky=gSky.isLocal();
+      useCache=!localAllSky && gSky.useCache();
+      co=c!=null ? c : gSky.getTarget();
+      coRadius= c!=null ? radius : gSky.getRadius();
    }
    
    private boolean testMoc=false; // true : la présence d'un MOC a été testé
@@ -382,24 +410,23 @@ public class PlanBG extends PlanImage {
    
    // @param c Centre du champ, ou null si non spécifié
    // @param radius Taille du champ, ou <=0 si non spécifié
-   protected void suite(Coord c,double radius) {
+   protected void suite() {
 
       if( this.label==null || this.label.trim().length()==0) setLabel(survey);
 //      if( !aladin.NOGUI ) aladin.localisation.setFrame( aladin.configuration.getFrameAllsky() );
-      if( c==null ) {
+      if( co==null ) {
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
-      } else {
-    	  // c est déjà en ICRS J2000
-    	  co = new Coord(c.al,c.del);
       }
+      if( coRadius<=0 ) coRadius=180;
+      
       aladin.view.setRepere1(co);
       objet = co+"";
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
-      setDefaultZoom(c,radius);
+      setDefaultZoom(co,coRadius);
       suiteSpecific();
       threading();
       log();
@@ -1571,8 +1598,6 @@ public String getUrl() {
       }
    }
 
-
-   protected boolean localAllSky=false;
 
    private final int ALLSKYORDER = 3;
 

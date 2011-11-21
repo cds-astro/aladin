@@ -91,7 +91,7 @@ final public class BuilderMoc {
          for( int j=0; j<sf1.length; j++ ) {
             String file = sf1[j].getAbsolutePath();
             
-            int npix = Util.getNpixFromPath(file);
+            long npix = Util.getNpixFromPath(file);
             if( npix==-1 ) continue;
             
            // Ecarte les fichiers n'ayant pas l'extension requise
@@ -124,9 +124,9 @@ final public class BuilderMoc {
    
    // Insertion récursive : dès qu'on a 4 frères consécutifs, on les supprime
    // et on insère récursivement le père
-   private void add(int order, int npix) {
-      int me = npix%4;
-      int firstBrother = npix - me;
+   private void add(int order, long npix) {
+      long me = npix%4L;
+      long firstBrother = npix - me;
       
       // Y a-t-il un frangin encore absent (en plus de moi) ? si oui, on insère
       for( int i=0; i<4; i++ ) {

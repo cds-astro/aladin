@@ -137,12 +137,12 @@ public class Util {
       return order;
    }
 
-   static public int getNpixFromPath(String filename) {
+   static public long getNpixFromPath(String filename) {
       int fromIndex = filename.lastIndexOf("Npix");
       if( fromIndex<0 ) return -1;
       int lastIndex = filename.indexOf('.',fromIndex);
       if( lastIndex<0 ) lastIndex = filename.length();
-      return Integer.parseInt( filename.substring(fromIndex+4,lastIndex) );
+      return Long.parseLong( filename.substring(fromIndex+4,lastIndex) );
 
       //	   int fromIndex = filename.indexOf("Npix");
       //	   if (fromIndex == -1)

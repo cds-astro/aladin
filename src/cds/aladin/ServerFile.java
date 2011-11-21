@@ -248,7 +248,12 @@ public class ServerFile extends Server implements XMLConsumer {
                      
                      // Catalogue ?
                      if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
-                        TreeNodeAllsky gSky = new TreeNodeAllsky(aladin, null, null,null, label, null, null, null, null, null, f, "15 cat");
+                        TreeNodeAllsky gSky;
+                        try { gSky = new TreeNodeAllsky(aladin, f); }
+                        catch( Exception e ) {
+                           aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                           gSky = new TreeNodeAllsky(aladin, null, null, null, null, null, null, null, null, null, f, "15 cat");
+                        }
                         n=aladin.calque.newPlanBG(gSky,label,null,null);
                         
                      // ou Image
@@ -412,7 +417,12 @@ public class ServerFile extends Server implements XMLConsumer {
             
             // ou catalogue ?
             else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
-               TreeNodeAllsky gSky = new TreeNodeAllsky(aladin, null, null, f, label, null, null, null, null, null, null, "15 cat");
+               TreeNodeAllsky gSky;
+               try { gSky = new TreeNodeAllsky(aladin, f); }
+               catch( Exception e ) {
+                  aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                  gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, "15 cat");
+               }
                n=aladin.calque.newPlanBG(gSky,label,null,null);
             }
             
