@@ -48,7 +48,7 @@ public class BuilderJpg implements Progressive, Runnable {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
-	   context.initParamFromGui();
+	   context.initParameters();
 	   initBscaleBzeroFromNpixFits(dirpath);
 	   cut=context.getCut();
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);

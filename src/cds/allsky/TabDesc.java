@@ -65,12 +65,12 @@ public class TabDesc extends JPanel implements ActionListener {
    private String SEE;
    private String INFOALLSKY;
    private String PARAMALLSKY;
-   private String KEEPALLSKY,COADDALLSKY,OVERWRITEALLSKY;
+   private String KEEPALLSKY,COADDALLSKY,OVERWRITEALLSKY,KEEPCELLALLSKY;
    private String SPECIFALLSKY,BLANKALLSKY,BORDERALLSKY, SKYVALALLSKY ;
 
    
    private JLabel paramLabel;
-   private JRadioButton keepRadio,coaddRadio,overwriteRadio;
+   private JRadioButton keepRadio,coaddRadio,overwriteRadio,keepCellRadio;
    private JCheckBox specifCheckbox;
    private JCheckBox blankCheckbox;
    private JCheckBox borderCheckbox;
@@ -165,10 +165,19 @@ public class TabDesc extends JPanel implements ActionListener {
       pCenter.add(resetHpx, c);
       c.gridy++;
       JPanel pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      pTiles.setBorder( BorderFactory.createEmptyBorder(0,10,0,0));
       pTiles.add(keepRadio);      //keepRadio.setEnabled(false);
       pTiles.add(overwriteRadio); //overwriteRadio.setEnabled(false);
       pTiles.add(coaddRadio);     //coaddRadio.setEnabled(false);
       pCenter.add(pTiles, c);
+      
+      if( Aladin.PROTO ) {
+         c.gridy++;
+         pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+         pTiles.setBorder( BorderFactory.createEmptyBorder(0,10,0,0));
+         pTiles.add(keepCellRadio);
+         pCenter.add(pTiles, c);
+      }
       
       c.gridx=2;
       
@@ -259,6 +268,7 @@ public class TabDesc extends JPanel implements ActionListener {
       PARAMALLSKY = getString("PARAMALLSKY");
       COADDALLSKY = getString("COADDALLSKY");
       KEEPALLSKY = getString("KEEPALLSKY");
+      KEEPCELLALLSKY = getString("KEEPCELLALLSKY");
       OVERWRITEALLSKY = getString("OVERWRITEALLSKY");
       SPECIFALLSKY  = getString("SPECIFALLSKY");
       BLANKALLSKY  = getString("BLANKALLSKY");
@@ -309,6 +319,7 @@ public class TabDesc extends JPanel implements ActionListener {
       keepRadio = new JRadioButton(KEEPALLSKY); tilesGroup.add(keepRadio);
       overwriteRadio = new JRadioButton(OVERWRITEALLSKY); tilesGroup.add(overwriteRadio);
       coaddRadio = new JRadioButton(COADDALLSKY); tilesGroup.add(coaddRadio);
+      keepCellRadio = new JRadioButton(KEEPCELLALLSKY); tilesGroup.add(keepCellRadio);
       keepRadio.setSelected(true);
       
       specifCheckbox = new JCheckBox(SPECIFALLSKY); specifCheckbox.setSelected(false);
@@ -377,6 +388,7 @@ public class TabDesc extends JPanel implements ActionListener {
 
       boolean flag = !resetHpx.isSelected() && resetHpx.isEnabled();
       keepRadio.setEnabled(flag);
+      keepCellRadio.setEnabled(flag);
       overwriteRadio.setEnabled(flag);
       coaddRadio.setEnabled(flag);
       
@@ -433,7 +445,7 @@ public class TabDesc extends JPanel implements ActionListener {
 
    public CoAddMode getCoaddMode() {
       return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACE : 
-            keepRadio.isSelected() ? CoAddMode.KEEP 
+            keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPCELL
             :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
    }
 

@@ -412,8 +412,9 @@ public final class HeaderFits {
    }
 
    /** Ecriture de l'entête FITS des mots clés mémorisés. L'ordre est conservé
-    * comme à l'origine - les commentaires ne sont pas restitués */
-   public void writeHeader(OutputStream os ) throws Exception {
+    * comme à l'origine - les commentaires ne sont pas restitués 
+    * @return le nombre d'octets écrits */
+   public int writeHeader(OutputStream os ) throws Exception {
       int n=0;
       Enumeration e = keysOrder.elements();
       while( e.hasMoreElements() ) {
@@ -423,7 +424,10 @@ public final class HeaderFits {
          os.write( getFitsLine(key,value) );
          n+=80;
       }
-      os.write( getEndBourrage(n));
+      byte [] b= getEndBourrage(n);
+      n+=b.length;
+      os.write(b);
+      return n;
    }
 
    /** Génération de la fin de l'entête FITS, càd le END et le byte de bourrage

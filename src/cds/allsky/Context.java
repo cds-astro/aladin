@@ -37,7 +37,7 @@ public class Context {
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
    protected int bitpixOrig = -1;            // BITPIX des images originales
-   protected double blankOrig;               // Valeur du BLANK en entrée
+   protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
@@ -47,8 +47,8 @@ public class Context {
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
-   protected double bZero;                   // Valeur BZERO de la boule Healpix à générer
-   protected double bScale;                  // Valeur BSCALE de la boule HEALPix à générer
+   protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
+   protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    
@@ -100,30 +100,24 @@ public class Context {
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
    public void setFrame(int frame) { this.frame=frame; }
-   public void setFrameName(String frame) { this.frame=
-       (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
+   public void setFrameName(String frame) { this.frame= (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setInitDir(String txt) { }
+   public void setSkyValName(String s ) { skyvalName=s; }
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon();}
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
-   public void setBScaleOrig(double x) { bScale = bScaleOrig = x; }
-   public void setBZeroOrig(double x) { bZero = bZeroOrig = x; }
+   public void setBScaleOrig(double x) { bScaleOrig = x; }
+   public void setBZeroOrig(double x) { bZeroOrig = x; }
    public void setBScale(double x) { bScale = x; bscaleBzeroSet=true; }
    public void setBZero(double x) { bZero = x; bscaleBzeroSet=true; }
    public void setBitpixOrig(int bitpixO) { 
 	   this.bitpixOrig = bitpixO; 
-	   if (this.bitpix==-1) 
-		   this.bitpix = bitpixO;
+	   if (this.bitpix==-1) this.bitpix = bitpixO;
    }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
-   public void setBlankOrig(double blankOrig) { 
-	   this.blankOrig = blankOrig;
-	   if (Double.isNaN(this.blank))
-		   this.blank = blankOrig;
-   }
-   public void setBlank(double blank) { this.blank = blank;}
+   public void setBlankOrig(double x) {  blankOrig = x; }
    public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setCut(double [] cut) { this.cut=cut; }
@@ -175,7 +169,7 @@ public class Context {
        if( !isColor() ) {
           setBZeroOrig(fitsfile.bzero);
           setBScaleOrig(fitsfile.bscale);
-          setBlankOrig(fitsfile.blank);
+          if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
        }
        initCut(fitsfile);
    }
@@ -227,31 +221,12 @@ public class Context {
       }
       return false;
    }
-
-   public void initChangeBitpix() {
-      int bitpix = getBitpix();
-      cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
-            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-      cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-            : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-      coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
-      
-      cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
-      cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
-      
-      blank = bitpix<0 ? Double.NaN : bitpix==32 ? Double.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
-      setBZero( bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef) );
-      setBScale( bScaleOrig/coef );
-   }
    
    public void setSkyval(String fieldName) {
        this.skyvalName = fieldName;
        if (cacheFits != null) cacheFits.setSkySub(skyvalName);
    }
-//   public void setSkySub(boolean skySub) {
-//      this.skySub = skySub;
-//      if (cacheFits != null) cacheFits.setSkySub(skySub);
-//   }
+   
    public void setCache(CacheFits cache) {
       this.cacheFits = cache;
       cache.setSkySub(skyvalName);
@@ -270,8 +245,68 @@ public class Context {
    }
    
    /** Initialisation des paramètres (ne sert que pour contextGui) */
-   public void initParamFromGui() {}
+   public void initParameters() {
+      
+      bitpix = getBitpix();
+      cut = getCut();
+      
+      bitpixOrig = getBitpixOrig();
+      cutOrig = getCutOrig();
+      blankOrig = getBlankOrig();
+      bZeroOrig = getBZeroOrig();
+      bScaleOrig = getBScaleOrig();
+     
+      // Y a-t-il un changement de bitpix ?
+      // Les cuts changent ainsi que le blank
+      if( bitpix != bitpixOrig ) {
+         cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+               : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+         cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+               : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+         coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
 
+         cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
+         cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
+
+         blank = getDefaultBlankFromBitpix(bitpix);
+         bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
+         bScale = bScaleOrig/coef;
+         
+         Aladin.trace(3,"Change BITPIX from "+bitpixOrig+" to "+bitpix);
+         Aladin.trace(3,"Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
+                        "to ["+cut[2]+" .. "+cut[3]+"]");
+         Aladin.trace(3,"Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
+               +" to "+bZero+","+bScale+","+blank);
+      
+         // Pas de changement de bitpix
+      } else {
+         blank=blankOrig;
+         if( Double.isNaN(blank) && bitpix>0 ) blank = getDefaultBlankFromBitpix(bitpix);
+         bZero=bZeroOrig;
+         bScale=bScaleOrig;
+         Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
+      }
+   }
+
+   private double getDefaultBlankFromBitpix(int bitpix) {
+      return bitpix<0 ? Double.NaN : bitpix==32 ? Double.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
+   }
+
+//   public void initChangeBitpix() {
+//      int bitpix = getBitpix();
+//      cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+//            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+//      cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+//            : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+//      coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+//
+//      cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
+//      cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
+//
+//      blank = getDefaultBlankFromBitpix(bitpix);
+//      setBZero( bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef) );
+//      setBScale( bScaleOrig/coef );
+//   }
 
    /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
     * soit une seule valeur appliquée à tous les bords,

@@ -192,7 +192,7 @@ final public class BuilderHpx {
                                 : pixelFinal<=cutOrig[2] ? cut[2]
                                 : pixelFinal>=cutOrig[3] ? cut[3]
                                 : (pixelFinal-cutOrig[2])*context.coef + cut[2];
-                  }
+                  } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
                   out.setPixelDouble(x,y,pixelFinal);
                }
             }

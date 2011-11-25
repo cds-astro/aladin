@@ -2173,6 +2173,8 @@ INDEXRESETALLSKY The set of the source images has been modified
 INDEXRESETALLSKY.fr Le jeu d'images sources a été modifié
 KEEPALLSKY keep already-computed pixel values
 KEEPALLSKY.fr conserver les valeurs des pixels déjà calculés
+KEEPCELLALLSKY	keel pre-existing target tiles
+KEEPCELLALLSKY.fr	conserver les tuiles pré-existantes
 COADDALLSKY average
 COADDALLSKY.fr moyenner
 OVERWRITEALLSKY overwrite

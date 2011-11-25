@@ -177,7 +177,7 @@ public class SkyGen {
 		else if (opt.equalsIgnoreCase("output"))
 			context.setOutputPath(val);
 		else if (opt.equalsIgnoreCase("blank"))
-			context.setBlank(Double.parseDouble(val));
+			context.setBlankOrig(Double.parseDouble(val));
 		else if (opt.equalsIgnoreCase("order"))
 			context.setOrder(Integer.parseInt(val));
 		else if (opt.equalsIgnoreCase("pixel"))

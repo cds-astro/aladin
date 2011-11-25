@@ -125,6 +125,7 @@ final public class BuilderMoc {
    // Insertion récursive : dès qu'on a 4 frères consécutifs, on les supprime
    // et on insère récursivement le père
    private void add(int order, long npix) {
+      if( order==0 ) { moc.add(order,npix); return; }
       long me = npix%4L;
       long firstBrother = npix - me;
       

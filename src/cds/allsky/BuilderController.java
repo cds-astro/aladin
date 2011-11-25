@@ -155,23 +155,14 @@ public class BuilderController implements Progressive {
       // pour chaque losange sélectionné
       NMAX = npix_list.size();     
       
-      // Initialisation du Moc
-      context.initParamFromGui();
-
-      // Y a-t-il un changement de bitpix ?
-      if( context.getBitpix() != context.getBitpixOrig() ) {
-         context.initChangeBitpix();
-         Aladin.trace(3,"Change BITPIX from "+context.getBitpixOrig()+" to "+context.getBitpix());
-         Aladin.trace(3,"Map original pixel range ["+context.getCutOrig()[2]+" .. "+context.getCutOrig()[3]+"] " +
-         		        "to ["+context.getCut()[2]+" .. "+context.getCut()[3]+"]");
-         Aladin.trace(3,"Change BZERO,BSCALE="+context.getBZeroOrig()+","+context.getBScaleOrig()+" to "+context.getBZero()+","+context.getBScale());
-      }
+      // Initialisation des parametres
+      context.initParameters();
       
       // Initialisation des variables 
       flagColor = context.isColor();
       bitpix = context.getBitpix();
-      context.getSkyval();
       coaddMode = context.getCoAddMode();
+      
 //      moc = context.getMoc();
       if( !flagColor ) {
          bZero = context.getBZero();
@@ -262,12 +253,9 @@ public class BuilderController implements Progressive {
          return createLeaveHpx(hpx,file,order,npix);      
       }
       Fits fils[] = new Fits[4];
-//      boolean found = false;
       for( int i =0; !stopped && i<4; i++ ) {
          fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
-//         if (fils[i] != null && !found) found = true;
       }
-//      if( !found ) return null;
       return createNodeHpx(file,path,order,npix,fils);
    }
 
@@ -403,6 +391,11 @@ public class BuilderController implements Progressive {
       if( !inTree || 
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) return flagColor ? null : findFits(file+".fits");
 
+      if( coaddMode==CoAddMode.KEEPCELL ) {
+         Fits oldOut = findFits(file+".fits");
+         if( oldOut!=null ) return oldOut;
+      }
+      
       Fits out = new Fits(w,w,bitpix);
       if( !flagColor ) {
          out.setBlank(blank);
@@ -440,7 +433,6 @@ public class BuilderController implements Progressive {
 
                      // On prend la moyenne des 4
                      double pix=0;
-                     boolean ok=false;
                      int nbPix=0;
                      if( in!=null ) {
                         for( int i=0;i<4; i++ ) {
@@ -461,12 +453,12 @@ public class BuilderController implements Progressive {
          }
       }
       
-      if( coaddMode!=CoAddMode.REPLACE ) {
+      if( coaddMode!=CoAddMode.REPLACE && coaddMode!=CoAddMode.KEEPCELL ) {
          Fits oldOut = findFits(file+".fits");
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
-            else if( coaddMode==CoAddMode.KEEP ) out.mergeOnNaN(oldOut);
-            else if( coaddMode==CoAddMode.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+            else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
+            else if( coaddMode==CoAddMode.KEEP ) { oldOut.mergeOnNaN(out); out=oldOut; }
          }
       }
 
@@ -726,10 +718,11 @@ public class BuilderController implements Progressive {
 
          if( coaddMode!=CoAddMode.REPLACE ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
+            if( oldOut!=null && coaddMode==CoAddMode.KEEPCELL ) return oldOut;
             if( oldOut!=null && out!=null) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
-               else if( coaddMode==CoAddMode.KEEP ) out.mergeOnNaN(oldOut);
-               else if( coaddMode==CoAddMode.OVERWRITE ) { oldOut.mergeOnNaN(out); out=oldOut; }
+               else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
+               else if( coaddMode==CoAddMode.KEEP ) { oldOut.mergeOnNaN(out); out=oldOut; }
             }
 //            else { // si on a *que* une ancienne version, on la garde telle que
 //            	out = oldOut;

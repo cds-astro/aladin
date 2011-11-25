@@ -478,15 +478,15 @@ final public class Fits {
 
 
    static public byte [] getBourrage(int currentPos) {
-      int size = 2880 - currentPos%2880;
+      int n = currentPos%2880;
+      int size = n==0 ? 0 : 2880 - n;
       byte [] b = new byte[size];
       return b;
    }
 
    /** Génération d'un fichier FITS (sans calibration) */
    public void writeFITS(OutputStream os) throws Exception {
-      headerFits.writeHeader(os);
-      int size;
+      int size = headerFits.writeHeader(os);
 
       // FITS couleur en mode ARGB
       if( flagARGB ) {
@@ -499,26 +499,31 @@ final public class Fits {
             buf[i*4+3] = (byte)(  pix     &0xFF );
          }
          os.write(buf);
-         size = buf.length;
+         size += buf.length;
          buf=null;
 
       // Fits classique
       } else {
          os.write(pixels);
-         size=pixels.length;
+         size += pixels.length;
       }
 
       // Ecriture des éventuelles extensions
       if( extHeader==null ) return;
       int n = extHeader.size();
       for( int i=0; i<n; i++ ) {
-         os.write(getBourrage(size));
+         byte [] b = getBourrage(size);
+         size += b.length;
+         os.write(b);
          HeaderFits h = (HeaderFits)extHeader.elementAt(i);
          h.writeHeader(os);
          byte [] p = (byte[])extPixels.elementAt(i);
          os.write(p);
-         size = p.length;
+         size += p.length;
       }
+      
+      // Bourrage final
+      os.write(getBourrage(size));  // Quel gachi !
    }
 
    /** Génération d'un fichier FITS (sans calibration) */

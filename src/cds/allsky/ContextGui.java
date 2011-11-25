@@ -18,7 +18,7 @@ public class ContextGui extends Context {
 
    /** Positionnement de l'interface graphique associée au traitement */
    public void setMainPanel(MainPanel mainPanel) { this.mainPanel=mainPanel; }
-   public CoAddMode getCoAddMode() { coAdd = mainPanel.tabDesc.getCoaddMode(); return coAdd;}
+//   public CoAddMode getCoAddMode() { coAdd = mainPanel.tabDesc.getCoaddMode(); return coAdd;}
    public int[] getBorderSize() {
       try {
          setBorderSize(mainPanel.getBorderSize());
@@ -85,7 +85,6 @@ public class ContextGui extends Context {
       mainPanel.setProgressIndexDir(txt);
    }
 
-
    public int getBitpixOrig() {
       return mainPanel.tabBuild.getOriginalBitpix();
    }
@@ -95,31 +94,24 @@ public class ContextGui extends Context {
    }
 
    public double getBlankOrig() {
-      double blank = blankOrig;
+      double b = Double.NaN;
       String s="";
       try { 
          s = mainPanel.tabDesc.getBlank().trim();
-         if( s.length()>0 ) blank = Double.parseDouble(s);
+         if( s.length()>0 ) b = Double.parseDouble(s);
       } catch( Exception e ) {
          mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }
-      setBlankOrig(blank);
-      return blank;
+      return b;
    }
    
    /** Initialisation des paramètres (ne sert que pour contextGui) */
-   public void initParamFromGui() {
+   public void initParameters() {
       setMoc( mainPanel.getMoc() );
+      setCoAddMode( mainPanel.tabDesc.getCoaddMode() );
+      setSkyValName( mainPanel.tabDesc.getSkyval() );
+      super.initParameters();
    }
-   
-   public String getSkyval() {
-	   skyvalName = mainPanel.tabDesc.getSkyval();
-	   return skyvalName;
-   }
-
-//   public HpixTree getMoc() {
-//      return mainPanel.getMoc();
-//   }
 
    public void setIsRunning(boolean flag) { 
       super.setIsRunning(flag);

@@ -41,7 +41,7 @@ public class BuilderRgb implements Runnable {
     public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path,int method) {
        this.aladin = aladin;
        this.context = context;
-       context.initParamFromGui();
+       context.initParameters();
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
