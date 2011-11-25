@@ -158,6 +158,9 @@ public class BuilderController implements Progressive {
       // Initialisation des parametres
       context.initParameters();
       
+      // Vérification de la cohérence en cas de reprise
+      if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing survey");
+      
       // Initialisation des variables 
       flagColor = context.isColor();
       bitpix = context.getBitpix();
@@ -458,7 +461,13 @@ public class BuilderController implements Progressive {
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
             else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-            else if( coaddMode==CoAddMode.KEEP ) { oldOut.mergeOnNaN(out); out=oldOut; }
+            else if( coaddMode==CoAddMode.KEEP ) { 
+               // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
+               // celui renseigné par l'utilisateur, et sinon celui par défaut
+               if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
+               oldOut.mergeOnNaN(out);
+               out=oldOut;
+            }
          }
       }
 
@@ -722,21 +731,25 @@ public class BuilderController implements Progressive {
             if( oldOut!=null && out!=null) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-               else if( coaddMode==CoAddMode.KEEP ) { oldOut.mergeOnNaN(out); out=oldOut; }
-            }
-//            else { // si on a *que* une ancienne version, on la garde telle que
-//            	out = oldOut;
+               else if( coaddMode==CoAddMode.KEEP ) { 
+                  // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
+                  // celui renseigné par l'utilisateur, et sinon celui par défaut
+                  if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
+                  oldOut.mergeOnNaN(out);
+                  out=oldOut;
+               }
             }
          }
+      }
 
-         if (out!=null) {
-             if( flagColor ) out.writeJPEG(file+".jpg");
-             else out.writeFITS(file+".fits");
-             long duree = System.currentTimeMillis()-t;
-             if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
-             
-             updateStat(0,1,duree,0,0);
-         }
+      if (out!=null) {
+         if( flagColor ) out.writeJPEG(file+".jpg");
+         else out.writeFITS(file+".fits");
+         long duree = System.currentTimeMillis()-t;
+         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
+
+         updateStat(0,1,duree,0,0);
+      }
 
 
       return out;

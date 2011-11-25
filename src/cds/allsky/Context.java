@@ -120,6 +120,7 @@ public class Context {
    public void setBlankOrig(double x) {  blankOrig = x; }
    public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }
+   public void setAbort() { setIsRunning(false); }
    public void setCut(double [] cut) { this.cut=cut; }
    public void setPixelCut(String cut) {
        String vals[] = cut.split(" ");
@@ -286,27 +287,50 @@ public class Context {
          bScale=bScaleOrig;
          Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
       }
+      
+      // A FAIRE : Retrait du skyval au cut
+      // et redéfinition du blank si bitpix entier
+   }
+   
+   public boolean verifCoherence() {
+      if( coAdd==CoAddMode.REPLACE ) return true;
+      String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+      if( !(new File(fileName)).exists() ) return true;
+      Fits fits = new Fits();
+      try { fits.loadHeaderFITS(fileName); }
+      catch( Exception e ) { return true; }
+      if( fits.bitpix!=bitpix ) {
+         warning("Incompatible BITPIX="+bitpix+" compared to pre-existing survey BITPIX="+fits.bitpix);
+         return false;
+      }
+      boolean nanO = Double.isNaN(fits.blank);
+      boolean nan = Double.isNaN(blank);
+      
+      // Cas particulier des Survey préexistants sans BLANK en mode entier. Dans ce cas, on accepte
+      // tout de même de traiter en sachant que le blank défini par l'utilisateur sera
+      // considéré comme celui du survey existant. Mais il faut nécessairement que l'utilisateur
+      // renseigne ce champ blank explicitement
+      if( bitpix>0 && nanO ) {
+         nan = !Double.isNaN(getBlankOrig()); 
+      }
+      
+      if( nanO!=nan || !nan && fits.blank!=blank ) {
+         warning("Incompatible BLANK="+blank+" compared to pre-existing survey BLANK="+fits.blank);
+         return false;
+      }
+      
+      int o = cds.tools.pixtools.Util.getMaxOrderByPath(getOutputPath());
+      if( o!=getOrder() ) {
+         warning("Incompatible order="+getOrder()+" compared to pre-existing survey order="+o);
+         return false;
+      }
+      
+      return true;
    }
 
    private double getDefaultBlankFromBitpix(int bitpix) {
       return bitpix<0 ? Double.NaN : bitpix==32 ? Double.MIN_VALUE : bitpix==16 ? Short.MIN_VALUE : 0;
    }
-
-//   public void initChangeBitpix() {
-//      int bitpix = getBitpix();
-//      cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
-//            : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-//      cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-//            : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-//      coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
-//
-//      cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
-//      cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
-//
-//      blank = getDefaultBlankFromBitpix(bitpix);
-//      setBZero( bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef) );
-//      setBScale( bScaleOrig/coef );
-//   }
 
    /** Interprétation de la chaine décrivant les bords à ignorer dans les images sources,
     * soit une seule valeur appliquée à tous les bords,

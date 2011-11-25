@@ -68,6 +68,15 @@ public class Task implements Runnable {
 	   }
 	}
 	
+	private void abort(Exception e) {
+       e.printStackTrace();
+       if( progressBar!=null ) progressBar.stop();
+       context.setAbort();
+       runner=null;
+       Aladin.trace(2,"Allsky... aborted");
+  
+	}
+	
 	public void run() {
 	   context.setIsRunning(true);
 	   try {
@@ -77,15 +86,23 @@ public class Task implements Runnable {
 	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
 	      // (garde l'ancien s'il existe déjà)
 	      if (mode<=INDEX) {
-	         Aladin.trace(2,"Launch Index (frame="+context.getFrameName()+")");
-	         followProgress(mode,builderIndex);
-	         
-	         boolean init = builderIndex.build();
-	         // si le thread a été interrompu, on sort direct
-	         if (runner != Thread.currentThread()) {
-	            progressBar.stop();
-	            return;
-	         }
+
+	         boolean init=false;
+	         try {
+	            // Initialisation des parametres pour vérifier la cohérence immédiatement
+	            context.initParameters();
+	            if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing survey");
+
+	            Aladin.trace(2,"Launch Index (frame="+context.getFrameName()+")");
+	            followProgress(mode,builderIndex);
+
+	            init = builderIndex.build();
+
+	            // si le thread a été interrompu, on sort direct
+	            if (runner != Thread.currentThread()) throw new Exception("Interrupted by user");
+
+	         } catch( Exception e ) { abort(e); return; }
+
 	         if (init) Aladin.trace(2,"Allsky... => Index built");
 	         else Aladin.trace(2,"Allsky... => Use previous Index");
 	         setProgress(mode,100);
@@ -103,13 +120,10 @@ public class Task implements Runnable {
 	            builder.build();
 	            
 	            // si le thread a été interrompu, on sort direct
-	            if (runner != Thread.currentThread()) {
-	               progressBar.stop();
-	               return;
-	            }
-	         } catch (Exception e) {
-	            e.printStackTrace();
-	         }
+	            if (runner != Thread.currentThread()) throw new Exception("Interrupted by user");
+	            
+	         } catch (Exception e) { abort(e); return; }
+	         
 	         Aladin.trace(2,"Allsky... => Hpx files built");
 	         setProgress(mode,100);
 	         progressBar.stop();

@@ -257,6 +257,12 @@ final public class MainPanel extends JPanel implements ActionListener {
       isRunning=flag;
       if (!isRunning) done();
    }
+   
+   public void setAbort() {
+      isRunning=false;
+      tabBuild.resumeWidgetsStatus();
+      tabBuild.stop();
+   }
 
    public void setRestart() {
       displayReStart();

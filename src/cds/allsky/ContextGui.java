@@ -117,6 +117,11 @@ public class ContextGui extends Context {
       super.setIsRunning(flag);
       mainPanel.setIsRunning(flag);
    }
+   
+   public void setAbort() {
+      super.setIsRunning(false);
+      mainPanel.setAbort();
+   }
 
    protected void enableProgress(boolean selected, int mode) {
       mainPanel.enableProgress(selected, mode);

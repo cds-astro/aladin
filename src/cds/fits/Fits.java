@@ -279,7 +279,10 @@ final public class Fits {
 	      xCell=x;
 	      yCell=y;
 	   }
-	   try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
+	   try { blank = headerFits.getDoubleFromHeader("BLANK");} 
+	   catch( Exception e ) {
+	      blank= /* bitpix>0 ? 0 : */ DEFAULT_BLANK;
+	   }
 	   
        int n = (Math.abs(bitpix)/8);
 	   
