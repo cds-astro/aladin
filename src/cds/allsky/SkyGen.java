@@ -344,8 +344,9 @@ public class SkyGen {
 			} finally {
 				progressBar.stop();
 			}
-			action = Action.ALLSKY;
-			start();
+			// + lance un allsky à la fin
+//			action = Action.ALLSKY;
+//			start();
 			break;
 		}
 		case ALLSKY : {
@@ -371,8 +372,8 @@ public class SkyGen {
 		System.out.println(
 				"input     Directory of original images (fits or jpg+hhh - default current dir)" + "\n" +
 				"output    Target directory (default $PWD+\"ALLSKY\")" + "\n" +
-				"pixel     keep|overwrite|average - in case of already computed values (default overwrite)" + "\n" +
-				"region    Healpix region to compute (ex: 3/34-38 50 53)" + "\n" +
+				"pixel     keep|overwrite|average|replaceall - in case of already computed values (default overwrite)" + "\n" +
+				"region    Healpix region to compute (ex: 3/34-38 50 53) (default all the sky)" + "\n" +
 				"blank     BLANK value alternative (use of FITS header by default)" + "\n" +
 				"border    Margins to ignore in the original images (N W S E or constant)" + "\n" +
 				"frame     Healpix frame (C or G - default C for ICRS)" + "\n" +
