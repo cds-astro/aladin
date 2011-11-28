@@ -444,8 +444,8 @@ public class TabDesc extends JPanel implements ActionListener {
    }
 
    public CoAddMode getCoaddMode() {
-      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACE : 
-            keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPCELL
+      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACEALL : 
+            keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPALL
             :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
    }
 
