@@ -112,6 +112,10 @@ public class ContextGui extends Context {
       setSkyValName( mainPanel.tabDesc.getSkyval() );
       super.initParameters();
    }
+   public String getSkyval() {
+	   skyvalName = mainPanel.tabDesc.getSkyval().toUpperCase();
+	   return skyvalName;
+   }
 
    public void setIsRunning(boolean flag) { 
       super.setIsRunning(flag);
