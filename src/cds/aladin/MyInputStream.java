@@ -26,7 +26,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
-import cds.tools.pixtools.HpixTree;
 import cds.xml.TableParser;
 
 /**
@@ -155,14 +154,14 @@ public final class MyInputStream extends FilterInputStream {
       type = (type & GZ) | (type & XFITS);
       flagGetType = alreadyRead = false;
    }
-   
+
    private boolean alreadyHCOMPtested=false;
    private boolean previousHCOMPtest;
-   
+
    /** Juste pour tester rapidement s'il s'agit d'un FITS HCOMP */
    public boolean isHCOMP() throws Exception {
       return (getType() & HCOMP) != 0;
-      
+
 //      if( alreadyHCOMPtested ) return previousHCOMPtest;
 //
 //      // le type de stream a deja ete detecte
@@ -184,7 +183,7 @@ public final class MyInputStream extends FilterInputStream {
 //      return previousHCOMPtest;
 
    }
-   
+
 
    /** Juste pour tester s'il s'agit d'un flux gzipé */
    public boolean isGZ() throws IOException {
@@ -209,7 +208,7 @@ public final class MyInputStream extends FilterInputStream {
 
    /** Sous-types particulier au FITS image */
    private void getTypeFitsImg() throws IOException {
-      
+
       // Détection d'un CUBE
       //    if( lookForSignature("NAXIS   = 3",false)>0
       if( hasFitsKey("NAXIS","3") && !hasFitsKey("NAXIS3","1")
@@ -235,10 +234,10 @@ public final class MyInputStream extends FilterInputStream {
             if( (long)naxis1*naxis2/**Math.abs(npix)/8*/ > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
          }catch( Exception e ) {}
       }
-      
+
       // Healpix
       if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
-      else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING")) 
+      else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HPX;
 
       // Detection de HCOMP
@@ -248,7 +247,7 @@ public final class MyInputStream extends FilterInputStream {
       //System.out.println("FITS Data magic code "+c0+" "+c1);
       if( c0==221 && c1==153 ) type |= HCOMP;
    }
-   
+
   /**
    * Determine le type de fichier.
    * Met a jour un champ de bit ou chaque bit decrit un type.
@@ -289,7 +288,7 @@ public final class MyInputStream extends FilterInputStream {
 
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
          else if( c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=HPXMOC;
-         
+
          // Détection HPXMO (ASCII - nouvelle définition #HPXMOCM...)
          else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X' && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=HPXMOC;
 
@@ -356,7 +355,7 @@ public final class MyInputStream extends FilterInputStream {
 
              // Compression RICE
              if(  hasFitsKey("ZCMPTYPE","RICE_1") ) type |= RICE;
-             
+
              // Pour répérer les tables AIPS CC de calculs intermédiaires
              else if( hasFitsKey("EXTNAME","AIPS CC") && hasFitsKey("TFIELDS","3")
                    && hasFitsKey("TTYPE2","DELTAX") && hasFitsKey("TUNIT2","DEGREES")
@@ -403,7 +402,8 @@ public final class MyInputStream extends FilterInputStream {
             // TODO : à améliorer car <RESOURCE ID=... type="results" ne sera pas reconnu
             else if( /* lookForSignature("<RESOURCE type=\"results\"",true)>0 && */
                   // SIAP et anciennes versions de SSAP
-                  lookForSignature("ucd=\"VOX:Image_Title\"",true)>0
+                     lookForSignature("ucd=\"VOX:Image_Title\"",true)>0
+                  || lookForSignature("ucd=\"VOX:Image_AccessReference\"",true)>0
                   // SSAP 1.x (ce n'est qu'un 'should' malheureusement)
                   || lookForSignature("SSAP</INFO>", true)>0
                   // SSAP 1.x
