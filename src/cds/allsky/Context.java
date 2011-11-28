@@ -186,7 +186,15 @@ public class Context {
        if (h > 1024) h = 1024;
        try {
            file.loadFITS(file.getFilename(), 0, 0, w, h);
+        	   
            double[] cut = file.findAutocutRange();
+           if (isSkySub()) {
+        	   double val = file.headerFits.getDoubleFromHeader(getSkyval());
+        	   cut[0] -= val;
+        	   cut[1] -= val;
+        	   cut[2] -= val;
+        	   cut[3] -= val;
+           }
            setCutOrig(cut);
        } catch (Exception e) {
            e.printStackTrace();
@@ -224,7 +232,7 @@ public class Context {
    }
    
    public void setSkyval(String fieldName) {
-       this.skyvalName = fieldName;
+       this.skyvalName = fieldName.toUpperCase();
        if (cacheFits != null) cacheFits.setSkySub(skyvalName);
    }
    
@@ -244,6 +252,9 @@ public class Context {
    public void setMoc(HpixTree region) {
       moc = region;
    }
+   
+
+   private boolean skysubDone = false;
    
    /** Initialisation des paramètres (ne sert que pour contextGui) */
    public void initParameters() {
@@ -287,13 +298,15 @@ public class Context {
          bScale=bScaleOrig;
          Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
       }
-      
-      // A FAIRE : Retrait du skyval au cut
-      // et redéfinition du blank si bitpix entier
+
+      // si besoin redéfinit le blank 
+      if (isSkySub() && bitpix>0) {
+    	  blank=getDefaultBlankFromBitpix(bitpix);
+      }
    }
    
    public boolean verifCoherence() {
-      if( coAdd==CoAddMode.REPLACE ) return true;
+      if( coAdd==CoAddMode.REPLACEALL ) return true;
       String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
       if( !(new File(fileName)).exists() ) return true;
       Fits fits = new Fits();
@@ -431,7 +444,7 @@ public class Context {
    }
 
    /**
-    * @param verbose the verbose to set
+    * @param verbose the verbose level to set
     */
    public static void setVerbose(boolean verbose) {
 	   Context.verbose = verbose;
@@ -447,11 +460,11 @@ public class Context {
    public static void setVerbose(int level) {
 	   if (level>=0) {
 		   Context.verbose = true;
-		   Aladin.aladin.setTraceLevel(level);
+		   Aladin.levelTrace = level;
 	   }
 	   else {
 		   Context.verbose = false;
-		   Aladin.aladin.setTraceLevel(0);
+		   Aladin.levelTrace = 0;
 	   }
    }
 
