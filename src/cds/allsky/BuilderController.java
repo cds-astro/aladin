@@ -52,7 +52,7 @@ public class BuilderController implements Progressive {
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
    //   private int fct = PlanImage.LINEAR;
-   private CoAddMode coaddMode=CoAddMode.REPLACE;
+   private CoAddMode coaddMode=CoAddMode.REPLACEALL;
 
    public Context context;
 
@@ -233,7 +233,7 @@ public class BuilderController implements Progressive {
    /** Création d'un losange et de toute sa descendance si nécessaire.
     * Méthode récursive qui 
     * 1) Vérifie si le travail n'a pas déjà été fait en se basant sur
-    *    l'existance d'un fichier fits (si overwrite à false)
+    *    l'existance d'un fichier fits (si option keepall à vrai)
     * 2) Si order==maxOrder, calcul le losange terminal => createLeaveHpx(...)
     * 3) sinon concatène les 4 fils (appel récursif) en 1 losange => createNodeHpx(...)
     * 
@@ -252,6 +252,12 @@ public class BuilderController implements Progressive {
       // si le process a été arrêté on essaie de ressortir au plus vite
       if (stopped) return null;
 
+      // si le losange a déjà été calculé on le renvoie
+      if( coaddMode==CoAddMode.KEEPALL ) {
+         Fits oldOut = findFits(file+".fits");
+         if( oldOut!=null ) return oldOut;
+      }
+      
       if( order==maxOrder ) {
          return createLeaveHpx(hpx,file,order,npix);      
       }
@@ -394,11 +400,6 @@ public class BuilderController implements Progressive {
       if( !inTree || 
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) return flagColor ? null : findFits(file+".fits");
 
-      if( coaddMode==CoAddMode.KEEPCELL ) {
-         Fits oldOut = findFits(file+".fits");
-         if( oldOut!=null ) return oldOut;
-      }
-      
       Fits out = new Fits(w,w,bitpix);
       if( !flagColor ) {
          out.setBlank(blank);
@@ -456,7 +457,7 @@ public class BuilderController implements Progressive {
          }
       }
       
-      if( coaddMode!=CoAddMode.REPLACE && coaddMode!=CoAddMode.KEEPCELL ) {
+      if( coaddMode!=CoAddMode.REPLACEALL && coaddMode!=CoAddMode.KEEPALL ) {
          Fits oldOut = findFits(file+".fits");
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
@@ -725,9 +726,9 @@ public class BuilderController implements Progressive {
 
       if( out !=null ) {
 
-         if( coaddMode!=CoAddMode.REPLACE ) {
+         if( coaddMode!=CoAddMode.REPLACEALL ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
-            if( oldOut!=null && coaddMode==CoAddMode.KEEPCELL ) return oldOut;
+            if( oldOut!=null && coaddMode==CoAddMode.KEEPALL ) return oldOut;
             if( oldOut!=null && out!=null) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
