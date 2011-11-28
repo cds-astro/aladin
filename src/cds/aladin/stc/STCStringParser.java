@@ -52,7 +52,7 @@ public class STCStringParser {
         shapes = shapes.substring(0, shapes.length() - 1);
 
         String regexp = new String(shapes);
-        regexp += "( +[A-Za-z0-9]+)( +[0-9\\.]+)+";
+        regexp += "( +[A-Za-z0-9]+)( +[-]?[0-9\\.]+)+";
         Pattern p = Pattern.compile(regexp);
         Matcher m = p.matcher(stcString);
         while (m.find()) {
@@ -66,8 +66,16 @@ public class STCStringParser {
         STCPolygon polygon = new STCPolygon();
         polygon.setFrame(STCFrame.valueOf(itWords.next()));
         while (itWords.hasNext()) {
-            double ra = Double.parseDouble(itWords.next());
-            double dec = Double.parseDouble(itWords.next());
+            double ra, dec;
+            ra = dec = Double.NaN;
+            try {
+                ra = Double.parseDouble(itWords.next());
+                dec = Double.parseDouble(itWords.next());
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+                continue;
+            }
             polygon.addCorner(ra, dec);
         }
         return polygon;
@@ -76,5 +84,6 @@ public class STCStringParser {
     public static void main(String[] args) {
         STCStringParser parser = new STCStringParser();
         parser.parse("Polygon   ICRS   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566  Polygon   J2000   211.115036    54.280565  211.115135    54.336616  210.971306    54.336617  210.971403    54.280566");
+        parser.parse("Polygon J2000 40.57741 0.07310 40.57741 0.06771 40.60596 -0.06867 40.60597 -0.06868 40.61360 -0.06868 40.74998 -0.04013 40.74999 -0.04012 40.74999 -0.03473 40.72144 0.10165 40.72142 0.10166 40.71380 0.10166 40.57742 0.07311");
     }
 }
