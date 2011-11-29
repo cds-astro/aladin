@@ -258,6 +258,11 @@ public class BuilderController implements Progressive {
          if( oldOut!=null ) return oldOut;
       }
       
+      // si on n'est pas dans le Moc, on sort
+      boolean inTree = context.isInMocTree(order,npix);
+      if (!inTree)
+    	  return null;
+      
       if( order==maxOrder ) {
          return createLeaveHpx(hpx,file,order,npix);      
       }
@@ -714,7 +719,7 @@ public class BuilderController implements Progressive {
 
       Fits oldOut=null;
       boolean isInList = context.isInMocLevel(order,npix);
-      if( !isInList ) {
+      if( !isInList && coaddMode!=CoAddMode.REPLACEALL ) {
          oldOut = findFits(file+".fits");
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) return oldOut;
       }
