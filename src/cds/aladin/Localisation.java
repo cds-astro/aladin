@@ -536,17 +536,37 @@ public final class Localisation extends MyBox {
    */
    protected void seeCoord(Position o) { seeCoord(o,0); }
    protected void seeCoord(Position o,int methode) {
+      String s=getLocalisation(o);
+      if( s==null ) return;
+      if( methode==0 ) { setTextAffichage(s); setMode(AFFICHAGE); }
+      else { Aladin.copyToClipBoard(s); setTextSaisie(s); setMode(SAISIE); aladin.console.setInPad(s+"\n"); }
+   }
+   
+   /** Localisation de la source en fonction du frame courant */
+   protected String getLocalisation(Position o) {
       String s="";
       switch( getFrame() ) {
+//         case XY:
+//            int n= aladin.view.getCurrentNumView();
+//            if( n==-1 ) return null;
+//            if( o.plan!=null && o.plan.hasXYorig ) s = s+ o.x+"  "+o.y;
+//            break;
+            
          case XY:
-            int n= aladin.view.getCurrentNumView();
-            if( n==-1 ) return;
-            if( o.plan!=null && o.plan.hasXYorig ) s = s+ o.x+"  "+o.y;
+            ViewSimple v = aladin.view.getCurrentView();
+            Projection proj = v.getProj();
+            Coord c = new Coord(o.raj,o.dej);
+            proj.getXY(c);
+            double x = c.x;
+            double y = c.y;
+            Plan plan = v.pref;
+            if( plan.isImage() ) s=Util.myRound(""+(x+0.5),2) 
+               +" "+Util.myRound(""+(((PlanImage)plan).naxis2-(y-0.5)),2);
+            else s=null;
             break;
          default : s = s+ J2000ToString(o.raj,o.dej);
       }
-      if( methode==0 ) { setTextAffichage(s); setMode(AFFICHAGE); }
-      else { Aladin.copyToClipBoard(s); setTextSaisie(s); setMode(SAISIE); aladin.console.setInPad(s+"\n"); }
+      return s;
    }
    
    // retourne true s'il s'agit d'un nom de fichier local

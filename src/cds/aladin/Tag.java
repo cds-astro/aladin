@@ -65,8 +65,8 @@ public final class Tag extends Position {
    private int L = 5;                 // Demi-taille du réticule
    private int tag = RETICLE;         // Type de tag
    private double angle=Math.PI/4;    // Angle de la hampe (sens positive, Y vers le bas)
-   private double dist=40;            // Taille de la hampe sans l'accroche
-   private int accroche = 20;         // Taille de l'accroche de la hampe (petit trait juste avant le label)
+   private double dist=0;             // Taille de la hampe sans l'accroche
+   private int accroche = 10;         // Taille de l'accroche de la hampe (petit trait juste avant le label)
    private Color couleur=null;        // Couleur alternative
    private float fond=0f;             // Niveau de transparence du fond (0, pour aucun)
    private int bord=0;                // Type de bord
@@ -118,6 +118,11 @@ public final class Tag extends Position {
       t.distAngulaireOrig=distAngulaireOrig;
       return t;
    }
+   
+   public String getCommand() {
+      return "draw tag("+getLocalisation()+","+Tok.quote(id)+","+Math.round(dist)+","
+          +Math.round((270-Math.toDegrees(angle)))+","+TAGS[tag]+","+F.getSize()+")";
+   }
 
    /** Retourne le type d'objet */
    static private final String C= "|";
@@ -155,7 +160,10 @@ public final class Tag extends Position {
    public String getObjType() { return "Tag"; }
    
    /** Positionnement de la distance (en pixels) du tag au label */
-   protected void setDist(int dist) { this.dist=dist; setWH();}
+   protected void setDist(int dist) { 
+      this.dist=dist;
+      setWH();
+   }
 
    /** Positionnement de l'angle (en degrés, sens trigo) du tag au label */
    protected void setAngle(int angle) { this.angle=Math.toRadians(270-angle); setWH();}
@@ -176,7 +184,7 @@ public final class Tag extends Position {
    * @param id le nouveau texte
    */
    protected void setText(String id) {
-      this.id= id==null || id.length()==0 ? null : id.replace("\\n","\n");
+      this.id= id==null || id.length()==0 ? "" : id.replace("\\n","\n");
       setWH();
    }
 
@@ -323,6 +331,7 @@ public final class Tag extends Position {
       if( nangle<0 ) nangle += Math.PI*2;
       else if( ndist>MAXDIST ) ndist=MAXDIST;
       if( Math.round(Math.toDegrees(nangle))==Math.toDegrees(angle) && dist==ndist  ) return false;
+      if( dist==0 && tag==RETICLE ) tag=ARROW;
       angle=nangle; dist=ndist;
       if( tag==NOPOLE ) tag=0;
       setWH();
@@ -571,7 +580,8 @@ public final class Tag extends Position {
    }
    
    private void drawTag(Graphics g, int x, int y) {
-      if( tag==NOPOLE || dist<=MINDIST ) return;
+      if( tag==NOPOLE  ) return;
+      if( dist<MINDIST && hasLabel() && !isEditing() ) return;
       switch( tag ) {
          case RETICLE:
          case BIGRETICLE:

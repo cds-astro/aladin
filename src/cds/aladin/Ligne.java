@@ -97,10 +97,14 @@ public class Ligne extends Position {
    }
    
    protected Ligne(double ra, double dec, Plan plan, ViewSimple v, Ligne debligne) {
-       super(plan,v,0.0,0.0,ra,dec,RADE,null);
-       this.debligne = debligne;
-       debligne.finligne = this;
+      this(ra,dec,plan,v,null,debligne);
    }
+   
+   protected Ligne(double ra, double dec, Plan plan, ViewSimple v, String id,Ligne debligne) {
+      super(plan,v,0.0,0.0,ra,dec,RADE,id);
+      this.debligne = debligne;
+      if( debligne!=null ) debligne.finligne = this;
+  }
 
   /** Continuation d'une ligne.
    * @param plan     plan d'appartenance de la ligne
@@ -111,7 +115,7 @@ public class Ligne extends Position {
    protected Ligne(Plan plan,ViewSimple v, double x, double y, String id, Ligne debligne) {
       super(plan,v,x,y,0.,0.,XY|RADE_COMPUTE,id);
       this.debligne = debligne;
-      debligne.finligne = this;
+      if( debligne!=null ) debligne.finligne = this;
    }
 
    ///// Constructeurs permettant de preciser la couleur de la ligne /////
@@ -202,17 +206,25 @@ public class Ligne extends Position {
    }
    
    /** Positionne les variables nécessaires au dernier segment d'un polygone */
-   protected void makeLastLigneForPolygone(ViewSimple v) {
+   protected void makeLastLigneForPolygone(ViewSimple v,boolean select) {
       getFirstBout().bout=0;
       bout=3;
-      setSelected(true);
+      setSelected(select);
       Ligne tmp = getFirstBout();
       raj=tmp.raj;
       dej=tmp.dej;
-      tmp.setSelected(true);
+      tmp.setSelected(select);
       projection(v);
    }
    
+   /** Positionne les variables nécessaires au dernier segment d'une polyligne fermée */
+   protected void makeLastLigneForClose(ViewSimple v) {
+      Ligne tmp = getFirstBout();
+      raj=tmp.raj;
+      dej=tmp.dej;
+      projection(v);
+   }
+
    /** Il faut faire 2 polylignes disjointes */
    protected void remove() {
       Ligne avant = debligne;
@@ -226,6 +238,25 @@ public class Ligne extends Position {
     * avec un flag bout==3 */
    protected boolean isPolygone() {
       return getLastBout().bout==3;
+   }
+   
+   public String getCommand() {
+      StringBuffer s = new StringBuffer("draw");
+      boolean isPolygon = isPolygone();
+      if( isPolygon ) s.append(" polygon(");
+      else if( this instanceof Cote) s.append(" dist(");
+      else s.append(" line(");
+      boolean first=true;
+      Ligne lig = getFirstBout();
+      while( isPolygon && lig!=null && lig.finligne!=null || !isPolygon && lig!=null ) {
+         if( !first ) s.append(", ");
+         s.append(lig.getLocalisation());
+         first=false;
+         lig=lig.finligne;
+      }
+      if( !(this instanceof Cote) && id!=null && id.trim().length()>0 ) s.append(","+Tok.quote(id));
+      s.append(')');
+      return s.toString();
    }
    
    /** Retourne true si l'objet contient des informations de photométrie  */

@@ -122,18 +122,6 @@ public class PlanTool extends PlanCatalog {
       return o;
    }
 
-  /** Bloque ou nom le mode de calcul des x,y des objets.
-   * @param lock <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
-   */
-   protected void setXYorig(boolean lock) {
-      hasXYorig = lock;
-   }
-
-  /** Retourne l'etat du plan tool (locke ou non).
-   * @return <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
-   */
-   protected boolean hasXYorig() { return hasXYorig; }
-
   /** Retourne la ligne d'informations concernant le plan dans le statut d'Aladin*/
    protected String getInfo() {
 

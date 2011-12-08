@@ -880,9 +880,13 @@ Aladin.trace(3,"setField "+f);
 
       // Parsing XML/CSV
       } else {
-         res = new TableParser(aladin,this, plan instanceof PlanBGCat ? "\t" :
-                                           (type&MyInputStream.BSV) == MyInputStream.BSV  ? " " :
-                                            aladin.CSVCHAR);
+         String sep;
+         if( plan instanceof PlanBGCat ) sep = "\t";
+         else if( (type&MyInputStream.BSV) == MyInputStream.BSV  ) sep = " ";
+         else if( dis.getSepCSV()!=-1 ) sep = dis.getSepCSV()+"";
+         else sep = aladin.CSVCHAR;
+         
+         res = new TableParser(aladin,this, sep);
          ok = res.parse(dis,endTag);
       }
 
@@ -1157,13 +1161,13 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       o[i] = newobj;
       return i;
    }
-
+   
    // Ajout d'un nouvel objet (non interractivement)
    protected void setObjetFast(Obj newobj) {
       int i = nextIndex();
       o[i] = newobj;
    }
-
+   
    /** Vérifie et fixe le nombre de champs de toutes les objets Source
     * ayant la même légende que celle passée en paramètre.
     * @param leg La légende "étalon"

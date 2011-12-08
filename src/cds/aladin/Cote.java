@@ -82,6 +82,12 @@ public final class Cote extends Ligne {
       super(plan,v,x,y,id,debcote);
       bout=2;
    }
+   
+   protected Cote(double ra, double dec, Plan plan, ViewSimple v,Cote debcote) {
+      super(ra,dec,plan,v,debcote);
+      bout=2;
+   }
+
 
    /** Retourne le type d'objet */
    public String getObjType() { return finligne==null ? "Arrow" : "Arrow+"; }

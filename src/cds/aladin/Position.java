@@ -154,6 +154,14 @@ public class Position extends Obj {
       this.plan=plan;
       createCacheXYVP();
    }
+   
+   /** Retourne la localisation de la source dans le frame courant */
+   public String getLocalisation() {
+      String s = plan.aladin.localisation.getLocalisation(this);
+      if( s==null ) return "null,null";
+      s=s.replace(' ', ',');
+      return s;
+   }
 
    /** Dans le cas de vues synchronisées, cette méthode permet de recopier
     * les variables xv et yv
@@ -241,15 +249,21 @@ public class Position extends Obj {
    }
 
    /**
-    * Modifie les x,y dans le plan tangent
-    * @param x
-    * @param y
-    */
+    * Modifie les x,y dans le plan tangent (sert pour les plan FOV) */
    protected void setXYTan(double x, double y) {
       this.x = x;
       this.y = y;
    }
-
+   
+   /**
+    * Modifie les x,y dans le plan tangent en fonction du centre de projection (sert pour les plan FOV) */
+   protected void setXYTan(Coord center) {
+      x = Math.toRadians( Math.cos(Math.toRadians(center.del))*(raj - center.al) );
+      y = Math.toRadians( dej - center.del);
+//      x = Util.tand( Math.cos(Math.toRadians(center.del))*(raj - center.al));
+//      y = Util.tand( dej - center.del);
+   }
+   
 //   /** Modifie la propriété "rotable" de l'objet */
 //   protected void setRollable(boolean rollable) { this.rollable=rollable; }
 

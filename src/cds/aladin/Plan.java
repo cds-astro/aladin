@@ -623,6 +623,18 @@ public class Plan implements Runnable {
        filters=null;
        slide=null;
     }
+    
+    /** Bloque ou nom le mode de calcul des x,y des objets.
+     * @param lock <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
+     */
+     protected void setXYorig(boolean lock) {
+        hasXYorig = lock;
+     }
+
+    /** Retourne l'etat du plan tool (locke ou non).
+     * @return <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
+     */
+     protected boolean hasXYorig() { return hasXYorig; }
 
    /**
     * Génère des XY "natifs" en fonction de la projection courante

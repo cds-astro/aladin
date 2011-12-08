@@ -1650,24 +1650,50 @@ final public class TableParser implements XMLConsumer {
    		throws Exception {
       int start=cur;
       char sep=0;   // le séparateur effectivement utilisé
+      boolean excelCSV = cs.length>0 && cs[0]==',';
       
-      while( cur<end && (sep=isColSep(ch[cur],cs))==0 && ch[cur]!=rs ) cur++;
+//      System.out.println("getField ["+getStringTrim(ch,start,end-start)+"]");
       
-      // Dans le cas d'un séparateur espace, on va shifter tous les blancs suivants
-      if( sep==' ' ) {
-         cur++;
-         while( cur<end && ch[cur]==' ' && ch[cur]!=rs ) cur++;
-         cur--;
+      // Cas particulier du CSV mode Excel "xxx","yyyy",zzzz
+      if( excelCSV ) {
+         boolean inQuote=false;
+         for( ; cur<end; cur++ ) {
+            if( ch[cur]=='"' ) inQuote=!inQuote;
+            if( !inQuote && !( (sep=isColSep(ch[cur],cs))==0 && ch[cur]!=rs ) ) break;
+         }
+         if( inQuote ) throw new Exception("Bad CSV: Excel quote delimiters not balanced (record "+(nbRecord+1)+" field["+row+"]=["+getStringTrim(ch,start,cur-start)+"])");
+         
+         
+      // Mode TSV, CSV courant
+      } else {
+         while( cur<end && (sep=isColSep(ch[cur],cs))==0 && ch[cur]!=rs ) cur++;
       }
+      
+      String value;
+      if( excelCSV ) {
+         if( cur-start>1 && ch[start]=='"' && ch[cur-1]=='"' ) value = getStringTrim(ch,start+1,cur-start-2);
+         else value = getStringTrim(ch,start,cur-start);
+      } else {
 
-      String value = getStringTrim(ch,start,cur-start);
+         // Dans le cas d'un séparateur espace, on va shifter tous les blancs suivants
+         if( sep==' ' ) {
+            cur++;
+            while( cur<end && ch[cur]==' ' && ch[cur]!=rs ) cur++;
+            cur--;
+         }
+
+         value = getStringTrim(ch,start,cur-start);
+      }
       
       // s'il y a un séparateur avant la première valeur, on doit simplement l'ignorer
       if( sep==' ' && row==0 && value.length()==0 ) return cur;
       
       if( record!=null ) {
-         if( row==record.length ) throw new Exception("Not aligned CSV catalog section (record "+(nbRecord+1)+" field["+row+"]=["+value+"])");
-         record[row++]=value;
+//         if( row==record.length ) throw new Exception("Not aligned CSV catalog section (record "+(nbRecord+1)+" field["+row+"]=["+value+"])");
+         if( row==record.length ) {
+            String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored";
+            aladin.console.setError(s);
+         } else record[row++]=value;
       }
       else {
          if( vRecord==null ) vRecord = new Vector<String>();
@@ -1693,8 +1719,11 @@ final public class TableParser implements XMLConsumer {
       // Extraction de chaque champ
       int un=0;
       while( cur<end && ch[cur]!=rs ) { cur=getField(ch,cur+un,end,rs,cs,nbRecord); un=1; }
-      if( record!=null && row<record.length && 
-            !(row==1 && record[0].equals("[EOD]")) ) throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
+      if( record!=null && row<record.length &&  !(row==1 && record[0].equals("[EOD]")) ) {
+//         throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
+         String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows) => ignored";
+         aladin.console.setError(s);
+      }
       return cur;
    }
 

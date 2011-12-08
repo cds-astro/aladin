@@ -168,13 +168,11 @@ public class Repere extends Position {
       Projection proj = v.getProj().copy();
       proj.setProjCenter(0,0);
       c.al=c.del=0;
-//      proj.getXYNative(c);
       proj.getXY(c);
       c.y+=r;
-//      proj.getCoordNative(c);
       proj.getCoord(c);
       radius=Math.abs(c.del);
-      setSelected(true);
+      System.out.println("radius="+Coord.getUnit(radius));
    }
 
    /** Positionnement d'un ID particulier */
@@ -490,6 +488,13 @@ public class Repere extends Position {
    
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return hasRayon(); }
+   
+   public String getCommand() {
+      String r;
+      if( plan.aladin.localisation.getFrame()==Localisation.XY ) r=Util.myRound(getRayon(plan.aladin.view.getCurrentView()));
+      else r=Coord.getUnit(getRadius());
+      return "draw phot("+getLocalisation()+","+r+")";
+   }
 
    /** Retourne le rayon en pixels d'un repère cerclé */
    protected double getRayon(ViewSimple v) {

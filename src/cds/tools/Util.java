@@ -62,6 +62,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
@@ -87,6 +89,8 @@ import javax.swing.*;
 
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
+import cds.aladin.Source;
+import cds.image.EPSGraphics;
 
 /**
  * Diverses méthodes utilitaires
@@ -861,6 +865,60 @@ public final class Util {
 //       g.drawLine(x+1,y+1,x+3,y+1);
 //       g.drawLine(x+2,y,x+2,y);
 //    }
+    
+    /** Draws an ellipse which can be rotated
+     *  @param g - the graphic context we draw on
+     *  @param c - color of the ellipse
+     *  @param xCenter,yCenter - the "center" of the ellipse
+     *  @param semiMA - value of the semi-major axis
+     *  @param semiMI - value of the semi-minor axis
+     *  @param angle - rotation angle around center
+     */
+    static public void drawEllipse(Graphics g,double xCenter, double yCenter, double semiMA, double semiMI, double angle) {
+       if( g instanceof EPSGraphics ) ((EPSGraphics)g).drawEllipse(xCenter,yCenter,semiMA,semiMI,angle);
+       else if( !(g instanceof Graphics2D ) ) drawEllipseOld(g,xCenter,yCenter,semiMA,semiMI,angle);
+       else {
+          Graphics2D g2d = (Graphics2D)g;
+          AffineTransform saveTransform = g2d.getTransform();
+          angle = angle*Math.PI/180.0;
+          g2d.rotate(angle, xCenter, yCenter);
+          g2d.draw(new Ellipse2D.Double(xCenter-semiMA,yCenter-semiMI,semiMA*2,semiMI*2));
+          g2d.setTransform(saveTransform);
+       }
+    }
+
+    /** Tracée d'une ellipse avec angle, méthode manuelle
+     * Utilisé si le contexte graphique ne supporte par Graphics2D */
+   static private void drawEllipseOld(Graphics g, double xCenter, double yCenter, double semiMA, double semiMI, double angle) {
+        // convert the angle into radians
+        angle = angle*Math.PI/180.0;
+
+        // number of iterations
+        int nbIt = 30;
+        Point[] p = new Point[nbIt];
+        double x,y,tmpX,tmpY;
+        double curAngle;
+
+        // first, we fill the array
+        for(int i=0; i<nbIt; i++) {
+            curAngle = 2.0*i/nbIt*Math.PI;
+            tmpX = semiMA*Math.cos(curAngle);
+            tmpY = semiMI*Math.sin(curAngle);
+            // rotation
+            x = tmpX*Math.cos(angle)-tmpY*Math.sin(angle)+xCenter;
+            y = tmpX*Math.sin(angle)+tmpY*Math.cos(angle)+yCenter;
+
+            //System.out.println(x+" "+y);
+            p[i] = new Point((int)x,(int)y);
+        }
+
+        // then we draw
+        for(int i=0; i<nbIt-1; i++) {
+            g.drawLine(p[i].x,p[i].y,p[i+1].x,p[i+1].y);
+        }
+        // complete the ellipse
+        g.drawLine(p[nbIt-1].x,p[nbIt-1].y,p[0].x,p[0].y);
+    }
 
     /** Positionne un tooltip sur un JComponent en vérifiant au préalable
      * qu'il n'aurait pas été déjà positionné */

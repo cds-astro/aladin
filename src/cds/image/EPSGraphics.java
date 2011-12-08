@@ -184,7 +184,7 @@ public class EPSGraphics extends Graphics {
     * @param semiMI petit axe
     * @param rot angle de rotation (deg, sens positif)
     */
-   public void drawEllipse(int xc, int yc, double semiMA, double semiMI, double rot) {
+   public void drawEllipse(double xc, double yc, double semiMA, double semiMI, double rot) {
       drawArc1(xc,yc,semiMA*2,semiMI*2,0,360,rot);
    }
 

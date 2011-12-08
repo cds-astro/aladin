@@ -26,6 +26,8 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import cds.astro.Proj3;
+
 /**
  * Forme composée de plusieurs objets
  *
@@ -34,7 +36,8 @@ import java.util.*;
  */
 public class Forme extends Position {
    
-   protected Position o[];		// Liste des objets qui compose la forme
+   protected Color couleur=null; // Couleur alternative
+   protected Position o[];		 // Liste des objets qui compose la forme
    
    protected void createCacheXYVP() {
       if( o==null ) return;
@@ -69,6 +72,9 @@ public class Forme extends Position {
    }
    protected void setXYTan(double x, double y) {
       for( int i=0; i<o.length; i++ ) o[i].setXYTan(x,y);
+   }
+   protected void setXYTan(Coord center) {
+      for( int i=0; i<o.length; i++ ) o[i].setXYTan(center);
    }
    protected void projection(ViewSimple v) {
       for( int i=0; i<o.length; i++ ) o[i].projection(v);
@@ -118,5 +124,35 @@ public class Forme extends Position {
       super.switchSelect();
       for( int i=0; i<o.length; i++ ) o[i].switchSelect();      
    }
+   
+   /** Détermination de la couleur de l'objet */
+   protected Color getColor() {
+      if( couleur!=null ) return couleur;
+      if( plan!=null && plan.type==Plan.APERTURE ) {
+         couleur = ((PlanField)plan).getColor(this);
+         if( couleur==null ) return plan.c;
+         return couleur;
+      }
+      if( plan!=null ) return plan.c;
+      return Color.black;
+   }
+   
+   /** Rotation en coordonnées sphériques (via le plan tangentiel)
+    * @param c Le centre de rotation
+    * @param radius le rayon
+    * @param angle l'angle en degrés par rapport au Nord dans le sens trigo
+    * @return le point au bout du vecteur en coordonnées sphériques
+    */
+   protected Coord applySphereRot(Coord c, double radius, double angle) {
+      Proj3 a = new Proj3(Proj3.TAN,c.al,c.del);
+      double tanr = Math.tan(Math.PI*radius/180.);
+      double cost = Math.cos( Math.PI*angle/180.);
+      double sint = Math.sin( Math.PI*angle/180.);
+      double x =  tanr*sint;
+      double y =  tanr*cost;
+      a.computeAngles(x,y);
+      return new Coord(a.getLon(),a.getLat());               
+   }
+
 //   void debug();
 }

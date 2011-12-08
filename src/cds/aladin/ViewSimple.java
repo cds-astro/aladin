@@ -1556,9 +1556,11 @@ public class ViewSimple extends JComponent
    /** Fin de saisie d'un objet */
    protected void finNewObjet() {
       if( view.newobj==null ) return;
-      setNewObjet();
+      calque.setObjet(view.newobj);
       if( view.newobj instanceof Ligne && !(view.newobj instanceof Cote) ) ((Ligne)view.newobj).getFirstBout().bout=0;
       if( view.newobj instanceof Tag ) ((Tag)view.newobj).setDistAngulaireOrig(getProjSyncView());
+      view.extendClip(view.newobj);
+      aladin.console.setCommand(view.newobj.getCommand());
       view.newobj=null;
       aladin.calque.repaintAll();
    }
@@ -2059,11 +2061,12 @@ public class ViewSimple extends JComponent
 
          // Fin d'un texte
          if( view.newobj instanceof Tag ) {
-            setNewObjet();
+            finNewObjet();
 
          // Traitement d'une polyligne en mode clic, un simple clic on cree
          // un nouveau sommet, un double clic (ou cote) =>  on a fini
          } else if( view.newobj instanceof Ligne && flagLigneClic ) {
+            boolean finObj=false;
             Obj suivant=null;
             boolean cote = (view.newobj instanceof Cote);
             view.extendClip(view.newobj);
@@ -2075,18 +2078,19 @@ public class ViewSimple extends JComponent
             setNewObjet();
 
             // Bouclage d'un polygone
-            if( flagOnFirstLine /* && pref.hasAvailablePixels() */ 
-//                  && (pref.hasAvailablePixels() || pref instanceof PlanBG && ((PlanBG)pref).DEBUGMODE) // A VIRER APRES TEST HEALPIX WIL FINI
-                  ) {   
+            if( flagOnFirstLine ) {   
                if( e.getClickCount()>1 )view.newobj = ((Ligne)view.newobj).debligne;  // On efface le sommet en doublon
-               ((Ligne)view.newobj).makeLastLigneForPolygone(this);
+               ((Ligne)view.newobj).makeLastLigneForPolygone(this,true);
                addObjSurfMove(((Ligne)view.newobj).getFirstBout());
+               finObj=true;
             }
-            if( e.getClickCount()<2 && !cote ) {
-
+            if( e.getClickCount()<2 && !cote && !finObj) {
                view.newobj = suivant;
                view.extendClip(view.newobj);
-            }
+            } else finObj=true;
+            
+            if( finObj ) finNewObjet();
+            
             view.repaintAll();
             return;
          }
@@ -2396,18 +2400,19 @@ public class ViewSimple extends JComponent
                view.extendClip(view.newobj);
             }
 
-            setNewObjet();
+//            setNewObjet();
 
             // Insertion d'un repère avec mesure de surface
             if( ((Repere)view.newobj).hasRayon() ) {
                view.newobj.setSelected(true);
                addObjSurfMove(view.newobj);
             }
+            finNewObjet();
          }
 
          view.newobj=null;
       }
-
+      
       // Traitement de la fin d'une selection multiple
       if( rselect!=null ) {
          if( rselect.width>1 && rselect.height>1 ) {
@@ -2481,11 +2486,13 @@ public class ViewSimple extends JComponent
          view.extendClip(view.newobj);
          view.newobj.setPosition(vs,p.x,p.y);
          view.extendClip(view.newobj);
-         setNewObjet(withForCDSTeam);
+         if( view.newobj instanceof Cote ) finNewObjet();
+         else setNewObjet(withForCDSTeam);
          view.newobj=null;
       }      
       
-      
+      if(  view.newobj!=null && view.newobj instanceof Tag ) ((Tag)view.newobj).setEditing(true);
+
       /** Traitement d'éventuellement déplacement (ou création) d'objet de surface 
        * à transmettre à des observers */
       if( objSurfMove!=null ) {
@@ -2837,6 +2844,7 @@ public class ViewSimple extends JComponent
          double rayon = Math.sqrt( deltaX*deltaX + deltaY*deltaY);
          if( rayonView>3 ) {
             t.setRayon(this,rayon);
+            t.setSelected(true);
             if( poigneePhot==null ) view.setSelected(t,true);
             view.extendClip(t);
             if( view.newobj!=null ) {

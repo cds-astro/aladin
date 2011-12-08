@@ -279,6 +279,38 @@ public final class PlanField extends Plan {
          make(co.al,co.del,roll);
       }
    }
+   
+   protected PlanField(Aladin aladin, String label,Coord center,double angle,boolean canbeRoll,boolean canbeMove) {
+      this.aladin= aladin;
+      type       = APERTURE;
+      c          = Couleur.getNextDefault(aladin.calque);
+      setLabel(label);
+      setOpacityLevel(Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL);
+      pcat       = new Pcat(this,c,aladin.calque,aladin.status,aladin);
+      selected   = true;
+      flagOk = true;
+      askActive=true;
+      flagRoll=canbeRoll;
+      flagMove=canbeMove;
+      instr=-1;
+      roll=angle;
+      co= center!=null ? center : new Coord(0,0);
+      
+      // Field of View projCenter
+      Repere projCenter = new Repere(this,co);
+      projCenter.setType(Repere.CENTER);
+
+      // Field of View rotCenter
+      Repere rotCenter = new Repere(this,co);
+      rotCenter.setRotCenterType(projCenter);
+      
+      pcat.setObjetFast(rotCenter);
+      pcat.setObjetFast(projCenter);
+      
+      needTarget=false;
+      make(co.al,co.del,roll);
+
+   }
 
    /**
     * Constructor for PlanField
@@ -501,39 +533,6 @@ public final class PlanField extends Plan {
        }
        setTarget(ra,de,raRot,deRot,roll);
     }
-
-    /**  WFPC2 instrument FoV creation */
-//    private void makeWFPC2() {
-//       pcat.o = new Obj[pcat.nb_o=11];
-//
-//       // Field of View projection center
-//       Repere projCenter = new Repere(this);
-//       projCenter.setType(Repere.CENTER);  // in x=0, y=0 position by default
-//       pcat.o[1] = projCenter;
-//
-//       // Field of View rotation center
-//       Repere rotCenter = new Repere(this);
-//       rotCenter.setRotCenterType(projCenter);  // in x=0, y=0 position by default
-//       pcat.o[0] = rotCenter;
-//
-//       for( int i=2; i<=10; i++ ) {
-//          Ligne p = new Ligne(this);
-//          pcat.o[i] = p;
-//
-//          if( i==2 || i==9 || i==10 ) p.x = tand( 67/3600.0);
-//          else if( i==3 || i==4 )    p.x = tand( -(151.5-67)/3600.0);
-//          else if( i==5 || i==6 )    p.x = tand( -44.5/3600.0);
-//          else if( i==7 || i==8 )    p.x = tand( -11/3600.0);
-//
-//          if( i==2 || i==3 || i==10 ) p.y = tand( -63/3600.0);
-//          else if( i==5 || i==4 )    p.y = tand( 11/3600.0);
-//          else if( i==7 || i==6 )    p.y = tand( 45/3600.0);
-//          else if( i==8 || i==9 )    p.y = tand( (150-63)/3600.0);
-//
-//          if( i>2 ) p.debligne=(Ligne)pcat.o[i-1];
-//          if( i<10 ) p.finligne=(Ligne)pcat.o[i+1];
-//       }
-//    }
 
     /** Generic CCD instrument creation */
     private void makeCCDs(double ORA,double ODE, double RA,double DE,

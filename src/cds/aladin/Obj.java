@@ -99,6 +99,9 @@ public abstract class Obj {
    /** Provide attache info (generally its name) */
    public String getInfo() { return id; }
    
+   /** Provide script command associated to this object */
+   public String getCommand() { return null; }
+   
    /** Return true if this object can be used for getting photometrical statistics (first segment of a polygon, or circle) */
    public boolean hasSurface() { return false; }
    

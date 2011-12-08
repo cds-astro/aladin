@@ -392,7 +392,7 @@ public class Action {
 
 			g.setFont(FONT);
 			g.setColor(theColor);
-			g.drawString(texte,p.x-wTexte,p.y+hTexte);
+			g.drawString(texte,p.x-wTexte,p.y+hTexte-8);  // Offset vers le haut de qq pixels
             return;
 		}
 
@@ -2057,12 +2057,6 @@ public class Action {
 		g.drawLine(p[4-1].x,p[4-1].y,p[0].x,p[0].y);
 	}
 
-    /** Draw an ellipse in an EPS graphics context (PF March 2007) */
-    private void doDrawEllipseEPS(Graphics g, Color c, Point center, double semiMA, double semiMI, double angle, int dx, int dy) {
-       g.setColor(c);
-       ((EPSGraphics)g).drawEllipse(center.x+dx,center.y+dy,semiMA,semiMI,angle);
-    }
-
 	/** draws an ellipse which can be rotated
 	 *	@param g - the graphic context we draw on
 	 *	@param c - color of the ellipse
@@ -2074,80 +2068,37 @@ public class Action {
 	private void doDrawEllipse(Graphics g, Source s,Color c, Point center, double semiMA, double semiMI,
 	        double angle, int dx, int dy, boolean transparency) {
 
-        if( g instanceof EPSGraphics ) {
-           doDrawEllipseEPS(g,c,center,semiMA,semiMI,angle,dx,dy); return;
-        }
+	   g.setColor(c);
+	   if( g instanceof EPSGraphics || !(g instanceof Graphics2D) ) {
+	      Util.drawEllipse(g,center.x+dx,center.y+dy,semiMA,semiMI,angle);
+	      return;
+	   }
 
-		try {
-		    boolean drawInTransparency = transparency && Aladin.ENABLE_FOOTPRINT_OPACITY;
-			Graphics2D g2d = (Graphics2D)g;
-			g2d.setColor(c);
-			AffineTransform saveTransform = g2d.getTransform();
-			Composite saveComposite = null;
-			if (drawInTransparency) {
-			    saveComposite = g2d.getComposite();
-                float opacityLevel = Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL*s.plan.getOpacityLevel();
-                Composite myComposite = Util.getImageComposite(opacityLevel);
-                g2d.setComposite(myComposite);
-			}
-			// convert the angle into radians
-			angle = angle*Math.PI/180.0;
-			g2d.rotate(angle, center.x+dx, center.y+dy);
-			if (drawInTransparency) {
-			    g2d.fill(new Ellipse2D.Double(center.x+dx-semiMA,center.y+dy-semiMI,semiMA*2,semiMI*2));
-			}
-			else {
-			    g2d.draw(new Ellipse2D.Double(center.x+dx-semiMA,center.y+dy-semiMI,semiMA*2,semiMI*2));
-			}
-			g2d.setTransform(saveTransform);
-			if (drawInTransparency) {
-			    g2d.setComposite(saveComposite);
-			}
-		}
-		catch(ClassCastException cce) {
-			// in this case, we draw the ellipse the old way
-			doDrawEllipseOld(g, c, center, semiMA, semiMI, angle, dx, dy);
-		}
-		catch(Exception e) {e.printStackTrace();}
+	   boolean drawInTransparency = transparency && Aladin.ENABLE_FOOTPRINT_OPACITY;
+	   Graphics2D g2d = (Graphics2D)g;
+	   g2d.setColor(c);
+	   AffineTransform saveTransform = g2d.getTransform();
+	   Composite saveComposite = null;
+	   if (drawInTransparency) {
+	      saveComposite = g2d.getComposite();
+	      float opacityLevel = Aladin.DEFAULT_FOOTPRINT_OPACITY_LEVEL*s.plan.getOpacityLevel();
+	      Composite myComposite = Util.getImageComposite(opacityLevel);
+	      g2d.setComposite(myComposite);
+	   }
+	   // convert the angle into radians
+	   angle = angle*Math.PI/180.0;
+	   g2d.rotate(angle, center.x+dx, center.y+dy);
+	   if (drawInTransparency) {
+	      g2d.fill(new Ellipse2D.Double(center.x+dx-semiMA,center.y+dy-semiMI,semiMA*2,semiMI*2));
+	   }
+	   else {
+	      g2d.draw(new Ellipse2D.Double(center.x+dx-semiMA,center.y+dy-semiMI,semiMA*2,semiMI*2));
+	   }
+	   g2d.setTransform(saveTransform);
+	   if (drawInTransparency) {
+	      g2d.setComposite(saveComposite);
+	   }
 	}
-
-	private void doDrawEllipseOld(Graphics g, Color c, Point center, double semiMA, double semiMI, double angle, int dx, int dy) {
-		// convert the angle into radians
-		angle = angle*Math.PI/180.0;
-
-		// number of iterations
-		int nbIt = 30;
-		Point[] p = new Point[nbIt];
-		double x,y,tmpX,tmpY;
-		double curAngle;
-
-		// first, we fill the array
-		for(int i=0; i<nbIt; i++) {
-			curAngle = 2.0*i/nbIt*Math.PI;
-			tmpX = semiMA*Math.cos(curAngle);
-			tmpY = semiMI*Math.sin(curAngle);
-			// rotation
-			x = tmpX*Math.cos(angle)-tmpY*Math.sin(angle)+center.x;
-			y = tmpX*Math.sin(angle)+tmpY*Math.cos(angle)+center.y;
-
-			// prise en compte du décalage dx, dy (pour l'impression)
-			x += dx;
-			y += dy;
-
-			//System.out.println(x+" "+y);
-			p[i] = new Point((int)x,(int)y);
-		}
-
-		g.setColor(c);
-		// then we draw
-		for(int i=0; i<nbIt-1; i++) {
-			g.drawLine(p[i].x,p[i].y,p[i+1].x,p[i+1].y);
-		}
-		// complete the ellipse
-		g.drawLine(p[nbIt-1].x,p[nbIt-1].y,p[0].x,p[0].y);
-	}
-
-
 
     /** counts the number of occurences of a char in a string
      *	@param c - the char

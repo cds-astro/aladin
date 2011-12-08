@@ -344,6 +344,7 @@ public class PlanCatalog extends Plan {
 	       String r1="row="+p.getCounts()+" col="+p.getFirstLegende().getSize()+" ra="+o.raj+" de="+o.dej+" id="+o.id;
 	       if( !r1.equals(r) ) throw new Exception("respond test ["+r1+"] should be ["+r+"]");
 	    } catch( Exception e ) {
+	       e.printStackTrace();
 	       aladin.levelTrace=trace;
 	       System.out.println(" Error: "+e.getMessage());
 	       return false;

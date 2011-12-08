@@ -127,6 +127,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    
    /** Mémorisation d'une commande */
    public void setCommand(String cmd) {
+      if( cmd==null || cmd.trim().length()==0 ) return;
       cmdHistory.addElement( new Command(cmd) );
       resumeTable();
    }
@@ -576,16 +577,17 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       }
    }
 
-   public void keyPressed(KeyEvent e) { }
-   public void keyTyped(KeyEvent e) { }
-
-   // Validation de la commande en cours
-   public void keyReleased(KeyEvent e) {
+   public void keyPressed(KeyEvent e) {
       int key = e.getKeyCode();
       if( key==KeyEvent.VK_ENTER ) execute();
       else if( key==KeyEvent.VK_UP ) showCmd(-1);
       else if( key==KeyEvent.VK_DOWN ) showCmd(+1);
       else setIndexCmd(-1);
+   }
+   public void keyTyped(KeyEvent e) { }
+
+   // Validation de la commande en cours
+   public void keyReleased(KeyEvent e) { 
       resumeButton();
    }
    

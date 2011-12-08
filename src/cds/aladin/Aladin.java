@@ -66,6 +66,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> DS9 region definition support (as simple Aladin script commands)
+ * @beta    <LI> TSV,CSV improvements (CSV Excel support)
  * @beta    <LI> JSAMP Web profile support
  * @beta    <LI> Bitpix image re-encoding support
  * @beta    <LI> Footprint display by STS-S definition
@@ -130,7 +132,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.071";
+    static public final    String VERSION = "v7.072";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1249,7 +1251,7 @@ public class Aladin extends JApplet
           jBar.add(jm);
        }
 
-       jBar.add(Box.createGlue());
+       jBar.add(javax.swing.Box.createGlue());
        JButton b;
 
        // Si applet, ajout d'un bouton tout à droite pour proposer l'installation
@@ -1295,7 +1297,7 @@ public class Aladin extends JApplet
           });
           jBar.add(b);
           
-          jBar.add(Box.createGlue());
+          jBar.add(javax.swing.Box.createGlue());
        }
 
        try {

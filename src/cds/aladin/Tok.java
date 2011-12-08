@@ -40,13 +40,21 @@ public final class Tok {
       i=0;
    }
    
-   /** Quote la chaine si c'est nécessaire */
+   /** Quote la chaine si c'est nécessaire (et backquote les " internes) */
    static public String quote(String s) {
+      int i;
       char a[] = s.toCharArray();
-      for( int i=0; i<a.length; i++ ) {
-         if( Character.isSpace(a[i]) || a[i]==',' ) return "\""+s+"\"";
+      for( i=0; i<a.length && !Character.isSpace(a[i]) && a[i]!=',' && a[i]!='\\' && a[i]!='\'' && a[i]!='"'; i++ );
+      if( i==a.length ) return s;
+      
+      StringBuffer s1 = new StringBuffer(a.length);
+      s1.append('"');
+      for( i=0; i<a.length; i++ ) {
+         if( a[i]=='"' || a[i]=='\\' ) s1.append('\\');
+         s1.append(a[i]);
       }
-      return s;
+      s1.append('"');
+      return s1.toString();
    }
    
    /** Unquote la chaine si nécessaire */
@@ -58,8 +66,17 @@ public final class Tok {
       if( (n=s.length())<2 ) return s;
       char c = s.charAt(0);
       
-      if( (c=='\"' || c=='\'') && c==s.charAt(n-1) ) return s.substring(1,n-1);
-      return s;
+      if( !( (c=='\"' || c=='\'') && c==s.charAt(n-1) )) return s;
+      char [] a = s.toCharArray();
+      StringBuffer s1 = new StringBuffer(a.length);
+      boolean backslash=false;
+      for( int i=1; i<n-1; i++ ) {
+         c=a[i];
+         if( backslash && (c=='"' || c=='\'' ||c=='\\') ) s1.replace(s1.length()-1,s1.length(),c+"");
+         else s1.append(c);
+         backslash= c=='\\';
+      }
+      return s1.toString();
    }
    
    /** Compte le nombre de tokens restants */
@@ -98,19 +115,49 @@ public final class Tok {
    public  String nextToken() {
       Util.resetString(curTok);
       boolean quote=false;
+      boolean backslash=false;
+      boolean first=true;
       
       for( ; i<a.length; i++) {
-         if( a[i]=='"' || a[i]=='\'') {
-            if( !quote ) { c=a[i]; quote=true; continue;}
-            else if( a[i]==c ) { quote=false; continue; }
+         if( !backslash && (a[i]=='"' || a[i]=='\'') ) {
+            if( !quote && first) { c=a[i]; quote=true; }
+            else if( a[i]==c ) quote=false;
          }
+         backslash = a[i]=='\\';
 // if( a[i]=='"' ) { quote=!quote; continue; }
          if( !quote && isSeparator(a[i]) ) {
-            while( isSeparator(a[++i]) );
+            while( ++i<a.length && isSeparator(a[i]) );
             return unQuote(curTok);
          }
+         first=false;
          curTok.append(a[i]);
       }
       return unQuote(curTok);
+   }
+   
+   
+   static private String TEST = "global color=green dashlist=8 3 width=1 font=\"helvetica 10 normal\" select=1 file=\"\\Root\\file\"";
+   static private String TEST1 = "global(color=green,dashlist=8,3,width=1,\"font=\\\"helvetica 10 normal\\\"\",select=1)";
+   static private String TEST2 = "box(83.468685,22.0908,163.33361\",367.7002\",96.508724)";
+   static public void main(String [] argv) {
+//      Tok tok = new Tok("\"font=\\\"helvetica 10 normal\\\"\"  ,  bidule","(, )");
+//      while( tok.hasMoreTokens() ) {
+//         System.out.println("["+tok.nextToken()+"]");
+//      }
+      
+      System.out.println("==> "+TEST2);
+      Tok tok = new Tok(TEST2,"( ,)");
+      StringBuffer s = new StringBuffer(tok.nextToken()+"(");
+      boolean first=true;
+      while( tok.hasMoreTokens() ) {
+         if( !first ) s.append(',');
+         first=false;
+         String p1 = tok.nextToken();
+         String p2 = Tok.quote(p1);
+         System.out.println(p1+" ==> "+ p2);
+         s.append(p2);
+      }
+      s.append(')');
+      System.out.println("==> "+s);
    }
 }

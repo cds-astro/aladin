@@ -63,7 +63,7 @@ public class PlanFov extends Plan {
 	    aladin.view.repaintAll();
 	    aladin.calque.repaintAll();
 	}
-
+	
 	private static double max(double a, double b) {
 		return a>b?a:b;
 	}

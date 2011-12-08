@@ -340,6 +340,9 @@ public class ServerFile extends Server implements XMLConsumer {
          // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
          if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
 
+         // Petit rajouti pour reconnaitre l'extension REG pour les regions DS9
+         if( f!=null && f.endsWith(".reg") ) type |= MyInputStream.AJS;
+
          String t = in.decodeType(type);
          Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
          aladin.log("load",mode+t);

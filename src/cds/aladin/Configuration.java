@@ -1027,12 +1027,12 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          Properties.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
       }
 
-      csvChoice = new JComboBox();
-      for( int i=0; i<CSVITEM.length; i++ ) csvChoice.addItem(CSVITEMLONG[i]);
-      (l = new JLabel(CSVCHAR)).setFont(l.getFont().deriveFont(Font.BOLD));
-      if( !aladin.OUTREACH ) {
-         Properties.addCouple(this, p, l, CSVCHARH, csvChoice, g, c, GridBagConstraints.EAST);
-      }
+//      csvChoice = new JComboBox();
+//      for( int i=0; i<CSVITEM.length; i++ ) csvChoice.addItem(CSVITEMLONG[i]);
+//      (l = new JLabel(CSVCHAR)).setFont(l.getFont().deriveFont(Font.BOLD));
+//      if( !aladin.OUTREACH ) {
+//         Properties.addCouple(this, p, l, CSVCHARH, csvChoice, g, c, GridBagConstraints.EAST);
+//      }
 
       // Le filtre par défaut
       filterChoice = new JComboBox();
@@ -1211,14 +1211,14 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
 //         }
 //      }
 
-      s = get(CSV);
-      csvItem=0;
-      if( s == null ) csvChoice.setSelectedIndex(0);
-      else {
-         for( int i=0; i<CSVITEM.length; i++ ) {
-            if( CSVITEM[i].equals(s) ) csvChoice.setSelectedIndex(csvItem=i);      
-         }
-      }
+//      s = get(CSV);
+//      csvItem=0;
+//      if( s == null ) csvChoice.setSelectedIndex(0);
+//      else {
+//         for( int i=0; i<CSVITEM.length; i++ ) {
+//            if( CSVITEM[i].equals(s) ) csvChoice.setSelectedIndex(csvItem=i);      
+//         }
+//      }
       
       s = get(FILTER);
       if( s != null && s.charAt(0)=='N' ) filterChoice.setSelectedIndex(0);

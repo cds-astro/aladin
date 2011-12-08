@@ -1154,7 +1154,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //   protected boolean hasBackGround() {
 //      return calque.planBG!=null && calque.planBG.active;
 //   }
-
+   
    /** Retourne true s'il y a au-moins une vue stickée (un sauvegarde() doit avoir été
     * opéré au préalable) */
    protected boolean hasStickedView() { return viewSticked.getNbUsed()>0; }
@@ -2049,9 +2049,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Extension des clips de chaque vue pour contenir l'objet o */
    protected void extendClip(Obj o) {
-      if( true ) return;
-      for( int i=0; i<modeView; i++ ) viewSimple[i].extendClip(o);
-//      for( int i=0; i<modeView; i++ ) viewSimple[i].extendClip(o.getClip(viewSimple[i]));
+//      for( int i=0; i<modeView; i++ ) viewSimple[i].extendClip(o);
    }
 
   /** Supprime les objets selectionnes.

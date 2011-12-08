@@ -29,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
 import cds.savot.model.SavotField;
 import cds.tools.Util;
@@ -62,6 +63,7 @@ public final class Command implements Runnable {
 
    Aladin a;
    Calque c;
+   private CommandDS9 ds9;      // Pour gérer les conversions de commandes DS9
    private boolean stop;        // passe à true pour tuer les threads de lecture
 
    private String lastCmd="";		// Dernière commande exécutée
@@ -144,7 +146,7 @@ public final class Command implements Runnable {
    
    // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
    static final private String NOSYNCCMD[] = {
-      "call","collapse","demo","draw","expand","function",
+      "call","collapse","demo","expand","function",
       "get","grid","help","hist","info","list","kernel","load","lock","md","mem",
       "pause","reset","reticle",
       "scale","setconf",
@@ -161,6 +163,7 @@ public final class Command implements Runnable {
    */
    Command(Aladin aladin) {
       a=aladin;
+      ds9 = new CommandDS9(aladin);
       testRobot();
       if( Aladin.ROBOTSUPPORT ) {
           robot = new MyRobot(a);
@@ -1090,13 +1093,7 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
 
-         // Pour les fonds de ciel
-         /* if( server.equalsIgnoreCase("allsky") ) {
-            j=criteria==null || criteria.length()==0 ? 0 : a.glu.findGluSky((new Tok(criteria)).nextToken(),2);
-            if( j!=-1 ) a.allsky(a.glu.getGluSky(j),target);
-            
-         // Pour les serveurs classiques
-         } else */if( (j=a.dialog.getServer(server))>=0 ) {
+         if( (j=a.dialog.getServer(server))>=0 ) {
             a.dialog.server[j].flagToFront=false;	// Pour eviter le toFront d'Aladin
             a.dialog.server[j].createPlane(target,radius,criteria,label,a.dialog.server[j].institute);
             if( a.isFullScreen() ) a.fullScreen.repaint();
@@ -1191,6 +1188,12 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          toStdoutAndConsole("!!! setconf error: "+e.getMessage());
          return e.getMessage();
+      }
+      
+      // On met automatiquement le mode de drawing correspondant au frame courant
+      if( propertie.equalsIgnoreCase("frame") ) {
+         if( Util.indexOfIgnoreCase(value, "XY")>=0 ) setDrawMode(DRAWXY);
+         else setDrawMode(DRAWRADEC);
       }
 
       return "";
@@ -1317,25 +1320,27 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       return "";
    }
 
-  // voir getDrawParam();
-   private int getOneDrawParam(StringBuffer p,char a[],int i) {
-      boolean flagText,bslash;
-
-      for( bslash=flagText=false; i<a.length; i++) {
-         if( !flagText) {
-            if( a[i]==',' || a[i]==' ') break;
-            else if( a[i]=='"' ) { flagText=true; continue; }
-         } else {
-            if( a[i]=='"' ) {
-               if( !bslash ) { i++; break; }
-            }
-            if( a[i]=='\\' ) { bslash=true; continue; }
-            else bslash=false;
-         }
-         p.append(a[i]);
-      }
-      return i;
-   }
+//  // voir getDrawParam();
+//   private int getOneDrawParam(StringBuffer p,char a[],int i) {
+//      boolean flagText,bslash;
+//      boolean first=true;
+//
+//      for( bslash=flagText=false; i<a.length; i++) {
+//         if( !flagText) {
+//            if( a[i]==',' || a[i]==' ' || a[i]==')' ) { i++; break; }
+//            else if( first && a[i]=='"' ) { flagText=true; continue; }
+//         } else {
+//            if( a[i]=='"' ) {
+//               if( !bslash ) { i++; break; }
+//            }
+//            if( a[i]=='\\' ) { bslash=true; continue; }
+//            else bslash=false;
+//         }
+//         p.append(a[i]);
+//         first=false;
+//      }
+//      return i;
+//   }
 
   /** Decoupe dans un tableau de String une ligne de parametres separes
    * par des , ou blancs. Les parametres peuvent etre
@@ -1343,35 +1348,35 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    * etre enquotees par ", (avec \" si exception)
    * Utilise getOneDrawParam().
    */
-   private String [] getDrawParam(String param) {
-      if( param.trim().length()==0 ) return new String[0];
-      char a[] = param.toCharArray();
-      int i=0;
-      StringBuffer p=null;
-      Vector<StringBuffer> v = new Vector<StringBuffer>(5);
-
-      while( i<a.length ) {
-         while( i<a.length && (a[i]==' ' || a[i]==',') ) i++;	// passe les separateurs
-         p = new StringBuffer();
-         i = getOneDrawParam(p,a,i);
-         v.addElement(p);
-      }
-
-      Enumeration<StringBuffer> e = v.elements();
-      String s[] = new String[v.size()];
-      for( i=0; e.hasMoreElements(); i++ ) {
-         s[i] = new String(e.nextElement());
-      }
-if( Aladin.levelTrace==2 ) {
-   System.out.print("getDrawParam: ");
-   for( i=0; s!=null && i<s.length; i++ ) {
-      System.out.print(" p["+i+"]=["+s[i]+"]");
-   }
-   System.out.println();
-}
-
-      return s;
-   }
+//   private String [] getDrawParam(String param) {
+//      if( param.trim().length()==0 ) return new String[0];
+//      char a[] = param.toCharArray();
+//      int i=0;
+//      StringBuffer p=null;
+//      Vector<StringBuffer> v = new Vector<StringBuffer>(5);
+//
+//      while( i<a.length ) {
+//         while( i<a.length && (a[i]==' ' || a[i]==',') ) i++;	// passe les separateurs
+//         p = new StringBuffer();
+//         i = getOneDrawParam(p,a,i);
+//         v.addElement(p);
+//      }
+//
+//      Enumeration<StringBuffer> e = v.elements();
+//      String s[] = new String[v.size()];
+//      for( i=0; e.hasMoreElements(); i++ ) {
+//         s[i] = new String(e.nextElement());
+//      }
+//      if( Aladin.levelTrace>=4 ) {
+//         System.out.print("Command.getDrawParam: ");
+//         for( i=0; s!=null && i<s.length; i++ ) {
+//            System.out.print(" p["+i+"]=["+s[i]+"]");
+//         }
+//         System.out.println();
+//      }
+//
+//      return s;
+//   }
 
    /** Supprime les marques de liens dans une chaine de caractères */
    protected String removeLinks(String help) {
@@ -1870,19 +1875,29 @@ if( Aladin.levelTrace==2 ) {
       return pi;
    }
    
+   
+   protected void setDrawMode(int mode) { drawMode=mode; }
+   
+   private boolean flagFoV=false;   // Une commande de création de FoV a été passée au préalable
+   private Color globalColor=null;  // Dernière couleur demandée
+   
   /** Execution d'une commande get */
-   protected boolean execDrawCmd(String cmd) {
+   protected boolean execDrawCmd(String cmd,String param) {
       Plan plan=null;	// Plan ou il faudra dessiner
       int height;		// On va compter XY à partir du bas
       Obj newobj=null;  // Nouvelle objet a inserer
       Coord c=null;	    // Position de l'objet si drawMode==DRAWRADEC;
       double x=0,y=0;	// Position de l'objet si drawMode==DRAWXY;
-
-//Aladin.trace(4,"execution de la commande ["+cmd+"]");
-      StringTokenizer st = new StringTokenizer(cmd,"(");
-      String fct = st.nextToken();
-      String param =  fct.length()<cmd.length() ? cmd.substring(fct.length()+1,cmd.length()-1) : "";
-      String p [] = getDrawParam(param);
+      
+//      StringTokenizer st = new StringTokenizer(param,"(");
+//      String fct = st.nextToken();
+//      String parameter =  fct.length()<param.length() ? param.substring(fct.length()+1,param.length()-1) : "";
+//      String p [] = getDrawParam(parameter);
+      
+      Tok tok = new Tok(param,"(, )");
+      String fct = tok.nextToken();
+      String p [] = new String[ tok.countTokens() ];
+      for( int i=0; i<p.length; i++ ) p[i] = tok.nextToken();
 
       // Détermination de la hauteur de l'image de base,
       // sinon on prendra 500 par défaut
@@ -1900,19 +1915,57 @@ if( Aladin.levelTrace==2 ) {
          }
          return true;
       }
+      
+      // Commande global(prop=value,prop=value...)
+      if( fct.equalsIgnoreCase("global") ) {
+         memoGlobal(p);
+         return true;
+      }
 
       // Création d'un plan tool => draw newtool(mytool)
       if( fct.equalsIgnoreCase("newtool") ) {
          String name=null;
          if( p.length>0 ) name=p[0];
          plan = a.calque.createPlanTool(name);
+         if( globalColor!=null ) plan.c=globalColor;
          return true;
       }
       
+      // Création d'un plan FoV => draw newFOV(xc,yc[,angle,mytool])
+      try {
+         if( fct.equalsIgnoreCase("newfov") ) {
+            if( drawMode==DRAWRADEC ) {
+               c = new Coord(p[0]+" "+p[1]);
+               c=a.localisation.frameToICRS(c);
+            } else {
+               c = new Coord();
+               c.x = Double.valueOf(p[0]).doubleValue()-0.5;
+               c.y = height-Double.valueOf(p[1]).doubleValue()+0.5;
+               a.view.getCurrentView().getProj().getCoord(c);
+            }
+            double angle = p.length<3 ? 0 : Double.parseDouble(p[2]);
+            String name = p.length>=4 ? p[3] : null;
+            plan = a.calque.createPlanField(name,c,angle,true,true);
+            if( globalColor!=null ) plan.c=globalColor;
+            flagFoV=true;
+            return true;
+         }
+      } catch( Exception e ) {
+         toStdoutAndConsole("!!! draw error: "+e.getMessage());
+         if( Aladin.levelTrace!=0 ) e.printStackTrace();
+         return false;
+      }
+      
       // Determination du plan TOOL, ou creation si necessaire
-      plan = a.calque.selectPlanTool();
-      if( drawMode==DRAWRADEC ) ((PlanTool)plan).setXYorig(false);
-
+      plan = flagFoV ? a.calque.selectPlanToolOrFoV() : a.calque.selectPlanTool();
+      
+      // Positionnement des variables globales au plan
+      if( globalColor!=null ) {
+         if( globalColor!=plan.c && plan.type==Plan.TOOL && plan.getCounts()>0 ) plan=a.calque.createPlanTool(null); // Création automatique au changement de couleur
+         plan.c=globalColor;
+      }
+      if( drawMode==DRAWRADEC ) plan.setXYorig(false);
+      
       try {
 
          // Recuperation de la position (toujours les 2 premiers parametres)
@@ -1920,8 +1973,8 @@ if( Aladin.levelTrace==2 ) {
             c = new Coord(p[0]+" "+p[1]);
             c=a.localisation.frameToICRS(c);
          } else {
-            x = Double.valueOf(p[0]).doubleValue();
-            y = height-Double.valueOf(p[1]).doubleValue();
+            x = Double.valueOf(p[0]).doubleValue()-0.5;
+            y = height-Double.valueOf(p[1]).doubleValue()+0.5;
          }
 
          // Commande string(x,y,text)
@@ -1931,7 +1984,7 @@ if( Aladin.levelTrace==2 ) {
             else newobj = tag = new Tag(plan,a.view.getCurrentView(),x,y,p[2]);
             tag.setDist(5); tag.setAngle(0); tag.setPole("nopole");
 
-         // Commande tag(x,y...)
+            // Commande tag(x,y...)
          } else if( fct.equalsIgnoreCase("tag") || fct.equalsIgnoreCase("string")) {
             Tag tag;
             String id = p.length<3 ? null : p[2]; 
@@ -1947,17 +2000,18 @@ if( Aladin.levelTrace==2 ) {
                return false;
             }
 
-//         } else if( fct.equalsIgnoreCase("tag") ) {
-//            if( drawMode==DRAWRADEC ) newobj = new Repere(plan,c);
-//            else newobj = new Repere(plan,a.view.getCurrentView(),x,y);
-
          // Commande phot(x,y,r)
          } else if( fct.equalsIgnoreCase("phot") ) {
             Repere phot;
-            if( drawMode==DRAWRADEC ) newobj = phot = new Repere(plan,c);
-            else newobj = phot = new Repere(plan,a.view.getCurrentView(),x,y);
+            ViewSimple v = a.view.getCurrentView();
             try {
-               phot.setRadius( p[2] );
+               if( drawMode==DRAWRADEC ) {
+                  newobj = phot = new Repere(plan,c);
+                  phot.setRadius( p[2] );
+               } else {
+                  newobj = phot = new Repere(plan,v,x,y);
+                  phot.setRayon( v,Double.parseDouble(p[2]) );
+               }
             } catch( Exception e ) {
                toStdoutAndConsole("!!! draw phot error: usage: draw phot(x,y,radius)");
                return false;
@@ -1972,6 +2026,43 @@ if( Aladin.levelTrace==2 ) {
             } else {
                double r = Double.valueOf(p[2]).doubleValue();
                newobj = new Cercle(plan,a.view.getCurrentView(),x,y,r);
+            }
+
+            // Commande ellipse(x,y,semiMA,semiMI,angle)
+         } else if( fct.equalsIgnoreCase("ellipse") ) {
+            double angle   = Double.valueOf(p[4]).doubleValue();
+            if( drawMode==DRAWRADEC ) {
+               double semiMA = Server.getAngle(p[2],Server.RADIUS)/60.;
+               double semiMI = Server.getAngle(p[3],Server.RADIUS)/60.;
+               newobj = new Ellipse(plan,c,semiMA,semiMI,angle);
+            } else {
+               double semiMA = Double.valueOf(p[2]).doubleValue();
+               double semiMI = Double.valueOf(p[3]).doubleValue();
+               newobj = new Ellipse(plan,a.view.getCurrentView(),x,y,semiMA,semiMI,angle);
+            }
+
+            // Commande box(x,y,w,h,angle)
+         } else if( fct.equalsIgnoreCase("box") ) {
+            double angle   = Double.valueOf(p[4]).doubleValue();
+            if( drawMode==DRAWRADEC ) {
+               double w = Server.getAngle(p[2],Server.RADIUS)/60.;
+               double h = Server.getAngle(p[3],Server.RADIUS)/60.;
+               newobj = new Box(plan,c,w,h,angle);
+            } else {
+               double w = Double.valueOf(p[2]).doubleValue();
+               double h = Double.valueOf(p[3]).doubleValue();
+               newobj = new Box(plan,a.view.getCurrentView(),x,y,w,h,angle);
+            }
+
+            // Commande vector(x,y,w,angle)
+         } else if( fct.equalsIgnoreCase("vector") ) {
+            double angle = Double.valueOf(p[3]).doubleValue();
+            if( drawMode==DRAWRADEC ) {
+               double w = Server.getAngle(p[2],Server.RADIUS)/60.;
+               newobj = new Vecteur(plan,c,w,angle);
+            } else {
+               double w = Double.valueOf(p[2]).doubleValue();
+               newobj = new Vecteur(plan,a.view.getCurrentView(),x,y,w,angle);
             }
 
             // Commande arc(x,y,r,startAngle,endAngle)
@@ -2000,23 +2091,57 @@ if( Aladin.levelTrace==2 ) {
                newobj = new Pickle(plan,a.view.getCurrentView(),x,y,r1,r2,startAngle,angle);
             }
 
-         } else if( fct.equalsIgnoreCase("line") ) {
-            if( drawMode==DRAWRADEC ) {
-               Coord c2 = new Coord(p[2]+" "+p[3]);
-               c2=a.localisation.frameToICRS(c2);
-               Ligne p1 = new Ligne(c.al,c.del, plan, a.view.getCurrentView());
-               plan.pcat.setObjetFast(p1);
-               newobj = new Ligne(c2.al, c2.del, plan, a.view.getCurrentView(),p1);
-            } else {
-               Ligne p1 = new Ligne(plan,a.view.getCurrentView(),x,y);
-               x = Double.valueOf(p[2]).doubleValue();
-               y = height-Double.valueOf(p[3]).doubleValue();
-               plan.pcat.setObjetFast(p1);
-               if( p.length>4 ) newobj = new Ligne(plan,a.view.getCurrentView(),x,y,p[4],p1);
-               else  newobj = new Ligne(plan,a.view.getCurrentView(),x,y,p1);;
+         } else if( fct.equalsIgnoreCase("line") 
+                 || fct.equalsIgnoreCase("polygon") ) {
+            newobj=null;
+            Ligne p1,op1 = null;
+            ViewSimple v = a.view.getCurrentView();
+            // Y a-t-il un label en dernier paramètre ?
+            String id=null;
+            int n = p.length;
+            if( n%2==1 ) {
+               id = p[n-1];
+               n--;
+            }
+            for( int i=0; i<n; i+=2) {
+               if( drawMode==DRAWRADEC ) {
+                  c = new Coord(p[i]+" "+p[i+1]);
+                  c=a.localisation.frameToICRS(c);
+                  p1  = new Ligne(c.al,c.del, plan, v,id,op1);
+               } else {
+                  x = Double.valueOf(p[i]).doubleValue()-0.5;
+                  y = height-Double.valueOf(p[i+1]).doubleValue()+0.5;
+                  p1 = new Ligne(plan,v,x,y,id,op1);
+               }
+               addObj(plan,p1);
+               op1=p1;
+            }
+            // bouclage
+            if( fct.equalsIgnoreCase("polygon") ) {
+               newobj = p1 = new Ligne(0,0,plan,v,id,op1);
+               p1.makeLastLigneForClose(v);
             }
 
-         // Commande draw inconnue
+         } else if( fct.equalsIgnoreCase("dist") ) {
+            newobj=null;
+            Cote p1,op1 = null;
+            ViewSimple v = a.view.getCurrentView();
+            int n = p.length;
+            for( int i=0; i<n; i+=2) {
+               if( drawMode==DRAWRADEC ) {
+                  c = new Coord(p[i]+" "+p[i+1]);
+                  c=a.localisation.frameToICRS(c);
+                  p1  = new Cote(c.al,c.del, plan, v,op1);
+               } else {
+                  x = Double.valueOf(p[i]).doubleValue()-0.5;
+                  y = height-Double.valueOf(p[i+1]).doubleValue()+0.5;
+                  p1 = new Cote(plan,v,x,y,op1);
+               }
+               addObj(plan,p1);
+               op1=p1;
+            }
+            
+        // Commande draw inconnue
          } else {
             toStdoutAndConsole("!!! draw error: function unknown ("+fct+")");
             return false;
@@ -2028,10 +2153,29 @@ if( Aladin.levelTrace==2 ) {
       }
 
       // Tracage
-      if( newobj!=null ) plan.pcat.setObjetFast(newobj);
+      if( newobj!=null ) addObj(plan,newobj);
+      
       plan.resetProj();
       a.view.repaintAll();
       return true;
+   }
+   
+   private void addObj(Plan plan,Obj newobj) {
+      plan.pcat.setObjetFast(newobj);
+      
+      // Il faut encore calculer les tangentes par rapport au centre de la projection
+      if( plan.type!=Plan.APERTURE ) return;
+      ((Position)newobj).setXYTan(plan.co);
+   }
+   
+   private void memoGlobal(String [] p) {
+      for( int i=0; i<p.length; i++ ) {
+         System.out.println("==> "+p[i]);
+         if( p[i].startsWith("color=") ) {
+            globalColor=Action.getColor(p[i].substring(6));
+            System.out.println("globalColor found="+p[i].substring(6)+" c="+globalColor);
+         }
+      }
    }
 
    /** Execution d'une commande info
@@ -2092,7 +2236,7 @@ if( Aladin.levelTrace==2 ) {
       if( s.indexOf(" / ")>0 || s.startsWith("/") ) return PlanImageAlgo.DIV;
       return -1;
    }
-   
+      
    StringBuffer comment=null;           // Last comment
    Function fonct=null;
    
@@ -2122,6 +2266,12 @@ if( Aladin.levelTrace==2 ) {
       // Attente que les serveurs soient OK
       syncServer();
       
+      // Compatibilité pour les commandes "region" de DS9
+      try { 
+         String s2 = ds9.translate(s1);
+         if( s2!=null ) return execScript(s2, verbose, flagOnlyFunction);
+      } catch( Exception e) { toStdoutAndConsole(e.getMessage()); return "";}
+
       // Extraction d'un éventuel préfixe désignant le plan target
       // ex: toto = get Simbad m1
       StringBuffer tp = new StringBuffer();
@@ -2206,7 +2356,7 @@ if( Aladin.levelTrace==2 ) {
       // Echo sur la console
       if( echo ) a.console.setCommand(s1);
       
-
+      
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
       if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
          if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
@@ -2250,7 +2400,6 @@ if( Aladin.levelTrace==2 ) {
       else if( cmd.equalsIgnoreCase("get") )    return execGetCmd(param,label,true);
       else if( cmd.equalsIgnoreCase("set") )    return execSetCmd(param);
       else if( cmd.equalsIgnoreCase("setconf") )return execSetconfCmd(param);
-      else if( cmd.equalsIgnoreCase("draw") )   execDrawCmd(param);
       else if( cmd.equalsIgnoreCase("status") ) return execStatusCmd(param);
       else if( cmd.equalsIgnoreCase("info") )   execInfo(param);//a.status.setText(param);
       else if( cmd.equalsIgnoreCase("help") )   execHelpCmd(param,false);
@@ -2261,7 +2410,8 @@ if( Aladin.levelTrace==2 ) {
             || cmd.equalsIgnoreCase("plane") )  a.calque.newPlanCatalogBySelectedObjet(label!=null?label:param,false);
       else if( cmd.equalsIgnoreCase("thumbnail")
             || cmd.equalsIgnoreCase("createROI")
-            || cmd.equalsIgnoreCase("ROI") ) execROICmd(param);
+            || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);
+      else if( cmd.equalsIgnoreCase("draw") )   execDrawCmd(cmd,param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) {  // For compatibility
          try {
             Plan p=null;
@@ -2888,7 +3038,9 @@ if( Aladin.levelTrace==2 ) {
               if( param.equals("off") ) a.gc=false;
               else a.gc=true;
             }
-      else if( cmd.equalsIgnoreCase("load") ) a.load(Tok.unQuote(param),label);
+      else if( cmd.equalsIgnoreCase("load") ) {
+         a.load(Tok.unQuote(param),label);
+      }
 
       // Pour CFHT-QSO: Renaud Savalle
       // Creation d'un nouveau plan tool

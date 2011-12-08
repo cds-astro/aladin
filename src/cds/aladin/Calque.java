@@ -974,7 +974,8 @@ public final class Calque extends JPanel implements Runnable {
   /** Traitement à  faire suite à un changement de frame */
    protected void resumeFrame() {
       
-//      int frame = aladin.localisation.getFrame();
+      int frame = aladin.localisation.getFrame();
+      aladin.command.setDrawMode( frame==Localisation.XY ? Command.DRAWXY : Command.DRAWRADEC);
 
       // Modification des libelles de reperes
       // Modification des frame des projections des plans AllSky
@@ -1004,7 +1005,7 @@ public final class Calque extends JPanel implements Runnable {
          // on le vide juste avant en cas de formulaire avec tree, sinon impossible à modifier le target
          if( srv.target!=null && srv.tree!=null ) srv.target.setText("");
 
-         aladin.dialog.setVisible(true);
+//         aladin.dialog.setVisible(true);
       }
       
       // Conversion de la position d'un cut out pour le frameInfo courant (s'il y a lieu)
@@ -1015,8 +1016,15 @@ public final class Calque extends JPanel implements Runnable {
       aladin.view.repaintAll();
 
       // Nécessaire dans le cas de plan Healpix
-      aladin.view.newView(1);
-      aladin.view.syncView(1,null,null,true);
+      for( int i=0; i<aladin.view.modeView; i++ ) {
+         ViewSimple v = aladin.view.viewSimple[i];
+         if( v.isFree() ) continue;
+         if( !(v.pref instanceof PlanBG) ) continue;
+         v.newView(1);
+         v.getProj().setProjCenter(aladin.view.repere.raj,aladin.view.repere.dej);
+      }
+//      aladin.view.newView(1);
+//      aladin.view.syncView(1,null,null,true);
    }
 
    /** Traitement d'un changement de mode d'affichage pixel */
@@ -1029,9 +1037,12 @@ public final class Calque extends JPanel implements Runnable {
    * Le plan courant doit etre du type TOOL
    * @param newobj l'objet a inserer
    */
+   private Obj oNewobj=null;
    protected void setObjet(Obj newobj) {
+      if( newobj==oNewobj ) return;   // Déjà inséré juste avant
       Plan pc = selectPlanTool();
       pc.pcat.setObjet(newobj);
+      oNewobj=newobj;
    }
 
   /** Suppression d'un objet.
@@ -2511,31 +2522,34 @@ public final class Calque extends JPanel implements Runnable {
      }
      
      // Retourne true si le plan passé en paramètre peut servir à ajouter des outils draws
-     private boolean planToolOk(Plan p, ViewSimple v) {
-        return p.type==Plan.TOOL && p.isReady() && p.isSelectable()
-//                   && v.pref.projd.agree(p.projd,v)
-                   ;
+     private boolean planToolOk(Plan p, boolean flagWithFoV) {
+        return (p.type==Plan.TOOL || flagWithFoV && p.type==Plan.APERTURE) && p.isReady() && p.isSelectable();
      }
      
      /** sélectionne et retourne le plan tool le plus adéquat, où le crée si nécessaire */
-     protected PlanTool selectPlanTool() {
+     protected PlanTool selectPlanTool() { return (PlanTool)selectPlanTool1(false); }
+     
+     /** sélectionne et retourne le plan tool ou FoV (APERTURE), où crée un plan tool si nécessaire */
+     protected Plan selectPlanToolOrFoV() { return selectPlanTool1(true); }
+     
+     private Plan selectPlanTool1(boolean flagWithFoV) {
         try {
            Plan p = getFirstSelectedPlan();
            ViewSimple v = aladin.view.getCurrentView();
            int indexView = getIndex(v.pref);
-           if( planToolOk(p,v) && getIndex(p)<indexView ) return (PlanTool)p;
+           if( planToolOk(p,flagWithFoV) && getIndex(p)<indexView ) return p;
            Plan [] plan = getPlans();
            for( int i=0; i<plan.length && i<indexView; i++ ) {
-              if( planToolOk(plan[i],v) ) {
+              if( planToolOk(plan[i],flagWithFoV) ) {
                  selectPlan(plan[i]);
-                 return (PlanTool) plan[i];
+                 return plan[i];
               }
            }
         } catch( Exception e ) { }
         return createPlanTool(null);
      }
 
-     protected Plan newPlanTool(String label) { return createPlanTool(label); }
+     protected PlanTool newPlanTool(String label) { return createPlanTool(label); }
 
      protected PlanTool createPlanTool(String label) {
         int n=getStackIndex();
@@ -2544,12 +2558,20 @@ public final class Calque extends JPanel implements Runnable {
         p.selected=true;
         p.active = true;
         Plan pref = getPlanRef();
-//        p.projd = pref!=null ? pref.projd.copy() : null;
         p.projd = pref==null ? null : 
            new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
                  90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
         suiteNew(p);
         return (PlanTool)p;
+     }
+
+     protected PlanField createPlanField(String label,Coord center,double angle,boolean canbeRoll,boolean canbeMove) {
+        int n=getStackIndex();
+        Plan p;
+        plan[n] = p = new PlanField(aladin,label,center,angle,canbeRoll,canbeMove);
+        p.active = true;
+        suiteNew(p);
+        return (PlanField)p;
      }
 
      protected int newPlanFov(String label, Fov[] fov) {
@@ -3023,8 +3045,7 @@ public final class Calque extends JPanel implements Runnable {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {
-            rad = Server.getAngle(radius, Server.RADIUS );
-            rad /= 60;
+            rad = Server.getAngle(radius, Server.RADIUS )/60.;
          } catch( Exception e ) { e.printStackTrace(); }
       }
       else if( gSky!=null && gSky.getRadius()!=-1 ) rad=gSky.getRadius();

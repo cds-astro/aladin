@@ -26,6 +26,8 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import javax.imageio.stream.FileImageInputStream;
+
 import cds.xml.TableParser;
 
 /**
@@ -99,6 +101,7 @@ public final class MyInputStream extends FilterInputStream {
    private byte cache[]=null; // Le tampon
    private int offsetCache=0; // Position du prochain octet a lire dans le tampon
    private int inCache=0;     // Nombre d'octets disponibles dans le tampon
+   private boolean flagEOF=false; // true si la fin du fichier a été atteinte
    private long type=-1;	      // Le champ de bits qui décrit le type de fichier
    private boolean flagGetType; // true si le type a deja ete determine
    private boolean alreadyRead; // true si le flux a deja ete entame
@@ -714,6 +717,8 @@ public long skip(long n) throws IOException {
     * @param len nombre de bytes a charger
     */
    private void loadInCache(int len) throws IOException {
+      
+      if( flagEOF ) throw new EOFException();
 
       // Premiere allocation du buffer du cache
       if( cache==null ) {
@@ -742,7 +747,7 @@ public long skip(long n) throws IOException {
       for( int n=0; n<len; n+=m ) {
          m = super.read(cache,offset,len-n);
 //System.out.println("J'ai lu "+m+" bytes");
-         if( m==-1 ) throw new EOFException();
+         if( m==-1 ) { flagEOF=true; throw new EOFException(); }
          offset+=m;
          inCache+=m;
       }
@@ -796,13 +801,84 @@ public long skip(long n) throws IOException {
       try { Integer.parseInt(s.substring(1,5).trim()); } catch( Exception e ) { return false; }
       return true;
    }
+   
+   static private int [] count(String s,boolean flagQuote,boolean flagMalin) {
+      int n[] = new int[128];
+      boolean inQuote=false;
+      
+      int len = s.length();
+      for( int i=0; i<len; i++ ) {
+         char c = s.charAt(i);
+         if( flagQuote ) {
+            if( inQuote ) {
+               if( c=='\\' ) i++;
+               else if( c=='"' ) inQuote=false;
+            } else inQuote= c=='"';
+            if( inQuote ) continue;
+         }
+         if( flagMalin && i==0 ) continue;   // On ne compte pas le première caractère (voudrait dire que le premier champ de la première ligne est vide
+         int ch = c;
+         if( ch>=n.length ) continue;
+         n[ch]++;
+      }
+      return n;
+   }
+   
+   static final private String SEP = "\t;:,!| /&";
+      
+   /** Analyse les lignes s[]. Dénombre les catactères présents dans chacune d'elles (>31 & <127)
+    * et recherche celui qui pourrait être un séparateur CSV, càd de même dénombrement dans chaque
+    * ligne, et parmi un ensemble de cas possible. S'il y a plusieurs candidats possibles,
+    * on écartera ceux qui commencent ou terminent la première ligne. S'il y a encore
+    * plusieurs candidats, on procédera de même pour les autres lignes de l'échantillon
+    * @param s
+    * @return
+    */
+   static private int analyseCSV(String [] s) { return analyseCSV(s,s.length); }
+   static private int analyseCSV(String [] s,int size) {
+      int [][] m = new int[size][];
+      for( int i=0; i<size; i++ ) {
+         if( Aladin.levelTrace>=4 ) {
+            String s1 = s[i];
+            if( s1.length()>0 && s1.charAt(s1.length()-1)=='\n' ) s1 = s1.substring(0,s1.length()-1);
+            Aladin.trace(4,"analyseCSV ligne "+i+" ["+s1+"]");
+         }
+         m[i] = count(s[i],true,true);
+      }
+      for( int k=0; k<SEP.length(); k++ ) {
+         int i = SEP.charAt(k);
+         int j;
+         if( m[0][i]==0 ) continue;
+         for( j=1; j<size && m[j][i]==m[j-1][i]; j++ );
+         if( j==size ) return (char)i;
+      }
+      return -1;
+   }
+   
+   static public void main(String argv[]) {
+      try {
+         // String s1 = argv[0];
+         String s1 = "C:\\Documents and Settings\\Standard\\Mes documents\\Fits et XML\\XMatch.txt";
+         DataInputStream dis = new DataInputStream(new FileInputStream(s1));
+         String [] s = new String[5];
+         for( int i=0;i<s.length; i++ ) {
+            s[i] = dis.readLine();
+            if( s[i].length()>0 && s[i].charAt(0)=='#' ) i--;
+         }
+         int c = analyseCSV(s);
+         System.out.println("CSV => "+c+" => "+(c==-1?"not CSV":"["+(char)c)+"]");
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
 
    /**
     * Transforme une entête Sextractor en une simple ligne de labels
     */
    private String translateSextraHeader(String head) {
       StringTokenizer st = new StringTokenizer(head,"\n\r");
-      StringBuffer nHead = new StringBuffer("z");
+//      StringBuffer nHead = new StringBuffer("z");
+      StringBuffer nHead = new StringBuffer();
 
       while( st.hasMoreTokens() ) {
          String s = st.nextToken();
@@ -838,10 +914,10 @@ public long skip(long n) throws IOException {
           catch( EOFException e) { }
           catch( IOException e ) { throw e; }
        }
-       char cs[];
+//       char cs[];
        int deb = offsetCache;
        int n=0;   // Nbre de tokens trouves dans la premiere ligne valide
-       int i=1;   // Nbre de lignes valides traitees
+//       int i=1;   // Nbre de lignes valides traitees
        int max=4; // Nbre de lignes valides a tester
        boolean inHeader=true; // true si on est dans l'entete du fichier
        int rep=1;
@@ -849,18 +925,20 @@ public long skip(long n) throws IOException {
        boolean flagSextra = true;   // true si on a détecté une entête Sextractor
        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
+       
+       int bufN = 0;
+       String [] bufLigne = new String[max];
 
-       try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
-       catch( Exception e ) { cs = "\t".toCharArray(); }
+//       try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
+//       catch( Exception e ) { cs = "\t".toCharArray(); }
+//
+//       if( Aladin.levelTrace>=3 ) debugMsg = new StringBuffer("CSV test result:");
 
-       if( Aladin.levelTrace>=3 ) debugMsg = new StringBuffer("CSV test result:");
-
-       do {
+       for( int i=0; bufN<max && deb!=-1; i++ ) {
           StringBuffer ligneb = new StringBuffer(256);
           deb = getLigne(ligneb,deb);
           String ligne = ligneb.toString();
-//System.out.println("ligne = ["+ligne+"]");
-          if( deb==-1 ) return n>0 ? rep : 0;
+          bufLigne[bufN] = ligne;
           if( inHeader ) {
              if( ligne.trim().length()==0 ) continue;
              if( ligne.charAt(0)=='#' ) {
@@ -869,31 +947,157 @@ public long skip(long n) throws IOException {
                 continue;
              }
              inHeader=false;
-             n = TableParser.countColumn(ligne,cs);
-             if( n==1 ) {
-                cs = new char[] { ' ' };
-                rep = 2;
-                n=TableParser.countColumn(ligne,cs);
-             }
-if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+n);
-             if( n<=1 ) { rep=0; break; }
-          } else {
-             int m = TableParser.countColumn(ligne,cs);
-if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+m);
-             if( m!=n ) { rep=0; break; }
-             i++;
           }
-       } while( i<max );
-Aladin.trace(3,debugMsg+"");
-
-       if( rep==2 && flagSextra ) {
-          rep=3;
-          try { substitute(sextraDeb,sextraFin-sextraDeb,translateSextraHeader( new String(cache,sextraDeb,sextraFin))); }
-          catch( Exception e ) { }
+//System.out.println("ligne["+bufN+"] = ["+bufLigne[bufN]+"]");
+         bufN++;
+       }
+//       do {
+//          StringBuffer ligneb = new StringBuffer(256);
+//          deb = getLigne(ligneb,deb);
+//          String ligne = ligneb.toString();
+////System.out.println("ligne = ["+ligne+"]");
+//          if( deb==-1 ) return n>0 ? rep : 0;
+//          if( inHeader ) {
+//             if( ligne.trim().length()==0 ) continue;
+//             if( ligne.charAt(0)=='#' ) {
+//                flagSextra = flagSextra & isSextra(ligne);
+//                if( flagSextra ) sextraFin = deb;
+//                continue;
+//             }
+//             inHeader=false;
+//             n = TableParser.countColumn(ligne,cs);
+//             if( n==1 ) {
+//                cs = new char[] { ' ' };
+//                rep = 2;
+//                n=TableParser.countColumn(ligne,cs);
+//             }
+//             if( n<=1 ) rep=0;
+////             if( n<=1 ) { rep=0; break; }
+//          } else {
+//             int m = TableParser.countColumn(ligne,cs);
+////             if( m!=n ) { rep=0; break; }
+//             if( m!=n ) rep=0;
+//             i++;
+//          }
+//          bufLigne[bufN++] = ligne;
+//       } while( i<max );
+//       Aladin.trace(3,debugMsg+"");
+       
+       if( bufN<2 ) return 0;
+       
+       int findSep = analyseCSV(bufLigne,bufN);
+       if( findSep>=0 ) {
+          char c = (char)findSep;
+          setSepCSV(c);
+          Aladin.trace(3,"CSV detected with ["+c+"] as delimitor");
+          return 1;
        }
 
-       return rep;
+       if( flagSextra ) {
+          if( TableParser.countColumn(bufLigne[0],new char[] { ' ' })>1 ) {
+             try { substitute(sextraDeb,sextraFin-sextraDeb,translateSextraHeader( new String(cache,sextraDeb,sextraFin))); }
+             catch( Exception e ) { }
+             Aladin.trace(3,"Sextractor ASCII detected");
+             return 3;
+          }
+       }
+       
+       char [] cs = new char[] { ' ' };
+       for( int i=0; i<bufN; i++ ) {
+          int m = TableParser.countColumn(bufLigne[0],cs);
+          if( i==0 ) n=m;
+          else if( m!=n ) return 0;
+       }
+
+       Aladin.trace(3,"BSD detected (aligned column with blanks");
+       return 2;
     }
+    
+    private char sepCSV=(char)-1;
+    public char getSepCSV() { return sepCSV; }
+    private void setSepCSV(char c) { sepCSV=c; }
+    
+//    /**
+//     * Determine s'il s'agit d'un flux en CSV.
+//     * Compare n lignes consecutives. Si elles ont le meme nombres de colonnes,
+//     * estime que c'est du CSV. Skip les lignes initiales blanches ou qui
+//     * commencent par #
+//     * DANS LE CAS D'UNE ENTETE SEXTRACTOR, IL Y A SUBSTITUTION DE L'ENTETE AVEC UNE SIMPLE LIGNE DE
+//     * LABELS
+//     * @return 0 ce n'est pas du CSV,
+//     *         1 c'est du CSV suivant Aladin.CSVCHAR
+//     *         2 C'est du BSV blanc séparateurs
+//     *         3 C'est du SEXTRA càd du BSV + entête:
+//     *                     #   1 NUMBER          Running object number
+//     *                     #   2 FLUXERR_ISO     RMS error for isophotal flux                    [count]
+//     *                     #...
+//     *                           1  3.08751e-05   5.2560   0.0042  0.007450911 4.463027e-05     75.842     72.788  77.4363120  +1.7139901   0.02255782  0.009481858 -21.2  18
+//     *                           2 1.506869e-05   7.6853   0.0194   0.00145597 3.457046e-05    100.831      4.265  77.3946642  +1.5997848    0.0134634  0.005376848  -1.4  27
+//     */
+//     private int isCSV() throws IOException {
+//        if( inCache<BLOCCACHE-10 ) {
+//           try { loadInCache(BLOCCACHE-10);
+//           }
+//           catch( EOFException e) { }
+//           catch( IOException e ) { throw e; }
+//        }
+//        char cs[];
+//        int deb = offsetCache;
+//        int n=0;   // Nbre de tokens trouves dans la premiere ligne valide
+//        int i=1;   // Nbre de lignes valides traitees
+//        int max=4; // Nbre de lignes valides a tester
+//        boolean inHeader=true; // true si on est dans l'entete du fichier
+//        int rep=1;
+//        StringBuffer debugMsg=null;
+//        boolean flagSextra = true;   // true si on a détecté une entête Sextractor
+//        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
+//        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
+//
+//        try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
+//        catch( Exception e ) { cs = "\t".toCharArray(); }
+//
+//        if( Aladin.levelTrace>=3 ) debugMsg = new StringBuffer("CSV test result:");
+//
+//        do {
+//           StringBuffer ligneb = new StringBuffer(256);
+//           deb = getLigne(ligneb,deb);
+//           String ligne = ligneb.toString();
+// //System.out.println("ligne = ["+ligne+"]");
+//           if( deb==-1 ) return n>0 ? rep : 0;
+//           if( inHeader ) {
+//              if( ligne.trim().length()==0 ) continue;
+//              if( ligne.charAt(0)=='#' ) {
+//                 flagSextra = flagSextra & isSextra(ligne);
+//                 if( flagSextra ) sextraFin = deb;
+//                 continue;
+//              }
+//              inHeader=false;
+//              n = TableParser.countColumn(ligne,cs);
+//              if( n==1 ) {
+//                 cs = new char[] { ' ' };
+//                 rep = 2;
+//                 n=TableParser.countColumn(ligne,cs);
+//              }
+// if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+n);
+//              if( n<=1 ) { rep=0; break; }
+//           } else {
+//              int m = TableParser.countColumn(ligne,cs);
+// if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+m);
+//              if( m!=n ) { rep=0; break; }
+//              i++;
+//           }
+//        } while( i<max );
+// Aladin.trace(3,debugMsg+"");
+//
+//        if( rep==2 && flagSextra ) {
+//           rep=3;
+//           try { substitute(sextraDeb,sextraFin-sextraDeb,translateSextraHeader( new String(cache,sextraDeb,sextraFin))); }
+//           catch( Exception e ) { }
+//        }
+//
+//        return rep;
+//     }
+
 
     /**
      * Retourne une ligne du tampon a partir d'une position initiale
@@ -902,19 +1106,33 @@ Aladin.trace(3,debugMsg+"");
      * @return la position dans le tampon qui suit le \n de fin de ligne
      *         -1 si aucun \n n'est trouve dans le tampon
      */
+//    private int getLigne1(StringBuffer s,int offset) throws IOException {
+//       int n = lookForSignature("\n",false,offset,false);
+//       if( n==-1 ) return -1;
+//       if( n==offset ) return -1;           // Au cas ou !
+//       s.append(new String(cache,offset,n-offset));
+//       return n;
+//    }
+    
     private int getLigne(StringBuffer s,int offset) throws IOException {
-       int n = lookForSignature("\n",false,offset,false);
-       if( n==-1 ) return -1;
-       if( n==offset ) return -1;           // Au cas ou !
-       s.append(new String(cache,offset,n-offset));
-       return n;
+       int c;
+       char ch;
+       do {
+          c = getValAt(offset++);
+          if( c==-1 ) return -1;
+          ch = (char)c;
+          if( ch!='\r' ) s.append(ch);
+       } while( ch!='\n' );
+       return offset;
     }
 
     /** Retourne la valeur unsigned dans le cache à la position pos,
      * étend le cache si nécessaire */
-    private int C(int pos) throws Exception {
-       try { while( offsetCache+pos>=inCache ) loadInCache(8192); }
+    private int getValAt(int pos) throws IOException {
+       try { while( offsetCache+pos>=inCache && !flagEOF ) loadInCache(8192); }
        catch( EOFException e ) { }
+       
+       if( offsetCache+pos>=inCache && flagEOF ) return -1;
 
        try { return cache[offsetCache+pos] & 0xFF; }
        catch( Exception e ) { return -1; }
@@ -1187,14 +1405,14 @@ Aladin.trace(3,debugMsg+"");
 
        int i=2;   // Taille de la signature JPEG
        try {
-          while( C(i)==0xFF ) {
-             int mode = C(i+1);
-             int size = C(i+2)<<8 | C(i+3);
+          while( getValAt(i)==0xFF ) {
+             int mode = getValAt(i+1);
+             int size = getValAt(i+2)<<8 | getValAt(i+3);
              try {
                 while( offsetCache+i+2+size>=inCache ) loadInCache(8192);
              } catch( EOFException e ) { }
 if( Aladin.levelTrace==4 ) {
-   Aladin.trace(4,"("+i+") Segment JPEG "+H(C(i))+" "+H(C(i+1))+" "+size+" octets : ");
+   Aladin.trace(4,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
    Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
 }
              if( mode==0xE1 ) {
@@ -1219,8 +1437,8 @@ if( Aladin.levelTrace==4 ) {
        int i=8;   // Taille de la signature PNG
        try {
           while( encore ) {
-             int size = C(i)<<24 | C(i+1)<<16 | C(i+2)<<8 | C(i+3);
-             String chunk = new String( new char[] { (char)C(i+4),(char)C(i+5),(char)C(i+6),(char)C(i+7)});
+             int size = getValAt(i)<<24 | getValAt(i+1)<<16 | getValAt(i+2)<<8 | getValAt(i+3);
+             String chunk = new String( new char[] { (char)getValAt(i+4),(char)getValAt(i+5),(char)getValAt(i+6),(char)getValAt(i+7)});
              try {
                 while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
              } catch( EOFException e ) { encore=false; }
@@ -1275,14 +1493,14 @@ if( Aladin.levelTrace==4 ) {
                                 int offset,int maxOffset,boolean flagEOF) throws IOException {
 //System.out.println("Call lookForSignature("+sig+","+offset+")");
 
-      boolean EOF=false;	// memorise qu'on a atteind la fin de stream
+      boolean EOF=false;	// memorise qu'on a atteint la fin de stream
 
       // n'est-on pas allé déjà trop loin dans le fichier ?
       if( maxOffset>=0 && offset>=maxOffset ) return -1;
 
       // Je charge au-moins BLOCCACHE-10 bytes dans le cache pour chercher
       // la signature (evite generalement la reallocation du tampon car on a deja
-      // chargee le tampon de quelques octets pour chercher un Magic Number)
+      // charge le tampon de quelques octets pour chercher un Magic Number)
       if( offsetCache+inCache-offset<BLOCCACHE-10 ) {
          try {
             int oOffsetCache=offsetCache;

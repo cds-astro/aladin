@@ -82,7 +82,6 @@ public class Arc extends Cercle {
    protected Arc(Plan plan,Coord c,double radius,double startAngleNorth,double angle) {
       super(plan,new Position[3]);
       this.angle=angle;
-      double x,y;
       o[0] = new Position(plan,null,0,0,c.al,c.del,RADE,null);
       Coord c1 = applySphereRot(c,radius,startAngleNorth);
       o[1] = new Position(plan,null,0,0,c1.al,c1.del,RADE,null);
@@ -97,25 +96,6 @@ public class Arc extends Cercle {
    /** Retourne le type d'objet */
    public String getObjType() { return "Arc"; }
    
-   
-   /** Rotation en coordonnées sphériques (via le plan tangentiel)
-    * @param c Le centre de rotation
-    * @param radius le rayon
-    * @param angle l'angle en degrés par rapport au Nord dans le sens trigo
-    * @return le point au bout du vecteur en coordonnées sphériques
-    */
-   protected Coord applySphereRot(Coord c, double radius, double angle) {
-      Proj3 a = new Proj3(Proj3.TAN,c.al,c.del);
-      double tanr = Math.tan(Math.PI*radius/180.);
-      double cost = Math.cos( Math.PI*angle/180.);
-      double sint = Math.sin( Math.PI*angle/180.);
-      double x =  tanr*sint;
-      double y =  tanr*cost;
-      a.computeAngles(x,y);
-      return new Coord(a.getLon(),a.getLat());               
-   }
-   
-      
    /** Retourne l'angle initiale à partir de 3H dans le sens trigo */
    protected double getStartAngle3H(ViewSimple v) {
       return 180.*Math.atan2( o[0].yv[v.n]-o[1].yv[v.n] , o[1].xv[v.n]-o[0].xv[v.n])/Math.PI;
