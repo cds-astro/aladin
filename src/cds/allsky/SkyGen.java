@@ -77,9 +77,9 @@ public class SkyGen {
 
 		// arguments des répertoires de départ
 		if (context.getInputPath() == null) {
-			// throw new Exception("Args inputdir/outputdir sont obligatoires");
+			throw new Exception("Argument inputdir is missing");
 			// Par défaut le répertoire courant
-			context.setInputPath(System.getProperty("user.dir"));
+			//context.setInputPath(System.getProperty("user.dir"));
 		}
 		if (context.getOutputPath() == null)
 			// Par défaut le répertoire courant
@@ -370,9 +370,9 @@ public class SkyGen {
 		System.out.println("SkyGen -param=configfile\n");
 		System.out.println("This configfile must contains these following options, or use them in comand line :");
 		System.out.println(
-				"input     Directory of original images (fits or jpg+hhh - default current dir)" + "\n" +
+				"input     Directory of original images (fits or jpg+hhh)" + "\n" +
 				"output    Target directory (default $PWD+\"ALLSKY\")" + "\n" +
-				"pixel     keep|overwrite|average|replaceall - in case of already computed values (default overwrite)" + "\n" +
+				"pixel     keep|keepall|overwrite|average|replaceall - in case of already computed values (default overwrite)" + "\n" +
 				"region    Healpix region to compute (ex: 3/34-38 50 53) (default all the sky)" + "\n" +
 				"blank     BLANK value alternative (use of FITS header by default)" + "\n" +
 				"border    Margins to ignore in the original images (N W S E or constant)" + "\n" +
