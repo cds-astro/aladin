@@ -132,7 +132,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.073";
+    static public final    String VERSION = "v7.074";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

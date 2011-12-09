@@ -20,10 +20,6 @@
 
 package cds.aladin;
 
-import java.util.*;
-
-import cds.tools.Util;
-
 /**
  * Gestion des équivalences de commandes entre DS9 et Aladin
  * @version 1.0 (dec 2011) Creation
@@ -31,26 +27,41 @@ import cds.tools.Util;
  */
 public final class CommandDS9  {
 
-   private Aladin a;
+   private Aladin aladin;
+   private int previousFrame=Localisation.J2000;
+   private int currentFrame=-1;
 
    public CommandDS9(Aladin aladin) {
-      this.a=aladin;
+      this.aladin=aladin;
    }
    
    /** Traduit une commande DS9 en l'équivalent Aladin
     * @param s La commande DS9 (une seule)
     * @return le script Aladin correspondant (éventuellement plusieurs commandes),
+    *         "" si la commande est de fait inutile
     *         null s'il ne s'agit pas d'une commande DS9 reconnue
     * @throws Exception (en cas d'erreur de parsing)
     */
    public String translate(String s) throws Exception {
-      StringBuffer s1 = new StringBuffer();
+      StringBuffer s1 = null;
+      
+      if( aladin!=null ) previousFrame = aladin.localisation.getFrame();
+      
       Tok tok = new Tok(s,";");
+      int nbCmd=0;
       while( tok.hasMoreTokens() ) {
-         if( s1.length()>0 ) s1.append(';');
          String a = translateOne(tok.nextToken());
-         if( a==null ) return null;
+         if( a==null ) continue;
+         if( a.length()>=0 && s1==null ) s1=new StringBuffer();
+         if( a.length()==0 ) continue;
+         if( s1.length()>0 ) s1.append(';');
          s1.append(a);
+         nbCmd++;
+      }
+      if( s1==null ) return null;
+      
+      if( nbCmd>1 && currentFrame!=-1 && !Localisation.isSameFrame(previousFrame,currentFrame) ) {
+         s1.append(";setconf frame="+Localisation.getFrameName(previousFrame));
       }
       return s1.toString();
    }
@@ -114,7 +125,7 @@ public final class CommandDS9  {
    // out: setconf frame=J2000
    private String formatCIAOtoAladin(String cmd) throws Exception  {
       if( cmd.indexOf("CIAO version")<0 ) return null;
-      return "setconf frame=J2000";
+      return frameDS9toAladin("J2000");
    }
 
    static private String SAOTNFORMATERROR = "!!!SAOTN compatibility error (format parsing failed)";
@@ -169,17 +180,22 @@ public final class CommandDS9  {
   
   // Commande du système de coordonnées (fk5,fk4,icrs,galactic,ecliptic,image)
   // in : fk5
-  // out: setconf frame=J2000;draw mode(RADEC)
+  // out: setconf frame=J2000
   private String frameDS9toAladin(String cmd) throws Exception {
+     int frame=-1;
           if( cmd.equals("fk5")
-           || cmd.equals("j2000") )    return("setconf frame=J2000");
-     else if( cmd.equals("icrs") )     return("setconf frame=ICRS");
+           || cmd.equals("j2000") )   frame=Localisation.J2000;
+     else if( cmd.equals("icrs") )    frame=Localisation.ICRS;
      else if( cmd.equals("fk4")
-           || cmd.equals("b1950") )    return("setconf frame=B1950");
-     else if( cmd.equals("galactic") ) return("setconf frame=Gal");
-     else if( cmd.equals("ecliptic") ) return("setconf frame=Ecliptic");
-     else if( cmd.equals("image") )    return("setconf frame=XY");
+           || cmd.equals("b1950") )   frame=Localisation.B1950;
+     else if( cmd.equals("galactic") )frame=Localisation.GAL;
+     else if( cmd.equals("ecliptic") )frame=Localisation.ECLIPTIC;
+     else if( cmd.equals("image") )   frame=Localisation.XY;
      else return null;
+     
+     if( frame==previousFrame ) return "";
+     currentFrame=frame;
+     return("setconf frame="+Localisation.getFrameName(currentFrame));
   }
 
   // Commandes basiques directement réutilisable. On se contente de gérer l'éventuelle
@@ -207,26 +223,26 @@ public final class CommandDS9  {
   }
   
   static final private String [] TEST = {
-//   "# Region file format: DS9 version 4.1",
-//   "# Filename: C:/Documents and Settings/Standard/Mes documents/Fits et XML/dss1.fits",
-//   "global color=green dashlist=8 3 width=1 font=\"helvetica 10 normal\" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1",
-//   "fk5",
-//   "circle(83.660376,22.042708,31.940586\")",
-//   "ellipse(83.585086,22.03882,79.491097\",38.786247\",351.70206)",
-//   "box(83.690273,22.020911,67.517674\",45.347692\",359.61543)",
-//   "polygon(83.63402,22.012313,83.621943,22.012238,83.622024,22.001041,83.634101,22.001117)",
-//   "polygon 83.610533 22.011943 83.584443 22.011775",
-//   "line(83.661236,22.006322,83.671597,21.992668) # line=0 0",
-//   "ecliptic;line(83.646735,22.007633,83.627889,21.983442) # line=0 0",
-//   "#  vector(83.702004,22.049953,94.710207\",20.171478) vector=1",
-//   "# text(83.646667,22.01715) color=red width=2 text={Region}",
-//   "# composite(83.667432,22.012471,23.324274) || composite=1",
-//   "point(83.667432,22.012471) || # point=boxcircle",
-//   "  point  83.667432  22.012471  ",
-//   "text(84.059752,21.854908) || textangle=22.939706 text={S0}",
-//   "polygon(84.099463,21.761356,83.958987,21.817998,84.019991,21.948451,84.16057,21.891758) ||",
-//   "",
+   "# Region file format: DS9 version 4.1",
+   "# Filename: C:/Documents and Settings/Standard/Mes documents/Fits et XML/dss1.fits",
+   "global color=green dashlist=8 3 width=1 font=\"helvetica 10 normal\" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1",
+   "fk5",
+   "circle(83.660376,22.042708,31.940586\")",
+   "ellipse(83.585086,22.03882,79.491097\",38.786247\",351.70206)",
+   "box(83.690273,22.020911,67.517674\",45.347692\",359.61543)",
+   "polygon(83.63402,22.012313,83.621943,22.012238,83.622024,22.001041,83.634101,22.001117)",
+   "polygon 83.610533 22.011943 83.584443 22.011775",
+   "line(83.661236,22.006322,83.671597,21.992668) # line=0 0",
+   "ecliptic;line(83.646735,22.007633,83.627889,21.983442) # line=0 0",
+   "#  vector(83.702004,22.049953,94.710207\",20.171478) vector=1",
+   "# text(83.646667,22.01715) color=red width=2 text={Region}",
+   "# composite(83.667432,22.012471,23.324274) || composite=1",
+   "point(83.667432,22.012471) || # point=boxcircle",
+   "  point  83.667432  22.012471  ",
+   "text(84.059752,21.854908) || textangle=22.939706 text={S0}",
+   "polygon(84.099463,21.761356,83.958987,21.817998,84.019991,21.948451,84.16057,21.891758) ||",
    "b1950; circle 82.907937d 22.010159d 31.940586",
+   "circle(83.660376,22.042708,31.940586\")",
 
   };
   

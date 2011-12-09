@@ -225,7 +225,7 @@ public final class HeaderFits {
          if( linesRead==0 ) Aladin.error="Remote server message:\n"+new String(buffer,0);
          else {
             Aladin.error="Fits header error (line "+(linesRead+1)+")";
-            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//            if( Aladin.levelTrace>=3 ) e.printStackTrace();
          }
          throw e;
       }

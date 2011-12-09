@@ -91,6 +91,13 @@ public final class Localisation extends MyBox {
       return FRAMEBISVAL[i];
    }
    
+   // Retourne true s'il s'agit du même système de référence (en ignorant la différence degrés et sexa)
+   static final boolean isSameFrame(int frame1,int frame2) {
+      if( frame1==ICRSD || frame1==J2000D || frame1==B1950D ) frame1--;
+      if( frame2==ICRSD || frame2==J2000D || frame2==B1950D ) frame2--;
+      return frame1==frame2;
+   }
+   
    static final String NOREDUCTION = "No astrometrical reduction";
    static final String NOHPX = "No HEALPix map";
    static final String NOPROJECTION = "No proj => select "+REPERE[XYLINEAR];

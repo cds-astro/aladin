@@ -49,8 +49,6 @@ final public class MainPanel extends JPanel implements ActionListener {
    protected Aladin aladin;
    protected ContextGui context;
 
-   private String s_ERRFITS;
-
    // Le formulaire multi-tab
    private JTabbedPane pTab;              // Le panel principale
    protected TabDesc  tabDesc;            // Le tab de la description du survey
@@ -66,7 +64,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       this.aladin = aladin;
       this.context = context;
       context.setMainPanel(this);
-      createChaine();
       createPanel();
       BuilderController.DEBUG = (Aladin.levelTrace > 0) ? true : false;
    }
@@ -97,10 +94,6 @@ final public class MainPanel extends JPanel implements ActionListener {
       add(pTab, BorderLayout.CENTER);
    }
 
-   private void createChaine() {
-      s_ERRFITS= getString("ERRFITS");
-   }
-
    private String getString(String k) { return Aladin.getChaine().getString(k); }
 
    public void actionPerformed(ActionEvent e) {
@@ -121,7 +114,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       boolean found = context.findImgEtalon(path);
       if( !found ) {
          context.warning("There is no available images in source directory !\n"
-               + s_ERRFITS + path);
+                + path);
          return;
       }
       String filename = context.getImgEtalon();
@@ -137,8 +130,7 @@ final public class MainPanel extends JPanel implements ActionListener {
 //      tabBuild.setBlank(file.blank);
       
       // calcule le meilleur nside
-      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib()
-            .GetResol()[0] * 3600.);
+      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
       setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
       
       newAllskyDir();

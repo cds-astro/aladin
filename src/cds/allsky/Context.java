@@ -1,12 +1,15 @@
 package cds.allsky;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.text.ParseException;
 import java.util.StringTokenizer;
 
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
+import cds.aladin.MyInputStream;
 import cds.aladin.PlanBG;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
@@ -106,7 +109,7 @@ public class Context {
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
-   public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon();}
+   public void setImgEtalon(String filename) throws Exception { initFromImgEtalon(); imgEtalon = filename; }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZeroOrig = x; }
@@ -166,44 +169,43 @@ public class Context {
 	   Fits fitsfile = new Fits();
 
 	   fitsfile.loadHeaderFITS(path);
+	   if( fitsfile.getCalib()==null ) throw new Exception("No calib !");
+	   
        setBitpixOrig(fitsfile.bitpix);
        if( !isColor() ) {
           setBZeroOrig(fitsfile.bzero);
           setBScaleOrig(fitsfile.bscale);
           if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
        }
-       initCut(fitsfile);
+       
+       // Il peut s'agit d'un fichier .hhh (sans pixel)
+       try { initCut(fitsfile); } catch( Exception e ) { }
    }
    
    /**
     * Lit l'image et calcul son autocut : affecte les datacut et pixelcut *Origines*
     * @param file
     */
-   protected void initCut(Fits file) {
+   protected void initCut(Fits file) throws Exception {
        int w = file.width;
        int h = file.height;
        if (w > 1024) w = 1024;
        if (h > 1024) h = 1024;
-       try {
-           file.loadFITS(file.getFilename(), 0, 0, w, h);
-        	   
-           double[] cut = file.findAutocutRange();
-           if (isSkySub()) {
-        	   double val = file.headerFits.getDoubleFromHeader(getSkyval());
-        	   cut[0] -= val;
-        	   cut[1] -= val;
-        	   cut[2] -= val;
-        	   cut[3] -= val;
-           }
-           setCutOrig(cut);
-       } catch (Exception e) {
-           e.printStackTrace();
+       file.loadFITS(file.getFilename(), 0, 0, w, h);
+
+       double[] cut = file.findAutocutRange();
+       if (isSkySub()) {
+          double val = file.headerFits.getDoubleFromHeader(getSkyval());
+          cut[0] -= val;
+          cut[1] -= val;
+          cut[2] -= val;
+          cut[3] -= val;
        }
+       setCutOrig(cut);
    }
 
    /**
     * Sélectionne un fichier de type FITS (ou équivalent) dans le répertoire donné => va servir d'étalon
-    * Utilise un cache une case pour éviter les recherches redondantes
     * @return true si trouvé
     */
    boolean findImgEtalon(String rootPath) {
@@ -222,11 +224,13 @@ public class Context {
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
-            Aladin.trace(4, "Context.findImgEtalon: loading header "+path+"...");
+            MyInputStream in = (new MyInputStream( new FileInputStream(path))).startRead();
+            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS ) continue;            
+            Aladin.trace(4, "Context.findImgEtalon: "+path+"...");
             setImgEtalon(path);
             return true;
             
-         }  catch (Exception e) { continue; }
+         }  catch( Exception e) { continue; }
       }
       return false;
    }

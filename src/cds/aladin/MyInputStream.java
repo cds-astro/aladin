@@ -261,7 +261,7 @@ public final class MyInputStream extends FilterInputStream {
    * decodeType().
    * @return un champ de bit decrivant le type de fichier
    */
-   public long getType() throws IOException {
+   public long getType() throws Exception {
       int csv;
 //System.out.println("call getType()");
 
@@ -274,7 +274,7 @@ public final class MyInputStream extends FilterInputStream {
 
       // recherche d'un eventuel MAGIC NUMBER ou d'une premier mot
       // non-equivoque pour determine le type de fichier
-//      try {
+      try {
 
          int c[] = new int[16];
          // On charge qq octets dans le tampon si nécessaire
@@ -477,10 +477,9 @@ public final class MyInputStream extends FilterInputStream {
 //                  || lookForSignature("filter ",true)>0 ) type |= AJSx;
 
 
-//      } catch ( EOFException e ) {
-////System.out.println("getType impossible: EOFException !!");
-//         return NOTAVAILABLE;
-//      }
+      } catch ( EOFException e ) {
+//System.out.println("getType impossible: EOFException !!");
+      }
 
       return type;
 
@@ -915,7 +914,7 @@ public long skip(long n) throws IOException {
     *                           1  3.08751e-05   5.2560   0.0042  0.007450911 4.463027e-05     75.842     72.788  77.4363120  +1.7139901   0.02255782  0.009481858 -21.2  18
     *                           2 1.506869e-05   7.6853   0.0194   0.00145597 3.457046e-05    100.831      4.265  77.3946642  +1.5997848    0.0134634  0.005376848  -1.4  27
     */
-    private int isCSV() throws IOException {
+    private int isCSV() throws Exception {
        if( inCache<BLOCCACHE-10 ) {
           try { loadInCache(BLOCCACHE-10);
           }
@@ -1122,7 +1121,7 @@ public long skip(long n) throws IOException {
 //       return n;
 //    }
     
-    private int getLigne(StringBuffer s,int offset) throws IOException {
+    private int getLigne(StringBuffer s,int offset) throws Exception {
        int c;
        char ch;
        do {
@@ -1136,7 +1135,7 @@ public long skip(long n) throws IOException {
 
     /** Retourne la valeur unsigned dans le cache à la position pos,
      * étend le cache si nécessaire */
-    private int getValAt(int pos) throws IOException {
+    private int getValAt(int pos) throws Exception {
        try { while( offsetCache+pos>=inCache && !flagEOF ) loadInCache(8192); }
        catch( EOFException e ) { }
        

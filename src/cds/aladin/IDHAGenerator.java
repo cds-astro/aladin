@@ -333,7 +333,7 @@ public class IDHAGenerator extends JFrame {
 			
             return (type&keptMask) != 0;
 		}
-		catch(IOException e) {return false;}
+		catch(Exception e) {return false;}
 	}
 
 	/** PRE : dir est un répertoire */

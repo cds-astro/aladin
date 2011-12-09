@@ -2286,7 +2286,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       // Compatibilité pour les commandes "region" de DS9
       try { 
          String s2 = ds9.translate(s1);
-         if( s2!=null ) return execScript(s2, verbose, flagOnlyFunction);
+         if( s2!=null ) {
+            if( s2.length()==0 ) return ""; // Commande jugée inutile (par exemple changement de frame)
+            return execScript(s2, verbose, flagOnlyFunction);
+         }
       } catch( Exception e) { toStdoutAndConsole(e.getMessage()); return "";}
 
       // Extraction d'un éventuel préfixe désignant le plan target

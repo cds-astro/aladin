@@ -2199,8 +2199,6 @@ COPYRIGHT Copyright :
 COPYRIGHT.fr Copyright :
 ORIGIN Origin :
 ORIGIN.fr Origine :
-ERRFITS No Fits file found in directory : 
-ERRFITS.fr Aucun fichier Fits trouvé dans le repertoire : 
 BITPIXALLSKY	Number of bits per pixel
 BITPIXALLSKY.fr Nombre de bits par pixel
 KEEPORIGALLSKY Keep original BITPIX
