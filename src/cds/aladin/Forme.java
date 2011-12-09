@@ -144,6 +144,7 @@ public class Forme extends Position {
     * @return le point au bout du vecteur en coordonnées sphériques
     */
    protected Coord applySphereRot(Coord c, double radius, double angle) {
+      if( angle/360.==Math.round(angle/360.) ) return c;
       Proj3 a = new Proj3(Proj3.TAN,c.al,c.del);
       double tanr = Math.tan(Math.PI*radius/180.);
       double cost = Math.cos( Math.PI*angle/180.);

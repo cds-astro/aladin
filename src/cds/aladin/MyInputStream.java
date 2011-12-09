@@ -85,12 +85,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long ARGB    = 1L<<34;
    static final public long PDS     = 1L<<35;
    static final public long HPXMOC  = 1L<<36;
+   static final public long DS9REG  = 1L<<37;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
-      "SEXTRACTOR","HUGE","AIPSTABLE","IPACTABLE","BMP","RICE","HEALPIX","GLU","ARGB","PDS","HPXMOC" };
+      "SEXTRACTOR","HUGE","AIPSTABLE","IPACTABLE","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
+      "HPXMOC","DS9REG" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -292,8 +294,14 @@ public final class MyInputStream extends FilterInputStream {
          // Détection HPXMOC (ASCII - ancienne définition ORDERING...)  A VIRER DES QUE POSSIBLE
          else if( c[0]=='O' && c[1]=='R' && c[2]=='D' && c[3]=='E' && c[4]=='R' ) type |=HPXMOC;
 
+         // Détection DS9REG 
+         else if( c[0]=='#' && c[1]==' ' && c[2]=='R' && c[3]=='e' && c[4]=='g' 
+               && c[5]=='i' && c[6]=='o' && c[7]=='n' && c[8]==' ' && c[9]=='f' 
+               &&c[10]=='i' &&c[11]=='l'&& c[12]=='e' ) type |= DS9REG|AJS;
+
          // Détection HPXMO (ASCII - nouvelle définition #HPXMOCM...)
-         else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X' && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=HPXMOC;
+         else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X' 
+               && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=HPXMOC;
 
 //         // Detection de BMP
 //         else if( c[0]==66  && c[1]==77 ) type |= BMP;

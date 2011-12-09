@@ -2522,7 +2522,7 @@ public final class Calque extends JPanel implements Runnable {
      }
      
      // Retourne true si le plan passé en paramètre peut servir à ajouter des outils draws
-     private boolean planToolOk(Plan p, boolean flagWithFoV) {
+     protected boolean planToolOk(Plan p, boolean flagWithFoV) {
         return (p.type==Plan.TOOL || flagWithFoV && p.type==Plan.APERTURE) && p.isReady() && p.isSelectable();
      }
      

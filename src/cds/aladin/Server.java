@@ -726,10 +726,13 @@ public void layout() {
       int offsetD  = r.indexOf('d');
       int offsetS  = r.indexOf('s');
       int offsetQ  = r.indexOf('\"');
+      int offsetM  = r.indexOf('\'');
+      int offsetM1 = r.indexOf('m');
       
       if( offsetD1>0 || offsetD>0 && (offsetS==-1 || offsetD>offsetS) ) fct=60.0; // Degres
       else if( offsetS>0 || offsetQ>0) fct=1/60.0;	// Secondes
-
+      else if( offsetM>0 || offsetM1>0 ) fct=1;     // Minutes
+      
       // Si absence d'unité, il s'agit de l'unité par défaut (modeRad)
       else {
          if( modeRad==RADIUSd ) fct=60.;
@@ -743,6 +746,12 @@ public void layout() {
       r = new String(a,0,i);
       return Double.valueOf(r).doubleValue()*fct;
    }
+   
+//   public static void main(String [] argv) {
+//      String s = "14'";
+//      double a = getAngle(s,RADIUSs)/60;
+//      System.out.println("==>"+s+" ==> "+(a*60)+" ==> "+Coord.getUnit(a));
+//   }
 
    /** Retourne la rayon (en arcmin) associé à un champ décrit par la chaine s */
    static protected double getRM(String s) { return getRWM(s,0); }

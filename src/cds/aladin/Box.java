@@ -109,7 +109,7 @@ public class Box extends Forme {
       double b=90;
       o[0] = new Position(plan,null,0,0,c.al,c.del,RADE,null);
       double demiDia = Math.sqrt(w*w/4+h*h/4);
-      double a = Math.toDegrees( Math.atan2(h/2,w/2) );
+      double a = Math.toDegrees( Math.atan2(h,w) );
       Coord c1 = applySphereRot(c,demiDia,b+a+angle);
       o[1] = new Position(plan,null,0,0,c1.al,c1.del,RADE,null);
       c1 = applySphereRot(c,demiDia,b-a+angle);

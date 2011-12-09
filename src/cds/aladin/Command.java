@@ -1880,6 +1880,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    
    private boolean flagFoV=false;   // Une commande de création de FoV a été passée au préalable
    private Color globalColor=null;  // Dernière couleur demandée
+   private Plan oPlan=null;         // Dernier plan Tool ou FoV utilisé
    
   /** Execution d'une commande get */
    protected boolean execDrawCmd(String cmd,String param) {
@@ -1926,7 +1927,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( fct.equalsIgnoreCase("newtool") ) {
          String name=null;
          if( p.length>0 ) name=p[0];
-         plan = a.calque.createPlanTool(name);
+         oPlan=plan = a.calque.createPlanTool(name);
          if( globalColor!=null ) plan.c=globalColor;
          return true;
       }
@@ -1939,13 +1940,13 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                c=a.localisation.frameToICRS(c);
             } else {
                c = new Coord();
-               c.x = Double.valueOf(p[0]).doubleValue()-0.5;
-               c.y = height-Double.valueOf(p[1]).doubleValue()+0.5;
+               c.x = parseDouble(p[0])-0.5;
+               c.y = height-parseDouble(p[1])+0.5;
                a.view.getCurrentView().getProj().getCoord(c);
             }
-            double angle = p.length<3 ? 0 : Double.parseDouble(p[2]);
+            double angle = p.length<3 ? 0 : parseDouble(p[2]);
             String name = p.length>=4 ? p[3] : null;
-            plan = a.calque.createPlanField(name,c,angle,true,true);
+            oPlan=plan = a.calque.createPlanField(name,c,angle,true,true);
             if( globalColor!=null ) plan.c=globalColor;
             flagFoV=true;
             return true;
@@ -1957,7 +1958,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       
       // Determination du plan TOOL, ou creation si necessaire
-      plan = flagFoV ? a.calque.selectPlanToolOrFoV() : a.calque.selectPlanTool();
+      // On essaye de reprendre le précédent si possible
+      if( oPlan!=null && oPlan.type!=Plan.APERTURE && flagFoV ) oPlan=null; // Il faut passer à un plan FoV
+      if( oPlan!=null && a.calque.planToolOk(oPlan,flagFoV) ) plan=oPlan;   // On reprend le précédent
+      else plan = flagFoV ? a.calque.selectPlanToolOrFoV() : a.calque.selectPlanTool();
+      oPlan=plan;
       
       // Positionnement des variables globales au plan
       if( globalColor!=null ) {
@@ -1973,8 +1978,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             c = new Coord(p[0]+" "+p[1]);
             c=a.localisation.frameToICRS(c);
          } else {
-            x = Double.valueOf(p[0]).doubleValue()-0.5;
-            y = height-Double.valueOf(p[1]).doubleValue()+0.5;
+            x = parseDouble(p[0])-0.5;
+            y = height-parseDouble(p[1])+0.5;
          }
 
          // Commande string(x,y,text)
@@ -1991,10 +1996,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             if( drawMode==DRAWRADEC ) newobj = tag = new Tag(plan,c,id);
             else newobj = tag = new Tag(plan,a.view.getCurrentView(),x,y,id);
             try {
-               if( p.length>3 ) tag.setDist( Integer.parseInt(p[3]) );
-               if( p.length>4 ) tag.setAngle( (int)Double.parseDouble(p[4]) );
+               if( p.length>3 ) tag.setDist( (int)parseDouble(p[3]) );
+               if( p.length>4 ) tag.setAngle( (int)parseDouble(p[4]) );
                if( p.length>5 ) tag.setPole( p[5] );
-               if( p.length>6 ) tag.setFontSize( Integer.parseInt(p[6]) );
+               if( p.length>6 ) tag.setFontSize( (int)parseDouble(p[6]) );
             } catch( Exception e ) {
                toStdoutAndConsole("!!! draw tag error: usage: draw tag(x,y[,label,dist,angle,pole,fontSize])");
                return false;
@@ -2010,7 +2015,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   phot.setRadius( p[2] );
                } else {
                   newobj = phot = new Repere(plan,v,x,y);
-                  phot.setRayon( v,Double.parseDouble(p[2]) );
+                  phot.setRayon( v,parseDouble(p[2]) );
                }
             } catch( Exception e ) {
                toStdoutAndConsole("!!! draw phot error: usage: draw phot(x,y,radius)");
@@ -2021,73 +2026,73 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          } else if( fct.equalsIgnoreCase("circle") ) {
 
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUS)/60.;
+               double r = Server.getAngle(p[2],Server.RADIUSs)/60.;
                newobj = new Cercle(plan,c,r);
             } else {
-               double r = Double.valueOf(p[2]).doubleValue();
+               double r = parseDouble(p[2]);
                newobj = new Cercle(plan,a.view.getCurrentView(),x,y,r);
             }
 
             // Commande ellipse(x,y,semiMA,semiMI,angle)
          } else if( fct.equalsIgnoreCase("ellipse") ) {
-            double angle   = Double.valueOf(p[4]).doubleValue();
+            double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double semiMA = Server.getAngle(p[2],Server.RADIUS)/60.;
-               double semiMI = Server.getAngle(p[3],Server.RADIUS)/60.;
+               double semiMA = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double semiMI = Server.getAngle(p[3],Server.RADIUSs)/60.;
                newobj = new Ellipse(plan,c,semiMA,semiMI,angle);
             } else {
-               double semiMA = Double.valueOf(p[2]).doubleValue();
-               double semiMI = Double.valueOf(p[3]).doubleValue();
+               double semiMA = parseDouble(p[2]);
+               double semiMI = parseDouble(p[3]);
                newobj = new Ellipse(plan,a.view.getCurrentView(),x,y,semiMA,semiMI,angle);
             }
 
             // Commande box(x,y,w,h,angle)
          } else if( fct.equalsIgnoreCase("box") ) {
-            double angle   = Double.valueOf(p[4]).doubleValue();
+            double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUS)/60.;
-               double h = Server.getAngle(p[3],Server.RADIUS)/60.;
+               double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double h = Server.getAngle(p[3],Server.RADIUSs)/60.;
                newobj = new Box(plan,c,w,h,angle);
             } else {
-               double w = Double.valueOf(p[2]).doubleValue();
-               double h = Double.valueOf(p[3]).doubleValue();
+               double w = parseDouble(p[2]);
+               double h = parseDouble(p[3]);
                newobj = new Box(plan,a.view.getCurrentView(),x,y,w,h,angle);
             }
 
             // Commande vector(x,y,w,angle)
          } else if( fct.equalsIgnoreCase("vector") ) {
-            double angle = Double.valueOf(p[3]).doubleValue();
+            double angle = parseDouble(p[3]);
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUS)/60.;
+               double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
                newobj = new Vecteur(plan,c,w,angle);
             } else {
-               double w = Double.valueOf(p[2]).doubleValue();
+               double w = parseDouble(p[2]);
                newobj = new Vecteur(plan,a.view.getCurrentView(),x,y,w,angle);
             }
 
             // Commande arc(x,y,r,startAngle,endAngle)
          } else if( fct.equalsIgnoreCase("arc") ) {
-            double startAngle = Double.valueOf(p[3]).doubleValue();
-            double angle   = Double.valueOf(p[4]).doubleValue();
+            double startAngle = parseDouble(p[3]);
+            double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUS)/60.;
+               double r = Server.getAngle(p[2],Server.RADIUSs)/60.;
                newobj = new Arc(plan,c,r,startAngle,angle);
             } else {
-               double r = Double.valueOf(p[2]).doubleValue();
+               double r = parseDouble(p[2]);
                newobj = new Arc(plan,a.view.getCurrentView(),x,y,r,startAngle,angle);
             }
 
             // Commande pickle(x,y,r1,r2,startAngle,endAngle)
          } else if( fct.equalsIgnoreCase("pickle") ) {
-            double startAngle = Double.valueOf(p[4]).doubleValue();
-            double angle   = Double.valueOf(p[5]).doubleValue();
+            double startAngle = parseDouble(p[4]);
+            double angle   = parseDouble(p[5]);
             if( drawMode==DRAWRADEC ) {
-               double r1 = Server.getAngle(p[2],Server.RADIUS)/60.;
-               double r2 = Server.getAngle(p[3],Server.RADIUS)/60.;
+               double r1 = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double r2 = Server.getAngle(p[3],Server.RADIUSs)/60.;
                newobj = new Pickle(plan,c,r1,r2,startAngle,angle);
             } else {
-               double r1 = Double.valueOf(p[2]).doubleValue();
-               double r2 = Double.valueOf(p[3]).doubleValue();
+               double r1 = parseDouble(p[2]);
+               double r2 = parseDouble(p[3]);
                newobj = new Pickle(plan,a.view.getCurrentView(),x,y,r1,r2,startAngle,angle);
             }
 
@@ -2109,8 +2114,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   c=a.localisation.frameToICRS(c);
                   p1  = new Ligne(c.al,c.del, plan, v,id,op1);
                } else {
-                  x = Double.valueOf(p[i]).doubleValue()-0.5;
-                  y = height-Double.valueOf(p[i+1]).doubleValue()+0.5;
+                  x = parseDouble(p[i])-0.5;
+                  y = height-parseDouble(p[i+1])+0.5;
                   p1 = new Ligne(plan,v,x,y,id,op1);
                }
                addObj(plan,p1);
@@ -2133,8 +2138,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   c=a.localisation.frameToICRS(c);
                   p1  = new Cote(c.al,c.del, plan, v,op1);
                } else {
-                  x = Double.valueOf(p[i]).doubleValue()-0.5;
-                  y = height-Double.valueOf(p[i+1]).doubleValue()+0.5;
+                  x = parseDouble(p[i])-0.5;
+                  y = height-parseDouble(p[i+1])+0.5;
                   p1 = new Cote(plan,v,x,y,op1);
                }
                addObj(plan,p1);
@@ -2160,6 +2165,19 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       return true;
    }
    
+   // Parsing d'un double avec prise en compte d'un éventuel format
+   // en suffixe (à la IRAF, ex: 23.7686d)
+   // prend également en compte le signe '+' en préfixe
+   private double parseDouble(String s) throws Exception {
+      s = s.trim();
+      int fin;
+      for( fin=s.length()-1; fin>0 && !Character.isDigit(s.charAt(fin)); fin--);
+      int deb= s.length()>0 && s.charAt(0)=='+' ? 1 : 0;
+      return Double.parseDouble(s.substring(deb,fin+1));
+   }
+   
+   // Ajout d'un objet graphique => dans le cas d'un ajout dans un plan FoV (PlanField)
+   // Il est nécessaire de calculer également les (x,y) tangentiels
    private void addObj(Plan plan,Obj newobj) {
       plan.pcat.setObjetFast(newobj);
       
@@ -2170,10 +2188,9 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    
    private void memoGlobal(String [] p) {
       for( int i=0; i<p.length; i++ ) {
-         System.out.println("==> "+p[i]);
          if( p[i].startsWith("color=") ) {
             globalColor=Action.getColor(p[i].substring(6));
-            System.out.println("globalColor found="+p[i].substring(6)+" c="+globalColor);
+//            System.out.println("globalColor found="+p[i].substring(6)+" c="+globalColor);
          }
       }
    }
