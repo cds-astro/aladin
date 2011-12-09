@@ -237,23 +237,33 @@ public class BuilderIndex implements Progressive {
             try {
                int code = fitsfile.loadHeaderFITS(currentfile);
 
-               int width = fitsfile.width - borderSize[3];
-               int height = fitsfile.height - borderSize[2];
-
-               updateStat(file, code, width, height, Math.abs(fitsfile.bitpix) / 8);
 
                try {
-                  for( int x=borderSize[1]; x<width; x+=cellSize ) {
-                     for( int y=borderSize[0]; y<height; y+=cellSize ) {
-                        fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
-                        fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
-                        fitsfile.xCell=x;
-                        fitsfile.yCell=y;
-                        String currentCell = fitsfile.getCellSuffix();
-//                        fitsfile.initCenter(); // pour forcer le recalcul du center et des RAmin-max...
-                        testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
+                  
+                  // Test sur l'image entière (pas possible autrement)
+                  if( currentfile.endsWith(".hhh") ) {
+                     updateStat(file, code, fitsfile.width, fitsfile.height, Math.abs(fitsfile.bitpix) / 8);
+                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
+                     
+                  // Découpage en petits carrés
+                  } else {   
+                        int width = fitsfile.width - borderSize[3];
+                        int height = fitsfile.height - borderSize[2];
+
+                        updateStat(file, code, width, height, Math.abs(fitsfile.bitpix) / 8);
+                        
+                        for( int x=borderSize[1]; x<width; x+=cellSize ) {
+                          
+                           for( int y=borderSize[0]; y<height; y+=cellSize ) {
+                              fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
+                              fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
+                              fitsfile.xCell=x;
+                              fitsfile.yCell=y;
+                              String currentCell = fitsfile.getCellSuffix();
+                              testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
+                           }
+                        }
                      }
-                  }
                } catch (Exception e) {
                   if( Aladin.levelTrace>=3 ) e.printStackTrace();
                   return;
