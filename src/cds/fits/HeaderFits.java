@@ -62,7 +62,7 @@ public final class HeaderFits {
 
   /** Les elements de l'entete */
    protected Hashtable header;
-   protected Vector keysOrder;
+   protected Vector<String> keysOrder;
 
 
    /** La taille de l'entete FITS (en octets) */
@@ -293,15 +293,32 @@ public final class HeaderFits {
             
             // Dans le cas d'une entête DSS dans un fichier ".hhh" il ne faut pas retenir les mots
             // clés concernant l'astrométrie de la plaque entière
-            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
+//            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
                header.put(key, value);
                keysOrder.addElement(key);
-            }
+//            }
             if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
          }
          i=c+1;
       }
+      if( specialDSS ) purgeAMDifRequired();
+      
       return true;
+   }
+   
+   // HORRIBLE PATCH (Pierre)
+   // Dans le cas des entêtes .hhh associées aux imagettes DSS, il y a souvent deux calibrations, non compatibles
+   // dans ce cas, je supprime celle de la plaque et je ne garde que celle de l'imagette.
+   private void purgeAMDifRequired() {
+      if( header.get("CRPIX1")==null ) return; 
+      
+      System.err.println("*** Double calibration on DSS image => remove AMD/PLT one");
+      Vector<String> nKeysOrder = new Vector<String>();
+      for( String key : keysOrder ) {
+         if( key.startsWith("AMD") || key.startsWith("PLT") ) header.remove(key);
+         else nKeysOrder.addElement(key);
+      }
+      keysOrder = nKeysOrder;
    }
 
    /**

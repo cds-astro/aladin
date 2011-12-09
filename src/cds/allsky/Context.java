@@ -109,7 +109,7 @@ public class Context {
    public void setInputPath(String path) { this.inputPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
-   public void setImgEtalon(String filename) throws Exception { initFromImgEtalon(); imgEtalon = filename; }
+   public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZeroOrig = x; }
