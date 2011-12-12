@@ -28,6 +28,10 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.swing.JTextField;
 
 import cds.aladin.Hist.HistItem;
 import cds.tools.Util;
@@ -202,6 +206,7 @@ public class Position extends Obj {
 
 
    protected void setCoord(ViewSimple v) {
+      Coord c = new Coord();
       boolean ok=false;
 //      if( plan.type==Plan.TOOL && ((PlanTool)plan).lock() ) return;
 
@@ -228,6 +233,7 @@ public class Position extends Obj {
    }
 
    protected void setCoord(ViewSimple v,Projection proj) {
+      Coord c = new Coord();
       // J'affecte les coordonnees associees a (x,y)
       c.x=xv[v.n]; c.y=yv[v.n];
       proj.getCoord(c);
@@ -240,6 +246,7 @@ public class Position extends Obj {
     * @param proj
     */
    protected void setXY(Projection proj) {
+      Coord c = new Coord();
       c.al = raj; c.del = dej;
       proj.getXY(c);
       if( !Double.isNaN(c.x) ) {
@@ -269,7 +276,7 @@ public class Position extends Obj {
 
 
    // PEUT ETRE UN PEU DANGEREUX DE LA METTRE EN STATIC ?
-   static protected Coord c = new Coord();	// Pour eviter les new inutiles
+//   static protected Coord c = new Coord();	// Pour eviter les new inutiles
 
   /** Projection de la source => calcul (x,y).
    * @param proj la projection a utiliser
@@ -277,6 +284,7 @@ public class Position extends Obj {
    protected void projection(ViewSimple v) {
 
       Projection proj;
+      Coord c = new Coord();
       
       // S'il n'y a pas de calibration, on prend les x,y natifs
       if( (plan!=null && plan.hasXYorig) || !Projection.isOk(proj=v.getProj()) ) {
@@ -712,6 +720,5 @@ public class Position extends Obj {
           histOn();
        }
 //       status(plan.aladin);
-   }
-
+    }
 }

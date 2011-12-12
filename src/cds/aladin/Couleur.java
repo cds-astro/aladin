@@ -39,13 +39,14 @@ import javax.swing.JComponent;
  * @version 0.9 : (??) creation
  */
 public final class Couleur extends JComponent implements MouseListener {
-   static final int W   =  25; // Taille d'un carre de selection de couleur (marge comprise)
+   static final int W   =  20; // Taille d'un carre de selection de couleur (marge comprise)
    static final int GAP = 4;   // Marge entre deux carres de selection de couleur
    int w   = W-GAP;             // Taille reelle d'un carre
    static int iDC = 0;         // indice de la prochaine couleur si aucune vide
    
    int ww = W;
    int gap = GAP;
+   private boolean noColor=false;   // true s'il est possible de choisir une "non couleur"
    
    // Les couleurs gerees (doivent necessairement etre en nombre pair)
    static final int NBDEFAULTCOLORS = 22;
@@ -77,6 +78,7 @@ public final class Couleur extends JComponent implements MouseListener {
    };
    
    Color[] dc;
+   Rectangle [] dcRect;
    int row;
    int current=-1;             // Couleur courante du selecteur
    boolean first;              // true si on affiche pour la premiere fois le selecteur
@@ -95,11 +97,13 @@ public final class Couleur extends JComponent implements MouseListener {
    * Color.green,Color.black,Color.white
    *
    * @param c la couleur courante (ex: Color.red...)
+   * @param flagNoColor Utilise le dernier carré de couleur comme "no color"
    */
-   protected Couleur(Color c) {
-       dc = DC;
-      if( c!=null ) setCouleur(c);
-//      resize( (dc.length/2)*W,2*W);
+   protected Couleur(Color c) { this(c,false); }
+   protected Couleur(Color c,boolean flagNoColor) {
+      dc = DC;
+      noColor=flagNoColor;
+      setCouleur(c);
       DIM = new Dimension( (dc.length/2)*W,2*W);
       first=true;
       row=dc.length/2;
@@ -139,7 +143,7 @@ public final class Couleur extends JComponent implements MouseListener {
    */
    protected Couleur(Color c, int width, int gap) {
        dc=DC;
-       if( c!=null ) setCouleur(c);
+       setCouleur(c);
        if (width>gap) {
          this.ww = width;
          this.gap = gap;
@@ -171,7 +175,7 @@ public final class Couleur extends JComponent implements MouseListener {
        
        row=dc.length/2;
        
-       if( c!=null ) setCouleur(c);
+       setCouleur(c);
        if (width>gap) {
          this.ww = width;
          this.gap = gap;
@@ -202,7 +206,7 @@ public final class Couleur extends JComponent implements MouseListener {
        
        row=dc.length/2;
        
-       if( c!=null ) setCouleur(c);
+       setCouleur(c);
        if (width>gap) {
          this.ww = width;
          this.gap = gap;
@@ -214,6 +218,13 @@ public final class Couleur extends JComponent implements MouseListener {
        first=true;
        addMouseListener(this);
     }
+   
+   /** Positionne le flag "nocolor". Si celui-ci est à true, 
+    * le widget ajoute une case "Nocolor" qui permettra à l'utilisateur
+    * de ne pas choisir de couleur, par exemple pour prendre celle par défaut
+    * @param flag
+    */
+   protected void setNoColorFlag(boolean flag) { noColor=flag; }
     
 
   /** Retourne la prochaine couleur par defaut.
@@ -257,6 +268,11 @@ public final class Couleur extends JComponent implements MouseListener {
    * see aladin.Couleur(java.awt.color)
    */
    protected boolean setCouleur( Color c ) {
+      if( noColor && c==null ) {
+         current = dc.length-1;
+         return true;
+      }
+      
       for( int i=0; i<dc.length; i++ ) {
          if( c.equals(dc[i]) ) {
             current=i;
@@ -267,11 +283,11 @@ public final class Couleur extends JComponent implements MouseListener {
       return false;
    }
 
-  /** Retourne la couleur courante.
+  /** Retourne la couleur courante ou null si aucune sélectionnée
    * @return la couleur courante du selecteur de couleur
    */
    protected Color getCouleur() {
-      if( current== -1 ) return null;
+      if( current== -1 || noColor && current==dc.length-1 ) return null;
       return dc[current];
    }
    
@@ -279,13 +295,17 @@ public final class Couleur extends JComponent implements MouseListener {
    static protected Color getCouleur(int i) {
       return DC[i%DC.length];
    }
+   
+   private int getIndice(int x,int y) {
+      if( dcRect==null ) return -1;
+      Point p = new Point(x,y);
+      for( int i=0; i<dcRect.length; i++ ) if( dcRect[i].contains(p) ) return i;
+      return -1;
+   }
 
   /** Gestion de la souris liee au selecteur de couleur */
    public void mousePressed(MouseEvent e) {
-      int x = e.getX();
-      int y = e.getY();
-      y--;x--;
-      int current = (y/ww)*row +(x/ww);
+      int current = getIndice(e.getX(),e.getY());
       if( this.current!=current) {
          this.current=current;
          if( listener!=null ) listener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, ""));
@@ -311,29 +331,39 @@ public final class Couleur extends JComponent implements MouseListener {
       // On remplit sur deux rangees des petits carres avec les couleurs
       // selectionnables. La couleur courante est repere par une ombre
       // inverse laissant croire que le carre est enfonce
-      
-      
-        for( j=0; j<2; j++ ) {
-           for( i=0; i<row; i++ ) {
-              k = j*row+i;                // Indice de la couleur
-              int x=i*ww;
-              int y=j*ww;
-              g.setColor( dc[k] );
-              g.fillRect(x,y,w,w);
 
-              // Trace des bordures
-              if( k!=current ) { c1=Color.white; c2=Color.black; }
-              else { c2=Color.white; c1=Color.black; }
+      for( j=0; j<2; j++ ) {
+         for( i=0; i<row; i++ ) {
+            k = j*row+i;                // Indice de la couleur
+            if( dcRect==null ) dcRect = new Rectangle[ dc.length ];
+            if( dcRect[k]==null ) dcRect[k] = new Rectangle(i*ww,j*ww,w,w);
+            
+            boolean onNoColor = noColor && k==dc.length-1;
+            g.setColor( onNoColor ? Color.white : dc[k] );
+            g.fillRect( dcRect[k].x,dcRect[k].y,dcRect[k].width,dcRect[k].height );
 
-              g.setColor(c1);
-              g.drawLine(x,y+w,x,y); g.drawLine(x,y,x+w,y);
-              g.setColor(c2);
-              g.drawLine(x+w,y,x+w,y+w); g.drawLine(x+w,y+w,x,y+w);
-           }
-        }
-      
-      
+            // Trace des bordures
+            if( k!=current ) { c1=Color.white; c2=Color.black; }
+            else { c2=Color.white; c1=Color.black; }
+
+            g.setColor(c1);
+            g.drawLine(dcRect[k].x,dcRect[k].y+dcRect[k].height,dcRect[k].x,dcRect[k].y);
+            g.drawLine(dcRect[k].x,dcRect[k].y,dcRect[k].x+dcRect[k].width,dcRect[k].y);
+            g.setColor(c2);
+            g.drawLine(dcRect[k].x+w,dcRect[k].y,dcRect[k].x+dcRect[k].width,dcRect[k].y+dcRect[k].height); 
+            g.drawLine(dcRect[k].x+w,dcRect[k].y+dcRect[k].height,dcRect[k].x,dcRect[k].y+dcRect[k].height);
+            
+            // Tracé du dernier carré en tant que "no color"
+            if( onNoColor ) {
+               g.setColor(Color.black);
+               g.drawLine(dcRect[k].x,dcRect[k].y,dcRect[k].x+dcRect[k].width,dcRect[k].y+dcRect[k].height);
+               g.drawLine(dcRect[k].x,dcRect[k].y+dcRect[k].height,dcRect[k].x+dcRect[k].width,dcRect[k].y);
+            }
+         }
+      }
    }
+   
+   
    
    /** getBrighterColors
     *  @param c  - la couleur de base

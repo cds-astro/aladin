@@ -21,11 +21,28 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.tools.Util;
 
 /**
@@ -118,6 +135,156 @@ public final class Tag extends Position {
       t.distAngulaireOrig=distAngulaireOrig;
       return t;
    }
+   
+   public Vector getProp() {
+      Vector propList = super.getProp();
+      Prop.remove(propList,"id");
+      
+      final JTextField textAngle = new JTextField( 10 );
+      final PropAction updateAngle = new PropAction() {
+         public int action() { textAngle.setText( ""+(360- (int)Math.round(Math.toDegrees(angle))) ); return PropAction.SUCCESS; }
+      };
+      PropAction changeAngle = new PropAction() {
+         public int action() { 
+            try { 
+               textAngle.setForeground(Color.black);
+               int nangle = Integer.parseInt( textAngle.getText() );
+               if( nangle==360-(int)Math.round(Math.toDegrees(angle)) ) return PropAction.NOTHING;
+               angle=Math.toRadians(360-nangle);
+               return PropAction.SUCCESS;
+            } catch( Exception e) {
+               updateAngle.action();
+               textAngle.setForeground(Color.red);
+               return PropAction.FAILED;
+            }
+         }
+      };
+      propList.add(Prop.propFactory("angle","Angle","Pole orientation (in degrees - trigonometric orientation)",textAngle,updateAngle,changeAngle));
+
+      final JTextField textDist = new JTextField( 10 );
+      final PropAction updateDist = new PropAction() {
+         public int action() { textDist.setText( ""+(int)dist ); return PropAction.SUCCESS; }
+      };
+      PropAction changeDist = new PropAction() {
+         public int action() { 
+            try { 
+               textDist.setForeground(Color.black);
+               int ndist = Integer.parseInt( textDist.getText() );
+               if( ndist==(int)dist ) return PropAction.NOTHING;
+               dist=ndist;
+               return PropAction.SUCCESS;
+            } catch( Exception e) {
+               updateDist.action();
+               textDist.setForeground(Color.red);
+               return PropAction.FAILED;
+            }
+         }
+      };
+      propList.add(Prop.propFactory("dist","Pole size","Pole size (in pixels)",textDist,updateDist,changeDist));
+
+      final JComboBox pole =  new JComboBox(TAGS);
+      final PropAction updatePole = new PropAction() {
+         public int action() { pole.setSelectedIndex(tag); return PropAction.SUCCESS; }
+      };
+      final PropAction changePole = new PropAction() {
+         public int action() {
+            int npole = pole.getSelectedIndex();
+            if( tag==npole ) return PropAction.NOTHING;
+            tag=npole;
+            return PropAction.SUCCESS;
+         }
+      };
+      pole.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changePole.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("tag","Arrow head","Alternative arrow head",pole,updatePole,changePole) );
+
+      final JTextField textSize = new JTextField( 10 );
+      final PropAction updateSize = new PropAction() {
+         public int action() { textSize.setText( F.getSize()+"" ); return PropAction.SUCCESS; }
+      };
+      PropAction changeSize = new PropAction() {
+         public int action() { 
+            try { 
+               textSize.setForeground(Color.black);
+               float nsize = Float.parseFloat( textSize.getText() );
+               if( nsize==F.getSize() ) return PropAction.NOTHING;
+               F=F.deriveFont(nsize);
+               return PropAction.SUCCESS;
+            } catch( Exception e) {
+               updateSize.action();
+               textSize.setForeground(Color.red);
+               return PropAction.FAILED;
+            }
+         }
+      };
+      propList.add(Prop.propFactory("fontsize","Font size",null,textSize,updateSize,changeSize));
+     
+      final Couleur col = new Couleur(couleur,true);
+      final PropAction changeCouleur = new PropAction() {
+         public int action() { 
+            Color c= col.getCouleur();
+            if( c==couleur ) return PropAction.NOTHING;
+            couleur=c;
+            return PropAction.SUCCESS;
+         }
+      };
+      col.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeCouleur.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      
+      final JTextArea textId = new JTextArea( 3,25 );
+      JScrollPane paneId = new JScrollPane(textId);
+      final PropAction updateId = new PropAction() {
+         public int action() { textId.setText( id ); return PropAction.SUCCESS; }
+      };
+      final PropAction changeId = new PropAction() {
+         public int action() { 
+            String s = textId.getText();
+            if( s.equals(id) ) return PropAction.NOTHING;
+            id=textId.getText();
+            return PropAction.SUCCESS;
+         }
+      };
+      propList.add(Prop.propFactory("id","Label","Tag label",paneId,updateId,changeId));
+
+      final JCheckBox bordCheck =  new JCheckBox("with border");
+      final PropAction updateBord = new PropAction() {
+         public int action() { bordCheck.setSelected(bord==1); return PropAction.SUCCESS; }
+      };
+      final PropAction changeBord = new PropAction() {
+         public int action() {
+            if( bordCheck.isSelected()== (bord==1) ) return PropAction.NOTHING;
+            bord = bordCheck.isSelected() ? 1 : 0;
+            return PropAction.SUCCESS;
+         }
+      };
+      bordCheck.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeBord.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("border","Label border",null,bordCheck,updateBord,changeBord) );
+
+      final JSlider transSlider =  new JSlider();
+      final PropAction updateTrans = new PropAction() {
+         public int action() { transSlider.setValue((int)(fond*100)); return PropAction.SUCCESS; }
+      };
+      final PropAction changeTrans = new PropAction() {
+         public int action() {
+            if( transSlider.getValue()==(int)(fond*100) ) return PropAction.NOTHING;
+            fond = (float)(transSlider.getValue()/100.);
+            return PropAction.SUCCESS;
+         }
+      };
+      transSlider.addMouseMotionListener( new MouseMotionListener() {
+         public void mouseMoved(MouseEvent e) { }
+         public void mouseDragged(MouseEvent e) { changeTrans.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("background","Label background",null,transSlider,updateTrans,changeTrans) );
+
+      return propList;
+   }
+
    
    public String getCommand() {
       return "draw tag("+getLocalisation()+","+Tok.quote(id)+","+Math.round(dist)+","
@@ -267,11 +434,16 @@ public final class Tag extends Position {
       return rect2.contains(x,y);
    }
    
+   static final private int T=4;
+   private Rectangle larger(Rectangle r) {
+      return new Rectangle( r.x-T, r.y-T, r.width+2*T, r.height+2*T);
+   }
+   
    /** Retourne true si x,y (coordonnées image) se trouve sur le tag */
    protected boolean onTag(ViewSimple v,double x, double y) {
       x = (x-xv[v.n])*v.zoom;
       y = (y-yv[v.n])*v.zoom;
-      return rect1.contains(x,y);
+      return larger(rect1).contains(x,y);
    }
    
    /** Retourne true si x,y (coordonnées image) se trouve sur le coin */
@@ -286,8 +458,8 @@ public final class Tag extends Position {
     * qui peut être modifiable par la molette de la souris. Si c'est le cas, mémorise
     * l'élément en question dans "on", et retourne true */
    protected boolean onViaWheel(ViewSimple v,double x, double y) {
-      if( onTag(v,x,y ) ) on = TAG;
-      else if( onLabel(v,x,y) )on = LABEL;
+      if( onLabel(v,x,y) )on = LABEL;
+      else if( onTag(v,x,y ) ) on = TAG;
       else on = NOTHING;
       return on!=NOTHING;
    }

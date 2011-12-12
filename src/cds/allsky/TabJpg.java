@@ -31,9 +31,9 @@ import cds.aladin.Chaine;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
-import cds.aladin.Properties;
 import cds.aladin.Tool;
 import cds.aladin.ToolBox;
+import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
 public class TabJpg extends JPanel implements ActionListener {
@@ -238,10 +238,10 @@ public class TabJpg extends JPanel implements ActionListener {
       JPanel p = new JPanel(g);
 
       tileStat = new JLabel("--");
-      Properties.addCouple(p, ".Jpeg tiles: ", tileStat, g, c);           
+      PropPanel.addCouple(p, ".Jpeg tiles: ", tileStat, g, c);           
 
       timeStat = new JLabel("--");
-      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
+      PropPanel.addCouple(p, ".Time: ", timeStat, g, c);           
 
       return p;
    }

@@ -20,6 +20,7 @@
 
 package cds.aladin;
 
+import cds.aladin.prop.PropPanel;
 import cds.tools.*;
 
 import java.awt.*;
@@ -233,7 +234,6 @@ public final class Configuration extends JFrame
       Util.setCloseShortcut(this, false,aladin);
       prop = new Vector(10);
       flagModif = false;
-      
    }
 
    /** Construction du panel des boutons de validation
@@ -971,7 +971,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          b.setMargin( new Insets(2,4,2,4));
          panel.add(b,BorderLayout.EAST);
       }
-      Properties.addCouple(this, p, l, LANGUEH, panel, g, c, GridBagConstraints.EAST);           
+      PropPanel.addCouple(this, p, l, LANGUEH, panel, g, c, GridBagConstraints.EAST);           
       
       addRemoteLanguage();
       
@@ -983,7 +983,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       modeChoice.addItem(PREVIEW);
       (l = new JLabel(MODE)).setFont(l.getFont().deriveFont(Font.BOLD));
       if( !aladin.setOUTREACH ) {
-         Properties.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);           
+         PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);           
       }
       
       // Le Répertoire par défaut
@@ -995,7 +995,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       panel = new JPanel(new BorderLayout(5,5));
       panel.add(dir,BorderLayout.CENTER);
       panel.add(b,BorderLayout.EAST);
-      Properties.addCouple(this, p, l,DEFDIRH, panel, g, c, GridBagConstraints.EAST);
+      PropPanel.addCouple(this, p, l,DEFDIRH, panel, g, c, GridBagConstraints.EAST);
       
       // Le frame
       frameChoice = aladin.localisation.createChoice();
@@ -1004,7 +1004,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(frameChoice);
       if( !aladin.OUTREACH ) {
-         Properties.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
       }
       
       // Le mode pixel
@@ -1024,7 +1024,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          panel.add(new JLabel("- "+CMC,JLabel.LEFT)); panel.add(cutChoice);
          panel.add(new JLabel("  - "+CMF,JLabel.LEFT)); panel.add(fctChoice);
          (l = new JLabel(CMB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         Properties.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, CMH, panel, g, c, GridBagConstraints.EAST);
       }
 
 //      csvChoice = new JComboBox();
@@ -1040,7 +1040,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       filterChoice.addItem(ACTIVATED);
       if( !aladin.OUTREACH ) {
          (l = new JLabel(FILTERB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         Properties.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, FILTERH, filterChoice, g, c, GridBagConstraints.EAST);
       }
 
       // Transparence des footprints
@@ -1063,7 +1063,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
 
       if( !aladin.OUTREACH ) {
          (l = new JLabel(TRANSB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         Properties.addCouple(this, p, l, TRANSH, transparencyPanel, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, TRANSH, transparencyPanel, g, c, GridBagConstraints.EAST);
 
 //         // Les centrage des tags
 //         (l = new JLabel(TAGCENTER)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1075,10 +1075,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // Le Web Browser
       if( isUnixStandalone() && !aladin.OUTREACH ) {
-         Properties.addFilet(p, g, c);
+         PropPanel.addFilet(p, g, c);
          browser = new JTextField(30);
          (l = new JLabel(WEBB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         Properties.addCouple(this, p, l, WEBH, browser, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, WEBH, browser, g, c, GridBagConstraints.EAST);
       }
       
       // Le survey par défaut
@@ -1089,7 +1089,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          p1.add(new JLabel(IMGS,JLabel.LEFT)); p1.add(serverTxt);
          p1.add(new JLabel(IMGC,JLabel.LEFT)); p1.add(surveyTxt);
          (l = new JLabel(IMGB)).setFont(l.getFont().deriveFont(Font.BOLD));
-         Properties.addCouple(this, p, l, IMGH, p1, g, c,GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, IMGH, p1, g, c,GridBagConstraints.EAST);
       }
 
       // Le GLU
@@ -1105,7 +1105,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          b.setMargin( new Insets(2,4,2,4));
          b.addActionListener(this);
          panel.add(b,BorderLayout.EAST);
-         Properties.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
 
          // Les logs
          if( Aladin.LOG ) {
@@ -1113,7 +1113,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             logChoice = new JComboBox();
             logChoice.addItem(ACTIVATED);
             logChoice.addItem(NOTACTIVATED);
-            Properties.addCouple(this, p, l, LOGH, logChoice, g, c, GridBagConstraints.EAST);
+            PropPanel.addCouple(this, p, l, LOGH, logChoice, g, c, GridBagConstraints.EAST);
          }
 
          // Le cache
@@ -1125,7 +1125,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          b=new JButton(CLEARCACHE); b.addActionListener(this);
          b.setMargin( new Insets(2,4,2,4));
          panel.add( b );
-         Properties.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
 }
 
       return p;

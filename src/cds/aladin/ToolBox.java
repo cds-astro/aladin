@@ -388,7 +388,11 @@ public final class ToolBox extends JComponent implements
 
       switch(i) {
          case PROP :
-            aladin.calque.select.propertiesOfSelectedPlanes();
+            // Propriétés sur un objet sélectionné
+            if( aladin.view.isPropObjet() ) aladin.view.propSelectedObj();
+            
+            // sinon sur le ou les plans sélectionnés
+            else aladin.calque.select.propertiesOfSelectedPlanes();
             break;
         case HIST :
            aladin.updatePixel();

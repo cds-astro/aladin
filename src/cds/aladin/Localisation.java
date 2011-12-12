@@ -550,7 +550,7 @@ public final class Localisation extends MyBox {
    }
    
    /** Localisation de la source en fonction du frame courant */
-   protected String getLocalisation(Position o) {
+   protected String getLocalisation(Obj o) {
       String s="";
       switch( getFrame() ) {
 //         case XY:
@@ -562,7 +562,7 @@ public final class Localisation extends MyBox {
          case XY:
             ViewSimple v = aladin.view.getCurrentView();
             Projection proj = v.getProj();
-            Coord c = new Coord(o.raj,o.dej);
+            Coord c = new Coord(o.getRa(),o.getDec());
             proj.getXY(c);
             double x = c.x;
             double y = c.y;
@@ -571,7 +571,7 @@ public final class Localisation extends MyBox {
                +" "+Util.myRound(""+(((PlanImage)plan).naxis2-(y-0.5)),2);
             else s=null;
             break;
-         default : s = s+ J2000ToString(o.raj,o.dej);
+         default : s = s+ J2000ToString(o.getRa(),o.getDec());
       }
       return s;
    }

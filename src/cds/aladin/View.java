@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 
+import cds.aladin.prop.Propable;
 import cds.tools.UrlLoader;
 import cds.tools.Util;
 
@@ -2020,11 +2021,36 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       return sources;
    }
+   
+   private Propable getLastPropableObj() {
+      Obj rep=null;
+      Enumeration<Obj> e = vselobj.elements();
+      while( e.hasMoreElements() ) {
+         Obj obj = e.nextElement();
+         if( obj.hasProp() ) rep=obj;
+      }
+      return rep;
+   }
+   
+   /** Indique s'il y a au-moins à objet sélectionné susceptible d'avoir des propriétés */
+    protected boolean isPropObjet() { return selectFromView && getLastPropableObj()!=null; }
+    
+    protected void propResume() { 
+       if( aladin.frameProp==null ) return;
+       aladin.frameProp.resume(); 
+    }
+    protected void propSelectedObj() {
+       Propable obj = getLastPropableObj();
+       if( obj==null ) return;
+       if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,obj);
+       else aladin.frameProp.updateAndShow(obj);
+    }
 
   /** Indique s'il y a au-moins une suppression effective a faire
    * @return <I>true</I> s'il y a des objets a supprimer, <I>false</I> sinon
    */
    protected boolean isDelSelObjet() {
+      if( !selectFromView ) return false;
       Enumeration<Obj> e = vselobj.elements();
 
       while( e.hasMoreElements() ) {
@@ -4090,8 +4116,11 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
     * de chaque vue. Cela dit, c'est le seul moyen que j'ai trouvé qui semble
     * fonctionner correctement.
     */
-   public void repaintAll()      { repaintAll1(0); }
-   public void updateAll()       {
+   public void repaintAll()      {
+      propResume();
+      repaintAll1(0);
+   }
+   public void updateAll() {
       if( aladin.isFullScreen() ) { aladin.fullScreen.repaint(); return; }
       repaintAll1(2);
    }

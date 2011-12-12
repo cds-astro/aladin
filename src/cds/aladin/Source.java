@@ -118,6 +118,8 @@ public class Source extends Position implements Comparator {
       fixInfo();
 
    }
+   
+   public boolean hasProp() { return false; }
 
    /** Projection de la source => calcul (x,y).
     * @param proj la projection a utiliser

@@ -50,7 +50,7 @@ import javax.swing.table.AbstractTableModel;
 import org.w3c.dom.views.AbstractView;
 
 import cds.aladin.Aladin;
-import cds.aladin.Properties;
+import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
 /**
@@ -156,7 +156,7 @@ public class FrameGlu extends JFrame implements KeyListener {
          f.addKeyListener(this);
          f.setMinimumSize(new Dimension(300, f.getMinimumSize().height));
          f.setPreferredSize(new Dimension(300, f.getPreferredSize().height));
-         Properties.addCouple(this, panel, l, glup[INFO], f, g, c, GridBagConstraints.EAST);
+         PropPanel.addCouple(this, panel, l, glup[INFO], f, g, c, GridBagConstraints.EAST);
       }
 
       return panel;

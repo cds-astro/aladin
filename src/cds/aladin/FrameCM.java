@@ -29,6 +29,7 @@ import java.util.*;
 
 import javax.swing.*;
 
+import cds.aladin.prop.Filet;
 import cds.tools.Util;
 
 

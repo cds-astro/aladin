@@ -18,7 +18,7 @@
 //
 
 
-package cds.aladin;
+package cds.aladin.prop;
 
 import java.awt.*;
 
@@ -40,12 +40,12 @@ public final class Filet extends JComponent {
   /** Creation d'un filet.
    * Mode par defaut : 5 pixels de haut
    */
-   protected Filet() { this(5,1); }
+   public Filet() { this(5,1); }
 
   /** Creation d'un filet.
    * @param h la hauteur du filet en pixels
    */
-   protected Filet(int h) { this(h,1); }
+   public Filet(int h) { this(h,1); }
    
    
    public Dimension getPreferredSize() { return new Dimension(w,h); }
@@ -54,12 +54,10 @@ public final class Filet extends JComponent {
    * @param h la hauteur du filet en pixels
    * @param type <I>1</I> pour une ligne, <I>0</I> pour du blanc
    */
-   protected Filet(int h,int type) {
+   public Filet(int h,int type) {
       this.type = type;
       this.h=h;
    }
-
-//   public void update(Graphics g) { paint(g); }
 
    public void paintComponent(Graphics g) {
       super.paintComponent(g);

@@ -39,6 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
 /**
@@ -137,7 +138,7 @@ protected void createChaine() {
       JPanel p=new JPanel();
       p.setLayout(g);
       
-      Properties.addFilet(p, g, c, 15,0);
+      PropPanel.addFilet(p, g, c, 15,0);
       
       c.anchor=GridBagConstraints.EAST;
       JRadioButton r = gaussian = new JRadioButton(GAUSSIAN,true);
@@ -202,7 +203,7 @@ protected void createChaine() {
       g.setConstraints(pp,c);
       p.add(pp);
       
-      Properties.addFilet(p, g, c, 10, 0);
+      PropPanel.addFilet(p, g, c, 10, 0);
       
       c.anchor=GridBagConstraints.EAST;
       r = kernels = new JRadioButton(KERNEL);
@@ -223,7 +224,7 @@ protected void createChaine() {
       g.setConstraints(comboKernel,c);
       p.add(comboKernel);
       
-      Properties.addFilet(p, g, c, 15, 0);
+      PropPanel.addFilet(p, g, c, 15, 0);
       
      return p;
    }

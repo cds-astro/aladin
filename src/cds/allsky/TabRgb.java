@@ -35,7 +35,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Chaine;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
-import cds.aladin.Properties;
+import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
 public class TabRgb extends JPanel implements ActionListener {
@@ -255,10 +255,10 @@ public class TabRgb extends JPanel implements ActionListener {
 	      JPanel p = new JPanel(g);
 
 	      tileStat = new JLabel("--");
-	      Properties.addCouple(p, ".RGB tiles: ", tileStat, g, c);           
+	      PropPanel.addCouple(p, ".RGB tiles: ", tileStat, g, c);           
 
 	      timeStat = new JLabel("--");
-	      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
+	      PropPanel.addCouple(p, ".Time: ", timeStat, g, c);           
 
 	      return p;
 	   }

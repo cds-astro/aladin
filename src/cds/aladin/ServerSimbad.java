@@ -28,6 +28,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import cds.aladin.prop.Filet;
+
 /**
  * Le formulaire d'interrogation de Simbad
  *

@@ -78,10 +78,10 @@ import cds.xml.XMLParser;
  * @beta    <LI> Overlay color map tool (for pixels or rainbow filter function)
  * @beta    <LI> Colored FITS cubes support (COLORMOD = ARGB)
  * @beta    <LI> Healpix allsky new features:<UL>
- * @beta       <LI> Progressive catalogue density control
- * @beta       <LI> Better performances (required RAM reduced, faster display)
- * @beta       <LI> Rhomb time loading has been reduced
- * @beta       <LI> Healpix Multi-Order Coverage Map support (TXT and FITS (NUNIQ-compressed) )
+ * @beta       <LI> Progressive catalogue density control 
+ * @beta       <LI> Better performances (required RAM reduced, faster display) 
+ * @beta       <LI> Rhomb time loading has been reduced 
+ * @beta       <LI> Healpix Multi-Order Coverage Map support (TXT and FITS (NUNIQ-compressed) ) 
  * @beta       <LI> Build your own sky facility
  * @beta       <LI> HTTP URL direct access
  * @beta       <LI> Crop full resolution has been improved (bilinear, faster) </UL>
@@ -263,11 +263,11 @@ public class Aladin extends JApplet
 
     // Limite image en full access
     static final long LIMIT_HUGEFILE = Runtime.getRuntime().maxMemory()/3;
-
+    
     static long MAXMEM = Runtime.getRuntime().maxMemory()/(1024*1024);
-
+    
     // Marge limite en MO pour le chargement des cubes en RAM.
-    // Il faut au-moins 500Mo de disponible pour une telle stratégie
+    // Il faut au-moins 500Mo de disponible pour une telle stratégie 
     static int MARGERAM = !PROTO ? 20000 : MAXMEM>500 ? 150 : 500;
 
     // Le nom du dico GLU specifique a Aladin
@@ -276,7 +276,7 @@ public class Aladin extends JApplet
     // Caractères (éventuellement plusieurs) utilisés comme séparateur
     // de colonne pour les tables CSV
     protected String CSVCHAR = "\t";
-
+    
     // True si par défaut l'outil Tag doit centrer sur l'objet le plus proche
     protected boolean CENTEREDTAG = false;
 
@@ -345,6 +345,7 @@ public class Aladin extends JApplet
     FrameInfoServer frameInfoServer; // Gère la fenêtre des infos sur un serveur
     FrameMacro frameMacro;        // Gere la fenetre des Macros
     FrameVOTool frameVOTool;      // Gère les applications VO accessibles par Aladin
+    protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
     public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
     public Console console;                  // Gere la fenetre de la console
     Command command=null;	      // Gere les commandes asynchrones
@@ -547,7 +548,7 @@ public class Aladin extends JApplet
           // Mode trace++ (pour aider au debogage)
           trace = getParameter("-debug");
           if( trace!=null ) levelTrace=4;
-
+          
           // désactivation du lancement automatique du hub interne
           try { if( getParameter("-nohub")!=null ) NOHUB = true; } catch(Exception e) {}
 
@@ -1295,7 +1296,7 @@ public class Aladin extends JApplet
              }
           });
           jBar.add(b);
-
+          
           jBar.add(javax.swing.Box.createGlue());
        }
 
@@ -1731,7 +1732,7 @@ public class Aladin extends JApplet
        ENABLE_FOOTPRINT_OPACITY = configuration.isTransparent();
        DEFAULT_FOOTPRINT_OPACITY_LEVEL = configuration.getTransparencyLevel();
        if( configuration.isBeginner() && !flagScreen ) { SCREEN="preview"; flagScreen=true; }
-
+       
        if( kernelList==null ) kernelList = new KernelList(this);
        if( chaine==null ) chaine = new Chaine(this);
        creatChaine();
@@ -1784,7 +1785,7 @@ public class Aladin extends JApplet
        // Initialisation des objets
        // Rq:  L'ordre de creation des objets n'est pas qcq
        creatFonts();
-
+       
        cache = new Cache(aladin);
        bookmarks = new Bookmarks(this);
        co = new CreatObj(this);
@@ -2026,7 +2027,7 @@ public class Aladin extends JApplet
           warningRestricted = true;
           warning(chaine.getString("RESTRICTED"));
        }
-
+       
        manageDrop();
 
        if( !aladin.NOGUI ) {
@@ -2039,7 +2040,7 @@ public class Aladin extends JApplet
           }).start();
        }
     }
-
+    
     protected void manageDrop() {
        // IL Y A UN GROS BUG SOUS LINUX QUI FAIT QUE LA JVM DU BROWSER SE PLANTE ET
        // PLANTE LE BROWSER LORSQUE L'ON FAIT UN DETACH() SI LA FRAME EST DRAG&DROP
@@ -2051,7 +2052,7 @@ public class Aladin extends JApplet
                 this, DnDConstants.ACTION_COPY_OR_MOVE, this);
        }
     }
-
+    
     // Surcharges de classes pour supprimer le trait séparateur du JSplitPane
     class MySplitPane extends JSplitPane {
        public MySplitPane(int newOrientation, boolean newContinuousLayout,
@@ -2060,21 +2061,21 @@ public class Aladin extends JApplet
           flagMesure = newOrientation==JSplitPane.VERTICAL_SPLIT;
           setUI(new MyBasicSplitPaneUI());
        }
-
+       
        private boolean flagMesure;
        private int mesureHeight;
-
+       
        // Repositionne le diviseur à la position mémorisée
        public void restoreMesureHeight() {
           setDividerLocation(getHeight()-(mesureHeight<=0 ? 150 : mesureHeight)); }
-
+       
        // Positionne le diviseur en fonction de la taille de la fenêtre des mesures,
-       // et mémorise cette valeur pour pouvoir y revenir
+       // et mémorise cette valeur pour pouvoir y revenir 
        public void setMesureHeight(int h) { mesureHeight=h; }
-
+       
        // Retourne la taille de la fenêtre des mesures.
        public int getMesureHeight() { return mesureHeight; }
-
+       
        // On bride à 55 pixels minimum pour la taille de la fenêtre des mesures
        public void setDividerLocation(int n) {
           if( flagMesure ) {
@@ -2084,7 +2085,7 @@ public class Aladin extends JApplet
           }
           super.setDividerLocation(n);
        }
-
+       
     }
     class MyBasicSplitPaneUI extends BasicSplitPaneUI {
        @Override
@@ -2265,7 +2266,7 @@ public class Aladin extends JApplet
        }
        return dir;
     }
-
+    
     public Glu getGlu() { return glu; }
     public Cache getCache() { return cache; }
     public Command getCommand() { return command; }
@@ -2350,15 +2351,15 @@ public class Aladin extends JApplet
           cache.clear();
        }
     }
-
+   
    /** Vérifie s'il est nécessaire de demander à l'utilisateur l'installation
     * de la nouvelle version */
    private void testUpgrade() {
       if( NOGUI || isApplet() || !TESTRELEASE ) return;
-
+      
       (new Thread("testUpgrade"){
          @Override
-         public void run() {
+         public void run() { 
             try {
                Thread.currentThread().sleep(5000);
                testVersion();
@@ -2963,7 +2964,7 @@ public class Aladin extends JApplet
 //       return true;
 //    }
 
-
+    
     /** Exécute une normalisation sur le plan de base */
     protected void norm() {
        command.execLater("norm");
@@ -3021,7 +3022,7 @@ public class Aladin extends JApplet
     protected void cloneObj(boolean uniqTable) {
        calque.newPlanCatalogBySelectedObjet(uniqTable);
     }
-
+    
     /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
     protected void createPlotCat() {
        PlanCatalog p = calque.getFirstSelectedPlanCatalog();
@@ -3243,7 +3244,7 @@ public class Aladin extends JApplet
        calque.setGrid(miGrid.isSelected(),true);
        calque.repaintAll();
     }
-
+    
     /** Permute l'activation/désactivation de la grille HEALPix */
     public void switchHpxGrid() {
        miHpxGrid.setSelected( !miHpxGrid.isSelected() );
@@ -3427,7 +3428,7 @@ public class Aladin extends JApplet
        }
        frameHealpixArithm.maj();
     }
-
+    
     /** Mise à jour de la fenêtre pour les operations arithmetiques */
     protected void updateBitpix() {
        if( frameBitpix==null ) {
@@ -3522,7 +3523,7 @@ public class Aladin extends JApplet
           // Sauvegarde config utilisateur
           console.setInfo("Aladin stopped");
           saveConfig();
-
+          
           // Arrêt d'un éventuel calcul de allsky
           try {
             if( frameAllsky!=null && frameAllsky.mainPanel!=null ) frameAllsky.mainPanel.stop();
@@ -3532,7 +3533,7 @@ public class Aladin extends JApplet
           trace(3,"Cache cleaning...");
           stopCacheUpdater();
           removeCache();
-
+          
           // Nettoyage de la pile
           try { calque.FreeAll(); } catch( Exception e ) {}
        }
@@ -3761,7 +3762,7 @@ public void setLocation(Point p) {
       l.setForeground(DARKBLUE);
       return l;
    }
-
+   
    /** retourne true s'il y a un réseau disponible */
    static public boolean hasNetwork() { return NETWORK; }
 
@@ -3782,10 +3783,10 @@ public void setLocation(Point p) {
 
    /** Retourne true si Aladin est en mode fullscreen (ou preview) */
    final public boolean isFullScreen() { return fullScreen!=null; }
-
+   
    /** Retourne true si Aladin est en mode PROTO */
    public boolean isProto() { return PROTO; }
-
+   
    /** Retourne true si Aladin est en mode OUTREACH */
    public boolean isOutreach() { return OUTREACH; }
 
@@ -4679,7 +4680,7 @@ public void show() {
          }
       }
       return null;
-
+      
 //      int i;
 //      for( i=0; i<calque.plan.length; i++ ) {
 //         if( calque.plan[i].flagOk && calque.plan[i].label.equals(planeLabel) ) {
@@ -4935,7 +4936,7 @@ public void show() {
       try {
          int n = calque.newPlan(in,label,null);
          if( n==-1 ) throw new Exception("Data format not recognized");
-
+         
 //         MyInputStream myIn = new MyInputStream(in);
 //         int type = myIn.getType();
 //         myIn = myIn.startRead();
@@ -5199,7 +5200,7 @@ if( levelTrace>=3 ) System.out.println(")");
       writeIndent(s,indent);
       writeBytes(s, "<TABLE name=\""+XMLParser.XMLEncode(tableName)+"\">\n");
       indent+=3;
-
+      
       // Les définitions par des groupes
       if( leg.hasGroup() ) {
          writeBytes(s, leg.getGroup() );
@@ -5321,7 +5322,7 @@ if( levelTrace>=3 ) System.out.println(")");
       }
       writeBytes(s, "</TR>\n");
    }
-
+   
    /**
     * Generation du VOTable des objets du plan p.
     * Dans le cas ou il n'y a aucun objet (selectionne) dans le plan, la ressource
@@ -5386,7 +5387,7 @@ if( levelTrace>=3 ) System.out.println(")");
 
          // Ne traite que les objets selectionnes par l'utilisateur le cas echeant
          if( onlySelected && !((Position)o).isSelected() ) continue;
-
+         
          leg = writeOneSourceInVOTable(s1,o,leg,writeOID,linkSuffix,addXY);
       }
 
@@ -5412,7 +5413,7 @@ if( levelTrace>=3 ) System.out.println(")");
    private Legende writeOneSourceInVOTable(OutputStream s1, Source o, Legende oleg,
                                 boolean writeOID, String linkSuffix, boolean addXY)
                                   throws IOException {
-
+      
       // Nouvelle table dans le plan courant
       if( o.leg!=oleg ) {
          if( oleg!=null ) writeBytes(s1, "      </TABLEDATA></DATA></TABLE>\n");    // fin de la table precedente
@@ -5422,7 +5423,7 @@ if( levelTrace>=3 ) System.out.println(")");
 
       // Ecriture des donnees pour l'objet courant
       writeVOTableData(s1,o,writeOID,addXY);
-
+      
       return oleg;
    }
 
@@ -5462,18 +5463,18 @@ if( levelTrace>=3 ) System.out.println(")");
             "  </DEFINITIONS>\n"
       );
 
-
+      
       // plans non null : generation de VOTable pour les plans mentionnés
       if( plans!=null ) {
          for( int i=0; i<plans.length; i++ ) {
             String linkSuffix = xmatch?"_tab"+(i+1):null;
             writePlanInVOTable(out, plans[i], false, writeOID, linkSuffix, addXY);
          }
-
+         
       // Génération d'un VOTable juste pour cette source
       } else if( src!=null ) {
          writeSourceInVOTable(out,src,writeOID,null,addXY);
-
+         
       // sinon on génère le VOTable pour tous les objets selectionnes
       } else {
          for( int i=calque.plan.length-1; i>=0; i-- ) {
@@ -5640,7 +5641,7 @@ if( levelTrace>=3 ) System.out.println(")");
       glu.showDocument("Http",u,true);
 
    }
-
+   
 /*
     void debug() {
       int i;
@@ -5877,7 +5878,7 @@ public boolean handleEvent(Event e) {
                            +"Paint: "+ViewSimple.timeForPaint+"ms</CENTER></HTML>");
       lastMem=mem;
       lastNbSrc=nbSrc;
-
+      
       // Warnings pour les limites de mémoire
       int memory = (int)(MAXMEM-lastMem);
       if( memory<50 ) {
@@ -5892,9 +5893,9 @@ public boolean handleEvent(Event e) {
 //         } else lowMem=false;
       }
    }
-
+   
    public long freeSomeRam() { return freeSomeRam(-1,null); }
-
+   
    /** Demande de libération de la mémoire non indispensable. Si -1, demande du max
     * @param askMem Nombre d'octets demandés, -1 si max
     * @param saufPlan plan a ne pas libérer, null si aucun spécifié
@@ -5906,23 +5907,23 @@ public boolean handleEvent(Event e) {
       for( int i=0; i<p.length; i++ ) {
          if( p[i]==saufPlan ) continue;     // On ne libère pas ce plan
          if( p[i] instanceof PlanImageBlink ) {
-            mem+= ((PlanImageBlink)p[i]).freeRam(askMem==-1 ? -1 : askMem-mem);
+            mem+= ((PlanImageBlink)p[i]).freeRam(askMem==-1 ? -1 : askMem-mem); 
          }
          if( askMem!=-1 && mem>=askMem ) break;
       }
       if( mem>0 ) gc();
       return mem;
    }
-
+   
    private boolean lowMem=false;
-
+   
    /** Retourne le nombre de mégaoctets disponibles en RAM */
    protected double getMem() {
       double mem = (Runtime.getRuntime().maxMemory()-
             (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()))/(1024*1024.);
       return mem;
    }
-
+   
    /** Retourne true si on a de la marge en RAM */
    protected boolean enoughMemory() { return MAXMEM-lastMem>256; }
 
@@ -6009,7 +6010,7 @@ public boolean handleEvent(Event e) {
 //         throw new AladinException(AladinData.ERR009);
 //      }
 //   }
-
+   
    /** Return the Aladin plugin directory */
    public String getPluginDir() {
       return plugins.getPlugPath();
@@ -6291,7 +6292,7 @@ public boolean handleEvent(Event e) {
 		catch(Exception e) {e.printStackTrace();return;}
 
 		calque.createPlanCatalog(mis, planeName);
-
+		
 //		int indice = calque.newPlanCatalog(mis, planeName);
 //		PlanCatalog plan = (PlanCatalog)calque.plan[indice];
 	}
@@ -6364,8 +6365,8 @@ public boolean handleEvent(Event e) {
      public void mousePressed(MouseEvent e) {}
      public void mouseReleased(MouseEvent e) { }
      public void mouseDragged(MouseEvent e) { }
-
-
+     
+     
      static public boolean test() {
         System.out.println("Aladin code test running...");
         Aladin aladin = Aladin.aladin;
@@ -6386,5 +6387,5 @@ public boolean handleEvent(Event e) {
 	public void creatLocalPlane(String filepath, String name) {
 		calque.newPlan(filepath,name,null);
 	}
-
+	
 }

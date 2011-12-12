@@ -23,7 +23,12 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Vector;
 
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.astro.AstroMath;
 import cds.tools.Util;
 
@@ -87,7 +92,35 @@ public final class Cote extends Ligne {
       super(ra,dec,plan,v,debcote);
       bout=2;
    }
+   
+   public Vector getProp() {
+      Cote deb = (Cote)getFirstBout();
+      Cote fin = (Cote)getLastBout();
+      Vector propList= deb.getProp1();
+      propList.addAll(fin.getProp1());
+      
+      final Couleur col = new Couleur(couleur,true);
+      final PropAction changeCouleur = new PropAction() {
+         public int action() { 
+            Color c= col.getCouleur();
+            if( c==couleur ) return PropAction.NOTHING;
+            couleur=c;
+            return PropAction.SUCCESS;
+         }
+      };
+      col.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeCouleur.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      return propList;
+   }
 
+   public Vector getProp1() {
+      Vector propList = super.getProp();
+      Prop.remove(propList, "color");
+      return propList;
+  }
+   
 
    /** Retourne le type d'objet */
    public String getObjType() { return finligne==null ? "Arrow" : "Arrow+"; }

@@ -21,13 +21,19 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import javax.swing.JTextField;
+
 import cds.aladin.Hist.HistItem;
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.tools.Util;
 
 /**
@@ -164,7 +170,26 @@ public class Ligne extends Position {
       debligne.finligne = this;
       this.couleur=new Color(c.getRGB());
    }
-
+   
+   public Vector getProp() {
+      Vector propList = super.getProp();
+      
+      final Couleur col = new Couleur(couleur,true);
+      final PropAction changeCouleur = new PropAction() {
+         public int action() { 
+            Color c= col.getCouleur();
+            if( c==couleur ) return PropAction.NOTHING;
+            couleur=c;
+            return PropAction.SUCCESS;
+         }
+      };
+      col.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeCouleur.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      return propList;
+  }
+  
    ///// FIN des constructeurs /////
    
    /** Retourne le type d'objet */
@@ -498,7 +523,9 @@ public class Ligne extends Position {
    }
    
    /** Set specifical color (dedicated for catalog sources) */
-   public void setColor(Color c) { couleur=c; }
+   public void setColor(Color c) { 
+      for( Ligne lig = getFirstBout(); lig!=null; lig = lig.finligne) lig.couleur=c;
+   }
    
    /**
     * Méthode:

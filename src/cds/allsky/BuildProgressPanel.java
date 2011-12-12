@@ -33,7 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.border.Border;
 
-import cds.aladin.Properties;
+import cds.aladin.prop.PropPanel;
 import cds.fits.CacheFits;
 import cds.tools.Util;
 
@@ -123,19 +123,19 @@ public class BuildProgressPanel extends JPanel {
       JPanel p = new JPanel(g);
 
       srcFileStat = new JLabel("--");
-      Properties.addCouple(p, ".Original images: ", srcFileStat, g, c);           
+      PropPanel.addCouple(p, ".Original images: ", srcFileStat, g, c);           
 
       memStat = new JLabel("--");
-      Properties.addCouple(p, ".Processing info: ", memStat, g, c);           
+      PropPanel.addCouple(p, ".Processing info: ", memStat, g, c);           
 
       lowTileStat = new JLabel("--");
-      Properties.addCouple(p, ".Low level tiles: ", lowTileStat, g, c);           
+      PropPanel.addCouple(p, ".Low level tiles: ", lowTileStat, g, c);           
 
       nodeTileStat = new JLabel("--");
-      Properties.addCouple(p, ".Tree tiles: ", nodeTileStat, g, c);           
+      PropPanel.addCouple(p, ".Tree tiles: ", nodeTileStat, g, c);           
 
       timeStat = new JLabel("--");
-      Properties.addCouple(p, ".Time: ", timeStat, g, c);           
+      PropPanel.addCouple(p, ".Time: ", timeStat, g, c);           
 
       return p;
    }

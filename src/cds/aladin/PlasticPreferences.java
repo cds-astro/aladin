@@ -37,6 +37,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import cds.aladin.prop.PropPanel;
+
 
 /** Une classe pour gérer les préférences liées à PLASTIC
  * 
@@ -107,36 +109,36 @@ public class PlasticPreferences extends JFrame implements ActionListener {
 	      p.setLayout(g);
 
 	      // propriété autoconnect
-	      Properties.addFilet(p, g, c);
-	      Properties.addSectionTitle(p, DEFAUTOCONNECT, g, c);
+	      PropPanel.addFilet(p, g, c);
+	      PropPanel.addSectionTitle(p, DEFAUTOCONNECT, g, c);
 	      autoconnectCb = new JCheckBox(AUTOCONNECT);
-	      Properties.addCouple(p, "", autoconnectCb, g, c);
+	      PropPanel.addCouple(p, "", autoconnectCb, g, c);
 	      
 	      // propriété launchhub at startup
-	      Properties.addFilet(p, g, c);
-	      Properties.addSectionTitle(p, DEFLAUNCHHUB, g, c);
+	      PropPanel.addFilet(p, g, c);
+	      PropPanel.addSectionTitle(p, DEFLAUNCHHUB, g, c);
 	      launchhubCb = new JCheckBox(LAUNCHHUB);
-	      Properties.addCouple(p, "", launchhubCb, g, c);
+	      PropPanel.addCouple(p, "", launchhubCb, g, c);
 	      
 	      // propriété selectobjects
-	      Properties.addFilet(p, g, c);
-	      Properties.addSectionTitle(p, DEFSELECTOBJECTS, g, c);
+	      PropPanel.addFilet(p, g, c);
+	      PropPanel.addSectionTitle(p, DEFSELECTOBJECTS, g, c);
 	      selectobjectsCb = new JCheckBox(SELECTOBJECTS);
-	      Properties.addCouple(p, "", selectobjectsCb, g, c);
+	      PropPanel.addCouple(p, "", selectobjectsCb, g, c);
 	      
 	      // propriété highlightobject
-	      Properties.addFilet(p, g, c);
-	      Properties.addSectionTitle(p, DEFHIGHLIGHTOBJECT, g, c);
+	      PropPanel.addFilet(p, g, c);
+	      PropPanel.addSectionTitle(p, DEFHIGHLIGHTOBJECT, g, c);
 	      highlightCb = new JCheckBox(HIGHLIGHTOBJECT);
-	      Properties.addCouple(p, "", highlightCb, g, c);
+	      PropPanel.addCouple(p, "", highlightCb, g, c);
 
 	      // propriété sendposition
-	      Properties.addFilet(p, g, c);
-	      Properties.addSectionTitle(p, DEFSENDPOSITION, g, c);
+	      PropPanel.addFilet(p, g, c);
+	      PropPanel.addSectionTitle(p, DEFSENDPOSITION, g, c);
 	      sendpositionCb = new JCheckBox(SENDPOSITION);
-	      Properties.addCouple(p, "", sendpositionCb, g, c);
+	      PropPanel.addCouple(p, "", sendpositionCb, g, c);
 	      
-	      Properties.addFilet(p, g, c);
+	      PropPanel.addFilet(p, g, c);
 	      
 	      return p;
 	}

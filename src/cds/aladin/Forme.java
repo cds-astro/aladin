@@ -26,6 +26,8 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.astro.Proj3;
 
 /**
@@ -54,6 +56,36 @@ public class Forme extends Position {
    protected Forme(Plan plan,Position o[]) {
       super(plan);
       this.o=o;
+   }
+   
+   public Vector getProp() {
+      Vector propList = super.getProp();
+      
+      final Couleur col = new Couleur(couleur,true);
+      PropAction changeCouleur = new PropAction() {
+         public int action() { 
+            Color c= col.getCouleur();
+            if( c==couleur ) return PropAction.NOTHING;
+            setColor(c);
+            return PropAction.SUCCESS;
+         }
+      };
+      propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      return propList;
+  }
+   
+   /** Provide RA J2000 position */
+   public double getRa() { return o[0].getRa(); }
+   
+   /** Provide DEC J2000 position */
+   public double getDec() { return o[0].getDec(); }
+   
+   public void setColor(Color c) { couleur=c; }
+   
+   protected void setRaDec(double ra, double de) {
+      double dra = o[0].getRa()-ra;
+      double dde = o[0].getDec()-de;
+      for( int i=0; i<o.length; i++ ) o[i].deltaRaDec(dra, dde);
    }
    
    /** Retourne le type d'objet */

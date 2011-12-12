@@ -20,6 +20,7 @@
 
 package cds.aladin;
 
+import cds.aladin.prop.PropPanel;
 import cds.astro.*;
 import cds.fits.HeaderFits;
 import cds.tools.Util;
@@ -496,13 +497,13 @@ public final class FrameNewCalib extends JFrame
       setSymRadio(sym);
       setProjChoice(t);
 
-      Properties.addCouple(p,COORD, cooT, g,c);
-      Properties.addCouple(p,XY, xyT, g,c);
-      Properties.addCouple(p,PIXSIZE, xyS, g,c);
-      Properties.addCouple(p,FRAME, frameChoice, g,c);
-      Properties.addCouple(p,PROJECT, projChoice, g,c);
-      Properties.addCouple(p,ROT, rotT, g,c);
-      Properties.addCouple(p,RASYM, pSym, g,c);
+      PropPanel.addCouple(p,COORD, cooT, g,c);
+      PropPanel.addCouple(p,XY, xyT, g,c);
+      PropPanel.addCouple(p,PIXSIZE, xyS, g,c);
+      PropPanel.addCouple(p,FRAME, frameChoice, g,c);
+      PropPanel.addCouple(p,PROJECT, projChoice, g,c);
+      PropPanel.addCouple(p,ROT, rotT, g,c);
+      PropPanel.addCouple(p,RASYM, pSym, g,c);
 
       return p;
    }

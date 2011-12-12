@@ -21,10 +21,16 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
+
+import javax.swing.JTextField;
 
 import cds.aladin.Hist.HistItem;
 import cds.aladin.Ligne.Segment;
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.astro.AstroMath;
 import cds.astro.Coo;
 import cds.astro.Proj3;
@@ -82,6 +88,51 @@ public class Repere extends Position {
       super(plan,v,x,y,raj,dej,XY|RADE,null);
       setId();
       setWithLabel(false);
+   }
+   
+   public Vector getProp() {
+      Vector propList = super.getProp();
+      
+      if( hasRayon() ) {
+         final Obj myself = this;
+         final JTextField testRadius = new JTextField( 10 );
+         final PropAction updateRadius = new PropAction() {
+            public int action() { testRadius.setText( Coord.getUnit(getRadius()) ); return PropAction.SUCCESS; }
+         };
+         PropAction changRadius = new PropAction() {
+            public int action() { 
+               testRadius.setForeground(Color.black);
+               String oval = Coord.getUnit(getRadius());
+               try {
+                  String nval = testRadius.getText();
+                  if( nval.equals(oval) ) return PropAction.NOTHING;
+                  ((Repere)myself).setRadius(nval);
+                  return PropAction.SUCCESS;
+               } catch( Exception e1 ) { 
+                  updateRadius.action();
+                  testRadius.setForeground(Color.red);
+               }
+               return PropAction.FAILED;
+            }
+         };
+         propList.add( Prop.propFactory("radius","Radius","",testRadius,updateRadius,changRadius) );
+      }
+      
+      final Couleur col = new Couleur(couleur,true);
+      final PropAction changeCouleur = new PropAction() {
+         public int action() { 
+            Color c= col.getCouleur();
+            if( c==couleur ) return PropAction.NOTHING;
+            couleur=c;
+            return PropAction.SUCCESS;
+         }
+      };
+      col.addActionListener( new ActionListener() {
+         public void actionPerformed(ActionEvent e) { changeCouleur.action(); plan.aladin.view.repaintAll(); }
+      });
+      propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
+      
+      return propList;
    }
    
    /** Retourne le type d'objet */
@@ -155,16 +206,8 @@ public class Repere extends Position {
    }
 
    /** Change le rayon d'un repère CERCLE (r en pixels dans le plan de ref de v */
-//   void setRayon(ViewSimple v,double r) {
-//      Projection proj = v.getProj();
-//      c.al=raj; c.del=dej;
-//      proj.getXY(c);
-//      c.y+=r;
-//      proj.getCoord(c);
-//      radius=Math.abs(dej-c.del);
-//      setSelected(true);
-//   }
    void setRayon(ViewSimple v,double r) {
+      Coord c = new Coord();
       Projection proj = v.getProj().copy();
       proj.setProjCenter(0,0);
       c.al=c.del=0;
@@ -172,7 +215,6 @@ public class Repere extends Position {
       c.y+=r;
       proj.getCoord(c);
       radius=Math.abs(c.del);
-      System.out.println("radius="+Coord.getUnit(radius));
    }
 
    /** Positionnement d'un ID particulier */
@@ -498,7 +540,7 @@ public class Repere extends Position {
 
    /** Retourne le rayon en pixels d'un repère cerclé */
    protected double getRayon(ViewSimple v) {
-//      return rayon;
+      Coord c = new Coord();
       Projection proj = v.getProj();
       if( radius==0 || v.pref==null || !Projection.isOk(proj) ) return 0;
       c.al=raj;
