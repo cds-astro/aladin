@@ -20,18 +20,22 @@
 
 package cds.aladin;
 
-import cds.tools.*;
-import cds.tools.pixtools.CDSHealpix;
-
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import cds.tools.Astrodate;
+import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestion des fenetres des proprietes associees aux plans.
@@ -106,7 +110,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    JScrollPane scroll;
    JSlider opacityLevel;
    JSlider gapOrder;
-   
+
    JSlider scalingFactor; // facteur d'échelle pour les filtres des plans CATALOG
 
    JSlider polaSegmentLen; // Pour plan POLARISATION, longueur max segments
@@ -271,7 +275,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 //      ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
 
       if( !noPack ) pack();
-      
+
       setVisible(true);
    }
 
@@ -340,7 +344,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       p.add( b=new JButton(CLOSE)); b.addActionListener(this);
       return p;
    }
-   
+
    protected static void addFull(JPanel p, Component valeur, GridBagLayout g, GridBagConstraints c) {
       c.gridwidth = GridBagConstraints.REMAINDER;
       c.fill = GridBagConstraints.BOTH;
@@ -368,7 +372,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          l.setFont(l.getFont().deriveFont(Font.ITALIC));
          t=l;
       } else t=(Component)titre;
-      
+
       if( help!=null ) {
          JPanel p2 = new JPanel();
          p2.add(t);
@@ -383,7 +387,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       c.weightx = 0.0;
       g.setConstraints(t,c);
       p.add(t);
-      
+
       if( valeur instanceof JButton ) {
          JPanel p1 = new JPanel();
          p1.add(valeur);
@@ -689,7 +693,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Origine
       if( plan.from!=null ) addCouple(p,ORIGIN, new JLabel(Util.fold(plan.from,50,true)), g,c);
-      
+
       // Accès à la description complète
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG)plan;
@@ -779,7 +783,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
               polaSegmentThickness = new JSlider(1, 5);
               polaSegmentThickness.setValue(ph.getSegmentThickness());
-              System.out.println(ph.getSegmentThickness());
+//              System.out.println(ph.getSegmentThickness());
               polaSegmentThickness.setMajorTickSpacing(1);
               polaSegmentThickness.setPaintTicks(true);
               polaSegmentThickness.setSnapToTicks(true);
@@ -827,6 +831,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                 // affichage autres champs disponibles
                 if (ph.tfieldNames.length > 1) {
                     JPanel pAvailableFields = new JPanel(new GridLayout(0, 1));
+                    JScrollPane scrollPane = new JScrollPane(pAvailableFields, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                    scrollPane.setPreferredSize(new Dimension(200, 300));
+
                     for (int i = 0; i < ph.tfieldNames.length; i++) {
                         if (i == ph.idxTFormToRead) {
                             continue;
@@ -840,11 +847,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                             }
                         });
                     }
-                    addCouple(null, p, SELECTFIELD, null, pAvailableFields, g, c, GridBagConstraints.NORTHWEST);
+                    addCouple(null, p, SELECTFIELD, null, scrollPane, g, c, GridBagConstraints.NORTHWEST);
                 }
             }
       }
-      
+
       if( plan.type==Plan.ALLSKYIMG ) {
          final PlanBG pbg = (PlanBG) plan;
          addFilet(p, g, c);
@@ -854,7 +861,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          addCouple(p, "Best pixel resolution", new JLabel(pbg.getMaxResolution()), g, c);
          addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
          if( ord>0 ) addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
-         addCouple(p, "HEALPix NSide:",  new JLabel((long)CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
+         addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
          if( pbg.inFits && pbg.inJPEG ) {
             JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
             bt.addActionListener(new ActionListener() {
@@ -862,20 +869,20 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                   pbg.switchFormat();
                   showProp(true);
                   aladin.view.repaintAll();
-                  
+
                }
             } );
             addCouple(p,"",bt, g, c);
          }
       }
-      
+
       if( plan.type==Plan.ALLSKYMOC ) {
          final PlanMoc pmoc = (PlanMoc)plan;
-         
+
          addCouple(p,"Size",new JLabel(pmoc.getMoc().getSize()+" cells"),g,c);
          addCouple(p,"Best Moc resolution",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
-         
+
          boolean wireFrame = pmoc.getWireFrame();
          ButtonGroup bg = new ButtonGroup();
          final JCheckBox b1 = new JCheckBox("wire frame");
@@ -892,10 +899,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          bg.add(b1); bg.add(b2);
          p1.add(b1); p1.add(b2);
          addCouple(p,"Drawing method",p1,g,c);
-         
-         
+
+
       }
-      
+
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
          addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
@@ -907,9 +914,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             addCouple(p,"Coverage map:",bt,g,c);
          }
       }
-      
+
       if( plan.flagOk && (plan.isSimpleCatalog() || plan instanceof PlanBG) ) {
-         
+
          JPanel p1 = aladin.view.getPlotControlPanelForPlan(plan);
          if( p1!=null ) {
             addFilet(p,g,c);
@@ -931,7 +938,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             addSectionTitle(p,DEFCATPROJ,g,c);
             addCouple(p,CENTER, new JLabel(plan.projd.c.getProjCenter().getSexa()), g,c);
             addCouple(p,METHOD, defCatProj, g,c);
-            
+
             if( plan.ref && plan instanceof PlanBG ) {
                defFrame = Localisation.createFrameCombo();
                defFrame.setSelectedIndex( ((PlanBG)plan).getFrameDrawing() );
@@ -942,10 +949,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             }
          }
       }
-      
-      
-      boolean filet=false; 
-      
+
+
+      boolean filet=false;
+
       if( plan.isCatalog() ) {
           if( !filet ) addFilet(p, g, c); filet=true;
           scalingFactor = new JSlider(0, 300);
@@ -958,8 +965,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           scalingFactor.addChangeListener(this);
           addCouple(p, SCALINGFACTOR, scalingFactor, g, c);
       }
-      
-      
+
+
       // niveau d'opacité des images et des footprints
       if( aladin.calque.canBeTransparent(plan) ) {
          if( !filet ) addFilet(p, g, c); filet=true;
@@ -975,7 +982,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           pTransp.add(opacityLevel);
           addCouple(p,OPACITY, pTransp, g,c);
       }
-      
+
       // Ajustement de l'ordre max
       if( plan instanceof PlanBGCat && !(plan instanceof PlanMoc)) {
          if( !filet ) addFilet(p, g, c); filet=true;
@@ -1073,7 +1080,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          c.fill = GridBagConstraints.BOTH;
 
       }
-      
+
       return p;
    }
 
@@ -1195,13 +1202,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( modCalib!=null ) modCalib.setEnabled(false);
     }
    }
-   
+
    // Changement de projection par défaut d'un catalogue
    private void actionDefCatProj() {
       if( defCatProj==null || plan.projd.c.getProj()==Calib.getProjType( (String)defCatProj.getSelectedItem() ) ) return;
       plan.modifyProj((String) defCatProj.getSelectedItem());
    }
-   
+
    // Changement de la frame de traçage d'un planBG
    private void actionFrameProj() {
       if( defFrame==null
@@ -1220,7 +1227,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          }
       }
    }
-   
+
    // Changement de motif pour les sources
    private void actionSourceType() {
       if( sourceType==null ) return;
@@ -1228,7 +1235,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       aladin.calque.repaintAll();
 
    }
-   
+
    // Changement de projection pour le calcul des alpha,delta
    // pour un plan n'ayant que des XY
    private void actionPlanXYProjs() {
@@ -1305,7 +1312,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( plan.hasXYorig ) actionPlanXYProjs();
          else actionPlanRefProjs();
       }
-      
+
       actionCouleur();
 
       // Modification du scope du folder
@@ -1477,7 +1484,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       else if( SEEFITS.equals(what) ) aladin.header(plan);
 
       // Visualisation des informations de parsing
-      else if( SEEPARSING.equals(what) ) aladin.tableInfo((PlanCatalog)plan);
+      else if( SEEPARSING.equals(what) ) aladin.tableInfo(plan);
 
       // Rechargement de l'URL dans le navigateur
       else if( LOADURL.equals(what) ) {
@@ -1494,8 +1501,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          ((PlanCatalog)plan).showFootprints(flagShow);
       }
    }
-   
-   
+
+
    private Border border = null;
 
    // mise à jour du titre de la frame
@@ -1518,11 +1525,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    }
 
    /******* Les methodes gerant globalement les fenetres de Properties ******/
-   
+
    static protected void addProperties(Properties p) {
       frameProp.addElement(p);
    }
-   
+
    /**
     * Crée la fenêtre de Properties pour le plan p
     * Si elle existe déja, la retrouve et l'affiche
@@ -1534,8 +1541,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
      if( pc!=null ) { pc.toFront(); return; }
      if( p.type==Plan.FILTER ) pc = new FilterProperties(p);
      else pc = new Properties(p);
-     
-     
+
+
      pc.showProp();
    }
 
@@ -1548,8 +1555,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
      Properties pc = getProperties(p);
      if( pc!=null ) pc.dispose();
    }
-   
-   
+
+
    /**
     * Retourne l'objet properties en fonction d'un plan
     * null sinon
