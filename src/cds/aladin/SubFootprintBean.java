@@ -178,8 +178,14 @@ public class SubFootprintBean {
                 Ligne curLine = new Ligne(pf);
                 v.addElement(curLine);
 
-                double x = isInSphericalCoords() ? Math.toRadians(raOffset[raOffset.length-1]) : Util.tand(raOffset[raOffset.length-1]);
-                double y = isInSphericalCoords() ? Math.toRadians(decOffset[decOffset.length-1]) : Util.tand(decOffset[decOffset.length-1]);
+
+                double x = isInSphericalCoords()
+                           ? Math.toRadians(Math.cos(Math.toRadians(decOffset[decOffset.length-1])) * raOffset[raOffset.length-1])
+                           : Util.tand(raOffset[raOffset.length-1]);
+                double y = isInSphericalCoords()
+                           ? Math.toRadians(decOffset[decOffset.length-1])
+                           : Util.tand(decOffset[decOffset.length-1]);
+
                 curLine.setXYTan(x, y);
 
                 // boucle sur les n points du FoV
@@ -187,7 +193,7 @@ public class SubFootprintBean {
                     Ligne newLine = new Ligne(pf);
                     v.addElement(newLine);
 
-                    x = isInSphericalCoords() ? Math.toRadians(raOffset[j]) : Util.tand(raOffset[j]);
+                    x = isInSphericalCoords() ? Math.toRadians(Math.cos(Math.toRadians(decOffset[j])) * raOffset[j]) : Util.tand(raOffset[j]);
                     y = isInSphericalCoords() ? Math.toRadians(decOffset[j]) : Util.tand(decOffset[j]);
                     newLine.setXYTan(Util.tand(raOffset[j]), Util.tand(decOffset[j]));
                     newLine.debligne = curLine;
@@ -198,7 +204,7 @@ public class SubFootprintBean {
 			}
 
 			case CIRCLE: {
-			    double xv = isInSphericalCoords() ? Math.toRadians(centerOffRa) : Util.tand(centerOffRa);
+			    double xv = isInSphericalCoords() ? Math.toRadians(Math.cos(Math.toRadians(centerOffDec))  * centerOffRa) : Util.tand(centerOffRa);
 			    double yv = isInSphericalCoords() ? Math.toRadians(centerOffDec) : Util.tand(centerOffDec);
 			    // TODO : ce tand(circleRadius) me semble étrange ...
 			    // TODO : doit fonctionner car tand(x)=x pour un x petit
