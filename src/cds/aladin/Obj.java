@@ -89,7 +89,7 @@ public abstract class Obj implements Propable{
    public String id;         // Object id
    protected byte flags = VISIBLE;  // Le tableau de flags
    
-   public boolean hasProp() { return true; }
+   public boolean hasProp() { return plan!=null && plan.type!=Plan.APERTURE; }
    public Vector<Prop> getProp() {
       Vector<Prop> propList = new Vector<Prop>();
       JLabel l = new JLabel("\""+getObjType()+"\" object in plane: \""+plan.getLabel()+"\"");
