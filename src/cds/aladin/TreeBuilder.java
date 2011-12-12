@@ -263,12 +263,12 @@ public class TreeBuilder {
         	return false;
         }
 
-        Enumeration fields = firstRes.getFieldSet(0).getItems().elements();
+        Enumeration<SavotField> fields = firstRes.getFieldSet(0).getItems().elements();
         SavotField curField;
         String curUtype, curUCD;
         // TODO : pour distinguer vraiment SSAP de SIAP, on pourrait peut-etre se baser sur le namespace
         while( fields.hasMoreElements() ) {
-            curField = (SavotField)fields.nextElement();
+            curField = fields.nextElement();
             curUtype = stripNSForUtype(curField.getUtype().trim());
             curUCD = curField.getUcd();
             if(    curUtype.equalsIgnoreCase(UTYPE_ACREF_SSA) && ! curUCD.equalsIgnoreCase(SIAP_URL)
