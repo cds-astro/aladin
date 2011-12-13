@@ -2237,7 +2237,7 @@ public class ViewSimple extends JComponent
          showPopMenu(e.getX(),e.getY());
          return;
       }
-      
+
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
       boolean isProjSync = isProjSync();
@@ -5540,6 +5540,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Activé ?
          boolean flagActive = flagDraw && p.active;
          
+         
          // Cas d'un image ou d'un plan BG
          if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
             if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
@@ -5976,7 +5977,6 @@ g.drawString(s,10,100);
       if( gr!=null ) setClip(gr);
       setClip(g);
       
-      
       // Buffer du fond
       if( imgbuf==null || imgbuf.getWidth(this)!=rv.width || imgbuf.getHeight(this)!=rv.height ) {
          if( gbuf!=null ) gbuf.dispose();
@@ -5984,13 +5984,11 @@ g.drawString(s,10,100);
          gbuf=imgbuf.getGraphics();
       }
       
-//      System.out.println("Paint flagDrag="+flagDrag+" quickInfo="+quickInfo+" quickBlink="+quickBlink+" modeGrabIt="+modeGrabIt+
-//            "falgBlinkControl="+flagBlinkControl+" quickBordure="+quickBordure+" view.newobj="+view.newobj);
-      
       if( !(flagDrag || quickInfo || quickBlink || modeGrabIt || flagBlinkControl || quickBordure || 
             view.newobj!=null && view.newobj instanceof Cote  ) ) {
          fillBackground(gbuf);
          paintOverlays(gbuf,clip,0,0);
+//System.out.println("paint");
       }
       
       g.drawImage(imgbuf,0,0,this);
@@ -6102,7 +6100,7 @@ g.drawString(s,10,100);
    protected void setPixelInfo(String s) {
       if( lastPixel!=null && lastPixel.equals(s) ) return;  // pas de changement
       lastPixel=s;
-      quickInfo= s!=null;
+      quickInfo=true;
       repaint();
    }
    

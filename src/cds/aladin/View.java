@@ -1155,7 +1155,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //   protected boolean hasBackGround() {
 //      return calque.planBG!=null && calque.planBG.active;
 //   }
-   
+
    /** Retourne true s'il y a au-moins une vue stickée (un sauvegarde() doit avoir été
     * opéré au préalable) */
    protected boolean hasStickedView() { return viewSticked.getNbUsed()>0; }
@@ -1241,7 +1241,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( n==-1 ) {
          for( int i=modeView-1; i>=0; i--) if( !viewSimple[i].isPlotView() ) { n=i; break; }
       }
-      
+
       // Si c'est pas possible, on écrase la dernière case
       if( n==-1 ) return modeView-1;
 
@@ -1321,8 +1321,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=0; i<allPlans.length; i++ ) {
          Plan p = allPlans[i];
          p.reallocObjetCache();
-         // thomas, pour affichage FoVs associés --> ne marche pas correctement
-         // TODO : le faire fonctionner !!
+
          if( p instanceof PlanCatalog ) ((PlanCatalog)p).reallocFootprintCache();
       }
       newView(1);
@@ -2021,7 +2020,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       return sources;
    }
-   
+
    private Propable getLastPropableObj() {
       Obj rep=null;
       Enumeration<Obj> e = vselobj.elements();
@@ -2985,22 +2984,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repere.dej=coo.del;
 //      aladin.sendObserver();
    }
-   
-   
+
+
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
       ViewSimple v = getCurrentView();
 //      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;
    }
-   
+
    private long lastRepaint=0;
-   
+
    /** Positionne la date du dernier repaint */
    protected void setPaintTimer() {
       lastRepaint = Util.getTime();
    }
-   
+
    /** Indique qu'il est possible de prendre son temps pour tracer */
    protected boolean canDrawAll() {
       if( mustDrawFast() ) return false;
@@ -4120,7 +4119,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
       propResume();
       repaintAll1(0);
    }
-   public void updateAll() {
+   public void updateAll()       {
       if( aladin.isFullScreen() ) { aladin.fullScreen.repaint(); return; }
       repaintAll1(2);
    }
@@ -4128,7 +4127,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
       if( aladin.isFullScreen() ) { aladin.fullScreen.repaint(); return; }
       repaintAll1(1);
    }
-   
+
    /**
     *
     * @param mode 0 repaintAll, 1 - quickRepaintAll, 2- updateAll
