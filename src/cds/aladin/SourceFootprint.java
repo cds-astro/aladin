@@ -19,25 +19,32 @@
 
 package cds.aladin;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.List;
+
+import cds.aladin.stc.STCObj;
+import cds.aladin.stc.STCStringParser;
+
 /**
  * Classe représentant un footprint associé à un objet Source
- * Cette classe a été créée afin de faire du nettoyage au niveau de la classe Source 
- * 
+ * Cette classe a été créée afin de faire du nettoyage au niveau de la classe Source
+ *
  * @author Thomas Boch
- * 
+ *
  * @version 0.1 18/04/2006
- * 
+ *
  */
 public class SourceFootprint {
 
 	private PlanField footprint; // objet PlanField associé à la source
-//	private double footprintAngle = 0.; // angle de position pour le footprint
-	private boolean showFootprint = false; // doit-on montrer le footprint associé 
+	private Fov stcsFov;
+	private boolean showFootprint = false; // doit-on montrer le footprint associé
 	private int idxFootprint = -1; // index du footprint
-	
+
 	/** Constructeur */
 	public SourceFootprint() {}
-	
+
 	/**
 	 * @return Returns the footprint.
 	 */
@@ -50,20 +57,28 @@ public class SourceFootprint {
 	protected void setFootprint(PlanField footprint) {
 		this.footprint = footprint;
 	}
-	
-	/**
-	 * @return Returns the footprintAngle.
-	protected double getFootprintAngle() {
-		return footprintAngle;
+
+	protected void setStcs(double ra, double dec, String stcs) {
+	    STCStringParser parser = new STCStringParser();
+	    List<STCObj> stcObj = parser.parse(stcs);
+	    this.stcsFov = new Fov(ra, dec, stcObj);
 	}
-	*/
-	/**
-	 * @param footprintAngle The footprintAngle to set.
-	protected void setFootprintAngle(double footprintAngle) {
-		this.footprintAngle = footprintAngle;
+
+	protected void draw(Projection proj, Graphics g, ViewSimple v, int dx, int dy, Color c) {
+	    if ( ! showFootprint) {
+	        return;
+	    }
+
+	    if (footprint != null) {
+	        footprint.c = c;
+            footprint.reset(ViewSimple.MOVECENTER);
+            footprint.pcat.draw(g, null, v, true, dx, dy);
+	    }
+	    else if (stcsFov != null) {
+	        stcsFov.draw(proj, v, g, dx, dy, c);
+	    }
 	}
-	*/
-	
+
 	/**
 	 * @return Returns the idxFootprint.
 	 */
@@ -76,14 +91,14 @@ public class SourceFootprint {
 	protected void setIdxFootprint(int idxFootprint) {
 		this.idxFootprint = idxFootprint;
 	}
-	
+
 	/**
 	 * @return Returns the showFootprint.
 	 */
 	protected boolean showFootprint() {
 		return showFootprint;
 	}
-	
+
 	/**
 	 * @param showFootprint The showFootprint to set.
 	 */

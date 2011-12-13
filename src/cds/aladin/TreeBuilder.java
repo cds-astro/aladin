@@ -127,6 +127,8 @@ public class TreeBuilder {
     private static final String UTYPE_DATATITLE_SSA = "DataID.Title";
     private static final String UCD1P_TITLE = "meta.title";
 
+    public static final String UTYPE_STCS_REGION = "stc:ObservationLocation.AstroCoordArea.Region";
+
     // variables de travail pour le Fov
     private double xVal, yVal, alphaVal, deltaVal;
     private double[] xValTab, yValTab;
@@ -1335,7 +1337,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
 				}
 
                 // STC region
-				else if (descId[i].equals("regionSTCS") || descStr[i].equals("stcs") || descStr[i].equals("position_bounds")) {
+				else if (descId[i].equals("regionSTCS") || descStr[i].equals("stcs") || descStr[i].equals("position_bounds") || utypes[i].equals(UTYPE_STCS_REGION)) {
 				    stcRegion = expla[i];
 				}
 

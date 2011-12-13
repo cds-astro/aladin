@@ -22,13 +22,10 @@ package cds.aladin;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
-import javax.swing.JComponent;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import java.util.Enumeration;
+import java.util.Vector;
+
+import javax.swing.*;
 
 import cds.tools.Util;
 import cds.xml.Field;
@@ -44,7 +41,7 @@ import cds.xml.Field;
  * @version 1.0 : (10 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
  */
-public final class MCanvas extends JComponent 
+public final class MCanvas extends JComponent
                            implements MouseListener,MouseMotionListener,
                            AdjustmentListener,
                            KeyListener,ActionListener
@@ -57,9 +54,9 @@ public final class MCanvas extends JComponent
    static final int MH = HL;            // Hauteur de la marge du haut
    static final int MB = 1;             // Hauteur de la marge du bas
    static final Color BG = Aladin.LBLUE;  //Color.white ou Aladin.BKGD precedemment
-   
+
    static private Color COLORBORD = new Color(153,153,153);
-   
+
    // Triangles-reperes de la ligne courante (position sur 1ere ligne)
    static final int [] tX =  {          5,          5,      14 };    // Exterieur
    static final int [] tY =  { HL/2+1 -5, HL/2+1 +5, HL/2+1 };
@@ -88,9 +85,9 @@ public final class MCanvas extends JComponent
    boolean firstUpdate=true; // Pour positionner le premier curseur
    int currentselect=-2;
    protected int triTag = Field.UNSORT;  //Indique un tri sur les tags
-   
+
    protected Legende oleg=null;           // La légende courante
-   protected Vector ligneHead=null;     // L'entête courante   
+   protected Vector ligneHead=null;     // L'entête courante
    protected Source objSelect=null;       // Source sélectionné (pour pouvoir bloquer son entête), sinon null
    protected Source objShow=null;         // Source pointée sous la souris dans l'image (le temps de faire le paintComponent=
    private boolean flagDrawHead=false;  // Juste pour réafficher rapidement le cas échéant
@@ -99,7 +96,7 @@ public final class MCanvas extends JComponent
 
    int indiceCourant=-1,sortField=-1;
    Source sCourante = null;
-   
+
    private static String TIPHEAD,/*TIPREP,*/TIPGLU,TIPARCH,TIPFOV,TIPTAG;
 
   /** Creation.
@@ -112,19 +109,19 @@ public final class MCanvas extends JComponent
       this.aladin = aladin;
       this.scrollV = scrollV;
       this.scrollH = scrollH;
-      
+
       // Determination des tailles des lettres
       wblanc = getToolkit().getFontMetrics(FONT).stringWidth("M");
-      
+
       if( Aladin.OUTREACH ) NBLIGNE=3;
-      
+
       TIPHEAD = aladin.chaine.getString("TIPHEAD");
 //      TIPREP  = aladin.chaine.getString("TIPREP");
       TIPGLU  = aladin.chaine.getString("TIPGLU");
       TIPARCH = aladin.chaine.getString("TIPARCH");
       TIPFOV  = aladin.chaine.getString("TIPFOV");
       TIPTAG  = aladin.chaine.getString("TIPTAG");
-      
+
       createPopupMenu();
 
       setOpaque(true);
@@ -134,11 +131,11 @@ public final class MCanvas extends JComponent
       addKeyListener(this);
       addMouseWheelListener(this);
    }
-   
-   public Dimension getPreferredSize() { 
+
+   public Dimension getPreferredSize() {
       return new Dimension(2, HL*NBLIGNE + MH+MB);
    }
-   
+
    JPopupMenu popMenu;
    JMenuItem menuTriA,menuTriD,menuCopyVal,menuCopyCoord,menuCopyMeasurement,menuCopyAll,menuCopyAllAscii,
             menuTag,menuUntag,menuKeepTag,menuKeepUntag,menuCreateMulti,menuCreateUniq,menuLoadImg,menuLoadImgs,menuUnselect,
@@ -198,7 +195,7 @@ public final class MCanvas extends JComponent
       j.addActionListener(this);
       popMenu.add( menuTableInfo=j=new JMenuItem(aladin.TABLEINFO));
       j.addActionListener(this);
-      
+
       add(popMenu);
    }
 
@@ -226,7 +223,7 @@ public final class MCanvas extends JComponent
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
    }
-   
+
    /** Chargement d'une image centrée sur la source sélectionnée dans le tableau des mesures */
    private void loadImg() {
       Source s = objSelect;
@@ -234,22 +231,22 @@ public final class MCanvas extends JComponent
       String target = aladin.localisation.J2000ToString(s.raj, s.dej);
       aladin.execAsyncCommand("\""+s.id+"\"=get "+aladin.configuration.getLoadImgCmd()+" "+target);
    }
-   
+
    /** Chargement d'une image centrée pour chaque source dans la table des mesures
     * S'il y a au-moins une source taguée, ne concerne que les sources taguées*/
    private void loadImgs() {
       int n=0;
-      
+
       // Décompte du nombre de sources concernées
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
          Source s = aladin.mesure.src[i];
          if( !s.isTagged() ) continue;
          n++;
       }
-      
+
       // Demande de confirmation s'il y en a trop
       if( !aladin.testNbImgLoad(n==0 ? aladin.mesure.nbSrc : n) ) return;
-      
+
       // C'est parti
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
          Source s = aladin.mesure.src[i];
@@ -258,10 +255,10 @@ public final class MCanvas extends JComponent
          aladin.execAsyncCommand("\""+s.id+"\"=get "+aladin.configuration.getLoadImgCmd()+" "+target);
       }
    }
-   
+
    /** Affichage du popup avec (dés)activation des menus concernés */
    private void popupShow(int x,int y) {
-      
+
       // Détermine s'il y a au-moins une source taguée
       boolean tag=false;
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
@@ -279,10 +276,10 @@ public final class MCanvas extends JComponent
       menuCopyMeasurement.setEnabled(flag);
       popMenu.show(this,x,y);
    }
-   
+
   /** Recale l'absisse par defaut */
    protected void initX() { absX=0; }
-   
+
   /** Dessine le bord gauche
     * @param x,y l'emplacement du mot dans la case
     * @param width la taille de la case
@@ -291,10 +288,10 @@ public final class MCanvas extends JComponent
       g.setColor(COLORBORD);
       g.drawLine(x+width+2,y,x+width+2,y+HF+2);
    }
-   
+
 //   static private int cY[] = new int[3];
 //   static private int cX[] = new int[3];
-//   
+//
 //  /** Dessin d'un repere (petit triangle) a la position (x,y).
 //   * @param g        Le contexte graphique
 //   * @param  x,y     Les coordonnees ou le repere doit etre dessine
@@ -318,20 +315,20 @@ public final class MCanvas extends JComponent
 //      g.setColor(c);
 //      if( flagRep ) g.fillPolygon(cX,cY,3);
 //      else g.drawPolygon(cX,cY,3);
-//      
+//
 //      g.setColor(COLORBORD);
 //      g.drawLine(1,y+2,1+16,y+2);
-//      
+//
 //   }
-   
+
    /** Dessine le petit triangle indiquant  l'ordre du tri */
    private void drawSort(Graphics g,int x,int y,int sort,Color background) {
       int w=8;
       Color c = background==Color.white ? Color.lightGray : Color.white;
-      
+
       g.setColor(background);
       g.fillRect(x-2, y-HF+1, w+5, HF);
-      
+
       y-=w/2+1;
       g.setColor(Color.black);
       if( sort==Field.SORT_DESCENDING ) {
@@ -339,7 +336,7 @@ public final class MCanvas extends JComponent
          g.drawLine(x,y-w/2, x+w,y-w/2);
          g.setColor(c);
          g.drawLine(x+w/2,y+w/2, x+w,y-w/2);
-         
+
       } else if( sort==Field.SORT_ASCENDING ) {
          g.drawLine(x+w/2,y-w/2, x,y+w/2);
          g.setColor(c);
@@ -364,10 +361,10 @@ public final class MCanvas extends JComponent
 
          g.setColor(BG);
          g.fillRect(x,y,l,h);
-         
+
          g.setColor( Aladin.BKGD);
          g.fillRect(x,y,l,h);
-         
+
          g.setColor(w.pushed?Color.black:Color.white);
          g.drawLine(x,y,x+l,y);
          g.drawLine(x,y,x,y+h);
@@ -390,7 +387,7 @@ public final class MCanvas extends JComponent
    static Color C5 = new Color(195,195,255);  // bleu clair - ligne montrée
    static Color C6 = new Color(140,140,255);  // bleu foncé - bordure de la cellule sous la souris
    static Color C7 = new Color(255,255,225);  // Jaune pâle - sous la souris
-   
+
   /** Tracer d'un mot dans la fenetre des mesures.
    * <BR>
    * <B>Rq :</B> Met a jour la boite englobante du mot w.setPosition(...)
@@ -411,7 +408,7 @@ public final class MCanvas extends JComponent
       int width;	     // Taille totale (en fonction du nbre de carac. indiques)
       int widthw;	     // Taille du mot
       String text =  w.text;
-      
+
       // Prise en compte de la precision
       if( w.precision>=0 ) {
          int i = text.lastIndexOf('.');
@@ -420,13 +417,13 @@ public final class MCanvas extends JComponent
             if( i+pos<text.length() ) text = text.substring(0,i+pos);
          }
       }
-      
+
       // Determination de la taille
       boolean flagCut=false;  // true si le mot est tronqué
-      FontMetrics fm = g.getFontMetrics(); 
+      FontMetrics fm = g.getFontMetrics();
       widthw = fm.stringWidth(text) + (w.sort!=Field.UNSORT ? 12 : 0);
       if( w.onMouse ) {
-         if( widthw<w.width*wblanc ) width = w.width*wblanc; 
+         if( widthw<w.width*wblanc ) width = w.width*wblanc;
          else {
             width=widthw;
             if( w.archive || w.footprint ) width+=3;
@@ -435,7 +432,7 @@ public final class MCanvas extends JComponent
          width = w.width*wblanc;
          flagCut = widthw>w.width*wblanc;
       }
-      
+
       // Remplissage prealable si necessaire
       if( flagClear || w.onMouse || w.show ) {
          g.setColor( w.onMouse ? C6 : w.show ? C5 :  background );
@@ -446,34 +443,34 @@ public final class MCanvas extends JComponent
             g.fillRect(x-4+M,y-HF+M-1,width+7-2*M,HL-1-2*M+2);
          }
       }
-     
+
       // ça dépasse à gauche ou à droite
       if( x+width<1  || x>W ) return width;
-      
+
       // Une marque GLU (ancre)
       else if( w.glu && !(w.archive || w.footprint) ) {
          if( w.pushed ) g.setColor( Color.red );  // L'ancre a ete cliquee
          else if( w.haspushed ) g.setColor( C2 ); // Ancre inactive (jamais cliquee)
          else g.setColor( Color.blue );           // Ancre deja cliquee
       } else g.setColor( w.computed?C4:Color.black);  // Par defaut
-      
+
       // Mot trop long ?
       if( flagCut ) {
          int c = (widthw - (width - (w.archive?6:0)) )/wblanc +2;
          int offset=text.length()-c;
          if( offset>0 ) text = text.substring(0,offset);
       }
-      
+
       // Affichage du texte en fonction de l'alignement
       xtext=x;
       if( !flagCut ) {
          if( w.align==Words.RIGHT ) xtext=x+width-widthw;
          else if( w.align==Words.CENTER ) xtext=x+width/2 - widthw/2;
       }
-      
+
       if( w.archive || w.footprint ) drawButton(g,xtext,y,HF,width,text,w);
       else g.drawString(text,xtext,y);
-      
+
       // On ajoute des points à la fin du mot s'il est coupé
       if( flagCut ) {
          Font f = g.getFont();
@@ -482,22 +479,22 @@ public final class MCanvas extends JComponent
          g.drawString("...",xp,y);
          g.setFont(f);
       }
-      
+
       // On dessine le triangle du mode de tri (ne concerne que l'entête)
       if( w.sort!=Field.UNSORT ) {
          Color c = w.onMouse ? Color.white :  background;
          drawSort(g,x+width-10,y,w.sort,c );
       }
-      
+
       // On souligne s'il s'agit d'une ancre
       if( w.glu ) g.drawLine(xtext,y+1,xtext+fm.stringWidth(text),y+1);
-            
+
       drawBordG(g,x,y-HF,width);
-      
+
       return w.width*wblanc;
    }
-   
-   
+
+
   /** Mise a jour d'une ligne.
    * Ecrit dans le contexte graphique les infos d'une ligne de mesures contenues dans
    * le vecteur word a l'ordonnee y
@@ -526,7 +523,7 @@ public final class MCanvas extends JComponent
          g.setColor( BG );
          g.fillRect(X+1,y-HF,X+W,HF+3);
       }
-      
+
       // Pour l'extraction du repere de debut de ligne
       Words rep = null;
       boolean flagFirst=true;
@@ -536,34 +533,34 @@ public final class MCanvas extends JComponent
       for( int i=0; e.hasMoreElements(); i++ ) {
          w = (Words) e.nextElement();
          if( w.show ) show=true;
-                      
+
          // Dans le cas d'un repere
          if( i==0 ) {
             if( flagFirst ) rep = w;
             width=tX[2];
-            
+
          // Dans le cas d'un mot
          } else {
             w.setPosition(x,y-HF,0,0);    // Memo des coord
             width = drawWords(g,w,flagClear);
-         }         
+         }
 
          w.setPosition(x,y-HF,width,HF);  // Memo de la boite recouvrant le mot, le repere
          x += width+wblanc;               // Calcul de la prochaine abscisse
          flagFirst=false;
       }
-      
+
       if( W!=-1 ) {
-         
+
          // Affichage du repere de debut de ligne si necessaire
          if( rep!=null && y>HF ) Util.drawCheckbox(g,X+3,y-11,o.plan.c,null,null,o.isTagged());
-         
+
          // On finit le fond de la ligne si nécessaire
          if( x<X+W ) {
             g.setColor(show ? C5 : BG);
             g.fillRect(x-4, y-HF, X+W-(x-4), HF+2);
          }
-         
+
          g.setColor(COLORBORD);
          g.drawLine(X+1,y+2,X+1+W,y+2);
       }
@@ -571,40 +568,40 @@ public final class MCanvas extends JComponent
       return x-absX;
 
    }
-   
+
    /** Retourne true s'il s'agit de la source et de l'indice du champ
     * de l'histogramme courant */
 //   private boolean isHist(Source o,int nField) {
 //      Hist hist = aladin.calque.zoom.zoomView.hist;
-//      return hist!=null && aladin.calque.zoom.zoomView.flagHist 
+//      return hist!=null && aladin.calque.zoom.zoomView.flagHist
 //           && hist.o==o && hist.nField==nField;
 //   }
-   
+
    /** Redessine l'entête qui si c'est nécessaire (sur un mouseMoved par exemple) */
    private void quickDrawHead(Graphics g,Source o) {
       if( o!=null && o.leg==oleg  ) return;      // déjà fait
       drawHead(g,o);
    }
-   
+
    private void clearHead(Graphics g,int X,int W) {
       if( W<=0 ) return;
       g.setColor( BG  );
       g.fillRect(X+1,1,W,HF+3);
 //      Aladin.trace(4,"MCanvas.clearHead()");
    }
-   
+
    /** Dessine la ligne d'entête, ou l'efface si null */
    protected void drawHead(Graphics g,Source o) { drawHead(g,0,0,o,W); }
    protected void drawHead(Graphics g,int X,int y,Source o,int W) {
       Vector head;
-      if( o==null && oleg==null 
+      if( o==null && oleg==null
             || o!=null && oleg==o.leg ) head=ligneHead;
       else {
          head= o==null ? null : aladin.mesure.getHeadLine(o);
-         oleg= o==null ? null : o.leg; 
+         oleg= o==null ? null : o.leg;
          ligneHead=head;
       }
-      
+
       // Effacement de la ligne
       if( head==null && W!=-1 ) {
          clearHead(g,X,W);
@@ -612,7 +609,7 @@ public final class MCanvas extends JComponent
 //         g.fillRect(X+1,1,W,HF+3);
          return;
       }
-      
+
       Words w;       // liste courante de mots
       int x= X+absX;       // Abscisse courante dans la ligne
       y+=HF+1;
@@ -632,7 +629,7 @@ public final class MCanvas extends JComponent
                g.fillRect(x+1,y-HF,width+2,HF+2);
                if( triTag!=Field.UNSORT ) drawSort(g,5,y,triTag,Aladin.BKGD);
             }
-            
+
          } else {
             w.setPosition(x,y-HF,0,0);    // Positionnement
             width = drawWords(g,w,true,Aladin.BKGD);
@@ -641,7 +638,7 @@ public final class MCanvas extends JComponent
          w.setPosition(x,y-HF,width,HF);  // Memo de la boite recouvrant le mot, le repere
          x += width+wblanc;               // Calcul de la prochaine abscisse
       }
-      
+
       if( W!=-1 ) {
 
          // On finit le fond de la ligne si nécessaire
@@ -661,16 +658,16 @@ public final class MCanvas extends JComponent
       if( aladin.inHelp ) { aladin.setHelp(false); return; }
       int x = ev.getX();
       int y = ev.getY();
-      
+
       requestFocusInWindow();
 
       //Menu Popup
-      if( (ev.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 
+      if( (ev.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0
             /* && currentsee<aladin.mesure.getNbSrc() */) {
           popupShow(x,y);
           return;
       }
-      
+
       // on avertit les FilterProperties qu'il y a eu un click dans les mesures
       if( FilterProperties.clickInMesure(sCourante, indiceCourant) ) return;
 
@@ -688,10 +685,10 @@ public final class MCanvas extends JComponent
 
    int memFirstsee=0;
    private int flagDragX=-1;
-   
+
 //   private double [] xHist = null;
 //   private String [] sHist = null;
-      
+
    /** Tri des sources de même type que celle passée en paramètre. La légende
     * concernée permet de déterminer le précédent tri effectué pour éventuellement
     * switcher entre un tri ascendant et descendant */
@@ -699,8 +696,8 @@ public final class MCanvas extends JComponent
       boolean ascending;
       nField=o.leg.getRealFieldNumber(nField);
       if( nField==-1 ) {
-         o.leg.clearSort(); 
-         triTag = Field.SORT_ASCENDING; 
+         o.leg.clearSort();
+         triTag = Field.SORT_ASCENDING;
          ascending = true;
       } else {
          triTag = Field.UNSORT;
@@ -709,7 +706,7 @@ public final class MCanvas extends JComponent
       ligneHead = aladin.mesure.getHeadLine(o);
       aladin.mesure.tri(o,nField,ascending);
    }
-   
+
 //   /** Génération de l'histogramme de répartition des valeurs du champ nField
 //    * de toutes les sources de même légende que la source étalon o
 //    */
@@ -722,7 +719,7 @@ public final class MCanvas extends JComponent
 //         aladin.calque.zoom.zoomView.setHist(sHist,o,nField);
 //      }
 //   }
-   
+
    /** Tri des sources de même type que celle passée en paramètre. */
    protected void tri(Source o,int nField,boolean ascending) {
       nField=o.leg.getRealFieldNumber(nField);
@@ -740,7 +737,7 @@ public final class MCanvas extends JComponent
       int x = ev.getX();
       int y = ev.getY();
       boolean flagPopup=false;
-      
+
       // On va ouvrir le Popup sur le mouseUp()
       if( (ev.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
          sortField = indiceCourant;
@@ -749,21 +746,21 @@ public final class MCanvas extends JComponent
 
       // Clic dans l'entête
       if( !flagPopup && y<MH && ligneHead!=null) {
-         
+
          // On va redimensionner
          if( onBordField!=-1 ) {
             onBordX = x;
-            return; 
+            return;
          }
-         
+
          // On va faire l'histogramme et si déjà fait trier
          timer.stop();
-         Source o = (Source) ligneHead.elementAt(0);         
+         Source o = (Source) ligneHead.elementAt(0);
          aladin.calque.zoom.zoomView.setHist(o,indiceCourant);
          tri(o,indiceCourant);
          return;
       }
-      
+
       aladin.calque.zoom.zoomView.setHist();
 
       // Il n'y a pas de mesure dans la fenetre des mesures
@@ -777,12 +774,12 @@ public final class MCanvas extends JComponent
       Vector ligne = aladin.mesure.getWordLine(currentsee);
       Enumeration e = ligne.elements();      // Pour faciliter la manip.
       Source o = (Source)e.nextElement();    // L'objet lui-meme
-      
+
       // Pour déselectionner la source correspondant à la ligne sous
       // la souris (shift appuyé). Il faut mettre ow=null pour éviter
       // des ghosts par la suite
       if( !flagPopup && ev.isShiftDown() ) {
-         deselect((Source)o);
+         deselect(o);
          return;
       }
 
@@ -790,10 +787,10 @@ public final class MCanvas extends JComponent
       if( !flagPopup && aladin.frameNewCalib!=null && aladin.frameNewCalib.isShowing() ) {
          aladin.frameNewCalib.mouse(0,0,null,o);
       }
-      
+
       // repérage de la source
       boolean rep;
-      
+
       // Synchronization de toutes les vues sur la source
       if( !flagPopup ) {
          if( ev.getClickCount()==2 || aladin.calque.getPlanBase() instanceof PlanBG ) {
@@ -839,8 +836,12 @@ public final class MCanvas extends JComponent
                   //            	o.footprint.make(o.raj,o.dej,o.footprintAngle);
                   //            	o.footprint.setTarget(o.raj, o.dej, o.footprintAngle);
                   //            	aladin.calque.newPlanField(o.footprint);
-                  o.getFootprint().setActivated(true);
-                  o.getFootprint().flagOk = true;
+                  PlanField pf = o.getFootprint().getFootprint();
+                  if (pf != null) {
+                      pf.setActivated(true);
+                      pf.flagOk = true;
+
+                  }
                   o.switchFootprint();
                   //            	System.out.println(o.footprintAngle);
                   //            	System.out.println("hide/show footprint ");
@@ -860,19 +861,19 @@ public final class MCanvas extends JComponent
             }
          }
       }
-      
+
       // Sélection temporaire de l'objet cliqué pour pouvoir voir le menu associé
       if( objSelect==null || flagPopup ) { objSelect=o; setShow(ligne,true); }
       else objSelect=null;
-      
+
       // Pour le déplacement horizontal par souris
       flagDragX=x;
       flagDrag=true;
-      
+
       currentselect=(currentselect==currentsee)?-2:currentsee;
       repaint();
    }
-   
+
    /** Déselection de la source indiquée */
    void deselect(Source o) {
       if( o==null ) return;
@@ -881,7 +882,7 @@ public final class MCanvas extends JComponent
          repaint();
       }
    }
-   
+
    /** Suppression d'une source (uniquement pour les plan isSourceRemovable() */
    void delete(Source o) {
       if( o==null || !o.plan.isSourceRemovable() ) return;
@@ -889,7 +890,7 @@ public final class MCanvas extends JComponent
       aladin.calque.delObjet(o);
       aladin.calque.repaintAll();
    }
-   
+
    public void mouseWheelMoved(MouseWheelEvent e) {
       int mode = e.getWheelRotation();
       int n = scrollV.getValue();
@@ -897,11 +898,11 @@ public final class MCanvas extends JComponent
       if( n+mode<0 ) return;
       scrollV.setValue(n+mode);
    }
-   
+
    public void mouseDragged(MouseEvent e) {
       if( aladin.inHelp ) return;
       int x = e.getX();
-      
+
       // On redimensionne la colonne
       if( onBordField!=-1 ) {
          Field f = oleg.field[onBordField];
@@ -916,44 +917,44 @@ public final class MCanvas extends JComponent
          repaint();
          return;
       }
-      
+
       if( flagDragX==-1 ) return;
       int offset = flagDragX-x;
       if( offset==0 ) return;
       int scroll = scrollH.getValue();
       scrollH.setValue(scroll+offset);
       flagDragX=x;
-      
+
       paintComponent(getGraphics());
    }
-   
+
    /** Suppression des drapeaux show et OnMouse de la ligne sous la souris en vue
     * de son effacement */
    private void clearMouseLigne(Graphics g) {
       clearLigne1(g,mouseLigne,false);
       mouseLigne=null;
    }
-   
+
    /** Suppression des drapeaux show et OnMouse de la ligne sélectionnée en vue
     * de son effacement */
    private void clearShowLigne(Graphics g) {
       clearLigne1(g,showLigne,true);
       showLigne=null;
    }
-   
+
    /** Suppression des drapeaux show et onMouse de la ligne passée en paramètre
     * + réaffichage (voir clearMouse() et clearShow()) */
    private void clearLigne1(Graphics g,Vector ligne,boolean flagShow) {
       if( ligne==null ) return;
       Enumeration e1 = ligne.elements();
       Source o = (Source)e1.nextElement(); // On passe l'objet
-      Words rep=null; 
-      
+      Words rep=null;
+
       // On remet le fond
       int y = ((Words)ligne.elementAt(1)).y;
       g.setColor(y<=HF ? Aladin.BKGD : BG);
       g.fillRect(0,y, W, HF+2);
-      
+
       Words w=null;
       int size=0;
       while( e1.hasMoreElements() ) {
@@ -963,25 +964,25 @@ public final class MCanvas extends JComponent
          if( w.repere ) rep=w;
          else size=drawWords(g,w,true);
       }
-      
+
       // On finit le fond de la ligne si nécessaire
       int x=w.x+size+3;
       if( x<W ) {
          g.setColor(w.show ? C5 : w.y<HF ? Aladin.BKGD : BG);
          g.fillRect(x, y, W-x, HF+2);
       }
-      
+
       // Affichage du repere de debut de ligne si necessaire
       if( rep!=null && y>HF) Util.drawCheckbox(g,3,y+1,o.plan.c,null,null,o.isTagged());
    }
-   
+
    /** Initialisation de la ligne à montrer  + affichage */
    private int initShow(Graphics g,int y,Vector ligne) {
       setShow(ligne,true);
       showLigne=ligne;
       return drawLigne(g,y,ligne,true);
    }
-   
+
    /** Initialisation de la ligne à montrer (drapeau show à positionner sur tous les mots */
    private void setShow(Vector ligne,boolean flag) {
       if( ligne==null ) return;
@@ -992,17 +993,17 @@ public final class MCanvas extends JComponent
          w.show = flag;
       }
    }
-   
+
    /** Force la reconstruction de la ligne d'entête */
-   protected void reloadHead() { 
+   protected void reloadHead() {
       if( ligneHead==null ) return;
       Source o = (Source)ligneHead.elementAt(0);
       ligneHead=aladin.mesure.getHeadLine(o);
    }
-   
+
    /** Désélection de la ligne en cours de sélection */
    protected void unselect() { objSelect=null; }
-   
+
    /** Construit la description du champ i de l'objet o */
    private String getDescription(Source o,int i) {
       StringBuffer res = new StringBuffer();
@@ -1015,7 +1016,7 @@ public final class MCanvas extends JComponent
       }
       return res.toString();
    }
-   
+
 //   /** Retourne le numéro du champ où se trouve la souris */
 //   private int getFieldIndex(Vector v,int x,int y) {
 //      Enumeration e = vhead.elements();
@@ -1026,11 +1027,11 @@ public final class MCanvas extends JComponent
 //      }
 //      return -1;
 //   }
-   
+
    Timer timer=null;
    Source oTimer=null;
    int onField=-1;
-   
+
    private void startTimerHist(Source o,int nField) {
       if( oTimer==o && onField==nField ) {
 //         aladin.trace(4, "MCanvas.startTimer("+o+","+nField+") nothing to do !");
@@ -1042,11 +1043,11 @@ public final class MCanvas extends JComponent
          timer = new Timer(500,this);
          timer.setRepeats(false);
          timer.start();
-      } else timer.restart();      
+      } else timer.restart();
 //      aladin.trace(4, "MCanvas.startTimer("+o+","+nField+") restarted !");
 
    }
-   
+
    private void endTimerHist() {
       if( oTimer==null || onField==-1 ) {
 //         aladin.trace(4, "endTimerHist() nothing to do !");
@@ -1055,9 +1056,9 @@ public final class MCanvas extends JComponent
       aladin.calque.zoom.zoomView.setHist(oTimer,onField);
       oTimer=null;
    }
-   
+
    private Words ow=null; // Dernier mot sous la souris (pour éviter de refaire la même chose)
-   
+
    // Calcule le véritable indice du champ dans la légende associée à la source
    // en fonction de l'indice dans la table affichée car certains champs peuvent être cachée
    // et il y a un décalage d'une valeur pour tenir compte de la case à cocher en début de ligne
@@ -1069,7 +1070,7 @@ public final class MCanvas extends JComponent
       }
       return indice-1;
    }
-   
+
   /** Deplacement de la souris sur les mesures.
    * Reperage du mot courant et de l'objet associe dans la vue
    */
@@ -1087,7 +1088,7 @@ public final class MCanvas extends JComponent
       Source o;
       String tip="";
       int indice;
-      
+
       // Est-on sur l'entête ?
       if( y<=MH ) {
          if( ligneHead==null ) return;
@@ -1104,7 +1105,7 @@ public final class MCanvas extends JComponent
                if( ow==w ) break;
                indiceCourant=i-1;
                sCourante = o;
-               
+
                // Démarrage du timer pour l'histogramme
                startTimerHist(sCourante,indiceCourant);
 
@@ -1122,7 +1123,7 @@ public final class MCanvas extends JComponent
                break;
             }
          }
-         
+
          if( onBordField!=-1 ) setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
          else aladin.makeCursor(this,Aladin.DEFAULT);
 
@@ -1132,7 +1133,7 @@ public final class MCanvas extends JComponent
 
       // Determination de la ligne courante
       currentsee = firstsee+ (y-MH)/HL;
-      
+
       // Si on se trouve en dehors de toute ligne, on gere l'evenement
       // de la meme maniere que si l'on sort de la fenetre
       if ( currentsee>=aladin.mesure.getNbSrc() ) {
@@ -1147,21 +1148,21 @@ public final class MCanvas extends JComponent
          Util.toolTip(this, tip);
          return;
       }
-      
-      
+
+
       Vector ligne = aladin.mesure.getWordLine(currentsee);
       o = (Source)ligne.elementAt(0);
-      
+
       // La ligne à montrer est-elle simplement sous la souris et s'agit-il
       // d'une ligne préalablement cliquée ?
       Source oshow = objSelect!=null ? objSelect : o;
-      
+
       // Visualisation dans la vue de la source associee a la mesure courante
       if( oo!=oshow ) { aladin.view.showSource(oshow); oo=oshow; }
 
       // Affichage de la coordonnees de la source
-      aladin.localisation.seeCoord((Position)oshow);
-      
+      aladin.localisation.seeCoord(oshow);
+
       // Affichage de l'entête correspondant à l'objet
       if( flagDrawHead ) drawHead(g,oshow);
       else quickDrawHead(g,oshow);
@@ -1179,7 +1180,7 @@ public final class MCanvas extends JComponent
             if( w==ow ) return;
             indiceCourant=indice;
             sCourante = o;
-            
+
             // Démarrage du timer pour l'histogramme
             startTimerHist(sCourante,indiceCourant);
 
@@ -1199,7 +1200,7 @@ public final class MCanvas extends JComponent
             else if( w.footprint) tip=TIPFOV;
             s=getDescription(o,indice);
             if( s==null ) s="";
-            
+
             // On change le curseur et on affiche eventuellement
             // l'URL ou la marque GLU
             try {
@@ -1210,19 +1211,19 @@ public final class MCanvas extends JComponent
                   else aladin.urlStatus.setText("");
                }
             } catch(Exception ecurs) {}
-            
+
             Util.drawEdge(g,W,H);
             aladin.mesure.setStatus(s);   // Mise a jour du status
             mouseLigne=ligne;
             ow=w;
-            
+
             break;
          }
      }
-      
+
       // Un tooltip sur la coche ?
-      if(x<15 ) tip=TIPTAG; 
-      
+      if(x<15 ) tip=TIPTAG;
+
     // thomas
     if(!trouve) {
        if( objSelect==null && showLigne!=null ) clearShowLigne(g);
@@ -1231,16 +1232,16 @@ public final class MCanvas extends JComponent
        ow=null;
        indiceCourant=-1;
     }
-    
+
     Util.toolTip(this, tip);
    }
-   
+
 
 //   public boolean mouseEnter(Event e, int x, int y) {
    public void mouseEntered(MouseEvent e) {
       ow=null;
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
-      
+
       // Juste pour repasser un sélection
       if( aladin.mesure.getNbSrc()>0 ) aladin.toolbox.mouseEnter(null,0,0);
 
@@ -1260,7 +1261,7 @@ public final class MCanvas extends JComponent
 
       // Traitement de l'objet dans la vue
       if( oo!=null ) { aladin.view.hideSource(); oo=null; }
-      
+
       // Petit nettoyage
       if( ow!=null ) ow.onMouse=false;
       repaint();
@@ -1278,9 +1279,9 @@ public final class MCanvas extends JComponent
       int n;                  // Numero de ligne
       int ntext;              // Nombre de ligne de mesures
       boolean retour=false;   // Le code de retour par defaut
-      
+
       if( mode==1 && objSelect!=null ) return false;
-      
+
       if( mode==3 ) {
          if( objSelect!=null ) unselect();
          else objSelect=o;
@@ -1288,7 +1289,7 @@ public final class MCanvas extends JComponent
          unselect();
          if( mode==2 ) objSelect=o;
       }
-      
+
       if( o==null )  currentsee=-1;        // Logique !
       else {
          for( n=0, ntext=aladin.mesure.getNbSrc(); n<ntext; n++ ) {
@@ -1314,37 +1315,37 @@ public final class MCanvas extends JComponent
 
    private int omax=-1;
    private boolean showScrollH=true;
-   
+
   /** Ajustement du scrollbar horizontal si necessaire
    * @param max le nombre de pixels du texte
    * @return true si on a dû ajouter la barre horizontale
    */
    private void adjustScrollH(int max) {
       boolean ok;
-      
+
       if( max==omax ) return;
       omax=max;
       scrollH.setMaximum(max);
-      
-      if( ok=(max<W && showScrollH) ) { aladin.mesure.remove(scrollH); showScrollH=false; } 
+
+      if( ok=(max<W && showScrollH) ) { aladin.mesure.remove(scrollH); showScrollH=false; }
       else if( ok=(max>=W && !showScrollH) ) {
          aladin.mesure.add(scrollH,"South");
          showScrollH=true;
          scrollH.setVisibleAmount(W);
          scrollH.setBlockIncrement(W-10*wblanc);
          nbligne--;
-      } 
+      }
       if( !ok ) return;
-      
+
       int deltaY = scrollH.getSize().height;
       if( showScrollH ) deltaY=-deltaY;
       scrollV.setSize( scrollV.getSize().width, scrollV.getSize().height+deltaY);
-      
+
       aladin.mesure.validate();
    }
-   
+
    private int onl = -1;
-   
+
    /** Ajuste le block et l'extend du scrollbar vertical en fonction du nombre
     * de lignes visibles */
    protected void adjustScrollV(int nl) {
@@ -1352,30 +1353,30 @@ public final class MCanvas extends JComponent
       scrollV.setBlockIncrement(nl-1);
       onl=nl;
    }
-   
+
    /** Surcharge juste pour en profiter pour mettre à jour
     * le nombre de sources sélectionnées dans la fenêtre des mesures */
    public void repaint() {
       aladin.adjustNbSel();
       super.repaint();
    }
-   
+
    // Regeneration du plan image pour la fenetre des mesures
    public void paintComponent(Graphics gr) {
       int j;
-      
+
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {
          firstUpdate=false;
          scrollV.setValue(0);
       }
-      
+
       mouseLigne=null;
       showLigne=null;
       ow=null;
-      
+
       // Double buffer (beaucoup plus rapide que le double buffering natif de SWING)
-      if( img==null || img.getWidth(this)!=getWidth() 
+      if( img==null || img.getWidth(this)!=getWidth()
             || img.getHeight(this)!=getHeight() ) {
          W=getWidth();
          H=getHeight();
@@ -1383,7 +1384,7 @@ public final class MCanvas extends JComponent
          img = aladin.createImage(W,H);
       }
       Graphics g=img.getGraphics();
-      
+
       // Affichage des lignes visibles
       nbligne = (H- (MH+MB))/HL;             // Nbre de lignes
       int y = MH+HF+1;                    // Ordonnee courante
@@ -1394,22 +1395,22 @@ public final class MCanvas extends JComponent
       if( firstsee<0 ) lastsee=firstsee = 0;
       g.setFont(FONT);
       aladin.mesure.memoWordLineClear();
-      
+
       Source oleg= objShow!=null ? objShow : objSelect;     // Quelle source à montrer ?
-      
+
       for( j=0; lastsee<ts && j<nbligne; lastsee++, j++, y+=HL ) {
          Vector word = aladin.mesure.getWordLine(lastsee);
          if( word==null ) continue;
-         
+
          // Mémorisation de la première source pour afficher l'entête correspondante
          if( oleg==null ) oleg = (Source)word.elementAt(0);
-         
+
          int m = drawLigne(g,y,word,true);
-         
+
          // Mémorisation de la WordLine afin de ne pas perdre les paramètres du tracé
          aladin.mesure.memoWordLine(word,lastsee);
-         
-         if( m>max ) max=m;         
+
+         if( m>max ) max=m;
       }
       lastsee--;
       objShow=null;
@@ -1420,7 +1421,7 @@ public final class MCanvas extends JComponent
          ligneHead=null;
          clearHead(g,0,W);
       }
-      
+
       // Si j'ai une scrollbar horizontale mais quelle ne serait pas nécessaire
       // il faut tout de même regarder si par hasard la ligne suivante n'en nécessiterait
       // pas une. Sinon, il va y avoir un effet de clignotement (ajout/retrait de
@@ -1430,11 +1431,11 @@ public final class MCanvas extends JComponent
          int m = drawLigne(g,-30,word,true);
          if( m>max ) max=W;
       }
-      
+
       // Ajustement des scrollbars si necessaire
       adjustScrollH(max);
       adjustScrollV((H- (MH+MB))/HL - (showScrollH?1:0));
-      
+
       // Nettoyage de la fin de la fenetre si necessaire
       y-=HF;
       int ry=H-y-1;                // La plage restante
@@ -1445,7 +1446,7 @@ public final class MCanvas extends JComponent
 
       // Les bordures du cadre
       Util.drawEdge(g,W,H);
-      
+
       gr.drawImage(img,0,0,this);
    }
 
@@ -1458,7 +1459,7 @@ public final class MCanvas extends JComponent
 //         aladin.mesure.setStatus("...sorting...");
 //         return true;
 //      }
-//      
+//
 //      if( aladin.inHelp ) {
 //         if( e.id==Event.MOUSE_ENTER ) aladin.help.setText(Help());
 //         else if( e.id==Event.MOUSE_UP ) aladin.helpOff();
@@ -1468,12 +1469,12 @@ public final class MCanvas extends JComponent
 //   }
 
    public void mouseClicked(MouseEvent e) { }
-   
+
    public void keyReleased(KeyEvent e) {
       if( aladin.inHelp ) { aladin.helpOff(); return; }
-      
+
       Search sr = aladin.mesure.flagSplit ? aladin.mesure.search : aladin.search;
-      
+
       int c = e.getKeyCode();
       if( c==KeyEvent.VK_UP || c==KeyEvent.VK_LEFT ) sr.execute("-");
       else if( c==KeyEvent.VK_DOWN || c==KeyEvent.VK_RIGHT ) sr.execute("+");

@@ -118,7 +118,7 @@ public class Source extends Position implements Comparator {
       fixInfo();
 
    }
-   
+
    public boolean hasProp() { return false; }
 
    /** Projection de la source => calcul (x,y).
@@ -652,13 +652,8 @@ public class Source extends Position implements Comparator {
 
     private void drawAssociatedFootprint(Graphics g, ViewSimple v, int dx, int dy) {
         // dessin du FoV éventuellement associé à la source
-        PlanField footprint;
-        if (    sourceFootprint != null
-            && (footprint = sourceFootprint.getFootprint()) != null
-            && showFootprint()) {
-            footprint.c = plan.c;
-            footprint.reset(ViewSimple.MOVECENTER);
-            footprint.pcat.draw(g, null, v, true, dx, dy);
+        if (sourceFootprint != null) {
+            sourceFootprint.draw(v.getProj(), g, v, dx, dy, plan.c);
         }
     }
 
@@ -1086,7 +1081,7 @@ public class Source extends Position implements Comparator {
        }
        return u;
     }
-    
+
     /** Return XML meta information associated to this object
      * @return XML string, or null
      */
@@ -1110,12 +1105,14 @@ public class Source extends Position implements Comparator {
     *
     */
    private void createSourceFootprint() {
-      if( sourceFootprint==null ) sourceFootprint = new SourceFootprint();
+      if( sourceFootprint==null ) {
+          sourceFootprint = new SourceFootprint();
+      }
    }
 
    /** Retourne le footprint attaché à la source (peut être <i>null</i>) */
-   protected PlanField getFootprint() {
-      return sourceFootprint==null?null:sourceFootprint.getFootprint();
+   protected SourceFootprint getFootprint() {
+      return sourceFootprint;
    }
 
    /** Attache un footprint donné à la source */
@@ -1124,20 +1121,17 @@ public class Source extends Position implements Comparator {
    	  sourceFootprint.setFootprint(footprint);
    }
 
+   protected void setFootprint(String stcs) {
+       createSourceFootprint();
+       sourceFootprint.setStcs(this.raj, this.dej, stcs);
+   }
+
    /**
     * Switch the state (on/off) of the associated footprint
     *
     */
    protected void switchFootprint() {
-      setShowFootprint(!showFootprint());
-   }
-
-   /**
-    *
-    * @return Returns <i>true</i> if the associated footprint is currently visible, <i>false</i> otherwise
-    */
-   protected boolean showFootprint() {
-      return sourceFootprint==null?false:sourceFootprint.showFootprint();
+      setShowFootprint(sourceFootprint.showFootprint());
    }
 
    /**

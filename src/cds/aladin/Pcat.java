@@ -325,9 +325,9 @@ Aladin.trace(3,"startTable "+name);
       nIdVraisemblance=0;
       group=null;
    }
-   
+
    private Vector<String> group=null;  // Liste des GROUP servant aux définitions des systèmes de coordonnées ou des Flux
-   
+
    // Ajoute un GROUP à la liste des GROUPs à associer à la prochaine légende qui sera créée
    private void addGroup(String s) {
       if( s==null ) { group=null; return; } // reset forcé
@@ -609,7 +609,7 @@ Aladin.trace(3,"setField "+f);
                leg = new Legende(v);
                leg.name=table;
             }
-            
+
             // Ajout de GROUPs éventuels
             if( group!=null ) leg.setGroup(group);
 
@@ -718,6 +718,17 @@ Aladin.trace(3,"setField "+f);
          else source = new Source(plan, ra, dec, lab, line.toString(), leg);
          if( oid != null ) source.setOID(oid);
          o[nb_o++] = source;
+
+         // Fov STCS attaché ?
+         int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION);
+         if (idxSTCS>=0) {
+             try {
+                 source.setFootprint(source.getValue(idxSTCS));
+             }
+             catch(Exception e) {
+                 e.printStackTrace();
+             }
+         }
 
          // Pour laisser la main aux autres threads
          if( Aladin.isSlow && nb_o%200==0 ) Util.pause(10);
@@ -885,7 +896,7 @@ Aladin.trace(3,"setField "+f);
          else if( (type&MyInputStream.BSV) == MyInputStream.BSV  ) sep = " ";
          else if( dis.getSepCSV()!=-1 ) sep = dis.getSepCSV()+"";
          else sep = aladin.CSVCHAR;
-         
+
          res = new TableParser(aladin,this, sep);
          ok = res.parse(dis,endTag);
       }
@@ -1052,7 +1063,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
 //         if( plan!=null ) plan.sendLog("Error","setPlanCat() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
          nb=-1;
       }
-      
+
        // s'il s'agit d'un stream FOV, on doit encore parser la suite !!
        if( flagFootprint ) {
            FootprintParser fParser = new FootprintParser(dis, res.getUnreadBuffer());
@@ -1161,13 +1172,13 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       o[i] = newobj;
       return i;
    }
-   
+
    // Ajout d'un nouvel objet (non interractivement)
    protected void setObjetFast(Obj newobj) {
       int i = nextIndex();
       o[i] = newobj;
    }
-   
+
    /** Vérifie et fixe le nombre de champs de toutes les objets Source
     * ayant la même légende que celle passée en paramètre.
     * @param leg La légende "étalon"
