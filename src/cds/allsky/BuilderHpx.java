@@ -42,7 +42,9 @@ final public class BuilderHpx {
    private Context context;
 
    private int bitpix;
-   double blankOrig;
+   private boolean hasAlternateBlank;
+   private double blankOrig;
+   private double blank;
    private boolean flagColor;
    private double bScale;
    private double bZero;
@@ -63,6 +65,11 @@ final public class BuilderHpx {
          cutOrig=context.getCutOrig();
          cut=context.getCut();
          blankOrig=context.getBlankOrig();
+         hasAlternateBlank = context.hasAlternateBlank();
+         blank = context.getBlank();
+
+      } else {
+         blank=0;
       }
       hpxFinderPath = context.getHpxFinderPath();
    }
@@ -91,7 +98,6 @@ final public class BuilderHpx {
          // cherche les numéros de pixels Healpix dans ce losange
          min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
-         double blank = flagColor ? 0 : context.getBlank();
          boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
 
          // initialisation de la liste des fichiers originaux pour ce losange
@@ -127,6 +133,7 @@ final public class BuilderHpx {
                double lastX=-1,lastY=-1;
                for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
                   file = downFiles.get(i);
+                  double currentBlankOrig = !hasAlternateBlank ? file.fitsfile.getBlank() : blankOrig;
 
                   // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
                   if( lastFitsFile!=null && lastFitsFile.equals(file.fitsfile.getFilename()) ) { coo.y=lastY; coo.x=lastX; }
@@ -149,7 +156,7 @@ final public class BuilderHpx {
 
                      // Cas normal
                   } else {
-                     double pix = getBilinearPixel(file.fitsfile,coo);
+                     double pix = getBilinearPixel(file.fitsfile,coo,currentBlankOrig);
                      if( Double.isNaN(pix) ) continue;
                      pixval[nbPix]=pix;
                   }
@@ -201,9 +208,6 @@ final public class BuilderHpx {
       return (!empty) ? out : null;
    }
    
-   private boolean isBlankPixel(double pix) {
-      return Double.isNaN(pix) || pix==blankOrig;
-   }
    
    //	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
    //	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
@@ -277,7 +281,7 @@ final public class BuilderHpx {
       return (maxd - d)/maxd;
    }
 
-   private double getBilinearPixel(Fits f,Coord coo) {
+   private double getBilinearPixel(Fits f,Coord coo,double myBlank) {
       double x = coo.x;
       double y = coo.y;
       
@@ -304,11 +308,25 @@ final public class BuilderHpx {
       double a1 = f.getPixelDouble(ox2,oy1);
       double a2 = f.getPixelDouble(ox1,oy2);
       double a3 = f.getPixelDouble(ox2,oy2);
-
-      if( isBlankPixel(a0) ) return Double.NaN;
-      if( isBlankPixel(a1) ) a1=a0;
-      if( isBlankPixel(a2) ) a2=a0;
-      if( isBlankPixel(a3) ) a3=a0;
+      
+      boolean b0 = Double.isNaN(a0) || a0==myBlank;
+      boolean b1 = Double.isNaN(a1) || a1==myBlank;
+      boolean b2 = Double.isNaN(a2) || a2==myBlank;
+      boolean b3 = Double.isNaN(a3) || a3==myBlank;
+      
+      if( b0 && b1 && b2 && b3 ) return Double.NaN;
+      if( b0 || b1 || b2 || b3 ) {
+         double a = !b0 ? a0 : !b1 ? a1 : !b2 ? a2 : a3;
+         if( b0 ) a0=a;
+         if( b1 ) a1=a;
+         if( b2 ) a2=a;
+         if( b3 ) a3=a;
+      }
+//
+//      if( isBlankPixel(a0,blank) ) return Double.NaN;
+//      if( isBlankPixel(a1,blank) ) a1=a0;
+//      if( isBlankPixel(a2,blank) ) a2=a0;
+//      if( isBlankPixel(a3,blank) ) a3=a0;
 
       return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
    }
@@ -451,7 +469,7 @@ final public class BuilderHpx {
                   }
 
                   fitsfile.setFilename(fitsfilename);
-                  if( !Double.isNaN(blank) ) fitsfile.setBlank(blank);
+//                  if( !Double.isNaN(blank) ) fitsfile.setBlank(blank);
 
                   SrcFile file = new SrcFile();
                   file.fitsfile = fitsfile;

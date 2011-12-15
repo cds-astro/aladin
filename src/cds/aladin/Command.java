@@ -174,15 +174,15 @@ public final class Command implements Runnable {
    /** Arrêt forcer du thread de lecture des commandes */
    protected void stop() { stop=true; }
    
-   protected void toStdoutAndConsole(String s) {
+   public void toStdoutAndConsole(String s) {
       toStdout(s);
       if( !s.startsWith("!!!") ) a.console.setInfo(s);
       else a.console.setError(s);
    }
 
    /** Affichage sur le standard output si possible */
-   protected void toStdoutln(String s) { toStdout(s+"\n"); }
-   protected void toStdout(String s) {
+   public void toStdoutln(String s) { toStdout(s+"\n"); }
+   public void toStdout(String s) {
       if( Aladin.NOGUI && !s.startsWith("!!!")  ) return;
       if( !Aladin.isApplet() ) System.out.print(s);
    }

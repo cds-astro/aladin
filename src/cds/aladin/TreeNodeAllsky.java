@@ -74,7 +74,7 @@ public class TreeNodeAllsky extends TreeNode {
       // Par http ou ftp ?
       try {
          InputStream in=null;
-         if( !local ) in = (new URL(pathOrUrl+Util.FS+PlanHealpix.PROPERTIES)).openStream();
+         if( !local ) in = (new URL(pathOrUrl+"/"+PlanHealpix.PROPERTIES)).openStream();
          else in = new FileInputStream(new File(pathOrUrl+Util.FS+PlanHealpix.PROPERTIES));
          if( in!=null ) prop.load(in);
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }

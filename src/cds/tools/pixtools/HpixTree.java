@@ -23,6 +23,7 @@ import java.io.InputStream;
 
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
+import cds.moc.Array;
 import cds.moc.HealpixMoc;
 
 /** Gestion d'un ensemble de pixels Healpix, d'ordres variables
@@ -30,10 +31,10 @@ import cds.moc.HealpixMoc;
  * @author Pierre Fernique [CDS]
  * @version 1.0 March 2011
  */
-public final class HpixTree extends HealpixMoc {
+public final class HpixTree extends HealpixMoc implements Cloneable {
    
     
-   public HpixTree(String s) { super(s); }
+   public HpixTree(String s) throws Exception { super(s); }
    
    public HpixTree(InputStream in) throws Exception {
       super();
@@ -48,7 +49,7 @@ public final class HpixTree extends HealpixMoc {
    }
    
    /** Ajout d'un pixel */
-   public boolean add(int order,long npix) {
+   public boolean add(int order,long npix) throws Exception {
       
       // On n'accepte pas en dessous de l'ordre 3 => sinon impossible à tracer
       // On insère les fils d'ordre 3 équivalents

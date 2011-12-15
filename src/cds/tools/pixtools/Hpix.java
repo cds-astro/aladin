@@ -30,18 +30,17 @@ import cds.aladin.Localisation;
 import cds.aladin.PointD;
 import cds.aladin.Projection;
 import cds.aladin.ViewSimple;
+import cds.moc.MocCell;
 
 /** Gestion d'un Pixel Healpix avec mémorisation des coins,
  * et des coordonnées XY projetés dans une vue particulière
  * @author Pierre Fernique [CDS]
  * @version 1.0 March 2011
  */
-public final class Hpix {
+public final class Hpix extends MocCell {
    // Ordre des indices des coins, Bas -> Gauche -> Haut -> Droite
    static final private int [] ORDRE = { 0,1,3,2 };
    
-   private int order;       // Order HEALPIX (=log2(NSIDE))
-   private long npix;       // Numéro du pixel (toujours en NESTED)
    private int frame;       // Le système de coordonnées (Localisation.GAL, Localisation.ECLIPTIC, Localisation.ICRS)
    
    private long ovIZ;              // Signature de la vue/projection/zoom utilisée pour le calcul de coins[]
@@ -62,12 +61,6 @@ public final class Hpix {
    
    /** Création à partir des deux valeurs order et npix */
    public Hpix(int order, long npix, int frame ) { init(order,npix,frame); }
-   
-   /** Retourne l'ordre du pixel (=log2(NSIDE)) */
-   public int getOrder() { return order; }
-   
-   /** Retourne le numéro du pixel (en mode NESTED) */
-   public long getNpix() { return npix; }
    
    /** Retourne le système de référence des coordonnées  (Localisation.GAL, Localisation.ECLIPTIC, Localisation.ICRS) */
    public int getFrame() { return frame; }

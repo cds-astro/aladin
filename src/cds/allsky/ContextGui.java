@@ -95,10 +95,14 @@ public class ContextGui extends Context {
 
    public double getBlankOrig() {
       double b = Double.NaN;
+      hasAlternateBlank=false;
       String s="";
       try { 
          s = mainPanel.tabDesc.getBlank().trim();
-         if( s.length()>0 ) b = Double.parseDouble(s);
+         if( s.length()>0 ) {
+            b = Double.parseDouble(s);
+            hasAlternateBlank=true;
+         }
       } catch( Exception e ) {
          mainPanel.tabDesc.blankTextField.setText("Unknown value => ["+s+"]");
       }

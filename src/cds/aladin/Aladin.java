@@ -131,7 +131,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.074";
+    static public final    String VERSION = "v7.075";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -348,7 +348,7 @@ public class Aladin extends JApplet
     protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
     public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
     public Console console;                  // Gere la fenetre de la console
-    Command command=null;	      // Gere les commandes asynchrones
+    public Command command=null;	      // Gere les commandes asynchrones
     FrameNewCalib frameNewCalib=null; // Gere la fenetre de recalibration astrometrique
     public Configuration configuration;	      // Configuration utilisateur
     public KernelList kernelList;    // Gère la liste des noyaux de convolution

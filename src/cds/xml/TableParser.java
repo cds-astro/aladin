@@ -1692,7 +1692,8 @@ final public class TableParser implements XMLConsumer {
 //         if( row==record.length ) throw new Exception("Not aligned CSV catalog section (record "+(nbRecord+1)+" field["+row+"]=["+value+"])");
          if( row==record.length ) {
             String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored";
-            aladin.console.setError(s);
+//            aladin.console.setError(s);
+            aladin.command.toStdoutAndConsole(s);
          } else record[row++]=value;
       }
       else {
@@ -1722,7 +1723,8 @@ final public class TableParser implements XMLConsumer {
       if( record!=null && row<record.length &&  !(row==1 && record[0].equals("[EOD]")) ) {
 //         throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
          String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows) => ignored";
-         aladin.console.setError(s);
+//         aladin.console.setError(s);
+         aladin.command.toStdoutAndConsole(s);
       }
       return cur;
    }

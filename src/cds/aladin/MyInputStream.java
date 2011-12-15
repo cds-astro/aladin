@@ -929,7 +929,8 @@ public long skip(long n) throws IOException {
        boolean inHeader=true; // true si on est dans l'entete du fichier
        int rep=1;
        StringBuffer debugMsg=null;
-       boolean flagSextra = true;   // true si on a détecté une entête Sextractor
+       boolean flagSextra = false;   // true si on a détecté une entête Sextractor
+       boolean firstComment = true; // True si on n'a pas encore traité le premier commentaire
        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
        
@@ -949,6 +950,7 @@ public long skip(long n) throws IOException {
           if( inHeader ) {
              if( ligne.trim().length()==0 ) continue;
              if( ligne.charAt(0)=='#' ) {
+                if( firstComment ) { flagSextra=true; firstComment=false; }
                 flagSextra = flagSextra & isSextra(ligne);
                 if( flagSextra ) sextraFin = deb;
                 continue;
@@ -1011,7 +1013,7 @@ public long skip(long n) throws IOException {
        
        char [] cs = new char[] { ' ' };
        for( int i=0; i<bufN; i++ ) {
-          int m = TableParser.countColumn(bufLigne[0],cs);
+          int m = TableParser.countColumn(bufLigne[i],cs);
           if( i==0 ) n=m;
           else if( m!=n ) return 0;
        }

@@ -157,9 +157,9 @@ public class Ellipse extends Forme {
       double xp = semiMA*Math.cos(u);
       double yp = semiMI*Math.sin(u);
       double p = Math.sqrt(xp*xp+yp*yp);
-      System.out.println("xy=("+x+","+y+") u="+Math.toDegrees(u)+" len="+len+" p="+p+" semiMA="+semiMA+" semiMI="+semiMI);
-//      return flagPerimetre ? Math.abs(len-p)<3+9/v.getZoom() : len<p;
-      return len<p;
+//      System.out.println("xy=("+x+","+y+") u="+Math.toDegrees(u)+" len="+len+" p="+p+" semiMA="+semiMA+" semiMI="+semiMI);
+      return flagPerimetre ? Math.abs(len-p)<3+9/v.getZoom() : len<p;
+//      return len<p;
    }
 
    /** Il faut que le centre de l'ellipse soit dans le rectangle pour retourner vrai */

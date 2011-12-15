@@ -41,6 +41,7 @@ public class Context {
    
    protected int bitpixOrig = -1;            // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
+   protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
@@ -85,6 +86,7 @@ public class Context {
    public double getBScale() { return bScale; }
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
+   public boolean hasAlternateBlank() { return hasAlternateBlank; }
    public HpixTree getMoc() { return moc; }
    public CoAddMode getCoAddMode() { return coAdd; }
    public double[] getCut() { return cut; }
@@ -120,7 +122,7 @@ public class Context {
 	   if (this.bitpix==-1) this.bitpix = bitpixO;
    }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
-   public void setBlankOrig(double x) {  blankOrig = x; }
+   public void setBlankOrig(double x) {  blankOrig = x; hasAlternateBlank=true; }
    public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setAbort() { setIsRunning(false); }
@@ -247,7 +249,11 @@ public class Context {
 
    protected HpixTree setMoc(String s) {
       if( s.length()==0 ) return null;
-      HpixTree hpixTree = new HpixTree(s);
+      HpixTree hpixTree;
+      try { hpixTree = new HpixTree(s);
+      } catch( Exception e ) {
+         return null;
+      }
       if( hpixTree.getSize()==0 ) return null;
       moc = hpixTree;
       return hpixTree;
@@ -271,6 +277,9 @@ public class Context {
       blankOrig = getBlankOrig();
       bZeroOrig = getBZeroOrig();
       bScaleOrig = getBScaleOrig();
+
+      // Le blank de sortie est imposée
+      blank = getDefaultBlankFromBitpix(bitpix);
      
       // Y a-t-il un changement de bitpix ?
       // Les cuts changent ainsi que le blank
@@ -284,7 +293,7 @@ public class Context {
          cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
          cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
 
-         blank = getDefaultBlankFromBitpix(bitpix);
+//         blank = getDefaultBlankFromBitpix(bitpix);
          bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
          bScale = bScaleOrig/coef;
          
@@ -296,17 +305,18 @@ public class Context {
       
          // Pas de changement de bitpix
       } else {
-         blank=blankOrig;
-         if( Double.isNaN(blank) && bitpix>0 ) blank = getDefaultBlankFromBitpix(bitpix);
+//         blank=blankOrig;
+//         if( Double.isNaN(blank) && bitpix>0 ) blank = getDefaultBlankFromBitpix(bitpix);
          bZero=bZeroOrig;
          bScale=bScaleOrig;
          Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
       }
+      
 
       // si besoin redéfinit le blank 
-      if (isSkySub() && bitpix>0) {
-    	  blank=getDefaultBlankFromBitpix(bitpix);
-      }
+//      if (isSkySub() && bitpix>0) {
+//    	  blank=getDefaultBlankFromBitpix(bitpix);
+//      }
    }
    
    public boolean verifCoherence() {

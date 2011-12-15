@@ -31,6 +31,7 @@ import javax.swing.Timer;
 
 import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
+import cds.moc.MocCell;
 import cds.tools.Util;
 import cds.tools.pixtools.Hpix;
 import cds.tools.pixtools.HpixTree;
@@ -83,7 +84,7 @@ public class PlanMoc extends PlanBGCat {
    protected void resetProj(int n) { }
    protected boolean isDrawn() { return true; }
    
-   private HealpixMoc getViewMoc(ViewSimple v,int order) {
+   private HealpixMoc getViewMoc(ViewSimple v,int order) throws Exception {
       Coord center = getCooCentre(v);
       long [] pix = getPixList(v,center,order);
 
@@ -95,16 +96,30 @@ public class PlanMoc extends PlanBGCat {
    }
    
    private Hpix [] hpixList = null;
-   private Hpix [] getHpixList(ViewSimple v) {
+   private Hpix [] hpixListLow = null;
+   private Hpix [] getHpixList(ViewSimple v,boolean low) {
       if( hpixList==null ) {
          hpixList = new Hpix[hpix.getSize()];
          int n=0;
-         Iterator<long[]> it = hpix.iterator();
+         Iterator<MocCell> it = hpix.iterator();
          while( it.hasNext() ) {
-            long [] h = it.next();
-            hpixList[n++] = new Hpix((int)h[0],h[1],frameOrigin);
+            MocCell h = it.next();
+            hpixList[n++] = new Hpix(h.order,h.npix,frameOrigin);
          }
+         
+//         HpixTree hpixLow = hpix;
+//         try { hpixLow.setLimitOrder(6); } 
+//         catch( Exception e ) { e.printStackTrace(); }
+//         hpixListLow = new Hpix[hpix.getSize()];
+//         n=0;
+//         it = hpixLow.iterator();
+//         while( it.hasNext() ) {
+//            MocCell h = it.next();
+//            hpixListLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
+//         }
+
       }
+//      return low?hpixListLow : hpixList;
       return hpixList;
    }
    
@@ -124,32 +139,36 @@ public class PlanMoc extends PlanBGCat {
       boolean mustDrawFast = mustDrawFast();
       int tLimit = mustDrawFast ? 30 : 75;
       
-      HealpixMoc moc = v.isAllSky() ? null : getViewMoc(v,max);
-      Hpix [] hpixList = getHpixList(v);
-      int r=0,d=0;
-      int order=0;
-      long t=0;
-      int i;
-      long delai = Util.getTime()-lastDrawAll;
-      boolean canDrawAll = !mustDrawFast && delai>300;
+      try {
+         HealpixMoc moc = v.isAllSky() ? null : getViewMoc(v,max);
+         Hpix [] hpixList = getHpixList(v,mustDrawFast);
+         int r=0,d=0;
+         int order=0;
+         long t=0;
+         int i;
+         long delai = Util.getTime()-lastDrawAll;
+         boolean canDrawAll = !mustDrawFast && delai>300;
 //      System.out.println("mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
-      for( i=0; i<hpixList.length; i++ ) {
-         if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
-         Hpix p = hpixList[i];
-         order=p.getOrder();
-         if( moc!=null && !moc.isInTree(order, p.getNpix())) { r++; continue; }
-         if( p.isOutView(v) ) continue;
-         if( wireFrame ) p.draw(g, v);
-         else p.fill(g, v);
-         d++;
-         if( d%100==0 ) t=Util.getTime()-t1;
-      }
-      drawAll = i==hpixList.length;
-      t = Util.getTime();
-      statTimeDisplay = t-t1;
-      if( drawAll ) lastDrawAll=t;
-      if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
+         for( i=0; i<hpixList.length; i++ ) {
+            if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
+            Hpix p = hpixList[i];
+            order=p.getOrder();
+            if( moc!=null && !moc.isInTree(order, p.getNpix())) { r++; continue; }
+            if( p.isOutView(v) ) continue;
+            if( wireFrame ) p.draw(g, v);
+            else p.fill(g, v);
+            d++;
+            if( d%100==0 ) t=Util.getTime()-t1;
+         }
+         drawAll = i==hpixList.length;
+         t = Util.getTime();
+         statTimeDisplay = t-t1;
+         if( drawAll ) lastDrawAll=t;
+         if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
 //      System.out.println("draw "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
    }
    
    private long lastDrawAll=0L;

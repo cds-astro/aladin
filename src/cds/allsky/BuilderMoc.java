@@ -99,7 +99,7 @@ final public class BuilderMoc {
             if( ext==null ) ext=e;
             else if( !ext.equals(e) ) continue;
             
-            add(order,npix);
+            moc.add(order,npix);
          }
       }
    }
@@ -119,31 +119,6 @@ final public class BuilderMoc {
          return prop.getProperty(PlanHealpix.KEY_COORDSYS,"C");
       } catch( Exception e ) { }
       return "C";
-   }
-   
-   
-   // Insertion récursive : dès qu'on a 4 frères consécutifs, on les supprime
-   // et on insère récursivement le père
-   private void add(int order, long npix) {
-      if( order==0 ) { moc.add(order,npix); return; }
-      long me = npix%4L;
-      long firstBrother = npix - me;
-      
-      // Y a-t-il un frangin encore absent (en plus de moi) ? si oui, on insère
-      for( int i=0; i<4; i++ ) {
-         if( i==me ) continue;
-         if( !moc.isIn(order, firstBrother+i) ) {
-            moc.add(order,npix);
-            return;
-         }
-      }
-      
-      // Les 3 frangins sont là, on les supprime et on insère le père
-      for( int i=0; i<4; i++ ) {
-         if( i==me ) continue;
-         moc.delete(order, firstBrother+i);
-      }
-      add(order-1,firstBrother/4);
    }
    
    static public void main(String [] argv) {
