@@ -52,6 +52,7 @@ final public class BuilderHpx {
    private String hpxFinderPath = null;
    private double[] cutOrig;
    private double[] cut;
+   private int[] borderSize;
 
    public BuilderHpx(Context context) {
       this.context = context;
@@ -67,6 +68,7 @@ final public class BuilderHpx {
          blankOrig=context.getBlankOrig();
          hasAlternateBlank = context.hasAlternateBlank();
          blank = context.getBlank();
+         borderSize = context.getBorderSize();
 
       } else {
          blank=0;
@@ -258,28 +260,34 @@ final public class BuilderHpx {
    //    }
 
 
+   static private final double OVERLAY_PROPORTION = 1/6.;
+   
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
-   //	private double getCoef(Fits f,Coord coo,double proportion) {
-   //	   double mx = f.width/proportion;
-   //	   double my = f.height/proportion;
-   //	   double coefx=1, coefy=1;
-   //	   if( coo.x<mx ) coefx =  coo.x/mx;
-   //	   else if( coo.x>f.width-mx ) coefx = (f.width-coo.x)/mx;
-   //       if( coo.y<my ) coefy =  coo.y/my;
-   //       else if( coo.y>f.height-my ) coefy = (f.height-coo.y)/my;
-   //       return Math.min(coefx,coefy);
-   //	}
+   	private double getCoef(Fits f,Coord coo) {
+   	   double width  = f.width -(borderSize[1]+borderSize[3]);
+   	   double height = f.height-(borderSize[0]+borderSize[2]);
+   	   double mx = width *OVERLAY_PROPORTION;
+   	   double my = height*OVERLAY_PROPORTION;
+   	   double x = coo.x-borderSize[1];
+   	   double y = coo.y-borderSize[0];
+   	   double coefx=1, coefy=1;
+   	   if( x<mx ) coefx =  x/mx;
+   	   else if( x>width-mx ) coefx = (width-x)/mx;
+          if( y<my ) coefy =  y/my;
+          else if( y>height-my ) coefy = (height-y)/my;
+          return Math.min(coefx,coefy);
+   	}
 
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au centre 
-   private double getCoef(Fits f,Coord coo) {
-      double cx = f.width/2;
-      double cy = f.height/2;
-      double dx = coo.x-cx;
-      double dy = coo.y-cy;
-      double d = Math.sqrt(dx*dx + dy*dy);
-      double maxd = Math.sqrt(cx*cx + cy*cy);
-      return (maxd - d)/maxd;
-   }
+//   private double getCoef(Fits f,Coord coo) {
+//      double cx = f.width/2;
+//      double cy = f.height/2;
+//      double dx = coo.x-cx;
+//      double dy = coo.y-cy;
+//      double d = Math.sqrt(dx*dx + dy*dy);
+//      double maxd = Math.sqrt(cx*cx + cy*cy);
+//      return (maxd - d)/maxd;
+//   }
 
    private double getBilinearPixel(Fits f,Coord coo,double myBlank) {
       double x = coo.x;
