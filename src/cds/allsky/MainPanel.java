@@ -37,7 +37,6 @@ import cds.aladin.Coord;
 import cds.aladin.PlanBG;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
 /**

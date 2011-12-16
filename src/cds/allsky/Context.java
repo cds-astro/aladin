@@ -17,9 +17,9 @@ import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.HpixTree;
 
 /**
  * Classe pour unifier les accès aux paramètres nécessaires pour les calculs
@@ -58,7 +58,7 @@ public class Context {
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
-   protected HpixTree moc = null;            // Zone du ciel à traiter (décrite par un MOC)
+   protected HealpixMoc moc = null;          // Zone du ciel à traiter (décrite par un MOC)
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected boolean isRunning=false;        // true s'il y a un processus de calcul en cours
 //   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
@@ -87,7 +87,7 @@ public class Context {
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
-   public HpixTree getMoc() { return moc; }
+   public HealpixMoc getMoc() { return moc; }
    public CoAddMode getCoAddMode() { return coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
@@ -247,19 +247,19 @@ public class Context {
       cache.setSkySub(skyvalName);
    }
 
-   protected HpixTree setMoc(String s) {
+   protected HealpixMoc setMoc(String s) {
       if( s.length()==0 ) return null;
-      HpixTree hpixTree;
-      try { hpixTree = new HpixTree(s);
+      try {
+         HealpixMoc m = new HealpixMoc(s);
+         if( m.getSize()==0 ) throw new Exception();
+         moc = m;
       } catch( Exception e ) {
          return null;
       }
-      if( hpixTree.getSize()==0 ) return null;
-      moc = hpixTree;
-      return hpixTree;
+      return moc;
    }
 
-   public void setMoc(HpixTree region) {
+   public void setMoc(HealpixMoc region) {
       moc = region;
    }
    

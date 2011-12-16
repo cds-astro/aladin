@@ -37,7 +37,6 @@ import cds.aladin.PlanHealpix;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
 

@@ -6,7 +6,6 @@ import cds.aladin.Aladin;
 import cds.aladin.Plan;
 import cds.aladin.PlanImage;
 import cds.tools.Util;
-import cds.tools.pixtools.HpixTree;
 
 /**
  * Contexte pour la création d'un Allsky, via l'interface graphique

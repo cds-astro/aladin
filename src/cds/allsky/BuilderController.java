@@ -36,7 +36,6 @@ import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.Hpix;
-import cds.tools.pixtools.HpixTree;
 import cds.tools.pixtools.Util;
 
 

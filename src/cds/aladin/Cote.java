@@ -104,7 +104,7 @@ public final class Cote extends Ligne {
          public int action() { 
             Color c= col.getCouleur();
             if( c==couleur ) return PropAction.NOTHING;
-            couleur=c;
+            setColor(c);
             return PropAction.SUCCESS;
          }
       };

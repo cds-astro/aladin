@@ -20,24 +20,15 @@
 package cds.aladin;
 
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.swing.RepaintManager;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-
-import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.tools.Util;
 import cds.tools.pixtools.Hpix;
-import cds.tools.pixtools.HpixTree;
 
 public class PlanMoc extends PlanBGCat {
-   private HpixTree hpix = null;
+   private HealpixMoc moc = null;
    
    protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       super(aladin);
@@ -56,7 +47,7 @@ public class PlanMoc extends PlanBGCat {
    }
    
    /** Retourne le Moc */
-   protected HealpixMoc getMoc() { return hpix; }
+   protected HealpixMoc getMoc() { return moc; }
    
    protected void suiteSpecific() { }
    protected boolean isLoading() { return false; }
@@ -70,8 +61,12 @@ public class PlanMoc extends PlanBGCat {
    
    protected boolean waitForPlan() {
       try {
-         hpix = new HpixTree(dis);
-         frameOrigin = hpix.getFrame();
+         moc = new HealpixMoc();
+         moc.setMinLimitOrder(3);
+         if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
+         else moc.readASCII(dis);
+         String c = moc.getCoordSys();
+         frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
       }
       catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -88,39 +83,43 @@ public class PlanMoc extends PlanBGCat {
       Coord center = getCooCentre(v);
       long [] pix = getPixList(v,center,order);
 
-      HealpixMoc moc = new HealpixMoc();
-      moc.setCoordSys(hpix.getCoordSys());
-      for( int i=0; i<pix.length; i++ ) moc.add(order,pix[i]);
-      moc.sort();
-      return moc;
+      HealpixMoc m = new HealpixMoc();
+      m.setCoordSys(moc.getCoordSys());
+      for( int i=0; i<pix.length; i++ ) m.add(order,pix[i]);
+      m.sort();
+      return m;
    }
    
    private Hpix [] hpixList = null;
    private Hpix [] hpixListLow = null;
    private Hpix [] getHpixList(ViewSimple v,boolean low) {
       if( hpixList==null ) {
-         hpixList = new Hpix[hpix.getSize()];
+         hpixList = new Hpix[moc.getSize()];
          int n=0;
-         Iterator<MocCell> it = hpix.iterator();
+         Iterator<MocCell> it = moc.iterator();
          while( it.hasNext() ) {
             MocCell h = it.next();
             hpixList[n++] = new Hpix(h.order,h.npix,frameOrigin);
          }
          
-//         HpixTree hpixLow = hpix;
-//         try { hpixLow.setLimitOrder(6); } 
-//         catch( Exception e ) { e.printStackTrace(); }
-//         hpixListLow = new Hpix[hpix.getSize()];
-//         n=0;
-//         it = hpixLow.iterator();
-//         while( it.hasNext() ) {
-//            MocCell h = it.next();
-//            hpixListLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
-//         }
+         int N=6;
+         hpixListLow = hpixList;
+         if( /* moc.getMaxOrder()>N && */ hpixList.length>12*Math.pow(4,N-1) ) {
+            HealpixMoc hpixLow = (HealpixMoc)moc.clone();
+            try { hpixLow.setMaxLimitOrder(7); } 
+            catch( Exception e ) { e.printStackTrace(); }
+            hpixListLow = new Hpix[moc.getSize()];
+            n=0;
+            it = hpixLow.iterator();
+            while( it.hasNext() ) {
+               MocCell h = it.next();
+               hpixListLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
+            }
+         }
 
       }
-//      return low?hpixListLow : hpixList;
-      return hpixList;
+      return low?hpixListLow : hpixList;
+//      return hpixList;
    }
    
    private boolean oDrawAll=false; // dernier état connu pour le voyant d'état de la pile
@@ -138,10 +137,11 @@ public class PlanMoc extends PlanBGCat {
       int max = Math.min(maxOrder(v),maxOrder)+1;
       boolean mustDrawFast = mustDrawFast();
       int tLimit = mustDrawFast ? 30 : 75;
+      double taille = v.getTaille();
       
       try {
-         HealpixMoc moc = v.isAllSky() ? null : getViewMoc(v,max);
-         Hpix [] hpixList = getHpixList(v,mustDrawFast);
+         HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
+         Hpix [] hpixList = getHpixList(v,taille>30 && mustDrawFast);
          int r=0,d=0;
          int order=0;
          long t=0;
@@ -152,8 +152,9 @@ public class PlanMoc extends PlanBGCat {
          for( i=0; i<hpixList.length; i++ ) {
             if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
             Hpix p = hpixList[i];
+            if( p==null ) break;
             order=p.getOrder();
-            if( moc!=null && !moc.isInTree(order, p.getNpix())) { r++; continue; }
+            if( m!=null && !m.isInTree(order, p.getNpix())) { r++; continue; }
             if( p.isOutView(v) ) continue;
             if( wireFrame ) p.draw(g, v);
             else p.fill(g, v);
