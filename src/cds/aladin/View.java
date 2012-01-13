@@ -3018,7 +3018,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          coord = aladin.localisation.getICRSCoord(coord);
 
          if( notCoord(coord) ) {
-            setSesameInProgress(true);
+//            setSesameInProgress(true);
+            _sesameTaskId = sesameSynchro.start("sesame/"+coord,5000);
             if( flagNow ) {
                _saisie=saisie;
                result=runB();
@@ -3039,6 +3040,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
+   private String _sesameTaskId=null;
    private String _saisie;
    private Plan _planWaitSimbad=null;
    static Coord oco=null;
@@ -3054,9 +3056,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
 
       // Lancement du Thread de resolution Simbad pour le plan indique
-      setSesameInProgress(true);
+//      setSesameInProgress(true);
       waitLockSesame();
       _planWaitSimbad = p;
+      _sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
       Thread sr = new Thread(this,"AladinSesameBis");
       Util.decreasePriority(Thread.currentThread(), sr);
 //      sr.setPriority( Thread.NORM_PRIORITY -1);
@@ -3395,9 +3398,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //System.out.println("stop blink thread");
    }
 
-   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
-   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }
-   synchronized private void setSesameInProgress(boolean flag) { if( flag ) sesameInProgress++; else sesameInProgress--; }
+//   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
+//   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }
+//   synchronized private void setSesameInProgress(boolean flag) { if( flag ) sesameInProgress++; else sesameInProgress--; }
+   
+   // Synchro sur les résolutions de sésame
+   protected Synchro sesameSynchro = new Synchro(10000);
+   protected boolean isSesameInProgress() { return !sesameSynchro.isReady(); }
 
   /** Resolution Sesame a proprement parle
    * @param objet le nom d'objet
@@ -3460,46 +3467,53 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
   /** Resolution Sesame par Thread independant pour un plan */
    void runA() {
       Plan planWaitSimbad = _planWaitSimbad;
+      String sesameTaskId = _sesameTaskId;
       unlockSesame();
-      Coord c=null;
-      try { c = sesame(planWaitSimbad.objet); }
-      catch( Exception e) { System.err.println(e.getMessage()); }
-      if( c!=null ) {
-         planWaitSimbad.co=c;
-         suiteSetRepere(planWaitSimbad.co);
-         repaintAll();
-      }
-      setSesameInProgress(false);
+      try {
+         Coord c=null;
+         try { c = sesame(planWaitSimbad.objet); }
+         catch( Exception e) { System.err.println(e.getMessage()); }
+         if( c!=null ) {
+            planWaitSimbad.co=c;
+            suiteSetRepere(planWaitSimbad.co);
+            repaintAll();
+         }
+//         setSesameInProgress(false);
+      }finally{ sesameSynchro.stop(sesameTaskId); }
    }
 
    /** Resolution Sesame par Thread independant pour un objet particulier */
    public boolean runB() {
       String memo=_saisie;
+      String sesameTaskId=_sesameTaskId;
       unlockSesame();
-      boolean rep=true;
+      try {
+         boolean rep=true;
 
-      saisie=memo+" ...resolving...";
-      aladin.localisation.setTextSaisie(saisie);
+         saisie=memo+" ...resolving...";
+         aladin.localisation.setTextSaisie(saisie);
 
-      Coord c=null;
-      try { c = sesame(memo); }
-      catch( Exception e) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         System.err.println(e.getMessage());
-      }
-      if( c==null ) {
-         if( memo.length()>0 ) aladin.command.toStdoutAndConsole("!!! Command or object identifier unknown ("+memo+") !");
-         saisie=memo;
-         rep=false;
-      } else {
-         saisie=aladin.localisation.J2000ToString(c.al,c.del);
-//         aladin.command.toStdoutAndConsole("\""+memo+"\" resolved as "+saisie+"\n");
-         aladin.console.setInPad(memo+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
-         setRepereByString();
-      }
-      aladin.localisation.setSesameResult(saisie);
-      setSesameInProgress(false);
-      return rep;
+         Coord c=null;
+         try { c = sesame(memo); }
+         catch( Exception e) {
+            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            System.err.println(e.getMessage());
+         }
+         if( c==null ) {
+            if( memo.length()>0 ) aladin.command.toStdoutAndConsole("!!! Command or object identifier unknown ("+memo+") !");
+            saisie=memo;
+            rep=false;
+         } else {
+            saisie=aladin.localisation.J2000ToString(c.al,c.del);
+//          aladin.command.toStdoutAndConsole("\""+memo+"\" resolved as "+saisie+"\n");
+            aladin.console.setInPad(memo+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
+            setRepereByString();
+         }
+         if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
+         aladin.localisation.setSesameResult(saisie);
+//       setSesameInProgress(false);
+         return rep;
+      } finally { sesameSynchro.stop(sesameTaskId); }
    }
 
    protected Repere simRep = null;

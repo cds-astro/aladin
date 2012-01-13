@@ -288,10 +288,11 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
 //      return super.keyDown(e,key);
 //   }
 
-   private String targetT;
-   private String criteriaT;
-   private String labelT;
-   private String originT;
+   private String _target;
+   private String _criteria;
+   private String _label;
+   private String _origin;
+   private String _serverTaskId;
 
    private boolean flagIDHASIAcall = false;
    private boolean flagCreatPlane = false;
@@ -309,47 +310,50 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
 
    /** Creation d'un plan de maniere generique */
    synchronized protected  int createPlane(String target,String radius,String criteria,
-   				 String label, String origin) {
+         String label, String origin) {
       String format=null,resol=null,qual=null;
       
       // Pour enlever des quotes intempestives
       criteria = specialUnQuoteCriteria(criteria);
 
-//System.out.println("Je recherche les criteres ["+criteria+"]");
-      // Test si les criteres ne seraient pas complets  (ex: POSSI/E/STScI)
-      // cad directement assimilable par le serveur d'image. Si oui,
-      // on ne cherche pas les criteres par defaut
-      if( criteria!=null && !isAllSky(criteria) ) {
-         int pos1 = criteria.indexOf('/');
-         int pos2 = criteria.indexOf('/',pos1+1);
-         if( pos1>0 && pos2>pos1 ) {
-            qual=criteria.replace('/',' ');
-            resol="FULL";
-            format="JPEG";
-            criteria=null;
+         //System.out.println("Je recherche les criteres ["+criteria+"]");
+         // Test si les criteres ne seraient pas complets  (ex: POSSI/E/STScI)
+         // cad directement assimilable par le serveur d'image. Si oui,
+         // on ne cherche pas les criteres par defaut
+         if( criteria!=null && !isAllSky(criteria) ) {
+            int pos1 = criteria.indexOf('/');
+            int pos2 = criteria.indexOf('/',pos1+1);
+            if( pos1>0 && pos2>pos1 ) {
+               qual=criteria.replace('/',' ');
+               resol="FULL";
+               format="JPEG";
+               criteria=null;
+            }
          }
-      }
 
-      // Recherche des meilleurs parametres en fonction des criteres
-      // Dans un thread separe pour rendre assez vite la main
-      if( criteria!=null ) {
-         while( !getLaunchLock() ) Util.pause(500);
-         targetT=target;
-         criteriaT=criteria;
-         originT=origin;
-         labelT=label;
+         // Recherche des meilleurs parametres en fonction des criteres
+         // Dans un thread separe pour rendre assez vite la main
+         if( criteria!=null ) {
+            while( !getLaunchLock() ) Util.pause(500);
+            _target=target;
+            _criteria=criteria;
+            _origin=origin;
+            _label=label;
+            _serverTaskId=aladin.synchroServer.start("ServerAladin.createPlane/"+target);
 
-         setSync(false);	// bloque la synchronisation Command.sync()
-         thread= new Thread(this,"AladinCreatePlane");
-         flagCreatPlane=true;
-         thread.start();
-         return 0;		// 0, c'est pas terrible, mais on ne connait
-                                // pas encore le numero du plan !
-      }
+//            setSync(false);	// bloque la synchronisation Command.sync()
+            thread= new Thread(this,"AladinCreatePlane");
+            flagCreatPlane=true;
+            thread.start();
+            return 0;		// 0, c'est pas terrible, mais on ne connait
+            // pas encore le numero du plan !
+         }
 
-      // Creation du plan avec les parametres specifiques
-      return creatAladinPlane(target,format,resol,qual,label,origin);
+         // Creation du plan avec les parametres specifiques
+         return creatAladinPlane(target,format,resol,qual,label,origin);
    }
+   
+
 
    public void run() {
       if( flagIDHASIAcall ) { flagIDHASIAcall=false; submitThread(); }
@@ -366,37 +370,42 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       String qual=null,resol=null,format=null;
 
       // Je recupere les parametres que j'avais mis de cote
-      String target=targetT;
-      String criteria=criteriaT;
-      String origin=originT;
-      String label=labelT;
+      String target=_target;
+      String criteria=_criteria;
+      String origin=_origin;
+      String label=_label;
+      String serverTaskId = _serverTaskId;
 
-      // Je libere le prochain
-      freeLaunchLock();
-      
-      // Particularité pour allsky
-      if( isAllSky(criteria) ) {
-         aladin.calque.newPlan("http://aladin.u-strasbg.fr/java/AllSky.fits","AllSky","Aladin image server");
+      try {
+         // Je libere le prochain
+         freeLaunchLock();
 
-      // Le cas général
-      } else {
+         // Particularité pour allsky
+         if( isAllSky(criteria) ) {
+            aladin.calque.newPlan("http://aladin.u-strasbg.fr/java/AllSky.fits","AllSky","Aladin image server");
 
-         // Acces aux qualifiers disponibles
-         try {
-            URL u = aladin.glu.getURL(getTagGlu(GLUDEFQUAL),Glu.quote(target)+" "+Glu.quote(criteria));
-//            DataInputStream cat = new DataInputStream(u.openStream());
-            DataInputStream cat = new DataInputStream(Util.openStream(u));
-            qual=cat.readLine();
-            resol=cat.readLine();
-            format=cat.readLine();
-         } catch( Exception e ) {}
+            // Le cas général
+         } else {
 
-         if( qual==null || qual.length()==0 ) Aladin.warning(this,aladin.chaine.getString("NOSUCHIMG")
-               +" ["+criteria+"] ["+target+"]",1);
+            // Acces aux qualifiers disponibles
+            try {
+               URL u = aladin.glu.getURL(getTagGlu(GLUDEFQUAL),Glu.quote(target)+" "+Glu.quote(criteria));
+               //            DataInputStream cat = new DataInputStream(u.openStream());
+               DataInputStream cat = new DataInputStream(Util.openStream(u));
+               qual=cat.readLine();
+               resol=cat.readLine();
+               format=cat.readLine();
+            } catch( Exception e ) {}
 
-         else creatAladinPlane(target,format,resol,qual,label,origin);
+            if( qual==null || qual.length()==0 ) Aladin.warning(this,aladin.chaine.getString("NOSUCHIMG")
+                  +" ["+criteria+"] ["+target+"]",1);
+
+            else creatAladinPlane(target,format,resol,qual,label,origin);
+         }
+      } finally {
+         aladin.synchroServer.stop(serverTaskId);
+//         setSync(true);	// libere la synchronisation Command.sync()
       }
-      setSync(true);	// libere la synchronisation Command.sync()
    }
 
    /** Creation d'un plan Aladin, parametres specifiques */
@@ -540,7 +549,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       String s = target.getText().trim();
       if( s!=null && isAllSky(s) ) {
          while( !getLaunchLock() ) Util.pause(500);
-         criteriaT=s;
+         _criteria=s;
          creatPlaneThread();
          return;
       }

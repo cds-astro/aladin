@@ -471,6 +471,7 @@ public class ViewSimple extends JComponent
    /** Retourne true si la vue est synchronisée */
    protected boolean isSync() {
       if( isFree() || !(pref.type==Plan.ALLSKYIMG) ) return true;
+//      System.out.println("ViewSimple="+this+" ovizBG="+ovizBG+" iz="+iz);
       return ovizBG==iz;
    }
    
@@ -478,8 +479,8 @@ public class ViewSimple extends JComponent
    protected void sync() {
       if( isSync() ) return;
       while( !isSync() ) {
-         Util.pause(100);
-         aladin.trace(4,"ViewSimple.sync() waiting image PlanBG buffer...");
+         Util.pause(25);
+         aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.sync() waiting image PlanBG buffer...");
       }
    }
 
@@ -610,14 +611,14 @@ public class ViewSimple extends JComponent
          pi.ref=false;
          pi.selected=false;
          pi.setOpacityLevel(1f);
+         pi.changeImgID();
+         pi.resetProj();
          pi.reverse();
-         
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
       return pi;
    }
    
-
    
    /** Génération d'un plan à partir des pixels repérés par le rectangle crop (éventuellement extraction de la frame
     * courante dans le cas d'un plan Blink et possibilité de recadrage sur la portion visible
@@ -1022,8 +1023,7 @@ public class ViewSimple extends JComponent
 //System.out.println("Changement de centre delta="+Coord.getUnit(deltaRa)+","+Coord.getUnit(deltaDe)  );
          proj.deltaProjCenter(deltaRa,deltaDe);
          aladin.view.newView(1);
-         aladin.view.setRepere(proj.getProjCenter());
-         
+         aladin.view.setRepere(proj.getProjCenter());                  
       }
       
       if( pref instanceof PlanBG && aladin.view.crop!=null ) aladin.view.crop.deltaXY(dxView/zoom,dyView/zoom);
@@ -1081,10 +1081,6 @@ public class ViewSimple extends JComponent
    
    protected void goToAllSky(Coord c) {
       aladin.view.setRepere(c);
-//      getProj().setProjCenter(c.al,c.del);
-//      newView(1);
-//      aladin.calque.zoom.zoomView.repaint();
-//      repaint();
       aladin.view.showSource(); 
    }
 
@@ -1449,7 +1445,7 @@ public class ViewSimple extends JComponent
 
    private boolean flagLockRepaint=false;   // voir waitLockReapaint() et unlockRepaint()
    private Object lockRepaint = new Object();
-   private int threadIDlock=0;             // ID du thread ui dispose du lock            
+   private int threadIDlock=0;             // ID du thread qui dispose du lock            
 
    protected void unlockRepaint(String orig) {
 //      aladin.trace(4,"ViewSimple.unlockRepaint("+orig+")...");
@@ -1459,8 +1455,8 @@ public class ViewSimple extends JComponent
       }
    }
    
-   // Si l'attente du lock du repaint dépasse 4 secondes, on libère le lock
-   static final int ITSTIME = 4000;
+   // Si l'attente du lock du repaint dépasse 8 secondes, on libère le lock
+   static final int ITSTIME = 8000;
    
    /** Attente du lock pour effectuer un paintComponent()
     * Si le thread dispose déjà du lock, retourne immédiatement (évite un deadlock)
@@ -1472,17 +1468,20 @@ public class ViewSimple extends JComponent
          try {
             synchronized( lockRepaint ) {
                int threadID = Thread.currentThread().hashCode();
-               if( threadIDlock==threadID ) return;
+               if( threadIDlock==threadID ) {
+//                  System.out.println("waitLockRepaint() même threadID="+threadID+" => "+Thread.currentThread().getName());
+                  return;
+               }
                if( !flagLockRepaint ) {
-                  flagLockRepaint=true;
-//                  aladin.trace(4,"ViewSimple.waitLockRepaint("+orig+") yes !");
                   threadIDlock=threadID;
+                  flagLockRepaint=true;
+//                  aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.waitLockRepaint("+orig+") yes ! by "+threadID);
                   return;
                }
             }
             Util.pause(50);
             if( System.currentTimeMillis()-t1 > ITSTIME ) {
-               System.err.println("ViewSimple.getLockRepaint("+orig+") too long... force unlock !");
+               System.err.println(Thread.currentThread().getName()+": ViewSimple.getLockRepaint("+orig+") too long... force unlock !");
                flagLockRepaint=false;
                threadIDlock=0;
                return;
@@ -2218,11 +2217,13 @@ public class ViewSimple extends JComponent
       }
 
       int tool = getTool(e);
-      boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
+      boolean boutonMilieu = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
 
       boolean fullScreen = isFullScreen();
+      
       //Menu Popup
-      if( boutonDroit ) {
+      if( boutonMilieu ) {
+         setScrollable(false);
          
          // Fin d'ajustement du contraste par le bouton droit
          if( xDrag!=-1 && Math.abs(xDrag-x)>2 && Math.abs(yDrag-y)>2 ) { xDrag=yDrag=-1; repaint(); return; }
@@ -2617,8 +2618,8 @@ public class ViewSimple extends JComponent
       // On cache le simbad tooltip
       aladin.view.suspendQuickSimbad();
       
-      boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
-      if( boutonDroit ) {
+      boolean boutonMilieu = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
+      if( boutonMilieu ) {
          if( Math.abs(xDrag-x)>1 || Math.abs(yDrag-y)>1 ) {
          try { setCMByMouse(x,y); } catch( Exception e1 ) {}
          return;
@@ -5060,7 +5061,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          c.al = proj.raj;
          c.del = proj.dej;
          c = aladin.localisation.ICRSToFrame(c);
-         try { cosd = Math.cos(c.del*Math.PI/180.); }
+         try { cosd = Util.cosd(c.del); }
          catch(Exception e) { cosd=1.; }
 
          boolean fullScreen = isFullScreen();
@@ -5070,7 +5071,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          double rd = getTailleDE()*60.;
          if( rd==0. || Double.isNaN(rd) ) rd=60*360.;
          double pasd = goodPas(rd/nb,PASD)/60.;
-         double ra=rd;
+         double ra=getTailleRA()*60.;
          if( Math.abs(cosd)<0.000001 ) ra=360*60;
          else ra = rd/cosd;
          
@@ -5911,18 +5912,19 @@ g.drawString(s,10,100);
 
    public void paintComponent(Graphics gr) { 
       waitLockRepaint("paintComponent");
-      try { paintComponent1(gr); }
-      catch( Exception e ) {
-         if( aladin.levelTrace>3 ) e.printStackTrace();
-         fillBackground(gr);
-         drawBordure(gr);
-         gr.setColor(Color.red);
-         gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
-      }
-      unlockRepaint("paintComponent");
-      resetClip();
-      aladin.view.setPaintTimer();
-      aladin.command.syncNeedRepaint=false;
+      try {
+         try { paintComponent1(gr); }
+         catch( Exception e ) {
+            if( aladin.levelTrace>3 ) e.printStackTrace();
+            fillBackground(gr);
+            drawBordure(gr);
+            gr.setColor(Color.red);
+            gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
+         }
+         resetClip();
+         aladin.view.setPaintTimer();
+         aladin.command.syncNeedRepaint=false;
+      } finally { unlockRepaint("paintComponent"); }
    }
    
    private void paintComponent1(Graphics gr) { 

@@ -714,6 +714,10 @@ e.printStackTrace();
       String label   = labelT.getText();
       String error=null;
       double r1=0.,rm1=0.;
+      
+      // Le frame associée à la projection est remis à ICRS par défaut.
+      // (==> Cas du changement de référentiel a posteriori pour les Allsky)
+      if( flagModif && oldp!=null ) oldp.frame=Localisation.ICRS;
 
       try {
 
@@ -777,8 +781,9 @@ e.printStackTrace();
             String s = wcsT.getText();
             HeaderFits headerFits = new HeaderFits(s);
             Calib c = new Calib(headerFits);
+            System.out.println("modify center=("+c.alphai+","+c.deltai+")");
             if( flagModif ) p=oldp;
-            else p = new Projection(label,Projection.WCS,raj,dej,rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system);
+            else p = new Projection(label,Projection.WCS,c.alphai,c.deltai,/*raj,dej,*/rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system);
             p.modify(label,c);
          }
 

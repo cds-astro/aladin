@@ -41,8 +41,8 @@ public class PlanBGCat extends PlanBG {
       super(aladin);
    }
 
-   protected PlanBGCat(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius) {
-      super(aladin,gluSky,label, c,radius);
+   protected PlanBGCat(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius,String startingTaskId) {
+      super(aladin,gluSky,label, c,radius,startingTaskId);
       aladin.log(Plan.Tp[type],label);
    }
 
@@ -57,6 +57,13 @@ public class PlanBGCat extends PlanBG {
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
    }
+   
+   protected boolean isSync() {
+      boolean isSync = super.isSync();
+      isSync = isSync && (planFilter==null || planFilter.isSync() );
+      return isSync;
+   }
+
 
    protected void suiteSpecific() {
       pixList = new Hashtable<String,HealpixKey>(1000);
@@ -65,6 +72,11 @@ public class PlanBGCat extends PlanBG {
    }
 
    protected void log() { }
+   
+   /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
+   protected boolean isFullyDrawn() { return readyDone && allWaitingKeysDrawn; }
+
+
 
    protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op) {
       if( v==null ) return;
@@ -88,7 +100,7 @@ public class PlanBGCat extends PlanBG {
 
       readyDone = readyAfterDraw;
    }
-
+   
    @Override
    protected void clearBuf() { }
 
@@ -144,6 +156,7 @@ public class PlanBGCat extends PlanBG {
       long [] pix=null;
       int order = getCurrentMaxOrder(v);
       int nb=0;
+      boolean allKeyReady=true;
 
       hasDrawnSomething=drawAllSky(g, v,  2);
       if( order>=3 ) hasDrawnSomething|=drawAllSky(g, v,  3);
@@ -168,6 +181,9 @@ public class PlanBGCat extends PlanBG {
             }
 
             HealpixKey healpix = getHealpix(norder,pix[i], true);
+            
+            // Juste pour tester la synchro
+//            Util.pause(100);
 
             // Inconnu => on ne dessine pas
             if( healpix==null ) continue;
@@ -185,6 +201,8 @@ public class PlanBGCat extends PlanBG {
 
             // Losange à gérer
             healpix.resetTimer();
+            
+            if(norder==order && status!=HealpixKey.READY ) allKeyReady=false;
 
             // Pas encore prêt
             if( status!=HealpixKey.READY ) { moreDetails = true; continue; }
@@ -198,6 +216,7 @@ public class PlanBGCat extends PlanBG {
       }
 
       setHasMoreDetails(moreDetails);
+      allWaitingKeysDrawn = allKeyReady;
 
       hasDrawnSomething=hasDrawnSomething || nb>0;
 
@@ -223,8 +242,6 @@ public class PlanBGCat extends PlanBG {
       if( nbFlush>2000  ) gc();
       pixList.remove( key(healpix) );
    }
-
-
 
    /** Force le recalcul de la projection n */
    protected void resetProj(int n) {

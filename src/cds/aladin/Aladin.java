@@ -313,7 +313,7 @@ public class Aladin extends JApplet
     Bookmarks bookmarks;          // Gère les favoris
     View view;                    // Gere la "View frame"
     Status status;                // Gere la ligne de "Status"
-    Match sync;                    // Gere le logo pour la grille
+    Match sync;                   // Gere le logo pour la grille
     Grid grid;                    // Gere le logo pour la grille
     Northup northup;              // Gère le logo pour le Nord en haut
     ViewControl viewControl;	  // Gere le logo de controle des views
@@ -349,6 +349,8 @@ public class Aladin extends JApplet
     public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
     public Console console;                  // Gere la fenetre de la console
     public Command command=null;	      // Gere les commandes asynchrones
+    Synchro synchroServer;              // Gère les synchronisations des servers
+    Synchro synchroPlan;              // Gère les synchronisations des Plans
     FrameNewCalib frameNewCalib=null; // Gere la fenetre de recalibration astrometrique
     public Configuration configuration;	      // Configuration utilisateur
     public KernelList kernelList;    // Gère la liste des noyaux de convolution
@@ -4810,7 +4812,8 @@ public void show() {
       waitDialog();
       try { return command.execScript(cmd); }
       catch( Exception e ) {
-         System.out.println("Error: "+e);
+         aladin.warning("Error: "+e,1);
+//         System.out.println("Error: "+e);
          return("Error: "+e);
       }
    }

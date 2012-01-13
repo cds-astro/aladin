@@ -77,6 +77,21 @@ public final class Localisation extends MyBox {
       "XY Fits","XY native","XY linear"
    };
    
+   // Le mot clé RADECSYS Fits correspondant au système de coordonnée
+   static final String [] RADECSYS = {
+      "ICRS","ICRS","FK5","FK5","FK4","FK4",null,null,null,null,null,null,
+   };
+   
+   // Le préfixe du mot clé CTYPE1 Fits correspondant au système de coordonnée
+   static final String [] CTYPE1 = {
+      "RA---","RA---","RA---","RA---","RA---","RA---","ELON-","GLON-","SLON-",null,null,"SOLAR",
+   };
+
+   // Le préfixe du mot clé CTYPE2 Fits correspondant au système de coordonnée
+   static final String [] CTYPE2 = {
+      "DEC--","DEC--","DEC--","DEC--","DEC--","DEC--","ELAT-","GLAT-","SLAT-",null,null,"SOLAR",
+   };
+   
    // Les différents Frames possibles (mode AllSky)
    static final String [] FRAME = { "Default", REPERE[ICRS], REPERE[ECLIPTIC], REPERE[GAL], REPERE[SGAL] };
    static JComboBox createFrameCombo() {return new JComboBox(FRAME); }

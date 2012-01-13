@@ -277,12 +277,12 @@ public final class Projection {
    }
 
    /** Modification d'une projection */
-   protected void modify(String label,int modeCalib,
-         double alphai, double deltai, double rm,
-         double cx, double cy,double r,
-         double rot,boolean sym,int t,int system) {
-      modify(label,modeCalib,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system);
-   }
+//   protected void modify(String label,int modeCalib,
+//         double alphai, double deltai, double rm,
+//         double cx, double cy,double r,
+//         double rot,boolean sym,int t,int system) {
+//      modify(label,modeCalib,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system);
+//   }
    protected void modify(String label,int modeCalib,
             double alphai, double deltai, double rm,double rm1,
             double cx, double cy,double r,double r1,
@@ -364,6 +364,11 @@ public final class Projection {
       this.modeCalib=WCS;
       this.coo=coo;
       this.c = c;
+//      if( frame!=Localisation.ICRS ) {
+//         Coord c1 = Localisation.frameToFrame(new Coord(c.alphai,c.deltai), Localisation.ICRS, frame);
+//         c.alphai=c1.al;
+//         c.deltai=c1.del;
+//      }
       this.coo = null;
       adjustParamByCalib(c);
    }
@@ -380,6 +385,10 @@ public final class Projection {
          alphai = co.al;
          deltai = co.del;
          co = c.getImgCenter();
+         if( frame!=Localisation.ICRS ) co = Localisation.frameToFrame(co, frame,Localisation.ICRS);
+//         co.x = c.xnpix/2.;
+//         co.y = c.ynpix/2.;
+//         getCoord(co);
          raj = co.al;
          dej = co.del;
       } catch( Exception e ) {
@@ -397,6 +406,8 @@ public final class Projection {
       system=c.getSystem();
       t=c.getProj();
    }
+   
+
 
    /** Retourne la résolution angulaire en degrées en pixel en alpha */
    protected double getPixResAlpha() throws Exception {
@@ -480,7 +491,8 @@ public final class Projection {
 
       Vector key   = new Vector(20);
       Vector value = new Vector(20);
-      try { c.GetWCS(key,value); }
+//      try { c.GetWCS(key,value); }
+      try { getWCS(key,value); }
       catch( Exception e ) { System.err.println("GetWCS error"); return null; }
       Enumeration ekey   = key.elements();
       Enumeration evalue = value.elements();
@@ -491,7 +503,62 @@ public final class Projection {
       }
       return s.toString();
    }
+   
+   /** La liste des mots clés WCS retournée par Calib va être modifié en fonction du frame propre à la classe Projection
+    * Ceci est nécessaire parce que par défaut Calib ne supportait que l'équatorial et qu'il avait fallu
+    * traiter les changement de référentiel pour le mode Allsky au niveau de la classe Projection (variable frame)
+    * Le but est de fournir la Calib WCS dans le frame de visu courante (sélecteur Localisation)
+    * A noter que le centre de la projection CRVAL1 et CRVAL2 est déjà exprimé dans le frame de la projection (beurk)
+    * et n'a donc plus à être converti (cf setProjCenter(...))
+    * 
+    * Lorsque Calib saura correctement gérer tous les référentiels, on pourra directement l'utiliser
+    *
+    * @param key Liste des mots clés WCS
+    * @param value Liste des valeurs correspondantes
+    * @throws Exception
+    */
+   protected void getWCS(Vector key, Vector value) throws Exception {
+      c.GetWCS(key,value);
+      if( isFrameEqualsCalibSyst() ) return;
+      
+      Enumeration ekey   = key.elements();
+      Enumeration evalue = value.elements();
+      for( int i=0; ekey.hasMoreElements(); i++ ) {
+         String skey   = (String)ekey.nextElement();
+         String svalue = (String)evalue.nextElement();
+         
+         if( skey.startsWith("CTYPE1") ) {
+            String ctype = Localisation.CTYPE1[frame];
+            svalue = ctype+svalue.substring(ctype.length());
+            value.setElementAt(svalue,i);
+         }
+         
+         else if( skey.startsWith("CTYPE2") ) {
+            String ctype = Localisation.CTYPE2[frame];
+            svalue = ctype+svalue.substring(ctype.length());
+            value.setElementAt(svalue,i);
+         }
 
+         else if( skey.startsWith("RADECSYS") ) {
+            String radecsys = Localisation.RADECSYS[frame];
+            if( radecsys==null ) { key.remove(i); value.remove(i); }
+            else value.setElementAt(radecsys,i);
+         }
+      }
+   }
+   
+   // Retourne true si le frame propre à la classe Projection est identique à celui de calib
+   private boolean isFrameEqualsCalibSyst() {
+      int system = c.getSystem();
+      if( system==Calib.ICRS && (frame==Localisation.ICRS  || frame==Localisation.ICRSD) )  return true;
+      if( system==Calib.FK5  && (frame==Localisation.J2000 || frame==Localisation.J2000D) ) return true;
+      if( system==Calib.FK4  && (frame==Localisation.B1950 || frame==Localisation.B1950D) ) return true;
+      if( system==Calib.GALACTIC      && frame==Localisation.GAL )      return true;
+      if( system==Calib.SUPERGALACTIC && frame==Localisation.SGAL )     return true;
+      if( system==Calib.ECLIPTIC      && frame==Localisation.ECLIPTIC ) return true;
+      return false;
+   }
+      
   /** Arrondi.
    * Applique au centre de la projection pour permettre les superpositions
    * legerement decalees (lors de l'interrogation)

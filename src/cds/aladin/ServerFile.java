@@ -216,243 +216,246 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
     */
    protected int creatLocalPlane(String f,String label,String origin, Obj o, ResourceNode resNode,InputStream is,Server server) {
-      setSync(false);
-      int n=0;
-      MyInputStream in;
-      long type;
-      URL u=null;
-      boolean localFile=false;
-
-      if( f!=null ) f=aladin.getFullFileName(f);
-
-      waitCursor();
+      String serverTaskId = aladin.synchroServer.start("ServerFile.creatLocalPlane/"+label);
       try {
-         if( label==null ) {
-            int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
-                  : Util.FS);
-            label=(i>=0)?f.substring(i+1):f;
+//         setSync(false);
+         int n=0;
+         MyInputStream in;
+         long type;
+         URL u=null;
+         boolean localFile=false;
 
-            // Suppression d'une extension éventuelle
-            i = label.lastIndexOf('.');
-            if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
-         }
+         if( f!=null ) f=aladin.getFullFileName(f);
 
-         // Analyse du contenu d'un répertoire local
-         if( is==null && !(f.startsWith("http:") || f.startsWith("https:"))) {
-            try {
-               final File x = new File(f);
-               if( x.isDirectory() ) {
-                  setSync(true);
-                  Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
-                  if( PlanBG.isPlanBG(f) ) {
-                     
-                     // Catalogue ?
-                     if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
-                        TreeNodeAllsky gSky;
-                        try { gSky = new TreeNodeAllsky(aladin, f); }
-                        catch( Exception e ) {
-                           aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                           gSky = new TreeNodeAllsky(aladin, null, null, null, null, null, null, null, null, null, f, "15 cat");
-                        }
-                        n=aladin.calque.newPlanBG(gSky,label,null,null);
-                        
-                     // ou Image
-                     } else n=aladin.calque.newPlanBG(f,label,null,null);
-                  }
-                  else {
-                     final ServerFile th = this;
-                     (new Thread(){
-                        public void run() {
-                           try {
-                              aladin.log("load", "dir");
-                              MyInputStream mi = new MyInputStream((new IDHAGenerator()).getStream(x,th)); 
-                              updateMetaData(mi,th,"",null);
-                              mi.close();
-                           } catch( IOException e ) {
-                              e.printStackTrace();
+         waitCursor();
+         try {
+            if( label==null ) {
+               int i = f.lastIndexOf(f.startsWith("http:")||f.startsWith("https:")||f.startsWith("ftp:") ? "/"
+                     : Util.FS);
+               label=(i>=0)?f.substring(i+1):f;
+
+               // Suppression d'une extension éventuelle
+               i = label.lastIndexOf('.');
+               if( i>0 && label.length()-i<=5 ) label = label.substring(0,i);
+            }
+
+            // Analyse du contenu d'un répertoire local
+            if( is==null && !(f.startsWith("http:") || f.startsWith("https:"))) {
+               try {
+                  final File x = new File(f);
+                  if( x.isDirectory() ) {
+//                     setSync(true);
+                     Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
+                     if( PlanBG.isPlanBG(f) ) {
+
+                        // Catalogue ?
+                        if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                           TreeNodeAllsky gSky;
+                           try { gSky = new TreeNodeAllsky(aladin, f); }
+                           catch( Exception e ) {
+                              aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                              gSky = new TreeNodeAllsky(aladin, null, null, null, null, null, null, null, null, null, f, "15 cat");
                            }
-                           defaultCursor();
-                        }
-                     }).start();
+                           n=aladin.calque.newPlanBG(gSky,label,null,null);
+
+                           // ou Image
+                        } else n=aladin.calque.newPlanBG(f,label,null,null);
+                     }
+                     else {
+                        final ServerFile th = this;
+                        (new Thread(){
+                           public void run() {
+                              try {
+                                 aladin.log("load", "dir");
+                                 MyInputStream mi = new MyInputStream((new IDHAGenerator()).getStream(x,th)); 
+                                 updateMetaData(mi,th,"",null);
+                                 mi.close();
+                              } catch( IOException e ) {
+                                 e.printStackTrace();
+                              }
+                              defaultCursor();
+                           }
+                        }).start();
+                     }
+                     return n;
                   }
+               } catch( Exception e) {
+                  defaultCursor();
+                  e.printStackTrace();
                   return n;
                }
-            } catch( Exception e) {
-               defaultCursor();
-               e.printStackTrace();
-               return n;
             }
-         }
 
-         if( origin==null ) origin=f;
+            if( origin==null ) origin=f;
 
-         // Pour loguer
-         String mode= is==null ? "file" : "stream";
+            // Pour loguer
+            String mode= is==null ? "file" : "stream";
 
-         // Pas de verification de la redondance pour les fichiers locaux
-         // mais tout de meme affichage des messages divers
-         flagVerif=false;
-         verif(0,null,null,null);
+            // Pas de verification de la redondance pour les fichiers locaux
+            // mais tout de meme affichage des messages divers
+            flagVerif=false;
+            verif(0,null,null,null);
 
-         // gestion des URL file:... sous Windows
-         if (f!=null && f.startsWith("file:")) {
-            f = f.replaceAll("\\\\", "/");
-         }
+            // gestion des URL file:... sous Windows
+            if (f!=null && f.startsWith("file:")) {
+               f = f.replaceAll("\\\\", "/");
+            }
 
-         //Obtention du stream (donnee locale ou distante)
-         if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
-            u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
-            in = Util.openStream(u);
-            mode="http";
-         }
+            //Obtention du stream (donnee locale ou distante)
+            if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
+               u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
+               in = Util.openStream(u);
+               mode="http";
+            }
 
-         // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
-         else if( is==null && f.startsWith("ftp://") ) {
-            u = new URL(getNameWithoutBrackets(f));
-            in = Util.openStream(u);
-            mode="ftp";
-         }
-         // URL du type file://...
-         else if( is==null && f.startsWith("file:/") ) {
-            localFile=true;
-            u = new URL(getNameWithoutBrackets(f));
-            in = Util.openStream(u);
-            mode="file";
-         }
-
-         else {
-            if( is==null ) {
+            // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
+            else if( is==null && f.startsWith("ftp://") ) {
+               u = new URL(getNameWithoutBrackets(f));
+               in = Util.openStream(u);
+               mode="ftp";
+            }
+            // URL du type file://...
+            else if( is==null && f.startsWith("file:/") ) {
                localFile=true;
-               Aladin.trace(3,"Opening "+getNameWithoutBrackets(f));
-               in = new MyInputStream(new FileInputStream( getNameWithoutBrackets(f) ));
+               u = new URL(getNameWithoutBrackets(f));
+               in = Util.openStream(u);
+               mode="file";
             }
+
             else {
-               // Dans le cas d'une continuation (FITS EXTENSION)
-               if( is instanceof MyInputStream ) in = (MyInputStream)is;
-
-               // Dans le cas normal
-               else in = new MyInputStream(is);
-            }
-         }
-         in = in.startRead();
-         type = in.getType();
-
-         // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
-         if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
-
-         // Petit rajouti pour reconnaitre l'extension REG pour les regions DS9
-         if( f!=null && f.endsWith(".reg") ) type |= MyInputStream.AJS;
-
-         String t = in.decodeType(type);
-         Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
-         aladin.log("load",mode+t);
-
-         if( (type & MyInputStream.AJS|type & MyInputStream.AJSx|MyInputStream.UNKNOWN)!=0) aladin.command.readFromStream(in);
-         else if( (type & MyInputStream.AJ)!=0) loadAJ(in);
-         else if( (type & MyInputStream.IDHA)!=0) updateMetaData(in,server,"",null);
-         else if( (type & MyInputStream.SIA_SSA)!=0)  updateMetaData(in,server,"",null);
-         
-         else if( (type & MyInputStream.HPXMOC)!=0 ) {
-            n=aladin.calque.newPlanHpxMOCM(in,label);
-         }
-         else if( (type & MyInputStream.HPX)!=0 ) {
-            n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false);
-         }
-         else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
-            if( u!=null ) {
-               n=aladin.calque.newPlanImageRGB(u,in,PlanImage.OTHER,
-                     label,null,f, origin,
-                     PlanImage.UNKNOWN,PlanImage.UNDEF,
-                     null,resNode);
-            } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
-         }
-         else if( (type & MyInputStream.XFITS)!=0) {
-            aladin.calque.newFitsExt(f,in,label,o);
-            n=1;
-         }
-         else if( (type & (MyInputStream.FITS|MyInputStream.PDS))!=0) {
-            if( u!=null ) {
-               n=aladin.calque.newPlanImage(u,in,PlanImage.OTHER,
-                     label,null,f, origin,
-                     PlanImage.UNKNOWN,PlanImage.UNDEF,
-                     o,resNode);
-            } else 
-               n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
-         }
-         else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
-            // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
-            boolean newPlane = (n=aladin.processFovVOTable(in,null,true))>=0;
-            // si on a juste ajouté un FOV à la liste des FOV chargés,
-            // on se place sur cet onglet et on sélectionne le FOV en question
-            if( !newPlane ) {
-               n=-2;  // Pour éviter une erreur via VOAPP (--> c'est du propre !)
-               aladin.dialog.setCurrent(ServerDialog.FIELD);
-               ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
-            }
-         }
-         else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
-               MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
-            if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);
-            else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
-            else n=aladin.calque.newPlanCatalog(in,label,origin);
-
-            // C'est peut être une image native ?
-         } else if( (type & MyInputStream.NativeImage())!=0 ) {
-            if( u!=null ) {
-               n=aladin.calque.newPlanImageColor(u,in,PlanImage.OTHER,
-                     label,null,f, origin,
-                     PlanImage.UNKNOWN,PlanImage.UNDEF,
-                     o,resNode);
-            } else n=aladin.calque.newPlanImageColor(f,null,in,resNode);
-
-            // C'est peut être un dico GLU ?
-         } else if( (type & MyInputStream.GLU)!=0 ) {
-            if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
-               aladin.glu.reload(false);
-            }
-
-            // C'est peut être un planBG via HTTP
-         } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
-            
-            // images ?
-            if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.jpg"))
-                  || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.fits")) ) n=aladin.calque.newPlanBG(new URL(f),label,null,null);
-            
-            // ou catalogue ?
-            else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
-               TreeNodeAllsky gSky;
-               try { gSky = new TreeNodeAllsky(aladin, f); }
-               catch( Exception e ) {
-                  aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                  gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, "15 cat");
+               if( is==null ) {
+                  localFile=true;
+                  Aladin.trace(3,"Opening "+getNameWithoutBrackets(f));
+                  in = new MyInputStream(new FileInputStream( getNameWithoutBrackets(f) ));
                }
-               n=aladin.calque.newPlanBG(gSky,label,null,null);
+               else {
+                  // Dans le cas d'une continuation (FITS EXTENSION)
+                  if( is instanceof MyInputStream ) in = (MyInputStream)is;
+
+                  // Dans le cas normal
+                  else in = new MyInputStream(is);
+               }
             }
-            
-            else throw new Exception("Data format not recognized");
+            in = in.startRead();
+            type = in.getType();
 
-         } else {
-            throw new Exception("Data format not recognized");
-         }
-         aladin.endMsg();
+            // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
+            if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
 
-         // Dans le cas de Meta-donnee (SIA ou IDHA) on va automatiquement ouvrir
-         // et positionner la fenetre des formulaires toFront
-         if( (type & (MyInputStream.SIA_SSA|MyInputStream.IDHA))!=0 ) {
-            aladin.dialog.show();
-            aladin.dialog.setCurrent(aladinLabel);
+            // Petit rajouti pour reconnaitre l'extension REG pour les regions DS9
+            if( f!=null && f.endsWith(".reg") ) type |= MyInputStream.AJS;
+
+            String t = in.decodeType(type);
+            Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
+            aladin.log("load",mode+t);
+
+            if( (type & MyInputStream.AJS|type & MyInputStream.AJSx|MyInputStream.UNKNOWN)!=0) aladin.command.readFromStream(in);
+            else if( (type & MyInputStream.AJ)!=0) loadAJ(in);
+            else if( (type & MyInputStream.IDHA)!=0) updateMetaData(in,server,"",null);
+            else if( (type & MyInputStream.SIA_SSA)!=0)  updateMetaData(in,server,"",null);
+
+            else if( (type & MyInputStream.HPXMOC)!=0 ) {
+               n=aladin.calque.newPlanHpxMOCM(in,label);
+            }
+            else if( (type & MyInputStream.HPX)!=0 ) {
+               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false);
+            }
+            else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
+               if( u!=null ) {
+                  n=aladin.calque.newPlanImageRGB(u,in,PlanImage.OTHER,
+                        label,null,f, origin,
+                        PlanImage.UNKNOWN,PlanImage.UNDEF,
+                        null,resNode);
+               } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
+            }
+            else if( (type & MyInputStream.XFITS)!=0) {
+               aladin.calque.newFitsExt(f,in,label,o);
+               n=1;
+            }
+            else if( (type & (MyInputStream.FITS|MyInputStream.PDS))!=0) {
+               if( u!=null ) {
+                  n=aladin.calque.newPlanImage(u,in,PlanImage.OTHER,
+                        label,null,f, origin,
+                        PlanImage.UNKNOWN,PlanImage.UNDEF,
+                        o,resNode);
+               } else 
+                  n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
+            }
+            else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
+               // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
+               boolean newPlane = (n=aladin.processFovVOTable(in,null,true))>=0;
+               // si on a juste ajouté un FOV à la liste des FOV chargés,
+               // on se place sur cet onglet et on sélectionne le FOV en question
+               if( !newPlane ) {
+                  n=-2;  // Pour éviter une erreur via VOAPP (--> c'est du propre !)
+                  aladin.dialog.setCurrent(ServerDialog.FIELD);
+                  ((ServerFoV)aladin.dialog.server[ServerDialog.FIELD]).selectFOV(ServerFoV.idLastRegistered);
+               }
+            }
+            else if( (type & (MyInputStream.ASTRORES|MyInputStream.VOTABLE|
+                  MyInputStream.CSV|MyInputStream.BSV|MyInputStream.IPAC))!=0 ) {
+               if( u!=null ) n=aladin.calque.newPlanCatalog(u,in,label,"",f,null,server);
+               else if( f!=null) n=aladin.calque.newPlanCatalog(f,in);
+               else n=aladin.calque.newPlanCatalog(in,label,origin);
+
+               // C'est peut être une image native ?
+            } else if( (type & MyInputStream.NativeImage())!=0 ) {
+               if( u!=null ) {
+                  n=aladin.calque.newPlanImageColor(u,in,PlanImage.OTHER,
+                        label,null,f, origin,
+                        PlanImage.UNKNOWN,PlanImage.UNDEF,
+                        o,resNode);
+               } else n=aladin.calque.newPlanImageColor(f,null,in,resNode);
+
+               // C'est peut être un dico GLU ?
+            } else if( (type & MyInputStream.GLU)!=0 ) {
+               if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
+                  aladin.glu.reload(false);
+               }
+
+               // C'est peut être un planBG via HTTP
+            } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
+
+               // images ?
+               if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.jpg"))
+                     || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.fits")) ) n=aladin.calque.newPlanBG(new URL(f),label,null,null);
+
+               // ou catalogue ?
+               else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
+                  TreeNodeAllsky gSky;
+                  try { gSky = new TreeNodeAllsky(aladin, f); }
+                  catch( Exception e ) {
+                     aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                     gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, "15 cat");
+                  }
+                  n=aladin.calque.newPlanBG(gSky,label,null,null);
+               }
+
+               else throw new Exception("Data format not recognized");
+
+            } else {
+               throw new Exception("Data format not recognized");
+            }
+            aladin.endMsg();
+
+            // Dans le cas de Meta-donnee (SIA ou IDHA) on va automatiquement ouvrir
+            // et positionner la fenetre des formulaires toFront
+            if( (type & (MyInputStream.SIA_SSA|MyInputStream.IDHA))!=0 ) {
+               aladin.dialog.show();
+               aladin.dialog.setCurrent(aladinLabel);
+            }
+         } catch(Exception e) {
+            e.printStackTrace();
+            Aladin.warning(this,""+e,1);
+            defaultCursor();
+            ball.setMode(Ball.NOK);
+//            setSync(true);
+            return -1;
          }
-      } catch(Exception e) {
-         e.printStackTrace();
-         Aladin.warning(this,""+e,1);
          defaultCursor();
-         ball.setMode(Ball.NOK);
-         setSync(true);
-         return -1;
-      }
-      defaultCursor();
-      setSync(true);
-      return n;
+//         setSync(true);
+         return n;
+      } finally { aladin.synchroServer.stop(serverTaskId); }
    }
 
    String of="";   // Precedente chaine dans le champ de saisie

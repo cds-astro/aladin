@@ -50,9 +50,38 @@ public class ServerAllsky extends ServerTree  {
 
    @Override
    protected int createPlane(String target,String radius,String criteria, String label, String origin) {
-      int j=criteria==null || criteria.length()==0 ? 0 : aladin.glu.findGluSky((new Tok(criteria)).nextToken(),2);
-      if( j!=-1 ) aladin.allsky(aladin.glu.getGluSky(j),label,target,radius);
+      String survey;
+      int defaultMode=PlanBG.UNKNOWN;
+      if( criteria==null || criteria.trim().length()==0 ) survey="DSS colored";
+      else {
+         Tok tok = new Tok(criteria,", ");
+         survey = tok.nextToken();
+         
+         while( tok.hasMoreTokens() ) {
+            String s = tok.nextToken();
+            if( s.equalsIgnoreCase("Fits") ) defaultMode=PlanBG.FITS;
+            else if( s.equalsIgnoreCase("Jpeg") || s.equalsIgnoreCase("jpg") ) defaultMode=PlanBG.JPEG;
+         }
+      }
+      
+      int j = aladin.glu.findGluSky(survey,2);
+      if( j<0 ) {
+         Aladin.warning(this,"Healpix allsky unknown ["+survey+"]",1);
+         return -1;
+      }
+
+      TreeNodeAllsky gSky = aladin.glu.getGluSky(j);
+      try { gSky.setDefaultMode(defaultMode);
+      } catch( Exception e ) {
+         aladin.command.toStdoutAndConsole("!!! "+e.getMessage());
+      }
+      aladin.allsky(gSky,label,target,radius);
+      
       return j;
+      
+//      int j=criteria==null || criteria.length()==0 ? 0 : aladin.glu.findGluSky((new Tok(criteria)).nextToken(),2);
+//      if( j!=-1 ) aladin.allsky(aladin.glu.getGluSky(j),label,target,radius);
+//      return j;
    }
 
    @Override

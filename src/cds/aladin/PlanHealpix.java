@@ -288,6 +288,7 @@ public class PlanHealpix extends PlanBG {
 
     @Override
     protected boolean waitForPlan() {
+        super.waitForPlan();
         try {
 
             boolean needProcessing = needProcessing(this.dirName, true);

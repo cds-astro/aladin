@@ -1596,9 +1596,14 @@ final public class TableParser implements XMLConsumer {
 //for( int w=0; w<rec.length; w++ ) System.out.println("   rec["+w+"]="+rec[w]);
             
             // Changement de repere si nécessaire
-            if( srcAstroFrame!=null ) c.convertTo(trgAstroFrame);
-            
-            consumer.setRecord(c.getLon(),c.getLat(), rec);
+            if( srcAstroFrame!=null ) {
+//               System.out.println("BEFORE c="+c);
+               c.convertTo(trgAstroFrame);
+//               System.out.println("AFTER c="+c);
+              consumer.setRecord(c.getLon(),c.getLat(), rec);
+              c = new Astrocoo(srcAstroFrame);
+              
+           } else consumer.setRecord(c.getLon(),c.getLat(), rec);
          }
 
 

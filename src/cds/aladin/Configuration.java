@@ -1669,11 +1669,13 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
      
       
       // Pour le caractère de CVS
-      index = csvChoice.getSelectedIndex();
-      if( index!=csvItem ) {
-         set(CSV,CSVITEM[index]);
-         setCSV(CSVITEM[index]);
-      }   
+      if( csvChoice!=null ) {
+         index = csvChoice.getSelectedIndex();
+         if( index!=csvItem ) {
+            set(CSV,CSVITEM[index]);
+            setCSV(CSVITEM[index]);
+         }   
+      }
 
        // Pour le browser
       if( browser != null ) {

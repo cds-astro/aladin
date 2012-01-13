@@ -1409,12 +1409,20 @@ public final class Save extends JFrame implements ActionListener {
    
    protected boolean saveOneView(String filename,int w, int h,int format,float qual,ViewSimple v) {
       boolean rep=false;
-      v.waitLockRepaint("saveOneView");
-      v.sync();
-      try { rep=saveOneView1(filename,w,h,format,qual,v); }
-      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-      v.unlockRepaint("saveOneView");
-      return rep;
+      try {
+         // Un peu compliqué mais indispensable car sinon risque de DeadLock
+         v.waitLockRepaint("saveOneView");
+         if( !v.isSync() ) {
+            v.unlockRepaint("saveOneView");
+            System.out.println(Thread.currentThread().getName()+": Save.saveOneView() waiting isSync() on "+v);
+            Util.pause(50);
+            v.waitLockRepaint("saveOneView");
+         }
+         System.out.println(Thread.currentThread().getName()+": Save.saveOneView() ready "+v);
+         try { rep=saveOneView1(filename,w,h,format,qual,v); }
+         catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+         return rep;
+      } finally { v.unlockRepaint("saveOneView"); }
    }
 
     /** Sauvegarde d'une vue
@@ -1791,7 +1799,7 @@ public final class Save extends JFrame implements ActionListener {
       if( hasSpecificWCS ) {
          key   = new Vector(20);
          value = new Vector(20);
-         try { projd.c.GetWCS(key,value); }
+         try { projd.getWCS(key,value); }
          catch( Exception e ) { }
 
          // Recherche des champs à supprimer ds l'entête FITS initiale

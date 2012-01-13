@@ -145,6 +145,7 @@ public class PlanCatalog extends Plan {
       boolean isSync = (flagOk && error==null
             || flagOk && pcat!=null && (hasSource || error!=null && !hasSource)
             || pcat!=null && error!=null && !hasSource);
+      isSync = isSync && (planFilter==null || planFilter.isSync() );
       return  isSync;
    }
 

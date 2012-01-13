@@ -103,6 +103,7 @@ public class Plan implements Runnable {
    protected Server server;      // Le serveur d'origine
    protected float opacityLevel = 1.0f; // TB, 26/09/2007 : niveau de transparence pour superposition  (ou FoV) sur image
    protected Color colorBackground = null; // Couleur du fond (null si automatique ou Color.white, Color.black)
+   protected String startingTaskId = null; // ID de la tache de démarrage du plan (voir aladin.synchroPlan)
 
    // thomas
    /** pour les filtres */

@@ -274,7 +274,7 @@ public class Source extends Position implements Comparator {
    protected void setPosition(ViewSimple v,double x, double y) { }
 
   /** Modification de l'identificateur
-   * @param id nouvel identificateur
+   * @param taskId nouvel identificateur
    */
    protected void deltaPosition(ViewSimple v,double dx, double dy) {
       if( plan==null || !plan.recalibrating ) return;

@@ -401,7 +401,9 @@ public final class Calque extends JPanel implements Runnable {
       int n=0;
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type!=Plan.ALLSKYIMG || !plan[i].flagOk ) continue;
-         double x = ((PlanBG)plan[i]).getFps();
+         double x;
+         try { x = ((PlanBG)plan[i]).getFps(); }
+         catch( Exception e ) { continue; }
          if( x<=0 ) continue;
          fps += x;
          n++;
@@ -3010,17 +3012,18 @@ public final class Calque extends JPanel implements Runnable {
       return p!=null && p.type==Plan.ALLSKYIMG;
    }
 
-   private int planBGLaunching = 0;
-   synchronized private void launchPlanBG() { planBGLaunching++; }
-   synchronized protected void planBGLaunched() { planBGLaunching--; }
-   protected boolean isPlanBGSync() {
-      if( planBGLaunching>0  ) {
-         aladin.trace(3,"Waiting planBG (in creation phase)");
-         return false;
-      }
-//      aladin.trace(3,"All planBG has been launched");
-      return true;
-   }
+//   private int planBGLaunching = 0;
+//   synchronized private void launchPlanBG() { planBGLaunching++; }
+//   synchronized protected void planBGLaunched() { planBGLaunching--; }
+//   
+//   protected boolean isPlanBGSync() {
+//      if( planBGLaunching>0  ) {
+//         aladin.trace(3,"Waiting planBG (in creation phase)");
+//         return false;
+//      }
+////      aladin.trace(3,"All planBG has been launched");
+//      return true;
+//   }
    
    // Détermination du target de démarrage pour un plan BG
    private Coord getTargetBG(String target,TreeNodeAllsky gSky) {
@@ -3079,12 +3082,16 @@ public final class Calque extends JPanel implements Runnable {
       Coord c=getTargetBG(target,gSky);
       double rad=getRadiusBG(target,radius,gSky);
       
-      launchPlanBG();
+//      launchPlanBG();
+      
       Plan p;
+      String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
       if( gSky!=null ) {
-         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad) : new PlanBG(aladin, gSky, label, c,rad);
+         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) 
+                                        : new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
-         plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad) : new PlanBG(aladin, url, label, c, rad);
+         plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId) 
+                                  : new PlanBG(aladin, url, label, c, rad, startingTaskId);
       }
       n=bestPlace(n);
       suiteNew(p);

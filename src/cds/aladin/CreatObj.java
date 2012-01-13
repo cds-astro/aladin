@@ -49,6 +49,8 @@ public final class CreatObj implements Runnable {
       a.console.setInfo("Aladin "+a.VERSION+" under JVM "+aladin.javaVersion+" with "+a.MAXMEM+"MB");
 
       trace(1,"Creating Command interface");
+      a.synchroServer = new Synchro(10000);
+      a.synchroPlan = new Synchro(60000);
       a.command=new Command(a);
 
       trace(1,"Creating Button menu");

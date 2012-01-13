@@ -183,9 +183,9 @@ public class Server extends JPanel
    public Dimension getSize() { return new Dimension(WIDTH,HEIGHT); }
 
    // Gestion d'un verrou pour la synchronisation script.
-   private boolean sync=true;
-   synchronized protected boolean isSync() { return sync && (tree==null || tree.isSync()); }
-   synchronized protected void setSync(boolean sync) { this.sync=sync; }
+//   private boolean sync=true;
+//   synchronized protected boolean isSync() { return sync && (tree==null || tree.isSync()); }
+//   synchronized protected void setSync(boolean sync) { this.sync=sync; }
 
    protected void createChaine() {
 //      aladinMenuNumber = ORDRE++;      // On se sert du createChaine pour initialiser le numéro d'ordre d'apparition par défaut

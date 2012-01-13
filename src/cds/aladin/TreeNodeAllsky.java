@@ -356,6 +356,12 @@ public class TreeNodeAllsky extends TreeNode {
    protected void submit() { aladin.allsky(this); }
    
    void loadCopyright() { aladin.glu.showDocument(copyrightUrl); }
+   
+   void setDefaultMode(int mode) throws Exception {
+      if( mode==PlanBG.FITS && inFits ) truePixels=true;
+      else if( mode==PlanBG.JPEG && inJPEG ) truePixels=false;
+      else throw new Exception("Mode not supported");
+   }
 
    void setUrl(String url) { this.url=url; }
    void setCopyright(String copyright) {

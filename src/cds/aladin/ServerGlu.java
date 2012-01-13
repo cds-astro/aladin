@@ -519,249 +519,262 @@ public class ServerGlu extends Server implements Runnable {
       Enumeration e;
       int i,j,k,m;
       
-      setSync(false);
-      
-      // Resolution par Simbad necessaire ?,
-      // et remplissage des champs adequats
+      String serverTaskId = aladin.synchroServer.start("ServerGlu.createPlane/"+target);
       try {
-         objet=resolveTarget(target);
-         if( objet==null ) throw new Exception(UNKNOWNOBJ);
-      } catch( Exception e1 ) {
-         Aladin.warning(this,e1.getMessage(),1);
-         setSync(true);
-         return -1;
-      }
+//         setSync(false);
 
-      // Pre-remplissage des champs concernant le radius
-      if( radius!=null && radius.length()>0 ) resolveRadius(radius,true);
-//      if( radius!=null && radius.length()>0 ) setRad(getRadius(radius,RADIUS)*2);
-
-      // Pré-remplissage du champ concernant la date
-      if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
-
-      
-      // Découpage des critères dans un tableau
-      Tok st = new Tok(criteria.trim(),",");
-      String crit[] = new String[st.countTokens()];
-      for( i=0; st.hasMoreTokens(); i++ ) {
-         crit[i] = st.nextToken();
-//System.out.println("Critère "+(i+1)+" ["+crit[i]+"]");
-      }
-
-      Vector v = new Vector(10);    // Liste des critères finaux
-      Vector vbis = new Vector(10);	// Juste pour etablir le label du plan
-
-      // Initialisation à null;
-      for( e = vc.elements(); e.hasMoreElements(); e.nextElement() ) {
-         v.addElement(null);
-         vbis.addElement(null);
-      }
-
-      // Placement des critères labelés (ex: Survey=DSS1)
-      for( i=0; i<crit.length; i++ ) {
-         String cr=crit[i];
-         int posEgal=cr.indexOf('=');
-         if( posEgal>0 && cr.charAt(posEgal-1)!='\\' ) {
-            String cName=cr.substring(0,posEgal).trim().toUpperCase();
-            s = cr.substring(posEgal+1).trim();
-//System.out.print(".Recherche initiale pour "+cName+"="+s);
-
-            // Recherche du paramètre correspondant
-            e = vc.elements();
-            for( j=0; e.hasMoreElements(); j++ ) {
-               JComponent c = (JComponent)e.nextElement();
-               if( isFieldInput(c) || isFieldTargetOrRadius(c)) continue;
-               String coName=c.getName();
-               if( coName==null ) continue;
-               coName=coName.trim().toUpperCase();
-//System.out.print(" ["+coName+"]");
-               if( coName.indexOf(cName)<0 ) continue;
-               if( c instanceof JComboBox ) s=getComboItem((JComboBox)c,s.toUpperCase());
-               if( s!=null ) {
-//System.out.print(" Bingo("+s+"):"+j);
-                  v.setElementAt(s,j);
-                  vbis.setElementAt(s,j);
-                  crit[i]=null; // je le mange
-               }
-               break;
-            }
-            
-//System.out.println();
-         }
-      }
-
-      // Placement des critères non labelés, mais dont la valeur va être
-      // trouvée dans la liste de la JComboBox
-      e = vc.elements();
-      for( j=0; e.hasMoreElements(); j++ ) {
-         JComponent c = (JComponent)e.nextElement();
-//System.out.print(".Recherche pour "+c.getName()+" :");
-         boolean trouve=false;
-         for( k=0; !trouve && k<crit.length; k++ ) {
-            String cr=crit[k];
-            if( cr==null ) continue;
-            cr = cr.toUpperCase();
-
-//System.out.print(" ["+cr+"]");
-            if( c instanceof JComboBox && !isFieldInput(c) ) {
-               s = getComboItem((JComboBox)c,cr);
-               if( s!=null ) {
-//System.out.print(" Bingo("+s+"):"+j);
-                  if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
-                  trouve=true;
-
-                  v.setElementAt(s,j);
-                  vbis.setElementAt(s,j);
-                  crit[k]=null;	// je le mange
-               }
-            }
-         }
-//System.out.println();
-      }
-
-      
-      // Passage en revue des critères input non encore utilisés et je les place
-      // postionnellement dans les critères output en sautant les cases déjà renseignés
-      e = vc.elements();
-      JComponent c=(JComponent)e.nextElement();
-      for( j=i=0; i<crit.length; i++ ) {
-         if( crit[i]==null ) continue;		// déjà utilisé
-
+         // Resolution par Simbad necessaire ?,
+         // et remplissage des champs adequats
          try {
-            for(;v.elementAt(j)!=null || isFieldTargetOrRadius(c); j++ ) c=(JComponent)e.nextElement();
-         }
-         catch(NoSuchElementException nsee) {continue;}
-
-         // Si le component est tagué en INPUT, on va remplacer le nom du plan saisie
-         // par son URL (si possible)
-         if( isFieldInput(c) ) {
-            setSelectedItem(c,crit[i]);		// Je positionne le Choice à la main sinon
-            crit[i]=getInputUrl(c);         // le getInputUrl merdouille
-            if( crit[i]==null ) { setSync(true); return -1; }
+            objet=resolveTarget(target);
+            if( objet==null ) throw new Exception(UNKNOWNOBJ);
+         } catch( Exception e1 ) {
+            Aladin.warning(this,e1.getMessage(),1);
+//            setSync(true);
+            return -1;
          }
 
-//System.out.println(".Position("+crit[i]+"):"+j);
-         v.setElementAt(crit[i],j);
-         vbis.setElementAt(crit[i],j);
-      }
+         // Pre-remplissage des champs concernant le radius
+         if( radius!=null && radius.length()>0 ) resolveRadius(radius,true);
+         //      if( radius!=null && radius.length()>0 ) setRad(getRadius(radius,RADIUS)*2);
 
-      // Passage en revue des critères manquants en output et positionnement de la valeur
-      // par défaut correspondante si elle peut être déterminée, sinon ""
-      e = vc.elements();
-      for( j=0; e.hasMoreElements(); j++ ) {
-         c = (JComponent)e.nextElement();
-         if( v.elementAt(j)!=null ) continue; // déjà renseigné
-//System.out.print(".Default pour "+c.getName()+" :");
-         s=""; // le défaut
+         // Pré-remplissage du champ concernant la date
+         if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
 
-         if( (c instanceof JTextField) ){
-            s = ((JTextField)c).getText();
-//System.out.print(" Default_Textfield("+s+"):"+j);
 
-         } else if( c instanceof JComboBox ) {
-            s = (String)((JComboBox)c).getSelectedItem();
-            if( (m=s.indexOf(" - "))>0 ) vbis.addElement(s.substring(m+3));
-            else vbis.addElement(s);
-            if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
-            else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) s="";
-//System.out.print(" Default_Choice("+s+"):"+j);
-            v.addElement(s);
+         // Découpage des critères dans un tableau
+         Tok st = new Tok(criteria.trim(),",");
+         String crit[] = new String[st.countTokens()];
+         for( i=0; st.hasMoreTokens(); i++ ) {
+            crit[i] = st.nextToken();
+            //System.out.println("Critère "+(i+1)+" ["+crit[i]+"]");
          }
-         v.setElementAt(s,j);
-         vbis.setElementAt(s,j);
-//System.out.println();
-      }
 
-      e = v.elements();
-      StringBuffer p=null;
-      StringBuffer p1=null;
-      while( e.hasMoreElements() ) {
-         s = (String)e.nextElement();
-//System.out.println("Param ["+s+"]");
-         if( p==null ) { p=new StringBuffer(Glu.quote(s)); p1=new StringBuffer(s); }
-         else { p.append(" "+Glu.quote(s)); p1.append("/"+s); }
-      }
+         Vector v = new Vector(10);    // Liste des critères finaux
+         Vector vbis = new Vector(10);	// Juste pour etablir le label du plan
 
-      // Generation de l'URL par appel au GLU
-      URL u = aladin.glu.getURL(actionName,p.toString());
+         // Initialisation à null;
+         for( e = vc.elements(); e.hasMoreElements(); e.nextElement() ) {
+            v.addElement(null);
+            vbis.addElement(null);
+         }
 
-      
-      // S'agit-il d'une commande script provenant d'un serveur en 2 temps ? (SIAP/SSAP)
-      if( flagSIAIDHA && ( type==IMAGE || type==SPECTRUM ) ) {
+         // Placement des critères labelés (ex: Survey=DSS1)
+         for( i=0; i<crit.length; i++ ) {
+            String cr=crit[i];
+            int posEgal=cr.indexOf('=');
+            if( posEgal>0 && cr.charAt(posEgal-1)!='\\' ) {
+               String cName=cr.substring(0,posEgal).trim().toUpperCase();
+               s = cr.substring(posEgal+1).trim();
+               //System.out.print(".Recherche initiale pour "+cName+"="+s);
 
-//          System.out.println(u);
-//          for( int pff=0; pff<crit.length; pff++ ) System.out.println(crit[pff]);
-          TreeBuilder tb = new TreeBuilder(aladin, u, -1, null,  objet);
-          try {
-             ResourceNode rootNode = tb.build();
-             Vector leaves = new Vector();
-             BasicTree.getAllLeaves(rootNode, leaves);
-             SIAPruner pruner = new SIAPruner((ResourceNode[])leaves.toArray(new ResourceNode[leaves.size()]), crit);
-             ResourceNode[] nodesToLoad = pruner.prune();
-             if( nodesToLoad==null ) {
-                setSync(true);
-                return -1;
-             }
-             ResourceNode node;
-             for( int idx=0; idx<nodesToLoad.length; idx++ ) {
-                node = nodesToLoad[idx];
-                if( type==IMAGE ) {
-                   // load image in aladin
-                   aladin.dialog.localServer.tree.load(node,label);
+               // Recherche du paramètre correspondant
+               e = vc.elements();
+               for( j=0; e.hasMoreElements(); j++ ) {
+                  JComponent c = (JComponent)e.nextElement();
+                  if( isFieldInput(c) || isFieldTargetOrRadius(c)) continue;
+                  String coName=c.getName();
+                  if( coName==null ) continue;
+                  coName=coName.trim().toUpperCase();
+                  //System.out.print(" ["+coName+"]");
+                  if( coName.indexOf(cName)<0 ) continue;
+                  if( c instanceof JComboBox ) s=getComboItem((JComboBox)c,s.toUpperCase());
+                  if( s!=null ) {
+                     //System.out.print(" Bingo("+s+"):"+j);
+                     v.setElementAt(s,j);
+                     vbis.setElementAt(s,j);
+                     crit[i]=null; // je le mange
+                  }
+                  break;
                }
-               else if( type==SPECTRUM ) {
-                  // broadcast spectrum to whatever spectrum app is there
-                  aladin.getMessagingMgr().sendMessageLoadSpectrum(node.location, node.location, node.name, node.getMetadata(), null);
-               }
+
+               //System.out.println();
             }
          }
-         catch(Exception e2) {
-            aladin.command.toStdoutln("error : "+e2.getMessage());
-            e2.printStackTrace();
-         }
-         setSync(true);
-         return 1;
-      }
 
-      // Generation du label du plan
-      if( label==null ) {
-         if( planeLabel==null ) label=aladinLabel;
-         else {
-            String [] param = new String[vbis.size()];
-            for( i=0; i<param.length; i++ ) {
-               s = (String)vbis.elementAt(i);
-               if( s.equals("-") ) s="";
-               param[i] = s;
+         // Placement des critères non labelés, mais dont la valeur va être
+         // trouvée dans la liste de la JComboBox
+         e = vc.elements();
+         for( j=0; e.hasMoreElements(); j++ ) {
+            JComponent c = (JComponent)e.nextElement();
+            //System.out.print(".Recherche pour "+c.getName()+" :");
+            boolean trouve=false;
+            for( k=0; !trouve && k<crit.length; k++ ) {
+               String cr=crit[k];
+               if( cr==null ) continue;
+               cr = cr.toUpperCase();
+
+               //System.out.print(" ["+cr+"]");
+               if( c instanceof JComboBox && !isFieldInput(c) ) {
+                  s = getComboItem((JComboBox)c,cr);
+                  if( s!=null ) {
+                     //System.out.print(" Bingo("+s+"):"+j);
+                     if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
+                     trouve=true;
+
+                     v.setElementAt(s,j);
+                     vbis.setElementAt(s,j);
+                     crit[k]=null;	// je le mange
+                  }
+               }
             }
-            planeLabel = dollarQuerySet(planeLabel);
-            label = aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim();
+            //System.out.println();
          }
-      }
 
-      String param = p1!=null ? p1.toString() : "";
 
-      // S'agit-il d'un serveur d'images
-      if( type==IMAGE ) {
-         if( !verif(Plan.IMAGE,objet,param) ) { setSync(true); return -1; }
-         if( fmt==PlanImage.NATIVE ) {
-            int n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
-                  fmt,PlanImage.UNDEF,null,null);
-            setSync(true);
-            return n;
+         // Passage en revue des critères input non encore utilisés et je les place
+         // postionnellement dans les critères output en sautant les cases déjà renseignés
+         e = vc.elements();
+         JComponent c=(JComponent)e.nextElement();
+         for( j=i=0; i<crit.length; i++ ) {
+            if( crit[i]==null ) continue;		// déjà utilisé
+
+            try {
+               for(;v.elementAt(j)!=null || isFieldTargetOrRadius(c); j++ ) c=(JComponent)e.nextElement();
+            }
+            catch(NoSuchElementException nsee) {continue;}
+
+            // Si le component est tagué en INPUT, on va remplacer le nom du plan saisie
+            // par son URL (si possible)
+            if( isFieldInput(c) ) {
+               setSelectedItem(c,crit[i]);		// Je positionne le Choice à la main sinon
+               crit[i]=getInputUrl(c);         // le getInputUrl merdouille
+               if( crit[i]==null ) {
+//                  setSync(true);
+                  return -1;
+               }
+            }
+
+            //System.out.println(".Position("+crit[i]+"):"+j);
+            v.setElementAt(crit[i],j);
+            vbis.setElementAt(crit[i],j);
+         }
+
+         // Passage en revue des critères manquants en output et positionnement de la valeur
+         // par défaut correspondante si elle peut être déterminée, sinon ""
+         e = vc.elements();
+         for( j=0; e.hasMoreElements(); j++ ) {
+            c = (JComponent)e.nextElement();
+            if( v.elementAt(j)!=null ) continue; // déjà renseigné
+            //System.out.print(".Default pour "+c.getName()+" :");
+            s=""; // le défaut
+
+            if( (c instanceof JTextField) ){
+               s = ((JTextField)c).getText();
+               //System.out.print(" Default_Textfield("+s+"):"+j);
+
+            } else if( c instanceof JComboBox ) {
+               s = (String)((JComboBox)c).getSelectedItem();
+               if( (m=s.indexOf(" - "))>0 ) vbis.addElement(s.substring(m+3));
+               else vbis.addElement(s);
+               if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
+               else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) s="";
+               //System.out.print(" Default_Choice("+s+"):"+j);
+               v.addElement(s);
+            }
+            v.setElementAt(s,j);
+            vbis.setElementAt(s,j);
+            //System.out.println();
+         }
+
+         e = v.elements();
+         StringBuffer p=null;
+         StringBuffer p1=null;
+         while( e.hasMoreElements() ) {
+            s = (String)e.nextElement();
+            //System.out.println("Param ["+s+"]");
+            if( p==null ) { p=new StringBuffer(Glu.quote(s)); p1=new StringBuffer(s); }
+            else { p.append(" "+Glu.quote(s)); p1.append("/"+s); }
+         }
+
+         // Generation de l'URL par appel au GLU
+         URL u = aladin.glu.getURL(actionName,p.toString());
+
+
+         // S'agit-il d'une commande script provenant d'un serveur en 2 temps ? (SIAP/SSAP)
+         if( flagSIAIDHA && ( type==IMAGE || type==SPECTRUM ) ) {
+
+            //          System.out.println(u);
+            //          for( int pff=0; pff<crit.length; pff++ ) System.out.println(crit[pff]);
+            TreeBuilder tb = new TreeBuilder(aladin, u, -1, null,  objet);
+            try {
+               ResourceNode rootNode = tb.build();
+               Vector leaves = new Vector();
+               BasicTree.getAllLeaves(rootNode, leaves);
+               SIAPruner pruner = new SIAPruner((ResourceNode[])leaves.toArray(new ResourceNode[leaves.size()]), crit);
+               ResourceNode[] nodesToLoad = pruner.prune();
+               if( nodesToLoad==null ) {
+//                  setSync(true);
+                  return -1;
+               }
+               ResourceNode node;
+               for( int idx=0; idx<nodesToLoad.length; idx++ ) {
+                  node = nodesToLoad[idx];
+                  if( type==IMAGE ) {
+                     // load image in aladin
+                     aladin.dialog.localServer.tree.load(node,label);
+                  }
+                  else if( type==SPECTRUM ) {
+                     // broadcast spectrum to whatever spectrum app is there
+                     aladin.getMessagingMgr().sendMessageLoadSpectrum(node.location, node.location, node.name, node.getMetadata(), null);
+                  }
+               }
+            }
+            catch(Exception e2) {
+               aladin.command.toStdoutln("error : "+e2.getMessage());
+               e2.printStackTrace();
+            }
+//            setSync(true);
+            return 1;
+         }
+
+         // Generation du label du plan
+         if( label==null ) {
+            if( planeLabel==null ) label=aladinLabel;
+            else {
+               String [] param = new String[vbis.size()];
+               for( i=0; i<param.length; i++ ) {
+                  s = (String)vbis.elementAt(i);
+                  if( s.equals("-") ) s="";
+                  param[i] = s;
+               }
+               planeLabel = dollarQuerySet(planeLabel);
+               label = aladin.glu.dollarSet(planeLabel,param,Glu.NOURL).trim();
+            }
+         }
+
+         String param = p1!=null ? p1.toString() : "";
+
+         // S'agit-il d'un serveur d'images
+         if( type==IMAGE ) {
+            if( !verif(Plan.IMAGE,objet,param) ) {
+//               setSync(true);
+               return -1;
+            }
+            if( fmt==PlanImage.NATIVE ) {
+               int n=aladin.calque.newPlanImageColor(u,null,PlanImage.OTHER,label,objet,param, "provided by "+institute,
+                     fmt,PlanImage.UNDEF,null,null);
+//               setSync(true);
+               return n;
+            } else {
+               int n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
+                     label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
+//               setSync(true);
+               return n;
+            }
+
+            // Ou d'un serveur de donnees
          } else {
-            int n = aladin.calque.newPlanImage(u,PlanImage.OTHER,
-               label,objet,param, "provided by "+institute, fmt,PlanImage.UNDEF, null);
-            setSync(true);
+            if( !verif(Plan.CATALOG,objet,param) ) { 
+//               setSync(true);
+               return -1;
+            }
+            int n = aladin.calque.newPlanCatalog(u,label,objet,param,"provided by "+institute,this);
+//            setSync(true);
             return n;
          }
 
-      // Ou d'un serveur de donnees
-      } else {
-         if( !verif(Plan.CATALOG,objet,param) ) { setSync(true); return -1; }
-         int n = aladin.calque.newPlanCatalog(u,label,objet,param,"provided by "+institute,this);
-         setSync(true);
-         return n;
-      }
+      } finally { aladin.synchroServer.stop(serverTaskId); }
    }
 
    public void submit() {

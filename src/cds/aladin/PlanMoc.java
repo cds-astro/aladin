@@ -60,6 +60,7 @@ public class PlanMoc extends PlanBGCat {
    public boolean getWireFrame() { return wireFrame; }
    
    protected boolean waitForPlan() {
+      super.waitForPlan();
       try {
          moc = new HealpixMoc();
          moc.setMinLimitOrder(3);

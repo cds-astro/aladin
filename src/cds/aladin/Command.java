@@ -148,7 +148,7 @@ public final class Command implements Runnable {
    static final private String NOSYNCCMD[] = {
       "call","collapse","demo","expand","function",
       "get","grid","help","hist","info","list","kernel","load","lock","md","mem",
-      "pause","reset","reticle",
+      "pause",/*"reset",*/"reticle",
       "scale","setconf",
       "status","stick","sync","timeout","trace","unlock","unstick",
    };
@@ -519,17 +519,32 @@ public final class Command implements Runnable {
       return v.toArray(new Plan[v.size()]);
    }
 
+//   protected boolean isSyncServer1() {
+//      for( int i=0; i<a.dialog.server.length; i++ ) {
+//         if( !a.dialog.server[i].isSync() ) {
+//            Aladin.trace(4,"Command.isSyncServer() : waiting server["+i+"] \""+a.dialog.server[i].aladinLabel+"\"...");
+//            return false;
+//         }
+//      }
+//      return true;
+//   }
    /** Retourne true si tous les serveurs sont syncrhonisés */
    protected boolean isSyncServer() {
-      for( int i=0; i<a.dialog.server.length; i++ ) {
-         if( !a.dialog.server[i].isSync() ) {
-            Aladin.trace(4,"Command.isSyncServer() : waiting server["+i+"] \""+a.dialog.server[i].aladinLabel+"\"...");
-            return false;
-         }
-      }
-      return true;
+      if( a.synchroServer.isReady() ) return true;
+      Aladin.trace(4,"Command.isSyncServer() : waiting server...\n" +
+      		         "==> "+a.synchroServer);
+      return false;
    }
    
+   /** Retourne true si tous les plans sont syncrhonisés */
+   protected boolean isSyncPlan() {
+      if( a.synchroPlan.isReady() ) return true;
+      Aladin.trace(4,"Command.isSyncPlan() : waiting plane...\n" +
+                     "==> "+a.synchroPlan);
+      return false;
+   }
+   
+
    protected boolean syncNeedRepaint=false;
    protected boolean syncNeedSesame=false;
    
@@ -542,7 +557,8 @@ public final class Command implements Runnable {
       }
       
       if( syncNeedSesame && a.view.isSesameInProgress() ) {
-         a.trace(4,"Command.isSync() : waiting sesame...");
+         a.trace(4,"Command.isSync() : waiting sesame...\n" +
+         		   "==> "+a.view.sesameSynchro.toString());
          return false;
       }
       syncNeedSesame=false;
@@ -554,8 +570,9 @@ public final class Command implements Runnable {
       }
       
       if( !isSyncServer() ) return false;
+      if( !isSyncPlan() ) return false;
       
-      if( !a.calque.isPlanBGSync() ) return false;
+//      if( !a.calque.isPlanBGSync() ) return false;
       
       Plan [] plan = a.calque.getPlans();
       for( int i=plan.length-1; i>=0; i-- ) {
@@ -621,14 +638,21 @@ public final class Command implements Runnable {
    }
 
    /** Attend que les serveurs soient OK */
-   private void syncServer() {
-      long d = System.currentTimeMillis();
-      while( !isSyncServer() ) {
-         if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
-            toStdoutln("!!! Time out error ("+(timeout/60000)+" minutes).");
-            return;
-         }
-         Util.pause(50);
+//   private void syncServer() {
+//      long d = System.currentTimeMillis();
+//      while( !isSyncServer() ) {
+//         if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
+//            toStdoutln("!!! Time out error ("+(timeout/60000)+" minutes).");
+//            return;
+//         }
+//         Util.pause(50);
+//      }
+//   }
+   private void syncServer() { 
+      try {
+         a.synchroServer.waitUntil(timeout);
+      } catch( Exception e ) {
+         toStdoutln("!!! Time out error ("+(timeout/60000)+" minutes).");
       }
    }
 
@@ -923,6 +947,7 @@ public final class Command implements Runnable {
              
              // ou via une position ou une target
              a.view.sesameResolve(cmd);
+             a.dialog.setDefaultTarget(cmd);
              
              return false;
           }
@@ -1837,6 +1862,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
 
       // Récupération du plan concerné (on ne supporte plus la possibilité de mentionner plusieurs plans)
+      // Attention, cette possibilité n'est pas offerte dans le cas d'un PlanBG (allsky) non visible
       PlanImage pi=null;
       try {
          pi = (PlanImage)getPlan(param.substring(0,j),1)[0];
@@ -1844,8 +1870,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       } catch( Exception e1 ) {
          pi = (PlanImage)a.calque.getPlanBase();
       }
-      
       ViewSimple v = a.view.getView(pi);
+      if( pi instanceof PlanBG && (!pi.active || !pi.ref && pi.getOpacityLevel()==0f) ) {
+         Aladin.warning("crop error: allsky plane ["+pi.label+"] must be visible to be cropped!",1);
+         return null;
+      }
 
       // On détermine la taille si non précisée ?
       if( !flagDim ) {
@@ -1854,6 +1883,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             h=v.rzoom.height;
          } catch( Exception e ) { }
       }
+      
+      if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
 
     // On essaye la position du repere, sinon le centre de la vue, si nécessaire
       if( !flagPos ) {
@@ -1865,13 +1896,13 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             y = pi.naxis2-(y+h);
          } catch( Exception e1 ) {
             x=v.rzoom.x;
-            y= v.rzoom.y; 
+            y=v.rzoom.y; 
          }
       }
 
-//      a.trace(4,"Command.crop: param=["+param+"] label="+label+" "+x+","+y+(flagPos?" (provided) ":" (on reticle) ")+w+"x"+h+(flagDim?"(provided)":"(view size)"));
+      a.trace(4,"Command.crop: on "+v+" param=["+param+"] label="+label+" "+x+","+y+(flagPos?" (provided) ":" (on reticle) ")+w+"x"+h+(flagDim?"( provided)":"(view size)"));
 
-      a.view.getView(pi).cropArea(new RectangleD(x,pi.naxis2-(y+h),w,h), label, 1, 1,false,false);
+      v.cropArea(new RectangleD(x,pi.naxis2-(y+h),w,h), label, v.zoom, 1,true,false);
       return pi;
    }
    
@@ -3022,7 +3053,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   }
                }
                String file = finFile==-1 ? s.substring(posFile) : s.substring(posFile,finFile);
-               file = file.trim();
+               file = Tok.unQuote(file.trim()).trim();
+               if( file.endsWith("fits") || file.endsWith("FITS")) {
+                  fits=true;
+               } else if( file.endsWith("hpx") || file.endsWith("HPX")) {
+                  hpx=true;
+               }
 
                if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,addXY);
                else if( p.isImage() && !(p instanceof PlanImageBlink) ) (a.save).saveImage(file,p,hpx?1:fits?0:2);
@@ -3945,7 +3981,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
          Vector<String> key   = new Vector<String>(20);
          Vector<String> value = new Vector<String>(20);
-         try { p.c.GetWCS(key,value); }
+         try { p.getWCS(key,value); }
          catch( Exception e ) { System.err.println("GetWCS error"); }
 
          Vector<byte[]> v = new Vector<byte[]>();

@@ -400,10 +400,14 @@ public class FrameMacro extends JFrame {
 			scriptRenderer.doColoringLater();
             // TODO : je ne sais pas comment forcer la position du scroll,
             // car je ne sais pas récupérer l'indice correspondant à une ligne
-            if( row>=0 ) {
-                Element root = scriptTP.getDocument().getDefaultRootElement();
-                int idx = root.getElement(row).getStartOffset();
-                scriptTP.setCaretPosition(idx);
+            try {
+               if( row>=0 ) {
+                   Element root = scriptTP.getDocument().getDefaultRootElement();
+                   int idx = root.getElement(row).getStartOffset();
+                   scriptTP.setCaretPosition(idx);
+               }
+            } catch( Exception e ) {
+               e.printStackTrace();
             }
 		}
 

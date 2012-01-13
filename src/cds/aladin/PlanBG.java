@@ -152,6 +152,7 @@ public class PlanBG extends PlanImage {
    protected HealpixKey allsky;    // Losanges spéciaux d'accès à tout le ciel niveau 3
    protected HealpixLoader loader;   // Gère le chargement des losanges
    protected boolean hasDrawnSomething=false;   // True si le dernier appel à draw() à dessiner au moins un losange
+   protected boolean allWaitingKeysDrawn=false;   // true si tous les losanges de résolution attendue ont été tracés
    protected boolean useCache=true;
    protected boolean color=false;   // true si le survey est fourni en couleur
    protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG couleur ou non
@@ -190,9 +191,11 @@ public class PlanBG extends PlanImage {
     * @param c Coordonnée centrale ou null si non spécifiée
     * @param radius Taille du champ en degrés, ou <=0 si non spécifié
     */
-   protected PlanBG(Aladin aladin, TreeNodeAllsky gluSky, String label, Coord c,double radius) {
+   protected PlanBG(Aladin aladin, TreeNodeAllsky gluSky, String label, Coord c,double radius,String startingTaskId) {
       super(aladin);
+      this.startingTaskId = startingTaskId;
       initCache();
+
       url = gluSky.getUrl();
       survey = gluSky.label;
       version = gluSky.version;
@@ -219,8 +222,9 @@ public class PlanBG extends PlanImage {
       color = gluSky.isColored();
    }
    
-   protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius) {
+   protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
       super(aladin);
+      this.startingTaskId=startingTaskId;
       initCache();
       aladin.trace(2,"Creating allSky directory plane ["+path+"]"); 
       type = ALLSKYIMG;
@@ -236,8 +240,9 @@ public class PlanBG extends PlanImage {
       suite();
    }
    
-   protected PlanBG(Aladin aladin, URL u, String label, Coord c, double radius) {
+   protected PlanBG(Aladin aladin, URL u, String label, Coord c, double radius, String startingTaskId) {
       super(aladin);
+      this.startingTaskId=startingTaskId;
       initCache();
       aladin.trace(2,"Creating allSky http plane ["+u+"]"); 
       type = ALLSKYIMG;
@@ -405,7 +410,8 @@ public String getUrl() {
 
    @Override
    protected boolean waitForPlan() {
-      aladin.calque.planBGLaunched();
+//      aladin.calque.planBGLaunched();
+      aladin.synchroPlan.stop(startingTaskId);
       return error==null;
    }
 
@@ -1329,6 +1335,9 @@ public String getUrl() {
 //   }
 //
 
+   /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
+   protected boolean isFullyDrawn() { return isDrawn () && allWaitingKeysDrawn; }
+   
    /** Retourne true si le dernier appel à draw() à dessiner au moins un losange */
 //   protected boolean isDrawn() { return pixList.size()>0 && hasDrawnSomething; }
    protected boolean isDrawn() { return readyDone; }
@@ -1346,11 +1355,42 @@ public String getUrl() {
 
    @Override
    protected boolean isSync() {
-      boolean rep = error!=null || flagOk && (!active || getOpacityLevel()==0f  && !ref || !flagProcessing && !isLoading() && isDrawn());
+      if( error!=null ) { 
+         aladin.trace(4,"PlanBG.isSync()=true:"+label+" => in error (error!=null)");
+         return true;
+      }
+      if( !flagOk ) {
+         aladin.trace(4,"PlanBG.isSync()=false: "+label+" => not ready (!flagOk)");
+         return false;
+      }
+      if( !active ) {
+         aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> not active (!active)");
+         return true;
+      }
+      if( getOpacityLevel()==0f && !ref ) {
+         aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> transparent (!ref && opacity="+getOpacityLevel()+")");
+         return true;
+      }
+      if( flagProcessing ) {
+         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is processing (flagProcessing)");
+         return false;
+      }
+      if( isLoading() ) {
+         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is loading (isLoading())");
+         return false;
+      }
+      if( !isFullyDrawn() ) {
+         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is not fully drawn at the best resolution (!isFullyDrawn())");
+         return false;
+      }
+      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> displayed and ready");
+      return true;
+
+//      boolean rep = error!=null || flagOk && (!active || getOpacityLevel()==0f  && !ref || !flagProcessing && !isLoading() && (isFullyDrawn() /* || pourcent==-2*/) );
 //      aladin.trace(4,"PlanBG.isSync()="+rep+" => thread="+this.hashCode()+" "+label+" error="+(error==null?"null":error)+
-//            " active="+active+" ref="+ref+" opacity="+getOpacityLevel()+" flagProcessing="+flagProcessing+" isLoading="+isLoading()+" isDrawn="+isDrawn()+
+//            " active="+active+" ref="+ref+" opacity="+getOpacityLevel()+" flagProcessing="+flagProcessing+" isLoading="+isLoading()+" isDrawn="+isDrawn()+" isFullyDrawn="+isFullyDrawn()+
 //            " pourcent="+pourcent);
-      return rep;
+//      return rep;
    }
 
    /** Retourne true si le all-sky est en couleur */
@@ -1812,7 +1852,9 @@ System.out.println("Wakeup for loading remote Allsky...");
    @Override
    protected Image getImage(ViewSimple v) {
       if(v.imageBG!=null && v.ovizBG == v.iz
-            && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) return v.imageBG;
+            && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) {
+         return v.imageBG;
+      }
       if( v.imageBG==null || v.rv.width!=v.owidthBG || v.rv.height!=v.oheightBG ) {
          v.imageBG = aladin.createImage(v.rv.width,v.rv.height);
          v.g2BG = v.imageBG.getGraphics();
@@ -2060,6 +2102,8 @@ System.out.println("Wakeup for loading remote Allsky...");
    
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
    protected void drawLosanges(Graphics g,ViewSimple v) {
+      allWaitingKeysDrawn = false;
+
       long t1 = Util.getTime();
       int nb=0;
       long [] pix=null;
@@ -2085,7 +2129,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       
       // Recherche des losanges qui couvrent la vue à la résolution max
       boolean allKeyReady=true;
-      if( max<=ALLSKYORDER ) allKeyReady=false;
+      if( max<=ALLSKYORDER ) allKeyReady=false; 
       else {
          pix = getPixList(v,center,max);
          for( int i=0; i<pix.length; i++ ) {
@@ -2093,7 +2137,7 @@ System.out.println("Wakeup for loading remote Allsky...");
             if( healpix==null && (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                pix[i]=-1; continue;
             }
-            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY ) {
+            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY && healpix.status!=HealpixKey.ERROR ) {
                allKeyReady=false;
                break;
             }
@@ -2107,10 +2151,6 @@ System.out.println("Wakeup for loading remote Allsky...");
       if( !allKeyReady  ) {
          if( pochoir ) drawBackground(g, v);
          if( drawAllSky(g,v) ) nb=1;
-//         if( (hasDrawnSomething= drawAllSky(g,v)) ) {
-//            if( pochoir ) drawForeground(g,v);
-//            nb=1;
-//         }
       }
       
 
@@ -2173,11 +2213,13 @@ System.out.println("Wakeup for loading remote Allsky...");
 
             // Inconnu => on ne dessine pas
             if( healpix==null ) continue;
+            
+            // Juste pour tester la synchro
+//            Util.pause(100);
 
             // Positionnement de la priorité d'affichage
             healpix.priority=order<max ? 500-(priority++) : priority++;
 
-//            int status = healpix.getStatus();
             int status = healpix.status;
 
             // Losange erroné ?
@@ -2191,7 +2233,7 @@ System.out.println("Wakeup for loading remote Allsky...");
 
             // Pas encore prêt
             if( status!=HealpixKey.READY ) continue;
-
+            
             // Tous les fils à tracer sont déjà prêts => on passe
             if( order<max && childrenReady(healpix,v) ) {
                healpix.filsFree();
@@ -2209,6 +2251,9 @@ System.out.println("Wakeup for loading remote Allsky...");
       nb+=redraw(g,v,t1);
       hasDrawnSomething=nb>0;
       if( hasDrawnSomething && pochoir ) drawForeground(g,v);
+      
+      //essai
+      allWaitingKeysDrawn = allKeyReady || (max<=ALLSKYORDER && hasDrawnSomething);
 
       tryWakeUp();
 //      long t2 = Util.getTime();
@@ -2216,8 +2261,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       statNbItems = nb;
 //aladin.trace(4,"Draw["+min+".."+max+"] "+s1+" "+ +nb+" losanges in "+(statTimeDisplay)+"ms");
    }
-
-
+   
    private int redraw(Graphics g,ViewSimple v,long t1) {
       int n=0;
       if( redraw.size()>0 ) {
@@ -2376,7 +2420,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       }
 
       /** Retourne true si l'image de meilleure résolution est prête */
-      protected boolean isReadyForDrawing() { return pourcent==-1; }
+      protected boolean isReadyForDrawing() { return readyAfterDraw;/* pourcent==-1; */ }
 
       /** Retourne true s'il y a encore au-moins un losange en cours de chargement */
       protected boolean isLoading() { return loading; }
@@ -2516,8 +2560,8 @@ System.out.println("Wakeup for loading remote Allsky...");
                || nb[HealpixKey.LOADINGFROMNET]>0;
          purging= stillOnePurge || nb[HealpixKey.PURGING]>0;
 
-         pourcent = n==0 ? -1 : n>=10 ? 1 : (10-n)*10.;
-         if( pourcent==-1 ) readyAfterDraw=true;
+         pourcent = n==0 ? -2 : n>=10 ? 1 : (10-n)*10.;
+         readyAfterDraw= n==0;
 
          // Pour du debug
          nbReady=nb[HealpixKey.READY];
