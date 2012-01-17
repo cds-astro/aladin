@@ -129,7 +129,7 @@ public class BuilderRgb implements Runnable {
 	      }
 	      if( found ) out = createNodeRGB(fils);
 	   }
-	   if( out!=null && context.isInMocTree(order,npix) ) generateRGB(out, order, npix);
+	   if( out!=null) generateRGB(out, order, npix);
 	   return out;
 	}
 
@@ -285,7 +285,11 @@ public class BuilderRgb implements Runnable {
           double progressFactor = 100f/768f;
           progress=0;
           for( int i=0; !stopped && i<768; i++ ) {
-             createRGB(3,i);
+        	  // Si le fichier existe déjà on ne l'écrase pas
+        	  String rgbfile = Util.getFilePath(path,3, i)+".jpg";
+        	  if ((new File(rgbfile)).exists())
+        		  continue;
+      		if( context.isInMocTree(3, i) ) createRGB(3,i);
              progress = (int)(i*progressFactor);
              long t1 = System.currentTimeMillis();
              if( t1-t>10000 ) { preview(path,0); t=t1; }
