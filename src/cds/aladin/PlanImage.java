@@ -273,21 +273,21 @@ public class PlanImage extends Plan {
     }
     
     /** Creation d'un plan de type IMAGE synchrone à partir d'un fichier */
-    protected PlanImage(Aladin aladin, String fileName)  throws Exception {
-       this.aladin  = aladin;
-       setLogMode(false);
-       type         = IMAGE;
-       dis = new MyInputStream(new FileInputStream(fileName));
-       setLabel(fileName);
-       isBlank      = false;
-       video        = aladin.configuration.getCMVideo();
-       transfertFct = aladin.configuration.getCMFct();
-       typeCM       = aladin.configuration.getCMMap();
-       if( cmControl==null ) cmControl = new int[3];
-       cmControl[0] = 0; cmControl[1] = 128; cmControl[2] = 255;
-       setFmt();
-       waitForPlan();
-    }
+//    protected PlanImage(Aladin aladin, String fileName)  throws Exception {
+//       this.aladin  = aladin;
+//       setLogMode(false);
+//       type         = IMAGE;
+//       dis = new MyInputStream(new FileInputStream(fileName));
+//       setLabel(fileName);
+//       isBlank      = false;
+//       video        = aladin.configuration.getCMVideo();
+//       transfertFct = aladin.configuration.getCMFct();
+//       typeCM       = aladin.configuration.getCMMap();
+//       if( cmControl==null ) cmControl = new int[3];
+//       cmControl[0] = 0; cmControl[1] = 128; cmControl[2] = 255;
+//       setFmt();
+//       waitForPlan();
+//    }
 
     static protected void createChaine(Chaine chaine) {
 //       DEFIMG = chaine.getString("PIDEFIMG");
@@ -369,7 +369,6 @@ public class PlanImage extends Plan {
        this.aladin= aladin;
        type       = IMAGE;
        c          = Color.black;
-       flagOk     = true;
        askActive  = true;
        isOldPlan  = true;       // Pour éviter entre autre de trier la pile lorsque le plan est créé
        cmControl  = new int[3];
@@ -462,15 +461,12 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
 
        // Attention, on ne duplique que les données 8 bits, les pixels originaux sont partagés
        try {
-         if( getBufPixels8()!=null  ) {
-             p.setBufPixels8(new byte[getBufPixels8().length]);
-             System.arraycopy(getBufPixels8(),0,p.getBufPixels8(),0,getBufPixels8().length);
-          } else setBufPixels8(null);
-      } catch( Exception e ) {
-         setBufPixels8(null);
-      }
+         if( pixels!=null  ) {
+             p.pixels = new byte[pixels.length];
+             System.arraycopy(pixels,0,p.pixels,0,pixels.length);
+          } else p.pixels = null;
+      } catch( Exception e ) { p.pixels = null; }
        p.pixelsOrigin=pixelsOrigin;
-       
        p.projD = null;
        p.projd = p.projInit = null;
        if( projd!=null ) p.setNewProjD(projd.copy());
@@ -1074,8 +1070,10 @@ Aladin.trace(3,"Original pixels RAM free for "+label);
    protected int oImgID=-2;           // Numéro de l'image pour savoir s'il vaut en générer une nouvelle
 
    /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
-    * si ce n'est pas nécessaire */
-   protected Image getImage(ViewSimple v) {
+    * si ce n'est pas nécessaire 
+    * @param now paramètre ignoré, voir PlanBG
+    */
+   protected Image getImage(ViewSimple v,boolean now) {
       if( oImgID==imgID ) return image;
       image = Toolkit.getDefaultToolkit().createImage(
             new MemoryImageSource(width,height,cm, getBufPixels8(), 0, width));
@@ -1089,7 +1087,7 @@ Aladin.trace(3,"Original pixels RAM free for "+label);
    * @param x,y,w,h   Le rectangle de la zone a extraire
    */
    protected void getPixels(byte [] newpixels,int x,int y,int w,int h) {
-      getPixels(newpixels,getBufPixels8(),width,height,x,y,w,h);
+      getPixels(newpixels,pixels,width,height,x,y,w,h);
    }
    protected void getPixels(byte [] newpixels,byte[]pixels,int width,int height,
                             int x,int y,int w,int h) {
@@ -2456,8 +2454,15 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
    /** Retourne la valeur 8 bits du pixel indiqué en coordonnées image*/
    public int getPixel8(int x,int y) {
-      return (getBufPixels8()[y*width+x] & 0xFF);
+      return (pixels[y*width+x] & 0xFF);
    }
+
+   
+   /** Retourne la valeur 8 bits du pixel indiqué en coordonnées image*/
+   protected byte getPixel8Byte(int x,int y) {
+      return pixels[y*width+x];
+   }
+
 
 /** INUTILE POUR LE MOMENT
    protected double getPixelValue(int x,int y,int mode) {
@@ -3494,8 +3499,6 @@ Aladin.trace(2,"Loading PDS image");
 //   }
 
 
-
-
    /** Dessin de l'image par transformée affine
     * @param op niveau d'opacité forcé, -1 si prendre celui du plan
     */
@@ -3527,7 +3530,7 @@ Aladin.trace(2,"Loading PDS image");
          }
 
          g2d.setTransform(tr);
-         g2d.drawImage(getImage(v),dx,dy,null);
+         g2d.drawImage(getImage(v,false),dx,dy,null);
          g2d.setComposite(saveComposite);
          g2d.setTransform(saveTransform);
 

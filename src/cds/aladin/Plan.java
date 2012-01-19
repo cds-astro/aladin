@@ -1588,8 +1588,7 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
 
       setPourcent(-1);
-      flagOk = true;
-      flagProcessing = false;
+      flagOk = ready;
 
       boolean un,deux,trois;
       un=deux=trois=false;
@@ -1620,6 +1619,8 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
       // Libération de l'attente possible sur le target (voir Command.waitingPlanInProgress)
       flagWaitTarget=false;
+      
+      flagProcessing = false;
 
       aladin.calque.repaintAll();
    }

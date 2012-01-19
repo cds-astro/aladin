@@ -23,6 +23,7 @@ package cds.aladin;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import cds.fits.HeaderFits;
 import cds.tools.Util;
 
 /**
@@ -100,7 +101,7 @@ public final class Projection {
 
    /** Aucune projection */
    protected Projection() { modeCalib=NO; }
-
+   
   /** Creation d'une projection à partir d'une autre projection */
    protected Projection(Projection p) {
       c=p.c;
@@ -519,7 +520,7 @@ public final class Projection {
     */
    protected void getWCS(Vector key, Vector value) throws Exception {
       c.GetWCS(key,value);
-      if( isFrameEqualsCalibSyst() ) return;
+      if( isEquatorial() /* isFrameEqualsCalibSyst() */ ) return;
       
       Enumeration ekey   = key.elements();
       Enumeration evalue = value.elements();
@@ -545,6 +546,22 @@ public final class Projection {
             else value.setElementAt(radecsys,i);
          }
       }
+   }
+   /** Construction d'une projection dont le frame est géré par Calib et non par Projection 
+    * => Actuellement uniquement possible pour Equatorial et Galactique => J'attends FB pour le reste
+    */
+   static protected Projection getEquivalentProj(Projection p) throws Exception {
+      if( p.isEquatorial() || p.system!=Calib.GALACTIC /* p.isFrameEqualsCalibSyst() */ ) return p;        // Rien à faire, pas encore possible
+      p.c = new Calib( new HeaderFits(p.getWCS()) );
+      p.adjustParamByCalib(p.c);
+      p.frame=Localisation.ICRS;
+      return p;
+   }
+   
+   private boolean isEquatorial() {
+      return frame==Localisation.ICRS || frame==Localisation.ICRSD
+      || frame==Localisation.J2000 || frame==Localisation.J2000D
+      || frame==Localisation.B1950 || frame==Localisation.B1950D;
    }
    
    // Retourne true si le frame propre à la classe Projection est identique à celui de calib

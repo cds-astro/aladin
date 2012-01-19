@@ -2409,6 +2409,7 @@ public final class Calque extends JPanel implements Runnable {
        p.setLabel(name);
        p.creatDefaultCM();
        p.orig = PlanImage.COMPUTED;
+       p.flagOk=true;
        return p.getLabel();
     }
 

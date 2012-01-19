@@ -372,8 +372,46 @@ public final class PlanFilter extends Plan {
 	   }
 //	   System.out.println("stop filter thread !");
    }
-
+   
+   
+   private long lastFilterLock=-1; // Date du dernier test de isSync() sur le filtre. Si on dépasse 4s, on relance
+   private boolean relaunchDone=false; // true si on vient de relancer manuellement un filtre (sur un isSync() bloquant)
+   
+   /** retourne true si le filtre a été appliqué. Sinon mémorise la date, et si la durée du blocage dépasse 4s, 
+    * on relance manuellement le filtre (PF. janvier 2011)
+    * Nécessaire dans le cas de script, on peut se retrouver dans un cas où Command. attend indéfiniment la synchronisation
+    * du plan filtre, mais celui-là n'est jamais relancé.
+    */
    protected boolean isSync() {
+      if( isSync1() ) {
+         lastFilterLock=-1;
+         return true;
+      }
+
+      long time = System.currentTimeMillis();
+      
+      if( lastFilterLock==-1 ) lastFilterLock=time;
+      
+      // Ca fait longtemps que ça bloque ?!
+      else if( time-lastFilterLock>4000 ) {
+
+         // déjà relancé une fois, tant pis on dit que c'est bon
+         if( relaunchDone ) {
+            if( aladin.levelTrace>=3 ) System.err.println("PlanFilter.isSync()=false, last manual relaunch did not work => assume isSync()=true");
+            lastFilterLock=-1; relaunchDone=false;
+            return true;
+         }
+
+         // On tente de relancer une fois manuellement
+         if( aladin.levelTrace>=3 ) System.err.println("PlanFilter.isSync()=false but delay exceed 4s => relaunch filter manually...");
+         relaunchDone=true;
+         doApplyFilter();
+         lastFilterLock=time;
+      }
+      return false;
+   }
+
+   private boolean isSync1() {
       return flagOk && !(error==null && mustUpdate);
    }
 

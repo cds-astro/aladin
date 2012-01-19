@@ -623,7 +623,7 @@ public final class Save extends JFrame implements ActionListener {
          append(CR+"       rzoomHeight=\""+m.rzoomHeight+"\"");
          append(CR+"       rvWidth=\""+m.rvWidth+"\"");
          append(CR+"       rvHeight=\""+m.rvHeight+"\"");
-         append(CR+"       pref=\""+m.pref+"\"");
+         append(CR+"       pref=\""+m.pref.label+"\"");
          append(CR+"       locked=\""+m.locked+"\"");
          append(CR+"       northUp=\""+m.northUp+"\"");
 //         append(CR+"       sync=\""+m.sync+"\"");
@@ -1409,20 +1409,20 @@ public final class Save extends JFrame implements ActionListener {
    
    protected boolean saveOneView(String filename,int w, int h,int format,float qual,ViewSimple v) {
       boolean rep=false;
-      try {
-         // Un peu compliqué mais indispensable car sinon risque de DeadLock
-         v.waitLockRepaint("saveOneView");
-         if( !v.isSync() ) {
-            v.unlockRepaint("saveOneView");
-            System.out.println(Thread.currentThread().getName()+": Save.saveOneView() waiting isSync() on "+v);
-            Util.pause(50);
-            v.waitLockRepaint("saveOneView");
-         }
-         System.out.println(Thread.currentThread().getName()+": Save.saveOneView() ready "+v);
+//      try {
+//         // Un peu compliqué mais indispensable car sinon risque de DeadLock
+//         v.waitLockRepaint("saveOneView");
+//         if( !v.isSync() ) {
+//            v.unlockRepaint("saveOneView");
+//            System.out.println(Thread.currentThread().getName()+": Save.saveOneView() waiting isSync() on "+v);
+//            Util.pause(50);
+//            v.waitLockRepaint("saveOneView");
+//         }
+//         System.out.println(Thread.currentThread().getName()+": Save.saveOneView() ready "+v);
          try { rep=saveOneView1(filename,w,h,format,qual,v); }
          catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
          return rep;
-      } finally { v.unlockRepaint("saveOneView"); }
+//      } finally { v.unlockRepaint("saveOneView"); }
    }
 
     /** Sauvegarde d'une vue
@@ -1577,7 +1577,7 @@ public final class Save extends JFrame implements ActionListener {
 
       // Affichage des overlays
       if( Projection.isOk(v.pref.projd ) ) {
-         v.paintOverlays(epsg,null,0,0);
+         v.paintOverlays(epsg,null,0,0,true);
          v.drawRepere(epsg,0,0);
          v.drawCredit(epsg,0,0);
       }

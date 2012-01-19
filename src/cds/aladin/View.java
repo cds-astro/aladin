@@ -1071,7 +1071,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
        // y a-t-il tout de même un catalogue qui pourrait
        // servir de référence par défaut
        if( j!=-1 ) {
-//System.out.println("Le plan "+plan[j]+" va être choisi comme réf");
+//System.out.println("Le plan "+allPlans[j]+" va être choisi comme réf");
        	 aladin.calque.setPlanRef(allPlans[j]);
        }
 

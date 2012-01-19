@@ -876,8 +876,6 @@ import java.lang.*;
                 		   deltai = 0.0 ;
                 	   }
                 	} else { 
-                		   
-                
 
                    alphai = hf.getDoubleFromHeader("CRVAL1  ");
                    deltai = hf.getDoubleFromHeader("CRVAL2  ");
@@ -1215,6 +1213,10 @@ import java.lang.*;
     protected void Dss (HeaderFits hf) throws Exception {
               int sign = 1;
                double det ;
+               
+               // PF - Jan 2011 - La méthode de calibration DSS ne marche pas actuellement avec les imagettes
+               // => dans les mains de François B. En attendant, je fais un gros patch
+               if( hf.getDoubleFromHeader("NAXIS1")<10000 ) throw new Exception("Certainely not a full plate");
 
               proj = TAN ; // projection TAN ;
               alpha += hf.getIntFromHeader("PLTRAM  ")*60. ;

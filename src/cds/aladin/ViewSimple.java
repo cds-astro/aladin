@@ -469,20 +469,20 @@ public class ViewSimple extends JComponent
    protected boolean isFree() { return pref==null || pref.type==Plan.NO || pref.type==Plan.X; }
    
    /** Retourne true si la vue est synchronisée */
-   protected boolean isSync() {
-      if( isFree() || !(pref.type==Plan.ALLSKYIMG) ) return true;
-//      System.out.println("ViewSimple="+this+" ovizBG="+ovizBG+" iz="+iz);
-      return ovizBG==iz;
-   }
+//   protected boolean isSync() {
+//      if( isFree() || !(pref.type==Plan.ALLSKYIMG) ) return true;
+////      System.out.println("ViewSimple="+this+" ovizBG="+ovizBG+" iz="+iz);
+//      return ovizBG==iz;
+//   }
    
    /** Attend que la vue soit synchronisée - pour les PlanBG */
-   protected void sync() {
-      if( isSync() ) return;
-      while( !isSync() ) {
-         Util.pause(25);
-         aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.sync() waiting image PlanBG buffer...");
-      }
-   }
+//   protected void sync() {
+//      if( isSync() ) return;
+//      while( !isSync() ) {
+//         Util.pause(25);
+//         aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.sync() waiting image PlanBG buffer...");
+//      }
+//   }
 
    /** Libère la vue  */
    protected void free() {
@@ -557,9 +557,9 @@ public class ViewSimple extends JComponent
       try {
          if( label==null ) label = pref.label;
          pi = (PlanImage)aladin.calque.dupPlan((PlanImage)pref, null,pref.type,false);
+         pi.flagOk=false;
          pi.setLabel(label);
          pi.pourcent=1;
-         pi.flagOk=false;
          pi.type=Plan.IMAGE;
          boolean cropped;
          
@@ -574,17 +574,17 @@ public class ViewSimple extends JComponent
          RectangleD rview = new RectangleD(p.x,p.y,pi.width,pi.height);
 
          if( pref.hasOriginalPixels() ) {
-            pref.getCurrentBufPixels(pi,rcrop,zoomFct,resMult,fullRes);
+           pref.getCurrentBufPixels(pi,rcrop,zoomFct,resMult,fullRes);
             
          } else if( ((PlanBG)pref).color ) {
             pi.type=Plan.IMAGERGB;
-            ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview);
+            ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview,true);
             pi.cm = IndexColorModel.getRGBdefault();
             ((PlanImageRGB)pi).initCMControl();
             ((PlanImageRGB)pi).flagRed=((PlanImageRGB)pi).flagGreen=((PlanImageRGB)pi).flagBlue=true;
             
          } else {
-            pi.setBufPixels8(pref.getPixels8Area(this,rview));
+            pi.pixels = pref.getPixels8Area(this,rview,true);
             pi.bitpix=8;
             pi.cm = ColorMap.getCM(0,128,255,false,pi.typeCM,PlanImage.LINEAR);
             pi.setTransfertFct(PlanImage.LINEAR);
@@ -597,6 +597,10 @@ public class ViewSimple extends JComponent
          double deltaX = (pA.x-Math.floor(pA.x))*zoomFct;
          double deltaY = (pA.y-Math.floor(pA.y))*zoomFct;
          pi.projd.deltaProjXYCenter(-deltaX,-deltaY);
+         
+         // Beurk !! en attendant BOF
+         try { pi.projd = Projection.getEquivalentProj(pi.projd); }
+         catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
          pi.noCacheFromOriginalFile();
          cropped=true;
@@ -606,7 +610,6 @@ public class ViewSimple extends JComponent
          
          pi.setHasSpecificCalib();
          pi.pourcent=-1;
-         pi.flagOk=true;
          pi.isOldPlan=false;
          pi.ref=false;
          pi.selected=false;
@@ -614,6 +617,7 @@ public class ViewSimple extends JComponent
          pi.changeImgID();
          pi.resetProj();
          pi.reverse();
+         pi.flagOk=true;
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
       return pi;
@@ -632,9 +636,9 @@ public class ViewSimple extends JComponent
          int frame=0;
          if( label==null ) label = pref.label;
          pi = (PlanImage)aladin.calque.dupPlan((PlanImage)pref, null,pref.type,false);
+         pi.flagOk=false;
          pi.setLabel(label);
          pi.pourcent=1;
-         pi.flagOk=false;
          if( !(pref instanceof PlanImageRGB) ) pi.type=Plan.IMAGE;
          boolean picked= pref instanceof PlanImageBlink;
          if( picked ) ((PlanImageBlink)pref).activePixelsOrigin(this,pi);
@@ -1414,7 +1418,7 @@ public class ViewSimple extends JComponent
          getImgView(g,pi);
       }
       fillBackground(g);
-      paintOverlays(g,null,0,0);
+      paintOverlays(g,null,0,0,true);
       drawCredit(g, 0, 0);
 //      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
 //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
@@ -1448,7 +1452,8 @@ public class ViewSimple extends JComponent
    private int threadIDlock=0;             // ID du thread qui dispose du lock            
 
    protected void unlockRepaint(String orig) {
-//      aladin.trace(4,"ViewSimple.unlockRepaint("+orig+")...");
+      if( true ) return;
+      aladin.trace(4,"ViewSimple.unlockRepaint("+orig+")...");
       synchronized( lockRepaint ) {
          flagLockRepaint=false;
          threadIDlock=0;
@@ -1463,19 +1468,20 @@ public class ViewSimple extends JComponent
     * @param orig Origine de l'appel (pour debugging)
     */
    protected void waitLockRepaint(String orig) {
+      if( true ) return;
       long t1 = System.currentTimeMillis();
       while( true )  {
          try {
             synchronized( lockRepaint ) {
                int threadID = Thread.currentThread().hashCode();
                if( threadIDlock==threadID ) {
-//                  System.out.println("waitLockRepaint() même threadID="+threadID+" => "+Thread.currentThread().getName());
+                  System.out.println("waitLockRepaint() même threadID="+threadID+" => "+Thread.currentThread().getName());
                   return;
                }
                if( !flagLockRepaint ) {
                   threadIDlock=threadID;
                   flagLockRepaint=true;
-//                  aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.waitLockRepaint("+orig+") yes ! by "+threadID);
+                  aladin.trace(4,Thread.currentThread().getName()+": ViewSimple.waitLockRepaint("+orig+") yes ! by "+threadID);
                   return;
                }
             }
@@ -1486,7 +1492,7 @@ public class ViewSimple extends JComponent
                threadIDlock=0;
                return;
             }
-//            aladin.trace(4,"ViewSimple.waitLockRepaint("+orig+") waiting...");
+            aladin.trace(4,"ViewSimple.waitLockRepaint("+orig+") waiting...");
          } catch( Exception e ) { if( aladin.levelTrace>=3  ) e.printStackTrace(); }
       }
    }
@@ -3609,12 +3615,13 @@ public class ViewSimple extends JComponent
     
     private int[] createZoomPixelsRGB(PlanImage p,int [] oldPixelsRGB) { return createZoomPixelsRGB(p,oldPixelsRGB,-1); }
     private int[] createZoomPixelsRGB(PlanImage p,int [] oldPixelsRGB, double frame) {
-       
-       // A tout hasard
-       int [] pixelsRGB = frame==-1 ? ((PlanRGBInterface)p).getPixelsRGB()
-                      : ((PlanImageCubeRGB)p).getFrameRGB((int)frame) ;
 
-       // A tout hasard
+       
+       // A tout hasard => NE MARCHE PAS APRES UN CROP ?? => voir COMMENTAIRE "CROP" ci-dessous
+       int [] newPixelsRGB = null;
+//       int [] newPixelsRGB = frame==-1 ? ((PlanRGBInterface)p).getPixelsRGB()
+//             : ((PlanImageCubeRGB)p).getFrameRGB((int)frame) ;
+
        w = top(rzoom.width+1);
        h = top(rzoom.height+1);
 
@@ -3629,22 +3636,23 @@ public class ViewSimple extends JComponent
 
        if( w<0 || h<0 ) return new int[0];
 
-       if( !(x1==0 && y1==0 && w==p.width && h==p.height) ) {
-          pixelsRGB = new int[w*h];
-          if( frame==-1) ((PlanRGBInterface)p).getPixels(pixelsRGB,x1,y1,w,h);
-          else ((PlanImageCubeRGB)p).getPixels(pixelsRGB,x1,y1,w,h,(int)frame) ;
-       }
+//CROP  if( !(x1==0 && y1==0 && w==p.width && h==p.height) ) {
+          newPixelsRGB = new int[w*h];
+          if( frame==-1) ((PlanRGBInterface)p).getPixels(newPixelsRGB,x1,y1,w,h);
+          else ((PlanImageCubeRGB)p).getPixels(newPixelsRGB,x1,y1,w,h,(int)frame) ;
+//     }
 
        // Zoom en agrandissement
        if( zoom>1 ) {
-          int [] scalepixelsRGB;
+
+          int [] scalePixelsRGB;
           int z1 = (int) zoom;   // Casting
           int ddx = floor( rzoom.x<=0 ? 0 : Math.floor( (rzoom.x-Math.floor(rzoom.x))*zoom ) );
           int ddy = floor( rzoom.y<=0 ? 0 : Math.floor( (rzoom.y-Math.floor(rzoom.y))*zoom ) );
           int wDst=Math.min(w*z1-ddx,getWidth());
           int hDst=Math.min(h*z1-ddy,getHeight());
           int taille = wDst*hDst;
-          scalepixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int [taille];
+          scalePixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int [taille];
 
           int yDeb=ddy;         // On commence sur une fraction de pixel (ordonnée)
           int yFin = z1;
@@ -3656,51 +3664,51 @@ public class ViewSimple extends JComponent
              int xFin = z1;
 
              for( int x=0; x<w; x++ ) {
-                int c = pixelsRGB[y*w+x];
+                int c = newPixelsRGB[y*w+x];
 
-                for( int i=xDeb; i<xFin && col<wDst; i++, col++ ) scalepixelsRGB[lig*wDst + col]=c;
+                for( int i=xDeb; i<xFin && col<wDst; i++, col++ ) scalePixelsRGB[lig*wDst + col]=c;
                 xDeb=xFin;
                 xFin+=z1;
              }
              lig++;
 
              for( int i=yDeb+1; i<yFin && lig<hDst; i++, lig++) {
-                System.arraycopy(scalepixelsRGB, (lig-1)*wDst, scalepixelsRGB, lig*wDst, wDst);
+                System.arraycopy(scalePixelsRGB, (lig-1)*wDst, scalePixelsRGB, lig*wDst, wDst);
              }
              yDeb=yFin;
              yFin+=z1;
 
           }
-          pixelsRGB = scalepixelsRGB;
+          newPixelsRGB = scalePixelsRGB;
           w=wDst;
           h=hDst;
-          
 
-//          int i,j,k,d;
-//          d=0;
-//          int taille = w*h*z1*z1;
-//          scalepixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int [taille];
-//          for( i=0; i<h; i++ ) {
-//             int orig=d;
-//             for( k=0; k<w; k++) {
-//                int c = pixelsRGB[i*w+k];
-////                bytefill(scalepixelsRGB,d,z1,c);   // N'est plus aussi rentable qu'avant - sans doute JIT)
-//                for( int m=0; m<z1; m++ ) scalepixelsRGB[d+m]=c;
-//                
-//                d+=z1;
-//             }
-//             for( j=1; j<z1; j+=j ) {
-//                System.arraycopy(scalepixelsRGB,orig, scalepixelsRGB,orig+j*w*z1,j*z1*w);
-//             }
-//             d+=(z1-1)*z1*w;
-//          }
-//          pixelsRGB = scalepixelsRGB;
-//          w *= z1;
-//          h *= z1;
 
-       // Zoom reduction
+          //          int i,j,k,d;
+          //          d=0;
+          //          int taille = w*h*z1*z1;
+          //          scalepixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int [taille];
+          //          for( i=0; i<h; i++ ) {
+          //             int orig=d;
+          //             for( k=0; k<w; k++) {
+          //                int c = pixelsRGB[i*w+k];
+          ////                bytefill(scalepixelsRGB,d,z1,c);   // N'est plus aussi rentable qu'avant - sans doute JIT)
+          //                for( int m=0; m<z1; m++ ) scalepixelsRGB[d+m]=c;
+          //                
+          //                d+=z1;
+          //             }
+          //             for( j=1; j<z1; j+=j ) {
+          //                System.arraycopy(scalepixelsRGB,orig, scalepixelsRGB,orig+j*w*z1,j*z1*w);
+          //             }
+          //             d+=(z1-1)*z1*w;
+          //          }
+          //          pixelsRGB = scalepixelsRGB;
+          //          w *= z1;
+          //          h *= z1;
+
+          // Zoom reduction
        } else if( zoom<1 ) {
-          int [] reducepixelsRGB;
+          int [] reducePixelsRGB;
           int  src=0;      // Nombre de pixels sources
           int  dst=0;      // Nombre de pixels destinations
           int  i,j,k,l,m;   // increments de balayage de l'image source
@@ -3723,76 +3731,76 @@ public class ViewSimple extends JComponent
           dh = Math.round(maxh*dst/src);
 
           int taille = dw*dh;
-          reducepixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int[taille];
+          reducePixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int[taille];
 
           // cas 1/x
           if( dst==1  ) {
              for( di=i=0; i<maxh; i+=src, di+=dw ) {
                 for( dj=j=0; j<maxw; j+=src, dj++ ) {
-                  for( c1=c2=c3=l=0; l<src; l++ ) {
-                     for( k=0, m=(i+l)*w+j; k<src; k++, m++ ) {
-                        c1+= ((pixelsRGB[m] & 0x00FF0000)>>16);
-                        c2+= ((pixelsRGB[m] & 0x0000FF00)>>8);
-                        c3+= ((pixelsRGB[m] & 0x000000FF));
-                     }
+                   for( c1=c2=c3=l=0; l<src; l++ ) {
+                      for( k=0, m=(i+l)*w+j; k<src; k++, m++ ) {
+                         c1+= ((newPixelsRGB[m] & 0x00FF0000)>>16);
+                         c2+= ((newPixelsRGB[m] & 0x0000FF00)>>8);
+                         c3+= ((newPixelsRGB[m] & 0x000000FF));
+                      }
                    }
                    c1/=srcX; c2/=srcX; c3/=srcX;
-                   reducepixelsRGB[di+dj] = ( ( 0xFF ) << 24 ) |
-                   		           ( (c1 & 0xFF ) << 16 ) |
-                                   ( (c2 & 0xFF ) << 8 ) |
-                                     (c3 & 0xFF );
+                   reducePixelsRGB[di+dj] = ( ( 0xFF ) << 24 ) |
+                   ( (c1 & 0xFF ) << 16 ) |
+                   ( (c2 & 0xFF ) << 8 ) |
+                   (c3 & 0xFF );
                 }
              }
 
-          // Cas 2/3
+             // Cas 2/3
           } else {
              int c;
              for( di=i=0; i<maxh; i+=src, di+=dst ) {
                 for( dj=j=0; j<maxw; j+=src, dj+=dst ) {
-                  for( c=l=0; l<src; l++ ) {
-                     for( k=0, m=(i+l)*w+j; k<src; k++, m++, c++ ) {
-                        pk1[c]=((pixelsRGB[m] & 0x00FF0000)>>17);
-                        pk2[c]=((pixelsRGB[m] & 0x0000FF00)>>9);
-                        pk3[c]=((pixelsRGB[m] & 0x000000FF)>>1);
-                     }
+                   for( c=l=0; l<src; l++ ) {
+                      for( k=0, m=(i+l)*w+j; k<src; k++, m++, c++ ) {
+                         pk1[c]=((newPixelsRGB[m] & 0x00FF0000)>>17);
+                         pk2[c]=((newPixelsRGB[m] & 0x0000FF00)>>9);
+                         pk3[c]=((newPixelsRGB[m] & 0x000000FF)>>1);
+                      }
                    }
                    c=di*dw;
-                   reducepixelsRGB[c+=dj]  =
-                   ( ( 0xFF ) << 24 ) |
-                   ( ((pk1[0]+pk1[1]) & 0xFF ) << 16 ) |
-                   ( ((pk2[0]+pk2[1]) & 0xFF ) << 8 ) |
-                     ((pk3[0]+pk3[1]) & 0xFF ) ;
+                   reducePixelsRGB[c+=dj]  =
+                      ( ( 0xFF ) << 24 ) |
+                      ( ((pk1[0]+pk1[1]) & 0xFF ) << 16 ) |
+                      ( ((pk2[0]+pk2[1]) & 0xFF ) << 8 ) |
+                      ((pk3[0]+pk3[1]) & 0xFF ) ;
 
-                   reducepixelsRGB[c+1]    =
-                   ( ( 0xFF ) << 24 ) |
-                   ( ((pk1[2]+pk1[5]) & 0xFF ) << 16 ) |
-                   ( ((pk2[2]+pk2[5]) & 0xFF ) << 8 ) |
-                     ((pk3[2]+pk3[5]) & 0xFF ) ;
+                   reducePixelsRGB[c+1]    =
+                      ( ( 0xFF ) << 24 ) |
+                      ( ((pk1[2]+pk1[5]) & 0xFF ) << 16 ) |
+                      ( ((pk2[2]+pk2[5]) & 0xFF ) << 8 ) |
+                      ((pk3[2]+pk3[5]) & 0xFF ) ;
 
                    c=(di+1)*dw;
 
-                   reducepixelsRGB[c+=dj]  =
-                   ( ( 0xFF ) << 24 ) |
-                   ( ((pk1[3]+pk1[6]) & 0xFF ) << 16 ) |
-                   ( ((pk2[3]+pk2[6]) & 0xFF ) << 8 ) |
-                     ((pk3[3]+pk3[6]) & 0xFF ) ;
+                   reducePixelsRGB[c+=dj]  =
+                      ( ( 0xFF ) << 24 ) |
+                      ( ((pk1[3]+pk1[6]) & 0xFF ) << 16 ) |
+                      ( ((pk2[3]+pk2[6]) & 0xFF ) << 8 ) |
+                      ((pk3[3]+pk3[6]) & 0xFF ) ;
 
-                   reducepixelsRGB[c+1]    =
-                   ( ( 0xFF ) << 24 ) |
-                   ( ((pk1[7]+pk1[8]) & 0xFF ) << 16 ) |
-                   ( ((pk2[7]+pk2[8]) & 0xFF ) << 8 ) |
-                     ((pk3[7]+pk3[8]) & 0xFF ) ;
+                   reducePixelsRGB[c+1]    =
+                      ( ( 0xFF ) << 24 ) |
+                      ( ((pk1[7]+pk1[8]) & 0xFF ) << 16 ) |
+                      ( ((pk2[7]+pk2[8]) & 0xFF ) << 8 ) |
+                      ((pk3[7]+pk3[8]) & 0xFF ) ;
                 }
              }
           }
 
-          pixelsRGB = reducepixelsRGB;
+          newPixelsRGB = reducePixelsRGB;
           w=dw;
           h=dh;
        }
 
-    return pixelsRGB;
- }
+       return newPixelsRGB;
+    }
 
 
    /**
@@ -3808,9 +3816,10 @@ public class ViewSimple extends JComponent
       int frame =(int)frameLevel;
       double transparency = frameLevel - frame;   // La partie décimale représente la transparence
 
-      // A tout hasard
-      byte [] pixels = frame==-1 ? p.getBufPixels8()
-                     : ((PlanImageBlink)p).getFrame(frame) ;
+      // A tout hasard => NE MARCHE PAS APRES UN CROP ?? => voir COMMENTAIRE "CROP" ci-dessous
+//      byte [] pixels = frame==-1 ? p.pixels : ((PlanImageBlink)p).getFrame(frame) ;
+      byte [] pixels =null;
+      
       w = top(rzoom.width+1);
       h = top(rzoom.height+1);
 
@@ -3845,15 +3854,15 @@ public class ViewSimple extends JComponent
       if( !flagHuge ) {
          // Extraction de la portion visible avec reajustement de l'image si
          // necessaire (presence de bords partiels)
-         if( !(x1==0 && y1==0 && w==p.width && h==p.height) || transparency!=0 ) {
+// CROP  if( !(x1==0 && y1==0 && w==p.width && h==p.height) || transparency!=0 ) {
 
             pixels = new byte[w*h];
 //System.out.println("* J'extrait les pixels ("+x1+","+y1+") sur "+w+"x"+h+" pour "+this);
             if( frame==-1 ) p.getPixels(pixels,x1,y1,w,h);
             else ((PlanImageBlink)p).getPixels(pixels,x1,y1,w,h,frame,transparency);
-         }
+//         }
       }
-
+      
       // Pour les tests unitaires
 testx1=x1; testy1=y1; testw=w; testh=h;
 
@@ -4060,11 +4069,9 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                      if( nPixelsRGB!=pixelsRGB ) { memImg=null; pixelsRGB=nPixelsRGB; }
                   } else {
                      nPixels = createZoomPixels(p,pixels);
-                     int olength=pixels==null ? -1: pixels.length;
-                     int nlength=nPixels==null ? -1: nPixels.length;
                      if( nPixels!=pixels ) { memImg=null; pixels=nPixels; }
                   }
-               } catch( Exception e ) { return true; }
+               } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); return true; }
 
                // Totalement en dehors de l'image
                if( pixels!=null && pixels.length==0 ) { imgFlagDraw=false;  return true;}
@@ -4075,7 +4082,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
             // ATTENTION: LE TEST SUR LE pHashCode SERT A CONTOURNER UN BUG SOUS LINUX POUR FORCER
             // LA RECREATION DU MEMORYIMAGESOURCE
             if( memImg==null || otype!=p.type || oh!=h || ow!=w || pHashCode!=p.hashCode() ) memImg=null;
-
+            
             // Construction de l'image Blink (elle sera faite après)
             if( p instanceof PlanImageBlink ) {
                memImg=null;
@@ -4092,11 +4099,12 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                         else memImg.newPixels(pixels,p.cm,0,w);
                         ocm=p.cm;
                      }
-                  } catch(Exception e) { memImg=null; }
+                  } catch(Exception e) { if( Aladin.levelTrace>+3 ) e.printStackTrace(); memImg=null; }
                }
                if( memImg==null  ) {
                   if( p.type==Plan.IMAGERGB ) memImg = new MemoryImageSource(w,h,p.cm, pixelsRGB, 0,w);
                   else memImg = new MemoryImageSource(w,h,p.cm, pixels, 0,w);
+                  
                   memImg.setAnimated(true);
                   try { memImg.setFullBufferUpdates(false); } catch( Exception e) { }
                   if( imgprep!=null ) imgprep.flush();
@@ -4679,6 +4687,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
     * est la 5 et qu'elle représente le 1/3 de la contribution avec la frame suivante pour
     * un fondu enchainé */
    protected double getCurrentFrameLevel() {
+      if( blinkControl==null ) return 1;
       double frame = blinkControl.getCurrentFrameIndex();
       double transparency = blinkControl.getTransparency();
       if( transparency==-1 || transparency==0 ) return frame;
@@ -5454,9 +5463,10 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    * @param g le contexte graphique concerne
    * @param clip le cliprect s'il existe, sinon null
    * @param dx,dy l'offset d'affichage uniquement utilise pour les impressions
+   * @param now true pour avoir immédiatement un affichage complet (mode allsky notamment)
    * @return true si au moins un plan a ete affiche
    */
-   protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy) {
+   protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy,boolean now) {
       boolean fullScreen = isFullScreen();
       if( isFree() ) {
          drawFovs(g,this,dx,dy);
@@ -5506,7 +5516,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Repérage d'un éventuel plan sous la souris dans le stack
          if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;
 
-         // Le plan image de référence
+         // Le plan image de référence (le cas allsky est traité après)
          if( p==pref && p.isImage() ) {
             if( p.active ) {
                if( northUp || isProjSync()) ((PlanImage)p).draw(g,vs,dx,dy,1); 
@@ -5524,7 +5534,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          }
          
          if( p==pref && p instanceof PlanBG ) {
-            if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy,1);
+            if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy,1,now);
             continue;
          }
          
@@ -5540,7 +5550,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          
          // Activé ?
          boolean flagActive = flagDraw && p.active;
-         
          
          // Cas d'un image ou d'un plan BG
          if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
@@ -5989,7 +5998,7 @@ g.drawString(s,10,100);
       if( !(flagDrag || quickInfo || quickBlink || modeGrabIt || flagBlinkControl || quickBordure || 
             view.newobj!=null && view.newobj instanceof Cote  ) ) {
          fillBackground(gbuf);
-         paintOverlays(gbuf,clip,0,0);
+         paintOverlays(gbuf,clip,0,0,false);
 //System.out.println("paint");
       }
       

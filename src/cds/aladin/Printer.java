@@ -148,7 +148,7 @@ class Printer implements Runnable {
          y=printTitre(g,x,y,w);
 
          g.setClip(x,y,w,h);
-         if( v.pref.active ) v.paintOverlays(g,null,x,y);
+         if( v.pref.active ) v.paintOverlays(g,null,x,y,true);
          g.setClip(null);
 
          // affichage des titres et legendes
@@ -204,7 +204,7 @@ class Printer implements Runnable {
             if( !v.isFree() ) {
                try { pg.setClip(x,y,v.getWidth(),v.getHeight()); }
                catch( Exception e ) {}
-               if( v.imgprep!=null ) v.paintOverlays(pg,null,x,y);
+               if( v.imgprep!=null ) v.paintOverlays(pg,null,x,y,true);
             }
             try { pg.setClip(null); }
             catch( Exception e ) {}

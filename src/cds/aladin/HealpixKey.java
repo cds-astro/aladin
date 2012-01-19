@@ -1350,14 +1350,14 @@ public class HealpixKey {
    // on ne tracera pas le losange
    static final private double RAPPORT = 5;
 
-   private int drawFils(Graphics g, ViewSimple v) { return drawFils(g,v,1); }
-   private int drawFils(Graphics g, ViewSimple v,int maxParente) {
+   private int drawFils(Graphics g, ViewSimple v,Vector<HealpixKey> redraw) { return drawFils(g,v,1,redraw); }
+   private int drawFils(Graphics g, ViewSimple v,int maxParente,Vector<HealpixKey> redraw) {
       int n=0;
       int limitOrder = CDSHealpix.MAXORDER-10;
       if( width>1 && order<limitOrder && parente<maxParente ) {
          fils = getChild();
          if( fils!=null ) {
-            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente);
+            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente,redraw);
          }
       }
       return n;
@@ -1541,8 +1541,10 @@ public class HealpixKey {
     * @param maxParente parente maximale autorisée pour le tracé des fils (longueur de la descendance, -1 si aucune)
     * @return le nombre d'images (java) tracés
     */
-   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1); }
-   protected int draw(Graphics g, ViewSimple v,int maxParente) {
+   
+   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
+   protected int draw(Graphics g, ViewSimple v,Vector<HealpixKey> redraw) { return draw(g,v,-1,redraw); }
+   protected int draw(Graphics g, ViewSimple v,int maxParente,Vector<HealpixKey> redraw) {
       long t1 = Util.getTime(0);
       int n=0;  // nombre d'images java que l'on va tracer (valeur du return)
       PointD[] b = getProjViewCorners(v);
@@ -1591,8 +1593,8 @@ public class HealpixKey {
 
             // Test losange trop grand,  A retracer
              if( !drawFast && isTooLarge(b) ) {
-               if( parente==0 && maxParente==-1 ) planBG.redraw.add(this);
-               else if( (n=drawFils(g,v,maxParente))>0 ) {
+               if( parente==0 && maxParente==-1 ) redraw.add(this);
+               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
                   resetTimer();
                   resetTimeAskRepaint();
                   return n;
@@ -1602,7 +1604,7 @@ public class HealpixKey {
             // Test losange derrière le ciel
             if( isBehindSky(b) ) {
                if( drawFast ) return 0;
-               return drawFils(g,v);
+               return drawFils(g,v,redraw);
             }
 
             // Test dessin 1 losange plutôt que 2 triangles
@@ -1621,7 +1623,7 @@ public class HealpixKey {
 
       /** Dessin des fils */
       if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) {
-         if( (n=drawFils(g,v))>0 ) return n;
+         if( (n=drawFils(g,v,redraw))>0 ) return n;
       }
 
       if( th==-1 && tb==-1 ) return 0;

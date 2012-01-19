@@ -753,6 +753,7 @@ public class ServerFile extends Server implements XMLConsumer {
          }
 
       }
+      plan.flagOk=true;
       return plan;
    }
 

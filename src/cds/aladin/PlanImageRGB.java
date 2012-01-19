@@ -109,28 +109,28 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       }
     }
    
-   public PlanImageRGB(Aladin aladin, String fRed, double [] minMaxRed, 
-                                         String fGreen, double [] minMaxGreen, 
-                                         String fBlue, double [] minMaxBlue) throws Exception {
-      super(aladin);
-      type=IMAGERGB;
-      
-      planRed   = fRed==null ? null : new PlanImage(aladin,fRed);
-      planGreen = fGreen==null ? null : new PlanImage(aladin,fGreen);
-      planBlue  = fBlue==null ? null : new PlanImage(aladin,fBlue);
-      flagRed = planRed!=null;
-      flagGreen = planGreen!=null;
-      flagBlue = planBlue!=null;
-      pRef=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
-      if( flagRed && minMaxRed!=null ) planRed.recut(minMaxRed[0], minMaxRed[1], false);
-      if( flagGreen && minMaxGreen!=null ) planGreen.recut(minMaxGreen[0], minMaxGreen[1], false);
-      if( flagBlue && minMaxBlue!=null ) planBlue.recut(minMaxBlue[0], minMaxBlue[1], false);
-      if( !flagRed ) pRef=planGreen;
-      diff=false;
-      init("RGB",pRef);
-      mustResample=true;
-      waitForPlan();
-   }
+//   public PlanImageRGB(Aladin aladin, String fRed, double [] minMaxRed, 
+//                                         String fGreen, double [] minMaxGreen, 
+//                                         String fBlue, double [] minMaxBlue) throws Exception {
+//      super(aladin);
+//      type=IMAGERGB;
+//      
+//      planRed   = fRed==null ? null : new PlanImage(aladin,fRed);
+//      planGreen = fGreen==null ? null : new PlanImage(aladin,fGreen);
+//      planBlue  = fBlue==null ? null : new PlanImage(aladin,fBlue);
+//      flagRed = planRed!=null;
+//      flagGreen = planGreen!=null;
+//      flagBlue = planBlue!=null;
+//      pRef=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
+//      if( flagRed && minMaxRed!=null ) planRed.recut(minMaxRed[0], minMaxRed[1], false);
+//      if( flagGreen && minMaxGreen!=null ) planGreen.recut(minMaxGreen[0], minMaxGreen[1], false);
+//      if( flagBlue && minMaxBlue!=null ) planBlue.recut(minMaxBlue[0], minMaxBlue[1], false);
+//      if( !flagRed ) pRef=planGreen;
+//      diff=false;
+//      init("RGB",pRef);
+//      mustResample=true;
+//      waitForPlan();
+//   }
 
    protected PlanImageRGB(Aladin aladin, String file,URL u,MyInputStream inImg, ResourceNode imgNode) {
       this(aladin,file,u,inImg);
@@ -1042,7 +1042,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
     /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
      * si ce n'est pas nécessaire */
-    protected Image getImage(ViewSimple v) {
+    protected Image getImage(ViewSimple v,boolean now) {
        if( oImgID==imgID ) return image;
        image = Toolkit.getDefaultToolkit().createImage(
              new MemoryImageSource(width,height,cm, pixelsRGB, 0, width));
@@ -1183,7 +1183,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       int i,n;
       int k=0;
       int aw,ah;   // Difference en abs et ord lorsqu'on depasse l'image
-
+      
       // Ajustement de la taille en cas de depassement
       aw=ah=0;
       if( x+w>width )  { aw = x+w-width;  w-=aw; }

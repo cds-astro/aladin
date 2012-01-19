@@ -139,6 +139,8 @@ public class PlanCatalog extends Plan {
 
       threading();
    }
+   
+   private long lastFilterLock = -1;
 
    protected boolean isSync() {
       boolean hasSource = hasSources();

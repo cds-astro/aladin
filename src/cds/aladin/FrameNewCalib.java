@@ -781,7 +781,6 @@ e.printStackTrace();
             String s = wcsT.getText();
             HeaderFits headerFits = new HeaderFits(s);
             Calib c = new Calib(headerFits);
-            System.out.println("modify center=("+c.alphai+","+c.deltai+")");
             if( flagModif ) p=oldp;
             else p = new Projection(label,Projection.WCS,c.alphai,c.deltai,/*raj,dej,*/rm,rm1,cx,cy,r,r1,rot,sym,Calib.TAN,system);
             p.modify(label,c);

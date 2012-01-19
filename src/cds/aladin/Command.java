@@ -581,6 +581,9 @@ public final class Command implements Runnable {
             if( plan[i].label==null ) {
                System.err.println("isSync label==null : type="+plan[i].type+" state="+plan[i].getDebugFlag());
             }
+//            if( Aladin.NOGUI && plan[i] instanceof PlanBG && !((PlanBG)plan[i]).isFullyDrawn() ) {
+//               syncNeedRepaint=true;
+//            }
             return false;
          }
       }
@@ -1873,6 +1876,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       ViewSimple v = a.view.getView(pi);
       if( pi instanceof PlanBG && (!pi.active || !pi.ref && pi.getOpacityLevel()==0f) ) {
          Aladin.warning("crop error: allsky plane ["+pi.label+"] must be visible to be cropped!",1);
+         System.err.println("crop error: allsky plane ["+pi.label+"] must be visible to be cropped!");
          return null;
       }
 
@@ -1882,14 +1886,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             w=v.rzoom.width;
             h=v.rzoom.height;
          } catch( Exception e ) { }
+         
       }
-      
-      if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
+      else if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
 
     // On essaye la position du repere, sinon le centre de la vue, si nécessaire
       if( !flagPos ) {
          try {
-            Coord c = new Coord(a.view.repere.raj,a.view.repere.dej);
+            Coord c = /* pi instanceof PlanBG ? v.getCooCentre()
+                  : */ new Coord(a.view.repere.raj,a.view.repere.dej);
             pi.projd.getXY(c);
             x = c.x-w/2.;
             y = c.y-h/2.;
@@ -1902,7 +1907,13 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       a.trace(4,"Command.crop: on "+v+" param=["+param+"] label="+label+" "+x+","+y+(flagPos?" (provided) ":" (on reticle) ")+w+"x"+h+(flagDim?"( provided)":"(view size)"));
 
-      v.cropArea(new RectangleD(x,pi.naxis2-(y+h),w,h), label, v.zoom, 1,true,false);
+      if( v.cropArea(new RectangleD(x,pi.naxis2-(y+h),w,h), label, v.zoom, 1,true,false)==null ) {
+         Aladin.warning("crop error: view ["+v+"] not usable!",1);;
+         System.err.println("crop error: view ["+v+"] not usable!");
+         return null;
+      }
+      syncNeedRepaint=true;
+      a.view.repaintAll();
       return pi;
    }
    
@@ -1945,6 +1956,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             toStdoutAndConsole("!!! draw error: mode param ("+p[0]+") unknown");
             return false;
          }
+         toStdoutAndConsole("Draw mode: "+(drawMode==DRAWXY ? "XY coordinates":"celestial coordinates"));
+         
          return true;
       }
       
@@ -2420,7 +2433,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       
       a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
-
+      
            if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
 //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
@@ -2530,6 +2543,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  return "";
               }
               a.calque.newPlanImageBlink(p,label,800);
+              syncNeedRepaint=true;
            }
       else if( cmd.equalsIgnoreCase("mosaic") ) {
          PlanImage p[] = getPlanImage(param);
@@ -2538,6 +2552,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             return "";
          }
          a.calque.newPlanImageMosaic(p,label,null);
+         syncNeedRepaint=true;
       }
       else if( cmd.equalsIgnoreCase("resamp") || cmd.equalsIgnoreCase("rsamp")) {
              try {
@@ -2554,6 +2569,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                    if( c=='B' || c=='b' ) methode=PlanImageResamp.BILINEAIRE;
                 }
                 a.calque.newPlanImageResamp(p1,p2,label,methode,fullPixel,true);
+                syncNeedRepaint=true;
             } catch( Exception e ) {
                 toStdoutAndConsole("Resamp error: "+e.getMessage());
                 return "";
@@ -2596,6 +2612,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             if( v1!=null && v1.equals("-cut") ) { fct=PlanImageAlgo.NORMCUT; v1=v2; }
             if( v1!=null ) p1 = (PlanImage)getPlanFromParam(v1);
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,null,0);
+            syncNeedRepaint=true;
          } catch( Exception e ) { toStdoutAndConsole("!!! norm error: "+e.getMessage()); return "error"; }
        }
       else if( cmd.equalsIgnoreCase("kernel") ) {
@@ -2631,6 +2648,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             if( p1!=null ) conv = param.substring(v1.length()).trim();
             else conv=param;
             a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.CONV,0,conv,0);
+            syncNeedRepaint=true;
         } catch( Exception e ) { toStdoutAndConsole("!!! conv error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("bitpix") ) {
@@ -2654,7 +2672,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             if( p1!=null ) v1=v2;
             String bitpix=v1;
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,bitpix,0);
-            
+            syncNeedRepaint=true;
+           
          } catch( Exception e ) { toStdoutAndConsole("!!! bitpix error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("RGB") ) {
@@ -2665,6 +2684,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                }
                a.calque.newPlanImageRGB(p[0],p.length>2?p[1]:null,
                                         p.length>2?p[2]:p[1],p[0],label,false);
+               syncNeedRepaint=true;
            }
       else if( cmd.equalsIgnoreCase("RGBdiff") ) {
                PlanImage p[] = getPlanImage(param);
@@ -2673,7 +2693,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   return "";
                }
                a.calque.newPlanImageRGB(p[0],p[1],null,p[0],label,true);
-     }
+               syncNeedRepaint=true;
+      }
       else if (cmd.equalsIgnoreCase("cm") ) execCM(param);
       else if( cmd.equalsIgnoreCase("sync") ) sync();
       else if( cmd.equalsIgnoreCase("md") ) {
@@ -2721,6 +2742,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
               try { 
                  if( p instanceof PlanImageBlink ) a.calque.newPlanImageFromBlink( (PlanImageBlink)p, -1);
                  else a.calque.dupPlan((PlanImage)p,p2.trim().length()==0 ? null:p2,p.type,true);
+                 syncNeedRepaint=true;
               } catch( Exception e ) {
                  toStdoutAndConsole("!!! copy error: "+e.getMessage());
                  return "";
@@ -2750,6 +2772,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   for( int i=j-2; i>=0; i--) {
                      a.calque.permute(vp.elementAt(i),target);
                   }
+                  syncNeedRepaint=true;
                   a.view.newView(1);
                   a.calque.repaintAll();
                } catch( Exception eMv ) {
@@ -2952,15 +2975,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 //System.out.println("save mode="+mode+" w="+w+" h="+h+" file="+(file==null?"null":file));
 
               if( flagDim && !a.NOGUI) {
-                 tmp="dimension specification required NOGUI mode (-nogui parameter)";
-                 toStdoutAndConsole("!!! save error: "+tmp);
-                 waitSave=false;
-                 return tmp;
+                 tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
+                 a.warning("save error: "+tmp,1);
+                 w=h=View.INITW;
+//                 waitSave=false;
+//                 return tmp;
               }
 
               if( file==null && !a.NOGUI) {
                  tmp="saving on standard output required NOGUI mode (-nogui parameter)";
-                 toStdoutAndConsole("!!! save error: "+tmp);
+                 a.warning("save error: "+tmp,1);
                  waitSave=false;
                  return tmp;
               } else file = Tok.unQuote(file);
@@ -3626,7 +3650,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);" +
       "set Draw* color=yellow;" +
       "draw mode(xy);" +
-      "draw phot(63 57 1');" +
+      "draw phot(63 57 15);" +
       "get LEDA M1;" +
       "hide Contours;" +
       "select ESO*;" +

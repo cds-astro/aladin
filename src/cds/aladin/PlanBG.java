@@ -33,6 +33,7 @@ import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
+import java.awt.image.DataBufferInt;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.FileInputStream;
@@ -406,12 +407,12 @@ public String getUrl() {
       super.planReady(ready);
       setPourcent(0);
       flagOk=ready;
+      aladin.synchroPlan.stop(startingTaskId);
    }
 
    @Override
    protected boolean waitForPlan() {
 //      aladin.calque.planBGLaunched();
-      aladin.synchroPlan.stop(startingTaskId);
       return error==null;
    }
 
@@ -1371,6 +1372,7 @@ public String getUrl() {
          aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> transparent (!ref && opacity="+getOpacityLevel()+")");
          return true;
       }
+      
       if( flagProcessing ) {
          aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is processing (flagProcessing)");
          return false;
@@ -1379,11 +1381,12 @@ public String getUrl() {
          aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is loading (isLoading())");
          return false;
       }
-      if( !isFullyDrawn() ) {
-         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is not fully drawn at the best resolution (!isFullyDrawn())");
-         return false;
-      }
-      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> displayed and ready");
+//      if( !isFullyDrawn() ) {
+//         aladin.trace(4,"PlanBG.isSync()=false: "+label+"=> is not fully drawn at the best resolution (!isFullyDrawn()=> isDrawn()=="+isDrawn()+"[readyDone="+readyDone+",readyAfterDraw="+readyAfterDraw+"] && allWaitingKeysDrawn=="+allWaitingKeysDrawn+")");
+//         return false;
+//      }
+      
+      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> ready");
       return true;
 
 //      boolean rep = error!=null || flagOk && (!active || getOpacityLevel()==0f  && !ref || !flagProcessing && !isLoading() && (isFullyDrawn() /* || pourcent==-2*/) );
@@ -1563,7 +1566,6 @@ public String getUrl() {
          if( localAllSky ) allsky.loadFromNet();
          else {
             if( !useCache || !allsky.isCached() ) {
-System.out.println("Wakeup for loading remote Allsky...");
                tryWakeUp();
                g.setColor(Color.white);
                g.fillRect(0,0,v.getWidth(),v.getHeight());
@@ -1731,8 +1733,6 @@ System.out.println("Wakeup for loading remote Allsky...");
 //      ben.draw(g,v);
 //   }
 
-   protected Vector<HealpixKey> redraw = new Vector<HealpixKey>(1000);
-
    /** Retourne un tableau de pixels d'origine couvrant la vue courante */
    protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, double zoom,double resMult,boolean fullRes) {
       int w = (int)Math.round(rcrop.width*zoom);
@@ -1817,10 +1817,10 @@ System.out.println("Wakeup for loading remote Allsky...");
    
    /** Retourne un tableau de pixels 8 bits de la zone délimitée par le rectangle rcrop (coordonnées de la vue), ou la vue si null */
    protected byte [] getBufPixels8(ViewSimple v) {
-      return getPixels8Area(v,new RectangleD(0,0,v.rv.width,v.rv.height));
+      return getPixels8Area(v,new RectangleD(0,0,v.rv.width,v.rv.height),true);
    }
-   protected byte [] getPixels8Area(ViewSimple v,RectangleD rcrop) {
-      int rgb [] = getPixelsRGBArea(v,rcrop);
+   protected byte [] getPixels8Area(ViewSimple v,RectangleD rcrop,boolean now) {
+      int rgb [] = getPixelsRGBArea(v,rcrop,now);
       if( rgb==null ) return null;
       int taille = rgb.length;
       byte [] pixels = new byte[taille];
@@ -1830,17 +1830,18 @@ System.out.println("Wakeup for loading remote Allsky...");
    }
 
    /** Retourne un tableau de pixels couleurs de la zone délimitée par le rectangle rcrop (coordonnées de la vue)*/
-   protected int [] getPixelsRGBArea(ViewSimple v,RectangleD rcrop) {
+   protected int [] getPixelsRGBArea(ViewSimple v,RectangleD rcrop,boolean now) {
       if( v==null ) return null;
       BufferedImage imgBuf = new BufferedImage(v.rv.width,v.rv.height,BufferedImage.TYPE_INT_ARGB);
       Graphics g = imgBuf.getGraphics();
-      drawLosanges(g, v);
+      drawLosanges(g, v, now);
       g.finalize(); g=null;
 
       int width=v.top(rcrop.width);
       int height=v.top(rcrop.height);
       int taille=width*height;
       int rgb[] = new int[taille];
+      
       imgBuf.getRGB(v.floor(rcrop.x), v.floor(rcrop.y), width, height, rgb, 0,width);
       imgBuf.flush(); imgBuf=null;
 
@@ -1848,10 +1849,13 @@ System.out.println("Wakeup for loading remote Allsky...");
    }
 
    /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
-    * si ce n'est pas nécessaire */
+    * si ce n'est pas nécessaire 
+    * @param now true s'il faut immédiatement fournir une image complète à la résolution adéquate
+    */
    @Override
-   protected Image getImage(ViewSimple v) {
-      if(v.imageBG!=null && v.ovizBG == v.iz
+   protected Image getImage(ViewSimple v,boolean now) {
+      if( !now &&
+            v.imageBG!=null && v.ovizBG == v.iz
             && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) {
          return v.imageBG;
       }
@@ -1866,35 +1870,16 @@ System.out.println("Wakeup for loading remote Allsky...");
       flagClearBuf=false;
       v.fillBackground(v.g2BG);
 
-      drawLosanges(v.g2BG,v);
+      drawLosanges(v.g2BG,v,now);
 
       return v.imageBG;
    }
 
-   /** Tracage de tous les losanges concernés en vue d'une sauvegarde ou d'une impression
-    * @param op niveau d'opacité, -1 pour celui définit dans le plan
-    */
-   protected void drawInImage(Graphics2D g,ViewSimple v,float op) {
-      if( op==-1 ) op=getOpacityLevel();
-      if(  op<=0.1 ) return;
-      Composite saveComposite = g.getComposite();
-      try {
-         if( op < 0.9 ) g.setComposite(Util.getImageComposite(op));
-         if( drawMode==DRAWPIXEL ) {
-            v.fillBackground(g);
-            drawLosanges(g,v);
-         } else if( drawMode==DRAWPOLARISATION ) {
-            drawPolarisation(g,v);
-         }
-      } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-      g.setComposite(saveComposite);
-   }
-
    /** Tracage de tous les losanges concernés, utilisation d'un cache (voir getImage())
     * @param op niveau d'opacité, -1 pour celui définit dans le plan
+    * @param now true si l'afficahge doit être immédiatement complet à la résolution adéquate
     */
-   protected void draw(Graphics g,ViewSimple v,float op) { draw(g,v,0,0,op); }
-   protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op) {
+   protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op,boolean now) {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();
       if(  op<=0.1 ) return;
@@ -1907,14 +1892,14 @@ System.out.println("Wakeup for loading remote Allsky...");
                Composite myComposite = Util.getImageComposite(op);
                g2d.setComposite(myComposite);
             }
-            if( drawMode==DRAWPIXEL ) g2d.drawImage(getImage(v), dx, dy, null);
+            if( drawMode==DRAWPIXEL ) g2d.drawImage(getImage(v,now), dx, dy, null);
             else if( drawMode==DRAWPOLARISATION ) drawPolarisation(g2d, v);
 
          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
          g2d.setComposite(saveComposite);
 
       } else {
-         if( drawMode==DRAWPIXEL ) g.drawImage(getImage(v),dx,dy,null);
+         if( drawMode==DRAWPIXEL ) g.drawImage(getImage(v,now),dx,dy,null);
          else if( drawMode==DRAWPOLARISATION ) drawPolarisation(g, v);
       }
       
@@ -2099,9 +2084,55 @@ System.out.println("Wakeup for loading remote Allsky...");
    /** Autorise à nouveau la mesure du DrawFast (voir ViewSimple.mouseRelease()) */
    protected void resetDrawFastDetection() { computeDrawFast=true; }
    
+   /** Tracé des losanges à la résolution adéquate dans la vue 
+    * mais en mode synchrone */
+   protected void drawLosangesNow(Graphics g,ViewSimple v) {
+      int order = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
+      boolean lowResolution = v.isAllSky() && order==ALLSKYORDER;
+      
+      if( lowResolution ) {
+         if( allsky==null ) {
+            allsky =  new HealpixAllsky(this,ALLSKYORDER);
+            try { allsky.loadNow();
+            } catch( Exception e ) { e.printStackTrace(); }
+         }
+      }
+      
+      Vector<HealpixKey> localRedraw = new Vector<HealpixKey>(100);
+      long [] pix;
+      if( v.isAllSky() ) {
+         pix = new long[12*(int)CDSHealpix.pow2(order)*(int)CDSHealpix.pow2(order)];
+         for( int i=0; i<pix.length; i++ ) pix[i]=i;
+      } else pix = getPixList(v,getCooCentre(v),order); // via query_disc()
+      
+      for( int i=0; i<pix.length; i++ ) {
+         if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
+         HealpixKey healpix;
+         if( lowResolution && allsky!=null ) healpix = (allsky.getPixList())[i];
+         else {
+            healpix = getHealpix(order,pix[i], true);
+            try { healpix.loadNow(); }
+            catch( Exception e ) { e.printStackTrace(); continue; }
+         }
+         if( healpix.status==HealpixKey.READY )  {
+            healpix.resetTimer();
+            healpix.draw(g,v,localRedraw);
+         }
+      }
+      redraw(g,v,0,localRedraw);
+      drawForeground(g,v);
+   }
+   
+   // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)
+   synchronized protected void drawLosanges(Graphics g,ViewSimple v, boolean now) {
+      if( now ) drawLosangesNow(g,v);
+      else drawLosangesAsync(g,v);
+   }
+   
+   protected Vector<HealpixKey> redraw = new Vector<HealpixKey>(100);
    
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
-   protected void drawLosanges(Graphics g,ViewSimple v) {
+   protected void drawLosangesAsync(Graphics g,ViewSimple v) {
       allWaitingKeysDrawn = false;
 
       long t1 = Util.getTime();
@@ -2152,8 +2183,6 @@ System.out.println("Wakeup for loading remote Allsky...");
          if( pochoir ) drawBackground(g, v);
          if( drawAllSky(g,v) ) nb=1;
       }
-      
-
       resetPriority();
       redraw.clear();
       HealpixKey healpix = null;
@@ -2163,19 +2192,19 @@ System.out.println("Wakeup for loading remote Allsky...");
 
          if( !allKeyReady ) {
             // via query_disc()
-            if( pix==null ) pix = getPixList(v,center,order); // via query_disc()
+            /*if( pix==null ) */pix = getPixList(v,center,order); // via query_disc()
 
-            // Par multiplication par 4 du père
-            else {
-               int k=0;
-               long [] pixn = new long[(pix.length-nOut)*4];
-               for( int i=0; i<pix.length; i++ ) {
-                  if( pix[i]==-1 ) continue;
-                  long p = pix[i]*4;
-                  for( int j=0; j<4; j++ ) pixn[k++] = p+j;
-               }
-               pix=pixn;
-            }
+//            // Par multiplication par 4 du père
+//            else {
+//               int k=0;
+//               long [] pixn = new long[(pix.length-nOut)*4];
+//               for( int i=0; i<pix.length; i++ ) {
+//                  if( pix[i]==-1 ) continue;
+//                  long p = pix[i]*4;
+//                  for( int j=0; j<4; j++ ) pixn[k++] = p+j;
+//               }
+//               pix=pixn;
+//            }
             nOut=0;
             if( pix.length==0 ) break;
 
@@ -2248,7 +2277,7 @@ System.out.println("Wakeup for loading remote Allsky...");
       }
 //      if( healpix!=null ) pixels = healpix.pixels;// Pour que l'histogramme soit à jour
 
-      nb+=redraw(g,v,t1);
+      nb+=redraw(g,v,t1,redraw);
       hasDrawnSomething=nb>0;
       if( hasDrawnSomething && pochoir ) drawForeground(g,v);
       
@@ -2262,13 +2291,13 @@ System.out.println("Wakeup for loading remote Allsky...");
 //aladin.trace(4,"Draw["+min+".."+max+"] "+s1+" "+ +nb+" losanges in "+(statTimeDisplay)+"ms");
    }
    
-   private int redraw(Graphics g,ViewSimple v,long t1) {
+   private int redraw(Graphics g,ViewSimple v,long t1,Vector<HealpixKey> redraw) {
       int n=0;
       if( redraw.size()>0 ) {
          Object list[] = redraw.toArray();
          for( int i=0; i<list.length; i++ ) {
             HealpixKey healpix = (HealpixKey)list[i];
-            try { n += healpix.draw(g, v, 8); } catch( Exception e ) { }
+            try { n += healpix.draw(g, v, 8,redraw); } catch( Exception e ) { }
          }
 //      if( n>0 ) System.out.println("Redraw "+redraw.size()+" losanges => "+n+" objets");
       }
