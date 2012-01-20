@@ -2269,7 +2269,7 @@ PUBRESTINFOALLSKY By exposing your target folder behind a Web server, you will a
 PUBRESTINFOALLSKY.fr Pour une distribution retreinte de votre relevé, placez le répertoire de destination derrière un serveur Web. Vos collaborateurs pourront accéder à votre relevé en utilisant directement l'adresse Web ci-dessous. Cet accès pourra être éventuellement protégé par mot de passe.
 PUBLICALLSKY Public distribution:
 PUBLICALLSKY.fr Distribution publique :
-PUBLICINFOALLSKY To allow an access to all Aladin users, "expose" your target folder behind a Web server, fill up and validate this foolowing form:
+PUBLICINFOALLSKY To allow an access to all Aladin users, "expose" your target folder behind a Web server, fill up and validate this following form:
 PUBLICINFOALLSKY.fr Afin de rendre accessible votre relevé pour tous les utilisateurs Aladin, veuillez "exposer" le repértoire de destination derrière un serveur Web, remplir et valider le formulaire suivant :
 
 # Info and warning strings
