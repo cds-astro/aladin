@@ -523,7 +523,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                 catch(Exception e) {
                     String errorMsg = "Error while processing SAMP message "+MSG_POINT_AT_COORDS+":"
                     +"Missing 'ra' or 'dec' parameter or incorrect type for params";
-                    a.command.toStdoutln(errorMsg);
+                    a.command.println(errorMsg);
                     retValue = FALSE;
                     e.printStackTrace();
                     if( responseNeeded ) {
@@ -1913,7 +1913,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                         idx = (Integer)e.nextElement();
                     }
                     catch(ClassCastException cce) {
-                        a.command.toStdoutln("Encountered bad format for SAMP int");
+                        a.command.println("Encountered bad format for SAMP int");
                         cce.printStackTrace();
                         continue;
                     }

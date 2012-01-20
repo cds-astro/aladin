@@ -458,7 +458,7 @@ public final class PlasticWidget extends JComponent  implements
 	      	boolean pTrace;
 	      	aladin.appMessagingMgr.setPlasticTrace(pTrace=!aladin.appMessagingMgr.getPlasticTrace());
 	      	String protocolName = aladin.appMessagingMgr.getProtocolName();
-	      	aladin.command.toStdoutln(pTrace?"Activating "+protocolName+" trace":
+	      	aladin.command.println(pTrace?"Activating "+protocolName+" trace":
 	      	                                  "Desactivating "+protocolName+" trace");
 	      }
 	}

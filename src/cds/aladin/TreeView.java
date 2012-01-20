@@ -217,7 +217,7 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
 
         // on affiche une eventuelle erreur
         if( error!=null ) {
-            aladin.command.toStdoutln("!!! "+error);
+            aladin.command.println("!!! "+error);
             return false;
         }
         //  patch pour Pierre, au cas où on a zéro resource retournée

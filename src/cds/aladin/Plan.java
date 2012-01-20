@@ -1422,7 +1422,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
           try {
              setNewProjD(new Projection(Projection.WCS,new Calib(headerFits.getHeaderFits())));
              setHasSpecificCalib();
-             aladin.command.toStdoutAndConsole("Astrometrical calibration has been modified on "+label);
+             aladin.command.console("Astrometrical calibration has been modified on "+label);
              aladin.view.newView();
              aladin.view.repaintAll();
           } catch( Exception e ) { }

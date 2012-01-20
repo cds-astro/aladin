@@ -94,6 +94,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Script command synchronisation also for allsky HEALPix surveys
  * @beta    <LI> Better manual astrometrical calibration
  * @beta    <LI> Support for 64 bit integer binary tables (FITS & VOTable)
  * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
@@ -131,7 +132,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.075";
+    static public final    String VERSION = "v7.076";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5123,7 +5124,7 @@ if( levelTrace>=3 ) System.out.println(")");
    static public void warning(Component c,String s) { warning(c,s,0); }
    static protected void warning(String s,int methode) { warning(Aladin.aladin.f,s,methode); }
    static protected void warning(Component c,String s,int methode) {
-      if( methode==1 ) aladin.command.toStdoutAndConsole("!!! "+s);
+      if( methode==1 ) aladin.command.printConsole("!!! "+s);
       if( NOGUI ) return;
       if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;
       Message.showWarning(c,s);
@@ -5943,8 +5944,8 @@ public boolean handleEvent(Event e) {
    public void setTraceLevel(int n) {
       levelTrace=n;
 //      if( n>0 ) pixel.addDebugItem();   // ajout de la possibilité Pixel FITS value
-      if( n==0 ) command.toStdoutln("Trace off");
-      else command.toStdoutln("Trace on (level "+n+")");
+      if( n==0 ) command.println("Trace off");
+      else command.println("Trace on (level "+n+")");
 
    }
 

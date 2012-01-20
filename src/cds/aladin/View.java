@@ -2934,6 +2934,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       aladin.calque.unSelectAllPlan();
       setSelect(u.vn);
+
       currentView=-1;   // Pour contourner le test dans setCurrentView()
       setCurrentView(viewSimple[u.vn]);
       repere.raj=u.ra;
@@ -3500,7 +3501,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             System.err.println(e.getMessage());
          }
          if( c==null ) {
-            if( memo.length()>0 ) aladin.command.toStdoutAndConsole("!!! Command or object identifier unknown ("+memo+") !");
+            if( memo.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+memo+") !");
             saisie=memo;
             rep=false;
          } else {
@@ -4013,7 +4014,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
    protected void scrollOn(int n,int current,int mode) {
       scrollV.setValue(n/aladin.viewControl.getNbCol(modeView));
       if( mode!=1 ) sauvegarde();
-//System.out.println("Je recharge "+modeView+" vues à partir de "+n);
+//System.out.println("Je recharge "+modeView+" vues à partir de "+n+" current="+current);
 
       // D'abord les vues stickées
       int nbStick=0;
@@ -4167,9 +4168,15 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV,"East"); validate(); }
 //System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
 
+         
          // Repaint avec Scroll
          if( n!=previousScrollGetValue ) {
-            scrollOn(n,getCurrentNumView() - (n-previousScrollGetValue),0);
+            int newCurrent = getCurrentNumView() - (n-previousScrollGetValue);
+            if( newCurrent<0 ) {
+               if( aladin.levelTrace>3 ) System.err.println("View.repaintAll1(): There is a problem with the scroll value ("+newCurrent+") => I assume 0 !");
+               newCurrent=1; 
+            }
+            scrollOn(n,newCurrent,0);
 
             // Simple repaint
          } else {

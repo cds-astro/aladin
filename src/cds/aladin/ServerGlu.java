@@ -721,7 +721,7 @@ public class ServerGlu extends Server implements Runnable {
                }
             }
             catch(Exception e2) {
-               aladin.command.toStdoutln("error : "+e2.getMessage());
+               aladin.command.println("error : "+e2.getMessage());
                e2.printStackTrace();
             }
 //            setSync(true);

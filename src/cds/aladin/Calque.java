@@ -2237,7 +2237,7 @@ public final class Calque extends JPanel implements Runnable {
                   if( /* aladin.OUTREACH && */ pc.pcat.badRaDecDetection 
                         && nExt>0 && v.size()>0 && ((Plan)v.elementAt(0)).isImage() ) {
                      p=null; // pour eviter les extensions DSS
-                     aladin.command.toStdoutAndConsole("!!! Table MEF extension ignored => seems to be reduction information");
+                     aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
                   }
 //                  if( pc.error==null && Aladin.OUTREACH) p = null; // pour eviter les extensions DSS
                }

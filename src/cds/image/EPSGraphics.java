@@ -41,6 +41,7 @@ public class EPSGraphics extends Graphics {
    private int xmin,ymin,xmax,ymax; // La "bounding box"
    private int height;              // Hauteur de la bounding box
    private int mode=STROKE;         // mode de tracage
+   private int size;                // Nombre d'octets (approximatif) dans le flux
    
    static final int STROKE=0;
    static final int FILL=1;
@@ -77,7 +78,24 @@ public class EPSGraphics extends Graphics {
    public void end() {
       tail();
       out.flush();
-      
+   }
+   
+   private void flushIfRequired(int n) {
+      size+=n;
+      if( size>10000 ) {
+         out.flush();
+         size=0;
+      }
+   }
+   
+   private void print(String s) {
+      out.print(s);
+      flushIfRequired(s.length());
+   }
+   
+   private void print(char c) {
+      out.print(c);
+      flushIfRequired(1);
    }
    
    /** Génère l'entête EPS */
@@ -85,7 +103,7 @@ public class EPSGraphics extends Graphics {
       String d = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(
             new Date(System.currentTimeMillis()));
 
-      out.print(
+      print(
             "%!PS-Adobe-3.0 EPSF-3.0\n" +
             "%%BoundingBox: "+xmin+" "+ymin+" "+xmax+" "+ymax+"\n" +
             "%%Creator: Aladin [CDS]\n" +
@@ -99,7 +117,7 @@ public class EPSGraphics extends Graphics {
             "%%EndComments\n"
             );
       if( preview!=null ) preview(preview);
-      out.print(
+      print(
             "0.5 setlinewidth\n" +
             "0 setlinejoin\n" +
             "/Helvetica findfont 10 scalefont setfont\n" +
@@ -115,7 +133,7 @@ public class EPSGraphics extends Graphics {
       int height = img.getHeight(null);
       int depth = 8;
       int lines = height*( (width/36)+(width%36!=0?1:0) );
-      out.print("%%BeginPreview: "+width+" "+height+" "+depth+" "+lines+"\n");
+      print("%%BeginPreview: "+width+" "+height+" "+depth+" "+lines+"\n");
       
       try {
          PixelGrabber pg = new PixelGrabber(img,0,0,width,height,true);
@@ -127,12 +145,12 @@ public class EPSGraphics extends Graphics {
          
       } catch( Exception e ) { e.printStackTrace(); }
       
-      out.print("%%EndPreview\n");
+      print("%%EndPreview\n");
    }
    
    /** Insère la fin du format EPS (cadre autour de l'image EPS) */
    private void tail() {
-      out.print(
+      print(
             "0 0 0 setrgbcolor\n" +
             "newpath\n" +
             xmin+" "+ymin+" moveto\n" +
@@ -203,10 +221,10 @@ public class EPSGraphics extends Graphics {
       startAngle+=180;     
       rot=180-rot;
       yc=this.height-yc;
-      out.print("gsave\n" + xc+" "+yc+" translate\n");
-      if( rot!=0 ) out.print(rot+" rotate\n");
-      if( !Double.isNaN(prop) && prop!=1 ) out.print("1 "+prop+" scale\n");
-      out.print("newpath\n" +
+      print("gsave\n" + xc+" "+yc+" translate\n");
+      if( rot!=0 ) print(rot+" rotate\n");
+      if( !Double.isNaN(prop) && prop!=1 ) print("1 "+prop+" scale\n");
+      print("newpath\n" +
                 "0 0 "+r+" "+startAngle+" "+(arcAngle+startAngle)+" arc " +
                 (mode==FILL?"fill":"stroke")+"\n" +
                 "grestore\n");
@@ -230,7 +248,7 @@ public class EPSGraphics extends Graphics {
          PixelGrabber pg = new PixelGrabber(img,0,0,width,height,true);
          pg.grabPixels();
          int []pixel = (int[])pg.getPixels();
-         out.print(
+         print(
                "gsave\n" +
                width+" "+height+" scale\n" +
                x+" "+y+" translate\n" +
@@ -243,7 +261,7 @@ public class EPSGraphics extends Graphics {
          // Lecture dans l'ordre inverse
          for( int i=height-1; i>=0; i--) writePixelsHexStr(pixel,i*width,width);
          
-         out.print("grestore\n");
+         print("grestore\n");
       } catch( Exception e ) {
          e.printStackTrace();
          return false;
@@ -298,9 +316,9 @@ public class EPSGraphics extends Graphics {
          int r = (int)((pix[offset+i])>>16) & 0xFF;
          int g = (int)((pix[offset+i])>>8) & 0xFF;
          int b = (int)(pix[offset+i]) & 0xFF;
-         out.print( HEX.charAt(r/16)); out.print( HEX.charAt(r%16));
-         out.print( HEX.charAt(g/16)); out.print( HEX.charAt(g%16));
-         out.print( HEX.charAt(b/16)); out.print( HEX.charAt(b%16));
+         print( HEX.charAt(r/16)); print( HEX.charAt(r%16));
+         print( HEX.charAt(g/16)); print( HEX.charAt(g%16));
+         print( HEX.charAt(b/16)); print( HEX.charAt(b%16));
       }
       if( width%72!=0 ) out.println();
    }
@@ -316,21 +334,21 @@ public class EPSGraphics extends Graphics {
     * @param width le nombre de pixels dans une ligne
     */
    private void writePixelsPreviewHexStr(int []pix, int offset, int width) {
-      out.print('%');
+      print('%');
       for( int i=0; i<width; i++ ) {
-         if( i>0 && i%36==0 && i!=(width-1)) out.print("\n%");
+         if( i>0 && i%36==0 && i!=(width-1)) print("\n%");
          int r = (int)((pix[offset+i])>>16) & 0xFF;
          int g = (int)((pix[offset+i])>>8) & 0xFF;
          int b = (int)(pix[offset+i]) & 0xFF;
          r=(r+g+b)/3;
-         out.print( HEX.charAt(r/16)); out.print( HEX.charAt(r%16));
+         print( HEX.charAt(r/16)); print( HEX.charAt(r%16));
       }
       out.println();
    }
 
    
    public void drawLine(int x1, int y1, int x2, int y2) {
-      out.print(x1+" "+(height-y1)+" "+x2+" "+(height-y2)+" l\n");
+      print(x1+" "+(height-y1)+" "+x2+" "+(height-y2)+" l\n");
 
    }
 
@@ -366,7 +384,7 @@ public class EPSGraphics extends Graphics {
          }
          str = res.toString();
       }
-      out.print("("+str+") "+x+" "+(height-y)+"  t\n");
+      print("("+str+") "+x+" "+(height-y)+"  t\n");
 
    }
 
@@ -394,7 +412,7 @@ public class EPSGraphics extends Graphics {
       y = this.height-y;
       int xmax= x+width-1;
       int ymax = y-height+1;
-      out.print(
+      print(
             "newpath\n" +
             x+" "+y+" moveto\n" +
             x+" "+ymax+" lineto\n" +
@@ -453,7 +471,7 @@ public class EPSGraphics extends Graphics {
       double r = c.getRed()/256.;
       double g = c.getGreen()/256.;
       double b = c.getBlue()/256.;
-      out.print(r+" "+g+" "+b+" setrgbcolor\n");
+      print(r+" "+g+" "+b+" setrgbcolor\n");
       color=c;
    }
 
@@ -472,7 +490,7 @@ public class EPSGraphics extends Graphics {
       if( (style&Font.BOLD) == Font.BOLD ) f=f+"-"+"Bold";
       if( (style&Font.ITALIC) == Font.ITALIC ) f=f+"-"+italic;
       
-      out.print("/"+f+" findfont "+font.getSize()+" scalefont setfont\n");
+      print("/"+f+" findfont "+font.getSize()+" scalefont setfont\n");
 
    }
 
@@ -487,7 +505,7 @@ public class EPSGraphics extends Graphics {
    }
 
    public void translate(int x, int y) {
-      out.print(x+" "+y+" translate\n");
+      print(x+" "+y+" translate\n");
    }
 
 }

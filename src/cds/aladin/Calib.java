@@ -131,7 +131,7 @@ import java.lang.*;
           
           // En attendant de supporter TANSIP
           if( s.indexOf(array[i])>=0 ) {
-             Aladin.aladin.command.toStdoutAndConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
+             Aladin.aladin.command.printConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
              return i;
           }
        }
@@ -139,7 +139,7 @@ import java.lang.*;
        // En attendant de supporter TNX
        if( s.indexOf("TNX")>=0 || s.indexOf("COE")>=0 ) {
           i=TAN;
-          Aladin.aladin.command.toStdoutAndConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
+          Aladin.aladin.command.printConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
           return i;
        }
        return -1;

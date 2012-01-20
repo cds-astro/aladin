@@ -209,7 +209,7 @@ public class KernelList {
       fwhm=p[0]; sigma=p[1]; radius=(int)p[2];
       if( radius>Kernel.MAXRADIUS ) throw new Exception("Too large kernel [radius="+radius+"]");
       String s = "fwhm="+Coord.getUnit(fwhm)+" sigma="+Coord.getUnit(sigma)+" pixel="+Coord.getUnit(pixelRes)+" radius="+radius;
-      Aladin.aladin.command.toStdoutAndConsole(s);
+//      Aladin.aladin.command.printConsole(s);
 //      Aladin.trace(4,"Kernel.createGaussienMatrix() fwhm="+Coord.getUnit(fwhm)+" sigma="+Coord.getUnit(sigma)+" pixelRes="+Coord.getUnit(pixelRes)+" radius="+radius);
       Kernel k = new Kernel();
       k.matrix = createGaussienMatrix(radius,sigma/pixelRes);
