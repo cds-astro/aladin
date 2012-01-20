@@ -11,7 +11,7 @@
 	   <property name="bin" value="${basedir}/bin"/>
 	   <property name="src" value="${basedir}/src"/>
 	   <property name="lib" value="${basedir}/lib"/>
-	   <!-- property name="mocjar" value="${basedir}/../Moc/Moc.jar"/-->
+	   <!-- property name="mocjar" value="${basedir}/../Moc/Moc.jar"/ -->
 	   <property name="mocjar" value="${lib}/Moc.jar"/>
    
    <target name="compil" description="source compilation" >
