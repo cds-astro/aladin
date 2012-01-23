@@ -8,6 +8,7 @@ import java.util.StringTokenizer;
 
 import cds.aladin.PlanImage;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
 public class SkyGen {
@@ -184,8 +185,14 @@ public class SkyGen {
 			context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
 		else if (opt.equalsIgnoreCase("bitpix"))
 			context.setBitpix(Integer.parseInt(val));
-		else if (opt.equalsIgnoreCase("region"))
-			context.setMoc(val);
+		else if (opt.equalsIgnoreCase("region")) {
+			if (val.endsWith("fits")) {
+				HealpixMoc moc = new HealpixMoc();
+				moc.read(val);
+				context.setMoc(moc);
+			}
+			else context.setMoc(val);
+		}
 		else if (opt.equalsIgnoreCase("frame"))
 			context.setFrameName(val);
 		else if (opt.equalsIgnoreCase("skyval"))
@@ -373,7 +380,7 @@ public class SkyGen {
 				"input     Directory of original images (fits or jpg+hhh)" + "\n" +
 				"output    Target directory (default $PWD+\"ALLSKY\")" + "\n" +
 				"pixel     keep|keepall|overwrite|average|replaceall - in case of already computed values (default overwrite)" + "\n" +
-				"region    Healpix region to compute (ex: 3/34-38 50 53) (default all the sky)" + "\n" +
+				"region    Healpix region to compute (ex: 3/34-38 50 53) or Moc.fits file (nothing means all the sky)" + "\n" +
 				"blank     BLANK value alternative (use of FITS header by default)" + "\n" +
 				"border    Margins to ignore in the original images (N W S E or constant)" + "\n" +
 				"frame     Healpix frame (C or G - default C for ICRS)" + "\n" +
