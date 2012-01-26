@@ -95,7 +95,7 @@ public class SubFootprintBean {
 	 * Constructeur pour un bean représentant un cercle
 	 * @param ctrXOffset offset en X du centre dans plan tangent (en degrés)
 	 * @param ctrYOffset offset en Y du centre dans plan tangent (en degrés)
-	 * @param radius rayon du cercle
+	 * @param radius rayon du cercle en degrés
 	 * @param name nom de la sous-partie
 	 */
 	protected SubFootprintBean(double ctrXOffset, double ctrYOffset, double radius, String name) {
