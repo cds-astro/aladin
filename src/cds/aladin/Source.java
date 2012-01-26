@@ -274,7 +274,7 @@ public class Source extends Position implements Comparator {
    protected void setPosition(ViewSimple v,double x, double y) { }
 
   /** Modification de l'identificateur
-   * @param taskId nouvel identificateur
+   * @param id nouvel identificateur
    */
    protected void deltaPosition(ViewSimple v,double dx, double dy) {
       if( plan==null || !plan.recalibrating ) return;
@@ -338,6 +338,11 @@ public class Source extends Position implements Comparator {
       if( !isVisible() ) return clip;
       Point p = getViewCoord(v,L*2,L*2);
       if( p==null ) return clip;
+
+      if (sourceFootprint != null) {
+          // TODO : étendre le clip
+      }
+
       if( !isWithLabel() ) {
          if( isSelected() ) return unionRect(clip, p.x-L-MDS,p.y-L-MDS, L*2+DS, L*2+DS);
          else return unionRect(clip, p.x-L,p.y-L, L*2, L*2);
