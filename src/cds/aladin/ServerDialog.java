@@ -21,29 +21,12 @@
 package cds.aladin;
 
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceDragEvent;
-import java.awt.dnd.DragSourceDropEvent;
-import java.awt.dnd.DragSourceEvent;
-import java.awt.dnd.DragSourceListener;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
+import java.awt.dnd.*;
 import java.awt.event.*;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -348,7 +331,9 @@ long t1,t;
                   ((ServerVizieR) svizier).vArchives));
             sv.addElement(new ServerSimbad(aladin));
             sv.addElement(new ServerNED(aladin));
-            if( Aladin.PROTO ) sv.addElement(new ServerSWarp(aladin));
+            if( Aladin.PROTO ) {
+                sv.addElement(new ServerSWarp(aladin));
+            }
          } else {
             sv.addElement(new ServerSimbad(aladin));
 //            sv.addElement(vizierBestof = new BestofServer(aladin,
@@ -618,7 +603,7 @@ long t1,t;
       Aladin.makeAdd(ct, buttonTop, "North");
       Aladin.makeAdd(ct, milieu, "Center");
       Aladin.makeAdd(ct, bas, "South");
-      
+
       aladin.manageDrop();
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
@@ -626,7 +611,7 @@ long t1,t;
 //      th.start();
       run();
    }
-   
+
    public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
       dropTargetDragEvent.acceptDrag (DnDConstants.ACTION_COPY_OR_MOVE);

@@ -21,13 +21,23 @@
 package cds.aladin;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 public class ServerAlmaFootprint extends Server {
+    private List<ALMASetup> setups = new ArrayList<ALMASetup>();
+
+    private JComboBox<ALMASetup> setupList;
+    private JTextField widthField;
+    private JTextField heightField;
+
 
     protected ServerAlmaFootprint(Aladin aladin) {
         this.aladin = aladin;
@@ -41,7 +51,17 @@ public class ServerAlmaFootprint extends Server {
     protected void init() {
        type    = APPLI;
        aladinLabel   = "ALMA footprint";
-       aladinLogo    = "ALMALogo.png";
+       aladinLogo    = "ALMALogo.gif";
+       grab = null;
+
+       // ajout des différents setups
+       setups.add(new ALMASetup(3, 56, new float[] {2.6f, 3.6f}, new float[] { 84, 116}));
+       setups.add(new ALMASetup(4, 48, new float[] {1.8f, 2.4f}, new float[] {125, 169}));
+       setups.add(new ALMASetup(5, 35, new float[] {1.4f, 1.8f}, new float[] {163, 211}));
+       setups.add(new ALMASetup(6, 27, new float[] {1.1f, 1.4f}, new float[] {211, 275}));
+       setups.add(new ALMASetup(7, 18, new float[] {0.8f, 1.1f}, new float[] {275, 373}));
+       setups.add(new ALMASetup(8, 12, new float[] {0.6f, 0.8f}, new float[] {385, 500}));
+       setups.add(new ALMASetup(9,  9, new float[] {0.4f, 0.5f}, new float[] {602, 720}));
     }
 
     protected void createChaine() {
@@ -70,55 +90,162 @@ public class ServerAlmaFootprint extends Server {
          JLabel l = new JLabel(description);
          l.setBounds(90,y,400, 20); y+=20;
          add(l);
+
+         // JPanel pour la memorisation du target (+bouton DRAG)
+         JPanel tPanel = new JPanel();
+         tPanel.setBackground(Aladin.BLUE);
+         int h = makeTargetPanel(tPanel, NORADIUS);
+         tPanel.setBounds(0,y,XWIDTH,h); y+=h;
+         add(tPanel);
+
+         modeCoo=COO|SIMBAD;
+
+         // JComboBox avec listes des setups
+         JLabel setuptTitle = new JLabel("Receiver band");
+         setuptTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
+         add(setuptTitle);
+         this.setupList = new JComboBox<ServerAlmaFootprint.ALMASetup>();
+         for (ALMASetup almaSetup: this.setups) {
+             this.setupList.addItem(almaSetup);
+         }
+         add(this.setupList);
+         this.setupList.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT);
+         y+=HAUT+MARGE;
+
+         // Footprint width
+         JLabel widthTitle = new JLabel("Width (arcmin)");
+         widthTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
+         add(widthTitle);
+         this.widthField = new JTextField("10");
+         add(this.widthField);
+         this.widthField.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT);
+         y+=HAUT+MARGE;
+
+         // Footprint height
+         JLabel heightTitle = new JLabel("Height (arcmin)");
+         heightTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
+         add(heightTitle);
+         this.heightField = new JTextField("5");
+         add(this.heightField);
+         this.heightField.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT);
+
      }
 
+     public void submit() {
+         String t = getTarget();
+         ALMASetup selectedSetup = this.setupList.getItemAt(this.setupList.getSelectedIndex());
 
-     public void startFPGeneration(Point2D p, double width, double height, double radius) {
+         double width, height;
+         try {
+             width  = Double.parseDouble(this.widthField.getText())/60.;
+             height = Double.parseDouble(this.heightField.getText())/60.;
+         }
+         catch(NumberFormatException nfe) {
+             Aladin.warning("Incorrect value for width/height !");
+             return;
+         }
+
+
+         FootprintBean fpBean = new FootprintBean();
+         float beam = selectedSetup.primaryBeam/3600f;
          Set<Point2D> centers = new TreeSet<Point2D>();
-         for (int x=0; 2*radius*x<=width/2; x++) {
-             for (int y=0; 2*radius*y<=height/2; y++) {
-                 double curX = 2*x*radius;
-                 if (y%2==1) curX += radius;
-                 if (curX>width/2) {
-                     continue;
+         double x, y;
+         for (int i=0; (x = i * beam * 0.5)<=width/2; i++) {
+
+             for (int j=0; (y = j * beam * Math.sqrt(3))<=height/2+beam/2; j++) {
+                 if (i%2==1) {
+                     y += Math.sqrt(3)/2*beam;
                  }
-                 double curY = 2*y*radius;
-                 centers.add(new Point2D(curX, curY));
-                 System.out.println(curX+ "\t" + curY);
+
+                 int signX, signY;
+                 for (int k=0; k<4; k++) {
+                     if (k%2==0) {
+                         signX = 1;
+                     }
+                     else {
+                         signX = -1;
+                     }
+                     if (k<2) {
+                         signY = 1;
+                     }
+                     else {
+                         signY = -1;
+                     }
+
+                     centers.add(new Point2D(signX * x, signY * y));
+
+                     // ajout de poignées aux extrémités
+                     if ( (i+1) * beam * 0.5 > width/2 && (j+1) * beam * Math.sqrt(3) > height/2 ) {
+                         double xE = signX * (x + beam/2);
+                         double yE = signY * (y+ beam/2);
+
+                         fpBean.addSubFootprintBean(new SubFootprintBean(new double[] {xE-1e-7, xE-1e-7, xE+1e-7, xE+1e-7},
+                                                                         new double[] {yE-1e-7, yE+1e-7, yE+1e-7, yE-1e-7},
+                                                                         "handle"));
+                     }
+                 }
              }
+         }
+
+         for (Point2D center: centers) {
+             fpBean.addSubFootprintBean(new SubFootprintBean(center.x, center.y, beam/2., null));
+         }
+
+         synchronized(aladin.calque) {
+             int idx = aladin.calque.newPlanField(fpBean, t, "ALMA", 0);
+             ((PlanField)aladin.calque.plan[idx]).setShowSubFPInProperties(false);
          }
      }
 
-        static public class Point2D implements Comparable<Point2D> {
-            private double x;
-            private double y;
+     static public class Point2D implements Comparable<Point2D> {
+         private double x;
+         private double y;
 
-            public Point2D(double x, double y) {
-                this.x = x;
-                this.y = y;
-            }
+         public Point2D(double x, double y) {
+             this.x = x;
+             this.y = y;
+         }
 
-            public boolean equals(Object obj) {
-                if (! (obj instanceof Point2D)) {
-                    return false;
-                }
-                Point2D p = (Point2D)obj;
-                return p.x==this.x && p.y==this.y;
-            }
+         public boolean equals(Object obj) {
+             if (! (obj instanceof Point2D)) {
+                 return false;
+             }
+             Point2D p = (Point2D)obj;
+             return p.x==this.x && p.y==this.y;
+         }
 
-            public int compareTo(Point2D p) {
-                double eps = 1;
-                if (Math.abs(p.x-this.x)<eps && Math.abs(p.y-this.y)<eps) {
-                    return 0;
-                }
-                return 1;
-            }
+         public int compareTo(Point2D p) {
+             double eps = 0.00001;
+             if (Math.abs(p.x-this.x)<eps && Math.abs(p.y-this.y)<eps) {
+                 return 0;
+             }
+             return 1;
+         }
+     }
 
-        }
+     static public class ALMASetup {
+         int bandId;
+         float primaryBeam;
+         float[] wavelengthRange;
+         float[] frequencyRange;
 
-        public void test() {
-            startFPGeneration(new Point2D(0, 0), 400, 200, 10);
-        }
+         /**
+          *
+          * @param primaryBeam primary beam in arcsec
+          * @param wavelengthRange wavelength range in mm {min; max}
+          */
+         public ALMASetup(int bandId, float primaryBeam, float[] wavelengthRange, float[] frequencyRange) {
+             this.bandId = bandId;
+             this.primaryBeam = primaryBeam;
+             this.wavelengthRange = wavelengthRange;
+             this.frequencyRange = frequencyRange;
+         }
 
+         public String toString() {
+             return   "Band " + this.bandId + " | "
+                    + this.wavelengthRange[0] + "-" + this.wavelengthRange[1] + " nm" + " | "
+                    + this.frequencyRange[0]  + "-" + this.frequencyRange[1]  + " GHz";
+         }
+     }
 
 }

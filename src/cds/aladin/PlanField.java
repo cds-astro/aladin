@@ -231,10 +231,13 @@ public final class PlanField extends Plan {
 
     private static final String ESPADONS_CCD[] = {""};
     private static final double ESPADONS_RD = 0.;
-    
+
     public static final double tand(double x) { return Math.tan( x*(Math.PI/180.0) ); }
 
-  /** Plan Field creation
+    private boolean showSubFPInProperties = true; // doit-on montrer les sous-parties du footprint dans les properties
+
+
+/** Plan Field creation
    * @param target target astronomical object or J2000 coordinates
    * @param roll roll angle
    * @param label Aladin plane label
@@ -279,7 +282,7 @@ public final class PlanField extends Plan {
          make(co.al,co.del,roll);
       }
    }
-   
+
    protected PlanField(Aladin aladin, String label,Coord center,double angle,boolean canbeRoll,boolean canbeMove) {
       this.aladin= aladin;
       type       = APERTURE;
@@ -295,7 +298,7 @@ public final class PlanField extends Plan {
       instr=-1;
       roll=angle;
       co= center!=null ? center : new Coord(0,0);
-      
+
       // Field of View projCenter
       Repere projCenter = new Repere(this,co);
       projCenter.setType(Repere.CENTER);
@@ -303,10 +306,10 @@ public final class PlanField extends Plan {
       // Field of View rotCenter
       Repere rotCenter = new Repere(this,co);
       rotCenter.setRotCenterType(projCenter);
-      
+
       pcat.setObjetFast(rotCenter);
       pcat.setObjetFast(projCenter);
-      
+
       needTarget=false;
       make(co.al,co.del,roll);
 
@@ -1063,7 +1066,7 @@ public final class PlanField extends Plan {
     * Build the JPanel allowing the user to select individual sub FoV
     */
    protected JPanel getPanelSubFov(ActionListener al) {
-      if( subFoV==null || subFoV.size()==0 ) return null;
+      if( subFoV==null || subFoV.size()==0 || ! isShowSubFPInProperties() ) return null;
       JPanel p = new JPanel();
       p.setLayout( new GridLayout(0,1));
 
@@ -1208,6 +1211,14 @@ public final class PlanField extends Plan {
       if( fpBean!=null ) return fpBean.getOrigin();
       return "";
   }
+
+   public boolean isShowSubFPInProperties() {
+       return showSubFPInProperties;
+   }
+
+   public void setShowSubFPInProperties(boolean showSubFPInProperties) {
+       this.showSubFPInProperties = showSubFPInProperties;
+   }
 
    /**
     * Sub Field of View structure
