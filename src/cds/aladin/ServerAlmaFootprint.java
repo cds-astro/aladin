@@ -34,7 +34,7 @@ import javax.swing.JTextField;
 public class ServerAlmaFootprint extends Server {
     private List<ALMASetup> setups = new ArrayList<ALMASetup>();
 
-    private JComboBox<ALMASetup> setupList;
+    private JComboBox setupList;
     private JTextField widthField;
     private JTextField heightField;
 
@@ -104,7 +104,7 @@ public class ServerAlmaFootprint extends Server {
          JLabel setuptTitle = new JLabel("Receiver band");
          setuptTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
          add(setuptTitle);
-         this.setupList = new JComboBox<ServerAlmaFootprint.ALMASetup>();
+         this.setupList = new JComboBox();
          for (ALMASetup almaSetup: this.setups) {
              this.setupList.addItem(almaSetup);
          }
@@ -133,7 +133,7 @@ public class ServerAlmaFootprint extends Server {
 
      public void submit() {
          String t = getTarget();
-         ALMASetup selectedSetup = this.setupList.getItemAt(this.setupList.getSelectedIndex());
+         ALMASetup selectedSetup = (ALMASetup) this.setupList.getItemAt(this.setupList.getSelectedIndex());
 
          double width, height;
          try {
