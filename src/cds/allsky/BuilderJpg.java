@@ -232,6 +232,7 @@ public class BuilderJpg implements Progressive, Runnable {
                             totalCoef+=coef[i];
                          }
                          if( totalCoef!=0 ) {
+                        	 pix=0;
                             for( int i=0; i<4; i++ ) {
                                if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
                             }
