@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -286,7 +287,12 @@ public class TabRgb extends JPanel implements ActionListener {
 			for (int i=0; i<3; i++) {
 				plans[i] = ch[i].getSelectedItem();
 			}
-			
+			// verifie si le champ du répertoire de sorie n'est pas vide ou invalide
+			if (!"".equals(dir.getText()) || !(new File(dir.getText())).isDirectory() ) {
+				Aladin.warning("Choose an output directory");
+				return;
+			}
+				
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			bOk.setEnabled(false);
 			BuilderRgb builderRgb = new BuilderRgb(aladin,mainPanel.context,plans,dir.getText(), getMethod());
