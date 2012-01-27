@@ -268,12 +268,18 @@ public class BuilderRgb implements Runnable {
           for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
           rgb.rgb[i]=pix;
        }
-       String file = Util.getFilePath(path,order, npix)+".jpg";
-       rgb.writeJPEG(file);
-       rgb.free();
+       String file="";
        
-       File f = new File(file);
-       updateStat(f);
+       try {
+    	   file = Util.getFilePath(path,order, npix)+".jpg";
+    	   rgb.writeJPEG(file);
+    	   rgb.free();
+
+    	   File f = new File(file);
+    	   updateStat(f);
+       } catch (Exception e) { // Erreur à l'ouverture du fichier (n'existe pas)
+    	   System.err.println("Warning file " + file + " not written\n\t" + e);
+       }
     }
     
     private long t=0;
