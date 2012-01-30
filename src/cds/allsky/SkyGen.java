@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.ParseException;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import cds.fits.Fits;
@@ -27,7 +26,7 @@ public class SkyGen {
 	/**
 	 * Analyse le fichier contenant les paramètres de config de la construction
 	 * du allsky sous le format : option = valeur
-	 * 
+	 *
 	 * @throws Exception
 	 *             si l'erreur dans le parsing des options nécessite une
 	 *             interrption du programme
@@ -70,7 +69,7 @@ public class SkyGen {
 
 	/**
 	 * Lance quelques vérifications de cohérence entre les options données
-	 * 
+	 *
 	 * @throws Exception
 	 *             si une incohérence des options nécessite une interrption du
 	 *             programme
@@ -111,7 +110,7 @@ public class SkyGen {
 		}
 
 		// si on n'a pas d'image etalon, on la cherche + initialise avec
-		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY) 
+		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY)
 				&& (context.getImgEtalon()==null) ) {
 			boolean found = context.findImgEtalon(context.getInputPath());
 			if (!found) {
@@ -127,7 +126,7 @@ public class SkyGen {
 				// calcule le meilleur nside/norder
 				long nside = healpix.core.HealpixIndex.calculateNSide(file
 						.getCalib().GetResol()[0] * 3600.);
-				order = ((int) Util.order((int) nside) - Constante.ORDER);
+				order = (Util.order((int) nside) - Constante.ORDER);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -147,7 +146,7 @@ public class SkyGen {
 			context.warning("Bitpix given (" + context.getBitpix()
 					+ ") != auto (" + context.getBitpixOrig() + ")");
 		}
-		
+
 		// il faut au moins un cut (ou img) pour construire des JPEG
 		if (context.getCut()==null && action==Action.JPEG)
 			throw new Exception("You hav to give at least option img= or cut= for Jpeg construction");
@@ -155,7 +154,7 @@ public class SkyGen {
 
 	/**
 	 * Affecte à un objet Context l'option de configuration donnée
-	 * 
+	 *
 	 * @param opt
 	 *            nom de l'option
 	 * @param val
@@ -299,7 +298,7 @@ public class SkyGen {
 			return;
 		}
 		switch (action) {
-		case FINDER : { 
+		case FINDER : {
 			System.out.println("*** Create local index :");
 			BuilderIndex builder = new BuilderIndex(context);
 			ThreadProgressBar progressBar = new ThreadProgressBar(builder);
@@ -332,7 +331,7 @@ public class SkyGen {
 			break;
 		}
 		case MOC : {
-			System.out.println("*** Create MultiOrderCoverage map"); 
+			System.out.println("*** Create MultiOrderCoverage map");
 			BuilderMoc builder = new BuilderMoc();
 			builder.createMoc(context.outputPath);
 			break;
@@ -417,11 +416,10 @@ public class SkyGen {
 			this.builder = builder;
 		}
 
-		@Override
 		public void run() {
 			isRunning=true;
 			while (isRunning) {
-				context.setProgress((int) this.builder.getProgress());
+				context.setProgress(this.builder.getProgress());
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -430,7 +428,7 @@ public class SkyGen {
 
 		}
 		public void stop() {
-			context.setProgress((int) this.builder.getProgress());
+			context.setProgress(this.builder.getProgress());
 			System.out.println("END");
 			isRunning=false;
 		}
