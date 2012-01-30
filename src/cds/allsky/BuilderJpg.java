@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 
 import cds.aladin.Aladin;
 import cds.aladin.PlanImage;
+import cds.allsky.Context.Method;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
@@ -34,17 +35,13 @@ public class BuilderJpg implements Progressive, Runnable {
 	private long startTime,totalTime;
 	private long statLastShowTime;
 	
-	static public final int MEDIANE = 0;
-	static public final int MOYENNE = 1;
-	private int method;
-
 	/**
 	 * Création du générateur JPEG.
 	 * @param cut borne de l'intervalle pour le passage en 8 bits (uniquement si cm==null)
 	 * @param cm table des couleurs pour le passage en 8 bits (prioritaire sur cut), 
 	 * @param context
 	 */
-	public BuilderJpg(final ColorModel cm, int method, Context context) {
+	public BuilderJpg(final ColorModel cm, Context context) {
 	   this.context = context;
 	   dirpath=context.getOutputPath();
 	   maxOrder = getMaxOrder();
@@ -52,7 +49,6 @@ public class BuilderJpg implements Progressive, Runnable {
 	   initBscaleBzeroFromNpixFits(dirpath);
 	   cut=context.getCut();
 	   this.tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
-	   this.method=method;
 	}
 	
 	// Initialise la valeur du BSCALE BZERO de sortie en fonction du premier fichier Npixxxx.fits trouvé dans Norder3/Dir0
@@ -136,7 +132,7 @@ public class BuilderJpg implements Progressive, Runnable {
 	 * de plus bas niveau. La méthode employée est la médiane sur les 4 pixels de niveau inférieurs */
     private Fits createJpg(String path,int order, long npix ) throws Exception {
         String file = Util.getFilePath(path,order,npix);
-        
+        Method method = context.getMethod();
         
         // si le process a été arrêté on essaie de ressortir au plus vite
         if( stopped ) return null;
@@ -153,12 +149,12 @@ public class BuilderJpg implements Progressive, Runnable {
               fils[i] = createJpg(path,order+1,npix*4+i);
               if (fils[i] != null && !found) found = true;
            }
-           if( found ) out = createNodeJpg(fils);
+           if( found ) out = createNodeJpg(fils, method);
         }
         if( out!=null && context.isInMocTree(order,npix) ) {
            if( debugFlag ) {
               debugFlag=false;
-              Aladin.trace(3,"Creating JPEG tiles: method="+(method==MOYENNE?"average":"median")
+              Aladin.trace(3,"Creating JPEG tiles: method="+(method==Context.Method.MOYENNE?"average":"median")
                     +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
                     +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
                     +" tcm="+(tcm==null?"null":"provided"));
@@ -197,7 +193,7 @@ public class BuilderJpg implements Progressive, Runnable {
     }
 
 	/** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
-    private Fits createNodeJpg(Fits fils[]) throws Exception {
+    private Fits createNodeJpg(Fits fils[], Method method) throws Exception {
        Fits out = new Fits(width,width,bitpix);
        out.setBlank(blank);
        out.setBscale(bscale);
@@ -221,7 +217,7 @@ public class BuilderJpg implements Progressive, Runnable {
                    if( in!=null ) {
 
                        // On prend la moyenne (sans prendre en compte les BLANK)
-                      if( method==MOYENNE ) {
+                      if( method==Context.Method.MOYENNE ) {
                          double totalCoef=0;
                          for( int i=0; i<4; i++ ) {
                             int dx = i==1 || i==3 ? 1 : 0;
@@ -268,4 +264,5 @@ public class BuilderJpg implements Progressive, Runnable {
        }
        return out;
     }
+
 }

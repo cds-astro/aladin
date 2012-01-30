@@ -8,6 +8,7 @@ import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImageRGB;
+import cds.allsky.Context.Method;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -29,16 +30,14 @@ public class BuilderRgb implements Runnable {
     private int maxOrder = 100;
     private int missing=-1;
     
-    static public final int MEDIANE = 0;
-    static public final int MOYENNE = 1;
-    private int method;
+    private Method method;
     
     private int statNbFile;
     private long statSize;
     private long startTime,totalTime;
     private long statLastShowTime;
 
-    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path,int method) {
+    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path, Method method) {
        this.aladin = aladin;
        this.context = context;
        context.initParameters();
@@ -165,7 +164,7 @@ public class BuilderRgb implements Runnable {
                       if( in!=null ) {
 
                           // On prend la moyenne (sans prendre en compte les BLANK)
-                         if( method==MOYENNE ) {
+                         if( method==Context.Method.MOYENNE ) {
                             double totalCoef=0;
                             for( int i=0; i<4; i++ ) {
                                int dx = i==1 || i==3 ? 1 : 0;
@@ -176,6 +175,7 @@ public class BuilderRgb implements Runnable {
                                totalCoef+=coef[i];
                             }
                             if( totalCoef!=0 ) {
+                            	pix = 0;
                                for( int i=0; i<4; i++ ) {
                                   if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
                                }

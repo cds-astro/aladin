@@ -34,6 +34,7 @@ import cds.aladin.PlanImage;
 import cds.aladin.Tool;
 import cds.aladin.ToolBox;
 import cds.aladin.prop.PropPanel;
+import cds.allsky.Context.Method;
 import cds.tools.Util;
 
 public class TabJpg extends JPanel implements ActionListener {
@@ -271,9 +272,9 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
-   public int getMethod() {
-      if( radioMediane.isSelected() ) return BuilderJpg.MEDIANE;
-      return BuilderJpg.MOYENNE;
+   public Method getMethod() {
+      if( radioMediane.isSelected() ) return Context.Method.MEDIANE;
+      return Context.Method.MOYENNE;
    }
    
    protected void resumeWidgetsStatus() {
@@ -348,7 +349,8 @@ public class TabJpg extends JPanel implements ActionListener {
             }
          }
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         BuilderJpg builderJpg = new BuilderJpg(getCM(), getMethod(), mainPanel.context );
+         mainPanel.context.setMethod(getMethod());
+         BuilderJpg builderJpg = new BuilderJpg(getCM(), mainPanel.context);
          builderJpg.start();
          (new ThreadProgressBar(builderJpg)).start();
          

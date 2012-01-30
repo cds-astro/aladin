@@ -37,6 +37,7 @@ import cds.aladin.Chaine;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.prop.PropPanel;
+import cds.allsky.Context.Method;
 import cds.tools.Util;
 
 public class TabRgb extends JPanel implements ActionListener {
@@ -220,10 +221,10 @@ public class TabRgb extends JPanel implements ActionListener {
 	
     private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
     
-    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
-    public int getMethod() {
-       if( radioMediane.isSelected() ) return BuilderRgb.MEDIANE;
-       return BuilderRgb.MOYENNE;
+    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG couleur */
+    public Method getMethod() {
+       if( radioMediane.isSelected() ) return Context.Method.MEDIANE;
+       return Context.Method.MOYENNE;
     }
 	
 	/** Recupere la liste des plans Allsky valides */

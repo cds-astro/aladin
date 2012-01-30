@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.ParseException;
+import java.util.Enumeration;
 import java.util.StringTokenizer;
 
 import cds.aladin.Aladin;
@@ -55,6 +56,7 @@ public class Context {
    protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
+   private Method method = Context.Method.MEDIANE;
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -141,6 +143,23 @@ public class Context {
                Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
    }
    
+   protected enum Method {
+	   MEDIANE, MOYENNE;
+	}
+   
+   /**
+    * @param method the method to set
+    * @see Context#MEDIANE
+    * @see Context#MOYENNE
+    */
+   public void setMethod(Method method) {
+	   this.method = method;
+   }
+   public void setMethod(String method) {
+	   this.method = Method.valueOf(method.toUpperCase());
+   }
+   public Method getMethod() { return method; }
+
    public void setDataCut(String cut) {
        String vals[] = cut.split(" ");
 	   if (vals.length==2 && this.cut != null) {
@@ -482,7 +501,7 @@ public class Context {
 	   }
    }
 
-public void warning(String string) {
+   public void warning(String string) {
        String s_WARN    = "WARNING :";//Aladin.getChaine().getString("WARNING");
        System.out.println(s_WARN+" "+string);
    }

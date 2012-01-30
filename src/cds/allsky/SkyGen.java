@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.ParseException;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
-import cds.aladin.PlanImage;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
@@ -38,8 +38,10 @@ public class SkyGen {
 		// pour construire le contexte
 
 		// Ouverture et lecture du fichier
+//		Properties properties = new Properties();
 		BufferedReader inputStream = null;
 		inputStream = new BufferedReader(new FileReader(file));
+//		properties.load(new FileReader(file));
 
 		String line = null;
 		while ((line = inputStream.readLine()) != null) {
@@ -205,6 +207,8 @@ public class SkyGen {
 			}
 		else if (opt.equalsIgnoreCase("pixelCut"))
 			context.setPixelCut(val);
+		else if (opt.equalsIgnoreCase("method"))
+			context.setMethod(val);
 		else if (opt.equalsIgnoreCase("dataCut")) {
 			context.setDataCut(val);
 		}
@@ -315,7 +319,7 @@ public class SkyGen {
 		}
 		case JPEG : {
 			System.out.println("*** Create Jpeg output :");
-			BuilderJpg builder = new BuilderJpg(null, PlanImage.LINEAR, context);
+			BuilderJpg builder = new BuilderJpg(null, context);
 			ThreadProgressBar progressBar = new ThreadProgressBar(builder);
 			(new Thread(progressBar)).start();
 			// laisse le temps au thread de se lancer
