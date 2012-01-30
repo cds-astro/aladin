@@ -88,7 +88,7 @@ public final class Select extends JComponent  implements
    static final int DX	      =  33;   // Largeur du logo
 
    // L'icone du calque
-   static final int [] frX =  { 6+gapL, 0+gapL, DX+gapL, DX-6+gapL, 6+gapL  };
+   static final int [] frX =  { 6+gapL, 0+gapL, DX+gapL, DX-6+gapL,6+gapL  };
    static final int [] frY =  {      1,      14,      14,       1,      1  };
    static final int frMin = frX[1];              // Limite inf. de l'icone (en abs)
    static final int frMax = frX[2];              // Limite sup. de l'icone (en abs)

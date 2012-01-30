@@ -74,7 +74,7 @@ public final class Zoom extends JPanel {
       int i;
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
-      setLayout( new BorderLayout(5,SLIDER_LOOK?5:0) );
+      setLayout( new BorderLayout(5,SLIDER_LOOK?10:0) );
      
       SLIDER_LOOK = Aladin.NEWLOOK_V7;
 
@@ -93,7 +93,7 @@ public final class Zoom extends JPanel {
          opacitySlider = new SliderOpacity(aladin);
          zoomSlider = new SliderZoom(this);
          
-         JPanel sliderPanel = new JPanel( new BorderLayout(0,0));
+         JPanel sliderPanel = new JPanel( new BorderLayout(2,2));
          sliderPanel.add(opacitySlider,BorderLayout.NORTH);
          sliderPanel.add(zoomSlider,BorderLayout.SOUTH);
          

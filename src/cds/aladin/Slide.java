@@ -506,6 +506,11 @@ public final class Slide {
          else g.setColor(colorBorder = Aladin.MYGRAY);
          g.drawPolygon(xc,yc,frX.length);
          
+         // Cote clair à droite et en bas du calque courant
+         g.setColor(new Color(100,100,100));
+         g.drawLine(xc[2],yc[2],xc[3],yc[3]);
+         g.drawLine(xc[1],yc[1],xc[2],yc[2]);
+         
          // Affichage de la petite languette du folder + le logo indiquant le localScope
          // ou le numéro indiquant le nombre de plans
          if( p.type==Plan.FOLDER ) {
@@ -545,7 +550,7 @@ public final class Slide {
          } else {
             g.drawLine(xc[1],yc[1]+1,xc[2],yc[1]+1);
          }
-
+         
          // Le logo du plan en fonction de son type
          switch( p.type ) {
             case Plan.IMAGE:
@@ -576,7 +581,7 @@ public final class Slide {
 //                  inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
 //                        isRefForVisibleView ? Aladin.GREEN : Color.black, 
 //                        p.ref);
-            Util.drawCheckbox(g, 3, dy+3, Color.gray ,
+            Util.drawCheckbox(g, 2, dy+3, Color.gray ,
                   inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
                   isRefForVisibleView ? Color.red : Color.black, 
                   p.active /* && !(p.isImage() && !isRefForVisibleView) */);

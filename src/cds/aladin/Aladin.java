@@ -174,8 +174,8 @@ public class Aladin extends JApplet
     public static final Color BLUE =  new Color(214,214,255);
     static final Color MAXBLUE =  new Color(153,153,255);
     static final Color MYGRAY = new Color(180,183,187);
-    static final Color STACKBLUE = new Color(120,120,255);
-    static final Color STACKGRAY = new Color(140,140,140);
+    static final Color STACKBLUE = new Color(140,140,255);
+    static final Color STACKGRAY = new Color(150,150,150);
 
     // couleur de fond du bouton Load... lorsqu'il est opérationnel
 //    static final Color COLOR_LOAD_READY = new Color(110,230,50);
