@@ -1,17 +1,13 @@
 package cds.allsky;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.ParseException;
-import java.util.Enumeration;
 import java.util.StringTokenizer;
 
 import cds.aladin.Aladin;
-import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
-import cds.aladin.PlanBG;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Galactic;
@@ -32,7 +28,6 @@ import cds.tools.pixtools.CDSHealpix;
 public class Context {
 
 	private static boolean verbose = false;
-	protected int trace=0;					// Niveau de debugging
    protected String label;                   // Nom du survey
    
    protected String inputPath;               // Répertoire des images origales
@@ -283,8 +278,6 @@ public class Context {
    }
    
 
-   private boolean skysubDone = false;
-   
    /** Initialisation des paramètres (ne sert que pour contextGui) */
    public void initParameters() {
       
@@ -469,11 +462,12 @@ public class Context {
 
    
    public void trace(int i, String string) {
-	   if (trace>=i)
+	   if (Aladin.levelTrace>=i)
 	   System.out.println(string);
    }
    public void setTrace(int trace) {
-	   this.trace = trace;
+	   Aladin.levelTrace = trace;
+	   
    }
 
    /**
@@ -481,6 +475,7 @@ public class Context {
     */
    public static void setVerbose(boolean verbose) {
 	   Context.verbose = verbose;
+	   BuilderController.DEBUG=true;
    }
 
    /**
