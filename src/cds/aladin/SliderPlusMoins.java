@@ -22,12 +22,20 @@ package cds.aladin;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -65,28 +73,30 @@ public abstract class SliderPlusMoins extends JPanel {
       label.setFont(Aladin.SSPLAIN);
 
       slider = new JSlider(JSlider.HORIZONTAL,min,max,min);
+      slider.setPaintLabels(false);
+      slider.setPaintTicks(false);
       slider.addChangeListener( new ChangeListener() {
          public void stateChanged(ChangeEvent e) { submit(0); }
       });
       
       JButton b;
-      moins=b = new JButton("-");
-      b.setFont(b.getFont().deriveFont(Font.BOLD));
+      moins=b = new Bouton("-");
+      b.setMargin(new Insets(0,0,0,0) );
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(-incr); }
       });
 
-      plus=b = new JButton("+");
-      b.setFont(b.getFont().deriveFont(Font.BOLD));
+      plus=b = new Bouton("+");
+      b.setMargin(new Insets(0,0,0,0) );
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(incr); }
       });
       
       setLayout( new BorderLayout(0,0));
       JPanel p = new JPanel(new BorderLayout(0,0));
-//      p.add(moins,BorderLayout.WEST);
+      p.add(moins,BorderLayout.WEST);
       p.add(slider,BorderLayout.CENTER);
-//      p.add(plus,BorderLayout.EAST);
+      p.add(plus,BorderLayout.EAST);
       
       add(label,BorderLayout.WEST);
       add(p,BorderLayout.CENTER);
@@ -124,6 +134,33 @@ public abstract class SliderPlusMoins extends JPanel {
       Util.toolTip(moins, tip);
       Util.toolTip(plus, tip);
       Util.toolTip(slider, tip);
+   }
+
+   class Bouton extends JButton implements MouseMotionListener {
+      static final int SIZE=10;
+      Bouton(String s) {
+         super.setText(s);
+         setFont(Aladin.LBOLD);
+         addMouseMotionListener(this);
+      }
+      public Dimension getPreferredSize() { return new Dimension(SIZE,SIZE); }
+      public Dimension getSize() { return new Dimension(SIZE,SIZE); }
+   
+      public void paintComponent(Graphics g) {
+         int H = getHeight();
+         int W = getWidth();
+         g.setColor( slider.getBackground());
+         g.fillRect(0, 0, W, H);
+         g.setColor( enable ? Color.black : Aladin.MYGRAY );
+         String s = getText();
+         g.drawString(s,W/2-g.getFontMetrics().stringWidth(s)/2,H/2+4);
+      }
+      public void mouseDragged(MouseEvent e) { }
+      public void mouseMoved(MouseEvent e) {
+         if( !enable ) return;
+         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+      }
+      
    }
    
 }
