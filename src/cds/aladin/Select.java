@@ -786,13 +786,13 @@ public final class Select extends JComponent  implements
          }
          
          // On est sans doute au-dessus de la pile
-         else {
+         else if( x>0 ) {
             int n;
             for( n=0; a.calque.plan[n].type==Plan.NO; n++);
             if( n>0 ) n--;
             newPlan = a.calque.plan[n];
 //          System.out.println("Je suis sur le dessus de la pile");
-         }
+         } else return;
 
          //Permutation des plans
          if( currentPlan!=newPlan /* && Math.abs(oldy-y)>=4 */ ) {

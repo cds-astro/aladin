@@ -155,7 +155,7 @@ public class Aladin extends JApplet
     static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
     static final String WELCOME           = "Bienvenue sur "+TITRE+
                                             " - "+getReleaseNumber();
-    static String COPYRIGHT         = "(c) 2011 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
+    static String COPYRIGHT         = "(c) 2012 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
 
     static protected String CACHE = ".aladin"; // Nom du répertoire cache
     static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore

@@ -20,7 +20,9 @@
 
 package cds.aladin;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,6 +30,7 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JToolBar;
 import javax.swing.event.ChangeEvent;
@@ -41,7 +44,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 Jan 2012 - création
  */
-public abstract class SliderPlusMoins extends JToolBar {
+public abstract class SliderPlusMoins extends JPanel {
    Aladin aladin;
    
    JLabel label;
@@ -56,12 +59,10 @@ public abstract class SliderPlusMoins extends JToolBar {
     * @param incr - valeur de l'incrément lors de l'usage du bouton + ou -
     */
    public SliderPlusMoins(Aladin aladin,String title, int min, int max, final int incr) {
-      super(HORIZONTAL);
-      setFloatable(false);
-      setBorder(BorderFactory.createEmptyBorder());
       this.aladin = aladin;
       
-      add(label = new JLabel(title));
+      label = new JLabel(title);
+      label.setFont(Aladin.SSPLAIN);
 
       slider = new JSlider(JSlider.HORIZONTAL,min,max,min);
       slider.addChangeListener( new ChangeListener() {
@@ -74,16 +75,22 @@ public abstract class SliderPlusMoins extends JToolBar {
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(-incr); }
       });
-      add(b);
 
-      add(slider);
-      
       plus=b = new JButton("+");
       b.setFont(b.getFont().deriveFont(Font.BOLD));
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(incr); }
       });
-      add(b);
+      
+      setLayout( new BorderLayout(0,0));
+      JPanel p = new JPanel(new BorderLayout(0,0));
+//      p.add(moins,BorderLayout.WEST);
+      p.add(slider,BorderLayout.CENTER);
+//      p.add(plus,BorderLayout.EAST);
+      
+      add(label,BorderLayout.WEST);
+      add(p,BorderLayout.CENTER);
+
       
       setEnabled(false);
       
