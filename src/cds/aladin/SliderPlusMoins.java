@@ -69,16 +69,18 @@ public abstract class SliderPlusMoins extends JPanel {
    public SliderPlusMoins(Aladin aladin,String title, int min, int max, final int incr) {
       this.aladin = aladin;
       
-      label = new JLabel(title);
-      label.setFont(Aladin.SSPLAIN);
-
       slider = new JSlider(JSlider.HORIZONTAL,min,max,min);
       slider.setPaintLabels(false);
       slider.setPaintTicks(false);
+      slider.setBackground( aladin.getBackground() );
       slider.addChangeListener( new ChangeListener() {
          public void stateChanged(ChangeEvent e) { submit(0); }
       });
       
+      label = new JLabel(title);
+      label.setFont(Aladin.SSPLAIN);
+      label.setBackground( slider.getBackground() );
+
       JButton b;
       moins=b = new Bouton("-");
       b.setMargin(new Insets(0,0,0,0) );
