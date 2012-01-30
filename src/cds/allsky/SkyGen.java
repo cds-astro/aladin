@@ -1,10 +1,11 @@
 package cds.allsky;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.Reader;
 import java.text.ParseException;
-import java.util.StringTokenizer;
+import java.util.Properties;
+import java.util.Set;
 
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
@@ -26,7 +27,7 @@ public class SkyGen {
 	/**
 	 * Analyse le fichier contenant les paramètres de config de la construction
 	 * du allsky sous le format : option = valeur
-	 *
+	 * 
 	 * @throws Exception
 	 *             si l'erreur dans le parsing des options nécessite une
 	 *             interrption du programme
@@ -37,25 +38,16 @@ public class SkyGen {
 		// pour construire le contexte
 
 		// Ouverture et lecture du fichier
-//		Properties properties = new Properties();
-		BufferedReader inputStream = null;
-		inputStream = new BufferedReader(new FileReader(file));
-//		properties.load(new FileReader(file));
+		Properties properties = new Properties();
+		Reader reader = new FileReader(file);
+		properties.load(reader);
 
-		String line = null;
-		while ((line = inputStream.readLine()) != null) {
-			StringTokenizer st = new StringTokenizer(line, "=");
-			if (st.countTokens() != 2) {
-				System.err.println("Error reading line : "+line);
-				continue;
-			}
-			// extrait le nom de l'option
-			String opt = st.nextToken().trim();
-			// extrait la/les valeurs
-			String val = st.nextToken().trim();
+		Set<Object> keys = properties.keySet();
+		for (Object opt : keys) {
+			String val = properties.getProperty((String)opt);
 
 			try {
-				setContextFromOptions(opt, val);
+				setContextFromOptions((String)opt, val);
 			} catch (Exception e) {
 				e.printStackTrace();
 				break;
@@ -63,13 +55,12 @@ public class SkyGen {
 
 		}
 
-		inputStream.close();
-
+		reader.close();
 	}
 
 	/**
 	 * Lance quelques vérifications de cohérence entre les options données
-	 *
+	 * 
 	 * @throws Exception
 	 *             si une incohérence des options nécessite une interrption du
 	 *             programme
@@ -110,7 +101,7 @@ public class SkyGen {
 		}
 
 		// si on n'a pas d'image etalon, on la cherche + initialise avec
-		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY)
+		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY) 
 				&& (context.getImgEtalon()==null) ) {
 			boolean found = context.findImgEtalon(context.getInputPath());
 			if (!found) {
@@ -126,7 +117,7 @@ public class SkyGen {
 				// calcule le meilleur nside/norder
 				long nside = healpix.core.HealpixIndex.calculateNSide(file
 						.getCalib().GetResol()[0] * 3600.);
-				order = (Util.order((int) nside) - Constante.ORDER);
+				order = ((int) Util.order((int) nside) - Constante.ORDER);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -146,10 +137,10 @@ public class SkyGen {
 			context.warning("Bitpix given (" + context.getBitpix()
 					+ ") != auto (" + context.getBitpixOrig() + ")");
 		}
-
-		// il faut au moins un cut (ou img) pour construire des JPEG
-		if (context.getCut()==null && action==Action.JPEG)
-			throw new Exception("You hav to give at least option img= or cut= for Jpeg construction");
+		
+		// il faut au moins un cut (ou img) pour construire des JPEG ou ALLSKY
+		if (context.getCut()==null && (action==Action.JPEG || action==Action.ALLSKY))
+			throw new Exception("Option img= or pixelCut= are mandatory for Jpeg and Allsky construction");
 	}
 
 	/**
@@ -393,8 +384,8 @@ public class SkyGen {
 				"order     Number of Healpix Order (default computed from the original resolution)" + "\n" +
 				"pixelCut  Display range cut (BSCALE,BZERO applied)(required JPEG 8 bits conversion - ex: \"120 140\")" + "\n" +
 				"dataCut   Range for pixel vals (BSCALE,BZERO applied)(required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
-				"color     True if your input images are colored jpeg" + "\n" +
-				"img       Image path to use for initialization" + "\n" +
+				"color     True if your input images are colored jpeg (default is false)" + "\n" +
+				"img       Image path to use for initialization (default is first found)" + "\n" +
 				"verbose   Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n");
 		System.out.println("\nUse one of these actions at end of command line :" + "\n" +
 				"finder    Build finder index" + "\n" +
