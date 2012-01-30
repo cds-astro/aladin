@@ -162,6 +162,7 @@ public class BuilderJpg implements Progressive, Runnable {
            if( tcm==null ) out.toPix8(cut[0],cut[1]);
            else out.toPix8(cut[0],cut[1],tcm);
            out.writeJPEG(file+".jpg");
+           Aladin.trace(4, "Writing " + file+".jpg");
            
            File f = new File(file+".jpg");
            updateStat(f);
