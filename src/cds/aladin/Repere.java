@@ -757,7 +757,7 @@ public class Repere extends Position {
     */
    protected boolean cutOn() {
       ViewSimple v=plan.aladin.view.getCurrentView();
-      if( v==null || plan.aladin.toolbox.getTool()==ToolBox.PAN ) return false;
+      if( v==null || plan.aladin.toolBox.getTool()==ToolBox.PAN ) return false;
       Plan p=v.pref;
       if( p==null || !(p instanceof PlanImageBlink) ) return false;
       PlanImageBlink pc = (PlanImageBlink)p;

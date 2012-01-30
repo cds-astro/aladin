@@ -1243,7 +1243,7 @@ public final class MCanvas extends JComponent
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
 
       // Juste pour repasser un sélection
-      if( aladin.mesure.getNbSrc()>0 ) aladin.toolbox.mouseEnter(null,0,0);
+      if( aladin.mesure.getNbSrc()>0 ) aladin.toolBox.mouseEnter(null,0,0);
 
 //      if( aladin.mesure.nbSrc>0 ) requestFocusInWindow();  // pour pouvoir taper une chaine
       Aladin.makeCursor(this,Aladin.HANDCURSOR);

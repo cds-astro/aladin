@@ -304,7 +304,7 @@ public final class Cote extends Ligne {
    protected boolean cutOn1() {
       ViewSimple v=plan.aladin.view.getCurrentView();
       if( Aladin.OUTREACH ) return false;
-      if( v==null || plan.aladin.toolbox.getTool()==ToolBox.PAN ) return false;
+      if( v==null || plan.aladin.toolBox.getTool()==ToolBox.PAN ) return false;
       Plan p=v.pref;
       if( p==null || !p.hasAvailablePixels() && !(p instanceof PlanImageRGB) ) return false;
       PlanImage pi = (PlanImage)p;

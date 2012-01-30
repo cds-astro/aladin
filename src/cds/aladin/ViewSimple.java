@@ -271,7 +271,6 @@ public class ViewSimple extends JComponent
    public synchronized void drop(DropTargetDropEvent dropTargetDropEvent) {
       aladin.drop(dropTargetDropEvent);
       aladin.view.setMouseView(this);
-
    }
 
    public void mouseWheelMoved(MouseWheelEvent e) {
@@ -313,7 +312,7 @@ public class ViewSimple extends JComponent
      
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
          // ou qu'on est en train de faire un crop
-         else if( !isPlotView() &&  ( aladin.toolbox.getTool()==ToolBox.PHOT ||
+         else if( !isPlotView() &&  ( aladin.toolBox.getTool()==ToolBox.PHOT ||
                view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
             if( hasCrop() ) p = view.crop.getFocusPos();
 //            else p = vs.getPosition((double)e.getX(),(double)e.getY());
@@ -322,7 +321,7 @@ public class ViewSimple extends JComponent
             vs.getProj().getCoord(coo);
          }
       } catch( Exception e1 ) { coo=null; }
-      if( aladin.toolbox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
+      if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
       vs.syncZoom(-e.getWheelRotation(),coo);
@@ -1364,7 +1363,7 @@ public class ViewSimple extends JComponent
 //         return true;
       }
       if(  isFree() || 
-            (aladin.toolbox.getTool()!=ToolBox.SELECT && aladin.toolbox.getTool()!=ToolBox.PAN)
+            (aladin.toolBox.getTool()!=ToolBox.SELECT && aladin.toolBox.getTool()!=ToolBox.PAN)
                    || aladin.calque.zoom.zoomView.flagdrag) return false;
       return isInImage(ra,dec);
    }
@@ -1725,7 +1724,7 @@ public class ViewSimple extends JComponent
    /** Retourne le Tool courant avec la possibilité de passer directement
     * en PAN avec la touche ALT enfoncée    */
    private int getTool(InputEvent e) {
-      int tool = aladin.toolbox.getTool();
+      int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       return tool;
    }
@@ -1828,7 +1827,7 @@ public class ViewSimple extends JComponent
          else {
             if( view.crop.submit(vs,x,y) ) {
                view.crop=null;
-               aladin.toolbox.setMode(ToolBox.CROP, Tool.UP);
+               aladin.toolBox.setMode(ToolBox.CROP, Tool.UP);
             }
             else {
                view.crop.reset();
@@ -1897,7 +1896,7 @@ public class ViewSimple extends JComponent
       // Création automatique d'une vue associé au plan Draw ?
       if( isFree() ) {
          Plan pc = aladin.calque.getFirstSelectedPlan();
-         if( !aladin.toolbox.isForTool(tool) || pc==null || pc.type!=Plan.TOOL ) return/* false*/;
+         if( !aladin.toolBox.isForTool(tool) || pc==null || pc.type!=Plan.TOOL ) return/* false*/;
 //System.out.println("J'affecte à la vue "+this+" le plan TOOL "+pc);
          aladin.calque.setPlanRef(pc,vs.n);
       }
@@ -1948,8 +1947,8 @@ public class ViewSimple extends JComponent
       // oublié de rebasculer en SELECT
       if( tool==ToolBox.PHOT && testPhot(p.x,p.y,false)!=null ) {
          tool = ToolBox.SELECT;
-         aladin.toolbox.setMode(ToolBox.PHOT,Tool.UP);
-         aladin.toolbox.setMode(ToolBox.SELECT,Tool.DOWN);
+         aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
+         aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
       }
       
       // Dans le cas de l'outil de selection
@@ -2105,7 +2104,7 @@ public class ViewSimple extends JComponent
 
       // Creation d'un nouvel objet
       Plan plan = aladin.calque.selectPlanTool();
-      view.newobj = aladin.toolbox.newTool( plan ,vs,p.x,p.y);
+      view.newobj = aladin.toolBox.newTool( plan ,vs,p.x,p.y);
 
 
       // Le debut d'une cote est insere immediatement
@@ -2402,8 +2401,8 @@ public class ViewSimple extends JComponent
 
             // Juste pour le spectre localisé pour un cube via un repere
             if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
-               aladin.toolbox.setMode(ToolBox.PHOT,Tool.UP);
-               aladin.toolbox.setMode(ToolBox.SELECT,Tool.DOWN);
+               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
+               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
                view.selectCote(view.newobj);
                view.extendClip(view.newobj);
             }
@@ -2913,6 +2912,7 @@ public class ViewSimple extends JComponent
 
 //      reloadPixelsOriginIfRequired();
       aladin.localisation.setPos(vs,x,y);
+      
       updateInfo();
 //      if( isProjSync ) aladin.pixel.setUndef();
 //      else aladin.pixel.setPixel(vs,x,y);
@@ -3288,13 +3288,13 @@ public class ViewSimple extends JComponent
 
       // Recuperation du Focus dans le cas d'un WEN actif pour pouvoir
       // effectuer un ajustement fin
-      if( aladin.toolbox.tool[ToolBox.WEN].mode==Tool.DOWN ) requestFocusInWindow();
+      if( aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN ) requestFocusInWindow();
 
       // Curseur pour le déplacement d'un plan
       if( aladin.view.isMegaDrag() ) Aladin.makeCursor(this,Aladin.PLANCURSOR);
 
       // Modification du curseur en fonction de l'outil
-      else setDefaultCursor(aladin.toolbox.getTool(),e.isShiftDown());
+      else setDefaultCursor(aladin.toolBox.getTool(),e.isShiftDown());
    }
 
    /** Positionnement du curseur par défaut en fonction de l'outil courant et
@@ -3358,12 +3358,14 @@ public class ViewSimple extends JComponent
       aladin.view.setRepereId(s);
       aladin.view.memoUndo(this,repCoord,null);
       if( flagSync ) aladin.view.syncView(1,repCoord,this);
-      else { aladin.view.setRepere1(repCoord); aladin.view.repaintAll(); }
-      if( pref instanceof PlanBG ) {
-//         aladin.dialog.setDefaultTarget(repCoord+"");
-         aladin.dialog.setDefaultTarget(s);
-         aladin.dialog.setDefaultParameters(Aladin.aladin.dialog.current,0);
-      }
+      else { aladin.view.moveRepere(repCoord); aladin.view.repaintAll(); }
+      
+      /* if( pref instanceof PlanBG ) */ aladin.dialog.adjustParameters();
+//      if( pref instanceof PlanBG ) {
+////         aladin.dialog.setDefaultTarget(repCoord+"");
+//         aladin.dialog.setDefaultTarget(s);
+//         aladin.dialog.setDefaultParameters(Aladin.aladin.dialog.current,0);
+//      }
       aladin.sendObserver();
    }
 
@@ -3389,7 +3391,7 @@ public class ViewSimple extends JComponent
       char k = e.getKeyChar();
       
       // Suppression de l'objet selectionne
-      if(  key==KeyEvent.VK_DELETE && aladin.toolbox.getTool()==ToolBox.SELECT ) {
+      if(  key==KeyEvent.VK_DELETE && aladin.toolBox.getTool()==ToolBox.SELECT ) {
 //         aladin.view.delSelObjet();   // Ca sera effectué par aladin.delete()
          return;
       }
@@ -3425,7 +3427,7 @@ public class ViewSimple extends JComponent
 
       // Peut etre un ajustement fin par les fleches
       else {
-         if( aladin.toolbox.tool[ToolBox.WEN].mode==Tool.DOWN &&
+         if( aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN &&
                  (key==KeyEvent.VK_UP || key==KeyEvent.VK_DOWN
                     || key==KeyEvent.VK_LEFT || key==KeyEvent.VK_RIGHT
                     || k=='+' || k=='-' ||
@@ -4482,7 +4484,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
   /** Retourne la taille de la vue courante
    *  @param mode 0 - RA x DE (defaut)
    *              1 - max(RA,DE)
-   *              2 - sqrt(RA*RA+DE*DE)
+   *              2 - sqrt(RA*RA+DE*DE) majoré par 180°
    */
    protected String getTaille(int mode) {
       if( isFree() || !Projection.isOk(getProj()) ) return null;
@@ -4493,7 +4495,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       switch(mode) {
          case 0: return Coord.getUnit(RAw) +" x "+Coord.getUnit(DEw);
          case 1: return Coord.getUnit( Math.max(RAw,DEw) );
-         case 2: return Coord.getUnit( Math.sqrt(RAw*RAw+DEw*DEw) );
+         case 2: double t = Math.sqrt(RAw*RAw+DEw*DEw);
+                 return Coord.getUnit( Math.min(t, 180) );
       }
       return "";
    }
@@ -5344,7 +5347,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Logo pour les plans ré-échantillonés
       if( pref instanceof PlanImageResamp
             && ((PlanImageResamp)pref).isResample() ) {
-         aladin.toolbox.tool[0].drawRsampIcon(g,Color.red,x,y,false);
+         aladin.toolBox.tool[0].drawRsampIcon(g,Color.red,x,y,false);
          x+=15;
       }
       g.setColor(c);
@@ -5534,7 +5537,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          }
          
          if( p==pref && p instanceof PlanBG ) {
-            if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy,1,now);
+            if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
             continue;
          }
          
@@ -6035,7 +6038,7 @@ g.drawString(s,10,100);
       
       // tracé du rectangle de crop
       if( view.crop!=null && isFree() 
-            || aladin.toolbox.tool[ToolBox.CROP].mode!=Tool.DOWN ) view.crop=null;
+            || aladin.toolBox.tool[ToolBox.CROP].mode!=Tool.DOWN ) view.crop=null;
       else if( hasCrop() ) view.crop.draw(g,this);
       
       // Dessin des bordures
@@ -6086,8 +6089,8 @@ g.drawString(s,10,100);
       g2d.setComposite(myComposite);
       
       g2d.translate(0,50);
-      aladin.toolbox.setSize(200,280);
-      aladin.toolbox.paintComponent(g2d);
+      aladin.toolBox.setSize(200,280);
+      aladin.toolBox.paintComponent(g2d);
       g2d.setTransform(saveTransform);
       g2d.setClip(saveClip);
       

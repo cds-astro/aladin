@@ -162,7 +162,7 @@ public class PlanBG extends PlanImage {
    protected boolean inJPEG=false;  // true: Les losanges originaux peuvent être fournis en JPEG
    private boolean hasMoc=false;   // true si on on peut disposer du MOC correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
-   protected int frameDrawing=0;   // Frame de tracé, 0 si utilisation du repère général
+   protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
 
 
@@ -338,7 +338,7 @@ public class PlanBG extends PlanImage {
       }
       if( coRadius<=0 ) coRadius=180;
       
-      aladin.view.setRepere1(co);
+      aladin.view.moveRepere(co);
       objet = co+"";
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
       p.frame = getCurrentFrameDrawing();
@@ -1879,6 +1879,9 @@ public String getUrl() {
     * @param op niveau d'opacité, -1 pour celui définit dans le plan
     * @param now true si l'afficahge doit être immédiatement complet à la résolution adéquate
     */
+   protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op) {
+      draw(g,v,dx,dy,-1,false);
+   }
    protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op,boolean now) {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();

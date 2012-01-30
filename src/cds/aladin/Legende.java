@@ -238,9 +238,18 @@ public final class Legende extends AbstractTableModel  {
    
    /** J'ajuste le numéro du champ dans le cas où il y aurait des champs non visibles avant */
    protected int getRealFieldNumber(int nField) {
-      int n=0;
-      for( int i=0; i<nField; i++ ) if( !field[i].visible ) n++;
-      return nField+n;
+      int nVisible=0;
+      int nInvisible=0;
+      
+      if( nField==0 ) {
+         for( int i=0; !field[i].visible; i++ ) nInvisible++;
+      } else {
+         for( int i=0; nVisible<nField; i++ ) {
+            if( !field[i].visible ) nInvisible++;
+            else nVisible++;
+         }
+      }
+      return nField+nInvisible;
    }
 
    /** Change le champ qui porte le tri */

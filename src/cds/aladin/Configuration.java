@@ -623,18 +623,18 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    
    
    // EN ATTENDANT
-   protected int getFrameAllsky() { return getFrame(); }
+//   protected int getFrameAllsky() { return getFrame(); }
    
-   /** Retourne l'indice de la frame mémorisée par l'utilisateur pour les Allsky, GAL par défaut */
-//   protected int getFrameAllsky() {
-//      if( Aladin.OUTREACH ) return Localisation.ICRS;
-//      String frame = get(FRAMEALLSKY);
-//      try {
-//         int i = Util.indexInArrayOf(frame, Localisation.REPERE);
-//         if( i>=0 ) return i;
-//      } catch( Exception e ) { }
-//      return Localisation.GAL;
-//   }
+   /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */
+   protected int getFrameDrawing() {
+      if( Aladin.OUTREACH ) return 3;   // GAL
+      String frame = get(FRAMEALLSKY);
+      try {
+         int i = Util.indexInArrayOf(frame, Localisation.FRAME);
+         if( i>=0 ) return i;
+      } catch( Exception e ) { }
+      return 0;   // Default => celui du repère céleste
+   }
    
    /** Retourne le code 2 lettres de la langue courante, même pour l'anglais */
    protected String getLanguage() {
@@ -999,10 +999,12 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // Le frame
       frameChoice = aladin.localisation.createChoice();
-      frameAllskyChoice = aladin.localisation.createChoice();
+      frameAllskyChoice = aladin.localisation.createFrameCombo();
       (l = new JLabel(FRAMEB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(frameChoice);
+      panel.add(new JLabel(" - "+FRAMEALLSKYB));
+      panel.add(frameAllskyChoice);
       if( !aladin.OUTREACH ) {
          PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
       }
@@ -1177,7 +1179,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       else frameChoice.setSelectedItem(s);   
       
       s = get(FRAMEALLSKY);
-      if( s == null ) frameAllskyChoice.setSelectedItem("Gal");
+      if( s == null ) frameAllskyChoice.setSelectedItem("GAL");
       else frameAllskyChoice.setSelectedItem(s);   
       
       fctChoice.setSelectedIndex(PlanImage.LINEAR);

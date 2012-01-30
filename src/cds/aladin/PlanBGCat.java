@@ -66,6 +66,7 @@ public class PlanBGCat extends PlanBG {
 
 
    protected void suiteSpecific() {
+      isOldPlan=false;
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
@@ -76,7 +77,8 @@ public class PlanBGCat extends PlanBG {
    /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
    protected boolean isFullyDrawn() { return readyDone && allWaitingKeysDrawn; }
 
-   protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op) {
+   
+   protected void draw(Graphics g,ViewSimple v, int dx, int dy,float op,boolean now) {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();
       if(  op<=0.1 ) return;

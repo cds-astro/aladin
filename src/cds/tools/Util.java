@@ -763,6 +763,43 @@ public final class Util {
        g.drawLine(x-2,y+3,x-2,y+3);
        g.drawLine(x+2,y+3,x+2,y+3);
    }
+    
+//    /**
+//     * Dessin d'un bouton radio
+//     * @param g le contexte graphique
+//     * @param x,y la position (coin en haut à gauche)
+//     * @param colorBord Couleur du bord
+//     * @param colorFond couleur du fond ou si null, couleur par défaut
+//     * @param colorCoche couleur de la coche ou si null, couleur par défaut
+//     * @param selected coche active si true
+//     */
+//    static public void drawRadio(Graphics g,int x,int y,
+//          Color colorBord,Color colorFond,Color colorCoche,boolean selected) {
+//       int w = CINT.length+1;
+//
+//       // Une couleur de fond particulière ?
+//       if( colorFond!=null ) {
+//          g.setColor(colorFond);
+//          g.fillRect(x+1,y+1,w,w);
+//
+//          // Couleur de fond par défaut
+//       } else {
+//          for( int i=0; i<CINT.length; i++ ) {
+//             g.setColor(CINT[i]);
+//             g.drawLine(x+1,y+1+i,x+CINT.length,y+1+i);
+//          }
+//       }
+//       
+//       g.setColor(colorBord);
+//       g.drawArc(x,y,w,w,0,360);
+//
+//       // La petite coche de sélection
+//       if( selected ) {
+//          g.setColor(colorCoche==null?Color.black:colorCoche);
+//          g.fillArc(x+2,y+2,w-4,w-4,0,360);
+//       }
+//    }
+
 
     // Couleurs de la coche
     static final private Color CINT[] = {

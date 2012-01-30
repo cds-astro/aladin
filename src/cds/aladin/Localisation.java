@@ -348,7 +348,7 @@ public final class Localisation extends MyBox {
     * POSITION histoire que cela se comprenne */
    protected void setSesameResult(String s) {
       aladin.localisation.setTextSaisie(s);
-      aladin.localisation.label.setText(POSITION);
+//      aladin.localisation.label.setText(POSITION);
       aladin.localisation.readyToClear();
    }
 

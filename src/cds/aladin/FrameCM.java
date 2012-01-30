@@ -159,7 +159,7 @@ public final class FrameCM extends JFrame implements ActionListener {
    protected void majCM() { majCM(false); }
    protected void majCM(boolean force) {
       if( force ) pimg=null;
-      if( aladin.toolbox.tool[ToolBox.HIST].mode==Tool.DOWN ) {
+      if( aladin.toolBox.tool[ToolBox.HIST].mode==Tool.DOWN ) {
          boolean flagRGB = pimg instanceof PlanImageRGB;
          memoControl();
 
@@ -932,8 +932,8 @@ public final class FrameCM extends JFrame implements ActionListener {
       pimg=null;
       imgID=-1;
       if( isVisible() ) {
-         aladin.toolbox.tool[ToolBox.HIST].setMode(Tool.UP);
-         aladin.toolbox.repaint();
+         aladin.toolBox.tool[ToolBox.HIST].setMode(Tool.UP);
+         aladin.toolBox.repaint();
          setVisible(false);
       }
    }
@@ -947,9 +947,9 @@ public final class FrameCM extends JFrame implements ActionListener {
       setVisible(false);
       aladin.gc();
       memoControl();
-      if( aladin.calque.getPlanBase()!=null )  aladin.toolbox.tool[ToolBox.HIST].setMode(Tool.UP);
-      else aladin.toolbox.tool[ToolBox.HIST].setMode(Tool.UNAVAIL);
-      aladin.toolbox.repaint();
+      if( aladin.calque.getPlanBase()!=null )  aladin.toolBox.tool[ToolBox.HIST].setMode(Tool.UP);
+      else aladin.toolBox.tool[ToolBox.HIST].setMode(Tool.UNAVAIL);
+      aladin.toolBox.repaint();
       imgID=-1;
    }
 

@@ -140,7 +140,8 @@ public final class FrameContour extends JFrame implements ActionListener {
           noiseInfo = new MyLabel(NOISEINFO,Label.LEFT,HELPFONT);
           zoomInfo = new MyLabel(ZOOMINFO,Label.LEFT,HELPFONT);
 
-          pimg = (PlanImage) a.calque.getPlanBase();
+//          pimg = (PlanImage) a.calque.getPlanBase();
+          pimg = a.calque.getFirstSelectedSimpleImage();
           setLocation(350,200);
 
           hist = new Histogramme();
@@ -294,6 +295,7 @@ public final class FrameContour extends JFrame implements ActionListener {
            currentZoomOnlyPanel.add(currentZoomOnly);
            g.setConstraints(currentZoomOnlyPanel,c);
            p.add(currentZoomOnlyPanel);
+           currentZoomOnly.setEnabled( a.calque.getFirstSelectedSimpleImage().ref );
 
            // bouton pour afficher l'aide
            helpBtn = createButton(showHelp?HIDEHELP:SHOWHELP);
@@ -363,19 +365,21 @@ public final class FrameContour extends JFrame implements ActionListener {
 
        @Override
     public void hide() {
-          if( a.calque.getPlanBase()!=null )  a.toolbox.tool[ToolBox.CONTOUR].mode=Tool.UP;
-          else a.toolbox.tool[ToolBox.CONTOUR].mode=Tool.UNAVAIL;
-          a.toolbox.repaint();
+          if( a.calque.getFirstSelectedSimpleImage()!=null )  a.toolBox.tool[ToolBox.CONTOUR].mode=Tool.UP;
+          else a.toolBox.tool[ToolBox.CONTOUR].mode=Tool.UNAVAIL;
+          a.toolBox.repaint();
           flagHide=true;
           etat=-1;
           super.hide();
        }
 
+       
 
       /** Mise a jour de la fenetre si necessaire*/
        protected void majContour() {
-          if( a.toolbox.tool[ToolBox.CONTOUR].mode==Tool.DOWN ) {
-             PlanImage p = (PlanImage)a.calque.getPlanBase();
+          if( a.toolBox.tool[ToolBox.CONTOUR].mode==Tool.DOWN ) {
+//             PlanImage p = (PlanImage)a.calque.getPlanBase();
+             PlanImage p = (PlanImage)a.calque.getFirstSelectedSimpleImage();
              if( p!=null && p.flagOk && p.hasAvailablePixels() ) {
                 int newEtat = p.getImgID();
 //                if (showHelp) move(350,70);
@@ -537,7 +541,7 @@ public final class FrameContour extends JFrame implements ActionListener {
            parseLevels();
 
            // création du plan contour
-           a.calque.newPlanContour("Contours",this.levels,new ContourPlot(),smoothCb.isSelected(),((Integer)smooothLevelChoice.getSelectedItem()).intValue(),currentZoomOnly.isSelected(),noisecb.isSelected(),couleurs);
+           a.calque.newPlanContour("Contours",pimg,this.levels,new ContourPlot(),smoothCb.isSelected(),((Integer)smooothLevelChoice.getSelectedItem()).intValue(),currentZoomOnly.isSelected(),noisecb.isSelected(),couleurs);
            // écriture sur la console de la commande script équivalente
            a.console.setCommand("contour "+levels.length+(smoothCb.isSelected()?"":" nosmooth")+(currentZoomOnly.isSelected()?" zoom":""));
 

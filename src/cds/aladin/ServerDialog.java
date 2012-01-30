@@ -603,15 +603,17 @@ long t1,t;
       Aladin.makeAdd(ct, buttonTop, "North");
       Aladin.makeAdd(ct, milieu, "Center");
       Aladin.makeAdd(ct, bas, "South");
-
+      
       aladin.manageDrop();
+      
+      setCurrent("Allsky");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
 //      Thread th = new Thread(this,"AladinServerPack");
 //      th.start();
       run();
    }
-
+   
    public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
       dropTargetDragEvent.acceptDrag (DnDConstants.ACTION_COPY_OR_MOVE);
@@ -873,6 +875,11 @@ long t1,t;
       server[current].resolveRadius(Coord.getUnit( /*Math.sqrt(2)* */
             Coord.getDist(c1, c2)), true);
    }
+   
+   /** Ajuste les champs de saisie en fonction du repere courant et de la taille du champ */
+   protected void adjustParameters() {
+      setDefaultParameters(current,3);
+   }
 
    /**
     * Mise en place du target/radius/epoch par defaut. Le choix se fait en fonction de
@@ -929,10 +936,13 @@ long t1,t;
                }
             }
          }
+         
+         if( mode==3 ) taille = v.getTaille(2);
 
          // Récupération de la position du repère
-         if( mode == 2 || mode == 3 || mode == 5 || v.pref instanceof PlanBG )  radec = Coord.getSexa(
-                  aladin.view.repere.raj, aladin.view.repere.dej, ":");
+         if( mode == 2 || mode == 3 || mode == 5 || v.pref instanceof PlanBG )  {
+            radec = Coord.getSexa(aladin.view.repere.raj, aladin.view.repere.dej, ":");
+         }
 
          // Recuperation de l'objet central et des coord du plan de ref
          else radec = v.getCentre();

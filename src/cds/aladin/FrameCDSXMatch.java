@@ -760,7 +760,7 @@ public class FrameCDSXMatch extends JFrame implements Runnable, ActionListener {
     }
 
     public void setVisible(boolean flag) {
-       aladin.toolbox.setMode(ToolBox.XMATCH, flag?Tool.DOWN:Tool.UP);
+       aladin.toolBox.setMode(ToolBox.XMATCH, flag?Tool.DOWN:Tool.UP);
        super.setVisible(flag);
     }
 

@@ -326,17 +326,19 @@ public final class Mesure extends JPanel implements Runnable {
        if( !flagSame ) nOccurence=0;
        oMasq=masq;
        
-       if( mcanvas.currentsee!=-1 || lastOcc==null || mcanvas.objSelect==null ) n=mcanvas.currentsee;
-       else { 
+       
+       if( mcanvas.objSelect!=null ) lastOcc=mcanvas.objSelect;
+//       if( mcanvas.currentsee==-1 || lastOcc==null || mcanvas.objSelect==null ) n=mcanvas.currentsee;
+//       else { 
           for( int i=0; i<nbSrc; i++ ) {
              if( src[i]==lastOcc ) { n = i; break; }
           }
-       }
+//       }
        
        n+=sens;
        if( n==-1 ) n=sens<0 ? nbSrc-1: 0;
        
-//System.out.println("Je cherche ["+masq+"] à partir de "+n+" nOccurence="+nOccurence);       
+//System.out.println("Je cherche ["+masq+"] à partir de "+n+" nOccurence="+nOccurence+" flagSame="+flagSame);       
 
        // Analyse de la recherche (ex: FLU*>10, OTYPE=X, Star, ...)
        StringBuffer col = new StringBuffer();    // pour récupérer un éventuel nom de colonne

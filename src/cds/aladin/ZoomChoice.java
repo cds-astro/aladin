@@ -50,4 +50,6 @@ public class ZoomChoice extends JPanel {
       cZoom.requestFocusInWindow();
       return true;
    }
+
+
 }

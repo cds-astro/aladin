@@ -84,6 +84,7 @@ public final class PlanContour extends PlanTool {
   int max;				// max des valeurs de niveau de gris
   int min;				// min des valeurs de niveau de gris
 
+  private PlanImage pimg = null;
   private double[] levels = null;	    	// tableau des niveaux de gris (differe de orgLevels si useSmoothing=true)
   private double[] orgLevels = null; 	    	// tableau des niveaux initiaux (entres par l'utilisateur)
 
@@ -104,7 +105,7 @@ public final class PlanContour extends PlanTool {
    * @param useOnlyCurrentZoom  True si l'on ne prend en compte que la vue courante
    * @param couleurs   	    	Tableau des couleurs de chaque contour (si null, initialisation par defaut)
    */
-  protected PlanContour(Aladin aladin, String label, double[] levels, ContourAlgorithm cAlgo, boolean useSmoothing, 
+  protected PlanContour(Aladin aladin, String label, PlanImage pimg, double[] levels, ContourAlgorithm cAlgo, boolean useSmoothing, 
         int smoothingLevel, boolean useOnlyCurrentZoom, boolean reduceNoise, Color[] couleurs, Color cPlanContour) {
       this(aladin, label);
 
@@ -117,6 +118,7 @@ public final class PlanContour extends PlanTool {
       flagOk = false;
 
       cAlgo.pc = this;
+      this.pimg = pimg;
       this.levels = levels;
       this.orgLevels = this.levels.clone();
       this.nbLevels = levels.length;
@@ -218,7 +220,8 @@ public final class PlanContour extends PlanTool {
     *  @return true en cas de succes, false si une Exception a ete souleve */
    protected boolean getPixels() {
 
-       p = calque.getPlanBase();
+//       p = calque.getPlanBase();
+       p = (Plan) (pimg==null ? calque.getPlanBase() : pimg);
        if ( p == null ) return false;
        objet = p.objet;
 
@@ -535,6 +538,7 @@ public final class PlanContour extends PlanTool {
        lines= null;
        zoomv=null;
        p=null;
+       pimg=null;
        //cAlgo.Free();
        //cAlgo.pc=null;
        cAlgo = null;

@@ -82,7 +82,8 @@ public final class Select extends JComponent  implements
    static final int sizeLabel = 112-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels
    // test AVO
    //static final int sizeLabel = 156-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels (test AVO)
-   static final int gapL      =   15;   // Marge de gauche (reserve pour le triangle)
+   static final int gapL      =   14;   // Marge de gauche (reserve pour les controles)
+//   static final int gapLL      =  14;   // Marge de gauche (reserve pour le radio)
    static final int gapB      =   5;   // Marge du bas
    static final int DX	      =  33;   // Largeur du logo
 
@@ -147,6 +148,9 @@ public final class Select extends JComponent  implements
       addMouseMotionListener(this);
       addMouseListener(this);
       addMouseWheelListener(this);
+      
+      setBackground(Aladin.NEWLOOK_V7 ? a.getBackground() : Aladin.LBLUE );
+      if( Aladin.NEWLOOK_V7 ) eyeHeight=0;
 
       // Calcule des tailles
       hs=Aladin.LSCREEN?291:200;   // Hauteur du canvas
@@ -172,12 +176,18 @@ public final class Select extends JComponent  implements
       if( opacity<0 ) opacity=0f;
       else if( opacity>1 ) opacity=1f;
       if( opacity==oOpacity ) return;
-      p.setOpacityLevel( opacity );
+      setOpacityLevel( p, opacity );
       Properties.majProp(p);
       a.calque.repaintAll();
    }
+   
+   // Ajustement de la transparence avec réactivation automatique du plan si nécessaire */
+   private void setOpacityLevel(Plan p,float opacity) {
+      p.setOpacityLevel( opacity );
+      if( !p.active && opacity>0.1 ) p.setActivated(true);
+   }
 
-   public Dimension getPreferredSize() { return new Dimension(ws,hs); }
+//   public Dimension getPreferredSize() { return new Dimension(ws,hs); }
 
    /** Permet de modifier la largeur du select */
    protected void setLargeur(int w) {
@@ -512,7 +522,7 @@ public final class Select extends JComponent  implements
    long lastClick = -1;
 
    /** Détermine s'il s'agit d'un clic souris destiné à changer le plan de référence */
-   private boolean canBeNewRef(MouseEvent e, int x,Plan currentPlan) {
+   protected boolean canBeNewRef(MouseEvent e, int x,Plan currentPlan) {
 //      if( e==null ) return false;
       boolean shiftDown = e!=null && e.isShiftDown();
 
@@ -545,7 +555,7 @@ public final class Select extends JComponent  implements
 
       // Sur le logo une image visible dans une vue ne pourra être pris en référence
       // => Simple activation
-      if( x>gapL && currentPlan.isImage()
+      if( x>gapL && (currentPlan.isImage() || currentPlan instanceof PlanBG)
             && (currentPlan.isViewable() && currentPlan.getOpacityLevel()>0 || a.calque.isBackGround())) return false;
 
       // Pour un plan Background */
@@ -624,7 +634,7 @@ public final class Select extends JComponent  implements
             float t = (x-oldSlide.x1)/(float)(oldSlide.x2-oldSlide.x1);
 
             // Changement de transparence pour le plan sous la souris s'il n'est pas sélectionné
-            if( !oldSlide.p.selected  ) oldSlide.p.setOpacityLevel(t);
+            if( !oldSlide.p.selected  ) setOpacityLevel( oldSlide.p, t);
 
             // sinon changement de transparence pour tous les plans sélectionnés
             else setOpacityLevel(t);
@@ -642,7 +652,7 @@ public final class Select extends JComponent  implements
    private void setOpacityLevel(float t) {
       Plan p[] = a.calque.getPlans();
       for( int i=0; i<p.length; i++ ) {
-         if( p[i].selected && a.calque.canBeTransparent(p[i])) p[i].setOpacityLevel(t);
+         if( p[i].selected && a.calque.canBeTransparent(p[i])) setOpacityLevel( p[i], t);
       }
    }
 
@@ -769,10 +779,20 @@ public final class Select extends JComponent  implements
       if( flagDrag==VERTICAL ) {
          flagDrag=0;
          Slide s = getSousSlide(y);
-
-         if( s==null ) { repaint(); return; }
-         newPlan = s.getPlan();
+         
+         if( s!=null ) {
+            newPlan = s.getPlan();
 //       System.out.println("Je suis SOUS le slide du plan "+(newPlan!=null?newPlan.label:"null"));
+         }
+         
+         // On est sans doute au-dessus de la pile
+         else {
+            int n;
+            for( n=0; a.calque.plan[n].type==Plan.NO; n++);
+            if( n>0 ) n--;
+            newPlan = a.calque.plan[n];
+//          System.out.println("Je suis sur le dessus de la pile");
+         }
 
          //Permutation des plans
          if( currentPlan!=newPlan /* && Math.abs(oldy-y)>=4 */ ) {
@@ -792,18 +812,36 @@ public final class Select extends JComponent  implements
       Plan p = s.getPlan();
 
       // Recherche du plan clique
-//      currentPlan = getPlan(y);  => Inutile, je passe plutôt par le slide.
       currentPlan = p;
 
       Plan [] allPlan = a.calque.getPlans();
+      
+      boolean itsDone=false;
+      boolean viewable = p.isViewable();
+      
+      if( a.calque.isModeAllSky() ) {
+         // Si possible on ne fait que déplacer le repère pour montrer le plan
+         if( !viewable && !(p instanceof PlanBG) && a.view.syncPlan(p) ) {
+            itsDone=true;
+            a.calque.unSelectAllPlan();
+            p.selected=true;
+         }
 
-      // Sélection d'un nouveau plan de référence ?
-      // Dans le cas multivue, on préferera recréer une vue sur le dernier panel (libre ou non), plutôt
-      // que de scroller sur une vue existente (très déroutant de fait) quitte à faire un doublon
-      if( !canBeNewRef(e,x,currentPlan) || (!a.view.isMultiView() && currentPlan.ref) ) newRef=null;
-      else newRef = currentPlan;
+         // Sélection d'un nouveau plan de référence ?
+         if( !itsDone ) {
+            if( !viewable && canBeNewRef(e,x,p) ) newRef = p;
+            else if( p instanceof PlanBG && !p.isOverlay() && p.isUnderImg() ) {
+               a.calque.switchOffBGOver(p);
+               itsDone=true;
+            }
+         }
+         
+      } else {
+         if( !canBeNewRef(e,x,p) || (!a.view.isMultiView() && p.ref) ) newRef=null;
+         else newRef = p;
+      }
 
-      if( p.type!=Plan.NO ) {
+      if( !itsDone && p.type!=Plan.NO ) {
          if( newRef!=null ) {
             if( a.calque.setPlanRef(p) ) {
                a.view.newView();
@@ -904,10 +942,10 @@ public final class Select extends JComponent  implements
             a.view.calque.selectAllObjectInPlans();
 
             // On repasse en mode SELECT si nécessaire
-            int i=a.toolbox.getTool();
+            int i=a.toolBox.getTool();
             if( i!=ToolBox.SELECT ) {
-               a.toolbox.setMode(i,Tool.UP);
-               a.toolbox.setMode(ToolBox.SELECT, Tool.DOWN);
+               a.toolBox.setMode(i,Tool.UP);
+               a.toolBox.setMode(ToolBox.SELECT, Tool.DOWN);
             }
          }
       }
@@ -1086,7 +1124,7 @@ public final class Select extends JComponent  implements
       a.view.repaintAll();
       repaint();
    }
-
+   
   /** Retourne le slide juste au-dessus en fonction de l'ordonnee y
    * @param y Ordonnee de la souris
    * @return le slide concerne, null si aucun
@@ -1126,6 +1164,7 @@ public final class Select extends JComponent  implements
 
    // Dessin de l'oeil
    void drawEye(Graphics g,boolean open) {
+      if( Aladin.NEWLOOK_V7 ) return;
 //      Color c = eyeInGreen?Aladin.GREEN:Color.black;
 
       Color c = a.calque.isFree() ? Color.gray : mouseIn ? Aladin.MYBLUE : Color.black;
@@ -1226,6 +1265,7 @@ public final class Select extends JComponent  implements
    // Ecrit le nom de l'objet central du plan de reference
    // a cote de l'oeil
    void writeTitle(Graphics g) {
+      if( Aladin.NEWLOOK_V7 ) return;
       Plan p =a.calque.getPlanRef();
       if( p==null || p.objet==null || p.flagOk==false ) return;
       g.setFont( Aladin.LBOLD );
@@ -1256,11 +1296,13 @@ public final class Select extends JComponent  implements
    /** Si nécessaire décale la scrollbar du select pour montrer le "slide"
     * correspondant au plan de base */
    protected void showSelectedPlan() {
-      int n = a.calque.getIndexPlanBase();
+      int n = a.calque.getFirstSelected();
+//      int n = a.calque.getIndexPlanBase();
       int lastPlan = a.calque.scroll.getLastVisiblePlan();
       int firstPlan = a.calque.scroll.getFirstVisiblePlan();
+      int nb = a.calque.scroll.getNbVisiblePlan();
       if( lastPlan<0 || firstPlan<0 || n<0 ) return;
-      int nb = lastPlan-firstPlan;
+//      int nb = lastPlan-firstPlan;
       if( n<firstPlan ) a.calque.scroll.setValue(n+nb);
       else if( n>lastPlan ) a.calque.scroll.setValue(n);
    }
@@ -1268,7 +1310,15 @@ public final class Select extends JComponent  implements
    private boolean firstUpdate=true;
 
    public void paintComponent(Graphics g) {
-
+      
+      if( a.calque.scrollAdjustement() ) {
+         repaint();
+         return;
+      }
+      
+      // Pas très joli
+      a.calque.zoom.opacitySlider.repaint();
+      
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {
          Aladin.makeCursor(a,Aladin.DEFAULT);
@@ -1280,11 +1330,11 @@ public final class Select extends JComponent  implements
       hsp= hs-eyeHeight-gapB;        // Hauteur de la portion pour les plans
 
       // On prepare le fond
-      g.setColor( Aladin.LBLUE );
+      g.setColor( getBackground() );
       g.fillRect(0,0,ws,hs);
 
       // Le pourtour
-      Util.drawEdge(g,ws,hs);
+      if( getBackground()!=a.getBackground() ) Util.drawEdge(g,ws,hs);
 
       // Le clip Rect pour ne pas depasser
       g.clipRect(2,2,ws-3,hs-3);
@@ -1317,18 +1367,24 @@ public final class Select extends JComponent  implements
 
       ViewSimple v = a.view.getCurrentView();
       int y=hs-22;
-      int j;
-      for( j=a.calque.scroll.getLastVisiblePlan(); j>=0 && y>eyeHeight; j-- ) {
+      int j,n;
+      int nbPlanVisible=0;
+      for( n=0; n<plan.length && plan[n].type==Plan.NO; n++);
+      for( j=a.calque.scroll.getLastVisiblePlan(); j>=n && y>eyeHeight; j-- ) {
          if( plan[j].slide==null ) plan[j].slide=new Slide(a,plan[j]);
          Slide s = plan[j].slide;
          slides.addElement(s);
          int mode = newRef==plan[j] || (v!=null && plan[j]==v.pref)?Slide.NOIR:
             plan[j].ref?Slide.GRIS:Slide.VIDE;
          try {
-            y=s.draw(g ,y,this.x,flagDrag==VERTICAL?-1:this.y,planRGB,mode);
+            int y1=s.draw(g ,y,this.x,flagDrag==VERTICAL?-1:this.y,planRGB,mode);
+            if( y1!=y ) nbPlanVisible++;   // Si on n'avance pas, c'est que le plan est "dans" un folder fermé
+            y=y1;
          } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
       }
       a.calque.scroll.setFirstVisiblePlan(j+1);
+      a.calque.scroll.setNbVisiblePlan(nbPlanVisible);
+      a.calque.scroll.setRequired(y<eyeHeight || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
 
       // Dans le cas d'un deplacement de plan
       if( flagDrag==VERTICAL ) moveLogo(g);

@@ -23,6 +23,7 @@ package cds.aladin;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Scrollbar;
 import java.io.EOFException;
 import java.io.InputStream;
@@ -156,7 +157,7 @@ public final class Calque extends JPanel implements Runnable {
    protected void createChaine() {
 
    }
-
+   
 //   protected Source sourceToShow; // source à montrer (thomas, votech)
 //   protected Source osourceToShow; // ancienne source à montrer (thomas, votech)
 
@@ -182,19 +183,35 @@ public final class Calque extends JPanel implements Runnable {
       // Panel principal : contient le selecteur de plans et le zoom
       setLayout( new BorderLayout(0,5) );
 
-      JPanel y = new JPanel(new BorderLayout(5,0));
-      y.add(zoom.getZoomChoicePanel(),"East");
+      JPanel y = new JPanel(new BorderLayout(Aladin.NEWLOOK_V7?10:5,0));
+      y.add( zoom.getZoomChoicePanel(),BorderLayout.EAST);
 
       JPanel x = new JPanel(new BorderLayout(2,2));
-      x.add(y,"North");
-      x.add(zoom,"Center");
+      if( !zoom.SLIDER_LOOK ) x.add(y,BorderLayout.NORTH);
+      x.add(zoom,BorderLayout.CENTER);
 
-      add("Center",select);
-      add("East",scroll);
-      add("South",x);
+      add(select,BorderLayout.CENTER);
+      if( !Aladin.NEWLOOK_V7 ) add(scroll,BorderLayout.EAST);
+      add(x,BorderLayout.SOUTH);
+   }
+   
+   /** Insère ou enlève la scrollbar verticale de la pile si nécessaire
+    * @return true s'il y a eu un changement d'état
+    */
+   protected boolean scrollAdjustement() {
+      int lastPlan = scroll.getLastVisiblePlan();
+      if( lastPlan==-1 ) return false;
+      boolean hideScroll = !scroll.getRequired();
+
+//      System.out.println("lastPlan="+lastPlan+" required="+scroll.getRequired()+" value="+scroll.getValue()+" ["+scroll.getMinimum()+".."+scroll.getMaximum()+"] hideScroll => "+hideScroll);
+      if( scroll.isShowing() && hideScroll  ) { remove(scroll); validate(); return true; }
+      else if( !scroll.isShowing() && !hideScroll  ) { add(scroll,"East"); validate(); return true; }
+      return false;
    }
 
-   public Dimension getPreferredSize() { return new Dimension(select.getPreferredSize().width- scroll.getPreferredSize().width,200); }
+   public Dimension getPreferredSize() { 
+      return new Dimension(select.getPreferredSize().width- (Aladin.NEWLOOK_V7 && scroll.isShowing()?scroll.getPreferredSize().width:0),200);
+   }
 
    /** Verrou d'accès à plan[] */
    volatile protected Object pile = new Object();
@@ -1001,14 +1018,15 @@ public final class Calque extends JPanel implements Runnable {
 
       // Réaffichage éventuel du formulaire courant pour convertir
       // la position par défaut
-      if( aladin.dialog.isVisible() ){
+//      if( aladin.dialog.isVisible() ){
          Server srv = aladin.dialog.server[aladin.dialog.current];
 
          // on le vide juste avant en cas de formulaire avec tree, sinon impossible à modifier le target
          if( srv.target!=null && srv.tree!=null ) srv.target.setText("");
 
-//         aladin.dialog.setVisible(true);
-      }
+//      }
+         aladin.dialog.adjustParameters();
+         aladin.dialog.resume();
       
       // Conversion de la position d'un cut out pour le frameInfo courant (s'il y a lieu)
       if( aladin.frameInfo!=null ) aladin.frameInfo.initTarget();
@@ -1110,7 +1128,7 @@ public final class Calque extends JPanel implements Runnable {
 //              || p.type==Plan.APERTURE || p.type==Plan.FOV
 //              || p.type==Plan.TOOL && !Projection.isOk(p.projd)) ;
    }
-
+   
   /** Positionne le plan comme etant de reference.
    * On passe l'objet plan lui-meme (pas terrible... je sais, mais il faut
    * que je retrouve son numero).
@@ -1206,6 +1224,19 @@ public final class Calque extends JPanel implements Runnable {
          if( setPlanRef(p) ) aladin.view.newView();
       } else if( !aladin.view.tryToShow(p) ) p.setActivated(true);
       if( flagPaint ) repaintAll();
+   }
+   
+   /** Désactivation de tous les plans BG au-dessus du plan passé en paramètre qui le cache */
+   protected void switchOffBGOver(Plan p) {
+      Plan [] plan = getPlans();
+      int n = getIndex(p);
+      for( int i=n-1; i>=0; i-- ) {
+         Plan pc = plan[i];
+         if( !pc.flagOk ) continue;
+         if( !(pc instanceof PlanBG && !pc.isOverlay()) ) continue;
+         pc.setActivated(false);
+      }
+      p.setActivated(true);
    }
 
    private boolean memoClinDoeil=false; // Vrai si on a mémorisé un état via le clin d'oeil
@@ -1474,6 +1505,13 @@ public final class Calque extends JPanel implements Runnable {
    public Plan getPlanBase() {
       Plan p = getPlanRef();
       return p!=null && (p.isImage() || p instanceof PlanBG) ?p: null;
+   }
+   
+   /** true si le plan de référence est un plan en mode Allsky 
+    * => changement de centre de projection */
+   public boolean isModeAllSky() {
+      Plan p = getPlanRef();
+      return p!=null && p instanceof PlanBG;
    }
 
    /** Retourne le prochain plan image dans la pile */
@@ -1874,7 +1912,7 @@ public final class Calque extends JPanel implements Runnable {
                   || pc.type==Plan.APERTURE
                   || pc.type==Plan.FOLDER
                   || pc.isTool() )
-                  && t1.equals(pc.getTargetQuery())); i++);
+                  && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
       if( i>plan.length || i<=0 || i-1==n ) return n;
       permute(plan[n],plan[i-1]);   //On permute les plans pour prendre en compte le folder
       p.folder=folder;
@@ -1887,7 +1925,7 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected void bestPlacePost(Plan p) {
       int i;
-      if( !p.isImage() || !Projection.isOk(p.projd) ) return;
+      if( p.noBestPlacePost || p.isImage() || !Projection.isOk(p.projd) ) return;
 //System.out.println("BestPlacePost pour "+p+" "+Thread.currentThread().getId());
 
       int folder = p.folder;
@@ -1969,6 +2007,9 @@ public final class Calque extends JPanel implements Runnable {
              label = prepareLabel(label);
              if( label==null ) label="["+p.label+"]";
              pc.setLabel(label);
+             
+             // VOIR MODIF PF JAN 12 ci-dessous (ligne à supprimer pour revenir à l'état antérieur)
+             pc.isOldPlan=false;
 
           }  else {
              p.isOldPlan=true;
@@ -1978,13 +2019,17 @@ public final class Calque extends JPanel implements Runnable {
 
        suiteNew(pc);
 
-       if( flagIns ) {
-          pc.selected=false;
-          pc.active=false;
-       } else {
-          pc.folder=0;
-          pc.planReady(true);
-       }
+       // MODIF PF JAN 12 pour que le nouveau plan deviennent celui de référence
+//       if( flagIns ) {
+//          pc.selected=false;
+//          pc.active=false;
+//       } else {
+//          pc.folder=0;
+//          pc.planReady(true);
+//       }
+       if( !flagIns ) pc.folder=0;
+       pc.planReady(true);
+       
        return pc;
     }
 
@@ -2316,12 +2361,14 @@ public final class Calque extends JPanel implements Runnable {
             }
          }
       }
+      
+//      p.planReady(true);
 
-      // Plan actif par défaut
-      if( setPlanRef(p) ) {
-         aladin.view.newView();
-         repaintAll();
-      }
+//      // Plan actif par défaut
+//      if( setPlanRef(p) ) {
+//         aladin.view.newView();
+//         repaintAll();
+//      }
    }
 
    /**
@@ -2597,7 +2644,7 @@ public final class Calque extends JPanel implements Runnable {
    * @param useOnlyCurrentZoom  - calcul sur la vue courante uniquement ?
    * @param indiceCouleurs  - tableau des indices dans Couleur.DC des couleurs de chaque niveau
    */
-   protected int newPlanContour(String label, double[] levels,
+   protected int newPlanContour(String label, PlanImage pimg, double[] levels,
                                 ContourAlgorithm cAlgo, boolean useSmoothing,
                                 int smoothingLevel, boolean useOnlyCurrentZoom,
                                 boolean reduceNoise, Color[] couleurs) {
@@ -2605,7 +2652,7 @@ public final class Calque extends JPanel implements Runnable {
       if (levels == null) plan[n] = new PlanContour(aladin,label);
       else {
          Color coul = PlanContour.getNextColor(aladin.calque);
-         plan[n] = new PlanContour(aladin,label, levels, cAlgo, useSmoothing,
+         plan[n] = new PlanContour(aladin,label, pimg, levels, cAlgo, useSmoothing,
                                    smoothingLevel, useOnlyCurrentZoom,
                                    reduceNoise, couleurs, coul);
       }
@@ -3053,7 +3100,7 @@ public final class Calque extends JPanel implements Runnable {
          } catch( Exception e ) { e.printStackTrace(); }
       }
       else if( gSky!=null && gSky.getRadius()!=-1 ) rad=gSky.getRadius();
-      else if( target==null && rad==-1 ) {
+      else if( (target==null || target.length()==0) && rad==-1 ) {
          try {
             rad = aladin.view.getCurrentView().getTaille();
          } catch( Exception e ) { }
@@ -3162,7 +3209,7 @@ public final class Calque extends JPanel implements Runnable {
       aladin.view.adjustViews(p);
 
       if( select!=null ) select.clinDoeil();
-      aladin.toolbox.toolMode();
+      aladin.toolBox.toolMode();
    }
 
   /** Test d'un eventuel plan selectionne (label enfonce)
@@ -3263,7 +3310,7 @@ public final class Calque extends JPanel implements Runnable {
   /** Retourne le numero du premier plan selectionne
    * @return le numero du plan, <I>-1</I> si aucun
    */
-    private int getFirstSelected() {
+    protected int getFirstSelected() {
        for( int i=0; i<plan.length; i++ ) {
           if( plan[i].selected ) return i;
        }
@@ -3290,6 +3337,14 @@ public final class Calque extends JPanel implements Runnable {
        for( int i=0; i<plan.length; i++ ) {
           if( plan[i].selected
                 && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return (PlanImage)plan[i];
+       }
+       return null;
+   }
+
+    /** Retourne le premier plan Image sélectionné, ou null si aucun */
+    protected PlanImage getFirstSelectedSimpleImage() {
+       for( int i=0; i<plan.length; i++ ) {
+          if( plan[i].selected && plan[i].isImage() ) return (PlanImage)plan[i];
        }
        return null;
    }
@@ -3350,15 +3405,64 @@ public final class Calque extends JPanel implements Runnable {
           plan[i].setOpacityLevel(opacity);
        }
     }
+    
+    
+    /** Change pour toute la pile le niveau d'opacité des images */
+    protected void setOpacityLevel(float opacity) {
+       Plan [] plan = getPlans();
+       for( int i=0; i<plan.length; i++ ) {
+          if( !plan[i].flagOk || !plan[i].selected ) continue;
+          plan[i].setOpacityLevel(opacity);
+       }
+    }
+
+    /** Détermine si le plan doit être activé comme un plan de référence ou simplement afficher en overlay */
+    protected boolean mustBeSetPlanRef(Plan p) {
+       boolean setRef=false;
+       
+       // prochaine vue à utiliser
+       ViewSimple v = aladin.view.viewSimple[ aladin.view.getLastNumView(p) ];
+       
+       // Juste pour du débuging
+       String sDebug=null;
+
+       // La pile est vide => ref
+       if( aladin.calque.isFreeX(p) ) { setRef=true; sDebug="Stack Vide"; }
+
+       // Il s'agit d'un simple remplacement de plan => activate 
+       else if( p.isOldPlan ) { setRef=false; sDebug="Flag IsOldPlan=true"; }
+
+       // Dans une case vide sans être un simple overlay => ref
+       else if( v.isFree() && !p.isOverlay() ) { setRef=true; sDebug="Image dans la prochaine view vide"; }
+
+       // Le plan de ref est une image normal et on charge une autre image => ref
+       else if( v.pref!=null && v.pref.isImage() && p.isImage() ) { setRef=true; sDebug="Image sur image"; }
+
+       // Le plan de ref est catalogue normal  et on charge image ou un plan allsky => ref
+       else if( v.pref!=null && (v.pref.isSimpleCatalog() && (p.isImage() || p instanceof PlanBG)) ) { setRef=true; sDebug="Image ou Allsky sur catalogue"; }
+
+       // Le plan de ref n'est pas allsky et le catalogue n'est pas visible
+       else if( v.pref!=null && !(v.pref instanceof PlanBG) && p.isSimpleCatalog() && !p.isViewable() ) { setRef=true; sDebug="Catalogue non visible autrement"; }
+       
+       // Dans le cas d'un multiview on priviligiera la création du plan
+       else if( aladin.view.isMultiView() && p.isImage() ) { setRef=true; sDebug="Image sur multivue"; }
+       
+       aladin.trace(4,"Calque.mustBeSetPlanRef("+p.label+") => "+setRef+(sDebug!=null?" ("+sDebug+")":""));
+       return setRef;
+    }
+
 
     /** Retourne true si le plan passé en paramètre peut être transparent
      *  Vérifie que la compatibilité des projections
      */
     protected boolean canBeTransparent(Plan p) {
        if( p==null ) return false;
-       if( p.isCatalog() ) return true;
+       if( p.isOverlay() ) {
+          p.setDebugFlag(Plan.CANBETRANSP,true);
+          return true;
+       }
        if( (p.isImage() || p.type==Plan.ALLSKYIMG) && !aladin.configuration.isTransparent() ) return false;
-       if( p.type==Plan.ALLSKYIMG && !p.ref && p.flagOk && !p.isUnderImgBkgd() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+       if( p.type==Plan.ALLSKYIMG && /* getIndex(p)!=plan.length-1 */ !p.ref && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
 
        if( !p.flagOk  || !planeTypeCanBeTrans(p)
              || !Projection.isOk(p.projd) || p.isRefForVisibleView()
@@ -3426,9 +3530,10 @@ public final class Calque extends JPanel implements Runnable {
    public void repaintAll() {
    	  if( select!=null  ) {
          select.repaint();
+         zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();
-         aladin.toolbox.toolMode();
+         aladin.toolBox.toolMode();
    	  }
    }
 

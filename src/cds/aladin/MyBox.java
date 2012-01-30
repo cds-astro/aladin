@@ -20,14 +20,9 @@
 
 package cds.aladin;
 
-import cds.astro.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -37,9 +32,10 @@ import javax.swing.*;
  * Provient d'un découplage de la classe Localisation
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.1 : jan 2012 : Ajout de la classe Text pour la petite croix
  * @version 1.0 : 22 février 2004 : création
  */
-public abstract class MyBox extends JPanel implements MouseListener {
+public abstract class MyBox extends JPanel implements MouseListener,MouseMotionListener {
    static protected final int SAISIE    = 0;
    static protected final int AFFICHAGE = 1;
 
@@ -55,9 +51,9 @@ public abstract class MyBox extends JPanel implements MouseListener {
 
 
    protected Aladin aladin;     // Reference
-   protected JTextField pos;          // Champ en mode affichage
+   protected Text pos;          // Champ en mode affichage
 //   private LCoord pos;
-   protected JTextField text;	// Champ en mode saisie
+   protected Text text;	// Champ en mode saisie
    private int mode = AFFICHAGE;// Mode de l'affichage courant
    private CardLayout cl;
    private JPanel cardPanel;
@@ -77,43 +73,41 @@ public abstract class MyBox extends JPanel implements MouseListener {
       c.addMouseListener(this);
 
       // Creation du label contenant la valeur de la position courant
-      pos = new JTextField(30);
+      pos = new Text("",30);
       pos.setFont(FONT);
 //      pos.setForeground( Color.blue );
       pos.setForeground( Color.gray );
       pos.addMouseListener(this);
+//      pos.addMouseMotionListener(this);
  
       // Creation d'un champ de saisie
-      text = new JTextField(30);
+      text = new Text("",30);
       text.setFont(FONT);
-//      text.setForeground( Color.magenta );
+      text.setForeground( Aladin.GREEN );
       text.addMouseListener(this);
+      text.addMouseMotionListener(this);
 
       cardPanel = new JPanel(cl=new CardLayout(0,0));
       cardPanel.add(LABEL_AFFICHAGE,pos);
       cardPanel.add(LABEL_SAISIE,text);
       
       JPanel p2 = new JPanel(new BorderLayout(0,0) );
-      p2.add( label=new Lab("   "+titre),BorderLayout.WEST);
+      p2.add( label=new Lab(titre),BorderLayout.WEST);
       p2.add( cardPanel,BorderLayout.CENTER);
-      JButton b = new JButton(aladin.chaine.getString("CLEAR"));
-      b.setMargin(new Insets(0,2,0,2));
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { text.setText(""); text.requestFocusInWindow(); }
-      });
-      p2.add(b,BorderLayout.EAST);
       
       setLayout(new BorderLayout(3,3));
       add(p2,BorderLayout.CENTER);
-
+      
       if( !Aladin.OUTREACH ) {
          JPanel p1 = new JPanel( new BorderLayout(0,0));
-         p1.add( new Lab("   "+aladin.chaine.getString("FRAME")),BorderLayout.WEST );
+         p1.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
+         p1.add( new Lab(aladin.chaine.getString("FRAME")),BorderLayout.WEST );
          p1.add( c,BorderLayout.EAST );
          add(p1,BorderLayout.EAST);
       }
       
       addMouseListener(this);
+      setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
    }
    
    public void setEnabled(boolean flag) { 
@@ -124,11 +118,23 @@ public abstract class MyBox extends JPanel implements MouseListener {
       label.setForeground(flag?Aladin.DARKBLUE:Color.lightGray);
       c.setEnabled(flag);
    }
+   
+   public void mouseDragged(MouseEvent e) { }
+   public void mouseMoved(MouseEvent e) {
+      Cursor nc,c = text.getCursor();
+      if( text.in(e.getX(),e.getY()) )  nc = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+      else nc = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
+      if( nc.equals(c) ) return;
+      text.setCursor(nc);
+   }
 
    public void mouseClicked(MouseEvent e) {}
    public void mousePressed(MouseEvent e) {}
    public void mouseEntered(MouseEvent e) { if( aladin.inHelp ) aladin.help.setText(aladin.chaine.getString("LCoord.HELP")); }
-   public void mouseReleased(MouseEvent e) { if( aladin.inHelp ) aladin.helpOff(); }
+   public void mouseReleased(MouseEvent e) {
+      if( aladin.inHelp ) aladin.helpOff();
+      if( text.in(e.getX(),e.getY()) ) reset();
+   }
    public void mouseExited(MouseEvent e) {}
    
    /** Retourne true si le popup est déroulé */
@@ -199,6 +205,44 @@ public abstract class MyBox extends JPanel implements MouseListener {
 //      public Dimension getPreferredSize() {
 //         return new Dimension(60,super.getPreferredSize().height);
 //      }
+   }
+   
+   /** Classe pour un JTextField avec reset en bout de champ (petite croix rouge) */
+   class Text extends JTextField {
+      private Dimension dim=null;
+      private Rectangle cross=null;
+      
+      Text(String t,int width) {
+         super(t,width);
+         dim = new Dimension(width,super.getPreferredSize().height);
+      }
+      
+      public Dimension getPreferredSize() { return dim; }
+      
+      boolean in(int x,int y) {
+         if( cross==null || text.getText().length()==0) return false;
+//         return cross.contains(x,y);
+         return x>=cross.x;
+      }
+      
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         drawCross(g,getWidth()-X-8,getHeight()/2-X/2);
+      }
+      
+      static private final int X = 6;
+      private void drawCross(Graphics g, int x, int y) {
+         g.setColor( text.getText().length()>0 ? Color.red.darker() : Color.gray );
+         g.drawLine(x,y,x+X,y+X);
+         g.drawLine(x+1,y,x+X+1,y+X);
+         g.drawLine(x+2,y,x+X+2,y+X);
+         g.drawLine(x+X,y,x,y+X);
+         g.drawLine(x+X+1,y,x+1,y+X);
+         g.drawLine(x+X+2,y,x+2,y+X);
+         cross = new Rectangle(x,y,X,X);
+      }
+      
+      
    }
    
 }

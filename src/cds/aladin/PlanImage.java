@@ -52,6 +52,8 @@ import java.util.zip.Inflater;
  */
 public class PlanImage extends Plan {
    static protected int LASTID=0;    // Dernier number d'image donné
+   
+   static private float DEFAULT_OPACITITY = 1f;
 
    //Le separateur du path / ou \
    static String DEFIMG,LOOKCALIB,INPROGRESS,OK,FAIL,IMGERR,ERROR,CALIBERR,
@@ -229,7 +231,8 @@ public class PlanImage extends Plan {
        this.imgNode = imgNode;
        flagSkip = skip;
        this.forPourcent = forPourcent;
-       if( forPourcent!=null ) isOldPlan=true;  // Subtilité pour éviter un Calque.bestPlacePost()
+//       if( forPourcent!=null ) isOldPlan=true;  // Subtilité pour éviter un Calque.bestPlacePost()
+       if( forPourcent!=null ) noBestPlacePost=true;
        flagWaitTarget=true;  // voir Command.waitingPlanInProgress
 
        // Recuperation du nom du plan a partir du nom du fichier
@@ -374,7 +377,7 @@ public class PlanImage extends Plan {
        cmControl  = new int[3];
        cmControl[0] = 0; cmControl[1]=128; cmControl[2]=255;
        transfertFct = LINEAR;
-       opacityLevel=0.0f;
+       opacityLevel=DEFAULT_OPACITITY;
    }
 
    /** Duplication d'un plan */
@@ -405,7 +408,7 @@ public class PlanImage extends Plan {
       this.fmt     = fmt;
       this.res     = res;
       this.from    = from;
-      this.opacityLevel = 0.0f;
+      this.opacityLevel = DEFAULT_OPACITITY;
       type         = IMAGE;
       setLabel(label);
       c            = Color.black;
@@ -1689,7 +1692,6 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
             setExtName();
             changeImgID();
             aladin.view.setRepere(this);
-            aladin.endMsg();
          }
 
 

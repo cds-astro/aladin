@@ -227,8 +227,6 @@ public class PlanCatalog extends Plan {
          setFilter(filterIndex);
       }
 
-      aladin.endMsg();
-
       if( getNbTable()>1 ) aladin.calque.splitCatalog(this);
 
      callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.SUCCESS, null));

@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import javax.swing.JPanel;
+
 /**
  * Le formulaire d'interrogation de l'arbre des Allskys
  *
@@ -35,6 +37,15 @@ public class ServerAllsky extends ServerTree  {
       type        = APPLI;
       aladinLabel = "Allsky";
       aladinLogo  = "Allsky.gif";
+   }
+   
+   protected int makeTarget(int y) {
+      JPanel tPanel = new JPanel();
+      int h = makeTargetPanel(tPanel,0);
+      tPanel.setBackground(Aladin.BLUE);
+      tPanel.setBounds(0,y,XWIDTH,h); y+=h;
+      add(tPanel);
+      return y;
    }
 
    @Override
@@ -52,6 +63,7 @@ public class ServerAllsky extends ServerTree  {
    protected int createPlane(String target,String radius,String criteria, String label, String origin) {
       String survey;
       int defaultMode=PlanBG.UNKNOWN;
+      
       if( criteria==null || criteria.trim().length()==0 ) survey="DSS colored";
       else {
          Tok tok = new Tok(criteria,", ");
@@ -94,5 +106,10 @@ public class ServerAllsky extends ServerTree  {
       freeTree();
       populateTree( aladin.glu.vGluSky.elements() );
    }
+   
+   public void submit(TreeNode n) {
+      aladin.calque.newPlanBG((TreeNodeAllsky)n, null, getTarget(false), getRadius(false) );
+   }
+
 
 }

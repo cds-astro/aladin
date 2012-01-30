@@ -843,7 +843,7 @@ public void layout() {
          grab.setEnabled(grabEnable);
       }
    }
-
+   
    /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
     * que c'est une année décimale et on la convertit en JD, sinon on laisse
     * tel que.

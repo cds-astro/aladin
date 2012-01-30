@@ -49,7 +49,9 @@ public class PlanMoc extends PlanBGCat {
    /** Retourne le Moc */
    protected HealpixMoc getMoc() { return moc; }
    
-   protected void suiteSpecific() { }
+   protected void suiteSpecific() {
+      isOldPlan=false;
+   }
    protected boolean isLoading() { return false; }
    protected boolean isSync() { return isReady(); }
    protected void reallocObjetCache() { }

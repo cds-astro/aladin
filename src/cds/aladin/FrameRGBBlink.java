@@ -261,14 +261,14 @@ public void show() {
    protected void toolButtonUp() {
       int n=getToolNumber();
       if( n<0 ) return;
-      a.toolbox.setMode(n, Tool.UP);
+      a.toolBox.setMode(n, Tool.UP);
    }
 
    /** Mise a jour de la fenetre si necessaire */
    protected void maj() {
       int n = getToolNumber();
       if( n==-1 ) return;
-      if( n==-2 || a.toolbox.tool[n].mode==Tool.DOWN ) {
+      if( n==-2 || a.toolBox.tool[n].mode==Tool.DOWN ) {
          PlanImage pi[]=getPlan();
          if( !flagHide && pi.length==choicePlan.length ) return; // A priori inutile
          show();

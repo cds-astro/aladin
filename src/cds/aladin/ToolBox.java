@@ -107,7 +107,7 @@ public final class ToolBox extends JComponent implements
    // Les parametres generaux
    static int W        = 34;      // Largeur d'un bouton
    static int HMIN     = W-5;     // Hauteur minimale d'un bouton
-   static int HREC     = W;       // Hauteur recommandee d'un bouton
+   static int HREC     = W+2;       // Hauteur recommandee d'un bouton
    static int L        = 3;       // Demi-taille du carre de changt de prop.
    static int ICONEGAP = 12;      // Nombre de pixels reserves pour le changement de proportions
 
@@ -291,7 +291,8 @@ public final class ToolBox extends JComponent implements
 
       // Si la vue courante a un plan de référence qui n'a pas de pixels accessibles
       // on invalide CONTOUR
-      if( v==null || v.isFree() || !v.pref.hasAvailablePixels() || v.pref instanceof PlanBG ) {
+//      if( v==null || v.isFree() || !v.pref.hasAvailablePixels() || v.pref instanceof PlanBG ) {
+      if( aladin.calque.getFirstSelectedSimpleImage()==null ) {
          mode[ToolBox.CONTOUR]=Tool.UNAVAIL;
       }
       
@@ -300,12 +301,15 @@ public final class ToolBox extends JComponent implements
 
       // Si la vue courante a un plan de référence qui n'est pas une image simple
       // ni RGB on invalide HIST et PHOT
-      if( v==null || v.isFree()
-        || !v.pref.hasAvailablePixels()
-        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-      if( v!=null && !v.isFree() && v.pref instanceof PlanBG && ((PlanBG)v.pref).color ) {
-         mode[ToolBox.HIST]=Tool.UNAVAIL;
-      }
+      Plan p = aladin.calque.getFirstSelectedPlan();
+      if( p==null || !p.hasAvailablePixels() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+//      if( v==null || v.isFree() 
+//            || !v.pref.hasAvailablePixels()
+//        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+     
+//      if( v!=null && !v.isFree() && v.pref instanceof PlanBG && ((PlanBG)v.pref).color ) {
+//         mode[ToolBox.HIST]=Tool.UNAVAIL;
+//      }
 
       if( v!=null && !v.isFree() && (v.pref instanceof PlanBG || v.northUp) ) mode[ToolBox.WEN]=Tool.UNAVAIL;
       
@@ -620,7 +624,7 @@ public final class ToolBox extends JComponent implements
          H = hs/nbtoolParCol;                     // hauteur qu'aurait un bouton
          if( H>=HMIN ) break;
       }
-
+      
       // On ajuste la hauteur du bouton pour equilibrer les colonnes
       // en jouant sur la taille du bouton (entre minimal et recommandee)
       for( H=HREC; H>HMIN ; H--) {

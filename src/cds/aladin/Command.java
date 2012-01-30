@@ -68,7 +68,7 @@ public final class Command implements Runnable {
 
    private String lastCmd="";		// Dernière commande exécutée
    
-   protected boolean waitSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
+   protected boolean syncNeedSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
    
    private Thread thread;   // Le thread de lecture des commandes
    JFrame robotInfo;
@@ -574,6 +574,11 @@ public final class Command implements Runnable {
          return false;
       }
       
+//      if( syncNeedSave ) {
+//         a.trace(4,"Command.isSync() : waiting save or export...");
+//         return false;
+//      }
+      
       if( !isSyncServer() ) return false;
       if( !isSyncPlan() ) return false;
       
@@ -640,7 +645,7 @@ public final class Command implements Runnable {
             inSync = false;
             return;
          }
-         Util.pause(500);
+         Util.pause(100);
       }
       inSync = false;
    }
@@ -2889,14 +2894,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                }
            }
       else if( cmd.equalsIgnoreCase("backup") ) {
-              waitSave=true;
+              syncNeedSave=true;
               if( a.save==null ) a.save = new Save(a);
               (a.save).saveAJ(param);
-              waitSave=false;
+              syncNeedSave=false;
            }
 
       else if( cmd.equalsIgnoreCase("save") ) {
-              waitSave=true;
+              syncNeedSave=true;
               if( a.save==null ) a.save = new Save(a);
 
               String tmp=null;
@@ -2990,7 +2995,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
               if( file==null && !a.NOGUI) {
                  tmp="saving on standard output required NOGUI mode (-nogui parameter)";
                  a.warning("save error: "+tmp,1);
-                 waitSave=false;
+                 syncNeedSave=false;
                  return tmp;
               } else file = Tok.unQuote(file);
 
@@ -3016,10 +3021,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
               if( flagROI ) a.view.saveROI(file,w,h,mode);
               else (a.save).saveView(file,w,h,mode,qual);
-              waitSave=false;
+              syncNeedSave=false;
            }
       else if( cmd.equalsIgnoreCase("export") ) {
-         waitSave=true;
+         syncNeedSave=true;
          try {
             if( param!=null && param.startsWith("-ROI") ) {
                String prefix = null;
@@ -3059,7 +3064,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( p==null ) {
                   String tmp="nothing to export";
                   printConsole("!!! export error: "+tmp);
-                  waitSave=false;
+                  syncNeedSave=false;
                   return tmp;
                }
 
@@ -3094,12 +3099,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                else {
                   String tmp="plane type ["+Plan.Tp[p.type]+"] not supported";
                   printConsole("!!! export error: "+tmp);
-                  waitSave=false;
+                  syncNeedSave=false;
                   return tmp;
                }
             }
          } catch( Exception e ) { if( a.levelTrace>=3 ) e.printStackTrace(); }
-         waitSave=false;
+         syncNeedSave=false;
       }
       else if( cmd.equalsIgnoreCase("trace") ) {
                if( param.equals("off") || param.equals("0")) {
@@ -3229,7 +3234,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
 
 
-               a.calque.newPlanContour(label!=null?label:"Contours",levels,new ContourPlot(),useSmoothing,2,currentZoomOnly,true,null);
+               a.calque.newPlanContour(label!=null?label:"Contours",null,levels,new ContourPlot(),useSmoothing,2,currentZoomOnly,true,null);
              }
 
       // thomas
@@ -3796,10 +3801,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                long msw = System.currentTimeMillis() -t;
                double debitw = (GB/(msw/1000.))/(1024*1024);
                
-               println("testperf cache flush...");
-               t = System.currentTimeMillis();
-               testDiskFlush(new File("/"),GB/8);
-               long msf = System.currentTimeMillis() -t;
+//               println("testperf cache flush...");
+//               t = System.currentTimeMillis();
+//               try {
+//                  testDiskFlush(new File("/"),GB/8);
+//               } catch( Exception e1 ) {
+//                  e1.printStackTrace();
+//               }
+//               long msf = System.currentTimeMillis() -t;
 //               toStdoutln(" reading 1GB tree file in "+Util.getTemps(msf));
               
                print("testperf disk reading...");

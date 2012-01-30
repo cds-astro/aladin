@@ -36,12 +36,14 @@ import java.text.DateFormat;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.Box;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import cds.aladin.bookmark.Bookmarks;
+import cds.aladin.prop.Filet;
 import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -64,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Stack control more adaptated to allsky mode
  * @beta    <LI> DS9 region definition support (as simple Aladin script commands)
  * @beta    <LI> TSV,CSV improvements (CSV Excel support)
  * @beta    <LI> Bug fix: properties window for HEALPix files with many FIELDS now shows properly
@@ -94,6 +97,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Measurement selection with hidden columns
  * @beta    <LI> Script command synchronisation also for allsky HEALPix surveys
  * @beta    <LI> Better manual astrometrical calibration
  * @beta    <LI> Support for 64 bit integer binary tables (FITS & VOTable)
@@ -123,6 +127,8 @@ public class Aladin extends JApplet
 
 
 //   static final boolean VP=true;
+   
+    static boolean NEWLOOK_V7=true;
 
     static final Dimension SCREENSIZE= Toolkit.getDefaultToolkit().getScreenSize();
     static final boolean LSCREEN= SCREENSIZE.width>1000;
@@ -132,7 +138,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.076";
+    static public final    String VERSION = "v7.500";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -323,7 +329,7 @@ public class Aladin extends JApplet
     Mesure mesure;                // Gere la "Frame of measurements"
     MySplitPane splitH;           // Gère la séparation mesure/Vue
     Search search;                // Gère le bandeau de recherche dans les mesures
-    public ToolBox toolbox;       // Gere la "Tool bar"
+    public ToolBox toolBox;       // Gere la "Tool bar"
     public Calque calque;         // Gere a la fois les plans et le zoom
     Localisation localisation;    // Gere l'affichage de la "Localisation"
     Logo logo;                    // Gere le "logo"
@@ -1795,7 +1801,8 @@ public class Aladin extends JApplet
 
        // Mise à jour des langues supportées
        configuration.loadRemoteLang();
-
+       
+       
        JButton b;
        ButtonGroup bg = new ButtonGroup();
        searchData = b = new JButton(new ImageIcon(getImagette("Load.gif")));
@@ -1872,11 +1879,11 @@ public class Aladin extends JApplet
 
        // Creation du menu
        if( !NOGUI ) {
-       trace(1,"Creating the Menu");
-       JMenuBar jBar = createJBar( createMenu() );
-       // TODO : que faire en mode applet ??
-       if( STANDALONE && macPlateform && !isApplet() ) f.setJMenuBar(jBar);
-       else setJMenuBar(jBar);
+          trace(1,"Creating the Menu");
+          JMenuBar jBar = createJBar( createMenu() );
+          // TODO : que faire en mode applet ??
+          if( STANDALONE && macPlateform && !isApplet() ) f.setJMenuBar(jBar);
+          else setJMenuBar(jBar);
        }
 
        trace(1,"Creating the main interface");
@@ -1886,29 +1893,47 @@ public class Aladin extends JApplet
        bigView = new JPanel(cardView);
        bigView.add("Help",help);
        bigView.add("View",view);
+       
+       JPanel gauche1 = new JPanel( new BorderLayout(3,0));
+       gauche1.add(bigView,BorderLayout.CENTER);
 
        // Désactivation des éléments de menus et des boutons non encore accessible
        setButtonMode();
 
        // Le panel gauche : contient la boite a boutons et les calques
        final JPanel gauche = new JPanel(new BorderLayout(3,0));
-       makeAdd(gauche,toolbox,"West");
-       makeAdd(gauche,calque,"Center");
+       if( NEWLOOK_V7 ) {
+          JPanel panelLogo = new JPanel();
+          panelLogo.add(logo);
+          gauche.add(panelLogo, BorderLayout.NORTH );
+       }
+       gauche.add(calque,BorderLayout.CENTER);
+       
+       JPanel gauche2;
+       if( !NEWLOOK_V7 ) gauche2=gauche;
+       else {
+          gauche2 = new JPanel(new BorderLayout(0,0));
+          gauche2.add(toolBox,BorderLayout.WEST);
+          gauche2.add(gauche,BorderLayout.CENTER);
+       }
 
        // Le panel haut1 : contient le menu et le bandeau d'info
        JPanel haut1 = new JPanel(new BorderLayout(1,1));
-       makeAdd(haut1,saisie,"North");
-       makeAdd(haut1,bookmarks.getToolBar(),"South");
+       haut1.add(saisie,BorderLayout.NORTH);
+       JPanel  panelBookmarks = new JPanel( new BorderLayout(0,0));
+       panelBookmarks.add( bookmarks.getToolBar(), BorderLayout.CENTER);
+       haut1.add(panelBookmarks,BorderLayout.SOUTH);
 
        // Le panel haut : contient le logo et le haut1
        JPanel haut = new JPanel(new BorderLayout(0,0));
        haut.setBorder(BorderFactory.createEmptyBorder(4,0,0,0));
-       makeAdd(haut,haut1,"Center");
-       makeAdd(haut,logo,"East");
+       haut.add(haut1,BorderLayout.CENTER);
+       if( !NEWLOOK_V7 ) haut.add(logo,BorderLayout.EAST);
 
        // le panel du status
        JPanel searchPanel = new JPanel(new BorderLayout(0,0));
-
+       searchPanel.setBorder(BorderFactory.createEmptyBorder(3,0,0,0));
+       
        JPanel y = new JPanel( new FlowLayout(FlowLayout.CENTER,0,0));
        y.setBorder(BorderFactory.createEmptyBorder());
        y.add(grid);
@@ -1958,11 +1983,11 @@ public class Aladin extends JApplet
 
        // test thomas (avec un séparateur) + Pierre
        final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-             bigView, gauche);
+             gauche1, gauche2);
        splitV.setBorder(BorderFactory.createEmptyBorder());
        splitV.setResizeWeight(1);
-       gauche.setMinimumSize(new Dimension(ZoomView.SIZE+ToolBox.W+3,200));
-       bigView.setMinimumSize(new Dimension(300,300));
+       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W+3,200));
+       gauche1.setMinimumSize(new Dimension(300,300));
 
        JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
        bigViewSearch.add(splitV,BorderLayout.CENTER);
@@ -2376,7 +2401,7 @@ public class Aladin extends JApplet
    synchronized boolean isPrinting() { return print; }
 
    /** Indication d'un save, export ou backup en cours */
-   protected boolean isSaving() { return command.waitSave; }
+   protected boolean isSaving() { return command.syncNeedSave; }
 
    /** Transformation de la chaine du numero de version vx.xxx en valeur
     * numerique
@@ -2558,7 +2583,7 @@ public class Aladin extends JApplet
    protected void allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
       if( !gSky.isMap() ) calque.newPlanBG(gSky,label,target,radius);
       else calque.newPlan(gSky.getUrl(), label, gSky.copyright);
-      toolbox.repaint();
+      toolBox.repaint();
    }
 
    /** Mise en place du ciel s */
@@ -3049,7 +3074,7 @@ public class Aladin extends JApplet
 
     /** Activation du DUMP depuis la JBar */
     protected void crop() {
-       toolbox.setMode(ToolBox.CROP, Tool.DOWN);
+       toolBox.setMode(ToolBox.CROP, Tool.DOWN);
 //       command.execLater("crop "+Tok.quote(calque.getPlanBase().getLabel()));
     }
 
@@ -3302,34 +3327,34 @@ public class Aladin extends JApplet
     /** Activation ou désactivation du zoom pointé via la Jbar */
     protected void zoom() {
        if( miZoomPt.isSelected() ) {
-          toolbox.tool[ToolBox.SELECT].mode=Tool.UP;
-          toolbox.tool[ToolBox.ZOOM].mode=Tool.DOWN;
+          toolBox.tool[ToolBox.SELECT].mode=Tool.UP;
+          toolBox.tool[ToolBox.ZOOM].mode=Tool.DOWN;
        } else {
-          toolbox.tool[ToolBox.SELECT].mode=Tool.DOWN;
-          toolbox.tool[ToolBox.ZOOM].mode=Tool.UP;
+          toolBox.tool[ToolBox.SELECT].mode=Tool.DOWN;
+          toolBox.tool[ToolBox.ZOOM].mode=Tool.UP;
        }
-       toolbox.repaint();
+       toolBox.repaint();
     }
 
     /** Activation ou désactivation du panning via la Jbar */
     protected void pan() { pan(miPan.isSelected()); }
     protected void pan(boolean mode) {
        if( mode ) {
-          toolbox.tool[ToolBox.SELECT].mode=Tool.UP;
-          toolbox.tool[ToolBox.PAN].mode=Tool.DOWN;
+          toolBox.tool[ToolBox.SELECT].mode=Tool.UP;
+          toolBox.tool[ToolBox.PAN].mode=Tool.DOWN;
        } else {
-          toolbox.tool[ToolBox.SELECT].mode=Tool.DOWN;
-          toolbox.tool[ToolBox.PAN].mode=Tool.UP;
+          toolBox.tool[ToolBox.SELECT].mode=Tool.DOWN;
+          toolBox.tool[ToolBox.PAN].mode=Tool.UP;
        }
-       toolbox.repaint();
+       toolBox.repaint();
        view.setDefaultCursor();
     }
 
     /** Activation d'un des outils graphiques via la Jbar */
     protected void graphic(int n) {
-       toolbox.setGraphicButton(n);
+       toolBox.setGraphicButton(n);
        calque.selectPlanTool();
-       toolbox.repaint();
+       toolBox.repaint();
    }
 
     /** Activation ou désactivation du GREY via la Jbar */
@@ -3340,8 +3365,8 @@ public class Aladin extends JApplet
 
     /** Activation ou désactivation du MGLASS via la Jbar */
     protected void glass() {
-       if( miGlass.isSelected() ) toolbox.tool[ToolBox.WEN].mode=Tool.DOWN;
-       else toolbox.tool[ToolBox.WEN].mode=Tool.UP;
+       if( miGlass.isSelected() ) toolBox.tool[ToolBox.WEN].mode=Tool.DOWN;
+       else toolBox.tool[ToolBox.WEN].mode=Tool.UP;
 
        aladin.calque.zoom.zoomView.setPixelTable(miGlassTable.isSelected());
 
@@ -3350,8 +3375,8 @@ public class Aladin extends JApplet
 
     /** Activation ou désactivation du MGLASS via la Jbar */
     protected void glassTable() {
-       if( miGlassTable.isSelected()) toolbox.tool[ToolBox.WEN].mode=Tool.DOWN;
-       else if( !miGlass.isSelected() )toolbox.tool[ToolBox.WEN].mode=Tool.UP;
+       if( miGlassTable.isSelected()) toolBox.tool[ToolBox.WEN].mode=Tool.DOWN;
+       else if( !miGlass.isSelected() )toolBox.tool[ToolBox.WEN].mode=Tool.UP;
 
        aladin.calque.zoom.zoomView.setPixelTable(miGlassTable.isSelected());
 
@@ -3373,8 +3398,8 @@ public class Aladin extends JApplet
 
     /** Ouverture de la fenêtre des pixels avec maj du bouton pixel associé */
     protected void pixel() {
-       toolbox.tool[ToolBox.HIST].mode=Tool.DOWN;
-       toolbox.repaint();
+       toolBox.tool[ToolBox.HIST].mode=Tool.DOWN;
+       toolBox.repaint();
        updatePixel();
     }
 
@@ -3384,15 +3409,15 @@ public class Aladin extends JApplet
           trace(1,"Creating the colormap window");
           frameCM = new FrameCM(this);
        }
-       boolean visible = toolbox.tool[ToolBox.HIST].mode==Tool.DOWN;
+       boolean visible = toolBox.tool[ToolBox.HIST].mode==Tool.DOWN;
        frameCM.setVisible(visible);
        if( visible ) frameCM.majCM();
     }
 
     /** Ouverture de la fenêtre des RGB avec maj du bouton associé */
     protected void RGB() {
-       toolbox.tool[ToolBox.RGB].mode=Tool.DOWN;
-       toolbox.repaint();
+       toolBox.tool[ToolBox.RGB].mode=Tool.DOWN;
+       toolBox.repaint();
        updateRGB();
     }
 
@@ -3445,8 +3470,8 @@ public class Aladin extends JApplet
 
     /** Ouverture de la fenêtre des blinks avec maj du bouton associé */
     protected void blink(int mode) {
-       toolbox.tool[ToolBox.BLINK].mode=Tool.DOWN;
-       toolbox.repaint();
+       toolBox.tool[ToolBox.BLINK].mode=Tool.DOWN;
+       toolBox.repaint();
        updateBlink(mode);
     }
 
@@ -3463,8 +3488,8 @@ public class Aladin extends JApplet
 
     /** Ouverture de la fenêtre des Contours avec maj du bouton pixel associé */
     protected void contour() {
-       toolbox.tool[ToolBox.CONTOUR].mode=Tool.DOWN;
-       toolbox.repaint();
+       toolBox.tool[ToolBox.CONTOUR].mode=Tool.DOWN;
+       toolBox.repaint();
        updateContour();
     }
 
@@ -4159,6 +4184,7 @@ public void setLocation(Point p) {
    protected void setButtonMode() {
       try {
          Plan pc = calque.getFirstSelectedPlan();
+         PlanImage pimg = calque.getFirstSelectedSimpleImage();
          Plan base = calque.getPlanBase();
          boolean hasImage = base!=null;
          int nbPlanCat = calque.getNbPlanCat();
@@ -4195,7 +4221,7 @@ public void setLocation(Point p) {
          if( miDel!=null ) miDel.setEnabled(!isFree);
          if( miDelAll!=null ) miDelAll.setEnabled(!isFree);
          if( miPixel!=null ) miPixel.setEnabled(nbPlanImg>0);
-         if( miContour!=null ) miContour.setEnabled(hasImage && !isBG);
+         if( miContour!=null ) miContour.setEnabled(pimg!=null);
          if( miVOtool!=null ) miVOtool.setEnabled(hasNoResctriction());
          if( miSave!=null ) miSave.setEnabled(mode && hasNoResctriction());
          if( miSaveG!=null ) miSaveG.setEnabled(mode && hasNoResctriction());
@@ -4248,13 +4274,13 @@ public void setLocation(Point p) {
          }
          if( miTarget!=null ) miTarget.setSelected(calque.hasTarget());
          if( miSimbad!=null ) miSimbad.setSelected(calque.flagSimbad);
-         if( miZoomPt!=null ) miZoomPt.setSelected(toolbox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
+         if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
          if( miPrevPos!=null ) miPrevPos.setEnabled(view.canActivePrevUndo());
          if( miNextPos!=null ) miNextPos.setEnabled(view.canActiveNextUndo());
-         if( miZoomPt!=null ) miZoomPt.setSelected(toolbox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
-         if( miPan!=null ) miPan.setSelected(toolbox.tool[ToolBox.PAN].mode==Tool.DOWN);
-         if( miGlass!=null ) miGlass.setSelected(toolbox.tool[ToolBox.WEN].mode==Tool.DOWN);
-         if( miGlassTable!=null ) miGlassTable.setSelected(toolbox.tool[ToolBox.WEN].mode==Tool.DOWN && calque.zoom.zoomView.isPixelTable() );
+         if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
+         if( miPan!=null ) miPan.setSelected(toolBox.tool[ToolBox.PAN].mode==Tool.DOWN);
+         if( miGlass!=null ) miGlass.setSelected(toolBox.tool[ToolBox.WEN].mode==Tool.DOWN);
+         if( miGlassTable!=null ) miGlassTable.setSelected(toolBox.tool[ToolBox.WEN].mode==Tool.DOWN && calque.zoom.zoomView.isPixelTable() );
          if( miPanel1!=null ) {
             if( m==ViewControl.MVIEW1 ) miPanel1.setSelected(true);
             else if( m==ViewControl.MVIEW2 ) miPanel2.setSelected(true);
@@ -4548,6 +4574,7 @@ public void show() {
       lastArg=0;
       for( int i=0; i<args.length; i++ ) {
          if( args[i].equals("-h") || args[i].equals("-help") ) { usage(); System.exit(0); }
+         else if( args[i].equals("-oldlook") )     { NEWLOOK_V7=false; lastArg=i+1; }
          else if( args[i].equals("-version") )     { version(); System.exit(0); }
          else if( args[i].equals("-test") )        { boolean rep=test(); System.exit(rep ? 0 : 1); }
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }

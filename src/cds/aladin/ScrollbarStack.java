@@ -24,13 +24,13 @@ package cds.aladin;
  * Un Scrollbar dédié à la pile
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.1 : (jan 2011) peaufinage
  * @version 1.0 : (oct 2006) Creation
  */
 public final class ScrollbarStack extends MyScrollbar {
    
    private Aladin aladin;
    private Calque calque;
-   private int firstPlan;
    
    ScrollbarStack(Aladin aladin,int orientation,int value,int visible,int min,int max) {
       super(orientation,value,visible,min,max);
@@ -46,13 +46,21 @@ public final class ScrollbarStack extends MyScrollbar {
       return getValue();
    }     
    
-   /** retourne l'indice du premier plan visible dans la pile (en haut) */
+   private int firstPlan;
+   /** Indice du premier plan visible dans la pile (en haut) */
    protected int getFirstVisiblePlan() { return firstPlan; }
+   protected void setFirstVisiblePlan(int index) { firstPlan = index; }
    
-   /** Positionne l'indice du permier plan visible dans la pile (en haut) */
-   protected void setFirstVisiblePlan(int index) {
-      firstPlan = index;
-   }
+
+   // Spécifie si la scrollbar est requise, ou peut être effacé
+   private boolean require=false;
+   protected void setRequired(boolean r) { require=r; }
+   protected boolean getRequired() { return require; }
+   
+   private int nbPlan=-1;
+   /** Mémorise le nombre de plans visibles dans la pile */
+   protected void setNbVisiblePlan(int nb) { nbPlan=nb; }
+   protected int getNbVisiblePlan() { return nbPlan; }
    
    /** Repositionnement du scroll en cas de suppression */
    protected boolean rm(int m) {

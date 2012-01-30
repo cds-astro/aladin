@@ -58,6 +58,9 @@ public abstract class ServerTree extends Server  {
       JLabel l = new JLabel(info);
       l.setBounds(120,y,400, 20); y+=20;
       add(l);
+      
+      // Target ?
+      y=makeTarget(y);
 
       // L'arbre
       tree = createTree();
@@ -77,6 +80,8 @@ public abstract class ServerTree extends Server  {
       modeCoo = COO|SIMBAD;
       modeRad = RADIUS;
    }
+   
+   protected int makeTarget(int y) { return y; }
 
    abstract protected void init();
 
@@ -141,15 +146,20 @@ protected void reset() {
    /** Interrogation */
    @Override
 public void submit() {
+      boolean ok=false;
      Enumeration e = root.preorderEnumeration();
      while( e.hasMoreElements() ) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
         TreeNode n = (TreeNode) node.getUserObject();
         if( !n.isCheckBoxSelected() ) continue;
-        n.submit();
+        submit(n);
+        ok=true;
      }
+     if( !ok ) aladin.warning(aladin.dialog,WNEEDCHECK,1);
      reset();
    }
+   
+   public void submit(TreeNode n) { n.submit(); }
 
 
    /** Procédure récursive pour la construction de l'arbre.

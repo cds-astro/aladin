@@ -361,7 +361,7 @@ public final class Slide {
 
    // Adaptation du logo pour un plan BGHPX
    static void drawLogoImgBG(Graphics g,int dx,int dy,Color c) {
-      int x = dx+frX[2]/2;
+      int x = dx+gapL+10;//frX[2]/2;
       int y = dy+3;
       Grid.fillBG(g,x,y,Color.white);
       Grid.drawGrid(g, x, y, c);
@@ -369,7 +369,7 @@ public final class Slide {
 
    // Adaptation du logo pour un plan BGHPX en mode POLARISATION
    static void drawLogoPolarisation(Graphics g,int dx,int dy,Color c) {
-      int x = dx+frX[2]/2;
+      int x = dx+gapL+10;//frX[2]/2;
       int y = dy+3;
       Grid.fillBG(g,x,y,Color.white);
       Grid.drawPolar(g, x, y, c);
@@ -418,7 +418,7 @@ public final class Slide {
 
    protected void redraw(Graphics g,int xMouse,int yMouse,int dx,int dy) {
       try {
-         Color labelBG=Aladin.LBLUE;
+         Color labelBG= a.calque.select.getBackground();
          Color colorBorder = p.c;
          Color colorForeground = p.c;
          if( p.collapse  ) return;
@@ -484,6 +484,7 @@ public final class Slide {
             // Sinon, dessin du calque en fonction du mode activé ou non
          } else {
             if( p.type==Plan.FOLDER ) g.setColor(!p.active? Color.yellow:jauneGris);
+            else if( p.ref && p.isUnderImgBkgd() ) g.setColor(Color.white);
             else g.setColor( p.active && !canBeTransparent ? Aladin.MYGRAY : Color.white );
 //          else g.setColor( p.active && !canBeTransparent && p.isViewable() ? Color.gray : Color.white );
             if( g.getColor()==Color.blue &&  (colorForeground==Color.blue || colorForeground==Color.black) ) colorForeground=Color.white;
@@ -571,10 +572,15 @@ public final class Slide {
                && !(p.isCatalog() && !p.hasObj())) {
             
             boolean isRefForVisibleView = p.isRefForVisibleView();
+//            Util.drawRadio(g,3,dy+3, Color.gray ,
+//                  inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
+//                        isRefForVisibleView ? Aladin.GREEN : Color.black, 
+//                        p.ref);
             Util.drawCheckbox(g, 3, dy+3, Color.gray ,
                   inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
                   isRefForVisibleView ? Color.red : Color.black, 
-                  p.active && !(p.isImage() && !isRefForVisibleView));
+                  p.active /* && !(p.isImage() && !isRefForVisibleView) */);
+            
          }
          
          // Les barres d'appartenance à un folder    
@@ -617,7 +623,7 @@ public final class Slide {
          if( p.label!=null ) {
             int py = dy+15-1;
             int px = Select.ws-15;
-            int px1 = 4;
+            int px1 = px;//4;
             x = dx+xLabel;
             
             try {
@@ -681,7 +687,8 @@ public final class Slide {
                g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
             }
             float transp = p.getOpacityLevel();
-            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
+//            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
+            g.setColor( transp<=0.1 ? Color.red : Color.green );
             g.fillRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
             g.setColor(Color.black);
             g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);

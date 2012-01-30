@@ -1216,7 +1216,7 @@ import java.lang.*;
                
                // PF - Jan 2011 - La méthode de calibration DSS ne marche pas actuellement avec les imagettes
                // => dans les mains de François B. En attendant, je fais un gros patch
-               if( hf.getDoubleFromHeader("NAXIS1")<10000 ) throw new Exception("Certainely not a full plate");
+//               if( hf.getDoubleFromHeader("NAXIS1")<10000 ) throw new Exception("Certainely not a full plate");
 
               proj = TAN ; // projection TAN ;
               alpha += hf.getIntFromHeader("PLTRAM  ")*60. ;
@@ -2597,7 +2597,7 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
             	  
             //	  System.out.println("x y xz yz"+(x_stand)*1000.0/incX+" "+(y_stand)*1000.0/incY+" "+(xz*1000.0/incX)+ " "+(yz*1000.0/incY));  
                c.x= ((x_stand*focale)*1000.0  +xz*1000.0 - Xorg)/incX ;
-               c.y= ((y_stand*focale)*1000.0 + yz*1000.0 + Yorg)/incY  ; 
+               c.y= ((y_stand*focale)*1000.0 + yz*1000.0 - Yorg)/incY  ; 
               // System.out.println("center cxy"+c.x+" "+c.y ) ;
               // System.out.println("Xorg Yorg"+Xorg+" "+Yorg+" "+incX+" "+incY) ;
               //  System.out.println("c.xy "+c.x+" "+c.y);

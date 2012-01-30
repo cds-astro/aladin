@@ -85,7 +85,7 @@ public final class CreatObj implements Runnable {
       a.search = new Search(a,true);
 
       trace(1,"Creating Toolbar panel");
-      a.toolbox = new ToolBox(a);
+      a.toolBox = new ToolBox(a);
 
       a.calque = new Calque(a);
       trace(1,"Creating Calque object");

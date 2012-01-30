@@ -756,7 +756,7 @@ try {
    protected void setCut(Obj objCut, int [] v, int mode ) {
       cutX=-1;
       this.objCut=objCut;
-      if( objCut==null || v==null || aladin.toolbox.tool[ToolBox.WEN].mode==Tool.DOWN ) {
+      if( objCut==null || v==null || aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN ) {
          if( flagCut ) repaint();
          flagCut=false;
          return;

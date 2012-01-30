@@ -138,17 +138,17 @@ public final class ViewControl extends JComponent implements
                int x=5+i*(L+2)+j*mw;
                int y=2+k*mh;
                if( down || in ) {
-               	  g.setColor( in ? Aladin.MYBLUE : Aladin.DARKBLUE);
+               	  g.setColor( !enabled ? Aladin.MYGRAY : in ? Aladin.MYBLUE : Aladin.DARKBLUE);
                	  g.fillRect(x,y,w,h);
                }
-               g.setColor(down || in ?Color.black:Color.white);
+               g.setColor(!enabled ? Aladin.MYGRAY : down || in ?Color.black:Color.white);
                g.drawLine(x,y,x+w,y); g.drawLine(x,y,x,y+h);
-               g.setColor(!down || in ?Color.black:Color.white);
+               g.setColor(!enabled ? Aladin.MYGRAY : !down || in ?Color.black:Color.white);
                g.drawLine(x+w,y,x+w,y+h); g.drawLine(x,y+h,x+w,y+h);
             }
          }
       }
-      g.setColor(Color.black);
+      g.setColor(!enabled ? Aladin.MYGRAY : Color.black);
       g.setFont(Aladin.SPLAIN);
       g.drawString(LABEL,(W+6)/2-g.getFontMetrics().stringWidth(LABEL)/2,H-2);
    }
@@ -203,7 +203,7 @@ public final class ViewControl extends JComponent implements
       computeModeView(e.getX());
       aladin.view.setModeView(modeView);
       aladin.console.setCommand("modeview "+modeView);
-      aladin.toolbox.toolMode();
+      aladin.toolBox.toolMode();
       Aladin.makeCursor(this,Aladin.DEFAULT);
       repaint();
    }
@@ -216,8 +216,11 @@ public final class ViewControl extends JComponent implements
 //      aladin.status.setText(n==-2 ? INFOSYNC : INFOMVIEW);
       Util.toolTip(this,n==-2 ? INFOSYNC : INFOMVIEW);
    }
+   
+   private boolean enabled=false;
 
    public void paintComponent(Graphics gr) {
+      enabled = !aladin.msgOn;
       drawLogo(gr);
    }
    

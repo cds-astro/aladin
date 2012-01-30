@@ -83,6 +83,7 @@ public class Plan implements Runnable {
    protected int folder;	     // niveau du folder, 0 si aucun
    protected Slide slide=null;   // Slide pour la pile
    protected boolean isOldPlan;  // True s'il s'agit d'un plan réutilisé (algo) (voir Plan.planReady());
+   protected boolean noBestPlacePost; // true s'il ne faut pas passer le plan à la méthode bestPlacePost() après son chargement
    protected boolean collapse;	 // true si le plan est collapse dans la pile
    protected String objet;       // Target du plan (celui qui a ete indique a l'interrogation)
    protected String label;       // Label du plan; (celui qui apparait dans le "plane stack"
@@ -216,7 +217,12 @@ public class Plan implements Runnable {
       p.active=active;
       p.ref=ref;
    }
-
+   
+   // Il s'agit d'un plan qui s'applique en overlay d'une image */
+   protected boolean isOverlay() {
+      return isCatalog() || isPlanBGOverlay() || this instanceof PlanTool 
+      || this instanceof PlanField || this instanceof PlanFov || this instanceof PlanFilter;
+   }
 
    /** Retourne true s'il s'agit d'un plan image */
    final protected boolean isImage() { return type==IMAGE || type==IMAGERGB || type==IMAGEHUGE
@@ -916,7 +922,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    protected boolean hasCanBeTranspState() { return (debugFlag & CANBETRANSP) == CANBETRANSP; }
 
    /** Retourne true si l'état UNDERIMG|UNDERBKGD a été positionné sur le plan */
-   protected boolean isUnderImgBkgd() { return (debugFlag & (UNDERIMG|UNDERBKGD)) !=0; }
+   protected boolean isUnderImg() { return (debugFlag & (UNDERIMG|UNDERBKGD)) !=0; }
+   protected boolean isUnderImgBkgd() { return (debugFlag & UNDERBKGD) !=0; }
 
    /** positionnement d'un flag de débugging du plan */
    protected void setDebugFlag(int type,boolean flag) {
@@ -946,7 +953,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       }
       return rep.toString();
    }
-
+   
     /** Retourne vrai si le plan peut etre visible dans au moins une des vues visibles
    * @return <I>true</I> si ok, <I>false</I> sinon.
    */
@@ -1017,7 +1024,10 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    /** Retourne true si le plan passé est susceptible d'être visible en partie dans la vue indiquée */
    protected boolean isCompatibleWith(ViewSimple v) {
       if( v.isFree() || !Projection.isOk(v.getProj()) ) return false;
-      if( v.pref==this ) return true;
+      if( v.pref==this ) {
+         setUnderBackGroundFlag(v);   // Faut tout de même positionner ce flag
+         return true;
+      }
 
 //      if( v.pref.type==Plan.IMAGEBKGD && type==Plan.IMAGEBKGD
 //            && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
@@ -1027,7 +1037,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 //
 //      } else
 
-      if( v.pref.isImage() && (type==Plan.IMAGE || this instanceof PlanBG) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
+      if( !(aladin.view.isMultiView() && v.pref.ref) 
+            && v.pref.isImage() && (type==Plan.IMAGE /* || this instanceof PlanBG*/  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
          setDebugFlag(UNDERIMG, true);
 //System.out.println("IMG:"+label+" sous IMG?:"+v.pref+" dans le pile");
          return false;
@@ -1035,22 +1046,44 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       } else setDebugFlag(UNDERIMG, false);
 
       // Peut être sous un plan Background ?
-      if( !aladin.view.isMultiView() ) {
-         Plan [] allPlan = aladin.calque.getPlans();
-         int n = aladin.calque.getIndex(allPlan,this);
-         for( int i=n-1; i>=0; i-- ) {
-            Plan p=allPlan[i];
-            if( p.type==ALLSKYIMG && p.active && (p.getOpacityLevel()==1 || p.isRefForVisibleView()) ) {
-//               System.out.println(label+" sous BG opaque ["+p+"] dans la pile");
-               setDebugFlag(UNDERBKGD, true);
-               return false;
-            }
-         }
+      if( !setUnderBackGroundFlag(v) ) {
+         return false;
       }
+      
+//      if( !aladin.view.isMultiView() ) {
+//         Plan [] allPlan = aladin.calque.getPlans();
+//         int n = aladin.calque.getIndex(allPlan,this);
+//         for( int i=n-1; i>=0; i-- ) {
+//            Plan p=allPlan[i];
+//            if( p.type==ALLSKYIMG && p.active && (p.getOpacityLevel()>=0.1 || p.isRefForVisibleView()) ) {
+//              System.out.println(label+" sous BG opaque ["+p+"] dans la pile");
+//               setDebugFlag(UNDERBKGD, true);
+//               return false;
+//            }
+//         }
+//      }
 
       boolean rep = isOutView(v);
 //System.out.println(this+" isOutView("+v+") = "+rep);
       return !rep;
+   }
+   
+   // Peut être sous un plan Background ?
+   private boolean setUnderBackGroundFlag(ViewSimple v) {
+      boolean under=false;
+      Plan [] allPlan = aladin.calque.getPlans();
+      int n = aladin.calque.getIndex(allPlan,this);
+      for( int i=n-1; i>=0; i-- ) {
+         Plan p=allPlan[i];
+         if( p.type==ALLSKYIMG && p.active && (p.getOpacityLevel()==1 || p.isRefForVisibleView()) ) {
+            under=true;
+            break;
+         }
+      }
+      if( under && aladin.view.isMultiView() ) under=false;
+      setDebugFlag(UNDERBKGD, under);
+      return !under;
+
    }
 
 
@@ -1457,6 +1490,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
    	  // Activation/Desactivation effective
    	  active=flag;
+   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       aladin.view.deSelect(this);
       return active;
    }
@@ -1568,11 +1602,13 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
    */
    protected void planReady(boolean ready) {
       if( flagSkip ) return;
+      
+      aladin.endMsg();
 
       if( !ready ) {
          if( error==null ) error = aladin.error;
          aladin.calque.select.repaint();
-         aladin.toolbox.toolMode();
+         aladin.toolBox.toolMode();
 
          return;
       }
@@ -1590,18 +1626,32 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
       setPourcent(-1);
       flagOk = ready;
 
-      boolean un,deux,trois;
-      un=deux=trois=false;
-
-      if( (un=!isOldPlan && (isImage() || type==ALLSKYIMG && !(this instanceof PlanBGCat)))
-            || (deux=aladin.calque.isFreeX(this))
-            || (trois=isSimpleCatalog() && !isViewable()) ) {
-//         System.out.println("je setPlanRef("+label+") un="+un+" deux="+deux+" trois="+trois);
+      
+      if( aladin.calque.mustBeSetPlanRef(this) ) {
          aladin.calque.setPlanRef(this);
-      } else {
-//         System.out.println("je setActivated("+label+")");
-         setActivated(true);
-      }
+         setOpacityLevel( isOverlay()?1f : 0f);
+         
+      } else setActivated(true);
+      
+       
+//    boolean un,deux,trois;
+//    un=deux=trois=false;
+//       if( v.isFree() || !(v.pref instanceof PlanBG && !v.pref.isOverlay()) ) {
+//         if( (un=!isOldPlan && (isImage() || type==ALLSKYIMG && !(this instanceof PlanBGCat)))
+//               || (deux=aladin.calque.isFreeX(this))
+//               || (trois=isSimpleCatalog() && !isViewable()) ) {
+//            aladin.calque.setPlanRef(this);
+//            setOpacityLevel( isOverlay()?1f : 0f);
+//                System.out.println("je setPlanRef("+label+") un="+un+" deux="+deux+" trois="+trois);
+//         } else {
+//            setActivated(true);
+//         }
+//         
+//      } else {
+//         if( !isViewable() ) aladin.calque.setPlanRef(this);
+//         else setActivated(true);
+//   
+//      }
 
       // Ajout thomas : on avertit qu'un nouveau plan a ete cree pour mettre a jour les filtres
       // et pour mettre a jour les FilterProperties

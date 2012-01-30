@@ -449,7 +449,7 @@ public final class Tool {
       X=idx;
       Y=idy;
       
-      Color CBG = aladin.toolbox.getBackground();
+      Color CBG = aladin.toolBox.getBackground();
       Color CBU = new Color(250,249,254);
       
       g.setColor( mode==DOWN ? CU : currentButton && mode!=UNAVAIL ? CBU : CBG);
