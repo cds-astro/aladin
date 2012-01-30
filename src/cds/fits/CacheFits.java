@@ -168,28 +168,32 @@ public class CacheFits {
       try {
     	  skyval = f.headerFits.getDoubleFromHeader(skyvalName);
       } catch (NullPointerException e) {
+    	  // On n'a pas trouve le mot cle, tampis on sort proprement
+    	  return;
       }
       if (skyval != 0) {
-         skyval -= 1;
-         for( int y=0; y<f.heightCell; y++ ) {
-            for( int x=0; x<f.widthCell; x++ ) {
-               // applique un nettoyage pour enlever les valeurs aberrantes
-               if (f.getPixelFull(x+f.xCell, y+f.yCell) < skyval)
-                  newval = f.blank;
-               else
-                  newval = f.getPixelFull(x+f.xCell, y+f.yCell)-skyval;
+    	  skyval -= 1;
+    	  for( int y=0; y<f.heightCell; y++ ) {
+    		  for( int x=0; x<f.widthCell; x++ ) {
+    			  // applique un nettoyage pour enlever les valeurs aberrantes
+    			  // et garder les anciens blank à blank
+    			  double pixelFull = f.getPixelFull(x+f.xCell, y+f.yCell);
+    			  if (pixelFull==f.blank || pixelFull<f.blank+skyval)
+    				  newval = f.blank;
+    			  else
+    				  newval = pixelFull-skyval;
 
-               switch (f.bitpix) {
-                  case 8 :
-                  case 16:
-                  case 32 :
-                     f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval);
-                  case -32:
-                  case -64 :
-                     f.setPixelDouble(x+f.xCell, y+f.yCell, newval);	
-               }
-            }
-         }
+    			  switch (f.bitpix) {
+    			  case 8 :
+    			  case 16:
+    			  case 32 :
+    				  f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval); break;
+    			  case -32:
+    			  case -64 :
+    				  f.setPixelDouble(x+f.xCell, y+f.yCell, newval); break;
+    			  }
+    		  }
+    	  }
       }
 
    }
