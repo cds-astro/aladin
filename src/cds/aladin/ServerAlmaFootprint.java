@@ -243,7 +243,7 @@ public class ServerAlmaFootprint extends Server {
 
          public String toString() {
              return   "Band " + this.bandId + " | "
-                    + this.wavelengthRange[0] + "-" + this.wavelengthRange[1] + " nm" + " | "
+                    + this.wavelengthRange[0] + "-" + this.wavelengthRange[1] + " mm" + " | "
                     + this.frequencyRange[0]  + "-" + this.frequencyRange[1]  + " GHz";
          }
      }
