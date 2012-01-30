@@ -384,6 +384,7 @@ public class SkyGen {
 				"input     Directory of original images (fits or jpg+hhh)" + "\n" +
 				"output    Target directory (default $PWD+\"ALLSKY\")" + "\n" +
 				"pixel     keep|keepall|overwrite|average|replaceall - in case of already computed values (default overwrite)" + "\n" +
+				"method    Level up pixel computation for Jpeg (and jpeg color) : median|mean (default is median)" + "\n" +
 				"region    Healpix region to compute (ex: 3/34-38 50 53) or Moc.fits file (nothing means all the sky)" + "\n" +
 				"blank     BLANK value alternative (use of FITS header by default)" + "\n" +
 				"border    Margins to ignore in the original images (N W S E or constant)" + "\n" +

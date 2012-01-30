@@ -164,7 +164,7 @@ public class BuilderRgb implements Runnable {
                       if( in!=null ) {
 
                           // On prend la moyenne (sans prendre en compte les BLANK)
-                         if( method==Context.Method.MOYENNE ) {
+                         if( method==Context.Method.MEAN ) {
                             double totalCoef=0;
                             for( int i=0; i<4; i++ ) {
                                int dx = i==1 || i==3 ? 1 : 0;

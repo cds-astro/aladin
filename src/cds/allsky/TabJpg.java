@@ -273,8 +273,8 @@ public class TabJpg extends JPanel implements ActionListener {
    
    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
    public Method getMethod() {
-      if( radioMediane.isSelected() ) return Context.Method.MEDIANE;
-      return Context.Method.MOYENNE;
+      if( radioMediane.isSelected() ) return Context.Method.MEDIAN;
+      return Context.Method.MEAN;
    }
    
    protected void resumeWidgetsStatus() {

@@ -223,8 +223,8 @@ public class TabRgb extends JPanel implements ActionListener {
     
     /**   retourne la méthode qu'il faudra utiliser pour construire les JPG couleur */
     public Method getMethod() {
-       if( radioMediane.isSelected() ) return Context.Method.MEDIANE;
-       return Context.Method.MOYENNE;
+       if( radioMediane.isSelected() ) return Context.Method.MEDIAN;
+       return Context.Method.MEAN;
     }
 	
 	/** Recupere la liste des plans Allsky valides */

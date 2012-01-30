@@ -56,7 +56,7 @@ public class Context {
    protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
-   private Method method = Context.Method.MEDIANE;
+   private Method method = Context.Method.MEDIAN;
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -144,13 +144,13 @@ public class Context {
    }
    
    protected enum Method {
-	   MEDIANE, MOYENNE;
+	   MEDIAN, MEAN;
 	}
    
    /**
     * @param method the method to set
-    * @see Context#MEDIANE
-    * @see Context#MOYENNE
+    * @see Context#MEDIAN
+    * @see Context#MEAN
     */
    public void setMethod(Method method) {
 	   this.method = method;

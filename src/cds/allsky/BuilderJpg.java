@@ -154,7 +154,7 @@ public class BuilderJpg implements Progressive, Runnable {
         if( out!=null && context.isInMocTree(order,npix) ) {
            if( debugFlag ) {
               debugFlag=false;
-              Aladin.trace(3,"Creating JPEG tiles: method="+(method==Context.Method.MOYENNE?"average":"median")
+              Aladin.trace(3,"Creating JPEG tiles: method="+(method==Context.Method.MEAN?"average":"median")
                     +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
                     +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
                     +" tcm="+(tcm==null?"null":"provided"));
@@ -217,7 +217,7 @@ public class BuilderJpg implements Progressive, Runnable {
                    if( in!=null ) {
 
                        // On prend la moyenne (sans prendre en compte les BLANK)
-                      if( method==Context.Method.MOYENNE ) {
+                      if( method==Context.Method.MEAN ) {
                          double totalCoef=0;
                          for( int i=0; i<4; i++ ) {
                             int dx = i==1 || i==3 ? 1 : 0;
