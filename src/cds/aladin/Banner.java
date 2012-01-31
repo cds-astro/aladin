@@ -36,7 +36,13 @@ final public class Banner extends Window implements Runnable {
 
   public Banner(Aladin a) {
      super(a.f);
-     number= Aladin.BETA && !Aladin.OUTREACH ? "Beta" : Aladin.VERSION.substring(0,Aladin.VERSION.indexOf('.'));
+     if( Aladin.BETA && !Aladin.OUTREACH ) number= "Beta";
+     else {
+        int virgule = Aladin.VERSION.indexOf('.');
+        number = Aladin.VERSION.substring(0,virgule);
+        char dec = Aladin.VERSION.charAt(virgule+1);
+        if( dec!='0' ) number=number+"."+dec;
+     }
      try {
         MyInputStream is = new MyInputStream(a.getClass().getResourceAsStream("/AladinBanner.jpg"));
         byte buf[] = is.readFully();
