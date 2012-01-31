@@ -35,6 +35,7 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -139,7 +140,7 @@ public final class Search extends JPanel implements MouseListener {
       genericSearchPanel.add(searchControlPanel,"Center");
       
       panelSearch.add(genericSearchPanel,"West");
-      if( !Aladin.OUTREACH ) panelSearch.add(new JLabel("    "),"Center");
+      if( !Aladin.OUTREACH ) panelSearch.add(Box.createHorizontalStrut(30),"Center");
       
       JPanel buttonPanel = new JPanel( new BorderLayout(0,0) );
       if( reduce!=null ) buttonPanel.add(reduce,"West");

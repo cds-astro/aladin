@@ -2319,8 +2319,8 @@ PARSING.fr Rapport de traitement
 GETOBJ	Object, coordinates, URL, filename or command ?
 GETOBJ.fr	Un objet, des coordonnées, une URL, un fichier ou une commande ?
 
-OPACITY Opac.
-OPACITY.fr Opac.
+OPACITY Opacity
+OPACITY.fr Opacité
 OPACITYTIP Adjust the transparency/opacity of selected planes
 OPACITYTIP.fr Ajuste le niveau de transparence des plans sélectionnés
 ZOOMTIP Adjust the zoom level of selected views

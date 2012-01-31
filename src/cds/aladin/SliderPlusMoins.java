@@ -145,6 +145,56 @@ public abstract class SliderPlusMoins extends JPanel {
       int getValue() { return value; }
       void setValue(int v) { value=v; repaint(); }
       
+      private Rectangle r;
+      private boolean in=false;
+      private int memoX,memoWhere;
+      
+      // X du slider (absisse) en fonction de la valeur courante
+      private int getPos() { return (int)( getWidth() * ( (double)(value-min)/(max-min) )); }
+      
+      // Positionnement de la valeur du slider en fonction de sa position X
+      private void setPos(int x) { 
+         value = (int)( ((double)x/getWidth())*(max-min)+min ); 
+         if( value>max ) value=max;
+         else if( value<min ) value=min;
+      }
+      
+      private int where(int x) { 
+         return x<r.x ? -1 : r.x<=x && x<=r.x+r.width ? 0 : 1;
+      }
+
+      public void mouseClicked(MouseEvent e) { }
+      public void mousePressed(MouseEvent e) {
+         memoX=e.getX(); 
+         memoWhere=where(memoX);
+      }
+      public void mouseReleased(MouseEvent e) { 
+         if( !isEnabled() ) return;
+         if( memoWhere==-1 ) value-=incr;
+         else if( memoWhere==1 ) value+=incr;
+         else {
+           int x=e.getX();
+           if( x==memoX ) return; 
+           memoX=x;
+           setPos(x);
+         }
+         if( value>max ) value=max;
+         else if( value<min ) value=min;
+         
+         submit(0);
+         repaint();
+      }
+      public void mouseEntered(MouseEvent e) { mouseMoved(e); }
+      public void mouseExited(MouseEvent e) { in=false; repaint(); }
+      public void mouseDragged(MouseEvent e) { in=true; mouseReleased(e); }
+      public void mouseMoved(MouseEvent e) { 
+         if( !enable ) return;
+         boolean newIn = where(e.getX())==0;
+         if( newIn==in ) return;
+         in=newIn;
+         repaint();
+      }
+      
       public void paintComponent(Graphics g) {
          int H = getHeight();
          int W = getWidth();
@@ -154,8 +204,7 @@ public abstract class SliderPlusMoins extends JPanel {
          
          Util.drawCartouche(g, 0, H/2-2, W, 5, 1f, enable ? Color.gray : Aladin.MYGRAY, Color.white);
          
-         int x = value;
-         x = (int)( W* ( (double)(x-min)/(max-min) ));
+         int x = getPos();
          if( x-7<0 ) x=7;
          if( x+5>W ) x=W-5;
          
@@ -166,45 +215,12 @@ public abstract class SliderPlusMoins extends JPanel {
          
          x=x-4;
          for( int i=0; i<3; i++ ) {
-            g.setColor(enable ? Color.black : Color.lightGray);
+            g.setColor(!enable ? Color.lightGray : in ? Aladin.GREEN : Color.black );
             g.drawLine(x+i*3,H/2-4,x+i*3,H/2+3);
             g.setColor(Color.white);
             g.drawLine(x+i*3+1,H/2-4,x+i*3+1,H/2+3);
          }
       }
-      
-      private Rectangle r;
-      private int memoX,memoY,memoWhere;
-      
-      private int where(int x, int y) { 
-         return x<r.x ? -1 : r.contains(x, y) ? 0 : 1;
-      }
-
-      public void mouseClicked(MouseEvent e) { }
-      public void mousePressed(MouseEvent e) {
-         memoX=e.getX(); memoY=e.getY();
-         memoWhere=where(memoX,memoY);
-      }
-      public void mouseReleased(MouseEvent e) { 
-         if( !isEnabled() ) return;
-         if( memoWhere==-1 ) value-=incr;
-         else if( memoWhere==1 ) value+=incr;
-         else {
-           int x=e.getX(),y=e.getY();
-           if( x==memoX && y==memoY ) return; 
-           memoX=x; memoY=y;
-           value = (int)( ((double)x/getWidth())*(max-min)+min );
-         }
-         if( value>max ) value=max;
-         else if( value<min ) value=min;
-         
-         submit(0);
-         repaint();
-      }
-      public void mouseEntered(MouseEvent e) { }
-      public void mouseExited(MouseEvent e) { }
-      public void mouseDragged(MouseEvent e) { mouseReleased(e); }
-      public void mouseMoved(MouseEvent e) {  }
    }
 
    class Bouton extends JButton implements MouseMotionListener {

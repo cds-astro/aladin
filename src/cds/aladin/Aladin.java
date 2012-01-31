@@ -138,7 +138,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.500";
+    static public final    String VERSION = "v7.501";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1986,7 +1986,7 @@ public class Aladin extends JApplet
              gauche1, gauche2);
        splitV.setBorder(BorderFactory.createEmptyBorder());
        splitV.setResizeWeight(1);
-       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W+3,200));
+       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
        gauche1.setMinimumSize(new Dimension(300,300));
 
        JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));

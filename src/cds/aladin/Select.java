@@ -79,7 +79,7 @@ public final class Select extends JComponent  implements
    static final int HORIZONTAL = 2;
 
    // Les valeurs accociees aux differents elements graphiques
-   static final int sizeLabel = 112-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels
+   static final int sizeLabel = 89/*112-MyScrollbar.LARGEUR*/;   // Nbre de pixels pour les labels
    // test AVO
    //static final int sizeLabel = 156-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels (test AVO)
    static final int gapL      =   14;   // Marge de gauche (reserve pour les controles)
@@ -559,10 +559,11 @@ public final class Select extends JComponent  implements
             && (currentPlan.isViewable() && currentPlan.getOpacityLevel()>0 || a.calque.isBackGround())) return false;
 
       // Pour un plan Background */
-      if( x<gapL && currentPlan.type==Plan.ALLSKYIMG ) return true;
+//      if( x<gapL && currentPlan.type==Plan.ALLSKYIMG ) return true;
 
       // Cas d'un plan catalogue qui ne peut être projeté sur une image
-      if( !currentPlan.isImage() && !currentPlan.isViewable() ) return x<frMax;
+//      if( !currentPlan.isImage() && !currentPlan.isViewable() ) return x<frMax;
+      if( currentPlan.isCatalog() && !currentPlan.isViewable() ) return x<frMax;
 
       // Cas d'un plan catalogue où l'on force la projection
       if( !currentPlan.isImage() ) return x<frMin && shiftDown;

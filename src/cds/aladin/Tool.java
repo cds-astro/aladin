@@ -592,9 +592,9 @@ public final class Tool {
                g.drawLine(dx+m3X[1][0]+1,dy+m3X[1][2],dx+m3X[1][1]+2,dy+m3X[1][2]);
             }
             break;
-//         case ToolBox.RESAMP:
-//            drawRsampIcon(g,c1,dx,dy,true);
-//            break;
+         case ToolBox.RESAMP:
+            drawRsampIcon(g,c1,dx,dy,true);
+            break;
          case ToolBox.PROP:
 //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203) );
