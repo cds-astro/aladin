@@ -2330,6 +2330,7 @@ public String getUrl() {
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    private void drawForeground(Graphics gv,ViewSimple v) {
 //      if( rayon<60 ) return;
+      if( v.getTaille()<15 ) return;
       Projection projd = v.getProj();
       Graphics2D g = (Graphics2D) gv;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

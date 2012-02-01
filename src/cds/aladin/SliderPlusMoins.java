@@ -35,6 +35,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -55,7 +57,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 Jan 2012 - création
  */
-public abstract class SliderPlusMoins extends JPanel {
+public abstract class SliderPlusMoins extends JPanel implements MouseWheelListener {
    Aladin aladin;
    
    JLabel label;
@@ -74,7 +76,8 @@ public abstract class SliderPlusMoins extends JPanel {
       
       slider = new Slider(min,max,incr);
       
-      label = new JLabel(title);
+      label = new Lab(title);
+      label.setMinimumSize(new Dimension(140,4));
       label.setFont(Aladin.SBOLD);
       label.setBackground( slider.getBackground() );
 
@@ -100,6 +103,14 @@ public abstract class SliderPlusMoins extends JPanel {
       
       setEnabled(false);
       
+      addMouseWheelListener(this);
+   }
+   
+   public void mouseWheelMoved(MouseWheelEvent e) {
+      if( !enable ) return;
+      if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
+      submit( -slider.incr*e.getWheelRotation() );
+      slider.repaint();
    }
    
    /** Récupère la valeur courant du slider */
@@ -132,6 +143,8 @@ public abstract class SliderPlusMoins extends JPanel {
       Util.toolTip(slider, tip);
    }
    
+   boolean setMinMax(int min,int max) { return slider.setMinMax(min,max); }
+   
    class Slider extends JPanel implements MouseMotionListener,MouseListener {
       int min,max,value,incr;
       Slider(int min, int max,int incr) {
@@ -144,6 +157,15 @@ public abstract class SliderPlusMoins extends JPanel {
       
       int getValue() { return value; }
       void setValue(int v) { value=v; repaint(); }
+      
+      boolean setMinMax(int min, int max) {
+         if( this.min==min && this.max==max ) return false;
+         this.min=min;
+         this.max=max;
+         if( value<min ) value=min;
+         else if( value>max ) value=max;
+         return true;
+      }
       
       private Rectangle r;
       private boolean in=false;
@@ -170,11 +192,11 @@ public abstract class SliderPlusMoins extends JPanel {
       }
       public void mouseReleased(MouseEvent e) { 
          if( !isEnabled() ) return;
-         if( memoWhere==-1 ) value-=incr;
+         /*if( memoWhere==-1 ) value-=incr;
          else if( memoWhere==1 ) value+=incr;
-         else {
+         else */{
            int x=e.getX();
-           if( x==memoX ) return; 
+//           if( x==memoX ) return; 
            memoX=x;
            setPos(x);
          }
@@ -223,12 +245,13 @@ public abstract class SliderPlusMoins extends JPanel {
       }
    }
 
-   class Bouton extends JButton implements MouseMotionListener {
+   class Bouton extends JButton implements MouseListener {
       static final int SIZE=10;
+      boolean in=false;
       Bouton(String s) {
          super.setText(s);
          setFont(Aladin.LBOLD);
-         addMouseMotionListener(this);
+         addMouseListener(this);
       }
       public Dimension getPreferredSize() { return new Dimension(SIZE,SIZE); }
       public Dimension getSize() { return new Dimension(SIZE,SIZE); }
@@ -239,7 +262,7 @@ public abstract class SliderPlusMoins extends JPanel {
          int W = getWidth();
          g.setColor( slider.getBackground());
          g.fillRect(0, 0, W, H);
-         g.setColor( enable ? Color.black : Aladin.MYGRAY );
+         g.setColor( !enable ? Aladin.MYGRAY : in ? aladin.GREEN : Color.black);
          String s = getText();
          g.drawString(s,W/2-g.getFontMetrics().stringWidth(s)/2,H/2+5);
       }
@@ -248,7 +271,24 @@ public abstract class SliderPlusMoins extends JPanel {
          if( !enable ) return;
          setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
       }
-      
+      public void mouseClicked(MouseEvent e) { }
+      public void mousePressed(MouseEvent e) { }
+      public void mouseReleased(MouseEvent e) { }
+      public void mouseEntered(MouseEvent e) {
+         in=true;
+         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+         repaint();
+      }
+      public void mouseExited(MouseEvent e) {
+         in=false;
+         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+         repaint();
+     }
+   }
+   
+   class Lab extends JLabel {
+      public Lab(String s) { super(s); }
+      public Dimension getPreferredSize() {  return new Dimension(30,14); }
    }
    
 }

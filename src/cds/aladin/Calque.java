@@ -210,7 +210,8 @@ public final class Calque extends JPanel implements Runnable {
    }
 
    public Dimension getPreferredSize() { 
-      return new Dimension(select.getPreferredSize().width- (Aladin.NEWLOOK_V7 && scroll.isShowing()?scroll.getPreferredSize().width:0),200);
+      return new Dimension(select.frMax+select.sizeLabel+MyScrollbar.LARGEUR,200);
+//      return new Dimension(select.getPreferredSize().width- (Aladin.NEWLOOK_V7 && scroll.isShowing()?scroll.getPreferredSize().width:0),200);
    }
 
    /** Verrou d'accès à plan[] */
@@ -3407,12 +3408,13 @@ public final class Calque extends JPanel implements Runnable {
     }
     
     
-    /** Change pour toute la pile le niveau d'opacité des images */
+    /** Change pour toute la pile le niveau d'opacité des images sélectionnées */
     protected void setOpacityLevel(float opacity) {
        Plan [] plan = getPlans();
        for( int i=0; i<plan.length; i++ ) {
           if( !plan[i].flagOk || !plan[i].selected ) continue;
           plan[i].setOpacityLevel(opacity);
+          if( opacity>=0.1 ) plan[i].setActivated(true);
        }
     }
 
@@ -3456,7 +3458,10 @@ public final class Calque extends JPanel implements Runnable {
      *  Vérifie que la compatibilité des projections
      */
     protected boolean canBeTransparent(Plan p) {
-       if( p==null ) return false;
+       if( p==null || !isFree() && getIndex(p)==plan.length-1 ) {
+          if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
+          return false;
+       }
        if( p.isOverlay() ) {
           p.setDebugFlag(Plan.CANBETRANSP,true);
           return true;

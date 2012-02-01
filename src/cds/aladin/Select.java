@@ -164,7 +164,7 @@ public final class Select extends JComponent  implements
    /** Modification de la transparence du plan sous la souris par action sur la molette */
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
-      int sens = e.getWheelRotation();
+      int sens = -e.getWheelRotation();
       Plan p = getPlan(e.getY());
       if( p==null || !a.calque.canBeTransparent(p) ) return;
       float opacity = p.getOpacityLevel();
@@ -187,13 +187,7 @@ public final class Select extends JComponent  implements
       if( !p.active && opacity>0.1 ) p.setActivated(true);
    }
 
-//   public Dimension getPreferredSize() { return new Dimension(ws,hs); }
-
-   /** Permet de modifier la largeur du select */
-   protected void setLargeur(int w) {
-      ws = w;
-      setSize(ws,getSize().height);
-   }
+//   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
 
    JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuShow,menuGoto,
             menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
@@ -838,7 +832,7 @@ public final class Select extends JComponent  implements
          }
          
       } else {
-         if( !canBeNewRef(e,x,p) || (!a.view.isMultiView() && p.ref) ) newRef=null;
+         if( !canBeNewRef(e,x,p) /*|| (!a.view.isMultiView() && p.ref) */ ) newRef=null;
          else newRef = p;
       }
 
@@ -1318,7 +1312,10 @@ public final class Select extends JComponent  implements
       }
       
       // Pas très joli
-      a.calque.zoom.opacitySlider.repaint();
+      if( a.calque.zoom.opacitySlider!=null ) {
+         a.calque.zoom.opacitySlider.repaint();
+         a.calque.zoom.zoomSlider.repaint();
+      }
       
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {

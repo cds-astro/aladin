@@ -584,7 +584,7 @@ public final class Slide {
             Util.drawCheckbox(g, 2, dy+3, Color.gray ,
                   inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
                   isRefForVisibleView ? Color.red : Color.black, 
-                  p.active /* && !(p.isImage() && !isRefForVisibleView) */);
+                  p.ref || p.active /* && !(p.isImage() && !isRefForVisibleView) */);
             
          }
          

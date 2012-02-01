@@ -61,7 +61,7 @@ public final class Zoom extends JPanel {
    protected SliderOpacity opacitySlider;
    protected SliderZoom zoomSlider;
    
-   static boolean SLIDER_LOOK = true;
+   static boolean SLIDER_LOOK = false;
 
    // Les references aux objets
 //   protected ViewSimple v;      // La vue associée au zoom
@@ -74,9 +74,9 @@ public final class Zoom extends JPanel {
       int i;
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
-      setLayout( new BorderLayout(5,SLIDER_LOOK?10:0) );
      
       SLIDER_LOOK = Aladin.NEWLOOK_V7;
+      setLayout( new BorderLayout(5,SLIDER_LOOK?10:0) );
 
       cZoom = new JComboBox();
       cZoom.setFont(cZoom.getFont().deriveFont(Font.PLAIN));
@@ -157,7 +157,7 @@ public final class Zoom extends JPanel {
    * (x1/4,x1/3,x1/2,x1,x2,x4,x8...x32)
    */
    protected double getValue() {
-      if( Aladin.NEWLOOK_V7 ) {
+      if( zoomSlider!=null ) {
          int n = zoomSlider.getValue();
          cZoom.setSelectedIndex(n);
       }

@@ -1955,8 +1955,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       if( zoomRepaint ) {
          aladin.calque.zoom.newZoom();
-         aladin.view.zoomview.repaint();
+//         aladin.view.zoomview.repaint();
+         aladin.calque.repaintAll();
       }
+      
    }
 
    /** Force le recalcul de la grille de coordonnées */
@@ -3657,6 +3659,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Dans le cas où il existe déjà une vue du plan mais non visible
     *  on va la rendre visible  */
    protected boolean tryToShow(Plan p) {
+//      if( true ) return false;
       int debut=previousScrollGetValue;
       int fin = debut+modeView;
 

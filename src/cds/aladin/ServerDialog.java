@@ -353,11 +353,11 @@ long t1,t;
       // liste
       if( !Aladin.OUTREACH ) sv = triServer(sv);
 
-      // L'acces local/url
-      sv.addElement(localServer = new ServerFile(aladin));
-
       // L'arbre des allsky
       sv.addElement(new ServerAllsky(aladin));
+
+      // L'acces local/url
+      sv.addElement(localServer = new ServerFile(aladin));
 
       // Juste pour savoir s'il y a un discoveryServer
       discoveryServer = null;
@@ -367,6 +367,9 @@ long t1,t;
          discoveryServer = new ServerAllVO(aladin);
          sv.addElement(discoveryServer);
       }
+      
+      // L'arbre des catégories
+      sv.addElement(new ServerCategory(aladin));
 
       // Les serveurs Spectra via GLU
       if( !Aladin.OUTREACH && Aladin.NETWORK ) addGluServer(sv, Server.SPECTRUM);
@@ -380,9 +383,6 @@ long t1,t;
       // Les serveurs d'application via GLU
       if( !Aladin.OUTREACH && Aladin.NETWORK )
          addGluServer(sv, Server.APPLI | Server.APPLIIMG);
-
-      // L'arbre des catégories
-      sv.addElement(new ServerCategory(aladin));
 
       // Serveurs obtenus via PLASTIC
 //      if( !Aladin.OUTREACH && Aladin.PROTO && Aladin.PLASTIC_SUPPORT ) {

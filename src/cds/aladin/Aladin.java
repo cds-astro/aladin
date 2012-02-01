@@ -138,7 +138,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.501";
+    static public final    String VERSION = "v7.502";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -950,7 +950,7 @@ public class Aladin extends JApplet
         },
         { {MIMAGE},
            {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},
-           {},{TRANSP},
+//           {},{TRANSP},
            {},{RGB},{GREY},{BLINK},
            {},{CALIMG},
            {},{FLIP,TOPBOTTOM,RIGHTLEFT},
@@ -1001,11 +1001,11 @@ public class Aladin extends JApplet
              { {MIMAGE},
                 {PIXEL+"|"+meta+" M"},{"?"+GLASS+"|"+meta+" G"},{"?"+GLASSTABLE},
                 {},{STATSURF, STATSURFCIRC, STATSURFPOLY},{CUT},
-                {},{TRANSP},{"?"+TRANSPON},
+//                {},{TRANSP},{"?"+TRANSPON},
                 {},{RGB},{GREY},{MOSAIC},{BLINK},
                 {},{RSAMP},{CALIMG},
                 {},{FLIP,TOPBOTTOM,RIGHTLEFT},{ARITHM},{HEALPIXARITHM},{CONV},{NORM},{BITPIX},
-                {},{COPY},{CROP},{HPXCREATE},
+                {},{COPY},{CROP},
              },
              { {MCATALOG},
                 {PLOTCAT},{XMATCH},{ADDCOL},
@@ -1035,7 +1035,8 @@ public class Aladin extends JApplet
                    "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                    "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
                 {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
-                {},{HPXGENERATE},
+                {},{HPXGENERATE}, {HPXCREATE},
+
                 {JUNIT},
              },
              { {MVIEW},
@@ -1982,12 +1983,16 @@ public class Aladin extends JApplet
        ct.setBorder(BorderFactory.createEmptyBorder(0,3,0,3));
 
        // test thomas (avec un séparateur) + Pierre
-       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
-             gauche1, gauche2);
-       splitV.setBorder(BorderFactory.createEmptyBorder());
-       splitV.setResizeWeight(1);
-       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
-       gauche1.setMinimumSize(new Dimension(300,300));
+//       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
+//             gauche1, gauche2);
+//       splitV.setBorder(BorderFactory.createEmptyBorder());
+//       splitV.setResizeWeight(1);
+//       gauche.setMinimumSize(new Dimension(ZoomView.SIZE + ToolBox.W,200));
+//       gauche1.setMinimumSize(new Dimension(300,300));
+       
+       JPanel splitV = new JPanel( new BorderLayout(0,0));
+       splitV.add(gauche1,BorderLayout.CENTER);
+       splitV.add(gauche2,BorderLayout.EAST);
 
        JPanel bigViewSearch = new JPanel( new BorderLayout(0,0));
        bigViewSearch.add(splitV,BorderLayout.CENTER);
