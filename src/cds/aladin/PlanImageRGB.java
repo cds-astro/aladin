@@ -245,7 +245,11 @@ Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
       if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
 
       bitpix = headerFits.getIntFromHeader("BITPIX");
-      if( bitpix!=8 && !isARGB ) aladin.command.printConsole("RGB BITPIX!=8 => autocutting each color component !\n");
+      if( bitpix==0 ) {
+         aladin.command.printConsole("!!! RGB BITPIX=0 => assuming BITPIX=8 !\n");
+         bitpix=8;
+      }
+      if( bitpix!=8 && !isARGB ) aladin.command.printConsole("!! RGB BITPIX!=8 => autocutting each color component !\n");
       naxis1=width = headerFits.getIntFromHeader("NAXIS1");
       if (width  <= 0) return false;
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");

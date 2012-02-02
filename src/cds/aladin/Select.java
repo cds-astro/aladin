@@ -22,8 +22,10 @@ package cds.aladin;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -50,6 +52,7 @@ public final class Select extends JComponent  implements
    String HSTACK,HEYE,WAITMIN,NOPROJ,MSELECT,MBROADCASTALL,MALLAPPS,MBROADCASTTABLE,MBROADCASTIMAGE,
           MDEL,MDELALL,MDELEMPTY,MCREATFOLD,HSTACK2,
           MINSFOLD,MCOL,MEXP,MPROP,SHOW,GOTO,HIDE;
+   String [] BEGIN;
 
    // Les references aux autres objets
    Aladin a;
@@ -137,6 +140,9 @@ public final class Select extends JComponent  implements
       GOTO = a.chaine.getString("GOTO");
       SHOW = a.chaine.getString("SHOW");
       HIDE = a.chaine.getString("HIDE");
+      
+      BEGIN = new String[6];
+      for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i); 
    }
 
   /** Creation de l'interface de la pile des plans.
@@ -781,7 +787,7 @@ public final class Select extends JComponent  implements
          }
          
          // On est sans doute au-dessus de la pile
-         else if( x>0 ) {
+         else if( x>0 && x<getWidth() && y>0 && y<oldy ) {
             int n;
             for( n=0; a.calque.plan[n].type==Plan.NO; n++);
             if( n>0 ) n--;
@@ -1156,6 +1162,101 @@ public final class Select extends JComponent  implements
       Slide s = getSlide(y);
       return s==null?null:s.getPlan();
    }
+   
+   static final private String WELCOME = "" +
+   		"Bienvenue on Aladin,\n" +
+   		"the professional\n" +
+   		"sky atlas.\n" +
+   		" \n" +
+   		".Discover most of\n" +
+   		"astronomical data\n" +
+   		"available over the world !\n" +
+   		" \n" +
+   		".Compare them\n" +
+   		"with your own data.\n" +
+   		" \n" +
+   		".Prepare your observation\n" +
+   		"mission.\n" +
+   		" \n" +
+   		"To start,\n" +
+   		"type any object name,\n" +
+   		"such as M1,\n" +
+   		"and press ENTER...\n"
+   		;
+   
+   static final private String BEGINNERHELP = 
+        "Your eye\n" +
+        "is on the top of \n" +
+        "a stack of planes.\n" +
+        " \n" +
+        "Each plane contains\n" +
+        "its own data set\n" +
+        "(image, catalog,\n" +
+        "graphical overlays).\n" +
+        " \n" +
+        "You see the combination\n" +
+        "of them.\n" +
+        " \n" +
+        "Use File->Open for\n" +
+        "discovering all\n" +
+        "other data.\n" +
+        " \n" +
+        "Clic & drag\n" +
+        "your own data."
+   		;
+   
+   static final private String ADVANCEDRHELP = ""
+      ;
+   
+   static final private String OTHER2HELP = "";
+ 
+   static final private String OTHER1HELP = 
+      "Mouse controls:\n" +
+      " \n" +
+      "-Left: source selection.\n" +
+      "-Middle: quick panning.\n" +
+      "-Right: constrast.\n" +
+      "-Wheel: quick zoom" +
+      " on the reticle.\n" +
+      "-Double-clic: re-center.\n" +
+      " \n" +
+      "-Let you mouse on an objet\n" +
+      "for discovering associated\n" +
+      "Simbad data.\n"
+      ;
+ 
+   boolean beginnerHelp=true;
+   
+   protected void setBeginnerHelp(boolean flag) { beginnerHelp=flag; }
+
+   void drawBeginnerHelp(Graphics g,int nbVisiblePlan,int yMax) {
+      String s = BEGIN[nbVisiblePlan+1];
+      g.setColor(Aladin.MYBLUE);
+      g.setFont(Aladin.BOLD);
+      int h=g.getFontMetrics().getHeight();
+      StringTokenizer st = new StringTokenizer(s,"\n");
+      boolean first=true;
+      for( int y=20; y<yMax && st.hasMoreTokens(); y+=h) {
+         String s1 = st.nextToken().trim();
+         if( s1.length()==0 && y+3*h>yMax ) break;
+         g.drawString(s1, 5, y);
+         if( first ) {
+            first=false;
+            g.setFont(Aladin.PLAIN);
+         }
+      }
+   }
+   
+//   long timeTips=0L;
+//   String tip=null;
+//   void drawTipHelp(Graphics g) {
+//      long t = System.currentTimeMillis();
+//      if( t-timeTips>5000 ) {
+//         tip = ((Tips)a.urlStatus).getNextTips();
+//         timeTips=t;
+//      }
+//      drawBeginnerHelp(g,tip);
+//   }
 
    // Dessin de l'oeil
    void drawEye(Graphics g,boolean open) {
@@ -1313,6 +1414,7 @@ public final class Select extends JComponent  implements
       
       // Pas très joli
       if( a.calque.zoom.opacitySlider!=null ) {
+         if( a.calque.zoom.filterSlider!=null ) a.calque.zoom.filterSlider.repaint();
          a.calque.zoom.opacitySlider.repaint();
          a.calque.zoom.zoomSlider.repaint();
       }
@@ -1320,6 +1422,7 @@ public final class Select extends JComponent  implements
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {
          Aladin.makeCursor(a,Aladin.DEFAULT);
+         a.localisation.setInitialFocus();
          firstUpdate=false;
       }
 
@@ -1383,7 +1486,11 @@ public final class Select extends JComponent  implements
       a.calque.scroll.setFirstVisiblePlan(j+1);
       a.calque.scroll.setNbVisiblePlan(nbPlanVisible);
       a.calque.scroll.setRequired(y<eyeHeight || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
-
+      
+//      if( nbPlanVisible>4 || !a.mesure.isReduced() ) beginnerHelp=false;
+      if( beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
+//      else if( nbPlanVisible<=3 ) drawTipHelp(g);
+      
       // Dans le cas d'un deplacement de plan
       if( flagDrag==VERTICAL ) moveLogo(g);
 

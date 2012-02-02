@@ -72,7 +72,7 @@ public final class Tips extends MyLabel implements MouseListener {
       return cTips;
    }
    
-   private String getNextTips() {
+   protected String getNextTips() {
       int n = random.nextInt(TIPS.size());
       return "TIP: "+TIPS.elementAt(n);
    }

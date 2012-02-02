@@ -2528,6 +2528,7 @@ public class ViewSimple extends JComponent
    
    /** Modification de la colormap par déplacement direct dans la vue - à la  DS9 */
    private void setCMByMouse(int x, int y) {
+      Plan pref = aladin.calque.getFirstSelectedPlanImage();
       if(  !(pref.isImage() || pref.type==Plan.ALLSKYIMG )  ) return;
       if( pref.type==Plan.ALLSKYIMG && ((PlanBG)pref).color ) return;
       y=getHeight()-y;

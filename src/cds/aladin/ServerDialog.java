@@ -270,7 +270,6 @@ public final class ServerDialog extends JFrame
       TIPCLEAR = aladin.chaine.getString("TIPCLEAR");
       TIPSUBMIT = aladin.chaine.getString("TIPSUBMIT");
       TIPCLOSE = aladin.chaine.getString("TIPCLOSE");
-
    }
 
 
@@ -606,7 +605,7 @@ long t1,t;
       
       aladin.manageDrop();
       
-      setCurrent("Allsky");
+//      setCurrent("Allsky");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
 //      Thread th = new Thread(this,"AladinServerPack");

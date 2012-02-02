@@ -2936,6 +2936,12 @@ Aladin.trace(2,"Loading FITS image");
          close();
          return false;
       }
+      if (bitpix==0) {
+         error=aladin.error="FITS format error: BITPIX=0 !";
+         Aladin.warning(error,1);
+         close();
+         return false;
+      }
 
       npix = n = Math.abs(bitpix)/8;	// Nombre d'octets par valeur
       taille=width*height*n;	// Nombre d'octets

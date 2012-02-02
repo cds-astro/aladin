@@ -244,22 +244,29 @@ public final class Localisation extends MyBox {
    protected void focus(String s) {
        setMode(SAISIE);
        text.setText(s);
+
       (new Thread() {
          Color def = text.getBackground();
          Color deff = text.getForeground();
          public void run() {
-            for( int i=0; i<3; i++ ) {
+            for( int i=0; i<2; i++ ) {
                text.setBackground(Color.green);
                text.setForeground(Color.black);
-               Util.pause(200);
+               Util.pause(1000);
                text.setBackground(def);
                text.setForeground(deff);
-               Util.pause(200);
+               Util.pause(100);
             }
             text.setText("");
             text.requestFocusInWindow();
          }
       }).start();
+   }
+   
+   protected void setInitialFocus() {
+      setMode(SAISIE);
+      text.requestFocusInWindow();
+      text.setCaretPosition(text.getText().length());
    }
    
    protected void infoStart() {
@@ -281,7 +288,7 @@ public final class Localisation extends MyBox {
               }
               if( !flagStopInfo ) {
                  text.setText(s);
-                 Util.pause(600);
+                 Util.pause(1000);
               }
            }
            if( flagStopInfo ) {

@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import java.awt.Graphics;
+
 /**
  * Slider de contrôle du zoom des vues sélectionnées
  * @author Pierre Fernique [CDS]
@@ -29,9 +31,7 @@ public class SliderZoom extends SliderPlusMoins {
    private Zoom zoom;
    
    public SliderZoom(Zoom zoom) {
-//      super(zoom.aladin,zoom.aladin.getChaine().getString("ZOOM"),0,zoom.cZoom.getItemCount(),1);
       super(zoom.aladin,zoom.aladin.getChaine().getString("ZOOM"),6,18,1);
-//      slider.setValue(zoom.MINZOOM);
       setTooltip(aladin.getChaine().getString("ZOOMTIP"));
       this.zoom = zoom;
    }
@@ -42,11 +42,9 @@ public class SliderZoom extends SliderPlusMoins {
       else zoom.incZoom(inc);
    }
    
-//   public void paintComponent(Graphics g) {
-//      Plan p = aladin.calque.getPlanRef();
-//      if( p instanceof PlanBG ) setMinMax(6,18);
-//      else setMinMax(0,aladin.calque.zoom.cZoom.getItemCount()-1);
-//      super.paintComponent(g);
-//   }
+   public void paintComponent(Graphics g) {
+      if( aladin.calque.isFree() ) slider.setValue(slider.min);
+      super.paintComponent(g);
+   }
 
 }

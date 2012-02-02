@@ -2337,6 +2337,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       // Attente que les serveurs soient OK
       syncServer();
       
+      // mémorisation du dernier commentaire pour une éventuelle définition de fonction
+      if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
+         if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
+         else comment.append(" "+s1.trim().substring(1));
+      } else if( !s1.startsWith("function") ) comment=null;
+
       // Compatibilité pour les commandes "region" de DS9
       try { 
          String s2 = ds9.translate(s1);
@@ -2430,14 +2436,9 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       // Echo sur la console
       if( echo ) a.console.setCommand(s1);
       
+      // Commentaire
+      if( s1.length()>0 && s1.trim().charAt(0)=='#' ) return "";
       
-      // mémorisation du dernier commentaire pour une éventuelle définition de fonction
-      if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
-         if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
-         else comment.append(" "+s1.trim().substring(1));
-         return "";
-      } else if( !s1.startsWith("function") ) comment=null;
-
       if( robotMode &&  Aladin.ROBOTSUPPORT ) {
           if( robot.executeCommand(cmd, param) ) return "";
       }

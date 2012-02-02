@@ -53,7 +53,7 @@ public class SliderOpacity extends SliderPlusMoins {
       if( p!=null && p.hasCanBeTranspState() ) {
          setEnabled(true);
          slider.setValue((int)( p.getOpacityLevel()*100 ));
-      } else setEnabled(false);
+      } else { slider.setValue(slider.min); setEnabled(false); }
       super.paintComponent(g);
    }
 

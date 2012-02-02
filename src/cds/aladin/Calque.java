@@ -3402,8 +3402,9 @@ public final class Calque extends JPanel implements Runnable {
     protected void setOpacityLevelImage(float opacity) {
        Plan [] plan = getPlans();
        for( int i=0; i<plan.length; i++ ) {
-          if( !plan[i].flagOk || !plan[i].isSimpleImage() ) continue;
-          plan[i].setOpacityLevel(opacity);
+          Plan p = plan[i];
+          if( !p.flagOk || !p.isSimpleImage() ) continue;
+          p.setOpacityLevel(opacity);
        }
     }
     
@@ -3412,9 +3413,10 @@ public final class Calque extends JPanel implements Runnable {
     protected void setOpacityLevel(float opacity) {
        Plan [] plan = getPlans();
        for( int i=0; i<plan.length; i++ ) {
-          if( !plan[i].flagOk || !plan[i].selected ) continue;
-          plan[i].setOpacityLevel(opacity);
-          if( opacity>=0.1 ) plan[i].setActivated(true);
+          Plan p = plan[i];
+          if( !p.flagOk || !p.selected || !p.hasCanBeTranspState() ) continue;
+          p.setOpacityLevel(opacity);
+          if( opacity>=0.1 ) p.setActivated(true);
        }
     }
 

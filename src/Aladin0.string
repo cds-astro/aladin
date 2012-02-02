@@ -2543,3 +2543,10 @@ TIP46.fr Déplacer rapidement la vue [bouton central de la souris]
 TIP47.fr Revenir à la position précédente [flêches vertes en haut à gauche]
 TIP48.fr Passer en plein écran [icône en haut à droite]
 TIP49.fr Utiliser Aladin en mode "enseignement" [préférences utilisateurs]
+
+BEGIN1	Bienvenue on Aladin,\nthe professional\nsky atlas.\n \n.Discover most of\nastronomical data\navailable over the world !\n \n.Compare them\nwith your own data.\n \n.Prepare your observation\nmission.\n \nTo start,\ntype any object name,\nsuch as M1,\nand press ENTER...
+BEGIN2	Your eye\nis on the top of \na stack of planes.\n \nEach plane contains\nits own data set\n(image, catalog,\ngraphical overlays).\n \nYou see the combination\nof them.\n \nUse File->Open for\ndiscovering all\nother data.\n \nClic & drag\nyour own data.
+BEGIN3	Stack controls:\n-Check box: switch on/off\n-Zoom: adjust size.\n-Opacity: adjust\ntransparency.\n \nAll planes are\ndrawn according to\none reference: the red\ncheck plane.\n \nClic & drag a plane\ninto the view\nfor changing the\nreference.
+BEGIN4	Mouse controls:\n \n-Left: source selection.\n-Middle: quick panning.\n-Right: constrast.\n-Wheel: quick zoom on the reticle.\n-Double-clic: re-center.\n \n-Let you mouse on an objet\nfor discovering associated\nSimbad data.
+BEGIN5	Basic controls:\n \n-Type any object name\nor coordinates for\nmoving on it.\n \n-Select catalog sources\nfor displaying associated\ndata measurements.
+

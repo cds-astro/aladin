@@ -2967,7 +2967,7 @@ public class Aladin extends JApplet
 
     /** Exécution de l'inversion verticale ou horizontale du plan de base */
     protected void flip(int methode) {
-       try { flip((PlanImage)calque.getPlanBase(),methode); }
+       try { flip((PlanImage)calque.getFirstSelectedSimpleImage(),methode); }
        catch( Exception e) { e.printStackTrace(); }
     }
 
@@ -3073,19 +3073,18 @@ public class Aladin extends JApplet
 
     /** Activation du COPY depuis la JBar */
     protected void copy() {
-       PlanImage pi = (PlanImage)calque.getPlanBase();
+       PlanImage pi = (PlanImage)calque.getFirstSelectedSimpleImage();
        command.execLater("copy "+Tok.quote(pi.getLabel()));
     }
 
     /** Activation du DUMP depuis la JBar */
     protected void crop() {
        toolBox.setMode(ToolBox.CROP, Tool.DOWN);
-//       command.execLater("crop "+Tok.quote(calque.getPlanBase().getLabel()));
     }
 
     /** Création d'un fichier map HEALpix à partir d'un PlanImage et affichage de cette map */
     protected void createHpx() {
-       final PlanImage pi = (PlanImage)calque.getPlanBase();
+       final PlanImage pi = (PlanImage)calque.getFirstSelectedSimpleImage();
        pi.flagProcessing=true;
 
        calque.select.repaint();
@@ -3698,7 +3697,7 @@ public class Aladin extends JApplet
 
    /** Lancement d'une recalibration sur une image*/
    protected void launchRecalibImg(Plan p) {
-      if( p==null ) p = calque.getPlanBase();
+      if( p==null ) p = calque.getFirstSelectedSimpleImage();
       if( p==null ) {
          warning(chaine.getString("NEEDIMG"));
          return;
@@ -4205,10 +4204,12 @@ public void setLocation(Point p) {
          int m = view.getModeView();
          boolean hasSelectedCat = (pc!=null && pc.isCatalog());
          ViewSimple v = view.getCurrentView();
-         boolean isBG = v!=null && v.pref!=null && v.pref instanceof PlanBG;
+//         boolean isBG = v!=null && v.pref!=null && v.pref instanceof PlanBG;
+         boolean isBG = pimg!=null && pimg instanceof PlanBG;
          boolean isCube = hasImage && (base.type==Plan.IMAGECUBE || base.type==Plan.IMAGECUBERGB);
-         boolean hasPixels = v!=null && v.pref!=null && v.pref.hasAvailablePixels() && v.pref.type!=Plan.IMAGEHUGE
-            && !isBG;
+//         boolean hasPixels = v!=null && v.pref!=null && v.pref.hasAvailablePixels() && v.pref.type!=Plan.IMAGEHUGE
+//         && !isBG;
+         boolean hasPixels = pimg!=null && pimg.hasAvailablePixels() && pimg.type!=Plan.IMAGEHUGE && !isBG;
          boolean isFree = calque.isFree();
          int nbPlans = calque.getNbPlans(true);
          boolean mode = nbPlans>0;

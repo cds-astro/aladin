@@ -83,7 +83,7 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       // Creation d'un champ de saisie
       text = new Text("",30);
       text.setFont(FONT);
-      text.setForeground( Aladin.GREEN );
+      text.setForeground( Aladin.MYBLUE );
       text.addMouseListener(this);
       text.addMouseMotionListener(this);
 

@@ -66,7 +66,7 @@ public class Source extends Position implements Comparator {
 
    /**** objet wrappant les infos relatives au footprint associé à la source ****/
    private SourceFootprint sourceFootprint;
-
+   
    /** For plugin */
    protected Source() {}
 
@@ -117,6 +117,13 @@ public class Source extends Position implements Comparator {
 
       fixInfo();
 
+   }
+   
+   /** Accroit ou décroit la taille du type de source */
+   void increaseSourceSize(int sens) { 
+      sourceType+=sens;
+      if( sourceType>=TYPENAME.length ) sourceType=(byte)(TYPENAME.length-1);
+      else if( sourceType<0 ) sourceType=0;
    }
 
    public boolean hasProp() { return false; }

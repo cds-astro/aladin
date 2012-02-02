@@ -34,8 +34,6 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  */
 public class PlanCatalog extends Plan {
-
-
    URL url = null;
 
   /** Creation d'un plan de type CATALOG (via une fichier)
@@ -245,6 +243,16 @@ public class PlanCatalog extends Plan {
 
    /** Retourne le nombre de tables qui composent le catalogue */
    protected int getNbTable() { return pcat.nbTable; }
+   
+   /** Accroit ou décroit la taille du type de source */
+   void increaseSourceSize(int sens) { 
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         ((Source)o).increaseSourceSize(sens);
+      }
+   }
 
    /** Retourne la liste des légendes des tables qui composent le catalogue */
    protected Vector<Legende> getLegende() {
