@@ -140,9 +140,6 @@ public final class Select extends JComponent  implements
       GOTO = a.chaine.getString("GOTO");
       SHOW = a.chaine.getString("SHOW");
       HIDE = a.chaine.getString("HIDE");
-      
-      BEGIN = new String[6];
-      for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i); 
    }
 
   /** Creation de l'interface de la pile des plans.
@@ -1161,89 +1158,56 @@ public final class Select extends JComponent  implements
    protected Plan getPlan(int y) {
       Slide s = getSlide(y);
       return s==null?null:s.getPlan();
-   }
-   
-   static final private String WELCOME = "" +
-   		"Bienvenue on Aladin,\n" +
-   		"the professional\n" +
-   		"sky atlas.\n" +
-   		" \n" +
-   		".Discover most of\n" +
-   		"astronomical data\n" +
-   		"available over the world !\n" +
-   		" \n" +
-   		".Compare them\n" +
-   		"with your own data.\n" +
-   		" \n" +
-   		".Prepare your observation\n" +
-   		"mission.\n" +
-   		" \n" +
-   		"To start,\n" +
-   		"type any object name,\n" +
-   		"such as M1,\n" +
-   		"and press ENTER...\n"
-   		;
-   
-   static final private String BEGINNERHELP = 
-        "Your eye\n" +
-        "is on the top of \n" +
-        "a stack of planes.\n" +
-        " \n" +
-        "Each plane contains\n" +
-        "its own data set\n" +
-        "(image, catalog,\n" +
-        "graphical overlays).\n" +
-        " \n" +
-        "You see the combination\n" +
-        "of them.\n" +
-        " \n" +
-        "Use File->Open for\n" +
-        "discovering all\n" +
-        "other data.\n" +
-        " \n" +
-        "Clic & drag\n" +
-        "your own data."
-   		;
-   
-   static final private String ADVANCEDRHELP = ""
-      ;
-   
-   static final private String OTHER2HELP = "";
- 
-   static final private String OTHER1HELP = 
-      "Mouse controls:\n" +
-      " \n" +
-      "-Left: source selection.\n" +
-      "-Middle: quick panning.\n" +
-      "-Right: constrast.\n" +
-      "-Wheel: quick zoom" +
-      " on the reticle.\n" +
-      "-Double-clic: re-center.\n" +
-      " \n" +
-      "-Let you mouse on an objet\n" +
-      "for discovering associated\n" +
-      "Simbad data.\n"
-      ;
+   }   
  
    boolean beginnerHelp=true;
    
    protected void setBeginnerHelp(boolean flag) { beginnerHelp=flag; }
+   
+   int lastBegin=-1;
 
    void drawBeginnerHelp(Graphics g,int nbVisiblePlan,int yMax) {
-      String s = BEGIN[nbVisiblePlan+1];
+      if( BEGIN==null ) {
+         BEGIN = new String[6];
+         for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i); 
+      }
+      int begin = nbVisiblePlan+1;
+      
+      // Pour n'afficher qu'une fois le même message
+      if( lastBegin!=-1 && lastBegin!=begin ) BEGIN[lastBegin]=null;
+      String s = BEGIN[begin];
+      lastBegin=begin;
+      if( s==null ) return;
+      
+      int xMax=getWidth();
       g.setColor(Aladin.MYBLUE);
       g.setFont(Aladin.BOLD);
-      int h=g.getFontMetrics().getHeight();
-      StringTokenizer st = new StringTokenizer(s,"\n");
+      FontMetrics fm = g.getFontMetrics();
+      int h=fm.getHeight();
       boolean first=true;
-      for( int y=20; y<yMax && st.hasMoreTokens(); y+=h) {
-         String s1 = st.nextToken().trim();
-         if( s1.length()==0 && y+3*h>yMax ) break;
-         g.drawString(s1, 5, y);
-         if( first ) {
-            first=false;
-            g.setFont(Aladin.PLAIN);
+      StringBuffer line = new StringBuffer();
+      int w=0;
+      StringTokenizer st = new StringTokenizer(s,"\n");
+      for( y=30; y+3*h<yMax && st.hasMoreTokens(); y+=h ) {
+         StringTokenizer st1 = new StringTokenizer(st.nextToken()," ");
+         for( ; y<yMax && st1.hasMoreTokens(); ) {
+            String s1 = st1.nextToken().trim();
+            int w1 = fm.stringWidth(" "+s1);
+            if( w1+w>xMax ) {
+               g.drawString(line.toString(),5,y);
+               y+=h;
+               line = new StringBuffer(s1);
+               w=0;
+               if( first ) { first=false; g.setFont(Aladin.PLAIN); }
+            } else line.append(" "+s1);
+            w+=w1;
          }
+         if( y<yMax && line.length()>0 ) {
+            g.drawString(line.toString(),5,y);
+            line = new StringBuffer();
+            w=0;
+         }
+         if( first ) { first=false; g.setFont(Aladin.PLAIN); }
       }
    }
    
@@ -1487,13 +1451,13 @@ public final class Select extends JComponent  implements
       a.calque.scroll.setNbVisiblePlan(nbPlanVisible);
       a.calque.scroll.setRequired(y<eyeHeight || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
       
-//      if( nbPlanVisible>4 || !a.mesure.isReduced() ) beginnerHelp=false;
-      if( beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
-//      else if( nbPlanVisible<=3 ) drawTipHelp(g);
-      
       // Dans le cas d'un deplacement de plan
       if( flagDrag==VERTICAL ) moveLogo(g);
 
+//    if( nbPlanVisible>4 || !a.mesure.isReduced() ) beginnerHelp=false;
+      if( beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
+//      else if( nbPlanVisible<=3 ) drawTipHelp(g);
+      
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {
             // On met a jour la fenetre des proprietes en indiquant
