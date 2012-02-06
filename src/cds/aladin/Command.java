@@ -68,7 +68,8 @@ public final class Command implements Runnable {
 
    private String lastCmd="";		// Dernière commande exécutée
    
-   protected boolean syncNeedSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
+//   protected boolean syncNeedSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
+   protected Synchro syncSave = new Synchro();
    
    private Thread thread;   // Le thread de lecture des commandes
    JFrame robotInfo;
@@ -549,6 +550,15 @@ public final class Command implements Runnable {
       return false;
    }
    
+   /** Retourne true si tous les serveurs sont syncrhonisés */
+   protected boolean isSyncSave() {
+      if( syncSave.isReady() ) return true;
+      Aladin.trace(4,"Command.isSyncSave() : waiting save process...\n" +
+                     "==> "+syncSave);
+      return false;
+   }
+   
+
 
    protected boolean syncNeedRepaint=false;
    protected boolean syncNeedSesame=false;
@@ -563,7 +573,7 @@ public final class Command implements Runnable {
       
       if( syncNeedSesame && a.view.isSesameInProgress() ) {
          a.trace(4,"Command.isSync() : waiting sesame...\n" +
-         		   "==> "+a.view.sesameSynchro.toString());
+         		   "==> "+a.view.sesameSynchro);
          return false;
       }
       syncNeedSesame=false;
@@ -574,13 +584,9 @@ public final class Command implements Runnable {
          return false;
       }
       
-//      if( syncNeedSave ) {
-//         a.trace(4,"Command.isSync() : waiting save or export...");
-//         return false;
-//      }
-      
       if( !isSyncServer() ) return false;
       if( !isSyncPlan() ) return false;
+      if( !isSyncSave() ) return false;
       
 //      if( !a.calque.isPlanBGSync() ) return false;
       
@@ -2893,16 +2899,21 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( !a.calque.zoom.setZoom(param) ) {
                   printConsole("!!! zoom error: factor \""+param+"\" unknown !");
                }
-           }
+      }
       else if( cmd.equalsIgnoreCase("backup") ) {
-              syncNeedSave=true;
-              if( a.save==null ) a.save = new Save(a);
-              (a.save).saveAJ(param);
-              syncNeedSave=false;
-           }
-
+         String syncId = syncSave.start("backup");
+         try {
+            if( a.save==null ) a.save = new Save(a);
+            (a.save).saveAJ(param);
+         }
+         catch( Exception e ) {}
+         finally {
+            syncSave.stop(syncId);
+         }
+      }
       else if( cmd.equalsIgnoreCase("save") ) {
-              syncNeedSave=true;
+         String syncId = syncSave.start("save");
+         try {
               if( a.save==null ) a.save = new Save(a);
 
               String tmp=null;
@@ -2996,7 +3007,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
               if( file==null && !a.NOGUI) {
                  tmp="saving on standard output required NOGUI mode (-nogui parameter)";
                  a.warning("save error: "+tmp,1);
-                 syncNeedSave=false;
                  return tmp;
               } else file = Tok.unQuote(file);
 
@@ -3022,10 +3032,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
               if( flagROI ) a.view.saveROI(file,w,h,mode);
               else (a.save).saveView(file,w,h,mode,qual);
-              syncNeedSave=false;
-           }
+         }
+         catch( Exception e ) {}
+         finally {
+            syncSave.stop(syncId);
+         }
+      }
       else if( cmd.equalsIgnoreCase("export") ) {
-         syncNeedSave=true;
+         String syncId = syncSave.start("export");
          try {
             if( param!=null && param.startsWith("-ROI") ) {
                String prefix = null;
@@ -3065,7 +3079,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( p==null ) {
                   String tmp="nothing to export";
                   printConsole("!!! export error: "+tmp);
-                  syncNeedSave=false;
                   return tmp;
                }
 
@@ -3100,12 +3113,13 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                else {
                   String tmp="plane type ["+Plan.Tp[p.type]+"] not supported";
                   printConsole("!!! export error: "+tmp);
-                  syncNeedSave=false;
                   return tmp;
                }
             }
          } catch( Exception e ) { if( a.levelTrace>=3 ) e.printStackTrace(); }
-         syncNeedSave=false;
+           finally {
+              syncSave.stop(syncId);
+         }
       }
       else if( cmd.equalsIgnoreCase("trace") ) {
                if( param.equals("off") || param.equals("0")) {

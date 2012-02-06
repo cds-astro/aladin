@@ -1676,7 +1676,7 @@ public final class Save extends JFrame implements ActionListener {
          if( p.type==Plan.IMAGERGB ) {
             img = new MemoryImageSource(p.width,p.height,p.cm,
                   ((PlanRGBInterface)p).getPixelsRGB(), 0,p.width);
-         } else img = new MemoryImageSource(p.width,p.height,p.cm, p.getBufPixels8(), 0,p.width);
+         } else img = new MemoryImageSource(p.width,p.height,p.cm, p.pixels, 0,p.width);
 
          String s = "Created by Aladin";
          if( !p.hasNoReduction() ) s = generateFitsHeaderString(p);

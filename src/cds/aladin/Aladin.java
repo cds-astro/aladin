@@ -2406,7 +2406,7 @@ public class Aladin extends JApplet
    synchronized boolean isPrinting() { return print; }
 
    /** Indication d'un save, export ou backup en cours */
-   protected boolean isSaving() { return command.syncNeedSave; }
+   protected boolean isSaving() { return !command.isSyncSave(); }
 
    /** Transformation de la chaine du numero de version vx.xxx en valeur
     * numerique
