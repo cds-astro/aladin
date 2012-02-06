@@ -22,9 +22,11 @@ package cds.aladin;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Label;
 import java.awt.MediaTracker;
 import java.awt.Point;
 import java.awt.Polygon;
@@ -1149,6 +1151,7 @@ public class HealpixKey {
 //      return 2880;
 //   }
 
+   static private final Component observer = (Component) new Label();
    
    // Regénération des pixels 8 bits
    protected byte [] getPixels(Image img) throws Exception {
@@ -1156,7 +1159,7 @@ public class HealpixKey {
       long t1=Util.getTime();
       BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
       Graphics g = imgBuf.getGraphics();
-      g.drawImage(img,0,0,Aladin.aladin);
+      g.drawImage(img,0,0,observer);
       g.finalize(); g=null;
       
       byte [] pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
@@ -1202,7 +1205,7 @@ public class HealpixKey {
       long t1=Util.getTime();
       BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
       Graphics g = imgBuf.getGraphics();
-      g.drawImage(img,0,0,Aladin.aladin);
+      g.drawImage(img,0,0,observer);
       g.finalize(); g=null;
       
       int [] rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
@@ -1734,7 +1737,7 @@ public class HealpixKey {
             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
       if( img==null ) return 0;
-      g2d.drawImage(img,0,0,null);
+      g2d.drawImage(img,0,0,planBG.aladin);
 
       return 1;
    }

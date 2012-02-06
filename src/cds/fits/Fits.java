@@ -18,6 +18,7 @@
 //
 
 package cds.fits;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Label;
@@ -149,10 +150,11 @@ final public class Fits {
 
    /* Chargement d'une image N&B sous forme d'un JPEG */
    protected void loadJpeg(MyInputStream dis) throws Exception { loadJpeg(dis,false); }
+   
+   static private Component observer = (Component)new Label();
 
    /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
    protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
-      Label observer = new Label();
       Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
       boolean encore=true;
       while( encore ) {
@@ -578,7 +580,7 @@ final public class Fits {
 
       BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
       Graphics g = bufferedImage.createGraphics();
-      g.drawImage(img,xCell,yCell,null);
+      g.drawImage(img,xCell,yCell,observer);
       g.dispose();
 
       ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();

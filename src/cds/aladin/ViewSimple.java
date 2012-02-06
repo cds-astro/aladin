@@ -1415,10 +1415,11 @@ public class ViewSimple extends JComponent
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
          getImgView(g,pi);
-      }
+      } 
       fillBackground(g);
       paintOverlays(g,null,0,0,true);
       drawCredit(g, 0, 0);
+      aladin.waitImage(img);
 //      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
 //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
       return img;

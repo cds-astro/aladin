@@ -1335,9 +1335,10 @@ public final class Save extends JFrame implements ActionListener {
                      img.getHeight(null),
                      RGB ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_BYTE_GRAY );
                Graphics g = bufferedImage.createGraphics();
-               g.drawImage(img,0,0,null);
+               g.drawImage(img,0,0,aladin);
                g.dispose();
             }
+            aladin.waitImage(bufferedImage);
             ImageIO.write(bufferedImage, format, o);
          }
       } catch( Exception e ) {
@@ -1363,9 +1364,10 @@ public final class Save extends JFrame implements ActionListener {
                img.getHeight(null),
                RGB ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_BYTE_GRAY );
          Graphics g = bufferedImage.createGraphics();
-         g.drawImage(img,0,0,null);
+         g.drawImage(img,0,0,aladin);
          g.dispose();
       }
+      aladin.waitImage(img);
       if( qual<0 || qual>1 ) qual=0.95f;
 
       ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
@@ -1689,6 +1691,7 @@ public final class Save extends JFrame implements ActionListener {
       }
       return true;
    }
+   
 
    /**
     * Sauvegarde d'un plan image dans un fichier FITS. Prend en compte le fait que l'image

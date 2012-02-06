@@ -1895,14 +1895,14 @@ public String getUrl() {
                Composite myComposite = Util.getImageComposite(op);
                g2d.setComposite(myComposite);
             }
-            if( drawMode==DRAWPIXEL ) g2d.drawImage(getImage(v,now), dx, dy, null);
+            if( drawMode==DRAWPIXEL ) g2d.drawImage(getImage(v,now), dx, dy, aladin);
             else if( drawMode==DRAWPOLARISATION ) drawPolarisation(g2d, v);
 
          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
          g2d.setComposite(saveComposite);
 
       } else {
-         if( drawMode==DRAWPIXEL ) g.drawImage(getImage(v,now),dx,dy,null);
+         if( drawMode==DRAWPIXEL ) g.drawImage(getImage(v,now),dx,dy,aladin);
          else if( drawMode==DRAWPOLARISATION ) drawPolarisation(g, v);
       }
       

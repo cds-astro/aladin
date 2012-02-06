@@ -3538,7 +3538,7 @@ Aladin.trace(2,"Loading PDS image");
          }
 
          g2d.setTransform(tr);
-         g2d.drawImage(getImage(v,false),dx,dy,null);
+         g2d.drawImage(getImage(v,false),dx,dy,aladin);
          g2d.setComposite(saveComposite);
          g2d.setTransform(saveTransform);
 

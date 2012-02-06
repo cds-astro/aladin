@@ -433,7 +433,7 @@ public class Rainbow {
          g.drawRect(0,0,(int)(r.width/z),(int)(r.height/z));
 
          // Tracé effective de la table des couleurs
-         gr.drawImage(img,(int)(r.x/z),(int)(r.y/z),null);
+         gr.drawImage(img,(int)(r.x/z),(int)(r.y/z),aladin);
          
          // L'axe
          gr.setColor(Color.black);
