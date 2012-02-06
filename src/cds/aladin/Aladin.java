@@ -4668,7 +4668,7 @@ public void show() {
       // Methode standard (lente)
       MediaTracker mt = new MediaTracker(this);
       mt.addImage(img,0);
-      try{ mt.waitForID(0); } catch( Exception e){ }
+      try{ mt.waitForID(0); } catch( Exception e){ if( levelTrace>=3 ) e.printStackTrace(); }
 
       // Methode rapide, mais susceptible de ne pas marcher dans
       // des versions postérieures de JVM

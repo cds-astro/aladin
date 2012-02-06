@@ -2329,6 +2329,7 @@ public String getUrl() {
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    private void drawForeground(Graphics gv,ViewSimple v) {
+      gv.drawString("PlanBG.drawForeground de "+v,100,100);
 //      if( rayon<60 ) return;
       if( v.getTaille()<15 ) return;
       Projection projd = v.getProj();
