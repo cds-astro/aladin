@@ -3133,11 +3133,13 @@ public final class Calque extends JPanel implements Runnable {
       
 //      launchPlanBG();
       
+      
       Plan p;
       String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
       if( gSky!=null ) {
-         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) 
-                                        : new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
+         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
+                       gSky.isMap()     ? new PlanHealpix(aladin,gSky,label,startingTaskId) :
+                                          new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
          plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId) 
                                   : new PlanBG(aladin, url, label, c, rad, startingTaskId);

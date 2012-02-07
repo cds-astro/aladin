@@ -124,7 +124,8 @@ public class PlanHealpix extends PlanBG {
 
     private boolean fromProperties; // true si la création du plan a été demandée depuis la fenetre des properties. Dans ce cas, on ne touche pas à idxTFormToRead, même pour les fichiers partiels
 
-	/** @param mode : DRAWPIXEL : les pixels, DRAWPOLARISATION : les segments de polarisation, DRAWANGLE : les angles sous forme d'une image */
+    
+    /** @param mode : DRAWPIXEL : les pixels, DRAWPOLARISATION : les segments de polarisation, DRAWANGLE : les angles sous forme d'une image */
     public PlanHealpix(Aladin aladin, String file, MyInputStream in, String label, int mode, int idxTFormToRead, boolean fromProperties) {
         super(aladin);
 
@@ -135,7 +136,24 @@ public class PlanHealpix extends PlanBG {
         threading();
     }
 
+    /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
+    public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, String startingTaskId) {
+       super(aladin);
 
+        this.startingTaskId=startingTaskId;
+        fromProperties = false;
+        
+        String file = gluSky.getUrl();
+        MyInputStream in = null;
+        try { in=Util.openAnyStream(file); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+        if( label==null ) label = gluSky.label;
+        
+        init( file , in, label, 0);
+        setDrawMode(DRAWPIXEL);
+
+        threading();
+    }
+    
     // juste pour les classes derivees
     public PlanHealpix(Aladin aladin) {
         super(aladin);

@@ -338,7 +338,6 @@ public class PlanBG extends PlanImage {
       }
       if( coRadius<=0 ) coRadius=180;
       
-      aladin.view.moveRepere(co);
       objet = co+"";
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
       p.frame = getCurrentFrameDrawing();
@@ -406,6 +405,7 @@ public String getUrl() {
    protected void planReady(boolean ready) {
       super.planReady(ready);
       setPourcent(0);
+      aladin.view.setRepere(co);
       flagOk=ready;
       aladin.synchroPlan.stop(startingTaskId);
    }
@@ -2329,7 +2329,6 @@ public String getUrl() {
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    private void drawForeground(Graphics gv,ViewSimple v) {
-      gv.drawString("PlanBG.drawForeground de "+v,100,100);
 //      if( rayon<60 ) return;
       if( v.getTaille()<15 ) return;
       Projection projd = v.getProj();

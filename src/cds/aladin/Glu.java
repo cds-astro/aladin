@@ -1532,15 +1532,12 @@ public final class Glu implements Runnable {
          if( !dis.readLine().startsWith("%DataTypeName") ) throw new Exception();
          return true;
       } catch( Exception e ) {
-         if( Aladin.levelTrace>0 ) e.printStackTrace();
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
       int i = NPHGLUALADIN.indexOf('/',8);
       if( i<0 ) i=NPHGLUALADIN.length();
       String s = NPHGLUALADIN.substring(7,i);
-      Aladin.warning("Default GLU registry site is not responding [" + s + "]!\n"+
-            "Aladin is currently looking for a new one for this session.\n \n"+
-            "Remember that you can set the default GLU site manually\n"+
-            "via the menu Tool -> user preferences");
+      Aladin.trace(2,"GLU registry site not responding [" + s + "] => Aladin will select another one automatically...");
       return false;
    }
 
