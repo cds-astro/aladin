@@ -150,7 +150,7 @@ public final class Command implements Runnable {
       "call","collapse","demo","expand","function",
       "get","grid","help","hist","info","list","kernel","load","lock","md","mem",
       "pause",/*"reset",*/"reticle",
-      "scale","setconf",
+      "scale",/*"setconf",*/
       "status","stick","sync","timeout","trace","unlock","unstick",
    };
    
@@ -1851,6 +1851,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       int i,j;
       String size,pos=null;
       double x=0,y=0,w=50,h=50;
+      Coord c1=null;
 
       // recup de la taille wxh
       boolean flagDim=false;
@@ -1909,19 +1910,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
     // On essaye la position du repere, sinon le centre de la vue, si nécessaire
       if( !flagPos ) {
          try {
-            Coord c = /* pi instanceof PlanBG ? v.getCooCentre()
-                  : */ new Coord(a.view.repere.raj,a.view.repere.dej);
-            pi.projd.getXY(c);
-            x = c.x-w/2.;
-            y = c.y-h/2.;
+            c1 = pi instanceof PlanBG ? v.getCooCentre()
+                  : new Coord(a.view.repere.raj,a.view.repere.dej);
+            pi.projd.getXY(c1);
+            x = c1.x;
+            y = c1.y;
+            x = c1.x-w/2.;
+            y = c1.y-h/2.;
             y = pi.naxis2-(y+h);
          } catch( Exception e1 ) {
+            e1.printStackTrace();
             x=v.rzoom.x;
             y=v.rzoom.y; 
          }
       }
 
-      a.trace(4,"Command.crop: on "+v+" param=["+param+"] label="+label+" "+x+","+y+(flagPos?" (provided) ":" (on reticle) ")+w+"x"+h+(flagDim?"( provided)":"(view size)"));
+      a.trace(4,"Command.crop: on "+v+" param=["+param+"] label="+label+" "+x+","+y+(flagPos?"(provided) ":" ("+c1+" on reticle) ")+w+"x"+h+(flagDim?"( provided)":"(view size)"));
 
       if( v.cropArea(new RectangleD(x,pi.naxis2-(y+h),w,h), label, v.zoom, 1,true,false)==null ) {
          Aladin.warning("crop error: view ["+v+"] not usable!",1);;
@@ -2901,7 +2905,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                }
       }
       else if( cmd.equalsIgnoreCase("backup") ) {
-         String syncId = syncSave.start("backup");
+         String syncId = syncSave.start("Command.backup");
          try {
             if( a.save==null ) a.save = new Save(a);
             (a.save).saveAJ(param);
@@ -2912,7 +2916,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          }
       }
       else if( cmd.equalsIgnoreCase("save") ) {
-         String syncId = syncSave.start("save");
+         System.out.println("Save c'est parti...");
+         String syncId = syncSave.start("Command.save");
          try {
               if( a.save==null ) a.save = new Save(a);
 
@@ -3018,7 +3023,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                     v.setZoomXY(1, -1, -1);
                  } else v.setDimension(w,h);
                  v.paintComponent(null);
-                 sync();
+//                 sync(false);
               }
               
              // Mode Image non précisé ?
@@ -3030,16 +3035,19 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  else mode|=Save.BMP;
               }
 
+              System.out.println("Save cappel à saveView...");
+
               if( flagROI ) a.view.saveROI(file,w,h,mode);
               else (a.save).saveView(file,w,h,mode,qual);
          }
-         catch( Exception e ) {}
+         catch( Exception e ) { e.printStackTrace(); }
          finally {
+            System.out.println("Save syncSave stop...");
             syncSave.stop(syncId);
          }
       }
       else if( cmd.equalsIgnoreCase("export") ) {
-         String syncId = syncSave.start("export");
+         String syncId = syncSave.start("Command.export");
          try {
             if( param!=null && param.startsWith("-ROI") ) {
                String prefix = null;

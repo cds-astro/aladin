@@ -1081,6 +1081,8 @@ SLMEXP	Expand the selected folders
 SHOW	Show
 HIDE	Hide
 GOTO	Reticle to the center of this plane
+SWARNING For displaying this plane, activate before a reference plane with compatible projection
+SWARNINGSLIDER For displaying this plane, use the opacity slider.\noR activate it as the projection reference
 
 SLHSTACK.fr	Cliquez pour l'activer/désactiver
 SLHSTACK2.fr	Cliquez pour le sélectionner
@@ -1107,6 +1109,8 @@ SLMEXP.fr	Ouvrir les dossiers sélectionnés
 SHOW.fr	Montrer
 HIDE.fr	Cacher
 GOTO.fr	Centrer le réticule sur ce plan
+SWARNING.fr Pour visualiser ce plan, activez au préalable un plan de reférence avec une projection compatible
+SWARNINGSLIDER.fr Pour visualiser ce plan, utilisez le curseur de transparence.\nOu activez-le en tant que référence de projection
 
 # View.java Strings
 VWPLOTCAT	Create a scatter plot
@@ -2544,15 +2548,14 @@ TIP47.fr Revenir à la position précédente [flêches vertes en haut à gauche]
 TIP48.fr Passer en plein écran [icône en haut à droite]
 TIP49.fr Utiliser Aladin en mode "enseignement" [préférences utilisateurs]
 
-BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n.Discover all astronomical data available over the net!\n \n.Compare them with your own data.\n \n.Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...
+BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...
 BEGIN2	Imagine your eye\nlooking through a stack of planes.\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them.\n \nUse File->Open for discovering all other data,\nor clic & drag your own files.
-BEGIN3	Stack controls:\n \n- Check box: switch on/off a plane\n- Zoom: adjust field size.\n- Opacity: adjust transparency.\n \nAll planes are drawn according to one reference plane checked in red.\n \nClic & drag a plane logo into the view for changing the reference.
+BEGIN3	Stack controls:\n \n- icon: show/hide a plane\n- Zoom: adjust field size.\n- Opacity: adjust transparency.\n \nThe planes are drawn according to the projectino of a reference plane.\n \nFor changing the reference, click on its check box.
 BEGIN4	Mouse controls:\n \n-Left: source selection.\n-Middle: quick panning.\n-Right: constrast adjustement.\n-Wheel: quick zoom on the reticle.\n-Simple-clic: move the reticle.\n-Double-clic: re-center.\n \nLet you mouse pointer on an object for discovering associated Simbad data.
 BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it.\n \n-Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controler.
 
-BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas pro du ciel.\n \n.Accédez à toutes les données astronomiques disponibles sur le net !\n \n.Comparez-les avec vos propre données.\n \n.Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...
+BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas pro du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propre données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...
 BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques.\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLa vue ci-contre est la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez le menu Fichier->Ouvrir,\nou glissez/déposez vos propres fichiers.
-BEGIN3.fr	Contrôle de la pile:\n \n- Case à cocher: active/désactive le plan\n- Zoom: ajuste la taille.\n- Opacité: ajuste la transparence.\n \nTous les plans sont dessinés en fonction d'un unique plan de référence coché en rouge.\n \nPour changer de plan de référence, glissez & déposez son logo dans la vue.
+BEGIN3.fr	Contrôle de la pile:\n \n- Logo: montre/cache le plan\n- Zoom: ajuste la taille.\n- Opacité: ajuste la transparence.\n \nLes plans sont dessinés en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
 BEGIN4.fr	Contrôle par la souris:\n \n- Gauche: sélection des sources.\n- Milieu: déplacement du champ.\n- Droite: ajustement du contraste.\n- Molette: zoom sur le réticule.\n- Simple-clic: déplace le réticule\n- Double-clic: recentre la vue.\n \nPour découvrir les informations Simbad sur un objet, laissez dessus qq secondes le pointeur.
 BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n- Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n- Visualiser simultanément plusieurs vues via le contrôle du"multivue".
-

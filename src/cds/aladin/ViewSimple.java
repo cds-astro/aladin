@@ -1185,15 +1185,6 @@ public class ViewSimple extends JComponent
       double dW = ((W/imgW)*rv.width )/zoom;
       double dH = ((H/imgH)*rv.height )/zoom;
 
-      // Recentrage automatique en cas de dépassement
-//           if( dW>W ) xc = W/2;
-//      else if( xc+dW/2>W ) xc = W-dW/2;
-//      else if( xc-dW/2<0 ) xc = dW/2;
-//
-//           if( dH>H ) yc = H/2;
-//      else if( yc+dH/2>H ) yc = H-dH/2;
-//      else if( yc-dH/2<0 ) yc = dH/2;
-
       // Memorisation du rectangle du zoom dans les coord. de l'image courante
       double xzImg = (imgW/W)*xc;
       double yzImg = (imgH/H)*yc;
@@ -1211,6 +1202,7 @@ public class ViewSimple extends JComponent
          this.yzoomView=yc;
          this.HView = H;
          this.WView = W;
+         
          return rzoom;
       }
 
@@ -1792,7 +1784,7 @@ public class ViewSimple extends JComponent
       if( tool==ToolBox.SELECT  || tool==-1  || tool==ToolBox.PAN  || tool==ToolBox.CROP ) {
 
          if( !isProjSync ) {
-            if( !flagshift && !selected  ) {
+            if( !flagshift && (!selected || !view.isMultiView()) ) {
                aladin.calque.unSelectAllPlan();
                aladin.view.unSelectAllView();
             }

@@ -193,13 +193,13 @@ public final class Hpix extends MocCell {
    
    // Initialise les coordonnées ICRS des 4 coins
    private void computeCorners() {
-      computeCorners=true;
       try {
          long nside = CDSHealpix.pow2(order);
          double [][] x = CDSHealpix.corners(nside,npix);
          corners = new Coord[4];
          for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
          corners = computeCornersToICRS(corners);
+         computeCorners=true;
        } catch( Exception e ) {  }
    }
    

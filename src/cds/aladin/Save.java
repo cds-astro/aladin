@@ -1440,6 +1440,7 @@ public final class Save extends JFrame implements ActionListener {
     */
    private boolean saveOneView1(String filename,int w, int h,int format,float qual,ViewSimple v) throws Exception {
      
+      System.out.println("saneOneView1 "+filename+" avant ...");
       boolean rep=false;
 //      v.setLockRepaint(true);
 

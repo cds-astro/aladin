@@ -606,7 +606,7 @@ public final class Projection {
       double z=1;
       if( v!=null ) {
          // sur un background
-         if( v.pref!=null && v.pref instanceof PlanBG ) return true;
+//         if( v.pref!=null && v.pref instanceof PlanBG ) return true;
          z = v.getZoom();
       }
 

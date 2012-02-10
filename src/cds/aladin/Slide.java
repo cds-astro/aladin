@@ -112,7 +112,7 @@ public final class Slide {
    }
 
    // Retourne vrai si on est sur le triangle de ref
-   protected boolean inRef(int x) {
+   protected boolean inCheck(int x) {
       if( p.collapse ) return false;
        return( x<gapL );
    }
@@ -173,36 +173,33 @@ public final class Slide {
 
    // Affichage d'un fond du logo de plan rempli en fonction d'une
    // valeur de pourcentage (remplissage vertical)
-   static void fillLogo(Graphics g,int dx,int dy,double pourcent) {
-      int [] y = new int[frX.length];
-      int [] x = new int[frX.length];
+   static void fillLogo(Graphics g,int []x, int [] y,double pourcent,Color c) {
       double p = pourcent/100.;
       int X1,X2,Y;
 
       // Decallage en ordonnee et tracage
-      for( int i=0; i<frX.length; i++ ) { y[i]=frY[i]+dy; x[i]=frX[i]+dx; }
       Y = y[1]-2 - (int)( (y[1]-y[0]-4)*p);
       X1 = x[1]+ (int)( (x[0]-x[1])*p);
       X2 = x[2]- (int)( (x[2]-x[3])*p);
       x[0]=x[4]=X1;
       x[3]=X2;
       y[0]=y[3]=y[4]=Y;
-      g.setColor(Aladin.MYGRAY);
-      g.fillPolygon(x,y,frX.length);
+      g.setColor(c);
+      g.fillPolygon(x,y,x.length);
    }
+
    
   /** Affichage d'un fond du logo de plan rempli en fonction d'une
    * valeur de pourcentage (remplissage horizontal)
    * @return l'absisse finale pour pouvoir faire le bouton sinon -1
    */
-   static int fillTransparency(Graphics g,int dx,int dy,float transp,boolean flagDraw) {
-      int [] y = new int[frX.length];
-      int [] x = new int[frX.length];
+   static int fillTransparency(Graphics g,int [] x,int [] y,float transp,boolean flagDraw,Color c) {
       double p = transp;
       int X;
+      
+      g.setColor(c);
 
       // Remplissage du trapèze en fonction de la transparence
-      for( int i=0; i<frX.length; i++ ) { y[i]=frY[i]+dy; x[i]=frX[i]+dx; }
       if( p<0.2 ) {
          p = p*5;
          int Y = y[0]+ (int)((y[1] - y[0]) * (1-p));
@@ -220,7 +217,7 @@ public final class Slide {
          x[4]=x[3]; x[2]=x[3]=X;
          y[4]=y[3]; y[3]=Y;
       }
-      if( flagDraw ) g.fillPolygon(x,y,frX.length);
+      if( flagDraw ) g.fillPolygon(x,y,x.length);
       return X;
    }
 
@@ -419,8 +416,11 @@ public final class Slide {
    protected void redraw(Graphics g,int xMouse,int yMouse,int dx,int dy) {
       try {
          Color labelBG= a.calque.select.getBackground();
-         Color colorBorder = p.c;
          Color colorForeground = p.c;
+         Color colorBorder = Color.gray;
+         Color colorFillFG = Aladin.MYGRAY;
+         Color colorFillBG = Color.white;
+         
          if( p.collapse  ) return;
          
          if( xc==null ) {
@@ -430,7 +430,8 @@ public final class Slide {
          // Calcul la taille des lettres
          int ht = Aladin.SIZE;
          
-         // Determination de la couleur du repere en triangle
+         // Determination de la couleur du dessin du logo dans le cas où
+         // il y a un plan couleur (choix des trois composantes RGB)
          if( planRGB!=null ) {
             boolean flagInv = ((PlanImage)planRGB).video==PlanImage.VIDEO_INVERSE;
             if( p.hashCode()==((PlanImageRGB)planRGB).pi[0] )
@@ -441,7 +442,7 @@ public final class Slide {
             else if( p.hashCode()==((PlanImageRGB)planRGB).pi[1] )
                colorForeground=flagInv?Color.magenta:Color.green;
          }
-         g.setColor( Color.black );
+//         g.setColor( Color.black );
          
          // ref==true => repérage du plan
          boolean ref = xMouse<=0 && p.type!=Plan.NO && p.underMouse && a.view.isVisible(p) && a.view.isMultiView();
@@ -452,11 +453,11 @@ public final class Slide {
          
          // Paramètres pour tracer le cadre et la bordure
          int y = dy-1;
-         int x = 1;
+         int x = dx+xLabel-1; // 1;
          int H = ht+7;
          int W = Select.ws-x;
          
-         // Tracage du fond particulier et du cadre
+         // Tracage du fond particulier sur le label
          if(  mode!=DRAG && (
                ref || p.selected  || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
             labelBG=(p.selected ? Aladin.STACKBLUE : Aladin.STACKGRAY );
@@ -470,47 +471,71 @@ public final class Slide {
             g.fillRect(x,y,W,H);
          }
          
+         // Le gris de remplissage des plan de référence est plus appuyé
+         // que pour les autres plans
+         if( p.ref ) {
+            colorFillFG = Color.gray;
+            colorBorder = new Color(50,50,50);
+         }
+         
          boolean canBeTransparent= a.calque.canBeTransparent(p);
-         int xPoignee=frMin+dx;
+         boolean isViewable = p.isViewable();
+         boolean inLogo = inLogo(xMouse) && in(yMouse);
+         boolean isRefForVisibleView = p.isRefForVisibleView();
+         
+         // On penche un peu plus le logo si la souris est dessus
+         if( inLogo && isRefForVisibleView ) {
+            xc[0]--; yc[0]--; xc[4]--; yc[4]--;
+            xc[3]++; yc[3]--; 
+            xc[1]--; yc[1]++; 
+            xc[2]++; yc[2]++; 
+         }
+         
+//         int xPoignee=frMin+dx;
 
          // Remplissage du pourcentage du plan (ajout thomas : remplissage pour PlanContour et pour PlanFilter)
          if( (p.isImage() || p.type==Plan.TOOL && p instanceof PlanContour || p instanceof PlanBG )
                && p.error==null && !p.flagOk ) {
             double pourcent = p.getPourcent();
-            g.setColor(Color.white);
+            g.setColor(colorFillBG);
             g.fillPolygon(xc,yc,frX.length);   // Faut bien mettre un fond 
-            fillLogo(g,dx,dy,pourcent);
+            fillLogo(g,xc,yc,pourcent,colorFillFG);
             
             // Sinon, dessin du calque en fonction du mode activé ou non
          } else {
             if( p.type==Plan.FOLDER ) g.setColor(!p.active? Color.yellow:jauneGris);
-            else if( p.ref && p.isUnderImgBkgd() ) g.setColor(Color.white);
-            else g.setColor( p.active && !canBeTransparent ? Aladin.MYGRAY : Color.white );
-//          else g.setColor( p.active && !canBeTransparent && p.isViewable() ? Color.gray : Color.white );
-            if( g.getColor()==Color.blue &&  (colorForeground==Color.blue || colorForeground==Color.black) ) colorForeground=Color.white;
+            else if( p.ref && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
+            else g.setColor( !p.active || !p.ref && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
+//            else g.setColor( p.active && !canBeTransparent && p.isViewable() ? Color.gray : colorFillBG );
+//            if( g.getColor()==Color.blue &&  (colorForeground==Color.blue || colorForeground==Color.black) ) colorForeground=Color.white;
             g.fillPolygon(xc,yc,frX.length);
-            
+
             if( canBeTransparent ) {
                float transp = p.getOpacityLevel();
                if( transp!=0 ) {
-//                  g.setColor(Color.magenta);
-                  g.setColor( Aladin.MYGRAY );
-                  xPoignee=fillTransparency(g,dx,dy,transp,p.active /* || p.isImage() */ ); 
-//                  xPoignee=fillTransparency(g,dx,dy,transp,p.active || p.isImage() ); 
+                  fillTransparency(g,xc,yc,transp,p.active,colorFillFG); 
+//                  xPoignee=fillTransparency(g,xc,yc,transp,p.active || p.isImage(),colorFillFG ); 
                }
             }
          }
          
-         // Le reperage du calque courant
-         if( p.type!=Plan.NO ) g.setColor( colorBorder = Color.darkGray);
-         else g.setColor(colorBorder = Aladin.MYGRAY);
-         g.drawPolygon(xc,yc,frX.length);
+//         if( p.type!=Plan.NO ) g.setColor( colorBorder = p.ref ? Color.black : Color.gray);
+//         else g.setColor(colorBorder = Aladin.MYGRAY);
+         
+         g.setColor( colorBorder );
+         
+         // on n'affiche le bord du cadre que pour les plans de référence
+         // et on fait un effet de relief si la souris est dessus
+//         drawSlideBorder(g,xc,yc,inLogo,p.ref);
+         if( isRefForVisibleView || inLogo ) g.drawPolygon(xc,yc,frX.length);
          
          // Cote clair à droite et en bas du calque courant
-         g.setColor(new Color(100,100,100));
-         g.drawLine(xc[2],yc[2],xc[3],yc[3]);
+//         if( p.ref ) {
+//            g.setColor(colorBorder.brighter());
+//            g.drawLine(xc[2],yc[2],xc[3],yc[3]);
+//         }
          g.drawLine(xc[1],yc[1],xc[2],yc[2]);
-         
+
          // Affichage de la petite languette du folder + le logo indiquant le localScope
          // ou le numéro indiquant le nombre de plans
          if( p.type==Plan.FOLDER ) {
@@ -530,7 +555,7 @@ public final class Slide {
             
             // On dessine une enveloppe comme logo pour le localScope
             if( ((PlanFolder)p).localScope ) {
-               g.setColor(Color.black);
+//               g.setColor(Color.black);
                int a = (xc[0]+xc[3])/2;
                int b = (yc[0]+yc[1])/2 +1;
                g.drawLine(xc[0],yc[0],a,b);
@@ -560,9 +585,9 @@ public final class Slide {
             case Plan.IMAGERGB:    drawLogoImg(g,dx,dy,null);                              break;
             case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);               break;
             case Plan.ALLSKYMOC:
-            case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,p.active?p.c:Aladin.MYGRAY);         break;
-            case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,p.active?Color.black:Aladin.MYGRAY); break;
-            case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,p.active?p.c:Aladin.MYGRAY);  break;
+            case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,isViewable?p.c:colorFillFG);         break;
+            case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?Color.black:colorFillFG); break;
+            case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,isViewable?p.c:colorFillFG);  break;
             case Plan.IMAGEMOSAIC:
             case Plan.IMAGECUBE:
             case Plan.IMAGEBLINK:  drawLogoImg(g,dx,dy,Color.black);                       break;
@@ -573,21 +598,23 @@ public final class Slide {
          }
          
          // Affichage de la checkbox
-         if( p.type!=Plan.NO && mode!=DRAG && p.flagOk && !p.hasError()
-               && !(p.isCatalog() && !p.hasObj())) {
-            
-            boolean isRefForVisibleView = p.isRefForVisibleView();
-//            Util.drawRadio(g,3,dy+3, Color.gray ,
+//         if( p.type!=Plan.NO && mode!=DRAG && p.flagOk && !p.hasError()
+//               && !(p.isCatalog() && !p.hasObj())) {
+//            
+//            boolean isRefForVisibleView = p.isRefForVisibleView();
+////            Util.drawRadio(g,Select.ws-23,dy+3, Color.gray ,
+////                  inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
+////                        isRefForVisibleView ? Aladin.GREEN : Color.black, 
+////                        p.ref);
+//            Util.drawCheckbox(g, 3, dy+3, Color.gray ,
 //                  inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
-//                        isRefForVisibleView ? Aladin.GREEN : Color.black, 
-//                        p.ref);
-            Util.drawCheckbox(g, 2, dy+3, Color.gray ,
-                  inLogoCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null, 
-                  isRefForVisibleView ? Color.red : Color.black, 
-                  p.ref || p.active /* && !(p.isImage() && !isRefForVisibleView) */);
-            
-         }
+//                  isRefForVisibleView ? Color.red : Color.black, 
+//                  p.ref || p.active /* && !(p.isImage() && !isRefForVisibleView) */);
+//         }
          
+         // Dessin de la checkbox de contrôle de la référence si nécessaire
+          drawCheckBox(g,3, dy+3, xMouse,yMouse, mode, p);
+    
          // Les barres d'appartenance à un folder    
          if( mode!=DRAG && p.folder>0 ) {
             Plan [] allPlan = a.calque.getPlans();
@@ -619,7 +646,7 @@ public final class Slide {
                //    +" ["+(n<allPlan.length?allPlan[n+1].label+"/"+allPlan[n+1].folder:"-")+"]");               
 
                // Barre horizontale pour le dernier niveau
-               if( last ) g.drawLine(x+5,dy+DY/2,x+13,dy+DY/2);
+               if( last ) g.drawLine(x+5,dy+DY/2,x+12,dy+DY/2);
             }
          }
          
@@ -627,7 +654,7 @@ public final class Slide {
          g.setFont( Aladin.BOLD );
          if( p.label!=null ) {
             int py = dy+15-1;
-            int px = Select.ws-15;
+            int px = Select.ws-12;
             int px1 = px;//4;
             x = dx+xLabel;
             
@@ -672,35 +699,66 @@ public final class Slide {
          }
          
          // Le curseur de réglage de la transparence
-         if( mode!=DRAG && canBeTransparent ) {
-            boolean large=false;
-            int largeur = large ? 5 : 3;
-            int debut = frX[1];
-            int fin = large ? frX[2]*3 : frX[2];
-            int haut = large ?  frY[1] : frY[1];
-            int xPos = large ? xPoignee*3 : xPoignee;
-            if( xPos<dx+debut+largeur ) xPos = dx+debut+largeur;
-            if( xPos>dx+fin-largeur ) xPos = dx+fin-largeur;
-            if( large ) {
-               g.setColor(Color.lightGray);
-               g.fillRect(dx+debut, dy+haut-1, dx+fin, 3);
-               Util.drawEdge(g, dx+debut, dy+haut-1, dx+fin, 3);
-            }
-            else {
-               g.setColor( Color.black );
-               g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
-               g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
-            }
-            float transp = p.getOpacityLevel();
-//            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
-            g.setColor( transp<=0.1 ? Color.red : Color.green );
-            g.fillRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
-            g.setColor(Color.black);
-            g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
-         }
+//         if( mode!=DRAG && canBeTransparent ) {
+//            int largeur = 3;
+//            int debut = frX[1];
+//            int fin = frX[2];
+//            int haut = frY[1];
+//            int xPos = xPoignee;
+//            if( xPos<dx+debut+largeur ) xPos = dx+debut+largeur;
+//            if( xPos>dx+fin-largeur ) xPos = dx+fin-largeur;
+//            g.setColor( Color.black );
+//            g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
+//            g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
+//            float transp = p.getOpacityLevel();
+////            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
+//            g.setColor( transp<=0.1 ? Color.red : Color.green );
+//            g.fillRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
+//            g.setColor(Color.black);
+//            g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
+//         }
 
       } catch( Exception e ) { e.printStackTrace(); }
    }
+   
+   private void drawCheckBox(Graphics g, int x, int y, int xMouse, int yMouse, int mode, Plan p) {
+      
+      // Plan pas encore prêt ?
+      if( !p.isReady() ) return;
+      
+      // Il s'agit d'un folder
+      if( p.type==Plan.FOLDER ) return;
+      
+      // Plan en cours de déplacement ?
+      if( mode==DRAG ) return;
+      
+      // Plan overlays qui peut être projeté sur un autre plan => on évite de mettre
+      // la checkbox pour ne pas surcharger les contrôles
+      if( !p.shouldHaveARefCheckBox() ) return;
+      
+      // Faut-il faire temporairement clignoter la checkbox pour signaler à l'utilisateur
+      // qu'il doit l'utiliser pour changer de référence
+      if( p.isCheckBoxBlink() ) {
+         Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.red, blinkState );
+         setBlink(true);
+         a.calque.select.drawMessage(g, a.calque.select.getLastMessage(), Color.red);
+      } else {
+         Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.black, p.ref );
+      }
+      
+   }
+   
+   // Dessin du bord d'un calque, avec effet de relief si la souris se situe dessus
+//   private void drawSlideBorder(Graphics g,int [] xc, int [] yc, boolean mouseIn, boolean isRef) {
+//      if( mouseIn ) {
+//         g.drawLine(xc[0]-1,yc[0]-1,xc[1]-1,yc[1]+1);
+//         g.drawLine(xc[0]-1,yc[0]-1,xc[3]+1,yc[3]-1);
+//         g.drawLine(xc[2]+1,yc[2]+1,xc[1]-1,yc[1]+1);
+//         g.drawLine(xc[2]+1,yc[2]+1,xc[3]+1,yc[3]-1);
+//      }
+//      if( isRef ) g.drawPolygon(xc,yc,xc.length);
+//      
+//   }
    
    /** Dessin d'un slide en cours de déplacement */
    protected void dragDraw(Graphics g,int x,int y ) {

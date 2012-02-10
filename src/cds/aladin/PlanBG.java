@@ -1854,25 +1854,36 @@ public String getUrl() {
     */
    @Override
    protected Image getImage(ViewSimple v,boolean now) {
-      if( !now &&
-            v.imageBG!=null && v.ovizBG == v.iz
-            && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) {
-         return v.imageBG;
-      }
-      if( v.imageBG==null || v.rv.width!=v.owidthBG || v.rv.height!=v.oheightBG ) {
-         v.imageBG = aladin.createImage(v.rv.width,v.rv.height);
-         v.g2BG = v.imageBG.getGraphics();
-      }
-      v.oImgIDBG=imgID;
-      v.owidthBG=v.rv.width;
-      v.oheightBG=v.rv.height;
-      v.ovizBG=v.iz;
-      flagClearBuf=false;
-      v.fillBackground(v.g2BG);
+	   if( now ) {
+		   Image img = aladin.createImage(v.rv.width,v.rv.height);
+		   Graphics g = img.getGraphics();
+		   v.fillBackground(g);
+		   drawLosanges(g,v,now);
+		   g.dispose();
+		   return img;
+	   } 
 
-      drawLosanges(v.g2BG,v,now);
+	   if( v.imageBG!=null && v.ovizBG == v.iz
+			   && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) {
+		   return v.imageBG;
+	   }
 
-      return v.imageBG;
+	   if( v.imageBG==null || v.rv.width!=v.owidthBG || v.rv.height!=v.oheightBG ) {
+		   if( v.imageBG!=null ) v.imageBG.flush();
+		   if( v.g2BG!=null ) v.g2BG.dispose();
+		   v.imageBG = aladin.createImage(v.rv.width,v.rv.height);
+		   v.g2BG = v.imageBG.getGraphics();
+	   }
+	   v.oImgIDBG=imgID;
+	   v.owidthBG=v.rv.width;
+	   v.oheightBG=v.rv.height;
+	   v.ovizBG=v.iz;
+	   flagClearBuf=false;
+	   v.fillBackground(v.g2BG);
+
+	   drawLosanges(v.g2BG,v,now);
+
+	   return v.imageBG;
    }
 
    /** Tracage de tous les losanges concernés, utilisation d'un cache (voir getImage())
@@ -1909,6 +1920,8 @@ public String getUrl() {
       setHasMoreDetails( maxOrder(v)<maxOrder ); 
 
       readyDone = readyAfterDraw;
+	   
+
    }
 
    boolean readyAfterDraw=false;

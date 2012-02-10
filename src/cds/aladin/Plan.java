@@ -983,9 +983,81 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    	  setDebugFlag(VIEWABLE,false);
    	  return false;
    }
+   
+   /** retourne vrai s'il s'agit d'un plan overlay qui peut être vu en transparence sur au-moins un autre plan 
+    * qui se trouve en dessous de lui dans la pile */
+//   protected boolean isOverlayable() {
+//      setDebugFlag(OVERLAYABLE,false);
+//      
+//      
+//      if( !isReady() ) return false;
+//      if( !isOverlay() ) return false;
+//      int n = aladin.calque.getIndex(this);
+//      
+//      Plan [] p = aladin.calque.getPlans();
+//      for( int i=n+1; i<p.length; i++ ) {
+//         if( !p[i].isReady() ) continue;
+//         if( p[i] instanceof PlanBG || isCompatibleWith(p[i]) ) {
+//            setDebugFlag(OVERLAYABLE,true);
+//            return true;
+//         }
+//      }
+//      return false;
+//   }
+   
+   /** Ce plan devrait avoir une checkbox afin de pouvoir le sélectionner dans la pile
+    * ==> Dépend des autres plans présents dans la pile */
+   protected boolean shouldHaveARefCheckBox() {
+      
+      if( !isReady() ) return false;
+      
+//      // Un plan pris en référence quel qu'il soit doit avoir une coche
+//      // s'il n'est pas tout seul dans la pile
+//      if( ref && aladin.calque.getNbUsedPlans()>1 ) return true;
+      
+      boolean isImage = isImage();
+      boolean isCatalog = isSimpleCatalog();
+      boolean isImgBg = type==ALLSKYIMG;
+      boolean isCatBg = isPlanBGOverlay();
+      
+      // réponse par défaut
+      boolean rep = isCatalog ? true : false;
+      
+      int n = aladin.calque.getIndex(this);
+      
+      Plan [] p = aladin.calque.getPlans();
+      for( int i=0; i<p.length; i++ ) {
+         if( !p[i].isReady() || p[i]==this ) continue;
+         
+         // pour une image, la checkbox doit apparaître...
+         if( isImage ) {
+            // s'il y a au-moins un catalogue dont la projection n'est pas compatible
+            if( p[i].isSimpleCatalog() && !isCompatibleWith(p[i])
+            // Ou qu'il y a une autre image, ou un allsky image
+             || p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
+         }
+         
+         // pour un catalogue...
+         if( isCatalog ) {
+            // si j'ai une image ou allskyimg compatible , c'est inutile
+            if( p[i].isImage() && isCompatibleWith(p[i]) || p[i] instanceof PlanBG  ) return false;
+            
+            // Si j'ai un catalogue situé en dessous compatible, c'est inutile
+            if( p[i].isSimpleCatalog() && isCompatibleWith(p[i]) && i>n ) return false;
+         }
+         
+         // Pour un allsky image...
+         if( isImgBg ) {
+            // Il suffit d'un autre plan BG image ou d'une image
+            if( p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
+         }
+         
+         // Et ce n'est jamais le cas pour un allsky cat
+      }
+      return rep;
+   }
 
-
-
+   
    /** Retourne true si la coordonnée est dans le plan */
    protected boolean contains(Coord c) { return false; }
 
@@ -1038,7 +1110,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 //      } else
 
       if( !(aladin.view.isMultiView() && v.pref.ref) 
-            && v.pref.isImage() && (type==Plan.IMAGE /* || this instanceof PlanBG*/  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
+            && v.pref.isImage() && (type==Plan.IMAGE || type==Plan.ALLSKYIMG  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
          setDebugFlag(UNDERIMG, true);
 //System.out.println("IMG:"+label+" sous IMG?:"+v.pref+" dans le pile");
          return false;
@@ -1464,6 +1536,21 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
        Properties.majProp(this);
     }
+    
+    
+    private long startCheckBoxBlink=0L;  // Date de début d'une séquence de checkbox blink
+    
+    /** Lance la séquence de blink de la check box du plan (voir isCheckBoxBlink() */
+    protected void startCheckBoxBlink() {
+       startCheckBoxBlink = System.currentTimeMillis();
+    }
+    
+    /** Retourne true si la checkbox du plan (dans la pile) doit être affiché
+     * temporairement en rouge afin d'indiquer à l'utilisateur qu'il doit éventuellement l'utiliser */
+    protected boolean isCheckBoxBlink() {
+       long t = System.currentTimeMillis();
+       return t-startCheckBoxBlink<4000;
+    }
 
    /** Demande d'activation/désactivation d'un plan
     * On mémorise le dernier état demandé au cas où ce n'est pas possible
@@ -1490,7 +1577,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
    	  // Activation/Desactivation effective
    	  active=flag;
-   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
+//   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       aladin.view.deSelect(this);
       return active;
    }
@@ -1627,31 +1714,26 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
       flagOk = ready;
 
       
-      if( aladin.calque.mustBeSetPlanRef(this) ) {
-         aladin.calque.setPlanRef(this);
-         setOpacityLevel( isOverlay()?1f : 0f);
-         
-      } else setActivated(true);
+//      if( aladin.calque.mustBeSetPlanRef(this) ) {
+//         aladin.calque.setPlanRef(this);
+//         setOpacityLevel( isOverlay()?1f : 0f);
+//         
+//      } else setActivated(true);
       
        
-//    boolean un,deux,trois;
-//    un=deux=trois=false;
-//       if( v.isFree() || !(v.pref instanceof PlanBG && !v.pref.isOverlay()) ) {
-//         if( (un=!isOldPlan && (isImage() || type==ALLSKYIMG && !(this instanceof PlanBGCat)))
-//               || (deux=aladin.calque.isFreeX(this))
-//               || (trois=isSimpleCatalog() && !isViewable()) ) {
-//            aladin.calque.setPlanRef(this);
-//            setOpacityLevel( isOverlay()?1f : 0f);
-//                System.out.println("je setPlanRef("+label+") un="+un+" deux="+deux+" trois="+trois);
-//         } else {
-//            setActivated(true);
-//         }
-//         
-//      } else {
-//         if( !isViewable() ) aladin.calque.setPlanRef(this);
-//         else setActivated(true);
-//   
-//      }
+      boolean un,deux,trois;
+      un=deux=trois=false;
+      
+      if( (un=!isOldPlan && (isImage() || type==ALLSKYIMG && !(this instanceof PlanBGCat)))
+            || (deux=aladin.calque.isFreeX(this))
+            || (trois=isSimpleCatalog() && !isViewable() && !aladin.calque.isBackGround() ) ) {
+         aladin.calque.setPlanRef(this);
+         setOpacityLevel( isOverlay()?1f : 0f);
+      } else {
+         if( !isViewable() ) aladin.view.syncPlan(this);
+         setActivated(true);
+      }
+
 
       // Ajout thomas : on avertit qu'un nouveau plan a ete cree pour mettre a jour les filtres
       // et pour mettre a jour les FilterProperties

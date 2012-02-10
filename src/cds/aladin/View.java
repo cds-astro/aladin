@@ -3034,31 +3034,110 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          coord = aladin.localisation.getICRSCoord(coord);
 
          if( notCoord(coord) ) {
-//            setSesameInProgress(true);
-            _sesameTaskId = sesameSynchro.start("sesame/"+coord,5000);
+            
+            // resolution synchrone
             if( flagNow ) {
-               _saisie=saisie;
-               result=runB();
+               result=(new SesameThread(saisie,null)).resolveSourceName();
+               
+            // resolution a-synchrone
             } else {
-               waitLockSesame();
-               _saisie=saisie;
-               _flagSesameResolve=true;
-               Thread t = new Thread(this,"AladinSesame");
-               Util.decreasePriority(Thread.currentThread(), t);
-//               t.setPriority( Thread.NORM_PRIORITY -1);
-               t.start();
+               String sesameSyncID = sesameSynchro.start("sesame/"+coord,5000);
+               SesameThread sesameThread = new  SesameThread(saisie, sesameSyncID);
+               Util.decreasePriority(Thread.currentThread(), sesameThread);
+               sesameThread.start();
                return null;
             }
          }
+
+//         if( notCoord(coord) ) {
+//            if( flagNow ) {
+//               _saisie=saisie;
+//               result=runB();
+//            } else {
+//               _sesameTaskId = sesameSynchro.start("sesame/"+coord,5000);
+//               waitLockSesame();
+//               _saisie=saisie;
+//               _flagSesameResolve=true;
+//               Thread t = new Thread(this,"AladinSesame");
+//               Util.decreasePriority(Thread.currentThread(), t);
+//               t.start();
+//               return null;
+//            }
+//         }
          if( result ) setRepereByString();
       }
       return result ? saisie : null;
    }
+   
+   class SesameThread extends Thread {
+      private Plan planObj=null;
+      private String sourceName=null; 
+      private String sesameTaskId;
+      
+      SesameThread(String sourceName,String sesameTaskId){
+         super("AladinSesameSourceName");
+         this.sourceName=sourceName;
+         this.sesameTaskId=sesameTaskId;
+      }
+      
+      SesameThread(Plan plan,String sesameTaskId){
+         super("AladinSesamePlan");
+         this.planObj=plan;
+         this.sesameTaskId=sesameTaskId;
+      }
+      
+      public void run() { 
+         if( sourceName!=null ) resolveSourceName(); 
+         else if( planObj!=null ) resolvePlan();
+         else System.out.println("SesameThread error, no plane, no planObj !");
+      }
+      
+      /** Résolution Sésame de l'objet central du plan passé au constructeur du Thread (Sésame) */
+      void resolvePlan() {
+         try {
+            Coord c=null;
+            try { c = sesame(planObj.objet); }
+            catch( Exception e) { System.err.println(e.getMessage()); }
+            if( c!=null ) {
+               planObj.co=c;
+               suiteSetRepere(planObj.co);
+               repaintAll();
+            }
+         } finally{ sesameSynchro.stop(sesameTaskId); }
+      }
+      
+      /** résolution Sésame d'une source passée au constructeur du Thread (sourceName) */
+      boolean resolveSourceName() {
+         try {
+            boolean rep=true;
+            aladin.localisation.setTextSaisie(sourceName+" ...resolving...");
+
+            Coord c=null;
+            try { c = sesame(sourceName); }
+            catch( Exception e) {
+               if( Aladin.levelTrace>=3 ) e.printStackTrace();
+               System.err.println(e.getMessage());
+            }
+            if( c==null ) {
+               if( sourceName.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+sourceName+") !");
+               saisie=sourceName;
+               rep=false;
+            } else {
+               saisie=aladin.localisation.J2000ToString(c.al,c.del);
+               aladin.console.setInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
+               setRepereByString();
+            }
+            if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
+            aladin.localisation.setSesameResult(saisie);
+            return rep;
+         } finally { sesameSynchro.stop(sesameTaskId); }
+      }
+   }
 
 
-   private String _sesameTaskId=null;
-   private String _saisie;
-   private Plan _planWaitSimbad=null;
+//   private String _sesameTaskId=null;
+//   private String _saisie;
+//   private Plan _planWaitSimbad=null;
    static Coord oco=null;
    static String oobjet=null;
 
@@ -3071,38 +3150,42 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          return true;
       }
 
-      // Lancement du Thread de resolution Simbad pour le plan indique
-//      setSesameInProgress(true);
-      waitLockSesame();
-      _planWaitSimbad = p;
-      _sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
-      Thread sr = new Thread(this,"AladinSesameBis");
-      Util.decreasePriority(Thread.currentThread(), sr);
-//      sr.setPriority( Thread.NORM_PRIORITY -1);
-      sr.start();
+      String sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
+      SesameThread sesameThread = new SesameThread(p, sesameTaskId);
+      Util.decreasePriority(Thread.currentThread(), sesameThread);
+      sesameThread.start();
+      
+//      // Lancement du Thread de resolution Simbad pour le plan indique
+////      setSesameInProgress(true);
+//      waitLockSesame();
+//      _planWaitSimbad = p;
+//      _sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
+//      Thread sr = new Thread(this,"AladinSesameBis");
+//      Util.decreasePriority(Thread.currentThread(), sr);
+////      sr.setPriority( Thread.NORM_PRIORITY -1);
+//      sr.start();
       return false;
    }
 
-   private boolean lock=false;
-
-   /** Attente sur le lock pour passage de paramètre à Sesame */
-   private void waitLockSesame() {
-      while( !getLockSesame() ) {
-         Util.pause(10);
-         System.out.println("View.waitlock...");
-      }
+//   private boolean lock=false;
+//
+//   /** Attente sur le lock pour passage de paramètre à Sesame */
+//   private void waitLockSesame() {
+//      while( !getLockSesame() ) {
+//         Util.pause(10);
+//         System.out.println("View.waitlockSesame...");
+//      }
+//   }
+//
+//   /** Tentative de récupération du lock */
+//   synchronized private boolean getLockSesame() {
+//      if( lock ) return false;
 //      lock=true;
-   }
-
-   /** Tentative de récupération du lock */
-   synchronized private boolean getLockSesame() {
-      if( lock ) return false;
-      lock=true;
-      return true;
-   }
-
-   /** Libération du lock */
-   synchronized private void unlockSesame() { lock=false; }
+//      return true;
+//   }
+//
+//   /** Libération du lock */
+//   synchronized private void unlockSesame() { lock=false; }
 
 
    /**
@@ -3212,9 +3295,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    public void run() {
 //System.out.println("run: flagBlink="+flagBlink);
-         if( _flagSesameResolve ) { _flagSesameResolve=false; runB(); }
-         else if( _flagTimer ) runC();
-         else if( _planWaitSimbad!=null ) runA();
+         /* if( _flagSesameResolve ) { _flagSesameResolve=false; runB(); }
+         else */ if( _flagTimer ) runC();
+//         else if( _planWaitSimbad!=null ) runA();
    }
 
    /** Zoom sur la source passée en paramètre */
@@ -3480,57 +3563,57 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
-  /** Resolution Sesame par Thread independant pour un plan */
-   void runA() {
-      Plan planWaitSimbad = _planWaitSimbad;
-      String sesameTaskId = _sesameTaskId;
-      unlockSesame();
-      try {
-         Coord c=null;
-         try { c = sesame(planWaitSimbad.objet); }
-         catch( Exception e) { System.err.println(e.getMessage()); }
-         if( c!=null ) {
-            planWaitSimbad.co=c;
-            suiteSetRepere(planWaitSimbad.co);
-            repaintAll();
-         }
-//         setSesameInProgress(false);
-      }finally{ sesameSynchro.stop(sesameTaskId); }
-   }
+//  /** Resolution Sesame par Thread independant pour un plan */
+//   void runA() {
+//      Plan planWaitSimbad = _planWaitSimbad;
+//      String sesameTaskId = _sesameTaskId;
+//      unlockSesame();
+//      try {
+//         Coord c=null;
+//         try { c = sesame(planWaitSimbad.objet); }
+//         catch( Exception e) { System.err.println(e.getMessage()); }
+//         if( c!=null ) {
+//            planWaitSimbad.co=c;
+//            suiteSetRepere(planWaitSimbad.co);
+//            repaintAll();
+//         }
+////         setSesameInProgress(false);
+//      }finally{ sesameSynchro.stop(sesameTaskId); }
+//   }
 
-   /** Resolution Sesame par Thread independant pour un objet particulier */
-   public boolean runB() {
-      String memo=_saisie;
-      String sesameTaskId=_sesameTaskId;
-      unlockSesame();
-      try {
-         boolean rep=true;
-
-         saisie=memo+" ...resolving...";
-         aladin.localisation.setTextSaisie(saisie);
-
-         Coord c=null;
-         try { c = sesame(memo); }
-         catch( Exception e) {
-            if( Aladin.levelTrace>=3 ) e.printStackTrace();
-            System.err.println(e.getMessage());
-         }
-         if( c==null ) {
-            if( memo.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+memo+") !");
-            saisie=memo;
-            rep=false;
-         } else {
-            saisie=aladin.localisation.J2000ToString(c.al,c.del);
-//          aladin.command.toStdoutAndConsole("\""+memo+"\" resolved as "+saisie+"\n");
-            aladin.console.setInPad(memo+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
-            setRepereByString();
-         }
-         if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
-         aladin.localisation.setSesameResult(saisie);
-//       setSesameInProgress(false);
-         return rep;
-      } finally { sesameSynchro.stop(sesameTaskId); }
-   }
+//   /** Resolution Sesame par Thread independant pour un objet particulier */
+//   public boolean runB() {
+//      String memo=_saisie;
+//      String sesameTaskId=_sesameTaskId;
+//      unlockSesame();
+//      try {
+//         boolean rep=true;
+//
+//         saisie=memo+" ...resolving...";
+//         aladin.localisation.setTextSaisie(saisie);
+//
+//         Coord c=null;
+//         try { c = sesame(memo); }
+//         catch( Exception e) {
+//            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//            System.err.println(e.getMessage());
+//         }
+//         if( c==null ) {
+//            if( memo.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+memo+") !");
+//            saisie=memo;
+//            rep=false;
+//         } else {
+//            saisie=aladin.localisation.J2000ToString(c.al,c.del);
+////          aladin.command.toStdoutAndConsole("\""+memo+"\" resolved as "+saisie+"\n");
+//            aladin.console.setInPad(memo+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
+//            setRepereByString();
+//         }
+//         if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
+//         aladin.localisation.setSesameResult(saisie);
+////       setSesameInProgress(false);
+//         return rep;
+//      } finally { sesameSynchro.stop(sesameTaskId); }
+//   }
 
    protected Repere simRep = null;
    private long startQuickSimbad=0L;

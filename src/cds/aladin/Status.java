@@ -73,6 +73,12 @@ public class Status extends JComponent implements MouseListener {
    */
    protected void setText(String s) {
       if( s==null ) s="";
+      
+      if( s.length()>0 && s.charAt(0)=='!' ) {
+         foreGround=Color.red;
+         s = s.substring(1);
+      } else foreGround=Color.blue;
+      
       if( lastText!=null && lastText.equals(s) ) return;
       if( s.length()==0 &&  aladin.dialog!=null && !aladin.command.isSync() ) s=aladin.chaine.getString("SEESTACK"); 
       text = s;
@@ -81,11 +87,13 @@ public class Status extends JComponent implements MouseListener {
    
    public Dimension getPreferredSize() { return new Dimension(W,H); }
    
+   private Color foreGround = Color.blue;
+   
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
       g.setColor( getBackground() );
       g.fillRect(0,0,W,H);
-      g.setColor(Color.blue);
+      g.setColor( foreGround );
       FontMetrics m = g.getFontMetrics();
 
       // Le status

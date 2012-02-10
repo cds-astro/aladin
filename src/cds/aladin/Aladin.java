@@ -138,7 +138,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.502";
+    static public final    String VERSION = "v7.503";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1913,7 +1913,8 @@ public class Aladin extends JApplet
        JPanel gauche2;
        if( !NEWLOOK_V7 ) gauche2=gauche;
        else {
-          gauche2 = new JPanel(new BorderLayout(0,0));
+          gauche2 = new JPanel(new BorderLayout(5,0));
+          gauche2.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0));
           gauche2.add(toolBox,BorderLayout.WEST);
           gauche2.add(gauche,BorderLayout.CENTER);
        }

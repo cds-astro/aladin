@@ -435,9 +435,9 @@ public final class Calque extends JPanel implements Runnable {
       int n=0;
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
-         if( plan[i] instanceof PlanImage && plan[i].flagOk ) {
-            if( withBG || !(plan[i] instanceof PlanBG) ) n++;
-         }
+         if( !plan[i].isReady() ) continue;
+         if( plan[i].isImage() ) n++;
+         if( withBG && plan[i].type==Plan.ALLSKYIMG ) n++;
       }
       return n;
    }
@@ -1155,6 +1155,25 @@ public final class Calque extends JPanel implements Runnable {
       // On sélectionne le plan dans la pile
       selectPlan(p);
 
+      return true;
+   }
+   
+   /** Positionne le plan BG comme étant de référence. Si la vue que l'on va utilisée
+    * est déjà un plan BG, centre automatiquement la nouvelle vue sur le même champ
+    * Si pas possible, garde la position par défaut
+    */
+   protected boolean setPlanRefOnSameTarget(PlanBG p) {
+      int nview = aladin.view.getLastNumView(p);
+      if( nview<0 || !canBeRef(p) )  return false;
+      ViewSimple v = aladin.view.viewSimple[nview];
+      
+      if( v.isFree() || !Projection.isOk(v.pref.projd) ) return setPlanRef(p,nview);  // pas possible de se mettre à la même position
+      Coord c = v.getProj().getProjCenter();
+      double z = v.zoom;
+      setPlanRef(p,nview);
+      v.getProj().setProjCenter(c.al,c.del);
+      v.newView(1);
+      v.setZoomRaDec(z,c.al,c.del);
       return true;
    }
 
@@ -1907,13 +1926,17 @@ public final class Calque extends JPanel implements Runnable {
       String t1 = plan[n].getTargetQuery();
       Plan pc;
 
+//      for( i=n+1; i<plan.length &&
+//      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
+//         (pc.isCatalog()
+//               || pc.type==Plan.APERTURE
+//               || pc.type==Plan.FOLDER
+//               || pc.isTool() )
+//               && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
+      
       for( i=n+1; i<plan.length &&
-         ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
-            (pc.isCatalog()
-                  || pc.type==Plan.APERTURE
-                  || pc.type==Plan.FOLDER
-                  || pc.isTool() )
-                  && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
+      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
+         pc.isOverlay() && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
       if( i>plan.length || i<=0 || i-1==n ) return n;
       permute(plan[n],plan[i-1]);   //On permute les plans pour prendre en compte le folder
       p.folder=folder;
@@ -1926,19 +1949,25 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected void bestPlacePost(Plan p) {
       int i;
-      if( p.noBestPlacePost || p.isImage() || !Projection.isOk(p.projd) ) return;
+      if( p.noBestPlacePost || p instanceof PlanBG /* || p.isImage() */ || !Projection.isOk(p.projd) ) return;
 //System.out.println("BestPlacePost pour "+p+" "+Thread.currentThread().getId());
 
+      boolean overlay = p.isOverlay();
       int folder = p.folder;
       Plan pc;
       int n = getIndex(p);
+//      for( i=n+1; i<plan.length &&
+//      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
+//            (pc.isCatalog()
+//                  || pc.type==Plan.FOLDER
+//                  || pc.type==Plan.APERTURE
+//                  || pc.type==Plan.TOOL && pc instanceof PlanContour)
+//                  && p.projd.agree(pc.projd,null)); i++);
+      
       for( i=n+1; i<plan.length &&
       ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
-            (pc.isCatalog()
-                  || pc.type==Plan.FOLDER
-                  || pc.type==Plan.APERTURE
-                  || pc.type==Plan.TOOL && pc instanceof PlanContour)
-                  && p.projd.agree(pc.projd,null)); i++);
+            !overlay && pc.isOverlay() && p.projd.agree(pc.projd,null)); i++);
+
       if( i>plan.length || i<=0 || i-1==n ) return;
       permute(p,plan[i-1]);   //On permute les plans pour prendre en compte le folder
       p.folder=folder;
@@ -2010,7 +2039,7 @@ public final class Calque extends JPanel implements Runnable {
              pc.setLabel(label);
              
              // VOIR MODIF PF JAN 12 ci-dessous (ligne à supprimer pour revenir à l'état antérieur)
-             pc.isOldPlan=false;
+//             pc.isOldPlan=false;
 
           }  else {
              p.isOldPlan=true;
@@ -2021,15 +2050,15 @@ public final class Calque extends JPanel implements Runnable {
        suiteNew(pc);
 
        // MODIF PF JAN 12 pour que le nouveau plan deviennent celui de référence
-//       if( flagIns ) {
-//          pc.selected=false;
-//          pc.active=false;
-//       } else {
-//          pc.folder=0;
-//          pc.planReady(true);
-//       }
-       if( !flagIns ) pc.folder=0;
-       pc.planReady(true);
+       if( flagIns ) {
+          pc.selected=false;
+          pc.active=false;
+       } else {
+          pc.folder=0;
+          pc.planReady(true);
+       }
+//       if( !flagIns ) pc.folder=0;
+//       pc.planReady(true);
        
        return pc;
     }
@@ -3462,7 +3491,7 @@ public final class Calque extends JPanel implements Runnable {
      *  Vérifie que la compatibilité des projections
      */
     protected boolean canBeTransparent(Plan p) {
-       if( p==null || !isFree() && getIndex(p)==plan.length-1 ) {
+       if( p==null || !isFree() && /* getIndex(p)==plan.length-1 || */ p.ref ) {
           if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
           return false;
        }
