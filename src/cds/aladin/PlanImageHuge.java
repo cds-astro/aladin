@@ -329,7 +329,13 @@ Aladin.trace(3,"getSubImage["+n+"] from "+label+" ("+x*step+","+y*step+" "+w*ste
           case View.REAL:
              if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
              if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
-             return Y(getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero);
+             
+//             return Y(getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero);
+             double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
+             if( aladin.levelTrace<4 ) return Y(val);
+             double infileVal=getPixVal1(onePixelOrigin,bitpix,0);
+             return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
+
       }
       return null;
    }

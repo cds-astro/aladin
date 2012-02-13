@@ -432,8 +432,8 @@ GRIDH	Click to activate/unactivate the coordinate grid
 GRIDH.fr	Cliquer pour activer/désactiver la grille de coordonnées
 BKGD	allsky
 BKGD.fr	ciel
-BKGDH	Click to activate/unactivate the background sky
-BKGDH.fr	Cliquer pour activer/désactiver le ciel d'arrière plan
+#BKGDH	Click to activate/unactivate the background sky
+#BKGDH.fr	Cliquer pour activer/désactiver le ciel d'arrière plan
 NORTHUPHELP	Turn the image North up, Est left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
 
@@ -1056,7 +1056,8 @@ PROPWHITE.fr	Blanc
 PROPBLACK.fr	Noir
 
 # Select.java Strings
-SLHSTACK	Click to activate/mask it
+SLHSTACK0	Click to designate this plane as the projection reference for the current view
+SLHSTACK	Click to show/hide this plane in the projection of the current view
 SLHSTACK2	Click to select it
 SLHEYE	Click to activate/mask all overlays
 SLWAITMIN	Please be patient...\nThis plane is under construction !
@@ -1084,7 +1085,8 @@ GOTO	Reticle to the center of this plane
 SWARNING For displaying this plane, activate before a reference plane with compatible projection
 SWARNINGSLIDER For displaying this plane, use the opacity slider.\noR activate it as the projection reference
 
-SLHSTACK.fr	Cliquez pour l'activer/désactiver
+SLHSTACK0.fr	Cliquez pour désigner ce plan en tant que projection de référence de la vue courante
+SLHSTACK.fr	Cliquez pour montrer/cacher ce plan dans la projection de la vue courante
 SLHSTACK2.fr	Cliquez pour le sélectionner
 SLHEYE.fr	Cliquez pour voir/masquer les ajouts
 SLWAITMIN.fr	Un instant...\nCe plan est en cours de chargement !
@@ -1439,6 +1441,8 @@ UPCACHE	Permanent disk cache
 UPCACHEH	Aladin requires local disk space for keeping data from one session to the other. More it has, better it runs
 UPLOG CDS log
 UPLOGH You will help the CDS team to improve Aladin by keeping the log mechanism activated. These "logs" are anonymous and do not transmit any local information (paths, file names,...) just some usage statistics and possibly bug reports. Thanks !
+PHELP Wizard
+UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
 #UPTAGCENTER	Centered tag
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
 
@@ -1501,6 +1505,8 @@ UPCACHE.fr	Mémoire tampon
 UPCACHEH.fr	Aladin requière de la place sur le disque local afin de conserver les données d'une session à l'autre. Plus il en dispose, mieux il s'exécutera.
 UPLOG.fr Log CDS
 UPLOGH.fr Vous aiderez l'équipe de CDS à améliorer Aladin en laissant actif ce mécanisme de logs. Ceux-ci sont anonymes et ne contiennent aucune information locale (noms de fichier, répertoires,...), uniquement des statistiques d'utilisation et d'éventuels rapports de bogues . Merci !
+UPHELP.fr Assistant
+UPHELPH.fr Active/désactive l'assistant pour les débutatns. Celui-ci permet aux nouveaux utilisateurs d'Aaldin de se familiariser avec l'interface graphique
 #UPTAGCENTER.fr	Marque centrée
 #UPTAGCENTERH.fr Activez ce sélecteur afin de contraindre l'outil de marquage (Outil "Marq") à se centrer automatiquement sur le barycentre de l'objet le plus proche
 

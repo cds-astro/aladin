@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.Graphics;
+import java.util.Iterator;
 
 /**
  * Slider de contrôle du facteur pour les filtres
@@ -45,7 +46,7 @@ public class SliderFilter extends SliderPlusMoins {
       if( s.actions!=null ) {
          if( p.getScalingFactor()==n ) return;
          p.setScalingFactor(n);
-      } else ((PlanCatalog)p).setSourceType(slider.getValue()/50);
+      }
       aladin.calque.repaintAll();
    }
    
@@ -61,10 +62,7 @@ public class SliderFilter extends SliderPlusMoins {
       Plan p = getPlanCatalog();
       if( p!=null ) {
          setEnabled(true);
-         Source s = (Source) p.iterator().next();
-         if( s.actions==null ) {
-            slider.setValue(s.sourceType*200);
-         } else slider.setValue((int)( p.getScalingFactor()*100 ));
+         slider.setValue((int)( p.getScalingFactor()*100 ));
       } else { slider.setValue(slider.min); setEnabled(false); }
       super.paintComponent(g);
    }

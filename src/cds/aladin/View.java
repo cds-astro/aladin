@@ -1893,6 +1893,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       suspendQuickSimbad();
 
       if( vc==null ) vc = getCurrentView();
+      System.out.println("setZoomRaDecForSelectedViews z="+z+" vc="+vc.pref);
 
       // Récupération de la taille du pixel de la vue courante afin de déterminer
       // le rapport sur le zoom pour les autres vues
@@ -3069,17 +3070,26 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return result ? saisie : null;
    }
    
+   /** Thread de résolution Sésame */
    class SesameThread extends Thread {
       private Plan planObj=null;
       private String sourceName=null; 
       private String sesameTaskId;
       
+      /** Constructeur pour une résolution par nom de source
+       * @param sourceName Nom de la source à résoudre
+       * @param sesameTaskId ID du gestionnaire de task (voir synchroSesame)
+       */
       SesameThread(String sourceName,String sesameTaskId){
          super("AladinSesameSourceName");
          this.sourceName=sourceName;
          this.sesameTaskId=sesameTaskId;
       }
       
+      /** Constructeur pour une résolution d'un nom d'objet attaché à un plan
+       * @param plan pour lequel il faut résoudre le nom d'objet
+       * @param sesameTaskId ID du gestionnaire de task (voir synchroSesame)
+       */
       SesameThread(Plan plan,String sesameTaskId){
          super("AladinSesamePlan");
          this.planObj=plan;

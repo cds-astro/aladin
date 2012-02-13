@@ -2400,8 +2400,6 @@ public class ViewSimple extends JComponent
                view.extendClip(view.newobj);
             }
 
-//            setNewObjet();
-
             // Insertion d'un repère avec mesure de surface
             if( ((Repere)view.newobj).hasRayon() ) {
                view.newobj.setSelected(true);
@@ -2461,6 +2459,11 @@ public class ViewSimple extends JComponent
          // Je selectionne la cote
          if( view.newobj instanceof Cote ) {
             aladin.view.selectCote(view.newobj);
+            
+            // Pour éviter de faire 2 cotes de suite
+            aladin.toolBox.setMode(ToolBox.DIST,Tool.UP);
+            aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
+
          }
 
          // Rien a faire si je suis une ligne en mode Clic, le mouseDown s'est charge
@@ -5551,11 +5554,15 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Cas d'un image ou d'un plan BG
          if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
             if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
+            if( fullScreen &&  p.hasObj() && p.isOverlay() ) {
+               aladin.fullScreen.setCheck(p);
+            }
+
 
             // Cas des plans TOOL et CATALOG
          } else {
             if( fullScreen ) {
-               if( p.pcat!=null && p.pcat.computeAndTestDraw(this,flagDraw) ) {
+               if( p.hasObj() && p.pcat.computeAndTestDraw(this,flagDraw) ) {
                   aladin.fullScreen.setCheck(p);
                }
             }

@@ -204,7 +204,7 @@ public final class Cote extends Ligne {
                   double cosc2 = AstroMath.cosd(c2.del);
                   double num = cosc2 * AstroMath.sind(dra);
                   double den = AstroMath.sind(c2.del) * AstroMath.cosd(c1.del)
-                  - cosc2 * AstroMath.sind(c1.del) * AstroMath.cosd(dra);
+                     - cosc2 * AstroMath.sind(c1.del) * AstroMath.cosd(dra);
                   double angle = (dra==0.0 && dde==0.0)?-1000:(den==0.0)?90.0:Math.atan2(num,den)*180/Math.PI;
                   if( angle<0.0 ) angle+=360.0;
                   dra = Math.abs(dra);
@@ -212,17 +212,19 @@ public final class Cote extends Ligne {
                   double drac = dra*AstroMath.cosd(c1.del);
                   dist = Coord.getDist(c1,c2);
                   id= "Dist = "+ Coord.getUnit(dist) +
-                  " (RA="+Coord.getUnit(drac)+
-                  "/"+Coord.getUnitTime(dra/15)+
-                  ", DE="+Coord.getUnit(dde)+")"+
-                  ((angle==-1000)?"":" PA = "+(Math.round(angle*10)/10.0)+" deg");
+                     " (RA="+Coord.getUnit(drac)+
+                     "/"+Coord.getUnitTime(dra/15)+
+                     ", DE="+Coord.getUnit(dde)+")"+
+                     ((angle==-1000)?"":" PA = "+(Math.round(angle*10)/10.0)+" deg");
+                  v.getProj().getXY(c1);
+                  v.getProj().getXY(c2);
                   dx = c1.x-c2.x;
                   dy = c1.y-c2.y;
                   distXY = (int)(Math.sqrt(dx*dx+dy*dy)+0.5);
                   return;
                }
             }
-         } catch( Exception e ) {}
+         } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
       }
 
       // Si on ne peut pas calculer les coordonnees, on donne juste

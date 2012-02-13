@@ -722,6 +722,7 @@ public final class Slide {
    }
    
    private void drawCheckBox(Graphics g, int x, int y, int xMouse, int yMouse, int mode, Plan p) {
+      p.setHasCheckBox(false);
       
       // Plan pas encore prêt ?
       if( !p.isReady() ) return;
@@ -745,6 +746,8 @@ public final class Slide {
       } else {
          Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.black, p.ref );
       }
+      
+      p.setHasCheckBox(true);
       
    }
    

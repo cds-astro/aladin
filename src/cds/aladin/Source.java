@@ -41,7 +41,7 @@ import cds.xml.Field;
 public class Source extends Position implements Comparator {
 
    static final int MDS = DS/2;      // demi-taille des poignees de selection
-   static final int L = 3;          // demi-taille de la source
+   static public int L = 3;          // demi-taille de la source
 
    // Gestion des formes en fonction du nombre d'elements
    static final int [] LIMIT =      { 3,     10,       100,      250,   500,   1000,       2000,   5000,          13000, 100000 };

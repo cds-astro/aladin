@@ -925,6 +925,11 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    protected boolean isUnderImg() { return (debugFlag & (UNDERIMG|UNDERBKGD)) !=0; }
    protected boolean isUnderImgBkgd() { return (debugFlag & UNDERBKGD) !=0; }
 
+   private boolean hasCheckBox=false;
+   protected void setHasCheckBox(boolean flag) { hasCheckBox=flag; }
+   protected boolean hasCheckBox() { return hasCheckBox; }
+
+   
    /** positionnement d'un flag de débugging du plan */
    protected void setDebugFlag(int type,boolean flag) {
       if( flag ) debugFlag |= type;
@@ -1728,7 +1733,8 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
             || (deux=aladin.calque.isFreeX(this))
             || (trois=isSimpleCatalog() && !isViewable() && !aladin.calque.isBackGround() ) ) {
          aladin.calque.setPlanRef(this);
-         setOpacityLevel( isOverlay()?1f : 0f);
+         if( !isOverlay() )  setOpacityLevel(0f);
+//         setOpacityLevel( isOverlay()?1f : 0f);
       } else {
          if( !isViewable() ) aladin.view.syncPlan(this);
          setActivated(true);

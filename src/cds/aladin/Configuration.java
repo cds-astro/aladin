@@ -100,6 +100,7 @@ public final class Configuration extends JFrame
    protected static String CACHE      = "HpxCacheSize";
    protected static String MAXCACHE   = "HpxMaxCacheSize";
    protected static String LOG        = "Log";
+   protected static String HELP       = "Wizard";
 //   protected static String TAG        = "CenteredTag";
 //   protected static String WENSIZE    = "WenSize";
    
@@ -111,7 +112,7 @@ public final class Configuration extends JFrame
                  CMB,CMH,CMV,CMM,CMC,CMF,BKGB,BKGH,WEBB,WEBH,RELOAD,
                  REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
                  FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
-                 IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH/*,TAGCENTER,TAGCENTERH*/;
+                 IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH/*,TAGCENTER,TAGCENTERH*/;
    
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
    static private String CSVITEMLONG[];
@@ -147,6 +148,7 @@ public final class Configuration extends JFrame
    private JComboBox        filterChoice;         // Pour l'activation du filtre par défaut
    private JComboBox        transparencyChoice;   // Pour l'activation de la transparence des footprints
    private JComboBox        logChoice;            // Pour l'activation des logs
+   private JComboBox        helpChoice;           // Pour l'activation de l'aide des débutants
 //   private JComboBox        tagChoice;           // Pour l'activation du centrage des tags
    private JSlider          transparencyLevel;    // niveau de transparence pour footprints
    private JComboBox        csvChoice;            // Pour la sélection du caractère CSV
@@ -218,6 +220,8 @@ public final class Configuration extends JFrame
       IMGC = aladin.chaine.getString("UPIMGC");
       LOGS = aladin.chaine.getString("UPLOG");
       LOGH = aladin.chaine.getString("UPLOGH");
+      HELPS = aladin.chaine.getString("UPHELP");
+      HELPH = aladin.chaine.getString("UPHELPH");
 //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
 //      TAGCENTERH = aladin.chaine.getString("UPTAGCENTERH");
       
@@ -649,6 +653,12 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       return s==null || s.equals(ACTIVATED);
    }
    
+   /** Retourne true si le mode HELP pour les débutants est activé */
+   protected boolean isHelp() {
+      String s = get(HELP);
+      return s==null || s.equals(ACTIVATED);
+   }
+
    /** Retourne le mode repéré dans le fichier de config */
    protected boolean isOutReach() {
       String s = get(MOD);
@@ -986,8 +996,15 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);           
       }
       
+      if( !Aladin.OUTREACH ) {
+         (l = new JLabel(HELPS)).setFont(l.getFont().deriveFont(Font.BOLD));
+         helpChoice = new JComboBox();
+         helpChoice.addItem(ACTIVATED);
+         helpChoice.addItem(NOTACTIVATED);
+         PropPanel.addCouple(this, p, l, HELPH, helpChoice, g, c, GridBagConstraints.EAST);
+      }
+      
       // Le Répertoire par défaut
-//      Properties.addFilet(p, g, c);
       dir = new JTextField(35);
       b=new JButton(BROWSE); b.addActionListener(this);
       b.setMargin( new Insets(2,4,2,4));
@@ -1100,7 +1117,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       createGluChoice();
       
       if( !aladin.OUTREACH ) {
-         
+
          // Le glu
          panel = new JPanel(new BorderLayout(5,5));
          panel.add(gluChoice,BorderLayout.WEST);
@@ -1117,7 +1134,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             logChoice.addItem(NOTACTIVATED);
             PropPanel.addCouple(this, p, l, LOGH, logChoice, g, c, GridBagConstraints.EAST);
          }
-
+         
          // Le cache
          (l = new JLabel(CACHES)).setFont(l.getFont().deriveFont(Font.BOLD));
          panel = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
@@ -1128,11 +1145,11 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          b.setMargin( new Insets(2,4,2,4));
          panel.add( b );
          PropPanel.addCouple(this, p, l, CACHEH, panel, g, c, GridBagConstraints.EAST);
-}
+      }
 
       return p;
    }
-   
+
    // Nettoyage du cache HPX et du cache GLU
    private void clearCache() {
       aladin.makeCursor(this,Aladin.WAITCURSOR);
@@ -1257,9 +1274,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       reload.setEnabled( true );
       
-      if( logChoice!=null) {
-         logChoice.setSelectedIndex(isLog()?0:1);
-      }
+      if( logChoice!=null) logChoice.setSelectedIndex(isLog()?0:1);
+      
+      if( helpChoice!=null) helpChoice.setSelectedIndex(isHelp()?0:1);
 
       if( cache!=null ) {
          long cacheSize = PlanBG.cacheSize;
@@ -1383,6 +1400,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       String s = get(LOG);
       if( s!=null && s.equals(ACTIVATED) ) remove(LOG);
+      
+      s = get(HELP);
+      if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
       
       // On conserve l'état du pointeur Simbad
       if( !Aladin.OUTREACH ) {
@@ -1592,6 +1612,12 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             remove(LOG);
             if( pub ) aladin.glu.log("Log", "on");
          }
+      }
+
+      // Pour l'assistant débutant
+      if( helpChoice!=null ) {
+         if( helpChoice.getSelectedIndex()==1 ) set(HELP,(String)helpChoice.getSelectedItem());
+         else remove(HELP);
       }
 
       // Pour le site Glu
@@ -1880,7 +1906,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       else if( LANGCONTRIB.equals(what)) langContrib();
       else if( RELOAD.equals(what) ) reloadGlu();
       else if( APPLY.equals(what) ) {
-         try { if( apply() ) { /* dispose(); */ } }	   
+         try { if( apply() ) { aladin.calque.repaintAll(); /* dispose(); */ } }	   
          catch( Exception e ) { Aladin.warning(this," "+e.getMessage(),1); }
       }
 //      else if( GLUTEST.equals(what) ) startGluTest();
