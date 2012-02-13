@@ -1913,8 +1913,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             c1 = pi instanceof PlanBG ? v.getCooCentre()
                   : new Coord(a.view.repere.raj,a.view.repere.dej);
             pi.projd.getXY(c1);
-            x = c1.x;
-            y = c1.y;
+//            x = c1.x;
+//            y = c1.y;
             x = c1.x-w/2.;
             y = c1.y-h/2.;
             y = pi.naxis2-(y+h);
@@ -2916,7 +2916,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          }
       }
       else if( cmd.equalsIgnoreCase("save") ) {
-         System.out.println("Save c'est parti...");
          String syncId = syncSave.start("Command.save");
          try {
               if( a.save==null ) a.save = new Save(a);
@@ -3035,14 +3034,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  else mode|=Save.BMP;
               }
 
-              System.out.println("Save cappel à saveView...");
-
               if( flagROI ) a.view.saveROI(file,w,h,mode);
               else (a.save).saveView(file,w,h,mode,qual);
          }
          catch( Exception e ) { e.printStackTrace(); }
          finally {
-            System.out.println("Save syncSave stop...");
             syncSave.stop(syncId);
          }
       }
