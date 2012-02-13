@@ -1893,7 +1893,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       suspendQuickSimbad();
 
       if( vc==null ) vc = getCurrentView();
-      System.out.println("setZoomRaDecForSelectedViews z="+z+" vc="+vc.pref);
 
       // Récupération de la taille du pixel de la vue courante afin de déterminer
       // le rapport sur le zoom pour les autres vues
@@ -1901,7 +1900,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          size = vc.pref.projd.c.getImgWidth()
                  /vc.pref.projd.c.getImgSize().width;
          if( vc.pref.type==Plan.IMAGEHUGE ) size *= ((PlanImageHuge)vc.pref).getStep();
-      } catch( Exception e) { };
+      } catch( Exception e) { if( aladin.levelTrace>=3) e.printStackTrace(); };
 
       for( int i=0; i<modeView; i++ ) {
          ViewSimple v = viewSimple[i];
@@ -1933,7 +1932,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                v.newView(1);
             }
             flag=v.setZoomRaDec(nz,coo.al,coo.del);
-
 
             // Si impossible d'atteindre la position demandée,
             // on effectue un simple zoom si pas de calibration, sinon on déselectionne

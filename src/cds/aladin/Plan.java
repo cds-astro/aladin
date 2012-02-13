@@ -421,7 +421,8 @@ public class Plan implements Runnable {
           for( i=0; it.hasNext() ; i++ ) {
              Obj o = it.next();
              if( o.in(v,x,y) ) {
-                if( i==0 && Aladin.ROTATEFOVCENTER && ((PlanField)this).isRollable() ) {
+                if( i==0 && Aladin.ROTATEFOVCENTER 
+                      && ((PlanField)this).isRollable() && ((PlanField)this).isCenterRollable() ) {
                    aladin.calque.planRotCenter=((Repere)o).plan;
                    res.addElement(o);
                 } else {

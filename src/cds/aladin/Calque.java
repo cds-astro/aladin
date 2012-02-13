@@ -1154,7 +1154,7 @@ public final class Calque extends JPanel implements Runnable {
 
       // On sélectionne le plan dans la pile
       selectPlan(p);
-
+      
       return true;
    }
    

@@ -790,6 +790,16 @@ public final class Select extends JComponent  implements
    protected String getLastMessage() {
       return lastMessage;
    }
+   
+   // Postionne le plan courant et met le repère en son centre si hors champs
+   // => sinon problème par la suite en cas de zoom via le slider
+   private boolean setPlanRef(Plan p) {
+      boolean rep = a.calque.setPlanRef(p);
+      if( !p.contains(new Coord(a.view.repere.raj,a.view.repere.dej)) ) {
+         a.view.setRepere(p);
+      }
+      return rep;
+   }
 
   /** Gestion de la souris */
    public void mouseReleased(MouseEvent e) {
@@ -867,8 +877,8 @@ public final class Select extends JComponent  implements
       if( !itsDone && p.type!=Plan.NO ) {
          if( newRef!=null ) {
             boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
-            if( recenter) System.out.println("Il faut que je change le target et le zoom de ce nouveau plan allsky...");
-            if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) || !recenter && a.calque.setPlanRef(p) ) {
+            if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) 
+            || !recenter && setPlanRef(p) ) {
                a.view.newView();
                a.console.setCommand("cview "+Tok.quote(p.label));
             }
@@ -1215,24 +1225,43 @@ public final class Select extends JComponent  implements
       lastBegin=begin;
       if( s==null ) return;
       int y= drawBeginnerHelp1(g,s,Aladin.MYBLUE,yMax);
-//      drawControlHelp(g,5);
+//      drawControlHelp(g,y);
    }
    
-   static private final int X = 6;
-   private void drawControlHelp(Graphics g,int y) {
-      drawCross(g,140,y);
-   }
-   private void drawCross(Graphics g, int x, int y) {
-//      g.setColor( text.getText().length()>0 ? Color.red.darker() : Color.gray );
-      g.setColor( Color.red.darker() );
-      g.drawLine(x,y,x+X,y+X);
-      g.drawLine(x+1,y,x+X+1,y+X);
-      g.drawLine(x+2,y,x+X+2,y+X);
-      g.drawLine(x+X,y,x,y+X);
-      g.drawLine(x+X+1,y,x+1,y+X);
-      g.drawLine(x+X+2,y,x+2,y+X);
-//      cross = new Rectangle(x,y,X,X);
-   }
+//   private void drawControlHelp(Graphics g,int y) {
+//      drawCross(g,Color.red.darker(),145,20);
+//      drawArrow(g,Color.lightGray,130,y-10,-1);
+//      drawArrow(g,Color.gray,142,y-10,1);
+//   }
+//   
+//   static private final int X = 6;
+//   private void drawCross(Graphics g, Color c, int x, int y) {
+//    g.setColor(c);
+//      g.setColor( Color.red.darker() );
+//      g.drawLine(x,y,x+X,y+X);
+//      g.drawLine(x+1,y,x+X+1,y+X);
+//      g.drawLine(x+2,y,x+X+2,y+X);
+//      g.drawLine(x+X,y,x,y+X);
+//      g.drawLine(x+X+1,y,x+1,y+X);
+//      g.drawLine(x+X+2,y,x+2,y+X);
+////      cross = new Rectangle(x,y,X,X);
+//   }
+//   
+//   private void drawArrow(Graphics g, Color c, int x, int y,int sens) {
+//      int h=4;
+//      int w=8;
+//      g.setColor(c);
+//      g.fillRect(x, y, w, h);
+//      if( sens==1 ) {
+//         g.drawLine(x+w-3,y-2,x+w-3,y+h+2);
+//         g.drawLine(x+w-2,y-1,x+w-2,y+h+1);
+//         g.drawLine(x+w,y+h/2,x+w,y+h/2);
+//      } else {
+//         g.drawLine(x+2,y-2,x+2,y+h+2);
+//         g.drawLine(x+1,y-1,x+1,y+h+1);
+//         g.drawLine(x-1,y+h/2,x-1,y+h/2);
+//      }
+//   }
                                              
       
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
@@ -1252,7 +1281,7 @@ public final class Select extends JComponent  implements
             String s1 = st1.nextToken().trim();
             int w1 = fm.stringWidth(" "+s1);
             if( w1+w>xMax ) {
-               g.drawString(line.toString(),5,y);
+               drawString(g,line.toString(),5,y);
                y+=h;
                line = new StringBuffer(s1);
                w=0;
@@ -1261,7 +1290,7 @@ public final class Select extends JComponent  implements
             w+=w1;
          }
          if( y<yMax && line.length()>0 ) {
-            g.drawString(line.toString(),5,y);
+            drawString(g,line.toString(),5,y);
             line = new StringBuffer();
             w=0;
          }
@@ -1275,6 +1304,12 @@ public final class Select extends JComponent  implements
       }
       
       return y;
+   }
+   
+   private void drawString(Graphics g,String s,int x, int y) {
+      if( s.length()==0 ) return;
+      if( s.charAt(0)=='*' ) { Util.drawCircle5(g, x+2, y-4); g.drawString(s.substring(1),x+7,y); }
+      else g.drawString(s,x,y);
    }
    
 //   long timeTips=0L;

@@ -62,6 +62,7 @@ public final class PlanField extends Plan {
 
    private int instr;		   // Instrument FoV code (CFH12K, EPICMOS...)
    private boolean flagRoll=true;   // True if the Aperture is rollable
+   private boolean flagCenterRoll=false; // true if the roll center is movable
    private boolean flagMove=true;   // True if the Aperture can be moved
    private double roll;		   // Current angle in degrees (if it is rollable)
    protected boolean needTarget;  // True si on attend la resolution du target
@@ -973,8 +974,15 @@ public final class PlanField extends Plan {
 
    /** Return the FoV projection center as a Position java object, or null  */
    protected Position getRotCenterObjet() {
-      try { return (Position)pcat.o[0]; }
+      try { return (Position)pcat.o[ 0 ]; }
       catch( Exception e) { return null; }
+   }
+   
+   /** Repositionne le centre de rotation du FOV sur le centre de projection */
+   protected void resetRotCenterObjet() {
+      try { pcat.o[0].raj = pcat.o[1].raj; pcat.o[0].dej = pcat.o[1].dej; }
+      catch( Exception e) { }
+
    }
 
    /** Return FoV projection center in the current Aladin coordinate frame */
@@ -1033,9 +1041,15 @@ public final class PlanField extends Plan {
 
   /** Return true if the FoV is rollable */
    protected boolean isRollable() { return flagRoll; }
-
+   
    /** Positionne l'attibut Rollable pour l'Aperture */
    protected void setRollable(boolean b) { this.flagRoll = b; }
+   
+   /** Return true if the FoV is rollable and its roll center is movable */
+   protected boolean isCenterRollable() { return flagCenterRoll; }
+
+   /** Positionne l'attribut Roll center Movable */
+   protected void setCenterRollable(boolean b) { flagCenterRoll = b; }
 
    /** Positionne l'attibut Movable pour l'Aperture */
    protected void setMovable(boolean b) { this.flagMove = b; }

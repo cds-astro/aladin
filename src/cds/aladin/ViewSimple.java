@@ -311,7 +311,7 @@ public class ViewSimple extends JComponent
          }
      
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
-         // ou qu'on est en train de faire un crop
+         // (ou qu'on est en train de faire un crop)
          else if( !isPlotView() &&  ( aladin.toolBox.getTool()==ToolBox.PHOT ||
                view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
             if( hasCrop() ) p = view.crop.getFocusPos();

@@ -481,18 +481,34 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Centre du champ de l'instrument
       if( plan.type==Plan.APERTURE ) {
-         PlanField pf = (PlanField)plan;
+         final PlanField pf = (PlanField)plan;
          sField = pf.getProjCenter();
          centerField = new JTextField(sField,20);
          if( !pf.isMovable () ) centerField.setEnabled(false);
          PropPanel.addCouple(p,REFCOORD, centerField, g,c );
          if( Aladin.ROTATEFOVCENTER ) {
             rotateCenterField = pf.getRotCenter();
+            JPanel pr = new JPanel( new BorderLayout(0,0));
             rotateCenter = new JTextField(rotateCenterField,20);
-            if( !pf.isRollable () ) {
-               rotateCenter.setEnabled(false);
-            }
-            PropPanel.addCouple(p,REFROTATE, rotateCenter, g,c );
+            rotateCenter.setEnabled(pf.isRollable() & pf.isCenterRollable() );
+            pr.add(rotateCenter,BorderLayout.CENTER);
+            JCheckBox rotCheck = new JCheckBox();
+            rotCheck.setSelected(pf.isCenterRollable() );
+            rotCheck.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  boolean r = !pf.isCenterRollable();
+                  pf.setCenterRollable(r);
+                  if( !r ) {
+                     pf.resetRotCenterObjet();
+                     rotateCenter.setText(pf.getRotCenter());
+                     rotateCenterField="";
+                     apply();
+                  }
+                  rotateCenter.setEnabled(pf.isRollable() & pf.isCenterRollable() );
+               }
+            });
+            pr.add(rotCheck,BorderLayout.EAST);
+            PropPanel.addCouple(p,REFROTATE, pr, g,c );
          }
          sRoll = pf.getRoll();
          rollField = new JTextField(sRoll, 4);
@@ -1240,6 +1256,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( !s.equals(sField) || (s1!=null && !s1.equals(sRoll))
                || (s2!=null && !s2.equals(rotateCenterField))
                ) {
+            System.out.println("Bingo");
             try {
                Coord projCenter = new Coord(aladin.localisation.getICRSCoord(s));
                double roll = (s1==null)?0.

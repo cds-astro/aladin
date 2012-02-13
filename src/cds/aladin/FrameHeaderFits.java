@@ -188,7 +188,7 @@ public class FrameHeaderFits extends JFrame {
       ta.setEditable(false);
 
       JScrollPane sc = new JScrollPane(ta);
-      sc.setPreferredSize(new Dimension(600,800));
+      sc.setPreferredSize(new Dimension(600,600));
       JPanel p = new JPanel();
       ts = new JTextField(10);
       ts.addKeyListener(new KeyAdapter() {
@@ -215,7 +215,7 @@ public class FrameHeaderFits extends JFrame {
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { setVisible(false); }
       });
-      Aladin.makeAdd(this,sc,"North");
+      Aladin.makeAdd(this,sc,"Center");
       Aladin.makeAdd(this,p,"South");
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false, null);
