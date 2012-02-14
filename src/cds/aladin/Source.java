@@ -41,7 +41,12 @@ import cds.xml.Field;
 public class Source extends Position implements Comparator {
 
    static final int MDS = DS/2;      // demi-taille des poignees de selection
-   static public int L = 3;          // demi-taille de la source
+//   static public int L = 3;          // demi-taille de la source
+   
+   final protected int getL() {
+      if( plan==null || plan.getScalingFactor()==1) return 3;
+      return (int)( (2*plan.getScalingFactor()/3.)*3 );
+   }
 
    // Gestion des formes en fonction du nombre d'elements
    static final int [] LIMIT =      { 3,     10,       100,      250,   500,   1000,       2000,   5000,          13000, 100000 };
@@ -300,6 +305,7 @@ public class Source extends Position implements Comparator {
       FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(DF);
       dw=dx = (byte)(m.stringWidth(id)/2);
       dh=dy = (byte)(HF/2);
+      int L =getL();
       if( dx>L ) { dx=L-1; dw+=(dw-dx); }
       if( dy>L ) { dy=L-1; dh+=(dh-dy); }
       box.x=dx; box.y=dy; box.width=dw; box.height=dh;
@@ -313,6 +319,7 @@ public class Source extends Position implements Comparator {
    * @return <I>true</I> si on est dedans, <I>false</I> sinon
    */
    protected boolean inside(ViewSimple v,double x, double y) {
+      int L =getL();
       double l=L/v.getZoom();
       double xc = xv[v.n];
       double yc = yv[v.n];
@@ -343,6 +350,7 @@ public class Source extends Position implements Comparator {
     */
    protected Rectangle extendClip(ViewSimple v,Rectangle clip) {
       if( !isVisible() ) return clip;
+      int L =getL();
       Point p = getViewCoord(v,L*2,L*2);
       if( p==null ) return clip;
 
@@ -363,6 +371,7 @@ public class Source extends Position implements Comparator {
    /** Teste l'intersection même partielle avec le clip */
    protected boolean inClip(ViewSimple v,Rectangle clip) {
       if( !isVisible() ) return false;
+      int L =getL();
       Point p = getViewCoord(v,L*2,L*2);
       if( p==null ) return false;
       int x,y,w,h;
@@ -379,6 +388,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un carre
    void drawCarre(Graphics g,Point p) {
+      int L =getL();
       if( !isWithLabel() ) g.drawRect(p.x-L,p.y-L, L*2, L*2);
       else {
          setBox();
@@ -390,14 +400,19 @@ public class Source extends Position implements Comparator {
       }
    }
 
-   final static int R=8;
-   final static int LR=6;
-   final static int SR=4;
+//   final static int R=8;
+//   final static int LR=6;
+//   final static int SR=4;
 
    // Tracage d'un cercle
    void drawCircleS(Graphics g,Point p) {
-      if( g instanceof EPSGraphics ) g.drawOval(p.x-SR/2, p.y-SR/2, SR, SR);
-      else Util.drawCircle5(g,p.x,p.y);
+      int L =getL();
+      
+      if( g instanceof EPSGraphics || L!=3 ) {
+         int SR = (int)(L+L/3.);
+//         if( SR%2==0 ) SR++;
+         g.drawOval(p.x-SR/2, p.y-SR/2, SR, SR);
+      } else Util.drawCircle5(g,p.x,p.y);
 
       if( isWithLabel() ) {
          setBox();
@@ -407,6 +422,8 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un cercle
    void drawOval(Graphics g,Point p) {
+      int L =getL();
+      int R = (int)( (L+L/3.)*2);
       g.drawOval(p.x-R/2, p.y-R/3, R, (2*R)/3);
       if( isWithLabel() ) {
          setBox();
@@ -416,7 +433,12 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un cercle
    void drawCircle(Graphics g,Point p) {
-      if( g instanceof EPSGraphics )  g.drawOval(p.x-LR/2, p.y-LR/2, LR, LR);
+      int L =getL();
+      if( g instanceof EPSGraphics || L!=3 )  {
+         int LR = L*2;
+//         if( LR%2==0 ) LR++;
+         g.drawOval(p.x-LR/2, p.y-LR/2, LR, LR);
+      }
       else Util.drawCircle7(g,p.x,p.y);
 
       if( isWithLabel() ) {
@@ -427,6 +449,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un losange
    void drawLosange(Graphics g,Point p) {
+      int L =getL();
       g.drawLine(p.x,p.y-L, p.x+L,p.y);
       g.drawLine(p.x+L,p.y, p.x,p.y+L);
       g.drawLine(p.x,p.y+L, p.x-L,p.y);
@@ -439,6 +462,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un triangle
    void drawTriangle(Graphics g,Point p) {
+      int L =getL();
       g.drawLine(p.x-L,p.y+L/3, p.x+L,p.y+L/3);
       g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
       g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
@@ -450,6 +474,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'une croix (vertical/horizontal)
    void drawPlus(Graphics g,Point p) {
+      int L =getL();
       g.drawLine(p.x-L,p.y, p.x+L,p.y );
       g.drawLine(p.x,p.y-L, p.x,p.y+L );
       if( isWithLabel() ) {
@@ -460,6 +485,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'une croix (45 degres)
    void drawCroix(Graphics g,Point p) {
+      int L = getL();
       g.drawLine(p.x-L,p.y-L, p.x+L,p.y+L );
       g.drawLine(p.x-L,p.y+L, p.x+L,p.y-L );
       if( isWithLabel() ) {
@@ -554,6 +580,7 @@ public class Source extends Position implements Comparator {
    /** Ecriture d'info ASCII permettant de construire des links html
     * pour une carte cliquable */
    protected void writeLinkFlex(OutputStream o,ViewSimple v) throws Exception {
+      int L =getL();
       PointD p = getViewCoordDouble(v,L,L);
       if( p==null ) return;  // hors champ
       o.write((plan.label+"\t"+(id!=null?id:"-")+"\t"+p.x+"\t"+p.y+"\t"+getFirstLink()+"\n").getBytes());
@@ -562,6 +589,7 @@ public class Source extends Position implements Comparator {
    /** Ecriture d'info ASCII permettant de construire des links html
     * pour une carte cliquable */
    protected void writeLink(OutputStream o,ViewSimple v) throws Exception {
+      int L =getL();
       Point p = getViewCoord(v,L,L);
       if( p==null ) return;  // hors champ
       o.write((plan.label+"\t"+(id!=null?id:"-")+"\t"+p.x+"\t"+p.y+"\t"+getFirstLink()+"\n").getBytes());
@@ -587,7 +615,7 @@ public class Source extends Position implements Comparator {
       }
       catch( Exception e ) { return "-"; }
    }
-
+   
 
   /** Dessine la source
    * @param g        le contexte graphique
@@ -595,6 +623,7 @@ public class Source extends Position implements Comparator {
    */
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       //System.out.println("On repaint");
+      int L =getL();
       Point p = getViewCoord(v,L,L);
       if( p==null ) return false;
       p.x+=dx; p.y+=dy;

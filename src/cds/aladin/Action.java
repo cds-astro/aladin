@@ -373,7 +373,6 @@ public class Action {
 					texte = texte.substring(0, end);
 					if( expIndex>=0 ) texte += saveText.substring(expIndex);
 				}
-
 			}
 
 			// the text is constant
@@ -386,11 +385,15 @@ public class Action {
 				else texte = textToDisp;
 			}
 
-			FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(FONT);
+			// Prise en compte du scaling facteur - PF fev 2012 (pas certain que ce soit une bonne idée)
+			float scalingFactor = s.plan.getScalingFactor();
+			Font font = scalingFactor==1f ? FONT : FONT.deriveFont(FONT.getSize()*(2*scalingFactor/3));
+			FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(font);
       		wTexte = m.stringWidth(texte)/2;
-      		hTexte = FONT_SIZE/2;
+//            hTexte = FONT_SIZE/2;
+            hTexte = m.getHeight()/2;
 
-			g.setFont(FONT);
+			g.setFont(font);
 			g.setColor(theColor);
 			g.drawString(texte,p.x-wTexte,p.y+hTexte-8);  // Offset vers le haut de qq pixels
             return;

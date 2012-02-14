@@ -58,7 +58,7 @@ public final class Zoom extends JPanel {
    ZoomView   zoomView;          // Le canvas associe au Zoom
    JComboBox   cZoom;               // Le Choice des differentes valeurs de zoom
    protected ZoomChoice zoomChoicePanel;
-   protected SliderFilter filterSlider;
+   protected SliderSize sizeSlider;
    protected SliderOpacity opacitySlider;
    protected SliderZoom zoomSlider;
    
@@ -91,12 +91,12 @@ public final class Zoom extends JPanel {
       cZoom.addMouseWheelListener( zoomView );
       
       if( SLIDER_LOOK ) {
-         if( Aladin.PROTO ) filterSlider = new SliderFilter(aladin);
+         /* if( Aladin.PROTO ) */sizeSlider = new SliderSize(aladin);
          opacitySlider = new SliderOpacity(aladin);
          zoomSlider = new SliderZoom(this);
          
          JPanel sliderPanel = new JPanel( new BorderLayout(2,2));
-         if( filterSlider!=null ) sliderPanel.add(filterSlider,BorderLayout.NORTH);
+         if( sizeSlider!=null ) sliderPanel.add(sizeSlider,BorderLayout.NORTH);
          sliderPanel.add(opacitySlider,BorderLayout.CENTER);
          sliderPanel.add(zoomSlider,BorderLayout.SOUTH);
          

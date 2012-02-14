@@ -304,13 +304,6 @@ public final class Configuration extends JFrame
    }
    
    
-   /** Spécifie le mode d'affichage des positions (J2000, B1950...) */
-   private void setPositionMode(String mode) throws Exception {
-      if( !aladin.localisation.setPositionMode(mode) ) {
-         throw new Exception("Not available position mode ! ["+mode+"]");
-      }
-   }
-   
    /** Spécifie le mode d'affichage des pixels */
 //   private void setPixelMode(String mode) throws Exception {
 //      if( !aladin.pixel.setPixelMode(mode) ) {
@@ -629,9 +622,20 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    // EN ATTENDANT
 //   protected int getFrameAllsky() { return getFrame(); }
    
+   private boolean setConfFrame=false; // true si l'utilisateur a modifié par script 
+   
+   /** Spécifie le mode d'affichage des positions (J2000, B1950...) */
+   private void setPositionMode(String mode) throws Exception {
+      if( !aladin.localisation.setPositionMode(mode) ) {
+         throw new Exception("Not available position mode ! ["+mode+"]");
+      }
+      setConfFrame=true;
+   }
+   
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */
    protected int getFrameDrawing() {
       if( Aladin.OUTREACH ) return 3;   // GAL
+      if( setConfFrame ) return getFrame();   // L'utilisateur a modifié le cas par défaut via une commande setconf frame=
       String frame = get(FRAMEALLSKY);
       try {
          int i = Util.indexInArrayOf(frame, Localisation.FRAME);

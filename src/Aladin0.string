@@ -2329,12 +2329,16 @@ PARSING.fr Rapport de traitement
 GETOBJ	Object, coordinates, URL, filename or command ?
 GETOBJ.fr	Un objet, des coordonnées, une URL, un fichier ou une commande ?
 
-OPACITY Opac.
-OPACITY.fr Opac.
+OPACITY opac.
+OPACITY.fr opac.
 OPACITYTIP Adjust the transparency/opacity of selected planes
 OPACITYTIP.fr Ajuste le niveau de transparence des plans sélectionnés
 ZOOMTIP Adjust the zoom level of selected views
 ZOOMTIP.fr Ajuste le facteur de zoom des vues sélectionnées
+SLIDERSIZE size
+SLIDERSIZE.fr taille
+SLIDERSIZETIP Adjust the graphical source size of selected planes
+SLIDERSIZETIP.fr	Ajuste la taille des sources graphiques des plans sélectionnés
 
 # Bookmarks strings
 BKMTITLE	Bookmarks controler

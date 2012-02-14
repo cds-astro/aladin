@@ -24,15 +24,15 @@ import java.awt.Graphics;
 import java.util.Iterator;
 
 /**
- * Slider de contrôle du facteur pour les filtres
+ * Slider de contrôle du facteur des tailles des sources (filtres et objets)
  * @author Pierre Fernique [CDS]
  * @version 1.0 Jan 2012 - création
  */
-public class SliderFilter extends SliderPlusMoins {
+public class SliderSize extends SliderPlusMoins {
    
-   public SliderFilter(Aladin aladin) {
-      super(aladin,"Filter",0,300,10);
-      setTooltip(aladin.getChaine().getString("SLIDERFILTERTIP"));
+   public SliderSize(Aladin aladin) {
+      super(aladin,aladin.getChaine().getString("SLIDERSIZE"),0,300,10);
+      setTooltip(aladin.getChaine().getString("SLIDERSIZETIP"));
    }
    
    void submit(int inc) {
@@ -42,16 +42,12 @@ public class SliderFilter extends SliderPlusMoins {
       if( n<0f ) n=0f;
       if( n>4 ) n=3f;
       if( inc!=0 ) slider.setValue((int)(n*100));
-      Source s = (Source) p.iterator().next();
-      if( s.actions!=null ) {
-         if( p.getScalingFactor()==n ) return;
-         p.setScalingFactor(n);
-      }
+//      if( p.getScalingFactor()==n ) return;
+      aladin.calque.setScalingFactor(n);
       aladin.calque.repaintAll();
    }
    
-   // retourne le premier plan sélectionné s'il est sous influence d'un filtre
-   // sinon null
+   // retourne le premier plan sélectionné 
    Plan getPlanCatalog() {
       Plan p = aladin.calque.getFirstSelectedPlan();
       if( p==null || !p.isCatalog() ) return null;

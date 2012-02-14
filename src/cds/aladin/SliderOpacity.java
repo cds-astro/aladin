@@ -43,7 +43,7 @@ public class SliderOpacity extends SliderPlusMoins {
       if( n<0f ) n=0f;
       if( n>1f ) n=1;
       if( inc!=0 ) slider.setValue((int)(n*100));
-      if( p.getOpacityLevel()==n ) return;
+//      if( p.getOpacityLevel()==n ) return;
       aladin.calque.setOpacityLevel(n);
       aladin.calque.repaintAll();
    }

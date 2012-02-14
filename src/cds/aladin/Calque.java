@@ -3440,7 +3440,7 @@ public final class Calque extends JPanel implements Runnable {
     }
     
     
-    /** Change pour toute la pile le niveau d'opacité des images sélectionnées */
+    /** Change pour tous les plans sélectionnés le niveau d'opacité */
     protected void setOpacityLevel(float opacity) {
        Plan [] plan = getPlans();
        for( int i=0; i<plan.length; i++ ) {
@@ -3448,6 +3448,16 @@ public final class Calque extends JPanel implements Runnable {
           if( !p.flagOk || !p.selected || !p.hasCanBeTranspState() ) continue;
           p.setOpacityLevel(opacity);
           if( opacity>=0.1 ) p.setActivated(true);
+       }
+    }
+
+    /** Change pour tous les plans sélectionnés le facteur de taille des sources */
+    protected void setScalingFactor(float scalingFactor) {
+       Plan [] plan = getPlans();
+       for( int i=0; i<plan.length; i++ ) {
+          Plan p = plan[i];
+          if( !p.flagOk || !p.selected || !p.isCatalog() ) continue;
+          p.setScalingFactor(scalingFactor);
        }
     }
 

@@ -5333,7 +5333,7 @@ if( levelTrace>=3 ) System.out.println(")");
       PointD pAddXY=null;
       if( addXY ) {
 
-          pAddXY = o.getViewCoordDouble(view.getCurrentView(),o.L,o.L);
+          pAddXY = o.getViewCoordDouble(view.getCurrentView(),o.getL(),o.getL());
           // si hors champ, on ignore carrément la source !
           if( pAddXY==null ) {
               return;

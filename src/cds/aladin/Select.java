@@ -1479,7 +1479,7 @@ public final class Select extends JComponent  implements
       
       // Pas très joli
       if( a.calque.zoom.opacitySlider!=null ) {
-         if( a.calque.zoom.filterSlider!=null ) a.calque.zoom.filterSlider.repaint();
+         if( a.calque.zoom.sizeSlider!=null ) a.calque.zoom.sizeSlider.repaint();
          a.calque.zoom.opacitySlider.repaint();
          a.calque.zoom.zoomSlider.repaint();
       }

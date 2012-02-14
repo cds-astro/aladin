@@ -104,7 +104,7 @@ public final class Blink {
    /** Demande le démarrage du blink pour une source donnée s */
    synchronized protected void start(Source s) {
       this.s=s;
-      p = s.getViewCoord(v.getProjSyncView(),s.L,s.L);
+      p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
       if( p==null ) { mode=NOBLINK; return; }
       mode=START;
    }
@@ -134,7 +134,7 @@ public final class Blink {
     *  lorsque la vue a été redessiné totalement
     */
    synchronized protected void reset() { 
-      p = s.getViewCoord(v.getProjSyncView(),s.L,s.L);
+      p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
       if( p==null ) mode=NOBLINK;
       for( int i=0; i<STEP; i++ ) step[i]=false;
    }
