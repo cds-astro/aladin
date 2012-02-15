@@ -150,6 +150,7 @@ public class ServerAlmaFootprint extends Server {
          float beam = selectedSetup.primaryBeam/3600f;
          Set<Point2D> centers = new TreeSet<Point2D>();
          double x, y;
+         double ymax = 0;
          for (int i=0; (x = i * beam * 0.5)<=width/2; i++) {
 
              for (int j=0; (y = j * beam * Math.sqrt(3))<=height/2+beam/2; j++) {
@@ -173,27 +174,29 @@ public class ServerAlmaFootprint extends Server {
                      }
 
                      centers.add(new Point2D(signX * x, signY * y));
-
-                     // ajout de poignées aux extrémités
-                     if ( (i+1) * beam * 0.5 > width/2 && (j+1) * beam * Math.sqrt(3) > height/2 ) {
-                         double xE = signX * (x + beam/2);
-                         double yE = signY * (y+ beam/2);
-
-                         fpBean.addSubFootprintBean(new SubFootprintBean(new double[] {xE-1e-7, xE-1e-7, xE+1e-7, xE+1e-7},
-                                                                         new double[] {yE-1e-7, yE+1e-7, yE+1e-7, yE-1e-7},
-                                                                         "handle"));
+                     if (ymax<y) {
+                         ymax = y;
                      }
+
+
                  }
              }
          }
 
+         ymax *= 1.3;
+         // ajout d'une poignée de rotation (une droite + un pickle)
+         fpBean.addSubFootprintBean(new SubFootprintBean(new double[] {0, 0}, new double[] {0, ymax}, "handle"));
+         fpBean.addSubFootprintBean(new SubFootprintBean(0, ymax, 270, 180, 0, 1e-3, "handle"));
+
+
+         // ajout des cercles correspondant aux beams
          for (Point2D center: centers) {
              fpBean.addSubFootprintBean(new SubFootprintBean(center.x, center.y, beam/2., null));
          }
 
          synchronized(aladin.calque) {
              int idx = aladin.calque.newPlanField(fpBean, t, "ALMA", 0);
-             ((PlanField)aladin.calque.plan[idx]).setShowSubFPInProperties(false);
+             ((PlanField)aladin.calque.plan[idx]).setIsAlmaFP(true);
          }
      }
 

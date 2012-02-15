@@ -21,6 +21,11 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JCheckBox;
@@ -66,6 +71,8 @@ public final class PlanField extends Plan {
    private boolean flagMove=true;   // True if the Aperture can be moved
    private double roll;		   // Current angle in degrees (if it is rollable)
    protected boolean needTarget;  // True si on attend la resolution du target
+
+   private boolean almaFP = false; // True if the current instance is an ALMA footprint
 
    private FootprintBean fpBean;
 
@@ -977,7 +984,7 @@ public final class PlanField extends Plan {
       try { return (Position)pcat.o[ 0 ]; }
       catch( Exception e) { return null; }
    }
-   
+
    /** Repositionne le centre de rotation du FOV sur le centre de projection */
    protected void resetRotCenterObjet() {
       try { pcat.o[0].raj = pcat.o[1].raj; pcat.o[0].dej = pcat.o[1].dej; }
@@ -1041,10 +1048,10 @@ public final class PlanField extends Plan {
 
   /** Return true if the FoV is rollable */
    protected boolean isRollable() { return flagRoll; }
-   
+
    /** Positionne l'attibut Rollable pour l'Aperture */
    protected void setRollable(boolean b) { this.flagRoll = b; }
-   
+
    /** Return true if the FoV is rollable and its roll center is movable */
    protected boolean isCenterRollable() { return flagCenterRoll; }
 
@@ -1080,7 +1087,7 @@ public final class PlanField extends Plan {
     * Build the JPanel allowing the user to select individual sub FoV
     */
    protected JPanel getPanelSubFov(ActionListener al) {
-      if( subFoV==null || subFoV.size()==0 || ! isShowSubFPInProperties() ) return null;
+      if( subFoV==null || subFoV.size()==0 || isAlmaFP() ) return null;
       JPanel p = new JPanel();
       p.setLayout( new GridLayout(0,1));
 
@@ -1095,6 +1102,35 @@ public final class PlanField extends Plan {
       }
 
       return p;
+   }
+
+   /**
+    * Export pointing centers, as a new catalogue plane (dedicated to ALMA footprints)
+    */
+   protected void exportAlmaPointings() {
+       List<Forme> pointings = new ArrayList<Forme>();
+       for (Obj obj: pcat.o) {
+           if (obj instanceof Cercle && ! (obj instanceof Pickle)) {
+               pointings.add((Forme)obj);
+           }
+       }
+
+       String vot = Util.createVOTable(pointings);
+
+        try {
+           aladin.calque.newPlanCatalog(new MyInputStream(new BufferedInputStream(
+                            new ByteArrayInputStream(vot.getBytes()))), "Pointings");
+        } catch (IOException e) {
+           e.printStackTrace();
+        }
+   }
+
+   protected boolean isAlmaFP() {
+       return almaFP;
+   }
+
+   protected void setIsAlmaFP(boolean b) {
+       this.almaFP = b;
    }
 
    /**
@@ -1226,13 +1262,6 @@ public final class PlanField extends Plan {
       return "";
   }
 
-   public boolean isShowSubFPInProperties() {
-       return showSubFPInProperties;
-   }
-
-   public void setShowSubFPInProperties(boolean showSubFPInProperties) {
-       this.showSubFPInProperties = showSubFPInProperties;
-   }
 
    /**
     * Sub Field of View structure
