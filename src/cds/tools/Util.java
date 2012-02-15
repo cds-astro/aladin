@@ -81,6 +81,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
@@ -88,8 +89,8 @@ import javax.net.ssl.*;
 import javax.swing.*;
 
 import cds.aladin.Aladin;
+import cds.aladin.Forme;
 import cds.aladin.MyInputStream;
-import cds.aladin.Source;
 import cds.image.EPSGraphics;
 
 /**
@@ -504,7 +505,7 @@ public final class Util {
 	   if( html ) res.append("</html>");
 	   return res.toString();
 	}
-	
+
 	/** Extrait la table des couleurs pour une composante sous la forme d'un tableau de 256 bytes
 	 * @param cm Le modèle de couleur
 	 * @param component 0-Rouge, 1-Vert, 2-Bleu
@@ -686,7 +687,7 @@ public final class Util {
       } catch( Exception e ) { }
       gr.drawPolygon(pol);
     }
-    
+
     /** Tracé d'un cartouche, éventuellement semi-transparent
      * Retourne les coordonnées pour écrire dedans */
     static public void drawCartouche(Graphics gr,int x, int y, int w, int h,
@@ -763,7 +764,7 @@ public final class Util {
        g.drawLine(x-2,y+3,x-2,y+3);
        g.drawLine(x+2,y+3,x+2,y+3);
    }
-    
+
     /**
      * Dessin d'un bouton radio
      * @param g le contexte graphique
@@ -789,7 +790,7 @@ public final class Util {
              g.drawLine(x+1,y+1+i,x+CINT.length,y+1+i);
           }
        }
-       
+
        g.setColor(colorBord);
        g.drawArc(x,y,w,w,0,360);
 
@@ -902,7 +903,7 @@ public final class Util {
 //       g.drawLine(x+1,y+1,x+3,y+1);
 //       g.drawLine(x+2,y,x+2,y);
 //    }
-    
+
     /** Draws an ellipse which can be rotated
      *  @param g - the graphic context we draw on
      *  @param c - color of the ellipse
@@ -1346,7 +1347,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 	   File f = new File(new File(filename).getParent());
 	   f.mkdirs();
 	   if( !f.exists() ) throw new Exception("Cannot create directory for "+filename);
-	   
+
 //	   File f;
 //	   String FS = filename.indexOf('/')>=0 ? "/" : "\\";
 //
@@ -1505,14 +1506,14 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        // DES QU'ON NE SUPPORTERA PLUS JAV 1.4
 //       return System.nanoTime()/1000000;
     }
-    
+
     /** Retourne la lettre code d'un champ TFORM FITS nD */
     static final public char getFitsType(String form) {
        int l=form.indexOf('(');
        if( l==-1 ) l=form.length();
        return form.charAt(l-1);
     }
-    
+
     /** retourne la taille du champs FITS exprimé sous la forme nD(xxx) ou nPD(xxx) */
     static final public int binSizeOf(String form) throws Exception {
        try {
@@ -1549,7 +1550,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           0;
        return sizeOf * n;
     }
-    
+
     /**
      * Affiche le chiffre donné avec une unité de volume disque (K M T)
      * @param val taille en octets
@@ -1569,7 +1570,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     	nf.setMaximumFractionDigits(format);
     	return nf.format(val)+unites[unit];
     }
-    
+
 	public static ArrayList<File> getFiles(String path, final String suffix) {
 //		FilenameFilter filter = new FilenameFilter() {
 //			public boolean accept(File dir, String name) {
@@ -1655,6 +1656,45 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
    public static final double cosd(double x) { return Math.cos( x*(Math.PI/180.0) ); }
 
 
+   /**
+    * build a VOTable document from a list of Forme
+    * @param formes list of Forme
+    * @return VOTable document with 2 columns: ra, dec corresponding to the positions of the objects
+    */
+   public static String createVOTable(List<Forme> formes) {
+       StringBuffer sb = new StringBuffer()
+           .append("<?xml version=\"1.0\"?>\n")
+           .append("<VOTABLE version=\"1.2\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+           .append("xmlns=\"http://www.ivoa.net/xml/VOTable/v1.2\"\n")
+           .append("xmlns:stc=\"http://www.ivoa.net/xml/STC/v1.30\" >\n")
+           .append("<RESOURCE>\n")
+           .append("<TABLE>\n")
+           .append("<GROUP ID=\"J2000\" utype=\"stc:AstroCoords\">\n")
+           .append("  <PARAM datatype=\"char\" arraysize=\"*\" ucd=\"pos.frame\" name=\"cooframe\"\n")
+           .append("    utype=\"stc:AstroCoords.coord_system_id\" value=\"ICRS\" />\n")
+           .append("  <FIELDref ref=\"ra\"/>\n")
+           .append("  <FIELDref ref=\"dec\"/>\n")
+           .append("</GROUP>\n")
+           .append("<FIELD name=\"RA\" ID=\"ra\" ucd=\"pos.eq.ra;meta.main\" ref=\"J2000\"\n")
+           .append("  utype=\"stc:AstroCoords.Position2D.Value2.C1\"\n")
+           .append("  datatype=\"double\" unit=\"deg\" />\n")
+           .append("<FIELD name=\"Dec\" ID=\"dec\" ucd=\"pos.eq.dec;meta.main\" ref=\"J2000\"\n")
+           .append("  utype=\"stc:AstroCoords.Position2D.Value2.C2\"\n")
+           .append("  datatype=\"double\" unit=\"deg\" />\n")
+           .append("<DATA><TABLEDATA>\n");
+
+       for (Forme forme: formes) {
+           sb.append(String.format((Locale)null, "<TR><TD>%.5f</TD><TD>%.5f</TD></TR>\n", forme.o[0].raj, forme.o[0].dej));
+       }
+
+       sb.append("</TABLEDATA></DATA>\n")
+           .append("</TABLE>\n")
+           .append("</RESOURCE>\n")
+           .append("</VOTABLE>");
+
+       return sb.toString();
+
+   }
 
 // PAS ENCORE TESTE
 //    /** Extrait le premier nombre entier qui se trouve dans la chaine à partir
