@@ -971,6 +971,8 @@ PROPSEGMENTLENGTH Segments length
 PROPSEGMENTTHICK Segments thickness
 PROPSEGMENTDENSITY Number of segments
 PROPSCALINGFACTOR Scaling factor (for filters)
+PROPPOINTING Pointing centers
+PROPPOINTINGLABEL Export pointing centers
 PROPDEFCATPROJ	Used projection
 PROPOPACITY	Overlay opacity/transparency
 PROPOPACITYLEVEL	Opacity level
@@ -1046,6 +1048,8 @@ PROPSEGMENTLENGTH.fr Longueur des segments
 PROPSEGMENTTHICK.fr Epaisseur des segments
 PROPSEGMENTDENSITY.fr Nombre de segments
 PROPSCALINGFACTOR.fr Facteur d'échelle (pour les filtres)
+PROPPOINTING.fr Pointages
+PROPPOINTINGLABEL.fr Exporter les positions des pointages
 PROPDEFCATPROJ.fr	Projection utilisée
 PROPOPACITY.fr	Niveau d'Opacité/Transparence
 PROPOPACITYLEVEL.fr	Niveau d'opacité
