@@ -383,13 +383,15 @@ final public class Fits {
          code |= HHH;
          
       // Cas habituel
-      } else headerFits = new HeaderFits(is);
-      
-      try {
-    	  bitpix = headerFits.getIntFromHeader("BITPIX");
-      } catch (Exception e1) {
-    	  bitpix = 0;
+      } else {
+         headerFits = new HeaderFits(is);
+         try {
+            bitpix = headerFits.getIntFromHeader("BITPIX");
+        } catch (Exception e1) {
+            bitpix = 0;
+        }
       }
+      
       if( bitpix==0 ) code |= COLOR;
       
 //      if( bitpix!=0 ) bitpix = headerFits.getIntFromHeader("BITPIX");
@@ -404,6 +406,7 @@ final public class Fits {
       this.setFilename(filename);
       return code;
    }
+   
 
    /** Retourne la valeur BSCALE (1 si non définie) */
    public double getBscale() { return bscale; }

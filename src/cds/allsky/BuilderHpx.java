@@ -68,11 +68,10 @@ final public class BuilderHpx {
          blankOrig=context.getBlankOrig();
          hasAlternateBlank = context.hasAlternateBlank();
          blank = context.getBlank();
-         borderSize = context.getBorderSize();
-
       } else {
          blank=0;
       }
+      borderSize = context.getBorderSize();
       hpxFinderPath = context.getHpxFinderPath();
    }
 

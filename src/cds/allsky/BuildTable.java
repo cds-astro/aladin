@@ -111,6 +111,7 @@ public class BuildTable extends JTable {
    }
 
    public int setSelectedOrder(int order) {
+      if( order<3 ) order=3;
       defaultOrder = order;
       setValueAt(Boolean.TRUE,order-3,CHECK_IDX);
       return order-3;

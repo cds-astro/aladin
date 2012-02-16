@@ -192,6 +192,9 @@ public final class Zoom extends JPanel {
    protected int getIndex() {
       return cZoom.getSelectedIndex();
    }
+   
+   static public final int MINSLIDER=6;
+   static public final int MAXSLIDER=18;
 
   /** Retourne la prochaine valeur du zoom.
    * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
@@ -203,6 +206,18 @@ public final class Zoom extends JPanel {
       i=i+sens;
       return getValue(i);
    }
+
+   /** Retourne la prochaine valeur du zoom.
+    * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
+    * @return le nouveau fct de zoom, ou -1 si problème
+    */
+    protected double getReasonableNextValue(double z,int sens) {
+       int i = getIndex(z);
+       if( sens<0 && i+sens<MINSLIDER || sens>0 && i+sens>MAXSLIDER ) return -1;
+       i=i+sens;
+       return getValue(i);
+    }
+
 
    /** Positionne le zoom à un facteur donné et demande un réaffichage
     *  Utilisé par Command

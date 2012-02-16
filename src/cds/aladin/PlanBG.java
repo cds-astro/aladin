@@ -1880,7 +1880,6 @@ public String getUrl() {
 	   v.ovizBG=v.iz;
 	   flagClearBuf=false;
 	   v.fillBackground(v.g2BG);
-
 	   drawLosanges(v.g2BG,v,now);
 
 	   return v.imageBG;
@@ -2277,7 +2276,7 @@ public String getUrl() {
             healpix.resetTimer();
 
             // Pas encore prêt
-            if( status!=HealpixKey.READY ) continue;
+            if( status!=HealpixKey.READY && status!=HealpixKey.ERROR ) continue;
             
             // Tous les fils à tracer sont déjà prêts => on passe
             if( order<max && childrenReady(healpix,v) ) {

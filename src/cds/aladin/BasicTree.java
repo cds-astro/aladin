@@ -1029,41 +1029,45 @@ public class BasicTree extends JComponent
 	// les "callbacks" liés aux popupMenu sont appelés sur l'evt mouseUp
 	// afin d'éviter de mauvaises surprises liées au WM
     public void mouseReleased(MouseEvent evt) {
-        int x = evt.getX();
-        int y = evt.getY();
-        
-        Graphics h = getGraphics();
-        
-		// cet événement est déclenché sur mouseUp pour que la fenêtre s'affiche en avant plan
-		if( triggerOnNodeSelected ) {
-			onNodeSelected(nodeToTrigger);
-			triggerOnNodeSelected=false;
-		}
-        BasicNode node;
-        try {node = nodeTab[y/YSPACE];}
-        catch (ArrayIndexOutOfBoundsException e) {
-            if( (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) onRightClickOutNode(x,y);
-            return;
-        }
-    	
-        // aucune action pour un noeud cache
-        if(node.hide) {
-           if( (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) onRightClickOutNode(x,y);
-            return;
-        } 
+        try {
+         int x = evt.getX();
+           int y = evt.getY();
+           
+           Graphics h = getGraphics();
+           
+         // cet événement est déclenché sur mouseUp pour que la fenêtre s'affiche en avant plan
+         if( triggerOnNodeSelected ) {
+         	onNodeSelected(nodeToTrigger);
+         	triggerOnNodeSelected=false;
+         }
+           BasicNode node;
+           try {node = nodeTab[y/YSPACE];}
+           catch (ArrayIndexOutOfBoundsException e) {
+               if( (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) onRightClickOutNode(x,y);
+               return;
+           }
+         
+           // aucune action pour un noeud cache
+           if(node.hide) {
+              if( (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) onRightClickOutNode(x,y);
+               return;
+           } 
 
-        boolean inLogo = inLogo(node, x);
-        boolean inNodeName = inNodeName(h,x,node);
-        
-        // click droit sur un noeud
-        if( !inLogo && (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) {
-            if(inNodeName) {
-                onRightClickInNode(node, x, y);
-            }
-            else{
-                onRightClickOutNode(x,y);  
-            }
-        }
+           boolean inLogo = inLogo(node, x);
+           boolean inNodeName = inNodeName(h,x,node);
+           
+           // click droit sur un noeud
+           if( !inLogo && (evt.getModifiers() & InputEvent.BUTTON3_MASK) !=0 ) {
+               if(inNodeName) {
+                   onRightClickInNode(node, x, y);
+               }
+               else{
+                   onRightClickOutNode(x,y);  
+               }
+           }
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
 	}
     
     public void mousePressed(MouseEvent evt) {

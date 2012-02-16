@@ -166,7 +166,7 @@ public class ContextGui extends Context {
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          cut[0] = cut[2] = 0;
-         cut[1] = cut[3] = 1;
+         cut[1] = cut[3] = 255;
       }
 
       return cut;

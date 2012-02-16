@@ -300,8 +300,10 @@ public class Source extends Position implements Comparator {
    // Calcul le decalage du label en fct de la font
    // et de la taille de la source. On utilise une variable statique pour éviter
    // les allocations inutiles
-   private Rectangle setBox() {
+   private Rectangle setBox() { return setBox(null); }
+   private Rectangle setBox(Graphics g) {
       int dx,dy,dw,dh;
+      if( g!=null ) g.setFont(DF);
       FontMetrics m = Toolkit.getDefaultToolkit().getFontMetrics(DF);
       dw=dx = (byte)(m.stringWidth(id)/2);
       dh=dy = (byte)(HF/2);
@@ -391,7 +393,7 @@ public class Source extends Position implements Comparator {
       int L =getL();
       if( !isWithLabel() ) g.drawRect(p.x-L,p.y-L, L*2, L*2);
       else {
-         setBox();
+         setBox(g);
          g.drawLine(p.x+L,p.y-L+box.y+2,  p.x+L,p.y+L);
          g.drawLine(p.x-L,p.y+L, p.x+L,p.y+L);
          g.drawLine(p.x-L,p.y+L, p.x-L,p.y-L);
@@ -415,7 +417,7 @@ public class Source extends Position implements Comparator {
       } else Util.drawCircle5(g,p.x,p.y);
 
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -426,7 +428,7 @@ public class Source extends Position implements Comparator {
       int R = (int)( (L+L/3.)*2);
       g.drawOval(p.x-R/2, p.y-R/3, R, (2*R)/3);
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -442,7 +444,7 @@ public class Source extends Position implements Comparator {
       else Util.drawCircle7(g,p.x,p.y);
 
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -455,7 +457,7 @@ public class Source extends Position implements Comparator {
       g.drawLine(p.x,p.y+L, p.x-L,p.y);
       g.drawLine(p.x-L,p.y, p.x,p.y-L);
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -467,7 +469,7 @@ public class Source extends Position implements Comparator {
       g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
       g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -478,7 +480,7 @@ public class Source extends Position implements Comparator {
       g.drawLine(p.x-L,p.y, p.x+L,p.y );
       g.drawLine(p.x,p.y-L, p.x,p.y+L );
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L-box.x/2,p.y-L+box.y/2);
       }
    }
@@ -489,7 +491,7 @@ public class Source extends Position implements Comparator {
       g.drawLine(p.x-L,p.y-L, p.x+L,p.y+L );
       g.drawLine(p.x-L,p.y+L, p.x+L,p.y-L );
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+L,p.y+box.y/2);
       }
    }
@@ -499,7 +501,7 @@ public class Source extends Position implements Comparator {
       g.drawLine(p.x-1,p.y, p.x+1,p.y );
       g.drawLine(p.x,p.y-1, p.x,p.y+1 );
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+2-box.x/2,p.y-2+box.y/2);
       }
    }
@@ -508,7 +510,7 @@ public class Source extends Position implements Comparator {
    void drawDot(Graphics g,Point p) {
       g.drawLine(p.x,p.y, p.x,p.y );
       if( isWithLabel() ) {
-         setBox();
+         setBox(g);
          g.drawString(id,p.x+2-box.x/2,p.y-2+box.y/2);
       }
    }

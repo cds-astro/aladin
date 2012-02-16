@@ -82,7 +82,7 @@ public final class Select extends JComponent  implements
    static final int HORIZONTAL = 2;
 
    // Les valeurs accociees aux differents elements graphiques
-   static final int sizeLabel = 89/*112-MyScrollbar.LARGEUR*/;   // Nbre de pixels pour les labels
+   static final int sizeLabel = 100;//89/*112-MyScrollbar.LARGEUR*/;   // Nbre de pixels pour les labels
    // test AVO
    //static final int sizeLabel = 156-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels (test AVO)
    static final int gapL      =   16;   // Marge de gauche (reserve pour les controles)
@@ -155,7 +155,7 @@ public final class Select extends JComponent  implements
       addMouseListener(this);
       addMouseWheelListener(this);
       
-      setBackground(Aladin.NEWLOOK_V7 ? a.getBackground() : Aladin.LBLUE );
+      setBackground(Aladin.NEWLOOK_V7 ? a.toolBox.getBackground() : Aladin.LBLUE );
 //      if( Aladin.NEWLOOK_V7 ) eyeHeight=0;
 
       // Calcule des tailles
@@ -741,6 +741,7 @@ public final class Select extends JComponent  implements
                System.out.println("switchShow: Je synchronise sur l'image et je l'active");
                boolean ok = p.setActivated(true);
                if( !activeBefore && !ok ) { setCheckBoxBlinkPlan(p); System.out.println("Impossible !"); }
+               else if( ok && p.getOpacityLevel()<0.1f ) p.setOpacityLevel(1f);
             } else {
                if( p.getOpacityLevel()<0.1f && p.active && !p.ref ) {
                   if( a.calque.isBackGround() && p.type==Plan.ALLSKYIMG ) {
@@ -1500,7 +1501,7 @@ public final class Select extends JComponent  implements
       g.fillRect(0,0,ws,hs);
 
       // Le pourtour
-      if( getBackground()!=a.getBackground() ) Util.drawEdge(g,ws,hs);
+//      Util.drawEdge(g,ws,hs);
       
 
       // Le clip Rect pour ne pas depasser

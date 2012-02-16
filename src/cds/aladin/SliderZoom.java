@@ -31,7 +31,7 @@ public class SliderZoom extends SliderPlusMoins {
    private Zoom zoom;
    
    public SliderZoom(Zoom zoom) {
-      super(zoom.aladin,zoom.aladin.getChaine().getString("ZOOM"),6,18,1);
+      super(zoom.aladin,zoom.aladin.getChaine().getString("ZOOM"),Zoom.MINSLIDER,Zoom.MAXSLIDER,1);
       setTooltip(aladin.getChaine().getString("ZOOMTIP"));
       this.zoom = zoom;
    }

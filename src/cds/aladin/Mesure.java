@@ -774,33 +774,6 @@ public final class Mesure extends JPanel implements Runnable {
       scrollV.setValues(0,1,0,1);
    }
 
-  /** Purge.    SANS DOUTE INUTILE DEPUIS Calque.deSelect(Plan)
-   * Purge des Sources dont les plans d'appartenance ont ete
-   * vides ou ne sont pas selectionnes
-   */
-//   protected void removeOldElements() {
-//      boolean dopaint = false;
-//      // Le lock sur text est necessaire en raison du thread qui calcule les filtres --> risque de pb sans ce lock
-//      synchronized(this) {
-//         for( int i=0; i<nbSrc; i++ ) {
-//            Source o = src[i];
-//            if( o.getPlan().type==Plan.NO || !o.getPlan().active ) {
-//               dopaint=true;
-//               rmSrc(i);
-//               i--;
-//               o.select=false;
-//               aladin.calque.view.vselobj.removeElement(o);
-//            }
-//         }
-//      }
-//      if( dopaint ) {
-//         mcanvas.currentsee=-1;
-//         mcanvas.currentselect=-2;
-//         scrollV.setValue(nbSrc);
-//         mcanvas.fullRepaint();
-//      }
-//   }
-
   /** Suppression de la ligne d'une source particulière
    */
    protected void remove(Source s) {

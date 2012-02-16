@@ -301,7 +301,9 @@ public final class HeaderFits {
          }
          i=c+1;
       }
-      if( specialDSS ) purgeAMDifRequired();
+      
+      // NORMALEMENT C'EST CORRIGE PAR BOF - PF fév 2011
+//      if( specialDSS ) purgeAMDifRequired();
       
       return true;
    }

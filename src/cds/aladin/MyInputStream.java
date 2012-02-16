@@ -144,7 +144,7 @@ public final class MyInputStream extends FilterInputStream {
       }
       return this;
    }
-
+   
    /** Retourne la position du prochain octet qui va être lu
     * dans le flux
     * @return position du prochain octet qui sera lu (commence à 0)
