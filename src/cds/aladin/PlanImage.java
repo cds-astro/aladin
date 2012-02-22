@@ -2274,6 +2274,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
              if( type!=ALLSKYIMG && pixelsOrigin!=null ) {
                 double val = getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
                 if( aladin.levelTrace<4 ) return Y(val);
+                
                 double infileVal=getPixVal1(pixelsOrigin,bitpix,(height-y-1)*width+x);
                 return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
              }
@@ -2282,6 +2283,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
              if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
              double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
              if( aladin.levelTrace<4 ) return Y(val);
+             
              double infileVal=getPixVal1(onePixelOrigin,bitpix,0);
              return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
       }

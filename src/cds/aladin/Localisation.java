@@ -59,37 +59,45 @@ public final class Localisation extends MyBox {
    // les constantes associees a chaque repere
    static final public int ICRS   = 0;
    static final public int ICRSD  = 1;
-   static final public int J2000  = 2;
-   static final public int J2000D = 3;
-   static final public int B1950  = 4;
-   static final public int B1950D = 5;
-   static final public int ECLIPTIC = 6;
-   static final public int GAL    = 7;
-   static final public int SGAL   = 8;
-   static final public int XY     = 9;
-   static final public int XYNAT  = 10;
-   static final public int XYLINEAR  = 11;
+   static final public int ECLIPTIC = 2;
+   static final public int GAL    = 3;
+   static final public int SGAL   = 4;
+   static final public int J2000  = 5;
+   static final public int J2000D = 6;
+   static final public int B1950  = 7;
+   static final public int B1950D = 8;
+   static final public int B1900  = 9;
+   static final public int B1875  = 10;
+   static final public int XY     = 11;
+   static final public int XYNAT  = 12;
+   static final public int XYLINEAR  = 13;
   
    // Le label pour chaque repere (dans l'ordre des constantes ci-dessus)
    static final String [] REPERE = {
-      "ICRS","ICRSd","J2000","J2000d","B1950",
-      "B1950d","Ecliptic","Gal","SGal",
-      "XY Fits","XY native","XY linear"
+      "ICRS","ICRSd","Ecliptic","Gal","SGal",
+      "J2000","J2000d","B1950","B1950d","B1900","B1875",
+      "XY Fits","XY image","XY linear"
    };
    
    // Le mot clé RADECSYS Fits correspondant au système de coordonnée
    static final String [] RADECSYS = {
-      "ICRS","ICRS","FK5","FK5","FK4","FK4",null,null,null,null,null,null,
+      "ICRS","ICRS",null,null,null,
+      "FK5","FK5","FK4","FK4","FK4","FK4",
+      null,null,null,
    };
    
    // Le préfixe du mot clé CTYPE1 Fits correspondant au système de coordonnée
    static final String [] CTYPE1 = {
-      "RA---","RA---","RA---","RA---","RA---","RA---","ELON-","GLON-","SLON-",null,null,"SOLAR",
+      "RA---","RA---","ELON-","GLON-","SLON-",
+      "RA---","RA---","RA---","RA---","RA---","RA---",
+      null,null,"SOLAR",
    };
 
    // Le préfixe du mot clé CTYPE2 Fits correspondant au système de coordonnée
    static final String [] CTYPE2 = {
-      "DEC--","DEC--","DEC--","DEC--","DEC--","DEC--","ELAT-","GLAT-","SLAT-",null,null,"SOLAR",
+      "DEC--","DEC--","ELAT-","GLAT-","SLAT-",
+      "DEC--","DEC--","DEC--","DEC--","DEC--","DEC--",
+      null,null,"SOLAR",
    };
    
    // Les différents Frames possibles (mode AllSky)
@@ -441,7 +449,9 @@ public final class Localisation extends MyBox {
    static final Astroframe AF_SGAL = new Supergal();
    static final Astroframe AF_ICRS = new ICRS();
    static final Astroframe AF_ECLI = new Ecliptic();
-   
+   static final Astroframe AF_FK4_1900 = new FK4(1900);
+   static final Astroframe AF_FK4_1875 = new FK4(1875);
+
    // Retourne la valeur du frame prevue dans Astroframe
    // en fonction de la valeur courante du menu deroulant
    static protected Astroframe getAstroframe(int i) {
@@ -449,6 +459,8 @@ public final class Localisation extends MyBox {
              (i==GAL)?AF_GAL:
              (i==J2000 || i==J2000D)?AF_FK5:
              (i==B1950 || i==B1950D)?AF_FK4:
+             (i==B1900)?AF_FK4_1900:
+             (i==B1875)?AF_FK4_1875:
              (i==ECLIPTIC)?AF_ECLI:
              (i==SGAL)?AF_SGAL:AF_ICRS;
    }

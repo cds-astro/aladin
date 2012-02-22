@@ -845,8 +845,6 @@ public final class Calque extends JPanel implements Runnable {
       aladin.view.deSelect();
       for( int i=0; i<plan.length; i++ ) {
          if( !plan[i].hasObj() ) continue;
-//         if( !plan[i].isCatalog() && plan[i].type!=Plan.TOOL ) continue;
-//         if( plan[i] instanceof PlanContour ) continue;
          if( plan[i].flagOk && plan[i].active &&(mode==0 || mode==2 || plan[i].selected) ) {
             aladin.view.selectAllInPlanWithoutFree(plan[i],mode==2?1:0);
          }
@@ -1170,10 +1168,13 @@ public final class Calque extends JPanel implements Runnable {
       if( v.isFree() || !Projection.isOk(v.pref.projd) ) return setPlanRef(p,nview);  // pas possible de se mettre à la même position
       Coord c = v.getProj().getProjCenter();
       double z = v.zoom;
+      double fct=1;
+      try { fct = p.projd.getPixResAlpha()/v.getProj().getPixResAlpha(); }
+      catch( Exception e ) {}
       setPlanRef(p,nview);
       v.getProj().setProjCenter(c.al,c.del);
       v.newView(1);
-      v.setZoomRaDec(z,c.al,c.del);
+      v.setZoomRaDec(z*fct,c.al,c.del);
       return true;
    }
 

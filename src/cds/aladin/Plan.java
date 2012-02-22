@@ -1200,7 +1200,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return false;  // Mais attention, ce n'est pas certain !!
 
       } else {
-         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView());
+         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView(),false);
          setDebugFlag(OUTOFVIEW,rep);
          return rep;
       }

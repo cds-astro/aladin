@@ -300,7 +300,11 @@ public final class Projection {
       if( frame!=Localisation.ICRS ) c = Localisation.frameToFrame(c, Localisation.ICRS, frame);
       modify(label,modeCalib,c.al,c.del,rm,rm1,cx,cy,r,r1,rot,sym,t,system);
    }
-
+   
+   protected void setProjRot(double rota) {
+      modify(label,modeCalib,alphai,deltai,rm,rm,cx,cy,r,r,rota,sym,t,system);
+   }
+   
    protected void deltaProjRot(double drot) {
       double rota = rot+drot;
       if( rota>360 ) rota-=360;
@@ -561,21 +565,11 @@ public final class Projection {
    private boolean isEquatorial() {
       return frame==Localisation.ICRS || frame==Localisation.ICRSD
       || frame==Localisation.J2000 || frame==Localisation.J2000D
-      || frame==Localisation.B1950 || frame==Localisation.B1950D;
+      || frame==Localisation.B1950 || frame==Localisation.B1950D
+      || frame==Localisation.B1900
+      || frame==Localisation.B1875 ;
    }
    
-   // Retourne true si le frame propre à la classe Projection est identique à celui de calib
-   private boolean isFrameEqualsCalibSyst() {
-      int system = c.getSystem();
-      if( system==Calib.ICRS && (frame==Localisation.ICRS  || frame==Localisation.ICRSD) )  return true;
-      if( system==Calib.FK5  && (frame==Localisation.J2000 || frame==Localisation.J2000D) ) return true;
-      if( system==Calib.FK4  && (frame==Localisation.B1950 || frame==Localisation.B1950D) ) return true;
-      if( system==Calib.GALACTIC      && frame==Localisation.GAL )      return true;
-      if( system==Calib.SUPERGALACTIC && frame==Localisation.SGAL )     return true;
-      if( system==Calib.ECLIPTIC      && frame==Localisation.ECLIPTIC ) return true;
-      return false;
-   }
-      
   /** Arrondi.
    * Applique au centre de la projection pour permettre les superpositions
    * legerement decalees (lors de l'interrogation)
@@ -594,9 +588,12 @@ public final class Projection {
    * avec l'objet projection
    * @param p la projection a comparer avec la projection courante
    * @param v la vue courante
+   * @param testBG true si on écarte le cas d'une superposition sur un plan BG, notamment
+   *               pour éviter que les losanges de PlanBGCat ne puissent être affichés
    * @return <I>true</I> c'est ok - <I>false</I> c'est mauvais
    */
-   protected boolean agree(Projection p,ViewSimple v) {
+   protected boolean agree(Projection p,ViewSimple v) { return agree(p,v,true); }
+   protected boolean agree(Projection p,ViewSimple v,boolean testBG) {
 
       if( p==null ) return false;
 
@@ -606,7 +603,7 @@ public final class Projection {
       double z=1;
       if( v!=null ) {
          // sur un background
-//         if( v.pref!=null && v.pref instanceof PlanBG ) return true;
+         if( testBG && v.pref!=null && v.pref instanceof PlanBG ) return true;
          z = v.getZoom();
       }
 

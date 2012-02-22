@@ -49,10 +49,13 @@ import javax.swing.event.ChangeListener;
 public final class Zoom extends JPanel {
 
    // Les valeurs generiques
-   static int mzn[] = {    1,   1,  1,   1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-   static int mzd[] = { 2048,1024,512, 256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
    static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
+   
+   static public final int MINSLIDER=2;
+   static public final int MAXSLIDER=18;
 
    // Les conposantes de l'objet
    ZoomView   zoomView;          // Le canvas associe au Zoom
@@ -193,9 +196,6 @@ public final class Zoom extends JPanel {
       return cZoom.getSelectedIndex();
    }
    
-   static public final int MINSLIDER=6;
-   static public final int MAXSLIDER=18;
-
   /** Retourne la prochaine valeur du zoom.
    * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
    * @return le nouveau fct de zoom, ou -1 si problème
@@ -206,17 +206,6 @@ public final class Zoom extends JPanel {
       i=i+sens;
       return getValue(i);
    }
-
-   /** Retourne la prochaine valeur du zoom.
-    * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
-    * @return le nouveau fct de zoom, ou -1 si problème
-    */
-    protected double getReasonableNextValue(double z,int sens) {
-       int i = getIndex(z);
-       if( sens<0 && i+sens<MINSLIDER || sens>0 && i+sens>MAXSLIDER ) return -1;
-       i=i+sens;
-       return getValue(i);
-    }
 
 
    /** Positionne le zoom à un facteur donné et demande un réaffichage

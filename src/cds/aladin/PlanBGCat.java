@@ -82,7 +82,7 @@ public class PlanBGCat extends PlanBG {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();
       if(  op<=0.1 ) return;
-
+      
       if( g instanceof Graphics2D ) {
          Graphics2D g2d = (Graphics2D)g;
          Composite saveComposite = g2d.getComposite();
@@ -144,7 +144,6 @@ public class PlanBGCat extends PlanBG {
 
       if( allsky[order].getStatus()==HealpixKey.READY ) {
          hasDrawnSomething = allsky[order].draw(g,v)>0;
-//System.out.println("drawAllSkyCat order "+order);
       }
       return hasDrawnSomething;
    }
@@ -157,7 +156,7 @@ public class PlanBGCat extends PlanBG {
       int order = getCurrentMaxOrder(v);
       int nb=0;
       boolean allKeyReady=true;
-
+      
       hasDrawnSomething=drawAllSky(g, v,  2);
       if( order>=3 ) hasDrawnSomething|=drawAllSky(g, v,  3);
 
@@ -165,7 +164,7 @@ public class PlanBGCat extends PlanBG {
       resetPriority();
 
       boolean moreDetails=order<=3;
-
+      
       for( int norder=4; norder<=order; norder++ ) {
 
          pix = getPixListView(v,norder);
@@ -180,14 +179,14 @@ public class PlanBGCat extends PlanBG {
                if( pere!=null && pere.isLast() ) continue;
             }
 
-            HealpixKey healpix = getHealpix(norder,pix[i], true);
+            HealpixKeyCat healpix = (HealpixKeyCat)getHealpix(norder,pix[i], true);
             
             // Juste pour tester la synchro
 //            Util.pause(100);
 
             // Inconnu => on ne dessine pas
             if( healpix==null ) continue;
-
+            
             // Positionnement de la priorité d'affichage
             healpix.priority=250-(priority++);
 
@@ -207,7 +206,7 @@ public class PlanBGCat extends PlanBG {
             // Pas encore prêt
             if( status!=HealpixKey.READY ) { moreDetails = true; continue; }
 
-            nb+=healpix.draw(g,v);
+            nb += healpix.draw(g,v);
 
             HealpixKeyCat h = (HealpixKeyCat)healpix;
 //            System.out.println(h.getStringNumber()+" => reallyLast="+h.isReallyLast(v));

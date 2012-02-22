@@ -462,8 +462,16 @@ final public class BuilderHpx {
                   // Mode JPEG + entête extente .hhh
                   if (fitsfilename.endsWith("hhh")) {
                      fitsfile.loadHeaderFITS(fitsfilename);
+                     
+                     // On essaye le fichier parallèle en JPG
                      fitsfilename=fitsfilename.replaceAll("hhh$", "jpg");
-                     fitsfile.loadJpeg(fitsfilename,true);
+                     try { fitsfile.loadJpeg(fitsfilename,true); }
+                     
+                     // Sinon peut être en PNG ? (C'est pas très beau mais c'est si facile)
+                     catch( Exception e ) {
+                        fitsfilename=fitsfilename.replaceAll("jpg$", "png");
+                        fitsfile.loadJpeg(fitsfilename,true);
+                     }
                   }
 
                   // Mode FITS couleur

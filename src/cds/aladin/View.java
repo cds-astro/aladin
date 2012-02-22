@@ -1900,7 +1900,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          size = vc.pref.projd.c.getImgWidth()
                  /vc.pref.projd.c.getImgSize().width;
          if( vc.pref.type==Plan.IMAGEHUGE ) size *= ((PlanImageHuge)vc.pref).getStep();
-      } catch( Exception e) { if( aladin.levelTrace>=3) e.printStackTrace(); };
+      } catch( Exception e) {  };
 
       for( int i=0; i<modeView; i++ ) {
          ViewSimple v = viewSimple[i];
@@ -2213,6 +2213,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       vselobj.removeAllElements();
       aladin.mesure.removeAllElements();
+      
       return true;
    }
 

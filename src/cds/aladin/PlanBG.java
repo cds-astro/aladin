@@ -395,9 +395,9 @@ public class PlanBG extends PlanImage {
          		"See the corresponding Aladin FAQ entry available via the Help menu");
       }
    }
-   
+
    @Override
-public String getUrl() {
+   public String getUrl() {
       return url;
    }
 
@@ -412,7 +412,6 @@ public String getUrl() {
 
    @Override
    protected boolean waitForPlan() {
-//      aladin.calque.planBGLaunched();
       return error==null;
    }
 
@@ -868,33 +867,33 @@ public String getUrl() {
    }
 
    protected long [] getPixListView(ViewSimple v, int order) {
-      Projection proj = v.getProj();
-      ArrayList<double[]> vlist = new ArrayList<double[]>(4);
-      Coord coo = new Coord();
-      for( int i=0; i<4; i++ ) {
-         PointD p = v.getPosition((double)(i==0 || i==3 ? 0 : v.getWidth()),
-                                  (double)(i==0 || i==1 ? 0 : v.getHeight()) );
-         coo.x = p.x; coo.y = p.y;
-         proj.getCoord(coo);
-         if( Double.isNaN(coo.al) ) return new long[0];
-         coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
-         if( coo.del < -90) coo.del = -180-coo.del;
-         if( coo.al < 0   ) coo.al  = 360+coo.al;
-         if( coo.del > 90 ) coo.del = 180-coo.del;
-         if( coo.al > 360 ) coo.al  = coo.al-360;
-
-         vlist.add( new double[]{coo.al,coo.del} );
-      }
-      long[] b=null;
-      try {
-         long nside = CDSHealpix.pow2(order);
-         b = CDSHealpix.query_polygon(nside,vlist);
-      } catch( Exception e ) {
-         e.printStackTrace();
-         b=new long[0];
-      }
-      
-      return b;
+      return getPixList(v,null,order);
+//      Projection proj = v.getProj();
+//      ArrayList<double[]> vlist = new ArrayList<double[]>(4);
+//      Coord coo = new Coord();
+//      for( int i=0; i<4; i++ ) {
+//         PointD p = v.getPosition((double)(i==0 || i==3 ? 0 : v.getWidth()),
+//                                  (double)(i==0 || i==1 ? 0 : v.getHeight()) );
+//         coo.x = p.x; coo.y = p.y;
+//         proj.getCoord(coo);
+//         if( Double.isNaN(coo.al) ) return new long[0];
+//         coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
+//         if( coo.del < -90) coo.del = -180-coo.del;
+//         if( coo.al < 0   ) coo.al  = 360+coo.al;
+//         if( coo.del > 90 ) coo.del = 180-coo.del;
+//         if( coo.al > 360 ) coo.al  = coo.al-360;
+//
+//         vlist.add( new double[]{coo.al,coo.del} );
+//      }
+//      long[] b=null;
+//      try {
+//         long nside = CDSHealpix.pow2(order);
+//         b = CDSHealpix.query_polygon(nside,vlist);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//         b=new long[0];
+//      }
+//      return b;
    }
 
    /** Retourne la liste des losanges susceptibles de recouvrir la vue pour un order donné */
@@ -1441,19 +1440,19 @@ public String getUrl() {
 
    /** Tracé de control des losanges Healpix d'ordre "order" visible dans
     * la vue */
-   protected void drawCtrl(Graphics g,ViewSimple v,int order) {
-      try {
-         long pix[];
-         pix = getPixListView(v,order);
-         if( pix.length>4096 ) return;
-         g.setColor( Couleur.getCouleur(order) );
-         for( int i=0; i<pix.length; i++ ) {
-            HealpixKey healpix = new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
-            if( healpix.isOutView(v) ) continue;
-            healpix.drawCtrl(g,v);
-         }
-      } catch( Exception e ) {}
-   }
+//   protected void drawCtrl(Graphics g,ViewSimple v,int order) {
+//      try {
+//         long pix[];
+//         pix = getPixListView(v,order);
+//         if( pix.length>4096 ) return;
+//         g.setColor( Couleur.getCouleur(order) );
+//         for( int i=0; i<pix.length; i++ ) {
+//            HealpixKey healpix = new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
+//            if( healpix.isOutView(v) ) continue;
+//            healpix.drawCtrl(g,v);
+//         }
+//      } catch( Exception e ) {}
+//   }
 
    protected long [] pixDebugIn = new long[0];
 
@@ -1896,7 +1895,7 @@ public String getUrl() {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();
       if(  op<=0.1 ) return;
-
+      
       if( g instanceof Graphics2D ) {
          Graphics2D g2d = (Graphics2D)g;
          Composite saveComposite = g2d.getComposite();
@@ -2183,7 +2182,7 @@ public String getUrl() {
             if( healpix==null && (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                pix[i]=-1; continue;
             }
-            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY && healpix.status!=HealpixKey.ERROR ) {
+            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY ) {
                allKeyReady=false;
                break;
             }
@@ -2336,6 +2335,7 @@ public String getUrl() {
    }
 
    private int x=0,y=0,rayon=0,grandAxe=0;
+   private double angle=0;
    static final int M = 2; //4;
 //   static final int EP =4; //12;
 
@@ -2353,7 +2353,9 @@ public String getUrl() {
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
       } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
-         g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
+         if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
+         else Util.drawEllipse(g, x+grandAxe,y+rayon, grandAxe+m, rayon+m, angle );
+
       }
       g.setStroke(st);
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
@@ -2385,6 +2387,8 @@ public String getUrl() {
          g.fillOval(x,y,rayon*2,rayon*2);
       } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
          Projection p =  projd.copy();
+         angle = -p.c.getProjRot();
+         p.setProjRot(0);
          p.frame = Localisation.ICRS;
          p.setProjCenter(0,0.1);
          Coord c =p.c.getProjCenter();
@@ -2403,7 +2407,8 @@ public String getUrl() {
          grandAxe = (int)(Math.abs(droit.x-center.x));
          x = (int)(center.x-grandAxe);
          y = (int)(center.y-rayon);
-         g.fillOval(x,y,grandAxe*2,rayon*2);
+         if( angle==0 ) g.fillOval(x,y,grandAxe*2,rayon*2);
+         else Util.fillEllipse(g, x+grandAxe,y+rayon, grandAxe, rayon, angle );
       } else g.fillRect(0, 0, v.rv.width, v.rv.height);
    }
 

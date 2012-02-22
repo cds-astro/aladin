@@ -926,6 +926,27 @@ public final class Util {
        }
     }
 
+    /** Draws an ellipse which can be rotated
+     *  @param g - the graphic context we draw on
+     *  @param c - color of the ellipse
+     *  @param xCenter,yCenter - the "center" of the ellipse
+     *  @param semiMA - value of the semi-major axis
+     *  @param semiMI - value of the semi-minor axis
+     *  @param angle - rotation angle around center
+     */
+    static public void fillEllipse(Graphics g,double xCenter, double yCenter, double semiMA, double semiMI, double angle) {
+//       if( g instanceof EPSGraphics ) ((EPSGraphics)g).fillEllipse(xCenter,yCenter,semiMA,semiMI,angle);
+//       else if( !(g instanceof Graphics2D ) ) drawEllipseOld(g,xCenter,yCenter,semiMA,semiMI,angle);
+//       else {
+          Graphics2D g2d = (Graphics2D)g;
+          AffineTransform saveTransform = g2d.getTransform();
+          angle = angle*Math.PI/180.0;
+          g2d.rotate(angle, xCenter, yCenter);
+          g2d.fill(new Ellipse2D.Double(xCenter-semiMA,yCenter-semiMI,semiMA*2,semiMI*2));
+          g2d.setTransform(saveTransform);
+//       }
+    }
+
     /** Tracée d'une ellipse avec angle, méthode manuelle
      * Utilisé si le contexte graphique ne supporte par Graphics2D */
    static private void drawEllipseOld(Graphics g, double xCenter, double yCenter, double semiMA, double semiMI, double angle) {

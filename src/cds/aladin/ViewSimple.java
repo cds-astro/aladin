@@ -293,7 +293,7 @@ public class ViewSimple extends JComponent
     */
    private void syncZoom(int sens,Coord coo) {
       if( isFree() ) return;
-      double nz = aladin.calque.zoom.getReasonableNextValue(zoom,sens);
+      double nz = aladin.calque.zoom.getNextValue(zoom,sens);
       if( nz==-1 ) return;
 
       if( !selected ) {
@@ -950,8 +950,6 @@ public class ViewSimple extends JComponent
       setZoomXY(fct,this.xzoomView,this.yzoomView);
     }
 
-   private boolean flagClickOutside=false;
-
    /** Scrolling par un clic and drag souris */
    protected void scroll(MouseEvent e) {
       if( locked ) return;
@@ -963,6 +961,21 @@ public class ViewSimple extends JComponent
       int dxView = x-scrollX;
       int dyView = y-scrollY;
       
+      // Rotation libre soit en appuyant CTRL, soit en pivotant la rose des vents
+      int W=getNESize();
+      boolean inNE = inNE(x,y);
+      if(  inNE || e.isControlDown() && pref instanceof PlanBG ) {
+         int xc = inNE ? rv.width-W/2 : rv.width/2;;
+         int yc = inNE ? rv.height-W/2 : rv.height/2;
+         double a1 = Math.atan2(scrollY-yc,scrollX-xc);
+         double a2 = Math.atan2(y-yc,x-xc);
+         getProj().deltaProjRot( Math.toDegrees( a1-a2 ) );
+         aladin.view.newView(1);
+         aladin.view.repaintAll();
+         return;
+      }
+      
+      // Déplacement par changement de centre de projection
       if( pref instanceof PlanBG && !(e.isControlDown() || getTaille()<30)  ) {
 
          Point ps = getPosition(scrollX, scrollY);
@@ -984,6 +997,7 @@ public class ViewSimple extends JComponent
          double deltaDe = cs.del-ct.del;
 //System.out.println("Changement de centre delta="+Coord.getUnit(deltaRa)+","+Coord.getUnit(deltaDe)  );
          proj.deltaProjCenter(deltaRa,deltaDe);
+         
          aladin.view.newView(1);
          aladin.view.setRepere(proj.getProjCenter());                  
       }
@@ -1819,8 +1833,7 @@ public class ViewSimple extends JComponent
             cs.x=fixe.x;
             cs.y=fixe.y;
             proj.getCoord(cs);
-            if( Double.isNaN(cs.al ) ) { cs=null; flagClickOutside=true; }
-            else flagClickOutside=false;
+            if( Double.isNaN(cs.al ) ) cs=null;
          }
 //      }
 
@@ -2601,7 +2614,7 @@ public class ViewSimple extends JComponent
       }
 
       // Scrolling de la vue par la souris
-      if( flagScrolling ) {
+      if( flagScrolling || inNE(x,y) ) {
          aladin.calque.zoom.zoomView.startDrag();
          lastWhenDrag = e.getWhen();
          vs.scroll(e);
@@ -2936,7 +2949,7 @@ public class ViewSimple extends JComponent
       // Gestion du rectangle de rainbow
       if( hasRainbow() && rainbow.mouseMove(x,y)
          || rainbowF!=null && rainbowF.mouseMove(x,y) ) { repaint(); return; }
-
+      
       // rechargement des pixels d'origine si nécessaire (obligatoire pour les cubes)
       reloadPixelsOriginIfRequired();
 
@@ -3100,7 +3113,7 @@ public class ViewSimple extends JComponent
             resetDefaultCursor(tool, e.isShiftDown() );
             if( flagOnFirstLine ) {
                if( oc!=Aladin.JOINDRECURSOR ) Aladin.makeCursor(this,(oc=Aladin.JOINDRECURSOR));
-            } else if( flagRollable ) {
+            } else if( flagRollable || inNE((int)x,(int)y) ) {
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( trouve ) {
                if( oc!=Aladin.HANDCURSOR ) Aladin.makeCursor(this,(oc=Aladin.HANDCURSOR));
@@ -4704,6 +4717,21 @@ testx1=x1; testy1=y1; testw=w; testh=h;
      return coo;
 
   }
+  
+  // Retourne la taille de la rose des vents
+  private int getNESize() {
+     int L = rv.width/20;
+     if( L>50 ) L=50;
+     else if( L<16 ) L=16;
+     return L*2;
+  }
+  
+  // Retourne true si la coordonnée se trouve dans la rose des vents
+  private boolean inNE(int x,int y) { 
+     if( !(pref instanceof PlanBG) ) return false;
+     int L = getNESize();
+     return x>rv.width-L && y>rv.height-L;
+  }
 
    /** Positionnement d'un repere Nord et Est */
    private void drawNE(Graphics g,Projection proj,int dx,int dy) {
@@ -4715,9 +4743,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       Coord c1,c;
       double delta = 1/60.;
       
-      double L = rv.width/20;
-      if( L>50 ) L=50;
-      else if( L<15 ) L=15;
+      double L = getNESize()/2.;
       
       boolean flagBG = pref instanceof PlanBG;
       
@@ -5195,6 +5221,9 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          g.drawOval(x+dx,y+dy,rayon*2,rayon*2);
       } else if( proj.t==Calib.AIT || proj.t==Calib.MOL ) {
          Projection p =  proj.copy();
+         double angle = -p.c.getProjRot();
+         p.setProjRot(0);
+
          p.frame=Localisation.ICRS;
          p.setProjCenter(0,0.1);
          Coord c =p.c.getProjCenter();
@@ -5214,7 +5243,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          int grandAxe = (int)(droit.x-center.x)+1;
          int x = (int)(center.x-grandAxe);
          int y = (int)(center.y-petitAxe);
-         g.drawOval(x+dx,y+dy,grandAxe*2,petitAxe*2);
+         if( angle==0 ) g.drawOval(x+dx,y+dy,grandAxe*2,petitAxe*2);
+         else Util.drawEllipse(g, x+dx+grandAxe, y+dy+petitAxe, grandAxe, petitAxe, angle);
       }
    }
 

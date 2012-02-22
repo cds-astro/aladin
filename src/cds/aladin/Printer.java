@@ -23,6 +23,7 @@ package cds.aladin;
 import java.util.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -145,19 +146,31 @@ class Printer implements Runnable {
          // Affichage et calcul de la taille du titre
          int x=1;
          int y=1;
+         g.setClip(0,0,x+w,y+h+200);
+
          y=printTitre(g,x,y,w);
 
          g.setClip(x,y,w,h);
-         if( v.pref.active ) v.paintOverlays(g,null,x,y,true);
-         g.setClip(null);
+         if( v.pref.active ) {
+            // Pour contourner le problème du Graphics2D de l'imprimante
+            // qui ne sait pas gérer les transformées affines
+            // Ca va pixeliser les fontes, mais les allsky et les vues
+            // synchronisées s'impriment désormais correctement
+            Image img = v.getImage(-1, -1);
+            g.drawImage(img, x, y, aladin);
+//            v.paintOverlays(g,null,x,y,true);
+            
+         }
+         g.setClip(0,0,x+w,y+h+200);
 
          // affichage des titres et legendes
          g.setColor(Color.black);
-         printTitre(g,x,0,w);
          g.drawRect(x,y,w,h);
-         printLegende(g,w-25,y+20,true);
+         
+//         printTitre(g,x,0,w);
+         printLegende(g,x+w,y+20,true);
          y+=h;
-         y=printCopyright(g,w,y,true);
+         y=printCopyright(g,0,y,w,true);
 
 //         aladin.view.repaintAll();       // Pour forcer le recalcul
          return PAGE_EXISTS;
@@ -202,12 +215,22 @@ class Printer implements Runnable {
 
             // Impression
             if( !v.isFree() ) {
-               try { pg.setClip(x,y,v.getWidth(),v.getHeight()); }
-               catch( Exception e ) {}
-               if( v.imgprep!=null ) v.paintOverlays(pg,null,x,y,true);
+               try { 
+                  pg.setClip(x,y,v.getWidth(),v.getHeight());
+
+                  // Pour contourner le problème du Graphics2D de l'imprimante
+                  // qui ne sait pas gérer les transformées affines
+                  // Ca va pixeliser les fontes, mais les allsky et les vues
+                  // synchronisées s'impriment désormais correctement
+                  Image img = v.getImage(-1, -1);
+                  pg.drawImage(img, x, y, aladin);
+                  // if( v.imgprep!=null ) v.paintOverlays(pg,null,x,y,true);
+                  
+               } catch( Exception e ) {}
+
             }
-            try { pg.setClip(null); }
-            catch( Exception e ) {}
+//            try { pg.setClip(null); }
+//            catch( Exception e ) {}
 
             // Encadrement
             pg.setColor(Color.black);
@@ -218,17 +241,17 @@ class Printer implements Runnable {
             if( v.getHeight()>offsetY ) offsetY=v.getHeight()+GAP;
          }
 
+         x=MARGE;
          y+=offsetY;
-         printCopyright(pg,w,y,false);
-         printLegende(pg,W-100,y,false);
+         g.setClip(x,y,w,200);
+         printCopyright(pg,x,y,w,false);
+//         printLegende(pg,W-100,y,false);
          
          return PAGE_EXISTS;
       }
    }
-
-
-
    
+
    /** Impression de la vue courante. */
 //   private void printCurrentView1() {
 //      int x=MARGE;
@@ -337,7 +360,7 @@ class Printer implements Runnable {
 //   }
 
   /** Impression des copyrights */
-   private int printCopyright(Graphics pg,int imgW,int y,boolean flagOrigin) {
+   private int printCopyright(Graphics pg,int x,int y, int imgW,boolean flagOrigin) {
       Font f  = new Font("TimesRoman",Font.PLAIN,7);
       FontMetrics  fm;
 
@@ -346,7 +369,7 @@ class Printer implements Runnable {
       fm = pg.getFontMetrics();
 
       // Le soft
-      int cx = 0;
+      int cx = x;
       int cy = y+fm.getAscent()+2;
       pg.drawString("Produced by Aladin (Centre de Donnees astronomiques de Strasbourg)",cx,cy);
       cy+=fm.getHeight();
@@ -406,7 +429,7 @@ class Printer implements Runnable {
          cy+=fm.getAscent();
       }
 
-      return cy+10;
+      return cy+2;
    }
 
   /** Impression du cadre des legendes des plans

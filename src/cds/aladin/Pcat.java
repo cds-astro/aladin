@@ -154,6 +154,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       drawnInViewSimple[v.n]=false;    // Par défaut, pas projetable
 
       if( v.isFree() ) return;
+      
 
       Projection proj = v.getProj();
       if( plan.proj[v.n]==proj && Projection.isOk(proj)

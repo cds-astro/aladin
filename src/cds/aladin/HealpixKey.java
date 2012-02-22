@@ -706,25 +706,25 @@ public class HealpixKey {
           RandomAccessFile f = new RandomAccessFile(filename,"r");
           
           // est-ce que le fichier est gzippé ?
-          byte [] c = new byte[2];
-          f.readFully(c);
-          if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
-             Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
-             f.close();
-             FileInputStream fgz = new FileInputStream(new File(filename));
-             dis = new MyInputStream( new GZIPInputStream(fgz) );
-             if( skip>0 ) dis.skip(skip);
-             buf = readFully(dis, fastLoad);
-             dis.close();
-             fgz.close();
-             
-          // Le fichier est normal
-          } else {
-             f.seek(0+skip);
-             buf = new byte[(int)(f.length()-skip)];
-             f.readFully(buf);
-             f.close();
-          }
+          try {
+             byte [] c = new byte[2];
+             f.readFully(c);
+             if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
+                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
+                FileInputStream fgz = new FileInputStream(new File(filename));
+                dis = new MyInputStream( new GZIPInputStream(fgz) );
+                if( skip>0 ) dis.skip(skip);
+                buf = readFully(dis, fastLoad);
+                dis.close();
+                fgz.close();
+
+                // Le fichier est normal
+             } else {
+                f.seek(0+skip);
+                buf = new byte[(int)(f.length()-skip)];
+                f.readFully(buf);
+             }
+          } finally { f.close(); }
        }
        
        timeStream = (int)(Util.getTime()-t1);

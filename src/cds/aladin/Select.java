@@ -877,7 +877,8 @@ public final class Select extends JComponent  implements
 
       if( !itsDone && p.type!=Plan.NO ) {
          if( newRef!=null ) {
-            boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
+//            boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
+            boolean recenter= p instanceof PlanBG;
             if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) 
             || !recenter && setPlanRef(p) ) {
                a.view.newView();
