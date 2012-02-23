@@ -30,6 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -429,6 +430,8 @@ public class TabDesc extends JPanel implements ActionListener {
    private void dirBrowser(JTextField dir) {
       String currentDirectoryPath = dir.getText().trim();
       if( currentDirectoryPath.length()==0 ) currentDirectoryPath=defaultDirectory;
+      if ( !(new File(currentDirectoryPath).exists()) )
+    	  currentDirectoryPath = defaultDirectory;
       String s = Util.dirBrowser(this, currentDirectoryPath);
       if( s==null ) return;
       dir.setText(s);
