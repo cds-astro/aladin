@@ -319,6 +319,9 @@ public class SkyGen {
 			}
 			builder.run();
 			progressBar.stop();
+			// + lance un allsky à la fin
+			action = Action.ALLSKY;
+			start();
 			break;
 		}
 		case MOC : {
