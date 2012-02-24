@@ -50,6 +50,7 @@ public class ServerAlmaFootprint extends Server {
     /** Initialisation des variables propres au footprint ALMA */
     protected void init() {
        type    = APPLI;
+       aladinMenu = "FoV...";
        aladinLabel   = "ALMA footprint";
        aladinLogo    = "ALMALogo.gif";
        grab = null;

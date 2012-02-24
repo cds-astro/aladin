@@ -375,8 +375,15 @@ long t1,t;
 
       // Les FoV
       if( !Aladin.OUTREACH ) {
-          sv.addElement(fovServer = new ServerFoV(aladin));
-          if( Aladin.PROTO ) sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
+         sv.addElement(fovServer = new ServerFoV(aladin));
+         int n = sv.size();
+         ServerFolder fovFolder = new ServerFolder(aladin, fovServer.aladinMenu, n, ServerFolder.TOP );
+         sv.addElement( fovFolder );
+         fovFolder.addItem(fovServer.aladinLabel);
+
+         sv.addElement(almaFovServer = new ServerAlmaFootprint(aladin));
+         fovFolder.addItem(almaFovServer.aladinLabel);
+
       }
 
       // Les serveurs d'application via GLU
@@ -1257,7 +1264,9 @@ long t1,t;
 
    // Gestion des evenement
    public boolean action(Event evt, Object what) {
+      System.out.println("what="+what);
       if( !(what instanceof String) ) return false;
+      
 
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
