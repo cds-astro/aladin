@@ -970,6 +970,7 @@ public class ViewSimple extends JComponent
          double a1 = Math.atan2(scrollY-yc,scrollX-xc);
          double a2 = Math.atan2(y-yc,x-xc);
          getProj().deltaProjRot( Math.toDegrees( a1-a2 ) );
+         flagMoveRepere=false;
          aladin.view.newView(1);
          aladin.view.repaintAll();
          return;
@@ -4729,7 +4730,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
   // Retourne true si la coordonnée se trouve dans la rose des vents
   private boolean inNE(int x,int y) { 
      if( !(pref instanceof PlanBG) ) return false;
-     int L = getNESize();
+     int L = (int)(getNESize()*1.5);
      return x>rv.width-L && y>rv.height-L;
   }
 

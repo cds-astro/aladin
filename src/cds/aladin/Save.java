@@ -1345,7 +1345,6 @@ public final class Save extends JFrame implements ActionListener {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception(ENCODER);
       }
-      if( o!=System.out ) o.close();
    }
 
    /** Ecriture d'une image en JPEG en gérant la qualité
@@ -1443,9 +1442,10 @@ public final class Save extends JFrame implements ActionListener {
       System.out.println("saneOneView1 "+filename+" avant ...");
       boolean rep=false;
 //      v.setLockRepaint(true);
-
+      
+      OutputStream o=null;
       try {
-         OutputStream o = filename==null ?
+          o = filename==null ?
                (OutputStream)System.out :
                (OutputStream)new FileOutputStream(aladin.getFullFileName(filename));
         if( (format&EPS)==EPS  ) saveEPS(v,o);
@@ -1468,7 +1468,7 @@ public final class Save extends JFrame implements ActionListener {
          if( filename!=null ) System.out.println("!!! image error ["+filename+"]");
          System.err.println(e.getMessage());
          if( aladin.levelTrace>=3 ) e.printStackTrace();
-      }
+      } finally { if( o!=null && o!=System.out ) o.close(); }
       Aladin.trace(3,"Current view saved successfully "+aladin.getFullFileName(filename));
 
       //Génération d'un fichier de liens pour faire une carte cliquable HTML
@@ -1478,7 +1478,7 @@ public final class Save extends JFrame implements ActionListener {
             int i=filename.lastIndexOf('.');
             if( i>=0 ) filename = filename.substring(0,i);
             String linkFilename = filename+(lkFlex?".lkflex":".lk");
-            OutputStream o = new FileOutputStream(aladin.getFullFileName(linkFilename));
+            o = new FileOutputStream(aladin.getFullFileName(linkFilename));
             linkWriter(v,o,lkFlex);
 
             // écriture position des 4 coins de la vue
@@ -1526,6 +1526,7 @@ public final class Save extends JFrame implements ActionListener {
             System.err.println(e.getMessage());
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
+         finally { o.close(); }
       }
 
 //      v.setLockRepaint(false);
@@ -2623,6 +2624,7 @@ public boolean handleEvent(Event e) {
 
       @Override
       public void close() throws IOException {
+         super.close();
          out.close();
       }
    }

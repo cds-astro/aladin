@@ -738,27 +738,32 @@ public final class Select extends JComponent  implements
             boolean activeBefore = p.active;
          
             if( a.calque.isBackGround() && !p.isViewable() && !(p instanceof PlanBG) && a.view.syncPlan(p) ) {
-               System.out.println("switchShow: Je synchronise sur l'image et je l'active");
+//               System.out.println("switchShow: Je synchronise sur l'image et je l'active");
                boolean ok = p.setActivated(true);
-               if( !activeBefore && !ok ) { setCheckBoxBlinkPlan(p); System.out.println("Impossible !"); }
-               else if( ok && p.getOpacityLevel()<0.1f ) p.setOpacityLevel(1f);
+               if( !activeBefore && !ok ) {
+                  setCheckBoxBlinkPlan(p);
+//                  System.out.println("Impossible !");
+               } else if( ok && p.getOpacityLevel()<0.1f ) p.setOpacityLevel(1f);
             } else {
                if( p.getOpacityLevel()<0.1f && p.active && !p.ref ) {
                   if( a.calque.isBackGround() && p.type==Plan.ALLSKYIMG ) {
-                     System.out.println("switchShow: déjà activé mais transparence max => on indique que le slider est une meilleur idée");
+//                     System.out.println("switchShow: déjà activé mais transparence max => on indique que le slider est une meilleur idée");
                      p.startCheckBoxBlink();
                      a.calque.unSelectAllPlan();
                      p.selected=true;
                      setLastMessage(WARNINGSLIDER);
                      return true;
                   }
-                  System.out.println("switchShow: déjà activé mais transparence max => je rends opaque");
+//                  System.out.println("switchShow: déjà activé mais transparence max => je rends opaque");
                   p.setOpacityLevel(1f);
                } else {
-                  System.out.println("switchShow: j'inverse l'activation "+p.active+" => "+!p.active);
+//                  System.out.println("switchShow: j'inverse l'activation "+p.active+" => "+!p.active);
                   boolean ok = p.setActivated(!p.active);
                   if( p.active && p.getOpacityLevel()<0.1f && !p.ref ) p.setOpacityLevel(1f);
-                  if( !activeBefore && !ok ) { setCheckBoxBlinkPlan(p); System.out.println("Impossible !"); }
+                  if( !activeBefore && !ok ) {
+                     setCheckBoxBlinkPlan(p);
+//                     System.out.println("Impossible !");
+                  }
                }
             }
          

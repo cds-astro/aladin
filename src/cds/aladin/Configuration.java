@@ -635,6 +635,8 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */
    protected int getFrameDrawing() {
       if( Aladin.OUTREACH ) return 3;   // GAL
+      if( !Aladin.PROTO ) return 0;   // Pour le moment le frame par défaut pour les allsky n'est supporté qu'en mode PROTO   
+      
       if( setConfFrame ) return getFrame();   // L'utilisateur a modifié le cas par défaut via une commande setconf frame=
       String frame = get(FRAMEALLSKY);
       try {
@@ -1024,8 +1026,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       (l = new JLabel(FRAMEB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(frameChoice);
-      panel.add(new JLabel(" - "+FRAMEALLSKYB));
-      panel.add(frameAllskyChoice);
+      if( aladin.PROTO ) {
+         panel.add(new JLabel(" - "+FRAMEALLSKYB));
+         panel.add(frameAllskyChoice);
+      }
       if( !aladin.OUTREACH ) {
          PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
       }

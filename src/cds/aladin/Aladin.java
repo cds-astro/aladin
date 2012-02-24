@@ -66,6 +66,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Free rotation in allsky mode
  * @beta    <LI> New coordinate frames: B1900, B1875, XY image
  * @beta    <LI> FOV rotate center adjustements
  * @beta    <LI> Wizard for beginners
@@ -412,7 +413,7 @@ public class Aladin extends JApplet
                       miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
-                      miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, miHistory,
+                      miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
                       miInFold,miConv,miArithm,miHealpixArithm,miNorm,miBitpix,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
@@ -455,7 +456,7 @@ public class Aladin extends JApplet
     static final int GETHEIGHT  = 15;		// Cochonnerie de getHeight()
 
     // Les menus;
-    String MFILE,MSAVE,OPENLOAD,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,HISTORY,MEDIT,MVIEW,
+    String MFILE,MSAVE,OPENLOAD,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
            MIMAGE,MCATALOG,MOVERLAY,MDOC ;
     String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
     String MBGKG; // menus pour les backgrounds
@@ -775,7 +776,7 @@ public class Aladin extends JApplet
        LOADIMG = chaine.getString("MLOADIMG");
        LOADCAT = chaine.getString("MLOADCAT");
        LOADVO  = chaine.getString("MLOADVO");
-       HISTORY = chaine.getString("HISTORY");
+//       HISTORY = chaine.getString("HISTORY");
        LOADFOV = chaine.getString("MLOADFOV");
        PIXEL   = chaine.getString("MPIXEL");
        CONTOUR = chaine.getString("MCONTOUR");
@@ -987,7 +988,7 @@ public class Aladin extends JApplet
                   {},{MBGKG,"???"},
                   {},{LOADIMG,"-"},{LOADCAT,"-"}, {LOADVO}, {LOADFOV},
                   {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
-                  {},{HISTORY+"|"+(macPlateform?alt:meta)+" H"},
+//                  {},{HISTORY+"|"+(macPlateform?alt:meta)+" H"},
                   {},{MPRINT+"|"+meta+" P"},
                   {},{NEW+"|"+meta+" N"},
                   {},{aladinSession>0 || extApplet!=null ? MCLOSE : isApplet()?MDCH1: MQUIT}
@@ -1616,7 +1617,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,EXPORT) )    miExport    = ji;
        else if( isMenu(m,EXPORTEPS) ) miExportEPS = ji;
        else if( isMenu(m,BACKUP) )    miBackup    = ji;
-       else if( isMenu(m,HISTORY) )   miHistory   = ji;
+//       else if( isMenu(m,HISTORY) )   miHistory   = ji;
        else if( isMenu(m,INFOLD) ) miInFold  = ji;
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
@@ -2824,7 +2825,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,RAINBOW)){ rainbow();
       } else if( isMenu(s,GRID))   { grid();
       } else if( isMenu(s,HPXGRID)){ hpxGrid();
-      } else if( isMenu(s,HISTORY)){ history();
+//      } else if( isMenu(s,HISTORY)){ history();
       } else if( isMenu(s,ZOOMP))  { calque.zoom.setZoom("+");
       } else if( isMenu(s,ZOOMM))  { calque.zoom.setZoom("-");
       } else if( isMenu(s,ZOOMPT)) { zoom();
@@ -3030,11 +3031,11 @@ public class Aladin extends JApplet
        calque.select.insertFolder();
     }
 
-    /** Affichage du metadata tree général */
-    protected void history() {
-       treeView.toFront();
-       treeView.show();
-    }
+//    /** Affichage du metadata tree général */
+//    protected void history() {
+//       treeView.toFront();
+//       treeView.show();
+//    }
 
     /** Affiche les informations sur les colonnes du PlanCatalog
      * passé en paramètre, ou si null, tous les plans catalogues sélectionnés */
@@ -4325,7 +4326,7 @@ public void setLocation(Point p) {
          if( miPlotcat!=null )  miPlotcat.setEnabled(hasSelectedCat);
          if( miConcat!=null )  miConcat.setEnabled(nbPlanCat>1);
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
-         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
+//         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
