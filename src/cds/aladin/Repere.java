@@ -278,7 +278,7 @@ public class Repere extends Position {
 //   }
    protected Rectangle extendClip(ViewSimple v,Rectangle clip) {
       if( !isVisible() ) return clip;
-      int L = ViewSimple.top(Math.max(this.L,getRayon(v)*v.getZoom()));
+      int L = (int)Math.ceil(Math.max(this.L,getRayon(v)*v.getZoom()));
       Point p = getViewCoord(v,L,L);
       if( p==null ) return clip;
 
@@ -299,7 +299,7 @@ public class Repere extends Position {
    protected Rectangle getClipRayon(ViewSimple v ) {
       Rectangle clip=null;
       if( !isVisible() ) return null;
-      int L = ViewSimple.top(getRayon(v)*v.getZoom());
+      int L = (int)Math.ceil(getRayon(v)*v.getZoom());
       Point p = getViewCoord(v,L,L);
       if( p==null ) return null;
       if( isSelected() )  clip = unionRect(clip, p.x-L-DS,p.y-L-DS,L*2+DDS,L*2+DDS);
@@ -356,10 +356,10 @@ public class Repere extends Position {
       if( (r>100 /* || v.pref instanceof PlanBG */ ) && v.flagClicAndDrag) return false;
       
       // TODO : j'ai des doutes sur ces valeurs si v.pref.type==Plan.IMAGEBKGD
-      minx=ViewSimple.floor(xc-r);
-      maxx=ViewSimple.top(xc+r);
-      miny=ViewSimple.floor(yc-r);
-      maxy=ViewSimple.top(yc+r);
+      minx=(int)Math.floor(xc-r);
+      maxx=(int)Math.ceil(xc+r);
+      miny=(int)Math.floor(yc-r);
+      maxy=(int)Math.ceil(yc+r);
       
       double carreRayon = r*r;
       double pixelSurf = 0;
@@ -420,10 +420,10 @@ public class Repere extends Position {
       if( v.pref.type==Plan.ALLSKYIMG ) {
          xc=xv[v.n]-0.5;
          yc=yv[v.n]-0.5;
-         minx=ViewSimple.floor(xc-r);
-         maxx=ViewSimple.top(xc+r);
-         miny=ViewSimple.floor(yc-r);
-         maxy=ViewSimple.top(yc+r);
+         minx=(int)Math.floor(xc-r);
+         maxx=(int)Math.ceil(xc+r);
+         miny=(int)Math.floor(yc-r);
+         maxy=(int)Math.ceil(yc+r);
       }
 
       // Calculs des statistiques => sera utilisé immédiatement par le paint
@@ -496,10 +496,10 @@ public class Repere extends Position {
          double r = Math.sqrt(dx*dx + dy*dy);
          double carreRayon = r*r;
 
-         int minx=ViewSimple.floor(xc-r);
-         int maxx=ViewSimple.top(xc+r);
-         int miny=ViewSimple.floor(yc-r);
-         int maxy=ViewSimple.top(yc+r);
+         int minx=(int)Math.floor(xc-r);
+         int maxx=(int)Math.ceil(xc+r);
+         int miny=(int)Math.floor(yc-r);
+         int maxy=(int)Math.ceil(yc+r);
 
          for( int y=miny; y<=maxy; y++ ) {
             for( int x=minx; x<=maxx; x++ ) {

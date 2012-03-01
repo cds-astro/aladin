@@ -185,7 +185,7 @@ public class Source extends Position implements Comparator {
 
        StringTokenizer st = new StringTokenizer(this.info,"\t");
        int nbInfo = st.countTokens()-1; // skip du triangle
-
+       
        int nbFields = leg.field.length;
 
        while( nbInfo<nbFields ) {

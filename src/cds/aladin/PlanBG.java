@@ -1836,12 +1836,12 @@ public class PlanBG extends PlanImage {
       drawLosanges(g, v, now);
       g.finalize(); g=null;
 
-      int width=v.top(rcrop.width);
-      int height=v.top(rcrop.height);
+      int width=(int)Math.ceil(rcrop.width);
+      int height=(int)Math.ceil(rcrop.height);
       int taille=width*height;
       int rgb[] = new int[taille];
       
-      imgBuf.getRGB(v.floor(rcrop.x), v.floor(rcrop.y), width, height, rgb, 0,width);
+      imgBuf.getRGB((int)Math.floor(rcrop.x), (int)Math.floor(rcrop.y), width, height, rgb, 0,width);
       imgBuf.flush(); imgBuf=null;
 
       return rgb;

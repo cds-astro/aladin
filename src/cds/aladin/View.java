@@ -1824,7 +1824,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                if( !Double.isNaN(coo.x) /* && v.isInView(coo.al, coo.del) */) {
                   PointD p = new PointD(coo.x,coo.y);
                   if( v.pref instanceof PlanBG ) s = ((PlanBG)v.pref).getPixelInfo(p.x, p.y,getPixelMode());
-                  else s = ((PlanImage)v.pref).getPixelInfo( floor(p.x), floor(p.y),getPixelMode());
+                  else s = ((PlanImage)v.pref).getPixelInfo( (int)Math.floor(p.x), (int)Math.floor(p.y),getPixelMode());
                   if( s==PlanImage.UNK ) s="";
                }
             }
@@ -3943,8 +3943,8 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          v.pref.copy(p);
          v.pref = p;
 
-         ((PlanImage)v.pref).crop(floor(v.rzoom.x),floor(v.rzoom.y),
-               top(v.rzoom.width),top(v.rzoom.height),false);
+         ((PlanImage)v.pref).crop((int)Math.floor(v.rzoom.x),(int)Math.floor(v.rzoom.y),
+               (int)Math.ceil(v.rzoom.width),(int)Math.ceil(v.rzoom.height),false);
          m++;
          String name = prefix+Util.align3(m);
          if( mode==0 ) save.saveImage(name+".fits",v.pref,0);
@@ -4306,11 +4306,6 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          scrollV.setMaximum((viewMemo.size()/aladin.viewControl.getNbCol(modeView)));
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
-
-   // Arrondi plus facile à écrire que (int)Math.round()
-   static protected int round(double x) { return (int)(x+0.5); }
-   static protected int floor(double x) { return (int)x; }
-   static protected int top(double x) { return (int)x==x ? (int)x : (int)(x+1); }
 
    public void adjustmentValueChanged(AdjustmentEvent e) {
       repaintAll();

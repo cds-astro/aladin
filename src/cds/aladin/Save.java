@@ -1751,10 +1751,10 @@ public final class Save extends JFrame implements ActionListener {
    protected Vector generateFitsHeader(ViewSimple v) {
       Plan p = v.pref;
       Projection proj = Projection.isOk(p.projd) ? p.projd.copy() : null;
-      int x = ViewSimple.floor(v.rzoom.x);
-      int y = ViewSimple.floor(v.rzoom.y);
-      int width = ViewSimple.top(v.rzoom.width);
-      int height = ViewSimple.top(v.rzoom.height);
+      int x = (int)Math.floor(v.rzoom.x);
+      int y = (int)Math.floor(v.rzoom.y);
+      int width = (int)Math.ceil(v.rzoom.width);
+      int height = (int)Math.ceil(v.rzoom.height);
       double Zzoom = v.zoom ;
 
       if( proj!=null ) proj.cropAndZoom(x, y, width, height, Zzoom) ;

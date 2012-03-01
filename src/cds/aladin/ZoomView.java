@@ -674,7 +674,7 @@ try {
 
           // Affichage de la valeur du pixel courant (sous la souris)
           if( cutX>0 ) {
-             s = p.getPixelInfoFromGrey(ViewSimple.floor(cutX* (256./SIZE)));
+             s = p.getPixelInfoFromGrey((int)Math.floor(cutX* (256./SIZE)));
              int x = cutX;
              
              g.setColor(Color.red);
@@ -967,7 +967,7 @@ try {
    protected void calculWen(ViewSimple v, int x,int y) {
       xmwen = x;
       ymwen = y;
-      int w = ViewSimple.top((double)SIZE/WENZOOM);
+      int w = (int)Math.ceil((double)SIZE/WENZOOM);
    /*anais*/
       int x1 = xmwen-w/2;
       int y1 = ymwen-w/2;
@@ -1211,7 +1211,7 @@ try {
 
       // Repere dans la loupe et les flèches dans les 4 directions
       if( flagwen && imgok ) {
-         int n = ViewSimple.top((double)SIZE/WENZOOM);
+         int n = (int)Math.ceil((double)SIZE/WENZOOM);
          int c = (n/2)*WENZOOM;
          int W2 = WENZOOM/2;
          gr.setColor( Color.blue );

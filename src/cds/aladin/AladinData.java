@@ -456,7 +456,7 @@ public class AladinData {
    public double[] getCoord(double x, double y) throws AladinException {
       testImage();
       if( !Projection.isOk(plan.projd) ) throw new AladinException(ERR006);
-      coo.x = x; coo.y = y;
+      coo.x = x-0.5; coo.y = y-0.5;
       coo.y = ((PlanImage)plan).naxis2 - coo.y ;
       plan.projd.getCoord(coo);
       return new double[]{coo.al,coo.del};

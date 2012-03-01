@@ -57,7 +57,7 @@ public class Message extends Panel {
         Panel p = getPanel(message==null?"[*EMPTY*]":message,myPanel,type);
         add(p);
     }
-
+    
     protected Panel getPanel(String message,Panel myPanel,int type) {
         Panel p = new Panel();
         this.type = type;

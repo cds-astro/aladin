@@ -603,8 +603,8 @@ public class ViewSimple extends JComponent
          boolean cropped;
          double x=0,y=0,w=0,h=0;
          
-         x=floor(rcrop.x);     y=floor(rcrop.y);
-         w=top(rcrop.width);   h=top(rcrop.height);
+         x=(int)Math.floor(rcrop.x);     y=(int)Math.floor(rcrop.y);
+         w=(int)Math.ceil(rcrop.width);   h=(int)Math.ceil(rcrop.height);
          if( verbose ) aladin.console.setCommand("crop "+D(x)+","+D( ((PlanImage)pref).naxis2-(y+h))+" "+D(w)+"x"+D(h));
          if( pref.type==Plan.IMAGEHUGE ) cropped = pi.cropHuge(x,y,w,h,false);
          else cropped = pi.crop(x,y,w,h,false);
@@ -660,7 +660,7 @@ public class ViewSimple extends JComponent
    */
    protected Point getPosition(int xview, int yview) {
       PointD p = getPosition((double)xview,(double)yview);
-      return new Point(floor(p.x),floor(p.y));
+      return new Point((int)Math.floor(p.x),(int)Math.floor(p.y));
    }
    
   /** Convertion de coordonnees.
@@ -802,11 +802,11 @@ public class ViewSimple extends JComponent
        }
 
        if( rzoom==null ) {
-          newx = round(x);
-          newy = round(y);
+          newx = (int)Math.round(x);
+          newy = (int)Math.round(y);
        } else {
-          newx = round( (x - rzoom.x)*zoom );
-          newy = round( (y - rzoom.y)*zoom );
+          newx = (int)Math.round( (x - rzoom.x)*zoom );
+          newy = (int)Math.round( (y - rzoom.y)*zoom );
        }
        
        // Petite correction due à une éventuelle marge sur le bord
@@ -1807,11 +1807,11 @@ public class ViewSimple extends JComponent
       // Si on est sur le blinkControl..
       int r;
       if( isPlanBlink()
-            && (r=blinkControl.setMouseDown(round(x),round(y)))>BlinkControl.NOTHING ) {
+            && (r=blinkControl.setMouseDown((int)Math.round(x),(int)Math.round(y)))>BlinkControl.NOTHING ) {
          flagCube=true;
          if( r==BlinkControl.IN ) return;
          if( r==BlinkControl.SLIDE )
-            aladin.view.setFrame(this, blinkControl.getFrameLevel(round(x)),e.isShiftDown());
+            aladin.view.setFrame(this, blinkControl.getFrameLevel((int)Math.round(x)),e.isShiftDown());
          aladin.view.repaintAll();
          return;
       }
@@ -1851,7 +1851,7 @@ public class ViewSimple extends JComponent
       // Initialisation d'un clic-and-drag de la vue
       if( tool==ToolBox.PAN
             || (fullScreen && !flagOnMovableObj && tool==ToolBox.SELECT) ) {
-         vs.scrollX=round(x); vs.scrollY=round(y);
+         vs.scrollX=(int)Math.round(x); vs.scrollY=(int)Math.round(y);
          setScrollable(true);
          wasScrolling = vs.isScrolling();
          vs.initScroll();
@@ -1943,7 +1943,7 @@ public class ViewSimple extends JComponent
 
             // On recommence une selection multiple
             if( v.size()==0 ) {
-               rselect = new Rectangle(round(x),round(y),1,1);
+               rselect = new Rectangle((int)Math.round(x),(int)Math.round(y),1,1);
                return;
             }
 
@@ -2020,7 +2020,7 @@ public class ViewSimple extends JComponent
                repereshow=aladin.mesure.mcanvas.show(o,2);
             } catch( Exception ec ) {}
 
-         } else rselect = new Rectangle(round(x),round(y),1,1);
+         } else rselect = new Rectangle((int)Math.round(x),(int)Math.round(y),1,1);
 
          return;
       }
@@ -2254,7 +2254,7 @@ public class ViewSimple extends JComponent
          // le scrolling automatique
          if( vs.isScrolling() ) {
             rselect=null;
-            vs.scroll(e,round(x-vs.scrollX),round(y-vs.scrollY));
+            vs.scroll(e,(int)Math.round(x-vs.scrollX),(int)Math.round(y-vs.scrollY));
             vs.startAutomaticScroll();
          }
 
@@ -2293,7 +2293,7 @@ public class ViewSimple extends JComponent
       if( fullScreen ) aladin.endMsg();
 
       // Fin d'un megaDrag ?
-      if( tool==ToolBox.SELECT && aladin.view.stopMegaDrag(this,round(x),round(y),e.isControlDown()) ) return;
+      if( tool==ToolBox.SELECT && aladin.view.stopMegaDrag(this,(int)Math.round(x),(int)Math.round(y),e.isControlDown()) ) return;
 
       boolean flagPlastic = false;
 
@@ -2387,7 +2387,7 @@ public class ViewSimple extends JComponent
       if( rselect!=null ) {
          if( rselect.width>1 && rselect.height>1 ) {
             flagDrag=false;
-            extendSelect(round(x),round(y));
+            extendSelect((int)Math.round(x),(int)Math.round(y));
             PointD p1 = vs.getPosition((double)rselect.x,(double)rselect.y);
             PointD p2 = vs.getPosition((double)rselect.x+rselect.width,
                   (double)rselect.y+rselect.height);
@@ -2968,7 +2968,7 @@ public class ViewSimple extends JComponent
             proj.getCoord(coo);
             aladin.view.setPixelInfo(coo);
          } else {
-            String s = ((PlanImage)pref).getPixelInfo( floor(lastMove.x), floor(lastMove.y), view.getPixelMode());
+            String s = ((PlanImage)pref).getPixelInfo( (int)Math.floor(lastMove.x), (int)Math.floor(lastMove.y), view.getPixelMode());
             if( s==PlanImage.UNK ) s="";
             setPixelInfo(s);
          }
@@ -2982,7 +2982,7 @@ public class ViewSimple extends JComponent
       // le réafficher immédiatement pour que le REWIND/PLAY/FORWARD soit
       // tracé dans la bonne couleur
       if( isPlanBlink() && blinkControl!=null ) {
-         int m = blinkControl.setMouseMove(vs,round(x),round(y));
+         int m = blinkControl.setMouseMove(vs,(int)Math.round(x),(int)Math.round(y));
          if( m!=BlinkControl.NOTHING ) {
            flagBlinkControl=true;
            update(getGraphics());
@@ -2995,7 +2995,7 @@ public class ViewSimple extends JComponent
       
       // Affichage du rectangle du zoom
       if( tool==ToolBox.ZOOM && !isScrolling() ) {
-         rselect = new Rectangle(round(x)-rv.width/4,round(y)-rv.height/4,rv.width/2,rv.height/2);
+         rselect = new Rectangle((int)Math.round(x)-rv.width/4,(int)Math.round(y)-rv.height/4,rv.width/2,rv.height/2);
          flagDrag=true;        // Pour un affichage rapide
          repaint();
 
@@ -3593,13 +3593,13 @@ public class ViewSimple extends JComponent
 //       int [] newPixelsRGB = frame==-1 ? ((PlanRGBInterface)p).getPixelsRGB()
 //             : ((PlanImageCubeRGB)p).getFrameRGB((int)frame) ;
 
-       w = top(rzoom.width+1);
-       h = top(rzoom.height+1);
+       w = (int)Math.ceil(rzoom.width+1);
+       h = (int)Math.ceil(rzoom.height+1);
 
        // Extraction de la portion visible avec reajustement de l'image si
        // necessaire (presence de bords partiels)
-       int x1 = floor(rzoom.x);
-       int y1 = floor(rzoom.y);
+       int x1 = (int)Math.floor(rzoom.x);
+       int y1 = (int)Math.floor(rzoom.y);
        if( x1<0 ) {w+=x1; x1=0; }
        if( y1<0 ) {h+=y1; y1=0; }
        if( x1+w>p.width ) w=p.width-x1;
@@ -3618,8 +3618,8 @@ public class ViewSimple extends JComponent
 
           int [] scalePixelsRGB;
           int z1 = (int) zoom;   // Casting
-          int ddx = floor( rzoom.x<=0 ? 0 : Math.floor( (rzoom.x-Math.floor(rzoom.x))*zoom ) );
-          int ddy = floor( rzoom.y<=0 ? 0 : Math.floor( (rzoom.y-Math.floor(rzoom.y))*zoom ) );
+          int ddx = rzoom.x<=0 ? 0 : (int)Math.floor( (rzoom.x-Math.floor(rzoom.x))*zoom );
+          int ddy = rzoom.y<=0 ? 0 : (int)Math.floor( (rzoom.y-Math.floor(rzoom.y))*zoom );
           int wDst=Math.min(w*z1-ddx,getWidth());
           int hDst=Math.min(h*z1-ddy,getHeight());
           int taille = wDst*hDst;
@@ -3791,13 +3791,13 @@ public class ViewSimple extends JComponent
 //      byte [] pixels = frame==-1 ? p.pixels : ((PlanImageBlink)p).getFrame(frame) ;
       byte [] pixels =null;
       
-      w = top(rzoom.width+1);
-      h = top(rzoom.height+1);
+      w = (int)Math.ceil(rzoom.width+1);
+      h = (int)Math.ceil(rzoom.height+1);
 
       double zoom = this.zoom;
 
-      int x1 = floor(rzoom.x);
-      int y1 = floor(rzoom.y);
+      int x1 = (int)Math.floor(rzoom.x);
+      int y1 = (int)Math.floor(rzoom.y);
       if( x1<0 ) {w+=x1; x1=0; }
       if( y1<0 ) {h+=y1; y1=0; }
       if( x1+w>p.width ) w=p.width-x1;
@@ -3844,8 +3844,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          
          // Voir commentaire au else
          if( !flagHuge ) {
-            int ddx = floor( rzoom.x<=0 ? 0 : Math.floor( (rzoom.x-Math.floor(rzoom.x))*zoom ) );
-            int ddy = floor( rzoom.y<=0 ? 0 : Math.floor( (rzoom.y-Math.floor(rzoom.y))*zoom ) );
+            int ddx = rzoom.x<=0 ? 0 : (int)Math.floor( (rzoom.x-Math.floor(rzoom.x))*zoom );
+            int ddy = rzoom.y<=0 ? 0 : (int)Math.floor( (rzoom.y-Math.floor(rzoom.y))*zoom );
             int wDst=Math.min(w*z1-ddx,getWidth());
             int hDst=Math.min(h*z1-ddy,getHeight());
             int taille = wDst*hDst;
@@ -4166,8 +4166,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
             ddx=ddy=0;
          }
 
-         this.dx = floor(imgDx);
-         this.dy = floor(imgDy);
+         this.dx = (int)Math.floor(imgDx);
+         this.dy = (int)Math.floor(imgDy);
          
          return true;
          
@@ -4543,8 +4543,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    /** Retourne une couleur bleutée qui se voit sur le rectangle indiqué */
    protected Color getGoodColor(int x1,int y1, int w, int h ) {
-      int x = x1-round(imgDx);
-      int y = y1-round(imgDy);
+      int x = x1-(int)Math.round(imgDx);
+      int y = y1-(int)Math.round(imgDy);
       try {
          if( pref.type==Plan.ALLSKYIMG && pref.active && !isAllSky() ) return Color.cyan;
          if( isFree()
@@ -5354,8 +5354,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
   /** Dessin de la surface couverte par le Grabit */
    private void drawGrabIt(Graphics g,double x1,double y1, double x2, double y2) {
-      g.drawLine(round(x1-5),round(y1),round(x1+5),round(y1));
-      g.drawLine(round(x1),round(y1-5),round(x1),round(y1+5));
+      g.drawLine((int)Math.round(x1-5),(int)Math.round(y1),(int)Math.round(x1+5),(int)Math.round(y1));
+      g.drawLine((int)Math.round(x1),(int)Math.round(y1-5),(int)Math.round(x1),(int)Math.round(y1+5));
       double dx = x1-x2;
       double dy = y1-y2;
       double r = Math.sqrt(dx*dx+dy*dy);
@@ -5513,10 +5513,10 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                   double offsetX = imgDx;
                   double offsetY = imgDy;
                   if( pref.type == Plan.IMAGEHUGE ) {
-                      if( rzoom.x>=0 ) offsetX -= floor( (rzoom.x - floor(rzoom.x))*zoom);
-                      if( rzoom.y>=0 ) offsetY -= floor( (rzoom.y - floor(rzoom.y))*zoom);
+                      if( rzoom.x>=0 ) offsetX -= (int)Math.floor( (rzoom.x - (int)Math.floor(rzoom.x))*zoom);
+                      if( rzoom.y>=0 ) offsetY -= (int)Math.floor( (rzoom.y - (int)Math.floor(rzoom.y))*zoom);
                   }
-                  if( imgFlagDraw ) g.drawImage(imgprep,dx+round(offsetX),dy+round(offsetY),this);
+                  if( imgFlagDraw ) g.drawImage(imgprep,dx+(int)Math.round(offsetX),dy+(int)Math.round(offsetY),this);
                }
             }
             continue;
@@ -6195,11 +6195,6 @@ g.drawString(s,10,100);
       return x;
    }
 
-   // Arrondi plus facile à écrire que (int)Math.round()
-   static protected int round(double x) { return (int)(x+0.5); }
-   static protected int floor(double x) { return (int)x; }
-   static protected int top(double x) { return (int)x==x ? (int)x : (int)(x+1); }
-   
    
    /************************  Gestion du plot de nuages de points ***********************/
    

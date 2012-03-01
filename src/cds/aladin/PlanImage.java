@@ -528,10 +528,10 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
       // inutile, le zoom couvre toute l'image
       if( test==4 ) return false;
       
-      int wi = ViewSimple.top(w);
-      int hi = ViewSimple.top(h);
-      int xi = ViewSimple.floor(x);
-      int yi = ViewSimple.floor(y);
+      int wi = (int)Math.ceil(w);
+      int hi = (int)Math.ceil(h);
+      int xi = (int)Math.floor(x);
+      int yi = (int)Math.floor(y);
 
       // Crop des pixels 8 bits
       byte npixels[] = new byte[wi*hi];
@@ -561,10 +561,10 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
 
      double r = 256./(pixelMax - pixelMin);
      try {
-        int wi = ViewSimple.top(w);
-        int hi = ViewSimple.top(h);
-        int xi = ViewSimple.floor(x);
-        int yi = ViewSimple.floor(y);
+        int wi = (int)Math.ceil(w);
+        int hi = (int)Math.ceil(h);
+        int xi = (int)Math.floor(x);
+        int yi = (int)Math.floor(y);
         
         int size = wi*hi;
         setBufPixels8(new byte[size]);
@@ -611,8 +611,8 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
      if( Projection.isOk(projd) ) projd.crop(x,y,w,h);
 
      // Validation du changement de taille
-     naxis1=width = ViewSimple.top(w);
-     naxis2=height = ViewSimple.top(h);
+     naxis1=width = (int)Math.ceil(w);
+     naxis2=height = (int)Math.ceil(h);
      setHasSpecificCalib();
 
      // Mise à jour des flags de recalcul et de retraçage
@@ -2021,6 +2021,9 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    
    protected boolean isBlank(int pixel) { return isBlank && pixel==blank; }
    protected boolean isBlank(double pixel) { return isBlank && pixel==blank || Double.isNaN(pixel); }
+   
+   /** True si la coordonnée x,y se trouve dans l'image */
+   protected boolean isInside(int x,int y) { return x>=0 && x<naxis1 && y>=0 && y<naxis2; }
 
    /**
     * Détermination du min et max des pixels passés en paramètre

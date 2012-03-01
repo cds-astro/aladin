@@ -563,10 +563,10 @@ public class Ligne extends Position {
       Segment [] seg = new Segment[nb];
       
       for( i=0, tmp=deb; tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
-         int fx=ViewSimple.floor(tmp.xv[v.n]-0.5);
-         int tx=ViewSimple.top(tmp.xv[v.n]-0.5);
-         int fy=ViewSimple.floor(tmp.yv[v.n]-0.5);
-         int ty=ViewSimple.top(tmp.yv[v.n]-0.5);
+         int fx=(int)Math.floor(tmp.xv[v.n]-0.5);
+         int tx=(int)Math.ceil(tmp.xv[v.n]-0.5);
+         int fy=(int)Math.floor(tmp.yv[v.n]-0.5);
+         int ty=(int)Math.ceil(tmp.yv[v.n]-0.5);
          if( tx>maxx ) maxx=tx;
          if( fx<minx ) minx=fx;
          if( ty>maxy ) maxy=ty;
@@ -668,10 +668,10 @@ public class Ligne extends Position {
          bc.del = tmp.finligne.dej;
          proj.getXY(bc);
          
-         int fx=ViewSimple.floor(ac.x-0.5);
-         int tx=ViewSimple.top(ac.x-0.5);
-         int fy=ViewSimple.floor(ac.y-0.5);
-         int ty=ViewSimple.top(ac.y-0.5);
+         int fx=(int)Math.floor(ac.x-0.5);
+         int tx=(int)Math.ceil(ac.x-0.5);
+         int fy=(int)Math.floor(ac.y-0.5);
+         int ty=(int)Math.ceil(ac.y-0.5);
          if( tx>maxx ) maxx=tx;
          if( fx<minx ) minx=fx;
          if( ty>maxy ) maxy=ty;

@@ -1490,7 +1490,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           runme.setPriority(ref.getPriority()-1);
        } catch( Exception e ) {}
     }
-
+    
     /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
     static public String getTemps(long ms) { return getTemps(ms,false);  }
     static public String getTemps(long ms,boolean round) {
