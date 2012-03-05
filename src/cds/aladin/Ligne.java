@@ -542,10 +542,10 @@ public class Ligne extends Position {
       
       if( bout!=3 ) return false;
       
-      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
-         ((PlanBG)v.pref).setDebugIn(this);
-         return false;
-      }
+//      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
+//         ((PlanBG)v.pref).setDebugIn(this);
+//         return false;
+//      }
 
       if( !v.pref.hasAvailablePixels() ) return false;
       statInit();    

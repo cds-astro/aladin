@@ -80,7 +80,6 @@ class HealpixAllskyPol extends HealpixKeyPol {
       int nbLosangeHeight = nbPix/nbLosangeWidth;
       if( nbPix/nbLosangeWidth!=(double)nbPix/nbLosangeWidth ) nbLosangeHeight++;
       int w = width/nbLosangeWidth;
-System.out.println("Génération de la liste des "+nbLosangeWidth+"x"+nbLosangeHeight+" losanges "+w+"x"+w+" pour AllSky "+(pixelsOrigin2!=null?"polarisation":"sans polarisation")+"...");      
       
       pixList = new HealpixKey[nbPix];
       for( int i=0; i<nbPix; i++ ) {

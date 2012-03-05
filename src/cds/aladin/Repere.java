@@ -338,9 +338,9 @@ public class Repere extends Position {
    }
 
    protected boolean statCompute(Graphics g,ViewSimple v) {
-      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
-         ((PlanBG)v.pref).setDebugIn(raj,dej,getRadius());
-      }
+//      if( v!=null && !v.isFree() && v.pref.type==Plan.ALLSKYIMG ) {
+//         ((PlanBG)v.pref).setDebugIn(raj,dej,getRadius());
+//      }
       
       boolean flagHist = v==v.aladin.view.getCurrentView();
       
@@ -353,7 +353,7 @@ public class Repere extends Position {
       double r=getRayon(v);
       
       // Si cercle large ou s'il s'agit d'un allsky, on ne calcule pas pendant le changement de taille ou les déplacements
-      if( (r>100 /* || v.pref instanceof PlanBG */ ) && v.flagClicAndDrag) return false;
+      if( r>100 &&  v.flagClicAndDrag) return false;
       
       // TODO : j'ai des doutes sur ces valeurs si v.pref.type==Plan.IMAGEBKGD
       minx=(int)Math.floor(xc-r);
@@ -380,7 +380,7 @@ public class Repere extends Position {
             PlanBG pbg = (PlanBG)v.pref;
             pixelSurf = Math.pow(pbg.getPixelResolution(),2);
             int orderFile = pbg.getOrder();
-            if( pbg.maxOrder!=pbg.getOrder() ) return false;
+//            if( pbg.maxOrder!=pbg.getOrder() ) return false;
             long nsideFile = CDSHealpix.pow2(orderFile);
             long nsideLosange = CDSHealpix.pow2(pbg.getLosangeOrder());
             long nside = nsideFile * nsideLosange;
@@ -388,9 +388,11 @@ public class Repere extends Position {
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
             double radiusRadian = Math.toRadians(getRadius());
             long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
+            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+"nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
-               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
+//               double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
                if( Double.isNaN(pix) ) continue;
                pix = pix*pbg.bScale+pbg.bZero;
                double polar[] = CDSHealpix.pix2ang_nest(nside, npix[i]);
@@ -400,6 +402,7 @@ public class Repere extends Position {
                statPixel(g,pix,coo.al,coo.del,v,onMouse);
                if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
             }
+            System.out.println("npix.length="+npix.length+" total="+total);
          } catch( Exception e ) { e.printStackTrace(); }
 
       } else {
@@ -473,7 +476,8 @@ public class Repere extends Position {
          long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
          for( int i=0; i<npix.length; i++ ) {
             long npixFile = npix[i]/(nsideLosange*nsideLosange);
-            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+//            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.ONLYIFDISKAVAIL);
+            double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
             if( Double.isNaN(pix) ) continue;
             pix = pix*pbg.bScale+pbg.bZero;
             nombre++;

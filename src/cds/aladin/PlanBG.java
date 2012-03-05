@@ -157,10 +157,11 @@ public class PlanBG extends PlanImage {
    protected boolean useCache=true;
    protected boolean color=false;   // true si le survey est fourni en couleur
    protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG couleur ou non
-   public boolean truePixels=false; // true si le survey est fourni en true pixels (FITS)
-   protected boolean inFits=false;  // true: Les losanges originaux peuvent être fournis en FITS
-   protected boolean inJPEG=false;  // true: Les losanges originaux peuvent être fournis en JPEG
-   private boolean hasMoc=false;   // true si on on peut disposer du MOC correspondant au survey
+   public boolean fitsGzipped=false; // true si le survey est fourni en true pixels (FITS) mais gzippé
+   public boolean truePixels=false;  // true si le survey est fourni en true pixels (FITS)
+   protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
+   protected boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
+   private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
@@ -1466,90 +1467,90 @@ public class PlanBG extends PlanImage {
       return n;
    }
 
-   protected void setDebugIn(double raj,double dej,double radius) {
-      if( !DEBUGMODE ) return;
-      ViewSimple v = aladin.view.getCurrentView();
-      int order = Math.max(3,maxOrder(v));
-      long [] npix = null;
-      Coord c = new Coord(raj,dej);
-      try {
-         c = Localisation.frameToFrame(c,Localisation.ICRS,frameOrigin);
-         npix = getNpixList(order,c,radius);
-      } catch( Exception e ) {
-         e.printStackTrace();
-         return;
-      }
-
-      boolean diff = true;
-      if( npix.length == pixDebugIn.length ) {
-         diff = false;
-         for( int i=0; i<npix.length; i++ ) {
-            if( npix[i]!=pixDebugIn[i] ) { diff=true; break; }
-         }
-      }
-
-      if( diff ) {
-         pixDebugIn = npix;
-         changeImgID();
-         v.repaint();
-
-         System.out.print("querydisk("+aladin.localisation.J2000ToString(raj,dej)+", "+Coord.getUnit(radius)+")\n   2^"+order+" => ");
-         for( int i=0; i<pixDebugIn.length; i++ )  System.out.print(" "+pixDebugIn[i]);
-         System.out.println();
-      }
-   }
+//   protected void setDebugIn(double raj,double dej,double radius) {
+//      if( !DEBUGMODE ) return;
+//      ViewSimple v = aladin.view.getCurrentView();
+//      int order = Math.max(3,maxOrder(v));
+//      long [] npix = null;
+//      Coord c = new Coord(raj,dej);
+//      try {
+//         c = Localisation.frameToFrame(c,Localisation.ICRS,frameOrigin);
+//         npix = getNpixList(order,c,radius);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//         return;
+//      }
+//
+//      boolean diff = true;
+//      if( npix.length == pixDebugIn.length ) {
+//         diff = false;
+//         for( int i=0; i<npix.length; i++ ) {
+//            if( npix[i]!=pixDebugIn[i] ) { diff=true; break; }
+//         }
+//      }
+//
+//      if( diff ) {
+//         pixDebugIn = npix;
+//         changeImgID();
+//         v.repaint();
+//
+//         System.out.print("querydisk("+aladin.localisation.J2000ToString(raj,dej)+", "+Coord.getUnit(radius)+")\n   2^"+order+" => ");
+//         for( int i=0; i<pixDebugIn.length; i++ )  System.out.print(" "+pixDebugIn[i]);
+//         System.out.println();
+//      }
+//   }
 
    
-   protected void setDebugIn(Ligne deb) {
-      if( !DEBUGMODE ) return;
-      ViewSimple v = aladin.view.getCurrentView();
-      int order = Math.max(3,maxOrder(v));
-      ArrayList<double[]> vlist = new ArrayList<double[]>();
-      Coord coo = new Coord();
-      Ligne tmp;
-      int i;
-      for( i=0, tmp=deb.getFirstBout(); tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
-         coo.al = tmp.raj; coo.del = tmp.dej;
-         if( Double.isNaN(coo.al) ) return;
-         coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
-         if( coo.del < -90) coo.del = -180-coo.del;
-         if( coo.al < 0   ) coo.al  = 360+coo.al;
-         if( coo.del > 90 ) coo.del = 180-coo.del;
-         if( coo.al > 360 ) coo.al  = coo.al-360;
-
-         vlist.add( new double[]{coo.al,coo.del} );
-      }
-      long[] npix=null;
-      try {
-         long nside = CDSHealpix.pow2(order);
-         npix = CDSHealpix.query_polygon(nside,vlist);
-      } catch( Exception e ) {
-         npix=new long[0];
-      }
-
-      boolean diff = true;
-      if( npix.length == pixDebugIn.length ) {
-         diff = false;
-         for( i=0; i<npix.length; i++ ) {
-            if( npix[i]!=pixDebugIn[i] ) { diff=true; break; }
-         }
-      }
-
-      if( diff ) {
-         pixDebugIn = npix;
-         changeImgID();
-         v.repaint();
-         StringBuffer s = new StringBuffer();
-         for( i=0; i<vlist.size(); i++ ) {
-            double a[] = vlist.get(i);
-            if( s.length()>0 ) s.append(", ");
-            s.append(Util.myRound(a[0]+"",2)+(a[1]<0?"":"+")+Util.myRound(a[1]+"",2));
-         }
-         System.out.print("query_polygon("+s+")\n   2^"+order+" => ");
-         for( i=0; i<pixDebugIn.length; i++ )  System.out.print(" "+pixDebugIn[i]);
-         System.out.println();
-      }
-   }
+//   protected void setDebugIn(Ligne deb) {
+//      if( !DEBUGMODE ) return;
+//      ViewSimple v = aladin.view.getCurrentView();
+//      int order = Math.max(3,maxOrder(v));
+//      ArrayList<double[]> vlist = new ArrayList<double[]>();
+//      Coord coo = new Coord();
+//      Ligne tmp;
+//      int i;
+//      for( i=0, tmp=deb.getFirstBout(); tmp.finligne!=null; tmp=tmp.finligne, i++ ) {
+//         coo.al = tmp.raj; coo.del = tmp.dej;
+//         if( Double.isNaN(coo.al) ) return;
+//         coo = Localisation.frameToFrame(coo,Localisation.ICRS,frameOrigin);
+//         if( coo.del < -90) coo.del = -180-coo.del;
+//         if( coo.al < 0   ) coo.al  = 360+coo.al;
+//         if( coo.del > 90 ) coo.del = 180-coo.del;
+//         if( coo.al > 360 ) coo.al  = coo.al-360;
+//
+//         vlist.add( new double[]{coo.al,coo.del} );
+//      }
+//      long[] npix=null;
+//      try {
+//         long nside = CDSHealpix.pow2(order);
+//         npix = CDSHealpix.query_polygon(nside,vlist);
+//      } catch( Exception e ) {
+//         npix=new long[0];
+//      }
+//
+//      boolean diff = true;
+//      if( npix.length == pixDebugIn.length ) {
+//         diff = false;
+//         for( i=0; i<npix.length; i++ ) {
+//            if( npix[i]!=pixDebugIn[i] ) { diff=true; break; }
+//         }
+//      }
+//
+//      if( diff ) {
+//         pixDebugIn = npix;
+//         changeImgID();
+//         v.repaint();
+//         StringBuffer s = new StringBuffer();
+//         for( i=0; i<vlist.size(); i++ ) {
+//            double a[] = vlist.get(i);
+//            if( s.length()>0 ) s.append(", ");
+//            s.append(Util.myRound(a[0]+"",2)+(a[1]<0?"":"+")+Util.myRound(a[1]+"",2));
+//         }
+//         System.out.print("query_polygon("+s+")\n   2^"+order+" => ");
+//         for( i=0; i<pixDebugIn.length; i++ )  System.out.print(" "+pixDebugIn[i]);
+//         System.out.println();
+//      }
+//   }
 
 
    private final int ALLSKYORDER = 3;

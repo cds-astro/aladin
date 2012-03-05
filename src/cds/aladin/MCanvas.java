@@ -1206,7 +1206,7 @@ public final class MCanvas extends JComponent
             try {
                if( w.glu ) w.urlStatus(aladin.urlStatus);
                else {
-                  String ucd=o.leg.getUCD(i-1);
+                  String ucd=o.leg.getUCD(indice);
                   if( ucd.length()>0 )  aladin.urlStatus.setText("UCD: "+ucd);
                   else aladin.urlStatus.setText("");
                }

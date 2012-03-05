@@ -132,8 +132,9 @@ public class HealpixKey {
    static protected final int FITS=1;
    static protected final int TSV=2;
    static protected final int XML=3;
+   static protected final int FITSGZIP=4;
 
-   static final String[] EXT = { ".jpg",".fits",".tsv",".xml" };
+   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".fits.gz" };
 
 //   protected int extCache=FITS;
    protected int extCache=JPEG;         // Format d'image pour le cache
@@ -942,9 +943,12 @@ public class HealpixKey {
          if( this instanceof HealpixAllsky && !planBG.flagRecut ) {
             try {
                planBG.bScale = getValue(head,"BSCALE");
-               planBG.bZero = getValue(head,"BZERO");
             } catch( Exception e ) { 
                planBG.bScale=1;
+            }
+            try {
+               planBG.bZero = getValue(head,"BZERO");
+            } catch( Exception e ) { 
                planBG.bZero=0;
             }
             try {
