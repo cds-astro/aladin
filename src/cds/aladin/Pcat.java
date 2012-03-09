@@ -154,7 +154,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       drawnInViewSimple[v.n]=false;    // Par défaut, pas projetable
 
       if( v.isFree() ) return;
-      
+
 
       Projection proj = v.getProj();
       if( plan.proj[v.n]==proj && Projection.isOk(proj)
@@ -907,7 +907,7 @@ Aladin.trace(3,"setField "+f);
 
       if( ok ) {
          if( !flagEndResource ) endResource();
-         long duree=System.currentTimeMillis()-d;;
+         long duree=System.currentTimeMillis()-d;
          String s = "Catalog parsed in "+Util.myRound(""+duree/1000.,3)+"s"+(nb_o<1000?"":" ("
                   +Util.myRound(""+1000.*nb_o/duree)+" objects per sec)");
          tableParserInfo("\n"+s);
