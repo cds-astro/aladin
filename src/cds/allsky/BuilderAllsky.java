@@ -195,6 +195,7 @@ final public class BuilderAllsky {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
+      boolean notfound = true;
      
       // Ecriture du fichier des propriétés à la racine du survey
       if( withProp ) writePropertiesFile(path,true);
@@ -212,6 +213,7 @@ final public class BuilderAllsky {
          String filename = path+FS+name;
          try {
             in.loadJpeg(filename+".jpg",true);
+            notfound = false;
             int yLosange=npix/nbOutLosangeWidth;
             int xLosange=npix%nbOutLosangeWidth;
             int gap = in.width/outLosangeWidth;
@@ -227,7 +229,10 @@ final public class BuilderAllsky {
          catch( Exception e ) { }
       }
       
-//      if( out==null ) throw new Exception("createAllSkyJpgColor error: null output file !");
+      if( notfound ) {
+    	  Aladin.trace(4, "createAllSkyJpgColor error: no jpeg files !");
+    	  return;
+      }
 
       String filename = getFileName(path, order);
       out.writeJPEG(filename+".jpg");
