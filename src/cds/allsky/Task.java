@@ -130,12 +130,12 @@ public class Task implements Runnable {
 	         context.enableProgress(false,TESS);
 	      }
 	      // création du fichier allsky
-	      if (mode <= JPG) mode = JPG;
 	      createAllSky();
 	      createMoc();
 	      context.preview(0);
 	      context.setIsRunning(false);
 
+	      if (mode <= JPG) mode = JPG;
 	      runner = null;
 	      mode = -1;
 	      Aladin.trace(2,"Allsky... done!");
