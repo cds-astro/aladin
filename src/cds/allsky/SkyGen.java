@@ -319,7 +319,7 @@ public class SkyGen {
 			}
 			builder.run();
 			progressBar.stop();
-			// la construction du allsky est automatiquement faire par le builder
+			// la construction du allsky est automatiquement faite par le builder
 			break;
 		}
 		case MOC : {
@@ -346,7 +346,9 @@ public class SkyGen {
 			} finally {
 				progressBar.stop();
 			}
-			// la construction du allsky est automatiquement faire par le builder
+			// force à recréer le allsky
+			action = Action.ALLSKY;
+			start();
 			break;
 		}
 		case ALLSKY : {
