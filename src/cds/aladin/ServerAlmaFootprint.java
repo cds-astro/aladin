@@ -56,13 +56,13 @@ public class ServerAlmaFootprint extends Server {
        grab = null;
 
        // ajout des différents setups
-       setups.add(new ALMASetup(3, 56, new float[] {2.6f, 3.6f}, new float[] { 84, 116}));
-       setups.add(new ALMASetup(4, 48, new float[] {1.8f, 2.4f}, new float[] {125, 169}));
-       setups.add(new ALMASetup(5, 35, new float[] {1.4f, 1.8f}, new float[] {163, 211}));
-       setups.add(new ALMASetup(6, 27, new float[] {1.1f, 1.4f}, new float[] {211, 275}));
-       setups.add(new ALMASetup(7, 18, new float[] {0.8f, 1.1f}, new float[] {275, 373}));
-       setups.add(new ALMASetup(8, 12, new float[] {0.6f, 0.8f}, new float[] {385, 500}));
-       setups.add(new ALMASetup(9,  9, new float[] {0.4f, 0.5f}, new float[] {602, 720}));
+       setups.add(new ALMASetup(3, 44.7f, new float[] {2.6f, 3.6f}, new float[] { 84, 116}));
+       setups.add(new ALMASetup(4, 30.9f, new float[] {1.8f, 2.4f}, new float[] {125, 169}));
+       setups.add(new ALMASetup(5, 24.1f, new float[] {1.4f, 1.8f}, new float[] {163, 211}));
+       setups.add(new ALMASetup(6, 18.9f, new float[] {1.1f, 1.4f}, new float[] {211, 275}));
+       setups.add(new ALMASetup(7, 13.8f, new float[] {0.8f, 1.1f}, new float[] {275, 373}));
+       setups.add(new ALMASetup(8, 10.3f, new float[] {0.6f, 0.8f}, new float[] {385, 500}));
+       setups.add(new ALMASetup(9,  6.9f, new float[] {0.4f, 0.5f}, new float[] {602, 720}));
     }
 
     protected void createChaine() {
@@ -117,7 +117,7 @@ public class ServerAlmaFootprint extends Server {
          JLabel widthTitle = new JLabel("Width (arcmin)");
          widthTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
          add(widthTitle);
-         this.widthField = new JTextField("10");
+         this.widthField = new JTextField("5");
          add(this.widthField);
          this.widthField.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT);
          y+=HAUT+MARGE;
@@ -126,7 +126,7 @@ public class ServerAlmaFootprint extends Server {
          JLabel heightTitle = new JLabel("Height (arcmin)");
          heightTitle.setBounds(XTAB1,y,XTAB2-10,HAUT);
          add(heightTitle);
-         this.heightField = new JTextField("5");
+         this.heightField = new JTextField("2");
          add(this.heightField);
          this.heightField.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT);
 
@@ -152,11 +152,11 @@ public class ServerAlmaFootprint extends Server {
          Set<Point2D> centers = new TreeSet<Point2D>();
          double x, y;
          double ymax = 0;
-         for (int i=0; (x = i * beam * 0.5)<=width/2; i++) {
+         for (int i=0; (x = i * beam * 0.5 * 0.5)<=width/2; i++) {
 
-             for (int j=0; (y = j * beam * Math.sqrt(3))<=height/2+beam/2; j++) {
+             for (int j=0; (y = j * beam * Math.sqrt(3) * 0.5)<=height/2+beam/2; j++) {
                  if (i%2==1) {
-                     y += Math.sqrt(3)/2*beam;
+                     y += Math.sqrt(3)/4*beam;
                  }
 
                  int signX, signY;
