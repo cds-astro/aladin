@@ -198,6 +198,7 @@ public class ServerAlmaFootprint extends Server {
          synchronized(aladin.calque) {
              int idx = aladin.calque.newPlanField(fpBean, t, "ALMA", 0);
              ((PlanField)aladin.calque.plan[idx]).setIsAlmaFP(true);
+             ((PlanField)aladin.calque.plan[idx]).setOpacityLevel(0.05f); // set low opacity level for ALMA footprints
          }
      }
 
