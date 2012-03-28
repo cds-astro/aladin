@@ -61,7 +61,7 @@ public class SourceFootprint {
 	protected void setStcs(double ra, double dec, String stcs) {
 	    STCStringParser parser = new STCStringParser();
 	    List<STCObj> stcObj = parser.parse(stcs);
-	    this.stcsFov = new Fov(ra, dec, stcObj);
+	    this.stcsFov = new Fov(stcObj);
 	}
 
 	protected void draw(Projection proj, Graphics g, ViewSimple v, int dx, int dy, Color c) {

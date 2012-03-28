@@ -2605,7 +2605,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
             Aladin.trace(3, "Creating FoV from STC-S description for node "+node.name);
             STCStringParser parser = new STCStringParser();
             List<STCObj> stcObjs = parser.parse(stcRegion);
-            node.setFov(new Fov(alphaVal, deltaVal, stcObjs));
+            node.setFov(new Fov(stcObjs));
         }
         // voir alphaVal et compagnie pour ne pas créer le fov si non nécessaire
         // Création d'un Fov aux formes complexes (cas des images HST)

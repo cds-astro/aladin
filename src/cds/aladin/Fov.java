@@ -64,9 +64,7 @@ public class Fov {
 
 	// Constructeurs
 
-	Fov(double alpha, double delta, List<STCObj> stcObjects) {
-	    this.alpha = alpha;
-	    this.delta = delta;
+	Fov(List<STCObj> stcObjects) {
 	    this.stcObjects = stcObjects;
 	}
 
