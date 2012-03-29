@@ -48,6 +48,7 @@ public class TreeNodeAllsky extends TreeNode {
    public String copyrightUrl;  // Url pour renvoyer une page HTML décrivant les droits
    public String hpxParam;      // Les paramètres propres à HEALPIX
    public String version="";    // Le numéro de version du survey
+   public String imageSourcePath; // Le template d'accès aux images sources (progéniteurs) (ex: id~=/(.*)/http://aladin.u-strasbg.fr/get?img=$1/)
    public String aladinProfile; // profile de l'enregistrement GLU (notamment "localdef")*
    public String aladinLabel;
    public int minOrder=-1;      // Min order Healpix
@@ -65,6 +66,8 @@ public class TreeNodeAllsky extends TreeNode {
    public int nside=-1;          // Max NSIDE
    public boolean local=false;   // Il s'agit d'un survey sur disque local
    
+   /** Construction d'un TreeNodeAllSky à partir des infos qu'il est possible de glaner
+    * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
    public TreeNodeAllsky(Aladin aladin,String pathOrUrl) {
       String s;
       this.aladin = aladin;
@@ -100,6 +103,12 @@ public class TreeNodeAllsky extends TreeNode {
       }
       id=label;
       
+      s = prop.getProperty(PlanHealpix.KEY_VERSION);
+      if( s!=null ) version=s;
+      
+      s = prop.getProperty(PlanHealpix.KEY_IMAGESOURCEPATH);
+      if( s!=null ) imageSourcePath=s;
+      
       description = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);
       verboseDescr = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE);
       copyright = prop.getProperty(PlanHealpix.KEY_COPYRIGHT);
@@ -118,7 +127,6 @@ public class TreeNodeAllsky extends TreeNode {
          try { radius=Server.getAngle(s, Server.RADIUSd); }
          catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
       }
-
       
       s = prop.getProperty(PlanHealpix.KEY_NSIDE);
       if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
@@ -299,6 +307,12 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** Retourne le rayon du champ par défaut (premier affichage) en degrés, -1 sinon */
    protected double getRadius() { return radius; }
+   
+   /** retourne le template d'accès aux progéniteurs */
+   protected String getImageSourcePath() { return imageSourcePath; }
+   
+   /** Retourne le numéro de version du survey, "" si non défini */
+   protected String getVersion() { return version==null ? "" : version; }
    
    protected int getLosangeOrder() { 
       if( cat || nside==-1 || maxOrder==-1) return -1;

@@ -30,13 +30,13 @@ import javax.swing.tree.*;
 /**
  * Formulaire d'interrogation sous la forme d'un arbre
  * @author Pierre Fernique [CDS]
-  */
+ */
 public abstract class ServerTree extends Server  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
    protected JTree tree;
 
- /** Creation du formulaire d'interrogation par arbre. */
+   /** Creation du formulaire d'interrogation par arbre. */
    protected ServerTree(Aladin aladin) {
       this.aladin = aladin;
       createChaine();
@@ -58,7 +58,7 @@ public abstract class ServerTree extends Server  {
       JLabel l = new JLabel(info);
       l.setBounds(120,y,400, 20); y+=20;
       add(l);
-      
+
       // Target ?
       y=makeTarget(y);
 
@@ -80,7 +80,7 @@ public abstract class ServerTree extends Server  {
       modeCoo = COO|SIMBAD;
       modeRad = RADIUS;
    }
-   
+
    protected int makeTarget(int y) { return y; }
 
    abstract protected void init();
@@ -107,7 +107,7 @@ public abstract class ServerTree extends Server  {
    }
 
    @Override
-public void show() {
+   public void show() {
       initTree();
       super.show();
    }
@@ -129,36 +129,36 @@ public void show() {
       }
       defaultExpand();
    }
-
+   
    /** Reset */
    @Override
-protected void reset() {
-     Enumeration e = root.preorderEnumeration();
-     while( e.hasMoreElements() ) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
-        TreeNode n = (TreeNode) node.getUserObject();
-        n.setCheckBox(false);
-     }
-     tree.validate();
-     repaint();
+   protected void reset() {
+      Enumeration e = root.preorderEnumeration();
+      while( e.hasMoreElements() ) {
+         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
+         TreeNode n = (TreeNode) node.getUserObject();
+         n.setCheckBox(false);
+      }
+      tree.validate();
+      repaint();
    }
 
    /** Interrogation */
    @Override
-public void submit() {
+   public void submit() {
       boolean ok=false;
-     Enumeration e = root.preorderEnumeration();
-     while( e.hasMoreElements() ) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
-        TreeNode n = (TreeNode) node.getUserObject();
-        if( !n.isCheckBoxSelected() ) continue;
-        submit(n);
-        ok=true;
-     }
-     if( !ok ) aladin.warning(aladin.dialog,WNEEDCHECK,1);
-     reset();
+      Enumeration e = root.preorderEnumeration();
+      while( e.hasMoreElements() ) {
+         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
+         TreeNode n = (TreeNode) node.getUserObject();
+         if( !n.isCheckBoxSelected() ) continue;
+         submit(n);
+         ok=true;
+      }
+      if( !ok ) aladin.warning(aladin.dialog,WNEEDCHECK,1);
+      reset();
    }
-   
+
    public void submit(TreeNode n) { n.submit(); }
 
 
@@ -202,38 +202,38 @@ public void submit() {
          DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
          if( node.isLeaf() ) tree.collapsePath(new TreePath(node));
       }
-    }
+   }
 
    /** Classe pour l'édition d'un noeud de l'arbre */
    class NoeudRenderer implements TreeCellRenderer {
-       DefaultTreeCellRenderer nonLeafRenderer = new DefaultTreeCellRenderer();
-       Color selectionForeground, selectionBackground, textForeground, textBackground;
+      DefaultTreeCellRenderer nonLeafRenderer = new DefaultTreeCellRenderer();
+      Color selectionForeground, selectionBackground, textForeground, textBackground;
 
-       NoeudRenderer() {
-           selectionForeground = UIManager.getColor("Tree.selectionForeground");
-           selectionBackground = UIManager.getColor("Tree.selectionBackground");
-           textForeground = UIManager.getColor("Tree.textForeground");
-           textBackground = UIManager.getColor("Tree.textBackground");
-       }
+      NoeudRenderer() {
+         selectionForeground = UIManager.getColor("Tree.selectionForeground");
+         selectionBackground = UIManager.getColor("Tree.selectionBackground");
+         textForeground = UIManager.getColor("Tree.textForeground");
+         textBackground = UIManager.getColor("Tree.textBackground");
+      }
 
-       public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus){
-          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
-          TreeNode n = (TreeNode)node.getUserObject();
+      public Component getTreeCellRendererComponent(JTree tree, Object obj, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus){
+         DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
+         TreeNode n = (TreeNode)node.getUserObject();
 
-          if( n.hasCheckBox() ) {
-             JPanel panel = n.getPanel();
-             if (selected) {
-                 panel.setForeground(selectionForeground);
-                 panel.setBackground(selectionBackground);
-             } else {
-                 panel.setForeground(textForeground);
-                 panel.setBackground(textBackground);
-             }
-             return panel;
-          }
-          else {
-              return nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
-          }
+         if( n.hasCheckBox() ) {
+            JPanel panel = n.getPanel();
+            if (selected) {
+               panel.setForeground(selectionForeground);
+               panel.setBackground(selectionBackground);
+            } else {
+               panel.setForeground(textForeground);
+               panel.setBackground(textBackground);
+            }
+            return panel;
+         }
+         else {
+            return nonLeafRenderer.getTreeCellRendererComponent(tree, obj, selected, expanded, leaf, row, hasFocus);
+         }
       }
    }
 
@@ -259,12 +259,12 @@ public void submit() {
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
          TreeNode n = (TreeNode)node.getUserObject();
          if( n.hasCheckBox() ) {
-             return n.getPanel();
+            return n.getPanel();
          }
          return renderer.getTreeCellRendererComponent(tree, obj, true, expanded, leaf, row, true);
       }
       public Object getCellEditorValue() {
-        return null;
+         return null;
       }
    }
 

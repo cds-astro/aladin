@@ -157,9 +157,9 @@ public class Util {
    }
 
 
-   static public int getNDirFromPath(String filename) {
+   static public long getNDirFromPath(String filename) {
       int fromIndex = filename.indexOf("Dir");
-      int npix = Integer.parseInt(
+      long npix = Long.parseLong(
             filename.substring(
                   fromIndex+3, 
                   filename.indexOf(Util.FS, fromIndex)
@@ -563,7 +563,7 @@ public class Util {
    //    }
 
    public static final int nside(int order){ return 1<<order;}
-   public static final int order(int nside){ int i=0; while((nside>>(++i))>0); return --i; }
+   public static final int order(int nside){ int i=0; while((nside>>>(++i))>0); return --i; }
    public static final long nbrPix(int nside){ return 12*(long)nside*nside; }
 
    /**
@@ -575,9 +575,9 @@ public class Util {
     * @return the index of the healpix pixel of order <i>orderTo</i>
     * containing the pixel of healpix index <i>idx</i> in order <i>orderFrom</i>.
     */
-   public static final int idx(int idx, int orderFrom, int orderTo){
+   public static final long idx(long idx, int orderFrom, int orderTo){
       if(orderFrom<orderTo) throw new IllegalArgumentException("'orderFrom' must be greatest than 'orderTo'!");
-      return idx>>((orderFrom-orderTo)<<1);
+      return idx>>>((orderFrom-orderTo)<<1);
    }
 
    /**

@@ -3248,7 +3248,7 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
                   for( int i=0; i<1000; i++ ) {
                      x=coo.x = rand.nextDouble()*widthPix;
                      y=coo.y = rand.nextDouble()*heightPix;
-                     System.out.println("random avant GetCoord"+coo.x+" "+coo.y);
+//                     System.out.println("random avant GetCoord"+coo.x+" "+coo.y);
                      c.GetCoord(coo);
                      c.GetXY(coo);
                      if( !equalEpsilon(coo.x,x) || !equalEpsilon(coo.y,y) ) {

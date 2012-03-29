@@ -36,7 +36,7 @@ public class TreeNode  implements Comparator {
    String path;
    String ordre;
 
-   private JCheckBox checkbox;
+   protected JCheckBox checkbox;
    private JPanel panel;
 
    protected GridBagConstraints gc;

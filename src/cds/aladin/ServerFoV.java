@@ -82,7 +82,7 @@ public final class ServerFoV extends Server implements TableModel {
       this.aladin = aladin;
       createChaine();
 //      aladinLabel = "FoV";
-      aladinLabel = "Instrument Field of Views";
+      aladinLabel = "Instrument Field of Views (FoV)";
       aladinMenu = "FoV...";
       type = APPLI;
       aladinLogo = "FoVLogo.gif";

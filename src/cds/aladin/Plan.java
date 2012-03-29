@@ -70,13 +70,14 @@ public class Plan implements Runnable {
    static final int ALLSKYCAT=18; // Le plan contient des segments de polarisation
    static final int ALLSKYMOC=19; // Le plan contient un Multi-Order Coverage map Healpix
    static final int IMAGECUBERGB =20;  // Le plan contient un cube d'images homogènes couleurs
+   static final int ALLSKYFINDER=21; // Plan Allsky Finder (de fait pas un vrai plan => voir PlanBG)
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
                                     "Catalog",
                                     "Tool","Aperture","Folder","Filter",
                                     "Image FoV","In progress","ImageHuge",
                                     "AllskyImage","AllskyPolarisation","AllskyCatalog",
-                                    "AllskyMOCM","CubeColor",
+                                    "MOC","CubeColor","AllskyFinder"
                                     };
 
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
@@ -236,7 +237,8 @@ public class Plan implements Runnable {
 
    /** Retourne true s'il s'agit d'un plan qui a des pixels */
    final public boolean hasAvailablePixels() {
-      return isImage() ||  type==IMAGEBLINK || type==IMAGECUBE
+//      return isImage() ||  type==IMAGEBLINK || type==IMAGECUBE
+      return isSimpleImage() ||  type==IMAGEBLINK || type==IMAGECUBE
       || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
    }
 

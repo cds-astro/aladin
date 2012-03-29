@@ -137,6 +137,12 @@ public abstract class Obj implements Propable{
       if( select ) flags |= SELECT;
       else flags &= ~SELECT;
    }
+   
+   /** Return the Obj color, by default the Plane color */
+   public Color getColor() { return plan.c; }
+   
+   /** Set the Obj color (if possible => depending of the nature of Obj) */
+   public void setColor() throws Exception { throw new Exception("Not specifical color property"); }
 
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return false; }

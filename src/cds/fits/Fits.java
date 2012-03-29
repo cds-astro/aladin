@@ -317,7 +317,7 @@ final public class Fits {
        }
 	   try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
 	   try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
-	   try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
+	   try { setCalib(new Calib(headerFits)); }                   catch( Exception e ) { calib=null; }
 	   pix8 = new byte[widthCell*heightCell];
 	   if( bitpix==8 ) initPix8();
    }
@@ -398,7 +398,7 @@ final public class Fits {
       width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
       height=heightCell = headerFits.getIntFromHeader("NAXIS2");
       xCell=yCell=0;
-      try { blank = headerFits.getDoubleFromHeader("BLANK");} catch( Exception e ) { blank=DEFAULT_BLANK; }
+      try { blank = headerFits.getDoubleFromHeader("BLANK");   } catch( Exception e ) { blank=DEFAULT_BLANK; }
       try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
       try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
       try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }

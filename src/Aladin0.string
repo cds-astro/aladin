@@ -2384,6 +2384,8 @@ ALLSKYTITLE	Available data in "allsky" mode
 ALLSKYTITLE.fr	Données disponibles en mode "ciel complet"	
 ALLSKYINFO Select items and press SUBMIT
 ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER
+TARGETNOTVISIBLE Target out of field.\nSelect another plane before.
+TARGETNOTVISIBLE.fr Cible hors champ.\nSélectionnez au préalable un autre plan.
 
 #ServerAlmaFootprint strings
 ALTITLE ALMA footprints

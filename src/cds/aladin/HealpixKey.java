@@ -178,8 +178,10 @@ public class HealpixKey {
       if( planBG.truePixels ) extCache=extNet=FITS;
       else if( planBG.color ) extCache=extNet=JPEG;
       else if( planBG instanceof PlanBGCat ) extCache=extNet=TSV;
-      fileNet = getFilePath(null,order,npix)+ EXT[extNet];
-      fileCache = getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
+//      fileNet = getFilePath(null,order,npix)+ EXT[extNet];
+//      fileCache = getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
+      fileNet = getFileNet();
+      fileCache = getFileCache();
       
       // Chargement immédiat des données
       try {
@@ -188,6 +190,14 @@ public class HealpixKey {
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
+   }
+   
+   protected String getFileNet() {
+      return getFilePath(null,order,npix)+ EXT[extNet];
+   }
+   
+   protected String getFileCache() {
+      return getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
    }
 
    /** Création d'un losange Healpix en fonction de son père (sous-échantillonnage)
@@ -917,7 +927,7 @@ public class HealpixKey {
             }
          }
 
-      } catch( Exception e ) { width=height=1024; bitpix=8; }
+      } catch( Exception e ) { width=height=512; bitpix=8; }
 
       int taille=width*height*(Math.abs(bitpix)/8);
       

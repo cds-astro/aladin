@@ -48,7 +48,7 @@ public class TreeNodeCategory extends TreeNode {
    }
 
    @Override
-protected void submit() {
+   protected void submit() {
       aladin.calque.newPlan(aladin.glu.getURL(id)+"",label,origin);
    }
 

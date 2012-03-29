@@ -81,6 +81,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
@@ -91,6 +92,7 @@ import javax.swing.*;
 import cds.aladin.Aladin;
 import cds.aladin.Forme;
 import cds.aladin.MyInputStream;
+import cds.aladin.Tok;
 import cds.image.EPSGraphics;
 
 /**
@@ -1573,6 +1575,13 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        return sizeOf * n;
     }
     
+//    HashMap<String, String> getNextJsonObj(MyInputStream in) {
+//       while( encore ) {
+//          char ch = in.g
+//          switch
+//       }
+//    }
+    
     /**
      * Affiche le chiffre donné avec une unité de volume disque (K M T)
      * @param val taille en octets
@@ -1594,12 +1603,6 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     }
     
 	public static ArrayList<File> getFiles(String path, final String suffix) {
-//		FilenameFilter filter = new FilenameFilter() {
-//			public boolean accept(File dir, String name) {
-//				name.endsWith(suffix);
-//				return false;
-//			}
-//		};
 		ArrayList<File> flist = new ArrayList<File>();
 		File[] files = (new File(path)).listFiles();
 		for (File file : files) {
@@ -1716,6 +1719,15 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 
        return sb.toString();
 
+   }
+
+   static public String extractJSON(String key,String s) {
+      String k="\""+key+"\"";
+      int o1 = s.indexOf(key);
+      if( o1<0 ) return null;
+      int o2 = s.indexOf('"',o1+k.length()+1);
+      if( o2<0 ) return null;
+      return Tok.unQuote( (new Tok(s.substring(o2),"},")).nextToken() );
    }
 
 // PAS ENCORE TESTE

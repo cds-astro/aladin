@@ -471,9 +471,11 @@ public final class Slide {
             g.fillRect(x,y,W,H);
          }
          
+         boolean isRefForVisibleView = p.isRefForVisibleView();
+         
          // Le gris de remplissage des plan de référence est plus appuyé
          // que pour les autres plans
-         if( p.ref ) {
+         if( /* p.ref */ isRefForVisibleView ) {
             colorFillFG = Color.gray;
             colorBorder = new Color(50,50,50);
          }
@@ -481,7 +483,6 @@ public final class Slide {
          boolean canBeTransparent= a.calque.canBeTransparent(p);
          boolean isViewable = p.isViewable();
          boolean inLogo = inLogo(xMouse) && in(yMouse);
-         boolean isRefForVisibleView = p.isRefForVisibleView();
          
          // On penche un peu plus le logo si la souris est dessus
          if( inLogo && isRefForVisibleView ) {
@@ -504,8 +505,8 @@ public final class Slide {
             // Sinon, dessin du calque en fonction du mode activé ou non
          } else {
             if( p.type==Plan.FOLDER ) g.setColor(!p.active? Color.yellow:jauneGris);
-            else if( p.ref && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
-            else g.setColor( !p.active || !p.ref && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
+            else if( /* p.ref */ isRefForVisibleView && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
+            else g.setColor( !p.active || /*!p.ref*/ !isRefForVisibleView && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
 //            else g.setColor( p.active && !canBeTransparent && p.isViewable() ? Color.gray : colorFillBG );
 //            if( g.getColor()==Color.blue &&  (colorForeground==Color.blue || colorForeground==Color.black) ) colorForeground=Color.white;
             g.fillPolygon(xc,yc,frX.length);
@@ -744,7 +745,8 @@ public final class Slide {
          setBlink(true);
          a.calque.select.drawMessage(g, a.calque.select.getLastMessage(), Color.red);
       } else {
-         Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.black, p.ref );
+         Util.drawCheckbox(g, x, y,  Color.gray , inCheck(xMouse) && in(yMouse) ? Aladin.BLUE : null,  Color.black, 
+               /* p.ref */p.isRefForVisibleView() );
       }
       
       p.setHasCheckBox(true);

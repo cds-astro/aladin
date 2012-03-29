@@ -3502,7 +3502,8 @@ public final class Calque extends JPanel implements Runnable {
      *  Vérifie que la compatibilité des projections
      */
     protected boolean canBeTransparent(Plan p) {
-       if( p==null || !isFree() && /* getIndex(p)==plan.length-1 || */ p.ref ) {
+       boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
+       if( p==null || !isFree() && /* p.ref */ isRefForVisibleView ) {
           if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
           return false;
        }
@@ -3511,7 +3512,7 @@ public final class Calque extends JPanel implements Runnable {
           return true;
        }
        if( (p.isImage() || p.type==Plan.ALLSKYIMG) && !aladin.configuration.isTransparent() ) return false;
-       if( p.type==Plan.ALLSKYIMG && /* getIndex(p)!=plan.length-1 */ !p.ref && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+       if( p.type==Plan.ALLSKYIMG && /*!p.ref */ !isRefForVisibleView && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
 
        if( !p.flagOk  || !planeTypeCanBeTrans(p)
              || !Projection.isOk(p.projd) || p.isRefForVisibleView()
@@ -3525,7 +3526,7 @@ public final class Calque extends JPanel implements Runnable {
        boolean audessus=true;
        for( int i=0; i<plan.length; i++ ) {
           if( audessus ) { if( plan[i]==p ) audessus=false; continue; }
-          if( !plan[i].ref || !Projection.isOk(plan[i].projd)) continue;
+          if( /*!plan[i].ref*/ !plan[i].isRefForVisibleView() || !Projection.isOk(plan[i].projd)) continue;
           if( plan[i].projd.agree(p.projd,vc) ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
        }
        p.setDebugFlag(Plan.CANBETRANSP,false);

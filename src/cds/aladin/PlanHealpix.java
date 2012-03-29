@@ -76,6 +76,9 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_TARGET = "target";
     static public final String KEY_TARGETRADIUS = "targetRadius";
     static public final String KEY_USECACHE = "useCache";
+    static public final String KEY_IMAGESOURCEPATH = "imageSourcePath";
+    static public final String KEY_SURVEY = "survey";
+    static public final String KEY_VERSION = "version";
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;
     static final int POLA_AMPLITUDE_MAGIC_CODE = -41;

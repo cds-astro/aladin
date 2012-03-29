@@ -219,7 +219,7 @@ public class BuilderController implements Progressive {
       String[] dirs = f.list();
       npix_list = new ArrayList<Long>();
       for (String dir : dirs) {
-         int i = Util.getNDirFromPath(dir+Util.FS);
+         long i = Util.getNDirFromPath(dir+Util.FS);
          // ajoute tous les losanges touchés par ce répertoire
          for (long n = Util.idx(i, ordermax, ordermin) ; n <= Util.idx(i+10000-1, ordermax, ordermin) ; n++) {
             if( n>max ) break;

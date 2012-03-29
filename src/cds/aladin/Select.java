@@ -727,15 +727,16 @@ public final class Select extends JComponent  implements
 
    /** Tente de montrer/cacher le plan passer en paramètre (par exemple
     * lorsque l'utilisateur clique sur le logo */
-   protected boolean switchShow(Plan p) {
+   protected boolean switchShow(Plan p,boolean inCheckBox) {
       if( p.type==Plan.FILTER ) {
          p.setActivated(!p.active);
          ((PlanFilter)p).updateState();
       } else {
          if( !planOk(p) ) return false;
-         if( /*p.active ||*/ !a.view.tryToShow(p) )  {
+         if(  !inCheckBox || !a.view.tryToShow(p) )  {
             
             boolean activeBefore = p.active;
+            boolean isRefForVisibleView = p.isRefForVisibleView();
          
             if( a.calque.isBackGround() && !p.isViewable() && !(p instanceof PlanBG) && a.view.syncPlan(p) ) {
 //               System.out.println("switchShow: Je synchronise sur l'image et je l'active");
@@ -745,7 +746,7 @@ public final class Select extends JComponent  implements
 //                  System.out.println("Impossible !");
                } else if( ok && p.getOpacityLevel()<0.1f ) p.setOpacityLevel(1f);
             } else {
-               if( p.getOpacityLevel()<0.1f && p.active && !p.ref ) {
+               if( p.getOpacityLevel()<0.1f && p.active && !isRefForVisibleView ) {
                   if( a.calque.isBackGround() && p.type==Plan.ALLSKYIMG ) {
 //                     System.out.println("switchShow: déjà activé mais transparence max => on indique que le slider est une meilleur idée");
                      p.startCheckBoxBlink();
@@ -759,7 +760,7 @@ public final class Select extends JComponent  implements
                } else {
 //                  System.out.println("switchShow: j'inverse l'activation "+p.active+" => "+!p.active);
                   boolean ok = p.setActivated(!p.active);
-                  if( p.active && p.getOpacityLevel()<0.1f && !p.ref ) p.setOpacityLevel(1f);
+                  if( p.active && p.getOpacityLevel()<0.1f && !isRefForVisibleView ) p.setOpacityLevel(1f);
                   if( !activeBefore && !ok ) {
                      setCheckBoxBlinkPlan(p);
 //                     System.out.println("Impossible !");
@@ -877,7 +878,8 @@ public final class Select extends JComponent  implements
       
       boolean itsDone=false;
 
-      if( !canBeNewRef(e,x,p) || (!a.view.isMultiView() && p.ref) ) newRef=null;
+      if( !canBeNewRef(e,x,p) 
+            ||  (!a.view.isMultiView() && p.ref)  ) newRef=null;
       else newRef = p;
 
       if( !itsDone && p.type!=Plan.NO ) {
@@ -898,7 +900,7 @@ public final class Select extends JComponent  implements
                if( e.getClickCount()>1 && s.inLogo(x) ) switchCollapseFolder(p);
                switchActiveFolder(p);         // Le double clic est tjrs précédé d'un simple clic
             } else {
-               if( !switchShow(p) ) {
+               if( !switchShow(p, s.inCheck(x) ) ) {
                   System.out.println("switchShow returns false");
                   return;
                }

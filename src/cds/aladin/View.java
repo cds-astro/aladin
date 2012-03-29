@@ -3134,7 +3134,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             } else {
                saisie=aladin.localisation.J2000ToString(c.al,c.del);
                aladin.console.setInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
-               setRepereByString();
+               if( !setRepereByString() && !aladin.NOGUI ) {
+                  Vector<Plan> v = aladin.calque.getPlanBG();
+                  if( v!=null && v.size()>0 ) {
+                     for( Plan p : v ) p.startCheckBoxBlink();
+                     aladin.calque.select.setLastMessage(aladin.getChaine().getString("TARGETNOTVISIBLE"));
+                     aladin.calque.select.repaint();
+                  }
+               }
             }
             if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
             aladin.localisation.setSesameResult(saisie);
@@ -3248,7 +3255,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
   /** Positionnement du repere en fonction des coordonnees de la chaine "saisie" */
-   protected void setRepereByString() {
+   protected boolean setRepereByString() {
+      boolean rep=false;
       try {
          Coord c=null;
          switch( aladin.localisation.getFrame() ) {
@@ -3264,13 +3272,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             default:
                c = new Coord(aladin.localisation.getICRSCoord(saisie));
          }
-         setRepere(c);
+         rep = setRepere(c);
          aladin.sendObserver();
       } catch( Exception e) {
          aladin.warning("New reticle position error ("+saisie+")",1);
          if( aladin.levelTrace>=3 ) System.err.println(e.getMessage());
       }
       nextSaisie=true;
+      return rep;
    }
 
 
@@ -3751,7 +3760,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Dans le cas où il existe déjà une vue du plan mais non visible
     *  on va la rendre visible  */
    protected boolean tryToShow(Plan p) {
-//      if( true ) return false;
       int debut=previousScrollGetValue;
       int fin = debut+modeView;
 
@@ -3803,7 +3811,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=0; i<n; i++ ) if( viewSimple[i].sticked ) nbStick++;
       return nbStick;
    }
-
+   
    /**
     * Positionne le nombre de vues visiblement simultanément.
     * @param m nombre de vues (ViewControl.MVIEW1, MVIEW4, MVIEW9, VIEW16)
@@ -3811,13 +3819,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected void setModeView(int m) {
       if( aladin.viewControl.modeView!=m ) aladin.viewControl.setModeView(m);
       if( modeView==m ) return;
-
+      
       // Peut être faut-il générer quelques vues ??
       // AVEC LES TRASNPARENCE DES IMAGES, JE TROUVE QUE CA COMPLIQUE PLUS QUE CA NE SIMPLIFIE
 //      autoSimpleViewGenerator();
-
       Point pos=null;
-
+      
       // Sauvegarde des vues de la configuration d'affichage actuelle
       sauvegarde();
 
@@ -3884,13 +3891,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( viewSimple[j].sticked ) continue;
          rechargeFromMemo(i++,j);
        }
-
-      // Dans le cas d'un fond de ciel actif
-//      if( hasBackGround() ) {
-//         for( int i=0; i<m; i++ ) {
-//            if( viewSimple[i].isFree() ) viewSimple[i].setPlanRef(aladin.calque.planBG, false);
-//         }
-//      }
 
       previousScrollGetValue=pos.x;
       setCurrentNumView(pos.y);

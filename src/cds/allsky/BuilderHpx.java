@@ -436,6 +436,19 @@ final public class BuilderHpx {
       dataoutputstream.flush();
       dataoutputstream.close();
    }
+   
+   
+   // Je fais au plus simple pour un simple test => il faudra utiliser une librairie JSON
+   private String nextPath(BufferedReader r) throws Exception {
+      String s = r.readLine();
+      if( s==null ) return null;
+      if( s.charAt(0)!='{' ) return s;   // Ancien format : un path par ligne
+      int o = s.indexOf("path");
+      int o1 = s.indexOf(':',o);
+      int o2 = s.indexOf('"',o1+1);
+      int o3 = s.indexOf('"',o2+1);
+      return s.substring(o2+1,o3);
+   }
 
    /**
     * Interroge les répertoires locaux HpxFinder pour obtenir une liste de
@@ -454,7 +467,7 @@ final public class BuilderHpx {
          BufferedReader reader;
          try {
             reader = new BufferedReader(new FileReader(f));
-            for( int i=0; (fitsfilename = reader.readLine()) != null; i++) {
+            for( int i=0; (fitsfilename = nextPath(reader)) != null; i++) {
                try {
                   //					récupère l'image
                   Fits fitsfile = new Fits();

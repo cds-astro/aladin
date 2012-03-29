@@ -1218,14 +1218,19 @@ final public class TableParser implements XMLConsumer {
       
       // Détermination du format si non spécifié
       if( format==FMT_UNKNOWN ) {
-         char ss = dec.charAt(0);
-         format= isSexa(ra+( ss!='-' && ss!='+' ? " +":" " )+dec) ? FMT_SEXAGESIMAL : FMT_DECIMAL;
+         try {
+            char ss = dec.charAt(0);
+            format= isSexa(ra+( ss!='-' && ss!='+' ? " +":" " )+dec) ? FMT_SEXAGESIMAL : FMT_DECIMAL;
+         }catch( Exception e ) {
+            if( Aladin.levelTrace>3 ) e.printStackTrace();
+         } 
       }
       
       // Parsing en sexagésimal
       if( format==FMT_SEXAGESIMAL ) {
-         char ss = dec.charAt(0);
-         try { c.set(ra+( ss!='-' && ss!='+' ? " +":" " )+dec); }
+         try {
+            char ss = dec.charAt(0);
+            c.set(ra+( ss!='-' && ss!='+' ? " +":" " )+dec); }
          catch( Exception e ) {
             if( Aladin.levelTrace>3 ) e.printStackTrace();
          } 

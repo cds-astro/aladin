@@ -1257,14 +1257,8 @@ long t1,t;
       }
    }
 
-//   public void paint(Graphics g) {
-//      System.out.println("Paint");
-//      super.paint(g);
-//   }
-
    // Gestion des evenement
    public boolean action(Event evt, Object what) {
-      System.out.println("what="+what);
       if( !(what instanceof String) ) return false;
       
 

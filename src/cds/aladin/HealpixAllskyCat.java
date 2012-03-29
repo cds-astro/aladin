@@ -32,7 +32,7 @@ import java.io.RandomAccessFile;
 import cds.tools.Util;
 
 class HealpixAllskyCat extends HealpixKeyCat {
-   
+
 
    protected HealpixAllskyCat(PlanBG planBG,int order) {
       super(planBG);
@@ -47,16 +47,16 @@ class HealpixAllskyCat extends HealpixKeyCat {
       fileNet = nameNet+ EXT[extNet];
       alreadyCached=false;
       priority=-1;
-      
+
       setStatus(ASKING);
    }
-   
+
    protected int draw(Graphics g, ViewSimple v) {
       if( pcat==null || !pcat.hasObj() ) return 0;
       pcat.draw(g, null, v, true, 0, 0);
       return pcat.getCounts();
    }
-   
+
    HealpixKey [] getPixList() {
       return new HealpixKey[]{ this };
    }

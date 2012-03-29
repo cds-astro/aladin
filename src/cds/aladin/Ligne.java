@@ -465,7 +465,7 @@ public class Ligne extends Position {
    protected int clipYId() { return 0; }
   
    /** Détermination de la couleur de l'objet */
-   protected Color getColor() {
+   public Color getColor() {
    	  if( couleur!=null ) return couleur;
    	  if( plan!=null && plan.type==Plan.APERTURE ) {
    	  	couleur = ((PlanField)plan).getColor(this);
@@ -588,7 +588,7 @@ public class Ligne extends Position {
          else flagHist=false;
       }
       
-      // Position prévue pour l'accrochage de la légence
+      // Position prévue pour l'accrochage de la légende
       int deuxTiersX = (int)( minx+2*(maxx-minx)/3. );
       int unTierY    = (int)( miny+(maxy-miny)/3. );
       
@@ -642,7 +642,7 @@ public class Ligne extends Position {
       Projection proj = p.projd;
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
-      if( bout!=3 ) throw new Exception("getStats error: it is not a polygon");
+      if( getLastBout().bout!=3 ) throw new Exception("getStats error: it is not a polygon");
       
       int x,y,i;
       int nb;

@@ -185,13 +185,29 @@ public class BuilderIndex implements Progressive {
     *            the contents of the file
     * @exception IOException 
     */
-   private static void createAFile(FileOutputStream out, String content)
+//   private static void createAFile(FileOutputStream out, String content)
+//   throws IOException {
+//      DataOutputStream dataoutputstream = new DataOutputStream(out);
+//      dataoutputstream.writeBytes(content);
+//      dataoutputstream.flush();
+//      dataoutputstream.close();
+//   }
+
+   private static void createAFile(FileOutputStream out, String filename, String stc)
    throws IOException {
+      int o1 = filename.lastIndexOf('/');
+      int o1b = filename.lastIndexOf('\\');
+      if( o1b>o1 ) o1=o1b;
+      int o2 = filename.indexOf('.',o1);
+      if( o2==-1 ) o2 = filename.length();
+      String name = filename.substring(o1+1,o2);
+      
       DataOutputStream dataoutputstream = new DataOutputStream(out);
-      dataoutputstream.writeBytes(content);
+      dataoutputstream.writeBytes("{ \"name\": \""+name+"\", \"path\": \""+filename+"\", \"stc\": \""+stc+"\" }\n");
       dataoutputstream.flush();
       dataoutputstream.close();
    }
+
 
    /**
     * Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
@@ -236,7 +252,6 @@ public class BuilderIndex implements Progressive {
             // saturer la mémoire par la suite
             try {
                int code = fitsfile.loadHeaderFITS(currentfile);
-
 
                try {
                   
@@ -283,17 +298,29 @@ public class BuilderIndex implements Progressive {
       FileOutputStream out;
       
       try {
-         // Recherche les 4 coins de l'image
+         // Recherche les 4 coins de l'image (cellule)
          Calib c = fitsfile.getCalib();
          ArrayList<double[]> cooList = new ArrayList<double[]>(4);
          Coord coo = new Coord();
+         StringBuffer stc = new StringBuffer("POLYGON J2000");
+         boolean hasCell = fitsfile.hasCell();
          for( int i=0; i<4; i++ ) {
             coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
             coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
             coo.y = fitsfile.height - coo.y -1;
             c.GetCoord(coo);
             cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
+            
+            // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
+            if( hasCell ) {
+               coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
+               coo.y = (i<2 ? 0 : fitsfile.height);
+               coo.y = fitsfile.height - coo.y -1;
+               c.GetCoord(coo);
+            }
+            stc.append(" "+coo.al+" "+coo.del);
          }
+         
 
          long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
 
@@ -312,7 +339,9 @@ public class BuilderIndex implements Progressive {
             // suivi éventuellement de la définition de la cellule en question
             // (mode mosaic)
             String filename = currentFile + (currentCell == null ? "" : currentCell);
-            createAFile(out, filename + "\n");
+//            createAFile(out, filename + "\n");
+            
+            createAFile(out, filename, stc.toString());
          }
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();

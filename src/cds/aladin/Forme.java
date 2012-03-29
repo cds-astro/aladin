@@ -158,7 +158,7 @@ public class Forme extends Position {
    }
 
    /** Détermination de la couleur de l'objet */
-   protected Color getColor() {
+   public Color getColor() {
       if( couleur!=null ) return couleur;
       if( plan!=null && plan.type==Plan.APERTURE ) {
          couleur = ((PlanField)plan).getColor(this);

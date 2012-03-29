@@ -1710,17 +1710,19 @@ public final class Glu implements Runnable {
 
    }
 
-   static protected final int ENCODE = 1;
-   static protected final int NOURL  = 2;
+   static public final int URL    = 0;
+   static public final int ENCODE = 1;
+   static public final int NOURL  = 2;
    
    /**
-    * Substitution dans un String des $nn par des parametres. Rq: Supprime tous
-    * les value=$nn en fin de ligne
+    * Substitution dans un String des $nn par des parametres.
+    * Rq: par défaut (mode URL): HTTP encode là où il faut et supprime tous les &value=$nn non renseigné
     * @param s La ligne a traiter
     * @param param Les parametres a inserer
+    * @param mode ULR=0:substitution pour une URL, ENCODE=1:les paramètres ont déjà été HTTPencodés, NOURL=2:substitution simple
     * @return La ligne traitee
     */
-   String dollarSet(String s, String[] param,int mode) {
+   static public String dollarSet(String s, String[] param,int mode) {
       char[] a; // Mappage de la chaine s
       int i = 0;
       int deb, fin; // pour memoriser les positions

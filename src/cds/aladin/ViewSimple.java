@@ -390,17 +390,22 @@ public class ViewSimple extends JComponent
     
     /** True si le plan de référence de cette vue peut être forcée Nord en haut */
     protected boolean canBeNorthUp() {
-       return !isFree() && Projection.isOk(pref.projd) && pref.isImage()
-           && !(pref instanceof PlanBG) && !isProjSync();
+       return !isFree() && Projection.isOk(pref.projd) /* && pref.isImage() */
+           && (!(pref instanceof PlanBG) || pref instanceof PlanBG && pref.projd.rot!=0 )
+           && !isProjSync();
     }
 
     /** Permute l'état northUp de la vue */
     protected boolean switchNorthUp() {
        if( !canBeNorthUp() ) return false;
-       Coord coo = getCooCentre();
-       northUp=!northUp;       
-       setZoomRaDec(0,coo.al,coo.del);
-       if( pref.isImage() ) ((PlanImage)pref).changeImgID();
+       if( pref instanceof PlanBG ) {
+          pref.projd.setProjRot(0);
+       } else {
+          Coord coo = getCooCentre();
+          northUp=!northUp;       
+          setZoomRaDec(0,coo.al,coo.del);
+          if( pref.isImage() ) ((PlanImage)pref).changeImgID();
+       }
        newView(1);
        aladin.view.repaintAll();
        return true;
@@ -2991,7 +2996,7 @@ public class ViewSimple extends JComponent
       }
 
       // Juste pour éviter de le faire 2x
-      boolean isSelectOrTool = tool==ToolBox.SELECT || ToolBox.isForTool(tool);
+      boolean isSelectOrTool = tool==ToolBox.SELECT || tool==ToolBox.PAN ||ToolBox.isForTool(tool);
       
       // Affichage du rectangle du zoom
       if( tool==ToolBox.ZOOM && !isScrolling() ) {
@@ -4730,6 +4735,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
   // Retourne true si la coordonnée se trouve dans la rose des vents
   private boolean inNE(int x,int y) { 
      if( !(pref instanceof PlanBG) ) return false;
+     if( aladin.toolBox.getTool()!=ToolBox.PAN ) return false;
      int L = (int)(getNESize()*1.5);
      return x>rv.width-L && y>rv.height-L;
   }

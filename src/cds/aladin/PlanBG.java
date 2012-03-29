@@ -146,6 +146,7 @@ public class PlanBG extends PlanImage {
    protected String survey;        // Nom du background
    protected String verboseDescr;  // Baratin sur le survey
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
+   protected String imageSourcePath; // Template d'accès aux progéniteurs (ex: id=~/(.*)/http://machine/cgi?img=$1/ )
    protected String url;           // Préfixe de l'url permettant d'accéder au background
    protected int minOrder=3;       // Ordre HEALPIX "fichier" min du background
    protected int maxOrder=8;       // Ordre HEALPIX "fichier" max du background
@@ -162,9 +163,12 @@ public class PlanBG extends PlanImage {
    protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
    protected boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
+   private boolean hasFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
+   
+   protected PlanBGFinder finder=null;
 
 
    // Gestion du cache
@@ -180,6 +184,8 @@ public class PlanBG extends PlanImage {
    protected long memSize=0;   // Taille actuelle de la mémoire utilisé par le fond duc iel
    
 
+   protected boolean isVerbose() { return false; }
+   
    // pour classes dérivées
    protected PlanBG(Aladin aladin) {
        super(aladin);
@@ -250,7 +256,9 @@ public class PlanBG extends PlanImage {
       type = ALLSKYIMG;
       video=VIDEO_NORMAL;
       url = u.toString();
-      survey = url.substring(url.lastIndexOf('/')+1);;
+      int n = url.length();
+      if( url.charAt(n-1)=='/' ) n--;
+      survey = url.substring(url.lastIndexOf('/',n)+1);;
       maxOrder = 3;
       useCache = true;
       localAllSky = false;
@@ -268,11 +276,13 @@ public class PlanBG extends PlanImage {
       maxOrder=gSky.getMaxOrder();
       inFits=gSky.isFits();
       inJPEG=gSky.isJPEG();
-      truePixels=inFits;
       color=gSky.isColored();
       frameOrigin=gSky.getFrame();
       losangeOrder=gSky.getLosangeOrder();
       localAllSky=gSky.isLocal();
+      imageSourcePath = gSky.getImageSourcePath();
+      version = gSky.getVersion();
+      truePixels=inFits && localAllSky || !inFits;
       useCache=!localAllSky && gSky.useCache();
       co=c!=null ? c : gSky.getTarget();
       coRadius= c!=null ? radius : gSky.getRadius();
@@ -288,6 +298,31 @@ public class PlanBG extends PlanImage {
       hasMoc = localAllSky ? (new File(moc)).exists() : Util.isUrlResponding(moc);
       testMoc=true;
       return hasMoc;
+   }
+   
+   private boolean testFinder=false; // true : la présence d'un HpxFinder a été testé
+   
+   protected boolean hasFinder() {
+      if( hasFinder || testFinder ) return hasFinder;
+      String f = url+"/HpxFinder";
+      hasFinder = localAllSky ? (new File(f)).exists() : Util.isUrlResponding(f);
+      testFinder=true;
+      return hasFinder;
+   }
+   
+   FrameProgen frameFinder = null;
+   
+   protected void frameFinder() {
+      if( frameFinder==null ) frameFinder = new FrameProgen(aladin);
+      else frameFinder.setVisible(true);
+   }
+   
+   protected void frameFinderResume(Graphics g,ViewSimple v) {
+      if( finder==null || frameFinder==null ) return;
+      if(frameFinder.progen!=null && frameFinder.progen.showNode!=null ) frameFinder.progen.showNode.draw(g,v);
+      finder.draw(g,v);
+      TreeMap<String,TreeNodeProgen> set = ((PlanBGFinder)finder).getLastProgen();
+      frameFinder.resume(set);
    }
    
    /** Chargement du Moc associé au survey */
@@ -359,6 +394,7 @@ public class PlanBG extends PlanImage {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
+      if( Aladin.PROTO ) finder = new PlanBGFinder(aladin,this);
 
       aladin.endMsg();
       creatDefaultCM();
@@ -925,7 +961,7 @@ public class PlanBG extends PlanImage {
    
    // Positionne l'ordre des losanges (trouvé lors de la lecture du premier losange
    protected void setLosangeOrder(int losangeOrder) { 
-//      if( losangeOrder!=-1 ) return;
+      if( this.losangeOrder!=-1 || losangeOrder<=0 ) return;
       this.losangeOrder=losangeOrder;
    }
    
@@ -1386,7 +1422,7 @@ public class PlanBG extends PlanImage {
 //         return false;
 //      }
       
-      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> ready");
+//      aladin.trace(4,"PlanBG.isSync()=true: "+label+"=> ready");
       return true;
 
 //      boolean rep = error!=null || flagOk && (!active || getOpacityLevel()==0f  && !ref || !flagProcessing && !isLoading() && (isFullyDrawn() /* || pourcent==-2*/) );
@@ -1917,6 +1953,9 @@ public class PlanBG extends PlanImage {
       }
       
       setHasMoreDetails( maxOrder(v)<maxOrder ); 
+      
+      try { frameFinderResume(g,v); } 
+      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
       readyDone = readyAfterDraw;
 	   
@@ -2555,7 +2594,7 @@ public class PlanBG extends PlanImage {
          boolean perhapsOneDeath=false;
          int [] nb = new int[HealpixKey.NBSTATUS];
          boolean flagVerbose =  aladin.calque.hasHpxGrid();
-//         flagVerbose=true;
+         flagVerbose=isVerbose();
          
          boolean first=true;
          int n=0;
@@ -2566,7 +2605,7 @@ public class PlanBG extends PlanImage {
             while( e.hasMoreElements() ) {
                final HealpixKey healpix = e.nextElement();
                int status = healpix.getStatus();
-
+               
                // Un peu de débuging si besoin
                if( flagVerbose && status!=HealpixKey.ERROR ) {
                   System.out.println((first?"\n":"")+healpix);

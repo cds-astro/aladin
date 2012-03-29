@@ -91,7 +91,7 @@ public final class MyInputStream extends FilterInputStream {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
-      "SEXTRACTOR","HUGE","AIPSTABLE","IPACTABLE","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
+      "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
       "HPXMOC","DS9REG" };
 
    // Recherche de signatures particulieres
@@ -241,7 +241,8 @@ public final class MyInputStream extends FilterInputStream {
       }
 
       // Healpix
-      if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
+      if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) 
+            || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HPX;
 
@@ -462,6 +463,9 @@ public final class MyInputStream extends FilterInputStream {
 
          // Detection d'un PDS sans magic code
          else if( lookForSignature("^IMAGE",true)>0 ) type |= PDS;
+
+         // Serait-ce du IPAC
+         else if( csv==4 ) type |= BSV|IPAC;
 
          // Serait-ce du Sextractor
          else if( csv==3 ) type |= BSV|SEXTRA;
@@ -784,6 +788,20 @@ public long skip(long n) throws IOException {
 //System.out.println("cache (inCache="+inCache+"/offsetCache="+offsetCache+")");
    }
 
+   private void substituteIPC(int pos, int len, String s) throws Exception {
+//System.out.println("AVANT:["+(new String(cache,0,inCache))+"]");
+//System.out.println("Substitution dans cache (inCache="+inCache+"/offsetCache="+offsetCache+") pos="+pos+" len="+len+" ["+s+"]");
+      char a[] = s.toCharArray();
+      if( a.length>len || pos<offsetCache ) throw new Exception("MyInputStream substitution error");
+      int i,j;
+      for( i=0,j=pos; i<a.length; i++,j++ ) cache[j] = (byte) a[i];
+      System.arraycopy(cache,pos+len, cache, pos+a.length, inCache - (pos+len) );
+      inCache -= len - a.length;
+//System.out.println("APRES:["+(new String(cache,0,inCache))+"]");
+//System.out.println("cache (inCache="+inCache+"/offsetCache="+offsetCache+")");
+   }
+
+
    /** Retourne le nombre de fois ou un caractere particulier est present dans
     * la chaine
     * @param s La chaine à analyser
@@ -865,7 +883,7 @@ public long skip(long n) throws IOException {
    static public void main(String argv[]) {
       try {
          // String s1 = argv[0];
-         String s1 = "C:\\Documents and Settings\\Standard\\Mes documents\\Fits et XML\\XMatch.txt";
+         String s1 = "C:\\Documents and Settings\\Standard\\Bureau\\Test.tbl";
          DataInputStream dis = new DataInputStream(new FileInputStream(s1));
          String [] s = new String[5];
          for( int i=0;i<s.length; i++ ) {
@@ -913,7 +931,15 @@ public long skip(long n) throws IOException {
     *                     #...
     *                           1  3.08751e-05   5.2560   0.0042  0.007450911 4.463027e-05     75.842     72.788  77.4363120  +1.7139901   0.02255782  0.009481858 -21.2  18
     *                           2 1.506869e-05   7.6853   0.0194   0.00145597 3.457046e-05    100.831      4.265  77.3946642  +1.5997848    0.0134634  0.005376848  -1.4  27
-    */
+    *         3 C'est du IPAC càd du BSV + entête:
+    *                     #\ ___ Ks photometric uncertainty of the associated 2MASS All-Sky PSC source
+    *                     #\
+    *                     #|       source_id|         ra|        dec|   sigra|  sigdec| sigradec| w1mpro|w1sigmpro|  w1snr|  w1rchi2| w2mpro|w2sigmpro|  w2snr|  w2rchi2| w3mpro|w3sigmpro|  w3snr|  w3rchi2| w4mpro|w4sigmpro|  w4snr|  w4rchi2|    rchi2|  nb|  na|  w1mag|w1sigm|w1flg|  w2mag|w2sigm|w2flg|  w3mag|w3sigm|w3flg|  w4mag|w4sigm|w4flg|cc_flags|det_bit|ph_qual|   sso_flg|r_2mass|pa_2mass|n_2mass|j_m_2mass|j_msig_2mass|h_m_2mass|h_msig_2mass|k_m_2mass|k_msig_2mass|             dist|           angle|
+    *                     #|            char|     double|     double|  double|  double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double|   double| int| int| double|double|  int| double|double|  int| double|double|  int| double|double|  int|    char|    int|   char|       int| double|  double|    int|   double|      double|   double|      double|   double|      double|           double|          double|
+    *                     #|                |        deg|        deg|  arcsec|  arcsec|   arcsec|    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |         |    |    |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |        |       |       |          | arcsec|     deg|       |      mag|         mag|      mag|         mag|      mag|         mag|           arcsec|             deg|
+    *                     #|            null|       null|       null|    null|    null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|     null|null|null|   null|  null| null|   null|  null| null|   null|  null| null|   null|  null| null|    null|   null|   null|      null|   null|    null|   null|     null|        null|     null|        null|     null|        null|             null|            null|
+    *                     # 02562a148-000137  83.6358261  22.0148582   1.4029   1.6771   -0.3636  11.750     0.407     2.7 9.340e-01  10.812     0.401     2.7 7.390e-01   7.589     0.315     3.4 9.000e-01   5.080      null     0.9 9.740e-01 8.210e-01    1    0   9.342   null    32   8.519   null    32   5.940  0.495     1   3.050  0.541     1     00dd       7    CCBU          0    null     null       0      null         null      null         null      null         null          9.255388        81.990647 
+   */
     private int isCSV() throws Exception {
        if( inCache<BLOCCACHE-10 ) {
           try { loadInCache(BLOCCACHE-10);
@@ -930,9 +956,12 @@ public long skip(long n) throws IOException {
        int rep=1;
        StringBuffer debugMsg=null;
        boolean flagSextra = false;   // true si on a détecté une entête Sextractor
+       boolean flagIPAC = false;    // true si on a détecté une entête IPAC
        boolean firstComment = true; // True si on n'a pas encore traité le premier commentaire
        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
+       int IPACDeb = deb;         // Position du début de l'entête IPAC (s'il y a lieu)
+       int IPACFin = 0;           // Position de fin de l'entête IPAC (s'il y a lieu)
        
        int bufN = 0;
        String [] bufLigne = new String[max];
@@ -949,7 +978,22 @@ public long skip(long n) throws IOException {
           bufLigne[bufN] = ligne;
           if( inHeader ) {
              if( ligne.trim().length()==0 ) continue;
-             if( ligne.charAt(0)=='#' ) {
+             char c = ligne.charAt(0);
+             if( !flagIPAC && bufN==0 && (c=='\\' || c=='|') ) flagIPAC=true;
+             if( flagIPAC ) {
+                if( c=='\\' ) continue;
+                if( c=='|' )  {
+                   bufLigne[bufN] = bufLigne[bufN].replace('|', ' ');
+                   bufLigne[bufN] = bufLigne[bufN].replace('-', ' ');
+                   int j=bufLigne[bufN].length()-2;
+                   while( j>0 && bufLigne[bufN].charAt(j)==' ') j--;
+                   bufLigne[bufN]=bufLigne[bufN].substring(0,j+1)+'\n';
+                   bufN++;
+                   IPACFin=deb;
+                   continue;
+                }
+             }
+             if( c=='#' ) {
                 if( firstComment ) { flagSextra=true; firstComment=false; }
                 flagSextra = flagSextra & isSextra(ligne);
                 if( flagSextra ) sextraFin = deb;
@@ -960,39 +1004,19 @@ public long skip(long n) throws IOException {
 //System.out.println("ligne["+bufN+"] = ["+bufLigne[bufN]+"]");
          bufN++;
        }
-//       do {
-//          StringBuffer ligneb = new StringBuffer(256);
-//          deb = getLigne(ligneb,deb);
-//          String ligne = ligneb.toString();
-////System.out.println("ligne = ["+ligne+"]");
-//          if( deb==-1 ) return n>0 ? rep : 0;
-//          if( inHeader ) {
-//             if( ligne.trim().length()==0 ) continue;
-//             if( ligne.charAt(0)=='#' ) {
-//                flagSextra = flagSextra & isSextra(ligne);
-//                if( flagSextra ) sextraFin = deb;
-//                continue;
-//             }
-//             inHeader=false;
-//             n = TableParser.countColumn(ligne,cs);
-//             if( n==1 ) {
-//                cs = new char[] { ' ' };
-//                rep = 2;
-//                n=TableParser.countColumn(ligne,cs);
-//             }
-//             if( n<=1 ) rep=0;
-////             if( n<=1 ) { rep=0; break; }
-//          } else {
-//             int m = TableParser.countColumn(ligne,cs);
-////             if( m!=n ) { rep=0; break; }
-//             if( m!=n ) rep=0;
-//             i++;
-//          }
-//          bufLigne[bufN++] = ligne;
-//       } while( i<max );
-//       Aladin.trace(3,debugMsg+"");
+       
+       // On vire les lignes blanches éventuelles à la fin
+       for( int i=bufN-1; i>=0; i-- ) if( bufLigne[i].length()==0 ) bufN--;
        
        if( bufN<2 ) return 0;
+       
+       if( flagIPAC ) {
+          try { substitute(IPACDeb,IPACFin-IPACDeb,bufLigne[0]); }
+          catch( Exception e ) { }
+          Aladin.trace(3,"IPAC detected");
+          return 4;
+
+       }
        
        int findSep = analyseCSV(bufLigne,bufN);
        if( findSep>=0 ) {
@@ -1026,103 +1050,6 @@ public long skip(long n) throws IOException {
     public char getSepCSV() { return sepCSV; }
     private void setSepCSV(char c) { sepCSV=c; }
     
-//    /**
-//     * Determine s'il s'agit d'un flux en CSV.
-//     * Compare n lignes consecutives. Si elles ont le meme nombres de colonnes,
-//     * estime que c'est du CSV. Skip les lignes initiales blanches ou qui
-//     * commencent par #
-//     * DANS LE CAS D'UNE ENTETE SEXTRACTOR, IL Y A SUBSTITUTION DE L'ENTETE AVEC UNE SIMPLE LIGNE DE
-//     * LABELS
-//     * @return 0 ce n'est pas du CSV,
-//     *         1 c'est du CSV suivant Aladin.CSVCHAR
-//     *         2 C'est du BSV blanc séparateurs
-//     *         3 C'est du SEXTRA càd du BSV + entête:
-//     *                     #   1 NUMBER          Running object number
-//     *                     #   2 FLUXERR_ISO     RMS error for isophotal flux                    [count]
-//     *                     #...
-//     *                           1  3.08751e-05   5.2560   0.0042  0.007450911 4.463027e-05     75.842     72.788  77.4363120  +1.7139901   0.02255782  0.009481858 -21.2  18
-//     *                           2 1.506869e-05   7.6853   0.0194   0.00145597 3.457046e-05    100.831      4.265  77.3946642  +1.5997848    0.0134634  0.005376848  -1.4  27
-//     */
-//     private int isCSV() throws IOException {
-//        if( inCache<BLOCCACHE-10 ) {
-//           try { loadInCache(BLOCCACHE-10);
-//           }
-//           catch( EOFException e) { }
-//           catch( IOException e ) { throw e; }
-//        }
-//        char cs[];
-//        int deb = offsetCache;
-//        int n=0;   // Nbre de tokens trouves dans la premiere ligne valide
-//        int i=1;   // Nbre de lignes valides traitees
-//        int max=4; // Nbre de lignes valides a tester
-//        boolean inHeader=true; // true si on est dans l'entete du fichier
-//        int rep=1;
-//        StringBuffer debugMsg=null;
-//        boolean flagSextra = true;   // true si on a détecté une entête Sextractor
-//        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
-//        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
-//
-//        try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
-//        catch( Exception e ) { cs = "\t".toCharArray(); }
-//
-//        if( Aladin.levelTrace>=3 ) debugMsg = new StringBuffer("CSV test result:");
-//
-//        do {
-//           StringBuffer ligneb = new StringBuffer(256);
-//           deb = getLigne(ligneb,deb);
-//           String ligne = ligneb.toString();
-// //System.out.println("ligne = ["+ligne+"]");
-//           if( deb==-1 ) return n>0 ? rep : 0;
-//           if( inHeader ) {
-//              if( ligne.trim().length()==0 ) continue;
-//              if( ligne.charAt(0)=='#' ) {
-//                 flagSextra = flagSextra & isSextra(ligne);
-//                 if( flagSextra ) sextraFin = deb;
-//                 continue;
-//              }
-//              inHeader=false;
-//              n = TableParser.countColumn(ligne,cs);
-//              if( n==1 ) {
-//                 cs = new char[] { ' ' };
-//                 rep = 2;
-//                 n=TableParser.countColumn(ligne,cs);
-//              }
-// if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+n);
-//              if( n<=1 ) { rep=0; break; }
-//           } else {
-//              int m = TableParser.countColumn(ligne,cs);
-// if( Aladin.levelTrace>=3 ) debugMsg.append(" line="+i+"=>"+m);
-//              if( m!=n ) { rep=0; break; }
-//              i++;
-//           }
-//        } while( i<max );
-// Aladin.trace(3,debugMsg+"");
-//
-//        if( rep==2 && flagSextra ) {
-//           rep=3;
-//           try { substitute(sextraDeb,sextraFin-sextraDeb,translateSextraHeader( new String(cache,sextraDeb,sextraFin))); }
-//           catch( Exception e ) { }
-//        }
-//
-//        return rep;
-//     }
-
-
-    /**
-     * Retourne une ligne du tampon a partir d'une position initiale
-     * @param s La ligne qui sera trouvee
-     * @param offset position initiale dans le tampon
-     * @return la position dans le tampon qui suit le \n de fin de ligne
-     *         -1 si aucun \n n'est trouve dans le tampon
-     */
-//    private int getLigne1(StringBuffer s,int offset) throws IOException {
-//       int n = lookForSignature("\n",false,offset,false);
-//       if( n==-1 ) return -1;
-//       if( n==offset ) return -1;           // Au cas ou !
-//       s.append(new String(cache,offset,n-offset));
-//       return n;
-//    }
-    
     private int getLigne(StringBuffer s,int offset) throws Exception {
        int c;
        char ch;
@@ -1134,6 +1061,19 @@ public long skip(long n) throws IOException {
        } while( ch!='\n' );
        return offset;
     }
+
+//    private int getJSonLigne(StringBuffer s,int offset) throws Exception {
+//       int c;
+//       char ch;
+//       do {
+//          c = getValAt(offset++);
+//          if( c==-1 ) return -1;
+//          ch = (char)c;
+//          if( ch!='\r' ) s.append(ch);
+//       } while( ch!='}' );
+//       return offset;
+//    }
+
 
     /** Retourne la valeur unsigned dans le cache à la position pos,
      * étend le cache si nécessaire */

@@ -306,9 +306,9 @@ public class Repere extends Position {
       return clip;
 
    }
-
+   
    /** Détermination de la couleur de l'objet */
-   protected Color getColor() {
+   public Color getColor() {
 	  if( type==TARGET || type==TARGETL ) couleur=Color.magenta.darker();
    	  if( couleur!=null ) return couleur;
 
@@ -388,7 +388,7 @@ public class Repere extends Position {
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
             double radiusRadian = Math.toRadians(getRadius());
             long [] npix = CDSHealpix.query_disc(nside, coo.al, coo.del, radiusRadian, false);
-            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+"nsideLosange="+nsideLosange);
+//            System.out.println("npix="+npix.length+" coo="+coo+" nside="+nside+" radius="+getRadius()+" nsideFile="+nsideFile+" nsideLosange="+nsideLosange);
             for( int i=0; i<npix.length; i++ ) {
                long npixFile = npix[i]/(nsideLosange*nsideLosange);
                double pix = pbg.getHealpixPixel(orderFile,npixFile,npix[i],HealpixKey.NOW);
@@ -400,9 +400,10 @@ public class Repere extends Position {
                coo.al = polar[0]; coo.del = polar[1];
                coo = Localisation.frameToFrame(coo,pbg.frameOrigin,Localisation.ICRS);
                statPixel(g,pix,coo.al,coo.del,v,onMouse);
+//               System.out.println("pix["+i+"]="+pix);
                if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
             }
-            System.out.println("npix.length="+npix.length+" total="+total);
+//            System.out.println("==> nombre="+npix.length+" total="+total+" => moyenne="+(total/nombre));
          } catch( Exception e ) { e.printStackTrace(); }
 
       } else {
@@ -487,6 +488,10 @@ public class Repere extends Position {
          
       // Cas d'une image "classique"
       } else {
+         PlanImage pi = (PlanImage)p;
+         pi.setLockCacheFree(true);
+         pi.pixelsOriginFromCache();
+         
          pixelSurf = proj.getPixResAlpha()*proj.getPixResDelta();
          Coord c = new Coord(raj,dej);
          proj.getXY(c);
@@ -508,13 +513,14 @@ public class Repere extends Position {
          for( int y=miny; y<=maxy; y++ ) {
             for( int x=minx; x<=maxx; x++ ) {
                if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               double pix= ((PlanImage)p).getPixelInDouble(x,y);
+               double pix= pi.getPixelInDouble(x,y);
                if( Double.isNaN(pix) ) continue;
                nombre++;
                total+=pix;
                carre+=pix*pix;
             }
          }
+         pi.setLockCacheFree(false);
       }
       
       double surface = nombre*pixelSurf;
