@@ -2973,9 +2973,11 @@ public class ViewSimple extends JComponent
             proj.getCoord(coo);
             aladin.view.setPixelInfo(coo);
          } else {
-            String s = ((PlanImage)pref).getPixelInfo( (int)Math.floor(lastMove.x), (int)Math.floor(lastMove.y), view.getPixelMode());
-            if( s==PlanImage.UNK ) s="";
-            setPixelInfo(s);
+            if( pref instanceof PlanImage ) {
+               String s = ((PlanImage)pref).getPixelInfo( (int)Math.floor(lastMove.x), (int)Math.floor(lastMove.y), view.getPixelMode());
+               if( s==PlanImage.UNK ) s="";
+               setPixelInfo(s);
+            }
          }
       }
 

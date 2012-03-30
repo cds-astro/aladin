@@ -1257,10 +1257,18 @@ public long skip(long n) throws IOException {
 
        fits.append("COMMENT FITS header built by Aladin from AVM tags\n");
 
-       s=(String)avm.get("Spatial.CoordsystemProjection");
-       if( s==null ) s="TAN";
-       fits.append("CTYPE1  = 'RA---"+s+"'\n");
-       fits.append("CTYPE2  = 'DEC--"+s+"'\n");
+       String projs=(String)avm.get("Spatial.CoordsystemProjection");
+       if( projs==null ) projs="TAN";
+       String slon="RA---";
+       String slat="DEC--";
+       s = (String)avm.get("Spatial.CoordinateFrame");
+       if( s!=null ) {
+          if( s.equals("GAL") ) { slon="GLON-"; slat="GLAT-"; }
+          else if( s.equals("ECL") ) { slon="ELON-"; slat="ELAT-"; }
+          if( s.equals("SGAL") ) { slon="SLON-"; slat="SLAT-"; }
+       }
+       fits.append("CTYPE1  = '"+slon+projs+"'\n");
+       fits.append("CTYPE2  = '"+slat+projs+"'\n");
 
        // Faut-il prendre en compte un changement d'échelle ?
        try {
@@ -1302,7 +1310,8 @@ public long skip(long n) throws IOException {
        if( (s=(String)avm.get("Spatial.Equinox"))!=null )
           fits.append("EQUINOX = "+s+"\n");
 
-       if( (s=(String)avm.get("Spatial.CoordinateFrame"))!=null )
+       s=(String)avm.get("Spatial.CoordinateFrame");
+       if( s!=null && (s.equals("FK4") || s.equals("FK5") || s.equals("ICRS") ) )
           fits.append("RADECSYS= "+s+"\n");
 
        fits.append("COMMENT Original AVM tags:\n");
