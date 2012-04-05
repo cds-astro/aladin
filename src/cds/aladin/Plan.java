@@ -224,6 +224,9 @@ public class Plan implements Runnable {
       return isCatalog() || isPlanBGOverlay() || this instanceof PlanTool 
       || this instanceof PlanField || this instanceof PlanFov || this instanceof PlanFilter;
    }
+   
+   /** Retourne true s'il s'agit d'un plan avec pixel */
+   protected boolean isPixel() { return isImage() || type==ALLSKYIMG; }
 
    /** Retourne true s'il s'agit d'un plan image */
    final protected boolean isImage() { return type==IMAGE || type==IMAGERGB || type==IMAGEHUGE

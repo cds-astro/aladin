@@ -895,7 +895,7 @@ public final class Select extends JComponent  implements
 
             // activation / desactivation du plan clique
          } else if( /* s.inLogo(x) */ s.inLogoCheck(x) ) {        // Dans les checkboxes
-//            a.calque.resetClinDoeil();	// Au cas où on venait de faire un clin d'oeil
+            a.calque.resetClinDoeil();	// Au cas où on venait de faire un clin d'oeil
             if( p.type==Plan.FOLDER ) {
                if( e.getClickCount()>1 && s.inLogo(x) ) switchCollapseFolder(p);
                switchActiveFolder(p);         // Le double clic est tjrs précédé d'un simple clic

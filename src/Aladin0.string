@@ -437,8 +437,10 @@ REDUCEH	Click here to reduce/maximize the measurement frame
 REDUCEH.fr	Cliquer pour réduire/agrandir la fenêtre des mesures
 GRID	grid
 GRID.fr	grille
-GRIDH	Click to activate/unactivate the coordinate grid
-GRIDH.fr	Cliquer pour activer/désactiver la grille de coordonnées
+GRIDH	Activate/unactivate the coordinate grid
+GRIDH.fr	Active/désactive la grille de coordonnées
+OEILH	Activate/unactivate the overlayed planes
+OEILH.fr	Active/désactive les plans superposés
 BKGD	allsky
 BKGD.fr	ciel
 #BKGDH	Click to activate/unactivate the background sky
@@ -2492,7 +2494,7 @@ TIP18	Extract a pointed spectra in a cube [phot button]
 TIP19	Define the object size and shape rules [filter button]
 TIP20	Compare two images via colored subtraction tool [RGB button]
 TIP21	Detach the object measurements in a separated window ["out arrow" icon]
-TIP22	Switch off all other planes by clicking the Aladin eye
+#TIP22	Switch off all other planes by clicking the Aladin eye
 TIP23	Write a script command directly into the "Command/Location" field
 TIP24	Insert a new column to a catalog [Catalog>Add a new column]
 #TIP25	Autocenter the tags by pressing the SHIFT key
@@ -2543,7 +2545,7 @@ TIP18.fr	Extrayez un spectre d'un cube [bouton phot]
 TIP19.fr	Définissez la taille et la forme des sources [bouton filtre]
 TIP20.fr	Comparez deux images par soustraction colorisée [bouton RGB]
 TIP21.fr	Détachez la fenêtre des mesures [flêche en bas à droite]
-TIP22.fr	Activez/désactivez tous les autres plans en cliquant sur l'oeil d'Aladin
+#TIP22.fr	Activez/désactivez tous les autres plans en cliquant sur l'oeil d'Aladin
 TIP23.fr	Saisissez une commande script directement dans le champ "Commande/Position"
 TIP24.fr	Insérez une nouvelle colonne à un catalogue [Catalogue>Ajouter...]
 #TIP25.fr	Centrez automatiquement le "Tag" en maintenant appuyé la touche MAJ

@@ -4264,6 +4264,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          aladin.grid.repaint();
          aladin.sync.repaint();
          aladin.northup.repaint();
+         aladin.oeil.repaint();
 
          // Ajustement de la configuration d'affichage en fonction de la position
          // de la scrollbar verticale si elle a changé.

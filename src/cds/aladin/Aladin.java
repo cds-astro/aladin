@@ -142,7 +142,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.512";
+    static public final    String VERSION = "v7.513";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -326,6 +326,7 @@ public class Aladin extends JApplet
     Status status;                // Gere la ligne de "Status"
     Match sync;                   // Gere le logo pour la grille
     Grid grid;                    // Gere le logo pour la grille
+    Oeil oeil;                    // Gere le logo pour l'oeil
     Northup northup;              // Gère le logo pour le Nord en haut
     ViewControl viewControl;	  // Gere le logo de controle des views
     MyLabel urlStatus;            // Gere la ligne de l'info sur les URLs
@@ -1945,7 +1946,7 @@ public class Aladin extends JApplet
        JPanel y = new JPanel( new FlowLayout(FlowLayout.CENTER,0,0));
        y.setBorder(BorderFactory.createEmptyBorder());
        y.add(grid);
-       if( !OUTREACH ) y.add(northup);
+       if( !OUTREACH ) { y.add(oeil); y.add(northup); }
        y.add(viewControl);
        if( !OUTREACH ) y.add(sync);
 

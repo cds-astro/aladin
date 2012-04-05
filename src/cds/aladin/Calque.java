@@ -401,6 +401,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return n;
    }
+   
 
   /** Retourne le nombre de plans actuellement utilises */
    protected int getNbUsedPlans() {
@@ -1260,36 +1261,38 @@ public final class Calque extends JPanel implements Runnable {
       p.setActivated(true);
    }
 
-//   private boolean memoClinDoeil=false; // Vrai si on a mémorisé un état via le clin d'oeil
-//
-//   /** Pour "oublier" qu'on utilisait l'oeil */
-//   protected void resetClinDoeil() { memoClinDoeil=false; }
-//
-//   /** Lorsque l'oeil est cliqué, il y aura mémorisation de l'état d'activation
-//    * ou non des plans (qui ne sont pas de référence), puis désactivation de ces
-//    * plans.
-//    * Si on reclique sur l'oeil, ce sera l'état préalablement mémorisé qui sera
-//    * restitué.
-//    * Utilise la variable Claque.memoClinDoeil pour savoir si on a déjà
-//    * mémorisé un état antérieur. Et Plan.memoClinDoeil pour mémoriser individuellement
-//    * chaque état de plan.
-//    */
-//   protected void clinDoeil() {
-//      Plan [] plan = getPlans();
-//      for( int i=0; i<plan.length; i++ ) {
-//         Plan pc = plan[i];
-//         if( !pc.flagOk ) continue;
-//         if( pc.ref ) continue;
-//         if( memoClinDoeil ) {
-//            pc.setActivated(pc.memoClinDoeil);
-//         } else {
-//            pc.memoClinDoeil=pc.active;
-//            pc.setActivated(false);
-//         }
-//      }
-//      memoClinDoeil=!memoClinDoeil;
-//      aladin.view.newView();
-//   }
+   private boolean memoClinDoeil=false; // Vrai si on a mémorisé un état via le clin d'oeil
+   
+   protected boolean hasClinDoeil() { return memoClinDoeil; }
+
+   /** Pour "oublier" qu'on utilisait l'oeil */
+   protected void resetClinDoeil() { memoClinDoeil=false; }
+
+   /** Lorsque l'oeil est cliqué, il y aura mémorisation de l'état d'activation
+    * ou non des plans (qui ne sont pas de référence), puis désactivation de ces
+    * plans.
+    * Si on reclique sur l'oeil, ce sera l'état préalablement mémorisé qui sera
+    * restitué.
+    * Utilise la variable Claque.memoClinDoeil pour savoir si on a déjà
+    * mémorisé un état antérieur. Et Plan.memoClinDoeil pour mémoriser individuellement
+    * chaque état de plan.
+    */
+   protected void clinDoeil() {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan pc = plan[i];
+         if( !pc.flagOk ) continue;
+         if( pc.ref ) continue;
+         if( memoClinDoeil ) {
+            pc.setActivated(pc.memoClinDoeil);
+         } else {
+            pc.memoClinDoeil=pc.active;
+            pc.setActivated(false);
+         }
+      }
+      memoClinDoeil=!memoClinDoeil;
+      aladin.view.newView();
+   }
 
    /** Demande l'activation de tous les plans possibles */
    protected void activateAll() {

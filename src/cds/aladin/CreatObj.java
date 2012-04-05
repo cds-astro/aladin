@@ -65,9 +65,10 @@ public final class CreatObj implements Runnable {
       trace(1,"Creating Status object");
       a.status = new Status(a,a.WELCOME);
 
-      trace(1,"Creating Sync, Split, Grid logo");
+      trace(1,"Creating Sync, Split, Grid, Wink logo");
       a.sync = new Match(a);
       a.grid = new Grid(a);
+      a.oeil = new Oeil(a);
       a.northup = new Northup(a);
 
       trace(1,"Creating View control widget");
