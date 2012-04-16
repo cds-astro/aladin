@@ -70,7 +70,7 @@ public class Oeil extends MyIcon {
       for( int i=0; i<aladin.calque.plan.length; i++ ) {
          Plan p = aladin.calque.plan[i];
          if( p.hasError() || !p.active || p.getOpacityLevel()<0.1f || p==pb ) continue;
-         if( p.hasNoReduction() || pb.projd.agree(p.projd, v) ) n++;
+         if( p.hasNoReduction() || pb.hasNoReduction() || pb.projd.agree(p.projd, v) ) n++;
       }
       return n>0;
    }
