@@ -264,6 +264,23 @@ final public class Fits {
        boolean flagHComp = dis.isHCOMP();
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
+	   // Si on a une image avec extension
+	   // ouvrir et lire le reste des infos depuis une image de l'extension
+	   long type = dis.getType();
+	   if ( (type & MyInputStream.XFITS)!=0)  {
+		   headerFits = new HeaderFits(dis);
+		   int naxis = headerFits.getIntFromHeader("NAXIS");
+		   // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
+		   if( headerFits.getStringFromHeader("EXTEND")!=null ) {
+			   while( naxis<2 ) {
+				   // Je saute l'éventuel baratin de la première HDU
+				   if (!headerFits.readHeader(dis))
+					   throw new Exception("Naxis < 2");
+				   naxis = headerFits.getIntFromHeader("NAXIS");
+			   }
+		   }
+		   bitpix = headerFits.getIntFromHeader("BITPIX");
+	   }
 	   width  = headerFits.getIntFromHeader("NAXIS1");
 	   height = headerFits.getIntFromHeader("NAXIS2");
 	   
@@ -364,6 +381,7 @@ final public class Fits {
    static final public int GZIP = 1;
    static final public int HHH = 1<<1;
    static final public int COLOR = 1<<2;
+   static final public int XFITS = 1<<3;
    
 
    /** Chargement de l'entete d'une image FITS depuis un fichier 
@@ -374,6 +392,7 @@ final public class Fits {
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       if( is.isGZ() ) code |= GZIP; 
       is = is.startRead();
+      long type = is.getType();
       
       // Cas spécial d'un fichier .hhhh
       if( filename.endsWith(".hhh") ) {
@@ -381,9 +400,26 @@ final public class Fits {
          headerFits = new HeaderFits();
          headerFits.readFreeHeader(new String(buf), true, null);
          code |= HHH;
-         
+      }
+      // Si on a une image avec extension
+      // ouvrir et lire le reste des infos depuis une image de l'extension
+      else if ( (type & MyInputStream.XFITS)!=0)  {
+    	  headerFits = new HeaderFits(is);
+    	  code |= XFITS;
+    	  int naxis = headerFits.getIntFromHeader("NAXIS");
+    	  // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
+    	  if( headerFits.getStringFromHeader("EXTEND")!=null ) {
+    		  while( naxis<2 ) {
+    			  // Je saute l'éventuel baratin de la première HDU
+    			  if (!headerFits.readHeader(is))
+    				  throw new Exception("Naxis < 2");
+    			  naxis = headerFits.getIntFromHeader("NAXIS");
+    		  }
+    	  }
+    	  bitpix = headerFits.getIntFromHeader("BITPIX");
+      }
       // Cas habituel
-      } else {
+      else {
          headerFits = new HeaderFits(is);
          try {
             bitpix = headerFits.getIntFromHeader("BITPIX");
