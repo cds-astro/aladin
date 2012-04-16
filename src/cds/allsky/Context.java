@@ -105,7 +105,9 @@ public class Context {
    public void setFrameName(String frame) { this.frame= (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setInitDir(String txt) { }
    public void setSkyValName(String s ) { skyvalName=s; }
-   public void setInputPath(String path) { this.inputPath = path; }
+   public void setInputPath(String path) { this.inputPath = path; 
+   		// cherche le dernier mot et le met dans le label
+   		label = path.substring(path.lastIndexOf(Util.FS) + 1);}
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
@@ -184,7 +186,7 @@ public class Context {
 	   String path = imgEtalon;
 	   Fits fitsfile = new Fits();
 
-	   fitsfile.loadHeaderFITS(path);
+	   int code = fitsfile.loadHeaderFITS(path);
 	   if( fitsfile.getCalib()==null ) throw new Exception("No calib !");
 	   
        setBitpixOrig(fitsfile.bitpix);
@@ -194,8 +196,14 @@ public class Context {
           if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
        }
        
+       // Vérifie s'il s'agit d'un image avec extension
+       if ( (code & Fits.XFITS)!=0 ){
+    	   
+       }
+    	   
        // Il peut s'agit d'un fichier .hhh (sans pixel)
-       try { initCut(fitsfile); } catch( Exception e ) { }
+       try { initCut(fitsfile); } catch( Exception e ) { 
+    	   Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage()); }
    }
    
    /**
@@ -246,7 +254,7 @@ public class Context {
             setImgEtalon(path);
             return true;
             
-         }  catch( Exception e) { continue; }
+         }  catch( Exception e) { Aladin.trace(4, "findImgEtalon : " +e.getMessage()); continue; }
       }
       return false;
    }
