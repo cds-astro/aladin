@@ -75,7 +75,7 @@ public final class FrameNewCalib extends JFrame
    ButtonGroup symRadio=null;	  // Boutons radios pour la symetrie
    JPanel pSym;			          // JPanel des boutons trueSym et falseSym
    JButton modifyButton,resetButton;
-   int maxPosT=5;		          // Le nombre max d'etoiles
+   int maxPosT=7;		          // Le nombre max d'etoiles
    FrameNewCalibTextField xyPosT[];		      // Textfields des XY
    FrameNewCalibTextField cooPosT[];		      // textfields des coordonnees associees
 

@@ -51,7 +51,7 @@ public class Oeil extends MyIcon {
    
    protected Oeil(Aladin aladin) {
       super(aladin,29,24);
-      LABEL = "wink";
+      LABEL = aladin.chaine.getString("OEIL");
    }
    
    /** Dessine l'icone de la grille */

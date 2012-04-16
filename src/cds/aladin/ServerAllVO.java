@@ -236,7 +236,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
    * @param s La chaine a mettre dans le champ target
    */
    protected void setTarget(String s) {
-      System.out.println("setTarget("+s+")");
+//      System.out.println("setTarget("+s+")");
       if( flagClear && otarget!=null && !otarget.equals(s) ) {
 //return;
 // 9 oct - JE NE COMPRENDS PAS POURQUOI J'AVAIS COMMENTE CE CLEAR. JE LE REMETS

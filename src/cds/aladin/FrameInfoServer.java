@@ -109,7 +109,7 @@ public class FrameInfoServer extends JFrame implements ActionListener {
 	   
 	   ta.setText(
                                     "\n"+
-                                 (s.description!=s.aladinLabel ? A(DESC)+s.description+"\n":"")+
+                                 (s.description!=s.aladinLabel ? A(DESC)+Util.fold(s.description,70)+"\n":"")+
 (s.type!=Server.APPLI && s.type!=Server.APPLIIMG? A(TYPE)+s.getType()+"\n":"")+
            (s.docUser!=null && s.docUser!=s.aladinLabel ? A(MORE)+s.docUser+"\n":"")+
 (s.institute!=null && s.institute!=s.aladinLabel && s.institute!=s.description? A(ORIGIN)+s.institute+"\n":"")+

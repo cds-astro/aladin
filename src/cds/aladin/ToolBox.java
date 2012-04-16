@@ -303,6 +303,8 @@ public final class ToolBox extends JComponent implements
       // ni RGB on invalide HIST et PHOT
       Plan p = aladin.calque.getFirstSelectedPlan();
       if( p==null || !p.hasAvailablePixels() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+      else if( p!=null && p.type==Plan.ALLSKYIMG && ((PlanBG)p).color ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+      
 //      if( v==null || v.isFree() 
 //            || !v.pref.hasAvailablePixels()
 //        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;

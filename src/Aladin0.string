@@ -96,8 +96,8 @@ SELECTTAG	Select tagged sources
 DETAG	Untag the tagged sources
 TAGSELECT	Tag selected sources
 
-#MLOAD.fr	Charge...
-MSAVE.fr	Enregistre...
+#MLOAD.fr	Charger...
+MSAVE.fr	Enregistrer...
 MTOOLS.fr	Outil
 MPLUGS.fr	Plugins
 #MLINK.fr	Lien...
@@ -439,6 +439,8 @@ GRID	grid
 GRID.fr	grille
 GRIDH	Activate/unactivate the coordinate grid
 GRIDH.fr	Active/désactive la grille de coordonnées
+OEIL	wink
+OEIL.fr	cligne
 OEILH	Activate/unactivate the overlayed planes
 OEILH.fr	Active/désactive les plans superposés
 BKGD	allsky
@@ -2340,6 +2342,10 @@ TOOMANYIMG	You can not download\nso many images simultaneously !
 TOOMANYIMG.fr	Vous ne pouvez pas charger\nautant d'images simultanément !
 PARSING	Parsing report
 PARSING.fr Rapport de traitement
+COORDCOLUMN	Coord. columns
+COORDCOLUMN.fr Colonnes des coord.
+COORDCOLUMNDETAIL The column called "Coo" allows you to modify the selection of the object coordinate columns. Either in a celestial reference (J2000), or in a cartesian reference (XY fits convention). Clic into the concerned cell.
+COORDCOLUMNDETAIL.fr La colonne intitulée "Coo" vous permet de modifier la sélection des colonnes des coordonnées des objets, soit dans un référentiel céleste (J2000), soit dans un référentiel cartésien (XY convention FITS).\nCliquez sur la case désirée.
 
 GETOBJ	Object, coordinates, URL, filename or command ?
 GETOBJ.fr	Un objet, des coordonnées, une URL, un fichier ou une commande ?
@@ -2386,6 +2392,8 @@ ALLSKYTITLE	Available data in "allsky" mode
 ALLSKYTITLE.fr	Données disponibles en mode "ciel complet"	
 ALLSKYINFO Select items and press SUBMIT
 ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER
+ALLSKYDESC The "allsky" mode allows you to visualise a survey\nfrom the whole sky view to the limit of the resolution. Aladin provides in "allsky" mode images, catalogues (progressive access), or density maps. The "allsky" image surveys are delivered in color composition, or in 8 bit pixels (JPEG), or in true pixels (FITS). Use the "Pixel" button for switching in the other pixel mode.\n \nWarning: the survey distributed in "allsky" mode have been bilinearly resampled. 
+ALLSKYDESC.fr Le mode "ciel complet" vous permet de visualiser un relevé\ndepuis une vue globale du ciel jusqu'à la limite de la résolution fournie. Il peut s'agir d'images, de catalogues ou de cartes de densité. Les relevés images en mode "ciel complet" sont fournis en composition colorée, ou en pixel 8 bits (JPEG), ou encore en "vrai" pixels" (FITS). Utilisez le bouton "Pixel" pour passer d'un mode pixel à l'autre).\n \nAttention : le mode "ciel complet" ne fournit pas les pixels originaux, mais un rééchantillonnages bilinéaire de ceux-ci.
 TARGETNOTVISIBLE Target out of field.\nSelect another plane before.
 TARGETNOTVISIBLE.fr Cible hors champ.\nSélectionnez au préalable un autre plan.
 

@@ -2152,6 +2152,7 @@ public class PlanBG extends PlanImage {
          }
       }
       
+      drawBackground(g, v);
       Vector<HealpixKey> localRedraw = new Vector<HealpixKey>(100);
       long [] pix;
       if( v.isAllSky() ) {

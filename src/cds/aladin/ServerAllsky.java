@@ -54,6 +54,7 @@ public class ServerAllsky extends ServerTree  {
       title = aladin.chaine.getString("ALLSKYTITLE");
       info = aladin.chaine.getString("ALLSKYINFO");
       info1 = null;
+      description = aladin.chaine.getString("ALLSKYDESC");
    }
 
    /** Creation du formulaire d'interrogation par arbre. */
