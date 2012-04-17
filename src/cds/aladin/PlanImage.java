@@ -225,7 +225,8 @@ public class PlanImage extends Plan {
     * @param imgNode noeud image décrivant l'image à charger
     */
     protected PlanImage(Aladin aladin, String file,MyInputStream inImg,String label,String from,
-          Obj o,ResourceNode imgNode,boolean skip,Plan forPourcent) {
+          Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
+       this.doClose=doClose;
        int fmt= FITS;
 //       int res=UNDEF;
        this.imgNode = imgNode;

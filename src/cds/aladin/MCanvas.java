@@ -1103,11 +1103,12 @@ public final class MCanvas extends JComponent
             if( w.onBord(x,y) ) onBordField=indice;
             if( x<15  || w.inside(x,y)  ) {
                if( ow==w ) break;
-               indiceCourant=i-1;
+//               indiceCourant=i-1;
+               indiceCourant=indice;
                sCourante = o;
 
                // Démarrage du timer pour l'histogramme
-               startTimerHist(sCourante,indiceCourant);
+               startTimerHist(sCourante,indice);
 
                if( objSelect==null && showLigne!=null ) clearShowLigne(g);
                if( mouseLigne!=null ) clearMouseLigne(g);
@@ -1182,7 +1183,7 @@ public final class MCanvas extends JComponent
             sCourante = o;
 
             // Démarrage du timer pour l'histogramme
-            startTimerHist(sCourante,indiceCourant);
+            startTimerHist(sCourante,indice);
 
             if( objSelect==null && showLigne!=null ) clearShowLigne(g);
             if( mouseLigne!=null ) clearMouseLigne(g);

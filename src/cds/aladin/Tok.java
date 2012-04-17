@@ -102,11 +102,18 @@ public final class Tok {
    /** Retourne la position courante */
    public  int getPos() { return i; }
    
+   
+   private char lastSeparator=0;
+   
    private boolean isSeparator(char c) {
-      if( separator==null ) return Character.isSpace(c);
-      return separator.indexOf(c)>=0; 
+      boolean rep=false;
+      if( separator==null )  rep = Character.isSpace(c);
+      else rep = separator.indexOf(c)>=0;
+      if( rep ) lastSeparator=c;
+      return rep;
    }
    
+   public char getLastSeparator() { return lastSeparator; } 
    
    private StringBuffer curTok = new StringBuffer();
    
@@ -134,6 +141,7 @@ public final class Tok {
       }
       return unQuote(curTok);
    }
+   
    
    
    static private String TEST = "global color=green dashlist=8 3 width=1 font=\"helvetica 10 normal\" select=1 file=\"\\Root\\file\"";

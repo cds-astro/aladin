@@ -39,7 +39,8 @@ public class PlanCatalog extends Plan {
   /** Creation d'un plan de type CATALOG (via une fichier)
    * @param file  Le nom du fichier
    */
-   protected PlanCatalog(Aladin aladin, String file, MyInputStream in,boolean skip) {
+   protected PlanCatalog(Aladin aladin, String file, MyInputStream in,boolean skip,boolean doClose) {
+      this.doClose=doClose;
       flagSkip = skip;
       String label = "Cat";
       this.dis=in;

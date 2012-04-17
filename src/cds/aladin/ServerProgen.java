@@ -74,7 +74,7 @@ public class ServerProgen extends ServerTree  {
             if( selRow==-1 ) return;
             TreePath path = tree.getPathForLocation(e.getX(), e.getY()); 
             TreeNodeProgen noeud = (TreeNodeProgen)((DefaultMutableTreeNode)path.getLastPathComponent()).getUserObject();
-            System.out.println("Je suis sur "+noeud+" => "+noeud.stc);
+            System.out.println("Je suis sur "+noeud+" => "+noeud.url);
             showNode=noeud;
             aladin.view.repaintAll();
          } 

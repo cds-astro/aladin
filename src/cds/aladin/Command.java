@@ -2311,10 +2311,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
    /** Retourne le code du calcul algébrique ou -1 si non trouvé */
    private int findAlgebre(String s) {
-      if( s.indexOf(" + ")>0 || s.startsWith("+") ) return PlanImageAlgo.ADD;
-      if( s.indexOf(" - ")>0 || s.startsWith("-") ) return PlanImageAlgo.SUB;
-      if( s.indexOf(" * ")>0 || s.startsWith("* ") ) return PlanImageAlgo.MUL;
-      if( s.indexOf(" / ")>0 || s.startsWith("/") ) return PlanImageAlgo.DIV;
+      if( s.startsWith("+") ) return PlanImageAlgo.ADD;
+      if( s.startsWith("-") ) return PlanImageAlgo.SUB;
+      if( s.startsWith("* ") ) return PlanImageAlgo.MUL;
+      if( s.startsWith("/") ) return PlanImageAlgo.DIV;
+      
+      if( s.indexOf(" + ")>0 ) return PlanImageAlgo.ADD;
+      if( s.indexOf(" - ")>0 ) return PlanImageAlgo.SUB;
+      if( s.indexOf(" * ")>0 ) return PlanImageAlgo.MUL;
+      if( s.indexOf(" / ")>0 ) return PlanImageAlgo.DIV;
+      
       return -1;
    }
       

@@ -101,4 +101,9 @@ public class TreeNode  implements Comparator {
       if( a2.ordre==null ) return 1;
       return a1.ordre.compareTo(a2.ordre);
    }
+   
+   public boolean equals(Object o) {
+      TreeNode a1= (TreeNode)o;
+      return a1.label.equals(label);
+   }
 }

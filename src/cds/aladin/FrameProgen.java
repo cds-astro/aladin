@@ -75,8 +75,7 @@ public class FrameProgen extends JFrame implements ActionListener {
       if( set==null ) return;
       Vector v = new Vector();
       for( String k : set.keySet() ) v.add(set.get(k) );
-      progen.freeTree();
-      progen.populateTree( v.elements());
+      progen.updateTree( v.elements());
    }
    
    private JPanel getTreePanel() {

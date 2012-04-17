@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Scrollbar;
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
@@ -1868,7 +1869,7 @@ public final class Calque extends JPanel implements Runnable {
       long type=0;
       try { type=inImg.getType();  } catch( Exception e ) {};
       if( (type&MyInputStream.CUBE)!=0 ) {
-         plan[n] = new PlanImageCube(aladin,null,inImg,label,from,o,imgNode,false,null);
+         plan[n] = new PlanImageCube(aladin,null,inImg,label,from,o,imgNode,false,true,null);
       } else {
          plan[n] = new PlanImage(aladin,inImg,orig,u,label,objet,param,from,
                fmt,res,o, imgNode);
@@ -1896,7 +1897,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       int n=getStackIndex();
 
-      plan[n] = new PlanImageCube(aladin,null,inImg,label,from,o,imgNode,false,null);
+      plan[n] = new PlanImageCube(aladin,null,inImg,label,from,o,imgNode,false,true,null);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
@@ -2202,6 +2203,7 @@ public final class Calque extends JPanel implements Runnable {
       Util.decreasePriority(Thread.currentThread(), runme);
 //      runme.setPriority( Thread.NORM_PRIORITY -1);
       Plan.aladinQueryThread(runme);
+      
       runme.start();
    }
 
@@ -2288,29 +2290,28 @@ public final class Calque extends JPanel implements Runnable {
             if( (type & MyInputStream.FITS)!=0 /* || (type & MyInputStream.HPX)!=0 */ ) {
                PlanImage pi = null;
                if( (type&MyInputStream.CUBE)!=0 ) {
-                  if( (type&MyInputStream.ARGB)!=0) pi = new PlanImageCubeRGB(aladin,file,in,label,null,o,null,false,null);
-                  else pi = new PlanImageCube(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,firstPlan);
+                  if( (type&MyInputStream.ARGB)!=0) pi = new PlanImageCubeRGB(aladin,file,in,label,null,o,null,false,false,null);
+                  else pi = new PlanImageCube(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.HUGE)!=0 ) {
-                  pi = new PlanImageHuge(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,firstPlan);
+                  pi = new PlanImageHuge(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                } else {
-                  pi = new PlanImage(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,firstPlan);
+                  pi = new PlanImage(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                }
 
                if( nExt==0 && pi.error!=null && pi.error.equals("_HEAD_XFITS_") ) {
                   ((PlanFolder)folder).headerFits = pi.headerFits;
-//                  nExt--;
                } else {
                   if( pi.error==null || pi.error.equals("_END_XFITS_") ) pi.pixelsOriginIntoCache();
                   p = pi;
                }
             } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
                if( (type & MyInputStream.RICE)!=0 ) {
-                  p = new PlanImageRice(aladin,file,in,label,null,o,null,!keepIt,firstPlan);
+                  p = new PlanImageRice(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.AIPSTABLE)!=0 ) {
                   Aladin.trace(3,"MEF AIPS CC table detected => ignored !");
-                  new PlanCatalog(aladin,"",in,true);  // Juste pour le manger
+                  new PlanCatalog(aladin,"",in,true,false);  // Juste pour le manger
                } else {
-                  PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt);
+                  PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt,false);
                   if( pc.label.equals("") ) pc.setLabel(file);
                   p=pc;
                   if( /* aladin.OUTREACH && */ pc.pcat.badRaDecDetection 
@@ -2318,10 +2319,9 @@ public final class Calque extends JPanel implements Runnable {
                      p=null; // pour eviter les extensions DSS
                      aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
                   }
-//                  if( pc.error==null && Aladin.OUTREACH) p = null; // pour eviter les extensions DSS
                }
            } else {
-              Aladin.trace(3,"MEF not supported !");
+              Aladin.trace(3,"One MEF extension not supported => ignored!");
               break;
             }
 
@@ -2365,11 +2365,11 @@ public final class Calque extends JPanel implements Runnable {
             }
 
          }
-         in.close();
       } catch( Exception e) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
-         try { in.close(); } catch(Exception e1) {} 
       }
+
+      try { in.close(); } catch(Exception e) { e.printStackTrace(); } 
 
       folder.planReady(true);
 
@@ -2396,13 +2396,6 @@ public final class Calque extends JPanel implements Runnable {
          }
       }
       
-//      p.planReady(true);
-
-//      // Plan actif par défaut
-//      if( setPlanRef(p) ) {
-//         aladin.view.newView();
-//         repaintAll();
-//      }
    }
 
    /**
@@ -2420,9 +2413,9 @@ public final class Calque extends JPanel implements Runnable {
          long type = in.getType();
 
          if( (type & MyInputStream.FITS)!=0 ) {
-            p = new PlanImage(aladin,"",in,"",null,null,null,true,null);
+            p = new PlanImage(aladin,"",in,"",null,null,null,true,false,null);
          } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
-            p = new PlanCatalog(aladin,"",in/*,label+"~"+i*/,true);
+            p = new PlanCatalog(aladin,"",in/*,label+"~"+i*/,true,false);
          } else {
             Aladin.trace(3,"Extension type not supported !");
             break;
@@ -2454,16 +2447,16 @@ public final class Calque extends JPanel implements Runnable {
       try { type = inImg.getType(); } catch( Exception e ) {}
 
       if( (type&MyInputStream.CUBE)!=0 && (type&MyInputStream.ARGB)!=0)
-         plan[n] = new PlanImageCubeRGB(aladin,file,inImg,label,from,o,imgNode,false,null);
+         plan[n] = new PlanImageCubeRGB(aladin,file,inImg,label,from,o,imgNode,false,true,null);
 
       else if( (type&MyInputStream.CUBE)!=0 )
-         plan[n] = new PlanImageCube(aladin,file,inImg,label,from,o,imgNode,false,null);
+         plan[n] = new PlanImageCube(aladin,file,inImg,label,from,o,imgNode,false,true,null);
 
       else if( (type&MyInputStream.HUGE)!=0 )
-         plan[n] = new PlanImageHuge(aladin,file,inImg,label,from,o,imgNode,false,null);
+         plan[n] = new PlanImageHuge(aladin,file,inImg,label,from,o,imgNode,false,true,null);
 
       else
-         plan[n] = new PlanImage(aladin,file,inImg,label,from,o,imgNode,false,null);
+         plan[n] = new PlanImage(aladin,file,inImg,label,from,o,imgNode,false,true,null);
 
       if( isNewPlan(label) ) n=bestPlace(n);
 
@@ -2642,7 +2635,7 @@ public final class Calque extends JPanel implements Runnable {
         p.selected=true;
         p.active = true;
         Plan pref = getPlanRef();
-        p.projd = pref==null ? null : 
+        p.projd = pref==null || !Projection.isOk(pref.projd)? null : 
            new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
                  90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
         suiteNew(p);
@@ -2928,7 +2921,7 @@ public final class Calque extends JPanel implements Runnable {
    protected int newPlanCatalog(String file) { return newPlanCatalog(file,null); }
    protected int newPlanCatalog(String file,MyInputStream in) {
       int n=getStackIndex();
-      plan[n] = new PlanCatalog(aladin,file,in,false);
+      plan[n] = new PlanCatalog(aladin,file,in,false,true);
       suiteNew(plan[n]);
       //PlanFilter.newPlan(plan[n]);
       return n;

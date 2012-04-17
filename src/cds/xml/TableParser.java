@@ -76,6 +76,7 @@ final public class TableParser implements XMLConsumer {
    private int qualX,qualY;	          // La qualité de détection des colonnes X et Y (1000 mauvais, 0 excellent)
    private Field f;		              // Le champ courant
    private Vector<Field> memoField;   // Mémorisation des Fields en cas de parsing binaire ultérieur
+   private Field[] tsvField;          // Idem dans le cas d'un TSV (sans doute à fusionner avec memoField si le coeur m'en dit)  
    private String fieldSub=null;      // contient le nom du tag courant fils de <FIELD>, sinon null
    private String tableSub=null;      // contient le nom du tag courant fils de <TABLE>, sinon null
    private String resourceSub=null;   // contient le nom du tag courant fils de <RESOURCE>, sinon null
@@ -157,9 +158,12 @@ final public class TableParser implements XMLConsumer {
       
       // Cas BINARY HREF
       if( inBinary ) {
-         byte [] buf = new byte[100000];
-         int n;
-         while( (n=in.read(buf))>0 ) parseBin(buf,0,n);
+         byte [] buf = in.readFully();
+         parseBin(buf,0,buf.length);
+         
+//         byte [] buf = new byte[100000];
+//         int n;
+//         while( (n=in.readFully(buf))>0 ) parseBin(buf,0,n);
          
       // Cas FITS HREF
       } else if( inFits ) {
@@ -374,7 +378,9 @@ final public class TableParser implements XMLConsumer {
                // Mode ASCII
                if( !flagBin ){
 //                  f.datatype="BIJFKED".indexOf(s.charAt(0))>=0 ? "D":"A";
-                  f.datatype=s.charAt(0)+"";
+                  char code = s.charAt(0);
+                  if( code=='E' || code=='F' ) code='D';
+                  f.datatype=code+"";
                  
                   // Détermination de la taille du champ
                   int k = s.indexOf('.');
@@ -1199,8 +1205,10 @@ final public class TableParser implements XMLConsumer {
    
    /** Positionne des noms de colonne par défaut pour palier à une absence d'entête */
    private void setDefaultField() {
+      tsvField = new Field[nField];
       for( int i=0; i<nField; i++ ) {
-         Field f = new Field("C"+(i+1));
+         Field f = tsvField[i] = new Field("C"+(i+1));
+         f.datatype="D";
          consumer.setField(f);
       }
    }
@@ -1481,7 +1489,7 @@ final public class TableParser implements XMLConsumer {
          if( !valueInTD ) record[row]=null;    // Dans le cas d'un champ vide
          valueInTD=false;
          row++;
-    } else if( depth==6 && name.equalsIgnoreCase("TR")  )          consumeRecord(record,-1);
+    } else if( depth==6 && name.equalsIgnoreCase("TR")  )         consumeRecord(record,-1);
       else if( depth==6 && name.equalsIgnoreCase("STREAM") )      inEncode64=false;
       else if( depth==3 && name.equalsIgnoreCase("TABLE") )     {
          fieldSub=tableSub=null;
@@ -1691,7 +1699,6 @@ final public class TableParser implements XMLConsumer {
             while( cur<end && ch[cur]==' ' && ch[cur]!=rs ) cur++;
             cur--;
          }
-
          value = getStringTrim(ch,start,cur-start);
       }
       
@@ -1699,18 +1706,16 @@ final public class TableParser implements XMLConsumer {
       if( sep==' ' && row==0 && value.length()==0 ) return cur;
       
       if( record!=null ) {
-//         if( row==record.length ) throw new Exception("Not aligned CSV catalog section (record "+(nbRecord+1)+" field["+row+"]=["+value+"])");
          if( row==record.length ) {
-            String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored";
-//            aladin.console.setError(s);
+            String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored\n";
             aladin.command.printConsole(s);
-         } else record[row++]=value;
+         } else record[row]=value;
       }
       else {
          if( vRecord==null ) vRecord = new Vector<String>();
          vRecord.addElement(value);
-         row++;
       }
+      row++;
 
       return cur;
    }
@@ -1733,7 +1738,6 @@ final public class TableParser implements XMLConsumer {
       if( record!=null && row<record.length &&  !(row==1 && record[0].equals("[EOD]")) ) {
 //         throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
          String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows) => ignored";
-//         aladin.console.setError(s);
          aladin.command.printConsole(s);
       }
       return cur;
@@ -1791,7 +1795,8 @@ final public class TableParser implements XMLConsumer {
       }
       return s;
    }
-
+   
+   
    /** Dans le mode CSV, parsing des données passées en paramètre. Cette méthode
     * peut être appelé plusieurs fois de suite pour un même tableau CSV
     * @param ch,start,length désignation de la chaine à perser
@@ -1918,11 +1923,12 @@ final public class TableParser implements XMLConsumer {
          // Détermination des colonnes de position RA,DEC ou X,Y
          // en fonction de l'entête CSV
          if( flagHeader && n==0 && (nRA<0 || flagTSV) ) {
+            tsvField = new Field[nField];
             for( i=0; i<nField; i++ ) {
-               Field f = new Field(record[i]/*.trim()*/);
+               Field f = tsvField[i] = new Field(record[i]/*.trim()*/);
+               f.datatype="D";
                detectPosField(f,i);
                if( flagTSV ) { consumer.setField(f); } // TSV natif
-//               flagPos=true;
             }
             posChooser();
          }
@@ -1954,6 +1960,20 @@ final public class TableParser implements XMLConsumer {
          
          // Bourrage si champ manquant en fin de ligne
          while( row<nField ) record[row++]="???";
+         
+         // Vérification "manuelle" a posteriori du datatype (par défaut double)
+         if( tsvField!=null ) {
+            for( i=0; i<tsvField.length; i++ ) {
+               if( tsvField[i].datatype!=null && tsvField[i].datatype.equals("D") ) {
+                  try { 
+                     String s1=record[i].trim();
+                     if( s1.length()>0 && !s1.equals("-") && !s1.equalsIgnoreCase("null")  ) Double.parseDouble(s1); 
+                  } catch( Exception e ) { 
+                     tsvField[i].datatype=null;
+                  }
+               }
+            }
+         }
          
          consumeRecord(record,nbRecord);
          cur=skipRecSep(ch,cur,rs);

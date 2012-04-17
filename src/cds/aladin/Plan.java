@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -138,7 +139,7 @@ public class Plan implements Runnable {
    protected boolean hasXYorig;   // true si dans le cas d'un plan objet on bloque les xy
    protected boolean recalibrating; // true si on est en train de recalibrer le plan (catalogue)
    protected boolean isSelectable=true; // false si le plan n'a pas d'objets sélectionnable
-
+   protected boolean doClose=true; // si false, ne pas fermer le flux une fois le plan créé
 
    protected double initZoom=1;	// Facteur de zoom par défaut
 
@@ -159,7 +160,7 @@ public class Plan implements Runnable {
    Pcat pcat;                  // Les objets du plan si CATALOG ou TOOL ou FIELD
    int sourceType=Obj.SQUARE;  // Le type de source dans le cas d'un plan CATALOG ou PlanBGCAT
    MyInputStream dis=null;     // Le flux de donnees
-   int streamType=0;           // le type de stream trouvé par MyInputStream
+//   int streamType=0;           // le type de stream trouvé par MyInputStream
 
    // Les variables et objets de travail
    Thread runme;               // Pour charger les images et les plans en asynchrone
@@ -1700,6 +1701,12 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
    */
    protected void planReady(boolean ready) {
       if( flagSkip ) return;
+      
+      if( doClose && dis!=null ) {
+         try { dis.close(); } catch( IOException e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
       
       aladin.endMsg();
 

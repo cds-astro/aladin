@@ -120,6 +120,31 @@ public abstract class ServerTree extends Server  {
       ((DefaultTreeModel)tree.getModel()).setRoot(r);
       root = r;
    }
+   
+   /** "Mise à jour" de l'arbre en fonction des enregistrements GLU recueillis */
+   protected void updateTree(Enumeration e1) {
+      
+      ArrayList<TreeNode> v = new ArrayList();
+      Enumeration e = root.preorderEnumeration();
+      while( e.hasMoreElements() ) {
+         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
+         TreeNode n = (TreeNode) node.getUserObject();
+         v.add(n);
+      }
+      freeTree();
+      
+      while( e1.hasMoreElements() ) {
+         TreeNode noeud = (TreeNode)e1.nextElement();
+         int i = v.indexOf(noeud);
+         if( i>=0 ) {
+            TreeNode oldNoeud = v.get(i);
+            noeud.setCheckBox( oldNoeud.isCheckBoxSelected() );
+         }
+         createTreeBranch(root,noeud,0);
+      }
+      defaultExpand();
+   }
+
 
    /** "Peuplement" de l'arbre en fonction des enregistrements GLU recueillis */
    protected void populateTree(Enumeration e) {

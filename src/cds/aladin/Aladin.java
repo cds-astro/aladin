@@ -67,7 +67,7 @@ import cds.xml.XMLParser;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> ALMA footprint utility (Server selector => FOV)
- * @beta    <LI> TSV,CSV improvements (notably CSV Excel and IPAC-TBL support)
+ * @beta    <LI> TSV,CSV improvements (notably CSV Excel and IPAC-TBL support, data type discovery,...)
  * @beta    <LI> Pixel extraction as table (menu Image => pixel extraction)
  * @beta    <LI> Free rotation in allsky mode (PAN mode => clic & drag on N-E logo)
  * @beta    <LI> New coordinate frames: B1900, B1875, XY image
@@ -100,6 +100,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Streams correctly closed
  * @beta    <LI> Properties window for HEALPix files with many FIELDS now shows properly
  * @beta    <LI> Measurement selection with hidden columns
  * @beta    <LI> Script command synchronisation also for allsky HEALPix surveys
@@ -113,6 +114,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> Crop on RGB is now working fine
  * @beta    <LI> BMP saving bug fixed
  * @beta    <LI> FITS binary table bug fixed (double bit mask error)
+ * @beta    <LI> FITS ASCII table bug fixed (TFORM Fn.n => numerical)
  * @beta    <LI> Huge image mode available even via network (required very good bandwidth)
  * @beta    <LI> Distance tool bug fixed (huge images + low resolution mode)
  * @beta    <LI> 7.023 overlay object bug fixed
@@ -142,7 +144,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.514";
+    static public final    String VERSION = "v7.515";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

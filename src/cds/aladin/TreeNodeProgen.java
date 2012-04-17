@@ -47,7 +47,7 @@ public class TreeNodeProgen extends TreeNode {
    TreeNodeProgen(Aladin aladin,String actionName,String description,String path,
          String url,String json) {
       super(aladin,actionName,null,description,path);
-      this.url=url;
+      this.url= url==null && json!=null ? Util.extractJSON("path",json) : url;
       if( json!=null ) stc = Util.extractJSON("stc",json);
    }
    

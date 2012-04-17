@@ -31,7 +31,7 @@ import java.util.Hashtable;
 final public class Field {
 
    /** Numeric datatype keys */
-   static private String NUMDATATYPE = "JKEDI";
+   static private String NUMDATATYPE = "JKEFGDI";
 
    /** Field Identifier */
    public String ID;
@@ -240,6 +240,8 @@ final public class Field {
       if( s.equals("A") ) return "char";
       if( s.equals("E") ) return "float";
       if( s.equals("D") ) return "double";
+      if( s.equals("F") ) return "double";
+      if( s.equals("G") ) return "double";
       if( s.equals("L") ) return "boolean";
       if( s.equals("I") ) return "short";
       if( s.equals("X") ) return "bit";

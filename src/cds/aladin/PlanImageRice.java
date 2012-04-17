@@ -41,8 +41,8 @@ import java.util.*;
 public class PlanImageRice extends PlanImage {
    
    protected PlanImageRice(Aladin aladin, String file,MyInputStream inImg,String label,String from,
-         Obj o,ResourceNode imgNode,boolean skip,Plan forPourcent) {
-      super(aladin,file,inImg,label,from,o,imgNode,skip,forPourcent);
+         Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
+      super(aladin,file,inImg,label,from,o,imgNode,skip,doClose,forPourcent);
    }
    
    protected boolean cacheImageFits(MyInputStream dis) throws Exception {

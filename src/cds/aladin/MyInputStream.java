@@ -127,6 +127,12 @@ public final class MyInputStream extends FilterInputStream {
       this.in= in!=null && withBuffer && !(in instanceof BufferedInputStream ) ?
                    new BufferedInputStream(in) : in;
    }
+   
+   public void close() throws IOException {
+      if( Aladin.levelTrace>3 ) System.out.println("MyinputStream.close(): "+this);
+      in.close();
+      super.close();
+   }
 
    static protected long NativeImage() { return JPEG|GIF|PNG|BMP; }
 

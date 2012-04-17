@@ -83,8 +83,8 @@ public class PlanImageBlink extends PlanImage {
    }
    
    protected PlanImageBlink(Aladin aladin,String file,MyInputStream in,String label,String from,
-         Obj o,ResourceNode imgNode,boolean skip,Plan forPourcent) {
-      super(aladin,file,in,label,from,o,imgNode,skip,forPourcent);
+         Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
+      super(aladin,file,in,label,from,o,imgNode,skip,doClose,forPourcent);
    }
    
    /** Nettoyage du plan pour aider le GC

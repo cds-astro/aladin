@@ -66,7 +66,7 @@ final public class BuilderAllsky {
       prop.setProperty(PlanHealpix.KEY_COORDSYS, coordsys+"");
       prop.setProperty(PlanHealpix.KEY_ISCOLOR, flagColor+"");
       prop.setProperty(PlanHealpix.KEY_ALADINVERSION, Aladin.VERSION);
-      prop.setProperty(PlanHealpix.KEY_IMAGESOURCEPATH, "path=~/(.*)/$1/");
+      prop.setProperty(PlanHealpix.KEY_IMAGESOURCEPATH, "path:$1");
       prop.setProperty(PlanHealpix.KEY_LABEL, context.getLabel());
       prop.setProperty(PlanHealpix.KEY_MAXORDER, context.getOrder()+"");
 

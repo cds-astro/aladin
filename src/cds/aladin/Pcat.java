@@ -368,11 +368,6 @@ Aladin.trace(3,"setField "+f);
          else if( f.name!=null && f.name.length()>1
                && (f.name.charAt(0)=='I' ||  f.name.charAt(0)=='i') && (f.name.charAt(1)=='D' ||  f.name.charAt(1)=='d')
                && nIdVraisemblance<20 ) { nIdVraisemblance=10; nId=pos; }
-
-//         if( f.name!=null && f.name.length()>1 &&
-//             (f.name.charAt(0)=='I' ||  f.name.charAt(0)=='i') && (f.name.charAt(1)=='D' ||  f.name.charAt(1)=='d') ) numId=vField.size();
-//         else if( f.name!=null && (f.name.equalsIgnoreCase("name") || f.name.equalsIgnoreCase("designation"))) numId=vField.size();
-//         else if( f.ucd!=null && (f.ucd.equals("ID_MAIN") || f.ucd.startsWith("meta.id")) ) numId=vField.size();
       }
       vField.addElement(f);
    }

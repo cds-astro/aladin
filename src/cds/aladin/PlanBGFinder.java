@@ -62,7 +62,7 @@ public class PlanBGFinder extends PlanBG {
    // Une règle de réécriture suit la syntaxe suivante :
    //     jsonKey:/regex/replacement/
    // ou  jsonKey:replacement
-   // L'expression "regex" doit contenir des expressions d'extration au moyen de parenthèses
+   // L'expression "regex" doit contenir des expressions d'extraction au moyen de parenthèses
    // L'expression "replacement" peut réutiliser ces extractions par des variables $1, $2...
    // Si le remplacement se trouve dans la zone de paramètres d'une url, l'encodage HTTP est assuré
    // La "jsonKey" fait référence à une clé JSON de la chaine passée en paramètre.
