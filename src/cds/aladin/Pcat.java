@@ -1072,6 +1072,11 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
            attachFootprintToSources(idToFootprint);
        }
 
+       // par défaut, on montre les footprints associés à un plan catalogue
+       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
+           ((PlanCatalog) plan).showFootprints(true);
+       }
+
        return nb;
    }
 
