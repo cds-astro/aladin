@@ -27,11 +27,13 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import cds.aladin.Pcat.PlanObjetIterator;
+
 /**
  * Formulaire d'interrogation sous la forme d'un arbre
  * @author Pierre Fernique [CDS]
  */
-public abstract class ServerTree extends Server  {
+public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
    protected JTree tree;
@@ -125,12 +127,7 @@ public abstract class ServerTree extends Server  {
    protected void updateTree(Enumeration e1) {
       
       ArrayList<TreeNode> v = new ArrayList();
-      Enumeration e = root.preorderEnumeration();
-      while( e.hasMoreElements() ) {
-         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
-         TreeNode n = (TreeNode) node.getUserObject();
-         v.add(n);
-      }
+      for( TreeNode n : this ) v.add(n);
       freeTree();
       
       while( e1.hasMoreElements() ) {
@@ -143,6 +140,16 @@ public abstract class ServerTree extends Server  {
          createTreeBranch(root,noeud,0);
       }
       defaultExpand();
+   }
+   
+   // Recupération d'un itérator sur tous les noeuds de l'arbre
+   public Iterator<TreeNode> iterator() { return new TreeIterator(); }
+
+   class TreeIterator implements Iterator<TreeNode> {
+      private Enumeration e = root.preorderEnumeration();
+      public boolean hasNext() { return e.hasMoreElements(); }
+      public TreeNode next() { return (TreeNode) ((DefaultMutableTreeNode)e.nextElement()).getUserObject(); }
+      public void remove() { }
    }
 
 
@@ -158,12 +165,7 @@ public abstract class ServerTree extends Server  {
    /** Reset */
    @Override
    protected void reset() {
-      Enumeration e = root.preorderEnumeration();
-      while( e.hasMoreElements() ) {
-         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
-         TreeNode n = (TreeNode) node.getUserObject();
-         n.setCheckBox(false);
-      }
+      for( TreeNode n : this ) n.setCheckBox(false);
       tree.validate();
       repaint();
    }
@@ -172,14 +174,19 @@ public abstract class ServerTree extends Server  {
    @Override
    public void submit() {
       boolean ok=false;
-      Enumeration e = root.preorderEnumeration();
-      while( e.hasMoreElements() ) {
-         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
-         TreeNode n = (TreeNode) node.getUserObject();
+      for( TreeNode n : this ) {
          if( !n.isCheckBoxSelected() ) continue;
          submit(n);
          ok=true;
       }
+//      Enumeration e = root.preorderEnumeration();
+//      while( e.hasMoreElements() ) {
+//         DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
+//         TreeNode n = (TreeNode) node.getUserObject();
+//         if( !n.isCheckBoxSelected() ) continue;
+//         submit(n);
+//         ok=true;
+//      }
       if( !ok ) aladin.warning(aladin.dialog,WNEEDCHECK,1);
       reset();
    }

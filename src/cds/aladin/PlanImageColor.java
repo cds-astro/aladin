@@ -26,6 +26,8 @@ import java.awt.image.*;
 import java.net.*;
 import java.util.*;
 
+import javax.imageio.ImageIO;
+
 /**
 * Gestion d'un plan image Couleur
 *
@@ -69,66 +71,59 @@ long t1,t=System.currentTimeMillis();
       
       try {
 
-         // TROISIEME METHODE, DE FAIT C'EST PLUS LENT
-         // (SANS DOUTE PARCE QUE UNE GRANDE PARTIE EN PURE JAVA)
-         //    buf = ImageIO.read(dis);
-         //    naxis1=width=buf.getWidth();
-         //    naxis2=height=buf.getHeight();
-         //    t1 = System.currentTimeMillis();
-         //    Aladin.trace(3,"imageIO read in "+(t1-t)+"ms"); t=t1;    
-
-
-         // DEUXIEME METHODE EN DEUX ETAPES
-         Image itmp = aladin.getToolkit().createImage(dis.readFully());    
-         
-         aladin.waitImage(itmp);
-         naxis1=width=itmp.getWidth(aladin);
-         naxis2=height=itmp.getHeight(aladin);
-
-         setPourcent(10);
-         t1 = System.currentTimeMillis();
-         Aladin.trace(3,"image "+width+"x"+height+" created&loaded in "+(t1-t)+" ms"); t=t1;
-
-         // PREMIERE METHODE TRES LENTE APRES JVM 1.3
-         //      setPourcent(45);
-         //	  PixelGrabber pg = new PixelGrabber(itmp,0,0,width,height,pixelsRGB,0,width);
-         //	  try { pg.grabPixels(); }
-         //	  catch (Exception e) { return false; }
-         //	  if( (pg.getStatus() & ImageObserver.ABORT) != 0 ) { return false; }
-         //
-
-         // A EVITER CAR RISQUE DE CONVERSION DES PIXELS SI MODE PAR DEFAUT NON ARGB
-         //      BufferedImage buf = aladin.getGraphicsConfiguration().createCompatibleImage(width, height);
-         buf = new BufferedImage(width, height,BufferedImage.TYPE_INT_ARGB);
-         Graphics g = buf.getGraphics();
-         g.drawImage(itmp,0,0,aladin);
-         g.finalize(); g=null;
-         itmp.flush(); itmp=null; 
-         
-         pixelsRGB = ((DataBufferInt)buf.getRaster().getDataBuffer()).getData();
-
-//         pixelsRGB = new int[width*height];
+//         if( true ) {
+////          TROISIEME METHODE, DE FAIT C'EST PLUS LENT
+////          (SANS DOUTE PARCE QUE UNE GRANDE PARTIE EN PURE JAVA)
+//             buf = ImageIO.read(dis);
+//             naxis1=width=buf.getWidth();
+//             naxis2=height=buf.getHeight();
+//             t1 = System.currentTimeMillis();
+//             Aladin.trace(3,"imageIO read in "+(t1-t)+"ms"); t=t1;    
+//             
+//             byte x [] = ((DataBufferByte)buf.getRaster().getDataBuffer()).getData();
+//             
+//             System.out.println("naxis1="+naxis1+" naxis2="+naxis2+" size="+(naxis1*naxis2*4)+" x.length="+x.length);
+//             
+//             
+//             System.out.println("J'y suis");
+//             
+//             
+////             pixelsRGB = new int[naxis1*naxis2*4];
+////             buf.getRGB(0, 0, naxis1, naxis2, pixelsRGB, 0, naxis1);
 //
-//         // Pour faire avancer le % de lecture
-//         if( height>1000 ) {
-//            int pasY = height/89;
-//            int startY=0;
-//            int i=0;
-//            do {
-//               setPourcent(10+i);
-//               if( startY+pasY>height ) pasY= height-startY;
-//               pixelsRGB=buf.getRGB(0,startY,width,pasY,pixelsRGB,startY*width,width);
-//               startY+=pasY;
-//               i++;
-//            } while( startY<height );
-//
-//            // Si trop petit, lecture d'un coup !
 //         } else {
-//            pixelsRGB=buf.getRGB(0,0,width,height,pixelsRGB,0,width);
-//         }
-         
-         buf.flush();  buf=null;
+            // DEUXIEME METHODE EN DEUX ETAPES
+            Image itmp = aladin.getToolkit().createImage(dis.readFully());    
+            
+            aladin.waitImage(itmp);
+            naxis1=width=itmp.getWidth(aladin);
+            naxis2=height=itmp.getHeight(aladin);
 
+            setPourcent(10);
+            t1 = System.currentTimeMillis();
+            Aladin.trace(3,"image "+width+"x"+height+" created&loaded in "+(t1-t)+" ms"); t=t1;
+
+            // PREMIERE METHODE TRES LENTE APRES JVM 1.3
+            //      setPourcent(45);
+            //	  PixelGrabber pg = new PixelGrabber(itmp,0,0,width,height,pixelsRGB,0,width);
+            //	  try { pg.grabPixels(); }
+            //	  catch (Exception e) { return false; }
+            //	  if( (pg.getStatus() & ImageObserver.ABORT) != 0 ) { return false; }
+            //
+
+            // A EVITER CAR RISQUE DE CONVERSION DES PIXELS SI MODE PAR DEFAUT NON ARGB
+            //      BufferedImage buf = aladin.getGraphicsConfiguration().createCompatibleImage(width, height);
+            buf = new BufferedImage(width, height,BufferedImage.TYPE_INT_ARGB);
+            Graphics g = buf.getGraphics();
+            g.drawImage(itmp,0,0,aladin);
+            g.finalize(); g=null;
+            itmp.flush(); itmp=null; 
+            
+            pixelsRGB = ((DataBufferInt)buf.getRaster().getDataBuffer()).getData();
+//         } 
+            
+         buf.flush();  buf=null;
+      
          t1 = System.currentTimeMillis();
          Aladin.trace(3,"RGB pixels extracted in "+(t1-t)+" ms"); t=t1;
 

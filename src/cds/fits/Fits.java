@@ -264,23 +264,27 @@ final public class Fits {
        boolean flagHComp = dis.isHCOMP();
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
-	   // Si on a une image avec extension
-	   // ouvrir et lire le reste des infos depuis une image de l'extension
-	   long type = dis.getType();
-	   if ( (type & MyInputStream.XFITS)!=0)  {
-		   headerFits = new HeaderFits(dis);
-		   int naxis = headerFits.getIntFromHeader("NAXIS");
-		   // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
-		   if( headerFits.getStringFromHeader("EXTEND")!=null ) {
-			   while( naxis<2 ) {
-				   // Je saute l'éventuel baratin de la première HDU
-				   if (!headerFits.readHeader(dis))
-					   throw new Exception("Naxis < 2");
-				   naxis = headerFits.getIntFromHeader("NAXIS");
-			   }
-		   }
-		   bitpix = headerFits.getIntFromHeader("BITPIX");
-	   }
+	   
+// MODIF D'ANAIS QUI NE PEUT PAS FONCTIONNER CAR UN FITS PEUT ETRE INDIQUE COMME ETANT SUSCEPTIBLE
+// D'AVOIR UNE EXTENSION SANS POUR AUTANT EN AVOIR UNE !!  [EXTEND = T]
+//
+//	   // Si on a une image avec extension
+//	   // ouvrir et lire le reste des infos depuis une image de l'extension
+//	   long type = dis.getType();
+//	   if ( (type & MyInputStream.XFITS)!=0)  {
+//		   headerFits = new HeaderFits(dis);
+//		   int naxis = headerFits.getIntFromHeader("NAXIS");
+//		   // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
+//		   if( headerFits.getStringFromHeader("EXTEND")!=null ) {
+//			   while( naxis<2 ) {
+//				   // Je saute l'éventuel baratin de la première HDU
+//				   if (!headerFits.readHeader(dis))
+//					   throw new Exception("Naxis < 2");
+//				   naxis = headerFits.getIntFromHeader("NAXIS");
+//			   }
+//		   }
+//		   bitpix = headerFits.getIntFromHeader("BITPIX");
+//	   }
 	   width  = headerFits.getIntFromHeader("NAXIS1");
 	   height = headerFits.getIntFromHeader("NAXIS2");
 	   

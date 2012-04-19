@@ -109,7 +109,7 @@ public class PlanMoc extends PlanBGCat {
          hpixListLow = hpixList;
          if( /* moc.getMaxOrder()>N && */ hpixList.length>12*Math.pow(4,N-1) ) {
             HealpixMoc hpixLow = (HealpixMoc)moc.clone();
-            try { hpixLow.setMaxLimitOrder(7); } 
+            try { hpixLow.setMaxLimitOrder(N); } 
             catch( Exception e ) { e.printStackTrace(); }
             hpixListLow = new Hpix[moc.getSize()];
             n=0;
