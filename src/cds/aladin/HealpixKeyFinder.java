@@ -131,10 +131,6 @@ public class HealpixKeyFinder extends HealpixKey {
       for( String json : list ) {
          String key = Util.extractJSON("name",json);
          if( key==null) key= Util.extractJSON("path",json);
-         else {
-            int o=key.indexOf('_');
-            if( o>=0 ) key=key.substring(0,o);
-         }
          
          String url = ((PlanBGFinder)planBG).resolveImageSourcePath(json);
 //         TreeNodeProgen node = new TreeNodeProgen(planBG.aladin, key, key, "Progen",
