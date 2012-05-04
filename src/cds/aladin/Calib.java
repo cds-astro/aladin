@@ -956,7 +956,7 @@ import java.lang.*;
                          } catch (Exception e7) {                     	 
                          rota2 = hf.getDoubleFromHeader("CROTA2  ");
                    //if(flagadd == 1) WCSKeys.addElement("CROTA2  ") ;
-//                      System.out.println("CROTA2 "+rota2);
+//                      ("CROTA2 "+rota2);
                           }
                           }
 
@@ -1128,18 +1128,36 @@ import java.lang.*;
                      if (Syst.indexOf("ICRS")>=0) system = ICRS;
                      if (Syst.indexOf("FK5")>=0) system = FK5 ;
                      if (Syst.indexOf("FK4")>=0) system = FK4 ;
-                     System.out.println("system "+system);
+             //        System.out.println("system "+system);
                   } catch(Exception e10) {}
                    try {
-                   adxpoly[0] = hf.getDoubleFromHeader("PV2_0   ");	   
-                   adxpoly[1] = hf.getDoubleFromHeader("PV2_1   ");    
+                   adxpoly[0] = hf.getDoubleFromHeader("PV2_0   ");	 
+                   } catch(Exception e11) {}
+                   try {
+                   adxpoly[1] = hf.getDoubleFromHeader("PV2_1   ");  
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[2] = hf.getDoubleFromHeader("PV2_2   "); 
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[3] = hf.getDoubleFromHeader("PV2_3   ");
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[4] = hf.getDoubleFromHeader("PV2_4   "); 
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[5] = hf.getDoubleFromHeader("PV2_5   ");
-                   adxpoly[6] = hf.getDoubleFromHeader("PV2_6   ");	   
-                   adxpoly[7] = hf.getDoubleFromHeader("PV2_7   ");    
+                   } catch(Exception e11) {}
+                   try {
+                   adxpoly[6] = hf.getDoubleFromHeader("PV2_6   ");	
+                   } catch(Exception e11) {}
+                   try {
+                   adxpoly[7] = hf.getDoubleFromHeader("PV2_7   ");  
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[8] = hf.getDoubleFromHeader("PV2_8   "); 
+                   } catch(Exception e11) {}
+                   try {
                    adxpoly[9] = hf.getDoubleFromHeader("PV2_9   ");
                  //                  System.out.println("adx: "+adxpoly[1]+" "+adxpoly[3]);
                   } catch(Exception e11) {}
@@ -1165,7 +1183,7 @@ import java.lang.*;
                         xyapoly[9] = hf.getDoubleFromHeader("PV1_9   ");   
                         xydpoly[9] = hf.getDoubleFromHeader("PV2_9   ");   
                   } catch(Exception e12) {}
-                            System.out.println(adxpoly[1]+" "+adxpoly[3]+" "+xydpoly[1]+" "+xydpoly[3]);
+                //            System.out.println(adxpoly[1]+" "+adxpoly[3]+" "+xydpoly[1]+" "+xydpoly[3]);
                   // else System.out.println("RA");
                   
                   // PF - sept 2010 - C'est plus generique comme cela
@@ -1272,11 +1290,11 @@ import java.lang.*;
                 	      }
                 	      catch (Exception e13 ){ proj = -1  ;}   
                 	      try {
-                	      System.out.println("ici") ;
+                	   //   System.out.println("ici") ;
                 	  	   order_ap = hf.getIntFromHeader("AP_ORDER") ;
-                	  	 System.out.println("ici") ;
+                	  //	 System.out.println("ici") ;
             	    	   order_bp = hf.getIntFromHeader("BP_ORDER") ;
-            	    	   System.out.println("ici") ;  
+            	    	//   System.out.println("ici") ;  
                	    	   for (int order = 2;  order < order_ap+1 ; order++)
                        	 {
                        		 for (int powx =0 ; powx < order+1 ; powx++ )
@@ -1284,7 +1302,7 @@ import java.lang.*;
                        			 sip_ap[powx][order-powx] = hf.getDoubleFromHeader("AP_"+(new Integer(powx).toString())+"_"+(new Integer(order-powx).toString())+"  ");
                        		 }
                        	 }	
-               	    	System.out.println("ici") ;
+               	 //   	System.out.println("ici") ;
             	    	   for (int order = 2;  order < order_bp+1 ; order++)
                          	 {
                          		 for (int powx =0 ; powx < order+1 ; powx++ )
@@ -1292,7 +1310,7 @@ import java.lang.*;
                          			 sip_bp[powx][order-powx] = hf.getDoubleFromHeader("BP_"+(new Integer(powx).toString())+"_"+(new Integer(order-powx).toString())+"  ");
                          		 }
                          	 }		
-            	    	   System.out.println("ici") ;
+            	    //	   System.out.println("ici") ;
                 	      }
                 	      catch (Exception e14 ) { }
                    }
@@ -1575,7 +1593,7 @@ import java.lang.*;
                 al = ac.getLon();
                 del = ac.getLat();
                }
-               if (system ==  FK5)
+              if (system ==  FK5)
 //                 if ((equinox != 2000.0)&&(system != GALACTIC))
     // Ancine test supprimé en 04/2012  
                      {
@@ -1695,10 +1713,12 @@ import java.lang.*;
                         sin_del*sdelz+ cos_del*cdelz *cos_dalpha);
                         double rteta ;
                         if (proj == ZPN)
-                        {
-                        	
-                        rteta = adxpoly[1]*(Math.PI/2 -tet) +adxpoly[3]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet) 
-                                 + adxpoly[5]* (Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
+                        { rteta = 0.0 ;
+                          	 for (int order = 9;  order >= 0 ; order--)
+                           	 { rteta = (rteta )*(Math.PI/2-tet)+adxpoly[order];}
+                            		
+                     //   rteta = adxpoly[1]*(Math.PI/2 -tet) +adxpoly[3]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet) 
+                     //            + adxpoly[5]* (Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
                         }
                         else rteta = (Math.PI/2 -tet) ;
                         //x_stand = (Math.PI/2 -tet)*Math.sin(phi) ;
@@ -1756,6 +1776,7 @@ import java.lang.*;
           }
         c.xstand = x_stand ;
         c.ystand = y_stand ;
+        
       }
 
 
@@ -1894,6 +1915,7 @@ import java.lang.*;
 
              double X ;
              double tet ;
+           //  System.out.println("Proj "+proj);
              switch(proj)
               {
                 case SIN: // projection en SINUS
@@ -2011,11 +2033,20 @@ import java.lang.*;
                        int niter = 20 ;
                        double dtet ;
                        int iter = 0 ;
+               //        System.out.println("adxpoly "+adxpoly[1]+" "+adxpoly[3]+" "+adxpoly[5]);
                        while (iter < niter)
-                       {                                                                                                                                                                                                                                                                                                                                                    
-                        dtet = (rteta- adxpoly[1]*tet -adxpoly[3]* tet*tet*tet-adxpoly[5]*tet*tet*tet*tet*tet)/(adxpoly[1]+3*adxpoly[3]* tet*tet+5*adxpoly[5]*tet*tet*tet*tet) ;
-                        tet += dtet ;
-       //                 System.out.println("tet"+iter+" "+rteta+" "+tet+" "+dtet);
+                       {   double rrr =0.0 ;
+                           double drrr = 0.0 ;
+                    	   for (int order = 9;  order >= 0 ; order--)
+                         	 { rrr = (rrr )*tet+adxpoly[order];}
+                    	   for (int order = 8;  order >= 0 ; order--)
+                    	   {  
+                         	   drrr = drrr * tet + (order+1)*adxpoly[order+1];
+                           }
+                     //   dtet = (rteta- adxpoly[1]*tet -adxpoly[3]* tet*tet*tet-adxpoly[5]*tet*tet*tet*tet*tet)/(adxpoly[1]+3*adxpoly[3]* tet*tet+5*adxpoly[5]*tet*tet*tet*tet) ;
+                          dtet = (rteta -rrr)/drrr ;  
+                    	   tet += dtet ;
+                  //     System.out.println("tet"+iter+" "+rteta+" "+tet+" "+dtet);
                         iter++ ;
                        }
                        }
@@ -2196,7 +2227,7 @@ import java.lang.*;
                  c.al = ac.getLon();
                  c.del = ac.getLat();
                  }
-              if (system == FK5)
+             if (system == FK5)
               {
  // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
 //                  Astroframe j2000 = new Astroframe() ;
@@ -2205,10 +2236,10 @@ import java.lang.*;
 //                  natif.convert(j2000) ;
 //                  c.al = j2000.getLon() ;
 //                  c.del = j2000.getLat() ;
-                  Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
+                 Astrocoo ac = new Astrocoo(AF_FK5,c.al,c.del);
                   ac.setPrecision(Astrocoo.MAS+1);
                   ac.convertTo(AF_ICRS);
-                  c.al = ac.getLon();
+                 c.al = ac.getLon();
                   c.del = ac.getLat();
                   }
               if (system == GALACTIC)
@@ -2748,10 +2779,12 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
                         double rteta ;
                         if (proj == ZPN)
                         { rteta = 0.0 ;
+                        // System.out.println("rteta "+rteta);
                      //                        	rteta = adxpoly[1]*(Math.PI/2 -tet) +adxpoly[3]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet) +adxpoly[5]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
                        	 for (int order = 9;  order >= 0 ; order--)
                        	 { rteta = (rteta )*(Math.PI/2-tet)+adxpoly[order];}}
                         	else rteta = (Math.PI/2 -tet) ;
+                       // System.out.println("rteta "+rteta);
                       //  System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
                         x_stand = rteta*Math.sin(phi) ;
 //                        y_stand = -(Math.PI/2 -tet)*Math.cos(phi) ;
@@ -3375,31 +3408,35 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
             if (aladin == 1) value.addElement("'DEC--TAN'");
 //PIERRE : ATTENTION type2 PEUT ETRE NULL -- NORMALEMENT, PLUS FB
             else value.addElement(type2);
-            key.addElement("RADECSYS");
-            switch (system)
-                {
-                 case 1 :
-                       value.addElement("FK4") ;
-                       break ;
-                 case 2 :
-                       value.addElement("GLON") ;
-                       break ;
-                 case 3 :
-                       value.addElement("SLON") ;
-                       break ;
-                 case 4 :
-                       value.addElement("ELON") ;
-                       break ;
-                 case 5 :
-                       value.addElement("FK5") ;
-                       break ;
-                 case 6 :
-                       value.addElement("ICRS") ;
-                       break ;
-                 case 7 :
-                	 value.addElement("Solar") ;
-                     break ; 
-                }
+           // key.addElement("RADECSYS");
+            if( RADECSYS[system].length()>0 ) {
+                key.addElement("RADECSYS");
+                value.addElement(RADECSYS[system]);
+             }
+           // switch (system)
+           //     {
+           //      case 1 :
+           //            value.addElement("FK4") ;
+           //            break ;
+           //      case 2 :
+           //            value.addElement("GLON") ;
+           //            break ;
+           //      case 3 :
+          //             value.addElement("SLON") ;
+           //            break ;
+           //      case 4 :
+           //            value.addElement("ELON") ;
+           //            break ;
+           //      case 5 :
+           //            value.addElement("FK5") ;
+           //            break ;
+           //      case 6 :
+           //            value.addElement("ICRS") ;
+           //            break ;
+           //      case 7 :
+           //     	 value.addElement("Solar") ;
+           //          break ; 
+           //     }
        if (aladin == 1)
           {
 //            double sca = incX/(1000.0*focale) ;
