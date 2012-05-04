@@ -69,18 +69,22 @@ public class SkyGen {
 		// ---- Qq vérifications
 
 		// arguments des répertoires de départ
-		if (context.getInputPath() == null) {
+		if ( (action==Action.TILES || action==Action.FINDER || action==null) && context.getInputPath() == null) {
 			throw new Exception("Argument inputdir is missing");
 			// Par défaut le répertoire courant
 			//context.setInputPath(System.getProperty("user.dir"));
 		}
-		if (context.getOutputPath() == null)
+		if (context.getOutputPath() == null && context.getInputPath()!=null )
 			// Par défaut le répertoire courant
-			context.setOutputPath(context.getInputPath()
-					+ /* Util.FS+ */Constante.ALLSKY);
+			context.setOutputPath(context.getInputPath() + Constante.ALLSKY);
+		// Deuxième vérif
+	    if (context.getOutputPath() == null) {
+           throw new Exception("Argument outputdir is missing");
+	    }
+
 
 		// données déjà présentes ?
-		if (!context.isExistingDir()) {
+		if ( (action==Action.TILES || action==Action.FINDER || action==null) && !context.isExistingDir()) {
 			throw new Exception("Input dir does NOT exists : "
 					+ context.getInputPath());
 		}
@@ -101,7 +105,7 @@ public class SkyGen {
 		}
 
 		// si on n'a pas d'image etalon, on la cherche + initialise avec
-		if ( (action!=Action.JPEG&&action!=Action.MOC&&action!=Action.ALLSKY) 
+		if ( (action==Action.TILES || action==Action.FINDER) 
 				&& (context.getImgEtalon()==null) ) {
 			boolean found = context.findImgEtalon(context.getInputPath());
 			if (!found) {
@@ -212,7 +216,7 @@ public class SkyGen {
 	}
 
 	enum Action {
-		FINDER, TILES, JPEG, MOC, ALLSKY
+		FINDER, TILES, JPEG, MOC, ALLSKY, GZIP, GUNZIP
 	}
 
 	public static void main(String[] args) {
@@ -268,8 +272,7 @@ public class SkyGen {
 		try {
 			generator.validateContext();
 		} catch (Exception e) {
-			System.err.println(e);
-//			e.printStackTrace();
+			e.printStackTrace();
 			return;
 		}
 		// lance les calculs
@@ -328,6 +331,20 @@ public class SkyGen {
 			builder.createMoc(context.outputPath);
 			break;
 		}
+		case GZIP : {
+		   System.out.println("*** Gzip all fits tiles");
+		   BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
+		   gz.gzip();
+           System.out.println("*** Gzip done !");
+		   break;
+		}
+        case GUNZIP : {
+           System.out.println("*** Gunzip all fits tiles");
+           BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
+           gz.gunzip();
+           System.out.println("*** Gunzip done !");
+           break;
+        }
 		case TILES : {
 			System.out.println("*** Create healpix tiles : ");
 			BuilderController builder = new BuilderController(context);
@@ -392,15 +409,17 @@ public class SkyGen {
 				"finder    Build finder index" + "\n" +
 				"tiles     Build Healpix tiles" + "\n" +
 				"jpeg      Build JPEG tiles from original tiles" + "\n" +
-				"moc       Build MOC from finder Index or from target directory" + "\n" +
-				"allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)");
+                "moc       Build MOC from finder Index or from target directory" + "\n" +
+                "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n" +
+                "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n" +
+                "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)");
 	}
 
 	private void setConfigFile(String configfile) throws Exception {
 		this.file = new File(configfile);
 		parseConfig();
 	}
-
+	
 	class ThreadProgressBar implements Runnable {
 		Progressive builder;
 		boolean isRunning = false;

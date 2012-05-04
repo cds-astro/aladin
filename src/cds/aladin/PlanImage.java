@@ -697,6 +697,12 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
       return url;
    }
    
+   /** Retourne la couleur de fond du plan */
+   protected Color getBackGroundColor() {
+      if( colorBackground!=null)  return colorBackground;
+      return isPixel() &&active && video==PlanImage.VIDEO_NORMAL ? Color.black : Color.white;
+   }
+   
    /** retourne la table des couleurs associée à l'image */
    public ColorModel getCM() { return cm; }
    

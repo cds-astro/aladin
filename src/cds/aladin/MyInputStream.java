@@ -129,7 +129,7 @@ public final class MyInputStream extends FilterInputStream {
    }
    
    public void close() throws IOException {
-      if( Aladin.levelTrace>3 ) System.out.println("MyinputStream.close(): "+this);
+//      if( Aladin.levelTrace>3 ) System.out.println("MyinputStream.close(): "+this);
       in.close();
       super.close();
    }

@@ -107,7 +107,8 @@ public class Context {
    public void setSkyValName(String s ) { skyvalName=s; }
    public void setInputPath(String path) { this.inputPath = path; 
    		// cherche le dernier mot et le met dans le label
-   		label = path.substring(path.lastIndexOf(Util.FS) + 1);}
+   		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
+   }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void sethpxFinderPath(String path) { hpxFinderPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
@@ -402,11 +403,15 @@ public class Context {
    protected void stop() { }
    
    protected boolean isExistingDir() {
-      return  (new File(getInputPath())).exists();
+      String path = getInputPath();
+      if( path==null ) return false;
+      return  (new File(path)).exists();
    }
 
    protected boolean isExistingAllskyDir() {
-      return (new File(getOutputPath())).exists();
+      String path = getOutputPath();
+      if( path==null ) return false;
+      return (new File(path)).exists();
    }
 
    protected void enableProgress(boolean selected, int mode) { }
@@ -485,6 +490,9 @@ public class Context {
 	   Context.verbose = verbose;
 	   BuilderController.DEBUG=true;
    }
+   
+   /** Verbose or not ? */
+   public static int getVerbose() { return Aladin.levelTrace; }
 
    /**
     * Niveau de verbosité : 
