@@ -188,7 +188,7 @@ public class Context {
 	   Fits fitsfile = new Fits();
 
 	   int code = fitsfile.loadHeaderFITS(path);
-	   if( fitsfile.getCalib()==null ) throw new Exception("No calib !");
+//	   if( fitsfile.getCalib()==null ) throw new Exception("No calib !");
 	   
        setBitpixOrig(fitsfile.bitpix);
        if( !isColor() ) {
@@ -513,7 +513,7 @@ public class Context {
    }
 
    public void warning(String string) {
-       String s_WARN    = "WARNING :";//Aladin.getChaine().getString("WARNING");
+       String s_WARN    = "INFO  :";//Aladin.getChaine().getString("WARNING");
        System.out.println(s_WARN+" "+string);
    }
 

@@ -105,6 +105,7 @@ final public class BuilderGzip {
          }
       }
       if( verbose>0 ) System.out.println();
+      if( nbFile==0 ) System.out.println("No tile found !");
    }
    
    // gzip (resp. gunzip) du fichier indiqué. 

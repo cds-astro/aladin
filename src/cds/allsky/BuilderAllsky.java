@@ -67,7 +67,8 @@ final public class BuilderAllsky {
       prop.setProperty(PlanHealpix.KEY_ISCOLOR, flagColor+"");
       prop.setProperty(PlanHealpix.KEY_ALADINVERSION, Aladin.VERSION);
       prop.setProperty(PlanHealpix.KEY_IMAGESOURCEPATH, "path:$1");
-      prop.setProperty(PlanHealpix.KEY_LABEL, context.getLabel());
+      String label = context.getLabel();
+      if( label!=null ) prop.setProperty(PlanHealpix.KEY_LABEL, label);
       prop.setProperty(PlanHealpix.KEY_MAXORDER, context.getOrder()+"");
 
       prop.store(new FileOutputStream(propertiesFile(path)), null);
@@ -155,16 +156,31 @@ final public class BuilderAllsky {
       out.setBlank(blank);
       out.setBzero(bzero);
       out.setBscale(bscale);
-      out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
-      out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
-      out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
-      out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
-      
-      // Ecriture du FITS (true bits)
+      if( cut[0]<cut[1] ) {
+         out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
+         out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
+         
+         if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
+            int bitpix = out.bitpix;
+            cut[2] = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Double.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Double.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+            Aladin.trace(1,"BuilderAllsky.createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
+         }
+         out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
+         out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
+
+      } else {
+         Aladin.trace(1,"BuilderAllsky.createAllSky() pixel cut range [PIXELMIN..PIXELMAX] not consistante => ignored");
+      }
+
+
+   // Ecriture du FITS (true bits)
       String filename = getFileName(path, order);
       out.writeFITS(filename+".fits");
       
-      Aladin.trace(3,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
+      Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
             +" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
    }
