@@ -41,7 +41,7 @@ public class Task implements Runnable {
        this.context = context;
        builderIndex = new BuilderIndex(context);
        builderAllsky = new BuilderAllsky(context,-1);
-       builder = new BuilderController(context);
+       builder = new BuilderController(this,context);
     }
     
 	public synchronized void startThread(){
@@ -259,7 +259,7 @@ public class Task implements Runnable {
 	               value = builder.getProgress();
 	               int n3 = ((BuilderController)builder).getLastN3();
 	               if (n3!=-1 && last!=n3) {
-	                  if( tasks.createAllSky(false) ) context.preview(n3);
+	                  /* if( tasks.createAllSky(false) ) */ context.preview(n3);
 	                  //                  tasks.config.setLastN3(n3);
 	                  last = n3;
 	               }

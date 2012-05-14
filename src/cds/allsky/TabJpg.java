@@ -12,6 +12,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.ColorModel;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -56,6 +57,7 @@ public class TabJpg extends JPanel implements ActionListener {
 //   private JButton bHelp = new JButton();
    protected JButton bNext = new JButton();
    protected JButton bPrevious = new JButton();
+   protected JButton b_moc;
    JProgressBar progressJpg = new JProgressBar(0,100);
    private String NEXT;
    private String PREVIOUS;
@@ -210,8 +212,16 @@ public class TabJpg extends JPanel implements ActionListener {
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
       pBtn.add(bPrevious);
+      
+      b_moc = new JButton(getString("LOADMOCP"));
+      b_moc.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { loadMoc(); }
+      });
+      pBtn.add(b_moc);
+
       ok.setText(getString("JPEGBUILDALLSKY"));
       pBtn.add(ok);
+      
       pBtn.add(Box.createRigidArea(new Dimension(10,0)));
       pBtn.add(bNext);
       pBtn.add(Box.createHorizontalGlue());
@@ -222,6 +232,11 @@ public class TabJpg extends JPanel implements ActionListener {
       add(pCenter, BorderLayout.CENTER);
       add(fin, BorderLayout.SOUTH);
       setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
+   }
+   
+   private void loadMoc() {
+      String mocFile = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 
    private void createChaine(Chaine chaine) {
@@ -263,6 +278,11 @@ public class TabJpg extends JPanel implements ActionListener {
    public String getCutMin() { return tCutMin.getText().trim(); }
    public String getCutMax() { return tCutMax.getText().trim(); }
    
+   private boolean isExistingMoc() {
+      String moc = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      return  moc!=null && (new File(moc)).exists();
+   }
+   
    public boolean isCutFromPlanBase() { return !radioManual.isSelected(); }
 
    /** Retourne la table des couleurs de la vue courante, ou null si le mode de cut est positionné manuellement */
@@ -281,6 +301,7 @@ public class TabJpg extends JPanel implements ActionListener {
       boolean readyToDo = mainPanel.isExistingDir() || mainPanel.isExistingAllskyDir();
       boolean isRunning = mainPanel.isRunning();
       boolean isColor = mainPanel.context.isColor();
+      b_moc.setEnabled(isExistingMoc());
       bPrevious.setEnabled(!isRunning);
       bNext.setEnabled(readyToDo && !isRunning);
       tCutMin.setEnabled(readyToDo && !isColor);

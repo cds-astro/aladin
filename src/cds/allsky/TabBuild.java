@@ -337,7 +337,7 @@ public class TabBuild extends JPanel implements ActionListener {
    }
    
    private void loadMoc() {
-      String mocFile = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String mocFile = mainPanel.context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME;
       mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 
@@ -391,7 +391,7 @@ public class TabBuild extends JPanel implements ActionListener {
    }
    
    private boolean isExistingMoc() {
-      String moc = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String moc = mainPanel.context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME;
       return  moc!=null && (new File(moc)).exists();
    }
 

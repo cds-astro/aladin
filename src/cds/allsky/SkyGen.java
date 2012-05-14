@@ -69,7 +69,7 @@ public class SkyGen {
       // ---- Qq vérifications
 
       // arguments des répertoires de départ
-      if ( (action==Action.TILES || action==Action.FINDER || action==null) && context.getInputPath() == null) {
+      if ( (action==Action.TILES || action==Action.INDEX || action==null) && context.getInputPath() == null) {
          throw new Exception("Argument \"input\" is missing");
          // Par défaut le répertoire courant
          //context.setInputPath(System.getProperty("user.dir"));
@@ -84,7 +84,7 @@ public class SkyGen {
 
 
       // données déjà présentes ?
-      if ( (action==Action.TILES || action==Action.FINDER || action==null) && !context.isExistingDir()) {
+      if ( (action==Action.TILES || action==Action.INDEX || action==null) && !context.isExistingDir()) {
          throw new Exception("Input dir does NOT exist : " + context.getInputPath());
       }
       if (context.isExistingAllskyDir()) {
@@ -103,7 +103,7 @@ public class SkyGen {
       
 
       // si on n'a pas d'image etalon, on la cherche + initialise avec
-      if ( (action==null || action==Action.TILES || action==Action.FINDER || action==Action.ALLSKY) 
+      if ( (action==null || action==Action.TILES || action==Action.INDEX || action==Action.ALLSKY) 
             && context.getImgEtalon()==null ) {
          
          double memoCut[] = context.getCut();
@@ -130,7 +130,7 @@ public class SkyGen {
          // On remet le cut qui avait été explicitement indiqué en paramètre
          if( found && memoCut!=null ) context.setCut(memoCut);
 
-         if( action==null || action==Action.TILES || action==Action.FINDER ) {
+         if( action==null || action==Action.TILES || action==Action.INDEX ) {
             Fits file = new Fits();
             try {
                file.loadHeaderFITS(context.getImgEtalon());
@@ -229,7 +229,8 @@ public class SkyGen {
    }
 
    enum Action {
-      FINDER, TILES, JPEG, MOC, ALLSKY, GZIP, GUNZIP
+      INDEX, TILES, JPEG, MOC, MOCINDEX, ALLSKY, GZIP, GUNZIP,
+      FINDER  // Pour compatibilité
    }
 
    public static void main(String[] args) {
@@ -274,6 +275,7 @@ public class SkyGen {
          else {
             try {
                generator.action = Action.valueOf(arg.toUpperCase());
+               if( generator.action==Action.FINDER ) generator.action=Action.INDEX;   // Pour compatibilité
             } catch (Exception e) {
                e.printStackTrace();
                return;
@@ -299,7 +301,7 @@ public class SkyGen {
       
       if (action==null) {
          // aucune action définie -> on fait la totale (sauf jpg)
-         action = Action.FINDER;
+         action = Action.INDEX;
          start();
          action = Action.TILES;
          start();
@@ -311,7 +313,7 @@ public class SkyGen {
       }
 
       switch (action) {
-         case FINDER : {
+         case INDEX : {
             System.out.println("*** Create HEALPix index...");
             BuilderIndex builder = new BuilderIndex(context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
@@ -347,10 +349,17 @@ public class SkyGen {
             break;
          }
          case MOC : {
-            System.out.println("*** Create MOC...");
+            System.out.println("*** Create MOC covering generated tiles)...");
             BuilderMoc builder = new BuilderMoc();
             builder.createMoc(context.outputPath);
-            System.out.println("MOC created !");
+            System.out.println("Tile MOC created in "+context.outputPath);
+            break;
+         }
+         case MOCINDEX : {
+            System.out.println("*** Create MOC covering HEALPix index)...");
+            BuilderMoc builder = new BuilderMoc();
+            builder.createMoc(context.getHpxFinderPath());
+            System.out.println("Index MOC created in "+context.getHpxFinderPath());
             break;
          }
          case GZIP : {
@@ -369,7 +378,8 @@ public class SkyGen {
          }
          case TILES : {
             System.out.println("*** Create FITS tiles... ");
-            BuilderController builder = new BuilderController(context);
+            Task task = new Task(context);
+            BuilderController builder = new BuilderController(task,context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
             // laisse le temps au thread de se lancer
@@ -431,10 +441,11 @@ public class SkyGen {
             "img       Image path to use for initialization (default is first found)" + "\n" +
             "verbose   Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n");
       System.out.println("\nUse one of these actions at end of command line :" + "\n" +
-            "finder    Build finder index" + "\n" +
+            "index     Build finder index" + "\n" +
             "tiles     Build Healpix tiles" + "\n" +
             "jpeg      Build JPEG tiles from original tiles" + "\n" +
-            "moc       Build MOC from finder Index or from target directory" + "\n" +
+            "moc       Build MOC (based on generated tiles)" + "\n" +
+            "mocindex  Build MOC (based on HEALPix index)" + "\n" +
             "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n" +
             "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n" +
             "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)");

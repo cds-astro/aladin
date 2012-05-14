@@ -54,7 +54,7 @@ public class BuilderController implements Progressive {
    private CoAddMode coaddMode=CoAddMode.REPLACEALL;
 
    public Context context;
-
+   public Task task;
    
 //   protected String hpxFinderPath;
    protected int ordermin = 3;
@@ -87,7 +87,8 @@ public class BuilderController implements Progressive {
    private long totalTime;                 // Temps depuis le début du calcul
    private long statLastShowTime = 0L;     // Date de la dernière mise à jour du panneau d'affichage
 
-   public BuilderController(Context context) {
+   public BuilderController(Task task,Context context) {
+      this.task = task;
       this.context=context;
       
    }
@@ -315,6 +316,8 @@ public class BuilderController implements Progressive {
                if (stopped) break;
 
                Fits f = createHpx(hpx, context.getOutputPath(), ordermin, ordermax, npix);
+               task.createAllSky(false);
+               
                if (f!=null) lastN3 = (int)npix;
                progress++;
             } catch( Throwable e ) { e.printStackTrace(); }

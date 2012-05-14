@@ -256,16 +256,16 @@ public class PlanBG extends PlanImage {
       type = ALLSKYIMG;
       video=VIDEO_NORMAL;
       url = u.toString();
-      int n = url.length();
-      if( url.charAt(n-1)=='/' ) n--;
-      survey = url.substring(url.lastIndexOf('/',n)+1);;
+      
       maxOrder = 3;
       useCache = true;
       localAllSky = false;
-      this.label=label;
       co=c;
       coRadius=radius;
       paramByTreeNode(new TreeNodeAllsky(aladin, url),c,radius);
+      int n = url.length();
+      if( url.endsWith("/") ) n--;
+      survey = this.label!=null && this.label.length()>0 ? this.label : url.substring(url.lastIndexOf('/',n-1)+1,n);
       aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
       suite();
    }
