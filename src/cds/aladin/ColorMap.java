@@ -549,7 +549,7 @@ public final class ColorMap extends JPanel  implements
    * @return la table des couleurs generee
    */
    // des triangles
-   static protected IndexColorModel getCM(int tr0,int tr1,int tr2,
+   public static IndexColorModel getCM(int tr0,int tr1,int tr2,
                                     boolean inverse,int typeCM,int fct) {
       int i,n;
 
