@@ -162,9 +162,7 @@ public class Task implements Runnable {
 
 	   try {
 	      builderAllsky.createAllSky(3,64);
-	   } catch (Exception e) {
-	      e.printStackTrace();
-	   }
+	   } catch (Exception e) { }
 	   return true;
 	}
 

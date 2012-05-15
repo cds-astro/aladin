@@ -79,15 +79,12 @@ final public class BuilderMoc {
          e.printStackTrace();
       }
    }
+   
+   /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */
+   public long getUsedArea() { return moc.getUsedArea(); }
 
-//   /** Used for duplicate the MOC into another file */
-//   public void duplicateMoc(String outputFile) throws Exception {
-//      try {
-//         moc.write(outputFile, HealpixMoc.FITS);
-//      } catch( Exception e ) {
-//         e.printStackTrace();
-//      }
-//   }
+   /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
+   public long getArea() { return moc.getArea(); }
 
    public void generateMoc(String path) throws Exception {
       ext = null;

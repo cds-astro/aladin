@@ -86,11 +86,11 @@ public class BuildProgressPanel extends JPanel {
       memStat.setText(s);
    }
 
-   protected void setLowTileStat(int nbTile,long sizeTile,long minTime, long maxTime, long avgTime) {
+   protected void setLowTileStat(int nbTile,long nbCells,long sizeTile,long minTime, long maxTime, long avgTime) {
       String s;
       if( nbTile==-1 ) s="";
       else 
-       s= nbTile+" tile"+(nbTile>1?"s":"")
+       s= nbTile+"/"+nbCells+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - avg.proc.time: "+Util.getTemps(avgTime)+" ["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"]";
       lowTileStat.setText(s);

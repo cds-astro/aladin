@@ -79,6 +79,7 @@ public class BuilderController implements Progressive {
    // Pour les stat
    private int statNbThreadRunning=-1;     // Nombre de Thread qui sont en train de calculer
    private int statNbThread;               // Nombre max de Thread de calcul
+   private long statNbTileToDo=-1;         // Nombre de tuiles à calculer
    private int statNbTile;                 // Nombre de tuiles terminales déjà calculés
    private long statMinTime,statMaxTime,statTotalTime,statAvgTime;
    private int statNodeTile;                 // Nombre de tuiles "intermédiaires" déjà calculés
@@ -201,8 +202,7 @@ public class BuilderController implements Progressive {
          cds.tools.Util.pause(1000);
       }
       
-      context.showBuildStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statNodeTile,
-            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
+      context.showBuildStat(System.currentTimeMillis()-t,statNbTile);
       Aladin.trace(3,"Cache stated: "+ context.cacheFits);
       Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }
@@ -755,10 +755,8 @@ public class BuilderController implements Progressive {
          else out.writeFITS(file+".fits");
          long duree = System.currentTimeMillis()-t;
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
-
          updateStat(0,1,duree,0,0);
       }
-
 
       return out;
    }

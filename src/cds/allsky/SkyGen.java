@@ -289,7 +289,7 @@ public class SkyGen {
       try {
          generator.validateContext();
       } catch (Exception e) {
-         System.out.println("FATAL ERROR: "+e.getMessage());
+         generator.context.error(e.getMessage());
          return;
       }
       // lance les calculs
@@ -309,31 +309,39 @@ public class SkyGen {
          start();
          action = Action.MOC;
          start();
+         context.done("The end");
          return;
       }
 
       switch (action) {
          case INDEX : {
-            System.out.println("*** Create HEALPix index...");
+            context.running("Creating HEALPix index (depth="+context.getOrder()+")...");
             BuilderIndex builder = new BuilderIndex(context);
-            ThreadProgressBar progressBar = new ThreadProgressBar(builder);
-            (new Thread(progressBar)).start();
-            // laisse le temps au thread de se lancer
-            try {
-               Thread.sleep(200);
-            } catch (InterruptedException e) {
-            }
             File f = new File(context.getHpxFinderPath()+Util.FS+"Norder"+order);
-            if (f.exists()) context.warning("Found previous index => use it");
-            else {
+            if (f.exists()) {
+               context.info("Found an existing index => use it \"as is\"");
+               builder.loadMoc();
+               if( context.getNbCells()!=-1 ) {
+                  context.info("Found an index MOC covering "+context.getNbCells()+" low level HEALPix cells");
+               }
+
+            } else {
+               ThreadProgressBar progressBar = new ThreadProgressBar(builder);
+               (new Thread(progressBar)).start();
+               // laisse le temps au thread de se lancer
+               try {
+                  Thread.sleep(200);
+               } catch (InterruptedException e) {
+               }
                builder.build();
-               System.out.println("HEALPix index created !");
+               context.nldone("HEALPix index created !");
+               progressBar.stop();
+               context.info("The generated index covers "+context.getNbCells()+" low level HEALPix cells (depth="+context.getOrder()+")");
             }
-            progressBar.stop();
             break;
          }
          case JPEG : {
-            System.out.println("*** Create Jpeg tiles...");
+            context.running("Creating Jpeg tiles...");
             BuilderJpg builder = new BuilderJpg(null, context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
@@ -344,40 +352,46 @@ public class SkyGen {
             }
             builder.run();
             progressBar.stop();
-            System.out.println("Jpeg tiles created !");
+            context.nldone("Jpeg tiles created !");
             // la construction du allsky est automatiquement faite par le builder
             break;
          }
          case MOC : {
-            System.out.println("*** Create MOC covering generated tiles)...");
+            context.running("Creating MOC covering generated tiles)...");
             BuilderMoc builder = new BuilderMoc();
             builder.createMoc(context.outputPath);
-            System.out.println("Tile MOC created in "+context.outputPath);
+            context.done("Tile MOC created in "+context.outputPath);
             break;
          }
          case MOCINDEX : {
-            System.out.println("*** Create MOC covering HEALPix index)...");
+            context.running("Creating MOC covering HEALPix index)...");
             BuilderMoc builder = new BuilderMoc();
             builder.createMoc(context.getHpxFinderPath());
-            System.out.println("Index MOC created in "+context.getHpxFinderPath());
+            context.done("Index MOC created in "+context.getHpxFinderPath());
             break;
          }
          case GZIP : {
-            System.out.println("*** Gzip all FITS tiles...");
+            context.running("Gzipping all FITS tiles...");
             BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
             gz.gzip();
-            System.out.println("Gzip done !");
+            context.done("Gzip done !");
             break;
          }
          case GUNZIP : {
-            System.out.println("*** Gunzip all FITS tiles...");
+            context.running("Gunzipping all FITS tiles...");
             BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
             gz.gunzip();
-            System.out.println("Gunzip done !");
+            context.done("Gunzip done !");
             break;
          }
          case TILES : {
-            System.out.println("*** Create FITS tiles... ");
+            context.running("Creating FITS tiles and allsky (max depth="+context.getOrder()+")...");
+            if( context.getNbCells()==-1 ) {
+               (new BuilderIndex(context)).loadMoc();  // pour connaitre le nombre de cellules à calculer
+               if( context.getNbCells()!=-1 ) {
+                  context.info("Found an index MOC covering "+context.getNbCells()+" low level HEALPix cells");
+               }
+           }
             Task task = new Task(context);
             BuilderController builder = new BuilderController(task,context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
@@ -391,26 +405,27 @@ public class SkyGen {
                builder.build();
             } catch (Exception e) {
 //               e.printStackTrace();
-               System.out.println("FATAL ERROR: "+e.getMessage());
+               context.error(e.getMessage());
                System.exit(0);
             } finally {
                progressBar.stop();
             }
+            context.done("FITS tiles created !");
+            
             // force à recréer le allsky
-            action = Action.ALLSKY;
-            start();
-            System.out.println("FITS tiles created !");
+//            action = Action.ALLSKY;
+//            start();
             break;
          }
          case ALLSKY : {
-            System.out.println("*** Create Allsky views (FITS and JPEG if possible)... ");
+            context.running("Creating Allsky views (FITS and JPEG if possible)...");
             BuilderAllsky builder = new BuilderAllsky(context, -1);
             try {
                builder.createAllSky(3, 64);
                if (context.getCut()!=null) builder.createAllSkyJpgColor(3,64,false);
-               System.out.println("Allsky view created !");
+               context.done("Allsky view created !");
             } catch (Exception e) {
-               System.out.println("FATAL ERROR: "+e.getMessage());
+               context.error(e.getMessage());
 //               e.printStackTrace();
                System.exit(0);
             }
@@ -475,7 +490,7 @@ public class SkyGen {
 
       }
       public void stop() {
-         context.setProgress(this.builder.getProgress());
+//         context.setProgress(this.builder.getProgress());
          isRunning=false;
       }
    }

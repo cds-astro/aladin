@@ -46,12 +46,16 @@ public class ContextGui extends Context {
          long statNodeAvgTime) {
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
       mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
-      mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,
+      mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,nbCells,
             (long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
             statMinTime,statMaxTime,statAvgTime);
       mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,
             (long)( Constante.SIDE*Constante.SIDE*Math.abs(bitpix)/8),
             statNodeAvgTime);
+   }
+   
+   protected void showBuildStat(long totalTime,int statNbTile) {
+      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime);
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)

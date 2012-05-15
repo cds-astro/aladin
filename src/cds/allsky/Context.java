@@ -58,7 +58,8 @@ public class Context {
    protected HealpixMoc moc = null;          // Zone du ciel à traiter (décrite par un MOC)
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected boolean isRunning=false;        // true s'il y a un processus de calcul en cours
-//   protected boolean isColor=false;          // true si les images d'entrée sont des jpeg couleur 
+   
+   protected long nbCells= -1;              // Pour les stats, nombre de cellules de bas niveaux à calculer
    
    protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
    
@@ -413,9 +414,17 @@ public class Context {
       if( path==null ) return false;
       return (new File(path)).exists();
    }
+   
+   /** Mémorise le nombre de cellules de bas niveau à calculer  */
+   protected void setNbCells(long nbCells) {
+      this.nbCells=nbCells;
+   }
+   
+   /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index) */
+   protected long getNbCells() { return nbCells; }
 
    protected void enableProgress(boolean selected, int mode) { }
-   protected void setProgress(int value) { System.out.print("*");}
+   protected void setProgress(int value) { System.out.print(".");}
    protected void setProgress(int mode, int value) { System.out.println(value+"%");}
    protected void preview (int n3) { }
 
@@ -428,7 +437,7 @@ public class Context {
 		   String s;
 		   if( statNbFile==-1 ) s = "--";
 		   else {
-			   s= statNbFile+" file"+(statNbFile>1?"s":"")
+			   s= "\n"+statNbFile+" file"+(statNbFile>1?"s":"")
 			   + (statNbZipFile==statNbFile ? " (all gzipped)" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
 			   + " using "+Util.getUnitDisk(statMemFile)
 			   + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight+"x"+statMaxNbyte+"]");
@@ -443,20 +452,38 @@ public class Context {
          int statNbTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
          long statNodeAvgTime) {
 	// affiche sur la sortie standard toutes les 30 sec
-	   if (verbose && (System.currentTimeMillis()-statTime)>30000) {
+	   if (/* verbose &&*/ (System.currentTimeMillis()-statTime)>30000) {
 		      long maxMem = Runtime.getRuntime().maxMemory();
 		      long totalMem = Runtime.getRuntime().totalMemory();
 		      long freeMem = Runtime.getRuntime().freeMemory();
 		      long usedMem = totalMem-freeMem;
+		      
+		      String sNbCells = nbCells==-1 ? "" : "/"+nbCells;
+		      String pourcentNbCells = nbCells==-1 ? "" : (Math.round( ( (double)statNbTile/nbCells )*1000)/10.)+"%) ";
+		      
+		      String s=statNbTile+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
+		          +pourcentNbCells
+		          +Util.getTemps(statAvgTime)+" per tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"])"
+		          +" per "+statNbThreadRunning+"/"+statNbThread+" threads"
+		          +" - RAM: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
+		          +" (FITS cache size: "+Util.getUnitDisk(cacheFits.getStatMem())+")";
 
-		      String s= "thread: "+(statNbThreadRunning==-1?"":statNbThreadRunning+" / "+statNbThread)
-		      + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
-		           +" (ram:"+cacheFits.getStatNbFind()
-		           +" disk:"+cacheFits.getStatNbOpen()+" free:"+cacheFits.getStatNbFree()+")"
-		      + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
-		      System.out.println(s);
-			   statTime = System.currentTimeMillis();
+//		      String s= "thread: "+(statNbThreadRunning==-1?"":statNbThreadRunning+" / "+statNbThread)
+//		      + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
+//		           +" (ram:"+cacheFits.getStatNbFind()
+//		           +" disk:"+cacheFits.getStatNbOpen()+" free:"+cacheFits.getStatNbFree()+")"
+//		      + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
+		      nlstat(s);
+			  statTime = System.currentTimeMillis();
 	   }
+   }
+   
+   // Demande d'affichage des stats de fin de travail
+   protected void showBuildStat(long totalTime,int statNbTile) {
+      int nbRemoved = (int)(nbCells-statNbTile);
+      String s = statNbTile+" tiles computed in "+Util.getTemps(totalTime,true);
+      if( nbRemoved>0 ) s=s+" - "+nbRemoved+" tiles have been ignored (fully BLANK)";
+      nldone(s);
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
@@ -511,11 +538,35 @@ public class Context {
 		   Aladin.levelTrace = 0;
 	   }
    }
+   
+   public void running(String string) {
+      System.out.println("RUN   : "+string);
+   }
+   
+   public void nldone(String string) {
+      System.out.println("\nDONE  : "+string);
+   }
+   
+   public void done(String string) {
+      System.out.println("DONE  : "+string);
+   }
+   
+   public void info(String string) {
+      System.out.println("INFO  : "+string);
+   }
 
    public void warning(String string) {
-       String s_WARN    = "INFO  :";//Aladin.getChaine().getString("WARNING");
-       System.out.println(s_WARN+" "+string);
+      System.out.println("WARN  : "+string);
    }
+
+   public void error(String string) {
+      System.out.println("ERROR : "+string);
+   }
+
+   public void nlstat(String string) {
+      System.out.println("\nSTAT  : "+string);
+   }
+
 
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());

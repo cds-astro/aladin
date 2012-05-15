@@ -150,14 +150,27 @@ public class BuilderIndex implements Progressive {
       } 
 
       // On en profite pour créer le Moc associé à l'index
-      BuilderMoc builderMoc = new BuilderMoc();
-      builderMoc.createMoc(pathDest);
+      buildMoc();
       
       progress=100;
       File fpause = new File(pausepath);
       fpause.delete();
       showStat();
       return true;
+   }
+   
+   protected void buildMoc() {
+      BuilderMoc builderMoc = new BuilderMoc();
+      builderMoc.createMoc(context.getHpxFinderPath());
+      context.setNbCells( builderMoc.getUsedArea()) ;
+   }
+   
+   protected void loadMoc() {
+      try {
+         HealpixMoc moc = new HealpixMoc();
+         moc.read(context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME);
+         context.setNbCells( moc.getUsedArea()) ;
+      } catch( Exception e) { e.printStackTrace(); }
    }
 
    /**
