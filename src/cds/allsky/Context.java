@@ -432,17 +432,17 @@ public class Context {
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
          int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
-	   // affiche sur la sortie standard toutes les 3 sec
-	   if ((System.currentTimeMillis()-statTime)>3000) {
+	   // affiche sur la sortie standard toutes les 30 sec
+	   if ((System.currentTimeMillis()-statTime)>30000) {
 		   String s;
 		   if( statNbFile==-1 ) s = "--";
 		   else {
-			   s= "\n"+statNbFile+" file"+(statNbFile>1?"s":"")
+			   s= statNbFile+" file"+(statNbFile>1?"s":"")
 			   + (statNbZipFile==statNbFile ? " (all gzipped)" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
 			   + " using "+Util.getUnitDisk(statMemFile)
 			   + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight+"x"+statMaxNbyte+"]");
 		   }
-		   System.out.println(s);
+		   nlstat(s);
 		   statTime = System.currentTimeMillis();
 	   }
    }
@@ -561,6 +561,10 @@ public class Context {
 
    public void error(String string) {
       System.out.println("ERROR : "+string);
+   }
+
+   public void action(String string) {
+      System.out.println("ACTION: "+string);
    }
 
    public void nlstat(String string) {

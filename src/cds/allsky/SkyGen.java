@@ -210,7 +210,7 @@ public class SkyGen {
          try {
             context.setBorderSize(val);
          } catch (ParseException e) {
-            System.err.println(e.getMessage());
+            throw new Exception(e.getMessage());
          }
          else if (opt.equalsIgnoreCase("pixelCut"))
             context.setPixelCut(val);
@@ -224,7 +224,7 @@ public class SkyGen {
          else if (opt.equalsIgnoreCase("img")) {
             context.setImgEtalon(val);
          }
-         else System.out.println("ERROR : unknown option " + opt);
+         else throw new Exception("Option unknown [" + opt + "]");
 
    }
 
@@ -266,7 +266,7 @@ public class SkyGen {
 
                generator.setContextFromOptions(opts[0], opts[1]);
             } catch (Exception e) {
-               e.printStackTrace();
+               generator.context.error(e.getMessage());
                return;
             }
          }
@@ -284,7 +284,7 @@ public class SkyGen {
 
       }
 
-      System.out.println("ACTION: "+(generator.action==null?"All steps (index+tiles+jpeg+allsky+moc)":generator.action));
+      generator.context.action(""+(generator.action==null?"All steps (index+tiles+jpeg+allsky+moc)":generator.action));
 
       try {
          generator.validateContext();
@@ -342,6 +342,8 @@ public class SkyGen {
          }
          case JPEG : {
             context.running("Creating Jpeg tiles...");
+            double cut [] = context.getCut();
+            context.info("8 bit conversion with pixel cut=["+cut[0]+" .. "+cut[1]+"]");
             BuilderJpg builder = new BuilderJpg(null, context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
@@ -391,7 +393,19 @@ public class SkyGen {
                if( context.getNbCells()!=-1 ) {
                   context.info("Found an index MOC covering "+context.getNbCells()+" low level HEALPix cells");
                }
-           }
+            }
+            
+            // Un peu de baratin
+            int b0=context.getBitpixOrig(), b1=context.getBitpix();
+            if( b0!=b1 ) context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
+            else context.info("BITPIX = "+b1+" (no conversion)");
+            double bs=context.getBScale(), bz=context.getBZero();
+            if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
+            double bl0 = context.getBlankOrig();
+            double bl1 = context.getBlank();
+            if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
+            else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
+            
             Task task = new Task(context);
             BuilderController builder = new BuilderController(task,context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
@@ -419,6 +433,8 @@ public class SkyGen {
          }
          case ALLSKY : {
             context.running("Creating Allsky views (FITS and JPEG if possible)...");
+            double cut [] = context.getCut();
+            context.info("Pixel range=["+cut[2]+" .. "+cut[3]+"] cut=["+cut[0]+" .. "+cut[1]+"]");
             BuilderAllsky builder = new BuilderAllsky(context, -1);
             try {
                builder.createAllSky(3, 64);
