@@ -2,12 +2,23 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Timer;
 
 import cds.aladin.Aladin;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
+import cds.aladin.PlanHealpix;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Galactic;
@@ -51,6 +62,7 @@ public class Context {
    protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
+   protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private Method method = Context.Method.MEDIAN;
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
@@ -141,6 +153,9 @@ public class Context {
            this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
                Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
    }
+   public void setTransfertFct(String txt) {
+	   this.fct=TransfertFct.valueOf(txt.toUpperCase());
+   }
    
    protected enum Method {
 	   MEDIAN, MEAN;
@@ -175,6 +190,22 @@ public class Context {
       this.cutOrig=cutOrig;
       cut = new double[cutOrig.length];
       System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
+   }
+   
+   /**
+    * Lit et charge en mémoire un premier fichier de properties 
+    */
+   protected void loadProp() {
+      try {
+         InputStream in=null;
+         propPathFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
+         in = new FileInputStream(new File(propPathFile));
+         if( in!=null ) {
+            prop = new Properties();
+            prop.load(in);
+         }
+      } catch( Exception e ) { /*error("No properties file found");*/ }
+      
    }
    
    protected double coef;
@@ -571,6 +602,31 @@ public class Context {
       System.out.println("\nSTAT  : "+string);
    }
 
+   public void doneIndex() {
+      nldone("HEALPix index created !");
+      info("The generated index covers "+getNbCells()+" low level HEALPix cells (depth="+getOrder()+")");
+
+      prop.put("IndexCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+      
+   }
+   
+   public void doneAllsky() {
+      done("Allsky view created !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("AllskyCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+
+   }
 
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
@@ -600,6 +656,8 @@ public class Context {
    
    private int[] xy2hpx = null;
    private int[] hpx2xy = null;
+   private Properties prop = null;
+   private String propPathFile = null;
 
    /** Méthode récursive utilisée par createHealpixOrder */
    private void fillUp(int[] npix, int nsize, int[] pos) {
