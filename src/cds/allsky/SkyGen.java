@@ -84,14 +84,17 @@ public class SkyGen {
          throw new Exception("Argument \"output\" is missing");
       }
       context.info("HEALPix survey directory: "+context.getOutputPath());
-
-
+      
+      if( action==Action.JPEG || action==action.ALLSKY || action==action.MOC 
+            || action==action.GZIP || action==action.GUNZIP ) {
+         if( !context.isExistingAllskyDir() ) throw new Exception("HEALPix survey not found!");
+      }
+      
       // données déjà présentes ?
       if ( (action==Action.TILES || action==Action.INDEX || action==null) && !context.isExistingDir()) {
          throw new Exception("Input dir does NOT exist : " + context.getInputPath());
       }
       if (context.isExistingAllskyDir()) {
-//         context.warning("Output dir already exists");
          if (context.getCoAddMode() == null) {
             if( action==Action.TILES || action==null ) context.warning("Default behaviour for computing pixels already computed : " + CoAddMode.getDefault());
             context.setCoAddMode(CoAddMode.getDefault());
@@ -368,11 +371,11 @@ public class SkyGen {
             ColorModel cm = null;
             if (context.fct!=null) {
                cm = ColorMap.getCM(0, 128, 255,false, 0/*PlanImage.CMGRAY*/, context.fct.code());
-               System.out.println("   Using "+context.fct);
             }
             BuilderJpg builder = new BuilderJpg(cm, context);
             double cut [] = context.getCut();
-            context.info("Will map pixel range ["+cut[0]+" .. "+cut[1]+"] to [0..255]");
+            String fct = context.getTransfertFct();
+            context.info("Will map pixel range ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+fct+")");
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
             // laisse le temps au thread de se lancer
@@ -449,7 +452,7 @@ public class SkyGen {
             }
             else context.info("BITPIX = "+b1+" (no conversion)");
             if( context.getDiskMem()!=-1 ) {
-               context.info("Disk requirement (upper range approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
+               context.info("Disk requirement (high approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
             }
             double bs=context.getBScale(), bz=context.getBZero();
             if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }

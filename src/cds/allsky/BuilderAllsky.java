@@ -75,7 +75,7 @@ final public class BuilderAllsky {
    }
 
    private File propertiesFile(String path) {
-      return new File(path+Util.FS+PlanHealpix.PROPERTIES);
+      return new File(path+Util.FS+Context.LOGFILE);
    }
 
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix

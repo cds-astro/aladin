@@ -2,18 +2,14 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Timer;
 
 import cds.aladin.Aladin;
 import cds.aladin.Localisation;
@@ -38,6 +34,8 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
 
+   static final public String LOGFILE = "Skygen.log";
+   
 	private static boolean verbose = false;
    protected String label;                   // Nom du survey
    
@@ -159,6 +157,8 @@ public class Context {
        setCutOrig(this.cut);
    }
    
+   public String getTransfertFct() { return fct.toString().toLowerCase(); }
+   
    public void setTransfertFct(String txt) {
       this.fct=TransfertFct.valueOf(txt.toUpperCase());
   }
@@ -214,7 +214,7 @@ public class Context {
       try {
          prop = new Properties();
          InputStream in=null;
-         propPathFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
+         propPathFile = getOutputPath()+Util.FS+LOGFILE;
          in = new FileInputStream(new File(propPathFile));
          if( in!=null ) {
             prop.load(in);
@@ -458,7 +458,7 @@ public class Context {
    protected boolean isExistingAllskyDir() {
       String path = getOutputPath();
       if( path==null ) return false;
-      return (new File(path)).exists();
+      return (new File(path+Util.FS+"Norder3")).exists();
    }
    
    /** Mémorise le nombre de cellules de bas niveau à calculer  */
