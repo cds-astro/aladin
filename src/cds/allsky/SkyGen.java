@@ -1,5 +1,6 @@
 package cds.allsky;
 
+import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
@@ -7,6 +8,7 @@ import java.text.ParseException;
 import java.util.Properties;
 import java.util.Set;
 
+import cds.aladin.ColorMap;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
@@ -182,6 +184,8 @@ public class SkyGen {
          usage();
       else if (opt.equalsIgnoreCase("verbose"))
          Context.setVerbose(Integer.parseInt(val));
+      else if (opt.equalsIgnoreCase("debug"))
+         if (Boolean.parseBoolean(val)) Context.setVerbose(4);
       else if (opt.equalsIgnoreCase("input"))
          context.setInputPath(val);
       else if (opt.equalsIgnoreCase("output"))
@@ -212,8 +216,16 @@ public class SkyGen {
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-         else if (opt.equalsIgnoreCase("pixelCut"))
-            context.setPixelCut(val);
+         else if (opt.equalsIgnoreCase("pixelCut")) {
+            String vals[] = val.trim().split(" ");
+            // si on a min max + fct de transfert
+            if (vals.length == 3 || vals.length == 5) {
+               int fctIndex = val.lastIndexOf(" ");
+               context.setPixelCut(val.substring(0,fctIndex));
+               context.setTransfertFct(val.substring(fctIndex+1));
+            }
+            else context.setPixelCut(val);
+         }
          else if (opt.equalsIgnoreCase("method"))
             context.setMethod(val);
          else if (opt.equalsIgnoreCase("dataCut")) {
@@ -253,9 +265,14 @@ public class SkyGen {
             }
             continue;
          }
+         // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
             SkyGen.usage();
             return;
+         }
+         // debug
+         else if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
+            Context.setVerbose(4);
          }
          // toutes les autres options écrasent les précédentes
          else if (arg.contains("=")) {
@@ -298,7 +315,9 @@ public class SkyGen {
 
    private void start() {
       context.setIsRunning(true);
-      
+      context.loadProp();
+      Task task = new Task(context);
+
       if (action==null) {
          // aucune action définie -> on fait la totale (sauf jpg)
          action = Action.INDEX;
@@ -334,17 +353,22 @@ public class SkyGen {
                } catch (InterruptedException e) {
                }
                builder.build();
-               context.nldone("HEALPix index created !");
                progressBar.stop();
-               context.info("The generated index covers "+context.getNbCells()+" low level HEALPix cells (depth="+context.getOrder()+")");
+               context.doneIndex();
             }
             break;
          }
          case JPEG : {
             context.running("Creating Jpeg tiles...");
+            // Calcule d'une fonction de transfert si besoin
+            ColorModel cm = null;
+            if (context.fct!=null) {
+               cm = ColorMap.getCM(0, 128, 255,false, 0/*PlanImage.CMGRAY*/, context.fct.code());
+               System.out.println("   Using "+context.fct);
+            }
+            BuilderJpg builder = new BuilderJpg(cm, context);
             double cut [] = context.getCut();
             context.info("8 bit conversion with pixel cut=["+cut[0]+" .. "+cut[1]+"]");
-            BuilderJpg builder = new BuilderJpg(null, context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
             // laisse le temps au thread de se lancer
@@ -406,7 +430,6 @@ public class SkyGen {
             if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
             else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
             
-            Task task = new Task(context);
             BuilderController builder = new BuilderController(task,context);
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
@@ -439,7 +462,7 @@ public class SkyGen {
             try {
                builder.createAllSky(3, 64);
                if (context.getCut()!=null) builder.createAllSkyJpgColor(3,64,false);
-               context.done("Allsky view created !");
+               context.doneAllsky();
             } catch (Exception e) {
                context.error(e.getMessage());
 //               e.printStackTrace();
@@ -466,11 +489,12 @@ public class SkyGen {
             "skyval    Fits key to use for removing sky background" + "\n" +
             "bitpix    Target bitpix (default is original one)" + "\n" +
             "order     Number of Healpix Order (default computed from the original resolution)" + "\n" +
-            "pixelCut  Display range cut (BSCALE,BZERO applied)(required JPEG 8 bits conversion - ex: \"120 140\")" + "\n" +
+            "pixelCut  Display range cut and optionnaly a transfert function name (BSCALE,BZERO applied)(required JPEG 8 bits conversion - ex: \"120 140 log\")" + "\n" +
             "dataCut   Range for pixel vals (BSCALE,BZERO applied)(required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
             "color     True if your input images are colored jpeg (default is false)" + "\n" +
             "img       Image path to use for initialization (default is first found)" + "\n" +
-            "verbose   Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n");
+            "verbose   Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
+            "debug     true|false - to set output display as te most verbose or just statistics" + "\n");
       System.out.println("\nUse one of these actions at end of command line :" + "\n" +
             "index     Build finder index" + "\n" +
             "tiles     Build Healpix tiles" + "\n" +
@@ -479,7 +503,7 @@ public class SkyGen {
             "mocindex  Build MOC (based on HEALPix index)" + "\n" +
             "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n" +
             "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n" +
-            "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)");
+      "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)");
    }
 
    private void setConfigFile(String configfile) throws Exception {
