@@ -75,7 +75,7 @@ final public class BuilderAllsky {
    }
 
    private File propertiesFile(String path) {
-      return new File(path+Util.FS+Context.LOGFILE);
+      return new File(path+Util.FS+PlanHealpix.PROPERTIES);
    }
 
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
@@ -100,6 +100,9 @@ final public class BuilderAllsky {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
+      
+      // Ecriture du fichier des propriétés à la racine du survey
+      writePropertiesFile(path,context.isColor());
       
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
