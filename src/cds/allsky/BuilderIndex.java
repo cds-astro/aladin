@@ -162,14 +162,14 @@ public class BuilderIndex implements Progressive {
    protected void buildMoc() {
       BuilderMoc builderMoc = new BuilderMoc();
       builderMoc.createMoc(context.getHpxFinderPath());
-      context.setNbCells( builderMoc.getUsedArea()) ;
+      context.setNbLowCells( builderMoc.getUsedArea()) ;
    }
    
    protected void loadMoc() {
       try {
          HealpixMoc moc = new HealpixMoc();
          moc.read(context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME);
-         context.setNbCells( moc.getUsedArea()) ;
+         context.setNbLowCells( moc.getUsedArea()) ;
       } catch( Exception e) { e.printStackTrace(); }
    }
 

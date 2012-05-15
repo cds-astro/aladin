@@ -202,7 +202,7 @@ public class BuilderController implements Progressive {
          cds.tools.Util.pause(1000);
       }
       
-      context.showBuildStat(System.currentTimeMillis()-t,statNbTile);
+      context.showBuildStat(System.currentTimeMillis()-t,statNbTile,statNodeTile);
       Aladin.trace(3,"Cache stated: "+ context.cacheFits);
       Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }

@@ -69,7 +69,7 @@ public class SkyGen {
     */
    private void validateContext() throws Exception {
       // ---- Qq vérifications
-
+      
       // arguments des répertoires de départ
       if ( (action==Action.TILES || action==Action.INDEX || action==null) && context.getInputPath() == null) {
          throw new Exception("Argument \"input\" is missing");
@@ -83,6 +83,7 @@ public class SkyGen {
       if (context.getOutputPath() == null) {
          throw new Exception("Argument \"output\" is missing");
       }
+      context.info("HEALPix survey directory: "+context.getOutputPath());
 
 
       // données déjà présentes ?
@@ -105,10 +106,11 @@ public class SkyGen {
       
 
       // si on n'a pas d'image etalon, on la cherche + initialise avec
-      if ( (action==null || action==Action.TILES || action==Action.INDEX || action==Action.ALLSKY) 
+      if ( (action==null || action==Action.TILES || action==Action.INDEX || action==Action.ALLSKY || action==Action.JPEG) 
             && context.getImgEtalon()==null ) {
          
          double memoCut[] = context.getCut();
+         double memoCutOrig[] = context.getCutOrig();
          boolean found=false;
          if( context.getInputPath()!=null ) {
            found = context.findImgEtalon(context.getInputPath());
@@ -130,9 +132,12 @@ public class SkyGen {
          }
          
          // On remet le cut qui avait été explicitement indiqué en paramètre
-         if( found && memoCut!=null ) context.setCut(memoCut);
+         if( found ) {
+            if( memoCut!=null ) context.setCut(memoCut);
+            if( memoCutOrig!=null ) context.setCutOrig(memoCutOrig);
+         }
 
-         if( action==null || action==Action.TILES || action==Action.INDEX ) {
+         if( action==null || action==Action.TILES || action==Action.INDEX || action==Action.JPEG ) {
             Fits file = new Fits();
             try {
                file.loadHeaderFITS(context.getImgEtalon());
@@ -144,22 +149,28 @@ public class SkyGen {
             }
          }
       }
-
+      
       // si le numéro d'order donné est différent de celui calculé
       // attention n'utilise pas la méthode context.getOrder car elle a un default à 3
       if (order != context.order && -1 != context.order) {
-         context.warning("Order given (" + context.getOrder() + ") != auto (" + order + ")");
+         context.warning("The number of levels (" + context.getOrder() + ") is not optimal (" + order + ") => sub (or over) sample will be applied");
       } else {
          context.setOrder(order);
       }
       // si le bitpix donné est différent de celui calculé
-      if (context.getBitpix() != context.getBitpixOrig()) {
-         context.warning("Bitpix given (" + context.getBitpix() + ") != auto (" + context.getBitpixOrig() + ")");
+      if (context.getBitpix() != context.getBitpixOrig() && (action==null || action==Action.TILES)) {
+         context.warning("The provided BITPIX (" + context.getBitpix() + ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
       }
 
       // il faut au moins un cut (ou img) pour construire des JPEG ou ALLSKY
-      if (context.getCut()==null && (action==Action.JPEG || action==Action.ALLSKY))
+      if (context.getCut()==null && (action==Action.JPEG || action==Action.ALLSKY || context.getBitpix() != context.getBitpixOrig()))
          throw new Exception("Range cuts unknown: option \"img\" or \"pixelCut\" are required");
+      
+      if( action==null || action==Action.TILES || action==Action.INDEX || action==Action.JPEG || action==Action.ALLSKY ) {
+         context.initParameters();
+         if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HEALPix survey => choose another output directory");
+         if( context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
+      }
    }
 
    /**
@@ -184,8 +195,9 @@ public class SkyGen {
          usage();
       else if (opt.equalsIgnoreCase("verbose"))
          Context.setVerbose(Integer.parseInt(val));
-      else if (opt.equalsIgnoreCase("debug"))
+      else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
+      }
       else if (opt.equalsIgnoreCase("input"))
          context.setInputPath(val);
       else if (opt.equalsIgnoreCase("output"))
@@ -216,16 +228,8 @@ public class SkyGen {
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-         else if (opt.equalsIgnoreCase("pixelCut")) {
-            String vals[] = val.trim().split(" ");
-            // si on a min max + fct de transfert
-            if (vals.length == 3 || vals.length == 5) {
-               int fctIndex = val.lastIndexOf(" ");
-               context.setPixelCut(val.substring(0,fctIndex));
-               context.setTransfertFct(val.substring(fctIndex+1));
-            }
-            else context.setPixelCut(val);
-         }
+         else if (opt.equalsIgnoreCase("pixelCut"))
+            context.setPixelCut(val);
          else if (opt.equalsIgnoreCase("method"))
             context.setMethod(val);
          else if (opt.equalsIgnoreCase("dataCut")) {
@@ -237,7 +241,7 @@ public class SkyGen {
             context.setImgEtalon(val);
          }
          else throw new Exception("Option unknown [" + opt + "]");
-
+      
    }
 
    enum Action {
@@ -312,12 +316,12 @@ public class SkyGen {
       // lance les calculs
       generator.start();
    }
-
+   
    private void start() {
       context.setIsRunning(true);
       context.loadProp();
       Task task = new Task(context);
-
+      
       if (action==null) {
          // aucune action définie -> on fait la totale (sauf jpg)
          action = Action.INDEX;
@@ -340,8 +344,8 @@ public class SkyGen {
             if (f.exists()) {
                context.info("Found an existing index => use it \"as is\"");
                builder.loadMoc();
-               if( context.getNbCells()!=-1 ) {
-                  context.info("Found an index MOC covering "+context.getNbCells()+" low level HEALPix cells");
+               if( context.getNbLowCells()!=-1 ) {
+                  context.info("Found an index MOC covering "+context.getNbLowCells()+" low level HEALPix cells");
                }
 
             } else {
@@ -368,7 +372,7 @@ public class SkyGen {
             }
             BuilderJpg builder = new BuilderJpg(cm, context);
             double cut [] = context.getCut();
-            context.info("8 bit conversion with pixel cut=["+cut[0]+" .. "+cut[1]+"]");
+            context.info("Will map pixel range ["+cut[0]+" .. "+cut[1]+"] to [0..255]");
             ThreadProgressBar progressBar = new ThreadProgressBar(builder);
             (new Thread(progressBar)).start();
             // laisse le temps au thread de se lancer
@@ -380,6 +384,22 @@ public class SkyGen {
             progressBar.stop();
             context.nldone("Jpeg tiles created !");
             // la construction du allsky est automatiquement faite par le builder
+            break;
+         }
+         case ALLSKY : {
+            context.running("Creating Allsky views (FITS and JPEG if possible)...");
+            double cut [] = context.getCut();
+            context.info("Pixel range=["+cut[2]+" .. "+cut[3]+"] cut=["+cut[0]+" .. "+cut[1]+"]");
+            BuilderAllsky builder = new BuilderAllsky(context, -1);
+            try {
+               builder.createAllSky(3, 64);
+               if (context.getCut()!=null) builder.createAllSkyJpgColor(3,64,false);
+               context.done("Allsky view created !");
+            } catch (Exception e) {
+               context.error(e.getMessage());
+//               e.printStackTrace();
+               System.exit(0);
+            }
             break;
          }
          case MOC : {
@@ -398,31 +418,39 @@ public class SkyGen {
          }
          case GZIP : {
             context.running("Gzipping all FITS tiles...");
-            BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
+            BuilderGzip gz = new BuilderGzip(context);
             gz.gzip();
             context.done("Gzip done !");
             break;
          }
          case GUNZIP : {
             context.running("Gunzipping all FITS tiles...");
-            BuilderGzip gz = new BuilderGzip( context.getOutputPath(), context.getVerbose() );
+            BuilderGzip gz = new BuilderGzip(context);
             gz.gunzip();
             context.done("Gunzip done !");
             break;
          }
          case TILES : {
             context.running("Creating FITS tiles and allsky (max depth="+context.getOrder()+")...");
-            if( context.getNbCells()==-1 ) {
+            if( context.getNbLowCells()==-1 ) {
                (new BuilderIndex(context)).loadMoc();  // pour connaitre le nombre de cellules à calculer
-               if( context.getNbCells()!=-1 ) {
-                  context.info("Found an index MOC covering "+context.getNbCells()+" low level HEALPix cells");
+               if( context.getNbLowCells()!=-1 ) {
+                  context.info("Found an index MOC covering "+context.getNbLowCells()+" low level HEALPix cells");
                }
             }
             
             // Un peu de baratin
             int b0=context.getBitpixOrig(), b1=context.getBitpix();
-            if( b0!=b1 ) context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
+            if( b0!=b1 ) {
+               context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
+               double cutOrig[] = context.getCutOrig();
+               double cut[] = context.getCut();
+               context.info("Will map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
+            }
             else context.info("BITPIX = "+b1+" (no conversion)");
+            if( context.getDiskMem()!=-1 ) {
+               context.info("Disk requirement (upper range approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
+            }
             double bs=context.getBScale(), bz=context.getBZero();
             if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
             double bl0 = context.getBlankOrig();
@@ -454,23 +482,8 @@ public class SkyGen {
 //            start();
             break;
          }
-         case ALLSKY : {
-            context.running("Creating Allsky views (FITS and JPEG if possible)...");
-            double cut [] = context.getCut();
-            context.info("Pixel range=["+cut[2]+" .. "+cut[3]+"] cut=["+cut[0]+" .. "+cut[1]+"]");
-            BuilderAllsky builder = new BuilderAllsky(context, -1);
-            try {
-               builder.createAllSky(3, 64);
-               if (context.getCut()!=null) builder.createAllSkyJpgColor(3,64,false);
-               context.doneAllsky();
-            } catch (Exception e) {
-               context.error(e.getMessage());
-//               e.printStackTrace();
-               System.exit(0);
-            }
-            break;
-         }
-      }
+
+       }
       context.setIsRunning(false);
    }
 
@@ -501,9 +514,10 @@ public class SkyGen {
             "jpeg      Build JPEG tiles from original tiles" + "\n" +
             "moc       Build MOC (based on generated tiles)" + "\n" +
             "mocindex  Build MOC (based on HEALPix index)" + "\n" +
-            "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n" +
-            "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n" +
-      "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)");
+            "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n"
+//            + "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n"
+//            + "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)"
+            );
    }
 
    private void setConfigFile(String configfile) throws Exception {

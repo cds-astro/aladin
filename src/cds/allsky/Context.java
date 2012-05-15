@@ -51,7 +51,7 @@ public class Context {
    protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
-   protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
+   protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
 //   protected boolean skySub = false;         // true s'il faut appliquer une soustraction du fond (via le cacheFits)
    protected String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
@@ -61,7 +61,7 @@ public class Context {
    protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
    protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
-   protected double[] cut;                   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
+   protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private Method method = Context.Method.MEDIAN;
    
@@ -71,9 +71,9 @@ public class Context {
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected boolean isRunning=false;        // true s'il y a un processus de calcul en cours
    
-   protected long nbCells= -1;              // Pour les stats, nombre de cellules de bas niveaux à calculer
+   protected long nbLowCells= -1;              // Pour les stats, nombre de cellules de bas niveaux à calculer (basé sur le moc de l'index)
    
-   protected CoAddMode coAdd;                      // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
+   protected CoAddMode coAdd;                  // NORMALEMENT INUTILE DESORMAIS (méthode de traitement)
    
    public Context() {}
 
@@ -140,22 +140,28 @@ public class Context {
    public void setIsRunning(boolean flag) { isRunning=flag; }
    public void setAbort() { setIsRunning(false); }
    public void setCut(double [] cut) { this.cut=cut; }
-   public void setPixelCut(String cut) {
-       String vals[] = cut.split(" ");
-       if (this.cut==null) {
-    	   this.cut = new double[4];
+   public void setPixelCut(String scut) throws Exception {
+       StringTokenizer st = new StringTokenizer(scut," ");
+       int i=0;
+       if( cut==null ) cut = new double[4];
+       while( st.hasMoreTokens() ) {
+          String s = st.nextToken();
+          try { 
+             double d = Double.parseDouble(s);
+             cut[i++]=d;
+          } catch( Exception e) {
+             setTransfertFct(s);
+          }
+          
        }
-	   if (vals.length==2) {
-		   this.cut[0] = Double.parseDouble(vals[0]);
-		   this.cut[1] = Double.parseDouble(vals[1]);
-	   }
-       else if (vals.length==4)
-           this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
-               Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
+       if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
+
+       setCutOrig(this.cut);
    }
+   
    public void setTransfertFct(String txt) {
-	   this.fct=TransfertFct.valueOf(txt.toUpperCase());
-   }
+      this.fct=TransfertFct.valueOf(txt.toUpperCase());
+  }
    
    protected enum Method {
 	   MEDIAN, MEAN;
@@ -174,16 +180,17 @@ public class Context {
    }
    public Method getMethod() { return method; }
 
-   public void setDataCut(String cut) {
-       String vals[] = cut.split(" ");
-	   if (vals.length==2 && this.cut != null) {
-		   this.cut[2] = Double.parseDouble(vals[0]);
-		   this.cut[3] = Double.parseDouble(vals[1]);
-	   }
-       else if (vals.length==4)
-           this.cut = new double[] {Double.parseDouble(vals[0]),Double.parseDouble(vals[1]),
-               Double.parseDouble(vals[2]),Double.parseDouble(vals[3])};
-
+   public void setDataCut(String scut) throws Exception {
+      StringTokenizer st = new StringTokenizer(scut," ");
+      int i=2;
+      if( cut==null ) cut = new double[4];
+      while( st.hasMoreTokens() && i<4 ) {
+         String s = st.nextToken();
+         double d = Double.parseDouble(s);
+         cut[i++]=d;
+      }
+      if( i<4 ) throw new Exception("Missing dataCut parameter");
+      setCutOrig(this.cut);
    }
 
    public void setCutOrig(double [] cutOrig) {
@@ -192,16 +199,24 @@ public class Context {
       System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
    }
    
+   // Mon propre split - sinon gros problème en cas de blancs dédoublés
+   private String [] split(String s,String c) {
+      StringTokenizer st = new StringTokenizer(s,c);
+      String [] w = new String[st.countTokens()];
+      for( int i=0; i<w.length; i++ ) w[i]=st.nextToken();
+      return w;
+   }
+   
    /**
     * Lit et charge en mémoire un premier fichier de properties 
     */
    protected void loadProp() {
       try {
+         prop = new Properties();
          InputStream in=null;
          propPathFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
          in = new FileInputStream(new File(propPathFile));
          if( in!=null ) {
-            prop = new Properties();
             prop.load(in);
          }
       } catch( Exception e ) { /*error("No properties file found");*/ }
@@ -447,12 +462,20 @@ public class Context {
    }
    
    /** Mémorise le nombre de cellules de bas niveau à calculer  */
-   protected void setNbCells(long nbCells) {
-      this.nbCells=nbCells;
+   protected void setNbLowCells(long nbLowCells) {
+      this.nbLowCells=nbLowCells;
    }
    
    /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index) */
-   protected long getNbCells() { return nbCells; }
+   protected long getNbLowCells() { return nbLowCells; }
+   
+   /** Retourne le volume du Allsky en fits en fonction du nombre de cellules prévues et du bitpix */
+   protected long getDiskMem() {
+      if( nbLowCells==-1 || bitpix==0 ) return -1;
+      long mem = nbLowCells * 512L*512L* Math.abs(bitpix);
+      
+      return mem;
+   }
 
    protected void enableProgress(boolean selected, int mode) { }
    protected void setProgress(int value) { System.out.print(".");}
@@ -489,13 +512,13 @@ public class Context {
 		      long freeMem = Runtime.getRuntime().freeMemory();
 		      long usedMem = totalMem-freeMem;
 		      
-		      String sNbCells = nbCells==-1 ? "" : "/"+nbCells;
-		      String pourcentNbCells = nbCells==-1 ? "" : (Math.round( ( (double)statNbTile/nbCells )*1000)/10.)+"%) ";
+		      String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
+		      String pourcentNbCells = nbLowCells==-1 ? "" : (Math.round( ( (double)statNbTile/nbLowCells )*1000)/10.)+"%) ";
 		      
 		      String s=statNbTile+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
 		          +pourcentNbCells
-		          +Util.getTemps(statAvgTime)+" per tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"])"
-		          +" per "+statNbThreadRunning+"/"+statNbThread+" threads"
+		          +Util.getTemps(statAvgTime)+" per tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
+		          +" by "+statNbThreadRunning+"/"+statNbThread+" threads"
 		          +" - RAM: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
 		          +" (FITS cache size: "+Util.getUnitDisk(cacheFits.getStatMem())+")";
 
@@ -510,11 +533,13 @@ public class Context {
    }
    
    // Demande d'affichage des stats de fin de travail
-   protected void showBuildStat(long totalTime,int statNbTile) {
-      int nbRemoved = (int)(nbCells-statNbTile);
+   protected void showBuildStat(long totalTime,int statNbTile,int statNodeTile) {
+      int nbRemoved = (int)(nbLowCells-statNbTile);
       String s = statNbTile+" tiles computed in "+Util.getTemps(totalTime,true);
       if( nbRemoved>0 ) s=s+" - "+nbRemoved+" tiles have been ignored (fully BLANK)";
       nldone(s);
+      long mem = ((long)statNbTile+(long)statNodeTile)*512L*512L*(long)Math.abs(bitpix);
+      info("All FITS tiles generated: "+Util.getUnitDisk(mem));
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
@@ -604,7 +629,7 @@ public class Context {
 
    public void doneIndex() {
       nldone("HEALPix index created !");
-      info("The generated index covers "+getNbCells()+" low level HEALPix cells (depth="+getOrder()+")");
+      info("The generated index covers "+getNbLowCells()+" low level HEALPix cells (depth="+getOrder()+")");
 
       prop.put("IndexCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       try {

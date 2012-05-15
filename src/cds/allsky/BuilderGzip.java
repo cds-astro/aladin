@@ -42,8 +42,12 @@ final public class BuilderGzip {
    private String root;     // Répertoire racine à partir duquel il faut (un)zipper les tuiles FITS
    private int verbose;     // Niveau de verbosité 0-rien, 1-étoiles, 2-fichiers
    private int nbFile;      // Nombre de fichires traités
+   private Context context=null;
    
-   public BuilderGzip(String root) { this( root,0); }
+   public BuilderGzip(Context context) {
+      this(context.getOutputPath(),context.getVerbose());
+      this.context=context;
+   }
    public BuilderGzip(String root,int verbose) {
       this.root = root;
       this.verbose=verbose;
@@ -89,6 +93,8 @@ final public class BuilderGzip {
          try { order = Integer.parseInt(name.substring(6)); }
          catch( Exception e ) { continue; }
          
+         // On ne compresse pas les tuiles au-delà de l'ordre 5
+         if( order>5 && compress ) continue;
          
          // traitement particulier pour le fichier Allsky.fits qui se trouve dans le Norder3
          if( order==3 ) {
