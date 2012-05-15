@@ -264,6 +264,11 @@ public class BuilderIndex implements Progressive {
             // saturer la mémoire par la suite
             try {
                int code = fitsfile.loadHeaderFITS(currentfile);
+               // TODO MEF
+               if ((code | Fits.XFITS)!=0) {
+            	   
+               }
+            	   
 
                try {
                   

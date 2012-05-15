@@ -101,9 +101,6 @@ final public class BuilderAllsky {
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       
-      // Ecriture du fichier des propriétés à la racine du survey
-      writePropertiesFile(path,context.isColor());
-      
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
 //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
@@ -183,6 +180,13 @@ final public class BuilderAllsky {
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
             +" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
       progress=100;
+      
+
+      // Ecriture du fichier des propriétés à la racine du survey
+      //writePropertiesFile(path,context.isColor());
+      // TODO
+      context.doneAllsky();
+      
    }
 
    /**
