@@ -76,7 +76,7 @@ public class SkyGen {
          // Par défaut le répertoire courant
          //context.setInputPath(System.getProperty("user.dir"));
       }
-      // Par défaut le répertoire courant
+      // Par défaut le répertoire input + ALLSKY
       if (context.getOutputPath() == null && context.getInputPath()!=null ) context.setOutputPath(context.getInputPath() + Constante.ALLSKY);
 
       // Deuxième vérif
@@ -85,8 +85,9 @@ public class SkyGen {
       }
       context.info("HEALPix survey directory: "+context.getOutputPath());
       
-      if( action==Action.JPEG || action==action.ALLSKY || action==action.MOC 
-            || action==action.GZIP || action==action.GUNZIP ) {
+      if( action==Action.JPEG || action==Action.ALLSKY || action==Action.MOC 
+            || action==Action.GZIP || action==Action.GUNZIP || action==Action.CLEANFITS
+            || action==Action.CLEANJPEG) {
          if( !context.isExistingAllskyDir() ) throw new Exception("HEALPix survey not found!");
       }
       
@@ -153,6 +154,13 @@ public class SkyGen {
          }
       }
       
+      // si l'utilisateur donne une option non utilisée
+      if ( (-1 != context.order || context.getInputPath() != null) 
+            && (action==Action.GZIP || action==Action.GUNZIP || action==Action.CLEANFITS || action==Action.CLEANJPEG)) {
+         context.warning("Option ignored : order");
+      }
+      // TODO faire de meme pour les autres options ignorées ? bcp ... !
+      
       // si le numéro d'order donné est différent de celui calculé
       // attention n'utilise pas la méthode context.getOrder car elle a un default à 3
       if (order != context.order && -1 != context.order) {
@@ -160,6 +168,7 @@ public class SkyGen {
       } else {
          context.setOrder(order);
       }
+      
       // si le bitpix donné est différent de celui calculé
       if (context.getBitpix() != context.getBitpixOrig() && (action==null || action==Action.TILES)) {
          context.warning("The provided BITPIX (" + context.getBitpix() + ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
@@ -255,7 +264,8 @@ public class SkyGen {
 
    enum Action {
       INDEX, TILES, JPEG, MOC, MOCINDEX, ALLSKY, GZIP, GUNZIP,
-      FINDER  // Pour compatibilité
+      FINDER,  // Pour compatibilité
+      CLEANFITS, CLEANJPEG
    }
 
    public static void main(String[] args) {
@@ -439,6 +449,18 @@ public class SkyGen {
             context.doneGunzip();
             break;
          }
+         case CLEANFITS : {
+            context.running("Removing all FITS tiles...");
+            clean(".fits");
+            context.doneCleanFits();
+            break;
+         }
+         case CLEANJPEG : {
+            context.running("Removing all Jpeg files...");
+            clean(".jpg");
+            context.doneCleanJpeg();
+            break;
+         }
          case TILES : {
             context.running("Creating FITS tiles and allsky (max depth="+context.getOrder()+")...");
             if( context.getNbLowCells()==-1 ) {
@@ -496,6 +518,28 @@ public class SkyGen {
       context.setIsRunning(false);
    }
 
+
+   private void clean(String extension) {
+      Cleaner cleaner = new Cleaner(context);
+      ThreadProgressBar progressBar = new ThreadProgressBar(cleaner);
+      (new Thread(progressBar)).start();
+      // laisse le temps au thread de se lancer
+      try {
+         Thread.sleep(200);
+      } catch (InterruptedException e) {
+      }
+      try {
+         cleaner.clean(extension);
+      } catch (Exception e) {
+         //            e.printStackTrace();
+         context.error(e.getMessage());
+         System.exit(0);
+      } finally {
+         progressBar.stop();
+      }
+
+   }
+
    private static void usage() {
       System.out.println("SkyGen -param=configfile\n");
       System.out.println("This configfile must contains these following options, or use them in comand line :");
@@ -523,7 +567,9 @@ public class SkyGen {
             "jpeg      Build JPEG tiles from original tiles" + "\n" +
             "moc       Build MOC (based on generated tiles)" + "\n" +
             "mocindex  Build MOC (based on HEALPix index)" + "\n" +
-            "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n"
+            "allsky    Build Allsky.fits and Allsky.jpg fits pixelCut exists (even if not used)" + "\n"+
+            "cleanfits Remove all FITS tiles generated (and keep jpeg version)" + "\n"+
+            "cleanjpeg Remove all Jpeg files generated (and keep FITS version)" + "\n"
 //            + "gzip      gzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n"
 //            + "gunzip    gunzip all fits tiles and Allsky.fits (by keeping the same names)"
             );
