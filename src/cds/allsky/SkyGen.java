@@ -326,7 +326,7 @@ public class SkyGen {
       Task task = new Task(context);
       
       if (action==null) {
-         // aucune action définie -> on fait la totale (sauf jpg)
+         // aucune action définie -> on fait la totale
          action = Action.INDEX;
          start();
          action = Action.TILES;
@@ -344,7 +344,7 @@ public class SkyGen {
             context.running("Creating HEALPix index (depth="+context.getOrder()+")...");
             BuilderIndex builder = new BuilderIndex(context);
             File f = new File(context.getHpxFinderPath()+Util.FS+"Norder"+order);
-            if (f.exists()) {
+            if (context.isIndexDone(f)) {
                context.info("Found an existing index => use it \"as is\"");
                builder.loadMoc();
                if( context.getNbLowCells()!=-1 ) {
@@ -385,7 +385,7 @@ public class SkyGen {
             }
             builder.run();
             progressBar.stop();
-            context.nldone("Jpeg tiles created !");
+            context.doneJpeg();
             // la construction du allsky est automatiquement faite par le builder
             break;
          }
@@ -397,7 +397,7 @@ public class SkyGen {
             try {
                builder.createAllSky(3, 64);
                if (context.getCut()!=null) builder.createAllSkyJpgColor(3,64,false);
-               context.done("Allsky view created !");
+               context.doneAllsky();
             } catch (Exception e) {
                context.error(e.getMessage());
 //               e.printStackTrace();
@@ -409,28 +409,28 @@ public class SkyGen {
             context.running("Creating MOC covering generated tiles)...");
             BuilderMoc builder = new BuilderMoc();
             builder.createMoc(context.outputPath);
-            context.done("Tile MOC created in "+context.outputPath);
+            context.doneMoc();
             break;
          }
          case MOCINDEX : {
             context.running("Creating MOC covering HEALPix index)...");
             BuilderMoc builder = new BuilderMoc();
             builder.createMoc(context.getHpxFinderPath());
-            context.done("Index MOC created in "+context.getHpxFinderPath());
+            context.doneMocIndex();
             break;
          }
          case GZIP : {
             context.running("Gzipping all FITS tiles...");
             BuilderGzip gz = new BuilderGzip(context);
             gz.gzip();
-            context.done("Gzip done !");
+            context.doneGzip();
             break;
          }
          case GUNZIP : {
             context.running("Gunzipping all FITS tiles...");
             BuilderGzip gz = new BuilderGzip(context);
             gz.gunzip();
-            context.done("Gunzip done !");
+            context.doneGunzip();
             break;
          }
          case TILES : {
@@ -478,7 +478,7 @@ public class SkyGen {
             } finally {
                progressBar.stop();
             }
-            context.done("FITS tiles created !");
+            context.doneTiles();
             
             // force à recréer le allsky
 //            action = Action.ALLSKY;
