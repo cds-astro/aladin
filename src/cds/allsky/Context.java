@@ -650,9 +650,77 @@ public class Context {
       } catch (IOException e) {
          error(e.getMessage());
       }
-
+   }
+   
+   public void doneJpeg() {
+      nldone("Jpeg tiles created !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("JpegCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   
+   public void doneMoc() {
+      done("Tile MOC created in "+outputPath);
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("MocCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   public void doneMocIndex() {
+      done("Index MOC created in "+getHpxFinderPath());
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("MocIndexCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   
+   public void doneTiles() {
+      done("FITS tiles created !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("TilesCreation", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
    }
 
+   public void doneGzip() {
+      done("Gzip done !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("GzipAction", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   public void doneGunzip() {
+      done("Gunzip done !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("GunzipAction", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());
    static private Astroframe AF_GAL1 = new Galactic();
@@ -729,5 +797,19 @@ public class Context {
    }
 
 
+   public boolean isIndexDone(File f) {
+      if (!f.exists()) return false;
+      // verifie en plus si on a été jusqu'au bout
+      if (prop == null) loadProp();
+      if (prop.containsKey("IndexCreation")) return true;
+      else return false;
+   }
 
+   public boolean isTilesDone(File f) {
+      if (!f.exists()) return false;
+      // verifie en plus si on a été jusqu'au bout
+      if (prop == null) loadProp();
+      if (prop.containsKey("TilesCreation")) return true;
+      else return false;
+   }
 }
