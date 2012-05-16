@@ -334,7 +334,7 @@ public class Context {
    }
    
 
-   /** Initialisation des paramètres (ne sert que pour contextGui) */
+   /** Initialisation des paramètres */
    public void initParameters() {
       
       bitpix = getBitpix();
@@ -715,6 +715,29 @@ public class Context {
       if (prop==null) { error("No properties file found"); return;}
       
       prop.put("GunzipAction", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   
+   public void doneCleanFits() {
+      done("Clean all FITS tiles done !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("CleanFitsAction", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      try {
+         prop.store(new FileOutputStream(propPathFile),null);
+      } catch (IOException e) {
+         error(e.getMessage());
+      }
+   }
+   public void doneCleanJpeg() {
+      done("Clean all Jpeg files done !");
+      if (prop==null) { error("No properties file found"); return;}
+      
+      prop.put("CleanJpegAction", DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
       try {
          prop.store(new FileOutputStream(propPathFile),null);
       } catch (IOException e) {
