@@ -209,8 +209,14 @@ public class SkyGen {
          context.setBlankOrig(Double.parseDouble(val));
       else if (opt.equalsIgnoreCase("order"))
          context.setOrder(Integer.parseInt(val));
-      else if (opt.equalsIgnoreCase("pixel"))
+      else if (opt.equalsIgnoreCase("pixelGeneration") || opt.equalsIgnoreCase("pixel"))
          context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
+      else if (opt.equalsIgnoreCase("tileGeneration")) {
+         if (CoAddMode.valueOf(val.toUpperCase()) == CoAddMode.OVERWRITE)
+            context.setCoAddMode(CoAddMode.REPLACEALL);
+         else if (CoAddMode.valueOf(val.toUpperCase()) == CoAddMode.KEEP)
+            context.setCoAddMode(CoAddMode.KEEPALL);
+      }
       else if (opt.equalsIgnoreCase("bitpix"))
          context.setBitpix(Integer.parseInt(val));
       else if (opt.equalsIgnoreCase("region")) {
