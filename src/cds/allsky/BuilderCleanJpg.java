@@ -19,16 +19,23 @@
 
 package cds.allsky;
 
-import cds.aladin.PlanImage;
+import java.io.File;
 
-public enum TransfertFct {
-	LOG (PlanImage.LOG), SQRT (PlanImage.SQRT), LINEAR (PlanImage.LINEAR), 
-	ASINH (PlanImage.ASINH), POW2 (PlanImage.SQR);
-	
-	private final int code;
-	TransfertFct(int i) {
-		code = i;
-	}
-	
-	int code() { return code;}
+/** Permet de nettoyer toutes les tuiles JPEG ainsi que le Allsky.jpg
+ * @author Anaïs Oberto & Pierre Fernique [CDS]
+ */
+public class BuilderCleanJpg extends BuilderCleanFits {
+
+   public BuilderCleanJpg(Context context) { super(context); }
+   
+   public Action getAction() { return Action.CLEANJPEG; }
+
+   public boolean mustBeDeleted(File f) {
+      String name = f.getName();
+      if( name.equals("Allsky.jpg") ) return true;
+      if( !name.endsWith(".jpg") )    return false;
+      if( !name.startsWith("Npix") ) return false;
+      return true;
+   }
+
 }

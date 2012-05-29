@@ -1,4 +1,4 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 2012 - UDS/CNRS
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -22,28 +22,15 @@ package cds.allsky;
 import static cds.tools.Util.FS;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Properties;
 
-import cds.aladin.Aladin;
-import cds.aladin.Localisation;
 import cds.aladin.PlanHealpix;
-import cds.fits.Fits;
 import cds.moc.HealpixMoc;
-import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-/**
- * Création d'un fichier Moc.fits
+/** Création d'un fichier Moc.fits correspondant aux tuiles de plus bas niveau
+ * @author Anaïs Oberto [CDS] & Pierre Fernique [CDS]
  */
-final public class BuilderMoc {
+public class BuilderMoc extends Builder {
 
    public static final String MOCNAME = "Moc.fits";
 
@@ -51,33 +38,30 @@ final public class BuilderMoc {
 
    private String ext; // Extension à traiter, null si non encore affectée.
 
-   public BuilderMoc() {
+   public BuilderMoc(Context context) {
+      super(context);
       moc = new HealpixMoc();
-      // moc.setCheckUnicity(true); // inutile puisque l'on teste les extensions
-      // des fichiers NPixNNN
    }
+   
+   public Action getAction() { return Action.MOC; }
 
-   public HealpixMoc getMoc() {
-      return moc;
+   public void run() throws Exception {
+      createMoc(context.getOutputPath());
    }
+   
+   public void validateContext() throws Exception { validateOutput(); }
 
-   /**
-    * Création d'un Moc associé à l'arborescence de l'index HPX_FINDER ou du
-    * répertoire lui-même puis écriture sur le disque à la racine
-    */
-   public void createMoc(String path) {
+   public HealpixMoc getMoc() { return moc; }
+
+   /** Création d'un Moc associé à l'arborescence trouvée dans le répertoire path */
+   protected void createMoc(String path) throws Exception {
       createMoc(path, path + FS + MOCNAME);
    }
 
-   private void createMoc(String path, String outputFile) {
-      try {
-         generateMoc(path);
-         moc.sort();
-         moc.write(outputFile, HealpixMoc.FITS);
-         // moc.write(output+FS+"Moc.txt", HealpixMoc.ASCII);
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
+   private void createMoc(String path, String outputFile) throws Exception {
+      generateMoc(path);
+      moc.sort();
+      moc.write(outputFile, HealpixMoc.FITS);
    }
    
    /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */
@@ -86,10 +70,10 @@ final public class BuilderMoc {
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
    public long getArea() { return moc.getArea(); }
 
-   public void generateMoc(String path) throws Exception {
+   private void generateMoc(String path) throws Exception {
       ext = null;
       moc.clear();
-      moc.setCoordSys(getFrame(path));
+      moc.setCoordSys(getFrame());
       int order = Util.getMaxOrderByPath(path);
       File f = new File(path + Util.FS + "Norder" + order);
 
@@ -99,6 +83,7 @@ final public class BuilderMoc {
       // consécutifs
       File[] sf = f.listFiles();
       for( int i = 0; i < sf.length; i++ ) {
+         if( context.isTaskAborting() ) throw new Exception("Task abort !");
          if( !sf[i].isDirectory() ) continue;
          File[] sf1 = sf[i].listFiles();
          for( int j = 0; j < sf1.length; j++ ) {
@@ -116,33 +101,22 @@ final public class BuilderMoc {
          }
       }
    }
+   
+   // Retourne le code HEALPix correspondant au système de référence des coordonnées
+   // du survey HEALPix
+   private String getFrame() {
+      try {
+         if( context.prop==null ) context.loadProperties();
+         return context.prop.getProperty(PlanHealpix.KEY_COORDSYS, "C");
+      } catch( Exception e ) { e.printStackTrace(); }
+      return "C";
+   }
 
-   // retourne l'extension du fichier passé en paramètre, "" si aucune
+   // Retourne l'extension du fichier passé en paramètre, "" si aucune
    private String getExt(String file) {
       int offset = file.lastIndexOf('.');
       if( offset == -1 ) return "";
       return file.substring(offset + 1, file.length());
    }
 
-   private String getFrame(String path) {
-      try {
-         File f = new File(path + Util.FS + PlanHealpix.PROPERTIES);
-         Properties prop = new java.util.Properties();
-         prop.load(new FileInputStream(f));
-         return prop.getProperty(PlanHealpix.KEY_COORDSYS, "C");
-      } catch( Exception e ) {
-      }
-      return "C";
-   }
-
-   static public void main(String[] argv) {
-      try {
-         BuilderMoc bdMoc = new BuilderMoc();
-         bdMoc.generateMoc("C:/Documents and Settings/Standard/Bureau/2MASStestALLSKY");
-         HealpixMoc moc = bdMoc.getMoc();
-         System.out.println(moc);
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
 }

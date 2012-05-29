@@ -97,7 +97,14 @@ public class CacheFits {
       // Pas trouvé, je l'ajoute
       else {
          if( isOver() ) clean();
-         f=add(fileName);
+         try {
+            f=add(fileName);
+         } catch( OutOfMemoryError e ) {
+            System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
+            maxMem /= 2;
+            clean();
+            f=add(fileName);
+         }
          statNbOpen++;
       }
 

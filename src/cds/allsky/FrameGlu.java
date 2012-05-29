@@ -19,9 +19,26 @@
 
 package cds.allsky;
 
+// Copyright 2012 - UDS/CNRS
+// The Aladin program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin.
+//
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
+//
+
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.Font;
@@ -33,8 +50,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import javax.swing.BorderFactory;
@@ -42,12 +57,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.table.AbstractTableModel;
-
-import org.w3c.dom.views.AbstractView;
 
 import cds.aladin.Aladin;
 import cds.aladin.prop.PropPanel;

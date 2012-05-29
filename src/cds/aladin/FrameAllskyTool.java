@@ -87,11 +87,6 @@ public class FrameAllskyTool extends JFrame {
 	}
 
 	public void export(PlanBG plan, String exportpath) {
-		String path = mainPanel.getOutputPath();
-//		Plan plan;
-//		int n = aladin.calque.newPlanBG(path, allskyPanel.getLabel(), null,
-//				null);
-//		plan = aladin.calque.getPlan(n);
 		((PlanBG)plan).setBitpix(-32);
 		while (!plan.isSync()) {
 			try {

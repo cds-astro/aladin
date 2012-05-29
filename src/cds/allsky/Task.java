@@ -19,263 +19,120 @@
 
 package cds.allsky;
 
-import static cds.allsky.Constante.INDEX;
-import static cds.allsky.Constante.JPG;
-import static cds.allsky.Constante.TESS;
-import cds.aladin.Aladin;
+import java.util.Vector;
 
-public class Task implements Runnable {
+/** Gère le lancemetn des tâches nécéssaires à la génération d'un survey HEALPix.
+ * Les tâches doivent hériter de la classe Builder. Elles peuvent être agencées consécutivement
+ * (via un Vector de tâches). Elles seront exécutées soit en synchrone, soit en asynchrone dans un Thread
+ * indépendant. Quel que soit le mode de lancement, un thread parallèle (ThreadProgressBar) sera également exécuté afin
+ * de gérer les affichages éventuelles (stats, info, erreurs).
+ * 
+ * L'éxécution peut être temporairement suspendue, voire interrompue en utilisant le Context
+ * (respectivement Context.taskAbort() et Context.setTaskPause(boolean))
+ * 
+ * @author anaïs Oberto & Pierre Fernique
+ *
+ */
+public class Task extends Thread {
 
 	private Context context;
-	private BuilderIndex builderIndex;
-	private BuilderAllsky builderAllsky;
-	private BuilderController builder;
+	private Vector<Action> actions;
+	private Builder builder=null;   // Builder en cours d'exécution
 	
-	private int mode = -1;                 // Mode courant (INDEX,TESS ou JPG)
-	
-	private volatile Thread runner = null;
-
-	private ThreadProgressBar progressBar;
-	
-    public Task(Context context) {
-       this.context = context;
-       builderIndex = new BuilderIndex(context);
-       builderAllsky = new BuilderAllsky(context,-1);
-       builder = new BuilderController(this,context);
+	/** Lancement d'une tâche unique
+	 * @param context
+	 * @param action
+	 * @param now  true pour une exécution asynchrone, false pour un thread indépendant
+	 */
+    public Task(Context context,Action action,boolean now) throws Exception {
+       this.context=context;
+       actions = new Vector<Action>();
+       actions.add(action);
+       
+       perform(now);
     }
     
-	public synchronized void startThread(){
-	   if(runner == null){
-	      runner = new Thread(this);
-	      try {
-	         runner.start(); // --> appelle run()
-	      } catch (Exception e) {
-	         e.printStackTrace();
-	      }
-	   }
-	}
+    /**
+     * Lancement d'un groupe de tâches exécutées consécutivement.
+     * @param context
+     * @param actions
+     * @param now true pour une exécution asynchrone, false pour un thread indépendant
+     */
+    public Task(Context context,Vector<Action> actions,boolean now) throws Exception {
+       this.context=context;
+       this.actions=actions;
+       perform(now);
+    }
+    
+    // Exécution des tâches
+    private void perform(boolean now) throws Exception {
+       if( context.isTaskRunning() ) throw new Exception("There is already a running task ("+context.getAction()+")");
+       
+       // Départ immédiat, ou en Thread à part
+       if( now ) run();
+       else start();
+    }
+    
+    public void run() {
+       ThreadProgressBar progressBar=null;
+       
+       progressBar = new ThreadProgressBar(context);
+       progressBar.start();
 
-	public synchronized void stopThread(){
+       try { 
+          context.setTaskRunning(true);
+          for( Action a : actions ) {
+             if( context.isTaskAborting() ) break;
+             builder = Builder.createBuilder(context,a);
+             builder.validateContext();
+             if( builder.isAlreadyDone() ) {
+                context.endAction();
+                continue;
+             }
 
-	   if(runner != null){
-	      runner = null;
-	      Aladin.trace(2,"STOP ON "+mode);
-	      switch (mode) {
-	         case INDEX : builderIndex.stop();break;
-	         case TESS : builder.stop();break;
-	      }
-	      progressBar.stop();
-	   }
-	}
-	
-	private void abort(Exception e) {
-       e.printStackTrace();
-       if( progressBar!=null ) progressBar.stop();
-       context.setAbort();
-       runner=null;
-       Aladin.trace(2,"Allsky... aborted");
-  
-	}
-	
-	public void run() {
-	   context.setIsRunning(true);
-	   try {
-	      mode = INDEX;
-	      //			if (allsky.toReset()) builder.reset(output);
+             context.startAction(a);
+             try {
+                builder.run();
+                builder.showStatistics();
+             } catch( Exception e ) {
+                e.printStackTrace();
+                context.taskAbort();
+             } 
+             context.endAction();
+          }
+          context.setTaskRunning(false);
+       }
+       catch( Exception e) {  context.warning(e.getMessage()); }
+       finally{ if( progressBar!=null ) progressBar.end(); }
+    }
+    
+    /** Thread de "suivi" de l'exécution => gère les affichages (stats, infos, erreurs) */
+    class ThreadProgressBar extends Thread {
+       private Context context;
+       boolean isRunning = true;
+       long lastStat=-1;            // date d'affichage des dernières stats.
+       long tempo;                  // Tempo entre deux affichages de statistiques
+       
+       public ThreadProgressBar(Context context) {
+          this.context = context;
+          tempo = context instanceof ContextGui ? 1000 : 30000;
+        }
 
-	      // Créée un répertoire HpxFinder avec l'indexation des fichiers source pour l'ordre demandé
-	      // (garde l'ancien s'il existe déjà)
-	      if (mode<=INDEX) {
-
-	         boolean init=false;
-	         try {
-	            // Initialisation des parametres pour vérifier la cohérence immédiatement
-	            context.initParameters();
-	            if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing survey");
-
-	            Aladin.trace(2,"Launch Index (frame="+context.getFrameName()+")");
-	            followProgress(mode,builderIndex);
-
-	            init = builderIndex.build();
-
-	            // si le thread a été interrompu, on sort direct
-	            if (runner != Thread.currentThread()) throw new Exception("Interrupted by user");
-
-	         } catch( Exception e ) { abort(e); return; }
-
-	         if (init) Aladin.trace(2,"Allsky... => Index built");
-	         else Aladin.trace(2,"Allsky... => Use previous Index");
-	         setProgress(mode,100);
-	         progressBar.stop();
-	         context.enableProgress(false,INDEX);
-	      }
-	      // Création des fichiers healpix fits et jpg
-	      if (mode <= TESS) {
-	         mode = TESS;
-	         Aladin.trace(2,"Launch Tess (frame="+context.getFrameName()+")");
-	         //				builder.setThread(runner);
-	         followProgress(mode, builder);
-	         
-	         try {
-	            builder.build();
-	            
-	            // si le thread a été interrompu, on sort direct
-	            if (runner != Thread.currentThread()) throw new Exception("Interrupted by user");
-	            
-	         } catch (Exception e) { abort(e); return; }
-	         
-	         Aladin.trace(2,"Allsky... => Hpx files built");
-	         setProgress(mode,100);
-	         progressBar.stop();
-	         context.enableProgress(false,TESS);
-	      }
-	      // création du fichier allsky
-	      createAllSky();
-	      createMoc();
-	      context.preview(0);
-	      context.setIsRunning(false);
-
-	      if (mode <= JPG) mode = JPG;
-	      runner = null;
-	      mode = -1;
-	      Aladin.trace(2,"Allsky... done!");
-	   } catch (Exception e) {
-	      e.printStackTrace();
-	   }
-	}
-	
-	private long lastCreatedAllSky=-1L;
-	
-	private void createMoc() {
-	   (new BuilderMoc()).createMoc(context.getOutputPath());
-	}
-
-	// création des fichiers allsky
-    public boolean  createAllSky() { return createAllSky(true); }
-    public boolean  createAllSky(boolean force) {
-	   
-	   if( !force ) {
-	      long now = System.currentTimeMillis();
-	      if( now-lastCreatedAllSky<15000 ) return false;  // déjà fait il n'y a pas bien longtemps
-	      lastCreatedAllSky = now;
-	   }
-
-	   try {
-	      builderAllsky.createAllSky(3,64);
-	   } catch (Exception e) { }
-	   return true;
-	}
-
-	void setInitDir(String txt) {
-	   context.setInitDir(txt);		
-	}
-
-	void setProgress(int stepMode, int i) {
-	   context.setProgress(stepMode, i);
-	}
-
-	private void followProgress(int stepMode, Progressive o) {
-	   progressBar = new ThreadProgressBar(stepMode,o, this);
-	   progressBar.start();
-	}
-
-	public void doInBackground() throws Exception {
-	   
-	   // petite vérification avant de lancer
-       String input = context.getInputPath();
-	   if (input == null || input.equals("")) {
-	      System.err.println("No input directory given");
-	      context.stop();
-	      return ;
-	   }
-
-	   if (mode == -1) mode = INDEX;
-
-	   startThread();
-	}
+       public void run() {
+          while( isRunning ) {
+             try { Thread.sleep(1000);  } catch (InterruptedException e) { }
+             if( isRunning && !context.isTaskPause() ) {
+                context.progressStatus();
+                long now = System.currentTimeMillis();
+                if( now-lastStat>tempo && builder!=null ) { builder.showStatistics(); lastStat=now; }
+             }
+             
+          }
+          context.resumeWidgets();
+       }
+       
+       public void end() { isRunning=false; }
+    }
 
 
-	/**
-	 * Invoked when task's progress property changes.
-	 */
-	//    public void propertyChange(PropertyChangeEvent evt) {
-	//        if ("progress" == evt.getPropertyName()) {
-	//            int progress = (Integer) evt.getNewValue();
-	//            //allskyPanel.setProgress(mode,progress);
-	//        } 
-	//    }
-
-	/**
-	 * Teste s'il n'y a plus de tache en cours (arret normal ou interrompu)
-	 */
-	public boolean isDone() {
-	   return runner == null;
-	   //		return runner != Thread.currentThread();
-	}
-
-//	public void setLastN3(int lastN3) {
-//	   config.setLastN3(lastN3);
-//	}
-
-
-	class ThreadProgressBar implements Runnable {
-
-	   private boolean stopped = false;
-	   int last = -1;
-	   Progressive builder;
-	   Task tasks;
-
-	   int mode ;
-	   public ThreadProgressBar(int stepMode, Progressive source, Task allskyTask) {
-	      mode=stepMode;
-	      builder = source;
-	      tasks = allskyTask;
-	   }
-	   public synchronized void start(){
-	      stopped=false;
-	      // lance en arrière plan le travail
-	      (new Thread(this)).start();
-	   }
-	   public synchronized void stop() {
-	      stopped=true;
-	   }
-
-	   /**
-	    * Va chercher la dernière valeur de progression
-	    */
-	   public void run() {
-	      int value = 0;
-	      String txt = "";
-	      while(builder != null && !stopped) {// && value < 99) {
-	         switch (mode) {
-	            case INDEX :
-	               value = builder.getProgress();
-	               txt = ((BuilderIndex)builder).getCurrentpath();
-	               tasks.setInitDir(txt);
-	               break;
-	            case TESS : 
-	               value = builder.getProgress();
-	               int n3 = ((BuilderController)builder).getLastN3();
-	               if (n3!=-1 && last!=n3) {
-	                  /* if( tasks.createAllSky(false) ) */ context.preview(n3);
-	                  //                  tasks.config.setLastN3(n3);
-	                  last = n3;
-	               }
-	               break;
-	               //			case JPG : 
-	               //				value = (int)((SkyGenerator)thread).getProgress();
-	               //				break;
-	         }
-	         tasks.setProgress(mode,value);
-	         try {
-	            Thread.sleep(200);
-	         } catch (InterruptedException e) {
-	         }
-	      }
-	      stopped = true;
-	      value = builder.getProgress();
-	      tasks.setProgress(mode,value);
-	   }
-
-	}
 }

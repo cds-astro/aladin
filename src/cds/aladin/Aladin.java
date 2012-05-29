@@ -144,7 +144,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.518";
+    static public final    String VERSION = "v7.520";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3569,7 +3569,10 @@ public class Aladin extends JApplet
           
           // Arrêt d'un éventuel calcul de allsky
           try {
-            if( frameAllsky!=null && frameAllsky.mainPanel!=null ) frameAllsky.mainPanel.stop();
+            if( frameAllsky!=null && frameAllsky.context.isTaskRunning() ) {
+               frameAllsky.context.taskAbort();
+               while( frameAllsky.context.isTaskRunning() ) Util.pause(100);
+            }
          } catch( Exception e1 ) { }
 
           // Suppression d'un cache éventuel

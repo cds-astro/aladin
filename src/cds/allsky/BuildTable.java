@@ -27,6 +27,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.border.Border;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -39,7 +40,8 @@ import cds.tools.pixtools.CDSHealpix;
 public class BuildTable extends JTable {
 
    static int  DEFAULT_BITPIX = -32;
-   private int 	bitpix = DEFAULT_BITPIX; // bitpix par défaut pour les calculs d'espace disque
+   
+   private Context context;
    
    static final private int MAXHEALPIXORDER = 21;
 
@@ -65,8 +67,9 @@ public class BuildTable extends JTable {
       "Disk space used at the end of the process"
    };
 
-   BuildTable() {
+   BuildTable(Context context) {
       super(createData(DEFAULT_BITPIX),columnNames);
+      this.context = context;
       setAutoscrolls(true);
       for( int i=0; i<columnSize.length; i++ )  getColumnModel().getColumn(i).setPreferredWidth( columnSize[i]);
    }
@@ -84,15 +87,13 @@ public class BuildTable extends JTable {
          }
       };
    }
-
+   
    public void setBitpix(int newbitpix) {
-      bitpix = newbitpix;
       setDiskHeader(newbitpix);
-      this.updateData();
    }
    
    private static String getDiskHeader(int bitpix) {
-      return  "Max disk space (bitpix="+bitpix+")";
+      return  "Disk space (bitpix="+bitpix+")";
    }
    
    public static void setDiskHeader(int bitpix) {
@@ -189,21 +190,17 @@ public class BuildTable extends JTable {
       return "<html>512 x 2<sup>"+(row+3)+"</sup></html>";
    }
 
-   public void updateData() {
-      long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
-      for (int i = 0; i < this.getRowCount(); i++) {
-         int order = i+3+Constante.ORDER;
-         long nside = CDSHealpix.pow2(order);
-         long nbPixel = 12*nside*nside;
-         this.setValueAt( Util.getUnitDisk(nbPixel*nbBytePerPixel) ,i,VOL_IDX);
-      }
-      repaint();
-   }
-
-
    @Override
    public Object getValueAt(int row, int column) {
-      return super.getModel().getValueAt(row, column);
+      if( column!=VOL_IDX ) return super.getModel().getValueAt(row, column);
+      
+      double skyArea = context.getSkyArea();
+      long nbBytePerPixel = (long)( context.getNpix() );
+      int order = row+3+Constante.ORDER;
+      long nside = CDSHealpix.pow2(order);
+      long nbPixel = 12*nside*nside;
+      return Util.getUnitDisk(nbPixel*nbBytePerPixel*skyArea);
+
    }
 
    public Class<? extends Object> getColumnClass(int c) {

@@ -1463,8 +1463,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          ConfigurationItem item = (ConfigurationItem) e.nextElement();
 
          // Entête si nécessaire
-         if( first
-               && !(item.key.equals("#") && item.value.startsWith("#Aladin")) ) {
+         if( first && !(item.key.equals("#") && item.value.startsWith("#Aladin")) ) {
             bw.write("#Aladin user configuration file");
             bw.newLine();
             bw.newLine();
@@ -1472,9 +1471,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          first = false;
 
          if( item.key.equals("#") ) bw.write(item.value); // Commentaires
-         else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key,
-               20)
-               + item.value); // Propriétés
+         else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key, 20) + item.value); // Propriétés
          bw.newLine();
       }
       bw.close();

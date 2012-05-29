@@ -228,6 +228,38 @@ public class PlanBG extends PlanImage {
       inJPEG = gluSky.isJPEG();
       truePixels=gluSky.isTruePixels();
       color = gluSky.isColored();
+
+      // Information supplémentaire par le fichier properties ?
+      boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
+      java.util.Properties prop = new java.util.Properties();
+      try {
+         InputStream in=null;
+         if( !local ) in = (new URL(url+"/"+PlanHealpix.PROPERTIES)).openStream();
+         else in = new FileInputStream(new File(url+Util.FS+PlanHealpix.PROPERTIES));
+         if( in==null ) throw new Exception();
+         prop.load(in);
+         in.close();
+
+         Aladin.trace(4,"PlanBG.setSpecificParams() found a \"properties\" file");
+         // Frame
+         String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS);
+         char c1 = strFrame.charAt(0);
+         int frame=-1;
+         if( c1=='C' ) frame=Localisation.ICRS;
+         else if( c1=='E' ) frame=Localisation.ECLIPTIC;
+         else if( c1=='G' ) frame=Localisation.GAL;
+         if( frame!=-1 && frame!=frameOrigin ) {
+            aladin.trace(1,"Coordinate frame found in properties file ("+Localisation.getFrameName(frame)
+                  +") differs from the GLU record ("+Localisation.getFrameName(frameOrigin)+") => assume "+Localisation.getFrameName(frame));
+            frameOrigin=frame;
+         }
+
+         // ImageSourcePath
+         imageSourcePath = prop.getProperty(PlanHealpix.KEY_IMAGESOURCEPATH);
+         if( imageSourcePath!=null ) Aladin.trace(4,"PlanBG.setSpecificParams() found a progenitor access rule => "+imageSourcePath);
+         
+      } catch( Exception e ) { aladin.trace(3,"No properties file found ..."); }
+
    }
    
    protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
@@ -282,7 +314,7 @@ public class PlanBG extends PlanImage {
       localAllSky=gSky.isLocal();
       imageSourcePath = gSky.getImageSourcePath();
       version = gSky.getVersion();
-      truePixels=inFits && localAllSky || !inFits;
+      truePixels=inFits && localAllSky || !inJPEG && !localAllSky;
       useCache=!localAllSky && gSky.useCache();
       co=c!=null ? c : gSky.getTarget();
       coRadius= c!=null ? radius : gSky.getRadius();
@@ -399,7 +431,6 @@ public class PlanBG extends PlanImage {
       aladin.endMsg();
       creatDefaultCM();
       resetStats();
-
    }
    
    /** Positionne la taille initiale du champ. */

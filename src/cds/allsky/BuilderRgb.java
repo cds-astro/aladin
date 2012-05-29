@@ -8,7 +8,7 @@ import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImageRGB;
-import cds.allsky.Context.Method;
+import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -30,17 +30,21 @@ public class BuilderRgb implements Runnable {
     private int maxOrder = 100;
     private int missing=-1;
     
-    private Method method;
+    private JpegMethod method;
     
     private int statNbFile;
     private long statSize;
     private long startTime,totalTime;
     private long statLastShowTime;
 
-    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path, Method method) {
+    public BuilderRgb(Aladin aladin, Context context, Object[] plans, String path, JpegMethod method) {
        this.aladin = aladin;
        this.context = context;
-       context.initParameters();
+       try {
+         context.initParameters();
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) p[c]=(PlanBG)plans[c];
        this.path = path;
@@ -66,7 +70,7 @@ public class BuilderRgb implements Runnable {
           int order = p[c].getMaxFileOrder();
           if( maxOrder > order)  maxOrder = order;
        }
-       builderAllsky = new BuilderAllsky(context,frame);
+       builderAllsky = new BuilderAllsky(context);
        
        Aladin.trace(3,"BuilderRgb maxOrder="+maxOrder+" => "+path);
     }
@@ -164,7 +168,7 @@ public class BuilderRgb implements Runnable {
                       if( in!=null ) {
 
                           // On prend la moyenne (sans prendre en compte les BLANK)
-                         if( method==Context.Method.MEAN ) {
+                         if( method==Context.JpegMethod.MEAN ) {
                             double totalCoef=0;
                             for( int i=0; i<4; i++ ) {
                                int dx = i==1 || i==3 ? 1 : 0;
@@ -392,7 +396,7 @@ public class BuilderRgb implements Runnable {
 	void preview(String path, int last) {
 	   try {
           try {
-        	  builderAllsky.createAllSkyJpgColor(path,3,64,true);
+        	  builderAllsky.createAllSkyJpgColor(path,3,64);
           } catch (Exception e) {
         	  Aladin.trace(3,e.getMessage());
           }

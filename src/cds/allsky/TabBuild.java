@@ -19,14 +19,11 @@
 
 package cds.allsky;
 
-import static cds.allsky.Constante.INDEX;
-import static cds.allsky.Constante.TESS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -34,6 +31,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -44,29 +43,27 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
 
 import cds.aladin.Aladin;
-import cds.aladin.Chaine;
-import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
 public class TabBuild extends JPanel implements ActionListener {
    protected static final String BEST = "best";
    protected static final String FIRST = "first";
 
-   protected JButton b_cancel;
-   protected JButton b_pause;
-   protected JButton b_ok;
-//   protected JButton b_help;
-   protected JButton b_previous;
-   protected JButton b_next;
-   protected JButton b_moc;
+   protected JButton abort;
+   protected JButton start;
+   protected JButton pause;
+   protected JButton previous;
+   protected JButton next;
+   protected JButton moc;
 
-   private static JTable tab = null;
+   private static BuildTable tab = null;
 
    private JLabel 	method_label = new JLabel();
    private ButtonGroup 	groupSampl = new ButtonGroup();
@@ -78,9 +75,6 @@ public class TabBuild extends JPanel implements ActionListener {
    private JCheckBox    fading = new JCheckBox();
    private ActionListener 	methodsListener = new MethodSelectListener(
          new JRadioButton[] {samplFast, overlayFast, samplBest, overlayBest},fading);
-
-   final private JLabel labelSampl = new JLabel();
-   final private JLabel labelOverlay = new JLabel();
 
    final private String BIT8 = "short (8bits)";
    final private String BIT16 = "int (16bits)";
@@ -98,37 +92,23 @@ public class TabBuild extends JPanel implements ActionListener {
    private JRadioButton 	bit_32 = new JRadioButton(BIT_32, false);
    private JRadioButton 	bit_64 = new JRadioButton(BIT64, false);
 
-//   private double bscale;
-//   private double bzero;
-//   private double blank;
-   private int bitpixO = -1;
+   private int bitpixOrig = -1;
    private JLabel bitpixLabel = new JLabel();
    private JLabel resoLabel;
+   private JLabel note;
 
-   private String OK,RESTART,RESUME,STOP,DONE, PREVIOUS, NEXT;
    private String canceltip;
    MainPanel mainPanel;
-   Task task;
-
+   Context context;
+   
    protected BuildProgressPanel buildProgressPanel;
-
-   private void createChaine() {
-      STOP = getString("STOP");
-      OK = getString("START");
-      RESUME = getString("RESUME");
-      DONE = getString("DONE");
-      RESTART = getString("RE_START");
-      canceltip = getString("TIPCANCALLSKY");
-      NEXT = getString("NEXT");
-      PREVIOUS = getString("PREVIOUS");
-   }
 
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
    public TabBuild(MainPanel panel) {
       super(new BorderLayout());
       mainPanel = panel;
-      createChaine();
+      context = mainPanel.context;
 
       JPanel pCenter = new JPanel();
       pCenter.setLayout(new GridBagLayout());
@@ -165,16 +145,6 @@ public class TabBuild extends JPanel implements ActionListener {
       keepBB.setText(getString("KEEPORIGALLSKY"));
       pCenter.add(keepBB, c);
 
-      // Zone de sélection de la résolution
-      //		c.gridx = 0;
-      //		c.gridy++;
-      //		c.anchor = GridBagConstraints.WEST;
-      //		c.fill = GridBagConstraints.HORIZONTAL;
-      //		c.gridwidth = GridBagConstraints.REMAINDER;
-      //		pCenter.add(new JSeparator(JSeparator.HORIZONTAL), c);
-      //		c.fill = GridBagConstraints.NONE;
-      //		c.gridwidth = 1;
-
       c.insets.top=15;
       c.gridx=0;
       c.gridy++;
@@ -197,70 +167,9 @@ public class TabBuild extends JPanel implements ActionListener {
       pCenter.add(pane, c);
       c.gridy++;
       c.anchor = GridBagConstraints.EAST;
-      JLabel l = new JLabel("<html><i>(*) whole sky</i></html>");
+      JLabel l = note = new JLabel("<html><i>(*) whole sky</i></html>");
       pCenter.add(l,c);
 
-      // méthode fast=plus proche / best=bilinéaire
-//      		c.gridx = 0;
-//      		c.gridy++;
-//      		c.anchor = GridBagConstraints.WEST;
-//      		c.fill = GridBagConstraints.HORIZONTAL;
-//      		c.gridwidth = GridBagConstraints.REMAINDER;
-//      		pCenter.add(new JSeparator(JSeparator.HORIZONTAL), c);
-//      		c.fill = GridBagConstraints.NONE;
-
-      /* JE N'AFFICHE PLUS LES PARAMETRES SUR LE CHOIX DU RESAMPLING 
-      c.anchor = GridBagConstraints.WEST;
-      c.fill = GridBagConstraints.NONE;
-      c.insets.top=15;
-      c.gridx = 0;
-      c.gridwidth = 1;
-      c.gridy++;
-      method_label.setText(getString("RESPARAMALLSKY"));
-      pCenter.add(method_label, c);
-      c.gridx++;
-      c.gridwidth = GridBagConstraints.REMAINDER;;
-      pCenter.add(Util.getHelpButton(this,getString("HELPESAMPALLSKY")),c);
-      c.insets.top=0;
-
-      c.gridwidth = 1;
-      c.gridx = 0;
-      c.gridy++;
-      labelSampl.setText(getString("SAMPLINGALLSKY"));
-      pCenter.add(labelSampl,c);
-      c.gridx++;
-      samplFast.setText(getString("FIRSTALLSKY"));
-      pCenter.add(samplFast, c);
-      c.gridwidth=2;
-      c.gridx++;
-      samplBest.setText(getString("BILIALLSKY"));
-      pCenter.add(samplBest, c);
-
-      c.gridwidth=1;
-      c.gridx = 0;
-      c.gridy++;
-      labelOverlay.setText(getString("OVERLAYALLSKY"));
-      pCenter.add(labelOverlay,c);
-      c.gridx++;
-      overlayFast.setText(getString("FIRSTALLSKY"));
-      pCenter.add(overlayFast, c);
-      c.gridx++;
-
-      JPanel p1 = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
-      overlayBest.setText(getString("COADDALLSKY"));
-      p1.add(overlayBest);
-      overlayBest.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            fading.setEnabled( overlayBest.isSelected() );
-         }
-      });
-      fading.setText(getString("FADINGALLSKY"));
-      p1.add(fading); fading.setSelected(true);		
-      pCenter.add(p1, c);
-      
-      */
-
-      
       // barres de progression
       c.insets.top=15;
       c.fill = GridBagConstraints.HORIZONTAL;
@@ -268,6 +177,7 @@ public class TabBuild extends JPanel implements ActionListener {
       c.gridy++;c.gridx=0;
       buildProgressPanel = new BuildProgressPanel();
       pCenter.add(buildProgressPanel, c);
+      buildProgressPanel.resetProgressBar();
 
       // boutons
       JPanel fin = new JPanel(new BorderLayout());
@@ -275,16 +185,15 @@ public class TabBuild extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
-      pBtn.add(b_previous);
-      pBtn.add(b_ok);
-      pBtn.add(b_cancel);
-      pBtn.add(b_moc);
-      //		pBtn.add(b_close);
+      pBtn.add(previous);
+      pBtn.add(moc);
+      pBtn.add(start);
+      pBtn.add(pause);
+      pBtn.add(abort);
       pBtn.add(Box.createRigidArea(new Dimension(10,0)));
-      pBtn.add(b_next);
+      pBtn.add(next);
       pBtn.add(Box.createHorizontalGlue());
       fin.add(pBtn, BorderLayout.CENTER);
-//      fin.add(b_help, BorderLayout.EAST);
 
       // composition du panel principal
       add(pCenter, BorderLayout.CENTER);
@@ -293,7 +202,7 @@ public class TabBuild extends JPanel implements ActionListener {
    }
 
    public void init() {
-      tab = new BuildTable();
+      tab = new BuildTable(context);
       resoLabel = new JLabel();
       resoLabel.setFont(resoLabel.getFont().deriveFont(Font.BOLD));
 
@@ -313,27 +222,26 @@ public class TabBuild extends JPanel implements ActionListener {
       // boutons
       initBtn();
    }
-
+   
    private void initBtn() {
       JButton bt;
-      b_previous = bt=new JButton(PREVIOUS);
-      bt.addActionListener(this); bt.setEnabled(false);
+      previous = bt=new JButton(getString("PREVIOUS"));
+      bt.addActionListener(this);
       
-      b_moc = bt=new JButton(getString("LOADMOC"));
-      bt.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { loadMoc(); }
-      });
+      moc = bt=new JButton(getString("LOADMOC"));
+      bt.addActionListener(this);
       
-      b_ok = bt=new JButton(OK);  
-      bt.addActionListener(this); bt.setEnabled(false);
+      start = bt=new JButton(getString("START"));  
+      bt.addActionListener(this);
       
-      b_cancel = bt=new JButton(STOP);
-      bt.addActionListener(this); bt.setToolTipText(canceltip); bt.setEnabled(false);
+      pause = bt=new JButton(getString("PAUSE"));  
+      bt.addActionListener(this);
       
-//      b_help = Util.getHelpButton(this,help);
+      abort = bt=new JButton(getString("ABORT"));
+      bt.addActionListener(this); bt.setToolTipText(canceltip); 
       
-      b_next = bt=new JButton(NEXT);
-      bt.addActionListener(this); bt.setEnabled(false);
+      next = bt=new JButton(getString("NEXT"));
+      bt.addActionListener(this); 
    }
    
    private void loadMoc() {
@@ -387,52 +295,55 @@ public class TabBuild extends JPanel implements ActionListener {
 
    public void show() {
       super.show();
-      resumeWidgetsStatus();
+      mainPanel.init();
+      mainPanel.resumeWidgets();
    }
    
-   private boolean isExistingMoc() {
-      String moc = mainPanel.context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME;
-      return  moc!=null && (new File(moc)).exists();
+   protected void resumeWidgets() {
+      try {
+         boolean readyToDo = context.isExistingDir() && mainPanel.tabDesc.outputField.getText().trim().length()>0;
+         boolean isRunning = context.isTaskRunning();
+         boolean isExistingMoc = context.getMocIndex()!=null;
+         moc.setEnabled(isExistingMoc);
+         String s = context.getArea()==null ? "whole sky" 
+               : (int)(((double)context.getSkyArea()*100000 )/1000.)+"%";
+         note.setText("<html><i>(*) "+s+"</i></html>");
+         previous.setEnabled(readyToDo && !isRunning);
+         next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
+         start.setEnabled(readyToDo && !isRunning && !(isRunning));
+         pause.setEnabled(isRunning);
+         abort.setEnabled(readyToDo && isRunning);
+         
+         bit8.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit16.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+         samplFast.setEnabled(readyToDo && !isRunning);
+         overlayFast.setEnabled(readyToDo && !isRunning);
+         samplBest.setEnabled(readyToDo && !isRunning);
+         overlayBest.setEnabled(readyToDo && !isRunning);
+         fading.setEnabled(readyToDo && !isRunning);
+         tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
+         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) 
+                              : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+      } catch( Exception e ) {
+         e.printStackTrace();
+      } 
    }
-
-   protected void resumeWidgetsStatus() {
-      boolean readyToDo = mainPanel.isExistingDir() && mainPanel.tabDesc.dir_D.getText().trim().length()>0;
-      boolean isRunning = mainPanel.isRunning();
-      b_moc.setEnabled(isExistingMoc());
-      b_previous.setEnabled(readyToDo && !isRunning);
-      b_next.setEnabled(readyToDo && !isRunning && mainPanel.isExistingAllskyDir() );
-      b_ok.setEnabled(readyToDo && !isRunning);
-      b_cancel.setEnabled(readyToDo && isRunning);
-      
-      bit8.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
-      bit16.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
-      bit32.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
-      bit_32.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
-      bit_64.setEnabled(readyToDo && !isRunning && bitpixO!=0 );
-      samplFast.setEnabled(readyToDo && !isRunning);
-      overlayFast.setEnabled(readyToDo && !isRunning);
-      samplBest.setEnabled(readyToDo && !isRunning);
-      overlayBest.setEnabled(readyToDo && !isRunning);
-      fading.setEnabled(readyToDo && !isRunning);
-      tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
-      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
-   }
-
+   
    public void clearForms() {
-      bitpixO = -1;
+      bitpixOrig = -1;
       bit8.setSelected(false);
       bit16.setSelected(false);
       bit32.setSelected(true);
       bit_32.setSelected(false);
       bit_64.setSelected(false);
-//      blank = Fits.DEFAULT_BLANK;
-//      bscale = Fits.DEFAULT_BSCALE;
-//      bzero = Fits.DEFAULT_BZERO;
       samplBest.setSelected(true);
       overlayBest.setSelected(true);
       fading.setSelected(true);
       ((BuildTable) tab).reset();
-      resumeWidgetsStatus();
+      resumeWidgets();
    }
 
    public int setSelectedOrder(int val) {
@@ -491,8 +402,8 @@ public class TabBuild extends JPanel implements ActionListener {
 //      return samplBest.isSelected() && fading.isSelected();
 //   }
 
-   public void setOriginalBitpix(int bitpix) {
-      this.bitpixO = bitpix;
+   public void setOriginalBitpixField(int bitpix) {
+      this.bitpixOrig = bitpix;
       ((BitpixListener) bitpixListener).setDefault(bitpix);
       switch (bitpix) {
          case 0:
@@ -516,18 +427,17 @@ public class TabBuild extends JPanel implements ActionListener {
       }
    }
 
-   public int getOriginalBitpix() {
-      return bitpixO;
+   public int getOriginalBitpixField() {
+      return bitpixOrig;
    }
-
 
    /**
     * Renvoie le bitpix sélectionné dans le formulaire
     * 
     * @return
     */
-   public int getBitpix() {
-      if( bitpixO==0 ) return 0;
+   public int getBitpixField() {
+      if( bitpixOrig==0 ) return 0;
       ButtonModel b = groupBitpix.getSelection();
       int i = BuildTable.DEFAULT_BITPIX;
       try {
@@ -538,153 +448,49 @@ public class TabBuild extends JPanel implements ActionListener {
       return i;
    }
 
-   public void displayStart() {
-      b_ok.setText(OK);
-      b_ok.setEnabled(true);
-      b_cancel.setEnabled(true);
-      b_next.setEnabled(false);
-      enableProgress(true,INDEX);
-      enableProgress(true,TESS);
-      setProgress(INDEX,0);
-      setProgress(TESS,0);
-   }
-   public void displayReStart() {
-      b_ok.setText(RESTART);
-      b_ok.setEnabled(true);
-      b_cancel.setEnabled(false);
-      displayNext();
-   }
-   public void displayResume() {
-      b_ok.setText(RESUME);
-      b_ok.setEnabled(true);
-      b_cancel.setEnabled(false);
-      displayNext();
-   }
-   public void displayDone() {
-      b_ok.setText(DONE);
-      b_ok.setEnabled(false);
-      b_cancel.setEnabled(false);
-      displayNext();
-      setCursor(null);
-      mainPanel.tabDesc.setFieldEnabled(true);
-   }
-   public void displayNext() {
-      b_next.setEnabled(true);
-   }
-
-   protected void setProgress(int mode, int value) {
-      switch (mode) {
-         case INDEX:
-            buildProgressPanel.setProgressIndex(value);
-            break;
-         case TESS:
-            buildProgressPanel.setProgressTess(value);
-            break;
-      }
-      b_moc.setEnabled(isExistingMoc());
-
-   }
-
-   protected void enableProgress(boolean selected, int mode) {
-      buildProgressPanel.select(selected, mode);
-   }
-
-   /** Spécifie le répertoire en cours d'indexation */
-   protected void setProgressIndexDir(String txt) {
-      buildProgressPanel.setProgressIndexDir(txt);
-      b_moc.setEnabled(isExistingMoc());
-   }
-
    public void actionPerformed(ActionEvent e) {
-      // on applique aussi la modification dans le tableau (calcul des volumes
-      // disques)
-      ((BuildTable) tab).setBitpix(getBitpix());
+      // on applique aussi la modification dans le tableau (calcul des volumes disques)
+      ((BuildTable) tab).setBitpix(getBitpixField());
 
-      // START / RESTART / RESUME 
-      if (e.getSource() == b_ok) {
-         // PAUSE -> b_cancel
-         //			if (e.getActionCommand() == PAUSE) {
-         //				if (task != null)
-         //					task.stopThread();
-         //				allskyPanel.setResume();
-         //				stop();
-         //				return;
-         //			}
-
-         // initialisation correcte des barres de progression et boutons
-         
-         mainPanel.resetProgress();
-
-         b_ok.setEnabled(false);
-         b_cancel.setEnabled(true);
-         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-         // bloque les champs texte
-         mainPanel.tabDesc.setFieldEnabled(false);
-
-         if (getBitpix() == -1) {
-            mainPanel.init();
-         }
-
-         // effectue le nettoyage selon les "reset" cochés
-         mainPanel.toReset();
-
-         //lance les taches en arrière plan
-         task = new Task(mainPanel.context);
-         if (task.isDone()) {
-            try {
-               task.doInBackground();
-            } catch (Exception e1) {
-               // TODO Auto-generated catch block
-               e1.printStackTrace();
-               return;
-            }
-
-            // Thread qui attend de savoir que les calculs sont terminés
-            new Thread(new Runnable() {
-               public void run() {
-                  boolean done = false;
-                  while(!done) {
-                     try {
-                        Thread.sleep(1000);
-                     } catch (InterruptedException e) {
-                     }
-                     if (task == null || task.isDone()) {
-                        Aladin.trace(3,"Task END");
-                        done=true;
-                        if (task == null) stop();
-                     }
-                  }
-               }
-            }).start();
-         }
-         // else rien, il faut attendre que la tache soit terminee ou interrompue
-         //		    showBuild();
-      } else if (e.getSource() == b_cancel) {
-         // arrete les process en cours
-         if (task != null)
-            task.stopThread();
-         stop();
-         // se prépare à relancer le process
-         mainPanel.setResume();
-
-         //		} else if (e.getSource() == b_close) {
-         //			// ferme juste la frame
-         //			allskyPanel.close();
-      } else if (e.getSource() == b_next) {
-         mainPanel.showJpgTab();
-         
-      } else if (e.getSource() == b_previous) {
-         mainPanel.showDescTab();
-      }
-
+           if (e.getSource() == start)    perform();
+      else if (e.getSource() == abort)    abort();
+      else if (e.getSource() == pause)    pause();
+      else if (e.getSource() == moc)      loadMoc();
+      else if (e.getSource() == next)     mainPanel.showJpgTab();
+      else if (e.getSource() == previous) mainPanel.showDescTab();
+      
+      mainPanel.resumeWidgets();
    }
+   
+   private void pause() {
+      if( context.isTaskPause() ) {
+         context.setTaskPause(false);
+         pause.setText(getString("PAUSE"));
+      } else {
+         context.setTaskPause(true);
+         pause.setText(getString("RESUME"));
+      }
+   }
+   
+   private void abort() {
+      if( !Aladin.confirmation(mainPanel, "Do you really want to abort the HEALPix survey computation ?") ) return;
+      context.taskAbort();
+   }
+   
+   private void perform() {
+      try {
+         Vector<Action> actions = new Vector<Action>();
+         
+         if( mainPanel.tabDesc.isResetIndex() ) actions.add(Action.CLEANINDEX);
+         actions.add(Action.INDEX);
+         if( mainPanel.tabDesc.isResetTiles() ) actions.add(Action.CLEANTILES);
+         actions.add(Action.TILES);
+         if( !context.isColor() ) actions.add(Action.GZIP);
 
-   public void stop() {
-      mainPanel.setResume();
-      b_cancel.setEnabled(false);
-      setCursor(null);
-      mainPanel.tabDesc.setFieldEnabled(true);
+         new Task(context, actions, false);
+      } catch( Exception e1 ) {
+         e1.printStackTrace();
+      }
    }
 
    class BitpixListener implements ActionListener {

@@ -19,16 +19,26 @@
 
 package cds.allsky;
 
-import cds.aladin.PlanImage;
+import java.io.File;
 
-public enum TransfertFct {
-	LOG (PlanImage.LOG), SQRT (PlanImage.SQRT), LINEAR (PlanImage.LINEAR), 
-	ASINH (PlanImage.ASINH), POW2 (PlanImage.SQR);
-	
-	private final int code;
-	TransfertFct(int i) {
-		code = i;
-	}
-	
-	int code() { return code;}
+/** Permet de nettoyer toutes les tuiles FITS ainsi que le Allsky.fits
+ * @author Anaïs Oberto & Pierre Fernique [CDS]
+ */
+public class BuilderCleanFits extends BuilderClean  {
+
+   public BuilderCleanFits(Context context) { super(context); }
+   
+   public Action getAction() { return Action.CLEANFITS; }
+   
+   public boolean mustBeDeleted(File f) {
+      String name = f.getName();
+      if( name.equals("Allsky.fits") ) return true;
+      if( !name.endsWith(".fits") )    return false;
+      if( !name.startsWith("Npix") ) return false;
+      return true;
+   }
+
+   public void run() throws Exception {
+      deleteDirExceptIndex(new File(context.getOutputPath()));
+   }
 }

@@ -1706,7 +1706,7 @@ final public class TableParser implements XMLConsumer {
       if( sep==' ' && row==0 && value.length()==0 ) return cur;
       
       if( record!=null ) {
-         if( row==record.length ) {
+         if( row>=record.length ) {
             String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored\n";
             aladin.command.printConsole(s);
          } else record[row]=value;
@@ -1774,7 +1774,7 @@ final public class TableParser implements XMLConsumer {
    */
    private boolean vide(char ch[],int cur, int end,char rs) {
       if( ch[cur]=='#' ) return true;	//commentaire
-      while( cur<end && (ch[cur]==' ' || ch[cur]=='\t')) cur++;
+      while( cur<end && (ch[cur]==' ' || ch[cur]=='\t' || ch[cur]=='\r') ) cur++;
       return ch[cur]==rs;
    }
    
@@ -1854,6 +1854,7 @@ final public class TableParser implements XMLConsumer {
          }
 
          // Analyse de la ligne
+         int curOld=cur;    // Juste pour se rappeler où on était.
          cur = getRecord(ch,cur,end,rs,cs,nbRecord);
          
          // Dans le cas DU TSV natif, ce n'est qu'à ce moment là
@@ -1904,7 +1905,7 @@ final public class TableParser implements XMLConsumer {
                char a[] = record[k].toCharArray();
                for( j=0; j<a.length; j++ ) {
                   char q = a[j];
-                  if( (q<'0' || q>'9') && q!='.' && q!='+'
+                  if( (q<'0' || q>'9') && q!='.' && q!='+' && q!='e' && q!='E'
                       && q!='-' && q!=':' && q!=' ' ) break;
                }
                if( j==0 || j<a.length ) { flagHeader=true; break; }

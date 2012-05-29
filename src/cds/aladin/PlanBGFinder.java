@@ -180,7 +180,7 @@ public class PlanBGFinder extends PlanBG {
 //      System.out.println("maxOrder="+maxOrder(v)+" order="+order+" isAllsky="+v.isAllSky());
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( maxOrder(v)<order || v.isAllSky() ) return;
+      if( maxOrder(v)<order-2 || v.isAllSky() ) return;
       
       int nb=0;
       boolean allKeyReady=true;

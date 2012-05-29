@@ -226,7 +226,7 @@ import cds.xml.*;
       // <RESOURCE ID=VizieR section
       if( name.equals("RESOURCE") ) {
          ID = (String)atts.get("ID");
-         if( ID.equals("VizieR") )
+         if( ID!=null && ID.equals("VizieR") )
           section=KEYWORDS;
       }
 
@@ -234,10 +234,10 @@ import cds.xml.*;
       else
       if ( name.equals("TABLE") ) {
          ID = (String)atts.get("ID");
-         if( ID.equals("AladinSurveys") )
+         if( ID!=null && ID.equals("AladinSurveys") )
            section=SURVEYS;
          else
-         if ( ID.equals("AladinArchives") )
+         if ( ID!=null && ID.equals("AladinArchives") )
           section=ARCHIVES;
       }
 

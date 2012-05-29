@@ -607,7 +607,7 @@ public final class ColorMap extends JPanel  implements
 
       double val[] = new double[256];
       double min=Double.MAX_VALUE;
-      double max=Double.MIN_VALUE;
+      double max=-min;
       double v;
       for( int i=0; i<256; i++ ) {
          v = i;

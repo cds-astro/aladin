@@ -53,7 +53,7 @@ public class TreeNodeProgen extends TreeNode {
    
    @Override
    protected void submit() {
-      aladin.execCommand("get File("+url+")");
+      aladin.execCommand("get File(\""+url+"\")");
    }
    
    protected void draw(Graphics g,ViewSimple v) {

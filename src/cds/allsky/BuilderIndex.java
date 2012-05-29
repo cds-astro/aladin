@@ -1,4 +1,4 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 2012 - UDS/CNRS
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -21,19 +21,13 @@ package cds.allsky;
 
 import static cds.tools.Util.FS;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
@@ -44,14 +38,16 @@ import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-public class BuilderIndex implements Progressive {
+/** Permet la génération de l'index HEALPix
+ * Rq : le MOC de l'index sera également généré à l'issue de la génération de l'index
+ * @author Standard Anaïs Oberto [CDS] & Pierre Fernique [CDS]
+ *
+ */
+public class BuilderIndex extends Builder {
 
-   private double progress = 0;
    private int [] borderSize= {0,0,0,0};
    private String initpath = null;
    private String currentfile = null;
-   private String pausepath = null;
-   private String currentpath = "";
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
@@ -59,21 +55,89 @@ public class BuilderIndex implements Progressive {
    private long statMemFile;               // Taille totale des fichiers sources (en octets)
    private long statMaxSize;               // taille du plus gros fichier trouvé
    private int statMaxWidth, statMaxHeight, statMaxNbyte; // info sur le plus gros fichier trouvé
-   private long statLastShowTime = 0L; // Date de la dernière mise à jour du panneau d'affichage
 
    boolean stopped = false;
 
-   private Context context;
+   public BuilderIndex(Context context) { super(context); }
+   
+   public Action getAction() { return Action.INDEX; }
 
-   public BuilderIndex() { }
+   public void run() throws Exception {
+      context.running("Creating HEALPix index...");
+      build();
 
-   public BuilderIndex(Context context) {
-      this.context = context;
+      BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
+      builderMocIndex.run();
+      context.setMocIndex( builderMocIndex.getMoc() ) ;
+
+      context.nldone("HEALPix index created !");
+   }
+   
+   public boolean isAlreadyDone() {
+      if( !context.actionAlreadyDone(Action.INDEX)) return false;
+      if( context.getMocIndex()==null ) {
+         try { context.loadMocIndex(); } catch( Exception e ) { return false; }
+      }
+      context.info("Pre-existing HEALPix index seems to be ready");
+      return true;
+   }
+   
+   public void validateContext() throws Exception { 
+      if( context instanceof ContextGui ) {
+         context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
+      }
+
+      validateInput();
+      validateOutput();
+      
+      // Tests order
+      int order = context.getOrder();
+      if( order==-1 ) {
+         String img = context.getImgEtalon();
+         if( img==null ) {
+            img = context.justFindImgEtalon( context.getInputPath() );
+            context.info("Use this reference image => "+img);
+         }
+         if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
+         try {
+            Fits file = new Fits();
+            file.loadHeaderFITS(img);
+            long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+            order = ((int) Util.order((int) nside) - Constante.ORDER);
+            context.setOrder(order);
+         } catch (Exception e) {
+            context.warning("The reference image has no astrometrical calibration ["+img+"] => order can not be computed");
+         }
+      }
+      if( order==-1 ) throw new Exception("Argument \"order\" is required");
+      else if( order<context.getOrder() ) {
+         context.warning("The provided order ["+order+"] is less than the optimal order ["+context.getOrder()+"] => OVER-sample will be applied");
+      } else if( order>context.getOrder() ) {
+         context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
+      }
+   }
+   
+   /** Demande d'affichage des stats (dans le TabBuild) */
+   public void showStatistics() {
+      context.showIndexStat(statNbFile, statNbZipFile, statMemFile, statMaxSize,
+            statMaxWidth, statMaxHeight, statMaxNbyte);
    }
 
-   // Suppression des statistiques
-   private void resetStat() {
-      statNbFile = -1;
+
+   // Génération de l'index
+   private boolean build() throws Exception {
+      initStat();
+      String input = context.getInputPath();
+      String output = context.getOutputPath();
+      int order = context.getOrder();
+      borderSize = context.getBorderSize();
+
+      File f = new File(output);
+      if (!f.exists()) f.mkdir();
+      String pathDest = context.getHpxFinderPath();
+      
+      create(input, pathDest, order);
+      return true;
    }
 
    // Initialisation des statistiques
@@ -81,7 +145,6 @@ public class BuilderIndex implements Progressive {
       statNbFile = statNbZipFile = 0;
       statMemFile = 0;
       statMaxSize = -1;
-      borderSize = context.getBorderSize();
    }
 
    // Mise à jour des stats
@@ -96,90 +159,10 @@ public class BuilderIndex implements Progressive {
          statMaxHeight = height;
          statMaxNbyte = nbyte;
       }
-      long t = System.currentTimeMillis();
-      if (t - statLastShowTime < 1000) return;
-      statLastShowTime=t;
-      showStat();
    }
 
-   // Demande d'affichage des stats (dans le TabBuild)
-   private void showStat() {
-      context.showIndexStat(statNbFile, statNbZipFile, statMemFile, statMaxSize,
-            statMaxWidth, statMaxHeight, statMaxNbyte);
-   }
-
-   public boolean build() {
-	   return build(context.getInputPath(),context.getOutputPath(),context.getOrder());
-   }
-   protected boolean build(String input, String output, int order) {
-      initStat();
-
-      File f = new File(output);
-      if (!f.exists()) f.mkdir();
-      String pathDest = context.getHpxFinderPath();
-      stopped = false;
-
-      progress = 0;
-      f = new File(pathDest+FS+"Norder"+order);
-      pausepath = pathDest+FS+"Norder"+order+FS+"pause";
-      if (f.exists()) {
-         File fpause = new File(pausepath);
-         if (fpause.exists()) {
-            BufferedReader r;
-            try {
-               r = new BufferedReader(new InputStreamReader( (new FileInputStream(fpause))));
-               initpath = r.readLine();
-
-            } catch (FileNotFoundException e) {
-               e.printStackTrace();
-            } catch (IOException e) {
-               e.printStackTrace();
-            }
-         } else {
-            progress=100;
-            return false;
-         }
-      }
-      create(input, pathDest, order);
-
-      // s'il ya eu une interruption -> sortie rapide
-      if (stopped) {
-         resetStat();
-         showStat();
-         return false;
-      } 
-
-      // On en profite pour créer le Moc associé à l'index
-      buildMoc();
-      
-      progress=100;
-      File fpause = new File(pausepath);
-      fpause.delete();
-      showStat();
-      return true;
-   }
-   
-   protected void buildMoc() {
-      BuilderMoc builderMoc = new BuilderMoc();
-      builderMoc.createMoc(context.getHpxFinderPath());
-      context.setNbLowCells( builderMoc.getUsedArea()) ;
-   }
-   
-   protected void loadMoc() {
-      try {
-         HealpixMoc moc = new HealpixMoc();
-         moc.read(context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME);
-         context.setNbLowCells( moc.getUsedArea()) ;
-      } catch( Exception e) { e.printStackTrace(); }
-   }
-
-   /**
-    * Création si nécessaire du fichier passé en paramètre et ouverture en
-    * écriture
-    * 
-    * @throws FileNotFoundException 
-    */
-   public static FileOutputStream openFile(String filename) throws Exception {
+   // Création si nécessaire du fichier passé en paramètre et ouverture en écriture
+   private FileOutputStream openFile(String filename) throws Exception {
       File f = new File( filename/*.replaceAll(FS+FS, FS)*/ );
       if( !f.exists() ) {
          cds.tools.Util.createPath(filename);
@@ -188,24 +171,8 @@ public class BuilderIndex implements Progressive {
       return new FileOutputStream(f, true);
    }
 
-   /**
-    * Writes a String to a local file
-    * 
-    * @param outfile
-    *            the file to write to
-    * @param content
-    *            the contents of the file
-    * @exception IOException 
-    */
-//   private static void createAFile(FileOutputStream out, String content)
-//   throws IOException {
-//      DataOutputStream dataoutputstream = new DataOutputStream(out);
-//      dataoutputstream.writeBytes(content);
-//      dataoutputstream.flush();
-//      dataoutputstream.close();
-//   }
-
-   private static void createAFile(FileOutputStream out, String filename, String stc)
+   // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
+   private void createAFile(FileOutputStream out, String filename, String stc)
    throws IOException {
       int o1 = filename.lastIndexOf('/');
       int o1b = filename.lastIndexOf('\\');
@@ -220,35 +187,30 @@ public class BuilderIndex implements Progressive {
       dataoutputstream.close();
    }
 
-
-   /**
-    * Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
-    * zone. Créé (ou complète) un fichier HPX texte contenant le chemin vers
-    * les fichiers FITS
-    */
-   public void create(String pathSource, String pathDest, int order) {
+   // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
+   // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
+   // les fichiers FITS
+   private void create(String pathSource, String pathDest, int order) throws Exception {
 
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
 
       String[] list = main.list();
-      currentpath = pathSource;
       // trie la liste pour garantir la reprise au bon endroit 
       Arrays.sort(list);
       if (list == null) return;
 
-      progress=0;
-      for (int f = 0 ; f < list.length && !stopped; f++) {
-         progress = f*100./(list.length-1);
+      context.setProgress(0,list.length-1);
+      for (int f = 0 ; f < list.length ; f++) {
+         if( context.isTaskAborting() ) throw new Exception("Task abort !");
 
+         context.setProgress(f);
          currentfile = pathSource+FS+list[f];
-
          File file = new File(currentfile); 
 
          if (file.isDirectory() && !list[f].equals(Constante.SURVEY)) {
 //            System.out.println("Look into dir " + currentfile);
             create(currentfile, pathDest, order);
-            currentpath = pathSource;
          } else {
             // en cas de reprise, saute jusqu'au dernier fichier utilisé
             if (initpath != null) { 
@@ -268,7 +230,6 @@ public class BuilderIndex implements Progressive {
                if ((code | Fits.XFITS)!=0) {
             	   
                }
-            	   
 
                try {
                   
@@ -306,8 +267,6 @@ public class BuilderIndex implements Progressive {
             }
          }
       }
-
-      if (!stopped) progress = 100;
    }
 
    private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, String currentCell, int order) throws Exception {
@@ -338,7 +297,6 @@ public class BuilderIndex implements Progressive {
             stc.append(" "+coo.al+" "+coo.del);
          }
          
-
          long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
 
          // pour chacun des losanges concernés
@@ -356,7 +314,6 @@ public class BuilderIndex implements Progressive {
             // suivi éventuellement de la définition de la cellule en question
             // (mode mosaic)
             String filename = currentFile + (currentCell == null ? "" : currentCell);
-//            createAFile(out, filename + "\n");
             
             createAFile(out, filename, stc.toString());
          }
@@ -365,100 +322,6 @@ public class BuilderIndex implements Progressive {
       }
 
    }
-
-
-//   private void testAndInsert(Fits fitsfile, String pathDest,
-//         String currentFile, String currentCell, int order) throws Exception {
-//      String hpxname;
-//      FileOutputStream out;
-//      long npix;
-//      long[] npixs = null;
-//
-//      // transforme les coordonnées du point de ref dans le bon frame
-//      Coord centerGAL;
-//      double[] aldel = context.ICRS2galIfRequired(fitsfile.center.al, fitsfile.center.del);
-//      centerGAL = new Coord(aldel[0], aldel[1]);
-//
-//      double[] inc = fitsfile.getCalib().GetResol();
-//      double radius = Math.max(Math.abs(inc[0]) * fitsfile.widthCell / 2.,
-//                               Math.abs(inc[1]) * fitsfile.heightCell / 2.);
-//      // rayon jusqu'à l'angle, au pire * sqrt(2)
-//      radius *= Math.sqrt(2.);
-//
-//      npixs = getNpixList(order, centerGAL, radius);
-//
-//      // pour chacun des losanges concernés
-//      for (int i = 0; i < npixs.length; i++) {
-//         npix = npixs[i];
-//
-//         // vérifie la validité du losange trouvé
-//         if (!isInImage(fitsfile, Util.getCorners(order, npix))) continue;
-//
-//         // initialise les chemins
-//         if (!pathDest.endsWith(FS)) {
-//            pathDest = pathDest + FS;
-//         }
-//         hpxname = pathDest+ Util.getFilePath("", order,npix);
-//         cds.tools.Util.createPath(hpxname);
-//         out = openFile(hpxname);
-//
-//         // ajoute le chemin du fichier Source FITS, 
-//         // suivi éventuellement de la définition de la cellule en question
-//         // (mode mosaic)
-//         createAFile(out, currentFile + (currentCell == null ? "" : currentCell) + "\n");
-//      }
-//   }
-
-   public String getCurrentpath() {
-      return currentpath;
-   }
-   
-   /**
-    * Récupère la liste des numéros de pixels healpix dans un cercle
-    * 
-    * @param order
-    * @param center
-    *            centre de la recherche en gal
-    * @param radius
-    *            rayon de la recherche (sera agrandi) en degrés
-    * @return
-    */
-//   static long [] getNpixList(int order, Coord center, double radius) {
-//      long nside = CDSHealpix.pow2(order);
-//      try {
-//         // augmente le rayon de la taille d'un demi pixel en plus de
-//         // l'option inclusive => +1 pixel
-//         //			long[] npix = CDSHealpix.query_disc(nside,center.al,center.del,
-//         //					Math.toRadians(radius)+Math.PI/(4.*nside),true);
-//
-//         // --- calcule la taille réel de la plus grande diagonale du pixel
-//         // récupère le pixel central
-//         // double[] thetaphi = Util.RaDecToPolar(new
-//         // double[]{center.al,center.del});
-//         double[] thetaphi = CDSHealpix.radecToPolar(new double[] {
-//               center.al, center.del });
-//         long n = CDSHealpix.ang2pix_nest(nside, thetaphi[0], thetaphi[1]);
-//         // calcule ses 4 coins et son centre
-//         Coord[] corners = Util.getCorners(order,n);
-//         double[] c = CDSHealpix.pix2ang_nest(nside, n);
-//         //			c = Util.PolarToRaDec(c);
-//         c = CDSHealpix.polarToRadec(c);
-//         Coord c1 = new Coord(c[0],c[1]);
-//         // cherche la plus grande distance entre le centre et chaque coin
-//         double dist = 0;
-//         for (int i = 0 ; i < 4 ; i++)
-//            dist = Math.max(dist, Coord.getDist(c1, corners[i]));
-//
-//         long[] npix = CDSHealpix.query_disc(nside, center.al, center.del,
-//               Math.toRadians(radius + dist), true);
-//
-//         return npix;
-//      } catch (Exception e1) {
-//         // TODO Auto-generated catch block
-//         e1.printStackTrace();
-//         return null;
-//      } 
-//   }
 
    private boolean isInImage(Fits f, Coord[] corners) {
       int signeX = 0;
@@ -490,55 +353,9 @@ public class BuilderIndex implements Progressive {
          return false;
       }
 
-      if (Math.abs(signeX) == Math.abs(corners.length)
-            || Math.abs(signeY) == Math.abs(corners.length))
+      if (Math.abs(signeX) == Math.abs(corners.length) || Math.abs(signeY) == Math.abs(corners.length)) {
          return false;
-
+      }
       return true;
    }
-
-
-   public int getProgress() {
-      return (int) progress;
-   }
-
-   public static int getNbNpix(String output, int order) {
-      return Util.computeNFiles(new File(output + FS + Constante.HPX_FINDER
-            +FS +"Norder"+order ));
-   }
-
-   public void stop() {
-      stopped = true;
-      if (pausepath == null)
-         return;
-
-      // on enregistre l'état
-      File fpause = new File(pausepath);
-      BufferedWriter r;
-      try {
-         r = new BufferedWriter(new OutputStreamWriter(
-               (new FileOutputStream(fpause))));
-         r.write(currentfile);
-         r.flush();
-         r.close();
-
-      } catch (FileNotFoundException e) {
-         e.printStackTrace();
-         stopped = false;
-      } catch (IOException e) {
-         e.printStackTrace();
-         stopped = false;
-      }
-   }
-
-
-   /*
-    * public static void main(String[] args) { Calib c = new Calib();
-    * InitLocalAccess init = new InitLocalAccess();
-    * 
-    * long t = System.currentTimeMillis(); for (int i = 0 ; i < 10000000 ; i++)
-    * { c.GalacticToRaDec(i%360,(i%360)-100, init.cooeq, init.framegal); }
-    * System.out.println((System.currentTimeMillis()-t)+"ms"); // 4700 ms avec
-    * la déclaration en externe de la méthode / 8400 ms en interne }
-    */
 }

@@ -37,7 +37,7 @@ import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
-final public class BuilderHpx {
+final public class ThreadBuilderTile {
 
    private Context context;
 
@@ -48,19 +48,17 @@ final public class BuilderHpx {
    private boolean flagColor;
    private double bScale;
    private double bZero;
-//   private boolean keepBB = true;
    private String hpxFinderPath = null;
    private double[] cutOrig;
    private double[] cut;
    private int[] borderSize;
 
-   public BuilderHpx(Context context) {
+   public ThreadBuilderTile(Context context) {
       this.context = context;
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
       if( !flagColor ) {
-         //      keepBB=context.isKeepBB();
          bZero = context.getBZero();
          bScale = context.getBScale();
          cutOrig=context.getCutOrig();
@@ -85,7 +83,7 @@ final public class BuilderHpx {
     * @param pixels
     * @return
     */
-   Fits buildHealpix(int nside_file, long npix_file, int nside) {
+   Fits buildHealpix(int nside_file, long npix_file, int nside) throws Exception {
       boolean empty = true;
       long min;
       long index;
@@ -120,6 +118,7 @@ final public class BuilderHpx {
          
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
+               if( x==0 && context.isTaskAborting() ) break;
                index = min + context.xy2hpx(y * out.width + x);
                // recherche les coordonnées du pixels HPX
                point = CDSHealpix.pix2ang_nest(nside, index);
@@ -206,6 +205,7 @@ final public class BuilderHpx {
             }
          }
       } catch( Exception e ) { e.printStackTrace(); }
+      if( context.isTaskAborting() ) throw new Exception("Task abort !");
       return (!empty) ? out : null;
    }
    

@@ -19,6 +19,7 @@
 
 package cds.allsky;
 
+
 public class Constante {
    public static final int INDEX = 0;
    public static final int TESS = 1;
@@ -31,12 +32,21 @@ public class Constante {
    // => voir cds.fits.loadFits(InputStream,x,y,w,h)
    public static final int FITSCELLSIZE = 4096; 
 
-   // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
-   public static final int MAXMBPERTHREAD = 400;
-
    // Taille des imagettes HEALPix
-   final static public int SIDE = 512;
    final static public int ORDER = 9; // 2^9 = 512 = SIDE
+   final static public int SIDE = (int)Math.pow(2,ORDER);
+   
+   // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
+// public static final int MAXMBPERTHREAD = 400;
+ 
+   public static final int GZIPMAXORDER = 5;  // On gzippe les tiles que jusqu'au niveau 5
+   public static final int MAXDEPTHINRAM = 4;
+   public static int NBTILESINRAM;
+   static {
+      NBTILESINRAM=1;
+      for( int i=1; i<=MAXDEPTHINRAM; i++ ) NBTILESINRAM+=Math.pow(4,i);
+//      System.out.println("NBTILESINRAM = "+NBTILESINRAM+ " side="+SIDE);
+   }
 
    // Nombre max de recouvrement pris en compte
    public static final int MAXOVERLAY = 6; 

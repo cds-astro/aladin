@@ -239,7 +239,7 @@ public class PlanImageAlgo extends PlanImage {
       if( fct==BITPIX || fct==BITPIXCUT ) {
          double maxCoding = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
                : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-         double minCoding = bitpix==-64?Double.MIN_VALUE : bitpix==-32? Float.MIN_VALUE
+         double minCoding = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
                : bitpix==64?Long.MIN_VALUE : bitpix==32?Integer.MIN_VALUE : bitpix==16?Short.MIN_VALUE:0;
          double pMin=p1.getPixelMin();
          double pMax=p1.getPixelMax();
@@ -357,7 +357,7 @@ public class PlanImageAlgo extends PlanImage {
          // réinitialisation de minPix et maxPix (rq les minPixCut et maxPixCut seront
          // réinitialisés via l'autocut)
          dataMin=Double.MAX_VALUE;
-         dataMax=Double.MIN_VALUE;
+         dataMax=-Double.MAX_VALUE;
          
          for( y=0; y<height; y++ ) {
             for( x=0; x<width; x++ ) { 

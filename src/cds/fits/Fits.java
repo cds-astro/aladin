@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -68,6 +69,7 @@ final public class Fits {
 	public double bscale=DEFAULT_BSCALE;	// BSCALE Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
 	public double blank=DEFAULT_BLANK;  // valeur BLANK
 	public boolean flagARGB=false;   // true s'il s'agit d'un FITS couleur ARGB
+	private long bitmapOffset=-1;   // Repère le positionnement du bitmap des pixels (voir releaseBitmap());
 
 	// Dans le cas où il s'agit d'une cellule sur l'image (seule une portion de l'image sera accessible)
     public int xCell;                // Position X à partir du coin haut gauche de la cellule de l'image (par défaut 0)
@@ -308,6 +310,7 @@ final public class Fits {
 	   }
 	   
        int n = (Math.abs(bitpix)/8);
+       bitmapOffset = dis.getPos();
 	   
 	   // Pas le choix, il faut d'abord tout lire, puis ne garder que la cellule si nécessaire
        if( flagHComp ) {
@@ -535,6 +538,7 @@ final public class Fits {
    /** Génération d'un fichier FITS (sans calibration) */
    public void writeFITS(OutputStream os) throws Exception {
       int size = headerFits.writeHeader(os);
+      bitmapOffset=size;
 
       // FITS couleur en mode ARGB
       if( flagARGB ) {
@@ -809,53 +813,54 @@ final public class Fits {
 //      toPix8Log(range[0],range[1]);
 //   }
    
-   public void cut() throws Exception {
-	   double[] range = {Double.MIN_VALUE,Double.MAX_VALUE};
-	   switch (bitpix) {
-	   case 8:
-		   range[0] = 0;
-		   range[1] = 255;
-	   case 16:
-		   range[0] = 0;
-		   range[1] = Short.MAX_VALUE;
-	   case 32:
-		   range[0] = 0;
-		   range[1] = Integer.MAX_VALUE;
-	   case -32:
-		   range[0] = Float.MIN_VALUE;
-		   range[1] = Float.MAX_VALUE;
-	   case -64:
-		   range[0] = Double.MIN_VALUE;
-		   range[1] = Double.MAX_VALUE;
-
-	   }
-	   toPix8(range[0],range[1]);
-   }
+//   public void cut() throws Exception {
+//	   double[] range = {Double.MIN_VALUE,Double.MAX_VALUE};
+//	   switch (bitpix) {
+//	   case 8:
+//		   range[0] = 0;
+//		   range[1] = 255;
+//	   case 16:
+//		   range[0] = 0;
+//		   range[1] = Short.MAX_VALUE;
+//	   case 32:
+//		   range[0] = 0;
+//		   range[1] = Integer.MAX_VALUE;
+//	   case -32:
+//		   range[0] = Float.MIN_VALUE;
+//		   range[1] = Float.MAX_VALUE;
+//	   case -64:
+//		   range[0] = Double.MIN_VALUE;
+//		   range[1] = Double.MAX_VALUE;
+//
+//	   }
+//	   toPix8(range[0],range[1]);
+//   }
+   
    /** Effectue un autocut linéaire des pixels "fullbits" et une conversion en 8bits dans
     * le tableau pix8 []. Utilise la méthode "à la Aladin" pour déterminer
     * le meilleur intervalle.
     */
-   public void autocut8() throws Exception {
-      double [] range = findAutocutRange();
-      toPix8(range[0],range[1]);
-   }
+//   public void autocut8() throws Exception {
+//      double [] range = findAutocutRange();
+//      toPix8(range[0],range[1]);
+//   }
 
    /** Calcule un autocut linéaire des pixels "fullbits"
     * Utilise la méthode "à la Aladin" pour déterminer
     * le meilleur intervalle.
     */
-   public static double[] autocut(String filename) throws Exception {
-	   Fits f = new Fits();
-	   f.loadFITS(filename);
-      return f.findAutocutRange();
-   }
+//   public static double[] autocut(String filename) throws Exception {
+//	   Fits f = new Fits();
+//	   f.loadFITS(filename);
+//      return f.findAutocutRange();
+//   }
 
 
    /** Remplit le tableau des pixels 8 bits (pix8)  */
-   public void toPix8() {
-	   double[] minmax = findMinMax();
-	   toPix8(minmax[0], minmax[1]);
-   }
+//   public void toPix8() {
+//	   double[] minmax = findMinMax();
+//	   toPix8(minmax[0], minmax[1]);
+//   }
 
 
    /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
@@ -999,8 +1004,44 @@ final public class Fits {
       return minmax;
    }
 
+   private boolean bitmapReleaseDone=false;
+   
+   /** Libération de la mémoire utilisé par le bitmap des pixels 
+    * (on suppose que le fichier pourra être relu ultérieurement)
+    * Rq : ne fonctionne que pour les fichiers FITS locaux (RandomAccessFile) qui ont
+    * été ouvert en mode normal (pas de cellule)
+    */
+   public void releaseBitmap() throws Exception {
+//      if( true ) return;
+      if( bitpix==0 ) return;  // De fait du JPEG
+      testBitmapReleaseFeature();
+      bitmapReleaseDone=true;
+      pixels=null;
+//      System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
+   }
+   
+   /** Rechargmeent de la mémoire utilisée par le bitmap des pixels
+    * ==> voir releaseBitmap()
+    */
+   public void reloadBitmap() throws Exception {
+      if( pixels!=null ) return;
+      if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
+      testBitmapReleaseFeature();
+//      System.out.println("reloadBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
+      RandomAccessFile f = new RandomAccessFile(filename, "r");
+      f.seek(bitmapOffset);
+      pixels = new byte[width*height*(Math.abs(bitpix)/8)];
+      f.readFully(pixels);
+      f.close();
+      bitmapReleaseDone=false;
 
-   /** Creation des tabl
+   }
+   
+   private void testBitmapReleaseFeature() throws Exception {
+      if( filename==null || bitmapOffset==-1 ) throw new Exception("FITS stream not compatible (not a true file ["+filename+"])");
+      if( xCell!=0 || yCell!=0 || widthCell!=width || heightCell!=height ) throw new Exception("Fits subcell not compatible ["+filename+"]");
+      if( !(new File(filename)).canRead() ) throw new Exception("FITS does not exist on disk ["+filename+"]");
+   }
 
 	/** Pour aider le GC */
    public void free() {
@@ -1051,7 +1092,7 @@ final public class Fits {
      //   DES PARTICULARITES LOCALES SUR LES GROSSES IMAGES.
      if( width - 2*MARGEW>1000 ) MARGEW = (width-1000)/2;
      if( height - 2*MARGEH>1000 ) MARGEH = (height-1000)/2;
-
+     
      double c;
 
      if( !autocut && (minCut!=0. || maxCut!=0.) ) {

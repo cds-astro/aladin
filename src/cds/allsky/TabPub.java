@@ -56,13 +56,15 @@ public class TabPub extends JPanel implements ActionListener {
 	JProgressBar progressHpx = new JProgressBar(0,100);
 	
 	private Aladin aladin;
-	MainPanel mainPanel;
+	private MainPanel mainPanel;
+	private Context context;
 	private String mapfile;
 	
 	public TabPub(Aladin a,MainPanel mainPanel) {
 		super(new BorderLayout());
 		aladin = a;
 		this.mainPanel = mainPanel;
+		context = mainPanel.context;
 		createChaine();
 		
 		Border emptyBorder = BorderFactory.createEmptyBorder(20, 0, 0, 0);
@@ -182,18 +184,17 @@ public class TabPub extends JPanel implements ActionListener {
 		EXPORT = getString("EXPORTALLSKY");
 	}
 
-	private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
+	private String getString(String k) { return aladin.getChaine().getString(k); }
 
 	public void newAllskyDir(String dir) {
 	    url.setText("http://servername.org/"+dir);
 	    url.repaint();
-	    if (mainPanel == null) pathLocal.setText(dir);
-	    else pathLocal.setText(mainPanel.getOutputPath());
+	    pathLocal.setText(context.getOutputPath());
 	}
 	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand() == PUBLISH) {
-		   new FrameGlu(aladin,mainPanel.getOrder(),mainPanel.hasJpg());
+		   new FrameGlu(aladin,context.getOrder(),mainPanel.hasJpg());
 		}
 		else if (ae.getSource() == bExport) {
 			mapfile = dirBrowserHPX();
@@ -216,7 +217,7 @@ public class TabPub extends JPanel implements ActionListener {
 	 * */
 	private String dirBrowserHPX() {
 		FileDialog fd = new FileDialog(aladin.frameAllsky,"Running directory selection",FileDialog.SAVE);
-		fd.setDirectory(mainPanel.getOutputPath());
+		fd.setDirectory(context.getOutputPath());
 //		fd.setFile("Allsky.hpx");
 		fd.setVisible(true);
 		if( fd.getFile()==null ) return null;
@@ -280,7 +281,7 @@ public class TabPub extends JPanel implements ActionListener {
 	            return 0;
 	        long size = f.length()/1024/1024;
 	        // la taille d'un fichier avec nside=4096 et bitpix=-32 est 768M
-	        long sizeFin = 4096*4096*12*(Math.abs(allsky.getBitpix()/8))/1024/1024;
+	        long sizeFin = 4096*4096*12*context.getNpix()/1024/1024;
 	        return (int) (100*size/sizeFin);
 	    }
 

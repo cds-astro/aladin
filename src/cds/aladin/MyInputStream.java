@@ -866,16 +866,34 @@ public long skip(long n) throws IOException {
     * @return
     */
    static private int analyseCSV(String [] s) { return analyseCSV(s,s.length); }
+   
+   // On va faire deux tentatives, l'une en supposant que les champs peuvent être "quotés", 
+   // et si ça ne donne rien, on recommence avec des champs supposés non quotés.
    static private int analyseCSV(String [] s,int size) {
+      int c = analyseCSV1(s,size,true);
+      if( c==-1 ) c = analyseCSV1(s,size,false);
+//      System.out.println("c="+c);
+      return c;
+   }
+   static private int analyseCSV1(String [] s,int size,boolean flagQuote) {
       int [][] m = new int[size][];
       for( int i=0; i<size; i++ ) {
          if( Aladin.levelTrace>=4 ) {
             String s1 = s[i];
             if( s1.length()>0 && s1.charAt(s1.length()-1)=='\n' ) s1 = s1.substring(0,s1.length()-1);
-            Aladin.trace(4,"analyseCSV ligne "+i+" ["+s1+"]");
+            Aladin.trace(4,"analyseCSV (quoted="+flagQuote+") ligne "+i+" ["+s1+"]");
          }
-         m[i] = count(s[i],true,true);
+         m[i] = count(s[i],flagQuote,true);
       }
+//      System.out.println("\n***");
+//      for( int j=0; j<size; j++ ) {
+//         System.out.print("Ligne "+j+":");
+//         for( int k=0; k<SEP.length(); k++ ) {
+//            int i = SEP.charAt(k);
+//            System.out.print(" ["+SEP.charAt(k)+"]/"+m[j][i]);
+//         }
+//         System.out.println();
+//      }
       for( int k=0; k<SEP.length(); k++ ) {
          int i = SEP.charAt(k);
          int j;
@@ -889,7 +907,7 @@ public long skip(long n) throws IOException {
    static public void main(String argv[]) {
       try {
          // String s1 = argv[0];
-         String s1 = "C:\\Documents and Settings\\Standard\\Bureau\\Test.tbl";
+         String s1 = "C:\\Documents and Settings\\Standard\\Bureau\\test.dat";
          DataInputStream dis = new DataInputStream(new FileInputStream(s1));
          String [] s = new String[5];
          for( int i=0;i<s.length; i++ ) {

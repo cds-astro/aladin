@@ -41,12 +41,10 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
-
 import cds.aladin.Aladin;
-import cds.aladin.Chaine;
 import cds.aladin.Localisation;
 import cds.tools.Util;
 
@@ -76,29 +74,32 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox blankCheckbox;
    private JCheckBox borderCheckbox;
    private JCheckBox skyvalCheckbox;
+   private JCheckBox frameCheckbox;
    
-   private ButtonGroup tilesGroup;
    private JTextField specifTextField;
    protected JTextField blankTextField;
    protected JTextField borderTextField;
    private JTextField skyvalTextField;
 
-   private JCheckBox resetHpx = new JCheckBox();
+   protected JTextField inputField = new JTextField(35); 
+   protected JTextField outputField = new JTextField(35);
+   private JButton browseInput = new JButton();
+   private JButton browseOutput = new JButton();
    private JCheckBox resetIndex = new JCheckBox();
-   private JButton browse_S = new JButton();
-   private JButton browse_D = new JButton();
-   private JTextField dir_S = new JTextField(35); 
-   protected JTextField dir_D = new JTextField(35);
-   private JTextField textFieldAllsky = new JTextField(35);
+   private JCheckBox resetTiles = new JCheckBox();
+   private JTextField labelField = new JTextField(35);
    private String defaultDirectory;
-   final private MainPanel mainPanel;
    private String BROWSE;
-   private JButton b_next,b_see;
+   private JButton next,seeImg,reset;
    private String help, titlehelp;
+   
+   private MainPanel mainPanel;
+   private Context context;
 
-   public TabDesc(String defaultDir, MainPanel mPanel) {
+   public TabDesc(String defaultDir, final MainPanel mainPanel) {
       super(new BorderLayout());
-      mainPanel = mPanel;
+      this.mainPanel = mainPanel;
+      context = mainPanel.context;
       createChaine();
       init();
       
@@ -126,9 +127,9 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(Util.getHelpButton(this, getString("HELPDIRSRCALLSKY")),c);
       c.gridx++;
-      pCenter.add(dir_S, c);
+      pCenter.add(inputField, c);
       c.gridx++;
-      pCenter.add(browse_S, c);
+      pCenter.add(browseInput, c);
 
       // Répertoire destination
       c.insets.top = 1;
@@ -138,9 +139,9 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(Util.getHelpButton(this, getString("HELPDIRTRGALLSKY")),c);
       c.gridx++;
-      pCenter.add(dir_D, c);
+      pCenter.add(outputField, c);
       c.gridx++;
-      pCenter.add(browse_D, c);
+      pCenter.add(browseOutput, c);
       
       // Label
       c.insets.bottom = 20;
@@ -150,7 +151,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(Util.getHelpButton(this, getString("HELPLABELALLSKY")),c);
       c.gridx++;
-      pCenter.add(textFieldAllsky, c);
+      pCenter.add(labelField, c);
 
       // Paramètres avancées
       c.insets.bottom=1;
@@ -163,7 +164,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridwidth=2;
       pCenter.add(resetIndex, c);
       c.gridy++;
-      pCenter.add(resetHpx, c);
+      pCenter.add(resetTiles, c);
       c.gridy++;
       JPanel pTiles = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       pTiles.setBorder( BorderFactory.createEmptyBorder(0,10,0,0));
@@ -226,11 +227,9 @@ public class TabDesc extends JPanel implements ActionListener {
       });
       pCenter.add(px,c);
       
-
-      
       if (Aladin.PROTO) {
          c.gridy++;
-         final JCheckBox cb1 = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
+         final JCheckBox cb1 = frameCheckbox = new JCheckBox("HEALPix in galactic (default is ICRS)", false);
          cb1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                mainPanel.context.setFrame(cb1.isSelected() ? Localisation.GAL : Localisation.ICRS);
@@ -244,8 +243,9 @@ public class TabDesc extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
-      pBtn.add(b_see);
-      pBtn.add(b_next);
+      pBtn.add(seeImg);
+      pBtn.add(reset);
+      pBtn.add(next);
       pBtn.add(Box.createHorizontalGlue());
       fin.add(pBtn, BorderLayout.CENTER);
 
@@ -286,29 +286,29 @@ public class TabDesc extends JPanel implements ActionListener {
       sourceLabel.setFont(sourceLabel.getFont().deriveFont(Font.BOLD));
       destLabel = new JLabel(REP_DEST);
       destLabel.setFont(destLabel.getFont().deriveFont(Font.BOLD));
-      dir_S.addActionListener(this);
-      dir_S.addKeyListener(new KeyAdapter() {
+      inputField.addActionListener(this);
+      inputField.addKeyListener(new KeyAdapter() {
          @Override
          public void keyReleased(KeyEvent e) {
             super.keyTyped(e);
-            if (!dir_S.getText().equals(""))
-               actionPerformed(new ActionEvent(dir_S, -1, "dirBrowser Action"));
+            if (!inputField.getText().equals(""))
+               actionPerformed(new ActionEvent(inputField, -1, "dirBrowser Action"));
          }
       });
 
-      browse_S.setText(BROWSE);
-      browse_S.addActionListener(this);
-      dir_D.addActionListener(this);
-      dir_D.addKeyListener(new KeyAdapter() {
+      browseInput.setText(BROWSE);
+      browseInput.addActionListener(this);
+      outputField.addActionListener(this);
+      outputField.addKeyListener(new KeyAdapter() {
          @Override
          public void keyReleased(KeyEvent e) {
             super.keyTyped(e);
-            if (!dir_D.getText().equals(""))
-               actionPerformed(new ActionEvent(dir_D, -1, "dirBrowser Action"));
+            if (!outputField.getText().equals(""))
+               actionPerformed(new ActionEvent(outputField, -1, "dirBrowser Action"));
          }
       });
-      browse_D.setText(BROWSE);
-      browse_D.addActionListener(this);
+      browseOutput.setText(BROWSE);
+      browseOutput.addActionListener(this);
       
       labelAllsky = new JLabel(LABELALLSKY);
       labelAllsky.setFont(labelAllsky.getFont().deriveFont(Font.BOLD));
@@ -316,7 +316,7 @@ public class TabDesc extends JPanel implements ActionListener {
       paramLabel = new JLabel(PARAMALLSKY);
       paramLabel.setFont(paramLabel.getFont().deriveFont(Font.BOLD));
       
-      tilesGroup = new ButtonGroup();
+      ButtonGroup tilesGroup = new ButtonGroup();
       keepRadio = new JRadioButton(KEEPALLSKY); tilesGroup.add(keepRadio);
       overwriteRadio = new JRadioButton(OVERWRITEALLSKY); tilesGroup.add(overwriteRadio);
       coaddRadio = new JRadioButton(COADDALLSKY); tilesGroup.add(coaddRadio);
@@ -332,101 +332,98 @@ public class TabDesc extends JPanel implements ActionListener {
       skyvalCheckbox = new JCheckBox(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
       skyvalTextField = new JTextField();
 
-      resetHpx.setText(REP_DEST_RESET);
-      resetHpx.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { 
-            resumeWidgetsStatus();
-         }
+      resetTiles.setText(REP_DEST_RESET);
+      resetTiles.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { resumeWidgets(); }
       });
 
       resetIndex.setText(INDEX_RESET);
       resetIndex.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            resumeWidgetsStatus();
-         }
+         public void actionPerformed(ActionEvent e) { resumeWidgets(); }
       });
 
-      b_see = new JButton(SEE);
-      b_see.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            loadImgEtalon();
-         }
+      seeImg = new JButton(SEE);
+      seeImg.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { loadImgEtalon(); }
       });
 
-
-      b_next = new JButton(NEXT);
-      b_next.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            mainPanel.showBuildTab();
-         }
+      reset = new JButton(getString("RESET"));
+      reset.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { mainPanel.clearForms(); }
       });
-//      b_help = Util.getHelpButton(this, help);
 
-      resetHpx.setSelected(false);
+      next = new JButton(NEXT);
+      next.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { mainPanel.showBuildTab(); }
+      });
+
+      resetTiles.setSelected(false);
       resetIndex.setSelected(true);
-      resumeWidgetsStatus();
   }
    
    // Chargement dans Aladin de l'image "étalon"
    private void loadImgEtalon() {
-      String fileName = mainPanel.context.getImgEtalon();
+      String fileName = context.getImgEtalon();
       if( fileName.endsWith(".hhh") ) fileName=fileName.substring(0,fileName.length()-4)+".jpg";
-
       mainPanel.aladin.execAsyncCommand("load "+fileName);
    }
    
    public void show() {
       super.show();
-      resumeWidgetsStatus();
+      resumeWidgets();
    }
    
-   protected void resumeWidgetsStatus() {
-      boolean color = mainPanel.context!=null && mainPanel.context.getBitpix()==0;
-      boolean allskyExist = mainPanel.isExistingAllskyDir();
-      boolean isRunning = mainPanel.isRunning();
-      resetHpx.setEnabled(allskyExist && !isRunning && !color);
-      resetIndex.setEnabled(allskyExist && !isRunning);
+   protected void resumeWidgets() {
+      try {
+         boolean color       = context.isColor();
+         boolean dirExist    = context.isExistingDir();
+         boolean allskyExist = context.isExistingAllskyDir();
+         boolean indexExist  = context.isExistingIndexDir();
+         boolean isRunning   = context.isTaskRunning();
+         
+         resetTiles.setEnabled(allskyExist && !isRunning && !color);
+         resetIndex.setEnabled(indexExist && !isRunning);
 
-      boolean flag = !resetHpx.isSelected() && resetHpx.isEnabled();
-      keepRadio.setEnabled(flag);
-      keepCellRadio.setEnabled(flag);
-      overwriteRadio.setEnabled(flag);
-      coaddRadio.setEnabled(flag);
-      
-      if( resetHpx.isSelected() && resetHpx.isEnabled() && resetIndex.isSelected() && resetIndex.isEnabled()) mainPanel.setRestart();
-      else if( resetHpx.isSelected() && resetHpx.isEnabled() || resetIndex.isSelected() && resetIndex.isEnabled() ) mainPanel.setResume();
-      else mainPanel.setStart();
-      
-      boolean isExistingDir = mainPanel.isExistingDir();
-      mainPanel.setStartEnabled(isExistingDir);
-      
-      boolean ready = isExistingDir && dir_D.getText().trim().length()>0;
-      b_see.setEnabled(mainPanel.context!=null && mainPanel.context.getImgEtalon()!=null);
-      b_next.setEnabled(ready);
-      blankCheckbox.setEnabled(ready && !isRunning && !color);
-      blankTextField.setEnabled(ready && !isRunning && !color);
-      borderCheckbox.setEnabled(ready && !isRunning);
-      borderTextField.setEnabled(ready && !isRunning);
-      skyvalCheckbox.setEnabled(ready && !isRunning);
-      skyvalTextField.setEnabled(ready && !isRunning);
-      specifCheckbox.setEnabled(ready && !isRunning);
-      specifTextField.setEnabled(ready && !isRunning);
-      dir_S.setEnabled(!isRunning);
-      dir_D.setEnabled(!isRunning);
-      textFieldAllsky.setEnabled(!isRunning);
-      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
+         boolean flag = !resetTiles.isSelected() && resetTiles.isEnabled();
+         keepRadio.setEnabled(flag);
+         keepCellRadio.setEnabled(flag);
+         overwriteRadio.setEnabled(flag);
+         coaddRadio.setEnabled(flag);
+         
+         boolean ready = dirExist && outputField.getText().trim().length()>0;
+         seeImg.setEnabled(context.getImgEtalon()!=null);
+         next.setEnabled(ready);
+         reset.setEnabled( getInputField().trim().length()>0 );
+         blankCheckbox.setEnabled(ready && !isRunning && !color);
+         blankTextField.setEnabled(ready && !isRunning && !color);
+         borderCheckbox.setEnabled(ready && !isRunning);
+         borderTextField.setEnabled(ready && !isRunning);
+         skyvalCheckbox.setEnabled(ready && !isRunning);
+         skyvalTextField.setEnabled(ready && !isRunning);
+         specifCheckbox.setEnabled(ready && !isRunning);
+         specifTextField.setEnabled(ready && !isRunning);
+         if( frameCheckbox!=null ) frameCheckbox.setEnabled(ready && !isRunning);
+         inputField.setEnabled(!isRunning);
+         outputField.setEnabled(!isRunning);
+         labelField.setEnabled(!isRunning);
+         
+         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : 
+                                Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+      } catch( Exception e ) { 
+         e.printStackTrace();
+      } 
    }
 
    public void clearForms() {
-      dir_S.setText("");
-      dir_D.setText("");
+      inputField.setText("");
+      outputField.setText("");
       if( mainPanel!=null ) mainPanel.actionPerformed(new ActionEvent("", -1, "dirBrowser Action"));
-      textFieldAllsky.setText("");
-      resetHpx.setSelected(false);
+      labelField.setText("");
+      resetTiles.setSelected(false);
       resetIndex.setSelected(true);
-      resumeWidgetsStatus();
+      resumeWidgets();
    }
-
+   
    private void dirBrowser(JTextField dir) {
       String currentDirectoryPath = dir.getText().trim();
       if( currentDirectoryPath.length()==0 ) currentDirectoryPath=defaultDirectory;
@@ -438,41 +435,33 @@ public class TabDesc extends JPanel implements ActionListener {
       mainPanel.actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
    }
 
-   public String getInputPath() {
-      return dir_S.getText();
-   }
+   public String getInputField() { return inputField.getText(); }
 
-   public String getOutputPath() {
-      return dir_D.getText();
-   }
+   public String getOutputField() { return outputField.getText(); }
 
-   public CoAddMode getCoaddMode() {
-      return resetHpx.isSelected() || !resetHpx.isEnabled()? CoAddMode.REPLACEALL : 
-            keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPALL
-            :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
-   }
+   public CoAddMode getCoaddModeField() {
+      return resetTiles.isSelected() ? CoAddMode.REPLACETILE : 
+         keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPTILE
+         :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE 
+         : coaddRadio.isSelected() ? CoAddMode.AVERAGE : CoAddMode.REPLACETILE;
 
-   public JTextField getSourceDirField() {
-      return dir_S;
-   }
-
-   public void setFieldEnabled(boolean enabled) {
-      dir_S.setEnabled(enabled);
-      dir_D.setEnabled(enabled);
+//      return resetTiles.isSelected() || !resetTiles.isEnabled()? CoAddMode.REPLACETILE : 
+//         keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPTILE
+//         :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE : CoAddMode.AVERAGE;
    }
 
    public void actionPerformed(ActionEvent e) {
-      if (e.getSource() == dir_S) {
+      if (e.getSource() == inputField) {
          initTxt();
-      } else if (e.getSource() == browse_S) {
-         dirBrowser(dir_S);
+      } else if (e.getSource() == browseInput) {
+         dirBrowser(inputField);
          initTxt();
       }
 
-      if (e.getSource() == dir_D) {
+      if (e.getSource() == outputField) {
          newAllskyDir();
-      } else if (e.getSource() == browse_D) {
-         dirBrowser(dir_D);
+      } else if (e.getSource() == browseOutput) {
+         dirBrowser(outputField);
          newAllskyDir();
       }
    }
@@ -482,7 +471,8 @@ public class TabDesc extends JPanel implements ActionListener {
     * SOURCE
     */
    private void initTxt() {
-      String txt = dir_S.getText();
+      String txt = inputField.getText();
+      if( !(new File(txt)).isDirectory() ) return;
       int i = txt.lastIndexOf(Util.FS);
       if (i == -1) return;
 
@@ -491,20 +481,19 @@ public class TabDesc extends JPanel implements ActionListener {
       
       // cherche le dernier mot et le met dans le label
       String str = txt.substring(txt.lastIndexOf(Util.FS) + 1);
-      textFieldAllsky.setText(str);
-      // dir_A.setText(str+AllskyConst.SURVEY);
+      labelField.setText(str);
 
       // rééinitialise le répertoire de destination avec le chemin des données
       // d'entrée
-      dir_D.setText("");
+      outputField.setText("");
       newAllskyDir();
    }
 
-   public String getLabel() {
-      return textFieldAllsky.getText();
+   public String getLabelField() {
+      return labelField.getText();
    }
    
-   public String getSpecifNpix() {
+   public String getMocField() {
       if( !specifCheckbox.isSelected() ) return "";
       return specifTextField.getText();
    }
@@ -519,7 +508,7 @@ public class TabDesc extends JPanel implements ActionListener {
       return borderTextField.getText();
    }
 
-   public String getSkyval() {
+   public String getSkyvalField() {
 	   if( !skyvalCheckbox.isSelected() ) return null;
 	   return skyvalTextField.getText();
    }
@@ -528,36 +517,36 @@ public class TabDesc extends JPanel implements ActionListener {
     * Applique les modifications si le nom du répertoire DESTINATION change
     */
    private void newAllskyDir() {
-      String str = dir_D.getText();
+      String str = outputField.getText();
       // enlève les multiples FS à la fin
-      while (str.endsWith(Util.FS))
-         str = str.substring(0, str.lastIndexOf(Util.FS));
+      while (str.endsWith(Util.FS)) str = str.substring(0, str.lastIndexOf(Util.FS));
 
       // si l'entrée est vide, on remet le défaut
       if (str.equals("")) {
          // réinitalise le répertoire SURVEY et l'utilise
-         initDirD();
+         initOutputField();
          mainPanel.newAllskyDir();
          return;
-      }
+      } 
       // cherche le dernier mot
       Constante.SURVEY = str.substring(str.lastIndexOf(Util.FS) + 1);
 
       mainPanel.newAllskyDir();
+      resumeWidgets();
+
    }
 
-   private void initDirD() {
-      Constante.SURVEY = getLabel() + Constante.ALLSKY;
-      String path = dir_S.getText();
+   private void initOutputField() {
+      Constante.SURVEY = getLabelField() + Constante.ALLSKY;
+      String path = inputField.getText();
       // enlève les multiples FS à la fin
-      while (path.endsWith(Util.FS))
-         path = path.substring(0, path.lastIndexOf(Util.FS));
+      while (path.endsWith(Util.FS)) path = path.substring(0, path.lastIndexOf(Util.FS));
 
-      dir_D.setText(path + Constante.ALLSKY + Util.FS);
+      outputField.setText(path + Constante.ALLSKY + Util.FS);
    }
 
-   public boolean isResetHpx() {
-      return resetHpx.isSelected() && resetHpx.isEnabled();
+   public boolean isResetTiles() {
+      return resetTiles.isSelected() && resetTiles.isEnabled();
    }
 
    public boolean isResetIndex() {

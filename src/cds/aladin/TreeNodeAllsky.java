@@ -79,7 +79,7 @@ public class TreeNodeAllsky extends TreeNode {
          InputStream in=null;
          if( !local ) in = (new URL(pathOrUrl+"/"+PlanHealpix.PROPERTIES)).openStream();
          else in = new FileInputStream(new File(pathOrUrl+Util.FS+PlanHealpix.PROPERTIES));
-         if( in!=null ) prop.load(in);
+         if( in!=null ) { prop.load(in); in.close(); }
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
       
 
@@ -107,7 +107,10 @@ public class TreeNodeAllsky extends TreeNode {
       if( s!=null ) version=s;
       
       s = prop.getProperty(PlanHealpix.KEY_IMAGESOURCEPATH);
-      if( s!=null ) imageSourcePath=s;
+      if( s!=null ) {
+         imageSourcePath=s;
+         Aladin.trace(4,"TreeNodeAllsky() => imageSourcePath="+s);
+      }
       
       description = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);
       verboseDescr = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE);

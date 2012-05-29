@@ -2058,6 +2058,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 //    enlevant éventuellement un peu de bord
       int MARGEW=(int)(width*0.05);
       int MARGEH=(int)(height*0.05);
+      
 
 //    LES DEUX LIGNES QUI SUIVENT SONT A COMMENTER SI ON VEUT ETRE SUR DE NE PAS LOUPER
 //    DES PARTICULARITES LOCALES SUR LES GROSSES IMAGES.
@@ -2102,7 +2103,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
          if( autocut && max-min>256 ) {
             if( min1-min>max1-min1 && min1!=Double.MAX_VALUE && min1!=max ) min=min1;
-            if( max-max1>max1-min1 && max1!=Double.MIN_VALUE && max1!=min  ) max=max1;
+            if( max-max1>max1-min1 && max1!=-Double.MAX_VALUE && max1!=min  ) max=max1;
          }
       }
 

@@ -47,11 +47,8 @@ public class BuildProgressPanel extends JPanel {
    private JLabel labelIndex = new JLabel(string1);
    private JLabel labelTess = new JLabel(string2);
 
-   private JProgressBar progressIndex = new JProgressBar(0,100);
-   private JProgressBar progressTess = new JProgressBar(0,100);
-
-   private Border border1 = BorderFactory.createLineBorder(Color.GRAY);
-   private Border border2 = BorderFactory.createLineBorder(Color.GRAY);
+   private JProgressBar progressBarIndex = new JProgressBar(0,100);
+   private JProgressBar progressBarTile = new JProgressBar(0,100);
 
 
    public BuildProgressPanel() {
@@ -79,18 +76,16 @@ public class BuildProgressPanel extends JPanel {
       long usedMem = totalMem-freeMem;
 
       String s= "thread: "+(nbRunningThread==-1?"":nbRunningThread+" / "+nbThread)
-      + " - cache: "+Util.getUnitDisk(cacheFits.getStatMem())
-           +" (ram:"+cacheFits.getStatNbFind()
-           +" disk:"+cacheFits.getStatNbOpen()+" free:"+cacheFits.getStatNbFree()+")"
-      + " - mem: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem);
+      + " - RAM: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
+      + " (FITS cache: "+Util.getUnitDisk(cacheFits.getStatMem())+")";
       memStat.setText(s);
    }
 
-   protected void setLowTileStat(int nbTile,long nbCells,long sizeTile,long minTime, long maxTime, long avgTime) {
+   protected void setLowTileStat(int nbTile,int nbEmptyTile,long nbCells,long sizeTile,long minTime, long maxTime, long avgTime) {
       String s;
       if( nbTile==-1 ) s="";
       else 
-       s= nbTile+"/"+nbCells+" tile"+(nbTile>1?"s":"")
+       s= nbTile+"+"+nbEmptyTile+"/"+nbCells+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - avg.proc.time: "+Util.getTemps(avgTime)+" ["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"]";
       lowTileStat.setText(s);
@@ -102,15 +97,15 @@ public class BuildProgressPanel extends JPanel {
       else 
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
-          + " - avg proc.time: "+Util.getTemps(avgTime);
+          + " - avg.proc.time: "+Util.getTemps(avgTime);
       nodeTileStat.setText(s);
    }
    
-   protected void setTimeStat(long time) {
-      String s;
-      if( time==-1 ) s="";
-      else s= Util.getTemps(time,true);
-      timeStat.setText(s);
+   protected void setTimeStat(long time,long nbTile,long sizeTile) {
+      StringBuffer s = new StringBuffer();
+      if( time!=-1 )  s.append(Util.getTemps(time,true));
+      if( time>20000 ) s.append(" - "+Util.getUnitDisk( (nbTile*sizeTile)/ (time/60000.))+"/mn");
+      timeStat.setText(s+"");
    }
    
    private JLabel srcFileStat,memStat,lowTileStat,nodeTileStat,timeStat;
@@ -152,62 +147,55 @@ public class BuildProgressPanel extends JPanel {
       p1Index.add(labelIndex, BorderLayout.NORTH);
       p2Tess.add(labelTess, BorderLayout.NORTH);
 
-      progressIndex.setStringPainted(true);
-      progressTess.setStringPainted(true);
+      progressBarIndex.setStringPainted(true);
+      progressBarTile.setStringPainted(true);
 
-      p1Index.add(progressIndex, BorderLayout.SOUTH);
-      p2Tess.add(progressTess, BorderLayout.SOUTH);
+      p1Index.add(progressBarIndex, BorderLayout.SOUTH);
+      p2Tess.add(progressBarTile, BorderLayout.SOUTH);
 
       p.add(p1Index);
       p.add(p2Tess);
       return p;
    }
+   
+   protected void resetProgressBar() {
+      for( JProgressBar bar : new JProgressBar[]{ progressBarIndex, progressBarTile} ) {
+         bar.setIndeterminate(false);
+         bar.setValue(0);
+         bar.setMaximum(100);
+         bar.setString(null);
+      }
+   }
 
    public void clearForms() {
-      progressTess.setValue(0);
-      progressIndex.setValue(0);
+      progressBarTile.setValue(0);
+      progressBarIndex.setValue(0);
       labelIndex.setText(string1);
       select(true,Constante.INDEX);
       select(true,Constante.TESS);
+      resetProgressBar();
    }
-
-   public void setProgressTess(int value) {
-      progressTess.setValue(value);
-      progressIndex.repaint();
-   }
-   public void setProgressIndex(int value) {
-      progressIndex.setValue(value);
-      progressIndex.repaint();
-   }
-
 
    public void select(boolean enabled, int index) {
-      JPanel p = null;
-      Border bord=null;
       JLabel label = null;
       switch (index) {
-         case Constante.INDEX : label = labelIndex; bord = border1; p = p1Index; break;
-         case Constante.TESS : label = labelTess; bord = border2;  p = p2Tess; break;
+         case Constante.INDEX : label = labelIndex; break;
+         case Constante.TESS : label = labelTess; break;
       }
       if (!enabled) {
          label.setFont(getFont().deriveFont(Font.ITALIC));
          label.setForeground(Color.LIGHT_GRAY);
-         bord = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
       }
       else {
          label.setFont(getFont().deriveFont(Font.PLAIN));
          label.setForeground(Color.BLACK);
-         bord = BorderFactory.createLineBorder(Color.GRAY);
       }
-      //		p.setBorder(bord);
       repaint();
    }
 
 
-   public JProgressBar getProgressTess() {
-      return progressTess;
-   }
-
+   public JProgressBar getProgressBarTile() { return progressBarTile; }
+   public JProgressBar getProgressBarIndex() { return progressBarIndex; }
 
    public void setProgressIndexDir(String txt) {
       labelIndex.setText(string1+" "+txt);

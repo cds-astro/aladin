@@ -1,3 +1,22 @@
+// Copyright 2012 - UDS/CNRS
+// The Aladin program is distributed under the terms
+// of the GNU General Public License version 3.
+//
+//This file is part of Aladin.
+//
+//    Aladin is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, version 3 of the License.
+//
+//    Aladin is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    The GNU General Public License is available in COPYING file
+//    along with Aladin.
+//
+
 package cds.allsky;
 
 import java.awt.BorderLayout;
@@ -35,12 +54,11 @@ import cds.aladin.PlanImage;
 import cds.aladin.Tool;
 import cds.aladin.ToolBox;
 import cds.aladin.prop.PropPanel;
-import cds.allsky.Context.Method;
+import cds.allsky.Context.JpegMethod;
 import cds.tools.Util;
 
 public class TabJpg extends JPanel implements ActionListener {
 
-   private static final String OK = "Build JPGs";
 
    private String CUT_MAX = "Max";
    private String CUT_MIN = "Min";
@@ -53,33 +71,24 @@ public class TabJpg extends JPanel implements ActionListener {
    private JRadioButton radioMoyenne;                     // selected si on est en calcul selon la moyenne
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
 
-   JButton ok = new JButton(OK);
-//   private JButton bHelp = new JButton();
-   protected JButton bNext = new JButton();
-   protected JButton bPrevious = new JButton();
-   protected JButton b_moc;
-   JProgressBar progressJpg = new JProgressBar(0,100);
-   private String NEXT;
-   private String PREVIOUS;
+   private JButton start,abort,pause;
+   private JButton next,previous;
+   private JButton moc;
+   private JProgressBar progressJpg = new JProgressBar(0,100);
 
    private final MainPanel mainPanel;
+   private Context context;
 
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
 
    public TabJpg(final MainPanel mainPanel) {
       super(new BorderLayout());
-      createChaine(Aladin.getChaine());
-      bPrevious = new JButton(PREVIOUS);
-      bPrevious.setEnabled(false);
-      bPrevious.addActionListener(this);
-      bNext = new JButton(NEXT);
-      bNext.setEnabled(false);
-      bNext.addActionListener(this);
+      this.mainPanel = mainPanel;
+      context = mainPanel.context;
 
       JRadioButton rb;
       ButtonGroup bg = new ButtonGroup();
 
-      this.mainPanel = mainPanel;
       JLabel label;
       GridBagConstraints c = new GridBagConstraints();
       c.gridx = 0;
@@ -93,7 +102,6 @@ public class TabJpg extends JPanel implements ActionListener {
       pCenter.setBorder(BorderFactory.createEmptyBorder(5, 25, 5,25));
 
       // Texte d'intro
-      //		c.fill = GridBagConstraints.HORIZONTAL;
       label = new JLabel(Util.fold(getString("JPEGINFOALLSKY"),80,true));
       label.setFont(label.getFont().deriveFont(Font.ITALIC));
       c.gridheight = 5;
@@ -187,15 +195,6 @@ public class TabJpg extends JPanel implements ActionListener {
       pCenter.add(p,c);
       c.insets.top=m;
 
-      c.gridwidth=1;
-      c.gridx=0;
-      c.gridy++;
-      c.insets.top=30;
-      ok.addActionListener(this);
-      ok.setEnabled(false);
-      c.insets.top=1;
-      pCenter.add(ok, c);
-
       // barre de progression
       progressJpg.setStringPainted(true);
       c.fill = GridBagConstraints.HORIZONTAL;
@@ -211,19 +210,32 @@ public class TabJpg extends JPanel implements ActionListener {
       JPanel pBtn = new JPanel();
       pBtn.setLayout(new BoxLayout(pBtn, BoxLayout.X_AXIS));
       pBtn.add(Box.createHorizontalGlue());
-      pBtn.add(bPrevious);
+      previous = new JButton(getString("PREVIOUS"));
+      previous.addActionListener(this);
+      previous.addActionListener(this);
+      pBtn.add(previous);
       
-      b_moc = new JButton(getString("LOADMOCP"));
-      b_moc.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { loadMoc(); }
-      });
-      pBtn.add(b_moc);
+      moc = new JButton(getString("LOADMOCP"));
+      moc.addActionListener(this);
+      pBtn.add(moc);
 
-      ok.setText(getString("JPEGBUILDALLSKY"));
-      pBtn.add(ok);
+      start= new JButton(getString("JPEGBUILDALLSKY"));
+      start.addActionListener(this);
+      pBtn.add(start);
+      
+      pause=new JButton(getString("PAUSE"));
+      pause.addActionListener(this);
+      pBtn.add(pause);
+      
+      abort=new JButton(getString("ABORT"));
+      abort.addActionListener(this);
+      pBtn.add(abort);
       
       pBtn.add(Box.createRigidArea(new Dimension(10,0)));
-      pBtn.add(bNext);
+      next = new JButton(getString("NEXT"));
+      next.addActionListener(this);
+      next.addActionListener(this);
+      pBtn.add(next);
       pBtn.add(Box.createHorizontalGlue());
       fin.add(pProgress, BorderLayout.NORTH);
       fin.add(pBtn, BorderLayout.CENTER);
@@ -234,16 +246,59 @@ public class TabJpg extends JPanel implements ActionListener {
       setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
    }
    
+   public void actionPerformed(ActionEvent e) {
+      if (e.getSource() == start ) {
+
+         // Juste pour vérifier qu'on a bien un plan all-sky valable en cours de visualisation
+         if( !radioManual.isSelected() ) {
+            try {
+               PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
+               if( !p.isTruePixels() ) throw new Exception();
+            } catch( Exception e1 ) {
+               mainPanel.aladin.warning(mainPanel,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
+               return;
+            }
+         }
+         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+         context.setJpegMethod(getMethod());
+         context.setProgressBar(progressJpg);
+         
+         try {
+            new Task(context, Action.JPEG, false);
+         } catch( Exception e1 ) {
+            e1.printStackTrace();
+         }
+      }
+      else if (e.getSource() == abort)      abort();
+      else if (e.getSource() == pause)      pause();
+
+      else if (e.getSource() == next)      mainPanel.showPubTab();
+      else if (e.getSource() == previous)  mainPanel.showBuildTab();
+      else if (e.getSource() == moc)       loadMoc();
+      
+      resumeWidgets();
+   }
+
+   private void pause() {
+      if( context.isTaskPause() ) {
+         context.setTaskPause(false);
+         pause.setText(getString("PAUSE"));
+      } else {
+         context.setTaskPause(true);
+         pause.setText(getString("RESUME"));
+      }
+   }
+   
+   private void abort() {
+      if( !Aladin.confirmation(mainPanel, "Do you really want to abort the JPEG tile computation ?") ) return;
+      context.taskAbort();
+   }
+   
    private void loadMoc() {
-      String mocFile = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String mocFile = context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
       mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 
-   private void createChaine(Chaine chaine) {
-      NEXT = chaine.getString("NEXT");
-      PREVIOUS = chaine.getString("PREVIOUS");
-   }
-   
    private JLabel tileStat,timeStat;
    
    private JPanel createStatPanel() {
@@ -279,7 +334,7 @@ public class TabJpg extends JPanel implements ActionListener {
    public String getCutMax() { return tCutMax.getText().trim(); }
    
    private boolean isExistingMoc() {
-      String moc = mainPanel.context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String moc = context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
       return  moc!=null && (new File(moc)).exists();
    }
    
@@ -292,28 +347,34 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    /**   retourne la méthode qu'il faudra utiliser pour construire les JPG */
-   public Method getMethod() {
-      if( radioMediane.isSelected() ) return Context.Method.MEDIAN;
-      return Context.Method.MEAN;
+   public JpegMethod getMethod() {
+      if( radioMediane.isSelected() ) return Context.JpegMethod.MEDIAN;
+      return Context.JpegMethod.MEAN;
    }
    
-   protected void resumeWidgetsStatus() {
-      boolean readyToDo = mainPanel.isExistingDir() || mainPanel.isExistingAllskyDir();
-      boolean isRunning = mainPanel.isRunning();
-      boolean isColor = mainPanel.context.isColor();
-      b_moc.setEnabled(isExistingMoc());
-      bPrevious.setEnabled(!isRunning);
-      bNext.setEnabled(readyToDo && !isRunning);
-      tCutMin.setEnabled(readyToDo && !isColor);
-      tCutMax.setEnabled(readyToDo && !isColor);
-      radioManual.setEnabled(readyToDo && !isColor);
-      labelMethod.setEnabled(readyToDo && !isColor);
-      radioAllsky.setEnabled(readyToDo && !isColor);
-      radioMediane.setEnabled(readyToDo && !isRunning && !isColor);
-      radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
-      progressJpg.setEnabled(readyToDo && !isRunning && !isColor);
-      ok.setEnabled(readyToDo && !isRunning && !isColor);
-      setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) ); 
+   protected void resumeWidgets() {
+      try {
+         boolean readyToDo = context.isExistingDir() || context.isExistingAllskyDir();
+         boolean isRunning = context.isTaskRunning();
+         boolean isColor = context.isColor();
+         moc.setEnabled(isExistingMoc());
+         previous.setEnabled(readyToDo && !isRunning);
+         next.setEnabled(readyToDo && !isRunning);
+         tCutMin.setEnabled(readyToDo && !isColor);
+         tCutMax.setEnabled(readyToDo && !isColor);
+         radioManual.setEnabled(readyToDo && !isColor);
+         labelMethod.setEnabled(readyToDo && !isColor);
+         radioAllsky.setEnabled(readyToDo && !isColor);
+         radioMediane.setEnabled(readyToDo && !isRunning && !isColor);
+         radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
+         progressJpg.setEnabled(readyToDo && !isRunning && !isColor);
+         start.setEnabled(readyToDo && !isRunning && !isColor);
+         abort.setEnabled(isRunning);
+         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+               : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      } 
    }
 
    public void clearForms() {
@@ -325,13 +386,13 @@ public class TabJpg extends JPanel implements ActionListener {
    }
 
    public void setStartEnabled(boolean enabled) {
-      ok.setEnabled(enabled);
-      bNext.setEnabled(enabled);
+      start.setEnabled(enabled);
+      next.setEnabled(enabled);
    }
    
    public void show() {
       updateCurrentCM();
-      resumeWidgetsStatus();
+      resumeWidgets();
       super.show(); 
    }
 
@@ -351,62 +412,4 @@ public class TabJpg extends JPanel implements ActionListener {
       currentCM.setText(s);
       return rep;
    }
-
-   public void setProgress(int value) {
-      progressJpg.setValue(value);
-   }
-
-   public void actionPerformed(ActionEvent e) {
-      if (e.getSource() == ok ) {
-
-         // Juste pour vérifier qu'on a bien un plan all-sky valable en cours de visualisation
-         if( !radioManual.isSelected() ) {
-            try {
-               PlanBG p = (PlanBG) mainPanel.aladin.calque.getPlanBase();
-               if( !p.isTruePixels() ) throw new Exception();
-            } catch( Exception e1 ) {
-               mainPanel.aladin.warning(mainPanel,"<html>There is no current view,<br>or the current view is not an all-sky view in true pixel mode");
-               return;
-            }
-         }
-         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         mainPanel.context.setMethod(getMethod());
-         BuilderJpg builderJpg = new BuilderJpg(getCM(), mainPanel.context);
-         builderJpg.start();
-         (new ThreadProgressBar(builderJpg)).start();
-         
-      } else if (e.getSource() == bNext) {
-         mainPanel.showPubTab();
-         
-      } else if (e.getSource() == bPrevious) {
-         mainPanel.showBuildTab();
-      }
-   }
-
-   class ThreadProgressBar implements Runnable {
-      Object builderJpg;
-      public ThreadProgressBar(Object source) {
-         builderJpg = source;
-      }
-
-      public void start(){
-         // lance en arrière plan le travail
-         (new Thread(this)).start();
-      }
-      public void run() {
-         int value = 0;
-         while(builderJpg != null && value < 99) {
-            value = (int)((BuilderJpg)builderJpg).getProgress();
-            setProgress(value);
-            try {
-               Thread.currentThread().sleep(200);
-            } catch (InterruptedException e) {
-            }
-         }
-         setProgress(100);
-         setCursor(null);
-         mainPanel.showPubTab();
-      }
-   }
-
 }
