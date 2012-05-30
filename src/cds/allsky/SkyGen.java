@@ -43,7 +43,6 @@ public class SkyGen {
       actions = new Vector<Action>();
    }
 
-
    /**
     * Analyse le fichier contenant les paramètres de config de la construction
     * du allsky sous le format : option = valeur

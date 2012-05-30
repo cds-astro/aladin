@@ -140,9 +140,10 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
    
    protected void resumeWidgets() {
-      if( tabDesc!=null ) tabDesc.resumeWidgets();
-      if( tabBuild!=null ) tabBuild.resumeWidgets();
-      if( tabJpg!=null ) tabJpg.resumeWidgets();
+      tabDesc.resumeWidgets();
+      tabBuild.resumeWidgets();
+      tabJpg.resumeWidgets();
+      tabRgb.resumeWidgets();
    }
 
    public void close() {

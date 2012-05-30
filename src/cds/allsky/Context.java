@@ -104,6 +104,7 @@ public class Context {
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
       validateOutputDone=validateInputDone=validateCutDone=false;
+      prop=null;
    }
 
    // Getters
@@ -606,7 +607,7 @@ public class Context {
    public boolean isTaskRunning() { return taskRunning; }
    public void setTaskRunning(boolean flag) { 
       if( flag ) taskAborting=false;            // Si la dernière tache a été interrompue, il faut reswitcher le drapeau
-      progressBar=null;
+      else progressBar=null;
       taskRunning=flag; 
       resumeWidgets();
    }

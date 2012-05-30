@@ -63,14 +63,11 @@ public class BuilderIndex extends Builder {
    public Action getAction() { return Action.INDEX; }
 
    public void run() throws Exception {
-      context.running("Creating HEALPix index...");
       build();
 
       BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
       builderMocIndex.run();
       context.setMocIndex( builderMocIndex.getMoc() ) ;
-
-      context.nldone("HEALPix index created !");
    }
    
    public boolean isAlreadyDone() {

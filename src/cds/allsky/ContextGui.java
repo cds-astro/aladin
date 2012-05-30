@@ -52,11 +52,13 @@ public class ContextGui extends Context {
       }
       return borderSize;
    }
+   
+   public void setOrder(int order) {
+      mainPanel.tabBuild.setOrder(order);
+   }
 
    public int getOrder() {
-      if (mainPanel.tabBuild.getOrder() != -1)  return mainPanel.tabBuild.getOrder();
-      if (mainPanel.planPreview != null) return mainPanel.planPreview.getMaxHealpixOrder();
-      return -1;
+      return mainPanel.tabBuild.getOrder();
    }
    
    // Demande d'affichage des stats (dans le TabBuild)
@@ -79,7 +81,6 @@ public class ContextGui extends Context {
             (long)( Constante.SIDE*Constante.SIDE*getNpix()),
             statNodeAvgTime);
       
-//      setProgress(Constante.TESS, (int)( (((double)statNbTile+statNbEmptyTile)/nbLowCells)*100 ));
       setProgress(statNbTile+statNbEmptyTile, nbLowCells);
    }
    
@@ -135,7 +136,7 @@ public class ContextGui extends Context {
          progressBar.setMaximum((int)progressMax);
          progressBar.setValue((int)progress);
       }
-      if( action==Action.TILES && lastNorder3!=-1 ) updateAllskyPreview();
+      if( (action==Action.TILES || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
    }
    
    public void endAction() throws Exception { 
@@ -172,6 +173,19 @@ public class ContextGui extends Context {
    public void resumeWidgets() { mainPanel.resumeWidgets(); }
 
    public void setProgressBar(JProgressBar bar) { progressBar=bar; progressBar.setString(null); }
+   
+   private Object [] plansRgb;
+   private String outputRgb;
+   private JpegMethod methodRgb;
+   
+   public void setRgbPlans(Object [] plans) { plansRgb=plans; }
+   public void setRgbOutput(String output) { outputRgb=output; }
+   public void setRgbMethod(JpegMethod method) { methodRgb=method; }
+   
+   public Object [] getRgbPlans() { return plansRgb; }
+   public String getRgbOutput() { return outputRgb; }
+   public JpegMethod getRgbMethod() { return methodRgb; }
+
 
    public String getInputPath() {
       return mainPanel.tabDesc.getInputField();
@@ -182,7 +196,7 @@ public class ContextGui extends Context {
    }
 
    public void setOutputPath(String output) {
-      this.outputPath = output;
+      mainPanel.tabDesc.setOutputField(output);
    }
 
    public int getBitpixOrig() {

@@ -128,6 +128,7 @@ public class Util {
 
    static public int getOrderFromPath(String filename) {
       int fromIndex = filename.indexOf("Norder");
+      if( fromIndex==-1 ) return -1;
       int order = Integer.parseInt(
             filename.substring(
                   fromIndex+6, 

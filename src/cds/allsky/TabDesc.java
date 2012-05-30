@@ -438,6 +438,7 @@ public class TabDesc extends JPanel implements ActionListener {
    public String getInputField() { return inputField.getText(); }
 
    public String getOutputField() { return outputField.getText(); }
+   public void setOutputField(String output) { outputField.setText(output); }
 
    public CoAddMode getCoaddModeField() {
       return resetTiles.isSelected() ? CoAddMode.REPLACETILE : 

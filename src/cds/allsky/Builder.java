@@ -54,6 +54,7 @@ public abstract class Builder {
          case CLEANJPEG: return new BuilderCleanJpg(context);
          case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
+         case RGB:       return new BuilderRgb(context);
       }
       throw new Exception("No builder associated to this action");
    }
@@ -72,6 +73,9 @@ public abstract class Builder {
    
    /** Affiche des statistiques de progression */
    public void showStatistics() { }
+   
+   
+   // Quelques validateurs génériques utilisés par les différents Builders.
    
    // Vérifie que le répertoire Input a été passé en paramètre et est utilisable
    protected void validateInput() throws Exception {

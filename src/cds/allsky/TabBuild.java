@@ -360,6 +360,8 @@ public class TabBuild extends JPanel implements ActionListener {
    public int getOrder() {
       return ((BuildTable) tab).getOrder();
    }
+   
+   public void setOrder(int order) { setSelectedOrder(order); }
 
 //   public void setBScaleBZero(double bscale, double bzero) {
 //      this.bscale = bscale;

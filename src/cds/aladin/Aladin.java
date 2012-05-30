@@ -5172,6 +5172,7 @@ if( levelTrace>=3 ) System.out.println(")");
    static public void warning(Component c,String s) { warning(c,s,0); }
    static protected void warning(String s,int methode) { warning(Aladin.aladin.f,s,methode); }
    static protected void warning(Component c,String s,int methode) {
+      if( s==null ) return;
       if( methode==1 ) aladin.command.printConsole("!!! "+s);
       if( NOGUI ) return;
       if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;

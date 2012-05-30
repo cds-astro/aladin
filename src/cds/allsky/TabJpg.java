@@ -369,6 +369,7 @@ public class TabJpg extends JPanel implements ActionListener {
          radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
          progressJpg.setEnabled(readyToDo && !isRunning && !isColor);
          start.setEnabled(readyToDo && !isRunning && !isColor);
+         pause.setEnabled(isRunning);
          abort.setEnabled(isRunning);
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
                : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );

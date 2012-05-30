@@ -102,7 +102,7 @@ public class Task extends Thread {
           }
           context.setTaskRunning(false);
        }
-       catch( Exception e) {  context.warning(e.getMessage()); }
+       catch( Exception e) {  e.printStackTrace(); context.warning(e.getMessage()); }
        finally{ if( progressBar!=null ) progressBar.end(); }
     }
     
