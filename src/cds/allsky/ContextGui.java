@@ -149,6 +149,7 @@ public class ContextGui extends Context {
          else if( taskAborting ) progressBar.setString("Aborted !");
          else progressBar.setString("Done !");
       }
+      if( (action==Action.TILES || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
       super.endAction();
    }
    

@@ -344,7 +344,7 @@ public class TabRgb extends JPanel implements ActionListener {
       actionPerformed(new ActionEvent(dir,-1, "dirBrowser Action"));
    }
 
-   synchronized protected void init() {
+   protected void init() {
       // sauvegarde les anciennes selections
       Object[] save = new Object[]{ch[0].getSelectedItem(),
             ch[1].getSelectedItem(),
@@ -365,6 +365,11 @@ public class TabRgb extends JPanel implements ActionListener {
          }
       }
    }
+   
+   public void show() {
+      super.show();
+      init();
+   }
 
    public void help() {
       JOptionPane.showMessageDialog(this, HELP, titlehelp,
@@ -382,7 +387,6 @@ public class TabRgb extends JPanel implements ActionListener {
    
    protected void resumeWidgets() {
       try {
-         init();
          boolean readyToDo = hasPlanSelection() && outputField.getText().trim().length()>0;
          boolean isRunning = context.isTaskRunning();
          start.setEnabled(readyToDo && !isRunning);

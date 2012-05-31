@@ -497,7 +497,7 @@ public class Context {
       if( path==null ) return false;
       File f = new File(path+Util.FS+"Norder3"+Util.FS+"Dir0");
       if( !f.exists() ) return false;
-      for( File fc : f.listFiles() ) { if( fc.getName().endsWith(".fits") ) return true; }
+      for( File fc : f.listFiles() ) { if( fc.getName().startsWith("Npix") ) return true; }
       return false;
    }
    
