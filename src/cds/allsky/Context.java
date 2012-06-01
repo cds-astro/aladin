@@ -495,10 +495,10 @@ public class Context {
    protected boolean isExistingAllskyDir() {
       String path = getOutputPath();
       if( path==null ) return false;
-      File f = new File(path+Util.FS+"Norder3"+Util.FS+"Dir0");
+      File f = new File(path);
       if( !f.exists() ) return false;
-      for( File fc : f.listFiles() ) { if( fc.getName().startsWith("Npix") ) return true; }
-      return false;
+      int order = cds.tools.pixtools.Util.getMaxOrderByPath(path);
+      return order!=-1;
    }
    
    protected boolean isExistingIndexDir() {
@@ -558,7 +558,7 @@ public class Context {
       long freeMem = Runtime.getRuntime().freeMemory();
       long usedMem = totalMem-freeMem;
       long nbLowCells = getNbLowCells();
-
+      
       String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
       String pourcentNbCells = nbLowCells==-1 ? "" : 
          (Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"%) ";

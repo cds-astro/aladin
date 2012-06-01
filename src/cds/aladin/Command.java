@@ -2110,9 +2110,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                newobj = new Ellipse(plan,a.view.getCurrentView(),x,y,semiMA,semiMI,angle);
             }
 
-            // Commande box(x,y,w,h,angle)
+            // Commande box(x,y,w,h[,angle])
          } else if( fct.equalsIgnoreCase("box") ) {
-            double angle   = parseDouble(p[4]);
+            double angle=0;
+            try { angle = parseDouble(p[4]); } catch( Exception e ) { }
             if( drawMode==DRAWRADEC ) {
                double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
                double h = Server.getAngle(p[3],Server.RADIUSs)/60.;

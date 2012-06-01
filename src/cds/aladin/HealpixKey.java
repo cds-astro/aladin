@@ -809,7 +809,9 @@ public class HealpixKey {
    protected double getPixelValue(long healpixIdxPixel,int mode) {
       long startIdx =  npix * (long)width * (long)width;
       int order = (int)CDSHealpix.log2(width);
-      if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) planBG.createHealpixOrder(order);
+      if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
+         try { planBG.createHealpixOrder(order); } catch( Exception e ) { return Double.NaN; }
+      }
       int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
       
       if( !loadPixelsOrigin(mode) ) return Double.NaN;

@@ -244,6 +244,7 @@ public class BuilderTiles extends Builder {
       context.setCache(new CacheFits(sizeCache, 100000));
 
       long maxMemPerThread = Constante.NBTILESINRAM * (long)( Constante.SIDE*Constante.SIDE*context.getNpix() );
+      maxMemPerThread += Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
       Aladin.trace(4,"BuildController.build(): RAM required per thread estimated at "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = (int) (size / maxMemPerThread);
       if (nbThread==0) nbThread=1;

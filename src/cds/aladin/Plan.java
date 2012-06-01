@@ -1686,7 +1686,11 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    public void run() {
 Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
       if( server!=null ) server.setStatus();
-      boolean rep=waitForPlan();
+      boolean rep=true;;
+      try { rep = waitForPlan();
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
       planReady( rep );
       if( server!=null ) server.setStatus();
    }

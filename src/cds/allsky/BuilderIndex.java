@@ -71,6 +71,7 @@ public class BuilderIndex extends Builder {
    }
    
    public boolean isAlreadyDone() {
+      if( !context.isExistingIndexDir() ) return false;
       if( !context.actionAlreadyDone(Action.INDEX)) return false;
       if( context.getMocIndex()==null ) {
          try { context.loadMocIndex(); } catch( Exception e ) { return false; }

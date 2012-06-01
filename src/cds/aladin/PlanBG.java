@@ -1286,12 +1286,13 @@ public class PlanBG extends PlanImage {
    }
 
    /** Creation des tableaux de correspondance indice Healpix <=> indice XY */
-   protected void createHealpixOrder(int order) {
+   protected void createHealpixOrder(int order) throws Exception {
       if (order==0) {
          xy2hpx = hpx2xy = new int[] {0};
          return;
       }
       int nsize = (int)CDSHealpix.pow2(order);
+      if( CDSHealpix.log2(nsize)!=order ) throw new Exception("Only HEALPix order power of 2 are supported");
       xy2hpx = new int[nsize*nsize];
       hpx2xy = new int[nsize*nsize];
       fillUp(xy2hpx,nsize,null);

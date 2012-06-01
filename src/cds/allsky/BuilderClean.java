@@ -40,6 +40,8 @@ public class BuilderClean extends Builder {
    
    public void validateContext() throws Exception { validateOutput(); }
    
+   public boolean isAlreadyDone() { return !(new File(context.getOutputPath())).exists(); }
+   
    public void showStatistics() { 
       if( context instanceof ContextGui ) return;
       context.nlstat(nbFile+" file"+(nbFile>1?"s":"")+" deleted");

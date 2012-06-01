@@ -30,7 +30,7 @@ public class Constante {
 
    // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
    // => voir cds.fits.loadFits(InputStream,x,y,w,h)
-   public static final int FITSCELLSIZE = 4096; 
+   public static final int FITSCELLSIZE = 1024; 
 
    // Taille des imagettes HEALPix
    final static public int ORDER = 9; // 2^9 = 512 = SIDE

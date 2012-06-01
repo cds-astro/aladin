@@ -112,6 +112,8 @@ public class Task extends Thread {
        boolean isRunning = true;
        long lastStat=-1;            // date d'affichage des dernières stats.
        long tempo;                  // Tempo entre deux affichages de statistiques
+       long lastGC=-1;              // date du dernier GC
+       long tempoGC=30000;          // Tempo entre deux GC
        
        public ThreadProgressBar(Context context) {
           this.context = context;
@@ -120,13 +122,16 @@ public class Task extends Thread {
 
        public void run() {
           while( isRunning ) {
-             try { Thread.sleep(1000);  } catch (InterruptedException e) { }
-             if( isRunning && !context.isTaskPause() ) {
-                context.progressStatus();
-                long now = System.currentTimeMillis();
-                if( now-lastStat>tempo && builder!=null ) { builder.showStatistics(); lastStat=now; }
-             }
-             
+             try {
+                try { Thread.sleep(1000); } catch( Exception e ) { }
+                if( isRunning && !context.isTaskPause() ) {
+                   context.progressStatus();
+                   long now = System.currentTimeMillis();
+                   if( now-lastStat>tempo && builder!=null ) { builder.showStatistics(); lastStat=now; }
+                   if( now-lastGC>tempoGC ) { System.gc(); lastGC=now; }
+                }
+             } catch(Exception e) { }
+
           }
           context.resumeWidgets();
        }

@@ -134,26 +134,66 @@ public class PlanMoc extends PlanBGCat {
    
    protected boolean mustDrawFast() { return aladin.view.mustDrawFast(); }
    
+//   protected void draw(Graphics g,ViewSimple v) {
+//      long t1 = Util.getTime();
+//      g.setColor(c);
+//      int max = Math.min(maxOrder(v),maxOrder)+1;
+//      boolean mustDrawFast = mustDrawFast();
+//      int tLimit = mustDrawFast ? 30 : 75;
+//      double taille = v.getTaille();
+//      
+//      try {
+//         HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
+//         int r=0,d=0;
+//         int order=0;
+//         long t=0;
+//         int i;
+//         long delai = Util.getTime()-lastDrawAll;
+//         boolean canDrawAll = !mustDrawFast && delai>300;
+//         boolean lowMoc = taille>30 || mustDrawFast;
+//         Hpix [] hpixList = getHpixList(v,lowMoc);
+////      System.out.println("lowMoc="+lowMoc+" mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
+//         for( i=0; i<hpixList.length; i++ ) {
+//            if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
+//            Hpix p = hpixList[i];
+//            if( p==null ) break;
+//            order=p.getOrder();
+//            if( m!=null && !m.isInTree(order, p.getNpix())) { r++; continue; }
+//            if( p.isOutView(v) ) continue;
+//            if( wireFrame ) p.draw(g, v);
+//            else p.fill(g, v);
+//            d++;
+//            if( d%100==0 ) t=Util.getTime()-t1;
+//         }
+//         drawAll = i==hpixList.length;
+//         t = Util.getTime();
+//         statTimeDisplay = t-t1;
+//         if( drawAll ) lastDrawAll=t;
+//         if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
+////      System.out.println("draw "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
+//      } catch( Exception e ) {
+//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//      }
+//   }
+
+   
    protected void draw(Graphics g,ViewSimple v) {
       long t1 = Util.getTime();
       g.setColor(c);
       int max = Math.min(maxOrder(v),maxOrder)+1;
-      boolean mustDrawFast = mustDrawFast();
-      int tLimit = mustDrawFast ? 30 : 75;
       double taille = v.getTaille();
       
       try {
          HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
-         Hpix [] hpixList = getHpixList(v,taille>30 && mustDrawFast);
          int r=0,d=0;
          int order=0;
          long t=0;
          int i;
-         long delai = Util.getTime()-lastDrawAll;
-         boolean canDrawAll = !mustDrawFast && delai>300;
-//      System.out.println("mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
+//         long delai = Util.getTime()-lastDrawAll;
+         boolean lowMoc = taille>30 ;
+         Hpix [] hpixList = getHpixList(v,lowMoc);
+//      System.out.println("lowMoc="+lowMoc+" mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
          for( i=0; i<hpixList.length; i++ ) {
-            if( (!canDrawAll || v.zoom<1/128.) && !(t<tLimit || order<max+4) ) break;
             Hpix p = hpixList[i];
             if( p==null ) break;
             order=p.getOrder();
@@ -169,7 +209,7 @@ public class PlanMoc extends PlanBGCat {
          statTimeDisplay = t-t1;
          if( drawAll ) lastDrawAll=t;
          if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
-//      System.out.println("draw "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
+//      System.out.println("draw "+(lowMoc?" low":"")+" "+hpixList.length+" rhombs mocView="+(moc==null?"null":moc.getMaxOrder()+"/"+moc.getSize())+" reject="+r+" drac="+d+" in "+statTimeDisplay+"ms");
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }

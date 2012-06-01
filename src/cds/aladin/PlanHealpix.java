@@ -309,31 +309,32 @@ public class PlanHealpix extends PlanBG {
 
     @Override
     protected boolean waitForPlan() {
-        super.waitForPlan();
-        try {
+       super.waitForPlan();
+       try {
 
-            boolean needProcessing = needProcessing(this.dirName, true);
-            if (needProcessing) { // pour eviter de charger un flux distant alors qu'on a deja les donnees
+          boolean needProcessing = needProcessing(this.dirName, true);
+          if (needProcessing) { // pour eviter de charger un flux distant alors qu'on a deja les donnees
 
-                try {
-                    this.isGZ = dis.isGZ();
-                    this.isARGB = (dis.getType() & MyInputStream.ARGB) != 0;
-                } catch (IOException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
-            }
-            setPixelPath();
+             try {
+                this.isGZ = dis.isGZ();
+                this.isARGB = (dis.getType() & MyInputStream.ARGB) != 0;
+             } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+             }
+          }
+          setPixelPath();
 
-            startHealpixCreation();
-            if (needProcessing) writePropertiesFile(this.dirName);
+          startHealpixCreation();
+          if (needProcessing) writePropertiesFile(this.dirName);
 
-            suiteSpecif();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+          suiteSpecif();
+          return true;
+       } catch (Exception e) {
+          error = e.getMessage();
+          if( aladin.levelTrace>=3 ) e.printStackTrace();
+          return false;
+       }
     }
 
     // the properties file will be used to check the file modification date
@@ -432,39 +433,18 @@ public class PlanHealpix extends PlanBG {
      *
      * @param in le flux du fichier Healpix
      */
-    private void startHealpixCreation() {
-        Aladin.trace(2,"Loading HEALPIX FITS image");
+    private void startHealpixCreation() throws Exception {
+       Aladin.trace(2,"Loading HEALPIX FITS image");
 
-        try {
-            File tmp = new File(getCacheDir()+Util.FS+this.dirName);
+       File tmp = new File(getCacheDir()+Util.FS+this.dirName);
 
-            if( ! needProcessing(this.dirName, true) ) {
-               return;
-            }
-            tmp.mkdir();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+       if( ! needProcessing(this.dirName, true) ) return;
+       tmp.mkdir();
 
+       double start = System.currentTimeMillis();
+       MyInputStream isTmp = isTmp = new MyInputStream(new FileInputStream(pixelPath));
 
-        double start = System.currentTimeMillis();
-        MyInputStream isTmp = null;
-        try {
-            isTmp = new MyInputStream(new FileInputStream(pixelPath));
-        } catch (FileNotFoundException e3) {
-            e3.printStackTrace();
-        } catch (IOException e3) {
-            e3.printStackTrace();
-        }
-
-        try {
-            headerFits = new FrameHeaderFits(isTmp);
-        } catch (Exception e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-            return;
-        }
+       headerFits = new FrameHeaderFits(isTmp);
 
         int naxis = headerFits.getIntFromHeader("NAXIS");
         // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
@@ -474,48 +454,39 @@ public class PlanHealpix extends PlanBG {
               naxis1 = headerFits.getIntFromHeader("NAXIS1");
               isTmp.skip(naxis1);
            } catch( Exception e) {}
-           try {
-              // On se cale sur le prochain segment de 2880
-              long pos = isTmp.getPos();
-              if( pos%2880!=0 ) {
-                 long offset = ((pos/2880)+1) *2880  -pos;
-                 isTmp.skip(offset);
-              }
-              headerFits = new FrameHeaderFits(isTmp);
-           } catch (Exception e) {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
-               return;
+           
+           // On se cale sur le prochain segment de 2880
+           long pos = isTmp.getPos();
+           if( pos%2880!=0 ) {
+              long offset = ((pos/2880)+1) *2880  -pos;
+              isTmp.skip(offset);
            }
+           headerFits = new FrameHeaderFits(isTmp);
         }
 
         int nside=0;
         int nsideImage=0;
         int minLevel = 3; // Norder minimum désiré
         initialOffsetHpx = isTmp.getPos();
-        try {
-
-            nside = headerFits.getIntFromHeader("NSIDE");
-            int maxSizeGeneratedImage = 512;
-            if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
-            Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
-            nbPixGeneratedImage = 2*maxSizeGeneratedImage;
-            nSideFile = nside;
-            double levelImage;
-            do {
-                nbPixGeneratedImage /= 2;
-                levelImage = getLevelImage(nside, nbPixGeneratedImage);
-            }
-            // TODO : à voir avec Pierre
-            while( levelImage<minLevel ); // niveau minimum : minLevel (=3)
-
-
-            nsideImage = (int)CDSHealpix.pow2((long)levelImage);
-            Aladin.trace(3, "NSIDE image: "+nsideImage);
-            Aladin.trace(3, "Level image : "+levelImage);
-            Aladin.trace(3, "nb pixels generated image : "+nbPixGeneratedImage);
+        nside = headerFits.getIntFromHeader("NSIDE");
+        int maxSizeGeneratedImage = 512;
+        if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
+        Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
+        nbPixGeneratedImage = 2*maxSizeGeneratedImage;
+        nSideFile = nside;
+        double levelImage;
+        do {
+           nbPixGeneratedImage /= 2;
+           levelImage = getLevelImage(nside, nbPixGeneratedImage);
         }
-        catch(Exception e) {e.printStackTrace();}
+        // TODO : à voir avec Pierre
+        while( levelImage<minLevel ); // niveau minimum : minLevel (=3)
+
+
+        nsideImage = (int)CDSHealpix.pow2((long)levelImage);
+        Aladin.trace(3, "NSIDE image: "+nsideImage);
+        Aladin.trace(3, "Level image : "+levelImage);
+        Aladin.trace(3, "nb pixels generated image : "+nbPixGeneratedImage);
 
 
         naxis1 = sizeRecord = headerFits.getIntFromHeader("NAXIS1");
