@@ -77,29 +77,14 @@ final public class Fits {
     public int widthCell;                // Largeur de la cellule de l'image (par défaut = naxis1)
     public int heightCell;                // Hauteur de la cellule de l'image (par défaut = naxis2)
 
-//	public Coord center;             // Coord J2000 du centre de l'image
 	public byte [] pix8;             // Pixels 8 bits en vue d'une sauvegarde JPEG (y compté depuis le haut)
 	public int [] rgb;               // pixels dans le cas d'une image couleur RGB
-	//    (y compté depuis le haut) => bitpix==0
 
 	private Calib calib;             // Calibration astrométrique
 
 
 	public static String FS = System.getProperty("file.separator");
 	
-//	static double [] minmax8;
-//	static double [] minmax16;
-//	static double [] minmax32;
-//	static double [] minmax_32;
-//	static double [] minmax_64;
-//	static {
-//		minmax8 = new double[] {0, 255};
-//		minmax16 = new double[] {0, Short.MAX_VALUE}; 
-//		minmax32 = new double[] {0, Short.MAX_VALUE}; 
-//		minmax_32 = new double[] {0, 10000};
-//		minmax_64 = new double[] {0, 10000};
-//	}
-
    /** Création en vue d'une lecture */
    public Fits() { }
 
@@ -1012,7 +997,6 @@ final public class Fits {
     * été ouvert en mode normal (pas de cellule)
     */
    public void releaseBitmap() throws Exception {
-//      if( true ) return;
       if( bitpix==0 ) return;  // De fait du JPEG
       testBitmapReleaseFeature();
       bitmapReleaseDone=true;

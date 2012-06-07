@@ -321,23 +321,32 @@ public class BuilderTiles extends Builder {
       boolean inTree = context.isInMocTree(order,npix);
       if (!inTree) return null;
       
+      
+      Fits f = null;
+      
+      // Création d'un losange terminal
       if( order==maxOrder )  {
-         Fits f = createLeaveHpx(hpx,file,order,npix);     
-         if( f!=null ) f.releaseBitmap();
-         return f;
+         f = createLeaveHpx(hpx,file,order,npix);     
+         
+      // Création des branches filles, et cumul des résultats
+      } else {
+
+         Fits fils[] = new Fits[4];
+         for( int i =0; !stopped && i<4; i++ ) {
+            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+            fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
+
+            //         if( order<maxOrder-(Constante.MAXDEPTHINRAM-1) && fils[i]!=null) fils[i].releaseBitmap();
+            //         if( order!=maxOrder && fils[i]!=null) fils[i].releaseBitmap();
+         }
+         f = createNodeHpx(file,path,order,npix,fils);
       }
       
-      Fits fils[] = new Fits[4];
-      for( int i =0; !stopped && i<4; i++ ) {
-         if( context.isTaskAborting() ) throw new Exception("Task abort !");
-         fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
-         
-         // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
-         // on les relira dans le createNodeHpx
-         if( order<maxOrder-(Constante.MAXDEPTHINRAM-1) && fils[i]!=null) fils[i].releaseBitmap();
-//         if( order!=maxOrder && fils[i]!=null) fils[i].releaseBitmap();
-      }
-      return createNodeHpx(file,path,order,npix,fils);
+      // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
+      // on les relira lorsqu'on en aura besoin dans createNodeHpx(...)
+//      if( order<maxOrder-(Constante.MAXDEPTHINRAM-1) && f!=null ) f.releaseBitmap();
+      if( f!=null ) f.releaseBitmap();
+      return f;
    }
 
 

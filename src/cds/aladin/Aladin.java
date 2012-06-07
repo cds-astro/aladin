@@ -4499,8 +4499,10 @@ public void show() {
       "       -version: display the Aladin release number\n"+
       "\n"+
       "   The files specified in the command line can be :\n"+
-      "       - images: FITS (gzipped?),JPEG,GIF,PNG\n"+
-      "       - tables: FITS, XML/VOTable, CSV, TSV, S-extractor, Skycat or ASCII tables\n"+
+      "       - images: FITS (gzipped,RICE,MEF,...), HEALPix maps, JPEG,GIF,PNG\n"+
+      "       - tables: FITS, XML/VOTable, CSV, TSV, S-extractor, IPAC-TBL, Skycat or ASCII tables\n"+
+      "       - graphics: Aladin or IDL or DS9 regions, MOCs\n"+
+      "       - directories: all-sky HEALPix folders\n"+
       "       - Aladin backup : \".aj\" extension\n"+
       "       - Aladin scripts : \".ajs\" extension\n"+
       "";

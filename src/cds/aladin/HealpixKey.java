@@ -23,6 +23,7 @@ package cds.aladin;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -84,6 +85,7 @@ public class HealpixKey {
 
    protected int status=UNKNOWN;  // status courant du losange
    protected long timer;        // Date de la dernière utilisation du losange, -1 si jamais encore utilisé
+   protected long timerLoad;    // Date du chargement
    protected int priority=-1;   // Priorité pour le chargement
 
    protected PlanBG planBG;     // Plan d'appartenance de ce losange
@@ -429,6 +431,7 @@ public class HealpixKey {
          planBG.nByteReadNet=loadNet(fileName);
          alreadyCached=false;
          resetTimer();
+         setTimerLoad();
          setStatus(READY);
          planBG.nbLoadNet++;
          parente=0;
@@ -474,6 +477,7 @@ public class HealpixKey {
             alreadyCached=true;
 //System.out.println("Loaded from CACHE in "+(System.currentTimeMillis()-t)+"ms "+this);
             resetTimer();
+            setTimerLoad();
             setStatus(READY);
             parente=0;
             planBG.nbLoadCache++;
@@ -1320,6 +1324,11 @@ public class HealpixKey {
    protected void resetTimer() {
       timer = System.currentTimeMillis();
    }
+   
+   // Positionne la date du chargement
+   private void setTimerLoad() {
+      timerLoad = System.currentTimeMillis();
+   }
 
    /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
    synchronized protected void resetTimeAskRepaint() {
@@ -1653,6 +1662,9 @@ public class HealpixKey {
 
       Graphics2D g2d = (Graphics2D)g;
       AffineTransform saveTransform = g2d.getTransform();
+      float opacity = getOpacity();
+      Composite saveComposite = g2d.getComposite();
+      g2d.setComposite( Util.getImageComposite( opacity ) );
       Shape clip = g2d.getClip();
 
       try {
@@ -1661,11 +1673,13 @@ public class HealpixKey {
             g2d.setTransform(saveTransform);
          }
          if( tb!=-1 && !flagLosange ) n+=drawTriangle(g2d, img, b, tb, true);
-      } catch( Throwable e ) { planBG.clearBuf(); }
-
-      g2d.setTransform(saveTransform);
-      g2d.setClip(clip);
-
+      } 
+      catch( Throwable e ) { planBG.clearBuf(); }
+      finally {
+         g2d.setTransform(saveTransform);
+         g2d.setComposite(saveComposite);
+         g2d.setClip(clip);
+      }
       if( parente>0 ) { pixels=null; rgb=null; }
 
       drawLosangeBorder(g,b);
@@ -1678,6 +1692,11 @@ public class HealpixKey {
       resetTimeAskRepaint();
 
       return n;
+   }
+   
+   // Pour le moment pas d'animation de fondu-enchainé
+   private float getOpacity() {
+      return 1f;
    }
 
    /** Retourne >0 si le point a est "à droite" de la droite passant par g et d */
