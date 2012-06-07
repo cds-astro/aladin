@@ -2154,14 +2154,16 @@ MRGBA.fr Construction RVB
 MTIPRGB Color composition with allskys
 MTIPRGB.fr Composition couleur
 
-ABORT ABORT
-ABORT.fr ANNULER
+ABORT Abort
+ABORT.fr Annuler
 START START
 START.fr LANCER
-STOP STOP
-STOP.fr STOP
-LOADMOC	See coverage...
-LOADMOC.fr Voir la couverture...
+#STOP Stop
+#STOP.fr Stop
+LOADMOC	See index coverage...
+LOADMOC.fr Voir la couverture (index)...
+LOADMOCP	See final coverage...
+LOADMOCP.fr Voir la couverture finale...
 SEE	See one original image...
 SEE.fr Voir une image originale
 NEXT Next >
@@ -2172,12 +2174,12 @@ RE_START RE START
 RE_START2 <html><b>RE</b>START</html>
 RE_START.fr RE-LANCER
 RE_START2.fr <html><b>RE</b>LANCER</html>
-RESUME RESUME
-RESUME.fr REPRENDRE
-PAUSE PAUSE
-PAUSE.fr PAUSE
-DONE DONE
-DONE.fr FINI
+RESUME Resume
+RESUME.fr Reprendre
+PAUSE Pause
+PAUSE.fr Pause
+#DONE DONE
+#DONE.fr FINI
 PUBLISHALLSKY Form to publish
 PUBLISHALLSKY.fr Formulaire pour publier
 HELPRGBALLSKY In order to build a colored allsky survey, select 2 or 3 allskys you have built (opened in the stack and grey levels adjusted).  
