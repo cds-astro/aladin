@@ -127,7 +127,12 @@ public final class Util {
     static public MyInputStream openStream(URL u, boolean useCache) throws Exception {
 	   URLConnection conn = u.openConnection();
 	   if( !useCache ) conn.setUseCaches(false);
-	   conn.setConnectTimeout(5000);
+	   conn.setConnectTimeout(10000);
+// DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
+	   if( conn instanceof HttpURLConnection ) {
+	      HttpURLConnection http = (HttpURLConnection)conn;
+	      http.setRequestProperty("http.agent", "Aladin/"+Aladin.VERSION);
+	   }
 
        MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn));
 //       MyInputStream mis = new MyInputStream(conn.getInputStream());
@@ -171,6 +176,7 @@ public final class Util {
                     }
                     redir = true;
                     conn = target.openConnection();
+                    try { conn.setUseCaches(http.getUseCaches()); } catch( Exception e ) { }
                     redirects++;
                 }
             }
