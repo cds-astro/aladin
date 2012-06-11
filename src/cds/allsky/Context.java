@@ -416,13 +416,20 @@ public class Context {
       else moc = mocIndex.intersection(mocArea);
    }
    
-   // Chargement du MOC de l'index
+   /** Chargement du MOC de l'index */
    protected void loadMocIndex() throws Exception {
       HealpixMoc mocIndex = new HealpixMoc();
       mocIndex.read( getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME);
       this.mocIndex=mocIndex;
    }
    
+   /** Chargement du MOC réel */
+   protected void loadMoc() throws Exception {
+      HealpixMoc mocIndex = new HealpixMoc();
+      mocIndex.read( getOutputPath()+Util.FS+BuilderMoc.MOCNAME);
+      this.mocIndex=mocIndex;
+   }   
+
    protected HealpixMoc getMocIndex() { return mocIndex; }
 
    

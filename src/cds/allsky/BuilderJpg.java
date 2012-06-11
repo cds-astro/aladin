@@ -88,6 +88,11 @@ public class BuilderJpg extends Builder {
       validateOrder(context.getOutputPath());      
       validateCut();
       
+      // Chargement du MOC réel à la place de celui de l'index (moins précis)
+      try { context.loadMoc(); } catch( Exception e ) {
+         context.warning("Tile MOC not found => use index MOC");
+      }
+      
       context.initParameters();
    }
    

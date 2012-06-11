@@ -711,7 +711,7 @@ public class HealpixKey {
        
        // Fichier distant
        if( filename.startsWith("http://") ) {
-          dis = Util.openStream(filename);
+          dis = Util.openStream(filename,false);
           if( skip>0 ) dis.skip(skip);
           buf = readFully(dis, fastLoad );
           dis.close();

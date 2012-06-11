@@ -119,11 +119,15 @@ public final class Util {
 	}
 
 	/** Ouverture d'un MyInputStream avec le User-Agent correspondant à Aladin */
-    static public MyInputStream openStream(String u) throws Exception {
-       return openStream(new URL(u));
+    static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true); }
+    static public MyInputStream openStream(String u,boolean useCache) throws Exception {
+       return openStream(new URL(u),useCache);
     }
-    static public MyInputStream openStream(URL u) throws Exception {
+    static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true); }
+    static public MyInputStream openStream(URL u, boolean useCache) throws Exception {
 	   URLConnection conn = u.openConnection();
+	   if( !useCache ) conn.setUseCaches(false);
+	   conn.setConnectTimeout(5000);
 
        MyInputStream mis = new MyInputStream(openConnectionCheckRedirects(conn));
 //       MyInputStream mis = new MyInputStream(conn.getInputStream());

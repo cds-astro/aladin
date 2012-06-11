@@ -44,6 +44,7 @@ import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import cds.aladin.bookmark.Bookmarks;
 import cds.aladin.prop.Filet;
+import cds.allsky.Context;
 import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -3569,9 +3570,12 @@ public class Aladin extends JApplet
           
           // Arrêt d'un éventuel calcul de allsky
           try {
-            if( frameAllsky!=null && frameAllsky.context.isTaskRunning() ) {
-               frameAllsky.context.taskAbort();
-               while( frameAllsky.context.isTaskRunning() ) Util.pause(100);
+             Context context = frameAllsky!=null && frameAllsky.context!=null ? frameAllsky.context
+                   : command.skygen!=null && command.skygen.context!=null ? command.skygen.context : null;
+            if( context!=null && context.isTaskRunning() ) {
+               context.taskAbort();
+               long t = System.currentTimeMillis();
+               while( context.isTaskRunning() && System.currentTimeMillis()-t<3000 ) Util.pause(100);
             }
          } catch( Exception e1 ) { }
 

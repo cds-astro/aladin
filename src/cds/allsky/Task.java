@@ -103,7 +103,7 @@ public class Task extends Thread {
           context.setTaskRunning(false);
        }
        catch( Exception e) {  e.printStackTrace(); context.warning(e.getMessage()); }
-       finally{ if( progressBar!=null ) progressBar.end(); }
+       finally{ context.setTaskRunning(false); if( progressBar!=null ) progressBar.end(); }
     }
     
     /** Thread de "suivi" de l'exécution => gère les affichages (stats, infos, erreurs) */

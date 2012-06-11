@@ -34,7 +34,8 @@ public class SkyGen {
 
    private File file;
    private boolean force=false;
-   private Context context;
+   private boolean flagAbort=false,flagPause=false,flagResume=false;
+   public Context context;
 
    private Vector<Action> actions;
 
@@ -145,7 +146,7 @@ public class SkyGen {
       } else throw new Exception("Option unknown [" + opt + "]");
       
    }
-
+   
    public void execute(String [] args) {
       int length = args.length;
       if (length == 0) {
@@ -197,15 +198,39 @@ public class SkyGen {
             try {
                Action a = Action.valueOf(arg.toUpperCase());
                if( a==Action.FINDER ) a=Action.INDEX;   // Pour compatibilité
+               if( a==Action.ABORT ) flagAbort=true;    // Bidouillage pour pouvoir tuer un skygen en cours d'exécution
+               if( a==Action.PAUSE ) flagPause=true;    // Bidouillage pour pouvoir mettre en pause un skygen en cours d'exécution
+               if( a==Action.RESUME ) flagResume=true;    // Bidouillage pour pouvoir remettre en route un skygen en pause
                actions.add(a);
             } catch (Exception e) {
                e.printStackTrace();
                return;
             }
          }
-
       }
       
+      // Permet de tuer proprement une tache déjà en cours d'exécution
+      if( flagAbort ) {
+         try { context.taskAbort(); }
+         catch( Exception e ) { context.error(e.getMessage()); }
+         return;
+      }
+      
+      // Permet de mettre en pause temporaire une tache en cours d'exécution
+      if( flagPause ) {
+         try { context.setTaskPause(true); }
+         catch( Exception e ) { context.error(e.getMessage()); }
+         return;
+      }
+      
+      // Permet de mettre reprendre une tache en pause
+      if( flagResume ) {
+         try { context.setTaskPause(false); }
+         catch( Exception e ) { context.error(e.getMessage()); }
+         return;
+      }
+
+
       // Les tâches à faire si aucune n'est indiquées
       if( actions.size()==0 ) {
          actions.add(Action.INDEX);
@@ -234,6 +259,14 @@ public class SkyGen {
          context.error(e.getMessage());
          return;
       }
+   }
+   
+   /** Juste pour pouvoir exécuter skygen comme une commande script Aladin */
+   public void executeAsync(String [] args) { new ExecuteAsyncThread(args); }
+   class ExecuteAsyncThread extends Thread {
+      String [] args;
+      public ExecuteAsyncThread(String [] args) { this.args=args; start(); }
+      public void run() { execute(args); }
    }
    
    private static void usage() {

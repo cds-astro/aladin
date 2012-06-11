@@ -29,6 +29,8 @@ import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import cds.allsky.Context;
+import cds.allsky.SkyGen;
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
 import cds.savot.model.SavotField;
@@ -120,10 +122,10 @@ public final class Command implements Runnable {
       "   @overlay [on|off]               @show|@hide [name]\n" +
       " \n" +
       "#MISCELLANEOUS:#\n" +
-      "   @backup filename     @status    @sync           @demo [on|off|end]\n" +
-      "   @pause [nn]          @trace     @mem            @info msg\n" +
-      "   @macro script param  @call fct  @list [fct]     @reset\n" +
-      "   @setconf prop=value  @function ... @quit      @help ...       " +
+      "   @backup filename     @status       @sync       @demo [on|off|end]\n" +
+      "   @pause [nn]          @trace        @mem        @info msg\n" +
+      "   @macro script param  @call fct     @list [fct] @reset\n" +
+      "   @setconf prop=value  @function ... @quit       @help ...       " +
       "";
  ;
 
@@ -1155,6 +1157,38 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
       }
 
       return "";
+   }
+   
+   protected SkyGen skygen=null;            // pour la génération des allskys via commande script
+   
+   /** Lancement via une commande script de la génération d'un allsky */
+   protected void execSkyGen(String param)  {
+      try {
+         Tok tok = new Tok(param);
+         String [] arg = new String[ tok.countTokens() ];
+         for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
+         
+         
+         // Interruption d'une exécution précédente en cours
+         if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0 
+               || Util.indexOfIgnoreCase(param, "resume")>=0) {
+            Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
+            if( context==null ) throw new Exception("There is no running skygen task");
+            if( Aladin.NOGUI )  skygen.execute(arg);
+            else skygen.executeAsync(arg);
+            return;
+         }
+         
+         if( skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ) {
+            throw new Exception("There is already a running skygen task !");
+         }
+         skygen = new SkyGen();
+         if( Aladin.NOGUI )  skygen.execute(arg);
+         else skygen.executeAsync(arg);
+      } catch( Exception e ) {
+         if( a.levelTrace>=3 ) e.printStackTrace();
+         a.warning("skygen error !"+e.getMessage()+"\n",1);
+      }
    }
    
    /** Lancement d'une macro par script */
@@ -2463,6 +2497,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
       
            if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
+      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
 //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("test") )   a.execCommand("USNO-B1_14000885+1348332 = get VizieR(USNO-B1,allcolumns) 14 00 08.85792000000265 +13 48 33.29639999999799 3.0arcmin");
