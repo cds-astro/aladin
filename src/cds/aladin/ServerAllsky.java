@@ -20,7 +20,14 @@
 
 package cds.aladin;
 
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
 /**
  * Le formulaire d'interrogation de l'arbre des Allskys
@@ -30,6 +37,7 @@ import javax.swing.JPanel;
  */
 public class ServerAllsky extends ServerTree  {
    private boolean populated=false;
+   private JRadioButton fitsRadio;
 
    /** Initialisation des variables propres */
    @Override
@@ -37,6 +45,32 @@ public class ServerAllsky extends ServerTree  {
       type        = APPLI;
       aladinLabel = "Allsky";
       aladinLogo  = "Allsky.gif";
+   }
+   
+   // boutons radio pour choix JPEG/FITS
+   protected int addTailPanel(int y) {
+      int h=25;
+      if( Aladin.OUTREACH ) return y;
+      JPanel formatPanel = new JPanel();
+      JRadioButton b;
+      ButtonGroup group = new ButtonGroup();
+      JLabel l = new JLabel(aladin.chaine.getString("ALADINDEFFMT"));
+      formatPanel.add(l);
+      b = new JRadioButton("Jpeg (faster)");
+      b.setBackground(Aladin.BLUE);
+      b.setSelected(true);
+      group.add(b);
+      formatPanel.add(b);
+      fitsRadio = b = new JRadioButton("Fits (full dynamic)");
+      b.setBackground(Aladin.BLUE);
+      group.add(b);
+      formatPanel.add(b);
+      
+      formatPanel.setBackground(Aladin.BLUE);
+      formatPanel.setBounds(0,y,XWIDTH,h); y+=h;
+
+      add(formatPanel);
+      return y;
    }
    
    protected int makeTarget(int y) {
@@ -109,7 +143,9 @@ public class ServerAllsky extends ServerTree  {
    }
    
    public void submit(TreeNode n) {
-      aladin.calque.newPlanBG((TreeNodeAllsky)n, null, getTarget(false), getRadius(false) );
+      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
+      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
+      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
    }
 
 

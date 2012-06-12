@@ -127,23 +127,6 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       byTree.setBackground(Aladin.BLUE);
       add(byTree);
       
-//      listTree = new ButtonGroup();
-//      b1 = new JRadioButton(BYLIST,true);  b1.setActionCommand(BYLIST);
-//      b1.addActionListener(this);
-//      listTree.add(b1);
-//      int xpos=XWIDTH-XTAB1-100-20;
-//      int wpos=68+10;
-//      b1.setBounds(xpos,y+2,wpos, 18);
-//      b1.setBackground(Aladin.BLUE);
-//      add(b1);
-//      
-//      b2 = new JRadioButton(BYTREE,false); b2.setActionCommand(BYTREE);
-//      b2.addActionListener(this);
-//      listTree.add(b2);
-//      b2.setBounds(xpos+wpos+3,y+2,50+10, 18); y+=22;
-//      b2.setBackground(Aladin.BLUE);
-//      add(b2);
-
       // L'arbre de Thomas
       tree = new MetaDataTree(aladin,null);
       tree.setAllowSortByFields(false);

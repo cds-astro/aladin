@@ -78,10 +78,16 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
          l.setBounds(30,y,440, 20); y+=20;
          add(l);
       }
+      
+      // Ajout en fin de formulaire si nécessaire
+      y = addTailPanel(y);
 
       modeCoo = COO|SIMBAD;
       modeRad = RADIUS;
    }
+   
+   /** A surcharger si on veut compléter la fin du formulaire (voir par exemple ServerAllsky) */
+   protected int addTailPanel(int y) {return y; }
 
    protected int makeTarget(int y) { return y; }
 

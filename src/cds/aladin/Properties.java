@@ -57,7 +57,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
           LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
           GENERATEPOLAAMP,GENERATEPOLAANG,CURRENTFIELD,POLAOPTIONS,SEGMENTLEN,SEGMENTTHICK,SEGMENTDENSITY,
-          SCALINGFACTOR,POINTING,POINTINGLABEL;
+          SCALINGFACTOR,POINTING,POINTINGLABEL,FULLDESCR;
 
    // Les references aux objets
    Aladin aladin;
@@ -198,6 +198,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       SCALINGFACTOR = aladin.chaine.getString("PROPSCALINGFACTOR");
       POINTING = aladin.chaine.getString("PROPPOINTING");
       POINTINGLABEL = aladin.chaine.getString("PROPPOINTINGLABEL");
+      FULLDESCR = aladin.chaine.getString("PROPFULLDESCR");
    }
 
   /** Creation du Frame donnant les proprietes du plan.
@@ -605,11 +606,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG)plan;
          if( pbg.verboseDescr!=null ) {
-            b = new JButton("Full description...");
+            b = new JButton(FULLDESCR);
             final JFrame frame = this;
             b.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) {
-                  aladin.info(frame,pbg.verboseDescr);
+                  aladin.info(frame,pbg.verboseDescr.replace("\\n","\n"));
                }
             });
             PropPanel.addCouple(p,"", b, g,c);
