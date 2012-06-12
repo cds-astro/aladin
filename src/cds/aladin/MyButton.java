@@ -163,7 +163,7 @@ public class MyButton extends JComponent implements MouseListener {
       this.aladin = aladin;
       addMouseListener(this);
       this.baratin = baratin;
-      if( baratin!=null ) Util.toolTip(this,baratin);
+      if( baratin!=null ) Util.toolTip(this,Util.fold(baratin,60,true));
       text=s;
       mode=enable?UP:UNAVAIL;
       if( help!=null ) this.help=help;
