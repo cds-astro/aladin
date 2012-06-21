@@ -41,7 +41,7 @@ public class BuilderTiles extends Builder {
    private double bZero;
    private double bScale;
    private double blank;
-   
+
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
    private CoAddMode coaddMode=CoAddMode.REPLACETILE;
@@ -73,16 +73,16 @@ public class BuilderTiles extends Builder {
    private long statNodeTotalTime,statNodeAvgTime;
    private long startTime;                 // Date de lancement du calcul
    private long totalTime;                 // Temps depuis le début du calcul
-   
+
    public BuilderTiles(Context context) { super(context); }
 
    public Action getAction() { return Action.TILES; }
 
-   
+
    public void run() throws Exception {
       context.running("Creating FITS tiles and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
-      
+
       // Un peu de baratin
       int b0=context.getBitpixOrig(), b1=context.getBitpix();
       if( b0!=b1 ) {
@@ -101,18 +101,18 @@ public class BuilderTiles extends Builder {
       double bl1 = context.getBlank();
       if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
       else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
-      
+
       build();
       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).run();
    }
-   
+
 //   public boolean isAlreadyDone() {
 //      if( !context.actionPrecedeAction(Action.INDEX, Action.TILES)) return false;
 //      context.info("Pre-existing HEALPix FITS survey seems to be ready");
 //      return true;
 //   }
-   
+
    public void validateContext() throws Exception {
       if( context instanceof ContextGui ) {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarTile() );
@@ -120,28 +120,35 @@ public class BuilderTiles extends Builder {
 
       validateInput();
       validateOutput();
-      validateOrder(context.getHpxFinderPath());      
-      
+      try {
+          validateOrder(context.getHpxFinderPath());
+      }
+      catch(Exception e) {
+          context.warning(e.getMessage());
+          // retry order validation with tiles directory
+          validateOrder(context.getOutputPath());
+      }
+
       // mémorisation des cuts et blank positionnés manuellement
       double [] memoCutOrig = context.getCutOrig();
       boolean hasAlternateBlank = context.hasAlternateBlank();
       double blankOrig = context.getBlankOrig();
       int bitpixOrig = context.getBitpixOrig();
-      
+
       // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK
       String img = context.getImgEtalon();
       if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
       if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
       try { context.setImgEtalon(img); }
       catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
-      
+
       if( bitpixOrig==-1 ) {
          context.info("BITPIX found in the reference image => "+context.getBitpixOrig());
       } else if( bitpixOrig!=context.getBitpixOrig() ) {
          context.warning("The provided BITPIX (" +bitpixOrig+ ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
          context.setBitpixOrig(bitpixOrig);
       }
-      
+
       // repositionnement des cuts et blank passés par paramètre
       double [] cutOrig = context.getCutOrig();
       if( memoCutOrig!=null ) {
@@ -157,21 +164,21 @@ public class BuilderTiles extends Builder {
       context.initParameters();
       if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HEALPix survey");
       if( context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
-      
+
       // Info sur la méthode
       CoAddMode m = context.getCoAddMode();
       context.info("mode="+CoAddMode.getExplanation(m));
    }
-   
+
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
    }
-   
+
    // Initialisation des statistiques
    private void initStat(int nbThread) {
-      statNbThread=nbThread; statNbThreadRunning=0; 
+      statNbThread=nbThread; statNbThreadRunning=0;
       statNbTile=statNodeTile=0;
       statTotalTime=statNodeTotalTime=0L;
       startTime = System.currentTimeMillis();
@@ -213,18 +220,18 @@ public class BuilderTiles extends Builder {
 //            npix_list.add(i+nummin);
 //         }
 //      }
-      
+
       npix_list = new ArrayList<Long>(1024);
       for( long npix=0; npix<768L; npix++) {
          if( context.isInMoc(3, npix) ) npix_list.add(npix);
       }
- 
-      
-      // Initialisation des variables 
+
+
+      // Initialisation des variables
       flagColor = context.isColor();
       bitpix = context.getBitpix();
       coaddMode = context.getCoAddMode();
-      
+
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
@@ -252,7 +259,7 @@ public class BuilderTiles extends Builder {
 
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
       context.info("processing by "+nbThread+" thread"+(nbThread>1?"s":"")+" with "+cds.tools.Util.getUnitDisk(size));
-      
+
       // Lancement des threads de calcul
       launchThreadBuilderHpx(nbThread,ordermin,ordermax);
 
@@ -261,7 +268,7 @@ public class BuilderTiles extends Builder {
          if( stopped ) { destroyThreadBuilderHpx(); return; }
          cds.tools.Util.pause(1000);
       }
-      
+
       Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
       Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }
@@ -290,12 +297,12 @@ public class BuilderTiles extends Builder {
 
 
    /** Création d'un losange et de toute sa descendance si nécessaire.
-    * Méthode récursive qui 
+    * Méthode récursive qui
     * 1) Vérifie si le travail n'a pas déjà été fait en se basant sur
     *    l'existance d'un fichier fits (si option keepall à vrai)
     * 2) Si order==maxOrder, calcul le losange terminal => createLeaveHpx(...)
     * 3) sinon concatène les 4 fils (appel récursif) en 1 losange => createNodeHpx(...)
-    * 
+    *
     * @param path  répertoire où stocker la base
     * @param sky   Nom de la base (premier niveau de répertoire dans path)
     * @param order Ordre healpix du losange de départ
@@ -316,18 +323,18 @@ public class BuilderTiles extends Builder {
          Fits oldOut = findFits(file+".fits");
          if( oldOut!=null ) return oldOut;
       }
-      
+
       // si on n'est pas dans le Moc, on sort
       boolean inTree = context.isInMocTree(order,npix);
       if (!inTree) return null;
-      
-      
+
+
       Fits f = null;
-      
+
       // Création d'un losange terminal
       if( order==maxOrder )  {
-         f = createLeaveHpx(hpx,file,order,npix);     
-         
+         f = createLeaveHpx(hpx,file,order,npix);
+
       // Création des branches filles, et cumul des résultats
       } else {
 
@@ -341,7 +348,7 @@ public class BuilderTiles extends Builder {
          }
          f = createNodeHpx(file,path,order,npix,fils);
       }
-      
+
       // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
       // on les relira lorsqu'on en aura besoin dans createNodeHpx(...)
 //      if( order<maxOrder-(Constante.MAXDEPTHINRAM-1) && f!=null ) f.releaseBitmap();
@@ -382,7 +389,7 @@ public class BuilderTiles extends Builder {
          while( encore ) {
             long npix = getNextNpix();
             if( npix==-1 ) break;
-            try { 
+            try {
                Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"...");
 
                // si le process a été arrêté on essaie de ressortir au plus vite
@@ -391,7 +398,7 @@ public class BuilderTiles extends Builder {
 
                createHpx(hpx, context.getOutputPath(), ordermin, ordermax, npix);
                context.setProgressLastNorder3((int)npix);
-               
+
             } catch( Throwable e ) { e.printStackTrace(); }
          }
          updateStat(-1,0,0,0,0,0);
@@ -408,7 +415,7 @@ public class BuilderTiles extends Builder {
       return pix;
    }
 
-   // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list) 
+   // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list)
    private void getlock() {
       while( true ) {
          synchronized(lockObj) { if( !lock ) { lock=true; return; } }
@@ -462,11 +469,11 @@ public class BuilderTiles extends Builder {
       double px[] = new double[4];
 
       boolean inTree = context.isInMocTree(order,npix);
-      if( !inTree || 
+      if( !inTree ||
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) return flagColor ? null : findFits(file+".fits");
 
       for( Fits f : fils ) if( f!=null ) f.reloadBitmap();
-      
+
       Fits out = new Fits(w,w,bitpix);
       if( !flagColor ) {
          out.setBlank(blank);
@@ -523,13 +530,13 @@ public class BuilderTiles extends Builder {
             }
          }
       }
-      
+
       if( coaddMode!=CoAddMode.REPLACETILE && coaddMode!=CoAddMode.KEEPTILE ) {
          Fits oldOut = findFits(file+".fits");
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
             else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-            else if( coaddMode==CoAddMode.KEEP ) { 
+            else if( coaddMode==CoAddMode.KEEP ) {
                // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
                // celui renseigné par l'utilisateur, et sinon celui par défaut
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
@@ -583,7 +590,7 @@ public class BuilderTiles extends Builder {
             if( oldOut!=null && out!=null) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-               else if( coaddMode==CoAddMode.KEEP ) { 
+               else if( coaddMode==CoAddMode.KEEP ) {
                   // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
                   // celui renseigné par l'utilisateur, et sinon celui par défaut
                   if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
@@ -613,7 +620,7 @@ public class BuilderTiles extends Builder {
       File f = new File(filefits);
       if( !f.exists() ) return null;
       Fits out = new Fits();
-      MyInputStream is = new MyInputStream( new FileInputStream(f)); 
+      MyInputStream is = new MyInputStream( new FileInputStream(f));
       out.loadFITS(is);
       out.setFilename(filefits);
       is.close();
