@@ -528,6 +528,8 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
   /** Interrogation d'Aladin */
    public void submit() {
       
+      waitCursor();
+      
       // Cas particulier pour le ciel complet
       String s = target.getText().trim();
       if( s!=null && isAllSky(s) ) {
@@ -539,7 +541,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
 
       // Recuperation et memorisation du target
       String obj = getTarget();
-      if( obj==null ) return;
+      if( obj==null ) { defaultCursor(); return; }
       memoTarget(obj);
 
       // Traitement des images par lot
@@ -556,6 +558,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
             if(  fi.isVisible() ) fi.load();
             else Aladin.warning(this,WNEEDCHECK);
          }
+         defaultCursor();
          return;
       }
 

@@ -183,9 +183,6 @@ public class PlanBG extends PlanImage {
    // Gestion de la mémoire
    protected long memSize=0;   // Taille actuelle de la mémoire utilisé par le fond duc iel
    
-
-   protected boolean isVerbose() { return false; }
-   
    // pour classes dérivées
    protected PlanBG(Aladin aladin) {
        super(aladin);
@@ -2627,7 +2624,6 @@ public class PlanBG extends PlanImage {
          boolean perhapsOneDeath=false;
          int [] nb = new int[HealpixKey.NBSTATUS];
          boolean flagVerbose =  aladin.calque.hasHpxGrid();
-         flagVerbose=isVerbose();
          
          boolean first=true;
          int n=0;

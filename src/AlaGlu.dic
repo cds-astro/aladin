@@ -172,14 +172,13 @@
 %Aladin.Menu        Others..
 %Aladin.LabelPlane  GALEX $1 $2 $3
 
-%A Default.bkm
-%D Default Aladin bookmarks
-%O CDS'aladin
-%Z ALADIN
-%U http://aladin.u-strasbg.fr/java/Bookmarks.ajs
-%Aladin.Bookmarks Allsky opt,Allsky IR,DSS,Simbad,2MASS,PPMX,NED
-%Aladin.Profile >=6.033
-
+#%A Default.bkm
+#%D Default Aladin bookmarks
+#%O CDS'aladin
+#%Z ALADIN
+#%U http://aladin.u-strasbg.fr/java/Bookmarks.ajs
+#%Aladin.Bookmarks Optical,IR,UV,Radio,DSS,Simbad,NED
+#%Aladin.Profile >=6.033
 
 %ActionName GenericSIA
 %Description Generic SIA query

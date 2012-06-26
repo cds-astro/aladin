@@ -252,7 +252,9 @@ public final class Save extends JFrame implements ActionListener {
       // J'ajoute une scrollbar
       JPanel p = new JPanel();
       p.setLayout( new GridLayout(1,1));
-      JScrollPane scroll = new JScrollPane(getPlanPanel());
+      JPanel p1 = getPlanPanel();
+      if( p1==null ) return;
+      JScrollPane scroll = new JScrollPane(p1);
       int h = Math.min(400,aladin.calque.getNbUsedPlans()*50+30);
       scroll.setMaximumSize(new Dimension(200,h));
       p.add(scroll);
@@ -399,6 +401,11 @@ public final class Save extends JFrame implements ActionListener {
          c.gridwidth = GridBagConstraints.REMAINDER;
          g.setConstraints(type,c); p.add(type);
          j++;
+      }
+      
+      if( j==0 ) {
+         aladin.warning(this,"There is no available plan to export !");
+         return null;
       }
 
       // s'il y a au moins un plan catalogue

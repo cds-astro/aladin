@@ -3545,6 +3545,7 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
       c.x = Xcen;
 //      c.y = ynpix-Ycen;
       c.y = Ycen;
+//      try { GetCoord(c); } catch( Exception e ) { }
       c.al=alphai;
       c.del=deltai;
       return c;

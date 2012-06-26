@@ -256,7 +256,7 @@ public class ViewSimple extends JComponent
             aladin.view.repaintAll();
             return;
          }
-      }catch( Exception e1) {}
+      }catch( Exception e1) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
 
       try {
          
@@ -279,7 +279,7 @@ public class ViewSimple extends JComponent
             coo.x=p.x; coo.y=p.y;
             vs.getProj().getCoord(coo);
          }
-      } catch( Exception e1 ) { coo=null; }
+      } catch( Exception e1 ) { coo=null; if( aladin.levelTrace>=3 ) e1.printStackTrace(); }
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
@@ -294,6 +294,7 @@ public class ViewSimple extends JComponent
    private void syncZoom(int sens,Coord coo) {
       if( isFree() ) return;
       double nz = aladin.calque.zoom.getNextValue(zoom,sens);
+//      aladin.trace(4,"ViewSimple.syncZoom("+sens+","+(coo==null?null:aladin.localisation.frameToString(coo.al, coo.del))+") zoom="+zoom+" => nz="+nz);
       if( nz==-1 ) return;
 
       if( !selected ) {
@@ -541,6 +542,7 @@ public class ViewSimple extends JComponent
             
          } else if( (pref).color ) {
             pi.type=Plan.IMAGERGB;
+            pi.bitpix=8;
             ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview,true);
             pi.cm = IndexColorModel.getRGBdefault();
             ((PlanImageRGB)pi).initCMControl();

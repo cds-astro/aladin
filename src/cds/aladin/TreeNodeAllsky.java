@@ -141,8 +141,8 @@ public class TreeNodeAllsky extends TreeNode {
       catch( Exception e ) {
          maxOrder = getMaxOrderByPath(pathOrUrl,local);
          if( maxOrder==-1 ) {
-            aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 15");
-            maxOrder=15;
+            aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
+            maxOrder=11;
          }
       }
       

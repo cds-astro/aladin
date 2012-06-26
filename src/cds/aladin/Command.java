@@ -2723,7 +2723,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 //            if( p1!=null ) bitpix = param.substring(v1.length()).trim();
 //            else bitpix=param;
 //            a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.BITPIX,0,bitpix,0);
-
+            
             fct = PlanImageAlgo.BITPIX;
             st = new Tok(param);
             String v1 = st.nextToken();
@@ -2734,6 +2734,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             p1 = (PlanImage)getPlanFromParam(v1,0,true);
             if( p1!=null ) v1=v2;
             String bitpix=v1;
+            
+            if( p1!=null && !p1.isSimpleImage() 
+             || p1==null && !a.calque.getPlanBase().isSimpleImage() ) { throw new Exception("Uncompatible image");  }
+
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,bitpix,0);
             syncNeedRepaint=true;
            

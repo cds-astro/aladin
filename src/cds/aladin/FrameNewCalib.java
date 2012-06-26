@@ -611,6 +611,8 @@ public final class FrameNewCalib extends JFrame
 
    /** Retourne la méthode de recalibration courante */
    protected int getModeCalib() { return modeCalib; }
+   
+   private long oplanHashCode=-1;
 
    // Action associee au menu de changement de methode
    private void changeMethod() {
@@ -620,6 +622,11 @@ public final class FrameNewCalib extends JFrame
       if( modeCalib==QUADRUPLET ) {
          xyPosT[0].requestFocus();
          setFocusPos(xyPosT[0]);
+         if( !plan.hasNoReduction() && plan.hashCode()!=oplanHashCode ) {
+            if( Aladin.confirmation(this,a.chaine.getString("NCALIBAGAIN")+"\n=> "+plan.label) ) {
+               oplanHashCode=plan.hashCode();
+            }
+         }
       }
 
       resumeFlagPlanRecalibrating();
@@ -745,6 +752,14 @@ e.printStackTrace();
             error="rotation";
             double rot = Double.valueOf( rotT.getText()).doubleValue();
             int type   = Projection.getProjType( (String)projChoice.getSelectedItem() );
+            
+//            // On remet le centre dans le système d'arrivée
+//            int syst = Localisation.getFrameComboValue( (String)projChoice.getSelectedItem() );
+//            Coord center = Localisation.frameToFrame(new Coord(raj,dej), Localisation.ICRS, syst);
+//            raj=center.al; dej=center.del;
+//            Aladin.trace(4,"FreamNewCalib.submit() syst="+syst+" center="+center);
+            
+            // Indice du système d'arrivée (à la BOF)
             int system = Localisation.getFrameComboBisValue( (String)frameChoice.getSelectedItem() );
             boolean sym  = trueSym.isSelected();
             error=null;

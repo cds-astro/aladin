@@ -282,7 +282,10 @@ public final class Zoom extends JPanel {
    */
    private int getIndex(double z) {
       int n=cZoom.getItemCount();
-      for( int i=0; i<n; i++ ) if( z==getValue(i) ) return i;
+      
+      for( int i=0; i<n; i++ ) {
+         if( getValue(i)>=z ) return i;
+      }
       return -1;
    }
    

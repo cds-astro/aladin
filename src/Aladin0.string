@@ -994,6 +994,7 @@ PROPRELOAD	Reload
 PROPAUTO	Automatic
 PROPWHITE	White
 PROPBLACK	Black
+PROPFULLDESCR Full description...
 
 PROPSEEFITS.fr	En-tête FITS originale
 #PROPINFO.fr	Information technique
@@ -1071,6 +1072,7 @@ PROPRELOAD.fr	Recharger
 PROPAUTO.fr	Automatique
 PROPWHITE.fr	Blanc
 PROPBLACK.fr	Noir
+PROPFULLDESCR.fr Description complète...
 
 # Select.java Strings
 SLHSTACK0	Click to designate this plane as the projection reference for the current view
@@ -1378,6 +1380,7 @@ NCXYPOS	"x y" position
 NCERRNOXY	No XY object near the pointer, try again
 NCERRNOBEST	Aladin will use the clicked coordinates
 NCERRIMG	Click on image to calibrate !
+NCALIBAGAIN This image has already an astrometrical solution !\nDo you really want to modify it ?
 #NCCOPYCAL	Do you want to use the astrometrical calibration\nof this plane for the new calibration ?
 
 NCTITLE.fr	Calibration astrométrique
@@ -1411,6 +1414,7 @@ NCXYPOS.fr	position "x y"
 NCERRNOXY.fr	Aucun objet avec des coordonnées XY à côté du pointeur,\nessayez à nouveau
 NCERRNOBEST.fr	Aladin va utiliser la position sous la souris
 NCERRIMG.fr	Cliquez dans l'image à calibrer !
+NCALIBAGAIN.fr Cette image a déjà une solution astrométrique. Voulez-vous réellement la modifier ?
 #NCCOPYCAL.fr	Voulez-vous utilisez la solution astrométrique de ce plan\npour la nouvelle calibration
 
 #Configuration.java strings

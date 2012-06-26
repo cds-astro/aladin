@@ -1169,6 +1169,7 @@ public final class Calque extends JPanel implements Runnable {
       
       if( v.isFree() || !Projection.isOk(v.pref.projd) ) return setPlanRef(p,nview);  // pas possible de se mettre à la même position
       Coord c = v.getProj().getProjCenter();
+      aladin.trace(4,"Calque.setPlanRefOnSameTarget() sur "+c);
       double z = v.zoom;
       double fct=1;
       try { fct = p.projd.getPixResAlpha()/v.getProj().getPixResAlpha(); }
@@ -3236,6 +3237,8 @@ public final class Calque extends JPanel implements Runnable {
       // Affectation du plan aux vues qui utilisaient son prédécesseur
       // dans le cas d'une réutilisation de plan
       aladin.view.adjustViews(p);
+      
+      select.repaint();
 
 //      if( select!=null ) select.clinDoeil();
       aladin.toolBox.toolMode();

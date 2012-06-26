@@ -107,13 +107,19 @@ public final class Localisation extends MyBox {
    // Les différents Frames possibles (pour la recalibration)
    static final String [] FRAMEBIS = { "Equatorial", "Galactic", "Ecliptic", "SuperGal" };
    static final int [] FRAMEBISVAL = { Calib.FK5, Calib.GALACTIC, Calib.ECLIPTIC, Calib.SUPERGALACTIC };
+   static final int [] FRAMEVAL = { ICRS, GAL, ECLIPTIC, SGAL };
    static JComboBox createFrameComboBis() {return new JComboBox(FRAMEBIS); }
    static int getFrameComboBisValue(String s) {
       int i = Util.indexInArrayOf(s, FRAMEBIS, true);
       if( i<0 ) return 0;
       return FRAMEBISVAL[i];
    }
-   
+   static int getFrameComboValue(String s) {
+      int i = Util.indexInArrayOf(s, FRAMEBIS, true);
+      if( i<0 ) return 0;
+      return FRAMEVAL[i];
+   }
+ 
    // Retourne true s'il s'agit du même système de référence (en ignorant la différence degrés et sexa)
    static final boolean isSameFrame(int frame1,int frame2) {
       if( frame1==ICRSD || frame1==J2000D || frame1==B1950D ) frame1--;
