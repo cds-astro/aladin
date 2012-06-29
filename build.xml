@@ -23,7 +23,7 @@
         <pathelement path="${lib}/jsamp.jar"/>
         <pathelement path="${lib}/jhealpixSmall.jar"/>
         <pathelement path="${lib}/microhub.jar"/>
-        <pathelement path="${Mocjar}"/>
+        <pathelement path="${mocjar}"/>
       </classpath>
      </javac>
    </target>
