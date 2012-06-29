@@ -544,6 +544,12 @@ public final class Command implements Runnable {
       return false;
    }
    
+   /** Retourne true si tous les plugins sont syncrhonisés */
+   protected boolean isSyncPlugin() { 
+      if( a.plugins==null ) return true;
+      return a.plugins.isSync();
+   }
+   
    /** Retourne true si tous les plans sont syncrhonisés */
    protected boolean isSyncPlan() {
       if( a.synchroPlan.isReady() ) return true;
@@ -588,6 +594,7 @@ public final class Command implements Runnable {
       
       if( !isSyncServer() ) return false;
       if( !isSyncPlan() ) return false;
+      if( !isSyncPlugin() ) return false;
       if( !isSyncSave() ) return false;
       
 //      if( !a.calque.isPlanBGSync() ) return false;
@@ -658,17 +665,6 @@ public final class Command implements Runnable {
       inSync = false;
    }
 
-   /** Attend que les serveurs soient OK */
-//   private void syncServer() {
-//      long d = System.currentTimeMillis();
-//      while( !isSyncServer() ) {
-//         if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
-//            toStdoutln("!!! Time out error ("+(timeout/60000)+" minutes).");
-//            return;
-//         }
-//         Util.pause(50);
-//      }
-//   }
    private void syncServer() { 
       try {
          a.synchroServer.waitUntil(timeout);

@@ -60,68 +60,18 @@ import cds.xml.XMLParser;
  * <BR>
  * Elle fonctionne a la fois en Applet ou en Standalone via la fonction main()
  *
- * @author   Pierre Fernique [CDS] + Thomas Boch [CDS]
+ * @author   Pierre Fernique [CDS], Thomas Boch [CDS], Anaïs Oberto[CDS], François Bonnarel [CDS]
  *
  * @beta The beta version incorporates new features in test phase for the next official Aladin version.<BR>
  * @beta The stability of these features is not totally guaranteed.
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> ALMA footprint utility (Server selector => FOV)
- * @beta    <LI> TSV,CSV improvements (notably CSV Excel and IPAC-TBL support, data type discovery,...)
- * @beta    <LI> Pixel extraction as table (menu Image => pixel extraction)
- * @beta    <LI> Free rotation in allsky mode (PAN mode => clic & drag on N-E logo)
- * @beta    <LI> New coordinate frames: B1900, B1875, XY image
- * @beta    <LI> FOV rotate center adjustements
- * @beta    <LI> Wizard for beginners
- * @beta    <LI> Stack control more adaptated to allsky mode
- * @beta    <LI> Graphic overlays with their own specifical properties (Prop button)
- * @beta    <LI> DS9 region definition support (as simple Aladin script commands)
- * @beta    <LI> JSAMP Web profile support
- * @beta    <LI> Bitpix image re-encoding support
- * @beta    <LI> Footprint display by STS-S definition
- * @beta    <LI> RGB FITS image with any BITPIX value now supported
- * @beta    <LI> Print improvements (Graphics2D support, automatic scale, multiviews...)
- * @beta    <LI> Support of HTTPS connections
- * @beta    <LI> New "macro" script command to launch a macro from a script
- * @beta    <LI> Overlay color map tool (for pixels or rainbow filter function)
- * @beta    <LI> Colored FITS cubes support (COLORMOD = ARGB)
- * @beta    <LI> Healpix allsky new features:<UL>
- * @beta       <LI> Better performances (required RAM reduced, faster display) 
- * @beta       <LI> Progressive catalogue density control 
- * @beta       <LI> Healpix Multi-Order Coverage Map support 
- * @beta       <LI> Build your own sky facility
- * @beta       <LI> HTTP URL direct access
- * @beta       <LI> Crop full resolution has been improved (bilinear, faster) </UL>
- * @beta    <LI> GROUP VOTable export
- * @beta    <LI> VOTable 1.2 STC coordinate reference support ("Referencing STC in VOTable" - IVOA Note 2010-06-18)
- * @beta    <LI> New projections (Mollweide, TNX and SIP as TAN)
- * @beta    <LI> PDS image support (not compressed, header inside)
+ * @beta    <LI> Plugin synchronization support
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
- * @beta    <LI> Streams correctly closed
- * @beta    <LI> Properties window for HEALPix files with many FIELDS now shows properly
- * @beta    <LI> Measurement selection with hidden columns
- * @beta    <LI> Script command synchronisation also for allsky HEALPix surveys
- * @beta    <LI> Better manual astrometrical calibration
- * @beta    <LI> Support for 64 bit integer binary tables (FITS & VOTable)
- * @beta    <LI> Progressive catalog source selection bug fixed (only visible sources are selectable)
- * @beta    <LI> Allsky "background grey" bug fixed ("E.T." bug)
- * @beta    <LI> Upgrade test bug fixed
- * @beta    <LI> Rice ZSCALE, ZZERO and UNCOMPRESSED_DATA support
- * @beta    <LI> Rice decomp for 16 and 8 BSIZE (only 32 was previously supported)
- * @beta    <LI> Crop on RGB is now working fine
- * @beta    <LI> BMP saving bug fixed
- * @beta    <LI> FITS binary table bug fixed (double bit mask error)
- * @beta    <LI> FITS ASCII table bug fixed (TFORM Fn.n => numerical)
- * @beta    <LI> Huge image mode available even via network (required very good bandwidth)
- * @beta    <LI> Distance tool bug fixed (huge images + low resolution mode)
- * @beta    <LI> 7.023 overlay object bug fixed
- * @beta    <LI> New version of the java HEALPix lib (a few bugs fixed)
- * @beta    <LI> SAMP SIAP bug fixed
- * @beta    <LI> TAN-SIP regression bug fixed
  * @beta </UL>
  *
  */
@@ -145,7 +95,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.524";
+    static public final    String VERSION = "v7.525";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

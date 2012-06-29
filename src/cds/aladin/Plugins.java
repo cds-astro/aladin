@@ -616,6 +616,20 @@ Aladin.trace(1,"Exec plugin by script ["+cmd+"]...");
     	}
     }
 
+    /**
+     * Appelle la méthode isSync() pour chaque plugin 
+     * Retourne true si tous les plugins sont synchronisés
+     */
+    protected boolean isSync() {
+        Enumeration e = plugs.elements();
+        while( e.hasMoreElements() ) {
+            AladinPlugin ap = (AladinPlugin) e.nextElement();
+            if( !ap.isSync() ) return false;
+        }
+        return true;
+    }
+
+
    public Object getElementAt(int index) {
       return ((AladinPlugin)plugs.elementAt(index)).menu();
    }

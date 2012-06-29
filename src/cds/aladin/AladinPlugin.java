@@ -160,7 +160,9 @@ public abstract class AladinPlugin implements Runnable {
    /** Optional: return true if the plugin must be executed in a separated thread */
    public boolean inSeparatedThread() { return false; }
    
-      
+   /** Optional: return true if the plugin has achieved its current task */
+   public boolean isSync() { return true; }
+     
    /** Optional: Method called by Aladin to execute the Plugin by script
     * @param param list of params
     * @return "" if ok, otherwise an error message.
