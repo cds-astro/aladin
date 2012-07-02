@@ -2115,7 +2115,7 @@ public class Aladin extends JApplet
           detach(false);
           fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
        } else if( SCREEN.equals("frame") ) {
-          detach(false);
+          detach();
        }
        flagScreen=false;
     }
@@ -2475,14 +2475,15 @@ public class Aladin extends JApplet
     protected void detach() { detach(true); }
     protected void detach(boolean show) {
         try {
-         if( flagDetach ) return;
-           makeAdd(f,this,"Center");
-           bDetach.setText(MDCH2);
-           miDetach.setText(MDCH2);
-           f.pack();
-           if( show ) f.setVisible(true);
-           flagDetach=true;
-      } catch( Exception e ) {
+          if( flagDetach || bDetach==null || miDetach==null || f==null ) return;
+          makeAdd(f,this,"Center");
+          bDetach.setText(MDCH2);
+          miDetach.setText(MDCH2);
+          f.pack();
+          if( show ) f.setVisible(true);
+          flagDetach=true;
+        } catch( Exception e ) {
+         e.printStackTrace();
       }
     }
 
