@@ -2474,17 +2474,20 @@ public class Aladin extends JApplet
     /** On insère l'applet dans sa propre fenetre */
     protected void detach() { detach(true); }
     protected void detach(boolean show) {
-        try {
-          if( flagDetach || bDetach==null || miDetach==null || f==null ) return;
+       System.err.println("detach("+show+") f="+f+" bDetach="+bDetach+" miDetach="+miDetach+"...");
+       try { throw new Exception("Juste pour la trace..."); } catch( Exception e1 ) { e1.printStackTrace(); }
+       try {
+          if( flagDetach ) return;
           makeAdd(f,this,"Center");
           bDetach.setText(MDCH2);
           miDetach.setText(MDCH2);
           f.pack();
           if( show ) f.setVisible(true);
           flagDetach=true;
-        } catch( Exception e ) {
-         e.printStackTrace();
-      }
+       } catch( Exception e ) {
+          e.printStackTrace();
+       }
+       System.err.println("detach("+show+") c'est terminé");
     }
 
    /** Remise en place de l'Applet dans la fenetre du navigateur */
