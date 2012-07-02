@@ -95,7 +95,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.525";
+    static public final    String VERSION = "v7.526";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2115,7 +2115,7 @@ public class Aladin extends JApplet
           detach(false);
           fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
        } else if( SCREEN.equals("frame") ) {
-          detach();
+          detach(false);
        }
        flagScreen=false;
     }
@@ -2474,13 +2474,16 @@ public class Aladin extends JApplet
     /** On insère l'applet dans sa propre fenetre */
     protected void detach() { detach(true); }
     protected void detach(boolean show) {
-        if( flagDetach ) return;
-        makeAdd(f,this,"Center");
-        flagDetach=true;
-        bDetach.setText(MDCH2);
-        miDetach.setText(MDCH2);
-        f.pack();
-        if( show ) f.setVisible(true);
+        try {
+         if( flagDetach ) return;
+           makeAdd(f,this,"Center");
+           bDetach.setText(MDCH2);
+           miDetach.setText(MDCH2);
+           f.pack();
+           if( show ) f.setVisible(true);
+           flagDetach=true;
+      } catch( Exception e ) {
+      }
     }
 
    /** Remise en place de l'Applet dans la fenetre du navigateur */

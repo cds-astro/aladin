@@ -268,8 +268,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( panel!=null ) remove(panel);
       panel = new JPanel();
       panel.setLayout( new BorderLayout(5,5) );
+      
+      propPanel=getPanelProperties();
+      JScrollPane scrollPane = new JScrollPane(propPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-      Aladin.makeAdd(panel,propPanel=getPanelProperties(),"Center");
+      Aladin.makeAdd(panel,scrollPane /*propPanel*/,"Center");
       // bordure avec titre
       setTitre(BANNER+" \""+plan.label+"\"");
 

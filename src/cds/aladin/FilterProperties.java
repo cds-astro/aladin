@@ -265,6 +265,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 	   panel.setLayout( new BorderLayout(5,5) );
 
        propPanel = getPanelProperties();
+       
 	   Aladin.makeAdd(panel,propPanel,"Center");
 	   Aladin.makeAdd(panel,getPanelValid(),"South");
 
@@ -320,9 +321,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 		addCouple(p, LABEL, label, g,c);
 
 		 // si le plan est un PlanFilter et que la def est vide, il est actif par defaut
-		if( pf.script.length()==0 ) {
-            pf.active = true;
-		}
+		if( pf.script.length()==0 ) pf.active = true;
 
 		// si la définition du script n'est pas vide, ou que l'on est en mode robot, on force le mode Advanced
 		if( pf.script!=null && pf.script.length()>0 || (Aladin.ROBOTSUPPORT && aladin.command.robotMode) ) currentMode = ADVANCED;
@@ -342,8 +341,8 @@ public final class FilterProperties extends Properties implements MouseListener,
         c.fill = GridBagConstraints.BOTH;
 		g.setConstraints(modeTabbedPane,c);
 		p.add(modeTabbedPane);
-
-		return p;
+		
+        return p;
 	 }
 
      /**

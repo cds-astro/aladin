@@ -19,31 +19,13 @@
 
 package cds.fits;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
 import java.io.OutputStream;
 import java.util.*;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 
 import cds.aladin.Aladin;
 import cds.aladin.FrameHeaderFits;
 import cds.aladin.MyInputStream;
 import cds.aladin.Save;
-import cds.tools.Util;
 
 /**
  * Classe dediee a la gestion d'un header FITS.
