@@ -2104,21 +2104,21 @@ public class Aladin extends JApplet
     /** Subtilité pour faire de la mise en page une fois que toutes les peer classes
      * aient été correctement initialisées
      */
-//    @Override
-//    public void paint(Graphics g) {
-//       if( !flagScreen ) { super.paint(g); return; }
-//
-//       if( SCREEN.equals("full") ) {
-//          detach(false);
-//          fullScreen(0);
-//       } else if( SCREEN.startsWith("preview") ) {
-//          detach(false);
-//          fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
-//       } else if( SCREEN.equals("frame") ) {
-//          detach();
-//       }
-//       flagScreen=false;
-//    }
+    @Override
+    public void paint(Graphics g) {
+       if( !flagScreen || isApplet() ) { super.paint(g); return; }
+
+       if( SCREEN.equals("full") ) {
+          detach(false);
+          fullScreen(0);
+       } else if( SCREEN.startsWith("preview") ) {
+          detach(false);
+          fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
+       } else if( SCREEN.equals("frame") ) {
+          detach();
+       }
+       flagScreen=false;
+    }
 
     /** Positionnement d'un message d'attente */
     protected void setBannerWait() {
@@ -2474,8 +2474,6 @@ public class Aladin extends JApplet
     /** On insère l'applet dans sa propre fenetre */
     protected void detach() { detach(true); }
     protected void detach(boolean show) {
-       System.err.println("detach("+show+") f="+f+" bDetach="+bDetach+" miDetach="+miDetach+"...");
-       try { throw new Exception("Juste pour la trace..."); } catch( Exception e1 ) { e1.printStackTrace(); }
        try {
           if( flagDetach ) return;
           makeAdd(f,this,"Center");
@@ -2485,9 +2483,8 @@ public class Aladin extends JApplet
           if( show ) f.setVisible(true);
           flagDetach=true;
        } catch( Exception e ) {
-          e.printStackTrace();
+          if( levelTrace>=3 ) e.printStackTrace();
        }
-       System.err.println("detach("+show+") c'est terminé");
     }
 
    /** Remise en place de l'Applet dans la fenetre du navigateur */
