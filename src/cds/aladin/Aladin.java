@@ -2104,21 +2104,21 @@ public class Aladin extends JApplet
     /** Subtilité pour faire de la mise en page une fois que toutes les peer classes
      * aient été correctement initialisées
      */
-    @Override
-    public void paint(Graphics g) {
-       if( !flagScreen ) { super.paint(g); return; }
-
-       if( SCREEN.equals("full") ) {
-          detach(false);
-          fullScreen(0);
-       } else if( SCREEN.startsWith("preview") ) {
-          detach(false);
-          fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
-       } else if( SCREEN.equals("frame") ) {
-          detach();
-       }
-       flagScreen=false;
-    }
+//    @Override
+//    public void paint(Graphics g) {
+//       if( !flagScreen ) { super.paint(g); return; }
+//
+//       if( SCREEN.equals("full") ) {
+//          detach(false);
+//          fullScreen(0);
+//       } else if( SCREEN.startsWith("preview") ) {
+//          detach(false);
+//          fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
+//       } else if( SCREEN.equals("frame") ) {
+//          detach();
+//       }
+//       flagScreen=false;
+//    }
 
     /** Positionnement d'un message d'attente */
     protected void setBannerWait() {
