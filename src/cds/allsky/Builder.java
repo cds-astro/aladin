@@ -55,6 +55,7 @@ public abstract class Builder {
          case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
+         case TREE:      return new BuilderTree(context);
       }
       throw new Exception("No builder associated to this action");
    }

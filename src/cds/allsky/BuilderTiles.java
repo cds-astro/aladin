@@ -212,20 +212,10 @@ public class BuilderTiles extends Builder {
       this.ordermax = context.getOrder();
       long t = System.currentTimeMillis();
 
-      // récupère les numéros des losanges du niveau haut (ordermin)
-//      if (nummin == nummax && nummin == 0) searchMinMax();
-//      else {
-//         npix_list = new ArrayList<Long>((int) (nummax-nummin));
-//         for (int i = 0; i < nummax-nummin ; i++) {
-//            npix_list.add(i+nummin);
-//         }
-//      }
-
       npix_list = new ArrayList<Long>(1024);
       for( long npix=0; npix<768L; npix++) {
          if( context.isInMoc(3, npix) ) npix_list.add(npix);
       }
-
 
       // Initialisation des variables
       flagColor = context.isColor();
@@ -342,9 +332,6 @@ public class BuilderTiles extends Builder {
          for( int i =0; !stopped && i<4; i++ ) {
             if( context.isTaskAborting() ) throw new Exception("Task abort !");
             fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
-
-            //         if( order<maxOrder-(Constante.MAXDEPTHINRAM-1) && fils[i]!=null) fils[i].releaseBitmap();
-            //         if( order!=maxOrder && fils[i]!=null) fils[i].releaseBitmap();
          }
          f = createNodeHpx(file,path,order,npix,fils);
       }

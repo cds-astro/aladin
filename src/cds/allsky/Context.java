@@ -411,7 +411,12 @@ public class Context {
       }
       
       // Détermination de la zone du ciel à calculer
-      if( mocIndex==null ) loadMocIndex();
+      try {
+         if( mocIndex==null ) loadMocIndex();
+      } catch( Exception e ) {
+         warning("No MOC index found => assume all sky");
+         mocIndex=new HealpixMoc("0/0-11");  // par défaut tout le ciel
+      }
       if( mocArea==null ) moc = mocIndex;
       else moc = mocIndex.intersection(mocArea);
    }

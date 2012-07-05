@@ -299,6 +299,7 @@ public class SkyGen {
             "moc        Build final MOC (based on generated tiles)" + "\n" +
             "mocindex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
+            "tree       (re)Build tree FITS tiles from FITS low level tiles" + "\n"+
             "clean      Remove all HEALPix survey" + "\n"+
             "cleanIndex Remove HEALPix index" + "\n"+
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+

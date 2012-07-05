@@ -670,6 +670,7 @@ public final class Calque extends JPanel implements Runnable {
 
     /** Retourne true si j'attends le premier plan */
     protected boolean waitingFirst() {
+       if( !aladin.command.isSync() ) return true;
        boolean rep=false;
        for( int i=0; i<plan.length; i++ ) {
           Plan p = plan[i];
