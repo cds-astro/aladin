@@ -411,6 +411,12 @@ public class Context {
       }
       
       // Détermination de la zone du ciel à calculer
+      initRegion();
+   }
+   
+   /** Détermination de la zone du ciel à calculer (appeler par initParameters()) ne pas utiliser tout
+    * seul sauf si besoin explicite */
+   protected void initRegion() throws Exception {
       try {
          if( mocIndex==null ) loadMocIndex();
       } catch( Exception e ) {
