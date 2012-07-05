@@ -297,16 +297,17 @@ public class SkyGen {
             "tiles      Build HEALPix FITS tiles" + "\n" +
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
-            "mocindex   Build index MOC (based on HEALPix index)" + "\n" +
+            "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
-            "tree       (re)Build tree FITS tiles from FITS low level tiles" + "\n"+
+            "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
             "clean      Remove all HEALPix survey" + "\n"+
             "cleanIndex Remove HEALPix index" + "\n"+
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+
             "cleanfits  Remove FITS tiles" + "\n"+
             "cleanjpeg  Remove Jpeg tiles " + "\n"+
             "gzip       gzip some fits tiles and Allsky.fits (by keeping the same names)" + "\n"+
-            "gunzip     gunzip all fits tiles and Allsky.fits (by keeping the same names)"
+            "gunzip     gunzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n"+
+            "progen     Adapt HEALPix tree index to a progenitor usage" + "\n"
             );
       System.out.println("\nEx: SkyGen -input=/MyImages    => Do all the job." +
       		             "\n    SkyGen -input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +

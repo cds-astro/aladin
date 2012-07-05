@@ -134,7 +134,7 @@ public class BuilderTree extends Builder {
          }
          if( found ) out = createNodeFits(fils, method);
       }
-      if( out!=null && context.isInMocTree(order,npix) ) {
+      if( out!=null && context.isInMocTree(order,npix) && order<maxOrder) {
          out.writeFITS(file+".fits");
          Aladin.trace(4, "Writing " + file+".fits");
 
