@@ -20,6 +20,7 @@
 package cds.allsky;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.Reader;
 import java.text.ParseException;
@@ -59,7 +60,8 @@ public class SkyGen {
 
       // Ouverture et lecture du fichier
       Properties properties = new Properties();
-      Reader reader = new FileReader(file);
+//      Reader reader = new FileReader(file);
+      FileInputStream reader = new FileInputStream(file);
       properties.load(reader);
 
       Set<Object> keys = properties.keySet();

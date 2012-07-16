@@ -20,43 +20,62 @@
 package cds.aladin;
 
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.io.ObjectInputStream.GetField;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JPanel;
 
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
-import cds.tools.Util;
-
 
 /** Gère les noeuds de l'arbre des catégories (formulaire ServerCategory) */
 public class TreeNodeProgen extends TreeNode {
-   String url;
-   String stc;
-   String origin;
+   static private int MAXLIVE=10000;   // Durée de vie en ms lorsque le TreeNodeProgen n'est plus dans la vue (<=0 =>peut être supprimé)
+   
+   private HealpixIndexItem hii;
+   private PlanBG planBG;
+   private long lastPaint;
 
-   TreeNodeProgen(Aladin aladin,String actionName,String description,String path,
-         String url,String json) {
-      super(aladin,actionName,null,description,path);
-      this.url= url==null && json!=null ? Util.extractJSON("path",json) : url;
-      if( json!=null ) stc = Util.extractJSON("stc",json);
+   TreeNodeProgen(PlanBG planBG, HealpixIndexItem hii) {
+      super(planBG.aladin,hii.getID(),null,hii.getID(),hii.getID());
+      this.hii = hii;
+      this.planBG = planBG;
+      touch();
+   }
+   
+   /** Redonne de la vie */
+   protected void touch() { lastPaint=System.currentTimeMillis(); }
+   
+   protected int getLive() {
+      int live = MAXLIVE - (int)(System.currentTimeMillis() - lastPaint); 
+      return live<0 ? 0 : live;
+   }
+   
+   /** Retourne false si le noeud peut être supprimé */
+   protected boolean inLive() { return getLive()>0; }
+   
+   /** Retourne une couleur en fonction du niveau de vie */
+   protected void updateColor() {
+      int live = getLive();
+      Aladin.trace(4,"TreeNodeProgen.updateColor() "+hii.getID()+" live="+live);
+      int max = MAXLIVE-3000;
+      Color c;
+      if( live>max ) c = Color.black;
+      else {
+         int x =(int)( ( max-live)*(200./max) );
+         Aladin.trace(4,"TreeNodeProgen.updateColor() x="+x);
+         c = new Color(x,x,x);
+      }
+      setForeground(c);
    }
    
    @Override
    protected void submit() {
+      String url = hii.resolveImageSourcePath(planBG.imageSourcePath);
       aladin.execCommand("get File(\""+url+"\")");
    }
    
    protected void draw(Graphics g,ViewSimple v) {
+      String stc = hii.getSTC();
       if( stc==null ) return;
       List<STCObj> stcObjects = new STCStringParser().parse(stc); 
       Fov fov = new Fov(stcObjects);

@@ -71,7 +71,7 @@ public class Plan implements Runnable {
    static final int ALLSKYCAT=18; // Le plan contient des segments de polarisation
    static final int ALLSKYMOC=19; // Le plan contient un Multi-Order Coverage map Healpix
    static final int IMAGECUBERGB =20;  // Le plan contient un cube d'images homogènes couleurs
-   static final int ALLSKYFINDER=21; // Plan Allsky Finder (de fait pas un vrai plan => voir PlanBG)
+   static final int ALLSKYFINDEX=21; // Plan Allsky Finder (de fait pas un vrai plan => voir PlanBG)
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
                                     "Catalog",

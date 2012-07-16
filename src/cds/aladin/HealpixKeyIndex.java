@@ -44,16 +44,16 @@ import cds.tools.Util;
  * (images originales qui ont permis de créer le survey Healpix)
  * => Cette arborescence Healpix se trouve toujours dans le répertoire "HpxFinder"
  */
-public class HealpixKeyFinder extends HealpixKey {
+public class HealpixKeyIndex extends HealpixKey {
    
    int mem=0;
-   ArrayList<String> list;
+   HealpixIndex index;
    
-   protected HealpixKeyFinder(PlanBG planBG) { super(planBG); }
+   protected HealpixKeyIndex(PlanBG planBG) { super(planBG); }
    
-   protected HealpixKeyFinder(PlanBG planBG,int order, long npix) {
+   protected HealpixKeyIndex(PlanBG planBG,int order, long npix) {
       super(planBG,order,npix,ASYNC);
-      System.out.println("==> HealpixKeyFinder sur "+fileNet);
+      System.out.println("==> HealpixKeyIndex sur "+fileNet);
    }
    
    protected String getFileNet() {
@@ -86,14 +86,10 @@ public class HealpixKeyFinder extends HealpixKey {
    }
    
    private void loadFile(String filename) throws Exception {
-      list = new ArrayList<String>(10);
       stream = loadStream(filename);
       mem = stream.length;
-      
-      DataInputStream in = new DataInputStream(new ByteArrayInputStream(stream));
-      String s;
-      while( (s=in.readLine())!=null ) list.add(s);
-      in.close();
+      index = new HealpixIndex();
+      index.loadStream(new ByteArrayInputStream(stream));
    }
    
    protected int writeCache() throws Exception {
@@ -115,7 +111,7 @@ public class HealpixKeyFinder extends HealpixKey {
       if( status==LOADINGFROMCACHE || status==LOADINGFROMNET ) abort();  // Arrêt de lecture
       else if( status==READY && planBG.useCache) write();                // Sauvegarde en cache
 
-      list=null;
+      index=null;
       mem=0;
       setStatus(UNKNOWN);
       return 1;
@@ -127,24 +123,26 @@ public class HealpixKeyFinder extends HealpixKey {
    @Override
    protected int getMem() { return mem;}
    
-   protected int draw(Graphics g, ViewSimple v,TreeMap<String,TreeNodeProgen> set) { 
-      for( String json : list ) {
-         String key = Util.extractJSON("name",json);
-         if( key==null) key= Util.extractJSON("path",json);
-         
-         String url = ((PlanBGFinder)planBG).resolveImageSourcePath(json);
-//         TreeNodeProgen node = new TreeNodeProgen(planBG.aladin, key, key, "Progen",
-//               "http://cadc.hia.nrc.gc.ca/getData/anon/HSTCA/"+key+"_drz[1]",s);
-         TreeNodeProgen node = new TreeNodeProgen(planBG.aladin, key, key, "Progen",
-               url,json);
-         set.put(key,node);
-      }
+   protected int addHealpixIndexItem(HealpixIndex hi) {
+      hi.putAll(index);
       resetTimer();
       resetTimeAskRepaint();
-      return list.size(); 
+      return index.size(); 
    }
    
-   protected int getCounts() { return list==null ? 0 : list.size(); }
+//   protected int draw(Graphics g, ViewSimple v,TreeMap<String,TreeNodeProgen> set) { 
+//      for( String key : index ) {
+//         HealpixIndexItem hii = index.get(key);
+//         String url = hii.resolveImageSourcePath(planBG.imageSourcePath);
+//         TreeNodeProgen node = new TreeNodeProgen(planBG.aladin, key, key, "Progen", url,hii.json);
+//         set.put(key,node);
+//      }
+//      resetTimer();
+//      resetTimeAskRepaint();
+//      return index.size(); 
+//   }
+   
+   protected int getCounts() { return index==null ? 0 : index.size(); }
    
    /** Pour du debuging */
    @Override

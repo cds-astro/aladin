@@ -670,7 +670,7 @@ public final class Calque extends JPanel implements Runnable {
 
     /** Retourne true si j'attends le premier plan */
     protected boolean waitingFirst() {
-       if( !aladin.command.isSync() ) return true;
+//       if( !aladin.command.isSync() ) return true;
        boolean rep=false;
        for( int i=0; i<plan.length; i++ ) {
           Plan p = plan[i];
@@ -2296,6 +2296,8 @@ public final class Calque extends JPanel implements Runnable {
                   else pi = new PlanImageCube(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.HUGE)!=0 ) {
                   pi = new PlanImageHuge(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
+               } else if( (type & MyInputStream.HEALPIX)!=0 ) {
+                  pi = new PlanHealpix(aladin,file,in,label+"["+nExt+"]",PlanBG.DRAWPIXEL,0, false);
                } else {
                   pi = new PlanImage(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                }

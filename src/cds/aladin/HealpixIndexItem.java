@@ -17,42 +17,56 @@
 //    along with Aladin.
 //
 
-
 package cds.aladin;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.TreeMap;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import cds.tools.Util;
 
-
-public class PlanBGFinder extends PlanBG {
-
-
-   private PlanBG planBG;
+/** Gère les infos d'un progéniteur 
+ * (image originale qui ont permis de créer le survey Healpix)
+ */
+public class HealpixIndexItem {
    
-   protected boolean isVerbose() { return false; }
+   private String json;     // La chaine des infos
+   
+   public HealpixIndexItem(String s) { json=s; }
+   
+   public String getJson() { return json; }
+   
+   /** Retourne l'ID associé à une entrée dans un fichier d'index Healpix
+    * Il s'agit : soit du champ "name", soit du champ "path" (sans l'extension optionnelle [x,y,w,h])
+    * et sinon la ligne en totalité (toujours sans l'extension optionnelle)
+    */
+   public String getID() {
+      String key = cds.tools.Util.extractJSON("name", json);
+      if( key==null ) {
+         int first=-1;
+         key = cds.tools.Util.extractJSON("path", json);
+         if( key==null ) key=json;
+         if( key.charAt(key.length()-1)==']' ) first = key.lastIndexOf('[');
+         if( first>0 ) key = key.substring(0, first);
+      }
+      return key;
+   }
 
-   protected PlanBGFinder(Aladin aladin,PlanBG planBG) {
-      super(aladin);
-      this.planBG=planBG;
-      type=ALLSKYFINDER;
-      url = planBG.url;
-      survey = planBG.survey;
-      version = planBG.version;
-      useCache = planBG.useCache;
-      frameOrigin=planBG.frameOrigin;
-      imageSourcePath=planBG.imageSourcePath;
-      pixList = new Hashtable<String,HealpixKey>(1000);
-      loader = new HealpixLoader();
+   /** Retourne le path original associé à une entrée dans un fichier d'index Healpix
+    * Il s'agit : soit du champ "path", soit de la ligne en totalité (sans l'extension optionnelle [x,y,w,h])
+    */
+   public String getPath() {
+      String path;
+      int first=-1;
+      path = cds.tools.Util.extractJSON("path", json);
+      if( path==null ) path=json;
+      if( path.charAt(path.length()-1)==']' ) first = path.lastIndexOf('[');
+      if( first>0 ) path = path.substring(0, first);
+      return path;
+   }
+
+   /** Retourne le STC propre à cette image, ou null s'il n'y en a pas */
+   public String getSTC() {
+      return cds.tools.Util.extractJSON("stc", json);
    }
    
    // Extraction du path ou de l'url d'accès au progéniteur.
@@ -67,16 +81,16 @@ public class PlanBGFinder extends PlanBG {
    // Si le remplacement se trouve dans la zone de paramètres d'une url, l'encodage HTTP est assuré
    // La "jsonKey" fait référence à une clé JSON de la chaine passée en paramètre.
    // Une clé vide (rien avant le ':') signifie que toute la chaine est prise en compte (path simple)
-   protected String resolveImageSourcePath(String json) {
+   public String resolveImageSourcePath(String imageSourcePath) {
       if( imageSourcePath==null ) return null;
       try {
          String jsonKey,value,pattern=null, replacement=null, result;
          Tok tok = new Tok(imageSourcePath," ");
-         System.out.println("ANALYSE de imageSourcePath => "+imageSourcePath);
+         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath()  imageSourcePath => "+imageSourcePath);
          while( tok.hasMoreTokens() ) {
             boolean flagRegex=false;
             String t = tok.nextToken();
-            System.out.println("==> "+t);
+//            System.out.println("==> "+t);
             
             int o = t.indexOf(":");
             if( o>=0 && t.charAt(o+1)=='/' ) flagRegex=true;
@@ -85,7 +99,7 @@ public class PlanBGFinder extends PlanBG {
             // (ex: id:http://monserveur/mycgi?img=$1)
             else {
                if( o<0 ) {
-                  if( aladin.levelTrace>=3 ) System.err.println("In \"properties\" file of \""+survey+"\": imageSourcePath syntax error ["+t+"] => ignored");
+                  if( Aladin.levelTrace>=3 ) System.err.println("In \"properties\" imageSourcePath syntax error ["+t+"] => ignored");
                   continue;
                }
                pattern="^(.*)$";
@@ -110,12 +124,12 @@ public class PlanBGFinder extends PlanBG {
                replacement = t.substring(o1+1,n);
             }
             result = replaceAll(value,pattern, replacement);
-            System.out.println("jsonKey=["+jsonKey+"] pattern=["+pattern+"] value=["+value+"] => replacement=["+replacement+"] => resul=["+result+"]");
+            Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath() jsonKey=["+jsonKey+"] pattern=["+pattern+"] value=["+value+"] => replacement=["+replacement+"] => resul=["+result+"]");
             return result;
          }
          throw new Exception("imageSourcePath syntax error");
       } catch( Exception e ) {
-         aladin.trace(4,"PlanBG.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
+         Aladin.trace(4,"PlanBG.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
          imageSourcePath=null;
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          return null;
@@ -123,7 +137,7 @@ public class PlanBGFinder extends PlanBG {
    }
    
    // Remplacement par expression régulière avec support des encodages HTTP pour les URLs
-   private  String replaceAll(String value,String regex, String replacement) {
+   private String replaceAll(String value,String regex, String replacement) {
       Matcher m = Pattern.compile(regex).matcher(value);
       
       // s'il ne s'agit pas d'une url, pas besoin de se fatiguer
@@ -150,100 +164,5 @@ public class PlanBGFinder extends PlanBG {
       return s;
    }
 
-   protected void log() { }
-   protected void clearBuf() { }
-   protected HealpixKey getHealpixFromAllSky(int order,long npix) { return null; }
 
-   /** Demande de chargement du losange repéré par order,npix */
-   public HealpixKey askForHealpix(int order,long npix) {
-      HealpixKey pixAsk = new HealpixKeyFinder(this,order,npix);
-      pixList.put( key(order,npix), pixAsk);
-      return pixAsk;
-   }
-
-   /** Retourne l'order max du dernier affichage */
-   protected int getCurrentMaxOrder(ViewSimple v) { return Math.max(2,Math.min(maxOrder(v),maxOrder)); }
-   
-   /** Retourne le losange Healpix s'il est chargé, sinon retourne null
-    * et si flagLoad=true, demande en plus son chargement si nécessaire */
-   protected HealpixKey getHealpix(int order,long npix,boolean flagLoad) {
-      HealpixKey healpix =  pixList.get( key(order,npix) );
-      if( healpix!=null ) return healpix;
-      if( flagLoad ) return askForHealpix(order,npix);
-      return null;
-   }
-
-   protected void draw(Graphics g,ViewSimple v) {
-      long [] pix=null;
-      TreeMap<String,TreeNodeProgen> set = new TreeMap<String,TreeNodeProgen>();
-      int order = planBG.getMaxFileOrder();
-//      System.out.println("maxOrder="+maxOrder(v)+" order="+order+" isAllsky="+v.isAllSky());
-      
-      // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( maxOrder(v)<order-2 || v.isAllSky() ) return;
-      
-      int nb=0;
-      boolean allKeyReady=true;
-
-      hasDrawnSomething=false;
-
-      setMem();
-      resetPriority();
-
-      pix = getPixListView(v,order);
-      
-      for( int i=0; i<pix.length; i++ ) {
-
-         if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
-
-         HealpixKeyFinder healpix = (HealpixKeyFinder)getHealpix(order,pix[i], true);
-
-         // Juste pour tester la synchro
-         //            Util.pause(100);
-
-         // Inconnu => on ne dessine pas
-         if( healpix==null ) continue;
-         
-         // Positionnement de la priorité d'affichage
-         healpix.priority=250-(priority++);
-
-         int status = healpix.getStatus();
-
-         // Losange erroné ?
-         if( status==HealpixKey.ERROR ) continue;
-
-         // On change d'avis
-         if( status==HealpixKey.ABORTING ) healpix.setStatus(HealpixKey.ASKING,true);
-
-         // Losange à gérer
-         healpix.resetTimer();
-
-         if( status!=HealpixKey.READY ) allKeyReady=false;
-
-         // Pas encore prêt
-         if( status!=HealpixKey.READY ) continue;
-
-         nb += healpix.draw(g,v,set);
-      }
-     
-      this.set = set;
-
-      allWaitingKeysDrawn = allKeyReady;
-
-      hasDrawnSomething=hasDrawnSomething || nb>0;
-
-      if( pix!=null && pix.length>0  ) tryWakeUp();
-   }
-   
-   TreeMap<String,TreeNodeProgen> set=null;
-   
-   protected TreeMap<String,TreeNodeProgen> getLastProgen() { return set; }
-   
-
-   /** Demande de réaffichage des vues */
-   protected void askForRepaint() {
-      aladin.view.repaintAll();
-   }
-   
-   protected void gc() { }
 }

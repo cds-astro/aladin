@@ -80,7 +80,7 @@ public final class MyInputStream extends FilterInputStream {
    static final public long IPAC    = 1<<29;
    static final public long BMP     = 1<<30;
    static final public long RICE    = 1L<<31;
-   static final public long HPX     = 1L<<32;
+   static final public long HEALPIX = 1L<<32;
    static final public long GLU     = 1L<<33;
    static final public long ARGB    = 1L<<34;
    static final public long PDS     = 1L<<35;
@@ -250,7 +250,7 @@ public final class MyInputStream extends FilterInputStream {
       if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) 
             || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
-            && !hasFitsKey("XTENSION","IMAGE") )  type |= HPX;
+            && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
 
       // Detection de HCOMP
       int n = findFitsEnd();

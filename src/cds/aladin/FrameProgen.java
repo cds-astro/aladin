@@ -71,11 +71,8 @@ public class FrameProgen extends JFrame implements ActionListener {
    }
    
    
-   public void resume(TreeMap<String,TreeNodeProgen> set) {
-      if( set==null ) return;
-      Vector v = new Vector();
-      for( String k : set.keySet() ) v.add(set.get(k) );
-      progen.updateTree( v.elements());
+   public void resume(HealpixIndex hi,PlanBG planBG) {
+      progen.updateTree(hi,planBG);
    }
    
    private JPanel getTreePanel() {

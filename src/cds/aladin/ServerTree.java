@@ -28,6 +28,7 @@ import javax.swing.*;
 import javax.swing.tree.*;
 
 import cds.aladin.Pcat.PlanObjetIterator;
+import cds.tools.Util;
 
 /**
  * Formulaire d'interrogation sous la forme d'un arbre
@@ -36,7 +37,7 @@ import cds.aladin.Pcat.PlanObjetIterator;
 public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
    protected String info,info1;
    protected DefaultMutableTreeNode root;
-   protected JTree tree;
+   protected MyTree tree;
 
    /** Creation du formulaire d'interrogation par arbre. */
    protected ServerTree(Aladin aladin) {
@@ -99,9 +100,9 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
    }
 
    /** Création de l'arbre */
-   private JTree createTree() {
+   private MyTree createTree() {
       root = getRoot();
-      tree = new JTree(root);
+      tree = new MyTree(root);
       tree.setBorder( BorderFactory.createEmptyBorder(10, 10, 10, 0));
 
       tree.setRootVisible(false);
@@ -124,13 +125,14 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
 
    /** Nettoyage de l'arbre */
    protected void freeTree() {
+      if( root!=null && root.getChildCount()==0 ) return;
       DefaultMutableTreeNode r = new DefaultMutableTreeNode( new TreeNode(aladin,"root",null,"",""));
       ((DefaultTreeModel)tree.getModel()).setRoot(r);
       root = r;
    }
    
    /** "Mise à jour" de l'arbre en fonction des enregistrements GLU recueillis */
-   protected void updateTree(Enumeration e1) {
+   synchronized protected void updateTree(Enumeration e1) {
       
       ArrayList<TreeNode> v = new ArrayList();
       for( TreeNode n : this ) v.add(n);
@@ -231,6 +233,29 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
          e.printStackTrace();
       }
    }
+   
+   /** Signale que l'arbre a été modifié */
+   public void fireTreeChanged() {
+      ((DefaultTreeModel)tree.getModel()).reload();
+   }
+   
+   /** Met à jour les couleurs des widgets avant de les tracer */
+   protected void updateColor() {}
+   
+   /** Suppression d'une feuille (désignée par son ID) et éventuellement de sa branche si c'était la dernière  */
+   protected boolean removeTreeBranch(DefaultMutableTreeNode node, String id ) {
+      DefaultMutableTreeNode subNode = null;
+      boolean rep=false;
+      Enumeration e = node.children();
+      while( e.hasMoreElements() ) {
+         subNode = (DefaultMutableTreeNode) e.nextElement();
+         TreeNode fils = (TreeNode) subNode.getUserObject();
+         String idFils = fils.getID();
+         if( idFils!=null && idFils.equals(id) ) { node.remove(subNode); rep=true;  break; }
+         if( removeTreeBranch(subNode,id) && node.getChildCount()==0 ) { node.remove(subNode); rep=true; break; }
+      }
+      return rep;
+   }
 
    /** Préparation de l'arbre afin qu'il "pré-ouvre" les branches terminales */
    protected void defaultExpand() {
@@ -305,5 +330,25 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
          return null;
       }
    }
-
+   
+   class Repainter extends Thread {
+      
+      public void run() {
+         while( true ) {
+            Util.pause(300);
+            if( tree.isVisible() ) {
+               tree.repaint();
+               System.out.print(".");
+            }
+         }
+      }
+   }
+   
+   class MyTree extends JTree {
+      public MyTree(DefaultMutableTreeNode node) { super(node); /* (new Repainter()).start(); */ }
+      public void paint(Graphics g) {
+         updateColor();
+         super.paint(g);
+      }
+   }
 }

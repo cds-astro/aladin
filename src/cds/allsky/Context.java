@@ -654,14 +654,14 @@ public class Context {
    public void startAction(Action a) throws Exception { 
       action=a; 
       running(action+" in progress...");
-      updateProperties( getKeyActionStart(action), getNow(),true);
+//      updateProperties( getKeyActionStart(action), getNow(),true);
       setProgress(0,-1);
    }
    public void endAction() throws Exception {
       if( isTaskAborting() )  nldone(action+" abort");
       else {
          nldone(action+" done");
-         updateProperties( getKeyActionEnd(action), getNow(),true);
+//         updateProperties( getKeyActionEnd(action), getNow(),true);
       }
       action=null;
    }

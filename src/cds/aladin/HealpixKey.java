@@ -725,7 +725,7 @@ public class HealpixKey {
              byte [] c = new byte[2];
              f.readFully(c);
              if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
-                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
+//                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
                 FileInputStream fgz = new FileInputStream(new File(filename));
                 dis = new MyInputStream( new GZIPInputStream(fgz) );
                 if( skip>0 ) dis.skip(skip);

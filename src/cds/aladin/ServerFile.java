@@ -357,9 +357,6 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
                n=aladin.calque.newPlanHpxMOCM(in,label);
             }
-            else if( (type & MyInputStream.HPX)!=0 ) {
-               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false);
-            }
             else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
                if( u!=null ) {
                   n=aladin.calque.newPlanImageRGB(u,in,PlanImage.OTHER,
@@ -367,6 +364,9 @@ public class ServerFile extends Server implements XMLConsumer {
                         PlanImage.UNKNOWN,PlanImage.UNDEF,
                         null,resNode);
                } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
+            }
+            else if( (type & MyInputStream.HEALPIX)!=0 ) {
+               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false);
             }
             else if( (type & MyInputStream.XFITS)!=0) {
                aladin.calque.newFitsExt(f,in,label,o);

@@ -168,7 +168,7 @@ public class PlanBG extends PlanImage {
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
    
-   protected PlanBGFinder finder=null;
+   protected PlanBGIndex finder=null;
 
 
    // Gestion du cache
@@ -349,9 +349,10 @@ public class PlanBG extends PlanImage {
    protected void frameFinderResume(Graphics g,ViewSimple v) {
       if( finder==null || frameFinder==null ) return;
       if(frameFinder.progen!=null && frameFinder.progen.showNode!=null ) frameFinder.progen.showNode.draw(g,v);
-      finder.draw(g,v);
-      TreeMap<String,TreeNodeProgen> set = ((PlanBGFinder)finder).getLastProgen();
-      frameFinder.resume(set);
+      finder.updateHealpixIndex(v);
+      HealpixIndex hi = ((PlanBGIndex)finder).getHealpixIndex();
+      System.out.println("==>"+hi);
+      frameFinder.resume(hi,this);
    }
    
    /** Chargement du Moc associé au survey */
@@ -423,7 +424,7 @@ public class PlanBG extends PlanImage {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
-      if( Aladin.PROTO ) finder = new PlanBGFinder(aladin,this);
+      if( Aladin.PROTO ) finder = new PlanBGIndex(aladin,this);
 
       aladin.endMsg();
       creatDefaultCM();

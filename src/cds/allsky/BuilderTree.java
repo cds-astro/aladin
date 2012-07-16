@@ -54,11 +54,15 @@ public class BuilderTree extends Builder {
 
    public void run() throws Exception {
       build();
-      if( flagAllsky && !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
+//      if( flagAllsky && !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
    }
    
    // Valide la cohérence des paramètres pour la création des tuiles JPEG
    public void validateContext() throws Exception {
+//      context.setOrder(9);
+//      context.initRegion();
+//      System.out.println("MOC : "+context.moc);
+      
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
@@ -84,8 +88,8 @@ public class BuilderTree extends Builder {
       maxOrder = context.getOrder();
       
       for( int i=0; i<768; i++ ) {
-//         if( context.isInMocTree(3, i) ) createTree(output,3,i);
-         createTree(output,3,i);
+         if( context.isInMocTree(3, i) ) createTree(output,3,i);
+//         createTree(output,3,i);
          context.setProgress(i);
       }
    }
@@ -105,23 +109,17 @@ public class BuilderTree extends Builder {
    private Fits createTree(String path,int order, long npix ) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
-//      if( !context.isInMocTree(order,npix) ) return null;
+      // Si son père n'est pas dans le MOC, on passe
+//      if( !context.isInMocTree(order-1,npix/4) ) return null;
       
-      // Si ni lui, ni ses frères sont dans le MOC, on passe
-      boolean ok=false;
-      long brother = npix - npix%4L;
-      for( int i=0; i<4; i++ ) {
-         ok = context.isInMocTree(order,brother+i);
-         if( ok ) break;
-      }
-      if( !ok ) return null;
+//      System.out.println("createTree("+order+","+npix+")...");
       
+      // S'il existe déjà un fits et qu'on sort de la région à traiter, on le retourne tel que
       String file = Util.getFilePath(path,order,npix);
+      if( !context.isInMocTree(order,npix) && new File(file+".fits").exists() ) return createLeaveFits(file);
+
 //      JpegMethod method = context.getJpegMethod();
       JpegMethod method = JpegMethod.MEAN;
-
-      // S'il n'existe pas le fits, c'est une branche morte
-//      if( !new File(file+".fits").exists() ) return null;
 
       Fits out = null;
       if( order==maxOrder ) out = createLeaveFits(file);
@@ -170,7 +168,6 @@ public class BuilderTree extends Builder {
 
    /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
    private Fits createNodeFits(Fits fils[], JpegMethod method) throws Exception {
-      
       Fits out = new Fits(width,width,bitpix);
       out.setBlank(blank);
       out.setBscale(bscale);
