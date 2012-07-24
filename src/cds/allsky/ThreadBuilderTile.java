@@ -34,6 +34,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
+import cds.fits.HeaderFits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -471,8 +472,27 @@ final public class ThreadBuilderTile {
                try {
                   //					récupère l'image
                   Fits fitsfile = new Fits();
+                  
+                  // Mode JPEG ou PNG avec .hhh
+                  int pos=-1;
+                  if( fitsfilename.endsWith(".hhh") || (pos=fitsfilename.indexOf(".hhh["))>0 ) {
+                     
+                     String hhhFile = pos==-1 ? fitsfilename : fitsfilename.substring(0,pos+4);
+                     
+                     fitsfilename=fitsfilename.replaceAll("\\.hhh", ".jpg");
+                     try { fitsfile=context.cacheFits.getFits(fitsfilename,true); }
+                     
+                     // Sinon peut être en PNG ? (C'est pas très beau mais c'est si facile)
+                     catch( Exception e ) {
+                        fitsfilename=fitsfilename.replaceAll("\\.jpg", ".png");
+                        fitsfile=context.cacheFits.getFits(fitsfilename,true);
+                     }
+                     
+                     fitsfile.loadHeaderFITS(hhhFile);
+                     
+                  }
 
-                  // Mode JPEG + entête extente .hhh
+                  /* // Mode JPEG + entête extente .hhh
                   if (fitsfilename.endsWith("hhh")) {
                      fitsfile.loadHeaderFITS(fitsfilename);
                      
@@ -485,14 +505,14 @@ final public class ThreadBuilderTile {
                         fitsfilename=fitsfilename.replaceAll("jpg$", "png");
                         fitsfile.loadJpeg(fitsfilename,true);
                      }
-                  }
+                  } */
 
                   // Mode FITS couleur
                   else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true);
 
                   // Mode FITS classique
                   else {
-                     fitsfile=context.cacheFits.getFits(fitsfilename);   // Utilisation d'un cache de fichiers Fits déjà ouvert
+                     fitsfile=context.cacheFits.getFits(fitsfilename,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
                      //					   fitsfile.loadFITS(fitsfilename);
                   }
 

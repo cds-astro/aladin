@@ -128,19 +128,28 @@ public class BuilderTiles extends Builder {
           // retry order validation with tiles directory
           validateOrder(context.getOutputPath());
       }
-
+      
+//      context.setBitpixOrig(0);
+//      if( true ) return;
+      
       // mémorisation des cuts et blank positionnés manuellement
       double [] memoCutOrig = context.getCutOrig();
       boolean hasAlternateBlank = context.hasAlternateBlank();
       double blankOrig = context.getBlankOrig();
       int bitpixOrig = context.getBitpixOrig();
-
+      
       // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK
       String img = context.getImgEtalon();
       if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
       if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
       try { context.setImgEtalon(img); }
       catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+      
+      // Image de référence en couleur
+      if(  context.getBitpixOrig()==0 ) {
+         context.initRegion();
+         return;
+      }
 
       if( bitpixOrig==-1 ) {
          context.info("BITPIX found in the reference image => "+context.getBitpixOrig());
@@ -377,7 +386,7 @@ public class BuilderTiles extends Builder {
             long npix = getNextNpix();
             if( npix==-1 ) break;
             try {
-               Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"...");
+//               Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"...");
 
                // si le process a été arrêté on essaie de ressortir au plus vite
                if (stopped) break;

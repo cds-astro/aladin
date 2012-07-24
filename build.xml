@@ -23,6 +23,12 @@
         <pathelement path="${lib}/jsamp.jar"/>
         <pathelement path="${lib}/jhealpixSmall.jar"/>
         <pathelement path="${lib}/microhub.jar"/>
+        <pathelement path="${lib}/cds.savot.common.jar"/>
+        <pathelement path="${lib}/cds.savot.model.jar"/>
+        <pathelement path="${lib}/cds.savot.pull.jar"/>
+        <pathelement path="${lib}/cds.savot.sax.jar"/>
+        <pathelement path="${lib}/cds.savot.writer.jar"/>
+        <pathelement path="${lib}/kxml2-2.3.0.jar"/>
         <pathelement path="${mocjar}"/>
       </classpath>
      </javac>
@@ -34,6 +40,12 @@
 	    <zipfileset src="${lib}/jsamp.jar"/>
 	    <zipfileset src="${lib}/jhealpixSmall.jar"/>
 	    <zipfileset src="${lib}/microhub.jar"/>
+        <zipfileset src="${lib}/cds.savot.common.jar"/>
+        <zipfileset src="${lib}/cds.savot.model.jar"/>
+        <zipfileset src="${lib}/cds.savot.pull.jar"/>
+        <zipfileset src="${lib}/cds.savot.sax.jar"/>
+        <zipfileset src="${lib}/cds.savot.writer.jar"/>
+        <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
 	    <zipfileset src="${mocjar}"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />

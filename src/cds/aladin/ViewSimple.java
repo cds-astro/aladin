@@ -3438,6 +3438,9 @@ public class ViewSimple extends JComponent
        markAvailableImages(x,y,aladin.treeView.mTree,shiftDown);
 
        showAvailableImages(x,y);
+       
+       // Idem pour les progeniteurs
+       if( aladin.frameProgen!=null ) aladin.frameProgen.updateCheckByMouse(this, (int)x, (int)y);
    }
 
    /**

@@ -47,6 +47,7 @@ public class PlanBGIndex extends PlanBG {
       useCache = planBG.useCache;
       frameOrigin=planBG.frameOrigin;
       imageSourcePath=planBG.imageSourcePath;
+      maxOrder = planBG.maxOrder;
       pixList = new Hashtable<String,HealpixKey>(1000);
       loader = new HealpixLoader();
    }
@@ -76,13 +77,12 @@ public class PlanBGIndex extends PlanBG {
 
    protected void updateHealpixIndex(ViewSimple v) {
       long [] pix=null;
-//      TreeMap<String,TreeNodeProgen> set = new TreeMap<String,TreeNodeProgen>();
       HealpixIndex hi = new HealpixIndex();
       int order = maxOrder(v)+1;
-//      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky());
+//      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( order<maxOrder-(BuilderProgenIndex.RANGE_ORDER) || v.isAllSky() ) { this.hi = hi; return; }
+      if( order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky() ) { this.hi = hi; return; }
       if( order>maxOrder ) order=maxOrder;
       
       int nb=0;
@@ -123,8 +123,7 @@ public class PlanBGIndex extends PlanBG {
          // Pas encore prêt
          if( status!=HealpixKey.READY ) continue;
 
-//         nb += healpix.draw(g,v,set);
-         nb += healpix.addHealpixIndexItem(hi);
+         nb += healpix.addHealpixIndexItem(hi,v);
       }
      
       this.hi = hi;
@@ -140,7 +139,6 @@ public class PlanBGIndex extends PlanBG {
    
    protected HealpixIndex getHealpixIndex() { return hi; }
    
-
    protected void askForRepaint() { planBG.askForRepaint();  }
    
    protected void gc() { }

@@ -231,13 +231,13 @@ public class BuilderIndex extends Builder {
 
                try {
                   
-                  // Test sur l'image entière (pas possible autrement)
-                  if( currentfile.endsWith(".hhh") ) {
-                     updateStat(file, code, fitsfile.width, fitsfile.height, Math.abs(fitsfile.bitpix) / 8);
-                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
-                     
-                  // Découpage en petits carrés
-                  } else {   
+//                  // Test sur l'image entière (pas possible autrement)
+//                  if( currentfile.endsWith(".hhh") ) {
+//                     updateStat(file, code, fitsfile.width, fitsfile.height, Math.abs(fitsfile.bitpix) / 8);
+//                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
+//                     
+//                  // Découpage en petits carrés
+//                  } else {   
                         int width = fitsfile.width - borderSize[3];
                         int height = fitsfile.height - borderSize[2];
 
@@ -254,7 +254,7 @@ public class BuilderIndex extends Builder {
                               testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                            }
                         }
-                     }
+//                     }
                } catch (Exception e) {
                   if( Aladin.levelTrace>=3 ) e.printStackTrace();
                   return;

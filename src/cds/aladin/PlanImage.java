@@ -2855,12 +2855,17 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
 Aladin.trace(3," => BLANK value = "+blank);
       } catch( Exception eblank ) { isBlank=false; }
 
-      // Y a-t-il des valeurs BZERO et BSCALE
+      // Y a-t-il un BZERO
       try {
          bZero  =  headerFits.getDoubleFromHeader("BZERO");
+Aladin.trace(3," => BZERO = "+bZero);
+      } catch( Exception ebzero ) { bZero=0.;}
+      
+      // Y a-t-il un BSCALE
+      try {
          bScale =  headerFits.getDoubleFromHeader("BSCALE");
 Aladin.trace(3," => BZERO = "+bZero+" BSCALE = "+bScale);
-      } catch( Exception ebzero ) { bZero=0.; bScale=1.; }
+      } catch( Exception ebscale ) { bScale=1.; }
 
 //      // Y a-t-il des valeurs DATAMIN et DATAMAX
 //      try {

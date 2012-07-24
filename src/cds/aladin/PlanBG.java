@@ -149,7 +149,7 @@ public class PlanBG extends PlanImage {
    protected String imageSourcePath; // Template d'accès aux progéniteurs (ex: id=~/(.*)/http://machine/cgi?img=$1/ )
    protected String url;           // Préfixe de l'url permettant d'accéder au background
    protected int minOrder=3;       // Ordre HEALPIX "fichier" min du background
-   protected int maxOrder=8;       // Ordre HEALPIX "fichier" max du background
+   protected int maxOrder=14;       // Ordre HEALPIX "fichier" max du background
    protected Hashtable<String,HealpixKey> pixList;      // Liste des losanges disponibles
    protected HealpixKey allsky;    // Losanges spéciaux d'accès à tout le ciel niveau 3
    protected HealpixLoader loader;   // Gère le chargement des losanges
@@ -163,12 +163,12 @@ public class PlanBG extends PlanImage {
    protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
    protected boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
-   private boolean hasFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
+   private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
    
-   protected PlanBGIndex finder=null;
+   protected PlanBGIndex planBGIndex=null;
 
 
    // Gestion du cache
@@ -329,30 +329,22 @@ public class PlanBG extends PlanImage {
       return hasMoc;
    }
    
-   private boolean testFinder=false; // true : la présence d'un HpxFinder a été testé
+   private boolean testHpxFinder=false; // true : la présence d'un HpxFinder a été testé
    
-   protected boolean hasFinder() {
-      if( hasFinder || testFinder ) return hasFinder;
+   protected boolean hasHpxFinder() {
+      if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
       String f = url+"/HpxFinder";
-      hasFinder = localAllSky ? (new File(f)).exists() : Util.isUrlResponding(f);
-      testFinder=true;
-      return hasFinder;
+      hasHpxFinder = localAllSky ? (new File(f)).exists() : Util.isUrlResponding(f);
+      testHpxFinder=true;
+      return hasHpxFinder;
    }
    
-   FrameProgen frameFinder = null;
-   
-   protected void frameFinder() {
-      if( frameFinder==null ) frameFinder = new FrameProgen(aladin);
-      else frameFinder.setVisible(true);
-   }
-   
-   protected void frameFinderResume(Graphics g,ViewSimple v) {
-      if( finder==null || frameFinder==null ) return;
-      if(frameFinder.progen!=null && frameFinder.progen.showNode!=null ) frameFinder.progen.showNode.draw(g,v);
-      finder.updateHealpixIndex(v);
-      HealpixIndex hi = ((PlanBGIndex)finder).getHealpixIndex();
-      System.out.println("==>"+hi);
-      frameFinder.resume(hi,this);
+   protected void frameProgenResume(Graphics g,ViewSimple v) {
+      if( planBGIndex==null || aladin.frameProgen==null ) return;
+      planBGIndex.updateHealpixIndex(v);
+      HealpixIndex hi = ((PlanBGIndex)planBGIndex).getHealpixIndex();
+      aladin.frameProgen.resume(hi,this);
+      aladin.frameProgen.progen.draw(g,v);
    }
    
    /** Chargement du Moc associé au survey */
@@ -424,7 +416,7 @@ public class PlanBG extends PlanImage {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
-      if( Aladin.PROTO ) finder = new PlanBGIndex(aladin,this);
+      if( Aladin.PROTO ) planBGIndex = new PlanBGIndex(aladin,this);
 
       aladin.endMsg();
       creatDefaultCM();
@@ -1984,7 +1976,7 @@ public class PlanBG extends PlanImage {
       
       setHasMoreDetails( maxOrder(v)<maxOrder ); 
       
-      try { frameFinderResume(g,v); } 
+      try { frameProgenResume(g,v); } 
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
       readyDone = readyAfterDraw;

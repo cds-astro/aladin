@@ -43,6 +43,11 @@ public class STCPolygon extends STCObj {
     public void setyCorners(ArrayList<Double> yCorners) {
         this.yCorners = yCorners;
     }
+    
+    @Override
+    public boolean isIn(double lon,double lat) {
+       return true;
+    }
 
 
 }

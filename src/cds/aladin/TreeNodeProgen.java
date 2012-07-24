@@ -21,6 +21,10 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.ObjectInputStream.GetField;
 import java.util.List;
 
@@ -36,10 +40,21 @@ public class TreeNodeProgen extends TreeNode {
    private long lastPaint;
 
    TreeNodeProgen(PlanBG planBG, HealpixIndexItem hii) {
-      super(planBG.aladin,hii.getID(),null,hii.getID(),hii.getID());
+      super(planBG.aladin,hii.getID(),null,hii.getID(),/* planBG.label+"/"+*/ hii.getID());
       this.hii = hii;
       this.planBG = planBG;
       touch();
+      
+      checkbox.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            aladin.view.repaintAll();
+         }
+      });
+   }
+   
+   /** Active la check box si la coordonnée xview,yview se trouve dans le footprint correspondant */
+   protected void updateCheckByMouse(ViewSimple v,int xview,int yview) {
+      checkbox.setSelected( hii.isIn(v,xview,yview) );
    }
    
    /** Redonne de la vie */
@@ -56,13 +71,11 @@ public class TreeNodeProgen extends TreeNode {
    /** Retourne une couleur en fonction du niveau de vie */
    protected void updateColor() {
       int live = getLive();
-      Aladin.trace(4,"TreeNodeProgen.updateColor() "+hii.getID()+" live="+live);
       int max = MAXLIVE-3000;
       Color c;
       if( live>max ) c = Color.black;
       else {
          int x =(int)( ( max-live)*(200./max) );
-         Aladin.trace(4,"TreeNodeProgen.updateColor() x="+x);
          c = new Color(x,x,x);
       }
       setForeground(c);
@@ -76,10 +89,11 @@ public class TreeNodeProgen extends TreeNode {
    
    protected void draw(Graphics g,ViewSimple v) {
       String stc = hii.getSTC();
+//      Aladin.trace(4,"TreeNodeProgren.draw() stc="+stc);
       if( stc==null ) return;
       List<STCObj> stcObjects = new STCStringParser().parse(stc); 
       Fov fov = new Fov(stcObjects);
-      fov.draw(v.getProj(), v, g, 0, 0, Color.red);
+      fov.draw(v.getProj(), v, g, 0, 0, g.getColor() );
    }
    
 }

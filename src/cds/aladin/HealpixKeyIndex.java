@@ -123,11 +123,16 @@ public class HealpixKeyIndex extends HealpixKey {
    @Override
    protected int getMem() { return mem;}
    
-   protected int addHealpixIndexItem(HealpixIndex hi) {
-      hi.putAll(index);
+   protected int addHealpixIndexItem(HealpixIndex hi,ViewSimple v) {
+//      hi.putAll(index);
+      for( String id : index ) {
+         HealpixIndexItem hii = index.get(id);
+         if( hii.isOutView(v) ) continue;
+         hi.put(id, hii);
+      }
       resetTimer();
       resetTimeAskRepaint();
-      return index.size(); 
+      return hi.size(); 
    }
    
 //   protected int draw(Graphics g, ViewSimple v,TreeMap<String,TreeNodeProgen> set) { 

@@ -817,7 +817,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
          PropPanel.addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
-         if( pbg.hasMoc() || pbg.hasFinder() ) {
+         if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
             JPanel p1 = new JPanel();
             if( pbg.hasMoc() ) {
                JButton bt = new JButton("MOC");
@@ -826,10 +826,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                });
                p1.add(bt);
             }
-            if( aladin.PROTO && pbg.hasFinder() ) {
+            if( aladin.PROTO && pbg.hasHpxFinder() ) {
                JButton bt = new JButton("Progenitors");
                bt.addActionListener(new ActionListener() {
-                  public void actionPerformed(ActionEvent e) { pbg.frameFinder(); }
+                  public void actionPerformed(ActionEvent e) { aladin.showFrameProgen(); }
                });
                p1.add(bt);
             }

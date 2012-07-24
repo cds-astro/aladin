@@ -63,7 +63,7 @@ public class ServerCategory extends ServerTree  {
       (new Thread("initTree") {
          public void run() {
             loadRemoteTree();
-            populateTree(aladin.glu.vGluCategory.elements());
+            tree.populateTree(aladin.glu.vGluCategory.elements());
          }
       }).start();
    }

@@ -120,7 +120,7 @@ public class Context {
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return bitpix; }
-   public int getNpix() { return isColor() ? 4 : Math.abs(bitpix)/8; }  // Nombre d'octets par pixel
+   public int getNpix() { return isColor() || bitpix==-1 ? 4 : Math.abs(bitpix)/8; }  // Nombre d'octets par pixel
    public double getBScaleOrig() { return bScaleOrig; }
    public double getBZeroOrig() { return bZeroOrig; }
    public double getBZero() { return bZero; }
@@ -324,8 +324,12 @@ public class Context {
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
+            // cas particulier d'un survey couleur en JPEG ou PNG avec calibration externe
+            if( path.endsWith(".hhh") ) return path;
+            
             MyInputStream in = (new MyInputStream( new FileInputStream(path))).startRead();
-            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS ) { in.close(); continue; }            
+            long type = in.getType();
+            if( (type&MyInputStream.FITS) != MyInputStream.FITS ) { in.close(); continue; }            
             in.close();
             return path;
             
@@ -333,6 +337,7 @@ public class Context {
       }
       return null;
    }
+   
 
    public void setSkyval(String fieldName) {
        this.skyvalName = fieldName.toUpperCase();

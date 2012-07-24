@@ -20,10 +20,6 @@
 
 package cds.aladin;
 
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -138,8 +134,8 @@ public class ServerAllsky extends ServerTree  {
    protected void initTree() { 
       if( populated ) return;
       populated=true;
-      freeTree();
-      populateTree( aladin.glu.vGluSky.elements() );
+      tree.freeTree();
+      tree.populateTree( aladin.glu.vGluSky.elements() );
    }
    
    public void submit(TreeNode n) {

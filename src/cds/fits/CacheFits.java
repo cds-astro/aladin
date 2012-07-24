@@ -28,13 +28,17 @@ import cds.tools.Util;
 
 
 /**
- * Classe de manipulation d'un cache de fichiers FITS ouverts.
+ * Classe de manipulation d'un cache de fichiers FITS/JPEG ouverts.
  * Permet d'éviter les ouvertures et réouvertures inutiles lors d'un traitement nécessitant plusieurs fois
  * l'accès aux mêmes images.
  * Il faut mentionner à la création la taille max allouée au cache, en Mo (par défaut 512Mo) et en Nb de fichiers (par défaut 10000)
- * L'accès à un fichier Fits se fait par Fits getFits(filename);
+ * L'accès à un fichier Fits se fait par Fits getFits(filename)( ou getFits(filename,true) pour du JPEG)
+ * 
+ * Rq: Le rajouti d'Anaïs sur la soustraction du skyvalName ne devrait pas être dans cette classe (selon moi)
+ * => A voir si on le déplace
  * 
  * @author Pierre Fernique [CDS]
+ * @version 1.1 - juillet 2012
  * @version 1.0 - sept 2011
  */
 public class CacheFits {
@@ -85,7 +89,8 @@ public class CacheFits {
     * @return l'objet Fits
     * @throws Exception
     */
-   synchronized public Fits getFits(String fileName) throws Exception {
+  public Fits getFits(String fileName) throws Exception { return getFits(fileName,false); }
+  synchronized public Fits getFits(String fileName,boolean jpeg) throws Exception {
       FitsFile f = find(fileName);
 
       // Trouvé, je le mets à jour
@@ -98,12 +103,12 @@ public class CacheFits {
       else {
          if( isOver() ) clean();
          try {
-            f=add(fileName);
+            f=add(fileName,jpeg);
          } catch( OutOfMemoryError e ) {
             System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
             maxMem /= 2;
             clean();
-            f=add(fileName);
+            f=add(fileName,jpeg);
          }
          statNbOpen++;
       }
@@ -116,10 +121,12 @@ public class CacheFits {
    private FitsFile find(String name) { return map.get(name); }
 
    // Ajoute un fichier Fits au cache. Celui-ci est totalement chargé en mémoire
-   private FitsFile add(String name) throws Exception {
+   private FitsFile add(String name,boolean jpeg) throws Exception {
       FitsFile f = new FitsFile();
       f.fits = new Fits();
-      f.fits.loadFITS(name);
+      if( jpeg ) f.fits.loadJpeg(name,true);
+      else f.fits.loadFITS(name);
+      
       // applique un filtre spécial
       if (skyvalName!=null) delSkyval(f.fits);
 
@@ -235,7 +242,7 @@ public class CacheFits {
 
       public long getMem() {
          if( fits==null ) return 0L;
-         return fits.widthCell*fits.heightCell*Math.abs(fits.bitpix)/8; 
+         return fits.widthCell*fits.heightCell*Math.abs(fits.bitpix==0 ? 32 : fits.bitpix)/8; 
       }
 
       void update() { timeAccess = System.currentTimeMillis(); }

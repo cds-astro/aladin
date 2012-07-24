@@ -23,6 +23,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Label;
 import java.awt.MediaTracker;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -35,13 +36,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
 import cds.aladin.Aladin;
@@ -134,69 +139,134 @@ final public class Fits {
 
    /** Retourne la calib ou null */
    public Calib getCalib() { return calib; }
+   
+// /** Chargement d'une image Jpeg N&B depuis un fichier */
+// public void loadJpeg(String filename) throws Exception { loadJpeg(filename,false); }
+//
+// /** Chargement d'une image Jpeg N&B ou COULEUR depuis un fichier */
+// public void loadJpeg(String filename,boolean flagColor) throws Exception {
+//    MyInputStream is = new MyInputStream( new FileInputStream(filename));
+//    loadJpeg(is,flagColor);
+//    is.close();
+//    this.setFilename(filename);
+// }
+// 
 
    /* Chargement d'une image N&B sous forme d'un JPEG */
    protected void loadJpeg(MyInputStream dis) throws Exception { loadJpeg(dis,false); }
    
-   static private Component observer = (Component)new Label();
-
-   /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
-   protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
-      Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
-      boolean encore=true;
-      while( encore ) {
-         try {
-            MediaTracker mt = new MediaTracker(observer);
-            mt.addImage(img,0);
-            mt.waitForID(0);
-            encore=false;
-         } catch( InterruptedException e ) { }
-      }
-      width=widthCell =img.getWidth(observer);
-      height=heightCell=img.getHeight(observer);
-      xCell=yCell=0;
-      bitpix= flagColor ? 0 : 8;
-      
-      BufferedImage imgBuf = new BufferedImage(widthCell,heightCell, 
-            flagColor ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY);
-      Graphics g = imgBuf.getGraphics();
-      g.drawImage(img,0,0,observer);
-      g.finalize(); g=null;
-      if( flagColor ) rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-      else pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
-      
-//      BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-//      Graphics g = imgBuf.getGraphics();
-//      g.drawImage(img,0,0,observer);
-//      g.finalize(); g=null;
-//      int taille=width*height;
-//      rgb = new int[taille];
-//      imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
-//      if( bitpix!=0 ) {
-//         pixels = new byte[taille];
-//         for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgb[i] & 0xFF);
-//         rgb=null;
-//      }
-      
-      imgBuf.flush(); imgBuf=null;
-      img.flush(); img=null;
-      if( bitpix==8 ) {
-         pix8 = new byte[widthCell*heightCell];
-         initPix8();
-      }
-   }
-
-   /** Chargement d'une image Jpeg N&B depuis un fichier */
-   public void loadJpeg(String filename) throws Exception { loadJpeg(filename,false); }
-
-   /** Chargement d'une image Jpeg N&B ou COULEUR depuis un fichier */
-   public void loadJpeg(String filename,boolean flagColor) throws Exception {
+   
+   /** Chargement d'une image JPEG depuis un fichier */
+   public void loadJpeg(String filename,int x, int y, int w, int h) throws Exception { loadJpeg(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
+   public void loadJpeg(String filename) throws Exception {loadJpeg(filename,false);}
+   public void loadJpeg(String filename, boolean color) throws Exception {
+      filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
-      loadJpeg(is,flagColor);
+      is = is.startRead();
+      loadJpeg(is,xCell,yCell,widthCell,heightCell,color);
       is.close();
       this.setFilename(filename);
    }
    
+   
+   protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
+      loadJpeg(dis,0,0,-1,-1,flagColor);
+   }
+
+   static private Component observer = (Component)new Label();
+
+//   /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
+//   protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
+//      Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
+//      boolean encore=true;
+//      while( encore ) {
+//         try {
+//            MediaTracker mt = new MediaTracker(observer);
+//            mt.addImage(img,0);
+//            mt.waitForID(0);
+//            encore=false;
+//         } catch( InterruptedException e ) { }
+//      }
+//      width=widthCell =img.getWidth(observer);
+//      height=heightCell=img.getHeight(observer);
+//      xCell=yCell=0;
+//      bitpix= flagColor ? 0 : 8;
+//      
+//      BufferedImage imgBuf = new BufferedImage(widthCell,heightCell, 
+//            flagColor ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY);
+//      Graphics g = imgBuf.getGraphics();
+//      g.drawImage(img,0,0,observer);
+//      g.finalize(); g=null;
+//      if( flagColor ) rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
+//      else pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+//      
+////      BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+////      Graphics g = imgBuf.getGraphics();
+////      g.drawImage(img,0,0,observer);
+////      g.finalize(); g=null;
+////      int taille=width*height;
+////      rgb = new int[taille];
+////      imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
+////      if( bitpix!=0 ) {
+////         pixels = new byte[taille];
+////         for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgb[i] & 0xFF);
+////         rgb=null;
+////      }
+//      
+//      imgBuf.flush(); imgBuf=null;
+//      img.flush(); img=null;
+//      if( bitpix==8 ) {
+//         pix8 = new byte[widthCell*heightCell];
+//         initPix8();
+//      }
+//   }
+   
+   public void loadJpeg(MyInputStream dis,int x,int y, int w, int h,boolean flagColor) throws Exception {
+      Iterator readers = ImageIO.getImageReadersByFormatName("jpeg");
+      ImageReader reader = (ImageReader)readers.next();
+      ImageInputStream iis = ImageIO.createImageInputStream(dis);
+      reader.setInput(iis,true);
+      width = reader.getWidth(0);
+      height = reader.getHeight(0);
+      
+      // Ouverture complète de l'image
+      if( w==-1 ) {
+         widthCell=width;
+         heightCell=height;
+         xCell=yCell=0;
+         
+      // Ouverture juste d'une cellule de l'image
+      } else {
+         if( x<0 || y<0 || x+w>width || y+h>height ) throw new Exception("Mosaic cell outside the image ("+width+"x"+height+") cell=["+x+","+y+" "+w+"x"+h+"]");
+         widthCell=w;
+         heightCell=h;
+         xCell=x;
+         yCell=y;
+      }
+      bitpix= flagColor ? 0 : 8;
+      
+      ImageReadParam param = reader.getDefaultReadParam();
+      if( this.widthCell!=width || this.heightCell!=height ) {
+         Rectangle r = new Rectangle(xCell,yCell,widthCell,heightCell);
+         param.setSourceRegion(r);
+      }
+      BufferedImage imgBuf = reader.read(0,param);
+      
+      if( flagColor ) {
+//         rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
+         
+         rgb = new int[widthCell*heightCell*4];
+         imgBuf.getRGB(0, 0, widthCell, heightCell, rgb, 0, widthCell);
+
+      } else pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+      
+      imgBuf.flush(); imgBuf=null;
+      if( bitpix==8 ) {
+         pix8 = new byte[widthCell*heightCell];
+         initPix8();
+      }
+
+   }
    
    // Extraction de la définition d'une cellule FITS pour une ouverture d'un fichier FITS en mode "mosaic"
    // le filename doit être suffixé par [x,y-wxh] (sans aucun blanc).
@@ -384,7 +454,7 @@ final public class Fits {
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       if( is.isGZ() ) code |= GZIP; 
       is = is.startRead();
-      long type = is.getType();
+      long type = 0L;
       
       // Cas spécial d'un fichier .hhhh
       if( filename.endsWith(".hhh") ) {
@@ -395,7 +465,7 @@ final public class Fits {
       }
       // Si on a une image avec extension
       // ouvrir et lire le reste des infos depuis une image de l'extension
-      else if ( (type & MyInputStream.XFITS)!=0)  {
+      else if ( ((type= is.getType()) & MyInputStream.XFITS)!=0)  {
     	  headerFits = new HeaderFits(is);
     	  code |= XFITS;
     	  int naxis = headerFits.getIntFromHeader("NAXIS");
@@ -645,6 +715,7 @@ final public class Fits {
    
    public int getPixelRGBJPG(int x, int y) {
       return 0x00FFFFFF & rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell) ];
+//      return 0x00FFFFFF & rgb[ ((height-(y-yCell)-1))*widthCell+(x-xCell) ];
    }
    
   
@@ -1372,8 +1443,9 @@ final public class Fits {
 
    public static void main(String[] args) {
       try {
+         String file = "C:/Test.jpg";
          Fits f = new Fits();
-         f.loadFITS("C:/Test.fits");
+         f.loadJpeg(file);
          System.out.println("lecture de "+f.getFilename()+" => "+f);
          int x= 33;
          int y= 25;
@@ -1381,33 +1453,33 @@ final public class Fits {
          int y1=2;
          int x2=7;
          int y2=27;
-         double pix = f.isInCell(x,y) ? f.getPixelFull(x,y) : Double.NaN;
+         double pix = f.isInCell(x,y) ? f.getPix8(x,y) : Double.NaN;
          System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         double pix1 = f.isInCell(x1,y1) ? f.getPixelFull(x1,y1) : Double.NaN;
+         double pix1 = f.isInCell(x1,y1) ? f.getPix8(x1,y1) : Double.NaN;
          System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         double pix2 = f.isInCell(x2,y2) ? f.getPixelFull(x2,y2) : Double.NaN;
+         double pix2 = f.isInCell(x2,y2) ? f.getPix8(x2,y2) : Double.NaN;
          System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
          f.free();
          
          Fits g = new Fits();
-         g.loadFITS("C:/Test.fits[1,0-10x18]");
+         g.loadJpeg(file+"[1,0-10x18]");
          System.out.println("lecture de "+g.getFilename()+" => "+g);
-         pix = g.isInCell(x,y) ? g.getPixelFull(x,y) : Double.NaN;
+         pix = g.isInCell(x,y) ? g.getPix8(x,y) : Double.NaN;
          System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         pix1 = g.isInCell(x1,y1) ? g.getPixelFull(x1,y1) : Double.NaN;
+         pix1 = g.isInCell(x1,y1) ? g.getPix8(x1,y1) : Double.NaN;
          System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         pix2 = g.isInCell(x2,y2) ? g.getPixelFull(x2,y2) : Double.NaN;
+         pix2 = g.isInCell(x2,y2) ? g.getPix8(x2,y2) : Double.NaN;
          System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
          g.free();
          
          Fits h = new Fits();
-         h.loadFITS("C:/Test.fits[24,22-10x5]");
+         h.loadJpeg(file+"[24,22-10x5]");
          System.out.println("lecture de "+h.getFilename()+" => "+h);
-         pix = h.isInCell(x,y) ? h.getPixelFull(x,y) : Double.NaN;
+         pix = h.isInCell(x,y) ? h.getPix8(x,y) : Double.NaN;
          System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         pix1 = h.isInCell(x1,y1) ? h.getPixelFull(x1,y1) : Double.NaN;
+         pix1 = h.isInCell(x1,y1) ? h.getPix8(x1,y1) : Double.NaN;
          System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         pix2 = h.isInCell(x2,y2) ? h.getPixelFull(x2,y2) : Double.NaN;
+         pix2 = h.isInCell(x2,y2) ? h.getPix8(x2,y2) : Double.NaN;
          System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
          h.free();
          

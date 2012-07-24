@@ -21,6 +21,7 @@ package cds.aladin;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -36,6 +37,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 
 import cds.aladin.prop.PropAction;
 import cds.aladin.prop.PropPanel;
@@ -49,7 +52,7 @@ import cds.tools.Util;
 public class FrameProgen extends JFrame implements ActionListener {
    private String apply,close;
    private Aladin aladin;
-   protected ServerProgen progen;
+   protected Progen progen;
    
    public FrameProgen(Aladin aladin ) {
       super("Access to original images");
@@ -58,25 +61,31 @@ public class FrameProgen extends JFrame implements ActionListener {
       enableEvents(AWTEvent.WINDOW_EVENT_MASK);
       Util.setCloseShortcut(this, false,aladin);
 
-      apply = aladin.chaine.getString("UPAPPLY");
+      apply = "Load orig. images";
       close = aladin.chaine.getString("UPCLOSE");
       
       JPanel container = (JPanel)getContentPane();
       container.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-      container.add( getTreePanel(), BorderLayout.CENTER);
+      JPanel treePanel = getTreePanel();
+      JScrollPane scrollTree = new JScrollPane(treePanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      scrollTree.setPreferredSize(new Dimension(300,400));
+      container.add( scrollTree, BorderLayout.CENTER);
       container.add( getValidPanel(), BorderLayout.SOUTH);
       setLocation(Aladin.computeLocation(this));
       pack();
       setVisible(true);
    }
    
+   protected void updateCheckByMouse(ViewSimple v,int xview,int yview) {
+      progen.updateCheckByMouse(v,xview,yview);
+   }
    
    public void resume(HealpixIndex hi,PlanBG planBG) {
       progen.updateTree(hi,planBG);
    }
    
    private JPanel getTreePanel() {
-      progen = new ServerProgen(aladin);
+      progen = new Progen(aladin);
       return progen;
    }
 

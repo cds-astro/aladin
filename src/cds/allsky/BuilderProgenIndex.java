@@ -18,27 +18,12 @@
 //
 
 package cds.allsky;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.TreeMap;
 
 import cds.aladin.Aladin;
 import cds.aladin.HealpixIndex;
-import cds.aladin.HealpixIndexItem;
-import cds.allsky.Context.JpegMethod;
-import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles d'index à partir des tuiles de plus bas
@@ -47,7 +32,7 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderProgenIndex extends Builder {
    
-   static public final int RANGE_ORDER = 3;   // nombre de niveaux pris en compte
+   static public final int MINORDER = 4;   // niveau minimal pris en compte
    
    private int maxOrder;
    private int minOrder;
@@ -76,8 +61,9 @@ public class BuilderProgenIndex extends Builder {
       validateIndex();
       validateOrder( context.getHpxFinderPath() );
       maxOrder = context.getOrder();
-      minOrder = maxOrder-(RANGE_ORDER-1);
-      if( minOrder<3 ) minOrder=3;
+//      minOrder = maxOrder-(RANGE_ORDER-1);
+//      if( minOrder<3 ) minOrder=3;
+      minOrder=Math.min(MINORDER,maxOrder);
       context.info("Tree HEALPix index built for orders ["+minOrder+".."+maxOrder+"]");
       context.initRegion();
    }
@@ -122,14 +108,17 @@ public class BuilderProgenIndex extends Builder {
    private HealpixIndex createTree(String path,int order, long npix ) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
-      // Si ni lui, ni ses frères sont dans le MOC, on passe
-      boolean ok=false;
-      long brother = npix - npix%4L;
-      for( int i=0; i<4; i++ ) {
-         ok = context.isInMocTree(order,brother+i);
-         if( ok ) break;
-      }
-      if( !ok ) return null;
+      // Si son père n'est pas dans le MOC, on passe
+      if( !context.isInMocTree(order-1,npix/4) ) return null;
+      
+//      // Si ni lui, ni ses frères sont dans le MOC, on passe
+//      boolean ok=false;
+//      long brother = npix - npix%4L;
+//      for( int i=0; i<4; i++ ) {
+//         ok = context.isInMocTree(order,brother+i);
+//         if( ok ) break;
+//      }
+//      if( !ok ) return null;
       
 //      System.out.println("createTree("+order+","+npix+")...");
       
@@ -146,7 +135,11 @@ public class BuilderProgenIndex extends Builder {
          }
          if( found ) out = createNode(fils);
       }
-      if( out!=null && context.isInMocTree(order,npix) && order<maxOrder) {
+      
+      // Si on a trop de Progen
+      if( order<maxOrder && out!=null && out.size()>HealpixIndex.TOOMANY ) out.setTooMany(true);
+
+      if( out!=null && !out.hasTooMany() && context.isInMocTree(order,npix) && order<maxOrder) {
          writeIndexFile(file,out);
          Aladin.trace(4, "Writing " + file);
 
@@ -156,7 +149,7 @@ public class BuilderProgenIndex extends Builder {
          updateStat(f);
       }
       
-      if( order<=minOrder ) return null;
+      if( order<minOrder ) return null;
       return out;
    }
    
@@ -184,9 +177,11 @@ public class BuilderProgenIndex extends Builder {
       HealpixIndex out = new HealpixIndex();
       for( int i=0; i<4; i++ ) {
          if( fils[i]==null ) continue;
+         if( fils[i].hasTooMany() ) { out.setTooMany(true); break; }
          out.putAll(fils[i]);
          fils[i]=null;
       }
+      
       return out;
    }
 

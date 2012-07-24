@@ -8,4 +8,6 @@ public abstract class STCObj {
 
 
     public abstract ShapeType getShapeType();
+    
+    public abstract boolean isIn(double lon,double lat);
 }

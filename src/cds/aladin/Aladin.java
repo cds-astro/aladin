@@ -67,7 +67,9 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Plugin synchronization support
+ * @beta    <LI> HEALPix sky => progenitor access support
+ * @beta    <LI> JPEG large image improvements (required RAM divided by 2)
+ * @beta    <LI> Plugin synchronisation support
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -95,7 +97,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.527";
+    static public final    String VERSION = "v7.528";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2457,6 +2459,15 @@ public class Aladin extends JApplet
        msgOn=false;
        if( isFullScreen() ) fullScreen.repaint();
        setHelp(false);
+    }
+    
+    
+    protected FrameProgen frameProgen = null;
+    
+    /** Visualisation (création si nécessaire) de la fenêtre des progéniteurs */ 
+    protected void showFrameProgen() {
+       if( frameProgen==null ) frameProgen = new FrameProgen(aladin);
+       else frameProgen.setVisible(true);
     }
 
    /** Efface le contenu du Status. En fait, si l'evenement
