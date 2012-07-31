@@ -121,10 +121,11 @@ import java.lang.*;
     static public final int SOL = 10;
     static public final int MOL = 11;
     static public final int SIP = 12 ;
+    static public final int MATRIX = 13 ;
     
     // Signature dans les mots clés FITS des différentes projections (l'indice dans le tableau doit correspondre
     // aux constantes statics ci-dessus
-    static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP" };
+    static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP","MATRIX" };
 
     /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
     static int getProjType(String s) { return Util.indexInArrayOf(s, projType); }
@@ -1787,6 +1788,13 @@ import java.lang.*;
              double y_objr ;
              double posx ;
              double posy ;
+             
+             // Ajout PF - juillet 2012 - pour développement calibration par matrice de coordonnées)
+             if( proj==MATRIX ) {
+                getCoordMatrix(c);
+                return;
+             }
+             
   // System.out.println("GetCoord "+c.x+" "+c.y+" "+aladin);
              if((aladin == 1) || (aladin ==2))
              {
@@ -2328,6 +2336,12 @@ import java.lang.*;
               double al,del ;
 
          //   System.out.println("GetXY aladin"+aladin+" "+c.al+" "+c.del+" "+system);
+              
+              if( proj==MATRIX ) {
+                 getXYMatrix(c);
+                 return;
+              }
+
               
               if(aladin == 1)
               {
@@ -3782,25 +3796,20 @@ else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > M
       } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
       return toutestbon;
    }
-  // 
-  // static final Astrocoo COO_EQU = new Astrocoo(new ICRS());
-  // static final Astrocoo COO_GAL = new Astrocoo(new Galactic());
-  // public static double[] RaDecToGalactic(double ra, double dec) {
-	//   double[] res = new double[2];
-	//   Astrocoo coo = (Astrocoo) COO_EQU.clone(); 
-	//   coo.set(ra, dec);
-	//   coo.convertTo(AF_GAL);
-	//   res[0] = coo.getLon();
-	//   res[1] = coo.getLat();
-	//   return res;
-  // }
-  // public static double[] GalacticToRaDec(double al, double del) {
-//	   double[] res = new double[2];
-//	   Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
-//	   coo.set(al,del);
-//	   coo.convertTo(AF_ICRS);
-//	   res[0] = coo.getLon();
-//	   res[1] = coo.getLat();
-//	   return res;
- //  }
+   
+   
+   
+   // Pour développement future - Calib par matrice
+   
+  public void getCoordMatrix(Coord c) {
+      c.al = 0;  // => methode a appeler en fonction de c.x et c.y
+      c.del = 0; // => methode a appeler en fonction de c.x et c.y
+   }
+  
+  public void getXYMatrix(Coord c) {
+     c.x = 0;  // => methode a appeler en fonction de c.al et c.del
+     c.y = 0;  // => methode a appeler en fonction de c.al et c.del
+  }
+
+
 }

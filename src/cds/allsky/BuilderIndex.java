@@ -231,17 +231,18 @@ public class BuilderIndex extends Builder {
 
                try {
                   
-//                  // Test sur l'image entière (pas possible autrement)
-//                  if( currentfile.endsWith(".hhh") ) {
-//                     updateStat(file, code, fitsfile.width, fitsfile.height, Math.abs(fitsfile.bitpix) / 8);
-//                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
-//                     
-//                  // Découpage en petits carrés
-//                  } else {   
+                  // Test sur l'image entière (pas possible autrement)
+                  if( !Fits.INCELLS && currentfile.endsWith(".hhh") ) {
+                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8);
+                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
+                     
+                  // Découpage en petits carrés
+                  } else {   
+//                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
                         int width = fitsfile.width - borderSize[3];
                         int height = fitsfile.height - borderSize[2];
 
-                        updateStat(file, code, width, height, Math.abs(fitsfile.bitpix) / 8);
+                        updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8);
                         
                         for( int x=borderSize[1]; x<width; x+=cellSize ) {
                           
@@ -254,7 +255,7 @@ public class BuilderIndex extends Builder {
                               testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                            }
                         }
-//                     }
+                     }
                } catch (Exception e) {
                   if( Aladin.levelTrace>=3 ) e.printStackTrace();
                   return;
@@ -281,7 +282,8 @@ public class BuilderIndex extends Builder {
          for( int i=0; i<4; i++ ) {
             coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
             coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
-            coo.y = fitsfile.height - coo.y -1;
+            if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+               coo.y = fitsfile.height - coo.y -1;
             c.GetCoord(coo);
             cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
             
@@ -289,7 +291,8 @@ public class BuilderIndex extends Builder {
             if( hasCell ) {
                coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
                coo.y = (i<2 ? 0 : fitsfile.height);
-               coo.y = fitsfile.height - coo.y -1;
+               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+                  coo.y = fitsfile.height - coo.y -1;
                c.GetCoord(coo);
             }
             stc.append(" "+coo.al+" "+coo.del);
@@ -302,7 +305,7 @@ public class BuilderIndex extends Builder {
             long npix = npixs[i];
 
             // vérifie la validité du losange trouvé
-            if (!isInImage(fitsfile, Util.getCorners(order, npix))) continue;
+            if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
 
             hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
             cds.tools.Util.createPath(hpxname);

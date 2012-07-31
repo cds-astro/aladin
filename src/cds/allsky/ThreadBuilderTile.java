@@ -142,7 +142,9 @@ final public class ThreadBuilderTile {
                   // Détermination du pixel dans l'image à traiter
                   else {
                      file.calib.GetXY(coo);
-                     lastY=coo.y = file.fitsfile.height-coo.y -1;  // Correction manuelle de 1 en comparaison avec les originaux
+                     if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && file.fitsfile.bitpix!=0 ) 
+                        coo.y = file.fitsfile.height-coo.y -1;
+                     lastY=coo.y;
                      lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
                      lastFitsFile=file.fitsfile.getFilename();
                   }
@@ -182,7 +184,7 @@ final public class ThreadBuilderTile {
                      }
                   }
                   if( pixelFinal!=0 ) empty=false;
-                  out.setPixelRGBJPG(x, y, pixelFinal);
+                 out.setPixelRGBJPG(x, y, pixelFinal);
 
                   // Cas normal
                }  else {
@@ -211,55 +213,6 @@ final public class ThreadBuilderTile {
    }
    
    
-   //	private final String [][] DSSEXT = { {"m7","m9","k7","k9"}, {"mk","mm","kk","km"}, 
-   //	                                     {"6m","8m","6k","8k"}, {"67","69","87","89"}, 
-   //	                                     {"ee","eg","ge","gg"}, {"nn","no","on","oo"} };
-   //
-   //	private void calculeDSSMin(double [] min,SrcFile file) {
-   //
-   //	   try {
-   //	      // Autour des imagettes 67 - 6m, m7 - mm
-   //	      String filename = file.fitsfile.getFilename();
-   //	      int index = filename.lastIndexOf('.');
-   //	      index = filename.lastIndexOf('.',index-1);
-   //	      String subname = filename.substring(0,index);
-   //	      for( int i=0; i<DSSEXT.length; i++ ) {
-   //	         double m=0;
-   //	         for( int j=0; j<4; j++ ) {
-   //	            String name = subname + "." + DSSEXT[i][j] + ".fits";
-   //	            Fits f = new Fits();
-   //	            f.loadFITS(name);
-   //	            m += f.findAutocutRange()[0];
-   //	         }
-   //	         min[i] = m/4;
-   //	      }
-   //	      System.out.println("calculeDSSMin pour "+subname+" => "+min[0]+","+min[1]+","+min[2]+","+min[3]+" c="+min[4]+","+min[5]);
-   //
-   //	   } catch( Exception e ) {
-   //	      e.printStackTrace();
-   //	   }
-   //	}
-
-
-
-   // Juste pour des tests
-   //    Fits buildTestHealpix(int nside_file, long npix_file, int nside) {
-   //       Fits out=null;
-   //       try {
-   //          // cherche les numéros de pixels Healpix dans ce losange
-   //
-   //          out = new Fits(SIDE, SIDE, bitpix);
-   //          for (int y = 0; y < out.height; y++) {
-   //             for (int x = 0; x < out.width; x++) {
-   //                double pixel = x+y; //(out.width+out.height)-(x+y);
-   //                out.setPixelDouble(x, y, pixel);
-   //             }
-   //          }
-   //       } catch( Exception e ) { }
-   //       return out;
-   //    }
-
-
    static private final double OVERLAY_PROPORTION = 1/6.;
    
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
@@ -366,6 +319,10 @@ final public class ThreadBuilderTile {
       int b1 = f.getPixelRGBJPG(ox2,oy1);
       int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
+//      int b0 = f.getPixelRGB(ox1,oy1);
+//      int b1 = f.getPixelRGB(ox2,oy1);
+//      int b2 = f.getPixelRGB(ox1,oy2);
+//      int b3 = f.getPixelRGB(ox2,oy2);
 
       int pix=0;
       for( int i=16; i>=0; i-=8 ) {
@@ -477,7 +434,8 @@ final public class ThreadBuilderTile {
                   int pos=-1;
                   if( fitsfilename.endsWith(".hhh") || (pos=fitsfilename.indexOf(".hhh["))>0 ) {
                      
-                     String hhhFile = pos==-1 ? fitsfilename : fitsfilename.substring(0,pos+4);
+//                     String hhhFile = pos==-1 ? fitsfilename : fitsfilename.substring(0,pos+4);
+                     String hhhFile = fitsfilename;
                      
                      fitsfilename=fitsfilename.replaceAll("\\.hhh", ".jpg");
                      try { fitsfile=context.cacheFits.getFits(fitsfilename,true); }
@@ -488,6 +446,7 @@ final public class ThreadBuilderTile {
                         fitsfile=context.cacheFits.getFits(fitsfilename,true);
                      }
                      
+//                     fitsfile.loadHeaderFITS(hhhFile);
                      fitsfile.loadHeaderFITS(hhhFile);
                      
                   }

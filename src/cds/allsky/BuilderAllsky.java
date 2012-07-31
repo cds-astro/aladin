@@ -39,6 +39,7 @@ final public class BuilderAllsky  extends Builder {
    
    public void validateContext() throws Exception {
       validateOutput();
+      validateCut();
       context.setProgressMax(100);
    }
    
@@ -159,13 +160,14 @@ final public class BuilderAllsky  extends Builder {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
+      int outFileHeight = nbOutLosangeHeight*outLosangeWidth;
       boolean notfound = true;
      
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
 //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
-      Fits out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth, 0);
+      Fits out = new Fits(outFileWidth,outFileHeight, 0);
       
       for( int npix=0; npix<n; npix++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
@@ -181,10 +183,10 @@ final public class BuilderAllsky  extends Builder {
             int gap = in.width/outLosangeWidth;
             for( int y=0; y<in.width/gap; y++ ) {
                for( int x=0; x<in.width/gap; x++ ) {
-                  int p=in.getPixelRGB(x*gap,y*gap);
+                  int p=in.getPixelRGB(x*gap,in.width-y*gap-1);
                   int xOut = xLosange*outLosangeWidth + x;
                   int yOut = yLosange*outLosangeWidth + y;
-                  out.setPixelRGB(xOut, yOut, p);
+                  out.setPixelRGB(xOut, outFileHeight-yOut-1, p);
                }
             }
          }

@@ -242,10 +242,16 @@ public class BuilderRgb extends Builder {
 	   for( int c=0; c<3; c++ ) {
 	      if( c==missing ) continue;
 	      out[c] = new Fits();
-	      out[c].loadFITS( Util.getFilePath( p[c].getUrl(),order, npix)+".fits");
+	      try {
+            out[c].loadFITS( Util.getFilePath( p[c].getUrl(),order, npix)+".fits");
+            
+         // Un losange d'une des composantes est manquant
+         } catch( Exception e ) {
+            out[c]=null;
+         }
 
 	      // Initialisation des constantes pour cette composante
-	      if( bitpix[c]==0 ) {
+	      if( out[c]!=null && bitpix[c]==0 ) {
 	         bitpix[c]=out[c].bitpix;
 	         blank[c]=out[c].blank;
 	         bscale[c]=out[c].bscale;
@@ -261,7 +267,7 @@ public class BuilderRgb extends Builder {
        
        // Passage en 8 bits pour chaque composante
        for( int c=0; c<3; c++ ) {
-          if( c==missing ) continue;
+          if( c==missing || out[c]==null ) continue;
 //          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
           out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c]);
        }
@@ -272,8 +278,11 @@ public class BuilderRgb extends Builder {
           int tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
           for( int c=0; c<3; c++ ) {
              if( c==missing ) continue;
-             pix8[c] = 0xFF & (int)out[c].pix8[i];
-             tot += pix8[c];
+             if( out[c]==null ) pix8[c]=0;
+             else {
+                pix8[c] = 0xFF & (int)out[c].pix8[i];
+                tot += pix8[c];
+             }
           }
           if( missing!=-1 ) pix8[missing] = tot/2;
           int pix = 0xFF;

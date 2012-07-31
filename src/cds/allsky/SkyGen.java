@@ -234,7 +234,9 @@ public class SkyGen {
 
 
       // Les tâches à faire si aucune n'est indiquées
+      boolean all=false;
       if( actions.size()==0 ) {
+         all=true;
          actions.add(Action.INDEX);
          actions.add(Action.TILES);
          actions.add(Action.GZIP);
@@ -244,12 +246,15 @@ public class SkyGen {
       // Nettoyage avant ?
       if( force ) {
          context.setIgnoreStamp(true);
-         for( int i=0; i<actions.size() ;i++ ) {
-            Action a = actions.get(i);
-                 if( a==Action.INDEX ) { actions.add(i, Action.CLEANINDEX); i++; }
-            else if( a==Action.TILES ) { actions.add(i, Action.CLEANTILES); i++; }
-            else if( a==Action.JPEG )  { actions.add(i, Action.CLEANJPEG);  i++; }
-        }
+         if( all ) actions.add(0, Action.CLEAN);
+         else {
+            for( int i=0; i<actions.size() ;i++ ) {
+               Action a = actions.get(i);
+               if( a==Action.INDEX ) { actions.add(i, Action.CLEANINDEX); i++; }
+               else if( a==Action.TILES ) { actions.add(i, Action.CLEANTILES); i++; }
+               else if( a==Action.JPEG )  { actions.add(i, Action.CLEANJPEG);  i++; }
+            }
+         }
       }
 
       // C'est parti

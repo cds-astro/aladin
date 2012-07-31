@@ -494,6 +494,18 @@ public final class MyInputStream extends FilterInputStream {
       return type;
 
    }
+   
+   /** Skippe les prochains octets (si nécessaire) pour se caler sur le prochain
+    * bloc de 2880 bytes (typique du FITS).
+    * @return le nombre d'octets effectivement skippes
+    * @throws IOException
+    */
+   public long skipOnNext2880() throws IOException {
+      long pos = getPos();
+      if( pos%2880==0 ) return 0;
+      long offset = ((pos/2880)+1) *2880  -pos;
+      return skip(offset);
+   }
 
    /**
     * Interface InputStream, methode skip()

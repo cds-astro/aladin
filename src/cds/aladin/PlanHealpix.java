@@ -456,11 +456,13 @@ public class PlanHealpix extends PlanBG {
            } catch( Exception e) {}
            
            // On se cale sur le prochain segment de 2880
-           long pos = isTmp.getPos();
-           if( pos%2880!=0 ) {
-              long offset = ((pos/2880)+1) *2880  -pos;
-              isTmp.skip(offset);
-           }
+           isTmp.skipOnNext2880();
+//           long pos = isTmp.getPos();
+//           if( pos%2880!=0 ) {
+//              long offset = ((pos/2880)+1) *2880  -pos;
+//              isTmp.skip(offset);
+//           }
+           
            headerFits = new FrameHeaderFits(isTmp);
         }
 

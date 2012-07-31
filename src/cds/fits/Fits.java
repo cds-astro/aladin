@@ -247,26 +247,68 @@ final public class Fits {
       
       ImageReadParam param = reader.getDefaultReadParam();
       if( this.widthCell!=width || this.heightCell!=height ) {
-         Rectangle r = new Rectangle(xCell,yCell,widthCell,heightCell);
+         int yJpegCell;
+         if( RGBASFITS ) yJpegCell = height-yCell-heightCell;
+         else yJpegCell=yCell;
+         Rectangle r = new Rectangle(xCell,yJpegCell,widthCell,heightCell);
          param.setSourceRegion(r);
       }
       BufferedImage imgBuf = reader.read(0,param);
       
       if( flagColor ) {
-//         rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-         
-         rgb = new int[widthCell*heightCell*4];
+         rgb = new int[widthCell*heightCell];
          imgBuf.getRGB(0, 0, widthCell, heightCell, rgb, 0, widthCell);
+         if( RGBASFITS ) invImageLine(widthCell,heightCell,rgb);
 
-      } else pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+      } else {
+         pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+         if( RGBASFITS ) {
+            invImageLine(widthCell,heightCell,pixels);
+            pix8 = pixels;
+         }
+         
+//      System.out.print("1ère ligne:");
+//      for( int i=0; i<5; i++ ) System.out.print(" "+pixels[i]);
+//      System.out.println();
+//      
+//      System.out.print("Dernière ligne :");
+//      for( int i=0; i<5; i++ ) System.out.print(" "+pixels[pixels.length-widthCell+i]);
+//      System.out.println();
+      }
       
+
       imgBuf.flush(); imgBuf=null;
-      if( bitpix==8 ) {
+      if( !RGBASFITS && bitpix==8 ) {
          pix8 = new byte[widthCell*heightCell];
          initPix8();
       }
 
    }
+   
+   protected static void invImageLine(int width, int height,byte [] pixels) {
+      byte[] tmp = new byte[width];
+      for( int h=height/2-1; h>=0; h-- ) {
+         int offset1=h*width;
+         int offset2=(height-h-1)*width;
+         System.arraycopy(pixels,offset1, tmp,0, width);
+         System.arraycopy(pixels,offset2, pixels,offset1, width);
+         System.arraycopy(tmp,0, pixels,offset2, width);
+      }
+      tmp=null;
+   }
+
+   protected static void invImageLine(int width, int height,int [] pixels) {
+      int[] tmp = new int[width];
+      for( int h=height/2-1; h>=0; h-- ) {
+         int offset1=h*width;
+         int offset2=(height-h-1)*width;
+         System.arraycopy(pixels,offset1, tmp,0, width);
+         System.arraycopy(pixels,offset2, pixels,offset1, width);
+         System.arraycopy(tmp,0, pixels,offset2, width);
+      }
+      tmp=null;
+   }
+
    
    // Extraction de la définition d'une cellule FITS pour une ouverture d'un fichier FITS en mode "mosaic"
    // le filename doit être suffixé par [x,y-wxh] (sans aucun blanc).
@@ -450,6 +492,7 @@ final public class Fits {
     * @return un code GZIP|HHH|COLOR pour savoir de quoi il s'agit
     */
    public int loadHeaderFITS(String filename) throws Exception {
+      filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       int code=0;
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       if( is.isGZ() ) code |= GZIP; 
@@ -492,10 +535,13 @@ final public class Fits {
       
       if( bitpix==0 ) code |= COLOR;
       
-//      if( bitpix!=0 ) bitpix = headerFits.getIntFromHeader("BITPIX");
-      width=widthCell  = headerFits.getIntFromHeader("NAXIS1");
-      height=heightCell = headerFits.getIntFromHeader("NAXIS2");
-      xCell=yCell=0;
+      width  = headerFits.getIntFromHeader("NAXIS1");
+      height = headerFits.getIntFromHeader("NAXIS2");
+      if( !hasCell() ) {
+         xCell=yCell=0;
+         widthCell=width;
+         heightCell=height;
+      }
       try { blank = headerFits.getDoubleFromHeader("BLANK");   } catch( Exception e ) { blank=DEFAULT_BLANK; }
       try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
       try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
@@ -676,14 +722,21 @@ final public class Fits {
 
    public void writeJPEG(OutputStream os) throws Exception { writeJPEG(os,0.95f); }
    public void writeJPEG(OutputStream os,float qual) throws Exception {
-      Image img = Toolkit.getDefaultToolkit().createImage(
-            bitpix==0 ? new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell)
-                       : new MemoryImageSource(widthCell,heightCell,getCM(), pix8, 0,widthCell));
+      Image img;
+      if( bitpix==0 ) {
+         if( RGBASFITS ) invImageLine(widthCell,heightCell, rgb);
+         img = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell) );
+      } else {
+         img = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell,getCM(), pix8, 0,widthCell) );
+      }
 
       BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
       Graphics g = bufferedImage.createGraphics();
-      g.drawImage(img,xCell,yCell,observer);
+      int yJpegCell = RGBASFITS ? height-yCell-heightCell : yCell;
+      g.drawImage(img,xCell,yJpegCell,observer);
       g.dispose();
+      
+      if( RGBASFITS && bitpix==0 ) invImageLine(widthCell,heightCell, rgb);
 
       ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
       ImageWriteParam iwp = writer.getDefaultWriteParam();
@@ -707,6 +760,17 @@ final public class Fits {
    }
    
    
+//   static final public boolean INCELLS=false;
+//   static final public boolean JPEGORDERCALIB=false;
+//   static final public boolean JPEGFROMTOP=true;
+//   static final public boolean RGBASFITS=false;
+
+   
+   static final public boolean INCELLS=true;         // true => permet le découpage en cellule d'un fichier .hhh
+   static final public boolean JPEGORDERCALIB=false;  // true => Ne fait pas le complément à la hauteur lors des calculs de coord via Calib pour les JPEG
+   static final public boolean JPEGFROMTOP=false;      // true => les lignes dans rgb[] sont comptées depuis le haut
+   static final public boolean RGBASFITS=true;       // true => les lignes dans rgb[] sont comptées depuis le bas comme en FITS
+  
    /** Retourne la valeur RGB du pixel dans le cas d'une image couleur RGB
     * => le facteur ALPHA est mis à zéro */
    public int getPixelRGB(int x, int y) {
@@ -714,10 +778,9 @@ final public class Fits {
    }
    
    public int getPixelRGBJPG(int x, int y) {
-      return 0x00FFFFFF & rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell) ];
-//      return 0x00FFFFFF & rgb[ ((height-(y-yCell)-1))*widthCell+(x-xCell) ];
+      if( Fits.JPEGFROMTOP )  return 0x00FFFFFF & rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell) ];
+      return 0x00FFFFFF & rgb[ (y-yCell)*widthCell + (x-xCell) ];
    }
-   
   
    /** Retourne la description de la cellule courante selon la syntaxe [x,y-wxh]
     * ou "" si le fichier n'a pas été ouvert en mode mosaic */
@@ -727,7 +790,7 @@ final public class Fits {
    }
    
    /** Retourne true si le fichier a été ouvert en mode mosaic */
-   public boolean hasCell() { return widthCell!=width || heightCell!=height; }
+   public boolean hasCell() { return widthCell!=-1 && heightCell!=-1 && (widthCell!=width || heightCell!=height); }
    
    /** Retourne true s'il y a un pixel connu à la position x,y.
     * Cela concerne le mode mosaic FITS, où l'on peut ouvrir juste une cellule sur le fichier
@@ -751,17 +814,17 @@ final public class Fits {
       return getPixValInt(pixels,bitpix,(y-yCell)*widthCell + (x-xCell));
    }
 
-   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du haut)
-    * exprimé en byte => destiné à être sauvegardé en JPEG  */
-   protected int getPix8FromTop(int x,int y) {
-      return getPixValInt(pix8,8, (y-yCell)*widthCell + (x-xCell));
-   }
-   
-   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
-    * exprimé en byte => destiné à être sauvegardé en JPEG  */
-   public int getPix8(int x,int y) {
-      return getPixValInt(pix8,8, ((height-y-1)-yCell)*widthCell+(x-xCell));
-   }
+//   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du haut)
+//    * exprimé en byte => destiné à être sauvegardé en JPEG  */
+//   public int getPix8FromTop(int x,int y) {
+//      return getPixValInt(pix8,8, (y-yCell)*widthCell + (x-xCell));
+//   }
+//   
+//   /** Retourne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
+//    * exprimé en byte => destiné à être sauvegardé en JPEG  */
+//   public int getPix8(int x,int y) {
+//      return getPixValInt(pix8,8, ((height-y-1)-yCell)*widthCell+(x-xCell));
+//   }
 
    /** Positionne la valeur du pixel RGB en (x,y) (y compté à partir du bas) exprimé en ARGB
     * Le facteur Alpha est forcé à 0xFF (pas de transparence) */
@@ -770,7 +833,8 @@ final public class Fits {
    }
    
    public void setPixelRGBJPG(int x,int y, int val) {
-      rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell)]=0xFF000000 | val;
+      if( Fits.JPEGFROMTOP ) rgb[ ((height-y-1)-yCell)*widthCell+(x-xCell)]=0xFF000000 | val;
+      else rgb[(y-yCell)*widthCell + (x-xCell)]=0xFF000000 | val;
    }
 
    /** Positionne la valeur du pixel en (x,y) (y compté à partir du bas) exprimé en double */
@@ -785,7 +849,7 @@ final public class Fits {
 
    /** Positionne la valeur du pixel 8 bits en (x,y) (y compté à partir du bas)
     * exprimé en byte => destiné à être sauvegardé en JPEG  */
-   public void setPix8(int x,int y, int val) {
+   private void setPix8(int x,int y, int val) {
       setPixValInt(pix8,8, ((height-y-1)-yCell)*widthCell+x, val);
 //      setPixValInt(pix8,8, y*width+x, val);
    }
@@ -1079,6 +1143,7 @@ final public class Fits {
     * ==> voir releaseBitmap()
     */
    public void reloadBitmap() throws Exception {
+      if( bitpix==0 ) return;  // De fait du JPEG
       if( pixels!=null ) return;
       if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
       testBitmapReleaseFeature();
@@ -1443,46 +1508,34 @@ final public class Fits {
 
    public static void main(String[] args) {
       try {
-         String file = "C:/Test.jpg";
          Fits f = new Fits();
-         f.loadJpeg(file);
+         f.loadFITS("F:/A.fits"); 
+//         f.loadFITS("F:/A.fits[900,150,200,400]");
          System.out.println("lecture de "+f.getFilename()+" => "+f);
-         int x= 33;
-         int y= 25;
-         int x1=1;
-         int y1=2;
-         int x2=7;
-         int y2=27;
-         double pix = f.isInCell(x,y) ? f.getPix8(x,y) : Double.NaN;
-         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         double pix1 = f.isInCell(x1,y1) ? f.getPix8(x1,y1) : Double.NaN;
-         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         double pix2 = f.isInCell(x2,y2) ? f.getPix8(x2,y2) : Double.NaN;
-         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
+         int x= 899;
+         int y= 149;
+         System.out.print("Valeur des pixels en FITS: ");
+         for( int i=0; i<10; i++,x++ ) {
+            double pix = f.isInCell(x,y) ? f.getPixelDouble(x,y) : Double.NaN;
+            System.out.print(" "+pix);
+         }
+         System.out.println();
          f.free();
-         
-         Fits g = new Fits();
-         g.loadJpeg(file+"[1,0-10x18]");
-         System.out.println("lecture de "+g.getFilename()+" => "+g);
-         pix = g.isInCell(x,y) ? g.getPix8(x,y) : Double.NaN;
-         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         pix1 = g.isInCell(x1,y1) ? g.getPix8(x1,y1) : Double.NaN;
-         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         pix2 = g.isInCell(x2,y2) ? g.getPix8(x2,y2) : Double.NaN;
-         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
-         g.free();
-         
-         Fits h = new Fits();
-         h.loadJpeg(file+"[24,22-10x5]");
-         System.out.println("lecture de "+h.getFilename()+" => "+h);
-         pix = h.isInCell(x,y) ? h.getPix8(x,y) : Double.NaN;
-         System.out.println("Valeur du pixel1 ("+x+","+y+") => "+pix);
-         pix1 = h.isInCell(x1,y1) ? h.getPix8(x1,y1) : Double.NaN;
-         System.out.println("Valeur du pixel2 ("+x1+","+y1+") => "+pix1);
-         pix2 = h.isInCell(x2,y2) ? h.getPix8(x2,y2) : Double.NaN;
-         System.out.println("Valeur du pixel3 ("+x2+","+y2+") => "+pix2);
-         h.free();
-         
+                  
+         f = new Fits();
+//         f.loadJpeg("F:/A.jpg");
+         f.loadJpeg("F:/A.jpg[900,150,200,400]");
+         System.out.println("lecture de "+f.getFilename()+" => "+f);
+         x= 899;
+         y= 149;
+         System.out.print("Valeur des pixels en JPEG: ");
+         for( int i=0; i<10; i++,x++ ) {
+            double pixInt = (double) (f.isInCell(x,y) ? f.getPixelInt(x,y) : -1 );
+            System.out.print(" "+pixInt);
+         }
+         System.out.println();
+
+         f.free();
 
 
       } catch( Exception e ) {
