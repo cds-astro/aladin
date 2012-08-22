@@ -332,6 +332,7 @@ long t1,t;
             sv.addElement(new ServerNED(aladin));
             if( Aladin.PROTO ) {
                 sv.addElement(new ServerSWarp(aladin));
+                sv.addElement(new ServerMocQuery(aladin));
             }
          } else {
             sv.addElement(new ServerSimbad(aladin));
@@ -366,7 +367,7 @@ long t1,t;
          discoveryServer = new ServerAllVO(aladin);
          sv.addElement(discoveryServer);
       }
-      
+
       // L'arbre des catégories
       sv.addElement(new ServerCategory(aladin));
 
@@ -609,9 +610,9 @@ long t1,t;
       Aladin.makeAdd(ct, buttonTop, "North");
       Aladin.makeAdd(ct, milieu, "Center");
       Aladin.makeAdd(ct, bas, "South");
-      
+
       aladin.manageDrop();
-      
+
 //      setCurrent("Allsky");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
@@ -619,7 +620,7 @@ long t1,t;
 //      th.start();
       run();
    }
-   
+
    public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
       dropTargetDragEvent.acceptDrag (DnDConstants.ACTION_COPY_OR_MOVE);
@@ -881,7 +882,7 @@ long t1,t;
       server[current].resolveRadius(Coord.getUnit( /*Math.sqrt(2)* */
             Coord.getDist(c1, c2)), true);
    }
-   
+
    /** Ajuste les champs de saisie en fonction du repere courant et de la taille du champ */
    protected void adjustParameters() {
       setDefaultParameters(current,3);
@@ -942,7 +943,7 @@ long t1,t;
                }
             }
          }
-         
+
          if( mode==3 ) taille = v.getTaille(2);
 
          // Récupération de la position du repère
@@ -1260,7 +1261,7 @@ long t1,t;
    // Gestion des evenement
    public boolean action(Event evt, Object what) {
       if( !(what instanceof String) ) return false;
-      
+
 
       // Changement du formulaire
       server[current].memTarget(); // Memorisation du precedent target
