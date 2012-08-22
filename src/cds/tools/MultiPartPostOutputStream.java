@@ -19,12 +19,7 @@
 
 package cds.tools;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -130,13 +125,13 @@ public class MultiPartPostOutputStream {
      * Writes a input stream's contents.  If the input stream is null, a
      * <code>java.lang.IllegalArgumentException</code> will be thrown.
      *
-     * @param  name      the field name
+     * @param  paramName the field name
      * @param  mimeType  the file content type (optional, recommended)
      * @param  fileName  the file name (required)
      * @param  is        the input stream
      * @throws  java.io.IOException  on input/output errors
      */
-    public void writeFile(String name, String mimeType,
+    public void writeFile(String paramName, String mimeType,
             String fileName, InputStream is, boolean gzip)
             throws java.io.IOException {
         if(is == null) {
@@ -151,7 +146,7 @@ public class MultiPartPostOutputStream {
         out.writeBytes(boundary);
         out.writeBytes(CRLF);
         // write content header
-        out.writeBytes("Content-Disposition: form-data; name=\"" + name +
+        out.writeBytes("Content-Disposition: form-data; name=\"" + paramName +
             "\"; filename=\"" + fileName + "\"");
         out.writeBytes(CRLF);
         if(mimeType != null) {
