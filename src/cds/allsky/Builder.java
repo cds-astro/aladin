@@ -52,6 +52,7 @@ public abstract class Builder {
          case CLEANTILES:return new BuilderCleanTiles(context);
          case CLEANFITS: return new BuilderCleanFits(context);
          case CLEANJPEG: return new BuilderCleanJpg(context);
+         case CHECK:     return new BuilderCheck(context);
          case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);

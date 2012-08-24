@@ -33,6 +33,8 @@ import cds.moc.HealpixMoc;
 
 public class SkyGen {
 
+   private static final String fileIn = "fileIn.log";
+   private static final String fileErr = "fileErr.log";
    private File file;
    private boolean force=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
@@ -79,7 +81,7 @@ public class SkyGen {
 
       reader.close();
    }
-   
+
    /**
     * Affecte à un objet Context l'option de configuration donnée
     *
