@@ -98,7 +98,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.530";
+    static public final    String VERSION = "v7.531";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -303,6 +303,7 @@ public class Aladin extends JApplet
     FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
     FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
     FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
+    FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opérations sur les MOCs
     FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
     FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
     FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -371,7 +372,7 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-                      miInFold,miConv,miArithm,miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
+                      miInFold,miConv,miArithm,miMocOp,miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
     JButton ExportYourWork,searchData,avant,apres;
@@ -428,7 +429,7 @@ public class Aladin extends JApplet
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,
            PANEL1,PANEL2,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
+           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
            HPXCREATE,HPXGRID,HPXDUMP,HPXGENERATE,GETOBJ;
@@ -811,6 +812,8 @@ public class Aladin extends JApplet
        FOLD    = chaine.getString("SLMCREATFOLD");
        INFOLD  = chaine.getString("SLMINSFOLD");
        ARITHM  = chaine.getString("MARITHM");
+       MOC    = PROTOPREFIX + chaine.getString("MMOC");
+       MOCM    =chaine.getString("MMOCOP");
        HEALPIXARITHM = PROTOPREFIX + chaine.getString("MHEALPIXARITHM");
 //       ADD     = chaine.getString("MADD");
 //       SUB     = chaine.getString("MSUB");
@@ -979,6 +982,7 @@ public class Aladin extends JApplet
              },
              { {MOVERLAY},
                 {CONTOUR},
+                { MOC,"MOC generator [TODO]",MOCM},
                 {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                 {},{NTOOL+"|"+alt+" N"},
                 {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
@@ -1578,6 +1582,7 @@ public class Aladin extends JApplet
 //       else if( isMenu(m,HISTORY) )   miHistory   = ji;
        else if( isMenu(m,INFOLD) ) miInFold  = ji;
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
+       else if( isMenu(m,MOCM) )   miMocOp  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
        else if( isMenu(m,NORM) )   miNorm    = ji;
        else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -2862,6 +2867,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,ROI) )   { roi();
       } else if( isMenu(s,MCLOSE) ){ quit(0);
       } else if( isMenu(s,ARITHM) ){ updateArithm();
+      } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,CONV) )  { updateConvolution();
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
       } else if( isMenu(s,NORM) )  { norm();
@@ -3421,6 +3427,15 @@ public class Aladin extends JApplet
           frameArithm = new FrameArithmetic(aladin);
        }
        frameArithm.maj();
+    }
+
+    /** Mise à jour de la fenêtre pour les operations des MOCs */
+    protected void updateMocOp() {
+       if( frameMocOperation==null ) {
+          trace(1,"Creating the MocOp window");
+          frameMocOperation = new FrameMocOperation(aladin);
+       }
+       frameMocOperation.maj();
     }
 
     /** Mise à jour de la fenêtre pour les operations de convolutions */
@@ -4178,6 +4193,7 @@ public void setLocation(Point p) {
          int nbPlanCat = calque.getNbPlanCat();
          int nbPlanObj = calque.getNbPlanTool();
          int nbPlanImg = calque.getNbPlanImg();
+         int nbPlanMoc = calque.getNbPlanMoc();
          int nbPlanHealpix = calque.getNbPlanByClass(PlanHealpix.class);
          int nbPlanTranspImg = calque.getNbPlanTranspImg();
          int nbPlanImgWithoutBG = calque.getNbPlanImg(false);
@@ -4307,6 +4323,7 @@ public void setLocation(Point p) {
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
 //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
+         if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);

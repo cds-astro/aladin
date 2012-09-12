@@ -159,7 +159,7 @@ public final class FrameBitpix extends FrameRGBBlink {
    @Override
    protected void submit() {
       try {
-         PlanImage p=getPlan(ch[0]);
+         PlanImage p=(PlanImage)getPlan(ch[0]);
          String code = cbBitpix.getSelection().getActionCommand();
          int i = Util.indexInArrayOf(code, CODE);
          int fct = cut.isSelected() ? PlanImageAlgo.BITPIXCUT : PlanImageAlgo.BITPIX;
@@ -172,7 +172,7 @@ public final class FrameBitpix extends FrameRGBBlink {
    }
    
    private void updateTrg() {
-      PlanImage p = getPlan(ch[0]);
+      PlanImage p =(PlanImage) getPlan(ch[0]);
       if( p==null ) return;
       String code = cbBitpix.getSelection().getActionCommand();
       int i = Util.indexInArrayOf(code, CODE);
@@ -199,7 +199,7 @@ public final class FrameBitpix extends FrameRGBBlink {
    protected void adjustWidgets() {
       srcSize.setText("");
       trgSize.setText("");
-      PlanImage p = getPlan(ch[0]);
+      PlanImage p = (PlanImage)getPlan(ch[0]);
       if( p==null ) return;
       updateSrc(p.bitpix,p.naxis1,p.naxis2);
    }

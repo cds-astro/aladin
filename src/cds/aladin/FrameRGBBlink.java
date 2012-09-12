@@ -53,7 +53,7 @@ public abstract class FrameRGBBlink extends JFrame
    // Les composantes de l'objet
    boolean flagHide=true;   // Vrai si la fenetre est cache
    protected JComboBox ch[];   // Liste des Choices pour la liste des plans
-   PlanImage choicePlan[];  // Pour faire la correspondance choice -> plan[]
+   Plan choicePlan[];  // Pour faire la correspondance choice -> plan[]
 
    JButton submitBtn; // pour mode robot
 
@@ -81,7 +81,7 @@ public abstract class FrameRGBBlink extends JFrame
       Util.setCloseShortcut(this, false, aladin);
 
       setLocation(Aladin.computeLocation(this));
-      choicePlan=new PlanImage[0];
+      choicePlan=new Plan[0];
       createPanel();
    }
 
@@ -207,10 +207,10 @@ public abstract class FrameRGBBlink extends JFrame
    }
 
    /** Recupere la liste des plans images valides */
-   protected PlanImage[] getPlan() {
+   protected Plan[] getPlan() {
       Vector<Plan> v = a.calque.getPlanImg();
       if( v==null ) return new PlanImage[0];
-      PlanImage pi [] = new PlanImage[v.size()];
+      Plan pi [] = new PlanImage[v.size()];
       v.copyInto(pi);
       return pi;
    }
@@ -269,7 +269,7 @@ public void show() {
       int n = getToolNumber();
       if( n==-1 ) return;
       if( n==-2 || a.toolBox.tool[n].mode==Tool.DOWN ) {
-         PlanImage pi[]=getPlan();
+         Plan pi[]=getPlan();
          if( !flagHide && pi.length==choicePlan.length ) return; // A priori inutile
          show();
       } else hide();
@@ -314,7 +314,7 @@ public void hide() {
     * choicePlan[] pour la correspondance Retourne null si aucun plan n'est
     * selectionne
     */
-   protected PlanImage getPlan(JComboBox c) {
+   protected Plan getPlan(JComboBox c) {
       int i=c.getSelectedIndex()-1;
       if (i<0) return null;
       return choicePlan[i];

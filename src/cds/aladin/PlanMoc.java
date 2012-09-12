@@ -30,6 +30,65 @@ import cds.tools.pixtools.Hpix;
 public class PlanMoc extends PlanBGCat {
    private HealpixMoc moc = null;
    
+   protected PlanMoc(Aladin aladin,String label,PlanMoc p1,PlanMoc p2,int fct) {
+      super(aladin);
+      p1.copy(this);
+      this.c = Couleur.getNextDefault(aladin.calque);
+      setOpacityLevel(1.0f);
+      if( label==null ) label = getFonction(p1,p2,fct);
+      setLabel(label);
+      
+      aladin.trace(3,"AllSky computation: "+Plan.Tp[type]+" => "+getFonction(p1,p2,fct));
+      
+//      setLabel(label == null ? "conv["+label+"]" : label);
+      launchAlgo(p1,p2,fct);
+   }
+   
+   
+   static final int UNION = 0;
+   static final int INTERSECTION = 1;
+   static final int SUBTRACTION = 2;
+   static final int COMPLEMENT = 3;
+   
+         
+   static private final String [] FCT = { "union","inter","sub","compl"};
+   static protected String getFct(int fct) {
+      return FCT[fct];
+   }
+   
+   protected String getFonction(PlanMoc p1,PlanMoc p2,int fct) {
+      return p1.label + " "+ getFct(fct) + (p2!=null ? " "+p2.label : "");
+   }
+
+   
+   protected void launchAlgo(PlanMoc p1,PlanMoc p2,int fct) {
+      flagProcessing=true;
+      try {
+         switch(fct) {
+            case UNION :        moc = p1.getMoc().union( p2.getMoc() ); break;
+            case INTERSECTION : moc = p1.getMoc().intersection( p2.getMoc() ); break;
+            case SUBTRACTION :  moc = p1.getMoc().subtraction( p2.getMoc() ); break;
+            case COMPLEMENT :   moc = p1.getMoc().complement(); break;
+         }
+         moc.setMinLimitOrder(3);
+         
+         from = "Computed by Aladin";
+         String s = getFonction(p1,p2,fct);
+         param = "Computed: "+s;
+         flagProcessing=false;
+         flagOk=true;
+         setActivated(true);
+         aladin.calque.repaintAll();
+         
+         sendLog("Compute"," [" + this + " = "+s+"]");
+         
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+   
+
+         
    protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       super(aladin);
       this.dis   = in;

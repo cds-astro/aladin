@@ -182,7 +182,7 @@ public final class FrameResample extends FrameRGBBlink {
       int methode = cbPPV.isSelected() ? PlanImageResamp.PPV : PlanImageResamp.BILINEAIRE;
       String sMethode = methode==PlanImageResamp.PPV ? " Closest":"";
       
-      PlanImage p = getPlan(ch[0]);
+      PlanImage p = (PlanImage)getPlan(ch[0]);
       
       int n=0;
       for( int i=0; i<a.calque.plan.length; i++ ) {

@@ -142,6 +142,7 @@ public class BuilderTiles extends Builder {
       String img = context.getImgEtalon();
       if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
       if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
+      context.info("Reference image: "+img);
       try { context.setImgEtalon(img); }
       catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
       

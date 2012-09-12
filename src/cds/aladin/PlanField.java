@@ -633,7 +633,7 @@ public final class PlanField extends Plan {
        Proj3 a;
        double cosr=1.,sinr=0.;
        double offsetX,offsetY;
-
+       
        // Pour pouvoir empiler la stack correctement
        if( co==null ) co=new Coord();
        co.al=raP; co.del=deP;
@@ -705,7 +705,7 @@ public final class PlanField extends Plan {
              p.dej = a.getLat();
           }
        }
-
+       
        // Mise à jour des propriétés si nécessaires
        Properties.majProp(this);
 
@@ -996,14 +996,14 @@ public final class PlanField extends Plan {
    protected String getProjCenter() {
       Position c = getProjCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.ARCSEC+3);
    }
 
    /** Return FoV rotation center in the current Aladin coordinate frame */
    protected String getRotCenter() {
       Position c = getRotCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.ARCSEC+3);
    }
 
    private Astrocoo afs = new Astrocoo(new ICRS());    // Frame ICRS (la reference de base)

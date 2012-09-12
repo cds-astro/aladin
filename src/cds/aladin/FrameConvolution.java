@@ -98,7 +98,7 @@ protected void createChaine() {
       tb[0] = show = new JButton("Show");
       show.setEnabled(false);
       tb[0].addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { showKernel( getPlan(ch[0]) ); }
+         public void actionPerformed(ActionEvent e) { showKernel( (PlanImage)getPlan(ch[0]) ); }
       });
       return tb;
    }
@@ -317,7 +317,7 @@ protected void createChaine() {
    @Override
 protected void submit() {
       try {
-         PlanImage p1=getPlan(ch[0]);
+         PlanImage p1=(PlanImage)getPlan(ch[0]);
          String conv = getConvCmd();
          a.calque.newPlanImageAlgo(conv,p1,null,PlanImageAlgo.CONV,0,conv,0);
 //         hide();
@@ -345,7 +345,7 @@ protected void submit() {
    @Override
    protected void adjustWidgets() {
       
-      PlanImage p1=getPlan(ch[0]);
+      PlanImage p1=(PlanImage)getPlan(ch[0]);
       String resolution="--";
       if( p1!=null ) {
          try {

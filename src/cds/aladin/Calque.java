@@ -501,6 +501,16 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Retourne le nombre de plans Moc actuellement utilises */
+   protected int getNbPlanMoc() {
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].type==Plan.ALLSKYMOC && plan[i].flagOk ) n++;
+      }
+      return n;
+   }
+
    /** Retourne le nombre de sources chargées dans l'ensemble des plans */
    protected long getNbSrc() {
       long n=0;
@@ -1721,6 +1731,29 @@ public final class Calque extends JPanel implements Runnable {
       p2.launchResampleBy(p,methode,fullPixel);
       return 1;
    }
+   
+   /** Crée une image Algo sur la pile avec l'algo suivant : "p1 fct p2" ou "p1 fct coef" si p2
+    * est nul. Si p1 est nul, la première opérande sera le plan de base lui-même et le résultat
+    * sera affecté au plan de base (pas de création de plan dans la pile)
+    * @param p1 le plan correspondant à la première opérande
+    * @param p2 le plan corresondant à la deuxième opérande
+    * @param fct 0:union, 1:intersection, 2:soustraction, 3:complement
+    * @return le numéro du plan dans la pile
+    */
+   protected int newPlanMoc(String label,PlanMoc p1, PlanMoc p2,int fct) {
+      int n;
+      PlanMoc pa;
+
+      if( label==null ) label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanMoc(aladin,label,p1,p2,fct);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
 
    /** Crée une image Algo sur la pile avec l'algo suivant : "p1 fct p2" ou "p1 fct coef" si p2
     * est nul. Si p1 est nul, la première opérande sera le plan de base lui-même et le résultat

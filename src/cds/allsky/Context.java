@@ -261,8 +261,8 @@ public class Context {
        int w = file.width;
        int h = file.height;
        int x=0, y=0;
-       if (w > 1024) { w = 1024; x=file.width/2; }
-       if (h > 1024) { h = 1024; y=file.height/2; }
+       if (w > 1024) { w = 1024; x=file.width/2 - 512; }
+       if (h > 1024) { h = 1024; y=file.height/2 -512; }
        file.loadFITS(file.getFilename(), x, y, w, h);
 
        double[] cut = file.findAutocutRange();

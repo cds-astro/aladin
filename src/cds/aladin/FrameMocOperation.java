@@ -37,35 +37,28 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : (jan 2008) Creation
  */
-public final class FrameArithmetic extends FrameRGBBlink {
+public final class FrameMocOperation extends FrameRGBBlink {
 
-   String TITLE,INFO,HELP1,ADD,SUB,MUL,DIV,NORM,PPV,BIL,METHOD,PLANE,PLANEVALUE;
+   String TITLE,INFO,HELP1,UNION,INTER,SUB,COMP,PLANE;
 
    // Les composantes de l'objet
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
-   private JCheckBox cbNorm;         // Le checkbox pour indiquer une normalisation préalable
-   private ButtonGroup cbMethod;         // Le Jradio pour indiquer la méthode de sampling
 
    @Override
 protected void createChaine() {
       super.createChaine();
-      TITLE = a.chaine.getString("ARITHTITLE");
-      INFO  = a.chaine.getString("ARITHINFO");
-      HELP1  = a.chaine.getString("ARITHHELP");
-      ADD   = a.chaine.getString("ARITHADD");
-      SUB = a.chaine.getString("ARITHSUB");
-      MUL  = a.chaine.getString("ARITHMUL");
-      DIV  = a.chaine.getString("ARITHDIV");
-      NORM  = a.chaine.getString("ARITHNORM");
-      PPV= a.chaine.getString("RSPPPV");
-      BIL= a.chaine.getString("RSPBIL");
-      METHOD    = a.chaine.getString("ARITHMETHOD");
-      PLANE    = a.chaine.getString("ARITHPLANE");
-      PLANEVALUE    = a.chaine.getString("ARITHPLANEVALUE");
+      TITLE = a.chaine.getString("MOCTITLE");
+      INFO  = a.chaine.getString("MOCINFO");
+      HELP1  = a.chaine.getString("MOCHELP");
+      UNION   = a.chaine.getString("MOCUNION");
+      INTER = a.chaine.getString("MOCINTER");
+      SUB  = a.chaine.getString("MOCSUB");
+      COMP  = a.chaine.getString("MOCCOMP");
+      PLANE    = a.chaine.getString("MOCPLANE");
    }
 
   /** Creation du Frame gerant la creation d'un plan RGB. */
-   protected FrameArithmetic(Aladin aladin) {
+   protected FrameMocOperation(Aladin aladin) {
       super(aladin);
       Aladin.setIcon(this);
    }
@@ -86,13 +79,13 @@ protected int getNb() { return 2; }
 
    @Override
 protected String getLabelSelector(int i) {
-      return i==0 ? PLANE : PLANEVALUE;
+      return PLANE;
    }
 
    /** Recupere la liste des plans images valides */
    @Override
 protected Plan[] getPlan() {
-      Vector<Plan> v  =a.calque.getPlans(Plan.IMAGE);
+      Vector<Plan> v  =a.calque.getPlans(Plan.ALLSKYMOC);
       if( v==null ) return new PlanImage[0];
       Plan pi [] = new PlanImage[v.size()];
       v.copyInto(pi);
@@ -118,13 +111,13 @@ protected JPanel getAddPanel() {
 
       JPanel pp=new JPanel();
       JRadioButton cb;
-      cb=new JRadioButton(ADD); cb.setActionCommand(ADD);
+      cb=new JRadioButton(UNION); cb.setActionCommand(UNION);
       cbg.add(cb); pp.add(cb);  cb.setSelected(true);
+      cb=new JRadioButton(INTER); cb.setActionCommand(INTER);
+      cbg.add(cb); pp.add(cb);
       cb=new JRadioButton(SUB); cb.setActionCommand(SUB);
       cbg.add(cb); pp.add(cb);
-      cb=new JRadioButton(MUL); cb.setActionCommand(MUL);
-      cbg.add(cb); pp.add(cb);
-      cb=new JRadioButton(DIV); cb.setActionCommand(DIV);
+      cb=new JRadioButton(COMP); cb.setActionCommand(COMP);
       cbg.add(cb); pp.add(cb);
 
       c.gridwidth=GridBagConstraints.REMAINDER;
@@ -132,63 +125,33 @@ protected JPanel getAddPanel() {
       g.setConstraints(pp,c);
       p.add(pp);
 
-      // Normalisation ?
-      cbNorm=new JCheckBox(NORM);
-      c.fill=GridBagConstraints.NONE;
-      g.setConstraints(cbNorm,c);
-      p.add(cbNorm);
-      c.fill=GridBagConstraints.BOTH;
-
-      // Choix de la méthode
-      JPanel p2=new JPanel();
-      p2.add(new JLabel(METHOD));
-      cbMethod=new ButtonGroup();
-      cb=new JRadioButton(PPV); cb.setActionCommand(PPV); cbMethod.add(cb); cb.setSelected(true);
-      p2.add(cb);
-      cb=new JRadioButton(BIL); cb.setActionCommand(BIL); cbMethod.add(cb);
-      p2.add(cb);
-      c.fill=GridBagConstraints.NONE;
-      g.setConstraints(p2,c);
-      p.add(p2);
-      c.fill=GridBagConstraints.BOTH;
 
       return p;
    }
 
    private int getOperation(String s) {
-      if( s.equals(ADD) ) return PlanImageAlgo.ADD;
-      if( s.equals(SUB) ) return PlanImageAlgo.SUB;
-      if( s.equals(MUL) ) return PlanImageAlgo.MUL;
+      if( s.equals(UNION) ) return PlanImageAlgo.ADD;
+      if( s.equals(INTER) ) return PlanImageAlgo.SUB;
+      if( s.equals(SUB) ) return PlanImageAlgo.MUL;
       return PlanImageAlgo.DIV;
    }
 
    @Override
 protected void submit() {
       try {
-         PlanImage p1=(PlanImage)getPlan(ch[0]), p2=(PlanImage)getPlan(ch[1]);
+         PlanMoc p1=(PlanMoc)getPlan(ch[0]), p2=(PlanMoc)getPlan(ch[1]);
 
-         double coef=0;
-         if( p2==null ) {
-            coef = Double.parseDouble(((String)ch[1].getSelectedItem()).trim());
-         }
-
-         int methode = cbMethod.getSelection().getActionCommand().equals(PPV)?
-               PlanImageAlgo.PPV:PlanImageAlgo.BILINEAIRE;
          String s=cbg.getSelection().getActionCommand();
          int fct=getOperation(s);
          
-         // Dans le cas où il faudrait normaliser avant le calcul
-         if( cbNorm.isSelected() ) {
-            if( p1!=null ) p1 = PlanImageAlgo.normalise(p1);
-            if( p2!=null ) p2 = PlanImageAlgo.normalise(p2);
-         }
+         System.out.println("Il faudrait que j'opère sur "+p1+" et "+p2+" l'opération "+s+" ("+fct+")");
          
-         a.calque.newPlanImageAlgo(s.substring(0,3),p1,p2,fct,coef,null,methode);
-//         hide();
+         a.calque.newPlanMoc(s.substring(0,3),p1,p2,fct);
+         hide();
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("Arithmetic operation failed !");
+         Aladin.warning("MOC operation failed !");
       }
 
     }

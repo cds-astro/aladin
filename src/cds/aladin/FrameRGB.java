@@ -259,7 +259,7 @@ public final class FrameRGB extends FrameRGBBlink {
    
    protected void submit() {
       // Determination de chaque plan et du plan de reference
-      PlanImage r=getPlan(ch[0]), g=getPlan(ch[1]), b=getPlan(ch[2]), ref/*=getPlan(ch[3])*/;
+      PlanImage r=(PlanImage)getPlan(ch[0]), g=(PlanImage)getPlan(ch[1]), b=(PlanImage)getPlan(ch[2]), ref/*=getPlan(ch[3])*/;
       String s=cbg.getSelection().getActionCommand();
       /* if( ref==null ) */ ref=s.equals(R)?r:s.equals(B)?b:s.equals(G)?g:null;
 

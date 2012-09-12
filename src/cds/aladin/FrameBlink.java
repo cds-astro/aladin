@@ -187,7 +187,7 @@ public final class FrameBlink extends FrameRGBBlink {
       Vector v=new Vector(10);
       for( int i=0; i < n; i++, first++ ) {
          if( first>=ch.length ) first=0;
-         PlanImage pi=getPlan(ch[first]);
+         PlanImage pi=(PlanImage)getPlan(ch[first]);
          if( pi != null ) v.addElement(pi);
       }
       
