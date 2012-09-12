@@ -48,9 +48,9 @@ public class ServerMocQuery extends Server  {
 
     private String baseUrl = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
 
-    private JComboBox<PlanMoc> comboMoc;
-    private JComboBox<String> comboCat;
-    private JComboBox<String> comboMaxNbRows;
+    private JComboBox comboMoc;
+    private JComboBox comboCat;
+    private JComboBox comboMaxNbRows;
 
 
 
@@ -165,7 +165,7 @@ public class ServerMocQuery extends Server  {
             comboMoc.removeAllItems();
             if (mocs != null) {
                 for (Iterator it = mocs.iterator(); it.hasNext();) {
-                    comboMoc.addItem((PlanMoc) it.next());
+                    comboMoc.addItem(it.next());
                 }
             }
         }
