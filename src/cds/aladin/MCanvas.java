@@ -24,9 +24,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -207,9 +205,9 @@ public final class MCanvas extends JComponent
    public void actionPerformed(ActionEvent e) {
       Object src = e.getSource();
       if( src instanceof Timer ) { endTimerHist(); return; }
-      
+
       if( src instanceof JMenuItem ) System.out.println("ActionCommand = "+((JMenuItem)src).getActionCommand());
-      
+
       if( src==menuTriA || src==menuTriD ) aladin.mesure.tri(src==menuTriA);
       else if( src==menuTag ) aladin.mesure.tag();
       else if( src==menuUntag ) aladin.mesure.untag();
@@ -229,7 +227,7 @@ public final class MCanvas extends JComponent
       else if( src==menuDel ) delete(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
-      
+
       // envoi via SAMP
       else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTSPECTRUM) ) {
          String o = ((JMenuItem)src).getText();
@@ -238,16 +236,19 @@ public final class MCanvas extends JComponent
          urlSamp=null;
       }
    }
-   
+
    /**
     * Envoie aux Appli SAMP indiquées, ou à toutes (null), le spectre pointé par l'url */
    protected void sendBySAMP(String url, String plasticApp) {
       AppMessagingInterface mMgr = aladin.getMessagingMgr();
       if( ! Aladin.PLASTIC_SUPPORT || ! mMgr.isRegistered() ) return;
-      
-      ArrayList recipientsList = new ArrayList();
-      if( plasticApp!=null ) recipientsList.add(plasticApp);
-      
+
+      ArrayList recipientsList = null;
+      if( plasticApp!=null ) {
+          recipientsList = new ArrayList();
+          recipientsList.add(mMgr.getAppWithName(plasticApp));
+      }
+
       aladin.trace(4,"MCanvas.sendBySAMP spectrum ["+url+"] to "+(plasticApp==null?"all":plasticApp));
 
       // une petite animation pour informer l'utilisateur que qqch se passe
@@ -261,9 +262,9 @@ public final class MCanvas extends JComponent
          aladin.warning("SAMP error: "+e.getMessage());
       }
    }
-   
+
    private String urlSamp;
-   
+
    /** Mémorise l'url d'un spectre qui va être envoyé via SAMP lorsque l'utilisateur aura indiqué
     * l'application SAMP cibles via le popupmenu qui va apparaître */
    protected void toSamp(String url,int x,int y) {
@@ -306,7 +307,7 @@ public final class MCanvas extends JComponent
 
    /** Affichage du popup avec (dés)activation des menus concernés */
    private void popupShow(int x,int y) {
-      
+
       // Détermine s'il y a au-moins une source taguée
       boolean tag=false;
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
@@ -324,8 +325,8 @@ public final class MCanvas extends JComponent
       menuCopyMeasurement.setEnabled(flag);
       popMenu.show(this,x,y);
    }
-   
-   
+
+
    private JPopupMenu popMenuSAMP = null;
 
    private JMenu menuBroadcastSpectrum;
@@ -336,9 +337,9 @@ public final class MCanvas extends JComponent
 
    // Cree le popup menu associe au select
    private void createSAMPPopupMenu() {
-      
+
       popMenuSAMP = new JPopupMenu("SAMP");
-      
+
       String appMsgProtocolName = aladin.getMessagingMgr().getProtocolName();
 //      MALLAPPS = aladin.chaine.getString("SLMALLAPPS").replaceAll("SAMP", appMsgProtocolName);
 //      MBROADCASTALL = aladin.chaine.getString("SLMBDCASTPLANES").replaceAll("SAMP", appMsgProtocolName);
@@ -356,9 +357,9 @@ public final class MCanvas extends JComponent
 
    // Affiche le popup SAMP
    private void showSAMPPopMenu(int x,int y) {
-      
+
       if( popMenuSAMP==null ) createSAMPPopupMenu();
-      
+
       // Activation des items relatifs à PLASTIC
       if( Aladin.PLASTIC_SUPPORT ) {
          AppMessagingInterface mMgr = aladin.getMessagingMgr();
@@ -366,7 +367,7 @@ public final class MCanvas extends JComponent
          ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
 //         menuBroadcast.setEnabled(spectrumApps.size()>0);
          menuBroadcastSpectrum.setEnabled(spectrumApps.size()>0);
-         
+
          JMenuItem item;
 
          // pour envoi des images sélectionnées
