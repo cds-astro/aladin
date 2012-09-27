@@ -56,7 +56,7 @@ Aladin)
     * @param catalogs a vector of catalogs
     * @param controlButton a control button (like SUBMIT)
     */
-  public VizieRCatalogs(JTextField cat, final JButton getReadMe, final Vector catalogs, JButton
+  public VizieRCatalogs(JTextField cat, final JButton getReadMe, final JButton getMoc, final Vector catalogs, JButton
 controlButton) {
 
      Aladin.setIcon(this);
@@ -71,7 +71,7 @@ controlButton) {
     panelMain.add(title, "North");
 
     // creates a list of catalogs and add it to the main panel
-    vizierlist = new VizieRTable(cat, getReadMe, catalogs, 20, VizieRTable.SEARCH_MODE);
+    vizierlist = new VizieRTable(cat, getReadMe, getMoc, catalogs, 20, VizieRTable.SEARCH_MODE);
     JScrollPane scroll = new JScrollPane(vizierlist);
     scroll.setSize(580,600);
     panelMain.add(scroll, "Center");
@@ -79,8 +79,8 @@ controlButton) {
     // left button(s) panel
     JPanel panelButtonLeft = new JPanel();
     panelButtonLeft.setFont(BOLD);
-    if (getReadMe != null)
-      panelButtonLeft.add(getReadMe);
+    if (getReadMe != null) panelButtonLeft.add(getReadMe);
+    if (getMoc != null) panelButtonLeft.add(getMoc);
 
     // right buttons panel
     JPanel panelButtonRight = new JPanel();
@@ -152,7 +152,7 @@ controlButton) {
    * @param controlButton a control button (like SUBMIT)
    */
    public VizieRCatalogs(final Vector catalogs, JButton controlButton) {
-    this(null, null, catalogs, controlButton);
+    this(null, null, null, catalogs, controlButton);
    }
 
   /** Constructor VizieRCatalogs
@@ -160,7 +160,7 @@ controlButton) {
     * @param catalogs a vector of catalogs
     */
    public VizieRCatalogs(final Vector catalogs) {
-    this(null, null, catalogs, null);
+    this(null, null, null, catalogs, null);
    }
 
   /** Show a preselection in vizier list

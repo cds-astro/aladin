@@ -22,7 +22,11 @@ package cds.aladin;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -202,7 +206,10 @@ public final class MCanvas extends JComponent
    /** Reactions aux differents boutons du menu */
    public void actionPerformed(ActionEvent e) {
       Object src = e.getSource();
-      if( src instanceof Timer ) endTimerHist();
+      if( src instanceof Timer ) { endTimerHist(); return; }
+      
+      if( src instanceof JMenuItem ) System.out.println("ActionCommand = "+((JMenuItem)src).getActionCommand());
+      
       if( src==menuTriA || src==menuTriD ) aladin.mesure.tri(src==menuTriA);
       else if( src==menuTag ) aladin.mesure.tag();
       else if( src==menuUntag ) aladin.mesure.untag();
@@ -222,7 +229,48 @@ public final class MCanvas extends JComponent
       else if( src==menuDel ) delete(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
+      
+      // envoi via SAMP
+      else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTSPECTRUM) ) {
+         String o = ((JMenuItem)src).getText();
+         if( urlSamp==null ) return;
+         sendBySAMP(urlSamp,o);
+         urlSamp=null;
+      }
    }
+   
+   /**
+    * Envoie aux Appli SAMP indiquées, ou à toutes (null), le spectre pointé par l'url */
+   protected void sendBySAMP(String url, String plasticApp) {
+      AppMessagingInterface mMgr = aladin.getMessagingMgr();
+      if( ! Aladin.PLASTIC_SUPPORT || ! mMgr.isRegistered() ) return;
+      
+      ArrayList recipientsList = new ArrayList();
+      if( plasticApp!=null ) recipientsList.add(plasticApp);
+      
+      aladin.trace(4,"MCanvas.sendBySAMP spectrum ["+url+"] to "+(plasticApp==null?"all":plasticApp));
+
+      // une petite animation pour informer l'utilisateur que qqch se passe
+      try {
+         mMgr.getPlasticWidget().animateWidgetSend();
+         mMgr.sendMessageLoadSpectrum(url, url, "Spectrum", new Hashtable(), recipientsList);
+
+         aladin.glu.log(mMgr.getProtocolName(), "sending data or spectrum URL");
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         aladin.warning("SAMP error: "+e.getMessage());
+      }
+   }
+   
+   private String urlSamp;
+   
+   /** Mémorise l'url d'un spectre qui va être envoyé via SAMP lorsque l'utilisateur aura indiqué
+    * l'application SAMP cibles via le popupmenu qui va apparaître */
+   protected void toSamp(String url,int x,int y) {
+      urlSamp=url;
+      showSAMPPopMenu(x,y);
+   }
+
 
    /** Chargement d'une image centrée sur la source sélectionnée dans le tableau des mesures */
    private void loadImg() {
@@ -258,7 +306,7 @@ public final class MCanvas extends JComponent
 
    /** Affichage du popup avec (dés)activation des menus concernés */
    private void popupShow(int x,int y) {
-
+      
       // Détermine s'il y a au-moins une source taguée
       boolean tag=false;
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) {
@@ -276,6 +324,69 @@ public final class MCanvas extends JComponent
       menuCopyMeasurement.setEnabled(flag);
       popMenu.show(this,x,y);
    }
+   
+   
+   private JPopupMenu popMenuSAMP = null;
+
+   private JMenu menuBroadcastSpectrum;
+//   private JMenuItem menuBroadcast;
+   private String MALLAPPS;
+//   private String MBROADCASTALL;
+   private String MBROADCASTSPECTRUM;
+
+   // Cree le popup menu associe au select
+   private void createSAMPPopupMenu() {
+      
+      popMenuSAMP = new JPopupMenu("SAMP");
+      
+      String appMsgProtocolName = aladin.getMessagingMgr().getProtocolName();
+//      MALLAPPS = aladin.chaine.getString("SLMALLAPPS").replaceAll("SAMP", appMsgProtocolName);
+//      MBROADCASTALL = aladin.chaine.getString("SLMBDCASTPLANES").replaceAll("SAMP", appMsgProtocolName);
+      MBROADCASTSPECTRUM = aladin.chaine.getString("SLMBDCASTSPECTRUM");
+
+      JMenuItem j;
+      if( Aladin.PLASTIC_SUPPORT ) {
+//         popMenuSAMP.add( menuBroadcast = j= new JMenuItem(MBROADCASTALL));
+//         menuBroadcast.setActionCommand(MBROADCASTSPECTRUM);
+//         j.addActionListener(this);
+         popMenuSAMP.add( menuBroadcastSpectrum = new JMenu(MBROADCASTSPECTRUM) );
+      }
+   }
+
+
+   // Affiche le popup SAMP
+   private void showSAMPPopMenu(int x,int y) {
+      
+      if( popMenuSAMP==null ) createSAMPPopupMenu();
+      
+      // Activation des items relatifs à PLASTIC
+      if( Aladin.PLASTIC_SUPPORT ) {
+         AppMessagingInterface mMgr = aladin.getMessagingMgr();
+
+         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
+//         menuBroadcast.setEnabled(spectrumApps.size()>0);
+         menuBroadcastSpectrum.setEnabled(spectrumApps.size()>0);
+         
+         JMenuItem item;
+
+         // pour envoi des images sélectionnées
+         menuBroadcastSpectrum.removeAll();
+//         menuBroadcastSpectrum.add(item = new JMenuItem(MALLAPPS));
+//         item.setActionCommand(MBROADCASTSPECTRUM);
+//         item.addActionListener(this);
+//         menuBroadcastSpectrum.addSeparator();
+         if( spectrumApps!=null && spectrumApps.size()>0) {
+            for (String appName: spectrumApps) {
+                menuBroadcastSpectrum.add(item = new JMenuItem(appName));
+                item.setActionCommand(MBROADCASTSPECTRUM);
+                item.addActionListener(this);
+            }
+         }
+
+      }
+      popMenuSAMP.show(this,x-15,y);
+   }
+
 
   /** Recale l'absisse par defaut */
    protected void initX() { absX=0; }
@@ -359,10 +470,10 @@ public final class MCanvas extends JComponent
       if( x+width>=1 ) {
          l=width-3;
 
-         g.setColor(BG);
-         g.fillRect(x,y,l,h);
+//         g.setColor(BG);
+//         g.fillRect(x,y,l,h);
 
-         g.setColor( Aladin.BKGD);
+         g.setColor( w.samp ? Color.yellow : Aladin.BKGD);
          g.fillRect(x,y,l,h);
 
          g.setColor(w.pushed?Color.black:Color.white);

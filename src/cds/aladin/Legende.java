@@ -562,7 +562,7 @@ public final class Legende extends AbstractTableModel  {
             if( f.coo==Field.X || f.coo==Field.Y ) f.coo=0;
          }
          field[index].coo = coo;
-         System.out.println("nra="+nra+" ndec="+ndec);
+//         System.out.println("nra="+nra+" ndec="+ndec);
          if( nra>=0 && ndec>=0 && coo!=0 ) plan.pcat.modifyRaDecField(this, nra, ndec);
          
       // Pour les coordonnées cartésiennes
@@ -584,7 +584,7 @@ public final class Legende extends AbstractTableModel  {
             if( f.coo==Field.RA || f.coo==Field.DE ) f.coo=0;
          }
          field[index].coo = coo;
-         System.out.println("nx="+nx+" ny="+ny);
+//         System.out.println("nx="+nx+" ny="+ny);
          if( nx>=0 && ny>=0 && coo!=0 ) plan.pcat.modifyXYField(this, nx, ny);
          
       }

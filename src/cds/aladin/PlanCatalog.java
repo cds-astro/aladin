@@ -139,6 +139,31 @@ public class PlanCatalog extends Plan {
       threading();
    }
    
+   /** retourne le nom de la table associée à une source */
+   protected String getTableName(Source o) {
+      String s = o.leg==null ? null : o.leg.name;
+      if( s==null ) {
+         if( o.info==null ) return "Table";
+         int i = o.info.indexOf('|');
+         int j = o.info.indexOf('>');
+         if( i==-1 || j==-1 ) return "Table";
+         s = o.info.substring(i+1,j);
+      }
+      if( s.endsWith("/out") ) s=s.substring(0,s.length()-4);
+      return s;
+   }
+
+   /** retourne le nom de la première table */
+   protected String getFirstTableName() {
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         return getTableName( (Source)o );
+      }
+      return null;
+   }
+   
    private long lastFilterLock = -1;
 
    protected boolean isSync() {

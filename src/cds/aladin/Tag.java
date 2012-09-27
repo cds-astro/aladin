@@ -478,6 +478,7 @@ public final class Tag extends Position {
     * qui peut être modifiable par étirement via la souris. Si c'est le cas, mémorise
     * l'élément en question dans "on", et retourne true */
    protected boolean onViaMouse(ViewSimple v,double x, double y) {
+      if( !hasLabel() && !isArrow() ) return false;
       if( onPoignee(v,x,y ) ) on = POIGNEE;
       else if( onCorner(v,x,y) ) on = CORNER;
       else on = NOTHING;
@@ -547,8 +548,11 @@ public final class Tag extends Position {
    }
    
    protected void drawSelect(Graphics g,ViewSimple v) {
-      super.drawSelect(g,v);
-      if( !hasLabel() && !isArrow() ) return;
+      
+      if( !hasLabel() && !isArrow() ) {
+         super.drawSelect(g,v);
+         return;
+      }
       
       // la poignée pour changer l'ancrage
       Point p = getViewCoord(v,50,50);

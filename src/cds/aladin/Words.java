@@ -66,6 +66,7 @@ public final class Words implements Runnable {
    boolean glu;		    // Marque GLU
    boolean repere;	    // Triangle (repere)
    boolean archive;	    // Bouton (acces a une archive FITS)
+   boolean samp;        // Bouton (utilisera SAMP)
    boolean footprint;   // Footprint associé
    
    // Les variables d'etat
@@ -123,6 +124,7 @@ public final class Words implements Runnable {
       // Les reperes sont des tags GLU dont l'id commence par _
       if( type.equals("_") ) repere=true;
       else if( type.equals("^") ) archive=true;
+      else if( type.equals("£") ) { archive=true; samp=true; }
       else return;
 
       // On enleve le premier caractere
@@ -298,6 +300,13 @@ public final class Words implements Runnable {
       
       // Les noms basé sur une url son généralement trop long
       if( label.startsWith("http://") || label.startsWith("ftp://") ) label=text;
+      
+      // Cas particulier où il faut transmettre l'URL à une application tierce via SAMP
+      if( samp ) {
+         System.out.println("Je dois transmettre à SAMP les données ["+label+"] via l'URL suivante : "+url);
+         aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
+         return;
+      }
       
       aladin.calque.newPlan(url,label,"provided by the original archive server", o);
 

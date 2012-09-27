@@ -81,7 +81,8 @@ MEXPORT	Export planes (FITS,VOTable,...)...
 MBACKUP	Backup the stack...
 MARITHM	Arithmetic operation...
 MMOC Coverage map (MOC)...
-MMOCOP	MOC operations...
+MMOCGEN Generation from images/catalogs...
+MMOCOP	Boolean operations...
 MHEALPIXARITHM HEALPix arithmetic operations...
 #MADD	Addition
 #MSUB	Subtraction
@@ -172,8 +173,9 @@ MEXPORTEPS.fr	Exporter la vue courante (EPS)...
 MEXPORT.fr	Exporter des plans (FITS,VOTable,...)...
 MBACKUP.fr	Sauvegarder la pile...
 MMOC.fr Cartes de couverture (MOC)...
+MMOCGEN.fr	Génération à partir d'images/catalogues
+MMOCOP.fr	Opérations logiques...
 MARITHM.fr	Opérations arithmétiques...
-MMOCOP.fr	Opérations sur les MOCs...
 MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MADD.fr	Addition
 #MSUB.fr	Soustraction
@@ -600,13 +602,15 @@ ALADINSERVERR.fr	!Erreur du serveur d'images Aladin !
 VZTITLE	VizieR catalog service
 VZNAME	VizieR\nCatalogs
 VZINFO	CDS VizieR catalog service (>5000 astronomical catalogs)
-VZCATDESC	Get info.
+VZCATDESC	Info.
+VZCATMOC	Coverage map (MOC).
 VZFROM	Provided by CDS VizieR catalog service
 VZDESC	VizieR provides access to the most complete library of published astronomical catalogues and data tables available on line.\n \nYou can access VizieR catalog service by a "get" command line (use the Aladin console, menu "Tools -> Aladin console"). For VizieR, the "get" syntax follows these conventions:\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : is a VizieR catalog identifier\n   - allcolumns : to get all columns
 VZINFO1	Specify a target, and a catalog name or identification...
 VZINFO2	... don't know which catalog ? Select the \npotentially interesting ones with words/keywords !
 VZGETALL2	All columns
 VZGETALL3	Whole catalog
+VZGETMOC	MOC only
 VZCAT	Catalog
 VZKEYWORD	Author, free text...:
 VZALLCAT	Do you really want to download\nall
@@ -615,12 +619,14 @@ VZTITLE.fr	Le service des catalogues VizieR
 VZNAME.fr	Catalog.\nVizieR
 VZINFO.fr	Service des catalogues VizieR du CDS (>5000 catalogues astronomiques)
 VZCATDESC.fr	Info
+VZCATMOC.fr	Couverture (MOC)
 VZFROM.fr	Fournit par le service des catalogues VizieR du CDS
 VZDESC.fr	VizieR offre l'accès à la plus complète des bibliothèques de catalogues et tables astronomiques accessibles en ligne.\n \nVous pouvez accéder à VizieR également par une commande en ligne "get" (ouvrir la console Aladin, menu "Outils -> Console Aladin). Dans le cas de VizieR, la commande "get" suit les conventions suivantes :\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : est un identificateur de catalogue\n   - allcolumns : pour récupérer toutes les colonnes des catalogues
 VZINFO1.fr	Indiquez une position et l'identificateur d'un catalogue...
 VZINFO2.fr	... Vous ne connaissez pas l'identificateur ? Générez une liste\nde catalogues potentiels à partir de mots-clés !
 VZGETALL2.fr	Toutes col.
 VZGETALL3.fr	Tout le cata.
+VZGETMOC.fr	MOC uniquem.
 VZCAT.fr	Catalogue
 VZKEYWORD.fr	Auteur, texte libre...:
 VZALLCAT.fr	Voulez-vous vraiment décharger\ntout le catalogue
@@ -827,7 +833,7 @@ MOCINTER	Intersection
 MOCSUB	Subtraction
 MOCCOMP	Complement
 MOCTITLE	MOC operations
-MOCINFO	Specify one or two MOC planes,\n choose an MOC operation and\npress the CREATE button to generate the resulting MOC.\n
+MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting MOC.\n
 MOCPLANE	Plane
 MOCHELP	A MOC is a sky region described by a HEALPix Multi-Order coverage map. It is possible to compute very fast operations on such objects.
 
@@ -839,9 +845,16 @@ MOCCOMP.fr	Complement
 MOCTITLE.fr	Opérations sur les MOC
 MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer le MOC résultant.
 MOCPLANE.fr	Plan
-MOCPLANEVALUE.fr Plan
 MOCHELP.fr	Un MOC représente une couverture du ciel à partir d'une carte multi-échelle HEALPix. Il est possible d'effectuer très efficacemnet des opérations sur de tels objets
 
+# FrameMocGeneration.java strings
+MOCGENOP	MOC generation:
+MOCGENTITLE	MOC generation
+MOCGENINFO	Specify image and/or catalog planes,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
+
+MOCGENOP.fr	Opérations sur les MOC:
+MOCGENTITLE.fr	Opérations sur les MOC
+MOCGENINFO.fr	Désignez des images et/ou des catalogues\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
 
 # FrameBitpix.java strings
 BITPIXTITLE	Bitpix image conversion
@@ -1108,9 +1121,10 @@ SLHEYE	Click to activate/mask all overlays
 SLWAITMIN	Please be patient...\nThis plane is under construction !
 SLNOPROJ	These planes cannot be superimposed.\nRegions do not overlap !
 SLMSELECT	Select all objects in selected planes
-SLMBDCASTPLANES	Broadcast planes to all SAMP applications
+SLMBDCASTPLANES	Broadcast to all SAMP applications
 SLMBDCASTTABLES	Broadcast selected tables to ...
 SLMBDCASTIMAGES	Broadcast selected images to ...
+SLMBDCASTSPECTRUM	Broadcast selected spectrum to ...
 SLMALLAPPS	... all SAMP applications
 SLMDEL	Delete
 SLMDELEMPTY	Delete empty/error planes
@@ -1137,9 +1151,10 @@ SLHEYE.fr	Cliquez pour voir/masquer les ajouts
 SLWAITMIN.fr	Un instant...\nCe plan est en cours de chargement !
 SLNOPROJ.fr	Ces plans ne peuvent se superposer.\nCes régions ne se recouvrent pas !
 SLMSELECT.fr	Sélectionner tous les objets des plans sélectionnées
-SLMBDCASTPLANES.fr	Envoie ces plans à toutes les applications SAMP
+SLMBDCASTPLANES.fr	Envoie à toutes les applications SAMP
 SLMBDCASTTABLES.fr	Envoie les tables sélectionnées à ...
 SLMBDCASTIMAGES.fr	Envoie les images sélectionnées à ...
+SLMBDCASTSPECTRUM.fr	Envoie les spectres sélectionnés à ...
 SLMALLAPPS.fr		... toutes les applications SAMP
 SLMDEL.fr	Supprimer
 SLMDELEMPTY.fr	Supprimer les plans vides/erronés

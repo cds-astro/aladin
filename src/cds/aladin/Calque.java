@@ -1732,14 +1732,7 @@ public final class Calque extends JPanel implements Runnable {
       return 1;
    }
    
-   /** Crée une image Algo sur la pile avec l'algo suivant : "p1 fct p2" ou "p1 fct coef" si p2
-    * est nul. Si p1 est nul, la première opérande sera le plan de base lui-même et le résultat
-    * sera affecté au plan de base (pas de création de plan dans la pile)
-    * @param p1 le plan correspondant à la première opérande
-    * @param p2 le plan corresondant à la deuxième opérande
-    * @param fct 0:union, 1:intersection, 2:soustraction, 3:complement
-    * @return le numéro du plan dans la pile
-    */
+   /** Crée un plan MOC en fonction d'un ou deux plans MOCs et d'un opérateur */
    protected int newPlanMoc(String label,PlanMoc p1, PlanMoc p2,int fct) {
       int n;
       PlanMoc pa;
@@ -1749,6 +1742,21 @@ public final class Calque extends JPanel implements Runnable {
       n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = pa = new PlanMoc(aladin,label,p1,p2,fct);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
+   /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
+   protected int newPlanMoc(String label,Plan [] p,int res) {
+      int n;
+      PlanMoc pa;
+
+      if( label==null ) label = "="+p[0].getUniqueLabel("["+p[0].getLabel()+"]");
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanMoc(aladin,label,p,res);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -3012,19 +3020,6 @@ public final class Calque extends JPanel implements Runnable {
       return label;
    }
 
-   private String getTableName(Source o) {
-      String s = o.leg==null ? null : o.leg.name;
-      if( s==null ) {
-         if( o.info==null ) return "Table";
-         int i = o.info.indexOf('|');
-         int j = o.info.indexOf('>');
-         if( i==-1 || j==-1 ) return "Table";
-         s = o.info.substring(i+1,j);
-      }
-      if( s.endsWith("/out") ) s=s.substring(0,s.length()-4);
-      return s;
-   }
-
    // Procédure interne de découpage d'un plan Catalogue en plusieurs Plan, ou
    // pour chaque table
    private Vector<Plan> splitCatalog1(PlanCatalog p) {
@@ -3048,6 +3043,7 @@ public final class Calque extends JPanel implements Runnable {
          Source o = (Source)o1;
          if( o.leg!=leg ) {
             p1 = new PlanCatalog(aladin);
+            p1.server = p.server;
             p1.c = p.c;
             p1.folder=folder+1;
             p1.from=p.from;
@@ -3059,7 +3055,7 @@ public final class Calque extends JPanel implements Runnable {
             p1.planFilter=p.planFilter;
 
             p1.projd = p.projd.copy();
-            p1.setLabel(getTableName(o));
+            p1.setLabel(p1.getTableName(o));
             v.addElement(p1);
             leg=o.leg;
          }
@@ -3173,7 +3169,7 @@ public final class Calque extends JPanel implements Runnable {
    }
    
    /** Création d'un plan Healpix Multi-Order Coverage Map  */
-   protected int newPlanHpxMOCM(MyInputStream in,String label) {
+   protected int newPlaMOC(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);

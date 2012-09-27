@@ -106,6 +106,21 @@
 %O CDS'aladin
 %U http://alasky.u-strasbg.fr/aladin/VO/IVOARegistry.dic
 
+%A getMOC
+%D CDS MOC Server for VizieR tables
+%O aladin
+#%U http://alasky.u-strasbg.fr/footprints/getMoc?baseUrl=http%3a%2f%2fvizier.u-strasbg.fr%2fviz-bin%2fvotable%2f-A%3f-source%3d$1%26&nside=$2 
+%U http://alasky.u-strasbg.fr/footprints/cats/vizier/$1?product=MOC&nside=$2
+%P.D 1:Catalog ID
+%P.K 1:E
+%P.D 2:MOC resolution
+%P.V 2:64
+%P.V 2:128
+%P.V 2:256
+%P.V 2:512
+%T II/294::
+%R Mime(moc/fits)
+
 #--------------------- à copier dans Aladin.dic -----------------
 
 #%A    SimbadGlu

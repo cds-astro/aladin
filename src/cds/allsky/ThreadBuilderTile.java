@@ -431,10 +431,7 @@ final public class ThreadBuilderTile {
                   Fits fitsfile = new Fits();
                   
                   // Mode JPEG ou PNG avec .hhh
-                  int pos=-1;
-                  if( fitsfilename.endsWith(".hhh") || (pos=fitsfilename.indexOf(".hhh["))>0 ) {
-                     
-//                     String hhhFile = pos==-1 ? fitsfilename : fitsfilename.substring(0,pos+4);
+                  if( fitsfilename.endsWith(".hhh") || fitsfilename.indexOf(".hhh[")>0 ) {
                      String hhhFile = fitsfilename;
                      
                      fitsfilename=fitsfilename.replaceAll("\\.hhh", ".jpg");
@@ -445,31 +442,20 @@ final public class ThreadBuilderTile {
                         fitsfilename=fitsfilename.replaceAll("\\.jpg", ".png");
                         fitsfile=context.cacheFits.getFits(fitsfilename,true);
                      }
-                     
-//                     fitsfile.loadHeaderFITS(hhhFile);
                      fitsfile.loadHeaderFITS(hhhFile);
                      
-                  }
-
-                  /* // Mode JPEG + entête extente .hhh
-                  if (fitsfilename.endsWith("hhh")) {
-                     fitsfile.loadHeaderFITS(fitsfilename);
-                     
-                     // On essaye le fichier parallèle en JPG
-                     fitsfilename=fitsfilename.replaceAll("hhh$", "jpg");
-                     try { fitsfile.loadJpeg(fitsfilename,true); }
-                     
-                     // Sinon peut être en PNG ? (C'est pas très beau mais c'est si facile)
-                     catch( Exception e ) {
-                        fitsfilename=fitsfilename.replaceAll("jpg$", "png");
-                        fitsfile.loadJpeg(fitsfilename,true);
+                  // Mode JPEG ou PNG avec calib interne
+                  } 
+                  else                    
+                     if( fitsfilename.endsWith(".jpg") || fitsfilename.indexOf(".jpg[")>0
+                       || fitsfilename.endsWith(".png") || fitsfilename.indexOf(".png[")>0 ) {
+                        fitsfile=context.cacheFits.getFits(fitsfilename,true);
                      }
-                  } */
 
                   // Mode FITS couleur
                   else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true);
 
-                  // Mode FITS classique
+                  // Mode FITS classique ou JPEG/PNG avec calib
                   else {
                      fitsfile=context.cacheFits.getFits(fitsfilename,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
                      //					   fitsfile.loadFITS(fitsfilename);

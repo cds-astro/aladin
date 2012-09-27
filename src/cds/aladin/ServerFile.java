@@ -355,7 +355,7 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.SIA_SSA)!=0)  updateMetaData(in,server,"",null);
 
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
-               n=aladin.calque.newPlanHpxMOCM(in,label);
+               n=aladin.calque.newPlaMOC(in,label);
             }
             else if( (type & MyInputStream.FITS)!=0 && (type & MyInputStream.RGB)!=0 ) {
                if( u!=null ) {

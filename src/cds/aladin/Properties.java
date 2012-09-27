@@ -810,8 +810,22 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          bg.add(b1); bg.add(b2);
          p1.add(b1); p1.add(b2);
          PropPanel.addCouple(p,"Drawing method",p1,g,c);
-
-
+      }
+      
+      // Accès au MOC des catalogues VizieR
+      if( Aladin.PROTO &&
+            (plan.server instanceof ServerVizieR || plan.server instanceof ServerVizieRMission) ) {
+         JPanel p1 = new JPanel();
+         final String cat = ((PlanCatalog)plan).getFirstTableName();
+         JButton bt = new JButton("MOC");
+         bt.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               int n = ((ServerVizieR)aladin.dialog.server[ServerDialog.VIZIER]).createMocPlane(cat);
+               if( n>=0 ) aladin.calque.plan[n].c=plan.c;   // on leur donne la même couleur
+            }
+         });
+         p1.add(bt);
+         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
       }
 
       if( plan instanceof PlanBG ) {
@@ -835,7 +849,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             }
             PropPanel.addCouple(p,"More info",p1,g,c);
          }
-       
          
       }
 

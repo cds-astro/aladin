@@ -122,6 +122,7 @@ public final class VizieRTable extends TwoColorJTable {
 
     protected JTextField catalog;    // Catalog name field
     protected JButton getReadMe;     // Button used to get (for example) informations about a selected catalog
+    protected JButton getMoc;        // Pour récupérer le MOC
     protected Vector vCats;          // vecteur des VizieRCatalog à afficher
     protected Vector v;
 
@@ -140,8 +141,8 @@ public final class VizieRTable extends TwoColorJTable {
      * @param getReadMe button (can be optional)
      * @param v vector of rows to put into the table
      */
-    public VizieRTable(JTextField catalog, JButton getReadMe, Vector v) {
-        this(catalog, getReadMe, v, 20, SURVEY_MODE);
+    public VizieRTable(JTextField catalog, JButton getReadMe, JButton getMoc, Vector v) {
+        this(catalog, getReadMe, getMoc, v, 20, SURVEY_MODE);
     }
 
     /** Constructor Table creation
@@ -152,7 +153,7 @@ public final class VizieRTable extends TwoColorJTable {
      * @param rows number of rows to show at one time
      * @param mode display mode : SURVEY_MODE or SEARCH_MODE
      */
-    public VizieRTable(JTextField catalog, JButton getReadMe, Vector v, int rows, int mode) {
+    public VizieRTable(JTextField catalog, JButton getReadMe, JButton getMoc, Vector v, int rows, int mode) {
         super();
 
         this.mode = mode;
@@ -160,6 +161,7 @@ public final class VizieRTable extends TwoColorJTable {
         this.vCats = createObjectsFromRows(v);
         this.catalog = catalog;
         this.getReadMe = getReadMe;
+        this.getMoc = getMoc;
 
         // setting grid color
         this.setGridColor(Color.lightGray);
@@ -201,7 +203,7 @@ public final class VizieRTable extends TwoColorJTable {
      * @param v vector of lines to put into the list
      */
     public VizieRTable(Vector v) {
-        this(null, null, v, 20, SURVEY_MODE);
+        this(null, null, null, v, 20, SURVEY_MODE);
     }
 
     private void setVisibleRowCount(int nbRows) {
@@ -369,10 +371,8 @@ public final class VizieRTable extends TwoColorJTable {
             }
 
             // Readme button avtivation or not
-            if (getReadMe != null) {
-                getReadMe.setEnabled(i == 1);
-
-            }
+            if (getReadMe != null)  getReadMe.setEnabled(i == 1);
+            if (getMoc != null)  getMoc.setEnabled(i == 1);
         }
     }
 

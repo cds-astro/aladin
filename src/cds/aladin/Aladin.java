@@ -67,6 +67,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Specifical color parameter for "draw" script command
  * @beta    <LI> HEALPix sky => progenitor access support
  * @beta    <LI> JPEG large image improvements (required RAM divided by 2)
  * @beta    <LI> Plugin synchronisation support
@@ -98,7 +99,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.531";
+    static public final    String VERSION = "v7.532";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -206,7 +207,7 @@ public class Aladin extends JApplet
      // Gère le mode particuliers
     static boolean LOG=true;  // false si on inhibe les logs
     public static boolean BETA=true;  // true si on tourne en mode BETA
-    public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
+    public static boolean PROTO=true;	// true si on tourne en mode PROTO (nécessite Proto.jar)
     static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
     static boolean ANTIALIAS=false;  // Anti-aliasing
@@ -304,6 +305,7 @@ public class Aladin extends JApplet
     FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
     FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
     FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opérations sur les MOCs
+    FrameMocGeneration frameMocGeneration;   // Gere la fenetre pour la génération d'un MOC à partir d'images ou de catalogues
     FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
     FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
     FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -372,7 +374,7 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-                      miInFold,miConv,miArithm,miMocOp,miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
+                      miInFold,miConv,miArithm,miMocGen,miMocOp,miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
     JButton ExportYourWork,searchData,avant,apres;
@@ -429,7 +431,7 @@ public class Aladin extends JApplet
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,
            PANEL1,PANEL2,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
+           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGEN,MOCM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
            HPXCREATE,HPXGRID,HPXDUMP,HPXGENERATE,GETOBJ;
@@ -813,6 +815,7 @@ public class Aladin extends JApplet
        INFOLD  = chaine.getString("SLMINSFOLD");
        ARITHM  = chaine.getString("MARITHM");
        MOC    = PROTOPREFIX + chaine.getString("MMOC");
+       MOCGEN    =chaine.getString("MMOCGEN");
        MOCM    =chaine.getString("MMOCOP");
        HEALPIXARITHM = PROTOPREFIX + chaine.getString("MHEALPIXARITHM");
 //       ADD     = chaine.getString("MADD");
@@ -982,7 +985,7 @@ public class Aladin extends JApplet
              },
              { {MOVERLAY},
                 {CONTOUR},
-                { MOC,"MOC generator [TODO]",MOCM},
+                { MOC,MOCGEN,MOCM},
                 {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                 {},{NTOOL+"|"+alt+" N"},
                 {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
@@ -1583,6 +1586,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,INFOLD) ) miInFold  = ji;
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
        else if( isMenu(m,MOCM) )   miMocOp  = ji;
+       else if( isMenu(m,MOCGEN) )   miMocGen  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
        else if( isMenu(m,NORM) )   miNorm    = ji;
        else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -2867,6 +2871,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,ROI) )   { roi();
       } else if( isMenu(s,MCLOSE) ){ quit(0);
       } else if( isMenu(s,ARITHM) ){ updateArithm();
+      } else if( isMenu(s,MOCGEN) )  { updateMocGen();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
       } else if( isMenu(s,CONV) )  { updateConvolution();
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
@@ -3436,6 +3441,15 @@ public class Aladin extends JApplet
           frameMocOperation = new FrameMocOperation(aladin);
        }
        frameMocOperation.maj();
+    }
+
+    /** Mise à jour de la fenêtre pour la génération d'un MOC */
+    protected void updateMocGen() {
+       if( frameMocGeneration==null ) {
+          trace(1,"Creating the MocGen window");
+          frameMocGeneration = new FrameMocGeneration(aladin);
+       }
+       frameMocGeneration.maj();
     }
 
     /** Mise à jour de la fenêtre pour les operations de convolutions */
@@ -4323,6 +4337,7 @@ public void setLocation(Point p) {
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
 //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
+         if( miMocGen!=null ) miMocGen.setEnabled(nbPlanImg+nbPlanCat>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);

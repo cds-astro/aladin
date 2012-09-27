@@ -163,6 +163,12 @@ final public class Fits {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       is = is.startRead();
+      is.getType();   // Pour être sûr de lire le commentaire éventuel
+      if( is.hasCommentCalib() ) {
+         headerFits = is.createHeaderFitsFromCommentCalib();
+         try { setCalib(new Calib(headerFits)); } catch( Exception e ) { calib=null; }
+
+      }
       loadJpeg(is,xCell,yCell,widthCell,heightCell,color);
       is.close();
       this.setFilename(filename);
@@ -497,7 +503,7 @@ final public class Fits {
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       if( is.isGZ() ) code |= GZIP; 
       is = is.startRead();
-      long type = 0L;
+      long type = is.getType();
       
       // Cas spécial d'un fichier .hhhh
       if( filename.endsWith(".hhh") ) {
@@ -505,10 +511,15 @@ final public class Fits {
          headerFits = new HeaderFits();
          headerFits.readFreeHeader(new String(buf), true, null);
          code |= HHH;
+         
+      // Cas d'un fichier PNG ou JPEG avec un commentaire contenant la calib
+      } else if( is.hasCommentCalib() ) {
+         headerFits = is.createHeaderFitsFromCommentCalib();
+         bitpix = 0;
       }
       // Si on a une image avec extension
       // ouvrir et lire le reste des infos depuis une image de l'extension
-      else if ( ((type= is.getType()) & MyInputStream.XFITS)!=0)  {
+      else if ( (type& MyInputStream.XFITS)!=0)  {
     	  headerFits = new HeaderFits(is);
     	  code |= XFITS;
     	  int naxis = headerFits.getIntFromHeader("NAXIS");
@@ -523,6 +534,7 @@ final public class Fits {
     	  }
     	  bitpix = headerFits.getIntFromHeader("BITPIX");
       }
+      
       // Cas habituel
       else {
          headerFits = new HeaderFits(is);
@@ -545,7 +557,8 @@ final public class Fits {
       try { blank = headerFits.getDoubleFromHeader("BLANK");   } catch( Exception e ) { blank=DEFAULT_BLANK; }
       try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
       try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
-      try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { calib=null; }
+      try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { 
+         if( Aladin.levelTrace>=3 ) e.printStackTrace(); calib=null; }
       is.close();
       this.setFilename(filename);
       return code;

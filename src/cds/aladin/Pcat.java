@@ -668,15 +668,19 @@ Aladin.trace(3,"setField "+f);
 
             String tag = (gref != null) ? gref : (href != null) ? "Http "
                   + href : null;
-            if( tag != null && flagArchive != null
-                   && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
+            
+            // JE LE REMETS ACTIF DE MANIERE GENERIQUE POUR N'IMPORTE QUEL SPECTRE - PF sept 2012
+            if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
+            
+            else if( tag != null && flagArchive != null && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
+            
             // AVO, support de Specview, je dois tester sur spectrumavo car les
             // spectres
             // accessibles à partir de VizieR sont gzippés et ne rentrent pas
             // directement dans Specview
             // TODO
-            //else if( tag!=null && flagArchive!=null &&
-            // flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
+            //else if( tag!=null && flagArchive!=null && flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
+            
 
             String text = (refText != null) ? refText : value[i];
 

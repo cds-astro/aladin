@@ -28,6 +28,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.imageio.stream.FileImageInputStream;
 
+import cds.fits.HeaderFits;
 import cds.xml.TableParser;
 
 /**
@@ -1383,12 +1384,18 @@ public long skip(long n) throws IOException {
 
     /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,
      * sinon génère une exception */
-    protected FrameHeaderFits createHeaderFitsFromCommentCalib() {
+    protected FrameHeaderFits createFrameHeaderFitsFromCommentCalib() {
        return new FrameHeaderFits(commentCalib);
+    }
+    
+    /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,
+     * sinon génère une exception */
+    public HeaderFits createHeaderFitsFromCommentCalib() throws Exception {
+       return new HeaderFits(commentCalib);
     }
 
     /** Retourne true si ce flux dispose d'une calib dans un segment commentaire (JPEG ou PNG) */
-    protected boolean hasCommentCalib() { return commentCalib!=null || avm!=null; }
+    public boolean hasCommentCalib() { return commentCalib!=null || avm!=null; }
 
     /** Recherche dans un flux JPEG le segment commentaire qui peut contenir une
      * calibration. La mémorise (voir getJpegCabib() )

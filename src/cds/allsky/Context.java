@@ -297,7 +297,8 @@ public class Context {
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
          try {
             MyInputStream in = (new MyInputStream( new FileInputStream(path))).startRead();
-            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS ) { in.close(); continue; }    
+            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS 
+                  && !in.hasCommentCalib() ) { in.close(); continue; }    
             in.close();
             Aladin.trace(4, "Context.findImgEtalon: "+path+"...");
             setImgEtalon(path);

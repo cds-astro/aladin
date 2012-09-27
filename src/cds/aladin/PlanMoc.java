@@ -22,14 +22,104 @@ package cds.aladin;
 import java.awt.Graphics;
 import java.util.Iterator;
 
+import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
 
 public class PlanMoc extends PlanBGCat {
    private HealpixMoc moc = null;
+   private int res;
    
+   
+   protected PlanMoc(Aladin aladin,String label,Plan[] p,int res) {
+      this(aladin,null,label,p[0].co,30);
+      try {
+         moc = new HealpixMoc();
+         moc.setCoordSys("C");
+         frameOrigin=Localisation.ICRS;
+         this.res=res;
+         moc.setCheckConsistencyFlag(false);
+         for( Plan p1 : p ) addMocFromPlan(p1);
+         moc.setMaxLimitOrder(res);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+      flagProcessing=false;
+      flagOk=true;
+      setActivated(true);
+      aladin.calque.repaintAll();
+   }
+   
+   private void addMocFromPlan(Plan p1 ) {
+      if( p1.isCatalog() ) addMocFromCatalog(p1);
+      else if( p1.isImage() ) addMocFromImage(p1);
+   }
+   
+   private void addMocFromCatalog(Plan p1) {
+      Iterator<Obj> it = p1.iterator();
+      Healpix hpx = new Healpix();
+      int order = res;
+      long oNpix=-1;  
+      Coord coo = new Coord();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Position) ) continue;
+         try {
+            coo.al = ((Position)o).raj;
+            coo.del = ((Position)o).dej;
+            long npix = hpx.ang2pix(order, coo.al, coo.del);
+            
+            // Juste pour éviter d'insérer 2x de suite le même npix
+            if( npix==oNpix ) continue;
+
+            moc.add(order,npix);
+            oNpix=npix;
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
+   }
+
+   private void addMocFromImage(Plan p1) {
+      PlanImage pimg = (PlanImage)p1;
+      Healpix hpx = new Healpix();
+      int order = res;
+      double gapD = ( 0.5*CDSHealpix.pixRes( CDSHealpix.pow2(res) )/3600.);
+      Coord coo = new Coord();
+      coo=p1.projd.getProjCenter();
+      coo = p1.projd.getXYNative(coo);
+      double y1 = coo.y;
+      coo.del+=gapD;
+      coo = p1.projd.getXYNative(coo);
+      double gap = Math.abs(y1-coo.y);
+      if( gap>1 ) gap=1;
+      System.out.println("res="+res+" gapD="+Coord.getUnit(gapD)+" gap="+gap);
+      
+      long oNpix=-1;  
+      for( double y=0; y<pimg.naxis2; y+=gap ) {
+         for( double x=0; x<pimg.naxis1; x+=gap ) {
+            try {
+               coo.x = x;
+               coo.y = y;
+               pimg.projd.getCoord(coo);
+               long npix = hpx.ang2pix(order, coo.al, coo.del);
+
+               // Juste pour éviter d'insérer 2x de suite le même npix
+               if( npix==oNpix ) continue;
+
+               moc.add(order,npix);
+               oNpix=npix;
+            } catch( Exception e ) {
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+            }
+         }
+      }
+   }
+
+
    protected PlanMoc(Aladin aladin,String label,PlanMoc p1,PlanMoc p2,int fct) {
       super(aladin);
       p1.copy(this);
@@ -41,7 +131,13 @@ public class PlanMoc extends PlanBGCat {
       aladin.trace(3,"AllSky computation: "+Plan.Tp[type]+" => "+getFonction(p1,p2,fct));
       
 //      setLabel(label == null ? "conv["+label+"]" : label);
-      launchAlgo(p1,p2,fct);
+      try {
+         launchAlgo(p1,p2,fct);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         aladin.error = error = e.getMessage();
+         flagOk=false;
+      }
    }
    
    
@@ -61,34 +157,28 @@ public class PlanMoc extends PlanBGCat {
    }
 
    
-   protected void launchAlgo(PlanMoc p1,PlanMoc p2,int fct) {
+   protected void launchAlgo(PlanMoc p1,PlanMoc p2,int fct) throws Exception {
       flagProcessing=true;
-      try {
-         switch(fct) {
-            case UNION :        moc = p1.getMoc().union( p2.getMoc() ); break;
-            case INTERSECTION : moc = p1.getMoc().intersection( p2.getMoc() ); break;
-            case SUBTRACTION :  moc = p1.getMoc().subtraction( p2.getMoc() ); break;
-            case COMPLEMENT :   moc = p1.getMoc().complement(); break;
-         }
-         moc.setMinLimitOrder(3);
-         
-         from = "Computed by Aladin";
-         String s = getFonction(p1,p2,fct);
-         param = "Computed: "+s;
-         flagProcessing=false;
-         flagOk=true;
-         setActivated(true);
-         aladin.calque.repaintAll();
-         
-         sendLog("Compute"," [" + this + " = "+s+"]");
-         
-      } catch( Exception e ) {
-         e.printStackTrace();
+      switch(fct) {
+         case UNION :        moc = p1.getMoc().union( p2.getMoc() ); break;
+         case INTERSECTION : moc = p1.getMoc().intersection( p2.getMoc() ); break;
+         case SUBTRACTION :  moc = p1.getMoc().subtraction( p2.getMoc() ); break;
+         case COMPLEMENT :   moc = p1.getMoc().complement(); break;
       }
+      moc.setMinLimitOrder(3);
+
+      from = "Computed by Aladin";
+      String s = getFonction(p1,p2,fct);
+      param = "Computed: "+s;
+      flagProcessing=false;
+      flagOk=true;
+      setActivated(true);
+      aladin.calque.repaintAll();
+
+      sendLog("Compute"," [" + this + " = "+s+"]");
+
    }
    
-
-         
    protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
       super(aladin);
       this.dis   = in;
@@ -121,6 +211,7 @@ public class PlanMoc extends PlanBGCat {
    public boolean getWireFrame() { return wireFrame; }
    
    protected boolean waitForPlan() {
+      if( dis==null ) return true;
       super.waitForPlan();
       try {
          moc = new HealpixMoc();

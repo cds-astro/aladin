@@ -39,6 +39,9 @@ import javax.swing.*;
  * @version 0.9 : (??) creation
  */
 public class ServerVizieRMission extends Server  {
+   
+   static final String  MOCGLU = "getMOC";
+   static final String  MOCERROR = "Catalog unknown or MOC server error";
 
    // Les references
    Vector vArchives;
@@ -51,8 +54,8 @@ public class ServerVizieRMission extends Server  {
    protected String default_methode;
    protected String help_list;
    protected String nomTextfield;
-   JCheckBox cbGetAll,cbGetAllCat;
-   protected String CATDESC,TAGGLU= "VizieRXML++",GETALL,GETALL1,ALLCAT;
+   JCheckBox cbGetAll,cbGetAllCat,cbGetMoc;
+   protected String CATDESC,TAGGLU= "VizieRXML++",GETALL,GETALL1,GETMOC,ALLCAT;
 
    // Pour pouvoir overider les variables pour les classes derivees
    protected void init() {
@@ -72,6 +75,7 @@ public class ServerVizieRMission extends Server  {
       verboseDescr      = aladin.chaine.getString("ARDESC");
       GETALL    = aladin.chaine.getString("VZGETALL2");
       GETALL1   = aladin.chaine.getString("VZGETALL3");
+      GETMOC   = aladin.chaine.getString("VZGETMOC");
       ALLCAT    = aladin.chaine.getString("VZALLCAT");
    }
 
@@ -107,7 +111,7 @@ public class ServerVizieRMission extends Server  {
       }
       y+=5;
 
-      int yGetAll = y+15;
+      int yGetAll = y+ 15; // + (Aladin.PROTO ? -15 : 0);
       int xGetAll = XWIDTH-90-15;
 
       // JPanel pour la memorisation du target (+bouton DRAG)
@@ -133,7 +137,7 @@ public class ServerVizieRMission extends Server  {
       // La checkbox du getWholeCat
       cbGetAllCat=new JCheckBox(GETALL1,false);
       cbGetAllCat.setBackground(Aladin.BLUE);
-      cbGetAllCat.setBounds(xGetAll,yGetAll,120,20); yGetAll+=20;
+      cbGetAllCat.setBounds(xGetAll,yGetAll,120,20); 
       cbGetAllCat.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             boolean flag=!cbGetAllCat.isSelected();
@@ -141,7 +145,26 @@ public class ServerVizieRMission extends Server  {
             radius.setEnabled(flag);
          }
       });
-      if( !Aladin.OUTREACH && !(this instanceof ServerVizieRSurvey) ) add(cbGetAllCat);
+      if( !Aladin.OUTREACH && !(this instanceof ServerVizieRSurvey) ) { add(cbGetAllCat); yGetAll+=20; }
+      
+      // La checkbox du getMoc
+      // NON UTILISABLE POUR LE MOMENT CAR LES ALIAS NE SONT PAS RECONNU PAR LE SERVEUR DE MOC
+//      if( Aladin.PROTO ) {
+//         cbGetMoc=new JCheckBox(GETMOC,false);
+//         cbGetMoc.setBackground(Aladin.BLUE);
+//         cbGetMoc.setBounds(xGetAll,yGetAll,140,20); yGetAll+=20;
+//         cbGetMoc.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//               boolean flag=!cbGetMoc.isSelected();
+//               target.setEnabled(flag);
+//               radius.setEnabled(flag);
+//               cbGetAllCat.setEnabled(flag);
+//               cbGetAll.setEnabled(flag);
+//            }
+//         });
+//         if( !Aladin.OUTREACH )add(cbGetMoc);
+//      }
+
 
       // Catalog + Radius
       JLabel label1 = new JLabel(addDot(nomTextfield));
@@ -176,7 +199,7 @@ public class ServerVizieRMission extends Server  {
       getReadMe.addActionListener(this);
 
       // La liste des Missions
-      missionlist = new VizieRTable(mission,getReadMe,vArchives,12,VizieRTable.SURVEY_MODE);
+      missionlist = new VizieRTable(mission,getReadMe,null,vArchives,12,VizieRTable.SURVEY_MODE);
       missionlist.setFont( Aladin.PLAIN );
       JScrollPane jc = new JScrollPane(missionlist);
       jc.setBounds(XTAB1,y,XWIDTH-2*XTAB1,180); y+=190;
@@ -260,6 +283,23 @@ public class ServerVizieRMission extends Server  {
       if( !verif(Plan.CATALOG,target,label+" "+radius) ) return -1;
       return aladin.calque.newPlanCatalog(u,label,target,label+" "+radius,origin,this);
    }
+   
+   protected int createMocPlane(String cat) {
+      URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cat));
+      Aladin.trace(4,"ServerVizierMission.createMocPlane("+cat+") URL= "+u);
+      
+      MyInputStream in;
+      try {
+         in = Util.openStream(u);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         Aladin.warning(this,MOCERROR,1);
+        return -1;
+      }
+      
+      return aladin.calque.newPlaMOC( in, "MOC "+cat);
+   }
+
 
   /** Interrogation des missions, soit par Vizir soit directement aux archives */
    public void submit() {
@@ -268,36 +308,43 @@ public class ServerVizieRMission extends Server  {
       double rm=0;
 
       boolean allcat = cbGetAllCat.isSelected();
+      boolean moc =  cbGetMoc!=null && cbGetMoc.isSelected();
 
-      if( !allcat && (objet=getTarget())==null ) return;
+
       cata = mission.getText().trim();
+      if( !allcat && !moc && (objet=getTarget())==null ) return;
       if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+      
+      if( moc ) {
+         createMocPlane(cata);
+         
+      } else {
 
+         if( allcat || objet==null || objet.length()==0) {
+            if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
+            if( !Aladin.confirmation(this,ALLCAT+" \""+cata+"\" ?") ) return;
+            objet="";
+            rm=0;
+         } else if( !allcat ) {
+            if( (r=getRadius())==null ) return;
+            rm = getRM(r);
+         }
 
-      if( allcat || objet==null || objet.length()==0) {
-         if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
-         if( !Aladin.confirmation(this,ALLCAT+" \""+cata+"\" ?") ) return;
-         objet="";
-         rm=0;
-      } else if( !allcat ) {
-         if( (r=getRadius())==null ) return;
-         rm = getRM(r);
+         if( allcat ) objet="";
+
+         //      String t= new String(objet);
+         waitCursor();
+
+         resetList();
+
+         String s="";
+         if( cbGetAll.isSelected() ) s=",allcolumns";
+         if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
+         else aladin.console.setCommand("get VizieR("+cata+s+")");
+
+         createPlane(objet,rm+"",cata,null,institute);
       }
 
-      if( allcat ) objet="";
-
-//      String t= new String(objet);
-      waitCursor();
-
-      resetList();
-
-      String s="";
-      if( cbGetAll.isSelected() ) s=",allcolumns";
-      if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
-      else aladin.console.setCommand("get VizieR("+cata+s+")");
-
-      createPlane(objet,rm+"",cata,null,institute);
-      
       resetFlagBoxes();
       defaultCursor();
    }
@@ -305,7 +352,6 @@ public class ServerVizieRMission extends Server  {
 
    protected void resetList() {
       missionlist.resetList();
-//      for( int i=missionlist.countItems()-1; i>=0; i-- ) missionlist.deselect(i);
    }
 
   /** Clear du formulaire */

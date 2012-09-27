@@ -508,6 +508,7 @@ public class Position extends Obj {
             case 2: xc=r.x+r.width-DS-1; yc=r.y; break;               // coin SD
             case 3: xc=r.x+r.width-DS-1; yc=r.y+r.height-DS-1; break; // coin ID
          }
+         drawPoignee(g,xc,yc);
       }
    }
    

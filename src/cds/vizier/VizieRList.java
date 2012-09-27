@@ -76,7 +76,7 @@ public final class VizieRList extends JList {
     * @param v vector of lines to put into the list
     * @param rows number of rows to show at one time
     */
-   public VizieRList(JTextField catalog, JButton getReadMe, Vector v, int rows) {
+   public VizieRList(JTextField catalog, JButton getReadMe, Vector v,int rows) {
       setVisibleRowCount(rows);
       this.catalog = catalog;
       this.getReadMe = getReadMe;

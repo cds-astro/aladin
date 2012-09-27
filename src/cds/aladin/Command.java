@@ -116,7 +116,7 @@ public final class Command implements Runnable {
       "   @bitpix [-cut] [x] BITPIX\n" +
       "  \n" +
       "#GRAPHIC# #TOOL:#                   #FOLDER:#\n" +
-      "   @draw fct(param)                @md [-localscope] [name]\n" +
+      "   @draw [color] fct(param)        @md [-localscope] [name]\n" +
       "   @grid [on|off]                  @mv|@rm [name]\n" +
       "   @reticle [on|off]               @collapse|@expand [name]\n" +
       "   @overlay [on|off]               @show|@hide [name]\n" +
@@ -1970,6 +1970,24 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    
    protected void setDrawMode(int mode) { drawMode=mode; }
    
+   /** Recupération d'une couleur spécifique, et recalage du Tok si nécessaire
+    * dans le cas d'un rgb(r,g,b) qui nécessite de lire 3 paramètres
+    * @param s le nom de la couleur ou de la fonction de couleur
+    * @param tok le parser des paramètres calés sur le prochain
+    * @return la couleur, ou null s'il ne s'agit pas d'un nom de couleur ou d'une fonction de couleur
+    */
+   private Color getSpecifColor(String s,Tok tok) {
+      Color c;
+      if( s.equalsIgnoreCase("rgb") ) {
+         String r = tok.nextToken();
+         String g = tok.nextToken();
+         String b = tok.nextToken();
+         s = s+"("+r+","+g+","+b+")";
+         c = Action.getColor(s);
+      } else c = Action.getColor(s);
+      return c;
+   }
+   
    private boolean flagFoV=false;   // Une commande de création de FoV a été passée au préalable
    private Color globalColor=null;  // Dernière couleur demandée
    private Plan oPlan=null;         // Dernier plan Tool ou FoV utilisé
@@ -1981,6 +1999,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       Obj newobj=null;  // Nouvelle objet a inserer
       Coord c=null;	    // Position de l'objet si drawMode==DRAWRADEC;
       double x=0,y=0;	// Position de l'objet si drawMode==DRAWXY;
+      Color specifColor=null;  // Couleur spécifique à l'objet
       
 //      StringTokenizer st = new StringTokenizer(param,"(");
 //      String fct = st.nextToken();
@@ -1989,9 +2008,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       
       Tok tok = new Tok(param,"(, )");
       String fct = tok.nextToken();
+      
+      // Couleur spécifique ? => on la traite, et on se recale
+      specifColor=getSpecifColor(fct,tok);
+      if( specifColor!=null )  fct = tok.nextToken();
+      
+      // Recupération des paramètres de la fonction
       String p [] = new String[ tok.countTokens() ];
       for( int i=0; i<p.length; i++ ) p[i] = tok.nextToken();
-
+      
       // Détermination de la hauteur de l'image de base,
       // sinon on prendra 500 par défaut
       height = 500;
@@ -2190,7 +2215,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                double r2 = parseDouble(p[3]);
                newobj = new Pickle(plan,a.view.getCurrentView(),x,y,r1,r2,startAngle,angle);
             }
-
+            
          } else if( fct.equalsIgnoreCase("line") 
                  || fct.equalsIgnoreCase("polygon") ) {
             newobj=null;
@@ -2213,6 +2238,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   y = height-parseDouble(p[i+1])+0.5;
                   p1 = new Ligne(plan,v,x,y,id,op1);
                }
+               if( specifColor!=null ) p1.setColor(specifColor);
                addObj(plan,p1);
                op1=p1;
             }
@@ -2237,6 +2263,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   y = height-parseDouble(p[i+1])+0.5;
                   p1 = new Cote(plan,v,x,y,op1);
                }
+               if( specifColor!=null ) p1.setColor(specifColor);
                addObj(plan,p1);
                op1=p1;
             }
@@ -2252,8 +2279,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          return false;
       }
 
-      // Tracage
-      if( newobj!=null ) addObj(plan,newobj);
+      // Couleur spécifique + Tracage
+      if( newobj!=null ) {
+         if( specifColor!=null ) newobj.setColor(specifColor);
+         addObj(plan,newobj);
+      }
       
       plan.resetProj();
       a.view.repaintAll();

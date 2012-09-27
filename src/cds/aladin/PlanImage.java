@@ -1632,11 +1632,11 @@ Aladin.trace(3,"Second try for opening the stream due to: "+e+"...");
                      // Cas où la calib se trouverait dans un commentaire de l'image JPEG ou PNG
                      if( dis.hasCommentCalib() ) {
                         try {
-                           headerFits=dis.createHeaderFitsFromCommentCalib();
+                           headerFits=dis.createFrameHeaderFitsFromCommentCalib();
                            c = new Calib(headerFits.getHeaderFits());
                         } catch( Exception e ) {
                            dis.jpegCalibAddNAXIS(width,height);   // Peut être une entete partielle à la Sloan
-                           headerFits=dis.createHeaderFitsFromCommentCalib();
+                           headerFits=dis.createFrameHeaderFitsFromCommentCalib();
                            c = new Calib(headerFits.getHeaderFits());
                         }
 if( c!=null ) Aladin.trace(3,"Reading FITS key words from JPEG comment");
