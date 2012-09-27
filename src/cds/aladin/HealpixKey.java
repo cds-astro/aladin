@@ -427,7 +427,7 @@ public class HealpixKey {
          char c = planBG.url.charAt(planBG.url.length()-1);
          if( c=='\\' || c=='/' ) fileName = planBG.url+fileNet;  // Directement sur root
          
-System.out.println("Start load from NET "+fileName+"...");
+//System.out.println("Start load from NET "+fileName+"...");
          planBG.nByteReadNet=loadNet(fileName);
          alreadyCached=false;
          resetTimer();
@@ -441,7 +441,7 @@ System.out.println("Start load from NET "+fileName+"...");
          planBG.cumulTimeJPEG += timeJPEG;
          planBG.cumulTimePixel += timePixel;
          planBG.askForRepaint();
-System.out.println("Loaded from NET in "+(System.currentTimeMillis()-t)+"ms : "+this);
+//System.out.println("Loaded from NET in "+(System.currentTimeMillis()-t)+"ms : "+this);
 
       } catch( Throwable e ) {
          pixels=null;
