@@ -368,7 +368,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             }
          }
          );
-         vcl = new VizieRCatalogs(catalog, getReadMe, getMoc, catalogs, controlButton);
+         vcl = new VizieRCatalogs(catalog, getReadMe, Aladin.PROTO ?getMoc:null, catalogs, controlButton);
       }
       else
          vcl.show(catalogs);
