@@ -67,8 +67,9 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Spectrum SAMP management dedicated to source catalog
  * @beta    <LI> Specifical color parameter for "draw" script command
- * @beta    <LI> HEALPix sky => progenitor access support
+ * @beta    <LI> HEALPix sky => progenitor access support, JPEG calibrated images supported
  * @beta    <LI> JPEG large image improvements (required RAM divided by 2)
  * @beta    <LI> Plugin synchronisation support
  * @beta </UL>
@@ -99,7 +100,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.532";
+    static public final    String VERSION = "v7.533";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -207,7 +208,7 @@ public class Aladin extends JApplet
      // Gère le mode particuliers
     static boolean LOG=true;  // false si on inhibe les logs
     public static boolean BETA=true;  // true si on tourne en mode BETA
-    public static boolean PROTO=true;	// true si on tourne en mode PROTO (nécessite Proto.jar)
+    public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
     static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
     static boolean ANTIALIAS=false;  // Anti-aliasing

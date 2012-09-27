@@ -164,7 +164,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
 
       if( !Aladin.OUTREACH ) {
          add(cbGetAllCat);
-         add(cbGetMoc);
+         if( Aladin.PROTO ) add(cbGetMoc);
       }
 
 //      JLabel label0 = new JLabel(GETALL1);

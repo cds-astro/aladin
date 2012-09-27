@@ -64,12 +64,14 @@ public class TabJpg extends JPanel implements ActionListener {
    private String CUT_MIN = "Min";
    private JTextField tCutMin = new JTextField(10);
    private JTextField tCutMax = new JTextField(10);
+   private JLabel label;                                  // texte d'explications
    private JRadioButton radioManual;                      // selected si on est en mode manuel
    private JRadioButton radioAllsky;                      // selected si on est en mode allsky
    private JLabel labelMethod;                            // Texte décrivant la méthode à utiliser
    private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
    private JRadioButton radioMoyenne;                     // selected si on est en calcul selon la moyenne
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
+   private JLabel warning;                                // indique s'il est nécessaire ou non d'effectuer ce post-traitement
 
    private JButton start,abort,pause;
    private JButton next,previous;
@@ -89,7 +91,7 @@ public class TabJpg extends JPanel implements ActionListener {
       JRadioButton rb;
       ButtonGroup bg = new ButtonGroup();
 
-      JLabel label;
+      JLabel lab;
       GridBagConstraints c = new GridBagConstraints();
       c.gridx = 0;
       c.gridy = 0;
@@ -100,13 +102,23 @@ public class TabJpg extends JPanel implements ActionListener {
       JPanel pCenter = new JPanel();
       pCenter.setLayout(new GridBagLayout());
       pCenter.setBorder(BorderFactory.createEmptyBorder(5, 25, 5,25));
+      
+      // Warning
+      warning = new JLabel(" ");
+      warning.setFont(warning.getFont().deriveFont(Font.BOLD));
+      warning.setForeground( Color.red);
+      c.gridheight = 2;
+      c.insets.bottom=20;
+      pCenter.add(warning,c);
+      c.insets.bottom=5;
+      c.gridy++;c.gridy++;
+      
 
       // Texte d'intro
-      label = new JLabel(Util.fold(getString("JPEGINFOALLSKY"),80,true));
-      label.setFont(label.getFont().deriveFont(Font.ITALIC));
+      label = lab = new JLabel(Util.fold(getString("JPEGINFOALLSKY"),80,true));
+      lab.setFont(lab.getFont().deriveFont(Font.ITALIC));
       c.gridheight = 5;
-      c.insets.bottom=20;
-      pCenter.add(label,c);
+      pCenter.add(lab,c);
       c.insets.bottom=0;
       c.gridy++;c.gridy++;c.gridy++;c.gridy++;c.gridy++;
       c.gridheight = 1;
@@ -139,11 +151,11 @@ public class TabJpg extends JPanel implements ActionListener {
       c.gridx = 0;
       c.gridy++;
       JPanel minmax = new JPanel(new FlowLayout());
-      label = new JLabel(CUT_MIN);
-      minmax.add(label);
+      lab = new JLabel(CUT_MIN);
+      minmax.add(lab);
       minmax.add(tCutMin);
-      label = new JLabel(CUT_MAX);
-      minmax.add(label);
+      lab = new JLabel(CUT_MAX);
+      minmax.add(lab);
       minmax.add(tCutMax);
       pCenter.add(minmax, c);
 
@@ -373,6 +385,9 @@ public class TabJpg extends JPanel implements ActionListener {
          abort.setEnabled(isRunning);
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
                : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+         warning.setText( isColor ? Util.fold(getString("MNOPOST"),60,true) : "" );
+         label.setEnabled( !isColor);
+
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       } 

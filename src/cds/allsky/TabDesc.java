@@ -398,8 +398,8 @@ public class TabDesc extends JPanel implements ActionListener {
          blankTextField.setEnabled(ready && !isRunning && !color);
          borderCheckbox.setEnabled(ready && !isRunning);
          borderTextField.setEnabled(ready && !isRunning);
-         skyvalCheckbox.setEnabled(ready && !isRunning);
-         skyvalTextField.setEnabled(ready && !isRunning);
+         skyvalCheckbox.setEnabled(ready && !isRunning && !color);
+         skyvalTextField.setEnabled(ready && !isRunning && !color);
          specifCheckbox.setEnabled(ready && !isRunning);
          specifTextField.setEnabled(ready && !isRunning);
          if( frameCheckbox!=null ) frameCheckbox.setEnabled(ready && !isRunning);

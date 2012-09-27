@@ -2182,12 +2182,14 @@ MDESC -1- Data description
 MDESC.fr -1- Description des données
 MTIPDESC Description step for your Allsky view
 MTIPDESC.fr Etape de description de la vue tout le ciel 
-MBUILD -2- Generate FITS tiles
-MBUILD.fr -2- Construction tuiles FITS
+MBUILD -2- Processing
+MBUILD.fr -2- Création
 MTIPBUILD Build step for your Allsky files
 MTIPBUILD.fr Etape de construction des fichiers du allsky
-MDISPLAY -3- Generate JPEG tiles
-MDISPLAY.fr -3- Construction tuiles JPEG
+MDISPLAY -3- Post-processing
+MDISPLAY.fr -3- Post-traitement
+MNOPOST Your sky does not require a post-processing, the tiles are already in JPEG.
+MNOPOST.fr Votre ciel complet ne nécessite pas de post-traitement, les tuiles qui le composent sont déjà en JPEG.
 MTIPDISP Parameters for your Allsky view
 MTIPDISP.fr Paramètres pour la visualisation du allsky
 MPUBLISH -4- Publish result
@@ -2263,8 +2265,8 @@ SKYVALALLSKY Sky background to subtract (FITS keyword)
 SKYVALALLSKY.fr Fond du ciel à soustraire (mot clé FITS)
 LABELALLSKY Data name:
 LABELALLSKY.fr Nom des données:
-INFOALLSKY Thanks to this panel, you will be able to generate an all sky survey from a set of images. These images must be in FITS format, astrometrically calibrated, possibly gzipped. Aladin resamples your image collection on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). This process can be very quick for low resolution surveys (e.g.: 1 minute for an all-sky survey at a 1' resolution => 768MB), and days for high resolution survey (ex: 10 days for 0.8" resolution => 4 TB). Once the system of hierarchical directories and files is build, you can load the target directory in Aladin and view your new progressive allsky in the same way as any remote all-sky survey in Aladin. You can also publish it for your collaborators
-INFOALLSKY.fr	Ce formulaire vous permet de construire un "ciel complet progressif" à partir d'une collection d'images. Celles-ci doivent être au format FITS, calibrées astrométriquement, éventuellement gzippées. Aladin va rééchantillonnger votre collection d'images dans une grille HEALPix, et enregistrer le résultat sous la forme d'une hiérarchie de répertoires et de fichiers (nommés "tuiles"). Ce processus sera rapide pour des images de faible résolution angulaire (ex: 1 minute pour un relevé du ciel d'une seconde d'arc par pixel => 768Mo). Il pourra être long pour un relevé profond (ex: 10 jours pour une résolution de 0,8" => 4To). Une fois construite la hiérarchie de répertoires et fichiers, vous pourrez accéder directement à votre vue progressive de la même manière que pour les autres vues "ciel complet" disponibles dans Aladin. Vous pourrez également publier votre ciel complet afin de le rendre disponible pour vos collaborateurs.
+INFOALLSKY Thanks to this panel, you will be able to generate an all sky survey from a set of images. These images must be in FITS, JPEG or PNG format, astrometrically calibrated, possibly gzipped. Aladin resamples your image collection on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). This process can be very quick for low resolution surveys (e.g.: 1 minute for an all-sky survey at a 1' resolution => 768MB), and days for high resolution survey (ex: 10 days for 0.8" resolution => 4 TB). Once the system of hierarchical directories and files is build, you can load the target directory in Aladin and view your new progressive allsky in the same way as any remote all-sky survey in Aladin. You can also publish it for your collaborators
+INFOALLSKY.fr	Ce formulaire vous permet de construire un "ciel complet progressif" à partir d'une collection d'images. Celles-ci doivent être au format FITS, JPEG ou PNG, calibrées astrométriquement, éventuellement gzippées. Aladin va rééchantillonnger votre collection d'images dans une grille HEALPix, et enregistrer le résultat sous la forme d'une hiérarchie de répertoires et de fichiers (nommés "tuiles"). Ce processus sera rapide pour des images de faible résolution angulaire (ex: 1 minute pour un relevé du ciel d'une seconde d'arc par pixel => 768Mo). Il pourra être long pour un relevé profond (ex: 10 jours pour une résolution de 0,8" => 4To). Une fois construite la hiérarchie de répertoires et fichiers, vous pourrez accéder directement à votre vue progressive de la même manière que pour les autres vues "ciel complet" disponibles dans Aladin. Vous pourrez également publier votre ciel complet afin de le rendre disponible pour vos collaborateurs.
 RGBALLSKY	This panel allows you to create a color all-sky survey from two or three monochromatic precomputed "all-sky" surveys. You must load these surveys in the Aladin stack, adjust their contrast as you wish. After that, you must associate the RED, GREEN and BLUE components via the  three choice menus, specify the target directory and submit.
 RGBALLSKY.fr Ce formulaire est dédié à la création d'un "ciel complet" colorisé. Celui-ci sera généré à partir de 2 ou 3 relevés en niveaux de gris, ayant déjà été calculés au préalable. Pour ce faire, vous devez charger ces relevés dans la pile d'Aladin, puis ajuster leur contraste respectif. Après cela, il s'agit d'associer à chacune des composantes couleurs Rouge, Vert et Bleu le relevé souhaité, de spécifier le répertoire de destination puis de lancer le calcul.
 DESCFALLSKY Description :

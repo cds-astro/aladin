@@ -1690,7 +1690,7 @@ public final class Save extends JFrame implements ActionListener {
          } else img = new MemoryImageSource(p.width,p.height,p.cm, p.pixels, 0,p.width);
 
          String s = "Created by Aladin";
-         if( !p.hasNoReduction() ) s = generateFitsHeaderString(p);
+         if( !p.hasNoReduction() ) s = generateFitsHeaderStringForNativeImage(p);
          ImageWriter(getToolkit().createImage(img),mode==3 ? "png":"jpg",-1,
                p.type==Plan.IMAGERGB, mode==3 ? new PNGOutputFilter(o,s) : new JpegOutputFilter(o,s));
       } catch(Exception e) {
@@ -1729,6 +1729,21 @@ public final class Save extends JFrame implements ActionListener {
       }
       aladin.log("export","image FITS");
       return rep;
+   }
+
+
+   /** Génération de l'entête FITS (mode strings) obtenu par generateFitsHeader(PlanImage p) 
+    * pour une image JPEG ou PNG */
+   protected String generateFitsHeaderStringForNativeImage(PlanImage p) {
+      Vector v =  generateFitsHeader1(p.projInit,p.projd,
+            p.headerFits,
+            false,
+            p.hasSpecificCalib(),
+            false,
+            false,
+            8,p.bZero,p.bScale,p.width,p.height);
+
+      return fitsHeaderVtoStrings( v );
    }
 
 
