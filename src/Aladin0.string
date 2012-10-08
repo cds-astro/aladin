@@ -603,14 +603,14 @@ VZTITLE	VizieR catalog service
 VZNAME	VizieR\nCatalogs
 VZINFO	CDS VizieR catalog service (>5000 astronomical catalogs)
 VZCATDESC	Info.
-VZCATMOC	Coverage map (MOC).
+VZCATMOC	Coverage
+VZCATDMAP	Density map
 VZFROM	Provided by CDS VizieR catalog service
 VZDESC	VizieR provides access to the most complete library of published astronomical catalogues and data tables available on line.\n \nYou can access VizieR catalog service by a "get" command line (use the Aladin console, menu "Tools -> Aladin console"). For VizieR, the "get" syntax follows these conventions:\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : is a VizieR catalog identifier\n   - allcolumns : to get all columns
 VZINFO1	Specify a target, and a catalog name or identification...
 VZINFO2	... don't know which catalog ? Select the \npotentially interesting ones with words/keywords !
 VZGETALL2	All columns
 VZGETALL3	Whole catalog
-VZGETMOC	MOC only
 VZCAT	Catalog
 VZKEYWORD	Author, free text...:
 VZALLCAT	Do you really want to download\nall
@@ -619,14 +619,14 @@ VZTITLE.fr	Le service des catalogues VizieR
 VZNAME.fr	Catalog.\nVizieR
 VZINFO.fr	Service des catalogues VizieR du CDS (>5000 catalogues astronomiques)
 VZCATDESC.fr	Info
-VZCATMOC.fr	Couverture (MOC)
+VZCATMOC.fr	Couverture
+VZCATDMAP.fr	Carte densité
 VZFROM.fr	Fournit par le service des catalogues VizieR du CDS
 VZDESC.fr	VizieR offre l'accès à la plus complète des bibliothèques de catalogues et tables astronomiques accessibles en ligne.\n \nVous pouvez accéder à VizieR également par une commande en ligne "get" (ouvrir la console Aladin, menu "Outils -> Console Aladin). Dans le cas de VizieR, la commande "get" suit les conventions suivantes :\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : est un identificateur de catalogue\n   - allcolumns : pour récupérer toutes les colonnes des catalogues
 VZINFO1.fr	Indiquez une position et l'identificateur d'un catalogue...
 VZINFO2.fr	... Vous ne connaissez pas l'identificateur ? Générez une liste\nde catalogues potentiels à partir de mots-clés !
 VZGETALL2.fr	Toutes col.
 VZGETALL3.fr	Tout le cata.
-VZGETMOC.fr	MOC uniquem.
 VZCAT.fr	Catalogue
 VZKEYWORD.fr	Auteur, texte libre...:
 VZALLCAT.fr	Voulez-vous vraiment décharger\ntout le catalogue

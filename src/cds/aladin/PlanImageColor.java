@@ -95,7 +95,7 @@ public class PlanImageColor extends PlanImageRGB {
             Aladin.trace(4,"PlanImageColor.cacheImageNatif()... RAM="+mem+"MB imageSize="+taille+"MB");
             if( mem<taille ) throw new Exception("Not enough memory for this image => required "+taille+"MB !");
             
-            if( true || mem<2*taille ) {
+//            if( mem<2*taille ) {
                Aladin.trace(4,"PlanImageColor.cacheImageNatif()... loading huge image piece by piece...");
 
                buf = new BufferedImage(width, height,BufferedImage.TYPE_INT_ARGB);
@@ -120,13 +120,13 @@ public class PlanImageColor extends PlanImageRGB {
                g.finalize(); g=null;
                pixelsRGB = ((DataBufferInt)buf.getRaster().getDataBuffer()).getData();
                
-            } else {
-               Aladin.trace(4,"PlanImageColor.cacheImageNatif()... loading image in one fast step...");
-               setPourcent(10);
-               buf = reader.read(0,param);
-               pixelsRGB = new int[width*height*4];
-               buf.getRGB(0, 0, width, height, pixelsRGB, 0, width);
-            }
+//            } else {
+//               Aladin.trace(4,"PlanImageColor.cacheImageNatif()... loading image in one fast step...");
+//               setPourcent(10);
+//               buf = reader.read(0,param);
+//               pixelsRGB = new int[width*height*4];
+//               buf.getRGB(0, 0, width, height, pixelsRGB, 0, width);
+//            }
             
 
 

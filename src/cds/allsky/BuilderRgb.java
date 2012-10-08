@@ -15,8 +15,8 @@ import cds.tools.pixtools.Util;
 
 public class BuilderRgb extends Builder {
 	private PlanBG[] p;
-	private final Aladin aladin;
-	private BuilderAllsky builderAllsky;
+//	private final Aladin aladin;
+//	private BuilderAllsky builderAllsky;
 	private String path;
     private int width=-1;
     private double [] blank;
@@ -35,7 +35,7 @@ public class BuilderRgb extends Builder {
     
     public BuilderRgb(Context context) {
        super(context);
-       aladin=((ContextGui)context).mainPanel.aladin;
+//       aladin=((ContextGui)context).mainPanel.aladin;
     }
     
     public Action getAction() { return Action.RGB; }
@@ -292,7 +292,7 @@ public class BuilderRgb extends Builder {
        String file="";
 
        file = Util.getFilePath(path,order, npix)+".jpg";
-       rgb.writeJPEG(file);
+       rgb.writeRGBJPEG(file);
        rgb.free();
 
        File f = new File(file);

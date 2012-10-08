@@ -259,7 +259,7 @@ public class PlanBG extends PlanImage {
 
    }
    
-   protected PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
+   public PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
       super(aladin);
       this.startingTaskId=startingTaskId;
       initCache();

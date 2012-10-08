@@ -109,7 +109,6 @@
 %A getMOC
 %D CDS MOC Server for VizieR tables
 %O aladin
-#%U http://alasky.u-strasbg.fr/footprints/getMoc?baseUrl=http%3a%2f%2fvizier.u-strasbg.fr%2fviz-bin%2fvotable%2f-A%3f-source%3d$1%26&nside=$2 
 %U http://alasky.u-strasbg.fr/footprints/cats/vizier/$1?product=MOC&nside=$2
 %P.D 1:Catalog ID
 %P.K 1:E
@@ -120,6 +119,29 @@
 %P.V 2:512
 %T II/294::
 %R Mime(moc/fits)
+
+%A getDMap
+%D CDS Density Map Server for VizieR tables
+%O aladin
+%U http://alasky.u-strasbg.fr/footprints/cats/vizier/$1?product=densityMap&nside=$2
+%P.D 1:Catalog ID
+%P.K 1:E
+%P.D 2:Density Map Healpix resolution
+%P.V 2:64
+%P.V 2:128
+%P.V 2:256
+%P.V 2:512
+%T II/294::
+%R Mime(healpix/fits)
+
+%A getDMapIcon
+%D CDS Density Map Icon Server for VizieR tables
+%O aladin
+%U http://alasky.u-strasbg.fr/footprints/cats/vizier/$1?product=densityMap&format=png&size=small
+%P.D 1:Catalog ID
+%P.K 1:E
+%T II/294::
+%R Mime(image/png)
 
 #--------------------- à copier dans Aladin.dic -----------------
 

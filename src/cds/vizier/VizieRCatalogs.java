@@ -80,7 +80,7 @@ controlButton) {
     JPanel panelButtonLeft = new JPanel();
     panelButtonLeft.setFont(BOLD);
     if (getReadMe != null) panelButtonLeft.add(getReadMe);
-    if (getMoc != null) panelButtonLeft.add(getMoc);
+    if (getMoc != null ) panelButtonLeft.add(getMoc);
 
     // right buttons panel
     JPanel panelButtonRight = new JPanel();

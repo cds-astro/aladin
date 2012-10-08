@@ -234,7 +234,7 @@ public final class MyInputStream extends FilterInputStream {
       // Détection d'une extension FITS à suivre
       if( hasFitsKey("EXTEND",null) ) type |= XFITS;
 
-      else if( hasFitsKey("CTYPE3","RGB")
+      if( hasFitsKey("CTYPE3","RGB")
             || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") ) type |= RGB;
 
       // Détection d'une image HUGE

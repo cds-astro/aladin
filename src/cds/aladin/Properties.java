@@ -790,8 +790,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan.type==Plan.ALLSKYMOC ) {
          final PlanMoc pmoc = (PlanMoc)plan;
 
-         PropPanel.addCouple(p,"Size",new JLabel(pmoc.getMoc().getSize()+" cells"),g,c);
-         PropPanel.addCouple(p,"Best Moc resolution",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
+         double cov = pmoc.getMoc().getCoverage();
+         double degrad = Math.toDegrees(1.0);
+         double skyArea = 4.*Math.PI*degrad*degrad;
+         PropPanel.addCouple(p,"Coverage",new JLabel(Util.round(cov*100, 1)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+         PropPanel.addCouple(p,"Best MOC ang.res",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
 
          boolean wireFrame = pmoc.getWireFrame();
@@ -812,21 +815,20 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p,"Drawing method",p1,g,c);
       }
       
-      // Accès au MOC des catalogues VizieR
-      if( Aladin.PROTO &&
-            (plan.server instanceof ServerVizieR || plan.server instanceof ServerVizieRMission) ) {
-         JPanel p1 = new JPanel();
-         final String cat = ((PlanCatalog)plan).getFirstTableName();
-         JButton bt = new JButton("MOC");
-         bt.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               int n = ((ServerVizieR)aladin.dialog.server[ServerDialog.VIZIER]).createMocPlane(cat);
-               if( n>=0 ) aladin.calque.plan[n].c=plan.c;   // on leur donne la même couleur
-            }
-         });
-         p1.add(bt);
-         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
-      }
+//      // Accès au MOC des catalogues VizieR
+//      if( Aladin.PROTO &&
+//            (plan.server instanceof ServerVizieR || plan.server instanceof ServerVizieRMission) ) {
+//         JPanel p1 = new JPanel();
+//         final String cat = ((PlanCatalog)plan).getFirstTableName();
+//         JButton bt = new JButton("MOC");
+//         bt.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//               ((ServerVizieR)aladin.dialog.server[ServerDialog.VIZIER]).createMocPlane(cat);
+//            }
+//         });
+//         p1.add(bt);
+//         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
+//      }
 
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;

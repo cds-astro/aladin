@@ -108,7 +108,7 @@ public class PlanImage extends Plan {
    protected ColorModel cm;			  // La table des couleurs associee a l'image
    protected int typeCM;			  // memorise la table des couleurs (CMGRAY ou CMBB ou CMA)
    protected int cmControl[];	      // Valeurs de controle de la table des couleurs
-   protected int transfertFct;        // Fonction de transfert (LINEAR,LOG,SQR...)
+   public int transfertFct;           // Fonction de transfert (LINEAR,LOG,SQR...)
    protected double hist[],histA[];   // Histogrammes des pixels (voir ColorMap)
    protected boolean flagHist;        // true si on dispose de l'histogramme des pixels à jour
    protected int width;				  // largeur de l'image
@@ -3232,7 +3232,7 @@ Aladin.trace(2,"Loading PDS image");
     *         | all|minpix..maxpix
     * @return true si l'opération a été effectuée, false sinon
     */
-   protected boolean setCmParam(String s) {
+   public boolean setCmParam(String s) {
       int i;
       boolean flagCM=false,flagPixel=false;
       double minPix = pixelMin; // par défaut, on reprend le min/max du dernier cut

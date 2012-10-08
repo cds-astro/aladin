@@ -21,10 +21,7 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.Reader;
 import java.text.ParseException;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -33,8 +30,6 @@ import cds.moc.HealpixMoc;
 
 public class SkyGen {
 
-   private static final String fileIn = "fileIn.log";
-   private static final String fileErr = "fileErr.log";
    private File file;
    private boolean force=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
@@ -145,6 +140,12 @@ public class SkyGen {
          context.setDataCut(val);
       } else if (opt.equalsIgnoreCase("color")) {
          context.setColor(Boolean.parseBoolean(val));
+      } else if (opt.equalsIgnoreCase("red"))   { context.setRgbInput(val, 0);
+      } else if (opt.equalsIgnoreCase("green")) { context.setRgbInput(val, 1);
+      } else if (opt.equalsIgnoreCase("blue"))  { context.setRgbInput(val, 2);
+      } else if (opt.equalsIgnoreCase("redparam"))   { context.setRgbCmParam(val, 0);
+      } else if (opt.equalsIgnoreCase("greenparam")) { context.setRgbCmParam(val, 1);
+      } else if (opt.equalsIgnoreCase("blueparam"))  { context.setRgbCmParam(val, 2);
       } else if (opt.equalsIgnoreCase("img")) {
          context.setImgEtalon(val);
       } else throw new Exception("Option unknown [" + opt + "]");
@@ -192,6 +193,7 @@ public class SkyGen {
 
                setContextFromOptions(opts[0], opts[1]);
             } catch (Exception e) {
+               e.printStackTrace();
                context.error(e.getMessage());
                return;
             }
@@ -285,7 +287,7 @@ public class SkyGen {
       System.out.println(
             "-force     Do not take into account possible previous computation\n"+
             "input      Source image directory (fits or jpg+hhh)" + "\n" +
-            "output     HEALPix target directory (default $PWD+\"ALLSKY\")" + "\n" +
+            "output     all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
             "mode       Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "img        Specifical reference image for default initializations (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
             "bitpix     Specifical target bitpix" + "\n" +
@@ -298,6 +300,12 @@ public class SkyGen {
             "pixelCut   Specifical pixel cut and/or transfert function for JPEG 8 bits conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange Specifical pixel value range (required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
             "color      True if the source images are colored jpeg (default is false)" + "\n" +
+            "red        all-sky used for RED component (see rgb action)\n" +
+            "green      all-sky used for BLUE component (see rgb action)\n" +
+            "blue       all-sky used for GREEN component (see rgb action)\n" +
+            "redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
+            "greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
+            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
 //            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
             "verbose    Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
             "debug      true|false - to set output display as te most verbose or just statistics" + "\n");
@@ -305,6 +313,7 @@ public class SkyGen {
             "index      Build finder index" + "\n" +
             "tiles      Build HEALPix FITS tiles" + "\n" +
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
+            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
@@ -318,12 +327,13 @@ public class SkyGen {
             "gunzip     gunzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n"+
             "progen     Adapt HEALPix tree index to a progenitor usage" + "\n"
             );
-      System.out.println("\nEx: SkyGen -input=/MyImages    => Do all the job." +
-      		             "\n    SkyGen -input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
+      System.out.println("\nEx: SkyGen input=/MyImages    => Do all the job." +
+      		             "\n    SkyGen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
-      		             "\n    SkyGen -input=/MyImages -blank=0 -border=\"100 50 100 50\" -mode=REPLACETILE    => recompute tiles" +
-      		             "\n           The original pixels in the border or equal to 0 will be ignored.");
+                         "\n    SkyGen input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+                         "\n           The original pixels in the border or equal to 0 will be ignored."+
+                         "\n    SkyGen red=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky");
    }
 
    private void setConfigFile(String configfile) throws Exception {

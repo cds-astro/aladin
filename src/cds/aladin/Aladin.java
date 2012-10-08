@@ -100,7 +100,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.533";
+    static public final    String VERSION = "v7.534";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5637,7 +5637,7 @@ if( levelTrace>=3 ) System.out.println(")");
          imageCache.put(name,img);
          is.close();
          return img;
-      } catch( Exception e ) { e.printStackTrace(); }
+      } catch( Exception e ) { if( levelTrace>=3 ) e.printStackTrace(); }
 
       // Cas d'erreur, on memorise dans le cache une chaine vide
       // histoire de ne pas essayer a chaque fois

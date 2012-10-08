@@ -25,6 +25,7 @@ import cds.vizier.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.net.*;
 import java.util.*;
 
@@ -41,6 +42,8 @@ import javax.swing.*;
 public class ServerVizieRMission extends Server  {
    
    static final String  MOCGLU = "getMOC";
+   static final String  DMAPGLU = "getDMap";
+   static final String  DMAPPNGGLU = "getDMapIcon";
    static final String  MOCERROR = "Catalog unknown or MOC server error";
 
    // Les references
@@ -50,17 +53,20 @@ public class ServerVizieRMission extends Server  {
    VizieRTable missionlist;        // La liste des missions proposees
    JTextField mission;            // le champ de saisie d'une mission
    MyLabel currentlist;           // legende courante de la liste
-   JButton getReadMe;             // Le bouton pour demander des infos
    protected String default_methode;
    protected String help_list;
    protected String nomTextfield;
-   JCheckBox cbGetAll,cbGetAllCat,cbGetMoc;
-   protected String CATDESC,TAGGLU= "VizieRXML++",GETALL,GETALL1,GETMOC,ALLCAT;
+   JCheckBox cbGetAll,cbGetAllCat;
+   JButton getReadMe;           // Le bouton pour demander des infos
+   JButton getMoc;              // Le bouton pour demander le MOC
+   JButton getDMap;             // Le bouton pour demander la carte de densité
+   protected String CATDESC,TAGGLU= "VizieRXML++",GETALL,GETALL1,CATMOC,CATDMAP,ALLCAT;
 
    // Pour pouvoir overider les variables pour les classes derivees
    protected void init() {
       aladinLogo = "VizieRMLogo.gif";
       docUser="http://vizier.u-strasbg.fr";
+      
   }
 
    protected void createChaine() {
@@ -71,12 +77,24 @@ public class ServerVizieRMission extends Server  {
       description      = aladin.chaine.getString("ARINFO");
       default_methode = aladin.chaine.getString("ARINFO1");
       help_list = aladin.chaine.getString("ARINFO2");
-      CATDESC   = aladin.chaine.getString("ARCATDESC");
+      CATDESC   = aladin.chaine.getString("VZCATDESC");
+      CATMOC = aladin.chaine.getString("VZCATMOC");
+      CATDMAP= aladin.chaine.getString("VZCATDMAP");
       verboseDescr      = aladin.chaine.getString("ARDESC");
       GETALL    = aladin.chaine.getString("VZGETALL2");
       GETALL1   = aladin.chaine.getString("VZGETALL3");
-      GETMOC   = aladin.chaine.getString("VZGETMOC");
       ALLCAT    = aladin.chaine.getString("VZALLCAT");
+   }
+   
+   private PngMap pngMap;
+   
+   class PngMap extends JComponent {
+      Image image=null;
+      void setImage(Image image) { this.image=image; repaint(); }
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         if( image!=null ) g.drawImage(image,0,0,this);
+      }
    }
 
  /** Creation du formulaire d'interrogation des missions
@@ -94,6 +112,14 @@ public class ServerVizieRMission extends Server  {
       setLayout(null);
       setFont(Aladin.PLAIN);
       int y=0;
+      
+      // Le Panel pour l'imagette de la carte de densité
+      int w = 100;
+      int h1 = 50;
+      pngMap = new PngMap();
+      pngMap.setBackground(Aladin.BLUE);
+      pngMap.setBounds(XWIDTH-w-5,15,w,h1);
+      add(pngMap);
 
       // Le titre
       JPanel tp = new JPanel();
@@ -147,24 +173,6 @@ public class ServerVizieRMission extends Server  {
       });
       if( !Aladin.OUTREACH && !(this instanceof ServerVizieRSurvey) ) { add(cbGetAllCat); yGetAll+=20; }
       
-      // La checkbox du getMoc
-      // NON UTILISABLE POUR LE MOMENT CAR LES ALIAS NE SONT PAS RECONNU PAR LE SERVEUR DE MOC
-//      if( Aladin.PROTO ) {
-//         cbGetMoc=new JCheckBox(GETMOC,false);
-//         cbGetMoc.setBackground(Aladin.BLUE);
-//         cbGetMoc.setBounds(xGetAll,yGetAll,140,20); yGetAll+=20;
-//         cbGetMoc.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//               boolean flag=!cbGetMoc.isSelected();
-//               target.setEnabled(flag);
-//               radius.setEnabled(flag);
-//               cbGetAllCat.setEnabled(flag);
-//               cbGetAll.setEnabled(flag);
-//            }
-//         });
-//         if( !Aladin.OUTREACH )add(cbGetMoc);
-//      }
-
 
       // Catalog + Radius
       JLabel label1 = new JLabel(addDot(nomTextfield));
@@ -176,6 +184,7 @@ public class ServerVizieRMission extends Server  {
       mission = new JTextField(28);
       mission.setBounds(l+15,y,150-30,HAUT);
       mission.addKeyListener(this);
+      mission.addActionListener(this);
       add(mission);
       JLabel label2 = new JLabel(addDot(RAD));
       label2.setBackground(Aladin.BLUE);
@@ -184,22 +193,49 @@ public class ServerVizieRMission extends Server  {
       add(label2);
       radius = new JTextField("10 arcmin");
       radius.addKeyListener(this);
-      radius.setBounds(294-15,y,Aladin.OUTREACH?60:105,HAUT); y+=HAUT+MARGE;
+      radius.setBounds(294-15,y,Aladin.OUTREACH?60:105,HAUT); y+=HAUT+MARGE-2;
       add(radius);
       modeRad=RADIUS;
+
+
+      // Bouton getReadMe
+      Insets insets = new Insets(0,10,0,10);
+      getReadMe = new JButton(CATDESC);
+      getReadMe.setMargin(insets);
+      getReadMe.addActionListener(this);
+      getReadMe.setFont( Aladin.BOLD);
+      getReadMe.setEnabled(true);
+      
+      // Bouton getMoc
+      getMoc = new JButton(CATMOC);
+      getMoc.setMargin(insets);
+      getMoc.addActionListener(this);
+      getMoc.setFont( Aladin.BOLD);
+      getMoc.setEnabled(true);
+      
+      // Bouton getDMap
+      getDMap = new JButton(CATDMAP);
+      getDMap.setMargin(insets);
+      getDMap.addActionListener(this);
+      getDMap.setFont( Aladin.BOLD);
+      getDMap.setEnabled(true);
+      
+      JPanel catControl = new JPanel(new FlowLayout(FlowLayout.LEFT));
+      catControl.setBounds(l+15,y,350,HAUT);
+      catControl.setBackground(Aladin.BLUE);
+      catControl.add(getReadMe);
+      catControl.add(getMoc);
+      catControl.add(getDMap);
+      if( !Aladin.OUTREACH ) add(catControl);
+      y+=HAUT+MARGE+5;
 
       // Deuxieme indication
       JLabel info2 = new JLabel(help_list);
       info2.setBounds(56,y,400, 20); y+=20;
       add(info2);
 
-      // Bouton Get info.
-      JButton getReadMe = new JButton(CATDESC);
-      getReadMe.setOpaque(false);
-      getReadMe.addActionListener(this);
-
       // La liste des Missions
-      missionlist = new VizieRTable(mission,getReadMe,null,vArchives,12,VizieRTable.SURVEY_MODE);
+      missionlist = new VizieRTable(mission,null,null,vArchives,12,VizieRTable.SURVEY_MODE);
       missionlist.setFont( Aladin.PLAIN );
       JScrollPane jc = new JScrollPane(missionlist);
       jc.setBounds(XTAB1,y,XWIDTH-2*XTAB1,180); y+=190;
@@ -207,11 +243,11 @@ public class ServerVizieRMission extends Server  {
 
       // La suite du bouton Get info.
 //      getReadMe.setFont( Aladin.BOLD);
-      if( !Aladin.OUTREACH ) {
-         getReadMe.setEnabled(false);
-         getReadMe.setBounds(300,y,100,25);
-         add(getReadMe);
-      }
+//      if( !Aladin.OUTREACH ) {
+//         getReadMe.setEnabled(false);
+//         getReadMe.setBounds(300,y,100,25);
+//         add(getReadMe);
+//      }
 
       // Indication du component à maximiser
       setMaxComp(jc);
@@ -297,61 +333,53 @@ public class ServerVizieRMission extends Server  {
         return -1;
       }
       
-      return aladin.calque.newPlaMOC( in, "MOC "+cat);
+      return aladin.calque.newPlanMOC( in, "MOC "+cat);
    }
 
 
   /** Interrogation des missions, soit par Vizir soit directement aux archives */
    public void submit() {
-      URL u;
       String objet="",cata,r;
       double rm=0;
 
       boolean allcat = cbGetAllCat.isSelected();
-      boolean moc =  cbGetMoc!=null && cbGetMoc.isSelected();
-
 
       cata = mission.getText().trim();
-      if( !allcat && !moc && (objet=getTarget())==null ) return;
+      if( !allcat && (objet=getTarget())==null ) return;
       if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-      
-      if( moc ) {
-         createMocPlane(cata);
-         
-      } else {
 
-         if( allcat || objet==null || objet.length()==0) {
-            if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
-            if( !Aladin.confirmation(this,ALLCAT+" \""+cata+"\" ?") ) return;
-            objet="";
-            rm=0;
-         } else if( !allcat ) {
-            if( (r=getRadius())==null ) return;
-            rm = getRM(r);
-         }
-
-         if( allcat ) objet="";
-
-         //      String t= new String(objet);
-         waitCursor();
-
-         resetList();
-
-         String s="";
-         if( cbGetAll.isSelected() ) s=",allcolumns";
-         if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
-         else aladin.console.setCommand("get VizieR("+cata+s+")");
-
-         createPlane(objet,rm+"",cata,null,institute);
+      if( allcat || objet==null || objet.length()==0) {
+         if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
+         if( !Aladin.confirmation(this,ALLCAT+" \""+cata+"\" ?") ) return;
+         objet="";
+         rm=0;
+      } else if( !allcat ) {
+         if( (r=getRadius())==null ) return;
+         rm = getRM(r);
       }
+
+      if( allcat ) objet="";
+
+      //      String t= new String(objet);
+      waitCursor();
+
+      resetList();
+
+      String s="";
+      if( cbGetAll.isSelected() ) s=",allcolumns";
+      if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
+      else aladin.console.setCommand("get VizieR("+cata+s+")");
+
+      createPlane(objet,rm+"",cata,null,institute);
 
       resetFlagBoxes();
       defaultCursor();
    }
 
-
    protected void resetList() {
       missionlist.resetList();
+      
+      pngMap.setImage(null);
    }
 
   /** Clear du formulaire */
@@ -385,22 +413,81 @@ public class ServerVizieRMission extends Server  {
       hide();show();
    }
 
-  /** Gestion des evenements. */
-   public void actionPerformed(ActionEvent e) {
-      Object s = e.getSource();
-
-      // Affichage via Netscape du Readme du missionue courant
-      if( s instanceof JButton
-            && ((JButton)s).getActionCommand().equals(CATDESC)) {
-         String cata = mission.getText().trim();
-         if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-
-         cata = Glu.quote(cata);
-         aladin.glu.showDocument("getReadMe",cata);
-         return;
+//  /** Gestion des evenements. */
+//   public void actionPerformed(ActionEvent e) {
+//      Object s = e.getSource();
+//
+//      // Affichage via Netscape du Readme du missionue courant
+//      if( s instanceof JButton
+//            && ((JButton)s).getActionCommand().equals(CATDESC)) {
+//         String cata = mission.getText().trim();
+//         if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+//
+//         cata = Glu.quote(cata);
+//         aladin.glu.showDocument("getReadMe",cata);
+//         return;
+//      }
+//
+//      super.actionPerformed(e);
+//   }
+   
+   String oc = null;
+   public void keyReleased(KeyEvent e) { 
+      super.keyReleased(e);
+      if( !(e.getSource() instanceof JTextField) ) return;
+      String c = ((JTextField)e.getSource()).getText().trim();
+      if( oc!=null && c.equals(oc) ) return;
+      if( c.length()<2 ) pngMap.setImage(null);
+      else {
+         Image img=null;
+         try {
+            img = aladin.getImagette( ""+aladin.glu.getURL(DMAPPNGGLU,c));
+         } catch( Exception e1 ) { img=null; }
+         if( img!=null ) aladin.waitImage(img);
+         pngMap.setImage(img);
+         oc=c;
       }
-
-      super.actionPerformed(e);
+      repaint();
    }
+   
+   /** Events management
+    * @see aladin.VizieR
+    */
+    public void actionPerformed(ActionEvent e) {
+       Object s = e.getSource();
+       
+       
+       if( s instanceof JButton ) {
+          String action = ((JButton)s).getActionCommand();
+          
+          if( action.equals(CATDESC) || action.equals(CATMOC) || action.equals(CATDMAP) ) {
+             
+             String cata = mission.getText().trim();
+             if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+             cata = Glu.quote(cata);
+             
+             // Affichage du README
+             if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",cata);
+             
+             // Chargement du MOC
+             else if( action.equals(CATMOC) ) {
+                URL u = aladin.glu.getURL(MOCGLU,cata+" 512");
+                aladin.execAsyncCommand("'MOC "+cata+"'=get File("+u+")");
+             }
+             
+             // Chargement de la carte de densité
+             else if( action.equals(CATDMAP) ) {
+                URL u = aladin.glu.getURL(DMAPGLU,cata+" 256");
+                aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
+             }
+             defaultCursor();
+             return;
+          }
+          
+       }
+
+       super.actionPerformed(e);
+    }
+
 
 }

@@ -35,9 +35,12 @@ import java.util.StringTokenizer;
 import javax.swing.JProgressBar;
 
 import cds.aladin.Aladin;
+import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
+import cds.aladin.PlanBG;
 import cds.aladin.PlanHealpix;
+import cds.aladin.PlanImage;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Galactic;
@@ -339,7 +342,23 @@ public class Context {
       return null;
    }
    
-
+   protected Object [] plansRgb;
+   protected String outputRgb;
+   protected JpegMethod methodRgb;
+   
+   static final private String LABELRGB [] = {"red","gree","blue"};
+   
+   public void setRgbInput(String path,int c) {
+      if( plansRgb==null ) plansRgb = new Object[3];
+      plansRgb[c] = new PlanBG(Aladin.aladin,path, LABELRGB[c], new Coord(0,0), 0, null);
+      ((PlanImage)plansRgb[c]).transfertFct=PlanImage.LINEAR;
+   }
+   
+   public void setRgbCmParam(String cmParam,int c) throws Exception {
+      if( plansRgb==null || plansRgb[c]==null ) throw new Exception("Color component folder must be defined first");
+      ((PlanImage)plansRgb[c]).setCmParam(cmParam);
+   }
+   
    public void setSkyval(String fieldName) {
        this.skyvalName = fieldName.toUpperCase();
        if (cacheFits != null) cacheFits.setSkySub(skyvalName);

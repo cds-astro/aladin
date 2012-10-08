@@ -125,36 +125,13 @@ final public class Fits {
     */
    public void setCalib(Calib c) {
       calib=c;
-//      initCenter();
    }
    
-//   public void initCenter() {
-//      try {
-//         center = new Coord();
-//         center.x = xCell+widthCell/2.;
-//         center.y = height-(yCell+heightCell/2.);
-//         calib.GetCoord(center);
-//      } catch( Exception e ) { e.printStackTrace(); }
-//   }
-
    /** Retourne la calib ou null */
    public Calib getCalib() { return calib; }
    
-// /** Chargement d'une image Jpeg N&B depuis un fichier */
-// public void loadJpeg(String filename) throws Exception { loadJpeg(filename,false); }
-//
-// /** Chargement d'une image Jpeg N&B ou COULEUR depuis un fichier */
-// public void loadJpeg(String filename,boolean flagColor) throws Exception {
-//    MyInputStream is = new MyInputStream( new FileInputStream(filename));
-//    loadJpeg(is,flagColor);
-//    is.close();
-//    this.setFilename(filename);
-// }
-// 
-
    /* Chargement d'une image N&B sous forme d'un JPEG */
    protected void loadJpeg(MyInputStream dis) throws Exception { loadJpeg(dis,false); }
-   
    
    /** Chargement d'une image JPEG depuis un fichier */
    public void loadJpeg(String filename,int x, int y, int w, int h) throws Exception { loadJpeg(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
@@ -180,6 +157,7 @@ final public class Fits {
    }
 
    static private Component observer = (Component)new Label();
+   
 
 //   /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
 //   protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
@@ -228,7 +206,8 @@ final public class Fits {
 //   }
    
    public void loadJpeg(MyInputStream dis,int x,int y, int w, int h,boolean flagColor) throws Exception {
-      Iterator readers = ImageIO.getImageReadersByFormatName("jpeg");
+      String coding = dis.getType()==MyInputStream.PNG ? "png":"jpeg";
+      Iterator readers = ImageIO.getImageReadersByFormatName(coding);
       ImageReader reader = (ImageReader)readers.next();
       ImageInputStream iis = ImageIO.createImageInputStream(dis);
       reader.setInput(iis,true);
@@ -751,6 +730,37 @@ final public class Fits {
       
       if( RGBASFITS && bitpix==0 ) invImageLine(widthCell,heightCell, rgb);
 
+      ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+      ImageWriteParam iwp = writer.getDefaultWriteParam();
+      iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+      iwp.setCompressionQuality(qual);
+
+      ImageOutputStream out = ImageIO.createImageOutputStream(os);
+      writer.setOutput(out);
+      writer.write(null, new IIOImage(bufferedImage,null,null), iwp);
+      writer.dispose();
+   }
+
+   /** Génération d'un fichier JPEG à partir des pixels RGB */
+   public void writeRGBJPEG(String file) throws Exception { writeRGBJPEG(file,0.95f); }
+   public void writeRGBJPEG(String file,float qual) throws Exception {
+      createDir(file);
+      FileOutputStream fos = new FileOutputStream(new File(file));
+      writeRGBJPEG( fos,qual);
+      fos.close();
+      this.setFilename(file);
+   }
+
+   public void writeRGBJPEG(OutputStream os) throws Exception { writeRGBJPEG(os,0.95f); }
+   public void writeRGBJPEG(OutputStream os,float qual) throws Exception {
+      Image img;
+      img = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell) );
+
+      BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+      Graphics g = bufferedImage.createGraphics();
+      g.drawImage(img,xCell,yCell,observer);
+      g.dispose();
+      
       ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
       ImageWriteParam iwp = writer.getDefaultWriteParam();
       iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);

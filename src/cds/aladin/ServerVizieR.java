@@ -43,21 +43,21 @@ import cds.tools.*;
  * @version 0.9 : (??) creation
  */
 public final class ServerVizieR extends Server implements CDSConstants,Runnable {
-   String CATDESC,CATMOC,INFO1,TAGGLU,GETALL,GETALL1,GETMOC,CAT;
+   String CATDESC,CATMOC,CATDMAP,INFO1,TAGGLU,GETALL,GETALL1,CAT;
    
    static final String  MOCGLU = "getMOC";
+   static final String  DMAPGLU = "getDMap";
    static final String  MOCERROR = "Catalog unknown or MOC server error";
-
 
    // les composantes de l'objet
    VizieRList vizierlist;       // La liste des catalogues proposees
    JTextField catalog;          // le champ de saisie du catalogue
    JCheckBox cbGetAll;          // La checkbox du Get All column
    JCheckBox cbGetAllCat;       // La checkbox du Get All Cat
-   JCheckBox cbGetMoc;          // La checkbox du Get MOC
    MyLabel legende;             // legende courante de la liste
    JButton getReadMe;           // Le bouton pour demander des infos
    JButton getMoc;              // Le bouton pour demander le MOC
+   JButton getDMap;             // Le bouton pour demander la carte de densité
    boolean hasPreviousFocus = false; // this boolean is needed for the submit button management
    Thread thread;
 
@@ -146,30 +146,8 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
          }
       });
       
-      // La checkbox du getMoc
-      if( Aladin.PROTO ) {
-         cbGetMoc=new JCheckBox(GETMOC,false);
-         cbGetMoc.setBackground(Aladin.BLUE);
-         cbGetMoc.setBounds(xGetAll,yGetAll,140,20); yGetAll+=20;
-         cbGetMoc.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               boolean flag=!cbGetMoc.isSelected();
-               target.setEnabled(flag);
-               radius.setEnabled(flag);
-               cbGetAllCat.setEnabled(flag);
-               cbGetAll.setEnabled(flag);
-            }
-         });
-      }
 
-      if( !Aladin.OUTREACH ) {
-         add(cbGetAllCat);
-         if( Aladin.PROTO ) add(cbGetMoc);
-      }
-
-//      JLabel label0 = new JLabel(GETALL1);
-//      label0.setBounds(xGetAll+10,yGetAll,55,20);
-//      add(label0);
+      if( !Aladin.OUTREACH ) add(cbGetAllCat);
 
       // Catalog + Radius
       JLabel label1 = new JLabel(addDot(CAT));
@@ -187,22 +165,41 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       label2.setBounds(246-15,y,l,HAUT);
       add(label2);
       radius = new JTextField("10 arcmin");
-      radius.setBounds(294-15,y,105,HAUT); y+=HAUT+MARGE+5;
+      radius.setBounds(294-15,y,105,HAUT); y+=HAUT+MARGE-2;
       radius.addKeyListener(this);
       radius.addActionListener(this);
       add(radius);
 
       // Bouton getReadMe
+      Insets insets = new Insets(0,10,0,10);
       getReadMe = new JButton(CATDESC);
+      getReadMe.setMargin(insets);
       getReadMe.addActionListener(this);
       getReadMe.setFont( Aladin.BOLD);
       getReadMe.setEnabled(true);
       
       // Bouton getMoc
       getMoc = new JButton(CATMOC);
+      getMoc.setMargin(insets);
       getMoc.addActionListener(this);
       getMoc.setFont( Aladin.BOLD);
       getMoc.setEnabled(true);
+      
+      // Bouton getDMap
+      getDMap = new JButton(CATDMAP);
+      getDMap.setMargin(insets);
+      getDMap.addActionListener(this);
+      getDMap.setFont( Aladin.BOLD);
+      getDMap.setEnabled(true);
+      
+      JPanel catControl = new JPanel(new FlowLayout(FlowLayout.LEFT));
+      catControl.setBounds(l+15,y,350,HAUT);
+      catControl.setBackground(Aladin.BLUE);
+      catControl.add(getReadMe);
+      catControl.add(getMoc);
+      catControl.add(getDMap);
+      if( !Aladin.OUTREACH ) add(catControl);
+      y+=HAUT+MARGE+5;
 
 
 //      getReadMe.addActionListener( new ActionListener() {
@@ -251,10 +248,10 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       verboseDescr   = aladin.chaine.getString("VZDESC");
       CATDESC= aladin.chaine.getString("VZCATDESC");
       CATMOC = aladin.chaine.getString("VZCATMOC");
+      CATDMAP= aladin.chaine.getString("VZCATDMAP");
       INFO1  = aladin.chaine.getString("VZINFO1");
       GETALL = aladin.chaine.getString("VZGETALL2");
       GETALL1= aladin.chaine.getString("VZGETALL3");
-      GETMOC = aladin.chaine.getString("VZGETMOC");
       CAT    = aladin.chaine.getString("VZCAT");
   }
 
@@ -320,22 +317,6 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    }
    
    
-   protected int createMocPlane(String cat) {
-      URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cat));
-      Aladin.trace(4,"ServerVizier.createMocPlane("+cat+") URL= "+u);
-      
-      MyInputStream in;
-      try {
-         in = Util.openStream(u);
-      } catch( Exception e ) {
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning(this,MOCERROR,1);
-        return -1;
-      }
-      
-      return aladin.calque.newPlaMOC( in, "MOC "+cat);
-   }
-
    // MODIF PIERRE F. POUR DESYNCHRONISER L'APPEL A LA LISTE DES CATALOGUES
    // DE VIZIER (sept 03)
    public void run() {
@@ -368,7 +349,8 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             }
          }
          );
-         vcl = new VizieRCatalogs(catalog, getReadMe, Aladin.PROTO ?getMoc:null, catalogs, controlButton);
+//         vcl = new VizieRCatalogs(catalog, getReadMe, Aladin.PROTO ?getMoc:null, catalogs, controlButton);
+         vcl = new VizieRCatalogs(catalog, null, null, catalogs, controlButton);
       }
       else
          vcl.show(catalogs);
@@ -400,40 +382,30 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
          return;
       }
       
-      boolean moc =  cbGetMoc!=null && cbGetMoc.isSelected();
-      
       boolean allCat = cbGetAllCat.isSelected();
 
       objet=getTarget(false);
       cata = catalog.getText().trim();
 
-      if( moc ) {
-         createMocPlane(cata);
-         
-      } else {
-         if( objet==null || objet.length()==0 ) {
-            if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
-            if( !Aladin.confirmation(this,"Do you really want to download\n"+
-                  "all \""+cata+"\" ?") ) return;
-            objet="";
-            rm=0;
-         } else if( !allCat ) {
-            if( (r=getRadius())==null ) return;
-            rm=getRM(r);
-         }
+      if( objet==null || objet.length()==0 ) {
+         if( cata.length()==0 ) { Aladin.warning(this,WNEEDCAT); return; }
+         if( !Aladin.confirmation(this,"Do you really want to download\n"+
+               "all \""+cata+"\" ?") ) return;
+         objet="";
+         rm=0;
+      } else if( !allCat ) {
+         if( (r=getRadius())==null ) return;
+         rm=getRM(r);
+      }
 
-         waitCursor();
+      waitCursor();
 
+      if( cbGetAll.isSelected() ) cata = cata+",allcolumns";
+      if( !allCat && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
+      else aladin.console.setCommand("get VizieRX("+cata+")");
 
+      createPlane(objet,rm+"",cata,null,null);
 
-         String s="";
-         if( cbGetAll.isSelected() ) cata = cata+",allcolumns";
-         if( !allCat && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
-         else aladin.console.setCommand("get VizieRX("+cata+")");
-
-         createPlane(objet,rm+"",cata,null,null);
-      } 
-      
       catalog.setText("");
       resetFlagBoxes();
       defaultCursor();
@@ -521,7 +493,6 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    protected void resetFlagBoxes() {
       cbGetAll.setSelected(false);
       cbGetAllCat.setSelected(false);
-      cbGetMoc.setSelected(false);
       target.setEnabled(true);
       radius.setEnabled(true);
    }
@@ -530,7 +501,6 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    * Rq : Eh oui, il faut bien ruser pour supporter Netscape 3.0
    */
    protected void reaffiche() {
-//      try{ invalidate(); validate(); } catch( Exception e ) {}
       hide();show();
    }
 
@@ -539,31 +509,36 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    */
    public void actionPerformed(ActionEvent e) {
       Object s = e.getSource();
-
-      // Affichage du selecteur de fichiers
-      if( s instanceof JButton
-            && ((JButton)s).getActionCommand().equals(CATDESC )) {
-         String cata = catalog.getText().trim();
-         if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-
-         cata = Glu.quote(cata);
-         waitCursor();
-         aladin.glu.showDocument("getReadMe",cata);
-
-         defaultCursor();
-         return;
-         
-      } else if( s instanceof JButton
-            && ((JButton)s).getActionCommand().equals(CATMOC )) {
-         String cata = catalog.getText().trim();
-         if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-         
-         createMocPlane(cata);
-         defaultCursor();
-         return;
-
-      }
       
+      if( s instanceof JButton ) {
+         String action = ((JButton)s).getActionCommand();
+         
+         if( action.equals(CATDESC) || action.equals(CATMOC) || action.equals(CATDMAP) ) {
+            
+            String cata = catalog.getText().trim();
+            if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+            cata = Glu.quote(cata);
+            
+            // Affichage du README
+            if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",cata);
+            
+            // Chargement du MOC
+            else if( action.equals(CATMOC) ) {
+               URL u = aladin.glu.getURL(MOCGLU,cata+" 512");
+               aladin.execAsyncCommand("'MOC "+cata+"'=get File("+u+")");
+            }
+            
+            // Chargement de la carte de densité
+            else if( action.equals(CATDMAP) ) {
+               URL u = aladin.glu.getURL(DMAPGLU,cata);
+               aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
+            }
+            defaultCursor();
+            return;
+         }
+         
+      }
+
       super.actionPerformed(e);
    }
 

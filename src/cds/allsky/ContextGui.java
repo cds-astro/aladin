@@ -175,10 +175,6 @@ public class ContextGui extends Context {
 
    public void setProgressBar(JProgressBar bar) { progressBar=bar; progressBar.setString(null); }
    
-   private Object [] plansRgb;
-   private String outputRgb;
-   private JpegMethod methodRgb;
-   
    public void setRgbPlans(Object [] plans) { plansRgb=plans; }
    public void setRgbOutput(String output) { outputRgb=output; }
    public void setRgbMethod(JpegMethod method) { methodRgb=method; }
@@ -186,7 +182,6 @@ public class ContextGui extends Context {
    public Object [] getRgbPlans() { return plansRgb; }
    public String getRgbOutput() { return outputRgb; }
    public JpegMethod getRgbMethod() { return methodRgb; }
-
 
    public String getInputPath() {
       return mainPanel.tabDesc.getInputField();

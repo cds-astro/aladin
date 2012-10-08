@@ -610,8 +610,8 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    /** Retourne l'indice de la frame mémorisée par l'utilisateur, ICRS par défaut */
    protected int getFrame() {
       if( Aladin.OUTREACH ) return Localisation.ICRS;
-      String frame = get(FRAME);
       try {
+         String frame = get(FRAME);
          int i = Util.indexInArrayOf(frame, Localisation.REPERE);
          if( i>=0 ) return i;
       } catch( Exception e ) { }

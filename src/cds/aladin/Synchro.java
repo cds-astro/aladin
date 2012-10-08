@@ -92,6 +92,7 @@ public final class Synchro {
     * @param taskId identificateur de la tache (fourni par setTask()
     */
    public void stop(String taskId) {
+      if( taskId==null ) return;
       try {
          waitLock();
          checkTask(taskId);

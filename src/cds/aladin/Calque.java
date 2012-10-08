@@ -3169,7 +3169,7 @@ public final class Calque extends JPanel implements Runnable {
    }
    
    /** Création d'un plan Healpix Multi-Order Coverage Map  */
-   protected int newPlaMOC(MyInputStream in,String label) {
+   protected int newPlanMOC(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
