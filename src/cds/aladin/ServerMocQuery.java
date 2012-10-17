@@ -21,11 +21,14 @@
 package cds.aladin;
 
 import java.awt.Dimension;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
@@ -33,6 +36,7 @@ import java.util.Vector;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import cds.moc.HealpixMoc;
 import cds.tools.MultiPartPostOutputStream;
@@ -45,11 +49,15 @@ import cds.tools.MultiPartPostOutputStream;
  */
 public class ServerMocQuery extends Server  {
 
+    static private String[] LARGE_CATS = {"2MASS", "CMC14", "UCAC3", "UCAC4", "2MASS6X", "SDSS8", "USNOB1", "WISE_ALLSKY",
+                                          "DENIS", "GLIMPSE", "GSC23", "NOMAD", "PPMX", "PPMXL", "TYCHO2", "SIMBAD",
+                                          "UKIDSS_DR8_LAS", "UKIDSS_DR6_GPS"};
 
     private String baseUrl = "http://cdsxmatch.u-strasbg.fr/QueryCat/QueryCat";
 
     private JComboBox comboMoc;
     private JComboBox comboCat;
+    private JTextField textCat;
     private JComboBox comboMaxNbRows;
 
 
@@ -108,18 +116,45 @@ public class ServerMocQuery extends Server  {
       pTitre.setFont(Aladin.BOLD);
       pTitre.setBounds(XTAB1,y,XTAB2-10,HAUT);
       add(pTitre);
+      y+=HAUT+MARGE;
+
+      pTitre = new JLabel("Choose in list");
+      pTitre.setFont(Aladin.ITALIC);
+      pTitre.setBounds(XTAB1,y,XTAB2-10,HAUT);
+      add(pTitre);
       comboCat = new JComboBox();
-      comboCat.addItem("SIMBAD");
-      comboCat.addItem("TYCHO2");
-      comboCat.addItem("CMC14");
-      comboCat.addItem("PPMX");
-      comboCat.addItem("2MASS");
-      comboCat.addItem("DENIS");
-      comboCat.addItem("UKIDSS_DR8_LAS_SLIM");
-      comboCat.addItem("SDSS8");
+      comboCat.addItem("---");
+      Arrays.sort(LARGE_CATS);
+      for (String cat: LARGE_CATS ) {
+          comboCat.addItem(cat);
+      }
 
       comboCat.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
       add(comboCat);
+
+      // champ texte pour entrer nom catalogue
+      pTitre = new JLabel("Or enter a VizieR table ID");
+      pTitre.setFont(Aladin.ITALIC);
+      pTitre.setBounds(XTAB1,y,XTAB2-10,HAUT);
+      add(pTitre);
+
+      textCat = new JTextField();
+      textCat.setBounds(XTAB2,y,XWIDTH-XTAB2,HAUT); y+=HAUT+MARGE;
+      add(textCat);
+
+      // listener on comboCat
+      comboCat.addItemListener(new ItemListener() {
+
+          public void itemStateChanged(ItemEvent e) {
+              if (e.getItem().equals("---")) {
+                  textCat.setEnabled(true);
+              }
+              else {
+                  textCat.setEnabled(false);
+                  textCat.setText("");
+              }
+          }
+      });
 
       // combo box pour limiter le nombre de sources
       pTitre = new JLabel("Max nb of rows");
@@ -208,7 +243,14 @@ public class ServerMocQuery extends Server  {
            MultiPartPostOutputStream out =
                new MultiPartPostOutputStream(urlConn.getOutputStream(), boundary);
 
-           out.writeField("catName", comboCat.getSelectedItem().toString());
+           String catName;
+           if (comboCat.getSelectedItem().equals("---")) {
+               catName = textCat.getText().trim();
+           }
+           else {
+               catName = comboCat.getSelectedItem().toString();
+           }
+           out.writeField("catName", catName);
            out.writeField("mode", "mocfile");
            out.writeField("format", "votable");
            String limit = comboMaxNbRows.getSelectedItem().toString();
@@ -235,7 +277,7 @@ public class ServerMocQuery extends Server  {
 
            out.close();
 
-           aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), "MOC query");
+           aladin.calque.newPlanCatalog(new MyInputStream(urlConn.getInputStream()), catName + " MOC query");
        }
        catch(Exception ioe) {
            defaultCursor();
