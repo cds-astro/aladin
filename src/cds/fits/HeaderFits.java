@@ -549,6 +549,9 @@ public final class HeaderFits {
      header = new Hashtable(200);
      keysOrder = new Vector(200);
   }
+  
+  /** Retourne la taille mémoire approximative */
+  public long getMem() { return 16+(keysOrder==null?0:keysOrder.size()*50); }
 
 
 

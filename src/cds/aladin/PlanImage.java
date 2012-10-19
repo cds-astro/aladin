@@ -890,15 +890,16 @@ Aladin.trace(3,"Original pixels saved in cache ["+cacheID+"]");
       try {
          openCache();
          fCache.seek(cacheOffset);
-         pixelsOrigin = new byte[width*height*npix];
+         byte [] pixelsOrigin1 = new byte[width*height*npix];
          
          //  Si on lit d'un coup un trop grop fichier, ça explose la mémoire (pb précédure native !!)
 //         fCache.readFully(pixelsOrigin);  
          int bloc=4*1024*1024;
-         for( int pos=0,len=0; pos<pixelsOrigin.length; pos+=len ) {
-            len = pixelsOrigin.length-pos<bloc ? pixelsOrigin.length-pos : bloc;
-            fCache.readFully(pixelsOrigin,pos,len);
+         for( int pos=0,len=0; pos<pixelsOrigin1.length; pos+=len ) {
+            len = pixelsOrigin1.length-pos<bloc ? pixelsOrigin1.length-pos : bloc;
+            fCache.readFully(pixelsOrigin1,pos,len);
          }
+         pixelsOrigin=pixelsOrigin1;
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
 Aladin.trace(3,"Original pixels lost ["+cacheID+"]");
@@ -2358,8 +2359,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    protected double getPixelInDouble(int x,int y) {
 
       // On retourne la valeur 8 bits faute de mieux
-      if( pixelsOrigin==null && !isBigImage() || fmt==JPEG 
-           ) return (getBufPixels8()[y*width+x] & 0xFF);
+      if( pixelsOrigin==null && !isBigImage() || fmt==JPEG ) return (getBufPixels8()[y*width+x] & 0xFF);
 
       // On accède directement à la valeur sur disque
       if( pixelsOriginFromDisk() ) {

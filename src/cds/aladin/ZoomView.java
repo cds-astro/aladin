@@ -1132,6 +1132,9 @@ try {
    public void paintComponent(Graphics gr) {
       if( Aladin.NOGUI ) return;
       
+      // AntiAliasing
+      aladin.setAliasing(gr);
+      
       ViewSimple v = aladin.view.getCurrentView();
       
       if( v==null || v.isFree() ) {

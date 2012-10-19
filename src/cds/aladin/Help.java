@@ -318,6 +318,10 @@ public final class Help extends JComponent implements
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
       g.setFont(font);
+      
+      // AntiAliasing
+      aladin.setAliasing(g);
+
       if( fm==null ) fm=g.getFontMetrics();
       
       if( text==null ) return;

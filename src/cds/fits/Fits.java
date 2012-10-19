@@ -87,6 +87,16 @@ final public class Fits {
 
 	private Calib calib;             // Calibration astrométrique
 
+	/** Donne une approximation de l'occupation mémoire (en bytes) */
+	public long getMem() {
+	   long mem = 12*4 + 4*8;
+	   if( calib!=null ) mem+=calib.getMem();
+	   if( headerFits!=null ) mem+=headerFits.getMem();
+	   if( pixels!=null ) mem+=pixels.length;
+	   if( pix8!=null ) mem+=pix8.length;
+	   if( rgb!=null ) mem+=rgb.length;
+	   return mem;
+	}
 
 	public static String FS = System.getProperty("file.separator");
 	
@@ -107,7 +117,7 @@ final public class Fits {
          rgb = new int[width*height];
       } else {
          pixels = new byte[width*height * Math.abs(bitpix)/8];
-         pix8 = new byte[width*height];
+//         pix8 = new byte[width*height];
          headerFits = new HeaderFits();
          headerFits.setKeyValue("SIMPLE","T");
          headerFits.setKeyValue("BITPIX",bitpix+"");
@@ -264,7 +274,7 @@ final public class Fits {
 
       imgBuf.flush(); imgBuf=null;
       if( !RGBASFITS && bitpix==8 ) {
-         pix8 = new byte[widthCell*heightCell];
+//         pix8 = new byte[widthCell*heightCell];
          initPix8();
       }
 
@@ -322,8 +332,9 @@ final public class Fits {
 
    /** Chargement d'une image FITS depuis un fichier */
    public void loadFITS(String filename,int x, int y, int w, int h) throws Exception { loadFITS(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
-   public void loadFITS(String filename) throws Exception {loadFITS(filename,false);}
-   public void loadFITS(String filename, boolean color) throws Exception {
+   public void loadFITS(String filename) throws Exception {loadFITS(filename,false,true);}
+   public void loadFITS(String filename, boolean color) throws Exception { loadFITS(filename,color,true); }
+   public void loadFITS(String filename, boolean color,boolean flagLoad) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
       is = is.startRead();
@@ -331,7 +342,7 @@ final public class Fits {
          if( widthCell<0 ) throw new Exception("Mosaic mode not supported yet for FITS color file");
          loadFITSColor(is);
       }
-      else loadFITS(is,xCell,yCell,widthCell,heightCell);
+      else loadFITS(is,xCell,yCell,widthCell,heightCell,flagLoad);
       is.close();
       this.setFilename(filename);
    }
@@ -342,10 +353,13 @@ final public class Fits {
    }
    
    /** Chargement d'une cellule d'une image FITS */
-   public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception {
+   public void loadFITS(MyInputStream dis,int x,int y,int w, int h) throws Exception { loadFITS(dis,x,y,w,h,true); }
+   public void loadFITS(MyInputStream dis,int x,int y,int w, int h,boolean flagLoad) throws Exception {
 	   dis = dis.startRead();
 //       boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
        boolean flagHComp = dis.isHCOMP();
+       if( flagHComp || dis.isGZ() ) { releasable=false; flagLoad=true; }
+       
 	   headerFits = new HeaderFits(dis);
 	   bitpix = headerFits.getIntFromHeader("BITPIX");
 	   
@@ -393,38 +407,42 @@ final public class Fits {
 	   
        int n = (Math.abs(bitpix)/8);
        bitmapOffset = dis.getPos();
-	   
+       
+       int size = widthCell*heightCell * n;
+       
 	   // Pas le choix, il faut d'abord tout lire, puis ne garder que la cellule si nécessaire
        if( flagHComp ) {
           byte [] buf = Hdecomp.decomp(dis);
           if( w==-1 ) pixels=buf;
           else {
-             pixels = new byte[widthCell*heightCell * n];
+             pixels = new byte[size];
              for( int lig=0; lig<heightCell; lig++) System.arraycopy(buf, (lig*width+xCell)*n, pixels, lig*widthCell*n, widthCell*n);
           }
           
        } else {
-          pixels = new byte[widthCell*heightCell * n];
+          if( flagLoad || bitpix==8 ) {
+             pixels = new byte[size];
 
-          // Lecture d'un coup
-          if( w==-1 ) dis.readFully(pixels);
+             // Lecture d'un coup
+             if( w==-1 ) dis.readFully(pixels);
 
-          // Lecture ligne à ligne pour mémoriser uniquement la cellule
-          else {
-             dis.skip( yCell*width*n);
-             byte [] buf = new byte[width * n];  // une ligne complète
-             for( int lig=0; lig<heightCell; lig++ ) {
-                dis.readFully(buf);
-                System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+             // Lecture ligne à ligne pour mémoriser uniquement la cellule
+             else {
+                dis.skip( yCell*width*n);
+                byte [] buf = new byte[width * n];  // une ligne complète
+                for( int lig=0; lig<heightCell; lig++ ) {
+                   dis.readFully(buf);
+                   System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+                }
+                dis.skip( (height-(yCell+heightCell) )*width * n);
              }
-             dis.skip( (height-(yCell+heightCell) )*width * n);
-          }
+          } else bitmapReleaseDone=true;
 
        }
 	   try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
 	   try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
 	   try { setCalib(new Calib(headerFits)); }                   catch( Exception e ) { calib=null; }
-	   pix8 = new byte[widthCell*heightCell];
+//	   pix8 = new byte[widthCell*heightCell];
 	   if( bitpix==8 ) initPix8();
    }
    
@@ -1009,6 +1027,7 @@ final public class Fits {
    /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
     * des valeurs des pixels originaux [min..max] linéairement */
    public void toPix8(double min, double max) {
+      if( pix8==null ) pix8 = new byte[widthCell*heightCell];
       double r = 256./(max - min);
       for( int y=0; y<heightCell; y++) {
          for( int x=0; x<widthCell; x++ ) {
@@ -1044,6 +1063,7 @@ final public class Fits {
     * S'il y a usage d'une fonction de transfert, elle est déjà appliquée à la table tcm (rien à faire de plus)
     * Il est préférable de travailler sur byte[] tcm plutot que sur ColorModel directement, c'est trop lent */
    public void toPix8(double min, double max, byte [] tcm) {
+      if( pix8==null ) pix8 = new byte[widthCell*heightCell];
       double r = 256./(max - min);
       
       for( int y=0; y<heightCell; y++) {
@@ -1063,6 +1083,7 @@ final public class Fits {
     * fullbits (uniquement si bitpix==8) avec inversion des lignes */
    public void initPix8() throws Exception {
       if( bitpix!=8 ) throw new Exception("bitpix!=8");
+      if( pix8==null ) pix8 = new byte[widthCell*heightCell];
       initPix(pixels,pix8);
    }
 
@@ -1148,6 +1169,18 @@ final public class Fits {
    }
 
    private boolean bitmapReleaseDone=false;
+   private int users=0;
+   
+   public boolean canBeReleased() { return users<=0; }
+   synchronized public void addUser() { users++; }
+   synchronized public void rmUser() { users--; }
+   
+   /** Retourne true si le bitmap est releasé */
+   public boolean isReleased() { return bitmapReleaseDone; }
+   
+   private boolean releasable=true;
+   public void setReleasable(boolean flag) { releasable=flag; }
+   public boolean isReleasable() { return releasable; }
    
    /** Libération de la mémoire utilisé par le bitmap des pixels 
     * (on suppose que le fichier pourra être relu ultérieurement)
@@ -1156,6 +1189,7 @@ final public class Fits {
     */
    public void releaseBitmap() throws Exception {
       if( bitpix==0 ) return;  // De fait du JPEG
+      if( !canBeReleased() ) return; // Pas possible, qq s'en sert
       testBitmapReleaseFeature();
       bitmapReleaseDone=true;
       pixels=null;
@@ -1173,8 +1207,22 @@ final public class Fits {
 //      System.out.println("reloadBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
       RandomAccessFile f = new RandomAccessFile(filename, "r");
       f.seek(bitmapOffset);
-      pixels = new byte[width*height*(Math.abs(bitpix)/8)];
-      f.readFully(pixels);
+      int n = Math.abs(bitpix)/8;
+      pixels = new byte[widthCell*heightCell*n];
+      
+      // Lecture d'un coup
+      if( !hasCell() ) f.readFully(pixels);
+
+      // Lecture ligne à ligne pour mémoriser uniquement la cellule
+      else {
+         f.skipBytes( yCell*width*n );
+         byte [] buf = new byte[width * n];  // une ligne complète
+         for( int lig=0; lig<heightCell; lig++ ) {
+            f.readFully(buf);
+            System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+         }
+      }
+
       f.close();
       bitmapReleaseDone=false;
 
@@ -1182,7 +1230,8 @@ final public class Fits {
    
    private void testBitmapReleaseFeature() throws Exception {
       if( filename==null || bitmapOffset==-1 ) throw new Exception("FITS stream not compatible (not a true file ["+filename+"])");
-      if( xCell!=0 || yCell!=0 || widthCell!=width || heightCell!=height ) throw new Exception("Fits subcell not compatible ["+filename+"]");
+      if( !releasable ) throw new Exception("FITS not compatible (compressed or reserved by user)");
+//      if( xCell!=0 || yCell!=0 || widthCell!=width || heightCell!=height ) throw new Exception("Fits subcell not compatible ["+filename+"]");
       if( !(new File(filename)).canRead() ) throw new Exception("FITS does not exist on disk ["+filename+"]");
    }
 
@@ -1190,6 +1239,7 @@ final public class Fits {
    public void free() {
       pixels =null;
       pix8 = null;
+      rgb = null;
       calib=null;
 //      center=null;
       headerFits=null;
@@ -1386,19 +1436,21 @@ final public class Fits {
    protected void setPixValDouble(byte[] t,int bitpix,int i,double val) {
       int c;
       switch(bitpix) {
-         case   8: t[i]=(byte)(0xFF & (int)val);
+         case -32: setInt(t,i<<2,Float.floatToIntBits((float)val));
                    break;
          case  16: i*=2;
                    c = (int)val;
                    t[i]  =(byte)(0xFF & (c>>8));
                    t[i+1]=(byte)(0xFF & c);
                    break;
+//         case -32: i*=4;
+//                   c=Float.floatToIntBits((float)val);
+//                   setInt(t,i,c);
+//                   break;
          case  32: i*=4;
                    setInt(t,i,(int)val);
                    break;
-         case -32: i*=4;
-                   c=Float.floatToIntBits((float)val);
-                   setInt(t,i,c);
+         case   8: t[i]=(byte)(0xFF & (int)val);
                    break;
          case -64: i*=8;
                    long c1 = Double.doubleToLongBits(val);
@@ -1430,15 +1482,14 @@ final public class Fits {
    private double getPixValDouble(byte[]t ,int bitpix,int i) {
       try {
          switch(bitpix) {
-            case   8: return ((t[i])&0xFF);
+            case -32: return Float.intBitsToFloat(getInt(t,i<<2));
             case  16: i*=2;
-            return ( ((t[i])<<8) | (t[i+1])&0xFF );
+               return ( ((t[i])<<8) | (t[i+1])&0xFF );
             case  32: return getInt(t,i*4);
-            case -32: return Float.intBitsToFloat(getInt(t,i*4));
+            case   8: return ((t[i])&0xFF);
             case -64: i*=8;
-            long a = (((long)getInt(t,i))<<32)
-            | ((getInt(t,i+4)) & 0xFFFFFFFFL);
-            return Double.longBitsToDouble(a);
+               long a = (((long)getInt(t,i))<<32) | ((getInt(t,i+4)) & 0xFFFFFFFFL);
+               return Double.longBitsToDouble(a);
          }
          return 0.;
       } catch( Exception e ) { return DEFAULT_BLANK; }
@@ -1457,7 +1508,7 @@ final public class Fits {
    }
 
    /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
-   public void coadd(Fits a) throws Exception {
+   public void coadd(Fits a) throws Exception { 
       int taille=widthCell*heightCell;
       
       if( a.pixels!=null && pixels!=null ) {
@@ -1482,6 +1533,46 @@ final public class Fits {
          }
       }
    }
+
+   /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */  
+   public void coadd(Fits a,double [] weight1,double [] weight2) throws Exception {
+      int taille=widthCell*heightCell;
+      
+      if( a.pixels!=null && pixels!=null ) {
+         for( int i=0; i<taille; i++) {
+            double v1 = getPixValDouble(pixels,bitpix,i);
+            double v2 = a.getPixValDouble(a.pixels,bitpix,i);
+            double fct1 = weight1[i] / (weight1[i]+weight2[i]);
+            double fct2 = weight2[i] / (weight1[i]+weight2[i]);
+            weight1[i]+=weight2[i];
+            weight2[i]=0;
+            double v = isBlankPixel(v1) ? v2 :  a.isBlankPixel(v2) ? v1 : v1*fct1 + v2*fct2;
+            setPixValDouble(pixels, bitpix, i, v);
+         }
+      }
+      if( a.pix8!=null && pix8!=null ) {
+         for( int i=0; i<taille; i++) {
+            double fct1 = weight1[i] / (weight1[i]+weight2[i]);
+            double fct2 = weight2[i] / (weight1[i]+weight2[i]);
+            weight1[i]+=weight2[i];
+            weight2[i]=0;
+            pix8[i] = (byte)(0xFF & ( (int)( pix8[i]*fct1 + a.pix8[i]*fct2 ) ) );
+         }
+      }
+      if( a.rgb!=null && rgb!=null ) {
+         for( int i=0; i<taille; i++) {
+            double fct1 = weight1[i] / (weight1[i]+weight2[i]);
+            double fct2 = weight2[i] / (weight1[i]+weight2[i]);
+            weight1[i]+=weight2[i];
+            weight2[i]=0;
+            int r  =  (int)( (0x00FF0000 & a.rgb[i])*fct1 + (0x00FF0000 & rgb[i])*fct2 );
+            int g  =  (int)( (0x0000FF00 & a.rgb[i])*fct1 + (0x0000FF00 & rgb[i])*fct2 );
+            int b  =  (int)( (0x000000FF & a.rgb[i])*fct1 + (0x000000FF & rgb[i])*fct2 );
+            rgb[i] = (0xFF000000 & rgb[i]) | r | g | b;
+         }
+      }
+   }
+
 
    /** Remplace les pixels (pix8[], pixels[] et rgb[] pour les nouvelles valeurs != NaN */
    public void overwriteWith(Fits a) throws Exception {

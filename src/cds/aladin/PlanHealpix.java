@@ -138,6 +138,7 @@ public class PlanHealpix extends PlanBG {
 
         threading();
     }
+    
 
     /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
     public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, String startingTaskId) {
@@ -164,7 +165,7 @@ public class PlanHealpix extends PlanBG {
 
     protected void log() {}
 
-    private void init(String file, MyInputStream in,String label,int idxTFormToRead) {
+    protected void init(String file, MyInputStream in,String label,int idxTFormToRead) {
         if (file != null && (file.startsWith("http") || file.startsWith("ftp"))) {
             isLocal = false;
         } else {
@@ -412,11 +413,6 @@ public class PlanHealpix extends PlanBG {
        co = new Coord(0,0);
        Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
        objet = co+"";
-       Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
-       p.frame = getCurrentFrameDrawing();
-
-       setNewProjD(p);
-       initZoom=1./ (Aladin.OUTREACH?64:32);
 
 //       timerLastDrawBG=-1;
        active=selected=true;
@@ -424,7 +420,16 @@ public class PlanHealpix extends PlanBG {
        pixList = new Hashtable<String, HealpixKey>(1000);
        allsky=null;
        loader = new HealpixLoader();
+       
+       postProd();
 
+    }
+    
+    protected void postProd() {
+       Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
+       p.frame = getCurrentFrameDrawing();
+       setNewProjD(p);
+       initZoom=1./ (Aladin.OUTREACH?64:32);
        creatDefaultCM();
     }
 

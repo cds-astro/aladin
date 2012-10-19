@@ -59,6 +59,10 @@ public class HealpixIndexItem {
          if( key.charAt(key.length()-1)==']' ) first = key.lastIndexOf('[');
          if( first>0 ) key = key.substring(0, first);
       }
+      
+      // On ne garde que le dernier élément après le dernier '/' pour éviter de construire une arborescence
+      int offset = key.lastIndexOf('/');
+      if( offset>=0 ) key = key.substring(offset+1,key.length() );
       return key;
    }
 
@@ -203,7 +207,7 @@ public class HealpixIndexItem {
       int w = v.getWidth();
       int h = v.getHeight();
       PointD [] b = getProjViewCorners(v);
-      if( b==null ) return true;
+      if( b==null ) return false;    // On n'a pas les footprints STC? on suppose par défaut qu'on est dans la vue (!!!)
 
       double minX,maxX,minY,maxY;
       minX=maxX=b[0].x;
@@ -285,7 +289,7 @@ public class HealpixIndexItem {
          }
          throw new Exception("imageSourcePath syntax error");
       } catch( Exception e ) {
-         Aladin.trace(4,"PlanBG.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
+         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
          imageSourcePath=null;
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          return null;
@@ -312,11 +316,11 @@ public class HealpixIndexItem {
       String param [] = new String[tok.countTokens() ];
       for( int i=0; tok.hasMoreTokens(); i++ ) {
          param[i]=tok.nextToken();
-//         System.out.println("tok["+i+"]="+param[i]);
+//        System.out.println("tok["+i+"]="+param[i]);
       }
       
       String s = Glu.dollarSet(replacement, param, Glu.URL);
-//      System.out.println("Glu => "+s);
+      System.out.println("Glu => "+s);
       return s;
    }
 

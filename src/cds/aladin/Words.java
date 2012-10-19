@@ -290,7 +290,8 @@ public final class Words implements Runnable {
       
       // tag Glu
       } else {
-         try { url = aladin.glu.getURL(id,param,flagHttp)+""; }   
+         try { url = aladin.glu.getURL(id,param,flagHttp)+""; 
+          if( url==null ) throw new Exception("Error during GLU resolution !"); }   
          catch( Exception e) {
             aladin.warning(aladin,"URL error");
             if( Aladin.levelTrace>=3 ) e.printStackTrace();
@@ -303,7 +304,7 @@ public final class Words implements Runnable {
       
       // Cas particulier où il faut transmettre l'URL à une application tierce via SAMP
       if( samp ) {
-         System.out.println("Je dois transmettre à SAMP les données ["+label+"] via l'URL suivante : "+url);
+//         System.out.println("Je dois transmettre à SAMP les données ["+label+"] via l'URL suivante : "+url);
          aladin.mesure.mcanvas.toSamp(url,x+w/2,y);
          return;
       }

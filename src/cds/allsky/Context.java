@@ -89,6 +89,7 @@ public class Context {
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
    protected CoAddMode coAdd=CoAddMode.getDefault();  // Methode de traitement par défaut
+   protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -124,6 +125,7 @@ public class Context {
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return bitpix; }
    public int getNpix() { return isColor() || bitpix==-1 ? 4 : Math.abs(bitpix)/8; }  // Nombre d'octets par pixel
+   public int getNpixOrig() { return isColor() || bitpixOrig==-1 ? 4 : Math.abs(bitpixOrig)/8; }  // Nombre d'octets par pixel
    public double getBScaleOrig() { return bScaleOrig; }
    public double getBZeroOrig() { return bZeroOrig; }
    public double getBZero() { return bZero; }
@@ -142,8 +144,10 @@ public class Context {
    public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isInTree(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
+   public int getMaxNbThread() { return maxNbThread; }
    
    // Setters
+   public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
@@ -594,24 +598,19 @@ public class Context {
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showTilesStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNbEmptyTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
-         long statNodeAvgTime) {
+         long statNodeAvgTime,long usedMem,long freeMem) {
 
-      long maxMem = Runtime.getRuntime().maxMemory();
-      long totalMem = Runtime.getRuntime().totalMemory();
-      long freeMem = Runtime.getRuntime().freeMemory();
-      long usedMem = totalMem-freeMem;
       long nbLowCells = getNbLowCells();
       
       String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
       String pourcentNbCells = nbLowCells==-1 ? "" : 
-         (Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"%) ";
-
+         (Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"% ";
+      long nbTilesPerSec = (totalTime)==0 ? 0 : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
       String s=(statNbTile+"+"+statNbEmptyTile)+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
-      +pourcentNbCells
-      +Util.getTemps(statAvgTime)+" per tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
+      +pourcentNbCells+ nbTilesPerSec+" tiles/mn) "
+      +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
       +" by "+statNbThreadRunning+"/"+statNbThread+" threads"
-      +" - Ram: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
-      +" (Fits cache size: "+Util.getUnitDisk(cacheFits.getStatMem())+")";
+      +" using "+Util.getUnitDisk(usedMem)+" ("+Util.getUnitDisk(freeMem)+" free)";
 
       nlstat(s);
 
@@ -774,14 +773,16 @@ public class Context {
 	   }
    }
    
-   public void running(String string) { System.out.println("RUN   : "+string); }
-   public void nldone(String string)  { System.out.println("\nDONE  : "+string);  }
-   public void done(String string)    { System.out.println("DONE  : "+string); }
-   public void info(String string)    { System.out.println("INFO  : "+string); }
-   public void warning(String string) { System.out.println("WARN  : "+string); }
-   public void error(String string)   { System.out.println("ERROR : "+string); }
-   public void action(String string)  { System.out.println("ACTION: "+string); }
-   public void nlstat(String string)  { System.out.println("\nSTAT  : "+string); }
+   public void running(String string)  { System.out.println("RUN   : "+string); }
+   public void nldone(String string)   { System.out.println("\nDONE  : "+string);  }
+   public void done(String string)     { System.out.println("DONE  : "+string); }
+   public void info(String string)     { System.out.println("INFO  : "+string); }
+   public void nlwarning(String string){ System.out.println("\nWARN  : "+string); }
+   public void warning(String string)  { System.out.println("WARN  : "+string); }
+   public void error(String string)    { System.out.println("ERROR : "+string); }
+   public void action(String string)   { System.out.println("ACTION: "+string); }
+   public void nlstat(String string)   { System.out.println("\nSTAT  : "+string); }
+   public void stat(String string)     { System.out.println("STAT  : "+string); }
    
    private boolean validateOutputDone=false;
    public boolean isValidateOutput() { return validateOutputDone; }

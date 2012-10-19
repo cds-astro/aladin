@@ -22,6 +22,7 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import cds.aladin.Aladin;
@@ -182,9 +183,19 @@ public class BuilderTiles extends Builder {
 
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
+      if( statNbTile+statEmptyTile==0 ) return;
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
-            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime);
+            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),getMem());
+      String s = showMem();
+      if( s.length()>0 ) {
+         //         adjustMem();
+         context.stat(s);
+      }
+      context.stat(context.cacheFits+"");
+      System.gc();
    }
+   
+   Hashtable<Thread,ArrayList<Fits>> memPerThread;
 
    // Initialisation des statistiques
    private void initStat(int nbThread) {
@@ -193,8 +204,91 @@ public class BuilderTiles extends Builder {
       statTotalTime=statNodeTotalTime=0L;
       startTime = System.currentTimeMillis();
       totalTime=0L;
+      memPerThread = new Hashtable<Thread,ArrayList<Fits>>();
    }
+   
+//   private long maxMem=0;
+   
+   // Libère de la mémoire non indispensable si besoin
+//   private void adjustMem() {
+//      if( maxMem==0 ) return;
+//      long diff=0L;
+//      long totMem=0L;
+//      long maxMemPerThread = maxMem/memPerThread.size();
+//      for( Long key : memPerThread.keySet() ) {
+//         ArrayList<Fits> m = memPerThread.get(key);
+//         if( m==null ) continue;
+//         long mem=0L;
+//         for( int i=m.size()-1; i>=0; i--) {
+//            Fits f = m.get(i);
+//            long m1 = f.getMem();
+//            if( mem>maxMemPerThread ) {
+//               try { f.releaseBitmap(); } catch( Exception e ) { }
+//               long m2= f.getMem();
+//               diff += m1-m2;
+//               m1=m2;
+//            }
+//            mem += m1;
+//         }
+//         totMem+=mem;
+//      }
+//      System.out.println("adjustMem: maxMem="+cds.tools.Util.getUnitDisk(maxMem)+" mem="+cds.tools.Util.getUnitDisk(totMem)+" diff="+cds.tools.Util.getUnitDisk(diff));
+//   }
 
+   // Suivi de mémoire d'un Thread particulier : suppression du Thread
+   private void rmThread(Thread t) {
+      Long key = new Long(t.hashCode());
+      ArrayList<Fits> m = memPerThread.get(key);
+      if( m!=null ) for( Fits f : m ) f.free();
+      memPerThread.remove(key);
+   }
+   
+   // Suivi de mémoire d'un Thread particulier : ajout d'un Fits
+   protected void addFits(Thread t,Fits f) {
+      if( f==null ) return;
+      ArrayList<Fits> m = memPerThread.get(t);
+      if( m==null ) {
+         m=new  ArrayList<Fits>();
+         memPerThread.put(t,m);
+      }
+      m.add(f);
+   }
+   
+   // Suivi de mémoire d'un Thread particulier : retrait d'un Fits
+   protected void rmFits(Thread t,Fits f) {
+      ArrayList<Fits> m = memPerThread.get(t);
+      if( m==null ) return;
+      m.remove(f);
+   }
+   
+   private long getUsedMem() {
+      long mem=0L;
+      for( Thread t : memPerThread.keySet() ) {
+         ArrayList<Fits> m = memPerThread.get(t);
+         mem += getUsedMem(m);
+      }
+      return mem;
+   }
+   
+   private String showMem() {
+      StringBuffer s = new StringBuffer();
+      int i=0;
+      for( Thread t : memPerThread.keySet() ) {
+         ArrayList<Fits> m = memPerThread.get(t);
+         if( s.length()>0 ) s.append(", ");
+         s.append(t.getName()+": "+m.size()+" tiles"+" ("+cds.tools.Util.getUnitDisk( getUsedMem(m) )+")");
+      }
+      return s.toString();
+   }
+   
+   // Suivi de mémoire d'un Thread particulier : retourne la mémoire utilisé (en bytes)
+   private long getUsedMem(ArrayList<Fits> m) {
+      if( m==null ) return 0L;
+      long mem=0L;
+      for( Fits f : m ) mem += f.getMem();
+      return mem;
+   }
+   
    // Mise à jour des stats
    private void updateStat(int deltaNbThread,int deltaTile,int deltaEmptyTile,long timeTile,int deltaNodeTile,long timeNodeTile) {
       statNbThreadRunning+=deltaNbThread;
@@ -244,21 +338,24 @@ public class BuilderTiles extends Builder {
       int nbProc = Runtime.getRuntime().availableProcessors();
 
       // On utilisera 2/3 de la mémoire pour les threads et le reste pour le cacheFits
-      long size = Runtime.getRuntime().maxMemory();
-      long sizeCache = (size/3L)/(1024L*1024L);
-      size -=sizeCache;
-      Aladin.trace(4,"BuildController.build() cacheFits.size="+sizeCache+"Mo");
-      context.setCache(new CacheFits(sizeCache, 100000));
+      long size = getMem();
+      long sizeCache= size>400*1024*1024L ? -200*1024*1024L : -50*1024*1024;   // On laissera 200Mo de libre 
+//      sizeCache=150*1024*1024L;
+      context.setCache(new CacheFits(sizeCache));
 
-      long maxMemPerThread = Constante.NBTILESINRAM * (long)( Constante.SIDE*Constante.SIDE*context.getNpix() );
-      maxMemPerThread += Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
-      Aladin.trace(4,"BuildController.build(): RAM required per thread estimated at "+cds.tools.Util.getUnitDisk(maxMemPerThread));
+      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
+      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = (int) (size / maxMemPerThread);
+      
+//      int nbThread=nbProc;
+      
+      int maxNbThread = context.getMaxNbThread();
+      if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
       if (nbThread==0) nbThread=1;
       if( nbThread>nbProc ) nbThread=nbProc;
 
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
-      context.info("processing by "+nbThread+" thread"+(nbThread>1?"s":"")+" with "+cds.tools.Util.getUnitDisk(size));
+      context.info("processing by "+nbThread+" thread"+(nbThread>1?"s":"")+" with "+cds.tools.Util.getUnitDisk(size)+" available RAM");
 
       // Lancement des threads de calcul
       launchThreadBuilderHpx(nbThread,ordermin,ordermax);
@@ -269,6 +366,7 @@ public class BuilderTiles extends Builder {
          cds.tools.Util.pause(1000);
       }
 
+      context.cacheFits.reset();
       Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
       Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }
@@ -333,7 +431,12 @@ public class BuilderTiles extends Builder {
 
       // Création d'un losange terminal
       if( order==maxOrder )  {
-         f = createLeaveHpx(hpx,file,order,npix);
+         try { f = createLeaveHpx(hpx,file,order,npix); }
+         catch( Exception e ) {
+            System.err.println("BuilderTiles.createLeave error: "+file);
+            e.printStackTrace();
+            return null;
+         }
 
       // Création des branches filles, et cumul des résultats
       } else {
@@ -343,7 +446,12 @@ public class BuilderTiles extends Builder {
             if( context.isTaskAborting() ) throw new Exception("Task abort !");
             fils[i] = createHpx(hpx, path,order+1,maxOrder,npix*4+i);
          }
-         f = createNodeHpx(file,path,order,npix,fils);
+         try { f = createNodeHpx(file,path,order,npix,fils); }
+         catch( Exception e ) {
+            System.err.println("BuilderTiles.createNodeHpx error: "+file);
+            e.printStackTrace();
+            return null;
+         }
       }
 
       // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
@@ -400,6 +508,7 @@ public class BuilderTiles extends Builder {
          }
          updateStat(-1,0,0,0,0,0);
          mode=DIED;
+         rmThread(Thread.currentThread());
          Aladin.trace(3,Thread.currentThread().getName()+" died !");
       }
    }
@@ -467,7 +576,12 @@ public class BuilderTiles extends Builder {
 
       boolean inTree = context.isInMocTree(order,npix);
       if( !inTree ||
-            fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) return flagColor ? null : findFits(file+".fits");
+            fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) {
+         if( flagColor ) return null;
+         Fits f = findFits(file+".fits");
+         addFits(Thread.currentThread(),f);
+         return f;
+      }
 
       for( Fits f : fils ) if( f!=null ) f.reloadBitmap();
 
@@ -539,6 +653,7 @@ public class BuilderTiles extends Builder {
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
                oldOut.mergeOnNaN(out);
                out=oldOut;
+               oldOut=null;
             }
          }
       }
@@ -552,8 +667,14 @@ public class BuilderTiles extends Builder {
       updateStat(0,0,0,0,1,duree);
 
       for( int i=0; i<4; i++ ) {
-         if( fils[i]!=null ) fils[i].free();
+         if( fils[i]!=null ) {
+            fils[i].free();
+            rmFits(Thread.currentThread(), fils[i]);
+            fils[i]=null;
+         }
       }
+      
+      addFits(Thread.currentThread(),out);
       return out;
    }
 
@@ -571,20 +692,23 @@ public class BuilderTiles extends Builder {
       boolean isInList = context.isInMoc(order,npix);
       if( !isInList && coaddMode!=CoAddMode.REPLACETILE ) {
          oldOut = findFits(file+".fits");
-         if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) return oldOut;
+         if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) {
+            addFits(Thread.currentThread(), oldOut);
+            return oldOut;
+         }
       }
 
       int nside_file = Util.nside(order);
       int nside = Util.nside(order+Constante.ORDER);
 
-      Fits out = hpx.buildHealpix(nside_file, npix, nside);
+      Fits out = hpx.buildHealpix(this,nside_file, npix, nside);
 
       if( out !=null ) {
 
          if( coaddMode!=CoAddMode.REPLACETILE ) {
             if( oldOut==null ) oldOut = findFits(file+".fits");
-            if( oldOut!=null && coaddMode==CoAddMode.KEEPTILE ) return oldOut;
-            if( oldOut!=null && out!=null) {
+            if( oldOut!=null && coaddMode==CoAddMode.KEEPTILE ) { out=null; return oldOut; }
+            if( oldOut!=null ) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
                else if( coaddMode==CoAddMode.KEEP ) {
@@ -593,6 +717,7 @@ public class BuilderTiles extends Builder {
                   if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
                   oldOut.mergeOnNaN(out);
                   out=oldOut;
+                  oldOut=null;
                }
             }
          }
@@ -604,8 +729,10 @@ public class BuilderTiles extends Builder {
          else out.writeFITS(file+".fits");
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);
+         
       } else updateStat(0,0,1,duree,0,0);
-
+      
+      addFits(Thread.currentThread(), out);
       return out;
    }
 

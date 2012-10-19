@@ -70,7 +70,7 @@ public class ContextGui extends Context {
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showTilesStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNbEmptyTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
-         long statNodeAvgTime) {
+         long statNodeAvgTime,long usedMem,long freeMem) {
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
       mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
       long nbLowCells = getNbLowCells();

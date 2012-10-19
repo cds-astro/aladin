@@ -91,6 +91,7 @@ public class Status extends JComponent implements MouseListener {
    
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
+      aladin.setAliasing(g);
       g.setColor( getBackground() );
       g.fillRect(0,0,W,H);
       g.setColor( foreGround );

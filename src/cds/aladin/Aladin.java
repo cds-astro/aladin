@@ -100,7 +100,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.534";
+    static public final    String VERSION = "v7.535";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -211,7 +211,7 @@ public class Aladin extends JApplet
     public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
     static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
-    static boolean ANTIALIAS=false;  // Anti-aliasing
+    static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
     static boolean AUTOSCROLL=false; // autoscroll en clic & drag
 
     static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
@@ -4619,6 +4619,8 @@ public void show() {
          else if( args[i].equals("-nobookmarks") ) { BOOKMARKS=false; lastArg=i+1; }
          else if( args[i].equals("-bookmarks") )   { BOOKMARKS=true; lastArg=i+1; }
          else if( args[i].equals("-samp") )        { USE_SAMP_REQUESTED=true; lastArg=i+1; }
+         else if( args[i].equals("-antialiasing") )    { ALIASING=1; lastArg=i+1; }
+         else if( args[i].equals("-noantialiasing") )  { ALIASING=-1; lastArg=i+1; }
          else if( args[i].equals("-plastic") )     { USE_PLASTIC_REQUESTED=true; lastArg=i+1; }
          else if( args[i].equals("-noplastic")
                   || args[i].equals("-nosamp") )   { PLASTIC_SUPPORT=false; lastArg=i+1; }
@@ -5852,6 +5854,26 @@ public boolean handleEvent(Event e) {
    /** Génération d'un log via le glu */
    public void log(String id,String param) {
       glu.log(id,param);
+   }
+   
+   
+   
+   /** Positionnement de l'antialiasing */ 
+   public void setAliasing(Graphics g) { setAliasing(g,ALIASING); }
+   public void setAliasing(Graphics g,int aliasing) {
+      if( aliasing==0 || !(g instanceof Graphics2D) ) return;
+      
+      if( aliasing==1 ) {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+               RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_ON);
+      } else {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+               RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_OFF);
+      }
    }
 
    static private int firstMem=0;

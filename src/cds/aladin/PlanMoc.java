@@ -39,11 +39,12 @@ public class PlanMoc extends PlanBGCat {
       try {
          moc = new HealpixMoc();
          moc.setCoordSys("C");
+         moc.setMaxLimitOrder(res);
          frameOrigin=Localisation.ICRS;
          this.res=res;
          moc.setCheckConsistencyFlag(false);
          for( Plan p1 : p ) addMocFromPlan(p1);
-         moc.setMaxLimitOrder(res);
+         moc.setCheckConsistencyFlag(true);
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -87,29 +88,41 @@ public class PlanMoc extends PlanBGCat {
       PlanImage pimg = (PlanImage)p1;
       Healpix hpx = new Healpix();
       int order = res;
-      double gapD = ( 0.5*CDSHealpix.pixRes( CDSHealpix.pow2(res) )/3600.);
       Coord coo = new Coord();
-      coo=p1.projd.getProjCenter();
-      coo = p1.projd.getXYNative(coo);
-      double y1 = coo.y;
-      coo.del+=gapD;
-      coo = p1.projd.getXYNative(coo);
-      double gap = Math.abs(y1-coo.y);
-      if( gap>1 ) gap=1;
-      System.out.println("res="+res+" gapD="+Coord.getUnit(gapD)+" gap="+gap);
+      double gap=1;
+      double gapA=0,gapD=0;
+      try { 
+         gapA = Math.min(p1.projd.getPixResAlpha(),p1.projd.getPixResDelta());
+         for( order=res; CDSHealpix.pixRes( CDSHealpix.pow2(order) )/3600. <= gapA*2; order--);
+      } catch( Exception e1 ) {
+         e1.printStackTrace();
+      }
+//      if( gap<1 || Double.isNaN(gap) ) gap=1;
+//      
+      gapD = CDSHealpix.pixRes( CDSHealpix.pow2(order) )/3600.;
+      System.out.println("res="+res+" order="+order+" gapA ="+Coord.getUnit(gapA)+" gapD ="+Coord.getUnit(gapD)+" gap="+gap);
       
+      pimg.setLockCacheFree(true);
+      pimg.pixelsOriginFromCache();
+
+      long t=System.currentTimeMillis();
       long oNpix=-1;  
       for( double y=0; y<pimg.naxis2; y+=gap ) {
          for( double x=0; x<pimg.naxis1; x+=gap ) {
             try {
                coo.x = x;
-               coo.y = y;
+               coo.y = (pimg.naxis2-y-1);
+               
+               // dans du vide - on test d'abord le buffers 8bits, et on vérifie si on tombe sur 0
+               if( pimg.getPixel8Byte((int)x,(int)coo.y)==0 && Double.isNaN(pimg.getPixel((int)x,(int)y)) ) continue;
+               
                pimg.projd.getCoord(coo);
-               long npix = hpx.ang2pix(order, coo.al, coo.del);
+               long npix=0;
+               npix = hpx.ang2pix(order, coo.al, coo.del);
 
                // Juste pour éviter d'insérer 2x de suite le même npix
                if( npix==oNpix ) continue;
-
+               
                moc.add(order,npix);
                oNpix=npix;
             } catch( Exception e ) {
@@ -117,6 +130,9 @@ public class PlanMoc extends PlanBGCat {
             }
          }
       }
+      
+      System.out.println("C'est terminé en "+(System.currentTimeMillis()-t)+"ms");
+      pimg.setLockCacheFree(false);
    }
 
 

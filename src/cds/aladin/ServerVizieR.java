@@ -28,6 +28,8 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import cds.vizier.*;
 import cds.xml.XMLParser;
@@ -46,7 +48,6 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    String CATDESC,CATMOC,CATDMAP,INFO1,TAGGLU,GETALL,GETALL1,CAT;
    
    static final String  MOCGLU = "getMOC";
-   static final String  DMAPGLU = "getDMap";
    static final String  MOCERROR = "Catalog unknown or MOC server error";
 
    // les composantes de l'objet
@@ -130,12 +131,14 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
 
       // La checkbox du getAllColumns
       cbGetAll=new JCheckBox(GETALL,false);
+      cbGetAll.setEnabled(false);
       cbGetAll.setBackground(Aladin.BLUE);
       cbGetAll.setBounds(xGetAll,yGetAll,120,20); yGetAll+=20;
       if( !Aladin.OUTREACH ) add(cbGetAll);
 
       // La checkbox du getAllCat
       cbGetAllCat=new JCheckBox(GETALL1,false);
+      cbGetAllCat.setEnabled(false);
       cbGetAllCat.setBackground(Aladin.BLUE);
       cbGetAllCat.setBounds(xGetAll,yGetAll,140,20); yGetAll+=20;
       cbGetAllCat.addActionListener(new ActionListener() {
@@ -158,7 +161,12 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       catalog = new JTextField(28);
       catalog.setBounds(l+15,y,150-30,HAUT);
       catalog.addKeyListener(this);
-      catalog.addActionListener(this);
+      catalog.getDocument().addDocumentListener(new DocumentListener() {
+         public void removeUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void insertUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void changedUpdate(DocumentEvent e) { updateWidgets(); }
+      });
+
       add(catalog);
       JLabel label2 = new JLabel(addDot(RAD));
       label2.setFont(Aladin.BOLD);
@@ -176,21 +184,21 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       getReadMe.setMargin(insets);
       getReadMe.addActionListener(this);
       getReadMe.setFont( Aladin.BOLD);
-      getReadMe.setEnabled(true);
+      getReadMe.setEnabled(false);
       
       // Bouton getMoc
       getMoc = new JButton(CATMOC);
       getMoc.setMargin(insets);
       getMoc.addActionListener(this);
       getMoc.setFont( Aladin.BOLD);
-      getMoc.setEnabled(true);
+      getMoc.setEnabled(false);
       
       // Bouton getDMap
       getDMap = new JButton(CATDMAP);
       getDMap.setMargin(insets);
       getDMap.addActionListener(this);
       getDMap.setFont( Aladin.BOLD);
-      getDMap.setEnabled(true);
+      getDMap.setEnabled(false);
       
       JPanel catControl = new JPanel(new FlowLayout(FlowLayout.LEFT));
       catControl.setBounds(l+15,y,350,HAUT);
@@ -503,11 +511,30 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
    protected void reaffiche() {
       hide();show();
    }
+   
+   private String oCat=null; // Juste pour éviter de faire plusieurs fois la même chose
+   
+   protected boolean updateWidgets() {
+      if( !super.updateWidgets() ) return false;
+      if( catalog==null ) return false;
+      String cat =  catalog.getText().trim();
+      if( oCat!=null && oCat.equals(cat) ) return true;
+      oCat=cat;
+      boolean catOk =cat.length()!=0;
+      getReadMe.setEnabled(catOk);
+      getMoc.setEnabled(catOk);
+      getDMap.setEnabled(catOk);
+      cbGetAll.setEnabled(catOk);
+      cbGetAllCat.setEnabled(catOk);
+      return true;
+   }
+
 
   /** Events management
    * @see aladin.VizieR
    */
    public void actionPerformed(ActionEvent e) {
+      super.actionPerformed(e);
       Object s = e.getSource();
       
       if( s instanceof JButton ) {
@@ -517,29 +544,23 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             
             String cata = catalog.getText().trim();
             if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-            cata = Glu.quote(cata);
             
             // Affichage du README
-            if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",cata);
+            if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",Glu.quote(cata));
             
             // Chargement du MOC
             else if( action.equals(CATMOC) ) {
-               URL u = aladin.glu.getURL(MOCGLU,cata+" 512");
+               URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cata)+" 512");
                aladin.execAsyncCommand("'MOC "+cata+"'=get File("+u+")");
             }
             
             // Chargement de la carte de densité
-            else if( action.equals(CATDMAP) ) {
-               URL u = aladin.glu.getURL(DMAPGLU,cata);
-               aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
-            }
+            else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
             defaultCursor();
             return;
          }
          
       }
-
-      super.actionPerformed(e);
    }
 
   /** Cache la sous-fenetre d'interrogation de VizieR */

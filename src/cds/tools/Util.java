@@ -1597,7 +1597,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
      * @param val taille en octets
      * @return le volume disque dans une unite coherente + l'unite utilisee
      */
-    static final public String unites[] = {"","KB","MB","GB","TB","PB","EB","ZB"};
+    static final public String unites[] = {"B","KB","MB","GB","TB","PB","EB","ZB"};
     static final public String getUnitDisk(double val) {
     	return getUnitDisk(val, 2);
     }

@@ -45,6 +45,7 @@ import cds.vizier.VizieRQuery;
  * additionnel pour Aladin JAVA se trouve dans le repertoire d'installation et
  * se nomme ALAGLU
  * @author Pierre Fernique [CDS]
+ * @version 2.4 : oct 2012 - correction $n substitution avant le '?' dans une URL
  * @version 2.3 : sept 2007 - Peut charger des fichiers glu locaux
  * @version 2.2 : sept 2005 - Gère en STANDALONE la recherche du site NPHGLU le
  *          plus proche
@@ -1714,6 +1715,15 @@ public final class Glu implements Runnable {
    static public final int ENCODE = 1;
    static public final int NOURL  = 2;
    
+//   public static void main(String argv[]) {
+//      String url = "http://cdsarc.u-strasbg.fr/viz-bin/nph-Cat/$2?-plus=-+&$1&bidule=$3";
+//      String [] param = { "/un/deux/trois" };
+//      String s = dollarSet(url,param,URL);
+//      System.out.println("url  =["+url+"]");
+//      System.out.println("param=["+param[0]+"]");
+//      System.out.println(  "==> ["+s+"]");
+//   }
+   
    /**
     * Substitution dans un String des $nn par des parametres.
     * Rq: par défaut (mode URL): HTTP encode là où il faut et supprime tous les &value=$nn non renseigné
@@ -1768,9 +1778,9 @@ public final class Glu implements Runnable {
          // Recherche de la fin du prefixe
          fin = offsetNum - 1; // Par defaut
          if( isurl && (num >= param.length || param[num].length() == 0) ) {
-            while( fin > 0 && a[fin] != '&' && a[fin] != '?' )
-               fin--; // on supprime le "&name="
-            if( a[fin] == '?' ) fin++; // On laisse le '?'
+            while( fin > 0 && a[fin] != '&' && a[fin] != '?' ) fin--; // on supprime le "&name="
+            if( fin==0 ) fin=offsetNum-1; // De fait avant le '?'
+            else if( a[fin] == '?' ) fin++; // On laisse le '?'
          }
 
          // Memorisation du prefixe

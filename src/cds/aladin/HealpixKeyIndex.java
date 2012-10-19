@@ -53,7 +53,7 @@ public class HealpixKeyIndex extends HealpixKey {
    
    protected HealpixKeyIndex(PlanBG planBG,int order, long npix) {
       super(planBG,order,npix,ASYNC);
-      System.out.println("==> HealpixKeyIndex sur "+fileNet);
+//      System.out.println("==> HealpixKeyIndex sur "+fileNet);
    }
    
    protected String getFileNet() {

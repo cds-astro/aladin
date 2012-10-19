@@ -66,6 +66,7 @@ public class Fov {
 
 	Fov(List<STCObj> stcObjects) {
 	    this.stcObjects = stcObjects;
+	    alpha=delta=Double.NaN;    // PF oct12 - sinon probleme au tracage
 	}
 
 	/**
@@ -251,8 +252,10 @@ public class Fov {
         // recherche des coordonnees du centre dans le repere courant (nécessaire pour la rotation)
 		coord = new Coord(alpha,delta);
         try {
-           coord = proj.getXY(coord);
-           if( Double.isNaN(coord.x) ) return null;
+           if( !Double.isNaN(alpha) ) {  // PF oct12 - 
+              coord = proj.getXY(coord);
+              if( Double.isNaN(coord.x) ) return null;
+           }
 
       		// calcul des n bords
       		for( int i=0;i<borders.length;i++ ) {

@@ -116,6 +116,7 @@ public final class Save extends JFrame implements ActionListener {
    JComboBox format;
    JCheckBox [] cbPlan;
    JRadioButton tsvCb, votCb;
+   JRadioButton jsonMocCb, fitsMocCb;
    JRadioButton fitsCb, jpgCb, pngCb;
    String errorFile=null;
 
@@ -314,7 +315,7 @@ public final class Save extends JFrame implements ActionListener {
          switch( p.type ) {
             case Plan.ALLSKYMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
-               res &= saveMoc(s,(PlanMoc)p);
+               res &= saveMoc(s,(PlanMoc)p,jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.ASCII : HealpixMoc.FITS);
                break;
             case Plan.TOOL:
                res&= (tsvCb!=null && tsvCb.isSelected()) || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
@@ -364,6 +365,7 @@ public final class Save extends JFrame implements ActionListener {
       listPlan = new Plan [nb];
       boolean noCatalog = true;
       boolean noImage = true;
+      boolean noMoc = true;
 
       Plan [] allPlan = aladin.calque.getPlans();
       for( i=0; i<allPlan.length; i++ ) {
@@ -372,6 +374,7 @@ public final class Save extends JFrame implements ActionListener {
          if( pl instanceof PlanBG && pl.type!=Plan.ALLSKYMOC ) continue;
          if( pl.isSimpleCatalog() && noCatalog ) noCatalog = false;
          if( pl.isImage() && noImage) noImage = false;
+         if( pl instanceof PlanMoc && noMoc ) noMoc = false;
          listPlan[j]=pl;
          cbPlan[j] = new JCheckBox(j+".- ",pl.selected);
 //         String s = pl.label+((pl.objet!=null)?"-"+pl.objet:"");
@@ -466,6 +469,36 @@ public final class Save extends JFrame implements ActionListener {
           c.insets.bottom = c.insets.top = 2;
           g.setConstraints(pFormat,c); p.add(pFormat);
       }
+      
+      // s'il y a au moins un plan Moc
+      if( !noMoc ) {
+          c.gridwidth = 2;
+          c.anchor = GridBagConstraints.EAST;
+          JLabel nil = new JLabel("");
+          g.setConstraints(nil,c); p.add(nil);
+
+          c.gridwidth = 1;
+          c.anchor = GridBagConstraints.WEST;
+          JLabel l = new JLabel(SAVEIN);
+          l.setFont(Aladin.BOLD);
+          g.setConstraints(l,c); p.add(l);
+
+          JPanel pFormat = new JPanel();
+          pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
+          ButtonGroup cg = new ButtonGroup();
+          fitsMocCb = new JRadioButton("FITS");      fitsMocCb.setActionCommand("FITS");
+          jsonMocCb = new JRadioButton("ASCII/JSON");      jsonMocCb.setActionCommand("ASCII/JSON");
+          cg.add(fitsMocCb); cg.add(jsonMocCb); fitsMocCb.setSelected(true);
+          pFormat.add(fitsMocCb);
+          pFormat.add(jsonMocCb);
+          fitsMocCb.addActionListener(this);
+          jsonMocCb.addActionListener(this);
+          c.gridwidth = 1;
+          if( !noImage ) c.gridwidth = GridBagConstraints.REMAINDER;
+          g.setConstraints(pFormat,c); p.add(pFormat);
+      }
+
+
 
       nbSavePlan=j;
 
@@ -636,6 +669,25 @@ public final class Save extends JFrame implements ActionListener {
 //         append(CR+"       sync=\""+m.sync+"\"");
       } catch( Exception e ) {}
    }
+
+   /** appelé lorsque l'utilisateur a modifie le format de sauvegarde des MOCs :
+    * on modifie le suffixe des noms de fichiers
+    */
+   private void changeMocFormat() {
+      boolean json = jsonMocCb.isSelected();
+      String newSuffix = json?".txt":".fits";
+      String oldSuffix = json?".fits":".txt";
+
+      for( int i=0; i<listPlan.length; i++ ) {
+         Plan p =listPlan[i];
+         if( p==null || !(p instanceof PlanMoc) ) continue;
+         String label = fileSavePlan[i].getText();
+         if( !label.endsWith(oldSuffix) ) continue;
+         int offset = label.lastIndexOf('.');
+         fileSavePlan[i].setText(label.substring(0, offset)+newSuffix);
+      }
+   }
+   
 
    /** appelé lorsque l'utilisateur a modifie le format de sauvegarde des cats :
     * on modifie le suffixe des noms de fichiers
@@ -1632,10 +1684,10 @@ public final class Save extends JFrame implements ActionListener {
    }
    */
    
-   protected boolean saveMoc(String filename, PlanMoc p) {
+   protected boolean saveMoc(String filename, PlanMoc p, int format) {
       try {
          HealpixMoc moc = p.getMoc();
-         moc.write(filename, HealpixMoc.FITS);
+         moc.write(filename, format);
       } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          return false;
@@ -2562,6 +2614,7 @@ public boolean action(Event evt, Object what) {
       else if( CHOICE[4].equals(what) ) aladin.saveHTML();
       else if( evt.target instanceof Checkbox && tsvCb!=null ) changeCatFormat();
       else if( evt.target instanceof Checkbox && fitsCb!=null ) changeImgFormat();
+      else if( evt.target instanceof Checkbox && fitsMocCb!=null ) changeMocFormat();
       return true;
    }
 
@@ -2569,6 +2622,7 @@ public boolean action(Event evt, Object what) {
       if( e.getSource() instanceof JRadioButton ) {
          if( tsvCb!=null ) changeCatFormat();
          if( fitsCb!=null ) changeImgFormat();
+         if( fitsMocCb!=null ) changeMocFormat();
       }
    }
 

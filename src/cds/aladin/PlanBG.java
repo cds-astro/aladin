@@ -239,7 +239,7 @@ public class PlanBG extends PlanImage {
 
          Aladin.trace(4,"PlanBG.setSpecificParams() found a \"properties\" file");
          // Frame
-         String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS);
+         String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"X");
          char c1 = strFrame.charAt(0);
          int frame=-1;
          if( c1=='C' ) frame=Localisation.ICRS;
@@ -350,7 +350,7 @@ public class PlanBG extends PlanImage {
    /** Chargement du Moc associé au survey */
    protected void loadMoc() {
       String moc = url+"/Moc.fits";
-      aladin.execAsyncCommand("load "+moc);
+      aladin.execAsyncCommand("'MOC "+label+"'=load "+moc);
    }
    
    /** Retourne le frame d'affichage, 0 si utilisation du frame général */
@@ -576,8 +576,10 @@ public class PlanBG extends PlanImage {
       double tmpMinPix=dataMin;
       double tmpMaxPix=dataMax;
       findMinMax( pixelsOrigin ,bitpix,width,height,min,max,autocut,0);
-      dataMin=tmpMinPix;
-      dataMax=tmpMaxPix;
+      if( tmpMinPix!=tmpMaxPix ) {
+         dataMin=tmpMinPix;
+         dataMax=tmpMaxPix;
+      }
       flagRecut=true;
       freeHist();
       return true;
@@ -1612,6 +1614,16 @@ public class PlanBG extends PlanImage {
 
 
    private final int ALLSKYORDER = 3;
+   
+   /** Chargement synchrone du allsky (nécessaire dans le cas d'une modif de la table des couleurs (Densité map), 
+    * avant même le premier affichage) */
+   protected void loadAllSkyNow() {
+      if( allsky==null ) {
+         allsky =  new HealpixAllsky(this,ALLSKYORDER);
+         pixList.put( key(ALLSKYORDER,-1), allsky);
+         try { allsky.loadNow(); } catch( Exception e ) { e.printStackTrace(); }
+      }
+   }
 
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v) {

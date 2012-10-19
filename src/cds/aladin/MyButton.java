@@ -483,6 +483,7 @@ public class MyButton extends JComponent implements MouseListener {
 //      W = getSize().width;
 //      H = getSize().height;     
       
+      if( aladin!=null ) aladin.setAliasing(g);
       // Le fond et le bord
       draw(g);
 

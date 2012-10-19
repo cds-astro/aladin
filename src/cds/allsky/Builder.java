@@ -152,4 +152,12 @@ public abstract class Builder {
       context.info("Pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
       context.setValidateCut(true);
    }
+   
+   /** Retourne le nombre d'octets disponibles en RAM */
+   public long getMem() {
+      return Runtime.getRuntime().maxMemory()-
+            (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
+   }
+   
+
 }

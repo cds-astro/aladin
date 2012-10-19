@@ -30,6 +30,7 @@ import java.util.List;
 
 import cds.aladin.stc.STCObj;
 import cds.aladin.stc.STCStringParser;
+import cds.tools.Util;
 
 /** Gère les noeuds de l'arbre des catégories (formulaire ServerCategory) */
 public class TreeNodeProgen extends TreeNode {
@@ -89,7 +90,7 @@ public class TreeNodeProgen extends TreeNode {
    
    protected void draw(Graphics g,ViewSimple v) {
       String stc = hii.getSTC();
-//      Aladin.trace(4,"TreeNodeProgren.draw() stc="+stc);
+      Aladin.trace(4,"TreeNodeProgren.draw() stc="+stc);
       if( stc==null ) return;
       List<STCObj> stcObjects = new STCStringParser().parse(stc); 
       Fov fov = new Fov(stcObjects);

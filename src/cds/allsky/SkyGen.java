@@ -122,6 +122,8 @@ public class SkyGen {
          } else context.setMocArea(val);
       } else if (opt.equalsIgnoreCase("frame")) {
          context.setFrameName(val);
+      } else if (opt.equalsIgnoreCase("maxThread")) {
+         context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval")) {
          context.setSkyval(val);
       } else if (opt.equalsIgnoreCase("border")) {
@@ -295,17 +297,18 @@ public class SkyGen {
             "border     Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "blank      Specifical BLANK value" + "\n" +
             "skyval     Fits key to use for removing a sky background" + "\n" +
+            "maxThread  Max number of computing threads" + "\n" +
             "region     Specifical HEALPix region to compute (ex: 3/34-38 50 53) or Moc.fits file (all sky by default)" + "\n" +
             "jpegMethod Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
             "pixelCut   Specifical pixel cut and/or transfert function for JPEG 8 bits conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange Specifical pixel value range (required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
             "color      True if the source images are colored jpeg (default is false)" + "\n" +
-            "red        all-sky used for RED component (see rgb action)\n" +
-            "green      all-sky used for BLUE component (see rgb action)\n" +
-            "blue       all-sky used for GREEN component (see rgb action)\n" +
-            "redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
-            "greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
-            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
+//            "red        all-sky used for RED component (see rgb action)\n" +
+//            "green      all-sky used for BLUE component (see rgb action)\n" +
+//            "blue       all-sky used for GREEN component (see rgb action)\n" +
+//            "redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
+//            "greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
+//            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
 //            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
             "verbose    Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
             "debug      true|false - to set output display as te most verbose or just statistics" + "\n");
@@ -313,7 +316,7 @@ public class SkyGen {
             "index      Build finder index" + "\n" +
             "tiles      Build HEALPix FITS tiles" + "\n" +
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
-            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
+//            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+

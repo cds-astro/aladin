@@ -796,6 +796,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p,"Coverage",new JLabel(Util.round(cov*100, 1)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
          PropPanel.addCouple(p,"Best MOC ang.res",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
+         PropPanel.addCouple(p,"Size",new JLabel("about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
          boolean wireFrame = pmoc.getWireFrame();
          ButtonGroup bg = new ButtonGroup();

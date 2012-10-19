@@ -30,11 +30,11 @@ public class Constante {
 
    // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
    // => voir cds.fits.loadFits(InputStream,x,y,w,h)
-   public static final int FITSCELLSIZE = 1024; 
 
    // Taille des imagettes HEALPix
    final static public int ORDER = 9; // 2^9 = 512 = SIDE
    final static public int SIDE = (int)Math.pow(2,ORDER);
+   public static final int FITSCELLSIZE = SIDE; 
    
    // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
 // public static final int MAXMBPERTHREAD = 400;
@@ -49,5 +49,5 @@ public class Constante {
    }
 
    // Nombre max de recouvrement pris en compte
-   public static final int MAXOVERLAY = 6; 
+   public static final int MAXOVERLAY = 10; 
 }

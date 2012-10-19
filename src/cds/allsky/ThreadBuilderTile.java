@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream.GetField;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ final public class ThreadBuilderTile {
    private double[] cutOrig;
    private double[] cut;
    private int[] borderSize;
+   private ArrayList<SrcFile> downFiles;
 
    public ThreadBuilderTile(Context context) {
       this.context = context;
@@ -72,6 +74,124 @@ final public class ThreadBuilderTile {
       }
       borderSize = context.getBorderSize();
       hpxFinderPath = context.getHpxFinderPath();
+      
+      downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
+
+   }
+   
+   public long getMem() {
+      long mem=2+5*4+4*8+2*8*4;
+      for( SrcFile f : downFiles) {
+         mem += f.fitsfile.getMem();
+      }
+      return mem;
+   }
+   
+   
+   private void rmFits(BuilderTiles bt,ArrayList<SrcFile> downFiles) {
+      if( downFiles==null ) return;
+      for( SrcFile f : downFiles ) {
+         bt.rmFits(Thread.currentThread(),f.fitsfile);
+      }
+   }
+   
+   private void checkMem(long nbProgen) throws Exception {
+      long rqMem = 4 * nbProgen * Constante.FITSCELLSIZE*Constante.FITSCELLSIZE*context.getNpixOrig();
+      rqMem += 2*Constante.SIDE*Constante.SIDE*context.getNpix();
+      if( nbProgen>Constante.MAXOVERLAY ) {
+         rqMem += 2*Constante.SIDE*Constante.SIDE*8;
+      }
+      while( !context.cacheFits.needMem(rqMem) ) {
+         try { 
+            context.nlwarning(Thread.currentThread().getName()+" is waiting more memory (need "+
+               cds.tools.Util.getUnitDisk(rqMem)+")...");
+            cds.tools.Util.pause(1000);
+         } catch( Exception e ) { }
+         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+      }
+   }
+   
+   Fits buildHealpix(BuilderTiles bt, int nside_file, long npix_file, int nside) throws Exception {
+      ArrayList<SrcFile> downFiles = null;
+      Fits out=null;
+      try {
+         // initialisation de la liste des fichiers originaux pour ce losange
+         downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);         
+         if (!askLocalFinder(bt,downFiles,hpxFinderPath, npix_file, Util.order(nside), blank)) {
+            rmFits(bt,downFiles);
+            return null;
+         }
+         
+         Fits f;
+         int n=downFiles.size();
+         
+         // Pas trop de progéniteurs => on peut tout faire d'un coup
+         if( n<Constante.MAXOVERLAY ) {
+            
+            checkMem(n);
+            for( int i=0; i<n; i++ ) {
+               f = downFiles.get(i).fitsfile;
+               f.addUser();
+               f.reloadBitmap();
+            }
+            out = buildHealpix1(bt,nside_file,npix_file,nside,downFiles,0,n,null);
+            
+            for( int i=0; i<n; i++ ) {
+               f = downFiles.get(i).fitsfile;
+               f.rmUser();
+            }
+
+            
+         // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
+         // en mémorisant le poids de chaque pixel à chaque couche
+         } else {
+            
+            checkMem(Constante.MAXOVERLAY);
+         
+            // poids déjà calculés
+            double [] weight = null;  
+            double [] fWeight = new double[Constante.SIDE*Constante.SIDE];
+
+            for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
+               if( context.isTaskAborting() ) throw new Exception("Task abort !");
+               int fin = deb+Constante.MAXOVERLAY;
+               if( fin>=n ) fin=n;
+               for( int i=deb; i<fin; i++ ) {
+                  f = downFiles.get(i).fitsfile;
+                  f.addUser();
+                  f.reloadBitmap();
+               }
+               f = buildHealpix1(bt,nside_file,npix_file,nside,downFiles,deb,fin,fWeight);
+               if( f!=null ) {
+                  if( out==null ) {
+                     out=f;
+                     weight=fWeight;
+                     fWeight = new double[Constante.SIDE*Constante.SIDE];
+                  }
+                  else out.coadd(f,weight,fWeight);
+               }
+               for( int i=deb; i<fin; i++ ) {
+                  f = downFiles.get(i).fitsfile;
+                  f.rmUser();
+//                  f.releaseBitmap();
+               }
+            }
+
+            // Juste pour vérifier les poids
+//            if( out!=null ) {
+//               for( int y=0; y<Constante.SIDE; y++ ) {
+//                  for( int x=0; x<Constante.SIDE; x++ ) {
+//                     out.setPixelDouble(x, y, weight[y*Constante.SIDE+x]);
+//                  }
+//               }
+//            }
+         }
+
+      } catch( Exception e ) { e.printStackTrace(); }
+      
+      rmFits(bt,downFiles);
+      if( context.isTaskAborting() ) throw new Exception("Task abort !");
+      return out;
    }
 
    /**
@@ -84,7 +204,8 @@ final public class ThreadBuilderTile {
     * @param pixels
     * @return
     */
-   Fits buildHealpix(int nside_file, long npix_file, int nside) throws Exception {
+   Fits buildHealpix1(BuilderTiles bt, int nside_file, long npix_file, int nside,
+                      ArrayList<SrcFile> downFiles,int deb,int fin,double [] weight) throws Exception {
       boolean empty = true;
       long min;
       long index;
@@ -93,6 +214,7 @@ final public class ThreadBuilderTile {
       Coord coo = new Coord();
       SrcFile file = null;
       Fits out=null;
+//      ArrayList<SrcFile> downFiles = null;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
@@ -100,9 +222,12 @@ final public class ThreadBuilderTile {
 
          boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
 
-         // initialisation de la liste des fichiers originaux pour ce losange
-         ArrayList<SrcFile> downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
-         if (!askLocalFinder(downFiles,hpxFinderPath, npix_file, Util.order(nside), blank)) return null;
+//         // initialisation de la liste des fichiers originaux pour ce losange
+//         downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);         
+//         if (!askLocalFinder(bt,downFiles,Constante.MAXOVERLAY,hpxFinderPath, npix_file, Util.order(nside), blank)) {
+//            rmFits(bt,downFiles);
+//            return null;
+//         }
 
          out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
          if( !flagColor ) {
@@ -118,8 +243,8 @@ final public class ThreadBuilderTile {
          if( flagColor ) { pixvalG = new double[Constante.MAXOVERLAY]; pixvalB = new double[Constante.MAXOVERLAY]; }
          
          for (int y = 0; y < out.height; y++) {
+            if( context.isTaskAborting() ) break;
             for (int x = 0; x < out.width; x++) {
-               if( x==0 && context.isTaskAborting() ) break;
                index = min + context.xy2hpx(y * out.width + x);
                // recherche les coordonnées du pixels HPX
                point = CDSHealpix.pix2ang_nest(nside, index);
@@ -132,7 +257,8 @@ final public class ThreadBuilderTile {
                double totalCoef=0;
                String lastFitsFile=null;
                double lastX=-1,lastY=-1;
-               for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
+//               for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
+               for( int i=deb; i<fin; i++ ) {
                   file = downFiles.get(i);
                   double currentBlankOrig = !hasAlternateBlank ? file.fitsfile.getBlank() : blankOrig;
 
@@ -148,6 +274,10 @@ final public class ThreadBuilderTile {
                      lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
                      lastFitsFile=file.fitsfile.getFilename();
                   }
+                  
+                  // Chargement du buffer si nécessaire
+//                  file.fitsfile.reloadBitmap();
+                  // IL FAUDRAIT ICI FAIRE DE LA PLACE SI NECESSAIRE
 
                   // Cas RGB
                   if( flagColor ) {
@@ -203,11 +333,16 @@ final public class ThreadBuilderTile {
                                 : pixelFinal>=cutOrig[3] ? cut[3]
                                 : (pixelFinal-cutOrig[2])*context.coef + cut[2];
                   } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
+                  
                   out.setPixelDouble(x,y,pixelFinal);
                }
+               
+               // Mémorisation du poids du pixel (si nécessaire)
+               if( weight!=null ) weight[y*Constante.SIDE+x]=totalCoef;
             }
          }
       } catch( Exception e ) { e.printStackTrace(); }
+      
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       return (!empty) ? out : null;
    }
@@ -417,7 +552,7 @@ final public class ThreadBuilderTile {
     * @param order
     * @return
     */
-   boolean askLocalFinder(ArrayList<SrcFile> downFiles,String path, long npix, int order,double blank) {
+   boolean askLocalFinder(BuilderTiles bt, ArrayList<SrcFile> downFiles, String path, long npix, int order,double blank) {
       String hpxfilename = path + cds.tools.Util.FS + Util.getFilePath("", order - Constante.ORDER, npix);
       File f = new File(hpxfilename);
       String fitsfilename = null;
@@ -425,7 +560,10 @@ final public class ThreadBuilderTile {
          BufferedReader reader;
          try {
             reader = new BufferedReader(new FileReader(f));
-            for( int i=0; (fitsfilename = nextPath(reader)) != null; i++) {
+            for( int i=0; (fitsfilename = nextPath(reader)) != null ; i++) {
+               
+//               if( maxFile>0 && i>=maxFile ) break; // Pas plus de N images
+               
                try {
                   //					récupère l'image
                   Fits fitsfile = new Fits();
@@ -435,12 +573,12 @@ final public class ThreadBuilderTile {
                      String hhhFile = fitsfilename;
                      
                      fitsfilename=fitsfilename.replaceAll("\\.hhh", ".jpg");
-                     try { fitsfile=context.cacheFits.getFits(fitsfilename,true); }
+                     try { fitsfile=context.cacheFits.getFits(fitsfilename,true,true); }
                      
                      // Sinon peut être en PNG ? (C'est pas très beau mais c'est si facile)
                      catch( Exception e ) {
                         fitsfilename=fitsfilename.replaceAll("\\.jpg", ".png");
-                        fitsfile=context.cacheFits.getFits(fitsfilename,true);
+                        fitsfile=context.cacheFits.getFits(fitsfilename,true,true);
                      }
                      fitsfile.loadHeaderFITS(hhhFile);
                      
@@ -449,7 +587,7 @@ final public class ThreadBuilderTile {
                   else                    
                      if( fitsfilename.endsWith(".jpg") || fitsfilename.indexOf(".jpg[")>0
                        || fitsfilename.endsWith(".png") || fitsfilename.indexOf(".png[")>0 ) {
-                        fitsfile=context.cacheFits.getFits(fitsfilename,true);
+                        fitsfile=context.cacheFits.getFits(fitsfilename,true,true);
                      }
 
                   // Mode FITS couleur
@@ -457,7 +595,7 @@ final public class ThreadBuilderTile {
 
                   // Mode FITS classique ou JPEG/PNG avec calib
                   else {
-                     fitsfile=context.cacheFits.getFits(fitsfilename,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
+                     fitsfile=context.cacheFits.getFits(fitsfilename,false,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
                      //					   fitsfile.loadFITS(fitsfilename);
                   }
 
@@ -469,6 +607,7 @@ final public class ThreadBuilderTile {
                   file.calib = fitsfile.getCalib();
 
                   downFiles.add(file);
+                  bt.addFits(Thread.currentThread(),fitsfile);
 
                } catch (Exception e) {
                   System.err.println("Erreur de chargement de : " + fitsfilename);

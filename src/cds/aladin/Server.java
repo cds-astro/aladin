@@ -516,6 +516,7 @@ public class Server extends JPanel
 
          target = new JTextField(40);
          target.addKeyListener(this);
+         target.addActionListener(this);
          x=XTAB2;
          l = XWIDTH-XTAB2/*-20*/;
          if( forVizieR ) { l=XWIDTH-180-30; x=70+30; }
@@ -837,11 +838,24 @@ public void layout() {
       target.setText(s);
 
       // Activation ou non du bouton GrabIt
-      if( aladin.dialog!=null && !aladin.dialog.isGrabIt() && grab!=null ) {
+//      if( aladin.dialog!=null && !aladin.dialog.isGrabIt() && grab!=null ) {
+//         Plan pref = aladin.calque.getPlanRef();
+//         boolean grabEnable = pref!=null && Projection.isOk(pref.projd);
+//         grab.setEnabled(grabEnable);
+//      }
+   }
+   
+   protected boolean updateWidgets() {
+      if( aladin.dialog==null ) return false;
+      
+      // Activation ou non du bouton GrabIt
+      if( !aladin.dialog.isGrabIt() && grab!=null ) {
          Plan pref = aladin.calque.getPlanRef();
          boolean grabEnable = pref!=null && Projection.isOk(pref.projd);
          grab.setEnabled(grabEnable);
       }
+      
+      return true;
    }
    
    /** Pre-remplissage du champ Date. Si c'est une valeur double, on considère
@@ -1160,6 +1174,7 @@ public void layout() {
       if( s instanceof JComboBox && tree!=null && !tree.isEmpty() ) tree.clear();
       if( s instanceof JButton
             && ((JButton)s).getActionCommand().equals(FrameServer.INFO)) showStatusReport();
+      updateWidgets();
    }
 
 //   // Je mange l'évènement pour pas qu'il se propage
@@ -1191,7 +1206,7 @@ public void layout() {
       }
    }
    
-   public void keyReleased(KeyEvent e) { }
+   public void keyReleased(KeyEvent e) { updateWidgets(); }
    public void keyTyped(KeyEvent e) { }
 
   /** Retourne le Nom du server éventuellement précédé par son Popup.

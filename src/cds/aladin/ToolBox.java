@@ -700,12 +700,7 @@ public final class ToolBox extends JComponent implements
       }
 
       // AntiAliasing
-      if( Aladin.ANTIALIAS ) {
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-               RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-               RenderingHints.VALUE_ANTIALIAS_ON);
-      }
+      aladin.setAliasing(g);
 
       // Remplissage du fond
       g.setColor( getBackground() );

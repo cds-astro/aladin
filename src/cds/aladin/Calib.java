@@ -39,6 +39,10 @@ import java.lang.*;
  */
 
  public final class Calib  implements Cloneable {
+    
+    /** Retourne la taille approximative en bytes - PF oct12*/
+    public long getMem() { return 22*4+448*8; }
+
     int    aladin ;
     double [] xyapoly = new double[10];
     double [] xydpoly = new double[10];
@@ -157,7 +161,7 @@ import java.lang.*;
     
     /** Retourne la signature de la projection (code 3 lettres) de l'indice passé en paramètre */
     static String getProjName(int indice ) { return projType[indice]; }
-
+    
 //#ifndef PIERRE
 //    /** Retourne true si le type de projection est reconnu par Calib
 //     * AJOUT PF nov 09 pour supporter les projections linéaires CRVAL+CDELT, mÃ¯Â¿Â½me

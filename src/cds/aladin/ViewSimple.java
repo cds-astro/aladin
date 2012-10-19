@@ -5477,12 +5477,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       }
       boolean flagDisplay=false;
 
-      if( Aladin.ANTIALIAS ) {
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-               RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-               RenderingHints.VALUE_ANTIALIAS_ON);
-      }
+      // AntiAliasing
+      aladin.setAliasing(g,-1);
 
       Projection proj;
       ViewSimple vs;        // La vue courante sauf s'il y a projSync sur une autre vue

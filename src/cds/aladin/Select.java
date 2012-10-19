@@ -1514,14 +1514,9 @@ public final class Select extends JComponent  implements
 
       // Le clip Rect pour ne pas depasser
       g.clipRect(2,2,ws-3,hs-3);
-
+      
       // AntiAliasing
-      if( Aladin.ANTIALIAS ) {
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-               RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-               RenderingHints.VALUE_ANTIALIAS_ON);
-      }
+      a.setAliasing(g);
 
       // Dessin de l'oeil de l'observateur et de l'objet central regarde
 //      drawEye(g,true);

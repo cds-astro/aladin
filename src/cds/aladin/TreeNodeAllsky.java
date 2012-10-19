@@ -153,6 +153,7 @@ public class TreeNodeAllsky extends TreeNode {
       // Détermination du format des cellules dans le cas d'un survey pixels
       String keyColor = prop.getProperty(PlanHealpix.KEY_ISCOLOR);
       if( keyColor!=null ) color = new Boolean(keyColor);
+      if( color ) inJPEG=true;
       if( !cat && (keyColor==null || !color) ) {
          String format = prop.getProperty(PlanHealpix.KEY_FORMAT);
          if( format!=null ) {

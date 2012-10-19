@@ -1665,6 +1665,19 @@ public final class Calque extends JPanel implements Runnable {
       plan[n] = new PlanFolder(aladin,label,folderNiv,localScope);
       return n;
    }
+   
+   static final String  DMAPGLU = "getDMap";
+   
+   /** Chargement de la carte de densité associée à un catalogue */
+   protected int newPlanDMap(String catID) {
+      String u = ""+aladin.glu.getURL(DMAPGLU,aladin.glu.quote(catID));
+      String label = "DMAP "+catID;
+      int n=getStackIndex(label);
+      plan[n] = new PlanHealpixDMap(aladin,u, label);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
   /** Enregistre une image RGB dans le prochain plan libre.
    * @param r le plan Red

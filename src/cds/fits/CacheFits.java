@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import cds.allsky.Constante;
 import cds.tools.Util;
 
 
@@ -43,14 +44,12 @@ import cds.tools.Util;
  */
 public class CacheFits {
 
-   static private final long DEFAULT_MAXMEM=512L;
-   static private final int  DEFAULT_MAXFILE=10000;
+   static private final long DEFAULT_MAXMEM=512*1024*1024L;
 
    private long maxMem;     // Taille max (en octets)
    private int  maxFile;    // Nombre de fichiers max
-   private long mem;        // mémoire courante (en octets)
-   private int file;        // Nombre de fichiers gérés
    private int nextId;      // prochain identificateur unique de fichier
+   private boolean cacheOutOfMem;   // En cas de débordement mémoire, on vire totalement le cache
    private HashMap<String, FitsFile> map;             // Table des fichiers
    private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    String skyvalName;          // Nom du champ pour soustraire le fond au moment 
@@ -65,22 +64,43 @@ public class CacheFits {
    /**
     * Création d'un cache de fichiers Fits
     */
-   public CacheFits() { this(DEFAULT_MAXMEM,DEFAULT_MAXFILE); }
+   public CacheFits() { this(DEFAULT_MAXMEM); }
 
    /**
     * Création d'un cache de fichiers Fits
-    * @param maxMem limite en Mo occupés
-    * @param maxFile limite en nombre de fichiers ouverts simultanément
+    * @param maxMem limite en bytes occupés, ou si négatif, 
+    *          nombre de bytes à garder libre par rapport à la RAM dispo
     */
-   public CacheFits(long maxMem,int maxFile) {
-      this.maxMem=maxMem*1024L*1024L;
-      this.maxFile=maxFile;
-      mem=0L;
-      file=0;
+   public CacheFits(long maxMem) {
+      this.maxMem=maxMem;
+      cacheOutOfMem=false;
       nextId=0;
       statNbFree=statNbOpen=statNbFind=0;
       map = new HashMap<String, FitsFile>(maxFile);
       sortedMap = new TreeMap<String, FitsFile>( new ValueComparator(map) );
+   }
+   
+   /** Vérification qu'il reste assez de mémoire RAM, et sinon
+    * on va libérer temporairement les blocs pixels[] non utilisés afin de récupérer
+    * ce qui manque
+    * @param rqMem taille de la mémoire requise
+    * @return true c'est bon, false, faut attendre
+    */
+   public boolean needMem(long rqMem) {
+      if( getFreeMem()>rqMem ) return true;
+      
+      long mem = 0L;
+      synchronized( this ) {
+         for( String key : map.keySet() ) {
+            Fits f = map.get(key).fits;
+            long m = f.getMem();
+            try { f.releaseBitmap();
+            } catch( Exception e ) { } mem += m-f.getMem();
+            if( mem>rqMem ) break;
+         }
+      }
+      gc();
+      return mem>rqMem;
    }
 
    /**
@@ -89,8 +109,10 @@ public class CacheFits {
     * @return l'objet Fits
     * @throws Exception
     */
-  public Fits getFits(String fileName) throws Exception { return getFits(fileName,false); }
-  synchronized public Fits getFits(String fileName,boolean jpeg) throws Exception {
+  public Fits getFits(String fileName) throws Exception { return getFits(fileName,false,true); }
+  synchronized public Fits getFits(String fileName,boolean jpeg,boolean flagLoad) throws Exception {
+      if( cacheOutOfMem ) return open(fileName,jpeg,flagLoad).fits;
+      
       FitsFile f = find(fileName);
 
       // Trouvé, je le mets à jour
@@ -103,12 +125,19 @@ public class CacheFits {
       else {
          if( isOver() ) clean();
          try {
-            f=add(fileName,jpeg);
-         } catch( OutOfMemoryError e ) {
+            f=add(fileName,jpeg,flagLoad);
+         } catch( Throwable e ) {
             System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
             maxMem /= 2;
-            clean();
-            f=add(fileName,jpeg);
+            try {
+               clean();
+               f=add(fileName,jpeg,flagLoad);
+            } catch( Throwable e1 ) {
+               System.err.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
+               reset();
+               cacheOutOfMem=true;
+               return open(fileName,jpeg,flagLoad).fits;
+            }
          }
          statNbOpen++;
       }
@@ -121,51 +150,80 @@ public class CacheFits {
    private FitsFile find(String name) { return map.get(name); }
 
    // Ajoute un fichier Fits au cache. Celui-ci est totalement chargé en mémoire
-   private FitsFile add(String name,boolean jpeg) throws Exception {
+   private FitsFile add(String name,boolean jpeg,boolean flagLoad) throws Exception {
+      FitsFile f = open(name,jpeg,flagLoad);
+      map.put(name, f);
+      return f;
+   }
+   
+   // Ouvre un fichier
+   private FitsFile open(String fileName,boolean jpeg,boolean flagLoad) throws Exception {
       FitsFile f = new FitsFile();
       f.fits = new Fits();
-      if( jpeg ) f.fits.loadJpeg(name,true);
-      else f.fits.loadFITS(name);
-      
+      if( skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
+      if( jpeg ) f.fits.loadJpeg(fileName,true);
+      else f.fits.loadFITS(fileName, flagLoad);
+
       // applique un filtre spécial
       if (skyvalName!=null) delSkyval(f.fits);
 
-      map.put(name, f);
-      mem+=f.getMem(); ;
-      file++;
       return f;
-   }
-
-   // Supprime un objet Fits du cache
-   private void remove(String name) {
-      FitsFile f=find(name);
-      if( f==null ) return;
-      statNbFree++;
-      mem-=f.getMem();
-      file--;
-      map.remove(name);
    }
 
    // Retourne true si le cache est en surcapacité
    private boolean isOver() {
-      return mem>maxMem || file>maxFile;
+      long mem = getMem();
+      if( maxMem<0 ) return mem>getFreeMem()+maxMem;
+      return mem>maxMem;
    }
 
-   // Retourne true si le cache est rempli à moins des 3/4
-   private boolean isMemOk() {
-      return mem<3*(maxMem/4) && file<3*(maxFile/4);
+   /** Retourne la taille occupée par le cache */
+   public long getMem() {
+      long mem=0L;
+      if( map==null ) return mem;
+      for( String key : map.keySet() ) {
+         FitsFile f = map.get(key);
+         mem += f.fits.getMem();
+      }
+      return mem;
    }
 
-   // Supprime les plus vieux éléments du cache pour qu'il ne soit rempli qu'au 3/4
+   // Supprime les plus vieux éléments du cache pour 
+   // qu'il y ait un peu de place libre
    private void clean() {
       sortedMap.clear();
       sortedMap.putAll(map);
+      long mem = getMem();
+      long totMem=0L;
+      long m=0;
+      int nb=0;
+      long freeMem = getFreeMem();
+      
       for( String key : sortedMap.keySet() ) {
-         if( isMemOk() ) return;
-         remove(key);
-         //         System.out.println("clean.remove "+key );
+         FitsFile f = map.get(key);
+         m = f.getMem();
+         totMem+=mem;
+         mem -= m;
+         nb++;
+         statNbFree++;
+         map.remove(key);
+//         System.out.println("clean.remove "+key );
+         
+         if( maxMem<0 && mem<freeMem+4*(maxMem/3L) || maxMem>=0 && mem<3*(maxMem/4L) ) break;
       }
+      
+      sortedMap.clear();
+      gc();
+      System.out.println("\nCache: "+nb+" files removed ("+Util.getUnitDisk(totMem)+"): "+this);
    }
+   
+   // Reset totalement le cache
+   synchronized public void reset() {
+      statNbFree+=map.size();
+      map.clear();
+      gc();
+   }
+   
    public void setSkySub(String key) {
       skyvalName = key;
    }
@@ -221,13 +279,22 @@ public class CacheFits {
    /** Retourne le nombre de fichiers ayant été supprimés du cache */
    public int getStatNbFree() { return statNbFree; }
 
-   /** Retourne le volume courant du cache en octets */
-   public long getStatMem() { return mem; }
+   public String toString() { 
+      long upLimit = maxMem<0 ? getFreeMem()+maxMem : maxMem;
+      return "Cache: "+map.size()+" file(s) ("+getNbReleased()+" released) for "+Util.getUnitDisk(getMem())
+      +"/"+Util.getUnitDisk(upLimit)+" (open="+statNbOpen+" find="+statNbFind+" free="+statNbFree+") RAMfree="+Util.getUnitDisk(getFreeMem());
+     }
 
-
-   public String toString() { return "CacheFits: "+file+" file(s) for "+Util.getUnitDisk(mem)
-      +" open="+statNbOpen+" find="+statNbFind+" free="+statNbFree; }
-
+   // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]
+   // est actuellement vide
+   private int getNbReleased() {
+      int n=0;
+      for( String key : map.keySet() ) {
+         if( map.get(key).fits.isReleased() ) n++;
+      }
+      return n;
+   }
+   
    // Gère une entrée dans le cache
    class FitsFile {
       Fits fits;
@@ -239,10 +306,14 @@ public class CacheFits {
          timeAccess = System.currentTimeMillis();
          id=nextId++;
       }
+      
+      public void free() {
+         if( fits!=null ) fits.free();
+      }
 
       public long getMem() {
          if( fits==null ) return 0L;
-         return fits.widthCell*fits.heightCell*Math.abs(fits.bitpix==0 ? 32 : fits.bitpix)/8; 
+         return fits.getMem(); 
       }
 
       void update() { timeAccess = System.currentTimeMillis(); }
@@ -271,6 +342,21 @@ public class CacheFits {
          return val;
       }
    }
+   
+   /** Retourne le nombre d'octets disponibles en RAM */
+   public long getFreeMem() {
+      return Runtime.getRuntime().maxMemory()-
+            (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
+   }
+   
+   /** Libère toute la mémoire inutile */
+   protected void gc() {
+      System.runFinalization();
+      System.gc();
+      Util.pause(100);
+   }
+
+
 
    //   static final String NAME1 = "C:/2MASS.fits";
    //   static final String NAME2 = "C:/Documents and Settings/Standard/Bureau/CFHTLS_W_g_222054+011900_T0007.fits[100,100-1000x1000]";

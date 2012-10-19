@@ -1497,6 +1497,9 @@ public final class MCanvas extends JComponent
          img = aladin.createImage(W,H);
       }
       Graphics g=img.getGraphics();
+      
+      // AntiAliasing
+      aladin.setAliasing(g);
 
       // Affichage des lignes visibles
       nbligne = (H- (MH+MB))/HL;             // Nbre de lignes

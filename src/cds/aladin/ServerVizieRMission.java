@@ -30,6 +30,8 @@ import java.net.*;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 /**
  * Le formulaire d'interrogation des Missions
@@ -42,7 +44,6 @@ import javax.swing.*;
 public class ServerVizieRMission extends Server  {
    
    static final String  MOCGLU = "getMOC";
-   static final String  DMAPGLU = "getDMap";
    static final String  DMAPPNGGLU = "getDMapIcon";
    static final String  MOCERROR = "Catalog unknown or MOC server error";
 
@@ -154,6 +155,7 @@ public class ServerVizieRMission extends Server  {
 
       // La checkbox du getAllColumns
       cbGetAll=new JCheckBox(GETALL,false);
+      cbGetAll.setEnabled(false);
       if( !Aladin.OUTREACH ) {
          cbGetAll.setBackground(Aladin.BLUE);
          cbGetAll.setBounds(xGetAll,yGetAll,120,20); yGetAll+=20;
@@ -162,6 +164,7 @@ public class ServerVizieRMission extends Server  {
 
       // La checkbox du getWholeCat
       cbGetAllCat=new JCheckBox(GETALL1,false);
+      cbGetAllCat.setEnabled(false);
       cbGetAllCat.setBackground(Aladin.BLUE);
       cbGetAllCat.setBounds(xGetAll,yGetAll,120,20); 
       cbGetAllCat.addActionListener(new ActionListener() {
@@ -173,7 +176,6 @@ public class ServerVizieRMission extends Server  {
       });
       if( !Aladin.OUTREACH && !(this instanceof ServerVizieRSurvey) ) { add(cbGetAllCat); yGetAll+=20; }
       
-
       // Catalog + Radius
       JLabel label1 = new JLabel(addDot(nomTextfield));
       label1.setBackground(Aladin.BLUE);
@@ -184,7 +186,11 @@ public class ServerVizieRMission extends Server  {
       mission = new JTextField(28);
       mission.setBounds(l+15,y,150-30,HAUT);
       mission.addKeyListener(this);
-      mission.addActionListener(this);
+      mission.getDocument().addDocumentListener(new DocumentListener() {
+         public void removeUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void insertUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void changedUpdate(DocumentEvent e) { updateWidgets(); }
+      });
       add(mission);
       JLabel label2 = new JLabel(addDot(RAD));
       label2.setBackground(Aladin.BLUE);
@@ -193,32 +199,32 @@ public class ServerVizieRMission extends Server  {
       add(label2);
       radius = new JTextField("10 arcmin");
       radius.addKeyListener(this);
+      radius.addActionListener(this);
       radius.setBounds(294-15,y,Aladin.OUTREACH?60:105,HAUT); y+=HAUT+MARGE-2;
       add(radius);
       modeRad=RADIUS;
-
 
       // Bouton getReadMe
       Insets insets = new Insets(0,10,0,10);
       getReadMe = new JButton(CATDESC);
       getReadMe.setMargin(insets);
+      getReadMe.setEnabled(false);
       getReadMe.addActionListener(this);
       getReadMe.setFont( Aladin.BOLD);
-      getReadMe.setEnabled(true);
       
       // Bouton getMoc
       getMoc = new JButton(CATMOC);
       getMoc.setMargin(insets);
+      getMoc.setEnabled(false);
       getMoc.addActionListener(this);
       getMoc.setFont( Aladin.BOLD);
-      getMoc.setEnabled(true);
       
       // Bouton getDMap
       getDMap = new JButton(CATDMAP);
       getDMap.setMargin(insets);
+      getDMap.setEnabled(false);
       getDMap.addActionListener(this);
       getDMap.setFont( Aladin.BOLD);
-      getDMap.setEnabled(true);
       
       JPanel catControl = new JPanel(new FlowLayout(FlowLayout.LEFT));
       catControl.setBounds(l+15,y,350,HAUT);
@@ -403,6 +409,23 @@ public class ServerVizieRMission extends Server  {
       target.setEnabled(true);
       radius.setEnabled(true);
    }
+   
+   private String oCat=null; // Juste pour éviter de faire plusieurs fois la même chose
+   
+   protected boolean updateWidgets() {
+      if( !super.updateWidgets() ) return false;
+      if( mission==null ) return false;
+      String cat =  mission.getText().trim();
+      if( oCat!=null && oCat.equals(cat) ) return true;
+      oCat=cat;
+      boolean catOk =cat.length()!=0;
+      getReadMe.setEnabled(catOk);
+      getMoc.setEnabled(catOk);
+      getDMap.setEnabled(catOk);
+      cbGetAll.setEnabled(catOk);
+      cbGetAllCat.setEnabled(catOk);
+      return true;
+   }
 
 
   /** Re-affichage avec regeneration du panel du formulaire.
@@ -434,7 +457,7 @@ public class ServerVizieRMission extends Server  {
    String oc = null;
    public void keyReleased(KeyEvent e) { 
       super.keyReleased(e);
-      if( !(e.getSource() instanceof JTextField) ) return;
+      if( !aladin.PROTO || !(e.getSource() instanceof JTextField) ) return;
       String c = ((JTextField)e.getSource()).getText().trim();
       if( oc!=null && c.equals(oc) ) return;
       if( c.length()<2 ) pngMap.setImage(null);
@@ -454,8 +477,8 @@ public class ServerVizieRMission extends Server  {
     * @see aladin.VizieR
     */
     public void actionPerformed(ActionEvent e) {
+       super.actionPerformed(e);
        Object s = e.getSource();
-       
        
        if( s instanceof JButton ) {
           String action = ((JButton)s).getActionCommand();
@@ -476,17 +499,17 @@ public class ServerVizieRMission extends Server  {
              }
              
              // Chargement de la carte de densité
-             else if( action.equals(CATDMAP) ) {
-                URL u = aladin.glu.getURL(DMAPGLU,cata+" 256");
-                aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
-             }
+             else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
+//             {
+//                URL u = aladin.glu.getURL(DMAPGLU,cata+" 256");
+//                aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
+//             }
              defaultCursor();
              return;
           }
           
        }
 
-       super.actionPerformed(e);
     }
 
 
