@@ -46,6 +46,7 @@ public abstract class Builder {
          case ALLSKY:    return new BuilderAllsky(context);
          case JPEG:      return new BuilderJpg(context);
          case MOC:       return new BuilderMoc(context);
+         case MOCHIGHT:  return new BuilderMocHight(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
@@ -147,8 +148,13 @@ public abstract class Builder {
       cutOrig = context.getCutOrig();
       if( cutOrig==null ) throw new Exception("Argument \"pixelCut\" required");
       if( cutOrig[2]==0 && cutOrig[3]==0 ) throw new Exception("Argument \"pixelRange\" required");
-      if( !( cutOrig[2] <= cutOrig[0] && cutOrig[0] < cutOrig[1] && cutOrig[1]<=cutOrig[3]) ) 
-         throw new Exception("Uncompatible pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"] or pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"]");
+      if( !( cutOrig[0] < cutOrig[1] ) ) 
+         throw new Exception("pixelCut error ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+      if( !( cutOrig[2] <= cutOrig[0] && cutOrig[0] < cutOrig[1] && cutOrig[1]<=cutOrig[3]) ) {
+         context.warning("Adjusting pixelRange with pixelCut ["+cutOrig[2]+" .. "+cutOrig[3]+"] => ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+         if( cutOrig[2] > cutOrig[0] ) cutOrig[2]=cutOrig[0];
+         if( cutOrig[1] > cutOrig[3] ) cutOrig[3]=cutOrig[1];
+      }
       context.info("Pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
       context.setValidateCut(true);
    }

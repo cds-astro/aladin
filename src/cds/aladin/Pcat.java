@@ -743,10 +743,12 @@ Aladin.trace(3,"setField "+f);
    protected boolean hasCatalogInfo() { return parsingInfo!=null || description!=null; }
 
    /** retourne true si au-moins un objet est sélectionné */
-   protected boolean hasSelectedObj() {
+   protected boolean hasSelectedOrTaggedObj() {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
-         if( (it.next()).isSelected() ) return true;
+         Obj o = (Obj)it.next();
+         if( o.isSelected() ) return true;
+         if( o instanceof Source && ((Source)o).isTagged() ) return true;
       }
       return false;
    }
@@ -885,7 +887,7 @@ Aladin.trace(3,"setField "+f);
 
       // Parsing FITS table
       } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
-         plan.headerFits = new FrameHeaderFits(dis);
+         plan.headerFits = new FrameHeaderFits(plan,dis);
          res = new TableParser(aladin,this,((PlanCatalog)plan).headerFits.getHeaderFits(),plan.flagSkip);
          ok = res.parse(dis);
 

@@ -221,6 +221,8 @@ final public class TableParser implements XMLConsumer {
          len = new int[nbField];
          prec = new int[nbField];
          nField=nRecord = 0;
+         
+         boolean variableField=false;
       
          for( int i=0; i<nbField; i++ ) {
             Field f = memoField.elementAt(i);
@@ -230,9 +232,21 @@ final public class TableParser implements XMLConsumer {
             }
             type[i]=t.charAt(0);
             len[i] = 1;
-            try { len[i] = Integer.parseInt(f.arraysize); } catch( Exception e ) { len[i]=1; }
-            if( i<nbField-1 ) pos[i+1] = pos[i] + binSizeOf(type[i],len[i]);
-            else sizeRecord = pos[i] + binSizeOf(type[i],len[i]);
+            
+            // Champ variable
+            if( f.arraysize!=null && f.arraysize.equals("*") ) {
+               len[i]=-1; 
+               sizeRecord=-1;
+               variableField=true;
+            }  else {
+               try { len[i] = Integer.parseInt(f.arraysize); } catch( Exception e ) { len[i]=1; }
+            }
+
+            if( !variableField ) {
+               if( i<nbField-1 ) pos[i+1] = pos[i] + binSizeOf(type[i],len[i]);
+               else sizeRecord = pos[i] + binSizeOf(type[i],len[i]);
+            } else pos[i]=-1;
+            
             prec[i]=6;
             try { prec[i] = Integer.parseInt(f.precision); } catch( Exception e ) { prec[i]=6; }
 //System.out.println("Field "+i+" type="+type[i]+" pos="+pos[i]+" len="+len[i]+" prec="+prec[i]);         
@@ -247,8 +261,24 @@ final public class TableParser implements XMLConsumer {
       // Parsing du buffer (on reprend éventuellement là où on en était)
       int position=offset;
       while( position<length ) {
-         if( nField==nbField ) nField=0;
-         int nextPosition = position + ((nField==nbField-1 ? sizeRecord : pos[nField+1]) - pos[nField]);
+         if( nField==nbField ) {
+            nField=0;
+//            System.out.print(nRecord+": ");
+         }
+         
+         int nbBytes = len[nField]==-1 ? -1 : binSizeOf(type[nField], len[nField]);
+         
+         // Champ variable ?
+         if( nbBytes==-1 ) {
+            nbBytes = getInt(b, position);
+            position+=4;
+         }
+         
+         // Le flux à du bourrage à la fin, avec en plus un champ variable
+         if( nbBytes==0 ) {
+            return true;
+         }
+         int nextPosition = position + nbBytes;
          
          // Dernier champ non complet => on le garde pour la prochaine fois
          if( nextPosition>length ) {
@@ -258,13 +288,38 @@ final public class TableParser implements XMLConsumer {
             return true;
          }
          
-         record[nField] = getBinField(b,position,len[nField],
-                type[nField],prec[nField], 0.,1.,false,0);
-//if( nRecord==7822 ) System.out.println(nRecord+"/"+nField+" ["+position+"] =>"+record[nField]);         
+         record[nField] = getBinField(b,position, len[nField]==-1 ? nbBytes : len[nField], type[nField],prec[nField], 0.,1.,false,0);
+//System.out.print(" "+nbBytes+"/"+record[nField]);
          position = nextPosition;
          nField++;
-         if( nField==nbField ) consumeRecord(record,nRecord++);
+         if( nField==nbField ) {
+            consumeRecord(record,nRecord++);
+//            System.out.println();
+         }
       }
+
+// ANCIEN CODE      
+//      int position=offset;
+//      while( position<length ) {
+//         if( nField==nbField ) nField=0;
+//         int nextPosition = position + ((nField==nbField-1 ? sizeRecord : pos[nField+1]) - pos[nField]);
+//         
+//         // Dernier champ non complet => on le garde pour la prochaine fois
+//         if( nextPosition>length ) {
+//            int n = length-position;
+//            memoB = new byte[n];
+//            System.arraycopy(b,position,memoB,0,n);
+//            return true;
+//         }
+//         
+//         record[nField] = getBinField(b,position,len[nField],
+//                type[nField],prec[nField], 0.,1.,false,0);
+////if( nRecord==7822 ) System.out.println(nRecord+"/"+nField+" ["+position+"] =>"+record[nField]);         
+//         if( len[nField]==-1 ) position += tmpLen;
+//         else position = nextPosition;
+//         nField++;
+//         if( nField==nbField ) consumeRecord(record,nRecord++);
+//      }
       
 //System.out.println("J'ai terminé nRecord="+nRecord+" nField="+nField);      
             
@@ -513,10 +568,8 @@ final public class TableParser implements XMLConsumer {
                      // cas BINAIRE
                   } else {
 //                     String val = 
-                        record[j] = getBinField(buf,offset+pos[j],len[j],type[j],prec[j],
-                           flagTzeroTscal?tzero[j]:0.,
-                                 flagTzeroTscal?tscal[j]:1.,
-                                       tnull[j]!=null,tinull[j]);                  
+                     record[j] = getBinField(buf,offset+pos[j],len[j],type[j],prec[j],
+                           flagTzeroTscal?tzero[j]:0., flagTzeroTscal?tscal[j]:1., tnull[j]!=null,tinull[j]);
 //                     System.out.println("Lecture champ "+(j+1)+" pos="+pos[j]+" type="+len[j]+type[j]+" => "+val);
                   }
                }
@@ -564,8 +617,12 @@ final public class TableParser implements XMLConsumer {
             type=='M'? 16:
             type=='P'? 8:
             0;
+      if( sizeOf==0 ) {
+         System.out.println("Problème sérieux pour ["+type+"]");
+      }
       return sizeOf * n;
    }
+   
    
    /**
     * Conversion d'un champ d'octets en valeur sont la forme d'un String
@@ -579,12 +636,12 @@ final public class TableParser implements XMLConsumer {
     * @return la chaine correspondante à la valeur
     */
    final private String getBinField(byte t[],int i, int n, char type,
-                                    int prec, double tzero,double tscale,
-                                    boolean hasNull,int tnull) {
+         int prec, double tzero,double tscale,
+         boolean hasNull,int tnull) {
       if( n==0 ) return "";
       if( type=='A' ) return getStringTrim(t,i,n);
       if( n==1 ) return getBinField(t,i,type,prec,tzero,tscale,hasNull,tnull);
-      
+
       StringBuffer a=null;
       for( int j=0; j<n; j++ ) {
          if( j==0 ) a = new StringBuffer();
@@ -593,7 +650,7 @@ final public class TableParser implements XMLConsumer {
       }
       return a+"";
    }
-   
+
    final private String getBinField(byte t[],int i, char type,int p,double z,double s,
          boolean hasNull, int n) {
       
@@ -601,6 +658,8 @@ final public class TableParser implements XMLConsumer {
       return a;
    }
    
+
+
    /**
     * Conversion d'un champ d'octets en valeur sont la forme d'un String
     * @param t le tableau des octets

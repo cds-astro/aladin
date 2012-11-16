@@ -32,6 +32,7 @@ import cds.aladin.Ligne.Segment;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.astro.AstroMath;
+import cds.astro.Astrocoo;
 import cds.astro.Coo;
 import cds.astro.Proj3;
 import cds.tools.Util;
@@ -210,11 +211,24 @@ public class Repere extends Position {
       Coord c = new Coord();
       Projection proj = v.getProj().copy();
       proj.setProjCenter(0,0);
+      double d=0;
       c.al=c.del=0;
+      
       proj.getXY(c);
+      
+      // Y a blême pour les Calibs qui ne sont pas en equatorial.
+      // Dans ce cas, je prend comme référence le point lui-même
+      // et je ne change pas le centre de projection
+      if( Double.isNaN(c.del) ) {
+         proj = v.getProj().copy();
+         c.al=raj;
+         c.del=dej;
+         d=dej;
+         proj.getXY(c);
+      }
       c.y+=r;
       proj.getCoord(c);
-      radius=Math.abs(c.del);
+      radius=Math.abs(d-c.del);
    }
 
    /** Positionnement d'un ID particulier */
@@ -725,7 +739,8 @@ public class Repere extends Position {
       Rectangle r = getClipRayon(v);
       int xc=0;
       int yc=0;
-
+      Color c = g.getColor();
+      
       // Trace des poignees de selection
       for( int i=0; i<4; i++ ) {
          switch(i ) {
@@ -734,11 +749,12 @@ public class Repere extends Position {
             case 2: xc=r.x+r.width-DS; yc=r.y+r.height/2-DS;  break;      // Droite
             case 3: xc=r.x; yc=r.y+r.height/2-DS;  break;              // Gauche
          }
-         g.setColor( Color.green );
+         g.setColor( c );
          g.fillRect( xc+1,yc+1 , DS,DS );
          g.setColor( Color.black );
          g.drawRect( xc,yc , DS,DS );
       }
+      g.setColor( c );
    }
 
    protected void drawRotCenterSelect(Graphics g,ViewSimple v) {

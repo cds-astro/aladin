@@ -63,6 +63,7 @@ public class CropTool  {
    
    private Aladin aladin;
    private Color color = Color.red;
+   private Plan plan;               // Le Plan à cropper
    private RectangleD r;            // La taille du rectangle dans les coordonnées de l'image
    private double resMult;          // Facteur multiplicatif pour la résolution finale (uniquement pour PlanBG)
    private boolean withFullRes;     // true si on utilise fullRes
@@ -82,8 +83,9 @@ public class CropTool  {
 
    /** Création de l'outil, à la position indiquée - on suppose qu'on démarre
     * immédiatement un clic & drag d'extension (équivalent à la poignée BD (Bas-Droit) */
-   public CropTool(Aladin aladin,ViewSimple v,double xview,double yview,boolean withFullRes) {
+   public CropTool(Aladin aladin,ViewSimple v,Plan plan,double xview,double yview,boolean withFullRes) {
       this.aladin=aladin;
+      this.plan = plan;
       PointD p = v.getPosition(xview,yview);
       r = new RectangleD(p.x, p.y, 1/v.zoom, 1/v.zoom);
       dragX=p.x;
@@ -140,8 +142,25 @@ public class CropTool  {
    
    /** Effectue le crop sur l'image courante */
    public void doCrop(ViewSimple v) {
+      if( doMocCrop(v) ) return;
       aladin.calque.newPlanImageByCrop(v, getRectangle(), getResMult(),fullRes );
       aladin.log("Crop",v.pref.getLogInfo());
+   }
+   
+   public boolean doMocCrop(ViewSimple v) {
+      Plan p = plan;
+      if( !(p instanceof PlanMoc) ) return false;
+      Projection proj = v.getProj();
+      Coord [] coo = new Coord[4];
+      for( int i=0; i<4; i++ ) {
+         Coord c = new Coord();
+         c.x = r.x + ((i==1 || i==2) ? r.width : 0);
+         c.y = r.y + (i>1 ? r.height : 0);
+         proj.getCoord(c);
+         coo[i]=c;
+      }
+      aladin.calque.newPlanMoc("Crop "+p.label,(PlanMoc)p,coo);
+      return true;
    }
    
    /** Permute la checkbox de full résolution */
@@ -509,7 +528,8 @@ public class CropTool  {
       // Les boutons et les labels ne seront pas affichés
       // si le rectangle est trop petit (il est tjs possible de zoomer)
       hasButton=false;
-      if( (bd.x-hg.x)>80 && (bd.y-hg.y)>50 ) {
+      boolean flagMoc = plan instanceof PlanMoc;
+      if( !flagMoc && (bd.x-hg.x)>80 && (bd.y-hg.y)>50 ) {
 
          // Tracé des labels
          drawLabel(g,LABEL_RES,v);
@@ -527,10 +547,12 @@ public class CropTool  {
          hasButton=true;
       }
       
-      // Tracé de la checkbox
-      x = (int)( hg.x+10 );
-      y = (int)( hg.y+ (bd.y-hg.y>2.*v.getHeight()/3 ? 4: -20) );
-      drawCheckbox(g,x,y);
+      if( !flagMoc) {
+         // Tracé de la checkbox
+         x = (int)( hg.x+10 );
+         y = (int)( hg.y+ (bd.y-hg.y>2.*v.getHeight()/3 ? 4: -20) );
+         drawCheckbox(g,x,y);
+      }
 
       // Mise en forme du curseur
       int cursor = Cursor.DEFAULT_CURSOR;

@@ -1066,12 +1066,10 @@ public final class Select extends JComponent  implements
    private Plan lastPlanUnderMouse=null;
    protected void underMouse(Plan p) {
       if( lastPlanUnderMouse==p || a.menuActivated() ) return;
-      boolean flagTrans = a.calque.canBeTransparent(p);
       a.calque.selectPlanUnderMouse(p);
-      if( lastPlanUnderMouse!=null && lastPlanUnderMouse.isImage()
-            /* || flagTrans */ ) a.view.repaintAll();
+      if( lastPlanUnderMouse!=null && lastPlanUnderMouse.isImage() ) a.view.repaintAll();
       else a.view.paintBordure();
-      if( /*!flagTrans || */ canDrawFoVImg() ) lastPlanUnderMouse=p;
+      if( canDrawFoVImg() ) lastPlanUnderMouse=p;
       else lastPlanUnderMouse=null;
    }
 

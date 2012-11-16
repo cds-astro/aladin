@@ -242,7 +242,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
 Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
 
       // Lecture de l'entete Fits si ce n'est deja fait
-      if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
+      if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
 
       bitpix = headerFits.getIntFromHeader("BITPIX");
       if( bitpix==0 ) {

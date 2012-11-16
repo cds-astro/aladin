@@ -52,7 +52,7 @@ public class PlanImageRice extends PlanImage {
       
 
       // Lecture de l'entete Fits si ce n'est deja fait
-      if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
+      if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
  
       bitpix = headerFits.getIntFromHeader("ZBITPIX");
       width = naxis1 = headerFits.getIntFromHeader("ZNAXIS1");

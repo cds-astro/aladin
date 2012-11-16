@@ -67,6 +67,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Tagging source feature
  * @beta    <LI> Spectrum SAMP management dedicated to source catalog
  * @beta    <LI> Specifical color parameter for "draw" script command
  * @beta    <LI> HEALPix sky => progenitor access support, JPEG calibrated images supported
@@ -75,6 +76,7 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> VOTable base64 BINARY STREAM with variable fields bug fix
  * @beta    <LI> HEALPix sky => RGB missing tiles supported
  * @beta <UL>
  * @beta </UL>
@@ -100,7 +102,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.535";
+    static public final    String VERSION = "v7.536";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -305,8 +307,10 @@ public class Aladin extends JApplet
     FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
     FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
     FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
+    FrameMocFiltering frameMocFiltering;   // Gere la fenetre pour les opérations de filtrage par les MOCs
     FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opérations sur les MOCs
-    FrameMocGeneration frameMocGeneration;   // Gere la fenetre pour la génération d'un MOC à partir d'images ou de catalogues
+    FrameMocGenImg frameMocGenImg;   // Gere la fenetre pour la génération d'un MOC à partir d'images
+    FrameMocGenImg frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
     FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
     FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
     FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -317,6 +321,7 @@ public class Aladin extends JApplet
     FrameInfoServer frameInfoServer; // Gère la fenêtre des infos sur un serveur
     FrameMacro frameMacro;        // Gere la fenetre des Macros
     FrameVOTool frameVOTool;      // Gère les applications VO accessibles par Aladin
+    protected FrameProgen frameProgen = null;
     protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
     public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
     public Console console;                  // Gere la fenetre de la console
@@ -375,7 +380,8 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-                      miInFold,miConv,miArithm,miMocGen,miMocOp,miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
+                      miInFold,miConv,miArithm,miMocGenImg,miMocGenCat,miMocOp,miMocFiltering,miMocCrop,
+                      miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
     JButton ExportYourWork,searchData,avant,apres;
@@ -432,7 +438,9 @@ public class Aladin extends JApplet
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,
            PANEL1,PANEL2,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGEN,MOCM,HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
+           SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENCAT,
+           MOCM,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
+           HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
            HPXCREATE,HPXGRID,HPXDUMP,HPXGENERATE,GETOBJ;
@@ -815,9 +823,14 @@ public class Aladin extends JApplet
        FOLD    = chaine.getString("SLMCREATFOLD");
        INFOLD  = chaine.getString("SLMINSFOLD");
        ARITHM  = chaine.getString("MARITHM");
-       MOC    = PROTOPREFIX + chaine.getString("MMOC");
-       MOCGEN    =chaine.getString("MMOCGEN");
-       MOCM    =chaine.getString("MMOCOP");
+       MOC    =  chaine.getString("MMOC");
+       MOCGENIMG   =chaine.getString("MMOCGENIMG");
+       MOCGENCAT   =chaine.getString("MMOCGENCAT");
+       MOCM     =chaine.getString("MMOCOP");
+       MOCFILTERING =chaine.getString("MMOCFILTERING");
+       MOCCROP =chaine.getString("MMOCCROP");
+       MOCHELP =chaine.getString("MMOCHELP");
+       MOCLOAD =chaine.getString("MMOCLOAD");
        HEALPIXARITHM = PROTOPREFIX + chaine.getString("MHEALPIXARITHM");
 //       ADD     = chaine.getString("MADD");
 //       SUB     = chaine.getString("MSUB");
@@ -963,7 +976,7 @@ public class Aladin extends JApplet
                       {ZOOM,ZOOMM+"|F2",ZOOMP+"|F3","","?"+ZOOMPT+"|F4"},
                   {},{FOLD},{INFOLD},
                   {},{SELECTALL+"|"+meta+" A"},{SELECT},{SELECTTAG},{UNSELECT+"|"+meta+" U"},
-                  {},{TAGSELECT},{DETAG},
+                  /*{},{TAGSELECT},*/{DETAG},
                   {},{DEL+"|DELETE"},{DELALL+"|shift DELETE"},
                   {},{HEAD+"|"+alt+" H"},{PROP+"|"+alt+" ENTER"}, {}, {PREF},
              },
@@ -986,12 +999,15 @@ public class Aladin extends JApplet
              },
              { {MOVERLAY},
                 {CONTOUR},
-                { MOC,MOCGEN,MOCM},
+//                {MOC,MOCGEN,MOCFILTERING,MOCCROP,MOCM},
                 {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                 {},{NTOOL+"|"+alt+" N"},
                 {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
                    {"?"+GRID+"|"+alt+" G"},{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},
                 {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
+             },
+             { {MOC},
+                {MOCLOAD},{MOCGENIMG},{MOCGENCAT},{},{MOCM},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
              },
              { {MTOOLS},
                 {SESAME+"|"+meta+" R"},
@@ -1587,7 +1603,10 @@ public class Aladin extends JApplet
        else if( isMenu(m,INFOLD) ) miInFold  = ji;
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
        else if( isMenu(m,MOCM) )   miMocOp  = ji;
-       else if( isMenu(m,MOCGEN) )   miMocGen  = ji;
+       else if( isMenu(m,MOCFILTERING) )   miMocFiltering  = ji;
+       else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
+       else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
+       else if( isMenu(m,MOCGENCAT) )   miMocGenCat  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
        else if( isMenu(m,NORM) )   miNorm    = ji;
        else if( isMenu(m,BITPIX) ) miBitpix  = ji;
@@ -2473,7 +2492,6 @@ public class Aladin extends JApplet
     }
     
     
-    protected FrameProgen frameProgen = null;
     
     /** Visualisation (création si nécessaire) de la fenêtre des progéniteurs */ 
     protected void showFrameProgen() {
@@ -2872,8 +2890,13 @@ public class Aladin extends JApplet
       } else if( isMenu(s,ROI) )   { roi();
       } else if( isMenu(s,MCLOSE) ){ quit(0);
       } else if( isMenu(s,ARITHM) ){ updateArithm();
-      } else if( isMenu(s,MOCGEN) )  { updateMocGen();
+      } else if( isMenu(s,MOCGENIMG) ){ updateMocGenImg();
+      } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
+      } else if( isMenu(s,MOCCROP) )  { crop();
+      } else if( isMenu(s,MOCHELP) )  { info(chaine.getString("MOCHELP"));
+      } else if( isMenu(s,MOCLOAD) )  { loadMoc();
+      } else if( isMenu(s,MOCFILTERING) )  { updateMocFiltering();
       } else if( isMenu(s,CONV) )  { updateConvolution();
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
       } else if( isMenu(s,NORM) )  { norm();
@@ -3434,6 +3457,29 @@ public class Aladin extends JApplet
        }
        frameArithm.maj();
     }
+    
+    /** Mise à jour de la fenêtre pour les operations des MOCs */
+    protected void updateMocFiltering() {
+       if( frameMocFiltering==null ) {
+          trace(1,"Creating the MocOp window");
+          frameMocFiltering = new FrameMocFiltering(aladin);
+       }
+       frameMocFiltering.maj();
+    }
+    
+    
+    private boolean loadMocFirst=true;
+    
+    /** Mise à jour de la fenêtre pour les operations des MOCs */
+    protected void loadMoc() {
+       dialog.show("VizieR");
+       if( loadMocFirst ) SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+             info(dialog,chaine.getString("MMOCLOADHELP"));
+          }
+          });   
+       loadMocFirst=false;
+    }
 
     /** Mise à jour de la fenêtre pour les operations des MOCs */
     protected void updateMocOp() {
@@ -3443,14 +3489,23 @@ public class Aladin extends JApplet
        }
        frameMocOperation.maj();
     }
+    
+    /** Mise à jour de la fenêtre pour la génération d'un MOC */
+    protected void updateMocGenCat() {
+       if( frameMocGenCat==null ) {
+          trace(1,"Creating the MocGenCat window");
+          frameMocGenCat = new FrameMocGenCat(aladin);
+       }
+       frameMocGenCat.maj();
+    }
 
     /** Mise à jour de la fenêtre pour la génération d'un MOC */
-    protected void updateMocGen() {
-       if( frameMocGeneration==null ) {
-          trace(1,"Creating the MocGen window");
-          frameMocGeneration = new FrameMocGeneration(aladin);
+    protected void updateMocGenImg() {
+       if( frameMocGenImg==null ) {
+          trace(1,"Creating the MocGenImg window");
+          frameMocGenImg = new FrameMocGenImg(aladin);
        }
-       frameMocGeneration.maj();
+       frameMocGenImg.maj();
     }
 
     /** Mise à jour de la fenêtre pour les operations de convolutions */
@@ -4338,8 +4393,11 @@ public void setLocation(Point p) {
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
 //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
-         if( miMocGen!=null ) miMocGen.setEnabled(nbPlanImg+nbPlanCat>0 );
+         if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
+         if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
+         if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
+         if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc );
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
          if( miConv!=null ) miConv.setEnabled(hasPixels && !isCube);
          if( miNorm!=null ) miNorm.setEnabled(hasPixels && !isCube);
@@ -4359,9 +4417,10 @@ public void setLocation(Point p) {
             miSyncProj.setSelected(syncMode==3);
          }
 
-         if( miCrop!=null ) miCrop.setEnabled(v!=null && v.pref!=null && (v.pref.hasAvailablePixels() || isBG )
-               && (v.pref.type!=Plan.IMAGEHUGE
-                     || ((PlanImageHuge)v.pref).fromSubImage(v.zoom, getWidth(), getHeight())));
+         if( miCrop!=null ) {
+            miCrop.setEnabled(v!=null && v.pref!=null && (v.pref.hasAvailablePixels() || isBG )
+               && (v.pref.type!=Plan.IMAGEHUGE || ((PlanImageHuge)v.pref).fromSubImage(v.zoom, getWidth(), getHeight())));
+         }
 
          Plan p = calque.getFirstSelectedPlan();
          if( miHead!=null ) miHead.setEnabled(p!=null && p.hasFitsHeader());

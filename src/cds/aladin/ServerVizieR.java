@@ -551,7 +551,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             // Chargement du MOC
             else if( action.equals(CATMOC) ) {
                URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cata)+" 512");
-               aladin.execAsyncCommand("'MOC "+cata+"'=get File("+u+")");
+               aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
             }
             
             // Chargement de la carte de densité

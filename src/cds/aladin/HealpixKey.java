@@ -35,7 +35,6 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.Toolkit;
-import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -54,7 +53,6 @@ import java.io.RandomAccessFile;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
-import cds.allsky.Constante;
 import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -117,11 +115,6 @@ public class HealpixKey {
 
    int oiz=-1;
    int vHashCode=-1;
-//   private PointD coins [] = new PointD[4];  // les 4 coins en X,Y
-//   protected Coord[] corners;     // Coordonnées Ra,Dec des 4 coins du losange
-                        //   3
-                        // 1   2
-                        //   0
 
    protected HealpixKey() { }
    
@@ -218,7 +211,6 @@ public class HealpixKey {
       int offsetY = child==1 || child==3 ? width : 0;
       p = new Point(father.p.x + offsetX ,father.p.y + offsetY);
       parente=father.parente+1;
-//      corners = computeCorners();
       resetTimer();
       pixels=null;
       rgb = null;
@@ -384,11 +376,6 @@ public class HealpixKey {
          }
       }
 
-// PLUS LA PEINE PUISQU'ON UTILISE DIRECTEMENT LE BUFFER PIXELS[]
-//      long live = getLiveTime();
-//      // Nettoyage de la mémoire image temporaire
-//      if( live>1000 ) imgBuf=null;
-
       // Tous les fils on été purgé
       if( rep ) {
 
@@ -396,7 +383,7 @@ public class HealpixKey {
          if( parente==0 ) {  fils=null; return rep; }
 
          // On purge le losange ?
-         if( /* live>3000 ||*/ getLive()==DEATH ) { free(); return true; }
+         if( getLive()==DEATH ) { free(); return true; }
       }
       return false;
    }
@@ -817,14 +804,17 @@ public class HealpixKey {
          try { planBG.createHealpixOrder(order); } catch( Exception e ) { return Double.NaN; }
       }
       int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
+      return getPixel(idx,mode);
+   }
+   
+   /** Retourne la valeur du pixel à l'emplacement idx (idx = y*width + x) */
+   protected double getPixel(int idx,int mode) {
       
       if( !loadPixelsOrigin(mode) ) return Double.NaN;
       resetTimer();
-      
       double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
             : getPixValDouble(pixelsOrigin,planBG.bitpix,idx);
       if( planBG.isBlank(pix) ) pix = Double.NaN;
-//      else pix = planBG.bScale * pix + planBG.bZero;
       return pix;
    }
       
@@ -1229,7 +1219,7 @@ public class HealpixKey {
       g.finalize(); g=null;
       
       int [] rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-
+      
       imgBuf.flush(); imgBuf=null;
       timePixel = (int)(Util.getTime()-t1);
 

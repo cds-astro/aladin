@@ -405,7 +405,7 @@ public final class Tag extends Position {
    private boolean isArrow() { return tag==ARROW || tag==BIGARROW; }
    
 // Retourne true s'il s'agit d'un reticule
-   private boolean isReticle() { return tag==BIGRETICLE || tag==RETICLE; };
+   protected boolean isReticle() { return tag==BIGRETICLE || tag==RETICLE; };
    
    /** Retourne true si le tag a un label */
    protected boolean hasLabel() { return id!=null && id.trim().length()>0; }

@@ -220,7 +220,7 @@ public class ServerFile extends Server implements XMLConsumer {
       try {
 //         setSync(false);
          int n=0;
-         MyInputStream in;
+         MyInputStream in=null;
          long type;
          URL u=null;
          boolean localFile=false;
@@ -304,14 +304,14 @@ public class ServerFile extends Server implements XMLConsumer {
             //Obtention du stream (donnee locale ou distante)
             if( is==null && (f.startsWith("http:")||f.startsWith("https:")) ) {
                u = aladin.glu.getURL("Http",getNameWithoutBrackets(f),true,true);
-               in = Util.openStream(u);
+               try { in = Util.openStream(u); } catch( Exception e ) { }
                mode="http";
             }
 
             // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
             else if( is==null && f.startsWith("ftp://") ) {
                u = new URL(getNameWithoutBrackets(f));
-               in = Util.openStream(u);
+               try { in = Util.openStream(u); } catch( Exception e ) { }
                mode="ftp";
             }
             // URL du type file://...
@@ -336,8 +336,10 @@ public class ServerFile extends Server implements XMLConsumer {
                   else in = new MyInputStream(is);
                }
             }
-            in = in.startRead();
-            type = in.getType();
+            if( in!=null ) {
+               in = in.startRead();
+               type = in.getType();
+            } else type=MyInputStream.UNKNOWN;
 
             // Petit rajouti pour reconnaitre l'extension AJS pour les scripts Aladin
             if( f!=null && f.endsWith(".ajs") ) type |= MyInputStream.AJS;
@@ -1018,8 +1020,7 @@ public class ServerFile extends Server implements XMLConsumer {
       //rec = new String(ch,start,cur-start).trim();
 
       // Ajout de l'objet dans le plan courant
-      Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg):
-         new Source(plan,ra,de,id,rec);
+      Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
 
       // Cas particulier de sources dans un plan tool
       if( leg!=null && typePlan==CATALOGTOOL && ((PlanTool)plan).legPhot==null ) ((PlanTool)plan).legPhot=leg;
@@ -1220,7 +1221,7 @@ public class ServerFile extends Server implements XMLConsumer {
          setScript(new String(ch,start,length).replaceAll("\\\\n", "\n"));
       } else if( inFitsHeader ) {
          if( ((PlanImage)plan).headerFits==null ) {
-            ((PlanImage)plan).headerFits = new FrameHeaderFits(new String(ch,start,length));
+            ((PlanImage)plan).headerFits = new FrameHeaderFits(plan,new String(ch,start,length));
          } else ((PlanImage)plan).headerFits.setOriginalHeaderFits(new String(ch,start,length));
       } else if( inFilter ) {
          if( plan.filters==null ) return;

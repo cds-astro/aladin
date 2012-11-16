@@ -1700,7 +1700,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
        if( !v.isInView(c.al,c.del) ) rep = v.setZoomRaDec(0,c.al,c.del);
        if( rep ) {
           repaintAll();
-//          showSource();
           aladin.calque.zoom.newZoom();
           aladin.calque.zoom.zoomView.repaint();
        }
@@ -2012,6 +2011,16 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return false;
    }
 
+   /** Indique s'il y a au- moins un objet déplaçable */
+   protected boolean hasMovableObj() { return hasMovableObj(vselobj); }
+   protected boolean hasMovableObj(Vector v) {
+      Enumeration<Obj> e = v.elements();
+      while( e.hasMoreElements() ) {
+         if( !(e.nextElement() instanceof Source) ) return true;
+      }
+      return false;
+   }
+
 
    /** Retourne le Vector des objets sélectionnés */
    protected Vector<Obj> getSelectedObjet() { return vselobj; }
@@ -2240,6 +2249,27 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       resetClip();
       repaintAll();
+   }
+   
+   /** Ajoute les sources taggées dans la sélection et dans la fenêtre des mesures */
+   protected void addTaggedSource(Plan p) {
+      if( p.getCounts()==0 ) return;
+      Iterator<Obj> it = p.iterator();
+      boolean trouve=false;
+      synchronized(this) {
+         while( it.hasNext() ) {
+            Obj s = it.next();
+            if( !(s instanceof Source) || !((Source)s).isTagged() ) continue;
+            ((Source)s).setSelect(true);
+            vselobj.add(s);
+            aladin.mesure.insertInfo((Source)s);
+            trouve=true;
+         }
+      }
+      if( trouve ) {
+         aladin.mesure.adjustScroll();
+         aladin.mesure.mcanvas.repaint();
+      }
    }
 
   /** Deselection d'une source du vecteur vselobj.
@@ -2690,12 +2720,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Selection de tous les objets du plan uniquement (sans réaffichage ni mise à jour
     * du Frame measurements. */
    protected void selectObjetPlanField(Plan p) {
-      deSelect();
+//      deSelect();
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-//         o.setSelect(true);
-//         aladin.view.vselobj.addElement(o);
          setSelected(o, true);
       }
    }
@@ -2706,8 +2734,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
-//         o.setSelect(false);
-//         aladin.view.vselobj.removeElement(o);
          setSelected(o, false);
       }
    }
@@ -2734,6 +2760,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          plasticFlag = aladin.getMessagingMgr().isRegistered();
       } else plasticFlag=false;
 
+      
       aladin.mesure.removeAllElements();
 
       Enumeration<Obj> e = vselobj.elements();
@@ -2754,7 +2781,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                }
                else {
                    ((Source)o).setSelect(false);
-                   //vselobj.removeElement(o);
                    v.addElement( (Source) o);
                }
 
@@ -2770,7 +2796,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       // on supprime de vselobj toutes les sources qui doivent l'etre
       Enumeration<Source> eObjTodel = v.elements();
       while( eObjTodel.hasMoreElements() ) vselobj.removeElement(eObjTodel.nextElement());
-
+      
       //long end = System.currentTimeMillis();
       //System.out.println(end-b);
       aladin.toolBox.toolMode();

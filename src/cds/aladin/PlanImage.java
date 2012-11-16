@@ -1633,11 +1633,11 @@ Aladin.trace(3,"Second try for opening the stream due to: "+e+"...");
                      // Cas où la calib se trouverait dans un commentaire de l'image JPEG ou PNG
                      if( dis.hasCommentCalib() ) {
                         try {
-                           headerFits=dis.createFrameHeaderFitsFromCommentCalib();
+                           headerFits=dis.createFrameHeaderFitsFromCommentCalib(this);
                            c = new Calib(headerFits.getHeaderFits());
                         } catch( Exception e ) {
                            dis.jpegCalibAddNAXIS(width,height);   // Peut être une entete partielle à la Sloan
-                           headerFits=dis.createFrameHeaderFitsFromCommentCalib();
+                           headerFits=dis.createFrameHeaderFitsFromCommentCalib(this);
                            c = new Calib(headerFits.getHeaderFits());
                         }
 if( c!=null ) Aladin.trace(3,"Reading FITS key words from JPEG comment");
@@ -1743,7 +1743,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
          RandomAccessFile rf = new RandomAccessFile(new File(f), "r");
          byte [] b = new byte[(int)rf.length()];
          rf.readFully(b);
-         FrameHeaderFits h = new FrameHeaderFits(new String(b),true);
+         FrameHeaderFits h = new FrameHeaderFits(this,new String(b),true);
          return h;
       } catch( Exception e ) { }
       return null;
@@ -2925,7 +2925,7 @@ Aladin.trace(3," => BZERO = "+bZero+" BSCALE = "+bScale);
 Aladin.trace(2,"Loading FITS image");
 
       // Lecture de l'entete Fits si ce n'est deja fait
-      if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
+      if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
 
       bitpix = headerFits.getIntFromHeader("BITPIX");
       naxis = headerFits.getIntFromHeader("NAXIS");
@@ -3114,7 +3114,7 @@ Aladin.trace(3," => Hdecompressing in "+temps+" ms");
 Aladin.trace(2,"Loading PDS image");
 
       // Lecture de l'entete Fits si ce n'est deja fait
-      if( headerFits==null ) headerFits = new FrameHeaderPDS(dis);
+      if( headerFits==null ) headerFits = new FrameHeaderPDS(this,dis);
       
       // Taille image, profondeur pixel
       width = naxis1 = headerFits.getIntFromHeader("LINE_SAMPLES");

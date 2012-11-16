@@ -76,9 +76,21 @@ public final class Projection {
    protected Coord coo[];			// Liste de quadruplets pour methode QUADRUPLET de recalibration
    
    // Liste des projections comme elles apparaissent dans Aladin, et correspondances dans Calib
-   static final String [] alaProj            = {"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE" };
-   static final String [] alaProjToType      = {"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL" };
+   static String [] alaProj            = {"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE" };
+   static String [] alaProjToType      = {"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",      };
 
+//          LORSQUE FRANCOIS AURA CORRIGE LES PROJECTIONS QUI MERDOIENT
+   static {
+      if( Aladin.PROTO ) {
+         alaProj       = new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC", "NCP", "ZPN", "TAN-SIP" };
+         alaProjToType = new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "NCP", "ZPN", "TAN-SIP" };
+      } else {
+         alaProj       =  new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE" };
+         alaProjToType =  new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",      };
+       
+      }
+   }
+   
    /** Retourne l'indice de la signature de la projection (case insensitive, qu'il s'agisse de son nom complet
     * apparaissant dans Aladin, ou sa signature */
    static public int getProjType(String projectionName) {
@@ -109,11 +121,11 @@ public final class Projection {
    }
 
    protected double getRaMax() {
-      return t==Calib.SIN || t==Calib.TAN ? 180 :360;
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP ? 180 :360;
    }
 
    protected double getDeMax() {
-      return t==Calib.SIN || t==Calib.TAN || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL ? 180 : 360;
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.AIT || t==Calib.CAR || t==Calib.MOL ? 180 : 360;
    }
    
     protected Projection(double refX,double refY,double x, double y, double refW, double refH, double w, double h, 
@@ -599,7 +611,10 @@ public final class Projection {
 
       // La meme projection
       if( this==p ) return true;
-
+      
+      // Concerne un champ très large => toujours compatible
+      if( p.rm>30*60 ) return true;
+      
       double z=1;
       if( v!=null ) {
          // sur un background

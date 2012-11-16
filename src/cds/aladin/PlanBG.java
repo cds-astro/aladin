@@ -37,8 +37,12 @@ import java.awt.image.DataBufferInt;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 
 import javax.swing.SwingUtilities;
@@ -167,6 +171,7 @@ public class PlanBG extends PlanImage {
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
    protected boolean localAllSky=false;
+   protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    
    protected PlanBGIndex planBGIndex=null;
 
@@ -207,6 +212,7 @@ public class PlanBG extends PlanImage {
       minOrder = gluSky.minOrder;
       maxOrder = gluSky.maxOrder;
       useCache = gluSky.useCache();
+      loadMocNow=gluSky.loadMocNow();
       frameOrigin=gluSky.frame;
       verboseDescr=gluSky.verboseDescr;
       co=c;
@@ -218,25 +224,84 @@ public class PlanBG extends PlanImage {
       suite();
    }
    
-   protected void setSpecificParams(TreeNodeAllsky gluSky) {
-      type = ALLSKYIMG;
-      video=VIDEO_NORMAL;
-      inFits = gluSky.isFits();
-      inJPEG = gluSky.isJPEG();
-      truePixels=gluSky.isTruePixels();
-      color = gluSky.isColored();
-
-      // Information supplémentaire par le fichier properties ?
+   // Supprime le cache en le renommant simplement => il sera nettoyé par la suite
+   // Puis recrée un répertoire pour accueillir les nouvelles données
+   private void resetCache() {
+      String dirname = getCacheDir()+Util.FS+survey;
+      File f = new File(dirname);
+      for( int i=1; i<10; i++ ) {
+         if( f.renameTo(new File(getCacheDir()+Util.FS+survey+"."+i+".old")) ) break;
+      }
+      (new File(getCacheDir()+Util.FS+survey)).mkdir();
+      aladin.trace(3,"HEALPix cache for "+survey+" is out of date => renamed => will be removed");
+   }
+   
+   /** Charge les propriétés à partir du fichier "properties" et en profite pour vérifier
+    * que le cache est à jour, en comparant les dates du fichier "properties" local et distant */
+   protected java.util.Properties loadPropertieFile() {
+      MyProperties prop = null;
       boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
-      java.util.Properties prop = new java.util.Properties();
       try {
          InputStream in=null;
-         if( !local ) in = (new URL(url+"/"+PlanHealpix.PROPERTIES)).openStream();
-         else in = new FileInputStream(new File(url+Util.FS+PlanHealpix.PROPERTIES));
+         
+         // S'il s'agit d'un produit local, accès direct sans se poser de questions
+         if( local ) in = new FileInputStream(new File(url+Util.FS+PlanHealpix.PROPERTIES));
+         else {
+            
+            String cacheFile = getCacheDir()+Util.FS+survey+Util.FS+PlanHealpix.PROPERTIES;
+            File f = new File(cacheFile);
+            String urlFile = url+"/"+PlanHealpix.PROPERTIES;
+            HttpURLConnection conn = (HttpURLConnection) (new URL(urlFile)).openConnection();
+
+            // Ne charge la version distante que si elle est plus récente que celle du cache
+            if( useCache && f.exists() ) conn.setIfModifiedSince( f.lastModified() );
+            try {
+               in = conn.getInputStream();
+               int code = conn.getResponseCode();
+               if( code==304 ) throw new Exception(); 
+               
+               // Réinitialisation du cache et réécriture
+               if( useCache ) {
+                  MyInputStream dis = new MyInputStream(in);
+                  byte [] buf = dis.readFully();
+                  dis.close();
+                  
+                  try {
+                     resetCache();
+                     f = new File(cacheFile);
+
+                     RandomAccessFile fcache = new RandomAccessFile(f, "rw");
+                     fcache.write(buf);
+                     fcache.close();
+                     
+                  } catch( Exception e ) {
+                     e.printStackTrace();
+                  }
+               }
+
+               // La version dans le cache est la bonne.
+            } catch( Exception e ) { 
+               aladin.trace(3,"HEALPix cache for "+survey+" is ok");
+            }
+            
+            // Faut bien lire les proriétés tout de même
+            if( f.exists() ) in = new FileInputStream(f);
+
+         }
          if( in==null ) throw new Exception();
+         prop = new MyProperties();
          prop.load(in);
          in.close();
-
+      } catch( Exception e ) { prop=null; }
+      return prop;
+   }
+   
+   protected void scanProperties() {
+      // Information supplémentaire par le fichier properties ?
+      try {
+         java.util.Properties prop = loadPropertieFile();
+         if( prop==null ) throw new Exception();
+         
          Aladin.trace(4,"PlanBG.setSpecificParams() found a \"properties\" file");
          // Frame
          String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"X");
@@ -257,6 +322,18 @@ public class PlanBG extends PlanImage {
          
       } catch( Exception e ) { aladin.trace(3,"No properties file found ..."); }
 
+   }
+   
+   
+   protected void setSpecificParams(TreeNodeAllsky gluSky) {
+      type = ALLSKYIMG;
+      video=VIDEO_NORMAL;
+      inFits = gluSky.isFits();
+      inJPEG = gluSky.isJPEG();
+      truePixels=gluSky.isTruePixels();
+      color = gluSky.isColored();
+      
+      scanProperties();
    }
    
    public PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
@@ -295,6 +372,7 @@ public class PlanBG extends PlanImage {
       int n = url.length();
       if( url.endsWith("/") ) n--;
       survey = this.label!=null && this.label.length()>0 ? this.label : url.substring(url.lastIndexOf('/',n-1)+1,n);
+      scanProperties();
       aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
       suite();
    }
@@ -309,6 +387,7 @@ public class PlanBG extends PlanImage {
       frameOrigin=gSky.getFrame();
       losangeOrder=gSky.getLosangeOrder();
       localAllSky=gSky.isLocal();
+      loadMocNow=gSky.loadMocNow();
       imageSourcePath = gSky.getImageSourcePath();
       version = gSky.getVersion();
       truePixels=inFits && localAllSky || !inJPEG && !localAllSky;
@@ -350,7 +429,7 @@ public class PlanBG extends PlanImage {
    /** Chargement du Moc associé au survey */
    protected void loadMoc() {
       String moc = url+"/Moc.fits";
-      aladin.execAsyncCommand("'MOC "+label+"'=load "+moc);
+      aladin.execAsyncCommand("'"+label+" MOC'=load "+moc);
    }
    
    /** Retourne le frame d'affichage, 0 si utilisation du frame général */
@@ -397,16 +476,27 @@ public class PlanBG extends PlanImage {
       if( coRadius<=0 ) coRadius=180;
       
       objet = co+"";
-      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
+      
+      // On va garder le même type de projection que le plan de base.
+      int defaultProjType = Calib.SIN;
+      Plan base = aladin.calque.getPlanBase();
+      if( base instanceof PlanBG ) defaultProjType = base.projd.t;
+      
+      Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
+            defaultProjType,Calib.FK5);
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
       setDefaultZoom(co,coRadius);
       suiteSpecific();
+      suite1();
+   }
+
+   protected void suite1() {
       threading();
       log();
    }
-   
+
    protected void suiteSpecific() {
       dataMin=pixelMin=0;
       dataMax=pixelMax=255;
@@ -466,6 +556,7 @@ public class PlanBG extends PlanImage {
       aladin.view.setRepere(co);
       flagOk=ready;
       aladin.synchroPlan.stop(startingTaskId);
+      if( loadMocNow ) loadMoc();
    }
 
    @Override
@@ -673,11 +764,13 @@ public class PlanBG extends PlanImage {
 
    /** Scan du cache et suppression des vieux fichiers */
    static synchronized void scanCache() {
-      if( (cacheSize!=-1 && cacheSize<MAXCACHE) || scanCache!=null) return;
+      if( (cacheSize!=-1 && cacheSize<MAXCACHE) ) return; 
+      if( scanCache!=null) return;
 
       (scanCache=new Thread("Scan cache") {
          @Override
          public void run() {
+            currentThread().setPriority(MIN_PRIORITY);
             long size=0;
             long t = System.currentTimeMillis();
             String dir = PlanBG.getCacheDirPath();
@@ -686,6 +779,17 @@ public class PlanBG extends PlanImage {
                setCacheSize(0);
                return;
             }
+            
+            Aladin.trace(3,"Scanning allsky cache...");
+            
+            // Premier parcours pour virer les surveys obsoletes
+            File fold[] = new File(dir).listFiles();
+            for( int i=0; i<fold.length; i++ ) {
+               if( fold[i].isDirectory() && fold[i].getName().endsWith(".old") ) {
+                  Aladin.trace(4,"PlanBG.scanCache(): removing folder "+fold[i].getName()+"...");
+                  Util.deleteDir(fold[i]);
+               }
+            }
 
             // Parcours du cache
             Vector<File> listCache = new Vector<File>(2000);
@@ -693,7 +797,9 @@ public class PlanBG extends PlanImage {
             size += getCacheSizePlanHealpix(new File(PlanHealpix.getCacheDirPath()), listCache);
             Collections.sort(listCache,(new Comparator() {
                public int compare(Object o1, Object o2) {
-                  return (int)( ((File)o1).lastModified()-((File)o2).lastModified() );
+                  long t1 = ((File)o1).lastModified();
+                  long t2 = ((File)o2).lastModified();
+                  return t1==t2 ? 0: t1>t2 ? 1 : -1;
                }
             }));
 
@@ -704,7 +810,7 @@ public class PlanBG extends PlanImage {
                File f = e.nextElement();
                if( size > (3*MAXCACHE)/4 ) {
 
-                  Aladin.trace(4,f+" ("+f.lastModified()+") deleted");
+                  Aladin.trace(4,"PlanBG.scanCache(): removing "+ f+" ("+f.lastModified()+")");
                   if( f.isFile() ) {
                       size-=f.length()/1024;
                       f.delete();
@@ -855,7 +961,7 @@ public class PlanBG extends PlanImage {
     * @param mode HealpixKey.SYNC,SYNCONLYIFLOCAL,HealpixKey.ASYNC
     * @return null si le HealpixKey n'est pas READY
     */
-   private HealpixKey getHealpixLowLevel(int order,long npix,int mode) {
+   protected HealpixKey getHealpixLowLevel(int order,long npix,int mode) {
       HealpixKey h = pixList.get( key(order,npix) );
       if( h==null) {
          h = new HealpixKey(this,order,npix,mode);
@@ -868,9 +974,6 @@ public class PlanBG extends PlanImage {
    /** Retourne le losange Healpix s'il est chargé, sinon retourne null
     * et si flagLoad=true, demande en plus son chargement si nécessaire */
    protected HealpixKey getHealpix(int order,long npix,boolean flagLoad) {
-      
-//      HealpixKey healpix = getHealpixFromAllSky(order,npix);
-//      if( healpix!=null ) return healpix;
       
       HealpixKey healpix =  pixList.get( key(order,npix) );
       if( healpix!=null ) return healpix;
@@ -1855,7 +1958,6 @@ public class PlanBG extends PlanImage {
                if( !((PlanImage)pi).isBlank ) {
                   ((PlanImage)pi).isBlank=true;
                   ((PlanImage)pi).blank=blank;
-//                  if( ((PlanImage)pi).headerFits==null ) ((PlanImage)pi).headerFits = new FrameHeaderFits();
                   if( bitpix>0 && ((PlanImage)pi).headerFits!=null) ((PlanImage)pi).headerFits.setKeyValue("BLANK", blank+"");
                }
             } else {
@@ -2445,7 +2547,7 @@ public class PlanBG extends PlanImage {
 
       g.setColor(new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0)));
       rayon=0;
-      if( projd.t==Calib.TAN ) g.fillRect(0,0,v.getWidth(),v.getHeight());
+      if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());
       else if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
          projd.getXYNative(c);

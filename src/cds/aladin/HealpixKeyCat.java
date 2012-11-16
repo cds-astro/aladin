@@ -122,7 +122,7 @@ public class HealpixKeyCat extends HealpixKey {
    protected int free() { return free(true); }
 
    /** Libère le losange
-    * @param force si false, ne libère que si aucune source n'est sélectionnée
+    * @param force si false, ne libère que si aucune source n'est sélectionnée, ni tagguée
     * @return 1 si libéré, 0 sinon
     */
    protected int free(boolean force) {
@@ -134,7 +134,7 @@ public class HealpixKeyCat extends HealpixKey {
       else if( status==READY && planBG.useCache) write();                // Sauvegarde en cache
 
       if( pcat!=null ) {
-         if( !force && pcat.hasSelectedObj() ) {
+         if( !force && pcat.hasSelectedOrTaggedObj() ) {
 //            System.out.println(this+" impossible à supprimer => source sélectionnée ");
             return 0;   // Suppression impossible tant qu'un objet est sélectionné
          }

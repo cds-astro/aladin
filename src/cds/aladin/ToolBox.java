@@ -296,8 +296,13 @@ public final class ToolBox extends JComponent implements
          mode[ToolBox.CONTOUR]=Tool.UNAVAIL;
       }
       
-      // On invalide l'outil phot pour les plan BG
-      if( !aladin.BETA && (v!=null && !v.isFree() && v.pref instanceof PlanBG) ) mode[ToolBox.PHOT]=Tool.UNAVAIL;
+      // Si le premier plan sélectionné est un MOC, on peut faire un crop
+      if( aladin.calque.getFirstSelectedPlan() instanceof PlanMoc ) {
+         mode[ToolBox.CROP]=Tool.UP;
+      }
+      
+     // On invalide l'outil phot pour les plan BG
+//      if( v!=null && !v.isFree() && v.pref instanceof PlanBG ) mode[ToolBox.PHOT]=Tool.UNAVAIL;
 
       // Si la vue courante a un plan de référence qui n'est pas une image simple
       // ni RGB on invalide HIST et PHOT

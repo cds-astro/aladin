@@ -21,10 +21,12 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JRadioButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -39,7 +41,7 @@ import cds.tools.Util;
  */
 public final class FrameMocOperation extends FrameRGBBlink {
 
-   String TITLE,INFO,HELP1,UNION,INTER,SUB,COMP,PLANE;
+   String TITLE,INFO,HELP1,SUNION,INTER,SUB,DIFF,COMP,PLANE;
 
    // Les composantes de l'objet
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
@@ -50,9 +52,10 @@ public final class FrameMocOperation extends FrameRGBBlink {
       TITLE = a.chaine.getString("MOCTITLE");
       INFO  = a.chaine.getString("MOCINFO");
       HELP1  = a.chaine.getString("MOCHELP");
-      UNION   = a.chaine.getString("MOCUNION");
+      SUNION   = a.chaine.getString("MOCUNION");
       INTER = a.chaine.getString("MOCINTER");
       SUB  = a.chaine.getString("MOCSUB");
+      DIFF  = a.chaine.getString("MOCDIFF");
       COMP  = a.chaine.getString("MOCCOMP");
       PLANE    = a.chaine.getString("MOCPLANE");
    }
@@ -75,7 +78,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
    @Override
    protected int getToolNumber() { return -2; }
    @Override
-   protected int getNb() { return 2; }
+   protected int getNb() { return 10; }
 
    @Override
    protected String getLabelSelector(int i) {
@@ -111,11 +114,13 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
       JPanel pp=new JPanel();
       JRadioButton cb;
-      cb=new JRadioButton(UNION); cb.setActionCommand(UNION);
+      cb=new JRadioButton(SUNION); cb.setActionCommand(SUNION);
       cbg.add(cb); pp.add(cb);  cb.setSelected(true);
       cb=new JRadioButton(INTER); cb.setActionCommand(INTER);
       cbg.add(cb); pp.add(cb);
       cb=new JRadioButton(SUB); cb.setActionCommand(SUB);
+      cbg.add(cb); pp.add(cb);
+      cb=new JRadioButton(DIFF); cb.setActionCommand(DIFF);
       cbg.add(cb); pp.add(cb);
       cb=new JRadioButton(COMP); cb.setActionCommand(COMP);
       cbg.add(cb); pp.add(cb);
@@ -128,23 +133,41 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
       return p;
    }
+   
 
    private int getOperation(String s) {
-      if( s.equals(UNION) ) return PlanImageAlgo.ADD;
-      if( s.equals(INTER) ) return PlanImageAlgo.SUB;
-      if( s.equals(SUB) ) return PlanImageAlgo.MUL;
-      return PlanImageAlgo.DIV;
+      if( s.equals(SUNION) ) return PlanMocAlgo.UNION;
+      if( s.equals(INTER) )  return PlanMocAlgo.INTERSECTION;
+      if( s.equals(SUB) )    return PlanMocAlgo.SUBTRACTION;
+      if( s.equals(DIFF) )   return PlanMocAlgo.DIFFERENCE;
+      return PlanMocAlgo.COMPLEMENT;
    }
+   
+   protected PlanMoc [] getPlans() {
+      ArrayList<PlanMoc> pListA = new ArrayList<PlanMoc>();
+      for( JComboBox c : ch ) {
+         int i=c.getSelectedIndex()-1;
+         if (i<0) continue;
+         pListA.add((PlanMoc)choicePlan[i]);
+      }
+      
+      PlanMoc [] pList = new PlanMoc[pListA.size()];
+      pListA.toArray(pList);
+      return pList;
+   }
+
 
    @Override
    protected void submit() {
       try {
-         PlanMoc p1=(PlanMoc)getPlan(ch[0]), p2=(PlanMoc)getPlan(ch[1]);
+         PlanMoc [] pList = getPlans();
 
          String s=cbg.getSelection().getActionCommand();
          int fct=getOperation(s);
+         String label = s.substring(0,3)+" "+pList[0].label+(pList.length==1?""
+               :pList[1].label+(pList.length==2?"":"..."));
 
-         a.calque.newPlanMoc(s.substring(0,3),p1,p2,fct);
+         a.calque.newPlanMoc(label,pList,fct);
          hide();
 
       } catch ( Exception e ) {

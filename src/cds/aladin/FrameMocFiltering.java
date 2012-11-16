@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
@@ -32,18 +33,19 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import cds.moc.Healpix;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
- * Gestion de la fenetre associee a la creation d'un plan arithmétic
+ * Gestion de la fenetre associeeau filtrage de sources par un MOC
  *
  * @author Pierre Fernique [CDS]
- * @version 1.0 : (jan 2008) Creation
+ * @version 1.0 : (oct 2012) Creation
  */
-public final class FrameMocGeneration extends FrameRGBBlink {
+public final class FrameMocFiltering extends FrameRGBBlink {
 
-   String TITLE,INFO,HELP1,PLANE;
+   String TITLE,INFO,HELP1,CATPLANE,MOCPLANE,IN,OUT;
 
    // Les composantes de l'objet
    private ButtonGroup cbg;	         // Les checkBox des opérations possibles
@@ -51,14 +53,17 @@ public final class FrameMocGeneration extends FrameRGBBlink {
    @Override
    protected void createChaine() {
       super.createChaine();
-      TITLE = a.chaine.getString("MOCGENTITLE");
-      INFO  = a.chaine.getString("MOCGENINFO");
+      TITLE = a.chaine.getString("MOCFILTERINGTITLE");
+      INFO  = a.chaine.getString("MOCFILTERINGINFO");
       HELP1  = a.chaine.getString("MOCHELP");
-      PLANE    = a.chaine.getString("MOCPLANE");
+      CATPLANE    = a.chaine.getString("MOCFILTERINGCAT");
+      MOCPLANE    = a.chaine.getString("MOCFILTERINGMOC");
+      IN  = a.chaine.getString("MOCFILTERINGIN");
+      OUT= a.chaine.getString("MOCFILTERINGOUT");
    }
 
    /** Creation du Frame gerant la creation d'un plan RGB. */
-   protected FrameMocGeneration(Aladin aladin) {
+   protected FrameMocFiltering(Aladin aladin) {
       super(aladin);
       Aladin.setIcon(this);
    }
@@ -75,17 +80,17 @@ public final class FrameMocGeneration extends FrameRGBBlink {
    @Override
    protected int getToolNumber() { return -2; }
    @Override
-   protected int getNb() { return 10; }
+   protected int getNb() { return 8; }
 
    @Override
    protected String getLabelSelector(int i) {
-      return PLANE;
+      return i==0 ? MOCPLANE : CATPLANE;
    }
 
    /** Recupere la liste des plans images et catalogues valides */
    @Override
    protected Plan[] getPlan() {
-      Vector<Plan> v  = a.calque.getPlans(Plan.IMAGE);
+      Vector<Plan> v  = a.calque.getPlans(Plan.ALLSKYMOC);
       Vector<Plan> v2  =a.calque.getPlans(Plan.CATALOG);
       if( v==null ) v=v2;
       else if( v2!=null ) v.addAll(v2);
@@ -95,14 +100,10 @@ public final class FrameMocGeneration extends FrameRGBBlink {
       return pi;
    }
 
-
    @Override
    protected Color getColorLabel(int i) {
       return Color.black;
    }
-
-   
-   JComboBox mocRes;
    
    @Override
    protected JPanel getAddPanel() {
@@ -116,9 +117,11 @@ public final class FrameMocGeneration extends FrameRGBBlink {
       cbg=new ButtonGroup();
 
       JPanel pp=new JPanel();
-      pp.add( new JLabel("MOC resolution :"));
-      mocRes = getComboRes();
-      pp.add(mocRes);
+      JRadioButton cb;
+      cb=new JRadioButton(IN); cb.setActionCommand(IN);
+      cbg.add(cb); pp.add(cb);  cb.setSelected(true);
+      cb=new JRadioButton(OUT); cb.setActionCommand(OUT);
+      cbg.add(cb); pp.add(cb);
 
       c.gridwidth=GridBagConstraints.REMAINDER;
       c.weightx=10.0;
@@ -128,45 +131,45 @@ public final class FrameMocGeneration extends FrameRGBBlink {
       return p;
    }
    
-   static final private int FIRSTORDER=8;
-   
-   private JComboBox getComboRes() {
-      JComboBox c = new JComboBox();
-      for( int o=FIRSTORDER; o<=Healpix.MAXORDER; o++ ) {
-         String s = "Order "+o+" => "+Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(o))/3600. );
-         c.addItem(s);
-      }
-      return c;
-   }
-   
-   private int getRes() { return mocRes.getSelectedIndex()+FIRSTORDER; }
-
    
    @Override
    protected void submit() {
       try {
-         // Décompte
-         int n=0;
-         for( int i=0; i<ch.length; i++ ) {
-            Plan p = getPlan(ch[i]);
-            if( p==null ) continue;
-            n++;
+         String s=cbg.getSelection().getActionCommand();
+         boolean lookIn = s.equals(IN);
+
+         Plan pMoc = getPlan(ch[0]);
+         if( pMoc.type!=Plan.ALLSKYMOC ) throw new Exception("Not a MOC");
+
+         Healpix hpx = new Healpix();
+         HealpixMoc moc = ((PlanMoc)pMoc).getMoc();
+         Vector v = new Vector();
+         String label="";
+         Coord c = new Coord();
+         
+         for( int i=1; i<ch.length; i++ ) {
+            Plan pCat = getPlan(ch[i]);
+            if( pCat==null ) continue;
+            if( label.length()==0 ) label=pCat.label;
+            else label=label+", "+pCat.label;
+            Iterator<Obj> it = pCat.iterator();
+            while( it.hasNext() ) {
+               Obj o = it.next();
+               c.al=o.getRa();
+               c.del=o.getDec();
+               c=Localisation.frameToFrame(c,Localisation.ICRS, ((PlanMoc)pMoc).frameOrigin);
+               boolean in = moc.contains(hpx, c.al, c.del);
+               if( lookIn==in ) v.add(o);
+            }
          }
-         Plan [] ps = new Plan[n];
-         n=0;
-         for( int i=0; i<ch.length; i++ ) {
-            Plan p = getPlan(ch[i]);
-            if( p==null ) continue;
-            ps[n++] = p;
-         }
-        
-         int res=getRes();
-         a.calque.newPlanMoc("MOC",ps,res);
+
+         PlanCatalog p = a.calque.newPlanCatalogBySources(v,"Filter "+label,false);
+         a.calque.repaintAll();
          hide();
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
-         Aladin.warning("MOC generation failed !");
+         Aladin.warning("Catalog filtering by MOC failed !");
       }
 
    }

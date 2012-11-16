@@ -38,6 +38,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
+import cds.aladin.MyProperties;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanHealpix;
 import cds.aladin.PlanImage;
@@ -96,6 +97,7 @@ public class Context {
    protected HealpixMoc mocArea = null;      // Zone du ciel à traiter (décrite par un MOC)
    protected HealpixMoc mocIndex = null;     // Zone du ciel correspondant à l'index Healpix
    protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
+   protected int diffOrder=4;           // Lors du calcul du MOC, différence entre ordre du MOC et ordre optimum
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
 
    public Context() {}
@@ -145,12 +147,14 @@ public class Context {
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
-   
+   public int getDiffOrder() { return diffOrder; }
+
    // Setters
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
+   public void setDiffOrder(int diffOrder) { this.diffOrder = diffOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame= (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setSkyValName(String s ) { skyvalName=s; }
@@ -639,7 +643,7 @@ public class Context {
    protected double progress=-1;       // Niveau de progression de l'action en cours, -1 si non encore active, =progressMax si terminée
    protected double progressMax=Double.MAX_VALUE;   // Progression max de l'action en cours (MAX_VALUE si inconnue)
    protected JProgressBar progressBar=null;  // la progressBar attaché à l'action
-   protected Properties prop=null;
+   protected MyProperties prop=null;
    
    
    protected boolean ignoreStamp;
@@ -846,7 +850,7 @@ public class Context {
          String propFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
 
          // Chargement des propriétés existantes
-         prop = new Properties();
+         prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
@@ -892,7 +896,7 @@ public class Context {
       waitingPropertieFile();
       try {
          String propFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
-         prop = new Properties();
+         prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
             if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");

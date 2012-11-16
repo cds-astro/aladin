@@ -64,7 +64,8 @@ public final class Words implements Runnable {
 
    // Type de mots
    boolean glu;		    // Marque GLU
-   boolean repere;	    // Triangle (repere)
+   boolean repere;	    // checkbox
+   boolean pin;         // Epinglette
    boolean archive;	    // Bouton (acces a une archive FITS)
    boolean samp;        // Bouton (utilisera SAMP)
    boolean footprint;   // Footprint associé

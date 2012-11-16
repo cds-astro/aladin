@@ -339,7 +339,7 @@ public class ServerVizieRMission extends Server  {
         return -1;
       }
       
-      return aladin.calque.newPlanMOC( in, "MOC "+cat);
+      return aladin.calque.newPlanMOC( in, cat+" MOC");
    }
 
 
@@ -495,15 +495,11 @@ public class ServerVizieRMission extends Server  {
              // Chargement du MOC
              else if( action.equals(CATMOC) ) {
                 URL u = aladin.glu.getURL(MOCGLU,cata+" 512");
-                aladin.execAsyncCommand("'MOC "+cata+"'=get File("+u+")");
+                aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
              }
              
              // Chargement de la carte de densité
              else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
-//             {
-//                URL u = aladin.glu.getURL(DMAPGLU,cata+" 256");
-//                aladin.execAsyncCommand("'DMap "+cata+"'=get File("+u+")");
-//             }
              defaultCursor();
              return;
           }

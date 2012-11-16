@@ -341,7 +341,7 @@ public class PlanHealpix extends PlanBG {
     // the properties file will be used to check the file modification date
     // and to store other parameters
     private boolean writePropertiesFile(String dir) {
-        Properties prop = new Properties();
+        MyProperties prop = new MyProperties();
         prop.setProperty(KEY_ORIGINAL_PATH, originalPath);
         if (isLocal) {
             try {
@@ -449,7 +449,7 @@ public class PlanHealpix extends PlanBG {
        double start = System.currentTimeMillis();
        MyInputStream isTmp = isTmp = new MyInputStream(new FileInputStream(pixelPath));
 
-       headerFits = new FrameHeaderFits(isTmp);
+       headerFits = new FrameHeaderFits(this,isTmp);
 
         int naxis = headerFits.getIntFromHeader("NAXIS");
         // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
@@ -468,7 +468,7 @@ public class PlanHealpix extends PlanBG {
 //              isTmp.skip(offset);
 //           }
            
-           headerFits = new FrameHeaderFits(isTmp);
+           headerFits = new FrameHeaderFits(this,isTmp);
         }
 
         int nside=0;
@@ -726,7 +726,7 @@ public class PlanHealpix extends PlanBG {
 
 
         File propFile = propertiesFile(dir);
-        java.util.Properties prop = new java.util.Properties();
+        MyProperties prop = new MyProperties();
         try {
             prop.load(new FileInputStream(propFile));
         } catch (Exception e) {

@@ -575,6 +575,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       	// Info d'image
       	if( plan.isImage() && plan.flagOk && plan.projd!=null ) {
+      	   String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
+           PropPanel.addCouple(p, "Pixel angular res.", new JLabel(s), g, c);
+
            double ep = plan.projd.c.GetEpoch();
            if( !Double.isNaN(ep) ) {
               PropPanel.addCouple(p,EPOCH, new JLabel(Astrodate.JDToDate(Astrodate.YdToJD(ep))+" ("+ep+")"), g,c);
@@ -789,31 +792,61 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan.type==Plan.ALLSKYMOC ) {
          final PlanMoc pmoc = (PlanMoc)plan;
-
+         final Frame frameProp = this;
          double cov = pmoc.getMoc().getCoverage();
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
-         PropPanel.addCouple(p,"Coverage",new JLabel(Util.round(cov*100, 1)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
-         PropPanel.addCouple(p,"Best MOC ang.res",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
+         final long mocSize = pmoc.getMoc().getSize();
+         PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
+         PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
-         PropPanel.addCouple(p,"Size",new JLabel("about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
+         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
-         boolean wireFrame = pmoc.getWireFrame();
-         ButtonGroup bg = new ButtonGroup();
-         final JCheckBox b1 = new JCheckBox("wire frame");
-         b1.setSelected(wireFrame);
+         final JRadioButton b1 = new JRadioButton("borders");
+         b1.setSelected( pmoc.isDrawingBorder() );
          b1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setWireFrame(b1.isSelected()); aladin.calque.repaintAll(); }
+            public void actionPerformed(ActionEvent e) { pmoc.setDrawingBorder(b1.isSelected()); aladin.calque.repaintAll(); }
          });
-         JCheckBox b2 = new JCheckBox("solid frame");
-         b2.setSelected(!wireFrame);
-         b2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setWireFrame(b1.isSelected()); aladin.calque.repaintAll(); }
+         final JRadioButton b2a = new JRadioButton("fill in");
+         b2a.setSelected( pmoc.isDrawingFillIn() );
+         b2a.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { pmoc.setDrawingFillIn(b2a.isSelected()); aladin.calque.repaintAll(); }
          });
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-         bg.add(b1); bg.add(b2);
-         p1.add(b1); p1.add(b2);
-         PropPanel.addCouple(p,"Drawing method",p1,g,c);
+         final JCheckBox b2 = new JCheckBox("diagonals");
+         b2.setSelected( pmoc.isDrawingDiagonal() );
+         b2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
+         });
+         p1.add(b1); p1.add(b2a); p1.add(b2);
+         PropPanel.addCouple(p,"Drawing method: ",p1,g,c);
+         
+         boolean twoResMode = pmoc.getTwoResMode();
+         ButtonGroup bg = new ButtonGroup();
+         final JCheckBox b3 = new JCheckBox("on");
+         b3.setSelected(twoResMode);
+         b3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
+         });
+         JCheckBox b4 = new JCheckBox("off");
+         b4.setSelected(!twoResMode);
+         b4.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               if( mocSize>20000L ) {
+                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
+                     b3.setSelected(true);
+                     return;
+                  }
+               }
+               pmoc.setTwoResMode(b3.isSelected());
+               aladin.calque.repaintAll();
+            }
+         });
+         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+         bg.add(b3); bg.add(b4);
+         p1.add(b3); p1.add(b4);
+         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
+
       }
       
 //      // Accès au MOC des catalogues VizieR
@@ -837,7 +870,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
             JPanel p1 = new JPanel();
             if( pbg.hasMoc() ) {
-               JButton bt = new JButton("MOC");
+               JButton bt = new JButton(aladin.MOC);
                bt.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) { pbg.loadMoc(); }
                });

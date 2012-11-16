@@ -316,7 +316,9 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() {
-      return type==CATALOG || type==TOOL && ((PlanTool)this).legPhot!=null || type==ALLSKYCAT;
+      return type==CATALOG || type==TOOL && 
+            (((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null)
+            || type==ALLSKYCAT;
    }
 
    /** Il s'agit d'un plan de type Tools */
@@ -326,7 +328,8 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan catalogue non progressif */
    protected boolean isSimpleCatalog() {
-      return type==CATALOG || type==TOOL && ((PlanTool)this).legPhot!=null;
+      return type==CATALOG || type==TOOL && 
+            ( ((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null);
    }
 
    /** Retourne true si le plan catalogue peut effacer les sources individuellement */
@@ -1307,11 +1310,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    /** Positionne le niveau d'opacité [0..1] (0: entièrement transparent, 1: entièrement opaque) */
    public void setOpacityLevel(float opacityLevel) {
       if( opacityLevel<0 ) opacityLevel=0;
-//      if( opacityLevel<=0.15 ) opacityLevel=0.15f;
       if( opacityLevel>1 ) opacityLevel=1;
-
       this.opacityLevel = opacityLevel;
-//      setActivated(true);
    }
 
    // TODO : à terme, on pourra se débarasser de cette méthode
@@ -1531,7 +1531,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
            aladin.calque.repaintAll();
        } else if( prop.startsWith("FITS:") ) {
           prop = prop.substring(5);
-          if( headerFits==null ) headerFits=new FrameHeaderFits(prop+"="+value);
+          if( headerFits==null ) headerFits=new FrameHeaderFits(this,prop+"="+value);
           else {
              if( value.length()==0 ) value=null;
              headerFits.setToHeader(prop,value);
@@ -1583,14 +1583,14 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    	  // Vérification que l'activation est possible en fonction des vues visibles
    	  if( askActive && !isViewable() ) flag=false;
 
-
    	  // Inutile, déjà fait
    	  if( active==flag ) return active;
 
    	  // Activation/Desactivation effective
    	  active=flag;
 //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
-      aladin.view.deSelect(this);
+      if( !active ) aladin.view.deSelect(this);
+      else aladin.view.addTaggedSource(this);
       return active;
    }
 

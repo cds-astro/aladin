@@ -90,40 +90,39 @@ public final class Command implements Runnable {
 
    static final String execHelp =
       "\n" +
-      "#PLANE:#                          #VIEW:#\n" +
-      "   @get servers [target] [radius]  @mview [1|2|4|9|16] [n]\n" +
-      "   @load filename                  @cview [-plot] [[x] v]\n" +
-      "   @select x1 [x2..]               @select v1 [v2..]\n" +
-      "   @set [x1] [x2..] prop=value     @zoom ...\n" +
-      "   @hide|@show [x1] [x2..]          @northup|@unnorthup [v1] [v2..]\n" +
-      "   @mv|@copy x1 x2                  @lock|@unlock [v1] [v2..]\n" +
-      "   @rm [x1] [x2..] | -all          @stick|@unstick [v1] [v2..]\n" +
-      "   @export [-fmt] x filename       @mv|@copy v1 v2\n" +
-      "                                  @rm [v1] [v2..] | -lock\n" +
-      "#IMAGE:#                            @save [-fmt] [-lk] [WxH] [filename]\n" +
-      "   @cm [x1|v1...] [colorMap...]    @coord|@object\n" +
+      "#PLANE:#                              #VIEW:#\n" +
+      "   @get servers [target] [radius]      @mview [1|2|4|9|16] [n]\n" +
+      "   @load filename                      @cview [-plot] [[x] v]\n" +
+      "   @select x1 [x2..]                   @select v1 [v2..]\n" +
+      "   @set [x1] [x2..] prop=value         @zoom ...\n" +
+      "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
+      "   @mv|@copy x1 x2                      @lock|@unlock [v1] [v2..]\n" +
+      "   @rm [x1] [x2..] | -all              @stick|@unstick [v1] [v2..]\n" +
+      "   @export [-fmt] x filename           @mv|@copy v1 v2\n" +
+      "                                      @rm [v1] [v2..] | -lock\n" +
+      "#IMAGE:#                                @save [-fmt] [-lk] [WxH] [filename]\n" +
+      "   @cm [x1|v1...] [colorMap...]        @coord|@object\n" +
       "   @RGB|@RGBdiff [x1|v1...]\n" +
-      "   @blink|@mosaic [x1] [x2...]      #CATALOG:#\n" +
-      "   @+ | @- | @* | @/ ...              @filter ...\n" +
-      "   @norm [-cut] [x]                @addcol ...\n" +
-      "   @conv [x] ...                   @xmatch x1 x2 [dist] ...\n" +
-      "   @kernel ...                     @cplane [name]\n" +
-      "   @resamp x1 x2 ...               @thumbnail [npix|radius\"]\n" +
-      "   @crop [x|v] [[X,Y] WxH]         @search {expr|+|-}\n" +
-      "   @flipflop [x|v] [V|H]           @tag|@untag\n\n" +
-      "   @contour [nn] [nosmooth] [zoom] @select -tag\n" +
-      "   @grey\n" +
-      "   @bitpix [-cut] [x] BITPIX\n" +
+      "   @blink|@mosaic [x1] [x2...]          #CATALOG:#\n" +
+      "   @+ | @- | @* | @/ ...                  @filter ...\n" +
+      "   @norm [-cut] [x]                    @addcol ...\n" +
+      "   @conv [x] ...                       @xmatch x1 x2 [dist] ...\n" +
+      "   @kernel ...                         @cplane [name]\n" +
+      "   @resamp x1 x2 ...                   @thumbnail [npix|radius\"]\n" +
+      "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
+      "   @flipflop [x|v] [V|H]               @tag|@untag\n\n" +
+      "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
+      "   @grey|@bitpix [-cut] [x] BITPIX\n" +
       "  \n" +
-      "#GRAPHIC# #TOOL:#                   #FOLDER:#\n" +
-      "   @draw [color] fct(param)        @md [-localscope] [name]\n" +
-      "   @grid [on|off]                  @mv|@rm [name]\n" +
-      "   @reticle [on|off]               @collapse|@expand [name]\n" +
-      "   @overlay [on|off]               @show|@hide [name]\n" +
+      "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
+      "   @draw [color] fct(param)            @md [-localscope] [name]\n" +
+      "   @grid [on|off]                      @mv|@rm [name]\n" +
+      "   @reticle [on|off]                   @collapse|@expand [name]\n" +
+      "   @overlay [on|off]                   @show|@hide [name]\n" +
       " \n" +
       "#MISCELLANEOUS:#\n" +
-      "   @backup filename     @status       @sync       @demo [on|off|end]\n" +
-      "   @pause [nn]          @trace        @mem        @info msg\n" +
+      "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
+      "   @skygen...           @trace        @mem        @info msg\n" +
       "   @macro script param  @call fct     @list [fct] @reset\n" +
       "   @setconf prop=value  @function ... @quit       @help ...       " +
       "";
@@ -138,13 +137,13 @@ public final class Command implements Runnable {
    // Liste des commandes scripts documentés
    static final String CMD[] = {
       "addcol","backup","bitpix","blink","call","cm","collapse","conv","contour","coord","copy",
-      "cplane","cview","crop","demo","draw","expand","export","filter","function",
+      "cplane","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
-      "macro","md","mem",
+      "macro","md","mem","northup",
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
-      "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show",
+      "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show","skygen",
       "status","stick","sync","tag","thumbnail","trace","unlock","unstick",
-      "untag","xmatch","zoom","+","-","*","/",
+      "untag","xmatch","moreonxmatch","zoom","+","-","*","/",
    };
    
    // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
@@ -1460,6 +1459,43 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       for( int i=0; i<a.length; i++ ) if( a[i]!='@' ) s.append(a[i]);
       return s.toString();
    }
+   
+   private static final String OTHERS = "+-*/";
+   private boolean isLetter(char c) {
+      return Character.isLetterOrDigit(c) || OTHERS.indexOf(c)>=0;
+   }
+   
+   /** Transforme les marques des liens en équivalent HTML */
+   protected String translateLinks(String help) {
+      StringBuffer s = new StringBuffer();
+      StringTokenizer tok = new StringTokenizer(help," |\t\n\r\f", true);
+      while( tok.hasMoreTokens() ) {
+         String w = tok.nextToken();
+         if( w.startsWith("@") ) {
+            int offset=1;
+            while( offset<w.length() && isLetter( w.charAt(offset) )) offset++;
+            String w1 = w.substring(1,offset);
+            String w2 = w.substring(offset,w.length());
+            s.append("<A HREF=\"#"+w1+"\">"+w1+"</A>"+w2);
+         } else if( w.startsWith("_") && w.endsWith("_")) {
+            String w1 = w.substring(1,w.length()-1);
+            s.append("<B><FONT SIZE=\"+2\" COLOR=\"darkgreen\">"+w1+"</FONT></B>");
+          
+         } else if( w.startsWith("#") && w.endsWith("#")) {
+            String w1 = w.substring(1,w.length()-1);
+            s.append("<B>"+w1+"</B>");
+          
+         } else if( w.startsWith("\\") ) {
+            String w1 = w.substring(1,w.length());
+            s.append(w1);
+          
+         } else s.append(w);
+
+      }
+      return s.toString();
+   }
+
+   
 
    /** Execution de la commande createROI */
    protected void execROICmd(String param) {
@@ -1629,6 +1665,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       
       if( param.equals("off")) { a.cardView.show(a.bigView,"View"); a.inScriptHelp=false; }
       else if( param.equals("all")) execAllHelp();
+      else if( param.equals("allhtml")) execHTMLHelp();
       else {
          String s=getHelpString(param);
          if( s.length() == 0 ) return;
@@ -1649,6 +1686,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          println(removeLinks(getHelpString(CMD[i])));
       }
    }
+   
+   /** Affiche le Help des commandes à la queue leuleu en HTML */
+   private void execHTMLHelp() {
+      println("<PRE>\n"+translateLinks(execHelp())+"</PRE>\n");
+      for( int i=0; i<CMD.length; i++ ) {
+         println("<P><HR><A NAME=\""+CMD[i]+"\"></A>");
+         println(translateLinks(getHelpStringHTML(CMD[i])));
+      }
+   }
+
 
    /** Mise en forme d'un texte de help avec éventuellement
     * récupération au préalable du paragraphe du help associé à une commande
@@ -1703,7 +1750,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             String mot=null;
             while( mot!=null || st2.hasMoreTokens() ) {
                if( mot==null ) mot = st2.nextToken();
-               if( line.length() + mot.length() >70 ) {
+               if( line.length() + mot.length() >78 ) {
                   res.append(line+"\n");
                   line = new StringBuffer(indent.toString());
                }
@@ -1714,7 +1761,80 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       return res.toString();
    }
+  
+   /** Mise en forme HTML d'un texte de help avec éventuellement
+    * récupération au préalable du paragraphe du help associé à une commande
+    * @param p chaine du help (commence par #) ou nom de commande
+    * @return le paragraphe du help mis en forme
+    */
+   private String getHelpStringHTML(String p) {
+      String s;
+
+      // Il s'agit déjà du texte de help et non pas d'une commande
+      if( p.charAt(0)=='#' ) s=p;
+
+      // Recherche du Help via le fichier Aladin.String
+      else {
+         String s1 = "Help."+Util.toLower(p);
+         s = a.chaine.getString(s1);
+         if( s.length()==0 || s.equals("["+s1+"]") ) {
+            printConsole("!!! help error: command \""+p+"\" unknown !");
+            return "";
+         }
+      }
+
+      // Découpage par section. La syntaxe est la suivante :
+      // #s:synopsys#d:texte\ntexte#e:exemple1#e:exemple2
+      // # séparateur de champ
+      // s:synopys, n:description 1 ligne, d:description, e:exemple,
+      // t:note, g:see also
+      // Le champ peut contenir des \n, l'indentation et le repli des lignes
+      // trop longue sera automatique
+      StringTokenizer st = new StringTokenizer(s,"#");
+      String indent = "   ";
+      StringBuffer res = new StringBuffer();
+      char oc=' ';
+      while( st.hasMoreTokens() ) {
+         s=st.nextToken();
+         if( s.length()<2 ) continue;
+         char c = s.charAt(0);
+         s = s.substring(2);
+
+         // Détermination d'un éventuel titre de section
+         if( c!=oc ) {
+            res.append("<P>\n"+(c=='n'?"":
+                                c=='s'?"<P><I><B>Synopsis</B></I>:<BR>":
+                                c=='d'?"<P><I><B>Description</B></I><BR>":
+                                c=='e'?"<P><I><B>Example</B></I>:<BR>":
+                                c=='t'?"<P><I><B>Note</B></I> - ":
+                                c=='g'?"<P><I><B>See also</B></I>: "
+                                      :"")+"\n");
+         } else res.append("<BR>\n");
+         oc=c;
+         
+         res.append(s);
+
+//         // Découpage du texte par ligne avec éventuellement repli des lignes
+//         StringTokenizer st1 = new StringTokenizer(s,"\n");
+//         while( st1.hasMoreTokens() ) {
+//            StringBuffer line = new StringBuffer(indent.toString());
+//            StringTokenizer st2= new StringTokenizer(st1.nextToken()," ",true);
+//            String mot=null;
+//            while( mot!=null || st2.hasMoreTokens() ) {
+//               if( mot==null ) mot = st2.nextToken();
+//               if( line.length() + mot.length() >70 ) {
+//                  res.append(line+"\n");
+//                  line = new StringBuffer(indent.toString());
+//               }
+//               line.append(mot); mot=null;
+//            }
+//            if( line.length()>indent.length() ) res.append(line+"\n");
+//         }
+      }
+      return res.toString();
+   }
    
+ 
    /** Interprétation d'une position healpix donnée par norder/npix */
    protected boolean execHpxCmd(String param) {
       try { 

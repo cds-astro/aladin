@@ -337,14 +337,15 @@ public class BuilderTiles extends Builder {
 
       int nbProc = Runtime.getRuntime().availableProcessors();
 
-      // On utilisera 2/3 de la mémoire pour les threads et le reste pour le cacheFits
+      // On utilisera pratiquement toute la mémoire pour le cache
       long size = getMem();
-      long sizeCache= size>400*1024*1024L ? -200*1024*1024L : -50*1024*1024;   // On laissera 200Mo de libre 
+      long sizeCache= size<=50*1024*1024 ? 0 : size>400*1024*1024L ? -200*1024*1024L : -50*1024*1024;   // On laissera 200Mo de libre 
 //      sizeCache=150*1024*1024L;
       context.setCache(new CacheFits(sizeCache));
 
       long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
       context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
+      context.info("Processing original image files in blocs of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
       int nbThread = (int) (size / maxMemPerThread);
       
 //      int nbThread=nbProc;

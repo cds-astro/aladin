@@ -746,6 +746,44 @@ public final class Save extends JFrame implements ActionListener {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
    static int [] b642a=null;
+   
+//   public static int get64(byte [] b, int k,
+//         char [] a, int start, int length) {
+//      byte [] res = decode(new String(a,start,length));
+//      System.arraycopy(res, 0, b, k, res.length);
+//      return k+res.length;
+//   }
+//   
+//   private final static char[] ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+//
+//   private static int[]  toInt   = new int[128];
+//
+//   static {
+//       for(int i=0; i< ALPHABET.length; i++) toInt[ALPHABET[i]]= i;
+//   }
+//   
+//   public static byte[] decode(String s){
+//      int delta = s.endsWith( "==" ) ? 2 : s.endsWith( "=" ) ? 1 : 0;
+//      byte[] buffer = new byte[s.length()*3/4 - delta];
+//      int mask = 0xFF;
+//      int index = 0;
+//      for(int i=0; i< s.length(); i+=4){
+//          int c0 = toInt[s.charAt( i )];
+//          int c1 = toInt[s.charAt( i + 1)];
+//          buffer[index++]= (byte)(((c0 << 2) | (c1 >> 4)) & mask);
+//          if(index >= buffer.length){
+//              return buffer;
+//          }
+//          int c2 = toInt[s.charAt( i + 2)];
+//          buffer[index++]= (byte)(((c1 << 4) | (c2 >> 2)) & mask);
+//          if(index >= buffer.length){
+//              return buffer;
+//          }
+//          int c3 = toInt[s.charAt( i + 3 )];
+//          buffer[index++]= (byte)(((c2 << 6) | c3) & mask);
+//      }
+//      return buffer;
+//  } 
 
   /** Decodage d'une image en base 64. - Merci Fox pour le code
    *  Le traitement peut etre en fait en plusieurs fois.
@@ -803,7 +841,7 @@ public final class Save extends JFrame implements ActionListener {
          if( (i&0x40)!=0 ) {
             System.err.println("****Bad input char "+((char)c)+
                   " line "+lineno+", col "+colno);
-            c3 >>= 4;
+            c3 >>>= 4;
 
          if( k>=size ) return k;
          b[k++]=(byte)c3;
@@ -818,9 +856,9 @@ public final class Save extends JFrame implements ActionListener {
          if( (i&0x40)!=0 ) {		/* 2 characters to issue */
             if( i!=0xff ) System.err.println("****Bad input char "+((char)c)+
                   " line "+lineno+", col "+colno);
-            c3 >>= 2;
+            c3 >>>= 2;
          if( k>=size ) return k;
-         b[k++]=(byte)(c3>>8);
+         b[k++]=(byte)(c3>>>8);
          if( k>=size ) return k;
          b[k++]=(byte)c3;
          continue ;
@@ -835,9 +873,9 @@ public final class Save extends JFrame implements ActionListener {
                " line "+lineno+", col "+colno);
          else c3 |= i;
          if( k>=size ) return k;
-         b[k++]=(byte)(c3>>16);
+         b[k++]=(byte)(c3>>>16);
          if( k>=size ) return k;
-         b[k++]=(byte)(c3>>8);
+         b[k++]=(byte)(c3>>>8);
          if( k>=size ) return k;
          b[k++]=(byte)c3;
       }

@@ -904,7 +904,7 @@ public final class Calque extends JPanel implements Runnable {
       Plan folder = getMyScopeFolder(v.pref);
 
       for( i=0; i<plan.length; i++ ) {
-         if( !plan[i].active || !plan[i].hasObj() /* plan[i].pcat==null*/  ) continue;
+         if( !plan[i].active || !plan[i].hasObj()  ) continue;
          if( plan[i].type==Plan.APERTURE ) continue;
 
          // Pas le même scope
@@ -1620,6 +1620,23 @@ public final class Calque extends JPanel implements Runnable {
       });
    }
    
+   /** Met à jour le plan "Tag" en fonction des paramètres de iqe */
+   protected void updateTagPlane(Tag tag) {
+      
+      final PlanTool p = selectPlanTool();
+      final Source s = p.addTag( (PlanImage)aladin.view.getMouseView().pref, tag.raj, tag.dej);
+      
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            Util.pause(100);
+            s.setSelected(true);
+            p.updateDedicatedFilter();
+            repaintAll();
+         }
+      });
+   }
+   
+
    Plan planRotCenter=null; // mémorise le PlanField donc on déplace uniquement le centre de rotation
 
   /** Recalcul les plans FoV en fonction de leur centre en x,y,al,del
@@ -1745,23 +1762,46 @@ public final class Calque extends JPanel implements Runnable {
       return 1;
    }
    
-   /** Crée un plan MOC en fonction d'un ou deux plans MOCs et d'un opérateur */
-   protected int newPlanMoc(String label,PlanMoc p1, PlanMoc p2,int fct) {
+   /** Crée un plan MOC en faisant un crop */
+   protected int newPlanMoc(String label,PlanMoc source,Coord [] coo) {
       int n;
       PlanMoc pa;
 
-      if( label==null ) label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
+      if( label==null && source!=null ) {
+         PlanMoc p1 = source;
+         label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
+      }
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMoc(aladin,label,p1,p2,fct);
+      plan[n] = pa = new PlanMocAlgo(aladin,label,source,coo);
+      if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
+      suiteNew(pa);
+      return n;
+   }
+
+
+   
+   /** Crée un plan MOC en fonction d'un ou plusieurs plans MOCs et d'un opérateur */
+   protected int newPlanMoc(String label,PlanMoc [] pList,int fct) {
+      int n;
+      PlanMoc pa;
+
+      if( label==null ) {
+         PlanMoc p1 = pList[0];
+         label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
+      }
+
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pa = new PlanMocAlgo(aladin,label,pList,fct);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
    }
 
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
-   protected int newPlanMoc(String label,Plan [] p,int res) {
+   protected int newPlanMoc(String label,Plan [] p,int res,double radius, double pixMin, double pixMax) {
       int n;
       PlanMoc pa;
 
@@ -1769,7 +1809,7 @@ public final class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMoc(aladin,label,p,res);
+      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -2822,7 +2862,7 @@ public final class Calque extends JPanel implements Runnable {
       pi.from = "Extract from "+cube.label+" (frame #"+(frame+1)+")";
 //      pi.setBufPixels8( cube.getFrame(n) );
    }
-
+   
    /** Création d'un plan image à partir des pixels visibles dans la vue passée en paramètre */
    protected void newPlanImageByCrop(final ViewSimple v,final RectangleD rcrop,final double resMult,final boolean fullRes) {
       final double zoom = v.zoom;
@@ -3077,7 +3117,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return v;
    }
-
+   
    /** Découpage d'un catalogue : une table par plan */
    protected void splitCatalog(PlanCatalog p) {
       if( p.getNbTable()==1 ) return;
@@ -3088,7 +3128,7 @@ public final class Calque extends JPanel implements Runnable {
          int n = getIndex(p);
          for( int i=0; i<n-m; i++) plan[i]=plan[i+m];
          for( int i=0; i<=m; i++ ) {
-            Plan p1 = (Plan)v.elementAt(i);;
+            Plan p1 = (Plan)v.elementAt(i);
             plan[n-m+i]= p1;
             p1.setActivated(true);
             if( i>1 ) p1.c = Couleur.getNextDefault(this);
@@ -3547,7 +3587,7 @@ public final class Calque extends JPanel implements Runnable {
      */
     protected boolean canBeTransparent(Plan p) {
        boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
-       if( p==null || !isFree() && /* p.ref */ isRefForVisibleView ) {
+       if( p==null || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
           if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
           return false;
        }

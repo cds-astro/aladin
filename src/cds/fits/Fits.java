@@ -333,7 +333,6 @@ final public class Fits {
    /** Chargement d'une image FITS depuis un fichier */
    public void loadFITS(String filename,int x, int y, int w, int h) throws Exception { loadFITS(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
    public void loadFITS(String filename) throws Exception {loadFITS(filename,false,true);}
-   public void loadFITS(String filename, boolean color) throws Exception { loadFITS(filename,color,true); }
    public void loadFITS(String filename, boolean color,boolean flagLoad) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
@@ -442,7 +441,6 @@ final public class Fits {
 	   try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
 	   try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
 	   try { setCalib(new Calib(headerFits)); }                   catch( Exception e ) { calib=null; }
-//	   pix8 = new byte[widthCell*heightCell];
 	   if( bitpix==8 ) initPix8();
    }
    
@@ -895,51 +893,6 @@ final public class Fits {
 //      setPixValInt(pix8,8, y*width+x, val);
    }
    
-   
-   
-//   /**
-//    * Convertit la valeur double donnée dans le type du bitpix et l'affecte
-//    * 8 : 0 255
-//    * 16 : 0 32767
-//    * 32 : 0 32767
-//    * -32 : 0 10000
-//    * -64 : 0 10000
-//    * @param x
-//    * @param y
-//    * @param val
-//    */
-//   public void setPixelDoubleFromBitpix(int x, int y, double val, int oldbitpix, double[] oldminmax) {
-//
-//	   if (oldbitpix == bitpix || isBlankPixel(val) ) {
-//		   setPixelDouble(x,y,val);
-//		   return;
-//	   }
-//	   
-//	   double newval = toBitpixRange(val, bitpix, oldminmax);
-//	   setPixelDouble(x,y,newval);
-//
-//   }
-//
-//   public static double toBitpixRange(double val, int bitpix, double[] oldminmax) {
-//	   double[] minmax = new double[2];
-//	   minmax = getBitpixRange(bitpix);
-//
-//	   double r = (minmax[1]-minmax[0])/(oldminmax[1]-oldminmax[0]);
-//	   double newval = (val-oldminmax[0])*r + minmax[0];
-//	   return newval;
-//   }
-//
-//   static private double[] getBitpixRange(int bitpix) {
-//      switch (bitpix) {
-//         case 8 :	return minmax8;
-//         case 16 : return minmax16;
-//         case 32 : return minmax32;
-//         case -32 : return minmax_32;
-//         case -64 : return minmax_64;
-//         default : return null;
-//      }
-//   }
-
    /** Retourne les coordonnées célestes en J2000 de (x,y) (y compté à partir du bas)
     * Le buffer "c" peut être fourni pour éviter des allocations inutiles, null sinon */
    protected double [] getRaDec(double [] c, double x, double y) throws Exception {
@@ -965,63 +918,7 @@ final public class Fits {
       return c;
    }
 
-//   /** Effectue un autocut logarithmique des pixels "fullbits" et une conversion en 8bits dans
-//    * le tableau pix8 []. Utilise la méthode "à la Aladin" pour déterminer
-//    * le meilleur intervalle.
-//    */
-//   public void autocutLog() throws Exception {
-//      double [] range = findAutocutRange();
-//      toPix8Log(range[0],range[1]);
-//   }
-   
-//   public void cut() throws Exception {
-//	   double[] range = {Double.MIN_VALUE,Double.MAX_VALUE};
-//	   switch (bitpix) {
-//	   case 8:
-//		   range[0] = 0;
-//		   range[1] = 255;
-//	   case 16:
-//		   range[0] = 0;
-//		   range[1] = Short.MAX_VALUE;
-//	   case 32:
-//		   range[0] = 0;
-//		   range[1] = Integer.MAX_VALUE;
-//	   case -32:
-//		   range[0] = Float.MIN_VALUE;
-//		   range[1] = Float.MAX_VALUE;
-//	   case -64:
-//		   range[0] = Double.MIN_VALUE;
-//		   range[1] = Double.MAX_VALUE;
-//
-//	   }
-//	   toPix8(range[0],range[1]);
-//   }
-   
-   /** Effectue un autocut linéaire des pixels "fullbits" et une conversion en 8bits dans
-    * le tableau pix8 []. Utilise la méthode "à la Aladin" pour déterminer
-    * le meilleur intervalle.
-    */
-//   public void autocut8() throws Exception {
-//      double [] range = findAutocutRange();
-//      toPix8(range[0],range[1]);
-//   }
 
-   /** Calcule un autocut linéaire des pixels "fullbits"
-    * Utilise la méthode "à la Aladin" pour déterminer
-    * le meilleur intervalle.
-    */
-//   public static double[] autocut(String filename) throws Exception {
-//	   Fits f = new Fits();
-//	   f.loadFITS(filename);
-//      return f.findAutocutRange();
-//   }
-
-
-   /** Remplit le tableau des pixels 8 bits (pix8)  */
-//   public void toPix8() {
-//	   double[] minmax = findMinMax();
-//	   toPix8(minmax[0], minmax[1]);
-//   }
 
 
    /** Remplit le tableau des pixels 8 bits (pix8) en fonction de l'intervalle
@@ -1171,7 +1068,7 @@ final public class Fits {
    private boolean bitmapReleaseDone=false;
    private int users=0;
    
-   public boolean canBeReleased() { return users<=0; }
+   public boolean hasUsers() { return users>0; }
    synchronized public void addUser() { users++; }
    synchronized public void rmUser() { users--; }
    
@@ -1189,7 +1086,7 @@ final public class Fits {
     */
    public void releaseBitmap() throws Exception {
       if( bitpix==0 ) return;  // De fait du JPEG
-      if( !canBeReleased() ) return; // Pas possible, qq s'en sert
+      if( hasUsers() ) return; // Pas possible, qq s'en sert
       testBitmapReleaseFeature();
       bitmapReleaseDone=true;
       pixels=null;

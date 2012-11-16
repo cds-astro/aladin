@@ -1761,6 +1761,24 @@ public class ViewSimple extends JComponent
       }
       if( rainbowUsed ) return;
 
+      // Gestion de l'outil de cropping
+      if( tool==ToolBox.CROP ) {
+         if( view.crop==null ) view.crop = new CropTool(aladin, vs, aladin.calque.getFirstSelectedPlan(),
+                                                 x, y, pref instanceof PlanBG && pref.hasAvailablePixels());
+         else {
+            if( view.crop.submit(vs,x,y) ) {
+               view.crop=null;
+               aladin.toolBox.setMode(ToolBox.CROP, Tool.UP);
+            }
+            else {
+               view.crop.reset();
+               view.crop.startDrag(vs,x,y);
+            }
+         }
+         repaint(); 
+         return; 
+      }
+      
       if( tool==ToolBox.SELECT  || tool==-1  || tool==ToolBox.PAN  || tool==ToolBox.CROP ) {
 
          if( !isProjSync ) {
@@ -1793,24 +1811,7 @@ public class ViewSimple extends JComponent
          Obj c = aladin.view.zoomview.getCut();
          if( c!=null && !c.cutOn() ) aladin.view.zoomview.suspendCut();
       }
-      
-      // Gestion de l'outil de cropping
-      if( tool==ToolBox.CROP ) {
-         if( view.crop==null ) view.crop = new CropTool(aladin, vs, x, y, pref instanceof PlanBG && pref.hasAvailablePixels());
-         else {
-            if( view.crop.submit(vs,x,y) ) {
-               view.crop=null;
-               aladin.toolBox.setMode(ToolBox.CROP, Tool.UP);
-            }
-            else {
-               view.crop.reset();
-               view.crop.startDrag(vs,x,y);
-            }
-         }
-         repaint(); 
-         return; 
-      }
-      
+            
       // Si on est sur le blinkControl..
       int r;
       if( isPlanBlink()
@@ -1939,6 +1940,11 @@ public class ViewSimple extends JComponent
 
          Vector<Obj> v = calque.getObjWith(vs,p.x,p.y);
          
+         // Pour indiquer à un éventuel drag qui suivrait qu'il faut déplacer les objets
+         // et non étirer un rectangle de sélection
+         flagMoveNotSelect = view.hasMovableObj(v);
+         for( Obj o : v ) System.out.println("Select: "+o);
+         
          // Synchronisation des vues sur l'objet - PREVU POUR LES VIEWS PLOT, MAIS NE MARCHE PAS
          if( e.getClickCount()==2 && v.size()==1 && v.elementAt(0) instanceof Source ) {
             view.setRepere((Source)view.vselobj.elementAt(0));
@@ -1969,8 +1975,10 @@ public class ViewSimple extends JComponent
                      o.setSelect(true);
                   }
                } else {
-                  o.setSelect(false);
-                  aladin.view.vselobj.removeElement(o);
+                  if( !((Source)o).isTagged() ) {
+                     o.setSelect(false);
+                     aladin.view.vselobj.removeElement(o);
+                  }
                }
             }
 
@@ -1989,19 +1997,26 @@ public class ViewSimple extends JComponent
 
             // Si le premier element a deja ete selectionne precedemment
             // on suppose qu'il s'agit d'un clic-and-drag
-            if( v.size()>0 && ((Position)v.elementAt(0)).isSelected() ) {
+//            if( v.size()>0 && ((Position)v.elementAt(0)).isSelected() ) {
+            if( v.size()>0 && aladin.view.vselobj.contains(v.elementAt(0))  ) {
+               flagMoveNotSelect=true;
                rselect=null;
                try {
                   Source o = (Source) v.elementAt(0);
                   repereshow=aladin.mesure.mcanvas.show(o,2);
                } catch( Exception ec ) {}
-
                return;
             }
 
+            Vector vTag = new Vector();
             en = aladin.view.vselobj.elements();
             while( en.hasMoreElements() ) {
-               ((Position)en.nextElement()).setSelect(false);
+               Obj o = (Obj)en.nextElement();
+               if( !(o instanceof Source) ) o.setSelect(false);
+               else {
+                  if( ((Source)o).isTagged() ) vTag.add(o);
+                  else o.setSelect(false);
+               }
             }
             en = v.elements();
             while( en.hasMoreElements() ) {
@@ -2012,23 +2027,26 @@ public class ViewSimple extends JComponent
                pos.setSelect(true);
             }
 
-            aladin.view.vselobj = v;
+            aladin.view.vselobj = vTag;
+            aladin.view.vselobj.addAll(v);
          }
 
          // Mise a jour des mesures
          aladin.view.setMesure();
 
-         if( aladin.view.hasSelectedObj() ) {
+         
+//         if( aladin.view.hasSelectedObj() ) {
+         if( flagMoveNotSelect ) {
 
             // Positionnement du repere et mise a jour de la
             // fenetre des infos
             try {
                Source o = (Source) v.elementAt(0);
                repereshow=aladin.mesure.mcanvas.show(o,2);
-            } catch( Exception ec ) {}
+            } catch( Exception ec ) { }
 
          } else rselect = new Rectangle((int)Math.round(x),(int)Math.round(y),1,1);
-
+         
          return;
       }
 
@@ -2412,7 +2430,14 @@ public class ViewSimple extends JComponent
                      nObjAdd++;
                   }
                }
-            } else aladin.view.vselobj = res;
+            } else {
+               Vector vTag = new Vector();
+               for( Obj o : aladin.view.vselobj ) {
+                  if( o instanceof Source && ((Source)o).isTagged() ) vTag.add(o);
+               }
+               aladin.view.vselobj = vTag;
+               aladin.view.vselobj.addAll(res);
+            }
 
             extendClip(res);
 
@@ -2473,7 +2498,12 @@ public class ViewSimple extends JComponent
          view.newobj=null;
       }      
       
-      if(  view.newobj!=null && view.newobj instanceof Tag ) ((Tag)view.newobj).setEditing(true);
+      if(  view.newobj!=null && view.newobj instanceof Tag ) {
+         if( ((Tag)view.newobj).isReticle() ) {
+            aladin.calque.updateTagPlane((Tag)view.newobj);
+            view.newobj=null;
+         } else ((Tag)view.newobj).setEditing(true);
+      }
 
       /** Traitement d'éventuellement déplacement (ou création) d'objet de surface 
        * à transmettre à des observers */
@@ -2590,6 +2620,9 @@ public class ViewSimple extends JComponent
               || hasRainbowF() && rainbowF.isUsed();
    }
    
+   private boolean flagMoveNotSelect=false; // true si le porchain clic and drag sera un déplacement d'objets
+                                            // et non une extension du rectangle de la sélection
+   
    public void mouseDragged(MouseEvent e) {
       int x = e.getX();
       int y = e.getY();
@@ -2678,34 +2711,8 @@ public class ViewSimple extends JComponent
          }
       }
 
-//      // Déplacement XY d'un plan catalogue en cours de recalibration
-//      if( tool==ToolBox.SELECT && planRecalibrating!=null
-//            && planRecalibrating.recalibrating && fixe!=null) {
-//
-//         // Fin du blinking si necessaire
-//         aladin.view.hideSource();
-//
-//         PointD p = vs.getPosition((double)x,(double)y);
-//         double dx=0,dy=0;
-//
-//         // Mise à jour du centre XY dans la fenetre de recalibration
-//         aladin.frameNewCalib.newXY(fixebis,p,vs);
-//
-//         dx = p.x-fixe.x;
-//         dy = p.y-fixe.y;
-//         fixe = p;
-//
-//
-//         // Glissement de tous les objets du plan en cours de recalibration
-//         resetClip();   // LE CLIP JUSTE SUR LES OBJETS MERDOUILLE
-//         Iterator<Obj> it = planRecalibrating.iterator();
-//         while( it.hasNext() ) it.next().deltaPosition(vs,dx,dy);
-//         repaint();
-//      } else
-      
-      
       // Deplacement d'objets sélectionnés
-      if( tool==ToolBox.SELECT && !aladin.view.vselobj.isEmpty() && fixe!=null && poigneePhot==null && poigneeTag==null) {
+      if( tool==ToolBox.SELECT && flagMoveNotSelect && fixe!=null && poigneePhot==null && poigneeTag==null) {
 
          // Calcul du vecteur deplacement en RA,DEC ou en XY (suivant les flags)
          PointD p = vs.getPosition((double)x,(double)y);
@@ -3064,7 +3071,7 @@ public class ViewSimple extends JComponent
                          && ((Ligne)o).plan==((Ligne)view.newobj).plan) {
                      flagOnFirstLine=true;
                   }
-
+                  
                  if(  !( o instanceof Source )
                      || ((Source)o).noFilterInfluence()
                      || ( ((Source)o).isSelectedInFilter() ) ) {
@@ -3440,7 +3447,8 @@ public class ViewSimple extends JComponent
        showAvailableImages(x,y);
        
        // Idem pour les progeniteurs
-       if( aladin.frameProgen!=null ) aladin.frameProgen.updateCheckByMouse(this, (int)x, (int)y);
+       if( aladin.view.getCurrentView()==this && aladin.frameProgen!=null 
+             && aladin.frameProgen.isVisible() ) aladin.frameProgen.updateCheckByMouse(this, (int)x, (int)y);
    }
 
    /**
@@ -5137,7 +5145,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          // Calcul de tous les segments de la grille (méthode récursive de proche
          // en proche).
-         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 250 : proj.t==Calib.TAN ? 4000 : 2000;
+         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 250 : proj.t==Calib.TAN || proj.t==Calib.SIP ? 4000 : 2000;
          calcul3Voisins(seg,-1,pasa,pasd,rajc,dejc,isAllSky() && getFullSkySize()>200,0,limiteSegmentSize);
          freeMemoSegment();
       }
@@ -5840,7 +5848,7 @@ g.drawString(s,10,100);
       while( e.hasMoreElements() ) {
          Blink b = (Blink)e.nextElement();
          if( b.isFree() ) continue;
-         b.paint(g);
+         b.paint(this,g);
       }
    }
 

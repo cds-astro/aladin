@@ -56,6 +56,8 @@ public class PlanBGCat extends PlanBG {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
+      
+      scanProperties();
    }
    
    protected boolean isSync() {
@@ -165,7 +167,7 @@ public class PlanBGCat extends PlanBG {
 
       boolean moreDetails=order<=3;
       
-      for( int norder=4; norder<=order; norder++ ) {
+      for( int norder=3; norder<=order; norder++ ) {
 
          pix = getPixListView(v,norder);
          for( int i=0; i<pix.length; i++ ) {
@@ -214,7 +216,8 @@ public class PlanBGCat extends PlanBG {
          }
       }
 
-      setHasMoreDetails(moreDetails);
+      setHasMoreDetails(order>=getMaxFileOrder() ? false : moreDetails);
+//      setHasMoreDetails(moreDetails);
       allWaitingKeysDrawn = allKeyReady;
 
       hasDrawnSomething=hasDrawnSomething || nb>0;

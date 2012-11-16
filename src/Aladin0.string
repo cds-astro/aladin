@@ -80,9 +80,15 @@ MEXPORTEPS	Export the current view (EPS)...
 MEXPORT	Export planes (FITS,VOTable,...)...
 MBACKUP	Backup the stack...
 MARITHM	Arithmetic operation...
-MMOC Coverage map (MOC)...
-MMOCGEN Generation from images/catalogs...
-MMOCOP	Boolean operations...
+MMOC Footprint
+MMOCLOAD Load catalog fooprint...
+MMOCGENIMG Generate from image or HEALPix map...
+MMOCGENCAT Generate from catalog...
+MMOCFILTERING Filter a table by MOC...
+MMOCCROP Rectangular crop...
+MMOCOP	Logical operations...
+MMOCHELP Help on footprint MOC...
+MMOCLOADHELP In order to load the footprint of a specifical catalog or table, specify its identifier in the "Catalog" field, and press the "Footprint" button.
 MHEALPIXARITHM HEALPix arithmetic operations...
 #MADD	Addition
 #MSUB	Subtraction
@@ -172,9 +178,15 @@ MSAVEVIEW.fr	Enregistrer la vue courante...
 MEXPORTEPS.fr	Exporter la vue courante (EPS)...
 MEXPORT.fr	Exporter des plans (FITS,VOTable,...)...
 MBACKUP.fr	Sauvegarder la pile...
-MMOC.fr Cartes de couverture (MOC)...
-MMOCGEN.fr	Génération à partir d'images/catalogues
+MMOC.fr Empreinte
+MMOCLOAD.fr Chargement de l'empreinte d'un catalogue...
+MMOCGENIMG.fr	Génération à partir d'une image ou d'une map HEALPix
+MMOCGENCAT.fr	Génération à partir d'un catalogue
+MMOCFILTERING.fr Filtrage d'un catalogue par MOC...
+MMOCCROP.fr	Découpage rectangulaire...
 MMOCOP.fr	Opérations logiques...
+MMOCHELP.fr Aide à propos des empreintes MOC...
+MMOCLOADHELP.fr Afin de charger l'empreinte sur le ciel d'un catalogue ou une table particulière, indiquez son identificateur dans le champ "Catalogue", puis cliquez sur le bouton "Empreinte".
 MARITHM.fr	Opérations arithmétiques...
 MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MADD.fr	Addition
@@ -603,7 +615,7 @@ VZTITLE	VizieR catalog service
 VZNAME	VizieR\nCatalogs
 VZINFO	CDS VizieR catalog service (>5000 astronomical catalogs)
 VZCATDESC	Info.
-VZCATMOC	Coverage
+VZCATMOC	Footprint
 VZCATDMAP	Density map
 VZFROM	Provided by CDS VizieR catalog service
 VZDESC	VizieR provides access to the most complete library of published astronomical catalogues and data tables available on line.\n \nYou can access VizieR catalog service by a "get" command line (use the Aladin console, menu "Tools -> Aladin console"). For VizieR, the "get" syntax follows these conventions:\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : is a VizieR catalog identifier\n   - allcolumns : to get all columns
@@ -619,7 +631,7 @@ VZTITLE.fr	Le service des catalogues VizieR
 VZNAME.fr	Catalog.\nVizieR
 VZINFO.fr	Service des catalogues VizieR du CDS (>5000 catalogues astronomiques)
 VZCATDESC.fr	Info
-VZCATMOC.fr	Couverture
+VZCATMOC.fr	Empreinte
 VZCATDMAP.fr	Carte densité
 VZFROM.fr	Fournit par le service des catalogues VizieR du CDS
 VZDESC.fr	VizieR offre l'accès à la plus complète des bibliothèques de catalogues et tables astronomiques accessibles en ligne.\n \nVous pouvez accéder à VizieR également par une commande en ligne "get" (ouvrir la console Aladin, menu "Outils -> Console Aladin). Dans le cas de VizieR, la commande "get" suit les conventions suivantes :\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : est un identificateur de catalogue\n   - allcolumns : pour récupérer toutes les colonnes des catalogues
@@ -781,6 +793,14 @@ FOVANGLE1.fr	en degrés
 FOVEDIT.fr	 Créer le vôtre...
 FOVLOAD.fr	Charger...
 
+#FrameHeaderFits
+HSAVE	Save
+HUNDO	Undo
+HSAVEINFO	Your edition have been validated\nDo you want to save this FITS file immediately ?
+
+HSAVE.fr	Sauve
+HUNDO.fr	Défaire
+HSAVEINFO.fr	Votre édition a été mémorisée\nVoulez-vous sauvegarder le fichier FITS immédiatement ?
 
 # FrameRGBBlink.java strings
 IMGCREATE	CREATE
@@ -827,34 +847,55 @@ ARITHPLANEVALUE.fr Plan ou Valeur
 ARITHHELP.fr	Note 1: Après avoir effectué l'opération arithmétique, Aladin ajuste automatique le contraste de l'image résultante. Il n'est donc pas anormal que l'aspect de l'image puisse ne pas changer.\n \nNote 2: Les opérations arithmétiques ne peuvent s'appliquer sur les images pour lesquelles Aladin ne dispose pas des vraies valeurs de pixels, typiquement les images 8 bits JPEG.
 
 # FrameMocOperation.java strings
-MOCOP	MOC operation:
+MOCOP	Footprint MOC operation:
 MOCUNION	Union
 MOCINTER	Intersection
 MOCSUB	Subtraction
+MOCDIFF	Difference
 MOCCOMP	Complement
-MOCTITLE	MOC operations
-MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting MOC.\n
+MOCTITLE	Footprint MOC operations
+MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting footprint MOC.\n
 MOCPLANE	Plane
-MOCHELP	A MOC is a sky region described by a HEALPix Multi-Order coverage map. It is possible to compute very fast operations on such objects.
+MOCHELP A footprint MOC described a sky region by a Multi-Order Coverage map (or MOC). It is a mesh of a part of the sky. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
 
-MOCOP.fr	Opérations sur les MOC:
+MOCOP.fr	Opérations sur les empreintes MOC:
 MOCUNION.fr	Union
 MOCINTER.fr	Intersection
 MOCSUB.fr	Soustraction
+MOCDIFF.fr	Difference
 MOCCOMP.fr	Complement
-MOCTITLE.fr	Opérations sur les MOC
-MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer le MOC résultant.
+MOCTITLE.fr	Opérations sur les empreintes MOC
+MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
 MOCPLANE.fr	Plan
-MOCHELP.fr	Un MOC représente une couverture du ciel à partir d'une carte multi-échelle HEALPix. Il est possible d'effectuer très efficacemnet des opérations sur de tels objets
+MOCHELP.fr	Une empreinte MOC permet de décrire une zone du ciel à partir d'une carte multi-échelle HEALPix (ou MOC). Il s'agit d'une sorte de maillage du ciel. Les opérations (unions, intersection, complément,...) s'effectuent très rapidement sur de tels MOCs.\n \nCertains serveurs de données, tel VizieR, sont capables de filtrer leurs réponses (sources de catalogues, listes d'images) en fonction d'une zone d'une ciel décrite par un MOC de manière particulièrement efficace.
 
-# FrameMocGeneration.java strings
-MOCGENOP	MOC generation:
-MOCGENTITLE	MOC generation
-MOCGENINFO	Specify image and/or catalog planes,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
+# FrameMocFiltering.java strings
+MOCFILTERINGOP	Filter:
+MOCFILTERINGTITLE	Filtering by footprint MOC
+MOCFILTERINGINFO	Specify a footprint MOC and one or several catalog\npress the CREATE button to generate a new catalogue\nwith sources inside (resp. outside) the footprint MOC.\n
+MOCFILTERINGIN	inside
+MOCFILTERINGOUT	outside
+MOCFILTERINGCAT Catalog plane
+MOCFILTERINGMOC MOC plane
 
-MOCGENOP.fr	Opérations sur les MOC:
-MOCGENTITLE.fr	Opérations sur les MOC
-MOCGENINFO.fr	Désignez des images et/ou des catalogues\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
+MOCFILTERINGOP.fr	Filtre:
+MOCFILTERINGTITLE.fr	Filtrage par empreinte MOC
+MOCFILTERINGINFO.fr	Désignez une empreinte MOC et un ou plusieurs catalogues\npuis appuyez sur le bouton CREER pour générer un nouveau catalogue\nne contenant que les sources dans (resp. hors) de l'empreinte MOC.
+MOCFILTERINGIN.fr	intérieur
+MOCFILTERINGOUT.fr	extérieur
+MOCFILTERINGCAT.fr Plan catalogue
+MOCFILTERINGMOC.fr Plan MOC
+
+# FrameMocGenImg.java strings
+MOCGENOP	Footprint MOC generation:
+MOCGENTITLE	Footprint MOC generation
+MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npress the CREATE button to generate the resulting footprint MOC.\n
+MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting footprint MOC.\n
+
+MOCGENOP.fr	Opérations sur les empreintes MOC:
+MOCGENTITLE.fr	Opérations sur les empreintes MOC
+MOCGENIMGINFO.fr	Désignez une image ou une carte HEALPix\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
+MOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
 
 # FrameBitpix.java strings
 BITPIXTITLE	Bitpix image conversion
@@ -1896,6 +1937,7 @@ MFLOADIMGS1	Load an image for each tagged source in this table
 MFGOTOIMG	Show this source
 MFUNSELECT	Unselect this source (SHIFT click)
 MFDEL	Delete this source
+MTAGINFO	Check the boxes below for tagging the corresponding lines\nand by this way, to keep them in the measurement frame even if the associated sources will be deselected.
 
 MFASCSORT.fr	Trier sens ascendant
 MFADESCSORT.fr	Trier sens descendant
@@ -1930,6 +1972,7 @@ MFLOADIMGS1.fr	Charger une image pour chaque source cochée dans cette table
 MFGOTOIMG.fr	Montrer cette source
 MFUNSELECT.fr	Déselectionner cette source (MAJ clic)
 MFDEL.fr	Supprimer cette source
+MTAGINFO.fr	Cochez les cases ci-dessous correspondantes aux lignes\nque vous souhaitez marquer, et de ce fait, les conserver dans la fenêtre des mesures,\nmême quand les sources correspondances seront désélectionnées.
 
 
 # Save.java strings
@@ -2475,8 +2518,8 @@ TIPSUBMIT	Submit your request
 TIPSUBMIT.fr	Soumet votre requête
 TIPCLOSE	Close this window
 TIPCLOSE.fr	Ferme cette fenêtre
-TIPTAG	Tag/untag this source
-TIPTAG.fr	Coche/décoche cette source
+TIPTAG	Tag/untag this source\n=> keep it in the measurement frame
+TIPTAG.fr	Coche/décoche cette source\n=> la garde dans la fenêtre des mesures
 TIPCMD	Last clicked coordinates / Script command field (see Ctrl+F5)
 TIPCMD.fr	Dernières coordonnées cliquées / Champ de commandes scripts (voir Ctrl+F5)
 TIPPOS	Coordinate location

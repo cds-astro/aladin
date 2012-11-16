@@ -568,6 +568,7 @@ public final class Mesure extends JPanel implements Runnable {
          Words w = new Words(leg.field[i].name,o.leg.getWidth(i),o.leg.getPrecision(i),
                              Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[i],
                              leg.field[i].sort);
+         w.pin = i==0;
          wordLine.addElement(w);
       }
       return wordLine;
@@ -797,6 +798,7 @@ public final class Mesure extends JPanel implements Runnable {
    protected void display() {
       mcanvas.currentsee=-1;
       mcanvas.currentselect=-2;
+      
       mcanvas.repaint();
    }
 

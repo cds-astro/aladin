@@ -34,6 +34,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -58,15 +60,20 @@ public class FrameHeaderFits extends JFrame {
    private StringBuffer	memoHeaderFits = null;	// Memorisation de l'entete FITS telle quelle (en Strings)
    private JTextPane ta;
    private JTextField ts;
-   static String CLOSE,CLEAR;
+   static String CLOSE,CLEAR,SAVE,CANCEL,SAVEINFO;
    private DefaultStyledDocument df;
-   private JButton clear;
+   private JButton clear,cancel,save;
+   private static final boolean SAVABLE=true;
+   private Plan plan;
 
    protected HeaderFits headerFits;
 
    static void createChaine(Chaine chaine) {
+      SAVE = chaine.getString("HSAVE");
+      CANCEL = chaine.getString("HUNDO");
       CLOSE = chaine.getString("CLOSE");
       CLEAR = chaine.getString("CLEAR");
+      SAVEINFO = chaine.getString("HSAVEINFO");
    }
 
    /** Création du header Fits à partir de rien */
@@ -81,8 +88,9 @@ public class FrameHeaderFits extends JFrame {
   /** Creation du header.
    * @param dis le flux en entree
    */
-   protected FrameHeaderFits(MyInputStream dis) throws Exception {
+   protected FrameHeaderFits(Plan plan,MyInputStream dis) throws Exception {
       super("FITS header");
+      this.plan=plan;
       Aladin.setIcon(this);
       makeTA();
       headerFits = new HeaderFits();
@@ -93,9 +101,10 @@ public class FrameHeaderFits extends JFrame {
    * peut etre une entete FITS "valide" (bloc de 2880, 80 colonnes...)
    * ou un simple paragraphe KEY = VALUE /COMMENT\n...
    */
-   protected FrameHeaderFits(String s) { this(s,false); }
-   protected FrameHeaderFits(String s,boolean specialHHH) {
+   protected FrameHeaderFits(Plan plan,String s) { this(plan,s,false); }
+   protected FrameHeaderFits(Plan plan,String s,boolean specialHHH) {
       Aladin.setIcon(this);
+      this.plan=plan;
       makeTA();
       headerFits = new HeaderFits();
       headerFits.readFreeHeader(s,specialHHH,this);
@@ -177,6 +186,43 @@ public class FrameHeaderFits extends JFrame {
       if( firstPos!=-1 ) ta.setCaretPosition(firstPos);
 
    }
+   
+   boolean isEdited=false;
+   
+   private String originalHeader = null;
+   protected void save() {
+      String s = ta.getText();
+      try {
+         headerFits = new HeaderFits(s);
+         if( plan!=null ) {
+            Calib c = new Calib(headerFits);
+            plan.projd=new Projection(Projection.WCS, c);
+            plan.setHasSpecificCalib();
+         }
+      } catch( Exception e ) {
+         Aladin.warning(this,"Not a valid FITS header: "+e.getMessage());
+         return;
+      }
+      
+      memoHeaderFits = new StringBuffer( s );
+      makeTA();
+      if( !Aladin.confirmation(this,SAVEINFO ) ) return;
+      plan.aladin.save(plan.aladin.EXPORT);
+   }
+   
+   protected void cancel() {
+      memoHeaderFits = new StringBuffer( originalHeader );
+      isEdited=false;
+      ta.setText(getOriginalHeaderFits());
+   }
+   
+   private void updateWidgets() {
+      if( originalHeader==null ) return;
+      System.out.println("updateWidgets");
+      isEdited=true;
+      cancel.setEnabled(!originalHeader.equals(ta.getText()));
+      save.setEnabled( !originalHeader.equals(ta.getText()));
+   }
 
   /** Construction du Frame de visualisation du Header FITS */
    public void makeTA() {
@@ -184,8 +230,14 @@ public class FrameHeaderFits extends JFrame {
 
       df=new DefaultStyledDocument() ;
       ta = new JTextPane(df);
+      ta.getDocument().addDocumentListener(new DocumentListener() {
+         public void removeUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void insertUpdate(DocumentEvent e)  { updateWidgets(); }
+         public void changedUpdate(DocumentEvent e) { updateWidgets(); }
+      });
+
       ta.setFont( Aladin.COURIER );
-      ta.setEditable(false);
+      ta.setEditable(SAVABLE); 
 
       JScrollPane sc = new JScrollPane(ta);
       sc.setPreferredSize(new Dimension(600,600));
@@ -210,6 +262,19 @@ public class FrameHeaderFits extends JFrame {
          public void actionPerformed(ActionEvent e) { ts.setText("");  search(""); }
       });
       p.add(new JLabel(" - "));
+      save = b =  new JButton(SAVE);
+      b.setEnabled(false);
+      if( SAVABLE ) p.add(b);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { save(); }
+      });
+      cancel = b =  new JButton(CANCEL);
+      b.setEnabled(false);
+      if( SAVABLE ) p.add(b);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { cancel(); }
+      });
+
       b =  new JButton(CLOSE);
       p.add(b);
       b.addActionListener(new ActionListener() {
@@ -233,6 +298,8 @@ public class FrameHeaderFits extends JFrame {
   /** Visualise le header FITS */
    protected void seeHeaderFits() {
       ta.setText(getOriginalHeaderFits());
+      originalHeader = ta.getText();  // Pour pouvoir annuler une édition
+      isEdited=false;
       ta.setCaretPosition(0); // on se positionne au début du header
       ts.requestFocusInWindow();
       first=true;

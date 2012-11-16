@@ -173,7 +173,6 @@ final public class ThreadBuilderTile {
                for( int i=deb; i<fin; i++ ) {
                   f = downFiles.get(i).fitsfile;
                   f.rmUser();
-//                  f.releaseBitmap();
                }
             }
 
@@ -214,20 +213,12 @@ final public class ThreadBuilderTile {
       Coord coo = new Coord();
       SrcFile file = null;
       Fits out=null;
-//      ArrayList<SrcFile> downFiles = null;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
          min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
          boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
-
-//         // initialisation de la liste des fichiers originaux pour ce losange
-//         downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);         
-//         if (!askLocalFinder(bt,downFiles,Constante.MAXOVERLAY,hpxFinderPath, npix_file, Util.order(nside), blank)) {
-//            rmFits(bt,downFiles);
-//            return null;
-//         }
 
          out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
          if( !flagColor ) {
@@ -301,6 +292,7 @@ final public class ThreadBuilderTile {
                // cas RGB
                if( flagColor ) {
                   int pixelFinal=0;
+                  
                   if( nbPix!=0 ) {
                      if( totalCoef==0 )  pixelFinal = (((int)pixval[0])<<16) | (((int)pixvalG[0])<<8) | ((int)pixvalB[0]);
                      else {
@@ -314,7 +306,8 @@ final public class ThreadBuilderTile {
                      }
                   }
                   if( pixelFinal!=0 ) empty=false;
-                 out.setPixelRGBJPG(x, y, pixelFinal);
+                  
+                  out.setPixelRGBJPG(x, y, pixelFinal);
 
                   // Cas normal
                }  else {
@@ -591,7 +584,7 @@ final public class ThreadBuilderTile {
                      }
 
                   // Mode FITS couleur
-                  else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true);
+                  else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true,true);
 
                   // Mode FITS classique ou JPEG/PNG avec calib
                   else {

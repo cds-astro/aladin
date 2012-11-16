@@ -1384,8 +1384,8 @@ public long skip(long n) throws IOException {
 
     /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,
      * sinon génère une exception */
-    protected FrameHeaderFits createFrameHeaderFitsFromCommentCalib() {
-       return new FrameHeaderFits(commentCalib);
+    protected FrameHeaderFits createFrameHeaderFitsFromCommentCalib(Plan plan) {
+       return new FrameHeaderFits(plan,commentCalib);
     }
     
     /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,

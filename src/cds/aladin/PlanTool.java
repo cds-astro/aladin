@@ -37,6 +37,7 @@ import cds.tools.VOObserver;
 public class PlanTool extends PlanCatalog {
    
    protected Legende legPhot = null;
+   protected Legende legTag = null;
    
   /** Creation d'un plan de type TOOL
    * @param label le nom du plan (dans la pile des plans)
@@ -71,6 +72,20 @@ public class PlanTool extends PlanCatalog {
       flagOk     = true;
       askActive  = true;
    }
+   
+   private void createTagLegende() {
+      setSourceRemovable(true);
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)" });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.DATATYPE, new String[]{  "char","char",     "char",     });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"" });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.PRECISION,new String[]{  "",     "2",        "3",       });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.DESCRIPTION,     
+            new String[]{  "Identifier",  "Right ascension",  "Declination" });
+      legTag = Legende.adjustDefaultLegende(legTag,Legende.UCD,      
+            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main" });
+ 
+   }
 
    private void createPhotLegende() {
       setSourceRemovable(true);
@@ -97,6 +112,30 @@ public class PlanTool extends PlanCatalog {
    
    /** retourne true si le plan a des sources */
    protected boolean withSource() { return legPhot!=null; }
+   
+   public Source addTag(PlanImage planBase,double ra, double dec) {
+      if( legTag==null ) createTagLegende();
+      
+      String id = "Tag "+pcat.getNextID();
+      Coord c = new Coord(ra,dec);
+      String [] val = { id, c.getRA(), c.getDE() };
+      Source o1 = addTag(id, ra, dec, val);
+      o1.setShape(Obj.PLUS);
+      o1.setTag(true);
+      aladin.view.newView(1);
+      return o1;
+   }
+   
+   private Source addTag(String id,double ra, double dec, String [] value) {
+      StringBuffer s = new StringBuffer("<&_A>");
+      for( int i=0; i<value.length; i++ ) {
+         s.append("\t"+value[i]);
+      }
+      Source o = new Source(this,ra,dec,id,s.toString());
+      o.leg = legTag;
+      pcat.setObjetFast(o);
+      return o;
+   }
    
    public Source addPhot(PlanImage planBase,double ra, double dec, double []iqe) {
       if( legPhot==null ) createPhotLegende();

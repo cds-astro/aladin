@@ -435,7 +435,7 @@ Aladin.trace(3,"getSubImage["+n+"] from "+label+" ("+x*step+","+y*step+" "+w*ste
 Aladin.trace(2,"Loading Huge FITS image");
 
       // Lecture de l'entete Fits si ce n'est deja fait
-      if( headerFits==null ) headerFits = new FrameHeaderFits(dis);
+      if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
  
       bitpix = headerFits.getIntFromHeader("BITPIX");
       naxis = headerFits.getIntFromHeader("NAXIS");

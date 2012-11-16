@@ -19,6 +19,7 @@
 
 package cds.tools.pixtools;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Polygon;
 
@@ -92,9 +93,10 @@ public final class Hpix extends MocCell {
    }
    
    /** Trace les bords du losange, de sommet à sommet */
-   public void draw(Graphics g,ViewSimple v) {
+   public void draw(Graphics g,ViewSimple v,boolean border,boolean diag) {
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
+      boolean drawnOk=true;
       
       // Taille max d'un segment => sinon sans doute passe derrière le ciel
       double maxSize=getMaxSize(v);
@@ -102,9 +104,14 @@ public final class Hpix extends MocCell {
       for( int i=0; i<4; i++ ) {
          int d = ORDRE[ i==0 ? 3 : i-1 ];
          int f = ORDRE[i];
-         if( b[d]==null || b[f]==null ) continue;
-         if( HealpixKey.dist(b,d,f)>maxSize*maxSize ) continue;
-         g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
+         if( b[d]==null || b[f]==null ) { drawnOk=false; continue; }
+         if( HealpixKey.dist(b,d,f)>maxSize*maxSize ) { drawnOk=false; continue; }
+         if( border ) g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
+      }
+      
+      if( drawnOk && diag ) {
+         g.drawLine((int)b[0].x,(int)b[0].y, (int)b[3].x,(int)b[3].y);
+         g.drawLine((int)b[2].x,(int)b[2].y, (int)b[1].x,(int)b[1].y);
       }
    }
    

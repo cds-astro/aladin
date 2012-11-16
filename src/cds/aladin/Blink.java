@@ -89,6 +89,7 @@ public final class Blink {
    private ViewSimple v;            // Vue à laquelle appartient le Blink
    private Source s;
    private Point p;                 // Position de la source dans la vue
+   private Calib c;
 
    /** Création d'un blink libre */
    protected Blink(ViewSimple v) {
@@ -104,6 +105,7 @@ public final class Blink {
    /** Demande le démarrage du blink pour une source donnée s */
    synchronized protected void start(Source s) {
       this.s=s;
+      c = v.getProjSyncView().getProj().c;
       p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
       if( p==null ) { mode=NOBLINK; return; }
       mode=START;
@@ -113,7 +115,8 @@ public final class Blink {
    synchronized protected void stop() { mode=STOP; }
 
    /** Paint du blink suivant le mode courant et/ou demandé */
-   synchronized protected void paint(Graphics g) {
+   synchronized protected void paint(ViewSimple v,Graphics g) {
+      Point p = s.getViewCoord(v.getProjSyncView(),s.getL(),s.getL());
       g.setXORMode(Color.green);
       
 //      g.setColor( Color.magenta );

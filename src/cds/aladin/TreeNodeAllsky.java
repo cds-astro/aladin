@@ -60,6 +60,7 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean truePixels=false; // true si par défaut le survey est fourni en truePixels (FITS)
    private boolean cat=false;    // true s'il s'agit d'un catalogue hiérarchique
    private boolean map=false;    // true s'il s'agit d'une map HEALPix FITS
+   private boolean moc=false;    // true s'il faut tout de suite charger le MOC
    public int frame=Localisation.GAL;  // Frame d'indexation
    public Coord target=null;     // Target for starting display
    public double radius=-1;   // Field size for starting display
@@ -72,7 +73,7 @@ public class TreeNodeAllsky extends TreeNode {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
-      java.util.Properties prop = new java.util.Properties();
+      MyProperties prop = new MyProperties();
       
       // Par http ou ftp ?
       try {
@@ -245,6 +246,7 @@ public class TreeNodeAllsky extends TreeNode {
                if( Util.indexOfIgnoreCase(s, "equ")>=0 ) frame = Localisation.ICRS;
                if( Util.indexOfIgnoreCase(s, "cat")>=0 ) cat=true;
                if( Util.indexOfIgnoreCase(s, "map")>=0 ) map=true;
+               if( Util.indexOfIgnoreCase(s, "moc")>=0 ) moc=true;
                
               
                // Un numéro de version du genre "v1.23" ?
@@ -278,6 +280,7 @@ public class TreeNodeAllsky extends TreeNode {
                   +(!isCatalog() && isColored() ?" colored" : " B&W")
                   +(!isFits() ? "" : isTruePixels() ?" *inFits*" : " inFits")
                   +(!isJPEG() ? "" : isTruePixels() ?" inJPEG" : " *inJPEG*")
+                  +(loadMocNow() ? " withMoc" : "")
                   +(useCache() ? " cache" : " nocache")
                   +" "+Localisation.getFrameName(getFrame())
                   +(isLocalDef() ? " localDef":"")
@@ -324,6 +327,8 @@ public class TreeNodeAllsky extends TreeNode {
    }
    
    protected boolean isLocal() { return local; }
+   
+   protected boolean loadMocNow() { return moc; }
    
    /** Retourne true s'il s'agit d'un survey fournissante les losanges en JPEG => 8 bits pixel + compression */
    protected boolean isJPEG() { return inJPEG; }

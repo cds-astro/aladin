@@ -73,7 +73,7 @@ public class CacheFits {
     */
    public CacheFits(long maxMem) {
       this.maxMem=maxMem;
-      cacheOutOfMem=false;
+      cacheOutOfMem=maxMem==0;
       nextId=0;
       statNbFree=statNbOpen=statNbFind=0;
       map = new HashMap<String, FitsFile>(maxFile);
@@ -162,7 +162,7 @@ public class CacheFits {
       f.fits = new Fits();
       if( skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
       if( jpeg ) f.fits.loadJpeg(fileName,true);
-      else f.fits.loadFITS(fileName, flagLoad);
+      else f.fits.loadFITS(fileName, false, flagLoad);
 
       // applique un filtre spécial
       if (skyvalName!=null) delSkyval(f.fits);
@@ -191,9 +191,9 @@ public class CacheFits {
    // Supprime les plus vieux éléments du cache pour 
    // qu'il y ait un peu de place libre
    private void clean() {
+      long mem = getMem();
       sortedMap.clear();
       sortedMap.putAll(map);
-      long mem = getMem();
       long totMem=0L;
       long m=0;
       int nb=0;
@@ -201,6 +201,7 @@ public class CacheFits {
       
       for( String key : sortedMap.keySet() ) {
          FitsFile f = map.get(key);
+         if( f.fits.hasUsers() ) continue;
          m = f.getMem();
          totMem+=mem;
          mem -= m;
@@ -281,7 +282,8 @@ public class CacheFits {
 
    public String toString() { 
       long upLimit = maxMem<0 ? getFreeMem()+maxMem : maxMem;
-      return "Cache: "+map.size()+" file(s) ("+getNbReleased()+" released) for "+Util.getUnitDisk(getMem())
+      if( upLimit<0 ) upLimit=0L;
+      return "Cache: "+map.size()+" file bloc(s) ("+getNbReleased()+" released) for "+Util.getUnitDisk(getMem())
       +"/"+Util.getUnitDisk(upLimit)+" (open="+statNbOpen+" find="+statNbFind+" free="+statNbFree+") RAMfree="+Util.getUnitDisk(getFreeMem());
      }
 

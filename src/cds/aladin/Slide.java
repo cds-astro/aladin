@@ -355,6 +355,14 @@ public final class Slide {
       g.setColor( Color.yellow );
       g.drawRect(dx+frX[2]-15,dy+frY[2]-8,5,5);
    }
+   
+   // Adaptation du logo pour un plan MOC
+   static void drawLogoMOC(Graphics g,int dx,int dy,Color c) {
+      int x = dx+gapL+10;//frX[2]/2;
+      int y = dy+3;
+      Grid.fillMOC(g,x,y,Color.white);
+      Grid.drawMOC(g, x, y, c);
+   }
 
    // Adaptation du logo pour un plan BGHPX
    static void drawLogoImgBG(Graphics g,int dx,int dy,Color c) {
@@ -585,7 +593,7 @@ public final class Slide {
             case Plan.IMAGECUBERGB:
             case Plan.IMAGERGB:    drawLogoImg(g,dx,dy,null);                              break;
             case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);               break;
-            case Plan.ALLSKYMOC:
+            case Plan.ALLSKYMOC:   drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);         break;
             case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,isViewable?p.c:colorFillFG);         break;
             case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?Color.black:colorFillFG); break;
             case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,isViewable?p.c:colorFillFG);  break;
@@ -678,10 +686,11 @@ public final class Slide {
                      boolean hasObj = p.pcat!=null && p.pcat.hasObj();
                      if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) drawBall(g,px,py-9,Color.orange);
                      else if( p.isSimpleCatalog() && !hasObj ) drawCross(g,px1,py-9);
+                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) drawCross(g,px1,py-9);
                      else drawBall(g,px1,py-9,Color.red);
                   } else {
                      boolean flag=false;
-                     Color green = p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ? Color.green : Aladin.GREEN ;
+                     Color green = p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ? Color.yellow : Color.green; // Color.green: Aladin.GREEN ;
                      if( !p.flagOk ||
                            ( (p instanceof PlanContour) && (((PlanContour)p).mustAdjustContour)) ||
                            (flag=(p.flagProcessing 
@@ -693,7 +702,9 @@ public final class Slide {
                         
                         setBlink(true);
                         
-                     } else if( p instanceof PlanBG  && p.active ) drawBall(g,px,py-9, green );
+                     } else {
+                        if( p instanceof PlanBG  && p.active ) drawBall(g,px,py-9, green );
+                     }
                   }
                }
             }

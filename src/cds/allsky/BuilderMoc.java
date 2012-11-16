@@ -34,7 +34,7 @@ public class BuilderMoc extends Builder {
 
    public static final String MOCNAME = "Moc.fits";
 
-   private HealpixMoc moc;
+   protected HealpixMoc moc;
 
    private String ext; // Extension à traiter, null si non encore affectée.
 
@@ -58,8 +58,12 @@ public class BuilderMoc extends Builder {
       createMoc(path, path + FS + MOCNAME);
    }
 
-   private void createMoc(String path, String outputFile) throws Exception {
+   protected void createMoc(String path, String outputFile) throws Exception {
+      moc.clear();
+      moc.setCoordSys(getFrame());
+      moc.setCheckConsistencyFlag(false);
       generateMoc(path);
+      moc.setCheckConsistencyFlag(true);
       moc.sort();
       moc.write(outputFile, HealpixMoc.FITS);
    }
@@ -70,10 +74,8 @@ public class BuilderMoc extends Builder {
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
    public long getArea() { return moc.getArea(); }
 
-   private void generateMoc(String path) throws Exception {
+   protected void generateMoc(String path) throws Exception {
       ext = null;
-      moc.clear();
-      moc.setCoordSys(getFrame());
       int order = Util.getMaxOrderByPath(path);
       File f = new File(path + Util.FS + "Norder" + order);
 
@@ -98,14 +100,19 @@ public class BuilderMoc extends Builder {
             if( ext == null ) ext = e;
             else if( !ext.equals(e) ) continue;
 
-            moc.add(order, npix);
+//            moc.add(order, npix);
+            generateTileMoc(moc,sf1[j],order,npix);
          }
       }
    }
    
+   protected void generateTileMoc(HealpixMoc moc,File f,int order, long npix) throws Exception {
+      moc.add(order,npix);
+   }
+   
    // Retourne le code HEALPix correspondant au système de référence des coordonnées
    // du survey HEALPix
-   private String getFrame() {
+   protected String getFrame() {
       try {
          if( context.prop==null ) context.loadProperties();
          return context.prop.getProperty(PlanHealpix.KEY_COORDSYS, "C");

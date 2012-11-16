@@ -49,8 +49,8 @@ import cds.tools.Util;
  */
 public final class FrameHeaderPDS extends FrameHeaderFits {
    
-    protected FrameHeaderPDS(MyInputStream dis) throws Exception {
-       super("PDS header");
+    protected FrameHeaderPDS(Plan plan,MyInputStream dis) throws Exception {
+       super(plan,"PDS header");
        Aladin.setIcon(this);
        makeTA();
        headerFits = new HeaderFits();

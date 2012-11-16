@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
+import cds.aladin.MyProperties;
 import cds.moc.HealpixMoc;
 
 public class SkyGen {
@@ -56,7 +57,7 @@ public class SkyGen {
       // pour construire le contexte
 
       // Ouverture et lecture du fichier
-      Properties properties = new Properties();
+      MyProperties properties = new MyProperties();
 //      Reader reader = new FileReader(file);
       FileInputStream reader = new FileInputStream(file);
       properties.load(reader);
@@ -109,6 +110,8 @@ public class SkyGen {
          context.setBlankOrig(Double.parseDouble(val));
       } else if (opt.equalsIgnoreCase("order")) {
          context.setOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("diffOrder")) {
+         context.setDiffOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
@@ -247,6 +250,7 @@ public class SkyGen {
          actions.add(Action.TILES);
          actions.add(Action.GZIP);
          actions.add(Action.JPEG);
+         actions.add(Action.PROGEN);
       }
       
       // Nettoyage avant ?
@@ -294,6 +298,7 @@ public class SkyGen {
             "img        Specifical reference image for default initializations (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
             "bitpix     Specifical target bitpix" + "\n" +
             "order      Specifical HEALPix order" + "\n" +
+            "diffOrder  Diff between MOC order and optimal order" + "\n" +
             "border     Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "blank      Specifical BLANK value" + "\n" +
             "skyval     Fits key to use for removing a sky background" + "\n" +

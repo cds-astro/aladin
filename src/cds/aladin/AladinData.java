@@ -311,8 +311,8 @@ public class AladinData {
    public void setFitsHeader(String header) throws AladinException {
       testImage();
       try {
-         ((PlanImage)plan).headerFits = new FrameHeaderFits(header);
-         ((PlanImage)plan).headerFits = new FrameHeaderFits(plan.aladin.save.generateFitsHeaderString((PlanImage)plan));
+         ((PlanImage)plan).headerFits = new FrameHeaderFits(plan,header);
+         ((PlanImage)plan).headerFits = new FrameHeaderFits(plan,plan.aladin.save.generateFitsHeaderString((PlanImage)plan));
       } catch( Exception e ) { throw new AladinException(ERR010+" => "+e.getMessage()); }
       setCalib();
    }
