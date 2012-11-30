@@ -1212,7 +1212,12 @@ public final class MCanvas extends JComponent
 //         aladin.trace(4, "endTimerHist() nothing to do !");
          return;
       }
-      aladin.calque.zoom.zoomView.setHist(oTimer,onField);
+      
+      if( oTimer.leg.isSED() ) {
+         aladin.view.zoomview.setSED(oTimer);
+      } else  {
+         aladin.calque.zoom.zoomView.setHist(oTimer,onField);
+      }
       oTimer=null;
    }
 
@@ -1247,6 +1252,7 @@ public final class MCanvas extends JComponent
       Source o;
       String tip="";
       int indice;
+      
 
       // Est-on sur l'entête ?
       if( y<=MH ) {
@@ -1323,6 +1329,9 @@ public final class MCanvas extends JComponent
 
       // Affichage de la coordonnees de la source
       aladin.localisation.seeCoord(oshow);
+      
+      // Pour mettre à jour le point d'un SED en cours de tracé
+      showSEDPoint(oshow);
 
       // Affichage de l'entête correspondant à l'objet
       if( flagDrawHead ) drawHead(g,oshow);
@@ -1395,6 +1404,10 @@ public final class MCanvas extends JComponent
     }
 
     Util.toolTip(this, tip);
+   }
+   
+   protected void showSEDPoint(Source s) {
+      if( s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
    }
 
 
@@ -1469,6 +1482,8 @@ public final class MCanvas extends JComponent
             break;
          }
       }
+      
+      if( retour ) showSEDPoint(o);
 
       repaint();
       return retour;

@@ -293,7 +293,7 @@ public class PlanBGCat extends PlanBG {
       while( e.hasMoreElements() ) {
          HealpixKeyCat healpix = (HealpixKeyCat)e.nextElement();
          if( healpix.getStatus()!=HealpixKey.READY ) continue;
-         n += healpix.pcat!=null ? healpix.pcat.getCounts() : 0;
+         n += healpix.pcat!=null ? healpix.pcat.getCount() : 0;
       }
 
       return n;

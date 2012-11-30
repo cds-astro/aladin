@@ -95,7 +95,7 @@ public class Plot {
    // initialisation du plot
    private void initPlot() {
       if( plotTable==null ) plotTable = new Vector<PlotItem>(10);
-      plotProj = new Projection(0,0,250,250,500,500,500,500,false,false,false,false);
+      plotProj = new Projection(0,0,0,0,500,500,500,500,false,false,false,false);
    }
    
    // recopie du plot pour la vue passée en paramètre
@@ -212,7 +212,7 @@ public class Plot {
             if( !(o instanceof Source) ) continue;
             Source s = (Source)o;
             val = getValues(val,s);
-            if( Double.isNaN(val[0]) ) continue;
+            if( Double.isNaN(val[0]) || Double.isNaN(val[1]) ) continue;
             double cX=val[0],cY=val[1];
             n++;
             if( first ) {
@@ -232,13 +232,15 @@ public class Plot {
             else if( cY>max1Y && cY<maxY || max1Y==maxY && cY>min1Y ) max1Y=cY;
          }
          
-         if( min1X==max1X ) { min1X=minX; max1X=maxX; }
-         if( min1Y==max1Y ) { min1Y=minY; max1Y=maxY; }
+         if( true || min1X==max1X ) { min1X=minX; max1X=maxX; }
+         if( true || min1Y==max1Y ) { min1Y=minY; max1Y=maxY; }
          
          aladin.trace(4,"ViewSimple.adjustPlot: nsrc="+n+" X=["+minX+" ("+min1X+") .. ("+max1X+") "+maxX+"] Y=["+minY+" ("+min1Y+") .. ("+max1Y+") "+maxY+"]");
          int w = viewSimple.getWidth();
          int h = viewSimple.getHeight();
-         plotProj = new Projection(0,0,0,0, (max1X-min1X)*1.1, (max1Y-min1Y)*1.1, w, h, 
+//         plotProj = new Projection(0,0,0,0, (max1X-min1X)*1.1, (max1Y-min1Y)*1.1, w, h, 
+//               plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
+         plotProj = new Projection(min1X,min1Y,0,0, (max1X-min1X), (max1Y-min1Y), w, h, 
                plotProj.isFlipXPlot(), plotProj.isFlipYPlot(), plotProj.isLogXPlot(), plotProj.isLogYPlot());
          viewSimple.newView(1);
          viewSimple.setZoomRaDec(1, (min1X+max1X)/2, (min1Y+max1Y)/2);
@@ -289,8 +291,8 @@ public class Plot {
    /** Tracé de la grille */
    public void drawPlotGrid(Graphics g,int dx,int dy) {
       try {
-         double incrX = getIncrX();
-         double incrY = getIncrY();
+         double incrX = plotProj.isLogXPlot() ? 1e-10 : getIncrX();
+         double incrY = plotProj.isLogYPlot() ? 1e-10 : getIncrY();
          if( incrX==0 || incrY==0 ) return;
          
          int w = viewSimple.getWidth();
@@ -304,37 +306,47 @@ public class Plot {
          c1.x=p.x; c1.y=p.y;
          plotProj.getCoord(c1);
          
-         double initValX = (int)(c0.al/incrX) * incrX;
-         double initValY = (int)(c0.del/incrY) * incrY;
+         double initValX = plotProj.isLogXPlot() ? 0 : (int)(c0.al/incrX) * incrX;
+         double initValY = plotProj.isLogYPlot() ? 0 : (int)(c0.del/incrY) * incrY;
          int nbRoundX = nbRound(incrX);
          int nbRoundY = nbRound(incrY);
          
          Coord c = new Coord();
-         c.del = initValY;
+         String s1;
          int i;
          
-         for( c.al=initValX, i=0; i<20; c.al+=incrX, i++ ) {
+         c.del = plotProj.isLogYPlot() ? 0.1 :initValY;
+         for( c.al=initValX, i=-10; i<10; c.al+=incrX, i++ ) {
             plotProj.getXY(c);
             Point p1 = viewSimple.getViewCoord(c.x, c.y);
-            if( p1==null ) continue;
-            g.setColor( Color.lightGray );
-            g.drawLine(p1.x+dx,0+dy,p1.x+dx,h+dy);
-            g.setColor(Color.black);
-            g.drawString(Util.myRound(c.al+"",nbRoundX),p1.x+2+dx, h-5+dy);
+            if( p1!=null ) {
+               g.setColor( Color.lightGray );
+               g.drawLine(p1.x+dx,0+dy,p1.x+dx,h+dy);
+               g.setColor(Color.black);
+               if( plotProj.isLogXPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
+               else s1 = c.al+"";
+               g.drawString(Util.myRound(s1,nbRoundX),p1.x+2+dx, h-5+dy);
+            }
+            if( plotProj.isLogXPlot() ) incrX*=10;
          }
-         c.al = initValX;
-         for( c.del=initValY, i=0; i<20; c.del-=incrY, i++ ) {
+         c.al = plotProj.isLogXPlot() ? 0.1 : initValX;
+         for( c.del=initValY, i=-10; i<10; c.del = c.del + (plotProj.isLogYPlot() ? incrY : -incrY), i++ ) {
             plotProj.getXY(c);
             Point p1 = viewSimple.getViewCoord(c.x, c.y);
-            if( p1==null ) continue;
-            g.setColor( Color.lightGray );
-            g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
-            g.setColor(Color.black);
-            g.drawString(Util.myRound(c.del+"",nbRoundY),4+dx,p1.y-5+dy);
+            if( p1!=null ) {
+               g.setColor( Color.lightGray );
+               g.drawLine(0+dx,p1.y+dy,w+dx,p1.y+dy);
+               g.setColor(Color.black);
+               if( plotProj.isLogYPlot() )  s1 = i<0 ? "1e"+i : i==0 ? "1" : "1e+"+i;
+               else s1 = c.del+"";
+               g.drawString(Util.myRound(s1,nbRoundY),4+dx,p1.y-5+dy);
+            }
+            if( plotProj.isLogYPlot() ) incrY*=10;
          }
          
       } catch( Exception e ) { e.printStackTrace(); }
    }
+
 
    // Recherche les colonnes à tracer pour le plot concernant le Plan plan
    private int [] getPlotIndex(Plan plan) {

@@ -1538,13 +1538,15 @@ UPIMGH	Choose the image server, the survey and/or the color\nwhich will be used 
 UPIMGS	Server
 UPIMGC	Survey/Color
 UPFRAMEB	Coordinate frame
-UPFRAMEALLSKYB Allsky mode
-UPFRAMEH	Specify the default coordinate frame.\nIn case of allsky display, the drawing orientation will use by default the same coordinate system. But you can explicitely specify another orientation.\nYou can modify this first choice via the plane propertie window.
+UPFRAMEALLSKYB All-sky mode
+UPPROJALLSKYB	All-sky projection
+UPPROJALLSKYH Specify the default projection for all-sky mode views
+UPFRAMEH	Specify the default coordinate frame.\nIn case of all-sky display, the drawing orientation will use by default the same coordinate system. But you can explicitely specify another orientation.\nYou can modify this first choice via the plane propertie window.
 UPCACHE	Permanent disk cache
 UPCACHEH	Aladin requires local disk space for keeping data from one session to the other. More it has, better it runs
 UPLOG CDS log
 UPLOGH You will help the CDS team to improve Aladin by keeping the log mechanism activated. These "logs" are anonymous and do not transmit any local information (paths, file names,...) just some usage statistics and possibly bug reports. Thanks !
-PHELP Wizard
+UPHELP Wizard
 UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
 #UPTAGCENTER	Centered tag
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
@@ -1603,6 +1605,8 @@ UPIMGS.fr	Serveur
 UPIMGC.fr	Relevé/Couleur
 UPFRAMEB.fr	Référentiel céleste
 UPFRAMEALLSKYB.fr Mode ciel complet
+UPPROJALLSKYB.fr	Projection ciel complet
+UPPROJALLSKYH.fr Indiquez la méthode de projection par défaut dans le cas de tracé d'un ciel complet
 UPFRAMEH.fr	Indiquez le système de référence céleste par défaut.\nLe tracé d'un ciel complet sera orienté par défaut dans le même système, à moins que vous n'en précisiez un autre explicitement.\nIl est possible de modifier ce choix a posteriori via les propriétés du plan.
 UPCACHE.fr	Mémoire tampon
 UPCACHEH.fr	Aladin requière de la place sur le disque local afin de conserver les données d'une session à l'autre. Plus il en dispose, mieux il s'exécutera.

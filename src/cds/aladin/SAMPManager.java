@@ -1284,7 +1284,7 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
             return false;
         }
 
-        if( idx.intValue()>=p.pcat.getCounts() ) {
+        if( idx.intValue()>=p.pcat.getCount() ) {
             return false;
         }
         final Source src = (Source)p.pcat.getObj(idx.intValue());

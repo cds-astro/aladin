@@ -82,8 +82,8 @@ public final class Projection {
 //          LORSQUE FRANCOIS AURA CORRIGE LES PROJECTIONS QUI MERDOIENT
    static {
       if( Aladin.PROTO ) {
-         alaProj       = new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC", "NCP", "ZPN", "TAN-SIP" };
-         alaProjToType = new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "NCP", "ZPN", "TAN-SIP" };
+         alaProj       = new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC", "NCP", "ZPN",  };
+         alaProjToType = new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "NCP", "ZPN",  };
       } else {
          alaProj       =  new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE" };
          alaProjToType =  new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",      };
@@ -131,10 +131,12 @@ public final class Projection {
     protected Projection(double refX,double refY,double x, double y, double refW, double refH, double w, double h, 
           boolean flipX, boolean flipY,boolean logX, boolean logY) {
        modeCalib=PLOT;
-       raj=alphai = refX; dej=deltai = refY;
+       raj=alphai = refX; 
+       dej=deltai = refY;
        cx = x; cy = y;
        rm = refW; rm1 = refH;
-       r = w; r1 = h;
+//       r = w; r1 = h;
+       r = w; r1 = w;
        flipPlotX = flipX ? -1 : 1;
        flipPlotY = flipY ? -1 : 1;
        logPlotX = logX;
@@ -142,31 +144,38 @@ public final class Projection {
 //       t=Calib.XYLINEAR;
     }
     
-    protected double getFctXPlot() { return r/rm; }
-    protected double getFctYPlot() { return r1/rm1; }
+    private double log(double x) { return Math.log(x)/Math.log(10); }
+    private double exp(double x) { return Math.exp(x * Math.log(10) ); }
+    
+    protected double getFctXPlot() { return r /( logPlotX ? log(rm) :rm); }
+    protected double getFctYPlot() { return r1/( logPlotY ? log(rm1):rm1); }
     
     protected Coord getXYPlot(Coord coo) {
        if( Double.isNaN(coo.al) ) { coo.x=Double.NaN; coo.y=Double.NaN; return coo; }
        try {
-          double valX = logPlotX ? Math.log(coo.al - alphai) : coo.al - alphai;
-          double valY = logPlotY ? Math.log(coo.del - deltai) : coo.del - deltai;
-          coo.x = ( valX * r/rm * flipPlotX ) + cx;
-          coo.y = ( valY * -r1/rm1 * flipPlotY ) + cy;
+          double valX = logPlotX ? log(coo.al) : coo.al - alphai;
+          double valY = logPlotY ? log(coo.del) : coo.del - deltai;
+          coo.x = ( valX * r/(logPlotX ? log(rm-alphai):rm) * flipPlotX ) + cx;
+          coo.y = ( valY * -r1/(logPlotY ? log(rm1-deltai):rm1) * flipPlotY ) + cy;
+          if( Double.isInfinite(coo.x) || Double.isInfinite(coo.y) ) throw new Exception();
        } catch( Exception e ) {
-          e.printStackTrace();
           coo.x = Double.NaN;
           coo.y = Double.NaN;
        }
        return coo;
     }
+
     
     protected Coord getCoordPlot(Coord coo) {
        if( Double.isNaN(coo.x) ) { coo.al=Double.NaN; coo.del=Double.NaN; return coo; }
        try {
-          double valX = logPlotX ? Math.exp(coo.x - cx) : coo.x - cx;
-          double valY = logPlotY ? Math.exp(coo.y - cy) : coo.y - cy;
-          coo.al  = ( valX * rm/r * flipPlotX ) + alphai;
-          coo.del = ( valY * -rm1/r1 * flipPlotY ) + deltai;
+          double valX = coo.x - cx;
+          double valY = coo.y - cy;
+          double al = valX * (logPlotX ?log(rm-alphai):rm)/r * flipPlotX;
+          coo.al  = ( logPlotX ? exp(al) : al ) + alphai;
+          double del = valY * -(logPlotY ? log(rm1-deltai):rm1)/r1 * flipPlotY;
+          coo.del = ( logPlotY ? exp(del) : del ) + deltai;
+          if( Double.isInfinite(coo.al) || Double.isInfinite(coo.del) ) throw new Exception();
        } catch( Exception e ) {
           coo.al = Double.NaN;
           coo.del = Double.NaN;

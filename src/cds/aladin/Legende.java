@@ -282,10 +282,18 @@ public final class Legende extends AbstractTableModel  {
       sorted=false;
    }
 
+   
+   /** retourne true s'il s'agit d'une légende comportant un point de SED */
+   protected boolean isSED() {
+      for( Field f : field ) {
+         if( f.sed!=0 ) return true;
+      }
+      return false;
+   }
 
    /** Retourne true s'il y a un champ trié */
    protected boolean isSorted() { return sorted; }
-
+   
 
    /** Retourne le nombre de champs de la légende */
    public int getSize() { return field.length; }

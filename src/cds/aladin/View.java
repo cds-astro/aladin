@@ -3721,9 +3721,16 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       v.getProj().getCoord(coo);
       double radius = Util.round(Math.abs(coo.del-d),7);
 //      if( radius>1 ) radius=1;
-
+      
+      // Faut-il également charger un SED ?
+      // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
+      boolean flagSED=true;
+      Source o;
+      if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
+      
       try {
          aladin.status.setText("Querying Simbad...");
+         if( flagSED ) zoomview.setSED((String)null);
          URL url = aladin.glu.getURL("SimbadQuick","\""+target+"\" "+radius,false);
          java.io.InputStream is = url.openStream();
          if( is!=null ) {
@@ -3749,12 +3756,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             simRep.setType(Repere.CARTOUCHE);
             simRep.setSize(TAILLEARROW);
             simRep.projection(v);
-            s=s.substring(s.indexOf('/')+1);
-            aladin.status.setText(s+"    [by Simbad]");
-            simRep.setId(s);
+            String s1=s.substring(s.indexOf('/')+1);
+            aladin.status.setText(s1+"    [by Simbad]");
+            simRep.setId(s1);
             simRep.setWithLabel(true);
-            aladin.console.setInPad(s+"\n");
+            aladin.console.setInPad(s1+"\n");
+            
+            
          } catch( Exception e ) { return; }
+         
+         // Et on cherche le SED correspondant
+         if( flagSED ) {
+            String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
+            aladin.trace(2,"Loading VizieR SED for \""+s2+"\"...");
+            aladin.view.zoomview.setSED(s2,simRep);
+         }
+         
       }
       Aladin.makeCursor(v,Cursor.DEFAULT_CURSOR);
 

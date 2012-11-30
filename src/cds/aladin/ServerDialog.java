@@ -116,6 +116,7 @@ public final class ServerDialog extends JFrame
 
     /** Memorisation du dernier target saisie par la saisie rapide */
     protected void setDefaultTarget(String s) {
+       if( s.equals(" --   --") ) return;
 //       System.out.println("setDefaultTarget("+s+")");
        defaultTarget=aladin.localisation.getICRSCoord(s);
     }

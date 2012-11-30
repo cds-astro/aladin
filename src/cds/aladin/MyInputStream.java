@@ -87,13 +87,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long PDS     = 1L<<35;
    static final public long HPXMOC  = 1L<<36;
    static final public long DS9REG  = 1L<<37;
+   static final public long SED     = 1L<<38;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG" };
+      "HPXMOC","DS9REG","SED" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -435,14 +436,14 @@ public final class MyInputStream extends FilterInputStream {
                         && lookForSignature("Access.Format", true)>0
                         && lookForSignature("DataID.Title", true)>0  )
             )
-               type |= SIA_SSA|XML;
+               type |= SIA_SSA;
 
             // Detection de FOV
             else if( lookForSignature("name=\"FoVRef\"",true)>0 ||
                      lookForSignature("ID=\"FoVRef\"",true)>0   ||
                      // pour nouveau format
                      lookForSignature("utype=\"dal:footprint.geom.id\"", true)>0
-            ) type |= FOV|XML;
+            ) type |= FOV;
 
             // Detection de FOV_ONLY
             // TODO : à modifier, beaucoup trop générique
@@ -453,6 +454,10 @@ public final class MyInputStream extends FilterInputStream {
 //                                        || (lookForSignature("FoV",true)>0 && lookForSignature("\"CARTESIAN\"",false)>0)
             ) {
                type |= FOV_ONLY;
+            }
+            
+            else if( lookForSignature("utype=\"photdm:PhotometryFilter.SpectralAxis.Coverage.Location.Value", true)>0 ) {
+               type |= SED;
             }
 
          }

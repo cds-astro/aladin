@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 
+import javax.imageio.stream.FileImageInputStream;
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;

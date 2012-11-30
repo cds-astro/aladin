@@ -878,16 +878,14 @@ public final class Select extends JComponent  implements
       
       boolean itsDone=false;
 
-      if( !canBeNewRef(e,x,p) 
-            ||  (!a.view.isMultiView() && p.ref)  ) newRef=null;
+      if( !canBeNewRef(e,x,p) ||  (!a.view.isMultiView() && p.ref)  ) newRef=null;
       else newRef = p;
 
       if( !itsDone && p.type!=Plan.NO ) {
          if( newRef!=null ) {
 //            boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
             boolean recenter= p instanceof PlanBG;
-            if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) 
-            || !recenter && setPlanRef(p) ) {
+            if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) || !recenter && setPlanRef(p) ) {
                a.view.newView();
                a.console.setCommand("cview "+Tok.quote(p.label));
             }

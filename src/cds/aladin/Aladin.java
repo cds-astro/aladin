@@ -67,6 +67,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> SED quick view (from VizieR SED builder)
  * @beta    <LI> Tagging source feature
  * @beta    <LI> Spectrum SAMP management dedicated to source catalog
  * @beta    <LI> Specifical color parameter for "draw" script command
@@ -102,7 +103,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.536";
+    static public final    String VERSION = "v7.537";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

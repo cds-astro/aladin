@@ -2999,12 +2999,10 @@ public final class Calque extends JPanel implements Runnable {
    * @param from  l'origine des donnees
    * @param Server le serveur d'origine
    */
-   protected int newPlanCatalog(URL u,String label, String objet,String param,String from,
-         Server server) {
+   protected int newPlanCatalog(URL u,String label, String objet,String param,String from, Server server) {
       return newPlanCatalog(u,null,label,objet,param,from,server);
    }
-   protected int newPlanCatalog(URL u,MyInputStream in,String label,
-         String objet,String param,String from,
+   protected int newPlanCatalog(URL u,MyInputStream in,String label, String objet,String param,String from,
          Server server) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
@@ -3028,6 +3026,14 @@ public final class Calque extends JPanel implements Runnable {
    protected Plan createPlanCatalog(MyInputStream in,String label) {
       int n =  newPlanCatalog(in,label);
       return plan[n];
+   }
+   
+   /** Ajoute un plan déjà préparé dans la pile */
+   protected int newPlan(Plan p) {
+      int n=getStackIndex();
+      plan[n] = p;
+      suiteNew(p);
+      return n;
    }
 
   /** Pour VOApp et ExtApp

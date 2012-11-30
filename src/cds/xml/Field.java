@@ -97,6 +97,9 @@ final public class Field {
    static public final int RA=1,DE=2,X=3,Y=4;
    static public final String [] COOSIGN = { "", "RA","DE","X","Y" };
    public int coo;
+   
+   static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
+   public int sed;
 
    /** True if it is the DE coordinate field */
    public boolean isDE;
@@ -109,7 +112,6 @@ final public class Field {
 
    /** Visible flag */
    public boolean visible=true;
-
 
    static public final int UNSORT = 0;
    static public final int SORT_ASCENDING  = 1;

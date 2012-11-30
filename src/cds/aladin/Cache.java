@@ -212,6 +212,7 @@ Aladin.trace(3,"Clear cache");
    synchronized private void fin() { thread=null; }
    
    synchronized private void startThread() {
+      if( !aladin.NETWORK ) return;
       if( thread!=null ) return;
       thread = new Thread(this,"Cache updater");
       Util.decreasePriority(Thread.currentThread(), thread);

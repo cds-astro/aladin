@@ -522,7 +522,7 @@ public class AladinData {
     */
    public int getNbObj() throws AladinException {
       testOverlay();
-      return plan.pcat.getCounts();
+      return plan.pcat.getCount();
    }
    
    /** FOR ADVANCED DEVELOPERS ONLY !

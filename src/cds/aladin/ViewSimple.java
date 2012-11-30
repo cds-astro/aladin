@@ -260,11 +260,15 @@ public class ViewSimple extends JComponent
 
       try {
          
-         PointD p1 = getZoomCoord(e.getX(), e.getY());
          // On positionne le xviewzoom.x et xviewzoom.y sur la position
          // de la souris dans le cas où le zoom via la position céleste
          // ne fonctionnerait pas
+         PointD p1 = getZoomCoord(e.getX(), e.getY());
+         
+         // Dans le cas d'un nuage de points, on prend simplement le centre de la vue
+         // sinon le déplacement est trop complexe
          if( isPlotView() ) {
+            p1 = getZoomCoord(rv.width/2, rv.height/2);    
             xzoomView=p1.x;
             yzoomView=p1.y;
          }
@@ -5653,7 +5657,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          paintForeGround(g);
 
          // Tracage du quick Simbad s'il existe
-         if( aladin.view.simRep!=null && this==aladin.view.getMouseView()) {
+         if( aladin.view.simRep!=null /* && this==aladin.view.getMouseView() */) {
             aladin.view.simRep.projection(this);
             aladin.view.simRep.draw(g,this,dx,dy);
          }

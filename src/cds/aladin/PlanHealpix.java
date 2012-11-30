@@ -426,7 +426,14 @@ public class PlanHealpix extends PlanBG {
     }
     
     protected void postProd() {
-       Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
+       int defaultProjType = aladin.configuration.getProjAllsky();
+       Plan base = aladin.calque.getPlanBase();
+       if( base instanceof PlanBG ) defaultProjType = base.projd.t;
+       
+       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
+             defaultProjType,Calib.FK5);
+
+//       Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
        p.frame = getCurrentFrameDrawing();
        setNewProjD(p);
        initZoom=1./ (Aladin.OUTREACH?64:32);

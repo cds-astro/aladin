@@ -54,7 +54,7 @@ class HealpixAllskyCat extends HealpixKeyCat {
    protected int draw(Graphics g, ViewSimple v) {
       if( pcat==null || !pcat.hasObj() ) return 0;
       pcat.draw(g, null, v, true, 0, 0);
-      return pcat.getCounts();
+      return pcat.getCount();
    }
 
    HealpixKey [] getPixList() {

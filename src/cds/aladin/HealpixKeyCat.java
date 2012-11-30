@@ -169,12 +169,12 @@ public class HealpixKeyCat extends HealpixKey {
       resetTimer();
       resetTimeAskRepaint();
 
-      return pcat.getCounts();
+      return pcat.getCount();
    }
 
    // Retourne le nombre de sources
    private int getCounts() {
-      if( getStatus()==READY && pcat!=null ) return pcat.getCounts();
+      if( getStatus()==READY && pcat!=null ) return pcat.getCount();
       return 0;
    }
 

@@ -46,8 +46,7 @@ public class BuilderTiles extends Builder {
    // Liste des Threads de calcul
    private ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
    private CoAddMode coaddMode=CoAddMode.REPLACETILE;
-
-//   protected String hpxFinderPath;
+   
    protected int ordermin = 3;
    protected long nummin = 0;
    protected long nummax = 0;

@@ -478,7 +478,8 @@ public class PlanBG extends PlanImage {
       objet = co+"";
       
       // On va garder le même type de projection que le plan de base.
-      int defaultProjType = Calib.SIN;
+//      int defaultProjType = Calib.SIN;
+      int defaultProjType = aladin.configuration.getProjAllsky();
       Plan base = aladin.calque.getPlanBase();
       if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       

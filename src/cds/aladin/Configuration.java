@@ -96,6 +96,7 @@ public final class Configuration extends JFrame
    protected static String BOOKMARKS  = "Bookmarks";
    protected static String FRAME      = "Frame";
    protected static String FRAMEALLSKY= "FrameAllsky";
+   protected static String PROJALLSKY = "ProjAllsky";
    protected static String VERSION    = "OfficialVersion";
    protected static String CACHE      = "HpxCacheSize";
    protected static String MAXCACHE   = "HpxMaxCacheSize";
@@ -111,7 +112,7 @@ public final class Configuration extends JFrame
    static String TITLE,DEFDIR,DEFDIRH,LANGUE,LANGUEH,LANGCONTRIB,CSVCHAR,CSVCHARH,PIXB,PIXH,PIX8,PIXF,
                  CMB,CMH,CMV,CMM,CMC,CMF,BKGB,BKGH,WEBB,WEBH,RELOAD,
                  REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
-                 FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
+                 PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
                  IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH/*,TAGCENTER,TAGCENTERH*/;
    
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
@@ -137,6 +138,7 @@ public final class Configuration extends JFrame
 //   private JComboBox        pixelChoice;          // Pour la sélection du mode Pixel par défaut
    private JComboBox        frameChoice;          // Pour la sélection du frame par défaut
    private JComboBox        frameAllskyChoice;    // Pour la sélection du frame par défaut dans le cas des Allsky
+   private JComboBox        projAllskyChoice;      // Pour la sélection de la projection par défaut pour les all-sky
    private JComboBox        videoChoice;          // Choix du mode vidéo
    private JComboBox        mapChoice;            // Choix de la color map
    private JComboBox        cutChoice;            // Choix de l'autocut
@@ -207,7 +209,9 @@ public final class Configuration extends JFrame
       CACHEH = aladin.chaine.getString("UPCACHEH");
       FRAMEALLSKYB = aladin.chaine.getString("UPFRAMEALLSKYB");
       FRAMEH = aladin.chaine.getString("UPFRAMEH");
-      OPALEVEL = aladin.chaine.getString("PROPOPACITYLEVEL");
+      PROJALLSKYB = aladin.chaine.getString("UPPROJALLSKYB");
+      PROJALLSKYH = aladin.chaine.getString("UPPROJALLSKYH");
+         OPALEVEL = aladin.chaine.getString("PROPOPACITYLEVEL");
       SMBB = aladin.chaine.getString("UPSMBB");
       SMBH = aladin.chaine.getString("UPSMBH");
       FILTERB = aladin.chaine.getString("UPFILTERB");
@@ -618,6 +622,19 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       return Localisation.ICRS;
    }
    
+   /** Retourne le code Calib de la projection par défaut pour les plans
+    * en mode all-sky */
+   protected int getProjAllsky() {
+      if( Aladin.OUTREACH ) return Calib.SIN;
+      try {
+         String proj = get(PROJALLSKY);
+         int i= Projection.getAlaProjIndex(proj);
+         String calibProj = Projection.alaProjToType[i];
+         i=Calib.getProjType(calibProj);
+         if( i>=0 ) return i;
+      } catch( Exception e ) { }
+      return Calib.SIN;
+   }
    
    // EN ATTENDANT
 //   protected int getFrameAllsky() { return getFrame(); }
@@ -1026,14 +1043,23 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       (l = new JLabel(FRAMEB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(frameChoice);
-      if( aladin.PROTO ) {
+//      if( aladin.PROTO ) {
          panel.add(new JLabel(" - "+FRAMEALLSKYB));
          panel.add(frameAllskyChoice);
-      }
+//      }
       if( !aladin.OUTREACH ) {
          PropPanel.addCouple(this, p, l, FRAMEH, panel, g, c, GridBagConstraints.EAST);
       }
       
+      // La projection par défaut pour les allsky
+      projAllskyChoice = new JComboBox( Projection.getAlaProj() );
+      (l = new JLabel(PROJALLSKYB)).setFont(l.getFont().deriveFont(Font.BOLD));
+      panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+      panel.add(projAllskyChoice);
+      if( !aladin.OUTREACH ) {
+         PropPanel.addCouple(this, p, l, PROJALLSKYH, panel, g, c, GridBagConstraints.EAST);
+      }
+
       // Le mode pixel
 //      pixelChoice = new JComboBox();
 //      pixelChoice.addItem(PIXF);      
@@ -1202,6 +1228,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       s = get(FRAME);
       if( s == null ) frameChoice.setSelectedItem("ICRS");
       else frameChoice.setSelectedItem(s);   
+      
+      s = get(PROJALLSKY);
+      if( s == null ) projAllskyChoice.setSelectedItem("SINUS");
+      else projAllskyChoice.setSelectedItem(s);
       
       s = get(FRAMEALLSKY);
       if( s == null ) frameAllskyChoice.setSelectedItem("GAL");
@@ -1644,6 +1674,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       // Pour les frames par défaut
       set(FRAME,(String)frameChoice.getSelectedItem());
       set(FRAMEALLSKY,(String)frameAllskyChoice.getSelectedItem());
+      
+      // Pour la projection all-sky par défaut
+      set(PROJALLSKY,(String)projAllskyChoice.getSelectedItem());
       
       // Pour le choix du mapping pixel
       s = videoChoice.getSelectedItem()+" "

@@ -108,7 +108,9 @@ public final class ZoomView extends JComponent
    
    // Les paramètres à mémoriser pour l'histogramme
    Hist hist=null;                  // L'histogramme courant
+   SED sed=null;                    // SED courant
    protected boolean flagHist=false;  // true si l'histogramme est actif
+   protected boolean flagSED=false;   // true s'il faut afficher le SED courant
    
    // Gestion de la synchronization des vues compatibles
    private boolean flagSynchronized=false;  // true - indique que l'on a déjà fait un synchronize des vues (SHIFT)
@@ -140,6 +142,7 @@ public final class ZoomView extends JComponent
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( aladin.inHelp ) return;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
+      if( flagSED ) return;
       if( flagHist ) { if( hist.mouseWheelMoved(e) ) repaint(); return; }
       synchronize(e);
       aladin.calque.zoom.incZoom(-e.getWheelRotation());
@@ -149,7 +152,7 @@ public final class ZoomView extends JComponent
       
    public void mousePressed(MouseEvent e) {
       if( aladin.inHelp ) return;
-   	  if( flagCut || flagHist ) return;
+   	  if( flagCut || flagHist || flagSED ) return;
    	  ViewSimple v = aladin.view.getCurrentView();
    	  v.stopAutomaticScroll();
    	  
@@ -192,6 +195,7 @@ public final class ZoomView extends JComponent
    /** Deplacement du rectangle de zoom */
    public void mouseDragged(MouseEvent e) {
       if( aladin.inHelp ) return;
+      if( flagSED ) return;
       if( flagHist ) { if( hist.mouseDragged(e) ) repaint(); return; }
 	  if( flagCut ) {
  	     if( objCut instanceof Repere ) setFrameCube(e.getX());
@@ -217,6 +221,12 @@ public final class ZoomView extends JComponent
    public void mouseMoved(MouseEvent e) {
       if( aladin.inHelp ) return;
       
+      if( flagSED ) { 
+         sed.mouseMove(e.getX(),e.getY());
+         repaint();
+         return;
+      }
+      
       if( INFO==null ) INFO = aladin.chaine.getString("ZINFO");
       aladin.status.setText(INFO);
       cutX=e.getX();cutY=e.getY();
@@ -231,6 +241,9 @@ public final class ZoomView extends JComponent
     * fin de l'affichage du de FWHM */
    public void mouseExited(MouseEvent e) {
       if( aladin.inHelp ) return;
+      
+      if( flagSED ) { sed.mouseExit(); repaint(); return; }
+      
       Aladin.makeCursor(this,Aladin.DEFAULT);
       if( aladin.view.flagHighlight ) {
          hist.resetHighlightSource();
@@ -247,6 +260,8 @@ public final class ZoomView extends JComponent
 
    public void mouseEntered(MouseEvent e) {
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
+      
+      if( flagSED ) { sed.mouseEnter(); return; }
       
       boolean resize = flagCut;
       if( objCut instanceof Repere && ((Repere)objCut).hasRayon() ) resize=false;
@@ -305,6 +320,9 @@ public final class ZoomView extends JComponent
   /** Deplacement du rectangle de zoom */
    public void mouseReleased(MouseEvent e) {
       if( aladin.inHelp ) { aladin.helpOff(); return; }
+      
+      if( flagSED ) { sed.mouseRelease(e.getX(), e.getY() ); return; }
+      
  	  if( flagCut ) {
  	     if( objCut instanceof Repere ) setFrameCube(e.getX());
  	     flagdrag=false;
@@ -572,12 +590,15 @@ try {
     */
     protected void setCM(IndexColorModel ic) { repaint(); }
 
-//    private Image imgCut;
-//    private Graphics gCut;
-
     /** Dessin de l'histogramme */
     protected void drawImgHist(Graphics g) {
        hist.draw(g);
+       drawBord(g);
+    }
+    
+    /** Dessin du SED courant */
+    protected void drawImgSED(Graphics g) {
+       sed.draw(g);
        drawBord(g);
     }
     
@@ -811,6 +832,66 @@ try {
       repaint();
    }
    
+   private String oSrcSed="";           // Source associé au dernier SED tracé
+   private long oHashcodePlanSed=0;     // hashcode du plan associé au dernier SED tracé
+   
+   /** Chargement et affichage d'un SED à partir d'un nom d'objet
+    * Si null, arrêt du SED précédent
+    * @param source
+    * @param simRep repere correspondant à l'objet dans la vue (si connu)
+    */
+   protected void setSED(String source) { setSED(source,null); }
+   protected void setSED(String source,Repere simRep) {
+      if( source==null ) source="";
+      if( oSrcSed.equals(source) ) return;
+      oSrcSed=source;
+      
+      // Arret du SED
+      if( source.length()==0 ) {
+         flagSED=false;
+         
+      // Chargement du SED
+      } else {
+         if( sed==null )  sed = new SED(aladin);
+         flagSED=true;
+         flagHist=false;
+         sed.setRepere(simRep);
+         sed.loadFromSource(source);
+      }
+      repaint();
+   }
+   
+   /** Chargement et affichage d'un SED à partir d'un objet étalon issu
+    * de la table des mesures. Il faut que le plan associé à l'objet étalon
+    * soit issu d'une table SED à la VizieR
+    * Si null, arrêt du SED précédent
+    * @param o
+    */
+   protected void setSED(Source o) {
+      String source=o==null?null:o.id;
+      if( source==null ) source="";
+      if( oSrcSed.equals(source) ) return;
+      oSrcSed=source;
+      
+      // Arret du SED
+      if( source.length()==0 ) {
+         flagSED=false;
+         
+      // Chargement du SED
+      } else {
+         if( sed==null )  sed = new SED(aladin);
+         flagSED=true;
+         flagHist=false;
+         if( oHashcodePlanSed!=o.plan.hashCode()) {
+            sed.loadFromPcat(o.plan.pcat);
+         }
+         sed.setHighLight(o);
+         oHashcodePlanSed=o.plan.hashCode();
+      }
+      repaint();
+
+   }
+   
    /** Arrêt de l'affichage de l'histogramme courant */   
    protected void setHist() { 
       if( !flagHist ) return;   // Déjà fait
@@ -841,6 +922,11 @@ try {
     */
    protected boolean setHist(Source o,int nField) {
       boolean rep=false;
+      
+      // pour annuler le précédent SED
+      flagSED=false;
+      oSrcSed="";
+      
       if( hist==null ) { hist = new Hist(aladin,SIZE,SIZE); rep=true; }
       rep |= hist.o!=o || hist.nField!=nField;
       flagHist=hist.init(o, nField);
@@ -1151,10 +1237,10 @@ try {
       else if( !flagdrag )  imgok = drawImgZoom(v);
       
       // L'histogramme
-      if( flagHist ) {
-         drawImgHist(gr);
-         return;
-      }
+      if( flagHist ) { drawImgHist(gr); return; }
+      
+      // Le SED
+      if( flagSED ) { drawImgSED(gr); return; }
       
       // Le graphe de coupe
       if( flagCut ) {

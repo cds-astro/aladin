@@ -435,7 +435,7 @@ public final class Save extends JFrame implements ActionListener {
           tsvCb.addActionListener(this);
           votCb.addActionListener(this);
           c.gridwidth = 1;
-          if( !noImage ) c.gridwidth = GridBagConstraints.REMAINDER;
+          if( !noImage || !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
           g.setConstraints(pFormat,c); p.add(pFormat);
       }
 
@@ -467,6 +467,7 @@ public final class Save extends JFrame implements ActionListener {
           pngCb.addActionListener(this);
           c.gridwidth = 1;
           c.insets.bottom = c.insets.top = 2;
+          if( !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
           g.setConstraints(pFormat,c); p.add(pFormat);
       }
       
@@ -494,7 +495,7 @@ public final class Save extends JFrame implements ActionListener {
           fitsMocCb.addActionListener(this);
           jsonMocCb.addActionListener(this);
           c.gridwidth = 1;
-          if( !noImage ) c.gridwidth = GridBagConstraints.REMAINDER;
+          c.gridwidth = GridBagConstraints.REMAINDER;
           g.setConstraints(pFormat,c); p.add(pFormat);
       }
 
@@ -1267,7 +1268,7 @@ public final class Save extends JFrame implements ActionListener {
          s.append("RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo"+CR);
 
          Iterator<Obj> it = pcat.iterator();
-         int nb = pcat.getCounts();
+         int nb = pcat.getCount();
          for( int i=0; i<=nb; i++ ) {
             if( i<nb ) {
                Position o = (Position)it.next();
@@ -1311,7 +1312,7 @@ public final class Save extends JFrame implements ActionListener {
          Legende leg = ((PlanCatalog)p).getFirstLegende();
          s.append(getShortHeader(leg));
 
-         int nb = pcat.getCounts();
+         int nb = pcat.getCount();
          Iterator<Obj> it = pcat.iterator();
          for( int i=0; i<=nb; i++ ) {
             Source o = (Source)(i<nb?it.next():null);

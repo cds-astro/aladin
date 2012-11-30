@@ -84,7 +84,7 @@ public class BuilderMoc extends Builder {
       // frères
       // consécutifs
       File[] sf = f.listFiles();
-      if( sf.length==0 ) throw new Exception("No tiles found !");
+      if( sf==null || sf.length==0 ) throw new Exception("No tiles found !");
       for( int i = 0; i < sf.length; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          if( !sf[i].isDirectory() ) continue;

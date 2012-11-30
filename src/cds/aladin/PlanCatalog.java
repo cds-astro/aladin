@@ -195,7 +195,7 @@ public class PlanCatalog extends Plan {
    }
 
    /** Retourne le nombre d'objects */
-   protected int getCounts() { return pcat==null ? 0 : pcat.getCounts(); }
+   protected int getCounts() { return pcat==null ? 0 : pcat.getCount(); }
 
    protected Obj [] getObj() {
       return pcat.o;
@@ -309,7 +309,7 @@ public class PlanCatalog extends Plan {
 
    /** Retourne la progression du chargement */
     protected String getProgress() {
-       if(!flagOk && error==null ) return " - "+pcat.getCounts() + " object"+(pcat.getCounts()<=1?"":"s")+" - in progress...";
+       if(!flagOk && error==null ) return " - "+pcat.getCount() + " object"+(pcat.getCount()<=1?"":"s")+" - in progress...";
        return super.getProgress();
     }
 
@@ -363,7 +363,7 @@ public class PlanCatalog extends Plan {
 	   }
 
 	}
-
+	
 	 /** retourne true si le plan a des sources */
 	 protected boolean hasSources() { return pcat!=null && pcat.hasObj(); }
 

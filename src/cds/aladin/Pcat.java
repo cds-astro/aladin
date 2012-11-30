@@ -865,8 +865,10 @@ Aladin.trace(3,"setField "+f);
    protected int tableParsing(MyInputStream dis,String endTag) throws Exception {
       o= new Obj[DEFAULTBLOC];
       nb_o = 0;
-      catalog=plan.label;
-      table=plan.label;
+      if( plan!=null ) {
+         catalog=plan.label;
+         table=plan.label;
+      }
       leg=null;
       flagTarget=false;
       minRa=minDec = Double.MAX_VALUE;
@@ -878,15 +880,8 @@ Aladin.trace(3,"setField "+f);
       long type=dis.getType();
       boolean ok;
 
-      // Parsing IPAC table
-      // ENCORE TOUT A FAIRE
-      if( false && (type & MyInputStream.IPAC)!=0 ) {
-//         plan.headerFits = new FrameHeaderFits(dis);
-         res = new TableParser(aladin,this,MyInputStream.IPAC);
-         ok = res.parse(dis);
-
       // Parsing FITS table
-      } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
+       if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
          plan.headerFits = new FrameHeaderFits(plan,dis);
          res = new TableParser(aladin,this,((PlanCatalog)plan).headerFits.getHeaderFits(),plan.flagSkip);
          ok = res.parse(dis);
@@ -1399,7 +1394,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
     }
 
    /** retourne le nombre d'objets */
-   protected int getCounts() { return nb_o; }
+   protected int getCount() { return nb_o; }
 
    /** retourne true si le plan contient des objets */
    protected boolean hasObj() { return nb_o>0; }

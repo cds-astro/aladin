@@ -381,7 +381,11 @@ public final class Localisation extends MyBox {
    protected void setPos(ViewSimple v,double x,double y) { setPos(v,x,y,0); }
    protected void setPos(ViewSimple v,double x,double y,int methode) { setPos(v,x,y,methode,false); }
    protected void setPos(ViewSimple v,double x,double y,int methode,boolean sendPlasticMsg) {
-      int i     = getFrame();
+      int frame     = getFrame();
+      
+      // Forcage pour les nuage de point
+      if( aladin.view.getMouseView().isPlotView() ) frame=XYLINEAR;
+
       Plan plan = v.pref;
       if( plan==null ) return;
       Projection proj = v.getProj();
@@ -390,13 +394,13 @@ public final class Localisation extends MyBox {
       String s=null;
       
       // Position (X,Y) simplement (mode FITS)
-      if( i==XY || proj!=null && proj.modeCalib==Projection.NO ) {
+      if( frame==XY || proj!=null && proj.modeCalib==Projection.NO ) {
          if( plan.isImage() )  s=Util.myRound(""+(p.x+0.5),4)
                       +"  "+Util.myRound(""+(((PlanImage)plan).naxis2-p.y+0.5),4);
          else s="";
 
          // Position (X,Y) simplement (mode Natif)
-      } else if( i==XYNAT || proj!=null && proj.modeCalib==Projection.NO ) {
+      } else if( frame==XYNAT || proj!=null && proj.modeCalib==Projection.NO ) {
             if( plan.isImage() )  s=Util.myRound(""+p.x,0)
                          +"  "+Util.myRound(""+p.y,0);
             else s="";
@@ -409,7 +413,7 @@ public final class Localisation extends MyBox {
             coo.y = p.y;
             proj.getCoord(coo);
             if( Double.isNaN(coo.al) ) s="";
-            else if( i==XYLINEAR ) {
+            else if( frame==XYLINEAR ) {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
                else s=Util.myRound(coo.al+"",4)+" : "+Util.myRound(coo.del+"",4);
             } else {
@@ -522,7 +526,7 @@ public final class Localisation extends MyBox {
    protected String convert(String coo,int frameSource,int frameTarget) {
 
       // Champ vide => Rien à faire
-      if( coo==null || coo.length()==0 ) return coo;
+      if( coo==null || coo.length()==0 || coo.indexOf("--")>=0 ) return "";
       
       // Identificateur à la place d'une coordonnée => Rien à faire
       for( int i=0; i<coo.length(); i++) {
@@ -545,7 +549,7 @@ public final class Localisation extends MyBox {
 ////try { throw new Exception("convert"); } catch(Exception e) { e.printStackTrace(); }
 //}
          
-         if( s.trim().startsWith("--") ) return "";
+         if( s.indexOf("--")>=0 ) return "";
          return s;
       } catch( Exception e ) { e.printStackTrace(); return coo; }
    }
@@ -592,13 +596,8 @@ public final class Localisation extends MyBox {
    /** Localisation de la source en fonction du frame courant */
    protected String getLocalisation(Obj o) {
       String s="";
-      switch( getFrame() ) {
-//         case XY:
-//            int n= aladin.view.getCurrentNumView();
-//            if( n==-1 ) return null;
-//            if( o.plan!=null && o.plan.hasXYorig ) s = s+ o.x+"  "+o.y;
-//            break;
-            
+      int frame = getFrame();
+      switch( frame ) {
          case XY:
             ViewSimple v = aladin.view.getCurrentView();
             Projection proj = v.getProj();

@@ -51,13 +51,14 @@ final public class BuilderMocHight extends BuilderMoc {
       MyInputStream dis = new MyInputStream(new FileInputStream(f));
       fits.loadFITS(dis);
       dis.close();
-      System.out.println("generateTileMoc for "+f.getName()+" MOC="+Util.getUnitDisk(moc.getMem()));
       
       double blank = context.getBlank();
       long nsize = CDSHealpix.pow2(Constante.ORDER);
       long min = nsize * nsize * npix;
       order+=Constante.ORDER;
       moc.setMaxLimitOrder(order-diffOrder);
+      
+      System.out.println("generateTileMoc for "+f.getName()+" MOC="+moc.getMaxLimitOrder()+"/"+Util.getUnitDisk(moc.getMem()));
       
       long oNpix=-1;  
       for( int y=0; y<fits.height; y++ ) {
