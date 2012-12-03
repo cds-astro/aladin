@@ -332,8 +332,10 @@ long t1,t;
             sv.addElement(new ServerSimbad(aladin));
             sv.addElement(new ServerNED(aladin));
             if( Aladin.PROTO ) {
-                sv.addElement(new ServerSWarp(aladin));
-                sv.addElement(new ServerMocQuery(aladin));
+               sv.addElement(new ServerSWarp(aladin));
+            }
+            if( Aladin.BETA ) {
+               sv.addElement(new ServerMocQuery(aladin));
             }
          } else {
             sv.addElement(new ServerSimbad(aladin));
