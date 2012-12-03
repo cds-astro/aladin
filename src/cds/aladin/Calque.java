@@ -562,7 +562,7 @@ public final class Calque extends JPanel implements Runnable {
    private boolean flagFirstSimbad=true;
    /** Activation/desactivation du quick Simbad  */
    protected void setSimbad(boolean flag) {
-      if( flagFirstSimbad && flag ) {
+      if( flagFirstSimbad ) {
          aladin.info(aladin.chaine.getString("HFINGER"));
       }
       flagFirstSimbad=false;

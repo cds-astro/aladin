@@ -220,7 +220,7 @@ ROI	Thumbnail view generator...
 #VOPLOT
 VOTOOL	VO tools
 GLUTOOL	Remote tools
-SIMBAD	Simbad automatic pointer
+SIMBAD	Simbad & VizieR (SED) pointer
 TIP	Tooltip on sources
 MSCROLL	Auto-scroll on mouse pan
 FULLSCREEN	Full screen
@@ -249,7 +249,7 @@ CALCAT.fr	Calibration astrométrique..
 ROI.fr	Créer des vues vignettes...
 VOTOOL.fr	Outils OV
 GLUTOOL.fr	Outils distants
-SIMBAD.fr	Pointeur Simbad automatique
+SIMBAD.fr	Pointeur Simbad & VizieR (SED)
 TIP.fr	Infobulle sur les sources
 MSCROLL.fr	Défilement automatique suite à un dépl. souris
 FULLSCREEN.fr	Plein écran
@@ -1526,8 +1526,9 @@ UPTEST	Test available registries
 UPCSVCHAR	CSV characters
 UPCSVCHARH	Available separator characters for CSV tables and catalogues
 UPSTOP	Stop running test
-UPSMBB	Simbad pointer
-UPSMBH	This selector allows you to automatically query Simbad data base for resolving the astronomical source under the mouse.
+UPSMBB	Simbad & VizieR (SED) pointer
+UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build an SED (Spectral Energy Distribution) of this source from various VizieR catalogs
+SEDLOADING	VizieR SED loading...
 UPFILTERB	Dedicated filter
 UPFILTERH	This selector allows you to automatically apply default dedicated filter for Simbad, NED,...
 UPTRANSB		Transparency/opacity
@@ -1564,7 +1565,7 @@ UPPIXB.fr	Affichage
 #UPPIX8.fr	8 bits niv. de gris
 #UPPIXF.fr	Pixels originaux
 UPCMB.fr	Visu. des pixels
-UPCMH.fr	Choississez le mode de visualisation des pixels :\nvidéo négative/positive, table des couleurs, filtres hautes/basses valeurs,\nfonctions de transfert et mode d'affichage
+UPCMH.fr	Choisissez le mode de visualisation des pixels :\nvidéo négative/positive, table des couleurs, filtres hautes/basses valeurs,\nfonctions de transfert et mode d'affichage
 UPCMV.fr	Vidéo
 UPCMM.fr	Couleur
 UPCMCO.fr	Contraste
@@ -1588,8 +1589,9 @@ UPCSVCHARH.fr	Caractères de séparations des colonnes pour les tables et catalogu
 #UPCSV4.fr	Virgule (,)
 #UPCSV5.fr	Tabulation ou barre (|)
 #UPCSV6.fr	Tab, barre (|) ou point-virgule (;)
-UPSMBB.fr	Pointeur Simbad
-UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique via\nSimbad de l'objet astronomique sous la souris.
+UPSMBB.fr	Pointeur Simbad & VizieR (SED)
+UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique sur les base de données Simbad et VizieR afin de trouver l'identificateur de l'objet astronomique sous la souris et d'en fournir un SED (Spectral Energy Distribution)\nconstruit à partir de catalogues de VizieR.
+SEDLOADING.fr	SED VizieR...
 #UPSMBN.fr	Non activé
 #UPSMBY.fr	Activé
 UPFILTERB.fr	Filtre dédié
@@ -2396,8 +2398,8 @@ PUBLICINFOALLSKY To allow an access to all Aladin users, "expose" your target fo
 PUBLICINFOALLSKY.fr Afin de rendre accessible votre relevé pour tous les utilisateurs Aladin, veuillez "exposer" le repértoire de destination derrière un serveur Web, remplir et valider le formulaire suivant :
 
 # Info and warning strings
-HFINGER	Simbad pointer:\n \nPoint your mouse on any astronomical object\nand wait 3 secondes to see if this object is known by Simbad.\n \nIf there are several objects around the position,\nonly the object with the largest bibliographical reference number will be displayed.
-HFINGER.fr	Le pointeur Simbad:\n \nGlisser le pointeur de la souris sur un objet astronomique\npuis patientez 3 secondes pour voir si cet objet est connu par Simbad.\n \nSi Simbad connait plusieurs objets proche de cette position\nc'est celui qui a le plus de références bibliographiques qui sera indiqué.
+HFINGER	Simbad & VizieR (SED) pointer:\n \nIf this function is activated, point your mouse on any astronomical object\nand wait 3 secondes to see if this object is known by Simbad.\n \nIf there are several objects around the position,\nonly the object with the largest bibliographical reference number will be displayed.\n \nAdditionally, a Spectral Energy Distribution (SED) graph is provided from VizieR catalog service.
+HFINGER.fr	Le pointeur Simbad & VizieR (SED):\n \nSi cette fonction est activée, glissez le pointeur de la souris sur un objet astronomique\npuis patientez 3 secondes pour voir si cet objet est connu par Simbad.\n \nSi Simbad connait plusieurs objets proche de cette position\nc'est celui qui a le plus de références bibliographiques qui sera cité.\n \nParallèlement, un graphe SED (Spectral Energy Distribution) est construit à partir du service de catalogues VizieR.
 INFOXY	This table has only XY positions. You must specify the astrometrical reduction parameters allowing Aladin to compute the associated sky positions.
 INFOXY.fr	Cette table ne contient que des positions XY. Veuillez indiquer les paramètres de la réduction astrométrique permettant à Aladin de calculer les positions correspondantes dans le ciel.
 NONET	No network found !\nOnly local resources will be available !

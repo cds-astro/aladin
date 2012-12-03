@@ -220,6 +220,14 @@ public class Plan implements Runnable {
       p.ref=ref;
    }
    
+   /** Retourne true si ce plan contient un SED
+    * (on ne test que le premier élément) */
+   protected boolean isSED() {
+      if( getCounts()==0 ) return false;
+      Obj s = iterator().next();
+      return s instanceof Source && ((Source)s).leg.isSED();
+   }
+   
    // Il s'agit d'un plan qui s'applique en overlay d'une image */
    protected boolean isOverlay() {
       return isCatalog() || isPlanBGOverlay() || this instanceof PlanTool 
@@ -973,7 +981,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    * @return <I>true</I> si ok, <I>false</I> sinon.
    */
    protected boolean isViewable() {
-      if( hasXYorig ) { setDebugFlag(VIEWABLE,true); return true; }
+      if( hasXYorig || isSED() ) { setDebugFlag(VIEWABLE,true); return true; }
    	  if( type==NO || type==X || !flagOk ) { setDebugFlag(VIEWABLE,false); return false; }
   	  if( !isCatalog() && !isPlanBGOverlay()
   	        && !(isImage() || type==ALLSKYIMG) ) { setDebugFlag(VIEWABLE,true); return true; }

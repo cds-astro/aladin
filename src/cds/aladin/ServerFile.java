@@ -226,6 +226,8 @@ public class ServerFile extends Server implements XMLConsumer {
          boolean localFile=false;
 
          if( f!=null ) f=aladin.getFullFileName(f);
+         
+         aladin.console.setCommand("load "+f);
 
          waitCursor();
          try {

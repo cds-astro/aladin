@@ -48,7 +48,7 @@ import cds.xml.Field;
  * @version 1.0 : (10 mai 99)  Toilettage du code
  * @version 0.9 : (??) creation
  */
-public final class Mesure extends JPanel implements Runnable {
+public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
    Aladin aladin;                 // Reference
    MCanvas mcanvas;               // Canvas des infos et mesures
    MyScrollbar scrollV;           // Scrollbar verticale
@@ -521,6 +521,14 @@ public final class Mesure extends JPanel implements Runnable {
       return -1;
    }
    
+   public Iterator<Source> iterator() { return new SourceIterator(); }
+   class SourceIterator implements Iterator<Source> {
+      int i=nbSrc;
+      public boolean hasNext() { return i>0; }
+      public Source next() { return src[--i]; }
+      public void remove() { }
+   }
+   
    // Retourne la première source du tableau
    protected Source getFirstSrc() { return nbSrc<1 ? null : src[0]; }
    
@@ -799,6 +807,10 @@ public final class Mesure extends JPanel implements Runnable {
       mcanvas.currentsee=-1;
       mcanvas.currentselect=-2;
       
+      Source s = aladin.mesure.getFirstSrc();
+      if( s==null && aladin.view.zoomview.flagSED || s.leg.isSED() ) {
+         aladin.view.zoomview.setSED(s);
+      }
       mcanvas.repaint();
    }
 

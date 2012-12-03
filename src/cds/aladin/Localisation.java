@@ -384,7 +384,8 @@ public final class Localisation extends MyBox {
       int frame     = getFrame();
       
       // Forcage pour les nuage de point
-      if( aladin.view.getMouseView().isPlotView() ) frame=XYLINEAR;
+      ViewSimple view = aladin.view.getMouseView();
+      if( view!=null && view.isPlotView() ) frame=XYLINEAR;
 
       Plan plan = v.pref;
       if( plan==null ) return;

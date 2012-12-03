@@ -240,6 +240,8 @@ public final class MCanvas extends JComponent
          sendBySAMP(urlSamp,o);
          urlSamp=null;
       }
+      
+      if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
    }
 
    /**
@@ -1625,9 +1627,10 @@ public final class MCanvas extends JComponent
 
       // Les bordures du cadre
       Util.drawEdge(g,W,H);
-      
 
       gr.drawImage(img,0,0,this);
+      
+      if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
    }
 
   /** Gestion du Help */

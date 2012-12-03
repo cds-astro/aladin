@@ -4281,6 +4281,7 @@ public void setLocation(Point p) {
 //         boolean hasPixels = v!=null && v.pref!=null && v.pref.hasAvailablePixels() && v.pref.type!=Plan.IMAGEHUGE
 //         && !isBG;
          boolean hasPixels = pimg!=null && pimg.hasAvailablePixels() && pimg.type!=Plan.IMAGEHUGE && !isBG;
+         boolean hasProj = pimg!=null && Projection.isOk(pimg.projd);
          boolean isFree = calque.isFree();
          int nbPlans = calque.getNbPlans(true);
          boolean mode = nbPlans>0;
@@ -4405,7 +4406,7 @@ public void setLocation(Point p) {
          if( miBitpix!=null ) miBitpix.setEnabled(hasPixels && !isCube);
          if( miPixExtr!=null ) miPixExtr.setEnabled(hasPixels && !isCube);
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
-         if( miCreateHpx!=null ) miCreateHpx.setEnabled(hasPixels /*&& v.pref.type!=Plan.IMAGERGB*/);
+         if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
          if( miFlip!=null ) miFlip.setEnabled(hasImage &&!isCube && !isBG);
          int syncMode=sync.getMode();

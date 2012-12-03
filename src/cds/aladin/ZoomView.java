@@ -33,6 +33,8 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.*;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import javax.swing.JComponent;
@@ -142,7 +144,7 @@ public final class ZoomView extends JComponent
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( aladin.inHelp ) return;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
-      if( flagSED ) return;
+      if( flagSED )  { if( sed.mouseWheel(e) ) repaint(); return; };
       if( flagHist ) { if( hist.mouseWheelMoved(e) ) repaint(); return; }
       synchronize(e);
       aladin.calque.zoom.incZoom(-e.getWheelRotation());
@@ -833,7 +835,13 @@ try {
    }
    
    private String oSrcSed="";           // Source associé au dernier SED tracé
-   private long oHashcodePlanSed=0;     // hashcode du plan associé au dernier SED tracé
+   
+   protected void clearSED() { 
+      flagSED=false;
+      oSrcSed="";
+      aladin.view.simRep=null;
+      aladin.calque.repaintAll();
+   }
    
    /** Chargement et affichage d'un SED à partir d'un nom d'objet
     * Si null, arrêt du SED précédent
@@ -848,7 +856,7 @@ try {
       
       // Arret du SED
       if( source.length()==0 ) {
-         flagSED=false;
+         clearSED();
          
       // Chargement du SED
       } else {
@@ -870,23 +878,22 @@ try {
    protected void setSED(Source o) {
       String source=o==null?null:o.id;
       if( source==null ) source="";
-      if( oSrcSed.equals(source) ) return;
+//      if( oSrcSed.equals(source) ) return;
       oSrcSed=source;
       
       // Arret du SED
       if( source.length()==0 ) {
-         flagSED=false;
+         clearSED();
          
       // Chargement du SED
       } else {
-         if( sed==null )  sed = new SED(aladin);
+         if( sed==null ) sed = new SED(aladin);
+         sed.clear();
          flagSED=true;
          flagHist=false;
-         if( oHashcodePlanSed!=o.plan.hashCode()) {
-            sed.loadFromPcat(o.plan.pcat);
-         }
+         sed.addFromIterator( aladin.mesure.iterator() );
+         sed.setSource(null);
          sed.setHighLight(o);
-         oHashcodePlanSed=o.plan.hashCode();
       }
       repaint();
 

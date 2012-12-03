@@ -73,6 +73,7 @@ final public class TableParser implements XMLConsumer {
    private int nRA,nDEC;	      	  // Numéro de la colonne RA et DEC (-1 si non encore trouvée)
    private int nX,nY;	      	      // Numéro de la colonne X et Y (-1 si non encore trouvée)
    private String sFreq,sFlux,sFluxErr,sSedId; // ID des colonnes portant les valeurs d'un point SED
+   private int nFreq,nFlux,nFluxErr,nSedId; // Numéro des colonnes correspondantes
    private int qualRA,qualDEC;	      // La qualité de détection des colonnes RA et DEC (1000 mauvais, 0 excellent)
    private int qualX,qualY;	          // La qualité de détection des colonnes X et Y (1000 mauvais, 0 excellent)
    private Field f;		              // Le champ courant
@@ -912,6 +913,7 @@ final public class TableParser implements XMLConsumer {
     */
    public void startElement (String name, Hashtable atts) {
       String att;
+      String id;
       String v;
 //      int depth = xmlparser.getStack().size();
       int depth = xmlparser.getDepth(); 
@@ -930,6 +932,7 @@ final public class TableParser implements XMLConsumer {
          // et également pour prendre en compte la méthodes suivante:
          // <GROUP ID="id" utype="stc:AstroCoords" ref="ivo://STClib/CoordSys#UTC-ICRS-TOPO"...>
          att =  (String)atts.get("utype");
+         id = (String)atts.get("ID");
          if( att!=null && (att.equalsIgnoreCase("stc:AstroCoords") 
                || att.equalsIgnoreCase("stc:AstroCoordSystem") || att.equalsIgnoreCase("stc:CatalogEntryLocation")) ) {
             inAstroCoords=true;
@@ -938,7 +941,8 @@ final public class TableParser implements XMLConsumer {
             if( v!=null && astroCoordsID!=null ) coosys.put(astroCoordsID,v);
          }
          
-         else if( att!=null && att.equalsIgnoreCase("spec:PhotometryPoint") ) {
+         else if( att!=null && att.equalsIgnoreCase("spec:PhotometryPoint") 
+               || id!=null && id.equals("gsed")) {
 //            System.out.println("J'ai trouvé un GROUP SED");
             inSEDGroup=true;
          }
@@ -955,7 +959,6 @@ final public class TableParser implements XMLConsumer {
             else if( att.equalsIgnoreCase("spec:PhotometryPoint") ) sFlux = (String)atts.get("ref");
             else if( att.equalsIgnoreCase("spec:PhotoMetryPointError") ) sFluxErr = (String)atts.get("ref");
             else if( att.equalsIgnoreCase("photdm:PhotometryFilter.identifier") ) sSedId = (String)atts.get("ref");
-         System.out.println(sFreq+"/"+sFlux+"/"+sFluxErr+"/"+sSedId);
          }
       }
       
@@ -1110,7 +1113,7 @@ final public class TableParser implements XMLConsumer {
                if( (att=(String)atts.get("name"))!=null ) consumer.setTableInfo("name",att);
                
             } else if( name.equalsIgnoreCase("COOSYS") ) {
-               String id=(String)atts.get("ID");
+               id=(String)atts.get("ID");
                if( id!=null ) {
                   if( (att=(String)atts.get("system"))!=null ) coosys.put(id,att);
                   if( (att=(String)atts.get("epoch"))!=null ) cooepoch.put(id,att);
@@ -1175,7 +1178,15 @@ final public class TableParser implements XMLConsumer {
       
       
       inAstroCoords=false;
-      inSEDGroup=false;
+      
+      if( inSEDGroup ) {
+         consumer.tableParserInfo("   -SED system found:");
+         if( sFreq!=null )    consumer.tableParserInfo("      .frequence col #"+nFreq+1);
+         if( sFlux!=null )    consumer.tableParserInfo("      .flux col      #"+nFlux+1);
+         if( sFluxErr!=null ) consumer.tableParserInfo("      .fluxError col #"+nFluxErr+1);
+         if( sSedId!=null )   consumer.tableParserInfo("      .SEDid col     #"+nSedId+1);
+         inSEDGroup=false;
+      }
       
       // Par défaut, ce sera du ICRS
       srcAstroFrame=null;
@@ -1458,16 +1469,14 @@ final public class TableParser implements XMLConsumer {
     * lorsqu'il a rencontré le GROUP qui décrivait le point de SED
     * @param f
     */
-   private void detectSEDField(Field f) {
+   private void detectSEDField(Field f,int nField) {
       String name = f.ID!=null ? f.ID : f.name;
       if( name == null ) return;
-           if( sFreq!=null    && name.equals(sFreq)    ) f.sed=Field.FREQ;
-      else if( sFlux!=null    && name.equals(sFlux)    ) f.sed=Field.FLUX;
-      else if( sFluxErr!=null && name.equals(sFluxErr) ) f.sed=Field.FLUXERR;
-      else if( sSedId!=null   && name.equals(sSedId)   ) f.sed=Field.SEDID;
+           if( sFreq!=null    && name.equals(sFreq)    ) { f.sed=Field.FREQ;    nFreq=nField; }
+      else if( sFlux!=null    && name.equals(sFlux)    ) { f.sed=Field.FLUX;    nFlux=nField; }
+      else if( sFluxErr!=null && name.equals(sFluxErr) ) { f.sed=Field.FLUXERR; nFluxErr=nField; }
+      else if( sSedId!=null   && name.equals(sSedId)   ) { f.sed=Field.SEDID;   nSedId=nField; }
       else return;
-      
-      System.out.println("Detection SED:"+f.sed+" => "+name);
    }
 
   /** Cherche à determiner si f concerne RA,DE,X ou Y en mettant à jour
@@ -1610,7 +1619,7 @@ final public class TableParser implements XMLConsumer {
          fieldSub=null;
          if( f.name==null ) f.name=f.ID;
          detectPosField(f,nField);
-         detectSEDField(f);
+         detectSEDField(f,nField);
          nField++;
          consumer.setField(f);
       }
