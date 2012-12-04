@@ -901,6 +901,12 @@ try {
    
    /** Arrêt de l'affichage de l'histogramme courant */   
    protected void setHist() { 
+      if( flagSED ) {
+         // Pour immédiatement afficher un SED
+         Source s = aladin.mesure.getFirstSrc();
+         if( s!=null && s.leg.isSED() ) setSED(s);
+         return;
+      }
       if( !flagHist ) return;   // Déjà fait
       flagHist=false;
       aladin.view.flagHighlight=false;

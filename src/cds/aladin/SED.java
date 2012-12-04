@@ -27,8 +27,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseWheelEvent;
-import java.net.URL;
 import java.net.URLEncoder;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -43,12 +43,14 @@ import cds.xml.Field;
  * @version 1.0 nov 2012
  */
 class SED extends JPanel {
-   static final int margeHaut=20,margeBas=35,margeDroite=30,margeGauche=10;
+   static final int margeHaut=20,margeBas=30,margeDroite=30,margeGauche=10;
    
    static final char MU = '\u03BC';
    static final char NU = '\u03BD';
    static final char TILDE = '\u223C';
    
+   static private final Color LIGHTGRAY = new Color(125,125,125);
+
    private Aladin aladin;
    private PlanCatalog plan;    // Le planCatalog qui va recueillir les infos du SED, il ne sera pas affiché dans la pile
    private String source;       // Le nom de la source concernée par le SED
@@ -56,24 +58,26 @@ class SED extends JPanel {
    private String url;          // Pour mémoire
    private float transparency;  // Niveau de transparence d'affichage des points
    
-   private double freqMin,freqMax;  // Intervalle de fréquences du SED
+   private double absMin,absMax;    // Intervalle de fréquences/longueurs d'onde du SED
    private double fluxMin,fluxMax;  // Intervalle de flux du SED
    private double coefX,coefY;      // Facteur de l'homothétie de traçage (déterminé dans setPosition())
    private boolean readyToDraw;     // true si tout est prêt pour être tracé
    private boolean planeAlreadyCreated;  // true si le plan dans la pile a déjé été créé à partir du SED
    private boolean flagWavelength;  // true pour un affichage en longueur d'onde
+   private int xOptMin,xOptMax;     // Position de la bande optique
    
    private ArrayList<SEDItem> sedList;  // Liste des points du SED sous une forme "prémachée"
    
    private Rectangle rCroix,rInfo,rWave;  // Position des icones sur le graphiques
-   private String currentFreq=null; // Dernière fréquence sous la souris
-   private String currentFlux=null; // Dernier flux sous la souris
-   private int currentX,currentY;   // Dernière position de la souris
-   private SEDItem siIn;            // !=null si sous la souris
+   private double currentAbs=Double.NaN;  // Dernière fréquence/longueur d'onde sous la souris
+   private double currentFlux=Double.NaN; // Dernier flux sous la souris
+   private int currentX,currentY;         // Dernière position de la souris
+   private SEDItem siIn;                  // !=null si sous la souris
    
    public SED(Aladin aladin) {
       this.aladin = aladin;
       transparency = 0.5f;
+      flagWavelength = false;
    }
    
    /** Mémorise le repère de la vue afin de pouvoir le réafficher ultérieurement
@@ -86,6 +90,9 @@ class SED extends JPanel {
    /** Nettoyage de la liste */
    public void clear() { 
       planeAlreadyCreated=readyToDraw=false;
+      xOptMax=xOptMin=0;
+      fluxMin=fluxMax=0;
+      absMin=absMax=0;
       if( sedList!=null ) sedList.clear();
    }
    
@@ -115,7 +122,7 @@ class SED extends JPanel {
    
    /** Charge et crée un SED à partir d'un identificateur de source astronomique (à la Sésame) */
    protected void loadFromSource(String source) {
-      planeAlreadyCreated=readyToDraw=false;
+      clear();
       this.source = source;
       try {
          aladin.trace(2,"VizieR SED loading for source \""+source+"\"...");
@@ -175,17 +182,21 @@ class SED extends JPanel {
       aladin.calque.repaintAll();
    }
 
-   /** Retourne la fréquence en GHz du point "n" du SED */
-   protected double getFreq(Source s,int n)    { return getSEDValue(s,n,Field.FREQ); }
+   /** Retourne la fréquence en GHz de la source */
+   protected double getFreq(Source s)    { return getSEDValue(s,Field.FREQ); }
    
-   /** Retourne le flux en Jy du point "n" du SED */
-   protected double getFlux(Source s,int n)    { return getSEDValue(s,n,Field.FLUX); }
+   /** Retourne le flux en Jy de la source */
+   protected double getFlux(Source s)    { return getSEDValue(s,Field.FLUX); }
    
-   /** Retourne l'erreur sur le flux du point "n" du SED */
-   protected double getFluxErr(Source s,int n) { return getSEDValue(s,n,Field.FLUXERR); }
+   /** Retourne l'erreur sur le flux de la source */
+   protected double getFluxErr(Source s) { 
+      double x = getSEDValue(s,Field.FLUXERR);
+      if( Double.isNaN(x) ) return 0;
+      return x;
+   }
    
    // Procédure interne d'accès aux valeurs numériques du SED
-   private double getSEDValue(Source s,int n,int sed) {
+   private double getSEDValue(Source s,int sed) {
       Legende leg = s.leg;
       for( int i = 0; i<leg.field.length; i++ ) {
          if( leg.field[i].sed == sed ) {
@@ -200,82 +211,116 @@ class SED extends JPanel {
       return Double.NaN;
    }
    
-   /** Retourne l'identificateur du filtre associé au point "n" du SED
-    * ATTENTION: dans la version actuelle, si l'identicateur du filtre n'est pas explicite (genre @nu ou :=94Ghz)
-    *            on retournera le nom de la table origine de la mesure. Ceci évoluera certainement
-    */
-   protected String getSEDId(Source s,int n) {
+   /** Retourne l'identificateur du filtre associé à la source */
+   protected String getSEDId(Source s) {
       Legende leg = s.leg;
-      String sTable=null,sId=null;
+      String sId=null;
       for( int i = 0; i<leg.field.length; i++ ) {
-         if( leg.field[i].name.equals("_tabname") ) sTable = s.getValue(i);
          if( leg.field[i].sed == Field.SEDID ) sId = s.getValue(i);
       }
-      if( sId==null && sTable==null ) return null;
-      if( sId==null ) return sTable;
-      return sId.startsWith("@") || sId.startsWith(":=")? sTable : sId;
+      return sId;
    }
    
    // Génère la liste des points SED "prémachés" sous la forme d'un ArrayList de SEDItem
    private void createSEDlist(Iterator<?> it) {
        if( sedList==null ) sedList = new ArrayList<SEDItem>();
-       for( int i=0; it.hasNext() ; i++ ) {
+       while( it.hasNext() ) {
           Source s = (Source) it.next();
-          double freq = getFreq(s,i);
-          double flux = getFlux(s,i);
+          double freq = getFreq(s);
+          double flux = getFlux(s);
           if( Double.isNaN(freq) || Double.isNaN(flux) ) continue;
           if( freq<=0 || flux<=0 ) continue; // Pas possible en log
-          double fluxErr = getFluxErr(s,i);
-          String sedId = getSEDId(s,i);
+          double fluxErr = getFluxErr(s);
+          String sedId = getSEDId(s);
           s.setSelect(true);
           SEDItem si = new SEDItem(s,freq,flux,fluxErr,sedId);
           sedList.add(si);
        }
    }
-     
+   
+   private static final double EPSILON = 1E-1;
+   private static final double WAVEMIN = 0.3;
+   private static final double WAVEMAX = 30;
+   private static final double FREQMIN = 1E4;
+   private static final double FREQMAX = 1E6;
+   private static final double WAVEOPTMIN = 0.2;
+   private static final double WAVEOPTMAX = 1;
+   private static final double FREQOPTMIN = wave2Freq(WAVEOPTMAX);
+   private static final double FREQOPTMAX = wave2Freq(WAVEOPTMIN);
+   
    // Détermine les intervalles de fréquence et de flux, et en déduit les positions
    // de traçage de chaque point du SED
    // lorsque c'est terminé, le tracé peut être opéré
    private void setPosition() {
       
       // Recherche des intervalles
-      freqMin = fluxMin = Double.MAX_VALUE;
-      freqMax = fluxMax = Double.MIN_VALUE;
+      absMin = fluxMin = Double.MAX_VALUE;
+      absMax = fluxMax = Double.MIN_VALUE;
       for( SEDItem si : sedList ) {
-         if( freqMin > si.freq ) freqMin = si.freq;
-         if( fluxMin > si.flux ) fluxMin = si.flux;
-         if( freqMax < si.freq ) freqMax = si.freq;
-         if( fluxMax < si.flux ) fluxMax = si.flux;
+         if( absMin > si.freq ) absMin = si.freq;
+         if( si.flux-si.fluxErr>0 ) {  if( fluxMin > si.flux-si.fluxErr ) fluxMin = si.flux-si.fluxErr; }
+         else if( fluxMin > EPSILON ) fluxMin=EPSILON;
+         if( absMax < si.freq ) absMax = si.freq;
+         if( fluxMax < si.flux+si.fluxErr ) fluxMax = si.flux+si.fluxErr;
+      }
+      
+      // Permutation fréquences <=> longueurs d'onde
+      if( flagWavelength ) {
+         double fr = freq2Wave(absMin);
+         absMin = freq2Wave(absMax);
+         absMax = fr;
+         if( absMin>WAVEMIN ) absMin=WAVEMIN;
+         if( absMax<WAVEMAX ) absMax=WAVEMAX;
+      } else {
+         if( absMin>FREQMIN ) absMin=FREQMIN;
+         if( absMax<FREQMAX ) absMax=FREQMAX;
       }
       
       // Affectation des positions
       Dimension dim = getDimension();
       dim.width -= (margeDroite+margeGauche);
       dim.height -= (margeHaut+margeBas);
-      double rangeFreq = Math.log(freqMax) - Math.log(freqMin);
-      double rangeFlux = Math.log(fluxMax) - Math.log(fluxMin);
-      coefX = dim.width / rangeFreq;
+      double rangeAbs = LOG(absMax) - LOG(absMin);
+      double rangeFlux = LOG(fluxMax) - LOG(fluxMin);
+      coefX = dim.width / rangeAbs;
       coefY = dim.height / rangeFlux;
       for( SEDItem si : sedList ) {
-         double x = ( Math.log(si.freq) - Math.log(freqMin)) * coefX;
-         double y = ( Math.log(si.flux) - Math.log(fluxMin)) * coefY;
+         double fr = flagWavelength ? freq2Wave(si.freq) : si.freq;
+         double x = ( LOG(fr) - LOG(absMin)) * coefX;
+         double y = ( LOG(si.flux) - LOG(fluxMin)) * coefY;
          si.setBox( (int)x, (int)(dim.height-y));
+         
+         if( si.fluxErr!=0 ) {
+            double hy=0; 
+            if( (si.flux-si.fluxErr)>0 ) hy = ( LOG(si.flux-si.fluxErr) - LOG(fluxMin)) * coefY;
+            double by = ( LOG(si.flux+si.fluxErr) - LOG(fluxMin)) * coefY;
+            si.setBoxErr((int)(dim.height-by),(int)(dim.height-hy));
+         }
+      }
+      
+      // Mémorisation de la portion optique
+      if( flagWavelength ) {
+         xOptMin = (int) ( ( LOG( freq2Wave(FREQOPTMAX)) - LOG(absMin)) * coefX );
+         xOptMax = (int) ( ( LOG( freq2Wave(FREQOPTMIN)) - LOG(absMin)) * coefX );
+      } else {
+         xOptMin = (int) ( ( LOG(FREQOPTMIN) - LOG(absMin)) * coefX );
+         xOptMax = (int) ( ( LOG(FREQOPTMAX) - LOG(absMin)) * coefX );
       }
       
       // Prêt à être dessiné
       readyToDraw = true;
    }
    
-   // Retourne la fréquence courante sous la souris
-   private double getCurrentFreq(double x) {
+   // Retourne la fréquence/longueur d'onde courante sous la souris
+   private double getCurrentAbs(double x) {
       if( !readyToDraw ) return Double.NaN;
-      return Math.exp( x/coefX + Math.log(freqMin) );
+      return POW( x/coefX + LOG(absMin) );
    }
    
    // Retourne le flux courant sous la souris
    double getCurrentFlux(double y) {
       if( !readyToDraw ) return Double.NaN;
-      return Math.exp( y/coefY + Math.log(fluxMin) );
+      return POW( y/coefY + LOG(fluxMin) );
    }
    
    /** Classe interne qui gère un point du SED */
@@ -285,8 +330,9 @@ class SED extends JPanel {
       private Source o;                     // Source aladin associée à la mesure
       private boolean highLight;            // true si on doit mettre en avant ce point
       private Rectangle r;                  // rectangle qui englobe le point
+      private int by,hy;                    // ordonnées de la barre d'erreur verticale
 
-      static final int W = 6;       // taille du carré englobant
+      static final int W = 6;               // taille du carré englobant
       
       private SEDItem(Source o,double freq,double flux,double fluxErr,String sedId) {
          this.o = o;
@@ -294,10 +340,14 @@ class SED extends JPanel {
          this.flux = flux;
          this.fluxErr = fluxErr;
          this.sedId = sedId;
+         by=hy=0;
       }
       
       // Positionne la boite englobante du point
-      private void setBox(int x, int y) { r = new Rectangle(x-W/2 +margeGauche, y-W/2 + margeHaut, W,W); }
+      private void setBox(int x, int y) { r = new Rectangle(margeGauche+x-W/2, margeHaut+y-W/2, W,W); }
+      
+      // Positionne les bornes de la barre d'erreur verticale
+      private void setBoxErr(int by, int hy) { this.by= margeHaut+by; this.hy= margeHaut+hy; }
       
       // Retourne true si la souris est dans la boite englobante
       private boolean contains(int x,int y) { return r.contains(x, y); }
@@ -306,6 +356,11 @@ class SED extends JPanel {
       private void draw(Graphics g) {
          g.setColor( o.getColor() );
          Util.fillCircle5(g, r.x+W/2, r.y+W/2);
+         if( Math.abs(by-hy)>5 ) {
+            g.drawLine(r.x+W/2,by,r.x+W/2,hy);
+            g.drawLine(r.x,by,r.x+W,by);
+            g.drawLine(r.x,hy,r.x+W,hy);
+         }
 
          // Mise en évidence de ce point particulièrement
          if( highLight ) {
@@ -320,11 +375,11 @@ class SED extends JPanel {
             g.drawString(sedId,dim.width/2-fm.stringWidth(sedId)/2, dim.height-height-2);
             
             String s;
-            if( !flagWavelength ) s = Util.myRound(freq)+"GHz";
-            else s = Util.myRound(getWaveLength(freq))+MU+"m";
+            if( !flagWavelength ) s = getUnitFreq(freq);
+            else s = getUnitWave(freq2Wave(freq));
             g.drawString(s, 5,getDimension().height-3);
             
-            s=Util.myRound(flux)+"Jy";
+            s=getUnitJy(flux);
             g.drawString(s, dim.width-5-fm.stringWidth(s),getDimension().height-3);
          }
       }
@@ -336,16 +391,22 @@ class SED extends JPanel {
    // Tracé du graphique
    protected void draw(Graphics g) {
       Dimension dim = getDimension();
+      int haut=margeHaut, bas=dim.height-margeBas;
+      int gauche=margeGauche, droite=dim.width-margeDroite;
       
       // Nettoyage
       g.setColor(Color.white);
       g.clearRect(0, 0, dim.width, dim.height);
       
+      // Bande optique
+      if( xOptMin!=xOptMax ) {
+         g.setColor(new Color(240,240,240));
+         g.fillRect(gauche+Math.min(xOptMin,xOptMax), haut, Math.abs(xOptMax-xOptMin+1), bas-haut);
+      }
+      
       // Tracé des axes
       int arrow=3;
-      g.setColor(Color.black);
-      int haut=margeHaut-5, bas=dim.height-margeBas+5;
-      int gauche=margeGauche-5, droite=dim.width-margeDroite+5;
+      g.setColor(Color.gray);
       g.drawLine(gauche, haut, gauche, bas);
       g.drawLine(gauche, haut, gauche-arrow, haut+arrow);
       g.drawLine(gauche, haut, gauche+arrow, haut+arrow);
@@ -354,24 +415,35 @@ class SED extends JPanel {
       g.drawLine(droite, bas, droite-arrow, bas+arrow);
       
       // Légende
+      g.setColor(Color.black);
       g.setFont(Aladin.SSPLAIN);
       g.drawString("log f("+NU+")",gauche-2,haut-4);
-      g.drawString(Util.myRound(fluxMax)+" Jy",gauche+4,haut+6);
+      g.drawString((fluxMax==0 ? "":getUnitJy(fluxMax)),gauche+4,haut+6);
       g.drawString("log "+NU,droite+2,bas);
-      if( flagWavelength ) g.drawString(MU+"m",droite+2,bas+10);
-      else g.drawString("GHz",droite+2,bas+10);
       
       // Tracé de la valeur sous la souris
-      g.setColor(Color.lightGray);
-      if( currentFreq!=null ) {
+      g.setColor(LIGHTGRAY);
+      String s;
+      if( !Double.isNaN(currentAbs) ) {
          g.drawLine(currentX,bas,currentX,bas-5);
          g.setFont(Aladin.SSPLAIN);
-         g.drawString(currentFreq, currentX, bas-8);
+         g.drawString( Util.myRound( LOG(currentAbs)), currentX, bas-8);
+         if( siIn==null ) {
+            g.setFont(Aladin.BOLD);
+            if( !flagWavelength ) s =getUnitFreq(currentAbs);
+            else s = getUnitWave(currentAbs);
+            g.drawString(s, 5,getDimension().height-3);
+         }
       }
-      if( currentFlux!=null ) {
+      if( !Double.isNaN(currentFlux) ) {
          g.drawLine(gauche,currentY,gauche+5,currentY);
          g.setFont(Aladin.SSPLAIN);
-         g.drawString(currentFlux, gauche+10, currentY);
+         g.drawString( Util.myRound( LOG(currentFlux)), gauche+10, currentY);
+         if( siIn==null ) {
+            g.setFont(Aladin.BOLD);
+            s=getUnitJy(currentFlux);
+            g.drawString(s, dim.width-5-g.getFontMetrics().stringWidth(s),getDimension().height-3);
+         }
       }
       
       // Les icones
@@ -383,8 +455,8 @@ class SED extends JPanel {
       SEDItem siIn=null;
       if( sedList==null || !readyToDraw ) {
          g.setFont(Aladin.ITALIC);
-         String s = aladin.chaine.getString("SEDLOADING");
-         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,(haut+bas)/2+5);
+         s = aladin.chaine.getString("SEDLOADING");
+         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,(haut+bas)/2+10);
          return;
       } else {
          g.setFont(Aladin.SPLAIN);
@@ -403,10 +475,10 @@ class SED extends JPanel {
       if( siIn==null ) {
          g.setColor(Color.black);
          g.setFont(Aladin.SPLAIN);
-         String s =  Util.myRound( flagWavelength ? getWaveLength(freqMin) : freqMin );
+         s = flagWavelength ? getUnitWave(absMin) :  getUnitFreq(absMin);
          g.drawString(s,gauche,bas+10);
-         s =  Util.myRound( flagWavelength ? getWaveLength(freqMax) : freqMax );
-         g.drawString(s,droite - g.getFontMetrics().stringWidth(s),bas+10);
+         s = flagWavelength ? getUnitWave(absMax) :  getUnitFreq(absMax);
+         g.drawString(s,20+droite - g.getFontMetrics().stringWidth(s),bas+10);
       }
       
       // Tracé du titre du graphique : le nom de la source
@@ -414,12 +486,13 @@ class SED extends JPanel {
          g.setColor(Aladin.GREEN);
          g.setFont(Aladin.BOLD);
          int size = g.getFontMetrics().stringWidth(source);
-         g.drawString(source,dim.width/2-size/2, haut-2);
+         g.drawString(source,dim.width/2-size/2, haut-4);
       }
 
    }
    
-   static double getWaveLength(double freq) { return 2.998E5/freq; }
+   static double freq2Wave(double freq) { return 2.998E5/freq; }
+   static double wave2Freq(double wave) { return 2.998E5/wave; }
    
    // Trace l'icone de fermeture du graphique
    private void drawCroix(Graphics g) {
@@ -448,7 +521,7 @@ class SED extends JPanel {
       g.fillRect(rInfo.x,rInfo.y,rInfo.width,rInfo.height);
       g.setColor(Color.blue);
       g.setFont(Aladin.SBOLD);
-      g.drawString("?",rInfo.x+2,rInfo.y+8);
+      g.drawString("^",rInfo.x+2,rInfo.y+10);
    }
    
    // Trace l'icone de demande de passage freq <-> longueur d'onde
@@ -458,7 +531,7 @@ class SED extends JPanel {
       g.setColor(Aladin.BKGD);
       rWave = new Rectangle(dim.width-w-4,11+2*w,w+4,w+4);
       g.fillRect(rWave.x,rWave.y,rWave.width,rWave.height);
-      g.setColor( flagWavelength ? Color.red : Color.blue );
+      g.setColor( flagWavelength ? Color.blue : Color.red );
       g.setFont(Aladin.SBOLD);
       g.drawString(TILDE+"",rWave.x+1,rWave.y+8);
    }
@@ -469,19 +542,22 @@ class SED extends JPanel {
       else if( rInfo.contains(x,y) ) createStackPlane( false );
       else if( rWave.contains(x,y) ) {
          flagWavelength = !flagWavelength;
+         setPosition();
          aladin.view.zoomview.repaint();
       }
       else if( siIn!=null ) {
-         createStackPlane( true );
+         int bloc=1;
+         if( !planeAlreadyCreated ) createStackPlane( true );
+         else bloc=2;
          aladin.view.showSource(siIn.o, false, true);
-         aladin.mesure.mcanvas.show(siIn.o, 2);
+         aladin.mesure.mcanvas.show(siIn.o, bloc);
          aladin.calque.repaintAll();
       } 
    }
    
    /** Actions à effectuer lorsque la souris sort du cadre */
    protected void mouseExit() {
-      currentFreq=currentFlux=null;
+      currentAbs=currentFlux=Double.NaN;
       aladin.view.simRep = null;
    }
    
@@ -491,9 +567,20 @@ class SED extends JPanel {
       if( simRep!=null ) aladin.view.repaintAll();
    }
    
+   /** Associe le bon tooltip */
+   private void toolTip(String k) {
+      String s = aladin.chaine.getString(k);
+      Util.toolTip(aladin.view.zoomview, s);
+   }
+   
    /** Actions à effectuer lorsque la souris survole le graphique */
    protected void mouseMove(int x, int y) {
       
+      // Tooltips ?
+      if( rCroix.contains(x,y) ) { toolTip("SEDCLOSE"); return; }
+      else if( rInfo.contains(x,y) ){ toolTip("SEDCREATEPLANE"); return; }
+      else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE"); return; }
+
       // Y a-t-il un point de SED sous la souris ?
       siIn=null;
       for( SEDItem si : sedList ) si.highLight=false;
@@ -514,22 +601,19 @@ class SED extends JPanel {
       // Quels sont le flux et la fréquence sous la souris
       Dimension dim = getDimension();
       if( x>margeGauche && x<dim.width-margeDroite ) {
-         double freq = getCurrentFreq( (double)(x-margeGauche) );
-         if( Double.isNaN(freq) ) currentFreq=null;
-         else currentFreq = Util.myRound( Math.log(freq));
-      } else currentFreq = null;
+         currentAbs = getCurrentAbs( (double)(x-margeGauche) );
+      } else currentAbs = Double.NaN;
 
-      if( y>margeHaut && y<dim.height-margeBas ) {
-         double flux = getCurrentFlux( (double)( (dim.height-y-1)-margeHaut) );
-         if( Double.isNaN(flux ) ) currentFlux=null;
-         else currentFlux = Util.myRound( Math.log10(flux) );
-      } else currentFlux = null;
+      if( y>margeHaut+14 && y<dim.height-margeBas-(x>margeGauche+30?0:14) ) {
+         currentFlux = getCurrentFlux( (double)(dim.height - (margeBas+margeHaut)) - (double)(y-margeHaut) ) ;
+      } else currentFlux = Double.NaN;
       
       // Mémorisation de la position sous la souris
       currentX=x;
       currentY=y;
    }
    
+   /** Actions à effectuer sur le mouvement de la roulette de la souris */
    protected boolean mouseWheel( MouseWheelEvent e) {
       int n=e.getWheelRotation();
       if( n==0 ) return false;
@@ -539,7 +623,39 @@ class SED extends JPanel {
       if( x==transparency ) return false;
       transparency=x;
       return true;
-
    }
+   
+   static public double LOG(double x) { return Math.log(x)/Math.log(10.); }
+   static public double POW(double x) { return Math.exp(x * Math.log(10.) ); }
+   
+   static final private String UNITFREQ[] = {"Hz","kHz", "MHz","GHz","THz","PHz","EHz"};
+   static final private String UNITWAVE[] = {"nm",MU+"m", "mm","m","km","Mm","Gm"};
+   static final private String UNITJY[]   = {MU+"Jy","mJy","Jy","kJy","MJy","GJy","TJy","PJy"};
+  
+   /** Affichage en fréquence : val donnée en GHz */
+   static final public String getUnitFreq(double val) {
+      return getUnit(val*1000000000.,UNITFREQ);
+   }
+
+   /** Affichage en Jansky : val donnée en GJy */
+   static final public String getUnitJy(double val) {
+      return getUnit(val*1000000.,UNITJY);
+   }
+
+   /** Affichage en longueur d'onde : val donnée en micron-mètre */
+   static final public String getUnitWave(double val) {
+      return getUnit(val*1000.,UNITWAVE);
+   }
+
+   static final private String getUnit(double val,String [] unit) {
+      int u = 0;
+      while (val >= 1000 && u<unit.length-1) { u++; val /= 1000L; }
+      NumberFormat nf = NumberFormat.getInstance();
+      nf.setMaximumFractionDigits(1);
+      return nf.format(val)+unit[u];
+   }
+
+
+
    
 }

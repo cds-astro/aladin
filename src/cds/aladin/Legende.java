@@ -238,6 +238,7 @@ public final class Legende extends AbstractTableModel  {
    
    /** J'ajuste le numéro du champ dans le cas où il y aurait des champs non visibles avant */
    protected int getRealFieldNumber(int nField) {
+      if( nField==-1 ) return nField;
       int nVisible=0;
       int nInvisible=0;
       

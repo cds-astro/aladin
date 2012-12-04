@@ -2452,10 +2452,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    /** Execute une chaine contenant un script comme un flux afin de garantir l'ordre des commandes
     * lorsqu'il y a des "load" ou "get" de scripts et filtres "emboités" */
    protected void execScriptAsStream(String s) {
-      MyByteArrayStream bis = new MyByteArrayStream(2000);
-      bis.write(s);
-      readFromStream(bis.getInputStream());
+      MyByteArrayStream bis=null;
+      try {
+         bis = new MyByteArrayStream(2000);
+         bis.write(s);
+         readFromStream(bis.getInputStream());
+      } finally {
+         try { if( bis!=null ) bis.close(); } catch( IOException e ) { }
+      }
    }
+   
+   static final boolean PATRICK  = false;
 
   /** Traitement d'une ligne de script eventuellement avec des ";"
    * @param s la ligne a traiter
@@ -2528,12 +2535,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    }
    protected String exec(String s) { return exec(s,true,false); }
    protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
-      
-      
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
+      
+      if( PATRICK ) a.trace(4,"Command.exec("+s1+")...");
       
       // Attente que les serveurs soient OK
       syncServer();
+      
+      if( PATRICK ) a.trace(4,"Command.exec() syncServer ok...");
       
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
       if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
@@ -2581,6 +2590,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( !isSync() ) a.trace(4,"Command.exec() : command \""+cmd+"\" needs sync...");
          sync();
       }
+      
+      if( PATRICK ) a.trace(4,"Command.exec() sync ok...");
       
       // est-ce le debut d'une nouvelle definition de fonction ?
       if( s1.trim().startsWith("function") ) {
@@ -2863,14 +2874,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       else if( cmd.equalsIgnoreCase("bitpix") ) {
          try {
-//            st = new Tok(param);
-//            String v1 = st.nextToken();
-//            String bitpix=null;
-//            PlanImage p1 = (PlanImage)getPlanFromParam(v1,0,true);
-//            if( p1!=null ) bitpix = param.substring(v1.length()).trim();
-//            else bitpix=param;
-//            a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.BITPIX,0,bitpix,0);
-            
             fct = PlanImageAlgo.BITPIX;
             st = new Tok(param);
             String v1 = st.nextToken();
@@ -3005,13 +3008,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
                // Suppression par les paramètres
                } else {
-
-//                  a.view.unSelect();
-
                   // Les vues éventuelles
                   ViewSimple v[] = getViews(param);
-//                  for( int i=0; i<v.length; i++ ) v[i].selected=true;
-//                  if( v.length>0 ) a.view.freeSelected();
                   if( v.length>0 ) a.view.free(v);
 
                   // Les plans
@@ -3041,7 +3039,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                boolean plot=false;
                String [] col = new String[2];
                Plan p=null;
-//               n=-1;
                if( param.length()==0 ) p=a.calque.getFirstSelectedPlan();
                else {
                   String p1 = st.nextToken();
@@ -3051,12 +3048,9 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                      else p1 = st.nextToken();
                   }
                   if( plot ) p1 = parseColumnIndex(col, p1);
-//                  if( n<0 ) n=getNumber(p1);
                   if( p==null ) p = getNumber(p1);
                }
                if( p==null ) return "";
-//               if( n<0 ) return "";
-//               Plan p = a.calque.plan[n];
                
                int nview=-1;
                if( st.hasMoreTokens()) {
@@ -3197,8 +3191,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
                  a.warning("save error: "+tmp,1);
                  w=h=View.INITW;
-//                 waitSave=false;
-//                 return tmp;
               }
 
               if( file==null && !a.NOGUI) {
@@ -3215,7 +3207,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                     v.setZoomXY(1, -1, -1);
                  } else v.setDimension(w,h);
                  v.paintComponent(null);
-//                 sync(false);
               }
               
              // Mode Image non précisé ?
@@ -3520,6 +3511,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       // Bon on va donc simplement activer Sesame et déplacer le repere
       else { 
+         if( PATRICK ) a.trace(4,"Command.exec() => execGetCmd("+s+")...");
          return execGetCmd(s,label,false);
       }
       return "";

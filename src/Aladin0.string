@@ -1526,9 +1526,12 @@ UPTEST	Test available registries
 UPCSVCHAR	CSV characters
 UPCSVCHARH	Available separator characters for CSV tables and catalogues
 UPSTOP	Stop running test
-UPSMBB	Simbad & VizieR (SED) pointer
-UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build an SED (Spectral Energy Distribution) of this source from various VizieR catalogs
+#UPSMBB	Simbad & VizieR (SED) pointer
+#UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build an SED (Spectral Energy Distribution) of this source from various VizieR catalogs
 SEDLOADING	VizieR SED loading...
+SEDCLOSE	Close SED graph
+SEDCREATEPLANE	Create catalogue stack plane from this SED
+SEDFREQWAVE	Draw in frequences (resp. in waves length)
 UPFILTERB	Dedicated filter
 UPFILTERH	This selector allows you to automatically apply default dedicated filter for Simbad, NED,...
 UPTRANSB		Transparency/opacity
@@ -1592,6 +1595,9 @@ UPCSVCHARH.fr	Caractères de séparations des colonnes pour les tables et catalogu
 UPSMBB.fr	Pointeur Simbad & VizieR (SED)
 UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique sur les base de données Simbad et VizieR afin de trouver l'identificateur de l'objet astronomique sous la souris et d'en fournir un SED (Spectral Energy Distribution)\nconstruit à partir de catalogues de VizieR.
 SEDLOADING.fr	SED VizieR...
+SEDCLOSE.fr	Ferme le graphe du SED
+SEDCREATEPLANE.fr	Crée un plan catalogue dans la pile\nà partir des données du SED
+SEDFREQWAVE.fr	Trace en fréquences (resp. en longueurs d'onde)
 #UPSMBN.fr	Non activé
 #UPSMBY.fr	Activé
 UPFILTERB.fr	Filtre dédié

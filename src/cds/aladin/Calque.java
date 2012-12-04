@@ -869,7 +869,7 @@ public final class Calque extends JPanel implements Runnable {
       	 	aladin.getMessagingMgr().sendSelectObjectsMsg();
          } catch( Throwable e) {}
       }
-
+      
       aladin.view.repaintAll();
       aladin.mesure.mcanvas.repaint();
    }

@@ -834,7 +834,9 @@ public final class MCanvas extends JComponent
     * switcher entre un tri ascendant et descendant */
    private void tri(Source o,int nField) {
       boolean ascending;
-      nField=o.leg.getRealFieldNumber(nField);
+//      int realNField = o.leg.getRealFieldNumber(nField);
+//      if( nField!=realNField ) System.out.println("nField="+nField+" realdNField="+realNField); 
+//      nField = realNField;
       if( nField==-1 ) {
          o.leg.clearSort();
          triTag = Field.SORT_ASCENDING;
@@ -862,7 +864,7 @@ public final class MCanvas extends JComponent
 
    /** Tri des sources de même type que celle passée en paramètre. */
    protected void tri(Source o,int nField,boolean ascending) {
-      nField=o.leg.getRealFieldNumber(nField);
+//      nField=o.leg.getRealFieldNumber(nField);
       o.leg.setSort(nField, ascending?Field.SORT_ASCENDING:Field.SORT_DESCENDING);
       ligneHead = aladin.mesure.getHeadLine(o);
       aladin.mesure.tri(o,nField,ascending);
@@ -1535,7 +1537,7 @@ public final class MCanvas extends JComponent
    /** Surcharge juste pour en profiter pour mettre à jour
     * le nombre de sources sélectionnées dans la fenêtre des mesures */
    public void repaint() {
-      aladin.adjustNbSel();
+      aladin.adjustNbSel();      
       super.repaint();
    }
 
