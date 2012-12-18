@@ -658,7 +658,7 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      if( flagColor ) out.writeJPEG(file+".jpg");
+      if( flagColor ) out.writeCompressed(file+".jpg",0,0,null,"jpeg");
       else out.writeFITS(file+".fits");
 
       long duree = System.currentTimeMillis() -t;
@@ -725,7 +725,7 @@ public class BuilderTiles extends Builder {
 
       long duree = System.currentTimeMillis()-t;
       if (out!=null) {
-         if( flagColor ) out.writeJPEG(file+".jpg");
+         if( flagColor ) out.writeCompressed(file+".jpg",0,0,null,"jpeg");
          else out.writeFITS(file+".fits");
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);

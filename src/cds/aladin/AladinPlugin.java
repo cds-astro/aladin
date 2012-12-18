@@ -187,12 +187,12 @@ public abstract class AladinPlugin implements Runnable {
    public boolean isRunning() { return thread!=null && thread.isAlive(); }      
  
    /** Use by Aladin to know the plugin state
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
     protected boolean isSuspended() { return thread!=null && thread.isAlive() && isSuspended; }      
    
    /** Use by Aladin to launch the plugin execution
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    protected void start() throws AladinException {
       if( isRunning() ) throw new AladinException(AladinData.ERR013);
@@ -202,7 +202,7 @@ public abstract class AladinPlugin implements Runnable {
    }
    
    /** Use by Aladin to stop the plugin execution
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    protected void stop() {
       if( !isRunning() ) return;
@@ -211,7 +211,7 @@ public abstract class AladinPlugin implements Runnable {
    }
    
    /** Use by Aladin to suspend the plugin execution
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    protected void suspend() {
       if( !isRunning() || thread==null || isSuspended ) return;
@@ -220,7 +220,7 @@ public abstract class AladinPlugin implements Runnable {
    }
    
    /** Use by Aladin to resume the plugin execution
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    protected void resume() {
       if( thread==null || !isRunning() && !isSuspended ) return;
@@ -231,7 +231,7 @@ public abstract class AladinPlugin implements Runnable {
    private String error=null;
    
    /** Returns the plugin error message, or null if there is not.
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    protected String getError() { return error; }
    
@@ -241,9 +241,10 @@ public abstract class AladinPlugin implements Runnable {
    public void setAladin(Aladin aladin) { this.aladin = aladin; }
    
    /** Thread processing
-    * DO NOT OVERIDE IT
+    * DO NOT OVERRIDE IT
     */
    public void run() { 
+      hasBeenStarted=true;
       try {
          exec();
       } catch( AladinException e) { 
@@ -251,4 +252,11 @@ public abstract class AladinPlugin implements Runnable {
          error=e.getMessage();
       }
    }
+   
+   private boolean hasBeenStarted=false;
+   
+   /** Returns true if the plugin has been launched
+    * DO NOT OVERRIDE IT
+    */
+   public boolean hasBeenStarted() { return hasBeenStarted; }
 }

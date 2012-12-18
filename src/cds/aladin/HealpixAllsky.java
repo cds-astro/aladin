@@ -59,6 +59,7 @@ class HealpixAllsky extends HealpixKey {
    
    HealpixKey createOneKey(int npix,int width,byte [] pix) {
       HealpixKey h = new HealpixKey();
+      h.allSky=true;
       h.planBG=planBG;
       h.order=order;
       h.npix=npix;
@@ -68,13 +69,13 @@ class HealpixAllsky extends HealpixKey {
       h.width=h.height=width;
       h.pixels=pix;
       h.alreadyCached=true;
-      h.allSky=true;
       h.setStatus(READY);
       return h;
    }
    
    HealpixKey createOneKeyRGB(int npix,int width,int []rgb) {
       HealpixKey h = new HealpixKey();
+      h.allSky=true;
       h.planBG=planBG;
       h.order=order;
       h.npix=npix;
@@ -84,7 +85,6 @@ class HealpixAllsky extends HealpixKey {
       h.width=h.height=width;
       h.rgb=rgb;
       h.alreadyCached=true;
-      h.allSky=true;
       h.setStatus(READY);
       return h;
    }

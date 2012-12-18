@@ -174,7 +174,7 @@ public class PlanHealpix extends PlanBG {
 
         this.idxTFormToRead = idxTFormToRead;
 
-        video = VIDEO_NORMAL;
+        video = aladin.configuration.getCMVideo();
         flagOk = false;
         isOldPlan = false;
         type = ALLSKYIMG;

@@ -51,6 +51,18 @@ import java.util.zip.Inflater;
  * @version 0.9 : (??) creation
  */
 public class PlanImage extends Plan {
+   
+   static protected final int PIX_ARGB = 0;    // FITS ARGB, PNG couleur   => couleur avec transparence
+   static protected final int PIX_RGB  = 1;    // FITS RGB, JPEG couleur   => Couleur sans transparence
+   static protected final int PIX_TRUE = 2;    // FITS => vraie valeur (définie par le BITPIX) => transparence sur NaN ou BLANK
+   static protected final int PIX_256  = 3;    // JPEG N&B => 256 niveaux
+   static protected final int PIX_255  = 4;    // PNG N&B => 255 niveaux - gère la transparence
+   
+   static final public String [] PIX_MODE = { "RGB composite & transparency", "RGB composite", "true pixel mode & transparency", 
+                                              "256 grey levels","255 grey levels & transparency" };
+   
+   protected int pixMode;         // Mode du losange (PIX_ARGB,PIX_RGB, PIX_TRUE, PIX_256, PIX_255
+
    static protected int LASTID=0;    // Dernier number d'image donné
    
    static private float DEFAULT_OPACITITY = 1f;
@@ -470,6 +482,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
              System.arraycopy(pixels,0,p.pixels,0,pixels.length);
           } else p.pixels = null;
       } catch( Exception e ) { p.pixels = null; }
+       p.pixMode=pixMode;
        p.pixelsOrigin=pixelsOrigin;
        p.projD = null;
        p.projd = p.projInit = null;
@@ -505,7 +518,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
        System.arraycopy(cmControl,0,p.cmControl,0,3);
        p.cm = ColorMap.getCM(p.cmControl[0],p.cmControl[1],p.cmControl[2],
              p.video==PlanImage.VIDEO_INVERSE,
-             p.typeCM, p.transfertFct);
+             p.typeCM, p.transfertFct,p.isTransparent());
 
    }
 
@@ -700,7 +713,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
    /** Retourne la couleur de fond du plan */
    protected Color getBackGroundColor() {
       if( colorBackground!=null)  return colorBackground;
-      return isPixel() &&active && video==PlanImage.VIDEO_NORMAL ? Color.black : Color.white;
+      return isPixel() && active && video==PlanImage.VIDEO_NORMAL ? Color.black : Color.white;
    }
    
    /** retourne la table des couleurs associée à l'image */
@@ -710,7 +723,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
    public void restoreCM() {
       IndexColorModel  ic = ColorMap.getCM(cmControl[0],cmControl[1],cmControl[2],
             video==PlanImage.VIDEO_INVERSE,
-            typeCM,transfertFct);
+            typeCM,transfertFct,isTransparent());
       setCM(ic);
    }
    
@@ -1570,6 +1583,7 @@ Aladin.trace(3,"Second try for opening the stream due to: "+e+"...");
                (type & MyInputStream.PDS)!=0?PDS:
                (type & MyInputStream.NativeImage())!=0?JPEG:
                FITS;
+         pixMode = fmt==JPEG ? PIX_256 : PIX_TRUE;
       } catch( Exception e) {}
    }
 
@@ -1842,7 +1856,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
             case -32: return getFloat(t,i*4);
             case -64: return getDouble(t,i*8);
          }
-         return 0.;
+         return Double.NaN;
       } catch( Exception e ) { return Double.NaN; }
 
    }
@@ -2027,6 +2041,13 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       return pOut;
    }
    
+   /** Retourne true si le point (xImg,yImg) est bien sur un pixel */
+   protected boolean isOnPixel(int xImg, int yImg) {
+      int pixel = (int)getPixel8Byte(xImg, yImg);
+      System.out.println("Je suis sur "+pixel);
+      return pixel>=20;
+   }
+   
    protected boolean isBlank(int pixel) { return isBlank && pixel==blank; }
    protected boolean isBlank(double pixel) { return isBlank && pixel==blank || Double.isNaN(pixel); }
    
@@ -2166,6 +2187,14 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       pixelMax=max;
       if( !autocut ) { dataMin=pixelMin; dataMax=pixelMax; }
    }
+   
+   /** Retourne true si le format d'image permet la transparence */
+   protected boolean isTransparent() { return pixMode!=PIX_256 && pixMode!=PIX_RGB ; } // fmt!=JPEG; }
+   
+//   protected boolean isTransparent() {
+//      return pixMode == PIX_255 || pixMode == PIX_TRUE || pixMode == PIX_ARGB;
+//   }
+
 
    /**
     * Passage en 8 bits avec normalisation et fonction de transfert.
@@ -2183,13 +2212,17 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     */
    final protected void to8bits(byte [] pOut, int offsetOut, byte [] pIn, int len, int bitpix,
          /* boolean isBlank, double blank, */ double min, double max,boolean memoMinMax) {
+      
+      int range  = isTransparent() ? 255 : 256;
+      int gapTransp = isTransparent() ?   1 :   0;
 
       // Simple cut du min et du max, puis extension/reduction sur les 8 bits
-      double r = 256./(max - min);
+      double r = range/(max - min);
+      range--;
       for( int i = 0; i < len; i++) {
          double c = getPixVal(pIn,bitpix,i);
 
-         if( Double.isNaN(c) ) { pOut[i+offsetOut] = 0; continue; }
+         if( isBlank(c)) { pOut[i+offsetOut] = 0; continue; }
 
          // Pour info dans les properties
          if( memoMinMax ) {
@@ -2197,7 +2230,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
             else if( c<dataMin ) dataMin=c;
          }
 
-         pOut[i+offsetOut] = (byte)( c<=min?0x00:c>=max?0xff:(int)( ((c-min)*r) ) & 0xff);
+         pOut[i+offsetOut] = (byte)( (gapTransp+ (c<=min?0x00:c>=max?range:(int)( (c-min)*r) )) & 0xff);
       }
    }
 
@@ -2256,6 +2289,9 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
                   :bitpix==16?"short" : bitpix==8?"byte" : "unknown";
       return s+" (bitpix="+bitpix+")";
    }
+   
+   /** retourne la description du mode graphique */
+   protected String getPixModeInfo() { return PIX_MODE[ pixMode ]; }
 
    /** Retourne la chaine d'explication de la taille et du codage de l'image
     * d'origine */
@@ -2475,7 +2511,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    
    /** Retourne la valeur 8 bits du pixel indiqué en coordonnées image*/
    protected byte getPixel8Byte(int x,int y) {
-      return pixels[y*width+x];
+      return pixels==null ? 0 : pixels[y*width+x];
    }
 
 
@@ -2750,6 +2786,26 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
 //      }
 //      return true;
 //   }
+   
+   protected String getBlankString() {
+      return !isBlank ? "" : Double.isNaN(blank) ? "NaN":""+blank;
+   }
+   
+   /** Positionnement de la valeur du blank */
+   protected void setBlankString(String b) {
+      try {
+         blank = Double.parseDouble(b.trim());
+         isBlank=true;
+         if( pixMode==PIX_256 ) pixMode=PIX_255;
+      } catch( Exception e ) {
+         isBlank=false;
+         blank=Double.NaN;
+         if( pixMode==PIX_255 ) pixMode=PIX_256;
+      }
+      recut(pixelMin,pixelMax,false);
+      restoreCM();
+      changeImgID();
+   }
 
    /**
     * Rejoue l'autocut en fonction d'un min et d'un max donnes
@@ -2762,6 +2818,7 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
     *                les 256 niveaux de gris
     * @return false si impossible de recharger les pixels d'origine
     */
+    protected boolean recut() { return recut(pixelMin,pixelMax,false); };
     protected boolean recut(double min,double max,boolean autocut) {
 
        if( min==-1 && max==-1 ) { min=dataMinFits; max=dataMaxFits; }
@@ -3023,8 +3080,7 @@ Aladin.trace(3," => Hdecompressing in "+temps+" ms");
                dis.readFully(buf,0,len);
 
                // Normalisation de la tranche
-               to8bits(getBufPixels8(),offsetLoad/npix,buf,len/npix,bitpix,
-                     /*isBlank,blank,*/pixelMin,pixelMax,true);
+               to8bits(getBufPixels8(),offsetLoad/npix,buf,len/npix,bitpix, pixelMin,pixelMax,true);
 
                offsetLoad+=len;
                setPourcent(offsetLoad*99./taille);
@@ -3210,8 +3266,10 @@ Aladin.trace(2,"Loading PDS image");
   /** Creation d'une table de couleurs par defaut */
    protected void creatDefaultCM() {
       cm = ColorMap.getCM(0,128,255,aladin.configuration.getCMVideo()==VIDEO_INVERSE,
-                                    aladin.configuration.getCMMap(),aladin.configuration.getCMFct());
+                                    aladin.configuration.getCMMap(),
+                                    aladin.configuration.getCMFct(),isTransparent());
    }
+   
 
   /** Affectation d'une nouvelle table des couleurs
    * a l'image du plan

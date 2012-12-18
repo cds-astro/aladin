@@ -199,7 +199,7 @@ final public class BuilderAllsky  extends Builder {
       }
 
       String filename = getFileName(path, order);
-      out.writeJPEG(filename+".jpg");
+      out.writeCompressed(filename+".jpg",0,0,null,"jpeg");
       
       context.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }

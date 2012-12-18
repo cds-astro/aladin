@@ -29,6 +29,7 @@ import java.awt.event.*;
 import java.awt.image.MemoryImageSource;
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.Authenticator;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -67,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Tool plan "movable" property
  * @beta    <LI> SED quick view (from VizieR SED builder)
  * @beta    <LI> Tagging source feature
  * @beta    <LI> Spectrum SAMP management dedicated to source catalog
@@ -93,8 +95,6 @@ public class Aladin extends JApplet
 
 //   static final boolean VP=true;
    
-    static boolean NEWLOOK_V7=true;
-
     static final Dimension SCREENSIZE= Toolkit.getDefaultToolkit().getScreenSize();
     static final boolean LSCREEN= SCREENSIZE.width>1000;
 
@@ -103,7 +103,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.537";
+    static public final    String VERSION = "v7.539";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -141,6 +141,8 @@ public class Aladin extends JApplet
     static final Color MYGRAY = new Color(180,183,187);
     static final Color STACKBLUE = new Color(140,140,255);
     static final Color STACKGRAY = new Color(150,150,150);
+    static final Color BLACKBLUE = new Color(0,0,200);
+    static final Color BACKGROUND   = new Color(198,218,239); 
 
     // couleur de fond du bouton Load... lorsqu'il est opérationnel
 //    static final Color COLOR_LOAD_READY = new Color(110,230,50);
@@ -1755,12 +1757,12 @@ public class Aladin extends JApplet
 
        // Pour gérer les accès protégé.
        try {
-          Class auth = Class.forName("java.net.Authenticator");
-          Method setDefault = auth.getDeclaredMethod("setDefault",new Class[]{ auth });
-          setDefault.invoke((Object)null, new Object[] { new MyAuthenticator() } );
+//          Class auth = Class.forName("java.net.Authenticator");
+//          Method setDefault = auth.getDeclaredMethod("setDefault",new Class[]{ auth });
+//          setDefault.invoke((Object)null, new Object[] { new MyAuthenticator() } );
 
           // METHODE PLUS SIMPLE DES QUE COMPATIBLE JVM 1.2
-//          Authenticator.setDefault(new MyAuthenticator());
+          Authenticator.setDefault(new MyAuthenticator());
 
        } catch( Exception e) {  }
 
@@ -1859,8 +1861,8 @@ public class Aladin extends JApplet
        saisie1.add(searchData);
        saisie1.add(ExportYourWork);
 //       saisie1.addSeparator();
-       saisie1.add(avant);
-       saisie1.add(apres);
+//       saisie1.add(avant);
+//       saisie1.add(apres);
        JPanel saisie = new JPanel( new BorderLayout(0,0));
        saisie.add(saisie1,BorderLayout.WEST);
        saisie.add(localisation, BorderLayout.CENTER);
@@ -1896,21 +1898,13 @@ public class Aladin extends JApplet
 
        // Le panel gauche : contient la boite a boutons et les calques
        final JPanel gauche = new JPanel(new BorderLayout(3,0));
-       if( NEWLOOK_V7 ) {
-          JPanel panelLogo = new JPanel();
-          panelLogo.add(logo);
-          gauche.add(panelLogo, BorderLayout.NORTH );
-       }
        gauche.add(calque,BorderLayout.CENTER);
        
        JPanel gauche2;
-       if( !NEWLOOK_V7 ) gauche2=gauche;
-       else {
-          gauche2 = new JPanel(new BorderLayout(5,0));
-          gauche2.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0));
-          gauche2.add(toolBox,BorderLayout.WEST);
-          gauche2.add(gauche,BorderLayout.CENTER);
-       }
+       gauche2 = new JPanel(new BorderLayout(2,0));
+       gauche2.setBorder( BorderFactory.createEmptyBorder(0, 2, 0, 0));
+       gauche2.add(toolBox,BorderLayout.WEST);
+       gauche2.add(gauche,BorderLayout.CENTER);
 
        // Le panel haut1 : contient le menu et le bandeau d'info
        JPanel haut1 = new JPanel(new BorderLayout(1,1));
@@ -1921,9 +1915,9 @@ public class Aladin extends JApplet
 
        // Le panel haut : contient le logo et le haut1
        JPanel haut = new JPanel(new BorderLayout(0,0));
-       haut.setBorder(BorderFactory.createEmptyBorder(4,0,0,0));
+       haut.setBorder(BorderFactory.createEmptyBorder(4,0,0,40));
        haut.add(haut1,BorderLayout.CENTER);
-       if( !NEWLOOK_V7 ) haut.add(logo,BorderLayout.EAST);
+       haut.add(logo,BorderLayout.EAST);
 
        // le panel du status
        JPanel searchPanel = new JPanel(new BorderLayout(0,0));
@@ -1974,7 +1968,8 @@ public class Aladin extends JApplet
 
        ct.setBackground(getBackground());
        ct.setLayout( new BorderLayout(3,3) );
-       ct.setBorder(BorderFactory.createEmptyBorder(0,3,0,3));
+       ct.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
+//       ct.setBorder(BorderFactory.createEmptyBorder(0,3,0,3));
 
        // test thomas (avec un séparateur) + Pierre
 //       final MySplitPane splitV = new MySplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
@@ -4661,7 +4656,6 @@ public void show() {
       lastArg=0;
       for( int i=0; i<args.length; i++ ) {
          if( args[i].equals("-h") || args[i].equals("-help") ) { usage(); System.exit(0); }
-         else if( args[i].equals("-oldlook") )     { NEWLOOK_V7=false; lastArg=i+1; }
          else if( args[i].equals("-version") )     { version(); System.exit(0); }
          else if( args[i].equals("-test") )        { boolean rep=test(); System.exit(rep ? 0 : 1); }
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }

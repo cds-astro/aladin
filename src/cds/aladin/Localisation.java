@@ -249,10 +249,6 @@ public final class Localisation extends MyBox {
       }
    }
    
-//   public Dimension getPreferredSize() {
-//      return  new Dimension(350,24);
-//   }
-   
    /** Fait clignoter le champ pour attirer l'attention
     * de l'utilisateur et demande le focus sur le champ de saisie */
    protected void focus(String s) {
@@ -369,7 +365,6 @@ public final class Localisation extends MyBox {
     * POSITION histoire que cela se comprenne */
    protected void setSesameResult(String s) {
       aladin.localisation.setTextSaisie(s);
-//      aladin.localisation.label.setText(POSITION);
       aladin.localisation.readyToClear();
    }
 

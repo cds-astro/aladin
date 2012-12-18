@@ -187,7 +187,9 @@ public final class Hpix extends MocCell {
       return false;  // Mais attention, ce n'est pas certain !!
    }
    
-   public String toString() { return order+"/"+npix ; }
+   public String toString() { return order+"/"+npix+
+         (computeCorners? ": "+corners[0]+" / "+corners[1]+" / "+corners[2]+" / "+corners[3]: ""); 
+   }
    
    
    // Initialisation des valeurs

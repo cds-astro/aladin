@@ -159,17 +159,13 @@ public class TabPub extends JPanel implements ActionListener {
 	 */
 	private void initBtn() {
 		bNext = new JButton(NEXT);
-		bNext.setEnabled(false);
 		bNext.addActionListener(this);
 		bExport.setText(EXPORT);
 		bExport.addActionListener(this);
-		bExport.setEnabled(false);
 		bPublic.setText(PUBLISH);
 		bPublic.addActionListener(this);
-		bPublic.setEnabled(false);
 	    bLocal.setText(OPEN);
 	    bLocal.addActionListener(this);
-		bLocal.setEnabled(false);
 	}
 	
 	public void clearForms() {
@@ -225,10 +221,11 @@ public class TabPub extends JPanel implements ActionListener {
 	}
 
 	public void setStartEnabled(boolean enabled) {
-		bExport.setEnabled(enabled);
-		bLocal.setEnabled(enabled);
-		bPublic.setEnabled(enabled);
-		bNext.setEnabled(enabled);
+	   resumeWidgets();
+//		bExport.setEnabled(enabled);
+//		bLocal.setEnabled(enabled);
+//		bPublic.setEnabled(enabled);
+//		bNext.setEnabled(enabled);
 	}
 	
 
@@ -259,11 +256,32 @@ public class TabPub extends JPanel implements ActionListener {
 				}
 			}
 			setProgress(100);
-			setCursor(null);
-
-			bExport.setSelected(false);
+			resumeWidgets();
 		}
 	}
+	   public void show() {
+	      super.show();
+	      resumeWidgets();
+	   }
+	   
+	   private boolean running=false;
+	   
+	   protected void resumeWidgets() {
+	      try {
+	         boolean color       = context.isColor();
+	         boolean allskyExist = context.isExistingAllskyDir();
+	         boolean isRunning   = context.isTaskRunning() || running;
+	         
+	         bPublic.setEnabled( !isRunning && allskyExist );
+	         bExport.setEnabled( !isRunning && !color && allskyExist );
+	         	         
+	         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : 
+	                                Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+	      } catch( Exception e ) { 
+	         e.printStackTrace();
+	      } 
+	   }
+
 	
     class ExportThread implements Runnable {
 	    String outfile;
@@ -290,9 +308,11 @@ public class TabPub extends JPanel implements ActionListener {
 	    }
 	    
 	    public void run() {
+	       running=true;
 	        File f = new File(outfile);
 	        f.delete();
 	        allsky.export(outfile);
+	        running=false;
 	    }
 	}
 

@@ -23,8 +23,6 @@ import java.util.Enumeration;
 import java.util.Iterator;
 
 import cds.tools.VOApp;
-import cds.tools.VOObserver;
-
 
 /**
  * Plan dedie a des objets graphiques (TOOL)
@@ -166,6 +164,23 @@ public class PlanTool extends PlanCatalog {
 
       if( type==NO ) return super.getInfo();
       return label+super.addDebugInfo();
+   }
+   
+   /** Modifie (si possible) une propriété du plan */
+   protected void setPropertie(String prop,String specif,String value) throws Exception {
+      if( prop.equalsIgnoreCase("movable") ) {
+         setMovable(value);
+      } else super.setPropertie(prop,specif,value);
+   }
+   
+   protected boolean movable=true; // True si les objets du plan peuvent être déplacés 
+
+   protected boolean isMovable() { return movable; }
+   
+   protected void setMovable(String v) throws Exception {
+      if( v.equalsIgnoreCase("On") ) movable=true;
+      else if( v.equalsIgnoreCase("Off") ) movable=false;
+      else throw new Exception("Syntax error => movable=on|off");
    }
 
    // Regeneration des libelles des reperes

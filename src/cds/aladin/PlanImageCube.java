@@ -89,6 +89,7 @@ Aladin.trace(2,"Loading FITS "+Tp[type]);
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");
       depth = headerFits.getIntFromHeader("NAXIS3");
       
+      pixMode = PIX_TRUE;
       npix = n = Math.abs(bitpix)/8;  // Nombre d'octets par valeur
       taille=(long)width*height*depth*n;	  // Nombre d'octets
       setPourcent(0);

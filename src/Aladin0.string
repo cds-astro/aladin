@@ -1034,6 +1034,7 @@ PROPFMT	Format:
 PROPEPOCH	Epoch:
 PROPDATEOBS	Date-Obs:
 PROPWCSEQ	WCS equinox:
+PROPPIXMODE	Graphic mode:
 PROPSIZE	Size:
 PROPFRAME	Frames:
 PROPDELAY	Delay:
@@ -1112,6 +1113,7 @@ PROPFMT.fr	Format:
 PROPEPOCH.fr	Epoque:
 PROPDATEOBS.fr	Date-Obs:
 PROPWCSEQ.fr	Equinoxe WCS:
+PROPPIXMODE.fr	Mode graph.:
 PROPSIZE.fr	Taille:
 PROPFRAME.fr	Cliché:
 PROPDELAY.fr	Delais:

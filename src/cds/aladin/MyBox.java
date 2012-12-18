@@ -75,10 +75,8 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       // Creation du label contenant la valeur de la position courant
       pos = new Text("",30);
       pos.setFont(FONT);
-//      pos.setForeground( Color.blue );
       pos.setForeground( Color.gray );
       pos.addMouseListener(this);
-//      pos.addMouseMotionListener(this);
  
       // Creation d'un champ de saisie
       text = new Text("",30);

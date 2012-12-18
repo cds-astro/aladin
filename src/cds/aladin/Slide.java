@@ -500,7 +500,7 @@ public final class Slide {
             xc[2]++; yc[2]++; 
          }
          
-//         int xPoignee=frMin+dx;
+         int xPoignee=frMin+dx;
 
          // Remplissage du pourcentage du plan (ajout thomas : remplissage pour PlanContour et pour PlanFilter)
          if( (p.isImage() || p.type==Plan.TOOL && p instanceof PlanContour || p instanceof PlanBG )
@@ -522,7 +522,7 @@ public final class Slide {
             if( canBeTransparent ) {
                float transp = p.getOpacityLevel();
                if( transp!=0 ) {
-                  fillTransparency(g,xc,yc,transp,p.active,colorFillFG); 
+                  xPoignee=fillTransparency(g,xc,yc,transp,p.active,colorFillFG); 
 //                  xPoignee=fillTransparency(g,xc,yc,transp,p.active || p.isImage(),colorFillFG ); 
                }
             }
@@ -711,24 +711,24 @@ public final class Slide {
          }
          
          // Le curseur de réglage de la transparence
-//         if( mode!=DRAG && canBeTransparent ) {
-//            int largeur = 3;
-//            int debut = frX[1];
-//            int fin = frX[2];
-//            int haut = frY[1];
-//            int xPos = xPoignee;
-//            if( xPos<dx+debut+largeur ) xPos = dx+debut+largeur;
-//            if( xPos>dx+fin-largeur ) xPos = dx+fin-largeur;
-//            g.setColor( Color.black );
-//            g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
-//            g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
-//            float transp = p.getOpacityLevel();
-////            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
-//            g.setColor( transp<=0.1 ? Color.red : Color.green );
-//            g.fillRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
-//            g.setColor(Color.black);
-//            g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
-//         }
+         if( mode!=DRAG && canBeTransparent ) {
+            int largeur = 3;
+            int debut = frX[1];
+            int fin = frX[2];
+            int haut = frY[1];
+            int xPos = xPoignee;
+            if( xPos<dx+debut+largeur ) xPos = dx+debut+largeur;
+            if( xPos>dx+fin-largeur ) xPos = dx+fin-largeur;
+            g.setColor( Color.black );
+            g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
+            g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
+            float transp = p.getOpacityLevel();
+//            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
+            g.setColor( transp<=0.1 ? Color.red : Color.green );
+            g.fillRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
+            g.setColor(Color.black);
+            g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
+         }
 
       } catch( Exception e ) { e.printStackTrace(); }
    }

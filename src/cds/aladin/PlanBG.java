@@ -20,21 +20,26 @@
 
 package cds.aladin;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Composite;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.MediaTracker;
+import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
+import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.ImageObserver;
+import java.awt.image.MemoryImageSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -48,6 +53,7 @@ import java.util.*;
 import javax.swing.SwingUtilities;
 
 import cds.astro.Coo;
+import cds.moc.multi.Buf;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -327,7 +333,7 @@ public class PlanBG extends PlanImage {
    
    protected void setSpecificParams(TreeNodeAllsky gluSky) {
       type = ALLSKYIMG;
-      video=VIDEO_NORMAL;
+      video = aladin.configuration.getCMVideo();
       inFits = gluSky.isFits();
       inJPEG = gluSky.isJPEG();
       truePixels=gluSky.isTruePixels();
@@ -342,7 +348,7 @@ public class PlanBG extends PlanImage {
       initCache();
       aladin.trace(2,"Creating allSky directory plane ["+path+"]"); 
       type = ALLSKYIMG;
-      video=VIDEO_NORMAL;
+      video= aladin.configuration.getCMVideo();
       File f = new File(path);
       url = f.getAbsolutePath();
       survey = f.getName();
@@ -360,7 +366,7 @@ public class PlanBG extends PlanImage {
       initCache();
       aladin.trace(2,"Creating allSky http plane ["+u+"]"); 
       type = ALLSKYIMG;
-      video=VIDEO_NORMAL;
+      video=aladin.configuration.getCMVideo();
       url = u.toString();
       
       maxOrder = 3;
@@ -565,13 +571,16 @@ public class PlanBG extends PlanImage {
       return error==null;
    }
 
-   /** Creation d'une table de couleurs par defaut */
-   protected void creatDefaultCM() {
-      transfertFct = aladin.configuration.getCMFct();
-      typeCM       = aladin.configuration.getCMMap();
-      cm = ColorMap.getCM(0,128,255,false, typeCM,transfertFct);
-   }
-
+   // INUTILE, DEJA DANS PlanImage
+//   /** Creation d'une table de couleurs par defaut */
+//   protected void creatDefaultCM() {
+//      transfertFct = aladin.configuration.getCMFct();
+//      typeCM       = aladin.configuration.getCMMap();
+//      video        = aladin.configuration.getCMVideo();
+//      boolean transp = pixMode==PIX_255 || pixMode==PIX_TRUE;
+//      cm = ColorMap.getCM(0,128,255,video==PlanImage.VIDEO_INVERSE, typeCM,transfertFct, transp);
+//   }
+   
    /** Modifie la table des couleurs */
    @Override
    protected void setCM(Object cm) {
@@ -894,7 +903,7 @@ public class PlanBG extends PlanImage {
    /** Demande de chargement du losange repéré par order,npix */
    public HealpixKey askForHealpix(int order,long npix) {
       HealpixKey pixAsk;
-
+      
       readyAfterDraw=false;
 
       if( drawMode==DRAWPOLARISATION ) pixAsk = new HealpixKeyPol(this,order,npix);
@@ -1062,7 +1071,7 @@ public class PlanBG extends PlanImage {
 
    /** Retourne la liste des losanges susceptibles de recouvrir la vue pour un order donné */
    protected long [] getPixList(ViewSimple v, Coord center, int order) {
-
+      
       long nside = CDSHealpix.pow2(order);
       double r1 = CDSHealpix.pixRes(nside)/3600;
       double r2 = Math.max(v.getTailleRA(),v.getTailleDE());
@@ -1997,7 +2006,14 @@ public class PlanBG extends PlanImage {
       if( rgb==null ) return null;
       int taille = rgb.length;
       byte [] pixels = new byte[taille];
-      for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgb[i] & 0xFF);
+      for( int i=0; i<taille; i++ ) {
+         if( ((rgb[i] >>> 24) & 0xFF)==0 ) pixels[i]=0;  // transparent
+         else {
+            int pix = rgb[i] & 0xFF;
+            if( pix<255 ) pix++;
+            pixels[i] = (byte)(pix & 0xFF);
+         }
+      }
       rgb=null;
       return pixels;
    }
@@ -2030,30 +2046,48 @@ public class PlanBG extends PlanImage {
 	   if( now ) {
 		   Image img = aladin.createImage(v.rv.width,v.rv.height);
 		   Graphics g = img.getGraphics();
-		   v.fillBackground(g);
+//		   v.drawBackground(g);
 		   drawLosanges(g,v,now);
+//           v.drawForeGround(g);
 		   g.dispose();
 		   return img;
 	   } 
 
+	   // Pas de modif depuis la dernière fois, je redonne l'image précédente
 	   if( v.imageBG!=null && v.ovizBG == v.iz
 			   && v.oImgIDBG==imgID && v.rv.width==v.owidthBG && v.rv.height==v.oheightBG ) {
 		   return v.imageBG;
 	   }
 
+	   // Dois-je créer une nouvelle image ?
 	   if( v.imageBG==null || v.rv.width!=v.owidthBG || v.rv.height!=v.oheightBG ) {
 		   if( v.imageBG!=null ) v.imageBG.flush();
 		   if( v.g2BG!=null ) v.g2BG.dispose();
-		   v.imageBG = aladin.createImage(v.rv.width,v.rv.height);
+           v.imageBG = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB);
 		   v.g2BG = v.imageBG.getGraphics();
+		   
+	   // ou simplement remettre de la transparence ?
+	   } else {
+	      ((Graphics2D)v.g2BG).setComposite(AlphaComposite.Clear);
+	      v.g2BG.fillRect(0, 0, v.rv.width, v.rv.height);
+	      ((Graphics2D)v.g2BG).setComposite(AlphaComposite.Src);
 	   }
+	   
 	   v.oImgIDBG=imgID;
 	   v.owidthBG=v.rv.width;
 	   v.oheightBG=v.rv.height;
 	   v.ovizBG=v.iz;
 	   flagClearBuf=false;
-	   v.fillBackground(v.g2BG);
+	   
+	   // Je trace les losanges
+	   if( !isTransparent() ) drawBackground(v.g2BG,v);
 	   drawLosanges(v.g2BG,v,now);
+	   
+	   // Pour pouvoir détecter s'il y a un objet sous la souris
+	   v.pixelsRGB = ((DataBufferInt)v.imageBG.getRaster().getDataBuffer()).getData();
+	   
+	   v.w=((BufferedImage)v.imageBG).getWidth();
+	   v.h=((BufferedImage)v.imageBG).getHeight();
 
 	   return v.imageBG;
    }
@@ -2095,8 +2129,6 @@ public class PlanBG extends PlanImage {
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
       readyDone = readyAfterDraw;
-	   
-
    }
 
    boolean readyAfterDraw=false;
@@ -2289,7 +2321,7 @@ public class PlanBG extends PlanImage {
          }
       }
       
-      drawBackground(g, v);
+//      drawBackground(g, v);
       Vector<HealpixKey> localRedraw = new Vector<HealpixKey>(100);
       long [] pix;
       if( v.isAllSky() ) {
@@ -2312,7 +2344,7 @@ public class PlanBG extends PlanImage {
          }
       }
       redraw(g,v,0,localRedraw);
-      drawForeground(g,v);
+//      drawForeground(g,v);
    }
    
    // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)
@@ -2332,156 +2364,171 @@ public class PlanBG extends PlanImage {
       long [] pix=null;
       int min = Math.max(ALLSKYORDER,minOrder);
       int max = Math.min(maxOrder(v),maxOrder);
+      boolean flagAllsky=false;
+      boolean allKeyReady = false;
       
-//      System.out.println("Order="+max+" v="+v.rv.width+"x"+v.rv.height);
       
-      // On accélère pendant un clic-and-drag
-      boolean fast = mustDrawFast();
-      if( fast ) min=max;
-      
-      // Pas sur que ce soit utile mais j'ai déjà eu des demandes de losanges order 2
-      if( min<ALLSKYORDER ) min=max=ALLSKYORDER;
+      // On dessine le ciel entier à basse résolution
+      if( min<ALLSKYORDER ) {
+         flagAllsky=drawAllSky(g,v); 
+         nb=1;
+      } else {
 
-      // Position centrale
-      double theta=0,phi=0;
-      Coord center = getCooCentre(v);
-      if( center!=null ) {
-         theta = Math.PI/2 - Math.toRadians(center.del);
-         phi = Math.toRadians(center.al);
-      }
-      
-      // Recherche des losanges qui couvrent la vue à la résolution max
-      boolean allKeyReady=true;
-      if( max<=ALLSKYORDER ) allKeyReady=false; 
-      else {
-         pix = getPixList(v,center,max);
-         for( int i=0; i<pix.length; i++ ) {
-            HealpixKey healpix = getHealpix(max,pix[i], false);
-            if( healpix==null && (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
-               pix[i]=-1; continue;
-            }
-            if( healpix==null || !healpix.isOutView(v) && healpix.status!=HealpixKey.READY ) {
-               allKeyReady=false;
-               break;
-            }
+         // On accélère pendant un clic-and-drag
+         boolean fast = mustDrawFast();
+         if( fast ) min=max;
+
+         // Position centrale
+         double theta=0,phi=0;
+         Coord center = getCooCentre(v);
+         if( center!=null ) {
+            theta = Math.PI/2 - Math.toRadians(center.del);
+            phi = Math.toRadians(center.al);
          }
-         if( !allKeyReady ) pix=null;
-      }
 
-      // j'affiche le allsky comme fond soit parce que je suis au niveau 3
-      // soit parceque tous les losanges ne sont pas prêts, 
-      boolean pochoir = !aladin.calque.hasHpxGrid();
-      if( !allKeyReady  ) {
-         if( pochoir ) drawBackground(g, v);
-         if( drawAllSky(g,v) ) nb=1;
-      }
-      resetPriority();
-      redraw.clear();
-      HealpixKey healpix = null;
-      int nOut=0;
-      int cmin = allKeyReady ? max : min; // Math.max(min,max-2); 
-      for( int order=cmin; order<=max; order++ ) {
-
-         if( !allKeyReady ) {
-            // via query_disc()
-            /*if( pix==null ) */pix = getPixList(v,center,order); // via query_disc()
-
-//            // Par multiplication par 4 du père
-//            else {
-//               int k=0;
-//               long [] pixn = new long[(pix.length-nOut)*4];
-//               for( int i=0; i<pix.length; i++ ) {
-//                  if( pix[i]==-1 ) continue;
-//                  long p = pix[i]*4;
-//                  for( int j=0; j<4; j++ ) pixn[k++] = p+j;
-//               }
-//               pix=pixn;
-//            }
-            nOut=0;
-            if( pix.length==0 ) break;
-
-            nDraw1+=pix.length;
-
-            // On place le losange central en premier dans la liste
-            try {
-               if( center!=null ) {
-                  long firstPix = CDSHealpix.ang2pix_nest(CDSHealpix.pow2(order),theta, phi);
-
-                  // Permutation en début de liste
-                  for( int i=0; i<pix.length; i++ ) {
-                     if( pix[i]==firstPix ) {
-                        long a = pix[0]; pix[0] = pix[i]; pix[i]=a;
-                        break;
+         // Recherche des losanges qui couvrent la vue à la résolution max
+         // uniquement si on est au-dela de l'order 3 (sauf si cest le dernier)
+         allKeyReady=true;
+         if( max<ALLSKYORDER || max==ALLSKYORDER && maxOrder==ALLSKYORDER ) allKeyReady=false; 
+         else {
+            pix = getPixList(v,center,max);
+            for( int i=0; i<pix.length; i++ ) {
+               HealpixKey healpix = getHealpix(max,pix[i], false);
+               if( healpix==null ) {
+                  if( (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
+                     pix[i]=-1; continue;
+                  } else { allKeyReady=false; break; }
+               } else {
+                  if( healpix.isOutView(v) ) { pix[i]=-1; continue; }
+                  else {
+                     if( healpix.status!=HealpixKey.READY
+                           && healpix.status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
+                     else {
+                        healpix.resetTimer();
                      }
                   }
                }
-            } catch( Exception e ) { }
+            }
+            if( !allKeyReady ) pix=null;
          }
 
-         for( int i=0; i<pix.length; i++ ) {
 
-            healpix = getHealpix(order,pix[i], false);
-            HealpixKey testIn = healpix!=null ? healpix : new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
-            
-            if( !allKeyReady && testIn.isOutView(v) ) {
-               nOut1++;
-               nOut++;
-               pix[i]=-1;
-               continue;
-            }
-
-            if( healpix==null ) healpix = getHealpix(order,pix[i], true);
-
-            // Inconnu => on ne dessine pas
-            if( healpix==null ) continue;
-            
-            // Juste pour tester la synchro
-//            Util.pause(100);
-
-            // Positionnement de la priorité d'affichage
-            healpix.priority=order<max ? 500-(priority++) : priority++;
-
-            int status = healpix.status;
-
-            // Losange erroné ?
-            if( status==HealpixKey.ERROR ) continue;
-
-            // On change d'avis
-            if( status==HealpixKey.ABORTING ) healpix.setStatus(HealpixKey.ASKING,true);
-
-            // Losange à gérer
-            healpix.resetTimer();
-
-            // Pas encore prêt
-            if( status!=HealpixKey.READY && status!=HealpixKey.ERROR ) continue;
-            
-            // Tous les fils à tracer sont déjà prêts => on passe
-            if( order<max && childrenReady(healpix,v) ) {
-               healpix.filsFree();
-               healpix.resetTimeAskRepaint();
-               continue;
-            }
-
-            nb+=healpix.draw(g,v);
-
-
+         // On met le fond du ciel que si on est le plan de référence de la vue
+         if( /* max<=ALLSKYORDER &&*/  !allKeyReady && v.pref==this || (!allKeyReady && max<=ALLSKYORDER && v.pref!=this) ) { 
+            flagAllsky=drawAllSky(g,v); 
+            nb=1;
          }
+
+         resetPriority();
+         redraw.clear();
+         HealpixKey healpix = null;
+         int nOut=0;
+         int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
+         if( max>=ALLSKYORDER ) for( int order=cmin; order<=max; order++ ) {
+            System.out.println("draw order="+order+" min="+min+" cmin="+cmin+" max="+max);
+
+            if( !allKeyReady ) {
+               pix = getPixList(v,center,order); 
+               nOut=0;
+               if( pix.length==0 ) break;
+
+               nDraw1+=pix.length;
+
+               // On place le losange central en premier dans la liste
+               try {
+                  if( center!=null ) {
+                     long firstPix = CDSHealpix.ang2pix_nest(CDSHealpix.pow2(order),theta, phi);
+
+                     // Permutation en début de liste
+                     for( int i=0; i<pix.length; i++ ) {
+                        if( pix[i]==firstPix ) {
+                           long a = pix[0]; pix[0] = pix[i]; pix[i]=a;
+                           break;
+                        }
+                     }
+                  }
+               } catch( Exception e ) { }
+            }
+
+            for( int i=0; i<pix.length; i++ ) {
+               if( pix[i]==-1 ) continue;
+               healpix = getHealpix(order,pix[i], false);
+               HealpixKey testIn = healpix!=null ? healpix : new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
+
+               if( !allKeyReady && testIn.isOutView(v) ) {
+                  nOut1++;
+                  nOut++;
+                  pix[i]=-1;
+                  continue;
+               }
+
+               if( healpix==null ) healpix = getHealpix(order,pix[i], true);
+
+               // Inconnu => on ne dessine pas
+               if( healpix==null ) continue;
+
+               // Juste pour tester la synchro
+               //            Util.pause(100);
+
+               // Positionnement de la priorité d'affichage
+               healpix.priority=order<max ? 500-(priority++) : priority++;
+
+               int status = healpix.status;
+
+               // Losange erroné ?
+               if( status==HealpixKey.ERROR ) continue;
+
+               // On change d'avis
+               if( status==HealpixKey.ABORTING ) healpix.setStatus(HealpixKey.ASKING,true);
+
+               // Losange à gérer
+               healpix.resetTimer();
+
+               // Pas encore prêt
+               if( status!=HealpixKey.READY && status!=HealpixKey.ERROR ) continue;
+
+               // Tous les fils à tracer sont déjà prêts => on passe
+               if( order<max && childrenReady(healpix,v) ) {
+                  healpix.filsFree();
+                  healpix.resetTimeAskRepaint();
+                  continue;
+               }
+
+               nb+=healpix.draw(g,v);
+            }
+         }
+         
+         //essai
+         allWaitingKeysDrawn = allKeyReady || (max<=ALLSKYORDER && hasDrawnSomething);
+
       }
-//      if( healpix!=null ) pixels = healpix.pixels;// Pour que l'histogramme soit à jour
 
-      nb+=redraw(g,v,t1,redraw);
-      hasDrawnSomething=nb>0;
-      if( hasDrawnSomething && pochoir ) drawForeground(g,v);
-      
-      //essai
-      allWaitingKeysDrawn = allKeyReady || (max<=ALLSKYORDER && hasDrawnSomething);
+      int nb1 =redraw(g,v,t1,redraw);
+      hasDrawnSomething=(nb+nb1)>0;
 
       tryWakeUp();
-//      long t2 = Util.getTime();
-//      statTimeDisplay = t2-t1;
-      statNbItems = nb;
-//aladin.trace(4,"Draw["+min+".."+max+"] "+s1+" "+ +nb+" losanges in "+(statTimeDisplay)+"ms");
+      
+      // Vitesse de tracé - sur les MAXSTAT derniers tracé
+      long t2 = Util.getTime();
+      long statTime = statTimeDisplayArray[nStat++] = t2-t1;
+      if( nStat==statTimeDisplayArray.length ) nStat=0;
+      long totalStatTime=0;
+      int nbStat=0;
+      for( int i=0; i<statTimeDisplayArray.length; i++ ) { 
+         if( statTimeDisplayArray[i]==0 ) continue;
+         totalStatTime+=statTimeDisplayArray[i];
+         nbStat++;
+      }
+      statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
+      statNbItems = nb+nb1;
+      
+aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyReady?" +allKeyReady":"")+" "+ +nb+"+"+nb1+" losanges in "+statTime+"ms (avg="+statTimeDisplay+"ms)");
    }
+   
+   static final private int MAXSTAT=5;
+   private int nStat=0;
+   private long[] statTimeDisplayArray = new long[MAXSTAT];
+   
    
    private int redraw(Graphics g,ViewSimple v,long t1,Vector<HealpixKey> redraw) {
       int n=0;
@@ -2491,7 +2538,6 @@ public class PlanBG extends PlanImage {
             HealpixKey healpix = (HealpixKey)list[i];
             try { n += healpix.draw(g, v, 8,redraw); } catch( Exception e ) { }
          }
-//      if( n>0 ) System.out.println("Redraw "+redraw.size()+" losanges => "+n+" objets");
       }
       statTimeDisplay = Util.getTime()-t1;
       return n;
@@ -2518,38 +2564,26 @@ public class PlanBG extends PlanImage {
 //   static final int EP =4; //12;
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
-   private void drawForeground(Graphics gv,ViewSimple v) {
+   protected void drawForeground(Graphics gv,ViewSimple v) {
+      
+      if( aladin.calque.hasHpxGrid() ) return;
+      
+      Graphics2D g = (Graphics2D)gv;
+   
 //      if( rayon<60 ) return;
       if( v.getTaille()<15 ) return;
-      Projection projd = v.getProj();
-      Graphics2D g = (Graphics2D) gv;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(Color.white);
       Stroke st = g.getStroke();
-      int m=2;
       g.setStroke(new BasicStroke(5));
-      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
-         g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
-      } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
-         if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
-         else Util.drawEllipse(g, x+grandAxe,y+rayon, grandAxe+m, rayon+m, angle );
 
-      }
-      g.setStroke(st);
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-
-   }
-
-   /** Tracé d'un fond couvrant la forme de tout le ciel en fonction du type de projection
-    * pour atténuer le phénomène de "feston" */
-   private void drawBackground(Graphics g,ViewSimple v) {
       Projection projd = v.getProj().copy();
       projd.frame=0;
 
-      g.setColor(new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0)));
       rayon=0;
-      if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());
-      else if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+      int m=2;
+      
+      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
          projd.getXYNative(c);
          PointD center = v.getViewCoordDble(c.x, c.y);
@@ -2562,7 +2596,9 @@ public class PlanBG extends PlanImage {
          rayon = (int)(Math.abs(Math.sqrt(deltaX*deltaX+deltaY*deltaY)));
          x = (int)(center.x-rayon);
          y = (int)(center.y-rayon);
-         g.fillOval(x,y,rayon*2,rayon*2);
+
+         g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
+         
       } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
          Projection p =  projd.copy();
          angle = -p.c.getProjRot();
@@ -2585,8 +2621,107 @@ public class PlanBG extends PlanImage {
          grandAxe = (int)(Math.abs(droit.x-center.x));
          x = (int)(center.x-grandAxe);
          y = (int)(center.y-rayon);
-         if( angle==0 ) g.fillOval(x,y,grandAxe*2,rayon*2);
-         else Util.fillEllipse(g, x+grandAxe,y+rayon, grandAxe, rayon, angle );
+         
+         if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
+         else Util.drawEllipse(g, x+grandAxe,y+rayon, grandAxe+m, rayon+m, angle );
+
+      }
+      g.setStroke(st);
+      
+      if( pixMode!=PIX_ARGB && pixMode!=PIX_RGB && video==VIDEO_INVERSE ) {
+         m=0;
+         g.setStroke(new BasicStroke(2));
+         g.setColor( new Color(210,220,255) );
+         if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+            g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
+         } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
+            if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
+            else Util.drawEllipse(g, x+grandAxe,y+rayon, grandAxe+m, rayon+m, angle );
+         }
+         g.setStroke(st);
+      }
+
+      
+      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+
+   }
+
+   /** Tracé d'un fond couvrant la forme de tout le ciel en fonction du type de projection
+    * pour atténuer le phénomène de "feston" */
+   protected void drawBackground(Graphics g,ViewSimple v) {
+      
+      if( aladin.calque.hasHpxGrid() ) return;
+      
+      Projection projd = v.getProj().copy();
+      projd.frame=0;
+
+      Color bckCol = color ? Color.black : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
+      g.setColor( bckCol );
+      rayon=0;
+      if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());
+      else if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+         Coord c = projd.c.getProjCenter();
+         projd.getXYNative(c);
+         PointD center = v.getViewCoordDble(c.x, c.y);
+         double signe = c.del<0?1:-1;
+         c.del = c.del + signe*( projd.t==Calib.SIN ? 89 : 179);
+         projd.getXYNative(c);
+         PointD haut = v.getViewCoordDble(c.x, c.y);
+         double deltaY = haut.y-center.y;
+         double deltaX = haut.x-center.x;
+         rayon = (int)(Math.abs(Math.sqrt(deltaX*deltaX+deltaY*deltaY)));
+         x = (int)(center.x-rayon);
+         y = (int)(center.y-rayon);
+         
+         if( isTransparent() ) {
+            Graphics2D g2d = (Graphics2D)g;
+            Paint paint = g2d.getPaint();
+            Paint gradient = new GradientPaint(x, y,new Color(0,0,70), 
+                               x+rayon*2,y+rayon*2, new Color(180,190,200));
+            g2d.setPaint(gradient);
+            g.fillOval(x,y,rayon*2,rayon*2);
+            g2d.setPaint(paint);
+         } else {
+            g.fillOval(x,y,rayon*2,rayon*2);
+         }
+         
+      } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
+         Projection p =  projd.copy();
+         angle = -p.c.getProjRot();
+         p.setProjRot(0);
+         p.frame = Localisation.ICRS;
+         p.setProjCenter(0,0.1);
+         Coord c =p.c.getProjCenter();
+         p.getXYNative(c);
+         PointD center = v.getViewCoordDble(c.x, c.y);
+         double signe = c.del<0?1:-1;
+         double del = c.del;
+         c.del += signe*89;
+         p.getXYNative(c);
+         PointD haut = v.getViewCoordDble(c.x, c.y);
+         c.del = del;
+         c.al+=179;
+         p.getXYNative(c);
+         PointD droit = v.getViewCoordDble(c.x, c.y);
+         rayon = (int)(Math.abs(haut.y-center.y));
+         grandAxe = (int)(Math.abs(droit.x-center.x));
+         x = (int)(center.x-grandAxe);
+         y = (int)(center.y-rayon);
+         
+         if( isTransparent() ) {
+            Graphics2D g2d = (Graphics2D)g;
+            Paint paint = g2d.getPaint();
+            Paint gradient = new GradientPaint(x+rayon/4, y+rayon/4,new Color(0,0,70),
+                            x+grandAxe*2-rayon/4,y+rayon*2-rayon/4, new Color(180,190,200));
+            g2d.setPaint(gradient);
+            if( angle==0 ) g.fillOval(x,y,grandAxe*2,rayon*2);
+            else Util.fillEllipse(g, x+grandAxe,y+rayon, grandAxe, rayon, angle );
+            g2d.setPaint(paint);
+         } else {
+            if( angle==0 ) g.fillOval(x,y,grandAxe*2,rayon*2);
+            else Util.fillEllipse(g, x+grandAxe,y+rayon, grandAxe, rayon, angle );
+         }
+         
       } else g.fillRect(0, 0, v.rv.width, v.rv.height);
    }
 
@@ -2873,37 +3008,6 @@ public class PlanBG extends PlanImage {
          if( thread!=null ) thread.interrupt();
       }
 
-      /** Mémorisation des pixels d'un losange d'ordre 3 dans le allsky correspondant
-       * si cela n'a pas déjà était fait, afin d'améliorer la résolution (64x64 => 128x128)
-       * PEUT ETRE A SUPPRIMER DANS LE CAS D'UNE MACHINE TROP LENTE */
-//      private void keepInAllSky(HealpixKey healpix) {
-//if( !color ) return;
-//         if( healpix.order!=3 || allsky==null || allsky[healpix.order]==null ) return;
-//         int w=128;
-//         HealpixKey h = allsky[healpix.order].elementAt((int)healpix.npix);
-//         if( h==null || h.width==w ) return;      // déjà fait
-//
-//         int [] rgbTmp=null;
-//         byte [] pixelsTmp=null;
-//         if( color ) rgbTmp = new int[w*w];
-//         else pixelsTmp = new byte[w*w];
-//
-//         int gap = healpix.width/w;
-//         for( int y=0; y<w; y++ ) {
-//            for( int x=0; x<w; x++ ) {
-//               if( color ) rgbTmp[y*w+x] = healpix.rgb[ (y*gap)*healpix.width +x*gap ];
-////               else pixelsTmp[y*w+x] = (byte)( (255-(int)healpix.pixels[ (y*gap)*healpix.width +x*gap]) & 0xFF );
-//               else pixelsTmp[y*w+x] = healpix.pixels[ (y*gap)*healpix.width +x*gap];
-//            }
-//         }
-//         if( color ) h.rgb=rgbTmp;
-//         else h.pixels=pixelsTmp;
-//         h.height=h.width=w;
-//         h.imgBuf=null;
-//         h.filsFree();
-////         System.out.println("Keep in AllSky in "+w+"x"+w+" "+healpix);
-//      }
-
       public void run() {
          boolean flagLoad;
 
@@ -2913,28 +3017,30 @@ public class PlanBG extends PlanImage {
                flagLoad=false;
 
 
-               try {
-                  Enumeration<HealpixKey> e = pixList.elements();
-                  int min = Integer.MAX_VALUE;
-                  HealpixKey minHealpix=null;
-                  while( e.hasMoreElements() ) {
-                     final HealpixKey healpix = e.nextElement();
-                     int status = healpix.getStatus();
-                     if( (type==0 && status==HealpixKey.TOBELOADFROMCACHE
-                       || type==1 && status==HealpixKey.TOBELOADFROMNET)
-                           && healpix.priority<min ) {
-                        minHealpix=healpix;
-                        min=healpix.priority;
+               // On ne charge que si on a le temps...
+               if( !aladin.view.mustDrawFast() ) {
+                  try {
+                     Enumeration<HealpixKey> e = pixList.elements();
+                     int min = Integer.MAX_VALUE;
+                     HealpixKey minHealpix=null;
+                     while( e.hasMoreElements() ) {
+                        final HealpixKey healpix = e.nextElement();
+                        int status = healpix.getStatus();
+                        if( (type==0 && status==HealpixKey.TOBELOADFROMCACHE
+                              || type==1 && status==HealpixKey.TOBELOADFROMNET)
+                              && healpix.priority<min ) {
+                           minHealpix=healpix;
+                           min=healpix.priority;
+                        }
                      }
-                  }
-                  if( minHealpix!=null ) {
-                     if( type==0 ) minHealpix.loadFromCache();
-                     else minHealpix.loadFromNet();
-                     if( !minHealpix.allSky ) setLosangeOrder(minHealpix.getLosangeOrder());
-//                     keepInAllSky(minHealpix);
-                     flagLoad = true;
-                  }
-               } catch( Exception e) {}
+                     if( minHealpix!=null ) {
+                        if( type==0 ) minHealpix.loadFromCache();
+                        else minHealpix.loadFromNet();
+                        if( !minHealpix.allSky ) setLosangeOrder(minHealpix.getLosangeOrder());
+                        flagLoad = true;
+                     }
+                  } catch( Exception e) {}
+               }
 
                if( flagLoad ) loader.wakeUp();
                else {

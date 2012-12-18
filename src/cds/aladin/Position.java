@@ -336,6 +336,7 @@ public class Position extends Obj {
       yv[v.n] += dy;
       setCoord(v);
   }
+   
 
    /** Application d'une rotation (relative)
     * @param theta angle de rotation en radians

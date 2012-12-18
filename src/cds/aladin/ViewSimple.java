@@ -61,6 +61,7 @@ public class ViewSimple extends JComponent
                                         DropTargetListener, DragSourceListener, DragGestureListener {
 
    static final String CREDIT = "Powered by Aladin";
+   static final float CARTOUCHE = 0.7f;
 
 //   static final int CMSIZE = 100;      // Taille de la portion d'image pour la CM dynamique
    Font F = Aladin.SPLAIN;
@@ -178,7 +179,8 @@ public class ViewSimple extends JComponent
    protected int owidthBG=-1,oheightBG=-1;
    protected Graphics g2BG=null;
    protected int ovizBG=-3;
-   protected Image imageBG=null;
+   protected BufferedImage imageBG=null;
+//   protected Image imageBG=null;
    protected int oImgIDBG=-2;
 
   /** Creation de l'objet View
@@ -544,7 +546,7 @@ public class ViewSimple extends JComponent
          if( pref.hasOriginalPixels() ) {
            pref.getCurrentBufPixels(pi,rcrop,zoomFct,resMult,fullRes);
             
-         } else if( (pref).color ) {
+         } else if( pref.color ) {
             pi.type=Plan.IMAGERGB;
             pi.bitpix=8;
             ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview,true);
@@ -555,9 +557,10 @@ public class ViewSimple extends JComponent
          } else {
             pi.pixels = pref.getPixels8Area(this,rview,true);
             pi.bitpix=8;
-            pi.cm = ColorMap.getCM(0,128,255,false,pi.typeCM,PlanImage.LINEAR);
+            pi.video = pref.video;
             pi.setTransfertFct(PlanImage.LINEAR);
             pi.cmControl[0]=0; pi.cmControl[1]=128; pi.cmControl[2]=255;
+            pi.restoreCM();
          }
          
          pi.projd.cropAndZoom(rcrop.x,rcrop.y,rcrop.width,rcrop.height, zoomFct);
@@ -801,7 +804,7 @@ public class ViewSimple extends JComponent
     protected Point getViewCoord(Point p, double x, double y) {
        int newx,newy;
        
-       if( Double.isNaN(x) ) return null;
+       if( Double.isNaN(x) || pref==null ) return null;
 
        // Juste pour accélérer (profiling)
 //     x = ItoHI(x);
@@ -1068,8 +1071,9 @@ public class ViewSimple extends JComponent
    }
    
    protected void goToAllSky(Coord c) {
-      aladin.view.setRepere(c);
-      aladin.view.showSource(); 
+      aladin.view.gotoThere(c,0,true);
+//      aladin.view.setRepere(c);
+//      aladin.view.showSource(); 
    }
 
    static int STEP = 2;
@@ -1336,8 +1340,8 @@ public class ViewSimple extends JComponent
     * le bouton SELECT est appuyé */
    boolean shouldMove(double ra, double dec) {
       if( pref!=null && pref instanceof PlanBG ) {
-         return selected || !aladin.view.isMultiView();
-//         return true;
+         return selected && !isInView(ra, dec);
+//         return selected || !aladin.view.isMultiView();
       }
       if(  isFree() || 
             (aladin.toolBox.getTool()!=ToolBox.SELECT && aladin.toolBox.getTool()!=ToolBox.PAN)
@@ -1352,7 +1356,6 @@ public class ViewSimple extends JComponent
          getProj().getXY(coo_x);
          if( Double.isNaN(coo_x.x) ) return false;
          PointD p = imageToZoomView(coo_x.x,coo_x.y);
-//         if( p.x>=0 && p.x<WView && p.y>=0 && p.y<HView ) return true;
          return p.x>=-WView/2 && p.x<=3*WView/2 && p.y>=-HView/2 && p.y<=3*HView/2;
       } catch (Exception e) {}
       return false;
@@ -1393,7 +1396,7 @@ public class ViewSimple extends JComponent
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
          getImgView(g,pi);
       } 
-      fillBackground(g);
+      drawBackground(g);
       paintOverlays(g,null,0,0,true);
       drawCredit(g, 0, 0);
       aladin.waitImage(img);
@@ -1836,19 +1839,17 @@ public class ViewSimple extends JComponent
       // Calcul des coordonnees dans le plan de projection de l'image courante
       PointD p=null;
       Coord cs=null;
-//      if( !isFree() ) {
-         p = vs.getPosition(x,y);
-         fixev = new PointD(x,y);       // Pt fixe pour le selecteur multiple
-         fixebis = fixe  = new PointD(p.x,p.y);   // Dans le cas ou il faut qu'on connaisse l'origine
-         Projection proj = getProj();
-         if( Projection.isOk(proj)) {
-            cs = new Coord();
-            cs.x=fixe.x;
-            cs.y=fixe.y;
-            proj.getCoord(cs);
-            if( Double.isNaN(cs.al ) ) cs=null;
-         }
-//      }
+      p = vs.getPosition(x,y);
+      fixev = new PointD(x,y);       // Pt fixe pour le selecteur multiple
+      fixebis = fixe  = new PointD(p.x,p.y);   // Dans le cas ou il faut qu'on connaisse l'origine
+      Projection proj = getProj();
+      if( Projection.isOk(proj)) {
+         cs = new Coord();
+         cs.x=fixe.x;
+         cs.y=fixe.y;
+         proj.getCoord(cs);
+         if( Double.isNaN(cs.al ) ) cs=null;
+      }
 
       // Mode GrabIt actif
       if( isGrabIt() && !isFree() ) {
@@ -2001,7 +2002,6 @@ public class ViewSimple extends JComponent
 
             // Si le premier element a deja ete selectionne precedemment
             // on suppose qu'il s'agit d'un clic-and-drag
-//            if( v.size()>0 && ((Position)v.elementAt(0)).isSelected() ) {
             if( v.size()>0 && aladin.view.vselobj.contains(v.elementAt(0))  ) {
                flagMoveNotSelect=true;
                rselect=null;
@@ -2437,7 +2437,8 @@ public class ViewSimple extends JComponent
             } else {
                Vector vTag = new Vector();
                for( Obj o : aladin.view.vselobj ) {
-                  if( o instanceof Source && ((Source)o).isTagged() ) vTag.add(o);
+                  if( o instanceof Source && ((Source)o).isTagged() 
+                        && !res.contains(o) ) vTag.add(o);
                }
                aladin.view.vselobj = vTag;
                aladin.view.vselobj.addAll(res);
@@ -2566,7 +2567,7 @@ public class ViewSimple extends JComponent
       } else {
          IndexColorModel  ic = ColorMap.getCM(tr1,tr2,tr3,
                pimg.video==PlanImage.VIDEO_INVERSE,
-               pimg.typeCM,pimg.transfertFct);
+               pimg.typeCM,pimg.transfertFct,pimg.isTransparent());
          pimg.setCM(ic);
          aladin.calque.zoom.zoomView.setCM(ic);
       }
@@ -2654,7 +2655,7 @@ public class ViewSimple extends JComponent
          if( tool==ToolBox.PAN && e.isShiftDown() && selected ) aladin.view.selectCompatibleViews();
          if( tool==ToolBox.PAN ) {
             selected=true;
-            aladin.view.setCurrentView(this);
+            if( aladin.view.getCurrentView()!=this ) aladin.view.setCurrentView(this);
          }
       }
 
@@ -2773,7 +2774,7 @@ public class ViewSimple extends JComponent
             Obj o = en.nextElement();
             if( !((Position)o).plan.recalibrating ) {
                if( ((Position)o).plan.type!=Plan.TOOL && ((Position)o).plan.type!=Plan.APERTURE
-                  || ((Position)o).plan instanceof PlanContour
+                  || !((Position)o).plan.isMovable()
                   || ((Position)o).plan.type==Plan.FOV ) continue; // pas de deplacement pour un objet de PlanContour ou PlanFov
             }
             
@@ -2926,6 +2927,25 @@ public class ViewSimple extends JComponent
    }
    
    private int oc=Aladin.DEFAULT;
+   int margeX, margeY;
+   
+   /** Retourne true si la souris n'est pas dans du fond d'image */
+   protected boolean isMouseOnSomething() {
+      if( lastView==null ) return false;
+      int x = (int)( lastView.x - margeX);
+      int y = (int)( lastView.y - margeY);
+//      System.out.println("lastView="+lastView.x+","+lastView.y+" marge="+margeX+","+margeY+" x,y="+x+","+y+" width="+w);
+      if( x<0 || x>=w || y<0 || y>=h ) return false;
+      int pix=0;
+      if( pixels!=null ) pix = (int) ( pixels[ y*w+x ] & 0xFF ) ;
+      else if( pixelsRGB!=null ) {
+         pix = pixelsRGB[ y*w+x ];
+         pix = ( (0xFF & pix) + ((pix>>>8) & 0xFF) + ((pix>>>16) & 0xFF) )/3;
+      }
+      if( ((PlanImage)pref).video == PlanImage.VIDEO_INVERSE ) pix = 255 - pix;
+      aladin.trace(4,"ViewSimple.isMouseOnSomething() pix => "+pix );
+      return pix>20;
+   }
 
    public void mouseMoved(MouseEvent e) { mouseMoved1(e.getX(),e.getY(),e); }
    protected void mouseMoved1(double x, double y,MouseEvent e) {
@@ -2933,7 +2953,7 @@ public class ViewSimple extends JComponent
       boolean flagRollable=false;
       flagOnFirstLine=false;
       boolean ok=false;
-
+      
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
 
@@ -3346,7 +3366,8 @@ public class ViewSimple extends JComponent
       aladin.console.setCommand(s);
       aladin.view.setRepereId(s);
       aladin.view.memoUndo(this,repCoord,null);
-      if( flagSync ) aladin.view.syncView(1,repCoord,this);
+//      if( flagSync ) aladin.view.syncView(1,repCoord,this);
+      if( flagSync ) aladin.view.syncView(1,repCoord,this,flagSync);
       else { aladin.view.moveRepere(repCoord); aladin.view.repaintAll(); }
       
       /* if( pref instanceof PlanBG ) */ aladin.dialog.adjustParameters();
@@ -3603,7 +3624,7 @@ public class ViewSimple extends JComponent
 //      setClip(g);
 
       // Du blanc en dessous (dans le cas des bords)
-      fillBackground(g);
+      drawBackground(g);
 
       return flagchange;
   }
@@ -3988,15 +4009,15 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                for( dj=j=0; j<maxw; j+=src, dj+=dst ) {
                   for( c=l=0; l<src; l++ ) {
                      for( k=0, m=(i+l)*w+j; k<src; k++, m++, c++ ) {
-                        pk[c]=(pixels[m] & 0xFF)>>1;
+                        pk[c]=(pixels[m] & 0xFF);
                      }
                   }
                   c=di*dw;
-                  reducepixels[c+=dj]  =(byte)(pk[0]+pk[1]);
-                  reducepixels[c+1]    =(byte)(pk[2]+pk[5]);
+                  reducepixels[c+=dj]  =(byte)( (pk[0]+pk[1])/2 );
+                  reducepixels[c+1]    =(byte)( (pk[2]+pk[5])/2);
                   c=(di+1)*dw;
-                  reducepixels[c+=dj]  =(byte)(pk[3]+pk[6]);
-                  reducepixels[c+1]    =(byte)(pk[7]+pk[8]);
+                  reducepixels[c+=dj]  =(byte)( (pk[3]+pk[6])/2);
+                  reducepixels[c+1]    =(byte)( (pk[7]+pk[8])/2);
                }
             }
          }
@@ -4216,7 +4237,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    protected boolean hasBord() { return flagBord; }
 
    /** Remplissage du fond suivant la bonne couleur */
-   protected void fillBackground(Graphics g) {
+   protected void drawBackground(Graphics g) {
       if( pref!=null && pref.colorBackground!=null) {
          g.setColor(pref.colorBackground);
       } else {
@@ -4225,7 +4246,19 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                && ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ? Color.black : Color.white );
       }
       g.fillRect(1,1,getWidth()-2,getHeight()-2);
+
+      if( pref!=null && pref instanceof PlanBG ) {
+         ((PlanBG)pref).drawBackground(g, this);
+      } 
    }
+   
+   /** Dessin du foreground  */
+   protected void drawForeGround(Graphics g) {
+      if( pref!=null && pref instanceof PlanBG ) ((PlanBG)pref).drawForeground(g, this);
+
+      if( aladin.getOrder()>=0 ) drawHealpixMouse(g);
+   }
+
 
   /** Initialisation d'un tableau.
    * @param array Le tableau a initialiser
@@ -4366,6 +4399,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    
    /** Retourne une couverture régulière de la zone visible dans la vue */
    protected Coord [] getCouverture() {
+      if( aladin.view.mustDrawFast() )  return new Coord[0];
       if( oCouverture!=iz) {
          oCouverture=iz;
          int nseg = Math.max(4,(int)getTaille()/4);
@@ -4552,8 +4586,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( x+taille > rv.width ) s=s1;
 //      g.setColor( getGoodColor(x+dx,rv.height-marge+2 + dy-10,taille,15));
       int y=rv.height-marge+3;
-      Util.drawCartouche(g, x+dx, y-11+dy, taille, 14, 0.6f, null, Color.white);
-      g.setColor(Color.blue);
+      Util.drawCartouche(g, x+dx, y-11+dy, taille, 14, CARTOUCHE, null, Color.white);
+      g.setColor( Aladin.BLACKBLUE);
       g.drawString(s, x+dx, y+dy);
    }
 
@@ -4567,12 +4601,15 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    /** Retourne une couleur bleutée qui se voit sur le rectangle indiqué */
    protected Color getGoodColor(int x1,int y1, int w, int h ) {
-      int x = x1-(int)Math.round(imgDx);
-      int y = y1-(int)Math.round(imgDy);
+//      int x = x1-(int)Math.round(imgDx);
+//      int y = y1-(int)Math.round(imgDy);
+      int x = x1-(int)Math.round(margeX);
+      int y = y1-(int)Math.round(margeY);
       try {
-         if( pref.type==Plan.ALLSKYIMG && pref.active && !isAllSky() ) return Color.cyan;
+         if( pref.type==Plan.ALLSKYIMG && pref.active && !isAllSky() 
+               && ((PlanBG)pref).color ) return Color.cyan;
          if( isFree()
-               || !(pref.isSimpleImage() && pref.active)
+               || (/* !(pref.isSimpleImage() */ pref.isOverlay() && pref.active)
                || w*h==0 || x>this.w || y>this.h || x+w<0 || y+h<0 ) return Color.blue;
          double pix=0;
          for( int j=y; j<y+h; j++ ) {
@@ -4583,7 +4620,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
             }
          }
          pix /=w*h;
-         if( ((PlanImage)pref).video==PlanImage.VIDEO_NORMAL ) pix = 255-pix;
+         if( ((PlanImage)pref).video== (pref.type==Plan.ALLSKYIMG ? PlanImage.VIDEO_INVERSE : PlanImage.VIDEO_NORMAL) ) pix = 255-pix;
          return pix<128 ? Color.blue : Color.cyan;
       } catch( Exception e ) { return Color.blue; }
    }
@@ -4652,8 +4689,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       FontMetrics fm = g.getFontMetrics();
       for( len=fm.stringWidth(s); s.length()>4 && len>rv.width-100; s=s.substring(0,s.length()-2), len=fm.stringWidth(s) );
       
-      Util.drawCartouche(g, x, y-11, len, 15, 0.6f, null, Color.white);
-      g.setColor( locked ? Color.red : Color.blue );
+      Util.drawCartouche(g, x, y-11, len, 15, CARTOUCHE, null, Color.white);
+      g.setColor( locked ? Color.red : Aladin.BLACKBLUE );
       
       g.drawString(s,x, y);
       g.setColor(c);
@@ -5157,7 +5194,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Affichage de la grille en semi transparence
       g.setColor(Aladin.GREEN);
       Stroke st = null;
-      if( antiAliasGrid && g instanceof Graphics2D ) {
+      if( g instanceof Graphics2D ) {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
             RenderingHints.VALUE_ANTIALIAS_ON);
          st = ((Graphics2D)g).getStroke();
@@ -5466,11 +5503,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       
    }
 
-   /** Dessin du foreground  */
-   protected void paintForeGround(Graphics g) {
-      if( aladin.getOrder()>=0 ) drawHealpixMouse(g);
-   }
-
    protected boolean flagPhotometry=false;
    
   /** Tracage des overlays graphiques
@@ -5525,6 +5557,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          
          // Repérage d'un éventuel plan sous la souris dans le stack
          if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;
+         
+         margeX=margeY=0;
 
          // Le plan image de référence (le cas allsky est traité après)
          if( p==pref && p.isImage() ) {
@@ -5537,7 +5571,11 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                       if( rzoom.x>=0 ) offsetX -= (int)Math.floor( (rzoom.x - (int)Math.floor(rzoom.x))*zoom);
                       if( rzoom.y>=0 ) offsetY -= (int)Math.floor( (rzoom.y - (int)Math.floor(rzoom.y))*zoom);
                   }
-                  if( imgFlagDraw ) g.drawImage(imgprep,dx+(int)Math.round(offsetX),dy+(int)Math.round(offsetY),this);
+                  if( imgFlagDraw ) {
+                     margeX = dx+(int)Math.round(offsetX);
+                     margeY = dy+(int)Math.round(offsetY);
+                     g.drawImage(imgprep,margeX,margeY,this);
+                  }
                }
             }
             continue;
@@ -5654,7 +5692,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Le repere courant
          vs.drawRepere(g,dx,dy);
          
-         paintForeGround(g);
+         drawForeGround(g);
 
          // Tracage du quick Simbad s'il existe
          if( aladin.view.simRep!=null /* && this==aladin.view.getMouseView() */) {
@@ -5939,7 +5977,7 @@ g.drawString(s,10,100);
          try { paintComponent1(gr); }
          catch( Exception e ) {
             if( aladin.levelTrace>3 ) e.printStackTrace();
-            fillBackground(gr);
+            drawBackground(gr);
             drawBordure(gr);
             gr.setColor(Color.red);
             gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
@@ -5974,7 +6012,7 @@ g.drawString(s,10,100);
       
       // Message pour patienter si on est entrain de modifier le plan de ref.
       if( !isFree() && pref.flagProcessing ) {
-         fillBackground(gr);
+         drawBackground(gr);
          if( imgprep!=null ) gr.drawImage(imgprep,dx,dy,this);
          waitImg(gr);
          drawBordure(gr);
@@ -5987,7 +6025,7 @@ g.drawString(s,10,100);
       PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
       
       if( !getImgView(gr,pi) || isFree() ) {
-         fillBackground(gr);
+         drawBackground(gr);
          drawBordure(gr);
          return;
       }
@@ -6011,7 +6049,7 @@ g.drawString(s,10,100);
       
       if( !(flagDrag || quickInfo || quickBlink || modeGrabIt || flagBlinkControl || quickBordure || 
             view.newobj!=null && view.newobj instanceof Cote  ) ) {
-         fillBackground(gbuf);
+         drawBackground(gbuf);
          paintOverlays(gbuf,clip,0,0,false);
 //System.out.println("paint");
       }
@@ -6147,7 +6185,7 @@ g.drawString(s,10,100);
             int len = pixel.charAt(0)=='R' ? 150 : g.getFontMetrics().stringWidth(pixel);
             x = getWidth()-(28+len);
             //         g.setColor( getGoodColor(x,y-10,len,15) );
-            Util.drawCartouche(g, x, y-12, len, 15, 0.6f, null, Color.white);
+            Util.drawCartouche(g, x, y-12, len, 15, CARTOUCHE, null, Color.white);
 
             // Dans le cas de trois composantes couleurs (ex: R:255 G:100 B:20)
             if( pixel.charAt(0)=='R' ) {
@@ -6158,7 +6196,7 @@ g.drawString(s,10,100);
                   g.drawString(c,x+i*50,y);
                }
             } else {
-               g.setColor( Color.blue );
+               g.setColor(  Aladin.BLACKBLUE );
                g.drawString(pixel,x,y);
             }
          }
@@ -6169,9 +6207,9 @@ g.drawString(s,10,100);
             x = getWidth()-260;
             int len = g.getFontMetrics().stringWidth(pos);
             //         g.setColor( getGoodColor(x,y-10,len,15) );
-            Util.drawCartouche(g, x, y-12, len, 15, 0.6f, null, Color.white);
+            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, null, Color.white);
 
-            g.setColor( Color.blue );
+            g.setColor( Aladin.BLACKBLUE );
             g.drawString(pos,x,y);
          }
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }

@@ -671,7 +671,7 @@ public final class FrameCM extends JFrame implements ActionListener {
             pimg.typeCM=aladin.configuration.getCMMap();
             choiceCM.setSelectedIndex(pimg.typeCM);
             pimg.video=aladin.configuration.getCMVideo();
-            if( pimg.type==Plan.ALLSKYIMG ) pimg.video=PlanImage.VIDEO_NORMAL;
+//            if( pimg.type==Plan.ALLSKYIMG ) pimg.video=PlanImage.VIDEO_NORMAL;
             int dtf = aladin.configuration.getCMFct();
             transfertCBG.setSelected(transfertCB[dtf].getModel(), true);
             pimg.setTransfertFct(dtf);

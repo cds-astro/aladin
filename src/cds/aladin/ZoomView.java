@@ -205,9 +205,9 @@ public final class ZoomView extends JComponent
  	  }
 	  ViewSimple v = aladin.view.getCurrentView();
 	  if( v.isPlotView() ) return;
+	  flagdrag = true;
       if( !v.isFree() && v.pref instanceof PlanBG ) setAllSkyCenter(v, e.getX(), e.getY());
       else {
-         flagdrag = true;
          synchronize(e);
          newZoom(e.getX(),e.getY());
          drawInViewNow((double)e.getX(),(double)e.getY());

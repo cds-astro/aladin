@@ -264,12 +264,13 @@ public class BuilderRgb extends Builder {
 	
     // génération du RGB à partir des composantes
     private void generateRGB(Fits [] out, int order, long npix) throws Exception {
+       byte [][] pixx8 = new byte [3][];
        
        // Passage en 8 bits pour chaque composante
        for( int c=0; c<3; c++ ) {
           if( c==missing || out[c]==null ) continue;
 //          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
-          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c]);
+          pixx8[c] = out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c], Fits.PIX_256);
        }
        
        Fits rgb = new Fits(width,width,0);
@@ -280,7 +281,7 @@ public class BuilderRgb extends Builder {
              if( c==missing ) continue;
              if( out[c]==null ) pix8[c]=0;
              else {
-                pix8[c] = 0xFF & (int)out[c].pix8[i];
+                pix8[c] = 0xFF & (int)pixx8[c][i];
                 tot += pix8[c];
              }
           }
@@ -292,7 +293,7 @@ public class BuilderRgb extends Builder {
        String file="";
 
        file = Util.getFilePath(path,order, npix)+".jpg";
-       rgb.writeRGBJPEG(file);
+       rgb.writeRGBcompressed(file,"jpeg");
        rgb.free();
 
        File f = new File(file);

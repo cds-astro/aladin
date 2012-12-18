@@ -79,7 +79,7 @@ public final class Zoom extends JPanel {
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
      
-      SLIDER_LOOK = Aladin.NEWLOOK_V7;
+      SLIDER_LOOK = true;
       setLayout( new BorderLayout(5,SLIDER_LOOK?10:0) );
 
       cZoom = new JComboBox();

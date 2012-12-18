@@ -547,7 +547,9 @@ public final class Command implements Runnable {
    /** Retourne true si tous les plugins sont syncrhonisés */
    protected boolean isSyncPlugin() { 
       if( a.plugins==null ) return true;
-      return a.plugins.isSync();
+      boolean rep=a.plugins.isSync();
+      if( !rep ) Aladin.trace(4,"Command.isSyncPlugin() : waiting a plugin...\n");
+      return rep;
    }
    
    /** Retourne true si tous les plans sont syncrhonisés */
@@ -749,6 +751,7 @@ public final class Command implements Runnable {
             res.append("Color   "+Action.findColorName(plan.c)+"\n");
          } else if( plan.type==Plan.TOOL ) {
             res.append("Color   "+Action.findColorName(plan.c)+"\n");
+            res.append("Movable "+(plan.isMovable()?"on":"off")+"\n");
          } else if( plan.type==Plan.IMAGE || plan.type==Plan.IMAGEHUGE ) {
             res.append("Width   "+((PlanImage)plan).naxis1+"\n"
                      + "Height  "+((PlanImage)plan).naxis2+"\n"
@@ -2462,8 +2465,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
    }
    
-   static final boolean PATRICK  = false;
-
   /** Traitement d'une ligne de script eventuellement avec des ";"
    * @param s la ligne a traiter
    * @param verbose true si on baratine
@@ -2537,19 +2538,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
       
-      if( PATRICK ) a.trace(4,"Command.exec("+s1+")...");
-      
-      // Attente que les serveurs soient OK
-      syncServer();
-      
-      if( PATRICK ) a.trace(4,"Command.exec() syncServer ok...");
-      
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
       if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
          if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
          else comment.append(" "+s1.trim().substring(1));
+         return "";
       } else if( !s1.startsWith("function") ) comment=null;
-
+      
+      // Attente que les serveurs soient OK
+      syncServer();
+      
       // Compatibilité pour les commandes "region" de DS9
       try { 
          String s2 = ds9.translate(s1);
@@ -2590,8 +2588,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( !isSync() ) a.trace(4,"Command.exec() : command \""+cmd+"\" needs sync...");
          sync();
       }
-      
-      if( PATRICK ) a.trace(4,"Command.exec() sync ok...");
       
       // est-ce le debut d'une nouvelle definition de fonction ?
       if( s1.trim().startsWith("function") ) {
@@ -3408,14 +3404,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  catch (NumberFormatException e) { printConsole("!!! contour error: incorrect or missing parameter");return "";}
                }
 
-
                int tmp[] = new int[nbContours];
                tmp = FrameContour.generateLevels(nbContours);
 
                double levels[] = new double[nbContours];
 
                for(int i=0;i<levels.length;i++) levels[i] = tmp[i];
-
 
                boolean useSmoothing = true; // vrai par defaut
 
@@ -3434,8 +3428,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  else currentZoomOnly = p2.equals("zoom")?true:false;
                }
                catch(Exception e) {}
-
-
 
                a.calque.newPlanContour(label!=null?label:"Contours",null,levels,new ContourPlot(),useSmoothing,2,currentZoomOnly,true,null);
              }
@@ -3511,7 +3503,6 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       // Bon on va donc simplement activer Sesame et déplacer le repere
       else { 
-         if( PATRICK ) a.trace(4,"Command.exec() => execGetCmd("+s+")...");
          return execGetCmd(s,label,false);
       }
       return "";

@@ -435,10 +435,9 @@ public final class ColorMap extends JPanel  implements
    */
   protected IndexColorModel getCM() {
      flagCMBand=false;
-
      return getCM(triangle[0],triangle[1],triangle[2],
            pimg.video==PlanImage.VIDEO_INVERSE,
-           pimg.typeCM,pimg.transfertFct);
+           pimg.typeCM,pimg.transfertFct,pimg.isTransparent());
   }
 
   static byte [] r = new byte[256];
@@ -490,7 +489,7 @@ public final class ColorMap extends JPanel  implements
    }
 
 
-   static public IndexColorModel getRainbowCM() {
+   static public IndexColorModel getRainbowCM(boolean transp) {
       byte[] red   = new byte[256];
       byte[] green = new byte[256];
       byte[] blue  = new byte[256];
@@ -500,7 +499,8 @@ public final class ColorMap extends JPanel  implements
           blue[i]  = (byte) (0xFF & RAINBOW_B[i]);
       }
 
-      return new IndexColorModel(8, 256, red, green, blue);
+      return transp ? new IndexColorModel(8, 256, red, green, blue,0)
+                 : new IndexColorModel(8, 256, red, green, blue);
    }
 
    // index de la dernière color map "par défaut" (par distinction avec celles ajoutées par l'utilisateur)
@@ -519,12 +519,12 @@ public final class ColorMap extends JPanel  implements
       return (255-Math.abs(x-(maxb+minb)/2)*10);
    }
 
-   static public ColorModel getCMBand(int greyLevel, boolean inverse,boolean background) {
-      return getCMBand(greyLevel-SIZEBAND,greyLevel+SIZEBAND, inverse,background);
+   static public ColorModel getCMBand(int greyLevel, boolean inverse,boolean background,boolean transp) {
+      return getCMBand(greyLevel-SIZEBAND,greyLevel+SIZEBAND, inverse,background,transp);
    }
 
    /** Génère une colormap temporaire ne montrant qu'une bande entre min et max */
-   static private IndexColorModel getCMBand(int min,int max,boolean inverse,boolean background) {
+   static private IndexColorModel getCMBand(int min,int max,boolean inverse,boolean background,boolean transp) {
       minb=min; maxb=max;
       for( int i=0; i<256; i++ ) {
          if( i<min || i> max ) rb[i] = gb[i] = bb[i] = (byte)(!background ? (inverse?255:0)
@@ -536,7 +536,7 @@ public final class ColorMap extends JPanel  implements
             bb[i]=c;
          }
       }
-      return new IndexColorModel(8,256,rb,gb,bb);
+      return transp ? new IndexColorModel(8,256,rb,gb,bb,0) : new IndexColorModel(8,256,rb,gb,bb);
    }
 
   /** Creation de la table des couleurs en fonction des parametres
@@ -549,9 +549,11 @@ public final class ColorMap extends JPanel  implements
    * @return la table des couleurs generee
    */
    // des triangles
-   public static IndexColorModel getCM(int tr0,int tr1,int tr2,
-                                    boolean inverse,int typeCM,int fct) {
-      int i,n;
+   public static IndexColorModel getCM(int tr0,int tr1,int tr2, boolean inverse,int typeCM,int fct) {
+      return getCM(-tr0,tr1,tr2,inverse,typeCM,fct,false);
+   }
+   public static IndexColorModel getCM(int tr0,int tr1,int tr2, boolean inverse,int typeCM,int fct,boolean transp) {
+     int i,n;
 
       int [] rd = new int[256];
       int [] gn = new int[256];
@@ -584,14 +586,16 @@ public final class ColorMap extends JPanel  implements
 	     MyColorMap myCM = (MyColorMap)customCM.elementAt(idx);
 	     interpolPalette(myCM.getRed(),myCM.getGreen(),myCM.getBlue(),!(inverse),tr0,tr1,tr2,fct);
 
-      // Sinon table de niveaux de gris
+      // Sinon table de niveaux de gris, en cas de trasnparence, on décale de 1
       } else {
-         for( i=0; i<256; i++ ) rd[i]=gn[i]=bl[i]=i;
+         int gap = transp ? 1 : 0;
+         for( i=gap; i<256; i++ ) rd[i]=gn[i]=bl[i]=i-gap;
          interpolPalette(rd,gn,bl,inverse,tr0,tr1,tr2,fct);
       }
 
-      return new IndexColorModel(8,256,r,g,b);
+      return transp ? new IndexColorModel(8,256,r,g,b,0) : new IndexColorModel(8,256,r,g,b);
    }
+   
 
    /** Modifie les indices des 256 entrées d'une table des couleurs pour tenir
     * compte d'une fonction de transfert
@@ -738,7 +742,9 @@ public final class ColorMap extends JPanel  implements
       if( !memoGreyLevel(x) ) return;
 
       if( pimg.type!=PlanImage.IMAGERGB &&  y<mY ) {
-         pimg.setCM(getCMBand(greyLevel, pimg.video==PlanImage.VIDEO_INVERSE,!e.isShiftDown()));
+         System.out.println("Pimg.video = "+pimg.video);
+         pimg.setCM(getCMBand(greyLevel, pimg.video==PlanImage.VIDEO_INVERSE,
+               !e.isShiftDown(),pimg.isTransparent()));
          isDragging=flagCMBand=true;
          pimg.aladin.view.getCurrentView().repaint();
          repaint();

@@ -36,12 +36,14 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.IndexColorModel;
+import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
@@ -50,6 +52,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
+import java.security.AllPermission;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
@@ -74,7 +77,8 @@ public class HealpixKey {
    static final int ERROR             = 7;
    static final int ABORTING          = 8;
    static final int PURGING           = 9;
-
+   
+   
    static public int NBSTATUS = PURGING+1;
 
    static public final String [] STATUS = { "UNKOWN","ASKING","TOBELOADFROMCACHE","TOBELOADFROMNET",
@@ -215,7 +219,8 @@ public class HealpixKey {
       pixels=null;
       rgb = null;
       alreadyCached=true;
-      allSky=false;
+//      allSky=false;
+      allSky=father.allSky;
       setStatus(UNKNOWN);
    }
 
@@ -768,14 +773,21 @@ public class HealpixKey {
       }
       
       if( !planBG.color ) {
+//         planBG.pixMode = PlanBG.PIX_255;
+         planBG.pixMode = PlanBG.PIX_256;
          pixels = getPixels(img);
          planBG.setBufPixels8(pixels);
-         planBG.pixelMin = 0;
-         planBG.pixelMax = 255;
-         planBG.dataMin    = 0;
+         planBG.pixelMin   = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
+         planBG.pixelMax   = 255;
+         planBG.dataMin    = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
          planBG.dataMax    = 255;
+      } else {
+         planBG.pixMode = PlanBG.PIX_RGB;
+         rgb = getPixelsRGB(img);
       }
-      else rgb = getPixelsRGB(img);
+      
+      if( this instanceof HealpixAllsky ) planBG.creatDefaultCM();
+      
       return n;
    }
 
@@ -857,29 +869,51 @@ public class HealpixKey {
     * @param bitpix Le code FITS de codage des pixels
     * @param min La valeur min du pixel: tout ce qui est inférieur ou égal sera 0 après conversion
     * @param max La valeur max du pixel: tout ce qui est supérieur ou égal sera 255 après conversion
+    * @param pixMOde : PIX_256: 256 valeurs
+    *                  PIX_255: 255 valeurs de 1 à 254 - on réserve le 0 pour la transparence
     * @return la tableau de pixels 8 bits
     */
-   final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max) {
+   
+   final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max, int pixMode) {
       byte [] out = new byte[pixels.length/(Math.abs(bitpix)/8)];
+      
+      int range  = pixMode==PlanBG.PIX_255 ? 255 : 256;
+      int gapTransp = pixMode==PlanBG.PIX_255 ?   1 :   0;
 
-      double r = 256./(max - min);
-      if( bitpix>0 ) {
-         for( int y=0; y<height; y++ ) {
-            for( int x=0; x<width; x++ ) {
-               int pixIn = getPixValInt(pixels,bitpix,(y*width)+x);
-               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-            }
-         }
-      } else {
-         for( int y=0; y<height; y++ ) {
-            for( int x=0; x<width; x++ ) {
-               double pixIn = getPixValDouble(pixels,bitpix,(y*width)+x);
-               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-            }
+      double r = range/(max - min);
+      range--;
+      for( int y=0; y<height; y++ ) {
+         for( int x=0; x<width; x++ ) {
+            double pixIn = PlanImage.getPixVal1(pixels, bitpix, y*width + x);
+            if( planBG.isBlank(pixIn) ) out[ (height-1-y)*width +x ]=0;
+            else  out[ (height-1-y)*width +x ] = (byte)( ( (int)( gapTransp+ (pixIn<=min ? 0 : pixIn>=max ? range : (pixIn-min)*r))  ) & 0xFF );
          }
       }
+      
       return out;
    }
+
+//   final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max) {
+//      byte [] out = new byte[pixels.length/(Math.abs(bitpix)/8)];
+//
+//      double r = 256./(max - min);
+//      if( bitpix>0 ) {
+//         for( int y=0; y<height; y++ ) {
+//            for( int x=0; x<width; x++ ) {
+//               int pixIn = getPixValInt(pixels,bitpix,(y*width)+x);
+//               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
+//            }
+//         }
+//      } else {
+//         for( int y=0; y<height; y++ ) {
+//            for( int x=0; x<width; x++ ) {
+//               double pixIn = getPixValDouble(pixels,bitpix,(y*width)+x);
+//               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
+//            }
+//         }
+//      }
+//      return out;
+//   }
 
    /** Inversion des lignes */
    protected void invLine(byte src[],byte dst[],int bitpix) {
@@ -896,6 +930,8 @@ public class HealpixKey {
    protected int loadFits(String filename) throws Exception {
 
       stream = loadStream(filename);
+      
+      planBG.pixMode = PlanBG.PIX_TRUE;
 
       // Lecture de l'entete Fits (à la brute - elle ne doit pas dépasser 2880 catactères)
       byte [] head = new byte[2880];
@@ -910,10 +946,11 @@ public class HealpixKey {
          bitpix = (int)getValue(head,"BITPIX");
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
+            planBG.pixMode = PlanBG.PIX_ARGB;
             System.out.println("HealpixKey FITS in ARGB");
          }
          if( bitpix!=8 && !flagARGB ) {
-            truePixels=true;
+             truePixels=true;
             if( planBG.flagRecut ) {
                pixelMin=planBG.pixelMin;
                pixelMax=planBG.pixelMax;
@@ -932,8 +969,7 @@ public class HealpixKey {
          planBG.color=true;     // PEUT ETRE PAS VRAIMENT NECESSAIRE
          rgb = new int[width*height];
          for( int i=0; i<width*height; i++ ) {
-            rgb[i]  = /* ((int)buf[2880 + i*4]   & 0xFF)  << 24 */
-                      0xFF000000                                       // PAS DE TRANSPARENCE POUR LE MOMENT
+            rgb[i]  =  ((int)stream[2880 + i*4]   & 0xFF)  << 24 
                     | ((int)stream[2880 + i*4+1] & 0xFF)  << 16
                     | ((int)stream[2880 + i*4+2] & 0xFF)  << 8
                     | ((int)stream[2880 + i*4+3] & 0xFF) ;
@@ -958,10 +994,14 @@ public class HealpixKey {
                planBG.bZero=0;
             }
             try {
-               planBG.pixelMin = getValue(head,"PIXELMIN");
-               planBG.pixelMax = getValue(head,"PIXELMAX");
-               planBG.dataMin  = getValue(head,"DATAMIN");
-               planBG.dataMax  = getValue(head,"DATAMAX");
+               try {
+                  planBG.pixelMin = getValue(head,"PIXELMIN");
+                  planBG.pixelMax = getValue(head,"PIXELMAX");
+               } catch( Exception e1 ) { }
+                  try {
+                     planBG.dataMin  = getValue(head,"DATAMIN");
+                     planBG.dataMax  = getValue(head,"DATAMAX");
+                  } catch( Exception e1 ) { }
                try {
                   planBG.blank    = getValue(head,"BLANK");
                   planBG.isBlank = true;
@@ -980,18 +1020,20 @@ public class HealpixKey {
                planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
                      "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
             }
+            planBG.creatDefaultCM();
             if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
          }
          
-         // Passage en 8bits si nécessaire avec retournement des lignes
-         if( bitpix!=8 ) {
-            pixels = to8bits(in,bitpix,pixelMin,pixelMax);
-
-            // Simple retournement des lignes
-         } else {
-            pixels = new byte[taille];
-            invLine(in,pixels,bitpix);
-         }
+         pixels = to8bits(in,bitpix,pixelMin,pixelMax, PlanBG.PIX_255);
+//         // Passage en 8bits si nécessaire avec retournement des lignes
+//         if( bitpix!=8 ) {
+//            pixels = to8bits(in,bitpix,pixelMin,pixelMax);
+//
+//            // Simple retournement des lignes
+//         } else {
+//            pixels = new byte[taille];
+//            invLine(in,pixels,bitpix);
+//         }
 
          if( this instanceof HealpixAllsky  && !planBG.color) {
             planBG.pixelsOrigin=in;
@@ -1165,9 +1207,15 @@ public class HealpixKey {
    
    // Regénération des pixels 8 bits
    protected byte [] getPixels(Image img) throws Exception {
-
       long t1=Util.getTime();
-      BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
+      BufferedImage imgBuf;
+      if(  planBG.pixMode==PlanImage.PIX_256) {
+         imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
+      } else {
+         imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED, 
+            (IndexColorModel) ColorMap.getCM(0, 128, 256, false, PlanImage.CMGRAY, 
+                  PlanImage.LINEAR, true));
+      }
       Graphics g = imgBuf.getGraphics();
       g.drawImage(img,0,0,observer);
       g.finalize(); g=null;
@@ -1327,11 +1375,11 @@ public class HealpixKey {
 
    /** Agrandissement du losange de val pixels dans toutes les directions */
    private PointD [] grow(PointD [] b,double val) throws Exception {
-//      int j=0;
-//      for( int i=0; i<4; i++ ) {
-//         if( b[i]==null ) j++;
-//      }
-//      if( j>1 ) return b;
+      int j=0;
+      for( int i=0; i<4; i++ ) {
+         if( b[i]==null ) j++;
+      }
+      if( j>1 ) return b;
 
       PointD [] b1 = new PointD[ b.length ];
       for( int i=0; i<4; i++ ) b1[i] = new PointD(b[i].x,b[i].y);
@@ -1339,20 +1387,21 @@ public class HealpixKey {
       for( int i=0; i<2; i++ ) {
          int a= i==1 ? 1 : 0;
          int c= i==1 ? 2 : 3;
-//         if( b1[a]==null ) {
-//
-//            int d,g;
-//            if( a==0 || a==3 ) { d=1; g=2; }
-//            else { d=0; g=3; }
-//            b1[a] = new PointD((b1[d].x+b1[g].x)/2,(b1[d].y+b1[g].y)/2);
-//         }
-//         if( b1[c]==null ) {
-//            int d,g;
-//            if( c==0 || c==3 ) { d=1; g=2; }
-//            else { d=0; g=3; }
-//            b1[c] = new PointD((b1[d].x+b1[g].x)/2,(b1[d].y+b1[g].y)/2);
-//         }
-//         if( b1[a]==null || b1[c]==null ) continue;
+         
+         if( b1[a]==null ) {
+            int d,g;
+            if( a==0 || a==3 ) { d=1; g=2; }
+            else { d=0; g=3; }
+            b1[a] = new PointD((b1[d].x+b1[g].x)/2,(b1[d].y+b1[g].y)/2);
+         }
+         if( b1[c]==null ) {
+            int d,g;
+            if( c==0 || c==3 ) { d=1; g=2; }
+            else { d=0; g=3; }
+            b1[c] = new PointD((b1[d].x+b1[g].x)/2,(b1[d].y+b1[g].y)/2);
+         }
+         if( b1[a]==null || b1[c]==null ) continue;
+         
          double angle = Math.atan2(b1[c].y-b1[a].y, b1[c].x-b1[a].x);
          double chouilla = val*Math.cos(angle);
          b1[a].x-=chouilla;
@@ -1430,7 +1479,8 @@ public class HealpixKey {
          return imgBuf; 
       }
       
-      BufferedImage img = null;
+//      BufferedImage img = null;
+      Image img = null;
       
       if( planBG.color ) {
          int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
@@ -1444,9 +1494,13 @@ public class HealpixKey {
 
       } else {
          byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
-         img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
-         WritableRaster wr = img.getRaster();
-         wr.setDataElements (0, 0, width, height, pix);
+         
+         MemoryImageSource x = new MemoryImageSource(width, height, planBG.getCM(), pix, 0, width);
+         img = Toolkit.getDefaultToolkit().createImage(x);
+         
+//         img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
+//         WritableRaster wr = img.getRaster();
+//         wr.setDataElements (0, 0, width, height, pix);
          
 // N'ARRIVE PAS A ETRE ACCELERE PAR LA CARTE GRAPHIQUE, PAS DE CHANCE !
 //         DataBuffer dbuf = (DataBuffer) new DataBufferByte(pix, width*height);
@@ -1574,11 +1628,9 @@ public class HealpixKey {
          if( out ) nOut++;
          return 0;
       }
-
-      // On prend une marge pour effacer les coutures
-      try { b = grow(b,1); }
-      catch( Exception e ) { return 0; }
-
+      
+      try { b = grow(b, 1); } catch( Exception e ) {  }
+      
       // Détermination des triangles à tracer
       double p1,p2;
       boolean flagLosange=false;
@@ -1606,22 +1658,25 @@ public class HealpixKey {
          } else {
             
             boolean drawFast = planBG.mustDrawFast();
-//            boolean drawFast = false;
-
-
+ 
             // Test losange trop grand,  A retracer
-             if( !drawFast && isTooLarge(b) ) {
-               if( parente==0 && maxParente==-1 ) redraw.add(this);
-               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
-                  resetTimer();
-                  resetTimeAskRepaint();
-                  return n;
-               }
+//            if( !drawFast && isTooLarge(b) ) {
+//               if( parente==0 && maxParente==-1 ) redraw.add(this);
+//               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
+//                  resetTimer();
+//                  resetTimeAskRepaint();
+//                  return n;
+//               }
+//            }
+            if( !drawFast && !allSky && isTooLarge(b) ) {
+               resetTimer();
+               return drawFils(g,v,8,redraw);
             }
 
             // Test losange derrière le ciel
             if( isBehindSky(b) ) {
                if( drawFast ) return 0;
+               resetTimer();
                return drawFils(g,v,redraw);
             }
 
@@ -1651,7 +1706,7 @@ public class HealpixKey {
       catch( Exception e ) { e.printStackTrace(); return 0; }
 
       Graphics2D g2d = (Graphics2D)g;
-      AffineTransform saveTransform = g2d.getTransform();
+//      AffineTransform saveTransform = g2d.getTransform();
       float opacity = getOpacity();
       Composite saveComposite = g2d.getComposite();
       g2d.setComposite( Util.getImageComposite( opacity ) );
@@ -1660,13 +1715,13 @@ public class HealpixKey {
       try {
          if( th!=-1 ) {
             n+=drawTriangle(g2d, img, b, th, !flagLosange);
-            g2d.setTransform(saveTransform);
+//            g2d.setTransform(saveTransform);
          }
          if( tb!=-1 && !flagLosange ) n+=drawTriangle(g2d, img, b, tb, true);
       } 
       catch( Throwable e ) { planBG.clearBuf(); }
       finally {
-         g2d.setTransform(saveTransform);
+//         g2d.setTransform(saveTransform);
          g2d.setComposite(saveComposite);
          g2d.setClip(clip);
       }
@@ -1722,11 +1777,15 @@ public class HealpixKey {
       }
 
       if( b[d]==null || b[g]==null ) return 0;
-
+      
       if( flagClip ) {
-         Polygon p = new Polygon(new int[]{ (int)b[h].x,(int)b[d].x,(int)b[g].x},
-               new int[]{ (int)b[h].y,(int)b[d].y,(int)b[g].y}, 3);
-         g2d.setClip(p);
+         PointD[] b1=null;
+         try {
+            b1 = grow(b, 2);
+            Polygon p = new Polygon(new int[]{ (int)(b1[h].x+0.5),(int)(b1[d].x+0.5),(int)(b1[g].x+0.5)},
+                  new int[]{ (int)(b1[h].y+0.5),(int)(b1[d].y+0.5),(int)(b1[g].y+0.5)}, 3);
+            g2d.setClip(p);
+         } catch( Exception e ) {  }
       }
 
       // On tourne l'image pour l'aligner sur h-d
@@ -1748,21 +1807,19 @@ public class HealpixKey {
       // On fait glisser selon les x pour longer l'axe d-h
       double sx = ( dhg*Math.cos(anglehg) )/ hd;
       AffineTransform tr = new AffineTransform();
-      if( h==3 || h==1 )  tr.translate((int)(b[d].x+b[g].x-b[h].x), (int)(b[d].y+b[g].y-b[h].y));
-      else tr.translate((int)b[h].x,(int)b[h].y);
+      if( h==3 || h==1 )  tr.translate(b[d].x+b[g].x-b[h].x,b[d].y+b[g].y-b[h].y);
+      else tr.translate(b[h].x,b[h].y);
       tr.rotate(angle);
       tr.scale(mx,my);
       tr.shear(sx,0);
 
-      g2d.setTransform(tr);
-
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-            (!planBG.color || planBG.truePixels) && order-parente>=planBG.maxOrder
+            planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || (!planBG.color || planBG.truePixels) && order-parente>=planBG.maxOrder
             ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR :
             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
       if( img==null ) return 0;
-      g2d.drawImage(img,0,0,planBG.aladin);
+      g2d.drawImage(img,tr,planBG.aladin);
 
       return 1;
    }

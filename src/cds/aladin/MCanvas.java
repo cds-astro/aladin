@@ -623,7 +623,7 @@ public final class MCanvas extends JComponent
       if( w.glu ) g.drawLine(xtext,y+1,xtext+fm.stringWidth(text),y+1);
       
       // Tracé de l'épinglette
-      if( w.pin )  {
+      if( w.pin && !aladin.isFullScreen() )  {
          if( pin==null ) pin = aladin.getImagette("Pin.png");
          g.drawImage(pin,x-16,y-HF-1,aladin);
       }

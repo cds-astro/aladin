@@ -48,7 +48,7 @@ public class PlanHealpixAlgo extends PlanHealpix {
     private void doInit() {
 //        this.idxTFormToRead = idxTFormToRead;
 
-        video = VIDEO_NORMAL;
+        video = aladin.configuration.getCMVideo();
         flagOk = false;
         isOldPlan = false;
         type = ALLSKYIMG;

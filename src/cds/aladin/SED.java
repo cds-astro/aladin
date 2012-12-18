@@ -49,6 +49,16 @@ class SED extends JPanel {
    static final char NU = '\u03BD';
    static final char TILDE = '\u223C';
    
+   private static final double EPSILON = 1E-1;
+   private static final double WAVEMIN = 0.2;
+   private static final double WAVEMAX = 30;
+   private static final double FREQMIN = 1E4;
+   private static final double FREQMAX = 1E6;
+   private static final double WAVEOPTMIN = 0.3;
+   private static final double WAVEOPTMAX = 1;
+   private static final double FREQOPTMIN = wave2Freq(WAVEOPTMAX);
+   private static final double FREQOPTMAX = wave2Freq(WAVEOPTMIN);
+   
    static private final Color LIGHTGRAY = new Color(125,125,125);
 
    private Aladin aladin;
@@ -238,16 +248,6 @@ class SED extends JPanel {
        }
    }
    
-   private static final double EPSILON = 1E-1;
-   private static final double WAVEMIN = 0.3;
-   private static final double WAVEMAX = 30;
-   private static final double FREQMIN = 1E4;
-   private static final double FREQMAX = 1E6;
-   private static final double WAVEOPTMIN = 0.2;
-   private static final double WAVEOPTMAX = 1;
-   private static final double FREQOPTMIN = wave2Freq(WAVEOPTMAX);
-   private static final double FREQOPTMAX = wave2Freq(WAVEOPTMIN);
-   
    // Détermine les intervalles de fréquence et de flux, et en déduit les positions
    // de traçage de chaque point du SED
    // lorsque c'est terminé, le tracé peut être opéré
@@ -356,10 +356,12 @@ class SED extends JPanel {
       private void draw(Graphics g) {
          g.setColor( o.getColor() );
          Util.fillCircle5(g, r.x+W/2, r.y+W/2);
+         
+         // Barre d'erreur
          if( Math.abs(by-hy)>5 ) {
             g.drawLine(r.x+W/2,by,r.x+W/2,hy);
-            g.drawLine(r.x,by,r.x+W,by);
-            g.drawLine(r.x,hy,r.x+W,hy);
+            g.drawLine(r.x+1,by,r.x+W-1,by);
+            g.drawLine(r.x+1,hy,r.x+W-1,hy);
          }
 
          // Mise en évidence de ce point particulièrement
@@ -388,6 +390,8 @@ class SED extends JPanel {
    /** Retourne la dimension du graphique */
    public Dimension getDimension() { return new Dimension(ZoomView.SIZE,ZoomView.SIZE); }
    
+   static final private Color COLOROPT = new Color(234,234,255);
+   
    // Tracé du graphique
    protected void draw(Graphics g) {
       Dimension dim = getDimension();
@@ -400,7 +404,7 @@ class SED extends JPanel {
       
       // Bande optique
       if( xOptMin!=xOptMax ) {
-         g.setColor(new Color(240,240,240));
+         g.setColor(COLOROPT);
          g.fillRect(gauche+Math.min(xOptMin,xOptMax), haut, Math.abs(xOptMax-xOptMin+1), bas-haut);
       }
       
@@ -427,7 +431,7 @@ class SED extends JPanel {
       if( !Double.isNaN(currentAbs) ) {
          g.drawLine(currentX,bas,currentX,bas-5);
          g.setFont(Aladin.SSPLAIN);
-         g.drawString( Util.myRound( LOG(currentAbs)), currentX, bas-8);
+         g.drawString( Util.myRound( LOG(currentAbs)+"",1), currentX, bas-8);
          if( siIn==null ) {
             g.setFont(Aladin.BOLD);
             if( !flagWavelength ) s =getUnitFreq(currentAbs);
@@ -438,7 +442,7 @@ class SED extends JPanel {
       if( !Double.isNaN(currentFlux) ) {
          g.drawLine(gauche,currentY,gauche+5,currentY);
          g.setFont(Aladin.SSPLAIN);
-         g.drawString( Util.myRound( LOG(currentFlux)), gauche+10, currentY);
+         g.drawString( Util.myRound( LOG(currentFlux)+"",1), gauche+10, currentY);
          if( siIn==null ) {
             g.setFont(Aladin.BOLD);
             s=getUnitJy(currentFlux);
@@ -544,8 +548,7 @@ class SED extends JPanel {
          flagWavelength = !flagWavelength;
          setPosition();
          aladin.view.zoomview.repaint();
-      }
-      else if( siIn!=null ) {
+      } else if( siIn!=null ) {
          int bloc=1;
          if( !planeAlreadyCreated ) createStackPlane( true );
          else bloc=2;
@@ -569,7 +572,7 @@ class SED extends JPanel {
    
    /** Associe le bon tooltip */
    private void toolTip(String k) {
-      String s = aladin.chaine.getString(k);
+      String s = k==null ? null : aladin.chaine.getString(k);
       Util.toolTip(aladin.view.zoomview, s);
    }
    
@@ -580,6 +583,7 @@ class SED extends JPanel {
       if( rCroix.contains(x,y) ) { toolTip("SEDCLOSE"); return; }
       else if( rInfo.contains(x,y) ){ toolTip("SEDCREATEPLANE"); return; }
       else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE"); return; }
+      else toolTip(null);
 
       // Y a-t-il un point de SED sous la souris ?
       siIn=null;

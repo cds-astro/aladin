@@ -47,6 +47,9 @@ public class BuilderJpg extends Builder {
    private int statNbFile;
    private long statSize;
    private long startTime,totalTime;
+   
+   static String fmt = "jpeg";
+//   static String fmt = "png";
 
    /**
     * Création du générateur JPEG.
@@ -56,7 +59,8 @@ public class BuilderJpg extends Builder {
     */
    public BuilderJpg(Context context) {
       super(context);
-      ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 0/*PlanImage.CMGRAY*/, context.fct.code());
+      ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 
+            0/*PlanImage.CMGRAY*/, context.fct.code());
       tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
    }
 
@@ -192,9 +196,9 @@ public class BuilderJpg extends Builder {
    // Conversion d'un fichier de FITS en JEPG (file sans l'extension)
    private void fits2jpeg(String file) throws Exception {
       Fits out = createLeaveJpg(file);
-      if( tcm==null ) out.toPix8(cut[0],cut[1]);
-      else out.toPix8(cut[0],cut[1],tcm);
-      out.writeJPEG(file+".jpg");
+//      if( tcm==null ) out.toPix8(cut[0],cut[1]);
+//      else out.toPix8(cut[0],cut[1],tcm);
+      out.writeCompressed(file+".jpg",cut[0],cut[1],tcm,fmt);
       Aladin.trace(4, "Writing " + file+".jpg");
    }
 
@@ -228,9 +232,9 @@ public class BuilderJpg extends Builder {
                   +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
                   +" tcm="+(tcm==null?"null":"provided"));
          }
-         if( tcm==null ) out.toPix8(cut[0],cut[1]);
-         else out.toPix8(cut[0],cut[1],tcm);
-         out.writeJPEG(file+".jpg");
+//         if( tcm==null ) out.toPix8(cut[0],cut[1]);
+//         else out.toPix8(cut[0],cut[1],tcm);
+         out.writeCompressed(file+".jpg",cut[0],cut[1],tcm,fmt);
          Aladin.trace(4, "Writing " + file+".jpg");
 
          if( order==maxOrder ) {

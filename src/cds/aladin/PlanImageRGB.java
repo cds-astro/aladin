@@ -77,6 +77,10 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       mustResample=true;  // Pour que le waitForPlan() face le resampling
       type=IMAGERGB;
       isOldPlan=false;
+      
+      pixMode = PIX_RGB;
+      if( (r==null || r.isTransparent() ) && (g==null || g.isTransparent() ) 
+            && (g==null || g.isTransparent()) ) pixMode=PIX_ARGB;
 
       planRed=r; planGreen=g; planBlue=b;
       flagRed=planRed!=null;
@@ -141,6 +145,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       super(aladin,file,inImg);
       if( u!=null ) this.u = u;	// C'est pas beau hein ?! En fait u est modifié comme pour un fichier dans super(), faut bien lui remettre les idées en place
       type=IMAGERGB;
+      pixMode = PIX_RGB;
       active=true;
       flagRed=flagGreen=flagBlue=true;
       initCMControl();
@@ -244,6 +249,7 @@ Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
 
+      pixMode = isARGB ? PIX_ARGB : PIX_RGB;
       bitpix = headerFits.getIntFromHeader("BITPIX");
       if( bitpix==0 ) {
          aladin.command.printConsole("!!! RGB BITPIX=0 => assuming BITPIX=8 !\n");
@@ -1057,6 +1063,11 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    /** Retourne les 3 composantes du pixel repéré dans l'image */
    public int getPixel8(int x,int y) {
       return pixelsRGB[y*width+x];
+   }
+   
+   /** Retourne la valeur 8 bits du pixel indiqué en coordonnées image*/
+   protected byte getPixel8Byte(int x,int y) {
+      return pixelsRGB==null ? 0 : (byte) getGreyPixel( getPixel8(x,y) );
    }
    
    // Pour ne vaire postAJLoad() qu'une fois

@@ -77,6 +77,8 @@ public class PlanImageColor extends PlanImageRGB {
             long type = dis.getType();
             String fmt = (type & MyInputStream.JPEG) != 0 ? "jpeg" :
                (type & MyInputStream.PNG) != 0 ? "png" : "gif";
+            
+            pixMode = (type & MyInputStream.JPEG) != 0 ? PIX_RGB : PIX_ARGB;
                
             Iterator readers = ImageIO.getImageReadersByFormatName(fmt);
             ImageReader reader = (ImageReader)readers.next();

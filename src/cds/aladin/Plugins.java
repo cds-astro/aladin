@@ -624,7 +624,10 @@ Aladin.trace(1,"Exec plugin by script ["+cmd+"]...");
         Enumeration e = plugs.elements();
         while( e.hasMoreElements() ) {
             AladinPlugin ap = (AladinPlugin) e.nextElement();
-            if( !ap.isSync() ) return false;
+            if( !ap.hasBeenStarted() ) continue;
+            if( !ap.isSync() ) {
+               return false;
+            }
         }
         return true;
     }

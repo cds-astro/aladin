@@ -212,7 +212,7 @@ public class PlanCatalog extends Plan {
          setFilter(value);
       } else super.setPropertie(prop,specif,value);
    }
-
+   
    protected boolean setActivated() {
       if( !hasSources() ) return false;
       return super.setActivated();

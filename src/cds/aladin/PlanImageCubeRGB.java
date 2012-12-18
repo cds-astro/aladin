@@ -65,6 +65,7 @@ Aladin.trace(2,"Loading FITS "+Tp[type]);
          error="BITPIX must be 24 or 32 for RGB or ARGB FITS cube !";
          return false;
       }
+      pixMode = bitpix==32 ? PIX_ARGB : PIX_RGB;
       naxis = headerFits.getIntFromHeader("NAXIS");
       
       // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs

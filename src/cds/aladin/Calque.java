@@ -184,7 +184,7 @@ public final class Calque extends JPanel implements Runnable {
       // Panel principal : contient le selecteur de plans et le zoom
       setLayout( new BorderLayout(0,5) );
 
-      JPanel y = new JPanel(new BorderLayout(Aladin.NEWLOOK_V7?10:5,0));
+      JPanel y = new JPanel(new BorderLayout(10,0));
       y.add( zoom.getZoomChoicePanel(),BorderLayout.EAST);
 
       JPanel x = new JPanel(new BorderLayout(2,2));
@@ -192,7 +192,6 @@ public final class Calque extends JPanel implements Runnable {
       x.add(zoom,BorderLayout.CENTER);
 
       add(select,BorderLayout.CENTER);
-      if( !Aladin.NEWLOOK_V7 ) add(scroll,BorderLayout.EAST);
       add(x,BorderLayout.SOUTH);
    }
    
@@ -2194,8 +2193,10 @@ public final class Calque extends JPanel implements Runnable {
       p2.calculPixelsZoom();
       p2.fmt=PlanImage.JPEG;   // Comme ça on n'inverse pas les pixels à la sauvegarde !!
       p2.video=PlanImage.VIDEO_NORMAL;
-      p2.cm = ColorMap.getCM(0,128,255,p2.video==PlanImage.VIDEO_INVERSE, aladin.configuration.getCMMap(),aladin.configuration.getCMFct());
+      p2.cm = ColorMap.getCM(0,128,255,p2.video==PlanImage.VIDEO_INVERSE, 
+            aladin.configuration.getCMMap(),aladin.configuration.getCMFct());
       p2.cmControl[0] = 0; p2.cmControl[1] = 128; p2.cmControl[2] = 255;
+      p2.pixMode = PlanImage.PIX_256;
       p2.changeImgID();
       p2.setPourcent(-1);
 

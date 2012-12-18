@@ -158,6 +158,8 @@ public final class PlanContour extends PlanTool {
    
    /** les contours ne sont jamais sélectionnables (PF nov 2010) */
    public boolean isSelectable() { return false; }
+   
+   public boolean isMovable() { return false; }
 
   /** Attente pendant la construction du plan.
    * @return <I>true</I> si ok, <I>false</I> sinon.

@@ -307,7 +307,7 @@ final public class ThreadBuilderTile {
                   }
                   if( pixelFinal!=0 ) empty=false;
                   
-                  out.setPixelRGBJPG(x, y, pixelFinal);
+                  out.setPixelRGBJPG(x, y, 0xFF000000 | pixelFinal);
 
                   // Cas normal
                }  else {
@@ -444,6 +444,7 @@ final public class ThreadBuilderTile {
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
       int b0 = f.getPixelRGBJPG(ox1,oy1);
+      if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
       int b1 = f.getPixelRGBJPG(ox2,oy1);
       int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
@@ -451,8 +452,8 @@ final public class ThreadBuilderTile {
 //      int b1 = f.getPixelRGB(ox2,oy1);
 //      int b2 = f.getPixelRGB(ox1,oy2);
 //      int b3 = f.getPixelRGB(ox2,oy2);
-
-      int pix=0;
+      
+      int pix=0xFF;
       for( int i=16; i>=0; i-=8 ) {
          double a0 = 0xFF & (b0>>i);
          double a1 = 0xFF & (b1>>i);

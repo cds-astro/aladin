@@ -53,11 +53,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    String SEEFITS,SEEPARSING,TABLEINFO,LOADURL,NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
           TITLE,BANNER,APPLY,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
-          LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,FRAME,DELAY,
+          LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
           ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
           LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
           GENERATEPOLAAMP,GENERATEPOLAANG,CURRENTFIELD,POLAOPTIONS,SEGMENTLEN,SEGMENTTHICK,SEGMENTDENSITY,
           SCALINGFACTOR,POINTING,POINTINGLABEL,FULLDESCR;
+   
+   String ON="On",OFF="Off";
 
    // Les references aux objets
    Aladin aladin;
@@ -73,6 +75,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    // Memorisation temporaire
    JTextField label;              // Le label du plan
+   TextField blankField;
    Couleur couleur=null;         // La couleur
    JComboBox sourceType=null;       // Le type de representation graphique
    ButtonGroup scope;
@@ -158,6 +161,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       EPOCH = aladin.chaine.getString("PROPEPOCH");
       DATEOBS = aladin.chaine.getString("PROPDATEOBS");
       WCSEQ = aladin.chaine.getString("PROPWCSEQ");
+      PIXMODE = aladin.chaine.getString("PROPPIXMODE");
       SIZE = aladin.chaine.getString("PROPSIZE");
       FRAME = aladin.chaine.getString("PROPFRAME");
       DELAY = aladin.chaine.getString("PROPDELAY");
@@ -547,9 +551,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Info sur les images
-//      if( plan.type==Plan.IMAGE || plan.type==Plan.IMAGERGB && ((PlanImage)plan).headerFits!=null ) {
-      if( plan.isImage() || plan instanceof PlanBG /*plan.type==Plan.ALLSKYIMG*/ ) {
-        PlanImage pimg = (PlanImage)plan;
+      if( plan.isImage() || plan instanceof PlanBG  ) {
+        final PlanImage pimg = (PlanImage)plan;
 
       	// Survey de l'image
         String survey=pimg.survey();
@@ -572,7 +575,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
            b.addActionListener(this);
            PropPanel.addCouple(p,FMT, fmtp, g,c);
         } else PropPanel.addCouple(p,FMT, fmtl, g,c);
-
+        
+        
+        // Mode graphique
+        PropPanel.addCouple(p,PIXMODE, new JLabel(pimg.getPixModeInfo()), g,c);
+        
       	// Info d'image
       	if( plan.isImage() && plan.flagOk && plan.projd!=null ) {
       	   String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
@@ -598,6 +605,18 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
            }
       	}
         if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
+    
+        // Valeur BLANK alternative
+        String vBlank = pimg.getBlankString();
+        blankField = new TextField(vBlank);
+        blankField.addActionListener(new ActionListener() {
+           public void actionPerformed(ActionEvent e) { 
+              actionBlank(); 
+              blankField.setText( pimg.getBlankString() );
+              aladin.calque.repaintAll();
+           }
+        });
+        PropPanel.addCouple(p,"Transparency", blankField, g,c);
       }
 
       if( plan instanceof PlanImageBlink ) {
@@ -633,6 +652,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          url.setCaretPosition(0);
          PropPanel.addCouple(p,"", url, g,c);
       }
+      
 
       // Panel pour les informations techniques
       if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {
@@ -970,7 +990,22 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
           pGapOrder.add(gapOrder);
           PropPanel.addCouple(p,DENSITY, pGapOrder, g,c);
       }
-
+      
+      // Propriété de déplacement des objets du plan
+      if( plan.type == Plan.TOOL && !(plan instanceof PlanContour) ) {
+         JRadioButton r;
+         cb = new ButtonGroup();
+         JPanel bg = new JPanel();
+         r = new JRadioButton(ON); r.setActionCommand(ON); cb.add(r);
+         r.setSelected(plan.isMovable());
+         r.addActionListener(this);
+         bg.add(r);
+         r = new JRadioButton(OFF); r.setActionCommand(OFF); cb.add(r);
+         r.setSelected(!plan.isMovable());
+         r.addActionListener(this);
+         bg.add(r);
+         PropPanel.addCouple(p,"Movable:",bg, g,c);
+      }
 
       // Couleur de fond pour une image couleur
       if( plan.ref && !(plan instanceof PlanBG) ) {
@@ -1175,6 +1210,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( modCalib!=null ) modCalib.setEnabled(false);
     }
    }
+   
+   private void actionBlank() {
+     ((PlanImage)plan).setBlankString(blankField.getText());
+     showProp(true);
+   }
 
    // Changement de projection par défaut d'un catalogue
    private void actionDefCatProj() {
@@ -1274,6 +1314,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          label.setText(plan.label);
          setTitre(BANNER+" \""+plan.label+"\"");
       }
+      
+      if( blankField!=null ) actionBlank();
 
       // Changement de projection catalogue par défaut ?
       actionDefCatProj();
@@ -1404,6 +1446,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          int i= ServerGlu.getFilterIndex(plan.filters,s);
          toGenFilterButton.setEnabled(i>=0);
          plan.setFilter(i);
+      }
+      
+      // Peut être le sélecteur de déplacement des objets dans le cas d'un plan tool
+      else if( src instanceof JRadioButton && plan.type==Plan.TOOL ) {
+         String s = ((JRadioButton)src).getActionCommand();
+         System.out.println("==> "+s);
+         try { ((PlanTool)plan).setMovable(s); } catch( Exception e1 ) { }
       }
 
       // Peut être le sélecteur de couleur de fond puor une image couleur

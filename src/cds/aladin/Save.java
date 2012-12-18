@@ -2215,29 +2215,32 @@ Aladin.trace(3,"Export "+p.label+" (orig. Fits header:"+hasFitsHeader+
    }
 
    // Génération de la deuxième HDU d'un fichier FITS Healpix
-   private Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int width) {
+   private Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int lenLine,int frame) {
       Vector v = new Vector(100);
       long nside = CDSHealpix.pow2(norder);
       long nbPix = 12*nside*nside;
       int npix = Math.abs(bitpix)/8;
-width=1;
+lenLine=1;
       String tForm = bitpix==8 ? "XX" : bitpix==16 ? "I" : bitpix==32 ? "J" :
                      bitpix==-32 ? "E" : "D";
       v.addElement( getFitsLine("XTENSION","BINTABLE","binary table extension") );
       v.addElement( getFitsLine("BITPIX","8","array data type") );
       v.addElement( getFitsLine("NAXIS","2","2-dimensional binary table") );
-      v.addElement( getFitsLine("NAXIS1",(width*npix)+"","width of table") );
-      v.addElement( getFitsLine("NAXIS2",(nbPix/width)+"","number of rows in table") );
+      v.addElement( getFitsLine("NAXIS1",(lenLine*npix)+"","width of table") );
+      v.addElement( getFitsLine("NAXIS2",(nbPix/lenLine)+"","number of rows in table") );
       v.addElement( getFitsLine("PCOUNT","0","number of group parameters") );
       v.addElement( getFitsLine("GCOUNT","1","number of groups") );
       v.addElement( getFitsLine("TFIELDS","1","number of table fields") );
       v.addElement( getFitsLine("TTYPE1","PIXVAL","label for field   1") );
-      v.addElement( getFitsLine("TFORM1",width+tForm,"data format of field") );
+      v.addElement( getFitsLine("TFORM1",lenLine+tForm,"data format of field") );
       v.addElement( getFitsLine("PIXTYPE","HEALPIX","Pixel algorithm") );
       v.addElement( getFitsLine("ORDERING",ring?"RING":"NESTED","Ordering scheme") );
       v.addElement( getFitsLine("NSIDE",nside+"","Resolution parameter") );
       v.addElement( getFitsLine("FIRSTPIX","0","First pixel (0 based)") );
       v.addElement( getFitsLine("LASTPIX",(nbPix-1)+"","Last pixel (0 based)") );
+      if( frame!=Localisation.GAL ) {
+         v.addElement( getFitsLine("COORDSYS",frame==Localisation.ECLIPTIC ? "E":"C","Coordinate system") );
+      }
 //      v.addElement( getFitsLine("INDXSCHM","IMPLICIT","Indexing: IMPLICIT or EXPLICIT") );
       return v;
    }
@@ -2298,7 +2301,7 @@ width=1;
       size += end.length;
 
       // Generation de la deuxième HDU FITS
-      v = generateHealpixHDU1(order,bitpix,ring,lenLine);
+      v = generateHealpixHDU1(order,bitpix,ring,lenLine,p.getFrameOrigin());
       size=writeFitsLines(f,v,size);
       end = getEndBourrage(size);
       f.write(end);
@@ -2412,7 +2415,7 @@ width=1;
       size += end.length;
 
       // Generation de la deuxième HDU FITS
-      v = generateHealpixHDU1(order,bitpix,ring,lenLine);
+      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.ICRS);
       size=writeFitsLines(f,v,size);
       end = getEndBourrage(size);
       f.write(end);

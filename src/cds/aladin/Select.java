@@ -155,7 +155,7 @@ public final class Select extends JComponent  implements
       addMouseListener(this);
       addMouseWheelListener(this);
       
-      setBackground(Aladin.NEWLOOK_V7 ? a.toolBox.getBackground() : Aladin.LBLUE );
+      setBackground( a.toolBox.getBackground() );
 //      if( Aladin.NEWLOOK_V7 ) eyeHeight=0;
 
       // Calcule des tailles

@@ -52,7 +52,9 @@ public class RainbowPixel extends Rainbow {
       }
       double greyLevel = 256 * lastPos;
       if( greyLevel>255 ) greyLevel=255;
-      getPlan().setCM(ColorMap.getCMBand((int)greyLevel, getPlan().video==PlanImage.VIDEO_INVERSE,true));
+      PlanImage pimg = getPlan();
+      pimg.setCM(ColorMap.getCMBand((int)greyLevel, getPlan().video==PlanImage.VIDEO_INVERSE,
+            true,pimg.isTransparent()));
       oLastPos=lastPos;
       flagRedCM=true;
    }

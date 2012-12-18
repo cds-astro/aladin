@@ -321,6 +321,9 @@ public class Plan implements Runnable {
    protected boolean isPlanBGOverlay() {
       return type==ALLSKYPOL || type==ALLSKYCAT;
    }
+   
+   /** Retourne true si le point (xImg,yImg) est bien sur un pixel */
+   protected boolean isOnPixel(int xImg, int yImg) { return false; }
 
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() {
@@ -342,6 +345,9 @@ public class Plan implements Runnable {
 
    /** Retourne true si le plan catalogue peut effacer les sources individuellement */
    protected boolean isSourceRemovable() { return pcat!=null && pcat.removable; }
+   
+   /** true si les objets du plan peuvent être déplacés */
+   protected boolean isMovable() { return true; }
 
    /** Modifie le statut d'un plan catalogue afin de rendre possible la suppression
     * individuelle de sources */
@@ -1170,12 +1176,15 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       int n = aladin.calque.getIndex(allPlan,this);
       for( int i=n-1; i>=0; i-- ) {
          Plan p=allPlan[i];
-         if( p.type==ALLSKYIMG && p.active && (p.getOpacityLevel()==1 || p.isRefForVisibleView()) ) {
+         if( p.type==ALLSKYIMG && p.active 
+               && (p.getOpacityLevel()==1 || p.isRefForVisibleView()) 
+               && !((PlanImage)p).isTransparent() ) {
             under=true;
             break;
          }
       }
       if( under && aladin.view.isMultiView() ) under=false;
+      
       setDebugFlag(UNDERBKGD, under);
       return !under;
 

@@ -160,6 +160,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    protected void export(String path) {
+      if( planPreview==null ) context.updateAllskyPreview();
       aladin.frameAllsky.export(planPreview, path);
    }
 

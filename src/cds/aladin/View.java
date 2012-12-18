@@ -1717,7 +1717,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     /** Synchronisation sur le plan pour la vue courante
      *  @param p le plan à montrer
      */
-     protected boolean  syncPlan(Plan p) { return gotoThere(p.co); }
+     protected boolean  syncPlan(Plan p) { return gotoThere(p.co,0,true); }
 
      /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
       * @param target Identificateur valide, ou coordonnées J2000
@@ -1726,7 +1726,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
      public  boolean gotoThere(String target) {
         try {
            Coord c = sesame(target);
-           return gotoThere(c);
+           return gotoThere(c,0,true);
         } catch( Exception e ) { }
         return false;
      }
@@ -1736,7 +1736,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       * @return true si ok
       */
      public boolean gotoThere(Source s) {
-        boolean rep = gotoThere(new Coord(s.raj,s.dej),0);
+        boolean rep = gotoThere(new Coord(s.raj,s.dej),0,false);
         setRepere(s);  // pour d'éventuels plots
         showSource(s,false,false); // pour blinker la source   CA FAIT TOUT DE MEME UN CALLBACK EN BOULCE AVEC SAMP
         return rep;
@@ -1747,11 +1747,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       * @param zoom le facteur de zoom souhaitée, 0 si on ne le modifie pas
       * @return true si ok
       */
-     public boolean gotoThere(Coord c) { return gotoThere(c,0); }
-     public boolean gotoThere(Coord c, double zoom) {
+     public boolean gotoThere(Coord c) { return gotoThere(c,0,false); }
+     public boolean gotoThere(Coord c, double zoom, boolean force) {
         ViewSimple v = getCurrentView();
         if( v.locked || c==null ) return false;
-        if( !v.shouldMove(c.al,c.del) ) return false;
+        if( !force && !v.shouldMove(c.al,c.del) ) return false;
 
         if( v.pref instanceof PlanBG ) {
            v.getProj().setProjCenter(c.al,c.del);
@@ -3681,7 +3681,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** (Re)démarrage du compteur en attendant une requête quickSimbad */
    synchronized protected void waitQuickSimbad(ViewSimple v) {
       if( v.pref==null || !(v.pref.isImage() || v.pref instanceof PlanBG) || v.lastMove==null ) return;
-      if( !Projection.isOk(v.pref.projd) /* || v.getTaille()>1 */ ) return;
+      if( !Projection.isOk(v.pref.projd) || v.isAllSky() /* || v.getTaille()>1 */ ) return;
       if( Math.abs(ox-v.lastMove.x)<TAILLEARROW/v.zoom && Math.abs(oy-v.lastMove.y)<TAILLEARROW/v.zoom ) return;
       if( simRep!=null && simRep.inLabel(v, v.lastView.x, v.lastView.y) ) return;
 
@@ -3702,9 +3702,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Coord coo = new Coord();
       if( v==null || v.pref==null
             || v.pref.projd==null
-            || v.lastMove==null ) return;
-
-      Aladin.makeCursor(v,Aladin.WAITCURSOR);
+            || v.lastMove==null  ) return;
+      
 
       String s=null;
       ox = coo.x = v.lastMove.x;
@@ -3712,6 +3711,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       v.getProj().getCoord(coo);
       if( Double.isNaN(coo.al) ) return;
       String target = coo.getSexa(":");
+      
+      // Est-on sur un objet avec pixel ?
+      if( !v.isMouseOnSomething() ) return;
 
       // Quelle est le rayon de l'interrogation (15 pixels écran au dessus) Max 1°
       double d = coo.del;
@@ -3720,7 +3722,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       coo.x=p.x; coo.y=p.y;
       v.getProj().getCoord(coo);
       double radius = Util.round(Math.abs(coo.del-d),7);
-//      if( radius>1 ) radius=1;
+      
+      Aladin.makeCursor(v,Aladin.WAITCURSOR);
       
       // Faut-il également charger un SED ?
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
@@ -4316,7 +4319,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          // Insertion ou suppression de la scrollbar verticale
          boolean hideScroll = getLastUsedView()< modeView && !hasStickedView();
          if( scrollV.isShowing() && hideScroll  ) { remove(scrollV); validate(); }
-         else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV,Aladin.NEWLOOK_V7 ? "West" : "East"); validate(); }
+         else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV, "West" ); validate(); }
 //System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
 
          

@@ -126,7 +126,11 @@ public final class Search extends JPanel implements MouseListener {
       JPanel searchPanel = new JPanel( new BorderLayout(0,0) );
       searchPanel.add(label=Aladin.createLabel(aladin.chaine.getString("MFSEARCHL")),"West");
       label.setToolTipText(aladin.chaine.getString("MFSEARCHHELP"));
-      searchPanel.add(text,"Center");
+      
+      JPanel pText = new JPanel(new BorderLayout());
+      pText.setBorder( BorderFactory.createEmptyBorder(2,0,2,0));
+      pText.add(text,BorderLayout.CENTER);
+      searchPanel.add(pText,"Center");
       
       panelSearch = new JPanel( new BorderLayout(0,0) );
       
@@ -140,7 +144,7 @@ public final class Search extends JPanel implements MouseListener {
       genericSearchPanel.add(searchControlPanel,"Center");
       
       panelSearch.add(genericSearchPanel,"West");
-      if( !Aladin.OUTREACH ) panelSearch.add(Box.createHorizontalStrut(30),"Center");
+      if( !Aladin.OUTREACH ) panelSearch.add(Box.createHorizontalStrut(40),"Center");
       
       JPanel buttonPanel = new JPanel( new BorderLayout(0,0) );
       if( reduce!=null ) buttonPanel.add(reduce,"West");
@@ -305,7 +309,7 @@ public final class Search extends JPanel implements MouseListener {
    
    /** Juste pour pouvoir redéfinir qq trucs */
    class SearchText extends JTextField implements KeyListener,MouseWheelListener {
-      private Dimension DIM = new Dimension(80,10);
+      private Dimension DIM = new Dimension(100,10);
       protected String previousSearch="";
       protected int oNbSrc=0;
       
