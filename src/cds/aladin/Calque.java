@@ -753,7 +753,7 @@ public final class Calque extends JPanel implements Runnable {
          }
          if( nb>aladin.view.getModeView() ) {
             aladin.view.setModeView(
-                  nb<=ViewControl.MVIEW2 ? ViewControl.MVIEW2 :
+                  nb<=ViewControl.MVIEW2L ? ViewControl.MVIEW2L :
                      nb<=ViewControl.MVIEW4 ? ViewControl.MVIEW4 :
                         nb<=ViewControl.MVIEW9 ? ViewControl.MVIEW9 :
                            ViewControl.MVIEW16);

@@ -2063,7 +2063,7 @@ public class PlanBG extends PlanImage {
 	   if( v.imageBG==null || v.rv.width!=v.owidthBG || v.rv.height!=v.oheightBG ) {
 		   if( v.imageBG!=null ) v.imageBG.flush();
 		   if( v.g2BG!=null ) v.g2BG.dispose();
-           v.imageBG = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB);
+           v.imageBG = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
 		   v.g2BG = v.imageBG.getGraphics();
 		   
 	   // ou simplement remettre de la transparence ?
@@ -2091,6 +2091,28 @@ public class PlanBG extends PlanImage {
 
 	   return v.imageBG;
    }
+   
+   private Timer timer = null;
+   synchronized protected void redrawAsap() {
+      if( timer!=null ) return;
+      System.out.println("starting fading process");
+      timer = new Timer();
+      TimerTask timerTask = new TimerTask() {
+         public void run() {
+            System.out.println("redrawAsap now");
+            changeImgID();
+            aladin.view.repaintAll();
+         }
+      };
+      timer.scheduleAtFixedRate(timerTask, 5, 5);
+   }
+   
+   synchronized protected void stopRedraw() {
+      if( timer==null ) return;
+      System.out.println("stopping fading process");
+      timer.cancel();
+      timer=null;
+   }
 
    /** Tracage de tous les losanges concernés, utilisation d'un cache (voir getImage())
     * @param op niveau d'opacité, -1 pour celui définit dans le plan
@@ -2103,6 +2125,8 @@ public class PlanBG extends PlanImage {
       if( v==null ) return;
       if( op==-1 ) op=getOpacityLevel();
       if(  op<=0.1 ) return;
+      
+      resetFading();
       
       if( g instanceof Graphics2D ) {
          Graphics2D g2d = (Graphics2D)g;
@@ -2127,6 +2151,9 @@ public class PlanBG extends PlanImage {
       
       try { frameProgenResume(g,v); } 
       catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      
+      if( fading ) redrawAsap();
+      else stopRedraw();
 
       readyDone = readyAfterDraw;
    }
@@ -2547,6 +2574,12 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
    protected double getFps() { return statTimeDisplay>0 ? 1000./statTimeDisplay : -1 ; }
 
    private boolean first=true;
+   
+   private boolean fading=false;
+   protected void resetFading() { fading=false; }
+   protected void updateFading(boolean flag) {
+      fading |= flag;
+   }
 
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
@@ -2575,13 +2608,16 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(Color.white);
       Stroke st = g.getStroke();
-      g.setStroke(new BasicStroke(5));
+      
+      int epaisseur = 50;
+      g.setStroke(new BasicStroke(epaisseur));
 
       Projection projd = v.getProj().copy();
       projd.frame=0;
 
+//      g.setColor( Color.yellow );
       rayon=0;
-      int m=2;
+      int m=epaisseur/2;
       
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();

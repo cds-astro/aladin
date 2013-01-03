@@ -56,6 +56,8 @@ import java.security.AllPermission;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import cds.astro.AstroMath;
+import cds.astro.Astrocoo;
 import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -1490,8 +1492,12 @@ public class HealpixKey {
                DataBuffer.TYPE_INT, width, height, bitMasks);
          ColorModel colorModel = ColorModel.getRGBdefault();
          WritableRaster raster = Raster.createWritableRaster(sampleModel, dbuf, null);
-         img = new BufferedImage(colorModel, raster, false, null);
+         img = new BufferedImage(colorModel, raster, true, null);
+         
+//         MemoryImageSource x = new MemoryImageSource(width, height, ColorModel.getRGBdefault(), pix, 0, width);
+//         img = Toolkit.getDefaultToolkit().createImage(x);
 
+         
       } else {
          byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
          
@@ -1585,8 +1591,6 @@ public class HealpixKey {
    static final double RAP=0.7;
    
    protected boolean isTooLarge(PointD b[] ) {
-//      return dist(b,1,2)>M || dist(b,0,3)>M || dist(b,0,1)>M || dist(b,2,3)>M
-//      || dist(b,0,2)>M || dist(b,1,3)>M;
       
       if( planBG.DEBUGMODE ) return false;
       
@@ -1614,6 +1618,8 @@ public class HealpixKey {
     * @return le nombre d'images (java) tracés
     */
    
+   private boolean flagSym;
+   
    protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
    protected int draw(Graphics g, ViewSimple v,Vector<HealpixKey> redraw) { return draw(g,v,-1,redraw); }
    protected int draw(Graphics g, ViewSimple v,int maxParente,Vector<HealpixKey> redraw) {
@@ -1634,6 +1640,8 @@ public class HealpixKey {
       // Détermination des triangles à tracer
       double p1,p2;
       boolean flagLosange=false;
+      
+      flagSym = false;
 
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
 
@@ -1642,19 +1650,33 @@ public class HealpixKey {
                || aDroite(b[1],b[0],b[3])*aDroite(b[2],b[0],b[3])>=0 ) {
             double d12=dist(b,1,2);
             double d03=dist(b,0,3);
+            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
+            flagSym=flagPatate;
             if( d12<d03 ) {
                p1 = distCentre(b[0],b[1],b[2]);
                p2 = distCentre(b[3],b[1],b[2]);
-               if( p1<p2 ) b[3]=null;
-               else b[0]=null;
+               
+               if( flagPatate ) {
+                  if( p1<p2 ) symetric(b[3],b[0],b[1],b[2]);
+                  else symetric(b[0],b[3],b[1],b[2]);
+               } else {
+                  if( p1<p2 ) b[3]=null;
+                  else b[0]=null;
+               }
+               
             } else {
                p1 = distCentre(b[1],b[0],b[3]);
                p2 = distCentre(b[2],b[0],b[3]);
-
-               if( p1<p2 ) b[2]=null;
-               else b[1]=null;
+               
+               if( flagPatate ) {
+                  if( p1<p2 ) symetric(b[2],b[1],b[0],b[3]);
+                  else symetric(b[1],b[2],b[0],b[3]);
+               } else {
+                  if( p1<p2 ) b[2]=null;
+                  else b[1]=null;
+               }
             }
-
+            
          } else {
             
             boolean drawFast = planBG.mustDrawFast();
@@ -1707,7 +1729,7 @@ public class HealpixKey {
 
       Graphics2D g2d = (Graphics2D)g;
 //      AffineTransform saveTransform = g2d.getTransform();
-      float opacity = getOpacity();
+      float opacity = getFadingOpacity();
       Composite saveComposite = g2d.getComposite();
       g2d.setComposite( Util.getImageComposite( opacity ) );
       Shape clip = g2d.getClip();
@@ -1735,13 +1757,26 @@ public class HealpixKey {
 
       resetTimer();
       resetTimeAskRepaint();
+      
+      if( opacity<1f ) planBG.updateFading(true);
 
       return n;
    }
    
+   private long loadDate = System.currentTimeMillis();
+   
+   static private final long TIMEFADER = 1500;
+   static private final float MINFADER = 0.6f;
+   
    // Pour le moment pas d'animation de fondu-enchainé
-   private float getOpacity() {
+   // EN FAIT IL FAUDRAIT MELANGER LES PIXELS AVEC LES VALEURS DU LOSANGE PERE
+   // PLUTOT QUE DE JOUER SUR L'OPACITY
+   private float getFadingOpacity() {
       return 1f;
+//      if( allSky ) return 1f;
+//      long t = System.currentTimeMillis() - loadDate;
+//      float op = t>=TIMEFADER ? 1f : MINFADER +( (float)t/TIMEFADER)*(1f-MINFADER);
+//      return op;
    }
 
    /** Retourne >0 si le point a est "à droite" de la droite passant par g et d */
@@ -1757,6 +1792,29 @@ public class HealpixKey {
       double my=(g.y+d.y)/2;
       return (a.x-mx)*(a.x-mx) + (a.y-my)*(a.y-my) ;
    }
+   
+   /** calcul dans b la symétrie orthogonale de a par rapport à la droite gd */
+   public static void symetric(PointD b, PointD a, PointD g, PointD d) {
+      
+      // Calcul de l'angle theta entre la droite gd et ga
+      double alpha = Math.atan2(d.y-g.y,d.x-g.x);
+      double beta  = Math.atan2(a.y-g.y,a.x-g.x);
+      double theta = alpha - beta;
+      
+      // on décale l'origine sur "g"
+      double ax = a.x - g.x;
+      double ay = a.y - g.y;
+      
+      // Rotation de -2*theta
+      double cost = Math.cos( -2*theta );
+      double sint = Math.sin( -2*theta );
+      double x = ax*cost + ay*sint;
+      double y = - ax*sint + ay*cost;
+      
+      // on recale
+      b.x = x + g.x;
+      b.y = y + g.y;     
+   }
 
    /** Retourne le carré de la distance des coins d'indice g et d */
    public static  double dist(PointD [] b, int g, int d) {
@@ -1768,6 +1826,7 @@ public class HealpixKey {
    /** Tracé du triangle dont l'indice de l'angle dans le losange est "h"
     * flagClip=true s'il y a positionnement d'un clip */
    protected int drawTriangle(Graphics2D g2d, Image img,PointD []b, int h,boolean flagClip) {
+      
       int d,g;
       switch(h) {
          case 0:   d=2; g=1; break;
@@ -1777,7 +1836,7 @@ public class HealpixKey {
       }
 
       if( b[d]==null || b[g]==null ) return 0;
-      
+
       if( flagClip ) {
          PointD[] b1=null;
          try {
@@ -1864,7 +1923,7 @@ public class HealpixKey {
          if( n<0 ) c = Color.blue;
          else c=new Color(n,n,0);
       }
-      g.setColor(j==3?Color.red:c);
+      g.setColor(flagSym ? Color.magenta : j==3?Color.red:c);
       g.drawPolygon(p);
 
       if( j!=4 ) return;

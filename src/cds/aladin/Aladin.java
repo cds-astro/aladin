@@ -68,6 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> "Transparent" all-sky support 
+ * @beta    <LI> 3 panel mode
  * @beta    <LI> Tool plan "movable" property
  * @beta    <LI> SED quick view (from VizieR SED builder)
  * @beta    <LI> Tagging source feature
@@ -103,7 +105,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.539";
+    static public final    String VERSION = "v7.540";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -377,7 +379,7 @@ public class Aladin extends JApplet
                       miProp,miGrid,miReticle,miReticleL,miNoReticle,
                       miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,
                       miPrevPos,miNextPos,
-                      miPan,miGlass,miGlassTable,miPanel1,miPanel2,miPanel4,miPanel9,miPanel16,
+                      miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel3,miPanel4,miPanel9,miPanel16,
                       miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
                       miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
@@ -439,7 +441,7 @@ public class Aladin extends JApplet
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
            DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,
-           PANEL1,PANEL2,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
+           PANEL1,PANEL2C,PANEL2L,PANEL3,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENCAT,
            MOCM,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
@@ -791,7 +793,9 @@ public class Aladin extends JApplet
        FILTERB = chaine.getString("MFILTERB");
        FILTER  = chaine.getString("SLMFILTER");
        PANEL1  = chaine.getString("MPANEL1");
-       PANEL2  = chaine.getString("MPANEL2");
+       PANEL2C  = chaine.getString("MPANEL2");
+       PANEL2L  = chaine.getString("MPANEL2L");
+       PANEL3  = chaine.getString("MPANEL3");
        PANEL4  = chaine.getString("MPANEL4");
        PANEL9  = chaine.getString("MPANEL9");
        PANEL16 = chaine.getString("MPANEL16");
@@ -1032,7 +1036,7 @@ public class Aladin extends JApplet
                 {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
                 {},{MOREVIEWS+"|F9"},{ONEVIEW},{ROI},
                 {},{"?"+LOCKVIEW},{DELLOCKVIEW},
-                {},{"%"+PANEL1+"|shift F1"},{"%"+PANEL2+"|"+alt+" F2"},
+                {},{"%"+PANEL1+"|shift F1"},{"%"+PANEL2C}, {"%"+PANEL3},
                    {"%"+PANEL4+"|shift F2"},{"%"+PANEL9+"|shift F3"},{"%"+PANEL16+"|shift F4"},
 //                {},{"?"+STICKVIEW},
                 {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
@@ -1564,7 +1568,9 @@ public class Aladin extends JApplet
        else if( isMenu(m,GLASS))   miGlass   = ji;
        else if( isMenu(m,GLASSTABLE))   miGlassTable   = ji;
        else if( isMenu(m,PANEL1))  miPanel1  = ji;
-       else if( isMenu(m,PANEL2))  miPanel2  = ji;
+       else if( isMenu(m,PANEL2C))  miPanel2c  = ji;
+       else if( isMenu(m,PANEL2L))  miPanel2l  = ji;
+       else if( isMenu(m,PANEL3))  miPanel3  = ji;
        else if( isMenu(m,PANEL4))  miPanel4  = ji;
        else if( isMenu(m,PANEL9))  miPanel9  = ji;
        else if( isMenu(m,PANEL16)) miPanel16 = ji;
@@ -2829,7 +2835,8 @@ public class Aladin extends JApplet
       } else if( isMenu(s,NEXTPOS)) { view.redo(false);
       } else if( isMenu(s,SYNC))   { switchMatch(false);
       } else if( isMenu(s,SYNCPROJ))   { switchMatch(true);
-      } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2) || isMenu(s,PANEL4)
+      } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2C) || isMenu(s,PANEL2L) 
+              || isMenu(s,PANEL3) || isMenu(s,PANEL4)
               || isMenu(s,PANEL9) || isMenu(s,PANEL16))   { panel(s);
       } else if( isMenu(s,PAN))    { pan();
       } else if( isMenu(s,RSAMP))  { rsamp();
@@ -3069,7 +3076,7 @@ public class Aladin extends JApplet
     protected void createPlotCat() {
        PlanCatalog p = calque.getFirstSelectedPlanCatalog();
        if( p==null ) return;
-       if( !view.getCurrentView().isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2);
+       if( !view.getCurrentView().isFree() && !view.isMultiView() ) view.setModeView(ViewControl.MVIEW2L);
        int nview = aladin.view.getLastNumView(p);
        view.setPlanRef(nview, p);
        view.viewSimple[nview].addPlotTable(p, 0, 1,true);
@@ -4356,7 +4363,9 @@ public void setLocation(Point p) {
          if( miGlassTable!=null ) miGlassTable.setSelected(toolBox.tool[ToolBox.WEN].mode==Tool.DOWN && calque.zoom.zoomView.isPixelTable() );
          if( miPanel1!=null ) {
             if( m==ViewControl.MVIEW1 ) miPanel1.setSelected(true);
-            else if( m==ViewControl.MVIEW2 ) miPanel2.setSelected(true);
+            else if( m==ViewControl.MVIEW2L ) miPanel2c.setSelected(true);
+//            else if( m==ViewControl.MVIEW2C ) miPanel2l.setSelected(true);
+            else if( m==ViewControl.MVIEW3 ) miPanel3.setSelected(true);
             else if( m==ViewControl.MVIEW4 ) miPanel4.setSelected(true);
             else if( m==ViewControl.MVIEW9 ) miPanel9.setSelected(true);
             else if( m==ViewControl.MVIEW16 )miPanel16.setSelected(true);

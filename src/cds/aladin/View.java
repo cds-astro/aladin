@@ -726,7 +726,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected int getTargetViewForEvent(Object target, int origX, int origY) {
       Dimension vueDim = viewSimple[0].getSize();
       int vueInLine = aladin.viewControl.getNbLig(modeView);
-      if( modeView==ViewControl.MVIEW2 ) vueInLine=2;
+      int vueInCol = aladin.viewControl.getNbCol(modeView);
       int x=0, y=0;   // Position de l'évènement par rapport à View
       if( target instanceof Select ) {
          if( origX>=0 ) return -1;  // On est resté dans la pile
@@ -736,10 +736,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          int currentView = ((ViewSimple)target).isProjSync() ?((ViewSimple)target).n
                              : getCurrentNumView();
          x = (currentView%vueInLine)*vueDim.width + origX;
-         y = (currentView/vueInLine)*vueDim.height + origY;
+         y = (currentView/vueInCol)*vueDim.height + origY;
       } else return -1;
 
-      int t = vueInLine*(y/vueDim.height) + (x/vueDim.width);
+      int t = vueInCol*(y/vueDim.height) + (x/vueDim.width);
       if( t<0 || t>=modeView ) t=-1;
 //System.out.println("orig=("+origX+","+origY+")=> ("+x+","+y+") donc vue target = "+target);
       return t;

@@ -59,6 +59,7 @@ MUNSELECT	Unselect objects
 MFILTERB	Predefined filters
 MPANEL1	1 panel
 MPANEL2	2 panels
+MPANEL3	3 panels
 MPANEL4	4 panels
 MPANEL9	9 panels
 MPANEL16	16 panels
@@ -158,6 +159,7 @@ MUNSELECT.fr	Désélectionner les objets
 MFILTERB.fr	Filtres prédéfinis
 MPANEL1.fr	1 panneau
 MPANEL2.fr	2 panneaux
+MPANEL3.fr	3 panneaux
 MPANEL4.fr	4 panneaux
 MPANEL9.fr	9 panneaux
 MPANEL16.fr	16 panneaux

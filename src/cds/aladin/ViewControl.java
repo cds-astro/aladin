@@ -40,14 +40,16 @@ import cds.tools.Util;
 public final class ViewControl extends JComponent implements
                   MouseMotionListener, MouseListener
                   {
-   static final int MVIEW1 = 1;
-   static final int MVIEW2 = 2;
-   static final int MVIEW4 = 4;
-   static final int MVIEW9 = 9;
+   static final int MVIEW1  = 1;
+   static final int MVIEW2L = 2;
+   static final int MVIEW2C = -2;
+   static final int MVIEW3  = 3;
+   static final int MVIEW4  = 4;
+   static final int MVIEW9  = 9;
    static final int MVIEW16 = 16;
    static final int DEFAULT = MVIEW1;
-   static final int[] MODE = { MVIEW1,MVIEW2,MVIEW4,MVIEW9,MVIEW16 };
-   static final int MAXVIEW = MODE[MODE.length-1];
+   static final int[] MODE = { MVIEW1,MVIEW2L,MVIEW3,MVIEW4,MVIEW9,MVIEW16 };
+   static final int MAXVIEW = MVIEW16;
    
    String INFOMVIEW,INFOSYNC,LABEL;
    static final int SL = 18;     // Taille du sync
@@ -107,14 +109,18 @@ public final class ViewControl extends JComponent implements
    /** Retourne le nombre de lignes de vues en fonction du mode */
    protected int getNbLig() { return getNbLig(modeView); }
    protected int getNbLig(int mode) {
-      if( mode==MVIEW2 ) return 1;
+      if( mode==MVIEW2L ) return 1;
+      else if( mode==MVIEW2C ) return 2;
+      else if( mode==MVIEW3 ) return 3;
       return (int)Math.sqrt(mode);
    }
    
    /** Retourne le nombre de colonnes de vues en fonction du mode */
    protected int getNbCol() { return getNbCol(modeView); }
    protected int getNbCol(int mode) {
-      if( mode==MVIEW2 ) return 2;
+      if( mode==MVIEW2L ) return 2;
+      else if( mode==MVIEW2C ) return 1;
+      else if( mode==MVIEW3 ) return 1;
       return (int)Math.sqrt(mode);
    }
 
