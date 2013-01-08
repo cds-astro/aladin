@@ -64,6 +64,23 @@ public class Grid extends MyIcon {
       {9, 4,10},
    };
    
+   // Barres horizontales du dessin de d'un SED
+   // (pas de barres verticales)
+   static final private int SY2[][] = {
+      // Zigzag + flèche
+                                 {11,12,2},
+      {3,3,3},                   {10,10,3}, {13,13,3},
+      {3,3,4},                   {9,9,4},
+      {4,4,5},                   {8,8,5},
+      {4,4,6},                   {7,7,6},   {7,7,6},
+                                 {5,6,7},             {14,14,7},
+                                                      {15,15,8},
+                                            {2,16,9},
+                                                      {15,15,10},
+                                                      {14,14,11},
+   };
+
+   
    // Barres horizontales du dessin de la grille dun MOC
    // (pas de barres verticales)
    static final private int TY2[][] = {
@@ -126,6 +143,13 @@ public class Grid extends MyIcon {
       g.setColor(c);
       for( int i=0; i<TY2BG.length; i++ ) g.drawLine(TY2BG[i][0]+x,TY2BG[i][2]+y,TY2BG[i][1]+x,TY2BG[i][2]+y);
    }
+   
+   /** Dessine l'icone d'un SED */
+   static protected void drawSED(Graphics g, int x,int y,Color c) {
+      g.setColor(c);
+      for( int i=0; i<SY2.length; i++ ) g.drawLine(SY2[i][0]+x,SY2[i][2]+y,SY2[i][1]+x,SY2[i][2]+y);
+   }
+
    
    static protected void fillBG(Graphics g, int x,int y,Color c) {
       g.setColor(c);

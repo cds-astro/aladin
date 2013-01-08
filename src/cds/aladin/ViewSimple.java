@@ -204,7 +204,7 @@ public class ViewSimple extends JComponent
       addMouseListener(this);
       addMouseMotionListener(this);
       addKeyListener(this);
-
+      
       setOpaque(true);
 //      setDoubleBuffered(false);
 
@@ -891,7 +891,7 @@ public class ViewSimple extends JComponent
    }
    protected Point getViewCoordWithMarge(Point p,double x, double y, int dw, int dh) {
       p = getViewCoord(p,x,y);
-      if( p.x<-dw || p.x>rv.width+dw ||
+      if( p==null || p.x<-dw || p.x>rv.width+dw ||
           p.y<-dh || p.y>rv.height+dh ) return null;
       return p;
    }
@@ -2937,10 +2937,12 @@ public class ViewSimple extends JComponent
 //      System.out.println("lastView="+lastView.x+","+lastView.y+" marge="+margeX+","+margeY+" x,y="+x+","+y+" width="+w);
       if( x<0 || x>=w || y<0 || y>=h ) return false;
       int pix=0;
-      if( pixels!=null ) pix = (int) ( pixels[ y*w+x ] & 0xFF ) ;
-      else if( pixelsRGB!=null ) {
+      if( pixelsRGB!=null ) {
          pix = pixelsRGB[ y*w+x ];
-         pix = ( (0xFF & pix) + ((pix>>>8) & 0xFF) + ((pix>>>16) & 0xFF) )/3;
+         pix =  ( (0xFF & pix) + ((pix>>>8) & 0xFF) + ((pix>>>16) & 0xFF) )/3;
+      }
+      else if( pixels!=null ) {
+         pix = (int) ( pixels[ y*w+x ] & 0xFF ) ;
       }
       if( ((PlanImage)pref).video == PlanImage.VIDEO_INVERSE ) pix = 255 - pix;
       aladin.trace(4,"ViewSimple.isMouseOnSomething() pix => "+pix );

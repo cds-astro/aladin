@@ -771,7 +771,7 @@ public class Repere extends Position {
     * => arret de son affichage
     */
    protected void cutOff() { 
-      plan.aladin.calque.zoom.zoomView.setHist(); 
+      plan.aladin.calque.zoom.zoomView.stopHist(); 
       plan.aladin.calque.zoom.zoomView.cutOff(this);
    }
 

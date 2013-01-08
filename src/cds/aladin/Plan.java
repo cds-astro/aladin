@@ -1608,6 +1608,14 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       if( !active ) aladin.view.deSelect(this);
       else aladin.view.addTaggedSource(this);
+      
+      // Activation automatique du SED associé au plan (le cas échéant)
+      if( active && isSED() ) {
+         Source sEtalon = aladin.view.addSEDSource(this);
+         System.out.println("Plan.setActivated() setSED("+sEtalon+")");
+         if( sEtalon!=null ) aladin.view.zoomview.setSED(sEtalon);
+      }
+      
       return active;
    }
 

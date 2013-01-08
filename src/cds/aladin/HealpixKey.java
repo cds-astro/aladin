@@ -785,6 +785,7 @@ public class HealpixKey {
          planBG.dataMax    = 255;
       } else {
          planBG.pixMode = PlanBG.PIX_RGB;
+         planBG.video = PlanImage.VIDEO_NORMAL;
          rgb = getPixelsRGB(img);
       }
       

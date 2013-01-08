@@ -1056,6 +1056,7 @@ public final class Save extends JFrame implements ActionListener {
          if( f.datatype!=null )    s.append(CR+"         datatype=\""+XMLParser.XMLEncode(f.datatype)+"\"");
          if( f.refText!=null )     s.append(CR+"         refText=\""+XMLParser.XMLEncode(f.refText)+"\"");
          if( f.refValue!=null )    s.append(CR+"         refValue=\""+XMLParser.XMLEncode(f.refValue)+"\"");
+         if( f.sed!=0 )            s.append(CR+"         sed=\""+XMLParser.XMLEncode(f.getSEDtag())+"\"");
          s.append("/>"+CR);
       }
 

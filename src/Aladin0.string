@@ -1534,8 +1534,10 @@ UPSTOP	Stop running test
 #UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build an SED (Spectral Energy Distribution) of this source from various VizieR catalogs
 SEDLOADING	VizieR SED loading...
 SEDCLOSE	Close SED graph
-SEDCREATEPLANE	Create catalogue stack plane from this SED
+#SEDCREATEPLANE	Create catalogue stack plane from this SED
 SEDFREQWAVE	Draw in frequences (resp. in waves length)
+SEDHELPTIP	Information about VizieR SED
+SEDHELP		A VizieR SED is a composite Spectral Energy Distribution diagram built from various source photometry measurements found a few arcseconds around a sky position/object amongst all VizieR tables. The eventual computation from magnitude are done by VizieR. Clic on the SED to access to the table.
 UPFILTERB	Dedicated filter
 UPFILTERH	This selector allows you to automatically apply default dedicated filter for Simbad, NED,...
 UPTRANSB		Transparency/opacity
@@ -1600,8 +1602,10 @@ UPSMBB.fr	Pointeur Simbad & VizieR (SED)
 UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique sur les base de données Simbad et VizieR afin de trouver l'identificateur de l'objet astronomique sous la souris et d'en fournir un SED (Spectral Energy Distribution)\nconstruit à partir de catalogues de VizieR.
 SEDLOADING.fr	SED VizieR...
 SEDCLOSE.fr	Ferme le graphe du SED
-SEDCREATEPLANE.fr	Crée un plan catalogue dans la pile\nà partir des données du SED
+#SEDCREATEPLANE.fr	Crée un plan catalogue dans la pile\nà partir des données du SED
 SEDFREQWAVE.fr	Trace en fréquences (resp. en longueurs d'onde)
+SEDHELPTIP.fr	Information sur les SED VizieR
+SEDHELP.fr		Un SED VizieR est un diagramme de distribution d'énergie construit à partir des mesures photométriques issues des sources trouvées à quelques secondes d'arc autour d'une position parmi toutes les tables de VizieR. Les calculs éventuels de flux à partir de la magnétude ont été effectués par VizieR. Cliquez sur le SED pour accéder aux détails de la table.
 #UPSMBN.fr	Non activé
 #UPSMBY.fr	Activé
 UPFILTERB.fr	Filtre dédié

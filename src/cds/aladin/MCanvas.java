@@ -924,7 +924,7 @@ public final class MCanvas extends JComponent
          return;
       }
 
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
 
       // Il n'y a pas de mesure dans la fenetre des mesures
       if( currentsee<0 || aladin.mesure.getNbSrc()<=currentsee ) return;

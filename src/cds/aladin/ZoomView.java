@@ -65,9 +65,8 @@ import javax.swing.JComponent;
  * @version 0.9 - 30 mars 1998
  */
 public final class ZoomView extends JComponent 
-               implements  MouseWheelListener, MouseListener,MouseMotionListener
-               /* ,KeyListener */ {
-
+               implements  MouseWheelListener, MouseListener,MouseMotionListener {
+   
    // Les valeurs generiques
    protected int WENZOOM     =  8; // Agrandissement pour la loupe (puissance de 2)
    static int SIZE;                   // Taille fixe de la fenetre
@@ -338,7 +337,7 @@ public final class ZoomView extends JComponent
  	        if( hist.mouseDragged(e) ) repaint();
  	     } else {
  	        if( hist.inCroix(e.getX(), e.getY() ) ) {
- 	           setHist();
+ 	           stopHist();
  	        } else hist.selectHighlightSource();
  	        aladin.calque.repaintAll();
  	     }
@@ -899,14 +898,15 @@ try {
 
    }
    
+   /** Met à jour le SED si nécessaire, sinon le fait disparaitre */
+   protected void resumeSED() { 
+      Source s = aladin.mesure.getFirstSrc();
+      if( (s==null || !s.leg.isSED()) && !flagSED ) return;
+      setSED( s ); 
+    }
+   
    /** Arrêt de l'affichage de l'histogramme courant */   
-   protected void setHist() { 
-      if( flagSED ) {
-         // Pour immédiatement afficher un SED
-         Source s = aladin.mesure.getFirstSrc();
-         if( s!=null && s.leg.isSED() ) setSED(s);
-         return;
-      }
+   protected void stopHist() { 
       if( !flagHist ) return;   // Déjà fait
       flagHist=false;
       aladin.view.flagHighlight=false;

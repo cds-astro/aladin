@@ -1052,12 +1052,13 @@ public final class Select extends JComponent  implements
       f.setActivated(flag);
    }
 
-   /** Selection d'un plan particulier */
-   protected void selectPlan(int i) {
-      for( int j=0; j<a.calque.plan.length; j++ ) a.calque.plan[j].selected=false;
-      a.calque.plan[i].selected=true;
-
-   }
+//   VIEUX CODE
+//   /** Selection d'un plan particulier */
+//   protected void selectPlan(int i) {
+//      for( int j=0; j<a.calque.plan.length; j++ ) a.calque.plan[j].selected=false;
+//      a.calque.plan[i].selected=true;
+//
+//   }
 
    /** Indication du plan sous la souris et
     *  reaffichage des bordures des vues si nécessaire */

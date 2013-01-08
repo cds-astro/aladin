@@ -43,6 +43,9 @@ import cds.xml.Field;
  * @version 1.0 nov 2012
  */
 class SED extends JPanel {
+   
+   static private final String SEDGLUTAG = "VizieR.sed"; 
+
    static final int margeHaut=20,margeBas=30,margeDroite=30,margeGauche=10;
    
    static final char MU = '\u03BC';
@@ -64,6 +67,7 @@ class SED extends JPanel {
    private Aladin aladin;
    private PlanCatalog plan;    // Le planCatalog qui va recueillir les infos du SED, il ne sera pas affiché dans la pile
    private String source;       // Le nom de la source concernée par le SED
+   private double radius;       // Le rayon de recherche de la SED
    private Repere simRep;       // Le repere à afficher dans la vue qui pointe sur la source du SED
    private String url;          // Pour mémoire
    private float transparency;  // Niveau de transparence d'affichage des points
@@ -78,7 +82,7 @@ class SED extends JPanel {
    
    private ArrayList<SEDItem> sedList;  // Liste des points du SED sous une forme "prémachée"
    
-   private Rectangle rCroix,rInfo,rWave;  // Position des icones sur le graphiques
+   private Rectangle rCroix,rWave,rHelp/*,rInfo*/;  // Position des icones sur le graphiques
    private double currentAbs=Double.NaN;  // Dernière fréquence/longueur d'onde sous la souris
    private double currentFlux=Double.NaN; // Dernier flux sous la souris
    private int currentX,currentY;         // Dernière position de la souris
@@ -88,6 +92,7 @@ class SED extends JPanel {
       this.aladin = aladin;
       transparency = 0.5f;
       flagWavelength = false;
+      radius = 5;
    }
    
    /** Mémorise le repère de la vue afin de pouvoir le réafficher ultérieurement
@@ -96,6 +101,9 @@ class SED extends JPanel {
    
    /** Mémorise le source associée au SED */
    protected void setSource(String source) { this.source=source; }
+   
+   /** Mémorise le rayon associé au SED */
+   protected void setRaidus(double radius) { this.radius = radius; }
    
    /** Nettoyage de la liste */
    public void clear() { 
@@ -135,8 +143,9 @@ class SED extends JPanel {
       clear();
       this.source = source;
       try {
-         aladin.trace(2,"VizieR SED loading for source \""+source+"\"...");
-         url = "http://cdsarc.u-strasbg.fr/viz-bin/sed?-c="+URLEncoder.encode(source);
+         aladin.trace(2,"VizieR SED loading around source \""+source+"\"...");
+         url = ""+aladin.glu.getURL(SEDGLUTAG,Glu.quote(source)+" "+radius);
+//         url = "http://cdsarc.u-strasbg.fr/viz-bin/sed?-c="+URLEncoder.encode(source) +"&-c.rs="+radius;
          aladin.trace(2,"SED loading: "+url);
          loadASync( Util.openAnyStream(url) );
       } catch( Exception e ) {
@@ -148,17 +157,14 @@ class SED extends JPanel {
    
    // Creation d'un plan catalogue dans la pile à partir des données du SED
    // On ne peut le faire qu'une seule fois
-   private void createStackPlane( boolean flagSelect ) {
+   private void createStackPlane() {
       if( planeAlreadyCreated ) return;
       planeAlreadyCreated = true;
       plan.label="SED "+source;
       plan.objet = source;
       aladin.calque.newPlan(plan);
       plan.planReady(true);
-      if( flagSelect ) {
-         aladin.calque.selectPlan(plan);
-         aladin.view.selectAllInPlan(plan);
-      }
+      aladin.calque.selectPlan(plan);   // sélectionne également les sources du plan
    }
    
    // Chargement et création d'un SED à partir d'un flux de manière asynchrone
@@ -436,7 +442,7 @@ class SED extends JPanel {
             g.setFont(Aladin.BOLD);
             if( !flagWavelength ) s =getUnitFreq(currentAbs);
             else s = getUnitWave(currentAbs);
-            g.drawString(s, 5,getDimension().height-3);
+            g.drawString(s, 5,dim.height-3);
          }
       }
       if( !Double.isNaN(currentFlux) ) {
@@ -446,23 +452,33 @@ class SED extends JPanel {
          if( siIn==null ) {
             g.setFont(Aladin.BOLD);
             s=getUnitJy(currentFlux);
-            g.drawString(s, dim.width-5-g.getFontMetrics().stringWidth(s),getDimension().height-3);
+            g.drawString(s, dim.width-5-g.getFontMetrics().stringWidth(s),dim.height-3);
          }
       }
       
       // Les icones
       drawCroix(g);
       drawWave(g);
-      drawInfo(g);
+//      drawInfo(g);
+      drawHelp(g);
 
-      // Tracé des points
       SEDItem siIn=null;
+      
+      // Pas encore prêt
       if( sedList==null || !readyToDraw ) {
          g.setFont(Aladin.ITALIC);
          s = aladin.chaine.getString("SEDLOADING");
-         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,(haut+bas)/2+10);
-         return;
+         int y = (haut+bas)/2-20;
+         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,y+=18);
+         s = Coord.getUnit(radius/3600.)+" around";
+         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,y+=18);
+         s = source;
+         g.drawString(s,dim.width/2-g.getFontMetrics().stringWidth(s)/2,y+=18);
+         if( sedList==null || !readyToDraw ) return;
+         
+      // Tracé des points
       } else {
+         
          g.setFont(Aladin.SPLAIN);
          Composite c = ((Graphics2D)g).getComposite();
          try {
@@ -489,8 +505,18 @@ class SED extends JPanel {
       if( source!=null ) {
          g.setColor(Aladin.GREEN);
          g.setFont(Aladin.BOLD);
-         int size = g.getFontMetrics().stringWidth(source);
-         g.drawString(source,dim.width/2-size/2, haut-4);
+         String s1 = "VizieR SED at "+Coord.getUnit(radius/3600.);
+         int size = g.getFontMetrics().stringWidth(s1);
+         int x = dim.width/2-size/2;
+         if( x<50 ) x=50;
+         g.drawString(s1,x, haut-4);
+         if( Double.isNaN(currentFlux) && Double.isNaN(currentAbs) && siIn==null ) {
+            s1 = source;
+            size = g.getFontMetrics().stringWidth( s1 );
+            x = dim.width/2-size/2;
+            if( x<50 ) x=50;
+            g.drawString(s1,x, dim.height-7);
+         }
       }
 
    }
@@ -513,20 +539,20 @@ class SED extends JPanel {
    }
    
    // Trace l'icone de demande de plus d'info sur le SED
-   private void drawInfo(Graphics g) {
-      if( planeAlreadyCreated ) {
-         rInfo = new Rectangle(0,0,0,0);
-         return;
-      }
-      int w=5;
-      int width=getDimension().width;
-      g.setColor(Aladin.BKGD);
-      rInfo = new Rectangle(width-w-4,6+w,w+4,w+4);
-      g.fillRect(rInfo.x,rInfo.y,rInfo.width,rInfo.height);
-      g.setColor(Color.blue);
-      g.setFont(Aladin.SBOLD);
-      g.drawString("^",rInfo.x+2,rInfo.y+10);
-   }
+//   private void drawInfo(Graphics g) {
+//      if( planeAlreadyCreated ) {
+//         rInfo = new Rectangle(0,0,0,0);
+//         return;
+//      }
+//      int w=5;
+//      int width=getDimension().width;
+//      g.setColor(Aladin.BKGD);
+//      rInfo = new Rectangle(width-w-4,6+w,w+4,w+4);
+//      g.fillRect(rInfo.x,rInfo.y,rInfo.width,rInfo.height);
+//      g.setColor(Color.blue);
+//      g.setFont(Aladin.SBOLD);
+//      g.drawString("^",rInfo.x+2,rInfo.y+10);
+//   }
    
    // Trace l'icone de demande de passage freq <-> longueur d'onde
    private void drawWave(Graphics g) {
@@ -540,22 +566,40 @@ class SED extends JPanel {
       g.drawString(TILDE+"",rWave.x+1,rWave.y+8);
    }
    
+   // Trace l'icone du help
+   private void drawHelp(Graphics g) {
+      int w=5;
+      Dimension dim=getDimension();
+      g.setColor(Aladin.BKGD);
+      rHelp = new Rectangle(dim.width-w-4,6+w,w+4,w+4);
+      g.fillRect(rHelp.x,rHelp.y,rHelp.width,rHelp.height);
+      g.setColor( Color.blue );
+      g.setFont(Aladin.SBOLD);
+      g.drawString("?",rHelp.x+2,rHelp.y+8);
+   }
+   
    /** Actions à effectuer lors du relachement de la souris */
    protected void mouseRelease(int x,int y) {
       if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null);
-      else if( rInfo.contains(x,y) ) createStackPlane( false );
+//      else if( rInfo.contains(x,y) ) createStackPlane();
+      else if( rHelp.contains(x,y) ) help();
       else if( rWave.contains(x,y) ) {
          flagWavelength = !flagWavelength;
          setPosition();
          aladin.view.zoomview.repaint();
       } else if( siIn!=null ) {
          int bloc=1;
-         if( !planeAlreadyCreated ) createStackPlane( true );
+         if( !planeAlreadyCreated ) createStackPlane();
          else bloc=2;
          aladin.view.showSource(siIn.o, false, true);
          aladin.mesure.mcanvas.show(siIn.o, bloc);
          aladin.calque.repaintAll();
       } 
+   }
+   
+   // Affiche un message explicatif sur le SED
+   private void help() {
+      aladin.info( aladin.chaine.getString("SEDHELP"));
    }
    
    /** Actions à effectuer lorsque la souris sort du cadre */
@@ -580,9 +624,10 @@ class SED extends JPanel {
    protected void mouseMove(int x, int y) {
       
       // Tooltips ?
-      if( rCroix.contains(x,y) ) { toolTip("SEDCLOSE"); return; }
-      else if( rInfo.contains(x,y) ){ toolTip("SEDCREATEPLANE"); return; }
-      else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE"); return; }
+      if( rCroix.contains(x,y) )     { toolTip("SEDCLOSE");       return; }
+//      else if( rInfo.contains(x,y) ) { toolTip("SEDCREATEPLANE"); return; }
+      else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE");    return; }
+      else if( rHelp.contains(x,y) ) { toolTip("SEDHELPTIP");     return; }
       else toolTip(null);
 
       // Y a-t-il un point de SED sous la souris ?

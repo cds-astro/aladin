@@ -363,6 +363,13 @@ public final class Slide {
       Grid.fillMOC(g,x,y,Color.white);
       Grid.drawMOC(g, x, y, c);
    }
+   
+   // Adaptation du logo pour un plan SED
+   static void drawLogoSED(Graphics g,int dx,int dy,Color c) {
+      int x = dx+gapL+8;
+      int y = dy+1;
+      Grid.drawSED(g, x, y, c);
+   }
 
    // Adaptation du logo pour un plan BGHPX
    static void drawLogoImgBG(Graphics g,int dx,int dy,Color c) {
@@ -589,21 +596,22 @@ public final class Slide {
          switch( p.type ) {
             case Plan.IMAGE:
             case Plan.IMAGEALGO:
-            case Plan.IMAGERSP:    drawLogoImg(g,dx,dy,colorForeground);                   break;
+            case Plan.IMAGERSP:    drawLogoImg(g,dx,dy,colorForeground);                      break;
             case Plan.IMAGECUBERGB:
-            case Plan.IMAGERGB:    drawLogoImg(g,dx,dy,null);                              break;
-            case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);               break;
-            case Plan.ALLSKYMOC:   drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);         break;
+            case Plan.IMAGERGB:    drawLogoImg(g,dx,dy,null);                                 break;
+            case Plan.IMAGEHUGE:   drawLogoImgHuge(g,dx,dy,colorForeground);                  break;
+            case Plan.ALLSKYMOC:   drawLogoMOC(g,dx,dy,isViewable?p.c:colorFillFG);           break;
             case Plan.ALLSKYCAT:   drawLogoImgBG(g,dx,dy,isViewable?p.c:colorFillFG);         break;
             case Plan.ALLSKYIMG:   drawLogoImgBG(g,dx,dy,isViewable?Color.black:colorFillFG); break;
             case Plan.ALLSKYPOL:   drawLogoPolarisation(g,dx,dy,isViewable?p.c:colorFillFG);  break;
             case Plan.IMAGEMOSAIC:
-            case Plan.IMAGECUBE:
-            case Plan.IMAGEBLINK:  drawLogoImg(g,dx,dy,Color.black);                       break;
+            case Plan.IMAGECUBE: 
+            case Plan.IMAGEBLINK:  drawLogoImg(g,dx,dy,Color.black);                          break;
             case Plan.APERTURE:
-            case Plan.TOOL:        drawLogoTool(g,dx,dy,colorForeground);                  break;
-            case Plan.CATALOG:     drawLogoCat(g,dx,dy,colorForeground);                   break;
-            case Plan.FILTER:      drawLogoFilter(g,dx,dy,p.active,false,Color.black,Color.black);     break;
+            case Plan.TOOL:        drawLogoTool(g,dx,dy,colorForeground);                     break;
+            case Plan.CATALOG:     if( p.isSED() ) drawLogoSED(g,dx,dy,colorForeground);
+                                   else drawLogoCat(g,dx,dy,colorForeground);                 break;
+            case Plan.FILTER:      drawLogoFilter(g,dx,dy,p.active,false,Color.black,Color.black); break;
          }
          
          // Affichage de la checkbox

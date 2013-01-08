@@ -2259,7 +2259,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       synchronized(this) {
          while( it.hasNext() ) {
             Obj s = it.next();
-            if( !(s instanceof Source) || !((Source)s).isTagged() ) continue;
+            if( !(s instanceof Source) || !((Source)s).isTagged() || ((Source)s).isSelected() ) continue;
             ((Source)s).setSelect(true);
             vselobj.add(s);
             aladin.mesure.insertInfo((Source)s);
@@ -2270,6 +2270,34 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.mesure.adjustScroll();
          aladin.mesure.mcanvas.repaint();
       }
+   }
+   
+   /** Ajoute toutes les sources SED du plan passé en paramètre dans la fenêtre des mesures
+    * si ce n'est déjà fait
+    * @return la première source SED trouvée, sinon null
+    */
+   protected Source addSEDSource(Plan p) {
+      if( p.getCounts()==0 ) return null;
+      Vector<Source> v = new Vector<Source>();
+      Iterator<Obj> it = p.iterator();
+      while( it.hasNext() ) {
+         Obj s = it.next();
+         if( !(s instanceof Source) || !((Source)s).leg.isSED() ) continue;
+//         if( ((Source)s).isSelected() ) continue;
+         v.add( (Source) s);
+      }
+      if( v.size()==0 ) return null;
+
+      synchronized(this) {
+         for( Source s1 : v ) {
+            s1.setSelect(true);
+            vselobj.add(s1);
+            aladin.mesure.insertInfo((Source)s1);
+         }
+      }
+      aladin.mesure.adjustScroll();
+      aladin.mesure.mcanvas.repaint();
+      return v.elementAt(0);
    }
 
   /** Deselection d'une source du vecteur vselobj.

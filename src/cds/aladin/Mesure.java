@@ -431,7 +431,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
 //      aladin.trace(4,"Mesure.scrollV("+s.id+") nbSrc="+nbSrc);
       
       mcanvas.unselect();
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(true);
       if( s.leg.isSorted() ) { s.leg.clearSort(); mcanvas.reloadHead(); }
       if( mcanvas.triTag!=Field.UNSORT ) mcanvas.triTag=Field.UNSORT;
@@ -443,7 +444,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       else for( int i=0; i<nbSrc; i++ ) src[i]=null;	// Pour le GC
       nbSrc=0;
       mcanvas.unselect();
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(false);
    }
    
@@ -465,7 +467,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       scrollV.setMaximum(nbSrc);
       mcanvas.unselect();
       mcanvas.repaint();
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(nbSrc>0);
    }
    
@@ -500,7 +503,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
          }
          nbSrc=n;
       }
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(nbSrc>0);
    }
 
@@ -511,7 +515,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       src[i]=null;
       nbSrc--;
       mcanvas.unselect();
-      aladin.calque.zoom.zoomView.setHist();
+      aladin.calque.zoom.zoomView.stopHist();
+      aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(nbSrc>0);
    }
    

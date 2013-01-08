@@ -22,6 +22,8 @@ package cds.xml;
 
 import java.util.Hashtable;
 
+import cds.tools.Util;
+
 /** Field description according to the Astrores XML standard.
  *
  * @Version 1.0 - 02/09/99
@@ -99,6 +101,7 @@ final public class Field {
    public int coo;
    
    static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
+   static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID" };
    public int sed;
 
    /** True if it is the DE coordinate field */
@@ -220,15 +223,29 @@ final public class Field {
       else if( name.equals("TITLE") )
                 title=(title==null?"":title)+value;
       else if( name.equals("href") )     href=value;
-      else if( name.equals("gref") ) gref=value;
+      else if( name.equals("gref") )     gref=value;
       else if( name.equals("refText") )  refText=value;
       else if( name.equals("refValue") ) refValue=value;
+      else if( name.equals("sed") )      setSEDtag(value);
       else return;
    }
 
    /** True si le field est numérique */
    public boolean isNumDataType() {
       return datatype!=null && NUMDATATYPE.indexOf(datatype)>=0;
+   }
+   
+   /** Récupère le label du flag SED du champ, ou null si aucun sur ce champ */
+   public String getSEDtag() {
+      if( sed==0 || sed>=SEDLABEL.length ) return null;
+      return SEDLABEL[sed];
+   }
+   
+   /** Positionne le flag SED en fonction du label passé en paramètre (provient d'une lecture d'une fichier AJ) */
+   private void setSEDtag(String tag) {
+      int i = Util.indexInArrayOf(tag, SEDLABEL, true);
+      if( i==-1 ) i=0;
+      sed = i;
    }
 
    /** Conversion d'un type de donnée exprimé dans le standard FITS
@@ -273,6 +290,7 @@ final public class Field {
       if( s.equals("doubleComplex") ) return "M";
       return "E";
    }
+   
 
    public String toString() {
       return  (ID==null?       "":" ID="+ID)
