@@ -191,7 +191,7 @@ protected int loadFits(String filename) throws Exception {
          if( parente<8 && isTooLarge(b) ) {
             int  n=drawPolarisationFils(g,v,parente+1);
             resetTimer();
-            resetTimeAskRepaint();
+//            resetTimeAskRepaint();
             return n;
          }
 

@@ -147,6 +147,7 @@ public class PlanHealpix extends PlanBG {
         this.startingTaskId=startingTaskId;
         fromProperties = false;
         
+        gluTag = gluSky.getID();
         String file = gluSky.getUrl();
         MyInputStream in = null;
         try { in=Util.openAnyStream(file); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }

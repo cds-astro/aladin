@@ -143,6 +143,7 @@ public class PlanBG extends PlanImage {
    static long MAXCACHE=4*1024*1024;                // taille max du cache en Ko
    static final protected int LIVETIME = 3*1000;            // temps de vie des losanges en mémoire (ms)
 
+   protected String gluTag=null;   // Identificateur dans le dico GLU
    protected String survey;        // Nom du background
    protected String verboseDescr;  // Baratin sur le survey
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
@@ -202,6 +203,7 @@ public class PlanBG extends PlanImage {
       this.startingTaskId = startingTaskId;
       initCache();
 
+      gluTag = gluSky.getID();
       url = gluSky.getUrl();
       survey = gluSky.label;
       version = gluSky.version;
@@ -232,8 +234,10 @@ public class PlanBG extends PlanImage {
       aladin.trace(3,"HEALPix cache for "+survey+" is out of date => renamed => will be removed");
    }
    
-   /** Charge les propriétés à partir du fichier "properties" et en profite pour vérifier
-    * que le cache est à jour, en comparant les dates du fichier "properties" local et distant */
+   /** Charge les propriétés à partir du fichier "properties" et en profite 
+    * 1) pour déterminer le meilleur site miroir (le cas échéant)
+    * 2) pour vérifier que le cache est à jour, en comparant les dates du fichier "properties" local et distant 
+    */
    protected java.util.Properties loadPropertieFile() {
       MyProperties prop = null;
       boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
@@ -243,6 +247,9 @@ public class PlanBG extends PlanImage {
          // S'il s'agit d'un produit local, accès direct sans se poser de questions
          if( local ) in = new FileInputStream(new File(url+Util.FS+PlanHealpix.PROPERTIES));
          else {
+            
+            // Eventuellement change de site Web s'il y a mieux
+            checkSite(false);
             
             String cacheFile = getCacheDir()+Util.FS+survey+Util.FS+PlanHealpix.PROPERTIES;
             File f = new File(cacheFile);
@@ -539,6 +546,28 @@ public class PlanBG extends PlanImage {
          		"We strongly suggest to adjust the JAVA memory parameter and relaunch Aladin.\n" +
          		"See the corresponding Aladin FAQ entry available via the Help menu");
       }
+   }
+   
+   static final private int MAXCHECKSITE = 3;
+   private int nbCheckSite=0;
+   
+   /** Tentative de changement de site Web dans le cas de mirroirs
+    * On ne le fait qu'un certain nombre de fois par survey
+    * @return true si ça a marché
+    */
+   public boolean checkSite(boolean withTrace) {
+      if( nbCheckSite>=MAXCHECKSITE ) return false;
+      if( gluTag==null ) return false;
+      aladin.glu.checkIndirection(gluTag, "" ); //"/properties");
+      String url1 = ""+aladin.glu.getURL(gluTag);
+      if( url1.equals(url) ) return false;
+      nbCheckSite++;
+      if( withTrace ) {
+         aladin.command.console("!!! Dynamic Web server site switching => "+url1);
+         Aladin.trace(2,"Plan "+label+" Dynamic Web server site switching: from "+url+" to "+url1); 
+      }
+      url=url1;
+      return true;
    }
 
    @Override
@@ -2442,7 +2471,7 @@ public class PlanBG extends PlanImage {
          int nOut=0;
          int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
          if( max>=ALLSKYORDER ) for( int order=cmin; order<=max; order++ ) {
-            System.out.println("draw order="+order+" min="+min+" cmin="+cmin+" max="+max);
+//            System.out.println("draw order="+order+" min="+min+" cmin="+cmin+" max="+max);
 
             if( !allKeyReady ) {
                pix = getPixList(v,center,order); 
@@ -2507,7 +2536,7 @@ public class PlanBG extends PlanImage {
                // Tous les fils à tracer sont déjà prêts => on passe
                if( order<max && childrenReady(healpix,v) ) {
                   healpix.filsFree();
-                  healpix.resetTimeAskRepaint();
+//                  healpix.resetTimeAskRepaint();
                   continue;
                }
 
@@ -2539,7 +2568,7 @@ public class PlanBG extends PlanImage {
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
       statNbItems = nb+nb1;
       
-aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyReady?" +allKeyReady":"")+" "+ +nb+"+"+nb1+" losanges in "+statTime+"ms (avg="+statTimeDisplay+"ms)");
+//aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyReady?" +allKeyReady":"")+" "+ +nb+"+"+nb1+" losanges in "+statTime+"ms (avg="+statTimeDisplay+"ms)");
    }
    
    static final private int MAXSTAT=5;
@@ -2778,13 +2807,14 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
       long t = System.currentTimeMillis();
       if( t - timerLastDrawBG < 500 ) return;
       timerLastDrawBG = t;
-      if( pixList!=null ) {
-         Enumeration<HealpixKey> e = pixList.elements();
-         while( e.hasMoreElements() ) {
-            HealpixKey healpix = e.nextElement();
-            if( healpix!=null ) healpix.setTimeAskRepaint(t);
-         }
-      }
+//      System.out.println("PlanBG.shouldRefresh !");
+//      if( pixList!=null ) {
+//         Enumeration<HealpixKey> e = pixList.elements();
+//         while( e.hasMoreElements() ) {
+//            HealpixKey healpix = e.nextElement();
+//            if( healpix!=null ) healpix.setTimeAskRepaint(t);
+//         }
+//      }
       changeImgID();
       aladin.view.repaintAll();
    }
@@ -2793,7 +2823,7 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
     * Gère le chargement des losanges de manière asynchrone
     */
    class HealpixLoader implements Runnable {
-      static final int DELAI =3000;   // delai en ms entre deux demandes de chargement des losanges
+      static final int DELAI =1000;   // delai en ms entre deux demandes de chargement des losanges
 
       private boolean loading;      // false s'il n'y a plus de losange en cours de chargement
       private boolean purging;      // false s'il n'y a plus aucun losange à purger
@@ -2998,10 +3028,12 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
    }
 
    private boolean oLoading = false;
+   static private final int MAXTIMETOBELOADFROMNET = 1000;      // Temps maximum autorisé pour prendre en charge plus d'un losange distant
 
    /** Gère le chargement d'un losange de manière asynchrone
     */
    class Loader implements Runnable {
+      
 
       boolean encore;
       Thread thread;
@@ -3046,26 +3078,61 @@ aladin.trace(4,"Draw["+min+".."+max+"] "+(flagAllsky?" +allsky":"")+" "+(allKeyR
                // On ne charge que si on a le temps...
                if( !aladin.view.mustDrawFast() ) {
                   try {
+                     ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
                      Enumeration<HealpixKey> e = pixList.elements();
                      int min = Integer.MAX_VALUE;
                      HealpixKey minHealpix=null;
+//                     if( e.hasMoreElements() ) System.out.println("Load :");
+
                      while( e.hasMoreElements() ) {
                         final HealpixKey healpix = e.nextElement();
                         int status = healpix.getStatus();
-                        if( (type==0 && status==HealpixKey.TOBELOADFROMCACHE
-                              || type==1 && status==HealpixKey.TOBELOADFROMNET)
-                              && healpix.priority<min ) {
-                           minHealpix=healpix;
-                           min=healpix.priority;
+                        
+                        // Du cache on charge immédiatement et en priorité
+                        if( type==0 && status==HealpixKey.TOBELOADFROMCACHE ) {
+                           healpix.loadFromCache();
+                           if( !healpix.allSky ) setLosangeOrder(healpix.getLosangeOrder());
+                           flagLoad=true;
+//                           System.out.println("   Load "+healpix);
+                           
+                       // Du net on va voir si on a le temps
+                       } else if( type==1 && status==HealpixKey.TOBELOADFROMNET ) {
+                           list.add(healpix);
                         }
+//                        if( (type==0 && status==HealpixKey.TOBELOADFROMCACHE
+//                              || type==1 && status==HealpixKey.TOBELOADFROMNET)
+//                              && healpix.priority<min ) {
+//                           minHealpix=healpix;
+//                           min=healpix.priority;
+//                        }
                      }
-                     if( minHealpix!=null ) {
-                        if( type==0 ) minHealpix.loadFromCache();
-                        else minHealpix.loadFromNet();
-                        if( !minHealpix.allSky ) setLosangeOrder(minHealpix.getLosangeOrder());
+                     
+                     // Quelque chose du Net ?
+                     long t = System.currentTimeMillis();
+                     if( list.size()>0 ) {
+                        Collections.sort(list);
+                        for( HealpixKey h :  list ) {
+                           if( h.getStatus()!=HealpixKey.TOBELOADFROMNET) continue;   // ca a changé, tant pis !
+                          
+//                           System.out.println("   Load "+h);
+                           if( type==0 ) h.loadFromCache();
+                           else h.loadFromNet();
+                           if( !h.allSky ) setLosangeOrder(h.getLosangeOrder());
+                           
+                           // Trop long pour un autre ? =>  ça sera pour le prochain tour
+                           if( System.currentTimeMillis() - t > MAXTIMETOBELOADFROMNET ) break;    
+                        }
                         flagLoad = true;
                      }
-                  } catch( Exception e) {}
+                     
+//                     if( minHealpix!=null ) {
+//                        /* if( type==0 ) minHealpix.loadFromCache();
+//                        else */ minHealpix.loadFromNet();
+//                        if( !minHealpix.allSky ) setLosangeOrder(minHealpix.getLosangeOrder());
+//                        flagLoad = true;
+////                        System.out.println("   Load "+minHealpix);
+//                     }
+                  } catch( Exception e) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
                }
 
                if( flagLoad ) loader.wakeUp();

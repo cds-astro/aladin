@@ -119,15 +119,15 @@ public final class Util {
 	}
 
 	/** Ouverture d'un MyInputStream avec le User-Agent correspondant à Aladin */
-    static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true); }
-    static public MyInputStream openStream(String u,boolean useCache) throws Exception {
-       return openStream(new URL(u),useCache);
+    static public MyInputStream openStream(String u) throws Exception { return openStream(new URL(u),true,10000); }
+    static public MyInputStream openStream(String u,boolean useCache, int timeOut) throws Exception {
+       return openStream(new URL(u),useCache,timeOut);
     }
-    static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true); }
-    static public MyInputStream openStream(URL u, boolean useCache) throws Exception {
+    static public MyInputStream openStream(URL u) throws Exception { return openStream(u,true,10000); }
+    static public MyInputStream openStream(URL u, boolean useCache,int timeOut) throws Exception {
 	   URLConnection conn = u.openConnection();
 	   if( !useCache ) conn.setUseCaches(false);
-	   conn.setConnectTimeout(10000);
+	   conn.setConnectTimeout(timeOut);
 // DEJA FAIT DANS Aladin.myInit() => mais sinon ne marche pas en applet
 	   if( conn instanceof HttpURLConnection ) {
 	      HttpURLConnection http = (HttpURLConnection)conn;
@@ -138,6 +138,7 @@ public final class Util {
 //       MyInputStream mis = new MyInputStream(conn.getInputStream());
 	   return mis.startRead();
 	}
+    
 
     /**
      * Java does not follow HTTP --> HTTPS redirections by default

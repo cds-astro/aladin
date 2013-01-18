@@ -788,7 +788,8 @@ public final class Glu implements Runnable {
    
    /** Retourne la description du ciel d'indice i */
    protected TreeNodeAllsky getGluSky(int i) {
-      return (TreeNodeAllsky)vGluSky.elementAt(i);
+      TreeNodeAllsky gSky = (TreeNodeAllsky)vGluSky.elementAt(i);
+      return gSky;
    }
 
    /**
@@ -1264,7 +1265,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"R") || isKey(name,"ResultDataType")) resultDataType = value;
             else if( isKey(name,"A") || isKey(name,"ActionName") ) {
                // Dans le cas d'un enregistrement d'indirection on mémorise la meilleure
-               // indirection directement dans aladinDic sous la syntaxe "%I gluID"
+               // indirection directement dans aladinDic sous la syntaxe "%I gluID\tgluID..." (le meilleur en premier)
                // Et on garde de coté la meilleure indirection pour après
                if( seeAction != null ) {
                   recI.addElement(seeAction);
@@ -1318,31 +1319,37 @@ public final class Glu implements Runnable {
                   aladinDic.put(aST.nextToken(), url);
                
             // On retient la meilleure indirection (voir après le while)
-            } else if( name.equals("I") || name.equals("SeeAction") ) { 
-               int m = 0;
+            } else if( name.equals("I") || name.equals("SeeAction") ) {
+               int metric = 0;
                int i = 0;
                if( name.equals("I") ) {
                   i = value.indexOf(':'); // Syntaxe courte: %I id:nn
-                  if( i > 0 ) try {
-                     m = Integer.parseInt(value.substring(i + 1));
-                  } catch( Exception e ) {
-                     m = 10000;
-                  }
-                  else i = value.length();
+                  if( i > 0 ) {
+                     try {
+                        metric = Integer.parseInt(value.substring(i + 1));
+                     } catch( Exception e ) {
+                        metric = 10000;
+                     }
+                  } else i = value.length();
                } else {
                   i = value.indexOf(' '); // Syntaxe longue: %SeeAction id
-                                          // availability=nn
-                  if( i > 0 ) try {
-                     m = Integer.parseInt(value.substring(i + 14));
-                  } catch( Exception e ) {
-                     m = 10000;
-                  }
-                  else i = value.length();
+                  // availability=nn
+                  if( i > 0 ) {
+                     try {
+                        metric = Integer.parseInt(value.substring(i + 14));
+                     } catch( Exception e ) {
+                        metric = 10000;
+                     }
+                  } else i = value.length();
                }
-               if( m < maxIndir ) {
-                  maxIndir = m;
-                  seeAction = value.substring(0, i);
-               }
+               String iTag = value.substring(0, i);
+               if( metric < maxIndir ) {
+                  maxIndir = metric;
+//                  seeAction = iTag;
+                  seeAction = iTag+ (seeAction==null ? "" : "\t"+seeAction);  // On insère devant
+               } 
+               else seeAction = (seeAction==null ? "" :seeAction+"\t") + iTag;  // On insère derrière
+               
                memoAlaSites(actionName, value.substring(0, i));
             // Le XLabel ne sert qu'à éviter aux versions Aladin <5 de charger des enregistrements GLU qui ne leur sont pas destinées
             } else if( name.equals("Aladin.Label") || name.equals("Aladin.XLabel")) {   
@@ -1400,14 +1407,15 @@ public final class Glu implements Runnable {
          // On mémorise le filtre pour le serveurs non GLU
          if( !flagLabel ) putAladinFilter(actionName,aladinFilter);
 
-         // On charge tous les enregistrements d'indirections qui nous manque si ils
-         // ne sont pas encore dans le dictionnaire locale
+         // On charge tous les enregistrements d'indirection qui nous manquent si ils
+         // ne sont pas encore dans le dictionnaire local (uniquement le choix par défaut)
          Enumeration eI = recI.elements();
          while( eI.hasMoreElements() ) {
             seeAction = (String) eI.nextElement();
-            if( aladinDic.get(seeAction) == null ) {
-               lastA = seeAction;
-               loadRemoteGluRecord(seeAction, profondeur + 1);
+            String firstAction = new StringTokenizer(seeAction,"\t").nextToken();
+            if( aladinDic.get(firstAction) == null ) {
+               lastA = firstAction;
+               loadRemoteGluRecord(firstAction, profondeur + 1);
             }
          }
 
@@ -1825,9 +1833,12 @@ public final class Glu implements Runnable {
     * @param params les parametres de la marque
     * @param encode true si les parametres sont deja http-encodees sinon false,
     *           ou meme absent
+    * @param indirectionIndex en cas d'indirections GLU, indice de l'indirection retenue (1 = la première - par défaut)
+    *        Dans le cas où il y des indirections en cascade, cette indice ne concerne que la première indirection
     * @return l'URL calculee, ou null en cas de probleme
     */
-   String gluResolver(String id, String params, boolean encode) {
+   String gluResolver(String id, String params, boolean encode) { return gluResolver(id,params,encode,1); }
+   String gluResolver(String id, String params, boolean encode,int indirectionIndex) {
       String[] param;
       int i;
       
@@ -1835,17 +1846,11 @@ public final class Glu implements Runnable {
       i = id.lastIndexOf(',');
       if( i>0 ) id = id.substring(0,i);
 
-      Aladin.trace(3, "Querying the inside GLU <&" + id + (encode ? ",n" : "")
-            + " " + params + ">...");
+      if( !chut ) Aladin.trace(3, "Querying the inside GLU <&" + id + (encode ? ",n" : "")
+                              + (params.length()>0 ? " " + params : "") + ">...");
 
       // Decoupage des parametres
       param = cutParam(params);
-
-      // Encodage des parametres si necessaire => C'EST DESORMAIS FAIT DANS dollarSet()
-//      if( !encode ) {
-//         for( i = 0; i < param.length; i++ )
-//            param[i] = URLEncoder.encode(param[i]);
-//      }
 
       // Recherche du masque de l'URL
       String url = (String) aladinDic.get(id);
@@ -1858,12 +1863,38 @@ public final class Glu implements Runnable {
          loadRemoteGluRecord(id);
          url = (String) aladinDic.get(id);
       }
+      
+      // Pas d'indirection, ni de récursitivité alors qu'on demande une alternative
+      // => ça va pas le faire
+      if( !url.startsWith("%I ") && url.indexOf("<&")<0 && indirectionIndex>1 ) return null;
 
-      // Dans le cas d'une indirection dans le dico GLU inside
-      // J'avais remplacé l'URL par "%I tagGLU", il faut donc que je
-      // recherche récursivement l'URL réelle.
-      while( url != null && url.startsWith("%I ") ) {
-         url = (String) aladinDic.get(url.substring(3));
+      // Dans le cas d'indirections dans le dico GLU inside
+      // J'avais remplacé l'URL par "%I tagGLU\ttagGLU...", il faut donc que je
+      // recherche l'URL réelle (avec éventuellement plusieurs sauts). 
+      // l'indice indirectionIndex indique l'indirection désirée, 1 (la première) par défaut
+      for( int bond=0; url != null && url.startsWith("%I "); bond++ ) {
+         if( bond>16 ) {
+            System.err.println("Too many GLU %I indirections (>16) => certainly a cycle => ignored");
+            return null;
+         }
+         String iTag = "";
+         int end = 2;
+         int nIndex = bond==0 ? indirectionIndex : 1;   // la possibilité de choisir l'indirection n'est possible qu'au premier saut
+         for( int index = 1; index<=nIndex; index++ ) {
+            int  deb = end+1;
+            end = url.indexOf('\t',deb);
+            if( end==-1 ) {
+               if( index != indirectionIndex ){
+                  if( !chut ) System.err.println("GLU %I indirection number "+indirectionIndex+" not existing => ignored");
+                  return null;
+               }
+               end = url.length();
+            }
+            iTag = url.substring(deb,end);
+         }
+//         Aladin.trace(4,"Glu.gluResolver("+id+",...) GLU indirections => "+url.replace("\t","|")+" => select: "+iTag);
+         url = (String) aladinDic.get(iTag);
+         
       }
 
       // Toujours introuvable
@@ -1873,9 +1904,92 @@ public final class Glu implements Runnable {
       url = dollarSet(url, param,encode?ENCODE:0);
 
       // Résolution récursive s'il y a une marque GLU dans l'URL elle-même
-      url = gluRecFilter(url);
+      url = gluRecFilter(url,indirectionIndex);
 
       return url;
+   }
+   
+   
+   /** Teste les indirections possibles d'une marque GLU et replace un des plus rapides en première position dans la liste %I tag\ttag... 
+    * @param urlSuffix permet d'ajouter un suffixe (tel que) à l'URL qui va être testé, null si aucun suffixe
+    * @return true si quelque chose à changer
+    */
+   protected boolean checkIndirection(String id, String urlSuffix) {
+      lastId=null;
+      chut=true;
+      try {
+         // Test des indirections, une à une
+         // et mémorisation de la plus rapide
+         long minTime = Long.MAX_VALUE;
+         int indice = 0;
+         //      byte [] buf = new byte[1024];
+
+         for( int n = 0; ; n++ ) {
+            URL u = getURL(id,"",false,false,n+1);
+            if( u==null ) break;
+            String url=u+ (urlSuffix!=null ? urlSuffix : "");
+
+            MyInputStream in=null;
+            long tps=-1;
+            try {
+               long t1 = System.currentTimeMillis();
+               in = Util.openStream(url,false,5000);
+               if( in==null ) throw new Exception("Util.openStream error");
+               //            try { in.readFully(buf); } catch( EOFException e ) {}
+               //            int j;
+               //            for( j=0; j<buf.length && buf[j]!=0; j++);
+               //            String s = new String(buf,0,0,j);
+               //            System.out.println("["+s+"]");
+
+               long t2 = System.currentTimeMillis();
+               tps = t2-t1;
+
+               // on arrondit au 100 ms prêt, et on ajoute un facteur aléatoire pour 
+               // répartir entre serveurs en gros équivalents
+               tps = (tps/100L) * 100L;
+               tps += (long)(Math.random()*100);
+            } catch( Exception e ) {
+               tps = -1;
+            } finally {
+               if( in!=null ) try { in.close(); } catch( Exception e) {}
+            }
+            Aladin.trace(4,"Glu.checkIndirection(...): "+id+"/"+(n+1)+" => "+url+" => "+tps+"ms");
+            if( tps!=-1 && tps<minTime ) { minTime=tps; indice=n; }
+         }
+
+         if( indice!=0 ) setIndirectionOrderOnLastId(indice);
+      }finally {
+         lastId = null;
+         chut=false;
+      }
+
+      return true;
+   }
+
+   private boolean chut=false; // pour éviter trop de baratin à l'écran lors d'un checkIndirection
+   private String lastId=null;   // Dernière entrée utilisée dans le GLU
+   
+   // Change l'ordre des indirections en mettant en premier celle d'indice "indiceOfTheBest"
+   private void setIndirectionOrderOnLastId(int indiceOfTheBest) {
+      if( lastId==null ) return;        // Y a un problème, pas d'entrée mémorisée
+      if( indiceOfTheBest==0 ) return;  // déjà la meilleure en première position
+
+      String iTags = (String) aladinDic.get(lastId);
+      if( !iTags.startsWith("%I ") ) return;  // pas d'indirection sur cet enregistrement
+      iTags = iTags.substring(3);
+
+      StringTokenizer st = new StringTokenizer(iTags,"\t");
+      String tags[] = new String[st.countTokens()];
+      for( int i=0; i<tags.length; i++ ) tags[i] = st.nextToken();
+
+      StringBuffer seeActions = new StringBuffer("%I "+tags[indiceOfTheBest]);
+      for( int i=0; i<tags.length; i++ ) if( i!=indiceOfTheBest ) seeActions.append("\t"+tags[i]);
+      
+      // Mémorisation du nouvel ordre
+      aladinDic.put(lastId,seeActions+"");
+
+      Aladin.trace(4,"Glu.CheckIndirections("+lastId+") => %I "+tags[indiceOfTheBest]+" => "+getURL(lastId));
+
    }
    
    /** Insertion des paramètres dans une chaine système */
@@ -1889,9 +2003,10 @@ public final class Glu implements Runnable {
     * GluFilter récursif dans le cas d'UN UNIQUE TAG GLU PRESENT dans l'URL
     * retourné (dans le cas d'une résolution GLU inside Java)
     * @param u l'url pouvant contenir des tags GLUs
+    * @param le numéro de l'indirection à choisir éventuellement (par défaut la première)
     * @return l'URL résolu complètement
     */
-   private String gluRecFilter(String u) {
+   private String gluRecFilter(String u,int indirectionIndex) {
       int i, j, k;
 
       // Détermination de l'emplacement du premier TAG GLU
@@ -1905,8 +2020,10 @@ public final class Glu implements Runnable {
          if( k > 0 && k < j ) j = k;
       }
 
-      return u.substring(0, i) + getURL(u.substring(i + 2, j))
-            + u.substring(j + 1);
+      URL url = getURL(u.substring(i + 2, j),"",false,false,indirectionIndex);
+      if( url==null ) return null;
+      
+      return u.substring(0, i) + url + u.substring(j + 1);
 
    }
 
@@ -1963,22 +2080,29 @@ public final class Glu implements Runnable {
     * @return l'URL calculee, ou null en cas de probleme
     */
    public URL getURL(String id) {
-      return getURL(id, "", false);
+      return getURL(id, "", false,true,1);
    }
 
    public URL getURL(String id, String params) {
-      return getURL(id, params, false);
+      return getURL(id, params, false,true,1);
    }
 
    public URL getURL(String id, String params, boolean encode) {
-      return getURL(id, params, encode, true);
+      return getURL(id, params, encode, true,1);
    }
 
    public URL getURL(String id, String params, boolean encode, boolean withLog) {
+      return getURL(id, params, encode, withLog,1);
+   }
+
+   public URL getURL(String id, String params, boolean encode, boolean withLog,int indexIndirection) {
       URL url = null; // L'URL resultante
       String tag; // Le tag GLU a utilise
       String option; // Les options de ce tag GLU
       String u; // L'URL a construire sous forme de chaine
+      
+      // Voir checkIndirection()
+      lastId = id;
       
       // Reseau ?
       if( !Aladin.NETWORK ) {
@@ -1989,10 +2113,10 @@ public final class Glu implements Runnable {
          return null;
       }
 
-      Aladin.trace(4, "Glu.getURL(" + id + "," + params + ", encode=" + encode
-            + ", withLog=" + withLog + ")");
+      if( !chut ) Aladin.trace(4, "Glu.getURL(" + id + (params==null || params.length()==0 ? "": " params=" + params)
+                                    + " encode=" + encode + " withLog=" + withLog + " indexIndirection=" + indexIndirection + ")");
       // log
-      if( withLog ) log(id, params);
+      if( withLog && indexIndirection>1) log(id, params);
 
       // Si les parametres sont deja httpencodes, j'ajoute l'option
       // n au tag GLU histoire de ne pas le faire deux fois
@@ -2006,11 +2130,10 @@ public final class Glu implements Runnable {
          if( Aladin.STANDALONE ) {
 
             // Appel au GLU inside
-            u = gluResolver(id, params, encode);
+            u = gluResolver(id, params, encode,indexIndirection);
 
             if( u == null ) {
-               Aladin.trace(3, "getURL error: glu record \"" + id
-                     + "\" not found !\n");
+               if( !chut ) Aladin.trace(3, "getURL error: glu record \"" + id + "\" not found !\n");
                return null;
             }
             url = new URL(u);
@@ -2021,10 +2144,7 @@ public final class Glu implements Runnable {
          } else {
             option = option + "R";
             tag = "<&" + id + option + " " + params + ">";
-            url = new URL(aladin.CGIPATH + "/" + NPHGLU + "?"
-                  + URLEncoder.encode(tag));
-            //            url = new URL(aladin.getCodeBase()+"/"+NPHGLU+"?" +
-            // URLEncoder.encode(tag));
+            url = new URL(aladin.CGIPATH + "/" + NPHGLU + "?" + URLEncoder.encode(tag));
          }
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) {
@@ -2034,7 +2154,7 @@ public final class Glu implements Runnable {
          return null;
       }
 
-      Aladin.trace(3, "Get: " + ((url == null) ? "null" : url.toString()));
+      if( !chut ) Aladin.trace(3, "Get: " + ((url == null) ? "null" : url.toString()));
       return url;
    }
 

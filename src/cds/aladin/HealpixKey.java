@@ -50,9 +50,11 @@ import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 import java.security.AllPermission;
+import java.util.Comparator;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
@@ -67,7 +69,7 @@ import cds.tools.pixtools.Hpix;
   * Gère un losange Healpix pour un PlanBG
   * @author Anaïs Oberto + Pierre Fernique [CDS]
   */
-public class HealpixKey {
+public class HealpixKey implements Comparable<HealpixKey> {
 
    static final int UNKNOWN           = 0;
    static final int ASKING            = 1;
@@ -291,17 +293,18 @@ public class HealpixKey {
    /** Pour du debuging */
    @Override
    public String toString() {
-      String code = status==HealpixKey.LOADINGFROMNET || status==HealpixKey.LOADINGFROMCACHE ? "**" :
-         status==HealpixKey.TOBELOADFROMNET || status==HealpixKey.TOBELOADFROMCACHE ? " x" : " .";
+      String code = status==HealpixKey.LOADINGFROMNET || status==HealpixKey.LOADINGFROMCACHE ? ">>" :
+         status==HealpixKey.TOBELOADFROMNET || status==HealpixKey.TOBELOADFROMCACHE ? " >" : " .";
 
-      long t = (int)(getAskRepaintTime()/1000L);
+//      long t = (int)(getAskRepaintTime()/1000L);
       return code+"["+Util.align(priority+"",5)+"] "+
              Util.align(getStringNumber()+(fils!=null?">":" "),8)+
              Util.align(getLongFullMem(),8)+
              (truePixels ? " truePix ":"         ")+
              Util.align(getStatusString(),16)+
              ( timer==-1 ? -1 : getLiveTime()/1000 ) +
-             "/"+t + "s => "+VIE[-getLive()]+
+//             "/"+t + "s => "+VIE[-getLive()]+
+              "s => "+VIE[-getLive()]+
              (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"+"+
              timeJPEG+"+"+timePixel+"ms" : "");
    }
@@ -409,6 +412,8 @@ public class HealpixKey {
       }
       imgBuf=null;
    }
+   
+   boolean retry=false;
 
    /** Chargement depuis le réseau */
    protected void loadFromNet() {
@@ -441,6 +446,19 @@ public class HealpixKey {
          pixels=null;
          rgb=null;
          if( getStatus()!=ABORTING ) {
+            
+//            System.out.println("Throwable: "+e.getMessage());
+            
+            // Le test sur FileNotFoundException ne peut suffire car en keepAlive il n'est pas généré
+            boolean notFoundError = e instanceof FileNotFoundException || e.getMessage().indexOf("HTTP response code: 40")>=0;
+            
+            // Peut-on retenter sur un autre site mirroir
+            if( !notFoundError && !retry && planBG.checkSite(true) ) {
+               retry=true;
+               loadFromNet();
+               return;
+            }
+            
             setStatus(ERROR);
             if( this instanceof HealpixAllsky ) planBG.askForRepaint();
 //            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
@@ -705,7 +723,7 @@ public class HealpixKey {
        
        // Fichier distant
        if( filename.startsWith("http://") ) {
-          dis = Util.openStream(filename,false);
+          dis = Util.openStream(filename,false,10000);
           if( skip>0 ) dis.skip(skip);
           buf = readFully(dis, fastLoad );
           dis.close();
@@ -1329,32 +1347,40 @@ public class HealpixKey {
       // reste en vie pour éviter de redemander le chargement
       if( (status==ERROR || status==LOADINGFROMNET) && parente==0 || npix==-1 ) return INLIFE;
 
-      if( getLiveTime()<PlanBG.LIVETIME ) return INLIFE;                       // En vie
-      if( getAskRepaintTime()>2000 ) return DEATH;
+      if( getLiveTime()<=PlanBG.LIVETIME ) return INLIFE;                       // En vie
+//      if( getAskRepaintTime()>2000 ) return DEATH;
+      if( getLiveTime()>PlanBG.LIVETIME+2000 ) return DEATH;
       return MAYBEDEATH;
    }
-
-   /** Retourne le temps depuis la dernière demande de réaffichage (en ms) */
-   synchronized protected long getAskRepaintTime() {
-      if( timeAskRepaint==0 ) return 0;
-      return System.currentTimeMillis()-timeAskRepaint;
-   }
-
+   
    /** Retourne le temps de vie courant du losange (en ms) */
    protected long getLiveTime() {
       return System.currentTimeMillis()-timer;
    }
 
-   long timeAskRepaint=0;
+//   /** Retourne le temps depuis la dernière demande de réaffichage (en ms) */
+//   synchronized protected long getAskRepaintTime() {
+//      if( timeAskRepaint==0 ) return 0;
+//      return System.currentTimeMillis()-timeAskRepaint;
+//   }
 
-   /** Positionne le temps de demande de réaffichage forcé */
-   synchronized protected void setTimeAskRepaint(long t) {
-      if( fils!=null ) {
-         for( int i=0; i<4; i++ ) fils[i].setTimeAskRepaint(t);
-      }
-      if( timeAskRepaint!=0 ) return;
-      timeAskRepaint = t;
-   }
+
+//   long timeAskRepaint=0;
+
+//   /** Positionne le temps de demande de réaffichage forcé */
+//   synchronized protected void setTimeAskRepaint(long t) {
+//      if( fils!=null ) {
+//         for( int i=0; i<4; i++ ) fils[i].setTimeAskRepaint(t);
+//      }
+//      if( timeAskRepaint!=0 ) return;
+//      timeAskRepaint = t;
+//   }
+
+// /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
+// synchronized protected void resetTimeAskRepaint() {
+//    timeAskRepaint=0;
+// }
+
 
    /** Force le losange a dépasser son temps de vie afin d'être rapidement testé */
    protected void setOld() {
@@ -1369,11 +1395,6 @@ public class HealpixKey {
    // Positionne la date du chargement
    private void setTimerLoad() {
       timerLoad = System.currentTimeMillis();
-   }
-
-   /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
-   synchronized protected void resetTimeAskRepaint() {
-      timeAskRepaint=0;
    }
 
    /** Agrandissement du losange de val pixels dans toutes les directions */
@@ -1651,7 +1672,9 @@ public class HealpixKey {
                || aDroite(b[1],b[0],b[3])*aDroite(b[2],b[0],b[3])>=0 ) {
             double d12=dist(b,1,2);
             double d03=dist(b,0,3);
-            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
+            // CA NE FONCTIONNE PAS SI BIEN, MEME SI C'EST PLUS RAPIDE
+//            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
+            boolean flagPatate=false;
             flagSym=flagPatate;
             if( d12<d03 ) {
                p1 = distCentre(b[0],b[1],b[2]);
@@ -1729,22 +1752,17 @@ public class HealpixKey {
       catch( Exception e ) { e.printStackTrace(); return 0; }
 
       Graphics2D g2d = (Graphics2D)g;
-//      AffineTransform saveTransform = g2d.getTransform();
       float opacity = getFadingOpacity();
       Composite saveComposite = g2d.getComposite();
       g2d.setComposite( Util.getImageComposite( opacity ) );
       Shape clip = g2d.getClip();
 
       try {
-         if( th!=-1 ) {
-            n+=drawTriangle(g2d, img, b, th, !flagLosange);
-//            g2d.setTransform(saveTransform);
-         }
+         if( th!=-1 ) n+=drawTriangle(g2d, img, b, th, !flagLosange);
          if( tb!=-1 && !flagLosange ) n+=drawTriangle(g2d, img, b, tb, true);
       } 
       catch( Throwable e ) { planBG.clearBuf(); }
       finally {
-//         g2d.setTransform(saveTransform);
          g2d.setComposite(saveComposite);
          g2d.setClip(clip);
       }
@@ -1757,7 +1775,7 @@ public class HealpixKey {
       planBG.cumulTimeDraw += (t2-t1);
 
       resetTimer();
-      resetTimeAskRepaint();
+//      resetTimeAskRepaint();
       
       if( opacity<1f ) planBG.updateFading(true);
 
@@ -2182,5 +2200,21 @@ public class HealpixKey {
    
    /** Retourne le Norder du losange */
    protected int getLosangeOrder() { return (int)CDSHealpix.log2(width); }
+
+   @Override
+   public int compareTo(HealpixKey o) {
+      return priority - o.priority;
+   }
+   
+   public static void main(String argv[] ) {
+      try {
+         HealpixKey h = new HealpixKey();
+         h.loadFits("http://alasky.u-strasbg.fr/DssColor/Norder3/Dir0/Npix1.jpg");
+      } catch( Throwable e ) {
+         e.printStackTrace();
+      }
+   }
+
+
 
 }

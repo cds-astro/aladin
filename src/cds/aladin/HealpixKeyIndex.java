@@ -131,7 +131,7 @@ public class HealpixKeyIndex extends HealpixKey {
          hi.put(id, hii);
       }
       resetTimer();
-      resetTimeAskRepaint();
+//      resetTimeAskRepaint();
       return hi.size(); 
    }
    
@@ -156,14 +156,15 @@ public class HealpixKeyIndex extends HealpixKey {
       String code = status==HealpixKey.LOADINGFROMNET || status==HealpixKey.LOADINGFROMCACHE ? "**" :
          status==HealpixKey.TOBELOADFROMNET || status==HealpixKey.TOBELOADFROMCACHE ? " x" : " .";
 
-      long t = (int)(getAskRepaintTime()/1000L);
+//      long t = (int)(getAskRepaintTime()/1000L);
       return code+"["+Util.align(priority+"",5)+"] "+
              Util.align(getStringNumber(),8)+
              Util.align(getCounts()+"d",8)+
              Util.align(getLongFullMem(),8)+
              Util.align(getStatusString(),16)+
              ( timer==-1 ? -1 : getLiveTime()/1000 ) +
-             "/"+t + "s => "+VIE[-getLive()]+
+//             "/"+t + "s => "+VIE[-getLive()]+
+             "s => "+VIE[-getLive()]+
              (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"ms" : "");
    }
 

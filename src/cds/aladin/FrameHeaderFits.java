@@ -218,7 +218,6 @@ public class FrameHeaderFits extends JFrame {
    
    private void updateWidgets() {
       if( originalHeader==null ) return;
-      System.out.println("updateWidgets");
       isEdited=true;
       cancel.setEnabled(!originalHeader.equals(ta.getText()));
       save.setEnabled( !originalHeader.equals(ta.getText()));

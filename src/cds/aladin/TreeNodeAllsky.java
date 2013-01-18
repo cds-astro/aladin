@@ -102,7 +102,7 @@ public class TreeNodeAllsky extends TreeNode {
          if( offset==end-1 && offset>0 ) { end=offset; offset = pathOrUrl.lastIndexOf(c,end-1); }
          label = pathOrUrl.substring(offset+1,end);
       }
-      id=label;
+      id="__"+label;
       
       s = prop.getProperty(PlanHealpix.KEY_VERSION);
       if( s!=null ) version=s;
@@ -341,7 +341,10 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** retourne l'URL de base pour accéder au serveur HTTP */
    protected String getUrl() {
-      if( url==null && id!=null ) url = aladin.glu.getURL(id)+"";
+      if( id!=null && aladin.glu.aladinDic.get(id)!=null) {
+         return aladin.glu.getURL(id)+"";
+      }
+//      if( url==null && id!=null ) url = aladin.glu.getURL(id)+"";
       return url;
    }
 

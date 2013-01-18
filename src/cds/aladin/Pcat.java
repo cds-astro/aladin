@@ -354,7 +354,7 @@ Aladin.trace(3,"startTable "+name);
 
    /** L'interface AstroRes */
    public void setField(Field f) {
-Aladin.trace(3,"setField "+f);
+      Aladin.trace(3,"setField "+f);
 
       // tentatives de reperage de la position de l'identificateur
       if( nIdVraisemblance==0 ) {

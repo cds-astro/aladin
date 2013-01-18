@@ -68,7 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> "Transparent" all-sky support 
+ * @beta    <LI> Automatic All-sky + Sesame server switch (load balancing + fault tolerance)
+ * @beta    <LI> "transparency pixel" support 
  * @beta    <LI> 3 panel mode
  * @beta    <LI> Tool plan "movable" property
  * @beta    <LI> SED quick view (from VizieR SED builder)

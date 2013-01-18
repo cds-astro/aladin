@@ -1379,9 +1379,11 @@ final public class TableParser implements XMLConsumer {
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la présence
     * d'une sous chaine RA dans le nom de colonne (-1 sinon) */
    private int raSubName(String s) {
-      if( s.indexOf("RADIUS")>=0 || s.indexOf("Radius")>=0 || s.indexOf("radius")>=0 ) return -1;
-      if( s.startsWith("_RA") || s.startsWith("_ra") ) return 0;
-      if( s.startsWith("RA") || s.startsWith("ra") )   return 1;
+      s = s.toLowerCase();
+      if( s.indexOf("radius")>=0 ) return -1;
+      if( s.startsWith("_ra") ) return 0;
+      if( s.startsWith("ra") )   return 1;
+      if( s.startsWith("alpha") ) return 2;
 //      if( s.indexOf("RA")>0 || s.indexOf("ra")>0 )     return 2;
       return -1;
    }
@@ -1408,11 +1410,13 @@ final public class TableParser implements XMLConsumer {
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la présence
     * d'une sous chaine DE dans le nom de colonne (-1 sinon) */
    private int deSubName(String s) {
-      if( s.startsWith("_DEC") || s.startsWith("_dec") ) return 0;
-      if( s.startsWith("_DE") || s.startsWith("_de") )   return 1;
-      if( s.startsWith("DEC") || s.startsWith("dec") )   return 2;
-      if( s.startsWith("DE") || s.startsWith("de") )     return 3;
-      if( s.indexOf("DE")>0 || s.indexOf("de")>0 )       return 4;
+      s = s.toLowerCase();
+      if( s.startsWith("_dec") ) return 0;
+      if( s.startsWith("_de") )  return 1;
+      if( s.startsWith("dec") )  return 2;
+      if( s.startsWith("de") )   return 3;
+      if( s.indexOf("de")>0 )    return 4;
+      if( s.startsWith("delta") )return 5;
       return -1;
    }
 

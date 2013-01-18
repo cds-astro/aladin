@@ -2283,7 +2283,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       while( it.hasNext() ) {
          Obj s = it.next();
          if( !(s instanceof Source) || !((Source)s).leg.isSED() ) continue;
-//         if( ((Source)s).isSelected() ) continue;
+//         if( ((Source)s).isSelected() ) return null;
          v.add( (Source) s);
       }
       if( v.size()==0 ) return null;
@@ -3103,21 +3103,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             }
          }
 
-//         if( notCoord(coord) ) {
-//            if( flagNow ) {
-//               _saisie=saisie;
-//               result=runB();
-//            } else {
-//               _sesameTaskId = sesameSynchro.start("sesame/"+coord,5000);
-//               waitLockSesame();
-//               _saisie=saisie;
-//               _flagSesameResolve=true;
-//               Thread t = new Thread(this,"AladinSesame");
-//               Util.decreasePriority(Thread.currentThread(), t);
-//               t.start();
-//               return null;
-//            }
-//         }
          if( result ) setRepereByString();
       }
       return result ? saisie : null;
@@ -3628,11 +3613,25 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //            }
 //         }
       } catch( Exception e ) {
+         
+         // On va essayer un autre site Sesame...
+         if( nbSesameCheck<MAXSESAMECHECK && aladin.glu.checkIndirection("Sesame","") ) {
+            URL url1 = aladin.glu.getURL("Sesame",URLEncoder.encode(objet),true);
+            if( !url.equals(url1) ) {
+               nbSesameCheck++;
+               aladin.command.console("!!! Automatic Sesame site switch => "+url1);
+               return sesame(objet);
+            }
+         }
+         
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception(aladin.chaine.getString("NOSESAME"));
       }
       return oco;
    }
+   
+   private int nbSesameCheck=0;                     // Nombre de fois où l'on a changé de site Sesame
+   private static final int MAXSESAMECHECK = 2;     // Nombre MAX de changement de site Sesame
 
 
 //  /** Resolution Sesame par Thread independant pour un plan */
@@ -3789,6 +3788,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             simRep.projection(v);
             String s1=s.substring(s.indexOf('/')+1);
             aladin.status.setText(s1+"    [by Simbad]");
+            s1 = s1+ " [more]";
             simRep.setId(s1);
             simRep.setWithLabel(true);
             aladin.console.setInPad(s1+"\n");
