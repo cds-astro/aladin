@@ -72,6 +72,7 @@ public final class Calque extends JPanel implements Runnable {
    protected boolean flagOverlay;// True si l'echelle doit etre affichee
    protected boolean flagHpxPolar;// True si la polarisation HEALPix doit etre affichee
    protected boolean flagSimbad; // True si la résolution quickSimbad est lancé
+   protected boolean flagVizierSED;  // True si la résolution SED est lancé
    protected boolean flagTip;    // True si les tooptips s'affichent sur les sources pointées
 //   protected boolean flagSyncView=false; // True si le zoom est synchronisé entre les vues
 
@@ -178,6 +179,8 @@ public final class Calque extends JPanel implements Runnable {
       aladin.AUTOSCROLL = aladin.configuration.get(Configuration.SCROLL)!=null;
       String s = aladin.configuration.get(Configuration.SMB);
       flagSimbad = Aladin.OUTREACH || s!=null && !s.startsWith("N");
+      s = aladin.configuration.get(Configuration.VIZIERSED);
+      flagVizierSED = !Aladin.OUTREACH && s!=null && !s.startsWith("N");
       
       setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
 
@@ -561,11 +564,21 @@ public final class Calque extends JPanel implements Runnable {
    private boolean flagFirstSimbad=true;
    /** Activation/desactivation du quick Simbad  */
    protected void setSimbad(boolean flag) {
-      if( flagFirstSimbad ) {
+      if( flagFirstSimbad && flag) {
          aladin.info(aladin.chaine.getString("HFINGER"));
+         flagFirstSimbad=false;
       }
-      flagFirstSimbad=false;
       flagSimbad=flag;
+   }
+
+   private boolean flagFirstVizierSED=true;
+   /** Activation/desactivation du quick VizierSED  */
+   protected void setVizierSED(boolean flag) {
+      if( flagFirstVizierSED && flag ) {
+         aladin.info(aladin.chaine.getString("HFINGERVIZIERSED"));
+         flagFirstVizierSED=false;
+      }
+      flagVizierSED=flag;
    }
 
    /** Retourne le premier plan image qui contient la coordonnée, sinon null */

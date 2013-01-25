@@ -79,6 +79,7 @@ public final class Configuration extends JFrame
    protected static String LANG       = "Language";
    protected static String CSV        = "CSVchar";
    protected static String SMB        = "SimbadPointer";
+   protected static String VIZIERSED  = "VizierSEDPointer";
    protected static String FILTER     = "DedicatedFilter";
    protected static String TRANSOLD   = "FootprintTransparency";
    protected static String TRANS      = "Transparency";
@@ -1442,11 +1443,15 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       s = get(HELP);
       if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
       
-      // On conserve l'état du pointeur Simbad
+      // On conserve l'état du pointeur Simbad et du poiteur VizierSED
       if( !Aladin.OUTREACH ) {
          if( aladin.calque.flagSimbad
                && (get(SMB)==null || !get(SMB).equals("On")) ) set(SMB,"On");
          if( !aladin.calque.flagSimbad && get(SMB)!=null ) remove(SMB);
+         
+         if( aladin.calque.flagVizierSED
+               && (get(VIZIERSED)==null || !get(VIZIERSED).equals("On")) ) set(VIZIERSED,"On");
+         if( !aladin.calque.flagVizierSED && get(VIZIERSED)!=null ) remove(VIZIERSED);
       }
       
       // On conserve la position de la fenêtre

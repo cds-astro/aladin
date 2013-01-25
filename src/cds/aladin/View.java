@@ -3035,8 +3035,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  @return true si le repère a pu être bougé au moins une fois
     */
    protected boolean setRepere(Coord coo) {
+      System.out.println("View.setRepere("+coo+")");
       moveRepere(coo);
-      syncView(1,null,null);
+      syncView(1,null,null,true);              // <= POUR THOMAS
       boolean rep=false;
       for( int i=0; i<modeView; i++ ) {
          viewSimple[i].repaint();
@@ -3520,15 +3521,17 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                taquinBlink|=taquin;
             }
 
-            simbadBlink = calque.flagSimbad;
+            simbadBlink = calque.flagSimbad || calque.flagVizierSED;
 
             if( t2>0 ) blinkMode++;
 
-            // Peut être faut-il lancer une résolution quick Simbad ?
+            // Peut être faut-il lancer une résolution quick Simbad ? 
+            // et/ou VizierSED ?
             if( simbadBlink && startQuickSimbad>0 ) {
                if( System.currentTimeMillis()-startQuickSimbad>500) {
                   startQuickSimbad=0L;
-                  quickSimbad();
+                  if( calque.flagSimbad ) quickSimbad();
+                  if( calque.flagVizierSED && !calque.flagSimbad ) quickVizierSED();
                }
             }
 
@@ -3778,6 +3781,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( s==null || s.trim().length()==0 ) {
          simRep=null;
          aladin.status.setText("No Simbad object here !");
+         if( calque.flagVizierSED ) quickVizierSED();
       } else {
          StringTokenizer st = new StringTokenizer(s,"/");
          try {
@@ -3788,27 +3792,78 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             simRep.projection(v);
             String s1=s.substring(s.indexOf('/')+1);
             aladin.status.setText(s1+"    [by Simbad]");
-            s1 = s1+ " [more]";
             simRep.setId(s1);
             simRep.setWithLabel(true);
             aladin.console.setInPad(s1+"\n");
-            
-            
+
+            // Et on cherche le SED correspondant
+            if( flagSED && calque.flagVizierSED ) {
+               String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
+               aladin.trace(2,"Loading VizieR SED for \""+s2+"\"...");
+               Repere sedRep = null; 
+               sedRep = new Repere(null,coo);
+               sedRep.setType(Repere.CARTOUCHE);
+               sedRep.setSize(TAILLEARROW);
+               sedRep.projection(v);
+               sedRep.setId("SED: "+target);
+               sedRep.setWithLabel(true);
+               aladin.view.zoomview.setSED(s2,sedRep);
+            }
          } catch( Exception e ) { return; }
-         
-         // Et on cherche le SED correspondant
-         if( flagSED ) {
-            String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
-            aladin.trace(2,"Loading VizieR SED for \""+s2+"\"...");
-            aladin.view.zoomview.setSED(s2,simRep);
-         }
-         
+
       }
       Aladin.makeCursor(v,Cursor.DEFAULT_CURSOR);
 
       v.repaint();
    }
+   
+   /** Resolution d'une requête VizieRSED sur la position courante
+    * afin de récupérer le SED sous la souris */
+   protected void quickVizierSED() {
+      ViewSimple v = getMouseView();
+      Coord coo = new Coord();
+      if( v==null || v.pref==null
+            || v.pref.projd==null
+            || v.lastMove==null  ) return;
+      
+      ox = coo.x = v.lastMove.x;
+      oy = coo.y = v.lastMove.y;
+      v.getProj().getCoord(coo);
+      if( Double.isNaN(coo.al) ) return;
+      String target = coo.getSexa();
+      
+      // Est-on sur un objet avec pixel ?
+      if( !v.isMouseOnSomething() ) return;
+      
+      Aladin.makeCursor(v,Aladin.WAITCURSOR);
+      
+       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
+      boolean flagSED=true;
+      Source o;
+      if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
+      
+      try {
+         if( flagSED ) zoomview.setSED((String)null);
+         Repere sedRep = null; //new Repere(plan)
+         coo = new Coord(target);
+         sedRep = new Repere(null,coo);
+         sedRep.setType(Repere.CARTOUCHE);
+         sedRep.setSize(TAILLEARROW);
+         sedRep.projection(v);
+         sedRep.setId("SED: "+target);
+         sedRep.setWithLabel(true);
+         aladin.view.zoomview.setSED(target,sedRep);
 
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         return;
+      }
+       
+      Aladin.makeCursor(v,Cursor.DEFAULT_CURSOR);
+      v.repaint();
+   }
+
+   
   /** Retourne vrai si la chaine contient au moins une lettre */
    static protected boolean notCoord(String s) {
       char a[] = s.toCharArray();

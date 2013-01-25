@@ -86,6 +86,7 @@ public final class Zoom extends JPanel {
       cZoom.setFont(cZoom.getFont().deriveFont(Font.PLAIN));
       for( i=0; i<MINZOOM; i++ ) cZoom.addItem(mzn[i]+"/"+mzd[i]+"x");
       for( i=0; i<MAXZOOM; i++ ) cZoom.addItem((0x1<<i)+"x");
+      
       cZoom.setSelectedIndex(MINZOOM);   // Selectionne par defaut le zoom a 1x
       zoomChoicePanel = new ZoomChoice(aladin,cZoom);
       cZoom.addActionListener(new ActionListener() {
@@ -170,9 +171,13 @@ public final class Zoom extends JPanel {
       return getValue(cZoom.getSelectedIndex());
    }
    protected double getValue(int i) {
+      
+//      if( i>=MINZOOM ) return Math.pow(1.1,i);
       if( i>=MINZOOM ) return (0x1<<(i-MINZOOM));
       return (double)mzn[i]/mzd[i];
    }
+   
+   
 
   /** Retourne le nombre de pixels "sources" pour un zoom donné */
    protected int getNbPixelSrc(double z) {

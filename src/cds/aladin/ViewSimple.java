@@ -3172,8 +3172,8 @@ public class ViewSimple extends JComponent
       }
 
       // Je démarre le décompte des 2 secondes en attendant une résolution QuickSimbad
-      if( aladin.calque.flagSimbad ) {
-            aladin.view.waitQuickSimbad(vs);
+      if( aladin.calque.flagSimbad || aladin.calque.flagVizierSED ) {
+         aladin.view.waitQuickSimbad(vs);
       }
 
       boolean rep=false;

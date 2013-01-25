@@ -373,7 +373,7 @@ public class Aladin extends JApplet
     static public String error;          // La derniere chaine d'erreur (DEVRAIT NE PAS ETRE STATIC)
     protected JMenuBar jBar;      // La barre de menu
     private JButton bDetach;
-    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miXmatch,miROI,miTip,miScroll,
+    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miVizierSED,miXmatch,miROI,miTip,miScroll,
                       miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
                       miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
                       miLock,miDelLock,miStick,miOne,miNorthUp,
@@ -436,7 +436,7 @@ public class Aladin extends JApplet
 
     // Sous-menus
     String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,RETICLE,RETICLEL,NORETICLE,
-           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,TIP,MSCROLL,SESAME,NEW,PREF,
+           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,TIP,MSCROLL,SESAME,NEW,PREF,
            /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
@@ -872,6 +872,7 @@ public class Aladin extends JApplet
        ROI    = chaine.getString("ROI");
        SESAME = chaine.getString("SESAME");
        SIMBAD = chaine.getString("SIMBAD");
+       VIZIERSED = chaine.getString("VIZIERSED");
        TIP    = chaine.getString("TIP");
        MSCROLL= chaine.getString("MSCROLL");
        VOTOOL = chaine.getString("VOTOOL");
@@ -1019,7 +1020,7 @@ public class Aladin extends JApplet
              },
              { {MTOOLS},
                 {SESAME+"|"+meta+" R"},
-                {},{"?"+SIMBAD},{"?"+TIP},/*{"?"+MSCROLL},{CEA_TOOLS},*/
+                {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+TIP},/*{"?"+MSCROLL},{CEA_TOOLS},*/
                 {},{MBKM},{CMD+"|F5"},{MACRO},
                 {},
                    { PROTOPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
@@ -1524,6 +1525,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,ADDCOL))  miAddCol  = ji;
        else if( isMenu(m,XMATCH))  miXmatch  = ji;
        else if( isMenu(m,SIMBAD))  miSimbad  = ji;
+       else if( isMenu(m,VIZIERSED))  miVizierSED  = ji;
        else if( isMenu(m,TIP))     miTip     = ji;
        else if( isMenu(m,MSCROLL)) miScroll  = ji;
        else if( isMenu(m,VOTOOL))  miVOtool  = ji;
@@ -2884,6 +2886,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,CALIMG) ){ launchRecalibImg(null);
       } else if( isMenu(s,CALCAT) ){ launchRecalibCat(null);
       } else if( isMenu(s,SIMBAD) ){ simbadPointer();
+      } else if( isMenu(s,VIZIERSED) ){ vizierSED();
       } else if( isMenu(s,TIP) )   { tip();
       } else if( isMenu(s,MSCROLL) ) { autoscroll();
       } else if( isMenu(s,SESAME) ){ sesame();
@@ -3726,6 +3729,11 @@ public class Aladin extends JApplet
        calque.setSimbad(!calque.flagSimbad);
     }
 
+    /** Lancement ou arrêt du mode VizieR SED Pointer */
+    protected void vizierSED() {
+       calque.setVizierSED(!calque.flagVizierSED);
+    }
+
     /** Activation ou désactivation de l'autoscroll */
     protected void autoscroll() {
        AUTOSCROLL=!AUTOSCROLL;
@@ -4355,6 +4363,7 @@ public void setLocation(Point p) {
          }
          if( miTarget!=null ) miTarget.setSelected(calque.hasTarget());
          if( miSimbad!=null ) miSimbad.setSelected(calque.flagSimbad);
+         if( miVizierSED!=null ) miVizierSED.setSelected(calque.flagVizierSED);
          if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
          if( miPrevPos!=null ) miPrevPos.setEnabled(view.canActivePrevUndo());
          if( miNextPos!=null ) miNextPos.setEnabled(view.canActiveNextUndo());

@@ -323,6 +323,7 @@ public class SkyGen {
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
 //            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
+            "mochight   Build final MOC (based on pixels of generated tiles)" + "\n" +
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
             "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+

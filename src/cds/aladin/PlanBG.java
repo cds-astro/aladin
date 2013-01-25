@@ -2618,7 +2618,7 @@ public class PlanBG extends PlanImage {
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    protected void drawForeground(Graphics gv,ViewSimple v) {
       
-      if( aladin.calque.hasHpxGrid() ) return;
+      if( aladin.calque.hasHpxGrid() || isOverlay() ) return;
       
       Graphics2D g = (Graphics2D)gv;
    
@@ -2705,12 +2705,12 @@ public class PlanBG extends PlanImage {
     * pour atténuer le phénomène de "feston" */
    protected void drawBackground(Graphics g,ViewSimple v) {
       
-      if( aladin.calque.hasHpxGrid() ) return;
+      if( aladin.calque.hasHpxGrid() || isOverlay() ) return;
       
       Projection projd = v.getProj().copy();
       projd.frame=0;
 
-      Color bckCol = color ? Color.black : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
+      Color bckCol = color ? Color.black : cm==null ? Color.white : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
       g.setColor( bckCol );
       rayon=0;
       if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());

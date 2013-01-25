@@ -88,7 +88,7 @@ public final class ServerDialog extends JFrame
 
 	// pour robot
 	Server curServer, localServer, vizierServer,vizierArchives,vizierSurveys,
-           vizierBestof,discoveryServer, aladinServer, fovServer, almaFovServer;
+           vizierBestof,discoveryServer, aladinServer, fovServer, almaFovServer, vizierSED;
 	JButton submit;
 
 	// Les references aux autres objets
