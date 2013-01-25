@@ -3228,7 +3228,7 @@ public class ViewSimple extends JComponent
       if( rainbowF!=null && rainbowF.isDragging( ) ) return;
       
       // Arrêt de la procédure QuickSimbad si nécessaire
-      if( aladin.calque.flagSimbad ) aladin.view.suspendQuickSimbad();
+      if( aladin.calque.flagSimbad || aladin.calque.flagVizierSED ) aladin.view.suspendQuickSimbad();
 
       // Peut etre s'agit-il d'un MegaDrag ?
       if( aladin.view.flagMegaDrag ) { rselect=null; resetClip(); }

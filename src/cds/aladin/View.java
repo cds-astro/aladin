@@ -3035,7 +3035,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  @return true si le repère a pu être bougé au moins une fois
     */
    protected boolean setRepere(Coord coo) {
-      System.out.println("View.setRepere("+coo+")");
       moveRepere(coo);
       syncView(1,null,null,true);              // <= POUR THOMAS
       boolean rep=false;

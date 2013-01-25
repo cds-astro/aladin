@@ -180,7 +180,7 @@ public final class Calque extends JPanel implements Runnable {
       String s = aladin.configuration.get(Configuration.SMB);
       flagSimbad = Aladin.OUTREACH || s!=null && !s.startsWith("N");
       s = aladin.configuration.get(Configuration.VIZIERSED);
-      flagVizierSED = !Aladin.OUTREACH && s!=null && !s.startsWith("N");
+      flagVizierSED = !Aladin.OUTREACH && s!=null && s.startsWith("Y");
       
       setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
 
