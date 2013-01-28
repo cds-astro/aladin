@@ -68,7 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Automatic All-sky + Sesame server switch (load balancing + fault tolerance)
+ * @beta    <LI> All-sky progressive zoom (not only powers of 2)
+ * @beta    <LI> Automatic All-sky + Sesame switcher (load balancing + fault tolerance)
  * @beta    <LI> "transparency pixel" support 
  * @beta    <LI> 3 panel mode
  * @beta    <LI> Tool plan "movable" property
@@ -106,7 +107,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.540";
+    static public final    String VERSION = "v7.541";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";

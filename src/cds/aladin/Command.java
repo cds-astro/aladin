@@ -3683,11 +3683,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
    protected void goTo(String param) {
       StringTokenizer st = new StringTokenizer(param);
-      try {
-         int x = Integer.parseInt(st.nextToken());
-         int y = Integer.parseInt(st.nextToken());
-         a.view.getCurrentView().goTo(x,y);
-      } catch( Exception e ) { e.printStackTrace(); }
+      a.view.gotoThere(param);
+//      try {
+//         int x = Integer.parseInt(st.nextToken());
+//         int y = Integer.parseInt(st.nextToken());
+//         a.view.getCurrentView().goTo(x,y);
+//      } catch( Exception e ) { e.printStackTrace(); }
    }
    
    

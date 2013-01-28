@@ -49,13 +49,18 @@ import javax.swing.event.ChangeListener;
 public final class Zoom extends JPanel {
 
    // Les valeurs generiques
-   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
-   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
+//   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+//   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+//   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
+//   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
    
-   static public final int MINSLIDER=2;
-   static public final int MAXSLIDER=18;
+   static int mzn[] = {     1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+   static int mzd[] = {  1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
+   static final int MAXZOOM=49;   // en puissance de 2, valeur maximal du zoom
+   
+   static public final int MINSLIDER=1;
+   static public final int MAXSLIDER=MAXZOOM-7;
 
    // Les conposantes de l'objet
    ZoomView   zoomView;          // Le canvas associe au Zoom
@@ -170,14 +175,29 @@ public final class Zoom extends JPanel {
       }
       return getValue(cZoom.getSelectedIndex());
    }
+   
    protected double getValue(int i) {
-      
-//      if( i>=MINZOOM ) return Math.pow(1.1,i);
-      if( i>=MINZOOM ) return (0x1<<(i-MINZOOM));
-      return (double)mzn[i]/mzd[i];
+      Plan p = aladin.calque.getPlanBase();
+      if( p!=null && p instanceof PlanBG ) return getValueTest(i);
+      return getValuePow2(i);
    }
    
+   protected double getValueTest(int i) {
+      double z;
+      z = Math.pow(1.2,i-MINZOOM);
+      z=z/10;
+//      System.out.println("i="+i+" => "+z);
+      return z;
+   }
    
+   protected double getValuePow2(int i) {
+      double z;
+      if( i>=MINZOOM ) z = (0x1<<(i-MINZOOM));
+      else z =  (double)mzn[i]/mzd[i];
+//      System.out.println("i="+i+" => "+z);
+      return z;
+   }
+
 
   /** Retourne le nombre de pixels "sources" pour un zoom donné */
    protected int getNbPixelSrc(double z) {

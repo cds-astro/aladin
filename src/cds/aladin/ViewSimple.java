@@ -234,11 +234,21 @@ public class ViewSimple extends JComponent
       aladin.view.setMouseView(this);
    }
 
+   private long lastTime = 0L;
    public void mouseWheelMoved(MouseWheelEvent e) {
       Coord coo=null;
       PointD p=null;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       
+      int mult=1;
+      long time = System.currentTimeMillis();
+      if( lastTime!=0L ) {
+         long delta = time - lastTime;
+         if( delta<15 ) mult=4;
+         else if( delta<30 ) mult=3;
+         else if( delta<50 ) mult=1;
+      }
+      lastTime=time;
 
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
@@ -289,7 +299,7 @@ public class ViewSimple extends JComponent
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
-      vs.syncZoom(-e.getWheelRotation(),coo);
+      vs.syncZoom(-e.getWheelRotation()*mult,coo);
    }
 
    /**

@@ -1725,8 +1725,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       */
      public  boolean gotoThere(String target) {
         try {
+           System.out.println("C'est parti pour "+target);
+           Coord c1 = getCurrentView().getCooCentre();
            Coord c = sesame(target);
-           return gotoThere(c,0,true);
+           gotoAnimation(c1, c);
+//           return gotoThere(c,0,true);
         } catch( Exception e ) { }
         return false;
      }
@@ -1767,6 +1770,32 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
         aladin.calque.zoom.newZoom();
         aladin.view.zoomview.repaint();
         return true;
+     }
+     
+     public void gotoAnimation(final Coord from, final Coord to) {
+        final ViewSimple v = getCurrentView();
+        if( v.locked || to==null ) return;
+        final double zoom = v.zoom;
+        (new Thread() {
+           public void run() {
+              double z = v.zoom;
+              int n=50;
+              for( int i=0; i<n; i++ ) {
+                 if( i<n/2 ) { if( z>0.05 ) z=z/1.1; }
+                 else if( z<zoom ) {
+                    z=z*1.1;
+                    if( z>zoom ) z=zoom;
+                 }
+                 double fct = i/(double)n;
+                 Coord c = new Coord( from.al + (to.al-from.al)*fct, from.del + (to.del-from.del)*fct);
+                 v.setZoomRaDec(z,c.al,c.del);
+                 v.repaint();
+                 System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
+                 Util.pause(50);
+              }
+              gotoThere(to,zoom,true);
+           }
+        }).start();
      }
 
     /** Ajustement de toutes les vues (non ROI )
@@ -1890,7 +1919,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       double nz;
 
       suspendQuickSimbad();
-
+      
+      boolean flagMoveRepere=coo!=null;
+      
       if( vc==null ) vc = getCurrentView();
 
       // Récupération de la taille du pixel de la vue courante afin de déterminer
@@ -1915,6 +1946,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
            } catch( Exception e ) { nz=z; if( aladin.levelTrace>=3) e.printStackTrace(); }
          } else nz=z;
 
+
          // En cas de recalibration on va éviter de déplacer la vue intempestivement
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
@@ -1925,7 +1957,15 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Déplacement soit sur le repère, soit sur la coordonnée passée en paramètre
             boolean flag;
-            if( coo==null ) coo = new Coord(repere.raj,repere.dej);
+            
+//            if( coo==null ) coo = new Coord(repere.raj,repere.dej);
+            // On va désomais pointer à la mi-distance entre la position centrale et le repere
+            // pour faire un effet de glissement
+            if( coo==null ) {
+               Coord c1 = v.getCooCentre();
+               Coord c2 = new Coord(repere.raj,repere.dej);
+               coo = new Coord(c1.al+(c2.al-c1.al)/3,c1.del+(c2.del-c1.del)/3);
+            }
             if( v.pref instanceof PlanBG ) {
                v.getProj().setProjCenter(coo.al,coo.del);
                v.newView(1);
@@ -1946,8 +1986,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( crop!=null && crop.isVisible() ) coo=null;  // pour éviter le déplacement du repère
 
       // Réaffichages nécessaires
-      if( coo==null ) repaintAll();
-       else moveRepere(coo);
+      if( flagMoveRepere ) moveRepere(coo);
+      else repaintAll();
       
       aladin.dialog.adjustParameters();
 
