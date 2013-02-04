@@ -26,6 +26,8 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
