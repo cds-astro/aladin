@@ -259,7 +259,6 @@ public class ServerMocQuery extends Server  {
                out.writeField("limit", limit);
            }
 
-
            HealpixMoc hpxMoc = selectedMoc.getMoc();
            File tmpMoc = File.createTempFile("moc", "fits");
            tmpMoc.deleteOnExit();
