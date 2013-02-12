@@ -295,7 +295,7 @@ final public class ThreadBuilderTile {
                         }
                         if( r>255 ) r=255;
                         if( g>255 ) g=255;
-                        if( b>255 ) g=255;
+                        if( b>255 ) b=255;
                         pixelFinal = (((int)r)<<16) | (((int)g)<<8) | ((int)b);
                      }
                   }
