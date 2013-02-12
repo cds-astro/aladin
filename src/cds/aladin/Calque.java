@@ -177,10 +177,8 @@ public final class Calque extends JPanel implements Runnable {
       reticleMode=aladin.configuration.get(Configuration.RETICLE)!=null ? 2 : 1;
       flagTip=aladin.configuration.get(Configuration.TOOLTIP)!=null;
       aladin.AUTOSCROLL = aladin.configuration.get(Configuration.SCROLL)!=null;
-      String s = aladin.configuration.get(Configuration.SMB);
-      flagSimbad = Aladin.OUTREACH || s!=null && !s.startsWith("N");
-      s = aladin.configuration.get(Configuration.VIZIERSED);
-      flagVizierSED = !Aladin.OUTREACH && s!=null && s.startsWith("Y");
+      flagSimbad = aladin.configuration.getSimbadFlag();
+      flagVizierSED = aladin.configuration.getVizierSEDFlag();
       
       setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
 

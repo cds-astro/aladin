@@ -2240,7 +2240,7 @@ lenLine=1;
       v.addElement( getFitsLine("FIRSTPIX","0","First pixel (0 based)") );
       v.addElement( getFitsLine("LASTPIX",(nbPix-1)+"","Last pixel (0 based)") );
       if( frame!=Localisation.GAL ) {
-         v.addElement( getFitsLine("COORDSYS",frame==Localisation.ECLIPTIC ? "E":"C","Coordinate system") );
+         v.addElement( getFitsLine("COORDSYS",frame==Localisation.ECLIPTIC ? "E": frame==Localisation.GAL ? "G" : "C","Coordinate system") );
       }
 //      v.addElement( getFitsLine("INDXSCHM","IMPLICIT","Indexing: IMPLICIT or EXPLICIT") );
       return v;
@@ -2382,8 +2382,7 @@ lenLine=1;
     * @throws IOException
     */
    protected InputStream saveImageHPX(OutputStream os,PlanImage p) throws Exception {
-	   if (p instanceof PlanBG)
-		   return saveImageHPX(os, (PlanBG)p);
+	   if (p instanceof PlanBG) return saveImageHPX(os, (PlanBG)p);
 	   
       MyByteArrayStream bas = null;
       OutputStream f;
@@ -2395,8 +2394,8 @@ lenLine=1;
       else f = bas = new MyByteArrayStream(10000);
 
 // A modifier par la suite
-      int order=9;
-//      int order=13; // pour mellinger
+//      int order=9;
+      int order=10; // pour mellinger
       int bitpix=flagColor ? 32 : p.bitpix==8 ? 16 : p.bitpix;    // Pour le moment les bytes de sont pas supportés
       int npix=Math.abs(bitpix)/8;
 
@@ -2414,8 +2413,11 @@ lenLine=1;
       byte [] end = getEndBourrage(size);
       f.write(end);
       size += end.length;
+      
+      System.out.println("p="+p+" system="+p.projd.c.getSystem());
 
       // Generation de la deuxième HDU FITS
+//      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.GAL);
       v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.ICRS);
       size=writeFitsLines(f,v,size);
       end = getEndBourrage(size);
@@ -2437,7 +2439,7 @@ lenLine=1;
          double [] radec = CDSHealpix.polarToRadec(polar);
          c.al = radec[0];
          c.del = radec[1];
-         Localisation.frameToFrame(c, Localisation.GAL, Localisation.ICRS);
+         c=Localisation.frameToFrame(c, Localisation.GAL, Localisation.ICRS);
          proj.getXY(c);
 
          if( !flagColor ) {

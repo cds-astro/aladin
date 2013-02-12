@@ -1870,6 +1870,9 @@ public class ViewSimple extends JComponent
          aladin.view.repaintAll();
          return;
       }
+      
+      // Juste pour tester...
+//      fullScreen = !view.isMultiView() && calque.getNbPlanCat()==0;
 
       // Initialisation d'un clic-and-drag de la vue
       if( tool==ToolBox.PAN

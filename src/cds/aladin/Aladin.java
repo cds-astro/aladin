@@ -110,8 +110,8 @@ public class Aladin extends JApplet
     static public final    String VERSION = "v7.541";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
-    static protected final String BETA_VERSION = "    *** BETA VERSION (based on "+VERSION+") ***";
-    static protected final String PROTO_VERSION = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
+    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
+    static protected final String PROTO_VERSION    = "    *** PROTOTYPE VERSION (based on "+VERSION+") ***";
     static protected  String currentVersion = null;	// Version courante dispo
 
     /** MRdecomp active */
@@ -124,11 +124,11 @@ public class Aladin extends JApplet
     static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
     static final String WELCOME           = "Bienvenue sur "+TITRE+
                                             " - "+getReleaseNumber();
-    static String COPYRIGHT         = "(c) 2012 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
+    static String COPYRIGHT         = "(c) 2013 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
 
     static protected String CACHE = ".aladin"; // Nom du répertoire cache
     static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
-                                             // créé, "" si impossible à créer
+                                               // créé, "" si impossible à créer
 
     static protected final String FOVURL  = "http://"+Aladin.ALADINMAINSITE+"/java/FOVs.xml";
     static protected final String TREEURL = "http://"+Aladin.ALADINMAINSITE+"/java/Tree.dic";
@@ -217,6 +217,7 @@ public class Aladin extends JApplet
      // Gère le mode particuliers
     static boolean LOG=true;  // false si on inhibe les logs
     public static boolean BETA=true;  // true si on tourne en mode BETA
+    public static boolean CDS=false;   // true si on tourne en mode CDS
     public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
     static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
@@ -4689,6 +4690,7 @@ public void show() {
          else if( args[i].equals("-nooutreach") )  { OUTREACH=false; setOUTREACH=true; lastArg=i+1; }
          else if( args[i].equals("-nogui") || args[i].equals("-script")) { NOGUI=true; BOOKMARKS=false; NOHUB=true; NOPLUGIN=true; lastArg=i+1; }
          else if( args[i].equals("-local") )       { NETWORK=false; lastArg=i+1; }
+         else if( args[i].equals("-cds") )         { CDS=true; lastArg=i+1; }
          else if( args[i].equals("-nobanner") )    { BANNER=false; lastArg=i+1; }
          else if( args[i].equals("-nocredit") )    { CREDIT=false; lastArg=i+1; }
          else if( args[i].equals("-nobookmarks") ) { BOOKMARKS=false; lastArg=i+1; }

@@ -89,8 +89,14 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       type = CATALOG;
       aladinLogo = "VizieRLogo.gif";
       docUser="http://vizier.u-strasbg.fr";
-      TAGGLU = "VizieRXML++";
+      TAGGLU = "VizieRXML++1";
       aladinLabel="VizieR";
+      
+      // Juste pour revenir au serveur Vizier normal si on n'a pas 
+      // la surcharge GLU pour le nouveau serveur
+      if( !aladin.CDS || aladin.glu.getURL(TAGGLU,"",false,false)==null ) {
+         TAGGLU = TAGGLU.substring(0,TAGGLU.length()-1);
+      } else TESTSERVER=true;
 
       setBackground(Aladin.BLUE);
       setLayout(null);
@@ -108,6 +114,11 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       Dimension d = makeTitle(tp,title);
       tp.setBounds(470/2-d.width/2,y,d.width,d.height); y+=d.height+10;
       add(tp);
+      
+      if( TESTSERVER ) {
+         testServer.setText("(beta server)");
+         testServer.setSelected(false);
+      }
 
       // Premiere indication
       JLabel info1 = new JLabel(INFO1);
@@ -247,6 +258,13 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       // Positionnement des objets pour les resultats
  //     vizier.setRef(vizierlist,legende);
    }
+   
+   // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
+   private String getTagGlu() {
+      if( TESTSERVER && !testServer.isSelected() ) return TAGGLU.substring(0,TAGGLU.length()-1);
+      return TAGGLU;
+   }
+
 
    protected void createChaine() {
       super.createChaine();
@@ -314,7 +332,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       String s = Glu.quote(catalogs)+" "+Glu.quote(target)+" "+Glu.quote(radius);
       if( allColumns ) s = s+" -out.all";
 
-      if( (u=aladin.glu.getURL(TAGGLU,s))==null ) {
+      if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) {
          Aladin.warning(this,WERROR,1);
          return -1;
       }
@@ -453,7 +471,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
             if( (j=item.indexOf('\t'))<0 ) continue;
             String catalogs = item.substring(0,j);
             String s = Glu.quote(catalogs)+" "+Glu.quote(target)+" "+Glu.quote(radius);
-            if( (u=aladin.glu.getURL(TAGGLU,s))==null ) continue;
+            if( (u=aladin.glu.getURL(getTagGlu(),s))==null ) continue;
             item = item.replace('\t', ' ');
 
             Aladin.writeBytes(out,

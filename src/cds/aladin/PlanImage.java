@@ -1672,7 +1672,7 @@ Aladin.trace(3,"Creating calibration from SIA metadata");
                            headerFits=DSShhh();
                            c = new Calib(headerFits.getHeaderFits());
 Aladin.trace(3,"Creating calibration from hhh additional file");
-                        } catch( Exception e ) {}
+                        } catch( Exception e ) { e.printStackTrace(); }
                      }
 
                      if( c==null ) throw new Exception();
@@ -1750,17 +1750,18 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    }
    
    // Charger l'entête fits à partir de la même URL avec l'extension hhh
-   private FrameHeaderFits DSShhh() {
+   private FrameHeaderFits DSShhh() throws Exception  {
+      RandomAccessFile rf=null;
       try {
          String f = filename;
          f=f.substring(0,f.lastIndexOf('.'))+".hhh";
-         RandomAccessFile rf = new RandomAccessFile(new File(f), "r");
+         if( !(new File(f)).exists() ) return null;
+         rf = new RandomAccessFile(new File(f), "r");
          byte [] b = new byte[(int)rf.length()];
          rf.readFully(b);
          FrameHeaderFits h = new FrameHeaderFits(this,new String(b),true);
          return h;
-      } catch( Exception e ) { }
-      return null;
+      }  finally { if( rf!=null ) try { rf.close(); } catch( Exception e1) {} }
    }
 
   /** Determination pour un tableau de bean[] de l'indice du bean min

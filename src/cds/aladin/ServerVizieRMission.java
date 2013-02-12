@@ -68,8 +68,8 @@ public class ServerVizieRMission extends Server  {
       aladinLogo = "VizieRMLogo.gif";
       docUser="http://vizier.u-strasbg.fr";
       
-  }
-
+   }
+   
    protected void createChaine() {
       super.createChaine();
       aladinLabel       = aladin.chaine.getString("ARNAME");

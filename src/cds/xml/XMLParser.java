@@ -284,6 +284,8 @@ public final class XMLParser {
 //      return ch==' ' || ch=='\t' || ch=='\n' || ch=='\r';
 //   }
    
+   static private final char COM[] = { '!','-','-' }; 
+   private boolean flagCOM;
    static private final char CDATA[] = { '!','[','C','D','A','T','A','[' }; 
    private boolean flagCDATA;
    private boolean flagDoublePoint;
@@ -317,12 +319,13 @@ public final class XMLParser {
       boolean ospace=false;		           // le caractère précédent est un espace
       boolean encore=true;		           // test de fin de boucle
       boolean inCDATA=true;                // pour tester si on est sur ![CDATA[
+      boolean inCOM=true;                  // pour tester si on est sur !--
       boolean flagNL=false; 		       // true si le caractère précédent était un \n
 
       minus=ominus=endminus=false;
       bracket=obracket=endbracket=false;
       xml0=xml1=xml2=xml3=xml4=false;
-      flagCDATA=false;
+      flagCDATA=flagCOM=false;
       flagDoublePoint=false;
 
       Util.resetString(curString);         // Pour mémoriser la chaine courante
@@ -359,7 +362,13 @@ public final class XMLParser {
             
                     // Pour repérer s'il y a un éventuel nom de domaine
                     if( c==':' ) flagDoublePoint=true;
-            
+                    
+                    // test sur !-- en debut
+                    if( inCOM ) {
+                       if( c!=COM[l] ) inCOM=false;
+                       else if( l==COM.length-1 ) { flagCOM=true; return c; }
+                    }
+           
                     // test sur ![CDATA[ en début
                     if( inCDATA ) {
                        if( c!=CDATA[l] ) inCDATA=false;
@@ -526,7 +535,7 @@ public final class XMLParser {
 
       // Y a-t-il une erreur ?
       if( c!='>' ) {
-         setError("No end tag");
+         setError("No end tag (mode="+mode+")");
          return -1;
       }
 
@@ -552,6 +561,7 @@ public final class XMLParser {
    *          2 : tag de fin </XXX>
    *          3 : tag de fin avec attribut <XXX ????/>
    *          4 : il s'agit en fait d'une balise <![CDATA[
+   *          5 : il s'agit en fait d'une balise <!--
    * @throws Exception
    */
    private int xmlGetNameTag() throws Exception {
@@ -565,6 +575,7 @@ public final class XMLParser {
       }
       
       if( flagCDATA ) return 4;
+      if( flagCOM ) return 5;
 
       // Traitement du tag </XXX>
       if( length>0 && ch[start]=='/' ) {
@@ -631,10 +642,12 @@ public final class XMLParser {
       }
 
       // Commentaire XML <!-- ... -->  => ignoré
-      char c = ch[start];
-      if( length>=3 && c=='!'
-          && ch[start+1]=='-' && ch[start+2]=='-') return xmlGetParamTag(-1)>=0?1:0;
+      if( code==5 ) return xmlGetParamTag(-1)>=0?1:0;
+//      char c = ch[start];
+//      if( length>=3 && c=='!'
+//          && ch[start+1]=='-' && ch[start+2]=='-') return xmlGetParamTag(-1)>=0?1:0;
 
+      char c = ch[start];
       // Tags spéciaux <!..., <?... => ignoré
       if( c=='?' || c=='!' ) return xmlGetParamTag(0)>=0?1:0;
 

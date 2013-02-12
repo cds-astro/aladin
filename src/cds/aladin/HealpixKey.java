@@ -427,7 +427,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( c=='\\' || c=='/' ) fileName = planBG.url+fileNet;  // Directement sur root
          
 //System.out.println("Start load from NET "+fileName+"...");
-         planBG.nByteReadNet=loadNet(fileName);
+         planBG.nByteReadNet+=loadNet(fileName);
          alreadyCached=false;
          resetTimer();
          setTimerLoad();

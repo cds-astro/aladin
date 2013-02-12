@@ -612,9 +612,9 @@ public class PlanBG extends PlanImage {
    protected boolean Free() {
       String stat = getShortStats();
       if( stat!=null ) aladin.log("HealpixStats",stat);
+      Aladin.trace(4,"PlanBG.Free() stat => "+(stat==null?"null":stat));
       
       hpx2xy = xy2hpx = null;
-//      lastGeneratedFile = null;
       frameOrigin=Localisation.ICRS;
       FreePixList();
       return super.Free();
@@ -3196,20 +3196,30 @@ public class PlanBG extends PlanImage {
    protected String getStats() {
       return "HealpixKey stats: "+label+":\n" +
             ".Created: "+nbCreated+"   Abort: "+nbAborted+"   Free: "+nbFree+"\n" +
-            ".Net   : "+nbLoadNet  +" => "+Util.round(nByteReadNet/(1024*1024.),1)  +"Mb in ~" +Util.round(rateLoadNet(),1)  +"ms"
+            ".Net   : "+nbLoadNet  +" => "+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb in ~" +Util.round(rateLoadNet(),0)  +"ms"
                +" "+streamJpegPixel()+"\n"+
-            ".CacheR: "+nbLoadCache+" => "+Util.round(nByteReadCache/(1024*1024.),1)+"Mb in ~" +Util.round(rateLoadCache(),1)+"ms\n" +
-            ".CacheW: "+nbWriteCache+" => "+Util.round(nByteWriteCache/(1024*1024.),1)+"Mb in ~" +Util.round(rateWriteCache(),1)+"ms\n" +
-            ".Img created: "+nbImgCreated+"    reused:"+nbImgInBuf+"    drawn "+nbImgDraw+" in ~"+Util.round(averageTimeDraw(),2)+"ms\n"
+            ".CacheR: "+nbLoadCache+" => "+Util.round(nByteReadCache/(1024*1024.),2)+"Mb in ~" +Util.round(rateLoadCache(),0)+"ms\n" +
+            ".CacheW: "+nbWriteCache+" => "+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb in ~" +Util.round(rateWriteCache(),0)+"ms\n" +
+            ".Img created: "+nbImgCreated+"    reused:"+nbImgInBuf+"    drawn "+nbImgDraw+" in ~"+Util.round(averageTimeDraw(),0)+"ms\n"
             ;
+   }
+   
+   // Extrait le nom du host du serveur
+   private String getHost() {
+      int i = url.indexOf("//");
+      if( i==-1 ) return "?";
+      int j = url.indexOf("/",i+2);
+      if( j<0 ) j=url.length();
+      return url.substring(i+2,j);
    }
    
    /** retourne une chaine donnant des stats minimales sur l'usage des losanges Healpix */
    protected String getShortStats() { 
-      if( nbLoadNet==0 ) return null;
-      return label+(!url.startsWith("http:")?" Local:":" Net:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(rateLoadNet(),2)  +"ms"
-      +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(rateLoadCache(),2)+"ms"
-      +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(rateWriteCache(),2)+"ms";
+      if( nbLoadNet==0 && nbLoadCache==0 ) return null;
+      boolean flagLocal = isLocalAllSky();
+      return label+(flagLocal?" Local:":" Net["+getHost()+"]:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(rateLoadNet(),0)  +"ms"
+      +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(rateLoadCache(),0)+"ms"
+      +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(rateWriteCache(),0)+"ms";
    }
    
    /** Retourne le temps moyen pour le chargement réseau d'une image, sa décompression JPEG, l'extraction des pixels */

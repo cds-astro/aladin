@@ -3637,10 +3637,6 @@ public final class Calib  implements Cloneable {
       widthd = ynpix * Math.abs(incD) ;
    }
 
-   public int getSyst() {
-      return system ;
-   }
-
    // thomas, 19/11/2007
    // TODO : François, peux tu me vérifier cette méthode ?
    /** S'agit-il d'une calib avec rotation dans le sens direct */

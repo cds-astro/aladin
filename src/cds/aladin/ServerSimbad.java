@@ -60,7 +60,7 @@ public class ServerSimbad extends Server  {
 
       // Juste pour revenir au serveur Simbad normal si on n'a pas 
       // la surcharge GLU pour le nouveau serveur
-      if( !Aladin.BETA || aladin.glu.getURL(tagGlu,"",false,false)==null ) {
+      if( !Aladin.BETA || !aladin.CDS || aladin.glu.getURL(tagGlu,"",false,false)==null ) {
          tagGlu = tagGlu.substring(0,tagGlu.length()-1);
       } else TESTSERVER=true;
       

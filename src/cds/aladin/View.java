@@ -1962,9 +1962,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             // On va désomais pointer à la mi-distance entre la position centrale et le repere
             // pour faire un effet de glissement
             if( coo==null ) {
-               Coord c1 = v.getCooCentre();
-               Coord c2 = new Coord(repere.raj,repere.dej);
-               coo = new Coord(c1.al+(c2.al-c1.al)/3,c1.del+(c2.del-c1.del)/3);
+               coo = new Coord(repere.raj,repere.dej);
+               if( v.pref instanceof PlanBG ) {
+                  Coord c1 = v.getCooCentre();
+                  try {
+                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
+                  } catch( Exception e ) { }
+               }
             }
             if( v.pref instanceof PlanBG ) {
                v.getProj().setProjCenter(coo.al,coo.del);
@@ -3135,7 +3139,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                
             // resolution a-synchrone
             } else {
-               String sesameSyncID = sesameSynchro.start("sesame/"+coord,5000);
+               String sesameSyncID = sesameSynchro.start("sesame/"+coord,7000);
                SesameThread sesameThread = new  SesameThread(saisie, sesameSyncID);
                Util.decreasePriority(Thread.currentThread(), sesameThread);
                sesameThread.start();

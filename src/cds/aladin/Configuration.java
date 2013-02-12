@@ -78,7 +78,7 @@ public final class Configuration extends JFrame
    protected static String POSITION   = "PositionMode";
    protected static String LANG       = "Language";
    protected static String CSV        = "CSVchar";
-   protected static String SMB        = "SimbadPointer";
+   protected static String SIMBAD     = "SimbadPointer";
    protected static String VIZIERSED  = "VizierSEDPointer";
    protected static String FILTER     = "DedicatedFilter";
    protected static String TRANSOLD   = "FootprintTransparency";
@@ -648,6 +648,22 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          throw new Exception("Not available position mode ! ["+mode+"]");
       }
       setConfFrame=true;
+   }
+   
+   /** Retourne le flag de Simbad Quick - par défaut actif */
+   protected boolean getSimbadFlag() {
+      if( Aladin.OUTREACH ) return true;
+      String flag = get(SIMBAD);
+      if( flag==null ) return true;
+      return flag.equalsIgnoreCase("Off"); 
+   }
+   
+   /** Retourne le flag de VizieRSED Quick - par défaut inactif */
+   protected boolean getVizierSEDFlag() {
+      if( Aladin.OUTREACH ) return false;
+      String flag = get(VIZIERSED);
+      if( flag==null ) return false;
+      return flag.equalsIgnoreCase("On"); 
    }
    
    /** Retourne l'indice de la frame qui sera utilisé par défaut pour le tracé des Allsky */
@@ -1445,13 +1461,11 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // On conserve l'état du pointeur Simbad et du poiteur VizierSED
       if( !Aladin.OUTREACH ) {
-         if( aladin.calque.flagSimbad
-               && (get(SMB)==null || !get(SMB).equals("On")) ) set(SMB,"On");
-         if( !aladin.calque.flagSimbad && get(SMB)!=null ) remove(SMB);
+         if( aladin.calque.flagSimbad && !getSimbadFlag() ) remove(SIMBAD);
+         if( !aladin.calque.flagSimbad && getSimbadFlag() ) set(SIMBAD,"Off");
          
-         if( aladin.calque.flagVizierSED
-               && (get(VIZIERSED)==null || !get(VIZIERSED).equals("On")) ) set(VIZIERSED,"On");
-         if( !aladin.calque.flagVizierSED && get(VIZIERSED)!=null ) remove(VIZIERSED);
+         if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
+         if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);
       }
       
       // On conserve la position de la fenêtre
@@ -1926,7 +1940,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             || prop.equalsIgnoreCase("frame"))    setPositionMode(value);
 //      else if( prop.equalsIgnoreCase(PIXEL)
 //            || prop.equalsIgnoreCase("pixel"))    setPixelMode(value);
-      else if( prop.equalsIgnoreCase(SMB)
+      else if( prop.equalsIgnoreCase(SIMBAD)
             || prop.equalsIgnoreCase("simbad"))   setSimbadMode(value);
       else if( prop.equalsIgnoreCase(FILTER)
             || prop.equalsIgnoreCase("filter"))   setFilterMode(value);

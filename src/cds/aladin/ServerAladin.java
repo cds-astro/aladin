@@ -49,16 +49,20 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
    JLabel step1,step2;
    String STEP1,STEP2,BYTREE,DEFFMT,SERVERR;
    
-   String GLUDEFQUAL = "DefQual1";
-   String GLUIMAGE = "Image1";
-   String GLUQUALIFIER = "Aladin.qualifierServer1";    
+//   String GLUDEFQUAL = "DefQual1";
+//   String GLUIMAGE = "Image1";
+//   String GLUQUALIFIER = "Aladin.qualifierServer1";    
+   String GLUDEFQUAL = "DefQual";
+   String GLUIMAGE = "Image";
+   String GLUQUALIFIER = "Aladin.qualifierServer";    
    
-   // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
+  // retourne le tagGLU à utiliser en fonction du choix du serveur test ou non
    // Supprimme le "1" à la fin
-   private String getTagGlu(String tag) {
-      if( TESTSERVER && !testServer.isSelected() ) return tag.substring(0,tag.length()-1);
-      return tag;
-   }   
+   private String getTagGlu(String tag) { return tag; }
+//   private String getTagGlu(String tag) {
+//      if( TESTSERVER && !testServer.isSelected() ) return tag.substring(0,tag.length()-1);
+//      return tag;
+//   }   
 
  /** Creation du formulaire d'interrogation d'Aladin.
    * @param aladin reference
@@ -72,11 +76,11 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       
       // Juste pour revenir au serveur Aladin normal si on n'a pas 
       // la surcharge GLU pour le nouveau serveur
-      if( !Aladin.BETA || aladin.glu.getURL(GLUQUALIFIER,"",false,false)==null ) {
-         GLUDEFQUAL = GLUDEFQUAL.substring(0,GLUDEFQUAL.length()-1);
-         GLUIMAGE = GLUIMAGE.substring(0,GLUIMAGE.length()-1);
-         GLUQUALIFIER = GLUQUALIFIER.substring(0,GLUQUALIFIER.length()-1);         
-      } else TESTSERVER=true;
+//      if( !Aladin.BETA || aladin.glu.getURL(GLUQUALIFIER,"",false,false)==null ) {
+//         GLUDEFQUAL = GLUDEFQUAL.substring(0,GLUDEFQUAL.length()-1);
+//         GLUIMAGE = GLUIMAGE.substring(0,GLUIMAGE.length()-1);
+//         GLUQUALIFIER = GLUQUALIFIER.substring(0,GLUQUALIFIER.length()-1);         
+//      } else TESTSERVER=true;
 
       setBackground(Aladin.BLUE);
       setLayout(null);
@@ -90,7 +94,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       Dimension d = makeTitle(tp,title);
       tp.setBounds(470/2-d.width/2,y,d.width,d.height); y+=d.height+10;
       add(tp);
-      if( TESTSERVER ) testServer.setText("(beta server)");
+//      if( TESTSERVER ) testServer.setText("(beta server)");
      
       // Premiere indication
       step1 = new JLabel(STEP1);
