@@ -747,16 +747,23 @@ final public class Fits {
    public void writeCompressed(OutputStream os,double pixelMin, double pixelMax, byte [] tcm, String format) throws Exception {
       Image imgSrc;
       BufferedImage imgTarget;
+      int [] rgb = this.rgb;
+      int typeInt = format.equals("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+      
       if( bitpix==0 || pixMode==PIX_RGB || pixMode==PIX_ARGB) {
-         if( RGBASFITS ) invImageLine(widthCell,heightCell, rgb);
+         if( RGBASFITS ) {
+            rgb = new int[this.rgb.length];
+            System.arraycopy(this.rgb, 0, rgb, 0, rgb.length);
+            invImageLine(widthCell,heightCell, rgb);
+         }
          imgSrc = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell) );
-         imgTarget = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+         imgTarget = new BufferedImage(width,height,typeInt);
       } else {
          int targetPixMode = format.equals("png") ? PIX_255 : PIX_256;
          byte [] pix8 = toPix8(pixelMin, pixelMax, tcm, targetPixMode);
          imgSrc = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell, getCM(targetPixMode), pix8, 0,widthCell) );
 //         imgTarget = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel) getCM(targetPixMode));
-         imgTarget = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+         imgTarget = new BufferedImage(width,height,typeInt);
       }
 
       Graphics g = imgTarget.createGraphics();
@@ -764,7 +771,7 @@ final public class Fits {
       g.drawImage(imgSrc,xCell,yJpegCell,observer);
       g.dispose();
 
-      if( RGBASFITS && bitpix==0 ) invImageLine(widthCell,heightCell, rgb);
+//      if( RGBASFITS && bitpix==0 ) invImageLine(widthCell,heightCell, rgb);
 
       ImageWriter writer = ImageIO.getImageWritersByFormatName(format).next();
       ImageWriteParam iwp = writer.getDefaultWriteParam();
