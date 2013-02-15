@@ -3080,8 +3080,8 @@ public class PlanBG extends PlanImage {
                   try {
                      ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
                      Enumeration<HealpixKey> e = pixList.elements();
-                     int min = Integer.MAX_VALUE;
-                     HealpixKey minHealpix=null;
+//                     int min = Integer.MAX_VALUE;
+//                     HealpixKey minHealpix=null;
 //                     if( e.hasMoreElements() ) System.out.println("Load :");
 
                      while( e.hasMoreElements() ) {

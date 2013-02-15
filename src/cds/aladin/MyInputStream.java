@@ -1417,10 +1417,10 @@ public long skip(long n) throws IOException {
              try {
                 while( offsetCache+i+2+size>=inCache ) loadInCache(8192);
              } catch( EOFException e ) { }
-if( Aladin.levelTrace==4 ) {
-   Aladin.trace(4,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
-   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-}
+//if( Aladin.levelTrace==4 ) {
+//   Aladin.trace(4,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
+//   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+//}
              if( mode==0xE1 ) {
                 memoJpegAVMCalib(offsetCache+i+4,size-2);
 
@@ -1448,10 +1448,10 @@ if( Aladin.levelTrace==4 ) {
              try {
                 while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
              } catch( EOFException e ) { encore=false; }
-if( Aladin.levelTrace==4 ) {
-   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
-   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-}
+//if( Aladin.levelTrace==4 ) {
+//   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
+//   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+//}
              if( chunk.equals("tEXt" ) ) {
 //                memoJpegAVMCalib(offsetCache+i+8,size);
                 if( memoPNGCalib(offsetCache+i+8,size) ) return true;

@@ -3616,15 +3616,15 @@ Aladin.trace(2,"Loading PDS image");
 
          g2d.setTransform(tr);
          g2d.drawImage(getImage(v,false),dx,dy,aladin);
-         g2d.setComposite(saveComposite);
-         g2d.setTransform(saveTransform);
 
          long t2 = Util.getTime();
          statTimeDisplay=t2-t1;
       }catch( Exception e ) { 
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+      } finally { 
          if( g2d!=null && saveComposite!=null ) g2d.setComposite(saveComposite);
          if( g2d!=null && saveTransform!=null ) g2d.setTransform(saveTransform);
-         if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      }
    }
 
    /** récupération de la transformée affine correspondant au tracé sur v */

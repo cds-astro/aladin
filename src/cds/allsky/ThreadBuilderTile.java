@@ -225,10 +225,11 @@ final public class ThreadBuilderTile {
          }
          
          // cherche la valeur à affecter dans chacun des pixels healpix
-         double pixval[] = new double[Constante.MAXOVERLAY];   // on va éviter de passer par le total afin d'éviter un débordement
-         double pixcoef[] = new double[Constante.MAXOVERLAY];  
+         int overlay = fin-deb;
+         double pixval[] = new double[overlay];   // on va éviter de passer par le total afin d'éviter un débordement
+         double pixcoef[] = new double[overlay];  
          double [] pixvalG=null,pixvalB=null;
-         if( flagColor ) { pixvalG = new double[Constante.MAXOVERLAY]; pixvalB = new double[Constante.MAXOVERLAY]; }
+         if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
          
          for (int y = 0; y < out.height; y++) {
             if( context.isTaskAborting() ) break;
@@ -246,6 +247,7 @@ final public class ThreadBuilderTile {
                String lastFitsFile=null;
                double lastX=-1,lastY=-1;
 //               for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
+               
                for( int i=deb; i<fin; i++ ) {
                   file = downFiles.get(i);
                   double currentBlankOrig = !hasAlternateBlank ? file.fitsfile.getBlank() : blankOrig;
@@ -263,10 +265,6 @@ final public class ThreadBuilderTile {
                      lastFitsFile=file.fitsfile.getFilename();
                   }
                   
-                  // Chargement du buffer si nécessaire
-//                  file.fitsfile.reloadBitmap();
-                  // IL FAUDRAIT ICI FAIRE DE LA PLACE SI NECESSAIRE
-
                   // Cas RGB
                   if( flagColor ) {
                      int pix = getBilinearPixelRGB(file.fitsfile,coo);
@@ -299,9 +297,9 @@ final public class ThreadBuilderTile {
                            g += (pixvalG[i]*pixcoef[i])/totalCoef;
                            b += (pixvalB[i]*pixcoef[i])/totalCoef;
                         }
-                        if( r>255 ) r=255;
-                        if( g>255 ) g=255;
-                        if( b>255 ) g=255;
+                        if( r>255 ) r=255; else if( r<0 ) r=0;
+                        if( g>255 ) g=255; else if( g<0 ) g=0;
+                        if( b>255 ) g=255; else if( b<0 ) b=0;
                         pixelFinal = (((int)r & 0xFF)<<16) | (((int)g & 0xFF)<<8) | ((int)b & 0xFF);
                      }
                   }
@@ -356,7 +354,9 @@ final public class ThreadBuilderTile {
    	   else if( x>width-mx ) coefx = (width-x)/mx;
           if( y<my ) coefy =  y/my;
           else if( y>height-my ) coefy = (height-y)/my;
-          return Math.min(coefx,coefy);
+       double c = Math.min(coefx,coefy);
+       if( c<0 ) return 0;
+       return c;
    	}
 
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au centre 
@@ -434,7 +434,7 @@ final public class ThreadBuilderTile {
       int ox2= x2;
       int oy2= y2;
       
-    if( x2<f.xCell || y2<f.yCell ||
+      if( x2<f.xCell || y2<f.yCell ||
         x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return 0;
 
       // Sur le bord, on dédouble le dernier pixel
@@ -444,15 +444,11 @@ final public class ThreadBuilderTile {
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
       int b0 = f.getPixelRGBJPG(ox1,oy1);
-      
       if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
+      
       int b1 = f.getPixelRGBJPG(ox2,oy1);
       int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
-//      int b0 = f.getPixelRGB(ox1,oy1);
-//      int b1 = f.getPixelRGB(ox2,oy1);
-//      int b2 = f.getPixelRGB(ox1,oy2);
-//      int b3 = f.getPixelRGB(ox2,oy2);
       
       int pix=0xFF;
       for( int i=16; i>=0; i-=8 ) {
@@ -591,7 +587,7 @@ final public class ThreadBuilderTile {
                   // Mode FITS classique ou JPEG/PNG avec calib
                   else {
                      fitsfile=context.cacheFits.getFits(fitsfilename,false,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
-                     //					   fitsfile.loadFITS(fitsfilename);
+//                     					   fitsfile.loadFITS(fitsfilename);
                   }
 
                   fitsfile.setFilename(fitsfilename);

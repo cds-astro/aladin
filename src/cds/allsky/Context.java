@@ -136,7 +136,7 @@ public class Context {
    public double getBlankOrig() { return blankOrig; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
    public HealpixMoc getArea() { return mocArea; }
-   public CoAddMode getCoAddMode() { return coAdd; }
+   public CoAddMode getCoAddMode() { return isColor() ? CoAddMode.REPLACETILE : coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
    public String getSkyval() { return skyvalName; }

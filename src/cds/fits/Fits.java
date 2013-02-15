@@ -163,7 +163,7 @@ final public class Fits {
    public void loadJpeg(String filename, boolean color) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
-      is = is.startRead();
+//      is = is.startRead();
       is.getType();   // Pour être sûr de lire le commentaire éventuel
       if( is.hasCommentCalib() ) {
          headerFits = is.createHeaderFitsFromCommentCalib();
@@ -266,9 +266,10 @@ final public class Fits {
 
       if( flagColor ) {
          pixMode = dis.getType()==MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
-         rgb = new int[widthCell*heightCell];
-         imgBuf.getRGB(0, 0, widthCell, heightCell, rgb, 0, widthCell);
-         if( RGBASFITS ) invImageLine(widthCell,heightCell,rgb);
+//         int [] rgb1 = new int[widthCell*heightCell];
+         int [] rgb1 = imgBuf.getRGB(0, 0, widthCell, heightCell, null, 0, widthCell);
+         if( RGBASFITS ) invImageLine(widthCell,heightCell,rgb1);
+         rgb = rgb1; rgb1=null;
 
       } else {
          pixMode = dis.getType()==MyInputStream.PNG ? PIX_255 : PIX_256;
@@ -852,7 +853,7 @@ final public class Fits {
 
    /** Retourne la description de la cellule courante selon la syntaxe [x,y-wxh]
     * ou "" si le fichier n'a pas été ouvert en mode mosaic */
-   public String getCellSuffix() throws Exception {
+   public String getCellSuffix() {
       if( !hasCell() ) return "";
       return "["+xCell+","+yCell+"-"+widthCell+"x"+heightCell+"]";
    }
@@ -1545,10 +1546,13 @@ final public class Fits {
             double fct2 = weight2[i] / (weight1[i]+weight2[i]);
             weight1[i]+=weight2[i];
             weight2[i]=0;
-            int t  = ((0xFF000000 & a.rgb[i]) | (0xFF000000 & rgb[i]) )!=0 ? 0xFF000000 : 0;
-            int r  =  (int)( (0x00FF0000 & a.rgb[i])*fct1 + (0x00FF0000 & rgb[i])*fct2 );
-            int g  =  (int)( (0x0000FF00 & a.rgb[i])*fct1 + (0x0000FF00 & rgb[i])*fct2 );
-            int b  =  (int)( (0x000000FF & a.rgb[i])*fct1 + (0x000000FF & rgb[i])*fct2 );
+            int t  = ((0xFF000000 & rgb[i]) | (0xFF000000 & a.rgb[i]) )!=0 ? 0xFF000000 : 0;
+//            int r  =  (int)( (rgb[i]&0xFF0000)*fct1 + (a.rgb[i]&0xFF0000)*fct2 );
+//            int g  =  (int)( (rgb[i]&0xFF00  )*fct1 + (a.rgb[i]&0xFF00  )*fct2 );
+//            int b  =  (int)( (rgb[i]&0xFF    )*fct1 + (a.rgb[i]&0xFF    )*fct2 );
+            int r  =  (int)( ((rgb[i]>>16)&0xFF)*fct1 + ((a.rgb[i]>>16)&0xFF)*fct2 )<<16;
+            int g  =  (int)( ((rgb[i]>> 8)&0xFF)*fct1 + ((a.rgb[i]>> 8)&0xFF)*fct2 )<< 8;
+            int b  =  (int)(  (rgb[i]&0xFF)*fct1 + (a.rgb[i]&0xFF)*fct2 );
             rgb[i] = t | r | g | b;
          }
       }
@@ -1595,6 +1599,10 @@ final public class Fits {
       int p = filename.lastIndexOf('[');
       if( p>=0 ) filename=filename.substring(0,p);
       this.filename = filename;
+   }
+   
+   public String getFileNameExtended() {
+      return getFilename()+getCellSuffix();
    }
 
    public String getFilename() {

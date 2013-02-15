@@ -126,7 +126,7 @@ public class CacheFits {
          if( isOver() ) clean();
          try {
             f=add(fileName,jpeg,flagLoad);
-         } catch( Throwable e ) {
+        } catch( Throwable e ) {
             System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
             maxMem /= 2;
             try {
@@ -322,7 +322,7 @@ public class CacheFits {
 
       public String toString() {
          long now = System.currentTimeMillis();
-         return "["+id+"] age="+(now-timeAccess)+" => "+fits.getFilename();
+         return "["+id+"] age="+(now-timeAccess)+" => "+fits.getFileNameExtended();
       }
    }
 
