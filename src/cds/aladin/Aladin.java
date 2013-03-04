@@ -880,7 +880,7 @@ public class Aladin extends JApplet
        SIMBAD = chaine.getString("SIMBAD");
        VIZIERSED = chaine.getString("VIZIERSED");
        TIP    = chaine.getString("TIP");
-       MSCROLL= chaine.getString("MSCROLL");
+//       MSCROLL= chaine.getString("MSCROLL");
        VOTOOL = chaine.getString("VOTOOL");
        PREF   = chaine.getString("PREF");
        NEW    = NOAPPLETPREFIX+chaine.getString("NEW");
