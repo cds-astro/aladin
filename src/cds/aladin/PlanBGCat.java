@@ -34,7 +34,7 @@ import cds.tools.Util;
 public class PlanBGCat extends PlanBG {
 
 
-   static final protected int MAXGAPORDER = 3;  // Décalage maximal autorisé
+   static final protected int MAXGAPORDER = 2;  // Décalage maximal autorisé
    private int gapOrder=0;                      // Décalage de l'ordre Max => changement de densité
 
    protected PlanBGCat(Aladin aladin) {

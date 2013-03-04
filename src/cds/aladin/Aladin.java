@@ -68,6 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> "match" command script
+ * @beta    <LI> Catalog proper motion support
  * @beta    <LI> All-sky progressive zoom (not only powers of 2)
  * @beta    <LI> Automatic All-sky + Sesame switcher (load balancing + fault tolerance)
  * @beta    <LI> "transparency pixel" support 
@@ -83,7 +85,9 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> VOTable base64 BINARY STREAM with variable fields bug fix
+ * @beta    <LI> FOV target precision bug fixed
+ * @beta    <LI> EPS NorthUP bug fixed
+ * @beta    <LI> VOTable base64 BINARY STREAM with variable fields bug fixed
  * @beta    <LI> HEALPix sky => RGB missing tiles supported
  * @beta <UL>
  * @beta </UL>
@@ -107,7 +111,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.541";
+    static public final    String VERSION = "v7.544";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -222,7 +226,6 @@ public class Aladin extends JApplet
     static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
     static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
-    static boolean AUTOSCROLL=false; // autoscroll en clic & drag
 
     static boolean ENABLE_FOOTPRINT_OPACITY=true; // footprints en transparence ?
     static float DEFAULT_FOOTPRINT_OPACITY_LEVEL=0.15f+0.000111f; // niveau de transparence (entre 0.0 et 1.0)
@@ -375,7 +378,7 @@ public class Aladin extends JApplet
     static public String error;          // La derniere chaine d'erreur (DEVRAIT NE PAS ETRE STATIC)
     protected JMenuBar jBar;      // La barre de menu
     private JButton bDetach;
-    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miVizierSED,miXmatch,miROI,miTip,miScroll,
+    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miVizierSED,miXmatch,miROI,miTip,
                       miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
                       miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
                       miLock,miDelLock,miStick,miOne,miNorthUp,
@@ -443,7 +446,7 @@ public class Aladin extends JApplet
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
            DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,
-           RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,
+           RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
            PANEL1,PANEL2C,PANEL2L,PANEL3,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENCAT,
@@ -795,8 +798,9 @@ public class Aladin extends JApplet
        UNSELECT= chaine.getString("MUNSELECT");
        FILTERB = chaine.getString("MFILTERB");
        FILTER  = chaine.getString("SLMFILTER");
+       PANEL   = chaine.getString("MPANEL");
        PANEL1  = chaine.getString("MPANEL1");
-       PANEL2C  = chaine.getString("MPANEL2");
+       PANEL2C = chaine.getString("MPANEL2");
        PANEL2L  = chaine.getString("MPANEL2L");
        PANEL3  = chaine.getString("MPANEL3");
        PANEL4  = chaine.getString("MPANEL4");
@@ -1038,10 +1042,10 @@ public class Aladin extends JApplet
              },
              { {MVIEW},
                 {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-                {},{MOREVIEWS+"|F9"},{ONEVIEW},{ROI},
-                {},{"?"+LOCKVIEW},{DELLOCKVIEW},
-                {},{"%"+PANEL1+"|shift F1"},{"%"+PANEL2C}, {"%"+PANEL3},
-                   {"%"+PANEL4+"|shift F2"},{"%"+PANEL9+"|shift F3"},{"%"+PANEL16+"|shift F4"},
+                {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL3,
+                   "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
+                {},{MOREVIEWS+"|F9"},{ONEVIEW}, {"?"+LOCKVIEW}, /* {ROI},
+                {},{"?"+LOCKVIEW},{DELLOCKVIEW}, */
 //                {},{"?"+STICKVIEW},
                 {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
              },
@@ -1529,7 +1533,6 @@ public class Aladin extends JApplet
        else if( isMenu(m,SIMBAD))  miSimbad  = ji;
        else if( isMenu(m,VIZIERSED))  miVizierSED  = ji;
        else if( isMenu(m,TIP))     miTip     = ji;
-       else if( isMenu(m,MSCROLL)) miScroll  = ji;
        else if( isMenu(m,VOTOOL))  miVOtool  = ji;
        else if( isMenu(m,MBGKG))   miGluSky  = ji;
        else if( isMenu(m,GLUTOOL)) miGluTool = ji;
@@ -2598,6 +2601,7 @@ public class Aladin extends JApplet
    /** Activation d'un background */
    protected void allsky(TreeNodeAllsky gSky) { allsky(gSky,null,null,null); }
    protected void allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
+      aladin.console.setCommand("get allsky("+Tok.quote(gSky.id)+")");
       if( !gSky.isMap() ) calque.newPlanBG(gSky,label,target,radius);
       else calque.newPlan(gSky.getUrl(), label, gSky.copyright);
       toolBox.repaint();
@@ -2890,7 +2894,6 @@ public class Aladin extends JApplet
       } else if( isMenu(s,SIMBAD) ){ simbadPointer();
       } else if( isMenu(s,VIZIERSED) ){ vizierSED();
       } else if( isMenu(s,TIP) )   { tip();
-      } else if( isMenu(s,MSCROLL) ) { autoscroll();
       } else if( isMenu(s,SESAME) ){ sesame();
 //      } else if( isMenu(s,CEA_TOOLS) ){ showCEATools();
       } else if( isMenu(s,MACRO) ) { macro();
@@ -3736,11 +3739,6 @@ public class Aladin extends JApplet
        calque.setVizierSED(!calque.flagVizierSED);
     }
 
-    /** Activation ou désactivation de l'autoscroll */
-    protected void autoscroll() {
-       AUTOSCROLL=!AUTOSCROLL;
-    }
-
     /** Activation ou désactivation des tooltips sur les objets */
     protected void tip() {
        calque.flagTip=!calque.flagTip;
@@ -4337,7 +4335,6 @@ public void setLocation(Point p) {
             miRainbow.setSelected(view.hasRainbow());
          }
          if( miTip!=null ) miTip.setSelected(calque.flagTip);
-         if( miScroll!=null ) miScroll.setSelected(AUTOSCROLL);
          if( miMore!=null ) miMore.setEnabled(!view.allImageWithView());
          if( miOne!=null ) miOne.setEnabled(view.isMultiView() || view.getNbUsedView()>1 );
          if( miNext!=null ) miNext.setEnabled(nbPlanImg>1);

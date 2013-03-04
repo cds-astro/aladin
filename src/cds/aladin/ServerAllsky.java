@@ -118,6 +118,7 @@ public class ServerAllsky extends ServerTree  {
       } catch( Exception e ) {
          aladin.command.printConsole("!!! "+e.getMessage());
       }
+
       aladin.allsky(gSky,label,target,radius);
       
       return j;
@@ -141,6 +142,7 @@ public class ServerAllsky extends ServerTree  {
    public void submit(TreeNode n) {
       TreeNodeAllsky gsky = (TreeNodeAllsky)n;
       gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
+      
       aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
    }
 

@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
+import cds.astro.Coo;
 import cds.astro.ICRS;
 import cds.astro.Proj3;
 import cds.tools.Util;
@@ -640,23 +641,27 @@ public final class PlanField extends Plan {
        objet=co.getSexa();
 
        // Quelle était la position du centre de projection lorsque this.roll==0
-       if( this.roll!=0 ) {
-          a = new Proj3(Proj3.TAN,raR,deR);
-          cosr=AstroMath.cosd(-this.roll); sinr=AstroMath.sind(-this.roll);
-          a.computeXY(raP, deP);
-          offsetX = a.getX();
-          offsetY = a.getY();
-          x =  offsetX*cosr + offsetY*sinr;
-          y = -offsetX*sinr + offsetY*cosr;
-          a.computeAngles(x,y);
-          raP = a.getLon();
-          deP = a.getLat();
-       }
-
+//       if( this.roll!=0 ) {
+//          a = new Proj3(Proj3.TAN,raR,deR);
+//          cosr=AstroMath.cosd(-this.roll); 
+//          sinr=AstroMath.sind(-this.roll);
+//          a.set( new Coo(raP,deP));
+////          a.computeXY(raP, deP);
+//          offsetX = a.getX();
+//          offsetY = a.getY();
+//          x =  offsetX*cosr + offsetY*sinr;
+//          y = -offsetX*sinr + offsetY*cosr;
+//          a.set(x,y);
+////          a.computeAngles(x,y);
+//          raP = a.getLon();
+//          deP = a.getLat();
+//       }
+       
        a = new Proj3(Proj3.TAN,raP,deP);
 
        Position rot = getRotCenterObjet();
-       a.computeXY(raR, deR);
+       a.set( new Coo(raR,deR));
+//      a.computeXY(raR, deR);
        offsetX = a.getX();
        offsetY = a.getY();
        rot.x = offsetX;
@@ -667,7 +672,7 @@ public final class PlanField extends Plan {
        this.roll = roll;
        if( roll!=0. ) { cosr=AstroMath.cosd(roll); sinr=AstroMath.sind(roll); }
 
-       for( int i=0; i<pcat.nb_o; i++ ) {
+       for( int i=1; i<pcat.nb_o; i++ ) {
           Position p = (Position)pcat.o[i];
 
           if( p instanceof Forme ) {
@@ -684,7 +689,8 @@ public final class PlanField extends Plan {
                    x=xr + offsetX;
                    y=yr + offsetY;
                 }
-                a.computeAngles(x,y);
+//                a.computeAngles(x,y);
+                a.set(x,y);
                 p.raj = a.getLon();
                 p.dej = a.getLat();
 
@@ -700,7 +706,8 @@ public final class PlanField extends Plan {
                 x=xr + offsetX;
                 y=yr + offsetY;
              }
-             a.computeAngles(x,y);
+//             a.computeAngles(x,y);
+             a.set(x,y);
              p.raj = a.getLon();
              p.dej = a.getLat();
           }
@@ -996,14 +1003,14 @@ public final class PlanField extends Plan {
    protected String getProjCenter() {
       Position c = getProjCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.ARCSEC+3);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3);
    }
 
    /** Return FoV rotation center in the current Aladin coordinate frame */
    protected String getRotCenter() {
       Position c = getRotCenterObjet();
       if( c==null ) return "";
-      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.ARCSEC+3);
+      return aladin.localisation.J2000ToString(c.raj,c.dej,Astrocoo.MAS+3);
    }
 
    private Astrocoo afs = new Astrocoo(new ICRS());    // Frame ICRS (la reference de base)

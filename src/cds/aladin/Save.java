@@ -1547,7 +1547,7 @@ public final class Save extends JFrame implements ActionListener {
           o = filename==null ?
                (OutputStream)System.out :
                (OutputStream)new FileOutputStream(aladin.getFullFileName(filename));
-        if( (format&EPS)==EPS  ) saveEPS(v,o);
+        if( (format&EPS)==EPS  ) saveEPS(v,w,h,o);
         else {
             Image img = v.getImage(w,h);
             if( (format&JPEG)==JPEG )  {
@@ -1668,22 +1668,24 @@ public final class Save extends JFrame implements ActionListener {
     * @param v la vue à sauvegarder
     * @param o le flux de sortie
     */
-   protected void saveEPS(ViewSimple v,OutputStream o) throws Exception {
+   protected void saveEPS(ViewSimple v,int w, int h, OutputStream o) throws Exception {
       PrintStream out = new PrintStream(o);
       EPSGraphics epsg = new EPSGraphics(out,"Aladin-chart",null,0,0,v.rv.width,v.rv.height);
 
       // Affichage de l'image
-      if( v.imgprep!=null && v.pref.active ) epsg.drawImage(v.imgprep,v.dx,v.dy,v.aladin);
-      // test pour sortie EPS des footprints avec transparence
-//      if( v.imgprep!=null && v.pref.active ) epsg.drawImage(v.getImage(0,0),0,0,v.aladin);
+       if( v.imgprep!=null && v.pref.active ) {
+          epsg.drawImage(v.getImage(w,h,false),0,0,v.aladin);
+       }
+
+//      if( v.imgprep!=null && v.pref.active ) epsg.drawImage(v.imgprep,v.dx,v.dy,v.aladin);
 
 
       // Affichage des overlays
       if( Projection.isOk(v.pref.projd ) ) {
-         v.paintOverlays(epsg,null,0,0,true);
-         v.drawRepere(epsg,0,0);
-         v.drawCredit(epsg,0,0);
+         v.paintOverlays(epsg,null,0,0,true,0x2);
+//         v.drawRepere(epsg,0,0);
       }
+      v.drawCredit(epsg,0,0);
       epsg.end();
       out.close();
    }

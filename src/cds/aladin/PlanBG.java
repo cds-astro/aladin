@@ -34,6 +34,7 @@ import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferInt;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -231,7 +232,7 @@ public class PlanBG extends PlanImage {
          if( f.renameTo(new File(getCacheDir()+Util.FS+survey+"."+i+".old")) ) break;
       }
       (new File(getCacheDir()+Util.FS+survey)).mkdir();
-      aladin.trace(3,"HEALPix cache for "+survey+" is out of date => renamed => will be removed");
+      aladin.trace(3,"HEALPix local cache for "+survey+" is out of date => renamed => will be removed");
    }
    
    /** Charge les propriétés à partir du fichier "properties" et en profite 
@@ -240,6 +241,8 @@ public class PlanBG extends PlanImage {
     */
    protected java.util.Properties loadPropertieFile() {
       MyProperties prop = null;
+      String dateRef=null;
+      
       boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
       try {
          InputStream in=null;
@@ -257,17 +260,39 @@ public class PlanBG extends PlanImage {
             HttpURLConnection conn = (HttpURLConnection) (new URL(urlFile)).openConnection();
 
             // Ne charge la version distante que si elle est plus récente que celle du cache
-            if( useCache && f.exists() ) conn.setIfModifiedSince( f.lastModified() );
+            if( useCache && f.exists() ) {
+               conn.setIfModifiedSince( f.lastModified() );
+               prop = new MyProperties();
+               InputStream in1 = new FileInputStream(f);
+               prop.load(in1);
+               in1.close();
+               dateRef = prop.getProperty("processingDate","");
+//               System.out.println("Cache processingDate="+dateRef);
+            }
             try {
                in = conn.getInputStream();
                int code = conn.getResponseCode();
                if( code==304 ) throw new Exception(); 
                
-               // Réinitialisation du cache et réécriture
+               // Réinitialisation du cache et réécriture ?
                if( useCache ) {
                   MyInputStream dis = new MyInputStream(in);
                   byte [] buf = dis.readFully();
                   dis.close();
+                  
+                  // On va vérifier tout de même que la date indiquée dans le fichier
+                  // properties est bien différente de celle de la version déjà en cache
+                  // (nécessaire dans le cas de sites miroirs, ou d'accès via CGI FX)
+                  prop = new MyProperties();
+                  InputStream in1 = new ByteArrayInputStream(buf);
+                  prop.load(in1);
+                  in1.close();
+                  String dateRef1 = prop.getProperty("processingDate","");
+//                  System.out.println("Remote processingDate="+dateRef1);
+                  if( dateRef1.equals(dateRef) ) {
+//                     aladin.trace(4,"PlanBG.loadPropertieFile() => processingDate identical !");
+                     throw new Exception();
+                  }
                   
                   try {
                      resetCache();
@@ -284,7 +309,7 @@ public class PlanBG extends PlanImage {
 
                // La version dans le cache est la bonne.
             } catch( Exception e ) { 
-               aladin.trace(3,"HEALPix cache for "+survey+" is ok");
+               aladin.trace(3,"HEALPix local cache for "+survey+" is ok");
             }
             
             // Faut bien lire les proriétés tout de même

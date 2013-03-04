@@ -1484,11 +1484,11 @@ public final class Select extends JComponent  implements
       }
       
       // Pas très joli
-      if( a.calque.zoom.opacitySlider!=null ) {
-         if( a.calque.zoom.sizeSlider!=null ) a.calque.zoom.sizeSlider.repaint();
-         a.calque.zoom.opacitySlider.repaint();
-         a.calque.zoom.zoomSlider.repaint();
-      }
+      if( a.calque.zoom.opacitySlider!=null ) a.calque.zoom.opacitySlider.repaint();
+      if( a.calque.zoom.sizeSlider!=null )    a.calque.zoom.sizeSlider.repaint();
+      if( a.calque.zoom.zoomSlider!=null )    a.calque.zoom.zoomSlider.repaint();
+      if( a.calque.zoom.epochSlider!=null )   a.calque.zoom.epochSlider.repaint();
+      if( a.calque.zoom.densitySlider!=null ) a.calque.zoom.densitySlider.repaint();
       
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {

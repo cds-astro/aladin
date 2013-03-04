@@ -282,7 +282,7 @@ public class PlanCatalog extends Plan {
 
    /** Retourne la liste des légendes des tables qui composent le catalogue */
    protected Vector<Legende> getLegende() {
-      Vector<Legende> leg = new Vector(10);
+      Vector<Legende> leg = new Vector<Legende>(10);
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();

@@ -23,7 +23,10 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
+import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -34,6 +37,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import cds.aladin.prop.PropPanel;
+import cds.astro.Astrotime;
 import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -96,8 +100,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    String rotateCenterField=null;       // Pour savoir si rotOffsetRA a ete modifie
    JTextField url=null;      // Pour visualiser, voir éditer l'url d'origine
    JTextField rollField=null;	 // Pour le plan FIELD, rotation du FOV
-   JTextField eqField=null;	 // Pour pouvoir modifier l'equinox par defaut
-   String sEquinox=null;	 // Pour savoir si l'equinox par defaut a ete modifie
+   JTextField epField=null;  // Pour pouvoir modifier l'epoque par defaut
+   JTextField eqField=null;  // Pour pouvoir modifier l'equinoxe par defaut
+   String sEquinox=null;	 // Pour savoir si l'equinoxe par defaut a ete modifiée
    String sRoll=null;	 	 // Pour savoir si rollField a ete modifie
    JRadioButton cbT=null;		 // Pour plan ADD, controle Target
    JRadioButton cbS=null;		 // Pour plan ADD, controle Scale
@@ -115,6 +120,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    JSlider opacityLevel;
    JSlider gapOrder;
 
+   JSlider epochSlider; 
    JSlider scalingFactor; // facteur d'échelle pour les filtres des plans CATALOG
 
    JSlider polaSegmentLen; // Pour plan POLARISATION, longueur max segments
@@ -265,7 +271,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       sourceType=null;
       couleur=null;
       sField=sEquinox=null;
-      eqField=rollField=null;
+      epField=eqField=rollField=null;
+      
       rotateCenter = null;
 
       // On reconstruit le panel
@@ -493,13 +500,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan.type==Plan.APERTURE ) {
          final PlanField pf = (PlanField)plan;
          sField = pf.getProjCenter();
-         centerField = new JTextField(sField,20);
+         centerField = new JTextField(sField,25);
          if( !pf.isMovable () ) centerField.setEnabled(false);
          PropPanel.addCouple(p,REFCOORD, centerField, g,c );
          if( Aladin.ROTATEFOVCENTER ) {
             rotateCenterField = pf.getRotCenter();
             JPanel pr = new JPanel( new BorderLayout(0,0));
-            rotateCenter = new JTextField(rotateCenterField,20);
+            rotateCenter = new JTextField(rotateCenterField,25);
             rotateCenter.setEnabled(pf.isRollable() & pf.isCenterRollable() );
             pr.add(rotateCenter,BorderLayout.CENTER);
             JCheckBox rotCheck = new JCheckBox();
@@ -551,7 +558,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Info sur les images
-      if( plan.isImage() || plan instanceof PlanBG  ) {
+      if( plan.isImage() || plan instanceof PlanBG   ) {
         final PlanImage pimg = (PlanImage)plan;
 
       	// Survey de l'image
@@ -577,46 +584,49 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
         } else PropPanel.addCouple(p,FMT, fmtl, g,c);
         
         
-        // Mode graphique
-        PropPanel.addCouple(p,PIXMODE, new JLabel(pimg.getPixModeInfo()), g,c);
-        
-      	// Info d'image
-      	if( plan.isImage() && plan.flagOk && plan.projd!=null ) {
-      	   String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
-           PropPanel.addCouple(p, "Pixel angular res.", new JLabel(s), g, c);
+        if( pimg.isImage() ) {
+           // Mode graphique
+           PropPanel.addCouple(p,PIXMODE, new JLabel(pimg.getPixModeInfo()), g,c);
 
-           double ep = plan.projd.c.GetEpoch();
-           if( !Double.isNaN(ep) ) {
-              PropPanel.addCouple(p,EPOCH, new JLabel(Astrodate.JDToDate(Astrodate.YdToJD(ep))+" ("+ep+")"), g,c);
-           } else {
-              String d = ((PlanImage)plan).getDateObs();
-              if( d!=null ) PropPanel.addCouple(p,DATEOBS, new JLabel(d), g,c);
-           }
-           double eq = plan.projd.c.GetEquinox();
-           if( eq!=0.0 ) {
-              eq= (int)(eq*1000)/1000.0;
-              PropPanel.addCouple(p,WCSEQ, new JLabel(""+eq), g,c);
+           // Info d'image
+           if(  plan.flagOk && plan.projd!=null ) {
+              String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
+              PropPanel.addCouple(p, "Pixel angular res.", new JLabel(s), g, c);
 
-           // On autorise la modification de l'equinoxe par defaut
-           } else {
-              sEquinox="2000.0";	// IL FAUDRA FAIRE PLUS MALIN
-              eqField = new JTextField(sEquinox);
-              PropPanel.addCouple(p,WCSEQ, eqField, g,c);
+              double ep = plan.projd.c.GetEpoch();
+              if( !Double.isNaN(ep) ) {
+                 PropPanel.addCouple(p,EPOCH, new JLabel(Astrodate.JDToDate(Astrodate.YdToJD(ep))+" ("+ep+")"), g,c);
+              } else {
+                 String d = ((PlanImage)plan).getDateObs();
+                 if( d!=null ) PropPanel.addCouple(p,DATEOBS, new JLabel(d), g,c);
+              }
+              double eq = plan.projd.c.GetEquinox();
+              if( eq!=0.0 ) {
+                 eq= (int)(eq*1000)/1000.0;
+                 PropPanel.addCouple(p,WCSEQ, new JLabel(""+eq), g,c);
+
+                 // On autorise la modification de l'equinoxe par defaut
+              } else {
+                 sEquinox="2000.0";	// IL FAUDRA FAIRE PLUS MALIN
+                 eqField = new JTextField(sEquinox);
+                 PropPanel.addCouple(p,WCSEQ, eqField, g,c);
+              }
            }
-      	}
-        if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
-    
-        // Valeur BLANK alternative
-        String vBlank = pimg.getBlankString();
-        blankField = new TextField(vBlank);
-        blankField.addActionListener(new ActionListener() {
-           public void actionPerformed(ActionEvent e) { 
-              actionBlank(); 
-              blankField.setText( pimg.getBlankString() );
-              aladin.calque.repaintAll();
-           }
-        });
-        PropPanel.addCouple(p,"Transparency", blankField, g,c);
+
+           if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
+
+           // Valeur BLANK alternative
+           String vBlank = pimg.getBlankString();
+           blankField = new TextField(vBlank);
+           blankField.addActionListener(new ActionListener() {
+              public void actionPerformed(ActionEvent e) { 
+                 actionBlank(); 
+                 blankField.setText( pimg.getBlankString() );
+                 aladin.calque.repaintAll();
+              }
+           });
+           PropPanel.addCouple(p,"Transparency", blankField, g,c);
+        }
       }
 
       if( plan instanceof PlanImageBlink ) {
@@ -669,16 +679,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          c.fill = GridBagConstraints.BOTH;
       }
 
-      if( plan.isSimpleCatalog() ) {
-         PlanCatalog pc = (PlanCatalog)plan;
+      if( plan.isCatalog() ) {
+         Vector<Legende> legs = plan.getLegende();
          b=new JButton(SEEPARSING);
          b.addActionListener(this);
-         int n = pc.getNbTable();
+         int n = legs.size();
          if( n==1 ) PropPanel.addCouple(p,TABLEINFO, b, g,c);
          else {
-            Vector leg = pc.getLegende();
             StringBuffer s = new StringBuffer("<html>");
-            for( int i=0; i<leg.size(); i++ ) s.append((i>0?"<br>":"")+(i+1)+": "+((Legende)leg.elementAt(i)).name);
+            for( int i=0; i<legs.size(); i++ ) s.append((i>0?"<br>":"")+(i+1)+": "+((Legende)legs.elementAt(i)).name);
             s.append("</html>");
             PropPanel.addCouple(p,TABLEINFO, new JLabel(s.toString()), g,c);
             PropPanel.addCouple(p,"", b, g,c);
@@ -947,6 +956,72 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       boolean filet=false;
 
       if( plan.isCatalog() ) {
+         
+         // Epoque pour un catalogue
+         if( plan.flagOk && plan.projd!=null && plan.hasPM() ) {
+            
+            if( !filet ) PropPanel.addFilet(p, g, c); filet=false;
+
+            String sEpoch = plan.getEpoch().toString("J");
+            JPanel pEpoch = new JPanel();
+            epField = new JTextField(sEpoch,10);
+            epField.addKeyListener(new KeyListener() {
+               public void keyTyped(KeyEvent arg0) { }
+               public void keyReleased(KeyEvent arg0) {
+                  if( arg0.getKeyCode()==KeyEvent.VK_ENTER ) apply();
+               }
+               public void keyPressed(KeyEvent arg0) { }
+            });
+            pEpoch.add(epField);
+            
+            b = new JButton("Img epoch");
+            Plan pi = aladin.calque.getPlanBase();
+            b.setEnabled( pi instanceof PlanImage && ((PlanImage)pi).getDateObs()!=null );
+
+            Insets m = b.getMargin();
+            b.setMargin(new Insets(m.top,3,m.bottom,3));
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent arg0) {
+                  try {
+                     Plan pi = aladin.calque.getPlanBase();
+                     if( !(pi instanceof PlanImage) ) return;
+                     Astrotime t = new Astrotime();
+                     t.set( ((PlanImage)pi).getDateObs() );
+                     epField.setText(t.toString("J"));
+                     apply();
+                  } catch( ParseException e ) {
+                     e.printStackTrace();
+                  }
+               }
+            });
+            pEpoch.add(b);
+
+            b = new JButton("Reset");
+            m = b.getMargin();
+            b.setMargin(new Insets(m.top,3,m.bottom,3));
+            b.addActionListener(new ActionListener() {
+               public void actionPerformed(ActionEvent arg0) {
+                  epField.setText("J2000");
+                  apply();
+              }
+            });
+            pEpoch.add(b);
+            PropPanel.addCouple(p,EPOCH, pEpoch, g,c);
+            
+            double y=2000;
+            try { y = Double.parseDouble(sEpoch.substring(1));
+            } catch( NumberFormatException e ) { }
+            epochSlider = new JSlider(1700, 2300);
+            epochSlider.setMinimumSize(epochSlider.getPreferredSize());
+            epochSlider.setValue((int)y);
+            epochSlider.setMajorTickSpacing(100);
+            epochSlider.setPaintLabels(true);
+            epochSlider.setPaintTicks(true);
+            epochSlider.setPaintTrack(true);
+            epochSlider.addChangeListener(this);
+            PropPanel.addCouple(p, "", epochSlider, g, c);
+         }
+         
           if( !filet ) PropPanel.addFilet(p, g, c); filet=true;
           scalingFactor = new JSlider(0, 300);
           scalingFactor.setMinimumSize(scalingFactor.getPreferredSize());
@@ -1137,6 +1212,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
            float factor = (float)(scalingFactor.getValue()/100.0);
            plan.setScalingFactor(factor);
            aladin.calque.repaintAll();
+           
+        // modification de l'époque   
+       } else if (src==epochSlider) {
+          try {
+             plan.setEpoch(epochSlider.getValue()+"");
+             epField.setText( plan.getEpoch().toString("J"));
+             aladin.calque.repaintAll();
+          } catch( Exception e1 ) { e1.printStackTrace(); }
        }
    }
 
@@ -1375,11 +1458,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( !s.equals(sField) || (s1!=null && !s1.equals(sRoll))
                || (s2!=null && !s2.equals(rotateCenterField))
                ) {
-            System.out.println("Bingo");
             try {
                Coord projCenter = new Coord(aladin.localisation.getICRSCoord(s));
-               double roll = (s1==null)?0.
-                            :Double.valueOf(s1).doubleValue();
+               double roll = (s1==null)?0. :Double.valueOf(s1).doubleValue();
 
                // Déplacement du target (et de tout le FoV)
                if( (s2==null || s2.equals(rotateCenterField)) && s1!=null && s1.equals(sRoll)) {
@@ -1403,6 +1484,29 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             aladin.view.newView(1);
          }
       }
+      
+      if( epField!=null ) {
+         String s=epField.getText();
+         if( !s.equals(plan.getEpoch().getJyr()) ) {
+//System.out.println("Je positionne la nouvelle époque :"+s);
+            try { 
+               plan.setEpoch(s) ;
+               epField.setText(plan.getEpoch().toString("J"));
+               epField.setForeground(Color.black);
+               double y=2000;
+               try { y = Double.parseDouble(s.substring(1));
+               } catch( NumberFormatException e ) { }
+               epochSlider.setValue((int)y);
+               aladin.view.newView(1);
+               
+            } catch(Exception e ) {
+               Aladin.warning(this,"Proper motion adjustement error\n=>"+e.getMessage());
+               epField.setForeground(Color.red);
+            }
+            
+         }
+      }
+
 
       actionSourceType();
       aladin.calque.repaintAll();

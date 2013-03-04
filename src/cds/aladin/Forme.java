@@ -183,7 +183,8 @@ public class Forme extends Position {
       double sint = Math.sin( Math.PI*angle/180.);
       double x =  tanr*sint;
       double y =  tanr*cost;
-      a.computeAngles(x,y);
+//      a.computeAngles(x,y);
+      a.set(x,y);
       return new Coord(a.getLon(),a.getLat());
    }
 

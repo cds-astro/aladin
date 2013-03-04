@@ -295,7 +295,7 @@ public class ViewSimple extends JComponent
             coo.x=p.x; coo.y=p.y;
             vs.getProj().getCoord(coo);
          }
-      } catch( Exception e1 ) { coo=null; if( aladin.levelTrace>=3 ) e1.printStackTrace(); }
+      } catch( Exception e1 ) { coo=null; /* if( aladin.levelTrace>=3 ) e1.printStackTrace();*/ }
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
@@ -1389,7 +1389,8 @@ public class ViewSimple extends JComponent
     * @param w largeur de l'image à récupérer (uniquement en mode nogui)
     * @param h hauteur de l'image à récupérer (uniquement en mode nogui)
     */
-   protected Image getImage(int w, int h) {
+   protected Image getImage(int w, int h) { return getImage(w,h,true); }
+   protected Image getImage(int w, int h, boolean withOverlays) {
       
       // Si on est en mode script, il faut creer manuellement l'image
       // de la vue. La taille sera fonction de l'image de base
@@ -1407,8 +1408,15 @@ public class ViewSimple extends JComponent
          getImgView(g,pi);
       } 
       drawBackground(g);
-      paintOverlays(g,null,0,0,true);
-      drawCredit(g, 0, 0);
+      
+      // Tout ?
+      if( withOverlays ) {
+         paintOverlays(g,null,0,0,true);
+         drawCredit(g, 0, 0);
+         
+      // ou uniquement les images
+      } else paintOverlays(g,null,0,0,true,0x1);
+      
       aladin.waitImage(img);
 //      System.out.println("ViewSimple.getImage("+w+","+h+") => paintOverlays done on "+img);
 //      if( aladin.NOGUI ) aladin.command.syncNeedRepaint=false;
@@ -1961,7 +1969,6 @@ public class ViewSimple extends JComponent
          // Pour indiquer à un éventuel drag qui suivrait qu'il faut déplacer les objets
          // et non étirer un rectangle de sélection
          flagMoveNotSelect = view.hasMovableObj(v);
-         for( Obj o : v ) System.out.println("Select: "+o);
          
          // Synchronisation des vues sur l'objet - PREVU POUR LES VIEWS PLOT, MAIS NE MARCHE PAS
          if( e.getClickCount()==2 && v.size()==1 && v.elementAt(0) instanceof Source ) {
@@ -2229,12 +2236,12 @@ public class ViewSimple extends JComponent
       }
 
       int tool = getTool(e);
-      boolean boutonMilieu = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
+      boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
 
       boolean fullScreen = isFullScreen();
       
       //Menu Popup
-      if( boutonMilieu ) {
+      if( boutonDroit ) {
          setScrollable(false);
          
          // Fin d'ajustement du contraste par le bouton droit
@@ -2288,9 +2295,7 @@ public class ViewSimple extends JComponent
 //System.out.println("Automatical scroll aborted");
          }
 
-         // JE FORCE L'ARRET DU SCROLL AUTOMATIQUE, C'EST DE FAIT TROP GENANT
-         // PF Jan 08
-         if( !Aladin.AUTOSCROLL ) vs.stopAutomaticScroll();
+         vs.stopAutomaticScroll();
 
          // S'il y a un offset suffisant (de l'élan dans la souris), on lance
          // le scrolling automatique
@@ -2650,8 +2655,8 @@ public class ViewSimple extends JComponent
       // On cache le simbad tooltip
       aladin.view.suspendQuickSimbad();
       
-      boolean boutonMilieu = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
-      if( boutonMilieu ) {
+      boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0;
+      if( boutonDroit ) {
          if( Math.abs(xDrag-x)>1 || Math.abs(yDrag-y)>1 ) {
          try { setCMByMouse(x,y); } catch( Exception e1 ) {}
          return;
@@ -4267,11 +4272,17 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       } 
    }
    
-   /** Dessin du foreground  */
-   protected void drawForeGround(Graphics g) {
-      if( pref!=null && pref instanceof PlanBG ) ((PlanBG)pref).drawForeground(g, this);
+   /** Dessin du foreground  
+    * mode 0x1 image, 0x2 overlay
+    */
+   protected void drawForeGround(Graphics g,int mode) {
+      if( pref!=null && pref instanceof PlanBG ) {
+         if( (mode&0x1)!=0 && pref.isPixel() || (mode&0x2)!=0 && pref.isOverlay() ) {
+            ((PlanBG)pref).drawForeground(g, this);
+         }
+      }
 
-      if( aladin.getOrder()>=0 ) drawHealpixMouse(g);
+      if( (mode&0x2)!=0 && aladin.getOrder()>=0) drawHealpixMouse(g);
    }
 
 
@@ -4869,15 +4880,11 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          if( northUp ) {
             g.setColor(Color.red);
-            Util.drawFleche(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
-            Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
-            Util.drawFleche(g,dx+x+1,dy+y+1,dx+x1+1,dy+y1,5,"N");
-            Util.drawFleche(g,dx+x,dy+y+1,dx+x2,dy+y2+1,5,"E");
          } else {
             g.setColor( getGoodColor((int)Math.min(dx+x,dx+x1)-(int)L,(int)Math.min(dy+y,dy+y1),(int)L,(int)L));
-            Util.drawFleche(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
-            Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
          }
+         Util.drawFleche(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
+         Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
       } catch( Exception e ) { return; }
    }
 
@@ -5525,9 +5532,14 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    * @param clip le cliprect s'il existe, sinon null
    * @param dx,dy l'offset d'affichage uniquement utilise pour les impressions
    * @param now true pour avoir immédiatement un affichage complet (mode allsky notamment)
+   * @param mode 0x1 - image, 0x2 - overlays, 0x3 - both
    * @return true si au moins un plan a ete affiche
    */
    protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy,boolean now) {
+      return paintOverlays(g,clip,dx,dy,now,0x3);
+   }
+   protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy,
+         boolean now,int mode) {
       boolean fullScreen = isFullScreen();
       if( isFree() ) {
          drawFovs(g,this,dx,dy);
@@ -5566,6 +5578,9 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       for( int i=allPlans.length-1; i>=0; i--) {
          Plan p = allPlans[i];
          if( p.type==Plan.NO || !p.flagOk ) continue;
+         if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
+         if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
+
          
          // Seuls les catalogues (et éventuellement les surcharges graphiques) sont traçables dans un plot
          if( isPlotView() && !p.isCatalog() && !p.isTool() ) continue;
@@ -5616,6 +5631,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          
          // Cas d'un image ou d'un plan BG
          if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
+            if( p.isImage() && (mode & 0x1) == 0 ) continue;
+            if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
             if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
             if( fullScreen &&  p.hasObj() && p.isOverlay() ) {
                aladin.fullScreen.setCheck(p);
@@ -5674,6 +5691,11 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       }
       if( !drawBord ) oldPlanBord=null;
 
+      if( (mode & 0x2)==0 ) {
+         drawForeGround(g,mode);
+         return flagDisplay;
+      }
+            
       if( vs.isPlotView() ) vs.plot.drawPlotGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
       
@@ -5707,7 +5729,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Le repere courant
          vs.drawRepere(g,dx,dy);
          
-         drawForeGround(g);
+         drawForeGround(g,mode);
 
          // Tracage du quick Simbad s'il existe
          if( aladin.view.simRep!=null /* && this==aladin.view.getMouseView() */) {

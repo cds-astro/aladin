@@ -723,25 +723,23 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  @param e l'évènement en question
     *  @return l'indice de la vue cible, -1 si problème
     */
-   protected int getTargetViewForEvent(Object target, int origX, int origY) {
+   protected int getTargetViewForEvent(Object source, int origX, int origY) {
       Dimension vueDim = viewSimple[0].getSize();
-      int vueInLine = aladin.viewControl.getNbLig(modeView);
       int vueInCol = aladin.viewControl.getNbCol(modeView);
       int x=0, y=0;   // Position de l'évènement par rapport à View
-      if( target instanceof Select ) {
+      if( source instanceof Select ) {
          if( origX>=0 ) return -1;  // On est resté dans la pile
          x = getSize().width + aladin.toolBox.getSize().width +10 + origX;
          y = origY;
-      } else if( target instanceof ViewSimple ) {
-         int currentView = ((ViewSimple)target).isProjSync() ?((ViewSimple)target).n
+      } else if( source instanceof ViewSimple ) {
+         int currentView = ((ViewSimple)source).isProjSync() ?((ViewSimple)source).n
                              : getCurrentNumView();
-         x = (currentView%vueInLine)*vueDim.width + origX;
+         x = (currentView%vueInCol)*vueDim.width + origX;
          y = (currentView/vueInCol)*vueDim.height + origY;
       } else return -1;
 
       int t = vueInCol*(y/vueDim.height) + (x/vueDim.width);
       if( t<0 || t>=modeView ) t=-1;
-//System.out.println("orig=("+origX+","+origY+")=> ("+x+","+y+") donc vue target = "+target);
       return t;
    }
 
@@ -3078,9 +3076,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  @param coo on utilise les champs ra,dec uniquement
     *  @return true si le repère a pu être bougé au moins une fois
     */
-   protected boolean setRepere(Coord coo) {
+   protected boolean setRepere(Coord coo) { return setRepere(coo,false); }
+   protected boolean setRepere(Coord coo,boolean force) {
       moveRepere(coo);
-      syncView(1,null,null,true);              // <= POUR THOMAS
+//      syncView(1,null,null,true);              // <= POUR THOMAS
+      syncView(1,null,null,force);              // <= POUR THOMAS
       boolean rep=false;
       for( int i=0; i<modeView; i++ ) {
          viewSimple[i].repaint();
@@ -3355,7 +3355,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             default:
                c = new Coord(aladin.localisation.getICRSCoord(saisie));
          }
-         rep = setRepere(c);
+         rep = setRepere(c,true);
          aladin.sendObserver();
       } catch( Exception e) {
          aladin.warning("New reticle position error ("+saisie+")",1);

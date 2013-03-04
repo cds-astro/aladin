@@ -57,6 +57,7 @@ MSEARCH	Search in loaded catalogs...
 MSELECTALL	Select all objects
 MUNSELECT	Unselect objects
 MFILTERB	Predefined filters
+MPANEL	Panels
 MPANEL1	1 panel
 MPANEL2	2 panels
 MPANEL2L	2 horiz. panels
@@ -158,13 +159,14 @@ MSEARCH.fr	Chercher dans les catalogues chargés...
 MSELECTALL.fr	Sélectionner tous les objets
 MUNSELECT.fr	Désélectionner les objets
 MFILTERB.fr	Filtres prédéfinis
-MPANEL1.fr	1 panneau
-MPANEL2.fr	2 panneaux
-MPANEL2L.fr	2 panneaux horiz.
-MPANEL3.fr	3 panneaux
-MPANEL4.fr	4 panneaux
-MPANEL9.fr	9 panneaux
-MPANEL16.fr	16 panneaux
+MPANEL.fr	Cadres
+MPANEL1.fr	1 cadre
+MPANEL2.fr	2 cadres
+MPANEL2L.fr	2 cadres horiz.
+MPANEL3.fr	3 cadres
+MPANEL4.fr	4 cadres
+MPANEL9.fr	9 cadres
+MPANEL16.fr	16 cadres
 MTOOL.fr Créer un nouveau plan "Drawing"
 MDIST.fr	dist - Outil de calcul de distance
 MDRAW.fr	dessin - Dessin à main levée
@@ -227,7 +229,7 @@ GLUTOOL	Remote tools
 SIMBAD	Simbad pointer
 VIZIERSED VizieR SED pointer
 TIP	Tooltip on sources
-MSCROLL	Auto-scroll on mouse pan
+#MSCROLL	Auto-scroll on mouse pan
 FULLSCREEN	Full screen
 PREVIEWSCREEN	Simple window
 SESAME	Object name resolver
@@ -257,7 +259,7 @@ GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
 VIZIERSED.fr	Pointeur SED VizieR
 TIP.fr	Infobulle sur les sources
-MSCROLL.fr	Défilement automatique suite à un dépl. souris
+#MSCROLL.fr	Défilement automatique suite à un dépl. souris
 FULLSCREEN.fr	Plein écran
 PREVIEWSCREEN.fr	Simple fenêtre
 SESAME.fr	Résolution de nom d'objet
@@ -1276,7 +1278,7 @@ VWMRETICLE.fr	Réticule classique
 VWMRETICLEL.fr	Réticule large
 VWMNORETICLE.fr	Sans réticule
 VWMTARGET.fr	Flêche de la cible
-VWMSTICKOFF.fr	Dé-scotcher les panneaux
+VWMSTICKOFF.fr	Dé-scotcher les cadres
 VWMSTICKON.fr	Panneau scotché
 VWMLABELON.fr	Afficher l'identificateur des objets sélectionnés
 VWMLABELOFF.fr	Cacher l'identificateur des objets sélectionnés
@@ -1564,6 +1566,8 @@ UPHELP Wizard
 UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progressively the Aladin graphical interface.
 #UPTAGCENTER	Centered tag
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
+UPSLIDERS	Control sliders
+UPSLIDERH	Add or remove interface control sliders
 
 UPTITLE.fr	Préférences utilisateur
 UPDEFDIR.fr	Rép. de travail
@@ -1636,6 +1640,8 @@ UPHELP.fr Assistant
 UPHELPH.fr Active/désactive l'assistant pour les débutatns. Celui-ci permet aux nouveaux utilisateurs d'Aaldin de se familiariser avec l'interface graphique
 #UPTAGCENTER.fr	Marque centrée
 #UPTAGCENTERH.fr Activez ce sélecteur afin de contraindre l'outil de marquage (Outil "Marq") à se centrer automatiquement sur le barycentre de l'objet le plus proche
+UPSLIDERS.fr	Contrôles
+UPSLIDERH.fr	Active ou non les réglettes de contrôles
 
 
 # Action.java strings
@@ -2478,6 +2484,16 @@ SLIDERSIZE size
 SLIDERSIZE.fr taille
 SLIDERSIZETIP Adjust the graphical source size of selected planes
 SLIDERSIZETIP.fr	Ajuste la taille des sources graphiques des plans sélectionnés
+SLIDEREPOCH epoch
+SLIDEREPOCH.fr époque
+SLIDEREPOCHTIP Adjust epoch of sources catalogues with proper motions
+SLIDEREPOCHTIP.fr	Ajuste l'époque des catalogues de sources ayant des mouvements propres
+SLIDEREPOCHLABELTIP Click to assign the epoch of current view, J2000 by default
+SLIDEREPOCHLABELTIP.fr Cliquer pour assigner l'époque de la vue courante, J2000 par défaut
+SLIDERDENSITY dens.
+SLIDERDENSITY.fr dens.
+SLIDERDENSITYTIP Adjust source density of selected progressive catalogs
+SLIDERDENSITYTIP.fr	Ajuste la densité des sources des catalogues progressifs sélectionnés
 
 # Bookmarks strings
 BKMTITLE	Bookmarks controler

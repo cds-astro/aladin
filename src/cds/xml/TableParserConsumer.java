@@ -162,10 +162,12 @@ public abstract interface TableParserConsumer {
     * the RA and DEC column indices found by the parse
     * @param nRa RA column index (0=first column)
     * @param nDec DEC column index (0=first column)
+    * @param nPmRa PMRA column index (0=first column)
+    * @param nPmDec PMDEC column index (0=first column)
     * @param nX X column index (0=first column)
     * @param nY Y column index (0=first column)
     */
-   public abstract void setTableRaDecXYIndex(int nRa, int nDec,int nX, int nY, boolean badDetection);
+   public abstract void setTableRaDecXYIndex(int nRa, int nDec,int nPmRa, int nPmDec, int nX, int nY, boolean badDetection);
 
   /** This method is called by the TableParser parser when the XML
    * /FIELD is encountered (the end of the element FIELD).

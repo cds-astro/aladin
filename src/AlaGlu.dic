@@ -94,7 +94,9 @@
 
 %A SimbadXML1
 %U http://simbad.u-strasbg.fr/simbad/sim-all?Ident=$1&Radius=$2&\Radius.unit=arcmin&Votable=main_id,otype,ra(s),dec(s),\coo_err_maja,coo_err_mina,coo_err_angle,pmra,pmdec,flux(B),\flux(V),sp,dim_majaxis,dim_minaxis,dim_angle,bibcodelist(N)
-#%U http://cdsweb.u-strasbg.fr/simsearch/simbad-cs.py?target=$1&SR=$2&format=votable-tsv&SRUNIT=arcmin
+
+%A VizieRXML++1
+%U http://cdsarc.u-strasbg.fr/local/viz-bin/votable?-source=$1&-c=$2&-out.add=_RAJ,_DEJ&-oc.form=dm&-out.meta=DhuL&-out.max=999999&-c.rm=$3&-out=_VizieR,*Mime(image/fits),*&-mime=TSV&$4
 
 %A ConvertToJpg
 %U http://cdsweb.u-strasbg.fr/~boch-bin/format-conversion/convert-img.py?img-url=
@@ -172,24 +174,27 @@
 #%Aladin.Filter #HII\nfilter HII {${OTYPE}="HII" { draw dot }}
 #%Aladin.Filter #X\nfilter X {${OTYPE}="X" { draw cross }}
 
-#%A Astrometry.net
-#%D Astrometry.net facility (v0.2)
-#%O aladin
-#%Z ALADIN
-#%Z CDS
-#%U http://cds-dev-tb.u-strasbg.fr:8080/astrometry/cgi-bin/solve-image.py?imageurl=$1&scale-low=$2&scale-high=$3
-#%P.D 1:Image reference
-#%P.D 2:Scale low
-#%P.D 3:Scale high
-#%P.K 1:Input(ALLIMG)
-#%R Mime(image/fits)
-#%R Mime(application/image)
-#%M.V This form allows to query remotely the Astrometry.net solve-field program on your current image in order to provide an astrometry (WCS) to your image
-#%F.U http://www.astrometry.net/
-#%Aladin.Profile >=10 beta
-#%Aladin.Label Astro.net
-#%Aladin.LabelPlane Astrometry $1
+%A Astrometry.net
+%D Astrometry.net facility (v0.2)
+%O aladin
+%Z ALADIN
+%Z CDS
+%U http://cds-dev-tb.u-strasbg.fr:8080/astrometry/cgi-bin/solve-image.py?imageurl=$1&scale-low=$2&scale-high=$3
+%P.D 1:Image reference
+%P.D 2:Scale low
+%P.D 3:Scale high
+%P.K 1:Input(ALLIMG)
+%R Mime(image/fits)
+%R Mime(application/image)
+%M.V This form allows to query remotely the Astrometry.net solve-field program on your current image in order to provide an astrometry (WCS) to your image
+%F.U http://www.astrometry.net/
+%Aladin.Profile >=7 beta
+%Aladin.Label Astro.net
+%Aladin.LabelPlane Astrometry $1
 #%Aladin.Logo AstrometryDotNet.gif
+%R Mime(application/xml)
+%Aladin.Menu Tools...
+
 
 %ActionName         GALEX
 %Description        Galaxy Evolution Explorer Catalog (STScI)
@@ -429,7 +434,7 @@
 %O CDS'aladin
 %Z ALADIN
 %U http://aladin.u-strasbg.fr/java/Bookmarks.ajs
-%Aladin.Bookmarks Optical,Infrared
+%Aladin.Bookmarks Optical,Infrared,IR,UV,Radio,
 %Aladin.Profile >=6.037 undergraduate
 
 ##################### Healpix surveys in test ###########################

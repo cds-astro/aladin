@@ -98,7 +98,7 @@ public final class Command implements Runnable {
       "   @set [x1] [x2..] prop=value         @zoom ...\n" +
       "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
       "   @mv|@copy x1 x2                      @lock|@unlock [v1] [v2..]\n" +
-      "   @rm [x1] [x2..] | -all              @stick|@unstick [v1] [v2..]\n" +
+      "   @rm [x1] [x2..] | -all              @match [-scale] [v|x|off]\n" +
       "   @export [-fmt] x filename           @mv|@copy v1 v2\n" +
       "                                      @rm [v1] [v2..] | -lock\n" +
       "#IMAGE:#                                @save [-fmt] [-lk] [WxH] [filename]\n" +
@@ -140,10 +140,10 @@ public final class Command implements Runnable {
       "addcol","backup","bitpix","blink","call","cm","collapse","conv","contour","coord","copy",
       "cplane","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
-      "macro","md","mem","northup",
+      "macro","md","mem","northup","match",
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
       "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show","skygen",
-      "status","stick","sync","tag","thumbnail","trace","unlock","unstick",
+      "status",/*"stick",*/"sync","tag","thumbnail","trace","unlock",/* "unstick",*/
       "untag","xmatch","moreonxmatch","zoom","+","-","*","/",
    };
    
@@ -1996,6 +1996,25 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          printConsole("!!! fliflop error: "+e.getMessage());
       }
    }
+   
+   /** Execution de la commande match */
+   protected void execMatchCmd(String param) {
+      StringTokenizer tok = new StringTokenizer(param);
+      int mode=3;
+      String p="";
+      while( tok.hasMoreTokens() ) {
+         String s = tok.nextToken();
+         if( s.equalsIgnoreCase("-scale") ) mode=2;
+         else if( s.equalsIgnoreCase("off") ) mode=0;
+         else { p=s; break; }
+      }
+      if( p.length()>0 ) execSelectCmd(p);
+      if( mode==0 ) {
+         if( a.view.isSelectCompatibleViews() ) a.view.unselectViewsPartial();
+         a.match(0);
+         
+      } else a.switchMatch(mode==3);
+   }
 
    /** réduction à une portion de l'image
     * Dans le cas d'une copie préalable, retourne le nouveau Plan
@@ -2669,6 +2688,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("reloadglu") )  a.glu = new Glu(a);
       else if( cmd.equalsIgnoreCase("goto") )   goTo(param);
       else if( cmd.equalsIgnoreCase("crop") )   execCropCmd(param,label);
+      else if( cmd.equalsIgnoreCase("match") )   execMatchCmd(param);
       else if( cmd.equalsIgnoreCase("stick") )  execViewCmd(param,STICKVIEW);
       else if( cmd.equalsIgnoreCase("unstick") )execViewCmd(param,UNSTICKVIEW);
       else if( cmd.equalsIgnoreCase("lock") )   execViewCmd(param,LOCKVIEW);

@@ -63,6 +63,7 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    JLabel label;
    Slider slider;
    JButton plus,moins;
+   int wheelIncr;
    
    /**
     * Création d'un slider
@@ -72,6 +73,11 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
     * @param incr - valeur de l'incrément lors de l'usage du bouton + ou -
     */
    public SliderPlusMoins(Aladin aladin,String title, int min, int max, final int incr) {
+      this(aladin,title,min,max,incr,incr);
+   }
+      
+      
+   public SliderPlusMoins(Aladin aladin,String title, int min, int max, final int incr,int wheelIncr) {
       this.aladin = aladin;
       
       slider = new Slider(min,max,incr);
@@ -88,6 +94,7 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
       });
 
       plus=b = new Bouton("+");
+      b.setFont(b.getFont().deriveFont((float)b.getFont().getSize()-1));
       b.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { submit(incr); }
       });
@@ -104,12 +111,13 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
       setEnabled(false);
       
       addMouseWheelListener(this);
+      this.wheelIncr=wheelIncr;
    }
    
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( !enable ) return;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
-      submit( -slider.incr*e.getWheelRotation() );
+      submit( -wheelIncr*e.getWheelRotation() );
       slider.repaint();
    }
    

@@ -176,7 +176,6 @@ public final class Calque extends JPanel implements Runnable {
       flagOverlay = true;
       reticleMode=aladin.configuration.get(Configuration.RETICLE)!=null ? 2 : 1;
       flagTip=aladin.configuration.get(Configuration.TOOLTIP)!=null;
-      aladin.AUTOSCROLL = aladin.configuration.get(Configuration.SCROLL)!=null;
       flagSimbad = aladin.configuration.getSimbadFlag();
       flagVizierSED = aladin.configuration.getVizierSEDFlag();
       
@@ -184,16 +183,8 @@ public final class Calque extends JPanel implements Runnable {
 
       // Panel principal : contient le selecteur de plans et le zoom
       setLayout( new BorderLayout(0,5) );
-
-      JPanel y = new JPanel(new BorderLayout(10,0));
-      y.add( zoom.getZoomChoicePanel(),BorderLayout.EAST);
-
-      JPanel x = new JPanel(new BorderLayout(2,2));
-      if( !zoom.SLIDER_LOOK ) x.add(y,BorderLayout.NORTH);
-      x.add(zoom,BorderLayout.CENTER);
-
       add(select,BorderLayout.CENTER);
-      add(x,BorderLayout.SOUTH);
+      add(zoom,BorderLayout.SOUTH);
    }
    
    /** Insère ou enlève la scrollbar verticale de la pile si nécessaire
@@ -3605,7 +3596,7 @@ public final class Calque extends JPanel implements Runnable {
      */
     protected boolean canBeTransparent(Plan p) {
        boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
-       if( p==null || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
+       if( p==null || p.type==Plan.FILTER || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
           if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
           return false;
        }

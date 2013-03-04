@@ -70,11 +70,13 @@ final public class TableParser implements XMLConsumer {
    private XMLParser xmlparser;	      // parser XML
    private int nField;	      	      // Numéro de champ courant
    private int nRecord;               // Numéro de l'enregistrement courant
-   private int nRA,nDEC;	      	  // Numéro de la colonne RA et DEC (-1 si non encore trouvée)
+   private int nRA,nDEC;              // Numéro de la colonne RA et DEC (-1 si non encore trouvée)
+   private int nPMRA,nPMDEC;          // Numéro de la colonne PMRA et PMDEC (-1 si non encore trouvée)
    private int nX,nY;	      	      // Numéro de la colonne X et Y (-1 si non encore trouvée)
    private String sFreq,sFlux,sFluxErr,sSedId; // ID des colonnes portant les valeurs d'un point SED
    private int nFreq,nFlux,nFluxErr,nSedId; // Numéro des colonnes correspondantes
-   private int qualRA,qualDEC;	      // La qualité de détection des colonnes RA et DEC (1000 mauvais, 0 excellent)
+   private int qualRA,qualDEC;        // La qualité de détection des colonnes RA et DEC (1000 mauvais, 0 excellent)
+   private int qualPMRA,qualPMDEC;    // La qualité de détection des colonnes RA et DEC (1000 mauvais, 0 excellent)
    private int qualX,qualY;	          // La qualité de détection des colonnes X et Y (1000 mauvais, 0 excellent)
    private Field f;		              // Le champ courant
    private Vector<Field> memoField;   // Mémorisation des Fields en cas de parsing binaire ultérieur
@@ -118,7 +120,7 @@ final public class TableParser implements XMLConsumer {
    private String astroCoordsID;      // Dernier ID d'une définition d'un système de coordonnées
    private Astroframe srcAstroFrame = null;     // Systeme de coord initial
    private Astroframe trgAstroFrame = AF_ICRS;  // System de coord final
-   private Astrocoo c = new Astrocoo();         // coord courante
+   private Astropos c = new Astropos();         // coord courante
    private String filter;          // Le filtre en cours de parsing, null sinon
    private boolean inSEDGroup;     // true si on est dans un GROUP de définition d'un point SED
 
@@ -858,8 +860,8 @@ final public class TableParser implements XMLConsumer {
     * à parser.
     */
    private void initTable() {
-      nRA=nDEC=nX=nY=-1;
-      qualRA=qualDEC=qualX=qualY=1000; // 1000 correspond au pire
+      nRA=nDEC=nPMRA=nPMDEC=nX=nY=-1;
+      qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=1000; // 1000 correspond au pire
       format = FMT_UNKNOWN;
 //      flagSexa=false;	// Par défaut on suppose des coord. en degrés
 //      knowFormat=false; // Par défaut on ne connait pas le format des coord.
@@ -973,7 +975,7 @@ final public class TableParser implements XMLConsumer {
          
          // Pas d'ID pour le système de coord, on en invente un
          if( astroCoordsID==null ) {
-            astroCoordsID = "_ASTROID_"+(ASTROID++);
+            astroCoordsID = "_DEFAULTID_"+(ASTROID++);
          }
          
          if( name.equalsIgnoreCase("PARAM") ) {
@@ -991,18 +993,58 @@ final public class TableParser implements XMLConsumer {
             }
 
             else if( att!=null &&
-                  (att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch") || att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch") )) {
+                  (att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch") 
+                || att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch") )) {
                v = (String)atts.get("value");
                if( v!=null ) {
 //                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  
+                  // Peut être le B ou le J est-il déjà renseigné séparément ?
+                  if( !Character.isDigit( v.charAt(0) ) ) {
+                     String s = cooepoch.get(astroCoordsID);
+                     if( s!=null && s.length()==1 ) v=s+v;
+                  }
                   cooepoch.put(astroCoordsID,v);
                }
             }
 
+            else if( att!=null && att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch.yearDef") ) {
+               v = (String)atts.get("value");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  
+                  // Peut être l'année a-t-elle déjà été renseignée ?
+                  String s = cooepoch.get(astroCoordsID);
+                  if( s!=null && Character.isDigit( s.charAt(0) ) ) {
+                     v=v+s;
+                  }
+                  cooepoch.put(astroCoordsID,v);
+               }
+            }
+            
             else if( att!=null && att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame.Equinox") ) {
                v = (String)atts.get("value");
                if( v!=null ) {
 //                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  
+                  // Peut être le B ou le J est-il déjà renseigné séparément ?
+                  if( !Character.isDigit( v.charAt(0) ) ) {
+                     String s = cooequinox.get(astroCoordsID);
+                     if( s!=null && s.length()==1 ) v=s+v;
+                  }
+                  cooequinox.put(astroCoordsID,v);
+               }
+            }
+            else if( att!=null && att.equalsIgnoreCase("stc:AstroCoordSystem.SpaceFrame.CoordRefFrame.Equinox.yearDef") ) {
+               v = (String)atts.get("value");
+               if( v!=null ) {
+//                  consumer.tableParserInfo("   -"+att+" => "+v);
+                  
+                  // Peut être l'année a-t-elle déjà été renseignée ?
+                  String s = cooequinox.get(astroCoordsID);
+                  if( s!=null && Character.isDigit( s.charAt(0) ) ) {
+                     v=v+s;
+                  }
                   cooequinox.put(astroCoordsID,v);
                }
             }
@@ -1196,13 +1238,18 @@ final public class TableParser implements XMLConsumer {
          else consumer.setTableInfo("__XYPOS","true");
       }
       
-      consumer.setTableRaDecXYIndex(nRA,nDEC,nX,nY, qualRA==1000 || qualDEC==1000 );
+      consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY, qualRA==1000 || qualDEC==1000 );
       if( flagXY ) consumer.tableParserInfo("   -assuming XY positions (column "+(nX+1)+" for X and "+(nY+1)+" for Y)");
       else if( nRA>=0 ) {
          consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal":" in degrees"))+
                " (column "+(nRA+1)+" for RA and "+(nDEC+1)+" for DEC)");
+         if( nPMRA>=0 ) {
+            consumer.tableParserInfo("   -Proper motion fields found"+
+                  " (column "+(nPMRA+1)+" for PMRA and "+(nPMDEC+1)+" for PMDEC)");
+         }
       }
       consumer.tableParserInfo("      [RA="+nRA+" ("+qualRA+") DE="+nDEC+" ("+qualDEC+") "+
+            "PMRA="+nPMRA+" ("+qualPMRA+") PMDEC="+nPMDEC+" ("+qualPMDEC+") "+
             "X="+nX+" ("+qualX+") Y="+nY+" ("+qualY+")]");
       
       if( coosys!=null && coosys.size()>0 ) {
@@ -1290,7 +1337,7 @@ final public class TableParser implements XMLConsumer {
       if( ref==null ) ref="null";
       
       if( srcAstroFrame!=null ) { 
-         c = new Astrocoo(srcAstroFrame);
+         c = new Astropos(srcAstroFrame);
          consumer.tableParserInfo("      => RA/DEC coordinate conversion: ref=\""+ref+"\" => "+srcAstroFrame+" to "+trgAstroFrame);
       } else {
          consumer.tableParserInfo("      => RA/DEC coordinate system used: ref=\""+ref+"\" => "+trgAstroFrame);
@@ -1419,6 +1466,42 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("delta") )return 5;
       return -1;
    }
+   
+   /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
+    * ou non du nom d'une colonne en tant que PMRA,
+    * (-1 s'il ne s'agit a priori pas de cela)
+    */
+   private int pmraName(String s) {
+      if( s.equalsIgnoreCase("PMRA") )  return 0;
+      return -1;
+   }
+
+   /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la présence
+    * d'une sous chaine PMRA dans le nom de colonne (-1 sinon) */
+   private int pmraSubName(String s) {
+      s = s.toLowerCase();
+      if( s.startsWith("pmra") ) return 0;
+      return -1;
+   }
+
+   /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
+    * ou non du nom d'une colonne en tant que PMDEC,
+    * (-1 s'il ne s'agit a priori pas de cela)
+    */
+   private int pmdecName(String s) {
+      if( s.equalsIgnoreCase("PMDE") )  return 0;
+      if( s.equalsIgnoreCase("PMDEC") ) return 1;
+      return -1;
+   }
+
+   /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la présence
+    * d'une sous chaine PMDEC dans le nom de colonne (-1 sinon) */
+   private int pmdecSubName(String s) {
+      s = s.toLowerCase();
+      if( s.startsWith("pmde") ) return 0;
+      return -1;
+   }
+
 
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
     * ou non du nom d'une colonne en tant que X,
@@ -1483,9 +1566,9 @@ final public class TableParser implements XMLConsumer {
       else return;
    }
 
-  /** Cherche à determiner si f concerne RA,DE,X ou Y en mettant à jour
-   * les indices de qualité (qualRA, qualDEC, qualX, qualY) et mémorise
-   * le numéro du champ si la qualité est meilleure (nRA,nDEC,nX,nY)
+  /** Cherche à determiner si f concerne RA,DE,PMRA,PMDEC, X ou Y en mettant à jour
+   * les indices de qualité (qualRA, qualDEC, qualPMRA, qualPMDEC, qualX, qualY) 
+   * et mémorise le numéro du champ si la qualité est meilleure (nRA,nDEC,nPMRA,nPMDEC,nX,nY)
    * La règle empirique est la suivante :
    * Priorité à l'UCD, sinon au nom de colonne + unité, sinon à une portion
    * du nom de colonne + unité, sinon au nom de colonne, sinon à une portion
@@ -1549,6 +1632,46 @@ final public class TableParser implements XMLConsumer {
       if( qual>0 && nRA==nField-1 && nRA>=0 ) qual--;
       
       if( qual>=0 && qualDEC>qual ) { nDEC=nField; qualDEC=qual; }
+      
+      // Détection du PMRA et évaluation de la qualité de cette détection
+      qual=-1;
+      if( ucd.equals("POS_PMRA") || ucd.equals("pos.pm;pos.eq.ra") ) {
+         try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=0; }
+         catch( Exception e ) { qual=1; }
+      }
+      else if( (n=pmraName(name))>=0 ) {
+         if( ucd.startsWith("pos.pm") ) qual=200+n;
+         else {
+            try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=300+n; }
+            catch( Exception e ) { qual=600+n; }
+         }
+      }
+      else if( (n=pmraSubName(name))>=0 ) {
+         if( ucd.startsWith("pos.pm") ) qual=400+n;
+         else {
+            try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=500+n; }
+            catch( Exception e ) { qual=700+n; }
+         }
+      }
+      if( qual>=0 &&  qualX>qual ) { nPMRA=nField; qualPMRA=qual; }
+
+      // Détection du PMDE et évaluation de la qualité de cette détection
+      qual=-1;
+      if( ucd.equals("POS_PMDE") || ucd.equals("pos.pm;pos.eq.dec") ) qual=0;
+      else if( (n=pmdecName(name))>=0 ) {
+         if( ucd.startsWith("pos.pm") ) qual=200+n;
+         try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=300+n; }
+         catch( Exception e ) { qual=600+n; }
+      }
+      else if( (n=pmdecSubName(name))>=0 ) {
+         if( ucd.startsWith("pos.pm") ) qual=400+n;
+         else {
+            try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=500+n; }
+            catch( Exception e ) { qual=700+n; }
+         }
+      }
+      if( qual>=0 &&  qualX>qual ) { nPMDEC=nField; qualPMDEC=qual; }
+
      
       // Détection du X et évaluation de la qualité de cette détection
       qual=-1;
@@ -1728,7 +1851,7 @@ final public class TableParser implements XMLConsumer {
                c.convertTo(trgAstroFrame);
 //               System.out.println("AFTER c="+c);
               consumer.setRecord(c.getLon(),c.getLat(), rec);
-              c = new Astrocoo(srcAstroFrame);
+              c = new Astropos(srcAstroFrame);
               
            } else consumer.setRecord(c.getLon(),c.getLat(), rec);
          }
@@ -1968,7 +2091,7 @@ final public class TableParser implements XMLConsumer {
          }
 
          // Analyse de la ligne
-         int curOld=cur;    // Juste pour se rappeler où on était.
+//         int curOld=cur;    // Juste pour se rappeler où on était.
          cur = getRecord(ch,cur,end,rs,cs,nbRecord);
          
          // Dans le cas DU TSV natif, ce n'est qu'à ce moment là
@@ -1987,7 +2110,7 @@ final public class TableParser implements XMLConsumer {
          
          // Détecteur de la ligne de ---- ----         
          for( dashLine=true, i=0; i<nField && dashLine; i++ ) {
-            char a[] = record[i]/*.trim()*/.toCharArray();
+            char a[] = record[i].toCharArray();
             for( j=0; j<a.length && a[j]=='-'; j++);
             if( j<a.length ) { dashLine=false; break; }
          }

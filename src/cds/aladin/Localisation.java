@@ -533,9 +533,10 @@ public final class Localisation extends MyBox {
       // Edition et conversion si nécessaire
       try {
          Astrocoo aft = new Astrocoo( getAstroframe(frameSource) );
+         aft.setPrecision(Astrocoo.MAS+3);
          aft.set(coo);
          if( frameSource!=frameTarget ) aft.convertTo( getAstroframe(frameTarget) );
-         aft.setPrecision(Astrocoo.ARCSEC+1);
+         
          String s = (frameTarget==J2000D || frameTarget==B1950D || frameTarget==ICRSD
                   || frameTarget==ECLIPTIC || frameTarget==GAL || frameTarget==SGAL )?
                 aft.toString("2d"):aft.toString("2s");
@@ -560,7 +561,7 @@ public final class Localisation extends MyBox {
       Coord cTmp = new Coord(al,del);
       cTmp = ICRSToFrame(cTmp);
       afs.setPrecision(precision);
-      return frameToString(cTmp.al,cTmp.del);
+      return frameToString(cTmp.al,cTmp.del,precision);
    }
    
    protected String frameToString(double al,double del) { return frameToString(al,del,Astrocoo.ARCSEC+1); }

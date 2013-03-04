@@ -26,6 +26,7 @@ import java.awt.Graphics2D;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -33,7 +34,11 @@ import java.util.Vector;
 
 import javax.swing.SwingUtilities;
 
+import cds.astro.Astropos;
+import cds.astro.Astrotime;
+import cds.astro.Unit;
 import cds.tools.Util;
+import cds.xml.TableParser;
 
 /**
  * gestion des plans
@@ -96,6 +101,7 @@ public class Plan implements Runnable {
                                  // ou null si non encore calcule
 //   protected Thread	sr;	         // Thread pour la resolution Simbad */
    protected Color c;            // La couleur associee au plan
+   protected Astrotime epoch;    // Epoque pour catalogue (par défaut J2000)
    protected Projection projd;   // La projection PAR DEFAUT associee au plan
    protected Projection projInit; // La projection initiale associee au plan
    protected Hashtable projD = null;  // La liste des projections associées au plan
@@ -131,6 +137,7 @@ public class Plan implements Runnable {
    boolean    isLastVisible;   // vrai si c'est le dernier visible dans la pile (en fct du scroll)
    boolean    underMouse;      // vrai si le plan est actuellement sous la souris
    boolean    ref;             // vrai si c'est le plan de reference pour la projection courante
+   int hasPM=-1;               // le plan a du PM : -1 - on ne sait pas encore, 0 - non,  1 - oui
    protected boolean memoClinDoeil; // Vrai si ce plan devra être réactivé si on clique sur l'oeil
    Projection proj[] = new Projection[ViewControl.MAXVIEW];
                                // Les projections COURANTES associees au plan
@@ -207,6 +214,7 @@ public class Plan implements Runnable {
       System.arraycopy(proj,0,p.proj,0,proj.length);
       p.error=error;
       p.flagLocal=flagLocal;
+      p.hasPM = hasPM;
       p.hasXYorig=hasXYorig;
       p.initZoom=initZoom;
       p.lastZoomView=lastZoomView;
@@ -376,11 +384,27 @@ public class Plan implements Runnable {
    }
 
    protected Legende getFirstLegende() { return null; }
-   protected Vector getLegende() { return null; }
+   protected Vector<Legende> getLegende() { return null; }
    protected int getNbTable() { return 0; }
    protected int getCounts() { return 0; }
    protected void reallocObjetCache() { if( pcat!=null ) pcat.reallocObjetCache(); }
-
+   
+   protected Astrotime getEpoch() { 
+      try {
+         if( epoch==null ) epoch = new Astrotime("J2000");
+      } catch( ParseException e ) { }
+      return epoch;
+   }
+   
+   /** Positionne une nouvelle epoque, et recalcule les positions de tous les objets
+    * en fonction de cette nouvelle epoque */
+   protected void setEpoch(String s) throws Exception { 
+      if( Character.isDigit( s.charAt(0)) ) s = "J"+s;
+      if( epoch==null ) epoch = new Astrotime(s);
+      else epoch.set(s);
+      if( !recomputePosition() ) throw new Exception("Unknown proper motion fields !");
+   }
+   
    protected Obj[] getObj() { return new Obj[0]; }
 
    protected float scalingFactor = 1.0f; // facteur d'échelle pour l'affichage des filtres (circle et proper motion)
@@ -467,6 +491,172 @@ public class Plan implements Runnable {
        }
        return res;
     }
+       
+    /** Retourne true si le plan a des champs indiquant un mouvement Propre */
+    public boolean hasPM() {
+       if( !flagOk || !isCatalog() ) return false;
+       if( hasPM<0 ) {
+          Vector<Legende> legs = getLegende();
+          Iterator<Legende> it = legs.iterator();
+          while( it.hasNext() ) {
+             Legende leg = it.next();
+             if( leg.getPmRa()>0 &&  leg.getPmDe()>0 ) { hasPM=1; return true; }
+          }
+          hasPM=0;
+          return false;
+       }
+       return hasPM==1;
+    }
+    
+    /** Recalcule toutes les positions internes 
+     * @return true si au moins une position a été effectivement modifié
+     */
+    public boolean recomputePosition() {
+       boolean rep=false;
+       Vector<Legende> legs = getLegende();
+       if( legs==null ) return false;
+//       aladin.trace(3,label+": reprocessing all internal coordinates...");
+       Iterator<Legende> it = legs.iterator();
+       while( it.hasNext() ) {
+          Legende leg = it.next();
+          int npmra = leg.getPmRa();
+          int npmde = leg.getPmDe();
+          if( npmra<=0 || npmde<=0 ) continue;  // Inutile, pas de PM
+          int nra   = leg.getRa();
+          int nde   = leg.getDe();
+          recomputePosition(iterator(),leg,nra,nde,npmra,npmde);
+          rep=true;
+       }
+       if( rep ) aladin.view.newView(1);
+
+       return rep;
+    }
+    
+    /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
+    public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
+       double epoch = getEpoch().getJyr();
+       int format = TableParser.FMT_UNKNOWN;
+       int nError=0;
+       
+       double J2000=Double.NaN;
+       try { J2000 = (new Astrotime("J2000")).getJyr(); }
+       catch( Exception e ) {}
+       
+//       boolean first=true;
+
+       Astropos c = new Astropos();
+       while( it.hasNext() ) {
+          try {
+             Source s = (Source)it.next();
+             if( s.leg!=leg ) continue;
+             String ra = s.getValue(nra);
+             String dec= s.getValue(ndec);
+             format = TableParser.getRaDec(c, ra, dec, format);
+//             if( first ) System.out.println("c="+c);
+             if( npmra>0 && npmde>0 ) {
+                try {
+                   Unit mu1 = new Unit();
+                   try {
+                      mu1.setUnit(s.getUnit(npmra));
+                      mu1.setValue(s.getValue(npmra));
+                   } catch( Exception e1 ) { e1.printStackTrace(); }
+                   Unit mu2 = new Unit();
+                   try {
+                      mu2.setUnit(s.getUnit(npmde));
+                      mu2.setValue(s.getValue(npmde));
+                   } catch( Exception e1 ) { e1.printStackTrace();  }
+                   if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
+                      try {
+                         mu1.convertTo(new Unit("mas/yr"));
+                      } catch( Exception e) { 
+                         // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
+                         mu1.setUnit(s.getUnit(npmra));
+                         mu1.setValue(s.getValue(npmra));
+                         mu1.convertTo(new Unit("ms/yr"));
+                         mu1.setValue( 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180));
+                         mu1.setUnit("mas/yr");
+                      };
+                      
+                      double pmra = mu1.getValue();
+                      //                   if( first ) System.out.println("pmra="+s1+" => mu1="+mu1+" => val="+pmra);
+                      mu2.convertTo(new Unit("mas/yr"));
+                      double pmde = mu2.getValue();
+                      //                   if( first ) System.out.println("pmde="+s1+" => mu2="+mu2+" => val="+pmde);
+
+                      c.set(c.getLon(),c.getLat(),J2000,pmra,pmde);
+                      //                   if( first ) System.out.println("set c : "+c);
+                      c.toEpoch(epoch);
+                      //                   if( first ) System.out.println("set epoch="+epoch+" : "+c);
+                      //                   if( pmra!=0 || pmde!=0 ) first=false;
+                   }
+                } catch( Exception e ) {
+                   nError++;
+                   if( nError>100 ) {
+                      if( aladin.levelTrace>=3 ) e.printStackTrace();
+                      aladin.warning("Too many error during proper motion computation !\n"
+                        + e.getMessage());
+                      break;
+                   }
+                }
+             }
+
+             s.raj = c.getLon();
+             s.dej = c.getLat();
+             
+          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+       }
+       
+    }
+
+    /** Modification des champs utilisés pour la position céleste */
+    public void modifyRaDecField(Legende leg, int nra,int ndec,int npmra,int npmde) {
+       aladin.trace(3,label+" new J2000 => RA pos="+(nra+1)+" DE pos="+(ndec+1)
+             +" PMRA pos="+(npmra+1)+" PMDE pos="+(npmde+1));
+       
+       recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
+
+       if( hasXYorig ) {
+          hasXYorig=false;
+          error=null;
+       }
+
+       aladin.view.newView(1);
+       aladin.view.repaintAll();
+
+       String s = "New J2000 fields for "+label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
+             +(npmra>0 ? " -  PMRA column "+(npmra+1):"")
+             +(npmde>0 ? " -  PMDEC column "+(npmde+1):"");
+       aladin.trace(2,s);
+       aladin.info(aladin,s);
+    }
+
+    /** Modification des champs utilisés pour la position en XY */
+    public void modifyXYField(Legende leg, int nx,int ny) {
+
+       aladin.trace(3,label+" new XY coordinate fields => X pos="+(nx+1)+" Y pos="+(ny+1));
+       Iterator<Obj> it = iterator();
+       while( it.hasNext() ) {
+          try {
+             Source s = (Source)it.next();
+             if( s.leg!=leg ) continue;
+             s.x = Double.parseDouble( s.getValue(nx) );
+             s.y = Double.parseDouble( s.getValue(ny) );
+          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+       }
+
+       if( !hasXYorig ) {
+          hasXYorig=true;
+          error=Plan.NOREDUCTION;
+       }
+
+       aladin.view.newView(1);
+       aladin.view.repaintAll();
+
+       aladin.info(aladin,"New XY fields for "+label+"\n=> X column "+(nx+1)+" -  Y column "+(ny+1) );
+    }
+
+
+
 
 
    /** Mémorisation des informations de zoom issues de la vue v
@@ -633,6 +823,7 @@ public class Plan implements Runnable {
    /** Initialise toutes les variables */
     protected void init() {
        type = NO;
+       hasPM=-1;
        flagOk=false;
        flagWaitTarget=isOldPlan=false;
        hasSpecificCalib=false;
@@ -1519,6 +1710,11 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
           setLabel(value);
        } else if( prop.equalsIgnoreCase("proj") ) {
           modifyProj(value);
+       } else if( prop.equalsIgnoreCase("epoch") ) {
+          if( !isCatalog() ) throw new Exception("Epoch can be modified only for catalog planes");
+          if( !hasPM() ) throw new Exception("Unknown proper motion fields");
+          setEpoch(value);
+          aladin.calque.repaintAll();
        } else if( prop.equalsIgnoreCase("info") ) {
           info=value;
        } else if( prop.equalsIgnoreCase("Color") ) {
@@ -1780,6 +1976,10 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
       } else {
          if( !isViewable() ) aladin.view.syncPlan(this);
          setActivated(true);
+         
+         // Voir si ca marche
+         aladin.calque.unSelectAllPlan();
+         selected=true;
       }
 
 

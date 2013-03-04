@@ -498,6 +498,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un point
    void drawPoint(Graphics g,Point p) {
+      if( plan!=null && plan.getScalingFactor()>2 ) { drawCircleS(g,p); return; }
       g.drawLine(p.x-1,p.y, p.x+1,p.y );
       g.drawLine(p.x,p.y-1, p.x,p.y+1 );
       if( isWithLabel() ) {
@@ -508,6 +509,7 @@ public class Source extends Position implements Comparator {
 
    // Tracage d'un dot
    void drawDot(Graphics g,Point p) {
+      if( plan!=null && plan.getScalingFactor()>1 ) { drawPoint(g,p); return; }
       g.drawLine(p.x,p.y, p.x,p.y );
       if( isWithLabel() ) {
          setBox(g);

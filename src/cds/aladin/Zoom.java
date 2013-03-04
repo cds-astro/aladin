@@ -69,9 +69,10 @@ public final class Zoom extends JPanel {
    protected SliderSize sizeSlider;
    protected SliderOpacity opacitySlider;
    protected SliderZoom zoomSlider;
+   protected SliderEpoch epochSlider;
+   protected SliderDensity densitySlider;
+   protected JPanel sliderPanel;
    
-   static boolean SLIDER_LOOK = false;
-
    // Les references aux objets
 //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
@@ -84,8 +85,7 @@ public final class Zoom extends JPanel {
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
      
-      SLIDER_LOOK = true;
-      setLayout( new BorderLayout(5,SLIDER_LOOK?10:0) );
+      setLayout( new BorderLayout(5,10) );
 
       cZoom = new JComboBox();
       cZoom.setFont(cZoom.getFont().deriveFont(Font.PLAIN));
@@ -99,20 +99,33 @@ public final class Zoom extends JPanel {
       });
       cZoom.addMouseWheelListener( zoomView );
       
-      if( SLIDER_LOOK ) {
-         /* if( Aladin.PROTO ) */sizeSlider = new SliderSize(aladin);
-         opacitySlider = new SliderOpacity(aladin);
-         zoomSlider = new SliderZoom(this);
-         
-         JPanel sliderPanel = new JPanel( new BorderLayout(2,2));
-         if( sizeSlider!=null ) sliderPanel.add(sizeSlider,BorderLayout.NORTH);
-         sliderPanel.add(opacitySlider,BorderLayout.CENTER);
-         sliderPanel.add(zoomSlider,BorderLayout.SOUTH);
-         
-         add(sliderPanel,BorderLayout.NORTH);
-      }
+      epochSlider   = new SliderEpoch(aladin);
+      sizeSlider    = new SliderSize(aladin);
+      densitySlider = new SliderDensity(aladin);
+      opacitySlider = new SliderOpacity(aladin);
+      zoomSlider    = new SliderZoom(this);
+
+      sliderPanel = new JPanel( new BorderLayout(0, 0));
+      adjustSliderPanel();
+
+      add(sliderPanel,BorderLayout.NORTH);
       
-      Aladin.makeAdd(this,zoomView,SLIDER_LOOK?"Center" : "East");
+      Aladin.makeAdd(this,zoomView,"Center");
+   }
+   
+   private JPanel slp=null;
+   protected void adjustSliderPanel() {
+      JPanel p = new JPanel( new GridLayout(0,1,1,1));
+      if( !Aladin.OUTREACH ) {
+         if( aladin.configuration.isSliderEpoch() ) p.add(epochSlider);
+         if( aladin.configuration.isSliderSize() ) p.add(sizeSlider);
+         if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
+      }
+      if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
+      if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);
+      if( slp!=null ) sliderPanel.remove(slp);
+      sliderPanel.add(p,BorderLayout.CENTER);
+      slp=p;
    }
    
    /** Retourne le JPanel contenant le menu déroulant du sélecteur

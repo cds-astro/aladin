@@ -24,6 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Iterator;
+import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -32,31 +34,34 @@ public class HealpixKeyCat extends HealpixKey {
    Pcat pcat=null;
    int mem=0;
    boolean last;
+   int nLoaded;
+   int nTotal;
 
    protected HealpixKeyCat(PlanBG planBG) { super(planBG); }
 
    protected HealpixKeyCat(PlanBG planBG,int order, long npix) {
       super(planBG,order,npix,ASYNC);
       last=false;
+      nTotal=0;
    }
 
    protected void updateCacheIfRequired(int time) throws Exception {
-      String pathName = planBG.getCacheDir();
-      pathName = pathName+Util.FS+fileCache;
-      long ifmodifiedsince = new File(pathName).lastModified();
-      String fileName = planBG.url+"/"+fileNet;
-      URLConnection conn = (new URL(fileName)).openConnection();
-      conn.setIfModifiedSince(ifmodifiedsince);
-      try {
-         conn.setReadTimeout(time);
-         MyInputStream dis = (new MyInputStream(conn.getInputStream())).startRead();
-         stream = readFully(dis,true);
-         Aladin.trace(4,getStringNumber()+" => cache update");
-         writeCache();
-         dis.close();
-      } catch( Exception e ) {
-         //            System.out.println("Le cache est conservé");
-      }
+//      String pathName = planBG.getCacheDir();
+//      pathName = pathName+Util.FS+fileCache;
+//      long ifmodifiedsince = new File(pathName).lastModified();
+//      String fileName = planBG.url+"/"+fileNet;
+//      URLConnection conn = (new URL(fileName)).openConnection();
+//      conn.setIfModifiedSince(ifmodifiedsince);
+//      try {
+//         conn.setReadTimeout(time);
+//         MyInputStream dis = (new MyInputStream(conn.getInputStream())).startRead();
+//         stream = readFully(dis,true);
+//         Aladin.trace(4,getStringNumber()+" => cache update");
+//         writeCache();
+//         dis.close();
+//      } catch( Exception e ) {
+//         //            System.out.println("Le cache est conservé");
+//      }
    }
 
    protected long loadCache(String filename) throws Exception {
@@ -76,6 +81,7 @@ public class HealpixKeyCat extends HealpixKey {
       mem = stream.length;
 
       testLast(stream);
+      testNLoaded(stream);
 
       int trace=planBG.aladin.levelTrace;
       planBG.aladin.levelTrace=0;
@@ -88,6 +94,22 @@ public class HealpixKeyCat extends HealpixKey {
 
       // Positionnement de la légende du premier Allsky chargé
       if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
+      
+      // Dans le cas où l'époque aurait-été modifié
+      recomputePosition(leg,pcat);
+   }
+   
+   /** Recalcule toutes les positions internes dans le cas où l'époque
+    * aurait été modifiée au préalable */ 
+   public void recomputePosition(Legende leg,Pcat pcat) {
+      if( planBG.epoch==null || planBG.getEpoch().toString("J").equals("J2000") ) return;
+//      System.out.println("Adaptation à l'époque "+planBG.getEpoch());
+      int npmra = leg.getPmRa();
+      int npmde = leg.getPmDe();
+      if( npmra<=0 || npmde<=0 ) return;  // Inutile, pas de PM
+      int nra   = leg.getRa();
+      int nde   = leg.getDe();
+      planBG.recomputePosition(pcat.iterator(),leg,nra,nde,npmra,npmde);
    }
 
    static final private char [] LAST = { '#','l','a','s','t',' ','l','e','v','e','l' };
@@ -98,7 +120,29 @@ public class HealpixKeyCat extends HealpixKey {
       last=true;
    }
 
-   /** Retourne true s'il n'y a pas de descendant */
+   static final private char [] NLOADED = { '#',' ','n','L','o','a','d','e','d',':',' ' };
+   
+   // # nLoaded: 48/48
+   private void testNLoaded(byte [] stream) {
+      if( stream.length<NLOADED.length ) return;
+      for( int i=0; i<NLOADED.length; i++ ) if( NLOADED[i]!=stream[i] ) return;
+      int deb=NLOADED.length;
+      int fin;
+      int slash=0;
+      for( fin=NLOADED.length; fin<stream.length 
+         && stream[fin]!='\n' && stream[fin]!='\r' && stream[fin]!=' '; fin++ ) {
+         if( stream[fin]=='/' ) slash=fin;
+      }
+      if( slash==0 ) return;
+      if( fin==stream.length ) return;
+      try {
+         nLoaded = Integer.parseInt(new String(stream,deb,slash-deb));
+         nTotal = Integer.parseInt(new String(stream,slash+1,fin-(slash+1)));
+         last = nLoaded==nTotal;
+      } catch( Exception e ) { nLoaded = nTotal = 0; }
+   }
+   
+  /** Retourne true s'il n'y a pas de descendant */
    protected boolean isLast() { return last; }
 
    /** Retourne true si on sait qu'il n'y a plus de descendance à charger */
@@ -195,7 +239,8 @@ public class HealpixKeyCat extends HealpixKey {
 //             "/"+t + "s => "+VIE[-getLive()]+
              "s => "+VIE[-getLive()]+
              (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"ms" : "")+
-             (isLast()?" last":"");
+             (isLast()?" last":"")+
+             (nTotal!=0?" "+nLoaded+"/"+nTotal:"");
    }
 
 

@@ -30,6 +30,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import cds.astro.Astrocoo;
+import cds.astro.Astropos;
+import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.TableParser;
@@ -480,62 +482,6 @@ Aladin.trace(3,"startTable "+name);
       genericLeg=leg;
    }
 
-   /** Modification des champs utilisés pour la position céleste */
-   public void modifyRaDecField(Legende leg, int nra,int ndec) {
-      Astrocoo c = new Astrocoo();
-      int format = TableParser.FMT_UNKNOWN;
-
-      aladin.trace(3,leg.plan.label+" new J2000 => RA pos="+(nra+1)+" DE pos="+(ndec+1));
-      for( int i=0; i<nb_o; i++ ) {
-         try {
-            Source s = (Source)o[i];
-            if( s.leg!=leg ) continue;
-            String ra = s.getValue(nra);
-            String dec= s.getValue(ndec);
-            format = TableParser.getRaDec(c, ra, dec, format);
-            s.raj = c.getLon();
-            s.dej = c.getLat();
-         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-      }
-
-      if( plan.hasXYorig ) {
-         plan.hasXYorig=false;
-         plan.error=null;
-      }
-
-      aladin.view.newView(1);
-      aladin.view.repaintAll();
-
-      aladin.info(aladin,"New J2000 fields for "+leg.plan.label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
-            +"\n (format: "+(format==TableParser.FMT_SEXAGESIMAL ? "sexagesimal":"decimal")+")");
-   }
-
-   /** Modification des champs utilisés pour la position en XY */
-   public void modifyXYField(Legende leg, int nx,int ny) {
-
-      aladin.trace(3,leg.plan.label+" new XY coordinate fields => X pos="+(nx+1)+" Y pos="+(ny+1));
-      for( int i=0; i<nb_o; i++ ) {
-         try {
-            Source s = (Source)o[i];
-            if( s.leg!=leg ) continue;
-            s.x = Double.parseDouble( s.getValue(nx) );
-            s.y = Double.parseDouble( s.getValue(ny) );
-         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-      }
-
-      if( !plan.hasXYorig ) {
-         plan.hasXYorig=true;
-         plan.error=Plan.NOREDUCTION;
-      }
-
-      aladin.view.newView(1);
-      aladin.view.repaintAll();
-
-      aladin.info(aladin,"New XY fields for "+leg.plan.label+"\n=> X column "+(nx+1)+" -  Y column "+(ny+1) );
-   }
-
-
-
    /** L'interface TableParserConsumer */
    public void setRecord(double ra, double dec, String[] value) {
       int n;
@@ -790,13 +736,16 @@ Aladin.trace(3,"startTable "+name);
    /** This method is called by the TableParserConsumer for
     * delivering RA,DEC,X,Y column index (-1 means not found)
     */
-   public void setTableRaDecXYIndex(int nRa, int nDec, int nX, int nY, boolean badDetection) {
+   public void setTableRaDecXYIndex(int nRa, int nDec, int nPmRa, int nPmDec,int nX, int nY, boolean badDetection) {
       int n=vField.size();
       if( nRa>=0  && nRa<n  ) ((Field)vField.elementAt(nRa)).coo=Field.RA;
       if( nDec>=0 && nDec<n ) ((Field)vField.elementAt(nDec)).coo=Field.DE;
+      if( nPmRa>=0 && nPmRa<n ) ((Field)vField.elementAt(nPmRa)).coo=Field.PMRA;
+      if( nPmDec>=0 && nPmDec<n ) ((Field)vField.elementAt(nPmDec)).coo=Field.PMDE;
       if( nX>=0   && nX<n   ) ((Field)vField.elementAt(nX)).coo=Field.X;
       if( nY>=0   && nY<n   ) ((Field)vField.elementAt(nY)).coo=Field.Y;
       badRaDecDetection = badDetection;
+      plan.hasPM=-1;
    }
 
 //   /** Retourne l'indice de la colonne RA si connu, sinon -1 */
