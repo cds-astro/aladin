@@ -86,6 +86,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta    <LI> FOV target precision bug fixed
+ * @beta    <LI> TAN SIP bug fixed
  * @beta    <LI> EPS NorthUP bug fixed
  * @beta    <LI> VOTable base64 BINARY STREAM with variable fields bug fixed
  * @beta    <LI> HEALPix sky => RGB missing tiles supported
