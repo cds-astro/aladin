@@ -83,7 +83,7 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
       slider = new Slider(min,max,incr);
       
       label = new Lab(title);
-      label.setMinimumSize(new Dimension(140,4));
+      label.setMinimumSize(new Dimension(145,4));
       label.setFont(Aladin.SBOLD);
       label.setBackground( slider.getBackground() );
 
