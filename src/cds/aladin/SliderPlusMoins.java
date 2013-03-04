@@ -83,7 +83,6 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
       slider = new Slider(min,max,incr);
       
       label = new Lab(title);
-      label.setMinimumSize(new Dimension(160,4));
       label.setFont(Aladin.SBOLD);
       label.setBackground( slider.getBackground() );
 
@@ -296,7 +295,7 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    
    class Lab extends JLabel {
       public Lab(String s) { super(s); }
-      public Dimension getPreferredSize() {  return new Dimension(30,14); }
+      public Dimension getPreferredSize() {  return new Dimension(40,14); }
    }
    
 }
