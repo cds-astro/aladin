@@ -23,7 +23,6 @@ import java.awt.Graphics;
 import java.io.*;
 import java.text.DateFormat;
 import java.util.*;
-import java.util.Properties;
 
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
@@ -37,7 +36,7 @@ import cds.tools.pixtools.CDSHealpix;
  *
  */
 public class PlanHealpix extends PlanBG {
-   
+
    static final public String PROPERTIES = "properties";
 
     // noms des clés utilisés dans le fichier properties
@@ -61,7 +60,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
     static public final String KEY_CURTFORMBITPIX = "curTFormBitpix";
     static public final String KEY_ALADINVERSION = "aladinVersion";
-    
+
     static public final String KEY_COORDSYS = "coordsys";
     static public final String KEY_ISCOLOR = "isColored";
     static public final String KEY_ISCAT = "isCatalog";
@@ -127,7 +126,7 @@ public class PlanHealpix extends PlanBG {
 
     private boolean fromProperties; // true si la création du plan a été demandée depuis la fenetre des properties. Dans ce cas, on ne touche pas à idxTFormToRead, même pour les fichiers partiels
 
-    
+
     /** @param mode : DRAWPIXEL : les pixels, DRAWPOLARISATION : les segments de polarisation, DRAWANGLE : les angles sous forme d'une image */
     public PlanHealpix(Aladin aladin, String file, MyInputStream in, String label, int mode, int idxTFormToRead, boolean fromProperties) {
         super(aladin);
@@ -138,7 +137,7 @@ public class PlanHealpix extends PlanBG {
 
         threading();
     }
-    
+
 
     /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
     public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, String startingTaskId) {
@@ -146,19 +145,19 @@ public class PlanHealpix extends PlanBG {
 
         this.startingTaskId=startingTaskId;
         fromProperties = false;
-        
+
         gluTag = gluSky.getID();
         String file = gluSky.getUrl();
         MyInputStream in = null;
         try { in=Util.openAnyStream(file); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
         if( label==null ) label = gluSky.label;
-        
+
         init( file , in, label, 0);
         setDrawMode(DRAWPIXEL);
 
         threading();
     }
-    
+
     // juste pour les classes derivees
     public PlanHealpix(Aladin aladin) {
         super(aladin);
@@ -421,16 +420,16 @@ public class PlanHealpix extends PlanBG {
        pixList = new Hashtable<String, HealpixKey>(1000);
        allsky=null;
        loader = new HealpixLoader();
-       
+
        postProd();
 
     }
-    
+
     protected void postProd() {
        int defaultProjType = aladin.configuration.getProjAllsky();
        Plan base = aladin.calque.getPlanBase();
        if( base instanceof PlanBG ) defaultProjType = base.projd.t;
-       
+
        Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
              defaultProjType,Calib.FK5);
 
@@ -467,7 +466,7 @@ public class PlanHealpix extends PlanBG {
               naxis1 = headerFits.getIntFromHeader("NAXIS1");
               isTmp.skip(naxis1);
            } catch( Exception e) {}
-           
+
            // On se cale sur le prochain segment de 2880
            isTmp.skipOnNext2880();
 //           long pos = isTmp.getPos();
@@ -475,7 +474,7 @@ public class PlanHealpix extends PlanBG {
 //              long offset = ((pos/2880)+1) *2880  -pos;
 //              isTmp.skip(offset);
 //           }
-           
+
            headerFits = new FrameHeaderFits(this,isTmp);
         }
 
@@ -678,7 +677,7 @@ public class PlanHealpix extends PlanBG {
         }
 
         Aladin.trace(3, "curNorder: "+curNorder);
-        // création des Norder de plus basse résolution jusqu'à 3
+        // création des Norder de la résolution la plus profonde jusqu'à 3
         for (int norder=curNorder-1; norder>=3 ; norder--) {
             // génération des fichiers de niveau norder
             int nbPix = (int)(12*Math.pow(CDSHealpix.pow2(norder), 2));
@@ -913,30 +912,38 @@ public class PlanHealpix extends PlanBG {
             RandomAccessFile raf, long initialOffset, long idxTForm) {
 
 
-
-
         // TODO : ATTENTION : si lowHealpixIdx n'est pas un multiple du format (1024E par exemple), ça ne marchera pas
         double val = 0; // Valeur du champ courant
 
-        int nbValues = (int) (highHealpixIdx - lowHealpixIdx + 1);
+        int nbValues = (int) (highHealpixIdx - lowHealpixIdx);
         double[] result = new double[nbValues];
 
 
         // On prend un buffer assez grand pour tout recuperer en une fois
         // (raisonnable quand on genere des images 512*512)
         int nbRowsToRead = nbValues / lenHpx[(int)idxTForm];
+        // dans ce cas, on ne récupère qu'une partie d'une ligne de données (bug fix pour fichier Caroline toto.fits)
+        if (nbRowsToRead==0) {
+            nbRowsToRead = 1;
+        }
 //        System.out.println("nbValues: "+nbValues);
 //        System.out.println("NB ROWS TO READ: "+nbRowsToRead);
 //        System.out.println(sizeRecord);
         int sizeBuf = nbRowsToRead * sizeRecord;
         byte[] buf = new byte[sizeBuf];
 
+        // (bug fix pour fichier Caroline toto.fits)
+        int inrowSkip = 0;
+        if (nbValues<lenHpx[(int)idxTForm]) {
+            inrowSkip = ((int)lowHealpixIdx % lenHpx[(int)idxTForm]) * Util.binSizeOf(typeHpx[(int)idxTForm], 1);
+        }
+
         int nbRowsToSkip = (int) lowHealpixIdx / lenHpx[(int)idxTForm];
         // on se place à l'endroit qui nous intéresse et on lit
         try {
 
             // System.out.println("NB ROWS TO SKIP: "+ nbRowsToSkip);
-            raf.seek(initialOffset + nbRowsToSkip * sizeRecord);
+            raf.seek(initialOffset + nbRowsToSkip * sizeRecord + inrowSkip);
             try {
                 raf.readFully(buf);
             } catch (EOFException e) {
@@ -959,21 +966,24 @@ public class PlanHealpix extends PlanBG {
                     offsetField += Util.binSizeOf(typeHpx[idxField], lenHpx[idxField]);
                     continue;
                 }
+
                 int totalOffset = offset+offsetField;
-                for( int k=0; k<lenHpx[idxField]; k++, resultIdx++ ) {
+                for( int k=0; k<lenHpx[idxField] && resultIdx<result.length; k++, resultIdx++ ) {
                     int offsetc = Util.binSizeOf(typeHpx[idxField],k);
+                    if (k==0) {
+                    }
                     switch(typeHpx[idxField]) {
                     case 'I': val = getShort(buf,totalOffset+offsetc); break;
                     case 'J': val = getInt(buf,totalOffset+offsetc); break;
-                    case 'K': val = (((long)getInt(buf,totalOffset+offsetc))<<32) 
-                                             | (((long)getInt(buf,totalOffset+offsetc+4))& 0xFFFFFFFFL); break;
+                    case 'K': val = (((long)getInt(buf,totalOffset+offsetc))<<32)
+                                             | ((getInt(buf,totalOffset+offsetc+4))& 0xFFFFFFFFL); break;
                     case 'E': val = Float.intBitsToFloat( getInt(buf,totalOffset+offsetc) );  break;
-                    case 'D': long a = (((long)getInt(buf,totalOffset+offsetc))<<32) 
-                                             | (((long)getInt(buf,totalOffset+offsetc+4))& 0xFFFFFFFFL);
+                    case 'D': long a = (((long)getInt(buf,totalOffset+offsetc))<<32)
+                                             | ((getInt(buf,totalOffset+offsetc+4))& 0xFFFFFFFFL);
                               val = Double.longBitsToDouble(a); break;
                     default: val=-1;
-                }
-                result[resultIdx] = val;
+                    }
+                    result[resultIdx] = val;
                 }
             }
         }
@@ -994,7 +1004,7 @@ public class PlanHealpix extends PlanBG {
     static public long getFather(long npix) { return npix/4; }
 
 
-    // PF janv 2011 - remplacement par une Hashmap 
+    // PF janv 2011 - remplacement par une Hashmap
     //pour ne plus faire exploser la mémoire en cas de grand NSIDE
 //    private double[] partialValues;
     HashMap partialValues;
@@ -1209,7 +1219,7 @@ public class PlanHealpix extends PlanBG {
         return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION"))
             && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION"));
     }
-    
+
     protected boolean isPartial() { return isPartial; }
 
     /**
