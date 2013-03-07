@@ -29,6 +29,7 @@
         <pathelement path="${lib}/cds.savot.sax.jar"/>
         <pathelement path="${lib}/cds.savot.writer.jar"/>
         <pathelement path="${lib}/kxml2-2.3.0.jar"/>
+        <pathelement path="${lib}/cds.astro.jar"/>
         <pathelement path="${mocjar}"/>
       </classpath>
      </javac>
@@ -46,6 +47,7 @@
         <zipfileset src="${lib}/cds.savot.sax.jar"/>
         <zipfileset src="${lib}/cds.savot.writer.jar"/>
         <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+        <zipfileset src="${lib}/cds.astro.jar"/>
 	    <zipfileset src="${mocjar}"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
