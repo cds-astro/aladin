@@ -813,7 +813,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       mcanvas.currentselect=-2;
       
       Source s = aladin.mesure.getFirstSrc();
-      if( s==null && aladin.view.zoomview.flagSED || s.leg.isSED() ) {
+      if( s==null && aladin.view.zoomview.flagSED || s!=null && s.leg!=null && s.leg.isSED() ) {
          aladin.view.zoomview.setSED(s);
       }
       mcanvas.repaint();

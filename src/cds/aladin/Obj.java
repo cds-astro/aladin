@@ -71,11 +71,11 @@ public abstract class Obj implements Propable{
    protected static final int XY_COMPUTE = 8;
 
    // Les différents flags
-   static protected final byte SELECT  = 1;
-   static protected final byte TAG     = 1<<1;
-   static protected final byte VISIBLE = 1<<2;
-   static protected final byte WITHLABEL   = 1<<3;
-   static protected final byte HIGHLIGHT   = 1<<4;
+   static protected final byte SELECT     = 1;
+   static protected final byte TAG        = 1<<1;
+   static protected final byte VISIBLE    = 1<<2;
+   static protected final byte WITHLABEL  = 1<<3;
+   static protected final byte HIGHLIGHT  = 1<<4;
    static protected final byte WITHSTAT   = 1<<5;
 
    protected Plan   plan;       // Plan d'appartenance de l'objet

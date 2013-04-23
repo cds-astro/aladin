@@ -114,7 +114,6 @@ public final class MyInputStream extends FilterInputStream {
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
                                  // toute l'entête fits courante dans le cache (voir hasFitsKey())
 
-
    public MyInputStream(InputStream in) throws IOException {
       this(in,UNKNOWN,true);
    }
@@ -243,8 +242,8 @@ public final class MyInputStream extends FilterInputStream {
          try {
             int naxis1 = Integer.parseInt(getFitsValue("NAXIS1"));
             int naxis2 = Integer.parseInt(getFitsValue("NAXIS2"));
-            //            int npix = Integer.parseInt(getFitsValue("BITPIX"));
-            if( (long)naxis1*naxis2/**Math.abs(npix)/8*/ > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
+            int npix = Integer.parseInt(getFitsValue("BITPIX"));
+            if( (long)naxis1*naxis2*(Math.abs(npix)/8) > Aladin.LIMIT_HUGEFILE ) type |= HUGE;
          }catch( Exception e ) {}
       }
 

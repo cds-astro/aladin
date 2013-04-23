@@ -52,12 +52,12 @@ public class ServerAllsky extends ServerTree  {
       ButtonGroup group = new ButtonGroup();
       JLabel l = new JLabel(aladin.chaine.getString("ALADINDEFFMT"));
       formatPanel.add(l);
-      b = new JRadioButton("Jpeg (faster)");
+      b = new JRadioButton(aladin.chaine.getString("ALLSKYJPEG"));
       b.setBackground(Aladin.BLUE);
       b.setSelected(true);
       group.add(b);
       formatPanel.add(b);
-      fitsRadio = b = new JRadioButton("Fits (full dynamic)");
+      fitsRadio = b = new JRadioButton(aladin.chaine.getString("ALLSKYFITS"));
       b.setBackground(Aladin.BLUE);
       group.add(b);
       formatPanel.add(b);
@@ -139,12 +139,21 @@ public class ServerAllsky extends ServerTree  {
       tree.populateTree( aladin.glu.vGluSky.elements() );
    }
    
-   public void submit(TreeNode n) {
-      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
-      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
-      
-      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
+   public void submit() {
+      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
+      for( TreeNode n : tree ) {
+         if( !(n instanceof TreeNodeAllsky) ) continue;
+         ((TreeNodeAllsky)n).setDefaultMode( mode );
+      }
+      super.submit();
    }
+   
+//   public void submit(TreeNode n) {
+//      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
+//      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
+//      
+//      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
+//   }
 
 
 }

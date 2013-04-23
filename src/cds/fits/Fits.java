@@ -155,7 +155,7 @@ final public class Fits {
    public Calib getCalib() { return calib; }
 
    /* Chargement d'une image N&B sous forme d'un JPEG */
-   protected void loadJpeg(MyInputStream dis) throws Exception { loadJpeg(dis,false); }
+   public void loadJpeg(MyInputStream dis) throws Exception { loadJpeg(dis,false); }
 
    /** Chargement d'une image JPEG depuis un fichier */
    public void loadJpeg(String filename,int x, int y, int w, int h) throws Exception { loadJpeg(filename+"["+x+","+y+"-"+w+"x"+h+"]"); }
@@ -176,7 +176,7 @@ final public class Fits {
    }
 
 
-   protected void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
+   public void loadJpeg(MyInputStream dis,boolean flagColor) throws Exception {
       loadJpeg(dis,0,0,-1,-1,flagColor);
    }
 
@@ -228,6 +228,7 @@ final public class Fits {
    //         initPix8();
    //      }
    //   }
+
 
    public void loadJpeg(MyInputStream dis,int x,int y, int w, int h,boolean flagColor) throws Exception {
       String coding = dis.getType()==MyInputStream.PNG ? "png":"jpeg";
@@ -801,10 +802,11 @@ final public class Fits {
 
    public void writeRGBcompressed(OutputStream os,String format) throws Exception {
       Image img;
+      int typeInt = format.equals("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+
       img = Toolkit.getDefaultToolkit().createImage( new MemoryImageSource(widthCell,heightCell, rgb, 0,widthCell) );
 
-      //      BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
-      BufferedImage bufferedImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+      BufferedImage bufferedImage = new BufferedImage(width,height,typeInt);
       Graphics g = bufferedImage.createGraphics();
       g.drawImage(img,xCell,yCell,observer);
       g.dispose();
@@ -1648,20 +1650,20 @@ final public class Fits {
       writer.write(null, new IIOImage(imgTarget,null,null), iwp);
       writer.dispose();
    }
+   
+   public static void convert(String filename) throws Exception {
+      Fits f = new Fits();
+      f.loadJpeg(filename, true);
+      invImageLine(f.width, f.height, f.rgb);
+      for( int i=0; i<f.rgb.length; i++ ) f.rgb[i] |= 0xFF000000;
+      f.writeRGBcompressed(filename+".jpg", "jpeg");
+   }
 
 
 
    public static void main(String[] args) {
       try {
-         Fits f = new Fits();
-         f.loadFITS("/DSS.fits"); 
-         System.out.println("lecture de "+f.getFilename()+" => "+f);
-         
-         double cut[] = f.findAutocutRange();
-         System.out.println("min="+cut[0]+" max="+cut[1]);
-         f.write("/DSS.png", cut[0], cut[1], null, "png");
-         System.out.println("Ecriture en PNG");
-         f.free();
+         convert("C:\\Users\\Pierre\\Desktop\\PLANCK\\HFIColor100-217-545\\Norder3\\Allsky.jpg");
       } catch( Exception e ) {
          e.printStackTrace();
       }

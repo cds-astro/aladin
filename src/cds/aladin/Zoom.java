@@ -183,7 +183,7 @@ public final class Zoom extends JPanel {
    */
    protected double getValue() {
       if( zoomSlider!=null ) {
-         int n = zoomSlider.getValue();
+         int n = (int)zoomSlider.getValue();
          cZoom.setSelectedIndex(n);
       }
       return getValue(cZoom.getSelectedIndex());

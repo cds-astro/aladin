@@ -248,11 +248,14 @@ public class SkyGen {
          all=true;
          actions.add(Action.INDEX);
          actions.add(Action.TILES);
-         actions.add(Action.GZIP);
-         actions.add(Action.JPEG);
-         actions.add(Action.PROGEN);
+
+         if( !context.isColor() ) {
+            actions.add(Action.GZIP);
+            actions.add(Action.JPEG);
+            actions.add(Action.PROGEN);
+         }
       }
-      
+     
       // Nettoyage avant ?
       if( force ) {
          context.setIgnoreStamp(true);

@@ -27,6 +27,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseWheelEvent;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -162,6 +163,7 @@ class SED extends JPanel {
       planeAlreadyCreated = true;
       plan.label="SED "+source;
       plan.objet = source;
+      try { plan.u=new URL(url); } catch( Exception e ) { }
       aladin.calque.newPlan(plan);
       plan.planReady(true);
       aladin.calque.selectPlan(plan);   // sélectionne également les sources du plan
@@ -429,7 +431,7 @@ class SED extends JPanel {
       g.setFont(Aladin.SSPLAIN);
       g.drawString("log f("+NU+")",gauche-2,haut-4);
       g.drawString((fluxMax==0 ? "":getUnitJy(fluxMax)),gauche+4,haut+6);
-      g.drawString("log "+NU,droite+2,bas);
+      g.drawString("log "+(flagWavelength ? MU : NU),droite+2,bas);
       
       // Tracé de la valeur sous la souris
       g.setColor(LIGHTGRAY);

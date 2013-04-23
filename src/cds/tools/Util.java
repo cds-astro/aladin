@@ -199,6 +199,8 @@ public final class Util {
     */
    static public boolean matchMask(String mask, String word) {
        if( word==null || mask==null ) return false;
+       if( mask.indexOf('*')<0 && mask.indexOf('?')<0 ) return word.indexOf(mask)>=0;
+       
        mask = mask+'\0';
        word = word+'\0';
        int indiceM,indiceA;

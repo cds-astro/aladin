@@ -58,6 +58,7 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean inFits=false; // true si le survey est fourni en FITS
    private boolean inJPEG=false; // true si le survey est fourni en JPEG
    private boolean truePixels=false; // true si par défaut le survey est fourni en truePixels (FITS)
+   private boolean truePixelsSet=false; // true si le mode par défaut du survey a été positionné manuellement
    private boolean cat=false;    // true s'il s'agit d'un catalogue hiérarchique
    private boolean map=false;    // true s'il s'agit d'une map HEALPix FITS
    private boolean moc=false;    // true s'il faut tout de suite charger le MOC
@@ -87,7 +88,7 @@ public class TreeNodeAllsky extends TreeNode {
       // recherche du frame Healpix
       String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
       char c1 = strFrame.charAt(0);
-      if( c1=='C' ) frame=Localisation.ICRS;
+      if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
       else if( c1=='E' ) frame=Localisation.ECLIPTIC;
       else if( c1=='G' ) frame=Localisation.GAL;
 
@@ -334,7 +335,10 @@ public class TreeNodeAllsky extends TreeNode {
    protected boolean isJPEG() { return inJPEG; }
    
    /** Retourne true si par défaut le survey est fourni en true pixels (FITS)  */
-   protected boolean isTruePixels() { return truePixels; }
+   protected boolean isTruePixels() { 
+      if( truePixelsSet ) return truePixels;
+      return inFits && local || !inJPEG && !local;
+   }
    
    /** Retourne true si le survey utilise le cache local */
    protected boolean useCache() { return useCache; }
@@ -379,11 +383,17 @@ public class TreeNodeAllsky extends TreeNode {
       return s.toString();
    }
    
-   protected void submit() { aladin.allsky(this); }
+   protected void submit() { 
+      String mode = isTruePixels() ? ",fits":"";
+      aladin.console.setCommand("get allsky("+Tok.quote(label)+mode+")");
+
+      aladin.allsky(this);
+   }
    
    void loadCopyright() { aladin.glu.showDocument(copyrightUrl); }
    
    void setDefaultMode(int mode) {
+      truePixelsSet=true;
       if( mode==PlanBG.FITS && inFits ) truePixels=true;
       else if( mode==PlanBG.JPEG && inJPEG ) truePixels=false;
    }

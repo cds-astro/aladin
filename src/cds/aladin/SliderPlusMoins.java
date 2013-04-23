@@ -121,7 +121,7 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    }
    
    /** Récupère la valeur courant du slider */
-   public int getValue() { return slider.getValue(); }
+   public double getValue() { return slider.getValue(); }
    
    /** Positionne la valeur courante du slider */
    public void setValue(int v) { slider.setValue(v); }
@@ -153,7 +153,8 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    boolean setMinMax(int min,int max) { return slider.setMinMax(min,max); }
    
    class Slider extends JPanel implements MouseMotionListener,MouseListener {
-      int min,max,value,incr;
+      int min,max,incr;
+      double value;
       Slider(int min, int max,int incr) {
          this.value=this.min=min;
          this.max=max;
@@ -162,8 +163,8 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
          addMouseMotionListener(this);
       }
       
-      int getValue() { return value; }
-      void setValue(int v) { value=v; repaint(); }
+      double getValue() { return value; }
+      void setValue(double v) { value=v; repaint(); }
       
       boolean setMinMax(int min, int max) {
          if( this.min==min && this.max==max ) return false;

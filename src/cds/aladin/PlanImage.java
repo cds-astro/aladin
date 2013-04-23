@@ -119,7 +119,7 @@ public class PlanImage extends Plan {
    protected byte[] pixelsOrigin;     // Tableau des pixels d'origine (LIGNES NON INVERSEES - format FITS)
    protected ColorModel cm;			  // La table des couleurs associee a l'image
    protected int typeCM;			  // memorise la table des couleurs (CMGRAY ou CMBB ou CMA)
-   protected int cmControl[];	      // Valeurs de controle de la table des couleurs
+   public int cmControl[];	      // Valeurs de controle de la table des couleurs
    public int transfertFct;           // Fonction de transfert (LINEAR,LOG,SQR...)
    protected double hist[],histA[];   // Histogrammes des pixels (voir ColorMap)
    protected boolean flagHist;        // true si on dispose de l'histogramme des pixels à jour
@@ -2318,11 +2318,12 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
           case View.INFILE:
                  return pixelsOrigin==null?UNK:
                     X(getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x));
+          case View.REALX:
           case View.REAL:
              if( fmt==JPEG ) return UNK;
              if( type!=ALLSKYIMG && pixelsOrigin!=null ) {
                 double val = getPixVal(pixelsOrigin,bitpix,(height-y-1)*width+x)*bScale+bZero;
-                if( aladin.levelTrace<4 ) return Y(val);
+                if( aladin.levelTrace<4 || mode==View.REALX ) return Y(val);
                 
                 double infileVal=getPixVal1(pixelsOrigin,bitpix,(height-y-1)*width+x);
                 return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
@@ -2331,7 +2332,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
              if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
              if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
              double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
-             if( aladin.levelTrace<4 ) return Y(val);
+             if( aladin.levelTrace<4|| mode==View.REALX  ) return Y(val);
              
              double infileVal=getPixVal1(onePixelOrigin,bitpix,0);
              return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
@@ -2457,6 +2458,9 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
    /** Retourne la valeur du pixel maximale pour le cut (bcale et bzero ont été déjà appliqué) */
    public double getPixelMax() { return pixelMax*bScale + bZero; }
+   
+   /** Retourne la valeur du pixel médiane (approximative) pour le cut (bcale et bzero ont été déjà appliqué) */
+   public double getPixelMiddle() { return getInvPixel( cmControl[1] )*bScale + bZero; }
 
    /** Retourne le bitpix */
    protected int getBitpix() { return bitpix; }
@@ -2538,7 +2542,10 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     */
    protected String getDateObs() {
       if( !hasFitsHeader() ) return null;
-      return headerFits.getStringFromHeader("DATE-OBS");
+      String s = headerFits.getStringFromHeader("EPOCH");
+      if( s==null ) headerFits.getStringFromHeader("DATE-OBS");
+      else s="J"+s;
+      return s;
    }
 
    /** Retourne true si on dispose d'une entête FITS */

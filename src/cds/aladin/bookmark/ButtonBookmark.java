@@ -100,7 +100,7 @@ public class ButtonBookmark extends JButton {
       catch( Exception e ) { e.printStackTrace(); }
    }
    
-   static private final Color Orange = new Color(255,175,0);
+   static public final Color Orange = new Color(255,175,0);
    
    /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
    public void paintComponent(Graphics g) {

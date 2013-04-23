@@ -7,6 +7,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
+import cds.aladin.PlanImage;
 import cds.aladin.PlanImageRGB;
 import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
@@ -81,10 +82,14 @@ public class BuilderRgb extends Builder {
              return;
           }
           tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
+          context.setProperty(c==0?"red":c==1?"green":"blue",p[c].label+" ["
+               +p[c].getPixelMin()+" "+p[c].getPixelMiddle()+" "+p[c].getPixelMax()+" "
+               +PlanImage.TRANSFERTFCT[ p[c].transfertFct ]+"]");
           int order = p[c].getMaxFileOrder();
           if( maxOrder > order)  maxOrder = order;
        }
        ((ContextGui)context).mainPanel.clearForms();
+       context.setFrame(frame);
        context.setOrder(maxOrder);
        context.setOutputPath(path);
        context.setBitpixOrig(0);

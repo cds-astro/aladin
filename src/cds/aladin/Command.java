@@ -2506,6 +2506,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( i==0 ) { if( (s1=exec(cmd,verbose,flagOnlyFunction))==null ) return null; }
                else s1=exec(cmd,verbose,flagOnlyFunction);
             }
+            
             if( s1!=null && s1.length()>0 ) rep.append(s1);
             i++;
          } catch( Exception e ) {
@@ -2558,7 +2559,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
       
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
-      if( s1.length()>0 && s1.trim().charAt(0)=='#' ) {
+      if( s1.trim().charAt(0)=='#' ) {
          if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
          else comment.append(" "+s1.trim().substring(1));
          return "";

@@ -127,6 +127,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    static final int LEVEL   = 0;
    static final int REAL    = 1;
    static final int INFILE  = 2;
+   static final int REALX   = 3;
 
    // Les composantes de l'objet
    Vector<Obj> vselobj = new Vector<Obj>(500); // Vecteur des objets selections
@@ -912,7 +913,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //               v.setZoomXY(v.zoom,-1,-1);
                // IL FAUT ENCORE Y REFLECHIR
                System.out.println("zoom="+v.zoom+" v.rzoom="+v.rzoom);
-               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false);
+               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false,true);
             }
 
             if( n==-1 ) {
@@ -1297,6 +1298,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       int lig = aladin.viewControl.getNbLig(m);
       int col = aladin.viewControl.getNbCol(m);
       mviewPanel.setLayout( new GridLayout(lig,col,0,0));
+      if( m==ViewControl.MVIEW2L) m=ViewControl.MVIEW2C;
       for( int i=0; i<m; i++ ) mviewPanel.add(viewSimple[i]);
    }
 
@@ -3623,9 +3625,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       oco=null;
 
       try {
-         url = aladin.glu.getURL("Sesame",URLEncoder.encode(objet),true);
+         url = aladin.glu.getURL("openSesame",URLEncoder.encode(objet),true);
 
-         UrlLoader urlLoader = new UrlLoader(url,5000);
+         UrlLoader urlLoader = new UrlLoader(url,3000);
          String res = urlLoader.getData();
          StringTokenizer st = new StringTokenizer(res,"\n");
          while( st.hasMoreTokens() ) {
@@ -3659,9 +3661,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //            }
 //         }
       } catch( Exception e ) {
-         
+         System.err.println("View.sesame..."+e.getMessage());
+         e.printStackTrace();
          // On va essayer un autre site Sesame...
-         if( nbSesameCheck<MAXSESAMECHECK && aladin.glu.checkIndirection("Sesame","") ) {
+         if( nbSesameCheck<MAXSESAMECHECK && aladin.glu.checkIndirection("openSesame","") ) {
             URL url1 = aladin.glu.getURL("Sesame",URLEncoder.encode(objet),true);
             if( !url.equals(url1) ) {
                nbSesameCheck++;

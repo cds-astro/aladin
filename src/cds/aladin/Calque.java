@@ -3114,6 +3114,7 @@ public final class Calque extends JPanel implements Runnable {
             p1.objet=p.objet;
             p1.pcat.nbTable=1;
             p1.sourceType=p.sourceType;
+            p1.fullSource=p.fullSource;
             p1.planFilter=p.planFilter;
 
             p1.projd = p.projd.copy();

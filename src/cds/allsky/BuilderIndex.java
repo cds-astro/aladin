@@ -113,6 +113,7 @@ public class BuilderIndex extends Builder {
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
       }
+      
    }
    
    /** Demande d'affichage des stats (dans le TabBuild) */

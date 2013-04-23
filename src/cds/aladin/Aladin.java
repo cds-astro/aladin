@@ -68,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
  * @beta    <LI> "match" command script
  * @beta    <LI> Catalog proper motion support
  * @beta    <LI> All-sky progressive zoom (not only powers of 2)
@@ -112,7 +113,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.544";
+    static public final    String VERSION = "v7.547";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -224,7 +225,7 @@ public class Aladin extends JApplet
     public static boolean BETA=true;  // true si on tourne en mode BETA
     public static boolean CDS=false;   // true si on tourne en mode CDS
     public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
-    static boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
+    static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
     static boolean setOUTREACH=false; // true si le mode OUTREACH a été modifié par paramètre sur la ligne de commande
     static int ALIASING=0;            // 0-défaut système, 1-actif, -1-désactivé
 
@@ -245,7 +246,7 @@ public class Aladin extends JApplet
     static final int LIMIT_PIXELORIGIN_INMEM = 4*1024*1024;
 
     // Limite image en full access
-    static final long LIMIT_HUGEFILE = Runtime.getRuntime().maxMemory()/3;
+    static final long LIMIT_HUGEFILE = Math.min((long)Integer.MAX_VALUE,Runtime.getRuntime().maxMemory()/2L);
     
     static long MAXMEM = Runtime.getRuntime().maxMemory()/(1024*1024);
     
@@ -279,7 +280,7 @@ public class Aladin extends JApplet
 
     // Les fontes associees a Aladin
     static int  SSIZE,SSSIZE,LSIZE  ;
-    static Font BOLD,PLAIN,ITALIC,SBOLD,SSBOLD,SPLAIN,SSPLAIN,SITALIC,
+    static public Font BOLD,PLAIN,ITALIC,SBOLD,SSBOLD,SPLAIN,SSPLAIN,SITALIC,
                 LPLAIN,LBOLD,LITALIC,LLITALIC,L,COURIER,BCOURIER;
 
     // L'instance d'aladin lui-meme, pour la methode main() et
@@ -293,7 +294,7 @@ public class Aladin extends JApplet
 
     // Les objets associees a l'interface
     FullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
-    Bookmarks bookmarks;          // Gère les favoris
+    public Bookmarks bookmarks;          // Gère les favoris
     View view;                    // Gere la "View frame"
     Status status;                // Gere la ligne de "Status"
     Match sync;                   // Gere le logo pour la grille
@@ -386,7 +387,7 @@ public class Aladin extends JApplet
                       miProp,miGrid,miReticle,miReticleL,miNoReticle,
                       miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,
                       miPrevPos,miNextPos,
-                      miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel3,miPanel4,miPanel9,miPanel16,
+                      miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
                       miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
                       miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
@@ -448,7 +449,7 @@ public class Aladin extends JApplet
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
            DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
-           PANEL1,PANEL2C,PANEL2L,PANEL3,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
+           PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENCAT,
            MOCM,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
@@ -803,7 +804,6 @@ public class Aladin extends JApplet
        PANEL1  = chaine.getString("MPANEL1");
        PANEL2C = chaine.getString("MPANEL2");
        PANEL2L  = chaine.getString("MPANEL2L");
-       PANEL3  = chaine.getString("MPANEL3");
        PANEL4  = chaine.getString("MPANEL4");
        PANEL9  = chaine.getString("MPANEL9");
        PANEL16 = chaine.getString("MPANEL16");
@@ -1043,7 +1043,7 @@ public class Aladin extends JApplet
              },
              { {MVIEW},
                 {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-                {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL3,
+                {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,
                    "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
                 {},{MOREVIEWS+"|F9"},{ONEVIEW}, {"?"+LOCKVIEW}, /* {ROI},
                 {},{"?"+LOCKVIEW},{DELLOCKVIEW}, */
@@ -1579,7 +1579,6 @@ public class Aladin extends JApplet
        else if( isMenu(m,PANEL1))  miPanel1  = ji;
        else if( isMenu(m,PANEL2C))  miPanel2c  = ji;
        else if( isMenu(m,PANEL2L))  miPanel2l  = ji;
-       else if( isMenu(m,PANEL3))  miPanel3  = ji;
        else if( isMenu(m,PANEL4))  miPanel4  = ji;
        else if( isMenu(m,PANEL9))  miPanel9  = ji;
        else if( isMenu(m,PANEL16)) miPanel16 = ji;
@@ -2602,7 +2601,6 @@ public class Aladin extends JApplet
    /** Activation d'un background */
    protected void allsky(TreeNodeAllsky gSky) { allsky(gSky,null,null,null); }
    protected void allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
-      aladin.console.setCommand("get allsky("+Tok.quote(gSky.id)+")");
       if( !gSky.isMap() ) calque.newPlanBG(gSky,label,target,radius);
       else calque.newPlan(gSky.getUrl(), label, gSky.copyright);
       toolBox.repaint();
@@ -2846,8 +2844,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,SYNC))   { switchMatch(false);
       } else if( isMenu(s,SYNCPROJ))   { switchMatch(true);
       } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2C) || isMenu(s,PANEL2L) 
-              || isMenu(s,PANEL3) || isMenu(s,PANEL4)
-              || isMenu(s,PANEL9) || isMenu(s,PANEL16))   { panel(s);
+              || isMenu(s,PANEL4) || isMenu(s,PANEL9) || isMenu(s,PANEL16))   { panel(s);
       } else if( isMenu(s,PAN))    { pan();
       } else if( isMenu(s,RSAMP))  { rsamp();
       } else if( isMenu(s,RGB))    { RGB();
@@ -2886,7 +2883,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,NTOOL))  { calque.createPlanTool(null);
       } else if( isMenu(s,DRAW))   { graphic(ToolBox.DRAW);
       } else if( isMenu(s,PHOT))   { graphic(ToolBox.PHOT);
-      } else if( isMenu(s,TAG))  { graphic(ToolBox.TAG);
+      } else if( isMenu(s,TAG))    { graphic(ToolBox.TAG);
       } else if( isMenu(s,PROP) )  { prop();
       } else if( isMenu(s,DEL) )   { delete();
       } else if( isMenu(s,DELALL) ){ reset();
@@ -3266,6 +3263,7 @@ public class Aladin extends JApplet
     protected void panel(String s) {
        try {
           int n = Integer.parseInt(s.substring(0,s.indexOf(' ')));
+          if( s.indexOf("hor")>=0 ) n++;
           view.setModeView(n);
        } catch( Exception e ) {}
     }
@@ -3347,7 +3345,8 @@ public class Aladin extends JApplet
     protected void match(int mode) {
        if( mode==2 || mode==3 ) {
           sync.megaSync=mode==3;
-          view.setZoomRaDecForSelectedViews(aladin.calque.zoom.getValue(),null);
+//          view.setZoomRaDecForSelectedViews(aladin.calque.zoom.getValue(),null);
+          view.setZoomRaDecForSelectedViews(0,null);
           log("match",mode==3?"scale+angle":"scale");
        } else {
           view.repaintAll();
@@ -4311,7 +4310,7 @@ public void setLocation(Point p) {
          if( miDel!=null ) miDel.setEnabled(!isFree);
          if( miDelAll!=null ) miDelAll.setEnabled(!isFree);
          if( miPixel!=null ) miPixel.setEnabled(nbPlanImg>0);
-         if( miContour!=null ) miContour.setEnabled(pimg!=null);
+         if( miContour!=null ) miContour.setEnabled( hasImage );
          if( miVOtool!=null ) miVOtool.setEnabled(hasNoResctriction());
          if( miSave!=null ) miSave.setEnabled(mode && hasNoResctriction());
          if( miSaveG!=null ) miSaveG.setEnabled(mode && hasNoResctriction());
@@ -4374,8 +4373,7 @@ public void setLocation(Point p) {
          if( miPanel1!=null ) {
             if( m==ViewControl.MVIEW1 ) miPanel1.setSelected(true);
             else if( m==ViewControl.MVIEW2L ) miPanel2c.setSelected(true);
-//            else if( m==ViewControl.MVIEW2C ) miPanel2l.setSelected(true);
-            else if( m==ViewControl.MVIEW3 ) miPanel3.setSelected(true);
+            else if( m==ViewControl.MVIEW2C ) miPanel2l.setSelected(true);
             else if( m==ViewControl.MVIEW4 ) miPanel4.setSelected(true);
             else if( m==ViewControl.MVIEW9 ) miPanel9.setSelected(true);
             else if( m==ViewControl.MVIEW16 )miPanel16.setSelected(true);

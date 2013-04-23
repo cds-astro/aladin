@@ -1330,19 +1330,24 @@ try {
          if( WENZOOM>8  ) gr.drawString("-",SIZE-11,SIZE-15);
          if( WENZOOM<64 )gr.drawString("+",SIZE-12,SIZE-5);
          
+         
          // Affichage des valeurs individuelles des pixels
          if( isPixelTable() && v.pref.type!=Plan.IMAGERGB ) {
             v = aladin.view.getMouseView();
-            int mode = aladin.view.getPixelMode();
             int i,j,x1,y1;
             int step= WENZOOM==32 ? 2 : 1;
-            gr.setFont( WENZOOM==32 ?  Aladin.SSPLAIN : Aladin.PLAIN );
+            gr.setFont( Aladin.BOLD );
+            gr.setColor( Color.black );
+            FontMetrics fm = gr.getFontMetrics();
             for( j=0, y1=ymwen-step; y1<=ymwen+step; y1++,j++) {
                for( i=0, x1=xmwen-step; x1<=xmwen+step; x1++,i++) {
-                  gr.setColor( y1==ymwen && x1==xmwen ? Color.red : Color.blue );
-                  String pix = ((PlanImage)v.pref).getPixelInfo(x1, y1, mode);
-                  gr.drawString(pix,i*WENZOOM+2,
-                        j*WENZOOM+WENZOOM/2-5+(i%2)*WENZOOM/3);
+                  int xx = i*WENZOOM+8;
+                  int yy = j*WENZOOM+2*WENZOOM/3-7+(i%2)*WENZOOM/2;
+                  String pix = ((PlanImage)v.pref).getPixelInfo(x1, y1, View.REALX);
+                  int w = fm.stringWidth(pix);
+                  Util.drawCartouche(gr, xx, yy-10, w, 13, 0.5f, null, Color.white);
+//                  gr.setColor( y1==ymwen && x1==xmwen ? Color.blue : Color.black );
+                  gr.drawString(pix,xx,yy);
                }
             }
          }

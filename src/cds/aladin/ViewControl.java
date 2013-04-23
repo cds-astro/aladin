@@ -41,14 +41,13 @@ public final class ViewControl extends JComponent implements
                   MouseMotionListener, MouseListener
                   {
    static final int MVIEW1  = 1;
-   static final int MVIEW2L = 2;
-   static final int MVIEW2C = -2;
-   static final int MVIEW3  = 3;
+   static final int MVIEW2C = 2;
+   static final int MVIEW2L  = 3;
    static final int MVIEW4  = 4;
    static final int MVIEW9  = 9;
    static final int MVIEW16 = 16;
    static final int DEFAULT = MVIEW1;
-   static final int[] MODE = { MVIEW1,MVIEW2L,MVIEW3,MVIEW4,MVIEW9,MVIEW16 };
+   static final int[] MODE = { MVIEW1,MVIEW2C,MVIEW2L,MVIEW4,MVIEW9,MVIEW16 };
    static final int MAXVIEW = MVIEW16;
    
    String INFOMVIEW,INFOSYNC,LABEL;
@@ -111,7 +110,6 @@ public final class ViewControl extends JComponent implements
    protected int getNbLig(int mode) {
       if( mode==MVIEW2L ) return 1;
       else if( mode==MVIEW2C ) return 2;
-      else if( mode==MVIEW3 ) return 3;
       return (int)Math.sqrt(mode);
    }
    
@@ -120,7 +118,6 @@ public final class ViewControl extends JComponent implements
    protected int getNbCol(int mode) {
       if( mode==MVIEW2L ) return 2;
       else if( mode==MVIEW2C ) return 1;
-      else if( mode==MVIEW3 ) return 1;
       return (int)Math.sqrt(mode);
    }
 

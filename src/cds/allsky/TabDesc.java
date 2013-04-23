@@ -381,7 +381,7 @@ public class TabDesc extends JPanel implements ActionListener {
          boolean indexExist  = context.isExistingIndexDir();
          boolean isRunning   = context.isTaskRunning();
          
-         resetTiles.setEnabled(allskyExist && !isRunning && !color);
+         resetTiles.setEnabled(allskyExist && !isRunning);
          resetIndex.setEnabled(indexExist && !isRunning);
 
          boolean flag = !resetTiles.isSelected() && resetTiles.isEnabled();

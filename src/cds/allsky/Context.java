@@ -28,9 +28,12 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JProgressBar;
 
@@ -99,7 +102,8 @@ public class Context {
    protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
    protected int diffOrder=4;           // Lors du calcul du MOC, différence entre ordre du MOC et ordre optimum
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
-
+   protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
+   protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
    public Context() {}
    
    public void reset() {
@@ -125,7 +129,7 @@ public class Context {
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
-   public int getBitpix() { return bitpix; }
+   public int getBitpix() { return isColor() ? bitpixOrig : bitpix; }
    public int getNpix() { return isColor() || bitpix==-1 ? 4 : Math.abs(bitpix)/8; }  // Nombre d'octets par pixel
    public int getNpixOrig() { return isColor() || bitpixOrig==-1 ? 4 : Math.abs(bitpixOrig)/8; }  // Nombre d'octets par pixel
    public double getBScaleOrig() { return bScaleOrig; }
@@ -136,7 +140,7 @@ public class Context {
    public double getBlankOrig() { return blankOrig; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
    public HealpixMoc getArea() { return mocArea; }
-   public CoAddMode getCoAddMode() { return isColor() ? CoAddMode.REPLACETILE : coAdd; }
+   public CoAddMode getCoAddMode() { return coAdd; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
    public double[] getCut() { return cut; }
    public double[] getCutOrig() { return cutOrig; }
    public String getSkyval() { return skyvalName; }
@@ -201,6 +205,13 @@ public class Context {
    public void setTransfertFct(String txt) {
       this.fct=TransfertFct.valueOf(txt.toUpperCase());
   }
+   
+   /** Donne l'extension des fichiers losanges */
+   public String getTileExt() {
+      return isColor() ? ".jpg": ".fits";
+   }
+   
+
    
    protected enum JpegMethod { MEDIAN, MEAN; }
    
@@ -287,11 +298,16 @@ public class Context {
        setCutOrig(cut);
    }
 
+   static private int nbFiles;  // nombre de fichiers scannés
    /**
     * Sélectionne un fichier de type FITS (ou équivalent) dans le répertoire donné => va servir d'étalon
     * @return true si trouvé
     */
-   boolean findImgEtalon(String rootPath) {
+   boolean findImgEtalon(String rootPath) { 
+      nbFiles=0;
+      return findImgEtalon1(rootPath);
+   }
+   boolean findImgEtalon1(String rootPath) {
       File main = new File(rootPath);
       String[] list = main.list();
       if( list==null ) return false;
@@ -301,7 +317,12 @@ public class Context {
          path = rootPath+list[f];
          if( (new File(path)).isDirectory() ) {
             if( list[f].equals(Constante.SURVEY) ) continue;
-            return findImgEtalon(path);
+            return findImgEtalon1(path);
+         }
+         nbFiles++;
+         if( nbFiles>100 ) {
+            Aladin.trace(4, "Context.findImgEtalon: too many files - ignored this step...");
+            return false;
          }
          
          // essaye de lire l'entete fits du fichier
@@ -395,52 +416,55 @@ public class Context {
    /** Initialisation des paramètres */
    public void initParameters() throws Exception {
       
-      bitpix = getBitpix();
-      cut = getCut();
-      
-      bitpixOrig = getBitpixOrig();
-      cutOrig = getCutOrig();
-      blankOrig = getBlankOrig();
-      bZeroOrig = getBZeroOrig();
-      bScaleOrig = getBScaleOrig();
+      if( !isColor() ) {
+         bitpix = getBitpix();
+         cut = getCut();
 
-      // Le blank de sortie est imposée
-      blank = getDefaultBlankFromBitpix(bitpix);
-      
-      // si les dataCut d'origine sont nuls ou incorrects, on les mets au max
-      if( cutOrig[2]>=cutOrig[3] ) {
-         cutOrig[2] = bitpixOrig==-64?-Double.MAX_VALUE : bitpixOrig==-32? -Float.MAX_VALUE
-               : bitpixOrig==64?Long.MIN_VALUE+1 : bitpixOrig==32?Integer.MIN_VALUE+1 : bitpixOrig==16?Short.MIN_VALUE+1:1;
-         cutOrig[3] = bitpixOrig==-64?Double.MAX_VALUE : bitpixOrig==-32? Float.MAX_VALUE
-               : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-      }
-      
-      // Y a-t-il un changement de bitpix ?
-      // Les cuts changent 
-      if( bitpix != bitpixOrig ) {
-         cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
-               : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-         cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-               : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-         coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+         bitpixOrig = getBitpixOrig();
+         cutOrig = getCutOrig();
+         blankOrig = getBlankOrig();
+         bZeroOrig = getBZeroOrig();
+         bScaleOrig = getBScaleOrig();
 
-         cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
-         cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
+         // Le blank de sortie est imposée
+         blank = getDefaultBlankFromBitpix(bitpix);
 
-         bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
-         bScale = bScaleOrig/coef;
-         
-         Aladin.trace(3,"Change BITPIX from "+bitpixOrig+" to "+bitpix);
-         Aladin.trace(3,"Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
-                        "to ["+cut[2]+" .. "+cut[3]+"]");
-         Aladin.trace(3,"Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
-               +" to "+bZero+","+bScale+","+blank);
-      
-      // Pas de changement de bitpix
-      } else {
-         bZero=bZeroOrig;
-         bScale=bScaleOrig;
-         Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
+         // si les dataCut d'origine sont nuls ou incorrects, on les mets au max
+         if( cutOrig[2]>=cutOrig[3] ) {
+            cutOrig[2] = bitpixOrig==-64?-Double.MAX_VALUE : bitpixOrig==-32? -Float.MAX_VALUE
+                  : bitpixOrig==64?Long.MIN_VALUE+1 : bitpixOrig==32?Integer.MIN_VALUE+1 : bitpixOrig==16?Short.MIN_VALUE+1:1;
+            cutOrig[3] = bitpixOrig==-64?Double.MAX_VALUE : bitpixOrig==-32? Float.MAX_VALUE
+                  : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+         }
+
+         // Y a-t-il un changement de bitpix ?
+         // Les cuts changent 
+         if( bitpix != bitpixOrig ) {
+            cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
+                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+            coef = (cut[3]-cut[2]) / (cutOrig[3]-cutOrig[2]);
+
+            cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
+            cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
+
+            bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
+            bScale = bScaleOrig/coef;
+
+            Aladin.trace(3,"Change BITPIX from "+bitpixOrig+" to "+bitpix);
+            Aladin.trace(3,"Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
+                  "to ["+cut[2]+" .. "+cut[3]+"]");
+            Aladin.trace(3,"Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
+                  +" to "+bZero+","+bScale+","+blank);
+
+            // Pas de changement de bitpix
+         } else {
+            bZero=bZeroOrig;
+            bScale=bScaleOrig;
+            Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
+         }
+
       }
       
       // Détermination de la zone du ciel à calculer
@@ -459,6 +483,9 @@ public class Context {
       if( mocArea==null ) moc = mocIndex;
       else moc = mocIndex.intersection(mocArea);
    }
+   
+   /** Retourne la zone du ciel à calculer */
+   protected HealpixMoc getRegion() { return moc; }
    
    /** Chargement du MOC de l'index */
    protected void loadMocIndex() throws Exception {
@@ -479,33 +506,36 @@ public class Context {
    
    public boolean verifCoherence() {
       if( coAdd==CoAddMode.REPLACETILE ) return true;
-      String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
-      if( !(new File(fileName)).exists() ) return true;
-      Fits fits = new Fits();
-      try { fits.loadHeaderFITS(fileName); }
-      catch( Exception e ) { return true; }
-      if( fits.bitpix!=bitpix ) {
-         warning("Uncompatible BITPIX="+bitpix+" compared to pre-existing survey BITPIX="+fits.bitpix);
-         return false;
-      }
-      boolean nanO = Double.isNaN(fits.blank);
-      boolean nan = Double.isNaN(blank);
       
-      // Cas particulier des Survey préexistants sans BLANK en mode entier. Dans ce cas, on accepte
-      // tout de même de traiter en sachant que le blank défini par l'utilisateur sera
-      // considéré comme celui du survey existant. Mais il faut nécessairement que l'utilisateur
-      // renseigne ce champ blank explicitement
-      if( bitpix>0 && nanO ) {
-         nan = !Double.isNaN(getBlankOrig()); 
-      }
-      
-      if( nanO!=nan || !nan && fits.blank!=blank ) {
-         warning("Uncompatible BLANK="+blank+" compared to pre-existing survey BLANK="+fits.blank);
-         return false;
+      if( !isColor() ) {
+         String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+         if( !(new File(fileName)).exists() ) return true;
+         Fits fits = new Fits();
+         try { fits.loadHeaderFITS(fileName); }
+         catch( Exception e ) { return true; }
+         if( fits.bitpix!=bitpix ) {
+            warning("Uncompatible BITPIX="+bitpix+" compared to pre-existing survey BITPIX="+fits.bitpix);
+            return false;
+         }
+         boolean nanO = Double.isNaN(fits.blank);
+         boolean nan = Double.isNaN(blank);
+
+         // Cas particulier des Survey préexistants sans BLANK en mode entier. Dans ce cas, on accepte
+         // tout de même de traiter en sachant que le blank défini par l'utilisateur sera
+         // considéré comme celui du survey existant. Mais il faut nécessairement que l'utilisateur
+         // renseigne ce champ blank explicitement
+         if( bitpix>0 && nanO ) {
+            nan = !Double.isNaN(getBlankOrig()); 
+         }
+
+         if( nanO!=nan || !nan && fits.blank!=blank ) {
+            warning("Uncompatible BLANK="+blank+" compared to pre-existing survey BLANK="+fits.blank);
+            return false;
+         }
       }
       
       int o = cds.tools.pixtools.Util.getMaxOrderByPath(getOutputPath());
-      if( o!=getOrder() ) {
+      if( o!=-1 && o!=getOrder() ) {
          warning("Uncompatible order="+getOrder()+" compared to pre-existing survey order="+o);
          return false;
       }
@@ -608,12 +638,12 @@ public class Context {
       
       String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
       String pourcentNbCells = nbLowCells==-1 ? "" : 
-         (Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"% ";
-      long nbTilesPerSec = (totalTime)==0 ? 0 : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
+         nbLowCells==0 ? "-":(Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"% ";
+      long nbTilesPerSec = totalTime/60000==0 ? statNbTile+statNbEmptyTile : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
       String s=(statNbTile+"+"+statNbEmptyTile)+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
       +pourcentNbCells+ nbTilesPerSec+" tiles/mn) "
       +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
-      +" by "+statNbThreadRunning+"/"+statNbThread+" threads"
+      +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
       +" using "+Util.getUnitDisk(usedMem)+" ("+Util.getUnitDisk(freeMem)+" free)";
 
       nlstat(s);
@@ -665,7 +695,7 @@ public class Context {
    }
    
    protected boolean taskAborting=false;       // True s'il y a une demande d'interruption du calcul en cours
-   public void taskAbort() {taskAborting=true; taskPause=false; }
+   public void taskAbort() { taskAborting=true; taskPause=false; }
    public boolean isTaskAborting() { 
       if( taskAborting ) return true; 
       while( taskPause ) Util.pause(500);
@@ -805,6 +835,15 @@ public class Context {
    static private Astroframe AF_GAL1 = new Galactic();
    static private Astroframe AF_ICRS1 = new ICRS();
    
+   /** Mémorisation d'une propriété à ajouter dans le fichier properties */
+   protected void setProperty(String key, String value) {
+      if( keyAddProp==null ) {
+         keyAddProp = new Vector<String>();
+         valueAddProp = new Vector<String>();
+      }
+      keyAddProp.addElement(key);
+      valueAddProp.addElement(value);
+   }
    
    /** Création, ou mise à jour du fichier des Properties associées au survey */
    protected void writePropertiesFile() throws Exception {
@@ -829,6 +868,18 @@ public class Context {
       updateProperties( new String[]{ PlanHealpix.KEY_IMAGESOURCEPATH, PlanHealpix.KEY_MAXORDER}, 
                        new String[]{ "path:$1",                       order},
                        false );
+      
+      // Propriétés additionnelles
+      if( keyAddProp!=null ) {
+         String k[] = new String[ keyAddProp.size() ];
+         String v[] = new String[ k.length ];
+         Enumeration<String> e = keyAddProp.elements();
+         for( int i=0; i<k.length; i++ ) {
+            k[i] = keyAddProp.get(i);
+            v[i] = valueAddProp.get(i);
+         }
+         updateProperties(k,v,true);
+      }
    }
 
    /** Mise à jour d'une propriété => voir updatePropertie(String [],String []) */

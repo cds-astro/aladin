@@ -20,6 +20,7 @@
           <pathelement path="microhub.jar"/>
           <pathelement path="Moc.jar"/>
           <pathelement path="jhealpixSmall.jar"/>
+          <pathelement path="cds.astro.jar"/>
       </classpath>
      </javac>
    </target>
@@ -31,6 +32,7 @@
 	    <zipfileset src="microhub.jar"/>
 	    <zipfileset src="Moc.jar"/>
 	    <zipfileset src="jhealpixSmall.jar"/>
+	    <zipfileset src="cds.astro.jar"/>
 	    <fileset dir="${basedir}" includes="*.gif,*.jpg,Ala*.*"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />

@@ -615,18 +615,22 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
            if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
 
-           // Valeur BLANK alternative
-           String vBlank = pimg.getBlankString();
-           blankField = new TextField(vBlank);
-           blankField.addActionListener(new ActionListener() {
-              public void actionPerformed(ActionEvent e) { 
-                 actionBlank(); 
-                 blankField.setText( pimg.getBlankString() );
-                 aladin.calque.repaintAll();
-              }
-           });
-           PropPanel.addCouple(p,"Transparency", blankField, g,c);
         }
+      }
+      
+      // Valeur BLANK alternative
+      if( plan.hasAvailablePixels() ) {
+         final PlanImage pimg = (PlanImage)plan;
+         String vBlank = pimg.getBlankString();
+         blankField = new TextField(vBlank);
+         blankField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { 
+               actionBlank(); 
+               blankField.setText( pimg.getBlankString() );
+               aladin.calque.repaintAll();
+            }
+         });
+         PropPanel.addCouple(p,"Transparency", blankField, g,c);
       }
 
       if( plan instanceof PlanImageBlink ) {
@@ -806,7 +810,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
          if( pbg.inFits && pbg.inJPEG ) {
-            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
+//            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
+            JButton bt = new JButton( pbg.truePixels ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
             bt.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   pbg.switchFormat();
@@ -987,6 +992,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                      if( !(pi instanceof PlanImage) ) return;
                      Astrotime t = new Astrotime();
                      t.set( ((PlanImage)pi).getDateObs() );
+                     System.out.println("Epoch="+t+" => "+t.toString("J"));
                      epField.setText(t.toString("J"));
                      apply();
                   } catch( ParseException e ) {
@@ -1493,10 +1499,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                plan.setEpoch(s) ;
                epField.setText(plan.getEpoch().toString("J"));
                epField.setForeground(Color.black);
-               double y=2000;
-               try { y = Double.parseDouble(s.substring(1));
-               } catch( NumberFormatException e ) { }
-               epochSlider.setValue((int)y);
+//               double y=2000;
+//               try { y = Double.parseDouble(s.substring(1));
+//               } catch( NumberFormatException e ) { }
+//               epochSlider.setValue((int)y);
                aladin.view.newView(1);
                
             } catch(Exception e ) {

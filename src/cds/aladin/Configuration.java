@@ -1499,6 +1499,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       // On mémorise les bookmarks si nécessaire
       if( !Aladin.OUTREACH && aladin.bookmarks.canBeSaved() ) {
          String list = aladin.bookmarks.getBookmarkList();
+         Aladin.trace(4,"Configuration.save(): updating bookmark list => "+list);
          if( aladin.bookmarks.isDefaultList() ) remove(BOOKMARKS);
          else if( get(BOOKMARKS)==null || !get(BOOKMARKS).equals(list) ) set(BOOKMARKS,list);
       }
@@ -1670,7 +1671,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    
    /** On recharge toutes les définitions du glu */
    private void reloadGlu() {
-      try { aladin.glu.reload(); } catch(Exception e) { e.printStackTrace(); }
+      try { aladin.glu.reload(true,false); } catch(Exception e) { e.printStackTrace(); }
    }
    
    /** Ouverture de la fenêtre de contribution à une nouvelle traduction */
@@ -1727,7 +1728,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             if( pub ) aladin.glu.log("Log", "on");
          }
       }
-
+      
       // Pour l'assistant débutant
       if( helpChoice!=null ) {
          if( helpChoice.getSelectedIndex()==1 ) set(HELP,(String)helpChoice.getSelectedItem());

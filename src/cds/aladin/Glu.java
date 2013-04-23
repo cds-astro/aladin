@@ -69,6 +69,9 @@ public final class Glu implements Runnable {
 
    // Profondeur max de la récursivité des définitions GLU (%I..)
    private static int MAXPROF = 6;
+   
+   // Timeout pour les tests d'indirection GLU (en ms)
+   private static final int CHECKTIMEOUT = 3000;
 
    /** URL d'envoi des logs */
    protected static String LOGSCRIPT = "nph-alalog.pl";
@@ -107,8 +110,9 @@ public final class Glu implements Runnable {
     * id -> URL avec des $nn
     */
    protected Hashtable aladinDic = null;
+   protected Hashtable<String,GluTest> aladinDicT = null;
    protected Hashtable aladinDicFilters = null;
-
+   
    /** Memorisation des serveurs definis par le dictionnaire GLU */
    protected static Vector vGluServer;
    
@@ -141,6 +145,7 @@ public final class Glu implements Runnable {
    protected Glu(Aladin aladin) {
       this.aladin  = aladin;
       aladinDic    = new Hashtable();
+      aladinDicT   = new Hashtable();
       vGluServer   = new Vector(50);
       vGluApp      = new Vector(10);
       vGluSky      = new Vector(10);
@@ -209,8 +214,8 @@ public final class Glu implements Runnable {
    /** Rechargement complet du GLU avec reconstructions des menus et
        * des frames associés (nettoyage préalable du cache)
        */
-   void reload() { reload(true); }
-   void reload(boolean clearBefore) {
+//   void reload() { reload(true); }
+   void reload(boolean clearBefore,boolean showLastGlu) {
       if( clearBefore ) {
          aladin.cache.clear();
          aladin.glu  = new Glu(aladin);
@@ -221,19 +226,23 @@ public final class Glu implements Runnable {
       Dimension d=null;
       int c = aladin.dialog.current;
       try {
-         aladin.dialog.getLocationOnScreen(); 
+         p=aladin.dialog.getLocationOnScreen(); 
          d = aladin.dialog.getSize();
       } catch( Exception e ) { p=null; }
       VizieRQuery.resetKeywords();
       
       aladin.dialog = new ServerDialog(aladin);
+      if( showLastGlu ) {
+         int c1 = aladin.dialog.getLastGluServerIndice();
+         if( c1!=-1 ) c=c1;
+      }
       aladin.dialog.setCurrent(c);
       if( p!=null ) {
          aladin.dialog.flagSetPos=true;
          aladin.dialog.setLocation(p);
          aladin.dialog.setSize(d);
       }
-      if( oldDialog.isVisible() ) aladin.dialog.showNow();
+      if( oldDialog.isVisible() || showLastGlu ) aladin.dialog.showNow();
       oldDialog.dispose();
    }
    
@@ -1093,14 +1102,18 @@ public final class Glu implements Runnable {
       if( system!=null && system.trim().length()==0 ) system=null;
       if( institute == null ) institute = description;
 
-      vGluServer.addElement(actionName.equals("SkyBoT.IMCCE") ? 
-            new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
-                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-                  resultDataType, institute, aladinFilter, aladinLogo, record)
-          : new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
-                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-                  resultDataType, institute, aladinFilter, aladinLogo, dir, system, record));
+      ServerGlu g =  actionName.equals("SkyBoT.IMCCE") ? new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
+            aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+            resultDataType, institute, aladinFilter, aladinLogo, record)
+                   : new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
+            aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+            resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
+
+      vGluServer.addElement(g);
+      if( !g.isHidden() )  lastGluServer = g;
    }
+   
+   protected ServerGlu lastGluServer=null;
 
    static private String subCR(String s) {
       char[] a = s.toCharArray();
@@ -1172,6 +1185,7 @@ public final class Glu implements Runnable {
       String aladinLabelPlane = null; // Masque du Label du plan ou null sinon
       String docUser = null; // URL d'une doc associee ou null sinon
       String url = null; // Le masque de l'URL de l'enr courant
+      String test=null; // Le test
       String s = null; // Variable de travail
       String description = null; // La description courante
       String verboseDescr = null;// La description verbose courante
@@ -1295,7 +1309,10 @@ public final class Glu implements Runnable {
                if( !flagLabel ) putAladinFilter(actionName,aladinFilter);
                
                maxIndir = Integer.MAX_VALUE;
-               copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=system=aladinActivated=actionName=description=verboseDescr=resultDataType=aladinMenu=aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=institute=aladinLogo=aladinSurvey=aladinHpxParam=aladinBookmarks=null;
+               copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=
+                     system=aladinActivated=actionName=description=verboseDescr=resultDataType=aladinMenu=
+                     aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=test=institute=aladinLogo=
+                     aladinSurvey=aladinHpxParam=aladinBookmarks=null;
                paramDescription = new Hashtable();
                paramDataType = new Hashtable();
                paramValue = new Hashtable(10);
@@ -1303,6 +1320,17 @@ public final class Glu implements Runnable {
                actionName = subCR(getValue(s, dis));
                record=new StringBuffer(1000);
                record.append("%"+Util.fillWithBlank(name, 4)+" "+actionName+"\n");
+            } else if( actionName!=null && (name.equals("T") || name.equals("Test")) ) {
+               test = value;
+               StringTokenizer aST = new StringTokenizer(actionName);
+               while( aST.hasMoreTokens() ) {
+                  String key = aST.nextToken();
+                  try {
+                     if( aladinDicT.get(key)==null ) aladinDicT.put(key, new GluTest(test,name.equals("Test")));
+                  } catch( Exception e ) {
+                     if( aladin.levelTrace>=3 ) e.printStackTrace();
+                  }
+               }
             } else if( name.equals("U") || name.equals("Url") ) {
                url = value;
                StringTokenizer aST = new StringTokenizer(actionName);
@@ -1894,7 +1922,7 @@ public final class Glu implements Runnable {
          }
 //         Aladin.trace(4,"Glu.gluResolver("+id+",...) GLU indirections => "+url.replace("\t","|")+" => select: "+iTag);
          url = (String) aladinDic.get(iTag);
-         
+         indId = iTag;
       }
 
       // Toujours introuvable
@@ -1916,30 +1944,55 @@ public final class Glu implements Runnable {
     */
    protected boolean checkIndirection(String id, String urlSuffix) {
       lastId=null;
+      indId=null;
       chut=true;
       try {
+         
+         // Vérifie qu'il y a au-moins une alternative
+         URL u = getURL(id,"",false,false,2);
+         if( u==null ) return false;
+         
          // Test des indirections, une à une
          // et mémorisation de la plus rapide
          long minTime = Long.MAX_VALUE;
          int indice = 0;
-         //      byte [] buf = new byte[1024];
 
          for( int n = 0; ; n++ ) {
-            URL u = getURL(id,"",false,false,n+1);
+            
+            // Pour initialiser les éventuelles indirections (BEURK)
+            u = getURL(id,"",false,false,n+1);
             if( u==null ) break;
+          
+            // Soit c'est l'indirection qui porte le %T, et sinon peut être la marque générique
+            GluTest gt = indId==null ? null : aladinDicT.get(indId);
+            if( gt==null ) gt=aladinDicT.get(id);
+            String pa = gt!=null && gt.params!=null ? gt.params : "";
+            boolean encode = gt!=null ? gt.optN : false;
+            String pattern = gt!=null ? gt.pattern : null;
+            boolean regex = gt!=null ? gt.regex : false;
+            
+            // pour de vrai
+            u = getURL(id,pa,encode,false,n+1);
             String url=u+ (urlSuffix!=null ? urlSuffix : "");
 
             MyInputStream in=null;
             long tps=-1;
             try {
                long t1 = System.currentTimeMillis();
-               in = Util.openStream(url,false,5000);
+               in = Util.openStream(url,false,CHECKTIMEOUT);
                if( in==null ) throw new Exception("Util.openStream error");
-               //            try { in.readFully(buf); } catch( EOFException e ) {}
-               //            int j;
-               //            for( j=0; j<buf.length && buf[j]!=0; j++);
-               //            String s = new String(buf,0,0,j);
-               //            System.out.println("["+s+"]");
+               
+               // Un pattern à tester ?
+               if( pattern!=null ) {
+                  MyInputStream mis = (new MyInputStream(in)).startRead();
+                  byte buf[] = mis.readFully();
+                  mis.close();
+                  boolean trouve;
+                  if( !regex ) trouve=Util.matchMask(pattern, new String(buf));
+                  else trouve=(new String(buf)).matches(pattern);
+                  
+                  if( !trouve ) throw new Exception("Pattern not found");
+               }
 
                long t2 = System.currentTimeMillis();
                tps = t2-t1;
@@ -1960,6 +2013,7 @@ public final class Glu implements Runnable {
          if( indice!=0 ) setIndirectionOrderOnLastId(indice);
       }finally {
          lastId = null;
+         indId = null;
          chut=false;
       }
 
@@ -1968,6 +2022,7 @@ public final class Glu implements Runnable {
 
    private boolean chut=false; // pour éviter trop de baratin à l'écran lors d'un checkIndirection
    private String lastId=null;   // Dernière entrée utilisée dans le GLU
+   private String indId=null;    // Dernière indirection utilisée dans le GLU (%I xxxx)
    
    // Change l'ordre des indirections en mettant en premier celle d'indice "indiceOfTheBest"
    private void setIndirectionOrderOnLastId(int indiceOfTheBest) {
@@ -2014,13 +2069,9 @@ public final class Glu implements Runnable {
 
       // Peut être y a-t-il des paramètres à la marque GLU => (on les ignore)
       k = u.indexOf(",", i);
-      if( k > 0 && k < j ) j = k;
-      else {
-         k = u.indexOf(" ", i);
-         if( k > 0 && k < j ) j = k;
-      }
+      if( !(i<k && k<j) ) k=j;
 
-      URL url = getURL(u.substring(i + 2, j),"",false,false,indirectionIndex);
+      URL url = getURL(u.substring(i + 2, k).trim(),"",false,false,indirectionIndex);
       if( url==null ) return null;
       
       return u.substring(0, i) + url + u.substring(j + 1);
@@ -2250,4 +2301,59 @@ public final class Glu implements Runnable {
       } catch( Exception elog ) {
       }
    }
+   
+   /** Classe pour mémoriser un test GLU - supporte les deux syntaxes parfile */
+   class GluTest {
+      String pattern;   // pattern pour vérifier le test, ou null si aucun
+      boolean regex;    // true si le pattern est une expression régulière (sans les /.../ délimiteurs)
+      String params;    // paramètres ou null si aucun
+      boolean optN;     // true si les paramètres sont déjà httpencodés
+      
+      GluTest(String s,boolean longSyntax) throws Exception {
+         if( longSyntax ) set1(s);
+         else set0(s);
+//         Aladin.trace(4,"Glu.GluTest => "+this);
+      }
+      
+      // Insertion syntaxe courte
+      // => pattern:option:param
+      private void set0(String s) throws Exception {
+         int i = s.indexOf(':');
+         int j = s.indexOf(':',i+1);
+         if( i==-1 || j==-1 ) throw new Exception("%T syntax error");
+         set(i>0?s.substring(0,i):null,i+1<j?s.substring(i+1,j):null,s.substring(j+1));
+      }
+      
+      // Insertion syntaxe longue
+      // => pattern="xxx" option="xxx" param="xxx"
+      String PATTERN = "pattern=", OPTION  = "option=", PARAM   = "param=";
+      private void set1(String s) throws Exception {
+         int i;
+         String pt=null,op=null,pa=null;
+         if( (i=s.indexOf(PATTERN))>=0 ) pt = new Tok(s.substring(i+PATTERN.length())).nextToken();
+         if( (i=s.indexOf(OPTION))>=0 )  op = new Tok(s.substring(i+OPTION.length())).nextToken();
+         if( (i=s.indexOf(PARAM))>=0 )   pa = new Tok(s.substring(i+PARAM.length())).nextToken();
+         set(pt,op,pa);         
+      }
+      
+      private void set(String pt,String op, String pa) {
+         if( pt!=null && pt.length()>0 ) {
+            regex = pt.length()>2 && pt.charAt(0)=='/';
+            pattern = regex ? pt.substring(1,pt.length()-1) : pt;
+         }
+         optN = op!=null && op.indexOf('n')>=0; 
+         if( pa!=null && pa.length()>0 ) params=pa;
+      }
+      
+      public String toString() {
+         StringBuffer s = new StringBuffer();
+         if( pattern!=null ) s.append(" pattern=["+pattern+"]");
+         if( regex ) s.append(" regex");
+         if( optN ) s.append(" optN");
+         if( params!=null ) s.append(" params=["+params+"]");
+         return s.toString();
+      }
+   }
+   
+
 }

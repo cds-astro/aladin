@@ -29,6 +29,8 @@ import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
@@ -37,7 +39,7 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderTiles extends Builder {
 
-   private boolean flagColor;
+   private boolean isColor;
    private int bitpix;
    private double bZero;
    private double bScale;
@@ -80,28 +82,30 @@ public class BuilderTiles extends Builder {
 
 
    public void run() throws Exception {
-      context.running("Creating FITS tiles and allsky (max depth="+context.getOrder()+")...");
+      String mode = context.isColor() ? "JPEG":"FITS";
+      context.running("Creating "+mode+" tiles and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
 
       // Un peu de baratin
-      int b0=context.getBitpixOrig(), b1=context.getBitpix();
-      if( b0!=b1 ) {
-         context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
-         double cutOrig[] = context.getCutOrig();
-         double cut[] = context.getCut();
-         context.info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
+      if( !context.isColor() ) {
+         int b0=context.getBitpixOrig(), b1=context.getBitpix();
+         if( b0!=b1 ) {
+            context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
+            double cutOrig[] = context.getCutOrig();
+            double cut[] = context.getCut();
+            context.info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
+         }
+         else context.info("BITPIX = "+b1+" (no conversion)");
+         if( context.getDiskMem()!=-1 ) {
+            context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
+         }
+         double bs=context.getBScale(), bz=context.getBZero();
+         if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
+         double bl0 = context.getBlankOrig();
+         double bl1 = context.getBlank();
+         if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
+         else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
       }
-      else context.info("BITPIX = "+b1+" (no conversion)");
-      if( context.getDiskMem()!=-1 ) {
-         context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
-      }
-      double bs=context.getBScale(), bz=context.getBZero();
-      if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
-      double bl0 = context.getBlankOrig();
-      double bl1 = context.getBlank();
-      if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
-      else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
-
       build();
       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).run();
@@ -133,50 +137,53 @@ public class BuilderTiles extends Builder {
       if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
       
       // Image de référence en couleur => pas besoin de plus
-      if(  context.isColor() ) { context.initRegion(); return; }
-      
-      // mémorisation des cuts et blank positionnés manuellement
-      double [] memoCutOrig = context.getCutOrig();
-      boolean hasAlternateBlank = context.hasAlternateBlank();
-      double blankOrig = context.getBlankOrig();
-      int bitpixOrig = context.getBitpixOrig();
-      
-      // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK
-//      String img = context.getImgEtalon();
-//      if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
-      if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
-      context.info("Reference image: "+img);
-      try { context.setImgEtalon(img); }
-      catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
-      
-//      // Image de référence en couleur
-//      if(  context.getBitpixOrig()==0 ) {
-//         context.initRegion();
-//         return;
-//      }
+//      if(  context.isColor() ) { context.initRegion(); return; }
+      if(  !context.isColor() ) { 
 
-      if( bitpixOrig==-1 ) {
-         context.info("BITPIX found in the reference image => "+context.getBitpixOrig());
-      } else if( bitpixOrig!=context.getBitpixOrig() ) {
-         context.warning("The provided BITPIX (" +bitpixOrig+ ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
-         context.setBitpixOrig(bitpixOrig);
+         // mémorisation des cuts et blank positionnés manuellement
+         double [] memoCutOrig = context.getCutOrig();
+         boolean hasAlternateBlank = context.hasAlternateBlank();
+         double blankOrig = context.getBlankOrig();
+         int bitpixOrig = context.getBitpixOrig();
+
+         // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK
+         //      String img = context.getImgEtalon();
+         //      if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
+         if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
+         context.info("Reference image: "+img);
+         try { context.setImgEtalon(img); }
+         catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+
+         //      // Image de référence en couleur
+         //      if(  context.getBitpixOrig()==0 ) {
+         //         context.initRegion();
+         //         return;
+         //      }
+
+         if( bitpixOrig==-1 ) {
+            context.info("BITPIX found in the reference image => "+context.getBitpixOrig());
+         } else if( bitpixOrig!=context.getBitpixOrig() ) {
+            context.warning("The provided BITPIX (" +bitpixOrig+ ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
+            context.setBitpixOrig(bitpixOrig);
+         }
+
+         // repositionnement des cuts et blank passés par paramètre
+         double [] cutOrig = context.getCutOrig();
+         if( memoCutOrig!=null ) {
+            if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
+            if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
+            context.setCutOrig(cutOrig);
+         }
+         context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+         context.setValidateCut(true);
+         if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
       }
-
-      // repositionnement des cuts et blank passés par paramètre
-      double [] cutOrig = context.getCutOrig();
-      if( memoCutOrig!=null ) {
-         if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
-         if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
-         context.setCutOrig(cutOrig);
-      }
-      context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
-      context.setValidateCut(true);
-      if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
-
+      
       // Mise à jour des paramètres de sortie (en cas de conversion du BITPIX notamment)
       context.initParameters();
       if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HEALPix survey");
-      if( context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
+      if( !context.isColor() && context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
+      
 
       // Info sur la méthode
       CoAddMode m = context.getCoAddMode();
@@ -324,11 +331,11 @@ public class BuilderTiles extends Builder {
       }
 
       // Initialisation des variables
-      flagColor = context.isColor();
+      isColor = context.isColor();
       bitpix = context.getBitpix();
       coaddMode = context.getCoAddMode();
 
-      if( !flagColor ) {
+      if( !isColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
          blank = context.getBlank();
@@ -419,16 +426,22 @@ public class BuilderTiles extends Builder {
       // si le process a été arrêté on essaie de ressortir au plus vite
       if (stopped) return null;
 
-      // si le losange a déjà été calculé on le renvoie
-      if( coaddMode==CoAddMode.KEEPTILE ) {
-         Fits oldOut = findFits(file+".fits");
-         if( oldOut!=null ) return oldOut;
-      }
-
       // si on n'est pas dans le Moc, on sort
       boolean inTree = context.isInMocTree(order,npix);
       if (!inTree) return null;
-
+      
+      // si le losange a déjà été calculé on le renvoie
+      if( coaddMode==CoAddMode.KEEPTILE ) {
+         Fits oldOut = findLeaf(file);
+         if( oldOut!=null ) {
+            HealpixMoc moc = context.getRegion();
+            moc = moc.intersection(new HealpixMoc(order+"/"+npix));
+            int nbTiles = (int)moc.getUsedArea();
+            updateStat(0,0,nbTiles,0,nbTiles/4,0);
+            oldOut.releaseBitmap();
+            return oldOut;
+         }
+      }
 
       Fits f = null;
 
@@ -580,8 +593,8 @@ public class BuilderTiles extends Builder {
       boolean inTree = context.isInMocTree(order,npix);
       if( !inTree ||
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) {
-         if( flagColor ) return null;
-         Fits f = findFits(file+".fits");
+         if( isColor ) return null;
+         Fits f = findLeaf(file);
          addFits(Thread.currentThread(),f);
          return f;
       }
@@ -589,7 +602,7 @@ public class BuilderTiles extends Builder {
       for( Fits f : fils ) if( f!=null ) f.reloadBitmap();
 
       Fits out = new Fits(w,w,bitpix);
-      if( !flagColor ) {
+      if( !isColor ) {
          out.setBlank(blank);
          out.setBscale(bScale);
          out.setBzero(bZero);
@@ -606,7 +619,7 @@ public class BuilderTiles extends Builder {
                for( int x=0; x<w; x+=2 ) {
 
                   // Couleur
-                  if( flagColor ) {
+                  if( isColor ) {
                      int pix=0;
                      if( in!=null ) {
                         for( int i=0;i<4; i++ ) {
@@ -646,7 +659,7 @@ public class BuilderTiles extends Builder {
       }
 
       if( coaddMode!=CoAddMode.REPLACETILE && coaddMode!=CoAddMode.KEEPTILE ) {
-         Fits oldOut = findFits(file+".fits");
+         Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
             else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
@@ -661,8 +674,9 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      if( flagColor ) out.writeCompressed(file+".jpg",0,0,null,"jpeg");
-      else out.writeFITS(file+".fits");
+      String filename = file+context.getTileExt();
+      if( isColor ) out.writeCompressed(filename,0,0,null,"jpeg");
+      else out.writeFITS(filename);
 
       long duree = System.currentTimeMillis() -t;
       if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createNodeHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
@@ -690,11 +704,12 @@ public class BuilderTiles extends Builder {
     */
    private Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
       long t = System.currentTimeMillis();
-
+      
       Fits oldOut=null;
+      
       boolean isInList = context.isInMoc(order,npix);
       if( !isInList && coaddMode!=CoAddMode.REPLACETILE ) {
-         oldOut = findFits(file+".fits");
+         if( oldOut==null ) oldOut = findLeaf(file);
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) {
             addFits(Thread.currentThread(), oldOut);
             return oldOut;
@@ -709,8 +724,8 @@ public class BuilderTiles extends Builder {
       if( out !=null  ) {
 
          if( coaddMode!=CoAddMode.REPLACETILE ) {
-            if( oldOut==null ) oldOut = findFits(file+".fits");
-            if( oldOut!=null && coaddMode==CoAddMode.KEEPTILE ) { out=null; return oldOut; }
+            if( oldOut==null ) oldOut = findLeaf(file);
+            if( oldOut!=null && coaddMode==CoAddMode.KEEPTILE ) { out=null; addFits(Thread.currentThread(), oldOut); return oldOut; }
             if( oldOut!=null ) {
                if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
                else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
@@ -728,8 +743,9 @@ public class BuilderTiles extends Builder {
 
       long duree = System.currentTimeMillis()-t;
       if (out!=null) {
-         if( flagColor ) out.writeCompressed(file+".jpg",0,0,null,"jpeg");
-         else out.writeFITS(file+".fits");
+         String filename = file + context.getTileExt();
+         if( isColor ) out.writeCompressed(filename,0,0,null,"jpeg");
+         else out.writeFITS(filename);
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);
          
@@ -738,19 +754,27 @@ public class BuilderTiles extends Builder {
       addFits(Thread.currentThread(), out);
       return out;
    }
+   
 
    /** Recherche et chargement d'un losange déjà calculé (présence du fichier Fits 8 bits).
     *  Retourne null si non trouvé
-    * @param filefits Nom du fichier fits (complet avec extension)
+    * @param file Nom du fichier fits (complet avec extension)
     */
-   static public Fits findFits(String filefits) throws Exception {
-      File f = new File(filefits);
+   public Fits findLeaf(String file) throws Exception {
+      String filename = file + context.getTileExt();
+      File f = new File(filename);
       if( !f.exists() ) return null;
       Fits out = new Fits();
-      MyInputStream is = new MyInputStream( new FileInputStream(f));
-      out.loadFITS(is);
-      out.setFilename(filefits);
-      is.close();
+      MyInputStream is = null;
+      try {
+         is = new MyInputStream( new FileInputStream(f));
+         if( isColor ) out.loadJpeg(is, true);
+         else out.loadFITS(is);
+         out.setFilename(filename);
+      } 
+      catch( Exception e ) { return null; } 
+      finally { if( is!=null ) is.close(); }
       return out;
    }
+   
 }

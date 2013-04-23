@@ -35,6 +35,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import cds.astro.AstroMath;
+import cds.moc.IntArray;
 import cds.tools.Util;
 
 /**
@@ -530,13 +531,17 @@ public class ViewSimple extends JComponent
 //   }
    
    /** Génération d'un plan à partir des pixels repérés par le rectangle crop pour un plan allsky */
-   protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes) {
+   protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean inStack) {
       PlanImage pi=null;
       PlanBG pref = (PlanBG)this.pref;
       
       try {
          if( label==null ) label = pref.label;
-         pi = (PlanImage)aladin.calque.dupPlan(pref, null,pref.type,false);
+         if( inStack )  pi = (PlanImage)aladin.calque.dupPlan(pref, null,pref.type,false);
+         else {
+            if( ((PlanBG)pref).color ) pi = new PlanImageRGB(aladin,pref);
+            else pi = new PlanImage(aladin,pref);
+         }
          pi.flagOk=false;
          pi.setLabel(label);
          pi.pourcent=1;
@@ -597,7 +602,7 @@ public class ViewSimple extends JComponent
          pi.selected=false;
          pi.setOpacityLevel(1f);
          pi.changeImgID();
-         pi.resetProj();
+         if( inStack ) pi.resetProj();
          pi.reverse();
          pi.flagOk=true;
 
@@ -612,7 +617,7 @@ public class ViewSimple extends JComponent
    protected PlanImage cropArea(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean verbose) {
       PlanImage pi=null;
       
-      if( pref.type==Plan.ALLSKYIMG ) return cropAreaBG(rcrop,label,zoom,resMult,fullRes);
+      if( pref.type==Plan.ALLSKYIMG ) return cropAreaBG(rcrop,label,zoom,resMult,fullRes,true);
       
       try {
          int frame=0;
@@ -2408,6 +2413,7 @@ public class ViewSimple extends JComponent
             }
             view.newobj = null;
          }
+         
 
          if( view.newobj!=null ) {
 
@@ -4283,6 +4289,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       }
 
       if( (mode&0x2)!=0 && aladin.getOrder()>=0) drawHealpixMouse(g);
+      
    }
 
 
@@ -5704,6 +5711,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( fullScreen ) g.setFont( Aladin.BOLD);
       else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
       else  g.setFont(Aladin.SSBOLD);
+      
+      if( !vs.isPlotView() ) drawForeGround(g,mode);
 
       if( calque.flagOverlay  ) {
          drawLabel(g,dx,dy);
@@ -5729,8 +5738,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Le repere courant
          vs.drawRepere(g,dx,dy);
          
-         drawForeGround(g,mode);
-
          // Tracage du quick Simbad s'il existe
          if( aladin.view.simRep!=null /* && this==aladin.view.getMouseView() */) {
             aladin.view.simRep.projection(this);

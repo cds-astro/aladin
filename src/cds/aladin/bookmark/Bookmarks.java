@@ -20,11 +20,15 @@
 
 package cds.aladin.bookmark;
 
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Enumeration;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JToolBar;
 
 import cds.aladin.Aladin;
@@ -85,6 +89,16 @@ public class Bookmarks {
          ButtonBookmark bkm = new ButtonBookmark(aladin,f);
          toolBar.add(bkm);
       }
+      
+      if( !Aladin.OUTREACH ) {
+         JButton plus = new JButton("  +  ");
+         plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
+         plus.setFont( plus.getFont().deriveFont(Font.BOLD));
+         plus.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { editFrame(); }
+         });
+         toolBar.add(plus);
+      }
    }
    
    /** Remet à jour la toolbar des signets suite à des modifs internes */
@@ -96,8 +110,11 @@ public class Bookmarks {
       aladin.repaint();
    }
    
-   /** Affichage de la frame d'édition et de consultation des signets */
+   /** Affichage de la frame de consultation des signets */
    public void showFrame() { getFrameBookmarks().setVisible(true); }
+   
+   /** Affichage de la frame d'édition et de consultation des signets */
+   public void editFrame() { getFrameBookmarks().setVisibleEdit(); }
    
    /** Retourne true si la liste courante des bookmarks correspond à la liste par défaut
     * définie par l'enregistrement GLU (voir glu.createBookmarks()) */
@@ -122,9 +139,11 @@ public class Bookmarks {
       return bkm.toString();
    }   
    
+   private boolean remoteBookmarksLoaded=false; // true si les bookmarks distants ont été correctement chargés
+   
    /** Retourne true si la liste des bookmarks peut être sauvegardée dans le fichier de configuration */
    public boolean canBeSaved() {
-      return aladin.hasNetwork();
+      return remoteBookmarksLoaded;
    }
    
    /** Mise à jour de la liste des bookmarks sélectionnés (les noms séparés par une simple virgule).
@@ -163,7 +182,7 @@ public class Bookmarks {
     * 1) Chargement à distance des définitions de fonctions scripts
     * 2) Assignation de certaines d'entre-elles en tant que bookmarks.
     */
-   public void createBookmarks(boolean noCache) {
+   synchronized public void createBookmarks(boolean noCache) {
       Glu glu = aladin.getGlu();
       Cache cache = aladin.getCache();
       Command command = aladin.getCommand();
@@ -178,6 +197,8 @@ public class Bookmarks {
             }
             MyInputStream in =  new MyInputStream(cache.get(glu.getURL(gluTag,"",false,false)));
             aladin.getCommand().execScript(new String(in.readFully()),false,true);
+            in.close();
+            remoteBookmarksLoaded=true;
          } catch( Exception e ) {
             e.printStackTrace();
             System.err.println("Remote bookmarks error: "+e.getMessage());
@@ -191,6 +212,7 @@ public class Bookmarks {
             command.setFunctionLocalDefinition(true);  // Toutes ces fonctions sont considérées comme locales
             MyInputStream in = new MyInputStream(new FileInputStream(f));
             command.execScript(new String(in.readFully()),false,true);
+            in.close();
          } catch( Exception e ) {
             e.printStackTrace();
             System.err.println("Local bookmarks error: "+e.getMessage());

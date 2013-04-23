@@ -88,6 +88,9 @@ final public class Field {
 
    /** link type */
    public String refValue;
+   
+   /** null value */
+   public String nullValue;
 
    /** true if it is a RA or DE field */
 //   public boolean coo;

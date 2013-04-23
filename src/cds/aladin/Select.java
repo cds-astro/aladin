@@ -82,7 +82,7 @@ public final class Select extends JComponent  implements
    static final int HORIZONTAL = 2;
 
    // Les valeurs accociees aux differents elements graphiques
-   static final int sizeLabel = 100;//89/*112-MyScrollbar.LARGEUR*/;   // Nbre de pixels pour les labels
+   static final int sizeLabel = 95;//89/*112-MyScrollbar.LARGEUR*/;   // Nbre de pixels pour les labels
    // test AVO
    //static final int sizeLabel = 156-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels (test AVO)
    static final int gapL      =   16;   // Marge de gauche (reserve pour les controles)
@@ -1560,31 +1560,38 @@ public final class Select extends JComponent  implements
       lastYMax = y;
       if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
       
-      SwingUtilities.invokeLater(new Runnable() {
-         public void run() {
-            // On met a jour la fenetre des proprietes en indiquant
-            // s'il y a ou non des plans en train d'etre charge
-            // afin d'eviter les clignotement de Properties
-            // intempestifs
-            Properties.majProp(slideBlink?1:0);
+      long t = System.currentTimeMillis();
+      if( t-300>ot ) {
+         ot=t;
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
 
-            // On met a jour la fenetre de la table des couleurs
-            if( a.frameCM!=null ) a.frameCM.majCM();
+               // On met a jour la fenetre des proprietes en indiquant
+               // s'il y a ou non des plans en train d'etre charge
+               // afin d'eviter les clignotement de Properties
+               // intempestifs
+               Properties.majProp(slideBlink?1:0);
 
-            // On met a jour la fenetre des contours
-            if( a.frameContour!=null ) a.frameContour.majContour();
+               // On met a jour la fenetre de la table des couleurs
+               if( a.frameCM!=null ) a.frameCM.majCM();
 
-            // On met a jour la fenetre des RGB et des Blinks
-            if( a.frameRGB!=null )   a.frameRGB.maj();
-            if( a.frameBlink!=null ) a.frameBlink.maj();
-            if( a.frameArithm!=null && a.frameArithm.isVisible() ) a.frameArithm.maj();
+               // Activation ou desactivation des boutons du menu principal
+               // associes a la presence d'au moins un plan
+               a.setButtonMode();
 
-            // Activation ou desactivation des boutons du menu principal
-            // associes a la presence d'au moins un plan
-            a.setButtonMode();
 
-        }
-      });
+               // On met a jour la fenetre des contours
+               if( a.frameContour!=null ) a.frameContour.majContour();
+
+               // On met a jour la fenetre des RGB et des Blinks
+               if( a.frameRGB!=null )   a.frameRGB.maj();
+               if( a.frameBlink!=null ) a.frameBlink.maj();
+               if( a.frameArithm!=null && a.frameArithm.isVisible() ) a.frameArithm.maj();
+
+
+            }
+         });
+      }
 
 
       // Reaffichage du status du plan sous la souris
@@ -1600,6 +1607,8 @@ public final class Select extends JComponent  implements
       //Clignotement des voyants si besoin
       if( slideBlink ) startBlink();
    }
+   
+   private long ot=0;
 
    private boolean slideBlink=false;
 

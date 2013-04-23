@@ -335,7 +335,7 @@ public class PlanBG extends PlanImage {
          String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"X");
          char c1 = strFrame.charAt(0);
          int frame=-1;
-         if( c1=='C' ) frame=Localisation.ICRS;
+         if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
          else if( c1=='E' ) frame=Localisation.ECLIPTIC;
          else if( c1=='G' ) frame=Localisation.GAL;
          if( frame!=-1 && frame!=frameOrigin ) {
@@ -411,6 +411,7 @@ public class PlanBG extends PlanImage {
       maxOrder=gSky.getMaxOrder();
       inFits=gSky.isFits();
       inJPEG=gSky.isJPEG();
+      truePixels=gSky.isTruePixels();
       color=gSky.isColored();
       frameOrigin=gSky.getFrame();
       losangeOrder=gSky.getLosangeOrder();
@@ -418,7 +419,7 @@ public class PlanBG extends PlanImage {
       loadMocNow=gSky.loadMocNow();
       imageSourcePath = gSky.getImageSourcePath();
       version = gSky.getVersion();
-      truePixels=inFits && localAllSky || !inJPEG && !localAllSky;
+//      truePixels=inFits && localAllSky || !inJPEG && !localAllSky;
       useCache=!localAllSky && gSky.useCache();
       co=c!=null ? c : gSky.getTarget();
       coRadius= c!=null ? radius : gSky.getRadius();
@@ -604,7 +605,7 @@ public class PlanBG extends PlanImage {
    protected void planReady(boolean ready) {
       super.planReady(ready);
       setPourcent(0);
-      aladin.view.setRepere(co);
+      if( co!=null ) aladin.view.setRepere(co);
       flagOk=ready;
       aladin.synchroPlan.stop(startingTaskId);
       if( loadMocNow ) loadMoc();
@@ -2634,6 +2635,8 @@ public class PlanBG extends PlanImage {
        }
       aladin.view.repaintAll();
    }
+   
+   
 
    private int x=0,y=0,rayon=0,grandAxe=0;
    private double angle=0;

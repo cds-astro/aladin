@@ -93,7 +93,7 @@ public class Plan implements Runnable {
    protected boolean noBestPlacePost; // true s'il ne faut pas passer le plan à la méthode bestPlacePost() après son chargement
    protected boolean collapse;	 // true si le plan est collapse dans la pile
    protected String objet;       // Target du plan (celui qui a ete indique a l'interrogation)
-   protected String label;       // Label du plan; (celui qui apparait dans le "plane stack"
+   public String label;       // Label du plan; (celui qui apparait dans le "plane stack"
    protected String param;       // Les parametres d'interrogation du serveur
    protected String info=null;   // De l'information sur le plan
    protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
@@ -166,6 +166,7 @@ public class Plan implements Runnable {
    // pour eviter les castings intempestifs)
    Pcat pcat;                  // Les objets du plan si CATALOG ou TOOL ou FIELD
    int sourceType=Obj.SQUARE;  // Le type de source dans le cas d'un plan CATALOG ou PlanBGCAT
+   boolean fullSource=false;   // Source pleine ou non (coloriée)
    MyInputStream dis=null;     // Le flux de donnees
 //   int streamType=0;           // le type de stream trouvé par MyInputStream
 
@@ -573,8 +574,8 @@ public class Plan implements Runnable {
                          mu1.setUnit(s.getUnit(npmra));
                          mu1.setValue(s.getValue(npmra));
                          mu1.convertTo(new Unit("ms/yr"));
-                         mu1.setValue( 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180));
-                         mu1.setUnit("mas/yr");
+                         double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);
+                         mu1 = new Unit(v+"mas/yr");
                       };
                       
                       double pmra = mu1.getValue();

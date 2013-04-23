@@ -239,7 +239,11 @@ public final class XMLParser {
                   String tmp = c.toString();
                   for( j=0; j<mKey.length && !tmp.equals(mKey[j]); j++);
                   if( j<mKey.length ) b.append(mValue[j]);	// found
-                  else return null;
+                  else {
+                     if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.XMLDecode("+s+") macro unknown => ignored !");
+                     return s;  // Macro non trouvée, on retourne simplement la macro
+//                     return null;
+                  }
                   mode=0;
                }
                break;
@@ -321,6 +325,7 @@ public final class XMLParser {
       boolean inCDATA=true;                // pour tester si on est sur ![CDATA[
       boolean inCOM=true;                  // pour tester si on est sur !--
       boolean flagNL=false; 		       // true si le caractère précédent était un \n
+      char spaceChar=' ';
 
       minus=ominus=endminus=false;
       bracket=obracket=endbracket=false;
@@ -345,17 +350,27 @@ public final class XMLParser {
                   boolean hexa = m.charAt(m.length()-2)=='x';
                   int code = Integer.parseInt(m.substring(2, m.length() - (hexa ? 2 : 1)), hexa ? 16 : 10);
                   c1 = (char) code;
-               } catch( Exception e ) { error="unresolved macro ["+m+"]"; return 0;  }
+               } catch( Exception e ) {
+                  if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.xmlGetString(...) unresolved macro ["+m+"] => ignored !");
+
+                   // Pas de macro, on continue tout de même (PF 2013)
+//                  error="unresolved macro ["+m+"]"; return 0; 
+               }
             } else {
                int i;
                for( i=0; i<mKey.length && !m.equals(mKey[i]); i++ );
                if( i<mKey.length ) c1=mValue[i].charAt(0);
-               else { error="unknown macro ["+m+"]"; return 0; }
+               else {
+                  // Pas de macro, on continue tout de même (PF 2013)
+                  if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.xmlGetString(...) unknown macro ["+m+"] => ignored !");
+//                  error="unknown macro ["+m+"]"; return 0;
+               }
             }
             Util.resetString(macro);
          }
          
          space=Character.isSpace(c);
+         if( space ) spaceChar=c;
          
          switch(mode) {
             case 0: encore=(!space && c!='>'); 
@@ -415,7 +430,7 @@ public final class XMLParser {
          }
          
          if( mode==3 || mode==5 || (!space || space && !ospace) && mode<3 ) {
-            if( mode!=3 && mode!=5 && space ) c1=' '; // substitution des blancs
+            if( mode!=3 && mode!=5 && space ) c1=spaceChar; // substitution des blancs
             curString.append(c1);
             l++;
          }

@@ -38,7 +38,7 @@ public class SliderDensity extends SliderPlusMoins {
       Plan [] p = getPlanCatalog();
       if( p==null  ) return;
       for( Plan p1 : p ) {
-         try { ((PlanBGCat)p1).setGapOrder(slider.getValue()+inc);
+         try { ((PlanBGCat)p1).setGapOrder((int)slider.getValue()+inc);
          } catch( Exception e ) { }
       }
       //      aladin.calque.setScalingFactor(n);

@@ -414,7 +414,7 @@ public class ServerFile extends Server implements XMLConsumer {
                // C'est peut être un dico GLU ?
             } else if( (type & MyInputStream.GLU)!=0 ) {
                if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
-                  aladin.glu.reload(false);
+                  aladin.glu.reload(false,true);
                }
 
                // C'est peut être un planBG via HTTP

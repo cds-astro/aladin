@@ -34,10 +34,12 @@ import cds.tools.Util;
 /**
  * Parser de tables
  * Accepte aussi bien du TSV natif, du TSV à la mode SkyCat,
- * du CSV, de l'ASCII simple (colonnes séparées par des espaces)
- * du AstroRes, du VOTable, du VOTable avec CSV encapsulé,
- * du FITS ASCII, du FITS BINTABLE
+ * du CSV, du IPAC, de l'ASCII simple (colonnes séparées par des espaces)
+ * du AstroRes, du VOTable, du VOTable avec CSV encapsulé, VOTable base64,
+ * du FITS ASCII, du FITS BINTABLE, ...
  * 
+ * @version 3.0 - avr 13 - BINARY correction + BINARY2
+ * @version 2.4 - 2009 - Support pour VOTable 1.2
  * @version 2.3 - déc 06 - correction bug <TD/>
  * @version 2.2 - avril 06 - Support pour le CSV et le FITS ASCII ou BINTABLE
  * @version 2.1 - déc 05 - Prise en compte de l'erreur "a la SIAP"
@@ -91,6 +93,7 @@ final public class TableParser implements XMLConsumer {
    private boolean inFieldDesc=false; // true si on est dans un tag <FIELD><DESCRIPTION>
    private boolean inEncode64=false;  // true si on est dans un tag <STREAM encode="base64">
    private boolean inBinary=false;    // true si on est dans un tag <BINARY>
+   private boolean inBinary2=false;   // true si on est dans un tag <BINARY2>
    private boolean inFits=false;      // true si on est dans un tag <FITS>
    private boolean inGroup=false;     // true si on est dans un group
    private int fitsExtNum;            // Numéro de l'extension fits en cas de <FITS extnum="x">
@@ -162,19 +165,20 @@ final public class TableParser implements XMLConsumer {
       MyInputStream in = aladin.glu.getMyInputStream(uri,false);
       
       // Cas BINARY HREF
-      if( inBinary ) {
+      if( inBinary || inBinary2 ) {
+         consumer.tableParserInfo("\nParsing VOTable data from an external"+(inBinary2?" BINARY2":" BINARY")+" stream:\n => "+uri);
          byte [] buf = in.readFully();
-         parseBin(buf,0,buf.length);
+         parseBin(buf,0,buf.length,inBinary2);
          
 //         byte [] buf = new byte[100000];
 //         int n;
-//         while( (n=in.readFully(buf))>0 ) parseBin(buf,0,n);
+//         while( (n=in.readFully(buf))>0 ) parseBin(buf,0,n,inBinary2);
          
       // Cas FITS HREF
       } else if( inFits ) {
          
          aladin.calque.seekFitsExt(in,fitsExtNum);
-         Aladin.trace(2,"Parsing VOTable data from a FITS stream ("+uri+") (ext="+fitsExtNum+")");
+         consumer.tableParserInfo("\nParsing VOTable data from a FITS stream:\n => "+uri+(fitsExtNum>0?" (ext="+fitsExtNum+")":""));
          in.resetType(); in.getType();
          headerFits = new HeaderFits(in);
          parseFits(in,true);
@@ -189,13 +193,18 @@ final public class TableParser implements XMLConsumer {
     * @param len taille du segment à parser
     * @throws Exception
     */
-   private void parseBase64(char ch[],int pos, int len) throws Exception {
-      if( memoField!=null ) consumer.tableParserInfo("\nFound VOTable base64 encoded STREAM data");
+   private void parseBase64(char ch[],int pos, int len,boolean inBinary2) throws Exception {
+      if( memoField!=null ) consumer.tableParserInfo("\nParsing VOTable data from a"+(inBinary2?" BINARY2":" BINARY")+" base64 stream");
       byte b[] = new byte[len];   // un peu grand mais bon !
       int offset = 0;
-      if( memoB!=null ) System.arraycopy(memoB,0,b,0,offset=memoB.length);
+      if( memoB!=null ) {
+         System.out.println("memoB!=null !! memoB.length="+memoB.length);
+         b = new byte[len+memoB.length]; 
+         System.arraycopy(memoB,0,b,0,offset=memoB.length);
+         memoB=null;
+      } else b = new byte[len];
       int n = Save.get64(b,offset,ch,pos,len);
-      parseBin(b,0,n);
+      parseBin(b,0,n,inBinary2);
    }
    
    // Variables d'instance en cas de parseBin consécutifs
@@ -205,7 +214,9 @@ final public class TableParser implements XMLConsumer {
    private int [] prec=null;
    private int sizeRecord=0;
    private int nbField=0;
-   private byte[] memoB = null;
+   private byte[] memoB = null;         // Memorisation du reste du flux à reprendre en cas de reprise
+   private byte [] nullMask = null;     // mask BINARY2 de la ligne courante
+   private boolean maskRead=false;      // true si le mask BINARY2 de la ligne courante a déjà été lu
 
    
    /** Parsing d'un champ de bits issu d'un STREAM BINAIRE votable. Le parsing peut se faire
@@ -215,9 +226,10 @@ final public class TableParser implements XMLConsumer {
     * @param b Le tableau d'octets
     * @param offset La position du début des données
     * @param length La taille des données
+    * @param inBinary2 true => Votable 1.3 BINARY2 codage
     * @return true si ok, false sinon
     */
-   private boolean parseBin(byte b[],int offset, int length) throws Exception {
+   private boolean parseBin(byte b[],int offset, int length,boolean inBinary2) throws Exception {
       
       if( memoField!=null ) {
          nbField = memoField.size();
@@ -225,6 +237,7 @@ final public class TableParser implements XMLConsumer {
          pos = new int[nbField];
          len = new int[nbField];
          prec = new int[nbField];
+         if( inBinary2 ) nullMask = new byte[( nbField+7)/8 ];
          nField=nRecord = 0;
          
          boolean variableField=false;
@@ -238,7 +251,7 @@ final public class TableParser implements XMLConsumer {
             type[i]=t.charAt(0);
             len[i] = 1;
             
-            // Champ variable
+            // Champ variable => len=-1, sizeRecord=-1
             if( f.arraysize!=null && f.arraysize.equals("*") ) {
                len[i]=-1; 
                sizeRecord=-1;
@@ -261,20 +274,47 @@ final public class TableParser implements XMLConsumer {
 //System.out.println("length="+length+" sizeRecord="+sizeRecord);      
       }
       
-//System.out.println("parseBin nRecord="+nRecord+" nField="+nField);
+//System.out.println("\nparseBin position="+offset+" length="+length+" nRecord="+nRecord+" nField="+nField);
 
       // Parsing du buffer (on reprend éventuellement là où on en était)
       int position=offset;
       while( position<length ) {
          if( nField==nbField ) {
             nField=0;
-//            System.out.print(nRecord+": ");
+//System.out.print(nRecord+": ");
          }
+         
+         // En BINARY2, il faut lire le masque de bits en préambule de la ligne
+         if( inBinary2 && nField==0 && !maskRead ) {
+
+            // Y a-t-il encore au-moins assez de bytes ? 
+            // sinon ce sera pour la prochaine fois
+            int n = length-position;
+            if( n<nullMask.length ) {
+//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause du nullMask..");
+               memoB = new byte[n];
+               System.arraycopy(b,position,memoB,0,n);
+               return true;
+            }
+
+            System.arraycopy(b, position, nullMask, 0, nullMask.length);
+            position+=nullMask.length;
+            maskRead=true;
+         } else maskRead=false;
          
          int nbBytes = len[nField]==-1 ? -1 : binSizeOf(type[nField], len[nField]);
          
          // Champ variable ?
          if( nbBytes==-1 ) {
+            
+            // Y a-t-il encore au-moins 4 bytes ? sinon ce sera pour la prochaine fois
+            int n = length-position;
+            if( n<4 ) {
+//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause de la longueur d'un champ variable..");
+               memoB = new byte[n];
+               System.arraycopy(b,position,memoB,0,n);
+               return true;
+            }
             nbBytes = getInt(b, position);
             position+=4;
          }
@@ -287,48 +327,40 @@ final public class TableParser implements XMLConsumer {
          
          // Dernier champ non complet => on le garde pour la prochaine fois
          if( nextPosition>length ) {
+            // Dans le cas d'un champ variable, il faut également garder sa taille
+            if( len[nField]==-1 ) position-=4;
             int n = length-position;
+//            System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause d'un champ non complet..");
             memoB = new byte[n];
             System.arraycopy(b,position,memoB,0,n);
             return true;
          }
          
-         record[nField] = getBinField(b,position, len[nField]==-1 ? nbBytes : len[nField], type[nField],prec[nField], 0.,1.,false,0);
+         
+         // Est-ce un champ null ?  
+         if( inBinary2 && isNull(nullMask,nField) ) record[nField]="null";
+         
+         // Sinon 
+         else record[nField] = getBinField(b,position, len[nField]==-1 ? nbBytes : len[nField], type[nField],prec[nField], 0.,1.,false,0);
+         
 //System.out.print(" "+nbBytes+"/"+record[nField]);
          position = nextPosition;
          nField++;
          if( nField==nbField ) {
             consumeRecord(record,nRecord++);
-//            System.out.println();
+//System.out.println();
          }
       }
-
-// ANCIEN CODE      
-//      int position=offset;
-//      while( position<length ) {
-//         if( nField==nbField ) nField=0;
-//         int nextPosition = position + ((nField==nbField-1 ? sizeRecord : pos[nField+1]) - pos[nField]);
-//         
-//         // Dernier champ non complet => on le garde pour la prochaine fois
-//         if( nextPosition>length ) {
-//            int n = length-position;
-//            memoB = new byte[n];
-//            System.arraycopy(b,position,memoB,0,n);
-//            return true;
-//         }
-//         
-//         record[nField] = getBinField(b,position,len[nField],
-//                type[nField],prec[nField], 0.,1.,false,0);
-////if( nRecord==7822 ) System.out.println(nRecord+"/"+nField+" ["+position+"] =>"+record[nField]);         
-//         if( len[nField]==-1 ) position += tmpLen;
-//         else position = nextPosition;
-//         nField++;
-//         if( nField==nbField ) consumeRecord(record,nRecord++);
-//      }
-      
-//System.out.println("J'ai terminé nRecord="+nRecord+" nField="+nField);      
             
       return true;
+   }
+   
+   static final int MASK[] = { 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1 };
+   
+   private boolean isNull(byte [] nullMask, int nField) {
+      int nByte = nField/8;
+      int nBit = nField%8;
+      return ( (0xFF & nullMask[ nByte ]) & MASK[nBit]) != 0;
    }
    
    /** Parsing d'une table Fits ASCII ou BINTABLE
@@ -684,12 +716,12 @@ final public class TableParser implements XMLConsumer {
       
       switch(type) {
          case 'L': return t[i]!=0 ? "T":"F";
-         case 'B': return fmt( ((t[i])&0xFF),p,z,s,hasNull,n);
-         case 'I': return fmt( getShort(t,i),p,z,s,hasNull,n);
-         case 'J': return fmt( getInt(t,i),p,z,s,hasNull,n);
+         case 'B': return fmtInt( ((t[i])&0xFF),p,z,s,hasNull,n);
+         case 'I': return fmtInt( getShort(t,i),p,z,s,hasNull,n);
+         case 'J': return fmtInt( getInt(t,i),p,z,s,hasNull,n);
          case 'K': a = (((long)getInt(t,i))<<32) 
                           | (((long)getInt(t,i+4))&0xFFFFFFFFL);
-                   return fmt(a,p,z,s,hasNull,n);
+                   return fmtLong(a,p,z,s,hasNull,n);
          case 'E': return fmt( Float.intBitsToFloat( getInt(t,i) ),p,z,s );
          case 'D': a = (((long)getInt(t,i))<<32)
                           | (((long)getInt(t,i+4))& 0xFFFFFFFFL);
@@ -721,7 +753,7 @@ final public class TableParser implements XMLConsumer {
     * @param tnull la valeur pour non définie
     * @return la valeur formatée
     */
-   final private String fmt(long x,int prec,double tzero,double tscale,
+   final private String fmtInt(long x,int prec,double tzero,double tscale,
                             boolean hasNull,int tnull)  {
       if( hasNull && tnull==x ) return "";
       double y=x;
@@ -729,6 +761,39 @@ final public class TableParser implements XMLConsumer {
       if( tzero!=0.  ) y+=tzero;
       if( prec>=0 ) y= Util.round(y,prec);
       
+      if( y!=x ) return y+"";
+      return x+"";
+   }
+
+   /**
+    * Mise en forme d'un entier long
+    * @param x l'entier à traiter
+    * @param prec la précision à afficher (-1 si non précisée)
+    * @param tzero le décallage
+    * @param tscale le changement d'échelle
+    * @param hasNull true s'il y a une valeur tnull définie
+    * @param tnull la valeur pour non définie
+    * @return la valeur formatée
+    */
+   final private String fmtLong(long x,int prec,double tzero,double tscale,
+                            boolean hasNull,int tnull)  {
+      if( hasNull && tnull==x ) return "";
+      if( tscale==1 && tzero==0 ) return x+"";
+      
+      // Calcul entier (la précision n'est pas prise en compte)
+      if( (long)tscale==tscale && (long)tzero==tzero ) {
+         long y=x;
+         if( tscale!=1. ) y*=(long)tscale;
+         if( tzero!=0.  ) y+=(long)tzero;
+         return y+"";
+      }
+      
+      // Calcul réel
+      double y=x;
+      if( tscale!=1. ) y*=tscale;
+      if( tzero!=0.  ) y+=tzero;
+      if( prec>=0 ) y= Util.round(y,prec);
+
       if( y!=x ) return y+"";
       return x+"";
    }
@@ -787,6 +852,10 @@ final public class TableParser implements XMLConsumer {
     * @return chaine extraite trimmée
     */
    static final public String getStringTrim(byte s[],int offset,int len) {      
+      if( len<0 || offset+len>s.length ) {
+         System.err.println("problem s.length="+s.length+" offset="+offset+" len="+len+" !!");
+         return new String(s,offset,s.length-offset);
+      }
       return (new String(s,offset,len)).trim();
 //      int deb,fin,j;
 //      for( deb=offset, j=0; j<len && (s[deb]==BLB || s[deb]==TABB); deb++, j++);
@@ -1182,6 +1251,9 @@ final public class TableParser implements XMLConsumer {
                f.addInfo("refText",(String)atts.get("title"));
                inLinkField=true;
 
+            } else if( name.equalsIgnoreCase("VALUES") ) {
+               f.nullValue = (String)atts.get("null");
+               
             } else if( name.equalsIgnoreCase("DESCRIPTION") ) {
                inFieldDesc=true;
                
@@ -1191,7 +1263,8 @@ final public class TableParser implements XMLConsumer {
                recsep=(String)atts.get("recsep");
                headlines=(String)atts.get("headlines");
             } else if( name.equalsIgnoreCase("BINARY") ) inBinary=true;
-              else if( name.equalsIgnoreCase("FITS") ) {
+            else if( name.equalsIgnoreCase("BINARY2") ) inBinary2=true;
+            else if( name.equalsIgnoreCase("FITS") ) {
                  inFits=true;
                  if( (att=(String)atts.get("extnum"))!=null ) {
                     fitsExtNum = Integer.parseInt(att);
@@ -1379,7 +1452,10 @@ final public class TableParser implements XMLConsumer {
       if( format==FMT_SEXAGESIMAL ) {
          try {
             char ss = dec.charAt(0);
-            c.set(ra+( ss!='-' && ss!='+' ? " +":" " )+dec); }
+            String s;
+            if( ss=='-' || ss=='+' ) s=ra+" "+dec;
+            else s=ra+" +"+dec;
+            c.set(s); }
          catch( Exception e ) {
             if( Aladin.levelTrace>3 ) e.printStackTrace();
          } 
@@ -1394,6 +1470,7 @@ final public class TableParser implements XMLConsumer {
       
       return format;
    }
+   
 
   /** Retourne true si la coord. passée en paramètre est du sexagésimal.
    * Test simplement s'il y a plus d'un séparateur de champ */
@@ -1739,6 +1816,7 @@ final public class TableParser implements XMLConsumer {
       else if( depth==5 && name.equalsIgnoreCase("LINK") )        inLinkField=false;
       else if( depth==5 && name.equalsIgnoreCase("CSV") )         inCSV=false;
       else if( depth==5 && name.equalsIgnoreCase("BINARY") )      inBinary=false;
+      else if( depth==5 && name.equalsIgnoreCase("BINARY2") )     inBinary2=false;
       else if( depth==5 && name.equalsIgnoreCase("FITS") )        inFits=false;
       
       // Ajustement de profonceur en fonction des GROUP
@@ -1767,7 +1845,7 @@ final public class TableParser implements XMLConsumer {
          if( inGroup ) { memoInGroup(ch,start,length); return; }
          
          // Cas d'un segment BASE64
-         if( inEncode64 ) { parseBase64(ch,start,length); return; }
+         if( inEncode64 ) { parseBase64(ch,start,length,inBinary2); return; }
          
          // Ecarte les portions de texte vides
          if( isEmpty(ch,start,length) ) return;
@@ -1806,6 +1884,7 @@ final public class TableParser implements XMLConsumer {
     * les coordonnées en fonction des valeurs nRA,nDEC ou nX,nY suivant le flagXY ou non
     */
    private void consumeRecord(String rec[],int nbRecord) {
+      
       try {
 
          // Coordonnées en XY
@@ -1817,29 +1896,6 @@ final public class TableParser implements XMLConsumer {
          // Coordonnées en RA/DEC
          } else {
             format = getRaDec(c,rec[nRA],rec[nDEC],format);
-
-//            // mode sexa ou decimal ?
-//            if( !knowFormat ) {
-//               knowFormat=true;
-//               char ss = rec[nDEC].charAt(0);
-//               flagSexa=isSexa(rec[nRA]+( ss!='-' && ss!='+' ? " +":" " )+rec[nDEC]);
-//            }
-//            
-//            if( flagSexa ) {
-//               char ss = rec[nDEC].charAt(0);
-//               try { c.set(rec[nRA]+( ss!='-' && ss!='+' ? " +":" " )+rec[nDEC]); }
-//               catch( Exception e ) {
-//                  if( Aladin.levelTrace>0 ) e.printStackTrace();
-//               } 
-//               
-//            } else {
-//               try {
-//                  c.set( Double.parseDouble(rec[nRA]),
-//                         Double.parseDouble(rec[nDEC]));
-//               } catch( Exception e ) {
-//                  if( Aladin.levelTrace>=3 ) e.printStackTrace();
-//               } 
-//            }
 
 //System.out.println("--> ["+t+"] knowFormat="+knowFormat+" flagSexa="+flagSexa);
 //System.out.println("rec=");

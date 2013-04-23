@@ -251,14 +251,18 @@ public final class Cote extends Ligne {
       return bout.in(v,x,y) && !autreCote.nearArrow(v,x,y);
    }
 
-   protected void drawID(Graphics g ,Point p1,Point p2) {
+   protected void drawID(Graphics g, ViewSimple v,Point p1,Point p2) {
       if( !isCoteSelected() ) return;
+      double dy=p2.y-p1.y;
+      double dx=p2.x-p1.x;
+      if( Math.sqrt(dy*dy + dx*dx)<20 && v.getTaille()>10 ) return; // trop petit
       int a = (p1.x+p2.x)/2;
       int b = (p1.y+p2.y)/2;
+      g.setFont( Aladin.BOLD );
       int frame = plan.aladin.localisation.getFrame();
       String s = raj==Double.NaN || (frame==Localisation.XY || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )? Util.myRound(dist+"", 2) : Coord.getUnit(dist);
       int x = a+3;
-      int y = b+((p2.y-p1.y)*(p2.x-p1.x)>0?-2:12);
+      int y = b+(dy*dx>0?-2:12);
       int w = g.getFontMetrics().stringWidth(s);
       Color c = g.getColor();
       Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
@@ -274,6 +278,10 @@ public final class Cote extends Ligne {
 
    protected int clipXId() { return !isCoteSelected()?0 : 12*Coord.getUnit(dist).length(); }
    protected int clipYId() { return !isCoteSelected()?0 : 15; }
+   
+   protected boolean tooLarge(ViewSimple v,Point p1, Point p2) {
+      return false;
+   }
 
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
       if( !isVisible() ) return false;

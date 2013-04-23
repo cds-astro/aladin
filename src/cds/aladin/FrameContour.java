@@ -32,6 +32,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Label;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -295,7 +296,11 @@ public final class FrameContour extends JFrame implements ActionListener {
            currentZoomOnlyPanel.add(currentZoomOnly);
            g.setConstraints(currentZoomOnlyPanel,c);
            p.add(currentZoomOnlyPanel);
-           currentZoomOnly.setEnabled( a.calque.getFirstSelectedSimpleImage().ref );
+           try {
+              currentZoomOnly.setEnabled( a.calque.getFirstSelectedSimpleImage().ref );
+           } catch( Exception e ) {
+              currentZoomOnly.setEnabled( false );
+           }
 
            // bouton pour afficher l'aide
            helpBtn = createButton(showHelp?HIDEHELP:SHOWHELP);
@@ -365,7 +370,7 @@ public final class FrameContour extends JFrame implements ActionListener {
 
        @Override
     public void hide() {
-          if( a.calque.getFirstSelectedSimpleImage()!=null )  a.toolBox.tool[ToolBox.CONTOUR].mode=Tool.UP;
+          if( a.calque.getFirstSelectedPlanImage()!=null )  a.toolBox.tool[ToolBox.CONTOUR].mode=Tool.UP;
           else a.toolBox.tool[ToolBox.CONTOUR].mode=Tool.UNAVAIL;
           a.toolBox.repaint();
           flagHide=true;
@@ -378,16 +383,22 @@ public final class FrameContour extends JFrame implements ActionListener {
       /** Mise a jour de la fenetre si necessaire*/
        protected void majContour() {
           if( a.toolBox.tool[ToolBox.CONTOUR].mode==Tool.DOWN ) {
-//             PlanImage p = (PlanImage)a.calque.getPlanBase();
-             PlanImage p = (PlanImage)a.calque.getFirstSelectedSimpleImage();
-             if( p!=null && p.flagOk && p.hasAvailablePixels() ) {
+             
+//             PlanImage p = (PlanImage)a.calque.getFirstSelectedSimpleImage();
+             PlanImage p = (PlanImage)a.calque.getFirstSelectedPlanImage();
+             
+             if( p!=null && p.flagOk && p.isPixel() ) {
                 int newEtat = p.getImgID();
-//                if (showHelp) move(350,70);
-//          	    	else move(350,200);
 
                 if( etat!=newEtat) {
                    etat=newEtat;
-                   this.pimg = p;
+                   try {
+                     if( p instanceof PlanBG ) this.pimg = getCropImage(p);
+                      else this.pimg = p;
+                  } catch( Exception e ) {
+                    a.warning(this,e.getMessage());
+                    return;
+                  }
                    createAllPanels();
                 }
 
@@ -410,6 +421,14 @@ public final class FrameContour extends JFrame implements ActionListener {
           etat=-1;
           super.dispose();
        }*/
+       
+       PlanImage getCropImage(Plan p ) throws Exception {
+          if( !(p instanceof PlanBG) ) throw new Exception("Contour cropping only on all-sky image");
+          ViewSimple v = a.view.getCurrentView();
+          if( v.pref!=p )  throw new Exception("All-sky image contour is only available on current view !");
+          PointD p1 = v.getPosition(0.,0.);
+          return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),p.label,v.zoom,1.,false,false);
+       }
 
 
        // remplit curs.couleurTriangle en fonction de indicesCouleurs

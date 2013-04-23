@@ -515,17 +515,20 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Chargement synchrone */
    protected void loadNow() throws Exception {
       
-      // Dans le cache ?
-      if( planBG.useCache && isCached() ) {
-         setStatus(TOBELOADFROMCACHE);
-         loadFromCache();
-      }
+      if( getStatus()!=READY ) {
+         // Dans le cache ?
+         if( planBG.useCache && isCached() ) {
+            setStatus(TOBELOADFROMCACHE);
+            loadFromCache();
+         }
+
+         // Pas dans le cache, ou innaccessible par le cache
+         if( !(planBG.useCache && isCached()) ) {
+            setStatus(TOBELOADFROMNET);
+            loadFromNet();
+         }
+      } else resetTimer();
       
-      // Pas dans le cache, ou innaccessible par le cache
-      if( !(planBG.useCache && isCached()) ) {
-         setStatus(TOBELOADFROMNET);
-         loadFromNet();
-      }
       if( getStatus()==READY ) {
          if( allSky ) planBG.setLosangeOrder( getLosangeOrder() );
          if( planBG.isTruePixels() ) loadPixelsOrigin(ONLYIFDISKAVAIL);  // En SYNC, on préfère tout de suite garder les pixels d'origine en RAM

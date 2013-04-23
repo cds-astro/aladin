@@ -22,15 +22,18 @@ package cds.aladin.bookmark;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Enumeration;
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -38,14 +41,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import cds.aladin.Aladin;
 import cds.aladin.Chaine;
 import cds.aladin.Function;
-import cds.aladin.Tok;
 import cds.tools.Util;
 
 /**
@@ -127,6 +129,10 @@ public class FrameBookmarks extends JFrame {
       Chaine chaine = aladin.getChaine();
       JButton b;
       
+      p.add( b=new JButton(chaine.getString("EXEC")));
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { execute(); }
+      });
       p.add( b=new JButton(chaine.getString("BKMEDITOR")));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
@@ -144,10 +150,20 @@ public class FrameBookmarks extends JFrame {
       return p;
    }
    
+   protected void setVisibleEdit() {
+      if( genPanel==null ) createPanel();
+      genPanel.remove(amateurPanel);
+      genPanel.add(getExpertPanel(),BorderLayout.CENTER);
+      expertMode=true;
+      pack();
+      setVisible(true);
+   }
+   
    // Retourne le panel d'édition
    protected JPanel getEditPanel() {
       JPanel p = new JPanel( new BorderLayout());
-      edit = new JTextArea(10,60);
+      edit = new JTextArea(8,50);
+      edit.setFont( Aladin.COURIER );
       edit.addKeyListener(new KeyAdapter(){
          public void keyReleased(KeyEvent e) {
             apply.setEnabled(isModif());
@@ -164,7 +180,10 @@ public class FrameBookmarks extends JFrame {
    private void resumeEdit(Function f,boolean valid) {
       if( valid ) valide(true);
       fctEdit=f;      
+      boolean local=f==null ? false : f.isLocalDefinition();
       edit.setText(f==null ? "" : f.toString());
+      edit.setEditable(local);
+      delete.setEnabled(local);
       apply.setEnabled(isModif());
    }
    
@@ -172,6 +191,7 @@ public class FrameBookmarks extends JFrame {
    // depuis le début de son édition
    private boolean isModif() {
       if( fctEdit==null ) return false;
+      if( !fctEdit.isLocalDefinition() ) return false;  // on n'a pas le droit de modifier une définition distante
       return !fctEdit.toString().trim().equals(edit.getText().trim());
    }
    
@@ -197,6 +217,19 @@ public class FrameBookmarks extends JFrame {
       }
    }
    
+   private void execute() {
+      Function f;
+      try { 
+         if( !isModif() ) {
+            int row = table.getSelectedRow();
+            f = aladin.getCommand().getFunction(row); 
+         } else {
+            f = new Function(edit.getText());
+         }
+         f.exec(aladin,"",true); }
+      catch( Exception e ) { e.printStackTrace(); }
+   }
+   
    // retourne le panel des boutons de controle du panel Expert
    private JPanel getControlPanel() {
       JPanel p = new JPanel( );
@@ -217,6 +250,10 @@ public class FrameBookmarks extends JFrame {
          public void actionPerformed(ActionEvent e) { resetBookmarks(); }
       });
       p.add(new JLabel(" - "));
+      p.add( b=new JButton(chaine.getString("EXEC")));
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { execute(); }
+      });
       p.add( b=apply=new JButton(chaine.getString("PROPAPPLY")));
       b.setEnabled(false);
       b.addActionListener(new ActionListener() {
@@ -225,10 +262,11 @@ public class FrameBookmarks extends JFrame {
       p.add( b=new JButton(chaine.getString("PROPCLOSE")));
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            genPanel.remove(expertPanel);
-            genPanel.add(getAmateurPanel(),BorderLayout.SOUTH);
-            expertMode=false;
-            pack();
+            dispose();
+//            genPanel.remove(expertPanel);
+//            genPanel.add(getAmateurPanel(),BorderLayout.SOUTH);
+//            expertMode=false;
+//            pack();
          }
       });
       return p;
@@ -261,7 +299,7 @@ public class FrameBookmarks extends JFrame {
       aladin.configuration.resetBookmarks();
       bookmarks.init(true);
       resumeTable();
-      bookmarks.resumeToolBar();
+//      bookmarks.resumeToolBar();  // Deja fait dans le bookmarks.init
       resumeEdit(null,false);
    }
    
@@ -278,9 +316,10 @@ public class FrameBookmarks extends JFrame {
    
    /********************************** Gère la table des bookmarks *********************************/
    
-   static final int BKM   = 0;
-   static final int NAME  = 1;
-   static final int DESC  = 2;
+   static final int BKM    = 0;
+   static final int LOC    = 1;
+   static final int NAME   = 2;
+   static final int DESC   = 3;
    
    private JTable table;
    private BookmarkTable tableModel;
@@ -297,11 +336,16 @@ public class FrameBookmarks extends JFrame {
    private JTable createBookmarksTable() {
       table=new JTable(tableModel=new BookmarkTable());
       table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+      table.getColumnModel().getColumn(LOC).setMinWidth(20);
+      table.getColumnModel().getColumn(LOC).setMaxWidth(20);
       table.getColumnModel().getColumn(BKM).setMinWidth(60);
       table.getColumnModel().getColumn(BKM).setMaxWidth(60);
       table.getColumnModel().getColumn(NAME).setMinWidth(70);
       table.getColumnModel().getColumn(NAME).setMaxWidth(70);
-      table.setPreferredScrollableViewportSize(new Dimension(320,16*12));
+      table.setPreferredScrollableViewportSize(new Dimension(420,38*12));
+      
+      MyRenderer cr = new MyRenderer();
+      table.getColumnModel().getColumn(LOC).setCellRenderer(cr);
 
       table.addMouseListener(new MouseAdapter() {
          public void mouseReleased(MouseEvent e) {
@@ -317,18 +361,20 @@ public class FrameBookmarks extends JFrame {
 
    class BookmarkTable extends AbstractTableModel {
       
-      public int getColumnCount() { return 3; }
+      public int getColumnCount() { return 4; }
       
       public int getRowCount() { return aladin.getCommand().getNbFunctions(); }
       
       public String getColumnName(int col) { 
-         return col==BKM  ? "Bookmark" :
+         return col==LOC  ? "" :
+                col==BKM  ? "Bookmark" :
                 col==NAME ? "Name" : 
                             "Description" ;
       }
       
       @SuppressWarnings({ "unchecked", "rawtypes" })
       public Class getColumnClass(int col) {
+         if( col==LOC ) return (new LabelIcon()).getClass();
          if( col==BKM ) return (new Boolean(true)).getClass();
          return super.getColumnClass(col);
       }
@@ -336,13 +382,18 @@ public class FrameBookmarks extends JFrame {
       public Object getValueAt(int row, int col) {
          Function f = aladin.getCommand().getFunction(row);
          switch( col ) {
+            case LOC  : return getIcon(f);
             case BKM  : return new Boolean(f.isBookmark());
             case NAME : return f.getName(); 
             default : return f.getDescription();
          }
       }
       
-      public boolean isCellEditable(int row, int col) { return true; }
+      public boolean isCellEditable(int row, int col) {
+         if( col==BKM ) return true;
+         Function f = aladin.getCommand().getFunction(row);
+         return f.isLocalDefinition();
+      }
       
       public void setValueAt(Object value,int row, int col) {
          Function f = aladin.getCommand().getFunction(row);
@@ -356,4 +407,34 @@ public class FrameBookmarks extends JFrame {
          }
       }
    }
+   
+   class MyRenderer extends DefaultTableCellRenderer {
+       public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,  
+                                                      boolean hasFocus, int row, int column) {  
+          return (Component)value;
+       }  
+   }  
+   
+   private LabelIcon getIcon(Function f) {
+      return new LabelIcon(f);
+   }
+   
+   class LabelIcon extends JLabel {
+      Function f;
+      
+      LabelIcon() { super(); }
+      LabelIcon(Function f) { this.f=f; }
+      
+//      public Dimension getPreferedDimension() { return new Dimension(60,20); }
+      
+      /** Affichage du bouton "bookmark", avec une petite étoile en préfixe */
+      public void paintComponent(Graphics g) {
+         super.paintComponent(g);
+         g.setColor( f.isLocalDefinition() ? Color.blue : ButtonBookmark.Orange);
+         Util.drawStar(g, 6,7);
+      }
+   }
+   
+
+
 }

@@ -795,8 +795,7 @@ public final class Save extends JFrame implements ActionListener {
    * @param length le nombre de caracteres a traiter dans a[]
    * @return la prochaine position a remplir dans b[]
    */
-   public static int get64(byte [] b, int k,
-         char [] a, int start, int length) {
+   public static int get64(byte [] b, int k, char [] a, int start, int length) {
       char [] tab = B64.toCharArray();
       int  c, c3, i,j, colno, lineno;
       boolean skip_line;
@@ -817,7 +816,7 @@ public final class Save extends JFrame implements ActionListener {
       while( j<length ) {
          c = a[j++];
          colno++;
-         if( skip_line ) System.err.print(c);
+         if( skip_line && Aladin.levelTrace>=3 ) System.err.print(c);
          if( c==' ' || c=='\t' || c=='\n' || c=='\r') {
             if( c=='\n' || c=='\r') { lineno++; colno=0; skip_line=false; }
             continue;
@@ -827,10 +826,10 @@ public final class Save extends JFrame implements ActionListener {
          if( (c3&0x40)!=0 ) {
             if( colno==1 ) {
                skip_line = true;
-               System.err.println("++++Ignore line: "+c);
+               if( Aladin.levelTrace>=3 ) System.err.println("++++Ignore line: "+c);
                continue;
             }
-            System.err.println("****Bad input char "+((char)c)+
+            if( Aladin.levelTrace>=3 ) System.err.println("****Bad input char (1) "+((char)c)+
                   " line "+lineno+", col "+colno);
             continue;
          }
@@ -840,7 +839,7 @@ public final class Save extends JFrame implements ActionListener {
          colno++ ;
          i = b642a[c&0xff];
          if( (i&0x40)!=0 ) {
-            System.err.println("****Bad input char "+((char)c)+
+            if( Aladin.levelTrace>=3 ) System.err.println("****Bad input char (2) "+((char)c)+
                   " line "+lineno+", col "+colno);
             c3 >>>= 4;
 
@@ -855,7 +854,7 @@ public final class Save extends JFrame implements ActionListener {
          colno++ ;
          i = b642a[c&0xff];
          if( (i&0x40)!=0 ) {		/* 2 characters to issue */
-            if( i!=0xff ) System.err.println("****Bad input char "+((char)c)+
+            if( i!=0xff && Aladin.levelTrace>=3 ) System.err.println("****Bad input char (3) "+((char)c)+
                   " line "+lineno+", col "+colno);
             c3 >>>= 2;
          if( k>=size ) return k;
@@ -870,9 +869,10 @@ public final class Save extends JFrame implements ActionListener {
          c = (a[j++]) & 0xff;
          colno++ ;
          i = b642a[c&0xff] ;
-         if( (i&0x40)!=0 && i!=0xff ) System.err.println("****Bad input char "+((char)c)+
+         if( (i&0x40)!=0 && i!=0xff ) {
+            if( Aladin.levelTrace>=3 ) System.err.println("****Bad input char (4) "+((char)c)+
                " line "+lineno+", col "+colno);
-         else c3 |= i;
+         } else c3 |= i;
          if( k>=size ) return k;
          b[k++]=(byte)(c3>>>16);
          if( k>=size ) return k;

@@ -471,7 +471,8 @@ public final class FrameCM extends JFrame implements ActionListener {
             JPanel p2 = new JPanel();
             p2.setBackground(Color.yellow);
             p2.add( new JLabel("<HTML><B>Mode:</B> "+pbg.getFormat()+"</HTML>"));
-            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixels" : "Switch to (slow) true pixels");
+//            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixels" : "Switch to (slow) true pixels");
+            JButton bt = new JButton( pbg.truePixels ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS"));
             bt.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) { switchMode(pbg); }
             } );

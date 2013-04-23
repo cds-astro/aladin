@@ -1796,6 +1796,7 @@ public class PlanHealpix extends PlanBG {
     private int coordsysToFrame(char sys) {
         switch (sys) {
         case 'C':
+        case 'Q':
             return Localisation.ICRS;
 
         case 'G':

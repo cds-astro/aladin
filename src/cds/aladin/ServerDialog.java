@@ -178,6 +178,12 @@ public final class ServerDialog extends JFrame
          }
       }
    }
+   
+   /** Retourne l'indice du formulaire du dernier Serveur GLU chargé
+    * => afin de pouvoir le rendre visible immédiatement le cas échéant */
+   protected int getLastGluServerIndice() {
+      return findIndiceServer(aladin.glu.lastGluServer);
+   }
 
 
    /**

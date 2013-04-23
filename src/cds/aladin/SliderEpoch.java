@@ -57,7 +57,7 @@ public class SliderEpoch extends SliderPlusMoins {
    
    /** Positionne l'époque en fonction de l'image de fond */
    protected void setDefaultEpoch() {
-      int yr=2000;
+      double yr=2000;
       try {
          Plan pi = aladin.calque.getPlanBase();
          if( pi instanceof PlanImage) {
@@ -65,14 +65,14 @@ public class SliderEpoch extends SliderPlusMoins {
             if( ep!=null ) {
                Astrotime t = new Astrotime();
                t.set( ep );
-               yr = (int)( t.getJyr() );
+               yr = t.getJyr();
             }
          }
       } catch( Exception e ) { }
       slider.setValue(yr);
       submit(0);
    }
-
+   
 
    void submit(int inc) {
       Plan [] p = getPlanCatalog();

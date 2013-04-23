@@ -61,7 +61,6 @@ MPANEL	Panels
 MPANEL1	1 panel
 MPANEL2	2 panels
 MPANEL2L	2 horiz. panels
-MPANEL3	3 panels
 MPANEL4	4 panels
 MPANEL9	9 panels
 MPANEL16	16 panels
@@ -163,7 +162,6 @@ MPANEL.fr	Cadres
 MPANEL1.fr	1 cadre
 MPANEL2.fr	2 cadres
 MPANEL2L.fr	2 cadres horiz.
-MPANEL3.fr	3 cadres
 MPANEL4.fr	4 cadres
 MPANEL9.fr	9 cadres
 MPANEL16.fr	16 cadres
@@ -596,6 +594,17 @@ RADIUS.fr	Rayon
 #YTARGET.fr	Indiquez ici une position
 SSHELP.fr  Cette fenêtre fournit un accès simple et homogène à la plupart des bases de données astronomique accessibles par Internet.\n   .Les onglets à gauche concernent les serveurs d'images ;\n   .Les onglets de droite concernent les serveurs de catalogues ou de tables.\n   .Les onglets du haut donnent accès à vos données locales [File], à tous les serveurs compatibles "Observatoire virtuel" [all VO] pour une interrogation simultanée, à une liste de champs instrumentaux [FOV] et enfin à d'autres services particuliers.\n \nSélectionnez le serveur de votre choix, renseignez son formulaire - notamment en désignant une position (coordonnées ou identificateur usuel) et un rayon de recherche - et appuyez "CHERCHER". Pour certains serveurs, vous devrez désigner explicitement quelles données vous désirez charger. Les résultats de vos requêtes (images, catalogues,...) seront enregistrés dans la "pile" d'Aladin et visualisés en conséquence.\n \nLe bouton "Réinit." réinitialise les champs de saisie, notamment la cible et le rayon par défaut (voire l'époque) afin qu'ils correspondent au champ en cours de visualisation. En revanche, le bouton "Effacer" efface simplement tous les champs de saisie.\n \nLe bouton "Pointer" qui apparait dans certains formulaires vous permet de remplir les champs "Position" et "Rayon" en cliquant/étirant dans la vue principale d'Aladin.
 NOSESAME.fr	Le résolveur de nom d'objet CDS Sésame est inatteignable actuellement.\nVous devez utiliser directement les coordonnées J2000 correspondantes.
+
+
+# ServerAllsky strings
+ALLSKYJPEG Preview (jpeg)
+ALLSKYJPEG.fr Prévisualisation (jpeg)
+ALLSKYFITS Full pixel dynamic (fits)
+ALLSKYFITS.fr Dynamique complète  (fits)
+ALLSKYSWJPEG Get preview (jpeg)
+ALLSKYSWJPEG.fr Mode Prévisualisation (jpeg)
+ALLSKYSWFITS Get full pixel dynamic (fits)
+ALLSKYSWFITS.fr Mode dynamique complète  (fits)
 
 # AladinServer.java strings
 ALADINTITLE	Aladin image server
@@ -2498,8 +2507,8 @@ SLIDERDENSITYTIP.fr	Ajuste la densité des sources des catalogues progressifs sél
 # Bookmarks strings
 BKMTITLE	Bookmarks controler
 BKMTITLE.fr	Gestionnaire des signets
-BKMDEFAULT	Reload original bookmarks
-BKMDEFAULT.fr Recharge les signets d'origine
+BKMDEFAULT	Reload bookmarks
+BKMDEFAULT.fr Recharge signets
 BKMCONFIRM	Do you really want to reload the Aladin original bookmarks ?
 BKMCONFIRM.fr	Voulez-vous réellement reprendre\nles signets Aladin d'origine ?
 BKMEDITOR	Bookmark editor

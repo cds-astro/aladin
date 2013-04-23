@@ -291,8 +291,9 @@ public final class ToolBox extends JComponent implements
 
       // Si la vue courante a un plan de référence qui n'a pas de pixels accessibles
       // on invalide CONTOUR
-//      if( v==null || v.isFree() || !v.pref.hasAvailablePixels() || v.pref instanceof PlanBG ) {
-      if( aladin.calque.getFirstSelectedSimpleImage()==null ) {
+//      if( aladin.calque.getFirstSelectedSimpleImage()==null 
+//            && !(v.pref instanceof PlanBG && v.pref.isPixel()) ) {
+      if( v==null || v.isFree() || !v.pref.isPixel() ) {
          mode[ToolBox.CONTOUR]=Tool.UNAVAIL;
       }
       
