@@ -741,9 +741,10 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
   			sb.append("</VOTABLE>");
 
 
+  			MyInputStream in = null;
   			try {
 //  			System.out.println(sb.toString());
-  			    int n = aladin.calque.newPlanCatalog( new MyInputStream(
+  			    int n = aladin.calque.newPlanCatalog( in = new MyInputStream(
   				    new BufferedInputStream(new ByteArrayInputStream(
   				    sb.toString().getBytes()))), "toto");
                   if( n>=0 ) {
@@ -761,6 +762,7 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
                   }
   			}
   			catch( Exception e) {e.printStackTrace();}
+  			finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }
   		}
       }
 

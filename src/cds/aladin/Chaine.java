@@ -163,13 +163,14 @@ public class Chaine {
              }
           }
        }
+       
+       BufferedReader dis=null;
        try {
-           BufferedReader dis = s.indexOf(".utf")>=0 ?
+           dis = s.indexOf(".utf")>=0 ?
                          new BufferedReader(new InputStreamReader(is,"UTF8"))
                         :new BufferedReader(new InputStreamReader(is,"iso-8859-1"));
                          
            parseStringFile(dis);
-           dis.close();
            Aladin.trace(1,"String file "+s+" loaded ("+(System.currentTimeMillis()-t)+"ms)");
        }
        
@@ -178,7 +179,12 @@ public class Chaine {
            if( aladin.levelTrace>=3 ) e.printStackTrace();
            Aladin.trace(1,"Could not load strings file "+s);
            return ;
-       }      
+       }    
+       
+       finally {
+          if( dis!=null ) try { dis.close(); } catch( Exception e1) {}
+       }
+       
     }
     
     /** Retourne l'indice du premier caractère de la chaine de texte suivant

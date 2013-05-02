@@ -67,7 +67,7 @@ public class BuilderTree extends Builder {
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
       try {
-         validateCut();
+         if( !context.isColor() ) validateCut();
          context.initParameters();
       } catch( Exception e ) {
          context.warning("No pixel cut information => you will have to (re)create the allsky.fits separately !");

@@ -110,10 +110,13 @@ public class BuilderGzip extends Builder {
    // gzip (resp. gunzip) du fichier indiqué. 
    // Dans le cas où un fichier est déjà gzippé (resp. gunzippé), le fichier est simplement ignoré
    private void gzip(String file,boolean compress) throws Exception {
+      MyInputStream mis = null;
+      OutputStream mos = null;
+      OutputStream fos = null;
       try {
         File in = new File(file);
         if( !in.isFile() ) throw new Exception(file+" does not exist !");
-        MyInputStream mis = new MyInputStream(new FileInputStream(in));
+        mis = new MyInputStream(new FileInputStream(in));
         if( compress ) {
            if( mis.isGZ() ) throw new Exception(file+" already gzipped");
         } else {
@@ -123,8 +126,8 @@ public class BuilderGzip extends Builder {
         String outFile = file+".tmp";
         File out = new File(outFile);
         if( out.isFile() ) out.delete();
-        OutputStream fos = new FileOutputStream(outFile);
-        OutputStream mos = compress ? new GZIPOutputStream( fos ) : fos;
+        fos = new FileOutputStream(outFile);
+        mos = compress ? new GZIPOutputStream( fos ) : fos;
         
         byte [] buf = new byte[8192];
         int n;
@@ -132,9 +135,6 @@ public class BuilderGzip extends Builder {
            mos.write(buf,0,n);
            if( context.isTaskAborting() ) break;
         }
-        
-        mos.close();
-        mis.close();
         
         if( context.isTaskAborting() ) out.delete();
         else {
@@ -147,6 +147,11 @@ public class BuilderGzip extends Builder {
         }
         
      } catch( Exception e ) { }
+     finally { 
+        if( mis!=null ) mis.close();
+        if( mos!=null ) mos.close();
+        if( fos!=null ) fos.close();
+     }
      
      if( context.isTaskAborting() ) throw new Exception("Task abort !");
    }

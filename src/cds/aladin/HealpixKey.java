@@ -721,16 +721,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
     protected byte [] loadStream(String filename,int skip) throws Exception {
        byte [] buf;
        long t1 = Util.getTime();
-       MyInputStream dis;
+       MyInputStream dis=null;
        boolean fastLoad = this instanceof HealpixAllsky;
        
        // Fichier distant
        if( filename.startsWith("http://") ) {
-          dis = Util.openStream(filename,false,10000);
-          if( skip>0 ) dis.skip(skip);
-          buf = readFully(dis, fastLoad );
-          dis.close();
-          
+          try {
+             dis = Util.openStream(filename,false,10000);
+             if( skip>0 ) dis.skip(skip);
+             buf = readFully(dis, fastLoad );
+          } finally { if( dis!=null ) dis.close(); }
+
        // Fichier local (zippé ou non)
        } else {
           RandomAccessFile f = new RandomAccessFile(filename,"r");
@@ -750,7 +751,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
                 // Le fichier est normal
              } else {
-                f.seek(0+skip);
+                f.seek(skip);
                 buf = new byte[(int)(f.length()-skip)];
                 f.readFully(buf);
              }

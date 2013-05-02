@@ -454,50 +454,54 @@ public class PlanHealpix extends PlanBG {
        tmp.mkdir();
 
        double start = System.currentTimeMillis();
-       MyInputStream isTmp = isTmp = new MyInputStream(new FileInputStream(pixelPath));
+       MyInputStream isTmp=null;
+       try {
+          isTmp = new MyInputStream(new FileInputStream(pixelPath));
 
-       headerFits = new FrameHeaderFits(this,isTmp);
+          headerFits = new FrameHeaderFits(this,isTmp);
 
-        int naxis = headerFits.getIntFromHeader("NAXIS");
-        // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
-        if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
-           // Je saute l'éventuel baratin de la première HDU
-           try {
-              naxis1 = headerFits.getIntFromHeader("NAXIS1");
-              isTmp.skip(naxis1);
-           } catch( Exception e) {}
+          int naxis = headerFits.getIntFromHeader("NAXIS");
+          // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
+          if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
+             // Je saute l'éventuel baratin de la première HDU
+             try {
+                naxis1 = headerFits.getIntFromHeader("NAXIS1");
+                isTmp.skip(naxis1);
+             } catch( Exception e) {}
 
-           // On se cale sur le prochain segment de 2880
-           isTmp.skipOnNext2880();
-//           long pos = isTmp.getPos();
-//           if( pos%2880!=0 ) {
-//              long offset = ((pos/2880)+1) *2880  -pos;
-//              isTmp.skip(offset);
-//           }
+             // On se cale sur le prochain segment de 2880
+             isTmp.skipOnNext2880();
+             //           long pos = isTmp.getPos();
+             //           if( pos%2880!=0 ) {
+             //              long offset = ((pos/2880)+1) *2880  -pos;
+             //              isTmp.skip(offset);
+             //           }
 
-           headerFits = new FrameHeaderFits(this,isTmp);
-        }
+             headerFits = new FrameHeaderFits(this,isTmp);
+          }
 
-        int nside=0;
-        int nsideImage=0;
-        int minLevel = 3; // Norder minimum désiré
-        initialOffsetHpx = isTmp.getPos();
-        nside = headerFits.getIntFromHeader("NSIDE");
-        int maxSizeGeneratedImage = 512;
-        if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
-        Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
-        nbPixGeneratedImage = 2*maxSizeGeneratedImage;
-        nSideFile = nside;
-        double levelImage;
-        do {
-           nbPixGeneratedImage /= 2;
-           levelImage = getLevelImage(nside, nbPixGeneratedImage);
-        }
-        // TODO : à voir avec Pierre
-        while( levelImage<minLevel ); // niveau minimum : minLevel (=3)
+          initialOffsetHpx = isTmp.getPos();
+       } finally { if( isTmp!=null ) isTmp.close(); }
+       
+       int nside=0;
+       int nsideImage=0;
+       int minLevel = 3; // Norder minimum désiré
+       nside = headerFits.getIntFromHeader("NSIDE");
+       int maxSizeGeneratedImage = 512;
+       if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
+       Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
+       nbPixGeneratedImage = 2*maxSizeGeneratedImage;
+       nSideFile = nside;
+       double levelImage;
+       do {
+          nbPixGeneratedImage /= 2;
+          levelImage = getLevelImage(nside, nbPixGeneratedImage);
+       }
+       // TODO : à voir avec Pierre
+       while( levelImage<minLevel ); // niveau minimum : minLevel (=3)
 
 
-        nsideImage = (int)CDSHealpix.pow2((long)levelImage);
+       nsideImage = (int)CDSHealpix.pow2((long)levelImage);
         Aladin.trace(3, "NSIDE image: "+nsideImage);
         Aladin.trace(3, "Level image : "+levelImage);
         Aladin.trace(3, "nb pixels generated image : "+nbPixGeneratedImage);
@@ -1261,48 +1265,50 @@ public class PlanHealpix extends PlanBG {
             }
         }
 
-        MyInputStream in;
+        MyInputStream in=null;
         try {
-            if (isLocal)
-                in = new MyInputStream(new FileInputStream(originalPath));
-            else
-                in = new MyInputStream(Util.openStream(originalPath));
+           try {
+              if (isLocal)
+                 in = new MyInputStream(new FileInputStream(originalPath));
+              else
+                 in = new MyInputStream(Util.openStream(originalPath));
 
-            in = in.startRead();
-            in.getType(); // il faut absolument faire cet appel, sinon
-                          // MyInputStream.isGZ() renvoie toujours false !!
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+              in = in.startRead();
+              in.getType(); // il faut absolument faire cet appel, sinon
+              // MyInputStream.isGZ() renvoie toujours false !!
+           } catch (Exception e) {
+              e.printStackTrace();
+              return;
+           }
 
-        String label = labelForField(mode);
-        synchronized (this) {
-            int idx = aladin.calque.newPlanHealpix(originalPath, in, label,
+           String label = labelForField(mode);
+           synchronized (this) {
+              int idx = aladin.calque.newPlanHealpix(originalPath, in, label,
                     mode == POLA_SEGMENT_MAGIC_CODE ? PlanBG.DRAWPOLARISATION
-                            : PlanBG.DRAWPIXEL, mode, false);
-            Plan polaPlane = aladin.calque.plan[idx];
+                          : PlanBG.DRAWPIXEL, mode, false);
+              Plan polaPlane = aladin.calque.plan[idx];
 
-            // on met le nouveau plan dans le folder approprié
-            if (folderPlane != null) {
-                int newIdx = aladin.calque.getIndex(folderPlane);
-                // on reste en dessous des plans polarisation
-                if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
+              // on met le nouveau plan dans le folder approprié
+              if (folderPlane != null) {
+                 int newIdx = aladin.calque.getIndex(folderPlane);
+                 // on reste en dessous des plans polarisation
+                 if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
                     newIdx += 1;
-                }
-                aladin.calque.permute(polaPlane, aladin.calque.plan[newIdx]);
-                aladin.view.newView(1);
-                aladin.calque.repaintAll();
-            }
-            if (mode==POLA_ANGLE_MAGIC_CODE) {
-                idx = aladin.calque.getIndex(polaPlane);
-                aladin.execAsyncCommand("cm @" + idx + " polarisation");
-            }
-            else if (mode==POLA_AMPLITUDE_MAGIC_CODE) {
-                idx = aladin.calque.getIndex(polaPlane);
-                aladin.execAsyncCommand("cm @" + idx + " log");
-            }
-        }
+                 }
+                 aladin.calque.permute(polaPlane, aladin.calque.plan[newIdx]);
+                 aladin.view.newView(1);
+                 aladin.calque.repaintAll();
+              }
+              if (mode==POLA_ANGLE_MAGIC_CODE) {
+                 idx = aladin.calque.getIndex(polaPlane);
+                 aladin.execAsyncCommand("cm @" + idx + " polarisation");
+              }
+              else if (mode==POLA_AMPLITUDE_MAGIC_CODE) {
+                 idx = aladin.calque.getIndex(polaPlane);
+                 aladin.execAsyncCommand("cm @" + idx + " log");
+              }
+           }
+        } finally { if( in!=null) try{ in.close(); } catch( Exception e) {} }
     }
 
 
@@ -1613,36 +1619,39 @@ public class PlanHealpix extends PlanBG {
             }
         }
 
-        MyInputStream in;
+        MyInputStream in=null;
         try {
-            if (isLocal) in = new MyInputStream(new FileInputStream(originalPath));
-            else in = new MyInputStream(Util.openStream(originalPath));
+           try {
+              if (isLocal) in = new MyInputStream(new FileInputStream(originalPath));
+              else in = new MyInputStream(Util.openStream(originalPath));
 
-            in = in.startRead();
-            in.getType(); // il faut absolument faire cet appel, sinon MyInputStream.isGZ() renvoie toujours false !!
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+              in = in.startRead();
+              in.getType(); // il faut absolument faire cet appel, sinon MyInputStream.isGZ() renvoie toujours false !!
+           }
+           catch(Exception e) {
+              e.printStackTrace();
+              return false;
+           }
 
-        int idx = aladin.calque.newPlanHealpix(originalPath, in,
-                                     tfieldNames[idxField],
-                                     PlanBG.DRAWPIXEL, idxField, true);
-        if (idx<0) {
-            return false;
-        }
-        // on met le nouveau plan dans le folder approprié
-        if (folder!=null) {
-            int newIdx = aladin.calque.getIndex(folder);
-            // on reste en dessous des plans polarisation
-            if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
-                newIdx += 1;
-            }
-            aladin.calque.permute(aladin.calque.plan[idx], aladin.calque.plan[newIdx]);
-            aladin.view.newView(1);
-            aladin.calque.repaintAll();
-        }
+           int idx = aladin.calque.newPlanHealpix(originalPath, in,
+                 tfieldNames[idxField],
+                 PlanBG.DRAWPIXEL, idxField, true);
+           if (idx<0) {
+              return false;
+           }
+           // on met le nouveau plan dans le folder approprié
+           if (folder!=null) {
+              int newIdx = aladin.calque.getIndex(folder);
+              // on reste en dessous des plans polarisation
+              if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
+                 newIdx += 1;
+              }
+              aladin.calque.permute(aladin.calque.plan[idx], aladin.calque.plan[newIdx]);
+              aladin.view.newView(1);
+              aladin.calque.repaintAll();
+           }
+
+        } finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
 
         return true;
     }

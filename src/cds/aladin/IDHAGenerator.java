@@ -324,16 +324,17 @@ public class IDHAGenerator extends JFrame {
 	 * @return boolean true if file has a known format, false otherwise
 	 */
 	private boolean checkFile(File file) {
+	   MyInputStream mis =null;
 		try {
-			MyInputStream mis = new MyInputStream(new FileInputStream(file));
+			mis = new MyInputStream(new FileInputStream(file));
 			mis = mis.startRead();
 			long type = mis.getType();
             //System.out.println("type de "+file.getName()+" : "+MyInputStream.decodeType(type));
-			mis.close();
 			
             return (type&keptMask) != 0;
 		}
 		catch(Exception e) {return false;}
+		finally { if( mis!=null ) try { mis.close(); } catch( Exception e1 ) {}}
 	}
 
 	/** PRE : dir est un répertoire */
@@ -479,14 +480,15 @@ public class IDHAGenerator extends JFrame {
 	 */
 	private void processImage(Image image) {
         HeaderFits hf = null;
+        MyInputStream myStream = null;
 	    try {
-            MyInputStream myStream = new MyInputStream(new FileInputStream(image.file));
+            myStream = new MyInputStream(new FileInputStream(image.file));
             myStream = myStream.startRead();
             hf = new HeaderFits(myStream);
-            myStream.close();
 	    }
 	    catch(Exception e) {Aladin.trace(3,"Error : could not create HeaderFits object");return;}
-
+        finally { if( myStream!=null ) try { myStream.close(); } catch( Exception e1) {}}
+	    
 	    Calib calib = null;
 	    try {
 	        calib = new Calib(hf);

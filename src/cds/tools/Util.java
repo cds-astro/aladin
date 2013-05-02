@@ -62,6 +62,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
@@ -650,7 +653,7 @@ public final class Util {
     }
 
     /** Tracé d'une flèche entre (x,y) et (x1,y1), avec un label éventuel et une taille d'empennage de L pixels */
-    static public void drawFleche(Graphics g,double x,double y,double x1,double y1,int L, String s) {
+    static private void drawFleche1(Graphics g,double x,double y,double x1,double y1,int L) {
        g.drawLine((int)x,(int)y,(int)x1,(int)y1);
 
        double theta,delta;
@@ -670,6 +673,40 @@ public final class Util {
        g.drawLine((int)(x1+dx1),(int)(y1+dy1),(int)x1,(int)y1);
        g.drawLine((int)x1,(int)y1,(int)(x1+dx2),(int)(y1+dy2));
 
+    }
+
+    static public void drawFlecheOutLine(Graphics g,double x,double y,double x1,double y1,int L, String s) {
+       boolean fd2 =  g instanceof Graphics2D;
+       Graphics2D g2 = fd2 ? (Graphics2D)g:null;
+       Object aliasing = null;
+       Stroke st = null;
+       Color c = g.getColor();
+       if( fd2 ) {
+          g.setColor(Color.black);
+          aliasing = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+          st = g2.getStroke();
+          g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+          g2.setStroke(new BasicStroke(2.4f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_MITER));
+          drawFleche1(g,x,y,x1,y1,L);
+          g2.setStroke(st);
+          g.setColor(c);
+       }
+       drawFleche1(g,x,y,x1,y1,L);
+       
+       if( s!=null ) {
+          if( x1<x ) x1-=10;
+          else x1+=2;
+          if( y1>y ) y1+=10;
+          else y1-=2;
+          if( fd2 ) Util.drawStringOutline(g, s,(int)x1,(int)y1, null,null);
+          else g.drawString(s,(int)x1,(int)y1);
+       }
+       if( fd2 ) g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aliasing);
+       
+    }
+    
+    static public void drawFleche(Graphics g,double x,double y,double x1,double y1,int L, String s) {
+       drawFleche1(g,x,y,x1,y1,L);
        if( s!=null ) {
           if( x1<x ) x1-=10;
           else x1+=2;
@@ -678,6 +715,7 @@ public final class Util {
           g.drawString(s,(int)x1,(int)y1);
        }
     }
+
 
     static public void drawFillOval(Graphics gr,int x, int y, int w, int h, float transparency,Color bg) {
        if( bg!=null ) gr.setColor(bg);
@@ -701,6 +739,38 @@ public final class Util {
           g.setComposite(saveComposite);
       } catch( Exception e ) { }
       gr.drawPolygon(pol);
+    }
+    
+    static public void drawStringOutline(Graphics g, String s, int x, int y, Color c, Color cOutLine) {
+       
+       if( c==null ) c=g.getColor();
+       if( cOutLine==null ) cOutLine=Color.black;
+       if( !(g instanceof Graphics2D ) ) { g.drawString(s, x, y); return; }
+       
+       Graphics2D g2 = (Graphics2D) g;
+       Color cb = g2.getColor();
+       Object aliasing = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+       AffineTransform t = g2.getTransform();
+       try {
+          Font f = g2.getFont();
+          FontMetrics fm = g2.getFontMetrics(f);
+          GlyphVector v = f.createGlyphVector(fm.getFontRenderContext(), s);
+          Shape s1 = v.getOutline();
+          g2.translate(x,y);
+          Stroke st = g2.getStroke();
+          g2.setStroke(new BasicStroke(1.6f,BasicStroke.CAP_SQUARE,BasicStroke.JOIN_BEVEL));
+          g.setColor(cOutLine);
+          g2.draw(s1);
+          g2.setStroke(st);
+          g2.setColor(c);
+//          g2.translate(-0.3,-0.3);
+          g2.fill(s1);
+       } finally {
+          g2.setTransform(t);
+       }
+       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aliasing);
+       g2.setColor(cb);
     }
     
     /** Tracé d'un cartouche, éventuellement semi-transparent

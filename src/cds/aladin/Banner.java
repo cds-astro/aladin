@@ -43,8 +43,9 @@ final public class Banner extends Window implements Runnable {
         char dec = Aladin.VERSION.charAt(virgule+1);
         if( dec!='0' ) number=number+"."+dec;
      }
+     MyInputStream is=null;
      try {
-        MyInputStream is = new MyInputStream(a.getClass().getResourceAsStream("/AladinBanner.jpg"));
+        is = new MyInputStream(a.getClass().getResourceAsStream("/AladinBanner.jpg"));
         byte buf[] = is.readFully();
         if( buf.length==0 ) throw new Exception();
         im = Toolkit.getDefaultToolkit().createImage(buf);
@@ -59,7 +60,9 @@ final public class Banner extends Window implements Runnable {
         setVisible(true);
         (new Thread(this,"Banner")).start();
         Util.pause(50);
-     } catch( Exception e) { }
+     }
+     catch( Exception e) { }
+     finally{ if( is!=null ) try { is.close(); } catch( Exception e1 ) {}} 
   }
 
   public void run() {

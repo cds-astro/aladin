@@ -327,16 +327,16 @@ public class Context {
          
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
+         MyInputStream in = null;
          try {
-            MyInputStream in = (new MyInputStream( new FileInputStream(path))).startRead();
-            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS 
-                  && !in.hasCommentCalib() ) { in.close(); continue; }    
-            in.close();
+            in = (new MyInputStream( new FileInputStream(path))).startRead();
+            if( (in.getType()&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;    
             Aladin.trace(4, "Context.findImgEtalon: "+path+"...");
             setImgEtalon(path);
             return true;
             
          }  catch( Exception e) { Aladin.trace(4, "findImgEtalon : " +e.getMessage()); continue; }
+         finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }
       }
       return false;
    }
@@ -356,18 +356,19 @@ public class Context {
          
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
+         MyInputStream in = null;
          try {
             // cas particulier d'un survey couleur en JPEG ou PNG avec calibration externe
             if( path.endsWith(".hhh") ) return path;
             
-            MyInputStream in = (new MyInputStream( new FileInputStream(path))).startRead();
+            in = (new MyInputStream( new FileInputStream(path))).startRead();
             long type = in.getType();
-            if( (type&MyInputStream.FITS) != MyInputStream.FITS ) { in.close(); continue; }            
-            in.close();
+            if( (type&MyInputStream.FITS) != MyInputStream.FITS ) continue;           
             return path;
             
          }  catch( Exception e) { Aladin.trace(4, "justFindImgEtalon : " +e.getMessage()); continue; }
-      }
+         finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }
+     }
       return null;
    }
    

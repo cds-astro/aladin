@@ -79,24 +79,27 @@ public class HealpixKeyCat extends HealpixKey {
       pcat = new Pcat(planBG);
       stream = loadStream(filename);
       mem = stream.length;
+      MyInputStream in = null;
 
-      testLast(stream);
-      testNLoaded(stream);
+      try {
+         testLast(stream);
+         testNLoaded(stream);
 
-      int trace=planBG.aladin.levelTrace;
-      planBG.aladin.levelTrace=0;
-      Legende leg = planBG.getFirstLegende();
-      if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
-      pcat.tableParsing(new MyInputStream(new ByteArrayInputStream(stream)),null);
-      planBG.aladin.levelTrace=trace;
+         int trace=planBG.aladin.levelTrace;
+         planBG.aladin.levelTrace=0;
+         Legende leg = planBG.getFirstLegende();
+         if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
+         pcat.tableParsing(in=new MyInputStream(new ByteArrayInputStream(stream)),null);
+         planBG.aladin.levelTrace=trace;
 
-      if( !planBG.useCache ) stream=null;
+         if( !planBG.useCache ) stream=null;
 
-      // Positionnement de la légende du premier Allsky chargé
-      if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
-      
-      // Dans le cas où l'époque aurait-été modifié
-      recomputePosition(leg,pcat);
+         // Positionnement de la légende du premier Allsky chargé
+         if( leg==null  ) ((PlanBGCat)planBG).setLegende( ((Source)pcat.iterator().next()).leg );
+
+         // Dans le cas où l'époque aurait-été modifié
+         recomputePosition(leg,pcat);
+      } finally { if( in!=null ) in.close(); }
    }
    
    /** Recalcule toutes les positions internes dans le cas où l'époque

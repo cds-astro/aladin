@@ -712,10 +712,12 @@ public class Repere extends Position {
       if( isWithLabel() && !hasRayon() ) {
          if( id==null ) setId();
          if( type==CARTOUCHE ) {
+//            Util.drawStringOutline((Graphics2D)g,id, p.x-dw/2,p.y-L-1,null,null);
             Util.drawCartouche(g,p.x-dw/2,p.y-L-dh-1, dw-2, dh+3, 1f, Color.black,JAUNEPALE);
             g.setColor( getColor() );
             g.setFont(Aladin.SPLAIN);
             g.drawString(id,p.x-dw/2,p.y-L-1);
+            
 //            g.drawLine(p.x-dw/2,p.y-L,p.x+dw/2,p.y-L);
             
          } else g.drawString(id,p.x-dw/2,p.y-L-1);

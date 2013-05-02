@@ -114,6 +114,8 @@ public final class MyInputStream extends FilterInputStream {
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
                                  // toute l'entête fits courante dans le cache (voir hasFitsKey())
 
+//   static public int NBOPENFILE = 0;
+   
    public MyInputStream(InputStream in) throws IOException {
       this(in,UNKNOWN,true);
    }
@@ -125,14 +127,17 @@ public final class MyInputStream extends FilterInputStream {
       alreadyRead=false;
       fitsHeadRead=false;
       dejaLu=0L;
+      
       this.in= in!=null && withBuffer && !(in instanceof BufferedInputStream ) ?
                    new BufferedInputStream(in) : in;
+//      NBOPENFILE++;
    }
    
    public void close() throws IOException {
+//      NBOPENFILE--;
 //      if( Aladin.levelTrace>3 ) System.out.println("MyinputStream.close(): "+this);
       in.close();
-      super.close();
+//      System.out.println("MyInputStream NBOPENFILE = "+NBOPENFILE);
    }
 
    static protected long NativeImage() { return JPEG|GIF|PNG|BMP; }

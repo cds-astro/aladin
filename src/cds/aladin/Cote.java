@@ -265,9 +265,9 @@ public final class Cote extends Ligne {
       int y = b+(dy*dx>0?-2:12);
       int w = g.getFontMetrics().stringWidth(s);
       Color c = g.getColor();
-      Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
-      g.setColor(Color.black);
-      g.drawString(s,x,y);
+//      Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
+      Util.drawStringOutline(g, s,x,y,c,Color.white);
+//      g.drawString(s,x,y);
       g.setColor(c);
    }
 

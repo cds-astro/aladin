@@ -162,16 +162,18 @@ final public class Fits {
    public void loadJpeg(String filename) throws Exception {loadJpeg(filename,false);}
    public void loadJpeg(String filename, boolean color) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
-      MyInputStream is = new MyInputStream( new FileInputStream(filename));
-//      is = is.startRead();
-      is.getType();   // Pour être sûr de lire le commentaire éventuel
-      if( is.hasCommentCalib() ) {
-         headerFits = is.createHeaderFitsFromCommentCalib();
-         try { setCalib(new Calib(headerFits)); } catch( Exception e ) { calib=null; }
+      MyInputStream is=null;
+      try {
+         is = new MyInputStream( new FileInputStream(filename));
+         //      is = is.startRead();
+         is.getType();   // Pour être sûr de lire le commentaire éventuel
+         if( is.hasCommentCalib() ) {
+            headerFits = is.createHeaderFitsFromCommentCalib();
+            try { setCalib(new Calib(headerFits)); } catch( Exception e ) { calib=null; }
 
-      }
-      loadJpeg(is,xCell,yCell,widthCell,heightCell,color);
-      is.close();
+         }
+         loadJpeg(is,xCell,yCell,widthCell,heightCell,color);
+      } finally { if( is!=null )  is.close(); }
       this.setFilename(filename);
    }
 
@@ -351,14 +353,16 @@ final public class Fits {
    public void loadFITS(String filename) throws Exception {loadFITS(filename,false,true);}
    public void loadFITS(String filename, boolean color,boolean flagLoad) throws Exception {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
-      MyInputStream is = new MyInputStream( new FileInputStream(filename));
-      is = is.startRead();
-      if( color ) {
-         if( widthCell<0 ) throw new Exception("Mosaic mode not supported yet for FITS color file");
-         loadFITSColor(is);
-      }
-      else loadFITS(is,xCell,yCell,widthCell,heightCell,flagLoad);
-      is.close();
+      MyInputStream is=null;
+      try {
+         is = new MyInputStream( new FileInputStream(filename));
+         is = is.startRead();
+         if( color ) {
+            if( widthCell<0 ) throw new Exception("Mosaic mode not supported yet for FITS color file");
+            loadFITSColor(is);
+         }
+         else loadFITS(is,xCell,yCell,widthCell,heightCell,flagLoad);
+      } finally { if( is!=null) is.close(); }
       this.setFilename(filename);
    }
 
@@ -515,66 +519,70 @@ final public class Fits {
       filename = parseCell(filename);   // extraction de la descrition d'une cellule éventuellement en suffixe du nom fichier.fits[x,y-wxh]
       int code=0;
       MyInputStream is = new MyInputStream( new FileInputStream(filename));
-      if( is.isGZ() ) code |= GZIP; 
-      is = is.startRead();
-      long type = is.getType();
+      try {
+         if( is.isGZ() ) code |= GZIP; 
+         is = is.startRead();
+         long type = is.getType();
 
-      // Cas spécial d'un fichier .hhhh
-      if( filename.endsWith(".hhh") ) {
-         byte [] buf = is.readFully();
-         headerFits = new HeaderFits();
-         headerFits.readFreeHeader(new String(buf), true, null);
-         code |= HHH;
+         // Cas spécial d'un fichier .hhhh
+         if( filename.endsWith(".hhh") ) {
+            byte [] buf = is.readFully();
+            headerFits = new HeaderFits();
+            headerFits.readFreeHeader(new String(buf), true, null);
+            code |= HHH;
 
-         // Cas d'un fichier PNG ou JPEG avec un commentaire contenant la calib
-      } else if( is.hasCommentCalib() ) {
-         headerFits = is.createHeaderFitsFromCommentCalib();
-         bitpix = 0;
-      }
-      // Si on a une image avec extension
-      // ouvrir et lire le reste des infos depuis une image de l'extension
-      else if ( (type& MyInputStream.XFITS)!=0)  {
-         headerFits = new HeaderFits(is);
-         code |= XFITS;
-         int naxis = headerFits.getIntFromHeader("NAXIS");
-         // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
-         if( headerFits.getStringFromHeader("EXTEND")!=null ) {
-            while( naxis<2 ) {
-               // Je saute l'éventuel baratin de la première HDU
-               if (!headerFits.readHeader(is))
-                  throw new Exception("Naxis < 2");
-               naxis = headerFits.getIntFromHeader("NAXIS");
-            }
-         }
-         bitpix = headerFits.getIntFromHeader("BITPIX");
-      }
-
-      // Cas habituel
-      else {
-         headerFits = new HeaderFits(is);
-         try {
-            bitpix = headerFits.getIntFromHeader("BITPIX");
-         } catch (Exception e1) {
+            // Cas d'un fichier PNG ou JPEG avec un commentaire contenant la calib
+         } else if( is.hasCommentCalib() ) {
+            headerFits = is.createHeaderFitsFromCommentCalib();
             bitpix = 0;
          }
-      }
+         // Si on a une image avec extension
+         // ouvrir et lire le reste des infos depuis une image de l'extension
+         else if ( (type& MyInputStream.XFITS)!=0)  {
+            headerFits = new HeaderFits(is);
+            code |= XFITS;
+            int naxis = headerFits.getIntFromHeader("NAXIS");
+            // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
+            if( headerFits.getStringFromHeader("EXTEND")!=null ) {
+               while( naxis<2 ) {
+                  // Je saute l'éventuel baratin de la première HDU
+                  if (!headerFits.readHeader(is))
+                     throw new Exception("Naxis < 2");
+                  naxis = headerFits.getIntFromHeader("NAXIS");
+               }
+            }
+            bitpix = headerFits.getIntFromHeader("BITPIX");
+         }
 
-      if( bitpix==0 ) code |= COLOR;
+         // Cas habituel
+         else {
+            headerFits = new HeaderFits(is);
+            try {
+               bitpix = headerFits.getIntFromHeader("BITPIX");
+            } catch (Exception e1) {
+               bitpix = 0;
+            }
+         }
 
-      width  = headerFits.getIntFromHeader("NAXIS1");
-      height = headerFits.getIntFromHeader("NAXIS2");
-      if( !hasCell() ) {
-         xCell=yCell=0;
-         widthCell=width;
-         heightCell=height;
+         if( bitpix==0 ) code |= COLOR;
+
+         width  = headerFits.getIntFromHeader("NAXIS1");
+         height = headerFits.getIntFromHeader("NAXIS2");
+         if( !hasCell() ) {
+            xCell=yCell=0;
+            widthCell=width;
+            heightCell=height;
+         }
+         try { blank = headerFits.getDoubleFromHeader("BLANK");   } catch( Exception e ) { blank=DEFAULT_BLANK; }
+         try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
+         try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
+         try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { 
+            if( Aladin.levelTrace>=3 ) e.printStackTrace(); calib=null; 
+         }
+         this.setFilename(filename);
+      } finally {
+         if( is!=null ) is.close();
       }
-      try { blank = headerFits.getDoubleFromHeader("BLANK");   } catch( Exception e ) { blank=DEFAULT_BLANK; }
-      try { bscale = headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { bscale=DEFAULT_BSCALE; }
-      try { bzero  = headerFits.getDoubleFromHeader("BZERO");  } catch( Exception e ) { bzero=DEFAULT_BZERO;  }
-      try { setCalib(new Calib(headerFits)); }                catch( Exception e ) { 
-         if( Aladin.levelTrace>=3 ) e.printStackTrace(); calib=null; }
-      is.close();
-      this.setFilename(filename);
       return code;
    }
 

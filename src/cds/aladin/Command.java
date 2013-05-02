@@ -1192,12 +1192,14 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
    
    /** Lancement d'une macro par script */
    protected void execMacro(String param) {
+      MyInputStream scriptStream = null;
+      MyInputStream paramStream = null;
       try {
          Tok tok = new Tok(param);
          
          // Récupération des lignes de commandes de la macro
          String scriptFile = a.getFullFileName(tok.nextToken());
-         MyInputStream scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
+         scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
          String s;
          Vector<String> v = new Vector<String>(100);
          while( (s=scriptStream.readLine())!=null ) {
@@ -1205,13 +1207,13 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
             v.addElement(s1);
          }
          Object [] cmd = v.toArray();
-         
+          
          // Instanciation du controler de macro
          MacroModel macro = new MacroModel(a);
          
          // Récupération des paramètres de la macro
          String paramFile = a.getFullFileName(tok.nextToken());
-         MyInputStream paramStream = (new MyInputStream(Util.openAnyStream(paramFile))).startRead();
+         paramStream = (new MyInputStream(Util.openAnyStream(paramFile))).startRead();
          HashMap params = new HashMap();
          while( (s=paramStream.readLine())!=null ) {
             int offset=-1;
@@ -1227,6 +1229,10 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
       } catch( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
          a.warning("macro error !"+e.getMessage()+"\n",1);
+      } 
+      finally {
+         if( scriptStream!=null ) try { scriptStream.close(); } catch( Exception e) {}
+         if( paramStream!=null )  try { paramStream.close(); }  catch( Exception e) {}
       }
    }
    

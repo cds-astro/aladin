@@ -2603,7 +2603,7 @@ private void processSIAPEvolResource(SavotResource res, ResourceNode root) {
         }
 
         if (stcRegion != null) {
-            Aladin.trace(3, "Creating FoV from STC-S description for node "+node.name);
+//            Aladin.trace(3, "Creating FoV from STC-S description for node "+node.name);
             STCStringParser parser = new STCStringParser();
             List<STCObj> stcObjs = parser.parse(stcRegion);
             node.setFov(new Fov(stcObjs));

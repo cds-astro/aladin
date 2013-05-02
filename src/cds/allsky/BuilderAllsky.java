@@ -39,7 +39,7 @@ final public class BuilderAllsky  extends Builder {
    
    public void validateContext() throws Exception {
       validateOutput();
-      validateCut();
+      if( !context.isColor() ) validateCut();
       context.setProgressMax(100);
    }
    

@@ -4619,9 +4619,11 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( x+taille > rv.width ) s=s1;
 //      g.setColor( getGoodColor(x+dx,rv.height-marge+2 + dy-10,taille,15));
       int y=rv.height-marge+3;
-      Util.drawCartouche(g, x+dx, y-11+dy, taille, 14, CARTOUCHE, null, Color.white);
-      g.setColor( Aladin.BLACKBLUE);
-      g.drawString(s, x+dx, y+dy);
+//      Util.drawCartouche(g, x+dx, y-11+dy, taille, 14, CARTOUCHE, null, Color.white);
+//      g.setColor( Aladin.BLACKBLUE);
+//      g.drawString(s, x+dx, y+dy);
+      Util.drawStringOutline(g, s, x+dx, y+dy, Color.cyan,null);
+
    }
 
    /** Retourne la marge pour les infos en fonction de la taille
@@ -4718,15 +4720,16 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       int x=getMarge()+dx;
       int y=5+getMarge()+dy;
 
-      int len;
-      FontMetrics fm = g.getFontMetrics();
-      for( len=fm.stringWidth(s); s.length()>4 && len>rv.width-100; s=s.substring(0,s.length()-2), len=fm.stringWidth(s) );
+//      int len;
+//      FontMetrics fm = g.getFontMetrics();
+//      for( len=fm.stringWidth(s); s.length()>4 && len>rv.width-100; s=s.substring(0,s.length()-2), len=fm.stringWidth(s) );
+//      Util.drawCartouche(g, x, y-11, len, 15, CARTOUCHE, null, Color.white);
+//      g.setColor( locked ? Color.red : Aladin.BLACKBLUE );
+//      g.drawString(s,x, y);
+//      g.setColor(c);
+
+      Util.drawStringOutline(g, s, x, y, Color.yellow, locked ? Color.red : null);
       
-      Util.drawCartouche(g, x, y-11, len, 15, CARTOUCHE, null, Color.white);
-      g.setColor( locked ? Color.red : Aladin.BLACKBLUE );
-      
-      g.drawString(s,x, y);
-      g.setColor(c);
    } 
    
    /** Affichage du target de la vue */
@@ -4888,11 +4891,12 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          if( northUp ) {
             g.setColor(Color.red);
          } else {
-            g.setColor( getGoodColor((int)Math.min(dx+x,dx+x1)-(int)L,(int)Math.min(dy+y,dy+y1),(int)L,(int)L));
+            g.setColor( Color.cyan);
+//            g.setColor( getGoodColor((int)Math.min(dx+x,dx+x1)-(int)L,(int)Math.min(dy+y,dy+y1),(int)L,(int)L));
          }
-         Util.drawFleche(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
-         Util.drawFleche(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
-      } catch( Exception e ) { return; }
+         Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x1,dy+y1,5,"N");
+         Util.drawFlecheOutLine(g,dx+x,dy+y,dx+x2,dy+y2,5,"E");
+     } catch( Exception e ) { return; }
    }
 
    /** Pas d'incréments en déclinaison */
@@ -5398,12 +5402,20 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                    int bord = aladin.view.getModeView()>4?2:4;
                    X+=dx; Y+=dy;
 
-                   g.setColor( getGoodColor(X,Y-bord,(int)w,bord)) ;
+                   g.setColor( Color.black ) ;
+                   g.fillRect(X-1,Y-bord-1,3,bord+2);
+                   g.fillRect(X-1,Y-1,(int)w+2,3);
+                   g.fillRect(X+(int)w-1,Y-bord-1,3,bord+2);
+
+                   //                   g.setColor( getGoodColor(X,Y-bord,(int)w,bord)) ;
+                   g.setColor( Color.cyan ) ;
                    g.drawLine(X,Y-bord,X,Y);
                    g.drawLine(X,Y,X+(int)w,Y);
                    g.drawLine(X+(int)w,Y,X+(int)w,Y-bord);
+                   
 
-                   g.drawString(s,X+3,Y-bord+1);
+//                   g.drawString(s,X+3,Y-bord+1);
+                   Util.drawStringOutline(g,s,X+3,Y-bord+1, null, Color.black);
                 }
              }
           }
@@ -6229,20 +6241,33 @@ g.drawString(s,10,100);
             int len = pixel.charAt(0)=='R' ? 150 : g.getFontMetrics().stringWidth(pixel);
             x = getWidth()-(28+len);
             //         g.setColor( getGoodColor(x,y-10,len,15) );
-            Util.drawCartouche(g, x, y-12, len, 15, CARTOUCHE, null, Color.white);
-
+            
+//            Util.drawCartouche(g, x, y-12, len, 15, CARTOUCHE, null, Color.white);
+//            // Dans le cas de trois composantes couleurs (ex: R:255 G:100 B:20)
+//            if( pixel.charAt(0)=='R' ) {
+//               StringTokenizer st = new StringTokenizer(pixel);
+//               for( int i=0; i<3; i++ ) {
+//                  String c = st.nextToken().substring(2);
+//                  g.setColor( i==0 ? Color.red : i==1 ? Aladin.GREEN : Color.blue );
+//                  g.drawString(c,x+i*50,y);
+//               }
+//            } else {
+//               g.setColor(  Aladin.BLACKBLUE );
+//               g.drawString(pixel,x,y);
+//            }
+            
             // Dans le cas de trois composantes couleurs (ex: R:255 G:100 B:20)
             if( pixel.charAt(0)=='R' ) {
                StringTokenizer st = new StringTokenizer(pixel);
                for( int i=0; i<3; i++ ) {
                   String c = st.nextToken().substring(2);
                   g.setColor( i==0 ? Color.red : i==1 ? Aladin.GREEN : Color.blue );
-                  g.drawString(c,x+i*50,y);
+                  Util.drawStringOutline(g, c,x+i*50,y, null,null);
                }
             } else {
-               g.setColor(  Aladin.BLACKBLUE );
-               g.drawString(pixel,x,y);
+               Util.drawStringOutline(g, pixel, x, y, Color.cyan,null);
             }
+
          }
          
          // Affichage de la position
@@ -6251,7 +6276,7 @@ g.drawString(s,10,100);
             x = getWidth()-260;
             int len = g.getFontMetrics().stringWidth(pos);
             //         g.setColor( getGoodColor(x,y-10,len,15) );
-            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, null, Color.white);
+            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, Color.cyan, null);
 
             g.setColor( Aladin.BLACKBLUE );
             g.drawString(pos,x,y);

@@ -1345,9 +1345,10 @@ try {
                   int yy = j*WENZOOM+2*WENZOOM/3-7+(i%2)*WENZOOM/2;
                   String pix = ((PlanImage)v.pref).getPixelInfo(x1, y1, View.REALX);
                   int w = fm.stringWidth(pix);
-                  Util.drawCartouche(gr, xx, yy-10, w, 13, 0.5f, null, Color.white);
+                  Util.drawStringOutline(gr, pix, xx, yy, y1==ymwen && x1==xmwen ? Color.cyan : Color.white,Color.black);
+//                  Util.drawCartouche(gr, xx, yy-10, w, 13, 0.5f, null, Color.white);
 //                  gr.setColor( y1==ymwen && x1==xmwen ? Color.blue : Color.black );
-                  gr.drawString(pix,xx,yy);
+//                  gr.drawString(pix,xx,yy);
                }
             }
          }

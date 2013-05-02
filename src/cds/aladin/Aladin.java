@@ -113,7 +113,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.547";
+    static public final    String VERSION = "v7.548";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -5700,8 +5700,8 @@ if( levelTrace>=3 ) System.out.println(")");
       }
 
       // Pas encore dans le cache, on la charge
+      MyInputStream is=null;
       try {
-      	 MyInputStream is;
       	 if( name.startsWith("http://") ) {
       	 	if( !NETWORK ) return null;
       	 	is = glu.getMyInputStream(name,false);
@@ -5710,9 +5710,10 @@ if( levelTrace>=3 ) System.out.println(")");
          if( buf.length==0 ) return null;  // Image introuvable
          Image img = Toolkit.getDefaultToolkit().createImage(buf);
          imageCache.put(name,img);
-         is.close();
          return img;
-      } catch( Exception e ) { if( levelTrace>=3 ) e.printStackTrace(); }
+      } 
+      catch( Exception e ) { if( levelTrace>=3 ) e.printStackTrace(); }
+      finally{ if( is!=null ) try { is.close(); } catch( Exception e) {} }
 
       // Cas d'erreur, on memorise dans le cache une chaine vide
       // histoire de ne pas essayer a chaque fois
@@ -6413,9 +6414,10 @@ public boolean handleEvent(Event e) {
 
 
 		// TODO : remplacer ceci par un passage direct des tableaux ?
-		MyInputStream mis;
+		MyInputStream mis=null;
+		MyByteArrayStream stream=null;
 		try {
-			MyByteArrayStream stream = new MyByteArrayStream();
+			stream = new MyByteArrayStream();
 			for( int i=0; i<nbCol; i++ ) {
 				stream.write(vecNames[i].getBytes());
 				if( i!=nbCol-1 ) stream.write("\t".getBytes());
@@ -6437,14 +6439,16 @@ public boolean handleEvent(Event e) {
 				}
 			}
 
-			stream.close();
-
 			mis = new MyInputStream(stream.getInputStream());
 			mis.startRead();
+			calque.createPlanCatalog(mis, planeName);
 		}
-		catch(Exception e) {e.printStackTrace();return;}
+		catch(Exception e) { e.printStackTrace();return; }
+		finally {
+           if( stream!=null ) try { stream.close(); } catch( Exception e1 ) {} 
+           if( mis!=null )    try { mis.close(); } catch( Exception e1 ) {} 
+		}
 
-		calque.createPlanCatalog(mis, planeName);
 		
 //		int indice = calque.newPlanCatalog(mis, planeName);
 //		PlanCatalog plan = (PlanCatalog)calque.plan[indice];
