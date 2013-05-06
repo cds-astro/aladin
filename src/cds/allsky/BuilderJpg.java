@@ -90,7 +90,7 @@ public class BuilderJpg extends Builder {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
-      validateCut();
+      if( !context.isColor() ) validateCut();
       
       // Chargement du MOC réel à la place de celui de l'index (moins précis)
       try { context.loadMoc(); } catch( Exception e ) {

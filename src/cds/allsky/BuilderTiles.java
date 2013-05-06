@@ -167,15 +167,17 @@ public class BuilderTiles extends Builder {
             context.setBitpixOrig(bitpixOrig);
          }
 
-         // repositionnement des cuts et blank passés par paramètre
-         double [] cutOrig = context.getCutOrig();
-         if( memoCutOrig!=null ) {
-            if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
-            if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
-            context.setCutOrig(cutOrig);
+         if( !context.isColor() ) {
+            // repositionnement des cuts et blank passés par paramètre
+            double [] cutOrig = context.getCutOrig();
+            if( memoCutOrig!=null ) {
+               if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
+               if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
+               context.setCutOrig(cutOrig);
+            }
+            context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+            context.setValidateCut(true);
          }
-         context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
-         context.setValidateCut(true);
          if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
       }
       
