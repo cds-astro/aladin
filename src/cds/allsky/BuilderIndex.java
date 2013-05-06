@@ -180,10 +180,12 @@ public class BuilderIndex extends Builder {
       if( o2==-1 ) o2 = filename.length();
       String name = filename.substring(o1+1,o2);
       
-      DataOutputStream dataoutputstream = new DataOutputStream(out);
-      dataoutputstream.writeBytes("{ \"name\": \""+name+"\", \"path\": \""+filename+"\", \"stc\": \""+stc+"\" }\n");
-      dataoutputstream.flush();
-      dataoutputstream.close();
+      DataOutputStream dataoutputstream = null;
+      try {
+         dataoutputstream = new DataOutputStream(out);
+         dataoutputstream.writeBytes("{ \"name\": \""+name+"\", \"path\": \""+filename+"\", \"stc\": \""+stc+"\" }\n");
+         dataoutputstream.flush();
+      } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
    }
 
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la

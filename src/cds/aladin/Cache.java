@@ -164,22 +164,26 @@ Aladin.trace(3,"Clear cache");
    public boolean putInCache(String url) throws Exception {
       
       // Lecture
+      MyInputStream in = null;
       try  {
-//         MyInputStream in = new MyInputStream( (new URL(url)).openStream() );
-//         in = in.startRead();
-         MyInputStream in = Util.openStream(url);
+         in = Util.openStream(url);
          byte buf[] = in.readFully();
          
          // Nettoyage et Ecriture
          String id = codage(url);
          File g = new File(dir+Util.FS+id);
          g.delete();
-         RandomAccessFile f = new RandomAccessFile(dir+Util.FS+id,"rw");
-         f.write(buf);
-         f.close();
+         RandomAccessFile f = null;
+         try {
+            f = new RandomAccessFile(dir+Util.FS+id,"rw");
+            f.write(buf);
+         } finally {  if( f!=null ) f.close(); }
          aladin.trace(3,"Put in cache ["+url+"]");         
          return true;
-      } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      } 
+      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      finally { if( in!=null ) in.close(); }
+      
       return false;
    }
    

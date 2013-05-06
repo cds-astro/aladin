@@ -68,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) also supported
  * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
  * @beta    <LI> "match" command script
  * @beta    <LI> Catalog proper motion support
@@ -113,7 +114,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.548";
+    static public final    String VERSION = "v7.549";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -6446,7 +6447,6 @@ public boolean handleEvent(Event e) {
 		catch(Exception e) { e.printStackTrace();return; }
 		finally {
            if( stream!=null ) try { stream.close(); } catch( Exception e1 ) {} 
-           if( mis!=null )    try { mis.close(); } catch( Exception e1 ) {} 
 		}
 
 		

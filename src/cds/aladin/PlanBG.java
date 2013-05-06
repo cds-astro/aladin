@@ -269,6 +269,8 @@ public class PlanBG extends PlanImage {
                dateRef = prop.getProperty("processingDate","");
 //               System.out.println("Cache processingDate="+dateRef);
             }
+            
+            MyInputStream dis = null;
             try {
                in = conn.getInputStream();
                int code = conn.getResponseCode();
@@ -276,7 +278,7 @@ public class PlanBG extends PlanImage {
                
                // Réinitialisation du cache et réécriture ?
                if( useCache ) {
-                  MyInputStream dis = new MyInputStream(in);
+                  dis = new MyInputStream(in);
                   byte [] buf = dis.readFully();
                   dis.close();
                   
@@ -294,22 +296,22 @@ public class PlanBG extends PlanImage {
                      throw new Exception();
                   }
                   
+                  RandomAccessFile fcache = null;
                   try {
                      resetCache();
                      f = new File(cacheFile);
-
-                     RandomAccessFile fcache = new RandomAccessFile(f, "rw");
+                     fcache = new RandomAccessFile(f, "rw");
                      fcache.write(buf);
-                     fcache.close();
-                     
-                  } catch( Exception e ) {
-                     e.printStackTrace();
-                  }
+                  } 
+                  catch( Exception e ) { e.printStackTrace(); }
+                  finally { if( fcache!=null ) fcache.close(); }
                }
 
                // La version dans le cache est la bonne.
             } catch( Exception e ) { 
                aladin.trace(3,"HEALPix local cache for "+survey+" is ok");
+            } finally {
+               if( dis!=null ) dis.close();
             }
             
             // Faut bien lire les proriétés tout de même

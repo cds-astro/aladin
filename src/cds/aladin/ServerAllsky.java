@@ -140,12 +140,27 @@ public class ServerAllsky extends ServerTree  {
    }
    
    public void submit() {
-      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
+      String mode = fitsRadio!=null && fitsRadio.isSelected() ? ",fits":"";
       for( TreeNode n : tree ) {
          if( !(n instanceof TreeNodeAllsky) ) continue;
-         ((TreeNodeAllsky)n).setDefaultMode( mode );
+         if( !n.isCheckBoxSelected() ) continue;
+         TreeNodeAllsky ta = (TreeNodeAllsky) n;
+         String target = getTarget(false);
+         String radius = getRadius(false);
+         String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
+         String criteria = ta.id+mode;
+         aladin.console.setCommand("get allsky("+Tok.quote(ta.aladinLabel)+mode+")"+cible);
+         createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
       }
-      super.submit();
+      reset();
+
+      
+//      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
+//      for( TreeNode n : tree ) {
+//         if( !(n instanceof TreeNodeAllsky) ) continue;
+//         ((TreeNodeAllsky)n).setDefaultMode( mode );
+//      }
+//      super.submit();
    }
    
 //   public void submit(TreeNode n) {

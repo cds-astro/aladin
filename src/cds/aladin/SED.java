@@ -186,6 +186,8 @@ class SED extends JPanel {
                aladin.view.zoomview.setSED((String)null);
                aladin.command.printConsole("!!! VizieR SED parsing error => "+e.getMessage());
                if( aladin.levelTrace>=3 ) e.printStackTrace();
+            } finally {
+               if( inParam!=null ) try { inParam.close(); } catch( Exception e ) {}
             }
          }
       } ).start();

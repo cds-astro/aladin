@@ -1267,48 +1267,44 @@ public class PlanHealpix extends PlanBG {
 
         MyInputStream in=null;
         try {
-           try {
-              if (isLocal)
-                 in = new MyInputStream(new FileInputStream(originalPath));
-              else
-                 in = new MyInputStream(Util.openStream(originalPath));
+           if (isLocal) in = new MyInputStream(new FileInputStream(originalPath));
+           else in = new MyInputStream(Util.openStream(originalPath));
 
-              in = in.startRead();
-              in.getType(); // il faut absolument faire cet appel, sinon
-              // MyInputStream.isGZ() renvoie toujours false !!
-           } catch (Exception e) {
-              e.printStackTrace();
-              return;
+           in = in.startRead();
+           in.getType(); // il faut absolument faire cet appel, sinon
+           // MyInputStream.isGZ() renvoie toujours false !!
+        } catch (Exception e) {
+           e.printStackTrace();
+           return;
+        }
+
+        String label = labelForField(mode);
+        synchronized (this) {
+           int idx = aladin.calque.newPlanHealpix(originalPath, in, label,
+                 mode == POLA_SEGMENT_MAGIC_CODE ? PlanBG.DRAWPOLARISATION
+                       : PlanBG.DRAWPIXEL, mode, false);
+           Plan polaPlane = aladin.calque.plan[idx];
+
+           // on met le nouveau plan dans le folder approprié
+           if (folderPlane != null) {
+              int newIdx = aladin.calque.getIndex(folderPlane);
+              // on reste en dessous des plans polarisation
+              if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
+                 newIdx += 1;
+              }
+              aladin.calque.permute(polaPlane, aladin.calque.plan[newIdx]);
+              aladin.view.newView(1);
+              aladin.calque.repaintAll();
            }
-
-           String label = labelForField(mode);
-           synchronized (this) {
-              int idx = aladin.calque.newPlanHealpix(originalPath, in, label,
-                    mode == POLA_SEGMENT_MAGIC_CODE ? PlanBG.DRAWPOLARISATION
-                          : PlanBG.DRAWPIXEL, mode, false);
-              Plan polaPlane = aladin.calque.plan[idx];
-
-              // on met le nouveau plan dans le folder approprié
-              if (folderPlane != null) {
-                 int newIdx = aladin.calque.getIndex(folderPlane);
-                 // on reste en dessous des plans polarisation
-                 if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
-                    newIdx += 1;
-                 }
-                 aladin.calque.permute(polaPlane, aladin.calque.plan[newIdx]);
-                 aladin.view.newView(1);
-                 aladin.calque.repaintAll();
-              }
-              if (mode==POLA_ANGLE_MAGIC_CODE) {
-                 idx = aladin.calque.getIndex(polaPlane);
-                 aladin.execAsyncCommand("cm @" + idx + " polarisation");
-              }
-              else if (mode==POLA_AMPLITUDE_MAGIC_CODE) {
-                 idx = aladin.calque.getIndex(polaPlane);
-                 aladin.execAsyncCommand("cm @" + idx + " log");
-              }
+           if (mode==POLA_ANGLE_MAGIC_CODE) {
+              idx = aladin.calque.getIndex(polaPlane);
+              aladin.execAsyncCommand("cm @" + idx + " polarisation");
            }
-        } finally { if( in!=null) try{ in.close(); } catch( Exception e) {} }
+           else if (mode==POLA_AMPLITUDE_MAGIC_CODE) {
+              idx = aladin.calque.getIndex(polaPlane);
+              aladin.execAsyncCommand("cm @" + idx + " log");
+           }
+        }
     }
 
 
@@ -1621,37 +1617,34 @@ public class PlanHealpix extends PlanBG {
 
         MyInputStream in=null;
         try {
-           try {
-              if (isLocal) in = new MyInputStream(new FileInputStream(originalPath));
-              else in = new MyInputStream(Util.openStream(originalPath));
+           if (isLocal) in = new MyInputStream(new FileInputStream(originalPath));
+           else in = new MyInputStream(Util.openStream(originalPath));
 
-              in = in.startRead();
-              in.getType(); // il faut absolument faire cet appel, sinon MyInputStream.isGZ() renvoie toujours false !!
-           }
-           catch(Exception e) {
-              e.printStackTrace();
-              return false;
-           }
+           in = in.startRead();
+           in.getType(); // il faut absolument faire cet appel, sinon MyInputStream.isGZ() renvoie toujours false !!
+        }
+        catch(Exception e) {
+           e.printStackTrace();
+           return false;
+        }
 
-           int idx = aladin.calque.newPlanHealpix(originalPath, in,
-                 tfieldNames[idxField],
-                 PlanBG.DRAWPIXEL, idxField, true);
-           if (idx<0) {
-              return false;
+        int idx = aladin.calque.newPlanHealpix(originalPath, in,
+              tfieldNames[idxField],
+              PlanBG.DRAWPIXEL, idxField, true);
+        if (idx<0) {
+           return false;
+        }
+        // on met le nouveau plan dans le folder approprié
+        if (folder!=null) {
+           int newIdx = aladin.calque.getIndex(folder);
+           // on reste en dessous des plans polarisation
+           if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
+              newIdx += 1;
            }
-           // on met le nouveau plan dans le folder approprié
-           if (folder!=null) {
-              int newIdx = aladin.calque.getIndex(folder);
-              // on reste en dessous des plans polarisation
-              if (aladin.calque.plan[newIdx+1].type==Plan.ALLSKYPOL) {
-                 newIdx += 1;
-              }
-              aladin.calque.permute(aladin.calque.plan[idx], aladin.calque.plan[newIdx]);
-              aladin.view.newView(1);
-              aladin.calque.repaintAll();
-           }
-
-        } finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
+           aladin.calque.permute(aladin.calque.plan[idx], aladin.calque.plan[newIdx]);
+           aladin.view.newView(1);
+           aladin.calque.repaintAll();
+        }
 
         return true;
     }

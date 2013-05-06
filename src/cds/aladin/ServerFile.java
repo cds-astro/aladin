@@ -621,7 +621,6 @@ public class ServerFile extends Server implements XMLConsumer {
       String s;
       String type = (String)atts.get("type");
       typePlan= Util.indexInArrayOf(type, Plan.Tp);
-
       inFilter = inFitsHeader = inFilterScript = false;
       switch(typePlan) {
          case Plan.FILTER:
@@ -837,7 +836,9 @@ public class ServerFile extends Server implements XMLConsumer {
       else if( name.equals("PLANE") ) plan = creatPlaneByAJ(atts);
       else if( name.equals("TABLE") )  vField = new Vector(10);
       else if( name.equals("SCRIPT") ) inFilterScript =true;
-      else if( name.equals("ORIRIGINALHEADERFITS") ) inFitsHeader=true;
+      else if( name.equals("ORIRIGINALHEADERFITS") ) {
+         inFitsHeader=true;
+      }
       else if( name.equals("FILTER") ) inFilter=true;
 
       else if( name.equals("FILTERS") ) {
@@ -918,6 +919,7 @@ public class ServerFile extends Server implements XMLConsumer {
             plan.flagOk = true;
             aladin.calque.addOnStack(plan);
             plan=null;
+            inFitsHeader=false;
             flagCatalogSource=false;
          }
 

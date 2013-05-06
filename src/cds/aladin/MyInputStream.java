@@ -24,7 +24,10 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import javax.imageio.stream.FileImageInputStream;
 
@@ -114,7 +117,7 @@ public final class MyInputStream extends FilterInputStream {
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
                                  // toute l'entête fits courante dans le cache (voir hasFitsKey())
 
-//   static public int NBOPENFILE = 0;
+   static public int NBOPENFILE = 0;
    
    public MyInputStream(InputStream in) throws IOException {
       this(in,UNKNOWN,true);
@@ -130,11 +133,11 @@ public final class MyInputStream extends FilterInputStream {
       
       this.in= in!=null && withBuffer && !(in instanceof BufferedInputStream ) ?
                    new BufferedInputStream(in) : in;
-//      NBOPENFILE++;
+      NBOPENFILE++;
    }
    
    public void close() throws IOException {
-//      NBOPENFILE--;
+      NBOPENFILE--;
 //      if( Aladin.levelTrace>3 ) System.out.println("MyinputStream.close(): "+this);
       in.close();
 //      System.out.println("MyInputStream NBOPENFILE = "+NBOPENFILE);
@@ -1149,19 +1152,48 @@ public long skip(long n) throws IOException {
        }
        return s+"";
     }
-
+    
+    
+    private String lz77Uncompress(byte [] tmp) throws Exception {
+       ByteArrayInputStream in = new ByteArrayInputStream(tmp);
+       InflaterInputStream zIn = new InflaterInputStream(in);
+       byte [] buffer = new byte[8192];
+       int n;
+       StringBuffer res = new StringBuffer();
+       while( (n=zIn.read(buffer))!=-1 ) {
+          String s = new String(buffer,0,n);
+          res.append(s);
+       }
+       zIn.close();
+       return res.toString();
+    }
+    
     /** Mémorisation du segment PNG commentaire supposé contenir une Calib
      * @param pos position dans le cache
      * @param size taille du segment
      * @return true si ça ressemble au moins un peu à une entête FITS
      */
-    private boolean memoPNGCalib(int pos,int size) {
+    private boolean memoPNGCalib(int pos,int size,boolean compress) {
 
        // Un commentaire PNG commence par un mot clé, suivi d'un octet à 0, puis le commentaire libre
        while( cache[pos]!=0 && size>1 ) { pos++; size--; }
        pos++; size--;
 
-       commentCalib = new String(cache,pos,size);
+       // Mode non compressé
+       if( !compress ) commentCalib = new String(cache,pos,size);
+       
+       // Mode compressé en LZ77
+       else {
+          try {
+             pos++; size--;   // pour l'octet qui contient le type de compression (toujorus à 0 de fait)
+             byte tmp [] = new byte[size];
+             System.arraycopy(cache, pos, tmp, 0, size);
+             commentCalib= lz77Uncompress(tmp);
+         } catch( Exception e ) {
+            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            return false;
+         }
+       }
 //       System.out.println("CALIB=["+commentCalib+"]");
        if( commentCalib.indexOf("CTYPE1")<0 ) {
           commentCalib=null;
@@ -1169,6 +1201,7 @@ public long skip(long n) throws IOException {
        }
        return true;
     }
+
 
     /** Mémorisation du segment JPEG commentaire supposé contenir une Calib
      * @param pos position dans le cache
@@ -1456,9 +1489,11 @@ public long skip(long n) throws IOException {
 //   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
 //   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
 //}
-             if( chunk.equals("tEXt" ) ) {
-//                memoJpegAVMCalib(offsetCache+i+8,size);
-                if( memoPNGCalib(offsetCache+i+8,size) ) return true;
+             if( chunk.equals("tEXt") ) {
+                if( memoPNGCalib(offsetCache+i+8,size,false) ) return true;
+
+             } if( chunk.equals("zTXt") ) {
+                if( memoPNGCalib(offsetCache+i+8,size,true) ) return true;
 
              } else if( chunk.equals("IEND") ) { encore=false;
 

@@ -186,11 +186,11 @@ public abstract class Obj implements Propable{
 
    /** Tool : Return the distance in degrees between this object and another */
    public double getDistance(Obj obj) {
+      Coord ca=new Coord(), cb=new Coord();
       ca.al=raj; ca.del=dej;
       cb.al=obj.raj; cb.del=obj.dej;
       return Coord.getDist(ca,cb);
    }
-   static private Coord ca=new Coord(), cb=new Coord();
 
    /** Return XML meta information associated to this object (GROUP meta definitions)
     * @return XML string, or null

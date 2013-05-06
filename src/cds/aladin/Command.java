@@ -4338,6 +4338,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       }catch( Exception e ) { e.printStackTrace();  }
    }
+   
+
 
 }
 

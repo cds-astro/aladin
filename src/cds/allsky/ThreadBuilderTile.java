@@ -548,7 +548,7 @@ final public class ThreadBuilderTile {
       File f = new File(hpxfilename);
       String fitsfilename = null;
       if (f.exists()) {
-         BufferedReader reader;
+         BufferedReader reader = null;
          try {
             reader = new BufferedReader(new FileReader(f));
             for( int i=0; (fitsfilename = nextPath(reader)) != null ; i++) {
@@ -610,6 +610,8 @@ final public class ThreadBuilderTile {
             // this should never happens
             e1.printStackTrace();
             return false;
+         } finally {
+            if( reader!=null ) try { reader.close(); } catch( Exception e) {}
          }
          return true;
       }

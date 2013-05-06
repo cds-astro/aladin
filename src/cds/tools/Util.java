@@ -1315,10 +1315,13 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 
     /** Retourne true s'il s'agit dun fichier JPEG couleur */
     static public boolean isJPEGColored(String file) throws Exception {
-       RandomAccessFile f = new RandomAccessFile(file,"r");
-       byte [] buf = new byte[(int)f.length()];
-       f.readFully(buf);
-       f.close();
+       RandomAccessFile f = null;
+       byte [] buf = null;
+       try {
+          f = new RandomAccessFile(file,"r");
+          buf = new byte[(int)f.length()];
+          f.readFully(buf);
+       } finally { if( f!=null )  f.close(); }
        return isJPEGColored(buf);
     }
 

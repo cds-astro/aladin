@@ -24,6 +24,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.ColorModel;
 import java.io.DataInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
@@ -3807,19 +3808,26 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Source o;
       if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
       
+      InputStream is = null;
+      DataInputStream cat = null;
       try {
          aladin.status.setText("Querying Simbad...");
          if( flagSED ) zoomview.setSED((String)null);
          URL url = aladin.glu.getURL("SimbadQuick","\""+target+"\" "+radius,false);
-         java.io.InputStream is = url.openStream();
+         is = url.openStream();
          if( is!=null ) {
-            DataInputStream cat = new DataInputStream(is);
+            cat = new DataInputStream(is);
             s = cat.readLine();
-            is.close();
          }
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          return;
+      }
+      finally {
+         try {
+            if( cat!=null ) cat.close();
+            else if( is!=null ) is.close();
+         } catch( Exception e1 ) {}
       }
 
       // On affiche le résultat

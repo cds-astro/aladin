@@ -19,6 +19,7 @@
 
 package cds.fits;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,13 +127,13 @@ public class CacheFits {
          if( isOver() ) clean();
          try {
             f=add(fileName,jpeg,flagLoad);
-        } catch( Throwable e ) {
+        } catch( OutOfMemoryError e ) {
             System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
             maxMem /= 2;
             try {
                clean();
                f=add(fileName,jpeg,flagLoad);
-            } catch( Throwable e1 ) {
+            } catch( OutOfMemoryError e1 ) {
                System.err.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
                reset();
                cacheOutOfMem=true;

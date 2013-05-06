@@ -873,11 +873,12 @@ public final class Glu implements Runnable {
    /** Mémorise les informations des applications VO dans un petit fichier GLU
     * écrit dans le répertoire cache d'Aladin (.aladin/VOTools) */
    public boolean writeGluAppDic() {
+      RandomAccessFile out = null;
       try {
          String file = aladin.getVOPath()+Util.FS+"VOTools.dic";
          File f = new File(file);
          f.delete();
-         RandomAccessFile out = new RandomAccessFile(file,"rw");
+         out = new RandomAccessFile(file,"rw");
          
          // Les VOtools (vGluApp)
          Enumeration e = vGluApp.elements();
@@ -894,11 +895,12 @@ public final class Glu implements Runnable {
             out.writeBytes(gs.getGluDic());
          }
 
-         out.close();
          aladin.trace(3,file+" successfully saved");
          return true;
       } catch( Exception e ) { 
          if( aladin.levelTrace>=3 ) e.printStackTrace();
+      } finally {
+         if( out!=null ) try { out.close(); } catch( Exception e ) {}
       }
       return false;
    }
@@ -1986,7 +1988,6 @@ public final class Glu implements Runnable {
                if( pattern!=null ) {
                   MyInputStream mis = (new MyInputStream(in)).startRead();
                   byte buf[] = mis.readFully();
-                  mis.close();
                   boolean trouve;
                   if( !regex ) trouve=Util.matchMask(pattern, new String(buf));
                   else trouve=(new String(buf)).matches(pattern);

@@ -174,17 +174,18 @@ public class TreeNodeAllsky extends TreeNode {
       aladin.trace(4,toString1());
    }
    
-   
    private boolean getIsColorByPath(String path,boolean local) {
+      MyInputStream in = null;
       try { 
          if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky.jpg");
-         MyInputStream in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky.jpg") );
+         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky.jpg") );
          byte [] buf = in.readFully();
          return Util.isJPEGColored(buf);
       } catch( Exception e) {
          aladin.trace(3,"Allsky.jpg not found => assume B&W survey");
          return false;
       }
+      finally { try { if( in!=null ) in.close(); } catch( Exception e1 ) {} }
    }
    
    private boolean getFormatByPath(String path,boolean local,int fmt) {

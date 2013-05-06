@@ -734,10 +734,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
        // Fichier local (zippé ou non)
        } else {
-          RandomAccessFile f = new RandomAccessFile(filename,"r");
+          RandomAccessFile f = null;
           
           // est-ce que le fichier est gzippé ?
           try {
+             f = new RandomAccessFile(filename,"r");
              byte [] c = new byte[2];
              f.readFully(c);
              if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
@@ -746,8 +747,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
                 dis = new MyInputStream( new GZIPInputStream(fgz) );
                 if( skip>0 ) dis.skip(skip);
                 buf = readFully(dis, fastLoad);
-                dis.close();
-                fgz.close();
 
                 // Le fichier est normal
              } else {
@@ -755,7 +754,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
                 buf = new byte[(int)(f.length()-skip)];
                 f.readFully(buf);
              }
-          } finally { f.close(); }
+          } finally { 
+             if( f!=null ) f.close(); 
+             if( dis!=null ) dis.close();
+          }
        }
        
        timeStream = (int)(Util.getTime()-t1);

@@ -717,9 +717,11 @@ final public class Fits {
    /** Génération d'un fichier FITS (sans calibration) */
    public void writeFITS(String filename) throws Exception {
       createDir(filename);
-      OutputStream os = new FileOutputStream(filename);
-      writeFITS(os);
-      os.close();
+      OutputStream os = null;
+      try {
+         os = new FileOutputStream(filename);
+         writeFITS(os);
+      } finally {  os.close(); }
       this.setFilename(filename);
    }
 
@@ -748,9 +750,11 @@ final public class Fits {
     */
    public void writeCompressed(String file, double pixelMin, double pixelMax, byte [] tcm, String format) throws Exception {
       createDir(file);
-      FileOutputStream fos = new FileOutputStream(new File(file));
-      writeCompressed( fos, pixelMin, pixelMax, tcm, format );
-      fos.close();
+      FileOutputStream fos = null;
+      try {
+         fos = new FileOutputStream(new File(file));
+         writeCompressed( fos, pixelMin, pixelMax, tcm, format );
+      } finally {  fos.close(); }
       this.setFilename(file);
    }
 
@@ -1195,25 +1199,27 @@ final public class Fits {
       if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
       testBitmapReleaseFeature();
       //      System.out.println("reloadBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
-      RandomAccessFile f = new RandomAccessFile(filename, "r");
-      f.seek(bitmapOffset);
-      int n = Math.abs(bitpix)/8;
-      pixels = new byte[widthCell*heightCell*n];
+      RandomAccessFile f = null;
+      try {
+         f = new RandomAccessFile(filename, "r");
+         f.seek(bitmapOffset);
+         int n = Math.abs(bitpix)/8;
+         pixels = new byte[widthCell*heightCell*n];
 
-      // Lecture d'un coup
-      if( !hasCell() ) f.readFully(pixels);
+         // Lecture d'un coup
+         if( !hasCell() ) f.readFully(pixels);
 
-      // Lecture ligne à ligne pour mémoriser uniquement la cellule
-      else {
-         f.skipBytes( yCell*width*n );
-         byte [] buf = new byte[width * n];  // une ligne complète
-         for( int lig=0; lig<heightCell; lig++ ) {
-            f.readFully(buf);
-            System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+         // Lecture ligne à ligne pour mémoriser uniquement la cellule
+         else {
+            f.skipBytes( yCell*width*n );
+            byte [] buf = new byte[width * n];  // une ligne complète
+            for( int lig=0; lig<heightCell; lig++ ) {
+               f.readFully(buf);
+               System.arraycopy(buf, xCell*n, pixels,lig*widthCell*n, widthCell*n);
+            }
          }
-      }
+      } finally { if( f!=null ) f.close();  }
 
-      f.close();
       bitmapReleaseDone=false;
 
    }

@@ -216,7 +216,7 @@ public final class HeaderFits {
    }
 
    /** Recherche d'un caractère c dans buf à partir de la position from. Retourne
-    * la position courante si on trouve un \n avant et que l'on atteind la limite finLigne
+    * la position courante si on trouve un \n avant et que l'on atteint la limite finLigne
     * ou buf.length. Dans le cas de recherche du caractère '/' (pour les commentaires FITS),
     * il est ignoré s'il se trouve dans une chaine quotée par '
     * @param buf buffer de recherche
@@ -265,21 +265,23 @@ public final class HeaderFits {
             a = getPos(buf,i,i+79,'=');
             b = getPos(buf,a,i+79,'/');
             c = getPos(buf,b,i+79,'\n');
-            key = new String(buf,i,a-i).trim();
-            value = (b-a>0 ) ? (new String(buf,a+1,b-a-1)).trim() : "";
-            com = (c-b>0) ? (new String(buf,b+1,c-b-1)).trim() : "";
-//System.out.println(i+":"+a+"["+key+"]="+b+"["+value+"]/"+c+"["+com+"]");
-//            if( key.equals("END") ) value=com=null;
-            
-            if( key.equals("END") ) break;
-            
-            // Dans le cas d'une entête DSS dans un fichier ".hhh" il ne faut pas retenir les mots
-            // clés concernant l'astrométrie de la plaque entière
-//            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
+            if( i!=a || i!=b || i!=c ) {
+               key = new String(buf,i,a-i).trim();
+               value = (b-a>0 ) ? (new String(buf,a+1,b-a-1)).trim() : "";
+               com = (c-b>0) ? (new String(buf,b+1,c-b-1)).trim() : "";
+               //System.out.println(i+":"+a+"["+key+"]="+b+"["+value+"]/"+c+"["+com+"]");
+               if( key.equals("END") ) value=com=null;
+
+               if( key.equals("END") ) break;
+
+               // Dans le cas d'une entête DSS dans un fichier ".hhh" il ne faut pas retenir les mots
+               // clés concernant l'astrométrie de la plaque entière
+               //            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
                header.put(key, value);
                keysOrder.addElement(key);
-//            }
-            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
+               //            }
+               if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
+            }
          }
          i=c+1;
       }

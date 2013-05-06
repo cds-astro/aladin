@@ -879,7 +879,7 @@ Aladin.trace(3,"Direct pixel file access ["+cacheID+"] pos="+cacheOffset);
          File f = new File(cacheID);
          RandomAccessFile rf = new RandomAccessFile(f,"rw");
          
-         //  Si on écrite d'un coup un trop grop fichier, ça explose la mémoire (pb précédure native !!)
+         //  Si on écrite d'un coup un trop grop fichier, ça explose la mémoire (pb procédure native !!)
 //         rf.write(buf);
          int bloc=4*1024*1024;
          for( int pos=0,len=0; pos<buf.length; pos+=len ) {
@@ -1654,7 +1654,7 @@ Aladin.trace(3,"Second try for opening the stream due to: "+e+"...");
                            headerFits=dis.createFrameHeaderFitsFromCommentCalib(this);
                            c = new Calib(headerFits.getHeaderFits());
                         }
-if( c!=null ) Aladin.trace(3,"Reading FITS key words from JPEG comment");
+if( c!=null ) Aladin.trace(3,"Reading FITS key words embedded in the comment segment");
                      }
 
                      //  cas où on peut récupérer la calibration depuis la réponse SIAP
@@ -1672,7 +1672,7 @@ Aladin.trace(3,"Creating calibration from SIA metadata");
                            headerFits=DSShhh();
                            c = new Calib(headerFits.getHeaderFits());
 Aladin.trace(3,"Creating calibration from hhh additional file");
-                        } catch( Exception e ) { e.printStackTrace(); }
+                        } catch( Exception e ) { }
                      }
 
                      if( c==null ) throw new Exception();
