@@ -82,7 +82,7 @@ public class Forme extends Position {
 
    public void setColor(Color c) { couleur=c; }
 
-   protected void setRaDec(double ra, double de) {
+   public void setRaDec(double ra, double de) {
       double dra = o[0].getRa()-ra;
       double dde = o[0].getDec()-de;
       for( int i=0; i<o.length; i++ ) o[i].deltaRaDec(dra, dde);

@@ -1197,8 +1197,13 @@ public final class Calib  implements Cloneable {
       // else System.out.println("RA");
 
       // PF - sept 2010 - C'est plus generique comme cela
-      try { proj = getSubProjType(type1.substring(5)); } 
+      // PF - mai 2013 - on vérifie les deux axes (pour rotation cube)
+      try { proj = getSubProjType(type2.substring(5)); } 
       catch( Exception e ) { proj=-1; }
+      if( proj!=-1 ) {
+         try { proj = getSubProjType(type1.substring(5)); } 
+         catch( Exception e ) { proj=-1; }
+      }
       //                   proj = 0 ;
       //                   System.out.println("type1 "+type1+" type2"+type2);
       //                   if (type1.indexOf("SIN")>= 0) proj = 1 ;
@@ -1346,12 +1351,12 @@ public final class Calib  implements Cloneable {
          }
          catch (Exception e14 ) { }
       }
-      if (type1.indexOf("COE")>= 0) proj = TAN ;
+      if (type1.indexOf("COE")>= 0 && type2.indexOf("COE")>= 0) proj = TAN ;
       if (proj == -1) {
          System.err.println(
-               "Calib warning:CTYPE "+type1+" is not yet supported "
+               "Calib warning:CTYPE "+type1+"/"+type2+" is not yet supported "
                      +"by Aladin") ;
-         throw new Exception("CTYPE "+type1+" is not yet supported "
+         throw new Exception("CTYPE "+type1+"/"+type2+" is not yet supported "
                +"by Aladin") ;
       }
 

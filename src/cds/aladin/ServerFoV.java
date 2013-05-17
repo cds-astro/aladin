@@ -227,9 +227,15 @@ public final class ServerFoV extends Server implements TableModel {
          FoVItem fov = fovList.elementAt(idx);
          s = fov.id;
       } else s=null;
+      
+      String code = "get FoV("+Tok.quote(s)+")";
+      aladin.console.setCommand(code+" "+t);
 
-      if( creatFieldPlane(t,r,s,null)!=-1 ) ball.setMode(Ball.OK);
-      else ball.setMode(Ball.NOK);
+      int n= creatFieldPlane(t,r,s,null);
+      if( n!=-1 ) {
+         ball.setMode(Ball.OK);
+         aladin.calque.getPlan(n).setBookmarkCode(code+" $TARGET");
+      } else ball.setMode(Ball.NOK);
    }
 
    // on conserve l'id du dernier FOV enregistré

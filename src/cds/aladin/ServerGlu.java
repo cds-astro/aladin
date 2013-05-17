@@ -789,8 +789,9 @@ public class ServerGlu extends Server implements Runnable {
    private void submit1() {
       String s,objet="";
       Enumeration e;
+      String code=null;
       boolean flagScriptEquiv=true;	// Par défaut, il existe tjs une commande script équivalent
-
+      
       // Resolution par Simbad necessaire ?
       if( target!=null ) {
          try {
@@ -868,8 +869,8 @@ public class ServerGlu extends Server implements Runnable {
          String r = getRadius(false);
          if( r==null ) r="";
          else r = " "+Coord.getUnit(getRM(r)/60.);
-         aladin.console.setCommand("get "+actionName + (criteres.length()==0?" ":"("+criteres+") ")
-               +this.getTarget()+r);
+         code = "get "+actionName + (criteres.length()==0?" ":"("+criteres+") ");
+         aladin.console.setCommand(code+this.getTarget()+r);
       }
 
       // Generation de l'URL par appel au GLU
@@ -911,6 +912,7 @@ public class ServerGlu extends Server implements Runnable {
       } else defaultCursor();
 
       lastPlan = aladin.calque.createPlan(u+"",label,"provided by "+institute,this);
+      if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
     }
    
    /** Lance l'éxécution de l'application system */

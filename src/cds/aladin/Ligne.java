@@ -785,7 +785,8 @@ public class Ligne extends Position {
 
    // Bidouillage pour éviter de traverser tout le ciel en passant derrière
    protected boolean tooLarge(ViewSimple v,Point p1, Point p2) {
-      if( v.getProj().t==Calib.SIN ) return false;
+      Projection proj =  v.getProj();
+      if( proj==null || proj.t==Calib.SIN ) return false;
       
       double dx = p1.x-p2.x;
       double dy = p1.y-p2.y;

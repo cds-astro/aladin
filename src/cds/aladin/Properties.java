@@ -36,6 +36,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
 import cds.astro.Astrotime;
 import cds.tools.Astrodate;
@@ -56,7 +57,7 @@ import cds.tools.pixtools.CDSHealpix;
 public class Properties extends JFrame implements ActionListener, ChangeListener {
 
    String SEEFITS,SEEPARSING,TABLEINFO,LOADURL,NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
-          TITLE,BANNER,APPLY,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
+          TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
           LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
           ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
           LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
@@ -146,6 +147,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       TITLE = aladin.chaine.getString("PROPTITLE");
       BANNER = aladin.chaine.getString("PROPBANNER");
       APPLY = aladin.chaine.getString("PROPAPPLY");
+      BOOKMARK = aladin.chaine.getString("PROPBOOKMARK");
       CLOSE = aladin.chaine.getString("PROPCLOSE");
       NOFILTER = aladin.chaine.getString("PROPNOFILTER");
       LABEL = aladin.chaine.getString("PROPLABEL");
@@ -306,6 +308,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
        JButton b;
        p.add( b=new JButton(APPLY)); b.addActionListener(this);
        b.setFont( b.getFont().deriveFont(Font.BOLD) );
+       if( plan.getBookmarkCode()!=null ) {
+          p.add( new JLabel(" ") );
+          p.add( b=new JButton(BOOKMARK)); b.addActionListener(this);
+       }
        p.add( b=new JButton(CLOSE)); b.addActionListener(this);
        return p;
     }
@@ -634,8 +640,40 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       if( plan instanceof PlanImageBlink ) {
-         PlanImageBlink pb=(PlanImageBlink)plan;
+         final PlanImageBlink pb=(PlanImageBlink)plan;
          PropPanel.addCouple(p,FRAME,new JLabel(pb.getNbFrame()+""), g,c);
+         if( Aladin.PROTO ) {
+            JPanel panel = new JPanel(new FlowLayout() );
+            JButton perm = new JButton("XxY->Z");
+            perm.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  ((JButton)e.getSource()).setEnabled(false);
+                  pb.permutation(PlanImageBlink.PERM0);
+               }
+            });
+            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM0);
+            panel.add(perm);
+            perm = new JButton("XxZ->Y");
+            perm.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  ((JButton)e.getSource()).setEnabled(false);
+                 pb.permutation(PlanImageBlink.PERM1);
+               }
+            });
+            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM1);
+            panel.add(perm);
+            perm = new JButton("ZxY->X");
+            perm.addActionListener( new ActionListener() {
+               public void actionPerformed(ActionEvent e) {
+                  ((JButton)e.getSource()).setEnabled(false);
+                 pb.permutation(PlanImageBlink.PERM2);
+               }
+            });
+            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM2);
+            panel.add(perm);
+            PropPanel.addCouple(p,"Permutations",panel, g,c);
+            
+         }
       }
 
       // Origine
@@ -1395,6 +1433,21 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
      aladin.calque.repaintAll();
      majPlanRef();
    }
+   
+   private void bookmark(){
+      FrameBookmarks fb = aladin.bookmarks.getFrameBookmarks();
+      fb.setVisibleEdit();
+      String name = aladin.bookmarks.getUniqueName(plan.label);
+      String code =  plan.getBookmarkCode();
+      StringBuffer param = new StringBuffer();
+      if( code!=null && code.indexOf("$TARGET")>=0 ) param.append("$TARGET");
+      if( code!=null && code.indexOf("$RADIUS")>=0 ) {
+         if( param.length()>0 ) param.append(',');
+         param.append("$RADIUS");
+      }
+      String param1 = param.length()>0 ? param.toString() : null;
+      fb.createNewBookmark(name,param1,"Load "+plan.label+(param1!=null?"":" on current position"), code);
+   }
 
    private void apply() {
       setFlagFullMaj(true);// Pour que toutes les fenetres soient maj par la suite
@@ -1612,6 +1665,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Submit PLAN
       } else if( APPLY.equals(what) ) apply();
+      
+      // Creation d'un bookmark
+      else if( BOOKMARK.equals(what) ) bookmark();
 
       // Visualisation du header fits
       else if( SEEFITS.equals(what) ) aladin.header(plan);

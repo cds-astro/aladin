@@ -946,11 +946,8 @@ public final class FilterProperties extends Properties implements MouseListener,
 
          // Submit PLAN
 		 if( APPLY.equals(what) ) apply();
-
-		 else if( CLOSE.equals(what) ) dispose();
-
+         else if( CLOSE.equals(what) ) dispose();
 		 else if (CAVEAT.equals(what)) Aladin.info(this, getCaveat());
-
 		 else if( MATHS.equals(what) ) showMathHelper();
 
 		 // action sur un des CheckBox pour choisir un filtre en mode Beginner

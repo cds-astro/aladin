@@ -51,8 +51,8 @@ import cds.tools.Util;
  */
 public final class FrameCM extends JFrame implements ActionListener {
 
-   static final String CM[]      = { "gray", "BB", "A","stern" };
-   static final String CMA[]     = { "gray", "BB", "A","stern" };
+   static public final String CM[]      = { "gray", "BB", "A","stern" };
+   static public final String CMA[]     = { "gray", "BB", "A","stern" };
 
    // Les chaines statiques
    String TITRE,REVERSE,RANGE,LIMITS,ALGO,ERRORRANGE,RESET,CLOSE,HELP,
@@ -616,15 +616,19 @@ public final class FrameCM extends JFrame implements ActionListener {
    /** Création d'un choice des CM possibles */
    protected static JComboBox createChoiceCM() {
       JComboBox c = new JComboBox();
-      // ajout des CM par défaut
-      for( int i=0; i<CM.length; i++ ) c.addItem(CM[i]);
-      // ajout des CM "custom"
-      if( ColorMap.customCMName!=null ) {
-      	Enumeration e = ColorMap.customCMName.elements();
-      	while( e.hasMoreElements() ) {
-      		c.addItem(e.nextElement());
-      	}
-      }
+      
+      for( String s : ColorMap.getCMList() ) c.addItem(s);
+      
+//      // ajout des CM par défaut
+//      for( int i=0; i<CM.length; i++ ) c.addItem(CM[i]);
+//      // ajout des CM "custom"
+//      if( ColorMap.customCMName!=null ) {
+//      	Enumeration e = ColorMap.customCMName.elements();
+//      	while( e.hasMoreElements() ) {
+//      		c.addItem(e.nextElement());
+//      	}
+//      }
+      
       // Ajout du ' --'
       c.addItem(" -- ");
       return c;

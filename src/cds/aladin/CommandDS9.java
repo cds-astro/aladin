@@ -202,7 +202,13 @@ public final class CommandDS9  {
   // absence de parenthèses
   // in : circle 293.00068 485.00134 31.69569  || ... # ...
   // out: draw circle(293.00068,485.00134,31.69569)
+  //
+  // Et si le premier paramètre n'est pas un numérique, on suppose que c'est
+  // le nom du système de référence à la STC
+  // in : POLYGON ICRS 293.00068 485.00134 31.69569..
+  //out : setconf frame=ICRS; draw polygon(293.00068,485.00134,31.69569...)
   private String basicDS9toAladin(String cmd) throws Exception {
+     String frame = null;
      // On enlève ce qu'il y a au bout de la ligne (commentaire, paramètres...)
      int c1 = cmd.indexOf('#');
      int c2 = cmd.indexOf('|');
@@ -211,15 +217,22 @@ public final class CommandDS9  {
      if( c==-1 ) c = cmd.length();
      cmd = cmd.substring(0,c).trim();
      Tok tok = new Tok(cmd,"( ,)");
-     StringBuffer s = new StringBuffer("draw "+tok.nextToken()+"(");
+     StringBuffer s = new StringBuffer("draw "+tok.nextToken().toLowerCase()+"(");
      boolean first=true;
      while( tok.hasMoreTokens() ) {
+        String t = tok.nextToken();
         if( !first ) s.append(',');
+        else {
+           if( !Character.isDigit( t.charAt(0) ) ) {
+              frame = "setconf frame="+t+";";
+              continue;
+           }
+        }
         first=false;
-        s.append(Tok.quote(tok.nextToken()));
+        s.append(Tok.quote(t));
      }
      s.append(')');
-     return s.toString();
+     return (frame!=null?frame:"")+s.toString();
   }
   
   static final private String [] TEST = {

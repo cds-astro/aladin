@@ -27,6 +27,7 @@ import java.awt.Image;
 import java.awt.event.*;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JPanel;
@@ -368,6 +369,29 @@ public final class ColorMap extends JPanel  implements
       this.cm1=cm1;
       this.cm2=cm2;
    }
+   
+   
+   /** Retourne la liste des noms des colormaps */
+   public static String [] getCMList() {
+      String res [] = new String[ FrameCM.CM.length + 
+                                  (customCMName==null ? 0 : customCMName.size())];
+      // ajout des CM par défaut
+      int i=0;
+      for( ; i<FrameCM.CM.length; i++ ) res[i] = FrameCM.CM[i];
+
+      // ajout des CM "custom"
+      if( ColorMap.customCMName!=null ) {
+         Enumeration e = ColorMap.customCMName.elements();
+         while( e.hasMoreElements() ) {
+            res[i++] = (String) e.nextElement();
+         }
+      }
+      return res;
+   }
+   
+   /** Retourne le nom d'une colormap particulière */
+   public static String getCMName(int i) { return getCMList()[i]; }
+
 
    /** La génération de l'histogramme va se faire dans deux buffers PlanImage.hist[]
     * et PlanImage.histA[]. S'il faut le régénérer, il suffit d'appeler PlanImage.freeHist()

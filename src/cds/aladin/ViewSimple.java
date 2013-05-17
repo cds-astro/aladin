@@ -1729,6 +1729,8 @@ public class ViewSimple extends JComponent
    private int getTool(InputEvent e) {
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
+      if( tool==ToolBox.SELECT 
+            && aladin.calque.getNbPlanCat()+aladin.calque.getNbPlanTool()==0 ) return ToolBox.PAN;
       return tool;
    }
 

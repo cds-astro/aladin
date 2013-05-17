@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Enumeration;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -79,6 +80,24 @@ public class Bookmarks {
          populateToolBar(toolBar);
       }
       return toolBar;
+   }
+   
+   /** Retourne un nom unique pour un nouveau signet */
+   public String getUniqueName(String name) {
+      int j = name.indexOf('(');
+      if( j>0 ) name = name.substring(0,j);
+      
+      Vector<Function> v = aladin.getCommand().getBookmarkFunctions();
+      for( int i=0; true; i++ ) {
+         boolean trouve=false;
+         String sn = name+ (i==0 ? "": "~"+i);
+         Enumeration<Function> e = v.elements();
+         while( e.hasMoreElements() ) {
+            Function f = e.nextElement();
+            if( sn.equals(f.getName()) ) { trouve=true; break; }
+         }
+         if( !trouve ) return sn;
+      }
    }
    
    // Ajoute les boutons qu'il faut dans la toolbar

@@ -215,7 +215,8 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param f path du fichier
     * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
     */
-   protected int creatLocalPlane(String f,String label,String origin, Obj o, ResourceNode resNode,InputStream is,Server server) {
+   protected int creatLocalPlane(String f,String label,String origin, Obj o, 
+         ResourceNode resNode,InputStream is,Server server) {
       String serverTaskId = aladin.synchroServer.start("ServerFile.creatLocalPlane/"+label);
       try {
 //         setSync(false);
@@ -226,8 +227,6 @@ public class ServerFile extends Server implements XMLConsumer {
          boolean localFile=false;
 
          if( f!=null ) f=aladin.getFullFileName(f);
-         
-         aladin.console.setCommand("load "+f);
 
          waitCursor();
          try {
@@ -485,7 +484,12 @@ public class ServerFile extends Server implements XMLConsumer {
             tree.resetCb();
          } else Aladin.warning(this,WNEEDCHECK);
          defaultCursor();
-      } else creatLocalPlane(f,null,null,null,null,null,this);
+      } else {
+         String code = "load "+f;
+         aladin.console.setCommand(code);
+         int n=creatLocalPlane(f,null,null,null,null,null,this);
+         if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode(code);
+      }
    }
 
    /** Nettoyage du formulaire */

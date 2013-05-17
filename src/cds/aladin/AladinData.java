@@ -798,7 +798,7 @@ public class AladinData {
 
 
    // Force Aladin to recompute and redisplay the plane
-   private void repaint() {
+   public void repaint() {
       if( plan instanceof PlanImage ) ((PlanImage)plan).changeImgID();
       else plan.aladin.view.newView(1);
       plan.aladin.calque.repaintAll();

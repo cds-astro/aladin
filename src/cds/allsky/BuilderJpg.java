@@ -108,27 +108,27 @@ public class BuilderJpg extends Builder {
    // Initialise la valeur du BSCALE BZERO de sortie en fonction du premier fichier Npixxxx.fits trouvé dans Norder3/Dir0
    // Nécessaire dans le cas de relance juste pour le calcul des JPEG car ces valeurs n'ont 
    // jamais été initialisées dans ce cas.
-   private void initBscaleBzeroFromNpixFits(String path) {
-      if( context.isBScaleBZeroSet() ) return; // inutile
-      try {
-         File f1 = null;
-         for( int i=0; i<768; i++ ) {
-            f1 = new File( Util.getFilePath(path, 3, i)+".fits" );
-            if( f1.exists() ) break;
-         }
-         Fits f = new Fits();
-         f.loadHeaderFITS(f1.getAbsolutePath());
-         double bscale=1;
-         double bzero=0;
-         try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }
-         try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
-         Aladin.trace(4,"BuilderJpg.initBscaleBzeroFromNpixFits()... reinit target BZERO="+bzero+", BSCALE="+bscale);
-         context.setBScale(bscale);
-         context.setBZero(bzero);
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
+//   private void initBscaleBzeroFromNpixFits(String path) {
+//      if( context.isBScaleBZeroSet() ) return; // inutile
+//      try {
+//         File f1 = null;
+//         for( int i=0; i<768; i++ ) {
+//            f1 = new File( Util.getFilePath(path, 3, i)+".fits" );
+//            if( f1.exists() ) break;
+//         }
+//         Fits f = new Fits();
+//         f.loadHeaderFITS(f1.getAbsolutePath());
+//         double bscale=1;
+//         double bzero=0;
+//         try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }
+//         try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
+//         Aladin.trace(4,"BuilderJpg.initBscaleBzeroFromNpixFits()... reinit target BZERO="+bzero+", BSCALE="+bscale);
+//         context.setBScale(bscale);
+//         context.setBZero(bzero);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
    public void build() throws Exception {
       initStat();

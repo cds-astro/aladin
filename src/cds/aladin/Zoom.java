@@ -70,6 +70,7 @@ public final class Zoom extends JPanel {
    protected SliderOpacity opacitySlider;
    protected SliderZoom zoomSlider;
    protected SliderEpoch epochSlider;
+   protected SliderCube  cubeSlider;
    protected SliderDensity densitySlider;
    protected JPanel sliderPanel;
    
@@ -99,6 +100,7 @@ public final class Zoom extends JPanel {
       });
       cZoom.addMouseWheelListener( zoomView );
       
+      cubeSlider    = new SliderCube(aladin);
       epochSlider   = new SliderEpoch(aladin);
       sizeSlider    = new SliderSize(aladin);
       densitySlider = new SliderDensity(aladin);
@@ -117,9 +119,10 @@ public final class Zoom extends JPanel {
    protected void adjustSliderPanel() {
       JPanel p = new JPanel( new GridLayout(0,1,1,1));
       if( !Aladin.OUTREACH ) {
-         if( aladin.configuration.isSliderEpoch() ) p.add(epochSlider);
-         if( aladin.configuration.isSliderSize() ) p.add(sizeSlider);
+         if( aladin.configuration.isSliderEpoch() )   p.add(epochSlider);
+         if( aladin.configuration.isSliderSize() )    p.add(sizeSlider);
          if( aladin.configuration.isSliderDensity() ) p.add(densitySlider);
+         if( aladin.configuration.isSliderCube() )    p.add(cubeSlider);
       }
       if( aladin.configuration.isSliderOpac() ) p.add(opacitySlider);
       if( aladin.configuration.isSliderZoom() ) p.add(zoomSlider);

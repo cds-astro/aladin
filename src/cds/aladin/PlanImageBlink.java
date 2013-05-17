@@ -20,6 +20,7 @@
 
 package cds.aladin;
 
+import cds.fits.HeaderFits;
 import cds.tools.Util;
 
 import java.io.*;
@@ -132,6 +133,188 @@ public class PlanImageBlink extends PlanImage {
       dataMax=pixelMax=255;
       bZero=0;
       bScale=1;
+   }
+   
+   static public final int PERM0 = 0; // PERM0 : naxis1 x naxis2 sur naxis3 niveaux
+   static public final int PERM1 = 1; // PERM1 : naxis1 x naxis3 sur naxis2 niveaux
+   static public final int PERM2 = 2; // PERM2 : naxis3 x naxis2 sur naxis1 niveaux
+   
+   static public final int W2D  = 0;  // Permute Width et Depth
+   static public final int H2D  = 1;  // Permute height et Depth
+   static public final int CP   = 2;  // Cycle naxis3 -> naxis1 -> naxis2 -> naxis3
+   static public final int CM   = 3;  // Cycle inverse
+   
+   
+   /** Permutation courante */
+   private int modePerm = PERM0;
+   
+   /** Retourne la permutation courante */
+   public int getPermutation() { return modePerm; }
+   
+   /** Détermine et effectue la permutation à effectuer en fonction de l'état courant
+    * et de celui à obtenir */
+   public void permutation(int m) {
+      int action=-1;
+      if( m==modePerm ) return;     // déjà fait
+           if( modePerm==PERM0 && m==PERM1 
+            || modePerm==PERM1 && m==PERM0 ) action=H2D;
+      else if( modePerm==PERM0 && m==PERM2 
+            || modePerm==PERM2 && m==PERM0 ) action=W2D;
+      else if( modePerm==PERM1 && m==PERM2 ) action=CP;
+      else if( modePerm==PERM2 && m==PERM1 ) action=CM;
+           
+      boolean full = modePerm==PERM0 ? loadInRam(0, depth) : isFullyInRam(0, depth);
+      
+      flagProcessing=true;
+      pourcent=-1;
+      aladin.calque.repaintAll();
+      (new ThreadPermute(m,action,full)).start();
+   }
+   
+   class ThreadPermute extends Thread {
+      int m;
+      int action;
+      boolean full;
+      
+      public ThreadPermute(int m,int action,boolean full) {
+         super();
+         this.m=m; this.action=action; this.full=full;
+      }
+      public void run() {
+         doPermute(action,full);
+         permuteCalib(m);
+         modePerm=m;
+         flagProcessing=false;
+         pourcent= -1;
+         changeImgID();
+         aladin.calque.repaintAll();
+      }
+   }
+   
+   // Effectue une permutation particulière
+   private void doPermute(int a,boolean full) {
+      
+      // Nouvelles dimensions
+      int w = a==W2D || a==CP ? depth : a==CM ? height : width;
+      int h = a==H2D || a==CM ? depth : a==CP ? width : height;
+      int d = a==CP || a==H2D ? height : width;
+      
+      ArrayList<PlanImageBlinkItem> v=null;
+      
+      
+      // On teste 2 fois en full, en cas de OutOfMemory
+      for( int j=full?1:0; j<2; j++ )  {
+         
+         // On ne peut pas travailler sur les true pixels, autant faire de
+         // la place avant.
+         if( !full ) {
+            for( PlanImageBlinkItem p : vFrames ) p.pixelsOrigin=null;
+            aladin.gc();
+         }
+
+         try {
+            // Initialisation
+            v = new ArrayList<PlanImageBlinkItem>(d);
+            for( int i=0; i<d; i++ ) {
+               byte [] pixels = new byte[ w*h ];
+               byte [] pixelsOrign = full ? new byte [ w*h*npix ] : null;
+               v.add( new PlanImageBlinkItem(label,pixels,pixelsOrign,false,null,0) );
+            }
+            break; // C'est bon
+            
+         } catch( OutOfMemoryError e ) {
+            aladin.console.setError("!!! Not enough memory => trying Cube permutation without true pixels...");
+            full=false;
+            v=null;
+            System.gc();
+         }
+      }
+      
+      double deltaPourcent = 100./depth;
+      
+      // Permutation des pixels
+      for( int z=0; z<depth; z++ ) {
+         pourcent+=deltaPourcent;
+         PlanImageBlinkItem pi = vFrames.get(z);
+         for( int y=0; y<height; y++ ) {
+            for( int x=0; x<width; x++ ) {
+               PlanImageBlinkItem p = v.get( a==CP || a==H2D ? y : x );
+               int src = y*width + x;
+               int trg = (a==H2D || a==CM ? z : a==CP ? x : y)* w 
+                       + (a==W2D || a==CP ? z : a==CM ? y : x);
+               p.pixels[ trg ] = pi.pixels[ src ];
+               if( full ) {
+                  System.arraycopy(pi.pixelsOrigin,src*npix,p.pixelsOrigin,trg*npix,npix);
+               }
+               
+            }
+         }
+      }
+      
+      // Mise sous forme vecteur
+      Vector<PlanImageBlinkItem> v1 = new Vector<PlanImageBlinkItem>(d);
+      for( PlanImageBlinkItem p : v ) v1.add(p);
+      
+      // Remplacement
+      synchronized( this ) {
+         vFrames = v1;
+         naxis1=width = w;
+         naxis2=height = h;
+         depth = d;
+         oLastFrame=-1;
+         activePixels(0);
+      }
+   }
+   
+   
+   // Ajustement de la calibration originale en fonction de la permutation demandée
+   // Travaille par substitution des préfixes numériques des mots clés FITS originaux
+   private void permuteCalib(int m) {
+      try {
+         if( headerFits==null ) return;
+         String originalHeaderFits = headerFits.getOriginalHeaderFits();
+              if( m==PERM1 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "2-3","3-2" });
+         else if( m==PERM2 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "1-3","3-1" });
+         Projection proj = new Projection(Projection.WCS,new Calib( new HeaderFits(originalHeaderFits) ));
+         setNewProjD(proj);
+         setHasSpecificCalib();
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         projd=null;
+         projD=null;
+         return;
+      }
+   }
+   
+   // Substitutions dans le headerfits d'un certain nombre de suffixes numériques
+   // des mots clés. Par exemple rules = { "2-3", "3-2" } signifie que tous
+   // les mots clés finissant par "2" vont être remplacé par "3" et réciproquement
+   // (NAXIS2 = ... va être remplacé par NAXIS3 = ....)
+   private String modifCalib(String s,String [] rules) {
+      StringTokenizer st = new StringTokenizer(s,"\n");
+      StringBuffer res = new StringBuffer();
+      while( st.hasMoreTokens() ) {
+         String line = st.nextToken();
+         if( !line.startsWith("COMMENT") && !line.startsWith("HISTORY")) {
+            int pos = line.indexOf('=');
+            if( pos!=-1 ) {
+               char ch=' ';
+               for( pos--; pos>0 && Character.isWhitespace( ch=line.charAt(pos)); pos--);
+               if( pos>0 && Character.isDigit(ch) ) {
+                  for( int i=0; i<rules.length; i++ ) {
+                     char avant = rules[i].charAt(0);
+                     char apres = rules[i].charAt( rules[i].length()-1 );
+                     if( ch==avant ) {
+                        line = line.substring(0,pos)+apres+line.substring(pos+1); 
+                        break;
+                     }
+                  }
+               }
+            }
+         }
+         res.append(line+"\n");
+      }
+      return res.toString();
    }
    
 //   protected void noOriginalPixels() {
@@ -269,7 +452,8 @@ public class PlanImageBlink extends PlanImage {
    
    /** Retourne true si on dispose (ou peut disposer) des pixels originaux */
    protected boolean hasOriginalPixels() {
-      return vFrames.elementAt(0).cacheID!=null;
+     PlanImageBlinkItem p = vFrames.elementAt(0);
+     return p.pixelsOrigin!=null || p.cacheID!=null;
    }
      
    
@@ -390,9 +574,12 @@ public class PlanImageBlink extends PlanImage {
       try { f.close(); } catch( Exception e ) {}
       Date d1=new Date(); long temps = (int)(d1.getTime()-d.getTime()); d=d1;
       Aladin.trace(3," => Full cube contrast adjustement in "+temps+" ms");
+      
+      buffer=null;
+//      permutation(modePerm);
+      
       flagOk=true;    
       flagUpdating=false;
-      buffer=null;
       
       changeImgID();
 //      sendLog("RecutPixel","["+getLogInfo()+"]");
@@ -627,10 +814,19 @@ public class PlanImageBlink extends PlanImage {
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
-      if( type==IMAGECUBERGB ) ((PlanRGBInterface)this).calculPixelsZoomRGB();
-      else calculPixelsZoom();
+//      if( type==IMAGECUBERGB ) ((PlanRGBInterface)this).calculPixelsZoomRGB();
+//      else calculPixelsZoom();
       aladin.calque.zoom.zoomView.resetImgID();
       aladin.calque.zoom.zoomView.repaint();
+   }
+   
+   protected void activePixels(int frame) {
+      if( flagUpdating ) return;
+      if( oLastFrame==frame ) return;
+      initFrame=oLastFrame=frame;
+      PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
+      setBufPixels8(pbi.pixels);
+      pixelsOrigin=pbi.pixelsOrigin;
    }
    
    /** Rend active la tranche courante des pixels d'origine, soit pour le planBlink lui-même
@@ -646,10 +842,8 @@ public class PlanImageBlink extends PlanImage {
       p.cacheOffset = pbi.cacheOffset;
       p.cacheFromOriginalFile=pbi.cacheFromOriginalFile;
       p.pixelsOrigin=pbi.pixelsOrigin;
-//System.out.println("Active pixelsOrigin "+ p.cacheOffset+ " "+ cacheID);     
    }
-
-
+   
    /** Extraction d'une portion de l'image.
     * Retourne une portion de l'image sur la forme d'un tableau de pixels
     * @param newpixels Le tableau a remplir (il doit etre assez grand)

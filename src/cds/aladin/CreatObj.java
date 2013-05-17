@@ -271,7 +271,7 @@ public final class CreatObj implements Runnable {
                    if( server.indexOf("Aladin")>=0 ) {
                       String criteria = fmt+" "+resol;
                       if( qualifier!=null ) criteria = criteria+" "+qualifier;
-                      int n=a.dialog.server[ServerDialog.ALADIN].createPlane(c,rm,criteria,null,null);
+                      a.dialog.server[ServerDialog.ALADIN].createPlane(c,rm,criteria,null,null);
                    }
 
                    // VizieR

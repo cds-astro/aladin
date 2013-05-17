@@ -20,15 +20,9 @@
 
 package cds.aladin;
 
-import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.util.Iterator;
-
-import javax.swing.BorderFactory;
 
 import cds.astro.Astrotime;
 

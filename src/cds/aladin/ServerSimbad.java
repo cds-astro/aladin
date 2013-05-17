@@ -332,6 +332,7 @@ public class ServerSimbad extends Server  {
       waitCursor();
       String script = "get "+aladinLabel+" "+objet+" "+Coord.getUnit(rm/60.);
       aladin.console.setCommand(script);
-      createPlane(objet,rm+"",null,null,institute);
+      int n=createPlane(objet,rm+"",null,null,institute);
+      if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode("get "+aladinLabel+" $TARGET $RADIUS");
    }
 }

@@ -1030,6 +1030,7 @@ PROPHIDEFOVS	Hide all associated FoVs
 PROPTITLE	Properties
 PROPBANNER	Properties of the plane
 PROPAPPLY	Apply
+PROPBOOKMARK	Bookmark
 PROPCLOSE	Close
 PROPNOFILTER	- no filter -
 PROPLABEL	PlaneID:
@@ -1109,6 +1110,7 @@ PROPHIDEFOVS.fr	Cacher tous les FoVs associés
 PROPTITLE.fr	Propriétés
 PROPBANNER.fr	Propriétés du plan
 PROPAPPLY.fr	Appliquer
+PROPBOOKMARK.fr	Signet
 PROPCLOSE.fr	Fermer
 PROPNOFILTER.fr	- aucun filtre -
 PROPLABEL.fr	PlandID:
@@ -2503,6 +2505,10 @@ SLIDERDENSITY dens.
 SLIDERDENSITY.fr dens.
 SLIDERDENSITYTIP Adjust source density of selected progressive catalogs
 SLIDERDENSITYTIP.fr	Ajuste la densité des sources des catalogues progressifs sélectionnés
+SLIDERCUBE cube
+SLIDERCUBE.fr cube
+SLIDERCUBETIP Cube frame control
+SLIDERCUBETIP.fr	Ajuste l'image visualisée pour un cube
 
 # Bookmarks strings
 BKMTITLE	Bookmarks controler

@@ -376,7 +376,8 @@ public class ServerVizieRMission extends Server  {
       if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
       else aladin.console.setCommand("get VizieR("+cata+s+")");
 
-      createPlane(objet,rm+"",cata,null,institute);
+      int n=createPlane(objet,rm+"",cata,null,institute);
+      if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode("get VizieR("+cata+s+") $TARGET $RADIUS");
 
       resetFlagBoxes();
       defaultCursor();
@@ -384,7 +385,6 @@ public class ServerVizieRMission extends Server  {
 
    protected void resetList() {
       missionlist.resetList();
-      
       pngMap.setImage(null);
    }
 

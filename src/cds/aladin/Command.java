@@ -1140,7 +1140,10 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
 
          if( (j=a.dialog.getServer(server))>=0 ) {
             a.dialog.server[j].flagToFront=false;	// Pour eviter le toFront d'Aladin
-            a.dialog.server[j].createPlane(target,radius,criteria,label,a.dialog.server[j].institute);
+            int n=a.dialog.server[j].createPlane(target,radius,criteria,label,a.dialog.server[j].institute);
+            if( n!=-1 ) {
+               a.calque.getPlan(n).setBookmarkCode("get "+server+(criteria.length()>0?"("+criteria+")":"")+" $TARGET $RADIUS");
+            }
             if( a.isFullScreen() ) a.fullScreen.repaint();
          } else {
             if( erreur.length()>0 ) erreur.append(", ");
@@ -2680,7 +2683,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
 //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
-      else if( cmd.equalsIgnoreCase("test") )   a.execCommand("USNO-B1_14000885+1348332 = get VizieR(USNO-B1,allcolumns) 14 00 08.85792000000265 +13 48 33.29639999999799 3.0arcmin");
+      else if( cmd.equalsIgnoreCase("test") )   hop();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
       else if( cmd.equalsIgnoreCase("testimg") )testCalib(label,param,0);
       else if( cmd.equalsIgnoreCase("testcat") )testCalib(label,param,1);
@@ -4339,7 +4342,29 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }catch( Exception e ) { e.printStackTrace();  }
    }
    
+   private void hop() {
+      try {
 
+         // reference slits from LMS
+         AladinData adRef = Aladin.aladin.getAladinData("toto");
+         // centroids slits
+         Iterator<Obj> itRef = adRef.iteratorObj();
+
+         while (itRef.hasNext() ) {
+           Obj objRef = itRef.next();
+           double ra  = objRef.getRa();
+           double dec = objRef.getDec();
+           System.out.println(ra+" | "+dec);
+           objRef.setRaDec(ra+0.1, dec+0.1);
+         }
+         
+         adRef.repaint();
+
+       } catch (AladinException e) {
+         e.printStackTrace();
+       }
+
+   }
 
 }
 

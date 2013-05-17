@@ -186,6 +186,11 @@ public class Plan implements Runnable {
 
    protected Plan() { type=X; aladin=Aladin.aladin; flagOk=false; label=""; startTime = System.currentTimeMillis(); }
    protected Plan(Aladin aladin) { this.aladin=aladin; }
+   
+   /** retourne la commande script qui a permit de créer le plan */
+   private String bookmarkCode=null;
+   protected String getBookmarkCode() { return bookmarkCode; }
+   protected void setBookmarkCode(String code) { bookmarkCode=code; }
 
     /** Duplication du Plan */
    protected void copy(Plan p) {

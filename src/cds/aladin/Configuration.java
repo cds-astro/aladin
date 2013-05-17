@@ -106,6 +106,7 @@ public final class Configuration extends JFrame
    protected static String SLEPOCH    = "SliderEpoch";
    protected static String SLSIZE     = "SliderSize";
    protected static String SLDENS     = "SliderDensity";
+   protected static String SLCUBE     = "SliderCube";
    protected static String SLOPAC     = "SliderOpac";
    protected static String SLZOOM     = "SliderZoom";
 //   protected static String TAG        = "CenteredTag";
@@ -120,7 +121,7 @@ public final class Configuration extends JFrame
                  REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
                  PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
                  IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
-                 SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/;
+                 SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/;
    
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
    static private String CSVITEMLONG[];
@@ -172,6 +173,7 @@ public final class Configuration extends JFrame
    private JCheckBox        bxEpoch;              // Pour l'activation du slider de l'époque
    private JCheckBox        bxSize;               // Pour l'activation du slider de la taille des sources
    private JCheckBox        bxDens;               // Pour l'activation du slider de la densité des sources
+   private JCheckBox        bxCube;               // Pour l'activation du slider de controle des cubes
    private JCheckBox        bxOpac;               // Pour l'activation du slider du controle de la transparence
    private JCheckBox        bxZoom;               // Pour l'activation du slider du controle du zoom
    
@@ -242,6 +244,7 @@ public final class Configuration extends JFrame
       SLIDEREPOCH = aladin.chaine.getString("SLIDEREPOCH");
       SLIDERDENSITY = aladin.chaine.getString("SLIDERDENSITY");
       SLIDERSIZE = aladin.chaine.getString("SLIDERSIZE");
+      SLIDERCUBE = aladin.chaine.getString("SLIDERCUBE");
       SLIDEROPAC = aladin.chaine.getString("OPACITY");
       SLIDERZOOM = aladin.chaine.getString("ZOOM");
       
@@ -729,6 +732,12 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       return s!=null && s.equals("on");
    }
    
+   /** Retourne true s'il faut un slider de controle de cube */
+   protected boolean isSliderCube() {
+      String s = get(SLCUBE);
+      return s!=null && s.equals("on");
+   }
+   
    /** Retourne true s'il faut un slider de controle de la transparence */
    protected boolean isSliderOpac() {
       String s = get(SLOPAC);
@@ -1097,6 +1106,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          sliderPanel.add( bxEpoch = new JCheckBox(SLIDEREPOCH));
          sliderPanel.add( bxSize  = new JCheckBox(SLIDERSIZE));
          sliderPanel.add( bxDens  = new JCheckBox(SLIDERDENSITY));
+         sliderPanel.add( bxCube  = new JCheckBox(SLIDERCUBE));
          sliderPanel.add( bxOpac  = new JCheckBox(SLIDEROPAC));
          sliderPanel.add( bxZoom  = new JCheckBox(SLIDERZOOM));
          PropPanel.addCouple(this, p, l, SLIDERH, sliderPanel, g, c, GridBagConstraints.EAST);
@@ -1747,6 +1757,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       if( bxDens!=null ) {
          if( !bxDens.isSelected() ) remove(SLDENS);
          else set(SLDENS,"on");
+      }
+      if( bxCube!=null ) {
+         if( !bxCube.isSelected() ) remove(SLCUBE);
+         else set(SLCUBE,"on");
       }
       if( bxOpac!=null ) {
          if( !bxOpac.isSelected() ) set(SLOPAC,"off");

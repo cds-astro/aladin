@@ -58,7 +58,7 @@ final public class BuilderMocHight extends BuilderMoc {
       order+=Constante.ORDER;
       moc.setMaxLimitOrder(order-diffOrder);
       
-      System.out.println("generateTileMoc for "+f.getName()+" MOC="+moc.getMaxLimitOrder()+"/"+Util.getUnitDisk(moc.getMem()));
+//      System.out.println("generateTileMoc for "+f.getName()+" MOC="+moc.getMaxLimitOrder()+"/"+Util.getUnitDisk(moc.getMem()));
       
       long oNpix=-1;  
       for( int y=0; y<fits.height; y++ ) {

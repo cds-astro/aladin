@@ -297,11 +297,15 @@ public abstract class Obj implements Propable{
     */
    public void setHighlighted(boolean flag) { }
 
+   /** Change object celestial coordinates */
+   public void setRaDec(double ra, double de) { raj=ra; dej=de; }
 
+   /** Change object XY coordinates in function of the current background image */
+   public void setXY(double x, double y) { setPosition(plan.aladin.view.getCurrentView(),x,y); }
+   
    protected abstract void setPosition(ViewSimple v,double x, double y);
    protected abstract void deltaPosition(ViewSimple v,double x, double y);
    protected abstract void deltaRaDec(double dra, double dde);
-   protected void setRaDec(double ra, double de) { raj=ra; dej=de; }
    protected abstract void setText(String id);
    protected abstract Point getViewCoord(ViewSimple v,int dw, int dh);
    protected abstract boolean inside(ViewSimple v,double x, double y);

@@ -426,11 +426,18 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
 
       waitCursor();
 
+      String bookmarkCode=null;
       if( cbGetAll.isSelected() ) cata = cata+",allcolumns";
-      if( !allCat && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
-      else aladin.console.setCommand("get VizieRX("+cata+")");
+      if( !allCat && objet!=null && objet.length()>0 ) {
+         bookmarkCode = "get VizieR("+cata+")";
+         aladin.console.setCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
+      } else {
+         bookmarkCode = "get VizieRX("+cata+")";
+         aladin.console.setCommand(bookmarkCode);
+      }
 
-      createPlane(objet,rm+"",cata,null,null);
+      int n = createPlane(objet,rm+"",cata,null,null);
+      if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode(bookmarkCode+" $TARGET $RADIUS");
 
       catalog.setText("");
       resetFlagBoxes();

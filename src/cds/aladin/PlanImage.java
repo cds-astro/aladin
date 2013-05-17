@@ -2327,7 +2327,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
                 
                 double infileVal=getPixVal1(pixelsOrigin,bitpix,(height-y-1)*width+x);
                 return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");
-             }
+             };
              if( !pixelsOriginFromDisk() ) return UNK;
              if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
              if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
@@ -3725,6 +3725,18 @@ Aladin.trace(2,"Loading PDS image");
    protected void setPixels(byte [] pixels) {
       this.pixels = pixels;
    }
+   
+   protected String getBookmarkCode() {
+      String s= super.getBookmarkCode();
+      if( s==null ) return null;
+      if( typeCM!=CMGRAY ) {
+         s+="\ncm "+ColorMap.getCMName(typeCM);
+         if( video==PlanImage.VIDEO_NORMAL ) s+=" noreverse";
+         if( transfertFct!=LINEAR) s+=" "+TRANSFERTFCT[transfertFct];
+      }
+      return s;
+   }
+
    
    /** Retourne le tableau des pixels 8 bits qui prennent en compte la table des couleurs */
    protected byte[] getLinearPixels8() { return getLinearPixels8(null); }

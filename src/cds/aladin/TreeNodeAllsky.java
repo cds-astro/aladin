@@ -346,8 +346,12 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** retourne l'URL de base pour accéder au serveur HTTP */
    protected String getUrl() {
-      if( id!=null && aladin.glu.aladinDic.get(id)!=null) {
-         return aladin.glu.getURL(id)+"";
+      try {
+         if( id!=null && aladin.glu.aladinDic.get(id)!=null) {
+            return aladin.glu.getURL(id)+"";
+         }
+      } catch( Exception e ) {
+         e.printStackTrace();
       }
 //      if( url==null && id!=null ) url = aladin.glu.getURL(id)+"";
       return url;

@@ -150,7 +150,7 @@ public class FrameBookmarks extends JFrame {
       return p;
    }
    
-   protected void setVisibleEdit() {
+   public void setVisibleEdit() {
       if( genPanel==null ) createPanel();
       genPanel.remove(amateurPanel);
       genPanel.add(getExpertPanel(),BorderLayout.CENTER);
@@ -273,10 +273,17 @@ public class FrameBookmarks extends JFrame {
    }
    
    // Initialisation de la fenêtre d'édition avec un Bookmark "vide"
-   private void createNewBookmark() {
-      Function f = addBookmark("YourName","","Your description","");
+   private void createNewBookmark() { 
+      createNewBookmark("YourName","$TARGET,$RADIUS","Your description",null); 
+   }
+   public void createNewBookmark(String name,String param,String description,String code) {
+      Function f = addBookmark(name,param,description,code);
       aladin.getCommand().addFunction(f);
       resumeEdit(f,true);
+      if( code!=null ) {
+         fctEdit.setCode(null);
+         valide(false);
+      }
       resumeTable();
       int row = table.getRowCount()-1;
       table.scrollRectToVisible(table.getCellRect(row,NAME,true));

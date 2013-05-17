@@ -46,6 +46,7 @@ import javax.swing.plaf.basic.BasicSplitPaneUI;
 import cds.aladin.bookmark.Bookmarks;
 import cds.aladin.prop.Filet;
 import cds.allsky.Context;
+import cds.allsky.MocGen;
 import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -68,6 +69,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> MOC generation support (-mocgen script program)
+ * @beta    <LI> STC-s region support (as a script command)
  * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) also supported
  * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
  * @beta    <LI> "match" command script
@@ -114,7 +117,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.549";
+    static public final    String VERSION = "v7.550";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -253,7 +256,8 @@ public class Aladin extends JApplet
     
     // Marge limite en MO pour le chargement des cubes en RAM.
     // Il faut au-moins 500Mo de disponible pour une telle stratégie 
-    static int MARGERAM = !PROTO ? 20000 : MAXMEM>500 ? 150 : 500;
+//    static int MARGERAM = !PROTO ? 20000 : MAXMEM>500 ? 150 : 500;
+    static int MARGERAM = MAXMEM>500 ? 150 : 500;
 
     // Le nom du dico GLU specifique a Aladin
     static String ALAGLU = "AlaGlu.dic";
@@ -1052,15 +1056,16 @@ public class Aladin extends JApplet
                 {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
              },
              { {MHELP},
-                  {HELP+"|F1"}, {TUTO, "Show me how to load an image",
-                                 "Show me how to display catalogs on an image",
-                                 "Show me how to play with the Aladin stack",
-                                 "Show me how to use the multiview mode",
-                                 "Show me how to do a contour",
-                                 "Show me how to control the image contrast",
-                                 "Show me how to create a colored image",
-                                 "What is a filter",
-                                 "Show me how to play with the metadata lists and trees"},
+                  {HELP+"|F1"}, 
+//                                {TUTO, "Show me how to load an image",
+//                                 "Show me how to display catalogs on an image",
+//                                 "Show me how to play with the Aladin stack",
+//                                 "Show me how to use the multiview mode",
+//                                 "Show me how to do a contour",
+//                                 "Show me how to control the image contrast",
+//                                 "Show me how to create a colored image",
+//                                 "What is a filter",
+//                                 "Show me how to play with the metadata lists and trees"},
                   {MDOC,FAQ,TUTORIAL,MAN},
                   {},{HELPSCRIPT+"|"+(macPlateform?alt:meta)+" F5"},
                   {},{SENDBUG}, {NEWS}, {ABOUT}
@@ -2594,17 +2599,19 @@ public class Aladin extends JApplet
       return true;
    }
 
-   protected void allsky() {
+   protected int allsky() {
       TreeNodeAllsky gSky = glu.getGluSky(0);
-      allsky(gSky);
+      return allsky(gSky);
    }
 
    /** Activation d'un background */
-   protected void allsky(TreeNodeAllsky gSky) { allsky(gSky,null,null,null); }
-   protected void allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
-      if( !gSky.isMap() ) calque.newPlanBG(gSky,label,target,radius);
-      else calque.newPlan(gSky.getUrl(), label, gSky.copyright);
+   protected int allsky(TreeNodeAllsky gSky) { return allsky(gSky,null,null,null); }
+   protected int allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
+      int n;
+      if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
+      else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright);
       toolBox.repaint();
+      return n;
    }
 
    /** Mise en place du ciel s */
@@ -4674,6 +4681,12 @@ public void show() {
       lastArg=0;
       for( int i=0; i<args.length; i++ ) {
          if( args[i].equals("-h") || args[i].equals("-help") ) { usage(); System.exit(0); }
+         
+         else if( args[i].equals("-pixfoot") || args[i].equals("-mocgen"))      { 
+            System.arraycopy(args, i+1, args, 0, args.length-i-1);
+            MocGen.main(args);
+            System.exit(0); 
+         }
          else if( args[i].equals("-version") )     { version(); System.exit(0); }
          else if( args[i].equals("-test") )        { boolean rep=test(); System.exit(rep ? 0 : 1); }
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }

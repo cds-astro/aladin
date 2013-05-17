@@ -91,7 +91,8 @@ public class ServerAllsky extends ServerTree  {
    protected ServerAllsky(Aladin aladin) { super(aladin); }
 
    @Override
-   protected int createPlane(String target,String radius,String criteria, String label, String origin) {
+   protected int createPlane(String target,String radius,String criteria, 
+         String label, String origin) {
       String survey;
       int defaultMode=PlanBG.UNKNOWN;
       
@@ -119,13 +120,10 @@ public class ServerAllsky extends ServerTree  {
          aladin.command.printConsole("!!! "+e.getMessage());
       }
 
-      aladin.allsky(gSky,label,target,radius);
+      return aladin.allsky(gSky,label,target,radius);
       
-      return j;
-      
-//      int j=criteria==null || criteria.length()==0 ? 0 : aladin.glu.findGluSky((new Tok(criteria)).nextToken(),2);
-//      if( j!=-1 ) aladin.allsky(aladin.glu.getGluSky(j),label,target,radius);
 //      return j;
+      
    }
 
    @Override
@@ -149,8 +147,10 @@ public class ServerAllsky extends ServerTree  {
          String radius = getRadius(false);
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
          String criteria = ta.id+mode;
-         aladin.console.setCommand("get allsky("+Tok.quote(ta.aladinLabel)+mode+")"+cible);
-         createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
+         String code = "get allsky("+Tok.quote(ta.id)+mode+")";
+         aladin.console.setCommand(code+cible);
+         int m=createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
+         if( m!=-1 ) aladin.calque.getPlan(m).setBookmarkCode(code+" $TARGET $RADIUS");
       }
       reset();
 
