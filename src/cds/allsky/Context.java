@@ -932,9 +932,11 @@ public class Context {
          if( ftmp.exists() ) ftmp.delete();
          File dir = new File( getOutputPath() );
          if( !dir.exists() && !dir.mkdir() ) throw new Exception("Cannot create output directory");
-         FileOutputStream out = new FileOutputStream(ftmp);
-         prop.store( out, null);
-         out.close();
+         FileOutputStream out = null;
+         try { 
+            out = new FileOutputStream(ftmp);
+            prop.store( out, null);
+         } finally {  if( out!=null ) out.close(); }
 
          if( f.exists() && !f.delete() ) throw new Exception("Propertie file locked ! (cannot delete)");
          if( !ftmp.renameTo(new File(propFile)) ) throw new Exception("Propertie file locked ! (cannot rename)");

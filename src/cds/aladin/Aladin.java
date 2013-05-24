@@ -47,6 +47,7 @@ import cds.aladin.bookmark.Bookmarks;
 import cds.aladin.prop.Filet;
 import cds.allsky.Context;
 import cds.allsky.MocGen;
+import cds.allsky.SkyGen;
 import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -109,15 +110,16 @@ public class Aladin extends JApplet
 
 //   static final boolean VP=true;
    
-    static final Dimension SCREENSIZE= Toolkit.getDefaultToolkit().getScreenSize();
-    static final boolean LSCREEN= SCREENSIZE.width>1000;
+//   static final Dimension SCREENSIZE= Toolkit.getDefaultToolkit().getScreenSize();
+    static Dimension SCREENSIZE= null;
+    static final boolean LSCREEN= true; //SCREENSIZE.width>1000;
 
     /** Nom de l'application */
     static protected final String TITRE   = "Aladin";
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.550";
+    static public final    String VERSION = "v7.551";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -157,6 +159,8 @@ public class Aladin extends JApplet
     static final Color STACKGRAY = new Color(150,150,150);
     static final Color BLACKBLUE = new Color(0,0,200);
     static final Color BACKGROUND   = new Color(198,218,239); 
+    static final Color ORANGE   = new Color(255,137,58); 
+    static final Color LIGHTORANGE   = new Color(255,211,58); 
 
     // couleur de fond du bouton Load... lorsqu'il est opérationnel
 //    static final Color COLOR_LOAD_READY = new Color(110,230,50);
@@ -524,6 +528,8 @@ public class Aladin extends JApplet
      * @see aladin.Aladin#suiteInit()
      */
     public void myInit() {
+       if( SCREENSIZE==null ) SCREENSIZE = Toolkit.getDefaultToolkit().getScreenSize();
+
        setMacProperties();
 
        // set user-agent (see RFC 2616, User-Agent section)
@@ -4552,6 +4558,8 @@ public void show() {
    static private final String USAGE =
       "Usage: Aladin [options...] [filenames...]\n"+
       "       Aladin -chart=\"[server[,server...]\" object\n"+
+      "       Aladin -skygen ...\n"+
+      "       Aladin -mocgen ...\n"+
       "       Aladin -help\n"+
       "       Aladin -version\n"+
       "\n"+
@@ -4579,6 +4587,8 @@ public void show() {
       "       -debug: debug mode (very verbose)\n"+
       "\n"+
       "       -chart=: build a png field chart directly on stdout\n"+
+      "       -skygen: build HEALPix allsky by script (see -skygen -h for help)\n"+
+      "       -mocgen: build MOC by script (see -mocgen -h for help)\n"+
       "       -help: display this help\n"+
       "       -version: display the Aladin release number\n"+
       "\n"+
@@ -4682,11 +4692,17 @@ public void show() {
       for( int i=0; i<args.length; i++ ) {
          if( args[i].equals("-h") || args[i].equals("-help") ) { usage(); System.exit(0); }
          
-         else if( args[i].equals("-pixfoot") || args[i].equals("-mocgen"))      { 
+         else if( args[i].equalsIgnoreCase("-pixfoot") || args[i].equalsIgnoreCase("-mocgen"))      { 
             System.arraycopy(args, i+1, args, 0, args.length-i-1);
             MocGen.main(args);
             System.exit(0); 
          }
+         else if( args[i].equalsIgnoreCase("-skygen"))      { 
+            System.arraycopy(args, i+1, args, 0, args.length-i-1);
+            SkyGen.main(args);
+            System.exit(0); 
+         }
+         
          else if( args[i].equals("-version") )     { version(); System.exit(0); }
          else if( args[i].equals("-test") )        { boolean rep=test(); System.exit(rep ? 0 : 1); }
          else if( args[i].equals("-trace") )       { levelTrace=3; lastArg=i+1; }

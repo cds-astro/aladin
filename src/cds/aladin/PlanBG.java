@@ -2381,6 +2381,23 @@ public class PlanBG extends PlanImage {
    /** Autorise à nouveau la mesure du DrawFast (voir ViewSimple.mouseRelease()) */
    protected void resetDrawFastDetection() { computeDrawFast=true; }
    
+   
+   protected void drawHealpixGrid(Graphics g, ViewSimple v) {
+      int order = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
+      long [] pix;
+      if( v.isAllSky() ) {
+         pix = new long[12*(int)CDSHealpix.pow2(order)*(int)CDSHealpix.pow2(order)];
+         for( int i=0; i<pix.length; i++ ) pix[i]=i;
+      } else pix = getPixList(v,getCooCentre(v),order); // via query_disc()
+      
+      for( int i=0; i<pix.length; i++ ) {
+         HealpixKey healpix = new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
+         if( healpix.isOutView(v) ) continue;
+//         healpix.drawRealBorders(g, v);
+         healpix.drawLosangeBorder(g, v);
+      }
+   }
+   
    /** Tracé des losanges à la résolution adéquate dans la vue 
     * mais en mode synchrone */
    protected void drawLosangesNow(Graphics g,ViewSimple v) {
@@ -2647,8 +2664,10 @@ public class PlanBG extends PlanImage {
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    protected void drawForeground(Graphics gv,ViewSimple v) {
-      
-      if( aladin.calque.hasHpxGrid() || isOverlay() ) return;
+      if( aladin.calque.hasHpxGrid() || isOverlay() ) {
+         if( aladin.calque.hasHpxGrid() ) drawHealpixGrid(gv, v);
+         return;
+      }
       
       Graphics2D g = (Graphics2D)gv;
    

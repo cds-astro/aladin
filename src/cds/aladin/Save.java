@@ -1473,10 +1473,13 @@ public final class Save extends JFrame implements ActionListener {
       iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
       iwp.setCompressionQuality(qual);
 
-      ImageOutputStream out = ImageIO.createImageOutputStream(os);
-      writer.setOutput(out);
-      writer.write(null, new IIOImage(bufferedImage,null,null), iwp);
-      writer.dispose();
+      ImageOutputStream out = null;
+      try {
+         out = ImageIO.createImageOutputStream(os);
+         writer.setOutput(out);
+         writer.write(null, new IIOImage(bufferedImage,null,null), iwp);
+         writer.dispose();
+      } finally { if( out!=null ) out.close(); }
    }
 
 

@@ -176,6 +176,11 @@ public class SkyGen {
             }
             continue;
          }
+         
+         // Juste pour pouvoir appeler directement par le main() de cette classe
+         // et non celle d'Aladin
+         else if( arg.equalsIgnoreCase("-skygen") ) continue;
+         
          // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
             SkyGen.usage();
@@ -185,7 +190,7 @@ public class SkyGen {
          else if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
             Context.setVerbose(4);
          }
-         else if (arg.equalsIgnoreCase("-force") ) {
+         else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") ) {
             force=true;
          }
 
@@ -290,27 +295,35 @@ public class SkyGen {
    }
    
    private static void usage() {
-      System.out.println("SkyGen [-force] options... [action [action...]]");
-      System.out.println("SkyGen [-force] -param=configfile\n");
-      System.out.println("This config file must contains these following options, or use them directly in the comand line :");
+      System.out.println("Usage: java -jar Aladin.jar -mocgen [-f] options... [action [action...]]");
+      System.out.println("       java -jar Aladin.jar -mocgen [-f] -param=configfile\n\n");
+      System.out.println("This config file must contains these following options, or use them\n" +
+      		"             directly in the comand line :");
       System.out.println(
-            "-force     Do not take into account possible previous computation\n"+
-            "input      Source image directory (fits or jpg+hhh)" + "\n" +
-            "output     all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
-            "mode       Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
-            "img        Specifical reference image for default initializations (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
-            "bitpix     Specifical target bitpix" + "\n" +
-            "order      Specifical HEALPix order" + "\n" +
-            "diffOrder  Diff between MOC order and optimal order" + "\n" +
-            "border     Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
-            "blank      Specifical BLANK value" + "\n" +
-            "skyval     Fits key to use for removing a sky background" + "\n" +
-            "maxThread  Max number of computing threads" + "\n" +
-            "region     Specifical HEALPix region to compute (ex: 3/34-38 50 53) or Moc.fits file (all sky by default)" + "\n" +
-            "jpegMethod Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
-            "pixelCut   Specifical pixel cut and/or transfert function for JPEG 8 bits conversion - ex: \"120 140 log\")" + "\n" +
-            "pixelRange Specifical pixel value range (required for bitpix conversion - ex: \"-32000 +32000\")" + "\n" +
-            "color      True if the source images are colored jpeg (default is false)" + "\n" +
+            "-f                 Do not take into account possible previous computation\n"+
+            "input=dir          Source image directory (fits or jpg+hhh)" + "\n" +
+            "output=dir         all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
+            "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
+            "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
+            "img=file           Specifical reference image for default initializations \n" +
+            "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
+            "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
+            "order=nn           Specifical HEALPix order" + "\n" +
+            "diffOrder          Diff between MOC order and optimal order" + "\n" +
+            "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
+            "blank=nn           Specifical BLANK value" + "\n" +
+            "skyval=key         Fits key to use for removing a sky background" + "\n" +
+            "maxThread=nn       Max number of computing threads" + "\n" +
+            "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
+            "                   or Moc.fits file (all sky by default)" + "\n" +
+            "jpegMethod=m       Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
+            "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
+            "                   conversion - ex: \"120 140 log\")" + "\n" +
+            "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
+            "                   conversion - ex: \"-32000 +32000\")" + "\n" +
+            "color=true|false   True if the source images are colored jpeg (default is false)" + "\n" +
+            "verbose            Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
+            "debug=true|false   to set output display as te most verbose or just statistics" + "\n"
 //            "red        all-sky used for RED component (see rgb action)\n" +
 //            "green      all-sky used for BLUE component (see rgb action)\n" +
 //            "blue       all-sky used for GREEN component (see rgb action)\n" +
@@ -318,8 +331,7 @@ public class SkyGen {
 //            "greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
 //            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
 //            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
-            "verbose    Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
-            "debug      true|false - to set output display as te most verbose or just statistics" + "\n");
+      );
       System.out.println("\nSpecifical actions (by default all required actions):" + "\n" +
             "index      Build finder index" + "\n" +
             "tiles      Build HEALPix FITS tiles" + "\n" +
@@ -335,17 +347,18 @@ public class SkyGen {
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+
             "cleanfits  Remove FITS tiles" + "\n"+
             "cleanjpeg  Remove Jpeg tiles " + "\n"+
-            "gzip       gzip some fits tiles and Allsky.fits (by keeping the same names)" + "\n"+
-            "gunzip     gunzip all fits tiles and Allsky.fits (by keeping the same names)" + "\n"+
+            "gzip       gzip some fits tiles and Allsky.fits (keeping the same names)" + "\n"+
+            "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "progen     Adapt HEALPix tree index to a progenitor usage" + "\n"
             );
-      System.out.println("\nEx: SkyGen input=/MyImages    => Do all the job." +
-      		             "\n    SkyGen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
+      System.out.println("\nEx: java -jar Aladin.jar -mocgen input=/MyImages    => Do all the job." +
+      		             "\n    java -jar Aladin.jar -mocgen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
-                         "\n    SkyGen input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
-                         "\n           The original pixels in the border or equal to 0 will be ignored."+
-                         "\n    SkyGen red=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky");
+                         "\n    java -jar Aladin.jar -mocgeninput=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+                         "\n           The original pixels in the border or equal to 0 will be ignored."
+//                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
+                         );
    }
 
    private void setConfigFile(String configfile) throws Exception {

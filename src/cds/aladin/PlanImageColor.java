@@ -72,6 +72,7 @@ public class PlanImageColor extends PlanImageRGB {
       // Recuperation de l'image 3x8 bits
       BufferedImage buf;
       
+      ImageInputStream iis = null;
       try {
          // 4EME METHODE POUR EVITER LE DOUBLEMENT DU BUFFER
             long type = dis.getType();
@@ -82,7 +83,7 @@ public class PlanImageColor extends PlanImageRGB {
                
             Iterator readers = ImageIO.getImageReadersByFormatName(fmt);
             ImageReader reader = (ImageReader)readers.next();
-            ImageInputStream iis = ImageIO.createImageInputStream(dis);
+            iis = ImageIO.createImageInputStream(dis);
             reader.setInput(iis,true);
             naxis1=width = reader.getWidth(0);
             naxis2=height = reader.getHeight(0);
@@ -199,7 +200,7 @@ public class PlanImageColor extends PlanImageRGB {
          aladin.error=e.getMessage();
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          return false;
-      }
+      } finally { if( iis!=null ) try { iis.close(); } catch( Exception e1) {} }
       
       return true;
    }

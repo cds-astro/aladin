@@ -563,6 +563,7 @@ public final class Util {
        g.setColor(Color.lightGray);
        g.drawLine(x+w-1,y+h-1,x,y+h-1); g.drawLine(x+w-1,y+h-1,x+w-1,y);
     }
+    
 
     /** Tracade d'un joli petit cercle de 7 pixels de diamètre */
     static public void drawCircle8(Graphics g,int x,int y) {

@@ -158,6 +158,8 @@ public class PlanBGCat extends PlanBG {
       int order = getCurrentMaxOrder(v);
       int nb=0;
       boolean allKeyReady=true;
+      long nLoaded=0L;
+      long nTotal=0L;
       
       hasDrawnSomething=drawAllSky(g, v,  2);
       if( order>=3 ) hasDrawnSomething|=drawAllSky(g, v,  3);
@@ -210,11 +212,27 @@ public class PlanBGCat extends PlanBG {
 
             nb += healpix.draw(g,v);
 
-            HealpixKeyCat h = (HealpixKeyCat)healpix;
-//            System.out.println(h.getStringNumber()+" => reallyLast="+h.isReallyLast(v));
-            if( !moreDetails && !h.isReallyLast(v) ) moreDetails = true;
+            if( order==norder ) {
+               HealpixKeyCat h = (HealpixKeyCat)healpix;
+               if( !moreDetails && !h.isReallyLast(v) ) moreDetails = true;
+
+               nLoaded += h.nLoaded;
+               nTotal += h.nTotal;
+            }
          }
+         
       }
+      
+      if( allKeyReady ) {
+         completude = nTotal!=0 && nLoaded==nTotal ? 100 : 100* ((double)order/maxOrder);
+         if( nTotal!=0 ) {
+            double p1 = 100 * ((double)nLoaded/nTotal);
+            if( p1>completude ) completude=p1;
+         }
+//         System.out.println("J'ai "+nLoaded+"/"+nTotal+" sources chargées order="+order+"/"+maxOrder+" soit "+getCompletude()+"% moreDetails="+moreDetails);
+      }
+      if( !moreDetails ) completude=100;
+
 
       setHasMoreDetails(order>=getMaxFileOrder() ? false : moreDetails);
 //      setHasMoreDetails(moreDetails);
@@ -223,7 +241,10 @@ public class PlanBGCat extends PlanBG {
       hasDrawnSomething=hasDrawnSomething || nb>0;
 
       if( pix!=null && pix.length>0  ) tryWakeUp();
-   }
+   }   
+   
+   private double completude=0;
+   protected double getCompletude() { return completude; }
 
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {

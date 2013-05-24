@@ -1730,7 +1730,7 @@ public class ViewSimple extends JComponent
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       if( tool==ToolBox.SELECT 
-            && aladin.calque.getNbPlanCat()+aladin.calque.getNbPlanTool()==0 ) return ToolBox.PAN;
+            && !aladin.calque.hasSelectableObjects() ) return ToolBox.PAN;
       return tool;
    }
 
@@ -2545,6 +2545,8 @@ public class ViewSimple extends JComponent
             if( o.plan.type!=Plan.TOOL ) continue;
             ((PlanTool)(o.plan)).sendMesureObserver(o, false);
             aladin.console.setInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
+//            System.out.println("Ici c'est parti !");
+//            ((PlanTool)(o.plan)).updatePhotMan(o);
          }
          objSurfMove=null;
       }
@@ -4289,6 +4291,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
             ((PlanBG)pref).drawForeground(g, this);
          }
       }
+      
+
 
       if( (mode&0x2)!=0 && aladin.getOrder()>=0) drawHealpixMouse(g);
       

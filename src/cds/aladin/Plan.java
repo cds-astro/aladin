@@ -1502,10 +1502,14 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    protected String getLabel() {
       String s=label;
       int p= (int)getPourcent();
-      if( p>0 ) s=Util.align((label.length()>6 ? label.substring(0,6):label)+"... ",9)+p+"%";
-      else  if( error==null && !flagOk ) s= label+"...";
+//      int c= (int)getCompletude();
+      if( p>0 && p<100) s=Util.align((label.length()>6 ? label.substring(0,6):label)+"... ",9)+p+"%";
+      else if( error==null && !flagOk ) s= label+"...";
+//      else if( c>0 && c<100) s=Util.align((label.length()>9 ? label.substring(0,9):label),11)+c+"%";
       return s;
    }
+   
+   protected double getCompletude() { return 100.; }
 
    /** Retourne l'url qui a permis de générer le plan */
    protected String getUrl() { return u==null ? null : u.toString(); }

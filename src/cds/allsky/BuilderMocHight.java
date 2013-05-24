@@ -19,7 +19,6 @@
 
 package cds.allsky;
 
-import static cds.tools.Util.FS;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +26,6 @@ import java.io.FileInputStream;
 import cds.aladin.MyInputStream;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
-import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Création d'un fichier Moc.fits correspondant au tuile HEALPix, mais à 

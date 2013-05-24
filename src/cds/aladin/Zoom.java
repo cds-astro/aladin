@@ -269,7 +269,9 @@ public final class Zoom extends JPanel {
    
    /** Incrément, ou décrément du zoom */
    protected void incZoom(int sens) {
-      aladin.view.setZoomRaDecForSelectedViews(getNextValue(getValue(),sens),null);
+      double z = getNextValue(getValue(),sens);
+      if( z==-1 ) return;
+      aladin.view.setZoomRaDecForSelectedViews(z,null);
    }
    
   /** Recalcul le zoom a l'emplacement courant */

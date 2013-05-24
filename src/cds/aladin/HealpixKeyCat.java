@@ -142,22 +142,24 @@ public class HealpixKeyCat extends HealpixKey {
          nLoaded = Integer.parseInt(new String(stream,deb,slash-deb));
          nTotal = Integer.parseInt(new String(stream,slash+1,fin-(slash+1)));
          last = nLoaded==nTotal;
+//         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
       } catch( Exception e ) { nLoaded = nTotal = 0; }
    }
    
   /** Retourne true s'il n'y a pas de descendant */
    protected boolean isLast() { return last; }
-
+   
    /** Retourne true si on sait qu'il n'y a plus de descendance à charger */
    protected boolean isReallyLast(ViewSimple v) {
-      if( last ) return true;
-      for( int i=0; i<4; i++ ) {
-         long filsPixid = npix*4+i;
-         if( (new HealpixKey(planBG, order+1, filsPixid, NOLOAD)).isOutView(v) ) continue;
-         HealpixKeyCat fils = (HealpixKeyCat) planBG.getHealpix(order+1, filsPixid, false);
-         if( fils==null || fils.getStatus()==ERROR || !fils.isReallyLast(v) ) return false;
-      }
-      return true;
+      return last;
+//      if( last ) return true;
+//      for( int i=0; i<4; i++ ) {
+//         long filsPixid = npix*4+i;
+//         if( (new HealpixKey(planBG, order+1, filsPixid, NOLOAD)).isOutView(v) ) continue;
+//         HealpixKeyCat fils = (HealpixKeyCat) planBG.getHealpix(order+1, filsPixid, false);
+//         if( fils==null || fils.getStatus()==ERROR || !fils.isReallyLast(v) ) return false;
+//      }
+//      return true;
    }
 
    protected int writeCache() throws Exception {

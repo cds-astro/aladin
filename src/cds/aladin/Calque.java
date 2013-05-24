@@ -481,6 +481,18 @@ public final class Calque extends JPanel implements Runnable {
       }
       return n;
    }
+   
+   /** Retourne true s'l y a au-moins un plan actif dont les objets 
+    * sont sélectionnables */
+   protected boolean hasSelectableObjects() {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( !p.flagOk || !p.active ) continue;
+         if( p.hasObj() || p.hasSources() ) return true;
+      }
+      return false;
+   }
 
    /** Retourne le nombre de plans Tool actuellement utilises */
    protected int getNbPlanTool() {
@@ -1589,21 +1601,21 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Découpage du chaine de mesures d'info statistiques sur les pixels
     * afin de préparer une entrée dans le plan "Photometry" */
-   private String [] splitVal(String id,Position o) {
-      String [] r = new String[9];
-      Coord c = new Coord(o.raj,o.dej);
-      r[0] = id;
-      r[1] = o.raj+"";
-      r[2] = o.dej+"";
-      StringTokenizer tok = new StringTokenizer(o.id,"/");
-      for( int i=3; i<=7; i++ ) {
-         String s = tok.nextToken().trim();
-         int offset = s.indexOf(' ');
-         r[i] = s.substring(offset+1);
-      }
-      r[8] = o instanceof Repere ? "Circle "+Coord.getUnit( ((Repere)o).getRadius()) : "Polygon";
-      return r;
-   }
+//   private String [] splitVal(String id,Position o) {
+//      String [] r = new String[9];
+//      Coord c = new Coord(o.raj,o.dej);
+//      r[0] = id;
+//      r[1] = o.raj+"";
+//      r[2] = o.dej+"";
+//      StringTokenizer tok = new StringTokenizer(o.id,"/");
+//      for( int i=3; i<=7; i++ ) {
+//         String s = tok.nextToken().trim();
+//         int offset = s.indexOf(' ');
+//         r[i] = s.substring(offset+1);
+//      }
+//      r[8] = o instanceof Repere ? "Circle "+Coord.getUnit( ((Repere)o).getRadius()) : "Polygon";
+//      return r;
+//   }
    
    /** Met à jour le plan "Photometry" en fonction des paramètres de iqe */
    protected void updatePhotometryPlane(Repere r, double [] iqe) {
@@ -1621,7 +1633,7 @@ public final class Calque extends JPanel implements Runnable {
       });
    }
    
-   /** Met à jour le plan "Tag" en fonction des paramètres de iqe */
+   /** Met à jour le plan "Tag" */
    protected void updateTagPlane(Tag tag) {
       
       final PlanTool p = selectPlanTool();

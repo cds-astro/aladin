@@ -28,6 +28,7 @@ import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
 
 /**
@@ -162,6 +163,12 @@ public class PlanMoc extends PlanBGCat {
 //         moc=toReferenceFrame("C");  // On force le MOC en ICRS si ce n'est pas le cas
          String c = moc.getCoordSys();
          frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
+         
+         // Centrage sur la première cellule
+         if( moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
+            MocCell cell = moc.iterator().next();
+            aladin.execAsyncCommand(cell+"");
+         }
       }
       catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

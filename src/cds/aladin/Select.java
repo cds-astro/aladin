@@ -115,7 +115,7 @@ public final class Select extends JComponent  implements
    int hs;                        // Hauteur du canvas
    int hsp;                       // Hauteur de la portion pour les plans
    Image img;                     // Image du buffer du paint
-   Graphics g;                    // GC du buffer du paint
+   Graphics g;                    // GC du buffer du pain
 //   private boolean mouseIn=false; // true si la souris est sur l'oeil
 
    protected void createChaine() {

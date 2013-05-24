@@ -39,7 +39,7 @@ public final class Slide {
    // Les valeurs accociees aux differents elements graphiques
    static final int gapL =  Select.gapL; // Marge de gauche (reserve pour le triangle)
    static final int DX   =  Select.DX;   // Largeur d'un slide (hors tout)
-   static final int DY   =  18;	         // Hauteur d'un slide (hors tout)
+   static final int DY   =  19;	         // Hauteur d'un slide (hors tout)
    static final int DFOLDER=10;		     // Decalage niveau de folder
 
    static final int VIDE=0;
@@ -401,6 +401,18 @@ public final class Slide {
    synchronized void setBlink(boolean f) {
       a.calque.select.setSlideBlink(f);
    }
+   
+   static protected void drawProportion(Graphics g,int x,int y, int width, int pourcent, Color c) {
+      int w = (int)( (pourcent/100.) * width);
+      g.setColor(c);
+      g.drawLine(x,y+2,x+width,y+2);
+      g.drawLine(x,y+3,x+width,y+3);
+      g.setColor( Color.green );
+      g.drawLine(x,y+2,x+w,y+2);
+      g.drawLine(x,y+3,x+w,y+3);
+      g.setColor(Color.gray);
+      g.drawRect(x,y+1,width,3);
+   }
 
    static protected void drawBall(Graphics g, int x,int y,Color c) {
       x+=4; y+=3;
@@ -411,7 +423,6 @@ public final class Slide {
       g.setColor(Color.white);
       g.fillRect(x-1,y-1,2,2);
    }
-
 
    // Dessin du voyant d'etat barre d'une croix
    static protected void drawCross(Graphics g, int x, int y) {
@@ -476,14 +487,18 @@ public final class Slide {
          if(  mode!=DRAG && (
                ref || p.selected  || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
             labelBG=(p.selected ? Aladin.STACKBLUE : Aladin.STACKGRAY );
+            g.setColor(labelBG.brighter());
+//            Graphics2D g2d = (Graphics2D)g;
+//            Paint p = g2d.getPaint();
+//            Paint gradient = new GradientPaint(x, y, labelBG.brighter().brighter(), x, y+H, labelBG);
+//            g2d.setPaint(gradient);
+            g.fillRect(x,y,W,H-2);
+//            g2d.setPaint(p);
             g.setColor(labelBG);
-            Graphics2D g2d = (Graphics2D)g;
-            Paint gradient = new GradientPaint(x, y, labelBG.brighter(), x, y+H, labelBG);
-            g2d.setPaint(gradient);
-            g.fillRect(x,y,W,H);
+            g.drawRect(x,y,W-1,H-2);
          } else if( mode!=DRAG ) {
             g.setColor(labelBG);
-            g.fillRect(x,y,W,H);
+            g.fillRect(x,y,W,H-2);
          }
          
          boolean isRefForVisibleView = p.isRefForVisibleView();
@@ -682,7 +697,7 @@ public final class Slide {
                      && (p.c.equals(Couleur.DC[7]) || p.c.equals(Couleur.DC[8])) ) g.setColor(Color.white);
                else g.setColor(p.c);
             } catch( Exception e) {}
-            g.drawString(p.getLabel(),x,py);
+            g.drawString(p.getLabel(),x,py-1);
             
            //le voyant d'état
             if( mode!=DRAG ) {
@@ -692,13 +707,13 @@ public final class Slide {
                      || p instanceof PlanBG ) {
                   if( p.error!=null ) {
                      boolean hasObj = p.pcat!=null && p.pcat.hasObj();
-                     if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) drawBall(g,px,py-9,Color.orange);
+                     if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) drawBall(g,px,py-9,Aladin.ORANGE);
                      else if( p.isSimpleCatalog() && !hasObj ) drawCross(g,px1,py-9);
                      else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) drawCross(g,px1,py-9);
                      else drawBall(g,px1,py-9,Color.red);
                   } else {
                      boolean flag=false;
-                     Color green = p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ? Color.yellow : Color.green; // Color.green: Aladin.GREEN ;
+                     Color green = p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ? Aladin.LIGHTORANGE : Color.green; // Color.green: Aladin.GREEN ;
                      if( !p.flagOk ||
                            ( (p instanceof PlanContour) && (((PlanContour)p).mustAdjustContour)) ||
                            (flag=(p.flagProcessing 
@@ -711,11 +726,15 @@ public final class Slide {
                         setBlink(true);
                         
                      } else {
-                        if( p instanceof PlanBG  && p.active ) drawBall(g,px,py-9, green );
+                        if( p instanceof PlanBG  && p.active ) {
+                           drawBall(g,px,py-9, green );
+                         }
                      }
+                     if( p instanceof PlanBGCat && p.active ) drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
                   }
                }
             }
+
          }
          
          // Le curseur de réglage de la transparence
