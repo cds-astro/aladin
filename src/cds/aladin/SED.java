@@ -92,7 +92,7 @@ class SED extends JPanel {
    public SED(Aladin aladin) {
       this.aladin = aladin;
       transparency = 0.5f;
-      flagWavelength = false;
+      flagWavelength = aladin.configuration.getSEDWave();
       radius = 5;
    }
    
@@ -104,7 +104,7 @@ class SED extends JPanel {
    protected void setSource(String source) { this.source=source; }
    
    /** Mémorise le rayon associé au SED */
-   protected void setRaidus(double radius) { this.radius = radius; }
+   protected void setRadius(double radius) { this.radius = radius; }
    
    /** Nettoyage de la liste */
    public void clear() { 
@@ -257,6 +257,9 @@ class SED extends JPanel {
           sedList.add(si);
        }
    }
+   
+   /** Retourne true si l'absisse est en longueur d'onde plutôt qu'en fréquence */
+   protected boolean getSEDWave() { return flagWavelength; }
    
    // Détermine les intervalles de fréquence et de flux, et en déduit les positions
    // de traçage de chaque point du SED

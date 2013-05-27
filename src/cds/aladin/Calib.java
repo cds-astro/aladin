@@ -2416,15 +2416,20 @@ public void GetCoord(Coord c) throws Exception {
             double x =  x_objr;
             double y =  y_objr;
             //   System.out.println("x y "+x+" "+y) ;
-            double PI_SQ = Math.PI * Math.PI;
-            double rSq = x * x / PI_SQ + y * y * PI_SQ / 16;
-            if( rSq > 1)  return; // Dehors
+//            double PI_SQ = Math.PI * Math.PI;
+//            double rSq = x * x / PI_SQ + y * y * PI_SQ / 16;
+//            if( rSq > 1)  return; // Dehors
+            double rSq = x * x / 8  + y * y / 2;
+            if( rSq > 1 ) throw new Exception("No coordinates");
             //   System.out.println("rSq "+rSq) ;
-            double theta = Math.asin(y * Math.PI / 4);
+//            double theta = Math.asin(y * Math.PI / 4);
+            double theta = Math.asin(y / Math.sqrt(2));
             double psi = theta * 2;
             //   System.out.println("psi "+psi) ;
+//            double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
+//            double alpha = x / Math.cos(theta);
             double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
-            double alpha = x / Math.cos(theta);
+            double alpha = (Math.PI/(2*Math.sqrt(2))) * (x / Math.cos(theta));
             c.al = alphai + alpha * rad_to_deg;
             c.del = /* deltai + */delta * rad_to_deg;
             break;
@@ -3144,13 +3149,14 @@ public void GetXY(Coord c) throws Exception {
                double previous = 0;
                for( int i=0; i<200; i++ ) {
                   previous = psi;
-                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(delta1))
-                        / (1 + Math.cos(psi));
+                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(delta1)) / (1 + Math.cos(psi));
                   if( Math.abs(psi - previous) > 0.0001 ) break;
                }
                double theta = psi / 2;
-               x_stand = alpha1 * Math.cos(theta)*rad_to_deg;
-               y_stand = 4 / Math.PI * Math.sin(theta)*rad_to_deg;
+//               x_stand = alpha1 * Math.cos(theta)*rad_to_deg;
+//               y_stand = 4 / Math.PI* Math.sin(theta)*rad_to_deg;
+               x_stand = (2*Math.sqrt(2)/Math.PI) * alpha1 * Math.cos(theta)*rad_to_deg;
+               y_stand = Math.sqrt(2) * Math.sin(theta)*rad_to_deg;
                break;
 
             case ZEA: // ZEA projection

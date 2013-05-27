@@ -603,6 +603,7 @@ public class ViewSimple extends JComponent
          pi.setOpacityLevel(1f);
          pi.changeImgID();
          if( inStack ) pi.resetProj();
+         pi.colorBackground=null;
          pi.reverse();
          pi.flagOk=true;
 
@@ -1411,7 +1412,8 @@ public class ViewSimple extends JComponent
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
          getImgView(g,pi);
-      } 
+         
+      }
       drawBackground(g);
       
       // Tout ?
@@ -4086,12 +4088,16 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          // Aucune image de base
          if( p==null ) return true;
-
+         
          // zoom pas pret
          if( rzoom==null  ) return false;
 
          // L'image de base n'est pas prete
          if( !p.flagOk ) return false;
+         
+         // Inutile dans ces 2 cas
+         if( p instanceof PlanBG ) return true;
+         if( isProjSync() || isNorthUp()) return true;
 
          // Teste s'il faut recommencer a extraire une image
          int imgID = p.getImgID();
@@ -4280,6 +4286,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( pref!=null && pref instanceof PlanBG ) {
          ((PlanBG)pref).drawBackground(g, this);
       } 
+
    }
    
    /** Dessin du foreground  
@@ -4588,7 +4595,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
           "ViewID  "+getID()+"\n"
         + "Centre  "+getCentre()+"\n"
         + "Size    "+getTaille(0)+"\n"
-        + "Zoom    "+aladin.calque.zoom.getItem(zoom)+"\n"
+        + "Zoom    "+zoom+"\n"
         + (Projection.isOk(getProj()) ?"Proj    ["+pref+"] "+getProj().getName()+"\n":"")
         + "Status  "+ (selected ? "selected":"unselected")
                        + (locked ? " locked":"")
@@ -5663,7 +5670,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                aladin.fullScreen.setCheck(p);
             }
 
-
             // Cas des plans TOOL et CATALOG
          } else {
             if( fullScreen ) {
@@ -6280,12 +6286,12 @@ g.drawString(s,10,100);
          if( isFullScreen() && pos!=null && pos.length()>0 ) {
             g.setFont(Aladin.BOLD);
             x = getWidth()-260;
-            int len = g.getFontMetrics().stringWidth(pos);
+//            int len = g.getFontMetrics().stringWidth(pos);
             //         g.setColor( getGoodColor(x,y-10,len,15) );
-            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, Color.cyan, null);
-
-            g.setColor( Aladin.BLACKBLUE );
-            g.drawString(pos,x,y);
+//            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, Color.cyan, null);
+//            g.setColor( Aladin.BLACKBLUE );
+//            g.drawString(pos,x,y);
+            Util.drawStringOutline(g, pos, x, y, Color.cyan,null);
          }
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }

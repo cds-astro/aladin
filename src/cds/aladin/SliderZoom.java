@@ -44,6 +44,10 @@ public class SliderZoom extends SliderPlusMoins {
    
    public void paintComponent(Graphics g) {
       if( aladin.calque.isFree() ) slider.setValue(slider.min);
+      else {
+         if( zoom.isBG() ) slider.setMinMax(Zoom.MINSLIDERBG, Zoom.MAXSLIDERBG);
+         else slider.setMinMax(Zoom.MINSLIDER, Zoom.MAXSLIDER);
+      }
       super.paintComponent(g);
    }
 

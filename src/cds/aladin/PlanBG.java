@@ -499,23 +499,24 @@ public class PlanBG extends PlanImage {
    protected void suite() {
 
       if( this.label==null || this.label.trim().length()==0) setLabel(survey);
+      int defaultProjType = aladin.configuration.getProjAllsky();
       if( co==null ) {
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
-         coRadius=180;
+         coRadius=Projection.getRaMax(defaultProjType);
       }
-      if( coRadius<=0 ) coRadius=180;
+      if( coRadius<=0 ) coRadius=Projection.getRaMax(defaultProjType);
       
       objet = co+"";
       
       // On va garder le même type de projection que le plan de base.
 //      int defaultProjType = Calib.SIN;
-      int defaultProjType = aladin.configuration.getProjAllsky();
       Plan base = aladin.calque.getPlanBase();
       if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       
       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
             defaultProjType,Calib.FK5);
+      
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
@@ -556,7 +557,7 @@ public class PlanBG extends PlanImage {
          initZoom = aladin.calque.zoom.getNearestZoomFct(z);
       }
       if( initZoom==-1 ) initZoom = c==null ? 1./(Aladin.OUTREACH?64:32) : 16;
-      aladin.trace(4,"PlanBG.setDefaultZoom("+c+","+Coord.getUnit(radius)+") => zoom = "+initZoom+" ie. "+aladin.calque.zoom.getItem(initZoom));
+      aladin.trace(4,"PlanBG.setDefaultZoom("+c+","+Coord.getUnit(radius)+") => zoom = "+initZoom);
    }
    
    protected void log() {
@@ -2093,7 +2094,7 @@ public class PlanBG extends PlanImage {
 	   if( now ) {
 		   Image img = aladin.createImage(v.rv.width,v.rv.height);
 		   Graphics g = img.getGraphics();
-//		   v.drawBackground(g);
+		   v.drawBackground(g);
 		   drawLosanges(g,v,now);
 //           v.drawForeGround(g);
 		   g.dispose();
@@ -2394,7 +2395,11 @@ public class PlanBG extends PlanImage {
          HealpixKey healpix = new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
          if( healpix.isOutView(v) ) continue;
 //         healpix.drawRealBorders(g, v);
-         healpix.drawLosangeBorder(g, v);
+         try {
+            healpix.drawLosangeBorder(g, v);
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
       }
    }
    
@@ -2686,6 +2691,8 @@ public class PlanBG extends PlanImage {
 //      g.setColor( Color.yellow );
       rayon=0;
       int m=epaisseur/2;
+      int chouilla = (int)( (v.getWidth()/800. -1)*6 );
+      if( chouilla<0 ) chouilla=0;
       
       if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
@@ -2697,7 +2704,7 @@ public class PlanBG extends PlanImage {
          PointD haut = v.getViewCoordDble(c.x, c.y);
          double deltaY = haut.y-center.y;
          double deltaX = haut.x-center.x;
-         rayon = (int)(Math.abs(Math.sqrt(deltaX*deltaX+deltaY*deltaY)));
+         rayon = (int)(Math.abs(Math.sqrt(deltaX*deltaX+deltaY*deltaY)))-chouilla;
          x = (int)(center.x-rayon);
          y = (int)(center.y-rayon);
 
@@ -2721,8 +2728,8 @@ public class PlanBG extends PlanImage {
          c.al+=179;
          p.getXYNative(c);
          PointD droit = v.getViewCoordDble(c.x, c.y);
-         rayon = (int)(Math.abs(haut.y-center.y));
-         grandAxe = (int)(Math.abs(droit.x-center.x));
+         rayon = (int)(Math.abs(haut.y-center.y))-chouilla;
+         grandAxe = (int)(Math.abs(droit.x-center.x))-chouilla;
          x = (int)(center.x-grandAxe);
          y = (int)(center.y-rayon);
          

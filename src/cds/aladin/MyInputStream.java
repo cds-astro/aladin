@@ -795,7 +795,7 @@ public long skip(long n) throws IOException {
       }
 //System.out.println("Chargement de "+len+" octets dans cache: offsetCache="+offsetCache+" inCache="+inCache);
    }
-
+   
    /**
     * Substitution dans le cache.
     * Ne marche que si les caractères n'ont pas encore été lus.
@@ -900,6 +900,17 @@ public long skip(long n) throws IOException {
 //      System.out.println("c="+c);
       return c;
    }
+   
+   // Retourne true si la première ligne est un commentaire, et pas le reste
+   static private boolean isFirstLineComment(String [] s, int size ) {
+      boolean flagFirstComment=true;
+      for( int i=0; i<size; i++ ) {
+         flagFirstComment &= s.length>0 
+               && (i==0 && s[i].charAt(0)=='#' || i>0 && s[i].charAt(0)!='#');
+      }
+      return flagFirstComment;
+   }
+   
    static private int analyseCSV1(String [] s,int size,boolean flagQuote) {
       int [][] m = new int[size][];
       for( int i=0; i<size; i++ ) {
@@ -1014,6 +1025,8 @@ public long skip(long n) throws IOException {
        
        int bufN = 0;
        String [] bufLigne = new String[max];
+       String firstLine=null;
+       int firstLinePos=deb;
 
 //       try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
 //       catch( Exception e ) { cs = "\t".toCharArray(); }
@@ -1046,6 +1059,8 @@ public long skip(long n) throws IOException {
                 if( firstComment ) { flagSextra=true; firstComment=false; }
                 flagSextra = flagSextra & isSextra(ligne);
                 if( flagSextra ) sextraFin = deb;
+                if( i==0 ) firstLine=ligne;
+                else firstLine=null;
                 continue;
              }
              inHeader=false;
@@ -1072,6 +1087,19 @@ public long skip(long n) throws IOException {
           char c = (char)findSep;
           setSepCSV(c);
           Aladin.trace(3,"CSV detected with ["+c+"] as delimitor");
+          
+          // On teste s'il n'y aurait pas une ligne header en commentaire juste avant
+          // a la CSV VizieR mode queryCat
+          if( firstLine!=null ) {
+             String buf1 [] = new String [bufN+1];
+             for( int i=1; i<buf1.length; i++ ) buf1[i]=bufLigne[i-1];
+             buf1[0]=firstLine;
+             if( analyseCSV(buf1,buf1.length)>=0 ) {
+                Aladin.trace(3,"First line is certainly a \"comment header\" a la CSV VizieR => remove #");
+                try { substitute(firstLinePos,1,""); }
+                catch( Exception e ) { }
+             }
+          }
           return 1;
        }
 
@@ -1478,17 +1506,19 @@ public long skip(long n) throws IOException {
     private boolean lookForPNGCalib() {
        boolean encore= true;
        int i=8;   // Taille de la signature PNG
+       boolean more=true;
        try {
           while( encore ) {
              int size = getValAt(i)<<24 | getValAt(i+1)<<16 | getValAt(i+2)<<8 | getValAt(i+3);
              String chunk = new String( new char[] { (char)getValAt(i+4),(char)getValAt(i+5),(char)getValAt(i+6),(char)getValAt(i+7)});
              try {
-                while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
-             } catch( EOFException e ) { encore=false; }
-//if( Aladin.levelTrace==4 ) {
-//   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
-//   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-//}
+                if( more ) while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
+                else if( offsetCache+i+8+size>=inCache ) encore=false;
+             } catch( EOFException e ) { more=false; }
+if( Aladin.levelTrace==4 ) {
+   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
+   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+}
              if( chunk.equals("tEXt") ) {
                 if( memoPNGCalib(offsetCache+i+8,size,false) ) return true;
 

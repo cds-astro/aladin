@@ -120,7 +120,8 @@ public final class Projection {
       adjustParamByCalib(c);
    }
 
-   protected double getRaMax() {
+   protected double getRaMax() { return getRaMax(t); }
+   static protected double getRaMax(int t) {
       return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP ? 180 :360;
    }
 

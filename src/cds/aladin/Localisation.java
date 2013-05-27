@@ -22,6 +22,7 @@ package cds.aladin;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -284,6 +285,7 @@ public final class Localisation extends MyBox {
       setMode(SAISIE);
       final String s = aladin.GETOBJ;
       text.setText(s);
+      text.setFont(text.getFont().deriveFont(Font.ITALIC));
      (new Thread() {
         Color def = text.getBackground();
         Color deff = text.getForeground();
@@ -294,23 +296,28 @@ public final class Localisation extends MyBox {
               if( !flagStopInfo ) {
                  text.setText("");
                  text.setForeground(Color.gray);
-                 Util.pause(200);
+                 Util.pause(100);
               }
               if( !flagStopInfo ) {
                  text.setText(s);
-                 Util.pause(1000);
+                 Util.pause(1500);
               }
            }
            if( flagStopInfo ) {
               text.setCaretPosition(text.getText().length());
               flagReadyToClear=flagStopInfo=false;
            }
+           text.setText("");
            text.setForeground(deff);
+           text.setFont(text.getFont().deriveFont(Font.BOLD));
            text.requestFocusInWindow();
         }
      }).start();
   }
    
+   protected JComboBox createSimpleChoice() {
+      return new JComboBox(REPERE);
+   }
    protected JComboBox createChoice() {
       final JComboBox c = super.createChoice();
       c.addActionListener(new ActionListener() {

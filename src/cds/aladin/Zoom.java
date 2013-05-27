@@ -23,16 +23,8 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * JPanel de gestion du Zoom et de la loupe
@@ -57,10 +49,13 @@ public final class Zoom extends JPanel {
    static int mzn[] = {     1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
    static int mzd[] = {  1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   static final int MAXZOOM=49;   // en puissance de 2, valeur maximal du zoom
+   static final int MAXZOOM=65;   // en puissance de 2, valeur maximal du zoom
    
-   static public final int MINSLIDER=1;
-   static public final int MAXSLIDER=MAXZOOM-7;
+   static public final int MINSLIDERBG=0;
+   static public final int MAXSLIDERBG=MAXZOOM-5;
+   
+   static public final int MINSLIDER=mzn.length-7;
+   static public final int MAXSLIDER=mzn.length+7;
 
    // Les conposantes de l'objet
    ZoomView   zoomView;          // Le canvas associe au Zoom
@@ -140,6 +135,7 @@ public final class Zoom extends JPanel {
     *  celui passé en paramètre
     */
    protected double getNearestZoomFct(double z) {
+      if( aladin.calque.getPlanBase() instanceof PlanBG ) return z;
       int n=cZoom.getItemCount();
       double min=Double.MAX_VALUE;
       double nz=getValue(0);
@@ -172,7 +168,7 @@ public final class Zoom extends JPanel {
          ViewSimple v = aladin.view.getCurrentView();
          double pixelSize = v.getProj().getPixResDelta();
          double nbPixel = deg / pixelSize;
-         double viewSize = v.getHeight();
+         double viewSize = v.getWidth();
          double z = viewSize / nbPixel;
          return getNearestZoomFct(z);
       } catch( Exception e ) {
@@ -185,11 +181,12 @@ public final class Zoom extends JPanel {
    * (x1/4,x1/3,x1/2,x1,x2,x4,x8...x32)
    */
    protected double getValue() {
+      int n;
       if( zoomSlider!=null ) {
-         int n = (int)zoomSlider.getValue();
-         cZoom.setSelectedIndex(n);
-      }
-      return getValue(cZoom.getSelectedIndex());
+         n = (int)zoomSlider.getValue();
+         try { cZoom.setSelectedIndex(n); } catch( Exception e ) {}
+      } else n=cZoom.getSelectedIndex();
+      return getValue(n);
    }
    
    protected double getValue(int i) {
@@ -248,7 +245,6 @@ public final class Zoom extends JPanel {
       return getValue(i);
    }
 
-
    /** Positionne le zoom à un facteur donné et demande un réaffichage
     *  Utilisé par Command
     *  @return true si possible, false sinon
@@ -269,7 +265,8 @@ public final class Zoom extends JPanel {
    
    /** Incrément, ou décrément du zoom */
    protected void incZoom(int sens) {
-      double z = getNextValue(getValue(),sens);
+      double z1 = getValue();
+      double z = getNextValue(z1,sens);
       if( z==-1 ) return;
       aladin.view.setZoomRaDecForSelectedViews(z,null);
    }
@@ -314,18 +311,23 @@ public final class Zoom extends JPanel {
       int i=getIndex(z);
       if( i!=-1 && cZoom.getSelectedIndex()!=i ) {
          flagNoAction=true;
-         cZoom.setSelectedIndex(i);
+         try { cZoom.setSelectedIndex(i);
+         } catch( Exception e ) { }
          if( zoomSlider!=null ) zoomSlider.setValue(i);
          flagNoAction=false;
       }
   }
+   
+   protected boolean isBG() {
+      Plan p = aladin.calque.getPlanBase();
+      return p!=null && p instanceof PlanBG;
+   }
 
   /** Retourne l'indice du Choice en fonction d'une valeur réelle
    *  de zoom. -1 si rien ne correspond
    */
    private int getIndex(double z) {
-      int n=cZoom.getItemCount();
-      
+      int n=cZoom.getItemCount()+250;
       for( int i=0; i<n; i++ ) {
          if( getValue(i)>=z ) return i;
       }
@@ -335,7 +337,7 @@ public final class Zoom extends JPanel {
    public void zoomSliderReset() {
       if( zoomSlider!=null ) zoomSlider.setEnabled( !aladin.calque.isFree() );
    }
-
+   
   /** Réinitialise le zoom
    * @param withImagette true si on resette également l'imagette
    */

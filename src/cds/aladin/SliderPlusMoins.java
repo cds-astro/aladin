@@ -65,6 +65,8 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    JButton plus,moins;
    int wheelIncr;
    
+   public String toString() { return slider.toString(); }
+   
    /**
     * Création d'un slider
     * @param aladin référence
@@ -162,6 +164,8 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
          addMouseListener(this);
          addMouseMotionListener(this);
       }
+      
+      public String toString() { return "slider["+min+" .. "+max+"] => "+value; }
       
       double getValue() { return value; }
       void setValue(double v) { value=v; repaint(); }

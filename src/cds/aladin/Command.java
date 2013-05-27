@@ -123,9 +123,9 @@ public final class Command implements Runnable {
       " \n" +
       "#MISCELLANEOUS:#\n" +
       "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
-      "   @skygen...           @trace        @mem        @info msg\n" +
+      "   @help ...            @trace        @mem        @info msg\n" +
       "   @macro script param  @call fct     @list [fct] @reset\n" +
-      "   @setconf prop=value  @function ... @quit       @help ...       " +
+      "   @setconf prop=value  @function ... @quit" +
       "";
  ;
 
@@ -142,7 +142,7 @@ public final class Command implements Runnable {
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem","northup","match",
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
-      "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show","skygen",
+      "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show",
       "status",/*"stick",*/"sync","tag","thumbnail","trace","unlock",/* "unstick",*/
       "untag","xmatch","moreonxmatch","zoom","+","-","*","/",
    };
@@ -1164,34 +1164,34 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
    protected SkyGen skygen=null;            // pour la génération des allskys via commande script
    
    /** Lancement via une commande script de la génération d'un allsky */
-   protected void execSkyGen(String param)  {
-      try {
-         Tok tok = new Tok(param);
-         String [] arg = new String[ tok.countTokens() ];
-         for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
-         
-         
-         // Interruption d'une exécution précédente en cours
-         if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0 
-               || Util.indexOfIgnoreCase(param, "resume")>=0) {
-            Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
-            if( context==null ) throw new Exception("There is no running skygen task");
-            if( Aladin.NOGUI )  skygen.execute(arg);
-            else skygen.executeAsync(arg);
-            return;
-         }
-         
-         if( skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ) {
-            throw new Exception("There is already a running skygen task !");
-         }
-         skygen = new SkyGen();
-         if( Aladin.NOGUI )  skygen.execute(arg);
-         else skygen.executeAsync(arg);
-      } catch( Exception e ) {
-         if( a.levelTrace>=3 ) e.printStackTrace();
-         a.warning("skygen error !"+e.getMessage()+"\n",1);
-      }
-   }
+//   protected void execSkyGen(String param)  {
+//      try {
+//         Tok tok = new Tok(param);
+//         String [] arg = new String[ tok.countTokens() ];
+//         for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
+//         
+//         
+//         // Interruption d'une exécution précédente en cours
+//         if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0 
+//               || Util.indexOfIgnoreCase(param, "resume")>=0) {
+//            Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
+//            if( context==null ) throw new Exception("There is no running skygen task");
+//            if( Aladin.NOGUI )  skygen.execute(arg);
+//            else skygen.executeAsync(arg);
+//            return;
+//         }
+//         
+//         if( skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ) {
+//            throw new Exception("There is already a running skygen task !");
+//         }
+//         skygen = new SkyGen();
+//         if( Aladin.NOGUI )  skygen.execute(arg);
+//         else skygen.executeAsync(arg);
+//      } catch( Exception e ) {
+//         if( a.levelTrace>=3 ) e.printStackTrace();
+//         a.warning("skygen error !"+e.getMessage()+"\n",1);
+//      }
+//   }
    
    /** Lancement d'une macro par script */
    protected void execMacro(String param) {
@@ -2680,7 +2680,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
       
            if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
-      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
+//      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
 //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("test") )   hop();

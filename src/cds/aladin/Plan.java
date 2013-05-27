@@ -503,6 +503,7 @@ public class Plan implements Runnable {
        if( !flagOk || !isCatalog() ) return false;
        if( hasPM<0 ) {
           Vector<Legende> legs = getLegende();
+          if( legs==null ) return false;
           Iterator<Legende> it = legs.iterator();
           while( it.hasNext() ) {
              Legende leg = it.next();
@@ -1509,7 +1510,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return s;
    }
    
-   protected double getCompletude() { return 100.; }
+   protected double getCompletude() { return -1; }
 
    /** Retourne l'url qui a permis de générer le plan */
    protected String getUrl() { return u==null ? null : u.toString(); }

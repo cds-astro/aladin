@@ -766,7 +766,7 @@ public final class ColorMap extends JPanel  implements
       if( !memoGreyLevel(x) ) return;
 
       if( pimg.type!=PlanImage.IMAGERGB &&  y<mY ) {
-         System.out.println("Pimg.video = "+pimg.video);
+//         System.out.println("Pimg.video = "+pimg.video);
          pimg.setCM(getCMBand(greyLevel, pimg.video==PlanImage.VIDEO_INVERSE,
                !e.isShiftDown(),pimg.isTransparent()));
          isDragging=flagCMBand=true;

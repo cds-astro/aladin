@@ -231,6 +231,8 @@ public class PlanMoc extends PlanBGCat {
    /** Retourne true si tout a été dessinée, sinon false */
    protected boolean hasMoreDetails() { oDrawAll = drawAll; return !drawAll; }
    
+   protected double getCompletude() { return -1; }
+   
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
       long t1 = Util.getTime();

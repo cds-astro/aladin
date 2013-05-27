@@ -1774,7 +1774,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       if( parente>0 ) { pixels=null; rgb=null; }
 
-//      drawLosangeBorder(g,b);
+      drawLosangeBorder(g,b);
 
       long t2 = Util.getTime(0);
       if( !allSky ) planBG.nbImgDraw++;
@@ -1921,68 +1921,69 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //      PointD b [] = new PointD[4];
 //   }
 
-//   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
-//    * => commandé par le menu Aladin.aladin.hpxCtrl */
-//   final protected void drawLosangeBorder(Graphics g,PointD b1[]) {
-//      if( !planBG.ref ) return;
-//      int debugIn = planBG.isDebugIn(npix);
-//      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
-//      PointD b [] = new PointD[4];
-//      int j=0;
-//      for( int i=0; i<4; i++ ) if( b1[i]!=null ) b[j++]=b1[i];
-//      Polygon p=null;
-//      if( j==4 ) p = new Polygon(new int[]{ (int)b[0].x,(int)b[1].x,(int)b[3].x,(int)b[2].x},
-//            new int[]{ (int)b[0].y,(int)b[1].y,(int)b[3].y,(int)b[2].y}, 4);
-//      else if( j==3 ) p = new Polygon(new int[]{ (int)b[0].x,(int)b[1].x,(int)b[2].x},
-//            new int[]{ (int)b[0].y,(int)b[1].y,(int)b[2].y}, 3);
-//      else return;
-//
-//      if( debugIn>0 ) {
-//         g.setColor(debugIn==1 ? BLUE1 :debugIn==2 ? BLUE2 : BLUE3 );
-//         g.fillPolygon(p);
-//      }
-//
-//      Color c= Color.green;
+   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
+    * => commandé par le menu Aladin.aladin.hpxCtrl */
+   final protected void drawLosangeBorder(Graphics g,PointD b1[]) {
+      if( !planBG.ref ) return;
+      int debugIn = planBG.isDebugIn(npix);
+      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
+      PointD b [] = new PointD[4];
+      int j=0;
+      for( int i=0; i<4; i++ ) if( b1[i]!=null ) b[j++]=b1[i];
+      Polygon p=null;
+      if( j==4 ) p = new Polygon(new int[]{ (int)b[0].x,(int)b[1].x,(int)b[3].x,(int)b[2].x},
+            new int[]{ (int)b[0].y,(int)b[1].y,(int)b[3].y,(int)b[2].y}, 4);
+      else if( j==3 ) p = new Polygon(new int[]{ (int)b[0].x,(int)b[1].x,(int)b[2].x},
+            new int[]{ (int)b[0].y,(int)b[1].y,(int)b[2].y}, 3);
+      else return;
+
+      if( debugIn>0 ) {
+         g.setColor(debugIn==1 ? BLUE1 :debugIn==2 ? BLUE2 : BLUE3 );
+         g.fillPolygon(p);
+      }
+
+      Color c= parente>0 ? new Color(100,100,0) : Color.green;
 //      if( parente>0 ) {
-//         int n=255-(parente*50);
+//         int n=200-(parente*50);
 //         if( n<0 ) c = Color.blue;
 //         else c=new Color(n,n,0);
 //      }
-//      g.setColor(flagSym ? Color.magenta : j==3?Color.red:c);
-//      g.drawPolygon(p);
-//
-////      if( j==4 ) drawNumber(g,b);
-//
-////      for( int i=0; i<4; i++ ) {
-////         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
-////         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
-////         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
-////         g.drawString(i+"", x,y+10);
-////      }
-//
-////      if( st!=null ) {
-////         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-////            RenderingHints.VALUE_ANTIALIAS_OFF);
-////         ((Graphics2D)g).setStroke(st);
-////      }
-//   }
+      g.setColor(flagSym ? Color.magenta : j==3?Color.red:c);
+      g.drawPolygon(p);
+
+//      if( j==4 ) drawNumber(g,b);
+
+//      for( int i=0; i<4; i++ ) {
+//         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
+//         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
+//         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
+//         g.drawString(i+"", x,y+10);
+//      }
+
+//      if( st!=null ) {
+//         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+//            RenderingHints.VALUE_ANTIALIAS_OFF);
+//         ((Graphics2D)g).setStroke(st);
+//      }
+   }
    
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
     * => commandé par le menu Aladin.aladin.hpxCtrl */
    final protected void drawLosangeBorder(Graphics g,ViewSimple v) {
       PointD b [] = getProjViewCorners(v);
-      if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return;
+      if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return;
       double c0 = dist(b,0,1);
       double c1 = dist(b,0,2);
       double c2 = dist(b,1,3);
       double c3 = dist(b,2,3);
       double min = Math.min(Math.min(c0,c1),Math.min(c2,c3));
-      double min2 = 8*min;
+      double min2 = 15*min;
       g.setColor(Color.green);
       if( c0<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[1].x,(int)b[1].y);
       if( c1<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[2].x,(int)b[2].y);
       if( c2<min2 ) g.drawLine((int)b[1].x,(int)b[1].y,(int)b[3].x,(int)b[3].y);
       if( c3<min2 ) g.drawLine((int)b[2].x,(int)b[2].y,(int)b[3].x,(int)b[3].y);
+      
       drawNumber(g,v,b);
    }
    

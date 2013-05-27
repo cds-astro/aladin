@@ -72,7 +72,7 @@ import cds.xml.XMLParser;
  * @beta <UL>
  * @beta    <LI> MOC generation support (-mocgen script program)
  * @beta    <LI> STC-s region support (as a script command)
- * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) also supported
+ * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) support
  * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
  * @beta    <LI> "match" command script
  * @beta    <LI> Catalog proper motion support
@@ -91,6 +91,7 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> MOLLWEIDE projection bug fixed
  * @beta    <LI> FOV target precision bug fixed
  * @beta    <LI> TAN SIP bug fixed
  * @beta    <LI> EPS NorthUP bug fixed
@@ -119,7 +120,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.551";
+    static public final    String VERSION = "v7.552";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

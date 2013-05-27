@@ -110,7 +110,8 @@ public class Bookmarks {
       }
       
       if( !Aladin.OUTREACH ) {
-         JButton plus = new JButton("  +  ");
+         JButton plus = new JButton("+");
+         plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
          plus.setToolTipText(aladin.getChaine().getString("BKMEDITOR"));
          plus.setFont( plus.getFont().deriveFont(Font.BOLD));
          plus.addActionListener(new ActionListener() {

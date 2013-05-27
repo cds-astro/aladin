@@ -730,7 +730,7 @@ public final class Slide {
                            drawBall(g,px,py-9, green );
                          }
                      }
-                     if( p instanceof PlanBGCat && p.active ) drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
+                     if( p.getCompletude()>=0 && p.active ) drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
                   }
                }
             }

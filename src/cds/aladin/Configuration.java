@@ -109,6 +109,7 @@ public final class Configuration extends JFrame
    protected static String SLCUBE     = "SliderCube";
    protected static String SLOPAC     = "SliderOpac";
    protected static String SLZOOM     = "SliderZoom";
+   protected static String SEDWAVE    = "SEDWave";
 //   protected static String TAG        = "CenteredTag";
 //   protected static String WENSIZE    = "WenSize";
    
@@ -671,6 +672,15 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       setConfFrame=true;
    }
    
+   /** Retourne true si l'absisse du SED est en longueur d'onde plutôt qu'en fréquence
+    * - par défaut false */
+   protected boolean getSEDWave() {
+      if( Aladin.OUTREACH ) return false;
+      String flag = get(SEDWAVE);
+      if( flag==null ) return false;
+      return flag.equalsIgnoreCase("On"); 
+   }
+   
    /** Retourne le flag de Simbad Quick - par défaut actif */
    protected boolean getSimbadFlag() {
       if( Aladin.OUTREACH ) return true;
@@ -1123,7 +1133,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       PropPanel.addCouple(this, p, l,DEFDIRH, panel, g, c, GridBagConstraints.EAST);
       
       // Le frame
-      frameChoice = aladin.localisation.createChoice();
+      frameChoice = aladin.localisation.createSimpleChoice();
       frameAllskyChoice = aladin.localisation.createFrameCombo();
       (l = new JLabel(FRAMEB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
@@ -1402,10 +1412,11 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       if( helpChoice!=null) helpChoice.setSelectedIndex(isHelp()?0:1);
       
       if( bxEpoch!=null ) bxEpoch.setSelected( isSliderEpoch() );
-      if( bxSize!=null ) bxSize.setSelected( isSliderSize() );
-      if( bxDens!=null ) bxDens.setSelected( isSliderDensity() );
-      if( bxOpac!=null ) bxOpac.setSelected( isSliderOpac() );
-      if( bxZoom!=null ) bxZoom.setSelected( isSliderZoom() );
+      if( bxSize!=null )  bxSize.setSelected( isSliderSize() );
+      if( bxDens!=null )  bxDens.setSelected( isSliderDensity() );
+      if( bxOpac!=null )  bxOpac.setSelected( isSliderOpac() );
+      if( bxCube!=null )  bxCube.setSelected( isSliderCube() );
+      if( bxZoom!=null )  bxZoom.setSelected( isSliderZoom() );
 
       if( cache!=null ) {
          long cacheSize = PlanBG.cacheSize;
@@ -1537,6 +1548,8 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          
          if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
          if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);
+         if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
+         else remove(SEDWAVE);
       }
       
       // On conserve la position de la fenêtre
