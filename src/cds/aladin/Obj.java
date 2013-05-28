@@ -146,6 +146,7 @@ public abstract class Obj implements Propable{
 
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return false; }
+   public boolean hasPhot(ViewSimple v) { return false; }
 
    /** Retourne true si la source a le flag sélect positionné  */
    final public boolean isSelected() { return (flags & SELECT) !=0; }

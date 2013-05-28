@@ -1548,8 +1548,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          
          if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
          if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);
-         if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
-         else remove(SEDWAVE);
+         try {
+            if( aladin.calque.zoom.zoomView.sed.getSEDWave() ) set(SEDWAVE,"On");
+            else remove(SEDWAVE);
+         } catch( Exception e1 ) { }
       }
       
       // On conserve la position de la fenêtre

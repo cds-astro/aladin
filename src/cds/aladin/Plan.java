@@ -507,6 +507,7 @@ public class Plan implements Runnable {
           Iterator<Legende> it = legs.iterator();
           while( it.hasNext() ) {
              Legende leg = it.next();
+             if( leg==null ) continue;
              if( leg.getPmRa()>0 &&  leg.getPmDe()>0 ) { hasPM=1; return true; }
           }
           hasPM=0;

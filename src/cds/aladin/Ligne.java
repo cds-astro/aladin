@@ -291,6 +291,12 @@ public class Ligne extends Position {
    
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return isPolygone(); }
+   public boolean hasPhot(Plan p) { 
+      if( !hasPhot() ) return false;
+      if( p instanceof PlanBG ) return false;  // POUR LE MOMENT
+      return p.hasAvailablePixels();
+   }
+
    
    /** Redessine tout le polygone avec un aplat - ne fonctionne que pour le dernier segment */
    private void fillPolygon(Graphics g,ViewSimple v,int dx, int dy) {
@@ -354,8 +360,24 @@ public class Ligne extends Position {
    * @param fz le zoom
    */
    protected boolean inside(ViewSimple v, double x,double y) {
+      if( bout==3 ) return inPolygon(v,(int)x,(int)y);
+
+      // Cas courant
       return nearArrow(v,x,y);
    }
+   
+   /** Redessine tout le polygone avec un aplat - ne fonctionne que pour le dernier segment */
+   private boolean inPolygon(ViewSimple v,int x, int y) {
+      if( bout!=3 ) return false;
+      Ligne tmp = this;
+      Polygon pol = new Polygon();
+      while( tmp.debligne!=null ) {
+         pol.addPoint((int)tmp.xv[v.n],(int)tmp.yv[v.n]);
+         tmp=tmp.debligne;
+      }
+      return pol.contains(x, y);
+   }
+
 
   /** Coordonnees dans la vue courante.
    * Retourne la position dans les coord. de la vue courante
@@ -552,7 +574,7 @@ public class Ligne extends Position {
 //         return false;
 //      }
 
-      if( !v.pref.hasAvailablePixels() ) return false;
+      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
       statInit();    
 
       int x,y,i;
@@ -646,6 +668,7 @@ public class Ligne extends Position {
       
       Projection proj = p.projd;
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
+      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
       if( getLastBout().bout!=3 ) throw new Exception("getStats error: it is not a polygon");
       
@@ -787,6 +810,7 @@ public class Ligne extends Position {
    protected boolean tooLarge(ViewSimple v,Point p1, Point p2) {
       Projection proj =  v.getProj();
       if( proj==null || proj.t==Calib.SIN ) return false;
+      if( !v.isAllSky() ) return false;
       
       double dx = p1.x-p2.x;
       double dy = p1.y-p2.y;
@@ -804,7 +828,7 @@ public class Ligne extends Position {
       
 //      if( outOfSky(v) ) return false;
       
-      if( !this.hidden ) {
+      if( !hidden ) {
 	     Point p2;
 	     g.setColor( getColor() );
 
@@ -820,7 +844,7 @@ public class Ligne extends Position {
 	        if( tooLarge(v,p1,p2) ) return false;
 
 	        g.drawLine(p1.x,p1.y, p2.x,p2.y);
-	        if( bout==3 ){
+	        if( bout==3 && hasPhot(v.pref) ){
 	           fillPolygon(g, v, dx, dy);
 	           if( hasOneSelected() ) statDraw(g,v,dx,dy);
 	        }

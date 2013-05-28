@@ -358,7 +358,7 @@ public class Repere extends Position {
       
       boolean flagHist = v==v.aladin.view.getCurrentView();
       
-      if( v==null || v.isFree() || !v.pref.hasAvailablePixels() ) return false;
+      if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
       statInit();
       
       double xc,yc;
@@ -468,6 +468,7 @@ public class Repere extends Position {
       
       Projection proj = p.projd;
       if( !p.hasAvailablePixels() ) throw new Exception("getStats error: image without pixel values");
+      if( !hasPhot(p) )  throw new Exception("getStats error: not compatible image");
       if( !Projection.isOk(proj) ) throw new Exception("getStats error: image without astrometrical calibration");
       if( radius<=0 ) throw new Exception("getStats error: no radius");
       
@@ -554,6 +555,10 @@ public class Repere extends Position {
    
    /** Retourne true si l'objet contient des informations de photométrie  */
    public boolean hasPhot() { return hasRayon(); }
+   public boolean hasPhot(Plan p) { 
+      if( !hasPhot() ) return false;
+      return p.hasAvailablePixels();
+   }
    
    public String getCommand() {
       String r;
@@ -664,25 +669,11 @@ public class Repere extends Position {
                if( isSelected() && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
                else cutOff();
             } else {
-//               if( v.pref instanceof PlanBG ) {
-//                  int l = (int)(getRayon(v)*v.getZoom());
-//                  g.drawOval(p.x-l, p.y-l, l*2, l*2);
-//                  
-////                  String s = plan.aladin.localisation.J2000ToString(raj, dej);
-////                  g.drawString(s, p.x - g.getFontMetrics().stringWidth(s)/2, p.y-2);
-////                  s = Coord.getUnit(getRadius());
-////                  g.drawString(s, p.x - g.getFontMetrics().stringWidth(s)/2, p.y+15);
-//                  
-////                  demiLargeur = (int)Math.min(Math.max(2,v.getZoom()*3),16);
-////                  demiCentre = 2*demiLargeur/3;
-////                  drawReticule(g,p.x,p.y,demiLargeur,demiCentre,getColor());
-////                  drawSpecialCircle(g,v);
-////                  id = PlanBG.CURRENTMODE;
-//               } else {
-                  int l = (int)(getRayon(v)*v.getZoom());
+               int l = (int)(getRayon(v)*v.getZoom());
+               if( hasPhot(v.pref) ) {
                   Util.drawFillOval(g, p.x-l, p.y-l, l*2, l*2, 0.1f * plan.getOpacityLevel(), null);
-//               }
-               if( isSelected() ) statDraw(g, v,dx,dy);
+                  if( isSelected() ) statDraw(g, v,dx,dy);
+               } else g.drawOval(p.x-l, p.y-l, l*2, l*2);
             }
             break;
          case ARROW:
