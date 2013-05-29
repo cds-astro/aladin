@@ -38,13 +38,7 @@ package cds.allsky;
 //    along with Aladin.
 //
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FileDialog;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -52,12 +46,7 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.RandomAccessFile;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import cds.aladin.Aladin;
 import cds.aladin.prop.PropPanel;
@@ -123,7 +112,7 @@ public class FrameGlu extends JFrame implements KeyListener {
       panel.add(message);
       return panel;
    }
-   
+
    private JButton test,save;
 
    // Panel des boutons de commandes
@@ -146,8 +135,8 @@ public class FrameGlu extends JFrame implements KeyListener {
       panel.add(b);
       return panel;
    }
-   
-   // Retourne le Panel du formulaire 
+
+   // Retourne le Panel du formulaire
    private JPanel getForm() {
       GridBagLayout g = new GridBagLayout();
       JPanel panel = new JPanel( g );
@@ -171,7 +160,7 @@ public class FrameGlu extends JFrame implements KeyListener {
 
       return panel;
    }
-   
+
    public void keyTyped(KeyEvent e) { }
    public void keyPressed(KeyEvent e) { }
    public void keyReleased(KeyEvent e) { activeButtonIfPossible(); }
@@ -182,10 +171,10 @@ public class FrameGlu extends JFrame implements KeyListener {
       test.setEnabled(ok);
       save.setEnabled(ok);
    }
-   
+
    // Retourne true ssi tous les champs requis ont été renseignés
    private boolean isReady() { return missingField()==-1; }
-   
+
    // Retourne le numéro du premier champ non optionnel qui est encore vide,
    // sinon -1
    private int missingField() {
@@ -218,7 +207,7 @@ public class FrameGlu extends JFrame implements KeyListener {
       if( !aladin.confirmation(this, "Your data corresponds to this following registry description (GLU record) " +
             "and can be saved on your disk as small text file for distributing to your collaborators." +
             "Simply by loading this file in Aladin, your collaborators will immediately see your data and will be able to access them.\n\n" +
-            "You can also send this file to the CDS team (question@simbad.u-strasbg.fr) in order to expose your data " +
+            "You can also send this file to the CDS team (cds-question@unistra.fr) in order to expose your data " +
             "to the whole astronomical community:\n \n"
             +glu+"\n \n" + "Generate this file ?") ) return;
       FileDialog fd = new FileDialog(aladin.dialog,"GLU Data record",FileDialog.SAVE);
