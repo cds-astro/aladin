@@ -8,7 +8,7 @@
 //       11 rue de l'Universite
 //       67000 STRASBOURG
 //       FRANCE
-//Email:   question@simbad.u-strasbg.fr
+//Email:   cds-question@unistra.fr
 //
 //-------
 //
@@ -62,9 +62,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
-import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
@@ -84,7 +82,6 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
@@ -141,7 +138,7 @@ public final class Util {
 //       MyInputStream mis = new MyInputStream(conn.getInputStream());
 	   return mis.startRead();
 	}
-    
+
 
     /**
      * Java does not follow HTTP --> HTTPS redirections by default
@@ -203,7 +200,7 @@ public final class Util {
    static public boolean matchMask(String mask, String word) {
        if( word==null || mask==null ) return false;
        if( mask.indexOf('*')<0 && mask.indexOf('?')<0 ) return word.indexOf(mask)>=0;
-       
+
        mask = mask+'\0';
        word = word+'\0';
        int indiceM,indiceA;
@@ -523,7 +520,7 @@ public final class Util {
 	   if( html ) res.append("</html>");
 	   return res.toString();
 	}
-	
+
 	/** Extrait la table des couleurs pour une composante sous la forme d'un tableau de 256 bytes
 	 * @param cm Le modèle de couleur
 	 * @param component 0-Rouge, 1-Vert, 2-Bleu
@@ -563,7 +560,6 @@ public final class Util {
        g.setColor(Color.lightGray);
        g.drawLine(x+w-1,y+h-1,x,y+h-1); g.drawLine(x+w-1,y+h-1,x+w-1,y);
     }
-    
 
     /** Tracade d'un joli petit cercle de 7 pixels de diamètre */
     static public void drawCircle8(Graphics g,int x,int y) {
@@ -693,7 +689,7 @@ public final class Util {
           g.setColor(c);
        }
        drawFleche1(g,x,y,x1,y1,L);
-       
+
        if( s!=null ) {
           if( x1<x ) x1-=10;
           else x1+=2;
@@ -703,9 +699,9 @@ public final class Util {
           else g.drawString(s,(int)x1,(int)y1);
        }
        if( fd2 ) g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aliasing);
-       
+
     }
-    
+
     static public void drawFleche(Graphics g,double x,double y,double x1,double y1,int L, String s) {
        drawFleche1(g,x,y,x1,y1,L);
        if( s!=null ) {
@@ -741,13 +737,13 @@ public final class Util {
       } catch( Exception e ) { }
       gr.drawPolygon(pol);
     }
-    
+
     static public void drawStringOutline(Graphics g, String s, int x, int y, Color c, Color cOutLine) {
-       
+
        if( c==null ) c=g.getColor();
        if( cOutLine==null ) cOutLine=Color.black;
        if( !(g instanceof Graphics2D ) ) { g.drawString(s, x, y); return; }
-       
+
        Graphics2D g2 = (Graphics2D) g;
        Color cb = g2.getColor();
        Object aliasing = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
@@ -773,7 +769,7 @@ public final class Util {
        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aliasing);
        g2.setColor(cb);
     }
-    
+
     /** Tracé d'un cartouche, éventuellement semi-transparent
      * Retourne les coordonnées pour écrire dedans */
     static public void drawCartouche(Graphics gr,int x, int y, int w, int h,
@@ -851,7 +847,7 @@ public final class Util {
        g.drawLine(x-2,y+3,x-2,y+3);
        g.drawLine(x+2,y+3,x+2,y+3);
    }
-    
+
     /**
      * Dessin d'un bouton radio
      * @param g le contexte graphique
@@ -877,7 +873,7 @@ public final class Util {
              g.drawLine(x+1,y+1+i,x+CINT.length,y+1+i);
           }
        }
-       
+
        g.setColor(colorBord);
        g.drawArc(x,y,w,w,0,360);
 
@@ -990,7 +986,7 @@ public final class Util {
 //       g.drawLine(x+1,y+1,x+3,y+1);
 //       g.drawLine(x+2,y,x+2,y);
 //    }
-    
+
     /** Draws an ellipse which can be rotated
      *  @param g - the graphic context we draw on
      *  @param c - color of the ellipse
@@ -1458,7 +1454,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 	   File f = new File(new File(filename).getParent());
 	   f.mkdirs();
 	   if( !f.exists() ) throw new Exception("Cannot create directory for "+filename);
-	   
+
 //	   File f;
 //	   String FS = filename.indexOf('/')>=0 ? "/" : "\\";
 //
@@ -1579,7 +1575,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           runme.setPriority(ref.getPriority()-1);
        } catch( Exception e ) {}
     }
-    
+
     /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
     static public String getTemps(long ms) { return getTemps(ms,false);  }
     static public String getTemps(long ms,boolean round) {
@@ -1617,14 +1613,14 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        // DES QU'ON NE SUPPORTERA PLUS JAV 1.4
 //       return System.nanoTime()/1000000;
     }
-    
+
     /** Retourne la lettre code d'un champ TFORM FITS nD */
     static final public char getFitsType(String form) {
        int l=form.indexOf('(');
        if( l==-1 ) l=form.length();
        return form.charAt(l-1);
     }
-    
+
     /** retourne la taille du champs FITS exprimé sous la forme nD(xxx) ou nPD(xxx) */
     static final public int binSizeOf(String form) throws Exception {
        try {
@@ -1661,14 +1657,14 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           0;
        return sizeOf * n;
     }
-    
+
 //    HashMap<String, String> getNextJsonObj(MyInputStream in) {
 //       while( encore ) {
 //          char ch = in.g
 //          switch
 //       }
 //    }
-    
+
     /**
      * Affiche le chiffre donné avec une unité de volume disque (K M T)
      * @param val taille en octets
@@ -1688,7 +1684,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
     	nf.setMaximumFractionDigits(format);
     	return nf.format(val)+unites[unit];
     }
-    
+
 	public static ArrayList<File> getFiles(String path, final String suffix) {
 		ArrayList<File> flist = new ArrayList<File>();
 		File[] files = (new File(path)).listFiles();
