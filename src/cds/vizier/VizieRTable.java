@@ -27,7 +27,7 @@
 //11 rue de l'Universite
 //67000 STRASBOURG
 //FRANCE
-//Email:   fernique@astro.u-strasbg.fr, question@simbad.u-strasbg.fr
+//Email:   fernique@astro.u-strasbg.fr, cds-question@unistra.fr
 
 //-------
 
