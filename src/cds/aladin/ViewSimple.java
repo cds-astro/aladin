@@ -285,10 +285,10 @@ public class ViewSimple extends JComponent
             xzoomView=p1.x;
             yzoomView=p1.y;
          }
-     
+         
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
          // (ou qu'on est en train de faire un crop)
-         else if( !isPlotView() &&  ( aladin.toolBox.getTool()==ToolBox.PHOT ||
+         else if( !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
                view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
             if( hasCrop() ) p = view.crop.getFocusPos();
 //            else p = vs.getPosition((double)e.getX(),(double)e.getY());
@@ -296,6 +296,7 @@ public class ViewSimple extends JComponent
             coo.x=p.x; coo.y=p.y;
             vs.getProj().getCoord(coo);
          }
+         
       } catch( Exception e1 ) { coo=null; /* if( aladin.levelTrace>=3 ) e1.printStackTrace();*/ }
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
@@ -1571,6 +1572,9 @@ public class ViewSimple extends JComponent
       view.extendClip(view.newobj);
       aladin.console.setCommand(view.newobj.getCommand());
       view.setSelectFromView(true);
+      
+      view.moveRepere( view.newobj.raj,view.newobj.dej );
+      
       view.newobj=null;
       aladin.calque.repaintAll();
    }
@@ -4407,8 +4411,10 @@ testx1=x1; testy1=y1; testw=w; testh=h;
      * @return coordonnées centrales, ou null
      */
    protected Coord getCooCentre() {
-      Projection proj=null;
-      if( isFree() || !Projection.isOk(proj=pref.projd) ) return null;
+      if( isFree() ) return null;
+//      Projection proj=pref.projd;
+      Projection proj = getProj();
+      if( isFree() || !Projection.isOk(proj) ) return null;
       double x = rv.width/2.;
       double y = rv.height/2.;
       PointD p = getPosition(x,y);

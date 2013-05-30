@@ -30,7 +30,8 @@ import java.awt.Graphics;
 public class SliderDensity extends SliderPlusMoins {
    
    public SliderDensity(Aladin aladin) {
-      super(aladin,aladin.getChaine().getString("SLIDERDENSITY"),-2,+2,1);
+      super(aladin,aladin.getChaine().getString("SLIDERDENSITY"),
+            -PlanBGCat.MAXGAPORDER,PlanBGCat.MAXGAPORDER,1);
       setTooltip(aladin.getChaine().getString("SLIDERDENSITYTIP"));
    }
 

@@ -1094,6 +1094,7 @@ PROPAUTO	Automatic
 PROPWHITE	White
 PROPBLACK	Black
 PROPFULLDESCR Full description...
+PROPFRAME  The coordinate system for drawing the HEALPix all-sky is now independant of the global coordinate system. Select "Default" for associating them again.
 
 PROPSEEFITS.fr	En-tête FITS originale
 #PROPINFO.fr	Information technique
@@ -1174,6 +1175,7 @@ PROPAUTO.fr	Automatique
 PROPWHITE.fr	Blanc
 PROPBLACK.fr	Noir
 PROPFULLDESCR.fr Description complète...
+PROPFRAME.fr Le système de coordonnées utilisé pour afficher le ciel HEALPix est désormais indépendant du système de coordonnée générale. Sélectionnez "Default" pour lier à nouveau les deux systèmes.
 
 # Select.java Strings
 SLHSTACK0	Click to designate this plane as the projection reference for the current view

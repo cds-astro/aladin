@@ -1965,9 +1965,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             if( coo==null ) {
                coo = new Coord(repere.raj,repere.dej);
                if( v.pref instanceof PlanBG ) {
-                  Coord c1 = v.getCooCentre();
                   try {
-                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
+                     coo = v.getProj().getXY(coo);
+                     Coord c1 = v.getCooCentre();
+                     coo.x = c1.x+(coo.x - c1.x)/3; 
+                     coo.y = c1.y+(coo.y - c1.y)/3;
+                     coo = v.getProj().getCoord(coo);
+//                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
                   } catch( Exception e ) { }
                }
             }

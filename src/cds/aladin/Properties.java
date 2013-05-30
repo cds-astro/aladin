@@ -1354,6 +1354,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( defFrame==null
             || ((PlanBG)plan).getFrameDrawing()==defFrame.getSelectedIndex() ) return;
       ((PlanBG)plan).setFrameDrawing( defFrame.getSelectedIndex() );
+      if( defFrame.getSelectedIndex()!=0 ) aladin.info(this,aladin.chaine.getString("PROPFRAME"));
    }
 
    // Changement de couleur
