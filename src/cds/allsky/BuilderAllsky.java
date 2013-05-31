@@ -19,6 +19,8 @@
 
 package cds.allsky;
 
+import java.io.File;
+
 import cds.aladin.Aladin;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
@@ -77,8 +79,14 @@ final public class BuilderAllsky  extends Builder {
          Fits in = new Fits();
          String filename = path+FS+name;
          try {
+            if( !(new File(filename+".fits")).exists() ) continue;
             in.loadFITS(filename+".fits");
             if( out==null ) {
+               if( in.width!=0 && in.width<outLosangeWidth ) {
+                  context.info("createAllsky: reducing width=>"+in.width+" ...");
+                  createAllSky(path,order,in.width);
+                  return;
+               }
                out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,in.bitpix);
                
                // initilialise toutes les valeurs à Blank
@@ -161,7 +169,7 @@ final public class BuilderAllsky  extends Builder {
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       int outFileHeight = nbOutLosangeHeight*outLosangeWidth;
-      boolean notfound = true;
+      boolean first = true;
      
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
@@ -176,8 +184,16 @@ final public class BuilderAllsky  extends Builder {
          Fits in = new Fits();
          String filename = path+FS+name;
          try {
+            if( !(new File(filename+".jpg")).exists() ) continue;
             in.loadJpeg(filename+".jpg",true);
-            notfound = false;
+            if( first ) {
+               if( in.width!=0 && in.width<outLosangeWidth ) {
+                  context.info("createAllsky: reducing width=>"+in.width+" ...");
+                  createAllSkyJpgColor(path,order,in.width);
+                  return;
+               }
+            }
+            first = false;
             int yLosange=npix/nbOutLosangeWidth;
             int xLosange=npix%nbOutLosangeWidth;
             int gap = in.width/outLosangeWidth;
@@ -193,7 +209,7 @@ final public class BuilderAllsky  extends Builder {
          catch( Exception e ) { }
       }
       
-      if( notfound ) {
+      if( first ) {
          Aladin.trace(4, "createAllSkyJpgColor error: no jpeg tiles !");
          return;
       }

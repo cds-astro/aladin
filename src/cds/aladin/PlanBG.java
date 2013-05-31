@@ -503,9 +503,11 @@ public class PlanBG extends PlanImage {
       if( co==null ) {
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
-         coRadius=Projection.getRaMax(defaultProjType);
+//         coRadius=Projection.getRaMax(defaultProjType);
+         coRadius=220;
       }
-      if( coRadius<=0 ) coRadius=Projection.getRaMax(defaultProjType);
+//      if( coRadius<=0 ) coRadius=Projection.getRaMax(defaultProjType);
+      if( coRadius<=0 ) coRadius=220;
       
       objet = co+"";
       
