@@ -929,28 +929,6 @@ public final class Calque extends JPanel implements Runnable {
       return res;
    }
 
-
-   private final Coord cooA = new Coord();
-   private final Coord cooB = new Coord();
-
-   /** Traitement particulier pour le CDS */
-   protected void forCDSTeam(Vector<Obj> v) {
-      if( v.size()!=2 ) return;
-      Obj oA = v.elementAt(0);
-      Obj oB = v.elementAt(1);
-      if( !(oA instanceof Source) || !(oB instanceof Source) ) return;
-      Source sA  = (Source)oA;
-      Source sB  = (Source)oB;
-      String idA = sA.getCatalogue()+":"+sA.id;
-      String idB = sB.getCatalogue()+":"+sB.id;
-      cooA.al=sA.raj; cooA.del=sA.dej;
-      cooB.al=sB.raj; cooB.del=sB.dej;
-      String dist = Coord.getUnit( Coord.getDist(cooA,cooB) );
-      String s = idA+" <==> "+idB+"    Dist="+dist;
-      aladin.status.setText(s);
-      aladin.console.setInPad(s+"\n");
-   }
-
   /** Retourne tous les objets qui contiennent (x,y).
    * Dans le cas d'un plan FIELD, il suffit qu'un seul objet contienne
    * (x,y) pour que tous les objets du plan soient pris.
@@ -1096,7 +1074,7 @@ public final class Calque extends JPanel implements Runnable {
    */
    protected boolean  delObjet(Obj obj) {
       Plan p = ((Position)obj).plan;
-      if( !p.active ) return false;
+      if( !p.active || p.pcat==null ) return false;
       return p.pcat.delObjet(obj);
    }
 

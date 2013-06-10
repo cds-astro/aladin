@@ -41,10 +41,10 @@ import cds.tools.Util;
  * @version 1.0 : (5 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
  */
-public final class Cote extends Ligne {
+public class Cote extends Ligne {
 
-   private double dist=-1;    // Dist angulaire de la cote (ou -1 si non encore calculée)
-   private double distXY=-1;  // Dist de la cote (ou -1 si non encore calculée)
+   protected double dist=-1;    // Dist angulaire de la cote (ou -1 si non encore calculée)
+   private double distXY=-1;    // Dist de la cote (ou -1 si non encore calculée)
 
   /** Constructeurs du premier bout.
    * @param plan plan d'appartenance de la cote
@@ -89,6 +89,11 @@ public final class Cote extends Ligne {
    }
    
    protected Cote(double ra, double dec, Plan plan, ViewSimple v,Cote debcote) {
+      super(ra,dec,plan,v,debcote);
+      bout=2;
+   }
+   
+   protected Cote(double ra, double dec, Plan plan, ViewSimple v,Ligne debcote) {
       super(ra,dec,plan,v,debcote);
       bout=2;
    }
@@ -141,7 +146,7 @@ public final class Cote extends Ligne {
    */
    protected boolean in(ViewSimple v,double x, double y) {
       if( !super.in(v,x,y) ) return false;
-      setId();
+      setId(v);
       return true;
    }
 
@@ -155,8 +160,8 @@ public final class Cote extends Ligne {
 
    protected void deltaPosition(ViewSimple v,double x, double y) {
       super.deltaPosition(v,x,y);
-      if( finligne!=null ) ((Cote)finligne).setId();
-      else setId();
+      if( finligne!=null ) ((Cote)finligne).setId(v);
+      else setId(v);
    }
 
    protected void deltaRaDec(double dra, double dde) {
@@ -172,14 +177,13 @@ public final class Cote extends Ligne {
    }
 
    // Juste pour éviter de les ré-allouer tout le temps.
-   private Coord c1 = new Coord();
-   private Coord c2 = new Coord();
 
    /** Mise en place de l'ID.
     * En fonction du plan de reference courant, positionne id avec la
     * longueur courante de la cote
     */
-   protected void setId() {
+   protected void setId() { setId(null); }
+   protected void setId(ViewSimple v) {
       Position p1,p2;
       double dx,dy;
       if( debligne!=null ) {
@@ -189,7 +193,7 @@ public final class Cote extends Ligne {
          p2 = finligne;
          p1 = this;
       }
-      ViewSimple v = plan.aladin.view.getCurrentView();
+      if( v==null ) v = plan.aladin.view.getCurrentView();
       if( v==null ) return;
 
       int frame = plan.aladin.localisation.getFrame();
@@ -211,7 +215,8 @@ public final class Cote extends Ligne {
                   if( dra>180 ) dra-=360;
                   double drac = dra*AstroMath.cosd(c1.del);
                   dist = Coord.getDist(c1,c2);
-                  id= "Dist = "+ Coord.getUnit(dist) +
+                  if( dist==0 ) id="Null distance";
+                  else id= "Dist = "+ Coord.getUnit(dist) +
                      " (RA="+Coord.getUnit(drac)+
                      "/"+Coord.getUnitTime(dra/15)+
                      ", DE="+Coord.getUnit(dde)+")"+
@@ -253,6 +258,9 @@ public final class Cote extends Ligne {
 
    protected void drawID(Graphics g, ViewSimple v,Point p1,Point p2) {
       if( !isCoteSelected() ) return;
+      drawID1(g,v,p1,p2);
+   }
+   protected void drawID1(Graphics g, ViewSimple v,Point p1,Point p2) {
       double dy=p2.y-p1.y;
       double dx=p2.x-p1.x;
       if( Math.sqrt(dy*dy + dx*dx)<20 && v.getTaille()>10 ) return; // trop petit
@@ -260,13 +268,15 @@ public final class Cote extends Ligne {
       int b = (p1.y+p2.y)/2;
       g.setFont( Aladin.BOLD );
       int frame = plan.aladin.localisation.getFrame();
-      String s = raj==Double.NaN || (frame==Localisation.XY || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )? Util.myRound(dist+"", 2) : Coord.getUnit(dist);
+      String s = raj==Double.NaN || (frame==Localisation.XY 
+            || frame==Localisation.XYNAT || frame==Localisation.XYLINEAR )? 
+                  Util.myRound(dist+"", 2) : Coord.getUnit(dist);
       int x = a+3;
       int y = b+(dy*dx>0?-2:12);
       int w = g.getFontMetrics().stringWidth(s);
       Color c = g.getColor();
 //      Util.drawCartouche(g, x, y-11, w, 15, 0.75f, null, Color.white);
-      Util.drawStringOutline(g, s,x,y,c,Color.white);
+      Util.drawStringOutline(g, s,x,y,c,Color.black);
 //      g.drawString(s,x,y);
       g.setColor(c);
    }
@@ -284,6 +294,8 @@ public final class Cote extends Ligne {
    }
 
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
+      if( this instanceof CoteDist ) return super.draw(g,v,dx,dy);
+      
       if( !isVisible() ) return false;
       if( !super.draw(g,v,dx,dy) ) { cutOff(); return false; }
 

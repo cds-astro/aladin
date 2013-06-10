@@ -261,7 +261,8 @@ public class Repere extends Position {
          xc = xv[v.n];
          yc = yv[v.n];
          
-         return(xc<=x+l+dw/2 && xc>=x-l-dw/2 && yc<=y+l+dh/2 && yc>=y-l-dh/2);
+         if( type==CARTOUCHE ) return(xc<=x+l+dw/2 && xc>=x-l-dw/2 && yc<=y+l+dh/2 && yc>=y-l-dh/2);
+         return(xc<=x+l && xc>=x-l && yc<=y+l && yc>=y-l);
       }
    }
    

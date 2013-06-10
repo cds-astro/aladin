@@ -24,6 +24,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.util.*;
 
+import cds.allsky.BuilderAllsky;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.tools.Util;
@@ -1780,14 +1781,22 @@ public class PlanHealpix extends PlanBG {
        // Sinon, FITS classique => détermination des valeurs des pixels
        else {
           // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
-          double range [] = out.findAutocutRange();
+          double cut [] = out.findAutocutRange();
 
-          out.headerFits.setKeyValue("PIXELMIN", range[0]+"");
-          out.headerFits.setKeyValue("PIXELMAX", range[1]+"");
-          out.headerFits.setKeyValue("DATAMIN",  range[2]+"");
-          out.headerFits.setKeyValue("DATAMAX",  range[3]+"");
+          out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
+          out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
+          if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
+             int bitpix = out.bitpix;
+             cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
+                   : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+             cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+                   : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+             Aladin.trace(1,"createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
+          }
+          out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
+          out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
 
-          Aladin.trace(3, "PIXELMINMAX = ["+range[0]+" "+range[1]+"] DATAMINMAX=["+range[2]+" "+range[3]+"]");
+          Aladin.trace(3, "PIXELMINMAX = ["+cut[0]+" "+cut[1]+"] DATAMINMAX=["+cut[2]+" "+cut[3]+"]");
        }
        out.writeFITS(filename+".fits");
 

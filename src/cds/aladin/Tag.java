@@ -716,7 +716,7 @@ public final class Tag extends Position {
          String s = st.nextToken();
          int x1 = p.x + (aDroite ? dim.width/2 - m.stringWidth(s) : -dim.width/2);
          g.drawString(s,x+x1,y+y1);
-         if( fond==0 ) Util.drawStringOutline(g, s,x+x1,y+y1, null, Color.white);
+         if( fond==0 ) Util.drawStringOutline(g, s,x+x1,y+y1, null, Color.black);
          else g.drawString(s,x+x1,y+y1);
          y1 += m.getHeight();
       }

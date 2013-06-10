@@ -3740,6 +3740,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //      } finally { sesameSynchro.stop(sesameTaskId); }
 //   }
 
+   // Object pour afficher la distance entre 2 objets sélectionnés
+   protected CoteDist coteDist = null;
+   
    protected Repere simRep = null;
    private long startQuickSimbad=0L;
    private double ox=0, oy=0;		// Pour vérifier qu'on déplace suffisemment

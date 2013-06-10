@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import cds.tools.Util;
+import cds.tools.pixtools.Hpix;
 
 
 public class PlanBGCat extends PlanBG {
@@ -220,8 +221,11 @@ public class PlanBGCat extends PlanBG {
                nTotal += h.nTotal;
             }
          }
-         
       }
+      
+      // On continue à afficher les sources sélectionnées même si elles appartiennent
+      // à une tuile plus profonde
+      drawTilesWithSelection(g,v,order);
       
       if( allKeyReady ) {
          completude = nTotal!=0 && nLoaded==nTotal ? 100 : 100* ((double)order/maxOrder);
@@ -242,6 +246,22 @@ public class PlanBGCat extends PlanBG {
 
       if( pix!=null && pix.length>0  ) tryWakeUp();
    }   
+   
+   // Affiche les sources sélectionnées ou tagguées pour les tuiles
+   // plus profondes que order
+   private int drawTilesWithSelection(Graphics g,ViewSimple v,int order) {
+      int nb=0;
+      for( HealpixKey healpix : pixList.values() ) {
+         if( healpix.order<=order ) continue;
+         if( healpix.allSky ) continue;
+         if( healpix.getStatus()!=HealpixKey.READY ) continue;
+         if( !((HealpixKeyCat)healpix).pcat.hasSelectedOrTaggedObj() ) continue;
+         if( healpix.isOutView(v) ) continue;
+         nb += ((HealpixKeyCat)healpix).drawOnlySelected(g,v);
+      }
+//      System.out.println("drawTilesWithSelection() order="+order+" nb="+nb);
+      return nb;
+   }
    
    private double completude=0;
    protected double getCompletude() { return completude; }

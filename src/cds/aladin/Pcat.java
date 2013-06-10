@@ -1212,31 +1212,30 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
    *             sinon il n'y aura qu'un simple calcul de position
    * @param dx,dy Offset pour le tracage
    */
-   synchronized protected void draw(Graphics g, Rectangle r,ViewSimple v,boolean draw,int dx,int dy) {
+   protected int draw(Graphics g, Rectangle r,ViewSimple v,boolean draw,int dx,int dy) {
+      return draw(g,r,v,draw,false,dx,dy);
+   }
+   synchronized protected int draw(Graphics g, Rectangle r,ViewSimple v,boolean draw,boolean onlySelected,int dx,int dy) {
 
-      if( !computeAndTestDraw(v,draw) ) return;
+      if( !computeAndTestDraw(v,draw) ) return 0;
 
       long t1 = Util.getTime();
 
+      int nb=0;
       try  {
 
          // gestion de la transparence
          // Le test d'impression est fait par dx==0 car à l'écran, il n'y a pas d'offset
          if( dx==0 && plan!=null && Aladin.isFootprintPlane(plan) &&
                Aladin.ENABLE_FOOTPRINT_OPACITY && plan.getOpacityLevel()>0.02 && g instanceof Graphics2D ) {
-
             drawFovInTransparency(g, r, v, draw, dx, dy);
-
-         } // fin gestion de la transparence
-
-         // test pour sortie EPS des footprint en transparence
-         //      if( ! (g instanceof EPSGraphics) ) return;
+         } 
 
          g.setColor(c);
-         plan.statNbItems=0L;
          for( int i=0; i<nb_o; i++ ) {
             if( r!=null && !o[i].inClip(v,r) ) continue;
-            if( o[i].draw(g,v,dx,dy) ) plan.statNbItems++;
+            if( onlySelected && !o[i].isSelected() ) continue;
+            if( o[i].draw(g,v,dx,dy) ) nb++;
          }
 
          long t2 = Util.getTime();
@@ -1244,7 +1243,8 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       } catch( Exception e) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
-
+      plan.statNbItems=nb;
+      return nb;
    }
 
    private void drawFovInTransparency(Graphics g, Rectangle r, ViewSimple v, boolean draw, int dx, int dy) {

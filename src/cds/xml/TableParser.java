@@ -1497,6 +1497,10 @@ final public class TableParser implements XMLConsumer {
       if( s.equalsIgnoreCase("RA(ICRS)") ) return 3;
       if( s.equalsIgnoreCase("RA") )       return 4;
       if( s.equalsIgnoreCase("ALPHA_J2000") ) return 5;
+      if( s.equalsIgnoreCase("GLON") )  { setGal(); return 0; }
+      if( s.equalsIgnoreCase("SGLON") ) { setSGal(); return 0; }
+      if( s.equalsIgnoreCase("SLON") )  { setSGal(); return 0; }
+      if( s.equalsIgnoreCase("ELON") )  { setEcl();  return 0; }
       return -1;
    }
 
@@ -1508,7 +1512,10 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("_ra") ) return 0;
       if( s.startsWith("ra") )   return 1;
       if( s.startsWith("alpha") ) return 2;
-//      if( s.indexOf("RA")>0 || s.indexOf("ra")>0 )     return 2;
+      if( s.startsWith("GLON") )  { setGal();  return 0; }
+      if( s.startsWith("SGLON") ) { setSGal(); return 0; }
+      if( s.startsWith("SLON") )  { setSGal(); return 0; }
+      if( s.startsWith("ELON") )  { setEcl();  return 0; }
       return -1;
    }
 
@@ -1528,6 +1535,10 @@ final public class TableParser implements XMLConsumer {
       if( s.equalsIgnoreCase("DE") )        return 8;
       if( s.equalsIgnoreCase("DEC") )       return 9;
       if( s.equalsIgnoreCase("DELTA_J2000") ) return 9;
+      if( s.equalsIgnoreCase("GLAT") )  { setGal();  return 0; }
+      if( s.equalsIgnoreCase("SGLAT") ) { setSGal(); return 0; }
+      if( s.equalsIgnoreCase("SLAT") )  { setSGal(); return 0; }
+      if( s.equalsIgnoreCase("ELAT") )  { setEcl();  return 0; }
       return -1;
    }
 
@@ -1541,8 +1552,16 @@ final public class TableParser implements XMLConsumer {
       if( s.startsWith("de") )   return 3;
       if( s.indexOf("de")>0 )    return 4;
       if( s.startsWith("delta") )return 5;
+      if( s.startsWith("GLAT") )  { setGal();  return 0; }
+      if( s.startsWith("SGLAT") ) { setSGal(); return 0; }
+      if( s.startsWith("SLAT") )  { setSGal(); return 0; }
+      if( s.startsWith("ELAT") )  { setEcl();  return 0; }
       return -1;
    }
+   
+   private void setGal()  { srcAstroFrame = AF_GAL;  coosys.put("Default","GAL"); }
+   private void setSGal() { srcAstroFrame = AF_SGAL; coosys.put("Default","SGAL"); }
+   private void setEcl()  { srcAstroFrame = AF_ECLI; coosys.put("Default","ECL"); }
    
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
     * ou non du nom d'une colonne en tant que PMRA,

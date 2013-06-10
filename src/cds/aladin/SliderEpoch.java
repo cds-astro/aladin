@@ -75,7 +75,8 @@ public class SliderEpoch extends SliderPlusMoins {
          try { p1.setEpoch((slider.getValue()+inc)+"");
          } catch( Exception e ) { }
       }
-      //      aladin.calque.setScalingFactor(n);
+      if( aladin.view.coteDist!=null ) aladin.view.getCurrentView().createCoteDist();
+
       aladin.calque.repaintAll();
    }
    

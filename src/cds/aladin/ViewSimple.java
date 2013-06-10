@@ -1568,7 +1568,9 @@ public class ViewSimple extends JComponent
       if( view.newobj==null ) return;
       calque.setObjet(view.newobj);
       if( view.newobj instanceof Ligne && !(view.newobj instanceof Cote) ) ((Ligne)view.newobj).getFirstBout().bout=0;
-      if( view.newobj instanceof Tag ) ((Tag)view.newobj).setDistAngulaireOrig(getProjSyncView());
+      if( view.newobj instanceof Tag ) {
+         ((Tag)view.newobj).setDistAngulaireOrig(getProjSyncView());
+      }
       view.extendClip(view.newobj);
       aladin.console.setCommand(view.newobj.getCommand());
       view.setSelectFromView(true);
@@ -1580,12 +1582,14 @@ public class ViewSimple extends JComponent
    }
 
   /** Ajoute l'objet en cours de saisie dans le plan selectionne */
-   protected void setNewObjet() { setNewObjet(false); }
-   protected void setNewObjet(boolean withForCDSTeam) {
+   protected void setNewObjet() { 
+//      setNewObjet(false); 
+//      }
+//   protected void setNewObjet(boolean withForCDSTeam) {
       if( view.newobj==null ) return;
       calque.setObjet(view.newobj);
       view.extendClip(view.newobj);
-      if( withForCDSTeam ) aladin.calque.forCDSTeam(aladin.view.vselobj);
+//      if( withForCDSTeam ) createCoteDist(aladin.view.vselobj);
    }
 
    // Calcul du nouveau selecteur multiple en fonction de la souris
@@ -2218,10 +2222,14 @@ public class ViewSimple extends JComponent
    }
 */
 
-   public void mouseReleased(MouseEvent e) { mouseReleased1(e.getX(),e.getY(),e); }
+   public void mouseReleased(MouseEvent e) { 
+      mouseReleased1(e.getX(),e.getY(),e); 
+      if( createCoteDist() ) repaint();
+   }
    public void mouseReleased1(double x, double y,MouseEvent e) {
 
 //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
+      
       
       if( pref!=null && pref instanceof PlanBG ) ((PlanBG)pref).resetDrawFastDetection();
       
@@ -2344,7 +2352,8 @@ public class ViewSimple extends JComponent
          return;
       }
 
-      boolean withForCDSTeam = true;    // Test d'usage de la méthode forCDSTeam
+//      boolean withForCDSTeam = true;    // Test d'usage de la méthode forCDSTeam
+//      if( tool==ToolBox.SELECT ) view.coteDist=null;
 
       // Pour forcer la regénération du curseur
       resetDefaultCursor(tool,e.isShiftDown());
@@ -2478,8 +2487,8 @@ public class ViewSimple extends JComponent
 
             extendClip(res);
 
-            if( nObjAdd==2 ) aladin.calque.forCDSTeam(res);
-            else { withForCDSTeam=false; aladin.calque.forCDSTeam(aladin.view.vselobj); }
+//            if( nObjAdd==2 ) createCoteDist(res);
+//            else { withForCDSTeam=false; createCoteDist(aladin.view.vselobj); }
 
             aladin.view.setMesure();
             rselect=null;
@@ -2531,7 +2540,8 @@ public class ViewSimple extends JComponent
          view.newobj.setPosition(vs,p.x,p.y);
          view.extendClip(view.newobj);
          if( view.newobj instanceof Cote ) finNewObjet();
-         else setNewObjet(withForCDSTeam);
+         else setNewObjet();
+//         else setNewObjet(withForCDSTeam);
          view.newobj=null;
       }      
       
@@ -2559,8 +2569,25 @@ public class ViewSimple extends JComponent
       
       aladin.view.repaintAll();
    }
-
-
+   
+   /** Traitement particulier pour le CDS */
+   protected boolean createCoteDist() {
+      Vector<Obj> v = view.vselobj;
+//      System.out.println("createCoteDist() => size="+v.size());
+      CoteDist oc = view.coteDist;
+      if( v.size()!=2 ) { view.coteDist=null; return oc!=view.coteDist; }
+      Obj a = v.elementAt(0);
+      Obj b = v.elementAt(1);
+      if( !(a instanceof Repere || a instanceof Source 
+            || (a instanceof Tag && a.hasPhot())) ) return false;
+      if( !(b instanceof Repere || b instanceof Source 
+            || (b instanceof Tag && b.hasPhot())) ) return false;
+      view.coteDist = new CoteDist(a,b,getProjSyncView());
+      aladin.status.setText(view.coteDist.id);
+      aladin.console.setInPad(view.coteDist.id+"\n");
+      return true;
+   }
+   
 /* REMARQUE SUR LE CLIP RECT
  *    L'extension en 2 temps du clip est indispensable car il est
  *    possible que la methode mouseDrag soit appelee plusieurs fois avant que
@@ -2840,6 +2867,8 @@ public class ViewSimple extends JComponent
                if( o instanceof Repere && ((Repere)o).hasRayon() ) {
                   addObjSurfMove(o);
                }
+               
+               createCoteDist();
             }
 
             //extension du clip et reaffichage
@@ -3080,7 +3109,7 @@ public class ViewSimple extends JComponent
          PointD p = lastMove;	// deja calcule
          
          if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) trouve=true;
-
+         
          Plan [] allPlans = calque.getPlans();
          Plan folder = calque.getMyScopeFolder(allPlans,pref);
 
@@ -3145,6 +3174,12 @@ public class ViewSimple extends JComponent
                   }
                }
             }
+         }
+         
+         // Pour pouvoir afficher les infos d'une coteDist
+         if( view.coteDist!=null && view.coteDist.inside(this, p.x, p.y) ) {
+            view.coteDist.status(aladin);
+            n=0;
          }
 
          if( n>0 ) {
@@ -3296,13 +3331,13 @@ public class ViewSimple extends JComponent
          }
       }
 
-      // On arrete l'insertion de l'objet en cours 
-      finNewObjet();
-
       // Modification du curseur
       Aladin.makeCursor(aladin,Aladin.DEFAULT);
       resetClip();
 
+      // On arrete l'insertion de l'objet en cours 
+      finNewObjet();
+      
       // Modification du zoom si necessaire
       calque.zoom.wenOff();
 
@@ -5768,10 +5803,16 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Le repere courant
          vs.drawRepere(g,dx,dy);
          
+         // Tracage de la distance entre 2 objets sélectionnés si elle existe
+         if( aladin.view.coteDist!=null ) {
+            aladin.view.coteDist.projection(vs);
+            aladin.view.coteDist.draw(g,vs,dx,dy);
+         }
+         
          // Tracage du quick Simbad s'il existe
-         if( aladin.view.simRep!=null /* && this==aladin.view.getMouseView() */) {
-            aladin.view.simRep.projection(this);
-            aladin.view.simRep.draw(g,this,dx,dy);
+         if( aladin.view.simRep!=null ) {
+            aladin.view.simRep.projection(vs);
+            aladin.view.simRep.draw(g,vs,dx,dy);
          }
       }
       

@@ -202,25 +202,15 @@ public class HealpixKeyCat extends HealpixKey {
    protected int getMem() { return mem;}
 
    @Override
-   protected int draw(Graphics g, ViewSimple v) {
+   protected int draw(Graphics g, ViewSimple v) { return draw1(g,v,false); }
+   protected int drawOnlySelected(Graphics g, ViewSimple v) { return draw1(g,v,true); }
+   private int draw1(Graphics g, ViewSimple v,boolean onlySelected) {
       if( pcat==null || !pcat.hasObj() ) return 0;
-
-      // DE FAIT, DEJA TESTE DANS PlanBGCat.draw()
-//      PointD[] b = getProjViewCorners(v);
-//
-//      boolean out=false;
-//      nDraw++;
-//      if( b==null  || (out=isOutView(v,b)) ) {
-//         if( out ) nOut++;
-//         return 0;
-//      }
-      pcat.draw(g, null, v, true, 0, 0);
+      int nb = pcat.draw(g, null, v, true, onlySelected, 0, 0);
       resetTimer();
-//      resetTimeAskRepaint();
-
-      return pcat.getCount();
+      return nb;
    }
-
+   
    // Retourne le nombre de sources
    private int getCounts() {
       if( getStatus()==READY && pcat!=null ) return pcat.getCount();

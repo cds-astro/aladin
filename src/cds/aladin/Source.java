@@ -191,7 +191,7 @@ public class Source extends Position implements Comparator {
        while( nbInfo<nbFields ) {
            this.info = new String(this.info)+"\t ";
            nbInfo++;
-           if( Aladin.levelTrace>=3) System.out.println("Source.fixInfo pour "+id);
+           if( Aladin.levelTrace>=3) System.err.println("Source.fixInfo() =>  pour "+id);
        }
    }
 

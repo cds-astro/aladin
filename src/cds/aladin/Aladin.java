@@ -37,14 +37,12 @@ import java.text.DateFormat;
 import java.util.*;
 
 import javax.swing.*;
-import javax.swing.Box;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import cds.aladin.bookmark.Bookmarks;
-import cds.aladin.prop.Filet;
 import cds.allsky.Context;
 import cds.allsky.MocGen;
 import cds.allsky.SkyGen;
@@ -70,7 +68,9 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC generation support (-mocgen script program)
+ * @beta    <LI> GLON/GLAT, ELON/ELAT, SLON/SLAT column autodetect in basic ASCII formats
+ * @beta    <LI> Automatical distance tool for 2 selected sources   
+ * @beta    <LI> MOC & SkyGen generation support (-mocgen & -skygen script programs)
  * @beta    <LI> STC-s region support (as a script command)
  * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) support
  * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
@@ -121,7 +121,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.554";
+    static public final    String VERSION = "v7.556";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

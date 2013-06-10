@@ -492,7 +492,8 @@ public class Plan implements Runnable {
              Obj o = it.next();
              boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
              if( in && ( !(o instanceof Source) ||
-             ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) res.addElement(o);
+             ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) 
+                res.addElement(o);
           }
        }
        return res;

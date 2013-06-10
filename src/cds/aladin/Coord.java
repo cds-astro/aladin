@@ -139,6 +139,7 @@ public final class Coord {
    */
    public static String getUnit(double x) { return getUnit(x,false,false); }
    public static String getUnit(double x,boolean entier,boolean flagSurface) {
+      if( x==0 ) return "";
       String s=null;
       double fct = flagSurface ? 3600 : 60;
       double fct1 = flagSurface ? 100000 : 1000;
