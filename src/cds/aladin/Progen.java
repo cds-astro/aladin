@@ -98,6 +98,14 @@ public class Progen extends JPanel  {
    
    public void submit() { tree.submit(); }
    
+   protected void copyInPad() {
+      for( TreeNode n : tree ) {
+         if( !(n instanceof TreeNodeProgen) ) continue;
+         aladin.console.setInPad( ( (TreeNodeProgen)n).label+"\n" );
+      }
+      aladin.console.setVisible(true);
+   }
+   
    protected void draw(Graphics g, ViewSimple v) {
       Color c = g.getColor();
       

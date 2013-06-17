@@ -1722,7 +1722,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //            }
             if( !drawFast && !allSky && isTooLarge(b) ) {
                resetTimer();
-               return drawFils(g,v,8,redraw);
+               int m = drawFils(g,v,8,redraw);
+               
+               // Si aucun sous-losange n'a pu être dessiné, je trace tout de même le père
+               if( m>0 ) return m;
             }
 
             // Test losange derrière le ciel

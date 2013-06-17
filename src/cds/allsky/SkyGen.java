@@ -22,6 +22,7 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -33,6 +34,7 @@ public class SkyGen {
 
    private File file;
    private boolean force=false;
+   private boolean flagMode=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
 
@@ -104,6 +106,8 @@ public class SkyGen {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
       } else if (opt.equalsIgnoreCase("input")) {
          context.setInputPath(val);
+      } else if (opt.equalsIgnoreCase("tobemerged")) {
+         context.setToBeMergedPath(val);
       } else if (opt.equalsIgnoreCase("output")) {
          context.setOutputPath(val);
       } else if (opt.equalsIgnoreCase("blank")) {
@@ -115,6 +119,7 @@ public class SkyGen {
       } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
+         flagMode=true;
       } else if (opt.equalsIgnoreCase("bitpix")) {
          context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("region") || opt.equalsIgnoreCase("moc")) {
@@ -225,6 +230,49 @@ public class SkyGen {
          }
       }
       
+      
+      if( context.getToBeMergedPath()!=null ) {
+         if( context.getInputPath()!=null ) {
+            context.error("Merging two all-skies do not required an input path parameter !");
+            return;
+         }
+         if( !findAction(actions,Action.MERGE) ) {
+            context.info("\"tobemerged\" parameter => assuming MERGE action");
+            actions.add(Action.MERGE);
+         }
+         if( !flagMode ) {
+            context.info("No merging mode specified => assuming OVERWRITE");
+         }
+         if( findAction(actions,Action.TILES) ) {
+            context.error("MERGE and TILES actions can not be done simultaneously");
+            return;
+         }
+         if( findAction(actions,Action.INDEX) ) {
+            context.error("MERGE and INDEX actions can not be done simultaneously");
+            return;
+         }
+         if( findAction(actions,Action.CLEAN) ) {
+            context.error("MERGE and CLEAN actions can not be done simultaneously");
+            return;
+         }
+         if( findAction(actions,Action.CLEANINDEX) ) {
+            context.error("MERGE and CLEANINDEX actions can not be done simultaneously");
+            return;
+         }
+         if( findAction(actions,Action.CLEANTILES) ) {
+            context.error("MERGE and CLEANTILES actions can not be done simultaneously");
+            return;
+         }
+         if( findAction(actions,Action.CLEANFITS) ) {
+            context.error("MERGE and CLEANFITS actions can not be done simultaneously");
+            return;
+         }
+         if( force ) {
+            context.error("-f parameter not compatible with MERGE");
+            return;
+         }
+      }
+      
       // Permet de tuer proprement une tache déjà en cours d'exécution
       if( flagAbort ) {
          try { context.taskAbort(); }
@@ -286,6 +334,11 @@ public class SkyGen {
       }
    }
    
+   private boolean findAction(Vector<Action> actions,Action s) {
+      for( Action a : actions ) { if( s==a ) return true; }
+      return false;
+   }
+   
    /** Juste pour pouvoir exécuter skygen comme une commande script Aladin */
    public void executeAsync(String [] args) { new ExecuteAsyncThread(args); }
    class ExecuteAsyncThread extends Thread {
@@ -316,6 +369,7 @@ public class SkyGen {
             "maxThread=nn       Max number of computing threads" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
+            "tobemerged=dir     all-sky directory to be merged to an already existing all-sky\n" +
             "jpegMethod=m       Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
             "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
@@ -342,6 +396,7 @@ public class SkyGen {
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
             "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
+            "merge      Merge an all-sky dir with an other already built all-sky" + "\n"+
             "clean      Remove all HEALPix survey" + "\n"+
             "cleanIndex Remove HEALPix index" + "\n"+
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+

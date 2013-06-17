@@ -161,8 +161,8 @@ public class BuilderRgb extends Builder {
        for( int c=0; c<3; c++ ) {
           out[c] = new Fits(width,width,bitpix[c]);
           out[c].setBlank(blank[c]);
-          out[c].setBscale(bscale[c]);
           out[c].setBzero(bzero[c]);
+          out[c].setBscale(bscale[c]);
        }
        
        for( int dg=0; dg<2; dg++ ) {

@@ -72,6 +72,7 @@ public class Context {
    protected String inputPath;               // Répertoire des images origales
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
+   protected String toBeMergedPath;          // Répertoire d'une boule HEALPix à merger avec une boule existante
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
    protected int bitpixOrig = -1;            // BITPIX des images originales
@@ -127,6 +128,7 @@ public class Context {
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
+   public String getToBeMergedPath() { return toBeMergedPath; }
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return isColor() ? bitpixOrig : bitpix; }
@@ -166,6 +168,7 @@ public class Context {
    		// cherche le dernier mot et le met dans le label
    		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
    }
+   public void setToBeMergedPath(String path) { toBeMergedPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
@@ -574,8 +577,8 @@ public class Context {
       return  (new File(path)).isDirectory();
    }
 
-   protected boolean isExistingAllskyDir() {
-      String path = getOutputPath();
+   protected boolean isExistingAllskyDir() { return isExistingAllskyDir( getOutputPath() ); }
+   protected boolean isExistingAllskyDir(String path) {
       if( path==null ) return false;
       File f = new File(path);
       if( !f.exists() ) return false;

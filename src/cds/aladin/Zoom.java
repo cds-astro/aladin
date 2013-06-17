@@ -49,10 +49,10 @@ public final class Zoom extends JPanel {
    static int mzn[] = {     1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
    static int mzd[] = {  1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-   static final int MAXZOOM=65;   // en puissance de 2, valeur maximal du zoom
+   static final int MAXZOOM=67;   // en puissance de 2, valeur maximal du zoom
    
    static public final int MINSLIDERBG=0;
-   static public final int MAXSLIDERBG=MAXZOOM-5;
+   static public final int MAXSLIDERBG=MAXZOOM-7;
    
    static public final int MINSLIDER=mzn.length-7;
    static public final int MAXSLIDER=mzn.length+7;

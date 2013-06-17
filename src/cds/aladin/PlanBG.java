@@ -2523,7 +2523,6 @@ public class PlanBG extends PlanImage {
          int nOut=0;
          int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
          if( max>=ALLSKYORDER ) for( int order=cmin; order<=max; order++ ) {
-//            System.out.println("draw order="+order+" min="+min+" cmin="+cmin+" max="+max);
 
             if( !allKeyReady ) {
                pix = getPixList(v,center,order); 

@@ -33,9 +33,9 @@ import cds.tools.pixtools.Util;
 public class BuilderTree extends Builder {
 
    private int maxOrder;
-   private int bitpix;
-   private int width;
-   private double blank,bscale,bzero;
+   protected int bitpix;
+   protected int width;
+   protected double blank,bscale,bzero;
    boolean flagAllsky=true;
 
    private int statNbFile;
@@ -54,15 +54,10 @@ public class BuilderTree extends Builder {
 
    public void run() throws Exception {
       build();
-//      if( flagAllsky && !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
    }
    
    // Valide la cohérence des paramètres pour la création des tuiles JPEG
    public void validateContext() throws Exception {
-//      context.setOrder(9);
-//      context.initRegion();
-//      System.out.println("MOC : "+context.moc);
-      
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
@@ -89,7 +84,6 @@ public class BuilderTree extends Builder {
       
       for( int i=0; i<768; i++ ) {
          if( context.isInMocTree(3, i) ) createTree(output,3,i);
-//         createTree(output,3,i);
          context.setProgress(i);
       }
    }
@@ -109,14 +103,13 @@ public class BuilderTree extends Builder {
    private Fits createTree(String path,int order, long npix ) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
-      // Si son père n'est pas dans le MOC, on passe
-//      if( !context.isInMocTree(order-1,npix/4) ) return null;
-      
 //      System.out.println("createTree("+order+","+npix+")...");
       
       // S'il existe déjà un fits et qu'on sort de la région à traiter, on le retourne tel que
       String file = Util.getFilePath(path,order,npix);
-      if( !context.isInMocTree(order,npix) && new File(file+".fits").exists() ) return createLeaveFits(file);
+      if( !context.isInMocTree(order,npix) && new File(file+".fits").exists() ) {
+         return createLeaveFits(path,context.getToBeMergedPath(),order,npix);
+      }
 
 //      JpegMethod method = context.getJpegMethod();
       JpegMethod method = JpegMethod.MEAN;
@@ -132,7 +125,7 @@ public class BuilderTree extends Builder {
          }
          if( found ) out = createNodeFits(fils, method);
       }
-      if( out!=null && context.isInMocTree(order,npix) && order<maxOrder) {
+      if( out!=null && context.isInMocTree(order,npix) && testTree(order,maxOrder) ) {
          out.writeFITS(file+".fits");
          Aladin.trace(4, "Writing " + file+".fits");
 
@@ -144,21 +137,29 @@ public class BuilderTree extends Builder {
       return out;
    }
    
+   protected boolean testTree(int order,int maxOrder) { return order<maxOrder; }
+   
+   protected Fits createLeaveFits(String path, String toBeMergedPath, int order, long npix) throws Exception {
+      String file = Util.getFilePath(path,order,npix);
+      Fits out = createLeaveFits(file);
+      if( first && out!=null ) { first=false; setConstantes(out); }
+      return out;
+   }
+   
    /** Construction d'une tuile terminale. De fait, simple chargement
     * du fichier FITS correspondant. */
-   private Fits createLeaveFits(String file) throws Exception {
+   protected Fits createLeaveFits(String file) throws Exception {
       Fits out = null;
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       try {
          out = new Fits();
          out.loadFITS(file+".fits");
-         if( first ) { first=false; setConstantes(out); }
       } catch( Exception e ) { out=null; }
       return out;
    }
 
    private boolean first=true;
-   private void setConstantes(Fits f) {
+   protected void setConstantes(Fits f) {
       bitpix = f.bitpix;
       blank  = f.blank;
       bscale = f.bscale;
@@ -170,8 +171,8 @@ public class BuilderTree extends Builder {
    private Fits createNodeFits(Fits fils[], JpegMethod method) throws Exception {
       Fits out = new Fits(width,width,bitpix);
       out.setBlank(blank);
-      out.setBscale(bscale);
       out.setBzero(bzero);
+      out.setBscale(bscale);
 
       Fits in;
       double p[] = new double[4];

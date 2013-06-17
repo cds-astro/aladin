@@ -22,7 +22,7 @@ package cds.allsky;
 /** Création d'un fichier Moc.fits correspondant à l'index HEALpix
  * @author Anaïs Oberto [CDS] & Pierre Fernique [CDS]
  */
-final public class BuilderMocIndex extends BuilderMoc {
+public class BuilderMocIndex extends BuilderMoc {
 
    public BuilderMocIndex(Context context) { super(context); }
    

@@ -121,8 +121,8 @@ final public class BuilderAllsky  extends Builder {
       double bscale = context.getBScale();
       
       out.setBlank(blank);
-      out.setBzero(bzero);
-      out.setBscale(bscale);
+//      out.setBzero(bzero);
+//      out.setBscale(bscale);
       if( cut[0]<cut[1] ) {
          out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
          out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");

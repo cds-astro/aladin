@@ -2332,7 +2332,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
              if( onePixelOrigin==null ) onePixelOrigin = new byte[npix];
              if( !getOnePixelFromCache(onePixelOrigin,npix,x,y) ) return UNK;
              double val = getPixVal(onePixelOrigin,bitpix,0)*bScale+bZero;
-             if( aladin.levelTrace<4|| mode==View.REALX  ) return Y(val);
+             if( aladin.levelTrace<4 || mode==View.REALX  ) return Y(val);
              
              double infileVal=getPixVal1(onePixelOrigin,bitpix,0);
              return Y(val)+(Double.isNaN(infileVal) || val!=infileVal?"("+infileVal+")":"")+(isBlank && infileVal==blank ? " BLANK":"");

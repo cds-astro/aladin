@@ -48,6 +48,7 @@ public abstract class Builder {
          case MOC:       return new BuilderMoc(context);
          case MOCHIGHT:  return new BuilderMocHight(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
+         case MOC10:     return new BuilderMocProg10(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
          case CLEANTILES:return new BuilderCleanTiles(context);
@@ -58,6 +59,7 @@ public abstract class Builder {
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
+         case MERGE:     return new BuilderTreeMerge(context);
          case PROGEN:    return new BuilderProgenIndex(context);
       }
       throw new Exception("No builder associated to this action");

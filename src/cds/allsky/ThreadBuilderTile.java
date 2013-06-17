@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
@@ -111,6 +112,20 @@ final public class ThreadBuilderTile {
    Fits buildHealpix(BuilderTiles bt, int nside_file, long npix_file, int nside) throws Exception {
       ArrayList<SrcFile> downFiles = null;
       Fits out=null;
+      
+      // Juste pour tester
+//      if (true ) {
+//         out = new Fits(Constante.SIDE,Constante.SIDE,bitpix);
+//         out.setBlank(blank);
+//         out.setBzero(bZero);
+//         out.setBscale(bScale);
+//         for( int y=0; y<out.height; y++ ) {
+//            for( int x=0; x<out.width; x++ ) out.setPixelDouble(x, y, 2);
+//         }
+//         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+//         return out;
+//      }
+      
       try {
          // initialisation de la liste des fichiers originaux pour ce losange
          downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);         
@@ -123,7 +138,8 @@ final public class ThreadBuilderTile {
          int n=downFiles.size();
          
          // Pas trop de progéniteurs => on peut tout faire d'un coup
-         if( n<Constante.MAXOVERLAY ) {
+         // Idem en mode couleur parce que trop casse-gueule de mettre au point sur 3x8 bits
+         if( flagColor || n<Constante.MAXOVERLAY ) {
             
             checkMem(n);
             for( int i=0; i<n; i++ ) {
@@ -137,7 +153,6 @@ final public class ThreadBuilderTile {
                f = downFiles.get(i).fitsfile;
                f.rmUser();
             }
-
             
          // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
          // en mémorisant le poids de chaque pixel à chaque couche
@@ -148,7 +163,7 @@ final public class ThreadBuilderTile {
             // poids déjà calculés
             double [] weight = null;  
             double [] fWeight = new double[Constante.SIDE*Constante.SIDE];
-
+            
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                if( context.isTaskAborting() ) throw new Exception("Task abort !");
                int fin = deb+Constante.MAXOVERLAY;
@@ -164,13 +179,32 @@ final public class ThreadBuilderTile {
                      out=f;
                      weight=fWeight;
                      fWeight = new double[Constante.SIDE*Constante.SIDE];
-                  }
-                  else out.coadd(f,weight,fWeight);
+                  } else out.coadd(f,weight,fWeight);
                }
                for( int i=deb; i<fin; i++ ) {
                   f = downFiles.get(i).fitsfile;
                   f.rmUser();
                }
+            }
+            // Changement de bitpix a la fin du calcul pour éviter les erreurs d'arrondi
+            // liées aux changements de bitpix
+            if( out!=null && bitpix!=context.getBitpixOrig() ) {
+               Fits out1 = new Fits(out.width,out.height,bitpix);
+               out1.setBlank(blank);
+               out1.setBzero(bZero);
+               out1.setBscale(bScale);
+               for( int y=0; y<out.height; y++ ) {
+                  for( int x=0; x<out.width; x++ ) {
+                     double pixelFinal = out.getPixelDouble(x, y);
+                     pixelFinal = Double.isNaN(pixelFinal) ? blank
+                           : pixelFinal<=cutOrig[2] ? cut[2]
+                           : pixelFinal>=cutOrig[3] ? cut[3]
+                           : (pixelFinal-cutOrig[2])*context.coef + cut[2];
+                     out1.setPixelDouble(x, y, pixelFinal);
+                  }
+               }
+               out = out1;
+               out1=null;
             }
 
             // Juste pour vérifier les poids
@@ -182,6 +216,15 @@ final public class ThreadBuilderTile {
 //               }
 //            }
          }
+         
+         // Juste pour les avoir également dans l'entête des tuiles
+         // DE FAIT PAS NECESSAIRE
+//         if( out!=null ) {
+//            out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
+//            out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
+//            out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
+//            out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
+//         }
 
       } catch( Exception e ) { e.printStackTrace(); }
       
@@ -201,7 +244,7 @@ final public class ThreadBuilderTile {
     * @return
     */
    Fits buildHealpix1(BuilderTiles bt, int nside_file, long npix_file, int nside,
-                      ArrayList<SrcFile> downFiles,int deb,int fin,double [] weight) throws Exception {
+            ArrayList<SrcFile> downFiles,int deb,int fin,double [] weight) throws Exception {
       boolean empty = true;
       long min;
       long index;
@@ -210,12 +253,25 @@ final public class ThreadBuilderTile {
       Coord coo = new Coord();
       SrcFile file = null;
       Fits out=null;
+      int bitpix    = this.bitpix;
+      double blank  = this.blank;
+      double bScale = this.bScale;
+      double bZero  = this.bZero;;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
          min = Util.getHealpixMin(nside_file, npix_file, nside, true);
 
          boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
+         
+         // Dans le cas d'un travail itératif par matrice de coefficients, on ne peut pas changer le bitpix
+         // sans risque d'altérer la moyenne par des problèmes d'arrondi. 
+         // Il faudra donc le faire a posteriori, tout à la fin
+         if( flagModifBitpix && weight!=null ) {
+            bitpix= context.getBitpixOrig();
+            blank = bitpix<0 ? Double.NaN : blankOrig;
+            flagModifBitpix=false;
+         }
 
          out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
          if( !flagColor ) {
@@ -332,7 +388,11 @@ final public class ThreadBuilderTile {
                if( weight!=null ) weight[y*Constante.SIDE+x]=totalCoef;
             }
          }
-      } catch( Exception e ) { e.printStackTrace(); }
+      } catch( Exception e ) { 
+         e.printStackTrace(); 
+         empty=true;
+         if( weight!=null ) for( int i=0; i<weight.length; i++ ) weight[i]=0;
+      }
       
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       return (!empty) ? out : null;
@@ -342,22 +402,27 @@ final public class ThreadBuilderTile {
    static private final double OVERLAY_PROPORTION = 1/6.;
    
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
-   	private double getCoef(Fits f,Coord coo) {
-   	   double width  = f.width -(borderSize[1]+borderSize[3]);
-   	   double height = f.height-(borderSize[0]+borderSize[2]);
-   	   double mx = width *OVERLAY_PROPORTION;
-   	   double my = height*OVERLAY_PROPORTION;
-   	   double x = coo.x-borderSize[1];
-   	   double y = coo.y-borderSize[0];
-   	   double coefx=1, coefy=1;
-   	   if( x<mx ) coefx =  x/mx;
-   	   else if( x>width-mx ) coefx = (width-x)/mx;
-          if( y<my ) coefy =  y/my;
-          else if( y>height-my ) coefy = (height-y)/my;
-       double c = Math.min(coefx,coefy);
-       if( c<0 ) return 0;
-       return c;
-   	}
+   private double getCoef(Fits f,Coord coo) {
+      double c=0;
+      try {
+         double width  = f.width -(borderSize[1]+borderSize[3]);
+         double height = f.height-(borderSize[0]+borderSize[2]);
+         double mx = width *OVERLAY_PROPORTION;
+         double my = height*OVERLAY_PROPORTION;
+         double x = coo.x-borderSize[1];
+         double y = coo.y-borderSize[0];
+         double coefx=1, coefy=1;
+         if( x<mx ) coefx =  x/mx;
+         else if( x>width-mx ) coefx = (width-x)/mx;
+         if( y<my ) coefy =  y/my;
+         else if( y>height-my ) coefy = (height-y)/my;
+         c = Math.min(coefx,coefy);
+         if( c<0 ) return 0;
+      } catch( Exception e ) {
+         c=0;
+      }
+      return c;
+   }
 
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au centre 
 //   private double getCoef(Fits f,Coord coo) {

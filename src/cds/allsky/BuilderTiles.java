@@ -424,13 +424,13 @@ public class BuilderTiles extends Builder {
     */
    private Fits createHpx(ThreadBuilderTile hpx, String path,int order, int maxOrder, long npix) throws Exception {
       String file = Util.getFilePath(path,order,npix);
-
+      
       // si le process a été arrêté on essaie de ressortir au plus vite
       if (stopped) return null;
 
-      // si on n'est pas dans le Moc, on sort
-      boolean inTree = context.isInMocTree(order,npix);
-      if (!inTree) return null;
+      // si on n'est pas dans le Moc, il faut retourner le fichier
+      // pour la construction de l'arborescence...
+      if( !context.isInMocTree(order,npix) ) return findLeaf(file);
       
       // si le losange a déjà été calculé on le renvoie
       if( coaddMode==CoAddMode.KEEPTILE ) {
@@ -606,8 +606,8 @@ public class BuilderTiles extends Builder {
       Fits out = new Fits(w,w,bitpix);
       if( !isColor ) {
          out.setBlank(blank);
-         out.setBscale(bScale);
          out.setBzero(bZero);
+         out.setBscale(bScale);
       }
       Fits in;
       for( int dg=0; dg<2; dg++ ) {
@@ -710,8 +710,15 @@ public class BuilderTiles extends Builder {
       Fits oldOut=null;
       
       boolean isInList = context.isInMoc(order,npix);
+//      
+//      if( !isInList && coaddMode==CoAddMode.REPLACETILE ) {
+//         oldOut = findLeaf(file);
+//         if( oldOut!=null )  addFits(Thread.currentThread(), oldOut);
+//         return oldOut;
+//      }
+
       if( !isInList && coaddMode!=CoAddMode.REPLACETILE ) {
-         if( oldOut==null ) oldOut = findLeaf(file);
+         oldOut = findLeaf(file);
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) {
             addFits(Thread.currentThread(), oldOut);
             return oldOut;

@@ -89,6 +89,8 @@ public class FrameProgen extends JFrame implements ActionListener {
       return progen;
    }
 
+   
+   final private String COPY = "Copy in pad";
 
    /** Construction du panel des boutons de validation
     * @return Le panel contenant les boutons Apply/Close */
@@ -99,6 +101,8 @@ public class FrameProgen extends JFrame implements ActionListener {
        p.add( b=new JButton(apply));
        b.addActionListener(this);
        b.setFont(b.getFont().deriveFont(Font.BOLD));
+       p.add( b=new JButton(COPY));
+       b.addActionListener(this);
        p.add( b=new JButton(close));
        b.addActionListener(this);
        return p;
@@ -109,6 +113,7 @@ public class FrameProgen extends JFrame implements ActionListener {
        String what = src instanceof JButton ? ((JButton)src).getActionCommand() : "";
 
        if( close.equals(what) ) dispose();
+       else if( COPY.equals(what) ) progen.copyInPad();
        else if( apply.equals(what) ) {
           try { 
              System.out.println("actionPerformed apply on "+src);

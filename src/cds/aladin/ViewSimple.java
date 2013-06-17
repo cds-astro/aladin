@@ -288,7 +288,7 @@ public class ViewSimple extends JComponent
          
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
          // (ou qu'on est en train de faire un crop)
-         else if( !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
+         else if(!isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
                view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
             if( hasCrop() ) p = view.crop.getFocusPos();
 //            else p = vs.getPosition((double)e.getX(),(double)e.getY());
@@ -296,6 +296,24 @@ public class ViewSimple extends JComponent
             coo.x=p.x; coo.y=p.y;
             vs.getProj().getCoord(coo);
          }
+//         else if( true || !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
+//               view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
+//            if( hasCrop() ) p = view.crop.getFocusPos();
+//            else p = vs.getPosition((double)e.getX(),(double)e.getY());
+//            coo = new Coord();
+//            coo.x=p.x; coo.y=p.y;
+//            vs.getProj().getCoord(coo);
+//            Coord c1 = getCooCentre();
+//            int rot = -e.getWheelRotation();
+//            double z = aladin.calque.zoom.getNextValue(vs.zoom,rot);
+//            double fct = z/vs.zoom;
+//            System.out.println("Wheel: rot="+rot+" Zoom="+vs.zoom+"=>"+z+" fct="+fct);
+//            double x = c1.x + (coo.x - c1.x)/fct;
+//            double y = c1.y + (coo.y - c1.y)/fct;
+//            coo.x=x; 
+//            coo.y=y;
+//            vs.getProj().getCoord(coo);
+//         }
          
       } catch( Exception e1 ) { coo=null; /* if( aladin.levelTrace>=3 ) e1.printStackTrace();*/ }
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }

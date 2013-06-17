@@ -1738,7 +1738,7 @@ final public class Fits {
       }
    }
 
-   protected void setPixValDouble(byte[] t, int bitpix, int i, double val) {
+   public void setPixValDouble(byte[] t, int bitpix, int i, double val) {
       int c;
       switch( bitpix ) {
          case -32:
@@ -1750,10 +1750,6 @@ final public class Fits {
             t[i] = (byte) (0xFF & (c >> 8));
             t[i + 1] = (byte) (0xFF & c);
             break;
-         // case -32: i*=4;
-         // c=Float.floatToIntBits((float)val);
-         // setInt(t,i,c);
-         // break;
          case 32:
             i *= 4;
             setInt(t, i, (int) val);
@@ -1796,7 +1792,7 @@ final public class Fits {
       }
    }
 
-   private double getPixValDouble(byte[] t, int bitpix, int i) {
+   public double getPixValDouble(byte[] t, int bitpix, int i) {
       try {
          switch( bitpix ) {
             case -32:
@@ -1831,15 +1827,38 @@ final public class Fits {
       return ((t[i]) << 24) | (((t[i + 1]) & 0xFF) << 16)
             | (((t[i + 2]) & 0xFF) << 8) | (t[i + 3]) & 0xFF;
    }
+   
+//   /** recopie les pixels (pixels[] et rgb[] avec éventuellement
+//    * un changement de bitpix*/
+//   public void overwriteWith(Fits a) throws Exception {
+//      if( a.pixels != null && pixels != null ) {
+//         if( bitpix==a.bitpix ) {
+//            if( a.pixels.length!=pixels.length ) throw new Exception("Not compatible Fits pixels[]");
+//            System.arraycopy(a.pixels, 0, pixels, 0, pixels.length);
+//         } else {
+//            int taille = widthCell * heightCell;
+//            for( int i = 0; i < taille; i++ ) {
+//               double v = a.getPixValDouble(a.pixels, a.bitpix, i);
+//               if( a.isBlankPixel(v) ) v=blank;
+//               setPixValDouble(pixels, bitpix, i, v );
+//            }
+//         }
+//      }
+//      if( a.rgb != null && rgb != null ) {
+//         if( a.rgb.length!=rgb.length ) throw new Exception("Not compatible Fits rgb[]");
+//         System.arraycopy(a.rgb, 0, rgb, 0, rgb.length);
+//      }
+//   }
 
-   /** Coadditionne les pixels (pix8[], pixels[] et rgb[] */
+
+   /** Coadditionne les pixels (pixels[] et rgb[] */
    public void coadd(Fits a) throws Exception {
       int taille = widthCell * heightCell;
 
       if( a.pixels != null && pixels != null ) {
          for( int i = 0; i < taille; i++ ) {
             double v1 = getPixValDouble(pixels, bitpix, i);
-            double v2 = a.getPixValDouble(a.pixels, bitpix, i);
+            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
             double v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1
                   : (v1 + v2) / 2;
             setPixValDouble(pixels, bitpix, i, v);
@@ -1865,13 +1884,13 @@ final public class Fits {
       if( a.pixels != null && pixels != null ) {
          for( int i = 0; i < taille; i++ ) {
             double v1 = getPixValDouble(pixels, bitpix, i);
-            double v2 = a.getPixValDouble(a.pixels, bitpix, i);
+            double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
             double fct1 = weight1[i] / (weight1[i] + weight2[i]);
             double fct2 = weight2[i] / (weight1[i] + weight2[i]);
             weight1[i] += weight2[i];
             weight2[i] = 0;
-            double v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : v1
-                  * fct1 + v2 * fct2;
+            double v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : 
+                           v1 * fct1 + v2 * fct2;
             setPixValDouble(pixels, bitpix, i, v);
          }
       }
@@ -1894,23 +1913,23 @@ final public class Fits {
    }
 
    /**
-    * Remplace les pixels (pix8[], pixels[] et rgb[] pour les nouvelles valeurs
+    * Remplace les pixels (pixels[] et rgb[] pour les nouvelles valeurs
     * != NaN
     */
-   public void overwriteWith(Fits a) throws Exception {
-      int taille = widthCell * heightCell;
+//   public void overwriteWith(Fits a) throws Exception {
+//      int taille = widthCell * heightCell;
+//
+//      if( a.pixels != null && pixels != null ) {
+//         for( int i = 0; i < taille; i++ ) {
+//            double v = a.getPixValDouble(pixels, bitpix, i);
+//            if( a.isBlankPixel(v) ) v = -100; // continue;
+//            setPixValDouble(pixels, bitpix, i, v);
+//            if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
+//         }
+//      }
+//   }
 
-      if( a.pixels != null && pixels != null ) {
-         for( int i = 0; i < taille; i++ ) {
-            double v = a.getPixValDouble(pixels, bitpix, i);
-            if( a.isBlankPixel(v) ) v = -100; // continue;
-            setPixValDouble(pixels, bitpix, i, v);
-            if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
-         }
-      }
-   }
-
-   /** Ajoute les pixels (pix8[], pixels[] et rgb[] sur les valeurs NaN */
+   /** Ajoute les pixels (pixels[] et rgb[] sur les valeurs NaN */
    public void mergeOnNaN(Fits a) throws Exception {
       int taille = widthCell * heightCell;
 
@@ -1919,7 +1938,7 @@ final public class Fits {
             double v1 = getPixValDouble(pixels, bitpix, i);
             if( !isBlankPixel(v1) ) continue;
 
-            double v = a.getPixValDouble(a.pixels, bitpix, i);
+            double v = a.getPixValDouble(a.pixels, a.bitpix, i);
             setPixValDouble(pixels, bitpix, i, v);
 
             if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
