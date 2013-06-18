@@ -455,6 +455,7 @@ public class Plan implements Runnable {
     * Dans le cas d'un plan FIELD, il suffit qu'un seul objet contienne
     * (x,y) pour que tous les objets du plan soient pris. Sauf s'il s'agit du centre
     * de rotation, dans ce cas, il y a mémorisation du plan concerné
+    * Dans le cas d'un polygone, si on a cliqué à l'intérieur de la surface, on sélectionne également tous les points de controle
     * @param x,y Position de la souris (coordonnees Image)
     * @return Le vecteur des objets qui contient le point
     */
@@ -488,14 +489,27 @@ public class Plan implements Runnable {
           }
 
        } else {
+          Vector<Ligne> vo = new Vector<Ligne>();
           while( it.hasNext() ) {
              Obj o = it.next();
+             
+             // On mémorise les points de controles d'un polygone si on a cliqué dessus 
+             if( o instanceof Ligne && ((Ligne)o).inPolygon(v, (int)x, (int)y) ) vo.addElement((Ligne)o);
              boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
              if( in && ( !(o instanceof Source) ||
-             ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) 
+                ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
                 res.addElement(o);
+            }
+          }
+          
+          // On sélectionne tous les points de controle du polygone dans lequel on a cliqué (sur la surface)
+          for( Ligne o : vo ) {
+             for( o=o.getFirstBout(); o!=null; o = o.finligne ) {
+                if( !res.contains(o) ) res.addElement(o);
+             }
           }
        }
+       
        return res;
     }
        

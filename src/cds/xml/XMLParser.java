@@ -429,8 +429,8 @@ public final class XMLParser {
                     break;
          }
          
-         if( mode==3 || mode==5 || (!space || space && !ospace) && mode<3 ) {
-            if( mode!=3 && mode!=5 && space ) c1=spaceChar; // substitution des blancs
+         if( (mode==3 || mode==5 || (!space || space && !ospace) && mode<3) ) {
+            if( mode!=3 && mode!=5 && space ) c1= ' '; // spaceChar; // substitution des blancs
             curString.append(c1);
             l++;
          }

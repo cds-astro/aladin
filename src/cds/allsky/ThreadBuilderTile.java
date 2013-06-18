@@ -476,11 +476,6 @@ final public class ThreadBuilderTile {
          if( b2 ) a2=a;
          if( b3 ) a3=a;
       }
-//
-//      if( isBlankPixel(a0,blank) ) return Double.NaN;
-//      if( isBlankPixel(a1,blank) ) a1=a0;
-//      if( isBlankPixel(a2,blank) ) a2=a0;
-//      if( isBlankPixel(a3,blank) ) a3=a0;
 
       return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
    }

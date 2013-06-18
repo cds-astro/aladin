@@ -360,14 +360,14 @@ public class Ligne extends Position {
    * @param fz le zoom
    */
    protected boolean inside(ViewSimple v, double x,double y) {
-      if( bout==3 ) return inPolygon(v,(int)x,(int)y);
+//      if( bout==3 ) return inPolygon(v,(int)x,(int)y);
 
       // Cas courant
       return nearArrow(v,x,y);
    }
-   
+      
    /** Redessine tout le polygone avec un aplat - ne fonctionne que pour le dernier segment */
-   private boolean inPolygon(ViewSimple v,int x, int y) {
+   protected boolean inPolygon(ViewSimple v,int x, int y) {
       if( bout!=3 ) return false;
       Ligne tmp = this;
       Polygon pol = new Polygon();

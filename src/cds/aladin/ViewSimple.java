@@ -1680,7 +1680,7 @@ public class ViewSimple extends JComponent
          Repere t = (Repere)o;
          if( !t.isSelected() || !t.hasRayon() ) continue;
          if( withPoignee ) { if( !t.onPoignee(this, x, y) ) continue; }
-         else { if( !t.inside(this,x,y) ) continue; } 
+         else { if( !t.inside(this,x,y) ) continue; }
          return t;
       }
       return null;
@@ -1757,8 +1757,8 @@ public class ViewSimple extends JComponent
    private int getTool(InputEvent e) {
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
-      if( tool==ToolBox.SELECT 
-            && !aladin.calque.hasSelectableObjects() ) return ToolBox.PAN;
+      
+      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() && !aladin.view.isMultiView()) return ToolBox.PAN;
       return tool;
    }
 

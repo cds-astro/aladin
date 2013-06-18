@@ -531,8 +531,8 @@ final public class Fits {
          else {
             pixels = new byte[size];
             for( int lig = 0; lig < heightCell; lig++ )
-               System.arraycopy(buf, (lig * width + xCell) * n, pixels, lig
-                     * widthCell * n, widthCell * n);
+               System.arraycopy(buf, (lig * width + xCell) * n, pixels, 
+                     lig * widthCell * n, widthCell * n );
          }
 
       } else {
@@ -544,14 +544,13 @@ final public class Fits {
 
             // Lecture ligne à ligne pour mémoriser uniquement la cellule
             else {
-               dis.skip(yCell * width * n);
-               byte[] buf = new byte[width * n]; // une ligne complète
+               dis.skip( (long)yCell * width * n);
+               byte[] buf = new byte[ width * n ]; // une ligne complète
                for( int lig = 0; lig < heightCell; lig++ ) {
                   dis.readFully(buf);
-                  System.arraycopy(buf, xCell * n, pixels, lig * widthCell * n,
-                        widthCell * n);
+                  System.arraycopy(buf, xCell * n , pixels, lig * widthCell * n, widthCell * n);
                }
-               dis.skip((height - (yCell + heightCell)) * width * n);
+               dis.skip((height - (yCell + heightCell)) * width * (long)n);
             }
          } else bitmapReleaseDone = true;
 
@@ -771,7 +770,7 @@ final public class Fits {
    public void setBlank(double blank) {
       this.blank = blank;
       if( headerFits != null ) headerFits.setKeyValue("BLANK",
-            Double.isNaN(blank) ? (String) null : blank + "");
+            Double.isNaN(blank) ? (String) null : (bitpix>0?(int)blank:blank) + "");
    }
 
    /**
@@ -1108,8 +1107,7 @@ final public class Fits {
     * à partir du bas) sous forme d'un double
     */
    public double getPixelFull(int x, int y) {
-      return bscale
-            * getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
+      return bscale * getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
                   + (x - xCell)) + bzero;
    }
 
@@ -1473,28 +1471,29 @@ final public class Fits {
    public void reloadBitmap() throws Exception {
       if( bitpix == 0 ) return; // De fait du JPEG
       if( pixels != null ) return;
-      if( !bitmapReleaseDone ) throw new Exception(
-            "no releaseBitmap done before");
+      if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
       testBitmapReleaseFeature();
       // System.out.println("reloadBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
       RandomAccessFile f = null;
       try {
          f = new RandomAccessFile(filename, "r");
-         f.seek(bitmapOffset);
          int n = Math.abs(bitpix) / 8;
          pixels = new byte[widthCell * heightCell * n];
 
          // Lecture d'un coup
-         if( !hasCell() ) f.readFully(pixels);
-
+         if( !hasCell() ) {
+            f.seek(bitmapOffset);
+            f.readFully(pixels);
+         }
+         
          // Lecture ligne à ligne pour mémoriser uniquement la cellule
          else {
-            f.skipBytes(yCell * width * n);
+            long offset = bitmapOffset + (long)yCell * width * n;
+            f.seek(offset);
             byte[] buf = new byte[width * n]; // une ligne complète
             for( int lig = 0; lig < heightCell; lig++ ) {
                f.readFully(buf);
-               System.arraycopy(buf, xCell * n, pixels, lig * widthCell * n,
-                     widthCell * n);
+               System.arraycopy(buf, xCell * n, pixels, lig * widthCell * n, widthCell * n);
             }
          }
       } finally {

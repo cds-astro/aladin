@@ -944,12 +944,17 @@ public final class Calque extends JPanel implements Runnable {
 
       Plan [] plan = getPlans();
       for( i=0; i<plan.length; i++ ) {
-         if( !plan[i].active ) continue;
-         if( (!plan[i].isCatalog()
-                 && plan[i].type!=Plan.TOOL
-                 && plan[i].type!=Plan.APERTURE ) ) continue;
-         if( folder!=getMyScopeFolder(plan[i]) ) continue;
-         Enumeration<Obj> e = plan[i].getObjWith(v,x,y).elements();
+         Plan p = plan[i];
+         if( !p.active ) continue;
+         // Selection pour un pylogone
+         if( p.type==Plan.TOOL ) 
+         
+         // Selection pour une FIELD
+         if( (!p.isCatalog()
+                 && p.type!=Plan.TOOL
+                 && p.type!=Plan.APERTURE ) ) continue;
+         if( folder!=getMyScopeFolder(p) ) continue;
+         Enumeration<Obj> e = p.getObjWith(v,x,y).elements();
          while( e.hasMoreElements() ) res.addElement(e.nextElement());
       }
       return res;
