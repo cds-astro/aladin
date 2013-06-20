@@ -471,6 +471,8 @@ public class Plan implements Runnable {
        Vector<Obj> res = new Vector<Obj>(500);
 
        Iterator<Obj> it = iterator(v);
+       if( it==null ) return new Vector<Obj>(1);
+       
        if( type==Plan.APERTURE ) {
           for( i=0; it.hasNext() ; i++ ) {
              Obj o = it.next();
@@ -492,16 +494,16 @@ public class Plan implements Runnable {
           Vector<Ligne> vo = new Vector<Ligne>();
           while( it.hasNext() ) {
              Obj o = it.next();
-             
+
              // On mémorise les points de controles d'un polygone si on a cliqué dessus 
              if( o instanceof Ligne && ((Ligne)o).inPolygon(v, (int)x, (int)y) ) vo.addElement((Ligne)o);
              boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
              if( in && ( !(o instanceof Source) ||
-                ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
+                   ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
                 res.addElement(o);
-            }
+             }
           }
-          
+
           // On sélectionne tous les points de controle du polygone dans lequel on a cliqué (sur la surface)
           for( Ligne o : vo ) {
              for( o=o.getFirstBout(); o!=null; o = o.finligne ) {
@@ -509,7 +511,7 @@ public class Plan implements Runnable {
              }
           }
        }
-       
+
        return res;
     }
        

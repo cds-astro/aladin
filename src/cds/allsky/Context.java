@@ -82,6 +82,7 @@ public class Context {
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
+   protected boolean fading=true;            // Activation du fading entre les images originales
    protected String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    
@@ -120,6 +121,7 @@ public class Context {
 
    // Getters
    public String getLabel() { return label; }
+   public boolean getFading() { return fading; }
    public int[] getBorderSize() { return borderSize; }
    public int getOrder() { return order; }
    public int getFrame() { return frame; }
@@ -157,6 +159,8 @@ public class Context {
 
    // Setters
    public void setMaxNbThread(int max) { maxNbThread = max; }
+   public void setFading(boolean fading) { this.fading = fading; }
+   public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }

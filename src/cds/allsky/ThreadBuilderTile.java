@@ -48,6 +48,7 @@ final public class ThreadBuilderTile {
    private boolean flagColor;
    private double bScale;
    private double bZero;
+   private boolean fading;
    private String hpxFinderPath = null;
    private double[] cutOrig;
    private double[] cut;
@@ -70,6 +71,7 @@ final public class ThreadBuilderTile {
       } else {
          blank=0;
       }
+      fading = context.getFading();
       borderSize = context.getBorderSize();
       hpxFinderPath = context.getHpxFinderPath();
       
@@ -355,7 +357,7 @@ final public class ThreadBuilderTile {
                         }
                         if( r>255 ) r=255; else if( r<0 ) r=0;
                         if( g>255 ) g=255; else if( g<0 ) g=0;
-                        if( b>255 ) g=255; else if( b<0 ) b=0;
+                        if( b>255 ) b=255; else if( b<0 ) b=0;
                         pixelFinal = (((int)r & 0xFF)<<16) | (((int)g & 0xFF)<<8) | ((int)b & 0xFF);
                      }
                   }
@@ -403,6 +405,7 @@ final public class ThreadBuilderTile {
    
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
    private double getCoef(Fits f,Coord coo) {
+      if( !fading ) return 1.;
       double c=0;
       try {
          double width  = f.width -(borderSize[1]+borderSize[3]);

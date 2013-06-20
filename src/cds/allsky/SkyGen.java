@@ -134,6 +134,8 @@ public class SkyGen {
          context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval")) {
          context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("fading")) {
+         context.setFading(val);
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
@@ -376,6 +378,7 @@ public class SkyGen {
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
             "                   conversion - ex: \"-32000 +32000\")" + "\n" +
             "color=true|false   True if the source images are colored jpeg (default is false)" + "\n" +
+            "fading=true|false  False to avoid fading effect between original images (default is true)" + "\n" +
             "verbose            Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
             "debug=true|false   to set output display as te most verbose or just statistics" + "\n"
 //            "red        all-sky used for RED component (see rgb action)\n" +

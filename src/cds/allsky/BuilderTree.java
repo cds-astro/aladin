@@ -127,8 +127,6 @@ public class BuilderTree extends Builder {
       }
       if( out!=null && context.isInMocTree(order,npix) && testTree(order,maxOrder) ) {
          out.writeFITS(file+".fits");
-         Aladin.trace(4, "Writing " + file+".fits");
-
          if( order==maxOrder ) {
             File f = new File(file+".fits");
             updateStat(f);
