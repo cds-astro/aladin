@@ -123,7 +123,7 @@ public class PlanHealpix extends PlanBG {
 
     private int curTFormBitpix;
 
-    private int myAllskyMode = FIRST; // mode de creation des images de niveau superieur et de l'image all sky : FIRST, MOYENNE, ...
+//    private int myAllskyMode = FIRST; // mode de creation des images de niveau superieur et de l'image all sky : FIRST, MOYENNE, ...
 
     private boolean fromProperties; // true si la création du plan a été demandée depuis la fenetre des properties. Dans ce cas, on ne touche pas à idxTFormToRead, même pour les fichiers partiels
 
@@ -184,6 +184,7 @@ public class PlanHealpix extends PlanBG {
         this.filename = file;
         cacheID = survey = file;
         this.originalPath = file;
+        maxOrder=3;
 
         int i = file.lastIndexOf(Util.FS);
         if (i > 0) {
@@ -263,7 +264,9 @@ public class PlanHealpix extends PlanBG {
 
     /** Retourne le Nordre des losanges */
     @Override
-    protected int getLosangeOrder() { return (int)log2(nbPixGeneratedImage); }
+    protected int getLosangeOrder() { 
+       return (int)log2(nbPixGeneratedImage); 
+    }
 
     private boolean dumpStreamToFile(InputStream srcStream, File destFile) {
         Aladin.trace(2, "Dumping input stream to temp file: "+destFile.getName());
@@ -313,7 +316,7 @@ public class PlanHealpix extends PlanBG {
     protected boolean waitForPlan() {
        super.waitForPlan();
        try {
-
+          
           boolean needProcessing = needProcessing(this.dirName, true);
           if (needProcessing) { // pour eviter de charger un flux distant alors qu'on a deja les donnees
 
@@ -351,6 +354,7 @@ public class PlanHealpix extends PlanBG {
             } catch (Exception e) {}
         }
         prop.setProperty(KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+        prop.setProperty(KEY_MAXORDER, maxOrder+""); 
         prop.setProperty(KEY_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
         prop.setProperty(KEY_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
 
@@ -402,7 +406,7 @@ public class PlanHealpix extends PlanBG {
 
        url = getCacheDir()+Util.FS+survey;
        minOrder = 3;
-       maxOrder = 3;
+//       maxOrder = 3;
 //       useCache = true;
        useCache=false;
        truePixels = inFits = true;
@@ -512,10 +516,13 @@ public class PlanHealpix extends PlanBG {
         naxis2 = nRecord = headerFits.getIntFromHeader("NAXIS2");
         nField = headerFits.getIntFromHeader("TFIELDS");
         ordering = headerFits.getStringFromHeader("ORDERING");
+        
 
         Aladin.trace(3, "sizeRecord: "+sizeRecord);
         Aladin.trace(3, "nRecord: "+nRecord);
         Aladin.trace(3, "ordering: "+ordering);
+        
+        
 
         // Recherche d'une valeur BAD_DATA - PF mars 2010
         try {
@@ -540,7 +547,11 @@ public class PlanHealpix extends PlanBG {
         }
 
         Aladin.trace(3, "COORDSYS vaut "+coordsys);
-
+        
+        
+        // Pour lire BZERO, BSCALE et BZERO
+        blank = Double.NaN;
+        loadFitsHeaderParam(headerFits);
 
         typeHpx = new char[nField];  // type de données pour le champ
         lenHpx = new int[nField];     // nombre d'items du champ
@@ -597,16 +608,16 @@ public class PlanHealpix extends PlanBG {
 
     }
 
-    private void generateHierarchy(int idxTForm) {
-        generateHierarchy(idxTForm, myAllskyMode);
-    }
+//    private void generateHierarchy(int idxTForm) {
+//        generateHierarchy(idxTForm, myAllskyMode);
+//    }
 
     /**
      * Generate hierarchy data for index idxTform
      * @param idxTForm TFORM index to use
      * @param modeAllsky mode to use for all sky data generation (
      */
-    private void generateHierarchy(int idxTForm, int modeAllsky) {
+    private void generateHierarchy(int idxTForm) { //, int modeAllsky) {
         // plans de polarisation
         if (idxTForm<0) {
             generatePolarisationData();
@@ -677,9 +688,9 @@ public class PlanHealpix extends PlanBG {
 
         int curNorder = (int)log2(newNSideImage);
         Fits[] fils = new Fits[4];
-        for (int i=0; i<4; i++) {
-            fils[i] = new Fits();
-        }
+//        for (int i=0; i<4; i++) {
+//            fils[i] = new Fits();
+//        }
 
         Aladin.trace(3, "curNorder: "+curNorder);
         // création des Norder de la résolution la plus profonde jusqu'à 3
@@ -689,8 +700,11 @@ public class PlanHealpix extends PlanBG {
             for (long npix=0; npix<nbPix; npix++) {
                 for (int i=0; i<4; i++) {
                     try {
-                        fils[i].loadFITS(getFilePath(getCacheDir() + Util.FS + dir,
-                                norder+1, npix*4+i)+".fits");
+                       String s = getFilePath(getCacheDir() + Util.FS + dir, norder+1, npix*4+i)+".fits";
+                       fils[i]=null;
+                       if( !(new File(s)).exists() ) continue;
+                       fils[i] = new Fits();
+                       fils[i].loadFITS(s);
                     } catch (Exception e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -698,7 +712,7 @@ public class PlanHealpix extends PlanBG {
                 }
                 try {
                     createNodeHpx(getFilePath(getCacheDir() + Util.FS + dir,
-                            norder, npix)+".fits", norder, npix, fils, myAllskyMode);
+                            norder, npix)+".fits", norder, npix, fils, curTFormBitpix, blank ); //myAllskyMode);
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -708,7 +722,7 @@ public class PlanHealpix extends PlanBG {
 
         // création du fichier allsky pour le niveau le plus haut (3)
         try {
-            createAllSky(getCacheDir(), dir, 3, 64, myAllskyMode);
+            createAllSky(getCacheDir(), dir, 3, 64); //, myAllskyMode);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -733,7 +747,21 @@ public class PlanHealpix extends PlanBG {
         File tmp = new File(getCacheDir() + Util.FS + dir
                 + Util.FS + "Norder3" + Util.FS + "Allsky.fits");
         if ( ! (tmp.exists() && tmp.length() > 0) ) {
-            return true;
+          
+           // Verif supplémentaire dans le cas d'un Healpix Partiel
+           // C'est du gros bricolage mais je n'ai pas trouvé mieux
+           // PF Juin 2013
+           if( dir.endsWith("TFIELD1") ) {
+              boolean rep = needProcessing(dir.substring(0,dir.length()-1)+"2", readProperties);
+              if( !rep && isPartial ) {
+                 idxTFormToRead = 1;
+                 this.dirName = getDirname() + Util.FS + dirNameForIdx(idxTFormToRead);
+                 this.survey = this.dirName;
+                 return false;
+              }
+           }
+           
+           return true;
         }
 
 
@@ -805,6 +833,7 @@ public class PlanHealpix extends PlanBG {
             // on va remplir les valeurs de newNSideImage et newSideFile dont a
             // besoin getOnePixelFromCache
             newNSideImage = Integer.parseInt(prop.getProperty(KEY_NSIDE_FILE));
+            maxOrder = (int)log2(newNSideImage);
             newNSideFile = Integer.parseInt(prop.getProperty(KEY_NSIDE_PIXEL));
             hpxOrderGeneratedImgs = Integer.parseInt(prop
                     .getProperty(KEY_ORDER_GENERATED_IMGS));
@@ -825,6 +854,7 @@ public class PlanHealpix extends PlanBG {
             // curTFormBitpix
             curTFormBitpix = Integer.parseInt(prop
                     .getProperty(KEY_CURTFORMBITPIX));
+            
 
             // lenHpx
             lenHpx = Util.splitAsInt(prop.getProperty(KEY_LENHPX), ",");
@@ -1125,6 +1155,7 @@ public class PlanHealpix extends PlanBG {
 //                }
 
                 value = values[(int) (index-min)];
+                if( empty && !Double.isNaN(value) ) empty=false;  // PF - juin 2013
                 out.setPixelDouble(x, y, value);
 
             }
@@ -1138,8 +1169,9 @@ public class PlanHealpix extends PlanBG {
                 String filePath = getFilePath(getCacheDir() + Util.FS + dir,
                         (int) log2(nside_file), npix_file)
                         + ".fits";
-
-                out.writeFITS(filePath);
+                
+                if( !empty )                            // PF - juin 2013
+                    out.writeFITS(filePath);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -1212,10 +1244,10 @@ public class PlanHealpix extends PlanBG {
 //        System.out.println(nside);
 //        System.out.println(nbPixImage);
 //        System.out.println("\n");
-        int nbPix = 12*nside*nside;
-        int nbNeededImages = nbPix/(nbPixImage*nbPixImage);
+        long nbPix = 12L*(long)nside*nside;
+        long nbNeededImages = nbPix/(nbPixImage*nbPixImage);
         if( nbNeededImages<1 ) return Double.NEGATIVE_INFINITY;
-        double nsideImage = Math.sqrt(nbNeededImages/12);
+        double nsideImage = Math.sqrt(nbNeededImages/12L);
         return Math.log(nsideImage)/Math.log(2);
     }
 
@@ -1387,13 +1419,13 @@ public class PlanHealpix extends PlanBG {
                     if (needProcessing(dirnamePolaU, false)) {
                         // mode plus proche voisin pour les all sky de
                         // polarisation
-                        generateHierarchy(idxPolaU, FIRST);
+                        generateHierarchy(idxPolaU); //, FIRST);
                         long size = Util.dirSize(new File(dirnamePolaU));
                         addInCache(size/1024);
                         writePropertiesFile(dirnamePolaU);
                     }
                     if (needProcessing(dirnamePolaQ, false)) {
-                        generateHierarchy(idxPolaQ, FIRST);
+                        generateHierarchy(idxPolaQ); //, FIRST);
                         long size = Util.dirSize(new File(dirnamePolaU));
                         addInCache(size/1024);
                         writePropertiesFile(dirnamePolaQ);
@@ -1674,7 +1706,7 @@ public class PlanHealpix extends PlanBG {
      * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
      * @param mode FIRST, MAX, MEDIANE, MOYENNE, SIGMA
      */
-    public void createAllSky(String path,String survey,int order,int outLosangeWidth, int mode) throws Exception {
+    public void createAllSky(String path,String survey,int order,int outLosangeWidth) throws Exception {
        long t=System.currentTimeMillis();
        int nside = (int)CDSHealpix.pow2(order);
        int n = 12*nside*nside;
@@ -1687,6 +1719,8 @@ public class PlanHealpix extends PlanBG {
 
        Fits out=null;
 //     Fits out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,8);
+       
+       double blank = hasBadData ? badData : this.blank;
 
        double fct=15./n;
        for( int npix=0; npix<n; npix++ ) {
@@ -1696,66 +1730,75 @@ public class PlanHealpix extends PlanBG {
 // if( npix%100==0 ) System.out.print(npix+"...");
  pourcent+=fct;
           try {
+             if( !(new File(filename+".fits")).exists() ) continue;
              in.loadFITS(filename+".fits");
              if( out==null ) {
                 out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,in.bitpix);
-                if( hasBadData ) out.setBlank(badData);
+                out.setBlank(blank);
+                out.setBzero(bZero);
+                out.setBscale(bScale);
+                // initilialise toutes les valeurs à Blank
+                for( int y=0; y<out.height; y++ ) {
+                   for( int x=0; x<out.width; x++ ) {
+                      out.setPixelDouble(x, out.height-1-y, blank);
+                   }
+                }
              }
 
              int yLosange=npix/nbOutLosangeWidth;
              int xLosange=npix%nbOutLosangeWidth;
              int gap = in.width/outLosangeWidth;
              // PF, Rapide,efficace (et très moche)
-             if( gap==0 )  { createAllSky(path,survey,order,in.width,mode); return; }
-             int nombre=gap*gap;
+             if( gap==0 )  { createAllSky(path,survey,order,in.width); return; }
+//             int nombre=gap*gap;
 
-             double liste [] = new double[nombre];
+//             double liste [] = new double[nombre];
              for( int y=0; y<in.width/gap; y++ ) {
                 for( int x=0; x<in.width/gap; x++ ) {
-                    double total=0;
-                    double carre=0;
+//                    double total=0;
+//                    double carre=0;
+//                    int i=0;
+//                    double max=Integer.MIN_VALUE;
+//                    double pix=blank;
+                    
+                    int offsetY = isARGB ? y*gap : in.heightCell-1-(y*gap);
+                    double pix = in.getPixelDouble(x*gap,offsetY) ;
 
-                    int i=0;
-                    double pix=0.0;
-                    double max=Integer.MIN_VALUE;
-
-                    for( int y1=0; y1<gap; y1++ ) {
-                       for( int x1=0; x1<gap; x1++) {
-                          int offsetY = isARGB ? y*gap+y1 : in.heightCell-1-(y*gap+y1);
-                          pix = in.getPixelDouble(x*gap+x1,offsetY) ;
-
-                          if( mode==FIRST ) break;
-                          if( mode==MEDIANE ) { liste[i++]=pix; continue; }
-                          if( mode==MAX ) { if( pix>max ) max=pix; continue; }
-                          total+=pix;
-                          carre+=pix*pix;
-                       }
-                    }
-
-                    switch (mode) {
-                        case FIRST:
-                            // rien à faire, on a déja la valeur qui nous intéresse
-                            break;
-                        case MOYENNE:
-                            pix = (total / nombre);
-                            break;
-                        case MEDIANE:
-                            Arrays.sort(liste);
-                            pix = liste[nombre / 2];
-                            break;
-                        case SIGMA:
-                            pix = (Math.sqrt(carre / nombre
-                                    - (total / nombre) * (total / nombre)));
-                            break;
-                        case MAX:
-                            pix = max;
-                            break;
-                        default:
-                            throw new Exception("mode " + mode
-                                    + " non supporté !");
-                    }
-
-
+//                    for( int y1=0; y1<gap; y1++ ) {
+//                       for( int x1=0; x1<gap; x1++) {
+//                          int offsetY = isARGB ? y*gap+y1 : in.heightCell-1-(y*gap+y1);
+//                          pix = in.getPixelDouble(x*gap+x1,offsetY) ;
+//
+//                          if( mode==FIRST ) break;
+//                          if( mode==MEDIANE ) { liste[i++]=pix; continue; }
+//                          if( mode==MAX ) { if( pix>max ) max=pix; continue; }
+//                          total+=pix;
+//                          carre+=pix*pix;
+//                       }
+//                    }
+//
+//                    switch (mode) {
+//                        case FIRST:
+//                            // rien à faire, on a déja la valeur qui nous intéresse
+//                            break;
+//                        case MOYENNE:
+//                            pix = (total / nombre);
+//                            break;
+//                        case MEDIANE:
+//                            Arrays.sort(liste);
+//                            pix = liste[nombre / 2];
+//                            break;
+//                        case SIGMA:
+//                            pix = (Math.sqrt(carre / nombre
+//                                    - (total / nombre) * (total / nombre)));
+//                            break;
+//                        case MAX:
+//                            pix = max;
+//                            break;
+//                        default:
+//                            throw new Exception("mode " + mode
+//                                    + " non supporté !");
+//                    }
 
                    if( pix<dataMin ) dataMin=pix;
                    else if( pix>dataMax ) dataMax=pix;
@@ -1780,21 +1823,21 @@ public class PlanHealpix extends PlanBG {
 
        // Sinon, FITS classique => détermination des valeurs des pixels
        else {
+          int bitpix = out.bitpix;
           // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
           double cut [] = out.findAutocutRange();
 
-          out.headerFits.setKeyValue("PIXELMIN", cut[0]+"");
-          out.headerFits.setKeyValue("PIXELMAX", cut[1]+"");
+          out.headerFits.setKeyValue("PIXELMIN", (bitpix>0 ? (long)cut[0]:cut[0])+"");
+          out.headerFits.setKeyValue("PIXELMAX", (bitpix>0 ? (long)cut[1]:cut[1])+"");
           if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
-             int bitpix = out.bitpix;
              cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
                    : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
              cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
                    : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
              Aladin.trace(1,"createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
           }
-          out.headerFits.setKeyValue("DATAMIN",  cut[2]+"");
-          out.headerFits.setKeyValue("DATAMAX",  cut[3]+"");
+          out.headerFits.setKeyValue("DATAMIN",  (bitpix>0 ? (long)cut[2]:cut[2])+"");
+          out.headerFits.setKeyValue("DATAMAX",  (bitpix>0 ? (long)cut[3]:cut[3])+"");
 
           Aladin.trace(3, "PIXELMINMAX = ["+cut[0]+" "+cut[1]+"] DATAMINMAX=["+cut[2]+" "+cut[3]+"]");
        }
@@ -1827,11 +1870,11 @@ public class PlanHealpix extends PlanBG {
        return super.drawAllSky(g,v);
     }
 
-    static final int FIRST   = 0;
-    static final int MOYENNE = 1;
-    static final int MEDIANE = 2;
-    static final int SIGMA   = 3;
-    static final int MAX     = 4;
+//    static final int FIRST   = 0;
+//    static final int MOYENNE = 1;
+//    static final int MEDIANE = 2;
+//    static final int SIGMA   = 3;
+//    static final int MAX     = 4;
 
     /** Création d'un losange par concaténation de ses 4 fils
      * et suppression des fichiers 8bits FITS des fils en question
@@ -1844,45 +1887,77 @@ public class PlanHealpix extends PlanBG {
      * @param fils les 4 fils du losange
      * @param mode méthode de cumul des pixels (FIRST, MOYENNE, MEDIANE...)
      */
-    Fits createNodeHpx(String file,int order,long npix,Fits fils[],
-          int mode) throws Exception {
+//    Fits createNodeHpx(String file,int order,long npix,Fits fils[], int mode) throws Exception {
+    Fits createNodeHpx(String file,int order,long npix,Fits fils[], int bitpix, double blank) throws Exception {
        int w = nbPixGeneratedImage;
-       Fits out = new Fits(w,w,16);
+       Fits out = new Fits(w,w,bitpix); //16);
+       out.setBlank(blank);
+       out.setBzero(bZero);
+       out.setBscale(bScale);
+       boolean empty=true;
+
        Fits in;
+       double px[] = new double[4];
+       
        for( int dg=0; dg<2; dg++ ) {
           for( int hb=0; hb<2; hb++ ) {
              int quad = dg<<1 | hb;
              in = fils[quad];
              int offX = (dg*w)>>>1;
              int offY = ((1-hb)*w)>>>1;
-             int pix8,p1,p2=0,p3=0,p4=0;
+//             int pix8=0;
+//             int p1,p2=0,p3=0,p4=0;
              for( int y=0; y<w; y+=2 ) {
                 for( int x=0; x<w; x+=2 ) {
-                   p1= in.getPixelInt(x,y);
-                   if( mode!=FIRST ) {
-                      p2 = in.getPixelInt(x+1,y);
-                      p3 = in.getPixelInt(x,y+1);
-                      p4 = in.getPixelInt(x+1,y+1);
+                   
+                   
+                   // On prend la moyenne des 4
+                   double pix=0;
+                   int nbPix=0;
+                   if( in!=null ) {
+                      for( int i=0;i<4; i++ ) {
+                         int gx = i==1 || i==3 ? 1 : 0;
+                         int gy = i>1 ? 1 : 0;
+                         px[i] = in.getPixelDouble(x+gx,y+gy);
+                         if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
+                      }
                    }
-                   switch( mode ) {
-                      case FIRST:   pix8 = p1; break;
-                      case MOYENNE: pix8 = (p1+p2+p3+p4)/4; break;
-                      case MAX :    pix8 = Math.max(Math.max(p1,p2),Math.max(p2,p3)); break;
-                      case SIGMA:   pix8 = (int)( Math.sqrt( (p1*p1+p2*p2+p3*p3+p4*p4)/4 - Math.pow((p1+p2+p3+p4)/4.,2.) ))*2; break;
-                      case MEDIANE:
-                         if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix8=p1;
-                         else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix8=p2;
-                         else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix8=p3;
-                         else pix8=p4;
-                         break;
-                      default: throw new Exception("mode non supporté ("+mode+")");
+                   for( int i=0; i<4; i++ ) {
+                      if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
                    }
-                   out.setPixelInt(offX+(x>>>1), offY+(y>>>1), pix8);
+                   if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
+                   else empty=false;
+                   out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
+
+                   
+//                   if( in!=null ) {
+//                      p1= in.getPixelInt(x,y);
+//                      if( mode!=FIRST ) {
+//                         p2 = in.getPixelInt(x+1,y);
+//                         p3 = in.getPixelInt(x,y+1);
+//                         p4 = in.getPixelInt(x+1,y+1);
+//                      }
+//                      switch( mode ) {
+//                         case FIRST:   pix8 = p1; break;
+//                         case MOYENNE: pix8 = (p1+p2+p3+p4)/4; break;
+//                         case MAX :    pix8 = Math.max(Math.max(p1,p2),Math.max(p2,p3)); break;
+//                         case SIGMA:   pix8 = (int)( Math.sqrt( (p1*p1+p2*p2+p3*p3+p4*p4)/4 - Math.pow((p1+p2+p3+p4)/4.,2.) ))*2; break;
+//                         case MEDIANE:
+//                            if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix8=p1;
+//                            else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix8=p2;
+//                            else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix8=p3;
+//                            else pix8=p4;
+//                            break;
+//                         default: throw new Exception("mode non supporté ("+mode+")");
+//                      }
+//                   }
+//                   out.setPixelInt(offX+(x>>>1), offY+(y>>>1), pix8);
                 }
              }
           }
        }
-       out.writeFITS(file);
+       if( empty ) out=null;
+       else out.writeFITS(file);
 
        return out;
     }

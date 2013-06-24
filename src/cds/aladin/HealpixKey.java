@@ -1901,7 +1901,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       tr.shear(sx,0);
 
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-            planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || (!planBG.color || planBG.truePixels) && order-parente>=planBG.maxOrder
+            planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || /*(!planBG.color || planBG.truePixels) &&*/ order-parente>=planBG.maxOrder
             ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR :
             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 

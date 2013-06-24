@@ -1917,6 +1917,19 @@ public class ViewSimple extends JComponent
       // Juste pour tester...
 //      fullScreen = !view.isMultiView() && calque.getNbPlanCat()==0;
 
+      if( tool==ToolBox.SELECT || tool==ToolBox.PAN ) {
+         // thomas
+     // click en mode SELECT --> on marque les images disponibles dans le treeView
+         vs.markAvailableImages(x,y,flagshift);
+         
+         // Dans le cas d'un Repere temporaire Simbad
+         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) {
+            view.showSimRep();
+            flagSimRepClic=true;
+            return;
+         }
+      }
+      
       // Initialisation d'un clic-and-drag de la vue
       if( tool==ToolBox.PAN
             || (fullScreen && !flagOnMovableObj && tool==ToolBox.SELECT) ) {
@@ -1987,17 +2000,6 @@ public class ViewSimple extends JComponent
       
       // Dans le cas de l'outil de selection
       if( tool==ToolBox.SELECT ) {
-
-         // thomas
-	 // click en mode SELECT --> on marque les images disponibles dans le treeView
-         vs.markAvailableImages(x,y,flagshift);
-         
-         // Dans le cas d'un Repere temporaire Simbad
-         if( view.simRep!=null && view.simRep.inLabel(this, x, y) ) {
-            view.showSimRep();
-            flagSimRepClic=true;
-            return;
-         }
 
          Vector<Obj> v = calque.getObjWith(vs,p.x,p.y);
          

@@ -419,8 +419,8 @@ final public class ThreadBuilderTile {
          else if( x>width-mx ) coefx = (width-x)/mx;
          if( y<my ) coefy =  y/my;
          else if( y>height-my ) coefy = (height-y)/my;
-         c = Math.min(coefx,coefy);
-         if( c<0 ) return 0;
+//         c = Math.min(coefx,coefy);
+         c = coefx*coefy;
       } catch( Exception e ) {
          c=0;
       }

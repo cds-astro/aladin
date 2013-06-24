@@ -368,9 +368,9 @@ public class Context {
             // cas particulier d'un survey couleur en JPEG ou PNG avec calibration externe
             if( path.endsWith(".hhh") ) return path;
             
-            in = (new MyInputStream( new FileInputStream(path))).startRead();
+            in = (new MyInputStream( new FileInputStream(path)) ).startRead();
             long type = in.getType();
-            if( (type&MyInputStream.FITS) != MyInputStream.FITS ) continue;           
+            if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;           
             return path;
             
          }  catch( Exception e) { Aladin.trace(4, "justFindImgEtalon : " +e.getMessage()); continue; }
