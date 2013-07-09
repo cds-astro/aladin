@@ -51,6 +51,7 @@ import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.event.IIOReadProgressListener;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
@@ -205,26 +206,27 @@ final public class Fits {
    }
 
    public void loadJpeg(String filename) throws Exception {
-      loadJpeg(filename, false);
+      loadJpeg(filename, false, true);
    }
 
-   public void loadJpeg(String filename, boolean color) throws Exception {
+   public void loadJpeg(String filename, boolean color,boolean scanCommentCalib) throws Exception {
       filename = parseCell(filename); // extraction de la descrition d'une
                                       // cellule éventuellement en suffixe du
                                       // nom fichier.fits[x,y-wxh]
       MyInputStream is = null;
       try {
          is = new MyInputStream(new FileInputStream(filename));
-         // is = is.startRead();
-         is.getType(); // Pour être sûr de lire le commentaire éventuel
-         if( is.hasCommentCalib() ) {
-            headerFits = is.createHeaderFitsFromCommentCalib();
-            try {
-               setCalib(new Calib(headerFits));
-            } catch( Exception e ) {
-               calib = null;
-            }
+         if( scanCommentCalib ) {
+            is.getType(); // Pour être sûr de lire le commentaire éventuel
+            if( is.hasCommentCalib() ) {
+               headerFits = is.createHeaderFitsFromCommentCalib();
+               try {
+                  setCalib(new Calib(headerFits));
+               } catch( Exception e ) {
+                  calib = null;
+               }
 
+            }
          }
          loadJpeg(is, xCell, yCell, widthCell, heightCell, color);
       } finally {
@@ -328,6 +330,7 @@ final public class Fits {
             param.setSourceRegion(r);
          }
          BufferedImage imgBuf = reader.read(0, param);
+         reader.dispose();
 
          if( flagColor ) {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
@@ -649,8 +652,10 @@ final public class Fits {
       int code = 0;
       MyInputStream is = new MyInputStream(new FileInputStream(filename));
       try {
-         if( is.isGZ() ) code |= GZIP;
-         is = is.startRead();
+         if( is.isGZ() ) {
+            code |= GZIP;
+            is = is.startRead();
+         }
          long type = is.getType();
 
          // Cas spécial d'un fichier .hhhh
@@ -2015,7 +2020,7 @@ final public class Fits {
 
    public static void convert(String filename) throws Exception {
       Fits f = new Fits();
-      f.loadJpeg(filename, true);
+      f.loadJpeg(filename, true,false);
       invImageLine(f.width, f.height, f.rgb);
       for( int i = 0; i < f.rgb.length; i++ )
          f.rgb[i] |= 0xFF000000;

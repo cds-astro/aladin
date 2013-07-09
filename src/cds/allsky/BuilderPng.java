@@ -1,4 +1,4 @@
-// Copyright 2010 - UDS/CNRS
+// Copyright 2012 - UDS/CNRS
 // The Aladin program is distributed under the terms
 // of the GNU General Public License version 3.
 //
@@ -17,23 +17,22 @@
 //    along with Aladin.
 //
 
-/**
- * 
- */
 package cds.allsky;
 
-import cds.aladin.Calib;
-import cds.fits.Fits;
+/** Construction de la hiérarchie des tuiles PNG à partir des tuiles FITS de plus bas
+ * niveau. Voir commentaire BuilderJpg
+ * @author Pierre Fernique
+ */
+public class BuilderPng extends BuilderJpg {
 
-class SrcFile {
-	Fits fitsfile;
-	Calib calib;
-	
-	SrcFile() { }
-	
-    @Override
-	public String toString() {
-		return fitsfile.getFilename().toString();
-	}
+   public BuilderPng(Context context) {
+      super(context);
+   }
+   
+   protected void init() {
+      fmt = "png";
+      ext = ".png";
+   }
 
+   public Action getAction() { return Action.PNG; }
 }

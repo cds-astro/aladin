@@ -2413,28 +2413,46 @@ public void GetCoord(Coord c) throws Exception {
 
             break ;
          case MOL:
+            cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
+            sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2) ;
+
             double x =  x_objr;
             double y =  y_objr;
-            //   System.out.println("x y "+x+" "+y) ;
-//            double PI_SQ = Math.PI * Math.PI;
-//            double rSq = x * x / PI_SQ + y * y * PI_SQ / 16;
-//            if( rSq > 1)  return; // Dehors
-            double rSq = x * x / 8  + y * y / 2;
-            if( rSq > 1 ) throw new Exception("No coordinates");
-            //   System.out.println("rSq "+rSq) ;
-//            double theta = Math.asin(y * Math.PI / 4);
-            double theta = Math.asin(y / Math.sqrt(2));
-            double psi = theta * 2;
-            //   System.out.println("psi "+psi) ;
-//            double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
-//            double alpha = x / Math.cos(theta);
-            double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
-            double alpha = (Math.PI/(2*Math.sqrt(2))) * (x / Math.cos(theta));
-            c.al = alphai + alpha * rad_to_deg;
-            c.del = /* deltai + */delta * rad_to_deg;
-            break;
-         case ZEA:  // projection ZEA
 
+            double rSq = x * x / 8 + y * y / 2 ;
+            if (rSq >1 ) throw new Exception("No coordinates") ;
+
+            double theta = Math.asin(y / Math.sqrt(2)) ;
+            double psi = theta * 2;
+
+            double Tetha = Math.asin((psi + Math.sin(psi)) / Math.PI);
+            double Phi =(Math.PI/(2*Math.sqrt(2)))*( x / Math.cos(theta));
+
+            c.del =  rad_to_deg* Math.asin((sdelp*Math.sin(Tetha)
+                  - cdelp*Math.cos(Tetha)*Math.cos(Phi)));
+
+            double arg3 = (Math.sin(Tetha)*cdelp
+                    + Math.cos(Tetha)*sdelp*Math.cos(Phi));
+
+            double arg2 = (Math.cos(Tetha)*Math.sin(Phi));
+
+            c.al = alphai + rad_to_deg*Math.atan2(arg2,arg3) ;
+
+            break;
+
+//            double x =  x_objr;
+//            double y =  y_objr;
+//            double rSq = x * x / 8  + y * y / 2;
+//            if( rSq > 1 ) throw new Exception("No coordinates");
+//            double theta = Math.asin(y / Math.sqrt(2));
+//            double psi = theta * 2;
+//            double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
+//            double alpha = (Math.PI/(2*Math.sqrt(2))) * (x / Math.cos(theta));
+//            c.al = alphai + alpha * rad_to_deg;
+//            c.del = /* deltai + */delta * rad_to_deg;
+//            break;
+            
+         case ZEA:  // projection ZEA
             double rtet =
             Math.sqrt(x_objr*x_objr +y_objr*y_objr)/2.;
             tet = Math.PI/2. - 2*Math.asin(rtet);
@@ -3135,29 +3153,46 @@ public void GetXY(Coord c) throws Exception {
                break ;
 
             case MOL:
-               double alpha1 =   (al- alphai)*deg_to_rad;
-               double delta1 =  (del/*- deltai*/)*deg_to_rad;
+               cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
+               sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2) ;
 
-               // Adjust alpha1 to the range +/- PI
-               while(alpha1 <= 0) alpha1 += 2*Math.PI;
-               while(alpha1 > Math.PI)  alpha1 -= 2*Math.PI;
+               phi = Math.atan2(cos_del *sin_dalpha, -(sin_del*cdelp - cos_del*sdelp *cos_dalpha));
+               tet =  Math.asin(sin_del*sdelp + cos_del*cdelp *cos_dalpha);
 
-               // Don't plot quite up to poles to avoid strange effects
-               //                     if(Math.abs(delta1) > Math.toRadians(89.99)) return;
-
-               double psi = 2 * Math.asin(2 * delta1 / Math.PI);
+               double psi = 2 * Math.asin(2 * tet / Math.PI);
                double previous = 0;
                for( int i=0; i<200; i++ ) {
                   previous = psi;
-                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(delta1)) / (1 + Math.cos(psi));
+                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(tet))
+                      / (1 + Math.cos(psi));
                   if( Math.abs(psi - previous) > 0.0001 ) break;
                }
                double theta = psi / 2;
-//               x_stand = alpha1 * Math.cos(theta)*rad_to_deg;
-//               y_stand = 4 / Math.PI* Math.sin(theta)*rad_to_deg;
-               x_stand = (2*Math.sqrt(2)/Math.PI) * alpha1 * Math.cos(theta)*rad_to_deg;
-               y_stand = Math.sqrt(2) * Math.sin(theta)*rad_to_deg;
+               x_stand = (2*Math.sqrt(2)/Math.PI)*phi*Math.cos(theta)*rad_to_deg;
+               y_stand = Math.sqrt(2)*Math.sin(theta)*rad_to_deg ;
                break;
+
+//               double alpha1 =   (al- alphai)*deg_to_rad;
+//               double delta1 =  (del/*- deltai*/)*deg_to_rad;
+//
+//               // Adjust alpha1 to the range +/- PI
+//               while(alpha1 <= 0) alpha1 += 2*Math.PI;
+//               while(alpha1 > Math.PI)  alpha1 -= 2*Math.PI;
+//
+//               // Don't plot quite up to poles to avoid strange effects
+//               //                     if(Math.abs(delta1) > Math.toRadians(89.99)) return;
+//
+//               double psi = 2 * Math.asin(2 * delta1 / Math.PI);
+//               double previous = 0;
+//               for( int i=0; i<200; i++ ) {
+//                  previous = psi;
+//                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(delta1)) / (1 + Math.cos(psi));
+//                  if( Math.abs(psi - previous) > 0.0001 ) break;
+//               }
+//               double theta = psi / 2;
+//               x_stand = (2*Math.sqrt(2)/Math.PI) * alpha1 * Math.cos(theta)*rad_to_deg;
+//               y_stand = Math.sqrt(2) * Math.sin(theta)*rad_to_deg;
+//               break;
 
             case ZEA: // ZEA projection
 

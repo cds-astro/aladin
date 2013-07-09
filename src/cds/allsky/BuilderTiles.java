@@ -133,12 +133,12 @@ public class BuilderTiles extends Builder {
           validateOrder(context.getOutputPath());
       }
       
-      String img = context.getImgEtalon();
-      if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
-      
       // Image de référence en couleur => pas besoin de plus
 //      if(  context.isColor() ) { context.initRegion(); return; }
       if(  !context.isColor() ) { 
+         
+         String img = context.getImgEtalon();
+         if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
 
          // mémorisation des cuts et blank positionnés manuellement
          double [] memoCutOrig = context.getCutOrig();
@@ -203,6 +203,7 @@ public class BuilderTiles extends Builder {
          context.stat(s);
       }
       context.stat(context.cacheFits+"");
+//      context.cacheFits.gc();
       System.gc();
    }
    
@@ -557,7 +558,8 @@ public class BuilderTiles extends Builder {
 
       initStat(nbThreads);
       context.createHealpixOrder(Constante.ORDER);
-
+      ThreadBuilderTile.nbThreadRunning=nbThreads;
+      
       for( int i=0; i<nbThreads; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          ThreadBuilderTile hpx = new ThreadBuilderTile(context);
@@ -710,12 +712,6 @@ public class BuilderTiles extends Builder {
       Fits oldOut=null;
       
       boolean isInList = context.isInMoc(order,npix);
-//      
-//      if( !isInList && coaddMode==CoAddMode.REPLACETILE ) {
-//         oldOut = findLeaf(file);
-//         if( oldOut!=null )  addFits(Thread.currentThread(), oldOut);
-//         return oldOut;
-//      }
 
       if( !isInList && coaddMode!=CoAddMode.REPLACETILE ) {
          oldOut = findLeaf(file);
@@ -750,15 +746,19 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      long duree = System.currentTimeMillis()-t;
+      long duree;
       if (out!=null) {
          String filename = file + context.getTileExt();
          if( isColor ) out.writeCompressed(filename,0,0,null,"jpeg");
          else out.writeFITS(filename);
+         duree = System.currentTimeMillis()-t;
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);
          
-      } else updateStat(0,0,1,duree,0,0);
+      } else {
+         duree = System.currentTimeMillis()-t;
+         updateStat(0,0,1,duree,0,0);
+      }
       
       addFits(Thread.currentThread(), out);
       return out;

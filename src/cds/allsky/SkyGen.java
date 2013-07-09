@@ -197,6 +197,10 @@ public class SkyGen {
          else if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
             Context.setVerbose(4);
          }
+         else if (arg.equalsIgnoreCase("-fast") ) {
+            context.fast=true;
+         }
+
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") ) {
             force=true;
          }
@@ -356,6 +360,7 @@ public class SkyGen {
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
+            "-fast              Fastest algorithm (first pixel method)\n"+
             "input=dir          Source image directory (fits or jpg+hhh)" + "\n" +
             "output=dir         all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
@@ -364,14 +369,14 @@ public class SkyGen {
             "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
             "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
             "order=nn           Specifical HEALPix order" + "\n" +
-            "diffOrder          Diff between MOC order and optimal order" + "\n" +
+//            "diffOrder          Diff between MOC order and optimal order" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
             "skyval=key         Fits key to use for removing a sky background" + "\n" +
             "maxThread=nn       Max number of computing threads" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
-            "tobemerged=dir     all-sky directory to be merged to an already existing all-sky\n" +
+//            "tobemerged=dir     all-sky directory to be merged to an already existing all-sky\n" +
             "jpegMethod=m       Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
             "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
@@ -393,27 +398,29 @@ public class SkyGen {
             "index      Build finder index" + "\n" +
             "tiles      Build HEALPix FITS tiles" + "\n" +
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
+            "png        Build PNG tiles (from FITS tiles)" + "\n" +
 //            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
-            "mochight   Build final MOC (based on pixels of generated tiles)" + "\n" +
+//            "mochight   Build final MOC (based on pixels of generated tiles)" + "\n" +
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
             "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
-            "merge      Merge an all-sky dir with an other already built all-sky" + "\n"+
+//            "merge      Merge an all-sky dir with an other already built all-sky" + "\n"+
             "clean      Remove all HEALPix survey" + "\n"+
             "cleanIndex Remove HEALPix index" + "\n"+
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+
             "cleanfits  Remove FITS tiles" + "\n"+
-            "cleanjpeg  Remove Jpeg tiles " + "\n"+
+            "cleanjpeg  Remove JPEG tiles " + "\n"+
+            "cleanpng   Remove PNG tiles " + "\n"+
             "gzip       gzip some fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "progen     Adapt HEALPix tree index to a progenitor usage" + "\n"
             );
-      System.out.println("\nEx: java -jar Aladin.jar -mocgen input=/MyImages    => Do all the job." +
-      		             "\n    java -jar Aladin.jar -mocgen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
+      System.out.println("\nEx: java -jar Aladin.jar -skygen input=/MyImages    => Do all the job." +
+      		             "\n    java -jar Aladin.jar -skygen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
-                         "\n    java -jar Aladin.jar -mocgeninput=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+                         "\n    java -jar Aladin.jar -skygen input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
                          "\n           The original pixels in the border or equal to 0 will be ignored."
 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                          );

@@ -275,9 +275,11 @@ public final class MyInputStream extends FilterInputStream {
    * Cette methode ne peut etre appelee si le stream a deja ete entame.
    * Le champ de bit peut etre affiche en langage naturelle par la methode
    * decodeType().
+   * @param limit nombre d'octets max à lire pour détecter le type (0 sans limite)
    * @return un champ de bit decrivant le type de fichier
    */
-   public long getType() throws Exception {
+   public long getType() throws Exception { return getType(0); }
+   public long getType(int limit) throws Exception {
       int csv;
 //System.out.println("call getType()");
 
@@ -325,7 +327,7 @@ public final class MyInputStream extends FilterInputStream {
          // Detection de JPEG
          else if( c[0]==255 && c[1]==216 ) {
             type |= JPEG;
-            lookForJpegCalib();
+            lookForJpegCalib(limit);
          }
 
          // Detection de GIF (GIF..a)
@@ -335,7 +337,7 @@ public final class MyInputStream extends FilterInputStream {
          else if( c[0]==137 && c[1]==80 && c[2]==78 && c[3]==71
                && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10) {
             type |= PNG;
-            lookForPNGCalib();
+            lookForPNGCalib(limit);
         }
 
          // Detection de MRCOMP
@@ -1470,13 +1472,15 @@ public long skip(long n) throws IOException {
     /** Recherche dans un flux JPEG le segment commentaire qui peut contenir une
      * calibration. La mémorise (voir getJpegCabib() )
      * Etend automatique le cache pour se faire.
+     * @param limit nombre d'octets max à lire pour détecter la calib, (0 jusqu'au bout)
      * @return true si on a trouvé un segment commentaire, false sinon
      */
-    private boolean lookForJpegCalib() {
+    private boolean lookForJpegCalib() { return lookForJpegCalib(0); }
+    private boolean lookForJpegCalib(int limit) {
 
        int i=2;   // Taille de la signature JPEG
        try {
-          while( getValAt(i)==0xFF ) {
+          while( getValAt(i)==0xFF && (limit<=0 || inCache<limit) ) {
              int mode = getValAt(i+1);
              int size = getValAt(i+2)<<8 | getValAt(i+3);
              try {
@@ -1501,14 +1505,16 @@ public long skip(long n) throws IOException {
     /** Recherche dans un flux PNG le segment commentaire qui peut contenir une
      * calibration. La mémorise (voir getPNGCabib() )
      * Etend automatique le cache pour se faire.
+     * @param limit nombre d'octets max à lire pour détecter la calib, (0 jusqu'au bout)
      * @return true si on a trouvé un segment commentaire, false sinon
      */
-    private boolean lookForPNGCalib() {
+    private boolean lookForPNGCalib() { return lookForPNGCalib(0); }
+    private boolean lookForPNGCalib(int limit) {
        boolean encore= true;
        int i=8;   // Taille de la signature PNG
        boolean more=true;
        try {
-          while( encore ) {
+          while( encore && (limit<=0 || inCache<limit)  ) {
              int size = getValAt(i)<<24 | getValAt(i+1)<<16 | getValAt(i+2)<<8 | getValAt(i+3);
              String chunk = new String( new char[] { (char)getValAt(i+4),(char)getValAt(i+5),(char)getValAt(i+6),(char)getValAt(i+7)});
              try {

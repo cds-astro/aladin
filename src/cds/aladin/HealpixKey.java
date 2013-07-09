@@ -115,6 +115,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean fromNet=true;// true si le losange provient du réseau et non du cache
    protected int timeStream;      // stat de lecture du stream, 
    private int timeJPEG, timePixel;  // stat de la création de l'image, de l'extraction des pixels
+   private int typeColor;         // Mode couleur JPEG ou PNG
 
    protected HealpixKey fils[] = null; // Si présence de fils en sous-échantillonnage
    protected HealpixKey anc=null;      // Ancêtre qui dispose des pixels, null sinon
@@ -136,8 +137,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static protected final int TSV=2;
    static protected final int XML=3;
    static protected final int FITSGZIP=4;
+   static protected final int PNG=5;
 
-   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".fits.gz" };
+   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".fits.gz",".png" };
 
 //   protected int extCache=FITS;
    protected int extCache=JPEG;         // Format d'image pour le cache
@@ -179,7 +181,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( !allSky ) planBG.nbCreated++;
       resetTimer();
       if( planBG.truePixels ) extCache=extNet=FITS;
-      else if( planBG.color ) extCache=extNet=JPEG;
+      else if( planBG.color ) extCache=extNet= planBG.inPNG ? PNG : JPEG;
+      else if( planBG.inJPEG) extCache=extNet=JPEG;
+      else if( planBG.inPNG ) extCache=extNet=PNG;
       else if( planBG instanceof PlanBGCat ) extCache=extNet=TSV;
 //      fileNet = getFilePath(null,order,npix)+ EXT[extNet];
 //      fileCache = getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
@@ -739,8 +743,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
           // est-ce que le fichier est gzippé ?
           try {
              f = new RandomAccessFile(filename,"r");
-             byte [] c = new byte[2];
+             byte [] c = new byte[8];
              f.readFully(c);
+             
+             // Detection de JPEG
+             if( c[0]==255 && c[1]==216 ) typeColor = JPEG;
+             else if( c[0]==137 && c[1]==80 && c[2]==78 && c[3]==71
+                   && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
+
              if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
 //                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
                 FileInputStream fgz = new FileInputStream(new File(filename));
@@ -773,7 +783,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       int n=stream.length;
       long t1=Util.getTime();
       Image img = Toolkit.getDefaultToolkit().createImage(stream);
-      if( extCache!=JPEG || !planBG.useCache ) stream=null;
+      if( extCache!=JPEG && extCache!=PNG || !planBG.useCache ) stream=null;
       boolean encore=true;
       while( encore ) {
          try {
@@ -808,7 +818,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.dataMin    = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
          planBG.dataMax    = 255;
       } else {
-         planBG.pixMode = PlanBG.PIX_RGB;
+//         planBG.pixMode = PlanBG.PIX_RGB;
+         planBG.pixMode = PlanBG.PIX_ARGB;
          planBG.video = PlanImage.VIDEO_NORMAL;
          rgb = getPixelsRGB(img);
       }
@@ -974,7 +985,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
             planBG.pixMode = PlanBG.PIX_ARGB;
-            System.out.println("HealpixKey FITS in ARGB");
+//            System.out.println("HealpixKey FITS in ARGB");
          }
          if( bitpix!=8 && !flagARGB ) {
              truePixels=true;

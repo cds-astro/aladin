@@ -422,6 +422,7 @@ public class ServerFile extends Server implements XMLConsumer {
                // images ?
                if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.jpg"))
                      || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.fits"))
+                     || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.png"))
                      ) n=aladin.calque.newPlanBG(new URL(f),label,null,null);
 
                // ou catalogue ?

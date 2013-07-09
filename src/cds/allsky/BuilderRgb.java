@@ -43,7 +43,8 @@ public class BuilderRgb extends Builder {
     
     public void run() throws Exception {
        build();
-       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).createAllSkyJpgColor(path,3,64);
+       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).createAllSkyColor(path,3,"jpeg",64);
+       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).createAllSkyColor(path,3,"png",64);
        if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(path);
     }
     

@@ -45,6 +45,7 @@ public abstract class Builder {
          case TILES:     return new BuilderTiles(context);
          case ALLSKY:    return new BuilderAllsky(context);
          case JPEG:      return new BuilderJpg(context);
+         case PNG:       return new BuilderPng(context);
          case MOC:       return new BuilderMoc(context);
          case MOCHIGHT:  return new BuilderMocHight(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
@@ -54,6 +55,7 @@ public abstract class Builder {
          case CLEANTILES:return new BuilderCleanTiles(context);
          case CLEANFITS: return new BuilderCleanFits(context);
          case CLEANJPEG: return new BuilderCleanJpg(context);
+         case CLEANPNG:  return new BuilderCleanPng(context);
          case CHECK:     return new BuilderCheck(context);
          case GZIP:      return new BuilderGzip(context);
          case GUNZIP:    return new BuilderGunzip(context);

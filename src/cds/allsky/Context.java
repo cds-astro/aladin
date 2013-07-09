@@ -83,7 +83,8 @@ public class Context {
    protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected boolean fading=true;            // Activation du fading entre les images originales
-   protected String skyvalName;                // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   protected boolean fast=false;             // methode la plus rapide
+   protected String skyvalName;              // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    
    protected int bitpix = -1;                // BITPIX de sortie
@@ -106,6 +107,7 @@ public class Context {
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
+   
    public Context() {}
    
    public void reset() {
@@ -646,13 +648,14 @@ public class Context {
       
       String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
       String pourcentNbCells = nbLowCells==-1 ? "" : 
-         nbLowCells==0 ? "-":(Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"% ";
-      long nbTilesPerSec = totalTime/60000==0 ? statNbTile+statNbEmptyTile : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
+         nbLowCells==0 ? "-":(Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"%";
+      long nbTilesPerMin = totalTime/60000==0 ? -1 : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
+      long tempsTotalEstime = nbLowCells==0 ? 0 : nbLowCells*(totalTime/(statNbTile+statNbEmptyTile))-totalTime;
       String s=(statNbTile+"+"+statNbEmptyTile)+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
-      +pourcentNbCells+ nbTilesPerSec+" tiles/mn) "
+      +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndIn="+Util.getTemps(tempsTotalEstime,true))+") "
       +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
       +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-      +" using "+Util.getUnitDisk(usedMem)+" ("+Util.getUnitDisk(freeMem)+" free)";
+      +" using "+Util.getUnitDisk(usedMem);
 
       nlstat(s);
 

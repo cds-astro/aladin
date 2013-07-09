@@ -467,7 +467,7 @@ public final class FrameCM extends JFrame implements ActionListener {
       // Switch en true pixels pour un plan Healpix
       if( pimg instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) pimg;
-         if( pbg.inFits && pbg.inJPEG ) {
+         if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
             JPanel p2 = new JPanel();
             p2.setBackground(Color.yellow);
             p2.add( new JLabel("<HTML><B>Mode:</B> "+pbg.getFormat()+"</HTML>"));

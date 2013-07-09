@@ -45,6 +45,7 @@ class HealpixAllsky extends HealpixKey {
       String nameNet = "Norder"+order+"/Allsky";
       String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
       if( planBG.truePixels ) extCache=extNet=FITS;
+      else if( planBG.inPNG && !planBG.inJPEG ) extCache=extNet=PNG;
       else /* if( planBG.color ) */ extCache=extNet=JPEG;
       fileCache = nameCache+ EXT[extCache];
       fileNet = nameNet+ EXT[extNet];

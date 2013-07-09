@@ -48,8 +48,8 @@ public class BuilderJpg extends Builder {
    private long statSize;
    private long startTime,totalTime;
    
-   static String fmt = "jpeg";
-//   static String fmt = "png";
+   protected String fmt;
+   protected String ext;
 
    /**
     * Création du générateur JPEG.
@@ -62,6 +62,12 @@ public class BuilderJpg extends Builder {
       ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 
             0/*PlanImage.CMGRAY*/, context.fct.code());
       tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
+      init();
+   }
+   
+   protected void init() {
+      fmt = "jpeg";
+      ext = ".jpg";
    }
 
    public Action getAction() { return Action.JPEG; }
@@ -80,7 +86,7 @@ public class BuilderJpg extends Builder {
          return true;
       }
       if( !context.actionPrecedeAction(Action.INDEX, Action.TILES)) return false;
-      if( !context.actionPrecedeAction(Action.TILES, Action.JPEG)) return false;
+      if( !context.actionPrecedeAction(Action.TILES, getAction())) return false;
       context.info("Pre-existing HEALPix JPEG survey seems to be ready");
       return true;
    }
@@ -186,7 +192,7 @@ public class BuilderJpg extends Builder {
             file = file.substring(0,file.lastIndexOf('.'));
             fits2jpeg(file);
             if( order==maxOrder ) {
-               File f = new File(file+".jpg");
+               File f = new File(file+ext);
                updateStat(f);
             }
          }
@@ -198,8 +204,8 @@ public class BuilderJpg extends Builder {
       Fits out = createLeaveJpg(file);
 //      if( tcm==null ) out.toPix8(cut[0],cut[1]);
 //      else out.toPix8(cut[0],cut[1],tcm);
-      out.writeCompressed(file+".jpg",cut[0],cut[1],tcm,fmt);
-      Aladin.trace(4, "Writing " + file+".jpg");
+      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+      Aladin.trace(4, "Writing " + file+ext);
    }
 
    /** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
@@ -227,18 +233,18 @@ public class BuilderJpg extends Builder {
       if( out!=null && context.isInMocTree(order,npix) ) {
          if( debugFlag ) {
             debugFlag=false;
-            Aladin.trace(3,"Creating JPEG tiles: method="+(method==Context.JpegMethod.MEAN?"average":"median")
+            Aladin.trace(3,"Creating "+fmt+" tiles: method="+(method==Context.JpegMethod.MEAN?"average":"median")
                   +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
                   +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
                   +" tcm="+(tcm==null?"null":"provided"));
          }
 //         if( tcm==null ) out.toPix8(cut[0],cut[1]);
 //         else out.toPix8(cut[0],cut[1],tcm);
-         out.writeCompressed(file+".jpg",cut[0],cut[1],tcm,fmt);
-         Aladin.trace(4, "Writing " + file+".jpg");
+         out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+         Aladin.trace(4, "Writing " + file+ext);
 
          if( order==maxOrder ) {
-            File f = new File(file+".jpg");
+            File f = new File(file+ext);
             updateStat(f);
          }
       }

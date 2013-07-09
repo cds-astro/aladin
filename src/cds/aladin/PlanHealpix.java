@@ -410,7 +410,7 @@ public class PlanHealpix extends PlanBG {
 //       useCache = true;
        useCache=false;
        truePixels = inFits = true;
-       inJPEG = false;
+       inPNG = inJPEG = false;
        color = isARGB;
        Aladin.trace(3, this+"");
 

@@ -92,6 +92,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta    <LI> FITS HEALPix maps with  NSIDE>=16384 bug fixed
+ * @beta    <LI> Allsky generator .hhh bug fixed
  * @beta    <LI> Allsky generator cell <64 bug fixed
  * @beta    <LI> MOLLWEIDE projection bug fixed
  * @beta    <LI> FOV target precision bug fixed
@@ -122,7 +123,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.560";
+    static public final    String VERSION = "v7.561";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -4701,8 +4702,9 @@ public void show() {
             System.exit(0); 
          }
          else if( args[i].equalsIgnoreCase("-skygen"))      { 
-            System.arraycopy(args, i+1, args, 0, args.length-i-1);
-            SkyGen.main(args);
+            String [] args1 = new String[args.length-i-1];
+            System.arraycopy(args, i+1, args1, 0, args.length-i-1);
+            SkyGen.main(args1);
             System.exit(0); 
          }
          

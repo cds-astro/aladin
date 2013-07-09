@@ -158,12 +158,14 @@ public class PlanBG extends PlanImage {
    protected boolean hasDrawnSomething=false;   // True si le dernier appel à draw() à dessiner au moins un losange
    protected boolean allWaitingKeysDrawn=false;   // true si tous les losanges de résolution attendue ont été tracés
    protected boolean useCache=true;
-   protected boolean color=false;   // true si le survey est fourni en couleur
+   protected boolean color=false;   // true si le survey est fourni en couleur (JPEG par défaut)
+   protected boolean colorPNG=false;   // true si le survey est fourni en couleur PNG
    protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG couleur ou non
    public boolean fitsGzipped=false; // true si le survey est fourni en true pixels (FITS) mais gzippé
    public boolean truePixels=false;  // true si le survey est fourni en true pixels (FITS)
    protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
    protected boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
+   protected boolean inPNG=false;   // true: Les losanges originaux peuvent être fournis en PNG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
@@ -360,6 +362,7 @@ public class PlanBG extends PlanImage {
       video = aladin.configuration.getCMVideo();
       inFits = gluSky.isFits();
       inJPEG = gluSky.isJPEG();
+      inPNG = gluSky.isPNG();
       truePixels=gluSky.isTruePixels();
       color = gluSky.isColored();
       
@@ -413,6 +416,7 @@ public class PlanBG extends PlanImage {
       maxOrder=gSky.getMaxOrder();
       inFits=gSky.isFits();
       inJPEG=gSky.isJPEG();
+      inPNG=gSky.isPNG();
       truePixels=gSky.isTruePixels();
       color=gSky.isColored();
       frameOrigin=gSky.getFrame();
@@ -1503,7 +1507,7 @@ public class PlanBG extends PlanImage {
    protected String getFormat() {
       if( color ) {
          if( inFits ) return "FITS RGB color";
-         else return "JPEG color";
+         else return (colorPNG ? "PNG":"JPEG")+" color";
       }
       if( truePixels ) return "FITS true pixels (BITPIX="+bitpix+")";
       else return "JPEG 8 bits pixels";

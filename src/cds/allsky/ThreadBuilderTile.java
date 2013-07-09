@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
+import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
@@ -54,12 +55,14 @@ final public class ThreadBuilderTile {
    private double[] cut;
    private int[] borderSize;
    private ArrayList<SrcFile> downFiles;
+   private boolean fast;
 
    public ThreadBuilderTile(Context context) {
       this.context = context;
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
+      fast = context.fast;
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
@@ -101,14 +104,30 @@ final public class ThreadBuilderTile {
       if( nbProgen>Constante.MAXOVERLAY ) {
          rqMem += 2*Constante.SIDE*Constante.SIDE*8;
       }
-      while( !context.cacheFits.needMem(rqMem) ) {
-         try { 
-            context.nlwarning(Thread.currentThread().getName()+" is waiting more memory (need "+
-               cds.tools.Util.getUnitDisk(rqMem)+")...");
-            cds.tools.Util.pause(1000);
-         } catch( Exception e ) { }
-         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+      if( !context.cacheFits.needMem(rqMem) ) return;
+      if( isTheLastRunning() ) {
+         context.nlwarning(Thread.currentThread().getName()+" needs "+
+               cds.tools.Util.getUnitDisk(rqMem)+" but can not stop => last thread running !");
+         return;
       }
+      try {
+         nbThreadRunning--;
+         while( !context.cacheFits.needMem(rqMem) ) {
+            try { 
+               context.nlwarning(Thread.currentThread().getName()+" is waiting more memory (need "+
+                     cds.tools.Util.getUnitDisk(rqMem)+")...");
+
+               cds.tools.Util.pause(1000);
+            } catch( Exception e ) { }
+            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         }
+      } finally { nbThreadRunning++; }
+   }
+   
+   static protected int nbThreadRunning=0;
+   
+   private boolean isTheLastRunning() {
+      return nbThreadRunning<=1;
    }
    
    Fits buildHealpix(BuilderTiles bt, int nside_file, long npix_file, int nside) throws Exception {
@@ -140,8 +159,7 @@ final public class ThreadBuilderTile {
          int n=downFiles.size();
          
          // Pas trop de progéniteurs => on peut tout faire d'un coup
-         // Idem en mode couleur parce que trop casse-gueule de mettre au point sur 3x8 bits
-         if( flagColor || n<Constante.MAXOVERLAY ) {
+         if( fast || n<Constante.MAXOVERLAY ) {
             
             checkMem(n);
             for( int i=0; i<n; i++ ) {
@@ -304,42 +322,53 @@ final public class ThreadBuilderTile {
                double totalCoef=0;
                String lastFitsFile=null;
                double lastX=-1,lastY=-1;
-//               for( int i=downFiles.size()-1; i>=0 && nbPix<Constante.MAXOVERLAY; i-- ) {
                
                for( int i=deb; i<fin; i++ ) {
-                  file = downFiles.get(i);
-                  double currentBlankOrig = !hasAlternateBlank ? file.fitsfile.getBlank() : blankOrig;
+                  try {
+                     file = downFiles.get(i);
+                     file.open();
+                     Calib calib = file.fitsfile.getCalib();
+                     double currentBlankOrig = !hasAlternateBlank ? file.fitsfile.getBlank() : blankOrig;
 
-                  // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
-                  if( lastFitsFile!=null && lastFitsFile.equals(file.fitsfile.getFilename()) ) { coo.y=lastY; coo.x=lastX; }
+                     // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
+                     if( lastFitsFile!=null && lastFitsFile==file.fitsfile.getFilename() ) { coo.y=lastY; coo.x=lastX; }
 
-                  // Détermination du pixel dans l'image à traiter
-                  else {
-                     file.calib.GetXY(coo);
-                     if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && file.fitsfile.bitpix!=0 ) 
-                        coo.y = file.fitsfile.height-coo.y -1;
-                     lastY=coo.y;
-                     lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
-                     lastFitsFile=file.fitsfile.getFilename();
+                     // Détermination du pixel dans l'image à traiter
+                     else {
+                        calib.GetXY(coo);
+                        if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && file.fitsfile.bitpix!=0 ) 
+                           coo.y = file.fitsfile.height-coo.y -1;
+                        lastY=coo.y;
+                        lastX=coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+                        lastFitsFile=file.fitsfile.getFilename();
+                     }
+                     
+                     // Cas RGB
+                     if( flagColor ) {
+                        int pix = getBilinearPixelRGB(file.fitsfile,coo);
+                        if( pix==0 ) continue;
+                        pixval[nbPix] = 0xFF & (pix>>16);
+                        pixvalG[nbPix] = 0xFF & (pix>>8);
+                        pixvalB[nbPix] = 0xFF & pix;
+
+                        // Cas normal
+                     } else {
+                        double pix = getBilinearPixel(file.fitsfile,coo,currentBlankOrig);
+                        if( Double.isNaN(pix) ) continue;
+                        pixval[nbPix]=pix;
+                     }
+                     // fading
+                     totalCoef+= pixcoef[nbPix] = getCoef(file.fitsfile,coo);
+                     nbPix++;
+                     
+                     // On a un pixel, pas besoin d'aller plus loin
+                     if( fast ) break;
+
+                  } catch( Exception e ) {
+                     // TODO Auto-generated catch block
+                     e.printStackTrace();
+                     continue;
                   }
-                  
-                  // Cas RGB
-                  if( flagColor ) {
-                     int pix = getBilinearPixelRGB(file.fitsfile,coo);
-                     if( pix==0 ) continue;
-                     pixval[nbPix] = 0xFF & (pix>>16);
-                     pixvalG[nbPix] = 0xFF & (pix>>8);
-                     pixvalB[nbPix] = 0xFF & pix;
-
-                     // Cas normal
-                  } else {
-                     double pix = getBilinearPixel(file.fitsfile,coo,currentBlankOrig);
-                     if( Double.isNaN(pix) ) continue;
-                     pixval[nbPix]=pix;
-                  }
-                  // fading
-                  totalCoef+= pixcoef[nbPix] = getCoef(file.fitsfile,coo);
-                  nbPix++;
                }
 
                // cas RGB
@@ -361,9 +390,11 @@ final public class ThreadBuilderTile {
                         pixelFinal = (((int)r & 0xFF)<<16) | (((int)g & 0xFF)<<8) | ((int)b & 0xFF);
                      }
                   }
+                  
                   if( pixelFinal!=0 ) empty=false;
                   
-                  out.setPixelRGBJPG(x, y, 0xFF000000 | pixelFinal);
+                  int alpha = pixelFinal==0 ?  0 : 0xFF000000;
+                  out.setPixelRGBJPG(x, y, alpha | pixelFinal);
 
                   // Cas normal
                }  else {
@@ -388,6 +419,7 @@ final public class ThreadBuilderTile {
                
                // Mémorisation du poids du pixel (si nécessaire)
                if( weight!=null ) weight[y*Constante.SIDE+x]=totalCoef;
+               
             }
          }
       } catch( Exception e ) { 
@@ -404,8 +436,21 @@ final public class ThreadBuilderTile {
    static private final double OVERLAY_PROPORTION = 1/6.;
    
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
+   // Même si le fading est désactivé, il faut tout de même divisé par 2 ou 4 les lignes des cellules
+   // adjacentes (dû au fait que le pixel des bords de cellules auront sinon un poids
+   // double voire quadruple, ce qui va se voir en cas de superpostion avec une autre image)
    private double getCoef(Fits f,Coord coo) {
-      if( !fading ) return 1.;
+      int x1 = (int)Math.floor(coo.x);
+      int y1 = (int)Math.floor(coo.y);
+      
+      // Diviseur du coefficient sur les lignes de recouvrements des cellules
+      // adjacentes (voir commentaire de la méthode)
+      double div=1;
+      if( x1>0 && x1<f.width  && (coo.x<=f.xCell || coo.x>=f.xCell+f.widthCell-1) ) div*=2;
+      if( y1>0 && y1<f.height && (coo.y<=f.yCell || coo.y>=f.yCell+f.heightCell-1) ) div*=2;
+      
+      if( !fading ) return 1./div;
+      
       double c=0;
       try {
          double width  = f.width -(borderSize[1]+borderSize[3]);
@@ -424,7 +469,7 @@ final public class ThreadBuilderTile {
       } catch( Exception e ) {
          c=0;
       }
-      return c;
+      return c/div;
    }
 
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au centre 
@@ -486,9 +531,12 @@ final public class ThreadBuilderTile {
    private int getBilinearPixelRGB(Fits f,Coord coo) {
       double x = coo.x;
       double y = coo.y;
+      
 
-      int x1 = (int)Math.floor(x);
-      int y1 = (int)Math.floor(y);
+//      int x1 = (int)Math.floor(x);
+//      int y1 = (int)Math.floor(y);
+      int x1 = (int)x;
+      int y1 = (int)y;
       int x2=x1+1;
       int y2=y1+1;
 
@@ -498,7 +546,7 @@ final public class ThreadBuilderTile {
       int oy2= y2;
       
       if( x2<f.xCell || y2<f.yCell ||
-        x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return 0;
+            x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return 0;
 
       // Sur le bord, on dédouble le dernier pixel
       if( ox1==f.xCell-1 ) ox1++;
@@ -507,19 +555,35 @@ final public class ThreadBuilderTile {
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
       int b0 = f.getPixelRGBJPG(ox1,oy1);
-      if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
+      if( fast ) return b0;
+//      if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
       
       int b1 = f.getPixelRGBJPG(ox2,oy1);
       int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
+            
+      boolean c0 = b0==0;
+      boolean c1 = b1==0;
+      boolean c2 = b2==0;
+      boolean c3 = b3==0;
       
+      if( c0 && c1 && c2 && c3 ) return 0;
+      if( c0 || c1 || c2 || c3 ) {
+         int a = !c0 ? b0 : !c1 ? b1 : !c2 ? b2 : b3;
+         if( c0 ) b0=a;
+         if( c1 ) b1=a;
+         if( c2 ) b2=a;
+         if( c3 ) b3=a;
+      }
+
       int pix=0xFF;
       for( int i=16; i>=0; i-=8 ) {
          double a0 = 0xFF & (b0>>i);
          double a1 = 0xFF & (b1>>i);
          double a2 = 0xFF & (b2>>i);
          double a3 = 0xFF & (b3>>i);
-         pix = (pix<<8) | (int)bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
+         int p = (int)(bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3)+0.5);
+         pix = (pix<<8) | p;
       }
       return pix;
    }
@@ -614,55 +678,19 @@ final public class ThreadBuilderTile {
          BufferedReader reader = null;
          try {
             reader = new BufferedReader(new FileReader(f));
-            for( int i=0; (fitsfilename = nextPath(reader)) != null ; i++) {
-               
-//               if( maxFile>0 && i>=maxFile ) break; // Pas plus de N images
+            while( (fitsfilename = nextPath(reader)) != null) {
                
                try {
-                  //					récupère l'image
                   Fits fitsfile = new Fits();
                   
-                  // Mode JPEG ou PNG avec .hhh
-                  if( fitsfilename.endsWith(".hhh") || fitsfilename.indexOf(".hhh[")>0 ) {
-                     String hhhFile = fitsfilename;
-                     
-                     fitsfilename=fitsfilename.replaceAll("\\.hhh", ".jpg");
-                     try { fitsfile=context.cacheFits.getFits(fitsfilename,true,true); }
-                     
-                     // Sinon peut être en PNG ? (C'est pas très beau mais c'est si facile)
-                     catch( Exception e ) {
-                        fitsfilename=fitsfilename.replaceAll("\\.jpg", ".png");
-                        fitsfile=context.cacheFits.getFits(fitsfilename,true,true);
-                     }
-                     fitsfile.loadHeaderFITS(hhhFile);
-                     
-                  // Mode JPEG ou PNG avec calib interne
-                  } 
-                  else                    
-                     if( fitsfilename.endsWith(".jpg") || fitsfilename.indexOf(".jpg[")>0
-                       || fitsfilename.endsWith(".png") || fitsfilename.indexOf(".png[")>0 ) {
-                        fitsfile=context.cacheFits.getFits(fitsfilename,true,true);
-                     }
-
-                  // Mode FITS couleur
-                  else if (bitpix==0) fitsfile.loadFITS(fitsfilename,true,true);
-
-                  // Mode FITS classique ou JPEG/PNG avec calib
-                  else {
-                     fitsfile=context.cacheFits.getFits(fitsfilename,false,false);   // Utilisation d'un cache de fichiers Fits déjà ouvert
-//                     					   fitsfile.loadFITS(fitsfilename);
-                  }
-
                   fitsfile.setFilename(fitsfilename);
-//                  if( !Double.isNaN(blank) ) fitsfile.setBlank(blank);
 
                   SrcFile file = new SrcFile();
                   file.fitsfile = fitsfile;
-                  file.calib = fitsfile.getCalib();
 
                   downFiles.add(file);
                   bt.addFits(Thread.currentThread(),fitsfile);
-
+                  
                } catch (Exception e) {
                   System.err.println("Erreur de chargement de : " + fitsfilename);
                   e.printStackTrace();
@@ -683,6 +711,33 @@ final public class ThreadBuilderTile {
          return false;
       }
    }
+   
+   class SrcFile {
+      Fits fitsfile;
+      boolean isOpened=false;
+      
+      SrcFile() { }
+      
+      @Override
+      public String toString() {
+          return fitsfile.getFilename().toString();
+      }
+      
+      protected void open() throws Exception {
+         if( isOpened ) return;
+         String fitsfilename = fitsfile.getFilename();
+         int mode = (fitsfilename.endsWith(".hhh") || fitsfilename.indexOf(".hhh[")>0) ? CacheFits.HHH
+               : (fitsfilename.endsWith(".jpg") || fitsfilename.indexOf(".jpg[")>0) ? CacheFits.JPEG
+               : (fitsfilename.endsWith(".png") || fitsfilename.indexOf(".png[")>0) ? CacheFits.PNG   
+               : CacheFits.FITS;
+
+         // Mode FITS couleur
+         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(fitsfilename,true,true);
+         else fitsfile=context.cacheFits.getFits(fitsfilename,mode,false); 
+         
+         isOpened=true;
+      }
+  }
 
    int n =0;
 

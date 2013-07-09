@@ -47,7 +47,8 @@ final public class BuilderAllsky  extends Builder {
    
    public void run() throws Exception { 
       if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64);
-      createAllSkyJpgColor(context.getOutputPath(),3,64);
+//      createAllSkyColor(context.getOutputPath(),3,"png",64);
+      createAllSkyColor(context.getOutputPath(),3,"jpeg",64);
       context.writePropertiesFile();
    }
    
@@ -156,12 +157,13 @@ final public class BuilderAllsky  extends Builder {
 	   return path+FS+"Norder"+order+FS+"Allsky";
    }
    
-   /** Création d'un AllSky JPEG couleur à partir des images JPEG à l'ordre indiqué
+   /** Création d'un AllSky JPEG couleur à partir des images JPEG ou PNG à l'ordre indiqué
     * Rq : seule la méthode FIRST est supportée
     * @param order order Healpix
+    * @param mode jpeg ou png
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSkyJpgColor(String path, int order,int outLosangeWidth) throws Exception {
+   public void createAllSkyColor(String path, int order,String mode,int outLosangeWidth) throws Exception {
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -171,6 +173,7 @@ final public class BuilderAllsky  extends Builder {
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       int outFileHeight = nbOutLosangeHeight*outLosangeWidth;
       boolean first = true;
+      String ext = mode=="png" ? ".png" : ".jpg";
      
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
@@ -185,12 +188,12 @@ final public class BuilderAllsky  extends Builder {
          Fits in = new Fits();
          String filename = path+FS+name;
          try {
-            if( !(new File(filename+".jpg")).exists() ) continue;
-            in.loadJpeg(filename+".jpg",true);
+            if( !(new File(filename+ext)).exists() ) continue;
+            in.loadJpeg(filename+ext,true,false);
             if( first ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
                   context.info("createAllsky: reducing width=>"+in.width+" ...");
-                  createAllSkyJpgColor(path,order,in.width);
+                  createAllSkyColor(path,order,ext,in.width);
                   return;
                }
             }
@@ -211,14 +214,14 @@ final public class BuilderAllsky  extends Builder {
       }
       
       if( first ) {
-         Aladin.trace(4, "createAllSkyJpgColor error: no jpeg tiles !");
+         Aladin.trace(4, "createAllSkyColor error: no "+ext+" tiles !");
          return;
       }
 
       String filename = getFileName(path, order);
-      out.writeCompressed(filename+".jpg",0,0,null,"jpeg");
+      out.writeCompressed(filename+ext,0,0,null,mode);
       
-      context.trace(4,"SkyGenerator.createAllSkyJpgColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+      context.trace(4,"SkyGenerator.createAllSkyColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }
    
 }

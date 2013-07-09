@@ -57,6 +57,7 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean color=false;  // true si le survey est en couleur
    private boolean inFits=false; // true si le survey est fourni en FITS
    private boolean inJPEG=false; // true si le survey est fourni en JPEG
+   private boolean inPNG=false;  // true si le survey est fourni en PNG
    private boolean truePixels=false; // true si par défaut le survey est fourni en truePixels (FITS)
    private boolean truePixelsSet=false; // true si le mode par défaut du survey a été positionné manuellement
    private boolean cat=false;    // true s'il s'agit d'un catalogue hiérarchique
@@ -162,11 +163,13 @@ public class TreeNodeAllsky extends TreeNode {
             int a,b;
             inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;
             inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0 || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
+            inPNG  = (b=Util.indexOfIgnoreCase(format, "png"))>=0;
             truePixels = inFits && a<b;                         // On démarre dans le premier format indiqué
          } else {
             inFits = getFormatByPath(pathOrUrl,local,0);
             inJPEG = getFormatByPath(pathOrUrl,local,1);
-            truePixels = local && inFits || !local && inJPEG;   // par défaut on démarre en FITS en local, en Jpeg en distant
+            inPNG  = getFormatByPath(pathOrUrl,local,3);
+            truePixels = local && inFits || !local && (inJPEG || inPNG);   // par défaut on démarre en FITS en local, en Jpeg en distant
          }
          if( keyColor==null ) color = getIsColorByPath(pathOrUrl,local);
       }
@@ -175,21 +178,22 @@ public class TreeNodeAllsky extends TreeNode {
    }
    
    private boolean getIsColorByPath(String path,boolean local) {
+      String ext = inPNG ? ".png" : ".jpg";
       MyInputStream in = null;
       try { 
-         if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky.jpg");
-         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky.jpg") );
+         if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext);
+         in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky"+ext) );
          byte [] buf = in.readFully();
          return Util.isJPEGColored(buf);
       } catch( Exception e) {
-         aladin.trace(3,"Allsky.jpg not found => assume B&W survey");
+         aladin.trace(3,"Allsky"+ext+" not found => assume B&W survey");
          return false;
       }
       finally { try { if( in!=null ) in.close(); } catch( Exception e1 ) {} }
    }
    
    private boolean getFormatByPath(String path,boolean local,int fmt) {
-      String ext = fmt==0 ? ".fits" : fmt==1 ? ".jpg" : ".xml";
+      String ext = fmt==0 ? ".fits" : fmt==1 ? ".jpg" : fmt==3 ? ".png" : ".xml";
       return local && (new File(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext)).exists() ||
             !local && Util.isUrlResponding(path+"/Norder3/Allsky"+ext);
    }
@@ -282,6 +286,7 @@ public class TreeNodeAllsky extends TreeNode {
                   +(!isCatalog() && isColored() ?" colored" : " B&W")
                   +(!isFits() ? "" : isTruePixels() ?" *inFits*" : " inFits")
                   +(!isJPEG() ? "" : isTruePixels() ?" inJPEG" : " *inJPEG*")
+                  +(!isPNG()  ? "" : isTruePixels() ?" inPNG"  : " *inPNG*")
                   +(loadMocNow() ? " withMoc" : "")
                   +(useCache() ? " cache" : " nocache")
                   +" "+Localisation.getFrameName(getFrame())
@@ -301,7 +306,7 @@ public class TreeNodeAllsky extends TreeNode {
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCatalog() { return cat; }
    
-   /** Retourne true s'il s'agit d'un survey ou d'une map couleur */
+   /** Retourne true s'il s'agit d'un survey ou d'une map couleur (par défaut JPG) */
    protected boolean isColored() { return color; }
    
    protected int getFrame() { return frame; }
@@ -332,8 +337,13 @@ public class TreeNodeAllsky extends TreeNode {
    
    protected boolean loadMocNow() { return moc; }
    
-   /** Retourne true s'il s'agit d'un survey fournissante les losanges en JPEG => 8 bits pixel + compression */
+   /** Retourne true s'il s'agit d'un survey fournissante les losanges en JPEG 
+    * => 8 bits pixel + compression avec perte */
    protected boolean isJPEG() { return inJPEG; }
+   
+   /** Retourne true s'il s'agit d'un survey fournissante les losanges en PNG 
+    * => 8 bits pixel + compression sans perte + transparence */
+   protected boolean isPNG() { return inPNG; }
    
    /** Retourne true si par défaut le survey est fourni en true pixels (FITS)  */
    protected boolean isTruePixels() { 
