@@ -37,8 +37,9 @@ class HealpixAllskyPol extends HealpixKeyPol {
       resetTimer();
       String nameNet = "Norder"+order+"/Allsky";
       String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
-      if( planBG.color ) extCache=extNet=JPEG;
-      if( planBG.truePixels ) extCache=extNet=FITS;
+      extCache=extNet=planBG.getTileMode();
+//      if( planBG.color ) extCache=extNet=JPEG;
+//      if( planBG.truePixels ) extCache=extNet=FITS;
       fileCache = nameCache+ EXT[extCache];
       fileNet = nameNet+ EXT[extNet];
       alreadyCached=false;

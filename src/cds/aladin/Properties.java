@@ -849,7 +849,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
          if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
 //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
-            JButton bt = new JButton( pbg.truePixels ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
+            JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
             bt.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) {
                   pbg.switchFormat();

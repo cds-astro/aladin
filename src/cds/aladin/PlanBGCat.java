@@ -46,6 +46,8 @@ public class PlanBGCat extends PlanBG {
       super(aladin,gluSky,label, c,radius,startingTaskId);
       aladin.log(Plan.Tp[type],label);
    }
+   
+   protected int getTileMode() { return HealpixKey.TSV; }
 
    protected int getGapOrder() { return gapOrder; }
    protected void setGapOrder(int gapOrder) {

@@ -174,8 +174,16 @@ public class PlanBG extends PlanImage {
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    
    protected PlanBGIndex planBGIndex=null;
-
-
+   
+//   public static int TILEUNKNOWN  = 0;
+//   public static int TILECOLOR    = 1;
+//   public static int TILEFITS     = 2;
+//   public static int TILEJPEG     = 4;
+//   public static int TILEPNG      = 8;
+//
+//   public int modeTile=TILEFITS;
+//   public int supportedTile=TILEUNKNOWN;
+   
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
    static volatile long cacheSize=-1;   // Taille actuelle du cache
@@ -367,6 +375,13 @@ public class PlanBG extends PlanImage {
       color = gluSky.isColored();
       
       scanProperties();
+   }
+   
+   protected int getTileMode() {
+      if( isTruePixels() ) return HealpixKey.FITS;
+      if( color ) return HealpixKey.JPEG;
+      if( inPNG ) return HealpixKey.PNG;
+      return HealpixKey.JPEG;
    }
    
    public PlanBG(Aladin aladin, String path, String label, Coord c, double radius,String startingTaskId) {
@@ -721,7 +736,7 @@ public class PlanBG extends PlanImage {
 
   /** Retourne true si on dispose (ou peut disposer) des pixels originaux */
    @Override
-   protected boolean hasOriginalPixels() { return truePixels; }
+   protected boolean hasOriginalPixels() { return isTruePixels(); }
 
    @Override
    protected boolean recut(double min,double max,boolean autocut) {
@@ -1173,7 +1188,7 @@ public class PlanBG extends PlanImage {
    /** Retourne true s'il est possible d'accéder à la valeur
     * du pixel Origin courant par un accès disque direct */
    protected boolean pixelsOriginFromDisk() {
-      return flagOk && !color && truePixels /* && !lockGetPixelInfo*/ ;
+      return flagOk && !color && isTruePixels() /* && !lockGetPixelInfo*/ ;
    }
    
 //   protected boolean lockGetPixelInfo=false;

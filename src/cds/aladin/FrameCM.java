@@ -436,7 +436,7 @@ public final class FrameCM extends JFrame implements ActionListener {
        pbg.switchFormat();
        showCM();
        aladin.view.repaintAll();
-       if( pbg.truePixels && pbg.useCache ) {
+       if( pbg.isTruePixels() && pbg.useCache ) {
           aladin.info(this,"The true all sky pixel mode requires a large network bandwidth\n" +
              "Your sky is being reloaded... Look for it in the Aladin stack\n" +
              "and be patient...");
@@ -472,7 +472,7 @@ public final class FrameCM extends JFrame implements ActionListener {
             p2.setBackground(Color.yellow);
             p2.add( new JLabel("<HTML><B>Mode:</B> "+pbg.getFormat()+"</HTML>"));
 //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixels" : "Switch to (slow) true pixels");
-            JButton bt = new JButton( pbg.truePixels ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS"));
+            JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS"));
             bt.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) { switchMode(pbg); }
             } );
