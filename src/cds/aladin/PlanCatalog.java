@@ -138,7 +138,7 @@ public class PlanCatalog extends Plan {
 
       threading();
    }
-   
+
    /** retourne le nom de la table associée à une source */
    protected String getTableName(Source o) {
       String s = o.leg==null ? null : o.leg.name;
@@ -163,7 +163,7 @@ public class PlanCatalog extends Plan {
       }
       return null;
    }
-   
+
    private long lastFilterLock = -1;
 
    protected boolean isSync() {
@@ -212,7 +212,7 @@ public class PlanCatalog extends Plan {
          setFilter(value);
       } else super.setPropertie(prop,specif,value);
    }
-   
+
    protected boolean setActivated() {
       if( !hasSources() ) return false;
       return super.setActivated();
@@ -269,9 +269,9 @@ public class PlanCatalog extends Plan {
 
    /** Retourne le nombre de tables qui composent le catalogue */
    protected int getNbTable() { return pcat.nbTable; }
-   
+
    /** Accroit ou décroit la taille du type de source */
-   void increaseSourceSize(int sens) { 
+   void increaseSourceSize(int sens) {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
@@ -363,7 +363,7 @@ public class PlanCatalog extends Plan {
 	   }
 
 	}
-	
+
 	 /** retourne true si le plan a des sources */
 	 protected boolean hasSources() { return pcat!=null && pcat.hasObj(); }
 
@@ -408,7 +408,7 @@ public class PlanCatalog extends Plan {
 	  "<DESCRIPTION>\n" +
 	    "VizieR Astronomical Server: vizier.u-strasbg.fr  2010-07-01T11:59:16\n" +
 	    "Explanations and Statistics of UCDs:         See LINK below\n" +
-	    "In case of problem, please report to:    question@simbad.u-strasbg.fr\n" +
+	    "In case of problem, please report to:    cds-question@unistra.fr\n" +
 	  "</DESCRIPTION>\n" +
 	 "<!-- VOTable description at http://www.ivoa.net/Documents/latest/VOT.html -->\n" +
 	 "<DEFINITIONS>\n" +
