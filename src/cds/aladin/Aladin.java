@@ -4865,26 +4865,31 @@ public void show() {
 
    /** Pour interface VOObserver */
    protected void sendObserver() {
+       // 1. Transmission de la position courante
+       // transmission via SAMP
+       boolean flagPlastic = Aladin.PLASTIC_SUPPORT;
+       if (Aladin.PLASTIC_SUPPORT && view.repere!=null) {
+           this.getMessagingMgr().pointAtCoords(view.repere.raj,view.repere.dej);
+       }
+       // transmission via interface VOApp
+       if( VOObsPos!=null && view.repere!=null ) {
+          Enumeration e = VOObsPos.elements();
+          while( e.hasMoreElements() ) {
+             try { ((VOObserver)e.nextElement()).position(view.repere.raj,view.repere.dej); }
+             catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
+          }
+       }
 
-      // Transmission de la position courante
-      if( VOObsPos!=null && view.repere!=null ) {
-         Enumeration e = VOObsPos.elements();
-         while( e.hasMoreElements() ) {
-            try { ((VOObserver)e.nextElement()).position(view.repere.raj,view.repere.dej); }
-            catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
-         }
-      }
+       // 2. Transmission de la valeur du pixel
+       if( VOObsPix!=null && view.repere!=null ) {
+          double pixelValue = view.getPixelValue();
 
-      // Transmission de la valeur du pixel
-      if( VOObsPix!=null && view.repere!=null ) {
-         double pixelValue = view.getPixelValue();
-
-         Enumeration e = VOObsPix.elements();
-         while( e.hasMoreElements() ) {
-            try { ((VOObserver)e.nextElement()).pixel(pixelValue); }
-            catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
-         }
-      }
+          Enumeration e = VOObsPix.elements();
+          while( e.hasMoreElements() ) {
+             try { ((VOObserver)e.nextElement()).pixel(pixelValue); }
+             catch( Exception e1 ) { if( levelTrace>=3 ) e1.printStackTrace(); }
+          }
+       }
 
    }
 
