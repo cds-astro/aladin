@@ -145,14 +145,18 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
     static final protected String MSG_SELECT_OBJECTS = "table.select.rowList";
 
     static final protected String MSG_LOAD_SPECTRUM = "spectrum.load.ssa-generic";
+
     // message non "officiel", permet l'envoi de cmdes script à Aladin, via SAMP
     static final protected String MSG_SEND_ALADIN_SCRIPT_CMD = "script.aladin.send";
+    // message non officiel, pour récupérer les coordonnées courantes
+    static final protected String MSG_GET_COORDS = "coord.get.sky";
 
 
     static final protected String MSG_PING = "samp.app.ping";
 
     // liste des messages supportés (i.e auxquels on répond)
-    static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS, MSG_POINT_AT_COORDS, MSG_LOAD_VOT_FROM_URL,
+    static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS, MSG_POINT_AT_COORDS, MSG_GET_COORDS,
+                                    MSG_LOAD_VOT_FROM_URL,
                                     MSG_LOAD_FITS_TABLE_FROM_URL, MSG_HIGHLIGHT_OBJECT, MSG_SELECT_OBJECTS,
                                     MSG_PING, MSG_SEND_ALADIN_SCRIPT_CMD,
                                     HUB_MSG_SHUTDOWN, HUB_MSG_REGISTRATION, HUB_MSG_UNREGISTRATION,
@@ -330,11 +334,13 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
         }
 
         // set MTypes
-        params = new Vector();
+        params = new Vector<Object>();
         params.add(myPrivateKey);
-        Map subscriptionMap = new Hashtable();
+        Map<String, Map<String, String>> subscriptionMap = new Hashtable<String, Map<String, String>>();
         for( int i=0; i<SUPPORTED_MESSAGES.length; i++ ) {
-            subscriptionMap.put(SUPPORTED_MESSAGES[i], new Hashtable());
+            Map<String, String> subscriptionAnnotation = new Hashtable<String, String>();
+            subscriptionAnnotation.put("x-samp.mostly-harmless", "1");
+            subscriptionMap.put(SUPPORTED_MESSAGES[i], subscriptionAnnotation);
         }
         params.add(subscriptionMap);
         try {
@@ -578,6 +584,18 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                     else {
                         replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, "Could not find sources to select");
                     }
+                }
+            }
+            else if( mType.equals(MSG_GET_COORDS) ) {
+                if (a.view.repere==null || Double.isNaN(a.view.repere.raj) || Double.isNaN(a.view.repere.dej)) {
+                    retValue = FALSE;
+                    replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, "no repere has been set");
+                }
+                else {
+                    Map<String, String> positionMap = new Hashtable<String, String>();
+                    positionMap.put("ra", Double.toString(a.view.repere.raj));
+                    positionMap.put("dec", Double.toString(a.view.repere.dej));
+                    replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, positionMap, null);
                 }
             }
             else {
