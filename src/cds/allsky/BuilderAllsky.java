@@ -33,7 +33,7 @@ import cds.tools.pixtools.Util;
  */
 final public class BuilderAllsky  extends Builder {
    
-   private static final String FS = System.getProperty("file.separator");
+   public static final String FS = System.getProperty("file.separator");
    
    public BuilderAllsky(Context context) { super(context); }
    
@@ -47,7 +47,7 @@ final public class BuilderAllsky  extends Builder {
    
    public void run() throws Exception { 
       if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64);
-//      createAllSkyColor(context.getOutputPath(),3,"png",64);
+      createAllSkyColor(context.getOutputPath(),3,"png",64);
       createAllSkyColor(context.getOutputPath(),3,"jpeg",64);
       context.writePropertiesFile();
    }
@@ -116,7 +116,11 @@ final public class BuilderAllsky  extends Builder {
       }
       
       // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
-      if( out==null ) throw new Exception("createAllSky error: null output file !");
+      if( out==null ) {
+//         context.warning("createAllsky: no FITS tiles found !");
+         return;
+//         throw new Exception("createAllSky error: null output file !");
+      }
       double cut [] = context.getCut();
       double bzero = context.getBZero();
       double bscale = context.getBScale();
@@ -153,7 +157,7 @@ final public class BuilderAllsky  extends Builder {
    }
    
 
-   private String getFileName(String path, int order) {
+   static public String getFileName(String path, int order) {
 	   return path+FS+"Norder"+order+FS+"Allsky";
    }
    
@@ -214,7 +218,7 @@ final public class BuilderAllsky  extends Builder {
       }
       
       if( first ) {
-         Aladin.trace(4, "createAllSkyColor error: no "+ext+" tiles !");
+//         context.warning("createAllSkyColor : no "+ext+" tiles found!");
          return;
       }
 

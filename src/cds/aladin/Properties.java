@@ -25,7 +25,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
+import java.net.URI;
 import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -364,9 +368,42 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       return p;
    }
 
-   private void showInfo() {
-      aladin.info(this,plan.info);
+//   private void showInfo() {
+//      aladin.info(this,plan.verboseDescr);
+//   }
+   
+   
+   class Anchor extends JButton {
+      Color color = Color.blue;
+      Anchor(String text,final String url) {
+         super(text);
+         final Component c = this;
+         setFont(getFont().deriveFont(Font.ITALIC));
+         setForeground(color);
+         //         setBackground(background);
+         setContentAreaFilled(false);
+         setBorder( BorderFactory.createMatteBorder(0, 0, 1, 0, color) );
+         addMouseMotionListener(new MouseMotionListener() {
+            public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
+            public void mouseDragged(MouseEvent e) { }
+         });
+         addMouseListener(new MouseListener() {
+            public void mouseReleased(MouseEvent e) { 
+               if( url.startsWith("http://") ) aladin.glu.showDocument(url);
+               else aladin.info(c,plan.verboseDescr.replace("\\n","\n"));
+            }
+            public void mousePressed(MouseEvent e)  {
+               color=MCanvas.C2;
+               setBorder( BorderFactory.createMatteBorder(0, 0, 1, 0, color) );
+               setForeground(color);
+            }
+            public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULT); }
+            public void mouseEntered(MouseEvent e)  { }
+            public void mouseClicked(MouseEvent e) { }
+         });
+      }
    }
+
 
    /** Construction du panel des proprietes du plan courant.
    * @return Le panel des proprietes du plan courant
@@ -384,19 +421,32 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // le label associe au plan
       label = new JTextField(plan.label,15);
       label.setMinimumSize(label.getPreferredSize());
-      if( plan.info!=null ) {
-         JPanel p1 = new JPanel();
-         p1.add(label);
-         b = new JButton(FrameServer.INFO);
-         Insets m = b.getMargin();
-         b.setMargin(new Insets(m.top,3,m.bottom,3));
-         b.setOpaque(false);
-         b.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { showInfo(); }
-         });
-         p1.add(b);
-         PropPanel.addCouple(p, LABEL, p1, g,c);
-      } else PropPanel.addCouple(p, LABEL, label, g,c);
+      PropPanel.addCouple(p, LABEL, label, g,c);
+      
+      if( plan.verboseDescr!=null || plan.description!=null ) {
+         if( plan.description!=null ) PropPanel.addCouple(p,"Description", new JLabel(Util.fold(plan.description,50,true)), g ,c);
+         if( plan.verboseDescr!=null ) PropPanel.addCouple(p,"", new Anchor("more...",plan.verboseDescr), g,c);
+      }
+
+      // Origine
+      String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
+      if( copyright!=null ) {
+         String s=Util.fold(copyright,50,true);
+         PropPanel.addCouple(p,ORIGIN, plan.copyrightUrl==null ? new JLabel(s) : new Anchor(s,plan.copyrightUrl), g,c);
+      }
+
+//      // Accès à la description complète
+//      if( plan.verboseDescr!=null ) {
+//         final Plan pbg = plan;
+//         b = new JButton(FULLDESCR);
+//         final JFrame frame = this;
+//         b.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//               aladin.info(frame,pbg.verboseDescr.replace("\\n","\n"));
+//            }
+//         });
+//         PropPanel.addCouple(p,"", b, g,c);
+//      }
 
       //La couleur
       if( !(plan.isImage() || plan.type==Plan.ALLSKYIMG)
@@ -676,23 +726,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          }
       }
 
-      // Origine
-      if( plan.from!=null ) PropPanel.addCouple(p,ORIGIN, new JLabel(Util.fold(plan.from,50,true)), g,c);
-
-      // Accès à la description complète
-      if( plan instanceof PlanBG ) {
-         final PlanBG pbg = (PlanBG)plan;
-         if( pbg.verboseDescr!=null ) {
-            b = new JButton(FULLDESCR);
-            final JFrame frame = this;
-            b.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  aladin.info(frame,pbg.verboseDescr.replace("\\n","\n"));
-               }
-            });
-            PropPanel.addCouple(p,"", b, g,c);
-         }
-      }
 
       // Url de déchargement
       if( plan.getUrl()!=null ) {

@@ -79,6 +79,8 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_IMAGESOURCEPATH = "imageSourcePath";
     static public final String KEY_SURVEY = "survey";
     static public final String KEY_VERSION = "version";
+    static public final String KEY_CATEGORY = "category";
+
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;
     static final int POLA_AMPLITUDE_MAGIC_CODE = -41;
@@ -414,7 +416,7 @@ public class PlanHealpix extends PlanBG {
        color = isARGB;
        Aladin.trace(3, this+"");
 
-       from="local";
+       copyright="local";
        co = new Coord(0,0);
        Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
        objet = co+"";

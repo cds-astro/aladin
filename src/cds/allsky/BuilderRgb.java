@@ -57,6 +57,7 @@ public class BuilderRgb extends Builder {
        Object [] plans = ((ContextGui)context).getRgbPlans();
        String path = ((ContextGui)context).getRgbOutput();
        JpegMethod method = ((ContextGui)context).getRgbMethod();
+       String label=null;
        
        p = new PlanBG[3];
        for( int c=0; c<3; c++ ) {
@@ -77,6 +78,7 @@ public class BuilderRgb extends Builder {
        int frame=-1;
        for( int c=0; c<3; c++) {
           if( p[c]==null ) { missing=c; continue; }
+          if( label==null ) label = p[c].label;
           if( frame==-1 ) frame = p[c].getFrameOrigin();
           else if( frame!=p[c].getFrameOrigin() ) {
              context.warning("All components must be used the same HEALPix coordinate system !");
@@ -95,6 +97,7 @@ public class BuilderRgb extends Builder {
        context.setOutputPath(path);
        context.setBitpixOrig(0);
        context.writePropertiesFile();
+       if( context.label==null || context.label.trim().length()==0 ) context.label="RGB-"+label;
     }
 
     private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }

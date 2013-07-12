@@ -28,6 +28,7 @@ import java.util.*;
 
 import java.lang.reflect.Method;
 
+import cds.tools.UrlLoader;
 import cds.tools.Util;
 import cds.vizier.VizieRQuery;
 
@@ -71,7 +72,7 @@ public final class Glu implements Runnable {
    private static int MAXPROF = 6;
    
    // Timeout pour les tests d'indirection GLU (en ms)
-   private static final int CHECKTIMEOUT = 3000;
+   private static final int CHECKTIMEOUT = 1000;
 
    /** URL d'envoi des logs */
    protected static String LOGSCRIPT = "nph-alalog.pl";
@@ -1977,20 +1978,25 @@ public final class Glu implements Runnable {
             u = getURL(id,pa,encode,false,n+1);
             String url=u+ (urlSuffix!=null ? urlSuffix : "");
 
-            MyInputStream in=null;
+            UrlLoader in=null;
+//            MyInputStream in=null;
             long tps=-1;
             try {
                long t1 = System.currentTimeMillis();
-               in = Util.openStream(url,false,CHECKTIMEOUT);
-               if( in==null ) throw new Exception("Util.openStream error");
+               in = new UrlLoader( new URL(url), CHECKTIMEOUT,true);
+//               in = Util.openStream(url,false,CHECKTIMEOUT);
+//               if( in==null ) throw new Exception("Util.openStream error");
                
                // Un pattern à tester ?
                if( pattern!=null ) {
-                  MyInputStream mis = (new MyInputStream(in)).startRead();
-                  byte buf[] = mis.readFully();
+//                  MyInputStream mis = (new MyInputStream(in)).startRead();
+//                  byte buf[] = mis.readFully();
+//                  byte buf[] = in.readFully();
+//                  String data = new String(buf);
+                  String data = in.getData();
                   boolean trouve;
-                  if( !regex ) trouve=Util.matchMask(pattern, new String(buf));
-                  else trouve=(new String(buf)).matches(pattern);
+                  if( !regex ) trouve=Util.matchMask(pattern, data);
+                  else trouve=data.matches(pattern);
                   
                   if( !trouve ) throw new Exception("Pattern not found");
                }
@@ -2004,8 +2010,8 @@ public final class Glu implements Runnable {
                tps += (long)(Math.random()*100);
             } catch( Exception e ) {
                tps = -1;
-            } finally {
-               if( in!=null ) try { in.close(); } catch( Exception e) {}
+//            } finally {
+//               if( in!=null ) try { in.close(); } catch( Exception e) {}
             }
             Aladin.trace(4,"Glu.checkIndirection(...): "+id+"/"+(n+1)+" => "+url+" => "+tps+"ms");
             if( tps!=-1 && tps<minTime ) { minTime=tps; indice=n; }

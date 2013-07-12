@@ -107,7 +107,7 @@ public class PlanImageMosaic extends PlanImage {
        progress="computing...";
        if( label==null ) label="Msc img";
        setLabel(label);
-       from="Mosaic";
+       copyright="Mosaic";
        param="";
        bitpix=8;
        npix=1;
@@ -238,8 +238,8 @@ public class PlanImageMosaic extends PlanImage {
      private void setFrom(PlanImage p[]) {
         String s="";
         for( int i=0; i<p.length; i++ ) s = s+" ["+p[i]+"]";
-        if( firstMosaic ) from = "Mosaic from ["+Ref+"]"+s;
-        else from += s;        
+        if( firstMosaic ) copyright = "Mosaic from ["+Ref+"]"+s;
+        else copyright += s;        
      }
 
      synchronized protected void addFrame(PlanImage p[]) throws Exception {

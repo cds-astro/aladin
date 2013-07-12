@@ -521,7 +521,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       c = p.c;
       projd = p.projd;
       projD = p.projD==null ? null : (Hashtable)p.projD.clone();
-      from = "Colored composition by Aladin";
+      copyright = "Colored composition by Aladin";
 
 /*
       // La memorisation du dernier zoom associe au plan

@@ -82,8 +82,7 @@ public class BuilderTiles extends Builder {
 
 
    public void run() throws Exception {
-      String mode = context.isColor() ? "JPEG":"FITS";
-      context.running("Creating "+mode+" tiles and allsky (max depth="+context.getOrder()+")...");
+      context.running("Creating "+context.getTileExt()+" tiles and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
 
       // Un peu de baratin
@@ -189,7 +188,7 @@ public class BuilderTiles extends Builder {
 
       // Info sur la méthode
       CoAddMode m = context.getCoAddMode();
-      context.info("mode="+CoAddMode.getExplanation(m));
+      if( !context.isColor() || m==CoAddMode.KEEPTILE || m==CoAddMode.REPLACETILE ) context.info("mode="+CoAddMode.getExplanation(m));
    }
 
    /** Demande d'affichage des statistiques (via Task()) */
@@ -662,7 +661,7 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      if( coaddMode!=CoAddMode.REPLACETILE && coaddMode!=CoAddMode.KEEPTILE ) {
+      if( !isColor && coaddMode!=CoAddMode.REPLACETILE && coaddMode!=CoAddMode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
             if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
@@ -679,7 +678,7 @@ public class BuilderTiles extends Builder {
       }
 
       String filename = file+context.getTileExt();
-      if( isColor ) out.writeCompressed(filename,0,0,null,"jpeg");
+      if( isColor ) out.writeCompressed(filename,0,0,null, context.MODE[ context.targetColorMode ]);
       else out.writeFITS(filename);
 
       long duree = System.currentTimeMillis() -t;
@@ -749,7 +748,7 @@ public class BuilderTiles extends Builder {
       long duree;
       if (out!=null) {
          String filename = file + context.getTileExt();
-         if( isColor ) out.writeCompressed(filename,0,0,null,"jpeg");
+         if( isColor ) out.writeCompressed(filename,0,0,null,Context.MODE[context.targetColorMode]);
          else out.writeFITS(filename);
          duree = System.currentTimeMillis()-t;
          if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");

@@ -1319,11 +1319,11 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
           buf = new byte[(int)f.length()];
           f.readFully(buf);
        } finally { if( f!=null )  f.close(); }
-       return isJPEGColored(buf);
+       return isColoredImage(buf);
     }
 
-    /** Retourne true s'il s'agit d'un buffer contenant un JPEG couleur */
-    static public boolean isJPEGColored(byte [] buf) throws Exception {
+    /** Retourne true s'il s'agit d'un buffer contenant une image couleur */
+    static public boolean isColoredImage(byte [] buf) throws Exception {
        JButton obs = new JButton();
        Image img = Toolkit.getDefaultToolkit().createImage(buf);
        boolean encore=true;

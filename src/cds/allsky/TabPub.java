@@ -190,7 +190,7 @@ public class TabPub extends JPanel implements ActionListener {
 	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand() == PUBLISH) {
-		   new FrameGlu(aladin,context.getOrder(),mainPanel.hasJpg());
+		   new FrameGlu(aladin,context);
 		}
 		else if (ae.getSource() == bExport) {
 			mapfile = dirBrowserHPX();

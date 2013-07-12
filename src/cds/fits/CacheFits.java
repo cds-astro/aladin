@@ -138,7 +138,7 @@ public class CacheFits {
     */
   public Fits getFits(String fileName) throws Exception { return getFits(fileName,FITS,true); }
   public Fits getFits(String fileName,int mode,boolean flagLoad) throws Exception {
-     if( cacheOutOfMem ) return open(fileName,mode,flagLoad).fits;
+     if( cacheOutOfMem )  return open(fileName,mode,flagLoad).fits;
      try {
         waitLock();
 
@@ -163,6 +163,7 @@ public class CacheFits {
                  f=add(fileName,mode,flagLoad);
               } catch( OutOfMemoryError e1 ) {
                  System.err.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
+                 e1.printStackTrace();
                  reset();
                  cacheOutOfMem=true;
                  return open(fileName,mode,flagLoad).fits;

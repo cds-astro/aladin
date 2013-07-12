@@ -49,6 +49,7 @@ import java.io.RandomAccessFile;
 import javax.swing.*;
 
 import cds.aladin.Aladin;
+import cds.aladin.PlanHealpix;
 import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
@@ -60,36 +61,36 @@ import cds.tools.Util;
 public class FrameGlu extends JFrame implements KeyListener {
 
    // décrit les 4 champs de GLUPARAM[]
-   static private final int REQUIRED=0, LABEL=1, FIELD=2, VALUE=3, INFO=4;
+   static private final int REQUIRED=0, LABEL=1,  FIELD=2, KEY=3,VALUE=4, INFO=5;
 
    // Informations pour la construction du formulaire de renseignements
    // Champ 1 : * -> requis, "-" -> optional, "" -> non visible
-   // Champ 2 : Label du champ
-   // Champ 3 : Valeur par défaut
-   // Champ 4 : Courte description, avec exemple éventuel
+   // Champ 2 : Label GLU du champ
+   // Champ 3 : Label properties du champ
+   // Champ 4 : Valeur par défaut
+   // Champ 5 : Courte description, avec exemple éventuel
    static private String GLUPARAM[][] = {
-      { "*", "Survey ID",      "ActionName",    "",           "One word survey identifier (ex: DSS-J)"  },
-      { "*", "Name",           "Description",   "",           "Survey name (ex: DSS blue" },
-      { "*", "Url access",     "Url",           "http://...", "Url for accessing the Healpix data (a Healpix FITS file map or a Healpix Aladin directory)" },
-      { "-", "Category",       "Aladin.Tree",   "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
-      { "-", "Description",    "Description",   "",           "Short description" },
-      { "-", "Full descript.", "VerboseDescr",  "",           "Full data description (can be a long paragraph)" },
-      { "-", "Web info",       "Doc.User",      "",           "Web page describing the data" },
-      { "-", "Institute",      "Institute",     "",           "Institute/origin of the data" },
-      { "-", "Copyright",      "Copyright",     "",           "Copyright mention (ex: (c) Institute of ....)" },
-      { "-", "Web site",       "Copyright.url", "",           "Web link for copyright mention" },
+      { "*", "Survey ID",      "Id",            "",                         "",           "One word survey identifier (ex: P/DSS/2)"  },
+      { "*", "Name",           "Description",   "",                         "",           "Survey name (ex: DSS blue" },
+      { "*", "Url access",     "Url",           "",                         "http://...", "Url for accessing the Healpix data (a Healpix FITS file map or a Healpix Aladin directory)" },
+      { "-", "Category",       "Aladin.Tree",   PlanHealpix.KEY_CATEGORY,   "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
+      { "-", "Description",    "Description",   PlanHealpix.KEY_DESCRIPTION,"",           "Short description" },
+      { "-", "Full descript.", "VerboseDescr",  PlanHealpix.KEY_DESCRIPTION_VERBOSE,"",   "Full data description (can be a long paragraph)" },
+      { "-", "Web info",       "Doc.User",      "",                         "",           "Web page describing the data" },
+      { "-", "Institute",      "Institute",     "",                         "",           "Institute/origin of the data" },
+      { "-", "Copyright",      "Copyright",     PlanHealpix.KEY_COPYRIGHT,  "",           "Copyright mention (ex: (c) Institute of ....)" },
+      { "-", "Web site",       "Copyright.url", PlanHealpix.KEY_COPYRIGHT_URL,"",         "Web link for copyright mention" },
    };
-
+   
+   
    private JTextField [] field;  // Les champs de saisie du formulaires
    private Aladin aladin;
-   private int orderMax;
-   private boolean isJpg;
+   Context context;
 
    /** Crée et affiche la JFrame qui contient le formulaire */
-   public FrameGlu(Aladin aladin, int order, boolean jpg) {
+   public FrameGlu(Aladin aladin, Context c) {
       this.aladin = aladin;
-      this.orderMax = order;
-      this.isJpg = jpg;
+      context = c;
       JPanel panel = new JPanel( new BorderLayout(5,5) );
       panel.setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5));
       panel.add( getInfo(), BorderLayout.NORTH);
@@ -151,7 +152,9 @@ public class FrameGlu extends JFrame implements KeyListener {
          JLabel l = new JLabel( glup[LABEL] );
          if( glup[REQUIRED].length()==0 ) continue;
          if( glup[REQUIRED].charAt(0)=='*' ) l.setFont( l.getFont().deriveFont(Font.BOLD) );
-         field[i] =f= new JTextField( glup[VALUE] );
+         String value = glup[VALUE];
+         if( glup[FIELD].equals("Description") ) value = context.getLabel();
+         field[i] =f= new JTextField( value );
          f.addKeyListener(this);
          f.setMinimumSize(new Dimension(300, f.getMinimumSize().height));
          f.setPreferredSize(new Dimension(300, f.getPreferredSize().height));
@@ -199,6 +202,7 @@ public class FrameGlu extends JFrame implements KeyListener {
          aladin.dialog.show("Allsky");
 
       } catch( Exception e ) { e.printStackTrace();  }
+      updateProperties();
    }
 
    // Demande la confirmation, puis sauvegarde l'enregistrement GLU correspondant au survey de l'utilisateur
@@ -223,28 +227,44 @@ public class FrameGlu extends JFrame implements KeyListener {
          rf.close();
          aladin.trace(3,"Glu record Allsky saved ["+f.getAbsolutePath()+"] !");
       } catch( Exception e ) { e.printStackTrace(); }
+      updateProperties();
    }
+   
+   private void updateProperties() {
+      try {
+         context.writePropertiesFile();
+      } catch( Exception e ) { }
+   }
+
 
    // Retourne l'enregistrement GLU en fonction des informations saisies
    // par l'utilisateur dans le formulaire, et des informations techniques
    // issus du survey
+   // En profite pour mettre à jour les propriétés du context pour la mise à jour du fichier properties
    private String getGluRecord() {
       StringBuffer s = new StringBuffer();
+      String id = field[0].getText().trim().replace('/','-');
+      s.append( Util.align("%ActionName",15)+" "+id+".htx"+Util.CR);
       for( int i=0; i<GLUPARAM.length; i++ ) {
          String [] glup = GLUPARAM[i];
          String value = field[i].getText().trim();
          if( value.length()==0 ) continue;
          s.append( Util.align("%"+glup[FIELD],15)+" "+value+Util.CR);
+         if( glup[KEY].length()>0 ) context.setProperty(glup[KEY], value);
       }
       s.append( Util.align("%Aladin.XLabel",15) +" "+field[1].getText().trim()+Util.CR);
       s.append( Util.align("%Aladin.Profile",15) +" >6.1"+Util.CR);
       s.append( Util.align("%Aladin.HpxParam",15)+" "+getHpxParam()+Util.CR);
+      
+      context.setProperty(PlanHealpix.KEY_LABEL,id);
+      
       return s.toString();
    }
-
+   
    // Retourne les paramètres HPX en fonction du survey
    private String getHpxParam() {
-	   return "3 "+orderMax+" "+(isJpg?"jpeg":"")+" fits";
+//      return orderMax+" "+(isJpg?"jpeg":"")+" fits";
+      return context.getOrder()+" "+context.getAvailableTileFormats();
    }
 
 }

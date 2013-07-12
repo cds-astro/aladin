@@ -69,7 +69,7 @@ public class AladinData {
    /** Return the origin of the plane
     * @param the origin of the plane
     */
-   public String getOrigin() { return plan.from; }
+   public String getOrigin() { return plan.copyright; }
 
    /**
     * Return the url from where the plane has been built

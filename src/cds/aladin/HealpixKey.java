@@ -24,7 +24,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Composite;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -42,7 +41,6 @@ import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
@@ -55,10 +53,6 @@ import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 import cds.fits.Fits;
 import cds.tools.Util;
@@ -109,13 +103,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected Image imgBuf;        // Dernière image créée (si assez de place en mémoire sinon null)
    protected int imgID=-2;        // Numéro de l'image du plan de référence
    protected byte stream[];       // stream représentant le fichier JPEG ou FITS (planBG.color=true)
-   protected boolean truePixels;  // true si les pixels 8 bits ont été calculés depuis du FITS true pixels, et non du JPEG
+   protected boolean truePixels;  // true si les pixels 8 bits ont été calculés depuis du FITS true pixels, et non du JPEG ou du PNG
    protected boolean alreadyCached; // true si le losange est en cache
    protected boolean allSky;      // true si ne doit jamais être effacé
    protected boolean fromNet=true;// true si le losange provient du réseau et non du cache
    protected int timeStream;      // stat de lecture du stream, 
    private int timeJPEG, timePixel;  // stat de la création de l'image, de l'extraction des pixels
-//   private int typeColor;         // Mode couleur JPEG ou PNG
+   private int typeColor;         // Mode couleur JPEG ou PNG
 
    protected HealpixKey fils[] = null; // Si présence de fils en sous-échantillonnage
    protected HealpixKey anc=null;      // Ancêtre qui dispose des pixels, null sinon
@@ -132,16 +126,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final public int ONLYIFRAMAVAIL = 1;         // Retourne la valeur du pixel si les données sont disponibles en mémoire
    static final public int ONLYIFDISKAVAIL = 2;    // Retourne la valeur du pixel quitte à attendre le chargement des données si elles sont locales (cache, ou locales)
    
+   // Type de tuiles
    static protected final int JPEG=0;
    static protected final int FITS=1;
-   static protected final int TSV=2;
-   static protected final int XML=3;
-   static protected final int FITSGZIP=4;
-   static protected final int PNG=5;
+   static protected final int TSV =2;
+   static protected final int XML =3;
+   static protected final int PNG =4;
 
-   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".fits.gz",".png" };
+   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".png" };
 
-//   protected int extCache=FITS;
    protected int extCache=JPEG;         // Format d'image pour le cache
    protected int extNet=JPEG;           // Format d'image pour le net
    
@@ -747,10 +740,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
              byte [] c = new byte[8];
              f.readFully(c);
              
-//             // Detection de JPEG
-//             if( c[0]==255 && c[1]==216 ) typeColor = JPEG;
-//             else if( c[0]==137 && c[1]==80 && c[2]==78 && c[3]==71
-//                   && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
+             // Detection de JPEG
+             if( ((int)c[0] & 0xFF)==255 && ((int)c[1] & 0xFF)==216 ) typeColor = JPEG;
+             else if( ((int)c[0] & 0xFF)==137 && c[1]==80 && c[2]==78 && c[3]==71
+                   && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
 
              if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
 //                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
@@ -804,9 +797,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       
       // Détermination a posteriori de la couleur ou non du survey
       if( planBG.colorUnknown && this instanceof HealpixAllsky ) {
-         planBG.color = Util.isJPEGColored(stream);
+         planBG.color = Util.isColoredImage(stream);
          planBG.colorUnknown = false;
-         planBG.aladin.trace(4,"HealpixKey.loadJpeg("+filename+") => JPEG "+(planBG.color?"color":" grey levels"));
+         planBG.aladin.trace(4,"HealpixKey.loadJpeg("+filename+") => "+(typeColor==PNG?"PNG":"JPEG")+" "+(planBG.color?"color":" grey levels"));
       }
       
       if( !planBG.color ) {
@@ -825,7 +818,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
          rgb = getPixelsRGB(img);
       }
       
-      if( this instanceof HealpixAllsky ) planBG.creatDefaultCM();
+      if( this instanceof HealpixAllsky ) {
+         planBG.creatDefaultCM();
+         planBG.colorPNG = typeColor==PNG;
+      }
       
       return n;
    }
@@ -1247,44 +1243,39 @@ public class HealpixKey implements Comparable<HealpixKey> {
    // Regénération des pixels 8 bits
    protected byte [] getPixels(Image img) throws Exception {
       long t1=Util.getTime();
+      byte [] pixels=null;
       BufferedImage imgBuf;
-      if(  planBG.pixMode==PlanImage.PIX_256 ) {
-         imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
+      
+      // Mode PNG B&W => Je ne trouve pas comment faire autrement
+      if( planBG.pixMode==PlanImage.PIX_255 ) {
+         int [] rgb = getPixelsRGB1(img);
+         pixels = new byte[rgb.length];
+         for( int i=0; i<pixels.length; i++ ) {
+            if( (rgb[i] & 0xFF000000)==0 ) pixels[i]=0;
+            else {
+               byte p = (byte) (0xFF & rgb[i]);
+               if( p==0 ) p=1;
+               pixels[i] = p;
+            }
+         }
+         rgb = null;
+         
+      // Mode JPEG B&W
       } else {
-         imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED, 
-            (IndexColorModel) ColorMap.getCM(0, 128, 256, false, PlanImage.CMGRAY, 
-                  PlanImage.LINEAR, true));
+         imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
+         Graphics g = imgBuf.getGraphics();
+         g.drawImage(img,0,0,observer);
+         g.finalize(); g=null;
+
+         pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+
+         imgBuf.flush(); imgBuf=null;
       }
-      Graphics g = imgBuf.getGraphics();
-      g.drawImage(img,0,0,observer);
-      g.finalize(); g=null;
-      
-      byte [] pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
-      
-//      WritableRaster raster = imgBuf.getRaster();
-//      int taille=width*height;
-//      byte [] pixels = new byte[taille];
-//      raster.getDataElements(0, 0, width, height, pixels);
-//
-      imgBuf.flush(); imgBuf=null;
-      
+
       timePixel = (int)(Util.getTime()-t1);
 
       return pixels;
    }
-
-   // Regénération des pixels 8 bits
-//   protected byte [] getPixels(Image img) throws Exception {
-//
-//      int rgbTmp[] = getPixelsRGB(img);
-//
-//      int taille=width*height;
-//      byte [] pixels = new byte[taille];
-//      for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgbTmp[i] & 0xFF);
-//      rgbTmp=null;
-//
-//      return pixels;
-//   }
 
    // Regénération des pixels RGB
    protected int [] getPixelsRGB(Image img) throws Exception {
@@ -2267,176 +2258,4 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return priority - o.priority;
    }
    
-   public static void main(String argv[] ) {
-      try {
-         new HealpixKey(true);
-      } catch( Throwable e ) {
-         e.printStackTrace();
-      }
-   }
-   
-   HealpixKey(boolean bidon) throws Exception {
-      order=3;
-      npix=4;
-      hpix = new Hpix(order,npix,0);
-      alreadyCached=allSky=false;
-      setStatus(ASKING);
-      resetTimer();
-      extCache=extNet=PNG;
-      loadBidon("/Users/Pierre/Desktop/Data/HalphaNorthALLSKY/Norder3/Dir0/Npix4.png");
-
-      System.out.println("Lecture effectuée");
-
-      JFrame frame = new JFrame();
-      frame.getContentPane().add(new MyPanel(this));
-      frame.pack();
-      frame.show();
-   }
-   
-   static final JLabel obs = new JLabel();
-   
-   private int loadBidon(String filename) throws Exception {
-      stream = loadStream(filename);
-      truePixels=false;
-      int n=stream.length;
-      long t1=Util.getTime();
-      Image img = Toolkit.getDefaultToolkit().createImage(stream);
-      boolean encore=true;
-      while( encore ) {
-         try {
-            MediaTracker mt = new MediaTracker(obs);
-            mt.addImage(img,0);
-            mt.waitForID(0);
-            encore=false;
-         } catch( InterruptedException e ) { }
-      }
-      width =img.getWidth(obs);
-      height=img.getHeight(obs);
-      if( width==-1 ) { throw new Exception("width = -1"); }
-      timeJPEG = (int)(Util.getTime()-t1);
-      
-      System.out.println("Image chargée");
-      
-      pixels = getPixelsX(img);
-//      imgBuf = img;
-      
-      System.out.println("Pixel extrait");
-//      
-//      if( this instanceof HealpixAllsky ) planBG.creatDefaultCM();
-      
-      return n;
-   }
-   
-   // Regénération des pixels 8 bits
-   protected byte [] getPixelsX(Image img) throws Exception {
-      long t1=Util.getTime();
-      BufferedImage imgBuf;
-//      imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
-      imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-//      imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED, 
-//            (IndexColorModel) ColorMap.getCM(0, 128, 255, false, PlanImage.CMGRAY, 
-//                  PlanImage.LINEAR, true));
-      Graphics g = imgBuf.getGraphics();
-      g.drawImage(img,0,0,obs);
-      g.finalize(); g=null;
-      
-//      byte [] pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
-      int [] rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-      
-      byte [] pixels = new byte[rgb.length];
-      boolean trouve=false;
-      for( int i=0; i<pixels.length; i++ ) {
-         pixels[i] = (byte)( 0xFF & rgb[i]);
-         if( !trouve && pixels[i]!=0 ) { System.out.println("pixels["+i+"] = "+pixels[i]); trouve=true; }
-      }
-      if( !trouve ) System.out.println("Y a un bleme, je n'ai aucun pixel");
-      
-//      WritableRaster raster = imgBuf.getRaster();
-//      int taille=width*height;
-//      byte [] pixels = new byte[taille];
-//      raster.getDataElements(0, 0, width, height, pixels);
-//
-      imgBuf.flush(); //imgBuf=null;
-      
-      timePixel = (int)(Util.getTime()-t1);
-
-      return pixels;
-   }
-
-   private Image createImageX() throws Exception {
-      if( imgBuf!=null )  return imgBuf; 
-      
-//      BufferedImage img = null;
-      Image img = null;
-      
-//      if( planBG.color ) {
-//         int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
-//         DataBuffer dbuf = (DataBuffer) new DataBufferInt(pix, width*height);
-//         int bitMasks[] = new int[]{0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000   };
-//         SampleModel sampleModel = new SinglePixelPackedSampleModel(
-//               DataBuffer.TYPE_INT, width, height, bitMasks);
-//         ColorModel colorModel = ColorModel.getRGBdefault();
-//         WritableRaster raster = Raster.createWritableRaster(sampleModel, dbuf, null);
-//         img = new BufferedImage(colorModel, raster, true, null);
-//         
-////         MemoryImageSource x = new MemoryImageSource(width, height, ColorModel.getRGBdefault(), pix, 0, width);
-////         img = Toolkit.getDefaultToolkit().createImage(x);
-//
-//         
-//      } else {
-         byte pix[] = pixels;
-         
-         MemoryImageSource x = new MemoryImageSource(width, height, getCM(), pix, 0, width);
-         img = Toolkit.getDefaultToolkit().createImage(x);
-         
-//         img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
-//         WritableRaster wr = img.getRaster();
-//         wr.setDataElements (0, 0, width, height, pix);
-         
-// N'ARRIVE PAS A ETRE ACCELERE PAR LA CARTE GRAPHIQUE, PAS DE CHANCE !
-//         DataBuffer dbuf = (DataBuffer) new DataBufferByte(pix, width*height);
-//         int[] offsets = new int[] {0};
-//         SampleModel sampleModel = new ComponentSampleModel(DataBuffer.TYPE_BYTE, width, height, 1, width, offsets);
-//         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-//         int[] nBits = {8};
-//         ColorModel colorModel = new ComponentColorModel(cs, nBits, false, true,
-//               Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
-//         int[] offsets = new int[] {0};
-//         img = new BufferedImage(colorModel, raster, true, null);
-//      }
-      imgBuf=img;
-
-      return img;
-   }
-   
-   ColorModel getCM() {
-//      return ColorModel.getRGBdefault();
-      return ColorMap.getCM(0,128,255,true, PlanImage.CMGRAY,PlanImage.LINEAR, false);
-   }
-
-
-   class MyPanel extends JPanel {
-      HealpixKey h;
-      MyPanel(HealpixKey h) {
-         this.h = h;
-      }
-      
-      public Dimension getPreferredSize() { return new Dimension(512,512); }
-      
-      public void paintComponent(Graphics g) {
-         System.out.println("paintComponent...");
-         super.paintComponent(g);
-         g.setColor(Color.red);
-         g.fillRect(0, 0, getPreferredSize().width, getPreferredSize().height);
-         try {
-            Image img=createImageX();
-            g.drawImage(img, 0, 0, obs);
-         } catch( Exception e ) { e.printStackTrace(); }
-
-      }
-   }
-
-
-   
-
 }

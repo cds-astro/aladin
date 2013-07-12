@@ -79,8 +79,8 @@ public class Task extends Thread {
        progressBar = new ThreadProgressBar(context);
        progressBar.start();
        
-       System.out.println("Check actions:");
-       for( Action a : actions ) { System.out.println(" ==> "+a); }
+//       System.out.println("Check actions:");
+//       for( Action a : actions ) { System.out.println(" ==> "+a); }
 
        try { 
           context.setTaskRunning(true);
@@ -93,8 +93,6 @@ public class Task extends Thread {
                 continue;
              }
              
-             System.out.println("***** C'est parti pour "+a);
-
              context.startAction(a);
              try {
                 builder.run();

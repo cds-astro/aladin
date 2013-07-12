@@ -378,10 +378,10 @@ class Printer implements Runnable {
 
       // La provenance
       Plan p = aladin.calque.getPlanRef();
-      if( flagOrigin && p!=null && p.from!=null ) {
+      if( flagOrigin && p!=null && p.copyright!=null ) {
          cy = y+fm.getAscent()+2;
-         cx =imgW-fm.stringWidth(p.from);
-         pg.drawString(p.from,cx,cy);
+         cx =imgW-fm.stringWidth(p.copyright);
+         pg.drawString(p.copyright,cx,cy);
       }
 
       return cy+fm.getDescent()+fm.getLeading();

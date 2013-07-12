@@ -118,7 +118,7 @@ public class PlanImageBlink extends PlanImage {
       progress="computing...";
       if( label==null ) label="Blk img";
       setLabel(label);
-      from="Blink sequence by Aladin";
+      copyright="Blink sequence by Aladin";
       param="";
       
       // On met une table de couleur linéaire car on va appliquer à chaque pixel 8 bits à insérer

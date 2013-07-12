@@ -19,18 +19,14 @@
 
 package cds.fits;
 
-import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Label;
-import java.awt.MediaTracker;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
-import java.awt.image.DataBufferInt;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
@@ -40,7 +36,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.nio.channels.ByteChannel;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -51,7 +46,6 @@ import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
-import javax.imageio.event.IIOReadProgressListener;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
@@ -59,10 +53,7 @@ import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
-import cds.allsky.Constante;
 import cds.image.Hdecomp;
-import cds.tools.pixtools.CDSHealpix;
-import cds.tools.pixtools.Util;
 
 /**
  * Classe de manipulation d'un fichier image FITS
@@ -223,6 +214,7 @@ final public class Fits {
                try {
                   setCalib(new Calib(headerFits));
                } catch( Exception e ) {
+                  System.err.println("loadJpeg("+filename+") : no calib found !");
                   calib = null;
                }
 
@@ -334,34 +326,21 @@ final public class Fits {
 
          if( flagColor ) {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
-            // int [] rgb1 = new int[widthCell*heightCell];
-            int[] rgb1 = imgBuf.getRGB(0, 0, widthCell, heightCell, null, 0,
-                  widthCell);
+            int[] rgb1 = imgBuf.getRGB(0, 0, widthCell, heightCell, null, 0, widthCell);
             if( RGBASFITS ) invImageLine(widthCell, heightCell, rgb1);
             rgb = rgb1;
             rgb1 = null;
 
          } else {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_255 : PIX_256;
-            pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer())
-                  .getData();
-            if( pixMode == PIX_255 ) {
-               for( int i = 0; i < pixels.length; i++ )
-                  if( pixels[i] < 255 ) pixels[i]++;
-            }
+            pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()) .getData();
+//            if( pixMode == PIX_255 ) {
+//               for( int i = 0; i < pixels.length; i++ )
+//                  if( pixels[i] < 255 ) pixels[i]++;
+//            }
             if( RGBASFITS ) {
                invImageLine(widthCell, heightCell, pixels);
-               // pix8 = pixels;
             }
-
-            // System.out.print("1ère ligne:");
-            // for( int i=0; i<5; i++ ) System.out.print(" "+pixels[i]);
-            // System.out.println();
-            //
-            // System.out.print("Dernière ligne :");
-            // for( int i=0; i<5; i++ )
-            // System.out.print(" "+pixels[pixels.length-widthCell+i]);
-            // System.out.println();
          }
 
          imgBuf.flush();
@@ -940,8 +919,7 @@ final public class Fits {
       Image imgSrc;
       BufferedImage imgTarget;
       int[] rgb = this.rgb;
-      int typeInt = format.equals("png") ? BufferedImage.TYPE_INT_ARGB
-            : BufferedImage.TYPE_INT_RGB;
+      int typeInt = format.equals("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
 
       if( bitpix == 0 || pixMode == PIX_RGB || pixMode == PIX_ARGB ) {
          if( RGBASFITS ) {
@@ -958,10 +936,8 @@ final public class Fits {
          imgSrc = Toolkit.getDefaultToolkit().createImage(
                new MemoryImageSource(widthCell, heightCell,
                      getCM(targetPixMode), pix8, 0, widthCell));
-         // imgTarget = new
-         // BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)
-         // getCM(targetPixMode));
-         imgTarget = new BufferedImage(width, height, typeInt);
+//          imgTarget = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel) getCM(targetPixMode));
+          imgTarget = new BufferedImage(width, height, typeInt);
       }
 
       Graphics g = imgTarget.createGraphics();
@@ -2018,21 +1994,22 @@ final public class Fits {
       } finally { if( out!=null ) out.close(); }
    }
 
-   public static void convert(String filename) throws Exception {
-      Fits f = new Fits();
-      f.loadJpeg(filename, true,false);
-      invImageLine(f.width, f.height, f.rgb);
-      for( int i = 0; i < f.rgb.length; i++ )
-         f.rgb[i] |= 0xFF000000;
-      f.writeRGBcompressed(filename + ".jpg", "jpeg");
-   }
-
-   public static void main(String[] args) {
-      try {
-         convert("C:\\Users\\Pierre\\Desktop\\PLANCK\\HFIColor100-217-545\\Norder3\\Allsky.jpg");
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
+//   public static void convert(String filename) throws Exception {
+//      Fits f = new Fits();
+//      f.loadJpeg(filename, true,false);
+//      invImageLine(f.width, f.height, f.rgb);
+//      for( int i = 0; i < f.rgb.length; i++ )
+//         f.rgb[i] |= 0xFF000000;
+//      f.writeRGBcompressed(filename + ".jpg", "jpeg");
+//   }
+//
+//   public static void main(String[] args) {
+//      try {
+//         convert("C:\\Users\\Pierre\\Desktop\\PLANCK\\HFIColor100-217-545\\Norder3\\Allsky.jpg");
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
+   
 
 }

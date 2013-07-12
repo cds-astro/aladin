@@ -70,6 +70,9 @@ public class TabJpg extends JPanel implements ActionListener {
    private JLabel labelMethod;                            // Texte décrivant la méthode à utiliser
    private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
    private JRadioButton radioMoyenne;                     // selected si on est en calcul selon la moyenne
+   private JLabel labelFormat;                            // Texte décrivant le format à utiliser
+   private JRadioButton jpegFormat;                       // JPEG tiles
+   private JRadioButton pngFormat;                        // PNG tiles
    private JLabel currentCM;                              // info détaillant le cut de la vue courante
    private JLabel warning;                                // indique s'il est nécessaire ou non d'effectuer ce post-traitement
 
@@ -186,17 +189,37 @@ public class TabJpg extends JPanel implements ActionListener {
       c.gridx = 0;
       c.gridy++;
       pCenter.add(currentCM,c);
-
+      
       c.gridx=0;
       c.gridy++;
       m=c.insets.top;
       c.insets.top=20;
       JPanel p = new JPanel();
       JLabel l;
-      labelMethod = l = new JLabel(getString("METHODJPG"));
+      labelFormat = l = new JLabel(getString("FORMATTILES"));
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       p.add(l);
       ButtonGroup bg1 = new ButtonGroup();
+      jpegFormat = rb = new JRadioButton("JPEG");
+      rb.setSelected(true);
+      bg1.add(rb);
+      p.add(rb);
+      pngFormat = rb = new JRadioButton("PNG");
+      bg1.add(rb);
+      p.add(rb);
+      pCenter.add(p,c);
+      c.insets.top=m;
+
+
+      c.gridx=0;
+      c.gridy++;
+//      m=c.insets.top;
+//      c.insets.top=20;
+      p = new JPanel();
+      labelMethod = l = new JLabel(getString("METHODJPG"));
+      l.setFont(l.getFont().deriveFont(Font.BOLD));
+      p.add(l);
+      bg1 = new ButtonGroup();
       radioMediane = rb = new JRadioButton(getString("MEDIANJPG"));
       rb.setSelected(true);
       bg1.add(rb);
@@ -205,7 +228,7 @@ public class TabJpg extends JPanel implements ActionListener {
       bg1.add(rb);
       p.add(rb);
       pCenter.add(p,c);
-      c.insets.top=m;
+//      c.insets.top=m;
 
       // barre de progression
       progressJpg.setStringPainted(true);
@@ -274,9 +297,10 @@ public class TabJpg extends JPanel implements ActionListener {
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
          context.setJpegMethod(getMethod());
          context.setProgressBar(progressJpg);
+         Action action = getTileFormat()==Context.PNG ? Action.PNG : Action.JPEG;
          
          try {
-            new Task(context, Action.JPEG, false);
+            new Task(context, action, false);
          } catch( Exception e1 ) {
             e1.printStackTrace();
          }
@@ -302,7 +326,7 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    private void abort() {
-      if( !Aladin.confirmation(mainPanel, "Do you really want to abort the JPEG tile computation ?") ) return;
+      if( !Aladin.confirmation(mainPanel, "Do you really want to abort the compressed tile computation ?") ) return;
       context.taskAbort();
    }
    
@@ -321,7 +345,7 @@ public class TabJpg extends JPanel implements ActionListener {
       JPanel p = new JPanel(g);
 
       tileStat = new JLabel("--");
-      PropPanel.addCouple(p, ".Jpeg tiles: ", tileStat, g, c);           
+      PropPanel.addCouple(p, ".Tiles: ", tileStat, g, c);           
 
       timeStat = new JLabel("--");
       PropPanel.addCouple(p, ".Time: ", timeStat, g, c);           
@@ -364,6 +388,12 @@ public class TabJpg extends JPanel implements ActionListener {
       return Context.JpegMethod.MEAN;
    }
    
+   /**   retourne le format pour les tuiles compressées (JPEG ou PNG) */
+   public int getTileFormat() {
+      if( pngFormat.isSelected() ) return Context.PNG;
+      return Context.JPEG;
+   }
+
    protected void resumeWidgets() {
       try {
          boolean readyToDo = context.isExistingDir() || context.isExistingAllskyDir();
@@ -379,6 +409,9 @@ public class TabJpg extends JPanel implements ActionListener {
          radioAllsky.setEnabled(readyToDo && !isColor);
          radioMediane.setEnabled(readyToDo && !isRunning && !isColor);
          radioMoyenne.setEnabled(readyToDo && !isRunning && !isColor);
+         labelFormat.setEnabled(readyToDo && !isColor);
+         jpegFormat.setEnabled(readyToDo && !isColor);
+         pngFormat.setEnabled(readyToDo && !isColor);
          progressJpg.setEnabled(readyToDo && !isRunning && !isColor);
          start.setEnabled(readyToDo && !isRunning && !isColor);
          pause.setEnabled(isRunning);
@@ -399,6 +432,7 @@ public class TabJpg extends JPanel implements ActionListener {
       radioManual.setSelected(true);
       radioMediane.setSelected(true);
       progressJpg.setValue(0);
+      jpegFormat.setSelected(true);
    }
 
    public void setStartEnabled(boolean enabled) {

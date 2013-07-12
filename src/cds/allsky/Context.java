@@ -39,6 +39,7 @@ import javax.swing.JProgressBar;
 
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
+import cds.aladin.HealpixKey;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
@@ -83,7 +84,7 @@ public class Context {
    protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected boolean fading=true;            // Activation du fading entre les images originales
-   protected boolean fast=false;             // methode la plus rapide
+   protected boolean mixing=false;             // methode la plus rapide
    protected String skyvalName;              // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    
@@ -96,7 +97,7 @@ public class Context {
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
    protected CoAddMode coAdd=CoAddMode.getDefault();  // Methode de traitement par défaut
-   protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
+   protected int maxNbThread=8;             // Nombre de threads de calcul max imposé par l'utilisateur
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -107,6 +108,16 @@ public class Context {
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
+   
+   
+   // Modes supportés pour les tuiles
+   static final public int PNG=0;
+   static final public int JPEG=1;
+   static final public int FITS=2;
+   static final public String [] EXT = { ".png",".jpg",".fits" };
+   static final public String [] MODE = { "png","jpeg","fits" };
+   
+   protected int targetColorMode = PNG;       // Mode de compression des tuiles couleurs
    
    public Context() {}
    
@@ -163,6 +174,7 @@ public class Context {
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
+   public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
@@ -188,7 +200,12 @@ public class Context {
    }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
    public void setBlankOrig(double x) {  blankOrig = x; hasAlternateBlank=true; }
-   public void setColor(boolean color) { if(color) this.bitpixOrig=0;}
+   public void setColor(String colorMode) { 
+      if( colorMode.equalsIgnoreCase("false")) return;
+      bitpixOrig=0;
+      if( colorMode.equalsIgnoreCase("png")) targetColorMode=PNG;
+      else targetColorMode=JPEG;
+   }
    public void setCut(double [] cut) { this.cut=cut; }
    public void setPixelCut(String scut) throws Exception {
        StringTokenizer st = new StringTokenizer(scut," ");
@@ -217,7 +234,7 @@ public class Context {
    
    /** Donne l'extension des fichiers losanges */
    public String getTileExt() {
-      return isColor() ? ".jpg": ".fits";
+      return isColor() ? EXT[ targetColorMode ] : ".fits";
    }
    
 
@@ -863,14 +880,14 @@ public class Context {
       updateProperties(
             new String[] { PlanHealpix.KEY_PROCESSING_DATE, PlanHealpix.KEY_COORDSYS,
                            PlanHealpix.KEY_ISCOLOR,         PlanHealpix.KEY_ALADINVERSION,
-                           PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER
+                           PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER,
                           },
             new String[] { getNow(),
                            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
                            isColor()+"",
                            Aladin.VERSION,
                            getLabel(),
-                           getOrder()+""
+                           getOrder()+"",
                          },
             true);
       
@@ -880,17 +897,33 @@ public class Context {
                        new String[]{ "path:$1",                       order},
                        false );
       
+      // Ajout des formats de tuiles supportés
+      String fmt = getAvailableTileFormats();
+      if( fmt.length()>0 ) setProperty(PlanHealpix.KEY_FORMAT,fmt);
+
       // Propriétés additionnelles
       if( keyAddProp!=null ) {
          String k[] = new String[ keyAddProp.size() ];
          String v[] = new String[ k.length ];
-         Enumeration<String> e = keyAddProp.elements();
          for( int i=0; i<k.length; i++ ) {
             k[i] = keyAddProp.get(i);
             v[i] = valueAddProp.get(i);
          }
          updateProperties(k,v,true);
       }
+   }
+   
+   // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)
+   protected String getAvailableTileFormats() {
+      String path = BuilderAllsky.getFileName(getOutputPath(),3);
+      StringBuffer res = new StringBuffer();
+      for( int i=0; i<EXT.length; i++ ) {
+         File f = new File(path+EXT[i]);
+         if( !f.exists() ) continue;
+         if( res.length()>0 ) res.append(' ');
+         res.append(MODE[i]);
+      }
+      return res.toString();
    }
 
    /** Mise à jour d'une propriété => voir updatePropertie(String [],String []) */

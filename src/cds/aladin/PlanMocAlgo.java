@@ -79,7 +79,7 @@ public class PlanMocAlgo extends PlanMoc {
          flagOk=false;
       }
       
-      from = "Computed by Aladin";
+      copyright = "Computed by Aladin";
       flagProcessing=false;
       if( moc.getSize()==0 ) {
          error="Empty MOC";
@@ -132,7 +132,7 @@ public class PlanMocAlgo extends PlanMoc {
          flagOk=false;
       }
       
-      from = "Computed by Aladin";
+      copyright = "Computed by Aladin";
       flagProcessing=false;
       if( moc.getSize()==0 ) {
          error="Empty MOC";

@@ -514,7 +514,7 @@ public final class MCanvas extends JComponent
    }
 
    static Color C1 = new Color(199,207,255);
-   static Color C2 = new Color(85,26,139);
+   static public Color C2 = new Color(85,26,139);
    static protected Color C3 = new Color(104,230,255);
    static Color C4 = new Color(221,91,53);    // couleur pour valeurs calculees
    static Color C5 = new Color(195,195,255);  // bleu clair - ligne montrée

@@ -136,14 +136,16 @@ public class SkyGen {
          context.setSkyval(val);
       } else if (opt.equalsIgnoreCase("fading")) {
          context.setFading(val);
+      } else if (opt.equalsIgnoreCase("mixing")) {
+         context.setMixing(val);
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-      } else if (opt.equalsIgnoreCase("jpegMethod")|| opt.equalsIgnoreCase("method")) {
-         if (opt.equalsIgnoreCase("method") ) context.warning("Prefer \"jpegMethod\" instead of \"method\"");
+      } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
+         if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          context.setMethod(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) {
          context.setPixelCut(val);
@@ -151,7 +153,7 @@ public class SkyGen {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
       } else if (opt.equalsIgnoreCase("color")) {
-         context.setColor(Boolean.parseBoolean(val));
+         context.setColor(val);
       } else if (opt.equalsIgnoreCase("red"))   { context.setRgbInput(val, 0);
       } else if (opt.equalsIgnoreCase("green")) { context.setRgbInput(val, 1);
       } else if (opt.equalsIgnoreCase("blue"))  { context.setRgbInput(val, 2);
@@ -198,7 +200,7 @@ public class SkyGen {
             Context.setVerbose(4);
          }
          else if (arg.equalsIgnoreCase("-fast") ) {
-            context.fast=true;
+            context.mixing=true;
          }
 
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") ) {
@@ -247,7 +249,7 @@ public class SkyGen {
             actions.add(Action.MERGE);
          }
          if( !flagMode ) {
-            context.info("No merging mode specified => assuming OVERWRITE");
+            context.info("No mixing mode specified => assuming OVERWRITE");
          }
          if( findAction(actions,Action.TILES) ) {
             context.error("MERGE and TILES actions can not be done simultaneously");
@@ -354,13 +356,12 @@ public class SkyGen {
    }
    
    private static void usage() {
-      System.out.println("Usage: java -jar Aladin.jar -mocgen [-f] options... [action [action...]]");
-      System.out.println("       java -jar Aladin.jar -mocgen [-f] -param=configfile\n\n");
+      System.out.println("Usage: java -jar Aladin.jar -skygen [-f] options... [action [action...]]");
+      System.out.println("       java -jar Aladin.jar -skygen [-f] -param=configfile\n\n");
       System.out.println("This config file must contains these following options, or use them\n" +
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
-            "-fast              Fastest algorithm (first pixel method)\n"+
             "input=dir          Source image directory (fits or jpg+hhh)" + "\n" +
             "output=dir         all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
@@ -373,17 +374,18 @@ public class SkyGen {
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
             "skyval=key         Fits key to use for removing a sky background" + "\n" +
-            "maxThread=nn       Max number of computing threads" + "\n" +
+            "maxThread=nn       Max number of computing threads (8 per default, -1 for max)" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
 //            "tobemerged=dir     all-sky directory to be merged to an already existing all-sky\n" +
-            "jpegMethod=m       Jpeg HEALPix method (MEDIAN|MEAN) (default MEDIAN)" + "\n" +
             "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
             "                   conversion - ex: \"-32000 +32000\")" + "\n" +
-            "color=true|false   True if the source images are colored jpeg (default is false)" + "\n" +
-            "fading=true|false  False to avoid fading effect between original images (default is true)" + "\n" +
+            "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
+            "mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
+            "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
+            "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
             "verbose            Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
             "debug=true|false   to set output display as te most verbose or just statistics" + "\n"
 //            "red        all-sky used for RED component (see rgb action)\n" +
@@ -394,16 +396,16 @@ public class SkyGen {
 //            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
 //            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
       );
-      System.out.println("\nSpecifical actions (by default all required actions):" + "\n" +
+      System.out.println("\nSpecifical actions (by default: \"index tiles jpeg moc allsky gzip progen\"):" + "\n" +
             "index      Build finder index" + "\n" +
-            "tiles      Build HEALPix FITS tiles" + "\n" +
+            "tiles      Build FITS tiles" + "\n" +
             "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
             "png        Build PNG tiles (from FITS tiles)" + "\n" +
 //            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
             "moc        Build final MOC (based on generated tiles)" + "\n" +
 //            "mochight   Build final MOC (based on pixels of generated tiles)" + "\n" +
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
-            "allsky     Build low resolution Allsky view (Fits and/or Jpeg)" + "\n"+
+            "allsky     Build low resolution Allsky view (Fits and/or Jpeg|png)" + "\n"+
             "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
 //            "merge      Merge an all-sky dir with an other already built all-sky" + "\n"+
             "clean      Remove all HEALPix survey" + "\n"+

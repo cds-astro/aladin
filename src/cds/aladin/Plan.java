@@ -93,9 +93,13 @@ public class Plan implements Runnable {
    protected boolean noBestPlacePost; // true s'il ne faut pas passer le plan à la méthode bestPlacePost() après son chargement
    protected boolean collapse;	 // true si le plan est collapse dans la pile
    protected String objet;       // Target du plan (celui qui a ete indique a l'interrogation)
-   public String label;       // Label du plan; (celui qui apparait dans le "plane stack"
+   public String label;          // Label du plan; (celui qui apparait dans le "plane stack"
    protected String param;       // Les parametres d'interrogation du serveur
-   protected String info=null;   // De l'information sur le plan
+   protected String description=null;
+   protected String verboseDescr=null;   // De l'information détaillée sur le plan
+   protected String copyright=null;      // L'origine du plan (mention du copyright)
+   protected String copyrightUrl=null;   // Lien vers l'origine ou vers le copyright
+
    protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation
                                  // ou null si non encore calcule
@@ -107,7 +111,6 @@ public class Plan implements Runnable {
    protected Hashtable projD = null;  // La liste des projections associées au plan
    protected FrameHeaderFits headerFits;  // Dans le cas où il y aurait une entête fits associée
    private boolean hasSpecificCalib; // true si la calibration astrométrique n'est pas celle du FITS d'origine
-   protected String from;        // L'origine du plan
    protected String filename;    // Nom du fichier des données si origine locale, sinon null
    protected Server server;      // Le serveur d'origine
    protected float opacityLevel = 1.0f; // TB, 26/09/2007 : niveau de transparence pour superposition  (ou FoV) sur image
@@ -198,15 +201,18 @@ public class Plan implements Runnable {
       p.folder=folder;
       p.collapse=collapse;
       p.objet=objet;
-      p.label=label;
       p.param=param;
+      p.label=label;
+      p.description = description;
+      p.verboseDescr = verboseDescr;
+      p.copyright=copyright;
+      p.copyrightUrl = copyrightUrl;
       p.co=co;
       p.c=c;
       p.projd=projd==null ? null : projd.copy();
       p.projInit=projInit;
       p.projD=projD;
       p.hasSpecificCalib=hasSpecificCalib;
-      p.from=from;
       p.influence = new boolean[influence.length];
       System.arraycopy(influence,0,p.influence,0,influence.length);
       p.log=log;
@@ -852,7 +858,7 @@ public class Plan implements Runnable {
        flagOk=false;
        flagWaitTarget=isOldPlan=false;
        hasSpecificCalib=false;
-       objet=error=label=param=info=null;
+       objet=error=label=param=description=verboseDescr=copyright=copyrightUrl=null;
        flagSkip=false;
        co=null;
        projd=projInit = null;
@@ -1696,20 +1702,20 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
   /** Retourne l'origine en tronquant la chaine si trop longue */
    protected String getFrom() {
-      if( from==null ) return null;
-      int n=from.length();
+      if( copyright==null ) return null;
+      int n=copyright.length();
       if( n>40 ) {
-         int end = from.lastIndexOf(Util.FS,from.length()-15);
-         int first = from.indexOf(Util.FS,4);
-         if( end!=-1 && first!=-1 && first<end ) return from.substring(0,first+1)+"..."+from.substring(end);
-         return from.substring(0,40)+"...";
+         int end = copyright.lastIndexOf(Util.FS,copyright.length()-15);
+         int first = copyright.indexOf(Util.FS,4);
+         if( end!=-1 && first!=-1 && first<end ) return copyright.substring(0,first+1)+"..."+copyright.substring(end);
+         return copyright.substring(0,40)+"...";
       }
-      return from;
+      return copyright;
    }
 
   /** Positionnement de l'origine */
    protected void setFrom(String from) {
-      this.from = from;
+      this.copyright = from;
    }
 
    /** Indique l'objet central et les parametres de l'image pour un log */
@@ -1745,7 +1751,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
           setEpoch(value);
           aladin.calque.repaintAll();
        } else if( prop.equalsIgnoreCase("info") ) {
-          info=value;
+          verboseDescr=value;
        } else if( prop.equalsIgnoreCase("Color") ) {
           Color c = Action.getColor(value);
           if( c==null ) throw new Exception("Syntax error in color function (ex: rgb(30,60,255) )");

@@ -729,7 +729,7 @@ public final class Command implements Runnable {
          res.append("PlaneID "+Tok.quote(plan.label)+"\n"
                + "PlaneNb "+(p.length-a.calque.getIndex(plan))+"\n"
                + "Type    "+Plan.Tp[plan.type]+"\n"
-               + (plan.info!=null ? "Info    "+plan.info+"\n" : "")
+               + (plan.verboseDescr!=null ? "Info    "+plan.verboseDescr+"\n" : "")
                + "Status  "+(plan.active ? "shown":"hidden")+" "
                            +(plan.selected ? "selected":"")
                            +(!plan.flagOk && plan.error!=null ? " error":"")

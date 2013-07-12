@@ -156,8 +156,8 @@ public class TreeNodeAllsky extends TreeNode {
       // Détermination du format des cellules dans le cas d'un survey pixels
       String keyColor = prop.getProperty(PlanHealpix.KEY_ISCOLOR);
       if( keyColor!=null ) color = new Boolean(keyColor);
-      if( color ) inJPEG=true;
-      if( !cat && (keyColor==null || !color) ) {
+//      if( color ) inJPEG=true;
+      if( !cat /* && (keyColor==null || !color)*/ ) {
          String format = prop.getProperty(PlanHealpix.KEY_FORMAT);
          if( format!=null ) {
             int a,b;
@@ -169,9 +169,12 @@ public class TreeNodeAllsky extends TreeNode {
             inFits = getFormatByPath(pathOrUrl,local,0);
             inJPEG = getFormatByPath(pathOrUrl,local,1);
             inPNG  = getFormatByPath(pathOrUrl,local,3);
-            truePixels = local && inFits || !local && (inJPEG || inPNG);   // par défaut on démarre en FITS en local, en Jpeg en distant
+            truePixels = local && inFits || !(!local && (inJPEG || inPNG));   // par défaut on démarre en FITS en local, en Jpeg en distant
          }
-         if( keyColor==null ) color = getIsColorByPath(pathOrUrl,local);
+         if( keyColor==null ) {
+            color = getIsColorByPath(pathOrUrl,local);
+         }
+         if( color ) truePixels=false;
       }
       
       aladin.trace(4,toString1());
@@ -184,7 +187,7 @@ public class TreeNodeAllsky extends TreeNode {
          if( local ) return Util.isJPEGColored(path+Util.FS+"Norder3"+Util.FS+"Allsky"+ext);
          in = new MyInputStream( Util.openStream(path+"/Norder3/Allsky"+ext) );
          byte [] buf = in.readFully();
-         return Util.isJPEGColored(buf);
+         return Util.isColoredImage(buf);
       } catch( Exception e) {
          aladin.trace(3,"Allsky"+ext+" not found => assume B&W survey");
          return false;
@@ -348,7 +351,7 @@ public class TreeNodeAllsky extends TreeNode {
    /** Retourne true si par défaut le survey est fourni en true pixels (FITS)  */
    protected boolean isTruePixels() { 
       if( truePixelsSet ) return truePixels;
-      return inFits && local || !inJPEG && !local;
+      return !isColored() && (inFits && local || !inJPEG && !local);
    }
    
    /** Retourne true si le survey utilise le cache local */

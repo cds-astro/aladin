@@ -641,7 +641,7 @@ public class ServerFile extends Server implements XMLConsumer {
             plan = new PlanCatalog(aladin);
             if( (s=(String)atts.get("object"))!=null ) plan.objet = s;
             if( (s=(String)atts.get("param"))!=null )  plan.param = s+".";
-            if( (s=(String)atts.get("from"))!=null )   plan.from = s;
+            if( (s=(String)atts.get("from"))!=null )   plan.copyright = s;
             if( (s=(String)atts.get("RA"))!=null )     ra=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("DE"))!=null )     de=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("radius"))!=null ) rm=Double.valueOf(s).doubleValue();
@@ -674,7 +674,7 @@ public class ServerFile extends Server implements XMLConsumer {
             if( (s=(String)atts.get("param"))!=null )      plan.param = s+".";
             if( (s=(String)atts.get("fmt"))!=null )        pi.fmt = PlanImage.getFmt(s);
             if( (s=(String)atts.get("resolution"))!=null ) pi.res = PlanImage.getRes(s);
-            if( (s=(String)atts.get("from"))!=null )       plan.from = s;
+            if( (s=(String)atts.get("from"))!=null )       plan.copyright = s;
             if( (s=(String)atts.get("cacheID"))!=null )    pi.cacheID = s;
             if( (s=(String)atts.get("cacheOffset"))!=null )pi.cacheOffset = Long.parseLong(s);
             if( (s=(String)atts.get("url"))!=null ) {

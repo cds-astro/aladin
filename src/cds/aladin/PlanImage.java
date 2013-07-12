@@ -420,7 +420,7 @@ public class PlanImage extends Plan {
       this.param   = param;
       this.fmt     = fmt;
       this.res     = res;
-      this.from    = from;
+      this.copyright    = from;
       this.opacityLevel = DEFAULT_OPACITITY;
       type         = IMAGE;
       setLabel(label);

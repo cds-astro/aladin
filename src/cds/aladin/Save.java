@@ -1093,7 +1093,7 @@ public final class Save extends JFrame implements ActionListener {
          append(CR+"     fmt=\""+XMLParser.XMLEncode(fmt)+"\"");
          append(CR+"     resolution=\""+XMLParser.XMLEncode(res)+"\"");
       }
-      if( p.from!=null ) append(CR+"     from=\""+XMLParser.XMLEncode(p.from)+"\"");
+      if( p.copyright!=null ) append(CR+"     from=\""+XMLParser.XMLEncode(p.copyright)+"\"");
       if( p.u!=null )    append(CR+"     url=\""+XMLParser.XMLEncode(p.u+"")+"\"");
       if( Projection.isOk(p.projd) ) {
          append(CR+"     RA=\""+p.projd.raj+"\"");

@@ -108,7 +108,7 @@ public class PlanImageAlgo extends PlanImage {
       this.coef = coef;
       this.param = param;
       
-      from = "Computed by Aladin";
+      copyright = "Computed by Aladin";
       param = "Computed: "+getFonction();
       setHasSpecificCalib();
       

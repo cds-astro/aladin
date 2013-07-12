@@ -2857,7 +2857,7 @@ public final class Calque extends JPanel implements Runnable {
       pi.pourcent=-1;
       pi.flagOk=true;
       pi.type=Plan.IMAGE;
-      pi.from = "Extract from "+cube.label+" (frame #"+(frame+1)+")";
+      pi.copyright = "Extract from "+cube.label+" (frame #"+(frame+1)+")";
 //      pi.setBufPixels8( cube.getFrame(n) );
    }
    
@@ -3103,7 +3103,7 @@ public final class Calque extends JPanel implements Runnable {
             p1.server = p.server;
             p1.c = p.c;
             p1.folder=folder+1;
-            p1.from=p.from;
+            p1.copyright=p.copyright;
             p1.co=p.co;
             p1.param=p.param;
             p1.objet=p.objet;

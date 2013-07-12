@@ -146,7 +146,6 @@ public class PlanBG extends PlanImage {
 
    protected String gluTag=null;   // Identificateur dans le dico GLU
    protected String survey;        // Nom du background
-   protected String verboseDescr;  // Baratin sur le survey
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
    protected String imageSourcePath; // Template d'accès aux progéniteurs (ex: id=~/(.*)/http://machine/cgi?img=$1/ )
    protected String url;           // Préfixe de l'url permettant d'accéder au background
@@ -158,9 +157,9 @@ public class PlanBG extends PlanImage {
    protected boolean hasDrawnSomething=false;   // True si le dernier appel à draw() à dessiner au moins un losange
    protected boolean allWaitingKeysDrawn=false;   // true si tous les losanges de résolution attendue ont été tracés
    protected boolean useCache=true;
-   protected boolean color=false;   // true si le survey est fourni en couleur (JPEG par défaut)
+   protected boolean color=false;   // true si le survey est fourni en couleur (JPEG|PNG)
    protected boolean colorPNG=false;   // true si le survey est fourni en couleur PNG
-   protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG couleur ou non
+   protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG|PNG couleur ou non
    public boolean fitsGzipped=false; // true si le survey est fourni en true pixels (FITS) mais gzippé
    public boolean truePixels=false;  // true si le survey est fourni en true pixels (FITS)
    protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
@@ -174,15 +173,6 @@ public class PlanBG extends PlanImage {
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    
    protected PlanBGIndex planBGIndex=null;
-   
-//   public static int TILEUNKNOWN  = 0;
-//   public static int TILECOLOR    = 1;
-//   public static int TILEFITS     = 2;
-//   public static int TILEJPEG     = 4;
-//   public static int TILEPNG      = 8;
-//
-//   public int modeTile=TILEFITS;
-//   public int supportedTile=TILEUNKNOWN;
    
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
@@ -223,12 +213,15 @@ public class PlanBG extends PlanImage {
       useCache = gluSky.useCache();
       loadMocNow=gluSky.loadMocNow();
       frameOrigin=gluSky.frame;
+      description=gluSky.description;
       verboseDescr=gluSky.verboseDescr;
+      copyright=gluSky.copyright;
+      copyrightUrl=gluSky.copyrightUrl;
       co=c;
       coRadius=radius;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
-      from=gluSky.copyright!=null && gluSky.copyright.length()>0 ? gluSky.copyright : url;
       setSpecificParams(gluSky);
+      if( copyrightUrl==null ) copyrightUrl=url;
       aladin.trace(3,"AllSky creation: "+gluSky.toString1()+(c!=null ? " around "+c:""));
       suite();
    }
@@ -261,8 +254,8 @@ public class PlanBG extends PlanImage {
          if( local ) in = new FileInputStream(new File(url+Util.FS+PlanHealpix.PROPERTIES));
          else {
             
-            // Eventuellement change de site Web s'il y a mieux
-            checkSite(false);
+            // Eventuellement changera de site Web s'il y a mieux
+            checkSite(false); 
             
             String cacheFile = getCacheDir()+Util.FS+survey+Util.FS+PlanHealpix.PROPERTIES;
             File f = new File(cacheFile);
@@ -360,6 +353,12 @@ public class PlanBG extends PlanImage {
          imageSourcePath = prop.getProperty(PlanHealpix.KEY_IMAGESOURCEPATH);
          if( imageSourcePath!=null ) Aladin.trace(4,"PlanBG.setSpecificParams() found a progenitor access rule => "+imageSourcePath);
          
+         String s;
+         s = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);         if( s!=null ) description = s;
+         s = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE); if( s!=null ) verboseDescr = s;
+         s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT);           if( s!=null ) copyright = s;
+         s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
+         
       } catch( Exception e ) { aladin.trace(3,"No properties file found ..."); }
 
    }
@@ -379,7 +378,7 @@ public class PlanBG extends PlanImage {
    
    protected int getTileMode() {
       if( isTruePixels() ) return HealpixKey.FITS;
-      if( color ) return HealpixKey.JPEG;
+//      if( color ) return HealpixKey.JPEG;
       if( inPNG ) return HealpixKey.PNG;
       return HealpixKey.JPEG;
    }
@@ -398,6 +397,7 @@ public class PlanBG extends PlanImage {
       useCache = false;
       this.label=label;
       paramByTreeNode(new TreeNodeAllsky(aladin, url), c, radius);
+      scanProperties();
       aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
       suite();
    }
@@ -1525,7 +1525,7 @@ public class PlanBG extends PlanImage {
          else return (colorPNG ? "PNG":"JPEG")+" color";
       }
       if( truePixels ) return "FITS true pixels (BITPIX="+bitpix+")";
-      else return "JPEG 8 bits pixels";
+      else return (colorPNG ? "PNG":"JPEG")+" 8 bits pixels";
    }
    
    /** Change le format d'affichage truePixels (Fits) <=> 8bits (JPEG) */

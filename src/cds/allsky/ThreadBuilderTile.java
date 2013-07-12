@@ -62,7 +62,7 @@ final public class ThreadBuilderTile {
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
-      fast = context.fast;
+      fast = context.mixing;
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
@@ -487,8 +487,10 @@ final public class ThreadBuilderTile {
       double x = coo.x;
       double y = coo.y;
       
-      int x1 = (int)Math.floor(x);
-      int y1 = (int)Math.floor(y);
+//      int x1 = (int)Math.floor(x);
+//      int y1 = (int)Math.floor(y);
+      int x1 = (int)x;
+      int y1 = (int)y;
       int x2=x1+1;
       int y2=y1+1;
 
@@ -682,10 +684,9 @@ final public class ThreadBuilderTile {
                
                try {
                   Fits fitsfile = new Fits();
-                  
                   fitsfile.setFilename(fitsfilename);
 
-                  SrcFile file = new SrcFile();
+                  SrcFile file = new SrcFile(fitsfilename);
                   file.fitsfile = fitsfile;
 
                   downFiles.add(file);
@@ -715,8 +716,9 @@ final public class ThreadBuilderTile {
    class SrcFile {
       Fits fitsfile;
       boolean isOpened=false;
+      String name=null;
       
-      SrcFile() { }
+      SrcFile(String name ) { this.name=name; }
       
       @Override
       public String toString() {
@@ -725,15 +727,18 @@ final public class ThreadBuilderTile {
       
       protected void open() throws Exception {
          if( isOpened ) return;
-         String fitsfilename = fitsfile.getFilename();
-         int mode = (fitsfilename.endsWith(".hhh") || fitsfilename.indexOf(".hhh[")>0) ? CacheFits.HHH
-               : (fitsfilename.endsWith(".jpg") || fitsfilename.indexOf(".jpg[")>0) ? CacheFits.JPEG
-               : (fitsfilename.endsWith(".png") || fitsfilename.indexOf(".png[")>0) ? CacheFits.PNG   
+         int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
+               : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
+               : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG   
                : CacheFits.FITS;
 
          // Mode FITS couleur
-         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(fitsfilename,true,true);
-         else fitsfile=context.cacheFits.getFits(fitsfilename,mode,false); 
+         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
+         
+         // Mode normal
+         else fitsfile=context.cacheFits.getFits(name,mode,false); 
+         
+         fitsfile.reloadBitmap();
          
          isOpened=true;
       }
@@ -823,46 +828,46 @@ final public class ThreadBuilderTile {
 //
 //   int gagnant=0;
 
-   /**
-    * Ecrit les pixels dans un fichier .hpx avec notre format Healpix
-    * 
-    * @param filename_base
-    * @param nside_file
-    * @param npix
-    * @param nside
-    * @param out
-    * @throws Exception
-    */
-   void writeHealpix(String filename_base, int nside_file, long npix,
-         int nside, Fits out) throws Exception {
-
-      // prépare l'entete
-      double incA = -(90./nside_file)/(Constante.SIDE);
-      double incD = (90./nside_file)/(Constante.SIDE);
-      double[] proj_center = new double[2];
-      proj_center = CDSHealpix.pix2ang_nest(nside_file,npix);
-      out.setCalib( new Calib(
-            proj_center[0],proj_center[1],
-            (Constante.SIDE+1)/2,(Constante.SIDE+1)/2,
-            Constante.SIDE,Constante.SIDE,
-            incA,incD,0,Calib.TAN,false,Calib.FK5));
-
-      out.headerFits.setKeyValue("ORDERING", "CDSHEALPIX");
-      if (bitpix > 0)
-         out.headerFits.setKeyValue("BLANK", String
-               .valueOf(Integer.MAX_VALUE));
-
-      // gestion des niveaux de gris
-      // cherche le min max
-      double minmax[] = out.findMinMax();
-      out.headerFits.setKeyValue("DATAMIN", String.valueOf(minmax[0]));
-      out.headerFits.setKeyValue("DATAMAX", String.valueOf(minmax[1]));
-
-      // Ecriture de l'image générée sous forme FITS "fullbits"
-      out.writeFITS(filename_base);
-      System.out.println("file " + filename_base + " written !!");
-
-   }
+//   /**
+//    * Ecrit les pixels dans un fichier .hpx avec notre format Healpix
+//    * 
+//    * @param filename_base
+//    * @param nside_file
+//    * @param npix
+//    * @param nside
+//    * @param out
+//    * @throws Exception
+//    */
+//   void writeHealpix(String filename_base, int nside_file, long npix,
+//         int nside, Fits out) throws Exception {
+//
+//      // prépare l'entete
+//      double incA = -(90./nside_file)/(Constante.SIDE);
+//      double incD = (90./nside_file)/(Constante.SIDE);
+//      double[] proj_center = new double[2];
+//      proj_center = CDSHealpix.pix2ang_nest(nside_file,npix);
+//      out.setCalib( new Calib(
+//            proj_center[0],proj_center[1],
+//            (Constante.SIDE+1)/2,(Constante.SIDE+1)/2,
+//            Constante.SIDE,Constante.SIDE,
+//            incA,incD,0,Calib.TAN,false,Calib.FK5));
+//
+//      out.headerFits.setKeyValue("ORDERING", "CDSHEALPIX");
+//      if (bitpix > 0)
+//         out.headerFits.setKeyValue("BLANK", String
+//               .valueOf(Integer.MAX_VALUE));
+//
+//      // gestion des niveaux de gris
+//      // cherche le min max
+//      double minmax[] = out.findMinMax();
+//      out.headerFits.setKeyValue("DATAMIN", String.valueOf(minmax[0]));
+//      out.headerFits.setKeyValue("DATAMAX", String.valueOf(minmax[1]));
+//
+//      // Ecriture de l'image générée sous forme FITS "fullbits"
+//      out.writeFITS(filename_base);
+//      System.out.println("file " + filename_base + " written !!");
+//
+//   }
 
    /*
 	public static void main(String[] args) {
