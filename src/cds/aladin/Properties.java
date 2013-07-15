@@ -373,30 +373,43 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 //   }
    
    
-   class Anchor extends JButton {
-      Color color = Color.blue;
-      Anchor(String text,final String url) {
-         super(text);
+   /** Genère un Label, éventuellement sur plusieurs lignes, qui peut avoir à la fin un lien (more...) pour de l'info
+    * additionnel, ou une url complète associée. Les deux simultanément ne sont pas possibles.
+    */
+   class Anchor extends JLabel {
+      String url,more;
+      int width;
+      
+      /**
+       * @param text Texte du baratin
+       * @param width nombre de caractères avant repli (-1 si pas de repli)
+       * @param more texte supplémentaire accessible par (more...), null sinon
+       * @param url url associée, null sinon
+       */
+      Anchor(String text,int width,final String more,final String url) {
+         super();
+         if( text==null ) text="";
+         this.more = more;
+         this.url=url;
+         if( width>0 ) text = Util.fold(text,width);
+         if( url!=null ) {
+            text = "<html><A HREF=\"\">"+text+"</A></html>";
+            setToolTipText(url);
+         }
+         if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
+         setText(text);
          final Component c = this;
          setFont(getFont().deriveFont(Font.ITALIC));
-         setForeground(color);
-         //         setBackground(background);
-         setContentAreaFilled(false);
-         setBorder( BorderFactory.createMatteBorder(0, 0, 1, 0, color) );
          addMouseMotionListener(new MouseMotionListener() {
             public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
             public void mouseDragged(MouseEvent e) { }
          });
          addMouseListener(new MouseListener() {
             public void mouseReleased(MouseEvent e) { 
-               if( url.startsWith("http://") ) aladin.glu.showDocument(url);
-               else aladin.info(c,plan.verboseDescr.replace("\\n","\n"));
+               if( url!=null ) aladin.glu.showDocument(url);
+               else aladin.info(c,more.replace("\\n","\n"));
             }
-            public void mousePressed(MouseEvent e)  {
-               color=MCanvas.C2;
-               setBorder( BorderFactory.createMatteBorder(0, 0, 1, 0, color) );
-               setForeground(color);
-            }
+            public void mousePressed(MouseEvent e)  { }
             public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULT); }
             public void mouseEntered(MouseEvent e)  { }
             public void mouseClicked(MouseEvent e) { }
@@ -424,29 +437,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       PropPanel.addCouple(p, LABEL, label, g,c);
       
       if( plan.verboseDescr!=null || plan.description!=null ) {
-         if( plan.description!=null ) PropPanel.addCouple(p,"Description", new JLabel(Util.fold(plan.description,50,true)), g ,c);
-         if( plan.verboseDescr!=null ) PropPanel.addCouple(p,"", new Anchor("more...",plan.verboseDescr), g,c);
+         PropPanel.addCouple(p,"Description: ", new Anchor(plan.description,50,plan.verboseDescr,null), g,c);
       }
 
       // Origine
       String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
       if( copyright!=null ) {
-         String s=Util.fold(copyright,50,true);
-         PropPanel.addCouple(p,ORIGIN, plan.copyrightUrl==null ? new JLabel(s) : new Anchor(s,plan.copyrightUrl), g,c);
+         PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,50,null,plan.copyrightUrl), g,c);
       }
-
-//      // Accès à la description complète
-//      if( plan.verboseDescr!=null ) {
-//         final Plan pbg = plan;
-//         b = new JButton(FULLDESCR);
-//         final JFrame frame = this;
-//         b.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//               aladin.info(frame,pbg.verboseDescr.replace("\\n","\n"));
-//            }
-//         });
-//         PropPanel.addCouple(p,"", b, g,c);
-//      }
 
       //La couleur
       if( !(plan.isImage() || plan.type==Plan.ALLSKYIMG)
@@ -624,9 +622,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       	// Format d'image
         JLabel fmtl = new JLabel(
-              plan instanceof PlanHealpix ? "HEALPix Fits"+(((PlanHealpix)plan).isPartial()?" (partial mode)":"") :
-              plan instanceof PlanMoc ? "HEALPix coverage map (MOC)" :
-              plan instanceof PlanBG ? "HEALPix CDS tesselation" :
+              plan instanceof PlanHealpix ? "HEALPix Fits map"+(((PlanHealpix)plan).isPartial()?" (partial mode)":"") :
+              plan instanceof PlanMoc ? "Multi-Order Coverage map (MOC)" :
+              plan instanceof PlanBG ? "Hierarchical Progressive Survey (HiPS)" :
                  PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
         // Bouton de recuperation de visualisation du header FITS
@@ -661,7 +659,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                  eq= (int)(eq*1000)/1000.0;
                  PropPanel.addCouple(p,WCSEQ, new JLabel(""+eq), g,c);
 
-                 // On autorise la modification de l'equinoxe par defaut
+              // On autorise la modification de l'equinoxe par defaut
               } else {
                  sEquinox="2000.0";	// IL FAUDRA FAIRE PLUS MALIN
                  eqField = new JTextField(sEquinox);
@@ -728,16 +726,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
 
       // Url de déchargement
-      if( plan.getUrl()!=null ) {
-         url = new JTextField(plan.getUrl(),40);
-         if( plan.hasRemoteUrl() ) {
-            url.setBorder(BorderFactory.createEmptyBorder());
-            url.setForeground(Color.blue);
+      String s1 = plan.getUrl();
+      if( s1!=null && (s1.startsWith("http://") || s1.startsWith("ftp://") )) {
+         PropPanel.addCouple(p,"Url: ", new Anchor(s1,-1,null,s1), g,c);
       }
-         url.setCaretPosition(0);
-         PropPanel.addCouple(p,"", url, g,c);
-      }
-      
 
       // Panel pour les informations techniques
       if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {

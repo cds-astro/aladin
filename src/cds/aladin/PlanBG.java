@@ -1522,10 +1522,10 @@ public class PlanBG extends PlanImage {
    protected String getFormat() {
       if( color ) {
          if( inFits ) return "FITS RGB color";
-         else return (colorPNG ? "PNG":"JPEG")+" color";
+         else return (colorPNG || inPNG ? "PNG":"JPEG")+" color";
       }
       if( truePixels ) return "FITS true pixels (BITPIX="+bitpix+")";
-      else return (colorPNG ? "PNG":"JPEG")+" 8 bits pixels";
+      else return (colorPNG || inPNG ? "PNG":"JPEG")+" 8 bits pixels";
    }
    
    /** Change le format d'affichage truePixels (Fits) <=> 8bits (JPEG) */

@@ -269,10 +269,13 @@ public class Plan implements Runnable {
 
    /** Retourne true s'il s'agit d'un plan qui a des pixels */
    final public boolean hasAvailablePixels() {
-//      return isImage() ||  type==IMAGEBLINK || type==IMAGECUBE
-      return isSimpleImage() ||  type==IMAGEBLINK || type==IMAGECUBE
-      || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
+//      return isSimpleImage() ||  type==IMAGEBLINK || type==IMAGECUBE
+//      || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
+      return hasOriginalPixels();
    }
+   
+   /** Retourne ture s'il s'agit d'un plan qui a des pixels avec leur valeur d'origine */
+   protected boolean hasOriginalPixels() { return false; };
 
    /** Retourne true s'il s'agit d'un plan qui n'a pas de réduction astrométrique */
    final protected boolean hasNoReduction() { return error==Plan.NOREDUCTION /* || !Projection.isOk(projd)*/ ; }
