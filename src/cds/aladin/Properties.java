@@ -60,7 +60,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Properties extends JFrame implements ActionListener, ChangeListener {
 
-   String SEEFITS,SEEPARSING,TABLEINFO,LOADURL,NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
+   String SEEFITS,SEEPARSING,TABLEINFO,/* LOADURL, */NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
           TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
           LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
           ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
@@ -143,7 +143,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       SEEFITS = aladin.chaine.getString("PROPSEEFITS");
       SEEPARSING = aladin.chaine.getString("VWTABLEINFO");
       TABLEINFO = aladin.chaine.getString("PROPTABLEINFO");
-      LOADURL = aladin.chaine.getString("PROPLOADURL");
+//      LOADURL = aladin.chaine.getString("PROPLOADURL");
       NEWCALIB = aladin.chaine.getString("PROPNEWCALIB");
       MODCALIB = aladin.chaine.getString("PROPMODCALIB");
       SHOWFOVS = aladin.chaine.getString("PROPSHOWFOVS");
@@ -391,29 +391,34 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( text==null ) text="";
          this.more = more;
          this.url=url;
-         if( width>0 ) text = Util.fold(text,width);
+         if( width>0 ) {
+            if( text.startsWith("http://") || text.startsWith("ftp://") && text.length()>width ) text=text.substring(0,width)+"...";
+            else text = Util.fold(text,width);
+         }
          if( url!=null ) {
             text = "<html><A HREF=\"\">"+text+"</A></html>";
             setToolTipText(url);
          }
          if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
          setText(text);
-         final Component c = this;
          setFont(getFont().deriveFont(Font.ITALIC));
-         addMouseMotionListener(new MouseMotionListener() {
-            public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
-            public void mouseDragged(MouseEvent e) { }
-         });
-         addMouseListener(new MouseListener() {
-            public void mouseReleased(MouseEvent e) { 
-               if( url!=null ) aladin.glu.showDocument(url);
-               else aladin.info(c,more.replace("\\n","\n"));
-            }
-            public void mousePressed(MouseEvent e)  { }
-            public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULT); }
-            public void mouseEntered(MouseEvent e)  { }
-            public void mouseClicked(MouseEvent e) { }
-         });
+         if( url!=null || more!=null ) {
+            final Component c = this;
+            addMouseMotionListener(new MouseMotionListener() {
+               public void mouseMoved(MouseEvent e) { Aladin.makeCursor(c,Aladin.HANDCURSOR); }
+               public void mouseDragged(MouseEvent e) { }
+            });
+            addMouseListener(new MouseListener() {
+               public void mouseReleased(MouseEvent e) { 
+                  if( url!=null ) aladin.glu.showDocument(url);
+                  else aladin.info(c,more.replace("\\n","\n"));
+               }
+               public void mousePressed(MouseEvent e)  { }
+               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULT); }
+               public void mouseEntered(MouseEvent e)  { }
+               public void mouseClicked(MouseEvent e) { }
+            });
+         }
       }
    }
 
@@ -728,23 +733,23 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Url de déchargement
       String s1 = plan.getUrl();
       if( s1!=null && (s1.startsWith("http://") || s1.startsWith("ftp://") )) {
-         PropPanel.addCouple(p,"Url: ", new Anchor(s1,-1,null,s1), g,c);
+         PropPanel.addCouple(p,"Url: ", new Anchor(s1,50,null,s1), g,c);
       }
 
       // Panel pour les informations techniques
-      if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {
-
-         JPanel panelInfo = new JPanel();
-         panelInfo.setBorder(BorderFactory.createEmptyBorder());
-         panelInfo.setLayout(new FlowLayout(FlowLayout.CENTER));
-         if( plan.getUrl()!=null ) {
-            panelInfo.add(b=new JButton(LOADURL));
-            b.addActionListener(this);
-         }
-         c.fill = GridBagConstraints.NONE;
-         PropPanel.addCouple(p,"",panelInfo, g,c);
-         c.fill = GridBagConstraints.BOTH;
-      }
+//      if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {
+//
+//         JPanel panelInfo = new JPanel();
+//         panelInfo.setBorder(BorderFactory.createEmptyBorder());
+//         panelInfo.setLayout(new FlowLayout(FlowLayout.CENTER));
+//         if( plan.getUrl()!=null ) {
+//            panelInfo.add(b=new JButton(LOADURL));
+//            b.addActionListener(this);
+//         }
+//         c.fill = GridBagConstraints.NONE;
+//         PropPanel.addCouple(p,"",panelInfo, g,c);
+//         c.fill = GridBagConstraints.BOTH;
+//      }
 
       if( plan.isCatalog() ) {
          Vector<Legende> legs = plan.getLegende();
@@ -1700,15 +1705,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Visualisation des informations de parsing
       else if( SEEPARSING.equals(what) ) aladin.tableInfo(plan);
-
-      // Rechargement de l'URL dans le navigateur
-      else if( LOADURL.equals(what) ) {
-         String u = url.getText().trim();
-         if( u.length()==0 ) u=plan.getUrl();  // Si le champ est vide, je prends l'URL d'origine
-         aladin.glu.showDocument("Http",u,true);
-      }
-//      // Ajout d'une nouvelle colonne
-//      else if( NEWCOL.equals(what) ) aladin.addCol((PlanCatalog)plan);
 
       // show/hide FoVs associés
       else if( SHOWFOVS.equals(what) || HIDEFOVS.equals(what) ) {

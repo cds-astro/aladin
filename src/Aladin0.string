@@ -597,12 +597,12 @@ NOSESAME.fr	Le résolveur de nom d'objet CDS Sésame est inatteignable actuellemen
 
 
 # ServerAllsky strings
-ALLSKYJPEG Preview (jpeg)
-ALLSKYJPEG.fr Prévisualisation (jpeg)
+ALLSKYJPEG Preview (jpeg|png)
+ALLSKYJPEG.fr Prévisualisation (jpeg|png)
 ALLSKYFITS Full pixel dynamic (fits)
 ALLSKYFITS.fr Dynamique complète  (fits)
-ALLSKYSWJPEG Get preview (jpeg)
-ALLSKYSWJPEG.fr Mode Prévisualisation (jpeg)
+ALLSKYSWJPEG Get preview (jpeg|png)
+ALLSKYSWJPEG.fr Mode Prévisualisation (jpeg|png)
 ALLSKYSWFITS Get full pixel dynamic (fits)
 ALLSKYSWFITS.fr Mode dynamique complète  (fits)
 
@@ -1019,7 +1019,7 @@ PROPSEEFITS	Get original header
 #PROPINFO	Technical information
 #PROPSEEPARSING	See catalog info
 PROPTABLEINFO	Table information:
-PROPLOADURL	Reload in your browser
+#PROPLOADURL	Reload in your browser
 PROPNEWCALIB	New...
 PROPMODCALIB	Edit...
 PROPTOPBOTTOM	Top/Bottom
@@ -1100,7 +1100,7 @@ PROPSEEFITS.fr	En-tête FITS originale
 #PROPINFO.fr	Information technique
 #PROPSEEPARSING.fr	Voir info catalogue
 PROPTABLEINFO.fr	Table
-PROPLOADURL.fr	Recharger dans votre navigateur
+#PROPLOADURL.fr	Recharger dans votre navigateur
 PROPNEWCALIB.fr	Nouveau...
 PROPMODCALIB.fr	Editer...
 PROPTOPBOTTOM.fr	Haut/Bas
@@ -2397,24 +2397,26 @@ HELPRESOALLSKY Provide the correspondance between the angular pixel resolution a
 HELPRESOALLSKY.fr Fournit la correspondance entre résolution angulaire finale et volume de données. La ligne bleutée indique le choix le plus approprié en fonction des images d'origine. Il est possible de sur/sous-échantillonner.
 HELPESAMPALLSKY Specify the resampling method. The pixel value will be either the first found value or the bilinear approximation from the 4 closest original pixels. In case of overlapping images, it is possible to choose either the first pixel found or the average of all overlaying pixels, possibly ponderated by the border distance.
 HELPESAMPALLSKY.fr Détermine la méthode utilisée pour le rééchantillonnage. La valeur du pixel sera soit le premier trouvé, soit une approximation bilinéaire des 4 pixels originaux les plus proches. En cas de superposition d'image, il sera possible de choisir, soit le premier pixel trouvé, soit la moyenne des pixels, éventuellement pondérée par la distance au bord de l'image.
-JPEGINFOALLSKY This step allows you to generate the JPEG tiles corresponding to the FITS tiles. This step is strongly recommended if you plan to publish your data through a Web site. The JPEG tiles provides better respond times. 
-JPEGINFOALLSKY.fr Cette étape vous permet de créer les tuiles JPEG associées aux tuiles FITS. Dans le cas où vous souhaitez rendre accessible ces données depuis un site Web il est vivement conseillée de générer ces JPEGs qui offriront à vos utilisateurs des temps de réponses bien plus rapides.
+JPEGINFOALLSKY This step allows you to generate the compressed tiles (JPEG or PNG) corresponding to the FITS tiles. This step is strongly recommended if you plan to publish your data through a Web site. The compressed tiles provides better respond times. The JPEG format is more compact, but modify a little bit the data and does not manage the transparency.
+JPEGINFOALLSKY.fr Cette étape vous permet de créer les tuiles compressées (JPEG ou PNG) associées aux tuiles FITS. Dans le cas où vous souhaitez rendre accessible ces données depuis un site Web il est vivement conseillée de générer ces tuiles qui offriront à vos utilisateurs des temps de réponses bien plus rapides. Le format JPEG est plus compact mais altère légèrement les données et ne gère pas la transparence.
 JPEGMCUTALLSKY Manual cut (linear):
 JPEGMCUTALLSKY.fr Seuillage manuel (linéaire) :
-HELPJPEGMCUTALLSKY Allows you to specify the pixel value range used for generating the JPEG tiles
-HELPJPEGMCUTALLSKY.fr Permet d'indiquer spécifiquement la plage des valeurs des pixels qui sera retenue pour générer les tuiles JPEG. 
+HELPJPEGMCUTALLSKY Allows you to specify the pixel value range used for generating the compressed tiles
+HELPJPEGMCUTALLSKY.fr Permet d'indiquer spécifiquement la plage des valeurs des pixels qui sera retenue pour générer les tuiles compressées. 
 JPEGCUTALLSKY Cut params imported from current view:
 JPEGCUTALLSKY.fr Seuillage utilisé dans la vue :
 HELPJPEGCUTALLSKY Take into account the cut parameters presently used in the control view. This method is better that the manual cut as you are not limited to a linear transformation.
 HELPJPEGCUTALLSKY.fr Va prendre en compte les paramètres de seuillage actuellement utilisés dans la vue de contrôle. Cette méthode est plus performante que la précédente car elle n'est pas nécessairement linéaire. 
-JPEGBUILDALLSKY Build JPEG
-JPEGBUILDALLSKY.fr Génération des JPEG
+JPEGBUILDALLSKY Build
+JPEGBUILDALLSKY.fr Génération
 METHODJPG Computing method:
 METHODJPG.fr Méthode de calcul :
 MEDIANJPG median
 MEDIANJPG.fr médiane
 AVERAGEJPG average
 AVERAGEJPG.fr moyenne
+FORMATTILES Tiles format
+FORMATTILES.fr Format des tuiles
 PUBFORYOUALLSKY Only for you:
 PUBFORYOUALLSKY.fr Juste pour vous :
 OPENALLSKY You can load whenever you want the allsky by opening the target directory
