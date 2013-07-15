@@ -392,7 +392,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          this.more = more;
          this.url=url;
          if( width>0 ) {
-            if( text.startsWith("http://") || text.startsWith("ftp://") && text.length()>width ) text=text.substring(0,width)+"...";
+            if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
             else text = Util.fold(text,width);
          }
          if( url!=null ) {
