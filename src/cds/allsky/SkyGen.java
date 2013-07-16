@@ -106,8 +106,6 @@ public class SkyGen {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
       } else if (opt.equalsIgnoreCase("input")) {
          context.setInputPath(val);
-      } else if (opt.equalsIgnoreCase("tobemerged")) {
-         context.setToBeMergedPath(val);
       } else if (opt.equalsIgnoreCase("output")) {
          context.setOutputPath(val);
       } else if (opt.equalsIgnoreCase("blank")) {
@@ -238,49 +236,6 @@ public class SkyGen {
          }
       }
       
-      
-      if( context.getToBeMergedPath()!=null ) {
-         if( context.getInputPath()!=null ) {
-            context.error("Merging two all-skies do not required an input path parameter !");
-            return;
-         }
-         if( !findAction(actions,Action.MERGE) ) {
-            context.info("\"tobemerged\" parameter => assuming MERGE action");
-            actions.add(Action.MERGE);
-         }
-         if( !flagMode ) {
-            context.info("No mixing mode specified => assuming OVERWRITE");
-         }
-         if( findAction(actions,Action.TILES) ) {
-            context.error("MERGE and TILES actions can not be done simultaneously");
-            return;
-         }
-         if( findAction(actions,Action.INDEX) ) {
-            context.error("MERGE and INDEX actions can not be done simultaneously");
-            return;
-         }
-         if( findAction(actions,Action.CLEAN) ) {
-            context.error("MERGE and CLEAN actions can not be done simultaneously");
-            return;
-         }
-         if( findAction(actions,Action.CLEANINDEX) ) {
-            context.error("MERGE and CLEANINDEX actions can not be done simultaneously");
-            return;
-         }
-         if( findAction(actions,Action.CLEANTILES) ) {
-            context.error("MERGE and CLEANTILES actions can not be done simultaneously");
-            return;
-         }
-         if( findAction(actions,Action.CLEANFITS) ) {
-            context.error("MERGE and CLEANFITS actions can not be done simultaneously");
-            return;
-         }
-         if( force ) {
-            context.error("-f parameter not compatible with MERGE");
-            return;
-         }
-      }
-      
       // Permet de tuer proprement une tache déjà en cours d'exécution
       if( flagAbort ) {
          try { context.taskAbort(); }
@@ -362,8 +317,8 @@ public class SkyGen {
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
-            "input=dir          Source image directory (fits or jpg+hhh)" + "\n" +
-            "output=dir         all-sky target directory (default $PWD+\"ALLSKY\")" + "\n" +
+            "input=dir          Source image directory (fits or jpg|png+hhh or HiPS)" + "\n" +
+            "output=dir         HiPS target directory (default $PWD+\"ALLSKY\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
@@ -407,8 +362,8 @@ public class SkyGen {
             "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
             "allsky     Build low resolution Allsky view (Fits and/or Jpeg|png)" + "\n"+
             "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
-//            "merge      Merge an all-sky dir with an other already built all-sky" + "\n"+
-            "clean      Remove all HEALPix survey" + "\n"+
+            "concat     Concatenate an HiPS to another already built HiPS" + "\n"+
+            "clean      Remove all HiPS files (index, tiles, directories, allsky, MOC, ...)" + "\n"+
             "cleanIndex Remove HEALPix index" + "\n"+
             "cleanTiles Remove all HEALPix survey except the index" + "\n"+
             "cleanfits  Remove FITS tiles" + "\n"+
@@ -416,14 +371,15 @@ public class SkyGen {
             "cleanpng   Remove PNG tiles " + "\n"+
             "gzip       gzip some fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
-            "progen     Adapt HEALPix tree index to a progenitor usage" + "\n"
+            "progen     Adapt the index to a progenitor usage" + "\n"
             );
       System.out.println("\nEx: java -jar Aladin.jar -skygen input=/MyImages    => Do all the job." +
       		             "\n    java -jar Aladin.jar -skygen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
                          "\n    java -jar Aladin.jar -skygen input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
-                         "\n           The original pixels in the border or equal to 0 will be ignored."
+                         "\n           The original pixels in the border or equal to 0 will be ignored."+
+                         "\n    java -jar Aladin.jar -skygen input=HiPS ouput=HiPStarget concat   => Concatenate HiPS to HiPStarget"
 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                          );
    }

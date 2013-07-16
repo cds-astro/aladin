@@ -103,12 +103,10 @@ public class BuilderTree extends Builder {
    private Fits createTree(String path,int order, long npix ) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
-//      System.out.println("createTree("+order+","+npix+")...");
-      
-      // S'il existe déjà un fits et qu'on sort de la région à traiter, on le retourne tel que
       String file = Util.getFilePath(path,order,npix);
+      // S'il existe déjà un fits et qu'on sort de la région à traiter, on le retourne tel que
       if( !context.isInMocTree(order,npix) && new File(file+".fits").exists() ) {
-         return createLeaveFits(path,context.getToBeMergedPath(),order,npix);
+         return createLeaveFits(file);
       }
 
 //      JpegMethod method = context.getJpegMethod();
@@ -137,13 +135,6 @@ public class BuilderTree extends Builder {
    
    protected boolean testTree(int order,int maxOrder) { return order<maxOrder; }
    
-   protected Fits createLeaveFits(String path, String toBeMergedPath, int order, long npix) throws Exception {
-      String file = Util.getFilePath(path,order,npix);
-      Fits out = createLeaveFits(file);
-      if( first && out!=null ) { first=false; setConstantes(out); }
-      return out;
-   }
-   
    /** Construction d'une tuile terminale. De fait, simple chargement
     * du fichier FITS correspondant. */
    protected Fits createLeaveFits(String file) throws Exception {
@@ -152,6 +143,8 @@ public class BuilderTree extends Builder {
       try {
          out = new Fits();
          out.loadFITS(file+".fits");
+         if( first && out!=null ) { first=false; setConstantes(out); }
+
       } catch( Exception e ) { out=null; }
       return out;
    }

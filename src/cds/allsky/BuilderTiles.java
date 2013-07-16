@@ -106,8 +106,8 @@ public class BuilderTiles extends Builder {
          else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
       }
       build();
-      if( !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
-      if( !context.isTaskAborting() ) (new BuilderMoc(context)).run();
+      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
 
 //   public boolean isAlreadyDone() {

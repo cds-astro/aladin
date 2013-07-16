@@ -73,6 +73,16 @@ public class HealpixIndex extends TreeMap<String, HealpixIndexItem> implements I
    /** Iterator sur chaque entrée */
    public Iterator<String> iterator() { return keySet().iterator(); }
    
+   /** Ajout des entrées d'un autre index */
+   public void merge(HealpixIndex hi) {
+      Iterator<String> it = hi.iterator();
+      while( it.hasNext() ){
+         String s = it.next();
+         HealpixIndexItem item = new HealpixIndexItem(s);
+         put( item.getID(), item);
+      }
+   }
+   
    public String toString() {
       StringBuffer s = new StringBuffer("[");
       for( String k : this ) {

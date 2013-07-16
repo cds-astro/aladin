@@ -245,13 +245,13 @@ public class ContextGui extends Context {
             cut[1]= p.getCutMax();
             cut[2]= p.getDataMin();
             cut[3]= p.getDataMax();
-            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bZero)/bScale;
+            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bzero)/bscale;
 
          } else {
             String cutMin = mainPanel.tabJpg.getCutMin();
             String cutMax = mainPanel.tabJpg.getCutMax();
-            cut[0] = (Double.parseDouble(cutMin)-bZero)/bScale;
-            cut[1] = (Double.parseDouble(cutMax)-bZero)/bScale;
+            cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
+            cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;
          }
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();

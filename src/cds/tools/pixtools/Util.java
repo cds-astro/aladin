@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import cds.aladin.Coord;
+import cds.fits.Fits;
 
 
 
@@ -188,7 +189,7 @@ public class Util {
       return maxOrder;
    }
 
-   /**
+  /**
     * Calcule de facon récursive le nombre de fichier finaux Npix... d'un répertoire
     * @param dir
     * @return le nombre de fichiers

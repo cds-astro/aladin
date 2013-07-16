@@ -73,7 +73,6 @@ public class Context {
    protected String inputPath;               // Répertoire des images origales
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
-   protected String toBeMergedPath;          // Répertoire d'une boule HEALPix à merger avec une boule existante
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
    protected int bitpixOrig = -1;            // BITPIX des images originales
@@ -90,8 +89,8 @@ public class Context {
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
-   protected double bZero=0;                 // Valeur BZERO de la boule Healpix à générer
-   protected double bScale=1;                // Valeur BSCALE de la boule HEALPix à générer
+   protected double bzero=0;                 // Valeur BZERO de la boule Healpix à générer
+   protected double bscale=1;                // Valeur BSCALE de la boule HEALPix à générer
    protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
@@ -143,7 +142,6 @@ public class Context {
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
    public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
-   public String getToBeMergedPath() { return toBeMergedPath; }
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return isColor() ? bitpixOrig : bitpix; }
@@ -151,8 +149,8 @@ public class Context {
    public int getNpixOrig() { return isColor() || bitpixOrig==-1 ? 4 : Math.abs(bitpixOrig)/8; }  // Nombre d'octets par pixel
    public double getBScaleOrig() { return bScaleOrig; }
    public double getBZeroOrig() { return bZeroOrig; }
-   public double getBZero() { return bZero; }
-   public double getBScale() { return bScale; }
+   public double getBZero() { return bzero; }
+   public double getBScale() { return bscale; }
    public double getBlank() { return blank; }
    public double getBlankOrig() { return blankOrig; }
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
@@ -186,14 +184,13 @@ public class Context {
    		// cherche le dernier mot et le met dans le label
    		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
    }
-   public void setToBeMergedPath(String path) { toBeMergedPath = path; }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScaleOrig = x; }
    public void setBZeroOrig(double x) { bZeroOrig = x; }
-   public void setBScale(double x) { bScale = x; bscaleBzeroSet=true; }
-   public void setBZero(double x) { bZero = x; bscaleBzeroSet=true; }
+   public void setBScale(double x) { bscale = x; bscaleBzeroSet=true; }
+   public void setBZero(double x) { bzero = x; bscaleBzeroSet=true; }
    public void setBitpixOrig(int bitpixO) { 
 	   this.bitpixOrig = bitpixO; 
 	   if (this.bitpix==-1) this.bitpix = bitpixO;
@@ -476,20 +473,20 @@ public class Context {
             cut[0] = (cutOrig[0]-cutOrig[2])*coef + cut[2];
             cut[1] = (cutOrig[1]-cutOrig[2])*coef + cut[2];
 
-            bZero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
-            bScale = bScaleOrig/coef;
+            bzero = bZeroOrig + bScaleOrig*(cutOrig[2] - cut[2]/coef);
+            bscale = bScaleOrig/coef;
 
             Aladin.trace(3,"Change BITPIX from "+bitpixOrig+" to "+bitpix);
             Aladin.trace(3,"Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
                   "to ["+cut[2]+" .. "+cut[3]+"]");
             Aladin.trace(3,"Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
-                  +" to "+bZero+","+bScale+","+blank);
+                  +" to "+bzero+","+bscale+","+blank);
 
             // Pas de changement de bitpix
          } else {
-            bZero=bZeroOrig;
-            bScale=bScaleOrig;
-            Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bZero+","+bScale+","+blank);
+            bzero=bZeroOrig;
+            bscale=bScaleOrig;
+            Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bzero+","+bscale+","+blank);
          }
 
       }
