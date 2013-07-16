@@ -40,6 +40,7 @@ import org.apache.xmlrpc.XmlRpcHandler;
 import org.astrogrid.samp.hub.Hub;
 import org.astrogrid.samp.hub.HubServiceMode;
 
+import sun.misc.BASE64Encoder;
 import cds.tools.Util;
 
 
@@ -150,12 +151,14 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
     static final protected String MSG_SEND_ALADIN_SCRIPT_CMD = "script.aladin.send";
     // message non officiel, pour récupérer les coordonnées courantes
     static final protected String MSG_GET_COORDS = "coord.get.sky";
+    // message non officiel pour faire un snapshot de la vue courante
+    static final protected String MSG_GET_SNAPSHOT = "snapshot.get.jpg";
 
 
     static final protected String MSG_PING = "samp.app.ping";
 
     // liste des messages supportés (i.e auxquels on répond)
-    static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS, MSG_POINT_AT_COORDS, MSG_GET_COORDS,
+    static final protected String[] SUPPORTED_MESSAGES = {MSG_LOAD_FITS, MSG_POINT_AT_COORDS, MSG_GET_COORDS,MSG_GET_SNAPSHOT,
                                     MSG_LOAD_VOT_FROM_URL,
                                     MSG_LOAD_FITS_TABLE_FROM_URL, MSG_HIGHLIGHT_OBJECT, MSG_SELECT_OBJECTS,
                                     MSG_PING, MSG_SEND_ALADIN_SCRIPT_CMD,
@@ -597,6 +600,50 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                     positionMap.put("dec", Double.toString(a.view.repere.dej));
                     replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, positionMap, null);
                 }
+            }
+            else if( mType.equals(MSG_GET_SNAPSHOT) ) {
+                File tmp;
+                BufferedInputStream bis = null;
+                StringBuffer base64Str = new StringBuffer("data:image/jpeg;base64,");
+                try {
+                    tmp = File.createTempFile("samp", ".jpg");
+                    tmp.deleteOnExit();
+
+                    int w, h;
+                    w = h = 300;
+                    a.save.saveView(tmp.getAbsolutePath(), w, h, Save.JPEG, 0.7f);
+                    BASE64Encoder enc = new BASE64Encoder();
+                    if (tmp.length()==0) {
+                        replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, "Unable to generate snapshot of current view");
+                        return FALSE;
+                    }
+                    // TODO : passer plutot une URL qu'une chaine en base64
+                    bis = new BufferedInputStream(new FileInputStream(tmp));
+                    byte[] buffer = new byte[(int)tmp.length()];
+                    int offset = 0;
+                    for (int read = bis.read(buffer, offset, buffer.length - offset); read>=0 && offset<buffer.length; read = bis.read(buffer, offset, buffer.length - offset)) {
+                        offset += read;
+                    }
+                    base64Str.append(enc.encode(buffer));
+                }
+                catch(Exception e) {
+                    replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, e.getMessage());
+                    return FALSE;
+                }
+                finally {
+                    if (bis != null) {
+                        try {
+                            bis.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                Map<String, String> resultMap = new Hashtable<String, String>();
+                resultMap.put("data", base64Str.toString().replaceAll("(\r\n|\n)", ""));
+
+                replyToMessage(msgId, MSG_REPLY_SAMP_STATUSOK, resultMap, null);
             }
             else {
                 System.err.println("Unprocessed message "+mType);
@@ -2213,6 +2260,10 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
      * @param error
      */
     private void replyToMessage(String msgId, String status, Map result, String error) {
+        if (msgId==null) {
+            trace("Can not reply to message because message-id has not been set in initial message !");
+            return;
+        }
         Map responseMap = new Hashtable();
         responseMap.put(MSG_REPLY_SAMP_STATUS, status);
         responseMap.put(MSG_REPLY_SAMP_RESULT, result==null?new Hashtable():result);
