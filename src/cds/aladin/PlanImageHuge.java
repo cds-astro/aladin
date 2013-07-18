@@ -192,6 +192,13 @@ public class PlanImageHuge extends PlanImage implements Runnable {
       }
    }
    
+   private void resetPixelSub() {
+      synchronized( vPixelsSub ) {
+         for( int i=0; i<nbPixelsSub; i++ ) vPixelsSub[i]=null;
+         nbPixelsSub=0;
+      }
+   }
+   
    /** Permet de position le buffer pleine résolution courant s'il existe dans
     * la liste. Retourne false sinon */
    private boolean selectPixelsSub(int x,int y,int w,int h) {
@@ -370,6 +377,9 @@ Aladin.trace(3,"getSubImage["+n+"] from "+label+" ("+x*step+","+y*step+" "+w*ste
           
           // Chargement de l'image
           loadHugeImage();
+          
+          // Reset des imagettes pleines résolutions
+          resetPixelSub();
           
        } catch( Exception e ) { e.printStackTrace(); return false; }          
 

@@ -1812,6 +1812,48 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
       if( o2<0 ) return null;
       return Tok.unQuote( (new Tok(s.substring(o2),"},")).nextToken() );
    }
+   
+   static private String B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+   
+   /** Conversion en base 64 - code Fox */
+   static public String toB64(byte [] p) {
+      StringBuffer res= new StringBuffer((int)(p.length*1.25));
+      
+      char [] tab = B64.toCharArray();
+      char [] b4 = new char[4];
+      int c, c3, nb=0;
+      int i=0;
+
+      while( i<p.length ) {
+         c = p[i++]&0xff;
+         c3 = c<<16;
+         b4[2] = b4[3] = '=';
+
+         if( i<p.length ) {
+            c = p[i++]&0xff;
+            c3 |= (c<<8);
+            b4[2]=0;
+            if( i<p.length ) {
+               c = p[i++]&0xff;
+               c3 |=  c;
+               b4[3]=0;
+            }
+         }
+         if( b4[3]==0 ) b4[3] = tab[c3&63];
+         c3 >>= 6;
+            if( b4[2]==0 ) b4[2] = tab[c3&63];
+            c3 >>= 6;
+            b4[1] = tab[c3&63];
+            c3 >>= 6;
+         b4[0] = tab[c3&63];
+         res.append(b4);
+         nb += 4;
+         if( (nb%64)==0 ) res.append(CR+" ");
+      }
+      return res.toString();
+   }
+
+
 
 // PAS ENCORE TESTE
 //    /** Extrait le premier nombre entier qui se trouve dans la chaine à partir
