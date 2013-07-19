@@ -25,6 +25,7 @@ import java.util.Properties;
 
 import cds.aladin.Localisation;
 import cds.aladin.PlanHealpix;
+import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
 
@@ -61,7 +62,7 @@ public abstract class Builder {
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
-         case CONCAT:     return new BuilderTreeMerge(context);
+         case CONCAT:     return new BuilderConcat(context);
          case PROGEN:    return new BuilderProgenIndex(context);
       }
       throw new Exception("No builder associated to this action");
@@ -161,6 +162,25 @@ public abstract class Builder {
       }
       context.info("Pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
       context.setValidateCut(true);
+   }
+   
+   /**
+    * Initialisation des PIXELMINMAX et RANGEMINMAX, BLANK à partir d'un Allsky.fits précédent
+    */
+   protected void setCutAndBlankFromPreviousAllskyFile(String allskyFile) throws Exception {
+      Fits f = new Fits();
+      f.loadHeaderFITS(allskyFile);
+      double cut[] = new double[4];
+      cut[0] = f.headerFits.getDoubleFromHeader("PIXELMIN");
+      cut[1] = f.headerFits.getDoubleFromHeader("PIXELMAX");
+      cut[2] = f.headerFits.getDoubleFromHeader("DATAMIN");
+      cut[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
+      context.setCutOrig(cut);
+      try {
+         double blank = f.headerFits.getDoubleFromHeader("BLANK");
+         context.blank=blank;
+      } catch( Exception e ) { }
+      
    }
    
    /** Retourne le nombre d'octets disponibles en RAM */

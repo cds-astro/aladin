@@ -90,10 +90,10 @@ public final class Zoom extends JPanel {
       
       cZoom.setSelectedIndex(MINZOOM);   // Selectionne par defaut le zoom a 1x
       zoomChoicePanel = new ZoomChoice(aladin,cZoom);
-      cZoom.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { submit(); }
-      });
-      cZoom.addMouseWheelListener( zoomView );
+//      cZoom.addActionListener(new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { submit(); }
+//      });
+//      cZoom.addMouseWheelListener( zoomView );
       
       cubeSlider    = new SliderCube(aladin);
       epochSlider   = new SliderEpoch(aladin);
@@ -151,14 +151,37 @@ public final class Zoom extends JPanel {
    * @param sZoom libelle du zoom (1/16x, ... , 1x, ... 32x)
    * @return index dans le selecteur, -1 si non trouve
    */
-   protected int getIndex(String sZoom) {
-      for( int i=cZoom.getItemCount()-1; i>=0; i-- ) {
-         String s=(String)cZoom.getItemAt(i);
-         if( s.equals(sZoom) ) return i;
-      }
-      return -1;
+//   protected int getIndex(String sZoom) {
+//      for( int i=cZoom.getItemCount()-1; i>=0; i-- ) {
+//         String s=(String)cZoom.getItemAt(i);
+//         if( s.equals(sZoom) ) return i;
+//      }
+//      return -1;
+//   }
+   
+   protected double getNearestZoom(String sZoom) {
+      double z;
+      if( sZoom.indexOf('x')>0 ) z=parseZoomString(sZoom);
+      else z = getNearestZoomFromRadius(sZoom);
+      return getNearestZoomFct(z);
    }
-
+   
+   // Parsing d'une chaine suivant la syntaxe 1/16x, ... , 1x, ... 32x
+   // pour retourner la valeur réelle du zoom
+   private double parseZoomString(String sZoom) {
+      int fin = sZoom.indexOf('x');
+      if( fin<0 ) fin=sZoom.length();
+      int slash = sZoom.indexOf('/');
+      boolean flagDiv=true;
+      if( slash<0 ) { flagDiv=false; slash=fin; }
+      double res = Double.parseDouble(sZoom.substring(0,slash));
+      if( flagDiv ) {
+         double den = Double.parseDouble(sZoom.substring(slash+1,fin));
+         res /= den;
+      }
+      return res;
+   }
+   
    /** Retourn le facteur de zoom le plus proche pour un angle donné.
     * L'angle est par défaut en ARCMIN, mais peut être suivi d'une unité
     * Le calcul est opéré sur la vue par défaut */
@@ -253,10 +276,11 @@ public final class Zoom extends JPanel {
       if( fct.equals("+") || fct.equals("plus")) incZoom(1);
       else if( fct.equals("-") ) incZoom(-1);
       else {
-         double z = -1;
-         int i = getIndex(fct);                // Valeur particulière de zoom ? ex: 4x
-         if( i>=0 ) z = getValue(i);
-         else z = getNearestZoomFromRadius(fct);   // Expression d'une angle sur le ciel ? ex: 1°
+//         double z = -1;
+//         int i = getIndex(fct);                // Valeur particulière de zoom ? ex: 4x
+//         if( i>=0 ) z = getValue(i);
+//         else z = getNearestZoomFromRadius(fct);   // Expression d'une angle sur le ciel ? ex: 1°
+         double z = getNearestZoom(fct);
          if( z<0 ) return false;
          aladin.view.setZoomRaDecForSelectedViews(z,null);
       }
@@ -277,21 +301,11 @@ public final class Zoom extends JPanel {
       if( v!=null ) zoomView.newZoom(v.xzoomView,v.yzoomView);
    }
    
-   /** Action à faire si le cZoom a été modifié
-   protected void submit() {
-      v.setZoom(getValue(),v.xzoomView,v.yzoomView);
-      newZoom();
-      v.repaint();
-   }
-    */
-   
    // Pour éviter que la mise à jour du choice du zoom effectue une synchronisation intempestive
    private boolean flagNoAction=false;
 
    /** Action à faire si le cZoom a été modifié */
    protected void submit() {
-// Ca fait trop de baratin de la console      
-//      aladin.pad.setCmd("zoom "+cZoom.getSelectedItem());
       if( !flagNoAction ) aladin.view.setZoomRaDecForSelectedViews(getValue(),null);
    }
 

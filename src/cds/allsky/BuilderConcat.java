@@ -34,7 +34,7 @@ import cds.tools.pixtools.Util;
 /** Fusion de 2 HiPS, puis reconstruction de l'arborescence, du allsky et du MOC
  * @author Pierre Fernique
  */
-public class BuilderTreeMerge extends Builder {
+public class BuilderConcat extends Builder {
    private int statNbFile;
    private long statSize;
    private long startTime,totalTime;
@@ -45,12 +45,9 @@ public class BuilderTreeMerge extends Builder {
    private String inputPathIndex;
    private CoAddMode mode;
    private boolean doHpxFinder;
+   private int tileMode;
 
-   /**
-    * Création du générateur de l'arbre FITS.
-    * @param context
-    */
-   public BuilderTreeMerge(Context context) {
+   public BuilderConcat(Context context) {
       super(context);
    }
 
@@ -58,21 +55,22 @@ public class BuilderTreeMerge extends Builder {
    
    public void run() throws Exception {
       build();
-      try {
-         setContextParamFromPreviousAllskyFile(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-      } catch( Exception e ) { }
       
       // Regeneration de l'arborescence pour la zone concernée
       (new BuilderTree(context)).run();
       context.info("tree updated");
       
-      // Regeneration des tuiles jpeg et de l'arborescence pour la zone concernée si nécessaire
-      boolean inJpg = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg")).exists();
-      if( inJpg ) { (new BuilderJpg(context)).run(); context.info("JPEG tiles updated"); }
+      boolean inJpg=false,inPng=false;
       
-      // Regeneration des tuiles png et de l'arborescence pour la zone concernée si nécessaire
-      boolean inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
-      if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
+      if( !context.isColor() ) {
+         // Regeneration des tuiles jpeg et de l'arborescence pour la zone concernée si nécessaire
+         inJpg = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg")).exists();
+         if( inJpg ) { (new BuilderJpg(context)).run(); context.info("JPEG tiles updated"); }
+
+         // Regeneration des tuiles png et de l'arborescence pour la zone concernée si nécessaire
+         inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
+         if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
+      }
       
       // Regeneration des allsky si non encore fait
       if( !inJpg && !inPng ) (new BuilderAllsky(context)).run();
@@ -84,19 +82,27 @@ public class BuilderTreeMerge extends Builder {
       File f = new File(outputPath+Util.FS+BuilderMoc.MOCNAME);
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
-         outputMoc.union(inputMoc);
+         outputMoc = outputMoc.union(inputMoc);
          outputMoc.write( context.getOutputPath()+Util.FS+"Moc.fits", HealpixMoc.FITS);
          context.info("MOC updated");
       } else {
          (new BuilderMoc(context)).run();
          context.info("MOC done");
-       }
+      }
       
+      // Post traitement sur le HpxFinder si nécessaire
       if( !doHpxFinder ) {
          f = new File(outputPathIndex);
          if( f.isDirectory() ) {
             f.renameTo( new File(outputPathIndex+"-partial"));
             context.warning("Previous HpxFinder has been removed as "+Constante.HPX_FINDER+"-partial");
+         }
+      } else {
+         // Faut-il lancer également une commande PROGEN
+         f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
+         if( f.isDirectory() ) {
+            (new BuilderProgenIndex(context)).run();
+            context.info("PROGEN tiles updated");
          }
       }
    }
@@ -108,19 +114,39 @@ public class BuilderTreeMerge extends Builder {
       outputPathIndex = cds.tools.Util.concatDir( outputPath,Constante.HPX_FINDER);
       inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.HPX_FINDER);
       mode = context.getCoAddMode();
+      tileMode=Context.FITS;
 
       if( inputPath==null ) throw new Exception("\"input\" parameter required !");
       File f = new File(inputPath);
       if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("\"inputPath\" directory not available ["+inputPath+"]");
 
-      if( !context.isExistingAllskyDir() ) throw new Exception("No HiPS found in ouput dir");
-      if( !context.isExistingAllskyDir( inputPath ) ) throw new Exception("No HiPS found in inputPath dir");
-
       int order = Util.getMaxOrderByPath( outputPath );
+      if( order==-1 )  throw new Exception("No HiPS found in ouput dir");
       context.setOrder(order);
       int inputOrder = Util.getMaxOrderByPath( inputPath );
+      if( inputOrder==-1 )  throw new Exception("No HiPS found in ouput dir");
       if( order!=inputOrder ) throw new Exception("Uncompatible HiPS: out.order="+order+" input.order="+inputOrder);
       context.info("Order retrieved from ["+inputPath+"] => "+order);
+      
+      String allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+      if( (new File(allsky)).exists() ) {
+         setContextParamFromPreviousAllskyFile(allsky);
+         validateParams(inputPath+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+      } else {
+         allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png";
+         if( (new File(allsky)).exists() ) {
+            context.setColor("png");
+            tileMode=Context.PNG;
+            context.info("Processing HiPS colored in "+context.getTileExt()+" tiles");
+         } else {
+            allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg";
+            if( (new File(allsky)).exists() ) {
+               context.setColor("jpg");
+               tileMode=Context.JPEG;
+               context.info("Processing HiPS colored in "+context.getTileExt()+" tiles");
+            }
+         }
+      }
       
       // faudra-t-il traiter les index
       doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
@@ -137,13 +163,12 @@ public class BuilderTreeMerge extends Builder {
          f = new File(inputPath+Util.FS+BuilderMoc.MOCNAME);
          inputMoc.read( f.getCanonicalPath() );
       }
-      if( context.mocArea!=null ) inputMoc.intersection(context.mocArea);
+      if( context.mocArea!=null ) inputMoc = inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
 
    }
    
-   /** retourne les pixelscut et pixelsrange en fonction d'un fichier allsky.fits */
-   public void setContextParamFromPreviousAllskyFile(String allskyFile) throws Exception {
+   protected void setContextParamFromPreviousAllskyFile(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
       double cut[] = new double[4];
@@ -152,8 +177,8 @@ public class BuilderTreeMerge extends Builder {
          cut[1] = f.headerFits.getDoubleFromHeader("PIXELMAX");
       } catch( Exception e ) { cut[0]=cut[1]=0; }
       try {
-         cut[2] = f.headerFits.getDoubleFromHeader("RANGEMIN");
-         cut[3] = f.headerFits.getDoubleFromHeader("RANGEMAX");
+         cut[2] = f.headerFits.getDoubleFromHeader("DATAMIN");
+         cut[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
       } catch( Exception e ) { cut[2]=cut[3]=0; }
       context.setCut(cut);
       
@@ -172,10 +197,41 @@ public class BuilderTreeMerge extends Builder {
          context.bzero = bzero;
       } catch( Exception e ) { }
     
+      try {
+         int bitpix = f.headerFits.getIntFromHeader("BITPIX");
+         context.bitpix = bitpix;
+      } catch( Exception e ) { }
+    
    }
 
-
    
+   /** Vérifie l'adéquation des deux HiPS en fonction du fichier allsky.fits input */
+   public void validateParams(String allskyFile) throws Exception {
+      Fits f = new Fits();
+      f.loadHeaderFITS(allskyFile);
+      
+      int bitpix = f.headerFits.getIntFromHeader("BITPIX");
+      if( bitpix!=context.bitpix ) throw new Exception("Uncompatible HiPS => input.BITPIX="+bitpix+" output.BITPIX="+context.bitpix);
+    
+      double bscale=1;
+      try {
+         bscale = f.headerFits.getDoubleFromHeader("BSCALE");
+      } catch( Exception e ) { }
+      if( bscale!=context.bscale ) throw new Exception("Uncompatible HiPS => input.BSCALE="+bscale+" output.BSCALE="+context.bscale);
+    
+      double bzero=0;
+      try {
+         bzero = f.headerFits.getDoubleFromHeader("BZERO");
+      } catch( Exception e ) { }
+      if( bzero!=context.bzero ) throw new Exception("Uncompatible HiPS => input.BZERO="+bzero+" output.BZERO="+context.bzero);
+      
+      double blank=Double.NaN;
+      try {
+         blank = f.headerFits.getDoubleFromHeader("BLANK");
+      } catch( Exception e ) { }
+      if( !Double.isNaN(blank) && blank!=context.blank ) context.warning("BLANK modification => ignored (input.BLANK="+blank+" output.BLANK="+context.blank+")");
+   }
+
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
       context.showJpgStat(statNbFile, statSize, totalTime);
@@ -194,12 +250,12 @@ public class BuilderTreeMerge extends Builder {
          Fits out=null;
          
          String inputFile = Util.getFilePath(inputPath,order,npix);
-         Fits input = loadFits(inputFile);
+         Fits input = loadTile(inputFile);
          if( input==null ) continue;
          
          // traitement de la tuile
          String outFile = Util.getFilePath(outputPath,order,npix);
-         out = loadFits(outFile);
+         out = loadTile(outFile);
          
          switch(mode) {
             case REPLACETILE:
@@ -224,9 +280,7 @@ public class BuilderTreeMerge extends Builder {
          
          if( out==null ) throw new Exception("Y a un blème ! out==null");
          
-         out.writeFITS(outFile+".fits");
-         File f = new File(outFile+".fits");
-         updateStat(f);
+         writeTile(out,outFile);
          if( context.isTaskAborting() )  throw new Exception("Task abort !");
 
          if( !doHpxFinder ) continue;
@@ -259,14 +313,27 @@ public class BuilderTreeMerge extends Builder {
 //      context.moc.union(contextMoc);
    }
    
-   private Fits loadFits(String file) throws Exception {
+   private Fits loadTile(String file) throws Exception {
       Fits f = new Fits();
       try {
-         f.loadFITS(file+".fits");
+         if( tileMode==Context.FITS ) f.loadFITS(file+".fits");
+         else if( tileMode==Context.PNG ) f.loadJpeg(file+".png",true,false);
+         else if( tileMode==Context.JPEG ) f.loadJpeg(file+".jpg",true,false);
       } catch( Exception e ) {
          f=null;
       }
       return f;
+   }
+   
+   private void writeTile(Fits out,String file) throws Exception {
+      String s=null;
+      if( tileMode==Context.FITS )  out.writeFITS(s=file+".fits");
+      else if( tileMode==Context.PNG ) out.writeRGBcompressed(s=file+".png","png");
+      else if( tileMode==Context.JPEG ) out.writeRGBcompressed(s=file+".jpg","jpg");
+      
+      File f = new File(s);
+      updateStat(f);
+
    }
    
    // Ecriture du fichier d'index HEALPix correspondant à la map passée en paramètre

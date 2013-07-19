@@ -56,10 +56,10 @@ public class BuilderTree extends Builder {
       build();
    }
    
-   // Valide la cohérence des paramètres pour la création des tuiles JPEG
+   // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
-      if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
+      if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
       validateOrder(context.getOutputPath());      
       try {
          if( !context.isColor() ) validateCut();

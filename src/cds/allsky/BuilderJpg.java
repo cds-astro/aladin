@@ -75,7 +75,7 @@ public class BuilderJpg extends Builder {
    public void run() throws Exception {
       double cut [] = context.getCut();
       String fct = context.getTransfertFct();
-      context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+fct+") jpegMethod="+context.getJpegMethod());
+      context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+fct+") method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
    }
@@ -96,7 +96,17 @@ public class BuilderJpg extends Builder {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
-      if( !context.isColor() ) validateCut();
+      if( !context.isColor() ) {
+         try { validateCut(); } catch( Exception e ) {
+            try {
+               setCutAndBlankFromPreviousAllskyFile(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+               double cut [] = context.cut;
+               context.info("Will use PIXELMIN and PIXELMAN ["+cut[0]+" .. "+cut[1]+"] and BLANK="+context.blank+" found in Allsky.fits");
+           } catch( Exception e1 ) {
+               throw new Exception("Pixel cut unkown => use pixelcut parameter");
+            }
+         }
+      }
       
       // Chargement du MOC réel à la place de celui de l'index (moins précis)
       try { context.loadMoc(); } catch( Exception e ) {

@@ -196,11 +196,8 @@ public class BuilderTiles extends Builder {
       if( statNbTile+statEmptyTile==0 ) return;
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),getMem());
-      String s = showMem();
-      if( s.length()>0 ) {
-         //         adjustMem();
-         context.stat(s);
-      }
+//      String s = showMem();
+//      if( s.length()>0 ) context.stat(s);
       context.stat(context.cacheFits+"");
 //      context.cacheFits.gc();
       System.gc();

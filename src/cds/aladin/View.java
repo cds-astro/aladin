@@ -1946,8 +1946,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                nz = aladin.calque.zoom.getNearestZoomFct(z/(size/cSize));
            } catch( Exception e ) { nz=z; if( aladin.levelTrace>=3) e.printStackTrace(); }
          } else nz=z;
-
-
+         
          // En cas de recalibration on va éviter de déplacer la vue intempestivement
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere

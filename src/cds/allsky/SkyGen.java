@@ -230,7 +230,7 @@ public class SkyGen {
                if( a==Action.RESUME ) flagResume=true;    // Bidouillage pour pouvoir remettre en route un skygen en pause
                actions.add(a);
             } catch (Exception e) {
-               e.printStackTrace();
+               context.error("Unknown skygen command ["+arg+"] !");
                return;
             }
          }
