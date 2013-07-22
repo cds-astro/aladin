@@ -62,7 +62,7 @@ public abstract class Builder {
          case GUNZIP:    return new BuilderGunzip(context);
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
-         case CONCAT:     return new BuilderConcat(context);
+         case CONCAT:    return new BuilderConcat(context);
          case PROGEN:    return new BuilderProgenIndex(context);
       }
       throw new Exception("No builder associated to this action");

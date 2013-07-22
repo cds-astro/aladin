@@ -62,7 +62,7 @@ public class ContextGui extends Context {
    }
    
    // Demande d'affichage des stats (dans le TabBuild)
-   protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
+   protected void showIndexStat(int statNbFile, int statBlocFile, int statNbZipFile, long statMemFile, long statMaxSize, 
          int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
       mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statNbZipFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
    }

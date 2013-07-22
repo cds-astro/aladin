@@ -102,7 +102,7 @@ final public class Fits {
 
    public double blank = DEFAULT_BLANK; // valeur BLANK
 
-   private long bitmapOffset = -1; // Repère le positionnement du bitmap des
+   public long bitmapOffset = -1; // Repère le positionnement du bitmap des
                                    // pixels (voir releaseBitmap());
 
    // Dans le cas où il s'agit d'une cellule sur l'image (seule une portion de
@@ -513,7 +513,7 @@ final public class Fits {
          else {
             pixels = new byte[size];
             for( int lig = 0; lig < heightCell; lig++ )
-               System.arraycopy(buf, (lig * width + xCell) * n, pixels, 
+               System.arraycopy(buf, ((yCell+lig) * width + xCell) * n, pixels, 
                      lig * widthCell * n, widthCell * n );
          }
 
@@ -1028,9 +1028,6 @@ final public class Fits {
             : new IndexColorModel(8, 256, r, r, r);
    }
 
-   static final public boolean INCELLS = true; // true => permet le découpage en
-                                               // cellule d'un fichier .hhh
-
    static final public boolean JPEGORDERCALIB = false; // true => Ne fait pas le
                                                        // complément à la
                                                        // hauteur lors des
@@ -1429,6 +1426,27 @@ final public class Fits {
    private boolean releasable = true;
    public void setReleasable(boolean flag) { releasable = flag; }
    public boolean isReleasable() { return releasable; }
+   
+//   // Gestion d'un lock
+//   transient private boolean lock;
+//   static private final Object lockObj= new Object();
+//   private void waitLock() {
+//      while( !getLock() ) sleep(100);
+//   }
+//   private void unlock() { lock=false; }
+//   private boolean getLock() {
+//      synchronized( lockObj ) {
+//         if( lock ) return false;
+//         lock=true;
+//         return true;
+//      }
+//   }
+//   // Mise en pause 
+//   private void sleep(int delay) {
+//      try { Thread.currentThread().sleep(delay); }
+//      catch( Exception e) { }
+//   }
+
 
    /**
     * Libération de la mémoire utilisé par le bitmap des pixels (on suppose que
@@ -1442,7 +1460,7 @@ final public class Fits {
       testBitmapReleaseFeature();
       bitmapReleaseDone = true;
       pixels = null;
-      // System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
+//      System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);
    }
 
    /**
@@ -1454,7 +1472,7 @@ final public class Fits {
       if( pixels != null ) return;
       if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
       testBitmapReleaseFeature();
-      // System.out.println("reloadBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" de "+filename);
+//      System.out.println("reloadBitmap() size="+widthCell+"x"+heightCell+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);
       RandomAccessFile f = null;
       try {
          f = new RandomAccessFile(filename, "r");
@@ -1466,7 +1484,7 @@ final public class Fits {
             f.seek(bitmapOffset);
             f.readFully(pixels);
          }
-         
+
          // Lecture ligne à ligne pour mémoriser uniquement la cellule
          else {
             long offset = bitmapOffset + (long)yCell * width * n;
@@ -1482,7 +1500,6 @@ final public class Fits {
       }
 
       bitmapReleaseDone = false;
-
    }
 
    private void testBitmapReleaseFeature() throws Exception {
@@ -1684,7 +1701,7 @@ final public class Fits {
 
    private Coord cTmp = new Coord();
 
-   private String filename;
+   public String filename;
 
    private void setPixValInt(byte[] t, int bitpix, int i, int val) {
       int c;
@@ -1846,12 +1863,12 @@ final public class Fits {
       }
       if( a.rgb != null && rgb != null ) {
          for( int i = 0; i < taille; i++ ) {
-            int t = ((0xFF000000 & a.rgb[i]) | (0xFF000000 & rgb[i])) != 0 ? 0xFF000000
-                  : 0;
-            int r = (0x00FF0000 & a.rgb[i]) + (0x00FF0000 & rgb[i]) / 2;
-            int g = (0x0000FF00 & a.rgb[i]) + (0x0000FF00 & rgb[i]) / 2;
-            int b = (0x000000FF & a.rgb[i]) + (0x000000FF & rgb[i]) / 2;
-            rgb[i] = t | r | g | b;
+            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+            if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
+            int r = (int) ( (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 ) << 16;
+            int g = (int) ( (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 ) << 8;
+            int b = (int) ( ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2 );
+            rgb[i] = 0xFF000000 | r | g | b;
          }
       }
    }
@@ -1880,14 +1897,15 @@ final public class Fits {
             double fct2 = weight2[i] / (weight1[i] + weight2[i]);
             weight1[i] += weight2[i];
             weight2[i] = 0;
-            int t = ((0xFF000000 & rgb[i]) | (0xFF000000 & a.rgb[i])) != 0 ? 0xFF000000
-                  : 0;
+            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+            if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
+            
             int r = (int) (((rgb[i] >> 16) & 0xFF) * fct1 + ((a.rgb[i] >> 16) & 0xFF)
                   * fct2) << 16;
             int g = (int) (((rgb[i] >> 8) & 0xFF) * fct1 + ((a.rgb[i] >> 8) & 0xFF)
                   * fct2) << 8;
             int b = (int) ((rgb[i] & 0xFF) * fct1 + (a.rgb[i] & 0xFF) * fct2);
-            rgb[i] = t | r | g | b;
+            rgb[i] = 0xFF000000 | r | g | b;
          }
       }
    }

@@ -48,10 +48,12 @@ public class BuilderIndex extends Builder {
    private int [] borderSize= {0,0,0,0};
    private String initpath = null;
    private String currentfile = null;
+   private boolean blocking;
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
    private int statNbZipFile;              // Nombre de fichiers sources gzippés
+   private int statBlocFile;              // Nombre de fichiers qu'il aura fallu découper en blocs
    private long statMemFile;               // Taille totale des fichiers sources (en octets)
    private long statMaxSize;               // taille du plus gros fichier trouvé
    private int statMaxWidth, statMaxHeight, statMaxNbyte; // info sur le plus gros fichier trouvé
@@ -84,6 +86,9 @@ public class BuilderIndex extends Builder {
       if( context instanceof ContextGui ) {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
       }
+      
+      blocking = context.blocking;
+      if( blocking ) context.info("Splitting large original image files in blocs of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
 
       validateInput();
       validateOutput();
@@ -118,7 +123,7 @@ public class BuilderIndex extends Builder {
    
    /** Demande d'affichage des stats (dans le TabBuild) */
    public void showStatistics() {
-      context.showIndexStat(statNbFile, statNbZipFile, statMemFile, statMaxSize,
+      context.showIndexStat(statNbFile, statBlocFile, statNbZipFile, statMemFile, statMaxSize,
             statMaxWidth, statMaxHeight, statMaxNbyte);
    }
 
@@ -141,14 +146,15 @@ public class BuilderIndex extends Builder {
 
    // Initialisation des statistiques
    private void initStat() {
-      statNbFile = statNbZipFile = 0;
+      statNbFile = statNbZipFile = statBlocFile = 0;
       statMemFile = 0;
       statMaxSize = -1;
    }
 
    // Mise à jour des stats
-   private void updateStat(File f,int code, int width,int height,int nbyte) {
+   private void updateStat(File f,int code, int width,int height,int nbyte,int deltaBlocFile) {
       statNbFile++;
+      statBlocFile += deltaBlocFile;
       if( (code & Fits.GZIP) !=0 ) statNbZipFile++;
       long size = f.length();
       statMemFile += size;
@@ -234,9 +240,9 @@ public class BuilderIndex extends Builder {
 
                try {
                   
-                  // Test sur l'image entière (pas possible autrement)
-                  if( !Fits.INCELLS && currentfile.endsWith(".hhh") ) {
-                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8);
+                  // Test sur l'image entière
+                  if( !blocking || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE ) {
+                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
                      testAndInsert(fitsfile, pathDest, currentfile, null, order);
                      
                   // Découpage en petits carrés
@@ -245,7 +251,7 @@ public class BuilderIndex extends Builder {
                         int width = fitsfile.width - borderSize[3];
                         int height = fitsfile.height - borderSize[2];
 
-                        updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8);
+                        updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
                         
                         for( int x=borderSize[1]; x<width; x+=cellSize ) {
                           

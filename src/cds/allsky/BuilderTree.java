@@ -19,216 +19,47 @@
 
 package cds.allsky;
 
-import java.io.File;
-
-import cds.aladin.Aladin;
-import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
-import cds.tools.pixtools.Util;
 
-/** Construction de la hiérarchie des tuiles FITS à partir des tuiles de plus bas
- * niveau. La méthode employée est la moyenne.
- * @author Pierre Fernique
+/** Permet la génération du survey HEALPix à partir d'un index préalablement généré
+ * @author Standard Anaïs Oberto [CDS] & Pierre Fernique [CDS]
+ *
  */
-public class BuilderTree extends Builder {
+public class BuilderTree extends BuilderTiles {
 
-   private int maxOrder;
-   protected int bitpix;
-   protected int width;
-   protected double blank,bscale,bzero;
-   boolean flagAllsky=true;
-
-   private int statNbFile;
-   private long statSize;
-   private long startTime,totalTime;
-
-   /**
-    * Création du générateur de l'arbre FITS.
-    * @param context
-    */
-   public BuilderTree(Context context) {
-      super(context);
-   }
+   public BuilderTree(Context context) { super(context); }
 
    public Action getAction() { return Action.TREE; }
 
    public void run() throws Exception {
+      context.running("Creating "+context.getTileExt()+" tree and allsky (max depth="+context.getOrder()+")...");
+      context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
       build();
+      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
-   
+
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
-      validateOrder(context.getOutputPath());      
-      try {
-         if( !context.isColor() ) validateCut();
+      validateOrder(context.getOutputPath());  
+      if( !context.isColor() ) {
+         validateCut();
          context.initParameters();
-      } catch( Exception e ) {
-         context.warning("No pixel cut information => you will have to (re)create the allsky.fits separately !");
-         flagAllsky=false;
+      } else {
+         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
          context.initRegion();
       }
    }
    
-   /** Demande d'affichage des stats via Task() */
-   public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime);
-   }
-
-   public void build() throws Exception {
-      initStat();
-      context.setProgressMax(768);
-      String output = context.getOutputPath();
-      maxOrder = context.getOrder();
-      
-      for( int i=0; i<768; i++ ) {
-         if( context.isInMocTree(3, i) ) createTree(output,3,i);
-         context.setProgress(i);
-      }
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+      long t = System.currentTimeMillis();
+      Fits f = findLeaf(file);
+      long duree = System.currentTimeMillis()-t;
+      if( f==null ) updateStat(0,0,1,duree,0,0);
+      else updateStat(0,1,0,duree,0,0);
+      return f;
    }
    
-   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
-
-   // Mise à jour des stats
-   private void updateStat(File f) {
-      statNbFile++;
-      statSize += f.length();
-      totalTime = System.currentTimeMillis()-startTime;
-   }
-
-   /** Construction récursive de la hiérarchie des tuiles FITS à partir des tuiles FITS
-    * de plus bas niveau. La méthode employée est la moyenne
-    */
-   private Fits createTree(String path,int order, long npix ) throws Exception {
-      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-      
-      String file = Util.getFilePath(path,order,npix);
-      // S'il existe déjà un fits et qu'on sort de la région à traiter, on le retourne tel que
-      if( !context.isInMocTree(order,npix) && new File(file+".fits").exists() ) {
-         return createLeaveFits(file);
-      }
-
-//      JpegMethod method = context.getJpegMethod();
-      JpegMethod method = JpegMethod.MEAN;
-
-      Fits out = null;
-      if( order==maxOrder ) out = createLeaveFits(file);
-      else {
-         Fits fils[] = new Fits[4];
-         boolean found = false;
-         for( int i =0; i<4; i++ ) {
-            fils[i] = createTree(path,order+1,npix*4+i);
-            if (fils[i] != null && !found) found = true;
-         }
-         if( found ) out = createNodeFits(fils, method);
-      }
-      if( out!=null && context.isInMocTree(order,npix) && testTree(order,maxOrder) ) {
-         out.writeFITS(file+".fits");
-         if( order==maxOrder ) {
-            File f = new File(file+".fits");
-            updateStat(f);
-         }
-      }
-      return out;
-   }
-   
-   protected boolean testTree(int order,int maxOrder) { return order<maxOrder; }
-   
-   /** Construction d'une tuile terminale. De fait, simple chargement
-    * du fichier FITS correspondant. */
-   protected Fits createLeaveFits(String file) throws Exception {
-      Fits out = null;
-      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-      try {
-         out = new Fits();
-         out.loadFITS(file+".fits");
-         if( first && out!=null ) { first=false; setConstantes(out); }
-
-      } catch( Exception e ) { out=null; }
-      return out;
-   }
-
-   private boolean first=true;
-   protected void setConstantes(Fits f) {
-      bitpix = f.bitpix;
-      blank  = f.blank;
-      bscale = f.bscale;
-      bzero  = f.bzero;
-      width  = f.width;
-   }
-
-   /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
-   private Fits createNodeFits(Fits fils[], JpegMethod method) throws Exception {
-      Fits out = new Fits(width,width,bitpix);
-      out.setBlank(blank);
-      out.setBzero(bzero);
-      out.setBscale(bscale);
-
-      Fits in;
-      double p[] = new double[4];
-      double coef[] = new double[4];
-
-      for( int dg=0; dg<2; dg++ ) {
-         for( int hb=0; hb<2; hb++ ) {
-            int quad = dg<<1 | hb;
-            in = fils[quad];
-            int offX = (dg*width)/2;
-            int offY = ((1-hb)*width)/2;
-
-            for( int y=0; y<width; y+=2 ) {
-               for( int x=0; x<width; x+=2 ) {
-
-                  double pix=blank;
-                  if( in!=null ) {
-
-                     // On prend la moyenne (sans prendre en compte les BLANK)
-                     if( method==Context.JpegMethod.MEAN ) {
-                        double totalCoef=0;
-                        for( int i=0; i<4; i++ ) {
-                           int dx = i==1 || i==3 ? 1 : 0;
-                           int dy = i>=2 ? 1 : 0;
-                           p[i] = in.getPixelDouble(x+dx,y+dy);
-                           if( in.isBlankPixel(p[i]) ) coef[i]=0;
-                           else coef[i]=1;
-                           totalCoef+=coef[i];
-                        }
-                        if( totalCoef!=0 ) {
-                           pix=0;
-                           for( int i=0; i<4; i++ ) {
-                              if( coef[i]!=0 ) pix += p[i]*(coef[i]/totalCoef);
-                           }
-                        }
-
-                        // On garde la valeur médiane (les BLANK seront automatiquement non retenus)
-                     } else {
-
-                        double p1 = in.getPixelDouble(x,y);
-                        if( in.isBlankPixel(p1) ) p1=Double.NaN;
-                        double p2 = in.getPixelDouble(x+1,y);
-                        if( in.isBlankPixel(p2) ) p1=Double.NaN;
-                        double p3 = in.getPixelDouble(x,y+1);
-                        if( in.isBlankPixel(p3) ) p1=Double.NaN;
-                        double p4 = in.getPixelDouble(x+1,y+1);
-                        if( in.isBlankPixel(p4) ) p1=Double.NaN;
-
-                        if( p1>p2 && (p1<p3 || p1<p4) || p1<p2 && (p1>p3 || p1>p4) ) pix=p1;
-                        else if( p2>p1 && (p2<p3 || p2<p4) || p2<p1 && (p2>p3 || p2>p4) ) pix=p2;
-                        else if( p3>p1 && (p3<p2 || p3<p4) || p3<p1 && (p3>p2 || p3>p4) ) pix=p3;
-                        else pix=p4;
-                     }
-                  }
-
-                  out.setPixelDouble(offX+(x/2), offY+(y/2), pix);
-               }
-            }
-         }
-      }
-
-      for( int i=0; i<4; i++ ) {
-         if( fils[i]!=null ) fils[i].free();
-      }
-      return out;
-   }
-
 }

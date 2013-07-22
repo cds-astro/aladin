@@ -34,10 +34,10 @@ import cds.tools.pixtools.Util;
 /** Fusion de 2 HiPS, puis reconstruction de l'arborescence, du allsky et du MOC
  * @author Pierre Fernique
  */
-public class BuilderConcat extends Builder {
-   private int statNbFile;
-   private long statSize;
-   private long startTime,totalTime;
+public class BuilderConcat extends BuilderTiles {
+//   private int statNbFile;
+//   private long statSize;
+//   private long startTime,totalTime;
    private HealpixMoc inputMoc,outputMoc;
    private String outputPath;
    private String inputPath;
@@ -57,8 +57,8 @@ public class BuilderConcat extends Builder {
       build();
       
       // Regeneration de l'arborescence pour la zone concernée
-      (new BuilderTree(context)).run();
-      context.info("tree updated");
+//      (new BuilderTree(context)).run();
+//      context.info("tree updated");
       
       boolean inJpg=false,inPng=false;
       
@@ -232,65 +232,133 @@ public class BuilderConcat extends Builder {
       if( !Double.isNaN(blank) && blank!=context.blank ) context.warning("BLANK modification => ignored (input.BLANK="+blank+" output.BLANK="+context.blank+")");
    }
 
-   /** Demande d'affichage des stats via Task() */
-   public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime);
-   }
+//   /** Demande d'affichage des stats via Task() */
+//   public void showStatistics() {
+//      context.showJpgStat(statNbFile, statSize, totalTime);
+//   }
+//
+//   public void build() throws Exception {
+//      initStat();
+//      
+//      int order = context.getOrder();
+//      
+//      Iterator<Long> it = context.moc.pixelIterator();
+//      while( it.hasNext() ) {
+//         long npix = it.next().longValue();
+//         
+//         
+//         Fits out=null;
+//         
+//         String inputFile = Util.getFilePath(inputPath,order,npix);
+//         Fits input = loadTile(inputFile);
+//         if( input==null ) continue;
+//         
+//         // traitement de la tuile
+//         String outFile = Util.getFilePath(outputPath,order,npix);
+//         out = loadTile(outFile);
+//         
+//         switch(mode) {
+//            case REPLACETILE:
+//               out=input;
+//               break;
+//            case KEEPTILE :
+//               if( out==null ) out=input;
+//               break;
+//            case AVERAGE:
+//               if( out!=null ) input.coadd(out);
+//               out=input;
+//               break;
+//            case OVERWRITE:
+//               if( out!=null ) out.mergeOnNaN(input);
+//               else out=input; 
+//               break;
+//            case KEEP:
+//               if( out!=null ) input.mergeOnNaN(out); 
+//               out=input;
+//               break;
+//         }
+//         
+//         if( out==null ) throw new Exception("Y a un blème ! out==null");
+//         
+//         writeTile(out,outFile);
+//         if( context.isTaskAborting() )  throw new Exception("Task abort !");
+//
+//         if( !doHpxFinder ) continue;
+//         
+//         // Traitement de la tuile index
+//         String inputIndexFile = Util.getFilePath(inputPathIndex,order,npix);
+//         HealpixIndex inputIndex = loadIndex(inputIndexFile);
+//         String outIndexFile = Util.getFilePath(outputPathIndex,order,npix);
+//         HealpixIndex outIndex = loadIndex(outIndexFile);
+//         
+//         switch(mode) {
+//            case REPLACETILE:
+//               outIndex=inputIndex;
+//               break;
+//            case KEEPTILE :
+//               if( outIndex==null ) outIndex=inputIndex;
+//               break;
+//            case AVERAGE:
+//            case OVERWRITE:
+//            case KEEP:
+//               if( outIndex!=null ) inputIndex.merge(outIndex);
+//               outIndex=inputIndex;
+//               break;
+//         }
+//         writeIndex(outIndexFile,outIndex);
+//
+//      }
+//   }
+   
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+      long t = System.currentTimeMillis();
+      Fits out=null;
 
-   public void build() throws Exception {
-      initStat();
-      
-      int order = context.getOrder();
-      
-      Iterator<Long> it = context.moc.pixelIterator();
-      while( it.hasNext() ) {
-         long npix = it.next().longValue();
-         
-         
-         Fits out=null;
-         
-         String inputFile = Util.getFilePath(inputPath,order,npix);
-         Fits input = loadTile(inputFile);
-         if( input==null ) continue;
-         
-         // traitement de la tuile
-         String outFile = Util.getFilePath(outputPath,order,npix);
-         out = loadTile(outFile);
-         
-         switch(mode) {
-            case REPLACETILE:
-               out=input;
-               break;
-            case KEEPTILE :
-               if( out==null ) out=input;
-               break;
-            case AVERAGE:
-               if( out!=null ) input.coadd(out);
-               out=input;
-               break;
-            case OVERWRITE:
-               if( out!=null ) out.mergeOnNaN(input);
-               else out=input; 
-               break;
-            case KEEP:
-               if( out!=null ) input.mergeOnNaN(out); 
-               out=input;
-               break;
-         }
-         
-         if( out==null ) throw new Exception("Y a un blème ! out==null");
-         
-         writeTile(out,outFile);
-         if( context.isTaskAborting() )  throw new Exception("Task abort !");
+      String inputFile = Util.getFilePath(inputPath,order,npix);
+      Fits input = loadTile(inputFile);
+      if( input==null ) {
+         long duree = System.currentTimeMillis()-t;
+         updateStat(0,0,1,duree,0,0);
+         return null;
+      }
 
-         if( !doHpxFinder ) continue;
-         
-         // Traitement de la tuile index
+      // traitement de la tuile
+      String outFile = Util.getFilePath(outputPath,order,npix);
+      out = loadTile(outFile);
+
+      switch(mode) {
+         case REPLACETILE:
+            out=input;
+            break;
+         case KEEPTILE :
+            if( out==null ) out=input;
+            break;
+         case AVERAGE:
+            if( out!=null ) input.coadd(out);
+            out=input;
+            break;
+         case OVERWRITE:
+            if( out!=null ) out.mergeOnNaN(input);
+            else out=input; 
+            break;
+         case KEEP:
+            if( out!=null ) input.mergeOnNaN(out); 
+            out=input;
+            break;
+      }
+
+      if( out==null ) throw new Exception("Y a un blème ! out==null");
+
+//      writeTile(out,outFile);
+      if( context.isTaskAborting() )  throw new Exception("Task abort !");
+
+      // Traitement de la tuile index
+      if( doHpxFinder ) {
          String inputIndexFile = Util.getFilePath(inputPathIndex,order,npix);
          HealpixIndex inputIndex = loadIndex(inputIndexFile);
          String outIndexFile = Util.getFilePath(outputPathIndex,order,npix);
          HealpixIndex outIndex = loadIndex(outIndexFile);
-         
+
          switch(mode) {
             case REPLACETILE:
                outIndex=inputIndex;
@@ -306,11 +374,11 @@ public class BuilderConcat extends Builder {
                break;
          }
          writeIndex(outIndexFile,outIndex);
-
       }
-      
-      // Union des deux mocs pour préparer l'arbre
-//      context.moc.union(contextMoc);
+
+      long duree = System.currentTimeMillis()-t;
+      updateStat(0,1,0,duree,0,0);
+      return out;
    }
    
    private Fits loadTile(String file) throws Exception {
@@ -325,16 +393,15 @@ public class BuilderConcat extends Builder {
       return f;
    }
    
-   private void writeTile(Fits out,String file) throws Exception {
-      String s=null;
-      if( tileMode==Context.FITS )  out.writeFITS(s=file+".fits");
-      else if( tileMode==Context.PNG ) out.writeRGBcompressed(s=file+".png","png");
-      else if( tileMode==Context.JPEG ) out.writeRGBcompressed(s=file+".jpg","jpg");
-      
-      File f = new File(s);
-      updateStat(f);
-
-   }
+//   private void writeTile(Fits out,String file) throws Exception {
+//      String s=null;
+//      if( tileMode==Context.FITS )  out.writeFITS(s=file+".fits");
+//      else if( tileMode==Context.PNG ) out.writeRGBcompressed(s=file+".png","png");
+//      else if( tileMode==Context.JPEG ) out.writeRGBcompressed(s=file+".jpg","jpg");
+//      
+//      File f = new File(s);
+//      updateStat(f);
+//   }
    
    // Ecriture du fichier d'index HEALPix correspondant à la map passée en paramètre
    private void writeIndex(String file,HealpixIndex map) throws Exception {
@@ -354,13 +421,13 @@ public class BuilderConcat extends Builder {
    
 
    
-   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
-
-   // Mise à jour des stats
-   private void updateStat(File f) {
-      statNbFile++;
-      statSize += f.length();
-      totalTime = System.currentTimeMillis()-startTime;
-   }
+//   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
+//
+//   // Mise à jour des stats
+//   private void updateStat(File f) {
+//      statNbFile++;
+//      statSize += f.length();
+//      totalTime = System.currentTimeMillis()-startTime;
+//   }
 
 }

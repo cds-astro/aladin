@@ -87,23 +87,26 @@ public class CacheFits {
     * @param rqMem taille de la mémoire requise
     * @return true c'est bon, false, faut attendre
     */
-   public boolean needMem(long rqMem) {
-      if( getFreeMem()>rqMem ) return true;
-      
-      long mem = 0L;
-      try {
-         waitLock();
-         for( String key : map.keySet() ) {
-            Fits f = map.get(key).fits;
-            long m = f.getMem();
-            try { f.releaseBitmap();
-            } catch( Exception e ) { } mem += m-f.getMem();
-            if( mem>rqMem ) break;
-         }
-      } finally { unlock(); }
-      gc();
-      return mem>rqMem;
-   }
+//   public boolean needMem(long rqMem) {
+//      if( rqMem<=0L ) return false;
+//      long freeMem=getFreeMem();
+//      if( getFreeMem()>rqMem ) return false;
+//      
+//      rqMem = rqMem-freeMem;
+//      long mem = 0L;
+//      try {
+//         waitLock();
+//         for( String key : map.keySet() ) {
+//            Fits f = map.get(key).fits;
+//            long m = f.getMem();
+//            try { f.releaseBitmap();
+//            } catch( Exception e ) { } mem += m-f.getMem();
+//            if( mem>rqMem ) break;
+//         }
+//      } finally { unlock(); }
+//      gc();
+//      return mem>rqMem;
+//   }
    
    // Gestion d'un lock
    transient private boolean lock;
@@ -347,11 +350,15 @@ public class CacheFits {
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]
    // est actuellement vide
    private int getNbReleased() {
-      int n=0;
-      for( String key : map.keySet() ) {
-         if( map.get(key).fits.isReleased() ) n++;
+      try {
+         int n=0;
+         for( String key : map.keySet() ) {
+            if( map.get(key).fits.isReleased() ) n++;
+         }
+         return n;
+      } catch( Exception e ) {
+         return -1;
       }
-      return n;
    }
    
    // Gère une entrée dans le cache

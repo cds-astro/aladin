@@ -83,7 +83,8 @@ public class Context {
    protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected boolean fading=true;            // Activation du fading entre les images originales
-   protected boolean mixing=false;             // methode la plus rapide
+   protected boolean mixing=true;            // Activation du mélange des pixels des images originales
+   protected boolean blocking=true;          // Activation de la lecture par blocs des fimages originales
    protected String skyvalName;              // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    
@@ -96,7 +97,7 @@ public class Context {
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
    protected CoAddMode coAdd=CoAddMode.getDefault();  // Methode de traitement par défaut
-   protected int maxNbThread=8;             // Nombre de threads de calcul max imposé par l'utilisateur
+   protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -116,7 +117,7 @@ public class Context {
    static final public String [] EXT = { ".png",".jpg",".fits" };
    static final public String [] MODE = { "png","jpeg","fits" };
    
-   protected int targetColorMode = PNG;       // Mode de compression des tuiles couleurs
+   protected int targetColorMode = JPEG;       // Mode de compression des tuiles couleurs
    
    public Context() {}
    
@@ -173,6 +174,7 @@ public class Context {
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
+   public void setBlocking(String s) { blocking = s.equalsIgnoreCase("false") ? false : true; }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
@@ -640,13 +642,14 @@ public class Context {
    protected void setProgressLastNorder3 (int lastNorder3) { this.lastNorder3=lastNorder3; }
 
    // Demande d'affichage des stats (dans le TabBuild)
-   protected void showIndexStat(int statNbFile, int statNbZipFile, long statMemFile, long statMaxSize, 
+   protected void showIndexStat(int statNbFile, int statBlocFile, int statNbZipFile, long statMemFile, long statMaxSize, 
          int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
       String s;
       if( statNbFile==-1 ) s = "--";
       else {
          s= statNbFile+" file"+(statNbFile>1?"s":"")
          + (statNbZipFile==statNbFile ? " (all gzipped)" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
+         + (statBlocFile>0 ? " ("+statBlocFile+" splitted in blocs)":"")
          + " using "+Util.getUnitDisk(statMemFile)
          + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight+"x"+statMaxNbyte+"]");
       }
@@ -658,22 +661,25 @@ public class Context {
          int statNbTile, int statNbEmptyTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
          long statNodeAvgTime,long usedMem,long freeMem) {
 
-      long nbLowCells = getNbLowCells();
-      
-      String sNbCells = nbLowCells==-1 ? "" : "/"+nbLowCells;
-      String pourcentNbCells = nbLowCells==-1 ? "" : 
-         nbLowCells==0 ? "-":(Math.round( ( (double)(statNbTile+statNbEmptyTile)/nbLowCells )*1000)/10.)+"%";
-      long nbTilesPerMin = totalTime/60000==0 ? -1 : ((statNbTile+statNbEmptyTile)/(totalTime/60000));
-      long tempsTotalEstime = nbLowCells==0 ? 0 : nbLowCells*(totalTime/(statNbTile+statNbEmptyTile))-totalTime;
-      String s=(statNbTile+"+"+statNbEmptyTile)+sNbCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
-      +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndIn="+Util.getTemps(tempsTotalEstime,true))+") "
-      +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"]"
-      +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-      +" using "+Util.getUnitDisk(usedMem);
+      long nbCells = getNbLowCells();
+      long nbTile = statNbTile+statNbEmptyTile+statNodeTile;
+      long nbLowTile = statNbTile+statNbEmptyTile;
+      String sNbCells = nbCells==-1 ? "" : "/"+nbCells;
+      String pourcentNbCells = nbCells==-1 ? "" : 
+         nbCells==0 ? "-":(Math.round( ( (double)nbLowTile/nbCells )*1000)/10.)+"%";
+      long nbTilesPerMin = totalTime/60000==0 ? -1 : (nbTile/(totalTime/60000));
+      long tempsTotalEstime = nbLowTile==0 ? 0 : nbCells==0 ? 0 : nbCells*(totalTime/nbLowTile)-totalTime;
+     
+      String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes computed in "+Util.getTemps(totalTime,true)+" ("
+         +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndIn="+Util.getTemps(tempsTotalEstime,true))+") "
+         +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
+         +Util.getTemps(statNodeAvgTime)+"/node"
+         +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
+         +" using "+Util.getUnitDisk(usedMem);
 
       nlstat(s);
 
-      setProgress(statNbTile+statNbEmptyTile, nbLowCells);
+      setProgress(statNbTile+statNbEmptyTile, nbCells);
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)

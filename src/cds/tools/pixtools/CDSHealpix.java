@@ -38,6 +38,12 @@ public final class CDSHealpix {
    
    static private HealpixBase hpxBase[] = new HealpixBase[MAXORDER+1];  // Objet HealpixBase pour chaque nside utilisé
 
+   
+   static public HealpixBase getHealpixBase(int order) throws Exception  {
+      if( hpxBase[order]==null ) hpxBase[order] = new HealpixBase((int)pow2(order),Scheme.NESTED);
+      return hpxBase[order];
+   }
+   
    static private int init(long nside) throws Exception {
       int order = (int)log2(nside);
       if( hpxBase[order]!=null ) return order;

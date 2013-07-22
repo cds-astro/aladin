@@ -1597,7 +1597,7 @@ Aladin.trace(3,"Second try for opening the stream due to: "+e+"...");
               dis = new MyInputStream(inputStream);
               dis = dis.startRead();
           }
-          catch(IOException ioe) {
+          catch(Exception ioe) {
               ioe.printStackTrace();
               callAllListeners(new PlaneLoadEvent(this, PlaneLoadEvent.ERROR, "error"));
               return false;

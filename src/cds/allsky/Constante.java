@@ -34,7 +34,7 @@ public class Constante {
    // Taille des imagettes HEALPix
    final static public int ORDER = 9; // 2^9 = 512 = SIDE
    final static public int SIDE = (int)Math.pow(2,ORDER);
-   public static final int FITSCELLSIZE = SIDE; 
+   public static final int FITSCELLSIZE = (int)(1.2*SIDE/Math.sqrt(2)); //SIDE; 
    
    // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
 // public static final int MAXMBPERTHREAD = 400;

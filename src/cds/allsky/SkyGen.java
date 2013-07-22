@@ -136,6 +136,8 @@ public class SkyGen {
          context.setFading(val);
       } else if (opt.equalsIgnoreCase("mixing")) {
          context.setMixing(val);
+      } else if (opt.equalsIgnoreCase("blocking")) {
+         context.setBlocking(val);
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
@@ -332,13 +334,13 @@ public class SkyGen {
             "maxThread=nn       Max number of computing threads (8 per default, -1 for max)" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
-//            "tobemerged=dir     all-sky directory to be merged to an already existing all-sky\n" +
             "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
             "                   conversion - ex: \"-32000 +32000\")" + "\n" +
             "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
             "mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
+            "blocking=true|false  True for splitting large original images in blocs (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
             "verbose            Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +

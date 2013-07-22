@@ -133,7 +133,7 @@ public class Task extends Thread {
                    if( now-lastStat>tempo && builder!=null ) { builder.showStatistics(); lastStat=now; }
                    if( now-lastGC>tempoGC ) { System.gc(); lastGC=now; }
                 }
-             } catch(Exception e) { }
+             } catch(Exception e) { e.printStackTrace();  }
 
           }
           context.resumeWidgets();

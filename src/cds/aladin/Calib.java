@@ -97,7 +97,7 @@ public final class Calib  implements Cloneable {
    // PF - Jan 2011 - Différentes valeurs des mots clés en fonction du système de coordonnées
    static final String[] RADECSYS    = { "", "FK4", "",       "",         "",        "FK5", "ICRS", "" };
 
-   protected int system = FK5;
+   protected int system = ICRS;
    protected int proj ;
 
    static private double deg_to_rad = Math.PI/180. ;
@@ -2725,89 +2725,104 @@ public void GetXY(Coord c) throws Exception {
       al = c.al ;
       del = c.del ;
       // System.out.println(c.al+" "+c.del);
-      if (system ==  FK4)
-         //                   if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancine test supprimé en 04/2012  
-      {
-         // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-         //                      Astroframe j2000 = new Astroframe() ;
-         //                      Astroframe natif = new Astroframe(1,equinox) ;
-         //                      j2000.set(al,del) ;
-         //                      j2000.convert(natif) ;
-         //                      al = natif.getLon() ;
-         //                      del = natif.getLat() ;                               
+      if( system!=ICRS ) {
+         Astroframe af = system==FK4           ? AF_FK4 :
+                         system==FK5           ? AF_FK5 :
+                         system==GALACTIC      ? AF_GAL :
+                         system==SUPERGALACTIC ? AF_SGAL:
+                         system==ECLIPTIC      ? AF_ECL : null;
          Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
          ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_FK4);
+         ac.convertTo(af);
          al = ac.getLon();
          del = ac.getLat();
       }
-      if (system ==  FK5)
-         //                       if ((equinox != 2000.0)&&(system != GALACTIC))
-         // Ancine test supprimé en 04/2012  
-      {
-         // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-         //                          Astroframe j2000 = new Astroframe() ;
-         //                          Astroframe natif = new Astroframe(1,equinox) ;
-         //                          j2000.set(al,del) ;
-         //                          j2000.convert(natif) ;
-         //                          al = natif.getLon() ;
-         //                          del = natif.getLat() ;                               
-         Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-         ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_FK5);
-         al = ac.getLon();
-         del = ac.getLat();
-      }
-      if (system == GALACTIC)
-      {
-         // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-         //                       Astroframe fk5 = new Astroframe() ;
-         //                       Astroframe natif =  new Astroframe(2,equinox);
-         //                       fk5.set(al,del) ;
-         //                       fk5.convert(natif);
-         //                       al = natif.getLon() ;
-         //                       del = natif.getLat() ;
-         Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-         ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_GAL);
-         al = ac.getLon();
-         del = ac.getLat();
-         //      System.out.println(c.al+" "+c.del);
-      }
-      if (system == ECLIPTIC)
-      {
-         //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-         //                     Astroframe fk5 = new Astroframe() ;
-         //                     Astroframe natif =  new Astroframe(2,equinox);
-         //                     fk5.set(al,del) ;
-         //                     fk5.convert(natif);
-         //                     al = natif.getLon() ;
-         //                     del = natif.getLat() ;
-         Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-         ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_ECL);
-         al = ac.getLon();
-         del = ac.getLat();
-         //      System.out.println(c.al+" "+c.del);
-      }
-
-      if (system == SUPERGALACTIC)
-      {
-         //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-         //                     Astroframe fk5 = new Astroframe() ;
-         //                     Astroframe natif =  new Astroframe(2,equinox);
-         //                     fk5.set(al,del) ;
-         //                     fk5.convert(natif);
-         //                     al = natif.getLon() ;
-         //                     del = natif.getLat() ;
-         Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-         ac.setPrecision(Astrocoo.MAS+1);
-         ac.convertTo(AF_SGAL);
-         al = ac.getLon();
-         del = ac.getLat();
-         //      System.out.println(c.al+" "+c.del);
-      }
+      
+// L'ART ET LA MANIERE DE FAIRE LES CHOSES COMPLIQUEES - PF 19/7/2013
+//         if (system ==  FK4)
+//            //                   if ((equinox != 2000.0)&&(system != GALACTIC))
+//            // Ancine test supprimé en 04/2012  
+//         {
+//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
+//            //                      Astroframe j2000 = new Astroframe() ;
+//            //                      Astroframe natif = new Astroframe(1,equinox) ;
+//            //                      j2000.set(al,del) ;
+//            //                      j2000.convert(natif) ;
+//            //                      al = natif.getLon() ;
+//            //                      del = natif.getLat() ;                               
+//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
+//            ac.setPrecision(Astrocoo.MAS+1);
+//            ac.convertTo(AF_FK4);
+//            al = ac.getLon();
+//            del = ac.getLat();
+//         }
+//         if (system ==  FK5)
+//            //                       if ((equinox != 2000.0)&&(system != GALACTIC))
+//            // Ancine test supprimé en 04/2012  
+//         {
+//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
+//            //                          Astroframe j2000 = new Astroframe() ;
+//            //                          Astroframe natif = new Astroframe(1,equinox) ;
+//            //                          j2000.set(al,del) ;
+//            //                          j2000.convert(natif) ;
+//            //                          al = natif.getLon() ;
+//            //                          del = natif.getLat() ;                               
+//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
+//            ac.setPrecision(Astrocoo.MAS+1);
+//            ac.convertTo(AF_FK5);
+//            al = ac.getLon();
+//            del = ac.getLat();
+//         }
+//         if (system == GALACTIC)
+//         {
+//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
+//            //                       Astroframe fk5 = new Astroframe() ;
+//            //                       Astroframe natif =  new Astroframe(2,equinox);
+//            //                       fk5.set(al,del) ;
+//            //                       fk5.convert(natif);
+//            //                       al = natif.getLon() ;
+//            //                       del = natif.getLat() ;
+//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
+//            ac.setPrecision(Astrocoo.MAS+1);
+//            ac.convertTo(AF_GAL);
+//            al = ac.getLon();
+//            del = ac.getLat();
+//            //      System.out.println(c.al+" "+c.del);
+//         }
+//         if (system == ECLIPTIC)
+//         {
+//            //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
+//            //                     Astroframe fk5 = new Astroframe() ;
+//            //                     Astroframe natif =  new Astroframe(2,equinox);
+//            //                     fk5.set(al,del) ;
+//            //                     fk5.convert(natif);
+//            //                     al = natif.getLon() ;
+//            //                     del = natif.getLat() ;
+//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
+//            ac.setPrecision(Astrocoo.MAS+1);
+//            ac.convertTo(AF_ECL);
+//            al = ac.getLon();
+//            del = ac.getLat();
+//            //      System.out.println(c.al+" "+c.del);
+//         }
+//
+//         if (system == SUPERGALACTIC)
+//         {
+//            //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
+//            //                     Astroframe fk5 = new Astroframe() ;
+//            //                     Astroframe natif =  new Astroframe(2,equinox);
+//            //                     fk5.set(al,del) ;
+//            //                     fk5.convert(natif);
+//            //                     al = natif.getLon() ;
+//            //                     del = natif.getLat() ;
+//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
+//            ac.setPrecision(Astrocoo.MAS+1);
+//            ac.convertTo(AF_SGAL);
+//            al = ac.getLon();
+//            del = ac.getLat();
+//            //      System.out.println(c.al+" "+c.del);
+//         }
+//      }
 
 
 

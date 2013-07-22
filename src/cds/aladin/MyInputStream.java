@@ -1747,7 +1747,7 @@ if( Aladin.levelTrace==4 ) {
 
                // On remplit le cache jusqu'au deux premiers bytes
                // des donnees FITS pour preparer un eventuel test
-               // du MGIC NUMBER de HCOMP
+               // du MAGIC NUMBER de HCOMP
                if( inCache<dataFits+2 ) loadInCache(dataFits+2-inCache);
 //for( int i=n-3; i<dataFits+2; i++ ) {
 //   if( i%10==0 ) System.out.println();
