@@ -196,8 +196,8 @@ public class BuilderTiles extends Builder {
    public void showStatistics() {
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),getMem());
-      String s = showMem();
-      if( s.length()>0 ) context.stat(s);
+//      String s = showMem();
+//      if( s.length()>0 ) context.stat(s);
       if( context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
 //      context.cacheFits.gc();
       System.gc();
