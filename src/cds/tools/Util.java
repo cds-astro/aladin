@@ -1671,18 +1671,24 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
      * @return le volume disque dans une unite coherente + l'unite utilisee
      */
     static final public String unites[] = {"B","KB","MB","GB","TB","PB","EB","ZB"};
-    static final public String getUnitDisk(double val) {
+    static final public String getUnitDisk(long val) {
     	return getUnitDisk(val, 2);
     }
-    static final public String getUnitDisk(double val, int format) {
+    static final public String getUnitDisk(long val, int format) {
     	int unit = 0;
-    	while (val >= 1024 && unit<unites.length-1) {
+    	long div,rest=0;
+    	boolean neg=false;
+    	if( val<0 ) { neg=true; val=-val; }
+    	while (val >= 1024L && unit<unites.length-1) {
     		unit++;
-    		val /= 1024L;
+    		div = val / 1024L;
+    		rest = val % 1024L;
+    		val=div;
     	}
     	NumberFormat nf = NumberFormat.getInstance();
     	nf.setMaximumFractionDigits(format);
-    	return nf.format(val)+unites[unit];
+    	double x = (double)val+rest/1024.;
+    	return (neg?"-":"")+nf.format(x)+unites[unit];
     }
 
 	public static ArrayList<File> getFiles(String path, final String suffix) {

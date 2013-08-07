@@ -165,7 +165,7 @@ public class BuildTable extends JTable {
          data[i][RES_IDX]   = Coord.getUnit( Math.sqrt(surface/nbPixel) );
          data[i][NSIDE_IDX] = order+" / "+nside;
          data[i][TILES_IDX] = (i+3)+" / "+(nbPixel/pixelPerFile);
-         data[i][VOL_IDX]   = Util.getUnitDisk((double)nbPixel*nbBytePerPixel);
+         data[i][VOL_IDX]   = Util.getUnitDisk(nbPixel*nbBytePerPixel);
       }
       return data;
    }
@@ -199,7 +199,7 @@ public class BuildTable extends JTable {
       int order = row+3+Constante.ORDER;
       long nside = CDSHealpix.pow2(order);
       long nbPixel = 12*nside*nside;
-      return Util.getUnitDisk(nbPixel*nbBytePerPixel*skyArea);
+      return Util.getUnitDisk((long)(nbPixel*nbBytePerPixel*skyArea));
 
    }
 

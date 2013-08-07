@@ -20,18 +20,17 @@
 package cds.aladin;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import javax.imageio.stream.FileImageInputStream;
 
 import cds.fits.HeaderFits;
+import cds.tools.Util;
 import cds.xml.TableParser;
 
 /**
@@ -122,7 +121,7 @@ public final class MyInputStream extends FilterInputStream {
    public MyInputStream(InputStream in) throws IOException {
       this(in,UNKNOWN,true);
    }
-   private MyInputStream(InputStream in,long type,boolean withBuffer) throws IOException {
+   public MyInputStream(InputStream in,long type,boolean withBuffer) throws IOException {
       super(in);
       this.type=type;
       this.withBuffer = withBuffer;
@@ -664,8 +663,11 @@ public long skip(long n) throws IOException {
    */
    public byte [] readFully() {
       int size=8192;
-      Vector v = new Vector(10);
-      Vector vSize = new Vector(10);
+      
+      ArrayList<byte[]> v = new ArrayList<byte[]>(1000);
+      ArrayList<Integer> vSize = new ArrayList<Integer>(1000);
+//      Vector v = new Vector(10);
+//      Vector vSize = new Vector(10);
       int n=0,m=0,i=0,j=0;
       byte [] tmp;
 
@@ -674,8 +676,8 @@ public long skip(long n) throws IOException {
          while( (n=read(tmp,0,size))!=-1 ) {
             i++;
 //System.out.println("Je lis "+n+" octets (tranche "+i+")");
-            v.addElement(tmp);
-            vSize.addElement( new Integer(n) );
+            v.add(tmp);
+            vSize.add( new Integer(n) );
             m+=n;
             tmp = new byte[size];
          }
@@ -687,8 +689,8 @@ public long skip(long n) throws IOException {
       byte [] tab = new byte[m];
       j=v.size();
       for( n=i=0; i<j; i++ ) {
-         tmp = (byte[])v.elementAt(i);
-         m = ((Integer)vSize.elementAt(i)).intValue();
+         tmp = v.get(i);
+         m = vSize.get(i).intValue();
 //System.out.println("Je copie la tranche "+(i+1)+" => "+m+" octets");
          System.arraycopy(tmp,0,tab,n,m);
          n+=m;
@@ -944,16 +946,44 @@ public long skip(long n) throws IOException {
    
    static public void main(String argv[]) {
       try {
-         // String s1 = argv[0];
-         String s1 = "C:\\Documents and Settings\\Standard\\Bureau\\test.dat";
-         DataInputStream dis = new DataInputStream(new FileInputStream(s1));
-         String [] s = new String[5];
-         for( int i=0;i<s.length; i++ ) {
-            s[i] = dis.readLine();
-            if( s[i].length()>0 && s[i].charAt(0)=='#' ) i--;
+         File dir = new File("C:\\Users\\Pierre\\Desktop\\Data\\Scuba");
+         File list [] = dir.listFiles();
+         long t1,t2;
+         long duree=0L,size=0L;
+         int n=0;
+         for( File f : list ) {
+            size += f.length();
+            t1 = System.currentTimeMillis();
+            //METHODE 1
+//            MyInputStream mi = new MyInputStream( new FileInputStream(f));
+//            Fits fits = new Fits();
+//            fits.loadFITS(mi);
+//            mi.close();
+            
+            //METHODE 2
+//            RandomAccessFile in = new RandomAccessFile(f, "r");
+//            byte [] b = new byte[(int)f.length()];
+//            in.readFully(b);
+//            in.close();
+            
+            //METHODE 3
+//            FileInputStream fi = new FileInputStream(f);
+//            FileChannel in = fi.getChannel();
+//
+//            ByteBuffer buf = ByteBuffer.allocateDirect(1024);
+//            while(in.read(buf) != -1) {
+//               buf.clear();
+//            }
+//            buf.clear();
+//            in.close();
+//            fi.close();
+            
+            t2 = System.currentTimeMillis();
+            n++;
+            duree+= (t2-t1);
+            if( n>0 && n%100==0) System.out.print(".");
          }
-         int c = analyseCSV(s);
-         System.out.println("CSV => "+c+" => "+(c==-1?"not CSV":"["+(char)c)+"]");
+         System.out.println("\nn="+n+" size="+Util.getUnitDisk(size)+" tps="+Util.getTemps(duree));
       } catch( Exception e ) {
          e.printStackTrace();
       }

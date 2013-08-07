@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
+import java.awt.image.ImageConsumer;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
@@ -36,6 +37,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -54,6 +56,7 @@ import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.MyInputStream;
 import cds.image.Hdecomp;
+import cds.tools.Util;
 
 /**
  * Classe de manipulation d'un fichier image FITS
@@ -123,8 +126,8 @@ final public class Fits {
    // compté depuis le haut)
    public int[] rgb; // pixels dans le cas d'une image couleur RGB
 
-   private Calib calib; // Calibration astrométrique
-
+   public Calib calib; // Calibration astrométrique
+   
    /** Donne une approximation de l'occupation mémoire (en bytes) */
    public long getMem() {
       long mem = 12 * 4 + 4 * 8;
@@ -132,7 +135,7 @@ final public class Fits {
       if( headerFits != null ) mem += headerFits.getMem();
       if( pixels != null ) mem += pixels.length;
       // if( pix8!=null ) mem+=pix8.length;
-      if( rgb != null ) mem += rgb.length;
+      if( rgb != null ) mem += 4*rgb.length;
       return mem;
    }
 
@@ -231,78 +234,160 @@ final public class Fits {
       loadJpeg(dis, 0, 0, -1, -1, flagColor);
    }
 
-//   static private Component observer = (Component) new Label();
+//   /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
+//   protected void loadJpegOne(MyInputStream dis,boolean flagColor) throws Exception {
+//      MyObserver observer = new MyObserver();
+//      Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
+//      boolean encore=true;
+//      while( encore ) {
+//         try {
+//            MediaTracker mt = new MediaTracker(null);
+//            mt.addImage(img,0);
+//            mt.waitForID(0);
+//            encore=false;
+//         } catch( InterruptedException e ) { }
+//      }
+//      width=widthCell =img.getWidth(observer);
+//      height=heightCell=img.getHeight(observer);
+//      xCell=yCell=0;
+//      bitpix= flagColor ? 0 : 8;
+//
+//      BufferedImage imgBuf = new BufferedImage(widthCell,heightCell,
+//            flagColor ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY);
+//      Graphics g = imgBuf.getGraphics();
+//      g.drawImage(img,0,0,observer);
+//      g.finalize(); g=null;
+//      if( flagColor ) rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
+//      else pixels = ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
+//
+////       BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+//      // Graphics g = imgBuf.getGraphics();
+//      // g.drawImage(img,0,0,observer);
+//      // g.finalize(); g=null;
+//      // int taille=width*height;
+//      // rgb = new int[taille];
+//      // imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
+//      // if( bitpix!=0 ) {
+//      // pixels = new byte[taille];
+//      // for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgb[i] & 0xFF);
+//      // rgb=null;
+//      // }
+//
+//      imgBuf.flush(); imgBuf=null;
+//      img.flush(); img=null;
+//   }
+   
+   // Mon propre ImageLoader pour éviter le MediaTracker qui nécessite un DISPLAY
+   // Attention : je ne supporte que les images ARGB et je ne teste pas les erreurs
+   final class MyImageLoader implements ImageConsumer {
+      
+      boolean ready=false;
+      boolean hasAlpha=true;
+      
+      MyImageLoader() {}
 
-   // /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
-   // protected void loadJpeg(MyInputStream dis,boolean flagColor) throws
-   // Exception {
-   // Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
-   // boolean encore=true;
-   // while( encore ) {
-   // try {
-   // MediaTracker mt = new MediaTracker(observer);
-   // mt.addImage(img,0);
-   // mt.waitForID(0);
-   // encore=false;
-   // } catch( InterruptedException e ) { }
-   // }
-   // width=widthCell =img.getWidth(observer);
-   // height=heightCell=img.getHeight(observer);
-   // xCell=yCell=0;
-   // bitpix= flagColor ? 0 : 8;
-   //
-   // BufferedImage imgBuf = new BufferedImage(widthCell,heightCell,
-   // flagColor ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_BYTE_GRAY);
-   // Graphics g = imgBuf.getGraphics();
-   // g.drawImage(img,0,0,observer);
-   // g.finalize(); g=null;
-   // if( flagColor ) rgb =
-   // ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-   // else pixels =
-   // ((DataBufferByte)imgBuf.getRaster().getDataBuffer()).getData();
-   //
-   // // BufferedImage imgBuf = new
-   // BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-   // // Graphics g = imgBuf.getGraphics();
-   // // g.drawImage(img,0,0,observer);
-   // // g.finalize(); g=null;
-   // // int taille=width*height;
-   // // rgb = new int[taille];
-   // // imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
-   // // if( bitpix!=0 ) {
-   // // pixels = new byte[taille];
-   // // for( int i=0; i<taille; i++ ) pixels[i] = (byte)(rgb[i] & 0xFF);
-   // // rgb=null;
-   // // }
-   //
-   // imgBuf.flush(); imgBuf=null;
-   // img.flush(); img=null;
-   // if( bitpix==8 ) {
-   // pix8 = new byte[widthCell*heightCell];
-   // initPix8();
-   // }
-   // }
+      public void setDimensions(int w, int h) {
+        width=w;
+        height=h;
+        if( widthCell==-1 ) {
+           widthCell=w;
+           heightCell=h;
+           xCell=yCell=0;
+        }
+        rgb = new int[widthCell*heightCell];
+//        System.out.println("xCell,yCell="+xCell+","+yCell+" "+widthCell+"x"+heightCell+" wxh="+width+"x"+height);
+      }
+      public void setPixels(int x, int y, int w, int h, ColorModel model,
+            int[] pixels, int off, int scansize) {
+         
+//         for( int j=0; j<h; j++ ) {
+//            System.arraycopy(pixels, off+scansize*j, 
+//                  rgb, (height-(y+j)-1)*width+x, w);
+//         }
+         
+         y = height - y - 1;
+         
+         if( y+h<yCell || y>=yCell+heightCell ) return;
+         
+         for( int j=0; j<h; j++ ) {
+            int y1 = j+y;
+            int yc = y1-yCell;
+            if( yc<0 || yc>=heightCell) continue;
+            
+            if( hasAlpha && w>=widthCell ) {
+               int destPos = yc*widthCell + x-xCell;
+               System.arraycopy(pixels, off+scansize*j, rgb, destPos, widthCell);
+               
+            } else {
 
-   public void loadJpeg(MyInputStream dis, int x, int y, int w, int h,
-         boolean flagColor) throws Exception {
-      String coding = dis.getType() == MyInputStream.PNG ? "png" : "jpeg";
-      Iterator readers = ImageIO.getImageReadersByFormatName(coding);
-      ImageReader reader = (ImageReader) readers.next();
-      ImageInputStream iis = null;
-      try {
-         iis = ImageIO.createImageInputStream(dis);
-         reader.setInput(iis, true);
-         width = reader.getWidth(0);
-         height = reader.getHeight(0);
+               for( int i=0; i<w; i++ ) {
 
-         // Ouverture complète de l'image
-         if( w == -1 ) {
-            widthCell = width;
-            heightCell = height;
-            xCell = yCell = 0;
+                  // Coordonnées image originale
+                  int x1 = i+x;
+
+                  // Coordonnées cellules
+                  int xc = x1-xCell;
+                  if( xc<0 || xc>=widthCell ) continue;
+
+                  int pix = pixels[ off+scansize*j +i ];
+                  if( !hasAlpha ) pix |=0xFF000000;
+                  rgb[ yc*widthCell + xc ] = pix;
+
+               }
+            }
+         }
+      }
+      public void imageComplete(int status) { ready=true; }  
+      public boolean ready() { return ready; }
+      
+      public void setProperties(Hashtable< ? , ? > props) { }
+      public void setColorModel(ColorModel model) {
+         hasAlpha=model.hasAlpha();
+      }
+      public void setHints(int hintflags) { }
+      public void setPixels(int x, int y, int w, int h, ColorModel model, byte[] pixels, int off, int scansize) {
+      }
+   }
+
+   public void loadJpeg(MyInputStream dis, int x, int y, int w, int h, boolean flagColor) throws Exception {
+      BufferedImage imgBuf;
+      
+      bitpix = flagColor ? 0 : 8;
+      
+      // Lecture de l'image complète avec la méthode de base (plus rapide que le
+      // BufferedImage loader)
+      // En revanche il faut réimplanter un ImageConsumer pour éviter l'usage
+      // d'un Component qui recquière un DISPLAY (via MediaTracker)
+      if( w==-1 && flagColor ) {
+         widthCell = w;
+         heightCell = h;
+         xCell = x;
+         yCell = y;
+         pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
+         Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
+         MyImageLoader loader = new MyImageLoader();
+         img.getSource().startProduction(loader);
+         while( !loader.ready() ) Util.pause(5);
+         if( width==-1 ) throw new Exception("MyLoader error");
+
+      // Lecture par cellules, plus lente
+      } else {
+         String coding = dis.getType() == MyInputStream.PNG ? "png" : "jpeg";
+         Iterator readers = ImageIO.getImageReadersByFormatName(coding);
+         ImageReader reader = (ImageReader) readers.next();
+         ImageInputStream iis = null;
+         try {
+            iis = ImageIO.createImageInputStream(dis);
+            reader.setInput(iis, true);
+            width = reader.getWidth(0);
+            height = reader.getHeight(0);
+            if( w==-1 ) {
+               w=width;
+               h=height;
+               y=x=0;
+            }
 
             // Ouverture juste d'une cellule de l'image
-         } else {
             if( x < 0 || y < 0 || x + w > width || y + h > height ) throw new Exception(
                   "Mosaic cell outside the image (" + width + "x" + height
                   + ") cell=[" + x + "," + y + " " + w + "x" + h + "]");
@@ -310,19 +395,19 @@ final public class Fits {
             heightCell = h;
             xCell = x;
             yCell = y;
-         }
-         bitpix = flagColor ? 0 : 8;
+ 
+            ImageReadParam param = reader.getDefaultReadParam();
+            if( this.widthCell != width || this.heightCell != height ) {
+               int yJpegCell;
+               if( RGBASFITS ) yJpegCell = height - yCell - heightCell;
+               else yJpegCell = yCell;
+               Rectangle r = new Rectangle(xCell, yJpegCell, widthCell, heightCell);
+               param.setSourceRegion(r);
+            }
+            imgBuf = reader.read(0, param);
+            reader.dispose();
 
-         ImageReadParam param = reader.getDefaultReadParam();
-         if( this.widthCell != width || this.heightCell != height ) {
-            int yJpegCell;
-            if( RGBASFITS ) yJpegCell = height - yCell - heightCell;
-            else yJpegCell = yCell;
-            Rectangle r = new Rectangle(xCell, yJpegCell, widthCell, heightCell);
-            param.setSourceRegion(r);
-         }
-         BufferedImage imgBuf = reader.read(0, param);
-         reader.dispose();
+         } finally { if( iis!=null ) iis.close(); }
 
          if( flagColor ) {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
@@ -334,18 +419,14 @@ final public class Fits {
          } else {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_255 : PIX_256;
             pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()) .getData();
-//            if( pixMode == PIX_255 ) {
-//               for( int i = 0; i < pixels.length; i++ )
-//                  if( pixels[i] < 255 ) pixels[i]++;
-//            }
-            if( RGBASFITS ) {
-               invImageLine(widthCell, heightCell, pixels);
-            }
+            if( RGBASFITS ) invImageLine(widthCell, heightCell, pixels);
          }
 
          imgBuf.flush();
          imgBuf = null;
-      } finally { if( iis!=null ) iis.close(); }
+      }
+
+
    }
 
    protected static void invImageLine(int width, int height, byte[] pixels) {
@@ -635,7 +716,7 @@ final public class Fits {
             code |= GZIP;
             is = is.startRead();
          }
-         long type = is.getType();
+         long type = is.getType(10000);
 
          // Cas spécial d'un fichier .hhhh
          if( filename.endsWith(".hhh") ) {
@@ -660,8 +741,7 @@ final public class Fits {
             if( headerFits.getStringFromHeader("EXTEND") != null ) {
                while( naxis < 2 ) {
                   // Je saute l'éventuel baratin de la première HDU
-                  if( !headerFits.readHeader(is) ) throw new Exception(
-                        "Naxis < 2");
+                  if( !headerFits.readHeader(is) ) throw new Exception("Naxis < 2");
                   naxis = headerFits.getIntFromHeader("NAXIS");
                }
             }
@@ -1097,6 +1177,17 @@ final public class Fits {
       return getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
             + (x - xCell));
    }
+   
+//   double [] pixdouble = null;
+//   public void initPixDoubleFast() {
+//      pixdouble = new double[pixels.length/(Math.abs(bitpix)/8)];
+//      for( int i=0; i<pixdouble.length; i++ ) 
+//         pixdouble[i] = getPixValDouble(pixels,bitpix, i);
+//      pixels=null;
+//   }
+//   public double getPixelDoubleFast(int x, int y) {
+//      return pixdouble[ (y - yCell) * widthCell + (x - xCell) ];
+//   }
 
    /**
     * Retourne la valeur du pixel en (x,y) (y compté à partir du bas) sous forme
@@ -1451,12 +1542,12 @@ final public class Fits {
    /**
     * Libération de la mémoire utilisé par le bitmap des pixels (on suppose que
     * le fichier pourra être relu ultérieurement) Rq : ne fonctionne que pour
-    * les fichiers FITS locaux (RandomAccessFile) qui ont été ouvert en mode
-    * normal (pas de cellule)
+    * les fichiers FITS locaux (RandomAccessFile)
     */
    public void releaseBitmap() throws Exception {
       if( bitpix == 0 ) return; // De fait du JPEG
       if( hasUsers() ) return; // Pas possible, qq s'en sert
+      if( filename==null ) return;
       testBitmapReleaseFeature();
       bitmapReleaseDone = true;
       pixels = null;
@@ -1470,6 +1561,7 @@ final public class Fits {
    public void reloadBitmap() throws Exception {
       if( bitpix == 0 ) return; // De fait du JPEG
       if( pixels != null ) return;
+      if( filename==null ) return;
       if( !bitmapReleaseDone ) throw new Exception("no releaseBitmap done before");
       testBitmapReleaseFeature();
 //      System.out.println("reloadBitmap() size="+widthCell+"x"+heightCell+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);

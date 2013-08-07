@@ -19,14 +19,11 @@
 
 package cds.tools.pixtools;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Polygon;
 
-import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.HealpixKey;
-import cds.aladin.HealpixKeyCat;
 import cds.aladin.Localisation;
 import cds.aladin.PointD;
 import cds.aladin.Projection;

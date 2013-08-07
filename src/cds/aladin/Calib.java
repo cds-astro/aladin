@@ -26,6 +26,8 @@ import cds.fits.HeaderFits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix ;
 
+import healpix.newcore.FastMath;
+
 import java.awt.*;
 import java.io.*;
 import java.util.*;
@@ -125,11 +127,10 @@ public final class Calib  implements Cloneable {
    static public final int SOL = 10;
    static public final int MOL = 11;
    static public final int SIP = 12 ;
-   static public final int MATRIX = 13 ;
 
    // Signature dans les mots cl�s FITS des diff�rentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP","MATRIX" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouv� */
    static int getProjType(String s) { return Util.indexInArrayOf(s, projType); }
@@ -354,8 +355,8 @@ public final class Calib  implements Cloneable {
             incD = Math.sqrt(CD[1][0]*CD[1][0]+CD[1][1]*CD[1][1]) ;
             widtha = xnpix * Math.abs(incA) ;
             widthd = ynpix * Math.abs(incD) ;
-            cdelz = Math.cos(deltai*deg_to_rad);
-            sdelz = Math.sin(deltai*deg_to_rad);
+            cdelz = FastMath.cos(deltai*deg_to_rad);
+            sdelz = FastMath.sin(deltai*deg_to_rad);
             aladin =0;
          }
          //         System.out.println("CD "+CD[0][0]+" "+CD[1][0]+" "+CD[0][1]+" "+CD[1][1]);
@@ -497,10 +498,10 @@ public final class Calib  implements Cloneable {
          //                   widtha = xnpix * Math.abs(incA) ;
          //                   widthd = ynpix * Math.abs(incD) ;
          // cos delta au centre de l'image
-         //                   cdelz = Math.cos((deltai/180.)*Math.PI);
-         //                   sdelz = Math.sin((deltai/180.)*Math.PI);
-         //                   cdelz = Math.cos(deltai*deg_to_rad);
-         //                   sdelz = Math.sin(deltai*deg_to_rad);
+         //                   cdelz = FastMath.cos((deltai/180.)*Math.PI);
+         //                   sdelz = FastMath.sin((deltai/180.)*Math.PI);
+         //                   cdelz = FastMath.cos(deltai*deg_to_rad);
+         //                   sdelz = FastMath.sin(deltai*deg_to_rad);
 
          //                 Calib newcal = new Calib (alphai,deltai,X_cen,Y_cen,
          //                                   (double)xnpix,xnpix*inc_A*60.,rot,proj-1,true);
@@ -542,8 +543,8 @@ public final class Calib  implements Cloneable {
       rota = Math.atan2(CD[0][1]/incA,CD[1][1]/incD)*(180./Math.PI) ;
       widtha = xnpix * Math.abs(incA) ;
       widthd = ynpix * Math.abs(incD) ;
-      cdelz = Math.cos(deltai*deg_to_rad);
-      sdelz = Math.sin(deltai*deg_to_rad);
+      cdelz = FastMath.cos(deltai*deg_to_rad);
+      sdelz = FastMath.sin(deltai*deg_to_rad);
       double det = CD[0][0]* CD[1][1]-CD[0][1]*CD[1][0] ;
       ID[0][0] = CD[1][1]/det ;
       ID[0][1] = -CD[0][1]/det ;
@@ -599,10 +600,10 @@ public final class Calib  implements Cloneable {
       Ycen = cy ;
       alphai = ra ;
       deltai = de ;
-      cdelz = Math.cos(deltai*deg_to_rad);
-      sdelz = Math.sin(deltai*deg_to_rad);
-      double cosdd = Math.cos(rot*deg_to_rad);
-      double sindd = Math.sin(rot*deg_to_rad);
+      cdelz = FastMath.cos(deltai*deg_to_rad);
+      sdelz = FastMath.sin(deltai*deg_to_rad);
+      double cosdd = FastMath.cos(rot*deg_to_rad);
+      double sindd = FastMath.sin(rot*deg_to_rad);
       // System.out.println ("New width "+width+"height "+height+"radius "+radius+"radius1 "+radius+"rot"+rot);
       radius /= 60. ;
       radius1 /= 60. ;
@@ -842,11 +843,11 @@ public final class Calib  implements Cloneable {
       ynpix = (new Integer(st)).intValue();
       //               System.out.println("npix "+xnpix+" "+ynpix);
 
-      //               cdelz = Math.cos((delta/180.)*Math.PI);
-      //               sdelz = Math.sin((delta/180.)*Math.PI);
+      //               cdelz = FastMath.cos((delta/180.)*Math.PI);
+      //               sdelz = FastMath.sin((delta/180.)*Math.PI);
 
-      cdelz = Math.cos(delta*deg_to_rad);
-      sdelz = Math.sin(delta*deg_to_rad);
+      cdelz = FastMath.cos(delta*deg_to_rad);
+      sdelz = FastMath.sin(delta*deg_to_rad);
       incA =  (xyapoly[2]*incX/focale/1000)*rad_to_deg ;
       incD =  (xydpoly[1]*incY/focale/1000)*rad_to_deg  ;
       //              System.out.println("incAD "+incA+" "+incD );
@@ -975,10 +976,10 @@ public final class Calib  implements Cloneable {
                if (rota1 == 0) rota = rota2 ;
                else if (rota2 != 0) rota = (rota1+rota2 )/2 ;
                // Auquel cas on calcule la matrice de transformation
-               CD[0][0] = incA*Math.cos((rota/180.)*Math.PI) ;
-               CD[0][1] = -incD*Math.sin((rota/180.)*Math.PI) ;
-               CD[1][0] = incA*Math.sin((rota/180.)*Math.PI) ;
-               CD[1][1] = incD*Math.cos((rota/180.)*Math.PI) ;
+               CD[0][0] = incA*FastMath.cos((rota/180.)*Math.PI) ;
+               CD[0][1] = -incD*FastMath.sin((rota/180.)*Math.PI) ;
+               CD[1][0] = incA*FastMath.sin((rota/180.)*Math.PI) ;
+               CD[1][1] = incD*FastMath.cos((rota/180.)*Math.PI) ;
                //System.out.println("CD "+CD[0][0]+"CD "+CD[0][1]);
             }
             catch (Exception e2) {
@@ -1365,10 +1366,10 @@ public final class Calib  implements Cloneable {
       widtha = xnpix * Math.abs(incA) ;
       widthd = ynpix * Math.abs(incD) ;
       // cos delta au centre de l'image
-      //                   cdelz = Math.cos((deltai/180.)*Math.PI);
-      //                   sdelz = Math.sin((deltai/180.)*Math.PI);
-      cdelz = Math.cos(deltai*deg_to_rad);
-      sdelz = Math.sin(deltai*deg_to_rad);
+      //                   cdelz = FastMath.cos((deltai/180.)*Math.PI);
+      //                   sdelz = FastMath.sin((deltai/180.)*Math.PI);
+      cdelz = FastMath.cos(deltai*deg_to_rad);
+      sdelz = FastMath.sin(deltai*deg_to_rad);
       // calcul de la transformation inverse
       det = CD[0][0]* CD[1][1]-CD[0][1]*CD[1][0] ;
       ID[0][0] = CD[1][1]/det ;
@@ -1425,8 +1426,8 @@ System.out.println("X Y "+X5+" "+Y5);
 System.out.println("X Y "+X6+" "+Y6);
 System.out.println("X Y "+X7+" "+Y7);
 System.out.println("X Y "+X8+" "+Y8);
-cdelz = Math.cos((deltai/180.)*Math.PI);
-sdelz = Math.sin((deltai/180.)*Math.PI);
+cdelz = FastMath.cos((deltai/180.)*Math.PI);
+sdelz = FastMath.sin((deltai/180.)*Math.PI);
 cdelz1 = cdelz ;
 sdelz1 = sdelz ;
 
@@ -1435,38 +1436,38 @@ sdelz1 = sdelz ;
 double xst1, yst1,deno;
 double xst2, yst2, xst3, yst3, xst4, yst4 ;
 double xst5, yst5, xst6, yst6, xst7, yst7, xst8, yst8 ;
-deno = Math.sin(Y1*Math.PI/180.)*sdelz1
-  +Math.cos(Y1*Math.PI/180.)*cdelz1
-  *Math.cos((X1-alphai)*Math.PI/180.) ;
-xst1 = Math.cos(Y1*Math.PI/180.)
- *Math.sin((X1-alphai)*Math.PI/180.)
+deno = FastMath.sin(Y1*Math.PI/180.)*sdelz1
+  +FastMath.cos(Y1*Math.PI/180.)*cdelz1
+  *FastMath.cos((X1-alphai)*Math.PI/180.) ;
+xst1 = FastMath.cos(Y1*Math.PI/180.)
+ *FastMath.sin((X1-alphai)*Math.PI/180.)
  / deno ;
-yst1 = ( Math.sin(Y1*Math.PI/180.)*cdelz1
- -Math.cos(Y1*Math.PI/180.)*sdelz1
- *Math.cos((X1-alphai)*Math.PI/180.))
+yst1 = ( FastMath.sin(Y1*Math.PI/180.)*cdelz1
+ -FastMath.cos(Y1*Math.PI/180.)*sdelz1
+ *FastMath.cos((X1-alphai)*Math.PI/180.))
  / deno; 
-System.out.println("detail "+Math.sin(Y1*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y1*Math.PI/180.)*sdelz1*Math.cos((X1-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y1*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y1*Math.PI/180.)*sdelz1*FastMath.cos((X1-alphai)*Math.PI/180.)
     / deno) ;
-System.out.println("detail "+Math.sin(Y1*Math.PI/180.)*cdelz1+" "+Math.cos(Y1*Math.PI/180.)*sdelz1 ) ;
+System.out.println("detail "+FastMath.sin(Y1*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y1*Math.PI/180.)*sdelz1 ) ;
 //   CD[0][0] = - xst1 / 256 ;
 //   CD[1][0] =  yst1 / 256 ;
 
 System.out.println("CD "+CD[0][0]+" "+CD[1][0]);
 System.out.println("xst yst"+xst1+" "+yst1) ;
-deno = Math.sin(Y2*Math.PI/180.)*sdelz1
-+Math.cos(Y2*Math.PI/180.)*cdelz1
-*Math.cos((X2-alphai)*Math.PI/180.) ;
-xst2 = Math.cos(Y2*Math.PI/180.)
-*Math.sin((X2-alphai)*Math.PI/180.)
+deno = FastMath.sin(Y2*Math.PI/180.)*sdelz1
++FastMath.cos(Y2*Math.PI/180.)*cdelz1
+*FastMath.cos((X2-alphai)*Math.PI/180.) ;
+xst2 = FastMath.cos(Y2*Math.PI/180.)
+*FastMath.sin((X2-alphai)*Math.PI/180.)
 / deno ;
-yst2 = (Math.sin(Y2*Math.PI/180.)*cdelz1
--Math.cos(Y2*Math.PI/180.)*sdelz1
-*Math.cos((X2-alphai)*Math.PI/180.))
+yst2 = (FastMath.sin(Y2*Math.PI/180.)*cdelz1
+-FastMath.cos(Y2*Math.PI/180.)*sdelz1
+*FastMath.cos((X2-alphai)*Math.PI/180.))
 / deno;
 
-System.out.println("detail "+Math.sin(Y2*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y2*Math.PI/180.)*sdelz1*Math.cos((X2-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y2*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y2*Math.PI/180.)*sdelz1*FastMath.cos((X2-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y2*Math.PI/180.)*cdelz1+" "+Math.cos(Y2*Math.PI/180.)*sdelz1) ;
+System.out.println("detail "+FastMath.sin(Y2*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y2*Math.PI/180.)*sdelz1) ;
 //CD[0][0] =  CD[0][0] + xst2 / 256 ;
 //CD[1][0] =  CD[1][0] - yst2 / 256 ;
 //CD[0][0] /= 2 ;
@@ -1474,90 +1475,90 @@ System.out.println("detail "+Math.sin(Y2*Math.PI/180.)*cdelz1+" "+Math.cos(Y2*Ma
 System.out.println("CD "+CD[0][0]+" "+CD[1][0]);
 System.out.println("xst yst"+xst2+" "+yst2) ;
 
-deno = Math.sin(Y3*Math.PI/180.)*sdelz1
-+Math.cos(Y3*Math.PI/180.)*cdelz1
-*Math.cos((X3-alphai)*Math.PI/180.) ;
-xst3 = (Math.cos(Y3*Math.PI/180.)
-*Math.sin((X3-alphai)*Math.PI/180.))
+deno = FastMath.sin(Y3*Math.PI/180.)*sdelz1
++FastMath.cos(Y3*Math.PI/180.)*cdelz1
+*FastMath.cos((X3-alphai)*Math.PI/180.) ;
+xst3 = (FastMath.cos(Y3*Math.PI/180.)
+*FastMath.sin((X3-alphai)*Math.PI/180.))
 / deno ;
-yst3 = Math.sin(Y3*Math.PI/180.)*cdelz1
--Math.cos(Y3*Math.PI/180.)*sdelz1
-*Math.cos((X3-alphai)*Math.PI/180.)
+yst3 = FastMath.sin(Y3*Math.PI/180.)*cdelz1
+-FastMath.cos(Y3*Math.PI/180.)*sdelz1
+*FastMath.cos((X3-alphai)*Math.PI/180.)
 / deno;
-System.out.println("detail "+Math.sin(Y3*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y3*Math.PI/180.)*sdelz1*Math.cos((X3-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y3*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y3*Math.PI/180.)*sdelz1*FastMath.cos((X3-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y3*Math.PI/180.)*cdelz1+" "+Math.cos(Y3*Math.PI/180.)*sdelz1 ) ;
+System.out.println("detail "+FastMath.sin(Y3*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y3*Math.PI/180.)*sdelz1 ) ;
 //CD[0][1] =   xst3 / 256 ;
 //CD[1][1] =   yst3 / 256 ;
 System.out.println("CD "+CD[0][1]+" "+CD[1][1]);
 System.out.println("xst yst"+xst3+" "+yst3) ;
-deno = Math.sin(Y4*Math.PI/180.)*sdelz1
-+Math.cos(Y4*Math.PI/180.)*cdelz1
-*Math.cos((X4-alphai)*Math.PI/180.) ;
-xst4 = Math.cos(Y4*Math.PI/180.)
-*Math.sin((X4-alphai)*Math.PI/180.)
+deno = FastMath.sin(Y4*Math.PI/180.)*sdelz1
++FastMath.cos(Y4*Math.PI/180.)*cdelz1
+*FastMath.cos((X4-alphai)*Math.PI/180.) ;
+xst4 = FastMath.cos(Y4*Math.PI/180.)
+*FastMath.sin((X4-alphai)*Math.PI/180.)
 / deno ;
-yst4 = (Math.sin(Y4*Math.PI/180.)*cdelz1
--Math.cos(Y4*Math.PI/180.)*sdelz1
-*Math.cos((X4-alphai)*Math.PI/180.))
+yst4 = (FastMath.sin(Y4*Math.PI/180.)*cdelz1
+-FastMath.cos(Y4*Math.PI/180.)*sdelz1
+*FastMath.cos((X4-alphai)*Math.PI/180.))
 / deno;
-System.out.println("detail "+Math.sin(Y4*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y4*Math.PI/180.)*sdelz1*Math.cos((X4-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y4*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y4*Math.PI/180.)*sdelz1*FastMath.cos((X4-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y4*Math.PI/180.)*cdelz1+" "+Math.cos(Y4*Math.PI/180.)*sdelz1 ) ;
+System.out.println("detail "+FastMath.sin(Y4*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y4*Math.PI/180.)*sdelz1 ) ;
 //CD[0][1] = CD[0][1] - xst4 / 256 ;
 //CD[1][1] =  CD[1][1] - yst4 / 256 ;
-deno = Math.sin(Y5*Math.PI/180.)*sdelz1
-+Math.cos(Y5*Math.PI/180.)*cdelz1
-*Math.cos((X5-alphai)*Math.PI/180.) ;
-xst5 = Math.cos(Y5*Math.PI/180.)
-*Math.sin((X5-alphai)*Math.PI/180.)
+deno = FastMath.sin(Y5*Math.PI/180.)*sdelz1
++FastMath.cos(Y5*Math.PI/180.)*cdelz1
+*FastMath.cos((X5-alphai)*Math.PI/180.) ;
+xst5 = FastMath.cos(Y5*Math.PI/180.)
+*FastMath.sin((X5-alphai)*Math.PI/180.)
 / deno ;
-yst5 = (Math.sin(Y5*Math.PI/180.)*cdelz1
--Math.cos(Y5*Math.PI/180.)*sdelz1
-*Math.cos((X5-alphai)*Math.PI/180.))
+yst5 = (FastMath.sin(Y5*Math.PI/180.)*cdelz1
+-FastMath.cos(Y5*Math.PI/180.)*sdelz1
+*FastMath.cos((X5-alphai)*Math.PI/180.))
 / deno;
-System.out.println("detail "+Math.sin(Y5*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y5*Math.PI/180.)*sdelz1*Math.cos((X5-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y5*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y5*Math.PI/180.)*sdelz1*FastMath.cos((X5-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y5*Math.PI/180.)*cdelz1+" "+Math.cos(Y5*Math.PI/180.)*sdelz1 ) ;
-deno = Math.sin(Y6*Math.PI/180.)*sdelz1
-+Math.cos(Y6*Math.PI/180.)*cdelz1
-*Math.cos((X6-alphai)*Math.PI/180.) ;
-xst6 = Math.cos(Y6*Math.PI/180.)
-*Math.sin((X6-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y5*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y5*Math.PI/180.)*sdelz1 ) ;
+deno = FastMath.sin(Y6*Math.PI/180.)*sdelz1
++FastMath.cos(Y6*Math.PI/180.)*cdelz1
+*FastMath.cos((X6-alphai)*Math.PI/180.) ;
+xst6 = FastMath.cos(Y6*Math.PI/180.)
+*FastMath.sin((X6-alphai)*Math.PI/180.)
 / deno ;
-yst6 = (Math.sin(Y6*Math.PI/180.)*cdelz1
--Math.cos(Y6*Math.PI/180.)*sdelz1
-*Math.cos((X6-alphai)*Math.PI/180.))
+yst6 = (FastMath.sin(Y6*Math.PI/180.)*cdelz1
+-FastMath.cos(Y6*Math.PI/180.)*sdelz1
+*FastMath.cos((X6-alphai)*Math.PI/180.))
 / deno;
-System.out.println("detail "+Math.sin(Y6*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y6*Math.PI/180.)*sdelz1*Math.cos((X6-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y6*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y6*Math.PI/180.)*sdelz1*FastMath.cos((X6-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y6*Math.PI/180.)*cdelz1+" "+Math.cos(Y6*Math.PI/180.)*sdelz1 ) ;
-deno = Math.sin(Y7*Math.PI/180.)*sdelz1
-+Math.cos(Y7*Math.PI/180.)*cdelz1
-*Math.cos((X7-alphai)*Math.PI/180.) ;
-xst7 = Math.cos(Y7*Math.PI/180.)
-*Math.sin((X7-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y6*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y6*Math.PI/180.)*sdelz1 ) ;
+deno = FastMath.sin(Y7*Math.PI/180.)*sdelz1
++FastMath.cos(Y7*Math.PI/180.)*cdelz1
+*FastMath.cos((X7-alphai)*Math.PI/180.) ;
+xst7 = FastMath.cos(Y7*Math.PI/180.)
+*FastMath.sin((X7-alphai)*Math.PI/180.)
 / deno ;
-yst7 = (Math.sin(Y7*Math.PI/180.)*cdelz1
--Math.cos(Y7*Math.PI/180.)*sdelz1
-*Math.cos((X7-alphai)*Math.PI/180.))
+yst7 = (FastMath.sin(Y7*Math.PI/180.)*cdelz1
+-FastMath.cos(Y7*Math.PI/180.)*sdelz1
+*FastMath.cos((X7-alphai)*Math.PI/180.))
 / deno;
-System.out.println("detail "+Math.sin(Y7*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y7*Math.PI/180.)*sdelz1*Math.cos((X7-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y7*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y7*Math.PI/180.)*sdelz1*FastMath.cos((X7-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y7*Math.PI/180.)*cdelz1+" "+Math.cos(Y7*Math.PI/180.)*sdelz1 ) ;
-deno = Math.sin(Y8*Math.PI/180.)*sdelz1
-+Math.cos(Y8*Math.PI/180.)*cdelz1
-*Math.cos((X8-alphai)*Math.PI/180.) ;
-xst8 = Math.cos(Y8*Math.PI/180.)
-*Math.sin((X8-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y7*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y7*Math.PI/180.)*sdelz1 ) ;
+deno = FastMath.sin(Y8*Math.PI/180.)*sdelz1
++FastMath.cos(Y8*Math.PI/180.)*cdelz1
+*FastMath.cos((X8-alphai)*Math.PI/180.) ;
+xst8 = FastMath.cos(Y8*Math.PI/180.)
+*FastMath.sin((X8-alphai)*Math.PI/180.)
 / deno ;
-yst8 = (Math.sin(Y8*Math.PI/180.)*cdelz1
--Math.cos(Y8*Math.PI/180.)*sdelz1
-*Math.cos((X8-alphai)*Math.PI/180.))
+yst8 = (FastMath.sin(Y8*Math.PI/180.)*cdelz1
+-FastMath.cos(Y8*Math.PI/180.)*sdelz1
+*FastMath.cos((X8-alphai)*Math.PI/180.))
 / deno;
-System.out.println("detail "+Math.sin(Y8*Math.PI/180.)*cdelz1/deno+" "+Math.cos(Y8*Math.PI/180.)*sdelz1*Math.cos((X8-alphai)*Math.PI/180.)
+System.out.println("detail "+FastMath.sin(Y8*Math.PI/180.)*cdelz1/deno+" "+FastMath.cos(Y8*Math.PI/180.)*sdelz1*FastMath.cos((X8-alphai)*Math.PI/180.)
 / deno) ;
-System.out.println("detail "+Math.sin(Y8*Math.PI/180.)*cdelz1+" "+Math.cos(Y8*Math.PI/180.)*sdelz1 ) ;
+System.out.println("detail "+FastMath.sin(Y8*Math.PI/180.)*cdelz1+" "+FastMath.cos(Y8*Math.PI/180.)*sdelz1 ) ;
 CD[0][0]= rad_to_deg * (-xst1 -xst2 -xst3 + xst5 + xst6 +xst7 )/6/256 ;
 CD[0][1]= rad_to_deg * (xst1 -xst3 -xst4 -xst5 + xst7 +xst8 )/6/256 ;
 CD[1][0]= -rad_to_deg * (-yst1 -yst2 -yst3 +yst5 +yst6 +yst7)/6/256;
@@ -1777,8 +1778,8 @@ protected void Dss (HeaderFits hf) throws Exception {
    //CNPIX2 double for DFBS WCSKeys.addElement("CNPIX2  "); 
    yz   = incY * 23040 / 1000. -yz ;
 
-   cdelz = Math.cos(delta*deg_to_rad);
-   sdelz = Math.sin(delta*deg_to_rad);
+   cdelz = FastMath.cos(delta*deg_to_rad);
+   sdelz = FastMath.sin(delta*deg_to_rad);
    alphai = alpha ;
    deltai = delta ;
 
@@ -1796,8 +1797,8 @@ protected void Dss (HeaderFits hf) throws Exception {
    //      widtha = xnpix * Math.abs(incA) ;
    //      widthd = ynpix * Math.abs(incD) ;
 
-   //    cdelz = Math.cos(deltai*deg_to_rad);
-   //    sdelz = Math.sin(deltai*deg_to_rad);
+   //    cdelz = FastMath.cos(deltai*deg_to_rad);
+   //    sdelz = FastMath.sin(deltai*deg_to_rad);
 
 
    //     type1 = "'RA---TAN'" ;
@@ -1835,18 +1836,18 @@ protected void GetXYstand(Coord c) throws Exception {
    // System.out.println("aldel_i "+alphai+" "+deltai);
    if(aladin == 1)
    {
-      //               cdelz = Math.cos((delta/180.)*Math.PI);
-      //               sdelz = Math.sin((delta/180.)*Math.PI);
+      //               cdelz = FastMath.cos((delta/180.)*Math.PI);
+      //               sdelz = FastMath.sin((delta/180.)*Math.PI);
 
 
       // Methode aladin = methode plaque ....
       //             delrad = (c.del/180.)*Math.PI;
       delrad = c.del*deg_to_rad;
       alrad  = (c.al - alpha)*deg_to_rad;
-      double sin_delrad = Math.sin (delrad) ;
-      double cos_delrad = Math.cos (delrad) ;
-      double sin_alrad  = Math.sin(alrad) ;
-      double cos_alrad  = Math.cos(alrad) ;
+      double sin_delrad = FastMath.sin (delrad) ;
+      double cos_delrad = FastMath.cos (delrad) ;
+      double sin_alrad  = FastMath.sin(alrad) ;
+      double cos_alrad  = FastMath.cos(alrad) ;
       dr = sin_delrad * sdelz
             + cos_delrad * cdelz * cos_alrad;
       x_stand =  cos_delrad
@@ -1957,18 +1958,18 @@ protected void GetXYstand(Coord c) throws Exception {
       double ddel = (del-deltai)*deg_to_rad ;
       double dalpha =  (al- alphai)*deg_to_rad;
       //System.out.println("dalpha "+ al +" " + alphai + " " + deg_to_rad );
-      double cos_del = Math.cos(del*deg_to_rad);
-      double sin_del = Math.sin(del*deg_to_rad);
-      double sin_dalpha = Math.sin(dalpha);
-      double cos_dalpha = Math.cos(dalpha);
-      //                 x_tet_phi = Math.cos(del*Math.PI/180.)
-      //                            *Math.sin((al - alphai)*Math.PI/180.) ;
+      double cos_del = FastMath.cos(del*deg_to_rad);
+      double sin_del = FastMath.sin(del*deg_to_rad);
+      double sin_dalpha = FastMath.sin(dalpha);
+      double cos_dalpha = FastMath.cos(dalpha);
+      //                 x_tet_phi = FastMath.cos(del*Math.PI/180.)
+      //                            *FastMath.sin((al - alphai)*Math.PI/180.) ;
       x_tet_phi = cos_del *sin_dalpha ;
-      //                 y_tet_phi = Math.sin(del*Math.PI/180.)
-      //                             *Math.cos(deltai*Math.PI/180.)
-      //                             - Math.cos(del*Math.PI/180.)
-      //                             *Math.sin(deltai*Math.PI/180.)
-      //                             *Math.cos((al - alphai)*Math.PI/180.);
+      //                 y_tet_phi = FastMath.sin(del*Math.PI/180.)
+      //                             *FastMath.cos(deltai*Math.PI/180.)
+      //                             - FastMath.cos(del*Math.PI/180.)
+      //                             *FastMath.sin(deltai*Math.PI/180.)
+      //                             *FastMath.cos((al - alphai)*Math.PI/180.);
       //               if (Math.abs(dalpha) < Math.PI/2 )
       y_tet_phi = sin_del * cdelz -  cos_del * sdelz * cos_dalpha ;
       //               else y_tet_phi = sin_del * cdelz + cos_del * sdelz * cos_dalpha ;
@@ -2010,18 +2011,18 @@ protected void GetXYstand(Coord c) throws Exception {
             //            + adxpoly[5]* (Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
             }
             else rteta = (Math.PI/2 -tet) ;
-            //x_stand = (Math.PI/2 -tet)*Math.sin(phi) ;
-            x_stand = rteta*Math.sin(phi) ;
-            // y_stand = -(Math.PI/2 -tet)*Math.cos(phi) ;
-            y_stand = - rteta*Math.cos(phi) ;
+            //x_stand = (Math.PI/2 -tet)*FastMath.sin(phi) ;
+            x_stand = rteta*FastMath.sin(phi) ;
+            // y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
+            y_stand = - rteta*FastMath.cos(phi) ;
             break ;
          case AIT:  // AIT proj
             if (al > 180.) dalpha -= 2*Math.PI ;
-            double cos_ddel = Math.cos(ddel) ;
+            double cos_ddel = FastMath.cos(ddel) ;
             double alph =
-                  Math.sqrt(2/(1+cos_ddel*Math.cos(dalpha/2.)));
-            x_stand = 2*alph*cos_ddel*Math.sin(dalpha/2.) ;
-            y_stand = alph*Math.sin(ddel) ;
+                  Math.sqrt(2/(1+cos_ddel*FastMath.cos(dalpha/2.)));
+            x_stand = 2*alph*cos_ddel*FastMath.sin(dalpha/2.) ;
+            y_stand = alph*FastMath.sin(ddel) ;
             if(dalpha/2. > Math.PI) x_stand = -x_stand ;
             break ;
          case ZEA: // ZEA projection
@@ -2040,11 +2041,11 @@ protected void GetXYstand(Coord c) throws Exception {
 
             tet = Math.asin (
                   sin_del*sdelz+ cos_del*cdelz *cos_dalpha);
-            double rtet = Math.sqrt(2*(1-Math.sin(tet)));
+            double rtet = Math.sqrt(2*(1-FastMath.sin(tet)));
 
 
-            x_stand = rtet*Math.sin(phi) ;
-            y_stand = - rtet*Math.cos(phi) ;
+            x_stand = rtet*FastMath.sin(phi) ;
+            y_stand = - rtet*FastMath.cos(phi) ;
 
 
             break ;
@@ -2077,17 +2078,11 @@ public void GetCoord(Coord c) throws Exception {
    double posx ;
    double posy ;
 
-   // Ajout PF - juillet 2012 - pour d�veloppement calibration par matrice de coordonn�es)
-   if( proj==MATRIX ) {
-      getCoordMatrix(c);
-      return;
-   }
-
    // System.out.println("GetCoord "+c.x+" "+c.y+" "+aladin);
    if((aladin == 1) || (aladin ==2))
    {
-      //               cdelz = Math.cos((delta/180.)*Math.PI);
-      //               sdelz = Math.sin((delta/180.)*Math.PI);
+      //               cdelz = FastMath.cos((delta/180.)*Math.PI);
+      //               sdelz = FastMath.sin((delta/180.)*Math.PI);
 
       // Methode aladin = methode plaque ....
 
@@ -2128,7 +2123,7 @@ public void GetCoord(Coord c) throws Exception {
 
       c.al = alpha
             + (Math.atan(posx/(cdelz-posy*sdelz)))*rad_to_deg ;
-      c.del = Math.atan(Math.cos((c.al-alpha)*deg_to_rad)
+      c.del = Math.atan(FastMath.cos((c.al-alpha)*deg_to_rad)
             *(sdelz +posy *cdelz)/(cdelz-posy*sdelz))
             //                     *(180./Math.PI);
             *rad_to_deg ;
@@ -2216,18 +2211,18 @@ public void GetCoord(Coord c) throws Exception {
       {
          case SIN: // projection en SINUS
             //                        c.del = (180./Math.PI)
-            //                               *(Math.asin(y_objr*Math.cos(deltai*Math.PI/180.)
-            //                               +Math.sin(deltai*Math.PI/180.)
+            //                               *(Math.asin(y_objr*FastMath.cos(deltai*Math.PI/180.)
+            //                               +FastMath.sin(deltai*Math.PI/180.)
             //                               *Math.sqrt(1-y_objr*y_objr - x_objr*x_objr)));
             c.del = rad_to_deg
             *(Math.asin(y_objr*cdelz
                   +sdelz
                   *Math.sqrt(1-y_objr*y_objr - x_objr*x_objr)));
             X = x_objr /
-                  //                                   (Math.cos(deltai*Math.PI/180.)
+                  //                                   (FastMath.cos(deltai*Math.PI/180.)
                   (cdelz
                         *Math.sqrt(1-y_objr*y_objr - x_objr*x_objr)
-                        //                                   - y_objr*Math.sin(deltai*Math.PI/180.));
+                        //                                   - y_objr*FastMath.sin(deltai*Math.PI/180.));
                         - y_objr*sdelz);
             c.al  = alphai + rad_to_deg*Math.atan(X) ;
             //                        double sign ;
@@ -2242,8 +2237,8 @@ public void GetCoord(Coord c) throws Exception {
             X = x_objr / (cdelz - y_objr*sdelz);
             c.al  = alphai + rad_to_deg*Math.atan(X) ;
             c.del = rad_to_deg
-                  *(Math.acos((cdelz- yy*sdelz)/Math.cos((c.al-alphai)*deg_to_rad))) ;
-            if((cdelz- yy*sdelz)/Math.cos((c.al- alphai)*deg_to_rad)>1)  
+                  *(Math.acos((cdelz- yy*sdelz)/FastMath.cos((c.al-alphai)*deg_to_rad))) ;
+            if((cdelz- yy*sdelz)/FastMath.cos((c.al- alphai)*deg_to_rad)>1)  
             { c.del = -32000.0 ; c.al = -32000.0;}
             if (sdelz <0) c.del = -c.del ;
             if (c.del > 90.)
@@ -2294,17 +2289,17 @@ public void GetCoord(Coord c) throws Exception {
             }
 
             //System.out.println("cdel"+cdelz+" "+sdelz);
-            //                       double deno = Math.cos(deltai*Math.PI/180.)
+            //                       double deno = FastMath.cos(deltai*Math.PI/180.)
             double deno = cdelz
-                  //                                     -yy*Math.sin(deltai*Math.PI/180.);
+                  //                                     -yy*FastMath.sin(deltai*Math.PI/180.);
                   -yy*sdelz;
             double d_al = Math.atan(x_objr/deno) ;
-            c.del = (180./Math.PI)*Math.atan(Math.cos(d_al)
+            c.del = (180./Math.PI)*Math.atan(FastMath.cos(d_al)
 
-                  //                                *(Math.sin(deltai*Math.PI/180.)
+                  //                                *(FastMath.sin(deltai*Math.PI/180.)
                   *(sdelz +yy*cdelz) / deno ) ;
             //                System.out.println("d_al "+x_objr+" "+c.del) ;
-            //                                +y_objr*Math.cos(deltai*Math.PI/180.))
+            //                                +y_objr*FastMath.cos(deltai*Math.PI/180.))
             //                        c.al = alphai + d_al*180./Math.PI;
             c.al = alphai + d_al*rad_to_deg;
             // Pourquoi ï¿½ï¿½ ?
@@ -2349,15 +2344,15 @@ public void GetCoord(Coord c) throws Exception {
             }
             else tet = rteta;
             if (rteta == 0.0) c.del = deltai ;
-            else c.del = rad_to_deg*Math.asin(+y_objr*cdelz*Math.sin(tet)/ rteta +sdelz*Math.cos(tet));
+            else c.del = rad_to_deg*Math.asin(+y_objr*cdelz*FastMath.sin(tet)/ rteta +sdelz*FastMath.cos(tet));
 
             if (tet < Math.PI/2)
-               c.al =alphai + rad_to_deg*Math.asin(Math.sin(tet)*x_objr/ (rteta*Math.cos(c.del*deg_to_rad)));
+               c.al =alphai + rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/ (rteta*FastMath.cos(c.del*deg_to_rad)));
 
-            else c.al =alphai + 180. - rad_to_deg*Math.asin(Math.sin(tet)*x_objr/(rteta*Math.cos(c.del*deg_to_rad))) ;
+            else c.al =alphai + 180. - rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/(rteta*FastMath.cos(c.del*deg_to_rad))) ;
 
             //         if(tet==0.0)c.al=alphai;
-            //         System.out.println("tete "+tet+" "+(alphai + rad_to_deg*Math.asin(Math.sin(tet)*x_objr/ (rteta*Math.cos(c.del*deg_to_rad))))+" "+(alphai + 180. - rad_to_deg*Math.asin(Math.sin(tet)*x_objr/(rteta*Math.cos(c.del*deg_to_rad)))));
+            //         System.out.println("tete "+tet+" "+(alphai + rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/ (rteta*FastMath.cos(c.del*deg_to_rad))))+" "+(alphai + 180. - rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/(rteta*FastMath.cos(c.del*deg_to_rad)))));
             // System.out.println("tet alphai"+tet+" "+c.al+" "+alphai);
             break;
 
@@ -2365,12 +2360,12 @@ public void GetCoord(Coord c) throws Exception {
             // Il faut gï¿½rer le cdelp, sdelp de telle sorte que
             // la position du pole des coordonnes locales reste toujours
             // inferieur a 90 degres
-            double cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
-            double sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2);
+            double cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+            double sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2);
             if (deltai > 0.)
             {
-               cdelp = Math.cos((90.-deltai)*deg_to_rad);
-               sdelp = Math.sin((90.-deltai)*deg_to_rad);
+               cdelp = FastMath.cos((90.-deltai)*deg_to_rad);
+               sdelp = FastMath.sin((90.-deltai)*deg_to_rad);
             }
             double phi ;
             double z =
@@ -2387,16 +2382,16 @@ public void GetCoord(Coord c) throws Exception {
                // pole des coordonnï¿½es locales
                if (deltai <0) phi += Math.PI ;
                //               System.out.println("tet phi Coord"+tet+" "+phi);
-               //                System.out.println("Le sin de delt"+sdelp*Math.sin(tet));
-               //                System.out.println("Le sin de delt"+cdelp*Math.cos(tet)*Math.cos(phi));
-               //                System.out.println("Le sin de delt"+(sdelp*Math.sin(tet)+cdelp*Math.cos(tet)*Math.cos(phi)));
+               //                System.out.println("Le sin de delt"+sdelp*FastMath.sin(tet));
+               //                System.out.println("Le sin de delt"+cdelp*FastMath.cos(tet)*FastMath.cos(phi));
+               //                System.out.println("Le sin de delt"+(sdelp*FastMath.sin(tet)+cdelp*FastMath.cos(tet)*FastMath.cos(phi)));
                c.del = rad_to_deg*
-                     Math.asin((sdelp*Math.sin(tet)+
-                           cdelp*Math.cos(tet)*Math.cos(phi)));
-               double arg1 = -(Math.sin(tet)*cdelp
-                     - Math.cos(tet)*sdelp*Math.cos(phi));
+                     Math.asin((sdelp*FastMath.sin(tet)+
+                           cdelp*FastMath.cos(tet)*FastMath.cos(phi)));
+               double arg1 = -(FastMath.sin(tet)*cdelp
+                     - FastMath.cos(tet)*sdelp*FastMath.cos(phi));
                double arg ;
-               arg = (Math.cos(tet)*Math.sin(phi));
+               arg = (FastMath.cos(tet)*FastMath.sin(phi));
                //      if (Math.abs(deltai) != 90.)
                c.al = alphai + rad_to_deg*Math.atan2(arg,arg1) ;
                if (deltai < 0.) c.al = c.al + 180. ;
@@ -2413,8 +2408,8 @@ public void GetCoord(Coord c) throws Exception {
 
             break ;
          case MOL:
-            cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
-            sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2) ;
+            cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+            sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
 
             double x =  x_objr;
             double y =  y_objr;
@@ -2425,16 +2420,16 @@ public void GetCoord(Coord c) throws Exception {
             double theta = Math.asin(y / Math.sqrt(2)) ;
             double psi = theta * 2;
 
-            double Tetha = Math.asin((psi + Math.sin(psi)) / Math.PI);
-            double Phi =(Math.PI/(2*Math.sqrt(2)))*( x / Math.cos(theta));
+            double Tetha = Math.asin((psi + FastMath.sin(psi)) / Math.PI);
+            double Phi =(Math.PI/(2*Math.sqrt(2)))*( x / FastMath.cos(theta));
 
-            c.del =  rad_to_deg* Math.asin((sdelp*Math.sin(Tetha)
-                  - cdelp*Math.cos(Tetha)*Math.cos(Phi)));
+            c.del =  rad_to_deg* Math.asin((sdelp*FastMath.sin(Tetha)
+                  - cdelp*FastMath.cos(Tetha)*FastMath.cos(Phi)));
 
-            double arg3 = (Math.sin(Tetha)*cdelp
-                    + Math.cos(Tetha)*sdelp*Math.cos(Phi));
+            double arg3 = (FastMath.sin(Tetha)*cdelp
+                    + FastMath.cos(Tetha)*sdelp*FastMath.cos(Phi));
 
-            double arg2 = (Math.cos(Tetha)*Math.sin(Phi));
+            double arg2 = (FastMath.cos(Tetha)*FastMath.sin(Phi));
 
             c.al = alphai + rad_to_deg*Math.atan2(arg2,arg3) ;
 
@@ -2446,8 +2441,8 @@ public void GetCoord(Coord c) throws Exception {
 //            if( rSq > 1 ) throw new Exception("No coordinates");
 //            double theta = Math.asin(y / Math.sqrt(2));
 //            double psi = theta * 2;
-//            double delta = Math.asin((psi + Math.sin(psi)) / Math.PI);
-//            double alpha = (Math.PI/(2*Math.sqrt(2))) * (x / Math.cos(theta));
+//            double delta = Math.asin((psi + FastMath.sin(psi)) / Math.PI);
+//            double alpha = (Math.PI/(2*Math.sqrt(2))) * (x / FastMath.cos(theta));
 //            c.al = alphai + alpha * rad_to_deg;
 //            c.del = /* deltai + */delta * rad_to_deg;
 //            break;
@@ -2461,24 +2456,24 @@ public void GetCoord(Coord c) throws Exception {
             else phi = Math.PI/2. ;
             if(y_objr < 0.0) phi = phi+Math.PI ;
             //               System.out.println("phi tet"+phi+" "+tet);
-            //               System.out.println("Le sin de delt"+sdelz*Math.sin(tet));
-            //               System.out.println("Le sin de delt"+cdelz*Math.cos(tet)*Math.cos(phi));
-            //               System.out.println("Le sin de delt"+(sdelz*Math.sin(tet)+cdelz*Math.cos(tet)*Math.cos(phi)));
+            //               System.out.println("Le sin de delt"+sdelz*FastMath.sin(tet));
+            //               System.out.println("Le sin de delt"+cdelz*FastMath.cos(tet)*FastMath.cos(phi));
+            //               System.out.println("Le sin de delt"+(sdelz*FastMath.sin(tet)+cdelz*FastMath.cos(tet)*FastMath.cos(phi)));
             c.del = rad_to_deg*
-                  Math.asin(sdelz*Math.sin(tet)+
-                        cdelz*Math.cos(tet)*Math.cos(phi));
+                  Math.asin(sdelz*FastMath.sin(tet)+
+                        cdelz*FastMath.cos(tet)*FastMath.cos(phi));
 
             //    if((y_objr < 0.0)) c.del = 2*deltai - c.del ;
 
-            //                   double arg1 = (Math.sin(tet)*Math.cos(deltai*Math.PI/180.)
-            //                   - Math.cos(tet)*Math.sin(deltai*Math.PI/180.)*Math.cos(phi));
-            double arg1 = (Math.sin(tet)*cdelz
-                  - Math.cos(tet)*sdelz*Math.cos(phi));
+            //                   double arg1 = (FastMath.sin(tet)*FastMath.cos(deltai*Math.PI/180.)
+            //                   - FastMath.cos(tet)*FastMath.sin(deltai*Math.PI/180.)*FastMath.cos(phi));
+            double arg1 = (FastMath.sin(tet)*cdelz
+                  - FastMath.cos(tet)*sdelz*FastMath.cos(phi));
             double arg ;
             //                   if(arg1 != 0)
-            //                   arg = -(Math.cos(tet)*Math.sin(phi))/ arg1 ;
+            //                   arg = -(FastMath.cos(tet)*FastMath.sin(phi))/ arg1 ;
             //                   else arg = 0.0 ;
-            arg = -(Math.cos(tet)*Math.sin(phi));
+            arg = -(FastMath.cos(tet)*FastMath.sin(phi));
             // if(y_objr < 0.0) arg = -arg ;
             if (Math.abs(deltai) != 90.)
                //                   c.al = alphai + (180./Math.PI)*Math.atan(arg) ;
@@ -2498,17 +2493,17 @@ public void GetCoord(Coord c) throws Exception {
             break ;
          case STG:    // STEREOGRAPHIC
             double sintet =
-            Math.sin(Math.PI/2
+            FastMath.sin(Math.PI/2
                   - 2*Math.atan(Math.sqrt(y_objr*y_objr + x_objr*x_objr)/2));
             //                            c.del = (180./Math.PI)
-            //                            *Math.asin(Math.cos(deltai*Math.PI/180.)*y_objr/2
-            //                               + sintet *(Math.sin(deltai*Math.PI/180.) +
-            //                                  Math.cos(deltai*Math.PI/180.)*y_objr/2));
+            //                            *Math.asin(FastMath.cos(deltai*Math.PI/180.)*y_objr/2
+            //                               + sintet *(FastMath.sin(deltai*Math.PI/180.) +
+            //                                  FastMath.cos(deltai*Math.PI/180.)*y_objr/2));
             c.del = rad_to_deg
                   *Math.asin(cdelz*y_objr/2
                         + sintet *(sdelz + cdelz*y_objr/2));
             deno =
-                  //                      sintet* (2*cdelz-y_objr*Math.sin(deltai*Math.PI/180.)) -y_objr*Math.sin(deltai*Math.PI/180.);
+                  //                      sintet* (2*cdelz-y_objr*FastMath.sin(deltai*Math.PI/180.)) -y_objr*FastMath.sin(deltai*Math.PI/180.);
                   sintet* (2*cdelz-y_objr*sdelz) -y_objr*sdelz;
             //                      c.al = alphai + (180./Math.PI) * Math.atan(
             //                      c.al = alphai + rad_to_deg  * Math.atan(
@@ -2633,11 +2628,10 @@ protected boolean TheSame(Calib cal) {
    if (proj != cal.proj) return false ;
    return true ;
 }
-public void GetXY(Coord c) throws Exception {
+public void GetXY(Coord c) throws Exception { GetXY(c,true); }
+public void GetXY(Coord c,boolean withTest) throws Exception {
    double x_obj =1.;
    double y_obj =1.;
-   double x_objr ;
-   double y_objr ;
    double x_tet_phi;
    double y_tet_phi;
    double y_stand =0.03;
@@ -2649,19 +2643,14 @@ public void GetXY(Coord c) throws Exception {
 
    //   System.out.println("GetXY aladin"+aladin+" "+c.al+" "+c.del+" "+system);
 
-   if( proj==MATRIX ) {
-      getXYMatrix(c);
-      return;
-   }
-
    //   System.out.println("GetXY aladin"+aladin+" "+c.al+" "+c.del+" "+system);
 
    if(aladin == 1)
    {
-      //               cdelz = Math.cos((delta/180.)*Math.PI);
-      //               sdelz = Math.sin((delta/180.)*Math.PI);
-      double cos_del = Math.cos(c.del*deg_to_rad);
-      //                 double sin_del = Math.sin(c.del*deg_to_rad);  PF => jamais utilisï¿½
+      //               cdelz = FastMath.cos((delta/180.)*Math.PI);
+      //               sdelz = FastMath.sin((delta/180.)*Math.PI);
+      double cos_del = FastMath.cos(c.del*deg_to_rad);
+      //                 double sin_del = FastMath.sin(c.del*deg_to_rad);  PF => jamais utilisï¿½
       //                 double dalpha =  (c.al- alphai)*deg_to_rad;   PF => jamais utilisï¿½
       double distalpha = Math.min(Math.abs(c.al-alphai),360.-Math.abs(c.al-alphai));
       if (cos_del*(distalpha)*cos_del*(distalpha)+(c.del-deltai)*(c.del-deltai)>625.0)
@@ -2670,10 +2659,10 @@ public void GetXY(Coord c) throws Exception {
       //             delrad = (c.del/180.)*Math.PI;
       delrad = c.del*deg_to_rad;
       alrad  = (c.al - alpha)*deg_to_rad;
-      double sin_delrad = Math.sin (delrad) ;
-      double cos_delrad = Math.cos (delrad) ;
-      double sin_alrad  = Math.sin(alrad) ;
-      double cos_alrad  = Math.cos(alrad) ;
+      double sin_delrad = FastMath.sin (delrad) ;
+      double cos_delrad = FastMath.cos (delrad) ;
+      double sin_alrad  = FastMath.sin(alrad) ;
+      double cos_alrad  = FastMath.cos(alrad) ;
       dr = sin_delrad * sdelz
             + cos_delrad * cdelz * cos_alrad;
       x_stand =  cos_delrad
@@ -2738,112 +2727,24 @@ public void GetXY(Coord c) throws Exception {
          del = ac.getLat();
       }
       
-// L'ART ET LA MANIERE DE FAIRE LES CHOSES COMPLIQUEES - PF 19/7/2013
-//         if (system ==  FK4)
-//            //                   if ((equinox != 2000.0)&&(system != GALACTIC))
-//            // Ancine test supprim� en 04/2012  
-//         {
-//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-//            //                      Astroframe j2000 = new Astroframe() ;
-//            //                      Astroframe natif = new Astroframe(1,equinox) ;
-//            //                      j2000.set(al,del) ;
-//            //                      j2000.convert(natif) ;
-//            //                      al = natif.getLon() ;
-//            //                      del = natif.getLat() ;                               
-//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-//            ac.setPrecision(Astrocoo.MAS+1);
-//            ac.convertTo(AF_FK4);
-//            al = ac.getLon();
-//            del = ac.getLat();
-//         }
-//         if (system ==  FK5)
-//            //                       if ((equinox != 2000.0)&&(system != GALACTIC))
-//            // Ancine test supprim� en 04/2012  
-//         {
-//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-//            //                          Astroframe j2000 = new Astroframe() ;
-//            //                          Astroframe natif = new Astroframe(1,equinox) ;
-//            //                          j2000.set(al,del) ;
-//            //                          j2000.convert(natif) ;
-//            //                          al = natif.getLon() ;
-//            //                          del = natif.getLat() ;                               
-//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-//            ac.setPrecision(Astrocoo.MAS+1);
-//            ac.convertTo(AF_FK5);
-//            al = ac.getLon();
-//            del = ac.getLat();
-//         }
-//         if (system == GALACTIC)
-//         {
-//            // PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-//            //                       Astroframe fk5 = new Astroframe() ;
-//            //                       Astroframe natif =  new Astroframe(2,equinox);
-//            //                       fk5.set(al,del) ;
-//            //                       fk5.convert(natif);
-//            //                       al = natif.getLon() ;
-//            //                       del = natif.getLat() ;
-//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-//            ac.setPrecision(Astrocoo.MAS+1);
-//            ac.convertTo(AF_GAL);
-//            al = ac.getLon();
-//            del = ac.getLat();
-//            //      System.out.println(c.al+" "+c.del);
-//         }
-//         if (system == ECLIPTIC)
-//         {
-//            //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-//            //                     Astroframe fk5 = new Astroframe() ;
-//            //                     Astroframe natif =  new Astroframe(2,equinox);
-//            //                     fk5.set(al,del) ;
-//            //                     fk5.convert(natif);
-//            //                     al = natif.getLon() ;
-//            //                     del = natif.getLat() ;
-//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-//            ac.setPrecision(Astrocoo.MAS+1);
-//            ac.convertTo(AF_ECL);
-//            al = ac.getLon();
-//            del = ac.getLat();
-//            //      System.out.println(c.al+" "+c.del);
-//         }
-//
-//         if (system == SUPERGALACTIC)
-//         {
-//            //PF 12/06 - Modif pour utilisation nouvelles classes Astrocoo de Fox                
-//            //                     Astroframe fk5 = new Astroframe() ;
-//            //                     Astroframe natif =  new Astroframe(2,equinox);
-//            //                     fk5.set(al,del) ;
-//            //                     fk5.convert(natif);
-//            //                     al = natif.getLon() ;
-//            //                     del = natif.getLat() ;
-//            Astrocoo ac = new Astrocoo(AF_ICRS,c.al,c.del);
-//            ac.setPrecision(Astrocoo.MAS+1);
-//            ac.convertTo(AF_SGAL);
-//            al = ac.getLon();
-//            del = ac.getLat();
-//            //      System.out.println(c.al+" "+c.del);
-//         }
-//      }
-
-
-
       //                System.out.println("c.al c.del "+c.al+" "+del);
       // Methode Header FITS WCS
       //                 double ddel = (del-deltai)*deg_to_rad ;    PF => Non utilisï¿½
-      //                 double cos_ddel = Math.cos(ddel) ;         PF => Non utilisï¿½
+      //                 double cos_ddel = FastMath.cos(ddel) ;         PF => Non utilisï¿½
       double dalpha =  (al- alphai)*deg_to_rad;
       //                System.out.println("dalpha "+ c.al +" " + alphai + " " + deltai + " " + deg_to_rad );
-      double cos_del = Math.cos(del*deg_to_rad);
-      double sin_del = Math.sin(del*deg_to_rad);
-      double sin_dalpha = Math.sin(dalpha);
-      double cos_dalpha = Math.cos(dalpha);
-      //                 x_tet_phi = Math.cos(del*Math.PI/180.)
-      //                            *Math.sin((al - alphai)*Math.PI/180.) ;
+      double cos_del = FastMath.cos(del*deg_to_rad);
+      double sin_del = FastMath.sin(del*deg_to_rad);
+      double sin_dalpha = FastMath.sin(dalpha);
+      double cos_dalpha = FastMath.cos(dalpha);
+      //                 x_tet_phi = FastMath.cos(del*Math.PI/180.)
+      //                            *FastMath.sin((al - alphai)*Math.PI/180.) ;
       x_tet_phi = cos_del *sin_dalpha ;
-      //                 y_tet_phi = Math.sin(del*Math.PI/180.)
-      //                             *Math.cos(deltai*Math.PI/180.)
-      //                             - Math.cos(del*Math.PI/180.)
-      //                             *Math.sin(deltai*Math.PI/180.)
-      //                             *Math.cos((al - alphai)*Math.PI/180.);
+      //                 y_tet_phi = FastMath.sin(del*Math.PI/180.)
+      //                             *FastMath.cos(deltai*Math.PI/180.)
+      //                             - FastMath.cos(del*Math.PI/180.)
+      //                             *FastMath.sin(deltai*Math.PI/180.)
+      //                             *FastMath.cos((al - alphai)*Math.PI/180.);
       //             if (Math.abs(dalpha) < Math.PI/2)
       y_tet_phi = sin_del * cdelz -  cos_del * sdelz * cos_dalpha ;
       //             else y_tet_phi = sin_del * cdelz + cos_del * sdelz * cos_dalpha ;
@@ -2851,30 +2752,37 @@ public void GetXY(Coord c) throws Exception {
 
       double phi ;
       double tet ;
-      int goodness = 1;
+//      int goodness = 1;
 
-      switch(proj)
-      {
-         case SIN:
-         case NCP : // NCP
-         case TAN: // TAN proj
-         case SIP:	
-            if (dalpha > Math.PI )   dalpha = -2*Math.PI +dalpha ;
-            if (dalpha < -Math.PI )  dalpha = + 2*Math.PI +dalpha ;
-            if ((-sin_del * sdelz)/(cos_del * cdelz) > 1  )
-               //                       { x_stand= 0.0 ; y_stand = 0.0 ; goodness = 0;}
-               throw new Exception("Outside the projection") ;
-            else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > Math.acos((-sin_del * sdelz)/(cos_del * cdelz)) ))
-               //   { x_stand= 0.0 ; y_stand = 0.0 ; goodness = 0 ;}
-               throw new Exception("Outside the projection") ;
-         default : 
-            break ;
+      if( withTest ) {
+         switch(proj)
+         {
+            case SIN:
+            case NCP : // NCP
+            case TAN: // TAN proj
+            case SIP:	
+               if (dalpha > Math.PI )   dalpha = -2*Math.PI +dalpha ;
+               if (dalpha < -Math.PI )  dalpha = + 2*Math.PI +dalpha ;
+               if ((-sin_del * sdelz)/(cos_del * cdelz) > 1  )
+                  //                       { x_stand= 0.0 ; y_stand = 0.0 ; goodness = 0;}
+                  throw new Exception("Outside the projection") ;
+               else    if (((-sin_del * sdelz)/(cos_del * cdelz) > -1 )&& (Math.abs(dalpha) > Math.acos((-sin_del * sdelz)/(cos_del * cdelz)) ))
+                  //   { x_stand= 0.0 ; y_stand = 0.0 ; goodness = 0 ;}
+                  throw new Exception("Outside the projection") ;
+            default : 
+               break ;
+         }
       }
-      if (goodness == 1)
-      {
+//      if (goodness == 1)
+//      {
          switch(proj)
          { 
-            case SIN : // SIN proj
+            case TAN: // TAN proj
+               double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
+               x_stand =  (x_tet_phi / den) * rad_to_deg ;
+               y_stand =  (y_tet_phi / den) * rad_to_deg;
+               break;
+             case SIN : // SIN proj
                //                        x_stand   = 180./Math.PI*x_tet_phi ;
                //                        y_stand   = 180./Math.PI*y_tet_phi ;
                x_stand   = rad_to_deg*x_tet_phi ;
@@ -2893,13 +2801,13 @@ public void GetXY(Coord c) throws Exception {
                            -sin_del*sin_del*cdelz*cdelz-cos_del*cos_del*sdelz*sdelz*cos_dalpha*cos_dalpha +2*sin_del*cos_del*sdelz*cdelz*cos_dalpha));
                   else {x_stand = 0.0 ; y_stand = 0.0 ;}
                break ;
-            case TAN: // TAN proj
-            case SIP: 	
-               //                         double den     = Math.sin(del*Math.PI/180.)
-               //                                  *Math.sin(deltai*Math.PI/180.) +
-               //                                   Math.cos(del*Math.PI/180.)
-               //                                  *Math.cos(deltai*Math.PI/ 180.) ;
-               double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
+//            case TAN:
+          case SIP: 	
+               //                         double den     = FastMath.sin(del*Math.PI/180.)
+               //                                  *FastMath.sin(deltai*Math.PI/180.) +
+               //                                   FastMath.cos(del*Math.PI/180.)
+               //                                  *FastMath.cos(deltai*Math.PI/ 180.) ;
+               den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
                x_stand =  x_tet_phi / den ;
                y_stand =  y_tet_phi / den ;
                //             System.out.println("alphai "+alphai+" "+deltai);
@@ -3115,7 +3023,7 @@ public void GetXY(Coord c) throws Exception {
                if (sin_del*cdelz - cos_del*sdelz*cos_dalpha > 0)
                   phi =  Math.PI + phi ;
                //  System.out.println("phi1"+phi);
-               //  System.out.println("cosphi"+Math.cos(phi));
+               //  System.out.println("cosphi"+FastMath.cos(phi));
                tet = Math.asin (
                      sin_del*sdelz+ cos_del*cdelz *cos_dalpha);
                double rteta ;
@@ -3128,9 +3036,9 @@ public void GetXY(Coord c) throws Exception {
                else rteta = (Math.PI/2 -tet) ;
                // System.out.println("rteta "+rteta);
                //  System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
-               x_stand = rteta*Math.sin(phi) ;
-               //                        y_stand = -(Math.PI/2 -tet)*Math.cos(phi) ;
-               y_stand = -rteta*Math.cos(phi) ;
+               x_stand = rteta*FastMath.sin(phi) ;
+               //                        y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
+               y_stand = -rteta*FastMath.cos(phi) ;
                x_stand *= rad_to_deg;
                y_stand *= rad_to_deg;
                //      System.out.println("xy "+x_stand+" "+y_stand+"\n\n");
@@ -3142,8 +3050,8 @@ public void GetXY(Coord c) throws Exception {
                // dans le cas des projections pseudo-cylindriques comme AITOFF
                // deltai, alphai n'est pas le pole des coordonï¿½es locales !!!
                // (meme chose dans GetCoord ....)
-               double cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
-               double sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2) ;
+               double cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+               double sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
 
                phi = Math.atan2(cos_del *sin_dalpha
                      ,-(sin_del*cdelp - cos_del*sdelp *cos_dalpha));
@@ -3154,9 +3062,9 @@ public void GetXY(Coord c) throws Exception {
                //                  if (phi < -Math.PI )  phi = + 2*Math.PI +phi ;
 
                double alph =
-                     Math.sqrt(2/(1+Math.cos(tet)*Math.cos(phi/2.)));
-               x_stand = 2*alph*Math.cos(tet)*Math.sin(phi/2);
-               y_stand = alph*Math.sin(tet) ;
+                     Math.sqrt(2/(1+FastMath.cos(tet)*FastMath.cos(phi/2.)));
+               x_stand = 2*alph*FastMath.cos(tet)*FastMath.sin(phi/2);
+               y_stand = alph*FastMath.sin(tet) ;
                //                     System.out.println("xy "+x_stand+" "+y_stand+"\n");
                //                     x_stand *= 180./Math.PI ;
                //                     y_stand *= 180./Math.PI ;
@@ -3168,8 +3076,8 @@ public void GetXY(Coord c) throws Exception {
                break ;
 
             case MOL:
-               cdelp = Math.cos(deltai*deg_to_rad+Math.PI/2);
-               sdelp = Math.sin(deltai*deg_to_rad+Math.PI/2) ;
+               cdelp = FastMath.cos(deltai*deg_to_rad+Math.PI/2);
+               sdelp = FastMath.sin(deltai*deg_to_rad+Math.PI/2) ;
 
                phi = Math.atan2(cos_del *sin_dalpha, -(sin_del*cdelp - cos_del*sdelp *cos_dalpha));
                tet =  Math.asin(sin_del*sdelp + cos_del*cdelp *cos_dalpha);
@@ -3178,13 +3086,13 @@ public void GetXY(Coord c) throws Exception {
                double previous = 0;
                for( int i=0; i<200; i++ ) {
                   previous = psi;
-                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(tet))
-                      / (1 + Math.cos(psi));
+                  psi -= (psi + FastMath.sin(psi) - Math.PI * FastMath.sin(tet))
+                      / (1 + FastMath.cos(psi));
                   if( Math.abs(psi - previous) > 0.0001 ) break;
                }
                double theta = psi / 2;
-               x_stand = (2*Math.sqrt(2)/Math.PI)*phi*Math.cos(theta)*rad_to_deg;
-               y_stand = Math.sqrt(2)*Math.sin(theta)*rad_to_deg ;
+               x_stand = (2*Math.sqrt(2)/Math.PI)*phi*FastMath.cos(theta)*rad_to_deg;
+               y_stand = Math.sqrt(2)*FastMath.sin(theta)*rad_to_deg ;
                break;
 
 //               double alpha1 =   (al- alphai)*deg_to_rad;
@@ -3201,21 +3109,21 @@ public void GetXY(Coord c) throws Exception {
 //               double previous = 0;
 //               for( int i=0; i<200; i++ ) {
 //                  previous = psi;
-//                  psi -= (psi + Math.sin(psi) - Math.PI * Math.sin(delta1)) / (1 + Math.cos(psi));
+//                  psi -= (psi + FastMath.sin(psi) - Math.PI * FastMath.sin(delta1)) / (1 + FastMath.cos(psi));
 //                  if( Math.abs(psi - previous) > 0.0001 ) break;
 //               }
 //               double theta = psi / 2;
-//               x_stand = (2*Math.sqrt(2)/Math.PI) * alpha1 * Math.cos(theta)*rad_to_deg;
-//               y_stand = Math.sqrt(2) * Math.sin(theta)*rad_to_deg;
+//               x_stand = (2*Math.sqrt(2)/Math.PI) * alpha1 * FastMath.cos(theta)*rad_to_deg;
+//               y_stand = Math.sqrt(2) * FastMath.sin(theta)*rad_to_deg;
 //               break;
 
             case ZEA: // ZEA projection
 
                //                  System.out.println(" phi:"+180*phi/Math.PI+"\n") ;
 
-               //                   if (Math.sin(del*Math.PI/180)*Math.cos(deltai*Math.PI/180)
-               //                   - Math.cos(del*Math.PI/180)*Math.sin(deltai*Math.PI/180)
-               //                   *Math.cos((al -alphai)*Math.PI/180) >0)
+               //                   if (FastMath.sin(del*Math.PI/180)*FastMath.cos(deltai*Math.PI/180)
+               //                   - FastMath.cos(del*Math.PI/180)*FastMath.sin(deltai*Math.PI/180)
+               //                   *FastMath.cos((al -alphai)*Math.PI/180) >0)
                //                        System.out.println("al del"+al+" "+del);
                if((sin_del*cdelz- cos_del*sdelz *cos_dalpha)!=0)
                   phi = Math.atan(-cos_del *sin_dalpha
@@ -3225,28 +3133,28 @@ public void GetXY(Coord c) throws Exception {
                //                      phi = Math.atan2(-cos_del *sin_dalpha,
                //                      (sin_del*cdelz- cos_del*sdelz *cos_dalpha));
                if ((sin_del*cdelz - cos_del*sdelz*cos_dalpha > 0)
-                     && (Math.abs(Math.sin(phi)) != 1.0))
+                     && (Math.abs(FastMath.sin(phi)) != 1.0))
                   phi =  Math.PI + phi ;
                tet = Math.asin (
-                     //                   Math.sin(del*Math.PI/180)*Math.sin(deltai*Math.PI/180)+
-                     //                   Math.cos(del*Math.PI/180)*Math.cos(deltai*Math.PI/180)
-                     //                   *Math.cos((al -alphai)*Math.PI/180));
+                     //                   FastMath.sin(del*Math.PI/180)*FastMath.sin(deltai*Math.PI/180)+
+                     //                   FastMath.cos(del*Math.PI/180)*FastMath.cos(deltai*Math.PI/180)
+                     //                   *FastMath.cos((al -alphai)*Math.PI/180));
                      sin_del*sdelz+ cos_del*cdelz *cos_dalpha);
                //                    System.out.println("tet phi XY"+tet+" "+phi);
-               //                   double rtet = (180/Math.PI)*Math.sqrt(2*(1-Math.sin(tet)));
-               double rtet = rad_to_deg*Math.sqrt(2*(1-Math.sin(tet)));
+               //                   double rtet = (180/Math.PI)*Math.sqrt(2*(1-FastMath.sin(tet)));
+               double rtet = rad_to_deg*Math.sqrt(2*(1-FastMath.sin(tet)));
 
-               x_stand = rtet*Math.sin(phi) ;
-               y_stand = - rtet*Math.cos(phi) ;
+               x_stand = rtet*FastMath.sin(phi) ;
+               y_stand = - rtet*FastMath.cos(phi) ;
 
 
                break ;
             case STG: // STEREOGRAPHIC
-               //                        den     = 1 + Math.sin(del*Math.PI/180.)
-               //                                  *Math.sin(deltai*Math.PI/180.) +
-               //                                   Math.cos(del*Math.PI/180.)
-               //                                  *Math.cos(deltai*Math.PI/ 180.)
-               //                                  *Math.cos((al - alphai)*Math.PI/180.) ;
+               //                        den     = 1 + FastMath.sin(del*Math.PI/180.)
+               //                                  *FastMath.sin(deltai*Math.PI/180.) +
+               //                                   FastMath.cos(del*Math.PI/180.)
+               //                                  *FastMath.cos(deltai*Math.PI/ 180.)
+               //                                  *FastMath.cos((al - alphai)*Math.PI/180.) ;
                den     = 1 + sin_del*sdelz + cos_del*cdelz*cos_dalpha;
                x_stand =  2*x_tet_phi / den ;
                y_stand =  2*y_tet_phi / den ;
@@ -3296,7 +3204,7 @@ public void GetXY(Coord c) throws Exception {
                //                       System.out.println("proj default\n");
                break ;
          }
-      }
+//      }
 
 
 
@@ -3568,21 +3476,21 @@ protected  void GetWCS_i()   throws Exception {
       //             System.out.println("alp delt"+alphai+" "+deltai);
       //             System.out.println("alp delt"+x_y_1.al+" "+x_y_1.del);
       double cdelz1, sdelz1 ;
-      cdelz1 = Math.cos((deltai/180.)*Math.PI);
-      sdelz1 = Math.sin((deltai/180.)*Math.PI);
+      cdelz1 = FastMath.cos((deltai/180.)*Math.PI);
+      sdelz1 = FastMath.sin((deltai/180.)*Math.PI);
 
       //                    CD[0][0] = -(x_y_1.al*cdelz1+x_y_1.del)*2/xnpix;
       //                    CD[0][1] = -(x_y_1.al*cdelz1-x_y_1.del)*2/ynpix;
       double xst, yst,deno;
-      deno = Math.sin(x_y_1.del*Math.PI/180.)*sdelz1
-            +Math.cos(x_y_1.del*Math.PI/180.)*cdelz1
-            *Math.cos((x_y_1.al-alphai)*Math.PI/180.) ;
-      xst = Math.cos(x_y_1.del*Math.PI/180.)
-            *Math.sin((x_y_1.al-alphai)*Math.PI/180.)
+      deno = FastMath.sin(x_y_1.del*Math.PI/180.)*sdelz1
+            +FastMath.cos(x_y_1.del*Math.PI/180.)*cdelz1
+            *FastMath.cos((x_y_1.al-alphai)*Math.PI/180.) ;
+      xst = FastMath.cos(x_y_1.del*Math.PI/180.)
+            *FastMath.sin((x_y_1.al-alphai)*Math.PI/180.)
             / deno ;
-      yst = Math.sin(x_y_1.del*Math.PI/180.)*cdelz1
-            -Math.cos(x_y_1.del*Math.PI/180.)*sdelz1
-            *Math.cos((x_y_1.al-alphai)*Math.PI/180.)
+      yst = FastMath.sin(x_y_1.del*Math.PI/180.)*cdelz1
+            -FastMath.cos(x_y_1.del*Math.PI/180.)*sdelz1
+            *FastMath.cos((x_y_1.al-alphai)*Math.PI/180.)
             / deno;
       CD[0][0] = -(ynpix*xst+xnpix*yst)*2/ynpix/xnpix;
       CD[0][1] = +(ynpix*xst-xnpix*yst)*2/xnpix/ynpix;
@@ -3600,15 +3508,15 @@ protected  void GetWCS_i()   throws Exception {
       //             System.out.println("alp delt"+x_y_2.al+" "+x_y_2.del);
       //                    CD[0][0] -= (x_y_2.al*cdelz1-x_y_2.del)*2/xnpix;
       //                    CD[0][1] += (x_y_2.al*cdelz1+x_y_2.del)*2/ynpix;
-      deno = Math.sin(x_y_2.del*Math.PI/180.)*sdelz1
-            +Math.cos(x_y_2.del*Math.PI/180.)*cdelz1
-            *Math.cos((x_y_2.al-alphai)*Math.PI/180.) ;
-      xst = Math.cos(x_y_2.del*Math.PI/180.)
-            *Math.sin((x_y_2.al-alphai)*Math.PI/180.)
+      deno = FastMath.sin(x_y_2.del*Math.PI/180.)*sdelz1
+            +FastMath.cos(x_y_2.del*Math.PI/180.)*cdelz1
+            *FastMath.cos((x_y_2.al-alphai)*Math.PI/180.) ;
+      xst = FastMath.cos(x_y_2.del*Math.PI/180.)
+            *FastMath.sin((x_y_2.al-alphai)*Math.PI/180.)
             / deno ;
-      yst = Math.sin(x_y_2.del*Math.PI/180.)*cdelz1
-            -Math.cos(x_y_2.del*Math.PI/180.)*sdelz1
-            *Math.cos((x_y_2.al-alphai)*Math.PI/180.)
+      yst = FastMath.sin(x_y_2.del*Math.PI/180.)*cdelz1
+            -FastMath.cos(x_y_2.del*Math.PI/180.)*sdelz1
+            *FastMath.cos((x_y_2.al-alphai)*Math.PI/180.)
             / deno;
       //System.out.println("stl "+xst+" "+yst+" ");
       CD[0][0] += (ynpix*xst-xnpix*yst)*2/ynpix/xnpix;
@@ -3622,15 +3530,15 @@ protected  void GetWCS_i()   throws Exception {
       GetCoord(x_y_3);
 
       //            System.out.println("alp delt"+x_y_3.al+" "+x_y_3.del);
-      deno = Math.sin(x_y_3.del*Math.PI/180.)*sdelz1
-            +Math.cos(x_y_3.del*Math.PI/180.)*cdelz1
-            *Math.cos((x_y_3.al-alphai)*Math.PI/180.) ;
-      xst = Math.cos(x_y_3.del*Math.PI/180.)
-            *Math.sin((x_y_3.al-alphai)*Math.PI/180.)
+      deno = FastMath.sin(x_y_3.del*Math.PI/180.)*sdelz1
+            +FastMath.cos(x_y_3.del*Math.PI/180.)*cdelz1
+            *FastMath.cos((x_y_3.al-alphai)*Math.PI/180.) ;
+      xst = FastMath.cos(x_y_3.del*Math.PI/180.)
+            *FastMath.sin((x_y_3.al-alphai)*Math.PI/180.)
             / deno ;
-      yst = Math.sin(x_y_3.del*Math.PI/180.)*cdelz1
-            -Math.cos(x_y_3.del*Math.PI/180.)*sdelz1
-            *Math.cos((x_y_3.al-alphai)*Math.PI/180.)
+      yst = FastMath.sin(x_y_3.del*Math.PI/180.)*cdelz1
+            -FastMath.cos(x_y_3.del*Math.PI/180.)*sdelz1
+            *FastMath.cos((x_y_3.al-alphai)*Math.PI/180.)
             / deno;
 
       //                   CD[0][0] += (x_y_3.al*cdelz1-x_y_3.del)*2/xnpix;
@@ -3647,15 +3555,15 @@ protected  void GetWCS_i()   throws Exception {
 
       //                  CD[0][0] += (x_y_4.al*cdelz1+x_y_4.del)*2/xnpix;
       //                  CD[0][1] -= (x_y_4.al*cdelz1-x_y_4.del)*2/ynpix;
-      deno = Math.sin(x_y_4.del*Math.PI/180.)*sdelz1
-            +Math.cos(x_y_4.del*Math.PI/180.)*cdelz1
-            *Math.cos((x_y_4.al-alphai)*Math.PI/180.) ;
-      xst = Math.cos(x_y_4.del*Math.PI/180.)
-            *Math.sin((x_y_4.al-alphai)*Math.PI/180.)
+      deno = FastMath.sin(x_y_4.del*Math.PI/180.)*sdelz1
+            +FastMath.cos(x_y_4.del*Math.PI/180.)*cdelz1
+            *FastMath.cos((x_y_4.al-alphai)*Math.PI/180.) ;
+      xst = FastMath.cos(x_y_4.del*Math.PI/180.)
+            *FastMath.sin((x_y_4.al-alphai)*Math.PI/180.)
             / deno ;
-      yst = Math.sin(x_y_4.del*Math.PI/180.)*cdelz1
-            -Math.cos(x_y_4.del*Math.PI/180.)*sdelz1
-            *Math.cos((x_y_4.al-alphai)*Math.PI/180.)
+      yst = FastMath.sin(x_y_4.del*Math.PI/180.)*cdelz1
+            -FastMath.cos(x_y_4.del*Math.PI/180.)*sdelz1
+            *FastMath.cos((x_y_4.al-alphai)*Math.PI/180.)
             / deno;
       CD[0][0] += (ynpix*xst+xnpix*yst)*2/ynpix/xnpix;
       CD[0][1] -= (xst*ynpix-yst*xnpix)*2/xnpix/ynpix;
@@ -4166,20 +4074,6 @@ static public boolean test() {
       }
    } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
    return toutestbon;
-}
-
-
-
-// Pour d�veloppement future - Calib par matrice
-
-public void getCoordMatrix(Coord c) {
-   c.al = 0;  // => methode a appeler en fonction de c.x et c.y
-   c.del = 0; // => methode a appeler en fonction de c.x et c.y
-}
-
-public void getXYMatrix(Coord c) {
-   c.x = 0;  // => methode a appeler en fonction de c.al et c.del
-   c.y = 0;  // => methode a appeler en fonction de c.al et c.del
 }
 
 

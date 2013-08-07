@@ -19,11 +19,8 @@
 
 package cds.tools.pixtools;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import cds.aladin.Coord;
-import cds.fits.Fits;
 
 
 
@@ -265,29 +262,29 @@ public class Util {
     * nside1 < nside2
     * n begins to 0
     */
-   public static long getHealpixMax(int n1, long n, int n2, boolean nside) {
-      if (nside) return (n+1)*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2))) -1;
-      else return (n+1)*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2))) -1;
-   }
+//   public static long getHealpixMax(int n1, long n, int n2, boolean nside) {
+//      if (nside) return (n+1)*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2))) -1;
+//      else return (n+1)*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2))) -1;
+//   }
 
    /**
     * Donne le numéro Min du pixel à la résolution nside2 contenu dans le losange
     * donné la résolution nside1
     * nside1 < nside2
     */
-   public static long getHealpixMin(int n1, long n, int n2, boolean nside) {
-      if (nside) return n*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2)));
-      else return n*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2)));
-   }
+//   public static long getHealpixMin(int n1, long n, int n2, boolean nside) {
+//      if (nside) return n*(long)(Math.pow(4,(CDSHealpix.log2(n2) - CDSHealpix.log2(n1))/CDSHealpix.log2(2)));
+//      else return n*(long)(Math.pow(4,(n2 - n1)/CDSHealpix.log2(2)));
+//   }
 
    /**
     * Donne le numéro max existant pour une résolution donnée
     * @param order
     * @return
     */
-   public static long getMax(int order) {
-      return (long) Math.pow(4,order) * 12 -1;
-   }
+//   public static long getMax(int order) {
+//      return (long) Math.pow(4,order) * 12 -1;
+//   }
 
 
    //    private int [] xy2hpx = null;

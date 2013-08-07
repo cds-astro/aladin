@@ -19,15 +19,10 @@
 
 package cds.tools.pixtools;
 
-import healpix.core.HealpixBase;
-import healpix.core.Pointing;
-import healpix.core.Scheme;
-import healpix.core.Vec3;
-import healpix.core.base.set.LongRangeSet;
-import healpix.tools.SpatialVector;
+import healpix.newcore.*;
+import healpix.tools.Constants;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /** Wrapper Healpix CDS pour ne pas réinitialiser systématiquement l'objet HealpixBase pour chaque NSIDE 
  * @author Pierre Fernique [CDS] with the help of Martin Reinecke
@@ -65,51 +60,103 @@ public final class CDSHealpix {
    }
 
    static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
-      SpatialVector vector = new SpatialVector(ra,dec);
       int order = init(nside);
-      LongRangeSet list = hpxBase[order].queryDisc(new Pointing(vector),radius,inclusive);
+      RangeSet list = inclusive ? hpxBase[order].queryDiscInclusive(pointing(ra,dec),radius,4)
+            : hpxBase[order].queryDisc(pointing(ra,dec),radius);
       if( list==null ) return new long[0];
       return list.toArray();
    }
 
+//   static public long[] query_disc(long nside,double ra, double dec, double radius, boolean inclusive) throws Exception {
+//      SpatialVector vector = new SpatialVector(ra,dec);
+//      int order = init(nside);
+//      LongRangeSet list = hpxBase[order].queryDisc(new Pointing(vector),radius,inclusive);
+//      if( list==null ) return new long[0];
+//      return list.toArray();
+//   }
+
    static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
-      ArrayList vlist = new ArrayList(cooList.size());
-      Iterator<double[]> it = cooList.iterator();
-      while( it.hasNext() ) {
-         double coo[] = it.next();
-         vlist.add(new SpatialVector(coo[0], coo[1]));
-      }
       int order = init(nside);
-      Pointing[] vertex = new Pointing[vlist.size()];
-      for (int i=0; i<vlist.size(); ++i) vertex[i]=new Pointing((Vec3)vlist.get(i));
-      LongRangeSet list = hpxBase[order].queryPolygon(vertex,true);
+      Pointing[] vertex = new Pointing[cooList.size()];
+      int i=0;
+      for(double [] coo : cooList) vertex[i++]=pointing(coo[0], coo[1]);
+      RangeSet list = hpxBase[order].queryPolygonInclusive(vertex,4);
       if( list==null ) return new long[0];
       return list.toArray();
    }
    
+//   static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
+//      ArrayList vlist = new ArrayList(cooList.size());
+//      Iterator<double[]> it = cooList.iterator();
+//      while( it.hasNext() ) {
+//         double coo[] = it.next();
+//         vlist.add(new SpatialVector(coo[0], coo[1]));
+//      }
+//      int order = init(nside);
+//      Pointing[] vertex = new Pointing[vlist.size()];
+//      for (int i=0; i<vlist.size(); ++i) vertex[i]=new Pointing((Vec3)vlist.get(i));
+//      LongRangeSet list = hpxBase[order].queryPolygon(vertex,true);
+//      if( list==null ) return new long[0];
+//      return list.toArray();
+//   }
+   
+   static private double dec(Pointing ptg) {
+      return (Math.PI*0.5 - ptg.theta) / Constants.cPr;
+  }
+   
+  static private double ra(Pointing ptg) {
+      return ptg.phi / Constants.cPr;
+  }
+  
+  static public Pointing pointing(double ra, double dec) {
+     return new Pointing( Math.PI/2 - (Math.PI/180)*dec , ra*Constants.cPr  );
+  }
+
+   
    static final private int [] A = { 3, 2, 0, 1 };
    static public double[][] corners(long nside,long npix) throws Exception {
-      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,1);
+      Vec3[] tvec = hpxBase[ init(nside) ].boundaries(npix,1);
       double [][] corners = new double[tvec.length][2];
       for (int i=0; i<tvec.length; ++i) {
-         SpatialVector v = new SpatialVector(tvec[i]);
+         Pointing pt = new Pointing(tvec[i]);
          int j=A[i];
-         corners[j][0] = v.ra();
-         corners[j][1] = v.dec();
+         corners[j][0] = ra(pt);
+         corners[j][1] = dec(pt);
       }
       return corners;  
    }
+//   static public double[][] corners(long nside,long npix) throws Exception {
+//      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,1);
+//      double [][] corners = new double[tvec.length][2];
+//      for (int i=0; i<tvec.length; ++i) {
+//         SpatialVector v = new SpatialVector(tvec[i]);
+//         int j=A[i];
+//         corners[j][0] = v.ra();
+//         corners[j][1] = v.dec();
+//      }
+//      return corners;  
+//   }
    
    static public double[][] borders(long nside,long npix,int step) throws Exception {
-      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,step);
+      Vec3[] tvec = hpxBase[ init(nside) ].boundaries(npix,step);
       double [][] borders = new double[tvec.length][2];
       for (int i=0; i<tvec.length; ++i) {
-         SpatialVector v = new SpatialVector(tvec[i]);
-         borders[i][0] = v.ra();
-         borders[i][1] = v.dec();
+         Pointing pt = new Pointing(tvec[i]);
+         borders[i][0] = ra(pt);
+         borders[i][1] = dec(pt);
       }
       return borders;  
    }
+//   static public double[][] borders(long nside,long npix,int step) throws Exception {
+//      Vec3[] tvec = hpxBase[ init(nside) ].corners(npix,step);
+//      double [][] borders = new double[tvec.length][2];
+//      for (int i=0; i<tvec.length; ++i) {
+//         SpatialVector v = new SpatialVector(tvec[i]);
+//         borders[i][0] = v.ra();
+//         borders[i][1] = v.dec();
+//      }
+//      return borders;  
+//   }
 
    static public long [] neighbours(long nside, long npix) throws Exception  {
       return hpxBase[ init(nside) ].neighbours(npix);

@@ -97,7 +97,7 @@ public class BuilderTiles extends Builder {
          }
          else context.info("BITPIX = "+b1+" (no conversion)");
          if( context.getDiskMem()!=-1 ) {
-            context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk(context.getDiskMem()*1.25));
+            context.info("Disk requirement (upper approximation) : "+cds.tools.Util.getUnitDisk((long)(context.getDiskMem()*1.25)));
          }
          double bs=context.getBScale(), bz=context.getBZero();
          if( bs!=1 || bz!=0 ) { context.info("BSCALE="+bs+" BZERO="+bz); }
@@ -191,16 +191,23 @@ public class BuilderTiles extends Builder {
       CoAddMode m = context.getCoAddMode();
       if( !context.isColor() || m==CoAddMode.KEEPTILE || m==CoAddMode.REPLACETILE ) context.info("mode="+CoAddMode.getExplanation(m));
    }
+   
+   long lastTime = 0L;
+   long lastNbTile = 0L;
 
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
+      long now = System.currentTimeMillis();
+      totalTime = now-startTime;
+      long deltaTime = now-lastTime;
+      long deltaNbTile = statNbTile-lastNbTile;
+      lastTime=now;
+      lastNbTile=statNbTile;
       context.showTilesStat(statNbThreadRunning,statNbThread,totalTime,statNbTile,statEmptyTile,statNodeTile,
-            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),getMem());
+            statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),deltaTime,deltaNbTile);
 //      String s = showMem();
 //      if( s.length()>0 ) context.stat(s);
-      if( context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
-//      context.cacheFits.gc();
-      System.gc();
+      if( context.cacheFits!=null && context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
    }
    
    Hashtable<Thread,ArrayList<Fits>> memPerThread;
@@ -276,10 +283,12 @@ public class BuilderTiles extends Builder {
    
    private long getUsedMem() {
       long mem=0L;
-      for( Thread t : memPerThread.keySet() ) {
-         ArrayList<Fits> m = memPerThread.get(t);
-         mem += getUsedMem(m);
-      }
+      try {
+         for( Thread t : memPerThread.keySet() ) {
+            ArrayList<Fits> m = memPerThread.get(t);
+            mem += getUsedMem(m);
+         }
+      } catch( Exception e ) { }
       return mem;
    }
    
@@ -297,7 +306,9 @@ public class BuilderTiles extends Builder {
    private long getUsedMem(ArrayList<Fits> m) {
       if( m==null ) return 0L;
       long mem=0L;
-      for( Fits f : m ) mem += f.getMem();
+      try {
+         for( Fits f : m ) mem += f.getMem();
+      } catch( Exception e ) { }
       return mem;
    }
    
@@ -321,7 +332,6 @@ public class BuilderTiles extends Builder {
             statNodeAvgTime = statNodeTotalTime/statNodeTile;
          }
       }
-      totalTime = System.currentTimeMillis()-startTime;
    }
 
    protected void build() throws Exception {
@@ -348,30 +358,32 @@ public class BuilderTiles extends Builder {
 
       // On utilisera pratiquement toute la mémoire pour le cache
       long size = getMem();
-      long sizeCache= size<=50*1024*1024 ? 0 : size>400*1024*1024L ? -200*1024*1024L : -50*1024*1024;   // On laissera 200Mo de libre 
-//      sizeCache=150*1024*1024L;
-      context.setCache(new CacheFits(sizeCache));
 
 //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
+      long bufMem =  4L * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpixOrig();
       long oneRhomb = Constante.SIDE*Constante.SIDE*context.getNpix();
-      long maxMemPerThread = 4*oneRhomb;
+      long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
       context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = (int) (size / maxMemPerThread);
-      
-//      int nbThread=nbProc;
-      
+
+      //    int nbThread=nbProc;
+
       int maxNbThread = context.getMaxNbThread();
       if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
       if (nbThread==0) nbThread=1;
       if( nbThread>nbProc ) nbThread=nbProc;
-      
+
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
-      context.info("processing by "+nbThread+" thread"+(nbThread>1?"s":"")+" with "+cds.tools.Util.getUnitDisk(size)+" available RAM");
+      context.info("Will use "+nbThread+" thread"+(nbThread>1?"s":""));
+
+      long sizeCache=2L*size/3L;
+      context.setCache(new CacheFits(sizeCache));
+      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
 
       // Lancement des threads de calcul
       launchThreadBuilderHpx(nbThread);
-      
+
       // Attente de la fin du travail
       while( stillAlive() ) {
          if( stopped ) { destroyThreadBuilderHpx(); return; }
@@ -511,16 +523,27 @@ public class BuilderTiles extends Builder {
    }
 
    // Retourne le prochain numéro de pixel à traiter par les threads de calcul, -1 si terminer
+//   private MocCell getNextNpix() {
+//      MocCell pix=null;
+//      getlock();
+//      try {
+//         if( !npixIterator.hasNext() ) return null;
+//         pix = new MocCell(ordermin,npixIterator.next().longValue());
+//         //      MocCell pix = NCURRENT==npix_list.size()  ? null : npix_list.get(NCURRENT++);
+//      } finally { unlock(); }
+//      return pix;
+//   }
+   
    private MocCell getNextNpix() {
       MocCell pix=null;
-      getlock();
-      try {
+      synchronized( lockObj ) {
          if( !npixIterator.hasNext() ) return null;
          pix = new MocCell(ordermin,npixIterator.next().longValue());
          //      MocCell pix = NCURRENT==npix_list.size()  ? null : npix_list.get(NCURRENT++);
-      } finally { unlock(); }
+      }
       return pix;
    }
+
 
    // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list)
    private void getlock() {
@@ -549,6 +572,10 @@ public class BuilderTiles extends Builder {
          threadList.add( t );
          t.start();
       }
+   }
+   
+   void destroyOneThreadBuilderHpx(ThreadBuilder x) {
+      
    }
 
    // Demande l'arrêt de tous les threads de calcul
@@ -719,10 +746,6 @@ public class BuilderTiles extends Builder {
          }
       }
 
-//      int nside_file = Util.nside(order);
-//      int nside = Util.nside(order+Constante.ORDER);
-
-//      Fits out = hpx.buildHealpix(this,nside_file, npix, nside);
       Fits out = hpx.buildHealpix(this,order, npix);
 
       if( out !=null  ) {
@@ -751,12 +774,9 @@ public class BuilderTiles extends Builder {
 
       long duree;
       if (out!=null) {
-//         String filename = file + context.getTileExt();
-//         if( isColor ) out.writeCompressed(filename,0,0,null,Context.MODE[context.targetColorMode]);
-//         else out.writeFITS(filename);
          write(file,out);
          duree = System.currentTimeMillis()-t;
-         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
+//         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");
          updateStat(0,1,0,duree,0,0);
          
       } else {

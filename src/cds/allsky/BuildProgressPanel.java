@@ -104,7 +104,7 @@ public class BuildProgressPanel extends JPanel {
    protected void setTimeStat(long time,long nbTile,long sizeTile) {
       StringBuffer s = new StringBuffer();
       if( time!=-1 )  s.append(Util.getTemps(time,true));
-      if( time>20000 ) s.append(" - "+Util.getUnitDisk( (nbTile*sizeTile)/ (time/60000.))+"/mn");
+      if( time>20000 ) s.append(" - "+Util.getUnitDisk( (long)((nbTile*sizeTile)/ (time/60000.)))+"/mn");
       timeStat.setText(s+"");
    }
    

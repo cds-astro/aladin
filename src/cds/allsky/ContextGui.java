@@ -62,15 +62,15 @@ public class ContextGui extends Context {
    }
    
    // Demande d'affichage des stats (dans le TabBuild)
-   protected void showIndexStat(int statNbFile, int statBlocFile, int statNbZipFile, long statMemFile, long statMaxSize, 
-         int statMaxWidth, int statMaxHeight, int statMaxNbyte) {
+   protected void showIndexStat(int statNbFile, int statBlocFile, int statNbZipFile, long statMemFile, long statPixSize, long statMaxSize, 
+         int statMaxWidth, int statMaxHeight, int statMaxNbyte,long statDuree) {
       mainPanel.tabBuild.buildProgressPanel.setSrcStat(statNbFile, statNbZipFile, statMemFile,statMaxSize,statMaxWidth,statMaxHeight,statMaxNbyte);
    }
 
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showTilesStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNbEmptyTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
-         long statNodeAvgTime,long usedMem,long freeMem) {
+         long statNodeAvgTime,long usedMem,long deltaTime,long deltaNbTile) {
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
       mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
       long nbLowCells = getNbLowCells();

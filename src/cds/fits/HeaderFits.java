@@ -418,19 +418,38 @@ public final class HeaderFits {
     * comme à l'origine - les commentaires ne sont pas restitués 
     * @return le nombre d'octets écrits */
    public int writeHeader(OutputStream os ) throws Exception {
-      int n=0;
+      int n=keysOrder.size()*80;
+      byte [] b= getEndBourrage(n);
+      byte buf [] = new byte[n + b.length];
+      
+      int m=0;
       Enumeration e = keysOrder.elements();
       while( e.hasMoreElements() ) {
          String key = (String)e.nextElement();
          String value = (String) header.get(key);
          if( value==null ) continue;
-         os.write( getFitsLine(key,value) );
-         n+=80;
+         System.arraycopy(getFitsLine(key,value),0,buf,m,80 );
+         m+=80;
       }
-      byte [] b= getEndBourrage(n);
+      System.arraycopy(b,0,buf,m,b.length);
       n+=b.length;
-      os.write(b);
+      os.write(buf);
       return n;
+      
+//      int n=0;
+//      Enumeration e = keysOrder.elements();
+//      while( e.hasMoreElements() ) {
+//         String key = (String)e.nextElement();
+//         String value = (String) header.get(key);
+//         if( value==null ) continue;
+//         os.write( getFitsLine(key,value) );
+//         n+=80;
+//      }
+//      byte [] b= getEndBourrage(n);
+//      n+=b.length;
+//      os.write(b);
+//      return n;
+
    }
 
    /** Génération de la fin de l'entête FITS, càd le END et le byte de bourrage

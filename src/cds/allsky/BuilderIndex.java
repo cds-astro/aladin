@@ -46,7 +46,6 @@ import cds.tools.pixtools.Util;
 public class BuilderIndex extends Builder {
 
    private int [] borderSize= {0,0,0,0};
-   private String initpath = null;
    private String currentfile = null;
    private boolean blocking;
 
@@ -55,7 +54,9 @@ public class BuilderIndex extends Builder {
    private int statNbZipFile;              // Nombre de fichiers sources gzippés
    private int statBlocFile;              // Nombre de fichiers qu'il aura fallu découper en blocs
    private long statMemFile;               // Taille totale des fichiers sources (en octets)
+   private long statPixSize;               // Nombre total de pixels
    private long statMaxSize;               // taille du plus gros fichier trouvé
+   private long statTime;                  // Date de début
    private int statMaxWidth, statMaxHeight, statMaxNbyte; // info sur le plus gros fichier trouvé
 
    boolean stopped = false;
@@ -87,7 +88,7 @@ public class BuilderIndex extends Builder {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
       }
       
-      blocking = context.blocking;
+      blocking = context.cutting;
       if( blocking ) context.info("Splitting large original image files in blocs of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
 
       validateInput();
@@ -123,8 +124,9 @@ public class BuilderIndex extends Builder {
    
    /** Demande d'affichage des stats (dans le TabBuild) */
    public void showStatistics() {
-      context.showIndexStat(statNbFile, statBlocFile, statNbZipFile, statMemFile, statMaxSize,
-            statMaxWidth, statMaxHeight, statMaxNbyte);
+      long statDuree = System.currentTimeMillis()-statTime;
+      context.showIndexStat(statNbFile, statBlocFile, statNbZipFile, statMemFile, statPixSize, statMaxSize,
+            statMaxWidth, statMaxHeight, statMaxNbyte,statDuree);
    }
 
 
@@ -147,8 +149,9 @@ public class BuilderIndex extends Builder {
    // Initialisation des statistiques
    private void initStat() {
       statNbFile = statNbZipFile = statBlocFile = 0;
-      statMemFile = 0;
+      statPixSize=statMemFile = 0;
       statMaxSize = -1;
+      statTime = System.currentTimeMillis();
    }
 
    // Mise à jour des stats
@@ -157,6 +160,7 @@ public class BuilderIndex extends Builder {
       statBlocFile += deltaBlocFile;
       if( (code & Fits.GZIP) !=0 ) statNbZipFile++;
       long size = f.length();
+      statPixSize += width*height;
       statMemFile += size;
       if( statMaxSize<size ) {
          statMaxSize=size;
@@ -198,78 +202,76 @@ public class BuilderIndex extends Builder {
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS
    private void create(String pathSource, String pathDest, int order) throws Exception {
-
+      
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
 
-      String[] list = main.list();
-      // trie la liste pour garantir la reprise au bon endroit 
-      Arrays.sort(list);
+      ArrayList<File> dir = new ArrayList<File>();
+      File[] list = main.listFiles();
       if (list == null) return;
-
+      
+      int i=0;
       context.setProgress(0,list.length-1);
-      for (int f = 0 ; f < list.length ; f++) {
+      for( File file : list ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         context.setProgress(i++);
+         if( file.isDirectory() ) { dir.add(file); continue; }
+         currentfile = file.getPath();
 
-         context.setProgress(f);
-         currentfile = pathSource+FS+list[f];
-         File file = new File(currentfile); 
+         Fits fitsfile = new Fits();
+         int cellSize = Constante.FITSCELLSIZE;
 
-         if (file.isDirectory() && !list[f].equals(Constante.SURVEY)) {
-//            System.out.println("Look into dir " + currentfile);
-            create(currentfile, pathDest, order);
-         } else {
-            // en cas de reprise, saute jusqu'au dernier fichier utilisé
-            if (initpath != null) { 
-               if (initpath.equals(currentfile))  initpath=null;
-               else continue;
-            }
+         // L'image sera mosaiquée en cellSize x cellSize pour éviter de
+         // saturer la mémoire par la suite
+         try {
+            int code = fitsfile.loadHeaderFITS(currentfile);
 
-            Fits fitsfile = new Fits();
-            int cellSize = Constante.FITSCELLSIZE; // permet à un Thread de travailler au max avec 500Mo pour 6
-                                                   // recouvrements en 32 bits
-
-            // L'image sera mosaiquée en cellSize x cellSize pour éviter de
-            // saturer la mémoire par la suite
             try {
-               int code = fitsfile.loadHeaderFITS(currentfile);
-               // TODO MEF
-               if ((code | Fits.XFITS)!=0) {
-            	   
-               }
 
-               try {
-                  
-                  // Test sur l'image entière
-                  if( !blocking || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE ) {
-                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
-                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
-                     
+               // Test sur l'image entière
+               if( !blocking /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
+                  updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
+                  testAndInsert(fitsfile, pathDest, currentfile, null, order);
+
                   // Découpage en petits carrés
-                  } else {   
-//                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
-                        int width = fitsfile.width - borderSize[3];
-                        int height = fitsfile.height - borderSize[2];
+               } else {   
+                  //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
+                  int width = fitsfile.width - borderSize[3];
+                  int height = fitsfile.height - borderSize[2];
 
-                        updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
-                        
-                        for( int x=borderSize[1]; x<width; x+=cellSize ) {
-                          
-                           for( int y=borderSize[0]; y<height; y+=cellSize ) {
-                              fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
-                              fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
-                              fitsfile.xCell=x;
-                              fitsfile.yCell=y;
-                              String currentCell = fitsfile.getCellSuffix();
-                              testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
-                           }
-                        }
+                  updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
+
+                  for( int x=borderSize[1]; x<width; x+=cellSize ) {
+
+                     for( int y=borderSize[0]; y<height; y+=cellSize ) {
+                        fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
+                        fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
+                        fitsfile.xCell=x;
+                        fitsfile.yCell=y;
+                        String currentCell = fitsfile.getCellSuffix();
+                        testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                      }
-               } catch (Exception e) {
-                  if( Aladin.levelTrace>=3 ) e.printStackTrace();
-                  return;
+                  }
                }
-            }  catch (Exception e) {
+            } catch (Exception e) {
+               if( Aladin.levelTrace>=3 ) e.printStackTrace();
+               return;
+            }
+         }  catch (Exception e) {
+            Aladin.trace(3,e.getMessage() + " " + currentfile);
+            continue;
+         }
+      }
+
+      list=null;
+      if( dir.size()>0 ) {
+         for( File f1 : dir ) {
+            if( !f1.isDirectory() ) continue;
+            currentfile = f1.getPath();
+//            System.out.println("Look into dir " + currentfile);
+            try {
+               create(currentfile, pathDest, order);
+            } catch( Exception e ) {
                Aladin.trace(3,e.getMessage() + " " + currentfile);
                continue;
             }
@@ -317,7 +319,7 @@ public class BuilderIndex extends Builder {
             if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
 
             hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
-            cds.tools.Util.createPath(hpxname);
+//            cds.tools.Util.createPath(hpxname);
             out = openFile(hpxname);
 
             // ajoute le chemin du fichier Source FITS, 
@@ -326,6 +328,7 @@ public class BuilderIndex extends Builder {
             String filename = currentFile + (currentCell == null ? "" : currentCell);
             
             createAFile(out, filename, stc.toString());
+            out.close();
          }
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
