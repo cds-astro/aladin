@@ -523,8 +523,6 @@ public class PlanHealpix extends PlanBG {
         Aladin.trace(3, "sizeRecord: "+sizeRecord);
         Aladin.trace(3, "nRecord: "+nRecord);
         Aladin.trace(3, "ordering: "+ordering);
-        
-        
 
         // Recherche d'une valeur BAD_DATA - PF mars 2010
         try {

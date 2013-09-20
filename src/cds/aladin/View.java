@@ -3859,13 +3859,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             // Et on cherche le SED correspondant
             if( flagSED && calque.flagVizierSED ) {
                String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
-               aladin.trace(2,"Loading VizieR SED for \""+s2+"\"...");
+               aladin.trace(2,"Loading VizieR phot. for \""+s2+"\"...");
                Repere sedRep = null; 
                sedRep = new Repere(null,coo);
                sedRep.setType(Repere.CARTOUCHE);
                sedRep.setSize(TAILLEARROW);
                sedRep.projection(v);
-               sedRep.setId("SED: "+target);
+               sedRep.setId("Phot: "+target);
                sedRep.setWithLabel(true);
                aladin.view.zoomview.setSED(s2,sedRep);
             }
@@ -3910,7 +3910,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          sedRep.setType(Repere.CARTOUCHE);
          sedRep.setSize(TAILLEARROW);
          sedRep.projection(v);
-         sedRep.setId("SED: "+target);
+         sedRep.setId("Phot.: "+target);
          sedRep.setWithLabel(true);
          aladin.view.zoomview.setSED(target,sedRep);
 

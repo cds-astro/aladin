@@ -153,8 +153,11 @@ public final class Glu implements Runnable {
       vGluCategory = new Vector(10);
 
       // Peut être un site GLU défini dans la configuration utilisateur
-      String nphGlu = aladin.configuration.get(Configuration.GLU);
-      if( nphGlu != null ) NPHGLUALADIN = nphGlu;
+      String nphGlu;
+      try {
+         nphGlu = aladin.configuration.get(Configuration.GLU);
+         if( nphGlu != null ) NPHGLUALADIN = nphGlu;
+      } catch( Exception e) {}
 
       // Methode propre a la version Standalone
       if( Aladin.STANDALONE ) {
@@ -166,7 +169,7 @@ public final class Glu implements Runnable {
                      .getResourceAsStream("/" + Aladin.ALAGLU));
                loadGluDic(dis,false,false);
                dis.close();
-               testNetwork();
+               if( aladin!=null ) testNetwork();
 //               if( !testCurrentAlaSite() && !testAlaSites(true, false) ) {
 //                  Aladin.info(aladin.chaine.getString("NONET"));
 //                  // Aladin.NETWORK=false; JE PREFERE NE PAS CACHER LES
@@ -1105,15 +1108,29 @@ public final class Glu implements Runnable {
       if( system!=null && system.trim().length()==0 ) system=null;
       if( institute == null ) institute = description;
 
-      ServerGlu g =  actionName.equals("SkyBoT.IMCCE") ? new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
-            aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-            resultDataType, institute, aladinFilter, aladinLogo, record)
-                   : new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
-            aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-            resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
+//    ServerGlu g =  actionName.equals("SkyBoT.IMCCE") ? new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
+//    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+//    resultDataType, institute, aladinFilter, aladinLogo, record)
+//           : new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
+//    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+//    resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
+//    vGluServer.addElement(g);
+//    if( !g.isHidden() )  lastGluServer = g;
 
-      vGluServer.addElement(g);
-      if( !g.isHidden() )  lastGluServer = g;
+      ServerGlu g=null;
+      if( aladin!=null ) {  // test Glu.main()
+         if( actionName.equals("SkyBoT.IMCCE") ) {
+            g = new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
+                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+                  resultDataType, institute, aladinFilter, aladinLogo, record);
+         } else {
+            g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
+                  aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
+                  resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
+         }
+         vGluServer.addElement(g);
+         if( !g.isHidden() )  lastGluServer = g;
+      }
    }
    
    protected ServerGlu lastGluServer=null;
@@ -1159,8 +1176,12 @@ public final class Glu implements Runnable {
    private boolean isKey(String s,String key) { return isKey(s,key,false); }
    private boolean isKey(String s,String key,boolean testLang) {
       if( testLang ) {
-         String suf = aladin.configuration.getLang();
-         if( suf.length()>0 && s.equalsIgnoreCase(key+suf) ) return true;
+         try {
+            String suf = aladin.configuration.getLang();
+            if( suf.length()>0 && s.equalsIgnoreCase(key+suf) ) return true;
+         } catch( Exception e ) {   // pour test en Glu.main (pas d'objet aladin.configuration)
+            testLang=false;
+         }
       }
       return s.equalsIgnoreCase(key);
    }
@@ -1294,7 +1315,7 @@ public final class Glu implements Runnable {
                }
                
                if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
-                  if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
+                  if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
                   else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,aladinProfile,copyright,copyrightUrl,aladinTree,
                         aladinSurvey,aladinHpxParam);
                   else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
@@ -1478,6 +1499,7 @@ public final class Glu implements Runnable {
     * Ex: >5.0, 4.3, <=4.6
     */
    private boolean hasValidNumVersion(String s) {
+      if( aladin==null ) return true;  // pour test Glu.main()
       double num = aladin.realNumVersion(Aladin.VERSION);
       int test=0;  // -2:<, -1:<=, 0:=, 1:>=, 2:>
       int i=0;
@@ -1763,6 +1785,21 @@ public final class Glu implements Runnable {
 //      System.out.println(  "==> ["+s+"]");
 //   }
    
+   
+   public static void main(String argv[]) {
+      try {
+         Aladin.STANDALONE=true;
+         Aladin.levelTrace=4;
+         Aladin.GLUFILE = "C:/AladinUK.dic";
+         Glu glu = new Glu(null);
+         System.out.println("Glu loaded");
+         boolean res = glu.checkIndirection("VizieRXML++", null);
+         System.out.println("=> "+glu.getURL("VizieRXML++"));
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+
    /**
     * Substitution dans un String des $nn par des parametres.
     * Rq: par défaut (mode URL): HTTP encode là où il faut et supprime tous les &value=$nn non renseigné
@@ -1983,7 +2020,7 @@ public final class Glu implements Runnable {
             long tps=-1;
             try {
                long t1 = System.currentTimeMillis();
-               in = new UrlLoader( new URL(url), CHECKTIMEOUT,true);
+               in = new UrlLoader( new URL(url), CHECKTIMEOUT,pattern!=null ? 2: 1);
 //               in = Util.openStream(url,false,CHECKTIMEOUT);
 //               if( in==null ) throw new Exception("Util.openStream error");
                
@@ -1995,6 +2032,7 @@ public final class Glu implements Runnable {
 //                  String data = new String(buf);
                   String data = in.getData();
                   boolean trouve;
+//                  System.out.println("data=["+data+"] pattern=["+pattern+"]");
                   if( !regex ) trouve=Util.matchMask(pattern, data);
                   else trouve=data.matches(pattern);
                   

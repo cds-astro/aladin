@@ -129,7 +129,7 @@ class SED extends JPanel {
          
       } catch( Exception e ) {
          aladin.view.zoomview.setSED((String)null);
-         aladin.command.printConsole("!!! VizieR SED parsing error => "+e.getMessage());
+         aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
@@ -144,14 +144,14 @@ class SED extends JPanel {
       clear();
       this.source = source;
       try {
-         aladin.trace(2,"VizieR SED loading around source \""+source+"\"...");
+         aladin.trace(2,"VizieR photometry loading around source \""+source+"\"...");
          url = ""+aladin.glu.getURL(SEDGLUTAG,Glu.quote(source)+" "+radius);
 //         url = "http://cdsarc.u-strasbg.fr/viz-bin/sed?-c="+URLEncoder.encode(source) +"&-c.rs="+radius;
-         aladin.trace(2,"SED loading: "+url);
+         aladin.trace(2,"Phot. loading: "+url);
          loadASync( Util.openAnyStream(url) );
       } catch( Exception e ) {
          aladin.view.zoomview.setSED((String)null);
-         aladin.command.printConsole("!!! VizieR SED builder error ["+source+"] => "+e.getMessage());
+         aladin.command.printConsole("!!! VizieR photometry builder error ["+source+"] => "+e.getMessage());
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
@@ -161,7 +161,7 @@ class SED extends JPanel {
    private void createStackPlane() {
       if( planeAlreadyCreated ) return;
       planeAlreadyCreated = true;
-      plan.label="SED "+source;
+      plan.label="PHOT "+source;
       plan.objet = source;
       try { plan.u=new URL(url); } catch( Exception e ) { }
       aladin.calque.newPlan(plan);
@@ -184,7 +184,7 @@ class SED extends JPanel {
                parseAndDraw();
             } catch( Exception e ) {
                aladin.view.zoomview.setSED((String)null);
-               aladin.command.printConsole("!!! VizieR SED parsing error => "+e.getMessage());
+               aladin.command.printConsole("!!! VizieR photometry parsing error => "+e.getMessage());
                if( aladin.levelTrace>=3 ) e.printStackTrace();
             } finally {
                if( inParam!=null ) try { inParam.close(); } catch( Exception e ) {}
@@ -512,7 +512,7 @@ class SED extends JPanel {
       if( source!=null ) {
          g.setColor(Aladin.GREEN);
          g.setFont(Aladin.BOLD);
-         String s1 = "VizieR SED at "+Coord.getUnit(radius/3600.);
+         String s1 = "VizieR Phot. at "+Coord.getUnit(radius/3600.);
          int size = g.getFontMetrics().stringWidth(s1);
          int x = dim.width/2-size/2;
          if( x<50 ) x=50;

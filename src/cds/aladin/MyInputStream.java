@@ -255,7 +255,7 @@ public final class MyInputStream extends FilterInputStream {
       }
 
       // Healpix
-      if( (type & XFITS) !=0 && (hasFitsKey("HPXMOCM",null) || hasFitsKey("HPXMOC",null) 
+      if( (type & XFITS) !=0 && (hasFitsKey("MOCORDER",null) || hasFitsKey("HPXMOC",null) || hasFitsKey("HPXMOCM",null)
             || hasFitsKey("ORDERING","UNIQ") || hasFitsKey("ORDERING","NUNIQ")) ) type |= HPXMOC;
       else if( (hasFitsKey("PIXTYPE", "HEALPIX") || hasFitsKey("ORDERING","NEST") || hasFitsKey("ORDERING","RING"))
             && !hasFitsKey("XTENSION","IMAGE") )  type |= HEALPIX;
@@ -316,9 +316,14 @@ public final class MyInputStream extends FilterInputStream {
                && c[5]=='i' && c[6]=='o' && c[7]=='n' && c[8]==' ' && c[9]=='f' 
                &&c[10]=='i' &&c[11]=='l'&& c[12]=='e' ) type |= DS9REG|AJS;
 
-         // Détection HPXMO (ASCII - nouvelle définition #HPXMOCM...)
+         // Détection HPXMO (ASCII - ancienne définition #HPXMOCM &  #HPXMOC...)
          else if( c[0]=='#' && c[1]=='H' && c[2]=='P' && c[3]=='X' 
                && c[4]=='M' && c[5]=='O' && c[6]=='C' ) type |=HPXMOC;
+         
+         // Détection MOCORDER (ASCII - nouvelle définition #MOCORDER...)
+         else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C' 
+               && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;
+
 
 //         // Detection de BMP
 //         else if( c[0]==66  && c[1]==77 ) type |= BMP;

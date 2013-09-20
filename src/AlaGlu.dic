@@ -45,7 +45,8 @@
 %A AlaU.uk
 %D Aladin URL prefix for UKADC (Cambridge, UK)
 %O CDS'aladin
-%L http://archive.ast.cam.ac.uk/viz-bin
+#%L http://archive.ast.cam.ac.uk/viz-bin
+%L http://vizier.ast.cam.ac.uk/viz-bin
 
 %A AlaU.us
 %D Aladin URL prefix for CFA (Harvard USA)

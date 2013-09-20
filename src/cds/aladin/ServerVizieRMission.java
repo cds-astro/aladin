@@ -454,24 +454,24 @@ public class ServerVizieRMission extends Server  {
 //      super.actionPerformed(e);
 //   }
    
-   String oc = null;
-   public void keyReleased(KeyEvent e) { 
-      super.keyReleased(e);
-      if( !aladin.PROTO || !(e.getSource() instanceof JTextField) ) return;
-      String c = ((JTextField)e.getSource()).getText().trim();
-      if( oc!=null && c.equals(oc) ) return;
-      if( c.length()<2 ) pngMap.setImage(null);
-      else {
-         Image img=null;
-         try {
-            img = aladin.getImagette( ""+aladin.glu.getURL(DMAPPNGGLU,c));
-         } catch( Exception e1 ) { img=null; }
-         if( img!=null ) aladin.waitImage(img);
-         pngMap.setImage(img);
-         oc=c;
-      }
-      repaint();
-   }
+//   String oc = null;
+//   public void keyReleased(KeyEvent e) { 
+//      super.keyReleased(e);
+//      if( !aladin.PROTO || !(e.getSource() instanceof JTextField) ) return;
+//      String c = ((JTextField)e.getSource()).getText().trim();
+//      if( oc!=null && c.equals(oc) ) return;
+//      if( c.length()<2 ) pngMap.setImage(null);
+//      else {
+//         Image img=null;
+//         try {
+//            img = aladin.getImagette( ""+aladin.glu.getURL(DMAPPNGGLU,c));
+//         } catch( Exception e1 ) { img=null; }
+//         if( img!=null ) aladin.waitImage(img);
+//         pngMap.setImage(img);
+//         oc=c;
+//      }
+//      repaint();
+//   }
    
    /** Events management
     * @see aladin.VizieR

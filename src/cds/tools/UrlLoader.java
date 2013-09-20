@@ -46,10 +46,11 @@ public class UrlLoader extends Thread {
    /** Création d'un URL loader - ne peut être utilisée qu'une fois
     * @param url Url a lire
     * @param timeout temps maximum pour la lecture (en ms)
+    * @param mode =0 aucun test, =1: test sans lecture, =2 test avec lecture
     */
-   public UrlLoader(URL url,int timeout,boolean test) throws Exception {
+   public UrlLoader(URL url,int timeout,int mode) throws Exception {
       this(url,timeout);
-      if( test ) getData(0);
+      if( mode>0 ) getData(mode==1 ? 0 : -1);
    }
    public UrlLoader(URL url,int timeout) {
       this.timeout = timeout;
@@ -59,11 +60,13 @@ public class UrlLoader extends Thread {
    /** Demande la lecture effective de l'URL */
    public String getData() throws Exception { return getData(-1); }
    public String getData(int length) throws Exception {
+      if( res!=null && res.length()!=0 ) return res.toString();
+      
       this.length=length;
       long t1 = System.currentTimeMillis();
 //      System.out.println("Pere en attente de résultat...");
       start();
-      while( isWaiting && System.currentTimeMillis()-t1 < timeout ) {
+      while( isWaiting && System.currentTimeMillis()-t1 < timeout*100 ) {
 //         System.out.println("Pere waiting..."+(System.currentTimeMillis()-t1));
          try { Thread.currentThread().sleep(100); } catch( Exception e) {}
       }
@@ -90,7 +93,7 @@ public class UrlLoader extends Thread {
          if( is==null ) {
             is=Util.openStream(url,false,(int)timeout);
 //            conn = (HttpURLConnection) url.openConnection();
-//            is = conn.getInputStream();
+//            is = new MyInputStream(conn.getInputStream());
          }
 //         System.out.println("length="+length);
          if( length!=0 ) {
@@ -106,9 +109,11 @@ public class UrlLoader extends Thread {
             is.close();
          }
       } catch( Exception e ) {
-         error = e.getMessage();
+//         e.printStackTrace();
+         error = e.toString();
+//         error = e.getMessage();
       }
       isWaiting=false;
-      //      System.out.println("Fils meurt...");
+//            System.out.println("Fils meurt...");
    }
 }
