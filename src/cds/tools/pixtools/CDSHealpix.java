@@ -20,7 +20,6 @@
 package cds.tools.pixtools;
 
 import healpix.newcore.*;
-import healpix.tools.Constants;
 
 import java.util.ArrayList;
 
@@ -100,16 +99,21 @@ public final class CDSHealpix {
 //      return list.toArray();
 //   }
    
+   
+   /** The Constant cPr. */
+   public static final double cPr = Math.PI / 180;
+
+   
    static private double dec(Pointing ptg) {
-      return (Math.PI*0.5 - ptg.theta) / Constants.cPr;
+      return (Math.PI*0.5 - ptg.theta) / cPr;
   }
    
   static private double ra(Pointing ptg) {
-      return ptg.phi / Constants.cPr;
+      return ptg.phi / cPr;
   }
   
   static public Pointing pointing(double ra, double dec) {
-     return new Pointing( Math.PI/2 - (Math.PI/180)*dec , ra*Constants.cPr  );
+     return new Pointing( Math.PI/2 - (Math.PI/180)*dec , ra*cPr  );
   }
 
    
