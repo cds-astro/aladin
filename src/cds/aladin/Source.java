@@ -50,7 +50,8 @@ public class Source extends Position implements Comparator {
 
    // Gestion des formes en fonction du nombre d'elements
    static final int [] LIMIT =      { 3,     10,       100,      250,   500,   1000,       2000,   5000,          13000, 100000 };
-   static final String [] TYPENAME= { "oval","square","circle","rhomb","cross","triangle","plus","small circle","dot","microdot" };
+   static final String [] TYPENAME= { "oval","square","circle","rhomb","cross","triangle","plus","small circle","dot","microdot",
+      "solid oval","solid square","solid circle","solid rhomb","solid triangle" };
 
    protected byte sourceType=SQUARE;    //Type de representation de la source par défaut (CARRE, ...)
    protected String info;       // Information supplementaire associee a la source (en plus de id)
@@ -389,15 +390,21 @@ public class Source extends Position implements Comparator {
    }
 
    // Tracage d'un carre
-   void drawCarre(Graphics g,Point p) {
+   void drawCarre(Graphics g,Point p) { drawCarre(g,p,false); }
+   void drawCarre(Graphics g,Point p,boolean solid) {
       int L =getL();
-      if( !isWithLabel() ) g.drawRect(p.x-L,p.y-L, L*2, L*2);
+      
+      if( !isWithLabel() ) {
+         g.drawRect(p.x-L,p.y-L, L*2, L*2);
+         if( solid ) g.fillRect(p.x-L,p.y-L, L*2, L*2);
+      }
       else {
          setBox(g);
          g.drawLine(p.x+L,p.y-L+box.y+2,  p.x+L,p.y+L);
          g.drawLine(p.x-L,p.y+L, p.x+L,p.y+L);
          g.drawLine(p.x-L,p.y+L, p.x-L,p.y-L);
          g.drawLine(p.x-L,p.y-L, p.x+L-box.x-2,p.y-L);
+         if( solid ) g.fillRect(p.x-L,p.y-L, L*2, L*2);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
       }
    }
@@ -423,10 +430,12 @@ public class Source extends Position implements Comparator {
    }
 
    // Tracage d'un cercle
-   void drawOval(Graphics g,Point p) {
+   void drawOval(Graphics g,Point p) { drawOval(g,p,false); }
+      void drawOval(Graphics g,Point p,boolean solid) {
       int L =getL();
       int R = (int)( (L+L/3.)*2);
       g.drawOval(p.x-R/2, p.y-R/3, R, (2*R)/3);
+      if( solid ) g.fillOval(p.x-R/2, p.y-R/3, R, (2*R)/3);
       if( isWithLabel() ) {
          setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
@@ -434,14 +443,19 @@ public class Source extends Position implements Comparator {
    }
 
    // Tracage d'un cercle
-   void drawCircle(Graphics g,Point p) {
+   void drawCircle(Graphics g,Point p) { drawCircle(g,p,false); }
+   void drawCircle(Graphics g,Point p,boolean solid) {
       int L =getL();
       if( g instanceof EPSGraphics || L!=3 )  {
          int LR = L*2;
 //         if( LR%2==0 ) LR++;
          g.drawOval(p.x-LR/2, p.y-LR/2, LR, LR);
+         if( solid )  g.fillOval(p.x-LR/2, p.y-LR/2, LR, LR);
       }
-      else Util.drawCircle7(g,p.x,p.y);
+      else {
+         if( solid ) Util.fillCircle7(g,p.x,p.y);
+         else Util.drawCircle7(g,p.x,p.y);
+      }
 
       if( isWithLabel() ) {
          setBox(g);
@@ -450,12 +464,18 @@ public class Source extends Position implements Comparator {
    }
 
    // Tracage d'un losange
-   void drawLosange(Graphics g,Point p) {
+   void drawLosange(Graphics g,Point p) { drawLosange(g,p,false ); }
+   void drawLosange(Graphics g,Point p,boolean solid) {
       int L =getL();
-      g.drawLine(p.x,p.y-L, p.x+L,p.y);
-      g.drawLine(p.x+L,p.y, p.x,p.y+L);
-      g.drawLine(p.x,p.y+L, p.x-L,p.y);
-      g.drawLine(p.x-L,p.y, p.x,p.y-L);
+      Polygon pol = new Polygon(new int[] {p.x,  p.x+L, p.x,  p.x-L},
+                                new int[] {p.y-L,p.y,   p.y+L,p.y  },
+                                4);
+      g.drawPolygon(pol);
+      if( solid ) g.fillPolygon(pol);
+//      g.drawLine(p.x,p.y-L, p.x+L,p.y);
+//      g.drawLine(p.x+L,p.y, p.x,p.y+L);
+//      g.drawLine(p.x,p.y+L, p.x-L,p.y);
+//      g.drawLine(p.x-L,p.y, p.x,p.y-L);
       if( isWithLabel() ) {
          setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
@@ -463,11 +483,18 @@ public class Source extends Position implements Comparator {
    }
 
    // Tracage d'un triangle
-   void drawTriangle(Graphics g,Point p) {
+   void drawTriangle(Graphics g,Point p) { drawTriangle(g,p,false); }
+   void drawTriangle(Graphics g,Point p,boolean solid) {
       int L =getL();
-      g.drawLine(p.x-L,p.y+L/3, p.x+L,p.y+L/3);
-      g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
-      g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
+      Polygon pol = new Polygon(new int[] {p.x-L,  p.x+L,   p.x},
+                                new int[] {p.y+L/3,p.y+L/3, p.y+L,p.y-(2*L)/3  },
+                                3);
+      g.drawPolygon(pol);
+      if( solid ) g.fillPolygon(pol);
+
+//      g.drawLine(p.x-L,p.y+L/3, p.x+L,p.y+L/3);
+//      g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
+//      g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
       if( isWithLabel() ) {
          setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
@@ -758,16 +785,21 @@ public class Source extends Position implements Comparator {
 		else g.setColor( c );
 //      	show=false;                // Le reaffichage supprime le caractere show
       	switch(sourceType) {
-           case OVAL:    drawOval(g,p);   break;
-           case SQUARE:  drawCarre(g,p);   break;
-           case CROSS:   drawCroix(g,p);   break;
-           case PLUS:    drawPlus(g,p);    break;
-           case RHOMB:   drawLosange(g,p); break;
-           case TRIANGLE:drawTriangle(g,p);break;
-           case CIRCLES: drawCircleS(g,p); break;
-           case CIRCLE:  drawCircle(g,p);  break;
-           case POINT:   drawPoint(g,p);   break;
-           case DOT:     drawDot(g,p);     break;
+           case SOLIDOVAL:    drawOval(g,p,true);    break;
+           case OVAL:         drawOval(g,p);         break;
+           case SOLIDSQUARE:  drawCarre(g,p,true);   break;
+           case SQUARE:       drawCarre(g,p);        break;
+           case CROSS:        drawCroix(g,p);        break;
+           case PLUS:         drawPlus(g,p);         break;
+           case SOLIDRHOMB:   drawLosange(g,p,true); break;
+           case RHOMB:        drawLosange(g,p);      break;
+           case SOLIDTRIANGLE:drawTriangle(g,p,true);     break;
+           case TRIANGLE:     drawTriangle(g,p);break;
+           case CIRCLES:      drawCircleS(g,p);      break;
+           case SOLIDCIRCLE:  drawCircle(g,p,true);  break;
+           case CIRCLE:       drawCircle(g,p);       break;
+           case POINT:        drawPoint(g,p);        break;
+           case DOT:          drawDot(g,p);          break;
       	}
    }
 

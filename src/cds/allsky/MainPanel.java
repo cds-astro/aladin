@@ -120,7 +120,7 @@ final public class MainPanel extends JPanel implements ActionListener {
       tabBuild.setOriginalBitpixField(file.bitpix);
       
       // calcule le meilleur nside
-      long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+      long nside = BuilderIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
       tabBuild.setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
       
       newAllskyDir();

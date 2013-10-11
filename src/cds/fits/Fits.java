@@ -348,6 +348,23 @@ final public class Fits {
       public void setPixels(int x, int y, int w, int h, ColorModel model, byte[] pixels, int off, int scansize) {
       }
    }
+   
+   
+//   static public void main(String []arg) {
+//      try {
+//         String input  = "/Users/Pierre/Desktop/Data/PNG/OD121_0x500018feL_SpirePhotoLargeScan_rcw120_ExtEmiGainsApplied_destriped_RGB_S.png";
+//         String output = "/Users/Pierre/Desktop/Data/PNG/Test.png";
+//         Fits f = new Fits();
+//         MyInputStream dis = new MyInputStream(new FileInputStream(input));
+//         System.out.println("Lecture de "+input+"...");
+//         f.loadJpeg(dis,true);
+//         System.out.println("Ecriture de "+output+"...");
+//         f.writeRGBcompressed(output, "png");
+//         System.out.println("The end");
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
    public void loadJpeg(MyInputStream dis, int x, int y, int w, int h, boolean flagColor) throws Exception {
       BufferedImage imgBuf;
@@ -418,7 +435,7 @@ final public class Fits {
 
          } else {
             pixMode = dis.getType() == MyInputStream.PNG ? PIX_255 : PIX_256;
-            pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()) .getData();
+            pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()).getData();
             if( RGBASFITS ) invImageLine(widthCell, heightCell, pixels);
          }
 

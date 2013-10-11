@@ -55,6 +55,7 @@ final public class ThreadBuilderTile {
    private double[] cutOrig;
    private double[] cut;
    private int[] borderSize;
+   private int radius;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
 
@@ -78,6 +79,7 @@ final public class ThreadBuilderTile {
       }
       fading = context.getFading();
       borderSize = context.getBorderSize();
+      radius = context.circle;
       hpxFinderPath = context.getHpxFinderPath();
       
       downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
@@ -272,6 +274,12 @@ final public class ThreadBuilderTile {
             out.setBlank(blank);
             out.setBzero(bZero);
             out.setBscale(bScale);
+            
+         // remplissage transparent
+         } else {
+            if( context.targetColorMode==Context.PNG ) {
+               for( int i=0; i<out.rgb.length; i++ ) out.rgb[i]=0xFF000000;
+            }
          }
          
          // cherche la valeur à affecter dans chacun des pixels healpix
@@ -396,7 +404,10 @@ final public class ThreadBuilderTile {
                   else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
                   else {
                      empty=false;
-                     for( int i=0; i<nbPix; i++ ) pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
+                     for( int i=0; i<nbPix; i++ ) {
+                        pixelFinal += (pixval[i]*pixcoef[i])/totalCoef;
+//                        pixelFinal += totalCoef;
+                     }
                   }
                   
                   // Changement de bitpix ?
@@ -405,6 +416,7 @@ final public class ThreadBuilderTile {
                                 : pixelFinal<=cutOrig[2] ? cut[2]
                                 : pixelFinal>=cutOrig[3] ? cut[3]
                                 : (pixelFinal-cutOrig[2])*context.coef + cut[2];
+                     if( bitpix>0 && (long)pixelFinal==blank && pixelFinal!=blank ) pixelFinal+=0.5;
                   } else if( Double.isNaN(pixelFinal) ) pixelFinal = blank;
                   
                   out.setPixelDouble(x,y,pixelFinal);
@@ -448,19 +460,30 @@ final public class ThreadBuilderTile {
       
       double c=0;
       try {
-         double width  = f.width -(borderSize[1]+borderSize[3]);
-         double height = f.height-(borderSize[0]+borderSize[2]);
-         double mx = width *OVERLAY_PROPORTION;
-         double my = height*OVERLAY_PROPORTION;
-         double x = coo.x-borderSize[1];
-         double y = coo.y-borderSize[0];
-         double coefx=1, coefy=1;
-         if( x<mx ) coefx =  x/mx;
-         else if( x>width-mx ) coefx = (width-x)/mx;
-         if( y<my ) coefy =  y/my;
-         else if( y>height-my ) coefy = (height-y)/my;
-//         c = Math.min(coefx,coefy);
-         c = coefx*coefy;
+         if( radius>0 ) {
+            double cx = f.width/2;
+            double cy = f.height/2;
+            double dx = coo.x-cx;
+            double dy = coo.y-cy;
+            double d = Math.sqrt(dx*dx + dy*dy);
+            if( d>radius ) c=0;
+            else if( d<radius-radius*OVERLAY_PROPORTION ) c=1;
+            else c = (radius - d)/radius;
+         } else {
+            double width  = f.width -(borderSize[1]+borderSize[3]);
+            double height = f.height-(borderSize[0]+borderSize[2]);
+            double mx = width *OVERLAY_PROPORTION;
+            double my = height*OVERLAY_PROPORTION;
+            double x = coo.x-borderSize[1];
+            double y = coo.y-borderSize[0];
+            double coefx=1, coefy=1;
+            if( x<mx ) coefx =  x/mx;
+            else if( x>width-mx ) coefx = (width-x)/mx;
+            if( y<my ) coefy =  y/my;
+            else if( y>height-my ) coefy = (height-y)/my;
+            //         c = Math.min(coefx,coefy);
+            c = coefx*coefy;
+         }
       } catch( Exception e ) {
          c=0;
       }
@@ -482,6 +505,13 @@ final public class ThreadBuilderTile {
       double x = coo.x;
       double y = coo.y;
       
+      if( radius>0 ) {
+         double xc = x - f.width/2;
+         double yc = y - f.height/2;
+         double r = Math.sqrt(xc*xc + yc*yc);
+         if( r>radius ) return Double.NaN;
+       }
+      
       int x1 = (int)x;
       int y1 = (int)y;
       int x2=x1+1;
@@ -492,7 +522,7 @@ final public class ThreadBuilderTile {
       int ox2= x2;
       int oy2= y2;
       
-    if( x2<f.xCell || y2<f.yCell ||
+      if( x2<f.xCell || y2<f.yCell ||
         x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ) return Double.NaN;
 
       // Sur le bord, on dédouble le dernier pixel
@@ -527,6 +557,14 @@ final public class ThreadBuilderTile {
       double x = coo.x;
       double y = coo.y;
       
+      if( radius>0 ) {
+         double xc = x - f.width/2;
+         double yc = y - f.height/2;
+         double r = Math.sqrt(xc*xc + yc*yc);
+         if( r>radius ) return 0;
+       }
+
+      
 
 //      int x1 = (int)Math.floor(x);
 //      int y1 = (int)Math.floor(y);
@@ -550,16 +588,20 @@ final public class ThreadBuilderTile {
       if( oy2==f.yCell+f.heightCell ) oy2--;
 
       int b0 = f.getPixelRGBJPG(ox1,oy1);
-//      if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
+      if( b0==0 ) return 0;     // pixel transparent (canal alpha à 0)
       
       int b1 = f.getPixelRGBJPG(ox2,oy1);
       int b2 = f.getPixelRGBJPG(ox1,oy2);
       int b3 = f.getPixelRGBJPG(ox2,oy2);
             
-      boolean c0 = b0==0;
-      boolean c1 = b1==0;
-      boolean c2 = b2==0;
-      boolean c3 = b3==0;
+//      boolean c0 = b0==0;
+//      boolean c1 = b1==0;
+//      boolean c2 = b2==0;
+//      boolean c3 = b3==0;
+      boolean c0 = (b0&0xFF000000)==0;
+      boolean c1 = (b1&0xFF000000)==0;
+      boolean c2 = (b2&0xFF000000)==0;
+      boolean c3 = (b3&0xFF000000)==0;
       
       if( c0 && c1 && c2 && c3 ) return 0;
       if( c0 || c1 || c2 || c3 ) {
@@ -570,7 +612,8 @@ final public class ThreadBuilderTile {
          if( c3 ) b3=a;
       }
 
-      int pix=0xFF;
+//      int pix=0xFF;
+      int pix=0x00;
       for( int i=16; i>=0; i-=8 ) {
          double a0 = 0xFF & (b0>>i);
          double a1 = 0xFF & (b1>>i);
@@ -579,6 +622,7 @@ final public class ThreadBuilderTile {
          int p = (int)(bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3)+0.5);
          pix = (pix<<8) | p;
       }
+      if( pix!=0 ) pix|=0xFF000000;
       return pix;
    }
 

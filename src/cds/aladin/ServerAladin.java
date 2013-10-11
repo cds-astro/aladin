@@ -528,7 +528,7 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
    protected String getDefaultFormat() {
       return format.getSelection().getActionCommand();
    }
-
+   
   /** Interrogation d'Aladin */
    public void submit() {
       
@@ -551,10 +551,12 @@ public final class ServerAladin extends Server implements Runnable, MyListener {
       // Traitement des images par lot
       if( tree!=null && !tree.isEmpty() ) {
          if( tree.nbSelected()>0 ) {
-             String format = getDefaultFormat();
+             if( !tooManyChecked() ) {
+                String format = getDefaultFormat();
 // verif() IL FAUDRAIT AJOUTER LA VERIFICATION DU PLAN.
-            tree.loadSelected(format);
-            tree.resetCb();
+                tree.loadSelected(format);
+                tree.resetCb();
+             }
          } else {
             // Si aucune ligne n'a ete cochee et si la Frameinfo est ouverte, je charge
             // l'image de cette derniere

@@ -68,7 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> SkyGen improvements (speed x5 - PNG support)
+ * @beta    <LI> Solid shape paint (source property)
+ * @beta    <LI> SkyGen improvements (speed x5 - PNG support - circle mask)
  * @beta    <LI> GLON/GLAT, ELON/ELAT, SLON/SLAT column autodetect in basic ASCII formats
  * @beta    <LI> Automatical distance tool for 2 selected sources   
  * @beta    <LI> MOC & SkyGen generation support (-mocgen & -skygen script programs)
@@ -124,7 +125,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.567";
+    static public final    String VERSION = "v7.571";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

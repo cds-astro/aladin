@@ -481,8 +481,10 @@ public class ServerFile extends Server implements XMLConsumer {
       of=f;
       if( tree!=null && !tree.isEmpty() ) {
          if( tree.nbSelected()>0 ) {
-            tree.loadSelected();
-            tree.resetCb();
+            if( !tooManyChecked() ) {
+               tree.loadSelected();
+               tree.resetCb();
+            }
          } else Aladin.warning(this,WNEEDCHECK);
          defaultCursor();
       } else {

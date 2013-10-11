@@ -3835,9 +3835,9 @@ public Coord getProjCenter()  {
    c.x = Xcen;
    //      c.y = ynpix-Ycen;
    c.y = Ycen;
-   //      try { GetCoord(c); } catch( Exception e ) { }
-   c.al=alphai;
-   c.del=deltai;
+         try { GetCoord(c); } catch( Exception e ) { }
+//   c.al=alphai;
+//   c.del=deltai;
    return c;
 }
 /*

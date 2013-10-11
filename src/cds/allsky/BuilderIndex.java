@@ -19,22 +19,18 @@
 
 package cds.allsky;
 
-import static cds.tools.Util.FS;
 
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -46,6 +42,7 @@ import cds.tools.pixtools.Util;
 public class BuilderIndex extends Builder {
 
    private int [] borderSize= {0,0,0,0};
+   private int radius = 0;
    private String currentfile = null;
    private boolean blocking;
 
@@ -106,7 +103,7 @@ public class BuilderIndex extends Builder {
          try {
             Fits file = new Fits();
             file.loadHeaderFITS(img);
-            long nside = healpix.core.HealpixIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+            long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
             order = ((int) Util.order((int) nside) - Constante.ORDER);
             context.setOrder(order);
          } catch (Exception e) {
@@ -121,6 +118,13 @@ public class BuilderIndex extends Builder {
       }
       
    }
+   
+   static public int calculateNSide(double pixsize) {
+      double arcsec2rad=Math.PI/(180.*60.*60.);
+      double nsd = Math.sqrt(4*Math.PI/12.)/(arcsec2rad*pixsize);
+      int order_req=Math.max(0,Math.min(29,1+(int)CDSHealpix.log2((long)(nsd))));
+      return 1<<order_req;
+  }
    
    /** Demande d'affichage des stats (dans le TabBuild) */
    public void showStatistics() {
@@ -137,6 +141,7 @@ public class BuilderIndex extends Builder {
       String output = context.getOutputPath();
       int order = context.getOrder();
       borderSize = context.getBorderSize();
+      radius = context.circle;
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();

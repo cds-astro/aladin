@@ -60,10 +60,11 @@ public class Server extends JPanel
    static int WIDTH = Aladin.OUTREACH ? 430 : 500; 	// Largeur du Panel
    static int HEIGHT = Aladin.OUTREACH ? 300 : 400;	// Hauteur du Panel
    static final int YOUTREACH = 60; // Ordonnée du premier label en mode OUTREACH
+   static final int MAXSELECTEDPLANE = 10; // Nombre max d'images à charger avant affichage un warning
 
    protected String TARGET,RAD,GRABIT="",DEFAULT_METHODE,TARGET_EX,RADIUS_EX,WNEEDOBJ,
         WNEEDRAD,WNEEDDATE, WNEEDCAT,WERROR,WTOOLARGE,WERRORDATE,WDEJA,HASFILTER1,
-        HASFILTER2,NOINPUTITEM,WNEEDCHECK,UNKNOWNOBJ;
+        HASFILTER2,NOINPUTITEM,WNEEDCHECK,UNKNOWNOBJ,NOTTOOMANY;
 
 
    // Pour le positionnement des widgets en absolu
@@ -208,6 +209,7 @@ public class Server extends JPanel
       HASFILTER2     =aladin.chaine.getString("HASFILTER2");
       NOINPUTITEM    =aladin.chaine.getString("NOINPUTITEM");
       UNKNOWNOBJ     =aladin.chaine.getString("UNKNOWNOBJ");
+      NOTTOOMANY       =aladin.chaine.getString("NOTTOOMANY");
 
       statusAllVO=new JLabel(" "); // Le status pour le mode ALLVO
 
@@ -1143,6 +1145,13 @@ public void layout() {
       return rep.toString();
    }
 
+   /** Retourne true si l'utilisateur a indiqué qu'il y avait trop d'images sélectionnées
+    * dans l'arbre */
+   protected boolean tooManyChecked() {
+      int n = tree.nbSelected();
+      if( n>0 && n<MAXSELECTEDPLANE ) return false;
+      return !aladin.confirmation(this,NOTTOOMANY+" ("+n+")");
+   }
 
    /** Voir classes derivees */
    public void submit() {}

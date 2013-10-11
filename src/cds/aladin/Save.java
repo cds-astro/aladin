@@ -28,8 +28,6 @@ import cds.fits.HeaderFits;
 import cds.image.*;
 import cds.moc.HealpixMoc;
 
-import healpix.core.HealpixIndex;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;

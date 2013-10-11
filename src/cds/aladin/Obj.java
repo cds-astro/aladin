@@ -63,6 +63,11 @@ public abstract class Obj implements Propable{
    public static final int CIRCLES  = 7;
    public static final int POINT    = 8;
    public static final int DOT      = 9;
+   public static final int SOLIDOVAL     = 10;
+   public static final int SOLIDSQUARE   = 11;
+   public static final int SOLIDCIRCLE   = 12;
+   public static final int SOLIDRHOMB    = 13;
+   public static final int SOLIDTRIANGLE = 14;
 
    // Les constantes associees a "methode" lors de la creation
    protected static final int XY = 1;

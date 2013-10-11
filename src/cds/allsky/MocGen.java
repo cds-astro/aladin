@@ -233,13 +233,14 @@ public class MocGen {
             strict=true;
             
          } else if( s.equalsIgnoreCase("-pixfoot") || s.equalsIgnoreCase("-mocgen")) {
-            continue;       // Juste pour ouvoir utiliser le main() de la classe en debug
+            continue;       // Juste pour pouvoir utiliser le main() de la classe en debug
             
          } else if( s.startsWith("mocfmt=") ) {
             String a=s.substring(x);
             if( a.equalsIgnoreCase("fits") ) fmt=HealpixMoc.FITS;
+            else if( a.equalsIgnoreCase("obsolete") ) fmt=HealpixMoc.OBSOLETE;
             else if( a.equalsIgnoreCase("json") 
-                  || a.equalsIgnoreCase("ascii") ) fmt=HealpixMoc.ASCII;
+                  || a.equalsIgnoreCase("ascii") ) fmt=HealpixMoc.JSON;
             else {
                System.out.println("Unkown MOC format ["+a+"]");
                return false;
@@ -290,7 +291,7 @@ public class MocGen {
       		"[-strict]          : Scan pixel values instead of using WCS image coverage\n" +
       		"[blank=value]      : Alternate BLANK value (-strict only)\n" +
             "[order=nn]         : MOC resolution (default 10)\n" +
-            "[mocfmt=fits|ascii]: MOC output format\n" +
+            "[mocfmt=fits|json] : MOC output format (default Fits)\n" +
       		"[previous=moc.fits]: Previous MOC (if additions)\n" +
       		"[in=fileOrDir]     : Directory of images/headers collection\n" +
             "[-r]               : Recursive directory scanning\n" +

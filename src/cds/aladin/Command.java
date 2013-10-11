@@ -34,6 +34,7 @@ import cds.allsky.Context;
 import cds.allsky.SkyGen;
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
+import cds.moc.HealpixMoc;
 import cds.savot.model.SavotField;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -3322,7 +3323,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   hpx=true;
                }
 
-               if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,addXY);
+               if( p instanceof PlanMoc ) (a.save).saveMoc(file, (PlanMoc)p, HealpixMoc.FITS);
+               else if( p.isCatalog() ) (a.save).saveCatalog(file,p,!vot,addXY);
                else if( p.isImage() && !(p instanceof PlanImageBlink) ) (a.save).saveImage(file,p,hpx?1:fits?0:2);
                else {
                   String tmp="plane type ["+Plan.Tp[p.type]+"] not supported";

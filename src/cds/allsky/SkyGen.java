@@ -37,6 +37,8 @@ public class SkyGen {
    private boolean flagMode=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
+   
+   public String launcher = "Aladin.jar -skygen";
 
    private Vector<Action> actions;
 
@@ -99,7 +101,7 @@ public class SkyGen {
 
       // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
-         usage();
+         usage(launcher);
       } else if (opt.equalsIgnoreCase("verbose")) {
          Context.setVerbose(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("debug")) {
@@ -138,6 +140,12 @@ public class SkyGen {
          context.setMixing(val);
       } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting")) {
          context.setCutting(val);
+      } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
+         try {
+            context.setCircle(val);
+         } catch (ParseException e) {
+            throw new Exception(e.getMessage());
+         }
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
@@ -169,7 +177,7 @@ public class SkyGen {
    public void execute(String [] args) {
       int length = args.length;
       if (length == 0) {
-         usage();
+         usage(launcher);
          return;
       }
       // extrait les options en ligne de commande, et les analyse
@@ -192,7 +200,7 @@ public class SkyGen {
          
          // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
-            SkyGen.usage();
+            SkyGen.usage("Skygen");
             return;
          }
          // debug
@@ -312,9 +320,10 @@ public class SkyGen {
       public void run() { execute(args); }
    }
    
-   private static void usage() {
-      System.out.println("Usage: java -jar Aladin.jar -skygen [-f] options... [action [action...]]");
-      System.out.println("       java -jar Aladin.jar -skygen [-f] -param=configfile\n\n");
+   // Aladin.jar -skygen
+   private static void usage(String launcher) {
+      System.out.println("Usage: java -jar "+launcher+" [-f] options... [action [action...]]");
+      System.out.println("       java -jar "+launcher+" [-f] -param=configfile\n\n");
       System.out.println("This config file must contains these following options, or use them\n" +
       		"             directly in the comand line :");
       System.out.println(
@@ -329,6 +338,7 @@ public class SkyGen {
             "order=nn           Specifical HEALPix order" + "\n" +
 //            "diffOrder          Diff between MOC order and optimal order" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
+            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
             "skyval=key         Fits key to use for removing a sky background" + "\n" +
             "maxThread=nn       Max number of computing threads (8 per default, -1 for max)" + "\n" +
@@ -375,13 +385,13 @@ public class SkyGen {
             "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "progen     Adapt the index to a progenitor usage" + "\n"
             );
-      System.out.println("\nEx: java -jar Aladin.jar -skygen input=/MyImages    => Do all the job." +
-      		             "\n    java -jar Aladin.jar -skygen input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
+      System.out.println("\nEx: java -jar "+launcher+" input=/MyImages    => Do all the job." +
+      		             "\n    java -jar "+launcher+" input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
-                         "\n    java -jar Aladin.jar -skygen input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+                         "\n    java -jar "+launcher+" input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
                          "\n           The original pixels in the border or equal to 0 will be ignored."+
-                         "\n    java -jar Aladin.jar -skygen input=HiPS ouput=HiPStarget concat   => Concatenate HiPS to HiPStarget"
+                         "\n    java -jar "+launcher+" input=HiPS ouput=HiPStarget concat   => Concatenate HiPS to HiPStarget"
 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                          );
    }

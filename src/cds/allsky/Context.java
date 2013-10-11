@@ -82,6 +82,7 @@ public class Context {
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
+   protected int circle = 0;                  // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean cutting=false;         // Activation de la lecture par blocs des fimages originales
@@ -175,6 +176,7 @@ public class Context {
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
    public void setCutting(String s) { cutting = s.equalsIgnoreCase("true") ? true : false; }
+   public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }

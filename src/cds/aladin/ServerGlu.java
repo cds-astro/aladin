@@ -881,10 +881,12 @@ public class ServerGlu extends Server implements Runnable {
           try{
 
             // Traitement des images par lot
-            if( tree!=null && !tree.isEmpty() ) {
-               if( tree.nbSelected()>0 ) {
-                  tree.loadSelected();
-                  tree.resetCb();
+             if( tree!=null && !tree.isEmpty() ) {
+                if( tree.nbSelected()>0 ) {
+                   if( !tooManyChecked() ) { 
+                      tree.loadSelected();
+                      tree.resetCb();
+                   }
                } else Aladin.warning(this,WNEEDCHECK);
 
 			   // Chargement des descriptions des images disponibles dans thread séparé
