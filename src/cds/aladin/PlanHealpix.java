@@ -882,8 +882,10 @@ public class PlanHealpix extends PlanBG {
 
     private int getBitpixFromFormat(char t) {
         switch (t) {
+        case 'B':
+           return 8;
         case 'I':
-            return 16;
+           return 16;
         case 'J':
            return 32;
         case 'K':
@@ -1008,6 +1010,7 @@ public class PlanHealpix extends PlanBG {
                     if (k==0) {
                     }
                     switch(typeHpx[idxField]) {
+                    case 'B': val = getByte(buf,totalOffset+offsetc); break;
                     case 'I': val = getShort(buf,totalOffset+offsetc); break;
                     case 'J': val = getInt(buf,totalOffset+offsetc); break;
                     case 'K': val = (((long)getInt(buf,totalOffset+offsetc))<<32)

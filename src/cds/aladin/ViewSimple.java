@@ -33,6 +33,7 @@ import java.util.*;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import cds.astro.AstroMath;
 import cds.tools.Util;
@@ -2448,7 +2449,6 @@ public class ViewSimple extends JComponent
             view.newobj = null;
          }
          
-
          if( view.newobj!=null ) {
 
             // Juste pour le spectre localisé pour un cube via un repere
@@ -2463,6 +2463,7 @@ public class ViewSimple extends JComponent
             if( ((Repere)view.newobj).hasRayon() ) {
                view.newobj.setSelected(true);
                addObjSurfMove(view.newobj);
+
             }
             finNewObjet();
          }
@@ -2574,12 +2575,23 @@ public class ViewSimple extends JComponent
       if( objSurfMove!=null ) {
          Enumeration e1=objSurfMove.elements();
          while( e1.hasMoreElements() ) {
-            Position o = (Position)e1.nextElement();
+            final Position o = (Position)e1.nextElement();
             if( o.plan.type!=Plan.TOOL ) continue;
             ((PlanTool)(o.plan)).sendMesureObserver(o, false);
             aladin.console.setInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
+            
+
 //            System.out.println("Ici c'est parti !");
 //            ((PlanTool)(o.plan)).updatePhotMan(o);
+//            
+//            SwingUtilities.invokeLater(new Runnable() {
+//               public void run() {
+//                  Util.pause(100);
+//                  o.setSelected(true);
+//                  o.plan.updateDedicatedFilter();
+//                  aladin.calque.repaintAll();
+//               }
+//            });
          }
          objSurfMove=null;
       }
@@ -2997,12 +3009,18 @@ public class ViewSimple extends JComponent
     * @return true si nécessaire et possible
     */
    private boolean reloadPixelsOriginIfRequired() {
-      if( isFree() || !pref.hasAvailablePixels() ) return false;
+      if( isFree() || !pref.hasAvailablePixels() ) {
+         return false;
+      }
       if( pref.type==Plan.IMAGEBLINK || pref.type==Plan.IMAGECUBE ) {
          if( blinkControl.mode!=BlinkControl.PAUSE ) return false;
       }
-      if( aladin.view.getPixelMode()==View.LEVEL ) return false;
-      if( ((PlanImage)pref).pixelsOriginFromDisk() ) return false;
+      if( aladin.view.getPixelMode()==View.LEVEL ) {
+         return false;
+      }
+      if( ((PlanImage)pref).pixelsOriginFromDisk() ) {
+         return false;
+      }
       return ((PlanImage)pref).pixelsOriginFromCache();
    }
    
@@ -6250,7 +6268,11 @@ g.drawString(s,10,100);
       // Statistiques de temps de repaint
       timeForPaint  = (Util.getTime() - t);
 //      System.out.println("ViewSimple paint "+timeForPaint+"ms");
+      
+      frameNumber++;
    }
+   
+   protected int frameNumber=0;
    
    private void drawHealpixMouse(Graphics g) {
       if( !(pref instanceof PlanBG) ) return;

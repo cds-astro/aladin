@@ -74,8 +74,8 @@ public class TabRgb extends JPanel implements ActionListener {
    private JButton 	    browse = new JButton();
    private JTextField 	outputField = new JTextField(30);
 
-   private JRadioButton radioMediane;                     // selected si on est en calcul selon la médiane
-
+   private JRadioButton radioMediane;               // selected si on est en calcul selon la médiane
+   private JRadioButton formatJpeg;                 // selected si JPG sinon PNG
 
    JProgressBar progressBar = new JProgressBar(0,100);
 
@@ -175,8 +175,23 @@ public class TabRgb extends JPanel implements ActionListener {
       p.add(rb);
       pCenter.add(p,c);
       c.insets.top=m;
-
-
+      
+      m=c.insets.top;
+      c.insets.top=0;
+      p = new JPanel();
+      l = new JLabel("Output tile format:");
+      l.setFont(l.getFont().deriveFont(Font.BOLD));
+      bg1 = new ButtonGroup();
+      p.add(l);
+      formatJpeg = rb = new JRadioButton("JPEG (faster)");
+      rb.setSelected(true);
+      bg1.add(rb);
+      p.add(rb);
+      rb = new JRadioButton("PNG (better)");
+      bg1.add(rb);
+      p.add(rb);
+      pCenter.add(p,c);
+      c.insets.top=m;
 
       // barre de progression
       progressBar.setStringPainted(true);
@@ -238,6 +253,12 @@ public class TabRgb extends JPanel implements ActionListener {
    public JpegMethod getMethod() {
       if( radioMediane.isSelected() ) return Context.JpegMethod.MEDIAN;
       return Context.JpegMethod.MEAN;
+   }
+
+   /**   retourne le format de codage pour les tuiles couleurs (JPEG ou PNG) */
+   public int getFormat() {
+      if( formatJpeg.isSelected() ) return Context.JPEG;
+      return Context.PNG;
    }
 
    /** Recupere la liste des plans Allsky valides */
@@ -305,6 +326,7 @@ public class TabRgb extends JPanel implements ActionListener {
          context.setRgbPlans(plans);
          context.setRgbOutput(outputField.getText());
          context.setRgbMethod(getMethod());
+         context.setRgbFormat(getFormat());
          context.setProgressBar(progressBar);
          try {
             new Task(context, Action.RGB, false);

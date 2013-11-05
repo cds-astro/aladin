@@ -1553,6 +1553,7 @@ UPSTOP	Stop running test
 #UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build a photometry histogram from various VizieR catalogs
 SEDLOADING	VizieR phot. loading...
 SEDCLOSE	Close phot. graph
+SEDMORE	Launch VizieR photometry Web tool on the same area
 #SEDCREATEPLANE	Create catalogue stack plane from these phot. measurements
 SEDFREQWAVE	Draw in frequences (resp. in waves length)
 SEDHELPTIP	Information about VizieR phot.
@@ -1623,6 +1624,7 @@ UPSMBB.fr	Pointeur Simbad & VizieR phot.
 UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique sur les base de données Simbad et VizieR afin de trouver l'identificateur de l'objet astronomique sous la souris et d'en fournir un histogramme photométrique construit à partir de catalogues de VizieR.
 SEDLOADING.fr	SED VizieR...
 SEDCLOSE.fr	Ferme le graphe du SED
+SEDMORE.fr	Lance l'outil photométrique VizieR pour la même position
 #SEDCREATEPLANE.fr	Crée un plan catalogue dans la pile\nà partir des données du SED
 SEDFREQWAVE.fr	Trace en fréquences (resp. en longueurs d'onde)
 SEDHELPTIP.fr	Information sur les mesures photométriques VizieR

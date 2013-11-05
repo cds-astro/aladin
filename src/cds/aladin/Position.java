@@ -564,7 +564,7 @@ public class Position extends Obj {
             )) {
          pix=Double.NaN;
       } else {
-         pix= ((PlanImage)v.pref).getPixelInDouble(x,y);
+         pix= pi.getPixelInDouble(x,y);
       }
       
       double zoom = v.getZoom();

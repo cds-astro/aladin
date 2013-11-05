@@ -708,7 +708,7 @@ public long skip(long n) throws IOException {
     * ou null si le flux est termin
     */
 //   public String readLine() throws IOException {
-//      StringBuffer res = new StringBuffer();
+//      StringBuilder res = new StringBuilder();
 //      int c;
 //      boolean first=true;
 //
@@ -749,7 +749,7 @@ public long skip(long n) throws IOException {
    * @return une chaine decrivant le type de fichier
    */
    static public String decodeType(long type) {
-      StringBuffer s = new StringBuffer();
+      StringBuilder s = new StringBuilder();
 
       long mode=0x1;
       for( int i=1; i<FORMAT.length; i++ ) {
@@ -999,8 +999,8 @@ public long skip(long n) throws IOException {
     */
    private String translateSextraHeader(String head) {
       StringTokenizer st = new StringTokenizer(head,"\n\r");
-//      StringBuffer nHead = new StringBuffer("z");
-      StringBuffer nHead = new StringBuffer();
+//      StringBuilder nHead = new StringBuilder("z");
+      StringBuilder nHead = new StringBuilder();
 
       while( st.hasMoreTokens() ) {
          String s = st.nextToken();
@@ -1051,7 +1051,7 @@ public long skip(long n) throws IOException {
        int max=4; // Nbre de lignes valides a tester
        boolean inHeader=true; // true si on est dans l'entete du fichier
        int rep=1;
-       StringBuffer debugMsg=null;
+       StringBuilder debugMsg=null;
        boolean flagSextra = false;   // true si on a détecté une entête Sextractor
        boolean flagIPAC = false;    // true si on a détecté une entête IPAC
        boolean firstComment = true; // True si on n'a pas encore traité le premier commentaire
@@ -1068,10 +1068,10 @@ public long skip(long n) throws IOException {
 //       try { cs = Aladin.aladin.CSVCHAR.toCharArray(); }
 //       catch( Exception e ) { cs = "\t".toCharArray(); }
 //
-//       if( Aladin.levelTrace>=3 ) debugMsg = new StringBuffer("CSV test result:");
+//       if( Aladin.levelTrace>=3 ) debugMsg = new StringBuilder("CSV test result:");
 
        for( int i=0; bufN<max && deb!=-1; i++ ) {
-          StringBuffer ligneb = new StringBuffer(256);
+          StringBuilder ligneb = new StringBuilder(256);
           deb = getLigne(ligneb,deb);
           String ligne = ligneb.toString();
           bufLigne[bufN] = ligne;
@@ -1164,7 +1164,7 @@ public long skip(long n) throws IOException {
     public char getSepCSV() { return sepCSV; }
     private void setSepCSV(char c) { sepCSV=c; }
     
-    private int getLigne(StringBuffer s,int offset) throws Exception {
+    private int getLigne(StringBuilder s,int offset) throws Exception {
        int c;
        char ch;
        do {
@@ -1176,7 +1176,7 @@ public long skip(long n) throws IOException {
        return offset;
     }
 
-//    private int getJSonLigne(StringBuffer s,int offset) throws Exception {
+//    private int getJSonLigne(StringBuilder s,int offset) throws Exception {
 //       int c;
 //       char ch;
 //       do {
@@ -1209,7 +1209,7 @@ public long skip(long n) throws IOException {
 
     /** Pour du débugging : affichage de  */
     private String ASC(byte buf[],int pos, int size) {
-       StringBuffer s = new StringBuffer();
+       StringBuilder s = new StringBuilder();
        for( int i=pos; i<pos+size  ; i++ ) {
           char c = (char)buf[i];
           s.append( !Character.isISOControl(c) ? c:'.');
@@ -1224,7 +1224,7 @@ public long skip(long n) throws IOException {
        InflaterInputStream zIn = new InflaterInputStream(in);
        byte [] buffer = new byte[8192];
        int n;
-       StringBuffer res = new StringBuffer();
+       StringBuilder res = new StringBuilder();
        while( (n=zIn.read(buffer))!=-1 ) {
           String s = new String(buffer,0,n);
           res.append(s);
@@ -1286,7 +1286,7 @@ public long skip(long n) throws IOException {
     double avmRefWidth=-1;
 
     /** Mémorisation d'un mot clé/valeur AVM */
-    private void memoOneAVM(StringBuffer key, StringBuffer value) {
+    private void memoOneAVM(StringBuilder key, StringBuilder value) {
        if( avm==null ) avm=new Hashtable(30);
        avm.put(key.toString().trim(),value.toString().trim());
        if( Aladin.levelTrace>=3 ) System.out.println("AVM tag: "+key+"=["+value.toString().trim()+"] ");
@@ -1294,7 +1294,7 @@ public long skip(long n) throws IOException {
 
     /** Ajout d'un caractère à une chaine en évitant les doublons des blancs
      * et en remplaçant d'éventuels NL par un blanc */
-    private void appendValue(StringBuffer buf,char c) {
+    private void appendValue(StringBuilder buf,char c) {
        int n= buf.length();
        if( c=='\n' || c=='\r' ) c=' ';    // On remplace les NL par un blanc
        if( n==0 || !Character.isSpaceChar(c) ) { buf.append(c); return; }
@@ -1324,8 +1324,8 @@ public long skip(long n) throws IOException {
        int depth=0;
        avm=null;
        avmRefWidth=-1;
-       StringBuffer key=null;
-       StringBuffer value=null;
+       StringBuilder key=null;
+       StringBuilder value=null;
        boolean flag0,flag1,flag2,flag3,flag4;
        boolean flagXMP2=false;      // Pour distinguer les deux modes XMP
        flag4=flag3=flag2=flag1=flag0=false;
@@ -1345,14 +1345,14 @@ public long skip(long n) throws IOException {
                 flag0=c=='<' || c==' ';  // Pour suporter les 2 types d'XMP
                 if( flag0 ) flagXMP2= c==' ';
                 if( flag4 ) {
-                   key = new StringBuffer();
+                   key = new StringBuilder();
                    if( !flagXMP2 ) { mode=1; depth=1; }
                    else mode=10;
                 }
                 break;
              // Mémorisation du mot clé XXXX dans <avm:XXXX>
              case 1:
-                if( c=='>' ) { mode=2; value=new StringBuffer(); }
+                if( c=='>' ) { mode=2; value=new StringBuilder(); }
                 else key.append(c);
                 break;
              // Lecture du paramètre en évitant les éventuels tags
@@ -1376,7 +1376,7 @@ public long skip(long n) throws IOException {
                 break;
              // Mémorisation du mot clé XXXX dans avm:XXXX=
              case 10:
-                if( c=='=' ) { mode=11;  value=new StringBuffer(); }
+                if( c=='=' ) { mode=11;  value=new StringBuilder(); }
                 else key.append(c);
                 break;
              // Passage de la première quote avm:XXXX="YYYY"
@@ -1394,7 +1394,7 @@ public long skip(long n) throws IOException {
     }
 
     private void createJpegAVMCalib(int width) {
-       StringBuffer fits = new StringBuffer(1000);
+       StringBuilder fits = new StringBuilder(1000);
        StringTokenizer st;
        String s;
        double ratio=1;
@@ -1712,7 +1712,7 @@ if( Aladin.levelTrace==4 ) {
    /** Récupère la valeur d'un mot clé fits ou null si non trouvé */
    private String getFitsValue(String key) throws IOException {
       if( !fitsHeadRead ) findFitsEnd();
-      StringBuffer value;
+      StringBuilder value;
       int k=offsetCache;
       while( (k=lookForSignature(key+"=",false,k,false))>=0 ) {
 
@@ -1720,7 +1720,7 @@ if( Aladin.levelTrace==4 ) {
          int i=k;
          if( (i-9)%80!=0 ) continue;   // Pas sur un multiple de 80 => pas un mot clé FITS
 
-         value = new StringBuffer();
+         value = new StringBuilder();
 
          // Comparaison sur la valeur qui suit
          while( !isFitsVal( (char)cache[i]) && i<k+71 ) i++;  //passe blancs et quotes simples

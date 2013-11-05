@@ -1226,6 +1226,13 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        s.delete(0,n);
     }
 
+    /** Nettoie un StringBuilder pour éviter des allocations inutiles */
+    static public void resetString(StringBuilder s) {
+       int n = s.length();
+       if( n==0 ) return;
+       s.delete(0,n);
+    }
+
     /** Concaténation de paths.
      * et insère le séparateur / uniquement si c'est nécessaire.
      * Remplace les \ éventuelles par / (et réciproquement)
@@ -1587,31 +1594,32 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        return s.toString();
     }
 
-    static private boolean tryNano=false;
-    static private Method nanoMethod=null;
+//    static private boolean tryNano=false;
+//    static private Method nanoMethod=null;
 
     /** Récupération du temps en ms via la méthode System.nanoTime() si possible
      * sinon via la méthode classique System.currentTimeMillis().
      * @param unit 0-ns 1:ms 2:s
      */
-    static public long getTime() { return getTime(1); }
-    static public long getTime(int unit) {
-       if( !tryNano ) {
-          tryNano=true;
-          try { nanoMethod = System.class.getMethod("nanoTime",new Class[] {}); }
-          catch( Exception e) { }
-       }
-       if( nanoMethod!=null ) {
-          try { return ((Long)(nanoMethod.invoke((Object)null, (Object[])null))).longValue()/(unit==1? 1000000L : unit==2 ? 1000000000L : 1); }
-          catch( Exception e) { nanoMethod=null; }
-       }
-       long t=System.currentTimeMillis();
-       if( unit==0 ) return t*1000000L;
-       if( unit==2 ) return t/1000L;
-       return t;
+    static final public long getTime() { return getTime(1); }
+    static final public long getTime(int unit) {
+       return unit==1 ? System.currentTimeMillis() 
+             : unit==0 ? System.nanoTime() : System.currentTimeMillis()/1000L;
+             
+//       if( !tryNano ) {
+//          tryNano=true;
+//          try { nanoMethod = System.class.getMethod("nanoTime",new Class[] {}); }
+//          catch( Exception e) { }
+//       }
+//       if( nanoMethod!=null ) {
+//          try { return ((Long)(nanoMethod.invoke((Object)null, (Object[])null))).longValue()/(unit==1? 1000000L : unit==2 ? 1000000000L : 1); }
+//          catch( Exception e) { nanoMethod=null; }
+//       }
+//       long t=System.currentTimeMillis();
+//       if( unit==0 ) return t*1000000L;
+//       if( unit==2 ) return t/1000L;
+//       return t;
 
-       // DES QU'ON NE SUPPORTERA PLUS JAV 1.4
-//       return System.nanoTime()/1000000;
     }
 
     /** Retourne la lettre code d'un champ TFORM FITS nD */

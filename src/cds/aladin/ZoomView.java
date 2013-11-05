@@ -529,12 +529,12 @@ try {
            Coord [] coin = v.getCouverture();
            if( coin!=null ) {
                proj.frame = v.pref.projd.frame;
+               gbuf.setColor( Color.blue );
                for( int i=0; i<coin.length; i++ ) {
                   if( Double.isNaN(coin[i].al) ) continue;
                   c.al = coin[i].al;
                   c.del = coin[i].del;
                   proj.getXY(c);
-                  gbuf.setColor( Color.blue );
                   gbuf.drawLine((int)c.x,(int)c.y,(int)c.x,(int)c.y);
                }
                c = v.getCooCentre();

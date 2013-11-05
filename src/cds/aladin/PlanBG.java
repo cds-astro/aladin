@@ -1363,7 +1363,7 @@ public class PlanBG extends PlanImage {
 //         }
          double[] polar = CDSHealpix.radecToPolar(new double[] {ra, dec});
          double[] polar1 = CDSHealpix.radecToPolar(new double[] {ra1, dec1});
-         long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
+         long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);         
          
          HealpixKey h = getHealpixLowLevel(order,npixFile,HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
@@ -1996,14 +1996,15 @@ public class PlanBG extends PlanImage {
             
       double blank = Double.NaN;
       
-      boolean flagClosest = maxOrder()*resMult>maxOrder+4;
+//      boolean flagClosest = maxOrder()*resMult>maxOrder+4;
+      boolean flagClosest = false;
+      boolean testClosest = false;
+      
       int order = fullRes ? maxOrder : (int)(getOrder()*resMult);
       int a=order;
       if( order<3 ) order=3;
       else if( order>maxOrder ) order=maxOrder;
       
-      aladin.trace(4,"PlanBG.getCurrentBufPixels(bitpix="+bitpix+" resMult="+resMult+",fullRes="+fullRes+")" +
-      		(flagClosest?" closest":" bilinear")+" order="+a+(a!=order?" ==> "+order:""));
       
       int offset=0;
       double fct = 100./h;
@@ -2029,15 +2030,24 @@ public class PlanBG extends PlanImage {
             pi.projd.getCoord(coo1);
             coo1 = Localisation.frameToFrame(coo1,Localisation.ICRS,frameOrigin);
             
+            // Passe en mode Closest si il y a suréchantillonnage
+            if( !testClosest ) {
+               testClosest=true;
+               double resDest = Coo.distance(coo.al,coo.del,coo1.al,coo1.del)*2;
+               double resSrc = getPixelResolution();
+               if( resDest<resSrc/2 ) flagClosest=true;
+//               System.out.println("resSrc="+resSrc+" resDst="+resDest+" flagClosest="+flagClosest);
+            }
+            
             if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) val = Double.NaN;
             else if( flagClosest ) val = getHealpixClosestPixel(coo1.al,coo1.del,order);
             else val = getHealpixLinearPixel(coo.al,coo.del,coo1.al,coo1.del,order);
             if( Double.isNaN(val) ) {
                setPixVal(onePixelOrigin, bitpix, 0, blank);
-               if( !((PlanImage)pi).isBlank ) {
-                  ((PlanImage)pi).isBlank=true;
-                  ((PlanImage)pi).blank=blank;
-                  if( bitpix>0 && ((PlanImage)pi).headerFits!=null) ((PlanImage)pi).headerFits.setKeyValue("BLANK", blank+"");
+               if( !pi.isBlank ) {
+                  pi.isBlank=true;
+                  pi.blank=blank;
+                  if( bitpix>0 && pi.headerFits!=null) pi.headerFits.setKeyValue("BLANK", blank+"");
                }
             } else {
                val = val*bScale+bZero;

@@ -83,7 +83,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> "transparency pixel" support 
  * @beta    <LI> 3 panel mode
  * @beta    <LI> Tool plan "movable" property
- * @beta    <LI> SED quick view (from VizieR SED builder)
+ * @beta    <LI> VizieR phot. tool
  * @beta    <LI> Tagging source feature
  * @beta    <LI> Spectrum SAMP management dedicated to source catalog
  * @beta    <LI> Specifical color parameter for "draw" script command
@@ -93,6 +93,8 @@ import cds.xml.XMLParser;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Oversampling crop HiPS bilinear bug fixed
+ * @beta    <LI> FITS HEALPix maps with  TFORM=B bug fixed
  * @beta    <LI> FITS HEALPix maps with  NSIDE>=16384 bug fixed
  * @beta    <LI> Allsky generator .hhh bug fixed
  * @beta    <LI> Allsky generator cell <64 bug fixed
@@ -125,7 +127,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.571";
+    static public final    String VERSION = "v7.574";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -257,7 +259,7 @@ public class Aladin extends JApplet
     // Si une image est plus petite que cette limite, on préférera garder les pixels
     // d'origine (PlanImage.pixelsOrigin) en mémoire pour éviter des accès disques
     // pour chaque valeur de pixel
-    static final int LIMIT_PIXELORIGIN_INMEM = 4*1024*1024;
+    static final int LIMIT_PIXELORIGIN_INMEM = 8*1024*1024;
 
     // Limite image en full access
     static final long LIMIT_HUGEFILE = Math.min(Integer.MAX_VALUE,Runtime.getRuntime().maxMemory()/2L);

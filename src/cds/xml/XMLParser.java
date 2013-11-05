@@ -295,8 +295,8 @@ public final class XMLParser {
    private boolean flagDoublePoint;
    
    
-   private StringBuffer curString = new StringBuffer();
-   private StringBuffer macro = new StringBuffer();
+   private StringBuilder curString = new StringBuilder();
+   private StringBuilder macro = new StringBuilder();
       
   /** Recherche la chaine courante en fonction du mode du parsing
    * La mémorisation se fait dans le tableau ch[], et les variables start et length.

@@ -27,6 +27,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseWheelEvent;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.NumberFormat;
@@ -68,7 +69,7 @@ class SED extends JPanel {
    private Aladin aladin;
    private PlanCatalog plan;    // Le planCatalog qui va recueillir les infos du SED, il ne sera pas affiché dans la pile
    private String source;       // Le nom de la source concernée par le SED
-   private double radius;       // Le rayon de recherche de la SED
+   private double radius;       // Le rayon de recherche de la SED (en arcsec)
    private Repere simRep;       // Le repere à afficher dans la vue qui pointe sur la source du SED
    private String url;          // Pour mémoire
    private float transparency;  // Niveau de transparence d'affichage des points
@@ -83,7 +84,7 @@ class SED extends JPanel {
    
    private ArrayList<SEDItem> sedList;  // Liste des points du SED sous une forme "prémachée"
    
-   private Rectangle rCroix,rWave,rHelp/*,rInfo*/;  // Position des icones sur le graphiques
+   private Rectangle rCroix,rWave,rHelp,rMore;  // Position des icones sur le graphiques
    private double currentAbs=Double.NaN;  // Dernière fréquence/longueur d'onde sous la souris
    private double currentFlux=Double.NaN; // Dernier flux sous la souris
    private int currentX,currentY;         // Dernière position de la souris
@@ -466,6 +467,7 @@ class SED extends JPanel {
       // Les icones
       drawCroix(g);
       drawWave(g);
+      drawMore(g);
 //      drawInfo(g);
       drawHelp(g);
 
@@ -561,6 +563,18 @@ class SED extends JPanel {
 //      g.drawString("^",rInfo.x+2,rInfo.y+10);
 //   }
    
+   // Trace l'icone de demande de chargement du SED dans l'outil Web
+   private void drawMore(Graphics g) {
+      int w=5;
+      Dimension dim=getDimension();
+      g.setColor(Aladin.BKGD);
+      rMore = new Rectangle(dim.width-w-4,16+3*w,w+4,w+4);
+      g.fillRect(rMore.x,rMore.y,rMore.width,rMore.height);
+      g.setColor( flagWavelength ? Color.blue : Color.red );
+      g.setFont(Aladin.SBOLD);
+      g.drawString("+",rMore.x+2,rMore.y+8);
+   }
+   
    // Trace l'icone de demande de passage freq <-> longueur d'onde
    private void drawWave(Graphics g) {
       int w=5;
@@ -589,6 +603,7 @@ class SED extends JPanel {
    protected void mouseRelease(int x,int y) {
       if( rCroix.contains(x,y) ) aladin.view.zoomview.setSED((String)null);
 //      else if( rInfo.contains(x,y) ) createStackPlane();
+      else if( rMore.contains(x,y) ) more();
       else if( rHelp.contains(x,y) ) help();
       else if( rWave.contains(x,y) ) {
          flagWavelength = !flagWavelength;
@@ -602,6 +617,15 @@ class SED extends JPanel {
          aladin.mesure.mcanvas.show(siIn.o, bloc);
          aladin.calque.repaintAll();
       } 
+   }
+   
+   private void more() {
+      // Je dois utiliser le %20 plutôt que le '+' pour l'encodage des blancs
+      // parce que l'outil VizieR photometry ne les supporte pas
+      String target = URLEncoder.encode(source);
+      target = target.replaceAll("[+]","%20");
+      aladin.glu.showDocument("Widget.VizPhot", target+" "+radius);
+//      aladin.glu.showDocument("Widget.VizPhot", Glu.quote(source)+" "+radius);
    }
    
    // Affiche un message explicatif sur le SED
@@ -632,6 +656,7 @@ class SED extends JPanel {
       
       // Tooltips ?
       if( rCroix.contains(x,y) )     { toolTip("SEDCLOSE");       return; }
+      if( rMore.contains(x,y) )      { toolTip("SEDMORE");       return; }
 //      else if( rInfo.contains(x,y) ) { toolTip("SEDCREATEPLANE"); return; }
       else if( rWave.contains(x,y) ) { toolTip("SEDFREQWAVE");    return; }
       else if( rHelp.contains(x,y) ) { toolTip("SEDHELPTIP");     return; }

@@ -725,7 +725,7 @@ e.printStackTrace();
       // Le frame associée à la projection est remis à ICRS par défaut.
       // (==> Cas du changement de référentiel a posteriori pour les Allsky)
       if( flagModif && oldp!=null ) oldp.frame=Localisation.ICRS;
-
+      
       try {
 
          // Methode par parametres

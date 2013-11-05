@@ -19,6 +19,7 @@
 
 package cds.allsky;
 
+import java.io.File;
 import java.text.ParseException;
 
 import javax.swing.JProgressBar;
@@ -97,7 +98,8 @@ public class ContextGui extends Context {
    private int lastShowAllSkyNorder3=-1;
    public void updateAllskyPreview() {
       try {
-         if( !isExistingAllskyDir() ) return;
+         String path = getOutputPath()+Util.FS+"Norder3";
+         if( !isExistingAllskyDir() || !(new File(path)).isDirectory() ) return;
          if( lastShowAllSkyNorder3==lastNorder3 ) return;  // Déjà calculé
          lastShowAllSkyNorder3=lastNorder3;
          (new BuilderAllsky(this)).run();
@@ -178,10 +180,13 @@ public class ContextGui extends Context {
    public void setRgbPlans(Object [] plans) { plansRgb=plans; }
    public void setRgbOutput(String output) { outputRgb=output; }
    public void setRgbMethod(JpegMethod method) { methodRgb=method; }
-   
+
    public Object [] getRgbPlans() { return plansRgb; }
    public String getRgbOutput() { return outputRgb; }
    public JpegMethod getRgbMethod() { return methodRgb; }
+   
+   public int getRgbFormat() { return targetColorMode; }
+   public void setRgbFormat(int format) { targetColorMode=format; }
 
    public String getInputPath() {
       return mainPanel.tabDesc.getInputField();

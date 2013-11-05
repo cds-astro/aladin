@@ -2365,7 +2365,7 @@ public final class Glu implements Runnable {
       private void set0(String s) throws Exception {
          int i = s.indexOf(':');
          int j = s.indexOf(':',i+1);
-         if( i==-1 || j==-1 ) throw new Exception("%T syntax error");
+         if( i==-1 || j==-1 ) throw new Exception("%T syntax error ["+s+"]");
          set(i>0?s.substring(0,i):null,i+1<j?s.substring(i+1,j):null,s.substring(j+1));
       }
       

@@ -179,9 +179,9 @@ final public class BuilderAllsky  extends Builder {
       boolean first = true;
       String ext = mode=="png" ? ".png" : ".jpg";
      
-//      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
-//      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
-//      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
+      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
+      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
+      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
       Fits out = new Fits(outFileWidth,outFileHeight, 0);
       

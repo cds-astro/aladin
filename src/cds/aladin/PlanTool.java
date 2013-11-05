@@ -72,32 +72,34 @@ public class PlanTool extends PlanCatalog {
       askActive  = true;
    }
    
-// public void updatePhotMan(Obj o) {
-// if( legPhotMan==null ) createPhotManuelLegende();
-// 
-// String [] val = { o.id, o.raj+"", o.dej+"", o.getRadius()+"", "","","","","","","" };
-// StringBuffer rep = new StringBuffer();
-// for( String s : val ) { 
-//    if( rep.length()>0 ) rep.append('\t'); 
-//    rep.append(s); 
-// }
-// o.id=rep.toString();
-// if( o instanceof Source ) ((Source)o).leg = legPhotMan;
-// aladin.view.newView(1);
-//}
-//
-//   private void createPhotManuelLegende() {
-//      setSourceRemovable(true);
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",    "arcmin^2","" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",  "10" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",     "2",     "2",     "2",     "2" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DESCRIPTION,     
-//            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
-//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UCD,      
-//            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
-//   }
+   public void updatePhotMan(Obj o) {
+      if( legPhotMan==null ) createPhotManuelLegende();
+
+      String [] val = { o.id, o.raj+"", o.dej+"", o.getRadius()+"", "","","","","","","" };
+      StringBuffer rep = new StringBuffer();
+      for( String s : val ) { 
+         if( rep.length()>0 ) rep.append('\t'); 
+         rep.append(s); 
+      }
+      o.id=rep.toString();
+      if( o instanceof Source ) ((Source)o).leg = legPhotMan;
+      
+      pcat.setObjetFast(o);
+      aladin.view.newView(1);
+   }
+
+   private void createPhotManuelLegende() {
+      setSourceRemovable(true);
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",    "arcmin^2","" });
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",  "10" });
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",     "2",     "2",     "2",     "2" });
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DESCRIPTION,     
+            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
+      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UCD,      
+            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
+   }
    
    private void createTagLegende() {
       setSourceRemovable(true);

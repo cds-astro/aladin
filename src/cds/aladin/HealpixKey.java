@@ -41,6 +41,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
@@ -252,15 +253,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected byte [] getPixelFromAncetre() throws Exception { 
       byte [] pixAnc = anc.pixels==null ? anc.getPixelFromAncetre() : anc.pixels;
       byte [] pixels = new byte[width*height];
+      
       for( int y=0; y<width; y++) {
          for( int x=0; x<width; x++) {
             pixels[ y*width+x ] = pixAnc[ (y+p.y)*anc.width + (x+p.x) ];
          }
       }
+      
       return pixels;
       
    }
-
+   
    /** Génération du tableau des pixels rgb d'un losange issu d'une filiation en fonction
     * des pixels de son ancêtre */
    private int [] getPixelFromAncetreRGB() throws Exception {
@@ -659,10 +662,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
        int n=0,m=0,i=0,j=0;
        byte [] tmp;
        long t = System.currentTimeMillis();
-       long t0=t;
+//       long t0=t;
        boolean letTimeForDragging = slowDown();
-       boolean oletTime = letTimeForDragging;
-       boolean slowdown=false;
+//       boolean oletTime = letTimeForDragging;
+//       boolean slowdown=false;
        int size=SIZESLOW;
        
        tmp = new byte[size];
@@ -678,7 +681,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
           long t1 = System.currentTimeMillis();
           if( t1-t>10 ) {
              letTimeForDragging = slowDown();
-             if( oletTime!=letTimeForDragging ) slowdown=true;
+//             if( oletTime!=letTimeForDragging ) slowdown=true;
              t=t1;
           }
           
@@ -804,7 +807,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
       
       if( !planBG.color ) {
          planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
-//         planBG.pixMode = PlanBG.PIX_256;
          pixels = getPixels(img);
          planBG.setBufPixels8(pixels);
          planBG.pixelMin   = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
@@ -812,8 +814,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.dataMin    = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
          planBG.dataMax    = 255;
       } else {
-//         planBG.pixMode = PlanBG.PIX_RGB;
-         planBG.pixMode = PlanBG.PIX_ARGB;
+         planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
          planBG.video = PlanImage.VIDEO_NORMAL;
          rgb = getPixelsRGB(img);
       }
@@ -1533,12 +1534,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
       } else {
          byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
          
-         MemoryImageSource x = new MemoryImageSource(width, height, planBG.getCM(), pix, 0, width);
-         img = Toolkit.getDefaultToolkit().createImage(x);
+//         MemoryImageSource x = new MemoryImageSource(width, height, planBG.getCM(), pix, 0, width);
+//         img = Toolkit.getDefaultToolkit().createImage(x);
          
-//         img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
-//         WritableRaster wr = img.getRaster();
-//         wr.setDataElements (0, 0, width, height, pix);
+         img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
+         WritableRaster wr = ((BufferedImage)img).getRaster();
+         wr.setDataElements (0, 0, width, height, pix);
          
 // N'ARRIVE PAS A ETRE ACCELERE PAR LA CARTE GRAPHIQUE, PAS DE CHANCE !
 //         DataBuffer dbuf = (DataBuffer) new DataBufferByte(pix, width*height);
@@ -1551,7 +1552,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //         int[] offsets = new int[] {0};
 //         img = new BufferedImage(colorModel, raster, true, null);
       }
-      img.setAccelerationPriority(1f);
+//      img.setAccelerationPriority(1f);
       if( !allSky ) planBG.nbImgCreated++;
       imgID=planBG.imgID;
 

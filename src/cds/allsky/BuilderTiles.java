@@ -340,7 +340,7 @@ public class BuilderTiles extends Builder {
 
        HealpixMoc moc = new HealpixMoc();
        moc.add( context.getRegion() );
-       moc.setMaxLimitOrder(3);
+       moc.setMocOrder(3);
        npixIterator = moc.pixelIterator();
 
       // Initialisation des variables
@@ -373,7 +373,7 @@ public class BuilderTiles extends Builder {
       if( maxNbThread>0 && nbThread>maxNbThread ) nbThread=maxNbThread;
       if (nbThread==0) nbThread=1;
       if( nbThread>nbProc ) nbThread=nbProc;
-
+      
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
       context.info("Will use "+nbThread+" thread"+(nbThread>1?"s":""));
 

@@ -1600,6 +1600,7 @@ public final class Calque extends JPanel implements Runnable {
 //      return r;
 //   }
    
+   
    /** Met à jour le plan "Photometry" en fonction des paramètres de iqe */
    protected void updatePhotometryPlane(Repere r, double [] iqe) {
       

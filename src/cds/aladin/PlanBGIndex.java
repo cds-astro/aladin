@@ -20,14 +20,9 @@
 
 package cds.aladin;
 
-import java.awt.Graphics;
 import java.util.Hashtable;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cds.allsky.BuilderProgenIndex;
-import cds.tools.Util;
 
 
 public class PlanBGIndex extends PlanBG {

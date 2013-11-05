@@ -1726,9 +1726,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       */
      public  boolean gotoThere(String target) {
         try {
-           System.out.println("C'est parti pour "+target);
            Coord c1 = getCurrentView().getCooCentre();
-           Coord c = sesame(target);
+           Coord c;
+           if( !View.notCoord(target) ) c = new Coord(target);
+           else c = sesame(target);
            gotoAnimation(c1, c);
 //           return gotoThere(c,0,true);
         } catch( Exception e ) { }
@@ -1777,27 +1778,49 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
         final ViewSimple v = getCurrentView();
         if( v.locked || to==null ) return;
         final double zoom = v.zoom;
-        (new Thread() {
-           public void run() {
+//        (new Thread() {
+//           public void run() {
               double z = v.zoom;
-              int n=50;
-              for( int i=0; i<n; i++ ) {
-                 if( i<n/2 ) { if( z>0.05 ) z=z/1.1; }
-                 else if( z<zoom ) {
-                    z=z*1.1;
-                    if( z>zoom ) z=zoom;
-                 }
-                 double fct = i/(double)n;
-                 Coord c = new Coord( from.al + (to.al-from.al)*fct, from.del + (to.del-from.del)*fct);
-                 v.setZoomRaDec(z,c.al,c.del);
-                 v.repaint();
-                 System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
-                 Util.pause(50);
+              
+              double dist = Coord.getDist(from, to);
+              int n=(int) (dist);
+              int mode=0;
+              int i=0;
+              boolean encore=true;
+              double fct=0;
+              while( encore ) {
+                 
+                 switch(mode) {
+                    case 0: 
+                       if( z<0.1 ) i++;
+                       if( z>0.05 ) z=z/1.05; 
+                       else mode=1; 
+                       break;
+                    case 1: 
+                       i++;
+                       if( i>=n-3 ) mode=2;
+                       break;
+                    case 2:
+                       if( z<0.1 && i<n ) i++;
+                       if( z<zoom ) z=z*1.05; 
+                       if( z>=zoom ) {z=zoom; encore=false; }
+                       break;
+                   
+                }
+                fct = i/(double)n;
+                Coord c = new Coord( from.al + (to.al-from.al)*fct, 
+                       from.del + (to.del-from.del)*fct);
+                
+                int frameNumber = v.frameNumber;
+                gotoThere(c,z,true);
+                while( frameNumber==v.frameNumber ) Util.pause(10);
+//                System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
+//                Util.pause(75);
               }
               gotoThere(to,zoom,true);
            }
-        }).start();
-     }
+//        }).start();
+//     }
 
     /** Ajustement de toutes les vues (non ROI )
     *  afin que leur centre corresponde à la coordonnée

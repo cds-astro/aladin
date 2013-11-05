@@ -8,6 +8,7 @@ import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
+import cds.aladin.PlanImageMosaic;
 import cds.aladin.PlanImageRGB;
 import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
@@ -29,6 +30,7 @@ public class BuilderRgb extends Builder {
     private int missing=-1;
     
     private JpegMethod method;
+    private int format;
     
     private int statNbFile;
     private long statSize;
@@ -42,9 +44,10 @@ public class BuilderRgb extends Builder {
     public Action getAction() { return Action.RGB; }
     
     public void run() throws Exception {
-       build();
-       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).createAllSkyColor(path,3,"jpeg",64);
-       if( !context.isTaskAborting() ) (new BuilderAllsky(context)).createAllSkyColor(path,3,"png",64);
+       build();       
+       if( !context.isTaskAborting() ) {
+          (new BuilderAllsky(context)).createAllSkyColor(path,3,Context.MODE[format],64);
+       }
        if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(path);
     }
     
@@ -57,6 +60,7 @@ public class BuilderRgb extends Builder {
        Object [] plans = ((ContextGui)context).getRgbPlans();
        String path = ((ContextGui)context).getRgbOutput();
        JpegMethod method = ((ContextGui)context).getRgbMethod();
+       this.format=((ContextGui)context).getRgbFormat();
        String label=null;
        
        p = new PlanBG[3];
@@ -85,6 +89,7 @@ public class BuilderRgb extends Builder {
              return;
           }
           tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
+ 
           context.setProperty(c==0?"red":c==1?"green":"blue",p[c].label+" ["
                +p[c].getPixelMin()+" "+p[c].getPixelMiddle()+" "+p[c].getPixelMax()+" "
                +PlanImage.TRANSFERTFCT[ p[c].transfertFct ]+"]");
@@ -114,7 +119,7 @@ public class BuilderRgb extends Builder {
        for( int i=0; i<768; i++ ) {
           if( context.isTaskAborting() ) new Exception("Task abort !");
           // Si le fichier existe déjà on ne l'écrase pas
-          String rgbfile = Util.getFilePath(path,3, i)+".jpg";
+          String rgbfile = Util.getFilePath(path,3, i)+Context.EXT[format];
           if( !context.isInMocTree(3, i) ) continue;
           if ((new File(rgbfile)).exists()) continue;
           createRGB(3,i);
@@ -135,7 +140,7 @@ public class BuilderRgb extends Builder {
 	      String file = Util.getFilePath(p[c].getUrl(),order,npix)+".fits";
 	      if( new File(file).exists() ) trouve++;
 	   }
-	   if( trouve<2 ) return null;
+	   if( trouve==0 ) return null;
 
 	   Fits [] out = null;
 
@@ -279,8 +284,9 @@ public class BuilderRgb extends Builder {
        for( int c=0; c<3; c++ ) {
           if( c==missing || out[c]==null ) continue;
 //          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
-          pixx8[c] = out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c], Fits.PIX_256);
-       }
+          pixx8[c] = out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c], 
+                format==Context.PNG ? Fits.PIX_255 : Fits.PIX_256);
+      }
        
        Fits rgb = new Fits(width,width,0);
        int [] pix8 = new int[3];
@@ -295,14 +301,18 @@ public class BuilderRgb extends Builder {
              }
           }
           if( missing!=-1 ) pix8[missing] = tot/2;
-          int pix = 0xFF;
-          for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
+          int pix;
+          if( tot==0 ) pix=0x00;
+          else {
+             pix = 0xFF;
+             for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
+          }
           rgb.rgb[i]=pix;
        }
        String file="";
 
-       file = Util.getFilePath(path,order, npix)+".jpg";
-       rgb.writeRGBcompressed(file,"jpeg");
+       file = Util.getFilePath(path,order, npix)+Context.EXT[format];
+       rgb.writeRGBcompressed(file,Context.MODE[format]);
        rgb.free();
 
        File f = new File(file);

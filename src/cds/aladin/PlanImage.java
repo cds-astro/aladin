@@ -78,8 +78,8 @@ public class PlanImage extends Plan {
    static final int CMSTERN= 3;
 
    // modes video possibles
-   protected static final int VIDEO_NORMAL  = 0;  // Video mode normal
-   protected static final int VIDEO_INVERSE = 1;  // Video inverse
+   public static final int VIDEO_NORMAL  = 0;  // Video mode normal
+   public static final int VIDEO_INVERSE = 1;  // Video inverse
 
    // Origines possibles
    protected static final int ALADIN  = 0;  // Par le serveur d'images Aladin
@@ -125,7 +125,7 @@ public class PlanImage extends Plan {
    protected boolean flagHist;        // true si on dispose de l'histogramme des pixels à jour
    protected int width;				  // largeur de l'image
    protected int height;			  // hauteur de l'image
-   protected int video;				  // memorise le mode video (NORMAL ou INVERSE)
+   public int video;				  // memorise le mode video (NORMAL ou INVERSE)
    protected int bitpix;              // profondeur de l'image a l'origine
    protected int naxis1;              // Largeur de l'image (diffère de width dans le cas de PlanImageHuge)
    protected int naxis2;              // Hauteur de l'image (diffère de height dans le cas de PlanImageHuge)
@@ -898,8 +898,12 @@ Aladin.trace(3,"Original pixels saved in cache ["+cacheID+"]");
     */
    protected boolean getFromCache() {
       if( !Aladin.STANDALONE ) return false;
-      if( pixelsOrigin!=null ) return true;
-      if( cacheID==null ) return false;
+      if( pixelsOrigin!=null ) {
+         return true;
+      }
+      if( cacheID==null ) {
+         return false;
+      }
       try {
          openCache();
          fCache.seek(cacheOffset);
@@ -962,7 +966,7 @@ Aladin.trace(3,"Original pixel sub-image ("+x+","+y+","+w+","+h+") extracted"
 
       // L'image est petite, on la charge entièrement pour s'éviter des
       // accès disques
-      if( naxis1*naxis2*npix<Aladin.LIMIT_PIXELORIGIN_INMEM ) return false;
+      if( naxis1*naxis2*npix<=Aladin.LIMIT_PIXELORIGIN_INMEM ) return false;
       return true;
    }
 
@@ -1076,7 +1080,9 @@ Aladin.trace(3,"Original pixels RAM free for "+label);
    }
 
    /** Rechargement des pixels d'origine depuis le cache si c'est possible */
-   protected boolean pixelsOriginFromCache() { return getFromCache(); }
+   protected boolean pixelsOriginFromCache() { 
+      return getFromCache(); 
+    }
    
    // Indique que l'image a change en incrementant le numero de version
    // de l'image.
@@ -1817,7 +1823,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 //      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
 //   }
    
-   static final protected int getByte (byte[] t, int i) {
+   static final protected int getByte(byte[] t, int i) {
       return (int)(t[i]&0xFF);
    }
    static final protected int getShort(byte[] t, int i) { 
