@@ -122,13 +122,20 @@ final public class BuilderAllsky  extends Builder {
 //         throw new Exception("createAllSky error: null output file !");
       }
       double cut [] = context.getCut();
-      double bzero = context.getBZero();
+      double bzero  = context.getBZero();
       double bscale = context.getBScale();
+      
       int bitpix = out.bitpix;
       
       out.setBlank(blank);
       out.setBzero(bzero);
       out.setBscale(bscale);
+      
+      if( cut==null ) {
+         cut = out.findAutocutRange(0, 0, true);
+//         System.out.println("BINGO");
+      }
+      
       if( cut[0]<cut[1] ) {
          out.headerFits.setKeyValue("PIXELMIN", (bitpix>0 ? (int)cut[0] : cut[0])+"");
          out.headerFits.setKeyValue("PIXELMAX", (bitpix>0 ? (int)cut[1] : cut[1])+"");
@@ -179,7 +186,7 @@ final public class BuilderAllsky  extends Builder {
       boolean first = true;
       String ext = mode=="png" ? ".png" : ".jpg";
      
-      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST color"
+      Aladin.trace(3,"Creation Allsky order="+order+" mode=FIRST color"
       +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
       +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 

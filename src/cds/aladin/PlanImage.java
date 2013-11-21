@@ -2108,7 +2108,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
                c = getPixVal(pIn,bitpix,i*width+j);
 
 //             On ecarte les valeurs sans signification
-               if( Double.isNaN(c) ) continue;
+               if( isBlank(c) ) continue;
 
                if( flagCut ) {
                   if( c<minCut || c>maxCut ) continue;
@@ -2147,7 +2147,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
          for( i=MARGEH; i<height-MARGEH; i++ ) {
             for( k=MARGEW; k<width-MARGEW; k++) {
                c = getPixVal(pIn,bitpix,i*width+k);
-               if( Double.isNaN(c)) continue;
+               if( isBlank(c) ) continue;
 
                j = (int)((c-min)/l);
                if( j==bean.length ) j--;
@@ -2451,7 +2451,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    public String getPixelMinInfo() { return getSpecialPixel(pixelMin); }
    public String getPixelMaxInfo() { return getSpecialPixel(pixelMax); }
    
-   private String getSpecialPixel(double x) {
+   protected String getSpecialPixel(double x) {
       if( aladin.view.getPixelMode()==View.INFILE ) return X(x);
       return Y(x*bScale+bZero);
    }

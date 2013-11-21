@@ -44,7 +44,7 @@ public class BuilderIndex extends Builder {
    private int [] borderSize= {0,0,0,0};
    private int radius = 0;
    private String currentfile = null;
-   private boolean blocking;
+   private boolean partitioning;
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
@@ -85,8 +85,8 @@ public class BuilderIndex extends Builder {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
       }
       
-      blocking = context.cutting;
-      if( blocking ) context.info("Splitting large original image files in blocs of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
+      partitioning = context.partitioning;
+      if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
 
       validateInput();
       validateOutput();
@@ -115,7 +115,9 @@ public class BuilderIndex extends Builder {
          context.warning("The provided order ["+order+"] is less than the optimal order ["+context.getOrder()+"] => OVER-sample will be applied");
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
-      }
+      } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
+         +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+Constante.ORDER))/3600. ) );
+
       
    }
    
@@ -234,7 +236,7 @@ public class BuilderIndex extends Builder {
             try {
 
                // Test sur l'image entière
-               if( !blocking /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
+               if( !partitioning || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE ) {
                   updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
                   testAndInsert(fitsfile, pathDest, currentfile, null, order);
 

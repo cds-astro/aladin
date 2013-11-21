@@ -1005,6 +1005,7 @@ final public class Fits {
       try {
          fos = new FileOutputStream(new File(file));
          writeCompressed(fos, pixelMin, pixelMax, tcm, format);
+         setReleasable(false);
       } finally {
          if( fos!=null ) fos.close();
       }
@@ -1182,8 +1183,10 @@ final public class Fits {
     * à partir du bas) sous forme d'un double
     */
    public double getPixelFull(int x, int y) {
-      return bscale * getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
-                  + (x - xCell)) + bzero;
+      double pix = getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
+            + (x - xCell));
+      if( isBlankPixel(pix) ) return pix;
+      return bscale * pix  + bzero;
    }
 
    /**
@@ -1449,7 +1452,7 @@ final public class Fits {
     *         minPix..maxPix
     */
    public double[] findFullAutocutRange() throws Exception {
-      double[] cut = findAutocutRange(0, 0);
+      double[] cut = findAutocutRange(0, 0,false);
       cut[0] = bscale * cut[0] + bzero;
       cut[1] = bscale * cut[1] + bzero;
       return cut;
@@ -1461,20 +1464,24 @@ final public class Fits {
     *         minPix..maxPix
     */
    public double[] findAutocutRange() throws Exception {
-      return findAutocutRange(0, 0);
+      return findAutocutRange(0, 0, false);
    }
-
+   
+   
    /**
     * Détermine l'intervalle pour un autocut "à la Aladin" en ne considérant que
     * les valeurs comprises entre min et max
+    * @param min valeur initiale du cut bas (0 si aucune)
+    * @param max valeur initiale du cut haut (0 si aucune)
+    * @param full true si on opère sur toute l'image, sinon juste la partie centrale
     * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
     *         minPix..maxPix
     */
-   public double[] findAutocutRange(double min, double max) throws Exception {
+   public double[] findAutocutRange(double min, double max,boolean full) throws Exception {
       double[] range = new double[4];
       try {
-         findMinMax(range, pixels, bitpix, widthCell, heightCell, min, max,
-               true, 0);
+         if( isReleased() ) reloadBitmap();
+         findMinMax(range, pixels, bitpix, widthCell, heightCell, min, max, true, full,0);
       } catch( Exception e ) {
          System.err.println("Erreur  MinMax");
          range[0] = range[2] = min;
@@ -1488,39 +1495,39 @@ final public class Fits {
       return Double.isNaN(pix) || /* !Double.isNaN(blank) && */pix == blank;
    }
 
-   public double[] findMinMax() {
-      boolean first = true;
-      long nmin = 0, nmax = 0;
-      double c;
-      double max = 0, max1 = 0;
-      double min = 0, min1 = 0;
-      int n = pixels.length / (Math.abs(bitpix) / 8);
-      for( int i = 0; i < n; i++ ) {
-         c = getPixValDouble(pixels, bitpix, i);
-         if( isBlankPixel(c) ) continue;
-
-         if( first ) {
-            max = max1 = min = min1 = c;
-            first = false;
-         }
-
-         if( min > c ) {
-            min = c;
-            nmin = 1;
-         } else if( max < c ) {
-            max = c;
-            nmax = 1;
-         } else {
-            if( c == min ) nmin++;
-            if( c == max ) nmax++;
-         }
-
-         if( c < min1 && c > min || min1 == min && c < max1 ) min1 = c;
-         else if( c > max1 && c < max || max1 == max && c > min1 ) max1 = c;
-      }
-      double[] minmax = new double[] { min, max };
-      return minmax;
-   }
+//   public double[] findMinMax() {
+//      boolean first = true;
+//      long nmin = 0, nmax = 0;
+//      double c;
+//      double max = 0, max1 = 0;
+//      double min = 0, min1 = 0;
+//      int n = pixels.length / (Math.abs(bitpix) / 8);
+//      for( int i = 0; i < n; i++ ) {
+//         c = getPixValDouble(pixels, bitpix, i);
+//         if( isBlankPixel(c) ) continue;
+//
+//         if( first ) {
+//            max = max1 = min = min1 = c;
+//            first = false;
+//         }
+//
+//         if( min > c ) {
+//            min = c;
+//            nmin = 1;
+//         } else if( max < c ) {
+//            max = c;
+//            nmax = 1;
+//         } else {
+//            if( c == min ) nmin++;
+//            if( c == max ) nmax++;
+//         }
+//
+//         if( c < min1 && c > min || min1 == min && c < max1 ) min1 = c;
+//         else if( c > max1 && c < max || max1 == max && c > min1 ) max1 = c;
+//      }
+//      double[] minmax = new double[] { min, max };
+//      return minmax;
+//   }
 
    private int users = 0;
    public boolean hasUsers() { return users > 0; }
@@ -1566,8 +1573,8 @@ final public class Fits {
       if( hasUsers() ) return; // Pas possible, qq s'en sert
       if( filename==null ) return;
       testBitmapReleaseFeature();
-      bitmapReleaseDone = true;
       pixels = null;
+      bitmapReleaseDone = true;
 //      System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);
    }
 
@@ -1656,7 +1663,7 @@ final public class Fits {
     * @param ntest Nombre d'appel en cas de traitement récursif.
     */
    private void findMinMax(double[] range, byte[] pIn, int bitpix, int width,
-         int height, double minCut, double maxCut, boolean autocut, int ntest)
+         int height, double minCut, double maxCut, boolean autocut, boolean full, int ntest)
          throws Exception {
       int i, j, k;
       boolean flagCut = (ntest > 0 || minCut != 0. && maxCut != 0.);
@@ -1665,17 +1672,19 @@ final public class Fits {
       double max = 0, max1 = 0;
       double min = 0, min1 = 0;
 
+      int margeW=0,margeH=0;
+         
+      
       // Marge pour l'échantillonnage (on recherche min et max que sur les 1000
       // pixels centraux en
       // enlevant éventuellement un peu de bord
-      int MARGEW = (int) (width * 0.05);
-      int MARGEH = (int) (height * 0.05);
+      if( !full ) {
+         margeW = (int) (width * 0.05);
+         margeH = (int) (height * 0.05);
 
-      // LES DEUX LIGNES QUI SUIVENT SONT A COMMENTER SI ON VEUT ETRE SUR DE NE
-      // PAS LOUPER
-      // DES PARTICULARITES LOCALES SUR LES GROSSES IMAGES.
-      if( width - 2 * MARGEW > 1000 ) MARGEW = (width - 1000) / 2;
-      if( height - 2 * MARGEH > 1000 ) MARGEH = (height - 1000) / 2;
+         if( width - 2 * margeW > 1000 ) margeW = (width - 1000) / 2;
+         if( height - 2 * margeH > 1000 ) margeH = (height - 1000) / 2;
+      }
 
       double c;
 
@@ -1686,8 +1695,8 @@ final public class Fits {
       } else {
          boolean first = true;
          long nmin = 0, nmax = 0;
-         for( i = MARGEH; i < height - MARGEH; i++ ) {
-            for( j = MARGEW; j < width - MARGEW; j++ ) {
+         for( i = margeH; i < height - margeH; i++ ) {
+            for( j = margeW; j < width - margeW; j++ ) {
                c = getPixValDouble(pIn, bitpix, i * width + j);
 
                // On ecarte les valeurs sans signification
@@ -1732,9 +1741,10 @@ final public class Fits {
          int nbean = 10000;
          double l = (max - min) / nbean;
          int[] bean = new int[nbean];
-         for( i = MARGEH; i < height - MARGEH; i++ ) {
-            for( k = MARGEW; k < width - MARGEW; k++ ) {
+         for( i = margeH; i < height - margeH; i++ ) {
+            for( k = margeW; k < width - margeW; k++ ) {
                c = getPixValDouble(pIn, bitpix, i * width + k);
+               if( isBlankPixel(c) ) continue;
 
                j = (int) ((c - min) / l);
                if( j == bean.length ) j--;
@@ -1759,7 +1769,7 @@ final public class Fits {
          if( mmBean[0] != -1 && mmBean[0] > mmBean[1] - 5 && ntest < 3 ) {
             if( min1 > min ) min = min1;
             if( max1 < max ) max = max1;
-            findMinMax(range, pIn, bitpix, width, height, min, max, autocut,
+            findMinMax(range, pIn, bitpix, width, height, min, max, autocut, full,
                   ntest + 1);
             return;
          }
@@ -2042,15 +2052,26 @@ final public class Fits {
 
       if( a.pixels != null && pixels != null ) {
          for( int i = 0; i < taille; i++ ) {
-            double v1 = getPixValDouble(pixels, bitpix, i);
-            if( !isBlankPixel(v1) ) continue;
+            double v = getPixValDouble(pixels, bitpix, i);
+            boolean vblank = isBlankPixel(v);
+            double va = a.getPixValDouble(a.pixels, a.bitpix, i);
+            boolean vablank = a.isBlankPixel(va);
+            
+            if( !vblank || vablank ) continue;
+            setPixValDouble(pixels, bitpix, i, va);
 
-            double v = a.getPixValDouble(a.pixels, a.bitpix, i);
-            setPixValDouble(pixels, bitpix, i, v);
-
-            if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
+//            if( a.rgb != null && rgb != null ) rgb[i] = a.rgb[i];
          }
       }
+      
+      if( a.rgb != null && rgb != null ) {
+         for( int i = 0; i < taille; i++ ) {
+            if( (rgb[i] & 0xFF000000)!=0 ) continue;
+            if( (a.rgb[i] & 0xFF000000)==0 ) continue;
+            rgb[i] = a.rgb[i];
+         }
+      }
+
    }
 
    public void setFilename(String filename) {

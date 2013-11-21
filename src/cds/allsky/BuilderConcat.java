@@ -83,7 +83,7 @@ public class BuilderConcat extends BuilderTiles {
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
          outputMoc = outputMoc.union(inputMoc);
-         outputMoc.write( context.getOutputPath()+Util.FS+"Moc.fits", HealpixMoc.FITS);
+         outputMoc.write( context.getOutputPath()+Util.FS+"Moc.fits");
          context.info("MOC updated");
       } else {
          (new BuilderMoc(context)).run();
@@ -98,6 +98,10 @@ public class BuilderConcat extends BuilderTiles {
             context.warning("Previous HpxFinder has been removed as "+Constante.HPX_FINDER+"-partial");
          }
       } else {
+         // Il faut refaire le MOC de l'index cumulé
+         (new BuilderMocIndex(context)).run();
+         context.info("Index MOC updated");
+        
          // Faut-il lancer également une commande PROGEN
          f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
          if( f.isDirectory() ) {
@@ -116,7 +120,7 @@ public class BuilderConcat extends BuilderTiles {
       mode = context.getCoAddMode();
       tileMode=Context.FITS;
 
-      if( inputPath==null ) throw new Exception("\"input\" parameter required !");
+      if( inputPath==null ) throw new Exception("\"in\" parameter required !");
       File f = new File(inputPath);
       if( f.exists() && (!f.isDirectory() || !f.canRead() )) throw new Exception("\"inputPath\" directory not available ["+inputPath+"]");
 
@@ -163,6 +167,7 @@ public class BuilderConcat extends BuilderTiles {
          f = new File(inputPath+Util.FS+BuilderMoc.MOCNAME);
          inputMoc.read( f.getCanonicalPath() );
       }
+      
       if( context.mocArea!=null ) inputMoc = inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
 
@@ -313,7 +318,7 @@ public class BuilderConcat extends BuilderTiles {
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
       long t = System.currentTimeMillis();
       Fits out=null;
-
+      
       String inputFile = Util.getFilePath(inputPath,order,npix);
       Fits input = loadTile(inputFile);
       if( input==null ) {
@@ -325,7 +330,7 @@ public class BuilderConcat extends BuilderTiles {
       // traitement de la tuile
       String outFile = Util.getFilePath(outputPath,order,npix);
       out = loadTile(outFile);
-
+      
       switch(mode) {
          case REPLACETILE:
             out=input;
@@ -348,8 +353,8 @@ public class BuilderConcat extends BuilderTiles {
       }
 
       if( out==null ) throw new Exception("Y a un blème ! out==null");
-
-//      writeTile(out,outFile);
+      else write(outFile,out);
+      
       if( context.isTaskAborting() )  throw new Exception("Task abort !");
 
       // Traitement de la tuile index

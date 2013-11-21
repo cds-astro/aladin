@@ -73,7 +73,7 @@ public class TabDesc extends JPanel implements ActionListener {
    private JCheckBox specifCheckbox;
    private JCheckBox blankCheckbox;
    private JCheckBox borderCheckbox;
-   private JCheckBox skyvalCheckbox;
+   private JRadioButton skyvalCheckbox;
    private JCheckBox frameCheckbox;
    
    private JTextField specifTextField;
@@ -329,7 +329,7 @@ public class TabDesc extends JPanel implements ActionListener {
       blankTextField = new JTextField();
       borderCheckbox = new JCheckBox(BORDERALLSKY); borderCheckbox.setSelected(false);
       borderTextField = new JTextField();
-      skyvalCheckbox = new JCheckBox(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
+      skyvalCheckbox = new JRadioButton(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
       skyvalTextField = new JTextField();
 
       resetTiles.setText(REP_DEST_RESET);
@@ -511,7 +511,9 @@ public class TabDesc extends JPanel implements ActionListener {
 
    public String getSkyvalField() {
 	   if( !skyvalCheckbox.isSelected() ) return null;
-	   return skyvalTextField.getText();
+	   String s = skyvalTextField.getText().toUpperCase().trim();
+	   if( s.length()==0 )  s="true";  // automatic skyval substraction
+	   return s;
    }
    
    /**

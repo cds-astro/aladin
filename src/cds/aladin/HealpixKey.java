@@ -1029,33 +1029,46 @@ public class HealpixKey implements Comparable<HealpixKey> {
             } catch( Exception e ) { 
                planBG.bZero=0;
             }
-            try {
-               try {
-                  planBG.pixelMin = getValue(head,"PIXELMIN");
-                  planBG.pixelMax = getValue(head,"PIXELMAX");
-               } catch( Exception e1 ) { }
-                  try {
-                     planBG.dataMin  = getValue(head,"DATAMIN");
-                     planBG.dataMax  = getValue(head,"DATAMAX");
-                  } catch( Exception e1 ) { }
+//            try {
+//               try {
+//                  planBG.pixelMin = getValue(head,"PIXELMIN");
+//                  planBG.pixelMax = getValue(head,"PIXELMAX");
+//               } catch( Exception e1 ) { }
+//               try {
+//                  planBG.dataMin  = getValue(head,"DATAMIN");
+//                  planBG.dataMax  = getValue(head,"DATAMAX");
+//               } catch( Exception e1 ) { }
                try {
                   planBG.blank    = getValue(head,"BLANK");
                   planBG.isBlank = true;
                } catch( Exception e ) { planBG.isBlank = false; }
+               
+               Fits tmp = new Fits(width,height,bitpix);
+               if( planBG.isBlank ) tmp.setBlank(planBG.blank);
+               tmp.pixels = in;
+               double [] range = tmp.findAutocutRange(0,0,true);
+               planBG.pixelMin = pixelMin = range[0];
+               planBG.pixelMax = pixelMax = range[1];
+               planBG.dataMin  = range[2];
+               planBG.dataMax  = range[3];
+//               planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
+//                     "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
+
                planBG.aladin.trace(3,"Pixel range found in AllSky.fits => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
                                                  "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]"+(planBG.isBlank?" Blank="+planBG.blank:"")
                                                  +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
-            } catch( Exception e1 ) {
-               Fits tmp = new Fits(width,height,bitpix);
-               tmp.pixels = in;
-               double [] range = tmp.findAutocutRange();
-               planBG.pixelMin = range[0];
-               planBG.pixelMax = range[1];
-               planBG.dataMin  = range[2];
-               planBG.dataMax  = range[3];
-               planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
-                     "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
-            }
+//            } catch( Exception e1 ) {
+//               Fits tmp = new Fits(width,height,bitpix);
+//               if( planBG.isBlank ) tmp.setBlank(planBG.blank);
+//               tmp.pixels = in;
+//               double [] range = tmp.findAutocutRange(0,0,true);
+//               planBG.pixelMin = range[0];
+//               planBG.pixelMax = range[1];
+//               planBG.dataMin  = range[2];
+//               planBG.dataMax  = range[3];
+//               planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
+//                     "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
+//            }
             planBG.creatDefaultCM();
             if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
          }

@@ -2349,8 +2349,8 @@ BLANKALLSKY Alternate blank FITS value
 BLANKALLSKY.fr Valeur BLANK alternative
 BORDERALLSKY Image border to ignore (N W S E in pix)
 BORDERALLSKY.fr Bords d'image à ignorer (N O S E en pix)
-SKYVALALLSKY Sky background to subtract (FITS keyword)
-SKYVALALLSKY.fr Fond du ciel à soustraire (mot clé FITS)
+SKYVALALLSKY Sky background adjustement (auto|FITS keyword)
+SKYVALALLSKY.fr Ajustement du Fond du ciel (auto|mot clé FITS)
 LABELALLSKY Data name:
 LABELALLSKY.fr Nom des données:
 INFOALLSKY Thanks to this panel, you will be able to generate an all sky survey from a set of images. These images must be in FITS, JPEG or PNG format, astrometrically calibrated, possibly gzipped. Aladin resamples your image collection on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). This process can be very quick for low resolution surveys (e.g.: 1 minute for an all-sky survey at a 1' resolution => 768MB), and days for high resolution survey (ex: 10 days for 0.8" resolution => 4 TB). Once the system of hierarchical directories and files is build, you can load the target directory in Aladin and view your new progressive allsky in the same way as any remote all-sky survey in Aladin. You can also publish it for your collaborators

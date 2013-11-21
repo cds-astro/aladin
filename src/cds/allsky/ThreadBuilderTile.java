@@ -69,7 +69,11 @@ final public class ThreadBuilderTile {
       if( !flagColor ) {
          bZero = context.getBZero();
          bScale = context.getBScale();
-         cutOrig=context.getCutOrig();
+         try {
+            cutOrig=context.getCutOrig();
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
          cut=context.getCut();
          blankOrig=context.getBlankOrig();
          hasAlternateBlank = context.hasAlternateBlank();

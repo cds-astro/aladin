@@ -20,6 +20,7 @@
 package cds.allsky;
 
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
  * @author Standard Anaïs Oberto [CDS] & Pierre Fernique [CDS]
@@ -44,18 +45,36 @@ public class BuilderTree extends BuilderTiles {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
       validateOrder(context.getOutputPath());  
-      if( !context.isColor() ) {
-         validateCut();
-         context.initParameters();
-      } else {
-         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
-         context.initRegion();
-      }
+      
+//      if( !context.isColor() ) {
+//         validateCut();
+//         context.initParameters();
+//      } else {
+//         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
+//         context.initRegion();
+//      }
+      
+      (new BuilderMoc(context)).run(); 
+      context.info("MOC rebuilt from low rhombs");
+      context.loadMoc();
+      context.initRegion();
    }
    
+   private boolean first=true;
+   protected void setConstantes(Fits f) {
+      first=false;
+      context.bitpix = bitpix = f.bitpix;
+      context.blank  = blank  = f.blank;
+      context.bzero  = bzero  = f.bzero;
+      context.bscale = bscale = f.bscale;
+      context.info("Found in first low rhomb: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
+   }
+
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
       long t = System.currentTimeMillis();
       Fits f = findLeaf(file);
+      if( first && f!=null ) setConstantes(f);
+
       long duree = System.currentTimeMillis()-t;
       if( f==null ) updateStat(0,0,1,duree,0,0);
       else updateStat(0,1,0,duree,0,0);

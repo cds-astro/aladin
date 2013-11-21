@@ -78,7 +78,7 @@ public class BuilderProgenIndex extends Builder {
    
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime);
+      context.showJpgStat(statNbFile, statSize, totalTime,0,0);
    }
 
    public void build() throws Exception {

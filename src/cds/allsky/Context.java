@@ -80,20 +80,23 @@ public class Context {
    protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
-   protected double[] cutOrig; // Valeurs cutmin,cutmax, datamin,datamax des images originales
+   protected boolean bscaleBzeroOrigSet=false; // true si on a positionné 
+   protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
+   protected double[] cutOrigBefore;         // idem mais avec BZERO et BSCALE (car passé par ligne de commande)
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
-   protected int circle = 0;                  // Rayon du cercle à garder, <=0 pour tout
+   protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
-   protected boolean cutting=false;         // Activation de la lecture par blocs des fimages originales
-   protected String skyvalName;              // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   protected boolean partitioning=true;          // Activation de la lecture par blocs des fimages originales
+   public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
    protected double bzero=0;                 // Valeur BZERO de la boule Healpix à générer
    protected double bscale=1;                // Valeur BSCALE de la boule HEALPix à générer
-   protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
+//   protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
    private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
@@ -126,7 +129,8 @@ public class Context {
       mocArea=mocIndex=moc=null;
       coAdd=CoAddMode.getDefault();
       hasAlternateBlank=false;
-      bscaleBzeroSet=false;
+//      bscaleBzeroSet=false;
+      bscaleBzeroOrigSet=false;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
       validateOutputDone=validateInputDone=validateCutDone=false;
@@ -159,11 +163,10 @@ public class Context {
    public HealpixMoc getArea() { return mocArea; }
    public CoAddMode getCoAddMode() { return coAdd; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
    public double[] getCut() { return cut; }
-   public double[] getCutOrig() { return cutOrig; }
+   public double[] getCutOrig() throws Exception { return cutOrig; }
    public String getSkyval() { return skyvalName; }
-   public boolean isSkySub() { return skyvalName!=null; }
    public boolean isColor() { return bitpixOrig==0; }
-   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
+//   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
    public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isInTree(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
@@ -175,7 +178,7 @@ public class Context {
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
-   public void setCutting(String s) { cutting = s.equalsIgnoreCase("true") ? true : false; }
+   public void setPartitioning(String s) { partitioning = s.equalsIgnoreCase("false") ? false : true; }
    public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
@@ -183,7 +186,12 @@ public class Context {
    public void setDiffOrder(int diffOrder) { this.diffOrder = diffOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame= (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
-   public void setSkyValName(String s ) { skyvalName=s; }
+   public void setSkyValName(String s ) { 
+      skyvalName=s; 
+      if( s==null ) return;
+      if(s.equalsIgnoreCase("true") )  info("Skyval automatical adjustement activated...");
+      else info("Skyval adjustement based on the FITS keyword ["+s+"]");
+   }
    public void setInputPath(String path) { this.inputPath = path; 
    		// cherche le dernier mot et le met dans le label
    		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
@@ -191,10 +199,10 @@ public class Context {
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
-   public void setBScaleOrig(double x) { bScaleOrig = x; }
-   public void setBZeroOrig(double x) { bZeroOrig = x; }
-   public void setBScale(double x) { bscale = x; bscaleBzeroSet=true; }
-   public void setBZero(double x) { bzero = x; bscaleBzeroSet=true; }
+   public void setBScaleOrig(double x) { bScaleOrig = x; bscaleBzeroOrigSet=true; }
+   public void setBZeroOrig(double x) { bZeroOrig = x; bscaleBzeroOrigSet=true; }
+//   public void setBScale(double x) { bscale = x; bscaleBzeroSet=true; }
+//   public void setBZero(double x) { bzero = x; bscaleBzeroSet=true; }
    public void setBitpixOrig(int bitpixO) { 
 	   this.bitpixOrig = bitpixO; 
 	   if (this.bitpix==-1) this.bitpix = bitpixO;
@@ -211,12 +219,11 @@ public class Context {
    public void setPixelCut(String scut) throws Exception {
        StringTokenizer st = new StringTokenizer(scut," ");
        int i=0;
+       if( cutOrigBefore==null ) cutOrigBefore = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
        while( st.hasMoreTokens() ) {
           String s = st.nextToken();
           try { 
-             double d = Double.parseDouble(s);
-             if( cut==null ) cut = new double[4];
-             cut[i++]=d;
+             cutOrigBefore[i++]=Double.parseDouble(s);
           } catch( Exception e) {
              setTransfertFct(s);
           }
@@ -224,7 +231,7 @@ public class Context {
        }
        if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
 
-       if( cut!=null ) setCutOrig(this.cut);
+//       if( cut!=null ) setCutOrig(this.cut);
    }
    
    public String getTransfertFct() { return fct.toString().toLowerCase(); }
@@ -258,20 +265,21 @@ public class Context {
    public void setDataCut(String scut) throws Exception {
       StringTokenizer st = new StringTokenizer(scut," ");
       int i=2;
-      if( cut==null ) cut = new double[4];
+//      if( cut==null ) cut = new double[4];
+      if( cutOrigBefore==null ) cutOrigBefore = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
       while( st.hasMoreTokens() && i<4 ) {
          String s = st.nextToken();
-         double d = Double.parseDouble(s);
-         cut[i++]=d;
+         cutOrigBefore[i++]=Double.parseDouble(s);
       }
       if( i<4 ) throw new Exception("Missing dataCut parameter");
-      setCutOrig(this.cut);
+//         setCutOrig(cutOrig);
    }
+   
 
    public void setCutOrig(double [] cutOrig) {
       this.cutOrig=cutOrig;
-      cut = new double[cutOrig.length];
-      System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
+//      cut = new double[cutOrig.length];
+//      System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
    }
    
    /**
@@ -315,12 +323,14 @@ public class Context {
        file.loadFITS(file.getFilename(), x, y, w, h);
 
        double[] cut = file.findAutocutRange();
-       if (isSkySub()) {
-          double val = file.headerFits.getDoubleFromHeader(getSkyval());
-          cut[0] -= val;
-          cut[1] -= val;
-          cut[2] -= val;
-          cut[3] -= val;
+       if( skyvalName!=null && !skyvalName.equalsIgnoreCase("true") ) {
+          try {
+             double val = file.headerFits.getDoubleFromHeader(getSkyval());
+             cut[0] -= val;
+             cut[1] -= val;
+             cut[2] -= val;
+             cut[3] -= val;
+          } catch( Exception e ) { }
        }
        setCutOrig(cut);
    }
@@ -417,13 +427,16 @@ public class Context {
    }
    
    public void setSkyval(String fieldName) {
-       this.skyvalName = fieldName.toUpperCase();
-       if (cacheFits != null) cacheFits.setSkySub(skyvalName);
+      this.skyvalName = fieldName.toUpperCase();
    }
    
+   public void setExpTime(String expTime) {
+      this.expTimeName = expTime.toUpperCase();
+  }
+  
    public void setCache(CacheFits cache) {
       this.cacheFits = cache;
-      cache.setSkySub(skyvalName);
+      cache.setContext(this);
    }
 
    protected void setMocArea(String s) throws Exception {
@@ -446,17 +459,20 @@ public class Context {
       
       if( !isColor() ) {
          bitpix = getBitpix();
-         cut = getCut();
 
          bitpixOrig = getBitpixOrig();
          cutOrig = getCutOrig();
          blankOrig = getBlankOrig();
-         bZeroOrig = getBZeroOrig();
-         bScaleOrig = getBScaleOrig();
+//         bZeroOrig = getBZeroOrig();
+//         bScaleOrig = getBScaleOrig();
 
          // Le blank de sortie est imposée
          blank = getDefaultBlankFromBitpix(bitpix);
 
+         // le cut de sortie est par défaut le même que celui d'entrée
+         cut = new double[4];
+         System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
+         
          // si les dataCut d'origine sont nuls ou incorrects, on les mets au max
          if( cutOrig[2]>=cutOrig[3] ) {
             cutOrig[2] = bitpixOrig==-64?-Double.MAX_VALUE : bitpixOrig==-32? -Float.MAX_VALUE
@@ -467,7 +483,7 @@ public class Context {
 
          // Y a-t-il un changement de bitpix ?
          // Les cuts changent 
-         if( bitpix != bitpixOrig ) {
+         if( bitpixOrig!=-1 && bitpix != bitpixOrig ) {
             cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
                   : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
             cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
@@ -530,7 +546,24 @@ public class Context {
    }   
 
    protected HealpixMoc getMocIndex() { return mocIndex; }
-
+   
+//   /** Positionne les cuts de sortie en fonction du fichier Allsky.fits
+//    * @return retourn le cut ainsi calculé
+//    * @throws Exception
+//    */
+//   protected double [] setCutFromAllsky() throws Exception {
+//      double [] cut = new double[4];
+//      String fileName=getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
+//      try {
+//         if( !(new File(fileName)).exists() ) throw new Exception("No available Allsky.fits file for computing cuts");
+//         Fits fits = new Fits();
+//         fits.loadFITS(fileName);
+//         cut = fits.findAutocutRange(0, 0, true);
+//         info("setCut from Allsky.fits => cut=["+cut[0]+".."+cut[1]+"] range=["+cut[2]+".."+cut[3]+"]");
+//         setCut(cut);
+//      } catch( Exception e ) { throw new Exception("No available Allsky.fits file for computing cuts"); }
+//      return cut;
+//   }
    
    public boolean verifCoherence() {
       if( coAdd==CoAddMode.REPLACETILE ) return true;
@@ -691,7 +724,7 @@ public class Context {
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
-   protected void showJpgStat(int statNbFile, long statSize, long totalTime) {
+   protected void showJpgStat(int statNbFile, long statSize, long totalTime,int statNbThread,int statNbThreadRunning) {
       long maxMem = Runtime.getRuntime().maxMemory();
       long totalMem = Runtime.getRuntime().totalMemory();
       long freeMem = Runtime.getRuntime().freeMemory();
@@ -699,8 +732,16 @@ public class Context {
       long nbLowCells = getNbLowCells();
       String pourcentNbCells = nbLowCells==-1 ? "" : 
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
-      String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
-      +pourcentNbCells +" - Ram: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)+")";
+//      String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
+//      +pourcentNbCells +" - Ram: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)+")";
+      
+      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : statNbFile*(totalTime/nbLowCells)-totalTime;
+      
+      String s=statNbFile+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
+            +pourcentNbCells+" EndIn="+Util.getTemps(tempsTotalEstime,true)
+            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
+            +" using "+Util.getUnitDisk(usedMem)
+            ;
 
       nlstat(s);
    }

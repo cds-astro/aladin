@@ -446,6 +446,16 @@ public class PlanBG extends PlanImage {
       coRadius= c!=null ? radius : gSky.getRadius();
    }
    
+   public String getDataMinInfo()  { return truePixels ? super.getDataMinInfo():"0"; }
+   public String getDataMaxInfo()  { return truePixels ? super.getDataMaxInfo():"255"; }
+   public String getPixelMinInfo() { return truePixels ? super.getPixelMinInfo():"0"; }
+   public String getPixelMaxInfo() { return truePixels ? super.getPixelMaxInfo():"255"; }
+   
+   protected String getPixelInfoFromGrey(int greyLevel,int mode) {
+      if( truePixels ) return super.getPixelInfoFromGrey(greyLevel,mode);
+      return "";
+   }
+   
    private boolean testMoc=false; // true : la présence d'un MOC a été testé
    
    /** Retourne true si le survey dispose d'un Moc associé. Il doit être sur la racine
@@ -1514,7 +1524,7 @@ public class PlanBG extends PlanImage {
       }
       double pixSize = v.getPixelSize();
       for( lastMaxOrder=2; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
-      if( lastMaxOrder==2 && pixSize<0.04 ) lastMaxOrder=3;
+      if( lastMaxOrder==2 && pixSize<0.06 ) lastMaxOrder=3;
       return lastMaxOrder;
    }
    
@@ -2491,16 +2501,14 @@ public class PlanBG extends PlanImage {
       long [] pix=null;
       int min = Math.max(ALLSKYORDER,minOrder);
       int max = Math.min(maxOrder(v),maxOrder);
-      boolean flagAllsky=false;
       boolean allKeyReady = false;
-      
       
       // On dessine le ciel entier à basse résolution
       if( min<ALLSKYORDER ) {
-         flagAllsky=drawAllSky(g,v); 
+         drawAllSky(g,v); 
          nb=1;
       } else {
-
+         
          // On accélère pendant un clic-and-drag
          boolean fast = mustDrawFast();
          if( fast ) min=max;
@@ -2542,7 +2550,7 @@ public class PlanBG extends PlanImage {
 
          // On met le fond du ciel que si on est le plan de référence de la vue
          if( /* max<=ALLSKYORDER &&*/  !allKeyReady && v.pref==this || (!allKeyReady && max<=ALLSKYORDER && v.pref!=this) ) { 
-            flagAllsky=drawAllSky(g,v); 
+            drawAllSky(g,v); 
             nb=1;
          }
 
@@ -2551,7 +2559,9 @@ public class PlanBG extends PlanImage {
          HealpixKey healpix = null;
          int nOut=0;
          int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
-         if( max>=ALLSKYORDER ) for( int order=cmin; order<=max; order++ ) {
+         
+         if( max>=ALLSKYORDER )
+         for( int order=cmin; order<=max; order++ ) {
 
             if( !allKeyReady ) {
                pix = getPixList(v,center,order); 

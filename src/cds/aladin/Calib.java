@@ -2777,11 +2777,11 @@ public void GetXY(Coord c,boolean withTest) throws Exception {
 //      {
          switch(proj)
          { 
-            case TAN: // TAN proj
-               double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
-               x_stand =  (x_tet_phi / den) * rad_to_deg ;
-               y_stand =  (y_tet_phi / den) * rad_to_deg;
-               break;
+//            case TAN: // TAN proj
+//               double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
+//               x_stand =  (x_tet_phi / den) * rad_to_deg ;
+//               y_stand =  (y_tet_phi / den) * rad_to_deg;
+//               break;
              case SIN : // SIN proj
                //                        x_stand   = 180./Math.PI*x_tet_phi ;
                //                        y_stand   = 180./Math.PI*y_tet_phi ;
@@ -2801,13 +2801,13 @@ public void GetXY(Coord c,boolean withTest) throws Exception {
                            -sin_del*sin_del*cdelz*cdelz-cos_del*cos_del*sdelz*sdelz*cos_dalpha*cos_dalpha +2*sin_del*cos_del*sdelz*cdelz*cos_dalpha));
                   else {x_stand = 0.0 ; y_stand = 0.0 ;}
                break ;
-//            case TAN:
+          case TAN:
           case SIP: 	
                //                         double den     = FastMath.sin(del*Math.PI/180.)
                //                                  *FastMath.sin(deltai*Math.PI/180.) +
                //                                   FastMath.cos(del*Math.PI/180.)
                //                                  *FastMath.cos(deltai*Math.PI/ 180.) ;
-               den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
+               double den  = sin_del * sdelz + cos_del * cdelz *cos_dalpha;
                x_stand =  x_tet_phi / den ;
                y_stand =  y_tet_phi / den ;
                //             System.out.println("alphai "+alphai+" "+deltai);
@@ -2816,7 +2816,7 @@ public void GetXY(Coord c,boolean withTest) throws Exception {
                //                        y_stand *= 180./Math.PI ;
                //            System.out.println("xystand"+x_stand+" "+y_stand);
                //                        System.out.println("proj 2\n");
-               if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&(aladin == 0))
+               if ( aladin==0 && xyapoly[1]!=0 && xyapoly[1]!=1 )
                {
                   //  double X = xyapoly[0]  * deg_to_rad ;
                   //  double Y = xydpoly[0] * deg_to_rad ;
@@ -2907,7 +2907,7 @@ public void GetXY(Coord c,boolean withTest) throws Exception {
                   x_stand = xx ;
                   y_stand = yy ;
                }
-               else if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&(aladin == 2))
+               else if ( aladin==2 && xyapoly[1]!=0 && xyapoly[1]!= 1 )
                {
                   double X = xyapoly[0];
                   double Y = xydpoly[0];

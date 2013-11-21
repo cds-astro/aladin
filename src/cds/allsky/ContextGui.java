@@ -241,35 +241,35 @@ public class ContextGui extends Context {
       return mainPanel.tabDesc.getLabelField();
    }
    
-   public double[] getCut() {
-      if( cut==null ) cut = new double[4];
-      try {
-         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
-            PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
-            cut[0]= p.getCutMin();
-            cut[1]= p.getCutMax();
-            cut[2]= p.getDataMin();
-            cut[3]= p.getDataMax();
-            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bzero)/bscale;
-
-         } else {
-            String cutMin = mainPanel.tabJpg.getCutMin();
-            String cutMax = mainPanel.tabJpg.getCutMax();
-            cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
-            cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;
-         }
-      } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         cut[0] = cut[2] = 0;
-         cut[1] = cut[3] = 255;
-      }
-
-      return cut;
-   }
+//   public double[] getCut() {
+//      if( cut==null ) cut = new double[4];
+//      try {
+//         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
+//            PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
+//            cut[0]= p.getCutMin();
+//            cut[1]= p.getCutMax();
+//            cut[2]= p.getDataMin();
+//            cut[3]= p.getDataMax();
+//            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bzero)/bscale;
+//
+//         } else {
+//            String cutMin = mainPanel.tabJpg.getCutMin();
+//            String cutMax = mainPanel.tabJpg.getCutMax();
+//            cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
+//            cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;
+//         }
+//      } catch( Exception e ) {
+//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//         cut[0] = cut[2] = 0;
+//         cut[1] = cut[3] = 255;
+//      }
+//
+//      return cut;
+//   }
    
-   public double[] getCutOrig() {
+   public double[] getCutOrig() throws Exception {
       if( cutOrig==null ) cutOrig = new double[4];
-      try {
+//      try {
          if( mainPanel.tabJpg.isCutFromPlanBase() ) {
             Plan p = mainPanel.aladin.calque.getPlanBase();
             cutOrig[0]= ((PlanImage)p).getCutMin();
@@ -283,11 +283,11 @@ public class ContextGui extends Context {
             cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
             cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
          }
-      } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         cutOrig[0] = cutOrig[2] = 0;
-         cutOrig[1] = cutOrig[3] = 1;
-      }
+//      } catch( Exception e ) {
+//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//         cutOrig[0] = cutOrig[2] = 0;
+//         cutOrig[1] = cutOrig[3] = 1;
+//      }
 
       return cutOrig;
    }

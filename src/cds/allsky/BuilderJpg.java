@@ -35,7 +35,7 @@ import cds.tools.pixtools.Util;
  * soit par une intervalle (cut[]).
  * @author Anaïs Oberto & Pierre Fernique
  */
-public class BuilderJpg extends Builder {
+public class BuilderJpg extends BuilderTiles {
 
    private int maxOrder;
    private double[] cut;
@@ -46,7 +46,6 @@ public class BuilderJpg extends Builder {
 
    private int statNbFile;
    private long statSize;
-   private long startTime,totalTime;
    
    protected String fmt;
    protected String ext;
@@ -71,13 +70,18 @@ public class BuilderJpg extends Builder {
    }
 
    public Action getAction() { return Action.JPEG; }
-
+   
    public void run() throws Exception {
       double cut [] = context.getCut();
       String fct = context.getTransfertFct();
       context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+fct+") method="+context.getJpegMethod());
       build();
-      if( !context.isTaskAborting() ) (new BuilderAllsky(context)).run();
+      if( !context.isTaskAborting() ) {
+//         (new BuilderAllsky(context)).run();
+         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64);
+         context.writePropertiesFile();
+      }
+
    }
    
    public boolean isAlreadyDone() {
@@ -97,12 +101,14 @@ public class BuilderJpg extends Builder {
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
       if( !context.isColor() ) {
-         try { validateCut(); } catch( Exception e ) {
+         
+         try { validateCut(); }
+         catch( Exception e ) {
             try {
-               setCutAndBlankFromPreviousAllskyFile(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-               double cut [] = context.cut;
-               context.info("Will use PIXELMIN and PIXELMAN ["+cut[0]+" .. "+cut[1]+"] and BLANK="+context.blank+" found in Allsky.fits");
-           } catch( Exception e1 ) {
+               setFitsParamFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+               context.info("Will use pixelCut ["+context.cutOrig[0]+" .. "+context.cutOrig[1]+"], " +
+               		"BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
+            } catch( Exception e1 ) {
                throw new Exception("Pixel cut unkown => use pixelcut parameter");
             }
          }
@@ -118,7 +124,8 @@ public class BuilderJpg extends Builder {
    
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime);
+      context.showJpgStat(statNbFile, statSize, totalTime,statNbThread,statNbThreadRunning);
+      if( !(context instanceof ContextGui ) ) super.showStatistics();
    }
 
    // Initialise la valeur du BSCALE BZERO de sortie en fonction du premier fichier Npixxxx.fits trouvé dans Norder3/Dir0
@@ -157,16 +164,49 @@ public class BuilderJpg extends Builder {
       
       // par la médiane, il faut repartir des losanges FITS de niveaux le plus bas
       if( method==JpegMethod.MEDIAN ) {
-         for( int i=0; i<768; i++ ) {
-            if( context.isInMocTree(3, i) ) createJpg(output,3,i);
-            context.setProgress(i);
-         }
+         super.build();
+//         for( int i=0; i<768; i++ ) {
+//            if( context.isInMocTree(3, i) ) createJpg(output,3,i);
+//            context.setProgress(i);
+//         }
          
       // Par la moyenne, on peut accélérer les choses en se contentant
       // de convertir tous les fichiers Fits trouvés
       } else fits2JpgDir(new File(output));
       
    }
+   
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+      Fits out = createLeaveJpg(file);
+      if( out==null ) return null;
+      
+      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+      Aladin.trace(4, "Writing " + file+ext);
+
+      if( order==maxOrder ) {
+         File f = new File(file+ext);
+         updateStat(f);
+      }
+      return out;
+   }
+   
+   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
+      JpegMethod method = context.getJpegMethod();
+      Fits out = createNodeJpg(fils, method);
+      if( out==null ) return null;
+      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+      Aladin.trace(4, "Writing " + file+ext);
+
+      if( order==maxOrder ) {
+         File f = new File(file+ext);
+         updateStat(f);
+      }
+      return out;
+   }
+   
+   /** Mise à jour de la barre de progression en mode GUI */
+   protected void setProgressBar(int npix) { context.setProgress(npix); }
+
    
    private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
 
@@ -218,50 +258,50 @@ public class BuilderJpg extends Builder {
       Aladin.trace(4, "Writing " + file+ext);
    }
 
-   /** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
-    * de plus bas niveau. La méthode employée est la moyenne ou la médiane sur les 4 pixels de niveau inférieurs
-    */
-   private Fits createJpg(String path,int order, long npix ) throws Exception {
-      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-      String file = Util.getFilePath(path,order,npix);
-      JpegMethod method = context.getJpegMethod();
-
-      // S'il n'existe pas le fits, c'est une branche morte
-      if( !new File(file+".fits").exists() ) return null;
-
-      Fits out = null;
-      if( order==maxOrder ) out = createLeaveJpg(file);
-      else {
-         Fits fils[] = new Fits[4];
-         boolean found = false;
-         for( int i =0; i<4; i++ ) {
-            fils[i] = createJpg(path,order+1,npix*4+i);
-            if (fils[i] != null && !found) found = true;
-         }
-         if( found ) out = createNodeJpg(fils, method);
-      }
-      if( out!=null && context.isInMocTree(order,npix) ) {
-         if( debugFlag ) {
-            debugFlag=false;
-            Aladin.trace(3,"Creating "+fmt+" tiles: method="+(method==Context.JpegMethod.MEAN?"average":"median")
-                  +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
-                  +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
-                  +" tcm="+(tcm==null?"null":"provided"));
-         }
-//         if( tcm==null ) out.toPix8(cut[0],cut[1]);
-//         else out.toPix8(cut[0],cut[1],tcm);
-         out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-         Aladin.trace(4, "Writing " + file+ext);
-
-         if( order==maxOrder ) {
-            File f = new File(file+ext);
-            updateStat(f);
-         }
-      }
-      return out;
-   }
-
-   private boolean debugFlag=true;
+//   /** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
+//    * de plus bas niveau. La méthode employée est la moyenne ou la médiane sur les 4 pixels de niveau inférieurs
+//    */
+//   private Fits createJpg(String path,int order, long npix ) throws Exception {
+//      if( context.isTaskAborting() ) throw new Exception("Task abort !");
+//      String file = Util.getFilePath(path,order,npix);
+//      JpegMethod method = context.getJpegMethod();
+//
+//      // S'il n'existe pas le fits, c'est une branche morte
+//      if( !new File(file+".fits").exists() ) return null;
+//
+//      Fits out = null;
+//      if( order==maxOrder ) out = createLeaveJpg(file);
+//      else {
+//         Fits fils[] = new Fits[4];
+//         boolean found = false;
+//         for( int i =0; i<4; i++ ) {
+//            fils[i] = createJpg(path,order+1,npix*4+i);
+//            if (fils[i] != null && !found) found = true;
+//         }
+//         if( found ) out = createNodeJpg(fils, method);
+//      }
+//      if( out!=null && context.isInMocTree(order,npix) ) {
+//         if( debugFlag ) {
+//            debugFlag=false;
+//            Aladin.trace(3,"Creating "+fmt+" tiles: method="+(method==Context.JpegMethod.MEAN?"average":"median")
+//                  +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
+//                  +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
+//                  +" tcm="+(tcm==null?"null":"provided"));
+//         }
+////         if( tcm==null ) out.toPix8(cut[0],cut[1]);
+////         else out.toPix8(cut[0],cut[1],tcm);
+//         out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+//         Aladin.trace(4, "Writing " + file+ext);
+//
+//         if( order==maxOrder ) {
+//            File f = new File(file+ext);
+//            updateStat(f);
+//         }
+//      }
+//      return out;
+//   }
+//
+//   private boolean debugFlag=true;
 
    /** Construction d'une tuile terminale. De fait, simple chargement
     * du fichier FITS correspondant. */

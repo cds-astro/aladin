@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import cds.allsky.Constante;
+import cds.allsky.Context;
 import cds.tools.Util;
 
 
@@ -55,9 +56,7 @@ public class CacheFits {
    private boolean cacheOutOfMem;   // En cas de débordement mémoire, on vire totalement le cache
    private Hashtable<String, FitsFile> map;             // Table des fichiers
 //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
-   String skyvalName;          // Nom du champ pour soustraire le fond au moment 
-   //de la mise dans le cache
-
+   Context context;
 
    //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
    //de la mise dans le cache
@@ -203,7 +202,7 @@ public class CacheFits {
    private FitsFile open(String fileName,int mode,boolean flagLoad) throws Exception {
       FitsFile f = new FitsFile();
       f.fits = new Fits();
-      if( skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
+      if( context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
       
       // Il faut lire deux fichiers, le HHH, puis le JPEG ou PNG suivant le cas
       if( (mode&HHH)!=0 ) {
@@ -238,7 +237,7 @@ public class CacheFits {
 
 
       // applique un filtre spécial
-      if (skyvalName!=null) delSkyval(f.fits);
+      if (context.skyvalName!=null || context.expTimeName!=null ) delSkyval(f.fits);
 
       return f;
    }
@@ -315,9 +314,31 @@ public class CacheFits {
       map.clear();
       gc();
    }
+   
+   public void setContext(Context c) { context = c; }
 
-   public void setSkySub(String key) {
-      skyvalName = key;
+   
+   private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
+   
+   // Détermination des cuts d'une image,
+   // et conservation dans un cache pour éviter de refaire plusieurs fois
+   // le calcul notamment dans le cas d'une image ouverte en mode "blocks"
+   private double [] findFullAutocutRange(Fits f) throws Exception {
+      String filename = f.getFilename();
+      double [] cut = cutCache.get(filename);
+      if( cut!=null ) return cut;
+//      if( !f.hasCell() ) cut = f.findFullAutocutRange();
+//      else {
+         Fits f1 = new Fits();
+         int w=1024;
+         int x = f.width/2-w/2, y=f.height/2-w/2;
+         f1.loadFITS(filename,x,y,w,w);
+         if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+         cut = f1.findFullAutocutRange();
+         f1.free();
+//      }
+      cutCache.put(filename,cut);
+      return cut;
    }
 
    /**
@@ -326,39 +347,79 @@ public class CacheFits {
     * @param f fitsfile
     */
    private void delSkyval(Fits f) {
-      // enlève le fond de ciel
       double skyval = 0;
-      double newval = f.blank;
-      try {
-    	  skyval = f.headerFits.getDoubleFromHeader(skyvalName);
-      } catch (NullPointerException e) {
-    	  // On n'a pas trouve le mot cle, tampis on sort proprement
-    	  return;
+      double expTime = 1;
+//      double newval = f.blank;
+      boolean skyValTag=false;
+      boolean expTimeTag=false;
+      
+      if( context.skyvalName!=null ) {
+         
+         try {
+            
+            if( context.skyvalName.equalsIgnoreCase("true") ) {
+               double cut [] = findFullAutocutRange(f);
+               double cutOrig [] = context.getCutOrig();
+               skyval = cut[0] - cutOrig[0];
+            } else {
+               skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
+            }
+            
+            skyValTag= skyval!=0;
+            
+//            skyval--;
+         } catch (Exception e) { }
       }
-      if (skyval != 0) {
-    	  skyval -= 1;
-    	  for( int y=0; y<f.heightCell; y++ ) {
-    		  for( int x=0; x<f.widthCell; x++ ) {
-    			  // applique un nettoyage pour enlever les valeurs aberrantes
-    			  // et garder les anciens blank à blank
-    			  double pixelFull = f.getPixelFull(x+f.xCell, y+f.yCell);
-    			  if (pixelFull==f.blank || pixelFull<f.blank+skyval)
-    				  newval = f.blank;
-    			  else
-    				  newval = pixelFull-skyval;
+      
+      if( context.expTimeName!=null ) {
+         try {
+            expTime = f.headerFits.getDoubleFromHeader(context.expTimeName);
+            expTimeTag= expTime!=1;
+         } catch (NullPointerException e) { }
+      }
+      
+      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 ) return;
+      
+      for( int y=0; y<f.heightCell; y++ ) {
+         for( int x=0; x<f.widthCell; x++ ) {
+            double pixelFull = f.getPixelDouble(x+f.xCell, y+f.yCell);
+            
+            if( Double.isNaN(pixelFull) ) continue; 
+             
+            if( context.hasAlternateBlank() ) {
+               if( pixelFull==context.getBlankOrig() ) continue;
+            } else if( f.isBlankPixel(pixelFull) ) continue;
 
-    			  switch (f.bitpix) {
-    			  case 8 :
-    			  case 16:
-    			  case 32 :
-    				  f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval); break;
-    			  case -32:
-    			  case -64 :
-    				  f.setPixelDouble(x+f.xCell, y+f.yCell, newval); break;
-    			  }
-    		  }
-    	  }
+            if( f.isBlankPixel(pixelFull) || context.hasAlternateBlank()) continue;
+            
+            pixelFull = pixelFull*f.bscale + f.bzero;
+
+            if( skyValTag  ) pixelFull -= skyval;
+            if( expTimeTag ) pixelFull /= expTime;
+            
+            pixelFull = (pixelFull - f.bzero) / f.bscale;
+
+            if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, pixelFull);
+            else f.setPixelInt(x+f.xCell, y+f.yCell, (int)(pixelFull+0.5)); 
+         }
       }
+      
+      // Ancien code d'Anaïs
+//      if (skyval != 0) {
+//    	  skyval -= 1;
+//    	  for( int y=0; y<f.heightCell; y++ ) {
+//    		  for( int x=0; x<f.widthCell; x++ ) {
+//    			  // applique un nettoyage pour enlever les valeurs aberrantes
+//    			  // et garder les anciens blank à blank
+//    			  double pixelFull = f.getPixelFull(x+f.xCell, y+f.yCell);
+//    			  if (pixelFull==f.blank || pixelFull<f.blank+skyval) newval = f.blank;
+//    			  else  newval = pixelFull-skyval;
+//
+//    			  if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, newval);
+//    			  else f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval); 
+//    		  }
+//    	  }
+//      }
 
    }
 

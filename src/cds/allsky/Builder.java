@@ -50,7 +50,6 @@ public abstract class Builder {
          case MOC:       return new BuilderMoc(context);
          case MOCHIGHT:  return new BuilderMocHight(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
-         case MOC10:     return new BuilderMocProg10(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
          case CLEANTILES:return new BuilderCleanTiles(context);
@@ -128,6 +127,21 @@ public abstract class Builder {
       if( context.isValidateCut() ) return;
       double [] cutOrig;
       double [] memoCutOrig = context.getCutOrig();
+      
+      // Attention, les cuts positionnés manuellement doivent
+      // être exprimés en raw (récupération du bscaleOrig/bzeroOrig)
+      double [] cutOrigBefore = context.cutOrigBefore;
+      if( cutOrigBefore!=null ) {
+         if( !context.bscaleBzeroOrigSet ) {
+            setBzeroBscaleOrigFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+         }
+         memoCutOrig = new double[4];
+         for( int i=0; i<4; i++ ) {
+            if( Double.isNaN(cutOrigBefore[i]) ) continue;
+            memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
+//            System.out.println("cutOrigBefore["+i+"]="+cutOrigBefore[i]+" => cutOrig["+i+"]="+memoCutOrig[i]);
+         }
+      }
 
       // Pas de pixelCut positionnés, ou pas de dataCut positionnés
       if( memoCutOrig==null || memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
@@ -144,6 +158,7 @@ public abstract class Builder {
          // Replacement des pixelCut paramétrés par l'utilisateur
          if( memoCutOrig!=null && memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
             cutOrig = context.getCutOrig();
+            if( cutOrig==null ) cutOrig = new double[4];
             cutOrig[0]=memoCutOrig[0];
             cutOrig[1]=memoCutOrig[1];
             context.setCutOrig(cutOrig);
@@ -152,7 +167,7 @@ public abstract class Builder {
       
       cutOrig = context.getCutOrig();
       if( cutOrig==null ) throw new Exception("Argument \"pixelCut\" required");
-      if( cutOrig[2]==0 && cutOrig[3]==0 ) throw new Exception("Argument \"pixelRange\" required");
+//      if( cutOrig[2]==0 && cutOrig[3]==0 ) throw new Exception("Argument \"pixelRange\" required");
       if( !( cutOrig[0] < cutOrig[1] ) ) 
          throw new Exception("pixelCut error ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
       if( !( cutOrig[2] <= cutOrig[0] && cutOrig[0] < cutOrig[1] && cutOrig[1]<=cutOrig[3]) ) {
@@ -165,22 +180,49 @@ public abstract class Builder {
    }
    
    /**
-    * Initialisation des PIXELMINMAX et RANGEMINMAX, BLANK à partir d'un Allsky.fits précédent
+    * Initialisation des paramètres FITS à partir d'un Allsky.fits précédent
     */
-   protected void setCutAndBlankFromPreviousAllskyFile(String allskyFile) throws Exception {
+   protected void setFitsParamFromPreviousAllsky(String allskyFile) throws Exception {
       Fits f = new Fits();
-      f.loadHeaderFITS(allskyFile);
-      double cut[] = new double[4];
-      cut[0] = f.headerFits.getDoubleFromHeader("PIXELMIN");
-      cut[1] = f.headerFits.getDoubleFromHeader("PIXELMAX");
-      cut[2] = f.headerFits.getDoubleFromHeader("DATAMIN");
-      cut[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
-      context.setCutOrig(cut);
+      
+//      f.loadHeaderFITS(allskyFile);
+//      double cutOrig[] = new double[4];
+//      cutOrig[0] = f.headerFits.getDoubleFromHeader("PIXELMIN");
+//      cutOrig[1] = f.headerFits.getDoubleFromHeader("PIXELMAX");
+//      cutOrig[2] = f.headerFits.getDoubleFromHeader("DATAMIN");
+//      cutOrig[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
+      
+      f.loadFITS(allskyFile);
+      double [] cutOrig = f.findAutocutRange(0,0,true);
+      
+      context.setBitpixOrig(f.bitpix);
+      context.setCutOrig(cutOrig);
       try {
          double blank = f.headerFits.getDoubleFromHeader("BLANK");
          context.blank=blank;
       } catch( Exception e ) { }
-      
+      try {
+         double bzero = f.headerFits.getDoubleFromHeader("BZERO");
+         context.bzero=bzero;
+      } catch( Exception e ) { }
+      try {
+         double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
+         context.bscale=bscale;
+      } catch( Exception e ) { }
+    
+   }
+   
+   protected void setBzeroBscaleOrigFromPreviousAllsky(String allskyFile) throws Exception {
+      Fits f = new Fits();
+      f.loadHeaderFITS(allskyFile);
+      try {
+         double bzero = f.headerFits.getDoubleFromHeader("BZERO");
+         context.bZeroOrig=bzero;
+      } catch( Exception e ) { }
+      try {
+         double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
+         context.bScaleOrig=bscale;
+      } catch( Exception e ) { }
    }
    
    /** Retourne le nombre d'octets disponibles en RAM */

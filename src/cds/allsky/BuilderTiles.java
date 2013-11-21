@@ -41,10 +41,10 @@ import cds.tools.pixtools.Util;
 public class BuilderTiles extends Builder {
 
    private boolean isColor;
-   private int bitpix;
-   private double bZero;
-   private double bScale;
-   private double blank;
+   protected int bitpix;
+   protected double bzero;
+   protected double bscale;
+   protected double blank;
 
    // Liste des Threads de calcul
    protected ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
@@ -134,7 +134,6 @@ public class BuilderTiles extends Builder {
       }
       
       // Image de référence en couleur => pas besoin de plus
-//      if(  context.isColor() ) { context.initRegion(); return; }
       if(  !context.isColor() ) { 
          
          String img = context.getImgEtalon();
@@ -154,11 +153,6 @@ public class BuilderTiles extends Builder {
          try { context.setImgEtalon(img); }
          catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
 
-         //      // Image de référence en couleur
-         //      if(  context.getBitpixOrig()==0 ) {
-         //         context.initRegion();
-         //         return;
-         //      }
 
          if( bitpixOrig==-1 ) {
             context.info("BITPIX found in the reference image => "+context.getBitpixOrig());
@@ -167,17 +161,16 @@ public class BuilderTiles extends Builder {
             context.setBitpixOrig(bitpixOrig);
          }
 
-         if( !context.isColor() ) {
-            // repositionnement des cuts et blank passés par paramètre
-            double [] cutOrig = context.getCutOrig();
-            if( memoCutOrig!=null ) {
-               if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
-               if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
-               context.setCutOrig(cutOrig);
-            }
-            context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
-            context.setValidateCut(true);
+         // repositionnement des cuts et blank passés par paramètre
+         double [] cutOrig = context.getCutOrig();
+         if( memoCutOrig!=null ) {
+            if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
+            if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
+            context.setCutOrig(cutOrig);
          }
+         context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+         context.setValidateCut(true);
+         
          if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
       }
       
@@ -349,8 +342,8 @@ public class BuilderTiles extends Builder {
       coaddMode = context.getCoAddMode();
 
       if( !isColor ) {
-         bZero = context.getBZero();
-         bScale = context.getBScale();
+         bzero = context.getBZero();
+         bscale = context.getBScale();
          blank = context.getBlank();
       }
 
@@ -463,14 +456,10 @@ public class BuilderTiles extends Builder {
 
       // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
       // on les relira lorsqu'on en aura besoin dans createNodeHpx(...)
-//      if( order<ordermax-(Constante.MAXDEPTHINRAM-1) && f!=null ) f.releaseBitmap();
-      if( f!=null ) {
-         f.releaseBitmap();
-      }
+      if( f!=null && f.isReleasable() ) f.releaseBitmap();
       return f;
    }
-
-
+   
    // Classe des threads de calcul
    private class ThreadBuilder extends Thread {
       ThreadBuilderTile threadBuilderTile;
@@ -501,26 +490,36 @@ public class BuilderTiles extends Builder {
          updateStat(+1,0,0,0,0,0);
          while( encore ) {
             MocCell cell = getNextNpix();
-            if( cell==null ) break;
+            if( cell==null ) {
+//               Aladin.trace(4,Thread.currentThread().getName()+" no more high level cell to process !");
+               break;
+            }
             mode=EXEC;
             try {
-//               Aladin.trace(4,Thread.currentThread().getName()+" process tree "+npix+"...");
+//               Aladin.trace(4,Thread.currentThread().getName()+" process high level cell "+cell+"...");
 
                // si le process a été arrêté on essaie de ressortir au plus vite
                if (stopped) break;
                if( context.isTaskAborting() ) break;
 
                createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix);
-               if( cell.order==3 ) context.setProgressLastNorder3((int)cell.npix);
+               if( cell.order==3 ) setProgressBar((int)cell.npix);
 
-            } catch( Throwable e ) { e.printStackTrace(); }
+            } catch( Throwable e ) {
+               Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
+               e.printStackTrace(); 
+               context.taskAbort();
+            }
          }
          updateStat(-1,0,0,0,0,0);
          mode=DIED;
          rmThread(Thread.currentThread());
-         Aladin.trace(3,Thread.currentThread().getName()+" died !");
+//         Aladin.trace(3,Thread.currentThread().getName()+" died !");
       }
    }
+   
+   /** Mise à jour de la barre de progression en mode GUI */
+   protected void setProgressBar(int npix) { context.setProgressLastNorder3(npix); }
 
    // Retourne le prochain numéro de pixel à traiter par les threads de calcul, -1 si terminer
 //   private MocCell getNextNpix() {
@@ -545,17 +544,17 @@ public class BuilderTiles extends Builder {
    }
 
 
-   // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list)
-   private void getlock() {
-      while( true ) {
-         synchronized(lockObj) { if( !lock ) { lock=true; return; } }
-         cds.tools.Util.pause(10);
-      }
-   }
-   private void unlock() { synchronized(lockObj) { lock=false; } }
+//   // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list)
+//   private void getlock() {
+//      while( true ) {
+//         synchronized(lockObj) { if( !lock ) { lock=true; return; } }
+//         cds.tools.Util.pause(10);
+//      }
+//   }
+//   private void unlock() { synchronized(lockObj) { lock=false; } }
 
    private Object lockObj = new Object();
-   private boolean lock=false;
+//   private boolean lock=false;
 
 
    // Crée une série de threads de calcul
@@ -574,9 +573,7 @@ public class BuilderTiles extends Builder {
       }
    }
    
-   void destroyOneThreadBuilderHpx(ThreadBuilder x) {
-      
-   }
+   void destroyOneThreadBuilderHpx(ThreadBuilder x) { }
 
    // Demande l'arrêt de tous les threads de calcul
    void destroyThreadBuilderHpx() {
@@ -607,7 +604,7 @@ public class BuilderTiles extends Builder {
     * @param npix Numéro Healpix du losange
     * @param fils les 4 fils du losange
     */
-   private Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
+   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
       long t = System.currentTimeMillis();
       int w=Constante.SIDE;
       double px[] = new double[4];
@@ -626,8 +623,8 @@ public class BuilderTiles extends Builder {
       Fits out = new Fits(w,w,bitpix);
       if( !isColor ) {
          out.setBlank(blank);
-         out.setBzero(bZero);
-         out.setBscale(bScale);
+         out.setBzero(bzero);
+         out.setBscale(bscale);
       }
       Fits in;
       for( int dg=0; dg<2; dg++ ) {

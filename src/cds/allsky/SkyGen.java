@@ -106,9 +106,11 @@ public class SkyGen {
          Context.setVerbose(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
-      } else if (opt.equalsIgnoreCase("input")) {
+      } else if (opt.equalsIgnoreCase("in")
+            || opt.equalsIgnoreCase("input")) {
          context.setInputPath(val);
-      } else if (opt.equalsIgnoreCase("output")) {
+      } else if (opt.equalsIgnoreCase("out")
+            || opt.equalsIgnoreCase("output")) {
          context.setOutputPath(val);
       } else if (opt.equalsIgnoreCase("blank")) {
          context.setBlankOrig(Double.parseDouble(val));
@@ -116,7 +118,8 @@ public class SkyGen {
          context.setOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("diffOrder")) {
          context.setDiffOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
+      } else if (opt.equalsIgnoreCase("mode") 
+            || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
          flagMode=true;
@@ -134,12 +137,16 @@ public class SkyGen {
          context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval")) {
          context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("exptime")) {
+         context.setExpTime(val);
       } else if (opt.equalsIgnoreCase("fading")) {
          context.setFading(val);
       } else if (opt.equalsIgnoreCase("mixing")) {
          context.setMixing(val);
-      } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting")) {
-         context.setCutting(val);
+      } else if (opt.equalsIgnoreCase("blocking") 
+            || opt.equalsIgnoreCase("cutting")
+            || opt.equalsIgnoreCase("partitioning")) {
+         context.setPartitioning(val);
       } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
          try {
             context.setCircle(val);
@@ -152,12 +159,14 @@ public class SkyGen {
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-      } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
+      } else if ( opt.equalsIgnoreCase("jpegMethod") 
+            || opt.equalsIgnoreCase("method")) {
          if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          context.setMethod(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) {
          context.setPixelCut(val);
-      } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
+      } else if (opt.equalsIgnoreCase("pixelRange") 
+            || opt.equalsIgnoreCase("dataCut")) {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
       } else if (opt.equalsIgnoreCase("color")) {
@@ -235,6 +244,7 @@ public class SkyGen {
             try {
                Action a = Action.valueOf(arg.toUpperCase());
                if( a==Action.FINDER ) a=Action.INDEX;   // Pour compatibilité
+               if( a==Action.CONCAT && !flagMode ) context.setCoAddMode(CoAddMode.AVERAGE);
                if( a==Action.ABORT ) flagAbort=true;    // Bidouillage pour pouvoir tuer un skygen en cours d'exécution
                if( a==Action.PAUSE ) flagPause=true;    // Bidouillage pour pouvoir mettre en pause un skygen en cours d'exécution
                if( a==Action.RESUME ) flagResume=true;    // Bidouillage pour pouvoir remettre en route un skygen en pause
@@ -278,6 +288,7 @@ public class SkyGen {
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
             actions.add(Action.JPEG);
+            actions.add(Action.PNG);
             actions.add(Action.PROGEN);
          }
       }
@@ -292,6 +303,7 @@ public class SkyGen {
                if( a==Action.INDEX ) { actions.add(i, Action.CLEANINDEX); i++; }
                else if( a==Action.TILES ) { actions.add(i, Action.CLEANTILES); i++; }
                else if( a==Action.JPEG )  { actions.add(i, Action.CLEANJPEG);  i++; }
+               else if( a==Action.PNG )  { actions.add(i, Action.CLEANPNG);  i++; }
             }
          }
       }
@@ -328,8 +340,8 @@ public class SkyGen {
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
-            "input=dir          Source image directory (fits or jpg|png+hhh or HiPS)" + "\n" +
-            "output=dir         HiPS target directory (default $PWD+\"ALLSKY\")" + "\n" +
+            "in=dir             Source image directory (fits or jpg|png+hhh or HiPS)" + "\n" +
+            "out=dir            HiPS target directory (default $PWD+\"ALLSKY\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
@@ -340,21 +352,22 @@ public class SkyGen {
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
-            "skyval=key         Fits key to use for removing a sky background" + "\n" +
             "maxThread=nn       Max number of computing threads (8 per default, -1 for max)" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
-            "pixelCut=min max   Specifical pixel cut and/or transfert function for JPEG 8 bits\n" +
+            "pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
             "                   conversion - ex: \"-32000 +32000\")" + "\n" +
+            "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
+//            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
             "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
             "mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
-            "cutting=true|false True for cutting large original images in cells of 1024x1024 (default is false)" + "\n" +
+            "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
-            "verbose            Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n" +
-            "debug=true|false   to set output display as te most verbose or just statistics" + "\n"
+            "verbose=n          Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n"
+//            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
 //            "red        all-sky used for RED component (see rgb action)\n" +
 //            "green      all-sky used for BLUE component (see rgb action)\n" +
 //            "blue       all-sky used for GREEN component (see rgb action)\n" +
@@ -383,15 +396,15 @@ public class SkyGen {
             "cleanpng   Remove PNG tiles " + "\n"+
             "gzip       gzip some fits tiles and Allsky.fits (keeping the same names)" + "\n"+
             "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
-            "progen     Adapt the index to a progenitor usage" + "\n"
+            "progen     transform the index to a progenitor usage" + "\n"
             );
-      System.out.println("\nEx: java -jar "+launcher+" input=/MyImages    => Do all the job." +
-      		             "\n    java -jar "+launcher+" input=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
+      System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
+      		             "\n    java -jar "+launcher+" in=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
       		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
       		             "\n           will map the originals values [-1..100] with a log function contrast." +
-                         "\n    java -jar "+launcher+" input=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+                         "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
                          "\n           The original pixels in the border or equal to 0 will be ignored."+
-                         "\n    java -jar "+launcher+" input=HiPS ouput=HiPStarget concat   => Concatenate HiPS to HiPStarget"
+                         "\n    java -jar "+launcher+" in=HiPS out=HiPStarget concat   => Concatenate HiPS to HiPStarget"
 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                          );
    }
