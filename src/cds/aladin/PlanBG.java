@@ -2549,7 +2549,12 @@ public class PlanBG extends PlanImage {
 
 
          // On met le fond du ciel que si on est le plan de référence de la vue
-         if( /* max<=ALLSKYORDER &&*/  !allKeyReady && v.pref==this || (!allKeyReady && max<=ALLSKYORDER && v.pref!=this) ) { 
+         if( nb==0 &&
+               max<=ALLSKYORDER  && !allKeyReady
+//               && (!isTransparent() || isTransparent() && max<=ALLSKYORDER) 
+//               && !allKeyReady && v.pref==this 
+//               || (!allKeyReady && max<=ALLSKYORDER && v.pref!=this) 
+               ) { 
             drawAllSky(g,v); 
             nb=1;
          }
@@ -2561,8 +2566,8 @@ public class PlanBG extends PlanImage {
          int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
          
          if( max>=ALLSKYORDER )
-         for( int order=cmin; order<=max; order++ ) {
-
+         for( int order=cmin; order<=max || !allKeyReady && order<=max+3 && order<=maxOrder; order++ ) {
+            
             if( !allKeyReady ) {
                pix = getPixList(v,center,order); 
                nOut=0;
@@ -2598,7 +2603,7 @@ public class PlanBG extends PlanImage {
                   continue;
                }
 
-               if( healpix==null ) healpix = getHealpix(order,pix[i], true);
+               if( healpix==null && order<=max ) healpix = getHealpix(order,pix[i], true );
 
                // Inconnu => on ne dessine pas
                if( healpix==null ) continue;

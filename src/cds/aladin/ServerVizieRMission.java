@@ -481,28 +481,32 @@ public class ServerVizieRMission extends Server  {
        Object s = e.getSource();
        
        if( s instanceof JButton ) {
-          String action = ((JButton)s).getActionCommand();
-          
-          if( action.equals(CATDESC) || action.equals(CATMOC) || action.equals(CATDMAP) ) {
+          try {
+            String action = ((JButton)s).getActionCommand();
              
-             String cata = mission.getText().trim();
-             if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-             cata = Glu.quote(cata);
-             
-             // Affichage du README
-             if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",cata);
-             
-             // Chargement du MOC
-             else if( action.equals(CATMOC) ) {
-                URL u = aladin.glu.getURL(MOCGLU,cata+" 512");
-                aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
+             if( action.equals(CATDESC) || action.equals(CATMOC) || action.equals(CATDMAP) ) {
+                
+                String cata = mission.getText().trim();
+                if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+//             cata = Glu.quote(cata);
+                
+                // Affichage du README
+                if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",Glu.quote(cata));
+                
+                // Chargement du MOC
+                else if( action.equals(CATMOC) ) {
+                   URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cata)+" 512");
+                   aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
+                
+                // Chargement de la carte de densité
+                } else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
+                
+                defaultCursor();
+                return;
              }
-             
-             // Chargement de la carte de densité
-             else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
-             defaultCursor();
-             return;
-          }
+         } catch( Exception e1 ) {
+            aladin.warning("Error: cannot load this product\n"+e1.getMessage());
+         }
           
        }
 

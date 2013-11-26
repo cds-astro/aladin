@@ -112,14 +112,14 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       JPanel tp = new JPanel();
       tp.setBackground(Aladin.BLUE);
       Dimension d = makeTitle(tp,title);
+      if( TESTSERVER ) {
+         testServer.setText("(beta server)");
+         d.width+=100;
+         testServer.setSelected(false);
+      }
       tp.setBounds(470/2-d.width/2,y,d.width,d.height); y+=d.height+10;
       add(tp);
       
-      if( TESTSERVER ) {
-         testServer.setText("(beta server)");
-         testServer.setSelected(false);
-      }
-
       // Premiere indication
       JLabel info1 = new JLabel(INFO1);
       info1.setBounds(86,y,400, 20); y+=20;
@@ -567,22 +567,26 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
          
          if( action.equals(CATDESC) || action.equals(CATMOC) || action.equals(CATDMAP) ) {
             
-            String cata = catalog.getText().trim();
-            if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
-            
-            // Affichage du README
-            if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",Glu.quote(cata));
-            
-            // Chargement du MOC
-            else if( action.equals(CATMOC) ) {
-               URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cata)+" 512");
-               aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
+            try {
+               String cata = catalog.getText().trim();
+               if( cata.equals("") ) { Aladin.warning(this,WNEEDCAT); return; }
+               
+               // Affichage du README
+               if( action.equals(CATDESC) ) aladin.glu.showDocument("getReadMe",Glu.quote(cata));
+               
+               // Chargement du MOC
+               else if( action.equals(CATMOC) ) {
+                  URL u = aladin.glu.getURL(MOCGLU,Glu.quote(cata)+" 512");
+                  aladin.execAsyncCommand("'"+cata+" MOC'=get File("+u+")");
+               }
+               
+               // Chargement de la carte de densité
+               else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
+               defaultCursor();
+               return;
+            } catch( Exception e1 ) {
+               aladin.warning("Error: cannot load this product\n"+e1.getMessage());
             }
-            
-            // Chargement de la carte de densité
-            else if( action.equals(CATDMAP) ) aladin.calque.newPlanDMap(cata);
-            defaultCursor();
-            return;
          }
          
       }

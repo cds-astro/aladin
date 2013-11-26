@@ -1683,11 +1683,16 @@ public final class Calque extends JPanel implements Runnable {
    static final String  DMAPGLU = "getDMap";
    
    /** Chargement de la carte de densité associée à un catalogue */
-   protected int newPlanDMap(String catID) {
+   protected int newPlanDMap(String catID) throws Exception {
       String u = ""+aladin.glu.getURL(DMAPGLU,aladin.glu.quote(catID));
       String label = "DMAP "+catID;
       int n=getStackIndex(label);
-      plan[n] = new PlanHealpixDMap(aladin,u, label);
+      try {
+         plan[n] = new PlanHealpixDMap(aladin,u, label);
+      } catch( Exception e ) {
+         plan[n].error=e.getMessage();
+         throw e;
+      }
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;

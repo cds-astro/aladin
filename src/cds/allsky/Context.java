@@ -223,7 +223,8 @@ public class Context {
        while( st.hasMoreTokens() ) {
           String s = st.nextToken();
           try { 
-             cutOrigBefore[i++]=Double.parseDouble(s);
+             cutOrigBefore[i]=Double.parseDouble(s);
+             i++;
           } catch( Exception e) {
              setTransfertFct(s);
           }
@@ -269,7 +270,8 @@ public class Context {
       if( cutOrigBefore==null ) cutOrigBefore = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
       while( st.hasMoreTokens() && i<4 ) {
          String s = st.nextToken();
-         cutOrigBefore[i++]=Double.parseDouble(s);
+         cutOrigBefore[i]=Double.parseDouble(s);
+         i++;
       }
       if( i<4 ) throw new Exception("Missing dataCut parameter");
 //         setCutOrig(cutOrig);
@@ -725,7 +727,7 @@ public class Context {
 
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showJpgStat(int statNbFile, long statSize, long totalTime,int statNbThread,int statNbThreadRunning) {
-      long maxMem = Runtime.getRuntime().maxMemory();
+//      long maxMem = Runtime.getRuntime().maxMemory();
       long totalMem = Runtime.getRuntime().totalMemory();
       long freeMem = Runtime.getRuntime().freeMemory();
       long usedMem = totalMem-freeMem;
@@ -735,9 +737,9 @@ public class Context {
 //      String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
 //      +pourcentNbCells +" - Ram: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)+")";
       
-      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : statNbFile*(totalTime/nbLowCells)-totalTime;
+      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
       
-      String s=statNbFile+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
+      String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
             +pourcentNbCells+" EndIn="+Util.getTemps(tempsTotalEstime,true)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
             +" using "+Util.getUnitDisk(usedMem)

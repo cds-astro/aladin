@@ -83,7 +83,7 @@ MEXPORT	Export planes (FITS,VOTable,...)...
 MBACKUP	Backup the stack...
 MARITHM	Arithmetic operation...
 MMOC Footprint
-MMOCLOAD Load catalog fooprint...
+MMOCLOAD Load catalog fooprint (MOC)...
 MMOCGENIMG Generate from image or HEALPix map...
 MMOCGENCAT Generate from catalog...
 MMOCFILTERING Filter a table by MOC...
@@ -101,7 +101,7 @@ MBITPIX	Bitpix convert...
 MPIXEXTR Pixel extraction...
 MCONV	Convolution...
 MHEAD	Fits header...
-MBKGD	All sky
+MBKGD	Progressive sky (HiPS)
 MBKM	Bookmarks...
 SELECTTAG	Select tagged sources
 DETAG	Untag the tagged sources
@@ -183,7 +183,7 @@ MEXPORTEPS.fr	Exporter la vue courante (EPS)...
 MEXPORT.fr	Exporter des plans (FITS,VOTable,...)...
 MBACKUP.fr	Sauvegarder la pile...
 MMOC.fr Empreinte
-MMOCLOAD.fr Chargement de l'empreinte d'un catalogue...
+MMOCLOAD.fr Chargement de l'empreinte (MOC) d'un catalogue...
 MMOCGENIMG.fr	Génération à partir d'une image ou d'une map HEALPix
 MMOCGENCAT.fr	Génération à partir d'un catalogue
 MMOCFILTERING.fr Filtrage d'un catalogue par MOC...
@@ -202,7 +202,7 @@ MBITPIX.fr	Conversion Bitpix...
 MPIXEXTR.fr Extraction des pixels...
 MCONV.fr	Convolution...
 MHEAD.fr	Entête Fits...
-MBKGD.fr	Ciel complet
+MBKGD.fr	Ciel progressif (HiPS)
 MBKM.fr	Signets...
 SELECTTAG.fr	Sélectionner les sources cochées
 DETAG.fr	Décocher les sources cochées
@@ -1094,7 +1094,7 @@ PROPAUTO	Automatic
 PROPWHITE	White
 PROPBLACK	Black
 PROPFULLDESCR Full description...
-PROPFRAMEINFO  The coordinate system for drawing the HEALPix all-sky is now independant of the global coordinate system. Select "Default" for associating them again.
+PROPFRAMEINFO  The coordinate system for drawing the HiPS is now independant of the global coordinate system. Select "Default" for associating them again.
 
 PROPSEEFITS.fr	En-tête FITS originale
 #PROPINFO.fr	Information technique
@@ -1568,10 +1568,10 @@ UPIMGH	Choose the image server, the survey and/or the color\nwhich will be used 
 UPIMGS	Server
 UPIMGC	Survey/Color
 UPFRAMEB	Coordinate frame
-UPFRAMEALLSKYB All-sky mode
-UPPROJALLSKYB	All-sky projection
-UPPROJALLSKYH Specify the default projection for all-sky mode views
-UPFRAMEH	Specify the default coordinate frame.\nIn case of all-sky display, the drawing orientation will use by default the same coordinate system. But you can explicitely specify another orientation.\nYou can modify this first choice via the plane propertie window.
+UPFRAMEALLSKYB HiPS mode
+UPPROJALLSKYB	HiPS projection
+UPPROJALLSKYH Specify the default projection for progressive sky mode
+UPFRAMEH	Specify the default coordinate frame.\nIn case of progressive mode (HiPS display), the drawing orientation will use by default the same coordinate system. But you can explicitely specify another orientation.\nYou can modify this first choice via the plane propertie window.
 UPCACHE	Permanent disk cache
 UPCACHEH	Aladin requires local disk space for keeping data from one session to the other. More it has, better it runs
 UPLOG CDS log
@@ -1645,8 +1645,8 @@ UPIMGC.fr	Relevé/Couleur
 UPFRAMEB.fr	Référentiel céleste
 UPFRAMEALLSKYB.fr Mode ciel complet
 UPPROJALLSKYB.fr	Projection ciel complet
-UPPROJALLSKYH.fr Indiquez la méthode de projection par défaut dans le cas de tracé d'un ciel complet
-UPFRAMEH.fr	Indiquez le système de référence céleste par défaut.\nLe tracé d'un ciel complet sera orienté par défaut dans le même système, à moins que vous n'en précisiez un autre explicitement.\nIl est possible de modifier ce choix a posteriori via les propriétés du plan.
+UPPROJALLSKYH.fr Indiquez la méthode de projection par défaut dans le cas de tracé d'un ciel progressive (HiPS)
+UPFRAMEH.fr	Indiquez le système de référence céleste par défaut.\nLe tracé d'un ciel progressif sera orienté par défaut dans le même système, à moins que vous n'en précisiez un autre explicitement.\nIl est possible de modifier ce choix a posteriori via les propriétés du plan.
 UPCACHE.fr	Mémoire tampon
 UPCACHEH.fr	Aladin requière de la place sur le disque local afin de conserver les données d'une session à l'autre. Plus il en dispose, mieux il s'exécutera.
 UPLOG.fr Log CDS
@@ -2256,10 +2256,10 @@ SWATLEASTONE.fr Sélectionnez au minimum une image
 #Healpix strings
 #HPXMENU HEALPix toolbox
 #HPXMENU.fr Boite à outils HEALPix
-HPXGENERATE HEALPix all-sky builder...
-HPXGENERATE.fr	Generateur de ciel complet HEALPix...
-HPXCREATE Convert current image to an HEALPix sky map
-HPXCREATE.fr Convertit l'image courante en map HEALPix
+HPXGENERATE Progressive sky builder (HiPS) ...
+HPXGENERATE.fr	Generateur ciel progressif (HiPS)
+HPXCREATE Convert current image to a HiPS
+HPXCREATE.fr Convertit l'image courante en HiPS
 HPXGRID	HEALPix grid
 HPXGRID.fr	Grille HEALPix
 #HPXDUMP Convert to a flat image plane
@@ -2268,25 +2268,25 @@ HPXGRID.fr	Grille HEALPix
 #package cds.allsky
 MDESC -1- Data description
 MDESC.fr -1- Description des données
-MTIPDESC Description step for your Allsky view
-MTIPDESC.fr Etape de description de la vue tout le ciel 
+MTIPDESC Description of your progressive sky (HiPS)
+MTIPDESC.fr Etape de description de votre ciel progressif (HiPS)
 MBUILD -2- Processing
 MBUILD.fr -2- Création
-MTIPBUILD Build step for your Allsky files
-MTIPBUILD.fr Etape de construction des fichiers du allsky
+MTIPBUILD Processing your progressive sky (HiPS)
+MTIPBUILD.fr Etape de construction de votre ciel progressif (HiPS)
 MDISPLAY -3- Post-processing
 MDISPLAY.fr -3- Post-traitement
-MNOPOST Your sky does not require a post-processing, the tiles are already in JPEG.
-MNOPOST.fr Votre ciel complet ne nécessite pas de post-traitement, les tuiles qui le composent sont déjà en JPEG.
-MTIPDISP Parameters for your Allsky view
-MTIPDISP.fr Paramètres pour la visualisation du allsky
+MNOPOST Your HiPS does not require a post-processing, the tiles are already in JPEG.
+MNOPOST.fr Votre HiPS ne nécessite pas de post-traitement, les tuiles qui le composent sont déjà en JPEG.
+MTIPDISP Parameters of your progressive sky (HiPS)
+MTIPDISP.fr Paramètres de votre ciel progressif (HiPS)
 MPUBLISH -4- Publish result
 MPUBLISH.fr -4- Publication
-MTIPPUBLISH Share your Allsky view
-MTIPPUBLISH.fr Partager votre allsky
+MTIPPUBLISH Share your your progressive sky (HiPS)
+MTIPPUBLISH.fr Partager votre ciel progressif (HiPS)
 MRGBA Generate RGB
 MRGBA.fr Construction RVB
-MTIPRGB Color composition with allskys
+MTIPRGB Color composition
 MTIPRGB.fr Composition couleur
 
 ABORT Abort
@@ -2317,14 +2317,14 @@ PAUSE.fr Pause
 #DONE.fr FINI
 PUBLISHALLSKY Form to publish
 PUBLISHALLSKY.fr Formulaire pour publier
-HELPRGBALLSKY In order to build a colored allsky survey, select 2 or 3 allskys you have built (opened in the stack and grey levels adjusted).  
-HELPRGBALLSKY.fr Afin de générer une vue du ciel en mode coloré, vous pouvez choisir 2 ou 3 allsky déjà générés (ouverts dans la pile d'Aladin, et avec l'étirement des niveaux de gris choisi).
-TITLEALLSKY Build your own Allsky on Aladin
-TITLEALLSKY.fr Créez votre ciel avec Aladin
-TIPSTOPALLSKY Kill process for this allsky
-TIPSTOPALLSKY.fr Tue la creation du allsky courant
-TIPHIDEALLSKY Close this window, computation keeps processing
-TIPHIDEALLSKY.fr Ferme cette fenetre, les calculs continuent
+HELPRGBALLSKY In order to build a colored progressive sky, select 2 or 3 allskys already generated and loaded in the Aladin stack (adjust their contrast before starting the process).  
+HELPRGBALLSKY.fr Afin de générer un ciel progressif (HiPS) en couleur, vous devez sélectionner 2 ou 3 HiPS déjà générés et chargés dans la pile (veillez à ajuster leur contraste avant de démarrer le processus).
+TITLEALLSKY Build your own Hierarchical Progressive Sky (HiPS)
+TITLEALLSKY.fr Créez votre propre ciel progressif (HiPS)
+TIPSTOPALLSKY Kill the building process
+TIPSTOPALLSKY.fr Interrompt le processus de construction
+TIPHIDEALLSKY Close this window (without killing the building process)
+TIPHIDEALLSKY.fr Ferme la fenetre (les calculs continuent)
 REPSALLSKY Source directory:
 REPSALLSKY.fr Rép. source:
 REPDALLSKY Target directory:
@@ -2349,14 +2349,14 @@ BLANKALLSKY Alternate blank FITS value
 BLANKALLSKY.fr Valeur BLANK alternative
 BORDERALLSKY Image border to ignore (N W S E in pix)
 BORDERALLSKY.fr Bords d'image à ignorer (N O S E en pix)
-SKYVALALLSKY Sky background adjustement (auto|FITS keyword)
-SKYVALALLSKY.fr Ajustement du Fond du ciel (auto|mot clé FITS)
+SKYVALALLSKY Sky background adjustement (FITS keyword|empty=>auto)
+SKYVALALLSKY.fr Ajustement du fond du ciel (mot clé FITS|vide=>auto)
 LABELALLSKY Data name:
 LABELALLSKY.fr Nom des données:
-INFOALLSKY Thanks to this panel, you will be able to generate an all sky survey from a set of images. These images must be in FITS, JPEG or PNG format, astrometrically calibrated, possibly gzipped. Aladin resamples your image collection on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). This process can be very quick for low resolution surveys (e.g.: 1 minute for an all-sky survey at a 1' resolution => 768MB), and days for high resolution survey (ex: 10 days for 0.8" resolution => 4 TB). Once the system of hierarchical directories and files is build, you can load the target directory in Aladin and view your new progressive allsky in the same way as any remote all-sky survey in Aladin. You can also publish it for your collaborators
-INFOALLSKY.fr	Ce formulaire vous permet de construire un "ciel complet progressif" à partir d'une collection d'images. Celles-ci doivent être au format FITS, JPEG ou PNG, calibrées astrométriquement, éventuellement gzippées. Aladin va rééchantillonnger votre collection d'images dans une grille HEALPix, et enregistrer le résultat sous la forme d'une hiérarchie de répertoires et de fichiers (nommés "tuiles"). Ce processus sera rapide pour des images de faible résolution angulaire (ex: 1 minute pour un relevé du ciel d'une seconde d'arc par pixel => 768Mo). Il pourra être long pour un relevé profond (ex: 10 jours pour une résolution de 0,8" => 4To). Une fois construite la hiérarchie de répertoires et fichiers, vous pourrez accéder directement à votre vue progressive de la même manière que pour les autres vues "ciel complet" disponibles dans Aladin. Vous pourrez également publier votre ciel complet afin de le rendre disponible pour vos collaborateurs.
-RGBALLSKY	This panel allows you to create a color all-sky survey from two or three monochromatic precomputed "all-sky" surveys. You must load these surveys in the Aladin stack, adjust their contrast as you wish. After that, you must associate the RED, GREEN and BLUE components via the  three choice menus, specify the target directory and submit.
-RGBALLSKY.fr Ce formulaire est dédié à la création d'un "ciel complet" colorisé. Celui-ci sera généré à partir de 2 ou 3 relevés en niveaux de gris, ayant déjà été calculés au préalable. Pour ce faire, vous devez charger ces relevés dans la pile d'Aladin, puis ajuster leur contraste respectif. Après cela, il s'agit d'associer à chacune des composantes couleurs Rouge, Vert et Bleu le relevé souhaité, de spécifier le répertoire de destination puis de lancer le calcul.
+INFOALLSKY This panel allows you to generate a "progressive sky", also called HiPS (Hierarchical Progressive Survey), from an image collection (FITS, JPEG or PNG, astrometrically calibrated, possibly gzipped). Aladin resamples your images on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). Ater this process, you can load the target directory and view your new progressive sky in the same way as any remote progressive surveys in Aladin. You can also publish it for your collaborators.
+INFOALLSKY.fr	Ce formulaire vous permet de construire un "ciel progressif" également appelé HiPS (Hierarchical Progressive Survey) à partir d'une collection d'images (FITS, JPEG ou PNG, calibrées astrométriquement, éventuellement gzippées). Aladin rééchantillonne votre collection d'images en HEALPix, et enregistre le résultat sous la forme d'une hiérarchie de répertoires et de fichiers (nommés "tuiles"). Une fois généré, vous pourrez accéder directement à votre ciel progressif aussi simplement que ceux déjà disponibles dans Aladin. Vous pourrez également le publier afin de le rendre accessible à vos collaborateurs.
+RGBALLSKY	This panel allows you to create a colored progressive sky (HiPS) from two or three monochromatic precomputed HiPS. You must load these HiPS in the Aladin stack, adjust their contrast as you wish. After that, you must associate the RED, GREEN and BLUE components via the  three choice menus, specify the target directory and submit.
+RGBALLSKY.fr Ce formulaire est dédié à la création d'un "ciel progressif" (HiPS) en couleur. Celui-ci est généré à partir de 2 ou 3 HiPS en niveaux de gris, ayant déjà été calculés au préalable. Pour ce faire, vous devez charger ces HiPS dans la pile d'Aladin, puis ajuster leur contraste respectif. Après cela, il s'agit d'associer à chacune des composantes couleurs Rouge, Vert et Bleu le ciel souhaité, de spécifier le répertoire de destination puis de lancer le calcul.
 DESCFALLSKY Description :
 DESCFALLSKY.fr Description :
 COPYRIGHT Copyright :
@@ -2399,12 +2399,12 @@ HELPRESOALLSKY Provide the correspondance between the angular pixel resolution a
 HELPRESOALLSKY.fr Fournit la correspondance entre résolution angulaire finale et volume de données. La ligne bleutée indique le choix le plus approprié en fonction des images d'origine. Il est possible de sur/sous-échantillonner.
 HELPESAMPALLSKY Specify the resampling method. The pixel value will be either the first found value or the bilinear approximation from the 4 closest original pixels. In case of overlapping images, it is possible to choose either the first pixel found or the average of all overlaying pixels, possibly ponderated by the border distance.
 HELPESAMPALLSKY.fr Détermine la méthode utilisée pour le rééchantillonnage. La valeur du pixel sera soit le premier trouvé, soit une approximation bilinéaire des 4 pixels originaux les plus proches. En cas de superposition d'image, il sera possible de choisir, soit le premier pixel trouvé, soit la moyenne des pixels, éventuellement pondérée par la distance au bord de l'image.
-JPEGINFOALLSKY This step allows you to generate the compressed tiles (JPEG or PNG) corresponding to the FITS tiles. This step is strongly recommended if you plan to publish your data through a Web site. The compressed tiles provides better respond times. The JPEG format is more compact, but modify a little bit the data and does not manage the transparency.
-JPEGINFOALLSKY.fr Cette étape vous permet de créer les tuiles compressées (JPEG ou PNG) associées aux tuiles FITS. Dans le cas où vous souhaitez rendre accessible ces données depuis un site Web il est vivement conseillée de générer ces tuiles qui offriront à vos utilisateurs des temps de réponses bien plus rapides. Le format JPEG est plus compact mais altère légèrement les données et ne gère pas la transparence.
+JPEGINFOALLSKY This step allows you to generate the preview tiles (JPEG or PNG) corresponding to the FITS tiles. This step is recommended if you plan to publish your data through a Web site. The preview tiles provides better respond times. The JPEG format is more compact, but modify a little bit the data. Contrary to PNG, it does not manage the transparency.
+JPEGINFOALLSKY.fr Cette étape vous permet de créer les tuiles de prévisualisation (JPEG ou PNG) associées aux tuiles FITS. Dans le cas où vous souhaitez rendre accessible ces données depuis un site Web il est vivement conseillée de générer ces tuiles qui offriront à vos utilisateurs des temps de réponses bien plus rapides. Le format JPEG est plus compact mais altère légèrement les données. Il ne gère pas la transparence à la différence du PNG.
 JPEGMCUTALLSKY Manual cut (linear):
 JPEGMCUTALLSKY.fr Seuillage manuel (linéaire) :
-HELPJPEGMCUTALLSKY Allows you to specify the pixel value range used for generating the compressed tiles
-HELPJPEGMCUTALLSKY.fr Permet d'indiquer spécifiquement la plage des valeurs des pixels qui sera retenue pour générer les tuiles compressées. 
+HELPJPEGMCUTALLSKY Allows you to specify the pixel value range used for generating the preview tiles
+HELPJPEGMCUTALLSKY.fr Permet d'indiquer spécifiquement la plage des valeurs des pixels qui sera retenue pour générer les tuiles de prévisualisation. 
 JPEGCUTALLSKY Cut params imported from current view:
 JPEGCUTALLSKY.fr Seuillage utilisé dans la vue :
 HELPJPEGCUTALLSKY Take into account the cut parameters presently used in the control view. This method is better that the manual cut as you are not limited to a linear transformation.
@@ -2421,8 +2421,8 @@ FORMATTILES Tiles format
 FORMATTILES.fr Format des tuiles
 PUBFORYOUALLSKY Only for you:
 PUBFORYOUALLSKY.fr Juste pour vous :
-OPENALLSKY You can load whenever you want the allsky by opening the target directory
-OPENALLSKY.fr A n'importe quel moment, vous pouvez rechargez votre relevé simplement en ouvrant le repertoire cible
+OPENALLSKY You can load whenever you want your progressive sky by opening the target directory
+OPENALLSKY.fr A n'importe quel moment, vous pouvez rechargez votre ciel progressif simplement en ouvrant le repertoire cible
 EXPORTALLSKY Generate
 EXPORTALLSKY.fr Générer
 PUBMAPALLSKY Distribute as a unique FITS HEALPix map:
@@ -2543,12 +2543,12 @@ TREEMORE	more info
 TREEMORE.fr	plus d'info
 
 #AllskyServer strings
-ALLSKYTITLE	Available data in "allsky" mode
-ALLSKYTITLE.fr	Données disponibles en mode "ciel complet"	
+ALLSKYTITLE	Available data in "progressive sky" mode
+ALLSKYTITLE.fr	Données disponibles en mode "ciel progressif"	
 ALLSKYINFO Select items and press SUBMIT
 ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER
-ALLSKYDESC The "allsky" mode allows you to visualise a survey\nfrom the whole sky view to the limit of the resolution. Aladin provides in "allsky" mode images, catalogues (progressive access), or density maps. The "allsky" image surveys are delivered in color composition, or in 8 bit pixels (JPEG), or in true pixels (FITS). Use the "Pixel" button for switching in the other pixel mode.\n \nWarning: the survey distributed in "allsky" mode have been bilinearly resampled. 
-ALLSKYDESC.fr Le mode "ciel complet" vous permet de visualiser un relevé\ndepuis une vue globale du ciel jusqu'à la limite de la résolution fournie. Il peut s'agir d'images, de catalogues ou de cartes de densité. Les relevés images en mode "ciel complet" sont fournis en composition colorée, ou en pixel 8 bits (JPEG), ou encore en "vrai" pixels" (FITS). Utilisez le bouton "Pixel" pour passer d'un mode pixel à l'autre).\n \nAttention : le mode "ciel complet" ne fournit pas les pixels originaux, mais un rééchantillonnages bilinéaire de ceux-ci.
+ALLSKYDESC The "progressive sky" mode (HiPS mode) allows you to visualise a survey at any scales (from the whole sky to the limit of the resolution). It can be images, catalogues, or density maps. The HiPS images are delivered in colored composition, or in 8 bit pixels (JPEG|PNG), or in true pixels (FITS). Use the "Pixel" button for switching in the other pixel mode.\n \nWarning: the survey distributed in "progressive sky" mode have been bilinearly resampled. 
+ALLSKYDESC.fr Le mode "ciel progressif" (HiPS) vous permet de visualiser un relevé à n'importe quelle échelle (depuis le ciel dans son ensemble jusqu'à la limite de la résolution fournie). Il peut s'agir d'images, de catalogues ou de cartes de densité. Les relevés images en mode "ciel progressif" sont fournis en composition colorée, ou en pixel 8 bits (JPEG|PNG), ou encore en "vrai" pixels" (FITS). Utilisez le bouton "Pixel" pour passer d'un mode pixel à l'autre).\n \nAttention : le mode "ciel progressif" ne donne pas accès aux pixels originaux, mais un rééchantillonnages bilinéaire de ceux-ci.
 TARGETNOTVISIBLE Target out of field.\nSelect another plane before.
 TARGETNOTVISIBLE.fr Cible hors champ.\nSélectionnez au préalable un autre plan.
 

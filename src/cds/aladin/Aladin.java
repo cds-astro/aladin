@@ -127,7 +127,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v7.575";
+    static public final    String VERSION = "v8.000";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -144,7 +144,7 @@ public class Aladin extends JApplet
     static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
     static final String WELCOME           = "Bienvenue sur "+TITRE+
                                             " - "+getReleaseNumber();
-    static String COPYRIGHT         = "(c) 2013 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
+    static String COPYRIGHT         = "(c) 2014 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
 
     static protected String CACHE = ".aladin"; // Nom du répertoire cache
     static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -238,7 +238,7 @@ public class Aladin extends JApplet
 
      // Gère le mode particuliers
     static boolean LOG=true;  // false si on inhibe les logs
-    public static boolean BETA=true;  // true si on tourne en mode BETA
+    public static boolean BETA=false;  // true si on tourne en mode BETA
     public static boolean CDS=false;   // true si on tourne en mode CDS
     public static boolean PROTO=false;	// true si on tourne en mode PROTO (nécessite Proto.jar)
     static public boolean OUTREACH=false;  // true si on tourne en mode OUTREACH
@@ -2682,7 +2682,7 @@ public class Aladin extends JApplet
 
    // Pour afficher les nouveautes
    private void newsReport() {
-       glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV7.png", true);
+       glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV8.png", true);
    }
 
    // Pour affiche la page d'info sur les plugins

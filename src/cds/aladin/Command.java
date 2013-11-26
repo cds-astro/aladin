@@ -1868,7 +1868,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             a.localisation.frameToFrame(c, ((PlanBG)pref).frameOrigin, Localisation.ICRS);
          }
          a.view.setRepere(c);
-         printConsole("Healpix "+order+"/"+npix+" => "+c);
+//         printConsole("Healpix "+order+"/"+npix+" => "+c);
          return true;
       } catch( Exception e ) { }
       return false;

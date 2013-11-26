@@ -454,14 +454,14 @@ public class Server extends JPanel
        b.addActionListener(this);
        p.add(b);
 
-       int width = stringSize(t)+30;
+       int width = stringSize(t)+20;
        if( TESTSERVER ) {
           testServer=new JCheckBox("test",true);
           testServer.setMargin(new Insets(m.top,10,m.bottom,3));
           testServer.setOpaque(false);
           testServer.setSelected(false);
           p.add(testServer);
-          width+=100;
+          width+=120;
        }
 
        return new Dimension(width,HAUT+5);

@@ -28,12 +28,12 @@ import cds.tools.Util;
  */
 public class PlanHealpixDMap extends PlanHealpix {
    
-   public PlanHealpixDMap(Aladin aladin, String urlOfFile, String label) {
+   public PlanHealpixDMap(Aladin aladin, String urlOfFile, String label) throws Exception {
       super(aladin);
 
       MyInputStream in = null;
-      try { in=Util.openAnyStream(urlOfFile); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       if( label==null ) label = "DMAP";
+      try { in=Util.openAnyStream(urlOfFile); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); throw e;}
       init( urlOfFile , in, label, 0);
       setDrawMode(DRAWPIXEL);
       threading();

@@ -250,6 +250,7 @@ public class TreeNodeAllsky extends TreeNode {
                if( Util.indexOfIgnoreCase(s, "color")>=0 ) color=true;
                if( Util.indexOfIgnoreCase(s, "fits")>=0 ) { inFits=true; if( first ) { first=false ; truePixels=true; } }
                if( Util.indexOfIgnoreCase(s, "jpeg")>=0 ) { inJPEG=true; if( first ) { first=false ; truePixels=false;} } 
+               if( Util.indexOfIgnoreCase(s, "png")>=0 )  { inPNG=true; if( first ) { first=false ; truePixels=false;} } 
                if( Util.indexOfIgnoreCase(s, "gal")>=0 ) frame = Localisation.GAL;
                if( Util.indexOfIgnoreCase(s, "ecl")>=0 ) frame = Localisation.ECLIPTIC;
                if( Util.indexOfIgnoreCase(s, "equ")>=0 ) frame = Localisation.ICRS;
