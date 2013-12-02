@@ -37,7 +37,6 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderJpg extends BuilderTiles {
 
-   private int maxOrder;
    private double[] cut;
    private byte [] tcm;
    private int bitpix;
@@ -45,7 +44,6 @@ public class BuilderJpg extends BuilderTiles {
    private double blank,bscale,bzero;
 
    private int statNbFile;
-   private long statSize;
    
    protected String fmt;
    protected String ext;
@@ -72,16 +70,16 @@ public class BuilderJpg extends BuilderTiles {
    public Action getAction() { return Action.JPEG; }
    
    public void run() throws Exception {
-      double cut [] = context.getCut();
-      String fct = context.getTransfertFct();
-      context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+fct+") method="+context.getJpegMethod());
+      cut = context.getCut();
+//      double cut [] = context.getCut();
+      context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+context.getTransfertFct()+")");
+      context.info("Tile aggregation method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) {
 //         (new BuilderAllsky(context)).run();
          (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64);
          context.writePropertiesFile();
       }
-
    }
    
    public boolean isAlreadyDone() {
@@ -124,7 +122,7 @@ public class BuilderJpg extends BuilderTiles {
    
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime,statNbThread,statNbThreadRunning);
+      context.showJpgStat(statNbFile, totalTime,statNbThread,statNbThreadRunning);
       if( !(context instanceof ContextGui ) ) super.showStatistics();
    }
 
@@ -155,24 +153,21 @@ public class BuilderJpg extends BuilderTiles {
 
    public void build() throws Exception {
       initStat();
-      context.setProgressMax(768);
-      String output = context.getOutputPath();
-      maxOrder = context.getOrder();
-      cut = context.getCut();
+//      String output = context.getOutputPath();
+//      maxOrder = context.getOrder();
+//      cut = context.getCut();
       
-      JpegMethod method = context.getJpegMethod();
+      super.build();
       
-      // par la médiane, il faut repartir des losanges FITS de niveaux le plus bas
-      if( method==JpegMethod.MEDIAN ) {
-         super.build();
-//         for( int i=0; i<768; i++ ) {
-//            if( context.isInMocTree(3, i) ) createJpg(output,3,i);
-//            context.setProgress(i);
-//         }
-         
-      // Par la moyenne, on peut accélérer les choses en se contentant
-      // de convertir tous les fichiers Fits trouvés
-      } else fits2JpgDir(new File(output));
+//      JpegMethod method = context.getJpegMethod();
+//      
+//      // par la médiane, il faut repartir des losanges FITS de niveaux le plus bas
+//      if( method==JpegMethod.MEDIAN ) {
+//         super.build();
+//         
+//      // Par la moyenne, on peut accélérer les choses en se contentant
+//      // de convertir tous les fichiers Fits trouvés
+//      } else fits2JpgDir(new File(output));
       
    }
    
@@ -182,11 +177,7 @@ public class BuilderJpg extends BuilderTiles {
       
       out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
       Aladin.trace(4, "Writing " + file+ext);
-
-      if( order==maxOrder ) {
-         File f = new File(file+ext);
-         updateStat(f);
-      }
+      updateStat();
       return out;
    }
    
@@ -196,11 +187,6 @@ public class BuilderJpg extends BuilderTiles {
       if( out==null ) return null;
       out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
       Aladin.trace(4, "Writing " + file+ext);
-
-      if( order==maxOrder ) {
-         File f = new File(file+ext);
-         updateStat(f);
-      }
       return out;
    }
    
@@ -208,55 +194,58 @@ public class BuilderJpg extends BuilderTiles {
    protected void setProgressBar(int npix) { context.setProgress(npix); }
 
    
-   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
+   private void initStat() {
+      context.setProgressMax(768);
+      statNbFile=0; 
+      startTime = System.currentTimeMillis();
+   }
 
    // Mise à jour des stats
-   private void updateStat(File f) {
+   private void updateStat() {
       statNbFile++;
-      statSize += f.length();
       totalTime = System.currentTimeMillis()-startTime;
    }
    
-   public boolean mustBeTranslated(File f) {
-      String name = f.getName();
-      if( name.equals("Allsky.fits") ) return true;
-      if( !name.endsWith(".fits") )    return false;
-      if( !name.startsWith("Npix") )   return false;
-      return true;
-   }
+//   private boolean mustBeTranslated(File f) {
+//      String name = f.getName();
+//      if( name.equals("Allsky.fits") ) return true;
+//      if( !name.endsWith(".fits") )    return false;
+//      if( !name.startsWith("Npix") )   return false;
+//      return true;
+//   }
    
-   // Conversion de toute l'arborescence FITS en JPEG (nécessairement méthode
-   // de la moyenne (comme pour le FITS))
-   private void fits2JpgDir(File dir) throws Exception {
-      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-      
-      // répertoire
-      if( dir.isDirectory() ) {
-         for ( File f : dir.listFiles() ) fits2JpgDir(f);
-         
-      // Fichier
-      } else {
-         int order = Util.getOrderFromPath(dir.getCanonicalPath());
-         if( order!=-1 && mustBeTranslated(dir) ) {
-            String file = dir.getCanonicalPath();
-            file = file.substring(0,file.lastIndexOf('.'));
-            fits2jpeg(file);
-            if( order==maxOrder ) {
-               File f = new File(file+ext);
-               updateStat(f);
-            }
-         }
-      }
-   }
+//   // Conversion de toute l'arborescence FITS en JPEG (nécessairement méthode
+//   // de la moyenne (comme pour le FITS))
+//   private void fits2JpgDir(File dir) throws Exception {
+//      if( context.isTaskAborting() ) throw new Exception("Task abort !");
+//      
+//      // répertoire
+//      if( dir.isDirectory() ) {
+//         for ( File f : dir.listFiles() ) fits2JpgDir(f);
+//         
+//      // Fichier
+//      } else {
+//         int order = Util.getOrderFromPath(dir.getCanonicalPath());
+//         if( order!=-1 && mustBeTranslated(dir) ) {
+//            String file = dir.getCanonicalPath();
+//            file = file.substring(0,file.lastIndexOf('.'));
+//            fits2jpeg(file);
+//            if( order==maxOrder ) {
+//               File f = new File(file+ext);
+//               updateStat(f);
+//            }
+//         }
+//      }
+//   }
    
-   // Conversion d'un fichier de FITS en JEPG (file sans l'extension)
-   private void fits2jpeg(String file) throws Exception {
-      Fits out = createLeaveJpg(file);
-//      if( tcm==null ) out.toPix8(cut[0],cut[1]);
-//      else out.toPix8(cut[0],cut[1],tcm);
-      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-      Aladin.trace(4, "Writing " + file+ext);
-   }
+//   // Conversion d'un fichier de FITS en JEPG (file sans l'extension)
+//   private void fits2jpeg(String file) throws Exception {
+//      Fits out = createLeaveJpg(file);
+////      if( tcm==null ) out.toPix8(cut[0],cut[1]);
+////      else out.toPix8(cut[0],cut[1],tcm);
+//      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
+//      Aladin.trace(4, "Writing " + file+ext);
+//   }
 
 //   /** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
 //    * de plus bas niveau. La méthode employée est la moyenne ou la médiane sur les 4 pixels de niveau inférieurs

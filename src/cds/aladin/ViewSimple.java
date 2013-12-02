@@ -21,6 +21,9 @@
 package cds.aladin;
 
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
@@ -28,6 +31,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
+import java.io.IOException;
 import java.util.*;
 
 import javax.swing.JComponent;
@@ -120,7 +124,7 @@ public class ViewSimple extends JComponent
    double pGrabItX=-1,pGrabItY=0;// Memorisation de la fin du GrabIt (position prec)
 
    double cGrabItX=-1,cGrabItY=0;    // Memorisation de la fin du GrabIt (position cour)
-   int currentCursor=Aladin.DEFAULT; // Le curseur courant
+   int currentCursor=Aladin.DEFAULTCURSOR; // Le curseur courant
    private int scrollX,scrollY;      // pour un scrolling via la souris
 
    // Les valeurs a memoriser pour le rectangle de selection et de zoom
@@ -346,7 +350,7 @@ public class ViewSimple extends JComponent
    }
 
    JPopupMenu popMenu;
-   JMenuItem menuLabel,menuClone,menuCopy
+   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg
 //             ,menuROI,menuLock,menuDel,menuDelROI,menuStick,menuSel,
 //              menuMore,menuNext,menuScreen
              ;
@@ -366,6 +370,8 @@ public class ViewSimple extends JComponent
 //      popMenu.add( menuMore=j=new JMenuItem(view.MOREVIEWS));
 //      j.addActionListener(this);
 //      popMenu.addSeparator();
+      popMenu.add( menuCopyImg=j=new JMenuItem(view.MCOPYIMG));
+      j.addActionListener(this);
       popMenu.add( menuCopy=j=new JMenuItem(view.MCOPY));
       j.addActionListener(this);
       popMenu.add( menuClone=j=new JMenuItem(aladin.CLONE));
@@ -398,7 +404,8 @@ public class ViewSimple extends JComponent
 
            if( src==menuLabel )  view.setSourceLabel();
       else if( src==menuClone )  aladin.cloneObj(false);
-      else if( src==menuCopy )   Aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
+      else if( src==menuCopy )   aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
+      else if( src==menuCopyImg )copier();
 //      else if( src==menuROI )    aladin.view.createROI();
 //      else if( src==menuLock )   switchLock();
 //      else if( src==menuDel )    aladin.view.freeSelected();
@@ -412,7 +419,12 @@ public class ViewSimple extends JComponent
 //         return;
 //      }
       calque.repaintAll();
-   }
+    }
+    
+    /** Copie la vue courante dans le Clipboard */
+    protected void copier() {
+       aladin.copyToClipBoard(getImage(-1,-1));
+    }
 
     /** Permute l'état lock de la vue */
     protected boolean switchLock() {
@@ -654,7 +666,7 @@ public class ViewSimple extends JComponent
          
          x=(int)Math.floor(rcrop.x);     y=(int)Math.floor(rcrop.y);
          w=(int)Math.ceil(rcrop.width);   h=(int)Math.ceil(rcrop.height);
-         if( verbose ) aladin.console.setCommand("crop "+D(x)+","+D( ((PlanImage)pref).naxis2-(y+h))+" "+D(w)+"x"+D(h));
+         if( verbose ) aladin.console.printCommand("crop "+D(x)+","+D( ((PlanImage)pref).naxis2-(y+h))+" "+D(w)+"x"+D(h));
          if( pref.type==Plan.IMAGEHUGE ) cropped = pi.cropHuge(x,y,w,h,false);
          else cropped = pi.crop(x,y,w,h,false);
 
@@ -1590,7 +1602,7 @@ public class ViewSimple extends JComponent
          ((Tag)view.newobj).setDistAngulaireOrig(getProjSyncView());
       }
       view.extendClip(view.newobj);
-      aladin.console.setCommand(view.newobj.getCommand());
+      aladin.console.printCommand(view.newobj.getCommand());
       view.setSelectFromView(true);
       
       view.moveRepere( view.newobj.raj,view.newobj.dej );
@@ -1758,7 +1770,8 @@ public class ViewSimple extends JComponent
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       
-      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() && !aladin.view.isMultiView()) return ToolBox.PAN;
+      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() 
+            && !aladin.view.isMultiView()) return ToolBox.PAN;
       return tool;
    }
 
@@ -1953,32 +1966,31 @@ public class ViewSimple extends JComponent
       // Si on a Control, on déplace uniquement le repère
       if( e.isControlDown() ) return;
 
-      // Recalibration dynamique en cours ?
-      if( recalib ) {
-         Vector v=null;
-
-         if( aladin.frameNewCalib.isGettingOriginalXY() ) v=aladin.frameNewCalib.plan.getObjWith(this,p.x,p.y);
-         else v=calque.getObjWith(this,p.x,p.y);
-
-         Obj o = v!=null && v.size()>0?(Obj)v.elementAt(0):null;
-         flagMoveRepere=false;
-
-         if( o==null || o instanceof Position ) {
-
-            // Déplacement globale
-            int method=aladin.frameNewCalib.getModeCalib();
-            if( method==FrameNewCalib.SIMPLE ) {
-               if( o!=null && ((Position)o).plan==aladin.frameNewCalib.plan ) {
-                  planRecalibrating=aladin.frameNewCalib.plan;
-                }
-
-            // Mise à jour de la liste des quadruplets
-            } else if( method==FrameNewCalib.QUADRUPLET ) {
-               aladin.frameNewCalib.mouse(p.x,p.y,(PlanImage)pref,(Position)o);
-            }
-         }
-
-      }
+//      // Recalibration dynamique en cours ?
+//      if( recalib ) {
+//         Vector v=null;
+//
+//         if( aladin.frameNewCalib.isGettingOriginalXY() ) v=aladin.frameNewCalib.plan.getObjWith(this,p.x,p.y);
+//         else v=calque.getObjWith(this,p.x,p.y);
+//
+//         Obj o = v!=null && v.size()>0?(Obj)v.elementAt(0):null;
+//         flagMoveRepere=false;
+//
+//         if( o==null || o instanceof Position ) {
+//
+//            // Déplacement globale
+//            int method=aladin.frameNewCalib.getModeCalib();
+//            if( method==FrameNewCalib.SIMPLE ) {
+//               if( o!=null && ((Position)o).plan==aladin.frameNewCalib.plan ) {
+//                  planRecalibrating=aladin.frameNewCalib.plan;
+//                }
+//
+//            // Mise à jour de la liste des quadruplets
+//            } else if( method==FrameNewCalib.QUADRUPLET ) {
+//               aladin.frameNewCalib.mouse(p.x,p.y,(PlanImage)pref,(Position)o);
+//            }
+//         }
+//      }
 
       if( tool== -1 ) return;
       
@@ -2384,6 +2396,34 @@ public class ViewSimple extends JComponent
       // Fin d'un megaDrag ?
       if( tool==ToolBox.SELECT && aladin.view.stopMegaDrag(this,(int)Math.round(x),(int)Math.round(y),e.isControlDown()) ) return;
 
+      // Recalibration dynamique en cours ?
+      boolean recalib = !isProjSync && aladin.view.isRecalibrating() 
+            && !flagClicAndDrag && (tool==ToolBox.SELECT || tool==ToolBox.PAN);
+      if( recalib ) {
+         Vector v=null;
+
+         PointD p = vs.getPosition(x,y);
+         if( aladin.frameNewCalib.isGettingOriginalXY() ) v=aladin.frameNewCalib.plan.getObjWith(this,p.x,p.y);
+         else v=calque.getObjWith(this,p.x,p.y);
+
+         Obj o = v!=null && v.size()>0?(Obj)v.elementAt(0):null;
+         flagMoveRepere=false;
+
+         if( o==null || o instanceof Position ) {
+
+            // Déplacement globale
+            int method=aladin.frameNewCalib.getModeCalib();
+            if( method==FrameNewCalib.SIMPLE ) {
+               if( o!=null && ((Position)o).plan==aladin.frameNewCalib.plan ) {
+                  planRecalibrating=aladin.frameNewCalib.plan;
+                }
+
+            // Mise à jour de la liste des quadruplets
+            } else if( method==FrameNewCalib.QUADRUPLET ) {
+               aladin.frameNewCalib.mouse(p.x,p.y,(PlanImage)pref,(Position)o);
+            }
+         }
+      }
 
       // Déplacement du repère
       if( (tool==ToolBox.SELECT
@@ -2578,7 +2618,7 @@ public class ViewSimple extends JComponent
             final Position o = (Position)e1.nextElement();
             if( o.plan.type!=Plan.TOOL ) continue;
             ((PlanTool)(o.plan)).sendMesureObserver(o, false);
-            aladin.console.setInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
+            aladin.console.printInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
             
 
 //            System.out.println("Ici c'est parti !");
@@ -2613,7 +2653,7 @@ public class ViewSimple extends JComponent
             || (b instanceof Tag && b.hasPhot())) ) return false;
       view.coteDist = new CoteDist(a,b,getProjSyncView());
       aladin.status.setText(view.coteDist.id);
-      aladin.console.setInPad(view.coteDist.id+"\n");
+      aladin.console.printInPad(view.coteDist.id+"\n");
       return true;
    }
    
@@ -2788,7 +2828,7 @@ public class ViewSimple extends JComponent
       if( hasRainbow() && rainbow.mouseDrag( vs, x,y, e.isShiftDown() ) ) { repaint(); return; }
       if( rainbowF!=null && rainbowF.mouseDrag( vs, x,y, e.isShiftDown() ) ) { repaint(); return; }
 
-      if( planRecalibrating==null ) {
+      if( true /* planRecalibrating==null */ ) {
 
          // Peut etre un début de MegaDrag
          if( tool==ToolBox.SELECT && xDrag==-1 ) aladin.view.startMegaDrag(this);
@@ -3024,7 +3064,7 @@ public class ViewSimple extends JComponent
       return ((PlanImage)pref).pixelsOriginFromCache();
    }
    
-   private int oc=Aladin.DEFAULT;
+   private int oc=Aladin.DEFAULTCURSOR;
    int margeX, margeY;
    
    /** Retourne true si la souris n'est pas dans du fond d'image */
@@ -3367,7 +3407,7 @@ public class ViewSimple extends JComponent
       }
 
       // Modification du curseur
-      Aladin.makeCursor(aladin,Aladin.DEFAULT);
+      Aladin.makeCursor(aladin,Aladin.DEFAULTCURSOR);
       resetClip();
 
       // On arrete l'insertion de l'objet en cours 
@@ -3420,7 +3460,7 @@ public class ViewSimple extends JComponent
           tool==ToolBox.PAN ? Aladin.HANDCURSOR :
              tool==ToolBox.PHOT ? ( isTagCentered(shift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
           aladin.view.isRecalibrating() || isGrabIt() || tool==ToolBox.ZOOM ? Aladin.CROSSHAIRCURSOR:
-          tool==ToolBox.TAG ? Aladin.TEXTCURSOR:Aladin.DEFAULT;
+          tool==ToolBox.TAG ? Aladin.TEXTCURSOR:Aladin.DEFAULTCURSOR;
 
       Aladin.makeCursor(this,currentCursor);
    }
@@ -3437,7 +3477,7 @@ public class ViewSimple extends JComponent
          tool==ToolBox.ZOOM ?
             Aladin.CROSSHAIRCURSOR:(tool==ToolBox.PAN )?
             Aladin.HANDCURSOR:(tool==ToolBox.TAG)?
-            Aladin.CROSSHAIRCURSOR:Aladin.DEFAULT;
+            Aladin.CROSSHAIRCURSOR:Aladin.DEFAULTCURSOR;
 
       Aladin.makeCursor(this,currentCursor);
    }
@@ -3469,7 +3509,7 @@ public class ViewSimple extends JComponent
    protected void moveRepere(Coord repCoord,boolean flagSync) {
       if( isPlotView() ) return;
       String s = aladin.localisation.J2000ToString(repCoord.al,repCoord.del);
-      aladin.console.setCommand(s);
+      aladin.console.printCommand(s);
       aladin.view.setRepereId(s);
       aladin.view.memoUndo(this,repCoord,null);
 //      if( flagSync ) aladin.view.syncView(1,repCoord,this);
@@ -3853,6 +3893,7 @@ public class ViewSimple extends JComponent
           dh = Math.round(maxh*dst/src);
 
           int taille = dw*dh;
+          if( taille<0 ) return null;
           reducePixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int[taille];
 
           // cas 1/x
@@ -6452,10 +6493,10 @@ g.drawString(s,10,100);
       plot.addPlotTable(plan,indexX,indexY,openProp);
       if( openProp ) {
          Legende leg = plan.getFirstLegende();
-         aladin.console.setCommand("cview -plot "+plan.label+"("+leg.getName(indexX)+","+leg.getName(indexY)+")");
+         aladin.console.printCommand("cview -plot "+plan.label+"("+leg.getName(indexX)+","+leg.getName(indexY)+")");
       }
 
    }
-
+   
  }
 

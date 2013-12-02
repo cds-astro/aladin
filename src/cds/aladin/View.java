@@ -180,13 +180,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
    static protected String NOZOOM,MSTICKON,MSTICKOFF,MOREVIEWS,
-         MLABELON,MCOPY,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
+         MLABELON,MCOPY,MCOPYIMG,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
          VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
 
    protected void createChaine() {
       NOZOOM    = aladin.chaine.getString("VWNOZOOM");
       MSTICKON  = aladin.chaine.getString("VWMSTICKON");
       MSTICKOFF = aladin.chaine.getString("VWMSTICKOFF");
+      MCOPYIMG  = aladin.chaine.getString("VWMCOPYIMG");
       MCOPY     = aladin.chaine.getString("VWMCOPY");
       MLABELON  = aladin.chaine.getString("VWMLABELON");
       MLABELOFF = aladin.chaine.getString("VWMLABELOFF");
@@ -582,8 +583,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean stopMegaDrag(Object target,int x, int y,boolean ctrlPressed) {
       boolean rep=true;
 
-      aladin.makeCursor(aladin.toolBox,Aladin.DEFAULT);
-      setMyCursor(Aladin.DEFAULT);
+      aladin.makeCursor(aladin.toolBox,Aladin.DEFAULTCURSOR);
+      setMyCursor(Aladin.DEFAULTCURSOR);
 
       // Détermination de la vue de destination
       int i = getTargetViewForEvent(target,x,y);
@@ -656,7 +657,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       // Copie ou déplacement d'une vue
       else if( rep && megaDragViewSource!=null ) {
          boolean copy = ctrlPressed;
-         aladin.console.setCommand( (copy ? "copy ":"mv ")+
+         aladin.console.printCommand( (copy ? "copy ":"mv ")+
                getIDFromNView(megaDragViewSource.n)+" "+
                getIDFromNView(megaDragViewTarget.n));
          moveOrCopyView(megaDragViewSource.n,megaDragViewTarget.n,copy);
@@ -666,7 +667,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       else if( rep ) {
          if( !aladin.calque.canBeRef( megaDragPlanSource ) ) rep=false;
          if( rep ) {
-            aladin.console.setCommand("cview "+Tok.quote(megaDragPlanSource.label)+
+            aladin.console.printCommand("cview "+Tok.quote(megaDragPlanSource.label)+
                               " "+getIDFromNView(megaDragViewTarget.n));
             unSelectAllView();
             setPlanRef(megaDragViewTarget.n,megaDragPlanSource);
@@ -809,7 +810,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Création de ROI autour de la position indiquée pour toutes les
     * vues sélectionnées. */
    protected void createROI() {
-      aladin.console.setCommand("thumbnail");
+      aladin.console.printCommand("thumbnail");
       createROIInternal(0,0,true);
    }
 
@@ -1430,7 +1431,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          cmd.append(" "+getIDFromNView(i));
          viewSimple[i].free();
       }
-      aladin.console.setCommand("rm "+cmd);
+      aladin.console.printCommand("rm "+cmd);
       sauvegarde();
       viewMemo.freeSelected();
    }
@@ -1442,7 +1443,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          cmd.append(" "+getIDFromNView(i));
          v[i].free();
       }
-      aladin.console.setCommand("rm "+cmd);
+      aladin.console.printCommand("rm "+cmd);
       sauvegarde();
 //      viewMemo.freeSelected();
    }
@@ -1459,7 +1460,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Libération des vues lockées  */
    protected void freeLock() {
-      aladin.console.setCommand("rm Lock");
+      aladin.console.printCommand("rm Lock");
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
          if( viewSimple[i].locked ) viewSimple[i].free();
       }
@@ -2161,7 +2162,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( o instanceof Source ) continue;
          if( o.id!=null && o.id.length()>0 ) res.append(o.id+"\n");
       }
-      aladin.console.setInPad(res.toString());
+      aladin.console.printInPad(res.toString());
    }
 
    /** Extension des clips de chaque vue pour contenir l'objet o */
@@ -3245,7 +3246,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                rep=false;
             } else {
                saisie=aladin.localisation.J2000ToString(c.al,c.del);
-               aladin.console.setInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
+               aladin.console.printInPad(sourceName+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
                if( !setRepereByString() && !aladin.NOGUI ) {
                   Vector<Plan> v = aladin.calque.getPlanBG();
                   if( v!=null && v.size()>0 ) {
@@ -3780,7 +3781,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Arrêt de la procédure Quick Simbad */
-   synchronized protected void suspendQuickSimbad(){ startQuickSimbad=0L; simRep=null; }
+   synchronized protected void suspendQuickSimbad(){ startQuickSimbad=0L; simRep=null;  }
 
    static final int TAILLEARROW = 15;
 
@@ -3817,9 +3818,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       v.getProj().getCoord(coo);
       if( Double.isNaN(coo.al) ) return;
       String target = coo.getSexa(":");
-      
+
       // Est-on sur un objet avec pixel ?
-      if( !v.isMouseOnSomething() ) return;
+      // CA NE MARCHE PAS BIEN, JE PREFERE LAISSER DE COTE
+//      if( !v.isMouseOnSomething() ) return;
 
       // Quelle est le rayon de l'interrogation (15 pixels écran au dessus) Max 1°
       double d = coo.del;
@@ -3877,7 +3879,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             aladin.status.setText(s1+"    [by Simbad]");
             simRep.setId(s1);
             simRep.setWithLabel(true);
-            aladin.console.setInPad(s1+"\n");
+            aladin.console.printInPad(s1+"\n");
 
             // Et on cherche le SED correspondant
             if( flagSED && calque.flagVizierSED ) {
@@ -3916,7 +3918,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       String target = coo.getSexa();
       
       // Est-on sur un objet avec pixel ?
-      if( !v.isMouseOnSomething() ) return;
+//      if( !v.isMouseOnSomething() ) return;
       
       Aladin.makeCursor(v,Aladin.WAITCURSOR);
       
@@ -4247,7 +4249,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
             else unsetStick(v);
          }
       }
-      aladin.console.setCommand((flag?"stick":"unstick")+sID);
+      aladin.console.printCommand((flag?"stick":"unstick")+sID);
       repaintAll();
    }
 

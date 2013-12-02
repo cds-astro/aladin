@@ -944,7 +944,7 @@ public final class ColorMap extends JPanel  implements
       stopBand();
       flagDrag=false;
       greyLevel=-1;
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
    }
 

@@ -189,7 +189,7 @@ public final class FrameResample extends FrameRGBBlink {
          if( !a.calque.plan[i].isSimpleImage() ) continue;
          PlanImage pref = (PlanImage)a.calque.plan[i];
          if( !pref.flagOk || !pref.selected ) continue;
-         if( p!=null ) a.console.setCommand("resamp "+Tok.quote(pref.label)+" "
+         if( p!=null ) a.console.printCommand("resamp "+Tok.quote(pref.label)+" "
             +Tok.quote(p.label)+sFull+sMethode);
          a.calque.newPlanImageResamp(pref,p,null,methode,fullPixel,cbKeep.isSelected());
          n++;

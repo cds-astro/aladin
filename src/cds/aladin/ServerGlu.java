@@ -870,7 +870,7 @@ public class ServerGlu extends Server implements Runnable {
          if( r==null ) r="";
          else r = " "+Coord.getUnit(getRM(r)/60.);
          code = "get "+actionName + (criteres.length()==0?" ":"("+criteres+") ");
-         aladin.console.setCommand(code+this.getTarget()+r);
+         aladin.console.printCommand(code+this.getTarget()+r);
       }
 
       // Generation de l'URL par appel au GLU

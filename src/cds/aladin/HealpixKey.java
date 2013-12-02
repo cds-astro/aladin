@@ -987,13 +987,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
          }
          if( bitpix!=8 && !flagARGB ) {
              truePixels=true;
-            if( planBG.flagRecut ) {
-               pixelMin=planBG.pixelMin;
-               pixelMax=planBG.pixelMax;
-            } else {
-               try { pixelMin = getValue(head,"PIXELMIN"); } catch( Exception e1 ) {}
-               try { pixelMax = getValue(head,"PIXELMAX"); } catch( Exception e1 ) {}
-            }
+//            if( planBG.flagRecut ) {
+//               pixelMin=planBG.pixelMin;
+//               pixelMax=planBG.pixelMax;
+//            } else {
+//               try { pixelMin = getValue(head,"PIXELMIN"); } catch( Exception e1 ) {}
+//               try { pixelMax = getValue(head,"PIXELMAX"); } catch( Exception e1 ) {}
+//            }
          }
 
       } catch( Exception e ) { width=height=512; bitpix=8; }
@@ -1018,7 +1018,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
          byte [] in = new byte[taille];
          System.arraycopy(stream, 2880, in, 0, taille);
          
-         if( this instanceof HealpixAllsky && !planBG.flagRecut ) {
+         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut; // || this instanceof HealpixAllsky;
+         
+         if( flagInit /* && !planBG.flagRecut */ ) {
+            planBG.bitpix=bitpix;
+            planBG.flagRecut=false;
             try {
                planBG.bScale = getValue(head,"BSCALE");
             } catch( Exception e ) { 
@@ -1029,15 +1033,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
             } catch( Exception e ) { 
                planBG.bZero=0;
             }
-//            try {
-//               try {
-//                  planBG.pixelMin = getValue(head,"PIXELMIN");
-//                  planBG.pixelMax = getValue(head,"PIXELMAX");
-//               } catch( Exception e1 ) { }
-//               try {
-//                  planBG.dataMin  = getValue(head,"DATAMIN");
-//                  planBG.dataMax  = getValue(head,"DATAMAX");
-//               } catch( Exception e1 ) { }
                try {
                   planBG.blank    = getValue(head,"BLANK");
                   planBG.isBlank = true;
@@ -1051,40 +1046,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
                planBG.pixelMax = pixelMax = range[1];
                planBG.dataMin  = range[2];
                planBG.dataMax  = range[3];
-//               planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
-//                     "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
 
-               planBG.aladin.trace(3,"Pixel range found in AllSky.fits => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
+               planBG.aladin.trace(3,"Pixel range detection => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
                                                  "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]"+(planBG.isBlank?" Blank="+planBG.blank:"")
                                                  +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
-//            } catch( Exception e1 ) {
-//               Fits tmp = new Fits(width,height,bitpix);
-//               if( planBG.isBlank ) tmp.setBlank(planBG.blank);
-//               tmp.pixels = in;
-//               double [] range = tmp.findAutocutRange(0,0,true);
-//               planBG.pixelMin = range[0];
-//               planBG.pixelMax = range[1];
-//               planBG.dataMin  = range[2];
-//               planBG.dataMax  = range[3];
-//               planBG.aladin.trace(3,"No pixel range information in AllSky.fits (do it myself) => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
-//                     "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]");
-//            }
-            planBG.creatDefaultCM();
+               planBG.restoreCM();
             if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
          }
          
          pixels = to8bits(in,bitpix,pixelMin,pixelMax, PlanBG.PIX_255);
-//         // Passage en 8bits si nécessaire avec retournement des lignes
-//         if( bitpix!=8 ) {
-//            pixels = to8bits(in,bitpix,pixelMin,pixelMax);
-//
-//            // Simple retournement des lignes
-//         } else {
-//            pixels = new byte[taille];
-//            invLine(in,pixels,bitpix);
-//         }
 
-         if( this instanceof HealpixAllsky  && !planBG.color) {
+         if( flagInit  && !planBG.color) {
             planBG.pixelsOrigin=in;
             planBG.setBufPixels8(pixels);
             planBG.bitpix=bitpix;

@@ -28,6 +28,9 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -110,6 +113,7 @@ public final class Configuration extends JFrame
    protected static String SLOPAC     = "SliderOpac";
    protected static String SLZOOM     = "SliderZoom";
    protected static String SEDWAVE    = "SEDWave";
+   protected static String LASTFILE   = "LastFile";
 //   protected static String TAG        = "CenteredTag";
 //   protected static String WENSIZE    = "WenSize";
    
@@ -117,8 +121,8 @@ public final class Configuration extends JFrame
    static String ACTIVATED = "Activated";
    
    // Les labels des boutons
-   static String TITLE,DEFDIR,DEFDIRH,LANGUE,LANGUEH,LANGCONTRIB,CSVCHAR,CSVCHARH,PIXB,PIXH,PIX8,PIXF,
-                 CMB,CMH,CMV,CMM,CMC,CMF,BKGB,BKGH,WEBB,WEBH,RELOAD,
+   static String TITLE,DEFDIR,DEFDIRH,LANGUE,LANGUEH,LANGCONTRIB,CSVCHAR,CSVCHARH,PIXB,/*PIXH,*/PIX8,PIXF,
+                 CMB,CMH,CMV,CMM,CMC,CMF,/*BKGB,BKGH,*/WEBB,WEBH,RELOAD,
                  REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
                  PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
                  IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
@@ -138,6 +142,7 @@ public final class Configuration extends JFrame
    private boolean         first      = true;    // Pour savoir si le JPanel à déjà été créé
    private boolean         flagModifLang=true;   // true si on vient de modifier la langue (ou au démarrage)
    private String          currentLang="En";     // Le suffixe de la langue courante
+   protected LinkedBlockingDeque<String> lastFile;  // La liste des derniers fichiers chargés
 
    // Les variables pour la gestion des champs de préférences
    private JTextField       browser;              // Pour la saisie du browser de l'utilisateur
@@ -194,7 +199,7 @@ public final class Configuration extends JFrame
       CSVCHAR = aladin.chaine.getString("UPCSVCHAR");
       CSVCHARH = aladin.chaine.getString("UPCSVCHARH");
       PIXB = aladin.chaine.getString("UPPIXB");
-      PIXH = aladin.chaine.getString("UPPIXH");
+//      PIXH = aladin.chaine.getString("UPPIXH");
       PIX8 = "8 bit grey level";
       PIXF = "Full pixel";
       CMB = aladin.chaine.getString("UPCMB");
@@ -203,8 +208,8 @@ public final class Configuration extends JFrame
       CMM = aladin.chaine.getString("UPCMM");
       CMC = aladin.chaine.getString("UPCMC");
       CMF = aladin.chaine.getString("UPCMF");
-      BKGB = aladin.chaine.getString("UPBKGB");
-      BKGH = aladin.chaine.getString("UPBKGH");
+//      BKGB = aladin.chaine.getString("UPBKGB");
+//      BKGH = aladin.chaine.getString("UPBKGH");
       WEBB = aladin.chaine.getString("UPWEBB");
       WEBH = aladin.chaine.getString("UPWEBH");
       REGB = aladin.chaine.getString("UPREGB");
@@ -482,7 +487,7 @@ public final class Configuration extends JFrame
    private void launchGluTest() {
       Aladin.makeCursor(this, Aladin.WAITCURSOR);
       aladin.glu.testAlaSites(false, true);
-      Aladin.makeCursor(this, Aladin.DEFAULT);
+      Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
 
       setSelectGluChoice(aladin.glu.NPHGLUALADIN);
    }
@@ -1098,7 +1103,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       modeChoice = new JComboBox();
       modeChoice.addItem(ASTRONOMER);
       modeChoice.addItem(UNDERGRADUATE);
-      modeChoice.addItem(PREVIEW);
+      if( aladin.PROTO ) modeChoice.addItem(PREVIEW);
       (l = new JLabel(MODE)).setFont(l.getFont().deriveFont(Font.BOLD));
       if( !aladin.setOUTREACH ) {
          PropPanel.addCouple(this, p, l, MODEH, modeChoice, g, c, GridBagConstraints.EAST);           
@@ -1294,7 +1299,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       PlanBG.clearCache();
       set(CACHE,"0");
       cache.setText("0 / ");
-      aladin.makeCursor(this,Aladin.DEFAULT);
+      aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
    }
    
    /** Positionnement des valeurs courantes */
@@ -1617,6 +1622,17 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key, 20) + item.value); // Propriétés
          bw.newLine();
       }
+      
+      // Je sauvegarde les paths des fichiers récemment ouverts
+      if( lastFile!=null ) {
+         int i=1;
+         for( String path : lastFile ) {
+            String key = LASTFILE+(i++);
+            bw.write(Util.align(key, 20) + path);
+            bw.newLine();
+         }
+      }
+      
       bw.close();
       flagModif = false;
       
@@ -1670,6 +1686,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       Aladin.trace(2, "Loading Aladin user configuration file...");
       while( (s = br.readLine()) != null ) {
          line++;
+         
          if( s.trim().length() == 0 ) {
             prop.addElement(new ConfigurationItem(" ", null));
             continue;
@@ -1678,6 +1695,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
             prop.addElement(new ConfigurationItem("#", s));
             continue;
          }
+         // Cas particulier des paths des fichiers récemment ouverts
          char a[] = s.toCharArray();
          int i, j;
          for( i = 0; i < a.length && !Character.isSpace(a[i]); i++ );
@@ -1686,7 +1704,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          String value = new String(a, j, a.length - j);
          if( key.equals(TRANSOLD) ) key=TRANS;      // Pour compatiblité
          aladin.trace(4, "Configuration.load() [" + key + "] = [" + value + "]");
-         set(key, value);
+         
+         if( key.startsWith(LASTFILE) ) setLastFile(value,false);
+         else set(key, value);
       }
       br.close();
       
@@ -1704,7 +1724,11 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    
    /** On recharge toutes les définitions du glu */
    private void reloadGlu() {
-      try { aladin.glu.reload(true,false); } catch(Exception e) { e.printStackTrace(); }
+      try {
+         aladin.makeCursor(this, Aladin.WAITCURSOR);
+         aladin.glu.reload(true,false);
+         aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
+      } catch(Exception e) { e.printStackTrace(); }
    }
    
    /** Ouverture de la fenêtre de contribution à une nouvelle traduction */
@@ -2040,6 +2064,21 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    private void setMode(String s) throws Exception {
       if( s==null ) { remove(MOD); return; }
       set(MOD,s);
+   }
+   
+   static private final int MAXLASTFILE = 10;
+   
+   /** Mémorise un nouveau path de fichier récemment ouvert */
+   protected void setLastFile(String path,boolean checkDoublon) {
+      if( lastFile==null ) lastFile = new LinkedBlockingDeque<String>(MAXLASTFILE);
+      if( checkDoublon ) {
+         File f1 = new File(path);
+         for( String f2 : lastFile ) {
+            if( f1.equals(new File(f2)) ) { lastFile.remove(f2); break; }
+         }
+      }
+      if( lastFile.size()==MAXLASTFILE ) lastFile.removeFirst();
+      lastFile.add(path);
    }
    
    /** Positionnement du répertoire par défaut, avec vérification d'existence */

@@ -255,7 +255,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {
                               aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                              gSky = new TreeNodeAllsky(aladin, null, null, null, null, null, null, null, null, null, f, "15 cat");
+                              gSky = new TreeNodeAllsky(aladin, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }
                            n=aladin.calque.newPlanBG(gSky,label,null,null);
 
@@ -353,9 +353,9 @@ public class ServerFile extends Server implements XMLConsumer {
             aladin.log("load",mode+t);
 
             if( (type & MyInputStream.AJS|type & MyInputStream.AJSx|MyInputStream.UNKNOWN)!=0) aladin.command.readFromStream(in);
-            else if( (type & MyInputStream.AJ)!=0) loadAJ(in);
-            else if( (type & MyInputStream.IDHA)!=0) updateMetaData(in,server,"",null);
-            else if( (type & MyInputStream.SIA_SSA)!=0)  updateMetaData(in,server,"",null);
+            else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
+            else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
+            else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
 
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
                n=aladin.calque.newPlanMOC(in,label);
@@ -414,6 +414,7 @@ public class ServerFile extends Server implements XMLConsumer {
             } else if( (type & MyInputStream.GLU)!=0 ) {
                if( aladin.glu.loadGluDic(new DataInputStream(in), false,localFile) ) {
                   aladin.glu.reload(false,true);
+                  n=1;
                }
 
                // C'est peut être un planBG via HTTP
@@ -431,7 +432,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   try { gSky = new TreeNodeAllsky(aladin, f); }
                   catch( Exception e ) {
                      aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                     gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, "15 cat");
+                     gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
                   }
                   n=aladin.calque.newPlanBG(gSky,label,null,null);
                }
@@ -459,6 +460,8 @@ public class ServerFile extends Server implements XMLConsumer {
          }
          defaultCursor();
 //         setSync(true);
+         
+         if( n>0 && (f!=null || u!=null)) aladin.memoLastFile(f!=null?f:u.toString());
          return n;
       } finally { aladin.synchroServer.stop(serverTaskId); }
    }
@@ -489,7 +492,7 @@ public class ServerFile extends Server implements XMLConsumer {
          defaultCursor();
       } else {
          String code = "load "+f;
-         aladin.console.setCommand(code);
+         aladin.console.printCommand(code);
          int n=creatLocalPlane(f,null,null,null,null,null,this);
          if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode(code);
       }

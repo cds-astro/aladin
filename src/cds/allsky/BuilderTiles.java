@@ -105,6 +105,7 @@ public class BuilderTiles extends Builder {
          double bl1 = context.getBlank();
          if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
          else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
+         context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
       }
       build();
       if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }

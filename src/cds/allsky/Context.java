@@ -726,7 +726,7 @@ public class Context {
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
-   protected void showJpgStat(int statNbFile, long statSize, long totalTime,int statNbThread,int statNbThreadRunning) {
+   protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
 //      long maxMem = Runtime.getRuntime().maxMemory();
       long totalMem = Runtime.getRuntime().totalMemory();
       long freeMem = Runtime.getRuntime().freeMemory();
@@ -793,14 +793,16 @@ public class Context {
 
    public void startAction(Action a) throws Exception { 
       action=a; 
+      action.startTime();
       running(action+" in progress...");
 //      updateProperties( getKeyActionStart(action), getNow(),true);
       setProgress(0,-1);
    }
    public void endAction() throws Exception {
-      if( isTaskAborting() )  nldone(action+" abort");
+      action.stopTime();
+      if( isTaskAborting() )  nldone(action+" abort (after "+Util.getTemps(action.getDuree())+")\n");
       else {
-         nldone(action+" done");
+         nldone(action+" done (in "+Util.getTemps(action.getDuree())+")\n");
 //         updateProperties( getKeyActionEnd(action), getNow(),true);
       }
       action=null;

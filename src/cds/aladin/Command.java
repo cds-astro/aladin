@@ -184,8 +184,8 @@ public final class Command implements Runnable {
    }
    
    public void console(String s) {
-      if( !s.startsWith("!!!") ) a.console.setInfo(s);
-      else a.console.setError(s);
+      if( !s.startsWith("!!!") ) a.console.printInfo(s);
+      else a.console.printError(s);
 
    }
 
@@ -242,7 +242,7 @@ public final class Command implements Runnable {
 //            if( !a.dialog.isShowing() ) a.dialog.show();
 //         }
 //      }
-      println("Aladin is waiting commands...");
+//      println("Aladin is waiting commands...");
       scriptFromInputStream();
       a.trace(2,"Command interpreter stopped !");
    }
@@ -731,6 +731,7 @@ public final class Command implements Runnable {
                + "PlaneNb "+(p.length-a.calque.getIndex(plan))+"\n"
                + "Type    "+Plan.Tp[plan.type]+"\n"
                + (plan.verboseDescr!=null ? "Info    "+plan.verboseDescr+"\n" : "")
+               + (plan.ack!=null ? "Ack     "+plan.ack+"\n" : "")
                + "Status  "+(plan.active ? "shown":"hidden")+" "
                            +(plan.selected ? "selected":"")
                            +(!plan.flagOk && plan.error!=null ? " error":"")
@@ -956,7 +957,7 @@ public final class Command implements Runnable {
                 a.warning(a.dialog.server[0].UNKNOWNOBJ);
                 return false;
              } else t=rep;
-             a.console.setCommand("get "+s+" "+cmd);
+             a.console.printCommand("get "+s+" "+cmd);
 
           // sinon il s'agit d'un simple deplacement du repere
           } else {
@@ -1117,7 +1118,7 @@ public final class Command implements Runnable {
             Coord coo=null;
             try {
                coo = a.view.sesame(target);
-               csr = Aladin.DEFAULT;
+               csr = Aladin.DEFAULTCURSOR;
                Aladin.makeCursor(a,csr);
                if( coo==null ) Aladin.warning("\""+target+"\": "+a.chaine.getString("OBJUNKNOWN"),1);
             } catch( Exception e ) { Aladin.warning(e.getMessage(),1); }
@@ -2669,7 +2670,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       
       // Echo sur la console
-      if( echo ) a.console.setCommand(s1);
+      if( echo ) a.console.printCommand(s1);
       
       // Commentaire
       if( s1.length()>0 && s1.trim().charAt(0)=='#' ) return "";
@@ -2884,7 +2885,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             } else s2 = a.kernelList.getKernelDef(param);
          }
          print(s2);
-         a.console.setInPad(s2);
+         a.console.printInPad(s2);
          return s2;
       }
       else if( cmd.equalsIgnoreCase("conv") ) {
@@ -3827,7 +3828,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             else s.append(name+(f.getDescription().length()>0?" - "+f.getDescription():"")+"\n");
          }
          print(s.toString());
-         a.console.setInPad(s.toString());
+         a.console.printInPad(s.toString());
          return s.toString();
          
       } catch( Exception e ) {
@@ -3985,7 +3986,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    protected void testscript(String param) {
       a.console.setVisible(true);
       a.console.clearPad();
-      a.console.setInPad(TEST.replace(';','\n') );
+      a.console.printInPad(TEST.replace(';','\n') );
       execScript(TEST);
       a.glu.showDocument("Http","http://aladin.u-strasbg.fr/java/Testscript.jpg",true);
    }

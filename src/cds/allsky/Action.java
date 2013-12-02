@@ -21,10 +21,42 @@ package cds.allsky;
 
 public enum Action {
    
-   INDEX, TILES, JPEG, PNG, MOC, MOCINDEX, MOCHIGHT, ALLSKY, GZIP, GUNZIP,
+   INDEX     ("Build index (in HpxFinder directory) + MOC index"), 
+   TILES     ("Build all true value pixel tiles (FITS) + Allsky.fits + MOC"), 
+   JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
+   PNG       ("Build all preview tiles (PNG) + Allsky.png"),
+   MOC       ("(Re)build the output coverage map (MOC order=maxorder)"), 
+   MOCINDEX  ("(Re)build the input coverage map (MOC order=maxorder) in HpxFinder directory"),
+   MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
+   ALLSKY    ("(Re)build all Allsky files"),
+   GZIP      ("Compress some FITS tiles and Allsky.fits"),
+   GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
+   CLEAN     ("Delete all Hips files (index, tiles, dir, Allsky, MOC, ..."), 
+   CLEANINDEX("Delete index (HpxFinder dir)"),
+   CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ..."), 
+   CLEANFITS ("Delete all FITS tiles and Allsky.fits"),
+   CLEANJPEG ("Delete all JPEG tiles and Allsky.jpg"),
+   CLEANPNG  ("Delete all PNG tiles and Allsky.png"),
+   TREE      ("(Re)build HiPS tree structure from already existing tiles"),
+   CONCAT    ("Concatenate one HiPS to another HiPS"),
+   PROGEN    ("Extend HiPS index for supporting progenitor facility"),
+   RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
+   CHECK     ("** In progress: Check readability of all tiles"),
    FINDER,  // Pour compatibilité
-   CLEAN, CLEANINDEX, CLEANTILES, CLEANFITS, CLEANJPEG, CLEANPNG, CHECK,
-   RGB, TREE, CONCAT, PROGEN,
-   ABORT, PAUSE, RESUME,
+   ABORT, PAUSE, RESUME;
+   
+   Action() {}
+   Action(String s ) { doc=s; }
+   
+   private String doc;
+   String doc() { return doc; }
+   void startTime() { startTime=System.currentTimeMillis(); }
+   void stopTime()  { stopTime=System.currentTimeMillis(); }
+   long getDuree() { 
+      return (stopTime==0 ? System.currentTimeMillis():stopTime)-startTime; 
+   }
+   
+   public long startTime,stopTime=0L;
+   public long nbFile;
 	
 }

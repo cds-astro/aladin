@@ -1628,7 +1628,7 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
        // écriture de la commande script équivalente
        String cmd = node.getScriptCommand();
        if( cmd!=null ) {
-    	   aladin.console.setCommand(cmd);
+    	   aladin.console.printCommand(cmd);
        }
 
 

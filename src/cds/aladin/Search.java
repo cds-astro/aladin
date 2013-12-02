@@ -161,6 +161,7 @@ public final class Search extends JPanel implements MouseListener {
    
    /** Permet de cacher/montrer les widgets propre à la recherche en ne laissant que les boutons "reduce" et "out" */
    protected void hideSearch(boolean flag) {
+      setIcon();
       if( flag==flagHideSearch ) return;
       flagHideSearch=flag;
       if( flagHideSearch ) remove(panelSearch);
@@ -199,7 +200,6 @@ public final class Search extends JPanel implements MouseListener {
       if( aladin.mesure.flagReduced || aladin.mesure.f!=null ) reduce.setIcon(new ImageIcon(aladin.getImagette("Agrandir.gif")));
       else reduce.setIcon(new ImageIcon(aladin.getImagette("Reduire.gif")));
    }
-
    
    static String SELECT,UNSELECT,APPEND,SHOW;
    

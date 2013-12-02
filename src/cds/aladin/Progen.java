@@ -101,7 +101,7 @@ public class Progen extends JPanel  {
    protected void copyInPad() {
       for( TreeNode n : tree ) {
          if( !(n instanceof TreeNodeProgen) ) continue;
-         aladin.console.setInPad( ( (TreeNodeProgen)n).label+"\n" );
+         aladin.console.printInPad( ( (TreeNodeProgen)n).label+"\n" );
       }
       aladin.console.setVisible(true);
    }

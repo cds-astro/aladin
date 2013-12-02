@@ -229,7 +229,7 @@ public final class ServerFoV extends Server implements TableModel {
       } else s=null;
       
       String code = "get FoV("+Tok.quote(s)+")";
-      aladin.console.setCommand(code+" "+t);
+      aladin.console.printCommand(code+" "+t);
 
       int n= creatFieldPlane(t,r,s,null);
       if( n!=-1 ) {

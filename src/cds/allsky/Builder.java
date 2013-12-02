@@ -82,7 +82,6 @@ public abstract class Builder {
    /** Affiche des statistiques de progression */
    public void showStatistics() { }
    
-   
    // Quelques validateurs génériques utilisés par les différents Builders.
    
    // Vérifie que le répertoire Input a été passé en paramètre et est utilisable

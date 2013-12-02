@@ -44,9 +44,9 @@ import javax.swing.*;
 
 /**
  * Gestion de la fenetre des sauvegardes
- * RQ: Uniquement necessaire pour le standalone
  *
  * @author Pierre Fernique [CDS]
+ * @version 1.6 : nov 2013 - réduction des possibilités via ce panneau
  * @version 1.6 : mars 2007 - sauvegarde EPS de la vue
  * @version 1.5 : février 2006 - sauvegarde des images FITS couleurs
  * @version 1.4 : octobre 2005 - prise en compte d'un InputStream pour supporter VOApp.getFITS()
@@ -95,6 +95,10 @@ public final class Save extends JFrame implements ActionListener {
    static final int CURRENTVIEW = 0;
    static final int ALLVIEWS = 1;
    static final int ALLROIS = 2;
+   
+   static final int SAVEVIEW = 0;
+   static final int EXPORTPLANS = 1;
+   static final int BACKUPSTACK =2;
 
    // Les references aux objets
    Aladin aladin;
@@ -135,19 +139,19 @@ public final class Save extends JFrame implements ActionListener {
       ENCODER = aladin.chaine.getString("SFJPEGENCODER");
 
       CHOICE = new String[] {
-            aladin.chaine.getString("SFCH5"),
+//            aladin.chaine.getString("SFCH5"),
             aladin.chaine.getString("SFCH3"),
-            aladin.chaine.getString("SFCH1"),
             aladin.chaine.getString("SFCH2"),
-            aladin.chaine.getString("SFCH4"),
+            aladin.chaine.getString("SFCH1"),
+//            aladin.chaine.getString("SFCH4"),
       };
 
       INFOCHOICE = new String[] {
-            aladin.chaine.getString("SFHCH5"),
+//            aladin.chaine.getString("SFHCH5"),
             aladin.chaine.getString("SFHCH3"),
-            aladin.chaine.getString("SFHCH1"),
             aladin.chaine.getString("SFHCH2"),
-            aladin.chaine.getString("SFHCH4"),
+            aladin.chaine.getString("SFHCH1"),
+//            aladin.chaine.getString("SFHCH4"),
       };
 
    }
@@ -174,9 +178,6 @@ public final class Save extends JFrame implements ActionListener {
       pack();
       if( show ) show();
    }
-
-
-   static final int SAVEVIEW = 1;
 
 
   /** Donne le panel de la fenetre de choix (save, export planes,
@@ -207,7 +208,7 @@ public final class Save extends JFrame implements ActionListener {
             p.add(l);
             format =new JComboBox();
             for( int j=0; j<FORMAT.length; j++ ) format.addItem(FORMAT[j]+" format");
-            format.setSelectedIndex(1);   /* EPS */
+            format.setSelectedIndex(3);   /* PNG */
             p.add(format);
             c.gridwidth = GridBagConstraints.REMAINDER;
             g.setConstraints(p,c);
@@ -309,7 +310,7 @@ public final class Save extends JFrame implements ActionListener {
          if( !cbPlan[i].isSelected() ) continue;
          Plan p = listPlan[i];
          f = new File(directory.getText(),fileSavePlan[i].getText());
-         aladin.console.setCommand("export "+Tok.quote(p.label)+" "+f.getAbsolutePath());
+         aladin.console.printCommand("export "+Tok.quote(p.label)+" "+f.getAbsolutePath());
          switch( p.type ) {
             case Plan.ALLSKYMOC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
@@ -521,7 +522,7 @@ public final class Save extends JFrame implements ActionListener {
       String s = (dir==null?"":dir)+(name==null?"":name);
       if( mode==0 ) {
          if( !Util.toLower(s).endsWith(".aj") ) s=s+".aj";
-         aladin.console.setCommand("backup "+s);
+         aladin.console.printCommand("backup "+s);
          res=saveAJ(s);
          if( res ) aladin.log("backup","");
       } else {
@@ -531,13 +532,16 @@ public final class Save extends JFrame implements ActionListener {
              !Util.toLower(s).endsWith(ext) ) s=s+ext;
 
          String lk = (format&LK)==LK ? " -lk":"";
-         aladin.console.setCommand("save "+lk+s);
+         aladin.console.printCommand("save "+lk+s);
          res=saveView(s,0,0,format,qual);
          if( res ) aladin.log("save",Util.toUpper(ext.substring(1)+lk));
       }
       if( !res ) {
          Aladin.warning(this,CANNOT+"\n"+s+"\n"+CANNOT1,1);
-      } else setVisible(false);
+      } else {
+         setVisible(false);
+         aladin.memoLastFile(s);
+      }
    }
 
    // Elements pour gerer le buffer de sauvegarde
@@ -1210,10 +1214,12 @@ public final class Save extends JFrame implements ActionListener {
    protected boolean saveCatalog(String s,Plan p, boolean tsv, boolean addXY) {
       s=aladin.getFullFileName(s);
       File f = new File(s);
-      if( tsv ) return saveCatTSV(f,p);
-      else return saveCatVOTable(f,p,addXY);
+      boolean rep;
+      if( tsv ) rep=saveCatTSV(f,p);
+      else rep=saveCatVOTable(f,p,addXY);
+      if( rep ) aladin.memoLastFile(s);
+      return rep;
    }
-
 
    protected boolean saveCatalog(File file, Plan p ,boolean tsv) {
        if( tsv ) return saveCatTSV(file,p);
@@ -1731,6 +1737,7 @@ public final class Save extends JFrame implements ActionListener {
       try {
          HealpixMoc moc = p.getMoc();
          moc.write(filename, format);
+         aladin.memoLastFile(filename);
       } catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          return false;
@@ -1756,8 +1763,11 @@ public final class Save extends JFrame implements ActionListener {
    protected boolean saveImage(String s,Plan p,int mode) {
       s=aladin.getFullFileName(s);
       File f = new File(s);
-      if( mode>=2 ) return saveImageColor(s,(PlanImage)p,mode);
-      return saveImageFITS(f,(PlanImage)p,mode);
+      boolean rep;
+      if( mode>=2 ) rep=saveImageColor(s,(PlanImage)p,mode);
+      else rep=saveImageFITS(f,(PlanImage)p,mode);
+      if( rep ) aladin.memoLastFile(s);
+      return rep;
    }
 
    /** Sauvegarde sous forme JPEG ou PNG + header FITS d'un plan - mode peut être 3-"png" ou 2-"jpg" */
@@ -1765,7 +1775,10 @@ public final class Save extends JFrame implements ActionListener {
       try {
          OutputStream o = new FileOutputStream(filename);
          boolean rep=saveImageColor(o,p,mode);
-         aladin.log("export",mode==3 ? "PNG" : "JPEG");
+         if( rep ) {
+            aladin.log("export",mode==3 ? "PNG" : "JPEG");
+            aladin.memoLastFile(filename);
+         }
          return rep;
 
       } catch( Exception e ) {
@@ -2662,11 +2675,12 @@ lenLine=1;
    @Override
 public boolean action(Event evt, Object what) {
 
-      if( CHOICE[0].equals(what) ) { aladin.printer(); hide(); }
-      else if( CHOICE[1].equals(what) ) saveFile(1,getCodedFormat(format.getSelectedIndex()),-1);
-      else if( CHOICE[2].equals(what) ) saveFile(0);
-      else if( CHOICE[3].equals(what) ) exportPlans();
-      else if( CHOICE[4].equals(what) ) aladin.saveHTML();
+//      if( CHOICE[0].equals(what) ) { aladin.printer(); hide(); }
+//      else 
+           if( CHOICE[SAVEVIEW].equals(what) ) saveFile(1,getCodedFormat(format.getSelectedIndex()),-1);
+      else if( CHOICE[BACKUPSTACK].equals(what) ) saveFile(0);
+      else if( CHOICE[EXPORTPLANS].equals(what) ) exportPlans();
+//      else if( CHOICE[5].equals(what) ) aladin.saveHTML();
       else if( evt.target instanceof Checkbox && tsvCb!=null ) changeCatFormat();
       else if( evt.target instanceof Checkbox && fitsCb!=null ) changeImgFormat();
       else if( evt.target instanceof Checkbox && fitsMocCb!=null ) changeMocFormat();

@@ -29,6 +29,7 @@ import java.util.Vector;
 
 import cds.aladin.MyProperties;
 import cds.moc.HealpixMoc;
+import cds.tools.Util;
 
 public class SkyGen {
 
@@ -287,7 +288,6 @@ public class SkyGen {
 
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
-            actions.add(Action.JPEG);
             actions.add(Action.PNG);
             actions.add(Action.PROGEN);
          }
@@ -307,21 +307,21 @@ public class SkyGen {
             }
          }
       }
+      
+      for( Action a : actions ) {
+         context.info("Action => "+a+": "+a.doc());
+      }
 
       // C'est parti
       try {
+         long t = System.currentTimeMillis();
          new Task(context,actions,true);
-         context.done("The end");
+         context.done("The end (done in "+Util.getTemps(System.currentTimeMillis()-t)+")");
       } catch (Exception e) {
          e.printStackTrace();
          context.error(e.getMessage());
          return;
       }
-   }
-   
-   private boolean findAction(Vector<Action> actions,Action s) {
-      for( Action a : actions ) { if( s==a ) return true; }
-      return false;
    }
    
    /** Juste pour pouvoir exécuter skygen comme une commande script Aladin */
@@ -334,7 +334,7 @@ public class SkyGen {
    
    // Aladin.jar -skygen
    private static void usage(String launcher) {
-      System.out.println("Usage: java -jar "+launcher+" [-f] options... [action [action...]]");
+      System.out.println("Usage: java -jar "+launcher+" [-f] options... [ACTION ...]");
       System.out.println("       java -jar "+launcher+" [-f] -param=configfile\n\n");
       System.out.println("This config file must contains these following options, or use them\n" +
       		"             directly in the comand line :");
@@ -345,20 +345,20 @@ public class SkyGen {
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
-            "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataCut)" + "\n" +
+            "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
             "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
             "order=nn           Specifical HEALPix order" + "\n" +
 //            "diffOrder          Diff between MOC order and optimal order" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
-            "maxThread=nn       Max number of computing threads (8 per default, -1 for max)" + "\n" +
+            "maxThread=nn       Max number of computing threads" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
             "                   or Moc.fits file (all sky by default)" + "\n" +
             "pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
-            "                   conversion - ex: \"-32000 +32000\")" + "\n" +
+            "                   conversion - ex: \"-5 110\")" + "\n" +
             "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
 //            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
             "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
@@ -366,7 +366,7 @@ public class SkyGen {
             "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
-            "verbose=n          Show live statistics : tracelevel from -1 (nothing) to 4 (a lot)" + "\n"
+            "verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"
 //            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
 //            "red        all-sky used for RED component (see rgb action)\n" +
 //            "green      all-sky used for BLUE component (see rgb action)\n" +
@@ -376,35 +376,28 @@ public class SkyGen {
 //            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
 //            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
       );
-      System.out.println("\nSpecifical actions (by default: \"index tiles jpeg moc allsky gzip progen\"):" + "\n" +
-            "index      Build finder index" + "\n" +
-            "tiles      Build FITS tiles" + "\n" +
-            "jpeg       Build JPEG tiles (from FITS tiles)" + "\n" +
-            "png        Build PNG tiles (from FITS tiles)" + "\n" +
-//            "rgb        Build RGB tiles (from 2 or 3 pre-computed all-skies)" + "\n" +
-            "moc        Build final MOC (based on generated tiles)" + "\n" +
-//            "mochight   Build final MOC (based on pixels of generated tiles)" + "\n" +
-            "mocIndex   Build index MOC (based on HEALPix index)" + "\n" +
-            "allsky     Build low resolution Allsky view (Fits and/or Jpeg|png)" + "\n"+
-            "tree       (Re)Build tree FITS tiles from FITS low level tiles" + "\n"+
-            "concat     Concatenate an HiPS to another already built HiPS" + "\n"+
-            "clean      Remove all HiPS files (index, tiles, directories, allsky, MOC, ...)" + "\n"+
-            "cleanIndex Remove HEALPix index" + "\n"+
-            "cleanTiles Remove all HEALPix survey except the index" + "\n"+
-            "cleanfits  Remove FITS tiles" + "\n"+
-            "cleanjpeg  Remove JPEG tiles " + "\n"+
-            "cleanpng   Remove PNG tiles " + "\n"+
-            "gzip       gzip some fits tiles and Allsky.fits (keeping the same names)" + "\n"+
-            "gunzip     gunzip all fits tiles and Allsky.fits (keeping the same names)" + "\n"+
-            "progen     transform the index to a progenitor usage" + "\n"
+      
+      System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP PROGEN\"):" + "\n" +
+            "INDEX      "+Action.INDEX.doc() + "\n" +
+            "TILES      "+Action.TILES.doc() + "\n" +
+            "JPEG       "+Action.JPEG.doc() + "\n" +
+            "PNG        "+Action.PNG.doc() + "\n" +
+//            "RGB        "+Action.RGB.doc() + "\n" +
+            "MOC        "+Action.MOC.doc() + "\n" +
+//            "MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
+            "ALLSKY     "+Action.ALLSKY.doc() + "\n"+
+            "TREE       "+Action.TREE.doc() + "\n"+
+            "CONCAT     "+Action.CONCAT.doc() + "\n"+
+            "GZIP       "+Action.GZIP.doc() + "\n"+
+            "PROGEN     "+Action.PROGEN.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
-      		             "\n    java -jar "+launcher+" in=/MyImages -bitpix=16 -pixelCut=\"-1 100 log\" => Do all the job" +
-      		             "\n           The HEALPix fits tiles will be coded in short integers, the Jpeg tiles" +
-      		             "\n           will map the originals values [-1..100] with a log function contrast." +
+      		             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +
+      		             "\n           The FITS tiles will be coded in short integers, the preview tiles" +
+      		             "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
                          "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
                          "\n           The original pixels in the border or equal to 0 will be ignored."+
-                         "\n    java -jar "+launcher+" in=HiPS out=HiPStarget concat   => Concatenate HiPS to HiPStarget"
+                         "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT   => Concatenate HiPS to HiPStarget"
 //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
                          );
    }

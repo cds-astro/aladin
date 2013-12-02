@@ -126,26 +126,26 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    }
    
    /** Mémorisation d'une commande */
-   public void setCommand(String cmd) {
+   public void printCommand(String cmd) {
       if( cmd==null || cmd.trim().length()==0 ) return;
       cmdHistory.addElement( new Command(cmd) );
       resumeTable();
    }
 
    /** Mémorisation d'une info */
-   public void setInfo(String info) {
+   public void printInfo(String info) {
       cmdHistory.addElement( new Command(info,INFO) );
       resumeTable();
    }
    
    /** Mémorisation d'une erreur */
-   public void setError(String error) {
+   public void printError(String error) {
       cmdHistory.addElement( new Command(error,ERROR) );
       resumeTable();
    }
    
    /** Ajout dans le pad et scrolling à la fin si nécessaire */
-   public void setInPad(String s) {
+   public void printInPad(String s) {
       boolean scroll = fieldPad.getCaretPosition()==fieldPad.getText().length();
       fieldPad.append(s);
       if( scroll ) fieldPad.setCaretPosition(fieldPad.getText().length());
@@ -154,7 +154,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    
    /** Ajout dans le pad des measurements des objets sélectionnés */
    public void dumpMeasurements() {
-      setInPad( aladin.mesure.getText() );
+      printInPad( aladin.mesure.getText() );
       aladin.log("DumpMeasurements","");
    }
    

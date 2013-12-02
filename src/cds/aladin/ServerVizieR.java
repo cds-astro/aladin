@@ -430,10 +430,10 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       if( cbGetAll.isSelected() ) cata = cata+",allcolumns";
       if( !allCat && objet!=null && objet.length()>0 ) {
          bookmarkCode = "get VizieR("+cata+")";
-         aladin.console.setCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
+         aladin.console.printCommand("get VizieR("+cata+") "+objet+" "+Coord.getUnit(rm/60.));
       } else {
          bookmarkCode = "get VizieRX("+cata+")";
-         aladin.console.setCommand(bookmarkCode);
+         aladin.console.printCommand(bookmarkCode);
       }
 
       int n = createPlane(objet,rm+"",cata,null,null);

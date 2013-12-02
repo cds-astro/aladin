@@ -622,7 +622,7 @@ long t1,t;
 
       aladin.manageDrop();
 
-//      setCurrent("Allsky");
+      setCurrent("Allsky");
 
       // INUTILE, C'EST MAINTENANT ASSEZ RAPIDE !
 //      Thread th = new Thread(this,"AladinServerPack");

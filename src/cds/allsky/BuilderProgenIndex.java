@@ -38,7 +38,6 @@ public class BuilderProgenIndex extends Builder {
    private int minOrder;
 
    private int statNbFile;
-   private long statSize;
    private long startTime,totalTime;
 
    /**
@@ -78,7 +77,7 @@ public class BuilderProgenIndex extends Builder {
    
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
-      context.showJpgStat(statNbFile, statSize, totalTime,0,0);
+      context.showJpgStat(statNbFile, totalTime,0,0);
    }
 
    public void build() throws Exception {
@@ -93,12 +92,11 @@ public class BuilderProgenIndex extends Builder {
       }
    }
    
-   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
+   private void initStat() { statNbFile=0; startTime = System.currentTimeMillis(); }
 
    // Mise à jour des stats
-   private void updateStat(File f) {
+   private void updateStat() {
       statNbFile++;
-      statSize += f.length();
       totalTime = System.currentTimeMillis()-startTime;
    }
 
@@ -144,10 +142,6 @@ public class BuilderProgenIndex extends Builder {
          Aladin.trace(4, "Writing " + file);
 
       }
-      if( out!=null && order==maxOrder ) {
-         File f = new File(file);
-         updateStat(f);
-      }
       
       if( order<minOrder ) return null;
       return out;
@@ -167,6 +161,7 @@ public class BuilderProgenIndex extends Builder {
 //      System.out.println("   createLeave("+file+")");
       HealpixIndex out = new HealpixIndex();
       out.loadStream( new FileInputStream(f));
+      updateStat();
       return out;
    }
    

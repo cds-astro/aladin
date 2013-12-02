@@ -90,7 +90,7 @@ public final class Logo extends JComponent implements MouseListener {
    * Lorsque l'on sort du le logo, le curseur reprend sa forme initiale
    */
    public void mouseExited(MouseEvent e) {
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
    }
 
  /** Clique sur le logo.

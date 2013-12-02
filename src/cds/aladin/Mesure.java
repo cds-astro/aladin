@@ -139,7 +139,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
        setSorting(false);
        scrollV.setValue(0);
        setStatus("");
-       aladin.makeCursor(mcanvas,Aladin.DEFAULT);
+       aladin.makeCursor(mcanvas,Aladin.DEFAULTCURSOR);
        memoWordLineClear();
        mcanvas.repaint();
     }

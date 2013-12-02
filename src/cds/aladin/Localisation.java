@@ -594,7 +594,7 @@ public final class Localisation extends MyBox {
       String s=getLocalisation(o);
       if( s==null ) return;
       if( methode==0 ) { setTextAffichage(s); setMode(AFFICHAGE); }
-      else { Aladin.copyToClipBoard(s); setTextSaisie(s); setMode(SAISIE); aladin.console.setInPad(s+"\n"); }
+      else { aladin.copyToClipBoard(s); setTextSaisie(s); setMode(SAISIE); aladin.console.printInPad(s+"\n"); }
    }
    
    /** Localisation de la source en fonction du frame courant */

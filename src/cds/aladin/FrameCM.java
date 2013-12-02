@@ -436,11 +436,10 @@ public final class FrameCM extends JFrame implements ActionListener {
        pbg.switchFormat();
        showCM();
        aladin.view.repaintAll();
-       if( pbg.isTruePixels() && pbg.useCache ) {
-          aladin.info(this,"The true all sky pixel mode requires a large network bandwidth\n" +
-             "Your sky is being reloaded... Look for it in the Aladin stack\n" +
-             "and be patient...");
-       }
+//       if( pbg.isTruePixels() && pbg.useCache && aladin.configuration.isHelp() ) {
+//          String s = aladin.chaine.getString("INFOHIPSFITS");
+//          aladin.info(this,s);
+//       }
     }
 
   /** Construction du panel en fonction de l'image en parametre.
@@ -670,9 +669,8 @@ public final class FrameCM extends JFrame implements ActionListener {
             if( ((PlanImageRGB)pimg).flagGreen ) cm2.reset();
             if( ((PlanImageRGB)pimg).flagBlue ) cm3.reset();
             ((PlanImageRGB)pimg).createImgRGB();
-
          } else {
-            aladin.console.setCommand("cm");
+            aladin.console.printCommand("cm");
             pimg.typeCM=aladin.configuration.getCMMap();
             choiceCM.setSelectedIndex(pimg.typeCM);
             pimg.video=aladin.configuration.getCMVideo();
@@ -684,6 +682,9 @@ public final class FrameCM extends JFrame implements ActionListener {
             setCM(cm.getCM());
             if( minCut!=null ) minCut.setText(pimg.X(pimg.pixelMin));
             if( maxCut!=null ) maxCut.setText(pimg.X(pimg.pixelMax));
+            if( pimg instanceof PlanBG && ((PlanBG)pimg).isTruePixels() ) {
+               ((PlanBG)pimg).forceReload();
+            }
          }
       }
       aladin.view.repaintAll();
@@ -706,7 +707,7 @@ public final class FrameCM extends JFrame implements ActionListener {
          if( pimg.video==PlanImage.VIDEO_NORMAL ) pimg.video=PlanImage.VIDEO_INVERSE;
          else pimg.video=PlanImage.VIDEO_NORMAL;
 
-         aladin.console.setCommand("cm "+(pimg.video==PlanImage.VIDEO_NORMAL?"noreverse":"reverse"));
+         aladin.console.printCommand("cm "+(pimg.video==PlanImage.VIDEO_NORMAL?"noreverse":"reverse"));
          if( pimg.type==Plan.IMAGERGB ) {
             if( ((PlanImageRGB)pimg).flagRed )  { cm.pimg.video=pimg.video;  cm.repaint(); }
             if( ((PlanImageRGB)pimg).flagGreen )  { cm2.pimg.video=pimg.video; cm2.repaint(); }
@@ -748,13 +749,13 @@ public final class FrameCM extends JFrame implements ActionListener {
          maxCut.setText(pimg.getDataMaxInfo());
          Aladin.makeCursor(this, Aladin.WAITCURSOR);
          if( !pimg.recut(pimg.dataMin,pimg.dataMax,false) ) {
-            Aladin.makeCursor(this, Aladin.DEFAULT);
+            Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
             aladin.warning(this,NOFULLPIXEL);
             return;
          }
       }
-      Aladin.makeCursor(this, Aladin.DEFAULT);
-      aladin.console.setCommand("cm all");
+      Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
+      aladin.console.printCommand("cm all");
       cm.repaint();
       setCM(cm.getCM());
 
@@ -771,7 +772,7 @@ public final class FrameCM extends JFrame implements ActionListener {
       int n;
       for( n=0; n<transfertCB.length && !transfertCB[n].isSelected(); n++ ) ;
       if( getTransfertFct()==n ) return; // déjà fait
-      aladin.console.setCommand("cm "+PlanImage.TRANSFERTFCT[n]);
+      aladin.console.printCommand("cm "+PlanImage.TRANSFERTFCT[n]);
 
 //      transfertFctTmp=n;
 //      Thread t = new Thread(this,"AladinColorMap");
@@ -835,7 +836,7 @@ public final class FrameCM extends JFrame implements ActionListener {
                }
             }
          }).start();
-         Aladin.makeCursor(this, Aladin.DEFAULT);
+         Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
 
          setCM(cm.getCM());
          minCut.setText(getMinPixCut());
@@ -853,16 +854,16 @@ public final class FrameCM extends JFrame implements ActionListener {
             return;
          }
 
-         aladin.console.setCommand("cm "+minCut.getText()+".."+maxCut.getText()
+         aladin.console.printCommand("cm "+minCut.getText()+".."+maxCut.getText()
                +(!autocutBox.isSelected()?" noautocut":""));
 
          Aladin.makeCursor(this, Aladin.WAITCURSOR);
          if( !pimg.recut(min,max,autocutBox.isSelected()) ) {
-            Aladin.makeCursor(this, Aladin.DEFAULT);
+            Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
             aladin.warning(this,NOFULLPIXEL);
             return;
          }
-         Aladin.makeCursor(this, Aladin.DEFAULT);
+         Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
 
          pimg.freeHist();
          setCM(cm.getCM());
@@ -880,9 +881,9 @@ public final class FrameCM extends JFrame implements ActionListener {
       if( n==getTypeCM() ) return;
       setTypeCM(n);
       cm.repaint();
-      if( n<CMA.length ) aladin.console.setCommand("cm "+CMA[n]);
+      if( n<CMA.length ) aladin.console.printCommand("cm "+CMA[n]);
       else {
-         try { aladin.console.setCommand("cm "+ColorMap.customCMName.get(n-ColorMap.LAST_DEFAULT_CM_IDX-1)); }
+         try { aladin.console.printCommand("cm "+ColorMap.customCMName.get(n-ColorMap.LAST_DEFAULT_CM_IDX-1)); }
          catch( Exception e ) {}
       }
       try { setCM(cm.getCM()); }

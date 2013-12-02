@@ -267,7 +267,7 @@ public final class FrameRGB extends FrameRGBBlink {
       boolean diff=cbDiff.isEnabled() && cbDiff.isSelected();
 
       if( r!=null && g!=null && b!=null && ref==null ) {
-         a.console.setCommand("RGB "+Tok.quote(r.label)+" "+Tok.quote(g.label)+" "+Tok.quote(b.label));
+         a.console.printCommand("RGB "+Tok.quote(r.label)+" "+Tok.quote(g.label)+" "+Tok.quote(b.label));
       }
       a.calque.newPlanImageRGB(r,g,b,ref,null,diff);
       hide();

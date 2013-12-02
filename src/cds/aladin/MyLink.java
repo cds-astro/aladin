@@ -210,7 +210,7 @@ public final class MyLink extends JComponent {
        if( x>strWidth+5 ) {
            if( inCanvas ) {
             inCanvas = false;
-            Aladin.makeCursor(this, Aladin.DEFAULT);
+            Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
             repaint();
            }
        }
@@ -250,7 +250,7 @@ public final class MyLink extends JComponent {
       } 
       else if( e.id==Event.MOUSE_EXIT ) {
           inCanvas = false;
-          Aladin.makeCursor(this, Aladin.DEFAULT);
+          Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
           repaint();
       }
 

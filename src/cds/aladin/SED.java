@@ -107,6 +107,12 @@ class SED extends JPanel {
    /** Mémorise le rayon associé au SED */
    protected void setRadius(double radius) { this.radius = radius; }
    
+   /** Retourne le nombre de points du SED, -1 si non encore chargée */
+   public int getCount() {
+      if( sedList==null ) return -1;
+      return sedList.size();
+   }
+   
    /** Nettoyage de la liste */
    public void clear() { 
       planeAlreadyCreated=readyToDraw=false;
@@ -620,12 +626,14 @@ class SED extends JPanel {
    }
    
    private void more() {
+      if( source==null ) return;
       // Je dois utiliser le %20 plutôt que le '+' pour l'encodage des blancs
       // parce que l'outil VizieR photometry ne les supporte pas
-      String target = URLEncoder.encode(source);
-      target = target.replaceAll("[+]","%20");
-      aladin.glu.showDocument("Widget.VizPhot", target+" "+radius);
-//      aladin.glu.showDocument("Widget.VizPhot", Glu.quote(source)+" "+radius);
+      // CE N'EST PLUS LA PEINE
+//      String target = URLEncoder.encode(source);
+//      target = target.replaceAll("[+]","%20");
+//      aladin.glu.showDocument("Widget.VizPhot", target+" "+radius);
+      aladin.glu.showDocument("Widget.VizPhot", Glu.quote(source)+" "+radius);
    }
    
    // Affiche un message explicatif sur le SED

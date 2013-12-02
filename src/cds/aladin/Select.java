@@ -713,11 +713,11 @@ public final class Select extends JComponent  implements
 
 
    // Gestion des curseurs
-   private int oc=Aladin.DEFAULT;
+   private int oc=Aladin.DEFAULTCURSOR;
    private void handCursor()    { makeCursor(Aladin.HANDCURSOR); }
    private void waitCursor()    { makeCursor(Aladin.WAITCURSOR); }
    private void moveCursor()    { makeCursor(Aladin.MOVECURSOR); }
-   private void defaultCursor() { makeCursor(Aladin.DEFAULT); }
+   private void defaultCursor() { makeCursor(Aladin.DEFAULTCURSOR); }
    private void makeCursor(int c) {
       if( oc==c ) return;
       Aladin.makeCursor(this,c);
@@ -769,8 +769,8 @@ public final class Select extends JComponent  implements
             }
          
 //            p.setActivated(!p.active);
-            if( !p.active ) a.console.setCommand("hide "+Tok.quote(p.label));
-            else a.console.setCommand("show "+Tok.quote(p.label));
+            if( !p.active ) a.console.printCommand("hide "+Tok.quote(p.label));
+            else a.console.printCommand("show "+Tok.quote(p.label));
          }
 
          // thomas
@@ -887,7 +887,7 @@ public final class Select extends JComponent  implements
             boolean recenter= p instanceof PlanBG;
             if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) || !recenter && setPlanRef(p) ) {
                a.view.newView();
-               a.console.setCommand("cview "+Tok.quote(p.label));
+               a.console.printCommand("cview "+Tok.quote(p.label));
             }
             newRef=null;
 
@@ -972,7 +972,7 @@ public final class Select extends JComponent  implements
           if( newRef!=null ) {
             if( a.calque.setPlanRef(p) ) {
                a.view.newView();
-               a.console.setCommand("cview "+Tok.quote(p.label));
+               a.console.printCommand("cview "+Tok.quote(p.label));
             }
             newRef=null;
          }
@@ -1493,7 +1493,7 @@ public final class Select extends JComponent  implements
       
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {
-         Aladin.makeCursor(a,Aladin.DEFAULT);
+         Aladin.makeCursor(a,Aladin.DEFAULTCURSOR);
          a.localisation.setInitialFocus();
          firstUpdate=false;
       }
@@ -1692,7 +1692,7 @@ public final class Select extends JComponent  implements
    public void mouseClicked(MouseEvent e) { }
    public void mouseEntered(MouseEvent e) {
       if( a.inHelp )  a.help.setText(Help());
-      a.makeCursor(this, Aladin.DEFAULT);
+      a.makeCursor(this, Aladin.DEFAULTCURSOR);
    }
 
    public void adjustmentValueChanged(AdjustmentEvent e) {

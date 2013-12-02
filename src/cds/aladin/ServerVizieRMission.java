@@ -373,8 +373,8 @@ public class ServerVizieRMission extends Server  {
 
       String s="";
       if( cbGetAll.isSelected() ) s=",allcolumns";
-      if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.setCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
-      else aladin.console.setCommand("get VizieR("+cata+s+")");
+      if( !cbGetAllCat.isSelected() && objet!=null && objet.length()>0 ) aladin.console.printCommand("get VizieR("+cata+s+") "+objet+" "+Coord.getUnit(rm/60.));
+      else aladin.console.printCommand("get VizieR("+cata+s+")");
 
       int n=createPlane(objet,rm+"",cata,null,institute);
       if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode("get VizieR("+cata+s+") $TARGET $RADIUS");

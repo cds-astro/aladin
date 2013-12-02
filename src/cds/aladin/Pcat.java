@@ -1117,7 +1117,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
          Cote c = (Cote)newobj;
          if( c.debligne!=null ) {
             c.setId();
-            aladin.console.setInPad(c.id+"\n");
+            aladin.console.printInPad(c.id+"\n");
          }
       }
       o[i] = newobj;

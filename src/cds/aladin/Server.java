@@ -410,7 +410,7 @@ public class Server extends JPanel
 
   /** Mise en place des differents de curseurs */
    protected void waitCursor() { ball.setMode(Ball.WAIT); makeCursor(Aladin.WAITCURSOR); }
-   protected void defaultCursor() { ball.setMode(Ball.OK); makeCursor(Aladin.DEFAULT); }
+   protected void defaultCursor() { ball.setMode(Ball.OK); makeCursor(Aladin.DEFAULTCURSOR); }
    protected void makeCursor(int c) {
       Aladin.makeCursor(aladin.dialog,c);
       Aladin.makeCursor(aladin,c);

@@ -149,7 +149,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
         boolean[] ignoreFlag2 = new boolean[p2.getCounts()];
         fillXMatchArray(p2.pcat, array2, coordTab2, ignoreFlag2);
 
-        if( !fromScript ) aladin.console.setCommand("xmatch "+Tok.quote(p1.label)+" "+Tok.quote(p2.label)+" "+seuils[1]);
+        if( !fromScript ) aladin.console.printCommand("xmatch "+Tok.quote(p1.label)+" "+Tok.quote(p2.label)+" "+seuils[1]);
         double beginXmatch = System.currentTimeMillis();
         Aladin.trace(3, "Total time for extracting coordinates : "+(beginXmatch-begin));
         // TODO : ajouter la possibilité d'interrompre un xmatch en cours en effaçant le plan résultat

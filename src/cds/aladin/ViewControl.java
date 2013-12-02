@@ -184,7 +184,7 @@ public final class ViewControl extends JComponent implements
       Aladin.makeCursor(this,Aladin.HANDCURSOR);
    }
    public void mouseExited(MouseEvent e) {
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       nMode=-1;
       repaint();
    }
@@ -205,9 +205,9 @@ public final class ViewControl extends JComponent implements
       Aladin.makeCursor(this,Aladin.WAITCURSOR);
       computeModeView(e.getX());
       aladin.view.setModeView(modeView);
-      aladin.console.setCommand("modeview "+modeView);
+      aladin.console.printCommand("modeview "+modeView);
       aladin.toolBox.toolMode();
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
    }
 

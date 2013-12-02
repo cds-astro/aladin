@@ -70,6 +70,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_LABEL = "label";
     static public final String KEY_DESCRIPTION = "description";
     static public final String KEY_DESCRIPTION_VERBOSE = "descriptionVerbose";
+    static public final String KEY_ACK = "acknowledgement";
     static public final String KEY_COPYRIGHT = "copyright";
     static public final String KEY_COPYRIGHT_URL = "copyrightUrl";
     static public final String KEY_NSIDE = "nside";

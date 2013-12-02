@@ -97,6 +97,7 @@ public class Plan implements Runnable {
    protected String param;       // Les parametres d'interrogation du serveur
    protected String description=null;
    protected String verboseDescr=null;   // De l'information détaillée sur le plan
+   protected String ack=null;    // L'acknowledgement
    protected String copyright=null;      // L'origine du plan (mention du copyright)
    protected String copyrightUrl=null;   // Lien vers l'origine ou vers le copyright
 
@@ -205,6 +206,7 @@ public class Plan implements Runnable {
       p.label=label;
       p.description = description;
       p.verboseDescr = verboseDescr;
+      p.ack = ack;
       p.copyright=copyright;
       p.copyrightUrl = copyrightUrl;
       p.co=co;
@@ -338,7 +340,7 @@ public class Plan implements Runnable {
    protected boolean hasSources() { return isCatalog() && iterator().hasNext(); }
 
    /** Retourne true si c'est un plan qui a des objets (ex: catalogue) */
-   protected boolean hasObj() { return pcat!=null; }
+   protected boolean hasObj() { return pcat!=null && pcat.hasObj(); }
 
    /** Retourne true s'il s'agit d'un PlanBG overlay (ex: Polarisation ou PlanBGCat) */
    protected boolean isPlanBGOverlay() {
@@ -861,7 +863,7 @@ public class Plan implements Runnable {
        flagOk=false;
        flagWaitTarget=isOldPlan=false;
        hasSpecificCalib=false;
-       objet=error=label=param=description=verboseDescr=copyright=copyrightUrl=null;
+       objet=error=label=param=description=verboseDescr=ack=copyright=copyrightUrl=null;
        flagSkip=false;
        co=null;
        projd=projInit = null;
@@ -1755,6 +1757,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
           aladin.calque.repaintAll();
        } else if( prop.equalsIgnoreCase("info") ) {
           verboseDescr=value;
+       } else if( prop.equalsIgnoreCase("ack") ) {
+          ack=value;
        } else if( prop.equalsIgnoreCase("Color") ) {
           Color c = Action.getColor(value);
           if( c==null ) throw new Exception("Syntax error in color function (ex: rgb(30,60,255) )");

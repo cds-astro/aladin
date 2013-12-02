@@ -215,6 +215,7 @@ public class PlanBG extends PlanImage {
       frameOrigin=gluSky.frame;
       description=gluSky.description;
       verboseDescr=gluSky.verboseDescr;
+      ack=gluSky.ack;
       copyright=gluSky.copyright;
       copyrightUrl=gluSky.copyrightUrl;
       co=c;
@@ -356,6 +357,7 @@ public class PlanBG extends PlanImage {
          String s;
          s = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);         if( s!=null ) description = s;
          s = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE); if( s!=null ) verboseDescr = s;
+         s = prop.getProperty(PlanHealpix.KEY_ACK);                 if( s!=null ) ack = s;
          s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT);           if( s!=null ) copyright = s;
          s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
          
@@ -750,7 +752,6 @@ public class PlanBG extends PlanImage {
 
    @Override
    protected boolean recut(double min,double max,boolean autocut) {
-//      if( !hasOriginalPixels() ) return false;
       FreePixList();
       changeImgID();
       double tmpMinPix=dataMin;
@@ -760,13 +761,11 @@ public class PlanBG extends PlanImage {
          dataMin=tmpMinPix;
          dataMax=tmpMaxPix;
       }
-      flagRecut=true;
       freeHist();
       return true;
    }
-
-   protected boolean flagRecut=false;
-
+   
+   protected boolean flagRecut=true;
 
    /** Postionne la taille approximative de tous les losanges en mémoire */
    protected void setMem() { return; }
@@ -1083,7 +1082,9 @@ public class PlanBG extends PlanImage {
       
       int orderLosange= getLosangeOrder();
       if( orderLosange>0 && orderLosange <= getAllSkyOrder() ) {
-         HealpixKey healpix = (allsky.getPixList())[ (int)npix ];
+         HealpixKey [] list = allsky.getPixList();
+         if( list==null ) return null;
+         HealpixKey healpix = list[ (int)npix ];
 
          if( healpix!=null ) {
             if( firstSubtil ) {
@@ -1549,6 +1550,7 @@ public class PlanBG extends PlanImage {
    public void forceReload() {
       FreePixList();
       changeImgID();
+      flagRecut=true;
       freeHist();
    }
    
@@ -2502,6 +2504,7 @@ public class PlanBG extends PlanImage {
       int min = Math.max(ALLSKYORDER,minOrder);
       int max = Math.min(maxOrder(v),maxOrder);
       boolean allKeyReady = false;
+      boolean oneKeyReady = false;
       
       // On dessine le ciel entier à basse résolution
       if( min<ALLSKYORDER ) {
@@ -2540,6 +2543,7 @@ public class PlanBG extends PlanImage {
                            && healpix.status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
                      else {
                         healpix.resetTimer();
+                        oneKeyReady=true;
                      }
                   }
                }
@@ -2550,7 +2554,7 @@ public class PlanBG extends PlanImage {
 
          // On met le fond du ciel que si on est le plan de référence de la vue
          if( nb==0 &&
-               max<=ALLSKYORDER  && !allKeyReady
+               max<=ALLSKYORDER  && !allKeyReady  || (!oneKeyReady && allsky!=null)
 //               && (!isTransparent() || isTransparent() && max<=ALLSKYORDER) 
 //               && !allKeyReady && v.pref==this 
 //               || (!allKeyReady && max<=ALLSKYORDER && v.pref!=this) 
@@ -2566,7 +2570,7 @@ public class PlanBG extends PlanImage {
          int cmin = min<max && allKeyReady ? max : min; // Math.max(min,max-2);
          
          if( max>=ALLSKYORDER )
-         for( int order=cmin; order<=max || !allKeyReady && order<=max+3 && order<=maxOrder; order++ ) {
+         for( int order=cmin; order<=max || !oneKeyReady && order<=max+3 && order<=maxOrder; order++ ) {
             
             if( !allKeyReady ) {
                pix = getPixList(v,center,order); 
@@ -2707,8 +2711,8 @@ public class PlanBG extends PlanImage {
    
    
 
-   private int x=0,y=0,rayon=0,grandAxe=0;
-   private double angle=0;
+//   protected int x=0,y=0,rayon=0,grandAxe=0;
+//   protected double angle=0;
    static final int M = 2; //4;
 //   static final int EP =4; //12;
 
@@ -2720,7 +2724,9 @@ public class PlanBG extends PlanImage {
       }
       
       Graphics2D g = (Graphics2D)gv;
-   
+      int x=0,y=0,rayon=0,grandAxe=0;
+      double angle=0;
+
 //      if( rayon<60 ) return;
       if( v.getTaille()<15 ) return;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -2730,7 +2736,7 @@ public class PlanBG extends PlanImage {
       int epaisseur = 50;
       g.setStroke(new BasicStroke(epaisseur));
 
-      Projection projd = v.getProj().copy();
+      Projection projd = v.getProjSyncView().getProj().copy();
       projd.frame=0;
 
 //      g.setColor( Color.yellow );
@@ -2808,8 +2814,11 @@ public class PlanBG extends PlanImage {
       
       if( aladin.calque.hasHpxGrid() || isOverlay() ) return;
       
-      Projection projd = v.getProj().copy();
+      Projection projd = v.getProjSyncView().getProj().copy();
       projd.frame=0;
+      
+      int x=0,y=0,rayon=0,grandAxe=0;
+      double angle=0;
 
       Color bckCol = color ? Color.black : cm==null ? Color.white : new Color(cm.getRed(0),cm.getGreen(0),cm.getBlue(0));
       g.setColor( bckCol );

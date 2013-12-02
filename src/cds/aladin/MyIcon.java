@@ -91,7 +91,7 @@ abstract public class MyIcon extends JComponent implements
 
   /** On quitte le bouton du split*/
    public void mouseExited(MouseEvent e) {
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       aladin.status.setText("");
       in=false;
       repaint();

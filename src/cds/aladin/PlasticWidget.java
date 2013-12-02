@@ -112,7 +112,7 @@ public final class PlasticWidget extends JComponent  implements
 
 	// on mouseMove, redisplay to hide the highlighting, and set the default cursor
 	public void mouseExited(MouseEvent e) {
-		Aladin.makeCursor(this,Aladin.DEFAULT);
+		Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 //		bkgdColor = Aladin.BKGD;
         isIn=false;
 		repaint();

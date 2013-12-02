@@ -245,7 +245,7 @@ public final class ZoomView extends JComponent
       
       if( flagSED ) { sed.mouseExit(); repaint(); return; }
       
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       if( aladin.view.flagHighlight ) {
          hist.resetHighlightSource();
          aladin.view.flagHighlight=false;
@@ -598,9 +598,11 @@ try {
     }
     
     /** Dessin du SED courant */
-    protected void drawImgSED(Graphics g) {
+    protected boolean drawImgSED(Graphics g) {
+       if( sed.getCount()==0 ) return false;
        sed.draw(g);
        drawBord(g);
+       return true;
     }
     
     /** Dessin du graphe de coupe */
@@ -1253,7 +1255,7 @@ try {
       if( flagHist ) { drawImgHist(gr); return; }
       
       // Le SED
-      if( flagSED ) { drawImgSED(gr); return; }
+      if( flagSED ) { if( drawImgSED(gr) ) return; }
       
       // Le graphe de coupe
       if( flagCut ) {

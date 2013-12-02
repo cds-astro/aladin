@@ -234,6 +234,7 @@ public final class Glu implements Runnable {
          d = aladin.dialog.getSize();
       } catch( Exception e ) { p=null; }
       VizieRQuery.resetKeywords();
+      aladin.gluSkyReload();
       
       aladin.dialog = new ServerDialog(aladin);
       if( showLastGlu ) {
@@ -987,7 +988,7 @@ public final class Glu implements Runnable {
     * dictionnaire GLU propre a Aladin
     */
    private void memoGluSky(String actionName,String aladinLabel,String aladinMenuNumber,String url,String description,
-         String verboseDescr,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,String aladinSurvey,String aladinHpxParam) {
+         String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,String aladinSurvey,String aladinHpxParam) {
       
       // Pour éviter les doublons
       int find = findGluSky(actionName);
@@ -1017,7 +1018,7 @@ public final class Glu implements Runnable {
       String path = aladinTree==null ? aladinLabel : aladinTree+"/"+aladinLabel;
       
       TreeNodeAllsky tn =  new TreeNodeAllsky(aladin,actionName,aladinMenuNumber,url,aladinLabel,
-            description,verboseDescr,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam);
+            description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam);
       
       if( find<0 ) vGluSky.addElement(tn);
       else vGluSky.setElementAt(tn,find);
@@ -1213,6 +1214,7 @@ public final class Glu implements Runnable {
       String s = null; // Variable de travail
       String description = null; // La description courante
       String verboseDescr = null;// La description verbose courante
+      String ack = null; // L'acknowledgement
       String resultDataType = null; // Le type de donnees retournees
       String seeAction = null; // Dans le cas d'indirection
       String institute = null;// Mention de l'institut d'origine
@@ -1300,6 +1302,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"F.U",true) || isKey(name,"Doc.User",true) )   docUser = value;
             else if( isKey(name,"D",true) || isKey(name,"Description",true) )  description = value;
             else if( isKey(name,"M.D",true) || isKey(name,"M.V",true) || isKey(name,"VD",true) || isKey(name,"VerboseDescr",true) ) verboseDescr = value;
+            else if( isKey(name,"Acknowledgement",true) || isKey(name,"Ack",true) ) ack = value;
             else if( isKey(name,"R") || isKey(name,"ResultDataType")) resultDataType = value;
             else if( isKey(name,"A") || isKey(name,"ActionName") ) {
                // Dans le cas d'un enregistrement d'indirection on mémorise la meilleure
@@ -1316,7 +1319,7 @@ public final class Glu implements Runnable {
                
                if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                   if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                  else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,aladinProfile,copyright,copyrightUrl,aladinTree,
+                  else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                         aladinSurvey,aladinHpxParam);
                   else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                   else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
@@ -1334,7 +1337,7 @@ public final class Glu implements Runnable {
                
                maxIndir = Integer.MAX_VALUE;
                copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=
-                     system=aladinActivated=actionName=description=verboseDescr=resultDataType=aladinMenu=
+                     system=aladinActivated=actionName=description=verboseDescr=ack=resultDataType=aladinMenu=
                      aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=test=institute=aladinLogo=
                      aladinSurvey=aladinHpxParam=aladinBookmarks=null;
                paramDescription = new Hashtable();
@@ -1446,7 +1449,7 @@ public final class Glu implements Runnable {
          }
          if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
             if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-            else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,aladinProfile,copyright,copyrightUrl,aladinTree,
+            else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                   aladinSurvey,aladinHpxParam);
             else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,

@@ -223,7 +223,7 @@ public class PlanImageBlink extends PlanImage {
             break; // C'est bon
             
          } catch( OutOfMemoryError e ) {
-            aladin.console.setError("!!! Not enough memory => trying Cube permutation without true pixels...");
+            aladin.console.printError("!!! Not enough memory => trying Cube permutation without true pixels...");
             full=false;
             v=null;
             System.gc();

@@ -458,7 +458,7 @@ public final class ToolBox extends JComponent implements
             else if( e.isShiftDown() ) {
                aladin.reset();
                tool[ToolBox.DEL].setMode(Tool.UNAVAIL);
-               aladin.console.setCommand("reset");
+               aladin.console.printCommand("reset");
              }
             // Suppression des vues sélectionnés
             else if( aladin.view.isViewSelected() && aladin.view.isMultiView() ) {
@@ -531,10 +531,10 @@ public final class ToolBox extends JComponent implements
    }
 
    // Gestion des curseurs
-   private int oc=Aladin.DEFAULT;
+   private int oc=Aladin.DEFAULTCURSOR;
    private void handCursor() { 	  makeCursor(Aladin.HANDCURSOR); }
    private void waitCursor() {    makeCursor(Aladin.WAITCURSOR); }
-   private void defaultCursor() { makeCursor(Aladin.DEFAULT); }
+   private void defaultCursor() { makeCursor(Aladin.DEFAULTCURSOR); }
    private void makeCursor(int c) {
       if( oc==c ) return;
       if( Aladin.makeCursor(this,c) ) oc=c;
@@ -555,7 +555,7 @@ public final class ToolBox extends JComponent implements
       oc=-1;
 //      inRedim=false;
       currentButton=-1;
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
    }
 

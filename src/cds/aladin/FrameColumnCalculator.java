@@ -481,7 +481,7 @@ public class FrameColumnCalculator extends JFrame implements ActionListener {
         f.setUnit(unit);
         
         // écriture sur la console de la commande script équivalente
-        a.console.setCommand("addcol "+pc.label+","+name+","+expr+","+unit+","+ucd+","+nbDec);
+        a.console.printCommand("addcol "+pc.label+","+name+","+expr+","+unit+","+ucd+","+nbDec);
         
         ColumnCalculator cc = new ColumnCalculator(new SavotField[] {f}, new String[] {expr}, pc, nbDec, a);
         if( !cc.createParser() ) {

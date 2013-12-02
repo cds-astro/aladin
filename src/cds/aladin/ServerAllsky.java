@@ -148,7 +148,7 @@ public class ServerAllsky extends ServerTree  {
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
          String criteria = ta.id+mode;
          String code = "get allsky("+Tok.quote(ta.id)+mode+")";
-         aladin.console.setCommand(code+cible);
+         aladin.console.printCommand(code+cible);
          int m=createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
          if( m!=-1 ) aladin.calque.getPlan(m).setBookmarkCode(code+" $TARGET $RADIUS");
       }

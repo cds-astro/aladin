@@ -562,7 +562,7 @@ public final class FrameContour extends JFrame implements ActionListener {
            // création du plan contour
            a.calque.newPlanContour("Contours",pimg,this.levels,new ContourPlot(),smoothCb.isSelected(),((Integer)smooothLevelChoice.getSelectedItem()).intValue(),currentZoomOnly.isSelected(),noisecb.isSelected(),couleurs);
            // écriture sur la console de la commande script équivalente
-           a.console.setCommand("contour "+levels.length+(smoothCb.isSelected()?"":" nosmooth")+(currentZoomOnly.isSelected()?" zoom":""));
+           a.console.printCommand("contour "+levels.length+(smoothCb.isSelected()?"":" nosmooth")+(currentZoomOnly.isSelected()?" zoom":""));
 
 
            // un nouveau plan a ete cree, il faut mettre a jour les couleurs

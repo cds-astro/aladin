@@ -72,7 +72,7 @@ public class MySelectableLabel extends Label {
 					setBackground(getSelectionColor());
 					setForeground(Util.getReverseColor(orgFntColor));
 					
-					Aladin.copyToClipBoard(getText());
+					Aladin.aladin.copyToClipBoard(getText());
 				}
 				else lastSelected = null;
 			}
@@ -90,7 +90,7 @@ public class MySelectableLabel extends Label {
 				if( lastSelected==null || me.getComponent()!=lastSelected )
 					restoreOrgColors();
 				
-				Aladin.makeCursor(me.getComponent(), Aladin.DEFAULT);
+				Aladin.makeCursor(me.getComponent(), Aladin.DEFAULTCURSOR);
 			}
 		});
 	}

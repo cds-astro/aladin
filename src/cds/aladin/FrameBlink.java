@@ -208,7 +208,7 @@ public final class FrameBlink extends FrameRGBBlink {
          cmd.append(" "+Tok.quote(p[i].label));
       }
 
-      a.console.setCommand(cmd.toString());
+      a.console.printCommand(cmd.toString());
       if( blink ) a.calque.newPlanImageBlink(p,null,getDelay());
       else a.calque.newPlanImageMosaic(p,null,null);
       hide();

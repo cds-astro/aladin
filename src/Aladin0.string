@@ -21,12 +21,16 @@ MINSTALL	Install
 MFILE	File
 MEDIT	Edit
 MZOOM	Zoom
+MCOPYALL	Copy
+MPASTEALL	Paste
 MVIEW	View
 MOVERLAY	Overlay
 MDOC	Other documentation...
 MOPENLOAD	Open...
 MOPENFILE	Open local file...
 MOPENURL	Open URL...
+MLASTFILE   Recent files & URLs...
+MLASTFILECLEAR.fr Clear history
 MLOADIMG	Load astronomical image
 MLOADCAT	Load catalog
 MLOADVO	Load from the Virtual Observatory...
@@ -122,12 +126,16 @@ MINSTALL.fr	Installer
 MFILE.fr	Fichier
 MEDIT.fr	Edition
 MZOOM.fr	Zoom
+MCOPYALL.fr	Copier
+MPASTEALL.fr	Coller
 MVIEW.fr	Vue
 MOVERLAY.fr	Graphique
 MDOC.fr	Documentation additionnelle...
 MOPENLOAD.fr	Ouvrir...
 MOPENFILE.fr	Ouvrir un fichier...
 MOPENURL.fr	Ouvrir une URL...
+MLASTFILE.fr   Fichiers & URL récents...
+MLASTFILECLEAR.fr Effacer l'historique
 MLOADIMG.fr	Charger une image astronomique
 MLOADCAT.fr	Charger un catalogue
 MLOADVO.fr	Charger depuis l'Observatoire Virtuel...
@@ -1258,7 +1266,8 @@ VWMSTICKOFF	Unstick the panel of the selected views
 VWMSTICKON	Sticked panel
 VWMLABELOFF	Unlabel the selected objects
 VWMLABELON	Label the selected objects
-VWMCOPY     Copy reticle location in the clipboard
+VWMCOPY     Copy the reticle location in the clipboard
+VWMCOPYIMG  Copy the current view in the clipboard
 VWMOREVIEWS	Create one view per image
 VWONEVIEW	Delete other views
 VWNEXT	Next image
@@ -1296,6 +1305,7 @@ VWMSTICKON.fr	Panneau scotché
 VWMLABELON.fr	Afficher l'identificateur des objets sélectionnés
 VWMLABELOFF.fr	Cacher l'identificateur des objets sélectionnés
 VWMCOPY.fr     Copier la position du réticule dans le presse-papier
+VWMCOPYIMG.fr     Copier la vue courante dans le presse-papier
 VWMOREVIEWS.fr	Créer une vue par image
 VWONEVIEW.fr	Supprimer les autres vues
 VWNEXT.fr	Image suivante
@@ -2256,8 +2266,8 @@ SWATLEASTONE.fr Sélectionnez au minimum une image
 #Healpix strings
 #HPXMENU HEALPix toolbox
 #HPXMENU.fr Boite à outils HEALPix
-HPXGENERATE Progressive sky builder (HiPS) ...
-HPXGENERATE.fr	Generateur ciel progressif (HiPS)
+HPXGENERATE Progressive sky builder (HiPS)...
+HPXGENERATE.fr	Générateur ciel progressif (HiPS)...
 HPXCREATE Convert current image to a HiPS
 HPXCREATE.fr Convertit l'image courante en HiPS
 HPXGRID	HEALPix grid
@@ -2282,7 +2292,7 @@ MTIPDISP Parameters of your progressive sky (HiPS)
 MTIPDISP.fr Paramètres de votre ciel progressif (HiPS)
 MPUBLISH -4- Publish result
 MPUBLISH.fr -4- Publication
-MTIPPUBLISH Share your your progressive sky (HiPS)
+MTIPPUBLISH Share your progressive sky (HiPS)
 MTIPPUBLISH.fr Partager votre ciel progressif (HiPS)
 MRGBA Generate RGB
 MRGBA.fr Construction RVB
@@ -2437,6 +2447,8 @@ PUBLICALLSKY Public distribution:
 PUBLICALLSKY.fr Distribution publique :
 PUBLICINFOALLSKY To allow an access to all Aladin users, "expose" your target folder behind a Web server, fill up and validate this following form:
 PUBLICINFOALLSKY.fr Afin de rendre accessible votre relevé pour tous les utilisateurs Aladin, veuillez "exposer" le repértoire de destination derrière un serveur Web, remplir et valider le formulaire suivant :
+INFOHIPSFITS The drawing of a progressive sky in "true" pixel mode requires a large network bandwidth\nYour sky is being reloaded...
+INFOHIPSFITS.fr L'affichage d'un ciel progressif en "vrai" pixels requière un bon réseau.\nVotre ciel est entrain d'être rechargé...
 
 # Info and warning strings
 HFINGER	Simbad pointer:\n \nIf this function is activated, point your mouse on any astronomical object and wait 3 seconds to see if this object is known by Simbad.\n \nIf there are several objects around the position,\nonly the object with the largest bibliographical reference number will be displayed.\n \nClick on the displayed label for accessing directly to the corresponding Simbad record.
@@ -2561,8 +2573,8 @@ TIPLOGO	Click on it to the Aladin Web page
 TIPLOGO.fr Cliquer pour aller sur la page Web d'Aladin
 TIPOPEN	Open the data load form...
 TIPOPEN.fr	Ouvrir le formulaire de chargement des données...
-TIPEXPORT	Print, save or export your work...
-TIPEXPORT.fr	Imprimer, enregistrer ou exporter votre travail...
+TIPEXPORT	Save or export your work...
+TIPEXPORT.fr	Enregistrer ou exporter votre travail...
 TIPHEAD	Click for sorting, click&drag on a border for resizing
 TIPHEAD.fr	Cliquer pour trier, cliquez/déplacez sur un bord pour redimensionner
 #TIPREP	Click on it to load information related to this table
@@ -2746,6 +2758,6 @@ BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it
 
 BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professional du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propre données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...
 BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques.\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLa vue ci-contre est la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez le menu Fichier->Ouvrir,\nou glissez/déposez vos propres fichiers.
-BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets*zoom: modifie l'agrandissement.\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
+BEGIN3.fr	Contrôle de la pile:\n \n*le logo: montre/cache le plan\n*taille: change la taille des objets\n*zoom: modifie l'agrandissement\n*opacité: ajuste la transparence.\n \nLa vue est dessinée en fonction de la projection d'un plan de référence.\n \nPour changer de plan de référence, cliquer sur sa coche.
 BEGIN4.fr	Contrôle par la souris:\n \n*Gauche: sélection des sources.\n*Milieu: déplacement du champ.\n*Droite: ajustement du contraste.\n*Molette: zoom sur le réticule.\n*Simple-clic: déplace le réticule\n*Double-clic: recentre la vue.\n \nPour découvrir les informations Simbad sur un objet, laissez dessus qq secondes le pointeur.
 BEGIN5.fr	Contrôle de base:\n \n- Saisissez un nom d'objet, des coordonnées pour vous déplacez dessus.\n \n- Sélectionnez des sources de catalogues afin de visualiser les mesures associées.\n \n- Visualiser simultanément plusieurs vues via le contrôle du"multivue".

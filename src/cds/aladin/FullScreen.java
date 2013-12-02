@@ -644,7 +644,7 @@ public final class FullScreen extends JFrame implements ActionListener {
     */
    protected boolean mouseMoved(int x,int y) {
       boolean rep=false;
-      int cursor=Aladin.DEFAULT;
+      int cursor=Aladin.DEFAULTCURSOR;
       Plan p;
       currentPlan=null;
       

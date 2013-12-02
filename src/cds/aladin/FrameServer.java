@@ -362,7 +362,7 @@ public final class FrameServer extends JFrame implements ActionListener,KeyListe
 
       fillWithServers();
 
-      Aladin.makeCursor(this, Aladin.DEFAULT);
+      Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
    }
 
    // set=ivo_managed permet de ne récupérer que les enregistrements gérés par ce registry

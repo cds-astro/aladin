@@ -133,7 +133,7 @@ public final class Help extends JComponent implements
     // Juste pour manger l'evenement
     public void mouseMoved(MouseEvent e) {
        if( getLink(e.getX(),e.getY())!=null ) Aladin.makeCursor(this,Aladin.HANDCURSOR);
-       else Aladin.makeCursor(this,Aladin.DEFAULT);
+       else Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
     }
 
     public void mouseEntered(MouseEvent e) {
@@ -376,7 +376,7 @@ public final class Help extends JComponent implements
       
       st = new StringTokenizer(text,"\n");
       x=10;
-      g.setColor(flagBanner ? Color.white : Aladin.GREEN);
+      g.setColor(flagBanner ? Color.white : Aladin.BLUEHELP); //Aladin.GREEN);
       while( st.hasMoreElements() ) {
          String s = (String) st.nextElement();
 

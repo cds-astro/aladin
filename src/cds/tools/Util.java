@@ -84,6 +84,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.net.ssl.*;
@@ -1232,6 +1233,35 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
        if( n==0 ) return;
        s.delete(0,n);
     }
+    
+    /** Retourne un path sous une forme plus compact.
+     * Insére si nécessaire des /.../ au milieu du path si sa taille dépasse width
+     */ 
+    static public String getShortPath(String path,int width) {
+       try {
+         if( path.length()>width ) {
+             File f = new File(path);
+             StringTokenizer st = new StringTokenizer(f.getCanonicalPath(),Util.FS,true);
+             StringBuffer s = new StringBuffer();
+             width -= f.getName().length();
+             String w=null;
+             while( s.length()<width && st.hasMoreTokens() ) {
+                w = st.nextToken();
+                s.append(w);
+             }
+             if( st.hasMoreTokens() ) {
+                if( w!=null && !w.equals(Util.FS) ) s.append(st.nextToken());
+                w = st.nextToken();  // Pour vérifier si par hasard il ne reste que le nom
+                if( st.hasMoreElements() ) s.append("..."+Util.FS);
+                s.append(f.getName());
+             }
+             return s.toString();
+          }
+      } catch( IOException e ) { }
+                              
+       return path;
+    }
+
 
     /** Concaténation de paths.
      * et insère le séparateur / uniquement si c'est nécessaire.

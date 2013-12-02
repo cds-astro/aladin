@@ -68,6 +68,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Recently open file menu
+ * @beta    <LI> Copy/Paste data
  * @beta    <LI> Solid shape paint (source property)
  * @beta    <LI> SkyGen improvements (speed x5 - PNG support - circle mask)
  * @beta    <LI> GLON/GLAT, ELON/ELAT, SLON/SLAT column autodetect in basic ASCII formats
@@ -127,7 +129,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.000";
+    static public final    String VERSION = "v8.001";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -162,6 +164,7 @@ public class Aladin extends JApplet
     static final Color LBLUE = new Color(229,229,229);
     public static final Color BLUE =  new Color(214,214,255);
     static final Color MAXBLUE =  new Color(153,153,255);
+    static final Color BLUEHELP = new Color(25,76,127);
     static final Color MYGRAY = new Color(180,183,187);
     static final Color STACKBLUE = new Color(140,140,255);
     static final Color STACKGRAY = new Color(150,150,150);
@@ -402,7 +405,7 @@ public class Aladin extends JApplet
                       miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
                       miLock,miDelLock,miStick,miOne,miNorthUp,
                       miProp,miGrid,miReticle,miReticleL,miNoReticle,
-                      miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,
+                      miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
                       miPrevPos,miNextPos,
                       miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
                       miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
@@ -412,7 +415,7 @@ public class Aladin extends JApplet
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
                       miInFold,miConv,miArithm,miMocGenImg,miMocGenCat,miMocOp,miMocFiltering,miMocCrop,
                       miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
-                      miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,
+                      miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
     JButton ExportYourWork,searchData,avant,apres;
 
@@ -453,7 +456,7 @@ public class Aladin extends JApplet
     static final int GETHEIGHT  = 15;		// Cochonnerie de getHeight()
 
     // Les menus;
-    String MFILE,MSAVE,OPENLOAD,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
+    String MFILE,MSAVE,OPENLOAD,LASTFILE,OPENFILE,OPENURL,LOADIMG,LOADCAT,LOADVO,LOADFOV,/*HISTORY,*/MEDIT,MVIEW,
            MIMAGE,MCATALOG,MOVERLAY,MDOC ;
     String MTOOLS,MPLUGS,MINTEROP,MHELP,MDCH1,MDCH2,MPRINT,MQUIT,MCLOSE,PROP;
     String MBGKG; // menus pour les backgrounds
@@ -464,7 +467,7 @@ public class Aladin extends JApplet
            /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
-           DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,
+           DELLOCKVIEW,STICKVIEW,FULLINT,NORTHUP,COPIER,COLLER,
            RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
            PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
@@ -773,6 +776,7 @@ public class Aladin extends JApplet
        MOVERLAY= chaine.getString("MOVERLAY");
        OPENFILE= chaine.getString("MOPENFILE");
        OPENLOAD= chaine.getString("MOPENLOAD");
+       LASTFILE=chaine.getString("MLASTFILE");
        OPENURL = chaine.getString("MOPENURL");
        LOADIMG = chaine.getString("MLOADIMG");
        LOADCAT = chaine.getString("MLOADCAT");
@@ -795,6 +799,8 @@ public class Aladin extends JApplet
        ZOOMM   = chaine.getString("MZOOMM");
        ZOOM    = chaine.getString("MZOOM");
        ZOOMPT  = chaine.getString("MZOOMPT");
+       COPIER  = chaine.getString("MCOPYALL");
+       COLLER  = chaine.getString("MPASTEALL");
        PREVPOS = chaine.getString("MPREVPOS");
        NEXTPOS = chaine.getString("MNEXTPOS");
        SYNC    = chaine.getString("MSYNC");
@@ -961,6 +967,7 @@ public class Aladin extends JApplet
         { {MEDIT},
              {"?"+PAN+"|"+alt+" Z"},
                  {ZOOM,"?"+ZOOMPT+"|F6","",ZOOMM+"|F7",ZOOMP+"|F8"},
+             {},{COPIER+"|"+meta+" C"},{COLLER+"|"+meta+" V"},
              {},{SELECTALL+"|"+meta+" A"},{UNSELECT+"|"+meta+" U"},
              {},{DEL+"|DELETE"},{DELALL+"|shift DELETE"},
              {},{HEAD+"|"+alt+" H"},{PROP+"|"+alt+" ENTER"}, {}, {PREF},
@@ -995,9 +1002,11 @@ public class Aladin extends JApplet
 
        }
 
+       
        String[][][] menu = new String[][][] {
              { {MFILE},
                   {OPENLOAD+"|"+meta+" L"},{OPENFILE+"|"+meta+" O"},{OPENURL},
+                  {LASTFILE,"???"},
                   {},{MBGKG,"???"},
                   {},{LOADIMG,"-"},{LOADCAT,"-"}, {LOADVO}, {LOADFOV},
                   {},{MSAVE+"|"+meta+" S"},{SAVEVIEW,"-"},{EXPORTEPS},{EXPORT},{BACKUP},
@@ -1009,6 +1018,7 @@ public class Aladin extends JApplet
              { {MEDIT},
                   {"?"+PAN+"|"+alt+" Z"},
                       {ZOOM,ZOOMM+"|F2",ZOOMP+"|F3","","?"+ZOOMPT+"|F4"},
+                  {},{COPIER+"|"+meta+" C"},{COLLER+"|"+meta+" V"},
                   {},{FOLD},{INFOLD},
                   {},{SELECTALL+"|"+meta+" A"},{SELECT},{SELECTTAG},{UNSELECT+"|"+meta+" U"},
                   /*{},{TAGSELECT},*/{DETAG},
@@ -1133,7 +1143,43 @@ public class Aladin extends JApplet
 
        return false;
     }
-
+    
+    protected void memoLastFile(String path) {
+       if( NOGUI ) return;
+       configuration.setLastFile(path, true);
+       updateLastFileMenu();
+    }
+    
+    /** Met à jour le menu des fichiers récemment ouverts */
+    protected void updateLastFileMenu() {
+       if( configuration.lastFile==null ) {
+          miLastFile.setEnabled(false);
+          return;
+       }
+       miLastFile.setEnabled(configuration.lastFile.size()>0);
+       miLastFile.removeAll();
+       JMenuItem item;
+       Iterator<String> it = configuration.lastFile.descendingIterator();
+       while( it.hasNext() ) {
+          String a = it.next();
+          miLastFile.add(item = new JMenuItem( Util.getShortPath(a,50)));
+          item.setActionCommand(a);
+          item.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               String filename = e.getActionCommand();
+               calque.newPlan(filename, null, null);
+            }
+         });
+       }
+       miLastFile.add(item = new JMenuItem( chaine.getString("MLASTFILECLEAR")));
+       item.addActionListener( new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+             configuration.lastFile=null;
+             updateLastFileMenu();
+          }
+       });
+    }
+    
     /**
      * Met à jour le menu Interop
      */
@@ -1368,6 +1414,9 @@ public class Aladin extends JApplet
 
        // Pour les applications VO
        VOReload();
+       
+       // Pour les fichiers récents
+       updateLastFileMenu();
 
        // Ajout des formats de sauvegarde supportés
        if( miSave!=null ) {
@@ -1584,6 +1633,8 @@ public class Aladin extends JApplet
        else if( isMenu(m,OVERLAY)) miOverlay = ji;
        else if( isMenu(m,RAINBOW)) miRainbow = ji;
        else if( isMenu(m,ZOOM))    miZoom    = ji;
+       else if( isMenu(m,COPIER))   miCopy1    = ji;
+       else if( isMenu(m,COLLER))   miPaste    = ji;
        else if( isMenu(m,ZOOMPT))  miZoomPt  = ji;
        else if( isMenu(m,PREVPOS)) miPrevPos  = ji;
        else if( isMenu(m,NEXTPOS)) miNextPos  = ji;
@@ -1633,6 +1684,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,PLOTCAT) )  miPlotcat   = ji;
        else if( isMenu(m,CONCAT) )  miConcat   = ji;
        else if( isMenu(m,SAVEVIEW) )  miSave      = ji;
+       else if( isMenu(m,LASTFILE) )  miLastFile      = ji;
        else if( isMenu(m,EXPORT) )    miExport    = ji;
        else if( isMenu(m,EXPORTEPS) ) miExportEPS = ji;
        else if( isMenu(m,BACKUP) )    miBackup    = ji;
@@ -2216,7 +2268,7 @@ public class Aladin extends JApplet
                 String f = st.nextToken();
                 if( f.trim().length()==0 ) continue;
                 calque.newPlan(f,null,null);
-                console.setCommand("load "+f);
+                console.printCommand("load "+f);
              }
              dropTargetDropEvent.getDropTargetContext().dropComplete(true);
 
@@ -2228,7 +2280,7 @@ public class Aladin extends JApplet
              while( iterator.hasNext() ) {
                 File file = (File) iterator.next();
                 calque.newPlan(file.getAbsolutePath(),file.getName(),null);
-                console.setCommand("load "+file.getAbsolutePath());
+                console.printCommand("load "+file.getAbsolutePath());
              }
              dropTargetDropEvent.getDropTargetContext().dropComplete(true);
 
@@ -2861,6 +2913,8 @@ public class Aladin extends JApplet
       } else if( isMenu(s,ZOOMP))  { calque.zoom.setZoom("+");
       } else if( isMenu(s,ZOOMM))  { calque.zoom.setZoom("-");
       } else if( isMenu(s,ZOOMPT)) { zoom();
+      } else if( isMenu(s,COPIER)) { copier();
+      } else if( isMenu(s,COLLER)) { coller();
       } else if( isMenu(s,PREVPOS)) { view.undo(false);
       } else if( isMenu(s,NEXTPOS)) { view.redo(false);
       } else if( isMenu(s,SYNC))   { switchMatch(false);
@@ -3018,7 +3072,7 @@ public class Aladin extends JApplet
 
     /** Exécution de l'inversion verticale ou horizontale */
     protected void flip(PlanImage p,int methode) throws Exception {
-       aladin.console.setCommand("flipflop "+(methode==0 ? "V" : "H"));
+       aladin.console.printCommand("flipflop "+(methode==0 ? "V" : "H"));
        aladin.view.flip(p,methode);
     }
 
@@ -3063,7 +3117,7 @@ public class Aladin extends JApplet
     protected void fold() {
        int n=calque.newFolder(null,0,false);
        Plan p = calque.getPlan(n);
-       if( p!=null ) console.setCommand("md "+p.getLabel());
+       if( p!=null ) console.printCommand("md "+p.getLabel());
     }
 
     /** Insertion des plans sélectionnés dans un nouveau folder de la pile */
@@ -3264,7 +3318,7 @@ public class Aladin extends JApplet
           pf.updateState();
 
           // affichage dans la console de la commande script équivalente
-          aladin.console.setCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
+          aladin.console.printCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
        }
        return true;
     }
@@ -3293,7 +3347,7 @@ public class Aladin extends JApplet
     /** Positionnement du mode du réticule via la JBar */
     protected void reticle(int mode) {
        calque.setReticle(mode);
-       console.setCommand("reticle "+(!calque.hasReticle() ? "off" : calque.reticleMode==1?"on" : "large" ));
+       console.printCommand("reticle "+(!calque.hasReticle() ? "off" : calque.reticleMode==1?"on" : "large" ));
        calque.repaintAll();
     }
 
@@ -3301,7 +3355,7 @@ public class Aladin extends JApplet
     protected void target() {
        calque.setOverlayFlag("target", miTarget.isSelected() );
 //       console.setCommand("target "+(calque.hasTarget()?"on":"off"));
-       console.setCommand("setconf overlays="+( calque.hasTarget()?"+":"-" )+"target");
+       console.printCommand("setconf overlays="+( calque.hasTarget()?"+":"-" )+"target");
        calque.repaintAll();
     }
 
@@ -3315,7 +3369,7 @@ public class Aladin extends JApplet
     /** Activation ou désactivation des infos d'overlays via la Jbar */
     protected void overlay() {
        calque.setOverlay(miOverlay.isSelected());
-       console.setCommand("overlay "+(calque.flagOverlay?"on":"off"));
+       console.printCommand("overlay "+(calque.flagOverlay?"on":"off"));
        calque.repaintAll();
     }
 
@@ -3412,7 +3466,7 @@ public class Aladin extends JApplet
 
     /** Activation ou désactivation du GREY via la Jbar */
     protected void grey() {
-       aladin.console.setCommand("grey");
+       aladin.console.printCommand("grey");
        view.calque.newPlanImage((PlanImageRGB)(view.getCurrentView().pref));
     }
 
@@ -3650,7 +3704,7 @@ public class Aladin extends JApplet
           trace(4,"Aladin.quit in progress... " );
           trace(3,"User configuration backup...");
           // Sauvegarde config utilisateur
-          console.setInfo("Aladin stopped");
+          console.printInfo("Aladin stopped");
           saveConfig();
           
           // Arrêt d'un éventuel calcul de allsky
@@ -3925,31 +3979,134 @@ public void setLocation(Point p) {
    /** Retourne true si Aladin est en mode OUTREACH */
    public boolean isOutreach() { return OUTREACH; }
 
+   
+   /** Dès que je saurai le faire */
+   protected boolean hasClipBoard() {
+      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+      Transferable tr=null;
+      try {
+         tr = clipboard.getContents(null);
+      } catch( Exception e ) {
+         clipboard = Toolkit.getDefaultToolkit().getSystemSelection();
+         try {
+            tr = clipboard.getContents(null);
+         } catch( Exception e1 ) { }
+      }
+      
+      if( tr==null ) return false;
+      DataFlavor [] df =tr.getTransferDataFlavors();
+      for( DataFlavor df1 : df ) {
+         if( df1.equals(DataFlavor.javaFileListFlavor) ) return true;
+         if( df1.equals(DataFlavor.stringFlavor) ) return true;
+      }
+      return false;
+   }
+   
+   protected void copier() {
+      
+      if( view.hasSelectedObj() ) {
+         
+      }
+      
+      ViewSimple v = view.getCurrentView();
+      v.copier();
+   }
+   
+   protected void coller() {
+      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+      try {
+         paste(clipboard.getContents(null) );
+      } catch( Exception e ) {
+         e.printStackTrace();
+         clipboard = Toolkit.getDefaultToolkit().getSystemSelection();
+         try {
+            paste( clipboard.getContents(null) );
+         } catch( Exception e1 ) {
+            e1.printStackTrace();
+         }
+      }
+   }
+   
+   public synchronized void paste(Transferable tr) {
+      try {
+         
+         if( tr.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ) {
+            java.util.List fileList = (java.util.List) tr.getTransferData(DataFlavor.javaFileListFlavor);
+            Iterator iterator = fileList.iterator();
+            while( iterator.hasNext() ) {
+               File file = (File) iterator.next();
+               calque.newPlan(file.getAbsolutePath(),file.getName(),null);
+               console.printCommand("load "+file.getAbsolutePath());
+            }
+
+         } else if( tr.isDataFlavorSupported(DataFlavor.stringFlavor) ) {
+            String s = (String)tr.getTransferData(DataFlavor.stringFlavor);
+            ByteArrayInputStream in = new ByteArrayInputStream(s.getBytes());
+            calque.newPlan(in, "Data", "Clipboard");
+            in.close();
+         }
+
+      } catch( Exception e ) {
+         if( levelTrace>=3 ) e.printStackTrace();
+         console.printError(e.getMessage());
+      }
+   }
 
    /** Copie du texte dans le clipboard de la machine
     *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
-    *
     * @param text le texte à mettre dans le presse-papiers
     */
-   protected static void copyToClipBoard(String text) {
-   	  // clipboard non accessible depuis une applet classique
+   protected void copyToClipBoard(String text) {
       if( isNonCertifiedApplet() ) return;
-
       if( text==null ) return;
+      Transferable selection = new StringSelection(text);
+      copyToClipBoard(selection);
+   }
+   
+   /** Copie du texte dans le clipboard de la machine
+    *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
+    * @param L'image à mettre dans le presse-papiers
+    */
+   protected void copyToClipBoard(Image img) {
+      if( isNonCertifiedApplet() ) return;
+      if( img==null ) return;
+      TransferableImage selection = new TransferableImage( img );
+      copyToClipBoard(selection);
+   }
 
-      StringSelection selection = new StringSelection(text);
-      Clipboard clipboard;
+   /** Copie d'un objet dans le clipboard de la machine
+    *  (sous Unix/Linux, à la fois dans le clipboard système et dans le clipboard de sélection)
+    * @param l'objet transferable
+    */
+   protected static void copyToClipBoard(Transferable selection) {
       // Il y a 2 clipboards :
       // - un dont le contenu est accessible par Ctrl-V (ou Pomme-V pour les MACeux)
-      clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
       if( clipboard!=null ) clipboard.setContents(selection, aladin);
       // - l'autre dont le contenu est accessible par le bouton du milieu
       // (mais on ne peut y accéder que depuis Java 1.4 !) et il n'existe pas sous Windows
-//      if( Aladin.JAVAAFTER140 ) {
-         clipboard = Toolkit.getDefaultToolkit().getSystemSelection();
-         if( clipboard!=null ) clipboard.setContents(selection, aladin);
-//      }
-      }
+      //      if( Aladin.JAVAAFTER140 ) {
+      clipboard = Toolkit.getDefaultToolkit().getSystemSelection();
+      if( clipboard!=null ) clipboard.setContents(selection, aladin);
+      //      }
+   }
+
+   class TransferableImage implements Transferable { 
+      private Image image; 
+      public TransferableImage(Image uneImage){ 
+         image = uneImage;    
+      }    
+      public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException{ 
+         if(!isDataFlavorSupported(flavor)){throw new UnsupportedFlavorException(flavor);} 
+         return image;    
+      } 
+      public DataFlavor[] getTransferDataFlavors(){ 
+         return new DataFlavor[]{DataFlavor.imageFlavor}; 
+      } 
+      public boolean isDataFlavorSupported(DataFlavor flavor){ 
+         return DataFlavor.imageFlavor.equals(flavor);    
+      } 
+   } 
 
    /** implémentation de l'interface ClipboardOwner */
    public void lostOwnership(Clipboard clipboard, Transferable contents) {}
@@ -3973,7 +4130,7 @@ public void setLocation(Point p) {
 //         pixel.setMode(MyBox.AFFICHAGE);
          makeCursor(this,HANDCURSOR);
       } else {
-         makeCursor(this,DEFAULT);
+         makeCursor(this,DEFAULTCURSOR);
       }
 
       // Desactivation des composantes innaccessibles
@@ -3990,7 +4147,7 @@ public void setLocation(Point p) {
       if( vrai ) help.setDefault();
    }
 
-   static final int DEFAULT = 0;
+   static final int DEFAULTCURSOR = 0;
    static final int WAITCURSOR 	= 1;
    static final int HANDCURSOR 	= 2;
    static final int CROSSHAIRCURSOR=3;
@@ -4047,7 +4204,7 @@ public void setLocation(Point p) {
       if( f instanceof FrameInfo )     return new Point(100,0);
       if( f instanceof FrameServer )   return new Point(500,200);
       if( f instanceof FrameInfoServer)return new Point(20,200);
-      if( f instanceof Save )          return new Point(500,400);
+      if( f instanceof Save )          return new Point(200,200);
       if( f instanceof FrameContour )  return new Point(350,200);
       if( f instanceof FrameCDSXMatch )return new Point(100,200);
       if( f instanceof FrameColumnCalculator ) return new Point(20,250);
@@ -4345,6 +4502,8 @@ public void setLocation(Point p) {
          if( miGlass!=null ) miGlass.setEnabled(hasImage && !isBG);
          if( miGlassTable!=null ) miGlassTable.setEnabled(hasImage && !isBG);
          if( miZoom!=null ) miZoom.setEnabled(!isFree);
+         if( miPaste!=null ) miPaste.setEnabled(hasClipBoard());
+         if( miCopy1!=null ) miCopy1.setEnabled(!isFree);
          if( miRsamp!=null ) miRsamp.setEnabled(nbPlanImgWithoutBG>1);
          if( miRGB!=null ) miRGB.setEnabled(nbPlanImgWithoutBG>1);
          if( miMosaic!=null ) miMosaic.setEnabled(nbPlanImgWithoutBG>1);
@@ -5765,60 +5924,60 @@ if( levelTrace>=3 ) System.out.println(")");
       return null;
    }
 
-  /** Appel a la generation par le serveur de l'applet ou "aladin.u-strasbg.fr"
-   * d'une page HTML permettant l'acces aux images originales de la pile
-   * Utilise le format HTTP suivant :
-   * frame=save&An=label&Dn=origine&Rn=format(FITS|HFITS|GFITS|MRCOMP)&Un=url
-   * ou n est un numero distinct pour chaque plan
-   *
-   * Dans le cas ou le plan vient du serveur d'images Aladin en JPEG,
-   * l'url du plan est modifiee pour que ce soit du FITS.
-   *
-   * RQ: IL PEUT Y AVOIR UN RISQUE DE DEBORDEMENT DE LA METHODE GET HTTP
-   * MAIS JE NE VOIS PAS COMMENT FAIRE CELA EN METHODE POST...QUI VIVRA VERRA
-   */
-   protected void saveHTML() {
-      StringBuffer pf=null;
-      int j=0;
-
-      synchronized( calque.pile ) {
-         for( int i=calque.plan.length-1; i>=0; i-- ) {
-            Plan p = calque.plan[i];
-         if( p.type!=Plan.IMAGE || !p.flagOk || p.error!=null ) continue;
-         if( p.u==null ) continue;
-
-         try {
-
-            if( pf==null ) pf=new StringBuffer();
-            else pf.append("&");
-
-            String u = p.getUrl();
-            String format= PlanImage.getFormat(((PlanImage)p).fmt);
-
-            // Cas particulier d'aladin en JPEG
-            if( ((PlanImage)p).isAladinJpeg() ) format="FITS";
-
-            pf.append("A"+j+"="+URLEncoder.encode(p.label)+
-                  "&D"+j+"="+URLEncoder.encode(p.copyright)+
-                  "&U"+j+"="+URLEncoder.encode(u)+
-                  "&R"+j+"="+URLEncoder.encode(format)
-            );
-            j++;
-         } catch( Exception e) {}
-      }
-      }
-
-      if( pf==null ) {
-         Aladin.warning(chaine.getString("NOIMGSTK"));
-         return;
-      }
-
-      String s=Aladin.STANDALONE?"http://aladin.u-strasbg.fr/java":CGIPATH;
-      String u = s+"/nph-aladin.pl?frame=save&"+pf;
-      trace(2,u);
-      glu.showDocument("Http",u,true);
-
-   }
+//  /** Appel a la generation par le serveur de l'applet ou "aladin.u-strasbg.fr"
+//   * d'une page HTML permettant l'acces aux images originales de la pile
+//   * Utilise le format HTTP suivant :
+//   * frame=save&An=label&Dn=origine&Rn=format(FITS|HFITS|GFITS|MRCOMP)&Un=url
+//   * ou n est un numero distinct pour chaque plan
+//   *
+//   * Dans le cas ou le plan vient du serveur d'images Aladin en JPEG,
+//   * l'url du plan est modifiee pour que ce soit du FITS.
+//   *
+//   * RQ: IL PEUT Y AVOIR UN RISQUE DE DEBORDEMENT DE LA METHODE GET HTTP
+//   * MAIS JE NE VOIS PAS COMMENT FAIRE CELA EN METHODE POST...QUI VIVRA VERRA
+//   */
+//   protected void saveHTML() {
+//      StringBuffer pf=null;
+//      int j=0;
+//
+//      synchronized( calque.pile ) {
+//         for( int i=calque.plan.length-1; i>=0; i-- ) {
+//            Plan p = calque.plan[i];
+//         if( p.type!=Plan.IMAGE || !p.flagOk || p.error!=null ) continue;
+//         if( p.u==null ) continue;
+//
+//         try {
+//
+//            if( pf==null ) pf=new StringBuffer();
+//            else pf.append("&");
+//
+//            String u = p.getUrl();
+//            String format= PlanImage.getFormat(((PlanImage)p).fmt);
+//
+//            // Cas particulier d'aladin en JPEG
+//            if( ((PlanImage)p).isAladinJpeg() ) format="FITS";
+//
+//            pf.append("A"+j+"="+URLEncoder.encode(p.label)+
+//                  "&D"+j+"="+URLEncoder.encode(p.copyright)+
+//                  "&U"+j+"="+URLEncoder.encode(u)+
+//                  "&R"+j+"="+URLEncoder.encode(format)
+//            );
+//            j++;
+//         } catch( Exception e) {}
+//      }
+//      }
+//
+//      if( pf==null ) {
+//         Aladin.warning(chaine.getString("NOIMGSTK"));
+//         return;
+//      }
+//
+//      String s=Aladin.STANDALONE?"http://aladin.u-strasbg.fr/java":CGIPATH;
+//      String u = s+"/nph-aladin.pl?frame=save&"+pf;
+//      trace(2,u);
+//      glu.showDocument("Http",u,true);
+//
+//   }
    
 /*
     void debug() {

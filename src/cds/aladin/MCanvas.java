@@ -223,11 +223,11 @@ public final class MCanvas extends JComponent
       else if( src==menuGoto ) aladin.view.zoomOnSource(objSelect);
 //      else if( src==menuLoadImg ) loadImg();
 //      else if( src==menuLoadImgs ) loadImgs();
-      else if( src==menuCopyAll ) Aladin.copyToClipBoard(aladin.mesure.getText());
-      else if( src==menuCopyAllAscii ) Aladin.copyToClipBoard(aladin.mesure.getText(true));
-      else if( src==menuCopyCoord ) Aladin.copyToClipBoard(aladin.mesure.getCurObjCoord());
-      else if( src==menuCopyVal ) Aladin.copyToClipBoard(aladin.mesure.getCurObjVal());
-      else if( src==menuCopyMeasurement ) Aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement());
+      else if( src==menuCopyAll ) aladin.copyToClipBoard(aladin.mesure.getText());
+      else if( src==menuCopyAllAscii ) aladin.copyToClipBoard(aladin.mesure.getText(true));
+      else if( src==menuCopyCoord ) aladin.copyToClipBoard(aladin.mesure.getCurObjCoord());
+      else if( src==menuCopyVal ) aladin.copyToClipBoard(aladin.mesure.getCurObjVal());
+      else if( src==menuCopyMeasurement ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement());
       else if( src==menuUnselect ) deselect(objSelect);
       else if( src==menuDel ) delete(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
@@ -1295,12 +1295,12 @@ public final class MCanvas extends JComponent
          }
          
          if( onBordField!=-1 ) setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
-         else aladin.makeCursor(this,Aladin.DEFAULT);
+         else aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
          return;
       }
       
-      aladin.makeCursor(this,Aladin.DEFAULT);
+      aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
       // Determination de la ligne courante
       currentsee = firstsee+ (y-MH)/HL;
@@ -1435,7 +1435,7 @@ public final class MCanvas extends JComponent
       if( timer!=null ) timer.stop();
       aladin.urlStatus.setText(aladin.COPYRIGHT);   // Remet le copyright
       currentsee=-1;                                // Plus aucune ligne courante
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
 
       // Traitement de l'objet dans la vue
       if( oo!=null ) { aladin.view.hideSource(); oo=null; }

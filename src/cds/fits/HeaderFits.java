@@ -566,7 +566,7 @@ public final class HeaderFits {
 
   /** Allocation ou réallocation des structures de mémorisation */
   protected void alloc() {
-     if( header!=null && keysOrder!=null ) return;
+//     if( header!=null && keysOrder!=null ) return;
      header = new Hashtable(200);
      keysOrder = new Vector(200);
   }

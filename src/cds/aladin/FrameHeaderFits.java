@@ -196,7 +196,7 @@ public class FrameHeaderFits extends JFrame {
          headerFits = new HeaderFits(s);
          if( plan!=null ) {
             Calib c = new Calib(headerFits);
-            plan.projd=new Projection(Projection.WCS, c);
+            plan.projd = new Projection(Projection.WCS, c);
             plan.setHasSpecificCalib();
          }
       } catch( Exception e ) {
@@ -219,8 +219,8 @@ public class FrameHeaderFits extends JFrame {
    private void updateWidgets() {
       if( originalHeader==null ) return;
       isEdited=true;
-      cancel.setEnabled(!originalHeader.equals(ta.getText()));
-      save.setEnabled( !originalHeader.equals(ta.getText()));
+      if( cancel!=null ) cancel.setEnabled(!originalHeader.equals(ta.getText()));
+      if( save!=null )   save.setEnabled( !originalHeader.equals(ta.getText()));
    }
 
   /** Construction du Frame de visualisation du Header FITS */
@@ -260,19 +260,22 @@ public class FrameHeaderFits extends JFrame {
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { ts.setText("");  search(""); }
       });
-      p.add(new JLabel(" - "));
-      save = b =  new JButton(SAVE);
-      b.setEnabled(false);
-      if( SAVABLE ) p.add(b);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { save(); }
-      });
-      cancel = b =  new JButton(CANCEL);
-      b.setEnabled(false);
-      if( SAVABLE ) p.add(b);
-      b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { cancel(); }
-      });
+      
+      if( Aladin.PROTO ) {
+         p.add(new JLabel(" - "));
+         save = b =  new JButton(SAVE);
+         b.setEnabled(false);
+         if( SAVABLE ) p.add(b);
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { save(); }
+         });
+         cancel = b =  new JButton(CANCEL);
+         b.setEnabled(false);
+         if( SAVABLE ) p.add(b);
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { cancel(); }
+         });
+      }
 
       b =  new JButton(CLOSE);
       p.add(b);

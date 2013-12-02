@@ -381,13 +381,21 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       int width;
       
       /**
-       * @param text Texte du baratin
-       * @param width nombre de caractères avant repli (-1 si pas de repli)
+       * @param text Texte du baratin (ou null si début du texte supplémentaire à afficher)
+       * @param width nombre de caractères avant repli (-1 si pas de repli), ou césure si text==null
        * @param more texte supplémentaire accessible par (more...), null sinon
        * @param url url associée, null sinon
        */
-      Anchor(String text,int width,final String more,final String url) {
+      Anchor(String text,int width, String more,final String url) {
          super();
+         if( text==null && more!=null ) {
+            if( more.length()>width ) {
+               int n = more.lastIndexOf(' ',width);
+               if( n<=0 ) n=width;
+               text=more.substring(0,n)+"...";
+            }
+            else { text=more; more=null; }
+         }
          if( text==null ) text="";
          this.more = more;
          this.url=url;
@@ -402,6 +410,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( more!=null ) text = "<html>"+text+" <A HREF=\"\">(more...)</A></html>";
          setText(text);
          setFont(getFont().deriveFont(Font.ITALIC));
+         final String more1 = more;
          if( url!=null || more!=null ) {
             final Component c = this;
             addMouseMotionListener(new MouseMotionListener() {
@@ -411,10 +420,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             addMouseListener(new MouseListener() {
                public void mouseReleased(MouseEvent e) { 
                   if( url!=null ) aladin.glu.showDocument(url);
-                  else aladin.info(c,more.replace("\\n","\n"));
+                  else aladin.info(c,more1.replace("\\n","\n"));
                }
                public void mousePressed(MouseEvent e)  { }
-               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULT); }
+               public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
                public void mouseEntered(MouseEvent e)  { }
                public void mouseClicked(MouseEvent e) { }
             });
@@ -443,6 +452,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       
       if( plan.verboseDescr!=null || plan.description!=null ) {
          PropPanel.addCouple(p,"Description: ", new Anchor(plan.description,50,plan.verboseDescr,null), g,c);
+      }
+
+      if( plan.ack!=null ) {
+         PropPanel.addCouple(p,"Acknowledgment: ", new Anchor(null,40,plan.ack,null), g,c);
       }
 
       // Origine

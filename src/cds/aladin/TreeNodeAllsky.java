@@ -44,6 +44,7 @@ public class TreeNodeAllsky extends TreeNode {
    private String url;           // L'url ou le path du survey
    public String description;   // Courte description (une ligne max)
    public String verboseDescr;  // Description de l'application (1 paragraphe ou plus)
+   public String ack;           // L'acknowledgement
    public String copyright;     // Mention légale du copyright
    public String copyrightUrl;  // Url pour renvoyer une page HTML décrivant les droits
    public String hpxParam;      // Les paramètres propres à HEALPIX
@@ -212,13 +213,14 @@ public class TreeNodeAllsky extends TreeNode {
    }
 
    public TreeNodeAllsky(Aladin aladin,String actionName,String aladinMenuNumber, String url,String aladinLabel,
-         String description,String verboseDescr,String aladinProfile,String copyright,String copyrightUrl,String path,
+         String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
       this.aladinLabel  = aladinLabel;
       this.url          = url;
       this.description  = description;
       this.verboseDescr = verboseDescr;
+      this.ack          = ack;
       this.copyright    = copyright;
       this.copyrightUrl = copyrightUrl;
       this.hpxParam     = aladinHpxParam;
@@ -352,7 +354,7 @@ public class TreeNodeAllsky extends TreeNode {
    /** Retourne true si par défaut le survey est fourni en true pixels (FITS)  */
    protected boolean isTruePixels() { 
       if( truePixelsSet ) return truePixels;
-      return !isColored() && (inFits && local || !inJPEG && !local);
+      return !isColored() && (inFits && local || !(inJPEG || inPNG) && !local);
    }
    
    /** Retourne true si le survey utilise le cache local */
@@ -404,7 +406,7 @@ public class TreeNodeAllsky extends TreeNode {
    
    protected void submit() { 
       String mode = isTruePixels() ? ",fits":"";
-      aladin.console.setCommand("get allsky("+Tok.quote(label)+mode+")");
+      aladin.console.printCommand("get allsky("+Tok.quote(label)+mode+")");
 
       aladin.allsky(this);
    }

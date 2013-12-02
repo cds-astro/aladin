@@ -218,7 +218,7 @@ public class BlinkControl {
       }
       if( m!=NOTHING )
          Aladin.makeCursor(aladin,m==BlinkControl.SHOULD_REPAINT?
-            Aladin.DEFAULT:Aladin.HANDCURSOR);
+            Aladin.DEFAULTCURSOR:Aladin.HANDCURSOR);
 
       Util.toolTip(c,m==IN || m==SHOULD_REPAINT 
             || m==NOTHING ? "" : HELP[mouseMove]);

@@ -540,12 +540,12 @@ public final class Calque extends JPanel implements Runnable {
       if( !hasGrid() ) {
          setOverlayFlag("grid", true);
 //         aladin.view.activeGrid();
-         if( verbose ) aladin.console.setCommand("grid on");
+         if( verbose ) aladin.console.printCommand("grid on");
       }
       else {
          setOverlayFlag("grid", false);
 //         aladin.view.unactiveGrid();
-         if( verbose ) aladin.console.setCommand("grid off");
+         if( verbose ) aladin.console.printCommand("grid off");
       }
       repaintAll();
    }
@@ -565,7 +565,7 @@ public final class Calque extends JPanel implements Runnable {
    private boolean flagFirstSimbad=true;
    /** Activation/desactivation du quick Simbad  */
    protected void setSimbad(boolean flag) {
-      if( flagFirstSimbad && flag) {
+      if( flagFirstSimbad && flag && aladin.configuration.isHelp() ) {
          aladin.info(aladin.chaine.getString("HFINGER"));
          flagFirstSimbad=false;
       }
@@ -575,7 +575,7 @@ public final class Calque extends JPanel implements Runnable {
    private boolean flagFirstVizierSED=true;
    /** Activation/desactivation du quick VizierSED  */
    protected void setVizierSED(boolean flag) {
-      if( flagFirstVizierSED && flag ) {
+      if( flagFirstVizierSED && flag && aladin.configuration.isHelp()) {
          aladin.info(aladin.chaine.getString("HFINGERVIZIERSED"));
          flagFirstVizierSED=false;
       }
@@ -751,7 +751,7 @@ public final class Calque extends JPanel implements Runnable {
          reinitPlan();
       }
       repaintAll();
-      Aladin.makeCursor(this,Aladin.DEFAULT);
+      Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
    }
 
    /** Active/Désactive tous les plans sélectionnés */
@@ -822,7 +822,7 @@ public final class Calque extends JPanel implements Runnable {
          for( i=plan.length-1; i>=0; i-- ) {
             if( plan[i].selected ) {
                if( plan[i].type==Plan.NO) continue; // on ne supprime pas un plan vide
-               if( verbose ) aladin.console.setCommand("rm "+Tok.quote(plan[i].label));
+               if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
                if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
 //               Plan ptmp = plan[i];

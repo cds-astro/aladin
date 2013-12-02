@@ -873,7 +873,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 		filterDef.setText(pf.script);
 
         // affichage dans la console de la commande script équivalente
-        aladin.console.setCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
+        aladin.console.printCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
 	 }
 
 	 private void apply() {
@@ -902,7 +902,7 @@ public final class FilterProperties extends Properties implements MouseListener,
             beginnerCbg.setSelected(new JButton().getModel(), true);
 
 	        // affichage dans la console de la commande script équivalente
-	        aladin.console.setCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
+	        aladin.console.printCommand("filter "+pf.label+" {\n"+pf.script+"\n}");
         }
         else {
         	// NB : pour le mode beginner, l'affichage dans la console
