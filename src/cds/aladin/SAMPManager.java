@@ -40,7 +40,6 @@ import org.apache.xmlrpc.XmlRpcHandler;
 import org.astrogrid.samp.hub.Hub;
 import org.astrogrid.samp.hub.HubServiceMode;
 
-//import sun.misc.BASE64Encoder;
 import cds.tools.Util;
 
 
@@ -612,7 +611,6 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                     int w, h;
                     w = h = 300;
                     a.save.saveView(tmp.getAbsolutePath(), w, h, Save.JPEG, 0.7f);
-//                    BASE64Encoder enc = new BASE64Encoder();
                     if (tmp.length()==0) {
                         replyToMessage(msgId, MSG_REPLY_SAMP_STATUSERROR, null, "Unable to generate snapshot of current view");
                         return FALSE;
@@ -624,7 +622,6 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
                     for (int read = bis.read(buffer, offset, buffer.length - offset); read>=0 && offset<buffer.length; read = bis.read(buffer, offset, buffer.length - offset)) {
                         offset += read;
                     }
-//                    base64Str.append(enc.encode(buffer));
                     base64Str.append(Util.toB64(buffer));
                 }
                 catch(Exception e) {
