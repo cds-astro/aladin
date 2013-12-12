@@ -708,38 +708,36 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan instanceof PlanImageBlink ) {
          final PlanImageBlink pb=(PlanImageBlink)plan;
          PropPanel.addCouple(p,FRAME,new JLabel(pb.getNbFrame()+""), g,c);
-         if( Aladin.PROTO ) {
-            JPanel panel = new JPanel(new FlowLayout() );
-            JButton perm = new JButton("XxY->Z");
-            perm.addActionListener( new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  ((JButton)e.getSource()).setEnabled(false);
-                  pb.permutation(PlanImageBlink.PERM0);
-               }
-            });
-            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM0);
-            panel.add(perm);
-            perm = new JButton("XxZ->Y");
-            perm.addActionListener( new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  ((JButton)e.getSource()).setEnabled(false);
-                 pb.permutation(PlanImageBlink.PERM1);
-               }
-            });
-            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM1);
-            panel.add(perm);
-            perm = new JButton("ZxY->X");
-            perm.addActionListener( new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  ((JButton)e.getSource()).setEnabled(false);
-                 pb.permutation(PlanImageBlink.PERM2);
-               }
-            });
-            perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM2);
-            panel.add(perm);
-            PropPanel.addCouple(p,"Permutations",panel, g,c);
+         JPanel panel = new JPanel(new FlowLayout() );
+         JButton perm = new JButton("XxY->Z");
+         perm.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               ((JButton)e.getSource()).setEnabled(false);
+               pb.permutation(PlanImageBlink.PERM0);
+            }
+         });
+         perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM0);
+         panel.add(perm);
+         perm = new JButton("XxZ->Y");
+         perm.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               ((JButton)e.getSource()).setEnabled(false);
+               pb.permutation(PlanImageBlink.PERM1);
+            }
+         });
+         perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM1);
+         panel.add(perm);
+         perm = new JButton("ZxY->X");
+         perm.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               ((JButton)e.getSource()).setEnabled(false);
+               pb.permutation(PlanImageBlink.PERM2);
+            }
+         });
+         perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM2);
+         panel.add(perm);
+         PropPanel.addCouple(p,"Permutations",panel, g,c);
             
-         }
       }
 
 
@@ -991,11 +989,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                });
                p1.add(bt);
             }
-            if( aladin.PROTO && pbg.hasHpxFinder() ) {
+            if( pbg.hasHpxFinder() ) {
                JButton bt = new JButton("Detail table");
                bt.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) {
-//                     aladin.showFrameProgen();
                      pbg.loadProgen();
                   }
                });

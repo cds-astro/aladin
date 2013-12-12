@@ -475,7 +475,7 @@ public class PlanBG extends PlanImage {
    
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
-      String f = url+"/HpxFinder";
+      String f = url+"/HpxFinder/metadata.xml";
       hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
       testHpxFinder=true;
       return hasHpxFinder;
