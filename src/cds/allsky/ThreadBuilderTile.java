@@ -145,11 +145,10 @@ final public class ThreadBuilderTile {
       return nbThreadRunning<=1;
    }
    
-   static long totalDelay=0L;
-   static long nRead=0L;
-   static long totalDelay1=0L;
-   static long nRead1=0L;
-
+//   static private long totalDelay=0L;
+//   static private long nRead=0L;
+//   static private long totalDelay1=0L;
+//   static private long nRead1=0L;
 
    Fits buildHealpix(BuilderTiles bt, int order, long npix_file) throws Exception {
       ArrayList<SrcFile> downFiles = null;
@@ -164,10 +163,12 @@ final public class ThreadBuilderTile {
 
          Fits f;
          int n=downFiles.size();
+         if( n>statMaxOverlays ) statMaxOverlays=n;
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          if( !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1) ) {
 
+            statOnePass++;
             checkMem(mixing ? n : 1);
             out = buildHealpix1(bt,order,npix_file,downFiles,0,n,null);
 
@@ -175,6 +176,7 @@ final public class ThreadBuilderTile {
             // en mémorisant le poids de chaque pixel à chaque couche
          } else {
 
+            statMultiPass++;
             checkMem(Constante.MAXOVERLAY);
 
             // poids déjà calculés
@@ -191,6 +193,14 @@ final public class ThreadBuilderTile {
                      weight=fWeight;
                      fWeight = new double[Constante.SIDE*Constante.SIDE];
                   } else out.coadd(f,weight,fWeight);
+               }
+               
+               // On libère dès à présent les fichiers Fits déjà utilisés
+               // pour qu'ils puissent être supprimés du cache le cas échéant
+               for( int i=deb; i<fin; i++ ) {
+                  SrcFile f1 = downFiles.get(i);
+                  f1.fitsfile.rmUser();
+                  downFiles.add(i,null);
                }
             }
             // Changement de bitpix a la fin du calcul pour éviter les erreurs d'arrondi
@@ -220,13 +230,21 @@ final public class ThreadBuilderTile {
       }
 
       for( int i=downFiles.size()-1; i>=0; i-- ) {
-         Fits f = downFiles.get(i).fitsfile;
-         f.rmUser();
+         SrcFile f1 = downFiles.get(i);
+         if( f1!=null ) {
+            Fits f = f1.fitsfile;
+            f.rmUser();
+         }
       }
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
+      
       return out;
    }
+   
+   static long statOnePass=0L;
+   static long statMultiPass=0L;
+   static int statMaxOverlays=0;
    
    static private double toRad = 180./Math.PI;
    static private double PI2 = Math.PI/2.;
@@ -444,13 +462,27 @@ final public class ThreadBuilderTile {
    
    static private final double OVERLAY_PROPORTION = 1/6.;
    
+   
+   // détermine si le pixel doit être pris en compte, ou s'il est dans la marge
+   private boolean isIn(Fits f, Coord coo) {
+      if( radius>0 ) {
+         double cx = f.width/2;
+         double cy = f.height/2;
+         double dx = coo.x-cx;
+         double dy = coo.y-cy;
+         double d = dx*dx + dy*dy;
+         if( d>radius*radius ) return false;
+      }
+      if( coo.x<borderSize[1] || coo.x>f.width-borderSize[3] ) return false;
+      if( coo.y<borderSize[0] || coo.y>f.height-borderSize[2] ) return false;
+      return true;
+   }
+   
    // Détermination d'un coefficent d'atténuation de la valeur du pixel en fonction de sa distance au bord 
    // Même si le fading est désactivé, il faut tout de même divisé par 2 ou 4 les lignes des cellules
    // adjacentes (dû au fait que le pixel des bords de cellules auront sinon un poids
    // double voire quadruple, ce qui va se voir en cas de superpostion avec une autre image)
    private double getCoef(Fits f,Coord coo) {
-//      int x1 = (int)Math.floor(coo.x);
-//      int y1 = (int)Math.floor(coo.y);
       int x1 = (int)coo.x;
       int y1 = (int)coo.y;
       
@@ -464,14 +496,13 @@ final public class ThreadBuilderTile {
       
       double c=0;
       try {
-         if( radius>0 ) {
+          if( radius>0 ) {
             double cx = f.width/2;
             double cy = f.height/2;
             double dx = coo.x-cx;
             double dy = coo.y-cy;
             double d = Math.sqrt(dx*dx + dy*dy);
-            if( d>radius ) c=0;
-            else if( d<radius-radius*OVERLAY_PROPORTION ) c=1;
+            if( d<radius-radius*OVERLAY_PROPORTION ) c=1;
             else c = (radius - d)/radius;
          } else {
             double width  = f.width -(borderSize[1]+borderSize[3]);
@@ -506,15 +537,10 @@ final public class ThreadBuilderTile {
 //   }
 
    private double getBilinearPixel(Fits f,Coord coo,double myBlank) {
+      if( !isIn(f,coo) ) return Double.NaN;
+      
       double x = coo.x;
       double y = coo.y;
-      
-      if( radius>0 ) {
-         double xc = x - f.width/2;
-         double yc = y - f.height/2;
-         double r = Math.sqrt(xc*xc + yc*yc);
-         if( r>radius ) return Double.NaN;
-       }
       
       int x1 = (int)x;
       int y1 = (int)y;
@@ -558,20 +584,11 @@ final public class ThreadBuilderTile {
    }
 
    private int getBilinearPixelRGB(Fits f,Coord coo) {
+      if( !isIn(f,coo) ) return 0;
+      
       double x = coo.x;
       double y = coo.y;
       
-      if( radius>0 ) {
-         double xc = x - f.width/2;
-         double yc = y - f.height/2;
-         double r = Math.sqrt(xc*xc + yc*yc);
-         if( r>radius ) return 0;
-       }
-
-      
-
-//      int x1 = (int)Math.floor(x);
-//      int y1 = (int)Math.floor(y);
       int x1 = (int)x;
       int y1 = (int)y;
       int x2=x1+1;
@@ -787,6 +804,7 @@ final public class ThreadBuilderTile {
          
          blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
       }
+      
   }
 
    int n =0;

@@ -274,6 +274,7 @@ public class PlanImage extends Plan {
           dis = inImg;
 
        } catch( Exception e ) {
+          error="_END_XFITS_";
           String s=file+" error !\n"+e;
           Aladin.warning(s,1);
           return;

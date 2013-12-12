@@ -992,9 +992,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                p1.add(bt);
             }
             if( aladin.PROTO && pbg.hasHpxFinder() ) {
-               JButton bt = new JButton("Progenitors");
+               JButton bt = new JButton("Detail table");
                bt.addActionListener(new ActionListener() {
-                  public void actionPerformed(ActionEvent e) { aladin.showFrameProgen(); }
+                  public void actionPerformed(ActionEvent e) {
+//                     aladin.showFrameProgen();
+                     pbg.loadProgen();
+                  }
                });
                p1.add(bt);
             }
@@ -1224,7 +1227,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // boutons pour montrer cacher les FoVs associés à un Plan.CATALOG
-      if( plan.flagOk && plan.isSimpleCatalog() && ((PlanCatalog)plan).hasAssociatedFootprints() ) {
+      if( plan.flagOk && plan.isCatalog() && plan.hasAssociatedFootprints() ) {
          PropPanel.addFilet(p,g,c);
          PropPanel.addSectionTitle(p,ASSFOV,g,c);
 
@@ -1722,7 +1725,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // show/hide FoVs associés
       else if( SHOWFOVS.equals(what) || HIDEFOVS.equals(what) ) {
          boolean flagShow = SHOWFOVS.equals(what)?true:false;
-         ((PlanCatalog)plan).showFootprints(flagShow);
+         plan.showFootprints(flagShow);
       }
 
       // export pointing centers

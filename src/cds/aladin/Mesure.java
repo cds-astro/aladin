@@ -598,6 +598,8 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       wordLine = new Vector(st.countTokens()+1);
       wordLine.addElement(o);           // L'objet lui-meme est tjrs en premiere place
       
+      int indexFootPrint = o.getIdxFootprint(); // position d'un Fov, -1 si aucun
+      
       for( int i=0; st.hasMoreTokens(); i++ ) {
          String tag = st.nextToken();
          Words w;
@@ -608,10 +610,10 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
 
             // Determination de l'alignement en fonction du type de donnees
             int align= o.leg.isNumField(i-1) ? Words.RIGHT : Words.LEFT;
-
+            
             // Creation d'un mot dans le cas d'un footprint associé (Thomas, VOTech)
-            if( o.getFootprint()!=null && o.getIdxFootprint()==i-1 ) {
-            	w = new Words(tag,o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true);
+            if( indexFootPrint==i-1 ) {
+               w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true);
             }
             // Creation du nouveau mot
             else w = new Words(tag,o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);

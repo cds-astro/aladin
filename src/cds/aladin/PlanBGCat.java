@@ -23,11 +23,16 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import cds.allsky.Context;
 import cds.tools.Util;
 import cds.tools.pixtools.Hpix;
 
@@ -59,8 +64,8 @@ public class PlanBGCat extends PlanBG {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
-      
       scanProperties();
+      loadGenericLegende();
    }
    
    protected boolean isSync() {
@@ -68,7 +73,6 @@ public class PlanBGCat extends PlanBG {
       isSync = isSync && (planFilter==null || planFilter.isSync() );
       return isSync;
    }
-
 
    protected void suiteSpecific() {
       isOldPlan=false;
@@ -123,7 +127,7 @@ public class PlanBGCat extends PlanBG {
       return pixAsk;
    }
 
-   private boolean localAllSky = false;   // A VIRER LORSQUE SIMBAD EN NET DISTANT
+//   private boolean localAllSky = false;   // A VIRER LORSQUE SIMBAD EN NET DISTANT
    private HealpixAllskyCat allsky[] = new HealpixAllskyCat[4];
 
    protected int getLosangeOrder() { return 9; }
@@ -135,7 +139,7 @@ public class PlanBGCat extends PlanBG {
          allsky[order] = new HealpixAllskyCat(this,order);
          pixList.put( key(order,-1), allsky[order]);
 
-         if( localAllSky ) allsky[order].loadFromNet();
+         if( local ) allsky[order].loadFromNet();
          else {
             if( !useCache || !allsky[order].isCached() ) {
                tryWakeUp();
@@ -265,7 +269,7 @@ public class PlanBGCat extends PlanBG {
       return nb;
    }
    
-   private double completude=0;
+   protected double completude=0;
    protected double getCompletude() { return completude; }
 
    /** Demande de réaffichage des vues */
@@ -317,13 +321,47 @@ public class PlanBGCat extends PlanBG {
       return v;
    }
 
-
-   private Legende leg=null;
+   protected Legende leg;
    protected void setLegende(Legende leg) {
+      System.out.println("PlanBGCat.setLegende => "+leg);
       this.leg=leg;
       setFilter(filterIndex);
    }
    protected Legende getFirstLegende() { return leg; }
+   
+   /** Affectation à la légende courante d'une liste de pattern à base d'expressions régulières
+    * pour effectuer l'extration des valeurs depuis le fichier JSON HpxFinder vers une vue sous forme de
+    * table VOTable correspondante au ficheir metadata.xml.
+    * Un pattern suit la syntaxe suivante :
+    * vide => simple ordre positionnel (numéro de champ équivalent dans le JSON)
+    * $[nom] => la valeur du champ JSON correspondant
+    * $[nom]:regex => extraction et concatenation des groupes de la regex de la valeur du champ JSON "nom"
+    * $[nom]:regex $[nom1]:regex ... idem mais pour plusieurs expressions
+    * @param src
+    * @throws Exception
+    */
+   protected void setPattern(Source src) throws Exception {
+      if( leg==null ) throw new Exception("cannot store pattern in null leg !");
+      String [] pattern = src.getValues();
+      for( int i=0; i<leg.field.length; i++ ) {
+         if( pattern[i].trim().length()==0 ) continue;
+         leg.field[i].hpxFinderPattern = pattern[i];
+      }
+   }
+
+   /** Charge la légende générique via le fichier metadata.xml (s'il existe) */
+   protected void loadGenericLegende() {
+      String filename = getUrl()+"/"+Context.METADATA;
+      Pcat pcat = new Pcat(this);
+      MyInputStream in = null;
+      try {
+          pcat.tableParsing(in=Util.openAnyStream(filename),null);
+          setLegende(pcat.leg);
+          if( pcat.hasObj() ) setPattern((Source)pcat.iterator().next());
+      }
+      catch( Exception e ) { }
+      finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+   }
 
    protected boolean hasObj() { return hasSources(); }
 
@@ -378,9 +416,7 @@ public class PlanBGCat extends PlanBG {
       public boolean hasNext() {
          while( it==null || !it.hasNext() ) {
             if( e==null ) {
-                if (pixList==null) {
-                    return false;
-                }
+                if (pixList==null) return false;
                 e = pixList.elements();
             }
             if( !e.hasMoreElements() ) return false;

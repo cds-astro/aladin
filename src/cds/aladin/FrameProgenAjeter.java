@@ -49,12 +49,12 @@ import cds.tools.Util;
  * @date déc 2011 - création
  * @author Pierre Fernique [CDS]
  */
-public class FrameProgen extends JFrame implements ActionListener {
+public class FrameProgenAjeter extends JFrame implements ActionListener {
    private String apply,close;
    private Aladin aladin;
    protected Progen progen;
    
-   public FrameProgen(Aladin aladin ) {
+   public FrameProgenAjeter(Aladin aladin ) {
       super("Access to original images");
       this.aladin = aladin;
       Aladin.setIcon(this);

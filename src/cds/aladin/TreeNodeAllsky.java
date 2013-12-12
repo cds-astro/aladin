@@ -62,6 +62,7 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean truePixels=false; // true si par défaut le survey est fourni en truePixels (FITS)
    private boolean truePixelsSet=false; // true si le mode par défaut du survey a été positionné manuellement
    private boolean cat=false;    // true s'il s'agit d'un catalogue hiérarchique
+   private boolean progen=false; // true s'il s'agit d'un catalogue progen
    private boolean map=false;    // true s'il s'agit d'une map HEALPix FITS
    private boolean moc=false;    // true s'il faut tout de suite charger le MOC
    public int frame=Localisation.GAL;  // Frame d'indexation
@@ -150,6 +151,8 @@ public class TreeNodeAllsky extends TreeNode {
          }
       }
       
+      progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
+
       s = prop.getProperty(PlanHealpix.KEY_ISCAT);
       if( s!=null ) cat = new Boolean(s);
       else cat = getFormatByPath(pathOrUrl,local,2);
@@ -158,7 +161,7 @@ public class TreeNodeAllsky extends TreeNode {
       String keyColor = prop.getProperty(PlanHealpix.KEY_ISCOLOR);
       if( keyColor!=null ) color = new Boolean(keyColor);
 //      if( color ) inJPEG=true;
-      if( !cat /* && (keyColor==null || !color)*/ ) {
+      if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
          String format = prop.getProperty(PlanHealpix.KEY_FORMAT);
          if( format!=null ) {
             int a,b;
@@ -203,13 +206,19 @@ public class TreeNodeAllsky extends TreeNode {
    }
    
    private int getMaxOrderByPath(String urlOrPath,boolean local) {
-      int maxOrder=-1;
-      for( int n=3; n<100; n++ ) {
-         if( local && !(new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()) ||
-            !local && !Util.isUrlResponding(urlOrPath+"/Norder"+n)) break;
-         maxOrder=n;
+      for( int n=25; n>=1; n--) {
+         if( local && new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()
+            || !local && Util.isUrlResponding(urlOrPath+"/Norder"+n)) return n;
       }
-      return maxOrder;
+      return -1;
+      
+//      int maxOrder=-1;
+//      for( int n=3; n<100; n++ ) {
+//         if( local && !(new File(urlOrPath+Util.FS+"Norder"+n).isDirectory()) ||
+//            !local && !Util.isUrlResponding(urlOrPath+"/Norder"+n)) break;
+//         maxOrder=n;
+//      }
+//      return maxOrder;
    }
 
    public TreeNodeAllsky(Aladin aladin,String actionName,String aladinMenuNumber, String url,String aladinLabel,
@@ -257,6 +266,7 @@ public class TreeNodeAllsky extends TreeNode {
                if( Util.indexOfIgnoreCase(s, "ecl")>=0 ) frame = Localisation.ECLIPTIC;
                if( Util.indexOfIgnoreCase(s, "equ")>=0 ) frame = Localisation.ICRS;
                if( Util.indexOfIgnoreCase(s, "cat")>=0 ) cat=true;
+               if( Util.indexOfIgnoreCase(s, "progen")>=0 ) progen=true;
                if( Util.indexOfIgnoreCase(s, "map")>=0 ) map=true;
                if( Util.indexOfIgnoreCase(s, "moc")>=0 ) moc=true;
                
@@ -286,7 +296,7 @@ public class TreeNodeAllsky extends TreeNode {
       double r;
       Coord c;
       return "GluSky ["+id+"]"
-                  +(isCatalog() ?" catalog" : isMap()?" fitsMap":" survey")
+                  +(isCatalog() ?" catalog" : isProgen() ?" progen" :isMap()?" fitsMap":" survey")
                   +" maxOrder:"+getMaxOrder()
                   +(getLosangeOrder()>=0?" cellOrder:"+getLosangeOrder():"")
                   +(!isCatalog() && isColored() ?" colored" : " B&W")
@@ -312,6 +322,9 @@ public class TreeNodeAllsky extends TreeNode {
    /** Retourne true s'il s'agit d'un catalogue hiérarchique */
    protected boolean isCatalog() { return cat; }
    
+   /** Retourne true s'il s'agit d'un catalogue hiérarchique pour des progéniteurs */
+   protected boolean isProgen() { return progen; }
+   
    /** Retourne true s'il s'agit d'un survey ou d'une map couleur (par défaut JPG) */
    protected boolean isColored() { return color; }
    
@@ -335,7 +348,7 @@ public class TreeNodeAllsky extends TreeNode {
    protected String getVersion() { return version==null ? "" : version; }
    
    protected int getLosangeOrder() { 
-      if( cat || nside==-1 || maxOrder==-1) return -1;
+      if( progen || cat || nside==-1 || maxOrder==-1) return -1;
       return (int)Healpix.log2(nside) - maxOrder;
    }
    

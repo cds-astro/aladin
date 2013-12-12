@@ -1402,7 +1402,7 @@ public final class FilterProperties extends Properties implements MouseListener,
             p = aladin.calque.plan[i];
             if( p.isCatalog() ) {
                Iterator<Obj> it = p.iterator();
-               while( it.hasNext() ) {
+               while( it!=null && it.hasNext() ) {
                   Obj o1 = it.next();
                   if( !(o1 instanceof Source) ) continue;
                   s = (Source)o1;

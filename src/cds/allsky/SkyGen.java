@@ -27,6 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
+import cds.aladin.Aladin;
 import cds.aladin.MyProperties;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
@@ -103,83 +104,73 @@ public class SkyGen {
       // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
          usage(launcher);
-      } else if (opt.equalsIgnoreCase("verbose")) {
-         Context.setVerbose(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("verbose"))   { Context.setVerbose(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("blank"))     { context.setBlankOrig(Double.parseDouble(val));
+      } else if (opt.equalsIgnoreCase("order"))     { context.setOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("diffOrder")) { context.setDiffOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("bitpix"))    { context.setBitpix(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("frame"))     { context.setFrameName(val);
+      } else if (opt.equalsIgnoreCase("maxThread")) { context.setMaxNbThread(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("skyval"))    { context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("exptime"))   { context.setExpTime(val);
+      } else if (opt.equalsIgnoreCase("fading"))    { context.setFading(val);
+      } else if (opt.equalsIgnoreCase("mixing"))    { context.setMixing(val);
+      } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
+      } else if (opt.equalsIgnoreCase("red"))        { context.setRgbInput(val, 0);
+      } else if (opt.equalsIgnoreCase("green"))      { context.setRgbInput(val, 1);
+      } else if (opt.equalsIgnoreCase("blue"))       { context.setRgbInput(val, 2);
+      } else if (opt.equalsIgnoreCase("redparam"))   { context.setRgbCmParam(val, 0);
+      } else if (opt.equalsIgnoreCase("greenparam")) { context.setRgbCmParam(val, 1);
+      } else if (opt.equalsIgnoreCase("blueparam"))  { context.setRgbCmParam(val, 2);
+      } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
+      } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
+      
       } else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
-      } else if (opt.equalsIgnoreCase("in")
-            || opt.equalsIgnoreCase("input")) {
+         
+      } else if (opt.equalsIgnoreCase("in") || opt.equalsIgnoreCase("input")) {
          context.setInputPath(val);
-      } else if (opt.equalsIgnoreCase("out")
-            || opt.equalsIgnoreCase("output")) {
+         
+      } else if (opt.equalsIgnoreCase("out") || opt.equalsIgnoreCase("output")) {
          context.setOutputPath(val);
-      } else if (opt.equalsIgnoreCase("blank")) {
-         context.setBlankOrig(Double.parseDouble(val));
-      } else if (opt.equalsIgnoreCase("order")) {
-         context.setOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("diffOrder")) {
-         context.setDiffOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("mode") 
-            || opt.equalsIgnoreCase("pixel")) {
+         
+      } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
          flagMode=true;
-      } else if (opt.equalsIgnoreCase("bitpix")) {
-         context.setBitpix(Integer.parseInt(val));
+         
       } else if (opt.equalsIgnoreCase("region") || opt.equalsIgnoreCase("moc")) {
          if (val.endsWith("fits")) {
             HealpixMoc moc = new HealpixMoc();
             moc.read(val);
             context.setMocArea(moc);
          } else context.setMocArea(val);
-      } else if (opt.equalsIgnoreCase("frame")) {
-         context.setFrameName(val);
-      } else if (opt.equalsIgnoreCase("maxThread")) {
-         context.setMaxNbThread(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("skyval")) {
-         context.setSkyval(val);
-      } else if (opt.equalsIgnoreCase("exptime")) {
-         context.setExpTime(val);
-      } else if (opt.equalsIgnoreCase("fading")) {
-         context.setFading(val);
-      } else if (opt.equalsIgnoreCase("mixing")) {
-         context.setMixing(val);
-      } else if (opt.equalsIgnoreCase("blocking") 
-            || opt.equalsIgnoreCase("cutting")
-            || opt.equalsIgnoreCase("partitioning")) {
+         
+      } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting") || opt.equalsIgnoreCase("partitioning")) {
          context.setPartitioning(val);
+         
       } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
          try {
             context.setCircle(val);
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
+         
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-      } else if ( opt.equalsIgnoreCase("jpegMethod") 
-            || opt.equalsIgnoreCase("method")) {
+         
+      } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
          if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          context.setMethod(val);
-      } else if (opt.equalsIgnoreCase("pixelCut")) {
-         context.setPixelCut(val);
-      } else if (opt.equalsIgnoreCase("pixelRange") 
-            || opt.equalsIgnoreCase("dataCut")) {
+         
+      } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
+      } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
-      } else if (opt.equalsIgnoreCase("color")) {
-         context.setColor(val);
-      } else if (opt.equalsIgnoreCase("red"))   { context.setRgbInput(val, 0);
-      } else if (opt.equalsIgnoreCase("green")) { context.setRgbInput(val, 1);
-      } else if (opt.equalsIgnoreCase("blue"))  { context.setRgbInput(val, 2);
-      } else if (opt.equalsIgnoreCase("redparam"))   { context.setRgbCmParam(val, 0);
-      } else if (opt.equalsIgnoreCase("greenparam")) { context.setRgbCmParam(val, 1);
-      } else if (opt.equalsIgnoreCase("blueparam"))  { context.setRgbCmParam(val, 2);
-      } else if (opt.equalsIgnoreCase("img")) {
-         context.setImgEtalon(val);
       } else throw new Exception("Option unknown [" + opt + "]");
       
    }
@@ -190,6 +181,9 @@ public class SkyGen {
          usage(launcher);
          return;
       }
+      
+      context.info("Starting SkyGen (based on Aladin "+Aladin.VERSION+")...");
+      
       // extrait les options en ligne de commande, et les analyse
       for (String arg : args) {
          // si c'est dans un fichier
@@ -244,11 +238,12 @@ public class SkyGen {
          else {
             try {
                Action a = Action.valueOf(arg.toUpperCase());
-               if( a==Action.FINDER ) a=Action.INDEX;   // Pour compatibilité
+               if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
+               if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
                if( a==Action.CONCAT && !flagMode ) context.setCoAddMode(CoAddMode.AVERAGE);
                if( a==Action.ABORT ) flagAbort=true;    // Bidouillage pour pouvoir tuer un skygen en cours d'exécution
                if( a==Action.PAUSE ) flagPause=true;    // Bidouillage pour pouvoir mettre en pause un skygen en cours d'exécution
-               if( a==Action.RESUME ) flagResume=true;    // Bidouillage pour pouvoir remettre en route un skygen en pause
+               if( a==Action.RESUME ) flagResume=true;  // Bidouillage pour pouvoir remettre en route un skygen en pause
                actions.add(a);
             } catch (Exception e) {
                context.error("Unknown skygen command ["+arg+"] !");
@@ -289,7 +284,7 @@ public class SkyGen {
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
             actions.add(Action.PNG);
-            actions.add(Action.PROGEN);
+            actions.add(Action.DETAILS);
          }
       }
      
@@ -300,10 +295,11 @@ public class SkyGen {
          else {
             for( int i=0; i<actions.size() ;i++ ) {
                Action a = actions.get(i);
-               if( a==Action.INDEX ) { actions.add(i, Action.CLEANINDEX); i++; }
-               else if( a==Action.TILES ) { actions.add(i, Action.CLEANTILES); i++; }
-               else if( a==Action.JPEG )  { actions.add(i, Action.CLEANJPEG);  i++; }
-               else if( a==Action.PNG )  { actions.add(i, Action.CLEANPNG);  i++; }
+                    if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
+               else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
+               else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
+               else if( a==Action.JPEG )    { actions.add(i, Action.CLEANJPEG);    i++; }
+               else if( a==Action.PNG )     { actions.add(i, Action.CLEANPNG);     i++; }
             }
          }
       }
@@ -361,6 +357,7 @@ public class SkyGen {
             "                   conversion - ex: \"-5 110\")" + "\n" +
             "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
 //            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
+            "fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" + 
             "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
             "mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
             "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
@@ -389,7 +386,7 @@ public class SkyGen {
             "TREE       "+Action.TREE.doc() + "\n"+
             "CONCAT     "+Action.CONCAT.doc() + "\n"+
             "GZIP       "+Action.GZIP.doc() + "\n"+
-            "PROGEN     "+Action.PROGEN.doc() + "\n"
+            "DETAILS    "+Action.DETAILS.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
       		             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +

@@ -996,9 +996,6 @@ public final class MCanvas extends JComponent
 
                // Show/hide associated FoV (thomas VOTech)
                if( w.footprint ) {
-                  //            	o.footprint.make(o.raj,o.dej,o.footprintAngle);
-                  //            	o.footprint.setTarget(o.raj, o.dej, o.footprintAngle);
-                  //            	aladin.calque.newPlanField(o.footprint);
                   PlanField pf = o.getFootprint().getFootprint();
                   if (pf != null) {
                       pf.setActivated(true);
@@ -1006,11 +1003,6 @@ public final class MCanvas extends JComponent
 
                   }
                   o.switchFootprint();
-                  //            	System.out.println(o.footprintAngle);
-                  //            	System.out.println("hide/show footprint ");
-                  //            	PlanField field = new PlanField(Aladin.aladin, "toto", 0, "toto", "WFPC2");
-                  //            	field.setCenter(312,-40.18);
-                  //            	field.setActivated(true);
                   return;
                }
 
@@ -1329,7 +1321,19 @@ public final class MCanvas extends JComponent
       Source oshow = objSelect!=null ? objSelect : o;
 
       // Visualisation dans la vue de la source associee a la mesure courante
-      if( oo!=oshow ) { aladin.view.showSource(oshow); oo=oshow; }
+      if( oo!=oshow ) { 
+         aladin.view.showSource(oshow); 
+         
+//         PlanField pf = oshow.getFootprint().getFootprint();
+//         if (pf != null) {
+//            pf.setActivated(true);
+//            pf.flagOk = true;
+//         }
+//         oshow.switchFootprint();
+//         if( oo!=null ) oo.switchFootprint();
+
+         oo=oshow;
+      }
 
       // Affichage de la coordonnees de la source
       aladin.localisation.seeCoord(oshow);
@@ -1371,7 +1375,8 @@ public final class MCanvas extends JComponent
                  if( w.repere ) { /* tip=TIPREP; */ s=w.text; }
             else if( w.glu )      tip=TIPGLU;
             else if( w.archive )  tip=TIPARCH;
-            else if( w.footprint) tip=TIPFOV;
+            else if( w.footprint)  tip=TIPFOV;
+               
             s=getDescription(o,indice);
             if( s==null ) s="";
 

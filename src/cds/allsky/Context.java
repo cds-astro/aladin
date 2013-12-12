@@ -27,8 +27,10 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Properties;
@@ -66,6 +68,7 @@ import cds.tools.pixtools.CDSHealpix;
 public class Context {
 
    static final public String LOGFILE = "Skygen.log";
+   static final public String METADATA = "metadata.xml";
    
    private static boolean verbose = false;
    protected String label;                   // Nom du survey
@@ -91,6 +94,8 @@ public class Context {
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
+   protected ArrayList<String> fitsKeys=null; // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
+   protected int typicalImgWidth=-1;       // Taille typique d'une image d'origine
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
@@ -198,6 +203,11 @@ public class Context {
    }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
+   public void setIndexFitskey(String list) {
+      StringTokenizer st = new StringTokenizer(list);
+      fitsKeys = new ArrayList<String>(st.countTokens());
+      while( st.hasMoreTokens() ) fitsKeys.add(st.nextToken());
+   }
    public void setCoAddMode(CoAddMode coAdd) { this.coAdd = coAdd; }
    public void setBScaleOrig(double x) { bScaleOrig = x; bscaleBzeroOrigSet=true; }
    public void setBZeroOrig(double x) { bZeroOrig = x; bscaleBzeroOrigSet=true; }
@@ -306,6 +316,9 @@ public class Context {
        if ( (code & Fits.XFITS)!=0 ){
     	   
        }
+       
+       // Mémorise la taille typique de l'image étalon
+       typicalImgWidth = Math.max(fitsfile.width,fitsfile.height);
     	   
        // Il peut s'agit d'un fichier .hhh (sans pixel)
        try { initCut(fitsfile); } catch( Exception e ) { 
@@ -799,7 +812,7 @@ public class Context {
       setProgress(0,-1);
    }
    public void endAction() throws Exception {
-      action.stopTime();
+      if( action==null ) return;
       if( isTaskAborting() )  nldone(action+" abort (after "+Util.getTemps(action.getDuree())+")\n");
       else {
          nldone(action+" done (in "+Util.getTemps(action.getDuree())+")\n");

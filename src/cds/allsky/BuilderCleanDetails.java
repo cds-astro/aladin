@@ -25,37 +25,44 @@ import javax.swing.JProgressBar;
 
 import cds.tools.Util;
 
-/** Permet de nettoyer un index HEALPix
- * @author Anaïs Oberto & Pierre Fernique [CDS]
+/** Permet de nettoyer les détails d'un index HEALPix
+ * @author Pierre Fernique [CDS]
  */
-public class BuilderCleanIndex extends BuilderClean {
+public class BuilderCleanDetails extends BuilderClean {
+   
+   private String lastOrder;
 
-   public BuilderCleanIndex(Context context) {
+   public BuilderCleanDetails(Context context) {
       super(context);
    }
    
-   public Action getAction() { return Action.CLEANINDEX; }
+   public Action getAction() { return Action.CLEANDETAILS; }
    
    public void validateContext() throws Exception { 
       super.validateContext();
-      if( context instanceof ContextGui ) {
-         JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
-         bar.setIndeterminate(true);
-         context.setProgressBar(bar);
-         bar.setString("Cleaning previous index...");
+      int orderIndex = cds.tools.pixtools.Util.getMaxOrderByPath( context.getHpxFinderPath() );
+      if( orderIndex==-1 ) throw new Exception("HpxFinder order dir not found !");
+      lastOrder = "Norder"+orderIndex;
+      context.info("Cleaning all Norder dir except "+lastOrder+"...");
+   }
+   
+   public void deleteDirExceptLastOrder(File dir) throws Exception {
+      if( context.isTaskAborting() ) throw new Exception("Task abort !");
+
+      for( File f : dir.listFiles() ) {
+         if( f.getName().equals(lastOrder) ) continue;
+         deleteDir(f);
       }
    }
    
-   public boolean isAlreadyDone() { return !(new File(context.getHpxFinderPath())).exists(); }
-   
    public void run() throws Exception {
-      if( context instanceof ContextGui ) Util.pause(1000); // Juste pour faire beau
-      deleteDir( new File(context.getHpxFinderPath()) );
+      deleteDirExceptLastOrder( new File(context.getHpxFinderPath()) );
    }
    
    public boolean mustBeDeleted(File f) {
       String name = f.getName();
       if( name.equals(Context.METADATA) ) return false;
+      else if( name.equals("Moc.fits") ) return false;
       return true;
    }
 

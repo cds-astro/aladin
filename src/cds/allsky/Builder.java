@@ -52,6 +52,7 @@ public abstract class Builder {
          case MOCINDEX:  return new BuilderMocIndex(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
+         case CLEANDETAILS:return new BuilderCleanDetails(context);
          case CLEANTILES:return new BuilderCleanTiles(context);
          case CLEANFITS: return new BuilderCleanFits(context);
          case CLEANJPEG: return new BuilderCleanJpg(context);
@@ -62,7 +63,7 @@ public abstract class Builder {
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
          case CONCAT:    return new BuilderConcat(context);
-         case PROGEN:    return new BuilderProgenIndex(context);
+         case DETAILS:   return new BuilderDetails(context);
       }
       throw new Exception("No builder associated to this action");
    }

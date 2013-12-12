@@ -129,7 +129,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.001";
+    static public final    String VERSION = "v8.005";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -140,7 +140,7 @@ public class Aladin extends JApplet
     static protected final boolean MRDECOMP= false;
 
     /** Taille moyenne des fonts */
-    static protected final int  SIZE   = 12;
+    static protected int  SIZE   = 12;
 
     static final String ICON              = "icon.gif";
     static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
@@ -354,7 +354,7 @@ public class Aladin extends JApplet
     FrameInfoServer frameInfoServer; // Gère la fenêtre des infos sur un serveur
     FrameMacro frameMacro;        // Gere la fenetre des Macros
     FrameVOTool frameVOTool;      // Gère les applications VO accessibles par Aladin
-    protected FrameProgen frameProgen = null;
+    protected FrameProgenAjeter frameProgen = null;
     protected FrameProp frameProp;// Fenêtre des propriétés individuelles d'un objet graphique
     public FrameAllskyTool frameAllsky;  // Gère la creation locale d'un allsky
     public Console console;                  // Gere la fenetre de la console
@@ -2575,11 +2575,11 @@ public class Aladin extends JApplet
     
     
     
-    /** Visualisation (création si nécessaire) de la fenêtre des progéniteurs */ 
-    protected void showFrameProgen() {
-       if( frameProgen==null ) frameProgen = new FrameProgen(aladin);
-       else frameProgen.setVisible(true);
-    }
+//    /** Visualisation (création si nécessaire) de la fenêtre des progéniteurs */ 
+//    protected void showFrameProgen() {
+//       if( frameProgen==null ) frameProgen = new FrameProgen(aladin);
+//       else frameProgen.setVisible(true);
+//    }
 
    /** Efface le contenu du Status. En fait, si l'evenement
     * arrive jusqu'ici c'est qu'il n'a pas ete traite par les autres
@@ -4914,6 +4914,11 @@ public void show() {
          else if( args[i].startsWith("-registry=") ) { FrameServer.REGISTRY_BASE_URL=args[i].substring(10); lastArg=i+1; }
          else if( args[i].startsWith("-stringfile=") ) { STRINGFILE=args[i].substring(12); lastArg=i+1; }
          else if( args[i].startsWith("-scriptfile=") ) { SCRIPTFILE=args[i].substring(12); lastArg=i+1; }
+         else if( args[i].startsWith("-font=") )   {
+            try { SIZE= Integer.parseInt(args[i].substring(6)); } catch( Exception e ) { e.printStackTrace(); }
+            trace(2,"default font size = "+SIZE);
+            lastArg=i+1;
+         }
          else if( args[i].charAt(0)=='-' ) { System.err.println("Aladin option unknown ["+args[i]+"]"); lastArg=i+1; }
       }
 

@@ -22,6 +22,7 @@ package cds.aladin;
 import java.awt.Graphics;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
@@ -89,7 +90,7 @@ public class HealpixKeyCat extends HealpixKey {
          planBG.aladin.levelTrace=0;
          Legende leg = planBG.getFirstLegende();
          if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
-         pcat.tableParsing(in=new MyInputStream(new ByteArrayInputStream(stream)),null);
+         pcat.tableParsing(in=new MyInputStream( getInputStreamFromStream() ),null);
          planBG.aladin.levelTrace=trace;
 
          if( !planBG.useCache ) stream=null;
@@ -100,6 +101,11 @@ public class HealpixKeyCat extends HealpixKey {
          // Dans le cas où l'époque aurait-été modifié
          recomputePosition(leg,pcat);
       } finally { if( in!=null ) in.close(); }
+   }
+   
+   /** Fournit un Inputstream à partir du bloc de byte lu */
+   protected InputStream getInputStreamFromStream() throws Exception  {
+      return new ByteArrayInputStream(stream);
    }
    
    /** Recalcule toutes les positions internes dans le cas où l'époque

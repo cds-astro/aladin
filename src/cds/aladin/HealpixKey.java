@@ -133,8 +133,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static protected final int TSV =2;
    static protected final int XML =3;
    static protected final int PNG =4;
+   static protected final int IDX =5;
 
-   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".png" };
+   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".png","" };
 
    protected int extCache=JPEG;         // Format d'image pour le cache
    protected int extNet=JPEG;           // Format d'image pour le net
@@ -619,26 +620,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Ouverture du stream pour l'écriture (dans le cache) */
    private FileOutputStream openOutputStream() throws Exception {
       String pathName = planBG.getCacheDir()+Util.FS+fileCache;
-      if( pathName==null ) return null;  // Pas de cache possible
 
-//      // Fichier cache déjà créé (Bizarre !) => on passe
-//      if( new File(pathName).exists() )  return null;
-      
       // On supprime une ancienne éventuelle version
       File f = new File(pathName);
       if( f.exists() )  f.delete();
 
-      // Création des sous-répertoires si nécessaire
-      for( int pos = fileCache.indexOf('/'); pos>=0; pos = fileCache.indexOf('/',pos+1) ) {
-         String dir = fileCache.substring(0,pos);
-         f = new File(planBG.getCacheDir()+Util.FS+dir);
-         if( !f.exists() ) f.mkdir();
-      }
-
+      Util.createPath(pathName);
       FileOutputStream ois = new FileOutputStream(pathName);
       return ois;
    }
-
    
    static final int SIZESLOW = 512;
    static final int SIZEFAST = 8*1024;

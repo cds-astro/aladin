@@ -1802,7 +1802,6 @@ public class ViewSimple extends JComponent
       boolean boutonDroit = (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 && fullScreen; 
       int tool = getTool(e);
       boolean flagshift = e.isShiftDown() ;
-      boolean recalib = !isProjSync && aladin.view.isRecalibrating();
 
       if( tool==ToolBox.ZOOM ) {
          vs.flagDrag=false;
@@ -1966,6 +1965,8 @@ public class ViewSimple extends JComponent
       // Si on a Control, on déplace uniquement le repère
       if( e.isControlDown() ) return;
 
+      // JE L'AI DEPLACE DANS mouseRelease()
+//    boolean recalib = !isProjSync && aladin.view.isRecalibrating();
 //      // Recalibration dynamique en cours ?
 //      if( recalib ) {
 //         Vector v=null;

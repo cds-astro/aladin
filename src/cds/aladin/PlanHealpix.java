@@ -1870,7 +1870,7 @@ public class PlanHealpix extends PlanBG {
 
     /** Dessin du ciel complet en rapide */
     protected boolean drawAllSky(Graphics g,ViewSimple v) {
-       localAllSky=true;
+       local=true;
        return super.drawAllSky(g,v);
     }
 

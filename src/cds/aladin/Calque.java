@@ -3260,7 +3260,8 @@ public final class Calque extends JPanel implements Runnable {
       Plan p;
       String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
       if( gSky!=null ) {
-         plan[n] = p = gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
+         plan[n] = p = gSky.isProgen()  ? new PlanBGCatIndex(aladin,gSky,label, c, rad,startingTaskId) :
+                       gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isMap()     ? new PlanHealpix(aladin,gSky,label,startingTaskId) :
                                           new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
@@ -3271,7 +3272,8 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(p);
       return n;
    }
-
+   
+   
 //   /** Création d'un plan BG à partir d'un répertoire local */
 //   public int newPlanBG(String path,String label) {
 //	   return newPlanBG(path, label,null,-1);

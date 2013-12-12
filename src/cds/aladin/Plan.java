@@ -2061,5 +2061,58 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
    
    // Recupération d'un itérator sur les objets visible dans la vue v (voir spécificité PlanBGCat)
    protected Iterator<Obj> iterator(ViewSimple v) { return iterator(); }
+   
+   
+   /**
+   *
+   * @return true if there are at least one source with one associated source
+   */
+   protected boolean hasAssociatedFootprints() {
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         Source s = (Source)o;
+         if( s.getFootprint() != null) return true;
+      }
+      return false;
+   }
+
+   /**
+    * Shows or hides all footprints associated to sources in the plane
+    * @param show
+    */
+   protected void showFootprints(boolean show) {
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         Source s = (Source)o;
+         s.setShowFootprint(show,false);
+      }
+
+      aladin.calque.repaintAll();
+   }
+
+
+   // thomas, pour realloc des objets constituant un footprint associé
+   protected void reallocFootprintCache() {
+      if( pcat==null ) return;   //PF 06/07/2006 - en cas de Free concurrent
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         Source s = (Source)o;
+         if( s.getFootprint()!=null ) {
+             PlanField pf = s.getFootprint().getFootprint();
+             if (pf != null) {
+                 pf.pcat.reallocObjetCache();
+             }
+         }
+      }
+
+   }
+   
+
 
 }

@@ -36,14 +36,14 @@ import cds.tools.pixtools.Util;
  */
 public class HealpixIndex extends TreeMap<String, HealpixIndexItem> implements Iterable<String>{
    
-   public static int TOOMANY = 50;   // Nombre maximum d'entrées autorisées
-   private boolean tooMany = false;
-   
-   /** Retourne si cet index est considéré comme saturé */
-   public boolean hasTooMany() { return tooMany; }
-   
-   /** Positionne le flag de saturation de cet index */
-   public void setTooMany(boolean flag) { tooMany=flag; }
+//   public static int TOOMANY = 500;   // Nombre maximum d'entrées autorisées
+//   private boolean tooMany = false;
+//   
+//   /** Retourne si cet index est considéré comme saturé */
+//   public boolean hasTooMany() { return tooMany; }
+//   
+//   /** Positionne le flag de saturation de cet index */
+//   public void setTooMany(boolean flag) { tooMany=flag; }
    
    /** Parsing d'un flux d'entrées, et mémorisation de celles-ci */
    public void loadStream(InputStream stream) throws Exception {

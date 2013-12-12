@@ -1208,17 +1208,17 @@ public class Source extends Position implements Comparator {
     *
     */
    protected void switchFootprint() {
-      setShowFootprint(sourceFootprint.showFootprint());
+      setShowFootprint(!sourceFootprint.showFootprint(),true);
    }
 
    /**
     * Shows/hides the footprint associated to a source
     * @param show
     */
-   protected void setShowFootprint(boolean show) {
+   protected void setShowFootprint(boolean show,boolean withRepaint) {
    	  createSourceFootprint();
    	  sourceFootprint.setShowFootprint(show);
-   	  plan.aladin.calque.repaintAll();
+   	  if( withRepaint ) plan.aladin.calque.repaintAll();
    }
 
    /**

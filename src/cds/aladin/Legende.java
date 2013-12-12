@@ -646,4 +646,7 @@ public final class Legende extends AbstractTableModel  {
       
       fireTableDataChanged();
    }
+   
+   // Juste pour de debuging
+   public String toString() { return field[0].name+" "+field[0].ucd+" ..."; }
 }

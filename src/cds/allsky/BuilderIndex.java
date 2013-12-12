@@ -24,7 +24,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
@@ -64,11 +66,11 @@ public class BuilderIndex extends Builder {
 
    public void run() throws Exception {
       build();
-
       BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
       builderMocIndex.run();
       context.setMocIndex( builderMocIndex.getMoc() ) ;
    }
+   
    
    public boolean isAlreadyDone() {
       if( !context.isExistingIndexDir() ) return false;
@@ -118,7 +120,17 @@ public class BuilderIndex extends Builder {
       } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
          +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+Constante.ORDER))/3600. ) );
 
-      
+      // Pour indiquer les listes des mots clés fits dont les valeurs vont être retenues
+      // dans les fichiers d'index JSON afin d'être utiliser dans l'accès à la "Table des détails" (progéniteurs)
+      if( context.fitsKeys!=null ) {
+         StringBuilder res = null;
+         for( String key : context.fitsKeys ) {
+            if( res==null ) res = new StringBuilder();
+            else res.append(", ");
+            res.append(key);
+         }
+         context.info("Extended metadata extraction based on FITS keys: "+res);
+      }
    }
    
    static public int calculateNSide(double pixsize) {
@@ -188,7 +200,7 @@ public class BuilderIndex extends Builder {
    }
 
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
-   private void createAFile(FileOutputStream out, String filename, String stc)
+   private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
    throws IOException {
       int o1 = filename.lastIndexOf('/');
       int o1b = filename.lastIndexOf('\\');
@@ -196,11 +208,15 @@ public class BuilderIndex extends Builder {
       int o2 = filename.indexOf('.',o1);
       if( o2==-1 ) o2 = filename.length();
       String name = filename.substring(o1+1,o2);
+      if( fitsVal==null ) fitsVal="";
       
       DataOutputStream dataoutputstream = null;
       try {
          dataoutputstream = new DataOutputStream(out);
-         dataoutputstream.writeBytes("{ \"name\": \""+name+"\", \"path\": \""+filename+"\", \"stc\": \""+stc+"\" }\n");
+         dataoutputstream.writeBytes(
+               "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
+                 "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
+                 "\"stc\": \""+stc+"\""+fitsVal+" }\n");
          dataoutputstream.flush();
       } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
    }
@@ -236,11 +252,11 @@ public class BuilderIndex extends Builder {
             try {
 
                // Test sur l'image entière
-               if( !partitioning || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE ) {
+               if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
                   updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
                   testAndInsert(fitsfile, pathDest, currentfile, null, order);
 
-                  // Découpage en petits carrés
+                  // Découpage en blocs
                } else {   
                   //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
                   int width = fitsfile.width - borderSize[3];
@@ -286,9 +302,12 @@ public class BuilderIndex extends Builder {
       }
    }
 
-   private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, String currentCell, int order) throws Exception {
+   private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, 
+         String currentCell, int order) throws Exception {
       String hpxname;
       FileOutputStream out;
+      Coord center = new Coord();
+      String fitsVal=null;
       
       try {
          // Recherche les 4 coins de l'image (cellule)
@@ -314,6 +333,24 @@ public class BuilderIndex extends Builder {
                c.GetCoord(coo);
             }
             stc.append(" "+coo.al+" "+coo.del);
+            
+            // On calcul également les coordonnées du centre de l'image
+            center.x = fitsfile.width/2;
+            center.y = fitsfile.height/2;
+            if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+               center.y = fitsfile.height - center.y -1;
+            c.GetCoord(center);
+            
+            // Faut-il récupérer des infos dans l'entête fits
+            StringBuilder res=null; 
+            for( String key : context.fitsKeys ) {
+               String val;
+               if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) continue;
+               if( res==null ) res = new StringBuilder();
+               res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
+            }
+            if( res!=null ) fitsVal=res.toString();
+            
          }
          
          long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
@@ -326,7 +363,6 @@ public class BuilderIndex extends Builder {
             if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
 
             hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
-//            cds.tools.Util.createPath(hpxname);
             out = openFile(hpxname);
 
             // ajoute le chemin du fichier Source FITS, 
@@ -334,7 +370,7 @@ public class BuilderIndex extends Builder {
             // (mode mosaic)
             String filename = currentFile + (currentCell == null ? "" : currentCell);
             
-            createAFile(out, filename, stc.toString());
+            createAFile(out, filename, center, stc.toString(), fitsVal);
             out.close();
          }
       } catch( Exception e ) {

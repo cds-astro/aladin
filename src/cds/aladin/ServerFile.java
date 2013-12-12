@@ -247,10 +247,21 @@ public class ServerFile extends Server implements XMLConsumer {
                   if( x.isDirectory() ) {
 //                     setSync(true);
                      Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
-                     if( PlanBG.isPlanBG(f) ) {
+                     boolean progen=false;
+                     if(  (progen=PlanBG.isPlanHpxFinder(f)) || PlanBG.isPlanBG(f) ) {
+
+                        // Progen ?
+                        if( progen ) {
+                           TreeNodeAllsky gSky;
+                           try { gSky = new TreeNodeAllsky(aladin, f); }
+                           catch( Exception e ) {
+                              aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                              gSky = new TreeNodeAllsky(aladin, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
+                           }
+                           n=aladin.calque.newPlanBG(gSky,label,null,null);
 
                         // Catalogue ?
-                        if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                        } else if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                            TreeNodeAllsky gSky;
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {
@@ -424,10 +435,21 @@ public class ServerFile extends Server implements XMLConsumer {
                if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.jpg"))
                      || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.fits"))
                      || Util.isUrlResponding(new URL(f+"/Norder3/Allsky.png"))
-                     ) n=aladin.calque.newPlanBG(new URL(f),label,null,null);
+                     ) {
+                  n=aladin.calque.newPlanBG(new URL(f),label,null,null);
+
+               // ou progen ?
+               } else if( f.endsWith("HpxFinder") || f.endsWith("HpxFinder/") ) {
+                     TreeNodeAllsky gSky;
+                     try { gSky = new TreeNodeAllsky(aladin, f); }
+                     catch( Exception e ) {
+                        aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
+                        gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
+                     }
+                     n=aladin.calque.newPlanBG(gSky,label,null,null);
 
                // ou catalogue ?
-               else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
+               } else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
                   TreeNodeAllsky gSky;
                   try { gSky = new TreeNodeAllsky(aladin, f); }
                   catch( Exception e ) {

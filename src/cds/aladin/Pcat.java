@@ -240,7 +240,7 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
       catalog=plan.label;
       table=plan.label;
    }
-
+   
    /** Interface pour le positionnement d'un filtre dédié */
    public void setFilter(String filter) {
       plan.addFilter(filter);
@@ -481,7 +481,7 @@ Aladin.trace(3,"startTable "+name);
    protected void setGenericLegende(Legende leg) {
       genericLeg=leg;
    }
-
+   
    /** L'interface TableParserConsumer */
    public void setRecord(double ra, double dec, String[] value) {
       int n;
@@ -558,6 +558,9 @@ Aladin.trace(3,"startTable "+name);
             nbTable++;
             flagFirstRecord = false;
          }
+         
+         // Dans le cas de la génération a posterio de la légende pour une table vide
+         if( value==null ) return;
 
          // Limite de chargement ?
          // On agrandi le tableau avec un petit gag sur l'indice de nb_o
@@ -670,6 +673,7 @@ Aladin.trace(3,"startTable "+name);
          if (idxSTCS>=0) {
              try {
                  source.setFootprint(source.getValue(idxSTCS));
+                 source.setIdxFootprint(idxSTCS);
              }
              catch(Exception e) {
                  e.printStackTrace();
@@ -848,7 +852,10 @@ Aladin.trace(3,"startTable "+name);
       }
 
       // Cas particulier pour un plan hiérarchique
-      if( ok && plan instanceof PlanBGCat ) return nb_o;
+      if( ok && plan instanceof PlanBGCat ) {
+         if( nb_o==0 ) setRecord(0, 0, null);  // pour initialiser tout de même la légende
+         return nb_o;
+      }
 
       if( ok ) {
          if( !flagEndResource ) endResource();

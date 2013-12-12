@@ -105,7 +105,7 @@ public class BuilderConcat extends BuilderTiles {
          // Faut-il lancer également une commande PROGEN
          f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
          if( f.isDirectory() ) {
-            (new BuilderProgenIndex(context)).run();
+            (new BuilderDetails(context)).run();
             context.info("PROGEN tiles updated");
          }
       }
@@ -128,7 +128,7 @@ public class BuilderConcat extends BuilderTiles {
       if( order==-1 )  throw new Exception("No HiPS found in ouput dir");
       context.setOrder(order);
       int inputOrder = Util.getMaxOrderByPath( inputPath );
-      if( inputOrder==-1 )  throw new Exception("No HiPS found in ouput dir");
+      if( inputOrder==-1 )  throw new Exception("No HiPS found in input dir");
       if( order!=inputOrder ) throw new Exception("Uncompatible HiPS: out.order="+order+" input.order="+inputOrder);
       context.info("Order retrieved from ["+inputPath+"] => "+order);
       

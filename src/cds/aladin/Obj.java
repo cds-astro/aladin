@@ -384,5 +384,10 @@ public abstract class Obj implements Propable{
       return !(x<r.x && x1<r.x || x>rx1 && x1>rx1
             || y<r.y && y1<r.y || y>ry1 && y1>ry1);
    }
+   
+   // Pour du debuging
+   public String toString() { return "("+raj+","+dej+") -> "+id; }
+   
+
 
 }

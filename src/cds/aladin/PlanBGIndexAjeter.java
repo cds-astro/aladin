@@ -22,17 +22,17 @@ package cds.aladin;
 
 import java.util.Hashtable;
 
-import cds.allsky.BuilderProgenIndex;
+import cds.allsky.BuilderDetails;
 
 
-public class PlanBGIndex extends PlanBG {
+public class PlanBGIndexAjeter extends PlanBG {
 
 
    private PlanBG planBG;
    
    protected boolean isVerbose() { return false; }
 
-   protected PlanBGIndex(Aladin aladin,PlanBG planBG) {
+   protected PlanBGIndexAjeter(Aladin aladin,PlanBG planBG) {
       super(aladin);
       this.planBG=planBG;
       type=ALLSKYFINDEX;
@@ -77,7 +77,7 @@ public class PlanBGIndex extends PlanBG {
 //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky() ) { this.hi = hi; return; }
+      if( order<BuilderDetails.MINORDER && maxOrder>=BuilderDetails.MINORDER || v.isAllSky() ) { this.hi = hi; return; }
       if( order>maxOrder ) order=maxOrder;
       
       int nb=0;

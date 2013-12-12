@@ -385,6 +385,10 @@ public class BuilderTiles extends Builder {
       }
 
       context.cacheFits.reset();
+      if( ThreadBuilderTile.statMaxOverlays>0 )
+         context.info("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
+      		ThreadBuilderTile.statOnePass+" in one step, "+
+            ThreadBuilderTile.statMultiPass+" in multi steps");
       Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
       Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }

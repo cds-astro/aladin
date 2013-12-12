@@ -31,18 +31,19 @@ public enum Action {
    ALLSKY    ("(Re)build all Allsky files"),
    GZIP      ("Compress some FITS tiles and Allsky.fits"),
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
-   CLEAN     ("Delete all Hips files (index, tiles, dir, Allsky, MOC, ..."), 
+   CLEAN     ("Delete all Hips files (index, tiles, dir, Allsky, MOC, ...)"), 
    CLEANINDEX("Delete index (HpxFinder dir)"),
-   CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ..."), 
+   CLEANDETAILS("Delete detail index (HpxFinder tree except last order dir)"),
+   CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ...)"), 
    CLEANFITS ("Delete all FITS tiles and Allsky.fits"),
    CLEANJPEG ("Delete all JPEG tiles and Allsky.jpg"),
    CLEANPNG  ("Delete all PNG tiles and Allsky.png"),
    TREE      ("(Re)build HiPS tree structure from already existing tiles"),
    CONCAT    ("Concatenate one HiPS to another HiPS"),
-   PROGEN    ("Extend HiPS index for supporting progenitor facility"),
+   DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
    CHECK     ("** In progress: Check readability of all tiles"),
-   FINDER,  // Pour compatibilité
+   FINDER,PROGEN,  // Pour compatibilité
    ABORT, PAUSE, RESUME;
    
    Action() {}

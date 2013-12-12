@@ -169,10 +169,10 @@ public class PlanBG extends PlanImage {
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
-   protected boolean localAllSky=false;
+   protected boolean local=false;
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    
-   protected PlanBGIndex planBGIndex=null;
+//   protected PlanBGIndex planBGIndex=null;
    
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
@@ -238,6 +238,7 @@ public class PlanBG extends PlanImage {
       (new File(getCacheDir()+Util.FS+survey)).mkdir();
       aladin.trace(3,"HEALPix local cache for "+survey+" is out of date => renamed => will be removed");
    }
+   
    
    /** Charge les propriétés à partir du fichier "properties" et en profite 
     * 1) pour déterminer le meilleur site miroir (le cas échéant)
@@ -415,7 +416,7 @@ public class PlanBG extends PlanImage {
       
       maxOrder = 3;
       useCache = true;
-      localAllSky = false;
+      local = false;
       co=c;
       coRadius=radius;
       paramByTreeNode(new TreeNodeAllsky(aladin, url),c,radius);
@@ -438,12 +439,12 @@ public class PlanBG extends PlanImage {
       color=gSky.isColored();
       frameOrigin=gSky.getFrame();
       losangeOrder=gSky.getLosangeOrder();
-      localAllSky=gSky.isLocal();
+      local=gSky.isLocal();
       loadMocNow=gSky.loadMocNow();
       imageSourcePath = gSky.getImageSourcePath();
       version = gSky.getVersion();
 //      truePixels=inFits && localAllSky || !inJPEG && !localAllSky;
-      useCache=!localAllSky && gSky.useCache();
+      useCache=!local && gSky.useCache();
       co=c!=null ? c : gSky.getTarget();
       coRadius= c!=null ? radius : gSky.getRadius();
    }
@@ -465,7 +466,7 @@ public class PlanBG extends PlanImage {
    protected boolean hasMoc() {
       if( hasMoc || testMoc ) return hasMoc;
       String moc = url+"/Moc.fits";
-      hasMoc = localAllSky ? (new File(moc)).exists() : Util.isUrlResponding(moc);
+      hasMoc = local ? (new File(moc)).exists() : Util.isUrlResponding(moc);
       testMoc=true;
       return hasMoc;
    }
@@ -475,18 +476,18 @@ public class PlanBG extends PlanImage {
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
       String f = url+"/HpxFinder";
-      hasHpxFinder = localAllSky ? (new File(f)).exists() : Util.isUrlResponding(f);
+      hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
       testHpxFinder=true;
       return hasHpxFinder;
    }
    
-   protected void frameProgenResume(Graphics g,ViewSimple v) {
-      if( planBGIndex==null || aladin.frameProgen==null ) return;
-      planBGIndex.updateHealpixIndex(v);
-      HealpixIndex hi = ((PlanBGIndex)planBGIndex).getHealpixIndex();
-      aladin.frameProgen.resume(hi,this);
-      aladin.frameProgen.progen.draw(g,v);
-   }
+//   protected void frameProgenResume(Graphics g,ViewSimple v) {
+//      if( planBGIndex==null || aladin.frameProgen==null ) return;
+//      planBGIndex.updateHealpixIndex(v);
+//      HealpixIndex hi = ((PlanBGIndex)planBGIndex).getHealpixIndex();
+//      aladin.frameProgen.resume(hi,this);
+//      aladin.frameProgen.progen.draw(g,v);
+//   }
    
    /** Chargement du Moc associé au survey */
    protected void loadMoc() {
@@ -494,6 +495,12 @@ public class PlanBG extends PlanImage {
       aladin.execAsyncCommand("'"+label+" MOC'=load "+moc);
    }
    
+   /** Chargement d'un plan Progen associé au survey */
+   protected void loadProgen() {
+      String progen = url+"/HpxFinder";
+      aladin.execAsyncCommand("'"+label+" PROGEN'=load "+progen);
+   }
+
    /** Retourne le frame d'affichage, 0 si utilisation du frame général */
    protected int getFrameDrawing() { return frameDrawing; }
    
@@ -520,6 +527,12 @@ public class PlanBG extends PlanImage {
    
    /** retourne le systeme de coordonnée natif de la boule Healpix */
    public int getFrameOrigin() { return frameOrigin; }
+
+   
+   static protected boolean isPlanHpxFinder(String path) {
+      File f = new File(path);
+      return f.getName().equals("HpxFinder") && f.isDirectory();
+   }
    
    static protected boolean isPlanBG(String path) {
       String s = path+Util.FS+"Norder3";
@@ -572,7 +585,7 @@ public class PlanBG extends PlanImage {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
-      if( Aladin.PROTO ) planBGIndex = new PlanBGIndex(aladin,this);
+//      if( Aladin.PROTO ) planBGIndex = new PlanBGIndex(aladin,this);
 
       aladin.endMsg();
       creatDefaultCM();
@@ -1216,7 +1229,7 @@ public class PlanBG extends PlanImage {
    }
 
    public String getSurveyDir() {
-      if( localAllSky ) return url;
+      if( local ) return url;
       else  return getCacheDir() + Util.FS + survey+version;
    }
    
@@ -1657,7 +1670,7 @@ public class PlanBG extends PlanImage {
    public boolean isTruePixels() { return truePixels; }
    
    /** Retourne true si le all-sky est local */
-   public boolean isLocalAllSky() { return localAllSky; }
+   public boolean isLocalAllSky() { return local; }
 
    private long [] children = null;
 
@@ -1807,7 +1820,7 @@ public class PlanBG extends PlanImage {
 //   }
 
 
-   private final int ALLSKYORDER = 3;
+   protected final int ALLSKYORDER = 3;
    
    /** Chargement synchrone du allsky (nécessaire dans le cas d'une modif de la table des couleurs (Densité map), 
     * avant même le premier affichage) */
@@ -1827,7 +1840,7 @@ public class PlanBG extends PlanImage {
          else allsky =  new HealpixAllsky(this,ALLSKYORDER);
          pixList.put( key(ALLSKYORDER,-1), allsky);
 
-         if( localAllSky ) allsky.loadFromNet();
+         if( local ) allsky.loadFromNet();
          else {
             if( !useCache || !allsky.isCached() ) {
                tryWakeUp();
@@ -2240,8 +2253,8 @@ public class PlanBG extends PlanImage {
       
       setHasMoreDetails( maxOrder(v)<maxOrder ); 
       
-      try { frameProgenResume(g,v); } 
-      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+//      try { frameProgenResume(g,v); } 
+//      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
       
       if( fading ) redrawAsap();
       else stopRedraw();

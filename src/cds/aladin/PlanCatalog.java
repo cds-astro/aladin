@@ -313,57 +313,6 @@ public class PlanCatalog extends Plan {
        return super.getProgress();
     }
 
-   /**
-	*
-	* @return true if there are at least one source with one associated source
-	*/
-	protected boolean hasAssociatedFootprints() {
-	   Iterator<Obj> it = iterator();
-	   while( it.hasNext() ) {
-          Obj o = it.next();
-          if( !(o instanceof Source) ) continue;
-          Source s = (Source)o;
-	      if( s.getFootprint() != null) return true;
-	   }
-	   return false;
-	}
-
-	/**
-	 * Shows or hides all footprints associated to sources in the plane
-	 * @param show
-	 */
-	protected void showFootprints(boolean show) {
-	   Iterator<Obj> it = iterator();
-	   while( it.hasNext() ) {
-          Obj o = it.next();
-          if( !(o instanceof Source) ) continue;
-          Source s = (Source)o;
-	      // TODO : ici, on va faire un repaint pour chaque source, à changer !!
-	      s.setShowFootprint(show);
-	   }
-
-	   aladin.calque.repaintAll();
-	}
-
-
-	// thomas, pour realloc des objets constituant un footprint associé
-	protected void reallocFootprintCache() {
-	   if( pcat==null ) return;   //PF 06/07/2006 - en cas de Free concurrent
-	   Iterator<Obj> it = iterator();
-	   while( it.hasNext() ) {
-          Obj o = it.next();
-          if( !(o instanceof Source) ) continue;
-          Source s = (Source)o;
-	      if( s.getFootprint()!=null ) {
-	          PlanField pf = s.getFootprint().getFootprint();
-	          if (pf != null) {
-	              pf.pcat.reallocObjetCache();
-	          }
-	      }
-	   }
-
-	}
-	
 	 /** retourne true si le plan a des sources */
 	 protected boolean hasSources() { return pcat!=null && pcat.hasObj(); }
 
