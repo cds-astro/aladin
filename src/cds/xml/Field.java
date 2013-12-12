@@ -21,6 +21,7 @@
 package cds.xml;
 
 import java.util.Hashtable;
+import java.util.regex.Pattern;
 
 import cds.tools.Util;
 
@@ -119,6 +120,9 @@ final public class Field {
    /** Visible flag */
    public boolean visible=true;
 
+   // Pattern pour l'extration de la valeur du champ en fonction d'une série d'expression régulière *.
+   public String hpxFinderPattern;
+   
    static public final int UNSORT = 0;
    static public final int SORT_ASCENDING  = 1;
    static public final int SORT_DESCENDING = 2;
