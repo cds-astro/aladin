@@ -85,7 +85,7 @@ public final class FrameMocGenCat extends FrameMocGenImg {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res=getRes();
+         int res=getOrder();
          double radius = getRadius();
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0);
          hide();

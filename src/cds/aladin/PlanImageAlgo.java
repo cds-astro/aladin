@@ -202,11 +202,13 @@ public class PlanImageAlgo extends PlanImage {
             double pixLine=0;
             for( x=0; x<width; x++ ) { 
                try {
-                  pixLine += p1.getPixel(x,y);
+                  double pix = p1.getPixel(x,y);
+                  if( p1.isBlank(pix) ) continue;
+                  pixLine += pix;
                   n++;
                } catch( Exception e ) { }
             }
-            moy+=pixLine/n;     // Moyenne de la ligne
+            moy+= n==0 ? 0 : pixLine/n;     // Moyenne de la ligne
          }
          moy /=height;          // Moyenne de l'image
       }
@@ -452,7 +454,6 @@ public class PlanImageAlgo extends PlanImage {
          headerFits.setKeyValue("BZERO", bZero+"");
       }
       reUseOriginalPixels();
-      if( flagNorm ) { dataMin=0; dataMax=1; }
       selected = active = true;
       
       Aladin.trace(3,"Algo achieved...");

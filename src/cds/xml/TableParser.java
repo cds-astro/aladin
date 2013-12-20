@@ -1464,7 +1464,7 @@ final public class TableParser implements XMLConsumer {
       } else {
          try { c.set( Double.parseDouble(ra), Double.parseDouble(dec)); }
          catch( Exception e ) {
-            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//            if( Aladin.levelTrace>=3 ) e.printStackTrace();
          } 
       }
       

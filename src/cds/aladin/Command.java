@@ -31,7 +31,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import cds.allsky.Context;
-import cds.allsky.SkyGen;
+import cds.allsky.HipsGen;
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
 import cds.moc.HealpixMoc;
@@ -1163,7 +1163,7 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
       return "";
    }
    
-   protected SkyGen skygen=null;            // pour la génération des allskys via commande script
+   protected HipsGen hipsgen=null;            // pour la génération des allskys via commande script
    
    /** Lancement via une commande script de la génération d'un allsky */
 //   protected void execSkyGen(String param)  {
@@ -2155,6 +2155,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       double x=0,y=0;	// Position de l'objet si drawMode==DRAWXY;
       Color specifColor=null;  // Couleur spécifique à l'objet
       
+      
 //      StringTokenizer st = new StringTokenizer(param,"(");
 //      String fct = st.nextToken();
 //      String parameter =  fct.length()<param.length() ? param.substring(fct.length()+1,param.length()-1) : "";
@@ -2724,6 +2725,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("thumbnail")
             || cmd.equalsIgnoreCase("createROI")
             || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);
+      else if( cmd.equalsIgnoreCase("stc") )    execDrawCmd("draw",param);
       else if( cmd.equalsIgnoreCase("draw") )   execDrawCmd(cmd,param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) {  // For compatibility
          try {

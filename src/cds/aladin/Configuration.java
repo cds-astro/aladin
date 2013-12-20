@@ -81,6 +81,7 @@ public final class Configuration extends JFrame
    protected static String POSITION   = "PositionMode";
    protected static String LANG       = "Language";
    protected static String CSV        = "CSVchar";
+   protected static String AUTODIST   = "AutoDistance";
    protected static String SIMBAD     = "SimbadPointer";
    protected static String VIZIERSED  = "VizierSEDPointer";
    protected static String FILTER     = "DedicatedFilter";
@@ -684,6 +685,14 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       String flag = get(SEDWAVE);
       if( flag==null ) return false;
       return flag.equalsIgnoreCase("On"); 
+   }
+   
+   /** Retourne le flag de l'outil autodist - par défaut actif */
+   protected boolean getAutoDist() {
+      if( Aladin.OUTREACH ) return false;
+      String flag = get(AUTODIST);
+      if( flag==null ) return true;
+      return flag.equalsIgnoreCase("On");
    }
    
    /** Retourne le flag de Simbad Quick - par défaut actif */
@@ -1554,10 +1563,13 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       s = get(HELP);
       if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
       
-      // On conserve l'état du pointeur Simbad et du poiteur VizierSED
+      // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
       if( !Aladin.OUTREACH ) {
          if( aladin.calque.flagSimbad && !getSimbadFlag() ) remove(SIMBAD);
          if( !aladin.calque.flagSimbad && getSimbadFlag() ) set(SIMBAD,"Off");
+         
+         if( aladin.calque.flagAutoDist && !getAutoDist() ) remove(AUTODIST);
+         if( !aladin.calque.flagAutoDist && getAutoDist() ) set(AUTODIST,"Off");
          
          if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
          if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);

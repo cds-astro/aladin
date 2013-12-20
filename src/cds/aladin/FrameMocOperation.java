@@ -167,7 +167,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
          String label = s.substring(0,3)+" "+pList[0].label+(pList.length==1?""
                :pList[1].label+(pList.length==2?"":"..."));
 
-         a.calque.newPlanMoc(label,pList,fct);
+         a.calque.newPlanMoc(label,pList,fct,0);
          hide();
 
       } catch ( Exception e ) {

@@ -125,10 +125,7 @@ public class PlanBGCatIndex extends PlanBGCat {
       
       hasDrawnSomething=false;
       
-      if( drawAllSky(v, map, 3) ) {
-         System.out.println("drawAllsky => allsky="+allsky);
-         return hasDrawnSomething;
-      }
+      if( drawAllSky(v, map, 3) )  return hasDrawnSomething;
       
       setMem();
       resetPriority();
@@ -173,9 +170,7 @@ public class PlanBGCatIndex extends PlanBGCat {
          }
       }
       
-      for( Source src : map.values() ) {
-         pcat1.setObjetFast(src);
-      }
+      for( Source src : map.values() ) pcat1.setObjetFast(src);
       pcat=pcat1;
    }
       

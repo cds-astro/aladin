@@ -244,19 +244,21 @@ public class ViewSimple extends JComponent
       Coord coo=null;
       PointD p=null;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
-      
       int mult=1;
-      long time = System.currentTimeMillis();
-      if( lastTime!=0L ) {
-         long delta = time - lastTime;
-         if( delta<15 ) mult=4;
-         else if( delta<30 ) mult=3;
-         else if( delta<50 ) mult=1;
-      }
-      lastTime=time;
-
+      
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
+      
+      // Accélération
+      if( vs.pref instanceof PlanBG ) {
+         long time = System.currentTimeMillis();
+         if( lastTime!=0L ) {
+            long delta = time - lastTime;
+            if( delta<30 ) mult=3;
+            else if( delta<50 ) mult=1;
+         }
+         lastTime=time;
+      }
       
       // Peut être un changement sur le tag courant
       try {
@@ -292,32 +294,16 @@ public class ViewSimple extends JComponent
          
          // Si le repere n'existe pas ou qu'il n'est pas dans la vue, on zoom au centre
          // (ou qu'on est en train de faire un crop)
-         else if(!isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
-               view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
+         else if( !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
+               view.repere==null || 
+               !(vs.pref instanceof PlanBG) && view.repere.getViewCoord(vs,0,0)==null 
+               || hasCrop() ) ) {
             if( hasCrop() ) p = view.crop.getFocusPos();
 //            else p = vs.getPosition((double)e.getX(),(double)e.getY());
             coo = new Coord();
             coo.x=p.x; coo.y=p.y;
             vs.getProj().getCoord(coo);
          }
-//         else if( true || !isPlotView() &&  ( /* aladin.toolBox.getTool()==ToolBox.PHOT || */
-//               view.repere==null || view.repere.getViewCoord(vs,0,0)==null || hasCrop() ) ) {
-//            if( hasCrop() ) p = view.crop.getFocusPos();
-//            else p = vs.getPosition((double)e.getX(),(double)e.getY());
-//            coo = new Coord();
-//            coo.x=p.x; coo.y=p.y;
-//            vs.getProj().getCoord(coo);
-//            Coord c1 = getCooCentre();
-//            int rot = -e.getWheelRotation();
-//            double z = aladin.calque.zoom.getNextValue(vs.zoom,rot);
-//            double fct = z/vs.zoom;
-//            System.out.println("Wheel: rot="+rot+" Zoom="+vs.zoom+"=>"+z+" fct="+fct);
-//            double x = c1.x + (coo.x - c1.x)/fct;
-//            double y = c1.y + (coo.y - c1.y)/fct;
-//            coo.x=x; 
-//            coo.y=y;
-//            vs.getProj().getCoord(coo);
-//         }
          
       } catch( Exception e1 ) { coo=null; /* if( aladin.levelTrace>=3 ) e1.printStackTrace();*/ }
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
@@ -1377,7 +1363,6 @@ public class ViewSimple extends JComponent
 
    /** Zoom la vue sur la source passée en paramètre */
    protected void zoomOnSource(Source o) {
-//      setZoomRaDec(16,o.raj,o.dej);
       setZoomSource(isPlotView() ? 2 : 16,o);
       repaint();
    }
@@ -1651,7 +1636,6 @@ public class ViewSimple extends JComponent
 
    private Position poignee=null;	// poignée d'une rotation en cours (après un mouseDown)
    private Repere poigneePhot=null;  // poignée d'une extension de repère circulaire en cours (après un mouseDown)
-   private Repere phot=null;       // On est sur un Phot
    private Tag poigneeTag=null; // poignée d'un changement d'ancrage pour un tag/label (après un mouseDown)
 
    /** teste si dans a liste des objet qui ont été sélectionné par la souris, parmi ceux qui
@@ -1771,7 +1755,7 @@ public class ViewSimple extends JComponent
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       
       if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() 
-            && !aladin.view.isMultiView()) return ToolBox.PAN;
+           /* && !aladin.view.isMultiView() */) return ToolBox.PAN;
       return tool;
    }
 
@@ -2642,6 +2626,7 @@ public class ViewSimple extends JComponent
    
    /** Traitement particulier pour le CDS */
    protected boolean createCoteDist() {
+      if( !calque.flagAutoDist ) return false;
       Vector<Obj> v = view.vselobj;
 //      System.out.println("createCoteDist() => size="+v.size());
       CoteDist oc = view.coteDist;
@@ -3098,20 +3083,6 @@ public class ViewSimple extends JComponent
       // Synchronisation sur une autre vue ?
       ViewSimple vs = getProjSyncView();
 
-      // TODO : à enlever, pour des tests uniquement
-      /*
-      if( PlasticManager.getSingleton(aladin).isRegistered() ) {
-      	PointD pd = getPosition((double)x,(double)y);
-      	Coord coo = new Coord();
-      	coo.x = pd.x;
-      	coo.y = pd.y;
-      	getProj().getCoord(coo);
-      	ArrayList al = new ArrayList();
-      	al.add(coo.getSexa());
-      	PlasticManager.getSingleton(aladin).sendAsyncMessage(PlasticManager.MSG_DRAW, al, null );
-      }
-      */
-
       if( isFree() || aladin.view.isMegaDrag() ) {
          if( aladin.view.isMultiView() ) aladin.status.setText("["+view.VIEW+" "+getID()+"]");
          return;
@@ -3231,7 +3202,9 @@ public class ViewSimple extends JComponent
                   // repère si on est entrain de faire une polyligne et que le prochain
                   // point se trouve sur le début de la polyligne pour faire un
                   // polygone => changement de curseur
-                  else if( !flagOnFirstLine && Ligne.isLigne(view.newobj)
+                  else if( !flagOnFirstLine
+                         && !(pref instanceof PlanBG)
+                         && Ligne.isLigne(view.newobj)
                          && Ligne.isDebLigne(o)
                          && ((Ligne)o).plan==((Ligne)view.newobj).plan) {
                      flagOnFirstLine=true;
@@ -3345,6 +3318,9 @@ public class ViewSimple extends JComponent
       
       // Pour desssiner le losange de controle Healpix sous la souris
       if( aladin.getOrder()>=0 ) repaint();
+      
+      // Pour afficher la position courante
+      else if( fullScreen ) repaint();
 
       return;
    }
@@ -4958,9 +4934,15 @@ testx1=x1; testy1=y1; testw=w; testh=h;
   // Retourne true si la coordonnée se trouve dans la rose des vents
   private boolean inNE(int x,int y) { 
      if( !(pref instanceof PlanBG) ) return false;
-     if( aladin.toolBox.getTool()!=ToolBox.PAN ) return false;
+     if( !isFullScreen() && aladin.toolBox.getTool()!=ToolBox.PAN ) return false;
      int L = (int)(getNESize()*1.5);
-     return x>rv.width-L && y>rv.height-L;
+     int lX = rv.width-L;
+     int lY = rv.height-L;
+     if( isFullScreen() ) { 
+        lX = aladin.fullScreen.getContentPane().getWidth()-L;
+        lY = aladin.fullScreen.getContentPane().getHeight()-L;
+     }
+     return x>lX && y>lY;
   }
 
    /** Positionnement d'un repere Nord et Est */

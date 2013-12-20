@@ -496,7 +496,7 @@ public final class Tool {
             g.drawPolygon(p);
             break;
          case ToolBox.DRAW:                // dessin du crayon
-            g.setColor( cPapier );
+//            g.setColor( cPapier );
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
             p = setPolygon(craymX,craymY,dx,dy);
             g.fillPolygon(p);

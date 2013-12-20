@@ -32,7 +32,7 @@ import cds.aladin.MyProperties;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
-public class SkyGen {
+public class HipsGen {
 
    private File file;
    private boolean force=false;
@@ -40,11 +40,11 @@ public class SkyGen {
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
    
-   public String launcher = "Aladin.jar -skygen";
+   public String launcher = "Aladin.jar -hipsgen";
 
    private Vector<Action> actions;
 
-   public SkyGen() {
+   public HipsGen() {
       this.context = new Context();
       actions = new Vector<Action>();
    }
@@ -182,7 +182,7 @@ public class SkyGen {
          return;
       }
       
-      context.info("Starting SkyGen (based on Aladin "+Aladin.VERSION+")...");
+      context.info("Starting HipsGen (based on Aladin "+Aladin.VERSION+")...");
       
       // extrait les options en ligne de commande, et les analyse
       for (String arg : args) {
@@ -204,7 +204,7 @@ public class SkyGen {
          
          // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
-            SkyGen.usage("Skygen");
+            HipsGen.usage("HipsGen");
             return;
          }
          // debug
@@ -405,7 +405,7 @@ public class SkyGen {
    }
 
    public static void main(String[] args) {
-      SkyGen generator = new SkyGen();
+      HipsGen generator = new HipsGen();
       generator.execute(args);
    }
 }

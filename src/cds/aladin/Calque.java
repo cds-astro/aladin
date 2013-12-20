@@ -71,6 +71,7 @@ public final class Calque extends JPanel implements Runnable {
    protected int reticleMode;    //  1-normal, 2-large
    protected boolean flagOverlay;// True si l'echelle doit etre affichee
    protected boolean flagHpxPolar;// True si la polarisation HEALPix doit etre affichee
+   protected boolean flagAutoDist; // True si l'outil de mesure automatique des distances est activé
    protected boolean flagSimbad; // True si la résolution quickSimbad est lancé
    protected boolean flagVizierSED;  // True si la résolution SED est lancé
    protected boolean flagTip;    // True si les tooptips s'affichent sur les sources pointées
@@ -176,6 +177,7 @@ public final class Calque extends JPanel implements Runnable {
       flagOverlay = true;
       reticleMode=aladin.configuration.get(Configuration.RETICLE)!=null ? 2 : 1;
       flagTip=aladin.configuration.get(Configuration.TOOLTIP)!=null;
+      flagAutoDist = aladin.configuration.getAutoDist();
       flagSimbad = aladin.configuration.getSimbadFlag();
       flagVizierSED = aladin.configuration.getVizierSEDFlag();
       
@@ -561,6 +563,16 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Activation/desactivation des informations  */
    protected void setOverlay(boolean flag) { flagOverlay=flag; }
+   
+   private boolean flagFirstAutoDist=true;
+   /** Activation/desactivation de l'outil de mesure automatique des distances */
+   protected void setAutoDist(boolean flag) {
+      if( flagFirstAutoDist && flag && aladin.configuration.isHelp() ) {
+         aladin.info(aladin.chaine.getString("HAUTODIST"));
+         flagFirstAutoDist=false;
+      }
+      flagAutoDist=flag;
+   }
 
    private boolean flagFirstSimbad=true;
    /** Activation/desactivation du quick Simbad  */
@@ -834,6 +846,7 @@ public final class Calque extends JPanel implements Runnable {
          }
       }
 
+      if( isFree() ) zoom.zoomView.free();
       aladin.view.findBestDefault();
       repaintAll();
    }
@@ -1785,7 +1798,7 @@ public final class Calque extends JPanel implements Runnable {
 
    
    /** Crée un plan MOC en fonction d'un ou plusieurs plans MOCs et d'un opérateur */
-   protected int newPlanMoc(String label,PlanMoc [] pList,int fct) {
+   protected int newPlanMoc(String label,PlanMoc [] pList,int op,int order) {
       int n;
       PlanMoc pa;
 
@@ -1796,7 +1809,7 @@ public final class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocAlgo(aladin,label,pList,fct);
+      plan[n] = pa = new PlanMocAlgo(aladin,label,pList,op,order);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -2029,14 +2042,6 @@ public final class Calque extends JPanel implements Runnable {
       String t1 = plan[n].getTargetQuery();
       Plan pc;
 
-//      for( i=n+1; i<plan.length &&
-//      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
-//         (pc.isCatalog()
-//               || pc.type==Plan.APERTURE
-//               || pc.type==Plan.FOLDER
-//               || pc.isTool() )
-//               && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
-      
       for( i=n+1; i<plan.length &&
       ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
          pc.isOverlay() && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
@@ -3248,14 +3253,13 @@ public final class Calque extends JPanel implements Runnable {
    public int newPlanBG(String path, String label, String target,String radius) { return newPlanBG(null,path,null,label,target,radius); }
    public int newPlanBG(TreeNodeAllsky gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
    public int newPlanBG(URL url, String label, String target,String radius) { return newPlanBG(null,null,url,label,target,radius); }
+   
+   
    protected int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(target,gSky);
       double rad=getRadiusBG(target,radius,gSky);
-      
-//      launchPlanBG();
-      
       
       Plan p;
       String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
@@ -3353,7 +3357,6 @@ public final class Calque extends JPanel implements Runnable {
       return true;
    }
 
-   private void permute(int s,int t) {  permute(s,t,1); }
    private void permute(int s,int t,int n) {
       int sens=(s<t)?1:-1;
       if( sens==-1) t++;

@@ -56,7 +56,7 @@ public final class Search extends JPanel implements MouseListener {
    Aladin aladin;
    SearchText text;
    JLabel label;
-   JButton left,right,go,out,reduce;
+   JButton left,right,/*go,*/out,reduce;
    protected JPanel panelSearch;
    
    static String MFSEARCHIN=null,MFSEARCHOUT,MFSEARCHNO,YOURSEARCH;
@@ -88,14 +88,14 @@ public final class Search extends JPanel implements MouseListener {
          public void actionPerformed(ActionEvent e) { up(); }
       });
       
-      go = b = new JButton(new ImageIcon(aladin.getImagette("Go.gif")));
-      b.setMargin(new Insets(0,0,0,0));
-      b.setBorderPainted(false);
-      b.setContentAreaFilled(false);
-      b.setToolTipText(aladin.chaine.getString("MFSEARCHGO"));
-      b.addActionListener( new ActionListener() {
-         public void actionPerformed(ActionEvent e) { go(); }
-      });
+//      go = b = new JButton(new ImageIcon(aladin.getImagette("Go.gif")));
+//      b.setMargin(new Insets(0,0,0,0));
+//      b.setBorderPainted(false);
+//      b.setContentAreaFilled(false);
+//      b.setToolTipText(aladin.chaine.getString("MFSEARCHGO"));
+//      b.addActionListener( new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { go(); }
+//      });
       
       if( withReduceButton ) {
          reduce = b = new JButton(new ImageIcon(aladin.getImagette("Agrandir.gif")));
@@ -135,7 +135,7 @@ public final class Search extends JPanel implements MouseListener {
       panelSearch = new JPanel( new BorderLayout(0,0) );
       
       JPanel searchControlPanel = new JPanel( new BorderLayout(0,0) );
-      if( !Aladin.OUTREACH ) searchControlPanel.add(go,"West");
+//      if( !Aladin.OUTREACH ) searchControlPanel.add(go,"West");
       searchControlPanel.add(left,"Center");
       searchControlPanel.add(right,"East");
       
@@ -243,7 +243,7 @@ public final class Search extends JPanel implements MouseListener {
       if(aladin.mesure!=null ) x=aladin.mesure.nbSrc>0;
       right.setEnabled(x);
       left.setEnabled(x);
-      go.setEnabled(text.searchChanged());
+//      go.setEnabled(text.searchChanged());
       
       if( flag==oEnable ) return;
       oEnable=flag;
@@ -338,7 +338,7 @@ public final class Search extends JPanel implements MouseListener {
                
       public void execute(int keyCode,String s,int flagAdd) {
          if( s==null ) s=getText();
-         go.setEnabled(searchChanged());
+//         go.setEnabled(searchChanged());
          if( keyCode==KeyEvent.VK_ENTER && flagAdd!=2 ) {
             previousSearch=s;
             // L'expression commence par "-", il s'agit d'une déselection de sources
@@ -350,7 +350,7 @@ public final class Search extends JPanel implements MouseListener {
             }
             boolean rep = aladin.mesure.selectByString(s,flagAdd);
             setColor( rep ? DEFAULT : NO);
-            go.setEnabled(false);
+//            go.setEnabled(false);
             right.setEnabled(rep);
             left.setEnabled(rep);
             text.selectAll();

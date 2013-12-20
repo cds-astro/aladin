@@ -849,7 +849,6 @@ public class Ligne extends Position {
 	           if( hasOneSelected() ) statDraw(g,v,dx,dy);
 	        }
 	        drawID(g,v,p1,p2);
-	        //            droite(g,v,p1.x,p1.y, p2.x,p2.y);
 	        
 	        // Trace des fleches
 	        if( bout==1 || bout==2 ) {

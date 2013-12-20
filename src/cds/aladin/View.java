@@ -1732,7 +1732,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
            if( !View.notCoord(target) ) c = new Coord(target);
            else c = sesame(target);
            gotoAnimation(c1, c);
-//           return gotoThere(c,0,true);
         } catch( Exception e ) { }
         return false;
      }
@@ -1779,8 +1778,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
         final ViewSimple v = getCurrentView();
         if( v.locked || to==null ) return;
         final double zoom = v.zoom;
-//        (new Thread() {
-//           public void run() {
               double z = v.zoom;
               
               double dist = Coord.getDist(from, to);
@@ -1820,7 +1817,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
               }
               gotoThere(to,zoom,true);
            }
-//        }).start();
 //     }
 
     /** Ajustement de toutes les vues (non ROI )
@@ -1942,6 +1938,15 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       double size=-1;
       double cSize;
       double nz;
+//      
+//      System.out.println("setZoom("+coo+","+z+","+zoomRepaint+")");
+//      if( coo!=null ) {
+//         try {
+//            throw new Exception("ici");
+//         } catch( Exception e) {
+//            e.printStackTrace();
+//         }
+//      }
 
       suspendQuickSimbad();
       
@@ -1991,10 +1996,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                   try {
                      coo = v.getProj().getXY(coo);
                      Coord c1 = v.getCooCentre();
-                     coo.x = c1.x+(coo.x - c1.x)/3; 
-                     coo.y = c1.y+(coo.y - c1.y)/3;
-                     coo = v.getProj().getCoord(coo);
-//                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
+//                     coo.x = c1.x+(coo.x - c1.x)/3; 
+//                     coo.y = c1.y+(coo.y - c1.y)/3;
+//                     coo = v.getProj().getCoord(coo);
+                     coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
                   } catch( Exception e ) { }
                }
             }
@@ -2025,7 +2030,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       if( zoomRepaint ) {
          aladin.calque.zoom.newZoom();
-//         aladin.view.zoomview.repaint();
          aladin.calque.repaintAll();
       }
       
@@ -3670,24 +3674,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                return oco;
             }
          }
-
-//         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//         conn.setConnectTimeout(3000);
-//         InputStream is = conn.getInputStream();
-//         if( is!=null ) {
-//            DataInputStream cat = new DataInputStream(is);
-//            while( timeout.isWaiting() && (s=cat.readLine())!=null){
-//               System.out.println("Sesame read :["+s+"]");
-//               if( s.startsWith("%J ") ) {
-//                  StringTokenizer st = new StringTokenizer(s);
-//                  st.nextToken();
-//                  oco = new Coord(st.nextToken()+" "+st.nextToken());
-//                  oobjet=objet;
-//                  Aladin.trace(2,"Sesame: "+objet+" -> "+oco.getSexa());
-//                  return oco;
-//               }
-//            }
-//         }
       } catch( Exception e ) {
          System.err.println("View.sesame..."+e.getMessage());
          e.printStackTrace();
@@ -3710,59 +3696,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    private int nbSesameCheck=0;                     // Nombre de fois où l'on a changé de site Sesame
    private static final int MAXSESAMECHECK = 2;     // Nombre MAX de changement de site Sesame
 
-
-//  /** Resolution Sesame par Thread independant pour un plan */
-//   void runA() {
-//      Plan planWaitSimbad = _planWaitSimbad;
-//      String sesameTaskId = _sesameTaskId;
-//      unlockSesame();
-//      try {
-//         Coord c=null;
-//         try { c = sesame(planWaitSimbad.objet); }
-//         catch( Exception e) { System.err.println(e.getMessage()); }
-//         if( c!=null ) {
-//            planWaitSimbad.co=c;
-//            suiteSetRepere(planWaitSimbad.co);
-//            repaintAll();
-//         }
-////         setSesameInProgress(false);
-//      }finally{ sesameSynchro.stop(sesameTaskId); }
-//   }
-
-//   /** Resolution Sesame par Thread independant pour un objet particulier */
-//   public boolean runB() {
-//      String memo=_saisie;
-//      String sesameTaskId=_sesameTaskId;
-//      unlockSesame();
-//      try {
-//         boolean rep=true;
-//
-//         saisie=memo+" ...resolving...";
-//         aladin.localisation.setTextSaisie(saisie);
-//
-//         Coord c=null;
-//         try { c = sesame(memo); }
-//         catch( Exception e) {
-//            if( Aladin.levelTrace>=3 ) e.printStackTrace();
-//            System.err.println(e.getMessage());
-//         }
-//         if( c==null ) {
-//            if( memo.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+memo+") !");
-//            saisie=memo;
-//            rep=false;
-//         } else {
-//            saisie=aladin.localisation.J2000ToString(c.al,c.del);
-////          aladin.command.toStdoutAndConsole("\""+memo+"\" resolved as "+saisie+"\n");
-//            aladin.console.setInPad(memo+" => ("+aladin.localisation.getFrameName()+") "+saisie+"\n");
-//            setRepereByString();
-//         }
-//         if( isFree() ) aladin.command.syncNeedRepaint=false;  // patch nécessaire dans le cas où la pile est vide - sinon blocage
-//         aladin.localisation.setSesameResult(saisie);
-////       setSesameInProgress(false);
-//         return rep;
-//      } finally { sesameSynchro.stop(sesameTaskId); }
-//   }
-
    // Object pour afficher la distance entre 2 objets sélectionnés
    protected CoteDist coteDist = null;
    
@@ -3772,11 +3705,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Ouverture de la page simbad pour l'objet indiqué par le repere SimRep */
    protected void showSimRep() {
-//      System.out.println("showSimRep pour "+simRep.id);
       int offset = simRep.id.indexOf('(');
       if( offset<0 ) return;
       String obj = simRep.id.substring(0,offset).trim();
-//      aladin.glu.showDocument("cdsportal", Tok.quote(obj));
       aladin.glu.showDocument("smb.query", Tok.quote(obj));
    }
 

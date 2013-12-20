@@ -69,8 +69,11 @@ public final class CommandDS9  {
    public String translateOne(String s) throws Exception {
       s = trimCom(s);
       if( s==null ) return null;
-      String cmd = (new Tok(s,"( ")).nextToken();
+      Tok tok = new Tok(s,"( ");
+      String cmd = tok.nextToken();
       
+      if( cmd.equalsIgnoreCase("draw") && tok.nextToken().equalsIgnoreCase("stc")) return translateOne(s.substring(cmd.length()));
+      if( cmd.equalsIgnoreCase("stc") ) return translateOne(s.substring(cmd.length()));  // On supprime simplement le préfixe STC
       if( cmd.equalsIgnoreCase("circle") 
        || cmd.equalsIgnoreCase("line") 
        || cmd.equalsIgnoreCase("polygon")
@@ -256,6 +259,9 @@ public final class CommandDS9  {
    "polygon(84.099463,21.761356,83.958987,21.817998,84.019991,21.948451,84.16057,21.891758) ||",
    "b1950; circle 82.907937d 22.010159d 31.940586",
    "circle(83.660376,22.042708,31.940586\")",
+   "# Region STC ",
+   "stc POLYGON ICRS 172.3051205700001 29.00697160000002 172.35133123000008 29.000585790000006 172.3475670999997 28.98066108000001 172.33490575999994 28.98246860000003 172.33324013999982 28.973249709999987 172.32257678999994 28.974723670000003 172.32063336000007 28.963602760000004 172.29783566999998 28.966582310000014", 
+   "draw stc POLYGON ICRS 172.3051205700001 29.00697160000002 172.35133123000008 29.000585790000006 172.3475670999997 28.98066108000001 172.33490575999994 28.98246860000003 172.33324013999982 28.973249709999987 172.32257678999994 28.974723670000003 172.32063336000007 28.963602760000004 172.29783566999998 28.966582310000014", 
 
   };
   

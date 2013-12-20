@@ -82,7 +82,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
       return PLANE;
    }
 
-   private boolean isPlanOk(Plan p) {
+   protected boolean isPlanOk(Plan p) {
       if( p instanceof PlanBG && !((PlanBG)p).isLocalAllSky() ) return false;
       if( p instanceof PlanImage && ((PlanImage)p).hasAvailablePixels() ) return true;
       if( p.isCatalog() ) return true;
@@ -112,7 +112,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    }
 
    
-   JComboBox mocRes;
+   JComboBox mocOrder;
    JTextField minRange,maxRange;
    JCheckBox rangeCheckBox;
    
@@ -131,8 +131,8 @@ public class FrameMocGenImg extends FrameRGBBlink {
 
       JPanel pp=new JPanel();
       pp.add( new JLabel("MOC resolution :"));
-      mocRes = getComboRes();
-      pp.add(mocRes);
+      mocOrder = getComboRes();
+      pp.add(mocOrder);
 
       c.gridwidth=GridBagConstraints.REMAINDER;
       c.weightx=10.0;
@@ -166,7 +166,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
       return c;
    }
    
-   protected int getRes() { return mocRes.getSelectedIndex()+FIRSTORDER; }
+   protected int getOrder() { return mocOrder.getSelectedIndex()+FIRSTORDER; }
    
    private double getMin() throws Exception {
       double min = Double.NaN;
@@ -199,7 +199,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res=getRes();
+         int res=getOrder();
          double pixMin=getMin();
          double pixMax=getMax();
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,0,pixMin,pixMax);

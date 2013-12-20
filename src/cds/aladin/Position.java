@@ -657,7 +657,7 @@ public class Position extends Obj {
     protected void statDraw(Graphics g,ViewSimple v,int dx, int dy) {
        
        // Juste pour afficher le débugging des losanges HEALPix couvrant
-       if( v.pref instanceof PlanBG && ((PlanBG)v.pref).DEBUGMODE )  { statCompute(g,v); return; } 
+//       if( v.pref instanceof PlanBG && ((PlanBG)v.pref).DEBUGMODE )  { statCompute(g,v); return; } 
 
        if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
 

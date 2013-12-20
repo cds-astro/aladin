@@ -83,6 +83,7 @@ public class BuilderDetails extends Builder {
          }
          detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -1;
       }
+      context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
       
       if( detailOrder<MINORDER ) detailOrder=MINORDER;
       if( detailOrder>maxOrder ) {

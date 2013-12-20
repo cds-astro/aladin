@@ -116,6 +116,7 @@ public final class ZoomView extends JComponent
    // Gestion de la synchronization des vues compatibles
    private boolean flagSynchronized=false;  // true - indique que l'on a déjà fait un synchronize des vues (SHIFT)
    
+   
   /** creation de la fenetre du zoom.
    * @param aladin,calque References
    */
@@ -147,6 +148,12 @@ public final class ZoomView extends JComponent
       if( flagHist ) { if( hist.mouseWheelMoved(e) ) repaint(); return; }
       synchronize(e);
       aladin.calque.zoom.incZoom(-e.getWheelRotation());
+   }
+   
+   protected void free() {
+      hist=null;
+      sed=null;
+      flagHist=flagSED=false;
    }
    
    public void mouseClicked(MouseEvent e) {};

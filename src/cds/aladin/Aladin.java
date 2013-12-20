@@ -45,7 +45,7 @@ import javax.swing.plaf.basic.BasicSplitPaneUI;
 import cds.aladin.bookmark.Bookmarks;
 import cds.allsky.Context;
 import cds.allsky.MocGen;
-import cds.allsky.SkyGen;
+import cds.allsky.HipsGen;
 import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
@@ -68,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
  * @beta    <LI> Recently open file menu
  * @beta    <LI> Copy/Paste data
  * @beta    <LI> Solid shape paint (source property)
@@ -129,7 +130,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.005";
+    static public final    String VERSION = "v8.006";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -344,6 +345,7 @@ public class Aladin extends JApplet
     FrameMocOperation frameMocOperation;   // Gere la fenetre pour les opérations sur les MOCs
     FrameMocGenImg frameMocGenImg;   // Gere la fenetre pour la génération d'un MOC à partir d'images
     FrameMocGenImg frameMocGenCat;   // Gere la fenetre pour la génération d'un MOC à partir de catalogues
+    FrameMocGenRes frameMocGenRes;   // Gere la fenetre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution
     FrameBitpix frameBitpix;       // Gere la fenetre pour de conversion du bitpix d'une image
     FrameConvolution frameConvolution; // Gere la fenetre pour la creation des plans Arithmetic via une convolution
     FrameHealpixArithmetic frameHealpixArithm;   // Gere la fenetre pour la creation des plans Arithmetic pour Healpix
@@ -400,7 +402,7 @@ public class Aladin extends JApplet
     static public String error;          // La derniere chaine d'erreur (DEVRAIT NE PAS ETRE STATIC)
     protected JMenuBar jBar;      // La barre de menu
     private JButton bDetach;
-    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miVizierSED,miXmatch,miROI,miTip,
+    private JMenuItem miDetach,miCalImg,miCalCat,miAddCol,miSimbad,miAutoDist,miVizierSED,miXmatch,miROI,/*miTip,*/
                       miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
                       miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
                       miLock,miDelLock,miStick,miOne,miNorthUp,
@@ -413,7 +415,7 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-                      miInFold,miConv,miArithm,miMocGenImg,miMocGenCat,miMocOp,miMocFiltering,miMocCrop,
+                      miInFold,miConv,miArithm,miMocGenImg,miMocGenCat,miMocOp,miMocToOrder,miMocFiltering,miMocCrop,
                       miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
@@ -463,7 +465,7 @@ public class Aladin extends JApplet
 
     // Sous-menus
     String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,RETICLE,RETICLEL,NORETICLE,
-           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,TIP,MSCROLL,SESAME,NEW,PREF,
+           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,SESAME,NEW,PREF,
            /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
@@ -472,7 +474,7 @@ public class Aladin extends JApplet
            PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENCAT,
-           MOCM,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
+           MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
            HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
@@ -867,6 +869,7 @@ public class Aladin extends JApplet
        MOCGENIMG   =chaine.getString("MMOCGENIMG");
        MOCGENCAT   =chaine.getString("MMOCGENCAT");
        MOCM     =chaine.getString("MMOCOP");
+       MOCTOORDER     =chaine.getString("MMOCTOORDER");
        MOCFILTERING =chaine.getString("MMOCFILTERING");
        MOCCROP =chaine.getString("MMOCCROP");
        MOCHELP =chaine.getString("MMOCHELP");
@@ -905,7 +908,8 @@ public class Aladin extends JApplet
        SESAME = chaine.getString("SESAME");
        SIMBAD = chaine.getString("SIMBAD");
        VIZIERSED = chaine.getString("VIZIERSED");
-       TIP    = chaine.getString("TIP");
+       AUTODIST = chaine.getString("AUTODIST");
+//       TIP    = chaine.getString("TIP");
 //       MSCROLL= chaine.getString("MSCROLL");
        VOTOOL = chaine.getString("VOTOOL");
        PREF   = chaine.getString("PREF");
@@ -1052,11 +1056,11 @@ public class Aladin extends JApplet
                 {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
              },
              { {MOC},
-                {MOCLOAD},{MOCGENIMG},{MOCGENCAT},{},{MOCM},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
+                {MOCLOAD},{MOCGENIMG},{MOCGENCAT},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
              },
              { {MTOOLS},
                 {SESAME+"|"+meta+" R"},
-                {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+TIP},/*{"?"+MSCROLL},{CEA_TOOLS},*/
+                {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
                 {},{MBKM},{CMD+"|F5"},{MACRO},
                 {},
                    { PROTOPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
@@ -1098,28 +1102,28 @@ public class Aladin extends JApplet
 
        // ajout menu interop
        if( PLASTIC_SUPPORT ) {
-           String[][][] retMenu = new String[menu.length+1][][];
-           for( int i=0; i<menu.length-1; i++ ) {
-               retMenu[i] = menu[i];
-   }
-           if( Aladin.BETA ) {
-               retMenu[retMenu.length-2] = new String[][] { {MINTEROP},
-                       {REGISTER}, {UNREGISTER},
-                       {}, {STARTINTERNALHUB}, {STOPINTERNALHUB},
-                       {}, {BROADCAST}, {BROADCASTIMAGE, "-"}, {BROADCASTTABLE, "-"},
-                       {}, {SAMPPREFS}
-                   };
-           }
-           else {
-               retMenu[retMenu.length-2] = new String[][] { {MINTEROP},
-                       {REGISTER}, {UNREGISTER},
-                       {}, {BROADCAST}, {BROADCASTIMAGE, "-"}, {BROADCASTTABLE, "-"},
-                       {}, {SAMPPREFS}
-                   };
-           }
+          String[][][] retMenu = new String[menu.length+1][][];
+          for( int i=0; i<menu.length-1; i++ ) {
+             retMenu[i] = menu[i];
+          }
+          if( Aladin.BETA ) {
+             retMenu[retMenu.length-2] = new String[][] { {MINTEROP},
+                   {REGISTER}, {UNREGISTER},
+                   {}, {STARTINTERNALHUB}, {STOPINTERNALHUB},
+                   {}, {BROADCAST}, {BROADCASTIMAGE, "-"}, {BROADCASTTABLE, "-"},
+                   {}, {SAMPPREFS}
+             };
+          }
+          else {
+             retMenu[retMenu.length-2] = new String[][] { {MINTEROP},
+                   {REGISTER}, {UNREGISTER},
+                   {}, {BROADCAST}, {BROADCASTIMAGE, "-"}, {BROADCASTTABLE, "-"},
+                   {}, {SAMPPREFS}
+             };
+          }
 
-           retMenu[retMenu.length-1] = menu[menu.length-1];
-           return retMenu;
+          retMenu[retMenu.length-1] = menu[menu.length-1];
+          return retMenu;
        }
        else {
            return menu;
@@ -1601,8 +1605,9 @@ public class Aladin extends JApplet
        else if( isMenu(m,ADDCOL))  miAddCol  = ji;
        else if( isMenu(m,XMATCH))  miXmatch  = ji;
        else if( isMenu(m,SIMBAD))  miSimbad  = ji;
+       else if( isMenu(m,AUTODIST))  miAutoDist  = ji;
        else if( isMenu(m,VIZIERSED))  miVizierSED  = ji;
-       else if( isMenu(m,TIP))     miTip     = ji;
+//       else if( isMenu(m,TIP))     miTip     = ji;
        else if( isMenu(m,VOTOOL))  miVOtool  = ji;
        else if( isMenu(m,MBGKG))   miGluSky  = ji;
        else if( isMenu(m,GLUTOOL)) miGluTool = ji;
@@ -1692,6 +1697,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,INFOLD) ) miInFold  = ji;
        else if( isMenu(m,ARITHM) ) miArithm  = ji;
        else if( isMenu(m,MOCM) )   miMocOp  = ji;
+       else if( isMenu(m,MOCTOORDER) )   miMocToOrder  = ji;
        else if( isMenu(m,MOCFILTERING) )   miMocFiltering  = ji;
        else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
        else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
@@ -2967,7 +2973,8 @@ public class Aladin extends JApplet
       } else if( isMenu(s,CALCAT) ){ launchRecalibCat(null);
       } else if( isMenu(s,SIMBAD) ){ simbadPointer();
       } else if( isMenu(s,VIZIERSED) ){ vizierSED();
-      } else if( isMenu(s,TIP) )   { tip();
+      } else if( isMenu(s,AUTODIST) )   { autodist();
+//      } else if( isMenu(s,TIP) )   { tip();
       } else if( isMenu(s,SESAME) ){ sesame();
 //      } else if( isMenu(s,CEA_TOOLS) ){ showCEATools();
       } else if( isMenu(s,MACRO) ) { macro();
@@ -2979,6 +2986,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,MOCGENIMG) ){ updateMocGenImg();
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
+      } else if( isMenu(s,MOCTOORDER) ) { updateMocToOrder();
       } else if( isMenu(s,MOCCROP) )  { crop();
       } else if( isMenu(s,MOCHELP) )  { info(chaine.getString("MOCHELP"));
       } else if( isMenu(s,MOCLOAD) )  { loadMoc();
@@ -3578,6 +3586,15 @@ public class Aladin extends JApplet
        frameMocOperation.maj();
     }
     
+    /** Mise à jour de la fenêtre pour la génération d'un MOC à partir d'un autre MOC de meilleure résolution */
+    protected void updateMocToOrder() {
+       if( frameMocGenRes==null ) {
+          trace(1,"Creating the MocGenRes window");
+          frameMocGenRes = new FrameMocGenRes(aladin);
+       }
+       frameMocGenRes.maj();
+    }
+
     /** Mise à jour de la fenêtre pour la génération d'un MOC */
     protected void updateMocGenCat() {
        if( frameMocGenCat==null ) {
@@ -3710,7 +3727,7 @@ public class Aladin extends JApplet
           // Arrêt d'un éventuel calcul de allsky
           try {
              Context context = frameAllsky!=null && frameAllsky.context!=null ? frameAllsky.context
-                   : command.skygen!=null && command.skygen.context!=null ? command.skygen.context : null;
+                   : command.hipsgen!=null && command.hipsgen.context!=null ? command.hipsgen.context : null;
             if( context!=null && context.isTaskRunning() ) {
                context.taskAbort();
                long t = System.currentTimeMillis();
@@ -3814,11 +3831,17 @@ public class Aladin extends JApplet
     protected void vizierSED() {
        calque.setVizierSED(!calque.flagVizierSED);
     }
+    
+  /** Activation ou désactivation de l'outil de mesure automatique des distance */
+  protected void autodist() {
+     calque.setAutoDist(!calque.flagAutoDist);
+  }
 
-    /** Activation ou désactivation des tooltips sur les objets */
-    protected void tip() {
-       calque.flagTip=!calque.flagTip;
-    }
+
+//    /** Activation ou désactivation des tooltips sur les objets */
+//    protected void tip() {
+//       calque.flagTip=!calque.flagTip;
+//    }
 
    /** Démarrage d'une extraction de vignettes ROI */
    protected void roi() { view.createROI(); }
@@ -4515,7 +4538,7 @@ public void setLocation(Point p) {
             miRainbow.setEnabled( view.rainbowAvailable());
             miRainbow.setSelected(view.hasRainbow());
          }
-         if( miTip!=null ) miTip.setSelected(calque.flagTip);
+//         if( miTip!=null ) miTip.setSelected(calque.flagTip);
          if( miMore!=null ) miMore.setEnabled(!view.allImageWithView());
          if( miOne!=null ) miOne.setEnabled(view.isMultiView() || view.getNbUsedView()>1 );
          if( miNext!=null ) miNext.setEnabled(nbPlanImg>1);
@@ -4543,6 +4566,7 @@ public void setLocation(Point p) {
          }
          if( miTarget!=null ) miTarget.setSelected(calque.hasTarget());
          if( miSimbad!=null ) miSimbad.setSelected(calque.flagSimbad);
+         if( miAutoDist!=null ) miAutoDist.setSelected(calque.flagAutoDist);
          if( miVizierSED!=null ) miVizierSED.setSelected(calque.flagVizierSED);
          if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
          if( miPrevPos!=null ) miPrevPos.setEnabled(view.canActivePrevUndo());
@@ -4591,6 +4615,7 @@ public void setLocation(Point p) {
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
+         if( miMocToOrder!=null ) miMocToOrder.setEnabled(nbPlanMoc>0);
          if( miMocFiltering!=null ) miMocFiltering.setEnabled(nbPlanMoc>0 && nbPlanCat>0 );
          if( miMocCrop!=null ) miMocCrop.setEnabled( pc instanceof PlanMoc );
          if( miHealpixArithm!=null ) miHealpixArithm.setEnabled(nbPlanHealpix>0);
@@ -4725,7 +4750,7 @@ public void show() {
    static private final String USAGE =
       "Usage: Aladin [options...] [filenames...]\n"+
       "       Aladin -chart=\"[server[,server...]\" object\n"+
-      "       Aladin -skygen ...\n"+
+      "       Aladin -hipsgen ...\n"+
       "       Aladin -mocgen ...\n"+
       "       Aladin -help\n"+
       "       Aladin -version\n"+
@@ -4754,7 +4779,7 @@ public void show() {
       "       -debug: debug mode (very verbose)\n"+
       "\n"+
       "       -chart=: build a png field chart directly on stdout\n"+
-      "       -skygen: build HEALPix allsky by script (see -skygen -h for help)\n"+
+      "       -hipsgen: build HEALPix progressive sky by script (see -hipsgen -h for help)\n"+
       "       -mocgen: build MOC by script (see -mocgen -h for help)\n"+
       "       -help: display this help\n"+
       "       -version: display the Aladin release number\n"+
@@ -4864,10 +4889,10 @@ public void show() {
             MocGen.main(args);
             System.exit(0); 
          }
-         else if( args[i].equalsIgnoreCase("-skygen"))      { 
+         else if( args[i].equalsIgnoreCase("-hipsgen") || args[i].equalsIgnoreCase("-skygen"))      { 
             String [] args1 = new String[args.length-i-1];
             System.arraycopy(args, i+1, args1, 0, args.length-i-1);
-            SkyGen.main(args1);
+            HipsGen.main(args1);
             System.exit(0); 
          }
          

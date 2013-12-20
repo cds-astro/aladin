@@ -36,20 +36,22 @@ public class PlanMocAlgo extends PlanMoc {
    static final int SUBTRACTION  = 2;
    static final int DIFFERENCE   = 3;
    static final int COMPLEMENT   = 4;
+   static final int TOORDER      = 5;
    
-   static private final String [] FCT = { "union","inter","sub","diff","compl"};
+   
+   static private final String [] FCT = { "union","inter","sub","diff","compl","ord" };
    static private String getFct(int fct) { return FCT[fct]; }
 
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
     */
-   public PlanMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op) {
+   public PlanMocAlgo(Aladin aladin,String label,PlanMoc [] pList,int op,int order) {
       super(aladin);
       PlanMoc p1 = pList[0];
       p1.copy(this);
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
-      String s = getFonction(p1,pList,op);
+      String s = getFonction(p1,pList,op,order);
       if( label==null ) label = s;
       setLabel(label);
       
@@ -58,6 +60,7 @@ public class PlanMocAlgo extends PlanMoc {
       try {
          moc = (HealpixMoc)p1.getMoc().clone();
          if( op==COMPLEMENT ) moc = moc.complement();
+         else if( op==TOORDER ) moc.setMocOrder(order);
          else {
             for( int i=1; i<pList.length; i++ ) {
                HealpixMoc m1=moc;
@@ -147,7 +150,8 @@ public class PlanMocAlgo extends PlanMoc {
    protected void suite1() { System.out.println("Je fais rien");}
    
    // Retourne le label associé à l'opération
-   private String getFonction(PlanMoc p1,PlanMoc [] pList,int op) {
+   private String getFonction(PlanMoc p1,PlanMoc [] pList,int op,int order) {
+      if( op==TOORDER ) return p1.label+":"+order;
       String lab2= pList.length>1 ? pList[1].label : null;
       String lab3= pList.length>2 ? pList[2].label : null;
       return p1.label + " "+ getFct(op) + (lab2==null ? " " : lab2 + (lab3==null?"":" ..."));

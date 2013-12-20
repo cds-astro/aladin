@@ -30,7 +30,7 @@ MOPENLOAD	Open...
 MOPENFILE	Open local file...
 MOPENURL	Open URL...
 MLASTFILE   Recent files & URLs...
-MLASTFILECLEAR.fr Clear history
+MLASTFILECLEAR Clear history
 MLOADIMG	Load astronomical image
 MLOADCAT	Load catalog
 MLOADVO	Load from the Virtual Observatory...
@@ -86,15 +86,16 @@ MEXPORTEPS	Export the current view (EPS)...
 MEXPORT	Export planes (FITS,VOTable,...)...
 MBACKUP	Backup the stack...
 MARITHM	Arithmetic operation...
-MMOC Footprint
-MMOCLOAD Load catalog fooprint (MOC)...
+MMOC Coverage
+MMOCLOAD Load catalog coverages (MOC)...
 MMOCGENIMG Generate from image or HEALPix map...
 MMOCGENCAT Generate from catalog...
 MMOCFILTERING Filter a table by MOC...
 MMOCCROP Rectangular crop...
 MMOCOP	Logical operations...
-MMOCHELP Help on footprint MOC...
-MMOCLOADHELP In order to load the footprint of a specifical catalog or table, specify its identifier in the "Catalog" field, and press the "Footprint" button.
+MMOCTOORDER Resolution adjustement...
+MMOCHELP Help on MultiOrder Coverage (MOC)...
+MMOCLOADHELP In order to load the coverage of a specifical catalog or table, specify its identifier in the "Catalog" field, and press the "MOC" button.
 MHEALPIXARITHM HEALPix arithmetic operations...
 #MADD	Addition
 #MSUB	Subtraction
@@ -197,6 +198,7 @@ MMOCGENCAT.fr	Génération à partir d'un catalogue
 MMOCFILTERING.fr Filtrage d'un catalogue par MOC...
 MMOCCROP.fr	Découpage rectangulaire...
 MMOCOP.fr	Opérations logiques...
+MMOCTOORDER.fr Ajustement de la résolution...
 MMOCHELP.fr Aide à propos des empreintes MOC...
 MMOCLOADHELP.fr Afin de charger l'empreinte sur le ciel d'un catalogue ou une table particulière, indiquez son identificateur dans le champ "Catalogue", puis cliquez sur le bouton "Empreinte".
 MARITHM.fr	Opérations arithmétiques...
@@ -234,7 +236,8 @@ VOTOOL	VO tools
 GLUTOOL	Remote tools
 SIMBAD	Simbad pointer
 VIZIERSED VizieR phot. pointer
-TIP	Tooltip on sources
+AUTODIST Auto-distance measurer
+#TIP	Tooltip on sources
 #MSCROLL	Auto-scroll on mouse pan
 FULLSCREEN	Full screen
 PREVIEWSCREEN	Simple window
@@ -264,7 +267,8 @@ VOTOOL.fr	Outils OV
 GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
 VIZIERSED.fr	Pointeur phot. VizieR
-TIP.fr	Infobulle sur les sources
+AUTODIST.fr Mesure de distance automatique
+#TIP.fr	Infobulle sur les sources
 #MSCROLL.fr	Défilement automatique suite à un dépl. souris
 FULLSCREEN.fr	Plein écran
 PREVIEWSCREEN.fr	Simple fenêtre
@@ -640,7 +644,7 @@ VZTITLE	VizieR catalog service
 VZNAME	VizieR\nCatalogs
 VZINFO	CDS VizieR catalog service (>5000 astronomical catalogs)
 VZCATDESC	Info.
-VZCATMOC	Footprint
+VZCATMOC	Coverage (MOC)
 VZCATDMAP	Density map
 VZFROM	Provided by CDS VizieR catalog service
 VZDESC	VizieR provides access to the most complete library of published astronomical catalogues and data tables available on line.\n \nYou can access VizieR catalog service by a "get" command line (use the Aladin console, menu "Tools -> Aladin console"). For VizieR, the "get" syntax follows these conventions:\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : is a VizieR catalog identifier\n   - allcolumns : to get all columns
@@ -872,16 +876,16 @@ ARITHPLANEVALUE.fr Plan ou Valeur
 ARITHHELP.fr	Note 1: Après avoir effectué l'opération arithmétique, Aladin ajuste automatique le contraste de l'image résultante. Il n'est donc pas anormal que l'aspect de l'image puisse ne pas changer.\n \nNote 2: Les opérations arithmétiques ne peuvent s'appliquer sur les images pour lesquelles Aladin ne dispose pas des vraies valeurs de pixels, typiquement les images 8 bits JPEG.
 
 # FrameMocOperation.java strings
-MOCOP	Footprint MOC operation:
+MOCOP	MOC operation:
 MOCUNION	Union
 MOCINTER	Intersection
 MOCSUB	Subtraction
 MOCDIFF	Difference
 MOCCOMP	Complement
-MOCTITLE	Footprint MOC operations
-MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting footprint MOC.\n
+MOCTITLE	MOC operations
+MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the CREATE button to generate the resulting MOC.\n
 MOCPLANE	Plane
-MOCHELP A footprint MOC described a sky region by a Multi-Order Coverage map (or MOC). It is a mesh of a part of the sky. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
+MOCHELP A MultiOrder Coverage map, also called MOC, described a sky region. It is a mesh of a part of the sky. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
 
 MOCOP.fr	Opérations sur les empreintes MOC:
 MOCUNION.fr	Union
@@ -896,8 +900,8 @@ MOCHELP.fr	Une empreinte MOC permet de décrire une zone du ciel à partir d'une c
 
 # FrameMocFiltering.java strings
 MOCFILTERINGOP	Filter:
-MOCFILTERINGTITLE	Filtering by footprint MOC
-MOCFILTERINGINFO	Specify a footprint MOC and one or several catalog\npress the CREATE button to generate a new catalogue\nwith sources inside (resp. outside) the footprint MOC.\n
+MOCFILTERINGTITLE	Filtering by MOC
+MOCFILTERINGINFO	Specify a MOC and one or several catalog\npress the CREATE button to generate a new catalogue\nwith sources inside (resp. outside) the MOC.\n
 MOCFILTERINGIN	inside
 MOCFILTERINGOUT	outside
 MOCFILTERINGCAT Catalog plane
@@ -912,10 +916,11 @@ MOCFILTERINGCAT.fr Plan catalogue
 MOCFILTERINGMOC.fr Plan MOC
 
 # FrameMocGenImg.java strings
-MOCGENOP	Footprint MOC generation:
-MOCGENTITLE	Footprint MOC generation
-MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npress the CREATE button to generate the resulting footprint MOC.\n
-MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting footprint MOC.\n
+MOCGENOP	MOC generation:
+MOCGENTITLE	MOC generation
+MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
+MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
+MOCGENORDINFO	Specify a MOC,\n choose a new resolution and\npress the CREATE button to generate the resulting MOC.\n
 
 MOCGENOP.fr	Opérations sur les empreintes MOC:
 MOCGENTITLE.fr	Opérations sur les empreintes MOC
@@ -2451,6 +2456,8 @@ INFOHIPSFITS The drawing of a progressive sky in "true" pixel mode requires a la
 INFOHIPSFITS.fr L'affichage d'un ciel progressif en "vrai" pixels requière un bon réseau.\nVotre ciel est entrain d'être rechargé...
 
 # Info and warning strings
+HAUTODIST Automatic distance measurer:\n \nWith this function activated, the distance is automatically computed and drawn for the two current selected catalog sources.
+HAUTODIST.fr Mesure de distance automatique:\n \nUne fois cette fonction activée, la sélection de deux sources de catalogues entraine le calcul automatique et l'affichage de leur distance.
 HFINGER	Simbad pointer:\n \nIf this function is activated, point your mouse on any astronomical object and wait 3 seconds to see if this object is known by Simbad.\n \nIf there are several objects around the position,\nonly the object with the largest bibliographical reference number will be displayed.\n \nClick on the displayed label for accessing directly to the corresponding Simbad record.
 HFINGER.fr	Le pointeur Simbad :\n \nLorsque cette fonction est activée, glissez le pointeur de la souris sur un objet astronomique puis patientez 3 secondes pour voir si cet objet est connu par Simbad.\n \nSi Simbad connait plusieurs objets proche de cette position\nc'est celui qui a le plus de références bibliographiques qui sera cité.\n \nVous pouvez cliquer sur le label qui s'affiche afin d'accéder directement à l'enregistrement Simbad correspondant.
 HFINGERVIZIERSED	VizieR Phot. pointer:\n \nIf this function is activated, point your mouse on any astronomical object and wait 3 seconds to build a photometry graph from VizieR catalog service.\n \nClick on this plot for displaying and manipulating individual photometry measurements, and also to know their origin.
