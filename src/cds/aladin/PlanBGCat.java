@@ -282,6 +282,13 @@ public class PlanBGCat extends PlanBG {
    protected void updateFilter() {
       planFilter.updateNow();
    }
+   
+   protected boolean Free() {
+      aladin.view.deSelect(this);
+      super.Free();
+      FilterProperties.notifyNewPlan();
+      return true;
+   }
 
    /** Suppression d'un losange catalogue si possible (aucun objet sélectionné) */
    protected void purge(HealpixKey healpix) {
@@ -323,7 +330,6 @@ public class PlanBGCat extends PlanBG {
 
    protected Legende leg;
    protected void setLegende(Legende leg) {
-      System.out.println("PlanBGCat.setLegende => "+leg);
       this.leg=leg;
       setFilter(filterIndex);
    }

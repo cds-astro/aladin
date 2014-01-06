@@ -3827,7 +3827,7 @@ protected Coord getImgCenter() throws Exception {
    return c;
 }
 
-/*
+/**
  * Retourne le centre de la projection en coord J2000 et en pixels
  */
 public Coord getProjCenter()  {
@@ -3840,7 +3840,7 @@ public Coord getProjCenter()  {
 //   c.del=deltai;
    return c;
 }
-/*
+/**
  * Retourne la rotation de la projection par rapport au NORD dans
  * le sens ???? (unite : le degre)
  */
@@ -3848,32 +3848,32 @@ public double getProjRot() {
    return rota;
 }
 
-/*
+/**
  * Retourne la largeur du champ en degres
  */
 public double getImgWidth() { return widtha; }
 
-/*
+/**
  * Retourne la largeur du champ en degres
  */
 public double getImgHeight() { return widthd; }
 
-/*
+/**
  * Retourne true si les RA sont inverses
  */
 public boolean getProjSym() { return incA>0; }
 
-/*
+/**
  * Retourne Le type de projection (indice du tableau projection)
  */
 protected int getProj() { return proj; }
 
-/*
+/**
  * Retourne Le système de coordonnées
  */
 protected int getSystem() { return system; }
 
-/*
+/**
  * Retourne La dimension en pixels de l'image
  */
 public Dimension getImgSize() { return new Dimension(xnpix,ynpix); }

@@ -299,8 +299,9 @@ public abstract class SliderPlusMoins extends JPanel implements MouseWheelListen
    }
    
    class Lab extends JLabel {
-      public Lab(String s) { super(s); }
-      public Dimension getPreferredSize() {  return new Dimension(40,14); }
+      private int width=40;
+      public Lab(String s) { super(s==null?"":s); if( s==null ) width=0; }
+      public Dimension getPreferredSize() {  return new Dimension(width,14); }
    }
    
 }

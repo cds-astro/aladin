@@ -23,6 +23,7 @@ package cds.aladin;
 import java.lang.reflect.Constructor;
 import java.awt.Color;
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import javax.imageio.stream.FileImageInputStream;
@@ -34,8 +35,10 @@ import cds.allsky.Context;
 import cds.allsky.HipsGen;
 import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
+import cds.astro.Unit;
 import cds.moc.HealpixMoc;
 import cds.savot.model.SavotField;
+import cds.tools.Computer;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
@@ -110,10 +113,10 @@ public final class Command implements Runnable {
       "   @norm [-cut] [x]                    @addcol ...\n" +
       "   @conv [x] ...                       @xmatch x1 x2 [dist] ...\n" +
       "   @kernel ...                         @cplane [name]\n" +
-      "   @resamp x1 x2 ...                   @thumbnail [npix|radius\"]\n" +
-      "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
-      "   @flipflop [x|v] [V|H]               @tag|@untag\n\n" +
-      "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
+      "   @resamp x1 x2 ...                   @search {expr|+|-}\n" +
+      "   @crop [x|v] [[X,Y] WxH]             @tag|@untag\n\n" +
+      "   @flipflop [x|v] [V|H]               @select -tag\n" +
+      "   @contour [nn] [nosmooth] [zoom]\n" +
       "   @grey|@bitpix [-cut] [x] BITPIX\n" +
       "  \n" +
       "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
@@ -126,7 +129,7 @@ public final class Command implements Runnable {
       "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
       "   @help ...            @trace        @mem        @info msg\n" +
       "   @macro script param  @call fct     @list [fct] @reset\n" +
-      "   @setconf prop=value  @function ... @quit" +
+      "   @setconf prop=value  @function ... @= ...      @convert      @quit" +
       "";
  ;
 
@@ -145,12 +148,12 @@ public final class Command implements Runnable {
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
       "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show",
       "status",/*"stick",*/"sync","tag","thumbnail","trace","unlock",/* "unstick",*/
-      "untag","xmatch","moreonxmatch","zoom","+","-","*","/",
+      "untag","xmatch","moreonxmatch","zoom","+","-","*","/","=",
    };
    
    // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
    static final private String NOSYNCCMD[] = {
-      "call","collapse","demo","expand","function",
+      "call","collapse","demo","expand","function","=",
       "get","grid","help","hist","info","list","kernel","load","lock","md","mem",
       "pause",/*"reset",*/"reticle",
       "scale",/*"setconf",*/
@@ -2577,8 +2580,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          return "";
       } else if( !s1.startsWith("function") ) comment=null;
       
+      
       // Attente que les serveurs soient OK
       syncServer();
+      
+      if( !filterMode && fonct==null ) {
+         // Petit ajustement éventuelle pour une commande "=expression" ou "expression="
+         s1 = evalAdjust(s1.trim());
+
+         // Petit adjustement éventuelle pour une commande " val Unit1 in Unit2"
+         s1 = convertAdjust(s1);
+      }
       
       // Compatibilité pour les commandes "region" de DS9
       try { 
@@ -2588,14 +2600,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             return execScript(s2, verbose, flagOnlyFunction);
          }
       } catch( Exception e) { printConsole(e.getMessage()); return "";}
-
+      
       // Extraction d'un éventuel préfixe désignant le plan target
       // ex: toto = get Simbad m1
       StringBuffer tp = new StringBuffer();
       String s = getTargetPlane(tp, s1);
       String label = tp.length()==0 ? null : "="+tp.toString();
 //System.out.println("TargetPlane=["+tp+"] => s="+s+" label="+label);
-
+      
+      
       Tok st = new Tok(s);
       String cmd = st.nextToken();
       String param;
@@ -2693,6 +2706,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("testscript"))testscript(param);
       else if( cmd.equalsIgnoreCase("testperf"))testperf(param);
       else if( cmd.equalsIgnoreCase("call"))    execFunction(param);
+      else if( cmd.equalsIgnoreCase("="))       execEval(param);
+      else if( cmd.equalsIgnoreCase("convert")) execConvert(param);
       else if( cmd.equalsIgnoreCase("list"))    return listFunction(param);
       else if( s.trim().startsWith("addcol") ) { execAddCol(s); return ""; }
       else if( cmd.equalsIgnoreCase("select") ) execSelectCmd(param);
@@ -3795,6 +3810,82 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( f.hasBeenModif() ) return true;
       }
       return false;
+   }
+   
+   // Ajustement d'une syntaxe partielle d'une commande convto où seul
+   // le mot clé " to " est repéré => insertion de la commande "convert" en préfixe
+   private String convertAdjust(String s) {
+      if( s.indexOf("convert")==0 ) return s;
+      int n = s.indexOf(" to ");
+      if( n<=0 ) return s;
+      return "convert "+s.substring(0,n)+" to "+s.substring(n+4);
+   }
+   
+   // Traitement d'une commande de conversion d'unité
+   private String execConvert(String s) {
+      String res;
+      if( s.trim().length()==0 ) {
+         StringBuffer s1 = new StringBuffer();
+         Enumeration e1 = Unit.symbols();
+         while( e1.hasMoreElements() ) {
+            String k = (String)e1.nextElement();
+            String d = Unit.explainUnit(k);
+            s1.append(k+" - "+d+"\n");
+         }
+         res = s1.toString();
+         print(res);
+         a.console.printInPad(res);
+      } else {
+         int n = s.indexOf(" to ");
+         String from = s.substring(0,n);
+         char c;
+         int m=from.length()-1;
+         while( m>0 && !Character.isDigit(c=from.charAt(m)) 
+               && c!=')'/*  && !Character.isSpaceChar(c) */) m--;
+         String to = s.substring(n+4);
+         try { 
+            from = Computer.compute( from.substring(0,m+1) )+from.substring(m+1);
+            Unit m1 = new Unit(from);
+            Unit m2 = new Unit();
+            m2.setUnit(to);
+            m1.convertTo(m2);
+            res = m1.getValue()+" "+m1.getUnit();
+         } catch( Exception e ) {
+            res="!!! Conversion error ["+e.getMessage()+"]";
+         }
+         a.localisation.setTextSaisie(res);
+         printConsole(res);
+      }
+      return res;
+   }
+   
+   // Traitement de l'évaluation d'une expression arithmétique
+   private String execEval(String p) {
+      String res;
+      if( p.trim().length()==0 ) {
+         res=Computer.help();
+         print(res);
+         a.console.printInPad(res);
+      } else {
+         try {
+            res = Computer.compute(p)+"";
+         } catch( Exception e ) {
+            res="!!! Eval error ["+e.getMessage()+"]";
+         }
+         a.localisation.setTextSaisie(res);
+         printConsole(res);
+      }
+      return res;
+   }
+   
+   // Petit ajustement éventuel pour une commande "=expression" ou "expression="
+   // afin de retourner la chaine "= expression"
+   private String evalAdjust(String s) {
+      int n=s.length();
+      if( n==0 || (s.charAt(0)!='=' && s.charAt(n-1)!='=') ) return s;
+      if( s.charAt(0)=='=' && !Character.isSpace( s.charAt(1) ) ) return "= "+s.substring(1);
+      if( s.charAt(n-1)=='=' ) return "= "+s.substring(0,n-1).trim();
+      return s;
    }
    
    private String execFunction(String p) {

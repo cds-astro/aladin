@@ -2598,26 +2598,26 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    * @param methode 0-N/S, 1-D/G, 2-N/S+D/G
    */
    protected void flip(int methode) {
-      getFromCache();
+      setLockCacheFree(true);
+      try {
+         pixelsOriginFromCache();
 
-      if( methode==0 || methode==2 ) {
-         invImageLine(width,height,getBufPixels8());
-         if( pixelsOrigin!=null ) invImageLine(width,height,pixelsOrigin,npix);
-      }
-      if( methode==1 || methode==2 ) {
-         invImageRow(width,height,getBufPixels8());
-         if( pixelsOrigin!=null ) invImageRow(width,height,pixelsOrigin,npix);
-      }
+         if( methode==0 || methode==2 ) { 
+            invImageLine(width,height,getBufPixels8());
+            if( pixelsOrigin!=null ) invImageLine(width,height,pixelsOrigin,npix);
+         }
+         if( methode==1 || methode==2 ) {
+            invImageRow(width,height,getBufPixels8());
+            if( pixelsOrigin!=null ) invImageRow(width,height,pixelsOrigin,npix);
+         }
 
-      if( pixelsOrigin!=null ) {
-         noCacheFromOriginalFile();
-         setInCache(1,pixelsOrigin);
-      }
+         if( pixelsOrigin!=null )  reUseOriginalPixels();
+      } finally { setLockCacheFree(false); }
 
       calculPixelsZoom();
       aladin.calque.zoom.zoomView.repaint();
 
-      if( Projection.isOk(projd) )  projd.flip(methode);
+      if( Projection.isOk(projd) ) projd.flip(methode);
 
       changeImgID();
    }
@@ -2803,13 +2803,15 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
 //   }
    
    protected String getBlankString() {
-      return !isBlank ? "" : Double.isNaN(blank) ? "NaN":""+blank;
+      return !isBlank ? "--" : Double.isNaN(blank) ? "NaN":""+blank;
    }
    
    /** Positionnement de la valeur du blank */
    protected void setBlankString(String b) {
       try {
-         blank = Double.parseDouble(b.trim());
+         String s =b.trim();
+         if( s.equalsIgnoreCase("NaN") ) blank = Double.NaN;
+         else blank = Double.parseDouble(s);
          isBlank=true;
          if( pixMode==PIX_256 ) pixMode=PIX_255;
       } catch( Exception e ) {

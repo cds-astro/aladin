@@ -67,7 +67,6 @@ public final class Legende extends AbstractTableModel  {
    boolean[] computed; // computed[i] true if field[i] is a computed column
    private int firstLink=-2;  // position du premier champ qui a un lien
    private boolean sorted=false;  // true s'il il y a tri posé sur un champ
-   
 
    protected Legende() {
       field = new Field[0];

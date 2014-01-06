@@ -342,14 +342,16 @@ public class BuilderIndex extends Builder {
             c.GetCoord(center);
             
             // Faut-il récupérer des infos dans l'entête fits
-            StringBuilder res=null; 
-            for( String key : context.fitsKeys ) {
-               String val;
-               if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) continue;
-               if( res==null ) res = new StringBuilder();
-               res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
+            if( context.fitsKeys!=null ) {
+               StringBuilder res=null; 
+               for( String key : context.fitsKeys ) {
+                  String val;
+                  if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) continue;
+                  if( res==null ) res = new StringBuilder();
+                  res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
+               }
+               if( res!=null ) fitsVal=res.toString();
             }
-            if( res!=null ) fitsVal=res.toString();
             
          }
          

@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import cds.tools.Util;
+
 /**
  * Gestion des équivalences de commandes entre DS9 et Aladin
  * @version 1.0 (dec 2011) Creation
@@ -209,7 +211,8 @@ public final class CommandDS9  {
   // Et si le premier paramètre n'est pas un numérique, on suppose que c'est
   // le nom du système de référence à la STC
   // in : POLYGON ICRS 293.00068 485.00134 31.69569..
-  //out : setconf frame=ICRS; draw polygon(293.00068,485.00134,31.69569...)
+  // out : setconf frame=ICRS; draw polygon(293.00068,485.00134,31.69569...)
+  // Rq: La position de l'observateur en STC est simplement ignorée
   private String basicDS9toAladin(String cmd) throws Exception {
      String frame = null;
      // On enlève ce qu'il y a au bout de la ligne (commentaire, paramètres...)
@@ -224,6 +227,7 @@ public final class CommandDS9  {
      boolean first=true;
      while( tok.hasMoreTokens() ) {
         String t = tok.nextToken();
+        if( isSTCKeyword(t) ) continue; // on ignore simplement
         if( !first ) s.append(',');
         else {
            if( !Character.isDigit( t.charAt(0) ) ) {
@@ -237,6 +241,15 @@ public final class CommandDS9  {
      s.append(')');
      return (frame!=null?frame:"")+s.toString();
   }
+  
+  static private String [] STCKEYS = {
+     "LOCAL_GROUP_CENTER","GALACTIC_CENTER","UNKNOWNRefPos",
+     "EMBARYCENTER","HELIOCENTER","BARYCENTER","TOPOCENTER",
+     "GEOCENTER","JUPITER","MERCURY","NEPTUNE","URANUS",
+     "SATURN","PLUTO","VENUS","LSRD","LSRK","MOON","MARS","LSR"
+     };
+  
+  private boolean isSTCKeyword(String s) { return Util.indexInArrayOf(s, STCKEYS,true)>=0; }
   
   static final private String [] TEST = {
    "# Region file format: DS9 version 4.1",

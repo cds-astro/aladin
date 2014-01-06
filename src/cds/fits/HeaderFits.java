@@ -65,6 +65,10 @@ public final class HeaderFits {
        readFreeHeader(s);
     }
 
+    public HeaderFits(String s,FrameHeaderFits frameHeaderFits) throws Exception {
+       readFreeHeader(s,false,frameHeaderFits);
+    }
+
     public HeaderFits(MyInputStream dis,FrameHeaderFits frameHeaderFits) throws Exception {
        readHeader(dis,frameHeaderFits);
     }
@@ -183,7 +187,7 @@ public final class HeaderFits {
             linesRead++;
             if( key.equals("END" ) ) break;
             if( frameHeaderFits!=null ) frameHeaderFits.appendMHF(new String(buffer,0));
-            if( buffer[8] != '=' /* || buffer[9] != ' ' */ ) continue;
+            if( buffer[8] != '=' ) continue;
             value=getValue(buffer);
 //Aladin.trace(3,key+" ["+value+"]");
             header.put(key, value);
@@ -247,33 +251,47 @@ public final class HeaderFits {
    public boolean readFreeHeader(String s) { return readFreeHeader(s,false,null); }
    public boolean readFreeHeader(String s,boolean specialDSS,FrameHeaderFits frameHeaderFits) {
       alloc();
+      int len=80;
       char buf [] = s.toCharArray();
       int i=0;
       String key,value,com;
       int a,b,c;
       while( i<buf.length ) {
+         
+         // Cas particulier d'une ligne vide
+         c=getPos(buf,i,i+len,'\n');
+         if( (new String(buf,i,c-i)).trim().length()==0 ) {
+            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF("");
 
          // Cas particulier pour COMMENT XXXX
-         if( buf.length>i+7 && (new String(buf,i,7)).equals("COMMENT") ) {
+         } else if( buf.length>i+7 && (new String(buf,i,7)).equals("COMMENT") ) {
             a=i+7;
-            c = getPos(buf,a,i+79,'\n');
+            c = getPos(buf,a,i+len,'\n');
             com = (c-a>0) ? (new String(buf,a+1,c-a-1)).trim() : "";
-            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLine(com))).trim());
+            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLineComment(com))).trim());
 
-         // Cas général
+         // Cas particulier pour HISTORY XXXX
+         } else if( buf.length>i+7 && (new String(buf,i,7)).equals("HISTORY") ) {
+               a=i+7;
+               c = getPos(buf,a,i+len,'\n');
+               com = (c-a>0) ? (new String(buf,a+1,c-a-1)).trim() : "";
+               if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLineHistory(com))).trim());
+
+            // Cas général
          } else {
-            a = getPos(buf,i,i+79,'=');
-            b = getPos(buf,a,i+79,'/');
-            c = getPos(buf,b,i+79,'\n');
+            a = getPos(buf,i,i+len,'=');
+            b = getPos(buf,a,i+len,'/');
+            c = getPos(buf,b,i+len,'\n');
             if( i!=a || i!=b || i!=c ) {
                key = new String(buf,i,a-i).trim();
                value = (b-a>0 ) ? (new String(buf,a+1,b-a-1)).trim() : "";
                com = (c-b>0) ? (new String(buf,b+1,c-b-1)).trim() : "";
                //System.out.println(i+":"+a+"["+key+"]="+b+"["+value+"]/"+c+"["+com+"]");
-               if( key.equals("END") ) value=com=null;
-
-               if( key.equals("END") ) break;
-
+               if( key.equals("END") ) {
+                  value=com=null;
+                  break;
+               }
+               
                // Dans le cas d'une entête DSS dans un fichier ".hhh" il ne faut pas retenir les mots
                // clés concernant l'astrométrie de la plaque entière
                //            if( !( specialDSS && (key.startsWith("AMD") || key.startsWith("PLT"))) ) {
@@ -295,17 +313,17 @@ public final class HeaderFits {
    // HORRIBLE PATCH (Pierre)
    // Dans le cas des entêtes .hhh associées aux imagettes DSS, il y a souvent deux calibrations, non compatibles
    // dans ce cas, je supprime celle de la plaque et je ne garde que celle de l'imagette.
-   private void purgeAMDifRequired() {
-      if( header.get("CRPIX1")==null ) return; 
-      
-      System.err.println("*** Double calibration on DSS image => remove AMD/PLT one");
-      Vector<String> nKeysOrder = new Vector<String>();
-      for( String key : keysOrder ) {
-         if( key.startsWith("AMD") || key.startsWith("PLT") ) header.remove(key);
-         else nKeysOrder.addElement(key);
-      }
-      keysOrder = nKeysOrder;
-   }
+//   private void purgeAMDifRequired() {
+//      if( header.get("CRPIX1")==null ) return; 
+//      
+//      System.err.println("*** Double calibration on DSS image => remove AMD/PLT one");
+//      Vector<String> nKeysOrder = new Vector<String>();
+//      for( String key : keysOrder ) {
+//         if( key.startsWith("AMD") || key.startsWith("PLT") ) header.remove(key);
+//         else nKeysOrder.addElement(key);
+//      }
+//      keysOrder = nKeysOrder;
+//   }
 
    /**
     * Teste si un mot clé est présent dans l'entête

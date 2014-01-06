@@ -310,8 +310,7 @@ public class Cote extends Ligne {
     * => arret de son affichage
     */
    protected void cutOff() { plan.aladin.calque.zoom.zoomView.cutOff(this); }
-
-
+   
    /** Passage d'une coupe du segment au zoomView
     * => affichage d'un histogramme dans le zoomView en surimpression
     * de la vignette courante.

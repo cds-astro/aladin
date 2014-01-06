@@ -966,6 +966,7 @@ public final class MCanvas extends JComponent
          aladin.search.setColorAndStatus(rep?1:-1);
          aladin.mesure.search.setColorAndStatus(rep?1:-1);
          aladin.localisation.seeCoord(o,1);
+         if( aladin.frameCooTool!=null ) aladin.frameCooTool.setSource(o);
          aladin.sendObserver();
 
 

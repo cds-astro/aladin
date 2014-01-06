@@ -402,7 +402,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
           mcanvas.show(t,2);
           rep = aladin.view.setRepere(new Coord(t.raj,t.dej)) ? 1 : -1;
           if( !Aladin.NOGUI ) aladin.view.showSource(t);
-          aladin.view.memoUndo(aladin.view.getCurrentView(), new Coord(t.raj,t.dej),t);
+//          aladin.view.memoUndo(aladin.view.getCurrentView(), new Coord(t.raj,t.dej),t);
 //System.out.println("J'ai trouve en pos = "+n+" field="+field);                
        }
        
@@ -463,7 +463,6 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
       
       mcanvas.currentsee=-1;
       mcanvas.currentselect=-2;
-//      scrollV.setValues(nbSrc,1,0,nbSrc+1);
       scrollV.setMaximum(nbSrc);
       mcanvas.unselect();
       mcanvas.repaint();

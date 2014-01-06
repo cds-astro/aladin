@@ -453,6 +453,7 @@ public final class Slide {
             yc = new int[frX.length];
             xc = new int[frX.length];
          }
+         
          // Calcul la taille des lettres
          int ht = Aladin.SIZE;
          
@@ -473,7 +474,7 @@ public final class Slide {
          // ref==true => repérage du plan
          boolean ref = xMouse<=0 && p.type!=Plan.NO && p.underMouse && a.view.isVisible(p) && a.view.isMultiView();
                   
-         // Decallage du logo en fonction de la position
+         // Decalage du logo en fonction de la position
          for( int i=0; i<frX.length; i++ ) yc[i]=frY[i]+dy;
          for( int i=0; i<frX.length; i++ ) xc[i]=frX[i]+dx;
          
@@ -646,7 +647,7 @@ public final class Slide {
          
          // Dessin de la checkbox de contrôle de la référence si nécessaire
           drawCheckBox(g,3, dy+3, xMouse,yMouse, mode, p);
-    
+          
          // Les barres d'appartenance à un folder    
          if( mode!=DRAG && p.folder>0 ) {
             Plan [] allPlan = a.calque.getPlans();
@@ -756,7 +757,7 @@ public final class Slide {
             g.setColor(Color.black);
             g.drawRect(xPos-1,dy+haut-largeur,largeur,largeur*2+1);
          }
-
+         
       } catch( Exception e ) { e.printStackTrace(); }
    }
    

@@ -120,6 +120,7 @@ public class FrameHeaderFits extends JFrame {
 
    /** Mise en forme du texte de l'entête fits avec surlignage éventuel d'un mot */
    private void search(String key) {
+      if( key.length()==0 ) first=true;
       if( atKey==null ) {
          atKey = new SimpleAttributeSet();
          atKey.addAttribute(StyleConstants.CharacterConstants.Foreground,Color.blue);
@@ -193,27 +194,40 @@ public class FrameHeaderFits extends JFrame {
    protected void save() {
       String s = ta.getText();
       try {
-         headerFits = new HeaderFits(s);
-         if( plan!=null ) {
-            Calib c = new Calib(headerFits);
-            plan.projd = new Projection(Projection.WCS, c);
-            plan.setHasSpecificCalib();
-         }
+        applyThisHeader(s);
       } catch( Exception e ) {
          Aladin.warning(this,"Not a valid FITS header: "+e.getMessage());
          return;
       }
       
-      memoHeaderFits = new StringBuffer( s );
-      makeTA();
       if( !Aladin.confirmation(this,SAVEINFO ) ) return;
       plan.aladin.save(plan.aladin.EXPORT);
    }
    
+   private void applyThisHeader(String s) throws Exception {
+      memoHeaderFits=null;
+      headerFits = new HeaderFits(s,this);
+      if( plan!=null ) {
+         Calib c = new Calib(headerFits);
+         plan.projd = new Projection(Projection.WCS, c);
+         plan.setHasSpecificCalib();
+         plan.aladin.view.newView(1);
+         plan.aladin.view.repaintAll();
+      }
+      ta.setText(memoHeaderFits.toString());
+      search("");
+   }
+   
    protected void cancel() {
-      memoHeaderFits = new StringBuffer( originalHeader );
-      isEdited=false;
-      ta.setText(getOriginalHeaderFits());
+      try {
+         applyThisHeader( originalHeader );
+       } catch( Exception e ) {
+          e.printStackTrace();
+       }
+
+//      memoHeaderFits = new StringBuffer( originalHeader );
+//      isEdited=false;
+//      ta.setText(getOriginalHeaderFits());
    }
    
    private void updateWidgets() {
@@ -261,21 +275,19 @@ public class FrameHeaderFits extends JFrame {
          public void actionPerformed(ActionEvent e) { ts.setText("");  search(""); }
       });
       
-      if( Aladin.PROTO ) {
-         p.add(new JLabel(" - "));
-         save = b =  new JButton(SAVE);
-         b.setEnabled(false);
-         if( SAVABLE ) p.add(b);
-         b.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { save(); }
-         });
-         cancel = b =  new JButton(CANCEL);
-         b.setEnabled(false);
-         if( SAVABLE ) p.add(b);
-         b.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { cancel(); }
-         });
-      }
+      p.add(new JLabel(" - "));
+      save = b =  new JButton(SAVE);
+      b.setEnabled(false);
+      if( SAVABLE ) p.add(b);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { save(); }
+      });
+      cancel = b =  new JButton(CANCEL);
+      b.setEnabled(false);
+      if( SAVABLE ) p.add(b);
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { cancel(); }
+      });
 
       b =  new JButton(CLOSE);
       p.add(b);

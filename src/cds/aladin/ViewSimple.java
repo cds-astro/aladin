@@ -332,7 +332,7 @@ public class ViewSimple extends JComponent
       }
 
       aladin.view.setZoomRaDecForSelectedViews(nz,coo,this,true);
-      if( aladin.view.onUndoTop() ) aladin.view.memoUndo(this, coo, null);
+//      if( aladin.view.onUndoTop() ) aladin.view.memoUndo(this, coo, null);
    }
 
    JPopupMenu popMenu;
@@ -422,6 +422,9 @@ public class ViewSimple extends JComponent
     
     /** True si le mode Nord en haut est activé pour cette vue */
     protected boolean isNorthUp() { return northUp; }
+    
+    /** En attente de développement de la rotation libre des images */
+//    protected boolean isRolled() { return true; }
     
     /** True si le plan de référence de cette vue peut être forcée Nord en haut */
     protected boolean canBeNorthUp() {
@@ -997,7 +1000,7 @@ public class ViewSimple extends JComponent
       setZoomXY(fct,this.xzoomView,this.yzoomView);
     }
 
-   /** Scrolling par un clic and drag souris */
+   /** Scrolling ou Rotation par un clic and drag souris */
    protected void scroll(MouseEvent e) {
       if( locked ) return;
       int x = e.getX();
@@ -1278,7 +1281,7 @@ public class ViewSimple extends JComponent
 
       if( withZoomView ) aladin.calque.zoom.reset();
 
-      aladin.view.memoUndo(this, null, null);
+//      aladin.view.memoUndo(this, null, null);
       
       // Maintenant qu'on affiche systématiquement la valeur du pixel
       reloadPixelsOriginIfRequired();
@@ -1750,12 +1753,21 @@ public class ViewSimple extends JComponent
 
    /** Retourne le Tool courant avec la possibilité de passer directement
     * en PAN avec la touche ALT enfoncée    */
-   private int getTool(InputEvent e) {
+   private int getTool(MouseEvent e) {
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       
-      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() 
-           /* && !aladin.view.isMultiView() */) return ToolBox.PAN;
+      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() ) {
+         
+         // En multiview, on garde la possibilité de déplacer les vues en attrapant
+         // leur bord
+         if( aladin.view.isMultiView() ) {
+            int x = e.getX();
+            int y = e.getY();
+            boolean closeBorder = x<10 || x>getWidth()-10 || y<10 || y>getHeight()-10;
+            if( !closeBorder ) return ToolBox.PAN;
+         } else return ToolBox.PAN;
+      }
       return tool;
    }
 
@@ -1864,7 +1876,7 @@ public class ViewSimple extends JComponent
          }
 
          // Mise à jour du CutGraph courant si il existe
-         Obj c = aladin.view.zoomview.getCut();
+         Obj c = aladin.view.zoomview.getObjCut();
          if( c!=null && !c.cutOn() ) aladin.view.zoomview.suspendCut();
       }
             
@@ -2350,7 +2362,7 @@ public class ViewSimple extends JComponent
       // et qu'on puisse faire un undo
       if( tool==ToolBox.PAN ) {
          Coord repCoord = new Coord(view.repere.raj,view.repere.dej);
-         aladin.view.memoUndo(this,repCoord,null);
+//         aladin.view.memoUndo(this,repCoord,null);
          String s = aladin.localisation.J2000ToString(repCoord.al,repCoord.del);
          aladin.localisation.setSesameResult(s);
          aladin.view.setRepereId(s);
@@ -2382,8 +2394,8 @@ public class ViewSimple extends JComponent
       if( tool==ToolBox.SELECT && aladin.view.stopMegaDrag(this,(int)Math.round(x),(int)Math.round(y),e.isControlDown()) ) return;
 
       // Recalibration dynamique en cours ?
-      boolean recalib = !isProjSync && aladin.view.isRecalibrating() 
-            && !flagClicAndDrag && (tool==ToolBox.SELECT || tool==ToolBox.PAN);
+      boolean recalib = !isProjSync && aladin.view.isRecalibrating() && !flagClicAndDrag
+            && (tool==ToolBox.SELECT || tool==ToolBox.PAN);
       if( recalib ) {
          Vector v=null;
 
@@ -2441,13 +2453,15 @@ public class ViewSimple extends JComponent
 
       // memorisation de la position et de la valeur du pixel
       // ou de l'objet sous la souris si il est unique
-      if( tool==ToolBox.SELECT ) {
+      if( tool==ToolBox.SELECT || tool==ToolBox.PAN ) {
 
          if( view.vselobj.size()==1 ) {
             aladin.localisation.seeCoord((Position)view.vselobj.elementAt(0),1);
          } else if( rselect==null || rselect.width==1 && rselect.height==1) {
             aladin.localisation.setPos(vs,x,y,1);
             updateInfo();
+            
+            if( aladin.framePixelTool!=null ) aladin.framePixelTool.setPixel(vs,x,y);
          }
       }
 
@@ -3436,12 +3450,12 @@ public class ViewSimple extends JComponent
       currentCursor =
           tool==ToolBox.PAN ? Aladin.HANDCURSOR :
              tool==ToolBox.PHOT ? ( isTagCentered(shift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
-          aladin.view.isRecalibrating() || isGrabIt() || tool==ToolBox.ZOOM ? Aladin.CROSSHAIRCURSOR:
+          aladin.view.isRecalibrating() && (tool==ToolBox.SELECT || tool==ToolBox.PAN)
+          || isGrabIt() || tool==ToolBox.ZOOM ? Aladin.CROSSHAIRCURSOR:
           tool==ToolBox.TAG ? Aladin.TEXTCURSOR:Aladin.DEFAULTCURSOR;
 
       Aladin.makeCursor(this,currentCursor);
    }
-   
    
 
    /** Positionnement du cureseur par défaut en fonction de l'outil courant */
@@ -3450,7 +3464,8 @@ public class ViewSimple extends JComponent
       if( rainbowF!=null && rainbowF.isSelected() ) return;
       if( aladin.lockCursor ) return;
       oc=-1;
-      currentCursor = tool==ToolBox.PHOT || aladin.view.isRecalibrating() ? (isTagCentered(isShift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
+      currentCursor = tool==ToolBox.PHOT || 
+            aladin.view.isRecalibrating() && tool==ToolBox.SELECT? (isTagCentered(isShift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
          tool==ToolBox.ZOOM ?
             Aladin.CROSSHAIRCURSOR:(tool==ToolBox.PAN )?
             Aladin.HANDCURSOR:(tool==ToolBox.TAG)?
@@ -3488,7 +3503,7 @@ public class ViewSimple extends JComponent
       String s = aladin.localisation.J2000ToString(repCoord.al,repCoord.del);
       aladin.console.printCommand(s);
       aladin.view.setRepereId(s);
-      aladin.view.memoUndo(this,repCoord,null);
+//      aladin.view.memoUndo(this,repCoord,null);
 //      if( flagSync ) aladin.view.syncView(1,repCoord,this);
       if( flagSync ) aladin.view.syncView(1,repCoord,this,flagSync);
       else { aladin.view.moveRepere(repCoord); aladin.view.repaintAll(); }
@@ -4189,7 +4204,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          
          // Inutile dans ces 2 cas
          if( p instanceof PlanBG ) return true;
-         if( isProjSync() || isNorthUp()) return true;
+         if( isProjSync() || isNorthUp() /* || isRolled() */ ) return true;
 
          // Teste s'il faut recommencer a extraire une image
          int imgID = p.getImgID();
@@ -5725,7 +5740,9 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // Le plan image de référence (le cas allsky est traité après)
          if( p==pref && p.isImage() ) {
             if( p.active ) {
-               if( northUp || isProjSync()) ((PlanImage)p).draw(g,vs,dx,dy,1); 
+               if( northUp || isProjSync() /* || isRolled() */ ) {
+                  ((PlanImage)p).draw(g,vs,dx,dy,1); 
+               }
                else {
                   double offsetX = imgDx;
                   double offsetY = imgDy;
@@ -6362,21 +6379,6 @@ g.drawString(s,10,100);
             g.setFont(Aladin.BOLD);
             int len = pixel.charAt(0)=='R' ? 150 : g.getFontMetrics().stringWidth(pixel);
             x = getWidth()-(28+len);
-            //         g.setColor( getGoodColor(x,y-10,len,15) );
-            
-//            Util.drawCartouche(g, x, y-12, len, 15, CARTOUCHE, null, Color.white);
-//            // Dans le cas de trois composantes couleurs (ex: R:255 G:100 B:20)
-//            if( pixel.charAt(0)=='R' ) {
-//               StringTokenizer st = new StringTokenizer(pixel);
-//               for( int i=0; i<3; i++ ) {
-//                  String c = st.nextToken().substring(2);
-//                  g.setColor( i==0 ? Color.red : i==1 ? Aladin.GREEN : Color.blue );
-//                  g.drawString(c,x+i*50,y);
-//               }
-//            } else {
-//               g.setColor(  Aladin.BLACKBLUE );
-//               g.drawString(pixel,x,y);
-//            }
             
             // Dans le cas de trois composantes couleurs (ex: R:255 G:100 B:20)
             if( pixel.charAt(0)=='R' ) {
@@ -6396,11 +6398,6 @@ g.drawString(s,10,100);
          if( isFullScreen() && pos!=null && pos.length()>0 ) {
             g.setFont(Aladin.BOLD);
             x = getWidth()-260;
-//            int len = g.getFontMetrics().stringWidth(pos);
-            //         g.setColor( getGoodColor(x,y-10,len,15) );
-//            Util.drawCartouche(g, x, y-12, len, 15,CARTOUCHE, Color.cyan, null);
-//            g.setColor( Aladin.BLACKBLUE );
-//            g.drawString(pos,x,y);
             Util.drawStringOutline(g, pos, x, y, Color.cyan,null);
          }
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }

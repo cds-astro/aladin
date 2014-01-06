@@ -138,6 +138,20 @@ public class PlanTool extends PlanCatalog {
 
    }
    
+   protected boolean Free() {
+      
+      // Pour suspendre éventuellement l'affichage des histogrammes
+      // associé à un objet contenu dans le plan
+      if( aladin.view.zoomview.flagCut || aladin.view.zoomview.flagHist ) {
+         Iterator<Obj> it = iterator();
+         while( it.hasNext() ) {
+            Obj o = it.next();
+            if( o.isSelected() ) o.remove();
+         }
+      }
+      return super.Free();
+   }
+   
    /** retourne true si le plan a des sources */
    protected boolean withSource() { return legPhot!=null; }
    

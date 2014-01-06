@@ -32,6 +32,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
+import java.text.ParseException;
 import java.util.*;
 
 import javax.swing.*;
@@ -261,15 +262,26 @@ public final class FrameNewCalib extends JFrame
          } catch( Exception e) { System.err.println("Error on projd: "+e); }
       } else {
          label=getNewLabel();
-         raj=dej=cx=cy=rm=rm1=r=r1=rot=0.0;
+         raj=dej=cx=cy=r=r1=rot=0.0;
          sym=false;
+         system=Calib.ICRS;
          t=1;
          if( plan.isImage() ) {
             r=((PlanImage)plan).naxis1;
             r1=((PlanImage)plan).naxis2;
             cx=((PlanImage)plan).naxis1/2;
             cy=((PlanImage)plan).naxis2/2;
-            sym=false;
+            rm=rm1=r/60.;   // 1" par défaut
+            if( plan.hasFitsHeader() ) {
+               try {
+                  String ra = plan.headerFits.getStringFromHeader("OBJCTRA");
+                  String de = plan.headerFits.getStringFromHeader("OBJCTDEC");
+                  Astrocoo c = new Astrocoo();
+                  c.set(ra+" "+de);
+                  raj=c.getLon();
+                  dej=c.getLat();
+               } catch( Exception e ) {}
+            }
          } else if( plan.isSimpleCatalog() && plan.hasXYorig ) {
             double m[] = new double[4];
             ((PlanCatalog)plan).getXYRange(m);
@@ -773,12 +785,6 @@ e.printStackTrace();
 
          // Methode par quadruplets
          } else if( modeCalib==QUADRUPLET ) {
-//            if( plan.isImage() && ((PlanImage)plan).naxis1!=((PlanImage)plan).naxis2 ) {
-//               Aladin.warning(this,"Unfortunately, this recalibration method is bugged for no square image !!\n" +
-//               		"Please insist to the CDS team for fixing as soon as possible this limitation\n  \n" +
-//               		"Use it carefully at your own risk\n \n" +
-//               		"We apologize for any inconveniences.");
-//            }
             Coord coo[] = getCoo(/*getHauteur()*/);
             if( coo==null ) return;
             if( flagModif ) p=oldp;
@@ -833,10 +839,10 @@ e.printStackTrace();
          Aladin.warning(this,error,1);
       }
       
-      if( a.calque.getIndex(drawPlan)==-1) {
-         drawPlan =a.calque.newPlanTool("Calibration");
-      }
-      a.command.execScript("rm "+drawPlan.label,false,false);
+//      if( a.calque.getIndex(drawPlan)==-1) {
+//         drawPlan =a.calque.newPlanTool("Calibration");
+//      }
+//      a.command.execScript("rm "+drawPlan.label,false,false);
       a.view.repaintAll();
 
    }
@@ -1355,13 +1361,13 @@ e.printStackTrace();
                  s1=Coord.getSexa(c.al,c.del,":");
 }
             }
-            if( s1!=null ) {
-               if( a.calque.getIndex(drawPlan)==-1) {
-                  drawPlan = a.calque.newPlanTool("Calibration");
-               }
-               a.command.execScript("select \""+drawPlan.label+"\";draw tag("+s1+")",false,false);
-               a.view.repaintAll();
-            }
+//            if( s1!=null ) {
+//               if( a.calque.getIndex(drawPlan)==-1) {
+//                  drawPlan = a.calque.newPlanTool("Calibration");
+//               }
+//               a.command.execScript("select \""+drawPlan.label+"\";draw tag("+s1+")",false,false);
+//               a.view.repaintAll();
+//            }
          } else {
             if( o==null || o==prevObj ) {
                a.warning("No object near the pointer, try again !!");

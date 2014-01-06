@@ -75,7 +75,7 @@ public final class CreatObj implements Runnable {
       a.viewControl = new ViewControl(a);
 
       trace(1,"Creating URL info line");
-      a.urlStatus = new Tips(a.COPYRIGHT);
+      a.urlStatus = new Tips(a);
 
       trace(1,"Creating Memory status line");
       a.memStatus = new MyLabel("",Label.RIGHT,a.SPLAIN);

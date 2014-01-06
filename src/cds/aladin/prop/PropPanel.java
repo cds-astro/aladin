@@ -180,7 +180,10 @@ public class PropPanel extends JPanel {
     * @param c les contraintes courantes sur le gestionnaire d'affichage
     */
    public static void addSectionTitle(JPanel p, String title,GridBagLayout g, GridBagConstraints c) {
-   	  JLabel l = new JLabel(title);
+      JLabel l = new JLabel(title);
+      addSectionTitle(p,l,g,c);
+   }
+   public static void addSectionTitle(JPanel p, JLabel l,GridBagLayout g, GridBagConstraints c) {
       l.setFont(l.getFont().deriveFont(Font.BOLD));
       c.gridwidth = GridBagConstraints.REMAINDER;
       c.anchor = GridBagConstraints.WEST;

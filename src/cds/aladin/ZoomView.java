@@ -105,7 +105,7 @@ public final class ZoomView extends JComponent
    private int[] cut;               // le graphe de coupe du dernier cut en niveau de gris
    private int[] cutR,cutG,cutB;  // le graphe de coupe du dernier cut en RGB
    protected boolean flagCut=false;  // true si une coupe est active
-   private Obj objCut;             // L'Objet graphique correspondant à l'histogramme que l'on trace
+   private Obj objCut;             // L'Objet graphique correspondant au cut que l'on trace
    
    // Les paramètres à mémoriser pour l'histogramme
    Hist hist=null;                  // L'histogramme courant
@@ -365,7 +365,7 @@ public final class ZoomView extends JComponent
       Coord coo = drawInViewNow(e.getX(),e.getY());
       if( coo!=null ) {
          aladin.view.setRepere(coo);
-         aladin.view.memoUndo(v,coo,null);
+//         aladin.view.memoUndo(v,coo,null);
       }
       flagdrag=false;
    }
@@ -755,14 +755,13 @@ try {
        g.setColor(Color.black);
        g.drawLine(1,cutY,SIZE,cutY);
        g.drawString(pixel,10,cutY<20?cutY+10:cutY-2);
-
    }
     
     /** Suspension temporaire de l'affichage du cutGraph */
     protected void suspendCut() { flagCut=false; repaint(); }
     
     /** Retourne le Cote associée au cutGraph courant, null si aucune */
-    protected Obj getCut() { return objCut; }
+    protected Obj getObjCut() { return objCut; }
     
     protected void cutOff(Obj objCut) {
        if( objCut!=this.objCut ) return;

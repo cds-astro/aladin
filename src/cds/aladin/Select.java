@@ -156,7 +156,6 @@ public final class Select extends JComponent  implements
       addMouseWheelListener(this);
       
       setBackground( a.toolBox.getBackground() );
-//      if( Aladin.NEWLOOK_V7 ) eyeHeight=0;
 
       // Calcule des tailles
       hs=Aladin.LSCREEN?291:200;   // Hauteur du canvas

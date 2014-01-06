@@ -562,7 +562,7 @@ public final class ServerFoV extends Server implements TableModel {
       Object o = e.getSource();
       if( o instanceof JButton ) {
          String menu = ((JButton)o).getActionCommand();
-         if( menu.equals(edit) )  aladin.glu.showDocument("FovEditor","");
+         if( menu.equals(edit) )  aladin.buildFoV();
          else if( menu.equals(LOAD) )  ((ServerFile)aladin.dialog.localServer).browseFile();
       }
 

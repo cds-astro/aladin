@@ -1594,19 +1594,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    /** Retourne true si le losange décrit par ses quatres coins est trop
     * grand pour être tracé en une seule fois => subdivision */
-   static final int M = 300*300;
-   static final int N = 150*150;
+   static final double M = 300*300;
+   static final double N = 150*150;
    static final double RAP=0.7;
    
-   protected boolean isTooLarge(PointD b[] ) {
+   protected boolean isTooLarge(PointD b[] ) throws Exception {
       
       if( planBG.DEBUGMODE ) return false;
-      
-      if( dist(b,0,1)>M || dist(b,0,2)>M ) return true;
-
+      double d1,d2;
+      if( (d1=dist(b,0,1))>M || (d2=dist(b,0,2))>M ) return true;
+      if( d1==0 || d2==0 ) throw new Exception("Rhomb error");
       double diag1 = dist(b,0,3);
-      double diag2 = dist(b,1,2);
-      if( diag2==0 ) return false;
+      double diag2 = dist(b,1,2); 
+      if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
       double rap = diag1/diag2;
       if( rap>1 ) rap = 1/rap;
       return rap<RAP && (diag1>N || diag2>N);
@@ -1700,13 +1700,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //                  return n;
 //               }
 //            }
-            if( !drawFast && !allSky && isTooLarge(b) ) {
-               resetTimer();
-               int m = drawFils(g,v,8,redraw);
-               
-               // Si aucun sous-losange n'a pu être dessiné, je trace tout de même le père
-               if( m>0 ) return m;
-            }
+            try {
+               if( !drawFast && !allSky && isTooLarge(b) ) {
+                  resetTimer();
+                  int m = drawFils(g,v,8,redraw);
+
+                  // Si aucun sous-losange n'a pu être dessiné, je trace tout de même le père
+                  if( m>0 ) return m;
+               }
+            } catch( Exception e ) { return 0; }
 
             // Test losange derrière le ciel
             if( isBehindSky(b) ) {

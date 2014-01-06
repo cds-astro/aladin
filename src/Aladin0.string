@@ -111,6 +111,7 @@ MBKM	Bookmarks...
 SELECTTAG	Select tagged sources
 DETAG	Untag the tagged sources
 TAGSELECT	Tag selected sources
+FOVEDITOR Instrument footprint editor...
 
 #MLOAD.fr	Charger...
 MSAVE.fr	Enregistrer...
@@ -155,7 +156,7 @@ MPREVPOS.fr Position précédente
 MNEXTPOS.fr Position suivante
 MSYNC.fr	Uniformiser l'échelle
 MSYNCPROJ.fr	Uniformiser l'échelle et l'orientation
-MPAN.fr	Glisser le champ de vue
+MPAN.fr	Déplacer le champ de vue
 MRSAMP.fr	Rééchantillonner...
 MGLASS.fr	Loupe
 MGLASSTABLE.fr	Table de pixels
@@ -217,6 +218,7 @@ MBKM.fr	Signets...
 SELECTTAG.fr	Sélectionner les sources cochées
 DETAG.fr	Décocher les sources cochées
 TAGSELECT.fr	Cocher les sources sélectionnées
+FOVEDITOR.fr Editeur de champ instrumental...
 
 PIXEXTRINFO1 The pixel extraction creates a source catalogue. Each source will be centered on a pixel of the current image and will provide the pixel values of each selected images in the stack (via the closest pixel method).
 PIXEXTRINFO1.fr L'extraction de pixels génère un catalogue de sources centrées sur chaque pixel de l'image courante. Chaque source fournira les valeurs de pixels pour chaque image sélectionnée dans la pile (méthode du plus proche pixel).
@@ -242,6 +244,8 @@ AUTODIST Auto-distance measurer
 FULLSCREEN	Full screen
 PREVIEWSCREEN	Simple window
 SESAME	Object name resolver
+COOTOOL Coordinate toolbox...
+PIXELTOOL Pixel toolbox...
 NEW	New Aladin window...
 PREF	User preferences...
 CEA_TOOLS	PROTO:AstroGrid CEA applications
@@ -266,6 +270,8 @@ ROI.fr	Créer des vues vignettes...
 VOTOOL.fr	Outils OV
 GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
+COOTOOL.fr Calculs de coordonnées...
+PIXELTOOL.fr Calculs de pixels...
 VIZIERSED.fr	Pointeur phot. VizieR
 AUTODIST.fr Mesure de distance automatique
 #TIP.fr	Infobulle sur les sources
@@ -340,8 +346,8 @@ RESTART	You have to restart Aladin to validate this configuration modification
 RESTART.fr	Vous devez redémarrer Aladin pour que cette modification de configuration soit prise en compte
 UNSIGNED	Unsigned applet not supported for this HTTP Aladin site\n => redirection in progress...
 UNSIGNED.fr	Le mode applet non signé n'est pas supporté par ce site Aladin HTTP\n => Redirection automatique en cours...
-BANNER	Aladin is developed by Pierre Fernique, Thomas Boch, François Bonnarel and Anaïs Oberto
-BANNER.fr	Aladin est développé par Pierre Fernique, Thomas Boch, François Bonnarel et Anaïs Oberto
+BANNER	Aladin is developed by Pierre Fernique, Thomas Boch, Anaïs Oberto and François Bonnarel 
+BANNER.fr	Aladin est développé par Pierre Fernique, Thomas Boch, Anaïs Oberto et François Bonnarel
 STARTING	is starting
 STARTING.fr	en cours de lancement
 YOURJVM	Your JVM release is java
@@ -378,16 +384,16 @@ STOPDEMO	Do you want to stop the demonstration ?\nClick NO to resume
 STOPDEMO.fr	Désirez-vous interrompre la démonstration ?\nCliquez NON pour poursuivre
 MB	Mb
 MB.fr	Mo
-PUB	*ALADIN is an interactive software sky atlas.\n* It allows one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n!Quick start...\n*Just type your target in the text field above\n*(ex: M1  or  13:29:53 +47:11:48)\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, François Bonnarel and Anaïs Oberto.
-PUB.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe\n*quelle partie du ciel, d'y superposer des objets issus de catalogues\n*astronomiques, et, interactivement, d'accéder aux informations relatives.\n \n!Démarrage rapide...\n*Saisissez simplement votre cible dans le champ de saisie ci-dessus.\n*(ex: M1  ou  13:29:53 +47:11:48)\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, François Bonnarel et Anaïs Oberto.
-PUBBETA	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A BETA RELEASE\n*Send bug report and comments to cds-question@unistra.fr\n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, François Bonnarel and Anaïs Oberto.
-PUBBETA.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE VERSION EST EN BETA TEST\n*Envoyez vos commentaires et bogues à cds-question@unistra.fr\n*Ou télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, François Bonnarel et Anaïs Oberto.
-PUBPROTO	ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A PROTOTYPE RELEASE\n*SOME FEATURES HAVE BEEN ADDED FOR DEMONSTRATION PURPOSES.\n*USE IT AT YOUR OWN RISKS\n \n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, François Bonnarel and Anaïs Oberto.
-PUBPROTO.fr	ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE MISE-A-JOUR EST UNE VERSION PROTOTYPE\n*CERTAINES FONCTIONNALITES QUI ONT ETE AJOUTEES\n*EN DEMONSTRATION SONT SANS GARANTIE\n \n*Vous pouvez télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, François Bonnarel et Anaïs Oberto.\n
+PUB	*ALADIN is an interactive software sky atlas.\n* It allows one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n!Quick start...\n*Just type your target in the text field above\n*(ex: M1  or  13:29:53 +47:11:48)\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch,  Anaïs Oberto and François Bonnarel.
+PUB.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe\n*quelle partie du ciel, d'y superposer des objets issus de catalogues\n*astronomiques, et, interactivement, d'accéder aux informations relatives.\n \n!Démarrage rapide...\n*Saisissez simplement votre cible dans le champ de saisie ci-dessus.\n*(ex: M1  ou  13:29:53 +47:11:48)\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto et François Bonnarel.
+PUBBETA	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A BETA RELEASE\n*Send bug report and comments to cds-question@unistra.fr\n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto and François Bonnarel.
+PUBBETA.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE VERSION EST EN BETA TEST\n*Envoyez vos commentaires et bogues à cds-question@unistra.fr\n*Ou télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto et François Bonnarel.
+PUBPROTO	ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!WARNING: THIS VERSION IS A PROTOTYPE RELEASE\n*SOME FEATURES HAVE BEEN ADDED FOR DEMONSTRATION PURPOSES.\n*USE IT AT YOUR OWN RISKS\n \n*Or take the official version for a real usage\n*(from http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto and François Bonnarel.
+PUBPROTO.fr	ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!CETTE MISE-A-JOUR EST UNE VERSION PROTOTYPE\n*CERTAINES FONCTIONNALITES QUI ONT ETE AJOUTEES\n*EN DEMONSTRATION SONT SANS GARANTIE\n \n*Vous pouvez télécharger la dernière version officielle pour un usage réel\n*(à partir de http://aladin.u-strasbg.fr).\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto et François Bonnarel.\n
 PUBOUTREACH	*ALADIN is an interactive software sky atlas\n*allowing one to visualize digitized images of any part of the sky,\n*to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n!You are running ALADIN in UNDERGRADUATE mode\n \n*%EuroVOAIDA.jpg\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, François Bonnarel and Anaïs Oberto.\n \n*The "undergraduate" Aladin extension has been developed\nin the framework of the AIDA European project.
 PUBOUTREACH.fr	*ALADIN est un atlas du ciel interactif.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n!Vous utilisez actuellement ALADIN en mode SCOLAIRE\n \n*%EuroVOAIDA.jpg\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, François Bonnarel et Anaïs Oberto.\n \n*L'extension "scolaire" d'Aladin a été développée\ndans le cadre du projet européen AIDA.
-PUBINPROG	*ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of\n*the sky, to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n \n!YOUR DATA ARE BEING DOWNLOADED...\n!Please wait...\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, François Bonnarel and Anaïs Oberto.
-PUBINPROG.fr	*ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n \n!VOS DONNEES SONT EN COURS DE CHARGEMENT\n!Veuillez patienter...\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, François Bonnarel et Anaïs Oberto.
+PUBINPROG	*ALADIN is an interactive software sky atlas developed by the CDS,\n*allowing one to visualize digitized images of any part of\n*the sky, to superimpose entries from astronomical catalogs,\n*and to interactively access related data and information.\n \n \n \n!YOUR DATA ARE BEING DOWNLOADED...\n!Please wait...\n \n*%CDSLogo.gif\n \n*Aladin is developed by Pierre Fernique,\n*Thomas Boch, Anaïs Oberto and François Bonnarel.
+PUBINPROG.fr	*ALADIN est un atlas du ciel interactif développé par le CDS.\n*Il permet de visualiser des images digitalisées de n'importe quelle\n*partie du ciel, d'y superposer des objets issus de catalogues astronomiques,\n*et, interactivement, d'accéder aux informations associées.\n \n \n \n!VOS DONNEES SONT EN COURS DE CHARGEMENT\n!Veuillez patienter...\n \n*%CDSLogo.gif\n \n*Aladin est développé par Pierre Fernique,\n*Thomas Boch, Anaïs Oberto et François Bonnarel.
 MVIEWDESC	Split the main window into 2, 4, 9 or 16 panels
 MVIEWDESC.fr	Découpe la fenêtre principale en 2, 4, 9 ou 16 écrans
 MVIEWSYNC	Match views (unify scale / orientation)
@@ -497,7 +503,7 @@ HDEL	Clear/remove current selected elements (graph.overlays, views or planes)
 HMGLSS	Activate the magnifying glass around the mouse position
 HPROP	Open the property windows of the selected planes
 HZOOM	Zoom forwards or backwards (with SHIFT) on the current field
-HPAN	Click and drag to pan the field (SHIFT => view sync)
+HPAN	Click and drag to pan the field (Ctrl for rolling)
 HHIST	Pixel histogram and contrast controller
 HPAD	Open the pad - to cut-and-paste, memorize
 HRGB	Create an RGB image
@@ -520,7 +526,7 @@ HDEL.fr	Efface/supprime les éléments sélectionnées (surcharges graph., vues, pla
 HMGLSS.fr	Active la loupe sur la position de la souris
 HPROP.fr	Ouvre les fenêtres des propriétés des plans sélectionnés
 HZOOM.fr	Zoom croissant ou décroissant (touche MAJ) sur la position pointée
-HPAN.fr	Cliquer et glisser pour déplacer le champ (MAJ => sync des vues)
+HPAN.fr	Cliquer et glisser pour déplacer le champ (CTRL pour tourner)
 HHIST.fr	Histogramme des pixels et contrôle du contraste
 HPAD.fr	Ouvre la fenêtre du bloc-note pour couper/copier des éléments
 HRGB.fr	Permet la création d'une image en couleurs composites (RVB)
@@ -825,11 +831,11 @@ FOVLOAD.fr	Charger...
 #FrameHeaderFits
 HSAVE	Save
 HUNDO	Undo
-HSAVEINFO	Your edition have been validated\nDo you want to save this FITS file immediately ?
+HSAVEINFO	Your edition have been validated.\nDo you want to save this FITS file immediately ?
 
 HSAVE.fr	Sauve
 HUNDO.fr	Défaire
-HSAVEINFO.fr	Votre édition a été mémorisée\nVoulez-vous sauvegarder le fichier FITS immédiatement ?
+HSAVEINFO.fr	Votre édition a été validée.\nVoulez-vous sauvegarder le fichier FITS immédiatement ?
 
 # FrameRGBBlink.java strings
 IMGCREATE	CREATE
@@ -2274,7 +2280,7 @@ SWATLEASTONE.fr Sélectionnez au minimum une image
 HPXGENERATE Progressive sky builder (HiPS)...
 HPXGENERATE.fr	Générateur ciel progressif (HiPS)...
 HPXCREATE Convert current image to a HiPS
-HPXCREATE.fr Convertit l'image courante en HiPS
+HPXCREATE.fr Convertir l'image courante en HiPS
 HPXGRID	HEALPix grid
 HPXGRID.fr	Grille HEALPix
 #HPXDUMP Convert to a flat image plane
@@ -2602,8 +2608,8 @@ TIPCLOSE	Close this window
 TIPCLOSE.fr	Ferme cette fenêtre
 TIPTAG	Tag/untag this source\n=> keep it in the measurement frame
 TIPTAG.fr	Coche/décoche cette source\n=> la garde dans la fenêtre des mesures
-TIPCMD	Last clicked coordinates / Script command field (see Ctrl+F5)
-TIPCMD.fr	Dernières coordonnées cliquées / Champ de commandes scripts (voir Ctrl+F5)
+TIPCMD	Object, coordinates, filename, URL or script command
+TIPCMD.fr	Objet, coordonnées, nom de fichier, URL ou commande script
 TIPPOS	Coordinate location
 TIPPOS.fr	Coordonnées de la position
 TIPPOSCHOICE	Coordinate frame
@@ -2654,112 +2660,100 @@ PLUGLOC.fr	Votre répertoire à plugins
 PLUGCONF.fr	Désirez-vous réellement supprimer définitivement\nles plugins sélectionnés ?
 
 #Tip messages
-TIP0	Adjust the constrast [right mouse button] - Pan [middle mouse button]
-TIP1	Create image mosaics or blink sequences [assoc button]
-TIP2	Exchange data with other application via Plastic/SAMP [radio antenna icon]
-TIP3	Synchronize/unsync. all views [last icon of view controller]
-TIP4	Adjust the zoom for displaying all the image [CTRL + clic in the zoom view]
-TIP5	Abort a running query by deleting the associated plane
-TIP6	Discover astronomical objects [Tool>Simbad pointer]
-TIP7	Use Aladin script commands for advanced usage [Tool>Script console]
-TIP8	Drag and drop your files from your desktop into Aladin
-TIP9	Adjust the zoom factor via the mouse wheel
-TIP10	Reset the stack by clicking the Del button with the SHIFT key pressed
-TIP11	Maintain the SHIFT key pressed for selecting disconnected catalog sources
-TIP12	Cross-match about 1 million catalog objects in a few seconds [Catalog>Cross match]
-TIP13	Load huge images in few seconds(several GB)
-TIP14	Load directly zip or gzip images/catalogs
-TIP15	Create your own catalog. The simplest syntax is: Ra Dec Val1 Val2...
-TIP16	Extend Aladin by creating your own java Aladin plugins [Tool>Plugin]
-TIP17	Draw a cut graph [Image>Cut graph]
-TIP18	Extract a pointed spectra in a cube [phot button]
-TIP19	Define the object size and shape rules [filter button]
-TIP20	Compare two images via colored subtraction tool [RGB button]
-TIP21	Detach the object measurements in a separated window ["out arrow" icon]
-#TIP22	Switch off all other planes by clicking the Aladin eye
-TIP23	Write a script command directly into the "Command/Location" field
-TIP24	Insert a new column to a catalog [Catalog>Add a new column]
-#TIP25	Autocenter the tags by pressing the SHIFT key
-TIP26	Find a position by typing its coordinate/object name ["Command/Location" field]
-TIP27	Find all available data for a position [File>Load from the Virtual Obs...]
-TIP28	Sort the measurements by clicking in the header
-TIP29	Select/unselect sources by an expression [Search field]
-TIP30	Project a catalog without image: drag its plane from the stack to a panel
-TIP31	Double-click on a catalog label for selecting all its sources
-TIP32	In the crowded regions, move the catalog plane under the image plane
-TIP33	+, -, *, / two images [Image>Arithmetic operation]
-TIP34	With more than one image, modify the transparency [stack "slider"]
-TIP35	Open two Aladin windows simultaneously [File>New Aladin Window]
-TIP36 Resize the measurement columns [click&drag the header]
-TIP37 Unselect a source [click measurement frame + SHIFT]
-TIP38 Choose your language [Edit>User preferrences]
-TIP39 Load a JPEG, GIF or PNG image [File>Load a file]
-TIP40 Lock a view [View popup menu>Locked view]
-TIP41 Compare several images side by side ["Multiview" icons]
-TIP42 Load in your browser the original data of a plane [prop button]
-TIP43 Modify the stack order [click & drag the planes]
-TIP44 Enable/disable a plane [click on its logo]
-TIP45 Quick contrast tuning [right mouse button]
-TIP46 Quick view pan [middle mouse button]
-TIP47 Return to the previous location [green arrows (left top)]
-TIP48 Switch to the full screen mode [icon on right top]
-TIP49 Use Aladin in outreach mode [user preferences]
+TIP0 Adjust the constrat easily => clic&drag right mouse button
+TIP1	Rotate the view => clic&drag middle mouse button + CTRL key
+TIP2	Switch off all other planes temporary => "wink"
+TIP3 Synchronize all views => "match"
+TIP4	Abort the current request => remove the associated plane
+TIP5	Discover the object under the mouse location => Tool>Simbad pointer
+TIP6	Get photometrical measurements => Tool>VizieR pointer
+TIP7	Use script commands => Tool>Console...
+TIP8	Load files quickly => Drag&Drog from your desktop
+TIP9	Adjust zoom level => Mouse wheel
+TIP10	Reset the stack => SHIFT key + "Del" button
+TIP11	Do you know that zipped/gzipped files are supported?
+TIP12	Create your own Aladin java "plugins" => Tool>Plugins
+TIP13	Détach the measurement panel => arrow button
+TIP14	Execute a script command by writting it in the "Location" field
+TIP15	Sort the source measurements by clicking in the table head line
+TIP16	Select some sources => "Search" field
+TIP17	Create a new view => Drag&drop the plane logo into the main panel
+TIP18	Double clic on the catalog name in the stack for selecting all its sources
+TIP19  Tag some sources for retrieving them easily => "checkboxes" in the measurements
+TIP20  Resize the measurement columns => clic&drag the header cells
+TIP21  Do you know that you can calibrate a PNG or JPEG image => Image>Calibration
+TIP22  Create your own instrument field of view => Tool>Instrument footprint
+TIP23  Modify the stack order => Drag&drop plane icons
+TIP24  Do you know that you can load FITS images of any size?
+TIP25  Adjust the source display according to its measurements => Catalog>Create a filter
+TIP26  Use Aladin in outreach mode => Edition>Préférences>Profile
+TIP27  Create a group of planes for activating them simultaneously => Edit>Create a folder
+TIP28  Do you know that you can edit&save the FITS header => Alt+H
+TIP29  Adjust the epoch for displaying dynamically the star proper motions
+TIP30  Modify the default coordinate frame => Edit>Preferences
+TIP31  Modify the default projection => Edit>Preferences
+TIP32  Modify the default color map => Edit>Preferences
+TIP33  Modify the default survey => Edit>Preferences>Survey
+TIP34  Do you know that you can subtract,divize,... images => Images>Operations
+TIP35  Do you know that you can extract all pixel values => Images>Extraction
+TIP36  Do you know that you can change the FITS pixel encoding => Images>Conversion
+TIP37  Create a scatter graph from the sources measurements => Catalog>Scatter plot
+TIP38  Correlate two catalogs => Catalog>Cross match
+TIP39  Get photometrical measurements inside a polygon/a circle => Overlay>phot or draw
+TIP40  Display the colormap over the current image => Overlay>Colormap
+TIP41  Write a object name in the "location" field for getting its sky location
+TIP42  Use macros for repeating the same process => Tool>Macros
+TIP43  Redo the same process thank to a bookmark => Tool>Bookmarks
 
-TIP0.fr	Ajuster le constraste [bouton/souris droit] - Déplacer [bouton/souris milieu]
-TIP1.fr	Créez des mosaïques ou des séquences d'images [bouton assoc]
-TIP2.fr	Transférez des données vers d'autres applications via Plastic/SAMP [l'antenne en bas]
-TIP3.fr	Synchronisez/désync. toutes les vues [dernière icône du contrôleur de vues]
-TIP4.fr	Ajustez le zoom pour voir toute l'image [CTRL + clic dans la fen. du zoom]
-TIP5.fr	Stoppez une requête en cours en supprimant le plan associé
-TIP6.fr	Découvrez la nature des objets astronomiques [Outil>Pointeur Simbad]
-TIP7.fr	Pour une utilisation pointue, utilisez les commandes scripts [Outil>Console...]
-TIP8.fr	Glissez/déposer vos fichiers depuis le Bureau sur Aladin
-TIP9.fr	Ajustez le facteur de zoom via la molette de la souris
-TIP10.fr	Réinitialisez la pile en cliquant sur le bouton "Suppr." avec la touche MAJ appuyée
-TIP11.fr	Sélectionnez des source en plusieurs fois en gardant appuyée la touche MAJ
-TIP12.fr	Corrélez un million de sources en quelques secondes [Catalogue>Corréler...]
-TIP13.fr	Chargez des immenses images en quelques secondes (plusieurs Go)
-TIP14.fr	Chargez directement vos données zippées ou gzippés
-TIP15.fr	Créez votre propre catalogue. La syntaxe la plus simple est : Ra Dec Val1 Val2...
-TIP16.fr	Créez vos propres "plugins" [plugins] java pour étendre Aladin [Outil>Plugins]
-TIP17.fr	Tracez une coupe de pixels [Image>Graphe de coupe]
-TIP18.fr	Extrayez un spectre d'un cube [bouton phot]
-TIP19.fr	Définissez la taille et la forme des sources [bouton filtre]
-TIP20.fr	Comparez deux images par soustraction colorisée [bouton RGB]
-TIP21.fr	Détachez la fenêtre des mesures [flêche en bas à droite]
-#TIP22.fr	Activez/désactivez tous les autres plans en cliquant sur l'oeil d'Aladin
-TIP23.fr	Saisissez une commande script directement dans le champ "Commande/Position"
-TIP24.fr	Insérez une nouvelle colonne à un catalogue [Catalogue>Ajouter...]
-#TIP25.fr	Centrez automatiquement le "Tag" en maintenant appuyé la touche MAJ
-TIP26.fr	Visualisez une position en tapant ses coord. ou un nom [champ "Commande/Position"]
-TIP27.fr	Visualisez toutes les données disponibles [Fichier>Charger depuis l'Obs...]
-TIP28.fr	Triez les mesures en cliquant dans leurs entêtes
-TIP29.fr	Sélectionner/déselectionner des sources via une expression [champ "Chercher"]
-TIP30.fr	Projetez un catalogue sans image : glissez son plan de la pile vers un panneau
-TIP31.fr	Double-cliquez sur le nom d'un catalogue pour sélectionner tous ses objets
-TIP32.fr	Dans les régions "sur-chargées", placez le plan catalogue sous le plan image
-TIP33.fr	+, -, *, / deux images [Image>Opérations arithmétiques]
-TIP34.fr	Avec plus de 2 images, modifier la transparence ["slider" du logo]
-TIP35.fr	Ouvrez deux fenêtres Aladin simultanément [Fichier>Nouvelle fenêtre...]
-TIP35.fr  Cochez certaines sources ["Coche" dans les mesures]
-TIP36.fr  Redimensionnez les colonnes des mesures [cliquez/étirer les entêtes]
-TIP37.fr  Déselectionnez une source [clic fenêtre des mesures + MAJ]
-TIP38.fr  Choississez votre langue [Edition>Préférences...]
-TIP39.fr  Chargez une image JPEG,GIF ou PNG [Fichier>Ouvrir un fichier]
-TIP40.fr  Verrouillez une vue [Menu contextuel de la vue>Vue verrouillée]
-TIP41.fr  Comparez bord à bord plusieurs images ["multivues" en bas à gauche]
-TIP42.fr  Charger dans votre navigateur les données originales d'un plan [Bouton prop]
-TIP43.fr  Modifiez l'ordre des plans dans la pile [cliquer - déplacer les plans]
-TIP44.fr  Activez/désactivez un plan [clic sur son logo]
-TIP45.fr Modifier rapidement le constraste [bouton de droite de la souris]
-TIP46.fr Déplacer rapidement la vue [bouton central de la souris]
-TIP47.fr Revenir à la position précédente [flêches vertes en haut à gauche]
-TIP48.fr Passer en plein écran [icône en haut à droite]
-TIP49.fr Utiliser Aladin en mode "enseignement" [préférences utilisateurs]
+
+TIP0.fr Vous pouvez ajuster rapidement le contraste => Clic&déplace bouton-droit
+TIP1.fr	Pour faire pivoter la vue => Clic&déplace  bouton-milieu + CTRL
+TIP2.fr	Cachez temporairement les autres plans => "cligne"
+TIP3.fr Synchronisez temporairement vos vues => "unif."
+TIP4.fr	Interrompre la requête en cours => supprimez le plan associé
+TIP5.fr	Connaitre l'objet sous la souris => Outil>Pointeur Simbad
+TIP6.fr	Obtenir des mesures photométriques => Outil>Pointeur VizieR
+TIP7.fr	Utiliser des commandes scripts => Outil>Console...
+TIP8.fr	Chargez facilement vos fichiers => Glissez/déposer
+TIP9.fr	Ajustez facilement le zoom => Molette souris
+TIP10.fr	Vider la pide d'un coup => MAJ + bouton "Suppr"
+TIP11.fr	Saviez-vous que vos fichiers peuvent être zippés ou gzippés ?
+TIP12.fr	Créer vos propres "plugins" java compatibles Aladin => Outil>Plugins
+TIP13.fr	Détacher la fenêtre des mesures => flêche en bas à droite
+TIP14.fr	Vous pouvez saisir une commande script directement dans le champ "Position"
+TIP15.fr	Triez les mesures en cliquant dans leurs entêtes
+TIP16.fr	Sélectionnez certaines sources => champ "Chercher"
+TIP17.fr	Créez une nouvelle vue => glissez le logo du plan vers la zone des vues
+TIP18.fr	Double-cliquez sur le nom d'un catalogue pour sélectionner tous ses objets
+TIP19.fr  Tagguer certaines sources pour les retrouver facilement => "Coche" dans les mesures
+TIP20.fr  Redimensionnez les colonnes des mesures => cliquez/étirer les entêtes
+TIP21.fr  Saviez-vous que vous pouvez calibrer des images JPEG ou PNG ? => Image>Calibrer
+TIP22.fr  Vous pouvez créer votre champ instrumental => Outils>Editeur de champ...
+TIP23.fr  Modifiez l'ordre des plans dans la pile => Glisser/Déposer
+TIP24.fr  Saviez-vous que vous pouvez charger des images FITS de n'importe quelle taille ?
+TIP25.fr  Contraindre la manière dont s'affiche les sources => Catalogue>Créer un filtre
+TIP26.fr  Aladin peut s'utiliser en mode "enseignement" => Edition>Préférences>Profile
+TIP27.fr  Grouper des plans pour les activer simultanément => Edition>Créer un dossier
+TIP28.fr  Saviez-vous que vous pouvez éditer l'entête FITS => Alt+H
+TIP29.fr  Vous pouvez modifier dynamiquement l'époque pour visualiser le mvt propre des étoiles
+TIP30.fr  Choisissez un autre référentiel céleste par défaut => Edition>Préférences
+TIP31.fr  Choisissez une autre projection par défaut => Edition>Préférences
+TIP32.fr  Choisissez une autre palette de couleurs par défaut => Edition>Préférences
+TIP33.fr  Choisissez un autre relevé par défaut => Edition>Préférences>Relevé
+TIP34.fr  Vous pouvez soustraire, diviser,... des images => Images>Opérations
+TIP35.fr  Vous pouvez extraire toutes les valeurs des pixels => Images>Extraction
+TIP36.fr  Changer le codage d'une image FITS => Images>Conversion
+TIP37.fr  Créer un graphe deux dimensions pour certaines mesures => Catalogue>Graphe de points
+TIP38.fr  Corréler deux catalogues => Catalogue>Corréler
+TIP39.fr  Mesures photométriques à l'intérieur d'un poygone, un cercle => Graphique>phot ou dessin
+TIP40.fr  Affichez la table des couleurs avec l'image => Graphique>Table des couleurs
+TIP41.fr  Saisissez un nom d'objet dans le champ "Location" pour connaître sa position
+TIP42.fr  Utilisez les macros pour effectuer plusieurs fois le même traitement => Outil>Macros
+TIP43.fr  Refaire le même traitement via un signet => Outil>Signets
 
 BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...
 BEGIN2	Imagine your eye\nlooking through a stack of planes.\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them.\n \nUse File->Open for discovering all other data,\nor clic & drag your own files.
-BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe vue is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
+BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe view is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
 BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nLet you mouse pointer on an object for discovering associated Simbad data.
 BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it.\n \n-Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controler.
 

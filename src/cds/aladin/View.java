@@ -1503,7 +1503,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       sauvegarde();
       viewMemo.freeAll();
       viewSticked.freeAll();
-      resetUndo();
+//      resetUndo();
       scrollOn(0);
    }
 
@@ -1687,7 +1687,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
        return aladin.frameNewCalib!=null
        && aladin.frameNewCalib.isShowing()
        && aladin.frameNewCalib.getModeCalib()==FrameNewCalib.QUADRUPLET
-       && aladin.toolBox.getTool()==ToolBox.SELECT;
+       ;
     }
 
     protected boolean syncSimple(Source o) {
@@ -1705,7 +1705,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
           aladin.calque.zoom.newZoom();
           aladin.calque.zoom.zoomView.repaint();
        }
-       memoUndo(v,c,o);
+//       memoUndo(v,c,o);
        moveRepere(c);
        showSource(o,false,false);
        resetBlinkSource();
@@ -1979,7 +1979,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          // En cas de recalibration on va éviter de déplacer la vue intempestivement
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
-         if( isRecalibrating() || v.isPlotView() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+         if( isRecalibrating() && aladin.toolBox.getTool()==ToolBox.SELECT
+               || v.isPlotView() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
 
          // Mode courant => Déplacement soit sur la coordonnée indiquée, soit sur le repere
          else {
@@ -2931,164 +2932,164 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //      repere.setId("Reticle location => "+s);
    }
 
-   volatile private Vector undoStack = new Vector();  // Mémorise les positions (repere,vue courante, zoom)
-   volatile private int nUndo=-1;   // indice de la position courante dans la liste undo
+//   private Vector undoStack = new Vector();  // Mémorise les positions (repere,vue courante, zoom)
+//   private int nUndo=-1;   // indice de la position courante dans la liste undo
 
    /** Permet la mémorisation des position pour la liste undo */
-   class Undo {
-      double zoom;                // issu du viewSimple courant
-      double xzoomView,yzoomView; // idem
-      double ra,de;               // Position du repère
-      Source source;              // Source courante s'il y a lieu
-      int vn;                     // Numéro de la vue
-      int nbView;                 // Nombre de vue
-      int prefSignature;          // signature du plan de référence de la vue (pour comparaison)
-
-      Undo(ViewSimple v,Coord c,Source s) {
-         zoom=v.zoom;
-         xzoomView=v.xzoomView;
-         yzoomView=v.yzoomView;
-         ra=c.al;
-         de=c.del;
-         source=s;
-         vn=v.n;
-         nbView=modeView;
-         prefSignature=v.pref.hashCode();
-      }
-
-      /** retourne true si la postion */
-      boolean samePos(Undo u) {
-         if( ra!=u.ra || de!=u.de ) return false;
-         if( vn!=u.vn ) return false;
-         if( prefSignature!=u.prefSignature ) return false;
-         return true;
-      }
-
-      /** Mise à jour du zoom uniquement */
-      void update(Undo u) {
-         zoom=u.zoom;
-         xzoomView = u.xzoomView;
-         yzoomView=u.yzoomView;
-      }
-
-      public String toString() {
-         return "Stack zoom="+zoom+" x,y="+xzoomView+","+yzoomView+" ra,dec="+new Coord(ra,de)+
-         " v.n="+vn+" prefSignature="+prefSignature;
-      }
-   }
-
-   /** reset de la liste undo */
-   protected void resetUndo() {
-      synchronized( undoStack ) {
-         undoStack.clear();
-         nUndo=-1;
-      }
-   }
-
-   /** Retourne true si on est au bout de la liste undo */
-   protected boolean onUndoTop() {
-      synchronized( undoStack ) { return undoStack.size()-1==nUndo; }
-   }
-
-   /** Mémorise une position sur le haut de la liste undo, et repositionne le cursuer
-    * de la liste en haut de la pile. Dans le cas ou le haut de la pile concerne
-    * la même vue à la même position, se contente de mettre à jour les variables
-    * associées au zoom */
-   protected void memoUndo(ViewSimple v,Coord coo,Source source) {
-      if( Aladin.NOGUI ) return;
-      if( coo==null ) coo = new Coord(repere.raj,repere.dej);
-      Undo u = new Undo(v,coo,source);
-      synchronized( undoStack ) {
-         int n = undoStack.size()-1;
-         if( n>0 ) {
-            Undo ou = (Undo)undoStack.elementAt(n);
-            if( ou.samePos(u) ) {
-               ou.update(u);
-               return;
-            }
-         }
-
-         // On supprime toute la fin de la la file
-         while( undoStack.size()>nUndo+1 ) undoStack.remove(nUndo+1);
-
-         undoStack.addElement(u);
-         purgeUndo();
-         nUndo=undoStack.size()-1;
-      }
-   }
-
-   /** Nettoyage de la file undo pour toutes les vues qui ont changé de plan de réf */
-   private void purgeUndo() {
-      synchronized( undoStack ) {
-         for(int i=0; i<undoStack.size(); i++ ) {
-            Undo u = (Undo)undoStack.elementAt(i);
-            if( viewSimple[u.vn].pref==null
-                  || u.prefSignature!=viewSimple[u.vn].pref.hashCode() ) {
-               undoStack.remove(i);
-               if( nUndo>i ) nUndo--;
-               i--;
-            }
-         }
-      }
-   }
-
-   /** Retourne true si l'on peut revenir en arrière sur la liste undo */
-   protected boolean canActivePrevUndo() {
-      synchronized( undoStack ) { return nUndo>0; }
-   }
-
-   /** Retourne true si l'on peut aller en avant sur la liste undo */
-   protected boolean canActiveNextUndo() {
-      synchronized( undoStack ) { return nUndo<undoStack.size()-1; }
-   }
-
-   /** Effectue un undo */
-   protected void undo(boolean flagFirst) {
-      synchronized( undoStack ) {
-         if( nUndo<=0 ) return;
-         try {
-            nUndo= flagFirst ? 0 : nUndo-1;
-            setUndo((Undo)undoStack.elementAt(nUndo));
-         } catch( Exception e) {}
-      }
-   }
-
-   /** Effectue un redo */
-   protected void redo(boolean flagLast) {
-      synchronized( undoStack ) {
-         if( nUndo==undoStack.size()-1 ) return;
-         try {
-            nUndo= flagLast ? undoStack.size()-1 : nUndo+1;
-            setUndo((Undo)undoStack.elementAt(nUndo));
-         } catch( Exception e) {}
-      }
-   }
-
-   /** Exécute le undo passé en paramètre => repositionne la vue courante,
-    * le zoom et le repère en conséquence */
-   private void setUndo(Undo u) {
-      if( Aladin.NOGUI ) return;
-      setModeView(u.nbView);
-      ViewSimple v = viewSimple[u.vn];
-      if( v.pref.hashCode()!=u.prefSignature ) {
-//System.out.println("Pref modifié => ignore");
-         return;
-      }
-
-      aladin.calque.unSelectAllPlan();
-      setSelect(u.vn);
-
-      currentView=-1;   // Pour contourner le test dans setCurrentView()
-      setCurrentView(viewSimple[u.vn]);
-      moveRepere(u.ra,u.de);
-      if( v.pref instanceof PlanBG ) setRepere(new Coord(u.ra,u.de));
-      else v.setZoomXY(u.zoom,u.xzoomView,u.yzoomView);
-
-      if( u.source!=null ) aladin.mesure.mcanvas.show(u.source, 2);
-
-      aladin.calque.repaintAll();
-      aladin.log("Undo","");
-   }
+//   class Undo {
+//      double zoom;                // issu du viewSimple courant
+//      double xzoomView,yzoomView; // idem
+//      double ra,de;               // Position du repère
+//      Source source;              // Source courante s'il y a lieu
+//      int vn;                     // Numéro de la vue
+//      int nbView;                 // Nombre de vue
+//      int prefSignature;          // signature du plan de référence de la vue (pour comparaison)
+//
+//      Undo(ViewSimple v,Coord c,Source s) {
+//         zoom=v.zoom;
+//         xzoomView=v.xzoomView;
+//         yzoomView=v.yzoomView;
+//         ra=c.al;
+//         de=c.del;
+//         source=s;
+//         vn=v.n;
+//         nbView=modeView;
+//         prefSignature=v.pref.hashCode();
+//      }
+//
+//      /** retourne true si la postion */
+//      boolean samePos(Undo u) {
+//         if( ra!=u.ra || de!=u.de ) return false;
+//         if( vn!=u.vn ) return false;
+//         if( prefSignature!=u.prefSignature ) return false;
+//         return true;
+//      }
+//
+//      /** Mise à jour du zoom uniquement */
+//      void update(Undo u) {
+//         zoom=u.zoom;
+//         xzoomView = u.xzoomView;
+//         yzoomView=u.yzoomView;
+//      }
+//
+//      public String toString() {
+//         return "Stack zoom="+zoom+" x,y="+xzoomView+","+yzoomView+" ra,dec="+new Coord(ra,de)+
+//         " v.n="+vn+" prefSignature="+prefSignature;
+//      }
+//   }
+//
+//   /** reset de la liste undo */
+//   protected void resetUndo() {
+//      synchronized( undoStack ) {
+//         undoStack.clear();
+//         nUndo=-1;
+//      }
+//   }
+//
+//   /** Retourne true si on est au bout de la liste undo */
+//   protected boolean onUndoTop() {
+//      synchronized( undoStack ) { return undoStack.size()-1==nUndo; }
+//   }
+//
+//   /** Mémorise une position sur le haut de la liste undo, et repositionne le cursuer
+//    * de la liste en haut de la pile. Dans le cas ou le haut de la pile concerne
+//    * la même vue à la même position, se contente de mettre à jour les variables
+//    * associées au zoom */
+//   protected void memoUndo(ViewSimple v,Coord coo,Source source) {
+//      if( Aladin.NOGUI ) return;
+//      if( coo==null ) coo = new Coord(repere.raj,repere.dej);
+//      Undo u = new Undo(v,coo,source);
+//      synchronized( undoStack ) {
+//         int n = undoStack.size()-1;
+//         if( n>0 ) {
+//            Undo ou = (Undo)undoStack.elementAt(n);
+//            if( ou.samePos(u) ) {
+//               ou.update(u);
+//               return;
+//            }
+//         }
+//
+//         // On supprime toute la fin de la la file
+//         while( undoStack.size()>nUndo+1 ) undoStack.remove(nUndo+1);
+//
+//         undoStack.addElement(u);
+//         purgeUndo();
+//         nUndo=undoStack.size()-1;
+//      }
+//   }
+//
+//   /** Nettoyage de la file undo pour toutes les vues qui ont changé de plan de réf */
+//   private void purgeUndo() {
+//      synchronized( undoStack ) {
+//         for(int i=0; i<undoStack.size(); i++ ) {
+//            Undo u = (Undo)undoStack.elementAt(i);
+//            if( viewSimple[u.vn].pref==null
+//                  || u.prefSignature!=viewSimple[u.vn].pref.hashCode() ) {
+//               undoStack.remove(i);
+//               if( nUndo>i ) nUndo--;
+//               i--;
+//            }
+//         }
+//      }
+//   }
+//
+//   /** Retourne true si l'on peut revenir en arrière sur la liste undo */
+//   protected boolean canActivePrevUndo() {
+//      synchronized( undoStack ) { return nUndo>0; }
+//   }
+//
+//   /** Retourne true si l'on peut aller en avant sur la liste undo */
+//   protected boolean canActiveNextUndo() {
+//      synchronized( undoStack ) { return nUndo<undoStack.size()-1; }
+//   }
+//
+//   /** Effectue un undo */
+//   protected void undo(boolean flagFirst) {
+//      synchronized( undoStack ) {
+//         if( nUndo<=0 ) return;
+//         try {
+//            nUndo= flagFirst ? 0 : nUndo-1;
+//            setUndo((Undo)undoStack.elementAt(nUndo));
+//         } catch( Exception e) {}
+//      }
+//   }
+//
+//   /** Effectue un redo */
+//   protected void redo(boolean flagLast) {
+//      synchronized( undoStack ) {
+//         if( nUndo==undoStack.size()-1 ) return;
+//         try {
+//            nUndo= flagLast ? undoStack.size()-1 : nUndo+1;
+//            setUndo((Undo)undoStack.elementAt(nUndo));
+//         } catch( Exception e) {}
+//      }
+//   }
+//
+//   /** Exécute le undo passé en paramètre => repositionne la vue courante,
+//    * le zoom et le repère en conséquence */
+//   private void setUndo(Undo u) {
+//      if( Aladin.NOGUI ) return;
+//      setModeView(u.nbView);
+//      ViewSimple v = viewSimple[u.vn];
+//      if( v.pref.hashCode()!=u.prefSignature ) {
+////System.out.println("Pref modifié => ignore");
+//         return;
+//      }
+//
+//      aladin.calque.unSelectAllPlan();
+//      setSelect(u.vn);
+//
+//      currentView=-1;   // Pour contourner le test dans setCurrentView()
+//      setCurrentView(viewSimple[u.vn]);
+//      moveRepere(u.ra,u.de);
+//      if( v.pref instanceof PlanBG ) setRepere(new Coord(u.ra,u.de));
+//      else v.setZoomXY(u.zoom,u.xzoomView,u.yzoomView);
+//
+//      if( u.source!=null ) aladin.mesure.mcanvas.show(u.source, 2);
+//
+//      aladin.calque.repaintAll();
+//      aladin.log("Undo","");
+//   }
 
    /** Déplacement du repere courant sur la source passée en paramètre et réaffichage
     *  @param coo on utilise les champs ra,dec uniquement
@@ -3113,6 +3114,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean setRepere(Coord coo) { return setRepere(coo,false); }
    protected boolean setRepere(Coord coo,boolean force) {
       moveRepere(coo);
+
 //      syncView(1,null,null,true);              // <= POUR THOMAS
       syncView(1,null,null,force);              // <= POUR THOMAS
       boolean rep=false;
@@ -3124,10 +3126,17 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Nouvelle position du repere courant (sans réaffichage) */
-   protected void moveRepere(Coord coo) { moveRepere(coo.al,coo.del); }
+   protected void moveRepere(Coord coo) { {
+      moveRepere(coo.al,coo.del); }
+   }
    protected void moveRepere(double ra, double dec) {
       repere.raj=ra;
       repere.dej=dec;
+      
+      if( aladin.frameCooTool!=null ) {
+         aladin.frameCooTool.setReticle(ra,dec);
+      }
+
       
       // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
 //      aladin.dialog.adjustParameters();

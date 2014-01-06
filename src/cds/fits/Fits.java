@@ -957,8 +957,9 @@ final public class Fits {
          size += p.length;
       }
 
-      // Bourrage final
-      os.write(getBourrage(size)); // Quel gachi !
+      // Bourrage final 
+      // POUR DES TUILES HiPS, PAS NECESSAIRE
+//      os.write(getBourrage(size)); // Quel gachi !
    }
 
    /** Génération d'un fichier FITS (sans calibration) */

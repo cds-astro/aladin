@@ -74,14 +74,10 @@ public class MyLabel extends JPanel {
   /** Recuperation du texte */
    public String getText() { return text; }
 
-   /** Pour une éventuelle surcharge - voir Copyright par exemple */
-   protected String pubNews(String text) { return text; }
-
   /** Modification du texte du Label.
    * @param text Le nouveau texte du label
    */
    public void setText(String text) {
-      text = pubNews(text);
       if( this.text!=null && this.text.equals(text) ) return;
       
       this.text=text;
@@ -112,9 +108,7 @@ public class MyLabel extends JPanel {
       }
       if( mode==Label.RIGHT ) max+=MARGE;
       int h=line.size()*fm.getHeight()+fm.getDescent();
-//      int h=line.size()*Aladin.GETHEIGHT+3;	// Cochonnerie de JAVA
       dim = new Dimension(max+4,h);
-//      resize(max+10,h);
       validate();
       reaffiche();
    }
@@ -129,7 +123,7 @@ public class MyLabel extends JPanel {
       flagReaffiche=true;
       repaint();
    }
-
+   
    public void paintComponent(Graphics g) {
       super.paintComponent(g);
       if( line==null ) return;
@@ -137,7 +131,6 @@ public class MyLabel extends JPanel {
       int i;
       int w,x;
       int y=fm.getHeight();
-//      int y=Aladin.GETHEIGHT;	// Cochonnerie de JAVA
       int n=line.size();
       int width = getSize().width;
       int height = getSize().height;
@@ -147,6 +140,7 @@ public class MyLabel extends JPanel {
          g.fillRect(0,0,width,height);
          flagReaffiche=false;
          g.setColor( getForeground() );
+         g.setFont( getFont() );
       }
 
       for( i=0; i<n; i++ ) {

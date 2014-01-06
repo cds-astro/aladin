@@ -68,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Pixel and coordinate toolbox
  * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
  * @beta    <LI> Recently open file menu
  * @beta    <LI> Copy/Paste data
@@ -79,7 +80,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> STC-s region support (as a script command)
  * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) support
  * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
- * @beta    <LI> "match" command script
+ * @beta    <LI> New script commands: "match", "=" (arithmetic expression solver), "convto"
  * @beta    <LI> Catalog proper motion support
  * @beta    <LI> All-sky progressive zoom (not only powers of 2)
  * @beta    <LI> Automatic All-sky + Sesame switcher (load balancing + fault tolerance)
@@ -130,7 +131,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.006";
+    static public final    String VERSION = "v8.007";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -159,6 +160,7 @@ public class Aladin extends JApplet
 
     // La couleur du fond
     static final Color BKGD   = Color.lightGray;
+//    static final Color BKGD   = new Color(246,246,246);
     static final Color GREEN = new Color(27,137,0);
     static final Color DARKBLUE = new Color(102,102,153);
     static final Color MYBLUE = new Color(49,106,197);
@@ -323,7 +325,7 @@ public class Aladin extends JApplet
     Oeil oeil;                    // Gere le logo pour l'oeil
     Northup northup;              // Gère le logo pour le Nord en haut
     ViewControl viewControl;	  // Gere le logo de controle des views
-    MyLabel urlStatus;            // Gere la ligne de l'info sur les URLs
+    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
     MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
     Mesure mesure;                // Gere la "Frame of measurements"
     MySplitPane splitH;           // Gère la séparation mesure/Vue
@@ -408,7 +410,7 @@ public class Aladin extends JApplet
                       miLock,miDelLock,miStick,miOne,miNorthUp,
                       miProp,miGrid,miReticle,miReticleL,miNoReticle,
                       miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
-                      miPrevPos,miNextPos,
+                      /* miPrevPos,miNextPos, */
                       miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
                       miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
                       miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
@@ -465,7 +467,8 @@ public class Aladin extends JApplet
 
     // Sous-menus
     String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,RETICLE,RETICLEL,NORETICLE,
-           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,SESAME,NEW,PREF,
+           TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,
+           COOTOOL,PIXELTOOL,SESAME,NEW,PREF,
            /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
@@ -478,7 +481,7 @@ public class Aladin extends JApplet
            HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
-           HPXCREATE,HPXGRID,HPXDUMP,HPXGENERATE,GETOBJ;
+           HPXCREATE,HPXGRID,HPXDUMP,FOVEDITOR,HPXGENERATE,GETOBJ;
     String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
 
      /** Retourne l'objet gérant les chaines */
@@ -847,6 +850,7 @@ public class Aladin extends JApplet
        TRANSPON= chaine.getString("MTRANSPON");
        CROP    = chaine.getString("VWMCROP1");
        HPXGENERATE = chaine.getString("HPXGENERATE");
+       FOVEDITOR = chaine.getString("FOVEDITOR");
        HPXCREATE=chaine.getString("HPXCREATE");
        HPXGRID  =chaine.getString("HPXGRID");
        COPY     = chaine.getString("MCOPY");
@@ -906,6 +910,8 @@ public class Aladin extends JApplet
        ADDCOL = chaine.getString("SLMNEWCOL");
        ROI    = chaine.getString("ROI");
        SESAME = chaine.getString("SESAME");
+       COOTOOL= chaine.getString("COOTOOL");
+       PIXELTOOL= chaine.getString("PIXELTOOL");
        SIMBAD = chaine.getString("SIMBAD");
        VIZIERSED = chaine.getString("VIZIERSED");
        AUTODIST = chaine.getString("AUTODIST");
@@ -1059,18 +1065,18 @@ public class Aladin extends JApplet
                 {MOCLOAD},{MOCGENIMG},{MOCGENCAT},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
              },
              { {MTOOLS},
-                {SESAME+"|"+meta+" R"},
+                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},
                 {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
                 {},{MBKM},{CMD+"|F5"},{MACRO},
-                {},
+                {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
+                {},{HPXGENERATE},{HPXCREATE},
                    { PROTOPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
                    "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
                    "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
                    "%Mouse NSIDE 2^17","%Mouse NSIDE 2^18","%Mouse NSIDE 2^19","%Mouse NSIDE 2^20","%Mouse NSIDE 2^21",
                    "%Mouse NSIDE 2^22","%Mouse NSIDE 2^23","%Mouse NSIDE 2^24","%Mouse NSIDE 2^25","%Mouse NSIDE 2^26",
                    "%Mouse NSIDE 2^27","%Mouse NSIDE 2^28","%Mouse NSIDE 2^29",},
-                {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
-                {},{HPXGENERATE}, {HPXCREATE},
+                {},{FOVEDITOR},
 
                 {JUNIT},
              },
@@ -1641,8 +1647,8 @@ public class Aladin extends JApplet
        else if( isMenu(m,COPIER))   miCopy1    = ji;
        else if( isMenu(m,COLLER))   miPaste    = ji;
        else if( isMenu(m,ZOOMPT))  miZoomPt  = ji;
-       else if( isMenu(m,PREVPOS)) miPrevPos  = ji;
-       else if( isMenu(m,NEXTPOS)) miNextPos  = ji;
+//       else if( isMenu(m,PREVPOS)) miPrevPos  = ji;
+//       else if( isMenu(m,NEXTPOS)) miNextPos  = ji;
        else if( isMenu(m,SYNC))    miSync    = ji;
        else if( isMenu(m,SYNCPROJ))miSyncProj= ji;
        else if( isMenu(m,PAN))     miPan     = ji;
@@ -1807,6 +1813,7 @@ public class Aladin extends JApplet
        if( !flagLaunch ) {
           try {
              UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+             
 //           UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
 
           } catch( Exception e ) { e.printStackTrace(); }
@@ -1921,29 +1928,29 @@ public class Aladin extends JApplet
        });
        bg.add(b);
 
-       avant = b = new JButton(new ImageIcon(getImagette("Avant.gif")));
-       b.setMargin(new Insets(0,0,0,0));
-       b.setBorderPainted(false);
-       b.setContentAreaFilled(false);
-       Util.toolTip(b,chaine.getString("TIPAVANT"));
-       b.addActionListener( new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-             view.undo( (e.SHIFT_MASK & e.getModifiers())!=0 );
-          }
-       });
-       bg.add(b);
-
-       apres = b = new JButton(new ImageIcon(getImagette("Apres.gif")));
-       b.setMargin(new Insets(0,0,0,0));
-       b.setBorderPainted(false);
-       b.setContentAreaFilled(false);
-       Util.toolTip(b,chaine.getString("TIPPRES"));
-       b.addActionListener( new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-             view.redo( (e.SHIFT_MASK & e.getModifiers())!=0 );
-          }
-       });
-       bg.add(b);
+//       avant = b = new JButton(new ImageIcon(getImagette("Avant.gif")));
+//       b.setMargin(new Insets(0,0,0,0));
+//       b.setBorderPainted(false);
+//       b.setContentAreaFilled(false);
+//       Util.toolTip(b,chaine.getString("TIPAVANT"));
+//       b.addActionListener( new ActionListener() {
+//          public void actionPerformed(ActionEvent e) {
+//             view.undo( (e.SHIFT_MASK & e.getModifiers())!=0 );
+//          }
+//       });
+//       bg.add(b);
+//
+//       apres = b = new JButton(new ImageIcon(getImagette("Apres.gif")));
+//       b.setMargin(new Insets(0,0,0,0));
+//       b.setBorderPainted(false);
+//       b.setContentAreaFilled(false);
+//       Util.toolTip(b,chaine.getString("TIPPRES"));
+//       b.addActionListener( new ActionListener() {
+//          public void actionPerformed(ActionEvent e) {
+//             view.redo( (e.SHIFT_MASK & e.getModifiers())!=0 );
+//          }
+//       });
+//       bg.add(b);
 
        // Le bandeau sous le menu : Panel saisie comportant la localisation
        // et le target lie au plan de reference
@@ -2708,7 +2715,7 @@ public class Aladin extends JApplet
    private void about() {
       Aladin.info(TITRE+" ("+VERSION+(BETA?" beta":PROTO?" proto":"")+") "+
             chaine.getString("CDS")+
-            "Authors: Pierre Fernique, Thomas Boch,\n      François Bonnarel, Anaïs Oberto\n" +
+            "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
             "* Copyright: UDS/CNRS - distributed under GNU GPL v3\n  \n" +
             "Portions of the code (WCS in JPEG, " +
@@ -2921,8 +2928,8 @@ public class Aladin extends JApplet
       } else if( isMenu(s,ZOOMPT)) { zoom();
       } else if( isMenu(s,COPIER)) { copier();
       } else if( isMenu(s,COLLER)) { coller();
-      } else if( isMenu(s,PREVPOS)) { view.undo(false);
-      } else if( isMenu(s,NEXTPOS)) { view.redo(false);
+//      } else if( isMenu(s,PREVPOS)) { view.undo(false);
+//      } else if( isMenu(s,NEXTPOS)) { view.redo(false);
       } else if( isMenu(s,SYNC))   { switchMatch(false);
       } else if( isMenu(s,SYNCPROJ))   { switchMatch(true);
       } else if( isMenu(s,PANEL1) || isMenu(s,PANEL1) || isMenu(s,PANEL2C) || isMenu(s,PANEL2L) 
@@ -2976,6 +2983,8 @@ public class Aladin extends JApplet
       } else if( isMenu(s,AUTODIST) )   { autodist();
 //      } else if( isMenu(s,TIP) )   { tip();
       } else if( isMenu(s,SESAME) ){ sesame();
+      } else if( isMenu(s,COOTOOL) ){ cooTool();
+      } else if( isMenu(s,PIXELTOOL) ){ pixelTool();
 //      } else if( isMenu(s,CEA_TOOLS) ){ showCEATools();
       } else if( isMenu(s,MACRO) ) { macro();
       } else if( isMenu(s,PREF) )  { preferences();
@@ -2998,6 +3007,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,PIXEXTR) )  { new FramePixelExtraction(this);
       } else if( isMenu(s,HEAD) )  { header();
       } else if( isMenu(s,HPXGENERATE)){ buildAllsky();
+      } else if( isMenu(s,FOVEDITOR))  { buildFoV();
       } else if( isMenu(s,TOPBOTTOM) )  { flip(0);
       } else if( isMenu(s,RIGHTLEFT) )  { flip(1);
       } else if( isMenu(s,REGISTER) ) { getMessagingMgr().register(false, true);
@@ -3699,17 +3709,25 @@ public class Aladin extends JApplet
     protected void windows() {
        if( isApplet() ) return;
        main(new String[]{});
-//       launch();
+       //       launch();
     }
 
     /**
      * Affiche la fenetre pour créer un allsky
      */
-    private void buildAllsky() {
-        FrameAllskyTool.display(this);
+    protected void buildAllsky() {
+       FrameAllskyTool.display(this);
     }
 
-        /** Terminaison propre d'Aladin */
+    /**
+     * Affiche la fenetre pour créer un FoV
+     */
+    protected void buildFoV() {
+       glu.showDocument("FovEditor","");
+    }
+
+
+    /** Terminaison propre d'Aladin */
     protected void quit(int code) {
 
        // Deselection des objets en cours dans le cas ou une application
@@ -3821,6 +3839,22 @@ public class Aladin extends JApplet
     protected void sesame() {
        localisation.focus(Localisation.YOUROBJ);
     }
+    
+    
+    protected FrameCooToolbox frameCooTool=null;
+    protected void cooTool() {
+       if( frameCooTool==null ) frameCooTool=new FrameCooToolbox(this);
+       else frameCooTool.setVisible(true);
+       log("CoordToolbox","");
+    }
+
+    protected FramePixelToolbox framePixelTool=null;
+    protected void pixelTool() {
+       if( framePixelTool==null ) framePixelTool=new FramePixelToolbox(this);
+       else framePixelTool.setVisible(true);
+       log("PixelToolbox","");
+
+    }
 
     /** Lancement ou arrêt du mode Simbad Pointer */
     protected void simbadPointer() {
@@ -3878,6 +3912,19 @@ public class Aladin extends JApplet
    /** Lancement d'une recalibration sur une image*/
    protected void launchRecalibImg(Plan p) {
       if( p==null ) p = calque.getFirstSelectedSimpleImage();
+      Plan [] plan=null;
+      if( p==null ) {
+         plan = calque.getPlans();
+         for( int i=0; i<plan.length; i++ ) {
+            if( plan[i].isImage() && !Projection.isOk(plan[i].projd) ) { p=plan[i]; break; }
+         }
+      }
+      if( p==null ) {
+         for( int i=0; i<plan.length; i++ ) {
+            if( plan[i].isImage() ) { p=plan[i]; break; }
+         }
+      }
+
       if( p==null ) {
          warning(chaine.getString("NEEDIMG"));
          return;
@@ -4569,8 +4616,8 @@ public void setLocation(Point p) {
          if( miAutoDist!=null ) miAutoDist.setSelected(calque.flagAutoDist);
          if( miVizierSED!=null ) miVizierSED.setSelected(calque.flagVizierSED);
          if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
-         if( miPrevPos!=null ) miPrevPos.setEnabled(view.canActivePrevUndo());
-         if( miNextPos!=null ) miNextPos.setEnabled(view.canActiveNextUndo());
+//         if( miPrevPos!=null ) miPrevPos.setEnabled(view.canActivePrevUndo());
+//         if( miNextPos!=null ) miNextPos.setEnabled(view.canActiveNextUndo());
          if( miZoomPt!=null ) miZoomPt.setSelected(toolBox.tool[ToolBox.ZOOM].mode==Tool.DOWN);
          if( miPan!=null ) miPan.setSelected(toolBox.tool[ToolBox.PAN].mode==Tool.DOWN);
          if( miGlass!=null ) miGlass.setSelected(toolBox.tool[ToolBox.WEN].mode==Tool.DOWN);
@@ -4646,8 +4693,8 @@ public void setLocation(Point p) {
          if( miHead!=null ) miHead.setEnabled(p!=null && p.hasFitsHeader());
 
          if( ExportYourWork!=null ) ExportYourWork.setEnabled(mode && hasNoResctriction());
-         if( avant!=null ) avant.setEnabled(view.canActivePrevUndo());
-         if( apres!=null ) apres.setEnabled(view.canActiveNextUndo());
+//         if( avant!=null ) avant.setEnabled(view.canActivePrevUndo());
+//         if( apres!=null ) apres.setEnabled(view.canActiveNextUndo());
 
       } catch( Exception e ) { e.printStackTrace(); }
 

@@ -132,19 +132,19 @@ public final class FullScreen extends JFrame implements ActionListener {
       JComponent.WHEN_IN_FOCUSED_WINDOW
       );
       
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { undo(); }
-      }, 
-      KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,InputEvent.ALT_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { redo(); }
-      }, 
-      KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,InputEvent.ALT_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+//      getRootPane().registerKeyboardAction(new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { undo(); }
+//      }, 
+//      KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,InputEvent.ALT_MASK),
+//      JComponent.WHEN_IN_FOCUSED_WINDOW
+//      );
+//      
+//      getRootPane().registerKeyboardAction(new ActionListener() {
+//         public void actionPerformed(ActionEvent e) { redo(); }
+//      }, 
+//      KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,InputEvent.ALT_MASK),
+//      JComponent.WHEN_IN_FOCUSED_WINDOW
+//      );
       
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { dist(); }
@@ -287,11 +287,11 @@ public final class FullScreen extends JFrame implements ActionListener {
    /** Passage à la prochaine image */
    private void next(int sens) { aladin.view.next(sens); }
    
-   /** Précédente position mémorisée */
-   private void undo() { aladin.view.undo(false); }
-   
-   /** Prochaine position mémorisée */
-   private void redo() { aladin.view.redo(false); }
+//   /** Précédente position mémorisée */
+//   private void undo() { aladin.view.undo(false); }
+//   
+//   /** Prochaine position mémorisée */
+//   private void redo() { aladin.view.redo(false); }
    
    /** Activation/désactivation de la grille */
    private void grid() { 

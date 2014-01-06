@@ -415,6 +415,7 @@ public final class Localisation extends MyBox {
             coo.x = p.x;
             coo.y = p.y;
             proj.getCoord(coo);
+            
             if( Double.isNaN(coo.al) ) s="";
             else if( frame==XYLINEAR ) {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
@@ -526,7 +527,7 @@ public final class Localisation extends MyBox {
     * @param frameTarget numéro du système de référence cible
     * @return les coordonnées éditées dans le système cible, ou l'identificateur inchangé
     */
-   protected String convert(String coo,int frameSource,int frameTarget) {
+   static protected String convert(String coo,int frameSource,int frameTarget) {
 
       // Champ vide => Rien à faire
       if( coo==null || coo.length()==0 || coo.indexOf("--")>=0 ) return "";
@@ -593,8 +594,14 @@ public final class Localisation extends MyBox {
    protected void seeCoord(Position o,int methode) {
       String s=getLocalisation(o);
       if( s==null ) return;
+      
       if( methode==0 ) { setTextAffichage(s); setMode(AFFICHAGE); }
-      else { aladin.copyToClipBoard(s); setTextSaisie(s); setMode(SAISIE); aladin.console.printInPad(s+"\n"); }
+      else { 
+//         aladin.copyToClipBoard(s); //POSE TROP DE PROBLEME
+         setTextSaisie(s); 
+         setMode(SAISIE); 
+         aladin.console.printInPad(s+"\n"); 
+      }
    }
    
    /** Localisation de la source en fonction du frame courant */

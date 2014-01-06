@@ -257,7 +257,6 @@ protected int loadFits(String filename) throws Exception {
 //         drawLosangeBorder(g,b);
          return 1;
       } catch( Exception e ) {
-         e.printStackTrace();
          return 0;
       }
    }
