@@ -251,7 +251,7 @@ public final class HeaderFits {
    public boolean readFreeHeader(String s) { return readFreeHeader(s,false,null); }
    public boolean readFreeHeader(String s,boolean specialDSS,FrameHeaderFits frameHeaderFits) {
       alloc();
-      int len=80;
+      int len=79;
       char buf [] = s.toCharArray();
       int i=0;
       String key,value,com;
