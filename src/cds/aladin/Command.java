@@ -879,6 +879,7 @@ public final class Command implements Runnable {
    protected String getTargetPlane(StringBuffer targetPlane,String cmd) {
       String s;
       int pos = cmd.indexOf('=');
+      if( pos==0 ) return cmd; // de fait une commande "=" (évaluation expression arithmétique)
       if( pos==-1 ) s=cmd;
       else s = cmd.substring(pos+1).trim();
 
