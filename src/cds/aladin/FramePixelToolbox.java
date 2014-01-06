@@ -370,7 +370,7 @@ public class FramePixelToolbox extends JFrame {
             int r=cm.getRed(index);
             int g=cm.getGreen(index);
             int b=cm.getBlue(index);
-            field[3].setText( String.format("%02X - %02X - %02X", r,g,b) );
+            field[3].setText( String.format("%02X-%02X-%02X", r,g,b) );
             field[4].setBackground( new Color(r,g,b) );
          } else {
             field[3].setText("");
