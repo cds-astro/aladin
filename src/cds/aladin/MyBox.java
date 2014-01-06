@@ -231,8 +231,8 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
       static private final int X = 6;
       private void drawCross(Graphics g, int x, int y) {
          g.setColor(Color.white);
-//         g.fillRect(x-3, y-6, dim.height, dim.height);
-         g.fillOval(x-3, y-6, dim.height, dim.height);
+//         g.fillRect(x-3, y-7, dim.height, dim.height);
+         g.fillOval(x-3, y-3, X+7, X+7);
          g.setColor( text.getText().length()>0 ? Color.red.darker() : Color.gray );
          g.drawLine(x,y,x+X,y+X);
          g.drawLine(x+1,y,x+X+1,y+X);
