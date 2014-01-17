@@ -238,7 +238,7 @@ public final class ToolBox extends JComponent implements
       // supprime les tools qui ne peuvent lui etre associes
       for( i=0; i<allPlan.length; i++ ) {
         if( allPlan[i].type==Plan.NO || !allPlan[i].flagOk ) continue;
-        if( allPlan[i].hasAvailablePixels() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
+        if( allPlan[i].isPixel() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
         if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
         if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
         if( allPlan[i].isCatalog() ) nbCat++;
@@ -308,7 +308,7 @@ public final class ToolBox extends JComponent implements
       // Si la vue courante a un plan de référence qui n'est pas une image simple
       // ni RGB on invalide HIST et PHOT
       Plan p = aladin.calque.getFirstSelectedPlan();
-      if( p==null || !p.hasAvailablePixels() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+      if( p==null || !p.isPixel() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
       else if( p!=null && p.type==Plan.ALLSKYIMG && p instanceof PlanBG && ((PlanBG)p).color ) mode[ToolBox.HIST]=Tool.UNAVAIL;
       
 //      if( v==null || v.isFree() 

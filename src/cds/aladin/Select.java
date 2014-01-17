@@ -1499,7 +1499,7 @@ public final class Select extends JComponent  implements
 
       ws = getSize().width;
       hs = getSize().height;
-      hsp= hs-/*eyeHeight-*/gapB;        // Hauteur de la portion pour les plans
+      hsp= hs-gapB;        // Hauteur de la portion pour les plans
 
       // On prepare le fond
       g.setColor( getBackground() );
@@ -1507,17 +1507,12 @@ public final class Select extends JComponent  implements
 
       // Le pourtour
 //      Util.drawEdge(g,ws,hs);
-      
 
       // Le clip Rect pour ne pas depasser
       g.clipRect(2,2,ws-3,hs-3);
       
       // AntiAliasing
       a.setAliasing(g);
-
-      // Dessin de l'oeil de l'observateur et de l'objet central regarde
-//      drawEye(g,true);
-//      writeTitle(g);
 
       Plan [] plan = a.calque.getPlans();
       // Determination du premier plan image (opaque)
@@ -1552,7 +1547,7 @@ public final class Select extends JComponent  implements
       }
       a.calque.scroll.setFirstVisiblePlan(j+1);
       a.calque.scroll.setNbVisiblePlan(nbPlanVisible);
-      a.calque.scroll.setRequired(y<0/*eyeHeight*/ || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
+      a.calque.scroll.setRequired(y<0 || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
       
       // Dans le cas d'un deplacement de plan
       if( flagDrag==VERTICAL ) moveLogo(g);
@@ -1579,7 +1574,6 @@ public final class Select extends JComponent  implements
                // associes a la presence d'au moins un plan
                a.setButtonMode();
 
-
                // On met a jour la fenetre des contours
                if( a.frameContour!=null ) a.frameContour.majContour();
 
@@ -1587,8 +1581,6 @@ public final class Select extends JComponent  implements
                if( a.frameRGB!=null )   a.frameRGB.maj();
                if( a.frameBlink!=null ) a.frameBlink.maj();
                if( a.frameArithm!=null && a.frameArithm.isVisible() ) a.frameArithm.maj();
-
-
             }
          });
       }
@@ -1596,13 +1588,6 @@ public final class Select extends JComponent  implements
 
       // Reaffichage du status du plan sous la souris
       if( planIn!=null ) setInfo(planIn);
-
-      // En cas de clin d'oeil
-//      if( clinDoeil ) {
-//         drawEye(g,false);
-//         flagRClip = false;
-//         startBlink();
-//      }
 
       //Clignotement des voyants si besoin
       if( slideBlink ) startBlink();
@@ -1620,7 +1605,7 @@ public final class Select extends JComponent  implements
 
   // Gestion du blinking d'une source par thread (pour supporter JVM 1.4)
    private void startBlink() {
-      if( !slideBlink /*&& !clinDoeil*/ ) return;
+      if( !slideBlink ) return;
       if( flagThreadBlink ) {
 //System.out.println("blink thread already running ");
          return;
@@ -1632,18 +1617,12 @@ public final class Select extends JComponent  implements
       thread.start();
    }
 
-/* Inutile car s'arret tout seul lorsque Slide.flagBlink passe a false
-   private void stopBlinking() {
-      setFlagBlink(false);
-   }
-*/
   // Gestion du Blinking 0.5 secondes
    public void run() {
-      while( flagThreadBlink && (slideBlink /*|| clinDoeil*/) ) {
+      while( flagThreadBlink && slideBlink ) {
 //System.out.println("blink thread (slideBlink="+slideBlink+") j'attends 0.5 sec "+thread);
          Util.pause(500);
-         /* if( clinDoeil ) clinDoeil=false;
-         else */ Slide.blinkState=!Slide.blinkState;
+         Slide.blinkState=!Slide.blinkState;
          repaint();
       }
       setFlagThreadBlink(false);

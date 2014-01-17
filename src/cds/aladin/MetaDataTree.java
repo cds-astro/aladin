@@ -1539,7 +1539,7 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
        // les URL du type file:/... ne sont pas supportés par creatPlane, je bidouille
        if( location.startsWith("file:") ) {
            location = location.substring(5);
-           ((ServerFile)aladin.dialog.server[ServerDialog.LOCAL]).creatLocalPlane(location,node.name,"",null,node,null,null);
+           ((ServerFile)aladin.dialog.server[ServerDialog.LOCAL]).creatLocalPlane(location,node.name,"",null,node,null,null,null,null);
            return;
        }
 
@@ -1648,7 +1648,7 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
        } else {
           ((ServerFile)aladin.dialog.localServer).creatLocalPlane(url.toString(), label,
                 node.origin!=null&&node.origin.length()>0?node.origin:(node.server!=null?node.server.institute:null),
-                      null, node, (InputStream)null,node.server!=null?node.server:null );
+                      null, node, (InputStream)null,node.server!=null?node.server:null,null,null );
        }
 
 //       // chargement de l'image
@@ -1859,7 +1859,7 @@ public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener
 
     private void loadOther(BasicNode node,String label) {
        if( label==null ) label=node.name;
-       aladin.calque.newPlan(((ResourceNode)node).location,label,null);
+       aladin.calque.newPlan(((ResourceNode)node).location,label,null,null,null);
     }
 
 	/** chargement d'un spectre dans une appli PLASTIC

@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 
 import cds.fits.HeaderFits;
+import cds.image.Bzip2;
 import cds.tools.Util;
 import cds.xml.TableParser;
 
@@ -90,13 +90,14 @@ public final class MyInputStream extends FilterInputStream {
    static final public long HPXMOC  = 1L<<36;
    static final public long DS9REG  = 1L<<37;
    static final public long SED     = 1L<<38;
+   static final public long BZIP2   = 1L<<39;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED" };
+      "HPXMOC","DS9REG","SED","BZIP2" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -153,8 +154,11 @@ public final class MyInputStream extends FilterInputStream {
     *          gzippe
     */
    public MyInputStream startRead() throws IOException {
-      if( isGZ() ) {
+      long t = isGZorBzip2();
+      if( (t & GZ)!=0 ) {
          return new MyInputStream(new GZIPInputStream(this),GZ,withBuffer);
+      } else if( (t & BZIP2)!=0 ) {
+         return new MyInputStream(new Bzip2(this),BZIP2,withBuffer);
       }
       return this;
    }
@@ -203,14 +207,18 @@ public final class MyInputStream extends FilterInputStream {
 
    }
 
-
-   /** Juste pour tester s'il s'agit d'un flux gzipé */
+   /** Juste pour tester s'il s'agit d'un flux gzippé */
    public boolean isGZ() throws IOException {
+      return (isGZorBzip2() & GZ)!=0;
+   }
+
+   /** Juste pour tester s'il s'agit d'un flux gzippé ou Bzippé2 */
+   public long isGZorBzip2() throws IOException {
       // le type de stream a deja ete detecte
-      if( flagGetType ) return (type&GZ)==GZ;
+      if( flagGetType ) return type;
 
       // Le stream a deja ete entame, impossible de determine le type
-      if( alreadyRead ) return false;
+      if( alreadyRead ) return 0;
 
       int c[] = new int[2];
       // On charge qq octets dans le tampon si nécessaire
@@ -221,8 +229,12 @@ public final class MyInputStream extends FilterInputStream {
       }
 
       // Detection de GZIP
-      if( c[0]==31  && c[1]==139 ) return true;
-      return false;
+      if( c[0]==31  && c[1]==139 ) return GZ;
+      
+      // Detection de BZIP2  (il faudrait aussi tester le "h" qui suit)
+      else if( c[0]=='B'  && c[1]=='Z' ) return BZIP2;
+      
+      return 0;
    }
 
    /** Sous-types particulier au FITS image */
@@ -304,6 +316,9 @@ public final class MyInputStream extends FilterInputStream {
 
          // Detection de GZIP
          if( c[0]==31  && c[1]==139 ) type |= GZ;
+         
+         // Detection de BZIP2
+         else if( c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
 
          // Détection PDS
          else if( c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;
@@ -1107,7 +1122,7 @@ public long skip(long n) throws IOException {
        }
        
        // On vire les lignes blanches éventuelles à la fin
-       for( int i=bufN-1; i>=0; i-- ) if( bufLigne[i].length()==0 ) bufN--;
+       for( int i=bufN-1; i>=0; i-- ) if( bufLigne[i].trim().length()==0 ) bufN--;
        
        if( bufN<2 ) return 0;
        

@@ -463,6 +463,7 @@ public final class Computer  {
       try {
          String s = " -skydist(05:34:43.68,+21:59:28.1,184.50849,-05.79883)*-60 " +
          		"-sin ( -round( 100+1e-03)%(3*2) + -cos(32.2+8^(7-5*max(3,1/8.7) )  )) * -(6-2E+5)";
+         s = "sin(125)^2 + cos(125)^2";
          Computer.setDebug(true);
          double x = Computer.compute(s);
          System.out.println(s+" = "+x);

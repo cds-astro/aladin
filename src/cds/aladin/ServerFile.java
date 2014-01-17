@@ -178,7 +178,7 @@ public class ServerFile extends Server implements XMLConsumer {
             f=f.substring(0,i);
          }
       }
-      return creatLocalPlane(f,label,origin,null,null,null,this);
+      return creatLocalPlane(f,label,origin,null,null,null,this,target,radius);
    }
 
    /** Creation d'un plan issu d'un chargement d'un fichier AJ, fits ou autre
@@ -216,7 +216,7 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
     */
    protected int creatLocalPlane(String f,String label,String origin, Obj o, 
-         ResourceNode resNode,InputStream is,Server server) {
+         ResourceNode resNode,InputStream is,Server server,String target,String radius) {
       String serverTaskId = aladin.synchroServer.start("ServerFile.creatLocalPlane/"+label);
       try {
 //         setSync(false);
@@ -268,10 +268,10 @@ public class ServerFile extends Server implements XMLConsumer {
                               aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
                               gSky = new TreeNodeAllsky(aladin, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }
-                           n=aladin.calque.newPlanBG(gSky,label,null,null);
+                           n=aladin.calque.newPlanBG(gSky,label,target,radius);
 
                            // ou Image
-                        } else n=aladin.calque.newPlanBG(f,label,null,null);
+                        } else n=aladin.calque.newPlanBG(f,label,target,radius);
                      }
                      else {
                         final ServerFile th = this;
@@ -380,10 +380,10 @@ public class ServerFile extends Server implements XMLConsumer {
                } else n=aladin.calque.newPlanImageRGB(f,null,in,resNode);
             }
             else if( (type & MyInputStream.HEALPIX)!=0 ) {
-               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false);
+               n=aladin.calque.newPlanHealpix(f,in,label,PlanBG.DRAWPIXEL,0, false,target,radius);
             }
             else if( (type & MyInputStream.XFITS)!=0) {
-               aladin.calque.newFitsExt(f,in,label,o);
+               aladin.calque.newFitsExt(f,in,label,o,target,radius);
                n=1;
             }
             else if( (type & (MyInputStream.FITS|MyInputStream.PDS))!=0) {
@@ -515,7 +515,7 @@ public class ServerFile extends Server implements XMLConsumer {
       } else {
          String code = "load "+f;
          aladin.console.printCommand(code);
-         int n=creatLocalPlane(f,null,null,null,null,null,this);
+         int n=creatLocalPlane(f,null,null,null,null,null,this,null,null);
          if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode(code);
       }
    }

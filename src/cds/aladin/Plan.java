@@ -1357,16 +1357,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return true;
       }
 
-//      if( v.pref.type==Plan.IMAGEBKGD && type==Plan.IMAGEBKGD
-//            && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
-//         setDebugFlag(UNDERBKGD, true);
-//System.out.println("BG:"+this+" sous BG:"+v.pref+" dans le pile");
-//         return false;
-//
-//      } else
-
       if( !(aladin.view.isMultiView() && v.pref.ref) 
-            && v.pref.isImage() && (type==Plan.IMAGE || type==Plan.ALLSKYIMG  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
+            && v.pref.isImage() && (type==Plan.IMAGE /* || type==Plan.ALLSKYIMG */  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
          setDebugFlag(UNDERIMG, true);
 //System.out.println("IMG:"+label+" sous IMG?:"+v.pref+" dans le pile");
          return false;
@@ -1378,19 +1370,6 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return false;
       }
       
-//      if( !aladin.view.isMultiView() ) {
-//         Plan [] allPlan = aladin.calque.getPlans();
-//         int n = aladin.calque.getIndex(allPlan,this);
-//         for( int i=n-1; i>=0; i-- ) {
-//            Plan p=allPlan[i];
-//            if( p.type==ALLSKYIMG && p.active && (p.getOpacityLevel()>=0.1 || p.isRefForVisibleView()) ) {
-//              System.out.println(label+" sous BG opaque ["+p+"] dans la pile");
-//               setDebugFlag(UNDERBKGD, true);
-//               return false;
-//            }
-//         }
-//      }
-
       boolean rep = isOutView(v);
 //System.out.println(this+" isOutView("+v+") = "+rep);
       return !rep;
@@ -1399,6 +1378,14 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    // Peut être sous un plan Background ?
    private boolean setUnderBackGroundFlag(ViewSimple v) {
       boolean under=false;
+      
+      // Si l'on force l'affichage des overlays qq soit leur position dans la pile
+      // on peut simplifier comme suit
+      if( ViewSimple.OVERLAYFORCEDISPLAY && !isPixel() ) {
+         setDebugFlag(UNDERBKGD, under);
+         return !under;
+      }
+      
       Plan [] allPlan = aladin.calque.getPlans();
       int n = aladin.calque.getIndex(allPlan,this);
       for( int i=n-1; i>=0; i-- ) {

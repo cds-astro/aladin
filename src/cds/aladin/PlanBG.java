@@ -547,16 +547,13 @@ public class PlanBG extends PlanImage {
       if( co==null ) {
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
-//         coRadius=Projection.getRaMax(defaultProjType);
          coRadius=220;
       }
-//      if( coRadius<=0 ) coRadius=Projection.getRaMax(defaultProjType);
       if( coRadius<=0 ) coRadius=220;
       
       objet = co+"";
       
       // On va garder le même type de projection que le plan de base.
-//      int defaultProjType = Calib.SIN;
       Plan base = aladin.calque.getPlanBase();
       if( base instanceof PlanBG ) defaultProjType = base.projd.t;
       
@@ -566,6 +563,11 @@ public class PlanBG extends PlanImage {
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
+      
+      typeCM = aladin.configuration.getCMMap();
+      transfertFct = aladin.configuration.getCMFct();
+      video = aladin.configuration.getCMVideo();
+      
       setDefaultZoom(co,coRadius);
       suiteSpecific();
       suite1();
@@ -585,7 +587,6 @@ public class PlanBG extends PlanImage {
       pixList = new Hashtable<String,HealpixKey>(1000);
       allsky=null;
       if( error==null ) loader = new HealpixLoader();
-//      if( Aladin.PROTO ) planBGIndex = new PlanBGIndex(aladin,this);
 
       aladin.endMsg();
       creatDefaultCM();
@@ -2941,6 +2942,11 @@ public class PlanBG extends PlanImage {
       changeImgID();
       aladin.view.repaintAll();
    }
+   
+   // Test qui repère un problème sur le serveur
+   protected boolean detectServerError(int nb[]) {
+      return nb[HealpixKey.READY]==0 && nb[HealpixKey.ERROR]>5;
+   }
 
    /**
     * Gère le chargement des losanges de manière asynchrone
@@ -3114,10 +3120,7 @@ public class PlanBG extends PlanImage {
 //         }
 //         System.out.println();
 
-         if( error==null ) {
-            if( nb[HealpixKey.READY]==0 && nb[HealpixKey.ERROR]>5 ) error="Server not available";
-            else error=null;
-         }
+         if( error==null && detectServerError(nb) ) error="Server not available";
 
          // Eventuel arrêt du chargement en cours si priorité désormais plus faible
          HealpixKey healpixMin=null,healpixNet=null;

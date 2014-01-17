@@ -114,13 +114,15 @@ public class PlanBGCatIndex extends PlanBGCat {
       long nLoaded=0L;
       long nTotal=0L;
       TreeMap<String, Source> map = new TreeMap<String, Source>();
+      setHasMoreDetails(true);
       
       int order = maxOrder(v)+1;
 //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( order<BuilderDetails.MINORDER && maxOrder>=BuilderDetails.MINORDER 
-            /* || v.isAllSky() */ ) return false;
+      if( order<BuilderDetails.MINORDER && maxOrder>=BuilderDetails.MINORDER ) {
+         return false;
+      }
       if( order>maxOrder ) order=maxOrder;
       
       hasDrawnSomething=false;
@@ -149,7 +151,7 @@ public class PlanBGCatIndex extends PlanBGCat {
          nLoaded++;
       }
       
-      completude  = !moreDetails ? 100 : 100 * ((double)nLoaded/nTotal);
+//      completude  = !moreDetails ? 100 : 100 * ((double)nLoaded/nTotal);
       setHasMoreDetails(moreDetails);
       allWaitingKeysDrawn = nTotal==nLoaded;
       
@@ -189,6 +191,10 @@ public class PlanBGCatIndex extends PlanBGCat {
    protected Iterator<Obj> iterator() { return pcat==null ? null : pcat.iterator(); }
    
    protected Iterator<Obj> iterator(ViewSimple v) { return iterator(); }
+   
+   protected boolean detectServerError(int nb[]) { completude=-1; pourcent=-1; return false; }
+
+
 
    
 }

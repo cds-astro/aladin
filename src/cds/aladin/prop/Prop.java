@@ -56,6 +56,7 @@ public class Prop {
    /** Exécute la réinitialisation du widget de la propriété */
    public void resume() {
       if( resume==null ) return;
+      if( widget.hasFocus() ) return; // Pour éviter une maj pdt une édition
       resume.action();
    }
    

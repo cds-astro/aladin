@@ -243,7 +243,6 @@ public class PlanBGCat extends PlanBG {
       }
       if( !moreDetails ) completude=100;
 
-
       setHasMoreDetails(order>=getMaxFileOrder() ? false : moreDetails);
 //      setHasMoreDetails(moreDetails);
       allWaitingKeysDrawn = allKeyReady;
@@ -278,6 +277,7 @@ public class PlanBGCat extends PlanBG {
       aladin.view.repaintAll();
    }
 
+   
    /** Force le reset de l'influence des filtres sur ce plan */
    protected void updateFilter() {
       planFilter.updateNow();

@@ -237,7 +237,7 @@ ROI	Thumbnail view generator...
 VOTOOL	VO tools
 GLUTOOL	Remote tools
 SIMBAD	Simbad pointer
-VIZIERSED VizieR phot. pointer
+VIZIERSED VizieR photometry pointer
 AUTODIST Auto-distance measurer
 #TIP	Tooltip on sources
 #MSCROLL	Auto-scroll on mouse pan
@@ -272,7 +272,7 @@ GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
 COOTOOL.fr Calculs de coordonnées...
 PIXELTOOL.fr Calculs de pixels...
-VIZIERSED.fr	Pointeur phot. VizieR
+VIZIERSED.fr	Pointeur photométrie VizieR
 AUTODIST.fr Mesure de distance automatique
 #TIP.fr	Infobulle sur les sources
 #MSCROLL.fr	Défilement automatique suite à un dépl. souris
@@ -615,12 +615,12 @@ NOSESAME.fr	Le résolveur de nom d'objet CDS Sésame est inatteignable actuellemen
 
 
 # ServerAllsky strings
-ALLSKYJPEG Preview (jpeg|png)
-ALLSKYJPEG.fr Prévisualisation (jpeg|png)
+ALLSKYJPEG Preview (jpg|png)
+ALLSKYJPEG.fr Prévisu. (jpg|png)
 ALLSKYFITS Full pixel dynamic (fits)
-ALLSKYFITS.fr Dynamique complète  (fits)
-ALLSKYSWJPEG Get preview (jpeg|png)
-ALLSKYSWJPEG.fr Mode Prévisualisation (jpeg|png)
+ALLSKYFITS.fr Dynamiq. complète (fits)
+ALLSKYSWJPEG Get preview (jpg|png)
+ALLSKYSWJPEG.fr Mode prévisualisation (jpg|png)
 ALLSKYSWFITS Get full pixel dynamic (fits)
 ALLSKYSWFITS.fr Mode dynamique complète  (fits)
 
@@ -1570,14 +1570,11 @@ UPTEST	Test available registries
 UPCSVCHAR	CSV characters
 UPCSVCHARH	Available separator characters for CSV tables and catalogues
 UPSTOP	Stop running test
-#UPSMBB	Simbad & VizieR phot. pointer
-#UPSMBH	This selector allows you to automatically query Simbad and VizieR data bases for resolving the astronomical source under the mouse and build a photometry histogram from various VizieR catalogs
 SEDLOADING	VizieR phot. loading...
 SEDCLOSE	Close phot. graph
 SEDMORE	Launch VizieR photometry Web tool on the same area
-#SEDCREATEPLANE	Create catalogue stack plane from these phot. measurements
 SEDFREQWAVE	Draw in frequences (resp. in waves length)
-SEDHELPTIP	Information about VizieR phot.
+SEDHELPTIP	Information about VizieR photometry
 SEDHELP		A VizieR photometry graph is a histogram built from various source photometry measurements found a few arcseconds around a sky position/object amongst all VizieR tables. The eventual computation from magnitude are done by VizieR. Clic on the graph to access to the table.
 UPFILTERB	Dedicated filter
 UPFILTERH	This selector allows you to automatically apply default dedicated filter for Simbad, NED,...
@@ -1641,12 +1638,10 @@ UPCSVCHARH.fr	Caractères de séparations des colonnes pour les tables et catalogu
 #UPCSV4.fr	Virgule (,)
 #UPCSV5.fr	Tabulation ou barre (|)
 #UPCSV6.fr	Tab, barre (|) ou point-virgule (;)
-UPSMBB.fr	Pointeur Simbad & VizieR phot.
 UPSMBH.fr	Ce sélecteur vous permet d'activer par défaut la recherche automatique sur les base de données Simbad et VizieR afin de trouver l'identificateur de l'objet astronomique sous la souris et d'en fournir un histogramme photométrique construit à partir de catalogues de VizieR.
-SEDLOADING.fr	SED VizieR...
-SEDCLOSE.fr	Ferme le graphe du SED
+SEDLOADING.fr	Photométrie VizieR...
+SEDCLOSE.fr	Ferme le graphe de photométrie
 SEDMORE.fr	Lance l'outil photométrique VizieR pour la même position
-#SEDCREATEPLANE.fr	Crée un plan catalogue dans la pile\nà partir des données du SED
 SEDFREQWAVE.fr	Trace en fréquences (resp. en longueurs d'onde)
 SEDHELPTIP.fr	Information sur les mesures photométriques VizieR
 SEDHELP.fr		Un graphe photométrique VizieR est un histogramme contruit à partir des mesures photométriques issues des sources trouvées à quelques secondes d'arc autour d'une position parmi toutes les tables de VizieR. Les calculs éventuels de flux à partir de la magnitude ont été effectués par VizieR. Cliquez sur le graphe pour accéder aux détails de la table.

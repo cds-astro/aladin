@@ -132,10 +132,14 @@ public class PlanHealpix extends PlanBG {
 
 
     /** @param mode : DRAWPIXEL : les pixels, DRAWPOLARISATION : les segments de polarisation, DRAWANGLE : les angles sous forme d'une image */
-    public PlanHealpix(Aladin aladin, String file, MyInputStream in, String label, int mode, int idxTFormToRead, boolean fromProperties) {
+    public PlanHealpix(Aladin aladin, String file, MyInputStream in, String label, int mode, int idxTFormToRead, boolean fromProperties, Coord c,double radius) {
         super(aladin);
 
         this.fromProperties = fromProperties;
+        
+        co=c;
+        coRadius=radius;
+
         init(file, in, label, idxTFormToRead);
         setDrawMode(mode);
 
@@ -144,7 +148,7 @@ public class PlanHealpix extends PlanBG {
 
 
     /** CONSTRUCTEUR TEMPORAIRE EN ATTENDANT QUE PlanHealpix SACHE TRAITER LES gluSky COMME LES AUTRES PlanBG */
-    public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, String startingTaskId) {
+    public PlanHealpix(Aladin aladin, TreeNodeAllsky gluSky, String label, Coord c,double radius, String startingTaskId) {
        super(aladin);
 
         this.startingTaskId=startingTaskId;
@@ -155,7 +159,10 @@ public class PlanHealpix extends PlanBG {
         MyInputStream in = null;
         try { in=Util.openAnyStream(file); } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
         if( label==null ) label = gluSky.label;
-
+        
+        co=c;
+        coRadius=radius;
+        
         init( file , in, label, 0);
         setDrawMode(DRAWPIXEL);
 
@@ -344,7 +351,7 @@ public class PlanHealpix extends PlanBG {
           return false;
        }
     }
-
+    
     // the properties file will be used to check the file modification date
     // and to store other parameters
     private boolean writePropertiesFile(String dir) {
@@ -404,13 +411,12 @@ public class PlanHealpix extends PlanBG {
 
         return true;
     }
+    
 
     private void suiteSpecif() {
 
        url = getCacheDir()+Util.FS+survey;
        minOrder = 3;
-//       maxOrder = 3;
-//       useCache = true;
        useCache=false;
        truePixels = inFits = true;
        inPNG = inJPEG = false;
@@ -418,11 +424,18 @@ public class PlanHealpix extends PlanBG {
        Aladin.trace(3, this+"");
 
        copyright="local";
-       co = new Coord(0,0);
-       Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
+       
+//       co = new Coord(0,0);
+//       Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
+//       objet = co+"";
+       if( co==null ) {
+          co = new Coord(0,0);
+          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
+          coRadius=220;
+       }
+       if( coRadius<=0 ) coRadius=220;
        objet = co+"";
 
-//       timerLastDrawBG=-1;
        active=selected=true;
 
        pixList = new Hashtable<String, HealpixKey>(1000);
@@ -430,21 +443,27 @@ public class PlanHealpix extends PlanBG {
        loader = new HealpixLoader();
 
        postProd();
-
     }
+    
 
     protected void postProd() {
        int defaultProjType = aladin.configuration.getProjAllsky();
        Plan base = aladin.calque.getPlanBase();
        if( base instanceof PlanBG ) defaultProjType = base.projd.t;
 
-       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,
-             defaultProjType,Calib.FK5);
+       Projection p = new Projection("allsky",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false, defaultProjType,Calib.FK5);
 
-//       Projection p =new Projection("test",Projection.WCS,co.al,co.del,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
        p.frame = getCurrentFrameDrawing();
+       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
        setNewProjD(p);
-       initZoom=1./ (Aladin.OUTREACH?64:32);
+       
+       typeCM = aladin.configuration.getCMMap();
+       transfertFct = aladin.configuration.getCMFct();
+       video = aladin.configuration.getCMVideo();
+
+//       initZoom=1./ (Aladin.OUTREACH?64:32);
+       setDefaultZoom(co,coRadius);
+
        creatDefaultCM();
     }
 

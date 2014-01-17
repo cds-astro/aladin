@@ -65,6 +65,7 @@ public class ViewSimple extends JComponent
                                         KeyListener,ActionListener,
                                         DropTargetListener, DragSourceListener, DragGestureListener {
 
+   static final boolean OVERLAYFORCEDISPLAY = true;
    static final String CREDIT = "Powered by Aladin";
    static final float CARTOUCHE = 0.7f;
 
@@ -625,6 +626,7 @@ public class ViewSimple extends JComponent
          if( inStack ) pi.resetProj();
          pi.colorBackground=null;
          pi.reverse();
+         pi.objet = pi.projd.getProjCenter().getSexa();
          pi.flagOk=true;
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
@@ -673,6 +675,7 @@ public class ViewSimple extends JComponent
          pi.selected=false;
          pi.setOpacityLevel(1f);
          if( !(pref instanceof PlanImageRGB) ) pi.reverse();
+         pi.objet = pi.projd.getProjCenter().getSexa();
          
 
       } catch( Exception e ) { if( pi!=null ) pi.error=e.getMessage(); e.printStackTrace(); }
@@ -5721,13 +5724,23 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Pour afficher des checkboxs associés aux plans directement dans la vue
       if( fullScreen ) aladin.fullScreen.startMemo();
       
-      // Dessin des plans les uns après les autres
+      
+      // Affichage en 2 passes, d'abord les images, puis tout le reste
+      for( int passe=1; passe <= (OVERLAYFORCEDISPLAY ? 2 : 1); passe++ ) {         
+      
+         // Dessin des plans les uns après les autres
       for( int i=allPlans.length-1; i>=0; i--) {
          Plan p = allPlans[i];
+         
+         // On affiche d'abord les images, puis tout le reste
+         if( OVERLAYFORCEDISPLAY ) {
+            if( passe!=1 && p.isPixel() ) continue;
+            if( passe==2 && p.isPixel() ) continue;
+         }
+         
          if( p.type==Plan.NO || !p.flagOk ) continue;
          if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
          if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-
          
          // Seuls les catalogues (et éventuellement les surcharges graphiques) sont traçables dans un plot
          if( isPlotView() && !p.isCatalog() && !p.isTool() ) continue;
@@ -5817,6 +5830,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          // force le recalcul de la projection de tous les plans
          if( dx>0 || dy>0 ) newView(1);
       }
+      } // Fin du for de l'affichage en 2 passes
 
       // Rien de plus si aucune projection
       if( !Projection.isOk(proj) ) {

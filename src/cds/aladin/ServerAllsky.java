@@ -115,6 +115,7 @@ public class ServerAllsky extends ServerTree  {
       }
 
       TreeNodeAllsky gSky = aladin.glu.getGluSky(j);
+      
       try { gSky.setDefaultMode(defaultMode);
       } catch( Exception e ) {
          aladin.command.printConsole("!!! "+e.getMessage());

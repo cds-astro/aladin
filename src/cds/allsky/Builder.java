@@ -127,19 +127,25 @@ public abstract class Builder {
       if( context.isValidateCut() ) return;
       double [] cutOrig;
       double [] memoCutOrig = context.getCutOrig();
+      boolean flagGaffe= false;   // true s'il faut s'assurer qu'on a pu récupérer le BSCALE,BZERO 
+                                  // soit d'un précédent Allsky.fits, soit d'une image étalon
       
       // Attention, les cuts positionnés manuellement doivent
       // être exprimés en raw (récupération du bscaleOrig/bzeroOrig)
       double [] cutOrigBefore = context.cutOrigBefore;
       if( cutOrigBefore!=null ) {
-         if( !context.bscaleBzeroOrigSet ) {
-            setBzeroBscaleOrigFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-         }
-         memoCutOrig = new double[4];
-         for( int i=0; i<4; i++ ) {
-            if( Double.isNaN(cutOrigBefore[i]) ) continue;
-            memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
-//            System.out.println("cutOrigBefore["+i+"]="+cutOrigBefore[i]+" => cutOrig["+i+"]="+memoCutOrig[i]);
+         try {
+            if( !context.bscaleBzeroOrigSet ) {
+               setBzeroBscaleOrigFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+            }
+            memoCutOrig = new double[4];
+            for( int i=0; i<4; i++ ) {
+               if( Double.isNaN(cutOrigBefore[i]) ) continue;
+               memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
+               //            System.out.println("cutOrigBefore["+i+"]="+cutOrigBefore[i]+" => cutOrig["+i+"]="+memoCutOrig[i]);
+            }
+         } catch( Exception e ) {
+            flagGaffe=true;
          }
       }
 
@@ -163,6 +169,10 @@ public abstract class Builder {
             cutOrig[1]=memoCutOrig[1];
             context.setCutOrig(cutOrig);
          }
+      }
+      
+      if( context.cutOrigBefore==null && flagGaffe ) {
+         throw new Exception("Cannot retrieve BZERO & BSCALE from original images, nor from previous Allsky.fits file");
       }
       
       cutOrig = context.getCutOrig();

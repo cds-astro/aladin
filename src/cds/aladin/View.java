@@ -1719,7 +1719,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     /** Synchronisation sur le plan pour la vue courante
      *  @param p le plan à montrer
      */
-     protected boolean  syncPlan(Plan p) { return gotoThere(p.co,0,true); }
+     protected boolean  syncPlan(Plan p) {
+//        return gotoThere(p.co,0,true);
+        return gotoThere(Projection.isOk(p.projd)?p.projd.getProjCenter():p.co,0,true);
+     }
 
      /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
       * @param target Identificateur valide, ou coordonnées J2000

@@ -2282,13 +2282,15 @@ public final class Calque extends JPanel implements Runnable {
    /** Création des plans associés à un flux FITSEXTENSION.
     * Utilise un PlanFolder qui contiendra toutes les extensions
     */
-   protected void newFitsExt(String file,MyInputStream in,String label,Obj o) {
+   protected void newFitsExt(String file,MyInputStream in,String label,Obj o,String target,String radius) {
       if( file!=null && label==null ) {
          int i = file.lastIndexOf(Util.FS);
          label=(i>=0)?file.substring(i+1):file;
       } else if( label==null ) label="Fits ext";
 
       waitLock();
+      _target=target;
+      _radius=radius;
       _file = file;
       _in   = in;
       _firstPlan = new PlanImage(aladin);
@@ -2312,6 +2314,8 @@ public final class Calque extends JPanel implements Runnable {
       runme.start();
    }
 
+   private String _target;
+   private String _radius;
    private String _file;
    private MyInputStream _in;
    private Plan _firstPlan;
@@ -2370,6 +2374,8 @@ public final class Calque extends JPanel implements Runnable {
     */
    private void newFitsExtThread() {
       Plan p=null;
+      String target    = _target;
+      String radius    = _radius;
       String file      = _file;
       MyInputStream in = _in;
       String label     = _label;
@@ -2382,7 +2388,7 @@ public final class Calque extends JPanel implements Runnable {
       if( file!=null ) numext = getNumExt(file);
 
       unlock();
-
+      
       Vector v = new Vector();
       try {
          for( int nExt=0; !allFitsExt(numext); nExt++ )  {
@@ -2400,7 +2406,8 @@ public final class Calque extends JPanel implements Runnable {
                } else if( (type & MyInputStream.HUGE)!=0 ) {
                   pi = new PlanImageHuge(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.HEALPIX)!=0 ) {
-                  pi = new PlanHealpix(aladin,file,in,label+"["+nExt+"]",PlanBG.DRAWPIXEL,0, false);
+                  pi = new PlanHealpix(aladin,file,in,label+"["+nExt+"]",PlanBG.DRAWPIXEL,0, false,
+                        getTargetBG(target, null),getRadiusBG(target, radius, null));
                } else {
                   pi = new PlanImage(aladin,file,in,label+"["+nExt+"]",null,o,null,!keepIt,false,firstPlan);
                }
@@ -2658,10 +2665,16 @@ public final class Calque extends JPanel implements Runnable {
       * @param mode PlanBG.[DRAWPIXEL|DRAWPOLARISATION|DRAWANGLE]
       * @param indice champ à lire
       */
-      protected int newPlanHealpix(String file,MyInputStream inImg, String label,
-                                   int mode, int idxFieldToRead, boolean fromProperties) {
+     protected int newPlanHealpix(String file,MyInputStream inImg, String label,
+           int mode, int idxFieldToRead, boolean fromProperties) {
+        return newPlanHealpix(file,inImg,label,mode,idxFieldToRead,fromProperties,null,null);
+     }
+     protected int newPlanHealpix(String file,MyInputStream inImg, String label,
+              int mode, int idxFieldToRead, boolean fromProperties,String target,String radius) {
+         Coord c=getTargetBG(target,null);
+         double rad=getRadiusBG(target,radius,null);
          int n=getStackIndex();
-         plan[n] = new PlanHealpix(aladin,file,inImg,label,mode,idxFieldToRead,fromProperties);
+         plan[n] = new PlanHealpix(aladin,file,inImg,label,mode,idxFieldToRead,fromProperties,c,rad);
 
          n=bestPlace(n);
          suiteNew(plan[n]);
@@ -3266,7 +3279,7 @@ public final class Calque extends JPanel implements Runnable {
       if( gSky!=null ) {
          plan[n] = p = gSky.isProgen()  ? new PlanBGCatIndex(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
-                       gSky.isMap()     ? new PlanHealpix(aladin,gSky,label,startingTaskId) :
+                       gSky.isMap()     ? new PlanHealpix(aladin,gSky,label, c,rad,startingTaskId) :
                                           new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
          plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId) 
@@ -3305,27 +3318,30 @@ public final class Calque extends JPanel implements Runnable {
    /** Creation d'un plan à partir d'un nom de fichier ou d'une url
     * issu d'une source */
    protected int newPlan(String filename,String label,String origin,Obj o) {
-      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,o,null,null,null);
+      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,o,null,null,null,null,null);
    }
 
    protected Plan createPlan(String filename,String label,String origin,Server server) {
-      int n = ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,null,null,null,server);
+      int n = ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,null,null,null,server,null,null);
       return plan[n];
    }
 
    /** Creation d'un plan à partir d'un nom de fichier ou d'une url */
    protected int newPlan(String filename,String label,String origin) {
-      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,null,null,null,null);
+      return newPlan(filename,label,origin,null,null);
+   }
+   protected int newPlan(String filename,String label,String origin,String target,String radius) {
+      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(filename,label,origin,null,null,null,null,target,radius);
    }
 
    /** Creation d'un plan à partir d'un stream ouvert */
    protected int newPlan(InputStream inputStream, String label,String origin) {
-      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(null,label,origin,null,null,inputStream,null);
+      return ((ServerFile)aladin.dialog.localServer).creatLocalPlane(null,label,origin,null,null,inputStream,null,null,null);
    }
 
    /** Creation d'un plan à partir d'un stream ouvert */
    protected Plan createPlan(InputStream inputStream, String label,String origin) throws Exception {
-      int n = ((ServerFile)aladin.dialog.localServer).creatLocalPlane(null,label,origin,null,null,inputStream,null);
+      int n = ((ServerFile)aladin.dialog.localServer).creatLocalPlane(null,label,origin,null,null,inputStream,null,null,null);
       if( n==-2 ) return null;   // De fait aucune création de plan (cas du FOV)
       if( n<0 ) throw new Exception("plane creation error");
       return plan[n];

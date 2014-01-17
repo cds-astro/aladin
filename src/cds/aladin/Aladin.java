@@ -68,6 +68,7 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> BZIP2 decompression support (thanks to Keiron Liddle java code)
  * @beta    <LI> Pixel and coordinate toolbox
  * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
  * @beta    <LI> Recently open file menu
@@ -131,7 +132,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.007";
+    static public final    String VERSION = "v8.008";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1162,6 +1163,7 @@ public class Aladin extends JApplet
     
     /** Met à jour le menu des fichiers récemment ouverts */
     protected void updateLastFileMenu() {
+       if( miLastFile==null ) return;
        if( configuration.lastFile==null ) {
           miLastFile.setEnabled(false);
           return;
@@ -2686,9 +2688,9 @@ public class Aladin extends JApplet
    /** Activation d'un background */
    protected int allsky(TreeNodeAllsky gSky) { return allsky(gSky,null,null,null); }
    protected int allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
-      int n;
+      int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
-      else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright);
+      else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
       toolBox.repaint();
       return n;
    }
@@ -2718,15 +2720,16 @@ public class Aladin extends JApplet
             "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
             "* Copyright: UDS/CNRS - distributed under GNU GPL v3\n  \n" +
-            "Portions of the code (WCS in JPEG, " +
-            "extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, Plastic " +
-            "integration) has been developed in the framework of the EuroVO VOTech project (2005-2008). " +
+            "Portions of the code (progressive catalogs, PM facility) have been developped  in the framework of GAIA CU9 (2012-2022)." +
+            "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
+            "WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
+            "integration have been developed in the framework of the EuroVO VOTech project (2005-2008). " +
             "The contours, filters, data tree, column calculator and Xmatcher have been developed " +
             "in the framework of the Astrophysical Virtual Observatory (AVO), an EC RTD project 2002-2004. " +
             "The RGB feature has been developed in the framework of the IDHA project (ACI GRID of the French Ministere de la Recherche).\n \n" +
             "* Contact:\ncds-question@unistra.fr\nhttp://aladin.u-strasbg.fr\n \n " +
-            "If the Aladin sky atlas was helpful for your research work, the following acknowledgment " +
-            "would be appreciated: \"This research has made use of Aladin\" or cite the following article 2000A&AS..143...33B.");
+            "If the Aladin sky atlas was helpful for your research work, the citation of the following " +
+            "article 2000A&AS..143...33B would be appreciated.");
    }
 
    // Pour envoyer un rapport de bug/une question
@@ -3739,7 +3742,7 @@ public class Aladin extends JApplet
           trace(4,"Aladin.quit in progress... " );
           trace(3,"User configuration backup...");
           // Sauvegarde config utilisateur
-          console.printInfo("Aladin stopped");
+//          console.printInfo("Aladin stopped");
           saveConfig();
           
           // Arrêt d'un éventuel calcul de allsky
