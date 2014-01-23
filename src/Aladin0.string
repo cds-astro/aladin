@@ -628,7 +628,7 @@ ALLSKYSWFITS.fr Mode dynamique complète  (fits)
 ALADINTITLE	Aladin image server
 ALADINNAME	Aladin\nimage\nserver
 ALADINBYTREE	Hierarchical view
-ALADINDEFFMT	Default image format:
+ALADINDEFFMT	Default format:
 ALADININFO	The Aladin image server (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
 ALADINSTEP1	Step 1: Specify a target/radius and press SUBMIT
 ALADINSTEP2	Step 2: load one or several images
@@ -638,7 +638,7 @@ ALADINSERVERR	!Aladin image server error !
 ALADINTITLE.fr	Serveur d'images Aladin
 ALADINNAME.fr	Serveur\nAladin
 ALADINBYTREE.fr	Vue hiérarchique
-ALADINDEFFMT.fr	Format d'image par défaut:
+ALADINDEFFMT.fr	Format par défaut:
 ALADININFO.fr	Le serveur d'images Aladin (CDS/Strasbourg) - DSS/MAMA/2MASS/IRAS
 ALADINSTEP1.fr	Etape 1: Indiquez une position et appuyez CHERCHER
 ALADINSTEP2.fr	Etape 2: Sélectionnez une ou plusieurs images
@@ -2563,8 +2563,8 @@ TREEMORE	more info
 TREEMORE.fr	plus d'info
 
 #AllskyServer strings
-ALLSKYTITLE	Available data in "progressive sky" mode
-ALLSKYTITLE.fr	Données disponibles en mode "ciel progressif"	
+ALLSKYTITLE	Progressive surveys (HiPS)
+ALLSKYTITLE.fr	Relevés progressifs (HiPS)
 ALLSKYINFO Select items and press SUBMIT
 ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER
 ALLSKYDESC The "progressive sky" mode (HiPS mode) allows you to visualise a survey at any scales (from the whole sky to the limit of the resolution). It can be images, catalogues, or density maps. The HiPS images are delivered in colored composition, or in 8 bit pixels (JPEG|PNG), or in true pixels (FITS). Use the "Pixel" button for switching in the other pixel mode.\n \nWarning: the survey distributed in "progressive sky" mode have been bilinearly resampled. 

@@ -5670,7 +5670,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    /** Retourne true si la vue est synchronisée par projection sur une autre vue */
    protected boolean isProjSync() {
       ViewSimple v=aladin.view.getCurrentView();
-      return !locked && !isPlotView() && !v.isPlotView() && selected && (v==null || v!=this )
+      return !locked && !isPlotView()  && selected && (v==null || v!=this )
           && aladin.sync.isProjSync();
       
    }

@@ -115,6 +115,7 @@ public final class Configuration extends JFrame
    protected static String SLZOOM     = "SliderZoom";
    protected static String SEDWAVE    = "SEDWave";
    protected static String LASTFILE   = "LastFile";
+   protected static String LASTRUN    = "LastRun";
 //   protected static String TAG        = "CenteredTag";
 //   protected static String WENSIZE    = "WenSize";
    
@@ -1519,6 +1520,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    protected void save() throws Exception {
       if( Aladin.NOGUI ) return;
       
+      // On mémorise la date de la session
+      setLastRun();
+      
       // On conserve l'état du réticule (large ou normal)
       if( aladin.calque.reticleMode==2 && get(RETICLE)==null ) set(RETICLE,"Large");
       if( aladin.calque.reticleMode!=2 && get(RETICLE)!=null ) remove(RETICLE);
@@ -1741,6 +1745,22 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          aladin.glu.reload(true,false);
          aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
       } catch(Exception e) { e.printStackTrace(); }
+   }
+   
+   /** Retourne la date de la dernière Session - et si inconnue, retourne
+    * la date courante => permet l'éventuelle regénération du cache GLU
+    * si ça fait trop longtemps depuis la dernière version */
+   protected long getLastRun() {
+      try {
+         return Long.parseLong( get(LASTRUN) );
+      } catch( Exception e ) {
+         return System.currentTimeMillis();
+      }
+   }
+   
+   /** Maj de la date de la dernière session */
+   protected void setLastRun() {
+      set(LASTRUN,System.currentTimeMillis()+"");
    }
    
    /** Ouverture de la fenêtre de contribution à une nouvelle traduction */

@@ -31,7 +31,7 @@ import javax.swing.JRadioButton;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : juillet 2010
  */
-public class ServerAllsky extends ServerTree  {
+public class ServerHips extends ServerTree  {
    private boolean populated=false;
    private JRadioButton fitsRadio;
 
@@ -39,8 +39,8 @@ public class ServerAllsky extends ServerTree  {
    @Override
    protected void init() {
       type        = APPLI;
-      aladinLabel = "Allsky";
-      aladinLogo  = "Allsky.gif";
+      aladinLabel = "HiPS";
+      aladinLogo  = "Hips.png";
    }
    
    // boutons radio pour choix JPEG/FITS
@@ -88,7 +88,7 @@ public class ServerAllsky extends ServerTree  {
    }
 
    /** Creation du formulaire d'interrogation par arbre. */
-   protected ServerAllsky(Aladin aladin) { super(aladin); }
+   protected ServerHips(Aladin aladin) { super(aladin); }
 
    @Override
    protected int createPlane(String target,String radius,String criteria, 

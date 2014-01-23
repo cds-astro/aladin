@@ -226,6 +226,12 @@ public class Function {
                break;
          }
       }
+      
+      // Petit patch de compatibilité => pourra être viré lorsqu'il n'y aura
+      // plus de bookmarks avec le server keyword "get allsky ..."
+      int j=code.indexOf("get allsky");
+      if( j>0 ) code = code.replace(j+4, j+10, "hips");
+      
 //      System.out.println();
       return false;
    }

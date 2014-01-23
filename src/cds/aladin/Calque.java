@@ -3454,7 +3454,14 @@ public final class Calque extends JPanel implements Runnable {
        }
     }
 
-
+    /** Retourne le premier plan catalogue de la pile
+     */
+      protected Plan getFirstCatalog() {
+         for( int i=0; i<plan.length; i++ ) {
+            if( plan[i].isReady() && plan[i].isSimpleCatalog() ) return plan[i];
+         }
+         return null;
+      }
 
   /** Retourne le numero du premier plan selectionne
    * @return le numero du plan, <I>-1</I> si aucun

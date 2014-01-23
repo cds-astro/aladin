@@ -317,8 +317,8 @@ public final class MyInputStream extends FilterInputStream {
          // Detection de GZIP
          if( c[0]==31  && c[1]==139 ) type |= GZ;
          
-         // Detection de BZIP2
-         else if( c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
+         // Detection de BZIP2 => ACTUELLEMENT IL Y A UN BUG DANS LE DECOMPRESSEUR BZIP2
+         else if( Aladin.PROTO && c[0]=='B'  && c[1]=='Z' )  type |= BZIP2;
 
          // Détection PDS
          else if( c[0]=='P' && c[1]=='D' && c[2]=='S' ) type |=PDS;

@@ -942,16 +942,18 @@ public final class Command implements Runnable {
        // Si le premier serveur n'existe pas, il s'agit sans
        // doute uniquement d'un target
        StringTokenizer st = new StringTokenizer(s,",(");
-       if( !withServer || a.dialog.getServer(st.nextToken())<0 ) {
+       String server = st.nextToken();
+       if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
+       if( !withServer || a.dialog.getServer(server)<0 ) {
 
           // Si la vue courante est vide il faut prendre
           // la liste des serveurs par defaut
           if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
              t=cmd;
-             if( Aladin.OUTREACH || a.isFullScreen() ) s="allsky(\"DSS colored\")";
+             if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"DSS colored\")";
              else {
                 s=a.configuration.getServer();
-                if( s==null || s.trim().length()==0 ) s="allsky";
+                if( s==null || s.trim().length()==0 || s.equalsIgnoreCase("allsky")) s="hips";
                 String p = a.configuration.getSurvey();
                 if( p!=null && p.trim().length()>0 ) s=s+"("+p+")";
              }
@@ -1087,6 +1089,7 @@ public final class Command implements Runnable {
          || (server.equalsIgnoreCase("VizieR")
                 && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
          || server.equalsIgnoreCase("allsky")
+         || server.equalsIgnoreCase("hips")
          || (server.equalsIgnoreCase("Aladin")
                 && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
 		 || server.equalsIgnoreCase("File") ) && i==b.length;
@@ -1139,6 +1142,7 @@ public final class Command implements Runnable {
          i=getServerInfo(serverX,criteriaX,b,i);
 
          String server = serverX.toString();
+         if( server.equalsIgnoreCase("allsky") ) server="hips";  // pour assurer la compatibilité
          String criteria = criteriaX.toString();
 Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
@@ -2080,8 +2084,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       ViewSimple v = a.view.getView(pi);
       if( pi instanceof PlanBG && (!pi.active || !pi.ref && pi.getOpacityLevel()==0f) ) {
-         Aladin.warning("crop error: allsky plane ["+pi.label+"] must be visible to be cropped!",1);
-         System.err.println("crop error: allsky plane ["+pi.label+"] must be visible to be cropped!");
+         Aladin.warning("crop error: HiPS plane ["+pi.label+"] must be visible to be cropped!",1);
+         System.err.println("crop error: HiPS plane ["+pi.label+"] must be visible to be cropped!");
          return null;
       }
 
@@ -2763,9 +2767,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          }
       }
       else if( cmd.equalsIgnoreCase("grid") ) {
-              boolean flag= !param.equals("off");
-              a.calque.setGrid(flag,false);
-              a.calque.repaintAll();
+         if( param.equalsIgnoreCase("healpix") || param.equalsIgnoreCase("hpx") ) {
+            if( !a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", true);
+         } else {
+            boolean flag= !param.equals("off");
+            if( !flag && a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", false);
+            a.calque.setGrid(flag,false);
+         }
+         a.calque.repaintAll();
            }
 //      else if( cmd.equalsIgnoreCase("hist") || cmd.equals("h") )   {
 //            try { n=Integer.parseInt(param); }
@@ -4050,16 +4059,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       "mv Cat1.tsv Fold;" +
       "set Img.jpg opacity=20;" +
       "collapse Fold;" +
-      "get allsky(SHASSA);" +
+      "get hips(SHASSA);" +
       "set proj=AITOFF;" +
       "zoom 180°;" +
       "rm B1;" +
-      "get allsky(Mellinger);" +
+      "get hips(Mellinger);" +
       "m1;" +
       "zoom 15';" +
       "rm B1;" +
       "set Melling* opacity=30;" +
-      "get allsky(\"Simbad density\");" +
+      "get hips(\"Simbad density\");" +
       "set proj=CARTESIAN;" +
       "cm eosb reverse log;" +
       "M1;" +

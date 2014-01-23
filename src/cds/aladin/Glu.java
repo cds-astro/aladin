@@ -1892,7 +1892,7 @@ public final class Glu implements Runnable {
       // Suppression d'un eventuel '?' tout seul en bout
       int n = url.length();
       if( isurl && n>0 && url.charAt(n - 1) == '?' ) url = url.substring(0, n- 1);
-
+      
       return url;
 
    }
@@ -2336,16 +2336,18 @@ public final class Glu implements Runnable {
             url = getURL("Http", tmp, true, false);
          }
 
-         InputStream is = url.openStream();
-         
-         // Lecture du numero de la derniere version disponible
-         if( flagTmp ) {
-            DataInputStream dis = new DataInputStream(is);
-            aladin.setCurrentVersion(dis.readLine());
-            dis.close();
-         }
+         InputStream is = null;
+         try {
+            is = url.openStream();
 
-         is.close();
+            // Lecture du numero de la derniere version disponible
+            if( flagTmp ) {
+               aladin.waitDialog();
+               DataInputStream dis = new DataInputStream(is);
+               aladin.setCurrentVersion(dis.readLine());
+            }
+
+         } finally { if( is!=null ) is.close(); }
       } catch( Exception elog ) {
       }
    }

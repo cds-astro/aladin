@@ -247,7 +247,7 @@ public class FrameBookmarks extends JFrame {
       });
       p.add( b=new JButton(chaine.getString("BKMDEFAULT")));
       b.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { resetBookmarks(); }
+         public void actionPerformed(ActionEvent e) { resetBookmarks(true); }
       });
       p.add(new JLabel(" - "));
       p.add( b=new JButton(chaine.getString("EXEC")));
@@ -301,12 +301,11 @@ public class FrameBookmarks extends JFrame {
    }
    
    // Réinitialisation de la liste des bookmarks
-   private void resetBookmarks() {
-      if( !aladin.confirmation(this,aladin.getChaine().getString("BKMCONFIRM")) ) return;
-      aladin.configuration.resetBookmarks();
-      bookmarks.init(true);
+   protected void resetBookmarks(boolean withConfirmation) {
+      if( withConfirmation &&
+            !aladin.confirmation(this,aladin.getChaine().getString("BKMCONFIRM")) ) return;
+      bookmarks.reload();
       resumeTable();
-//      bookmarks.resumeToolBar();  // Deja fait dans le bookmarks.init
       resumeEdit(null,false);
    }
    

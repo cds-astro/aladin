@@ -2749,7 +2749,7 @@ public class PlanBG extends PlanImage {
       
       int epaisseur = 50;
       g.setStroke(new BasicStroke(epaisseur));
-
+      
       Projection projd = v.getProjSyncView().getProj().copy();
       projd.frame=0;
 

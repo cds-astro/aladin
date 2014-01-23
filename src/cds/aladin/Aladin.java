@@ -68,7 +68,6 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> BZIP2 decompression support (thanks to Keiron Liddle java code)
  * @beta    <LI> Pixel and coordinate toolbox
  * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
  * @beta    <LI> Recently open file menu
@@ -132,7 +131,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.008";
+    static public final    String VERSION = "v8.009";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -575,16 +574,20 @@ public class Aladin extends JApplet
           // désactivation du lancement automatique du hub interne
           try { if( getParameter("-nohub")!=null ) NOHUB = true; } catch(Exception e) {}
 
-          // Provenance de l'applet (si different de aladin.u-strasbg.fr)
-          HOSTSERVER = getSite(getCodeBase().toString());
-          if( HOSTSERVER!=null  && !HOSTSERVER.equals(ALADINMAINSITE) ) APPLETSERVER=HOSTSERVER;
-
-          // Recuperation du CGIPATH s'il est different du getCodeBase();
-          CGIPATH=getCodeBase()+"";
           try {
-             String cgi = getParameter("cgi");
-             if( cgi!=null ) CGIPATH="http://"+HOSTSERVER+cgi;
-          } catch( Exception e3 ) {};
+            // Provenance de l'applet (si different de aladin.u-strasbg.fr)
+             HOSTSERVER = getSite(getCodeBase().toString());
+             if( HOSTSERVER!=null  && !HOSTSERVER.equals(ALADINMAINSITE) ) APPLETSERVER=HOSTSERVER;
+
+             // Recuperation du CGIPATH s'il est different du getCodeBase();
+             CGIPATH=getCodeBase()+"";
+             try {
+                String cgi = getParameter("cgi");
+                if( cgi!=null ) CGIPATH="http://"+HOSTSERVER+cgi;
+             } catch( Exception e3 ) {};
+         } catch( Exception e1 ) {
+            e1.printStackTrace();
+         }
 
           // Recupération du nom du lanceur de l'applet (Simbad, VizieR, NED...)
           try { FROMDB = getParameter("from"); } catch( Exception e ) {}
@@ -660,8 +663,12 @@ public class Aladin extends JApplet
     }
     @Override
     public URL getCodeBase() {
-       if( extApplet!=null ) return extApplet.getCodeBase();
-       return super.getCodeBase();
+       try {
+         if( extApplet!=null ) return extApplet.getCodeBase();
+          return super.getCodeBase();
+      } catch( Exception e ) {
+         return null;
+      }
     }
     @Override
     public AppletContext getAppletContext() {
@@ -1059,7 +1066,7 @@ public class Aladin extends JApplet
                 {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                 {},{NTOOL+"|"+alt+" N"},
                 {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
-                   {"?"+GRID+"|"+alt+" G"},{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},
+                   {"?"+GRID+"|"+alt+" G"},/*{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},*/
                 {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
              },
              { {MOC},
@@ -2463,14 +2470,25 @@ public class Aladin extends JApplet
     * En cas de modification, on efface le cache, notamment le dico GLU */
    protected void setCurrentVersion(String s )  {
        currentVersion = s;
+       if( !NETWORK ) return;
+       
+       // Banner de demande de maj de la version si nécessaire
        testUpgrade();
 
-       // Doit-on nettoyer le cache ?
+       // Doit-on nettoyer le cache et recharger les bookmarks officielles
+       // car le numéro officiel de la version Aladin a changé ?
        String lastCurrentVersion = configuration.getOfficialVersion();
        if( currentVersion!=null && currentVersion.length()!=0 &&
              (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
           configuration.setOfficialVersion(currentVersion);
-          trace(1,"Resetting GLU records (=> clear local cache)...");
+          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
+          cache.clear();
+          bookmarks.reload();
+       }
+       
+       // Doit-on nettoyer le cache car la dernière session date de plus de 15 jours
+       else if((System.currentTimeMillis()-configuration.getLastRun())>15*86400*1000L ) {
+          trace(1,"Reloading GLU records & VizieR keywords (too old definitions) => clear local cache...");
           cache.clear();
        }
     }
@@ -3407,8 +3425,9 @@ public class Aladin extends JApplet
     }
 
     /** Activation ou désactivation de la grille HEALPix via la Jbar */
-    public void hpxGrid() {
-       calque.setOverlayFlag("hpxgrid", miHpxGrid.isSelected() );
+    public void hpxGrid() { hpxGrid(miHpxGrid.isSelected()); }
+    public void hpxGrid(boolean flag) {
+       calque.setOverlayFlag("hpxgrid", flag );
        view.newView();
        view.repaintAll();
     }

@@ -824,9 +824,12 @@ public class ServerGlu extends Server implements Runnable {
                  int j;
                  String t=null;
                  crit=s = (String)((JComboBox)c).getSelectedItem();
+                 // Si la valeur est précédée d'un "XXX - valeur", c'est XXX qui sera utilisé
+                 // en tant que valeur.
                  if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
+                 if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2).trim());
                  else vbis.addElement(s);
-                 if( (j=s.indexOf(" - "))>0 ) s=s.substring(0,j);
+                 if( j>=0 ) s=s.substring(0,j);
                  else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
                  v.addElement(s);
               }

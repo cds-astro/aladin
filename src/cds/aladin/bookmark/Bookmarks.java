@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -68,6 +69,22 @@ public class Bookmarks {
    public FrameBookmarks getFrameBookmarks() {
       if( frameBookmarks==null ) frameBookmarks = new FrameBookmarks(aladin,this);
       return frameBookmarks;
+   }
+   
+   /** Réinitialisation (rechargement) des bookmarks "officielles" */
+   public void reload() {
+      String list = aladin.configuration.getBookmarks();
+      aladin.configuration.resetBookmarks();
+      init(true);
+      
+      // On réactive les bookmarks locaux
+      StringTokenizer tok = new StringTokenizer(list,",");
+      while( tok.hasMoreTokens() ) {
+         String name = tok.nextToken();
+         Function f = aladin.getCommand().getFunction(name);
+         if( f.isLocalDefinition() ) f.setBookmark(true); 
+      }
+      if( aladin.hasGUI() ) resumeToolBar();
    }
    
    /** Fournit la toolbar des signets (éventuellement la crée) */

@@ -57,7 +57,7 @@ import cds.tools.Util;
 
 
 /**
-* Controlleur (lien entre vue et modèle) pour les macros
+* Controleur (lien entre vue et modèle) pour les macros
 * (utilisation des scripts avec liste de paramètres)
 *
 * @author Thomas Boch [CDS]
@@ -121,7 +121,20 @@ public class MacroController implements ActionListener, MouseMotionListener,
     private void importParams() {
        ParamTableModel ptm = macroModel.getParamTableModel();
        Vector<Plan> p = a.calque.getSelectedPlanes();
-       if( p.size()==0 || p.size()==1 && !((Plan)p.elementAt(0)).isCatalog() ) a.warning(frameMacro,a.chaine.getString("NEEDCAT"));
+       if( p!=null && p.size()>0 ) {
+          Vector<Plan> pa = new Vector<Plan>();
+          for( int i=0; i<p.size(); i++ ) {
+             Plan p2 = p.get(i);
+             if( p2.isReady() && p2.isSimpleCatalog() ) pa.add(p2);
+          }
+          p = pa;
+       }
+          
+       if( p==null || p.size()==0 ) {
+          Plan p1 = a.calque.getFirstCatalog();
+          if( p1!=null ) { p = new Vector<Plan>(); p.add(p1); }
+       }
+       if( p.size()==0 ) a.warning(frameMacro,a.chaine.getString("NEEDCAT"));
 
        ptm.reset();
        int n=0;

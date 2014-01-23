@@ -363,7 +363,7 @@ long t1,t;
       if( !Aladin.OUTREACH ) sv = triServer(sv);
 
       // L'arbre des allsky
-      sv.addElement(new ServerAllsky(aladin));
+      sv.addElement(new ServerHips(aladin));
 
       // L'acces local/url
       sv.addElement(localServer = new ServerFile(aladin));
