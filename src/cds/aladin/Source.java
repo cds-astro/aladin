@@ -1220,6 +1220,12 @@ public class Source extends Position implements Comparator {
    	  sourceFootprint.setShowFootprint(show);
    	  if( withRepaint ) plan.aladin.calque.repaintAll();
    }
+   
+   /** True is a footprint is associated to this source and displayed */
+   protected boolean isShowingFootprint() {
+      if( sourceFootprint==null ) return false;
+      return sourceFootprint.showFootprint();
+   }
 
    /**
     * @return Retourne l'index du footprint associé (valeur par défaut : -1)

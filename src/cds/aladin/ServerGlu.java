@@ -504,7 +504,7 @@ public class ServerGlu extends Server implements Runnable {
             || flagNumeric && s.equals(cr) ) {
 //         if( !flagNumeric && (s.indexOf(cr)>=0 || s1.indexOf(cr)>=0) || flagNumeric && s.equals(cr) ) {
             s = (String)c.getItemAt(i);   // Pour ne pas rester en majuscules
-            if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
+            if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m).trim();
             return s;
 
          }
@@ -609,7 +609,7 @@ public class ServerGlu extends Server implements Runnable {
                   s = getComboItem((JComboBox)c,cr);
                   if( s!=null ) {
                      //System.out.print(" Bingo("+s+"):"+j);
-                     if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
+                     if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m).trim();
                      trouve=true;
 
                      v.setElementAt(s,j);
@@ -667,7 +667,7 @@ public class ServerGlu extends Server implements Runnable {
                s = (String)((JComboBox)c).getSelectedItem();
                if( (m=s.indexOf(" - "))>0 ) vbis.addElement(s.substring(m+3));
                else vbis.addElement(s);
-               if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m);
+               if( (m=s.indexOf(" - "))>0 ) s=s.substring(0,m).trim();
                else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) s="";
                //System.out.print(" Default_Choice("+s+"):"+j);
                v.addElement(s);
@@ -827,9 +827,9 @@ public class ServerGlu extends Server implements Runnable {
                  // Si la valeur est précédée d'un "XXX - valeur", c'est XXX qui sera utilisé
                  // en tant que valeur.
                  if( (j=s.indexOf(" - "))>0 ) vbis.addElement(crit=s.substring(j+3));
-                 if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2).trim());
+                 if( (j=s.trim().indexOf("- "))==0 ) vbis.addElement(crit=s.substring(j+2));
                  else vbis.addElement(s);
-                 if( j>=0 ) s=s.substring(0,j);
+                 if( j>=0 ) s=s.substring(0,j).trim();
                  else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) crit=s="";
                  v.addElement(s);
               }
@@ -1007,7 +1007,7 @@ public class ServerGlu extends Server implements Runnable {
          } else if( c instanceof JComboBox ) {
             int j;
             s = (String)((JComboBox)c).getSelectedItem();
-            if( (j=s.indexOf(" - "))>0 ) s=s.substring(0,j);
+            if( (j=s.indexOf(" - "))>0 ) s=s.substring(0,j).trim();
             else if( s.equals("?") || s.startsWith("-") && s.endsWith("-")) s="";
             v.addElement(s);
          }

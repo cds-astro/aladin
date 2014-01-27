@@ -56,11 +56,26 @@ public class PlanMoc extends PlanBGCat {
    public PlanMoc(Aladin a) { super(a); }
       
    /** Création d'un Plan MOC à partir d'un flux */
+   protected PlanMoc(Aladin aladin, HealpixMoc moc, String label, Coord c, double radius) {
+      this(aladin,null,moc,label,c,radius);
+   }
+   
+   /** Création d'un Plan MOC à partir d'un flux */
    protected PlanMoc(Aladin aladin, MyInputStream in, String label, Coord c, double radius) {
+      this(aladin,in,null,label,c,radius);
+   }
+   
+   protected PlanMoc(Aladin aladin, MyInputStream in, HealpixMoc moc, String label, Coord c, double radius) {
       super(aladin);
       this.dis   = in;
+      this.moc   = moc;
       useCache = false;
-      frameOrigin=Localisation.GAL;
+      frameOrigin = Localisation.ICRS;
+      if( moc!=null ) {
+         String f = moc.getCoordSys();
+         frameOrigin = f.equals("E")?Localisation.ECLIPTIC : 
+            f.equals("G")?Localisation.GAL:Localisation.ICRS;
+      }
       type = ALLSKYMOC;
       this.c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
@@ -156,19 +171,20 @@ public class PlanMoc extends PlanBGCat {
       if( dis==null ) return true;
       super.waitForPlan();
       try {
-         moc = new HealpixMoc();
-         moc.setMinLimitOrder(3);
-         if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
-         else moc.readASCII(dis);
-//         moc=toReferenceFrame("C");  // On force le MOC en ICRS si ce n'est pas le cas
+         if( moc==null && dis!=null ) {
+            moc = new HealpixMoc();
+            moc.setMinLimitOrder(3);
+            if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
+            else moc.readASCII(dis);
+         }
          String c = moc.getCoordSys();
          frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
          
          // Centrage sur la première cellule
-         if( moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
-            MocCell cell = moc.iterator().next();
-            aladin.execAsyncCommand(cell+"");
-         }
+//         if( moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
+//            MocCell cell = moc.iterator().next();
+//            aladin.execAsyncCommand(cell+"");
+//         }
       }
       catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -253,7 +269,7 @@ public class PlanMoc extends PlanBGCat {
             Hpix p = hpixList[i];
             if( p==null ) break;
             order=p.getOrder();
-            if( m!=null && !m.isInTree(order, p.getNpix())) continue;
+            if( m!=null && !m.isIntersecting(order, p.getNpix())) continue;
             if( p.isOutView(v) ) continue;
             
             // Tracé en aplat avec demi-niveau d'opacité

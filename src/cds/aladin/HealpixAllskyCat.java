@@ -34,7 +34,7 @@ import cds.tools.Util;
 class HealpixAllskyCat extends HealpixKeyCat {
 
 
-   protected HealpixAllskyCat(PlanBG planBG,int order) {
+   protected HealpixAllskyCat(PlanBG planBG,int order,int ext) {
       super(planBG);
       this.order=order;
       this.npix=-1;
@@ -42,7 +42,7 @@ class HealpixAllskyCat extends HealpixKeyCat {
       resetTimer();
       String nameNet = "Norder"+order+"/Allsky";
       String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
-      extCache=extNet=XML;
+      extCache=extNet=ext;
       fileCache = nameCache+ EXT[extCache];
       fileNet = nameNet+ EXT[extNet];
       alreadyCached=false;

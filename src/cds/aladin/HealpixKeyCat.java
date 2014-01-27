@@ -83,8 +83,11 @@ public class HealpixKeyCat extends HealpixKey {
       MyInputStream in = null;
 
       try {
-         testLast(stream);
-         testNLoaded(stream);
+         try {
+            testLast(stream);      // A virer lorsqu'on n'utilisera plus les anciens HiPS
+            testNLoaded(stream);   // A virer lorsqu'on n'utilisera plus les anciens HiPS
+            testCompleteness(stream);
+         } catch( Exception e ) {  if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
 
          int trace=planBG.aladin.levelTrace;
          planBG.aladin.levelTrace=0;
@@ -149,9 +152,32 @@ public class HealpixKeyCat extends HealpixKey {
          nTotal = Integer.parseInt(new String(stream,slash+1,fin-(slash+1)));
          last = nLoaded==nTotal;
 //         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
-      } catch( Exception e ) { nLoaded = nTotal = 0; }
+      } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
    }
    
+   static final private char [] COMPLETENESS = { '#',' ','C','o','m','p','l','e','t','e','n','e','s','s',' ','=' };
+   
+   // # Completeness = 903 / 90811
+   private void testCompleteness(byte [] stream) {
+      if( stream.length<COMPLETENESS.length ) return;
+      for( int i=0; i<COMPLETENESS.length; i++ ) if( COMPLETENESS[i]!=stream[i] ) return;
+      int deb=COMPLETENESS.length;
+      int fin;
+      int slash=0;
+      for( fin=COMPLETENESS.length; fin<stream.length 
+         && stream[fin]!='\n' && stream[fin]!='\r'; fin++ ) {
+         if( stream[fin]=='/' ) slash=fin;
+      }
+      if( slash==0 ) return;
+      if( fin==stream.length ) return;
+      try {
+         nLoaded = Integer.parseInt((new String(stream,deb,slash-deb)).trim());
+         nTotal = Integer.parseInt((new String(stream,slash+1,fin-(slash+1))).trim());
+         last = nLoaded==nTotal;
+//         System.out.println("Trouve ["+new String(stream,0,fin)+"] pour "+this);
+      } catch( Exception e ) { nLoaded = 1; nTotal = 2; last=false; }
+   }
+
   /** Retourne true s'il n'y a pas de descendant */
    protected boolean isLast() { return last; }
    

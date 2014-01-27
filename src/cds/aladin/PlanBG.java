@@ -45,6 +45,7 @@ import java.util.*;
 
 
 import cds.astro.Coo;
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -331,7 +332,7 @@ public class PlanBG extends PlanImage {
       return prop;
    }
    
-   protected void scanProperties() {
+   protected boolean scanProperties() {
       // Information supplémentaire par le fichier properties ?
       try {
          java.util.Properties prop = loadPropertieFile();
@@ -362,7 +363,8 @@ public class PlanBG extends PlanImage {
          s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT);           if( s!=null ) copyright = s;
          s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
          
-      } catch( Exception e ) { aladin.trace(3,"No properties file found ..."); }
+      } catch( Exception e ) { aladin.trace(3,"No properties file found ...");  return false; }
+      return true;
 
    }
    
@@ -491,8 +493,43 @@ public class PlanBG extends PlanImage {
    
    /** Chargement du Moc associé au survey */
    protected void loadMoc() {
-      String moc = url+"/Moc.fits";
-      aladin.execAsyncCommand("'"+label+" MOC'=load "+moc);
+      if( moc==null ) {
+         try { loadInternalMoc(); } catch( Exception e ) {
+            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            return;
+         }
+      }
+      aladin.calque.newPlanMOC(moc,label+" MOC");
+   }
+   
+   protected HealpixMoc moc;
+   
+   /** Chargement du MOC associé au HiPS, soit depuis le cache, soit depuis le net */
+   protected void loadInternalMoc() throws Exception {
+      String fcache = getCacheDirPath()+"/"+survey+version+"/Moc.fits";
+      if( !local && useCache ) {
+         if( new File(fcache).exists() ) {
+            InputStream in = null;
+            try { 
+               in = new FileInputStream(fcache);
+               moc = new HealpixMoc(in);
+            } finally { if( in!=null ) in.close(); }
+            Aladin.trace(3,"Loading "+survey+" MOC from cache");
+            return;
+         }
+      }
+      String f = getUrl()+"/Moc.fits";
+      MyInputStream mis = null;
+      try {
+         mis=Util.openAnyStream(f);
+         moc = new HealpixMoc(mis);
+      } finally { if( mis!=null) mis.close(); }
+      Aladin.trace(3,"Loading "+survey+" MOC from net");
+
+      if( !local && useCache ) {
+         moc.write(fcache);
+         Aladin.trace(3,"Saving "+survey+" MOC in cache");
+      }
    }
    
    /** Chargement d'un plan Progen associé au survey */
@@ -655,10 +692,18 @@ public class PlanBG extends PlanImage {
    protected void planReady(boolean ready) {
       super.planReady(ready);
       setPourcent(0);
-      if( co!=null ) aladin.view.setRepere(co);
       flagOk=ready;
       aladin.synchroPlan.stop(startingTaskId);
-      if( loadMocNow ) loadMoc();
+      if( co!=null ) aladin.view.setRepere(co);
+      
+      // Chargement du MOC associé, avec ou sans création d'un plan dédié
+      if( loadMocNow ) {
+         (new Thread() { public void run() { loadMoc(); } }).start();
+      } else if( hasMoc() ) {
+         (new Thread() { 
+            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
+         }).start();
+      }
    }
 
    @Override
@@ -1177,7 +1222,7 @@ public class PlanBG extends PlanImage {
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
    }
 
-   private double RES[]=null;
+   protected double RES[]=null;
    
    private static final int DEFAULTLOSANGEORDER = 9;
 
@@ -1383,9 +1428,6 @@ public class PlanBG extends PlanImage {
       int nSideFile = (int)CDSHealpix.pow2(order);
 
       try {
-//         if( first1 ) {
-//            aladin.execAsyncCommand("draw mode radec;draw newtool");
-//         }
          double[] polar = CDSHealpix.radecToPolar(new double[] {ra, dec});
          double[] polar1 = CDSHealpix.radecToPolar(new double[] {ra1, dec1});
          long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);         
@@ -1396,12 +1438,10 @@ public class PlanBG extends PlanImage {
          long nside = (long)h.width * CDSHealpix.pow2(h.order);
          long npixPixel = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
          
-//         List<Long> voisins = CDSHealpix.neighbours_nest(nside,npixPixel);
          long [] voisins = CDSHealpix.neighbours(nside,npixPixel);
          
          // On ne va prendre 3 voisins (S,SW,W) + le pixel en question
          // pour l'interpolation
-//         voisins.add(0, npixPixel);
          int m = 4;
          for( int i=m; i>=1; i-- ) voisins[i] = voisins[i-1];
          voisins[0]=npixPixel;
@@ -1409,7 +1449,6 @@ public class PlanBG extends PlanImage {
          HealpixKey h1;
          for( int i=0; i<m; i++ ) {
             h1=h;
-//            long nlpix = voisins.get(i).longValue();
             long nlpix = voisins[i];
             
             // Test au cas où l'on déborde du HealpixKey courant
@@ -1422,16 +1461,11 @@ public class PlanBG extends PlanImage {
                h1=htmp;
             }
             
-            // Pondération en prenant comme coefficient la l'inverse de la distance sur les coordonnées polaires
+            // Pondération en prenant comme coefficient l'inverse de la distance sur les coordonnées polaires
             try {
                double pix = h1.getPixelValue(nlpix,HealpixKey.NOW);
                if( Double.isNaN(pix) ) continue;
                double [] polar2 = CDSHealpix.pix2ang_nest(nside, nlpix);
-//               if( first1 ) {
-//                  double[] radec = CDSHealpix.polarToRadec(polar2);
-//                  Coord coo1 = new Coord(radec[0],radec[1]);
-//                  aladin.execAsyncCommand("draw line("+coo1.al+" "+coo1.del+" "+ra1+" "+dec1+")");
-//               }
                double coef = Coo.distance(polar1[0],polar1[1],polar2[0],polar2[1]);
                if( coef==0 ) return pix;  // Je suis pile dessus
                double c = 1/coef;
@@ -1441,12 +1475,6 @@ public class PlanBG extends PlanImage {
          }
          pixel = totalPixel/totalCoef;
          
-//         if( first1 ) {
-//            Coord coo = new Coord(ra1,dec1);
-//            coo = aladin.localisation.frameToFrame(coo, frameOrigin, Localisation.ICRS);
-//            System.out.println("Res = "+aladin.localisation.J2000ToString(coo.al, coo.del)+" diff="+diff+" pix="+pixel);
-//         }
-
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
@@ -1522,8 +1550,8 @@ public class PlanBG extends PlanImage {
       aladin.trace(4,"PlanBG.touchCache() : Date:"+d+" => "+pathName);
    }
    
-   private long lastIz=-1;
-   private int lastMaxOrder=3;
+   protected long lastIz=-1;
+   protected int lastMaxOrder=3;
    
    protected int maxOrder(ViewSimple v) {
       long iz = v.getIZ();
@@ -1538,8 +1566,13 @@ public class PlanBG extends PlanImage {
          }
       }
       double pixSize = v.getPixelSize();
-      for( lastMaxOrder=2; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
-      if( lastMaxOrder==2 && pixSize<0.06 ) lastMaxOrder=3;
+      for( lastMaxOrder=1; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
+      adjustMaxOrder(lastMaxOrder,pixSize);
+      return lastMaxOrder;
+   }
+   
+   protected int adjustMaxOrder(int lastMaxOrder,double pixSize) {
+      if( lastMaxOrder<=2 && pixSize<0.06 ) lastMaxOrder=3;
       return lastMaxOrder;
    }
    
@@ -2153,7 +2186,6 @@ public class PlanBG extends PlanImage {
 		   Graphics g = img.getGraphics();
 		   v.drawBackground(g);
 		   drawLosanges(g,v,now);
-//           v.drawForeGround(g);
 		   g.dispose();
 		   return img;
 	   } 
@@ -2506,6 +2538,15 @@ public class PlanBG extends PlanImage {
       else drawLosangesAsync(g,v);
    }
    
+   /** Retourne true si on est sûr que ce losange est en dehors du
+    * MOC associé au HIPS */
+   protected boolean isOutMoc(int order,long npix) {
+      if( moc==null ) return false; // pas de MOC chargé, je ne sais pas !
+      boolean res = !moc.isIntersecting(order, npix);
+//      if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
+      return res;
+   }
+   
    protected Vector<HealpixKey> redraw = new Vector<HealpixKey>(100);
    
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
@@ -2545,7 +2586,7 @@ public class PlanBG extends PlanImage {
          else {
             pix = getPixList(v,center,max);
             for( int i=0; i<pix.length; i++ ) {
-               HealpixKey healpix = getHealpix(max,pix[i], false);
+                HealpixKey healpix = getHealpix(max,pix[i], false);
                if( healpix==null ) {
                   if( (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                      pix[i]=-1; continue;
@@ -2611,6 +2652,7 @@ public class PlanBG extends PlanImage {
 
             for( int i=0; i<pix.length; i++ ) {
                if( pix[i]==-1 ) continue;
+               if( isOutMoc(order,pix[i]) ) continue;
                healpix = getHealpix(order,pix[i], false);
                HealpixKey testIn = healpix!=null ? healpix : new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
 
@@ -3195,7 +3237,7 @@ public class PlanBG extends PlanImage {
       public void run() {
          boolean flagLoad;
 
-         while( encore ) {
+        while( encore ) {
             try {
 //System.out.println(label+" running...");
                flagLoad=false;
@@ -3225,12 +3267,6 @@ public class PlanBG extends PlanImage {
                        } else if( type==1 && status==HealpixKey.TOBELOADFROMNET ) {
                            list.add(healpix);
                         }
-//                        if( (type==0 && status==HealpixKey.TOBELOADFROMCACHE
-//                              || type==1 && status==HealpixKey.TOBELOADFROMNET)
-//                              && healpix.priority<min ) {
-//                           minHealpix=healpix;
-//                           min=healpix.priority;
-//                        }
                      }
                      
                      // Quelque chose du Net ?
@@ -3250,14 +3286,6 @@ public class PlanBG extends PlanImage {
                         }
                         flagLoad = true;
                      }
-                     
-//                     if( minHealpix!=null ) {
-//                        /* if( type==0 ) minHealpix.loadFromCache();
-//                        else */ minHealpix.loadFromNet();
-//                        if( !minHealpix.allSky ) setLosangeOrder(minHealpix.getLosangeOrder());
-//                        flagLoad = true;
-////                        System.out.println("   Load "+minHealpix);
-//                     }
                   } catch( Exception e) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
                }
 

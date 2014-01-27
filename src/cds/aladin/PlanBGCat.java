@@ -23,25 +23,20 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cds.allsky.Context;
 import cds.tools.Util;
-import cds.tools.pixtools.Hpix;
-
 
 public class PlanBGCat extends PlanBG {
 
 
    static final protected int MAXGAPORDER = 3;  // Décalage maximal autorisé
    private int gapOrder=0;                      // Décalage de l'ordre Max => changement de densité
+   protected int allskyExt=HealpixAllsky.XML;   // L'extension des fichiers allsky (dépend de la version du HiPS catalog)
 
    protected PlanBGCat(Aladin aladin) {
       super(aladin);
@@ -50,6 +45,7 @@ public class PlanBGCat extends PlanBG {
    protected PlanBGCat(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius,String startingTaskId) {
       super(aladin,gluSky,label, c,radius,startingTaskId);
       aladin.log(Plan.Tp[type],label);
+      setAllskyExt();
    }
    
    protected int getTileMode() { return HealpixKey.TSV; }
@@ -64,6 +60,7 @@ public class PlanBGCat extends PlanBG {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
+      frameOrigin=gluSky.getFrame();
       scanProperties();
       loadGenericLegende();
    }
@@ -127,16 +124,15 @@ public class PlanBGCat extends PlanBG {
       return pixAsk;
    }
 
-//   private boolean localAllSky = false;   // A VIRER LORSQUE SIMBAD EN NET DISTANT
    private HealpixAllskyCat allsky[] = new HealpixAllskyCat[4];
 
    protected int getLosangeOrder() { return 9; }
-
+   
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v,int order) {
       boolean hasDrawnSomething=false;
       if( allsky[order]==null ) {
-         allsky[order] = new HealpixAllskyCat(this,order);
+         allsky[order] = new HealpixAllskyCat(this,order,allskyExt);
          pixList.put( key(order,-1), allsky[order]);
 
          if( local ) allsky[order].loadFromNet();
@@ -156,9 +152,15 @@ public class PlanBGCat extends PlanBG {
       }
       return hasDrawnSomething;
    }
-
+   
+   protected int adjustMaxOrder(int lastMaxOrder,double pixSize) {
+      return lastMaxOrder;
+   }
+   
    /** Retourne l'order max du dernier affichage */
-   protected int getCurrentMaxOrder(ViewSimple v) { return Math.max(2,Math.min(maxOrder(v)+gapOrder,maxOrder)); }
+   protected int getCurrentMaxOrder(ViewSimple v) { 
+      return Math.max(1,Math.min(maxOrder(v)+gapOrder,maxOrder)); 
+   }
 
    protected void draw(Graphics g,ViewSimple v) {
       long [] pix=null;
@@ -167,30 +169,56 @@ public class PlanBGCat extends PlanBG {
       boolean allKeyReady=true;
       long nLoaded=0L;
       long nTotal=0L;
+      boolean allsky1=false,allsky2=false,allsky3=false;
+      boolean hipsOld = allskyExt==HealpixAllsky.XML;  // Vieille version d'un HiPS catalog
       
-      hasDrawnSomething=drawAllSky(g, v,  2);
-      if( order>=3 ) hasDrawnSomething|=drawAllSky(g, v,  3);
+//      System.out.println("order="+order+" hipsOld="+hipsOld);
+      if( !hipsOld ) allsky1=drawAllSky(g, v,  1);
+      if( hipsOld || order>=2 ) allsky2=drawAllSky(g, v,  2);
+      if( order>=3 ) allsky3=drawAllSky(g, v,  3);
+      
+      hasDrawnSomething = allsky1 || allsky2 || allsky3;
 
       setMem();
       resetPriority();
 
       boolean moreDetails=order<=3;
       
-      for( int norder=3; norder<=order; norder++ ) {
+      pix = getPixListView(v,3);
+      int pixLength = pix.length;
+      long [] npix = null;
+      int npixLength = 0;
+      
+      for( int norder= hipsOld?3:1; norder<=order; norder++ ) {
+         
+         // Si on n'a fait le allsky, inutile de faire les losanges individuels correspondants
+         // sauf s'il s'agit de l'ancienne forme des HiPS (uniquement pour norder=3)
+         if( !hipsOld ) {
+            if( norder==1 && allsky[1].getStatus()!=HealpixKey.ERROR ) continue;
+            if( norder==2 && allsky[2].getStatus()!=HealpixKey.ERROR ) continue;
+            if( norder==3 && allsky[3].getStatus()!=HealpixKey.ERROR ) continue;
+         }
+         
+         // On prépare la liste des pixels Healpix pour le prochain niveau
+         if( norder<order ) {
+            npix = new long[ pix.length*4 ]; 
+            npixLength=0;
+         } else npix=null;
 
-         pix = getPixListView(v,norder);
-         for( int i=0; i<pix.length; i++ ) {
+         for( int i=0; i<pixLength; i++ ) {
+            
+            if( isOutMoc(norder, pix[i]) ) continue;
 
             if( (new HealpixKey(this,norder,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
 
-            // Teste si le losange père est déjà chargé et est le dernier de sa branche
-            // et dans ce cas, on ne tente pas de charger le suivant
-            if( norder>4 ) {
-               HealpixKeyCat pere = (HealpixKeyCat)getHealpix(norder-1,pix[i]/4,false);
-               if( pere!=null && pere.isLast() ) continue;
-            }
-
             HealpixKeyCat healpix = (HealpixKeyCat)getHealpix(norder,pix[i], true);
+            
+            if( npix!=null ) {
+               npix[npixLength++] = pix[i]*4;
+               npix[npixLength++] = pix[i]*4+1;
+               npix[npixLength++] = pix[i]*4+2;
+               npix[npixLength++] = pix[i]*4+3;
+            }
             
             // Juste pour tester la synchro
 //            Util.pause(100);
@@ -218,6 +246,9 @@ public class PlanBGCat extends PlanBG {
             if( status!=HealpixKey.READY ) { moreDetails = true; continue; }
 
             nb += healpix.draw(g,v);
+            
+            // Il n'y aura plus rien dans cette branche du HiPS
+            if( healpix.isLast() ) npixLength-=4;
 
             if( order==norder ) {
                HealpixKeyCat h = (HealpixKeyCat)healpix;
@@ -227,6 +258,9 @@ public class PlanBGCat extends PlanBG {
                nTotal += h.nTotal;
             }
          }
+         
+         pix = npix;
+         pixLength = npixLength;
       }
       
       // On continue à afficher les sources sélectionnées même si elles appartiennent
@@ -244,7 +278,6 @@ public class PlanBGCat extends PlanBG {
       if( !moreDetails ) completude=100;
 
       setHasMoreDetails(order>=getMaxFileOrder() ? false : moreDetails);
-//      setHasMoreDetails(moreDetails);
       allWaitingKeysDrawn = allKeyReady;
 
       hasDrawnSomething=hasDrawnSomething || nb>0;
@@ -276,7 +309,12 @@ public class PlanBGCat extends PlanBG {
       updateFilter();
       aladin.view.repaintAll();
    }
-
+   
+   // HONNETEMENT JE NE COMPRENDS PAS POURQUOI JE DOIS FAIRE CE REPAINT ICI
+   protected void planReady(boolean ready) {
+      super.planReady(ready);
+      askForRepaint();
+   }
    
    /** Force le reset de l'influence des filtres sur ce plan */
    protected void updateFilter() {
@@ -368,7 +406,17 @@ public class PlanBGCat extends PlanBG {
       catch( Exception e ) { }
       finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
    }
-
+   
+   /** Détermine si les fichiers Allsky ont une extension .xml ou .tsv
+    * dépend de la version du HiPS catalog */
+   protected void setAllskyExt() {
+      String filename = getUrl()+"/Norder1/Allsky.tsv";
+      MyInputStream in = null;
+      try { in=Util.openAnyStream(filename); allskyExt = HealpixAllsky.TSV; } 
+      catch( Exception e ) { }
+      finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+   }
+   
    protected boolean hasObj() { return hasSources(); }
 
    /** retourne true si le plan a des sources */
@@ -385,7 +433,7 @@ public class PlanBGCat extends PlanBG {
 
       return n;
    }
-
+   
    /** On récupère une copie de la liste courante des objets */
    protected Obj[] getObj() {
       int n = getCounts();

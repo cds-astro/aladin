@@ -34,6 +34,7 @@ import java.util.*;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
 /**
@@ -3250,13 +3251,25 @@ public final class Calque extends JPanel implements Runnable {
       return rad;
    }
    
-   /** Création d'un plan Healpix Multi-Order Coverage Map  */
+   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un flux */
    protected int newPlanMOC(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(null,null);
       double rad=getRadiusBG(null,null,null);
       plan[n] = new PlanMoc(aladin,in,label,c,rad);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
+   
+   /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
+   protected int newPlanMOC(HealpixMoc moc,String label) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      Coord c=getTargetBG(null,null);
+      double rad=getRadiusBG(null,null,null);
+      plan[n] = new PlanMoc(aladin,moc,label,c,rad);
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;

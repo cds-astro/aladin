@@ -3864,7 +3864,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             res="!!! Conversion error ["+e.getMessage()+"]";
          }
          a.localisation.setTextSaisie(res);
-         printConsole(res);
+//         printConsole(res);
+         a.console.printInPad(s+"\n = "+res+"\n");
       }
       return res;
    }
@@ -3883,7 +3884,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             res="!!! Eval error ["+e.getMessage()+"]";
          }
          a.localisation.setTextSaisie(res);
-         printConsole(res);
+//         printConsole(res);
+         a.console.printInPad(p+"\n = "+res+"\n");
       }
       return res;
    }

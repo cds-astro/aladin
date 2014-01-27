@@ -42,7 +42,6 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.IndexColorModel;
-import java.awt.image.MemoryImageSource;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
@@ -176,13 +175,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( !allSky ) planBG.nbCreated++;
       resetTimer();
       extCache=extNet=planBG.getTileMode();
-//      if( planBG.truePixels ) extCache=extNet=FITS;
-//      else if( planBG.color ) extCache=extNet= planBG.inPNG ? PNG : JPEG;
-//      else if( planBG.inJPEG) extCache=extNet=JPEG;
-//      else if( planBG.inPNG ) extCache=extNet=PNG;
-//      else if( planBG instanceof PlanBGCat ) extCache=extNet=TSV;
-//      fileNet = getFilePath(null,order,npix)+ EXT[extNet];
-//      fileCache = getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
       fileNet = getFileNet();
       fileCache = getFileCache();
       
@@ -712,6 +704,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     protected byte [] loadStream(String filename,int skip) throws Exception {
        byte [] buf;
        long t1 = Util.getTime();
+       planBG.aladin.trace(4,"loadStream("+filename+")...");
        MyInputStream dis=null;
        boolean fastLoad = this instanceof HealpixAllsky;
        

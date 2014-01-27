@@ -248,7 +248,7 @@ public class ServerFile extends Server implements XMLConsumer {
 //                     setSync(true);
                      Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
                      boolean progen=false;
-                     if(  (progen=PlanBG.isPlanHpxFinder(f)) || PlanBG.isPlanBG(f) ) {
+                     if(  (progen=PlanBG.isPlanHpxFinder(f)) ||  PlanBG.isPlanBG(f) ) {
 
                         // Progen ?
                         if( progen ) {
@@ -261,7 +261,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            n=aladin.calque.newPlanBG(gSky,label,null,null);
 
                         // Catalogue ?
-                        } else if( (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                        } else if(  (new File(f+"/Metadata.xml")).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                            TreeNodeAllsky gSky;
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {

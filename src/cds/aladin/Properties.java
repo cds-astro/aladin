@@ -1723,6 +1723,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       else if( SHOWFOVS.equals(what) || HIDEFOVS.equals(what) ) {
          boolean flagShow = SHOWFOVS.equals(what)?true:false;
          plan.showFootprints(flagShow);
+         if( plan instanceof PlanBGCatIndex ) ((PlanBGCatIndex)plan).setShowFootprint(flagShow);
       }
 
       // export pointing centers

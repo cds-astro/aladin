@@ -40,7 +40,7 @@ public class PlanMocGen extends PlanMoc {
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
    protected PlanMocGen(Aladin aladin,String label,Plan[] p,int res,double radius,double pixMin,double pixMax) {
-      super(aladin,null,label,p[0].co,30);
+      super(aladin,null,null,label,p[0].co,30);
       this.p = p;
       this.res=res;
       this.radius=radius;

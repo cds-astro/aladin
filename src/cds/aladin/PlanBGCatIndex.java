@@ -56,7 +56,7 @@ public class PlanBGCatIndex extends PlanBGCat {
       int fin = s.lastIndexOf("/HpxFinder");
       int deb = s.lastIndexOf('/', fin-1);
       String associatedSurvey = s.substring(deb+1,fin);
-      System.out.println("URL => "+url+" ["+associatedSurvey+"]");
+//      System.out.println("URL => "+url+" ["+associatedSurvey+"]");
       return associatedSurvey; 
    }
 
@@ -135,6 +135,7 @@ public class PlanBGCatIndex extends PlanBGCat {
       boolean moreDetails = false;
 
       for( int i=0; i<pix.length; i++ ) {
+         if( isOutMoc(order, pix[i]) ) continue;
          if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
          nTotal++;
 
@@ -168,12 +169,21 @@ public class PlanBGCatIndex extends PlanBGCat {
          while( it.hasNext() ) {
             Source src = (Source)it.next();
             String id = src.id;
-            if( map.containsKey(id) || src.isSelected() ) map.put(id,src);
+            boolean isInMap = map.containsKey(id); 
+            if( isInMap || src.isSelected() ) map.put(id,src);
          }
       }
       
-      for( Source src : map.values() ) pcat1.setObjetFast(src);
+      for( Source src : map.values() ) {
+         if( showFootprint ) src.setShowFootprint(true, false);
+         pcat1.setObjetFast(src);
+      }
       pcat=pcat1;
+   }
+   
+   private boolean showFootprint=false;
+   protected void setShowFootprint(boolean flag) {
+      showFootprint = flag;
    }
       
    protected void resetProj(int n) { if( pcat!=null ) pcat.projpcat[n]=null; }

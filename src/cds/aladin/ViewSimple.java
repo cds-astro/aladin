@@ -5724,112 +5724,112 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Pour afficher des checkboxs associés aux plans directement dans la vue
       if( fullScreen ) aladin.fullScreen.startMemo();
       
-      
       // Affichage en 2 passes, d'abord les images, puis tout le reste
       for( int passe=1; passe <= (OVERLAYFORCEDISPLAY ? 2 : 1); passe++ ) {         
-      
+
          // Dessin des plans les uns après les autres
-      for( int i=allPlans.length-1; i>=0; i--) {
-         Plan p = allPlans[i];
-         
-         // On affiche d'abord les images, puis tout le reste
-         if( OVERLAYFORCEDISPLAY ) {
-            if( passe!=1 && p.isPixel() ) continue;
-            if( passe==2 && p.isPixel() ) continue;
-         }
-         
-         if( p.type==Plan.NO || !p.flagOk ) continue;
-         if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
-         if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-         
-         // Seuls les catalogues (et éventuellement les surcharges graphiques) sont traçables dans un plot
-         if( isPlotView() && !p.isCatalog() && !p.isTool() ) continue;
-         
-         // Repérage d'un éventuel plan sous la souris dans le stack
-         if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;
-         
-         margeX=margeY=0;
+         for( int i=allPlans.length-1; i>=0; i--) {
+            Plan p = allPlans[i];
+            if( p.type==Plan.NO || !p.flagOk ) continue;
 
-         // Le plan image de référence (le cas allsky est traité après)
-         if( p==pref && p.isImage() ) {
-            if( p.active ) {
-               if( northUp || isProjSync() /* || isRolled() */ ) {
-                  ((PlanImage)p).draw(g,vs,dx,dy,1); 
-               }
-               else {
-                  double offsetX = imgDx;
-                  double offsetY = imgDy;
-                  if( pref.type == Plan.IMAGEHUGE ) {
-                      if( rzoom.x>=0 ) offsetX -= (int)Math.floor( (rzoom.x - (int)Math.floor(rzoom.x))*zoom);
-                      if( rzoom.y>=0 ) offsetY -= (int)Math.floor( (rzoom.y - (int)Math.floor(rzoom.y))*zoom);
-                  }
-                  if( imgFlagDraw ) {
-                     margeX = dx+(int)Math.round(offsetX);
-                     margeY = dy+(int)Math.round(offsetY);
-                     g.drawImage(imgprep,margeX,margeY,this);
-                  }
-               }
+            // On affiche d'abord les images, puis tout le reste
+            if( OVERLAYFORCEDISPLAY ) {
+               if( passe==1 && !p.isPixel() ) continue;
+               if( passe==2 && p.isPixel() ) continue;
             }
-            continue;
-         }
-         
-         if( p==pref && p instanceof PlanBG ) {
-            if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
-            continue;
-         }
-         
-         // Même scope que le plan de référence ?
-         boolean flagDraw;
-         // Dans le cas d'un plan de polarisation, il faut qu'il soit hors tout ou
-         // dans le même folder que le plan de référence
-         if( p.type!=Plan.ALLSKYPOL ) flagDraw = calque.getMyScopeFolder(allPlans,p)==folder;
-         else {
-            Plan foldpol = calque.getFolder(p);
-            flagDraw = foldpol==null || calque.getFolder(pref) == calque.getFolder(p);
-         }
-         
-         // Activé ?
-         boolean flagActive = flagDraw && p.active;
-         
-         // Cas d'un image ou d'un plan BG
-         if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
-            if( p.isImage() && (mode & 0x1) == 0 ) continue;
+
+            if( p.isPixel()   && (mode & 0x1) == 0 ) continue;
             if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-            if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
-            if( fullScreen &&  p.hasObj() && p.isOverlay() ) {
-               aladin.fullScreen.setCheck(p);
-            }
+            
 
-            // Cas des plans TOOL et CATALOG
-         } else {
-            if( fullScreen ) {
-               if( p.hasObj() && p.pcat.computeAndTestDraw(this,flagDraw) ) {
-                  aladin.fullScreen.setCheck(p);
+            // Seuls les catalogues (et éventuellement les surcharges graphiques) sont traçables dans un plot
+            if( isPlotView() && !p.isCatalog() && !p.isTool() ) continue;
+
+            // Repérage d'un éventuel plan sous la souris dans le stack
+            if( p.underMouse && p.isImage() ) planUnderMouse = (PlanImage)p;
+
+            margeX=margeY=0;
+
+            // Le plan image de référence (le cas allsky est traité après)
+            if( p==pref && p.isImage() ) {
+               if( p.active ) {
+                  if( northUp || isProjSync() /* || isRolled() */ ) {
+                     ((PlanImage)p).draw(g,vs,dx,dy,1); 
+                     
+                  } else {
+                     double offsetX = imgDx;
+                     double offsetY = imgDy;
+                     if( pref.type == Plan.IMAGEHUGE ) {
+                        if( rzoom.x>=0 ) offsetX -= (int)Math.floor( (rzoom.x - (int)Math.floor(rzoom.x))*zoom);
+                        if( rzoom.y>=0 ) offsetY -= (int)Math.floor( (rzoom.y - (int)Math.floor(rzoom.y))*zoom);
+                     }
+                     if( imgFlagDraw ) {
+                        margeX = dx+(int)Math.round(offsetX);
+                        margeY = dy+(int)Math.round(offsetY);
+                        g.drawImage(imgprep,margeX,margeY,this);
+                     }
+                  }
                }
+               continue;
             }
             
-            if( !(p instanceof PlanMoc) && p.pcat==null || !p.active ) continue;
-            float opacity = p.getOpacityLevel();
-            if( opacity >0.05 ) {
-               if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D
-                     && !(p instanceof PlanField) ) {
-                  Graphics2D g2d = (Graphics2D)g;
-                  Composite saveComposite = g2d.getComposite();
-                  Composite myComposite = Util.getImageComposite(opacity);
-                  g2d.setComposite(myComposite);
-                  p.pcat.draw(g2d,clip,vs,flagActive,dx,dy);
-                  g2d.setComposite(saveComposite);
-               } else p.pcat.draw(g,clip,vs,flagActive,dx,dy);
+            if( p==pref && p instanceof PlanBG ) {
+               if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
+               continue;
             }
+
+            // Même scope que le plan de référence ?
+            boolean flagDraw;
+            // Dans le cas d'un plan de polarisation, il faut qu'il soit hors tout ou
+            // dans le même folder que le plan de référence
+            if( p.type!=Plan.ALLSKYPOL ) flagDraw = calque.getMyScopeFolder(allPlans,p)==folder;
+            else {
+               Plan foldpol = calque.getFolder(p);
+               flagDraw = foldpol==null || calque.getFolder(pref) == calque.getFolder(p);
+            }
+
+            // Activé ?
+            boolean flagActive = flagDraw && p.active;
+
+            // Cas d'un image ou d'un plan BG
+            if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
+               if( p.isImage() && (mode & 0x1) == 0 ) continue;
+               if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
+               if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
+               if( fullScreen &&  p.hasObj() && p.isOverlay() ) {
+                  aladin.fullScreen.setCheck(p);
+               }
+
+               // Cas des plans TOOL et CATALOG
+            } else {
+               if( fullScreen ) {
+                  if( p.hasObj() && p.pcat.computeAndTestDraw(this,flagDraw) ) {
+                     aladin.fullScreen.setCheck(p);
+                  }
+               }
+
+               if( !(p instanceof PlanMoc) && p.pcat==null || !p.active ) continue;
+               float opacity = p.getOpacityLevel();
+               if( opacity >0.05 ) {
+                  if( p.getOpacityLevel()<0.9 && g instanceof Graphics2D
+                        && !(p instanceof PlanField) ) {
+                     Graphics2D g2d = (Graphics2D)g;
+                     Composite saveComposite = g2d.getComposite();
+                     Composite myComposite = Util.getImageComposite(opacity);
+                     g2d.setComposite(myComposite);
+                     p.pcat.draw(g2d,clip,vs,flagActive,dx,dy);
+                     g2d.setComposite(saveComposite);
+                  } else p.pcat.draw(g,clip,vs,flagActive,dx,dy);
+               }
+            }
+
+            flagDisplay = true;
+
+            // Pour eviter de memoriser dans chaque objet les positions
+            // decalees par les offsets de marge (en cas d'impression), je
+            // force le recalcul de la projection de tous les plans
+            if( dx>0 || dy>0 ) newView(1);
          }
-
-         flagDisplay = true;
-
-         // Pour eviter de memoriser dans chaque objet les positions
-         // decalees par les offsets de marge (en cas d'impression), je
-         // force le recalcul de la projection de tous les plans
-         if( dx>0 || dy>0 ) newView(1);
-      }
       } // Fin du for de l'affichage en 2 passes
 
       // Rien de plus si aucune projection
@@ -5857,23 +5857,23 @@ testx1=x1; testy1=y1; testw=w; testh=h;
          drawForeGround(g,mode);
          return flagDisplay;
       }
-            
+
       if( vs.isPlotView() ) vs.plot.drawPlotGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
-      
+
       if( dx==0 ) drawBlinkControl(g);      // Il ne s'agit pas d'une impression
 
       if( fullScreen ) g.setFont( Aladin.BOLD);
       else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
       else  g.setFont(Aladin.SSBOLD);
-      
+
       if( !vs.isPlotView() ) drawForeGround(g,mode);
 
       if( calque.flagOverlay  ) {
          drawLabel(g,dx,dy);
          drawTarget(g,dx,dy);
       }
-      
+
       if( !vs.isPlotView() )  {
 
          if( !proj.isXYLinear() && calque.flagOverlay ) {
@@ -5892,20 +5892,20 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          // Le repere courant
          vs.drawRepere(g,dx,dy);
-         
+
          // Tracage de la distance entre 2 objets sélectionnés si elle existe
          if( aladin.view.coteDist!=null ) {
             aladin.view.coteDist.projection(vs);
             aladin.view.coteDist.draw(g,vs,dx,dy);
          }
-         
+
          // Tracage du quick Simbad s'il existe
          if( aladin.view.simRep!=null ) {
             aladin.view.simRep.projection(vs);
             aladin.view.simRep.draw(g,vs,dx,dy);
          }
       }
-      
+
       // Tracé du rainbow
       if( hasRainbow() ) rainbow.draw(g,this,dx,dy);
       if( rainbowF!=null ) rainbowF.draw(g,this,dx,dy);
