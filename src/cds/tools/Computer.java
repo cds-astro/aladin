@@ -166,8 +166,8 @@ public final class Computer  {
       if( e.pos>deb && ch==':' ) return true;  // nombre sexa
       if( SEP!=',' && ch==',' ) return true;
       if( e.pos>deb && !e.isEnd() ) {
-         if( (ch=='E' || ch=='e') && ((ch1=e.s[e.pos+1])=='+' || ch1=='-') ) return true;
-         if( (ch=='+' || ch=='-') && ((ch1=e.s[e.pos-1])=='E' || ch1=='e') ) return true;
+         if( (ch=='E' || ch=='e') && ((ch1=e.s[e.pos+1])=='+' || ch1=='-' || Character.isDigit(ch1)) ) return true;
+         if( (ch=='+' || ch=='-' || Character.isDigit(ch)) && ((ch1=e.s[e.pos-1])=='E' || ch1=='e') ) return true;
       }
       return false;
    }
@@ -463,7 +463,7 @@ public final class Computer  {
       try {
          String s = " -skydist(05:34:43.68,+21:59:28.1,184.50849,-05.79883)*-60 " +
          		"-sin ( -round( 100+1e-03)%(3*2) + -cos(32.2+8^(7-5*max(3,1/8.7) )  )) * -(6-2E+5)";
-         s = "sin(125)^2 + cos(125)^2";
+//         s = "1.23456789E10*2";
          Computer.setDebug(true);
          double x = Computer.compute(s);
          System.out.println(s+" = "+x);

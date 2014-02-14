@@ -261,7 +261,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            n=aladin.calque.newPlanBG(gSky,label,null,null);
 
                         // Catalogue ?
-                        } else if(  (new File(f+"/Metadata.xml")).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                        } else if(  (new File(f+"/metadata.xml")).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                            TreeNodeAllsky gSky;
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {

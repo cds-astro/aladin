@@ -171,6 +171,7 @@ public class PlanBGCat extends PlanBG {
       long nTotal=0L;
       boolean allsky1=false,allsky2=false,allsky3=false;
       boolean hipsOld = allskyExt==HealpixAllsky.XML;  // Vieille version d'un HiPS catalog
+      StringBuilder debug = new StringBuilder();
       
 //      System.out.println("order="+order+" hipsOld="+hipsOld);
       if( !hipsOld ) allsky1=drawAllSky(g, v,  1);
@@ -178,6 +179,15 @@ public class PlanBGCat extends PlanBG {
       if( order>=3 ) allsky3=drawAllSky(g, v,  3);
       
       hasDrawnSomething = allsky1 || allsky2 || allsky3;
+      
+//      if( hipsOld ) debug.append("Old");
+//      if( hasDrawnSomething ) {
+//         if( debug.length()>0 ) debug.append(" ");
+//         debug.append("allsky");
+//         if( allsky1 ) debug.append("1");
+//         if( allsky2 ) debug.append("2");
+//         if( allsky3 ) debug.append("3");
+//      }
 
       setMem();
       resetPriority();
@@ -188,6 +198,8 @@ public class PlanBGCat extends PlanBG {
       int pixLength = pix.length;
       long [] npix = null;
       int npixLength = 0;
+      
+//      if( (hipsOld?3:1)<order ) debug.append(" order");
       
       for( int norder= hipsOld?3:1; norder<=order; norder++ ) {
          
@@ -204,10 +216,14 @@ public class PlanBGCat extends PlanBG {
             npix = new long[ pix.length*4 ]; 
             npixLength=0;
          } else npix=null;
+         
+//         debug.append(norder+"("+pixLength+")");
 
          for( int i=0; i<pixLength; i++ ) {
             
             if( isOutMoc(norder, pix[i]) ) continue;
+            
+
 
             if( (new HealpixKey(this,norder,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
 
@@ -230,6 +246,7 @@ public class PlanBGCat extends PlanBG {
             healpix.priority=250-(priority++);
 
             int status = healpix.getStatus();
+//            debug.append(","+pix[i]+HealpixKey.STATUS[status]);
 
             // Losange erroné ?
             if( status==HealpixKey.ERROR ) continue;
@@ -282,7 +299,9 @@ public class PlanBGCat extends PlanBG {
 
       hasDrawnSomething=hasDrawnSomething || nb>0;
 
-      if( pix!=null && pix.length>0  ) tryWakeUp();
+      if( moreDetails /* pix!=null && pix.length>0*/  ) tryWakeUp();
+      
+//      System.out.println(debug+"");
    }   
    
    // Affiche les sources sélectionnées ou tagguées pour les tuiles

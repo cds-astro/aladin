@@ -89,6 +89,7 @@ MARITHM	Arithmetic operation...
 MMOC Coverage
 MMOCLOAD Load catalog coverages (MOC)...
 MMOCGENIMG Generate from image or HEALPix map...
+MMOCGENIMGS Generate from an image collection...
 MMOCGENCAT Generate from catalog...
 MMOCFILTERING Filter a table by MOC...
 MMOCCROP Rectangular crop...
@@ -192,16 +193,17 @@ MSAVEVIEW.fr	Enregistrer la vue courante...
 MEXPORTEPS.fr	Exporter la vue courante (EPS)...
 MEXPORT.fr	Exporter des plans (FITS,VOTable,...)...
 MBACKUP.fr	Sauvegarder la pile...
-MMOC.fr Empreinte
-MMOCLOAD.fr Chargement de l'empreinte (MOC) d'un catalogue...
+MMOC.fr Couverture
+MMOCLOAD.fr Chargement de la couverture (MOC) d'un catalogue...
 MMOCGENIMG.fr	Génération à partir d'une image ou d'une map HEALPix
+MMOCGENIMGS.fr	Génération à partir d'une collection d'images
 MMOCGENCAT.fr	Génération à partir d'un catalogue
 MMOCFILTERING.fr Filtrage d'un catalogue par MOC...
 MMOCCROP.fr	Découpage rectangulaire...
 MMOCOP.fr	Opérations logiques...
 MMOCTOORDER.fr Ajustement de la résolution...
-MMOCHELP.fr Aide à propos des empreintes MOC...
-MMOCLOADHELP.fr Afin de charger l'empreinte sur le ciel d'un catalogue ou une table particulière, indiquez son identificateur dans le champ "Catalogue", puis cliquez sur le bouton "Empreinte".
+MMOCHELP.fr Aide à propos des MOC...
+MMOCLOADHELP.fr Afin de charger la couverture d'un catalogue ou une table particulière sur le ciel, indiquez son identificateur dans le champ "Catalogue", puis cliquez sur le bouton "Couverture".
 MARITHM.fr	Opérations arithmétiques...
 MHEALPIXARITHM.fr Opérations arithmétiques sur plan Healpix...
 #MADD.fr	Addition
@@ -666,7 +668,7 @@ VZTITLE.fr	Le service des catalogues VizieR
 VZNAME.fr	Catalog.\nVizieR
 VZINFO.fr	Service des catalogues VizieR du CDS (>5000 catalogues astronomiques)
 VZCATDESC.fr	Info
-VZCATMOC.fr	Empreinte
+VZCATMOC.fr	Couverture (MOC)
 VZCATDMAP.fr	Carte densité
 VZFROM.fr	Fournit par le service des catalogues VizieR du CDS
 VZDESC.fr	VizieR offre l'accès à la plus complète des bibliothèques de catalogues et tables astronomiques accessibles en ligne.\n \nVous pouvez accéder à VizieR également par une commande en ligne "get" (ouvrir la console Aladin, menu "Outils -> Console Aladin). Dans le cas de VizieR, la commande "get" suit les conventions suivantes :\nget VizieR(catID1[,catID2]...[,allcolumns]) [target] [radiusUnit]\n   - catIDn : est un identificateur de catalogue\n   - allcolumns : pour récupérer toutes les colonnes des catalogues
@@ -893,16 +895,16 @@ MOCINFO	Specify one or two MOC planes,\n choose a MOC operation and\npress the C
 MOCPLANE	Plane
 MOCHELP A MultiOrder Coverage map, also called MOC, described a sky region. It is a mesh of a part of the sky. The operations (unions, intersections, complement,...) on such MOCs are very fast.\n \nSome data servers, such as VizieR, can be "queried by MOC" in order to return data (catalog sources, of list of images) only inside a specifical sky area.
 
-MOCOP.fr	Opérations sur les empreintes MOC:
+MOCOP.fr	Opérations sur les MOC:
 MOCUNION.fr	Union
 MOCINTER.fr	Intersection
 MOCSUB.fr	Soustraction
 MOCDIFF.fr	Difference
 MOCCOMP.fr	Complement
-MOCTITLE.fr	Opérations sur les empreintes MOC
-MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
+MOCTITLE.fr	Opérations sur les MOC
+MOCINFO.fr	Désignez 1 ou 2 plans images\nainsi que l'opération à effectuer puis\nappuyez sur le bouton CREER pour générer le MOC résultant.
 MOCPLANE.fr	Plan
-MOCHELP.fr	Une empreinte MOC permet de décrire une zone du ciel à partir d'une carte multi-échelle HEALPix (ou MOC). Il s'agit d'une sorte de maillage du ciel. Les opérations (unions, intersection, complément,...) s'effectuent très rapidement sur de tels MOCs.\n \nCertains serveurs de données, tel VizieR, sont capables de filtrer leurs réponses (sources de catalogues, listes d'images) en fonction d'une zone d'une ciel décrite par un MOC de manière particulièrement efficace.
+MOCHELP.fr	Un carte de couverture (MOC) permet de décrire une zone du ciel à partir d'une carte multi-échelle HEALPix. Il s'agit d'un maillage du ciel. Les opérations (unions, intersection, complément,...) s'effectuent très rapidement sur de tels MOCs.\n \nCertains serveurs de données, tel VizieR, sont capables de filtrer leurs réponses (sources de catalogues, listes d'images) en fonction d'une zone d'une ciel décrite par un MOC de manière particulièrement efficace.
 
 # FrameMocFiltering.java strings
 MOCFILTERINGOP	Filter:
@@ -914,8 +916,8 @@ MOCFILTERINGCAT Catalog plane
 MOCFILTERINGMOC MOC plane
 
 MOCFILTERINGOP.fr	Filtre:
-MOCFILTERINGTITLE.fr	Filtrage par empreinte MOC
-MOCFILTERINGINFO.fr	Désignez une empreinte MOC et un ou plusieurs catalogues\npuis appuyez sur le bouton CREER pour générer un nouveau catalogue\nne contenant que les sources dans (resp. hors) de l'empreinte MOC.
+MOCFILTERINGTITLE.fr	Filtrage par MOC
+MOCFILTERINGINFO.fr	Désignez un MOC et un ou plusieurs catalogues\npuis appuyez sur le bouton CREER pour générer un nouveau catalogue\nne contenant que les sources dans (resp. hors) du MOC.
 MOCFILTERINGIN.fr	intérieur
 MOCFILTERINGOUT.fr	extérieur
 MOCFILTERINGCAT.fr Plan catalogue
@@ -925,13 +927,15 @@ MOCFILTERINGMOC.fr Plan MOC
 MOCGENOP	MOC generation:
 MOCGENTITLE	MOC generation
 MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
+MOCGENIMGSINFO	Set the directory of your image collection,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENORDINFO	Specify a MOC,\n choose a new resolution and\npress the CREATE button to generate the resulting MOC.\n
 
-MOCGENOP.fr	Opérations sur les empreintes MOC:
-MOCGENTITLE.fr	Opérations sur les empreintes MOC
-MOCGENIMGINFO.fr	Désignez une image ou une carte HEALPix\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
-MOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer l'empreinte MOC résultante.
+MOCGENOP.fr	Génération de MOC:
+MOCGENTITLE.fr	Génération de MOC
+MOCGENIMGINFO.fr	Désignez une image ou une carte HEALPix\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
+MOCGENIMGSINFO.fr	Indiquez le répertoire de votre collection d'images,\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
+MOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
 
 # FrameBitpix.java strings
 BITPIXTITLE	Bitpix image conversion
@@ -1114,6 +1118,7 @@ PROPWHITE	White
 PROPBLACK	Black
 PROPFULLDESCR Full description...
 PROPFRAMEINFO  The coordinate system for drawing the HiPS is now independant of the global coordinate system. Select "Default" for associating them again.
+PROGENITOR Original images
 
 PROPSEEFITS.fr	En-tête FITS originale
 #PROPINFO.fr	Information technique
@@ -1195,6 +1200,7 @@ PROPWHITE.fr	Blanc
 PROPBLACK.fr	Noir
 PROPFULLDESCR.fr Description complète...
 PROPFRAMEINFO.fr Le système de coordonnées utilisé pour afficher le ciel HEALPix est désormais indépendant du système de coordonnée générale. Sélectionnez "Default" pour lier à nouveau les deux systèmes.
+PROGENITOR.fr Images originales
 
 # Select.java Strings
 SLHSTACK0	Click to designate this plane as the projection reference for the current view
@@ -2446,9 +2452,9 @@ PUBMAPALLSKY.fr Distribution en tant que fichier FITS HEALPix unique :
 PUBMAPINFOALLSKY Export your producted data in a FITs map and send it to your collaborators. This file is following the HEALPix format NESTED, and will use pixels values for the angular resolution of 51" (NSIDE=4096).
 PUBMAPINFOALLSKY.fr Exporter votre relevé généré en tant qu'un unique fichier FITS que vous pourrez envoyer à vos collaborateurs. Ce fichier sera conforme à la norme HEALPix NESTED et sa résolution angulaire par pixel sera de 51" (NISDE=4096).
 PUBRESTALLSKY Restricted distribution:
-PUBRESTALLSKY.fr Distribution retreinte :
+PUBRESTALLSKY.fr Distribution restreinte :
 PUBRESTINFOALLSKY By exposing your target folder behind a Web server, you will allow your collaborator to access it via the URL below. This Web access can be retricted (by password).
-PUBRESTINFOALLSKY.fr Pour une distribution retreinte de votre relevé, placez le répertoire de destination derrière un serveur Web. Vos collaborateurs pourront accéder à votre relevé en utilisant directement l'adresse Web ci-dessous. Cet accès pourra être éventuellement protégé par mot de passe.
+PUBRESTINFOALLSKY.fr Pour une distribution restreinte de votre relevé, placez le répertoire de destination derrière un serveur Web. Vos collaborateurs pourront accéder à votre relevé en utilisant directement l'adresse Web ci-dessous. Cet accès pourra être éventuellement protégé par mot de passe.
 PUBLICALLSKY Public distribution:
 PUBLICALLSKY.fr Distribution publique :
 PUBLICINFOALLSKY To allow an access to all Aladin users, "expose" your target folder behind a Web server, fill up and validate this following form:

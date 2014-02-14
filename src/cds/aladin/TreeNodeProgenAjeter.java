@@ -33,14 +33,14 @@ import cds.aladin.stc.STCStringParser;
 import cds.tools.Util;
 
 /** Gère les noeuds de l'arbre des catégories (formulaire ServerCategory) */
-public class TreeNodeProgen extends TreeNode {
+public class TreeNodeProgenAjeter extends TreeNode {
    static private int MAXLIVE=10000;   // Durée de vie en ms lorsque le TreeNodeProgen n'est plus dans la vue (<=0 =>peut être supprimé)
    
    private HealpixIndexItem hii;
    private PlanBG planBG;
    private long lastPaint;
 
-   TreeNodeProgen(PlanBG planBG, HealpixIndexItem hii) {
+   TreeNodeProgenAjeter(PlanBG planBG, HealpixIndexItem hii) {
       super(planBG.aladin,hii.getID(),null,hii.getID(),/* planBG.label+"/"+*/ hii.getID());
       this.hii = hii;
       this.planBG = planBG;
@@ -84,8 +84,8 @@ public class TreeNodeProgen extends TreeNode {
    
    @Override
    protected void submit() {
-      String url = hii.resolveImageSourcePath(planBG.imageSourcePath);
-      aladin.execCommand("get File(\""+url+"\")");
+//      String url = hii.resolveImageSourcePath(planBG.imageSourcePath);
+//      aladin.execCommand("get File(\""+url+"\")");
    }
    
    protected void draw(Graphics g,ViewSimple v) {

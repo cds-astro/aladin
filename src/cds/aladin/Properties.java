@@ -990,7 +990,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                p1.add(bt);
             }
             if( pbg.hasHpxFinder() ) {
-               JButton bt = new JButton("Detail table");
+               JButton bt = new JButton(aladin.chaine.getString("PROGENITOR"));
                bt.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) {
                      pbg.loadProgen();

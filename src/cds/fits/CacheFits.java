@@ -57,6 +57,8 @@ public class CacheFits {
    private Hashtable<String, FitsFile> map;             // Table des fichiers
 //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    Context context;
+   private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
+   
 
    //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
    //de la mise dans le cache
@@ -266,6 +268,12 @@ public class CacheFits {
       }
       return mem;
    }
+   
+   // Force le nettoyage du clean
+   public void forceClean() {
+      synchronized( lockObj  ) {  clean(); }
+   }
+
 
    // Supprime les plus vieux éléments du cache pour 
    // qu'il y ait un peu de place libre
@@ -318,8 +326,6 @@ public class CacheFits {
    public void setContext(Context c) { context = c; }
 
    
-   private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
-   
    // Détermination des cuts d'une image,
    // et conservation dans un cache pour éviter de refaire plusieurs fois
    // le calcul notamment dans le cas d'une image ouverte en mode "blocks"
@@ -340,6 +346,8 @@ public class CacheFits {
       cutCache.put(filename,cut);
       return cut;
    }
+   
+   private boolean first=true;
 
    /**
     * Applique un filtre (soustraction du skyval)
@@ -356,18 +364,27 @@ public class CacheFits {
       if( context.skyvalName!=null ) {
          
          try {
-            
             if( context.skyvalName.equalsIgnoreCase("true") ) {
                double cut [] = findFullAutocutRange(f);
-               double cutOrig [] = context.getCutOrig();
-               skyval = cut[0] - cutOrig[0];
-            } else {
-               skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
+//               double cutOrig [] = context.getCutOrig();
+//               skyval = cut[0] - cutOrig[0];
+               skyval = cut[0];
+           } else {
+               try {
+                  skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
+               } catch( Exception e ) {
+                  double cut [] = findFullAutocutRange(f);
+//                double cutOrig [] = context.getCutOrig();
+//                skyval = cut[0] - cutOrig[0];
+                skyval = cut[0];
+                if( first ) {
+                   context.warning("\nSKYVAL="+context.skyvalName+" not found is some images => use an estimation for these images");
+                   first=false;
+                }
+              }
             }
             
             skyValTag= skyval!=0;
-            
-//            skyval--;
          } catch (Exception e) { }
       }
       
@@ -390,8 +407,6 @@ public class CacheFits {
                if( pixelFull==context.getBlankOrig() ) continue;
             } else if( f.isBlankPixel(pixelFull) ) continue;
 
-            if( f.isBlankPixel(pixelFull) || context.hasAlternateBlank()) continue;
-            
             pixelFull = pixelFull*f.bscale + f.bzero;
 
             if( skyValTag  ) pixelFull -= skyval;
@@ -403,24 +418,6 @@ public class CacheFits {
             else f.setPixelInt(x+f.xCell, y+f.yCell, (int)(pixelFull+0.5)); 
          }
       }
-      
-      // Ancien code d'Anaïs
-//      if (skyval != 0) {
-//    	  skyval -= 1;
-//    	  for( int y=0; y<f.heightCell; y++ ) {
-//    		  for( int x=0; x<f.widthCell; x++ ) {
-//    			  // applique un nettoyage pour enlever les valeurs aberrantes
-//    			  // et garder les anciens blank à blank
-//    			  double pixelFull = f.getPixelFull(x+f.xCell, y+f.yCell);
-//    			  if (pixelFull==f.blank || pixelFull<f.blank+skyval) newval = f.blank;
-//    			  else  newval = pixelFull-skyval;
-//
-//    			  if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, newval);
-//    			  else f.setPixelInt(x+f.xCell, y+f.yCell, (int)newval); 
-//    		  }
-//    	  }
-//      }
-
    }
 
    /** Retourne le nombre de fichiers ayant été ouverts */

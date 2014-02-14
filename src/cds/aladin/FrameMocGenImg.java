@@ -84,7 +84,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
 
    protected boolean isPlanOk(Plan p) {
       if( p instanceof PlanBG && !((PlanBG)p).isLocalAllSky() ) return false;
-      if( p instanceof PlanImage && ((PlanImage)p).hasAvailablePixels() ) return true;
+      if( p instanceof PlanImage && ((PlanImage)p).isPixel() ) return true;
       if( p.isCatalog() ) return true;
       return false;
    }

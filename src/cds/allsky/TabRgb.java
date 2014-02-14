@@ -184,10 +184,10 @@ public class TabRgb extends JPanel implements ActionListener {
       bg1 = new ButtonGroup();
       p.add(l);
       formatJpeg = rb = new JRadioButton("JPEG (faster)");
-      rb.setSelected(true);
       bg1.add(rb);
       p.add(rb);
       rb = new JRadioButton("PNG (better)");
+      rb.setSelected(true);
       bg1.add(rb);
       p.add(rb);
       pCenter.add(p,c);

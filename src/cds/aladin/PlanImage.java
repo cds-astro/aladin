@@ -61,7 +61,7 @@ public class PlanImage extends Plan {
    static final public String [] PIX_MODE = { "RGB composite & transparency", "RGB composite", "true pixel mode & transparency", 
                                               "256 grey levels","255 grey levels & transparency" };
    
-   protected int pixMode;         // Mode du losange (PIX_ARGB,PIX_RGB, PIX_TRUE, PIX_256, PIX_255
+   protected int pixMode=-1;         // Mode du losange (PIX_ARGB,PIX_RGB, PIX_TRUE, PIX_256, PIX_255
 
    static protected int LASTID=0;    // Dernier number d'image donné
    
@@ -118,7 +118,7 @@ public class PlanImage extends Plan {
    protected byte [] pixelsZoom;      // Tabluea des pixels de l'image vignette (8 bits) pour le ZoomView
    protected byte[] pixelsOrigin;     // Tableau des pixels d'origine (LIGNES NON INVERSEES - format FITS)
    protected ColorModel cm;			  // La table des couleurs associee a l'image
-   protected int typeCM;			  // memorise la table des couleurs (CMGRAY ou CMBB ou CMA)
+   public int typeCM;			  // memorise la table des couleurs (CMGRAY ou CMBB ou CMA)
    public int cmControl[];	      // Valeurs de controle de la table des couleurs
    public int transfertFct;           // Fonction de transfert (LINEAR,LOG,SQR...)
    protected double hist[],histA[];   // Histogrammes des pixels (voir ColorMap)
@@ -2197,9 +2197,9 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    }
    
    /** Retourne true si le format d'image permet la transparence */
-   protected boolean isTransparent() { return pixMode!=PIX_256 && pixMode!=PIX_RGB ; } // fmt!=JPEG; }
+   public boolean isTransparent() { return pixMode!=PIX_256 && pixMode!=PIX_RGB ; } // fmt!=JPEG; }
    
-//   protected boolean isTransparent() {
+//   public boolean isTransparent() {
 //      return pixMode == PIX_255 || pixMode == PIX_TRUE || pixMode == PIX_ARGB;
 //   }
 

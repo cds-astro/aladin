@@ -107,6 +107,7 @@ public class Context {
    private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
    protected CoAddMode coAdd=CoAddMode.getDefault();  // Methode de traitement par défaut
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
+   protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
    
    protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
@@ -172,13 +173,14 @@ public class Context {
    public String getSkyval() { return skyvalName; }
    public boolean isColor() { return bitpixOrig==0; }
 //   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
-   public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isInTree(order,npix); }
+   public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
    public int getDiffOrder() { return diffOrder; }
 
    // Setters
+   public void setPublisher(String s) { publisher=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
@@ -485,7 +487,7 @@ public class Context {
          blank = getDefaultBlankFromBitpix(bitpix);
 
          // le cut de sortie est par défaut le même que celui d'entrée
-         cut = new double[4];
+         cut = new double[5];
          System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
          
          // si les dataCut d'origine sont nuls ou incorrects, on les mets au max
@@ -730,10 +732,11 @@ public class Context {
          +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
          +Util.getTemps(statNodeAvgTime)+"/node"
          +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-         +" using "+Util.getUnitDisk(usedMem)
+//         +" using "+Util.getUnitDisk(usedMem)
          ;
 
       nlstat(s);
+      if( cacheFits!=null && cacheFits.getStatNbOpen()>0 ) stat(cacheFits+"");
 
       setProgress(statNbTile+statNbEmptyTile, nbCells);
    }
@@ -741,9 +744,9 @@ public class Context {
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
 //      long maxMem = Runtime.getRuntime().maxMemory();
-      long totalMem = Runtime.getRuntime().totalMemory();
-      long freeMem = Runtime.getRuntime().freeMemory();
-      long usedMem = totalMem-freeMem;
+//      long totalMem = Runtime.getRuntime().totalMemory();
+//      long freeMem = Runtime.getRuntime().freeMemory();
+//      long usedMem = totalMem-freeMem;
       long nbLowCells = getNbLowCells();
       String pourcentNbCells = nbLowCells==-1 ? "" : 
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
@@ -755,7 +758,7 @@ public class Context {
       String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
             +pourcentNbCells+" EndIn="+Util.getTemps(tempsTotalEstime,true)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-            +" using "+Util.getUnitDisk(usedMem)
+//            +" using "+Util.getUnitDisk(usedMem)
             ;
 
       nlstat(s);
@@ -948,27 +951,35 @@ public class Context {
       // Propriétés à mettre à jour de toutes manières
       updateProperties(
             new String[] { PlanHealpix.KEY_PROCESSING_DATE, PlanHealpix.KEY_COORDSYS,
-                           PlanHealpix.KEY_ISCOLOR,         PlanHealpix.KEY_ALADINVERSION,
+                           PlanHealpix.KEY_ISCOLOR,         PlanHealpix.KEY_HIPSBUILDER,
                            PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER,
                           },
             new String[] { getNow(),
                            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
                            isColor()+"",
-                           Aladin.VERSION,
+                           "Aladin/HipsGen "+Aladin.VERSION,
                            getLabel(),
                            getOrder()+"",
                          },
             true);
       
+      if( cut!=null ) {
+         setProperty(PlanHealpix.KEY_PIXELCUT,  Util.myRound(cut[0])+" "+Util.myRound(cut[1]));
+         setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(cut[2])+" "+Util.myRound(cut[3]));
+      }
+      
       // Propriétés à mettre que si elles n'existent pas encore
       String order = getOrder()==-1 ? (String)null : getOrder()+"";
-      updateProperties( new String[]{ PlanHealpix.KEY_IMAGESOURCEPATH, PlanHealpix.KEY_MAXORDER}, 
-                       new String[]{ "path:$1",                       order},
+      updateProperties( new String[]{ PlanHealpix.KEY_MAXORDER}, 
+                       new String[]{ order},
                        false );
       
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
       if( fmt.length()>0 ) setProperty(PlanHealpix.KEY_FORMAT,fmt);
+      
+      // Y a-t-il un publisher indiqué ?
+      if( publisher!=null ) setProperty(PlanHealpix.KEY_PUBLISHER,publisher);
 
       // Propriétés additionnelles
       if( keyAddProp!=null ) {

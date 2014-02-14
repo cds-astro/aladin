@@ -2115,10 +2115,10 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    
    /** Positionnement du répertoire par défaut, avec vérification d'existence */
    private void setDir(String d) throws Exception {
-//      if( d==null ) { remove(DIR); return; }
+      if( d==null ) { remove(DIR); return; }
       File f = new File(d);
       if( !f.isDirectory() ) throw new Exception("Not a directory ! ["+d+"]");
-//      set(DIR,d);
+      set(DIR,d);
    }
    
    /** Positionne la chaine décrivrant la dernière version officielle */

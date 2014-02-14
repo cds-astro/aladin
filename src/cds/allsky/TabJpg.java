@@ -201,10 +201,10 @@ public class TabJpg extends JPanel implements ActionListener {
       p.add(l);
       ButtonGroup bg1 = new ButtonGroup();
       jpegFormat = rb = new JRadioButton("JPEG");
-      rb.setSelected(true);
       bg1.add(rb);
       p.add(rb);
       pngFormat = rb = new JRadioButton("PNG");
+      rb.setSelected(true);
       bg1.add(rb);
       p.add(rb);
       pCenter.add(p,c);

@@ -487,11 +487,15 @@ public class TabBuild extends JPanel implements ActionListener {
          actions.add(Action.INDEX);
          if( mainPanel.tabDesc.isResetTiles() ) actions.add(Action.CLEANTILES);
          actions.add(Action.TILES);
-         if( !context.isColor() ) actions.add(Action.GZIP);
+         if( !context.isColor() ) {
+            actions.add(Action.GZIP);
+            actions.add(Action.DETAILS);
+         }
 
          new Task(context, actions, false);
       } catch( Exception e1 ) {
-         e1.printStackTrace();
+         Aladin.warning(e1.getMessage());
+         if( Aladin.levelTrace>=3 ) e1.printStackTrace();
       }
    }
 

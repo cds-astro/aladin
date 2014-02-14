@@ -49,7 +49,6 @@ public class TreeNodeAllsky extends TreeNode {
    public String copyrightUrl;  // Url pour renvoyer une page HTML décrivant les droits
    public String hpxParam;      // Les paramètres propres à HEALPIX
    public String version="";    // Le numéro de version du survey
-   public String imageSourcePath; // Le template d'accès aux images sources (progéniteurs) (ex: id~=/(.*)/http://aladin.u-strasbg.fr/get?img=$1/)
    public String aladinProfile; // profile de l'enregistrement GLU (notamment "localdef")*
    public String aladinLabel;
    public int minOrder=-1;      // Min order Healpix
@@ -110,12 +109,6 @@ public class TreeNodeAllsky extends TreeNode {
       
       s = prop.getProperty(PlanHealpix.KEY_VERSION);
       if( s!=null ) version=s;
-      
-      s = prop.getProperty(PlanHealpix.KEY_IMAGESOURCEPATH);
-      if( s!=null ) {
-         imageSourcePath=s;
-         Aladin.trace(4,"TreeNodeAllsky() => imageSourcePath="+s);
-      }
       
       description = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);
       verboseDescr = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE);
@@ -340,9 +333,6 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** Retourne le rayon du champ par défaut (premier affichage) en degrés, -1 sinon */
    protected double getRadius() { return radius; }
-   
-   /** retourne le template d'accès aux progéniteurs */
-   protected String getImageSourcePath() { return imageSourcePath; }
    
    /** Retourne le numéro de version du survey, "" si non défini */
    protected String getVersion() { return version==null ? "" : version; }

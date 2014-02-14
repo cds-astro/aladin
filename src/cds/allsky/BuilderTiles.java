@@ -201,7 +201,7 @@ public class BuilderTiles extends Builder {
             statMinTime,statMaxTime,statAvgTime,statNodeAvgTime,getUsedMem(),deltaTime,deltaNbTile);
 //      String s = showMem();
 //      if( s.length()>0 ) context.stat(s);
-      if( context.cacheFits!=null && context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
+//      if( context.cacheFits!=null && context.cacheFits.getStatNbOpen()>0 ) context.stat(context.cacheFits+"");
    }
    
    Hashtable<Thread,ArrayList<Fits>> memPerThread;
@@ -571,7 +571,7 @@ public class BuilderTiles extends Builder {
       
       for( int i=0; i<nbThreads; i++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
-         ThreadBuilderTile threadBuilderTile = new ThreadBuilderTile(context);
+         ThreadBuilderTile threadBuilderTile = new ThreadBuilderTile(context,this);
          ThreadBuilder t = new ThreadBuilder("Builder"+i,threadBuilderTile);
          threadList.add( t );
          t.start();

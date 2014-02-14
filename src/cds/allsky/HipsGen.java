@@ -78,7 +78,6 @@ public class HipsGen {
             e.printStackTrace();
             break;
          }
-
       }
 
       reader.close();
@@ -104,17 +103,17 @@ public class HipsGen {
       // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
          usage(launcher);
-      } else if (opt.equalsIgnoreCase("verbose"))   { Context.setVerbose(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("blank"))     { context.setBlankOrig(Double.parseDouble(val));
-      } else if (opt.equalsIgnoreCase("order"))     { context.setOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("diffOrder")) { context.setDiffOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("bitpix"))    { context.setBitpix(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("frame"))     { context.setFrameName(val);
-      } else if (opt.equalsIgnoreCase("maxThread")) { context.setMaxNbThread(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("skyval"))    { context.setSkyval(val);
-      } else if (opt.equalsIgnoreCase("exptime"))   { context.setExpTime(val);
-      } else if (opt.equalsIgnoreCase("fading"))    { context.setFading(val);
-      } else if (opt.equalsIgnoreCase("mixing"))    { context.setMixing(val);
+      } else if (opt.equalsIgnoreCase("verbose"))    { Context.setVerbose(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("blank"))      { context.setBlankOrig(Double.parseDouble(val));
+      } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("diffOrder"))  { context.setDiffOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
+      } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("skyval"))     { context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("exptime"))    { context.setExpTime(val);
+      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val);
+      } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
       } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
       } else if (opt.equalsIgnoreCase("red"))        { context.setRgbInput(val, 0);
       } else if (opt.equalsIgnoreCase("green"))      { context.setRgbInput(val, 1);
@@ -124,6 +123,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("blueparam"))  { context.setRgbCmParam(val, 2);
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
+      } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
       
       } else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
@@ -177,12 +177,12 @@ public class HipsGen {
    
    public void execute(String [] args) {
       int length = args.length;
+      boolean first=true;
+      
       if (length == 0) {
          usage(launcher);
          return;
       }
-      
-      context.info("Starting HipsGen (based on Aladin "+Aladin.VERSION+")...");
       
       // extrait les options en ligne de commande, et les analyse
       for (String arg : args) {
@@ -200,15 +200,21 @@ public class HipsGen {
          
          // Juste pour pouvoir appeler directement par le main() de cette classe
          // et non celle d'Aladin
-         else if( arg.equalsIgnoreCase("-skygen") ) continue;
+         else if( arg.equalsIgnoreCase("-skygen") || arg.equalsIgnoreCase("-hipsgen")) continue;
          
          // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
-            HipsGen.usage("HipsGen");
+            HipsGen.usage(launcher);
             return;
          }
+         
+         if( first ) {
+            first=false;
+            context.info("Starting HipsGen (based on Aladin "+Aladin.VERSION+")...");
+         }
+
          // debug
-         else if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
+         if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
             Context.setVerbose(4);
          }
          else if (arg.equalsIgnoreCase("-fast") ) {
@@ -328,7 +334,7 @@ public class HipsGen {
       public void run() { execute(args); }
    }
    
-   // Aladin.jar -skygen
+   // Aladin.jar -hipsgen
    private static void usage(String launcher) {
       System.out.println("Usage: java -jar "+launcher+" [-f] options... [ACTION ...]");
       System.out.println("       java -jar "+launcher+" [-f] -param=configfile\n\n");
@@ -336,8 +342,8 @@ public class HipsGen {
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
-            "in=dir             Source image directory (fits or jpg|png+hhh or HiPS)" + "\n" +
-            "out=dir            HiPS target directory (default $PWD+\"ALLSKY\")" + "\n" +
+            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS)" + "\n" +
+            "out=dir            HiPS target directory (default $PWD+\""+Constante.ALLSKY+"\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
@@ -363,6 +369,7 @@ public class HipsGen {
             "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+            "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
             "verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"
 //            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
 //            "red        all-sky used for RED component (see rgb action)\n" +
@@ -406,6 +413,7 @@ public class HipsGen {
 
    public static void main(String[] args) {
       HipsGen generator = new HipsGen();
+      generator.launcher="HipsGen";
       generator.execute(args);
    }
 }

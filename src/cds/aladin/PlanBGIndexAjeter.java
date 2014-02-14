@@ -41,7 +41,7 @@ public class PlanBGIndexAjeter extends PlanBG {
       version = planBG.version;
       useCache = planBG.useCache;
       frameOrigin=planBG.frameOrigin;
-      imageSourcePath=planBG.imageSourcePath;
+//      imageSourcePath=planBG.imageSourcePath;
       maxOrder = planBG.maxOrder;
       pixList = new Hashtable<String,HealpixKey>(1000);
       loader = new HealpixLoader();

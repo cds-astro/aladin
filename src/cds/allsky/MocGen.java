@@ -48,13 +48,87 @@ public class MocGen {
    private int order=10;            // Default order
    private double blank=Double.NaN; // Alternative blank value
    private int fmt=HealpixMoc.FITS;
-   private boolean verbose=false;
+   public  boolean verbose=false;
    private boolean strict=false;
    private boolean recursive=false;
    private boolean multWrite=false; // true for updating output MOC continously
    
+   private HealpixMoc moc;      // Le MOC en cour de calcul
+   private boolean ready;       // true si le MOC est prêt
+   private boolean error;       // true si le MOC n'a pas pu être généré
+   private String serror;       // Message d'erreur
+   private boolean abort;       // Demande d'interruption de construction
+   private String scanningDir=null; // Le répertoire en cours de scanning
+   private int nbImg;           // Le nombre d'images sources
+   
+   /** Génération d'un MOC à partir d'une ligne de commande */
+   public MocGen(String [] args) {
+      super();
+      execute(args);
+   }
+   
+   /** Génération d'un MOC à partir d'une liste de paramètres */
+   public MocGen(String in,int order,boolean recursive,boolean strict,double blank) throws Exception {
+      this.strict=strict;
+      this.blank=blank;
+      this.in=in;
+      this.recursive=recursive;
+      this.order=order;
+   }
+   
+   /** Retourne true si le MOC est prêt - il faut tester isError() pour vérifier
+    * que le MOC est non seulement prêt mais également Ok */
+   public boolean isReady() { return ready; }
+   
+   /** Retourne true si le MOC n'a pas pu être généré - valable qu'après un test isReady() */
+   public boolean isError() { return error; }
+   
+   /** Retourne l'erreur suite à un échec de génération */
+   public String getError() { return serror; }
+   
+   /** Retourne le MOC généré */
+   public HealpixMoc getMoc() throws Exception {
+      if( error ) throw new Exception("MOC error => "+serror);
+      if( !ready ) throw new Exception("MOC not yet ready");
+      return moc;
+   }
+   
+   /** Demande d'interruption de construction du MOC */
+   public void abort() { abort=true;}
+   
+   /** Retourne le nom du répertoire en cours de Scanning */
+   public String getScanningDir() { return scanningDir; }
+   
+   /** Retourne le nombre d'images sources */
+   public int getNbImages() { return nbImg; }
+
+   /** Lancement de la génération du MOC */
+   public void start() {
+      (new Thread() {
+         public void run() {
+            try {
+               serror=null;
+               error=abort=ready=false;
+               nbImg=0;
+               moc = new HealpixMoc();
+               moc.setMocOrder(order);
+               moc.setCheckConsistencyFlag(false);
+               scanAndDo(moc,new File(in),order);
+               moc.checkAndFix();
+               ready=true;
+            } catch( Exception e ) {
+//               System.out.println("Moc Exception => "+e.getMessage());
+               moc=null;
+               serror=e.getMessage();
+               error=true;
+               ready=true;
+            }
+         }
+      }).start();
+   }
+   
    // Ajout dans le MOC du fichier passé en paramètre avec scan des pixels
-   protected boolean addInMocPixel(HealpixMoc moc,File file,int res) throws Exception {
+   private boolean addInMocPixel(HealpixMoc moc,File file,int res) throws Exception {
       Fits f = new Fits();
       try { f.loadFITS(file.getAbsolutePath()); } 
       catch( Exception e ) { return false; }
@@ -129,6 +203,7 @@ public class MocGen {
       try { f.loadHeaderFITS(file.getAbsolutePath()); } 
       catch( Exception e ) { return false; }
       Calib c = f.getCalib();
+      if( c==null ) return false;
       
       if( verbose ) System.out.println("Adding footprint of ["+file.getName()+"]...");
       return addInMocBox(moc,c,order);
@@ -147,14 +222,17 @@ public class MocGen {
       int n=0;
       File [] list;
       
+      scanningDir=rep.getCanonicalPath();
+      
       // Pour supporter le cas où ce serait directement un fichier 
       // etnon un répertoire
       if( rep.isFile() ) list = new File[]{rep};
       else list = rep.listFiles();
       
       for( File f : list ) {
+         if( abort ) throw new Exception("MOC aborted");
          if( f.isFile() ) {
-            if( addInMoc(moc,f,order,strict) ) n++;
+            if( addInMoc(moc,f,order,strict) ) { n++; nbImg++; }
             if( n>0 && n%100==0 ) {
                moc.checkAndFix();
                if( multWrite ) {
@@ -183,6 +261,7 @@ public class MocGen {
       try {
          StringBuffer buf = new StringBuffer();
          while( (s=in.readLine())!=null ) {
+            if( abort ) throw new Exception("MOC aborted");
             if( s.trim().length()==0 ) {
                HeaderFits header = new HeaderFits(buf.toString());
                if( addInMocBox(moc,new Calib(header),order) ) n++;
@@ -194,6 +273,7 @@ public class MocGen {
 
       return n;
    }
+   
    
    // parameter scanning and interpretation
    private boolean scanArgs(String args[] )  {
@@ -305,12 +385,12 @@ public class MocGen {
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +
-      		"Version: 1.1 - based on Aladin "+Aladin.VERSION+" - may 2013 - P.Fernique [CDS]");
+      		"Version: 1.2 - based on Aladin "+Aladin.VERSION+" - Jan 2014 - P.Fernique [CDS]");
    }
    
    // Generation d'un MOC pour toute une hiérarchie de fichiers FITS (ou JPEG/PNG avec calibration)
    // en basant le calcul du MOC sur les 4 coins des images trouvées
-   private void excute(String [] args) {
+   private void execute(String [] args) {
       if( (args.length>0 && (args[0].equals("-h") || args[0].equals("-help"))) 
             || !scanArgs(args)) {
          usage();
@@ -319,9 +399,12 @@ public class MocGen {
 
       int n=0;
       try {
-         HealpixMoc moc = new HealpixMoc();
+         serror=null;
+         error=abort=ready=false;
+         nbImg=0;
+         moc = new HealpixMoc();
          if( previous!=null ) moc.read(previous);
-         moc.setMaxLimitOrder(order);
+         moc.setMocOrder(order);
          moc.setCheckConsistencyFlag(false);
          long t = System.currentTimeMillis();
          if( in!=null ) n = scanAndDo(moc,new File(in),order);
@@ -331,14 +414,17 @@ public class MocGen {
          if( verbose ) System.out.println(n+" files added in the MOC in "+cds.tools.Util.getTemps(ms));
          moc.write(out,fmt);
          if( verbose ) System.out.println("MOC achieved => "+out);
+         ready=true;
       } catch( Exception e ) {
+         moc=null;
+         serror=e.getMessage();
+         error=true;
          e.printStackTrace();
       }
    }
-
+   
    /** Debuging launcher */
    public static void main(String[] args) {
-      MocGen generator = new MocGen();
-      generator.excute(args);
+      new MocGen(args);
    }
 }

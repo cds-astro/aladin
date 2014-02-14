@@ -64,6 +64,7 @@ public abstract class Builder {
          case TREE:      return new BuilderTree(context);
          case CONCAT:    return new BuilderConcat(context);
          case DETAILS:   return new BuilderDetails(context);
+         case MAPTILES:  return new BuilderMapTiles(context);
       }
       throw new Exception("No builder associated to this action");
    }

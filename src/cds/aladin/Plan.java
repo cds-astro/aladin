@@ -1771,6 +1771,17 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
            if( f>100 || f<0 ) throw new Exception("Opacity value must be between 0 and 100 !");
            setOpacityLevel(f/100f);
            aladin.calque.repaintAll();
+       } else if( prop.equalsIgnoreCase("scalingFactor") || prop.equalsIgnoreCase("size")) {
+          float n;
+          try {
+             n = Float.parseFloat(value);   
+             if( n<=0 ) throw new Exception();
+          } catch( Exception e ) {
+             throw new Exception(value+" is not a valid value for scalingFactor ]0..5] !");
+          }
+          setScalingFactor(n);
+          aladin.calque.repaintAll();
+
        } else if( prop.startsWith("FITS:") ) {
           prop = prop.substring(5);
           if( headerFits==null ) headerFits=new FrameHeaderFits(this,prop+"="+value);

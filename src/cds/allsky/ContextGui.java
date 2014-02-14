@@ -108,6 +108,7 @@ public class ContextGui extends Context {
          if( mysky.trim().length()==0 ) mysky="MySky";
          int npix = lastShowAllSkyNorder3>=0 ? lastShowAllSkyNorder3 : 0;
          mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(mysky);
+         
          if (mainPanel.planPreview == null || mainPanel.planPreview.isFree() || mainPanel.planPreview.hasError() ) {
             double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), npix);
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
@@ -116,8 +117,10 @@ public class ContextGui extends Context {
                   Coord.getSexa(radec[0], radec[1]), "30");
             Aladin.trace(4, "ContextGui.preview(): create "+mysky);
             mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(n);
+//            mainPanel.planPreview.flagNoRecutRedo=true;
             //            mainPanel.setStartEnabled(true);
          } else {
+//            mainPanel.planPreview.flagNoRecutRedo=true;
             mainPanel.planPreview.forceReload();
             mainPanel.aladin.calque.repaintAll();
             Aladin.trace(4, "ContextGui.preview(): update "+mysky);

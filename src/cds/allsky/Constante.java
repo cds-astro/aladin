@@ -24,7 +24,7 @@ public class Constante {
    public static final int INDEX = 0;
    public static final int TESS = 1;
    public static final int JPG = 2;
-   public static final String ALLSKY = "ALLSKY";
+   public static final String ALLSKY = "HiPS";
    public static String SURVEY = ALLSKY; // sous répertoire final contenant la hierarchie healpix
    public static final String HPX_FINDER = "HpxFinder";
 

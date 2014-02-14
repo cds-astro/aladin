@@ -220,7 +220,10 @@ public final class MCanvas extends JComponent
 //      else if( src==menuKeepUntag ) aladin.mesure.keepUntag();
       else if( src==menuCreateMulti ) aladin.cloneObj(false);
       else if( src==menuCreateUniq ) aladin.cloneObj(true);
-      else if( src==menuGoto ) aladin.view.zoomOnSource(objSelect);
+      else if( src==menuGoto ) {
+         aladin.view.gotoThere(objSelect);
+         aladin.view.zoomOnSource(objSelect);
+      }
 //      else if( src==menuLoadImg ) loadImg();
 //      else if( src==menuLoadImgs ) loadImgs();
       else if( src==menuCopyAll ) aladin.copyToClipBoard(aladin.mesure.getText());

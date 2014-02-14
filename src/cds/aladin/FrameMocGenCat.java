@@ -77,7 +77,7 @@ public final class FrameMocGenCat extends FrameMocGenImg {
          radius.setForeground(Color.red);
          throw e;
       }
-      radius.setForeground(Color.red);
+      radius.setForeground(Color.black);
       return x;
    }
    

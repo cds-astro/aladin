@@ -61,7 +61,8 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_NBPIXGENERATEDIMAGE = "nbPixGeneratedImage";
     static public final String KEY_CURTFORMBITPIX = "curTFormBitpix";
     static public final String KEY_ALADINVERSION = "aladinVersion";
-
+    
+    static public final String KEY_HIPSBUILDER = "HiPSBuilder";
     static public final String KEY_COORDSYS = "coordsys";
     static public final String KEY_ISCOLOR = "isColored";
     static public final String KEY_ISCAT = "isCatalog";
@@ -77,10 +78,12 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_TARGET = "target";
     static public final String KEY_TARGETRADIUS = "targetRadius";
     static public final String KEY_USECACHE = "useCache";
-    static public final String KEY_IMAGESOURCEPATH = "imageSourcePath";
     static public final String KEY_SURVEY = "survey";
     static public final String KEY_VERSION = "version";
     static public final String KEY_CATEGORY = "category";
+    static public final String KEY_PUBLISHER = "publisher";
+    static public final String KEY_PIXELRANGE = "pixelRange";
+    static public final String KEY_PIXELCUT = "pixelCut";
 
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;

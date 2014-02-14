@@ -162,6 +162,8 @@ public class BuilderIndex extends Builder {
       String pathDest = context.getHpxFinderPath();
       
       create(input, pathDest, order);
+      
+      if( statNbFile==0 ) throw new Exception("No available image found ! Notice that Multi-Extension Fits is not supported (yet) by HiPS generator"); 
       return true;
    }
 
@@ -250,6 +252,10 @@ public class BuilderIndex extends Builder {
             int code = fitsfile.loadHeaderFITS(currentfile);
 
             try {
+//               if( (code|Fits.XFITS)!=0 ) {
+//                  Aladin.trace(3,"MEF not supported yet by HiPSgen: "+currentfile+" ignored");
+//                  continue;
+//               }
 
                // Test sur l'image entière
                if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {

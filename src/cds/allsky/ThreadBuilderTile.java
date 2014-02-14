@@ -43,6 +43,7 @@ import cds.tools.pixtools.Util;
 final public class ThreadBuilderTile {
 
    private Context context;
+   private BuilderTiles builderTiles;
    private int bitpix;
    private boolean hasAlternateBlank;
    private double blankOrig;
@@ -59,9 +60,9 @@ final public class ThreadBuilderTile {
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
 
-   public ThreadBuilderTile(Context context) {
+   public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
-      
+      this.builderTiles=builderTiles;
       
       bitpix=context.getBitpix();
       flagColor = context.isColor();
@@ -133,6 +134,12 @@ final public class ThreadBuilderTile {
                      cds.tools.Util.getUnitDisk(rqMem)+")...");
 
                cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
+               nbThreadRunning = builderTiles.nbThreadRunning(); // Pour etre vraiment sur
+               if( nbThreadRunning<=1 ) {
+                  context.nlwarning(Thread.currentThread().getName()+" resumes (last thread runnning)");
+                  context.cacheFits.forceClean();
+                  break;
+               }
             } catch( Exception e ) { }
             if( context.isTaskAborting() ) throw new Exception("Task abort !");
          }
@@ -200,7 +207,7 @@ final public class ThreadBuilderTile {
                for( int i=deb; i<fin; i++ ) {
                   SrcFile f1 = downFiles.get(i);
                   f1.fitsfile.rmUser();
-                  downFiles.add(i,null);
+                  downFiles.set(i,null);
                }
             }
             // Changement de bitpix a la fin du calcul pour éviter les erreurs d'arrondi

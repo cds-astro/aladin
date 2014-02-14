@@ -44,7 +44,7 @@ import javax.swing.tree.*;
  */
 public class Progen extends JPanel  {
    
-   private TreeNodeProgen showNode=null;
+   private TreeNodeProgenAjeter showNode=null;
    private Aladin aladin;
    private TreeForProgen tree;
    
@@ -60,9 +60,9 @@ public class Progen extends JPanel  {
             if( selRow==-1 ) return;
             TreePath path = tree.getPathForLocation(e.getX(), e.getY()); 
             TreeNode noeud = (TreeNode)((DefaultMutableTreeNode)path.getLastPathComponent()).getUserObject();
-            if( !(noeud instanceof TreeNodeProgen) ) return;
+            if( !(noeud instanceof TreeNodeProgenAjeter) ) return;
 //            System.out.println("Je suis sur "+noeud.getID());
-            showNode=(TreeNodeProgen)noeud;
+            showNode=(TreeNodeProgenAjeter)noeud;
             aladin.view.repaintAll();
          } 
       });
@@ -100,8 +100,8 @@ public class Progen extends JPanel  {
    
    protected void copyInPad() {
       for( TreeNode n : tree ) {
-         if( !(n instanceof TreeNodeProgen) ) continue;
-         aladin.console.printInPad( ( (TreeNodeProgen)n).label+"\n" );
+         if( !(n instanceof TreeNodeProgenAjeter) ) continue;
+         aladin.console.printInPad( ( (TreeNodeProgenAjeter)n).label+"\n" );
       }
       aladin.console.setVisible(true);
    }
@@ -115,8 +115,8 @@ public class Progen extends JPanel  {
       // affichage des progéniteur sélectionnés
       g.setColor(Color.blue);
       for( TreeNode n : tree ) {
-         if( !(n instanceof TreeNodeProgen) ) continue;
-         if( n.checkbox.isSelected() ) ((TreeNodeProgen)n).draw(g,v);
+         if( !(n instanceof TreeNodeProgenAjeter) ) continue;
+         if( n.checkbox.isSelected() ) ((TreeNodeProgenAjeter)n).draw(g,v);
       }
   
       g.setColor(c);
@@ -124,16 +124,16 @@ public class Progen extends JPanel  {
    
    protected void updateCheckByMouse(ViewSimple v,int xview,int yview) {
       for( TreeNode n : tree ) {
-         if( !(n instanceof TreeNodeProgen) ) continue;
-         ((TreeNodeProgen)n).updateCheckByMouse(v,xview,yview);
+         if( !(n instanceof TreeNodeProgenAjeter) ) continue;
+         ((TreeNodeProgenAjeter)n).updateCheckByMouse(v,xview,yview);
       }
       repaint();
    }
    	
    private void setColorByAge() {
       for( TreeNode n : tree ) {
-         if( !(n instanceof TreeNodeProgen) ) continue;
-         ((TreeNodeProgen)n).updateColor();
+         if( !(n instanceof TreeNodeProgenAjeter) ) continue;
+         ((TreeNodeProgenAjeter)n).updateColor();
       }
    }
    
@@ -157,12 +157,12 @@ public class Progen extends JPanel  {
             TreeNode n;
             // Déjà présent dans l'arbre
             if( (n=v.get(id))!=null ) { 
-               if( n instanceof TreeNodeProgen ) ((TreeNodeProgen)n).touch();
+               if( n instanceof TreeNodeProgenAjeter ) ((TreeNodeProgenAjeter)n).touch();
                v.remove(id);
                continue;
             }
             HealpixIndexItem hii = hi.get(id);
-            TreeNodeProgen node = new TreeNodeProgen(planBG,hii);
+            TreeNodeProgenAjeter node = new TreeNodeProgenAjeter(planBG,hii);
 //            System.out.println("J'ajoute "+id);
             modified=true;
             tree.createTreeBranch(tree.getRoot(),node,0);
@@ -172,7 +172,7 @@ public class Progen extends JPanel  {
          for( String id : v.keySet() ) {
 //            if( id.equals("root") ) continue;
             TreeNode n = v.get(id);
-            if( !(n instanceof TreeNodeProgen )) continue;
+            if( !(n instanceof TreeNodeProgenAjeter )) continue;
 //            if( ((TreeNodeProgen)n).inLive() ) {
 //               System.out.println("Je devrais supprimer "+id+" mais pas encore assez vieux");
 //               continue;

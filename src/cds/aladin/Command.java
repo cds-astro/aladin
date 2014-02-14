@@ -509,7 +509,7 @@ public final class Command implements Runnable {
       if( param.length()==0 ) {
          for( int i =0; i<allPlan.length; i++ ) {
             Plan p = allPlan[i];
-            if( method==1 && ! p.hasAvailablePixels()) continue;
+            if( method==1 && ! p.isPixel()) continue;
             if( p.flagOk && p.selected ) v.addElement(p);
          }
 
@@ -520,7 +520,7 @@ public final class Command implements Runnable {
             String s = st.nextToken();
             Plan p = getPlanFromParam(s,method==2?1:0);
             if( p==null ) continue;
-            if( method==1 && !p.hasAvailablePixels()) continue;
+            if( method==1 && !p.isPixel()) continue;
             if( method==3 && p.type!=Plan.FOLDER ) continue;
             if( p!=null ) {
                if( p.flagOk || method==4 ) v.addElement(p);
@@ -1278,7 +1278,7 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          a.calque.repaintAll();
          return "";
       }
-
+      
       try { a.configuration.setconf(propertie,value); }
       catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
@@ -1375,7 +1375,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          s = tok.nextToken();
          p = getPlanFromParam(s);
          if( p==null ) break;
-         if( !p.hasAvailablePixels() ) { defaultPlan=false; continue; }
+         if( !p.isPixel() ) { defaultPlan=false; continue; }
          v.add(p);
       }
 

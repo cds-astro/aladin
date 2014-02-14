@@ -1,9 +1,11 @@
 package cds.allsky;
 
+import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.FileNotFoundException;
 
 import cds.aladin.Aladin;
+import cds.aladin.ColorMap;
 import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
@@ -88,7 +90,11 @@ public class BuilderRgb extends Builder {
              context.warning("All components must be used the same HEALPix coordinate system !");
              return;
           }
-          tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
+          
+          IndexColorModel cm = ColorMap.getCM(p[c].cmControl[0],p[c].cmControl[1],p[c].cmControl[2],
+                false, p[c].typeCM,p[c].transfertFct,p[c].isTransparent());
+          tcm[c] = cds.tools.Util.getTableCM(cm, 2);
+//          tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
  
           context.setProperty(c==0?"red":c==1?"green":"blue",p[c].label+" ["
                +p[c].getPixelMin()+" "+p[c].getPixelMiddle()+" "+p[c].getPixelMax()+" "
@@ -101,8 +107,8 @@ public class BuilderRgb extends Builder {
        context.setOrder(maxOrder);
        context.setOutputPath(path);
        context.setBitpixOrig(0);
-       context.writePropertiesFile();
        if( context.label==null || context.label.trim().length()==0 ) context.label="RGB-"+label;
+       context.writePropertiesFile();
     }
 
     private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
@@ -283,7 +289,6 @@ public class BuilderRgb extends Builder {
        // Passage en 8 bits pour chaque composante
        for( int c=0; c<3; c++ ) {
           if( c==missing || out[c]==null ) continue;
-//          out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), p[c].getCM());
           pixx8[c] = out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c], 
                 format==Context.PNG ? Fits.PIX_255 : Fits.PIX_256);
       }

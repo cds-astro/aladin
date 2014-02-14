@@ -117,6 +117,7 @@ public class PlanBGCatIndex extends PlanBGCat {
       setHasMoreDetails(true);
       
       int order = maxOrder(v)+1;
+      if( order<BuilderDetails.MINORDER ) order=BuilderDetails.MINORDER;
 //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges

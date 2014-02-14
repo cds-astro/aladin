@@ -51,6 +51,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
@@ -81,7 +82,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    static public final String [] STATUS = { "UNKOWN","ASKING","TOBELOADFROMCACHE","TOBELOADFROMNET",
                                      "LOADINGFROMCACHE","LOADINGFROMNET",
-                                     "READY","ERROR","ABORTING","PURGING", };
+                                     "READY","ERROR","ABORTING","PURGING" };
 
    protected int status=UNKNOWN;  // status courant du losange
    protected long timer;        // Date de la dernière utilisation du losange, -1 si jamais encore utilisé
@@ -541,12 +542,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return n;
    }
 
-   /** Retourne true si le losange est ready */
-   protected boolean isReady() { return getStatus()==READY; }
-
-   /** Retourne true si le losange est ready */
-   protected boolean isError() { return getStatus()==ERROR; }
-
    /** Retourne true si le losange est dans le cache */
    protected boolean isCached() {
       if( alreadyCached ) return true;
@@ -789,7 +784,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       
       if( !planBG.color ) {
-         planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
+         if( planBG.pixMode==-1 ) planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
          pixels = getPixels(img);
          planBG.setBufPixels8(pixels);
          planBG.pixelMin   = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
@@ -797,7 +792,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.dataMin    = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
          planBG.dataMax    = 255;
       } else {
-         planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
+         if( planBG.pixMode==-1 ) planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
          planBG.video = PlanImage.VIDEO_NORMAL;
          rgb = getPixelsRGB(img);
       }
@@ -950,7 +945,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       stream = loadStream(filename);
       
-      planBG.pixMode = PlanBG.PIX_TRUE;
+      boolean initPixMode = planBG.pixMode==-1;
+      if( initPixMode ) planBG.pixMode = PlanBG.PIX_TRUE;
 
       // Lecture de l'entete Fits (à la brute - elle ne doit pas dépasser 2880 catactères)
       byte [] head = new byte[2880];
@@ -965,7 +961,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          bitpix = (int)getValue(head,"BITPIX");
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
-            planBG.pixMode = PlanBG.PIX_ARGB;
+            if( initPixMode ) planBG.pixMode = PlanBG.PIX_ARGB;
 //            System.out.println("HealpixKey FITS in ARGB");
          }
          if( bitpix!=8 && !flagARGB ) {
@@ -1001,40 +997,72 @@ public class HealpixKey implements Comparable<HealpixKey> {
          byte [] in = new byte[taille];
          System.arraycopy(stream, 2880, in, 0, taille);
          
-         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut; // || this instanceof HealpixAllsky;
+         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut ;
+               //|| planBG.flagRecutRedo && !allSky;
          
-         if( flagInit /* && !planBG.flagRecut */ ) {
+         if( flagInit ) {
             planBG.bitpix=bitpix;
             planBG.flagRecut=false;
-            try {
-               planBG.bScale = getValue(head,"BSCALE");
-            } catch( Exception e ) { 
-               planBG.bScale=1;
+            try { planBG.bScale = getValue(head,"BSCALE"); } catch( Exception e ) { planBG.bScale=1; }
+            try { planBG.bZero  = getValue(head,"BZERO");  } catch( Exception e ) { planBG.bZero=0;  }
+            try { planBG.blank  = getValue(head,"BLANK"); planBG.isBlank = true; } catch( Exception e ) { planBG.isBlank = false; }
+            
+            // Est-ce que j'ai des informations de range et de cut via le fichier de properties ?
+            boolean flagPixelRange=false;
+            boolean flagPixelCut=false;
+            if( planBG.pixelRange!=null ) {
+               double [] a = split(planBG.pixelRange);
+               if( a!=null ) {
+                  planBG.dataMin =(a[0]-planBG.bZero)/planBG.bScale;
+                  planBG.dataMax =(a[1]-planBG.bZero)/planBG.bScale;
+                  flagPixelRange=true;
+               }
             }
-            try {
-               planBG.bZero = getValue(head,"BZERO");
-            } catch( Exception e ) { 
-               planBG.bZero=0;
+            if( planBG.pixelCut!=null ) {
+               double [] a = split(planBG.pixelCut);
+               if( a!=null ) {
+                  planBG.pixelMin = pixelMin =(a[0]-planBG.bZero)/planBG.bScale;
+                  planBG.pixelMax = pixelMax =(a[1]-planBG.bZero)/planBG.bScale;
+                  flagPixelCut=true;
+               }
             }
-               try {
-                  planBG.blank    = getValue(head,"BLANK");
-                  planBG.isBlank = true;
-               } catch( Exception e ) { planBG.isBlank = false; }
-               
+
+            if( !flagPixelCut && !flagPixelRange ) {
                Fits tmp = new Fits(width,height,bitpix);
                if( planBG.isBlank ) tmp.setBlank(planBG.blank);
                tmp.pixels = in;
                double [] range = tmp.findAutocutRange(0,0,true);
-               planBG.pixelMin = pixelMin = range[0];
-               planBG.pixelMax = pixelMax = range[1];
-               planBG.dataMin  = range[2];
-               planBG.dataMax  = range[3];
+               if( !flagPixelCut ) {
+                  planBG.pixelMin = pixelMin = range[0];
+                  planBG.pixelMax = pixelMax = range[1];
+               }
+               if( !flagPixelRange ) {
+                  planBG.dataMin  = range[2];
+                  planBG.dataMax  = range[3];
+               }
 
-               planBG.aladin.trace(3,"Pixel range detection => PixelMinMax=["+planBG.pixelMin+","+planBG.pixelMax+"], " +
-                                                 "DataMinMax=["+planBG.dataMin+","+planBG.dataMax+"]"+(planBG.isBlank?" Blank="+planBG.blank:"")
-                                                 +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
-               planBG.restoreCM();
+               planBG.aladin.trace(3,"Pixel range detection on "+order+"/"+npix+" NaN="+Util.round(range[4]*100,1)
+                     +"% => PixelMinMax=["+Util.myRound(planBG.pixelMin)+","+Util.myRound(planBG.pixelMax)+"], " +
+                     "DataMinMax=["+Util.myRound(planBG.dataMin)+","+Util.myRound(planBG.dataMax)+"] "+(planBG.isBlank?" Blank="+planBG.blank:"")
+                     +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
+            } else {
+               planBG.aladin.trace(3,"Pixel properties PixelMinMax=["+Util.myRound(planBG.pixelMin)+","+Util.myRound(planBG.pixelMax)+"], " +
+                     "DataMinMax=["+Util.myRound(planBG.dataMin)+","+Util.myRound(planBG.dataMax)+"] "+(planBG.isBlank?" Blank="+planBG.blank:"")
+                     +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
+               
+            }
+            planBG.restoreCM();
             if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
+
+//            if( !planBG.flagNoRecutRedo  ) {
+//               if( planBG.flagRecutRedo && range[4]>0.97 ) {
+//                  planBG.forceReload();
+//                  planBG.flagRecutRedo=false;
+//               } else if( allSky && range[4]>0.97 ) {
+//                  planBG.flagRecutRedo=true;   // On refera une détection au premier vrai losange
+//               }
+//            }
+
          }
          
          pixels = to8bits(in,bitpix,pixelMin,pixelMax, PlanBG.PIX_255);
@@ -1051,6 +1079,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       
       return 2880+taille;
+   }
+   
+   private double [] split(String s) {
+      double [] a = new double[2];
+      StringTokenizer st = new StringTokenizer(s);
+      a[0] = Double.parseDouble(st.nextToken());
+      a[1] = Double.parseDouble(st.nextToken());
+      return a;
    }
    
    /** Construit le pathName du fichier, où qu'il soit (cache, local, ou réseau) */
@@ -1420,14 +1456,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
    // on ne tracera pas le losange
    static final private double RAPPORT = 5;
 
-   private int drawFils(Graphics g, ViewSimple v,Vector<HealpixKey> redraw) { return drawFils(g,v,1,redraw); }
-   private int drawFils(Graphics g, ViewSimple v,int maxParente,Vector<HealpixKey> redraw) {
+   private int drawFils(Graphics g, ViewSimple v/*,Vector<HealpixKey> redraw*/) { return drawFils(g,v,1/*,redraw*/); }
+   private int drawFils(Graphics g, ViewSimple v,int maxParente/*,Vector<HealpixKey> redraw*/) {
       int n=0;
       int limitOrder = CDSHealpix.MAXORDER-10;
       if( width>1 && order<limitOrder && parente<maxParente ) {
          fils = getChild();
          if( fils!=null ) {
-            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente,redraw);
+            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente/*,redraw*/);
          }
       }
       return n;
@@ -1621,9 +1657,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
    
    private boolean flagSym;
    
-   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
-   protected int draw(Graphics g, ViewSimple v,Vector<HealpixKey> redraw) { return draw(g,v,-1,redraw); }
-   protected int draw(Graphics g, ViewSimple v,int maxParente,Vector<HealpixKey> redraw) {
+//   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
+   protected int draw(Graphics g, ViewSimple v/*,Vector<HealpixKey> redraw*/) { return draw(g,v,-1/*,redraw*/); }
+   protected int draw(Graphics g, ViewSimple v,int maxParente/*,Vector<HealpixKey> redraw*/) {
       long t1 = Util.getTime(0);
       int n=0;  // nombre d'images java que l'on va tracer (valeur du return)
       PointD[] b = getProjViewCorners(v);
@@ -1696,7 +1732,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             try {
                if( !drawFast && !allSky && isTooLarge(b) ) {
                   resetTimer();
-                  int m = drawFils(g,v,8,redraw);
+                  int m = drawFils(g,v,8/*,redraw*/);
 
                   // Si aucun sous-losange n'a pu être dessiné, je trace tout de même le père
                   if( m>0 ) return m;
@@ -1707,7 +1743,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             if( isBehindSky(b) ) {
                if( drawFast ) return 0;
                resetTimer();
-               return drawFils(g,v,redraw);
+               return drawFils(g,v/*,redraw*/);
             }
 
             // Test dessin 1 losange plutôt que 2 triangles
@@ -1726,7 +1762,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       /** Dessin des fils */
       if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) {
-         if( (n=drawFils(g,v,redraw))>0 ) return n;
+         if( (n=drawFils(g,v/*,redraw*/))>0 ) return n;
       }
 
       if( th==-1 && tb==-1 ) return 0;
@@ -1753,7 +1789,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( parente>0 ) { pixels=null; rgb=null; }
 
       drawLosangeBorder(g,b);
-
+      
       long t2 = Util.getTime(0);
       if( !allSky ) planBG.nbImgDraw++;
       planBG.cumulTimeDraw += (t2-t1);

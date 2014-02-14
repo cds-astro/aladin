@@ -55,7 +55,7 @@ public class PlanMoc extends PlanBGCat {
 
    public PlanMoc(Aladin a) { super(a); }
       
-   /** Création d'un Plan MOC à partir d'un flux */
+   /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
    protected PlanMoc(Aladin aladin, HealpixMoc moc, String label, Coord c, double radius) {
       this(aladin,null,moc,label,c,radius);
    }
@@ -109,7 +109,7 @@ public class PlanMoc extends PlanBGCat {
       Healpix hpx = new Healpix();
       int order = moc.getMaxOrder();
       aladin.trace(2,"Moc reference frame conversion: "+a+" => "+b);
-      HealpixMoc moc1 = new HealpixMoc(coordSys,moc.getMinLimitOrder(),moc.getMaxLimitOrder());
+      HealpixMoc moc1 = new HealpixMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
       Iterator<Long> it = moc.pixelIterator();

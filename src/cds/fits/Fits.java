@@ -1195,8 +1195,7 @@ final public class Fits {
     * d'un double
     */
    public double getPixelDouble(int x, int y) {
-      return getPixValDouble(pixels, bitpix, (y - yCell) * widthCell
-            + (x - xCell));
+      return getPixValDouble(pixels, bitpix, (y - yCell) * widthCell + (x - xCell));
    }
    
 //   double [] pixdouble = null;
@@ -1476,10 +1475,10 @@ final public class Fits {
     * @param max valeur initiale du cut haut (0 si aucune)
     * @param full true si on opère sur toute l'image, sinon juste la partie centrale
     * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
-    *         minPix..maxPix
+    *         minPix..maxPix  range[4]=[0..1]: proportion pixel significatif
     */
    public double[] findAutocutRange(double min, double max,boolean full) throws Exception {
-      double[] range = new double[4];
+      double[] range = new double[5];
       try {
          if( isReleased() ) reloadBitmap();
          findMinMax(range, pixels, bitpix, widthCell, heightCell, min, max, true, full,0);
@@ -1487,6 +1486,7 @@ final public class Fits {
          System.err.println("Erreur  MinMax");
          range[0] = range[2] = min;
          range[1] = range[3] = max;
+         range[4]=0;
       }
       return range;
    }
@@ -1694,6 +1694,7 @@ final public class Fits {
          range[3] = max = maxCut;
 
       } else {
+         int nblank=0; // Nombre de valeurs BLANK
          boolean first = true;
          long nmin = 0, nmax = 0;
          for( i = margeH; i < height - margeH; i++ ) {
@@ -1701,7 +1702,7 @@ final public class Fits {
                c = getPixValDouble(pIn, bitpix, i * width + j);
 
                // On ecarte les valeurs sans signification
-               if( isBlankPixel(c) ) continue;
+               if( isBlankPixel(c) ) { nblank++; continue; }
 
                if( flagCut ) {
                   if( c < minCut || c > maxCut ) continue;
@@ -1736,6 +1737,11 @@ final public class Fits {
          }
          range[2] = min;
          range[3] = max;
+         
+         // Proportion de pixel significatif [0..1]
+         try {
+            range[4] = (double)nblank / ((height-2*margeH) * (width-2*margeW));
+         } catch( Exception e ) { e.printStackTrace(); }
       }
 
       if( autocut ) {

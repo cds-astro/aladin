@@ -21,6 +21,8 @@ package cds.allsky;
 
 import java.util.Vector;
 
+import cds.aladin.Aladin;
+
 /** Gère le lancemetn des tâches nécéssaires à la génération d'un survey HEALPix.
  * Les tâches doivent hériter de la classe Builder. Elles peuvent être agencées consécutivement
  * (via un Vector de tâches). Elles seront exécutées soit en synchrone, soit en asynchrone dans un Thread
@@ -98,14 +100,18 @@ public class Task extends Thread {
                 builder.run();
                 builder.showStatistics();
              } catch( Exception e ) {
-                e.printStackTrace();
+                if( Aladin.levelTrace>=3 ) e.printStackTrace();
                 context.taskAbort();
+                context.warning(e.getMessage());
              } 
              context.endAction();
           }
           context.setTaskRunning(false);
        }
-       catch( Exception e) {  e.printStackTrace(); context.warning(e.getMessage()); }
+       catch( Exception e) { 
+          if( Aladin.levelTrace>=3 ) e.printStackTrace();
+          context.warning(e.getMessage());
+       }
        finally{ context.setTaskRunning(false); if( progressBar!=null ) progressBar.end(); }
     }
     
