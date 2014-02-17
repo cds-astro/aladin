@@ -1343,11 +1343,12 @@ VWNIF.fr	Cible hors image !
 # FrameCM.java Strings
 CMTITRE	Pixel mapping
 CMREVERSE	Reverse
-CMRANGE	Orig. pixel range:
-CMLIMITS	Autocut limits:
+CMRANGE	Pixel range:
+CMLIMITS	Pixel cut:
 CMALGO	Use Aladin autocut algorithm
 CMERRORRANGE	The min value should be less than the max value !
 CMRESET	Reset
+CMRESETBG	Rescan
 CMCLOSE	Close
 CMHELP	Help
 CMNOCUT	get all
@@ -1361,11 +1362,12 @@ CMMESSAGE	This histogram represents the number count \nof each pixel value (in a
 
 CMTITRE.fr	Dynamique des pixels
 CMREVERSE.fr	Inverser
-CMRANGE.fr	Intervalle d'orig.:
-CMLIMITS.fr	Seuils limites:
+CMRANGE.fr	Intervalle des pixels:
+CMLIMITS.fr	Seuils d'affichage:
 CMALGO.fr	Utiliser le seuillage automatique
 CMERRORRANGE.fr	La valeur minimale doit être inférieure à la valeur maximale !
 CMRESET.fr	Réinit.
+CMRESETBG.fr	Rescan
 CMCLOSE.fr	Fermer
 CMHELP.fr	Aide
 CMNOCUT.fr	Récupérer tout
@@ -2369,6 +2371,8 @@ SPECIFALLSKY Only process these tiles (e.g 3/128...)
 SPECIFALLSKY.fr Ne traiter que certaines tuiles (ex 3/128...)
 BLANKALLSKY Alternate blank FITS value
 BLANKALLSKY.fr Valeur BLANK alternative
+HDUALLSKY Specifical HDU numbers (e.g: 0 2)
+HDUALLSKY.fr Numéros HDU spécifiques(ex: 0 2)
 BORDERALLSKY Image border to ignore (N W S E in pix)
 BORDERALLSKY.fr Bords d'image à ignorer (N O S E en pix)
 SKYVALALLSKY Sky background adjustement (FITS keyword|empty=>auto)

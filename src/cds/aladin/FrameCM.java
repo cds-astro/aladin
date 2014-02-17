@@ -55,7 +55,7 @@ public final class FrameCM extends JFrame implements ActionListener {
    static public final String CMA[]     = { "gray", "BB", "A","stern" };
 
    // Les chaines statiques
-   String TITRE,REVERSE,RANGE,LIMITS,ALGO,ERRORRANGE,RESET,CLOSE,HELP,
+   String TITRE,REVERSE,RANGE,LIMITS,ALGO,ERRORRANGE,RESET,RESCAN,CLOSE,HELP,
           NOCUT,REPLAY,ALL,METHODE,METHODEX,METHODERGB,NOFULLPIXEL,MESSAGE,CMM,CMCO;
 
    // Les references
@@ -87,6 +87,7 @@ public final class FrameCM extends JFrame implements ActionListener {
       ALGO = aladin.chaine.getString("CMALGO");
       ERRORRANGE = aladin.chaine.getString("CMERRORRANGE");
       RESET = aladin.chaine.getString("CMRESET");
+      RESCAN = aladin.chaine.getString("CMRESETBG");
       CLOSE = aladin.chaine.getString("CMCLOSE");
       HELP = aladin.chaine.getString("CMHELP");
       NOCUT = aladin.chaine.getString("CMNOCUT");
@@ -546,6 +547,9 @@ public final class FrameCM extends JFrame implements ActionListener {
       b=new JButton(REVERSE); b.addActionListener(this); validation.add(small(b));
       validation.add(new JLabel("  "));
       b=new JButton(RESET); b.addActionListener(this); validation.add(small(b));
+      if( pimg instanceof PlanBG && ((PlanBG)pimg).isTruePixels() ) {
+         b=new JButton(RESCAN); b.addActionListener(this); validation.add(small(b));
+      }
       if( isPlanRGB || isPlanBlink ) {
          b=new JButton(CLOSE); b.addActionListener(this); validation.add(b);
       }
@@ -682,14 +686,16 @@ public final class FrameCM extends JFrame implements ActionListener {
             setCM(cm.getCM());
             if( minCut!=null ) minCut.setText(pimg.X(pimg.pixelMin));
             if( maxCut!=null ) maxCut.setText(pimg.X(pimg.pixelMax));
-            if( pimg instanceof PlanBG && ((PlanBG)pimg).isTruePixels() ) {
-               ((PlanBG)pimg).forceReload();
-            }
          }
       }
       aladin.view.repaintAll();
       aladin.calque.zoom.zoomView.repaint();
-
+   }
+   
+   private void rescan() {
+      if( !(pimg instanceof PlanBG) || !((PlanBG)pimg).isTruePixels() ) return;
+      ((PlanBG)pimg).forceReload();
+      aladin.view.repaintAll();
    }
 
   /** Gestion du bouton REVERSE */
@@ -970,6 +976,7 @@ public final class FrameCM extends JFrame implements ActionListener {
       String s = e.getActionCommand();
            if( CLOSE.equals(s) )     dispose();
       else if( RESET.equals(s) )     reset();
+      else if( RESCAN.equals(s) )    rescan();
       else if( REVERSE.equals(s) )   reverse();
       else if( NOCUT.equals(s) )     getAll();
       else if( REPLAY.equals(s) )    changeAutocut();

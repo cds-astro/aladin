@@ -21,6 +21,7 @@ package cds.allsky;
 
 import java.io.File;
 import java.text.ParseException;
+import java.util.StringTokenizer;
 
 import javax.swing.JProgressBar;
 
@@ -72,8 +73,11 @@ public class ContextGui extends Context {
    protected void showTilesStat(int statNbThreadRunning, int statNbThread, long totalTime, 
          int statNbTile, int statNbEmptyTile, int statNodeTile, long statMinTime, long statMaxTime, long statAvgTime,
          long statNodeAvgTime,long usedMem,long deltaTime,long deltaNbTile) {
+
+      if( statNbTile==0 ) return;
+
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
-      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
+//      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
       long nbLowCells = getNbLowCells();
       mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,statNbEmptyTile,nbLowCells,
             (long)( Constante.SIDE*Constante.SIDE*getNpix()),
@@ -82,13 +86,29 @@ public class ContextGui extends Context {
             (long)( Constante.SIDE*Constante.SIDE*getNpix()),
             statNodeAvgTime);
       
+      long nbCells = getNbLowCells();
+      long nbLowTile = statNbTile+statNbEmptyTile;
+      long tempsTotalEstime = nbLowTile==0 ? 0 : nbCells==0 ? 0 : nbCells*(totalTime/nbLowTile)-totalTime;
+      
+      long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
+
+      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,nbTilesPerMin,tempsTotalEstime);
+      
       setProgress(statNbTile+statNbEmptyTile, nbLowCells);
    }
    
    // Demande d'affichage des stats (dans le TabJpeg)
-   protected void showJpgStat(int statNbFile, long statSize, long totalTime) {
-      mainPanel.tabJpg.setStat(statNbFile, statSize, totalTime);
+   protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
+      long nbLowCells = getNbLowCells();
+      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
+      
+      String s1=statNbFile+" / "+nbLowCells+" tiles";
+      String s2=Util.getTemps(totalTime,true);
+      if( tempsTotalEstime>0 ) s2+=" - ends in="+Util.getTemps(tempsTotalEstime,true);
+
+      mainPanel.tabJpg.setStat(s1,s2);
    }
+
 
    // Demande d'affichage des stats (dans le TabRgb)
    protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
@@ -117,10 +137,7 @@ public class ContextGui extends Context {
                   Coord.getSexa(radec[0], radec[1]), "30");
             Aladin.trace(4, "ContextGui.preview(): create "+mysky);
             mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(n);
-//            mainPanel.planPreview.flagNoRecutRedo=true;
-            //            mainPanel.setStartEnabled(true);
          } else {
-//            mainPanel.planPreview.flagNoRecutRedo=true;
             mainPanel.planPreview.forceReload();
             mainPanel.aladin.calque.repaintAll();
             Aladin.trace(4, "ContextGui.preview(): update "+mysky);
@@ -141,7 +158,8 @@ public class ContextGui extends Context {
          progressBar.setMaximum((int)progressMax);
          progressBar.setValue((int)progress);
       }
-      if( (action==Action.TILES || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
+      if( (action==Action.TILES || action==Action.JPEG
+            || action==Action.PNG || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
    }
    
    public void endAction() throws Exception { 
@@ -154,7 +172,10 @@ public class ContextGui extends Context {
          else if( taskAborting ) progressBar.setString("Aborted !");
          else progressBar.setString("Done !");
       }
-      if( (action==Action.TILES || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
+      if( (action==Action.TILES || action==Action.JPEG
+            || action==Action.PNG || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
+      
+      if( action==Action.INDEX ) mainPanel.tabBuild.resumeWidgets();
       super.endAction();
    }
    
@@ -227,6 +248,17 @@ public class ContextGui extends Context {
       return b;
    }
    
+   public int [] getHDU() {
+      String s="";
+      try { 
+         s = mainPanel.tabDesc.getHDU().trim();
+         hdu = parseHDU(s);
+      } catch( Exception e ) {
+         mainPanel.tabDesc.blankTextField.setText("Syntax error => ["+s+"]");
+      }
+      return hdu;
+   }
+   
    /** Initialisation des paramètres (ne sert que pour contextGui) */
    public void initParameters() throws Exception {
       setMocArea( mainPanel.tabDesc.getMocField().trim() );
@@ -272,25 +304,19 @@ public class ContextGui extends Context {
    
    public double[] getCutOrig() throws Exception {
       if( cutOrig==null ) cutOrig = new double[4];
-//      try {
-         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
-            Plan p = mainPanel.aladin.calque.getPlanBase();
-            cutOrig[0]= ((PlanImage)p).getCutMin();
-            cutOrig[1]= ((PlanImage)p).getCutMax();
-            cutOrig[2]= ((PlanImage)p).getDataMin();
-            cutOrig[3]= ((PlanImage)p).getDataMax();
+      if( mainPanel.tabJpg.isCutFromPlanBase() ) {
+         PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
+         cutOrig[0]= ((p.getCutMin()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
+         cutOrig[1]= ((p.getCutMax()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
+         //            cutOrig[2]= ((PlanImage)p).getDataMin();
+         //            cutOrig[3]= ((PlanImage)p).getDataMax();
 
-         } else {
-            String cutMin = mainPanel.tabJpg.getCutMin();
-            String cutMax = mainPanel.tabJpg.getCutMax();
-            cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
-            cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
-         }
-//      } catch( Exception e ) {
-//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-//         cutOrig[0] = cutOrig[2] = 0;
-//         cutOrig[1] = cutOrig[3] = 1;
-//      }
+      } else {
+         String cutMin = mainPanel.tabJpg.getCutMin();
+         String cutMax = mainPanel.tabJpg.getCutMax();
+         cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
+         cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
+      }
 
       return cutOrig;
    }

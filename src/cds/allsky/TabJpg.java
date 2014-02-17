@@ -353,14 +353,10 @@ public class TabJpg extends JPanel implements ActionListener {
       return p;
    }
    
-   protected void setStat(int nbTile,long sizeTile,long time) {
-      String s;
-      if( nbTile==-1 ) s="";
-      else s= nbTile+" tile"+(nbTile>1?"s":"") + " for "+Util.getUnitDisk(sizeTile);
-      tileStat.setText(s);
-      if( time==-1 ) s="";
-      else s= Util.getTemps(time,true);
-      timeStat.setText(s);
+   protected void setStat(String sTile,String sTime) {
+      tileStat.setText(sTile);
+      timeStat.setText(sTime);
+
    }
    
    public void setCutMin(String s) { tCutMin.setText(s); }

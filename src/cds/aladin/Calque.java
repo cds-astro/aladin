@@ -3608,7 +3608,7 @@ public final class Calque extends JPanel implements Runnable {
        Plan [] plan = getPlans();
        for( int i=0; i<plan.length; i++ ) {
           Plan p = plan[i];
-          if( !p.flagOk || !p.selected || !p.isCatalog() ) continue;
+          if( !p.flagOk || !p.selected || !(p.isCatalog() || p.type==Plan.TOOL) ) continue;
           p.setScalingFactor(scalingFactor);
        }
     }

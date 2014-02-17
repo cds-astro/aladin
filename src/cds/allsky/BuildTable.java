@@ -42,6 +42,7 @@ public class BuildTable extends JTable {
    static int  DEFAULT_BITPIX = -32;
    
    private Context context;
+   private TabBuild tabBuild;
    
    static final private int MAXHEALPIXORDER = 21;
 
@@ -67,8 +68,9 @@ public class BuildTable extends JTable {
       "Disk space used at the end of the process"
    };
 
-   BuildTable(Context context) {
+   BuildTable(Context context,TabBuild tabBuild) {
       super(createData(DEFAULT_BITPIX),columnNames);
+      this.tabBuild=tabBuild;
       this.context = context;
       setAutoscrolls(true);
       for( int i=0; i<columnSize.length; i++ )  getColumnModel().getColumn(i).setPreferredWidth( columnSize[i]);
@@ -124,7 +126,10 @@ public class BuildTable extends JTable {
          setValueAt(new Boolean(false),i,CHECK_IDX);
       }
    }
-
+   
+   public void refresh() {
+      repaint();
+   }
    
    static final Border bord = BorderFactory.createEmptyBorder(0,10,0,0);
    /**
@@ -192,14 +197,25 @@ public class BuildTable extends JTable {
 
    @Override
    public Object getValueAt(int row, int column) {
-      if( column!=VOL_IDX ) return super.getModel().getValueAt(row, column);
       
-      double skyArea = context.getSkyArea();
-      long nbBytePerPixel = (long)( context.getNpix() );
-      int order = row+3+Constante.ORDER;
-      long nside = CDSHealpix.pow2(order);
-      long nbPixel = 12*nside*nside;
-      return Util.getUnitDisk((long)(nbPixel*nbBytePerPixel*skyArea));
+      if( column==VOL_IDX ) {
+         double skyArea = context.getIndexSkyArea();
+         long nbBytePerPixel = (long)( tabBuild.getNpix() );
+         int order = row+3+Constante.ORDER;
+         long nside = CDSHealpix.pow2(order);
+         long nbPixel = 12*nside*nside;
+         return Util.getUnitDisk((long)(nbPixel*nbBytePerPixel*skyArea*(row==1?1:1.33)));
+      }
+      
+      if( column==TILES_IDX && context.mocIndex!=null ) {
+         double skyArea = context.getIndexSkyArea();
+         int order = row+3+Constante.ORDER;
+         long nside = CDSHealpix.pow2(order);
+         long nbPixel = 12*nside*nside;
+         return (row+3)+" / "+(long)(nbPixel*skyArea)/(long)(Constante.SIDE*Constante.SIDE);
+      }
+      
+      return super.getModel().getValueAt(row, column);
 
    }
 

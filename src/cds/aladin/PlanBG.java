@@ -164,9 +164,9 @@ public class PlanBG extends PlanImage {
    protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG|PNG couleur ou non
    public boolean fitsGzipped=false; // true si le survey est fourni en true pixels (FITS) mais gzippé
    public boolean truePixels=false;  // true si le survey est fourni en true pixels (FITS)
-   protected boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
-   protected boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
-   protected boolean inPNG=false;   // true: Les losanges originaux peuvent être fournis en PNG
+   public boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
+   public boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
+   public boolean inPNG=false;   // true: Les losanges originaux peuvent être fournis en PNG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
@@ -2090,7 +2090,13 @@ public class PlanBG extends PlanImage {
       int taille=width*height;
       int rgb[] = new int[taille];
       
-      imgBuf.getRGB((int)Math.floor(rcrop.x), (int)Math.floor(rcrop.y), width, height, rgb, 0,width);
+      // En cas de problème d'arrondi négatif
+      int x = (int)Math.floor(rcrop.x);
+      if( x<0 ) x=0;
+      int y = (int)Math.floor(rcrop.y);
+      if( y<0 ) y=0;
+      
+      imgBuf.getRGB(x, y, width, height, rgb, 0,width);
       imgBuf.flush(); imgBuf=null;
 
       return rgb;

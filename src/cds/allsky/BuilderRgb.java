@@ -323,31 +323,4 @@ public class BuilderRgb extends Builder {
        File f = new File(file);
        updateStat(f);
     }
-    
-	/** Création/rafraichissemnt d'un allsky (en l'état) et affichage */
-//	void preview(String path, int last) {
-//	   try {
-//          try {
-//        	  builderAllsky.createAllSkyJpgColor(path,3,64);
-//          } catch (Exception e) {
-//        	  Aladin.trace(3,e.getMessage());
-//          }
-//          
-//          Plan planPreview = aladin.calque.getPlan("MySkyColor");
-//          if( planPreview==null || planPreview.isFree() ) {
-//             double[] res = CDSHealpix.pix2ang_nest(Util.nside(3), last);
-//             double[] radec = CDSHealpix.polarToRadec(new double[] {res[0],res[1]});
-//             radec = context.gal2ICRSIfRequired(radec);
-//             int n = aladin.calque.newPlanBG(path, "=MySkyColor", Coord.getSexa(radec[0],radec[1]), "30" );
-//             Aladin.trace(4,"RGBGuild: Create MySky");
-//             planPreview = aladin.calque.getPlan(n);
-//          } else {
-//             ((PlanBG)planPreview).forceReload();
-//             aladin.calque.repaintAll();
-//             Aladin.trace(4,"RGBGuild: Create MySky");
-//             
-//          }
-//      } catch( Exception e ) {e.printStackTrace(); }
-//	}
-		
 }

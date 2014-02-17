@@ -2174,6 +2174,14 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       }
       // Affichage du selecteur de répertoires
       else if( BROWSE.equals(what) ) {
+         
+//         CDSFileDialog fd = new CDSFileDialog(aladin);
+//         aladin.setDefaultDirectory(fd);
+//         String directory = fd.getDirectory();
+//         aladin.memoDefaultDirectory(directory);
+//         String d = fd.getFile();
+//         System.out.println("J'ai sélectionné ["+d+"]");
+//         if( d!=null ) dir.setText(d);
 
          FileDialog fd = new FileDialog(aladin.dialog);
          aladin.setDefaultDirectory(fd);
@@ -2183,8 +2191,8 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          fd.setFile(DEFAULT_FILENAME);
 
          fd.show();
-         aladin.memoDefaultDirectory(fd);
          String directory = fd.getDirectory();
+         aladin.memoDefaultDirectory(directory);
          String name =  fd.getFile();
          // si on n'a pas changé le nom, on a selectionne un repertoire
          boolean isDir = false;

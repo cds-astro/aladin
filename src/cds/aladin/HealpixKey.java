@@ -997,8 +997,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          byte [] in = new byte[taille];
          System.arraycopy(stream, 2880, in, 0, taille);
          
-         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut ;
-               //|| planBG.flagRecutRedo && !allSky;
+         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut;
          
          if( flagInit ) {
             planBG.bitpix=bitpix;
@@ -1010,20 +1009,23 @@ public class HealpixKey implements Comparable<HealpixKey> {
             // Est-ce que j'ai des informations de range et de cut via le fichier de properties ?
             boolean flagPixelRange=false;
             boolean flagPixelCut=false;
-            if( planBG.pixelRange!=null ) {
-               double [] a = split(planBG.pixelRange);
-               if( a!=null ) {
-                  planBG.dataMin =(a[0]-planBG.bZero)/planBG.bScale;
-                  planBG.dataMax =(a[1]-planBG.bZero)/planBG.bScale;
-                  flagPixelRange=true;
+            
+            if( planBG.flagRecut ) {
+               if( planBG.pixelRange!=null ) {
+                  double [] a = split(planBG.pixelRange);
+                  if( a!=null ) {
+                     planBG.dataMin =(a[0]-planBG.bZero)/planBG.bScale;
+                     planBG.dataMax =(a[1]-planBG.bZero)/planBG.bScale;
+                     flagPixelRange=true;
+                  }
                }
-            }
-            if( planBG.pixelCut!=null ) {
-               double [] a = split(planBG.pixelCut);
-               if( a!=null ) {
-                  planBG.pixelMin = pixelMin =(a[0]-planBG.bZero)/planBG.bScale;
-                  planBG.pixelMax = pixelMax =(a[1]-planBG.bZero)/planBG.bScale;
-                  flagPixelCut=true;
+               if( planBG.pixelCut!=null ) {
+                  double [] a = split(planBG.pixelCut);
+                  if( a!=null ) {
+                     planBG.pixelMin = pixelMin =(a[0]-planBG.bZero)/planBG.bScale;
+                     planBG.pixelMax = pixelMax =(a[1]-planBG.bZero)/planBG.bScale;
+                     flagPixelCut=true;
+                  }
                }
             }
 
@@ -1054,20 +1056,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
             planBG.restoreCM();
             if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
 
-//            if( !planBG.flagNoRecutRedo  ) {
-//               if( planBG.flagRecutRedo && range[4]>0.97 ) {
-//                  planBG.forceReload();
-//                  planBG.flagRecutRedo=false;
-//               } else if( allSky && range[4]>0.97 ) {
-//                  planBG.flagRecutRedo=true;   // On refera une détection au premier vrai losange
-//               }
-//            }
-
          }
          
          pixels = to8bits(in,bitpix,pixelMin,pixelMax, PlanBG.PIX_255);
 
-         if( flagInit  && !planBG.color) {
+         if( flagInit && !planBG.color) {
             planBG.pixelsOrigin=in;
             planBG.setBufPixels8(pixels);
             planBG.bitpix=bitpix;

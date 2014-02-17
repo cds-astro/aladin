@@ -38,7 +38,7 @@ import cds.tools.pixtools.Util;
 public class BuilderJpg extends BuilderTiles {
 
    private double[] cut;
-   private byte [] tcm;
+   protected byte [] tcm;
    private int bitpix;
    private int width;
    private double blank,bscale,bzero;
@@ -56,9 +56,6 @@ public class BuilderJpg extends BuilderTiles {
     */
    public BuilderJpg(Context context) {
       super(context);
-      ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 
-            0/*PlanImage.CMGRAY*/, context.fct.code());
-      tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
       init();
    }
    
@@ -69,30 +66,6 @@ public class BuilderJpg extends BuilderTiles {
 
    public Action getAction() { return Action.JPEG; }
    
-   public void run() throws Exception {
-      cut = context.getCut();
-//      double cut [] = context.getCut();
-      context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to [0..255] ("+context.getTransfertFct()+")");
-      context.info("Tile aggregation method="+context.getJpegMethod());
-      build();
-      if( !context.isTaskAborting() ) {
-//         (new BuilderAllsky(context)).run();
-         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64);
-         context.writePropertiesFile();
-      }
-   }
-   
-   public boolean isAlreadyDone() {
-      if( context.isColor() ) {
-         context.info("Jpeg conversion not required for Healpix colored survey");
-         return true;
-      }
-      if( !context.actionPrecedeAction(Action.INDEX, Action.TILES)) return false;
-      if( !context.actionPrecedeAction(Action.TILES, getAction())) return false;
-      context.info("Pre-existing HEALPix JPEG survey seems to be ready");
-      return true;
-   }
-
    // Valide la cohérence des paramètres pour la création des tuiles JPEG
    public void validateContext() throws Exception {
       validateOutput();
@@ -105,7 +78,7 @@ public class BuilderJpg extends BuilderTiles {
             try {
                setFitsParamFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
                context.info("Will use pixelCut ["+context.cutOrig[0]+" .. "+context.cutOrig[1]+"], " +
-               		"BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
+                    "BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
             } catch( Exception e1 ) {
                throw new Exception("Pixel cut unkown => use pixelcut parameter");
             }
@@ -120,55 +93,53 @@ public class BuilderJpg extends BuilderTiles {
       context.initParameters();
    }
    
+   
+   protected int getMinCM() { return 0; }
+
+   public void run() throws Exception {
+      ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 
+            0/*PlanImage.CMGRAY*/, context.fct.code());
+      tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
+      cut = context.getCut();
+      if( context.bzero!=0 || context.bscale!=1 ) {
+         double [] val = { cut[0]*context.bscale+context.bzero, cut[1]*context.bscale+context.bzero };
+         context.info("Map pixel cut ["+cut[0]+"/"+val[0]+" .. "+cut[1]+"/"+val[1]+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
+      } else  {
+         context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
+
+      }
+      context.info("Tile aggregation method="+context.getJpegMethod());
+      build();
+      if( !context.isTaskAborting() ) {
+         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64);
+         context.writePropertiesFile();
+         if( context instanceof ContextGui && ((ContextGui) context).mainPanel.planPreview!=null ) {
+            if( fmt.equals("jpeg") ) ((ContextGui) context).mainPanel.planPreview.inJPEG = true;
+            else ((ContextGui) context).mainPanel.planPreview.inPNG = true;
+         }
+      }
+   }
+   
+   public boolean isAlreadyDone() {
+      if( context.isColor() ) {
+         context.info("Jpeg conversion not required for Healpix colored survey");
+         return true;
+      }
+      if( !context.actionPrecedeAction(Action.INDEX, Action.TILES)) return false;
+      if( !context.actionPrecedeAction(Action.TILES, getAction())) return false;
+      context.info("Pre-existing HEALPix JPEG survey seems to be ready");
+      return true;
+   }
+
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
       context.showJpgStat(statNbFile, totalTime,statNbThread,statNbThreadRunning);
       if( !(context instanceof ContextGui ) ) super.showStatistics();
    }
 
-   // Initialise la valeur du BSCALE BZERO de sortie en fonction du premier fichier Npixxxx.fits trouvé dans Norder3/Dir0
-   // Nécessaire dans le cas de relance juste pour le calcul des JPEG car ces valeurs n'ont 
-   // jamais été initialisées dans ce cas.
-//   private void initBscaleBzeroFromNpixFits(String path) {
-//      if( context.isBScaleBZeroSet() ) return; // inutile
-//      try {
-//         File f1 = null;
-//         for( int i=0; i<768; i++ ) {
-//            f1 = new File( Util.getFilePath(path, 3, i)+".fits" );
-//            if( f1.exists() ) break;
-//         }
-//         Fits f = new Fits();
-//         f.loadHeaderFITS(f1.getAbsolutePath());
-//         double bscale=1;
-//         double bzero=0;
-//         try { bscale = f.headerFits.getDoubleFromHeader("BSCALE"); } catch( Exception e ) { }
-//         try { bzero = f.headerFits.getDoubleFromHeader("BZERO"); } catch( Exception e ) { }
-//         Aladin.trace(4,"BuilderJpg.initBscaleBzeroFromNpixFits()... reinit target BZERO="+bzero+", BSCALE="+bscale);
-//         context.setBScale(bscale);
-//         context.setBZero(bzero);
-//      } catch( Exception e ) {
-//         e.printStackTrace();
-//      }
-//   }
-
    public void build() throws Exception {
       initStat();
-//      String output = context.getOutputPath();
-//      maxOrder = context.getOrder();
-//      cut = context.getCut();
-      
       super.build();
-      
-//      JpegMethod method = context.getJpegMethod();
-//      
-//      // par la médiane, il faut repartir des losanges FITS de niveaux le plus bas
-//      if( method==JpegMethod.MEDIAN ) {
-//         super.build();
-//         
-//      // Par la moyenne, on peut accélérer les choses en se contentant
-//      // de convertir tous les fichiers Fits trouvés
-//      } else fits2JpgDir(new File(output));
-      
    }
    
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
@@ -206,92 +177,6 @@ public class BuilderJpg extends BuilderTiles {
       totalTime = System.currentTimeMillis()-startTime;
    }
    
-//   private boolean mustBeTranslated(File f) {
-//      String name = f.getName();
-//      if( name.equals("Allsky.fits") ) return true;
-//      if( !name.endsWith(".fits") )    return false;
-//      if( !name.startsWith("Npix") )   return false;
-//      return true;
-//   }
-   
-//   // Conversion de toute l'arborescence FITS en JPEG (nécessairement méthode
-//   // de la moyenne (comme pour le FITS))
-//   private void fits2JpgDir(File dir) throws Exception {
-//      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-//      
-//      // répertoire
-//      if( dir.isDirectory() ) {
-//         for ( File f : dir.listFiles() ) fits2JpgDir(f);
-//         
-//      // Fichier
-//      } else {
-//         int order = Util.getOrderFromPath(dir.getCanonicalPath());
-//         if( order!=-1 && mustBeTranslated(dir) ) {
-//            String file = dir.getCanonicalPath();
-//            file = file.substring(0,file.lastIndexOf('.'));
-//            fits2jpeg(file);
-//            if( order==maxOrder ) {
-//               File f = new File(file+ext);
-//               updateStat(f);
-//            }
-//         }
-//      }
-//   }
-   
-//   // Conversion d'un fichier de FITS en JEPG (file sans l'extension)
-//   private void fits2jpeg(String file) throws Exception {
-//      Fits out = createLeaveJpg(file);
-////      if( tcm==null ) out.toPix8(cut[0],cut[1]);
-////      else out.toPix8(cut[0],cut[1],tcm);
-//      out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-//      Aladin.trace(4, "Writing " + file+ext);
-//   }
-
-//   /** Construction récursive de la hiérarchie des tuiles JPEG à partir des tuiles FITS
-//    * de plus bas niveau. La méthode employée est la moyenne ou la médiane sur les 4 pixels de niveau inférieurs
-//    */
-//   private Fits createJpg(String path,int order, long npix ) throws Exception {
-//      if( context.isTaskAborting() ) throw new Exception("Task abort !");
-//      String file = Util.getFilePath(path,order,npix);
-//      JpegMethod method = context.getJpegMethod();
-//
-//      // S'il n'existe pas le fits, c'est une branche morte
-//      if( !new File(file+".fits").exists() ) return null;
-//
-//      Fits out = null;
-//      if( order==maxOrder ) out = createLeaveJpg(file);
-//      else {
-//         Fits fils[] = new Fits[4];
-//         boolean found = false;
-//         for( int i =0; i<4; i++ ) {
-//            fils[i] = createJpg(path,order+1,npix*4+i);
-//            if (fils[i] != null && !found) found = true;
-//         }
-//         if( found ) out = createNodeJpg(fils, method);
-//      }
-//      if( out!=null && context.isInMocTree(order,npix) ) {
-//         if( debugFlag ) {
-//            debugFlag=false;
-//            Aladin.trace(3,"Creating "+fmt+" tiles: method="+(method==Context.JpegMethod.MEAN?"average":"median")
-//                  +" maxOrder="+maxOrder+" bitpix="+bitpix+" blank="+blank+" bzero="+bzero+" bscale="+bscale
-//                  +" cut="+(cut==null?"null":cut[0]+".."+cut[1])
-//                  +" tcm="+(tcm==null?"null":"provided"));
-//         }
-////         if( tcm==null ) out.toPix8(cut[0],cut[1]);
-////         else out.toPix8(cut[0],cut[1],tcm);
-//         out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-//         Aladin.trace(4, "Writing " + file+ext);
-//
-//         if( order==maxOrder ) {
-//            File f = new File(file+ext);
-//            updateStat(f);
-//         }
-//      }
-//      return out;
-//   }
-//
-//   private boolean debugFlag=true;
-
    /** Construction d'une tuile terminale. De fait, simple chargement
     * du fichier FITS correspondant. */
    private Fits createLeaveJpg(String file) throws Exception {

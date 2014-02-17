@@ -19,6 +19,10 @@
 
 package cds.allsky;
 
+import java.awt.image.ColorModel;
+
+import cds.aladin.ColorMap;
+
 /** Construction de la hiérarchie des tuiles PNG à partir des tuiles FITS de plus bas
  * niveau. Voir commentaire BuilderJpg
  * @author Pierre Fernique
@@ -35,4 +39,6 @@ public class BuilderPng extends BuilderJpg {
    }
 
    public Action getAction() { return Action.PNG; }
+   
+   protected int getMinCM() { return 1; }
 }

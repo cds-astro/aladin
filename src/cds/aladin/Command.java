@@ -2092,12 +2092,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       // On détermine la taille si non précisée ?
       if( !flagDim ) {
          try {
-            w=v.rzoom.width;
-            h=v.rzoom.height;
+            if( pi instanceof PlanBG ) {
+               w = v.rv.width;
+               h = v.rv.height;
+            } else {
+               w=v.rzoom.width;
+               h=v.rzoom.height;
+            }
          } catch( Exception e ) { }
          
       }
-      else if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
+      if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
 
     // On essaye la position du repere, sinon le centre de la vue, si nécessaire
       if( !flagPos ) {

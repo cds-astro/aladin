@@ -244,51 +244,54 @@ public class BuilderIndex extends Builder {
          currentfile = file.getPath();
 
          Fits fitsfile = new Fits();
+         int [] hdus = context.getHDU();
+         if( hdus==null ) hdus = new int[]{0};
          int cellSize = Constante.FITSCELLSIZE;
 
-         // L'image sera mosaiquée en cellSize x cellSize pour éviter de
-         // saturer la mémoire par la suite
-         try {
-            int code = fitsfile.loadHeaderFITS(currentfile);
-
+         // Multi Extension ou non ?
+         for( int hdu : hdus ) {
+            
+            // L'image sera mosaiquée en cellSize x cellSize pour éviter de
+            // saturer la mémoire par la suite
             try {
-//               if( (code|Fits.XFITS)!=0 ) {
-//                  Aladin.trace(3,"MEF not supported yet by HiPSgen: "+currentfile+" ignored");
-//                  continue;
-//               }
+               int code = fitsfile.loadHeaderFITS(currentfile+ (hdu==0?"":"["+hdu+"]"));
 
-               // Test sur l'image entière
-               if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
-                  updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
-                  testAndInsert(fitsfile, pathDest, currentfile, null, order);
+               try {
 
-                  // Découpage en blocs
-               } else {   
-                  //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
-                  int width = fitsfile.width - borderSize[3];
-                  int height = fitsfile.height - borderSize[2];
+                  // Test sur l'image entière
+                  if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
+                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
+                     testAndInsert(fitsfile, pathDest, currentfile, null, order);
 
-                  updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
+                     // Découpage en blocs
+                  } else {   
+                     //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
+                     int width = fitsfile.width - borderSize[3];
+                     int height = fitsfile.height - borderSize[2];
 
-                  for( int x=borderSize[1]; x<width; x+=cellSize ) {
+                     updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
 
-                     for( int y=borderSize[0]; y<height; y+=cellSize ) {
-                        fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
-                        fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
-                        fitsfile.xCell=x;
-                        fitsfile.yCell=y;
-                        String currentCell = fitsfile.getCellSuffix();
-                        testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
+                     for( int x=borderSize[1]; x<width; x+=cellSize ) {
+
+                        for( int y=borderSize[0]; y<height; y+=cellSize ) {
+                           fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
+                           fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
+                           fitsfile.xCell=x;
+                           fitsfile.yCell=y;
+                           fitsfile.hdu = hdu;
+                           String currentCell = fitsfile.getCellSuffix();
+                           testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
+                        }
                      }
                   }
+               } catch (Exception e) {
+                  if( Aladin.levelTrace>=3 ) e.printStackTrace();
+                  return;
                }
-            } catch (Exception e) {
-               if( Aladin.levelTrace>=3 ) e.printStackTrace();
-               return;
+            }  catch (Exception e) {
+               Aladin.trace(3,e.getMessage() + " " + currentfile);
+               continue;
             }
-         }  catch (Exception e) {
-            Aladin.trace(3,e.getMessage() + " " + currentfile);
-            continue;
          }
       }
 
@@ -309,7 +312,7 @@ public class BuilderIndex extends Builder {
    }
 
    private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, 
-         String currentCell, int order) throws Exception {
+         String suffix, int order) throws Exception {
       String hpxname;
       FileOutputStream out;
       Coord center = new Coord();
@@ -347,12 +350,15 @@ public class BuilderIndex extends Builder {
                center.y = fitsfile.height - center.y -1;
             c.GetCoord(center);
             
-            // Faut-il récupérer des infos dans l'entête fits
+            // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
             if( context.fitsKeys!=null ) {
                StringBuilder res=null; 
                for( String key : context.fitsKeys ) {
                   String val;
-                  if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) continue;
+                  if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
+                     if( fitsfile.headerFits0==null || fitsfile.headerFits0!=null 
+                           && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
+                  }
                   if( res==null ) res = new StringBuilder();
                   res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
                }
@@ -375,8 +381,8 @@ public class BuilderIndex extends Builder {
 
             // ajoute le chemin du fichier Source FITS, 
             // suivi éventuellement de la définition de la cellule en question
-            // (mode mosaic)
-            String filename = currentFile + (currentCell == null ? "" : currentCell);
+            // (mode mosaic), void du HDU particulier
+            String filename = currentFile + (suffix == null ? "" : suffix);
             
             createAFile(out, filename, center, stc.toString(), fitsVal);
             out.close();

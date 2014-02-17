@@ -100,11 +100,12 @@ public class BuildProgressPanel extends JPanel {
           + " - avg.proc.time: "+Util.getTemps(avgTime);
       nodeTileStat.setText(s);
    }
-   
-   protected void setTimeStat(long time,long nbTile,long sizeTile) {
-      StringBuffer s = new StringBuffer();
-      if( time!=-1 )  s.append(Util.getTemps(time,true));
-      if( time>20000 ) s.append(" - "+Util.getUnitDisk( (long)((nbTile*sizeTile)/ (time/60000.)))+"/mn");
+
+   protected void setTimeStat(long time,long nbTilesPerMin,long tempsTotalEstime) {
+      StringBuilder s = new StringBuilder();
+      if( time!=-1 )  s.append((tempsTotalEstime>0?"running ":"")+Util.getTemps(time,true));
+      if(  time>5000 && tempsTotalEstime>0 ) s.append(" - "+nbTilesPerMin+" tiles/mn");
+      if( time>20000 && tempsTotalEstime>0 ) s.append(" - ends in "+Util.getTemps(tempsTotalEstime,true));
       timeStat.setText(s+"");
    }
    

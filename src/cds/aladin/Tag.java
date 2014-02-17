@@ -636,7 +636,13 @@ public final class Tag extends Position {
       return new Point( (int)Math.round( dist*Math.cos(angle) ), (int)Math.round( dist*Math.sin(angle) ));
    }
    
-   private Font getFont() { return F; }
+   private Font getFont() {
+      double z = plan!=null ? plan.getScalingFactor() : 1;
+      if( z==1 ) return F;
+      float size = F.getSize();
+      size *= z;
+      return F.deriveFont(size);
+   }
    private void setFont(Font f) { F=f; }
    
    /** Set specifical color (dedicated for catalog sources) */

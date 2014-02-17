@@ -49,6 +49,7 @@ import javax.swing.JScrollPane;
 import javax.swing.table.AbstractTableModel;
 
 import cds.aladin.Aladin;
+import cds.aladin.Coord;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -202,7 +203,7 @@ public class TabBuild extends JPanel implements ActionListener {
    }
 
    public void init() {
-      tab = new BuildTable(context);
+      tab = new BuildTable(context,this);
       resoLabel = new JLabel();
       resoLabel.setFont(resoLabel.getFont().deriveFont(Font.BOLD));
 
@@ -299,15 +300,21 @@ public class TabBuild extends JPanel implements ActionListener {
       mainPanel.resumeWidgets();
    }
    
+   private String getCoverageString() {
+      double cov = context.getIndexSkyArea();
+      if( cov==1 ) return "whole sky ";
+      double degrad = Math.toDegrees(1.0);
+      double skyArea = 4.*Math.PI*degrad*degrad;
+      return Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2 ";
+   }
+   
    protected void resumeWidgets() {
       try {
          boolean readyToDo = context.isExistingDir() && mainPanel.tabDesc.outputField.getText().trim().length()>0;
          boolean isRunning = context.isTaskRunning();
          boolean isExistingMoc = context.getMocIndex()!=null;
          moc.setEnabled(isExistingMoc);
-         String s = context.getArea()==null ? "whole sky" 
-               : (int)(((double)context.getSkyArea()*100000 )/1000.)+"%";
-         note.setText("<html><i>(*) "+s+"</i></html>");
+         note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
          previous.setEnabled(readyToDo && !isRunning);
          next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
          start.setEnabled(readyToDo && !isRunning && !(isRunning));
@@ -327,6 +334,7 @@ public class TabBuild extends JPanel implements ActionListener {
          tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) 
                               : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+         tab.refresh();
       } catch( Exception e ) {
          e.printStackTrace();
       } 
@@ -362,47 +370,6 @@ public class TabBuild extends JPanel implements ActionListener {
    }
    
    public void setOrder(int order) { setSelectedOrder(order); }
-
-//   public void setBScaleBZero(double bscale, double bzero) {
-//      this.bscale = bscale;
-//      this.bzero = bzero;
-//   }
-//
-//   public void setBlank(double blank) {
-//      this.blank = blank;
-//   }
-//
-//   public double getBscale() {
-//      // si ce n'est pas le bitpix original
-//      // on renvoie une valeur par défaut
-//      if (this.bitpixO != getBitpix())
-//         return Fits.DEFAULT_BSCALE;
-//      return bscale;
-//   }
-//
-//   public double getBzero() {
-//      // si ce n'est pas le bitpix original
-//      // on renvoie une valeur par défaut
-//      if (this.bitpixO != getBitpix())
-//         return Fits.DEFAULT_BZERO;
-//      return bzero;
-//   }
-//
-//   public double getBlank() {
-//      // si ce n'est pas le bitpix original
-//      // on renvoie une valeur par défaut
-//      if (this.bitpixO != getBitpix())
-//         return Fits.DEFAULT_BLANK;
-//      return blank;
-//   }
-//
-//   public boolean isKeepBB() {
-//      return keepBB.isSelected();
-//   }
-//
-//   public boolean isFading() {
-//      return samplBest.isSelected() && fading.isSelected();
-//   }
 
    public void setOriginalBitpixField(int bitpix) {
       this.bitpixOrig = bitpix;
@@ -449,6 +416,11 @@ public class TabBuild extends JPanel implements ActionListener {
       }
       return i;
    }
+   
+   /** Retourne le nombre de bytes qui correspond au bitpix sélectionné dans le formulaire */
+   protected int getNpix() {
+      return context.isColor() ? 4 : Math.abs(getBitpixField())/8;
+   }
 
    public void actionPerformed(ActionEvent e) {
       // on applique aussi la modification dans le tableau (calcul des volumes disques)
@@ -462,6 +434,7 @@ public class TabBuild extends JPanel implements ActionListener {
       else if (e.getSource() == previous) mainPanel.showDescTab();
       
       mainPanel.resumeWidgets();
+      resumeWidgets();
    }
    
    private void pause() {

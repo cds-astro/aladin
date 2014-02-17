@@ -585,6 +585,7 @@ public class ViewSimple extends JComponent
          } else if( pref.color ) {
             pi.type=Plan.IMAGERGB;
             pi.bitpix=8;
+            
             ((PlanImageRGB)pi).pixelsRGB = pref.getPixelsRGBArea(this,rview,true);
             pi.cm = IndexColorModel.getRGBdefault();
             ((PlanImageRGB)pi).initCMControl();

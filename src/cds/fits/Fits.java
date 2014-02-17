@@ -88,6 +88,7 @@ final public class Fits {
    public static final double DEFAULT_BZERO = 0.;
 
    public HeaderFits headerFits; // header Fits
+   public HeaderFits headerFits0; // Header Fits du HDU0
 
    public byte[] pixels; // Pixels d'origine "fullbits" (y compté depuis le bas)
 
@@ -121,6 +122,8 @@ final public class Fits {
 
    public int heightCell; // Hauteur de la cellule de l'image (par défaut =
                           // naxis2)
+   
+   public int hdu;        // Numéro de l'extension dans le cas d'un MEF
 
    // public byte [] pix8; // Pixels 8 bits en vue d'une sauvegarde JPEG (y
    // compté depuis le haut)
@@ -156,7 +159,7 @@ final public class Fits {
       this.width = this.widthCell = width;
       this.height = this.heightCell = height;
       this.bitpix = bitpix;
-      xCell = yCell = 0;
+      hdu = xCell = yCell = 0;
       if( bitpix == 0 ) {
          pixMode = PIX_ARGB;
          rgb = new int[width * height];
@@ -470,27 +473,33 @@ final public class Fits {
       tmp = null;
    }
 
-   // Extraction de la définition d'une cellule FITS pour une ouverture d'un
-   // fichier FITS en mode "mosaic"
-   // le filename doit être suffixé par [x,y-wxh] (sans aucun blanc).
+   // Extraction de la définition d'une cellule FITS et d'un numéro d'extension
+   // pour une ouverture d'un fichier FITS en mode "mosaic"
+   // le filename doit être suffixé par [e:x,y-wxh] (sans aucun blanc).
+   // ou bien [e] ou [x,y-wxh]
    // => met à jour les variables xCell, yCell, widthCell et heigthCell
-   // S'il n'y a pas de définition de cellule, laisse xCell et yCell à 0 et
-   // widthCell et heightCell à -1
+   // S'il n'y a pas de définition de cellule xCell et yCell à 0 et
+   // widthCell et heightCell à -1. S'il n'y a pas de définition d'extension mef=0
    // @return le nom de fichier sans le suffixe
    private String parseCell(String filename) throws Exception {
-      xCell = yCell = 0;
+      hdu = xCell = yCell = 0;
       widthCell = heightCell = -1;
       int deb = filename.lastIndexOf('[');
       if( deb == -1 ) return filename;
       int fin = filename.indexOf(']', deb);
       if( fin == -1 ) return filename;
+      boolean flagCell = filename.indexOf(',',deb)>0;
+      boolean flagMef = !flagCell || filename.indexOf(':',deb)>0 ;
       StringTokenizer st = new StringTokenizer(
-            filename.substring(deb + 1, fin), ",-x");
+            filename.substring(deb + 1, fin), ":,-x");
       try {
-         xCell = Integer.parseInt(st.nextToken());
-         yCell = Integer.parseInt(st.nextToken());
-         widthCell = Integer.parseInt(st.nextToken());
-         heightCell = Integer.parseInt(st.nextToken());
+         if( flagMef ) hdu=Integer.parseInt(st.nextToken());
+         if( flagCell ) {
+            xCell = Integer.parseInt(st.nextToken());
+            yCell = Integer.parseInt(st.nextToken());
+            widthCell = Integer.parseInt(st.nextToken());
+            heightCell = Integer.parseInt(st.nextToken());
+         }
       } catch( Exception e ) {
          throw new Exception("Bad cell mosaic FITS definition => " + filename);
       }
@@ -520,7 +529,7 @@ final public class Fits {
             if( widthCell < 0 ) throw new Exception(
                   "Mosaic mode not supported yet for FITS color file");
             loadFITSColor(is);
-         } else loadFITS(is, xCell, yCell, widthCell, heightCell, flagLoad);
+         } else loadFITS(is, hdu, xCell, yCell, widthCell, heightCell, flagLoad);
       } finally {
          if( is != null ) is.close();
       }
@@ -529,16 +538,41 @@ final public class Fits {
 
    /** Chargement d'une image FITS */
    public void loadFITS(MyInputStream dis) throws Exception {
-      loadFITS(dis, 0, 0, -1, -1);
+      loadFITS(dis, 0, 0, 0, -1, -1);
    }
 
    /** Chargement d'une cellule d'une image FITS */
-   public void loadFITS(MyInputStream dis, int x, int y, int w, int h)
+   public void loadFITS(MyInputStream dis, int ext, int x, int y, int w, int h)
          throws Exception {
-      loadFITS(dis, x, y, w, h, true);
+      loadFITS(dis,ext, x, y, w, h, true);
+   }
+   
+   // Se cale sur le début de l'extension indiqué par le numéro ext
+   private void moveOnHUD(MyInputStream dis, int ext) throws Exception {
+      boolean first=true;
+      for( ; ext>0; ext-- ) {
+         HeaderFits h = new HeaderFits(dis);
+         if( first ) { headerFits0 = h; first=false; }  // pour conserver le HDU0
+         int bitpix = h.getIntFromHeader("BITPIX");
+         int naxis = h.getIntFromHeader("NAXIS");
+         if( naxis==0 ) continue;
+         int gcount=1;
+         try { gcount = h.getIntFromHeader("GCOUNT"); } catch( Exception e) {}
+         int pcount=0;
+         try { pcount = h.getIntFromHeader("PCOUNT"); } catch( Exception e) {}
+         long taille = 1L;
+         for( int i=1; i<=naxis; i++ ) {
+            int n = h.getIntFromHeader("NAXIS"+i);
+            taille *= n;
+         }
+         taille += pcount;
+         taille *= gcount*Math.abs(bitpix)/8;
+         dis.skip(taille);
+         dis.skipOnNext2880();
+      }
    }
 
-   public void loadFITS(MyInputStream dis, int x, int y, int w, int h,
+   public void loadFITS(MyInputStream dis, int ext, int x, int y, int w, int h,
          boolean flagLoad) throws Exception {
       dis = dis.startRead();
       // boolean flagHComp = (dis.getType() & MyInputStream.HCOMP) !=0;
@@ -547,32 +581,17 @@ final public class Fits {
          releasable = false;
          flagLoad = true;
       }
+      
+      // On passe les extensions qu'on ne veut pas
+      moveOnHUD(dis,ext);
 
       pixMode = PIX_TRUE;
       headerFits = new HeaderFits(dis);
+      
+      // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante
+      if( ext==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) headerFits = new HeaderFits(dis);
+      
       bitpix = headerFits.getIntFromHeader("BITPIX");
-
-      // MODIF D'ANAIS QUI NE PEUT PAS FONCTIONNER CAR UN FITS PEUT ETRE INDIQUE
-      // COMME ETANT SUSCEPTIBLE
-      // D'AVOIR UNE EXTENSION SANS POUR AUTANT EN AVOIR UNE !! [EXTEND = T]
-      //
-      // // Si on a une image avec extension
-      // // ouvrir et lire le reste des infos depuis une image de l'extension
-      // long type = dis.getType();
-      // if ( (type & MyInputStream.XFITS)!=0) {
-      // headerFits = new HeaderFits(dis);
-      // int naxis = headerFits.getIntFromHeader("NAXIS");
-      // // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
-      // if( headerFits.getStringFromHeader("EXTEND")!=null ) {
-      // while( naxis<2 ) {
-      // // Je saute l'éventuel baratin de la première HDU
-      // if (!headerFits.readHeader(dis))
-      // throw new Exception("Naxis < 2");
-      // naxis = headerFits.getIntFromHeader("NAXIS");
-      // }
-      // }
-      // bitpix = headerFits.getIntFromHeader("BITPIX");
-      // }
       width = headerFits.getIntFromHeader("NAXIS1");
       height = headerFits.getIntFromHeader("NAXIS2");
 
@@ -725,7 +744,7 @@ final public class Fits {
    public int loadHeaderFITS(String filename) throws Exception {
       filename = parseCell(filename); // extraction de la descrition d'une
                                       // cellule éventuellement en suffixe du
-                                      // nom fichier.fits[x,y-wxh]
+                                      // nom fichier.fits[ext:x,y-wxh]
       int code = 0;
       MyInputStream is = new MyInputStream(new FileInputStream(filename));
       try {
@@ -748,26 +767,31 @@ final public class Fits {
             headerFits = is.createHeaderFitsFromCommentCalib();
             bitpix = 0;
          }
-         // Si on a une image avec extension
-         // ouvrir et lire le reste des infos depuis une image de l'extension
-         else if( (type & MyInputStream.XFITS) != 0 ) {
-            headerFits = new HeaderFits(is);
-            code |= XFITS;
-            int naxis = headerFits.getIntFromHeader("NAXIS");
-            // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
-            if( headerFits.getStringFromHeader("EXTEND") != null ) {
-               while( naxis < 2 ) {
-                  // Je saute l'éventuel baratin de la première HDU
-                  if( !headerFits.readHeader(is) ) throw new Exception("Naxis < 2");
-                  naxis = headerFits.getIntFromHeader("NAXIS");
-               }
-            }
-            bitpix = headerFits.getIntFromHeader("BITPIX");
-         }
+//         // Si on a une image avec extension
+//         // ouvrir et lire le reste des infos depuis une image de l'extension
+//         else if( (type & MyInputStream.XFITS) != 0 ) {
+//            headerFits = new HeaderFits(is);
+//            code |= XFITS;
+//            int naxis = headerFits.getIntFromHeader("NAXIS");
+//            // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
+//            if( headerFits.getStringFromHeader("EXTEND") != null ) {
+//               while( naxis < 2 ) {
+//                  // Je saute l'éventuel baratin de la première HDU
+//                  if( !headerFits.readHeader(is) ) throw new Exception("Naxis < 2");
+//                  naxis = headerFits.getIntFromHeader("NAXIS");
+//               }
+//            }
+//            bitpix = headerFits.getIntFromHeader("BITPIX");
+//         }
 
          // Cas habituel
          else {
+            moveOnHUD(is, hdu);
             headerFits = new HeaderFits(is);
+            
+            // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante
+            if( hdu==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) headerFits = new HeaderFits(is);
+
             try {
                bitpix = headerFits.getIntFromHeader("BITPIX");
             } catch( Exception e1 ) {
@@ -1157,8 +1181,10 @@ final public class Fits {
     * ou "" si le fichier n'a pas été ouvert en mode mosaic
     */
    public String getCellSuffix() {
-      if( !hasCell() ) return "";
-      return "[" + xCell + "," + yCell + "-" + widthCell + "x" + heightCell
+      if( !hasCell() )  return hdu==0 ? "" : "["+hdu+"]";
+      return "["
+            +(hdu==0?"":hdu+":")
+            + xCell + "," + yCell + "-" + widthCell + "x" + heightCell
             + "]";
    }
 
@@ -1361,8 +1387,8 @@ final public class Fits {
       int range = 256;
       int gap = 0;
       if( isTransparent(pixMode) ) {
-         range = 255;
-         gap = 1;
+         range = 254;
+         gap = 2;
       }
 
       byte[] pix8 = new byte[widthCell * heightCell];
@@ -1375,9 +1401,8 @@ final public class Fits {
             double pixIn = getPixelDouble(x + xCell, y + yCell);
             if( isBlankPixel(pixIn) ) pixOut = 0;
             else {
-               int pix = (gap
-                     + (pixIn <= min ? 0x00 : pixIn >= max ? range
-                           : (int) (((pixIn - min) * r))) & 0xff);
+               int pix = ((gap + (pixIn <= min ? 0x00 : pixIn >= max ? range
+                           : (int) (((pixIn - min) * r)))) & 0xff);
                pixOut = tcm == null ? (byte) pix : tcm[pix];
             }
             // setPix8(x+xCell,y+yCell,pixOut);
@@ -1639,7 +1664,7 @@ final public class Fits {
       // center=null;
       headerFits = null;
       width = height = bitpix = 0;
-      widthCell = heightCell = xCell = yCell = 0;
+      widthCell = heightCell = xCell = yCell = hdu = 0;
    }
 
    @Override
@@ -2165,6 +2190,17 @@ final public class Fits {
 //         e.printStackTrace();
 //      }
 //   }
+   
+   public static void main(String[] args) {
+      try {
+         
+         Fits f = new Fits();
+         f.loadFITS("C:\\Users\\Pierre\\Desktop\\Data\\Herschell\\hspire1342239942browse_18217979027709026.fits[2]");
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
+
    
 
 }

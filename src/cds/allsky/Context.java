@@ -78,6 +78,7 @@ public class Context {
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
+   protected int [] hdu = null;              // Liste des HDU à prendre en compte
    protected int bitpixOrig = -1;            // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
    protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
@@ -199,6 +200,21 @@ public class Context {
       if(s.equalsIgnoreCase("true") )  info("Skyval automatical adjustement activated...");
       else info("Skyval adjustement based on the FITS keyword ["+s+"]");
    }
+   public int [] getHDU() { return hdu; }
+   public void setHDU(String s) throws Exception { hdu = parseHDU(s); }
+   protected int [] parseHDU(String s) throws Exception {
+      int [] hdu = null;
+      if( s.length()==0 || s.equals("0") ) return hdu;
+      StringTokenizer st = new StringTokenizer(s," ,;");
+      hdu = new int[st.countTokens()];
+      int n=0;
+      while( st.hasMoreTokens() ) {
+         String s1 = st.nextToken();
+         hdu[n++] =Integer.parseInt(s1);
+      }
+      return hdu;
+   }
+
    public void setInputPath(String path) { this.inputPath = path; 
    		// cherche le dernier mot et le met dans le label
    		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
@@ -418,7 +434,7 @@ public class Context {
             in = (new MyInputStream( new FileInputStream(path)) ).startRead();
             long type = in.getType();
             if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;           
-            return path;
+            return path + (hdu==null ? "":"["+hdu[0]+"]");
             
          }  catch( Exception e) { Aladin.trace(4, "justFindImgEtalon : " +e.getMessage()); continue; }
          finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }
@@ -469,6 +485,11 @@ public class Context {
    public double getSkyArea() { 
       if( moc==null ) return 1;
       return moc.getCoverage();
+   }
+   
+   public double getIndexSkyArea() { 
+      if( mocIndex==null ) return 1;
+      return mocIndex.getCoverage();
    }
 
    /** Initialisation des paramètres */
@@ -743,22 +764,14 @@ public class Context {
 
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
-//      long maxMem = Runtime.getRuntime().maxMemory();
-//      long totalMem = Runtime.getRuntime().totalMemory();
-//      long freeMem = Runtime.getRuntime().freeMemory();
-//      long usedMem = totalMem-freeMem;
       long nbLowCells = getNbLowCells();
       String pourcentNbCells = nbLowCells==-1 ? "" : 
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
-//      String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
-//      +pourcentNbCells +" - Ram: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)+")";
-      
       long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
       
       String s=statNbFile+"/"+nbLowCells+" tiles computed in "+Util.getTemps(totalTime,true)+" ("
             +pourcentNbCells+" EndIn="+Util.getTemps(tempsTotalEstime,true)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-//            +" using "+Util.getUnitDisk(usedMem)
             ;
 
       nlstat(s);
@@ -964,8 +977,8 @@ public class Context {
             true);
       
       if( cut!=null ) {
-         setProperty(PlanHealpix.KEY_PIXELCUT,  Util.myRound(cut[0])+" "+Util.myRound(cut[1]));
-         setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(cut[2])+" "+Util.myRound(cut[3]));
+         setProperty(PlanHealpix.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
+         setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
       
       // Propriétés à mettre que si elles n'existent pas encore

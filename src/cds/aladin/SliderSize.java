@@ -36,7 +36,7 @@ public class SliderSize extends SliderPlusMoins {
    }
    
    void submit(int inc) {
-      Plan p = getPlanCatalog();
+      Plan p = getPlans();
       if( p==null ) return;
       float n = (float)( (slider.getValue()+inc)/100.);
       if( n<0f ) n=0f;
@@ -48,14 +48,14 @@ public class SliderSize extends SliderPlusMoins {
    }
    
    // retourne le premier plan sélectionné 
-   Plan getPlanCatalog() {
+   Plan getPlans() {
       Plan p = aladin.calque.getFirstSelectedPlan();
-      if( p==null || !p.isCatalog() ) return null;
+      if( p==null || !(p.isCatalog() || p.type==Plan.TOOL) ) return null;
       return p;
    }
    
    public void paintComponent(Graphics g) {
-      Plan p = getPlanCatalog();
+      Plan p = getPlans();
       if( p!=null ) {
          setEnabled(true);
          slider.setValue((int)( p.getScalingFactor()*100 ));
