@@ -202,16 +202,30 @@ public class Context {
    }
    public int [] getHDU() { return hdu; }
    public void setHDU(String s) throws Exception { hdu = parseHDU(s); }
-   protected int [] parseHDU(String s) throws Exception {
+   
+   // Construit le tableau des HDU à partir d'une syntaxe "1,3,4-7" ou "all"
+   // dans le cas de all, retourne un tableau ne contenant que -1
+   static public int [] parseHDU(String s) throws Exception {
       int [] hdu = null;
       if( s.length()==0 || s.equals("0") ) return hdu;
-      StringTokenizer st = new StringTokenizer(s," ,;");
-      hdu = new int[st.countTokens()];
-      int n=0;
+      if( s.equalsIgnoreCase("all") ) return new int[]{-1}; // Toutes les extensions images
+      StringTokenizer st = new StringTokenizer(s," ,;-",true);
+      ArrayList<Integer> a = new ArrayList<Integer>();
+      boolean flagRange=false;
+      int previousN=-1;
       while( st.hasMoreTokens() ) {
-         String s1 = st.nextToken();
-         hdu[n++] =Integer.parseInt(s1);
+         String s1=st.nextToken();
+         if( s1.equals("-") ) { flagRange=true; continue; }
+         else if( !Character.isDigit( s1.charAt(0) ) ) continue;
+         int n = Integer.parseInt(s1);
+         if( flagRange ) {
+            for( int i=previousN+1; i<=n && i<1000; i++ ) a.add(i);
+            flagRange=false;
+         }  else a.add(n);
+         previousN = n;
       }
+      hdu = new int[a.size()];
+      for( int i=0; i<hdu.length; i++ ) hdu[i]=a.get(i);
       return hdu;
    }
 
@@ -434,7 +448,7 @@ public class Context {
             in = (new MyInputStream( new FileInputStream(path)) ).startRead();
             long type = in.getType();
             if( (type&MyInputStream.FITS) != MyInputStream.FITS && !in.hasCommentCalib() ) continue;           
-            return path + (hdu==null ? "":"["+hdu[0]+"]");
+            return path + (hdu==null || hdu.length>0 && hdu[0]==-1 ? "":"["+hdu[0]+"]");
             
          }  catch( Exception e) { Aladin.trace(4, "justFindImgEtalon : " +e.getMessage()); continue; }
          finally { if( in!=null ) try { in.close(); } catch( Exception e1 ) {} }

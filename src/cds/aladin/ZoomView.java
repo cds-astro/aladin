@@ -632,8 +632,9 @@ try {
        // il s'agit d'une coupe en couleur, sinon d'une coupe en niveau de gris
        if( cut[0]!=-1 ) {
           g.setColor(Color.cyan);
-//          for( int i=1; i<SIZE-1; i++ ) gCut.drawLine(i-1,SIZE-hist[i-1],i,SIZE-hist[i]);
           for( int i=1; i<SIZE-1; i++ ) g.drawLine(i,SIZE-cut[i],i,SIZE);
+          g.setColor(Color.blue);
+          for( int i=1; i<SIZE-1; i++ ) g.drawLine(i,SIZE-cut[i-1],i,SIZE-cut[i]);
 
        } else {
           g.setColor(Color.red);
@@ -661,6 +662,7 @@ try {
        g.drawLine(1,cutY,4,cutY);
        g.drawLine(SIZE-4,cutY,SIZE,cutY);
        g.drawString(pixel,25,cutY<20?SIZE-2:10);
+//       Util.drawStringOutline(g, pixel,25,cutY<20?SIZE-2:10, Color.yellow, Color.black);
 
        // Tracage du trait repérant le FWHM en fonction de la position
        // courante de la souris dans le cut graph.

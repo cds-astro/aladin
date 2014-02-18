@@ -52,6 +52,7 @@ public class MocGen {
    private boolean strict=false;
    private boolean recursive=false;
    private boolean multWrite=false; // true for updating output MOC continously
+   private int hdu[] = null;
    
    private HealpixMoc moc;      // Le MOC en cour de calcul
    private boolean ready;       // true si le MOC est prêt
@@ -68,12 +69,13 @@ public class MocGen {
    }
    
    /** Génération d'un MOC à partir d'une liste de paramètres */
-   public MocGen(String in,int order,boolean recursive,boolean strict,double blank) throws Exception {
+   public MocGen(String in,int order,boolean recursive,boolean strict,double blank,int [] hdu) throws Exception {
       this.strict=strict;
       this.blank=blank;
       this.in=in;
       this.recursive=recursive;
       this.order=order;
+      this.hdu=hdu;
    }
    
    /** Retourne true si le MOC est prêt - il faut tester isError() pour vérifier
@@ -129,52 +131,64 @@ public class MocGen {
    
    // Ajout dans le MOC du fichier passé en paramètre avec scan des pixels
    private boolean addInMocPixel(HealpixMoc moc,File file,int res) throws Exception {
-      Fits f = new Fits();
-      try { f.loadFITS(file.getAbsolutePath()); } 
-      catch( Exception e ) { return false; }
-     
-      Calib c = f.getCalib();
-      Coord coo = new Coord();
+      boolean rep=false;
+      boolean flagFirstHdu = hdu==null;
+      boolean flagAllHdu = hdu!=null && hdu.length>0 && hdu[0]==-1;
       
-      double pix;
-      double gap=1;
-      double gapA=0;
-      try { 
-         gapA = Math.min(c.GetResol()[0],c.GetResol()[1]);
-         for( order=res; CDSHealpix.pixRes( CDSHealpix.pow2(order) )/3600. <= gapA*2; order--);
-      } catch( Exception e1 ) {
-         e1.printStackTrace();
-      }
-      if( verbose ) System.out.println("Adding pixel coverage of ["+file.getName()+"]...");
-      
-      if( !Double.isNaN(blank) ) f.setBlank(blank);
-      
-      long oNpix=-1;  
-      for( double y=0; y<f.height; y+=gap ) {
-         for( double x=0; x<f.width; x+=gap ) {
-            try {
-               coo.x = x;
-               coo.y = (f.height-y-1);
-               
-               // dans du vide - on test d'abord le buffers 8bits, et on vérifie si on tombe sur 0
-               pix = f.getPixelDouble((int)x,(int)y);
-               if( f.isBlankPixel(pix) ) continue;
-               
-               c.GetCoord(coo);
-               long npix=0;
-               npix = hpx.ang2pix(order, coo.al, coo.del);
+      for( int i=0; flagAllHdu || flagFirstHdu || i<hdu.length; i++ ) {
+         int ext = flagFirstHdu ? 0 : flagAllHdu ? i : hdu[i];
+         Fits f = new Fits();
+         f.setSkipHDU0( flagFirstHdu );
+         try { f.loadFITS(file.getAbsolutePath()+"["+ext+"]"); } 
+         catch( Exception e ) { return rep; }
 
-               // Juste pour éviter d'insérer 2x de suite le même npix
-               if( npix==oNpix ) continue;
-               
-               moc.add(order,npix);
-               oNpix=npix;
-            } catch( Exception e ) {
-               e.printStackTrace();
+         Calib c = f.getCalib();
+         if( c==null ) continue;
+         
+         Coord coo = new Coord();
+
+         double pix;
+         double gap=1;
+         double gapA=0;
+         try { 
+            gapA = Math.min(c.GetResol()[0],c.GetResol()[1]);
+            for( order=res; CDSHealpix.pixRes( CDSHealpix.pow2(order) )/3600. <= gapA*2; order--);
+         } catch( Exception e1 ) {
+            e1.printStackTrace();
+         }
+         if( verbose ) System.out.println("Adding pixel coverage of "+file.getName()+f.getCellSuffix()+"...");
+
+         if( !Double.isNaN(blank) ) f.setBlank(blank);
+
+         long oNpix=-1;  
+         for( double y=0; y<f.height; y+=gap ) {
+            for( double x=0; x<f.width; x+=gap ) {
+               try {
+                  coo.x = x;
+                  coo.y = (f.height-y-1);
+
+                  // dans du vide - on test d'abord le buffers 8bits, et on vérifie si on tombe sur 0
+                  pix = f.getPixelDouble((int)x,(int)y);
+                  if( f.isBlankPixel(pix) ) continue;
+
+                  c.GetCoord(coo);
+                  long npix=0;
+                  npix = hpx.ang2pix(order, coo.al, coo.del);
+
+                  // Juste pour éviter d'insérer 2x de suite le même npix
+                  if( npix==oNpix ) continue;
+
+                  moc.add(order,npix);
+                  oNpix=npix;
+               } catch( Exception e ) {
+                  e.printStackTrace();
+               }
             }
          }
+         rep = true;
+         if( flagFirstHdu ) break;
       }
-      return true;
+      return rep;
    }
    
    // Ajout dans le MOC de la Calib passé en paramètre
@@ -199,14 +213,24 @@ public class MocGen {
    // 3) extraction des pixels HEALPix correspondants, 4) ajout dans le MOC
    // Rq : les fichiers qui n'ont pas de calibration sont simplement ignorés
    private boolean addInMocBox(HealpixMoc moc, File file,int order) throws Exception {
-      Fits f = new Fits();
-      try { f.loadHeaderFITS(file.getAbsolutePath()); } 
-      catch( Exception e ) { return false; }
-      Calib c = f.getCalib();
-      if( c==null ) return false;
+      boolean rep=false;
+      boolean flagFirstHdu = hdu==null;
+      boolean flagAllHdu = hdu!=null && hdu.length>0 && hdu[0]==-1;
       
-      if( verbose ) System.out.println("Adding footprint of ["+file.getName()+"]...");
-      return addInMocBox(moc,c,order);
+      for( int i=0; flagAllHdu || flagFirstHdu || i<hdu.length; i++ ) {
+         int ext = flagFirstHdu ? 0 : flagAllHdu ? i : hdu[i];
+         Fits f = new Fits();
+         f.setSkipHDU0( flagFirstHdu );
+         try { f.loadFITS(file.getAbsolutePath()+"["+ext+"]"); } 
+         catch( Exception e ) { return rep; }
+         Calib c = f.getCalib();
+         if( c==null ) continue;
+
+         if( verbose ) System.out.println("Adding footprint of "+file.getName()+f.getCellSuffix()+"...");
+         rep |= addInMocBox(moc,c,order);
+         if( flagFirstHdu ) break;
+     }
+      return rep;
    }
    
    private boolean addInMoc(HealpixMoc moc, File file, int order,boolean strict) throws Exception {
@@ -300,6 +324,14 @@ public class MocGen {
                return false;
             }
            
+         } else if( s.startsWith("hdu=") ) {
+            try {
+               hdu = Context.parseHDU(s.substring(x));
+            } catch( Exception e ) {
+               System.out.println("Unavailable HDU numbers ["+s.substring(x)+"]");
+               return false;
+            }
+            
          } else if( s.equals("-v") || s.equals("-verbose") ) {
             verbose=true;
             
@@ -308,6 +340,7 @@ public class MocGen {
             
          } else if( s.equals("-o") ) {
             multWrite=true;
+            
             
          } else if( s.equals("-strict") ) {
             strict=true;
@@ -352,14 +385,21 @@ public class MocGen {
       if( strict ) System.out.println("MOC generation based on *pixel* coverage:");
       else System.out.println("MOC generation based on *image* coverage:");
       System.out.println(".in="+(in==null?"null => assuming stdin WCS headers stream (blank line separator)":in));
-      if( recursive && in!=null && (new File(in)).isDirectory() ) 
-         System.out.println(".recursive directory scanning");
+      if( recursive && in!=null && (new File(in)).isDirectory() ) System.out.println(".recursive directory scanning");
       System.out.println(".out="+out);
       if( previous!=null ) System.out.println(".previous="+previous);
       System.out.println(".order="+order);
+      if( hdu!=null ) {
+         System.out.print(".hdu=");
+         if( hdu.length>0 && hdu[0]==-1 ) System.out.println("all");
+         else {
+            for( int i=0; i<hdu.length; i++ ) System.out.print((i==0?"":",")+hdu[i]);
+            System.out.println();
+         }
+      }
       System.out.println(".mocfmt="+(fmt==HealpixMoc.FITS?"fits":"ascii"));
       if( strict ) System.out.println(".blank=NaN"+(Double.isNaN(blank)?"":"|"+blank));
-         
+
       return true;
    }
    
@@ -374,6 +414,7 @@ public class MocGen {
             "[mocfmt=fits|json] : MOC output format (default Fits)\n" +
       		"[previous=moc.fits]: Previous MOC (if additions)\n" +
       		"[in=fileOrDir]     : Directory of images/headers collection\n" +
+      		"[hdu=n1,n2-n3|all] : List of concerned Fits extensions\n" +
             "[-r]               : Recursive directory scanning\n" +
             "[-o]               : Output MOC updated continuously rather than generated at the end\n" +
       		"[out=outMoc.fits]  : Output MOC file\n" +
@@ -385,7 +426,7 @@ public class MocGen {
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +
-      		"Version: 1.2 - based on Aladin "+Aladin.VERSION+" - Jan 2014 - P.Fernique [CDS]");
+      		"Version: 1.3 - based on Aladin "+Aladin.VERSION+" - Feb 2014 - P.Fernique [CDS]");
    }
    
    // Generation d'un MOC pour toute une hiérarchie de fichiers FITS (ou JPEG/PNG avec calibration)

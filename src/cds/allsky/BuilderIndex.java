@@ -21,6 +21,7 @@ package cds.allsky;
 
 
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class BuilderIndex extends Builder {
    private int radius = 0;
    private String currentfile = null;
    private boolean partitioning;
+   private int [] hdu = null;
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
@@ -156,6 +158,7 @@ public class BuilderIndex extends Builder {
       int order = context.getOrder();
       borderSize = context.getBorderSize();
       radius = context.circle;
+      hdu = context.getHDU();
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();
@@ -244,17 +247,24 @@ public class BuilderIndex extends Builder {
          currentfile = file.getPath();
 
          Fits fitsfile = new Fits();
-         int [] hdus = context.getHDU();
-         if( hdus==null ) hdus = new int[]{0};
+         boolean flagDefaultHDU = hdu==null;
+         boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
          int cellSize = Constante.FITSCELLSIZE;
 
          // Multi Extension ou non ?
-         for( int hdu : hdus ) {
+         for( int j=0; flagAllHDU || flagDefaultHDU ||  j<hdu.length; j++ ) {
+            int ext = flagDefaultHDU ? 0 : flagAllHDU ? j : hdu[j];
             
             // L'image sera mosaiquée en cellSize x cellSize pour éviter de
             // saturer la mémoire par la suite
             try {
-               int code = fitsfile.loadHeaderFITS(currentfile+ (hdu==0?"":"["+hdu+"]"));
+               int code = fitsfile.loadHeaderFITS(currentfile+ (ext==0?"":"["+ext+"]"));
+               if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
+               
+              // S'agit-il d'une image calibrée ?
+               if( fitsfile.calib==null ) continue;
+               
+               Aladin.trace(4,"HiPS indexing "+currentfile+ (ext==0?"":"["+ext+"]..."));
 
                try {
 
@@ -278,7 +288,7 @@ public class BuilderIndex extends Builder {
                            fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
                            fitsfile.xCell=x;
                            fitsfile.yCell=y;
-                           fitsfile.hdu = hdu;
+                           fitsfile.ext = ext;
                            String currentCell = fitsfile.getCellSuffix();
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                         }
@@ -286,12 +296,13 @@ public class BuilderIndex extends Builder {
                   }
                } catch (Exception e) {
                   if( Aladin.levelTrace>=3 ) e.printStackTrace();
-                  return;
+                  break;
                }
             }  catch (Exception e) {
                Aladin.trace(3,e.getMessage() + " " + currentfile);
-               continue;
+               break;
             }
+            if( flagDefaultHDU ) break;
          }
       }
 

@@ -1818,13 +1818,13 @@ public final class Calque extends JPanel implements Runnable {
    
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
    protected int newPlanMocColl(Aladin aladin,String label,String directory,int order,
-         boolean strict,boolean recursive,double blank) {
+         boolean strict,boolean recursive,double blank,int [] hdu) {
       int n;
       PlanMoc pa;
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocColl(aladin,label,directory,order,strict,recursive,blank);
+      plan[n] = pa = new PlanMocColl(aladin,label,directory,order,strict,recursive,blank,hdu);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;

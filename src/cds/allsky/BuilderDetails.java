@@ -75,14 +75,11 @@ public class BuilderDetails extends Builder {
       if( maxOrder==-1 ) throw new Exception("HpxFinder seems to be not yet ready ! (order=-1)");
       context.info("Order retrieved from HpxFinder => "+maxOrder);
       
-      detailOrder = context.getOrder();
-      if( true || detailOrder==-1) {
-         validateImgWidth();
-         if( context.typicalImgWidth==-1 ) {
-            throw new Exception("Typical original image size unknown => specify the target Order via \"order=\" parameter !");
-         }
-         detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -2; //-1;
-      }
+      validateImgWidth();
+      if( context.typicalImgWidth==-1 ) {
+         detailOrder = context.getOrder();
+         if( detailOrder==-1 ) throw new Exception("Typical original image size unknown => specify the target Order via \"order=\" parameter !");
+      } else detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -2; //-1;
       context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
       
       if( detailOrder<MINORDER ) detailOrder=MINORDER;

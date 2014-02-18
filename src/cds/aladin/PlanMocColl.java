@@ -33,15 +33,17 @@ public class PlanMocColl extends PlanMoc {
    private boolean strict;
    private double blank;
    private boolean recursive;
+   private int [] hdu;
    
    protected PlanMocColl(Aladin aladin,String label,String directory,int order,
-         boolean strict,boolean recursive,double blank) {
+         boolean strict,boolean recursive,double blank,int [] hdu) {
       super(aladin,null,null,label,null,0);
       this.directory = directory;
       this.order = order;
       this.strict=strict;
       this.recursive=recursive;
       this.blank=blank;
+      this.hdu = hdu;
       
       pourcent=0;
       
@@ -75,7 +77,7 @@ public class PlanMocColl extends PlanMoc {
    protected boolean waitForPlan() {
       try {
          frameOrigin=Localisation.ICRS;
-         generator = new MocGen(directory,order,recursive,strict,blank);
+         generator = new MocGen(directory,order,recursive,strict,blank,hdu);
 //         generator.verbose=true;
          generator.start();
          while( !generator.isReady() ) {

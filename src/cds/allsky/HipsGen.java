@@ -352,7 +352,7 @@ public class HipsGen {
             "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
             "order=nn           Specifical HEALPix order" + "\n" +
 //            "diffOrder          Diff between MOC order and optimal order" + "\n" +
-            "hdu=n1,n2,...      List of HDU numbers (0 is the primary HDU - default is 0)\n" +
+            "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
             "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
             "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +

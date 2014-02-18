@@ -33,6 +33,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import cds.allsky.Context;
+import cds.allsky.ContextGui;
 import cds.tools.Util;
 
 /**
@@ -59,8 +61,8 @@ public class FrameMocGenImgs extends FrameMocGenImg {
    private JTextField dirField;
    private JCheckBox strictBox;
    private JCheckBox recBox;
-   private JTextField fieldBlank;
-   private JLabel labelBlank;
+   private JTextField fieldBlank,fieldHDU;
+   private JLabel labelBlank,labelHDU;
    private JButton browseButton;
    
    
@@ -71,6 +73,7 @@ public class FrameMocGenImgs extends FrameMocGenImg {
       labelBlank.setEnabled(false);
       fieldBlank.setEnabled(false);
       fieldBlank.setText("");
+      fieldHDU.setText("");
       super.reset();
    }
    
@@ -96,6 +99,24 @@ public class FrameMocGenImgs extends FrameMocGenImg {
       
       g.setConstraints(pp,c);
       p.add(pp);
+      
+      labelHDU = new JLabel("Specifical FITS HDU (e.g 1,3-5|all)");
+      fieldHDU=new JTextField(10);
+      fieldHDU.addKeyListener( new KeyListener() {
+         public void keyTyped(KeyEvent e) { }
+         public void keyReleased(KeyEvent e) { }
+         public void keyPressed(KeyEvent e) {
+            JTextField t = (JTextField)e.getSource();
+            if( t.getForeground()!=Color.black ) t.setForeground(Color.black);
+         }
+      });
+      pp = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+      pp.add( labelHDU );
+      pp.add( fieldHDU );
+      pp.add( new JLabel("(first one by default)"));
+      g.setConstraints(pp,c);
+      p.add(pp);
+
       
       recBox = new JCheckBox("Scanning sub-directories");
       g.setConstraints(recBox, c);
@@ -170,6 +191,18 @@ public class FrameMocGenImgs extends FrameMocGenImg {
       fieldBlank.setForeground(Color.black);
       return x;
    }
+   private int [] getHDU() throws Exception {
+      int [] hdu = null;
+      try {
+         String s = fieldHDU.getText().trim();
+         hdu = Context.parseHDU(s);
+      } catch( Exception e ) {
+         fieldHDU.setForeground(Color.red);
+         throw e;
+      }
+      fieldBlank.setForeground(Color.black);
+      return hdu;
+   }
    
    private String getDir() throws Exception {
       String dir="";
@@ -189,7 +222,7 @@ public class FrameMocGenImgs extends FrameMocGenImg {
       try {
          String dir = getDir();
          String label = (new File(dir)).getName()+" MOC";
-         a.calque.newPlanMocColl(a, label, dir, getOrder() ,getStrict(),getRecursive(),getBlank());
+         a.calque.newPlanMocColl(a, label, dir, getOrder() ,getStrict(),getRecursive(),getBlank(),getHDU());
          hide();
 
       } catch ( Exception e ) {
