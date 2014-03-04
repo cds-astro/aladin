@@ -51,8 +51,18 @@
 	    <zipfileset src="${mocjar}"/>
         <manifest>
            <attribute name="Main-Class" value="cds.aladin.Aladin" />
+           <attribute name="Permissions" value="all-permissions" />
         </manifest>
       </jar>
+      <signjar
+         jar="Aladin.jar"
+         signedjar="Aladin.jar"
+         lazy="true"
+         alias="1"
+         keystore="${basedir}/Aladin.jks"
+         storepass="ura1280"
+         preservelastmodified="true">
+      </signjar>
    </target>
    
    <target name="clean" description="Remove building directory" >
