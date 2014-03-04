@@ -86,10 +86,10 @@ public abstract class Obj implements Propable{
    protected Plan   plan;       // Plan d'appartenance de l'objet
    
    /** J2000 RA coordinate */
-   public double raj=Double.NaN;
+   protected double raj=Double.NaN;
 
    /** J2000 DEC coordinate */
-   public double dej;
+   protected double dej;
    
    public String id;         // Object id
    protected byte flags = VISIBLE;  // Le tableau de flags
@@ -164,6 +164,9 @@ public abstract class Obj implements Propable{
    
    /** Provide attache info (generally its name) */
    public String getInfo() { return id; }
+   
+   /** Iterator for multi-component objects such as Line, Polygon, Box ... */
+   public Iterator<Obj> iteratorObj() { return null; }
    
    /** Provide script command associated to this object */
    public String getCommand() { return null; }

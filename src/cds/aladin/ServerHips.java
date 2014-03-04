@@ -39,7 +39,7 @@ public class ServerHips extends ServerTree  {
    @Override
    protected void init() {
       type        = APPLI;
-      aladinLabel = "HiPS";
+      aladinLabel = "hips";
       aladinLogo  = "Hips.png";
    }
    

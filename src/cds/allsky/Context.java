@@ -85,8 +85,10 @@ public class Context {
    protected double bZeroOrig=0;             // Valeur BZERO d'origine
    protected double bScaleOrig=1;            // Valeur BSCALE d'origine
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné 
-   protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales
-   protected double[] cutOrigBefore;         // idem mais avec BZERO et BSCALE (car passé par ligne de commande)
+   protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
+   protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
+   public double[] pixelBad=null;            // Plage de valeurs de pixel ignorées (valeurs physiques)
+   protected double[] bad=null;              // Plage de valeurs de pixel ignorées (raw)
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
@@ -142,6 +144,8 @@ public class Context {
       lastNorder3=-2;
       validateOutputDone=validateInputDone=validateCutDone=false;
       prop=null;
+      pixelBad=null;
+      pixelRangeCut=null;
    }
 
    // Getters
@@ -169,7 +173,7 @@ public class Context {
    public boolean hasAlternateBlank() { return hasAlternateBlank; }
    public HealpixMoc getArea() { return mocArea; }
    public CoAddMode getCoAddMode() { return coAdd; } //isColor() ? CoAddMode.REPLACETILE : coAdd; }
-   public double[] getCut() { return cut; }
+   public double[] getCut() throws Exception { return cut; }
    public double[] getCutOrig() throws Exception { return cutOrig; }
    public String getSkyval() { return skyvalName; }
    public boolean isColor() { return bitpixOrig==0; }
@@ -261,11 +265,11 @@ public class Context {
    public void setPixelCut(String scut) throws Exception {
        StringTokenizer st = new StringTokenizer(scut," ");
        int i=0;
-       if( cutOrigBefore==null ) cutOrigBefore = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
+       if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
        while( st.hasMoreTokens() ) {
           String s = st.nextToken();
           try { 
-             cutOrigBefore[i]=Double.parseDouble(s);
+             pixelRangeCut[i]=Double.parseDouble(s);
              i++;
           } catch( Exception e) {
              setTransfertFct(s);
@@ -273,11 +277,23 @@ public class Context {
           
        }
        if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
-
-//       if( cut!=null ) setCutOrig(this.cut);
    }
+   public void setPixelBad(String sbad) throws Exception {
+      StringTokenizer st = new StringTokenizer(sbad," ");
+      int i=0;
+      if( pixelBad==null ) pixelBad = new double[]{Double.NaN,Double.NaN};
+      try {
+         pixelBad[0] = Double.parseDouble(st.nextToken());
+         if( st.hasMoreTokens() ) pixelBad[1] = Double.parseDouble(st.nextToken());
+         else pixelBad[1] = pixelBad[0];
+      } catch( Exception e ) { throw new Exception("pixelBad parameter error"); }
+  }
+  
+   public double [] getPixelRangeCut() throws Exception { return pixelRangeCut; }
    
-   public String getTransfertFct() { return fct.toString().toLowerCase(); }
+   
+   public TransfertFct getFct() throws Exception { return fct; }
+   public String getTransfertFct()  throws Exception { return getFct().toString().toLowerCase(); }
    
    public void setTransfertFct(String txt) {
       this.fct=TransfertFct.valueOf(txt.toUpperCase());
@@ -309,10 +325,10 @@ public class Context {
       StringTokenizer st = new StringTokenizer(scut," ");
       int i=2;
 //      if( cut==null ) cut = new double[4];
-      if( cutOrigBefore==null ) cutOrigBefore = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
+      if( pixelRangeCut==null ) pixelRangeCut = new double[]{Double.NaN,Double.NaN,Double.NaN,Double.NaN};
       while( st.hasMoreTokens() && i<4 ) {
          String s = st.nextToken();
-         cutOrigBefore[i]=Double.parseDouble(s);
+         pixelRangeCut[i]=Double.parseDouble(s);
          i++;
       }
       if( i<4 ) throw new Exception("Missing dataCut parameter");
@@ -344,11 +360,6 @@ public class Context {
           if( !Double.isNaN(fitsfile.blank) ) setBlankOrig(fitsfile.blank);
        }
        
-       // Vérifie s'il s'agit d'un image avec extension
-       if ( (code & Fits.XFITS)!=0 ){
-    	   
-       }
-       
        // Mémorise la taille typique de l'image étalon
        typicalImgWidth = Math.max(fitsfile.width,fitsfile.height);
     	   
@@ -367,19 +378,19 @@ public class Context {
        int x=0, y=0;
        if (w > 1024) { w = 1024; x=file.width/2 - 512; }
        if (h > 1024) { h = 1024; y=file.height/2 -512; }
-       file.loadFITS(file.getFilename(), x, y, w, h);
+       file.loadFITS(file.getFilename(), 0, x, y, w, h);
 
-       double[] cut = file.findAutocutRange();
-       if( skyvalName!=null && !skyvalName.equalsIgnoreCase("true") ) {
-          try {
-             double val = file.headerFits.getDoubleFromHeader(getSkyval());
-             cut[0] -= val;
-             cut[1] -= val;
-             cut[2] -= val;
-             cut[3] -= val;
-          } catch( Exception e ) { }
-       }
-       setCutOrig(cut);
+       double[] cutOrig = file.findAutocutRange();
+//       if( skyvalName!=null && !skyvalName.equalsIgnoreCase("true") ) {
+//          try {
+//             double val = file.headerFits.getDoubleFromHeader(getSkyval());
+//             cutOrig[0] -= val;
+//             cutOrig[1] -= val;
+//             cutOrig[2] -= val;
+//             cutOrig[3] -= val;
+//          } catch( Exception e ) { }
+//       }
+       setCutOrig(cutOrig);
    }
 
    static private int nbFiles;  // nombre de fichiers scannés
@@ -559,6 +570,13 @@ public class Context {
             bzero=bZeroOrig;
             bscale=bScaleOrig;
             Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bzero+","+bscale+","+blank);
+         }
+         
+         // Calcul des valeurs raw des bad pixels
+         if( pixelBad!=null ) {
+            bad = new double[2];
+            bad[0] = (pixelBad[0]-bZeroOrig)/bScaleOrig;
+            bad[1] = (pixelBad[1]-bZeroOrig)/bScaleOrig;
          }
 
       }
@@ -991,8 +1009,16 @@ public class Context {
             true);
       
       if( cut!=null ) {
-         setProperty(PlanHealpix.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
-         setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+         if( cut[0]!=0 || cut[1]!=0 ) {
+            String s1="";
+            
+            // FAUSSE BONNE IDEE => SI ON PASSE DU PNG AU FITS, IL FAUT ALORS CHANGER DE FCT DE TRANSFERT MANUELLEMENT
+//            TransfertFct f = getFct();
+//            if( f!=TransfertFct.LINEAR ) s1 = " "+PlanImage.getTransfertFctInfo(f.code());
+            
+           setProperty(PlanHealpix.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
+         }
+         if( cut[2]!=0 || cut[3]!=0 )  setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
       
       // Propriétés à mettre que si elles n'existent pas encore

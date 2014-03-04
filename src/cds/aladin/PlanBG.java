@@ -176,8 +176,6 @@ public class PlanBG extends PlanImage {
    protected String pixelRange=null;  // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected String pixelCut=null;  // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    
-//   protected PlanBGIndex planBGIndex=null;
-   
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
    static volatile long cacheSize=-1;   // Taille actuelle du cache
@@ -690,7 +688,7 @@ public class PlanBG extends PlanImage {
    public boolean checkSite(boolean withTrace) {
       if( nbCheckSite>=MAXCHECKSITE ) return false;
       if( gluTag==null ) return false;
-      aladin.glu.checkIndirection(gluTag, "" ); //"/properties");
+      aladin.glu.checkIndirection(gluTag, "/properties" ); //"");
       String url1 = ""+aladin.glu.getURL(gluTag);
       if( url1.equals(url) ) return false;
       nbCheckSite++;

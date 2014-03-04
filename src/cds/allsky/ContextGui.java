@@ -21,13 +21,11 @@ package cds.allsky;
 
 import java.io.File;
 import java.text.ParseException;
-import java.util.StringTokenizer;
 
 import javax.swing.JProgressBar;
 
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
-import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
 import cds.tools.Util;
@@ -104,9 +102,12 @@ public class ContextGui extends Context {
       
       String s1=statNbFile+" / "+nbLowCells+" tiles";
       String s2=Util.getTemps(totalTime,true);
-      if( tempsTotalEstime>0 ) s2+=" - ends in="+Util.getTemps(tempsTotalEstime,true);
+      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime,true);
 
       mainPanel.tabJpg.setStat(s1,s2);
+      
+      setProgress(statNbFile, nbLowCells);
+
    }
 
 
@@ -276,50 +277,57 @@ public class ContextGui extends Context {
       return mainPanel.tabDesc.getLabelField();
    }
    
-//   public double[] getCut() {
-//      if( cut==null ) cut = new double[4];
-//      try {
-//         if( mainPanel.tabJpg.isCutFromPlanBase() ) {
-//            PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
-//            cut[0]= p.getCutMin();
-//            cut[1]= p.getCutMax();
-//            cut[2]= p.getDataMin();
-//            cut[3]= p.getDataMax();
-//            for( int i=0; i<4; i++ ) cut[i] = (((cut[i]*p.bScale)+p.bZero)-bzero)/bscale;
-//
-//         } else {
-//            String cutMin = mainPanel.tabJpg.getCutMin();
-//            String cutMax = mainPanel.tabJpg.getCutMax();
-//            cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
-//            cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;
-//         }
-//      } catch( Exception e ) {
-//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-//         cut[0] = cut[2] = 0;
-//         cut[1] = cut[3] = 255;
-//      }
-//
-//      return cut;
-//   }
+   public TransfertFct getFct() throws Exception {
+      if(  mainPanel.tabJpg.isCutFromPlanBase() ) {
+         PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
+         return TransfertFct.getFromCode(p.transfertFct);
+      }
+      return super.getFct();
+      
+   }
    
-   public double[] getCutOrig() throws Exception {
-      if( cutOrig==null ) cutOrig = new double[4];
+   public double[] getPixelRangeCut() throws Exception {
+      double [] cut = new double[5];
+      for( int i=0; i<4; i++ ) cut[i] = Double.NaN;
       if( mainPanel.tabJpg.isCutFromPlanBase() ) {
          PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
-         cutOrig[0]= ((p.getCutMin()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
-         cutOrig[1]= ((p.getCutMax()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
-         //            cutOrig[2]= ((PlanImage)p).getDataMin();
-         //            cutOrig[3]= ((PlanImage)p).getDataMax();
+         cut[0]= p.getCutMin()*p.bScale+p.bZero;
+         cut[1]= p.getCutMax()*p.bScale+p.bZero;
+         
+//         cut[0]= ((p.getCutMin()*p.bScale+p.bZero)-bzero)/bscale;
+//         cut[1]= ((p.getCutMax()*p.bScale+p.bZero)-bzero)/bscale;
 
       } else {
          String cutMin = mainPanel.tabJpg.getCutMin();
          String cutMax = mainPanel.tabJpg.getCutMax();
-         cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
-         cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
+         cut[0] = Double.parseDouble(cutMin);
+         cut[1] = Double.parseDouble(cutMax);
+         
+//         cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
+//         cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;
       }
 
-      return cutOrig;
+      return cut;
    }
+
+//   public double[] getCutOrig() throws Exception {
+//      if( cutOrig==null ) cutOrig = new double[4];
+//      if( mainPanel.tabJpg.isCutFromPlanBase() ) {
+//         PlanImage p = (PlanImage)mainPanel.aladin.calque.getPlanBase();
+//         cutOrig[0]= ((p.getCutMin()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
+//         cutOrig[1]= ((p.getCutMax()*p.bScale+p.bZero)-bZeroOrig)/bScaleOrig;
+//         //            cutOrig[2]= ((PlanImage)p).getDataMin();
+//         //            cutOrig[3]= ((PlanImage)p).getDataMax();
+//
+//      } else {
+//         String cutMin = mainPanel.tabJpg.getCutMin();
+//         String cutMax = mainPanel.tabJpg.getCutMax();
+//         cutOrig[0] = (Double.parseDouble(cutMin)-bZeroOrig)/bScaleOrig;
+//         cutOrig[1] = (Double.parseDouble(cutMax)-bZeroOrig)/bScaleOrig;
+//      }
+//
+//      return cutOrig;
+//   }
 
    public void setCutOrig(double [] c) {
       super.setCutOrig(c);

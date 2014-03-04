@@ -121,6 +121,17 @@ public class BuilderIndex extends Builder {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
       } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
          +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+Constante.ORDER))/3600. ) );
+      
+      
+      // Récupération de la liste des HDU
+      hdu = context.getHDU();
+      if( hdu==null ) context.info("MEF stategy => extension 0, otherwise 1");
+      else if( hdu.length>0 && hdu[0]==-1 ) context.info("MEF stategy => all images found in the MEF");
+      else {
+         StringBuilder s = new StringBuilder("MEF stategy: extensions ");
+         for( int i=0; i<hdu.length; i++ ) { if( i>0 )  s.append(','); s.append(hdu[i]+""); }
+         context.info(s+"");
+      }
 
       // Pour indiquer les listes des mots clés fits dont les valeurs vont être retenues
       // dans les fichiers d'index JSON afin d'être utiliser dans l'accès à la "Table des détails" (progéniteurs)
@@ -158,7 +169,6 @@ public class BuilderIndex extends Builder {
       int order = context.getOrder();
       borderSize = context.getBorderSize();
       radius = context.circle;
-      hdu = context.getHDU();
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();

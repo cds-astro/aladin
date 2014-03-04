@@ -73,16 +73,17 @@ public class BuilderJpg extends BuilderTiles {
       validateOrder(context.getOutputPath());      
       if( !context.isColor() ) {
          
-         try { validateCut(); }
-         catch( Exception e ) {
-            try {
-               setFitsParamFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-               context.info("Will use pixelCut ["+context.cutOrig[0]+" .. "+context.cutOrig[1]+"], " +
-                    "BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
-            } catch( Exception e1 ) {
-               throw new Exception("Pixel cut unkown => use pixelcut parameter");
-            }
-         }
+//         try {
+            validateCut();
+//         } catch( Exception e ) {
+//            try {
+//               setFitsParamFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+//               context.info("Will use pixelCut ["+context.cutOrig[0]+" .. "+context.cutOrig[1]+"], " +
+//                    "BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
+//            } catch( Exception e1 ) {
+//               throw new Exception("Pixel cut unkown => use pixelcut parameter");
+//            }
+//         }
       }
       
       // Chargement du MOC réel à la place de celui de l'index (moins précis)
@@ -90,24 +91,22 @@ public class BuilderJpg extends BuilderTiles {
          context.warning("Tile MOC not found => use index MOC");
       }
       
-      context.initParameters();
+      context.initRegion();
+//      context.initParameters();
    }
    
    
    protected int getMinCM() { return 0; }
 
    public void run() throws Exception {
-      ColorModel cm = context.fct==null ? null : ColorMap.getCM(0, 128, 255,false, 
-            0/*PlanImage.CMGRAY*/, context.fct.code());
+      ColorModel cm = context.getFct()==null ? null : ColorMap.getCM(0, 128, 255,false, 
+            0/*PlanImage.CMGRAY*/, context.getFct().code());
       tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
       cut = context.getCut();
-      if( context.bzero!=0 || context.bscale!=1 ) {
-         double [] val = { cut[0]*context.bscale+context.bzero, cut[1]*context.bscale+context.bzero };
-         context.info("Map pixel cut ["+cut[0]+"/"+val[0]+" .. "+cut[1]+"/"+val[1]+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
-      } else  {
-         context.info("Map pixel cut ["+cut[0]+" .. "+cut[1]+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
+      double bz = context.bzero;
+      double bs = context.bscale;
+      context.info("Map pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"] to ["+getMinCM()+"..255] ("+context.getTransfertFct()+")");
 
-      }
       context.info("Tile aggregation method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) {

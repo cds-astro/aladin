@@ -126,32 +126,34 @@ public abstract class Builder {
    // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
    protected void validateCut() throws Exception {
       if( context.isValidateCut() ) return;
-      double [] cutOrig;
-      double [] memoCutOrig = context.getCutOrig();
-      boolean flagGaffe= false;   // true s'il faut s'assurer qu'on a pu récupérer le BSCALE,BZERO 
-                                  // soit d'un précédent Allsky.fits, soit d'une image étalon
+      double [] cut = null;
+//      double [] cut = context.getCut();
       
-      // Attention, les cuts positionnés manuellement doivent
-      // être exprimés en raw (récupération du bscaleOrig/bzeroOrig)
-      double [] cutOrigBefore = context.cutOrigBefore;
-      if( cutOrigBefore!=null ) {
+      boolean missingCut   = cut==null || cut[0]==0 && cut[1]==0;
+      boolean missingRange = cut==null || cut[2]==0 && cut[3]==0;
+
+      // S'il y a des pixelRange et/ou pixelCut indiqués sur la ligne de commande, il faut les convertir
+      // en cut[] à récupérant le bzero et le bscale depuis le fichier Allsky.fits
+      double [] pixelRangeCut = context.getPixelRangeCut();
+      if( (missingCut  || missingRange ) && pixelRangeCut!=null ) {
          try {
-            if( !context.bscaleBzeroOrigSet ) {
-               setBzeroBscaleOrigFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-            }
-            memoCutOrig = new double[4];
+            setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+            if( cut==null ) cut = new double[5];
             for( int i=0; i<4; i++ ) {
-               if( Double.isNaN(cutOrigBefore[i]) ) continue;
-               memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
-               //            System.out.println("cutOrigBefore["+i+"]="+cutOrigBefore[i]+" => cutOrig["+i+"]="+memoCutOrig[i]);
+               if( Double.isNaN(pixelRangeCut[i]) ) continue;
+               cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;
+//               System.out.println("Retreiving from user pixelRangeCut["+i+"]="+pixelRangeCut[i]+" => cut["+i+"]="+cut[i]);
             }
+
          } catch( Exception e ) {
-            flagGaffe=true;
+            throw new Exception("Cannot retrieve BZERO & BSCALE from previous Allsky.fits file => you must create Allsky.fits before !");
          }
       }
-
-      // Pas de pixelCut positionnés, ou pas de dataCut positionnés
-      if( memoCutOrig==null || memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
+      
+      // S'il me manque le cut du pixelCut ou du pixelRange, il faut que je récupère une image étalon
+      // que j'en déduise les cutOrig, bzeroOrig, bscaleOrig, puis que j'en calcule le bzero, bscale et donc les cut
+      missingCut   = cut==null || cut[0]==0 && cut[1]==0;
+      if( missingCut ) {
          String img = context.getImgEtalon();
          if( img==null && context.getInputPath()!=null) {
             img = context.justFindImgEtalon( context.getInputPath() );
@@ -162,32 +164,99 @@ public abstract class Builder {
             catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
          }
          
-         // Replacement des pixelCut paramétrés par l'utilisateur
-         if( memoCutOrig!=null && memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
-            cutOrig = context.getCutOrig();
-            if( cutOrig==null ) cutOrig = new double[4];
-            cutOrig[0]=memoCutOrig[0];
-            cutOrig[1]=memoCutOrig[1];
-            context.setCutOrig(cutOrig);
+         context.initParameters();
+         
+         double [] imgCut = context.getCut();
+         if( cut==null ) cut = new double[5];
+         if( missingCut )   {
+            cut[0]=imgCut[0];
+            cut[1]= imgCut[1]; 
+            context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
          }
       }
       
-      if( context.cutOrigBefore==null && flagGaffe ) {
-         throw new Exception("Cannot retrieve BZERO & BSCALE from original images, nor from previous Allsky.fits file");
-      }
+      context.setCut(cut);
       
-      cutOrig = context.getCutOrig();
-      if( cutOrig==null ) throw new Exception("Argument \"pixelCut\" required");
-//      if( cutOrig[2]==0 && cutOrig[3]==0 ) throw new Exception("Argument \"pixelRange\" required");
-      if( !( cutOrig[0] < cutOrig[1] ) ) 
-         throw new Exception("pixelCut error ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
-      if( !( cutOrig[2] <= cutOrig[0] && cutOrig[0] < cutOrig[1] && cutOrig[1]<=cutOrig[3]) ) {
-         context.warning("Adjusting pixelRange with pixelCut ["+cutOrig[2]+" .. "+cutOrig[3]+"] => ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
-         if( cutOrig[2] > cutOrig[0] ) cutOrig[2]=cutOrig[0];
-         if( cutOrig[1] > cutOrig[3] ) cutOrig[3]=cutOrig[1];
-      }
-      context.info("Pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+      double bz=context.bzero;
+      double bs=context.bscale;
+      if( cut==null || cut[0]==0 && cut[1]==0 ) throw new Exception("Argument \"pixelCut\" required");
+      if( !( cut[0] < cut[1] ) ) throw new Exception("pixelCut error ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"]");
+      context.info("pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"]");
       context.setValidateCut(true);
+   }
+   
+//   // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
+//   protected void validateCut() throws Exception {
+//      if( context.isValidateCut() ) return;
+//      double [] cutOrig;
+//      double [] memoCutOrig = context.getCutOrig();
+//      boolean flagGaffe= false;   // true s'il faut s'assurer qu'on a pu récupérer le BSCALE,BZERO 
+//                                  // soit d'un précédent Allsky.fits, soit d'une image étalon
+//      
+//      // Attention, les cuts positionnés manuellement doivent
+//      // être exprimés en raw (récupération du bscaleOrig/bzeroOrig)
+//      double [] cutOrigBefore = context.cutOrigBefore;
+//      if( cutOrigBefore!=null ) {
+//         try {
+//            if( !context.bscaleBzeroOrigSet ) {
+//               setBzeroBscaleOrigFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+//            }
+//            memoCutOrig = new double[4];
+//            for( int i=0; i<4; i++ ) {
+//               if( Double.isNaN(cutOrigBefore[i]) ) continue;
+//               memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
+//               //            System.out.println("cutOrigBefore["+i+"]="+cutOrigBefore[i]+" => cutOrig["+i+"]="+memoCutOrig[i]);
+//            }
+//         } catch( Exception e ) {
+//            flagGaffe=true;
+//         }
+//      }
+//
+//      // Pas de pixelCut positionnés, ou pas de dataCut positionnés
+//      if( memoCutOrig==null || memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
+//         String img = context.getImgEtalon();
+//         if( img==null && context.getInputPath()!=null) {
+//            img = context.justFindImgEtalon( context.getInputPath() );
+//            context.info("Use this reference image => "+img);
+//         }
+//         if( img!=null ) {
+//            try { context.setImgEtalon(img); }
+//            catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+//         }
+//         
+//         // Replacement des pixelCut paramétrés par l'utilisateur
+//         if( memoCutOrig!=null && memoCutOrig[2]==0 && memoCutOrig[3]==0 ) {
+//            cutOrig = context.getCutOrig();
+//            if( cutOrig==null ) cutOrig = new double[4];
+//            cutOrig[0]=memoCutOrig[0];
+//            cutOrig[1]=memoCutOrig[1];
+//            context.setCutOrig(cutOrig);
+//         }
+//      }
+//      
+//      if( context.cutOrigBefore==null && flagGaffe ) {
+//         throw new Exception("Cannot retrieve BZERO & BSCALE from original images, nor from previous Allsky.fits file");
+//      }
+//      
+//      cutOrig = context.getCutOrig();
+//      double bz=context.bZeroOrig;
+//      double bs=context.bScaleOrig;
+//      if( cutOrig==null ) throw new Exception("Argument \"pixelCut\" required");
+////      if( cutOrig[2]==0 && cutOrig[3]==0 ) throw new Exception("Argument \"pixelRange\" required");
+//      if( !( cutOrig[0] < cutOrig[1] ) ) 
+//         throw new Exception("pixelCut error ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+////      if( !( cutOrig[2] <= cutOrig[0] && cutOrig[0] < cutOrig[1] && cutOrig[1]<=cutOrig[3]) ) {
+////         context.warning("Adjusting pixelRange with pixelCut ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"] => ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+////         if( cutOrig[2] > cutOrig[0] ) cutOrig[2]=cutOrig[0];
+////         if( cutOrig[1] > cutOrig[3] ) cutOrig[3]=cutOrig[1];
+////      }
+//      context.info("Pixel range ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"], pixel cut ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+//      context.setValidateCut(true);
+//   }
+
+   
+   protected String ip(double raw,double bzero,double bscale) {
+      return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
    }
    
    /**
@@ -204,10 +273,10 @@ public abstract class Builder {
 //      cutOrig[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
       
       f.loadFITS(allskyFile);
-      double [] cutOrig = f.findAutocutRange(0,0,true);
+      double [] cut = f.findAutocutRange(0,0,true);
       
-      context.setBitpixOrig(f.bitpix);
-      context.setCutOrig(cutOrig);
+      context.setBitpix(f.bitpix);
+      context.setCut(cut);
       try {
          double blank = f.headerFits.getDoubleFromHeader("BLANK");
          context.blank=blank;
@@ -223,16 +292,16 @@ public abstract class Builder {
     
    }
    
-   protected void setBzeroBscaleOrigFromPreviousAllsky(String allskyFile) throws Exception {
+   protected void setBzeroBscaleFromPreviousAllsky(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
       try {
          double bzero = f.headerFits.getDoubleFromHeader("BZERO");
-         context.bZeroOrig=bzero;
+         context.bzero=bzero;
       } catch( Exception e ) { }
       try {
          double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
-         context.bScaleOrig=bscale;
+         context.bscale=bscale;
       } catch( Exception e ) { }
    }
    

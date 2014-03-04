@@ -59,6 +59,7 @@ final public class ThreadBuilderTile {
    private int radius;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
+   private double[] pixelBad = null;
 
    public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
@@ -72,10 +73,11 @@ final public class ThreadBuilderTile {
          bScale = context.getBScale();
          try {
             cutOrig=context.getCutOrig();
+            cut=context.getCut();
+            pixelBad=context.pixelBad;
          } catch( Exception e ) {
             e.printStackTrace();
          }
-         cut=context.getCut();
          blankOrig=context.getBlankOrig();
          hasAlternateBlank = context.hasAlternateBlank();
          blank = context.getBlank();
@@ -134,10 +136,11 @@ final public class ThreadBuilderTile {
                      cds.tools.Util.getUnitDisk(rqMem)+")...");
 
                cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
+               context.cacheFits.forceClean();
                nbThreadRunning = builderTiles.nbThreadRunning(); // Pour etre vraiment sur
                if( nbThreadRunning<=1 ) {
                   context.nlwarning(Thread.currentThread().getName()+" resumes (last thread runnning)");
-                  context.cacheFits.forceClean();
+//                  context.cacheFits.forceClean();
                   break;
                }
             } catch( Exception e ) { }
@@ -542,7 +545,8 @@ final public class ThreadBuilderTile {
 //      double maxd = Math.sqrt(cx*cx + cy*cy);
 //      return (maxd - d)/maxd;
 //   }
-
+   
+   
    private double getBilinearPixel(Fits f,Coord coo,double myBlank) {
       if( !isIn(f,coo) ) return Double.NaN;
       

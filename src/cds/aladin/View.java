@@ -831,17 +831,35 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       int first = -1;
 
       // Détermination des views images concernées
-      Vector vcVect = new Vector();
+      Vector<ViewSimple> vcVect = new Vector<ViewSimple>();
+      
+      // On commence par les plans sélectionnés
+      // CA NE MARCHE PAS
+//      if( vcVect.size()==0 ) {
+//         Plan [] plan = aladin.calque.getPlans();
+//         for( Plan p : plan ) {
+//            if( !p.flagOk || !p.isPixel() || !p.selected ) continue;
+//            if( isUsed(p) ) continue;
+//            ViewSimple v = createViewForPlan(p);
+//            vcVect.add(v);
+//         }
+//      }
+      
+      // On prend en compte les vues correspondnantes
       for( int i=0; i<modeView; i++ ) {
          ViewSimple vc=viewSimple[i];
-         if( vc.isFree() || !vc.pref.flagOk || !(vc.pref.isImage() || vc.pref instanceof PlanBG) ) continue;
+         if( vc.isFree() || !vc.pref.flagOk || !vc.pref.isPixel() ) continue;
          if( !vc.selected ) continue;
-         vcVect.addElement(vc);
+         if( !vcVect.contains(vc ) ) vcVect.add(vc);
       }
+      
+      
+      // Toujours aucune vue => on prend la vue de base
       if( vcVect.size()==0 ) vcVect.add(getCurrentView());
+      
       ViewSimple vca[] = new ViewSimple[vcVect.size()];
-      Enumeration e = vcVect.elements();
-      for( int i=0; e.hasMoreElements(); i++ ) vca[i]=(ViewSimple)e.nextElement();
+      Enumeration<ViewSimple> e = vcVect.elements();
+      for( int i=0; e.hasMoreElements(); i++ ) vca[i]=e.nextElement();
 
       // Détermination des objets concernées... soit les objets sélectionnés
       // soit ceux du premier plan qui va bien
@@ -890,7 +908,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          for( int i=0; i<vca.length; i++ ) {
             ViewSimple v;
             ViewSimple vc=vca[i];
-            if( vc.isFree() || !vc.pref.flagOk || !(vc.pref.isImage() || vc.pref instanceof PlanBG) ) continue;
+            if( vc.isFree() || !vc.pref.flagOk || !vc.pref.isPixel() ) continue;
             if( !vc.selected ) continue;
 
             // Par défaut on prend un radius correspondant à "pixel" pixels de l'image
@@ -910,13 +928,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             int width = isMultiView() ? v.rv.width : v.rv.width/3;
             v.setCenter(o.raj,o.dej);
             v.setZoomByRadius(tailleRadius,width);
-            if( !(v.pref instanceof PlanBG) ) v.locked= true;
-            else {
-//               v.setZoomXY(v.zoom,-1,-1);
-               // IL FAUT ENCORE Y REFLECHIR
-               System.out.println("zoom="+v.zoom+" v.rzoom="+v.rzoom);
-               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false,true);
-            }
+            v.locked=true;
+//            if( !(v.pref instanceof PlanBG) ) v.locked= true;
+//            else {
+////               v.setZoomXY(v.zoom,-1,-1);
+//               System.out.println("zoom="+v.zoom+" v.rzoom="+v.rzoom);
+//               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false,true);
+//            }
 
             if( n==-1 ) {
                n=viewMemo.setAfter(previousScrollGetValue+modeView-1 -getNbStickedView(),v);
@@ -933,7 +951,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Création d'une vue pour le Plan en paramètre */
-   protected void createViewForPlan(Plan p) {
+   protected ViewSimple createViewForPlan(Plan p) {
       int n=getNextNumView();
       ViewSimple v;
       if( n==-1 ) {
@@ -945,6 +963,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       if( n== -1) viewMemo.setAfter(previousScrollGetValue+modeView-1
                      -getNbStickedView(),v);
+      return v;
    }
 
 
@@ -1187,7 +1206,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne la vue courante */
    protected ViewSimple getCurrentView() {
-//      if( currentView<0 || currentView>=modeView ) return null;
+      if( currentView>=modeView ) {
+//         System.err.println("View.getCurrentView() error: currentView ("+currentView+") > modeView ("+modeView+")");
+         setCurrentNumView(modeView-1);
+      }
       return viewSimple[currentView];
    }
 
@@ -1967,7 +1989,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       for( int i=0; i<modeView; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( v.locked || !v.selected || v.isPlotView()!=vc.isPlotView() ) continue;
+         if( /* v.locked || */ !v.selected || v.isPlotView()!=vc.isPlotView() ) continue;
 
          // Calcul du facteur de zoom pour les vues en fonction de la taille
          // du pixel
@@ -1983,7 +2005,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
          if( isRecalibrating() && aladin.toolBox.getTool()==ToolBox.SELECT
-               || v.isPlotView() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+               || v.isPlotView() || v.locked ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
 
          // Mode courant => Déplacement soit sur la coordonnée indiquée, soit sur le repere
          else {

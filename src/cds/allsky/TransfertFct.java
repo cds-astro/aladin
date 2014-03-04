@@ -26,9 +26,16 @@ public enum TransfertFct {
 	ASINH (PlanImage.ASINH), POW2 (PlanImage.SQR);
 	
 	private final int code;
-	TransfertFct(int i) {
-		code = i;
-	}
+	TransfertFct(int i) { code = i; }
+	
+	static public TransfertFct getFromCode(int i) throws Exception {
+       if( i==PlanImage.LOG )    return LOG;
+       if( i==PlanImage.SQRT )   return SQRT;
+       if( i==PlanImage.LINEAR ) return LINEAR;
+       if( i==PlanImage.ASINH )  return ASINH;
+       if( i==PlanImage.SQR )    return POW2;
+       throw new Exception("TransfertFct code error");
+   }
 	
 	int code() { return code;}
 }

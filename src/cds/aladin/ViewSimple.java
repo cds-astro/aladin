@@ -1255,7 +1255,6 @@ public class ViewSimple extends JComponent
          pref=p;
 
          // Affectation si nécessaire d'une projection locale
-         // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
          projLocal = pref instanceof PlanBG ? pref.projd.copy() : null;
       }
       
@@ -1330,10 +1329,7 @@ public class ViewSimple extends JComponent
     *  @return true si c'est possible, false sinon
     */
    protected boolean setCenter(double ra,double dec) {
-      if( pref instanceof PlanBG ) {
-         projLocal.setProjCenter(ra, dec);
-         return true;
-      }
+      if( pref instanceof PlanBG ) projLocal.setProjCenter(ra, dec);
       return setZoomRaDec(zoom,ra,dec);
    }
    
@@ -1430,7 +1426,7 @@ public class ViewSimple extends JComponent
 //            setZoomXY(1, -1, -1);
 //         } else setDimension(w,h);
 //      }
-      BufferedImage img = new BufferedImage(rv.width, rv.height, BufferedImage.TYPE_INT_RGB);
+      BufferedImage img = new BufferedImage(rv.width, rv.height, BufferedImage.TYPE_INT_ARGB);
       Graphics2D g = (Graphics2D)img.getGraphics();
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
@@ -5488,7 +5484,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
        double y;
        int i;
        
-       Projection proj = vs.pref.projd;
+       Projection proj = vs.getProj();
 
        int X,Y;
        X=Y=getMarge();
@@ -5797,9 +5793,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
                if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
-               if( fullScreen &&  p.hasObj() && p.isOverlay() ) {
-                  aladin.fullScreen.setCheck(p);
-               }
+               if( fullScreen &&  p.hasObj() && p.isOverlay() ) aladin.fullScreen.setCheck(p);
 
                // Cas des plans TOOL et CATALOG
             } else {
@@ -6055,8 +6049,8 @@ g.drawString(s,10,100);
       
       if( isPlotView() ) return plot.getProj();
       
-//      proj = projLocal!=null ? projLocal : pref.projd;    // projLocal dans le cas d'un planBG
-      proj = pref.projd;
+      proj = projLocal!=null ? projLocal : pref.projd;    // projLocal dans le cas d'un planBG
+//      proj = pref.projd;
       if( proj==null ) return null;
       
       if( !northUp ) return proj;

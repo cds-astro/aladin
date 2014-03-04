@@ -198,7 +198,7 @@ public class TabDesc extends JPanel implements ActionListener {
 
       c.gridy++;
       px = new JPanel( new BorderLayout(0,0));
-      blankTextField.addKeyListener(new KeyAdapter() {
+      hduTextField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) {
             hduCheckbox.setSelected( hduTextField.getText().trim().length()>0 );
          }
@@ -347,6 +347,9 @@ public class TabDesc extends JPanel implements ActionListener {
       borderTextField = new JTextField();
       skyvalCheckbox = new JRadioButton(SKYVALALLSKY); skyvalCheckbox.setSelected(false);
       skyvalTextField = new JTextField();
+      skyvalCheckbox.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { resumeWidgets(); }
+      });
 
       resetTiles.setText(REP_DEST_RESET);
       resetTiles.addActionListener(new ActionListener() {
@@ -424,6 +427,9 @@ public class TabDesc extends JPanel implements ActionListener {
          inputField.setEnabled(!isRunning);
          outputField.setEnabled(!isRunning);
          labelField.setEnabled(!isRunning);
+         
+         if( skyvalCheckbox.isSelected() 
+               && skyvalTextField.getText().trim().length()==0 ) skyvalTextField.setText("true");
          
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : 
                                 Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );

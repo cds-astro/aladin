@@ -1836,7 +1836,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
            .append("<DATA><TABLEDATA>\n");
 
        for (Forme forme: formes) {
-           sb.append(String.format((Locale)null, "<TR><TD>%.5f</TD><TD>%.5f</TD></TR>\n", forme.o[0].raj, forme.o[0].dej));
+           sb.append(String.format((Locale)null, "<TR><TD>%.5f</TD><TD>%.5f</TD></TR>\n", forme.o[0].getRa(), forme.o[0].getDec()));
        }
 
        sb.append("</TABLEDATA></DATA>\n")

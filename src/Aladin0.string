@@ -2371,12 +2371,12 @@ SPECIFALLSKY Only process these tiles (e.g 3/128...)
 SPECIFALLSKY.fr Ne traiter que certaines tuiles (ex 3/128...)
 BLANKALLSKY Alternate blank FITS value
 BLANKALLSKY.fr Valeur BLANK alternative
-HDUALLSKY Specifical HDU numbers (e.g: 0 2)
-HDUALLSKY.fr Numéros HDU spécifiques(ex: 0 2)
+HDUALLSKY Specifical HDU numbers (e.g: 0 2|all)
+HDUALLSKY.fr Numéros HDU spécifiques(ex: 0 2|all)
 BORDERALLSKY Image border to ignore (N W S E in pix)
 BORDERALLSKY.fr Bords d'image à ignorer (N O S E en pix)
-SKYVALALLSKY Sky background adjustement (FITS keyword|empty=>auto)
-SKYVALALLSKY.fr Ajustement du fond du ciel (mot clé FITS|vide=>auto)
+SKYVALALLSKY Sky background adjustement (FITS keyword|true=auto)
+SKYVALALLSKY.fr Ajustement du fond du ciel (mot clé FITS|true=auto)
 LABELALLSKY Data name:
 LABELALLSKY.fr Nom des données:
 INFOALLSKY This panel allows you to generate a "progressive sky", also called HiPS (Hierarchical Progressive Survey), from an image collection (FITS, JPEG or PNG, astrometrically calibrated, possibly gzipped). Aladin resamples your images on an HEALPix grid, and stores the result under a hierarchy of directories and files (called "tiles"). Ater this process, you can load the target directory and view your new progressive sky in the same way as any remote progressive surveys in Aladin. You can also publish it for your collaborators.

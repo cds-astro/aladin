@@ -245,14 +245,14 @@ public class BuilderDetails extends Builder {
                "    <FIELD name=\"id\" ucd=\"meta.id;meta.dataset\" datatype=\"char\" arraysize=\"13*\">\n" +
                "      <DESCRIPTION>Dataset name, uniquely identifies the data for a given exposure.</DESCRIPTION>\n" +
                "       <!-- Simple HTTP link description (Aladin will open it in a Web navigator)\n" +
-               "         <LINK href=\"http://your.server.edu/info?param=${id}\"/>\n" +
+               "         <LINK href=\"http://your.server.edu/info?param=${id}&amp;otherparam=foo\"/>\n" +
                "       -->\n" +
                "     </FIELD>\n" +
                "    <FIELD name=\"access\" datatype=\"char\" arraysize=\"9*\">\n" +
                "      <DESCRIPTION>Load original this original image</DESCRIPTION>\n" +
                "       <LINK content-type=\"image/fits\" href=\"${access}\"/>\n" +
                "       <!--  Image HTTP link description (Aladin will load it)\n" +
-               "          <LINK content-type=\"image/fits\" href=\"http://your.server.edu/getdata?param=${id}\" title=\"remote img\"/>\n" +
+               "          <LINK content-type=\"image/fits\" href=\"http://your.server.edu/getdata?param=${id}&amp;otherparam=foo\" title=\"remote img\"/>\n" +
                "        -->\n" +
                "    </FIELD>\n" +
                "    <FIELD name=\"FoV\" datatype=\"char\" utype=\"stc:ObservationLocation.AstroCoordArea.Region\" arraysize=\"12*\">\n" +

@@ -93,7 +93,7 @@ public class BuilderTiles extends Builder {
             context.info("BITPIX conversion from "+context.getBitpixOrig()+" to "+context.getBitpix());
             double cutOrig[] = context.getCutOrig();
             double cut[] = context.getCut();
-            context.info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
+            context.info("Map original raw pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] to ["+cut[2]+" .. "+cut[3]+"]");
          }
          else context.info("BITPIX = "+b1+" (no conversion)");
          if( context.getDiskMem()!=-1 ) {
@@ -105,6 +105,7 @@ public class BuilderTiles extends Builder {
          double bl1 = context.getBlank();
          if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
          else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
+         if( context.bad!=null ) context.info("Pixel values ignored ["+ip(context.bad[0],bz,bs)+" .. "+ip(context.bad[1],bz,bs)+"]");
          context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
       }
       build();
@@ -127,8 +128,7 @@ public class BuilderTiles extends Builder {
       validateOutput();
       try {
           validateOrder(context.getHpxFinderPath());
-      }
-      catch(Exception e) {
+      } catch(Exception e) {
           context.warning(e.getMessage());
           // retry order validation with tiles directory
           validateOrder(context.getOutputPath());
@@ -136,7 +136,7 @@ public class BuilderTiles extends Builder {
       
       // Image de référence en couleur => pas besoin de plus
       if(  !context.isColor() ) { 
-         
+        
          String img = context.getImgEtalon();
          if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
 
@@ -161,15 +161,27 @@ public class BuilderTiles extends Builder {
             context.warning("The provided BITPIX (" +bitpixOrig+ ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
             context.setBitpixOrig(bitpixOrig);
          }
+         
+         double [] cutOrigBefore = context.getPixelRangeCut();
+         if( cutOrigBefore!=null ) {
+            memoCutOrig = new double[4];
+            for( int i=0; i<4; i++ ) {
+               if( Double.isNaN(cutOrigBefore[i]) ) continue;
+               memoCutOrig[i] = (cutOrigBefore[i] - context.bZeroOrig)/context.bScaleOrig;
+            }
+         }
+
 
          // repositionnement des cuts et blank passés par paramètre
          double [] cutOrig = context.getCutOrig();
+         double bs = context.bScaleOrig;
+         double bz = context.bZeroOrig;
          if( memoCutOrig!=null ) {
-            if( memoCutOrig[0]!=0 && memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
-            if( memoCutOrig[2]!=0 && memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
+            if( memoCutOrig[0]!=0 || memoCutOrig[1]!=0 ) { cutOrig[0]=memoCutOrig[0]; cutOrig[1]=memoCutOrig[1]; }
+            if( memoCutOrig[2]!=0 || memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
             context.setCutOrig(cutOrig);
          }
-         context.info("Data range ["+cutOrig[2]+" .. "+cutOrig[3]+"], pixel cut ["+cutOrig[0]+" .. "+cutOrig[1]+"]");
+         context.info("Data range ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"], pixel cut ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
          context.setValidateCut(true);
          
          if( hasAlternateBlank ) context.setBlankOrig(blankOrig);

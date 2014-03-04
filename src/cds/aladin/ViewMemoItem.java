@@ -43,7 +43,8 @@ public final class ViewMemoItem {
    Vector plotTable;
    Projection plotProj;
    
-   double alphai, deltai;   // Uniquement dans le cas de planBG (v.projLocal)
+   Projection projLocal;
+//   double alphai, deltai;   // Uniquement dans le cas de planBG (v.projLocal)
    
    protected ViewMemoItem() { }
 
@@ -74,8 +75,9 @@ public final class ViewMemoItem {
       
       // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
       if( v.projLocal!=null ) {
-         alphai = v.projLocal.alphai;
-         deltai = v.projLocal.deltai;
+//         alphai = v.projLocal.alphai;
+//         deltai = v.projLocal.deltai;
+         projLocal = v.projLocal.copy();
       }
       
       if( v.pref instanceof PlanImageBlink && v.blinkControl!=null) {
@@ -102,8 +104,9 @@ public final class ViewMemoItem {
       
       // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
       if( pref instanceof PlanBG ) {
-         v.projLocal = v.pref.projd.copy();
-         v.projLocal.setProjCenter(alphai, deltai);
+//         v.projLocal = v.pref.projd.copy();
+//         v.projLocal.setProjCenter(alphai, deltai);
+         v.projLocal = projLocal.copy();
       }
       if( pref instanceof PlanImageBlink ) {
          if( v.blinkControl==null ) v.blinkControl = new BlinkControl(pref.aladin,

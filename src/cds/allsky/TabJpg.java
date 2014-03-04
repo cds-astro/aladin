@@ -298,6 +298,7 @@ public class TabJpg extends JPanel implements ActionListener {
          context.setJpegMethod(getMethod());
          context.setProgressBar(progressJpg);
          Action action = getTileFormat()==Context.PNG ? Action.PNG : Action.JPEG;
+         context.setValidateCut(false);
          
          try {
             new Task(context, action, false);

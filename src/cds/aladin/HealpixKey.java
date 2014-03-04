@@ -1000,6 +1000,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          boolean flagInit = planBG.bitpix==0 || planBG.flagRecut;
          
          if( flagInit ) {
+            boolean init = planBG.bitpix==0;
             planBG.bitpix=bitpix;
             planBG.flagRecut=false;
             try { planBG.bScale = getValue(head,"BSCALE"); } catch( Exception e ) { planBG.bScale=1; }
@@ -1010,7 +1011,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             boolean flagPixelRange=false;
             boolean flagPixelCut=false;
             
-            if( planBG.flagRecut ) {
+            if( init ) {
                if( planBG.pixelRange!=null ) {
                   double [] a = split(planBG.pixelRange);
                   if( a!=null ) {
@@ -1024,6 +1025,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   if( a!=null ) {
                      planBG.pixelMin = pixelMin =(a[0]-planBG.bZero)/planBG.bScale;
                      planBG.pixelMax = pixelMax =(a[1]-planBG.bZero)/planBG.bScale;
+//                     planBG.transfertFct = (int)a[2]; 
                      flagPixelCut=true;
                   }
                }
@@ -1075,10 +1077,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
    
    private double [] split(String s) {
-      double [] a = new double[2];
+      double [] a = new double[3];
       StringTokenizer st = new StringTokenizer(s);
       a[0] = Double.parseDouble(st.nextToken());
       a[1] = Double.parseDouble(st.nextToken());
+      if( st.hasMoreTokens() ) {
+         a[2]=PlanImage.getTransfertFct(st.nextToken());
+         if( a[2]==-1 ) a[2]=PlanImage.LINEAR;
+      }
       return a;
    }
    

@@ -2443,7 +2443,11 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    }
    
    /** Retourne le nom de la fonction de transition (asinh, log, sqrt, linear ou sqr) */
-   public String getTransfertFctInfo() { return TRANSFERTFCT[transfertFct]; }
+   static public String getTransfertFctInfo(int i) { return TRANSFERTFCT[i]; }
+   public String getTransfertFctInfo() { return getTransfertFctInfo(transfertFct); }
+   
+   /** Retourne le code de la fonction de transition */
+   static public int getTransfertFct(String s) { return Util.indexInArrayOf(s, TRANSFERTFCT,true); }
 
    /** Retourne les valeurs de pixel qui ont été mémorisées soit dans
     *  l'unité du fichier (INFILE) sinon en niveau d'énergie (REAL) */

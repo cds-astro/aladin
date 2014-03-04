@@ -31,6 +31,7 @@ import java.util.*;
 
 import javax.swing.JTextField;
 
+import cds.aladin.Forme.ObjetIterator;
 import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
@@ -891,6 +892,18 @@ public class Ligne extends Position {
       }
       return true;
    }
+   
+   // Recupération d'un itérator sur les objets qui compose la forme (Ligne, Cote) 
+   protected Iterator<Obj> iterator() { return new ObjetIterator(); }
+
+   class ObjetIterator implements Iterator<Obj> {
+      private Ligne line = getFirstBout();
+      public boolean hasNext() { return line.finligne!=null && line.bout!=3; }
+      public Obj next() { return line=line.finligne; }
+      public void remove() { }
+   }
+
+
    
 
 }

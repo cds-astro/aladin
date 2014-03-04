@@ -24,8 +24,10 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.Iterator;
 import java.util.Vector;
 
+import cds.aladin.Pcat.PlanObjetIterator;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.astro.Proj3;
@@ -187,6 +189,18 @@ public class Forme extends Position {
       a.set(x,y);
       return new Coord(a.getLon(),a.getLat());
    }
+   
+   // Recupération d'un itérator sur les objets qui compose la forme
+   protected Iterator<Obj> iterator() { return new ObjetIterator(); }
+
+   class ObjetIterator implements Iterator<Obj> {
+      private int index=0;
+      public boolean hasNext() { return index<o.length; }
+      public Obj next() { return o[index++]; }
+      public void remove() { }
+   }
+
+
 
 //   void debug();
 }

@@ -507,9 +507,9 @@ final public class Fits {
    }
 
    /** Chargement d'une image FITS depuis un fichier */
-   public void loadFITS(String filename, int x, int y, int w, int h)
+   public void loadFITS(String filename, int ext, int x, int y, int w, int h)
          throws Exception {
-      loadFITS(filename + "[" + x + "," + y + "-" + w + "x" + h + "]");
+      loadFITS(filename + "[" + ext + ":" + x + "," + y + "-" + w + "x" + h + "]");
    }
 
    public void loadFITS(String filename) throws Exception {
@@ -816,7 +816,11 @@ final public class Fits {
             } catch( Exception e ) {
                bzero = DEFAULT_BZERO;
             }
-            setCalib(new Calib(headerFits));
+            try {
+               setCalib(new Calib(headerFits));
+            } catch( Exception e ) {
+               calib=null;
+            }
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             calib = null;
@@ -1180,6 +1184,16 @@ final public class Fits {
             + "]";
    }
 
+   
+   /**
+    * Retourne la description de l'extension courante selon la syntaxe [e]
+    * ou "" si le fichier n'a pas été ouvert en mode MEF
+    */
+   public String getMefSuffix() {
+      if( ext==0 ) return "";
+      return "["+ext+"]";
+   }
+   
    /** Retourne true si le fichier a été ouvert en mode mosaic */
    public boolean hasCell() {
       return widthCell != -1 && heightCell != -1
@@ -1463,17 +1477,17 @@ final public class Fits {
    // }
    // }
 
-   /**
-    * Détermine l'intervalle pour un autocut "à la Aladin".
-    * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
-    *         minPix..maxPix
-    */
-   public double[] findFullAutocutRange() throws Exception {
-      double[] cut = findAutocutRange(0, 0,false);
-      cut[0] = bscale * cut[0] + bzero;
-      cut[1] = bscale * cut[1] + bzero;
-      return cut;
-   }
+//   /**
+//    * Détermine l'intervalle pour un autocut "à la Aladin".
+//    * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
+//    *         minPix..maxPix
+//    */
+//   public double[] findFullAutocutRange() throws Exception {
+//      double[] cut = findAutocutRange(0, 0,false);
+//      cut[0] = bscale * cut[0] + bzero;
+//      cut[1] = bscale * cut[1] + bzero;
+//      return cut;
+//   }
 
    /**
     * Détermine l'intervalle pour un autocut "à la Aladin".
@@ -1500,7 +1514,6 @@ final public class Fits {
          if( isReleased() ) reloadBitmap();
          findMinMax(range, pixels, bitpix, widthCell, heightCell, min, max, true, full,0);
       } catch( Exception e ) {
-         System.err.println("Erreur  MinMax");
          range[0] = range[2] = min;
          range[1] = range[3] = max;
          range[4]=0;
@@ -1667,6 +1680,8 @@ final public class Fits {
 
    // -------------------- C'est privé --------------------------
 
+   
+   static private int FINDMINMAXSIZE = 1500;
    /**
     * Détermination du min et max des pixels passés en paramètre
     * @param En sortie : range[0]=minPixCut, range[1]=maxPixCut,
@@ -1700,8 +1715,8 @@ final public class Fits {
          margeW = (int) (width * 0.05);
          margeH = (int) (height * 0.05);
 
-         if( width - 2 * margeW > 1000 ) margeW = (width - 1000) / 2;
-         if( height - 2 * margeH > 1000 ) margeH = (height - 1000) / 2;
+         if( width - 2 * margeW > FINDMINMAXSIZE ) margeW = (width - FINDMINMAXSIZE) / 2;
+         if( height - 2 * margeH > FINDMINMAXSIZE ) margeH = (height - FINDMINMAXSIZE) / 2;
       }
 
       double c;

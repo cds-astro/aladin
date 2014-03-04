@@ -41,12 +41,12 @@ final public class BuilderAllsky  extends Builder {
    
    public void validateContext() throws Exception {
       validateOutput();
-      if( !context.isColor() ) validateCut();
       context.setProgressMax(100);
    }
    
    public void run() throws Exception { 
       if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64);
+      if( !context.isColor() ) validateCut();
       createAllSkyColor(context.getOutputPath(),3,"png",64);
       createAllSkyColor(context.getOutputPath(),3,"jpeg",64);
       context.writePropertiesFile();
@@ -66,12 +66,15 @@ final public class BuilderAllsky  extends Builder {
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       
+      boolean findParam=false;
+      double bzero=0,bscale=1,blank=Double.NaN;
+      
 //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
 //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
 //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
       Fits out = null;
       
-      double blank = context.getBlank();
+//      double blank = context.getBlank();
       
       for( int npix=0; npix<n; npix++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
@@ -82,6 +85,7 @@ final public class BuilderAllsky  extends Builder {
          try {
             if( !(new File(filename+".fits")).exists() ) continue;
             in.loadFITS(filename+".fits");
+            if( !findParam ) { bzero=in.getBzero(); bscale=in.getBscale(); blank=in.getBlank(); findParam=true; }
             if( out==null ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
                   context.info("createAllsky: reducing width=>"+in.width+" ...");
@@ -121,38 +125,37 @@ final public class BuilderAllsky  extends Builder {
          return;
 //         throw new Exception("createAllSky error: null output file !");
       }
-      double cut [] = context.getCut();
-      double bzero  = context.getBZero();
-      double bscale = context.getBScale();
+//      double cut [] = context.getCut();
+//      double bzero  = context.getBZero();
+//      double bscale = context.getBScale();
       
-      int bitpix = out.bitpix;
+//      int bitpix = out.bitpix;
       
       out.setBlank(blank);
       out.setBzero(bzero);
       out.setBscale(bscale);
       
-      if( cut==null ) {
-         cut = out.findAutocutRange(0, 0, true);
-//         System.out.println("BINGO");
-      }
-      
-      if( cut[0]<cut[1] ) {
-         out.headerFits.setKeyValue("PIXELMIN", (bitpix>0 ? (int)cut[0] : cut[0])+"");
-         out.headerFits.setKeyValue("PIXELMAX", (bitpix>0 ? (int)cut[1] : cut[1])+"");
-         
-         if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
-            cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
-                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-            Aladin.trace(1,"BuilderAllsky.createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
-         }
-         out.headerFits.setKeyValue("DATAMIN",  (bitpix>0 ? (int)cut[2] : cut[2])+"");
-         out.headerFits.setKeyValue("DATAMAX",  (bitpix>0 ? (int)cut[3] : cut[3])+"");
-
-      } else {
-         Aladin.trace(1,"BuilderAllsky.createAllSky() pixel cut range [PIXELMIN..PIXELMAX] not consistante => ignored");
-      }
+//      if( cut==null ) {
+//         cut = out.findAutocutRange(0, 0, true);
+//      }
+//      
+//      if( cut[0]<cut[1] ) {
+//         out.headerFits.setKeyValue("PIXELMIN", (bitpix>0 ? (int)cut[0] : cut[0])+"");
+//         out.headerFits.setKeyValue("PIXELMAX", (bitpix>0 ? (int)cut[1] : cut[1])+"");
+//         
+//         if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
+//            cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
+//                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
+//            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
+//                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+//            Aladin.trace(1,"BuilderAllsky.createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
+//         }
+//         out.headerFits.setKeyValue("DATAMIN",  (bitpix>0 ? (int)cut[2] : cut[2])+"");
+//         out.headerFits.setKeyValue("DATAMAX",  (bitpix>0 ? (int)cut[3] : cut[3])+"");
+//
+//      } else {
+//         Aladin.trace(1,"BuilderAllsky.createAllSky() pixel cut range [PIXELMIN..PIXELMAX] not consistante => ignored");
+//      }
 
 
    // Ecriture du FITS (true bits)
@@ -160,9 +163,8 @@ final public class BuilderAllsky  extends Builder {
       out.writeFITS(filename+".fits");
       
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
-            +" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+            /*+" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]*/+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }
-   
 
    static public String getFileName(String path, int order) {
 	   return path+FS+"Norder"+order+FS+"Allsky";

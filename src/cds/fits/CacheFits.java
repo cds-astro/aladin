@@ -112,24 +112,24 @@ public class CacheFits {
 //   }
    
    // Gestion d'un lock
-   transient private boolean lock;
    static private final Object lockObj= new Object();
-   private void waitLock() {
-      while( !getLock() ) sleep(5);
-   }
-   private void unlock() { lock=false; }
-   private boolean getLock() {
-      synchronized( lockObj ) {
-         if( lock ) return false;
-         lock=true;
-         return true;
-      }
-   }
-   // Mise en pause 
-   private void sleep(int delay) {
-      try { Thread.currentThread().sleep(delay); }
-      catch( Exception e) { }
-   }
+//   transient private boolean lock;
+//   private void waitLock() {
+//      while( !getLock() ) sleep(5);
+//   }
+//   private void unlock() { lock=false; }
+//   private boolean getLock() {
+//      synchronized( lockObj ) {
+//         if( lock ) return false;
+//         lock=true;
+//         return true;
+//      }
+//   }
+//   // Mise en pause 
+//   private void sleep(int delay) {
+//      try { Thread.currentThread().sleep(delay); }
+//      catch( Exception e) { }
+//   }
    
    static public final int FITS = 0; // FITS classique
    static public final int JPEG = 1; // JPEG
@@ -147,10 +147,6 @@ public class CacheFits {
      if( cacheOutOfMem )  return open(fileName,mode,flagLoad).fits;
 
      synchronized( lockObj  ) {
-//     try {
-//        waitLock();
-        
-         
         FitsFile f = find(fileName);
 
         // Trouvé, je le mets à jour
@@ -183,7 +179,6 @@ public class CacheFits {
         }
 
         return f.fits;
-//      } finally { unlock(); 
      }
 
   }
@@ -239,7 +234,7 @@ public class CacheFits {
 
 
       // applique un filtre spécial
-      if (context.skyvalName!=null || context.expTimeName!=null ) delSkyval(f.fits);
+      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelBad!=null ) delSkyval(f.fits);
 
       return f;
    }
@@ -312,7 +307,7 @@ public class CacheFits {
       long duree = System.currentTimeMillis() - now;
       String s1 = i>1 ? "s":"";
       long freeRam = getFreeMem();
-      System.out.println("\nCache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
+      context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
             +" => freeRAM="+Util.getUnitDisk(freeRam));
    }
    
@@ -329,28 +324,31 @@ public class CacheFits {
    // Détermination des cuts d'une image,
    // et conservation dans un cache pour éviter de refaire plusieurs fois
    // le calcul notamment dans le cas d'une image ouverte en mode "blocks"
-   private double [] findFullAutocutRange(Fits f) throws Exception {
-      String filename = f.getFilename();
+   private double [] findAutocutRange(Fits f) throws Exception {
+      String filename = f.getFilename()+f.getMefSuffix();
       double [] cut = cutCache.get(filename);
       if( cut!=null ) return cut;
-//      if( !f.hasCell() ) cut = f.findFullAutocutRange();
-//      else {
-         Fits f1 = new Fits();
-         int w=1024;
-         int x = f.width/2-w/2, y=f.height/2-w/2;
-         f1.loadFITS(filename,x,y,w,w);
-         if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
-         cut = f1.findFullAutocutRange();
-         f1.free();
-//      }
+      Fits f1 = new Fits();
+      int w=1024;
+      int x = f.width/2-w/2, y=f.height/2-w/2;
+      f1.loadFITS(f.getFilename(),f.ext,x,y,w,w);
+      if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+      cut = f1.findAutocutRange();
       cutCache.put(filename,cut);
+//      context.info("Skyval estimation => "+ip(cut[0],f1.bzero,f1.bscale)+" for "+filename);
+
       return cut;
    }
+   
+//   private String ip(double raw,double bzero,double bscale) {
+//      return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
+//   }
+
    
    private boolean first=true;
 
    /**
-    * Applique un filtre (soustraction du skyval)
+    * Applique un filtre (soustraction du skyval, division par le expTime)
     * sur les pixels avant de les mettre dans le cache
     * @param f fitsfile
     */
@@ -362,26 +360,28 @@ public class CacheFits {
       boolean expTimeTag=false;
       
       if( context.skyvalName!=null ) {
-         
+
          try {
             if( context.skyvalName.equalsIgnoreCase("true") ) {
-               double cut [] = findFullAutocutRange(f);
-//               double cutOrig [] = context.getCutOrig();
-//               skyval = cut[0] - cutOrig[0];
-               skyval = cut[0];
-           } else {
+               double cut [] = findAutocutRange(f);
+               double cutOrig [] = context.getCutOrig();
+               skyval = cut[0] - cutOrig[0];
+               //               skyval = cut[0];
+            } else {
                try {
                   skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
+                  double cutOrig [] = context.getCutOrig();
+                  skyval = skyval - cutOrig[0];
                } catch( Exception e ) {
-                  double cut [] = findFullAutocutRange(f);
-//                double cutOrig [] = context.getCutOrig();
-//                skyval = cut[0] - cutOrig[0];
-                skyval = cut[0];
-                if( first ) {
-                   context.warning("\nSKYVAL="+context.skyvalName+" not found is some images => use an estimation for these images");
-                   first=false;
-                }
-              }
+                  double cut [] = findAutocutRange(f);
+                  double cutOrig [] = context.getCutOrig();
+                  skyval = cut[0] - cutOrig[0];
+                  //                skyval = cut[0];
+                  if( first ) {
+                     context.warning("\nSKYVAL="+context.skyvalName+" not found is some images => use an estimation for these images");
+                     first=false;
+                  }
+               }
             }
             
             skyValTag= skyval!=0;
@@ -395,13 +395,24 @@ public class CacheFits {
          } catch (NullPointerException e) { }
       }
       
-      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 ) return;
+      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 && context.pixelBad==null ) return;
+      
+//      System.out.println("SkyVal="+skyval+" => "+f.getFilename()+f.getFileNameExtended());
+      
+      
+      double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;
       
       for( int y=0; y<f.heightCell; y++ ) {
          for( int x=0; x<f.widthCell; x++ ) {
             double pixelFull = f.getPixelDouble(x+f.xCell, y+f.yCell);
             
             if( Double.isNaN(pixelFull) ) continue; 
+            
+            if( context.pixelBad!=null && context.pixelBad[0]<=pixelFull && pixelFull<=context.pixelBad[1] ) {
+               if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, blank);
+               else f.setPixelInt(x+f.xCell, y+f.yCell, (int)blank); 
+               continue;
+            }
              
             if( context.hasAlternateBlank() ) {
                if( pixelFull==context.getBlankOrig() ) continue;

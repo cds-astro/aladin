@@ -69,6 +69,8 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> HiPS improvements: thumbnail generator, original image links, JPEG|PNG support, ...
+ * @beta    <LI> Obj.iterator() plugin method for multi-component object manipulation
  * @beta    <LI> Pixel and coordinate toolbox
  * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
  * @beta    <LI> Recently open file menu
@@ -92,7 +94,6 @@ import cds.xml.XMLParser;
  * @beta    <LI> Tagging source feature
  * @beta    <LI> Spectrum SAMP management dedicated to source catalog
  * @beta    <LI> Specifical color parameter for "draw" script command
- * @beta    <LI> HEALPix sky => progenitor access support, JPEG calibrated images supported
  * @beta    <LI> JPEG large image improvements (required RAM divided by 2)
  * @beta    <LI> Plugin synchronisation support
  * @beta </UL>
@@ -132,7 +133,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.026";
+    static public final    String VERSION = "v8.029";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1102,8 +1103,8 @@ public class Aladin extends JApplet
                 {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
                 {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,
                    "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
-                {},{MOREVIEWS+"|F9"},{ONEVIEW}, {"?"+LOCKVIEW}, /* {ROI},
-                {},{"?"+LOCKVIEW},{DELLOCKVIEW}, */
+                {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW}, {ROI},
+//                {},{"?"+LOCKVIEW},{DELLOCKVIEW}, 
 //                {},{"?"+STICKVIEW},
                 {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
              },
@@ -4122,11 +4123,6 @@ public void setLocation(Point p) {
    }
    
    protected void copier() {
-      
-      if( view.hasSelectedObj() ) {
-         
-      }
-      
       ViewSimple v = view.getCurrentView();
       v.copier();
    }
