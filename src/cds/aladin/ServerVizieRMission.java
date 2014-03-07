@@ -231,7 +231,7 @@ public class ServerVizieRMission extends Server  {
       catControl.setBackground(Aladin.BLUE);
       catControl.add(getReadMe);
       catControl.add(getMoc);
-      catControl.add(getDMap);
+      if( aladin.BETA ) catControl.add(getDMap);
       if( !Aladin.OUTREACH ) add(catControl);
       y+=HAUT+MARGE+5;
 

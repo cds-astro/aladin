@@ -59,7 +59,6 @@ final public class ThreadBuilderTile {
    private int radius;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
-   private double[] pixelBad = null;
 
    public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
@@ -74,7 +73,6 @@ final public class ThreadBuilderTile {
          try {
             cutOrig=context.getCutOrig();
             cut=context.getCut();
-            pixelBad=context.pixelBad;
          } catch( Exception e ) {
             e.printStackTrace();
          }

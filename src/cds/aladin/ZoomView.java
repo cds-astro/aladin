@@ -532,10 +532,12 @@ try {
             gbuf.drawOval(x-pa/2,y-pa,pa,pa*2);
             gbuf.drawLine(x-ga,y,x+ga,y);
             gbuf.drawLine(x,y-pa,x,y+pa);
+            
+            Projection proj = v.pref.projd;
    
            Coord [] coin = v.getCouverture();
            if( coin!=null ) {
-               proj.frame = v.pref.projd.frame;
+               proj.frame = proj.frame;
                gbuf.setColor( Color.blue );
                for( int i=0; i<coin.length; i++ ) {
                   if( Double.isNaN(coin[i].al) ) continue;
@@ -547,8 +549,9 @@ try {
                c = v.getCooCentre();
                if( c== null ) {
                   System.out.println("Gag ++ ");
-                  v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
+                  proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
                   v.pref.projd.frame = aladin.localisation.getFrame();
+                  v.projLocal = v.pref.projd.copy();
                   drawAllSkyControl(g, v);
                   return;
                }
@@ -1190,7 +1193,7 @@ try {
 
    private void drawInfo(Graphics g) {
    	  try {
-   	     Projection proj = aladin.view.getCurrentView().pref.projd;
+         Projection proj = aladin.view.getCurrentView().pref.projd;
    	     if( proj.isXYLinear() ) return;
          Calib c = proj.c;
          String w = Coord.getUnit(c.getImgWidth());

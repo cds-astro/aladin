@@ -550,9 +550,11 @@ public final class ColorMap extends JPanel  implements
    /** Génère une colormap temporaire ne montrant qu'une bande entre min et max */
    static private IndexColorModel getCMBand(int min,int max,boolean inverse,boolean background,boolean transp) {
       minb=min; maxb=max;
+      int milieu = (min+max)/2;
       for( int i=0; i<256; i++ ) {
          if( i<min || i> max ) rb[i] = gb[i] = bb[i] = (byte)(!background ? (inverse?255:0)
                                                                : inverse ? 255-i : i);
+         else if( i==milieu ) { rb[i]=(byte)0xFF; gb[i]=bb[i]=0; }
          else {
             byte c = (byte)getRBandColor(i);
             rb[i]=0;
@@ -1108,15 +1110,17 @@ public final class ColorMap extends JPanel  implements
          x = greyLevel+mX;
 
          // Petit rectangle sur la bande de la colormap
-         gr.setColor(Color.blue);
-         if( x>mX ) gr.drawLine(x-1,0,x-1,mY-3);
-         if( x<255+mX) gr.drawLine(x+1,0,x+1,mY-3);
-         gr.drawLine(x,0,x,0);
-         gr.drawLine(x,mY-3,x,mY-3);
+//         gr.setColor(Color.blue);
+//         if( x>mX ) gr.drawLine(x-1,0,x-1,mY-3);
+//         if( x<255+mX) gr.drawLine(x+1,0,x+1,mY-3);
+//         gr.drawLine(x,0,x,0);
+//         gr.drawLine(x,mY-3,x,mY-3);
 
          // Petit trait de repère du pixel courant
+         gr.setColor(Color.red);
          gr.drawLine(x,mY+Hp, x,mY+Hp+4);
-
+         
+         gr.setColor(Color.black);
          int len = gr.getFontMetrics().stringWidth(s);
          if( x<40 ) x=40;
          else if( x+len>220 ) x = 220-len;

@@ -191,7 +191,7 @@ public class Forme extends Position {
    }
    
    // Recupération d'un itérator sur les objets qui compose la forme
-   protected Iterator<Obj> iterator() { return new ObjetIterator(); }
+   public Iterator<Obj> iterator() { return new ObjetIterator(); }
 
    class ObjetIterator implements Iterator<Obj> {
       private int index=0;

@@ -762,7 +762,7 @@ public final class Glu implements Runnable {
    protected int findGluSky(String A,int mode) {
       for( int i = vGluSky.size()-1; i >=0; i-- ) {
          TreeNodeAllsky gs = (TreeNodeAllsky) vGluSky.elementAt(i);
-         if( A.equals(gs.id) || A.equals(gs.label) ) return i;
+         if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label, A)>=0 ) return i;
          if( mode==2 ) {
             int offset = gs.label.lastIndexOf('/');
@@ -987,7 +987,7 @@ public final class Glu implements Runnable {
     * Memorisation dans le Vecteur vGluSky des Ciels definis au moyen du
     * dictionnaire GLU propre a Aladin
     */
-   private void memoGluSky(String actionName,String aladinLabel,String aladinMenuNumber,String url,String description,
+   private void memoGluSky(String actionName,String id,String aladinLabel,String aladinMenuNumber,String url,String description,
          String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String aladinTree,String aladinSurvey,String aladinHpxParam) {
       
       // Pour éviter les doublons
@@ -1017,7 +1017,7 @@ public final class Glu implements Runnable {
       // Construction du path pour l'arbre (noeud terminal inclus)
       String path = aladinTree==null ? aladinLabel : aladinTree+"/"+aladinLabel;
       
-      TreeNodeAllsky tn =  new TreeNodeAllsky(aladin,actionName,aladinMenuNumber,url,aladinLabel,
+      TreeNodeAllsky tn =  new TreeNodeAllsky(aladin,actionName,id,aladinMenuNumber,url,aladinLabel,
             description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,path,aladinHpxParam);
       
       if( find<0 ) vGluSky.addElement(tn);
@@ -1193,6 +1193,7 @@ public final class Glu implements Runnable {
       //      String A=null; // L'identificateur de l'enr courant
       String actionName = lastA; // L'identificateur de l'enr courant (voir rq ci-dessous
                         // bug JVM 1.1.8)
+      String id =null; // Identificateur (éventuellement différent de actionName)
       String releaseNumber = null; // Numéro de release de l'application
       String copyright = null;  // Copyright
       String copyrightUrl = null;  // Copyright Url
@@ -1263,8 +1264,8 @@ public final class Glu implements Runnable {
                   if( ignore ) ignore=false;
                   StringTokenizer st = new StringTokenizer(value);
                   while( st.hasMoreTokens() ) {
-                     String id = st.nextToken();
-                     if( aladinDic.get(id)!=null ) {
+                     String id1 = st.nextToken();
+                     if( aladinDic.get(id1)!=null ) {
                         ignore=true;
                         aladin.trace(3,"GLU record overwrite ignored: "+value);
                         break;
@@ -1284,6 +1285,7 @@ public final class Glu implements Runnable {
             else if( isKey(name,"ReleaseNumber") )     releaseNumber=subCR(value);
             else if( isKey(name,"Download") )          download=subCR(value);
             else if( isKey(name,"Jar") )               jar=subCR(value);
+            else if( isKey(name,"Id") )                id=subCR(value);
             else if( isKey(name,"Webstart") )          webstart=subCR(value);
             else if( isKey(name,"Applet") )            applet=subCR(value);
             else if( isKey(name,"JavaParam") )         javaParam=subCR(value);
@@ -1319,7 +1321,7 @@ public final class Glu implements Runnable {
                
                if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
                   if( aladin!=null && aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-                  else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+                  else if( flagGluSky ) memoGluSky(actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                         aladinSurvey,aladinHpxParam);
                   else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
                   else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,
@@ -1339,7 +1341,7 @@ public final class Glu implements Runnable {
                copyright=copyrightUrl=releaseNumber=jar=javaParam=download=webstart=applet=dir=
                      system=aladinActivated=actionName=description=verboseDescr=ack=resultDataType=aladinMenu=
                      aladinMenuNumber=aladinLabel=aladinLabelPlane=docUser=seeAction=url=test=institute=aladinLogo=
-                     aladinSurvey=aladinHpxParam=aladinBookmarks=null;
+                     aladinSurvey=aladinHpxParam=aladinBookmarks=id=null;
                paramDescription = new Hashtable();
                paramDataType = new Hashtable();
                paramValue = new Hashtable(10);
@@ -1449,7 +1451,7 @@ public final class Glu implements Runnable {
          }
          if( hasValidProfile(aladinProfile,aladinTree,flagPlastic) && distribAladin ) {
             if( aladinBookmarks!=null ) aladin.bookmarks.memoGluBookmarks(actionName,aladinBookmarks);
-            else if( flagGluSky ) memoGluSky(actionName,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
+            else if( flagGluSky ) memoGluSky(actionName,id,aladinLabel,aladinMenuNumber,url,description,verboseDescr,ack,aladinProfile,copyright,copyrightUrl,aladinTree,
                   aladinSurvey,aladinHpxParam);
             else if( aladinTree!=null ) memoTree(actionName,description,aladinTree,url,docUser,aladinUrlDemo);
             else if( flagPlastic ) memoApplication(actionName,aladinLabel,aladinMenuNumber,description,verboseDescr,institute,releaseNumber,

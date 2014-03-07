@@ -950,7 +950,7 @@ public final class Command implements Runnable {
           // la liste des serveurs par defaut
           if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
              t=cmd;
-             if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"DSS colored\")";
+             if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"P/DSS2/color\")";
              else {
                 s=a.configuration.getServer();
                 if( s==null || s.trim().length()==0 || s.equalsIgnoreCase("allsky")) s="hips";

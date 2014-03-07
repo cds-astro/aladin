@@ -133,7 +133,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.029";
+    static public final    String VERSION = "v8.033";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -830,7 +830,7 @@ public class Aladin extends JApplet
        SYNCPROJ= chaine.getString("MSYNCPROJ");
        LOCKVIEW   = aladin.chaine.getString("VWMNEWROI");
        DELLOCKVIEW   = aladin.chaine.getString("VWMDELROI");
-       STICKVIEW = aladin.chaine.getString("VWMSTICKON");
+       STICKVIEW = BETAPREFIX+aladin.chaine.getString("VWMSTICKON");
        PAN     = chaine.getString("MPAN");
        RSAMP   = chaine.getString("MRSAMP");
        GLASS   = chaine.getString("MGLASS");
@@ -1086,7 +1086,7 @@ public class Aladin extends JApplet
              { {MTOOLS},
                 {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},
                 {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
-                {},{MBKM},{CMD+"|F5"},{MACRO},
+                {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
                 {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
                 {},{HPXGENERATE},{HPXCREATE},
                    { PROTOPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
@@ -1103,9 +1103,9 @@ public class Aladin extends JApplet
                 {FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
                 {},{PANEL,"%"+PANEL1+"|shift F1","%"+PANEL2C,"%"+PANEL2L,
                    "%"+PANEL4+"|shift F2","%"+PANEL9+"|shift F3","%"+PANEL16+"|shift F4"},
-                {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW}, {ROI},
+                {},{MOREVIEWS+"|F9"},{ONEVIEW}, {DELLOCKVIEW}, {"?"+LOCKVIEW},
 //                {},{"?"+LOCKVIEW},{DELLOCKVIEW}, 
-//                {},{"?"+STICKVIEW},
+                {},{"?"+STICKVIEW},
                 {},{"?"+NORTHUP+"|"+alt+" X"},{"?"+SYNC+"|"+alt+" S"},{"?"+SYNCPROJ+"|"+alt+" Q"},
              },
              { {MHELP},
@@ -2493,11 +2493,19 @@ public class Aladin extends JApplet
        if( currentVersion!=null && currentVersion.length()!=0 &&
              (lastCurrentVersion==null || !lastCurrentVersion.equals(currentVersion)) ) {
           configuration.setOfficialVersion(currentVersion);
-          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
+          trace(1,"Reset cache & bookmarks definition (new official Aladin version)...");
           cache.clear();
           bookmarks.reload();
        }
        
+       // Doit-on nettoyer le cache et recharger les bookmarks officielles
+       // car le numéro de version Aladin a changé par rapport à la dernière utilisation
+       else if( configuration.getVersion()==null || !configuration.getVersion().equals(VERSION) ) {
+          trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
+          cache.clear();
+          bookmarks.reload();
+       }
+
        // Doit-on nettoyer le cache car la dernière session date de plus de 15 jours
        else if((System.currentTimeMillis()-configuration.getLastRun())>15*86400*1000L ) {
           trace(1,"Reloading GLU records & VizieR keywords (too old definitions) => clear local cache...");
@@ -2716,8 +2724,8 @@ public class Aladin extends JApplet
    }
 
    /** Activation d'un background */
-   protected int allsky(TreeNodeAllsky gSky) { return allsky(gSky,null,null,null); }
-   protected int allsky(TreeNodeAllsky gSky,String label,String target,String radius) {
+   protected int allsky(TreeNodeAllsky gSky) { return hips(gSky,null,null,null); }
+   protected int hips(TreeNodeAllsky gSky,String label,String target,String radius) {
       int n=1;
       if( !gSky.isMap() ) n=calque.newPlanBG(gSky,label,target,radius);
       else n=calque.newPlan(gSky.getUrl(), label, gSky.copyright,target,radius);
@@ -6345,7 +6353,9 @@ public boolean handleEvent(Event e) {
       int mem = (int)( (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())/(1024*1024));
       if( firstMem==0 ) firstMem=mem;
       mem-=firstMem;
-      String s= nbSel+" sel / "+nbSrc+" src    "+(fps>0?(int)Math.round(fps)+"fps / ":"")+mem+MB;
+      String s= nbSel+" sel / "+nbSrc+" src    "
+                    + (nbView>view.getModeView()?nbView+" views   ":"")
+                    +(fps>0?(int)Math.round(fps)+"fps / ":"")+mem+MB;
       memStatus.setText(s);
       if( infoPanel!=null ) infoPanel.doLayout();
       Util.toolTip(memStatus,"<HTML><CENTER>"

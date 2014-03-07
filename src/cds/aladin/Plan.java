@@ -1055,8 +1055,13 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          double cx, double cy,double r,
          double rot,boolean sym,int t,int system) {
       projd.modify(label,modeCalib,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system);
+      syncProjLocal();
    }
-
+   
+   
+   /** Mise à jour des projections adaptées à chaque vue (pour les planBG) */
+   protected void syncProjLocal() { }
+   
    /** Force le recalcul de la projection n */
    protected void resetProj(int n) { proj[n]=null; }
 
@@ -1140,11 +1145,15 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
    /** Vérifie que le plan n'est pas de référence pour une vue visible actuellement */
    protected boolean isRefForVisibleView() {
-      for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
-         ViewSimple v = aladin.view.viewSimple[i];
-         if( v.pref==this ) { setDebugFlag(REFFORVISIBLEVIEW,true); return true; }
+      try {
+         for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
+            ViewSimple v = aladin.view.viewSimple[i];
+            if( v.pref==this ) { setDebugFlag(REFFORVISIBLEVIEW,true); return true; }
+         }
+         setDebugFlag(REFFORVISIBLEVIEW,false);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
-      setDebugFlag(REFFORVISIBLEVIEW,false);
       return false;
    }
 
@@ -1440,7 +1449,8 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return false;  // Mais attention, ce n'est pas certain !!
 
       } else {
-         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView(),false);
+//         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView(),false);
+         boolean rep = !v.getProj().agree(projd,aladin.view.getCurrentView(),false);
          setDebugFlag(OUTOFVIEW,rep);
          return rep;
       }
@@ -1848,7 +1858,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       // Activation automatique du SED associé au plan (le cas échéant)
       if( active && isSED() ) {
          Source sEtalon = aladin.view.addSEDSource(this);
-         System.out.println("Plan.setActivated() setSED("+sEtalon+")");
+//         System.out.println("Plan.setActivated() setSED("+sEtalon+")");
          if( sEtalon!=null ) aladin.view.zoomview.setSED(sEtalon);
       }
       

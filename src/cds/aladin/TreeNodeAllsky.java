@@ -41,7 +41,8 @@ import cds.tools.Util;
 /** Gère les noeuds de l'arbre du formulaire ServerAllsky */
 public class TreeNodeAllsky extends TreeNode {
 
-   private String url;           // L'url ou le path du survey
+   public String internalId;    // Alternative à l'ID de l'identificateur GLU
+   private String url;          // L'url ou le path du survey
    public String description;   // Courte description (une ligne max)
    public String verboseDescr;  // Description de l'application (1 paragraphe ou plus)
    public String ack;           // L'acknowledgement
@@ -214,7 +215,7 @@ public class TreeNodeAllsky extends TreeNode {
 //      return maxOrder;
    }
 
-   public TreeNodeAllsky(Aladin aladin,String actionName,String aladinMenuNumber, String url,String aladinLabel,
+   public TreeNodeAllsky(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
          String aladinHpxParam) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
@@ -227,6 +228,7 @@ public class TreeNodeAllsky extends TreeNode {
       this.copyrightUrl = copyrightUrl;
       this.hpxParam     = aladinHpxParam;
       this.aladinProfile= aladinProfile;
+      this.internalId   = id;
       
       if( this.url!=null ) {
          char c = this.url.charAt(this.url.length()-1);

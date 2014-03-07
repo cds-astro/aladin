@@ -894,7 +894,7 @@ public class Ligne extends Position {
    }
    
    // Recupération d'un itérator sur les objets qui compose la forme (Ligne, Cote) 
-   protected Iterator<Obj> iterator() { return new ObjetIterator(); }
+   public Iterator<Obj> iterator() { return new ObjetIterator(); }
 
    class ObjetIterator implements Iterator<Obj> {
       private Ligne line = getFirstBout();

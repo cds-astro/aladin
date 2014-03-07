@@ -256,7 +256,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {
                               aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                              gSky = new TreeNodeAllsky(aladin, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
+                              gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
                            }
                            n=aladin.calque.newPlanBG(gSky,label,null,null);
 
@@ -266,7 +266,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            try { gSky = new TreeNodeAllsky(aladin, f); }
                            catch( Exception e ) {
                               aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                              gSky = new TreeNodeAllsky(aladin, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
+                              gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }
                            n=aladin.calque.newPlanBG(gSky,label,target,radius);
 
@@ -444,7 +444,7 @@ public class ServerFile extends Server implements XMLConsumer {
                      try { gSky = new TreeNodeAllsky(aladin, f); }
                      catch( Exception e ) {
                         aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                        gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
+                        gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
                      }
                      n=aladin.calque.newPlanBG(gSky,label,null,null);
 
@@ -454,7 +454,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   try { gSky = new TreeNodeAllsky(aladin, f); }
                   catch( Exception e ) {
                      aladin.trace(4, "ServerFile.creatLocalPlane(...) Allsky properties file not found, assume default params");
-                     gSky = new TreeNodeAllsky(aladin, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
+                     gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
                   }
                   n=aladin.calque.newPlanBG(gSky,label,null,null);
                }

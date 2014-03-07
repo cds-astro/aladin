@@ -492,6 +492,7 @@ public final class Calque extends JPanel implements Runnable {
       for( int i=0; i<plan.length; i++ ) {
          Plan p = plan[i];
          if( !p.flagOk || !p.active ) continue;
+         if( p instanceof PlanContour ) continue;
          if( p.hasObj() || p.hasSources() ) return true;
       }
       return false;
@@ -1027,17 +1028,12 @@ public final class Calque extends JPanel implements Runnable {
          if( plan[i] instanceof PlanBG && Projection.isOk(plan[i].projd)) {
             if( plan[i].projd.frame != ((PlanBG)plan[i]).getCurrentFrameDrawing() ) {
                plan[i].projd.frame = ((PlanBG)plan[i]).getCurrentFrameDrawing();
+               plan[i].syncProjLocal();
                plan[i].resetProj();
             }
          }
       }
-
-      // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
-//      for( int i=0; i<aladin.view.viewSimple.length; i++ ) {
-//         ViewSimple v = aladin.view.viewSimple[i];
-//         if( v.projLocal!=null ) v.projLocal.frame = frame;
-//      }
-
+      
       // Réaffichage éventuel du formulaire courant pour convertir
       // la position par défaut
 //      if( aladin.dialog.isVisible() ){
@@ -1058,13 +1054,14 @@ public final class Calque extends JPanel implements Runnable {
       aladin.view.repaintAll();
 
       // Nécessaire dans le cas de plan Healpix
-      for( int i=0; i<aladin.view.modeView; i++ ) {
-         ViewSimple v = aladin.view.viewSimple[i];
-         if( v.isFree() ) continue;
-         if( !(v.pref instanceof PlanBG) ) continue;
-         v.newView(1);
-         v.getProj().setProjCenter(aladin.view.repere.raj,aladin.view.repere.dej);
-      }
+//      for( int i=0; i<aladin.view.modeView; i++ ) {
+//         ViewSimple v = aladin.view.viewSimple[i];
+//         if( v.isFree() ) continue;
+//         if( !(v.pref instanceof PlanBG) ) continue;
+//         v.newView(1);
+//         v.getProj().setProjCenter(aladin.view.repere.raj,aladin.view.repere.dej);
+//      }
+      
 //      aladin.view.newView(1);
 //      aladin.view.syncView(1,null,null,true);
    }

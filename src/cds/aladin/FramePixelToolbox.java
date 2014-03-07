@@ -229,19 +229,22 @@ public class FramePixelToolbox extends JFrame {
       PlanImage p = (PlanImage)v.pref;
       PointD po   = v.getPosition(x,y);
       double pixel;
-      if( p instanceof PlanBG ) pixel = ((PlanBG)p).getPixelInDouble(po.x, po.y);
+      if( p instanceof PlanBG ) {
+         p.projd = v.projLocal.copy();
+         pixel = ((PlanBG)p).getPixelInDouble(po.x, po.y);
+      }
       else {
          int yi = (int)Math.floor(po.y);
          int xi = (int)Math.floor(po.x);
          if( yi<0 || yi>=p.naxis2 || xi<0 || xi>p.naxis1 ) pixel=Double.NaN;
          else {
             if( p.pixelsOrigin!=null ) {
-               pixel = p.getPixVal(p.pixelsOrigin,bitpix,(p.naxis2-yi-1)*p.naxis1+xi)*p.bScale+p.bZero;
+               pixel = p.getPixVal(p.pixelsOrigin,p.bitpix,(p.naxis2-yi-1)*p.naxis1+xi)*p.bScale+p.bZero;
             } else {
                if( !p.pixelsOriginFromDisk() ) pixel=Double.NaN;
                byte [] onePixelOrigin = new byte[p.npix];
                if( !p.getOnePixelFromCache(onePixelOrigin,p.npix,xi,yi) ) pixel = Double.NaN;
-               pixel = p.getPixVal(onePixelOrigin,bitpix,0)*p.bScale+p.bZero;
+               else pixel = p.getPixVal(onePixelOrigin,bitpix,0)*p.bScale+p.bZero;
             }
          }
       }
@@ -262,6 +265,7 @@ public class FramePixelToolbox extends JFrame {
    // Regénération de l'ensemble des valeurs à partir des éléments connus
    private void resume() {
       if( pVal==null ) return;
+      System.out.println("raw="+raw);
       pVal.setValue(raw);
       pCutMin.setValue(cutMin);
       pCutMax.setValue(cutMax);
@@ -340,6 +344,7 @@ public class FramePixelToolbox extends JFrame {
          
          for( int i=0; i<field.length; i++ ) {
             MyField f = field[i] = new MyField(W[i]);
+            if( i==4 ) field[i].setOpaque(true);
             f.setEditable(editable && i<2);
             if( f.isEditable() ) {
                f.setActionCommand(i+"");
@@ -372,9 +377,11 @@ public class FramePixelToolbox extends JFrame {
             int b=cm.getBlue(index);
             field[3].setText( String.format("%02X-%02X-%02X", r,g,b) );
             field[4].setBackground( new Color(r,g,b) );
+            field[4].setText("");
          } else {
             field[3].setText("");
             field[4].setBackground( Color.white );
+            field[4].setText(".");
          }
       }
       

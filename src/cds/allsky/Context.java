@@ -87,8 +87,8 @@ public class Context {
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné 
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
    protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
-   public double[] pixelBad=null;            // Plage de valeurs de pixel ignorées (valeurs physiques)
-   protected double[] bad=null;              // Plage de valeurs de pixel ignorées (raw)
+   public double[] pixelGood=null;          // Plage des valeurs des pixels conservés (valeurs physiques)
+   protected double[] good=null;              // Plage des valeurs de pixels conservés (raw)
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
@@ -144,7 +144,8 @@ public class Context {
       lastNorder3=-2;
       validateOutputDone=validateInputDone=validateCutDone=false;
       prop=null;
-      pixelBad=null;
+      pixelGood=null;
+      good=null;
       pixelRangeCut=null;
    }
 
@@ -278,15 +279,14 @@ public class Context {
        }
        if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
    }
-   public void setPixelBad(String sbad) throws Exception {
-      StringTokenizer st = new StringTokenizer(sbad," ");
-      int i=0;
-      if( pixelBad==null ) pixelBad = new double[]{Double.NaN,Double.NaN};
+   public void setPixelGood(String sGood) throws Exception {
+      StringTokenizer st = new StringTokenizer(sGood," ");
+      if( pixelGood==null ) pixelGood = new double[]{Double.NaN,Double.NaN};
       try {
-         pixelBad[0] = Double.parseDouble(st.nextToken());
-         if( st.hasMoreTokens() ) pixelBad[1] = Double.parseDouble(st.nextToken());
-         else pixelBad[1] = pixelBad[0];
-      } catch( Exception e ) { throw new Exception("pixelBad parameter error"); }
+         pixelGood[0] = Double.parseDouble(st.nextToken());
+         if( st.hasMoreTokens() ) pixelGood[1] = Double.parseDouble(st.nextToken());
+         else pixelGood[1] = pixelGood[0];
+      } catch( Exception e ) { throw new Exception("pixelGood parameter error"); }
   }
   
    public double [] getPixelRangeCut() throws Exception { return pixelRangeCut; }
@@ -381,6 +381,7 @@ public class Context {
        file.loadFITS(file.getFilename(), 0, x, y, w, h);
 
        double[] cutOrig = file.findAutocutRange();
+       cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX
 //       if( skyvalName!=null && !skyvalName.equalsIgnoreCase("true") ) {
 //          try {
 //             double val = file.headerFits.getDoubleFromHeader(getSkyval());
@@ -572,11 +573,11 @@ public class Context {
             Aladin.trace(3,"BITPIX kept "+bitpix+" BZERO,BSCALE,BLANK="+bzero+","+bscale+","+blank);
          }
          
-         // Calcul des valeurs raw des bad pixels
-         if( pixelBad!=null ) {
-            bad = new double[2];
-            bad[0] = (pixelBad[0]-bZeroOrig)/bScaleOrig;
-            bad[1] = (pixelBad[1]-bZeroOrig)/bScaleOrig;
+         // Calcul des valeurs raw des good pixels
+         if( pixelGood!=null ) {
+            good = new double[2];
+            good[0] = (pixelGood[0]-bZeroOrig)/bScaleOrig;
+            good[1] = (pixelGood[1]-bZeroOrig)/bScaleOrig;
          }
 
       }

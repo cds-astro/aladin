@@ -166,7 +166,7 @@ public abstract class Obj implements Propable{
    public String getInfo() { return id; }
    
    /** Iterator for multi-component objects such as Line, Polygon, Box ... */
-   public Iterator<Obj> iteratorObj() { return null; }
+   public Iterator<Obj> iterator() { return null; }
    
    /** Provide script command associated to this object */
    public String getCommand() { return null; }

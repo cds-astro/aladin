@@ -102,7 +102,8 @@ public final class Configuration extends JFrame
    protected static String FRAME      = "Frame";
    protected static String FRAMEALLSKY= "FrameAllsky";
    protected static String PROJALLSKY = "ProjAllsky";
-   protected static String VERSION    = "OfficialVersion";
+   protected static String VERSION    = "Version";
+   protected static String OFFICIALVERSION= "OfficialVersion";
    protected static String CACHE      = "HpxCacheSize";
    protected static String MAXCACHE   = "HpxMaxCacheSize";
    protected static String LOG        = "Log";
@@ -598,6 +599,11 @@ public final class Configuration extends JFrame
    
    /** Retourne la chaine décrivant la dernière version officielle */
    protected String getOfficialVersion() {
+      return get(OFFICIALVERSION);
+   }
+   
+   /** Retourne la chaine décrivant la dernière version utilisée */
+   protected String getVersion() {
       return get(VERSION);
    }
    
@@ -1523,6 +1529,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       // On mémorise la date de la session
       setLastRun();
       
+      // Mémorisation de la version utilisée
+      set(VERSION,Aladin.VERSION);
+      
       // On conserve l'état du réticule (large ou normal)
       if( aladin.calque.reticleMode==2 && get(RETICLE)==null ) set(RETICLE,"Large");
       if( aladin.calque.reticleMode!=2 && get(RETICLE)!=null ) remove(RETICLE);
@@ -2123,7 +2132,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    
    /** Positionne la chaine décrivrant la dernière version officielle */
    protected void setOfficialVersion(String s) {
-      set(VERSION,s);
+      set(OFFICIALVERSION,s);
    }
 
    /** Propriétés modifiables par la commande script "setconf xxx=valeur"

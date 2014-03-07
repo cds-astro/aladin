@@ -234,7 +234,7 @@ public class CacheFits {
 
 
       // applique un filtre spécial
-      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelBad!=null ) delSkyval(f.fits);
+      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelGood!=null ) delSkyval(f.fits);
 
       return f;
    }
@@ -395,7 +395,7 @@ public class CacheFits {
          } catch (NullPointerException e) { }
       }
       
-      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 && context.pixelBad==null ) return;
+      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 && context.pixelGood==null ) return;
       
 //      System.out.println("SkyVal="+skyval+" => "+f.getFilename()+f.getFileNameExtended());
       
@@ -408,7 +408,7 @@ public class CacheFits {
             
             if( Double.isNaN(pixelFull) ) continue; 
             
-            if( context.pixelBad!=null && context.pixelBad[0]<=pixelFull && pixelFull<=context.pixelBad[1] ) {
+            if( context.pixelGood!=null && (pixelFull<context.pixelGood[0] || context.pixelGood[1]<pixelFull) ) {
                if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, blank);
                else f.setPixelInt(x+f.xCell, y+f.yCell, (int)blank); 
                continue;

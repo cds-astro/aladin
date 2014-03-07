@@ -48,6 +48,7 @@ import javax.swing.text.DefaultEditorKit.CutAction;
 
 import cds.astro.Coo;
 import cds.moc.HealpixMoc;
+import cds.moc.MocCell;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -175,6 +176,7 @@ public class PlanBG extends PlanImage {
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    protected String pixelRange=null;  // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected String pixelCut=null;  // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
+   protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
    
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
@@ -547,6 +549,19 @@ public class PlanBG extends PlanImage {
          pixList.remove(k);
 //         System.out.println("*** removeHealpixErrorOutsideMoc "+k);
       }
+      
+      // On en profite pour mémoriser la position de la première cellule
+      if( (co==null || flagNoTarget) && moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
+         try {
+            MocCell cell = moc.iterator().next();
+            double res[] = CDSHealpix.pix2ang_nest(CDSHealpix.pow2(cell.getOrder()), cell.getNpix());
+            double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
+            co = new Coord(radec[0],radec[1]);
+         } catch( Exception e1 ) {
+            if( aladin.levelTrace>=3 ) e1.printStackTrace();
+         }
+      }
+
    }
    
    /** Chargement d'un plan Progen associé au survey */
@@ -564,13 +579,47 @@ public class PlanBG extends PlanImage {
 //      System.out.println("PlanBG.setFrameDrawing("+Localisation.FRAME[frame]+")..");
       if( projd.frame!=getCurrentFrameDrawing() ) {
 //         System.out.println("PlanBG.setFrameDrawing: => new proj = "+Localisation.REPERE[getFrame()]);
-         ViewSimple v = aladin.view.getView(this);
-         Coord c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+         
+//         ViewSimple v = aladin.view.getView(this);
+//         Coord c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+//         projd.frame = getCurrentFrameDrawing();
+//         aladin.view.newView(1);
+//         v.goToAllSky(c);
+//         aladin.view.repaintAll();
+         
          projd.frame = getCurrentFrameDrawing();
-         aladin.view.newView(1);
-         v.goToAllSky(c);
+         syncProjLocal();
          aladin.view.repaintAll();
       }
+   }
+   
+   /** Adaptation des projLocal dans chaque vue */
+   protected void syncProjLocal() {
+      for( int j=0; j<aladin.view.modeView; j++ ) {
+         ViewSimple v = aladin.view.viewSimple[j];
+         if( v.pref!=this ) continue;
+         Coord c = v.projLocal.getProjCenter();
+         v.projLocal.frame = projd.frame;
+//         v.projLocal.setProjCenter(c.al,c.del);         
+         if( projd.frame!=Localisation.ICRS ) c = Localisation.frameToFrame(c, Localisation.ICRS, projd.frame);
+         v.projLocal.modify(projd.label,projd.modeCalib,c.al,c.del,projd.rm,projd.rm,projd.cx,projd.cy,projd.r,projd.r,
+               projd.rot,projd.sym,projd.t,projd.system);
+         v.newView(1);
+      }
+     
+      // Idem pour les vues non visibles
+      for( int j=aladin.view.viewMemo.size()-1; j>=0; j--) {
+         ViewMemoItem memo = aladin.view.viewMemo.memo[j]; 
+         if( memo==null ) continue;
+         if( memo.pref!=this ) continue;
+         Coord c = memo.projLocal.getProjCenter();
+         memo.projLocal.frame = projd.frame;
+//         memo.projLocal.setProjCenter(c.al,c.del);
+         if( projd.frame!=Localisation.ICRS ) c = Localisation.frameToFrame(c, Localisation.ICRS, projd.frame);
+         memo.projLocal.modify(projd.label,projd.modeCalib,c.al,c.del,projd.rm,projd.rm,projd.cx,projd.cy,projd.r,projd.r,
+               projd.rot,projd.sym,projd.t,projd.system);
+      }
+
    }
    
    /** Retourne le frame courant en fonction du sélecteur du frame d'affichage */
@@ -599,6 +648,7 @@ public class PlanBG extends PlanImage {
       if( this.label==null || this.label.trim().length()==0) setLabel(survey);
       int defaultProjType = aladin.configuration.getProjAllsky();
       if( co==null ) {
+         flagNoTarget=true;
          co = new Coord(0,0);
          co=Localisation.frameToFrame(co,aladin.localisation.getFrame(),Localisation.ICRS );
          coRadius=220;
@@ -2439,7 +2489,7 @@ public class PlanBG extends PlanImage {
       } else pix = getPixList(v,getCooCentre(v),order); // via query_disc()
       
       for( int i=0; i<pix.length; i++ ) {
-         if( moc!=null && !moc.isIntersecting(order, i) ) continue;
+         if( moc!=null && !moc.isIntersecting(order, pix[i]) ) continue;
          if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
          HealpixKey healpix;
          if( lowResolution && allsky!=null ) healpix = (allsky.getPixList())[i];

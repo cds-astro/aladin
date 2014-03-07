@@ -4453,7 +4453,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    /** Dessin du repère  */
    protected void drawRepere(Graphics g, int dx, int dy) {
-
       aladin.view.repere.reprojection(this);  // On reprojette systématiquement !!
       if( !aladin.calque.hasReticle() || !Projection.isOk(getProj()) ) return;
       if( aladin.calque.reticleMode==2
@@ -5894,10 +5893,12 @@ testx1=x1; testy1=y1; testw=w; testh=h;
             aladin.view.coteDist.draw(g,vs,dx,dy);
          }
 
-         // Tracage du quick Simbad s'il existe
-         if( aladin.view.simRep!=null ) {
-            aladin.view.simRep.projection(vs);
-            aladin.view.simRep.draw(g,vs,dx,dy);
+         if( aladin.view.getMouseNumView()==n ) {
+            // Tracage du quick Simbad s'il existe
+            if( aladin.view.simRep!=null ) {
+               aladin.view.simRep.projection(vs);
+               aladin.view.simRep.draw(g,vs,dx,dy);
+            }
          }
       }
 

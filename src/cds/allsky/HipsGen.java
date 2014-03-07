@@ -168,11 +168,12 @@ public class HipsGen {
          if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          context.setMethod(val);
          
-      } else if (opt.equalsIgnoreCase("pixelBad")) { context.setPixelBad(val);
+      } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
       } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
+         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
       } else throw new Exception("Option unknown [" + opt + "]");
       
    }
@@ -364,7 +365,7 @@ public class HipsGen {
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
             "                   conversion - ex: \"-5 110\")" + "\n" +
-            "pixelBad=min [max] Range of pixel values ignored (equivalent to a BLANK range)" + "\n" +
+//            "pixelGood=min [max] Range of pixel values kept" + "\n" +
             "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
 //            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
             "fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" + 

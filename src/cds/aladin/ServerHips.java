@@ -110,7 +110,7 @@ public class ServerHips extends ServerTree  {
       
       int j = aladin.glu.findGluSky(survey,2);
       if( j<0 ) {
-         Aladin.warning(this,"Healpix allsky unknown ["+survey+"]",1);
+         Aladin.warning(this,"Progressive survey (HiPS) unknown ["+survey+"]",1);
          return -1;
       }
 
@@ -121,7 +121,7 @@ public class ServerHips extends ServerTree  {
          aladin.command.printConsole("!!! "+e.getMessage());
       }
 
-      return aladin.allsky(gSky,label,target,radius);
+      return aladin.hips(gSky,label,target,radius);
       
 //      return j;
       
@@ -147,8 +147,9 @@ public class ServerHips extends ServerTree  {
          String target = getTarget(false);
          String radius = getRadius(false);
          String cible = target==null || target.trim().length()==0 ? "" : (" "+target+( radius==null ? "" : " "+radius));
-         String criteria = ta.id+mode;
-         String code = "get allsky("+Tok.quote(ta.id)+mode+")";
+         String id = ta.internalId!=null ? ta.internalId : ta.id;
+         String criteria = id+mode;
+         String code = "get hips("+Tok.quote(id)+mode+")";
          aladin.console.printCommand(code+cible);
          int m=createPlane(target,radius,criteria,ta.aladinLabel,ta.copyright);
          if( m!=-1 ) aladin.calque.getPlan(m).setBookmarkCode(code+" $TARGET $RADIUS");

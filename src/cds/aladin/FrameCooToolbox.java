@@ -448,7 +448,7 @@ public class FrameCooToolbox extends JFrame {
             new double[] { plx,0}, new double []{ rv,0});
       targetCoo.toEpoch(targetEpoch);
      
-      System.out.println("==> "+targetCoo);
+//      System.out.println("==> "+targetCoo);
       return Util.myRound( ""+targetCoo.plx,6 );
    }
    
@@ -460,7 +460,7 @@ public class FrameCooToolbox extends JFrame {
             new double[] { plx,0}, new double []{ rv,0});
       targetCoo.toEpoch(targetEpoch);
      
-      System.out.println("==> "+targetCoo);
+//      System.out.println("==> "+targetCoo);
       double d = Coo.distance(ra, dec, targetCoo.getLon(), targetCoo.getLat() );
       return Coord.getUnit( d );
    }

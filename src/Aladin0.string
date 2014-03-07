@@ -1004,6 +1004,7 @@ BLKBLK	Blink seq.
 BLKERR1	The reference image number\nshould be in
 BLKERR2	You must select at least two images !
 #BLKERR3	The reference image number for the resampling\ndoes not correspond to a valid image !
+ADDFRAMECONF Do you really want to append the source image frame to the cube (resp. to the mosaic image) ?
 
 BLKTITLE.fr	Associations d'images
 BLKINFO.fr	Spécifiez les images que vous désirez associer.\nSélectionnez le mode Mosaïque ou Séquence animée,\npuis appuyez sur CREE.
@@ -1013,6 +1014,7 @@ BLKBLK.fr	Séquence animée
 BLKERR1.fr	Le numéro de l'image de référence\ndoit être compris dans
 BLKERR2.fr	Vous devez spécifier au-moins deux images !
 #BLKERR3.fr	Le numéro de l'image de référence pour le rééchantillonnage\nne correspond à aucun image valide !
+ADDFRAMECONF.fr Voulez-vous réellement ajouter l'image source au cube de données (resp. à l'image mosaïque) ?
 
 # FrameResample.java strings
 RSPPIXF	Full

@@ -105,7 +105,7 @@ public class BuilderTiles extends Builder {
          double bl1 = context.getBlank();
          if( context.hasAlternateBlank() ) context.info("BLANK conversion from "+(Double.isNaN(bl0)?"NaN":bl0)+" to "+(Double.isNaN(bl1)?"NaN":bl1));
          else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
-         if( context.bad!=null ) context.info("Pixel values ignored ["+ip(context.bad[0],bz,bs)+" .. "+ip(context.bad[1],bz,bs)+"]");
+         if( context.good!=null ) context.info("Good pixel values ["+ip(context.good[0],bz,bs)+" .. "+ip(context.good[1],bz,bs)+"] => other values are ignored");
          context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
       }
       build();
@@ -181,14 +181,19 @@ public class BuilderTiles extends Builder {
             if( memoCutOrig[2]!=0 || memoCutOrig[3]!=0 ) { cutOrig[2]=memoCutOrig[2]; cutOrig[3]=memoCutOrig[3]; }
             context.setCutOrig(cutOrig);
          }
-         context.info("Data range ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"], pixel cut ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+         
+         if( cutOrig[0]==cutOrig[1] ) context.warning("BAD PIXEL CUT: ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"] => YOU WILL HAVE TO CHANGE/EDIT THE properties FILE VALUES");
+         
          context.setValidateCut(true);
          
          if( hasAlternateBlank ) context.setBlankOrig(blankOrig);
-      }
+         
+         context.initParameters();
+         context.info("Data range ["+ip(cutOrig[2],bz,bs)+" .. "+ip(cutOrig[3],bz,bs)+"], pixel cut ["+ip(cutOrig[0],bz,bs)+" .. "+ip(cutOrig[1],bz,bs)+"]");
+        
+      } else context.initParameters();
       
-      // Mise à jour des paramètres de sortie (en cas de conversion du BITPIX notamment)
-      context.initParameters();
+
       if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HEALPix survey");
       if( !context.isColor() && context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
       

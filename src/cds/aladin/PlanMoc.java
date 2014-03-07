@@ -168,28 +168,38 @@ public class PlanMoc extends PlanBGCat {
    protected int getCounts() { return 0; }
 
    protected boolean waitForPlan() {
-      if( dis==null ) return true;
-      super.waitForPlan();
-      try {
-         if( moc==null && dis!=null ) {
-            moc = new HealpixMoc();
-            moc.setMinLimitOrder(3);
-            if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
-            else moc.readASCII(dis);
+      if( dis!=null ) {
+         super.waitForPlan();
+         try {
+            if( moc==null && dis!=null ) {
+               moc = new HealpixMoc();
+               moc.setMinLimitOrder(3);
+               if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
+               else moc.readASCII(dis);
+            }
+            String c = moc.getCoordSys();
+            frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
+
          }
-         String c = moc.getCoordSys();
-         frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
+         catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            return false;
+         }
          
-         // Centrage sur la première cellule
-//         if( moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
-//            MocCell cell = moc.iterator().next();
-//            aladin.execAsyncCommand(cell+"");
-//         }
       }
-      catch( Exception e ) {
-         if( aladin.levelTrace>=3 ) e.printStackTrace();
-         return false;
+      
+      // Mémoristion de la position de la première cellule
+      if( (co==null || flagNoTarget ) && moc.getSize()>0 && frameOrigin==Localisation.ICRS ) {
+         try {
+            MocCell cell = moc.iterator().next();
+            double res[] = CDSHealpix.pix2ang_nest(CDSHealpix.pow2(cell.getOrder()), cell.getNpix());
+            double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
+            co = new Coord(radec[0],radec[1]);
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+         }
       }
+      
       return true;
    }
    

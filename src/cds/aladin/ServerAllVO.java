@@ -464,7 +464,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
          aladin.log("Error","Discovery tool error.submit()");
       }
 
-System.out.println("C'est terminé pour le multiplexeur");
+//System.out.println("C'est terminé pour le multiplexeur");
 //seeJeton();
       finMultiplex();
       defaultCursor();

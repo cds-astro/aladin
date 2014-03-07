@@ -204,7 +204,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       getMoc.setFont( Aladin.BOLD);
       getMoc.setEnabled(false);
       
-      // Bouton getDMap
+      // Bouton getDMap      
       getDMap = new JButton(CATDMAP);
       getDMap.setMargin(insets);
       getDMap.addActionListener(this);
@@ -216,7 +216,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       catControl.setBackground(Aladin.BLUE);
       catControl.add(getReadMe);
       catControl.add(getMoc);
-      catControl.add(getDMap);
+      if( aladin.BETA ) catControl.add(getDMap);
       if( !Aladin.OUTREACH ) add(catControl);
       y+=HAUT+MARGE+5;
 

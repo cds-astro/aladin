@@ -102,7 +102,6 @@ public final class ViewMemoItem {
       
       v.plot = plot==null ? null : plot.copyIn(v);
       
-      // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
       if( pref instanceof PlanBG ) {
 //         v.projLocal = v.pref.projd.copy();
 //         v.projLocal.setProjCenter(alphai, deltai);

@@ -311,6 +311,7 @@ public final class FrameServer extends JFrame implements ActionListener,KeyListe
       } else if( s.equals(REFRESH) ){ refresh();
       } else if( s.equals(SUBMIT) ) {
 //         aladin.dialog.setCurrent(discoveryServer.nom);
+         discoveryServer.tree.clear();
          discoveryServer.submit();
       } else if( s.equals(MODIFY_ENDPOINT) ) { modifyEndpoint();
       }

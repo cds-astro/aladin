@@ -1586,6 +1586,9 @@ public final class Save extends JFrame implements ActionListener {
             String linkFilename = filename+(lkFlex?".lkflex":".lk");
             o = new FileOutputStream(aladin.getFullFileName(linkFilename));
             linkWriter(v,o,lkFlex);
+            
+            Projection proj = v.pref.projd;
+//            Projection proj = v.getProj();
 
             // écriture position des 4 coins de la vue
             if( lkFlex ) {
@@ -1598,25 +1601,25 @@ public final class Save extends JFrame implements ActionListener {
                 Coord coo1 = new Coord();
                 coo1.x = pp.x;
                 coo1.y = pp.y;
-                v.pref.projd.getCoord(coo1);
+                proj.getCoord(coo1);
 
                 pp = v.getPosition(0.0, v.rv.height);
                 Coord coo2 = new Coord();
                 coo2.x = pp.x;
                 coo2.y = pp.y;
-                v.pref.projd.getCoord(coo2);
+                proj.getCoord(coo2);
 
                 pp = v.getPosition((double)v.rv.width, (double)v.rv.height);
                 Coord coo3 = new Coord();
                 coo3.x = pp.x;
                 coo3.y = pp.y;
-                v.pref.projd.getCoord(coo3);
+                proj.getCoord(coo3);
 
                 pp = v.getPosition(v.rv.width, 0.0);
                 Coord coo4 = new Coord();
                 coo4.x = pp.x;
                 coo4.y = pp.y;
-                v.pref.projd.getCoord(coo4);
+                proj.getCoord(coo4);
 
                 out.print("# C0 "+"0.0"+" "+"0.0"+" "+coo1.al+" "+coo1.del+"\n");
                 out.print("# C1 "+"0.0"+" "+v.rv.height+" "+coo2.al+" "+coo2.del+"\n");
@@ -1688,7 +1691,7 @@ public final class Save extends JFrame implements ActionListener {
 
 
       // Affichage des overlays
-      if( Projection.isOk(v.pref.projd ) ) {
+      if( Projection.isOk(v.getProj() ) ) {
          v.paintOverlays(epsg,null,0,0,true,0x2);
 //         v.drawRepere(epsg,0,0);
       }
