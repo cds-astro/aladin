@@ -342,7 +342,7 @@ public class Aladin extends JApplet
     Help help;                    // Gere le "Help" en ligne
     public ServerDialog dialog;   // Gere l'interrogation des serveurs
     TreeView treeView;            // Gere l'arbre contenant l'historique des interrogations
-    FrameCM frameCM;              // Gere la fenetre du controle de la table des couleurs
+    FrameColorMap frameCM;              // Gere la fenetre du controle de la table des couleurs
     FrameRGB frameRGB;            // Gere la fenetre pour la creation des plans RGB
     FrameBlink frameBlink;        // Gere la fenetre pour la creation des plans Blink
     FrameArithmetic frameArithm;   // Gere la fenetre pour la creation des plans Arithmetic via une opération arithmétique
@@ -472,7 +472,7 @@ public class Aladin extends JApplet
     // Sous-menus
     String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,RETICLE,RETICLEL,NORETICLE,
            TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,
-           COOTOOL,PIXELTOOL,SESAME,NEW,PREF,
+           COOTOOL,PIXELTOOL,CALCULATOR, SESAME,NEW,PREF,
            /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
            TUTORIAL,SENDBUG,PLUGINFO,NEWS,ABOUT,ZOOMP,ZOOMM,ZOOM,ZOOMPT,PAN,SYNC,PREVPOS,NEXTPOS,
            SYNCPROJ,GLASS,GLASSTABLE,RSAMP,VOINFO,FULLSCREEN,PREVIEWSCREEN,MOREVIEWS,ONEVIEW,NEXT,LOCKVIEW,
@@ -931,6 +931,7 @@ public class Aladin extends JApplet
        SESAME = chaine.getString("SESAME");
        COOTOOL= chaine.getString("COOTOOL");
        PIXELTOOL= chaine.getString("PIXELTOOL");
+       CALCULATOR= chaine.getString("CALCULATOR");
        SIMBAD = chaine.getString("SIMBAD");
        VIZIERSED = chaine.getString("VIZIERSED");
        AUTODIST = chaine.getString("AUTODIST");
@@ -1084,7 +1085,7 @@ public class Aladin extends JApplet
                 {MOCLOAD},{MOCGENCAT},{MOCGENIMG},{MOCGENIMGS},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
              },
              { {MTOOLS},
-                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},
+                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
                 {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
                 {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
                 {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
@@ -3027,6 +3028,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,SESAME) ){ sesame();
       } else if( isMenu(s,COOTOOL) ){ cooTool();
       } else if( isMenu(s,PIXELTOOL) ){ pixelTool();
+      } else if( isMenu(s,CALCULATOR) ){ calculator();
 //      } else if( isMenu(s,CEA_TOOLS) ){ showCEATools();
       } else if( isMenu(s,MACRO) ) { macro();
       } else if( isMenu(s,PREF) )  { preferences();
@@ -3423,7 +3425,6 @@ public class Aladin extends JApplet
     /** Activation ou désactivation des infos d'overlays colormap via la Jbar */
     protected void rainbow() {
        view.showRainbow(miRainbow.isSelected());
-//       console.setCommand("rainbow "+(view.hasRainbow()?"on":"off"));
        view.repaintAll();
     }
 
@@ -3581,7 +3582,7 @@ public class Aladin extends JApplet
     public void updatePixel() {
        if( frameCM==null ) {
           trace(1,"Creating the colormap window");
-          frameCM = new FrameCM(this);
+          frameCM = new FrameColorMap(this);
        }
        boolean visible = toolBox.tool[ToolBox.HIST].mode==Tool.DOWN;
        frameCM.setVisible(visible);
@@ -3898,20 +3899,21 @@ public class Aladin extends JApplet
        localisation.focus(Localisation.YOUROBJ);
     }
     
+    protected void calculator() {
+       localisation.focus(chaine.getString("YOUREXPR"),"= ");
+    }
+    
     
     protected FrameCooToolbox frameCooTool=null;
     protected void cooTool() {
        if( frameCooTool==null ) frameCooTool=new FrameCooToolbox(this);
        else frameCooTool.setVisible(true);
-       log("CoordToolbox","");
     }
 
     protected FramePixelToolbox framePixelTool=null;
     protected void pixelTool() {
        if( framePixelTool==null ) framePixelTool=new FramePixelToolbox(this);
        else framePixelTool.setVisible(true);
-       log("PixelToolbox","");
-
     }
 
     /** Lancement ou arrêt du mode Simbad Pointer */
@@ -4319,7 +4321,7 @@ public void setLocation(Point p) {
    }
    static private Point computeLocation1(Frame f) {
       Dimension d;
-      if( f instanceof FrameCM )       return new Point(180,aladin.getY());
+      if( f instanceof FrameColorMap )       return new Point(180,aladin.getY());
       if( f instanceof FrameRGBBlink ) return new Point(500,500);
       if( f instanceof Properties )    return new Point(20,10);
       if( f instanceof ServerDialog )  return new Point(0,SCREENSIZE.height-f.getSize().height-MARGEB-100);
@@ -4697,7 +4699,7 @@ public void setLocation(Point p) {
          if( miUnSelect!=null ) miUnSelect.setEnabled(hasSelectedObj);
          if( miCut!=null ) miCut.setEnabled(nbPlanImgWithoutBG>0);
          PlanImage pi = calque.getFirstSelectedPlanImage();
-         if( miStatSurf!=null ) miStatSurf.setEnabled(hasImage && (!isBG || pi instanceof PlanHealpix));
+         if( miStatSurf!=null ) miStatSurf.setEnabled(hasPixels && (!isBG || pi instanceof PlanHealpix));
          if( miTransp!=null ) miTransp.setEnabled(pi!=null && calque.canBeTransparent(pi));
          if( miTranspon!=null ) miTranspon.setEnabled(nbPlanTranspImg>0);
          if( miDist!=null ) miDist.setEnabled(nbPlanImg>0);

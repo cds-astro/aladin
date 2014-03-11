@@ -570,7 +570,7 @@ public final class Calque extends JPanel implements Runnable {
    /** Activation/desactivation de l'outil de mesure automatique des distances */
    protected void setAutoDist(boolean flag) {
       if( flagFirstAutoDist && flag && aladin.configuration.isHelp() ) {
-         aladin.info(aladin.chaine.getString("HAUTODIST"));
+         aladin.configuration.showHelpIfOk("HAUTODIST");
          flagFirstAutoDist=false;
       }
       flagAutoDist=flag;
@@ -580,7 +580,7 @@ public final class Calque extends JPanel implements Runnable {
    /** Activation/desactivation du quick Simbad  */
    protected void setSimbad(boolean flag) {
       if( flagFirstSimbad && flag && aladin.configuration.isHelp() ) {
-         aladin.info(aladin.chaine.getString("HFINGER"));
+         aladin.configuration.showHelpIfOk("HFINGER");
          flagFirstSimbad=false;
       }
       flagSimbad=flag;
@@ -590,7 +590,7 @@ public final class Calque extends JPanel implements Runnable {
    /** Activation/desactivation du quick VizierSED  */
    protected void setVizierSED(boolean flag) {
       if( flagFirstVizierSED && flag && aladin.configuration.isHelp()) {
-         aladin.info(aladin.chaine.getString("HFINGERVIZIERSED"));
+         aladin.configuration.showHelpIfOk("HFINGERVIZIERSED");
          flagFirstVizierSED=false;
       }
       flagVizierSED=flag;
@@ -3199,9 +3199,14 @@ public final class Calque extends JPanel implements Runnable {
    protected int newPlanCatalog() {
       int n=getStackIndex();
       plan[n] = new PlanCatalog(aladin);
-	  // la projection est celle du plan de reference
-	  Plan pRef = getPlanRef();
-	  plan[n].projd = (pRef!=null)?pRef.projd:null;
+      
+//	  // la projection est celle du plan de reference
+//	  Plan pRef = getPlanRef();
+//	  plan[n].projd = (pRef!=null)?pRef.projd:null;
+	  
+	  // La projection est celle de la vue de base
+	  Projection proj = aladin.view.getCurrentView().getProj();
+	  plan[n].projd = proj==null ? null : proj.copy();
 
       suiteNew(plan[n]);
       return n;

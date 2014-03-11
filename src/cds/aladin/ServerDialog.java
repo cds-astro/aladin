@@ -378,7 +378,7 @@ long t1,t;
       }
 
       // L'arbre des catégories
-      sv.addElement(new ServerCategory(aladin));
+      sv.addElement(new ServerWatch(aladin));
 
       // Les serveurs Spectra via GLU
       if( !Aladin.OUTREACH && Aladin.NETWORK ) addGluServer(sv, Server.SPECTRUM);

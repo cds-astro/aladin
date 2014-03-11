@@ -1097,12 +1097,12 @@ Aladin.trace(3," => Reading in "+temps+" ms");
          }
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
+   
+   protected boolean hasOriginalPixels() { return true; }
 
    /** Retourne les valeurs des trois pixels d'origine */
    protected String getPixelInfo(int x,int y,int mode) {
 //      if( mode!=Pixel.LEVEL ) return UNK;
-      
-      System.out.println("ici");
       
       if( !Projection.isOk(projd) || x<0 || x>=width || y<0 || y>=height ) return "";
       

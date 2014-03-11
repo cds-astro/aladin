@@ -447,7 +447,18 @@ public class Server extends JPanel
        JLabel t = new JLabel(title.replace('\n',' '));
        t.setFont( Aladin.LBOLD );
        p.add(t);
-       JButton b = new JButton(FrameServer.INFO);
+       
+//       JButton b = new JButton(FrameServer.INFO);
+//       JButton b = Util.getHelpButton(this,MESSAGE)
+             
+       JButton b = new JButton(new ImageIcon(Aladin.aladin.getImagette("Help.gif")));
+       b.setMargin(new Insets(0,0,0,0));
+       b.setBorderPainted(false);
+       b.setContentAreaFilled(false);
+       b.addActionListener( new ActionListener() {
+          public void actionPerformed(ActionEvent e) { showStatusReport(); }
+       });
+
        Insets m = b.getMargin();
        b.setMargin(new Insets(m.top,3,m.bottom,3));
        b.setOpaque(false);
@@ -1181,8 +1192,8 @@ public void layout() {
    public void actionPerformed(ActionEvent arg0) {
       Object s = arg0.getSource();
       if( s instanceof JComboBox && tree!=null && !tree.isEmpty() ) tree.clear();
-      if( s instanceof JButton
-            && ((JButton)s).getActionCommand().equals(FrameServer.INFO)) showStatusReport();
+//      if( s instanceof JButton
+//            && ((JButton)s).getActionCommand().equals(FrameServer.INFO)) showStatusReport();
       updateWidgets();
    }
 

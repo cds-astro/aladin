@@ -386,17 +386,18 @@ public class FrameCooToolbox extends JFrame {
    }
    
    /** Change l'époque cible et relance le calcul en conséquence */
-   protected void setEpoch( String s ) {
+   protected void setEpoch( String s) {
       try {
          if( Character.isDigit( s.charAt(0)) ) s = "J"+s;
          targetEpoch = (new Astrotime(s)).getJyr();
       } catch(Exception e ) {
       }
-      resume();
+      resume(false);
    }
 
    // Remet à jour tout le tableau en fonction des valeurs courantes */
-   private void resume() {
+   private void resume() { resume(true); }
+   private void resume(boolean flagLog) {
       if( cooField==null ) return;
       for( int i=0;i<cooField.length; i++ ) cooField[i].setText( getCoordIn(i) );
       
@@ -412,7 +413,11 @@ public class FrameCooToolbox extends JFrame {
       distParsecField.setText( getDistParsec() );
       
       sliderEpoch.setValue((int)targetEpoch);
+      
+      if( flagLog ) aladin.glu.log("CoordToolbox","");
    }
+   
+   
    
    static private double PARSEC2AL = 3.2614945566008;
   

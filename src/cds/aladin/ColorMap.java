@@ -373,11 +373,11 @@ public final class ColorMap extends JPanel  implements
    
    /** Retourne la liste des noms des colormaps */
    public static String [] getCMList() {
-      String res [] = new String[ FrameCM.CM.length + 
+      String res [] = new String[ FrameColorMap.CM.length + 
                                   (customCMName==null ? 0 : customCMName.size())];
       // ajout des CM par défaut
       int i=0;
-      for( ; i<FrameCM.CM.length; i++ ) res[i] = FrameCM.CM[i];
+      for( ; i<FrameColorMap.CM.length; i++ ) res[i] = FrameColorMap.CM[i];
 
       // ajout des CM "custom"
       if( ColorMap.customCMName!=null ) {
@@ -752,10 +752,21 @@ public final class ColorMap extends JPanel  implements
       // Reaffichage si necessaire
       if( ogreyLevel!=greyLevel ) {
          ogreyLevel=greyLevel;
+         
+         // On en profite pour mettre à jour la boite à outils
+         resumePixelTool();
+         
          return true;
       }
 
       return false;
+   }
+   
+   
+   // Mise à jour des informations de la pixelToolBox
+   protected void resumePixelTool() {
+      if( pimg.aladin.framePixelTool==null || !pimg.aladin.framePixelTool.isVisible() ) return;
+      pimg.aladin.framePixelTool.setParams(pimg, getLastPixel());
    }
 
 
@@ -774,6 +785,7 @@ public final class ColorMap extends JPanel  implements
          isDragging=flagCMBand=true;
          pimg.aladin.view.getCurrentView().repaint();
          repaint();
+         
       } else stopBand();
 
       if( !flagCMBand ) {
@@ -1076,6 +1088,14 @@ public final class ColorMap extends JPanel  implements
          else gr.setColor(new Color(rb[i]&0xFF,gb[i]&0xFF,bb[i]&0xFF));
          for( ;xc<x; xc++) gr.drawLine(dx+xc,dy,dx+xc,dy+height);
       }
+   }
+   
+   /** retourne la valeur du dernier pixel sous la souris (valeur physique) */
+   protected double getLastPixel() {
+      try {
+         return Double.parseDouble( pimg.getPixelInfoFromGrey(greyLevel) );
+      } catch( Exception e ) {}
+      return Double.NaN;
    }
 
    /** Trace les colormaps pour les trois composantes et divers infos lié à la position

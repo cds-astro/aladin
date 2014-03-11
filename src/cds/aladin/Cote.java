@@ -301,7 +301,7 @@ public class Cote extends Ligne {
 
       if( (isSelected() || debligne!=null && debligne.isSelected()
                             || finligne!=null && finligne.isSelected())
-            && plan.aladin.view.nbSelectedObjet()<=2 ) cutOn();
+            && plan.aladin.view.hasOneCoteSelected() ) cutOn();
       else cutOff();
       return true;
    }

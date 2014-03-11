@@ -171,6 +171,10 @@ public final class ToolBox extends JComponent implements
       }
       return -1;
    }
+   
+   
+   private boolean firstTag=true;
+   private boolean firstRepere=true;
 
 
   /** Creation d'un nouveau objet en fonction du bouton appuye.
@@ -181,8 +185,19 @@ public final class ToolBox extends JComponent implements
       int tool = getTool();
       switch(tool) {
          case DRAW: Ligne ligne = new Ligne(plan,v,x,y); ligne.bout=4; return ligne;
-         case TAG: return new Tag(plan,v,x,y);
+         case TAG:
+            if( firstTag && aladin.configuration.isHelp() &&
+               aladin.configuration.showHelpIfOk("TAGINFO") ) {
+               firstTag=false;
+               return null;
+            }
+            return new Tag(plan,v,x,y);
          case PHOT:
+            if( firstRepere && aladin.configuration.isHelp() && aladin.calque.getPlanBase().hasAvailablePixels() &&
+               aladin.configuration.showHelpIfOk("REPEREINFO") ) {
+               firstRepere=false;
+               return null;
+            }
             Repere r = new Repere(plan,v,x,y);
 //            r.setWithLabel(true);
             return r;

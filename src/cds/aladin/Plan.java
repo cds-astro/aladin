@@ -377,7 +377,7 @@ public class Plan implements Runnable {
    /** Modifie le statut d'un plan catalogue afin de rendre possible la suppression
     * individuelle de sources */
    protected void setSourceRemovable(boolean flag) {
-      if( !isSimpleCatalog() ) return;
+//      if( !isSimpleCatalog() ) return;
       pcat.removable=flag;
    }
 

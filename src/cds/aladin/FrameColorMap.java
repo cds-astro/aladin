@@ -49,14 +49,14 @@ import cds.tools.Util;
  * @version 1.0 : (5 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
  */
-public final class FrameCM extends JFrame implements ActionListener {
+public final class FrameColorMap extends JFrame implements ActionListener {
 
    static public final String CM[]      = { "gray", "BB", "A","stern" };
    static public final String CMA[]     = { "gray", "BB", "A","stern" };
 
    // Les chaines statiques
    String TITRE,REVERSE,RANGE,LIMITS,ALGO,ERRORRANGE,RESET,RESCAN,CLOSE,HELP,
-          NOCUT,REPLAY,ALL,METHODE,METHODEX,METHODERGB,NOFULLPIXEL,MESSAGE,CMM,CMCO;
+          NOCUT,REPLAY,TOOL,ONVIEW,ALL,METHODE,METHODEX,METHODERGB,NOFULLPIXEL,MESSAGE,CMM,CMCO;
 
    // Les references
    PlanImage pimg;          // L'image concernee
@@ -100,10 +100,12 @@ public final class FrameCM extends JFrame implements ActionListener {
       METHODERGB = aladin.chaine.getString("CMMETHODERGB");
       NOFULLPIXEL = aladin.chaine.getString("CMNOFULLPIXEL");
       MESSAGE = aladin.chaine.getString("CMMESSAGE");
+      TOOL = aladin.chaine.getString("CMPIXTOOL");
+      ONVIEW = aladin.chaine.getString("CMONVIEW");
    }
 
   /** Creation de l'objet sans pour autant remplir la frame */
-   protected FrameCM(Aladin aladin) {
+   protected FrameColorMap(Aladin aladin) {
       super();
       this.aladin = aladin;
       Aladin.setIcon(this);
@@ -384,9 +386,9 @@ public final class FrameCM extends JFrame implements ActionListener {
        validation.add(choiceCM);
 
        // Les boutons
-       b=new JButton(REVERSE); b.addActionListener(this); validation.add(small(b));
+       b=getButton(REVERSE); validation.add(b);
        validation.add(new JLabel("  "));
-       b=new JButton(RESET); b.addActionListener(this); validation.add(small(b));
+       b=getButton(RESET); validation.add(b);
        g.setConstraints(validation,c);
        p.add(validation);
 
@@ -400,7 +402,7 @@ public final class FrameCM extends JFrame implements ActionListener {
        labelOriginalPixel =  new JLabel(RANGE+" ["+getMinPix()+" .. "+getMaxPix()+"]     ");
        labelOriginalPixel.setFont( Aladin.BOLD);
        x.add(labelOriginalPixel);
-       b=new JButton(NOCUT); b.addActionListener(this); x.add(b);
+       b=getButton(NOCUT); x.add(b);
        g.setConstraints(x,c);
        p.add(x);
 
@@ -420,8 +422,8 @@ public final class FrameCM extends JFrame implements ActionListener {
        p.add(autocutBox);
 
        x = new JPanel();
-       b=new JButton(REPLAY); b.addActionListener(this); x.add(b);
-       b=new JButton(CLOSE); b.addActionListener(this); x.add(b);
+       b=getButton(REPLAY);x.add(b);
+       b=getButton(CLOSE); x.add(b);
        g.setConstraints(x,c);
        p.add(x);
 
@@ -544,14 +546,14 @@ public final class FrameCM extends JFrame implements ActionListener {
          validation.add(choiceCM);
       }
       // Les boutons
-      b=new JButton(REVERSE); b.addActionListener(this); validation.add(small(b));
+      b=getButton(REVERSE); validation.add(b);
       validation.add(new JLabel("  "));
-      b=new JButton(RESET); b.addActionListener(this); validation.add(small(b));
+      b=getButton(RESET); validation.add(b);
       if( pimg instanceof PlanBG && ((PlanBG)pimg).isTruePixels() ) {
-         b=new JButton(RESCAN); b.addActionListener(this); validation.add(small(b));
+         b=getButton(RESCAN); validation.add(b);
       }
       if( isPlanRGB || isPlanBlink ) {
-         b=new JButton(CLOSE); b.addActionListener(this); validation.add(b);
+         b=getButton(CLOSE); validation.add(b);
       }
       g.setConstraints(validation,c);
       p.add(validation);
@@ -569,7 +571,7 @@ public final class FrameCM extends JFrame implements ActionListener {
          labelOriginalPixel =  new JLabel(RANGE+" ["+getMinPix()+" .. "+getMaxPix()+"]     ");
          labelOriginalPixel.setFont( Aladin.BOLD);
          x.add(labelOriginalPixel);
-         b=new JButton(NOCUT); b.addActionListener(this); x.add(b);
+         b=getButton(NOCUT); x.add(b);
          g.setConstraints(x,c);
          p.add(x);
          
@@ -589,9 +591,12 @@ public final class FrameCM extends JFrame implements ActionListener {
          p.add(autocutBox);
 
          x = new JPanel();
-         b=new JButton(REPLAY); b.addActionListener(this); x.add(b);
-         b=new JButton(ALL); b.addActionListener(this); x.add(b);
-         b=new JButton(CLOSE); b.addActionListener(this); x.add(b);
+         b=getButton(ONVIEW); x.add(b);
+         b=getButton(TOOL);   x.add(b);
+         x.add( new JLabel(" - "));
+         b=getButton(REPLAY); x.add(b);
+         b=getButton(ALL);    x.add(b);
+         b=getButton(CLOSE);  x.add(b);
          g.setConstraints(x,c);
          p.add(x);
       }
@@ -604,6 +609,15 @@ public final class FrameCM extends JFrame implements ActionListener {
 //      setResizable(false);
    }
    
+   static private Insets MARGIN = new Insets(1, 3, 1, 3);
+   
+   private JButton getButton(String label) {
+      JButton b=new JButton(label);
+      b.setMargin(MARGIN);
+      b.addActionListener(this);
+      return b;
+   }
+   
    public Dimension getMinimumSize() { return new Dimension(200,300); }
 
    protected JComponent noBold(JComponent c) {
@@ -611,26 +625,11 @@ public final class FrameCM extends JFrame implements ActionListener {
       return c;
    }
 
-   protected JComponent small(JButton b) {
-      b.setMargin(new Insets(2,2,2,2) );
-      return b;
-   }
-
    /** Création d'un choice des CM possibles */
    protected static JComboBox createChoiceCM() {
       JComboBox c = new JComboBox();
       
       for( String s : ColorMap.getCMList() ) c.addItem(s);
-      
-//      // ajout des CM par défaut
-//      for( int i=0; i<CM.length; i++ ) c.addItem(CM[i]);
-//      // ajout des CM "custom"
-//      if( ColorMap.customCMName!=null ) {
-//      	Enumeration e = ColorMap.customCMName.elements();
-//      	while( e.hasMoreElements() ) {
-//      		c.addItem(e.nextElement());
-//      	}
-//      }
       
       // Ajout du ' --'
       c.addItem(" -- ");
@@ -972,6 +971,7 @@ public final class FrameCM extends JFrame implements ActionListener {
       super.processWindowEvent(e);
    }
    
+   
    public void actionPerformed(ActionEvent e) {
       String s = e.getActionCommand();
            if( CLOSE.equals(s) )     dispose();
@@ -981,10 +981,13 @@ public final class FrameCM extends JFrame implements ActionListener {
       else if( NOCUT.equals(s) )     getAll();
       else if( REPLAY.equals(s) )    changeAutocut();
       else if( ALL.equals(s) )       all();
+      else if( TOOL.equals(s) )      aladin.pixelTool();
+      else if( ONVIEW.equals(s) )    { aladin.view.showRainbow(true); aladin.view.repaintAll(); }
       else if( e.getSource() instanceof JRadioButton ) changeTransfertFct();
       else if( e.getSource() instanceof JComboBox ) changeCM((JComboBox)e.getSource() );
            
      if( aladin.frameAllsky!=null ) aladin.frameAllsky.updateCurrentCM();
+     cm.resumePixelTool();
 
    }
 

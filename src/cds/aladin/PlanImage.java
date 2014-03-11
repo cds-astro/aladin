@@ -3325,7 +3325,7 @@ Aladin.trace(2,"Loading PDS image");
          s= tok.nextToken();
 
          // S'agit-il d'un nom d'une palette prédéfine ?
-         if( (i=Util.indexInArrayOf(s,FrameCM.CMA,true))!=-1 ) {
+         if( (i=Util.indexInArrayOf(s,FrameColorMap.CMA,true))!=-1 ) {
             if( i!=typeCM ) { typeCM=i; flagCM=true; }
 
             // S'agit-il d'un nom de palette additionnelle ?

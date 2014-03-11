@@ -60,7 +60,7 @@ public final class Parser {
     // différentes classes des opérateurs
     static private Class[] AVAIL_OP_CLASSES = {
     	SinOp.class, CosOp.class, TanOp.class, LogOp.class, NepLogOp.class, AbsOp.class,
-		Deg2RadOp.class, Rad2DegOp.class, SqrtOp.class, ExpOp.class, AtanOp.class
+		Deg2RadOp.class, Rad2DegOp.class, SqrtOp.class, ExpOp.class, AtanOp.class,
     };
 
     static private String[] OP_CLASSES_KW = {

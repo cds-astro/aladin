@@ -270,7 +270,7 @@ public class PlanImageHuge extends PlanImage implements Runnable {
       restart=false;
       unlock();
       long t = System.currentTimeMillis();
-      double r = 256./(pixelMax - pixelMin);
+      double r = 255./(pixelMax - pixelMin);
       try {
          int size = w*h*step*step;
          pixelsWork = new byte[size];
@@ -285,8 +285,8 @@ public class PlanImageHuge extends PlanImage implements Runnable {
             for( int j=0; j<len; j++ ) {
                double c = getPixVal(buf,bitpix,j);
                if( Double.isNaN(c) || isBlank && c==blank ) { pixelsWork[pos++] = 0; continue; }
-               pixelsWork[pos++] = (byte)( c<=pixelMin?0x00:c>=pixelMax?0xff
-                     :(int)( ((c-pixelMin)*r) ) & 0xff);    
+               pixelsWork[pos++] = (byte)( 1+ (c<=pixelMin?0x00:c>=pixelMax?0xfe
+                     :(int)( ((c-pixelMin)*r)) ) & 0xff);    
             }
             
             if( restart ) {

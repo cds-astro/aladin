@@ -555,6 +555,7 @@ public class ViewSimple extends JComponent
    protected PlanImage cropAreaBG(RectangleD rcrop,String label,double zoom,double resMult,boolean fullRes,boolean inStack) {
       PlanImage pi=null;
       PlanBG pref = (PlanBG)this.pref;
+      pref.projd = projLocal.copy();
       
       try {
          if( label==null ) label = pref.label;
@@ -6417,7 +6418,7 @@ g.drawString(s,10,100);
    private void drawColorMap(Graphics g) {
       if( !( pref.hasAvailablePixels() || pref.type==Plan.ALLSKYIMG && !((PlanBG)pref).color) ) return;
       if( aladin.frameCM==null ) {
-         aladin.frameCM = new FrameCM(aladin);
+         aladin.frameCM = new FrameColorMap(aladin);
          aladin.frameCM.initCM((PlanImage)pref);
       }
       aladin.frameCM.cm.drawColorMap(g, 1, 1, getWidth(), 20);

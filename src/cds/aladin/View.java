@@ -862,7 +862,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( !vcVect.contains(vc ) ) vcVect.add(vc);
       }
       
-      
       // Toujours aucune vue => on prend la vue de base
       if( vcVect.size()==0 ) vcVect.add(getCurrentView());
       
@@ -891,9 +890,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          }
       }
 
+      
+      // Récupération des sources concernées dans l'ordre des mesures
+      Vector<Obj> vsel = new Vector<Obj>();
+      for( int i=0; i<aladin.mesure.nbSrc; i++ ) vsel.add(aladin.mesure.src[i]);
+      
       // Détermination des sources en éliminant les doublons ou les objets
       // trop proches ou les objets hors champ
-      Position src[] = getSourceList(vselobj,vca,tailleRadius==0?3./3600:tailleRadius/2);
+      Position src[] = getSourceList(vsel,vca,tailleRadius==0?3./3600:tailleRadius/2);
       if( src.length==0 ) {
          aladin.warning(ROIWNG);
          return;
@@ -2122,6 +2126,20 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne le nombre d'objets sélectionnés */
    protected int nbSelectedObjet() { return vselobj.size(); }
 
+   /** Retourne true s'il y a une et une seule Cote sélectionnée parmi les objets */
+   protected boolean hasOneCoteSelected() {
+      int n=0;
+      Enumeration<Obj> e = vselobj.elements();
+      while( e.hasMoreElements() ) {
+         Obj o = e.nextElement();
+         if( !(o instanceof Cote) ) continue;
+         n++;
+         if( n>2 ) return false;
+      }
+      return n==2;
+   }
+
+
    /** Indique s'il y a au- moins une source sélectionnée */
    protected boolean hasSelectedSource() {
       Enumeration<Obj> e = vselobj.elements();
@@ -2228,6 +2246,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean delSelObjet() {
 
       Enumeration<Obj> e = vselobj.elements();
+      
+      // décompte des tags
+      int tags = 0;
+      for( Obj o : vselobj ) { if( o instanceof Source && o.plan!=null && o.plan instanceof PlanTool ) tags++; }
+      
+      e = vselobj.elements();
 
       boolean ok = !vselobj.isEmpty();
       boolean flagCote=false;
@@ -2236,13 +2260,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          Obj o = e.nextElement();
          if( o instanceof Cote ) flagCote=true;
          extendClip(o);
+         
+         // On ne supprime pas s'il y a plus de 1 tags sélectionnés
+         if( tags>1 && o instanceof Source && o.plan!=null && o.plan instanceof PlanTool )  continue;
+         
          if( o instanceof Source && ((Source)o).plan.isSourceRemovable() ) {
             aladin.mesure.remove((Source)o);
          }
+         
          calque.delObjet(o);
       }
       vselobj.removeAllElements();
       if( flagCote ) aladin.calque.zoom.zoomView.setCut(null);
+      if( tags>1 ) aladin.warning(aladin.chaine.getString("REMOVETAG"));
       if( ok ) repaintAll();
       return ok;
    }
@@ -3158,12 +3188,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean setRepere(Coord coo,boolean force) {
       moveRepere(coo);
 
-//      syncView(1,null,null,true);              // <= POUR THOMAS
       syncView(1,null,null,force);              // <= POUR THOMAS
       boolean rep=false;
       for( int i=0; i<modeView; i++ ) {
          viewSimple[i].repaint();
          rep |= viewSimple[i].isInImage(coo.al,coo.del);
+         
+         // Petite subtilité pour éviter tous les bugs liés à l'utilisation du ViewSimple.projLocal
+         // à la place de pref.projd.
+         if( currentView==i && !viewSimple[i].isFree() 
+               && viewSimple[i].pref instanceof PlanBG && viewSimple[i].projLocal!=null ) {
+//            viewSimple[i].pref.projd = viewSimple[i].projLocal.copy();
+            viewSimple[i].pref.projd.setProjCenter(coo.al, coo.del);
+         }
       }
       return rep;
    }
@@ -3176,10 +3213,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repere.raj=ra;
       repere.dej=dec;
       
-      if( aladin.frameCooTool!=null ) {
-         aladin.frameCooTool.setReticle(ra,dec);
-      }
-
+      if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
       
       // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
 //      aladin.dialog.adjustParameters();
@@ -4115,8 +4149,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void exportROI(String prefix) { exportSaveROI(prefix,0,0,0,0); }
    protected void saveROI(String prefix,int w,int h,int fmt) {
-//      System.out.println("No yet debugged !!!");
-      exportSaveROI(prefix,1,w,h,fmt);
+      System.out.println("No yet debugged !!!");
+//      exportSaveROI(prefix,1,w,h,fmt);
    }
    private void exportSaveROI(String prefix,int mode,int w,int h,int fmt) {
       if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";

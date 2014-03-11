@@ -58,9 +58,12 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
       add(tp);
 
       // Indication
-      JLabel l = new JLabel(info);
-      l.setBounds(120,y,400, 20); y+=20;
-      add(l);
+      JLabel l;
+      if( info!=null ) {
+         l= new JLabel(info);
+         l.setBounds(120,y,400, 20); y+=20;
+         add(l);
+      }
 
       // Target ?
       y=makeTarget(y);

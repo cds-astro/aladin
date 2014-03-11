@@ -82,7 +82,8 @@ public class ServerHips extends ServerTree  {
    protected void createChaine() {
       super.createChaine();
       title = aladin.chaine.getString("ALLSKYTITLE");
-      info = aladin.chaine.getString("ALLSKYINFO");
+//      info = aladin.chaine.getString("ALLSKYINFO");
+      info=null;
       info1 = null;
       description = aladin.chaine.getString("ALLSKYDESC");
    }

@@ -252,7 +252,8 @@ public final class Localisation extends MyBox {
    
    /** Fait clignoter le champ pour attirer l'attention
     * de l'utilisateur et demande le focus sur le champ de saisie */
-   protected void focus(String s) {
+   protected void focus(String s) { focus(s,null); }
+   protected void focus(String s,final String initial) {
        setMode(SAISIE);
        text.setText(s);
 
@@ -268,8 +269,13 @@ public final class Localisation extends MyBox {
                text.setForeground(deff);
                Util.pause(100);
             }
-            text.setText("");
-            text.requestFocusInWindow();
+            if( initial==null ) {
+               text.setText("");
+               text.requestFocusInWindow();
+            } else {
+               text.setText(initial);
+               setInitialFocus();
+            }
          }
       }).start();
    }

@@ -248,6 +248,7 @@ PREVIEWSCREEN	Simple window
 SESAME	Object name resolver
 COOTOOL Coordinate toolbox...
 PIXELTOOL Pixel toolbox...
+CALCULATOR Calculator...
 NEW	New Aladin window...
 PREF	User preferences...
 CEA_TOOLS	PROTO:AstroGrid CEA applications
@@ -274,6 +275,7 @@ GLUTOOL.fr	Outils distants
 SIMBAD.fr	Pointeur Simbad
 COOTOOL.fr Calculs de coordonnées...
 PIXELTOOL.fr Calculs de pixels...
+CALCULATOR.fr Calculatrice...
 VIZIERSED.fr	Pointeur photométrie VizieR
 AUTODIST.fr Mesure de distance automatique
 #TIP.fr	Infobulle sur les sources
@@ -812,6 +814,7 @@ VOWAIT.fr	Chargement de l'annuaire du VO en cours...
 VOWAIT1.fr	En attente de
 VOWAIT2.fr	réponse
 VOERR.fr	Erreur dans le processus d'exploration
+
 
 # FieldServer.java strings
 FOVINFO	Instrument fields of view
@@ -1361,6 +1364,8 @@ CMMETHODEX	Adjust the colormap simultaneously for all selected images\nby modify
 CMMETHODERGB	Adjust the contrast by moving\nthe three triangles for each component
 CMNOFULLPIXEL	The full pixels are not available for this image\nYou can not apply this function
 CMMESSAGE	This histogram represents the number count \nof each pixel value (in a logarithm scale).\n \nSeveral transfert functions are available (log, sqr, linear...)\nto adjust the default contrast.\nYou can tune this contrast with the curves overlayed on the histogram:\nThe three triangles allows you to modify thes curves:\n  .the left one adjusts the cut-low pixel value,\n  .the right one adjusts the cut-hight pixel value,\n  .the middle one adjusts the dynamic mapping.\n \nYou can move the triangles by clicking/dragging them or\nwith the arrow keys after having pointed the relevant triangle.\n \nThe result is immediately displayed in the frame view (press CTRL for desactivating it).\nFor colored images, pressing SHIFT key will synchronize the 3 components.\n \nNotice: when Aladin loads an image, it applies an autocut algorithm to determine the min and max "relevant" pixel values from the original image. These values are represented in the histogram. But if these values are not determined correctly for your work, you can "re-play" the autocut algorithm by forcing manually the range of original pixels on which this algorithm will be applied. Even, you can keep all original pixels by clicking the "get all" button.
+CMPIXTOOL Toolbox
+CMONVIEW CM on view
 
 CMTITRE.fr	Dynamique des pixels
 CMREVERSE.fr	Inverser
@@ -1380,6 +1385,8 @@ CMMETHODEX.fr	Ajustez la table des couleurs simultanément\nde toutes les images 
 CMMETHODERGB.fr	Ajuster le contraste en déplaçant\nles triangles de contrôle
 CMNOFULLPIXEL.fr	Les pixels originaux de cette image ne sont pas accessibles\nVous ne pouvez utiliser cette fonction
 CMMESSAGE.fr	Cet histogramme représente le nombre de pixels dans chaque niveau de gris (en échelle logarithmique).\n \nPlusieurs fonctions de transfert sont possibles (log, sqrt, linear...) pour ajuster globalement le contraste initial. Vous pouvez également préciser ce contraste en manipulant les courbes superposées à l'histogramme: Trois triangles de contrôle vous permettent ainsi:\n  .A gauche de seuiller les valeurs basses;\n  .A droite de seuiller les valeurs hautres;\n  .Au milieu d'ajuster la dynamique.\n \nVous pouvez déplacer ces triangles en cliquant/glissant dessus ou simplement en utilisant les flêches droite/gauche après avoir placé la souris sur le triangle choisi.\n \nLe résultat est immédiatement affiché dans la vue de l'image. Vous pouvez inhiber cette mise à jour immédiate en appuyant sur la touche CTRL.\nDans le cas d'une image couleur, les trois composantes seront synchronisées par l'appui de la touche MAJ. \nA noter: Lorsque Aladin charge une image, il applique automatiquement un algorithme de seuillage afin de déterminer les limites des valeurs pertinentes. Ce sont ces valeurs qui sont représentées dans l'histogramme. Si ce seuillage ne convient pas à votre travail, vous pouvez "réutiliser" cet algorithme en modifiant manuellement l'intervalle initiale. Vous pouvez même prendre en compte toutes les valeurs originales en cliquant sur le bouton "Récupère tout".
+CMPIXTOOL.fr Outils
+CMONVIEW.fr CM sur vue 
 
 # FilterProperties.java strings
 FTBEGINNER	Beginner mode
@@ -2519,6 +2526,14 @@ COORDCOLUMN	Coord. columns
 COORDCOLUMN.fr Colonnes des coord.
 COORDCOLUMNDETAIL The column called "Coo" allows you to modify the selection of the object coordinate columns. Either in a celestial reference (J2000), or in a cartesian reference (XY fits convention). Clic into the concerned cell.
 COORDCOLUMNDETAIL.fr La colonne intitulée "Coo" vous permet de modifier la sélection des colonnes des coordonnées des objets, soit dans un référentiel céleste (J2000), soit dans un référentiel cartésien (XY convention FITS).\nCliquez sur la case désirée.
+REMOVETAG For removing a specifical pointing tag, use the contextual menu on its associated measurement line
+REMOVETAG.fr Pour supprimer un tag de pointage spécifique, utilisez le menu contextuel de ses mesures associées
+TAGINFO Clic anywhere for creating a positional tag, use a clic-and-drag for generating a full text tag with arrow...
+TAGINFO.fr Utilisez le clic simple pour créer un tag de positionnement, cliquer-étendre pour créer un repère complet avec du texte...
+REPEREINFO Use a simple clic on a source for getting its photometrical parameters, or clic-and-drag for generating yourself a manual photometrical spherical tool. 
+REPEREINFO.fr Utilisez le clic simple sur un source astronomique pour en mesurer automatiquement ses caractéristiques, on un cliquer-étendre pour générer un cercle de mesure manuel
+STOPHELP Redisplay this help?
+STOPHELP.fr Réafficher ce message d'aide ?
 
 GETOBJ	Object, coordinates, URL, filename or command ?
 GETOBJ.fr	Un objet, des coordonnées, une URL, un fichier ou une commande ?
@@ -2547,6 +2562,8 @@ SLIDERCUBE cube
 SLIDERCUBE.fr cube
 SLIDERCUBETIP Cube frame control
 SLIDERCUBETIP.fr	Ajuste l'image visualisée pour un cube
+YOUREXPR Which algebrical expression ? (after the "=")
+YOUREXPR.fr Quelle expression algébrique ? (après le signe "=")
 
 # Bookmarks strings
 BKMTITLE	Bookmarks controler
@@ -2562,7 +2579,7 @@ BKMAPPLY.fr	Voulez-vous appliquer vos modifications ?
 BKMHELP Select the bookmarks (short-cuts) which will appear just under the main window menu.\nYou can also create/edit your own bookmarks.
 BKMHELP.fr Cochez les signets (raccourcis) que vous souhaitez voir apparaître sous le menu de la fenêtre principale.\nVous pouvez également créer votre propres signets via l'éditeur de signets
 
-#TreeServer strings
+#ServerWatch strings
 TREETITLE	Discover the universe
 TREETITLE.fr	Découvrir l'univers
 TREEINFO1	Select categories of objects and press SUBMIT.
@@ -2573,12 +2590,16 @@ TREEEXAMPLE	example
 TREEEXAMPLE.fr	exemple
 TREEMORE	more info
 TREEMORE.fr	plus d'info
+TREEDESCRIPT Discovering astronomical object form
+TREEDESCRIPT.fr Formulaire de découverte des objets astronomiques
+TREEVERBOSE This form is dedicated to the outreach or for demonstration purpose. It allows you to access to examples of astronomical objects, sorted by categories. These objects are provided by the Simbad data base from CDS. Take care that these categories are not exhaustives, but just provided for demonstration.
+TREEVERBOSE.fr Ce formulaire est destiné à l'enseignement et à la démonstration. Il vous permet d'accéder à des exemples d'objets astromiques classés par grandes catégories. Ces objets sont issues de la base de données Simbad du CDS. Prenez note que ces catégories ne sont en aucun cas exhaustives, mais démonstratives.
 
 #AllskyServer strings
 ALLSKYTITLE	Progressive surveys (HiPS)
 ALLSKYTITLE.fr	Relevés progressifs (HiPS)
-ALLSKYINFO Select items and press SUBMIT
-ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER
+#ALLSKYINFO Select items and press SUBMIT
+#ALLSKYINFO.fr Sélectionner, puis appuyer sur CHERCHER - La position
 ALLSKYDESC The "progressive sky" mode (HiPS mode) allows you to visualise a survey at any scales (from the whole sky to the limit of the resolution). It can be images, catalogues, or density maps. The HiPS images are delivered in colored composition, or in 8 bit pixels (JPEG|PNG), or in true pixels (FITS). Use the "Pixel" button for switching in the other pixel mode.\n \nWarning: the survey distributed in "progressive sky" mode have been bilinearly resampled. 
 ALLSKYDESC.fr Le mode "ciel progressif" (HiPS) vous permet de visualiser un relevé à n'importe quelle échelle (depuis le ciel dans son ensemble jusqu'à la limite de la résolution fournie). Il peut s'agir d'images, de catalogues ou de cartes de densité. Les relevés images en mode "ciel progressif" sont fournis en composition colorée, ou en pixel 8 bits (JPEG|PNG), ou encore en "vrai" pixels" (FITS). Utilisez le bouton "Pixel" pour passer d'un mode pixel à l'autre).\n \nAttention : le mode "ciel progressif" ne donne pas accès aux pixels originaux, mais un rééchantillonnages bilinéaire de ceux-ci.
 TARGETNOTVISIBLE Target out of field.\nSelect another plane before.

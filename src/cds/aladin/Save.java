@@ -2007,13 +2007,13 @@ public final class Save extends JFrame implements ActionListener {
                
                // Traitement simplifié pour les COMMENT et HISTORY
                if( k.equals("COMMENT") ) {
-                  String s1=s.substring(8).trim();
+                  String s1=s.substring(7).trim();
                   if( hasSpecificWCS && s1.equals(BYALADIN) ) continue;  // inutile, on le remettra par la suite
                   v.addElement( getFitsLineComment(s1) );
                   continue;
                }
                if(  k.equals("HISTORY") ) {
-                  v.addElement( getFitsLineHistory(s.substring(8).trim()) );
+                  v.addElement( getFitsLineHistory(s.substring(7).trim()) );
                   continue;
                }
 

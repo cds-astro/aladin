@@ -33,7 +33,7 @@ import javax.swing.tree.*;
  * @author Pierre Fernique [CDS]
  * @version 1.0 : aout 2009
  */
-public class ServerCategory extends ServerTree  {
+public class ServerWatch extends ServerTree  {
    	
   /** Initialisation des variables propres */
    protected void init() {
@@ -47,10 +47,12 @@ public class ServerCategory extends ServerTree  {
       title = aladin.chaine.getString("TREETITLE");
       info = aladin.chaine.getString("TREEINFO1");
       info1 = aladin.chaine.getString("TREEINFO2");
+      description = aladin.chaine.getString("TREEDESCRIPT");
+      verboseDescr  = aladin.chaine.getString("TREEVERBOSE");
    }
 
  /** Creation du formulaire d'interrogation par arbre. */
-   protected ServerCategory(Aladin aladin) { super(aladin); }
+   protected ServerWatch(Aladin aladin) { super(aladin); }
    
    protected DefaultMutableTreeNode getRoot() {
       if( root==null ) root = new DefaultMutableTreeNode( new TreeNodeCategory(aladin,"WP5:root","","") );

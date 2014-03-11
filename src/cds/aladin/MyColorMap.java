@@ -28,7 +28,7 @@ package cds.aladin;
  * 
  * @author Thomas Boch [CDS]
  * @version 0.1 03 avril 2006
- * @see FrameCM#addCustomCM(MyColorMap)
+ * @see FrameColorMap#addCustomCM(MyColorMap)
  */
 public class MyColorMap {
 	// les tableaux de répartition des composante

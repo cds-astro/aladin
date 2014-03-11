@@ -248,6 +248,10 @@ public class FramePixelToolbox extends JFrame {
             }
          }
       }
+      setParams(p,pixel);
+   }
+      
+   protected void setParams(PlanImage p,double pixel) {
       bzero = p.bZero;
       bscale = p.bScale;
       blank = p.isBlank ? p.blank : Double.NaN;
@@ -265,7 +269,6 @@ public class FramePixelToolbox extends JFrame {
    // Regénération de l'ensemble des valeurs à partir des éléments connus
    private void resume() {
       if( pVal==null ) return;
-      System.out.println("raw="+raw);
       pVal.setValue(raw);
       pCutMin.setValue(cutMin);
       pCutMax.setValue(cutMax);
@@ -301,6 +304,8 @@ public class FramePixelToolbox extends JFrame {
                : bitpix==-32 ? Util.myRound(""+(Float.MAX_VALUE*bscale+bzero),2) : Util.myRound(""+(Double.MAX_VALUE*bscale+bzero),2);
          pMax.setValue(maxp,0);
       }
+      
+      aladin.glu.log("PixelToolbox","");
    }
    
    // Permet de bloquer la taille d'un Label

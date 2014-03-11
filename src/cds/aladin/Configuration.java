@@ -117,6 +117,7 @@ public final class Configuration extends JFrame
    protected static String SEDWAVE    = "SEDWave";
    protected static String LASTFILE   = "LastFile";
    protected static String LASTRUN    = "LastRun";
+   protected static String STOPHELP   = "StopHelp";
 //   protected static String TAG        = "CenteredTag";
 //   protected static String WENSIZE    = "WenSize";
    
@@ -381,11 +382,11 @@ public final class Configuration extends JFrame
    // Voir setCMMod() et setBkgMode()
    private void setMode1(String mode,boolean flagBackground) throws Exception {
       if( CMPARAM==null ) {
-         CMPARAM = new String[4+PlanImage.TRANSFERTFCT.length+FrameCM.CMA.length];
+         CMPARAM = new String[4+PlanImage.TRANSFERTFCT.length+FrameColorMap.CMA.length];
          CMPARAM[0] = "reverse"; CMPARAM[1]="noreverse";
          CMPARAM[2] = "autocut"; CMPARAM[3]="noautocut";
          System.arraycopy(PlanImage.TRANSFERTFCT,0,CMPARAM,4,PlanImage.TRANSFERTFCT.length);
-         System.arraycopy(FrameCM.CMA,0,CMPARAM,4+PlanImage.TRANSFERTFCT.length,FrameCM.CMA.length);
+         System.arraycopy(FrameColorMap.CMA,0,CMPARAM,4+PlanImage.TRANSFERTFCT.length,FrameColorMap.CMA.length);
       }
       Tok tok = new Tok(mode);
       StringBuffer cm = null;
@@ -536,8 +537,8 @@ public final class Configuration extends JFrame
    private int getMap1(String s) {
       int i;      
       if( s!=null ) {
-         for( i=0; i<FrameCM.CMA.length; i++ ) {
-            if( s.indexOf(FrameCM.CMA[i])>=0 ) return i;
+         for( i=0; i<FrameColorMap.CMA.length; i++ ) {
+            if( s.indexOf(FrameColorMap.CMA[i])>=0 ) return i;
          }
          if( ColorMap.customCMName!=null ) {
             Enumeration e = ColorMap.customCMName.elements();
@@ -622,6 +623,41 @@ public final class Configuration extends JFrame
      if( s!=null && (Util.indexOfIgnoreCase(s,"NO")>=0 
                       || Util.indexOfIgnoreCase(s,"OFF")>=0) ) return -1;
      return 0;
+   }
+   
+   private Vector<String> stopHelp = null;
+   
+   /** Affichage du help associé à la clé 
+    * @return true si le help a été affiché
+    */
+   protected boolean  showHelpIfOk(String key) {
+      if( stopHelp==null ) stopHelp = new Vector<String>();
+      if( stopHelp.contains(key) ) return false;
+      if( !aladin.confirmation(aladin.chaine.getString(key)
+            +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
+      return true;
+   }
+   
+   // Initialisation de la liste des mots clés dont les HELPs ne doivent plus être affichés
+   private void initStopHelp(String s) {
+      if( s==null ) return;
+      stopHelp = new Vector<String>();
+      StringTokenizer st = new StringTokenizer(s);
+      while( st.hasMoreTokens() ) stopHelp.add(st.nextToken());      
+   }
+   
+   // Maj de la liste des mots clés dont les HELPs ne doivent plus être affichés
+   private void majStopHelp() {
+      if( stopHelp==null || stopHelp.size()==0 ) remove(STOPHELP);
+      else {
+         StringBuilder s = new StringBuilder();
+         Enumeration<String> e = stopHelp.elements();
+         while( e.hasMoreElements() ) {
+            if( s.length()>0 ) s.append(' ');
+            s.append(e.nextElement());
+         }
+         set(STOPHELP,s.toString());
+      }
    }
    
    /** retourne le suffixe de la langue courante. En première approximation
@@ -1191,7 +1227,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // Le pixel mapping
       videoChoice = x=new JComboBox(); x.addItem("reverse"); x.addItem("noreverse");
-      mapChoice = x = FrameCM.createChoiceCM();
+      mapChoice = x = FrameColorMap.createChoiceCM();
       cutChoice = x=new JComboBox();   x.addItem("autocut"); x.addItem("noautocut");
       fctChoice = x=new JComboBox();   for( int i=0; i<PlanImage.TRANSFERTFCT.length; i++ ) x.addItem(PlanImage.TRANSFERTFCT[i]);
       if( !aladin.OUTREACH ) {
@@ -1526,6 +1562,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
    protected void save() throws Exception {
       if( Aladin.NOGUI ) return;
       
+      // On mémorise les helps qu'on ne veut plus
+      majStopHelp();
+      
       // On mémorise la date de la session
       setLastRun();
       
@@ -1743,6 +1782,9 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // Positionnement du MAXCACHE s'il y a lieu
       setMaxCache(get(MAXCACHE));
+      
+      // Positionnement des mots clés des helps qu'on ne veut plus voir
+      initStopHelp(get(STOPHELP));
       
       flagModif = false;
    }
