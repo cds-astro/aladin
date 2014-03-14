@@ -133,7 +133,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.034";
+    static public final    String VERSION = "v8.035";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2944,7 +2944,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,MDCH2) ) { unDetach();
       } else if( isMenu(s,FAQ) )   { glu.showDocument("Aladin.java.getFAQ","");
       } else if( isMenu(s,MAN) )   { glu.showDocument("Aladin.java.getManual.pdf","");
-      } else if( isMenu(s,TUTORIAL) ){ glu.showDocument("Http", "http://aladin.u-strasbg.fr/tutorials", true);;
+      } else if( isMenu(s,TUTORIAL) ){ glu.showDocument("Aladin.Tutorial", "");
       } else if( isMenu(s,MPRINT) ){ printer();
       } else if( isMenu(s,SENDBUG) ) { sendBugReport();
       } else if( isMenu(s,NEWS) )  { newsReport();
@@ -4573,7 +4573,8 @@ public void setLocation(Point p) {
    protected void setButtonMode() {
       try {
          Plan pc = calque.getFirstSelectedPlan();
-         PlanImage pimg = calque.getFirstSelectedSimpleImage();
+//         PlanImage pimg = calque.getFirstSelectedSimpleImage();
+         PlanImage pimg = calque.getFirstSelectedImage();
          Plan base = calque.getPlanBase();
          boolean hasImage = base!=null;
          int nbPlanCat = calque.getNbPlanCat();
@@ -4613,7 +4614,7 @@ public void setLocation(Point p) {
          if( miXmatch!=null ) miXmatch.setEnabled( nbPlanCat>0 );
          if( miDel!=null ) miDel.setEnabled(!isFree);
          if( miDelAll!=null ) miDelAll.setEnabled(!isFree);
-         if( miPixel!=null ) miPixel.setEnabled(nbPlanImg>0);
+         if( miPixel!=null ) miPixel.setEnabled(pimg!=null && (!isBG || isBG && !((PlanBG)pimg).isColored() ));
          if( miContour!=null ) miContour.setEnabled( hasImage );
          if( miVOtool!=null ) miVOtool.setEnabled(hasNoResctriction());
          if( miSave!=null ) miSave.setEnabled(mode && hasNoResctriction());
@@ -4728,7 +4729,7 @@ public void setLocation(Point p) {
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
          if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
-         if( miFlip!=null ) miFlip.setEnabled(hasImage &&!isCube && !isBG);
+         if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);
          int syncMode=sync.getMode();
          if( miSync!=null ) {
             miSync.setEnabled(syncMode!=0);
@@ -4740,7 +4741,7 @@ public void setLocation(Point p) {
          }
 
          if( miCrop!=null ) {
-            miCrop.setEnabled(v!=null && v.pref!=null && (v.pref.hasAvailablePixels() || isBG )
+            miCrop.setEnabled(v!=null && v.pref!=null && (v.pref.isPixel() || isBG )
                && (v.pref.type!=Plan.IMAGEHUGE || ((PlanImageHuge)v.pref).fromSubImage(v.zoom, getWidth(), getHeight())));
          }
 

@@ -2044,15 +2044,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                   try {
                      coo = v.getProj().getXY(coo);
                      Coord c1 = v.getCooCentre();
-//                     coo.x = c1.x+(coo.x - c1.x)/3; 
-//                     coo.y = c1.y+(coo.y - c1.y)/3;
-//                     coo = v.getProj().getCoord(coo);
                      coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
+                     
+                     // Si ce point est en dehors de la vue, on va directement au repere
+                     v.getProj().getXY(coo);
+                     PointD p = v.getPositionInView(coo.x, coo.y);
+                     if( p.x<0 || p.x>v.rv.width || p.y<0 || p.y>v.rv.height ) coo = new Coord(repere.raj,repere.dej);
+                     
                   } catch( Exception e ) { }
                }
             }
             if( v.pref instanceof PlanBG ) {
                v.getProj().setProjCenter(coo.al,coo.del);
+               v.pref.projd.setProjCenter(coo.al,coo.del);
                v.newView(1);
             }
             flag=v.setZoomRaDec(nz,coo.al,coo.del);
@@ -4149,8 +4153,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void exportROI(String prefix) { exportSaveROI(prefix,0,0,0,0); }
    protected void saveROI(String prefix,int w,int h,int fmt) {
-      System.out.println("No yet debugged !!!");
-//      exportSaveROI(prefix,1,w,h,fmt);
+//      System.out.println("No yet debugged !!!");
+      exportSaveROI(prefix,1,w,h,fmt);
    }
    private void exportSaveROI(String prefix,int mode,int w,int h,int fmt) {
       if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";
@@ -4168,11 +4172,18 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          if( v.isFree() ) continue;
          
          if( !v.pref.isPixel() ) continue;
-         if( !(v.pref instanceof PlanBG) ) continue;
+//         if( !(v.pref instanceof PlanBG) ) continue;
          
+         v.rv = new Rectangle(0,0,viewSimple[0].rv.width,viewSimple[0].rv.height);
+//         v.rv = new Rectangle(0,0,w,h);
+         v.setSize(v.rv.width, v.rv.height);
+         v.pref.projd = v.projLocal;
+         
+         v.newView(1);
          v.setZoomXY(v.zoom,v.xzoomView,v.yzoomView);
-         v.n=ViewControl.MAXVIEW;
-         v.n=0;
+         
+//         v.n=ViewControl.MAXVIEW;
+//         v.n=0;
 //         
 //         
 //         // Duplication du plan de référence pour ne pas "l'abimer"

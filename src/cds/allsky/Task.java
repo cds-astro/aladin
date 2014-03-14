@@ -97,8 +97,10 @@ public class Task extends Thread {
              
              context.startAction(a);
              try {
-                builder.run();
-                builder.showStatistics();
+                if( !builder.isFake() ) {
+                   builder.run();
+                   builder.showStatistics();
+                }
              } catch( Exception e ) {
                 if( Aladin.levelTrace>=3 ) e.printStackTrace();
                 context.taskAbort();

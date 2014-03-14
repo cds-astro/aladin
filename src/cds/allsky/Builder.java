@@ -84,6 +84,13 @@ public abstract class Builder {
    /** Affiche des statistiques de progression */
    public void showStatistics() { }
    
+   /** Indique le mode Just-print - not run -> retourne true si c'est le cas avec un message d'info */
+   public boolean isFake() {
+      if( !context.fake ) return false;
+      context.info("Action "+getAction()+" not run due to the -n option");
+      return true;
+   }
+   
    // Quelques validateurs génériques utilisés par les différents Builders.
    
    // Vérifie que le répertoire Input a été passé en paramètre et est utilisable
@@ -173,6 +180,12 @@ public abstract class Builder {
             cut[1]= imgCut[1]; 
             context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
          }
+      }
+      
+      // S'il me manque toujours le pixelCut, je vais tenter de les récupérer par le fichier des properties
+      missingCut   = cut==null || cut[0]==0 && cut[1]==0;
+      if( missingCut ) {
+         // A FAIRE
       }
       
       context.setCut(cut);

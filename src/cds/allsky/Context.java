@@ -87,18 +87,19 @@ public class Context {
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné 
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
    protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
-   public double[] pixelGood=null;          // Plage des valeurs des pixels conservés (valeurs physiques)
-   protected double[] good=null;              // Plage des valeurs de pixels conservés (raw)
+   public double[] pixelGood=null;           // Plage des valeurs des pixels conservés (valeurs physiques)
+   protected double[] good=null;             // Plage des valeurs de pixels conservés (raw)
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
-   protected boolean partitioning=true;          // Activation de la lecture par blocs des fimages originales
+   protected boolean fake=false;             // Activation du mode "just-print norun"
+   protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
    public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
-   protected ArrayList<String> fitsKeys=null; // Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
-   protected int typicalImgWidth=-1;       // Taille typique d'une image d'origine
+   protected ArrayList<String> fitsKeys=null;// Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
+   protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
    
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie

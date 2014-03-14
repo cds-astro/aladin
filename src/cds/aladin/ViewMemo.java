@@ -19,6 +19,7 @@
 
 package cds.aladin;
 
+import java.awt.Rectangle;
 import java.util.*;
 
 final public class ViewMemo {

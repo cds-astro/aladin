@@ -3254,7 +3254,7 @@ public class ViewSimple extends JComponent
                   Util.toolTip(this,id!=null ? cPlan.label+": "+id : "");
                }
             } else {
-               if( calque.flagTip )Util.toolTip(this,n+" objects");
+               if( calque.flagTip ) Util.toolTip(this,n+" objects");
             }
 
             // Show info de la source dans le canvas des mesures
@@ -3283,6 +3283,11 @@ public class ViewSimple extends JComponent
             aladin.view.hideSource();
             if( calque.flagTip ) Util.toolTip(this,"");
          }
+         
+         // détermine si la souris est sur le bord de la vue pour un éventuel déplacement ou une copie de vue
+         int marge = rv.width/40;
+         boolean flagMarge = view.isMultiView() && (tool==ToolBox.SELECT || tool==ToolBox.PAN)
+               && (x<=marge || x>=rv.width-marge || y<=marge || y>=rv.height-marge);
 
          // Je change le curseur si necessaire
          if( !aladin.lockCursor && isSelectOrTool ) {
@@ -3293,6 +3298,8 @@ public class ViewSimple extends JComponent
                if( oc!=Aladin.TURNCURSOR ) Aladin.makeCursor(this,(oc=Aladin.TURNCURSOR));
             } else if( trouve ) {
                if( oc!=Aladin.HANDCURSOR ) Aladin.makeCursor(this,(oc=Aladin.HANDCURSOR));
+            } else if( flagMarge ) {
+               if( oc!=Aladin.PLANCURSOR ) Aladin.makeCursor(this,(oc=Aladin.PLANCURSOR));
             } else {
                if( oc!=currentCursor ) Aladin.makeCursor(this,(oc=currentCursor));
             }
@@ -3744,6 +3751,7 @@ public class ViewSimple extends JComponent
     protected boolean getImageBG() {
       boolean flagchange=false;         // Vrai s'il faut reextraire une vue
       Dimension rv = getSize();
+      if( rv.width==0 ) rv = new Dimension(this.rv.width,this.rv.height);   // bon on passe par le rectangle
 
       // Pas encore de buffer de base
       if( img==null || img.getWidth(this)!=rv.width
@@ -4923,9 +4931,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    }
    
    /** Retourne les coordonnées de la rose des vents */
-  protected Coord getNECentre() {
-     Projection proj=null;
-     if( isFree() || !Projection.isOk(proj=getProj()) ) return null;
+  protected Coord getNECentre(Projection proj) {
+     if( isFree() || !Projection.isOk(proj) ) return null;
      double x = rv.width-15;
      double y = rv.height-15;
      PointD p = getPosition(x,y);
@@ -4972,10 +4979,11 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       
       double L = getNESize()/2.;
       
-      boolean flagBG = pref instanceof PlanBG;
+//      boolean flagBG = pref instanceof PlanBG;
+      boolean flagBG=false;
       
       try { 
-         c=getNECentre();
+         c=getNECentre(proj);
 
          // On n'affiche pas le repère si on traverse le nord ou le sud
          //         if( c.del+height>90. || c.del-height<-90. ) return;
@@ -4990,7 +4998,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          c1 = new Coord(c.al,c.del+delta);
          if( !flagBG ) c1 = aladin.localisation.frameToICRS(c1);
-         proj.getXYNative(c1);
+//         proj.getXYNative(c1);
+         proj.getXY(c1);
          if( Double.isNaN(c1.x) ) return;
          x1=c1.x; y1=c1.y;
          alpha = Math.atan2(y1-y,x1-x);
@@ -4998,7 +5007,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
          c1 = new Coord(c.al+delta/Math.cos(c.del*Math.PI/180.),c.del);
          if( !flagBG ) c1 = aladin.localisation.frameToICRS(c1);
-         proj.getXYNative(c1);
+//         proj.getXYNative(c1);
+         proj.getXY(c1);
          if( Double.isNaN(c1.x) ) return;
          x2=c1.x; y2=c1.y;
          alpha = Math.atan2(y2-y,x2-x);
@@ -6174,20 +6184,17 @@ g.drawString(s,10,100);
    }
 
    public void paintComponent(Graphics gr) { 
-//      waitLockRepaint("paintComponent");
-//      try {
-         try { paintComponent1(gr); }
-         catch( Exception e ) {
-            if( aladin.levelTrace>3 ) e.printStackTrace();
-            drawBackground(gr);
-            drawBordure(gr);
-            gr.setColor(Color.red);
-            gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
-         }
-         resetClip();
-         aladin.view.setPaintTimer();
-         aladin.command.syncNeedRepaint=false;
-//      } finally { unlockRepaint("paintComponent"); }
+      try { paintComponent1(gr); }
+      catch( Exception e ) {
+         if( aladin.levelTrace>3 ) e.printStackTrace();
+         drawBackground(gr);
+         drawBordure(gr);
+         gr.setColor(Color.red);
+         gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
+      }
+      resetClip();
+      aladin.view.setPaintTimer();
+      aladin.command.syncNeedRepaint=false;
    }
    
    private void paintComponent1(Graphics gr) { 

@@ -1365,11 +1365,10 @@ public final class Glu implements Runnable {
                StringTokenizer aST = new StringTokenizer(actionName);
                while( aST.hasMoreTokens() )
                   aladinDic.put(aST.nextToken(), url);
-               // Le %L overide le %U (BEURK), EN FAIT IL FAUDRAIT ETRE PLUS
-               // MALIN DANS
-               // LE CAS OU %L CONTIENT $url MAIS CE SERA POUR UNE PROCHAINE
-               // FOIS.
-            } else if( name.equals("L") || name.equals("FullTextResult") ) {
+               // Le %L overide le %U (BEURK) ,
+               // EN FAIT IL FAUDRAIT ETRE PLUS MALIN DANS
+               // LE CAS OU %L CONTIENT $url MAIS CE SERA POUR UNE PROCHAINE FOIS.
+            } else if( (name.equals("L") || name.equals("FullTextResult")) ) {
                url = value;
                StringTokenizer aST = new StringTokenizer(actionName);
                while( aST.hasMoreTokens() )

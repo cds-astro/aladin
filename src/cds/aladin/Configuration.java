@@ -730,19 +730,19 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       return flag.equalsIgnoreCase("On"); 
    }
    
-   /** Retourne le flag de l'outil autodist - par défaut actif */
+   /** Retourne le flag de l'outil autodist - par défaut inactif */
    protected boolean getAutoDist() {
       if( Aladin.OUTREACH ) return false;
       String flag = get(AUTODIST);
-      if( flag==null ) return true;
+      if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
    }
    
-   /** Retourne le flag de Simbad Quick - par défaut actif */
+   /** Retourne le flag de Simbad Quick - par défaut inactif */
    protected boolean getSimbadFlag() {
       if( Aladin.OUTREACH ) return true;
       String flag = get(SIMBAD);
-      if( flag==null ) return true;
+      if( flag==null ) return false;
       return flag.equalsIgnoreCase("On");
    }
    
@@ -1617,11 +1617,11 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
       if( !Aladin.OUTREACH ) {
-         if( aladin.calque.flagSimbad && !getSimbadFlag() ) remove(SIMBAD);
-         if( !aladin.calque.flagSimbad && getSimbadFlag() ) set(SIMBAD,"Off");
+         if( aladin.calque.flagSimbad && !getSimbadFlag() ) set(SIMBAD,"On");    //remove(SIMBAD);
+         if( !aladin.calque.flagSimbad && getSimbadFlag() ) remove(SIMBAD);      //set(SIMBAD,"Off");
          
-         if( aladin.calque.flagAutoDist && !getAutoDist() ) remove(AUTODIST);
-         if( !aladin.calque.flagAutoDist && getAutoDist() ) set(AUTODIST,"Off");
+         if( aladin.calque.flagAutoDist && !getAutoDist() ) set(AUTODIST,"On");  //remove(AUTODIST);
+         if( !aladin.calque.flagAutoDist && getAutoDist() ) remove(AUTODIST);    //set(AUTODIST,"Off");
          
          if( aladin.calque.flagVizierSED && !getVizierSEDFlag() ) set(VIZIERSED,"On");
          if( !aladin.calque.flagVizierSED && getVizierSEDFlag() ) remove(VIZIERSED);

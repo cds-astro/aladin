@@ -2755,6 +2755,8 @@ public class PlanBG extends PlanImage {
 
    /** Tracé d'un bord le long de projection pour atténuer le phénomène de "feston" */
    protected void drawForeground(Graphics gv,ViewSimple v) {
+      v = v.getProjSyncView();
+      
       if( aladin.calque.hasHpxGrid() || isOverlay() ) {
          if( aladin.calque.hasHpxGrid() ) drawHealpixGrid(gv, v);
          return;
@@ -2764,7 +2766,6 @@ public class PlanBG extends PlanImage {
       int x=0,y=0,rayon=0,grandAxe=0;
       double angle=0;
 
-//      if( rayon<60 ) return;
       if( v.getTaille()<15 ) return;
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       g.setColor(Color.white);
@@ -2773,7 +2774,7 @@ public class PlanBG extends PlanImage {
       int epaisseur = 50;
       g.setStroke(new BasicStroke(epaisseur));
       
-      Projection projd = v.getProjSyncView().getProj().copy();
+      Projection projd = v.getProj().copy();
       projd.frame=0;
 
 //      g.setColor( Color.yellow );

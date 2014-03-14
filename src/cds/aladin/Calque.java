@@ -1548,7 +1548,7 @@ public final class Calque extends JPanel implements Runnable {
    */
    public Plan getPlanBase() {
       Plan p = getPlanRef();
-      return p!=null && (p.isImage() || p instanceof PlanBG) ?p: null;
+      return p!=null && p.isPixel() ? p: null;
    }
    
    /** true si le plan de référence est un plan en mode Allsky 
@@ -3527,10 +3527,18 @@ public final class Calque extends JPanel implements Runnable {
        return null;
    }
 
-    /** Retourne le premier plan Image sélectionné, ou null si aucun */
+    /** Retourne le premier plan Image simple sélectionné, ou null si aucun */
     protected PlanImage getFirstSelectedSimpleImage() {
        for( int i=0; i<plan.length; i++ ) {
           if( plan[i].selected && plan[i].isImage() ) return (PlanImage)plan[i];
+       }
+       return null;
+   }
+
+    /** Retourne le premier plan Image sélectionné, ou null si aucun */
+    protected PlanImage getFirstSelectedImage() {
+       for( int i=0; i<plan.length; i++ ) {
+          if( plan[i].selected && plan[i].isPixel() ) return (PlanImage)plan[i];
        }
        return null;
    }

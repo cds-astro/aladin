@@ -217,16 +217,10 @@ public class HipsGen {
          }
 
          // debug
-         if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) {
-            Context.setVerbose(4);
-         }
-         else if (arg.equalsIgnoreCase("-fast") ) {
-            context.mixing=true;
-         }
-
-         else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") ) {
-            force=true;
-         }
+         if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) Context.setVerbose(4);
+         else if (arg.equalsIgnoreCase("-fast") ) context.mixing=true;
+         else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
+         else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
 
          // toutes les autres options écrasent les précédentes
          else if (arg.contains("=")) {
@@ -313,6 +307,7 @@ public class HipsGen {
          }
       }
       
+      if( context.fake ) context.warning("NO RUN MODE (option -n), JUST PRINT INFORMATION !!!");
       for( Action a : actions ) {
          context.info("Action => "+a+": "+a.doc());
       }
@@ -345,6 +340,7 @@ public class HipsGen {
       		"             directly in the comand line :");
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
+            "-n                 Just print process information, but do not execute it.\n"+
             "in=dir             Source image directory (fits or jpg|png +hhh or HiPS)" + "\n" +
             "out=dir            HiPS target directory (default $PWD+\""+Constante.ALLSKY+"\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
@@ -364,7 +360,7 @@ public class HipsGen {
             "pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
             "                   conversion - ex: \"120 140 log\")" + "\n" +
             "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
-            "                   conversion - ex: \"-5 110\")" + "\n" +
+            "                   conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
 //            "pixelGood=min [max] Range of pixel values kept" + "\n" +
             "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
 //            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +

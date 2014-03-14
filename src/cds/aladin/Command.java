@@ -3247,11 +3247,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
 //System.out.println("save mode="+mode+" w="+w+" h="+h+" file="+(file==null?"null":file));
 
-              if( flagDim && !a.NOGUI) {
-                 tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
-                 a.warning("save error: "+tmp,1);
-                 w=h=View.INITW;
-              }
+//              if( flagDim && !a.NOGUI) {
+//                 tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
+//                 a.warning("save error: "+tmp,1);
+//                 w=h=View.INITW;
+//              }
 
               if( file==null && !a.NOGUI) {
                  tmp="saving on standard output required NOGUI mode (-nogui parameter)";
@@ -3274,12 +3274,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  if( file!=null && (file.endsWith(".jpg") || file.endsWith(".jpeg"))) mode|=Save.JPEG;
                  else if( file!=null && file.endsWith(".eps")) mode|=Save.EPS;
                  else if( file!=null && file.endsWith(".png")) mode|=Save.PNG;
+                 else if( file!=null && file.endsWith(".bmp")) mode|=Save.BMP;
                  else if( file!=null && file.endsWith(".lk")) mode|=Save.LK;
-                 else mode|=Save.BMP;
+                 else mode|=Save.PNG;
               }
 
-              if( flagROI ) a.view.saveROI(file,w,h,mode);
-              else (a.save).saveView(file,w,h,mode,qual);
+              if( flagROI ) {
+                 int dot = file.lastIndexOf('.');
+                 if( dot>=0 ) file = file.substring(0,dot);
+                 a.view.saveROI(file,w,h,mode);
+              } else (a.save).saveView(file,w,h,mode,qual);
          }
          catch( Exception e ) { e.printStackTrace(); }
          finally {
