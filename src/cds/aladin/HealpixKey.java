@@ -699,7 +699,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     protected byte [] loadStream(String filename,int skip) throws Exception {
        byte [] buf;
        long t1 = Util.getTime();
-       planBG.aladin.trace(4,"loadStream("+filename+")...");
+//       planBG.aladin.trace(4,"loadStream("+filename+")...");
        MyInputStream dis=null;
        boolean fastLoad = this instanceof HealpixAllsky;
        

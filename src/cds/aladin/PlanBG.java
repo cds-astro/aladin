@@ -2704,7 +2704,7 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
       statNbItems = nb/*+nb1*/;
-      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
+//      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
    }
    
    static final private int MAXSTAT=5;

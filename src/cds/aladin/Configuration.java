@@ -630,10 +630,11 @@ public final class Configuration extends JFrame
    /** Affichage du help associé à la clé 
     * @return true si le help a été affiché
     */
-   protected boolean  showHelpIfOk(String key) {
+   protected boolean showHelpIfOk(String key) { return showHelpIfOk(null,key); }
+   protected boolean showHelpIfOk(Component c,String key) {
       if( stopHelp==null ) stopHelp = new Vector<String>();
       if( stopHelp.contains(key) ) return false;
-      if( !aladin.confirmation(aladin.chaine.getString(key)
+      if( !aladin.confirmation(c==null?aladin:c,aladin.chaine.getString(key)
             +"\n \n"+aladin.chaine.getString("STOPHELP"))) stopHelp.add(key);
       return true;
    }

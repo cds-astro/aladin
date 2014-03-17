@@ -1667,7 +1667,7 @@ public final class Save extends JFrame implements ActionListener {
       EPSGraphics epsg = new EPSGraphics(out,"Aladin-chart",null,0,0,v.rv.width,v.rv.height);
 
       // Affichage de l'image
-       if( v.imgprep!=null && v.pref.active ) {
+       if( /* v.imgprep!=null && */ v.pref.active ) {
           epsg.drawImage(v.getImage(w,h,false),0,0,v.aladin);
        }
 

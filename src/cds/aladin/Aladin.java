@@ -133,7 +133,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.035";
+    static public final    String VERSION = "v8.036";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -421,7 +421,7 @@ public class Aladin extends JApplet
                       miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
                       miCopy,miHpxGrid,miHpxDump,
                       miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-                      miInFold,miConv,miArithm,miMocGenImg,miMocGenCat,miMocOp,miMocToOrder,miMocFiltering,miMocCrop,
+                      miInFold,miConv,miArithm,miMocHips,miMocGenImg,miMocGenCat,miMocOp,miMocToOrder,miMocFiltering,miMocCrop,
                       miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
                       miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
                       miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
@@ -481,7 +481,7 @@ public class Aladin extends JApplet
            PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
            STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
            SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGENIMGS,MOCGENCAT,
-           MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,
+           MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
            HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
            CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
            REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
@@ -897,6 +897,7 @@ public class Aladin extends JApplet
        MOCCROP =chaine.getString("MMOCCROP");
        MOCHELP =chaine.getString("MMOCHELP");
        MOCLOAD =chaine.getString("MMOCLOAD");
+       MOCHIPS =chaine.getString("MMOCHIPS");
        HEALPIXARITHM = PROTOPREFIX + chaine.getString("MHEALPIXARITHM");
 //       ADD     = chaine.getString("MADD");
 //       SUB     = chaine.getString("MSUB");
@@ -1082,7 +1083,7 @@ public class Aladin extends JApplet
                 {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
              },
              { {MOC},
-                {MOCLOAD},{MOCGENCAT},{MOCGENIMG},{MOCGENIMGS},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
+                {MOCHIPS},{MOCLOAD},{MOCGENCAT},{MOCGENIMG},{MOCGENIMGS},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{MOCHELP}
              },
              { {MTOOLS},
                 {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
@@ -1728,6 +1729,7 @@ public class Aladin extends JApplet
        else if( isMenu(m,MOCFILTERING) )   miMocFiltering  = ji;
        else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
        else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
+       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
        else if( isMenu(m,MOCGENCAT) )   miMocGenCat  = ji;
        else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
        else if( isMenu(m,NORM) )   miNorm    = ji;
@@ -3044,6 +3046,7 @@ public class Aladin extends JApplet
       } else if( isMenu(s,MOCCROP) )  { crop();
       } else if( isMenu(s,MOCHELP) )  { info(chaine.getString("MOCHELP"));
       } else if( isMenu(s,MOCLOAD) )  { loadMoc();
+      } else if( isMenu(s,MOCHIPS) )  { loadMocHips();
       } else if( isMenu(s,MOCFILTERING) )  { updateMocFiltering();
       } else if( isMenu(s,CONV) )  { updateConvolution();
       } else if( isMenu(s,HEALPIXARITHM) ){ updateHealpixArithm();
@@ -3623,6 +3626,12 @@ public class Aladin extends JApplet
        frameMocFiltering.maj();
     }
     
+    /** Chargemetn du MOC correspondant au plan HiPS courant  */
+    protected void loadMocHips() {
+       Plan p = calque.getPlanBase();
+       if( p==null || p instanceof PlanMoc || !(p instanceof PlanBG) || !((PlanBG)p).hasMoc() ) return;
+       ((PlanBG)p).loadMoc();
+    }
     
     private boolean loadMocFirst=true;
     
@@ -3633,7 +3642,7 @@ public class Aladin extends JApplet
           public void run() {
              info(dialog,chaine.getString("MMOCLOADHELP"));
           }
-          });   
+       });   
        loadMocFirst=false;
     }
 
@@ -4715,6 +4724,7 @@ public void setLocation(Point p) {
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
 //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
+         if( miMocHips!=null ) miMocHips.setEnabled( isBG && ((PlanBG)pi).hasMoc() );
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);
