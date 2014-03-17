@@ -72,7 +72,7 @@ public class Bookmarks {
    }
    
    /** Réinitialisation (rechargement) des bookmarks "officielles" */
-   public void reload() {
+   synchronized public void reload() {
       String list = aladin.configuration.getBookmarks();
       aladin.configuration.resetBookmarks();
       init(true);
