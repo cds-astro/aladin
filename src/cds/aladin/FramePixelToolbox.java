@@ -382,11 +382,10 @@ public class FramePixelToolbox extends JFrame {
             int b=cm.getBlue(index);
             field[3].setText( String.format("%02X-%02X-%02X", r,g,b) );
             field[4].setBackground( new Color(r,g,b) );
-            field[4].setText(".");
+            field[4].setOpaque(true);
          } else {
             field[3].setText("");
             field[4].setBackground( Color.white );
-            field[4].setText("");
          }
       }
       
