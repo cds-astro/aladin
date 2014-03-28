@@ -147,6 +147,8 @@ public class PlanBG extends PlanImage {
    static final String CACHE = "Background";
    static long MAXCACHE=4*1024*1024;                // taille max du cache en Ko
    static final protected int LIVETIME = 3*1000;            // temps de vie des losanges en mémoire (ms)
+   
+   protected MyProperties prop = null; // La liste des propriétés associées au HiPS
 
    protected String gluTag=null;   // Identificateur dans le dico GLU
    protected String survey;        // Nom du background
@@ -160,22 +162,23 @@ public class PlanBG extends PlanImage {
    protected boolean hasDrawnSomething=false;   // True si le dernier appel à draw() à dessiner au moins un losange
    protected boolean allWaitingKeysDrawn=false;   // true si tous les losanges de résolution attendue ont été tracés
    protected boolean useCache=true;
-   protected boolean color=false;   // true si le survey est fourni en couleur (JPEG|PNG)
-   protected boolean colorPNG=false;   // true si le survey est fourni en couleur PNG
+   protected boolean cube=false;     // true s'il s'agit d'un HiPS cube
+   protected boolean color=false;    // true si le survey est fourni en couleur (JPEG|PNG)
+   protected boolean colorPNG=false; // true si le survey est fourni en couleur PNG
    protected boolean colorUnknown=false; // true si on ne sait pas a priori si le survey est en JPEG|PNG couleur ou non
    public boolean fitsGzipped=false; // true si le survey est fourni en true pixels (FITS) mais gzippé
    public boolean truePixels=false;  // true si le survey est fourni en true pixels (FITS)
-   public boolean inFits=false;   // true: Les losanges originaux peuvent être fournis en FITS
-   public boolean inJPEG=false;   // true: Les losanges originaux peuvent être fournis en JPEG
-   public boolean inPNG=false;   // true: Les losanges originaux peuvent être fournis en PNG
+   public boolean inFits=false;      // true: Les losanges originaux peuvent être fournis en FITS
+   public boolean inJPEG=false;      // true: Les losanges originaux peuvent être fournis en JPEG
+   public boolean inPNG=false;       // true: Les losanges originaux peuvent être fournis en PNG
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
-   protected boolean local=false;
+   protected boolean local;
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
-   protected String pixelRange=null;  // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
-   protected String pixelCut=null;  // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
+   protected String pixelRange=null;   // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
+   protected String pixelCut=null;     // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
    
    // Gestion du cache
@@ -215,6 +218,7 @@ public class PlanBG extends PlanImage {
       minOrder = gluSky.minOrder;
       maxOrder = gluSky.maxOrder;
       useCache = gluSky.useCache();
+      local=gluSky.local;
       loadMocNow=gluSky.loadMocNow();
       frameOrigin=gluSky.frame;
       description=gluSky.description;
@@ -249,7 +253,7 @@ public class PlanBG extends PlanImage {
     * 2) pour vérifier que le cache est à jour, en comparant les dates du fichier "properties" local et distant 
     */
    protected java.util.Properties loadPropertieFile() {
-      MyProperties prop = null;
+      if( prop!=null ) return prop;
       String dateRef=null;
       
       boolean local=!(url.startsWith("http:") || url.startsWith("https:") ||url.startsWith("ftp:"));
@@ -378,6 +382,7 @@ public class PlanBG extends PlanImage {
       inPNG = gluSky.isPNG();
       truePixels=gluSky.isTruePixels();
       color = gluSky.isColored();
+      cube = gluSky.isCube();
       
       scanProperties();
    }
@@ -431,7 +436,7 @@ public class PlanBG extends PlanImage {
       suite();
    }
    
-   private void paramByTreeNode(TreeNodeAllsky gSky, Coord c, double radius) {
+   protected void paramByTreeNode(TreeNodeAllsky gSky, Coord c, double radius) {
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       else setLabel(gSky.label);
       maxOrder=gSky.getMaxOrder();
@@ -440,6 +445,7 @@ public class PlanBG extends PlanImage {
       inPNG=gSky.isPNG();
       truePixels=gSky.isTruePixels();
       color=gSky.isColored();
+      cube=gSky.isCube();
       frameOrigin=gSky.getFrame();
       losangeOrder=gSky.getLosangeOrder();
       local=gSky.isLocal();
@@ -737,7 +743,7 @@ public class PlanBG extends PlanImage {
     */
    public boolean checkSite(boolean withTrace) {
       if( nbCheckSite>=MAXCHECKSITE ) return false;
-      if( gluTag==null ) return false;
+      if( gluTag==null || gluTag.startsWith("__")) return false;
       aladin.glu.checkIndirection(gluTag, "/properties" ); //"");
       String url1 = ""+aladin.glu.getURL(gluTag);
       if( url1.equals(url) ) return false;
@@ -805,6 +811,7 @@ public class PlanBG extends PlanImage {
       hpx2xy = xy2hpx = null;
       frameOrigin=Localisation.ICRS;
       FreePixList();
+      prop=null;
       return super.Free();
    }
 
@@ -1333,7 +1340,6 @@ public class PlanBG extends PlanImage {
    }
    
 //   protected boolean lockGetPixelInfo=false;
-
    
    /** Retourne l'order de l'affichage actuel */
    protected int getOrder() { 
@@ -1767,8 +1773,11 @@ public class PlanBG extends PlanImage {
 //            " pourcent="+pourcent);
 //      return rep;
    }
+   
+   /** Retourne true s'il s'agit d'un HiPS cube */
+   public boolean isCube() { return cube; }
 
-   /** Retourne true si le all-sky est en couleur */
+   /** Retourne true s'il s'agit d'un HiPS en couleur */
    public boolean isColored() { return color; }
    
    /** Retourne true si le all-sky est affiché en FITS */
@@ -2538,6 +2547,8 @@ public class PlanBG extends PlanImage {
       boolean allskyDrawn=false;           // true si on a déjà essayé de tracer un allsky
       StringBuilder debug=new StringBuilder(" order="+max);
       
+      if( getZ()>1 ) debug.append(" z="+getZ());
+      
       // On dessine le ciel entier à basse résolution
       if( min<ALLSKYORDER ) {
          if( drawAllSky(g,v) ) {
@@ -2562,12 +2573,12 @@ public class PlanBG extends PlanImage {
          // Recherche des losanges qui couvrent la vue à la résolution max
          // uniquement si on est au-dela de l'order 3 (sauf si cest le dernier)
          allKeyReady=true;
-         if( max<ALLSKYORDER /* || max==ALLSKYORDER && maxOrder==ALLSKYORDER */ ) allKeyReady=false; 
+         if( max<ALLSKYORDER ) allKeyReady=false; 
          else {
             pix = getPixList(v,center,max);
             for( int i=0; i<pix.length; i++ ) {
-                HealpixKey healpix = getHealpix(max,pix[i], false);
-                if( healpix==null ) {
+               HealpixKey healpix = getHealpix(max,pix[i], false);
+               if( healpix==null ) {
                   if( (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                      pix[i]=-1; continue;
                   } else { allKeyReady=false;  break; }
@@ -2583,6 +2594,20 @@ public class PlanBG extends PlanImage {
                   }
                }
             }
+            
+            // Dans le cas d'un cube, peut être ai-je déjà tous les losanges d'à coté
+            if( !allKeyReady && isCube() ) {
+               allKeyReady=true;
+               for( int i=0; i<pix.length; i++ ) {
+                  if( getHealpixPreviousFrame(max, pix[i])==null ) {
+                     allKeyReady=false;
+//                     System.out.println("Missing "+max+"/"+pix[i]);
+                     break;
+                  };
+               }
+               if( allKeyReady ) debug.append(" allPreviousKeyReady");
+            }
+            
             if( !allKeyReady ) pix=null;
          }
          
@@ -2639,7 +2664,16 @@ public class PlanBG extends PlanImage {
                if( healpix==null && order<=max ) healpix = getHealpix(order,pix[i], true );
 
                // Inconnu => on ne dessine pas
-               if( healpix==null ) continue;
+               if( healpix==null ) {
+                  
+                  // Si c'est un cube et qu'on dispose du losange de la tranche d'à-coté, on affiche cette derniere en attendant
+                  // plutôt que d'afficher une résolution différente
+                  HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
+                  if( h!=null ) nb+=h.draw(g,v);
+                  
+                  continue;
+                  
+               }
 
                // Juste pour tester la synchro
                //            Util.pause(100);
@@ -2657,9 +2691,17 @@ public class PlanBG extends PlanImage {
 
                // Losange à gérer
                healpix.resetTimer();
-
+               
                // Pas encore prêt
-               if( status!=HealpixKey.READY && status!=HealpixKey.ERROR ) continue;
+               if( status!=HealpixKey.READY ) {
+                  
+                  // Si c'est un cube et qu'on dispose du losange de la tranche d'à-coté, on affiche cette derniere en attendant
+                  // plutôt que d'afficher une résolution différente
+                  HealpixKey h = getHealpixPreviousFrame(order,pix[i]);
+                  if( h!=null ) nb+=h.draw(g,v);
+                  
+                  continue;
+               }
 
                // Tous les fils à tracer sont déjà prêts => on passe
                if( order<max && childrenReady(healpix,v) ) {
@@ -2669,6 +2711,7 @@ public class PlanBG extends PlanImage {
                }
 
                nb+=healpix.draw(g,v);
+               setHealpixPreviousFrame(order,pix[i]);
                
                if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
             }
@@ -2704,8 +2747,12 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
       statNbItems = nb/*+nb1*/;
-//      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
+      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
    }
+   
+   /** Ne marche que pour les cubes */
+   protected HealpixKey getHealpixPreviousFrame(int order, long npix) { return null; }
+   protected void setHealpixPreviousFrame(int order,long npix) { }
    
    static final private int MAXSTAT=5;
    private int nStat=0;
@@ -3286,12 +3333,11 @@ public class PlanBG extends PlanImage {
                   try {
                      setPause(true);
                      Thread.currentThread().sleep(10000);
-                     setPause(false);
                   } catch( Exception e ) {
 //                     System.out.println(label+" wakeup !");
                   }
                }
-            } catch( Throwable t ) { t.printStackTrace(); }
+            } catch( Throwable t ) { if( Aladin.levelTrace>=3 ) t.printStackTrace(); }
          }
          thread=null;
       }

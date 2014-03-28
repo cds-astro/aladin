@@ -22,9 +22,13 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Vector;
 
 import cds.aladin.Aladin;
@@ -178,6 +182,12 @@ public class HipsGen {
       
    }
    
+   static private SimpleDateFormat SDF;
+   static {
+      SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+      SDF.setTimeZone(TimeZone.getDefault());
+   }
+   
    public void execute(String [] args) {
       int length = args.length;
       boolean first=true;
@@ -213,7 +223,7 @@ public class HipsGen {
          
          if( first ) {
             first=false;
-            context.info("Starting HipsGen (based on Aladin "+Aladin.VERSION+")...");
+            context.info("Starting HipsGen "+SDF.format(new Date())+" (based on Aladin "+Aladin.VERSION+")...");
          }
 
          // debug

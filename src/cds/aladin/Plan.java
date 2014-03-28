@@ -76,14 +76,15 @@ public class Plan implements Runnable {
    static final int ALLSKYCAT=18; // Le plan contient des segments de polarisation
    static final int ALLSKYMOC=19; // Le plan contient un Multi-Order Coverage map Healpix
    static final int IMAGECUBERGB =20;  // Le plan contient un cube d'images homogènes couleurs
-   static final int ALLSKYFINDEX=21; // Plan Allsky Finder (de fait pas un vrai plan => voir PlanBG)
+   static final int ALLSKYFINDEX=21; // Plan HiPS Finder (de fait pas un vrai plan => voir PlanBG)
+   static final int ALLSKYCUBE=22; // Plan HiPS cube
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
                                     "Catalog",
                                     "Tool","Aperture","Folder","Filter",
                                     "Image FoV","In progress","ImageHuge",
-                                    "AllskyImage","AllskyPolarisation","AllskyCatalog",
-                                    "MOC","CubeColor","AllskyFinder"
+                                    "HipsImage","HipsPolarisation","HipsCatalog",
+                                    "MOC","CubeColor","HipsFinder","HipsCube",
                                     };
 
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
@@ -356,6 +357,33 @@ public class Plan implements Runnable {
             (((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null)
             || type==ALLSKYCAT;
    }
+   
+   /** Retourne true si le plan est un cube */
+   protected boolean isCube() { return false; }
+   
+   /** Active le frame propre au cube */
+   protected void activePixels(ViewSimple v) {}
+   
+   /** Retourne la profondeur du plan dans le cas d'un cube (1 sinon) */
+   protected int getDepth() { return 1; }
+   
+   /** retourne la tranche courante (s'il s'agit d'un cube, sinon 0) */
+   protected double getZ() { return 0; }
+   
+   /** Positionne le Frame initial (s'il s'agit d'un cube) */
+   protected void setZ(double initFrame) { }
+   
+   /** gestion de la pause pour le défilement d'un cube */
+   protected void setPause(boolean t) { }
+   protected boolean isPause() { return true; }
+   
+   protected int getInitDelay() { return 400; }
+   
+   /** Juste pour pouvoir le dérivée tranquillement => ne s'applique qu'aux images*/
+   synchronized void changeImgID() { }
+   
+   /** Juste pour pouvoir le dérivée tranquillement => ne s'applique qu'aux cubes*/
+   protected boolean setCubeFrame(double frame) { return false; }
 
    /** Il s'agit d'un plan de type Tools */
    protected boolean isTool() {
@@ -1957,7 +1985,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    public void run() {
 Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
       if( server!=null ) server.setStatus();
-      boolean rep=true;;
+      boolean rep=true;
       try { rep = waitForPlan();
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();

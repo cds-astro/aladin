@@ -92,6 +92,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected PlanBG planBG;     // Plan d'appartenance de ce losange
    protected int order;         // Numéro de résolution HEALPIX
    protected long npix;         // NNuméro du pixel HEALPIX dans la résolution nside
+   protected int z;             // Dans le cas d'un HiPS cube, l'indice de la frame
    protected Hpix hpix;
    protected String fileCache;  // path partiel du fichier  SURVEY/NorderXX/DirYY/NpixYYyyyy
    protected String fileNet;    // nom du fichier "à l'ancienne" (à virer dès que la base est Ok)
@@ -165,6 +166,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       this.planBG = planBG;
       this.order=order;
       this.npix=npix;
+      z=(int)planBG.getZ();
       hpix = new Hpix(order,npix,planBG.frameOrigin);
 //      corners = computeCorners();
       
@@ -189,11 +191,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
    
    protected String getFileNet() {
-      return getFilePath(null,order,npix)+ EXT[extNet];
+      return getFilePath(null,order,npix,z)+ EXT[extNet];
    }
    
    protected String getFileCache() {
-      return getFilePath(planBG.survey+planBG.version,order,npix)+ EXT[extCache];
+      return getFilePath(planBG.survey+planBG.version,order,npix,z)+ EXT[extCache];
    }
 
    /** Création d'un losange Healpix en fonction de son père (sous-échantillonnage)
@@ -272,17 +274,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
 
    /** Retourne le nom de fichier complet en fonction du survey, de l'ordre et du numéro healpix */
-   static protected String getFilePath(String survey,int order, long npix) {
+   static protected String getFilePath(String survey,int order, long npix,int z) {
       return
-      (survey!=null ? survey + "/" :"") +
-      "Norder" + order + "/" +
-      "Dir" + ((npix / 10000)*10000) + "/" +
-      "Npix" + npix;
+      (survey!=null ? survey + "/" :"") + cds.tools.pixtools.Util.getFilePath(order, npix, z);
+//      "Norder" + order + "/" +
+//      "Dir" + ((npix / 10000)*10000) + "/" +
+//      "Npix" + npix;
    }
-
+   
    /** Retourne le numéro du losange sous la forme : Norder+parente/npix[-] (pour débogage) */
    protected String getStringNumber() {
-      return order+"/"+npix;
+      return order+"/"+npix+(z<=0?"":"_"+z);
    }
 
    /** Pour du debuging */
@@ -442,7 +444,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
          rgb=null;
          if( getStatus()!=ABORTING ) {
             
-//            System.out.println("Throwable: "+e.getMessage());
+//            System.err.println("Throwable: "+e.getMessage());
+//            e.printStackTrace();
             
             // Le test sur FileNotFoundException ne peut suffire car en keepAlive il n'est pas généré
             boolean notFoundError = e instanceof FileNotFoundException || e.getMessage().indexOf("HTTP response code: 40")>=0;
@@ -835,7 +838,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
    
    /** Retourne la valeur du pixel à l'emplacement idx (idx = y*width + x) */
    protected double getPixel(int idx,int mode) {
-      
       if( !loadPixelsOrigin(mode) ) return Double.NaN;
       resetTimer();
       double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
@@ -964,16 +966,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             if( initPixMode ) planBG.pixMode = PlanBG.PIX_ARGB;
 //            System.out.println("HealpixKey FITS in ARGB");
          }
-         if( bitpix!=8 && !flagARGB ) {
-             truePixels=true;
-//            if( planBG.flagRecut ) {
-//               pixelMin=planBG.pixelMin;
-//               pixelMax=planBG.pixelMax;
-//            } else {
-//               try { pixelMin = getValue(head,"PIXELMIN"); } catch( Exception e1 ) {}
-//               try { pixelMax = getValue(head,"PIXELMAX"); } catch( Exception e1 ) {}
-//            }
-         }
+         if( bitpix!=8 && !flagARGB ) truePixels=true;
 
       } catch( Exception e ) { width=height=512; bitpix=8; }
 
@@ -1045,7 +1038,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   planBG.dataMax  = range[3];
                }
 
-               planBG.aladin.trace(3,"Pixel range detection on "+order+"/"+npix+" NaN="+Util.round(range[4]*100,1)
+               planBG.aladin.trace(3,"Pixel range detection on "+getStringNumber()+" NaN="+Util.round(range[4]*100,1)
                      +"% => PixelMinMax=["+Util.myRound(planBG.pixelMin)+","+Util.myRound(planBG.pixelMax)+"], " +
                      "DataMinMax=["+Util.myRound(planBG.dataMin)+","+Util.myRound(planBG.dataMax)+"] "+(planBG.isBlank?" Blank="+planBG.blank:"")
                      +" bzero="+planBG.bZero+" bscale="+planBG.bScale);

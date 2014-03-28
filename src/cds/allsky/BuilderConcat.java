@@ -238,11 +238,11 @@ public class BuilderConcat extends BuilderTiles {
    }
 
    
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits out=null;
       
-      String inputFile = Util.getFilePath(inputPath,order,npix);
+      String inputFile = Util.getFilePath(inputPath,order,npix,z);
       Fits input = loadTile(inputFile);
       if( input==null ) {
          long duree = System.currentTimeMillis()-t;
@@ -251,7 +251,7 @@ public class BuilderConcat extends BuilderTiles {
       }
 
       // traitement de la tuile
-      String outFile = Util.getFilePath(outputPath,order,npix);
+      String outFile = Util.getFilePath(outputPath,order,npix,z);
       out = loadTile(outFile);
       
       switch(mode) {
@@ -282,9 +282,9 @@ public class BuilderConcat extends BuilderTiles {
 
       // Traitement de la tuile index
       if( doHpxFinder ) {
-         String inputIndexFile = Util.getFilePath(inputPathIndex,order,npix);
+         String inputIndexFile = Util.getFilePath(inputPathIndex,order,npix,z);
          HealpixIndex inputIndex = loadIndex(inputIndexFile);
-         String outIndexFile = Util.getFilePath(outputPathIndex,order,npix);
+         String outIndexFile = Util.getFilePath(outputPathIndex,order,npix,z);
          HealpixIndex outIndex = loadIndex(outIndexFile);
 
          switch(mode) {

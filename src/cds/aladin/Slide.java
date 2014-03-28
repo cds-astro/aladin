@@ -469,7 +469,6 @@ public final class Slide {
             else if( p.hashCode()==((PlanImageRGB)planRGB).pi[1] )
                colorForeground=flagInv?Color.magenta:Color.green;
          }
-//         g.setColor( Color.black );
          
          // ref==true => repérage du plan
          boolean ref = xMouse<=0 && p.type!=Plan.NO && p.underMouse && a.view.isVisible(p) && a.view.isMultiView();
@@ -489,12 +488,7 @@ public final class Slide {
                ref || p.selected  || p.type!=Plan.NO && in(yMouse) && inLabel(xMouse)) ) {
             labelBG=(p.selected ? Aladin.STACKBLUE : Aladin.STACKGRAY );
             g.setColor(labelBG.brighter());
-//            Graphics2D g2d = (Graphics2D)g;
-//            Paint p = g2d.getPaint();
-//            Paint gradient = new GradientPaint(x, y, labelBG.brighter().brighter(), x, y+H, labelBG);
-//            g2d.setPaint(gradient);
             g.fillRect(x,y,W,H-2);
-//            g2d.setPaint(p);
             g.setColor(labelBG);
             g.drawRect(x,y,W-1,H-2);
          } else if( mode!=DRAG ) {
@@ -506,7 +500,7 @@ public final class Slide {
          
          // Le gris de remplissage des plan de référence est plus appuyé
          // que pour les autres plans
-         if( /* p.ref */ isRefForVisibleView ) {
+         if( isRefForVisibleView ) {
             colorFillFG = Color.gray;
             colorBorder = new Color(50,50,50);
          }
@@ -600,7 +594,8 @@ public final class Slide {
             g.fillPolygon(xf,yf,xf.length);
             g.setColor(colorBorder);
             g.drawPolygon(xf,yf,xf.length);
-         } else if( p instanceof PlanImageBlink ) {
+            
+         } else if( p.isCube() ) {
             g.drawLine(xc[1]+1,yc[1]+1,xc[1]+1,yc[1]+1);
             g.drawLine(xc[2]-2,yc[1]+1,xc[2]-2,yc[1]+1);
             g.drawLine(xc[1],yc[1]+2,xc[2]-1,yc[1]+2);

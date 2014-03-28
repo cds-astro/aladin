@@ -129,6 +129,7 @@ public class BuilderTiles extends Builder {
       try {
           validateOrder(context.getHpxFinderPath());
       } catch(Exception e) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
           context.warning(e.getMessage());
           // retry order validation with tiles directory
           validateOrder(context.getOutputPath());
@@ -161,6 +162,8 @@ public class BuilderTiles extends Builder {
             context.warning("The provided BITPIX (" +bitpixOrig+ ") is different than the original one (" + context.getBitpixOrig() + ") => bitpix conversion will be applied");
             context.setBitpixOrig(bitpixOrig);
          }
+         
+         if( context.depth>1 ) context.info("Original images are cubes (depth="+context.depth+")");
          
          double [] cutOrigBefore = context.getPixelRangeCut();
          if( cutOrigBefore!=null ) {
@@ -422,12 +425,11 @@ public class BuilderTiles extends Builder {
     * @param order Ordre healpix du losange de départ
     * @param maxOrder Ordre healpix max de la descendance
     * @param npix Numéro healpix du losange
-    * @param fast true si on utilise la méthode la plus rapide (non bilinéaire, non moyennée)
-    * @param fading true si on utilise un fading sur les bords des images
+    * @param z Dans le cas d'un cube, indice de la tranche en cours
     * @return Le losange
     */
-   private Fits createHpx(ThreadBuilderTile hpx, String path,int order,long npix) throws Exception {
-      String file = Util.getFilePath(path,order,npix);
+   private Fits createHpx(ThreadBuilderTile hpx, String path,int order,long npix, int z) throws Exception {
+      String file = Util.getFilePath(path,order,npix,z);
       
       // si le process a été arrêté on essaie de ressortir au plus vite
       if (stopped) return null;
@@ -453,7 +455,7 @@ public class BuilderTiles extends Builder {
 
       // Création d'un losange terminal
       if( order==ordermax )  {
-         try { f = createLeaveHpx(hpx,file,order,npix); }
+         try { f = createLeaveHpx(hpx,file,order,npix,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createLeave error: "+file);
             e.printStackTrace();
@@ -466,9 +468,9 @@ public class BuilderTiles extends Builder {
          Fits fils[] = new Fits[4];
          for( int i =0; !stopped && i<4; i++ ) {
             if( context.isTaskAborting() ) throw new Exception("Task abort !");
-            fils[i] = createHpx(hpx, path,order+1,npix*4+i);
+            fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
          }
-         try { f = createNodeHpx(file,path,order,npix,fils); }
+         try { f = createNodeHpx(file,path,order,npix,fils,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createNodeHpx error: "+file);
             e.printStackTrace();
@@ -524,8 +526,11 @@ public class BuilderTiles extends Builder {
                if (stopped) break;
                if( context.isTaskAborting() ) break;
 
-               createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix);
-               if( cell.order==3 ) setProgressBar((int)cell.npix);
+               for( int z=0; z<context.depth; z++ ) {
+//                  if( context.depth>1 ) context.info("Processing frame="+z+"/"+context.depth);
+                  createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix, z);
+                  if( cell.order==3 ) setProgressBar((int)cell.npix);
+               }
 
             } catch( Throwable e ) {
                Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
@@ -543,40 +548,17 @@ public class BuilderTiles extends Builder {
    /** Mise à jour de la barre de progression en mode GUI */
    protected void setProgressBar(int npix) { context.setProgressLastNorder3(npix); }
 
-   // Retourne le prochain numéro de pixel à traiter par les threads de calcul, -1 si terminer
-//   private MocCell getNextNpix() {
-//      MocCell pix=null;
-//      getlock();
-//      try {
-//         if( !npixIterator.hasNext() ) return null;
-//         pix = new MocCell(ordermin,npixIterator.next().longValue());
-//         //      MocCell pix = NCURRENT==npix_list.size()  ? null : npix_list.get(NCURRENT++);
-//      } finally { unlock(); }
-//      return pix;
-//   }
    
    private MocCell getNextNpix() {
       MocCell pix=null;
       synchronized( lockObj ) {
          if( !npixIterator.hasNext() ) return null;
          pix = new MocCell(ordermin,npixIterator.next().longValue());
-         //      MocCell pix = NCURRENT==npix_list.size()  ? null : npix_list.get(NCURRENT++);
       }
       return pix;
    }
 
-
-//   // Gère l'accès exclusif par les threads de calcul à la liste des losanges à traiter (npix_list)
-//   private void getlock() {
-//      while( true ) {
-//         synchronized(lockObj) { if( !lock ) { lock=true; return; } }
-//         cds.tools.Util.pause(10);
-//      }
-//   }
-//   private void unlock() { synchronized(lockObj) { lock=false; } }
-
    private Object lockObj = new Object();
-//   private boolean lock=false;
 
 
    // Crée une série de threads de calcul
@@ -626,7 +608,7 @@ public class BuilderTiles extends Builder {
     * @param npix Numéro Healpix du losange
     * @param fils les 4 fils du losange
     */
-   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
+   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[],int z) throws Exception {
       long t = System.currentTimeMillis();
       int w=Constante.SIDE;
       double px[] = new double[4];
@@ -747,10 +729,10 @@ public class BuilderTiles extends Builder {
     * @param file Nom du fichier de destination (complet mais sans l'extension)
     * @param order Ordre healpix du losange
     * @param npix Numéro Healpix du losange
-    * @param fading utilisation d'un fading pour les bords/recouvrements d'images
+    * @param z numéro de la frame (pour un cube)
     * @return null si rien trouvé pour construire ce fichier
     */
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
       
       Fits oldOut=null;
@@ -765,7 +747,7 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      Fits out = hpx.buildHealpix(this,order, npix);
+      Fits out = hpx.buildHealpix(this,order, npix,z);
 
       if( out !=null  ) {
 

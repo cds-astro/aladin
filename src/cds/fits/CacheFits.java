@@ -195,8 +195,11 @@ public class CacheFits {
       return f;
    }
    
+   private boolean firstChangeOrig=true;
+   
    // Ouvre un fichier
    private FitsFile open(String fileName,int mode,boolean flagLoad) throws Exception {
+      boolean flagChangeOrig=false;
       FitsFile f = new FitsFile();
       f.fits = new Fits();
       if( context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
@@ -229,12 +232,15 @@ public class CacheFits {
       }
       else {
          f.fits.loadFITS(fileName, false, flagLoad);
-//         f.fits.initPixDoubleFast();
+         flagChangeOrig = f.fits.bzero!=context.bZeroOrig || f.fits.bscale!=context.bScaleOrig;
+         if( flagChangeOrig && firstChangeOrig ) {
+            context.warning("All original images do no used the same BZERO & BSCALE factors => rescaling will be applied");
+            firstChangeOrig=false;
+         }
       }
 
-
       // applique un filtre spécial
-      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelGood!=null ) delSkyval(f.fits);
+      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelGood!=null || flagChangeOrig ) delSkyval(f.fits,flagChangeOrig);
 
       return f;
    }
@@ -329,20 +335,23 @@ public class CacheFits {
       double [] cut = cutCache.get(filename);
       if( cut!=null ) return cut;
       Fits f1 = new Fits();
-      int w=1024;
-      int x = f.width/2-w/2, y=f.height/2-w/2;
-      f1.loadFITS(f.getFilename(),f.ext,x,y,w,w);
+      f1.loadHeaderFITS(filename);
+      int w=f1.width>1024 ? 1024 : f1.width;
+      int h=f1.height>1024 ? 1024 : f1.height; 
+      int d=f1.depth>10 ? 10 : f1.depth;
+      int x = f.width/2-w/2, y=f.height/2-h/2, z=f.depth/3-d/3;
+      f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
       if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
       cut = f1.findAutocutRange();
       cutCache.put(filename,cut);
-//      context.info("Skyval estimation => "+ip(cut[0],f1.bzero,f1.bscale)+" for "+filename);
+      context.info("Skyval estimation => "+ip(cut[0],f1.bzero,f1.bscale)+" for "+filename);
 
       return cut;
    }
    
-//   private String ip(double raw,double bzero,double bscale) {
-//      return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
-//   }
+   private String ip(double raw,double bzero,double bscale) {
+      return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
+   }
 
    
    private boolean first=true;
@@ -352,7 +361,7 @@ public class CacheFits {
     * sur les pixels avant de les mettre dans le cache
     * @param f fitsfile
     */
-   private void delSkyval(Fits f) {
+   private void delSkyval(Fits f,boolean flagChangeOrig) {
       double skyval = 0;
       double expTime = 1;
 //      double newval = f.blank;
@@ -370,6 +379,7 @@ public class CacheFits {
             } else {
                try {
                   skyval = f.headerFits.getDoubleFromHeader(context.skyvalName);
+                  skyval = (skyval - context.bZeroOrig)/context.bScaleOrig;
                   double cutOrig [] = context.getCutOrig();
                   skyval = skyval - cutOrig[0];
                } catch( Exception e ) {
@@ -395,38 +405,40 @@ public class CacheFits {
          } catch (NullPointerException e) { }
       }
       
-      if( !skyValTag && !expTimeTag && f.bzero==0 && f.bscale==1 && context.pixelGood==null ) return;
+      if( !skyValTag && !expTimeTag && !flagChangeOrig && /* f.bzero==0 && f.bscale==1 && */context.pixelGood==null ) return;
       
-//      System.out.println("SkyVal="+skyval+" => "+f.getFilename()+f.getFileNameExtended());
+//      System.out.println("SkyVal="+skyval+" => "+f.getFileNameExtended());
       
       
       double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;
       
-      for( int y=0; y<f.heightCell; y++ ) {
-         for( int x=0; x<f.widthCell; x++ ) {
-            double pixelFull = f.getPixelDouble(x+f.xCell, y+f.yCell);
-            
-            if( Double.isNaN(pixelFull) ) continue; 
-            
-            if( context.pixelGood!=null && (pixelFull<context.pixelGood[0] || context.pixelGood[1]<pixelFull) ) {
-               if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, blank);
-               else f.setPixelInt(x+f.xCell, y+f.yCell, (int)blank); 
-               continue;
+      for( int z=0; z<f.depthCell; z++ ) {
+         for( int y=0; y<f.heightCell; y++ ) {
+            for( int x=0; x<f.widthCell; x++ ) {
+               double pixelFull = f.getPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell);
+
+               if( Double.isNaN(pixelFull) ) continue; 
+
+               if( context.good!=null && (pixelFull<context.good[0] || context.good[1]<pixelFull) ) {
+                  if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, blank);
+                  else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)blank); 
+                  continue;
+               }
+
+               if( context.hasAlternateBlank() ) {
+                  if( pixelFull==context.getBlankOrig() ) continue;
+               } else if( f.isBlankPixel(pixelFull) ) continue;
+
+               pixelFull = pixelFull*f.bscale + f.bzero;
+
+               if( skyValTag  ) pixelFull -= skyval;
+               if( expTimeTag ) pixelFull /= expTime;
+
+               pixelFull = (pixelFull - context.bZeroOrig) / context.bScaleOrig;
+
+               if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, pixelFull);
+               else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)(pixelFull+0.5)); 
             }
-             
-            if( context.hasAlternateBlank() ) {
-               if( pixelFull==context.getBlankOrig() ) continue;
-            } else if( f.isBlankPixel(pixelFull) ) continue;
-
-            pixelFull = pixelFull*f.bscale + f.bzero;
-
-            if( skyValTag  ) pixelFull -= skyval;
-            if( expTimeTag ) pixelFull /= expTime;
-            
-            pixelFull = (pixelFull - f.bzero) / f.bscale;
-
-            if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, pixelFull);
-            else f.setPixelInt(x+f.xCell, y+f.yCell, (int)(pixelFull+0.5)); 
          }
       }
    }
@@ -444,7 +456,7 @@ public class CacheFits {
 //      int nbReleased = getNbReleased();
       int n = map.size();
       String s = n>1 ? "s":"";
-      return "Cache: "+n+" file"+s
+      return "Cache: "+n+" cell"+s
 //      +(nbReleased>0 ? "("+nbReleased+" released)" : "")
             +" using "+Util.getUnitDisk(getMem())
             +(maxMem>0 ? "/"+Util.getUnitDisk(maxMem):"["+Util.getUnitDisk(maxMem)+"]")
@@ -454,19 +466,19 @@ public class CacheFits {
 
    // retourne le nombre de fichier dans le cache dont le bloc mémoire pixel[]
    // est actuellement vide
-   private int getNbReleased() {
-      try {
-         int n=0;
-         Enumeration<String> e = map.keys();
-         while( e.hasMoreElements() ) {
-            String key = e.nextElement();
-            if( map.get(key).fits.isReleased() ) n++;
-         }
-         return n;
-      } catch( Exception e ) {
-         return -1;
-      }
-   }
+//   private int getNbReleased() {
+//      try {
+//         int n=0;
+//         Enumeration<String> e = map.keys();
+//         while( e.hasMoreElements() ) {
+//            String key = e.nextElement();
+//            if( map.get(key).fits.isReleased() ) n++;
+//         }
+//         return n;
+//      } catch( Exception e ) {
+//         return -1;
+//      }
+//   }
    
    // Gère une entrée dans le cache
    class FitsFile {

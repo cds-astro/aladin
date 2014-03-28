@@ -93,12 +93,12 @@ public final class Save extends JFrame implements ActionListener {
    }
 
    static final int CURRENTVIEW = 0;
-   static final int ALLVIEWS = 1;
    static final int ALLROIS = 2;
    
-   static final int SAVEVIEW = 0;
+   static final int SAVEVIEW    = 0;
    static final int EXPORTPLANS = 1;
-   static final int BACKUPSTACK =2;
+   static final int BACKUPSTACK = 2;
+   static final int ALLVIEWS    = 3;
 
    // Les references aux objets
    Aladin aladin;
@@ -115,11 +115,12 @@ public final class Save extends JFrame implements ActionListener {
    JTextField [] fileSavePlan;
    Plan [] listPlan;
    int nbSavePlan;
-   JComboBox format;
+   JComboBox format,format1;
    JCheckBox [] cbPlan;
    JRadioButton tsvCb, votCb;
    JRadioButton jsonMocCb, fitsMocCb;
    JRadioButton fitsCb, jpgCb, pngCb;
+   JLabel info;
    String errorFile=null;
 
    boolean first=true;
@@ -138,21 +139,32 @@ public final class Save extends JFrame implements ActionListener {
       SAVERGBIN = aladin.chaine.getString("SFSAVERGBIN");
       ENCODER = aladin.chaine.getString("SFJPEGENCODER");
 
-      CHOICE = new String[] {
-//            aladin.chaine.getString("SFCH5"),
-            aladin.chaine.getString("SFCH3"),
-            aladin.chaine.getString("SFCH2"),
-            aladin.chaine.getString("SFCH1"),
-//            aladin.chaine.getString("SFCH4"),
-      };
-
-      INFOCHOICE = new String[] {
-//            aladin.chaine.getString("SFHCH5"),
-            aladin.chaine.getString("SFHCH3"),
-            aladin.chaine.getString("SFHCH2"),
-            aladin.chaine.getString("SFHCH1"),
-//            aladin.chaine.getString("SFHCH4"),
-      };
+      if( Aladin.BETA ) {
+         CHOICE = new String[] {
+               aladin.chaine.getString("SFCH3"),
+               aladin.chaine.getString("SFCH2"),
+               aladin.chaine.getString("SFCH1"),
+               aladin.chaine.getString("SFCH6"),
+         };
+         INFOCHOICE = new String[] {
+               aladin.chaine.getString("SFHCH3"),
+               aladin.chaine.getString("SFHCH2"),
+               aladin.chaine.getString("SFHCH1"),
+               aladin.chaine.getString("SFHCH6"),
+         };
+         
+      } else {
+         CHOICE = new String[] {
+               aladin.chaine.getString("SFCH3"),
+               aladin.chaine.getString("SFCH2"),
+               aladin.chaine.getString("SFCH1"),
+         };
+         INFOCHOICE = new String[] {
+               aladin.chaine.getString("SFHCH3"),
+               aladin.chaine.getString("SFHCH2"),
+               aladin.chaine.getString("SFHCH1"),
+         };
+      }
 
    }
 
@@ -213,6 +225,17 @@ public final class Save extends JFrame implements ActionListener {
             c.gridwidth = GridBagConstraints.REMAINDER;
             g.setConstraints(p,c);
             b.add(p);
+         } else if( i==ALLVIEWS ) {
+            JPanel p = new JPanel();
+            MyLabel l = new MyLabel(INFOCHOICE[i],Label.LEFT,Aladin.PLAIN);
+            p.add(l);
+            format1 =new JComboBox();
+            for( int j=0; j<FORMAT.length; j++ ) format1.addItem(FORMAT[j]+" format");
+            format1.setSelectedIndex(2);   /* JPG */
+            p.add(format1);
+            c.gridwidth = GridBagConstraints.REMAINDER;
+            g.setConstraints(p,c);
+            b.add(p);
          } else {
             MyLabel l = new MyLabel(INFOCHOICE[i],Label.LEFT,Aladin.PLAIN);
             c.gridwidth = GridBagConstraints.REMAINDER;
@@ -233,6 +256,9 @@ public final class Save extends JFrame implements ActionListener {
       bt.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { hide(); }
       });
+      this.info = new JLabel();
+      this.info.setFont(this.info.getFont().deriveFont(Font.ITALIC));
+      Aladin.makeAdd(c1, this.info,"Center");
       Aladin.makeAdd(c1, bt,"East");
       Aladin.makeAdd(p,c1,"South");
 
@@ -504,9 +530,9 @@ public final class Save extends JFrame implements ActionListener {
 
       return p;
    }
-
+   
   /** Backup ou Save view
-   * @param mode 0-backup, 1-view
+   * @param mode 0-backup, 1-view, 2-allview
    * @param format BMP, JPEG, PNG, EPS, PNG|LK (ignoré si mode=0)
    */
    protected void saveFile(int mode) { saveFile(mode,BMP,-1); }
@@ -520,27 +546,46 @@ public final class Save extends JFrame implements ActionListener {
       String name =  fd.getFile();
       if( name==null ) return;
       String s = (dir==null?"":dir)+(name==null?"":name);
-      if( mode==0 ) {
-         if( !Util.toLower(s).endsWith(".aj") ) s=s+".aj";
-         aladin.console.printCommand("backup "+s);
-         res=saveAJ(s);
-         if( res ) aladin.log("backup","");
-      } else {
-         String ext = format==BMP ? ".bmp" : format==JPEG ? ".jpg" :
-                     (format&PNG)==PNG ? ".png" : ".eps";
-         if( !(Util.toLower(s).endsWith(".jpeg") && format==JPEG) &&
-             !Util.toLower(s).endsWith(ext) ) s=s+ext;
 
-         String lk = (format&LK)==LK ? " -lk":"";
-         aladin.console.printCommand("save "+lk+s);
-         res=saveView(s,0,0,format,qual);
-         if( res ) aladin.log("save",Util.toUpper(ext.substring(1)+lk));
-      }
+      aladin.makeCursor(this, Aladin.WAITCURSOR );
+      try {
+         if( mode==0 ) {
+            if( !Util.toLower(s).endsWith(".aj") ) s=s+".aj";
+            aladin.console.printCommand("backup "+s);
+            res=saveAJ(s);
+            if( res ) aladin.log("backup","");
+         } else if( mode==2 ) {
+            aladin.console.printCommand("save -allviews "+s);
+            final String s1=s;
+            final int format1 = format;
+            (new Thread() {
+               public void run() {
+                  boolean ok = saveAllViews(s1, format1);
+                  if( !ok ) info("Save error !!!");
+                  else setVisible(false);
+               }
+            }).start();
+            res=true;
+         } else {
+            String ext = format==BMP ? ".bmp" : format==JPEG ? ".jpg" :
+               (format&PNG)==PNG ? ".png" : ".eps";
+            if( !(Util.toLower(s).endsWith(".jpeg") && format==JPEG) &&
+                  !Util.toLower(s).endsWith(ext) ) s=s+ext;
+
+            String lk = (format&LK)==LK ? " -lk":"";
+            aladin.console.printCommand("save "+lk+s);
+            res=saveView(s,0,0,format,qual);
+            if( res ) aladin.log("save",Util.toUpper(ext.substring(1)+lk));
+         }
+      } finally { aladin.makeCursor(this, Aladin.DEFAULTCURSOR ); }
+
       if( !res ) {
          Aladin.warning(this,CANNOT+"\n"+s+"\n"+CANNOT1,1);
       } else {
-         setVisible(false);
-         aladin.memoLastFile(s);
+         if(mode!=2 ) {
+            setVisible(false);
+            aladin.memoLastFile(s);
+         }
       }
    }
 
@@ -1510,6 +1555,56 @@ public final class Save extends JFrame implements ActionListener {
       }
       return saveOneView(filename,w,h,format,qual,aladin.view.getCurrentView());
    }
+   
+   
+   /** Sauvegarde toutes les vues */
+   protected boolean saveAllViews(String prefix,int fmt) {
+      boolean res=false;
+      try {
+         if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";
+         ViewSimple v = new ViewSimple(aladin,aladin.view,0,0,0);
+         
+         // pour être sûr que tout est dans viewMemo
+         aladin.view.sauvegarde();
+         
+         // on fait une copie pour éviter de se marcher sur les pieds
+         ViewMemo viewMemo = aladin.view.viewMemo.copy();
+         
+         // On prend la taille du premier cadre
+         Rectangle rv = new Rectangle(0,0,aladin.view.viewSimple[0].rv.width,aladin.view.viewSimple[0].rv.height);
+
+         int n = viewMemo.size();
+         for( int i=0; i<n; i++ ) {
+            if( viewMemo.get(i,v)==null ) continue;
+            if( v.isFree() ) continue;
+
+            if( !v.pref.isPixel() ) continue;
+            //       if( !(v.pref instanceof PlanBG) ) continue;
+            
+            v.rv = rv;
+            v.setSize(rv.width, rv.height);     // BEURK - mais sinon j'ai de gros souci
+            if( v.pref instanceof PlanBG ) v.pref.projd = v.projLocal;
+
+            v.setZoomXY(v.zoom,v.xzoomView,v.yzoomView);
+            v.newView(1);
+
+            String name = prefix+Util.align3(i+1)+(fmt==BMP?".bmp":fmt==PNG?".png":".jpg");
+            info("Saving "+(i+1)+"/"+n+" "+Util.getShortPath(name, 40)+"...");
+            res = saveOneView(name,-1,-1,fmt,-1,v) || res;
+            
+         }
+         v.free();
+         
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         res=false;
+      }
+      
+      return res;
+   }
+   
+   /** Positionnement d'un message associé au traitement en cours */
+   private void info(String s) { info.setText(s+" "); }
 
    
    protected boolean saveOneView(String filename,int w, int h,int format,float qual,ViewSimple v) {
@@ -2699,6 +2794,7 @@ public boolean action(Event evt, Object what) {
            if( CHOICE[SAVEVIEW].equals(what) ) saveFile(1,getCodedFormat(format.getSelectedIndex()),-1);
       else if( CHOICE[BACKUPSTACK].equals(what) ) saveFile(0);
       else if( CHOICE[EXPORTPLANS].equals(what) ) exportPlans();
+      else if( Aladin.BETA && CHOICE[ALLVIEWS].equals(what) ) saveFile(2,getCodedFormat(format1.getSelectedIndex()),-1);
 //      else if( CHOICE[5].equals(what) ) aladin.saveHTML();
       else if( evt.target instanceof Checkbox && tsvCb!=null ) changeCatFormat();
       else if( evt.target instanceof Checkbox && fitsCb!=null ) changeImgFormat();

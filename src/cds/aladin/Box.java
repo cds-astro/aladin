@@ -26,7 +26,13 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+import cds.aladin.prop.Prop;
+import cds.aladin.prop.PropAction;
 import cds.astro.Proj3;
+import cds.tools.Util;
 
 /**
 * Objet graphique representant une boite
@@ -54,11 +60,16 @@ public class Box extends Forme {
     * @param h la hauteur
     * @param angle l'angle de la boite (dans le sens trigo)
     */
-   protected Box(Plan plan, ViewSimple v, double xv, double yv,double w, double h,double angle) {
+   protected Box(Plan plan, ViewSimple v, double xv, double yv,double w, double h,double angle,String label) {
       super(plan,new Position[5]);
       this.angle=angle;
       double x,y,d;
-      o[0] = new Position(plan,v,xv,yv,0,0,XY|RADE_COMPUTE,null);
+
+      o[0] = new Position(plan,v,xv,yv,0,0,XY|RADE_COMPUTE,label);
+      Coord c=new Coord(o[0].raj,o[0].dej);
+      o[0] = new Tag(plan,null,0,0,label);
+      o[0].raj=c.al; o[0].dej=c.del;
+ 
       double demiDia = Math.sqrt(w*w/4+h*h/4);
       double a = Math.atan2(h/2,w/2);
       double b = Math.toRadians(90+angle);
@@ -79,20 +90,6 @@ public class Box extends Forme {
       y = yv + demiDia*Math.cos(d);
       o[3] = new Position(plan,v,x,y,0,0,XY|RADE_COMPUTE,null);
       setObjet(o);
-
-//      this.angle=angle;
-//      double x,y,a;
-//      o[0] = new Position(plan,v,xv,yv,0,0,XY|RADE_COMPUTE,null);
-//      a =startAngleNorth;
-//      a = Math.PI*a/180.;
-//      x = xv+ rv*Math.sin(a);
-//      y = yv+ rv*Math.cos(a);
-//      o[1] = new Position(plan,v,x,y,0,0,XY|RADE_COMPUTE,null);
-//      a =startAngleNorth+angle;
-//      a = Math.PI*a/180.;
-//      x = xv+ rv*Math.sin(a);
-//      y = yv+ rv*Math.cos(a);
-//      o[2] = new Position(plan,v,x,y,0,0,XY|RADE_COMPUTE,null);
    }
    
    /**
@@ -103,11 +100,14 @@ public class Box extends Forme {
     * @param h hauteur (en degrés)
     * @param angle angle (dans le sens trigo)
     */
-   protected Box(Plan plan,Coord c,double w, double h,double angle) {
+   protected Box(Plan plan,Coord c,double w, double h,double angle,String label) {
       super(plan,new Position[5]);
       this.angle=angle;
       double b=90;
-      o[0] = new Position(plan,null,0,0,c.al,c.del,RADE,null);
+//      o[0] = new Position(plan,null,0,0,c.al,c.del,RADE,label);
+      o[0] = new Tag(plan,null,0,0,label);
+      o[0].raj=c.al; o[0].dej=c.del;
+      ((Tag)o[0]).setDist(40);
       double demiDia = Math.sqrt(w*w/4+h*h/4);
       double a = Math.toDegrees( Math.atan2(h,w) );
       Coord c1 = applySphereRot(c,demiDia,b+a+angle);
@@ -119,6 +119,7 @@ public class Box extends Forme {
       c1 = applySphereRot(c,demiDia,b+180-a+angle);
       o[4] = new Position(plan,null,0,0,c1.al,c1.del,RADE,null);
       setObjet(o);
+
    }
    
    /** Pour faire plaisir aux objets dérivées (Pickle par exemple) */
@@ -170,6 +171,33 @@ public class Box extends Forme {
        return false;
     }
     
+    public Vector getProp() {
+       Vector propList = super.getProp();
+
+       final JTextArea textId = new JTextArea( 3,25 );
+       JScrollPane paneId = new JScrollPane(textId);
+       final PropAction updateId = new PropAction() {
+          public int action() { textId.setText( o[0].id ); return PropAction.SUCCESS; }
+       };
+       final PropAction changeId = new PropAction() {
+          public int action() { 
+             String s = textId.getText();
+             if( s.equals(o[0].id) ) return PropAction.NOTHING;
+             o[0].id=textId.getText();
+             return PropAction.SUCCESS;
+          }
+       };
+       propList.add(Prop.propFactory("id","Label","Box label",paneId,updateId,changeId));
+
+       return propList;
+   }
+
+    
+    public String getInfo() { return o[0].id; }
+    
+    /** Set the information associated to the object (for instance tag label...) */
+    public void setInfo(String info) { o[0].setInfo(info); }
+    
     /** Dessine l'objet dans le contexte graphique en fonction:
      * @param g : le contexte graphique
      * @param v : la vue concernée
@@ -179,6 +207,7 @@ public class Box extends Forme {
    protected boolean draw(Graphics g,ViewSimple v,int dx, int dy) {
       if( !isVisible() ) return false;
       
+      Color c =  getColor() ;
       Point op=null;
       for( int i=0; i<o.length; i++ ) {
          int j = i==0 ? 4:i;
@@ -187,12 +216,15 @@ public class Box extends Forme {
          if( p==null ) return false;
          p.x+=dx; p.y+=dy;
          if( op!=null ) {
-            g.setColor( getColor() );
+            g.setColor(c);
             g.drawLine(op.x, op.y, p.x, p.y);
             if( isSelected() ) drawSelect(g,v,j);
          }
          op=p;
       }
+      
+      // Label
+      if( o[0].id!=null && o[0].id.length()>0 ) o[0].draw(g,v,dx,dy);
       return true;
    }
 }

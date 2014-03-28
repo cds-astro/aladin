@@ -263,7 +263,7 @@ public class Source extends Position implements Comparator {
   /** Modification de l'information associee a la source
    * @param info la nouvelle info supplementaire
    */
-   protected void setInfo(String info) { this.info = info; oid=""; }
+   public void setInfo(String info) { this.info = info; oid=""; }
 
   /** Modification de la legende associee a la source
    * @param leg la nouvelle legende

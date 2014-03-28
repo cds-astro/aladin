@@ -110,7 +110,7 @@ public class BuilderJpg extends BuilderTiles {
       context.info("Tile aggregation method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) {
-         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64);
+         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64,0);
          context.writePropertiesFile();
          if( context instanceof ContextGui && ((ContextGui) context).mainPanel.planPreview!=null ) {
             if( fmt.equals("jpeg") ) ((ContextGui) context).mainPanel.planPreview.inJPEG = true;
@@ -141,7 +141,7 @@ public class BuilderJpg extends BuilderTiles {
       super.build();
    }
    
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
       Fits out = createLeaveJpg(file);
       if( out==null ) return null;
       
@@ -151,7 +151,7 @@ public class BuilderJpg extends BuilderTiles {
       return out;
    }
    
-   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[]) throws Exception {
+   protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
       JpegMethod method = context.getJpegMethod();
       Fits out = createNodeJpg(fils, method);
       if( out==null ) return null;
@@ -200,6 +200,7 @@ public class BuilderJpg extends BuilderTiles {
 
    /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
    private Fits createNodeJpg(Fits fils[], JpegMethod method) throws Exception {
+      if( width==0 || fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null ) return null;
       Fits out = new Fits(width,width,bitpix);
       out.setBlank(blank);
       out.setBscale(bscale);

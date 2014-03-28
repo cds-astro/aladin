@@ -1237,6 +1237,11 @@ final public class TableParser implements XMLConsumer {
                if( inGroup ) { resetGroup(); inGroup=false; }
                f = new Field(atts);
                
+            // POUR LE MOMENT ON EN FAIT RIEN
+            // Juste pour faire l'allocation de l'objet, sinon il va y avoir des null references
+            } else if( name.equalsIgnoreCase("PARAM")) {
+               f = new Field(atts);
+               
             } else if( name.equalsIgnoreCase("DATA") ) {
                record = new String[nField];
                posChooser();
@@ -1846,6 +1851,9 @@ final public class TableParser implements XMLConsumer {
          detectSEDField(f,nField);
          nField++;
          consumer.setField(f);
+         
+      // POUR LE MOMENT ON EN FAIT RIEN
+      } else if( depth==4 && name.equalsIgnoreCase("PARAM") ) {
       }
       
 //    System.out.println("endElement: "+name+" depth="+depth);

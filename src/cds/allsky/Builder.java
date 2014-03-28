@@ -130,30 +130,79 @@ public abstract class Builder {
       } else if( order!=orderIndex ) throw new Exception("Detected order ["+orderIndex+"] does not correspond to the param order ["+order+"]");
    }
    
+   /** Récupération de la profondeur (cube) */
+   protected void validateDepth() throws Exception {
+      
+      if( context.depthInit ) return;
+      
+      // tentative de récupération de la profondeur par une image étalon
+      String img = context.getImgEtalon();
+      if( img==null && context.getInputPath()!=null) {
+         img = context.justFindImgEtalon( context.getInputPath() );
+         context.info("Use this reference image => "+img);
+      }
+      if( img!=null ) {
+         try { context.setImgEtalon(img); }
+         catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+      }
+      
+      if( !context.depthInit ) {
+      
+      // Tentative de récupération de la profondeur par le fichier des properties
+      // A FAIRE
+      }
+      
+      if( context.depthInit && context.depth>1 ) context.info("Working on HiPS cube => depth="+context.depth);
+   }
+   
    // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
    protected void validateCut() throws Exception {
       if( context.isValidateCut() ) return;
       double [] cut = null;
 //      double [] cut = context.getCut();
       
+      double [] pixelGood = context.pixelGood;
+      boolean missingGood = pixelGood!=null && context.good!=null;
+      
       boolean missingCut   = cut==null || cut[0]==0 && cut[1]==0;
       boolean missingRange = cut==null || cut[2]==0 && cut[3]==0;
 
       // S'il y a des pixelRange et/ou pixelCut indiqués sur la ligne de commande, il faut les convertir
-      // en cut[] à récupérant le bzero et le bscale depuis le fichier Allsky.fits
+      // en cut[] à récupérant le bzero et le bscale depuis le fichier Allsky.fits ou depuis une image étalon
       double [] pixelRangeCut = context.getPixelRangeCut();
-      if( (missingCut  || missingRange ) && pixelRangeCut!=null ) {
+      if( (missingCut  || missingRange ) && pixelRangeCut!=null || missingGood ) {
          try {
             setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+         } catch( Exception e ) {
+            
+            String img = context.getImgEtalon();
+            if( img==null && context.getInputPath()!=null) {
+               img = context.justFindImgEtalon( context.getInputPath() );
+               context.info("Use this reference image => "+img);
+            }
+            if( img!=null ) {
+               try { context.setImgEtalon(img); }
+               catch( Exception e1) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+            }
+         }
+         
+         try {
             if( cut==null ) cut = new double[5];
             for( int i=0; i<4; i++ ) {
                if( Double.isNaN(pixelRangeCut[i]) ) continue;
                cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;
 //               System.out.println("Retreiving from user pixelRangeCut["+i+"]="+pixelRangeCut[i]+" => cut["+i+"]="+cut[i]);
             }
+            
+            if( missingGood ) {
+               context.good = new double[2];
+               for( int i=0; i<2; i++ ) {
+                  context.good[i] = (context.pixelGood[i] - context.bzero)/context.bscale;
+               }
+            }
 
          } catch( Exception e ) {
-            throw new Exception("Cannot retrieve BZERO & BSCALE from previous Allsky.fits file => you must create Allsky.fits before !");
+            throw new Exception("Cannot retrieve BZERO & BSCALE from previous Allsky.fits file or reference image");
          }
       }
       

@@ -98,13 +98,6 @@ final public class ThreadBuilderTile {
       return mem;
    }
    
-//   private void rmFits(BuilderTiles bt,ArrayList<SrcFile> downFiles) {
-//      if( downFiles==null ) return;
-//      for( SrcFile f : downFiles ) {
-//         bt.rmFits(Thread.currentThread(),f.fitsfile);
-//      }
-//   }
-   
    private boolean needMem(long rqMem) {
       return context.cacheFits.getFreeMem()<rqMem;
    }
@@ -158,7 +151,7 @@ final public class ThreadBuilderTile {
 //   static private long totalDelay1=0L;
 //   static private long nRead1=0L;
 
-   Fits buildHealpix(BuilderTiles bt, int order, long npix_file) throws Exception {
+   Fits buildHealpix(BuilderTiles bt, int order, long npix_file, int z) throws Exception {
       ArrayList<SrcFile> downFiles = null;
       Fits out=null;
 
@@ -173,12 +166,14 @@ final public class ThreadBuilderTile {
          int n=downFiles.size();
          if( n>statMaxOverlays ) statMaxOverlays=n;
 
+
          // Pas trop de progéniteurs => on peut tout faire d'un coup
+         // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
          if( !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1) ) {
 
             statOnePass++;
             checkMem(mixing ? n : 1);
-            out = buildHealpix1(bt,order,npix_file,downFiles,0,n,null);
+            out = buildHealpix1(bt,order,npix_file,z,downFiles,0,n,null);
 
             // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
             // en mémorisant le poids de chaque pixel à chaque couche
@@ -194,7 +189,7 @@ final public class ThreadBuilderTile {
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
                if( fin>=n ) fin=n;
-               f = buildHealpix1(bt,order,npix_file,downFiles,deb,fin,fWeight);
+               f = buildHealpix1(bt,order,npix_file,z,downFiles,deb,fin,fWeight);
                if( f!=null ) {
                   if( out==null ) {
                      out=f;
@@ -202,7 +197,7 @@ final public class ThreadBuilderTile {
                      fWeight = new double[Constante.SIDE*Constante.SIDE];
                   } else out.coadd(f,weight,fWeight);
                }
-               
+
                // On libère dès à présent les fichiers Fits déjà utilisés
                // pour qu'ils puissent être supprimés du cache le cas échéant
                for( int i=deb; i<fin; i++ ) {
@@ -257,7 +252,6 @@ final public class ThreadBuilderTile {
    static private double toRad = 180./Math.PI;
    static private double PI2 = Math.PI/2.;
 
-
    /**
     * Rempli le tableau de pixels correspondant au fichier (losange) Healpix
     * donné
@@ -268,9 +262,7 @@ final public class ThreadBuilderTile {
     * @param pixels
     * @return
     */
-//   Fits buildHealpix1(BuilderTiles bt, int nside_file, long npix_file, int nside,
-//         ArrayList<SrcFile> downFiles,int deb,int fin,double [] weight) throws Exception {
-   Fits buildHealpix1(BuilderTiles bt, int order, long npix_file,
+   Fits buildHealpix1(BuilderTiles bt, int order, long npix_file, int z,
          ArrayList<SrcFile> downFiles,int deb,int fin,double [] weight) throws Exception {
       boolean empty = true;
       long min;
@@ -282,7 +274,7 @@ final public class ThreadBuilderTile {
       int bitpix    = this.bitpix;
       double blank  = this.blank;
       double bScale = this.bScale;
-      double bZero  = this.bZero;;
+      double bZero  = this.bZero;
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
@@ -324,7 +316,6 @@ final public class ThreadBuilderTile {
          boolean gal2ICRS = context.frame!=Localisation.ICRS;
          
          for (int y = 0; y < out.height; y++) {
-//            if( context.isTaskAborting() ) break;
             for (int x = 0; x < out.width; x++) {
                index = min + context.xy2hpx(y * out.width + x);
                // recherche les coordonnées du pixels HPX
@@ -337,54 +328,29 @@ final public class ThreadBuilderTile {
                
                int nbPix=0;
                double totalCoef=0;
-//               String lastFitsFile="";
-//               double lastX=-1,lastY=-1;
                
                for( int i=deb; i<fin; i++ ) {
                   try {
                      file = downFiles.get(i);
-                     file.open();
-
-                     // Même fichier qu'avant => même calibration, on s'évite un calcul ra,dec=>x,y
-//                      if( lastFitsFile.equals(file.fitsfile.filename) ) {
-//                         nX++; coo.y=lastY; coo.x=lastX;
-//                         if( nX%10==0 ) System.out.println("same nX="+nX);
-//                      }
+                     file.open(z);
 
                      // Détermination du pixel dans l'image à traiter
-//                     else { 
-//                        file.fitsfile.calib.GetXY(coo,false);
-                        file.fitsfile.calib.GetXY(coo,false);
-//                        if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && file.fitsfile.bitpix!=0 ) 
-                           coo.y = file.fitsfile.height-coo.y -1;
-//                        lastY=coo.y;
-//                        lastX=
-                              coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
-//                        lastFitsFile=file.fitsfile.filename;
-//                     }
-                     
+                     file.fitsfile.calib.GetXY(coo,false);
+                     coo.y = file.fitsfile.height-coo.y -1;
+                     coo.x -= 1;                             // Correction manuelle de 1 en comparaison avec les originaux
+
                      // Cas RGB
                      if( flagColor ) {
                         int pix = getBilinearPixelRGB(file.fitsfile,coo);
                         if( pix==0 ) continue;
-//                        if( !mixing ) {
-//                           out.setPixelRGBJPG(x, y, pix);
-//                           empty=false;
-//                           break;
-//                        }
                         pixval[nbPix] = 0xFF & (pix>>16);
                         pixvalG[nbPix] = 0xFF & (pix>>8);
                         pixvalB[nbPix] = 0xFF & pix;
 
-                        // Cas normal
+                     // Cas normal
                      } else {
-                        double pix = getBilinearPixel(file.fitsfile,coo,file.blank);
+                        double pix = getBilinearPixel(file.fitsfile,coo,z,file.blank);
                         if( Double.isNaN(pix) ) continue;
-//                        if( !mixing ) {
-//                           out.setPixelDouble(x,y,pix);
-//                           empty=false;
-//                           break;
-//                        }
                         pixval[nbPix]=pix;
                      }
                      // fading
@@ -396,7 +362,6 @@ final public class ThreadBuilderTile {
 
                   }
                   catch( Exception e ) {
-                     // TODO Auto-generated catch block
                      e.printStackTrace();
                      continue;
                   }
@@ -543,6 +508,57 @@ final public class ThreadBuilderTile {
 //      double maxd = Math.sqrt(cx*cx + cy*cy);
 //      return (maxd - d)/maxd;
 //   }
+   
+   
+   private double getBilinearPixel(Fits f,Coord coo,int z,double myBlank) {
+      if( !isIn(f,coo) ) return Double.NaN;
+      
+      double x = coo.x;
+      double y = coo.y;
+      
+      int x1 = (int)x;
+      int y1 = (int)y;
+      int x2=x1+1;
+      int y2=y1+1;
+
+      int ox1= x1;
+      int oy1= y1;
+      int ox2= x2;
+      int oy2= y2;
+      
+      if( x2<f.xCell || y2<f.yCell ||
+        x1>=f.xCell+f.widthCell || y1>=f.yCell+f.heightCell ||
+        z<0 || z>=f.depth ) return Double.NaN;
+
+      // Sur le bord, on dédouble le dernier pixel
+      if( ox1==f.xCell-1 ) ox1++;
+      if( oy1==f.yCell-1 ) oy1++;
+      if( ox2==f.xCell+f.widthCell ) ox2--;
+      if( oy2==f.yCell+f.heightCell ) oy2--;
+
+      double a0 = f.getPixelDouble(ox1,oy1,z);
+      double a1 = f.getPixelDouble(ox2,oy1,z);
+      double a2 = f.getPixelDouble(ox1,oy2,z);
+      double a3 = f.getPixelDouble(ox2,oy2,z);
+      
+      boolean b0 = Double.isNaN(a0) || a0==myBlank;
+      boolean b1 = Double.isNaN(a1) || a1==myBlank;
+      boolean b2 = Double.isNaN(a2) || a2==myBlank;
+      boolean b3 = Double.isNaN(a3) || a3==myBlank;
+      
+      if( b0 && b1 && b2 && b3 ) return Double.NaN;
+      if( b0 || b1 || b2 || b3 ) {
+         double a = !b0 ? a0 : !b1 ? a1 : !b2 ? a2 : a3;
+         if( b0 ) a0=a;
+         if( b1 ) a1=a;
+         if( b2 ) a2=a;
+         if( b3 ) a3=a;
+      }
+
+      return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
+   }
+
+
    
    
    private double getBilinearPixel(Fits f,Coord coo,double myBlank) {
@@ -754,10 +770,8 @@ final public class ThreadBuilderTile {
 
                   SrcFile file = new SrcFile(fitsfilename);
                   file.fitsfile = fitsfile;
-//                  file.open();
 
                   downFiles.add(file);
-//                  bt.addFits(Thread.currentThread(),fitsfile);
                   
                } catch (Exception e) {
                   System.err.println("Erreur de chargement de : " + fitsfilename);
@@ -782,7 +796,7 @@ final public class ThreadBuilderTile {
    
    class SrcFile {
       Fits fitsfile;
-      boolean isOpened=false;
+      int isOpened=-1;   // numero du frame ouvert, -1 si aucun
       String name=null;
       double blank;
       
@@ -795,8 +809,9 @@ final public class ThreadBuilderTile {
           return fitsfile.getFilename();
       }
       
-      protected void open() throws Exception {
-         if( isOpened ) return;
+      protected void open(int frame) throws Exception {
+         if( isOpened==frame ) return;
+         if( isOpened!=-1 ) fitsfile.rmUser();  // je ne peux de totue façon pas ouvrir simultanément plusieurs frame du même fichier
          int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
                : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
                : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG   
@@ -806,163 +821,66 @@ final public class ThreadBuilderTile {
          if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
          
          // Mode normal
-         else fitsfile=context.cacheFits.getFits(name,mode,true); 
+         else {
+            name = addFrameToName(name,frame);
+            fitsfile=context.cacheFits.getFits(name,mode,true); 
+         }
          
-         isOpened=true;
+         isOpened=frame;
          fitsfile.addUser();
          
          blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
       }
       
+      
+      // J'ai [ext;x,y-wxh] et je veux [ext;x,y,z-w*h*d]
+      String addFrameToName(String name,int frame) throws Exception {
+         Fits tmp = new Fits();
+         tmp.loadHeaderFITS(name);
+         tmp.zCell=frame;
+         tmp.depthCell=1;
+         return tmp.getFileNameExtended();
+      }
+      
   }
 
+//   class SrcFile {
+//      Fits fitsfile;
+//      boolean isOpened=false;
+//      String name=null;
+//      double blank;
+//      
+//      SrcFile(String name ) {
+//         this.name=name;
+//      }
+//      
+//      @Override
+//      public String toString() {
+//          return fitsfile.getFilename();
+//      }
+//      
+//      protected void open() throws Exception {
+//         if( isOpened ) return;
+//         int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
+//               : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
+//               : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG   
+//               : CacheFits.FITS;
+//
+//         // Mode FITS couleur
+//         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
+//         
+//         // Mode normal
+//         else fitsfile=context.cacheFits.getFits(name,mode,true); 
+//         
+//         isOpened=true;
+//         fitsfile.addUser();
+//         
+//         blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
+//      }
+//      
+//  }
+
+
    int n =0;
-
-//   /**
-//    * Cherche dans la liste des fichiers récupérés sur Aladin si les
-//    * coordonnées y sont, et renvoie sa position dans l'objet de Coordonnées
-//    * @param coo_gal coordonnée d'entrée en ra,dec (en GAL), où le x,y est enregistré
-//    * @return l'accès au fichier FITS lu
-//    * @see Calib#GetXY(Coord)
-//    */
-//   private Fits searchDownloaded(ArrayList<SrcFile> downFiles, Coord coo_gal, int recouvrement) {
-//      if (downFiles == null)
-//         return null;
-//
-//      int nfiles = downFiles.size();
-//      for (int i = 0 ; i<nfiles ; i++,gagnant++) {
-//         if( gagnant>=nfiles ) gagnant=0;
-//         // cherche d'abord dans l'ancien gagnant
-//         SrcFile file = downFiles.get(gagnant);
-//         Calib calib = file.calib;
-//         // transforme les coordonnées en ICRS
-//         double[] radec = context.gal2ICRSIfRequired(coo_gal.al,coo_gal.del);
-//         Coord c = new Coord(radec[0],radec[1]);
-//
-//         if (isInFile(c, recouvrement, calib)) {
-//            double pix = file.fitsfile.getPixelDouble((int)c.x, file.fitsfile.heightCell-1-(int)c.y);
-//            coo_gal.x = c.x;
-//            coo_gal.y = c.y;
-//            if( !file.fitsfile.isBlankPixel(pix ) ) return file.fitsfile;
-//
-//         }
-//
-//         //           else
-//         //               System.out.println("\t inutile : " + downFiles.get(gagnant).fitsfile.filename);
-//      }
-//      return null;
-//   }
-
-//   /**
-//    * sans recouvrement si elle est un tout petit peu sur le bord on copie la
-//    * valeur
-//    * 
-//    * @param c
-//    *            coordonnées en ICRS (x,y modifiés)
-//    */
-//   private boolean isInFile(Coord c, int recouvrement, Calib calib) {
-//      try {
-//         calib.GetXY(c);
-//      } catch (Exception e) {
-//         e.printStackTrace();
-//         return false;
-//      }
-//      // si la coordonnée est bien dedans
-//      double xnpix = calib.getImgSize().getWidth();
-//      double ynpix = calib.getImgSize().getHeight();
-//      if (c.x >= recouvrement && c.x <= xnpix - 1 - recouvrement
-//            && c.y >= recouvrement && c.y <= ynpix - 1 - recouvrement) {
-//
-//         return true;
-//      }
-//      // sans recouvrement si elle est un tout petit peu sur le bord on copie la valeur
-//      if (recouvrement==0 &&
-//            c.x >= -2 && c.x <= xnpix+1
-//            && c.y >= -2 && c.y <= ynpix+1
-//      ) {
-//         if (c.x >=-2 && c.x < 0) {
-//            c.x = 0;
-//         }
-//         if (c.x > xnpix-1 && c.x <= xnpix+2) {
-//            c.x = xnpix-1;
-//         }
-//         if (c.y >= -2 && c.y < 0) {
-//            c.y = 0;
-//         }
-//         if (c.y > ynpix-1 && c.y <= ynpix+2) {
-//            c.y = ynpix-1;
-//         }
-//
-//         return true;
-//      }
-//      return false;
-//   }
-//
-//   int gagnant=0;
-
-//   /**
-//    * Ecrit les pixels dans un fichier .hpx avec notre format Healpix
-//    * 
-//    * @param filename_base
-//    * @param nside_file
-//    * @param npix
-//    * @param nside
-//    * @param out
-//    * @throws Exception
-//    */
-//   void writeHealpix(String filename_base, int nside_file, long npix,
-//         int nside, Fits out) throws Exception {
-//
-//      // prépare l'entete
-//      double incA = -(90./nside_file)/(Constante.SIDE);
-//      double incD = (90./nside_file)/(Constante.SIDE);
-//      double[] proj_center = new double[2];
-//      proj_center = CDSHealpix.pix2ang_nest(nside_file,npix);
-//      out.setCalib( new Calib(
-//            proj_center[0],proj_center[1],
-//            (Constante.SIDE+1)/2,(Constante.SIDE+1)/2,
-//            Constante.SIDE,Constante.SIDE,
-//            incA,incD,0,Calib.TAN,false,Calib.FK5));
-//
-//      out.headerFits.setKeyValue("ORDERING", "CDSHEALPIX");
-//      if (bitpix > 0)
-//         out.headerFits.setKeyValue("BLANK", String
-//               .valueOf(Integer.MAX_VALUE));
-//
-//      // gestion des niveaux de gris
-//      // cherche le min max
-//      double minmax[] = out.findMinMax();
-//      out.headerFits.setKeyValue("DATAMIN", String.valueOf(minmax[0]));
-//      out.headerFits.setKeyValue("DATAMAX", String.valueOf(minmax[1]));
-//
-//      // Ecriture de l'image générée sous forme FITS "fullbits"
-//      out.writeFITS(filename_base);
-//      System.out.println("file " + filename_base + " written !!");
-//
-//   }
-
-   /*
-    public static void main(String[] args) {
-        long t= System.currentTimeMillis();
-        int bitpix = 16;
-        long n =0;
-
-
-        for (long i = 0 ; i < 100000000 ; i++) {
-//          switch (bitpix) {
-//          case 8:
-//          case 16:
-//          case 32:
-                int j = (int)i;
-//          case -32:
-//          case -64:
-//              double d = (double)i;
-//          case 0:
-//              int k = (int)i%256;
-//          }
-        }
-        System.out.println((System.currentTimeMillis()-t)+"ms");
-    }
-    */
 
 }

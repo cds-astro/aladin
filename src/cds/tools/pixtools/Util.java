@@ -98,15 +98,14 @@ public class Util {
     * @param survey
     * @param order
     * @param npix
+    * @param z frame du cube, pour 0 => pas d'extension
     * @return
     */
-   static public String getFilePath(String survey,int order, long npix) {
+   static public String getFilePath(String survey,int order, long npix) { return getFilePath(survey,order,npix,0); }
+   static public String getFilePath(String survey,int order, long npix, int z) {
       String prefix = survey!=null && survey.length()>0 ? survey : "";
-      String suffix = getFilePath(order,npix);
+      String suffix = getFilePath(order,npix,z);
       return cds.tools.Util.concatDir(prefix, suffix);
-      
-//      return (survey!=null && survey.length()>0 ? survey + FS : "") +
-//      getFilePath(order,npix);
    }
 
    /**
@@ -115,13 +114,16 @@ public class Util {
     * @param survey
     * @param order
     * @param npix
+    * @param z frame du cube, pour 0 => pas d'extension
     * @return
     */
-   static public String getFilePath(int order, long npix) {
+   static public String getFilePath(int order, long npix) { return getFilePath(order,npix,0); }
+   static public String getFilePath(int order, long npix,int z) {
       return
-      "Norder" + order + FS +
-      "Dir" + ((npix / DIRSIZE)*DIRSIZE) + FS +
-      "Npix" + npix;
+      "Norder" + order + "/" +
+      "Dir" + ((npix / DIRSIZE)*DIRSIZE) + "/" +
+      "Npix" + npix
+      + ( z<=0 ? "" : "_"+z);
    }
 
    static public int getOrderFromPath(String filename) {
@@ -139,22 +141,11 @@ public class Util {
    static public long getNpixFromPath(String filename) {
       int fromIndex = filename.lastIndexOf("Npix");
       if( fromIndex<0 ) return -1;
-      int lastIndex = filename.indexOf('.',fromIndex);
+      int lastIndex = filename.indexOf('_',fromIndex);
+      if( lastIndex<0 ) lastIndex = filename.indexOf('.',fromIndex);
       if( lastIndex<0 ) lastIndex = filename.length();
       return Long.parseLong( filename.substring(fromIndex+4,lastIndex) );
-
-      //	   int fromIndex = filename.indexOf("Npix");
-      //	   if (fromIndex == -1)
-      //		   return -1;
-      //		int npix = Integer.parseInt(
-      //				filename.substring(
-      //						fromIndex+4, 
-      //						filename.indexOf(".", fromIndex)
-      //				)
-      //			);
-      //		return npix;
    }
-
 
    static public long getNDirFromPath(String filename) {
       int fromIndex = filename.indexOf("Dir");

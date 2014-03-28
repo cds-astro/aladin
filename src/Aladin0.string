@@ -2073,11 +2073,13 @@ SFCH2	Export\nsome\nplanes
 SFCH3	Save\ncurrent\nview
 SFCH4	Get\nimage\nlinks.
 SFCH5	Print\nthe\nview(s)
+SFCH6	Save\nall the\nviews
 SFHCH1	Create a file storing the current stack\n(The format is Aladin proprietary - AJ format)
 SFHCH2	Allows you to save planes:\n- catalogs in ASCII Tab-Separated-Value, or VOTable\n- images in FITS (or possible BMP for RGB images)
 SFHCH3	Create a file of the view with the\ncurrent overlays
 SFHCH4	Produce a Web page with links\nto the original images
 SFHCH5	Print the view(s) with\nall overlays
+SFHCH6	Save all the views,\neach of them in an individual file
 
 SFTITLE.fr	Sauvegarde Aladin
 SFINFO.fr	Choississez l'une de ces possibilités
@@ -2096,11 +2098,13 @@ SFCH2.fr	Exporte\ncertains\nplans
 SFCH3.fr	Sauve\nla vue\ncourante
 SFCH4.fr	Génère\nles liens\nimages
 SFCH5.fr	Imprimer\nles\nvues
+SFCH6.fr	Sauve\ntoutes les\nvues
 SFHCH1.fr	Crée un fichier unique mémorisant la pile courante\n(Le format est propre à Aladin - format AJ)
 SFHCH2.fr	Vous permet de sauvegarder des plans:\n- catalogues en ASCII TSV ou VOTable\n- images en FITS (ou BMP pour les images RVB)
 SFHCH3.fr	Sauvegarde la vue courante dans\nun fichier
 SFHCH4.fr	Génère une page Web avec des liens\nsur les images originales
 SFHCH5.fr	Imprime les vues ainsi que\nleurs surcharges graphiques
+SFHCH6.fr	Sauvegarde toutes les vues,\nchacune dans un fichier séparé.
 
 # NotePad.java strings
 NPTITLE	Aladin console

@@ -25,7 +25,7 @@ import java.awt.*;
 
 import javax.swing.JComponent;
 
-public class BlinkControl {
+public class CubeControl {
    
    static protected int NOTHING = 0;
    static protected int PAUSE   = 1;
@@ -100,19 +100,14 @@ public class BlinkControl {
    private int sliderY[] = new int[4];
    private int labelX,labelY;
    private int labelPX,labelPY;
-   
-//   private int shapePauseX[][]  = { rewX,playX1,playX2,fowX,plusX1,plusX2,slashX,moinsX };
-//   private int shapePauseY[][]  = { rewY,playY1,playY2,fowY,plusY1,plusY2,slashY,moinsY };
-//   private int shapePlayX[][]   = { rewX,pauseX1,pauseX2,fowX,plusX1,plusX2,slashX,moinsX };
-//   private int shapePlayY[][]   = { rewY,pauseY1,pauseY2,fowY,plusY1,plusY2,slashY,moinsY };
 
    private int shapeX[][]   = { pauseX1,pauseX2,playX1,playX2,rewX,fowX,plusX1,plusX2,slashX,moinsX,sliderX,posX };
    private int shapeY[][]   = { pauseY1,pauseY2,playY1,playY2,rewY,fowY,plusY1,plusY2,slashY,moinsY,sliderY,posY };
    
    private Aladin aladin;
-   private PlanImageBlink p;
+   private Plan p;
       
-   protected BlinkControl(Aladin aladin,PlanImageBlink p,int d,boolean pause) {
+   protected CubeControl(Aladin aladin,Plan p,int d,boolean pause) {
       this.aladin=aladin;
       this.p=p;
       delay = d;
@@ -122,8 +117,8 @@ public class BlinkControl {
    }
    
    /** Copie du BlinkControl */
-   protected BlinkControl copy() {
-      BlinkControl b = new BlinkControl(aladin,p,delay,mode==PAUSE);
+   protected CubeControl copy() {
+      CubeControl b = new CubeControl(aladin,p,delay,mode==PAUSE);
       b.startTime = startTime;
       b.nbFrame = nbFrame;
       b.lastFrame = lastFrame;
@@ -176,7 +171,6 @@ public class BlinkControl {
       dx+= 3*SIZE;
       labelPX=dx; labelPY=size+ size/2 -2;
       
-//      dx += size;
       int dy = 2*size+2;
       posX[0]=posX[4]=-size/2; posX[1]=posX[2]=size/2; posX[3]=0;
       posY[0]=posY[1]=dy-4; posY[2]=posY[4]=dy+size-3; posY[3]=dy+size-1;
@@ -217,7 +211,7 @@ public class BlinkControl {
          aladin.status.setText(s);
       }
       if( m!=NOTHING )
-         Aladin.makeCursor(aladin,m==BlinkControl.SHOULD_REPAINT?
+         Aladin.makeCursor(aladin,m==CubeControl.SHOULD_REPAINT?
             Aladin.DEFAULTCURSOR:Aladin.HANDCURSOR);
 
       Util.toolTip(c,m==IN || m==SHOULD_REPAINT 
@@ -274,7 +268,7 @@ public class BlinkControl {
    }
    
    /** Synchronize le blinkControl en fonction d'un autre */
-   protected void syncBlink(BlinkControl b) {
+   protected void syncBlink(CubeControl b) {
       startTime = b.startTime;
       lastFrame = b.lastFrame;
       delay = b.delay;
@@ -295,7 +289,8 @@ public class BlinkControl {
       startTime = timeRef-frame*delay;
       lastFrame = (int) ((timeRef - startTime) / delay);
       if( nbFrame!=0 ) lastFrame = (int) (((timeRef - startTime) / delay) % nbFrame);
-      p.initFrame=frameLevel;  // pour repartir sur cette même image en cas de regénération d'une vue
+      p.setZ(frameLevel);  // pour repartir sur cette même image en cas de regénération d'une vue
+      p.setCubeFrame(frameLevel);
       if( pause ) mode=PAUSE;
    }
    
@@ -332,8 +327,10 @@ public class BlinkControl {
       
    /** Force le passage en PAUSE ou en PLAY */
    protected void setMode(int m) {
-      if( m==PLAY ) { p.initPause=false; mode=PLAY; resume(); askStep(2); aladin.view.startTimer(); }
-      else if( m==PAUSE ) { p.initPause=true; mode=PAUSE; askStep(0); }
+      if( !p.isCube() ) return;
+      if( m==PLAY ) { p.setPause(false); mode=PLAY; resume(); askStep(2); aladin.view.startTimer(); }
+      else if( m==PAUSE ) { p.setPause(true); mode=PAUSE; askStep(0); }
+
    }
    
    private int step=0;
@@ -375,6 +372,8 @@ public class BlinkControl {
       
       if( transparency!=-1 ) {
          g.drawString(Util.align2((int)((1-transparency)*100))+"%",x+labelPX,y+labelPY);
+      } else {
+//         g.drawString(Util.align2("/"+nbFrame),x+labelPX,y+labelPY);
       }
       
       // Tracé des petits tirets correspondant à chaque image

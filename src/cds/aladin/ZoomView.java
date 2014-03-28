@@ -317,11 +317,11 @@ public final class ZoomView extends JComponent
    /** Changement du frame d'un cube via le spectre affiché */
    private void setFrameCube(int xc) {
       ViewSimple vc = aladin.view.getCurrentView();
-      int nbFrame = vc.blinkControl.nbFrame;
+      int nbFrame = vc.cubeControl.nbFrame;
       int frame = (int)( nbFrame* ( (double)xc/SIZE));
       if( frame>=nbFrame ) frame=nbFrame-1;
       if( frame<0 ) frame=0;
-      vc.blinkControl.setFrameLevel(frame);
+      vc.cubeControl.setFrameLevel(frame);
       vc.repaint();
    }
 
@@ -533,7 +533,7 @@ try {
             gbuf.drawLine(x-ga,y,x+ga,y);
             gbuf.drawLine(x,y-pa,x,y+pa);
             
-            Projection proj = v.pref.projd;
+//            Projection proj = v.getProj();
    
            Coord [] coin = v.getCouverture();
            if( coin!=null ) {
@@ -733,8 +733,8 @@ try {
               
        // Tracage du trait repérant le frame courant dans le cube
        ViewSimple vc = aladin.view.getCurrentView();
-       int frame = vc.blinkControl.lastFrame;
-       int nbFrame = vc.blinkControl.nbFrame;
+       int frame = vc.cubeControl.lastFrame;
+       int nbFrame = vc.cubeControl.nbFrame;
        int x = (int)( SIZE*((double)frame/nbFrame) );
        int w = Math.max(1,(int)( (double)SIZE/nbFrame));
        g.setColor(Color.red);
@@ -1053,7 +1053,7 @@ try {
 
       // Ni bougé (ni même frame) ?
       if( v.pref.type==Plan.IMAGEBLINK || v.pref.type==Plan.IMAGECUBE ) {
-         frame = v.blinkControl.lastFrame;
+         frame = v.cubeControl.lastFrame;
       } else frame=oframe;      
       if( c.equals(oc) && frame==oframe ) return;
       oc = c;

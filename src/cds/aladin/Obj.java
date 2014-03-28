@@ -86,10 +86,10 @@ public abstract class Obj implements Propable{
    protected Plan   plan;       // Plan d'appartenance de l'objet
    
    /** J2000 RA coordinate */
-   protected double raj=Double.NaN;
+   public double raj=Double.NaN;
 
    /** J2000 DEC coordinate */
-   protected double dej;
+   public double dej;
    
    public String id;         // Object id
    protected byte flags = VISIBLE;  // Le tableau de flags
@@ -286,6 +286,9 @@ public abstract class Obj implements Propable{
 
    /** Set specifical color (dedicated for catalog sources) */
    public void setColor(Color c) {}
+   
+   /** Set the information associated to the object (for instance tag label...) */
+   public void setInfo(String info) { id=info; }
 
    /** Return the object type */
    public String getObjType() { return ""; }

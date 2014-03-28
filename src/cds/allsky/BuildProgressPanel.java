@@ -57,14 +57,14 @@ public class BuildProgressPanel extends JPanel {
       add( createStatPanel(),BorderLayout.CENTER );
    }
 
-   protected void setSrcStat(int nbFile,int nbZipFile, long totalSize,long maxSize,int maxWidth,int maxHeight,int maxNbyte) {
+   protected void setSrcStat(int nbFile,int nbZipFile, long totalSize,long maxSize,int maxWidth,int maxHeight,int maxDepth,int maxNbyte) {
       String s;
       if( nbFile==-1 ) s = "--";
       else {
          s= nbFile+" file"+(nbFile>1?"s":"")
          + (nbZipFile==nbFile ? " (all gzipped)" : nbZipFile>0 ? " ("+nbZipFile+" gzipped)":"")
          + " using "+Util.getUnitDisk(totalSize)
-         + (nbFile>1 && maxSize<0 ? "" : " => biggest: ["+maxWidth+"x"+maxHeight+"x"+maxNbyte+"]");
+         + (nbFile>1 && maxSize<0 ? "" : " => biggest: ["+maxWidth+"x"+maxHeight+(maxDepth>1?"x"+maxDepth:"")+" x"+maxNbyte+"]");
       }
       srcFileStat.setText(s);
    }

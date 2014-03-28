@@ -45,10 +45,14 @@ final public class BuilderAllsky  extends Builder {
    }
    
    public void run() throws Exception { 
-      if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64);
-      if( !context.isColor() ) validateCut();
-      createAllSkyColor(context.getOutputPath(),3,"png",64);
-      createAllSkyColor(context.getOutputPath(),3,"jpeg",64);
+//      if( !context.isColor() ) validateCut();
+      validateDepth();
+      for( int z=0; z<context.depth; z++ ) {
+         if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64, z);
+         if( z==0 && !context.isColor() ) validateCut();
+         createAllSkyColor(context.getOutputPath(),3,"png",64, z);
+         createAllSkyColor(context.getOutputPath(),3,"jpeg",64, z);
+      }
       context.writePropertiesFile();
    }
    
@@ -57,7 +61,7 @@ final public class BuilderAllsky  extends Builder {
     * @param order order Healpix
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSky(String path, int order,int outLosangeWidth) throws Exception {
+   public void createAllSky(String path, int order,int outLosangeWidth, int z) throws Exception {
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -79,7 +83,7 @@ final public class BuilderAllsky  extends Builder {
       for( int npix=0; npix<n; npix++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
-         String name = Util.getFilePath("", order, npix);
+         String name = Util.getFilePath("", order, npix,z);
          Fits in = new Fits();
          String filename = path+FS+name;
          try {
@@ -89,7 +93,7 @@ final public class BuilderAllsky  extends Builder {
             if( out==null ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
                   context.info("createAllsky: reducing width=>"+in.width+" ...");
-                  createAllSky(path,order,in.width);
+                  createAllSky(path,order,in.width,z);
                   return;
                }
                out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,in.bitpix);
@@ -123,51 +127,30 @@ final public class BuilderAllsky  extends Builder {
       if( out==null ) {
 //         context.warning("createAllsky: no FITS tiles found !");
          return;
-//         throw new Exception("createAllSky error: null output file !");
       }
-//      double cut [] = context.getCut();
-//      double bzero  = context.getBZero();
-//      double bscale = context.getBScale();
-      
-//      int bitpix = out.bitpix;
       
       out.setBlank(blank);
       out.setBzero(bzero);
       out.setBscale(bscale);
       
-//      if( cut==null ) {
-//         cut = out.findAutocutRange(0, 0, true);
-//      }
-//      
-//      if( cut[0]<cut[1] ) {
-//         out.headerFits.setKeyValue("PIXELMIN", (bitpix>0 ? (int)cut[0] : cut[0])+"");
-//         out.headerFits.setKeyValue("PIXELMAX", (bitpix>0 ? (int)cut[1] : cut[1])+"");
-//         
-//         if( !(cut[2]<cut[3] && cut[2]<=cut[0] && cut[3]>=cut[1]) ) {
-//            cut[2] = bitpix==-64?-Double.MAX_VALUE : bitpix==-32? -Float.MAX_VALUE
-//                  : bitpix==64?Long.MIN_VALUE+1 : bitpix==32?Integer.MIN_VALUE+1 : bitpix==16?Short.MIN_VALUE+1:1;
-//            cut[3] = bitpix==-64?Double.MAX_VALUE : bitpix==-32? Float.MAX_VALUE
-//                  : bitpix==64?Long.MAX_VALUE : bitpix==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
-//            Aladin.trace(1,"BuilderAllsky.createAllSky() data range [DATAMMIN..DATAMAX] not consistante => max possible range");
-//         }
-//         out.headerFits.setKeyValue("DATAMIN",  (bitpix>0 ? (int)cut[2] : cut[2])+"");
-//         out.headerFits.setKeyValue("DATAMAX",  (bitpix>0 ? (int)cut[3] : cut[3])+"");
-//
-//      } else {
-//         Aladin.trace(1,"BuilderAllsky.createAllSky() pixel cut range [PIXELMIN..PIXELMAX] not consistante => ignored");
-//      }
-
 
    // Ecriture du FITS (true bits)
-      String filename = getFileName(path, order);
-      out.writeFITS(filename+".fits");
+      String filename = getFileName(path, order,z);
+      out.writeFITS(filename+".fits",true);
+      
+      // Dans le cas d'un cube, il est possible que le Allsky.fits n'ait pas été créé (vide),
+      // on va alors dupliquer le premier Allsky_nnn.fits en Allsky.fits pour s'en sortir
+      if( z>1 ) {
+         String f = getFileName(path,order,0);
+         if( !(new File(f+".fits")).isFile() ) out.writeFITS(f+".fits",true);
+      }
       
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
-            /*+" pixelRange=["+cut[0]+".."+cut[1]+"] dataRange=["+cut[2]+".."+cut[3]*/+"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
+            +"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }
 
-   static public String getFileName(String path, int order) {
-	   return path+FS+"Norder"+order+FS+"Allsky";
+   static public String getFileName(String path, int order, int z) {
+	   return path+FS+"Norder"+order+FS+"Allsky"+(z>0?"_"+z : "");
    }
    
    /** Création d'un AllSky JPEG couleur à partir des images JPEG ou PNG à l'ordre indiqué
@@ -176,7 +159,7 @@ final public class BuilderAllsky  extends Builder {
     * @param mode jpeg ou png
     * @param outLosangeWidth largeur des losanges pour le Allsky (typiquement 64 ou 128 pixels)
     */
-   public void createAllSkyColor(String path, int order,String mode,int outLosangeWidth) throws Exception {
+   public void createAllSkyColor(String path, int order,String mode,int outLosangeWidth,int z) throws Exception {
       long t=System.currentTimeMillis();
       int nside = (int)CDSHealpix.pow2(order);
       int n = 12*nside*nside;
@@ -188,7 +171,7 @@ final public class BuilderAllsky  extends Builder {
       boolean first = true;
       String ext = mode=="png" ? ".png" : ".jpg";
      
-      Aladin.trace(3,"Creation Allsky order="+order+" mode=FIRST color"
+      Aladin.trace(3,"Creation Allsky order="+order+(z>0?"_"+z:"")+" mode=FIRST color"
       +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
       +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
@@ -197,7 +180,7 @@ final public class BuilderAllsky  extends Builder {
       for( int npix=0; npix<n; npix++ ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
-         String name = Util.getFilePath(order, npix);
+         String name = Util.getFilePath(order, npix, z);
          Fits in = new Fits();
          String filename = path+FS+name;
          try {
@@ -206,7 +189,7 @@ final public class BuilderAllsky  extends Builder {
             if( first ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
                   context.info("createAllsky: reducing width=>"+in.width+" ...");
-                  createAllSkyColor(path,order,ext,in.width);
+                  createAllSkyColor(path,order,ext,in.width, z);
                   return;
                }
             }
@@ -231,8 +214,17 @@ final public class BuilderAllsky  extends Builder {
          return;
       }
 
-      String filename = getFileName(path, order);
+      String filename = getFileName(path, order, z);
       out.writeCompressed(filename+ext,0,0,null,mode);
+      
+      // Dans le cas d'un cube, il est possible que le Allsky.ext n'ait pas été créé (vide),
+      // on va alors dupliquer le premier Allsky_nnn.ext en Allsky.ext pour s'en sortir
+      if( z>1 ) {
+         String f = getFileName(path,order,0);
+         if( !(new File(f+ext)).isFile() ) out.writeCompressed(f+ext,0,0,null,mode);
+      }
+      
+
       
       context.trace(4,"SkyGenerator.createAllSkyColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }

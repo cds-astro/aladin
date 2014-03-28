@@ -784,7 +784,7 @@ public class Repere extends Position {
 
       int x=(int)xv[v.n];
       int y=(int)yv[v.n];
-      int n=pc.getNbFrame();
+      int n=pc.getDepth();
       int res[] = new int[n];
       try {
          for( int i=0; i<n; i++ ) res[i] = (pc.getPixel8bit(i,x,y)) & 0xFF;

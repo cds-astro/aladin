@@ -329,13 +329,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
      * @param sync true si on doit l'appliquer, non pas uniquement à "v" mais
      *             à toutes les vues.
      */
-    protected void setFrame(ViewSimple v,double frameLevel, boolean sync) {
+    protected void setCubeFrame(ViewSimple v,double frameLevel, boolean sync) {
        // Pas de synchronisation des frames, facile !
-       if( !sync ) { v.blinkControl.setFrameLevel(frameLevel); return; }
+       if( !sync ) { v.cubeControl.setFrameLevel(frameLevel); return; }
 
        // Synchronisation de toutes les vues ayant le même plan blink de référence
        for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].pref==v.pref ) viewSimple[i].blinkControl.setFrameLevel(frameLevel);
+          if( viewSimple[i].pref==v.pref && viewSimple[i].pref.selected ) viewSimple[i].cubeControl.setFrameLevel(frameLevel);
        }
     }
 
@@ -343,10 +343,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
      * Synchronisation de toutes les vues blinks sur le même plan de référence
      * @param v la vue de référence
      */
-    protected void syncBlink(ViewSimple v) {
+    protected void syncCube(ViewSimple v) {
        for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].pref==v.pref && viewSimple[i].blinkControl!=v.blinkControl ) {
-             viewSimple[i].blinkControl.syncBlink(v.blinkControl);
+          if( viewSimple[i].pref==v.pref && viewSimple[i].cubeControl!=v.cubeControl ) {
+             viewSimple[i].cubeControl.syncBlink(v.cubeControl);
           }
        }
     }
@@ -3636,7 +3636,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             for( int i=0; i<modeView; i++ ) {
                ViewSimple v = viewSimple[i];
 
-               boolean plan = v.isPlanBlink() && v.blinkControl.mode!=BlinkControl.PAUSE;
+               boolean plan = v.isPlanBlink() && v.cubeControl.mode!=CubeControl.PAUSE;
                boolean source = v.isSourceBlink();
                boolean scroll = v.isScrolling();
                boolean sablier = v.isSablier();
@@ -4153,8 +4153,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void exportROI(String prefix) { exportSaveROI(prefix,0,0,0,0); }
    protected void saveROI(String prefix,int w,int h,int fmt) {
-//      System.out.println("No yet debugged !!!");
-      exportSaveROI(prefix,1,w,h,fmt);
+      System.out.println("No yet debugged !!!");
+//      exportSaveROI(prefix,1,w,h,fmt);
    }
    private void exportSaveROI(String prefix,int mode,int w,int h,int fmt) {
       if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";

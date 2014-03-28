@@ -24,7 +24,6 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.text.*;
-import java.util.Calendar;
 import java.util.Date;
 
 /**

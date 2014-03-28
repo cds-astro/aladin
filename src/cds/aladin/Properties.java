@@ -705,9 +705,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p,"Transparency", blankField, g,c);
       }
 
+      if( plan.isCube() ) {
+         PropPanel.addCouple(p,FRAME,new JLabel(plan.getDepth()+""), g,c);
+      }
       if( plan instanceof PlanImageBlink ) {
          final PlanImageBlink pb=(PlanImageBlink)plan;
-         PropPanel.addCouple(p,FRAME,new JLabel(pb.getNbFrame()+""), g,c);
          JPanel panel = new JPanel(new FlowLayout() );
          JButton perm = new JButton("XxY->Z");
          perm.addActionListener( new ActionListener() {

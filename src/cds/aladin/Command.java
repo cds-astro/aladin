@@ -1913,23 +1913,23 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( n>=0) {
                   int np[] = a.view.getNumView(a.calque.getPlan(n));
                   for( int i=0; i<np.length; i++ ) {
-                     if( a.view.viewSimple[np[i]].blinkControl==null ) continue;
-                     a.view.viewSimple[np[i]].blinkControl.setFrameLevel(frame);
+                     if( a.view.viewSimple[np[i]].cubeControl==null ) continue;
+                     a.view.viewSimple[np[i]].cubeControl.setFrameLevel(frame);
                      a.view.viewSimple[np[i]].repaint();
                   }
                   
                // Une vue particulière
                } else if( nview>=0 ) {
-                  if( a.view.viewSimple[nview].blinkControl==null ) continue;
-                  a.view.viewSimple[nview].blinkControl.setFrameLevel(frame);
+                  if( a.view.viewSimple[nview].cubeControl==null ) continue;
+                  a.view.viewSimple[nview].cubeControl.setFrameLevel(frame);
                   a.view.viewSimple[nview].repaint();
                  
                // Toutes les vues sélectionnées
                } else {
                   ViewSimple v[] = a.view.getSelectedView();
                   for( int i=0; i<v.length; i++ ) {
-                     if( v[i].blinkControl==null ) continue;
-                     v[i].blinkControl.setFrameLevel(frame);
+                     if( v[i].cubeControl==null ) continue;
+                     v[i].cubeControl.setFrameLevel(frame);
                      v[i].repaint();
                   }
                }
@@ -2333,18 +2333,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                newobj = new Ellipse(plan,a.view.getCurrentView(),x,y,semiMA,semiMI,angle);
             }
 
-            // Commande box(x,y,w,h[,angle])
+            // Commande box(x,y,w,h[,angle][,label])
          } else if( fct.equalsIgnoreCase("box") ) {
             double angle=0;
-            try { angle = parseDouble(p[4]); } catch( Exception e ) { }
+            String label=null;
+            try { angle = parseDouble(p[4]); } catch( Exception e ) { 
+               try { label = p[4]; } catch( Exception e1) {};
+            }
+            if( label==null ) try { label = p[5]; } catch( Exception e) {};
             if( drawMode==DRAWRADEC ) {
                double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
                double h = Server.getAngle(p[3],Server.RADIUSs)/60.;
-               newobj = new Box(plan,c,w,h,angle);
+               newobj = new Box(plan,c,w,h,angle,label);
             } else {
                double w = parseDouble(p[2]);
                double h = parseDouble(p[3]);
-               newobj = new Box(plan,a.view.getCurrentView(),x,y,w,h,angle);
+               newobj = new Box(plan,a.view.getCurrentView(),x,y,w,h,angle,label);
             }
 
             // Commande vector(x,y,w,angle)
@@ -2823,7 +2827,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                  printConsole("!!! blink error: 2 images are required for blinking");
                  return "";
               }
-              a.calque.newPlanImageBlink(p,label,800);
+              a.calque.newPlanImageBlink(p,label,400);
               syncNeedRepaint=true;
            }
       else if( cmd.equalsIgnoreCase("mosaic") ) {
@@ -3180,7 +3184,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
               if( tmp!=null ) {
 
                  // Les ROI ?
-                 if( tmp.equals("-ROI" ) ) {
+                 if( tmp.equals("-ROI" ) || tmp.equals("-allviews") ) {
                     flagROI=true;
                     posFile = s.indexOf(tmp)+tmp.length()+1;
                     tmp = st.nextToken();

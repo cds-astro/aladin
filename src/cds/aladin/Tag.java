@@ -354,6 +354,9 @@ public final class Tag extends Position {
       this.id= id==null || id.length()==0 ? "" : id.replace("\\n","\n");
       setWH();
    }
+   
+   /** Set the information associated to the object (for instance tag label...) */
+   public void setInfo(String info) { setText(info); }
 
   /** Positionne le flag d'édition en cours
    * Cela signifie que le texte est en cours d'edition et qu'il faut

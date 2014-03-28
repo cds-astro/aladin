@@ -44,13 +44,43 @@ public final class ViewMemoItem {
    Projection plotProj;
    
    Projection projLocal;
-//   double alphai, deltai;   // Uniquement dans le cas de planBG (v.projLocal)
    
    protected ViewMemoItem() { }
+   
+   /** Duplication */
+   protected ViewMemoItem copy() {
+      ViewMemoItem vmi = new ViewMemoItem();
+      vmi.zoom= zoom;
+      vmi.xzoomView = xzoomView;
+      vmi.yzoomView = yzoomView;
+      vmi.rzoomHeight = rzoomHeight;
+      vmi.rzoomWidth = rzoomWidth;
+      vmi.rvWidth = rvWidth;
+      vmi.rvHeight = rvHeight;
+      vmi.pref = pref;
+      vmi.delay = delay;
+      vmi.lastFrame = lastFrame;
+      vmi.nbFrame = nbFrame;
+      vmi.modeBlink = modeBlink;
+      vmi.ordreTaquin = ordreTaquin;
+      vmi.locked = locked;
+      vmi.selected = selected;
+      vmi.northUp = northUp;
+      vmi.plot = plot; 
+      vmi.isPlotView = isPlotView;
+      vmi.plotTable = plotTable;
+      vmi.plotProj = plotProj==null ? null : plotProj.copy();
+      vmi.projLocal = projLocal==null ? null : projLocal.copy();
+      
+//    ATTENTION, CES 3 ELEMENTS NE SONT PAS COPIES EN PROFONDEUR => SANS DOUTE SANS SOUCI      
+      vmi.plot = plot; 
+      vmi.isPlotView = isPlotView;
+      vmi.plotTable = plotTable;
 
-   protected ViewMemoItem(ViewSimple v) {
-      set(v);
+      return vmi;
    }
+
+   protected ViewMemoItem(ViewSimple v) { set(v); }
    
    protected void set(ViewSimple v) {
       zoom=v.zoom;
@@ -80,11 +110,11 @@ public final class ViewMemoItem {
          projLocal = v.projLocal.copy();
       }
       
-      if( v.pref instanceof PlanImageBlink && v.blinkControl!=null) {
-         delay = v.blinkControl.delay;
-         lastFrame = v.blinkControl.lastFrame;
-         nbFrame = v.blinkControl.nbFrame;
-         modeBlink = v.blinkControl.mode;
+      if( v.pref instanceof PlanImageBlink && v.cubeControl!=null) {
+         delay = v.cubeControl.delay;
+         lastFrame = v.cubeControl.lastFrame;
+         nbFrame = v.cubeControl.nbFrame;
+         modeBlink = v.cubeControl.mode;
       }
    }
 
@@ -105,17 +135,17 @@ public final class ViewMemoItem {
       if( pref instanceof PlanBG ) {
 //         v.projLocal = v.pref.projd.copy();
 //         v.projLocal.setProjCenter(alphai, deltai);
-         v.projLocal = projLocal.copy();
+         v.projLocal = projLocal==null ? null : projLocal.copy();
       }
       if( pref instanceof PlanImageBlink ) {
-         if( v.blinkControl==null ) v.blinkControl = new BlinkControl(pref.aladin,
+         if( v.cubeControl==null ) v.cubeControl = new CubeControl(pref.aladin,
                                          (PlanImageBlink)pref,delay,
-                                         modeBlink==BlinkControl.PAUSE);
-         else v.blinkControl.delay = delay;
-         v.blinkControl.lastFrame = lastFrame;
-         v.blinkControl.nbFrame = nbFrame;
-         v.blinkControl.mode = modeBlink;
-         v.blinkControl.resume();
+                                         modeBlink==CubeControl.PAUSE);
+         else v.cubeControl.delay = delay;
+         v.cubeControl.lastFrame = lastFrame;
+         v.cubeControl.nbFrame = nbFrame;
+         v.cubeControl.mode = modeBlink;
+         v.cubeControl.resume();
       }
       return v;
    }

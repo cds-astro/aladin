@@ -84,6 +84,9 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_PUBLISHER = "publisher";
     static public final String KEY_PIXELRANGE = "pixelRange";
     static public final String KEY_PIXELCUT = "pixelCut";
+    static public final String KEY_ISCUBE = "isCube";
+    static public final String KEY_CUBEDEPTH = "cubeDepth";
+    static public final String KEY_CUBEFIRSTFRAME = "cubeFirstFrame";
 
 
     static final int POLA_SEGMENT_MAGIC_CODE = -42;

@@ -57,6 +57,7 @@ public class BuilderMoc extends Builder {
    protected void createMoc(String path) throws Exception {
       createMoc(path, path + FS + MOCNAME);
    }
+   
 
    protected void createMoc(String path, String outputFile) throws Exception {
       moc.clear();
@@ -78,6 +79,7 @@ public class BuilderMoc extends Builder {
       ext = null;
       int order = Util.getMaxOrderByPath(path);
       File f = new File(path + Util.FS + "Norder" + order);
+      
 
       // Ajout des pixels de plus bas niveau uniquement
       // et création immédiate de l'arborescence par récursivité dès qu'on a 4
@@ -100,9 +102,9 @@ public class BuilderMoc extends Builder {
             if( ext == null ) ext = e;
             else if( !ext.equals(e) ) continue;
 
-//            moc.add(order, npix);
             generateTileMoc(moc,sf1[j],order,npix);
          }
+         moc.checkAndFix();
       }
    }
    
@@ -119,11 +121,13 @@ public class BuilderMoc extends Builder {
       } catch( Exception e ) { e.printStackTrace(); }
       return "C";
    }
-
+   
    // Retourne l'extension du fichier passé en paramètre, "" si aucune
    private String getExt(String file) {
       int offset = file.lastIndexOf('.');
       if( offset == -1 ) return "";
+      int pos = file.indexOf(Util.FS,offset);
+      if( pos!= -1 ) return "";
       return file.substring(offset + 1, file.length());
    }
 

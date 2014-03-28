@@ -70,7 +70,7 @@ public class BuilderTree extends BuilderTiles {
       context.info("Found in first low rhomb: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
    }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits f = findLeaf(file);
       if( first && f!=null ) setConstantes(f);

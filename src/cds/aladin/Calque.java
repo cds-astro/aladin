@@ -1052,18 +1052,7 @@ public final class Calque extends JPanel implements Runnable {
       // Invalidation des grilles de coordonnées
       aladin.view.grilAgain();
       aladin.view.repaintAll();
-
-      // Nécessaire dans le cas de plan Healpix
-//      for( int i=0; i<aladin.view.modeView; i++ ) {
-//         ViewSimple v = aladin.view.viewSimple[i];
-//         if( v.isFree() ) continue;
-//         if( !(v.pref instanceof PlanBG) ) continue;
-//         v.newView(1);
-//         v.getProj().setProjCenter(aladin.view.repere.raj,aladin.view.repere.dej);
-//      }
       
-//      aladin.view.newView(1);
-//      aladin.view.syncView(1,null,null,true);
    }
 
    /** Traitement d'un changement de mode d'affichage pixel */
@@ -2883,7 +2872,7 @@ public final class Calque extends JPanel implements Runnable {
    
    /** Extraction d'un tranche d'un cube. Si n==-1, tranche courante */
    protected void newPlanImageFromBlink(PlanImageBlink cube, int frame) throws Exception {
-      if( frame==-1 ) frame = aladin.view.getView(cube).blinkControl.lastFrame;
+      if( frame==-1 ) frame = aladin.view.getView(cube).cubeControl.lastFrame;
       cube.activePixelsOrigin(frame);
       PlanImage pi = (PlanImage)aladin.calque.dupPlan(cube, null,cube.type,false);
       pi.setLabel(cube.label+"#"+frame);
@@ -3310,6 +3299,7 @@ public final class Calque extends JPanel implements Runnable {
          plan[n] = p = gSky.isProgen()  ? new PlanBGCatIndex(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isMap()     ? new PlanHealpix(aladin,gSky,label, c,rad,startingTaskId) :
+                       gSky.isCube()    ? new PlanBGCube(aladin, gSky, label, c,rad,startingTaskId):
                                           new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
          plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId) 

@@ -135,7 +135,7 @@ public class BuilderDetails extends Builder {
       }
       
       if( allsky!=null /* && !allsky.hasTooMany() */ ) {
-         String file = BuilderAllsky.getFileName(context.getHpxFinderPath(), 3);
+         String file = BuilderAllsky.getFileName(context.getHpxFinderPath(), 3,0);
 //         System.out.println("Create "+file);
          writeIndexFile(file, allsky);
       }

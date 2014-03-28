@@ -40,10 +40,12 @@ class HealpixAllsky extends HealpixKey {
       this.planBG = planBG;
       this.order=order;
       this.npix=-1;
+      z=(int)planBG.getZ();
       allSky=true;
       resetTimer();
-      String nameNet = "Norder"+order+"/Allsky";
-      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
+      String sZ = z<=0 ? "" : "_"+z;
+      String nameNet = "Norder"+order+"/Allsky"+sZ;
+      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky"+sZ;
       extCache=extNet=planBG.getTileMode();
 //      if( planBG.truePixels ) extCache=extNet=FITS;
 //      else if( planBG.inPNG && !planBG.inJPEG ) extCache=extNet=PNG;
@@ -64,6 +66,7 @@ class HealpixAllsky extends HealpixKey {
       h.allSky=true;
       h.planBG=planBG;
       h.order=order;
+      h.z=z;
       h.npix=npix;
       h.hpix = new Hpix(order,npix,planBG.frameOrigin);
 //      h.corners = h.computeCorners();
@@ -81,6 +84,7 @@ class HealpixAllsky extends HealpixKey {
       h.planBG=planBG;
       h.order=order;
       h.npix=npix;
+      h.z=z;
 //      h.corners = h.computeCorners();
       h.hpix = new Hpix(order,npix,planBG.frameOrigin);
       h.resetTimer();

@@ -19,8 +19,6 @@
 
 package cds.aladin;
 
-import java.awt.Rectangle;
-import java.util.*;
 
 final public class ViewMemo {
    static private int BLOC = 64;
@@ -30,6 +28,15 @@ final public class ViewMemo {
    protected ViewMemo() { }
 
    protected int size() { return nb; }
+
+   /** Duplication du ViewMemo (ainsi que de tous ses ViewMemoItem) */
+   protected ViewMemo copy() {
+      ViewMemo vm = new ViewMemo();
+      vm.memo = new ViewMemoItem[memo.length];
+      vm.nb = nb;
+      for( int i=0; i<nb; i++ ) vm.memo[i] = memo[i].copy();
+      return vm;
+   }
    
    private void fixeNb() {
 //      if( memo==null ) return;

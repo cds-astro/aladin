@@ -107,7 +107,7 @@ public class ViewSimple extends JComponent
    int [] tmpRGB;                // Pixels de la portion de l'image visible
    protected RainbowPixel rainbow;    // Un Rainbow en superposition de la vue pour les pixels
    protected Rainbow rainbowF;    // Un Rainbow en superposition de la vue pour les filtres
-   BlinkControl blinkControl=null; // En cas d'image Blink, le controleur associé
+   CubeControl cubeControl=null; // En cas d'image Blink, le controleur associé
    protected boolean flagHuge;   // true: Cette vue affiche une image HUGE en pleine résolution
    int xHuge,yHuge,wHuge,hHuge;  // Position de la zone Haute définition si image Huge (coord dans l'image sous-échantillonnée)
    int w,h;                      // largeur et hauteur de l'image dans pixels[]
@@ -337,8 +337,8 @@ public class ViewSimple extends JComponent
    }
 
    JPopupMenu popMenu;
-   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg
-//             ,menuROI,menuLock,menuDel,menuDelROI,menuStick,menuSel,
+   JMenuItem menuLabel,menuClone,menuCopy,menuCopyImg,menuLock
+//             ,menuROI,menuDel,menuDelROI,menuStick,menuSel,
 //              menuMore,menuNext,menuScreen
              ;
 
@@ -365,9 +365,9 @@ public class ViewSimple extends JComponent
       j.addActionListener(this);
       popMenu.add( menuLabel=j=new JMenuItem(view.MLABELON));
       j.addActionListener(this);
-//      popMenu.addSeparator();
-//      popMenu.add( menuLock=j=new JCheckBoxMenuItem(view.MNEWROI));
-//      j.addActionListener(this);
+      popMenu.addSeparator();
+      popMenu.add( menuLock=j=new JMenuItem(view.MNEWROI));
+      j.addActionListener(this);
 ////      popMenu.add( menuROI=j=new JMenuItem(view.MROI));
 ////      j.addActionListener(this);
 //      popMenu.add( menuDelROI=j=new JMenuItem(view.MDELROI));
@@ -394,7 +394,7 @@ public class ViewSimple extends JComponent
       else if( src==menuCopy )   aladin.copyToClipBoard(aladin.localisation.J2000ToString(repCoord.al,repCoord.del));
       else if( src==menuCopyImg )copier();
 //      else if( src==menuROI )    aladin.view.createROI();
-//      else if( src==menuLock )   switchLock();
+      else if( src==menuLock )   switchLock();
 //      else if( src==menuDel )    aladin.view.freeSelected();
 //      else if( src==menuDelROI ) aladin.view.freeLock();
 //      else if( src==menuSel )    aladin.view.selectAllViews();
@@ -459,8 +459,8 @@ public class ViewSimple extends JComponent
       menuCopy.setEnabled(repCoord.al!=0 && repCoord.del!=0);
 //      menuStick.setText( sticked ? view.MSTICKOFF:view.MSTICKON);
       menuLabel.setText( view.labelOn() ? view.MLABELON:view.MLABELOFF);
-//      menuLock.setEnabled( !isProjSync() );
-//      menuLock.setSelected(locked);
+      menuLock.setEnabled( !isProjSync() );
+      menuLock.setSelected(locked);
 //      menuMore.setEnabled( !aladin.view.allImageWithView());
 //      menuNext.setEnabled( aladin.calque.getNbPlanImg()>1 );
 
@@ -496,7 +496,7 @@ public class ViewSimple extends JComponent
       memImg=null;
       pixels=null;
       pixelsRGB=null;
-      blinkControl=null;
+      cubeControl=null;
       previousFrameLevel=-1;
       lastImgID=-1;
       ordreTaquin=-1;
@@ -518,7 +518,7 @@ public class ViewSimple extends JComponent
       v.plot = isPlotView() ? plot.copyIn(v) : null;
       
       if( pref instanceof PlanImageBlink ) {
-         v.blinkControl = blinkControl.copy();
+         v.cubeControl = cubeControl.copy();
       }
       v.setZoomXY(zoom,xzoomView,yzoomView);
    }
@@ -663,7 +663,7 @@ public class ViewSimple extends JComponent
          if( pref.type==Plan.IMAGEHUGE ) cropped = pi.cropHuge(x,y,w,h,false);
          else cropped = pi.crop(x,y,w,h,false);
 
-         if( picked ) frame = blinkControl.lastFrame+1;
+         if( picked ) frame = cubeControl.lastFrame+1;
 
          pi.copyright = "Dumped from "+pref.label
          	+ (picked?"  frame #"+frame:"")
@@ -1264,13 +1264,12 @@ public class ViewSimple extends JComponent
       if( !p.isCatalog() && isPlotView() ) { plot.free(); plot=null; }
       
       // Création du controleur de blink s'il s'agit d'un cube
-      if( pref instanceof PlanImageBlink ) {
-         PlanImageBlink pb = (PlanImageBlink)pref;
-         blinkControl = new BlinkControl(aladin,pb,pb.initDelay,pb.initPause);
-         blinkControl.setFrameLevel(pb.initFrame,false);
-         blinkControl.resume();
+      if( pref.isCube() ) {
+         cubeControl = new CubeControl(aladin,pref,pref.getInitDelay(),pref.isPause());
+         cubeControl.setFrameLevel(pref.getZ(),false);
+         cubeControl.resume();
       }
-      else blinkControl=null;
+      else cubeControl=null;
 
       // Tentative de récupération de valeurs de zoom précédemment sauvegardées
       // pour ce plan dans le cas du mode MVIEW1
@@ -1427,7 +1426,8 @@ public class ViewSimple extends JComponent
 //            setZoomXY(1, -1, -1);
 //         } else setDimension(w,h);
 //      }
-      BufferedImage img = new BufferedImage(rv.width, rv.height, BufferedImage.TYPE_INT_ARGB);
+      BufferedImage img = new BufferedImage(rv.width, rv.height, 
+            pref.isImage() && ((PlanImage)pref).isTransparent() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
       Graphics2D g = (Graphics2D)img.getGraphics();
       if( aladin.NOGUI ) {
          PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
@@ -1884,11 +1884,11 @@ public class ViewSimple extends JComponent
       // Si on est sur le blinkControl..
       int r;
       if( isPlanBlink()
-            && (r=blinkControl.setMouseDown((int)Math.round(x),(int)Math.round(y)))>BlinkControl.NOTHING ) {
+            && (r=cubeControl.setMouseDown((int)Math.round(x),(int)Math.round(y)))>CubeControl.NOTHING ) {
          flagCube=true;
-         if( r==BlinkControl.IN ) return;
-         if( r==BlinkControl.SLIDE )
-            aladin.view.setFrame(this, blinkControl.getFrameLevel((int)Math.round(x)),e.isShiftDown());
+         if( r==CubeControl.IN ) return;
+         if( r==CubeControl.SLIDE )
+            aladin.view.setCubeFrame(this, cubeControl.getFrameLevel((int)Math.round(x)),e.isShiftDown());
          aladin.view.repaintAll();
          return;
       }
@@ -2282,7 +2282,7 @@ public class ViewSimple extends JComponent
       // Rien à faire
       if( flagCube ) {
          flagCube=false;
-         if( e.isShiftDown() ) { aladin.view.syncBlink(this); aladin.view.repaintAll(); }
+         if( e.isShiftDown() ) { aladin.view.syncCube(this); aladin.view.repaintAll(); }
          return;
       }
 
@@ -2801,7 +2801,7 @@ public class ViewSimple extends JComponent
 
       // Si on est sur le blinkControl..
       if( flagCube  ) {
-         aladin.view.setFrame(this, blinkControl.getFrameLevel(x),e.isShiftDown());
+         aladin.view.setCubeFrame(this, cubeControl.getFrameLevel(x),e.isShiftDown());
          aladin.view.repaintAll();
          return;
       }
@@ -3054,7 +3054,7 @@ public class ViewSimple extends JComponent
          return false;
       }
       if( pref.type==Plan.IMAGEBLINK || pref.type==Plan.IMAGECUBE ) {
-         if( blinkControl.mode!=BlinkControl.PAUSE ) return false;
+         if( cubeControl.mode!=CubeControl.PAUSE ) return false;
       }
       if( aladin.view.getPixelMode()==View.LEVEL ) {
          return false;
@@ -3148,9 +3148,9 @@ public class ViewSimple extends JComponent
       // En cas de passage de la souris sur le blinkControl, il faut
       // le réafficher immédiatement pour que le REWIND/PLAY/FORWARD soit
       // tracé dans la bonne couleur
-      if( isPlanBlink() && blinkControl!=null ) {
-         int m = blinkControl.setMouseMove(vs,(int)Math.round(x),(int)Math.round(y));
-         if( m!=BlinkControl.NOTHING ) {
+      if( isPlanBlink() && cubeControl!=null ) {
+         int m = cubeControl.setMouseMove(vs,(int)Math.round(x),(int)Math.round(y));
+         if( m!=CubeControl.NOTHING ) {
            flagBlinkControl=true;
            update(getGraphics());
            return;
@@ -4566,8 +4566,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( oCouverture!=iz) {
          oCouverture=iz;
          int nseg = Math.max(4,(int)getTaille()/4);
-         Projection proj=null;
-         if( isFree() || !Projection.isOk(proj=pref.projd) ) couverture = null;
+         Projection proj=getProj();
+         if( isFree() || !Projection.isOk(proj) ) couverture = null;
          else {
             couverture = new Coord[(nseg+1)*(nseg+1)];
             double segx = (double)rv.width/nseg;
@@ -4886,24 +4886,23 @@ testx1=x1; testy1=y1; testw=w; testh=h;
     * est la 5 et qu'elle représente le 1/3 de la contribution avec la frame suivante pour
     * un fondu enchainé */
    protected double getCurrentFrameLevel() {
-      if( blinkControl==null ) return 1;
-      double frame = blinkControl.getCurrentFrameIndex();
-      double transparency = blinkControl.getTransparency();
+      if( cubeControl==null ) return 1;
+      double frame = cubeControl.getCurrentFrameIndex();
+      double transparency = cubeControl.getTransparency();
       if( transparency==-1 || transparency==0 ) return frame;
-      if( transparency==1 ) return frame<blinkControl.nbFrame ? frame+1 : 0;
+      if( transparency==1 ) return frame<cubeControl.nbFrame ? frame+1 : 0;
       return frame+transparency;
    }
 
    /** Retourne l'indice de la frame courante dans le cas d'un plan blink de référence. */
    protected int getCurrentFrameIndex() {
-      return blinkControl.getCurrentFrameIndex();
+      return cubeControl.getCurrentFrameIndex();
    }
 
 
    /** Affiche si nécessaire les logos de contrôles pour les images Blink */
    private void drawBlinkControl(Graphics g) {
       if( !isPlanBlink() ) return;
-      PlanImageBlink pref = ((PlanImageBlink)this.pref);
       int x,y;
       boolean fullScreen = isFullScreen();
 
@@ -4912,22 +4911,20 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       int size=rv.width>=200?8:6;
       if( aladin.view.getModeView()<=ViewControl.MVIEW9 || fullScreen ) {
 //         x=rv.width-blinkControl.getWidth()-10;
-         x=rv.width/2 - blinkControl.getWidth()/2;
+         x=rv.width/2 - cubeControl.getWidth()/2;
          y =5 + ( fullScreen ? 13:0);
        } else {
-         x=rv.width-blinkControl.getWidth()-10;
-         y =rv.height-blinkControl.getHeight()-size-3;
+         x=rv.width-cubeControl.getWidth()-10;
+         y =rv.height-cubeControl.getHeight()-size-3;
        }
 
       // Mise à jour des pixels 8 bits
-      if( blinkControl.mode!=blinkControl.SLIDE ) {
+      if( cubeControl.mode!=cubeControl.SLIDE ) {
          if( selected ) pref.activePixels(this);
       }
 
        // Affichage du blinkControl
-       blinkControl.draw(g,x,y,size,
-             getCurrentFrameIndex(),
-             pref.getNbFrame());
+       cubeControl.draw(g,x,y,size, getCurrentFrameIndex(), pref.getDepth());
    }
    
    /** Retourne les coordonnées de la rose des vents */
@@ -6014,7 +6011,7 @@ g.drawString(s,10,100);
    protected int paintPlanBlink() {
       if( !isPlanBlink() || !pref.active ) return 0;
       if( getCurrentFrameIndex() != previousFrameLevel ) repaint();
-      return blinkControl.delay;
+      return cubeControl.delay;
    }
 
    /** Affichage de la bordure uniquement */
@@ -6027,7 +6024,8 @@ g.drawString(s,10,100);
 
    /** Retourne true si le plan de référence est un plan Blink */
    protected boolean isPlanBlink() {
-     return pref!=null && (pref instanceof PlanImageBlink );
+      return pref!=null && pref.isCube();
+//     return pref!=null && (pref instanceof PlanImageBlink );
    }
 
    /** Retourne true si il y a au moins un objet blink à montrer

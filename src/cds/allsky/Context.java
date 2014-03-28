@@ -78,17 +78,19 @@ public class Context {
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    
+   protected int depth=1;                    // profondeur du cube (1 pour une image)
+   protected boolean depthInit=false;          // true si la profondeur du cube a été positionné
    protected int [] hdu = null;              // Liste des HDU à prendre en compte
-   protected int bitpixOrig = -1;            // BITPIX des images originales
+   public int bitpixOrig = -1;               // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
    protected boolean hasAlternateBlank=false;// true si on a indiqué une valeur BLANK alternative
-   protected double bZeroOrig=0;             // Valeur BZERO d'origine
-   protected double bScaleOrig=1;            // Valeur BSCALE d'origine
+   public double bZeroOrig=0;                // Valeur BZERO d'origine
+   public double bScaleOrig=1;               // Valeur BSCALE d'origine
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné 
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
    protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
    public double[] pixelGood=null;           // Plage des valeurs des pixels conservés (valeurs physiques)
-   protected double[] good=null;             // Plage des valeurs de pixels conservés (raw)
+   public double[] good=null;                // Plage des valeurs de pixels conservés (raw)
    protected int[] borderSize = {0,0,0,0};   // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    protected boolean fading=true;            // Activation du fading entre les images originales
@@ -148,6 +150,8 @@ public class Context {
       pixelGood=null;
       good=null;
       pixelRangeCut=null;
+      depth=1;
+      depthInit=false;
    }
 
    // Getters
@@ -339,8 +343,12 @@ public class Context {
 
    public void setCutOrig(double [] cutOrig) {
       this.cutOrig=cutOrig;
-//      cut = new double[cutOrig.length];
-//      System.arraycopy(cutOrig, 0, cut, 0, cutOrig.length);
+   }
+   
+   /** Initialisation de la profondeur d'un cube */
+   public void setDepth(int depth) {
+      this.depth=depth;
+      depthInit=true;
    }
    
    /**
@@ -351,8 +359,7 @@ public class Context {
 	   String path = imgEtalon;
 	   Fits fitsfile = new Fits();
 
-	   int code = fitsfile.loadHeaderFITS(path);
-//	   if( fitsfile.getCalib()==null ) throw new Exception("No calib !");
+	   fitsfile.loadHeaderFITS(path);
 	   
        setBitpixOrig(fitsfile.bitpix);
        if( !isColor() ) {
@@ -363,10 +370,16 @@ public class Context {
        
        // Mémorise la taille typique de l'image étalon
        typicalImgWidth = Math.max(fitsfile.width,fitsfile.height);
+       
+       // Peut être s'agit-il d'un cube ?
+       try {
+          setDepth( fitsfile.headerFits.getIntFromHeader("NAXIS3") );
+       } catch( Exception e ) { setDepth(1); }
     	   
        // Il peut s'agit d'un fichier .hhh (sans pixel)
        try { initCut(fitsfile); } catch( Exception e ) { 
-    	   Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage()); }
+    	   Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage());
+       }
    }
    
    /**
@@ -376,22 +389,15 @@ public class Context {
    protected void initCut(Fits file) throws Exception {
        int w = file.width;
        int h = file.height;
-       int x=0, y=0;
+       int d = file.depth;
+       int x=0, y=0, z=0;
        if (w > 1024) { w = 1024; x=file.width/2 - 512; }
        if (h > 1024) { h = 1024; y=file.height/2 -512; }
-       file.loadFITS(file.getFilename(), 0, x, y, w, h);
+       if (d > 1 ) { d = 1;  z=file.depth/2 - 1/2; }
+       file.loadFITS(file.getFilename(), 0, x, y, z, w, h, d);
 
        double[] cutOrig = file.findAutocutRange();
        cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX
-//       if( skyvalName!=null && !skyvalName.equalsIgnoreCase("true") ) {
-//          try {
-//             double val = file.headerFits.getDoubleFromHeader(getSkyval());
-//             cutOrig[0] -= val;
-//             cutOrig[1] -= val;
-//             cutOrig[2] -= val;
-//             cutOrig[3] -= val;
-//          } catch( Exception e ) { }
-//       }
        setCutOrig(cutOrig);
    }
 
@@ -732,7 +738,7 @@ public class Context {
    /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index et le MOC de la zone) */
    protected long getNbLowCells() { 
       if( moc==null || getOrder()==-1 ) return -1;
-      long nbcells = moc.getUsedArea();
+      long nbcells = moc.getUsedArea() * depth;
       return nbcells *= (long) Math.pow(4, (getOrder() - moc.getMaxOrder()) );
    }
    
@@ -750,7 +756,7 @@ public class Context {
 
    // Demande d'affichage des stats (dans le TabBuild)
    protected void showIndexStat(int statNbFile, int statBlocFile, int statNbZipFile, long statMemFile, long statPixSize, long statMaxSize, 
-         int statMaxWidth, int statMaxHeight, int statMaxNbyte,long statDuree) {
+         int statMaxWidth, int statMaxHeight, int statMaxDepth, int statMaxNbyte,long statDuree) {
       String s;
       if( statNbFile==-1 ) s = "";
       else {
@@ -762,7 +768,8 @@ public class Context {
 //         + (statBlocFile>0 && statBlocFile==statNbFile? " - all splitted" : statBlocFile>0 ? "("+statBlocFile+" splitted)":"")
          + " => "+Util.getUnitDisk(statPixSize).replace("B","pix")
          + " using "+Util.getUnitDisk(statMemFile)
-         + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight+"x"+statMaxNbyte+"]");
+         + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight
+               +(statMaxDepth>1?"x"+statMaxDepth:"")+" x"+statMaxNbyte+"]");
       }
       nlstat(s);
    }
@@ -995,18 +1002,23 @@ public class Context {
    /** Création, ou mise à jour du fichier des Properties associées au survey */
    protected void writePropertiesFile() throws Exception {
       
+      int order = getOrder();
+      if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
+      
+      String label = getLabel();
+      if( label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
+      
       // Propriétés à mettre à jour de toutes manières
       updateProperties(
             new String[] { PlanHealpix.KEY_PROCESSING_DATE, PlanHealpix.KEY_COORDSYS,
-                           PlanHealpix.KEY_ISCOLOR,         PlanHealpix.KEY_HIPSBUILDER,
+                           PlanHealpix.KEY_HIPSBUILDER,
                            PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER,
                           },
             new String[] { getNow(),
                            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
-                           isColor()+"",
                            "Aladin/HipsGen "+Aladin.VERSION,
-                           getLabel(),
-                           getOrder()+"",
+                           label,
+                           order+"",
                          },
             true);
       
@@ -1023,19 +1035,23 @@ public class Context {
          if( cut[2]!=0 || cut[3]!=0 )  setProperty(PlanHealpix.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
       
-      // Propriétés à mettre que si elles n'existent pas encore
-      String order = getOrder()==-1 ? (String)null : getOrder()+"";
-      updateProperties( new String[]{ PlanHealpix.KEY_MAXORDER}, 
-                       new String[]{ order},
-                       false );
-      
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
       if( fmt.length()>0 ) setProperty(PlanHealpix.KEY_FORMAT,fmt);
       
+      // Dans le cas d'un HiPS couleur
+      if( isColor() ) setProperty(PlanHealpix.KEY_ISCOLOR,"true");
+      
+      // Pour le cas d'un Cube
+      if( depth>1 ) {
+         setProperty(PlanHealpix.KEY_ISCUBE,"true");
+         setProperty(PlanHealpix.KEY_CUBEDEPTH,depth+"");
+         setProperty(PlanHealpix.KEY_CUBEFIRSTFRAME,"0");
+      }
+      
       // Y a-t-il un publisher indiqué ?
       if( publisher!=null ) setProperty(PlanHealpix.KEY_PUBLISHER,publisher);
-
+      
       // Propriétés additionnelles
       if( keyAddProp!=null ) {
          String k[] = new String[ keyAddProp.size() ];
@@ -1050,7 +1066,7 @@ public class Context {
    
    // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)
    protected String getAvailableTileFormats() {
-      String path = BuilderAllsky.getFileName(getOutputPath(),3);
+      String path = BuilderAllsky.getFileName(getOutputPath(),3,0);
       StringBuffer res = new StringBuffer();
       for( int i=0; i<EXT.length; i++ ) {
          File f = new File(path+EXT[i]);

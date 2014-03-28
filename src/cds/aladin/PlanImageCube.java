@@ -268,7 +268,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
          noOriginalPixels();
          
          d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
-         Aladin.trace(3," => Reading "+(!dejaCharge?"(2 pass) ":"")+"and analyzing "+getNbFrame()+" frames in "+Util.round(temps/0.001,3)+" s => "
+         Aladin.trace(3," => Reading "+(!dejaCharge?"(2 pass) ":"")+"and analyzing "+getDepth()+" frames in "+Util.round(temps/0.001,3)+" s => "
                +(temps!=0 ? Util.round((taille/temps)/1024*1.024,2)+" Mbyte/s" : "--")
                +(loadInRam ? " (fully in RAM)": partialInRam?" (partially in RAM)":""));
 

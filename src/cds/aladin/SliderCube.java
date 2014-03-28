@@ -35,29 +35,32 @@ public class SliderCube extends SliderPlusMoins {
    }
 
    void submit(int inc) {
-      PlanImageBlink p = getPlanCube();
+      Plan p = getPlanCube();
       if( p==null ) return;
-      double frame = getValue();
+      double frame = getValue()+inc;
+//      System.out.println("submit inc="+inc+" frame="+frame);
       ViewSimple vs = aladin.view.getView(p);
-      p.changeImgID();
-      if( vs!=null ) aladin.view.setFrame(vs, frame, true);
-      else  p.activePixels((int)frame);
+      p.changeImgID();      
+      if( vs!=null /* && p instanceof PlanImageBlink */ ) aladin.view.setCubeFrame(vs, frame, true);
+      else p.setCubeFrame((int)frame);
       aladin.view.repaintAll();
    }
    
    // retourne le premier plan Cube sélectionné 
-   PlanImageBlink  getPlanCube() {
+   Plan getPlanCube() {
       Plan [] p = aladin.calque.getPlans();
-      for( Plan p1 : p ) if( p1.selected && p1 instanceof PlanImageBlink ) return (PlanImageBlink)p1;
+      for( Plan p1 : p ) if( p1.selected && p1.isCube() ) return p1;
       return null;
    }
    
    public void paintComponent(Graphics g) {
-      PlanImageBlink p = getPlanCube();
+      Plan p = getPlanCube();
       if( p!=null ) {
+//         System.out.println("p="+p.label+" depth="+p.getDepth()+" z="+p.getZ()+" initFrame="+p.getInitFrame());
          setEnabled(true);
-         slider.setMinMax(0, p.getNbFrame()-1 );
-         slider.setValue( p.initFrame );
+         slider.setMinMax(0, p.getDepth()-1 );
+         slider.setValue( p.getZ() );
+//         slider.setValue( p.getZ() );
       } else { 
          slider.setValue(slider.min); 
          setEnabled(false); 

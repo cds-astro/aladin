@@ -55,6 +55,7 @@ public class TreeNodeAllsky extends TreeNode {
    public int minOrder=-1;      // Min order Healpix
    public int maxOrder=-1;      // Max order Healpix
    private boolean useCache=true;// Non utilisation du cache local
+   private boolean cube=false;   // true si le survey est un cube
    private boolean color=false;  // true si le survey est en couleur
    private boolean inFits=false; // true si le survey est fourni en FITS
    private boolean inJPEG=false; // true si le survey est fourni en JPEG
@@ -65,6 +66,8 @@ public class TreeNodeAllsky extends TreeNode {
    private boolean progen=false; // true s'il s'agit d'un catalogue progen
    private boolean map=false;    // true s'il s'agit d'une map HEALPix FITS
    private boolean moc=false;    // true s'il faut tout de suite charger le MOC
+   public int cubeDepth=-1;      // Profondeur du cube HiPs (-1 si inconnue)
+   public int cubeFirstFrame=0;  // Première frame à afficher (0 par défaut)
    public int frame=Localisation.GAL;  // Frame d'indexation
    public Coord target=null;     // Target for starting display
    public double radius=-1;   // Field size for starting display
@@ -142,6 +145,28 @@ public class TreeNodeAllsky extends TreeNode {
          if( maxOrder==-1 ) {
             aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
             maxOrder=11;
+         }
+      }
+      
+      // Les paramètres liés aux cubes
+      try { cube = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCUBE)); }
+      catch( Exception e ) { cube=false; }
+      if( cube ) {
+         s = prop.getProperty(PlanHealpix.KEY_CUBEDEPTH);
+         if( s!=null ) {
+            try { cubeDepth = Integer.parseInt(s); }
+            catch( Exception e ) {
+               aladin.trace(3,"CubeDepth syntax error ["+s+"] => trying autodetection");
+               cubeDepth=-1;
+            }
+         }
+         s = prop.getProperty(PlanHealpix.KEY_CUBEFIRSTFRAME);
+         if( s!=null ) {
+            try { cubeFirstFrame = Integer.parseInt(s); }
+            catch( Exception e ) {
+               aladin.trace(3,"cubeFirstFrame syntax error ["+s+"] => assuming frame 0");
+               cubeFirstFrame=-1;
+            }
          }
       }
       
@@ -254,6 +279,7 @@ public class TreeNodeAllsky extends TreeNode {
                
                if( Util.indexOfIgnoreCase(s, "nocache")>=0 ) useCache=false;
                if( Util.indexOfIgnoreCase(s, "color")>=0 ) color=true;
+               if( Util.indexOfIgnoreCase(s, "cube")>=0 ) cube=true;
                if( Util.indexOfIgnoreCase(s, "fits")>=0 ) { inFits=true; if( first ) { first=false ; truePixels=true; } }
                if( Util.indexOfIgnoreCase(s, "jpeg")>=0 ) { inJPEG=true; if( first ) { first=false ; truePixels=false;} } 
                if( Util.indexOfIgnoreCase(s, "png")>=0 )  { inPNG=true; if( first ) { first=false ; truePixels=false;} } 
@@ -295,6 +321,7 @@ public class TreeNodeAllsky extends TreeNode {
                   +" maxOrder:"+getMaxOrder()
                   +(getLosangeOrder()>=0?" cellOrder:"+getLosangeOrder():"")
                   +(!isCatalog() && isColored() ?" colored" : " B&W")
+                  +(!isCube() ? "" : " cube"+(cubeDepth==-1 ? "" : "/"+cubeDepth+(cubeFirstFrame==0?"":"/"+cubeFirstFrame)))
                   +(!isFits() ? "" : isTruePixels() ?" *inFits*" : " inFits")
                   +(!isJPEG() ? "" : isTruePixels() ?" inJPEG" : " *inJPEG*")
                   +(!isPNG()  ? "" : isTruePixels() ?" inPNG"  : " *inPNG*")
@@ -322,6 +349,9 @@ public class TreeNodeAllsky extends TreeNode {
    
    /** Retourne true s'il s'agit d'un survey ou d'une map couleur (par défaut JPG) */
    protected boolean isColored() { return color; }
+   
+   /** Retourne true s'il s'agit d'un HiPS cube */
+   protected boolean isCube() { return cube; }
    
    protected int getFrame() { return frame; }
    

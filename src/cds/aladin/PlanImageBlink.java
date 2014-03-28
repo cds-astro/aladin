@@ -37,8 +37,8 @@ public class PlanImageBlink extends PlanImage {
 
    protected PlanImage pRef;
    protected int initDelay;		// Le delai initial
-   protected boolean initPause; // en pause lors de la régénération du blinkController
-   protected double initFrame;     // La frame initiale
+   protected boolean flagPause; // en pause lors de la régénération du blinkController
+   protected double z;          // La frame courante
    protected Vector<PlanImageBlinkItem> vFrames;
    protected int depth;
    private PlanImage tmpP[];    // Subtilité de programmation pour traiter la création
@@ -54,8 +54,8 @@ public class PlanImageBlink extends PlanImage {
       super(aladin);
       type=IMAGEBLINK;
       initDelay=delay;
-      initPause=false;
-      initFrame=0;
+      flagPause=false;
+      z=0;
       isOldPlan=false;
 
       pRef=p[0];
@@ -82,6 +82,14 @@ public class PlanImageBlink extends PlanImage {
          runme.start();
       }
    }
+   
+   /** Gestion de la pause pour le défilement d'un cube */
+   protected void setPause(boolean flag) { flagPause = flag; }
+   protected boolean isPause() { return flagPause; }
+   
+   /** Positionne le Frame courant (s'il s'agit d'un cube) */
+   protected void setZ(double z) { this.z = z; };
+   protected double getZ() { return z; }
    
    protected PlanImageBlink(Aladin aladin,String file,MyInputStream in,String label,String from,
          Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
@@ -262,7 +270,7 @@ public class PlanImageBlink extends PlanImage {
          naxis2=height = h;
          depth = d;
          oLastFrame=-1;
-         activePixels(0);
+         setCubeFrame(0);
       }
    }
    
@@ -474,7 +482,7 @@ public class PlanImageBlink extends PlanImage {
       _min=min; _max=max; _autocut=autocut; flagRecut=true; _restart=false;
             
       ViewSimple vc = aladin.view.getCurrentView();
-      int frame = vc.blinkControl.lastFrame;
+      int frame = vc.cubeControl.lastFrame;
       activePixelsOrigin(frame);
       PlanImageBlinkItem pbi = vFrames.elementAt(frame);
       pixelsOriginFromCache();
@@ -635,6 +643,9 @@ public class PlanImageBlink extends PlanImage {
       return mem;
    }
    
+   /** Il s'agit d'un cube */
+   protected boolean isCube() { return true; }
+   
    synchronized boolean isFullyInRam(int z1, int d) {
       for( int z=z1; z<depth && z<z1+d; z++ ) { 
          if( vFrames.elementAt(z).pixelsOrigin==null ) return false;
@@ -778,7 +789,7 @@ public class PlanImageBlink extends PlanImage {
    }
 
    /** Retourne le nombre de Frames */
-   protected int getNbFrame() {
+   protected int getDepth() {
       return vFrames==null ?  0 : vFrames.size();
    }
       
@@ -806,11 +817,11 @@ public class PlanImageBlink extends PlanImage {
     */
    protected void activePixels(ViewSimple v) {
       if( flagUpdating ) return;
-      if( ooLastFrame==v.blinkControl.lastFrame ) return;
-      if( v.blinkControl.mode==BlinkControl.PAUSE ) activePixelsOrigin(v);
+      if( ooLastFrame==v.cubeControl.lastFrame ) return;
+      if( v.cubeControl.mode==CubeControl.PAUSE ) activePixelsOrigin(v);
       else ((PlanImage)v.pref).noOriginalPixels();
-      if( oLastFrame==v.blinkControl.lastFrame ) return;
-      oLastFrame=v.blinkControl.lastFrame;
+      if( oLastFrame==v.cubeControl.lastFrame ) return;
+      oLastFrame=v.cubeControl.lastFrame;
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
@@ -820,20 +831,22 @@ public class PlanImageBlink extends PlanImage {
       aladin.calque.zoom.zoomView.repaint();
    }
    
-   protected void activePixels(int frame) {
-      if( flagUpdating ) return;
-      if( oLastFrame==frame ) return;
-      initFrame=oLastFrame=frame;
+   protected boolean setCubeFrame(double frameLevel) {
+      int frame= (int)frameLevel;
+      if( flagUpdating ) return false;
+      if( oLastFrame==frame ) return false;
+      z=oLastFrame=frame;
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
+      return true;
    }
    
    /** Rend active la tranche courante des pixels d'origine, soit pour le planBlink lui-même
     * soit pourun planImage désigné (dans le cas d'une extraction d'une frame */
    protected void activePixelsOrigin(ViewSimple v) { activePixelsOrigin(v,this); }
    protected void activePixelsOrigin(int frame) { activePixelsOrigin(this,frame); }   
-   protected void activePixelsOrigin(ViewSimple v,PlanImage p) { activePixelsOrigin(p,v.blinkControl.lastFrame); }
+   protected void activePixelsOrigin(ViewSimple v,PlanImage p) { activePixelsOrigin(p,v.cubeControl.lastFrame); }
    
    private void activePixelsOrigin(PlanImage p,int frame) {
       ooLastFrame = frame;
@@ -864,7 +877,7 @@ public class PlanImageBlink extends PlanImage {
       if( y + h > height ) { ah=y + h - height; h-=ah; }
 
       // Pas de fondu enchainé avec la frame suivante
-      if( transparency==-1 || transparency==0 || getNbFrame()==1 ) {
+      if( transparency==-1 || transparency==0 || getDepth()==1 ) {
          byte pixels[]=getFrame(frame);
          for( i=y, n=y + h; i < n; i++ ) {
             System.arraycopy(pixels,i * width + x,newpixels,k,w);
@@ -875,7 +888,7 @@ public class PlanImageBlink extends PlanImage {
       
       // Fondu enchainé avec la prochaine frame
       byte p1[] = getFrame(frame);
-      byte p2[] = getFrame(frame==getNbFrame()-1 ? 0 : frame+1);
+      byte p2[] = getFrame(frame==getDepth()-1 ? 0 : frame+1);
       double complement = 1-transparency;
       
       for( i=y, n=y + h; i<n; i++ ) {

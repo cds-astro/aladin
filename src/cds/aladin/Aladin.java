@@ -69,47 +69,12 @@ import cds.xml.XMLParser;
  * @beta <P>
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> HiPS improvements: thumbnail generator, original image links, JPEG|PNG support, ...
- * @beta    <LI> Obj.iterator() plugin method for multi-component object manipulation
- * @beta    <LI> Pixel and coordinate toolbox
- * @beta    <LI> Footprint MOC operations (generation, filtering, ...)
- * @beta    <LI> Recently open file menu
- * @beta    <LI> Copy/Paste data
- * @beta    <LI> Solid shape paint (source property)
- * @beta    <LI> HipsGen improvements (speed x5 - PNG, MEF support - circle mask)
- * @beta    <LI> GLON/GLAT, ELON/ELAT, SLON/SLAT column autodetect in basic ASCII formats
- * @beta    <LI> Automatical distance tool for 2 selected sources   
- * @beta    <LI> MOC & SkyGen generation support (-mocgen & -skygen script programs)
- * @beta    <LI> STC-s region support (as a script command)
- * @beta    <LI> PNG compressed zTXt comment segment (for FITs header) support
- * @beta    <LI> VOTable 1.3 support (BINARY2 + LINK + Note STC in VOTable 1.2 & 2.0)
- * @beta    <LI> New script commands: "match", "=" (arithmetic expression solver), "convto"
- * @beta    <LI> Catalog proper motion support
- * @beta    <LI> All-sky progressive zoom (not only powers of 2)
- * @beta    <LI> Automatic All-sky + Sesame switcher (load balancing + fault tolerance)
- * @beta    <LI> "transparency pixel" support 
- * @beta    <LI> 3 panel mode
- * @beta    <LI> Tool plan "movable" property
- * @beta    <LI> VizieR phot. tool
- * @beta    <LI> Tagging source feature
- * @beta    <LI> Spectrum SAMP management dedicated to source catalog
- * @beta    <LI> Specifical color parameter for "draw" script command
- * @beta    <LI> JPEG large image improvements (required RAM divided by 2)
- * @beta    <LI> Plugin synchronisation support
+ * @beta    <LI> HiPS cube support
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> Oversampling crop HiPS bilinear bug fixed
- * @beta    <LI> FITS HEALPix maps with  TFORM=B bug fixed
- * @beta    <LI> FITS HEALPix maps with  NSIDE>=16384 bug fixed
- * @beta    <LI> Allsky generator .hhh bug fixed
- * @beta    <LI> Allsky generator cell <64 bug fixed
- * @beta    <LI> MOLLWEIDE projection bug fixed
- * @beta    <LI> FOV target precision bug fixed
- * @beta    <LI> TAN SIP bug fixed
- * @beta    <LI> EPS NorthUP bug fixed
- * @beta    <LI> VOTable base64 BINARY STREAM with variable fields bug fixed
- * @beta    <LI> HEALPix sky => RGB missing tiles supported
+ * @beta <UL>
+ * @beta    <LI> HiPS generation "." directory bug fixed
  * @beta <UL>
  * @beta </UL>
  *
@@ -133,7 +98,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.036";
+    static public final    String VERSION = "v8.040";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -1024,7 +989,7 @@ public class Aladin extends JApplet
         },
         { {MVIEW},
            {"?"+FULLSCREEN+"|F11"}, {PREVIEWSCREEN+"|F12"}, {NEXT+"|TAB"},
-           {},{MOREVIEWS+"|F9"}
+           {},{MOREVIEWS+"|F9"}, {"?"+LOCKVIEW},
         },
         { {MHELP},
              {HELP},{ABOUT},
@@ -3628,7 +3593,8 @@ public class Aladin extends JApplet
     
     /** Chargemetn du MOC correspondant au plan HiPS courant  */
     protected void loadMocHips() {
-       Plan p = calque.getPlanBase();
+       Plan p = calque.getFirstSelectedPlan();
+       if( p==null || p instanceof PlanMoc || !(p instanceof PlanBG) || !((PlanBG)p).hasMoc() ) p=calque.getPlanBase();
        if( p==null || p instanceof PlanMoc || !(p instanceof PlanBG) || !((PlanBG)p).hasMoc() ) return;
        ((PlanBG)p).loadMoc();
     }
@@ -4724,7 +4690,8 @@ public void setLocation(Point p) {
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
 //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
-         if( miMocHips!=null ) miMocHips.setEnabled( isBG && ((PlanBG)pi).hasMoc() );
+         if( miMocHips!=null ) miMocHips.setEnabled( pi instanceof PlanBG && ((PlanBG)pi).hasMoc() 
+               || base instanceof PlanBG && ((PlanBG)base).hasMoc() );
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
          if( miMocGenCat!=null ) miMocGenCat.setEnabled( nbPlanCat>0 );
          if( miMocOp!=null ) miMocOp.setEnabled(nbPlanMoc>0);

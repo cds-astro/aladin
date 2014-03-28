@@ -58,7 +58,7 @@ public class BuilderIndex extends Builder {
    private long statPixSize;               // Nombre total de pixels
    private long statMaxSize;               // taille du plus gros fichier trouvé
    private long statTime;                  // Date de début
-   private int statMaxWidth, statMaxHeight, statMaxNbyte; // info sur le plus gros fichier trouvé
+   private int statMaxWidth, statMaxHeight, statMaxDepth, statMaxNbyte; // info sur le plus gros fichier trouvé
 
    boolean stopped = false;
 
@@ -157,7 +157,7 @@ public class BuilderIndex extends Builder {
    public void showStatistics() {
       long statDuree = System.currentTimeMillis()-statTime;
       context.showIndexStat(statNbFile, statBlocFile, statNbZipFile, statMemFile, statPixSize, statMaxSize,
-            statMaxWidth, statMaxHeight, statMaxNbyte,statDuree);
+            statMaxWidth, statMaxHeight, statMaxDepth, statMaxNbyte,statDuree);
    }
 
 
@@ -189,7 +189,7 @@ public class BuilderIndex extends Builder {
    }
 
    // Mise à jour des stats
-   private void updateStat(File f,int code, int width,int height,int nbyte,int deltaBlocFile) {
+   private void updateStat(File f,int code, int width,int height,int depth,int nbyte,int deltaBlocFile) {
       statNbFile++;
       statBlocFile += deltaBlocFile;
       if( (code & Fits.GZIP) !=0 ) statNbZipFile++;
@@ -200,6 +200,7 @@ public class BuilderIndex extends Builder {
          statMaxSize=size;
          statMaxWidth = width;
          statMaxHeight = height;
+         statMaxDepth = depth;
          statMaxNbyte = nbyte;
       }
    }
@@ -260,6 +261,7 @@ public class BuilderIndex extends Builder {
          boolean flagDefaultHDU = hdu==null;
          boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
          int cellSize = Constante.FITSCELLSIZE;
+         int firstDepth=0;
 
          // Multi Extension ou non ?
          for( int j=0; flagAllHDU || flagDefaultHDU ||  j<hdu.length; j++ ) {
@@ -274,13 +276,16 @@ public class BuilderIndex extends Builder {
               // S'agit-il d'une image calibrée ?
                if( fitsfile.calib==null ) continue;
                
+               if( firstDepth==0 ) firstDepth=fitsfile.depth;
+               else if( fitsfile.depth!=firstDepth ) continue;
+               
                Aladin.trace(4,"HiPS indexing "+currentfile+ (ext==0?"":"["+ext+"]..."));
 
                try {
 
                   // Test sur l'image entière
                   if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
-                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
+                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
                      testAndInsert(fitsfile, pathDest, currentfile, null, order);
 
                      // Découpage en blocs
@@ -289,15 +294,17 @@ public class BuilderIndex extends Builder {
                      int width = fitsfile.width - borderSize[3];
                      int height = fitsfile.height - borderSize[2];
 
-                     updateStat(file, code, width, height, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
+                     updateStat(file, code, width, height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
 
                      for( int x=borderSize[1]; x<width; x+=cellSize ) {
 
                         for( int y=borderSize[0]; y<height; y+=cellSize ) {
                            fitsfile.widthCell = x + cellSize > width ? width - x : cellSize;
                            fitsfile.heightCell = y + cellSize > height ? height - y : cellSize;
+                           fitsfile.depthCell = fitsfile.depth = 1;
                            fitsfile.xCell=x;
                            fitsfile.yCell=y;
+                           fitsfile.zCell=0;
                            fitsfile.ext = ext;
                            String currentCell = fitsfile.getCellSuffix();
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
