@@ -23,6 +23,7 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.awt.image.ColorModel;
 
 import javax.swing.*;
@@ -79,6 +80,13 @@ public class FramePixelToolbox extends JFrame {
       setVisible(true);
    }
    
+   public void processWindowEvent(WindowEvent e) {
+      if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
+         aladin.framePixelTool=null;
+      }
+      super.processWindowEvent(e);
+   }
+
    // Création du tableau des différentes valeurs clés de pixel
    // => min/max encodable, min/max dans l'image, min/max du cut, et une valeur courante
    // avec leurs différentes représentations (physical, raw, indexCM, RGB, couleur)

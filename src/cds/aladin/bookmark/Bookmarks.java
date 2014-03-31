@@ -78,7 +78,7 @@ public class Bookmarks {
       init(true);
       
       // On réactive les bookmarks locaux
-      StringTokenizer tok = new StringTokenizer(list,",");
+      StringTokenizer tok = new StringTokenizer(list==null?"":list,",");
       while( tok.hasMoreTokens() ) {
          String name = tok.nextToken();
          Function f = aladin.getCommand().getFunction(name);

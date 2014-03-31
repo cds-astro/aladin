@@ -488,6 +488,9 @@ public class Aladin extends JApplet
 
    @Override
    public void stop() {
+      // Nettoyage de la pile
+      try { calque.FreeAll(); } catch( Exception e ) {}
+
       if( dialog!=null ) dialog.hide();
       if( frameCM!=null ) frameCM.hide();
       if( f!=null ) f.hide();
@@ -499,6 +502,15 @@ public class Aladin extends JApplet
       if( Aladin.PLASTIC_SUPPORT && messagingMgrCreated )	{
          getMessagingMgr().unregister(true);
       }
+      
+      if( isLogging() ) {
+         long t=System.currentTimeMillis();
+         while( isLogging() ) {
+            Util.pause(500);
+            if( System.currentTimeMillis()-t>30000 ) break; // Au-delà de 30s on quitte
+         }
+      }
+
 
       super.stop();
    }
@@ -2463,7 +2475,7 @@ public class Aladin extends JApplet
           configuration.setOfficialVersion(currentVersion);
           trace(1,"Reset cache & bookmarks definition (new official Aladin version)...");
           cache.clear();
-          bookmarks.reload();
+          if( bookmarks!=null ) bookmarks.reload();
        }
        
        // Doit-on nettoyer le cache et recharger les bookmarks officielles
@@ -2471,7 +2483,7 @@ public class Aladin extends JApplet
        else if( configuration.getVersion()==null || !configuration.getVersion().equals(VERSION) ) {
           trace(1,"Reset cache & bookmarks definition (new Aladin version)...");
           cache.clear();
-          bookmarks.reload();
+          if( bookmarks!=null ) bookmarks.reload();
        }
 
        // Doit-on nettoyer le cache car la dernière session date de plus de 15 jours
@@ -2503,6 +2515,9 @@ public class Aladin extends JApplet
 
    /** Indication d'un save, export ou backup en cours */
    protected boolean isSaving() { return !command.isSyncSave(); }
+   
+   /** Envoi d'un log en cours */
+   protected boolean isLogging() { return glu.isLogging(); }
 
    /** Transformation de la chaine du numero de version vx.xxx en valeur
     * numerique
@@ -3807,14 +3822,18 @@ public class Aladin extends JApplet
           trace(3,"Slave session => not true exit() ...");
           reset();		// Nécessaire pour ne pas avoir de ressurections intempestives
           command.stop();
-//          f.dispose();
           f.setVisible(false);        // Pour une sombre histoire de bug MAC
 
        } else {         // Sinon terminer l'application
 
-          if( isPrinting() || isSaving() ) trace(3,"Print or Save in progress => waiting...");
-          while( isPrinting() || isSaving() ) {
-             Util.pause(100);
+          if( isPrinting() || isSaving() || isLogging() ) {
+             if( isPrinting() || isSaving() ) trace(3,"Print or Save in progress => waiting...");
+             f.setVisible(false);
+             long t=System.currentTimeMillis();
+             while( isPrinting() || isSaving() || isLogging() ) {
+                Util.pause(500);
+                if( System.currentTimeMillis()-t>5*60000 ) break; // Au-delà de 5 minutes on quitte
+             }
           }
           trace(3,"See you !");
           System.exit(code);

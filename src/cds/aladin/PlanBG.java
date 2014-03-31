@@ -745,7 +745,7 @@ public class PlanBG extends PlanImage {
       if( nbCheckSite>=MAXCHECKSITE ) return false;
       if( gluTag==null || gluTag.startsWith("__")) return false;
       aladin.glu.checkIndirection(gluTag, "/properties" ); //"");
-      String url1 = ""+aladin.glu.getURL(gluTag);
+      String url1 = ""+aladin.glu.getURL(gluTag, "", false,true,1);
       if( url1.equals(url) ) return false;
       nbCheckSite++;
       if( withTrace ) {
@@ -1959,8 +1959,9 @@ public class PlanBG extends PlanImage {
          else {
             if( !useCache || !allsky.isCached() ) {
                tryWakeUp();
-               g.setColor(Color.white);
-               g.fillRect(0,0,v.getWidth(),v.getHeight());
+               drawBackground(g, v);
+//               g.setColor(Color.white);
+//               g.fillRect(0,0,v.getWidth(),v.getHeight());
                return true;
 
             } else allsky.loadFromCache();
@@ -2747,7 +2748,7 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
       statNbItems = nb/*+nb1*/;
-      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
+//      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
    }
    
    /** Ne marche que pour les cubes */

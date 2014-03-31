@@ -21,16 +21,11 @@
 package cds.aladin;
 
 import java.awt.Color;
-import java.awt.Composite;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
-import java.awt.geom.AffineTransform;
 
 import cds.tools.Util;
 
@@ -96,18 +91,6 @@ public class CropTool  {
       fullRes=false;
       resMult=1;
    }
-   
-   /** Déplacement du rectangle du crop notamment dans le cas d'un changement de projection
-    * d'un plan PlanBG */
-//   public void deltaCoord(ViewSimple v, double deltaRa, double deltaDec) {
-//      Coord c = new Coord();
-//      c.x=r.x; c.y=r.y;
-//      v.getProj().getCoord(c);
-//      c.al-=deltaRa;
-//      c.del-=deltaDec;
-//      v.getProj().getXY(c);
-//      r.x=c.x; r.y=c.y;
-//   }
    
    /** Déplacement du rectangle du crop notamment dans le cas d'un changement de projection
     * d'un plan PlanBG */

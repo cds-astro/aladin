@@ -5863,8 +5863,6 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       if( vs.isPlotView() ) vs.plot.drawPlotGrid(g,dx,dy);
       else if( calque.hasGrid() && !proj.isXYLinear() ) vs.drawGrid(g,clip,dx,dy);
 
-      if( dx==0 ) drawBlinkControl(g);      // Il ne s'agit pas d'une impression
-
       if( fullScreen ) g.setFont( Aladin.BOLD);
       else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
       else  g.setFont(Aladin.SSBOLD);
@@ -5913,6 +5911,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Tracé du rainbow
       if( hasRainbow() ) rainbow.draw(g,this,dx,dy);
       if( rainbowF!=null ) rainbowF.draw(g,this,dx,dy);
+      
+      if( dx==0 ) drawBlinkControl(g);      // Il ne s'agit pas d'une impression
 
       return flagDisplay;
    }

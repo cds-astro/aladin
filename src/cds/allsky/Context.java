@@ -67,7 +67,6 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
 
-   static final public String LOGFILE = "Skygen.log";
    static final public String METADATA = "metadata.xml";
    
    private static boolean verbose = false;
@@ -997,6 +996,10 @@ public class Context {
       }
       keyAddProp.addElement(key);
       valueAddProp.addElement(value);
+   }
+   
+   protected void writeIndexHtml() throws Exception {
+      
    }
    
    /** Création, ou mise à jour du fichier des Properties associées au survey */

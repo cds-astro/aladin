@@ -399,7 +399,7 @@ public class TreeNodeAllsky extends TreeNode {
    protected String getUrl() {
       try {
          if( id!=null && aladin.glu.aladinDic.get(id)!=null) {
-            return aladin.glu.getURL(id)+"";
+            return aladin.glu.getURL(id,"",false,false,1)+"";
          }
       } catch( Exception e ) {
          e.printStackTrace();

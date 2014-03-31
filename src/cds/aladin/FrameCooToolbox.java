@@ -23,6 +23,7 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 import javax.swing.*;
 
@@ -78,6 +79,13 @@ public class FrameCooToolbox extends JFrame {
       getContentPane().add( createPanelRight(), BorderLayout.EAST);
       pack();
       setVisible(true);
+   }
+   
+   public void processWindowEvent(WindowEvent e) {
+      if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
+         aladin.frameCooTool=null;
+      }
+      super.processWindowEvent(e);
    }
    
    // Création du panel des coordonnées dans les différents systèmes
@@ -306,7 +314,7 @@ public class FrameCooToolbox extends JFrame {
 
       pmra=pmdec=0;
       init=true;
-      resume();
+      resume(false);
    }
    
    /** Extrait les coordonnées à partir d'une saisie directe dans la liste

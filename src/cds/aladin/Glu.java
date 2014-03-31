@@ -1790,19 +1790,19 @@ public final class Glu implements Runnable {
 //   }
    
    
-   public static void main(String argv[]) {
-      try {
-         Aladin.STANDALONE=true;
-         Aladin.levelTrace=4;
-         Aladin.GLUFILE = "C:/AladinUK.dic";
-         Glu glu = new Glu(null);
-         System.out.println("Glu loaded");
-         boolean res = glu.checkIndirection("VizieRXML++", null);
-         System.out.println("=> "+glu.getURL("VizieRXML++"));
-      } catch( Exception e ) {
-         e.printStackTrace();
-      }
-   }
+//   public static void main(String argv[]) {
+//      try {
+//         Aladin.STANDALONE=true;
+//         Aladin.levelTrace=4;
+//         Aladin.GLUFILE = "C:/AladinUK.dic";
+//         Glu glu = new Glu(null);
+//         System.out.println("Glu loaded");
+//         boolean res = glu.checkIndirection("VizieRXML++", null);
+//         System.out.println("=> "+glu.getURL("VizieRXML++"));
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
    /**
     * Substitution dans un String des $nn par des parametres.
@@ -2092,7 +2092,7 @@ public final class Glu implements Runnable {
       // Mémorisation du nouvel ordre
       aladinDic.put(lastId,seeActions+"");
 
-      Aladin.trace(4,"Glu.CheckIndirections("+lastId+") => %I "+tags[indiceOfTheBest]+" => "+getURL(lastId));
+      Aladin.trace(4,"Glu.CheckIndirections("+lastId+") => %I "+tags[indiceOfTheBest]+" => "+getURL(lastId,"",false,false,1));
 
    }
    
@@ -2216,7 +2216,9 @@ public final class Glu implements Runnable {
       if( !chut ) Aladin.trace(4, "Glu.getURL(" + id + (params==null || params.length()==0 ? "": " params=" + params)
                                     + " encode=" + encode + " withLog=" + withLog + " indexIndirection=" + indexIndirection + ")");
       // log
-      if( withLog && indexIndirection>1) log(id, params);
+      if( withLog ) {
+         log(id, params);
+      }
 
       // Si les parametres sont deja httpencodes, j'ajoute l'option
       // n au tag GLU histoire de ne pas le faire deux fois
@@ -2293,12 +2295,13 @@ public final class Glu implements Runnable {
     * @return null ou eventuellement le retour du log si Id=="Start"
     */
    protected void log(String id, String params) {
-
+      
       if( !Aladin.NETWORK || !Aladin.LOG || !aladin.configuration.isLog() ) return;
       
       // les trucs inutiles ou un peu trop indiscrets
       if( id.equals("VizX") ) return;
-      if( id.equals("Load") || id.equals("Http") ) params="";
+      if( id.equals("Load") /* || id.equals("Http") */ ) params="";
+      if( id.equals("Http") && params!=null && params.indexOf("u-strasbg.fr")<0 ) params="";
       
       try {
          waitLock(); // verrouillage
@@ -2324,6 +2327,7 @@ public final class Glu implements Runnable {
       unlock(); // liberation du verrou
       
       try {
+         
 
          // Construction de l'URL par defaut
          if( Aladin.APPLETSERVER == null && Aladin.RHOST == null ) {
@@ -2339,6 +2343,7 @@ public final class Glu implements Runnable {
 
          InputStream is = null;
          try {
+            logIncr();
             is = url.openStream();
 
             // Lecture du numero de la derniere version disponible
@@ -2347,11 +2352,30 @@ public final class Glu implements Runnable {
                DataInputStream dis = new DataInputStream(is);
                aladin.setCurrentVersion(dis.readLine());
             }
+            is.close();
+            is=null;
 
-         } finally { if( is!=null ) is.close(); }
-      } catch( Exception elog ) {
+         } finally {
+            if( is!=null ) is.close();
+            logDecr();
+         }
+      } catch( Exception elog ) { 
+         if( Aladin.levelTrace>=3 ) elog.printStackTrace();
       }
    }
+   
+   private int logCpt=0;
+   private Object lockLog = new Object();
+   
+   /** Retourne true si on est en train d'envoyer un log */
+   protected boolean isLogging() { 
+      synchronized(lockLog) { 
+         return logCpt>0; 
+      } 
+   }
+   
+   private void logIncr() { synchronized(lockLog) { logCpt++; } }
+   private void logDecr() { synchronized(lockLog) { logCpt--; } }
    
    /** Classe pour mémoriser un test GLU - supporte les deux syntaxes parfile */
    class GluTest {
