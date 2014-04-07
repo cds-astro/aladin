@@ -32,6 +32,7 @@ public final class ViewMemoItem {
    protected Plan pref;
    protected int delay;
    protected int lastFrame;
+   protected long startTime;
    protected int nbFrame;
    protected int modeBlink;
    protected int ordreTaquin;
@@ -60,6 +61,7 @@ public final class ViewMemoItem {
       vmi.pref = pref;
       vmi.delay = delay;
       vmi.lastFrame = lastFrame;
+      vmi.startTime = startTime;
       vmi.nbFrame = nbFrame;
       vmi.modeBlink = modeBlink;
       vmi.ordreTaquin = ordreTaquin;
@@ -103,16 +105,12 @@ public final class ViewMemoItem {
       if( v.isPlotView() ) plot = v.plot.copyIn(v);
       else plot=null;   
       
-      // POUR LE MOMENT CE N'EST PAS UTILISE (PF FEV 2009)
-      if( v.projLocal!=null ) {
-//         alphai = v.projLocal.alphai;
-//         deltai = v.projLocal.deltai;
-         projLocal = v.projLocal.copy();
-      }
+      if( v.projLocal!=null ) projLocal = v.projLocal.copy();
       
-      if( v.pref instanceof PlanImageBlink && v.cubeControl!=null) {
+      if( v.pref!=null && v.pref.isCube() &&  v.cubeControl!=null) {
          delay = v.cubeControl.delay;
          lastFrame = v.cubeControl.lastFrame;
+         startTime = v.cubeControl.startTime;
          nbFrame = v.cubeControl.nbFrame;
          modeBlink = v.cubeControl.mode;
       }
@@ -137,12 +135,14 @@ public final class ViewMemoItem {
 //         v.projLocal.setProjCenter(alphai, deltai);
          v.projLocal = projLocal==null ? null : projLocal.copy();
       }
-      if( pref instanceof PlanImageBlink ) {
-         if( v.cubeControl==null ) v.cubeControl = new CubeControl(pref.aladin,
-                                         (PlanImageBlink)pref,delay,
+      if( pref!=null && pref.isCube() ) {
+         if( v.cubeControl==null ) v.cubeControl = new CubeControl(v,
+                                         pref,delay,
                                          modeBlink==CubeControl.PAUSE);
          else v.cubeControl.delay = delay;
+         
          v.cubeControl.lastFrame = lastFrame;
+         v.cubeControl.startTime = startTime;
          v.cubeControl.nbFrame = nbFrame;
          v.cubeControl.mode = modeBlink;
          v.cubeControl.resume();

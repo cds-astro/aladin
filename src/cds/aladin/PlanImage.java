@@ -263,7 +263,7 @@ public class PlanImage extends Plan {
           if( file!=null ) {
               // patch Thomas 30/05/06 (sous Windows, on ne pouvait pas charger de FITS extensions à partir d'une URL distante)
               // TODO : à montrer à Pierre
-              if( file.startsWith("http") ) u = new URL(file);
+              if( file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) u = new URL(file);
               else {
                  filename = (new File(file)).getCanonicalPath();
                  u = new URL("file:"+(new File(file)).getCanonicalPath());

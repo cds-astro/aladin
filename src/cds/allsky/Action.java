@@ -40,6 +40,7 @@ public enum Action {
    CLEANPNG  ("Delete all PNG tiles and Allsky.png"),
    TREE      ("(Re)build HiPS tree structure from already existing tiles"),
    CONCAT    ("Concatenate one HiPS to another HiPS"),
+   CUBE      ("Create a HiPS cube based on a list of HiPS"),
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
    CHECK     ("** In progress: Check readability of all tiles"),

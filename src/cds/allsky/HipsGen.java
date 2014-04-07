@@ -128,6 +128,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
       } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
+      } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
       } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
       
       } else if (opt.equalsIgnoreCase("debug")) {
@@ -313,6 +314,7 @@ public class HipsGen {
                else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.JPEG )    { actions.add(i, Action.CLEANJPEG);    i++; }
                else if( a==Action.PNG )     { actions.add(i, Action.CLEANPNG);     i++; }
+               else if( a==Action.CUBE )    { actions.add(i, Action.CLEAN);        i++; }
             }
          }
       }
@@ -381,6 +383,7 @@ public class HipsGen {
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
             "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
+            "label=name         Label of the survey (by default, input directory name)" + "\n"+
             "verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"
 //            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
 //            "red        all-sky used for RED component (see rgb action)\n" +

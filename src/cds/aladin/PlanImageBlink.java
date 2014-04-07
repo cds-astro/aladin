@@ -84,7 +84,7 @@ public class PlanImageBlink extends PlanImage {
    }
    
    /** Gestion de la pause pour le défilement d'un cube */
-   protected void setPause(boolean flag) { flagPause = flag; }
+   protected void setPause(boolean flag,ViewSimple v) { flagPause = flag; }
    protected boolean isPause() { return flagPause; }
    
    /** Positionne le Frame courant (s'il s'agit d'un cube) */
@@ -804,8 +804,8 @@ public class PlanImageBlink extends PlanImage {
    }
    
    /** Retourne le Pixel x,y de la frame n ATTENTION, SANS DOUTE LENT */
-   protected byte getPixel8bit(int n,int x,int y) {
-      return vFrames.elementAt(n).pixels[y*width+x];
+   protected byte getPixel8bit(int z,double x,double y) {
+      return vFrames.elementAt(z).pixels[(int)y*width+(int)x];
    }
    
    // POur ne pas recharger tous le temps les pixels courants lorsque l'on déplace

@@ -63,6 +63,7 @@ public abstract class Builder {
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
          case CONCAT:    return new BuilderConcat(context);
+         case CUBE:      return new BuilderCube(context);
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);
       }
@@ -146,10 +147,16 @@ public abstract class Builder {
          catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
       }
       
-      if( !context.depthInit ) {
-      
       // Tentative de récupération de la profondeur par le fichier des properties
-      // A FAIRE
+      if( !context.depthInit ) {
+         try {
+            context.loadProperties();
+            String s = (String)context.prop.get(PlanHealpix.KEY_CUBEDEPTH);
+            if( s!=null ) {
+               int depth = Integer.parseInt(s);
+               if( depth>1 ) context.setDepth( depth );
+            }
+         } catch( Exception e ) { context.warning("Propertie file problem => "+e.getMessage()); }
       }
       
       if( context.depthInit && context.depth>1 ) context.info("Working on HiPS cube => depth="+context.depth);
@@ -174,7 +181,7 @@ public abstract class Builder {
          try {
             setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
          } catch( Exception e ) {
-            
+
             String img = context.getImgEtalon();
             if( img==null && context.getInputPath()!=null) {
                img = context.justFindImgEtalon( context.getInputPath() );
@@ -185,7 +192,7 @@ public abstract class Builder {
                catch( Exception e1) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
             }
          }
-         
+
          try {
             if( cut==null ) cut = new double[5];
             for( int i=0; i<4; i++ ) {
@@ -225,7 +232,7 @@ public abstract class Builder {
          double [] imgCut = context.getCut();
          if( cut==null ) cut = new double[5];
          if( missingCut )   {
-            cut[0]=imgCut[0];
+            cut[0]= imgCut[0];
             cut[1]= imgCut[1]; 
             context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
          }
@@ -234,7 +241,7 @@ public abstract class Builder {
       // S'il me manque toujours le pixelCut, je vais tenter de les récupérer par le fichier des properties
       missingCut   = cut==null || cut[0]==0 && cut[1]==0;
       if( missingCut ) {
-         // A FAIRE
+          // TODO
       }
       
       context.setCut(cut);

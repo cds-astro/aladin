@@ -124,10 +124,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected HealpixKey() { }
    
    // Mode de récupération d'un true pixel (voir getTruePixel(...)
-   static final public int NOW = 0;                 // Retourne la valeur du pixel quitte à attendre le chargement des données
-   static final public int ONLYIFRAMAVAIL = 1;         // Retourne la valeur du pixel si les données sont disponibles en mémoire
+   static final public int NOW = 0;                // Retourne la valeur du pixel quitte à attendre le chargement des données
+   static final public int ONLYIFRAMAVAIL = 1;     // Retourne la valeur du pixel si les données sont disponibles en mémoire
    static final public int ONLYIFDISKAVAIL = 2;    // Retourne la valeur du pixel quitte à attendre le chargement des données si elles sont locales (cache, ou locales)
-   
+   static final public int PIX8 = 3;               // Retourne la valeur du pixel 8 bits si présent en mémoire
+  
    // Type de tuiles
    static protected final int JPEG=0;
    static protected final int FITS=1;
@@ -159,14 +160,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @param planBG Plan d'appartenance
     * @param order  order heapix (nside = 2^order)
     * @param npix   numéro healpix du pixel à l'ordre indiqué
+    * @param z      profondeur (dans le cas d'un cube, 0 sinon)
     * @param mode : NOLOAD - pas de chargement, ASYNC - chargement asynchrone, SYNC - chargement synchrone, 
     *               SYNCONLYIFLOCAL - chargement synchrone si accès local, sinon asynchrone
     */
    protected HealpixKey(PlanBG planBG,int order, long npix,int mode) {
+      this(planBG,order,npix,(int)planBG.getZ(),mode);
+   }
+   protected HealpixKey(PlanBG planBG,int order, long npix,int z,int mode) {
       this.planBG = planBG;
       this.order=order;
       this.npix=npix;
-      z=(int)planBG.getZ();
+      this.z=z;
       hpix = new Hpix(order,npix,planBG.frameOrigin);
 //      corners = computeCorners();
       
@@ -597,10 +602,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected void abort() {
 //      System.out.println("*** ABORTING "+this);
       if( npix==-1 ) {
-         if( Aladin.levelTrace>=3 ) {
-            Aladin.trace(4,"Tentative d'ABORT sur un allsky");
-            try { throw new Exception(); } catch( Exception e ) { e.printStackTrace(); }
-         }
+//         if( Aladin.levelTrace>=3 ) {
+//            Aladin.trace(4,"Tentative d'ABORT sur un allsky");
+//            try { throw new Exception(); } catch( Exception e ) { e.printStackTrace(); }
+//         }
          return;        // on n'aborte pas les allsky
       }
       planBG.nbAborted++;
@@ -801,7 +806,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       
       if( this instanceof HealpixAllsky ) {
-         planBG.creatDefaultCM();
+         if( planBG.cm==null ) planBG.creatDefaultCM();
          planBG.colorPNG = typeColor==PNG;
       }
       
@@ -838,6 +843,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
    
    /** Retourne la valeur du pixel à l'emplacement idx (idx = y*width + x) */
    protected double getPixel(int idx,int mode) {
+      if( mode==PIX8 ) {
+         int x = idx%width;
+         int y = width - idx/width -1;
+         return pixels[ y*width+x ];
+      }
+      
       if( !loadPixelsOrigin(mode) ) return Double.NaN;
       resetTimer();
       double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
@@ -845,6 +856,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( planBG.isBlank(pix) ) pix = Double.NaN;
       return pix;
    }
+   
       
    /** Retourne true si dans l'entête on trouve "COLORMOD  ARGB" */
    protected boolean isARGB(byte[] head){

@@ -2748,10 +2748,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( mode==STR || !numeric || s.length()==0 ) {
          boolean match;
          if( s.length()==0 ) return colVal.trim().length()==0 ? mode!=DIFF : mode==DIFF; // RQ !=DIFF => EGAL|STR
-         else match = Util.matchMaskIgnoreCase(s,colVal);
-         return mode==EGAL || mode==STR ? match
-              : mode==DIFF ? !match
-              : false;
+         else {
+            if( s.indexOf('*')<0 && s.indexOf('?')<0 ) match = colVal.indexOf(s)>=0;
+            else match = Util.matchMaskIgnoreCase(s,colVal);
+         }
+         return mode==EGAL || mode==STR ? match : mode==DIFF ? !match : false;
       }
       try {
          double v = Double.parseDouble(colVal);

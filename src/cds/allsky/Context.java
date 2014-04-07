@@ -191,6 +191,7 @@ public class Context {
 
    // Setters
    public void setPublisher(String s) { publisher=s; }
+   public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
    public void setFading(String s) { fading = s.equalsIgnoreCase("false") ? false : true; }
@@ -238,9 +239,15 @@ public class Context {
       return hdu;
    }
 
-   public void setInputPath(String path) { this.inputPath = path; 
+   public void setInputPath(String path) {
+      
+      this.inputPath = path; 
    		// cherche le dernier mot et le met dans le label
-   		label = path==null ? null : path.substring(path.lastIndexOf(Util.FS) + 1);
+   	  if( label==null ) {
+   	     int offset = path.lastIndexOf(Util.FS);
+   	     if( offset==-1 ) offset = path.lastIndexOf('/');
+   	     label = path==null ? null : path.substring(offset + 1);
+   	  }
    }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
@@ -745,7 +752,7 @@ public class Context {
    protected long getDiskMem() {
       long nbLowCells = getNbLowCells();
       if( nbLowCells==-1 || bitpix==0 ) return -1;
-      long mem = nbLowCells * 512L*512L* (Math.abs(bitpix)/8);
+      long mem = depth * nbLowCells * 512L*512L* (Math.abs(bitpix)/8);
       
       return mem;
    }
@@ -998,8 +1005,120 @@ public class Context {
       valueAddProp.addElement(value);
    }
    
+   private String INDEX = 
+
+         "<HTML>\n" +
+         "<HEAD>\n" +
+         "   <script type=\"text/javascript\" src=\"http://code.jquery.com/jquery-1.10.1.min.js\"></script>\n" +
+         "   <link rel=\"stylesheet\" href=\"http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css\" >\n" +
+         "   <script type=\"text/javascript\">var jqMenu = jQuery.noConflict();</script>\n" +
+         "   <script type=\"text/javascript\">\n" +
+         "var hipsDir=null;</script>\n" +
+         "</HEAD>\n" +
+
+         "<H1>\"$LABEL\" progressive survey</H1>\n" +
+         "This Web resource contains HiPS(*) components for <B>$LABEL</B> progressive survey.\n" +
+         "<script type=\"text/javascript\">\n" +
+         "hipsDir = location.href;\n" +
+         "hipsDir = hipsDir.substring(0,hipsDir.lastIndexOf(\"/\",hipsDir.length));\n" +
+         "document.getElementById(\"hipsBase\").innerHTML=hipsDir;\n" +
+         "</script>\n" +
+         "<TABLE>\n" +
+         "<TR>\n" +
+         "<TD>\n" +
+         "   <script type=\"text/javascript\" src=\"http://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js\" charset=\"utf-8\"></script>\n" +
+         "<div id=\"aladin-lite-div\" style=\"width:350px;height:350px;\"></div>\n" +
+         "<script type=\"text/javascript\">\n" +
+         "//var hipsDir = location.href;\n" +
+         "//hipsDir = hipsDir.substring(0,hipsDir.lastIndexOf(\"/\",hipsDir.length));\n" +
+         "var aladin = $.aladin(\"#aladin-lite-div\");\n" +
+         "aladin.setImageSurvey(aladin.createImageSurvey('$LABEL', '$LABEL',\n" +
+         "hipsDir, '$SYS', $ORDER));\n" +
+
+         "</script>    \n" +
+
+         "</TD>\n" +
+         "<TD>\n" +
+         "<UL>\n" +
+         "$INFO" +
+         "   <LI> <B>Raw property file:</B> <A HREF=\"properties\">properties</A>\n" +
+         "   <LI> <B>Base URL:<p id=\"hipsBase\"></p></B> \n" +
+         "</UL>\n" +
+         "</TD>\n" +
+         "</TR>\n" +
+         "</TABLE>\n" +
+
+         "This survey can be displayed by <A HREF=\"http://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
+         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=download\">Aladin</A> regular client\n" +
+         "(use directly the base URL)<BR>or any other HiPS aware clients .\n" +
+         "<HR>\n" +
+         "<I>(*) The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
+         "HiPS is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...)." +
+         "HiPS technical documentation is available <A HREF=\"http://aladin.u-strasbg.fr/HiPS/HiPS%20technical%20doc.pdf\">here<A></I>\n" +
+         "<script type=\"text/javascript\">\n" +
+         "document.getElementById(\"hipsBase\").innerHTML=hipsDir;\n" +
+         "</script>\n" +
+
+         "</HTML>\n" +
+""; 
+   
+   /** Génère un fichier index.html afin de pouvoir afficher qq chose si l'utilisateur charge
+    * directement dans son navigateur le répertoire de base du HiPS généré
+    */
    protected void writeIndexHtml() throws Exception {
+      String label = getLabel();
+      if( label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
       
+      int order = getOrder();
+      if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
+      
+      if( moc==null ) try { loadMoc(); } catch( Exception e ) { }
+      if( prop==null ) loadProperties();
+      String frame = prop.getProperty(PlanHealpix.KEY_COORDSYS);
+      String sys = frame.equals("C") ? "equatorial" : frame.equals("E") ? "ecliptic" : "galactic";
+      
+      long nside = CDSHealpix.pow2(order);
+      double resol = CDSHealpix.pixRes(nside)/3600;
+      
+      int width = Constante.SIDE;
+
+      String res = INDEX.replace("$LABEL",label);
+      StringBuilder info = new StringBuilder();
+      info.append("   <LI> <B>Label:</B> "+label+"\n");
+      info.append("   <LI> <B>Type:</B>"+(depth>1?"HiPS cube ("+depth+" frames)" : isColor() ? "colored HiPS image" : "HiPS image")+"\n");
+      info.append("   <LI> <B>Best pixel angular resolution:</B> "+Coord.getUnit( resol )+"\n");
+      info.append("   <LI> <B>Max tile order:</B> "+order+" (NSIDE="+nside+")\n");
+      info.append("   <LI> <B>Available encoding tiles:</B> "+getAvailableTileFormats()+"\n");
+      info.append("   <LI> <B>Tile size:</B> "+width+"x"+width+"\n");
+      if( bitpix!=0 ) info.append("   <LI> <B>FITS tile BITPIX:</B> "+bitpix+"\n");
+      info.append("   <LI> <B>Processing date:</B> "+getNow()+"\n");
+      info.append("   <LI> <B>HiPS builder:</B> "+"Aladin/HipsGen "+Aladin.VERSION+"\n");
+      info.append("   <LI> <B>Coordinate frame:</B> " +sys+"\n");
+      if( moc!=null ) {
+         double cov = moc.getCoverage();
+         double degrad = Math.toDegrees(1.0);
+         double skyArea = 4.*Math.PI*degrad*degrad;
+         info.append("   <LI> <B>Sky area:</B> "+Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2\n");
+         info.append("   <LI> <B>Associated coverage map:</B> <A HREF=\""+BuilderMoc.MOCNAME+"\">MOC</A>\n");
+      }
+      
+      String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),METADATA);
+      if( (new File(metadata)).exists() ) {
+         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/Metadata.xml\">Metadata.xml</A>\n");
+      }
+
+      res = res.replace("$INFO",info);
+      res = res.replace("$ORDER",getOrder()+"");
+      res = res.replace("$SYS",sys);
+      
+      String tmp = getOutputPath()+Util.FS+"index.html";
+      File ftmp = new File(tmp);
+      if( ftmp.exists() ) ftmp.delete();
+      FileOutputStream out = null;
+      try { 
+         out = new FileOutputStream(ftmp);
+         out.write(res.getBytes());
+      } finally {  if( out!=null ) out.close(); }
    }
    
    /** Création, ou mise à jour du fichier des Properties associées au survey */
@@ -1065,6 +1184,9 @@ public class Context {
          }
          updateProperties(k,v,true);
       }
+      
+      // On en profite pour écrire le fichier index.html
+      writeIndexHtml();
    }
    
    // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)

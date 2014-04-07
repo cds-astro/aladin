@@ -778,16 +778,15 @@ public class Repere extends Position {
    protected boolean cutOn() {
       ViewSimple v=plan.aladin.view.getCurrentView();
       if( v==null || plan.aladin.toolBox.getTool()==ToolBox.PAN ) return false;
-      Plan p=v.pref;
-      if( p==null || !(p instanceof PlanImageBlink) ) return false;
-      PlanImageBlink pc = (PlanImageBlink)p;
+      Plan pc=v.pref;
+      if( !pc.isCube() ) return false;
 
-      int x=(int)xv[v.n];
-      int y=(int)yv[v.n];
+      double x= xv[v.n];
+      double y= yv[v.n];
       int n=pc.getDepth();
       int res[] = new int[n];
       try {
-         for( int i=0; i<n; i++ ) res[i] = (pc.getPixel8bit(i,x,y)) & 0xFF;
+         for( int z=0; z<n; z++ ) res[z] = (pc.getPixel8bit(z,x,y)) & 0xFF;
       } catch( Exception e ) {}
 
       plan.aladin.calque.zoom.zoomView.setCut(this,res,ZoomView.CUTNORMAL);

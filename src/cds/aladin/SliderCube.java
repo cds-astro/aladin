@@ -39,10 +39,16 @@ public class SliderCube extends SliderPlusMoins {
       if( p==null ) return;
       double frame = getValue()+inc;
 //      System.out.println("submit inc="+inc+" frame="+frame);
-      ViewSimple vs = aladin.view.getView(p);
-      p.changeImgID();      
-      if( vs!=null /* && p instanceof PlanImageBlink */ ) aladin.view.setCubeFrame(vs, frame, true);
-      else p.setCubeFrame((int)frame);
+      p.changeImgID();     
+      
+//      ViewSimple vs = aladin.view.getView(p);
+//      if( vs!=null ) aladin.view.setCubeFrame(vs, frame, true);
+//      else p.setCubeFrame((int)frame);
+      
+      int vn[] = aladin.view.getNumView(p);
+      for( int i=0; i<vn.length; i++ ) {
+         aladin.view.setCubeFrame(aladin.view.viewSimple[ vn[i] ], frame, true);
+      }
       aladin.view.repaintAll();
    }
    

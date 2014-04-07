@@ -155,6 +155,7 @@ public class PlanMocGen extends PlanMoc {
       
       // Détermination de l'ordre pixel (order) et tuiles (fileOrder)
       int order = p.getLosangeOrder();
+      int z = (int)p.getZ();
       
       int divOrder=0;
       int fileOrder = res - order;
@@ -194,7 +195,7 @@ public class PlanMocGen extends PlanMoc {
       for( int npixFile=0; npixFile<n; npixFile++ ) {
          System.out.println("Traitement de "+npixFile);
          pourcent += incrPourcent;
-         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,HealpixKey.SYNC);
+         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
          if( h==null ) continue;
          
          long min = nsize * nsize * npixFile;

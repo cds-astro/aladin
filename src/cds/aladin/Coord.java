@@ -58,7 +58,7 @@ public final class Coord {
   /** Creation */
    public Coord() {}
    public Coord(double ra,double dej) { al=ra; del=dej; coo.set(al,del); }
-
+   
   /** Creation et affection al,del en fonction d'une chaine sexagesimale
    * ou degre */
    public Coord(String sexa) throws Exception {

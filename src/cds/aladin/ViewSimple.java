@@ -517,9 +517,7 @@ public class ViewSimple extends JComponent
       v.projLocal=projLocal==null ? null : projLocal.copy();
       v.plot = isPlotView() ? plot.copyIn(v) : null;
       
-      if( pref instanceof PlanImageBlink ) {
-         v.cubeControl = cubeControl.copy();
-      }
+      if( pref.isCube() ) v.cubeControl = cubeControl.copy();
       v.setZoomXY(zoom,xzoomView,yzoomView);
    }
 
@@ -1265,7 +1263,7 @@ public class ViewSimple extends JComponent
       
       // Création du controleur de blink s'il s'agit d'un cube
       if( pref.isCube() ) {
-         cubeControl = new CubeControl(aladin,pref,pref.getInitDelay(),pref.isPause());
+         cubeControl = new CubeControl(this,pref,pref.getInitDelay(),pref.isPause());
          cubeControl.setFrameLevel(pref.getZ(),false);
          cubeControl.resume();
       }

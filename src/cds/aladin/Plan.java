@@ -373,8 +373,11 @@ public class Plan implements Runnable {
    /** Positionne le Frame initial (s'il s'agit d'un cube) */
    protected void setZ(double initFrame) { }
    
+   /** Prévu pour les cubes */
+   protected byte getPixel8bit(int z,double x,double y) { return 0; }
+   
    /** gestion de la pause pour le défilement d'un cube */
-   protected void setPause(boolean t) { }
+   protected void setPause(boolean t,ViewSimple v) { }
    protected boolean isPause() { return true; }
    
    protected int getInitDelay() { return 400; }

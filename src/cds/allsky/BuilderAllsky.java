@@ -56,6 +56,17 @@ final public class BuilderAllsky  extends Builder {
       context.writePropertiesFile();
    }
    
+   
+   public void runJpegOrPngOnly(String format) throws Exception { 
+    validateDepth();
+    validateCut();
+    for( int z=0; z<context.depth; z++ ) {
+       createAllSkyColor(context.getOutputPath(),3,format,64, z);
+    }
+    context.writePropertiesFile();
+ }
+ 
+
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée
     * @param order order Healpix

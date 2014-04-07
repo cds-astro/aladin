@@ -37,10 +37,16 @@ class HealpixAllsky extends HealpixKey {
    private int order;
 
    protected HealpixAllsky(PlanBG planBG,int order) {
+      this(planBG,order,(int)planBG.getZ());
+   }
+   protected HealpixAllsky(PlanBG planBG,int order,int z) {
+      this(planBG,order,z,ASYNC);
+   }
+   protected HealpixAllsky(PlanBG planBG,int order,int z,int mode) {
       this.planBG = planBG;
       this.order=order;
       this.npix=-1;
-      z=(int)planBG.getZ();
+      this.z=z;
       allSky=true;
       resetTimer();
       String sZ = z<=0 ? "" : "_"+z;
@@ -59,6 +65,15 @@ class HealpixAllsky extends HealpixKey {
       pixList= null;
 //System.out.println("Création d'un Allsky pour "+nbPix+" losanges");      
       setStatus(ASKING);
+      
+      // Chargement immédiat des données
+      try {
+         if(  mode==SYNC ||
+             (mode==SYNCONLYIFLOCAL && (planBG.useCache && isCached() || planBG.isLocalAllSky())) ) loadNow();
+      } catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
+
    }
    
    HealpixKey createOneKey(int npix,int width,byte [] pix) {

@@ -49,7 +49,10 @@ public class BuilderGzip extends Builder {
    
    public Action getAction() { return Action.GZIP; }
 
-   public void validateContext() throws Exception { validateOutput(); }
+   public void validateContext() throws Exception {
+      validateOutput();
+      validateDepth();
+   }
    
    /** Gzippe toutes les tuiles FITS ainsi que le fichier Allsky.fits qui se trouve
     * dans le répertoire Allsky repéré par root.
@@ -83,23 +86,25 @@ public class BuilderGzip extends Builder {
          try { order = Integer.parseInt(name.substring(6)); }
          catch( Exception e ) { continue; }
          
-         // traitement particulier pour le fichier Allsky.fits qui se trouve dans le Norder3
-         if( order==3 ) {
-            String allsky = path+FS+"Norder3"+FS+"Allsky.fits";
-            if( (new File(allsky)).isFile() ) { gzip(allsky,compress); nbFile++; }
-         }
-         
-         // On ne compresse pas les tuiles au-delà de l'ordre 5
-         // Ni celles du dernier niveau
-         if( compress && (order>Constante.GZIPMAXORDER || order==maxOrder) ) continue;
-         
-         // Traitement de toutes les tuiles du niveau
-         long maxNpix = Healpix.pow2(order);
-         maxNpix = 12*maxNpix*maxNpix;
-         for( long npix=0; npix<maxNpix; npix++ ) {
-            String filename = Util.getFilePath(path, order, npix)+".fits";
-            if( (new File(filename)).isFile() ) {
-               gzip(filename,compress);
+         for( int z=0; z<context.depth; z++ ) {
+            // traitement particulier pour le fichier Allsky.fits qui se trouve dans le Norder3
+            if( order==3 ) {
+               String allsky = path+FS+"Norder3"+FS+"Allsky"+(z==0?"":"_"+z)+".fits";
+               if( (new File(allsky)).isFile() ) { gzip(allsky,compress); nbFile++; }
+            }
+
+            // On ne compresse pas les tuiles au-delà de l'ordre 5
+            // Ni celles du dernier niveau
+            if( compress && (order>Constante.GZIPMAXORDER || order==maxOrder) ) continue;
+
+            // Traitement de toutes les tuiles du niveau
+            long maxNpix = Healpix.pow2(order);
+            maxNpix = 12*maxNpix*maxNpix;
+            for( long npix=0; npix<maxNpix; npix++ ) {
+               String filename = Util.getFilePath(path, order, npix,z)+".fits";
+               if( (new File(filename)).isFile() ) {
+                  gzip(filename,compress);
+               }
             }
          }
       }

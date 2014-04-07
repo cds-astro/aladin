@@ -1096,6 +1096,8 @@ public class PlanBG extends PlanImage {
 
    /** Construction d'une clé pour les Hasptable */
    protected String key(int order, long npix) { return order+"."+npix; }
+   
+   protected String key(int order, long npix,int z) { return order+"."+npix+(z<=0?"":"_"+z); }
 
    /** Demande de chargement du losange repéré par order,npix */
    public HealpixKey askForHealpix(int order,long npix) {
@@ -1168,11 +1170,11 @@ public class PlanBG extends PlanImage {
     * @param mode HealpixKey.SYNC,SYNCONLYIFLOCAL,HealpixKey.ASYNC
     * @return null si le HealpixKey n'est pas READY
     */
-   protected HealpixKey getHealpixLowLevel(int order,long npix,int mode) {
-      HealpixKey h = pixList.get( key(order,npix) );
+   protected HealpixKey getHealpixLowLevel(int order,long npix,int z,int mode) {
+      HealpixKey h = pixList.get( key(order,npix,z) );
       if( h==null) {
-         h = new HealpixKey(this,order,npix,mode);
-         pixList.put( key(order,npix), h);
+         h = new HealpixKey(this,order,npix,z,mode);
+         pixList.put( key(order,npix,z), h);
       }
       if( h.getStatus()!=HealpixKey.READY ) return null;
       return h;
@@ -1405,7 +1407,9 @@ public class PlanBG extends PlanImage {
       return true;
    }
    
-   protected double getOnePixelFromCache(Projection projd, double x,double y) { return getOnePixelFromCache(projd,x,y,-1,HealpixKey.ONLYIFDISKAVAIL); }
+   protected double getOnePixelFromCache(Projection projd, double x,double y) { 
+      return getOnePixelFromCache(projd,x,y,-1,HealpixKey.ONLYIFDISKAVAIL); 
+   }
    
    /**
     * @param order l'ordre Healpix pour lequel le pixel sera récupéré, -1 si ordre courant de l'affichage
@@ -1413,6 +1417,9 @@ public class PlanBG extends PlanImage {
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
    protected double getOnePixelFromCache(Projection projd, double x,double y,int order,int mode) {
+      return getOnePixelFromCache(projd, x, y,order,(int)getZ(),mode);
+   }
+   protected double getOnePixelFromCache(Projection projd, double x,double y,int order,int z,int mode) {
       double pixel = Double.NaN;
       if( order<=0 ) order = getOrder();   // L'ordre n'est pas mentionné, on prend l'ordre de l'affichage courant
       int nSideFile = (int)CDSHealpix.pow2(order);
@@ -1426,7 +1433,7 @@ public class PlanBG extends PlanImage {
          double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
          long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
          
-         pixel = getHealpixPixel(order,npixFile,polar[0], polar[1],mode);
+         pixel = getHealpixPixel(order,npixFile,polar[0], polar[1], z,mode);
          
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
@@ -1440,9 +1447,11 @@ public class PlanBG extends PlanImage {
     * @param HealpixKey.NOW - les données seront chargées immédiatement où qu'elles soient, sinon asynchrone
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
-   protected double getHealpixPixel(int orderFile,long npixFile,double theta, double phi,int mode) {
-      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
-      if( h==null ) return Double.NaN;
+   protected double getHealpixPixel(int orderFile,long npixFile,double theta, double phi,int z,int mode) {
+      HealpixKey h = mode==HealpixKey.PIX8 ? pixList.get( key(orderFile,npixFile,z) ) :
+         getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
+//      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,z,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
+      if( h==null || h.getStatus()!=HealpixKey.READY ) return Double.NaN;
       long nside = (long)h.width * CDSHealpix.pow2(h.order);
       try {
          long healpixIdxPixel = CDSHealpix.ang2pix_nest(nside, theta, phi);
@@ -1458,7 +1467,7 @@ public class PlanBG extends PlanImage {
     *             HealpixKey.ONLYIFDISKAVAIL - les données seront chargées immédiatement si elles sont présentes sur le disque locale, sinon asynchrone
     */
    protected double getHealpixPixel(int orderFile,long npixFile,long healpixIdxPixel,int mode) {
-      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
+      HealpixKey h = getHealpixLowLevel(orderFile,npixFile,(int)getZ(),mode==HealpixKey.NOW ? HealpixKey.SYNC : HealpixKey.SYNCONLYIFLOCAL);
       if( h==null ) return Double.NaN;
       return h.getPixelValue(healpixIdxPixel,mode); 
    }
@@ -1477,13 +1486,13 @@ public class PlanBG extends PlanImage {
          double[] polar = CDSHealpix.radecToPolar(new double[] {ra, dec});
          long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);
          
-         HealpixKey h = getHealpixLowLevel(order,npixFile,HealpixKey.SYNC);
+         HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
 
          long nside = (long)h.width * CDSHealpix.pow2(h.order);
          long npixPixel = CDSHealpix.ang2pix_nest(nside, polar[0], polar[1]);
 
-         HealpixKey h1 = getHealpixLowLevel(order,npixFile,HealpixKey.SYNC);
+         HealpixKey h1 = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h1==null ) return Double.NaN;
          pixel = h1.getPixelValue(npixPixel,HealpixKey.NOW);
          
@@ -1509,7 +1518,7 @@ public class PlanBG extends PlanImage {
          double[] polar1 = CDSHealpix.radecToPolar(new double[] {ra1, dec1});
          long npixFile = CDSHealpix.ang2pix_nest( nSideFile, polar[0], polar[1]);         
          
-         HealpixKey h = getHealpixLowLevel(order,npixFile,HealpixKey.SYNC);
+         HealpixKey h = getHealpixLowLevel(order,npixFile,(int)getZ(),HealpixKey.SYNC);
          if( h==null ) return Double.NaN;
 
          long nside = (long)h.width * CDSHealpix.pow2(h.order);
@@ -1533,7 +1542,7 @@ public class PlanBG extends PlanImage {
             long pixOffset = nlpix-startIdx;
             if( pixOffset<0 || pixOffset>=h.width*h.width ) {
                long npixFile1 = nlpix/(h.width*h.width);
-               HealpixKey htmp = getHealpixLowLevel(order,npixFile1,HealpixKey.SYNC);
+               HealpixKey htmp = getHealpixLowLevel(order,npixFile1,(int)getZ(),HealpixKey.SYNC);
                if( htmp==null ) continue;
                h1=htmp;
             }
@@ -1950,7 +1959,7 @@ public class PlanBG extends PlanImage {
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v) {
       boolean hasDrawnSomething=false;
-      if( allsky==null ) {
+      if( allsky==null || allsky.z!=(int)getZ() ) {
          if( drawMode==DRAWPOLARISATION ) allsky = new HealpixAllskyPol(this,ALLSKYORDER);
          else allsky =  new HealpixAllsky(this,ALLSKYORDER);
          pixList.put( key(ALLSKYORDER,-1), allsky);
@@ -1959,7 +1968,7 @@ public class PlanBG extends PlanImage {
          else {
             if( !useCache || !allsky.isCached() ) {
                tryWakeUp();
-               drawBackground(g, v);
+               if( v.pref==this ) drawBackground(g, v);
 //               g.setColor(Color.white);
 //               g.fillRect(0,0,v.getWidth(),v.getHeight());
                return true;
@@ -2015,13 +2024,16 @@ public class PlanBG extends PlanImage {
 //       System.out.println("drawAllSky "+(partial?"partial":"all")+" order="+ALLSKYORDER+" in "+t1+"ms");
 
       } else {
-         if( drawMode==DRAWPIXEL ) {
+         if( drawMode==DRAWPIXEL /* && isPause()*/ ) {
             g.setColor(Color.red);
             g.drawString("Whole sky in progress...", 5,30);
+            bingo = true;
          }
       }
       return hasDrawnSomething;
    }
+   
+   private boolean bingo = false;
 
    /** Retourne un tableau de pixels d'origine couvrant la vue courante */
    protected void getCurrentBufPixels(PlanImage pi,RectangleD rcrop, double zoom,double resMult,boolean fullRes) {
@@ -2602,7 +2614,6 @@ public class PlanBG extends PlanImage {
                for( int i=0; i<pix.length; i++ ) {
                   if( getHealpixPreviousFrame(max, pix[i])==null ) {
                      allKeyReady=false;
-//                     System.out.println("Missing "+max+"/"+pix[i]);
                      break;
                   };
                }
@@ -2612,7 +2623,8 @@ public class PlanBG extends PlanImage {
             if( !allKeyReady ) pix=null;
          }
          
-         if( nb==0 && max<=ALLSKYORDER  && (!allKeyReady  || (!oneKeyReady && allsky!=null)) ) { 
+         if( nb==0 && max<=ALLSKYORDER  && (!allKeyReady  || (!oneKeyReady && allsky!=null)) 
+               && (!isCube() || isCube() && !oneKeyReady) ) { 
             if( drawAllSky(g,v) ) {
                nb++; 
                debug.append(" allsky2");
@@ -2724,7 +2736,7 @@ public class PlanBG extends PlanImage {
       }
       
       // On a rien dessiné, on met tout de même le allsky du fond
-      if( nb==0 && !allskyDrawn && allsky!=null && allsky.getStatus()==HealpixKey.READY
+      if( isPause() && nb==0 && !allskyDrawn && allsky!=null && allsky.getStatus()==HealpixKey.READY
             && drawAllSky(g, v) ) {
          nb++;
          debug.append(" allsky3");
@@ -2748,8 +2760,8 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1; 
       statNbItems = nb/*+nb1*/;
-//      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
-   }
+      if( bingo ) { aladin.trace(4,"Draw"+debug+" in "+statTime+"ms"); bingo=false; }
+   } 
    
    /** Ne marche que pour les cubes */
    protected HealpixKey getHealpixPreviousFrame(int order, long npix) { return null; }

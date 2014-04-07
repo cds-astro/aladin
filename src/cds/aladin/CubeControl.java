@@ -60,7 +60,7 @@ public class CubeControl {
    protected int lastFrame=0;	// Dernière Frame affichée
    protected double transparency=-1; // Niveau de transparence [0..1], -1 si non appliqué
    
-   private long startTime;      // Date de démarrage afin de calculer la bonne frame
+   protected long startTime;      // Date de démarrage afin de calculer la bonne frame
    private int mouseMove=NOTHING;
 
    
@@ -104,11 +104,13 @@ public class CubeControl {
    private int shapeX[][]   = { pauseX1,pauseX2,playX1,playX2,rewX,fowX,plusX1,plusX2,slashX,moinsX,sliderX,posX };
    private int shapeY[][]   = { pauseY1,pauseY2,playY1,playY2,rewY,fowY,plusY1,plusY2,slashY,moinsY,sliderY,posY };
    
+   private ViewSimple v;
    private Aladin aladin;
    private Plan p;
       
-   protected CubeControl(Aladin aladin,Plan p,int d,boolean pause) {
-      this.aladin=aladin;
+   protected CubeControl(ViewSimple v,Plan p,int d,boolean pause) {
+      this.v=v;
+      this.aladin=v.aladin;
       this.p=p;
       delay = d;
       startTime=System.currentTimeMillis();
@@ -118,7 +120,7 @@ public class CubeControl {
    
    /** Copie du BlinkControl */
    protected CubeControl copy() {
-      CubeControl b = new CubeControl(aladin,p,delay,mode==PAUSE);
+      CubeControl b = new CubeControl(v,p,delay,mode==PAUSE);
       b.startTime = startTime;
       b.nbFrame = nbFrame;
       b.lastFrame = lastFrame;
@@ -246,15 +248,31 @@ public class CubeControl {
    /** Retourne l'indice de la frame courante */
    protected int getCurrentFrameIndex() {
       if( delay==0 || nbFrame<=0 ) return lastFrame;
-      int n;
+      int n,m=-1;
       int step = getNextFrameInfo();
-      if( step==2 ) n= (int) (((System.currentTimeMillis() - startTime) / delay) % nbFrame);
-      else n=lastFrame+step;
+      if( step==2 ) {
+         long now = System.currentTimeMillis();
+         if( p instanceof PlanImageBlink )  n= (int) (((now - startTime) / delay) % nbFrame);
+         else {
+            // Delai non écoulé
+            if( now - startTime < delay ) n=lastFrame;
+            else {
+               m = ((PlanBGCube)p).getCurrentFrameReady();
+               
+               // frame non prête => on attend
+               if( m!=-1 && lastFrame+1>m ) n=lastFrame;
+               else n=lastFrame+1;
+            }
+         }
+            
+      } else n=lastFrame+step;
       
       if( n>=nbFrame ) n=0;
       else if( n<0 ) n = nbFrame-1;
       
       lastFrame=n;
+      if( m!=-1 ) System.out.println("CubeControl.getCurrentFrameIndex() lastFrame="+lastFrame+" frameReady="+m+" delai="+delay+" startTime="+startTime);
+      
       return n;
    }
    
@@ -286,12 +304,17 @@ public class CubeControl {
       
       p.changeImgID();
       long timeRef=System.currentTimeMillis();
-      startTime = timeRef-frame*delay;
-      lastFrame = (int) ((timeRef - startTime) / delay);
-      if( nbFrame!=0 ) lastFrame = (int) (((timeRef - startTime) / delay) % nbFrame);
-      p.setZ(frameLevel);  // pour repartir sur cette même image en cas de regénération d'une vue
+
+      if( p instanceof PlanImageBlink ) {
+         startTime = timeRef-frame*delay;
+         lastFrame = (int) ((timeRef - startTime) / delay);
+         if( nbFrame!=0 ) lastFrame = (int) (((timeRef - startTime) / delay) % nbFrame);
+      } else {
+         startTime = timeRef;
+         lastFrame = (int)frameLevel;
+      }
       p.setCubeFrame(frameLevel);
-      if( pause ) mode=PAUSE;
+      if( pause ) setMode(PAUSE); // mode=PAUSE;
    }
    
    /** Positionne la transparence courante [0..1], -1 si inactive */
@@ -302,7 +325,12 @@ public class CubeControl {
    /** Recale la date de début de la séquence pour qu'elle reprenne bien
     * à l'image courante */
    protected void resume() {
-      startTime = System.currentTimeMillis()-lastFrame*delay;
+      long now = System.currentTimeMillis();
+      if( p instanceof PlanImageBlink ) {
+         startTime = now-lastFrame*delay;
+      } else {
+         startTime=now;
+      }
       transparency=-1;  // On annule la transparence si on n'est pas en pause
    }
       
@@ -328,8 +356,8 @@ public class CubeControl {
    /** Force le passage en PAUSE ou en PLAY */
    protected void setMode(int m) {
       if( !p.isCube() ) return;
-      if( m==PLAY ) { p.setPause(false); mode=PLAY; resume(); askStep(2); aladin.view.startTimer(); }
-      else if( m==PAUSE ) { p.setPause(true); mode=PAUSE; askStep(0); }
+      if( m==PLAY ) { p.setPause(false,v); mode=PLAY; resume(); askStep(2); aladin.view.startTimer(); }
+      else if( m==PAUSE ) { p.setPause(true,v); mode=PAUSE; askStep(0); }
 
    }
    

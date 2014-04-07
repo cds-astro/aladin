@@ -291,13 +291,15 @@ public class BuilderDetails extends Builder {
       String metadata = cds.tools.Util.concatDir(context.getHpxFinderPath(),context.METADATA);
       if( (new File(metadata)).exists() ) {
          context.info("Pre-existing "+Context.METADATA+" file => keep it");
-         return;
+      } else {
+         RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
+         String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
+         f.write(s.getBytes());
+         f.close();
+         context.info("Mapping hpxFinder/"+Context.METADATA+" file has been generated");
       }
-      RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
-      String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
-      f.write(s.getBytes());
-      f.close();
-      context.info("Mapping hpxFinder/"+Context.METADATA+" file has been generated");
+
+      context.writeIndexHtml();
    }
    
 

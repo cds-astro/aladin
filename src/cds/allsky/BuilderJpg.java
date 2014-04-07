@@ -110,13 +110,16 @@ public class BuilderJpg extends BuilderTiles {
       context.info("Tile aggregation method="+context.getJpegMethod());
       build();
       if( !context.isTaskAborting() ) {
-         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64,0);
-         context.writePropertiesFile();
+//         (new BuilderAllsky(context)).createAllSkyColor(context.getOutputPath(),3,fmt,64,0);
+//         context.writePropertiesFile();
+         
+         (new BuilderAllsky(context)).runJpegOrPngOnly(fmt);
          if( context instanceof ContextGui && ((ContextGui) context).mainPanel.planPreview!=null ) {
             if( fmt.equals("jpeg") ) ((ContextGui) context).mainPanel.planPreview.inJPEG = true;
             else ((ContextGui) context).mainPanel.planPreview.inPNG = true;
          }
       }
+
    }
    
    public boolean isAlreadyDone() {
