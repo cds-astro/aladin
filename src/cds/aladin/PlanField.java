@@ -31,11 +31,7 @@ import java.util.Vector;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
-import cds.astro.AstroMath;
-import cds.astro.Astrocoo;
-import cds.astro.Coo;
-import cds.astro.ICRS;
-import cds.astro.Proj3;
+import cds.astro.*;
 import cds.tools.Util;
 import cds.tools.VOApp;
 
@@ -634,7 +630,7 @@ public final class PlanField extends Plan {
        Proj3 a;
        double cosr=1.,sinr=0.;
        double offsetX,offsetY;
-       
+
        // Pour pouvoir empiler la stack correctement
        if( co==null ) co=new Coord();
        co.al=raP; co.del=deP;
@@ -643,7 +639,7 @@ public final class PlanField extends Plan {
        // Quelle était la position du centre de projection lorsque this.roll==0
 //       if( this.roll!=0 ) {
 //          a = new Proj3(Proj3.TAN,raR,deR);
-//          cosr=AstroMath.cosd(-this.roll); 
+//          cosr=AstroMath.cosd(-this.roll);
 //          sinr=AstroMath.sind(-this.roll);
 //          a.set( new Coo(raP,deP));
 ////          a.computeXY(raP, deP);
@@ -656,7 +652,7 @@ public final class PlanField extends Plan {
 //          raP = a.getLon();
 //          deP = a.getLat();
 //       }
-       
+
        a = new Proj3(Proj3.TAN,raP,deP);
 
        Position rot = getRotCenterObjet();
@@ -712,7 +708,7 @@ public final class PlanField extends Plan {
              p.dej = a.getLat();
           }
        }
-       
+
        // Mise à jour des propriétés si nécessaires
        Properties.majProp(this);
 
@@ -831,11 +827,8 @@ public final class PlanField extends Plan {
 		int idxStart = 2;
 		for( int i=0; i<nbSubFov; i++ ) {
 			System.arraycopy(o[i], 0, pcat.o, idxStart, o[i].length);
-			// TODO : mettre la description pour le 2nd param
-			if( nbSubFov>1 ) {
-				addSubFoV(fovParts[i].getName(),fovParts[i].getDesc(),
-						  idxStart,idxStart+o[i].length-1,true,fovParts[i].getColor());
-			}
+			addSubFoV(fovParts[i].getName(),fovParts[i].getDesc(),
+			        idxStart,idxStart+o[i].length-1,true,fovParts[i].getColor());
 			idxStart += o[i].length;
 		}
 	}
