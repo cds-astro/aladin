@@ -304,7 +304,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
              Util.align(getLongFullMem(),8)+
              (truePixels ? " truePix ":"         ")+
              Util.align(getStatusString(),16)+
-             ( timer==-1 ? -1 : getLiveTime()/1000 ) +
+             ( timer==-1 ? -1 : getCurrentLiveTime()/1000 ) +
 //             "/"+t + "s => "+VIE[-getLive()]+
               "s => "+VIE[-getLive()]+
              (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"+"+
@@ -336,7 +336,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * retourne le nombre de losanges pour qui vraisemblablement il y a eu libération de mémoire
     * pour forcer un éventuel gc() */
    protected int free() {
-      if( allSky ) return 0;
+//      if( allSky ) return 0;
       int rep = 0;
       try {
          rep+=free1();
@@ -1362,18 +1362,24 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected int getLive() {
 
       int status = getStatus();
+      
+      long time = getLiveTime();
+      
+      // Ne meurt jamais pour une durée de vie négative
+      if( time==-1 ) return INLIFE;
 
       // reste en vie pour éviter de redemander le chargement
-      if( (status==ERROR || status==LOADINGFROMNET) && parente==0 || npix==-1 ) return INLIFE;
+      if( (status==ERROR || status==LOADINGFROMNET) && parente==0  /* || npix==-1 */ ) return INLIFE;
 
-      if( getLiveTime()<=PlanBG.LIVETIME ) return INLIFE;                       // En vie
-//      if( getAskRepaintTime()>2000 ) return DEATH;
-      if( getLiveTime()>PlanBG.LIVETIME+2000 ) return DEATH;
+      if( getCurrentLiveTime()<=time ) return INLIFE;     // En vie
+      if( getCurrentLiveTime()>time+2000 ) return DEATH;
       return MAYBEDEATH;
    }
    
+   protected long getLiveTime() { return PlanBG.LIVETIME; }
+   
    /** Retourne le temps de vie courant du losange (en ms) */
-   protected long getLiveTime() {
+   protected long getCurrentLiveTime() {
       return System.currentTimeMillis()-timer;
    }
 

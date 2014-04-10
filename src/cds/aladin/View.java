@@ -440,7 +440,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
           if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
           for( int i=0; i<modeView; i++ ) {
              if( viewSimple[i].isFree() || cv==viewSimple[i] ) continue;
-             if( cv.pref==viewSimple[i].pref ) continue;
+             if( cv.pref==viewSimple[i].pref && cv.pref.getZ()==viewSimple[i].pref.getZ() ) continue;
              if( viewSimple[i].selected ) continue;
              if( cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) return true;
           }

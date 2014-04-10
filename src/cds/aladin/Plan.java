@@ -368,6 +368,7 @@ public class Plan implements Runnable {
    protected int getDepth() { return 1; }
    
    /** retourne la tranche courante (s'il s'agit d'un cube, sinon 0) */
+   protected double getZ(ViewSimple v) { return 0; }
    protected double getZ() { return 0; }
    
    /** Positionne le Frame initial (s'il s'agit d'un cube) */

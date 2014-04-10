@@ -445,7 +445,7 @@ public class PlanHealpix extends PlanBG {
        active=selected=true;
 
        pixList = new Hashtable<String, HealpixKey>(1000);
-       allsky=null;
+//       allsky=null;
        loader = new HealpixLoader();
 
        postProd();

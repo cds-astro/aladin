@@ -34,7 +34,6 @@ class HealpixAllsky extends HealpixKey {
    protected int nbPix;       // Nombre de losanges
    protected HealpixKey [] pixList;  // Liste des losanges
    private int mem=0;
-   private int order;
 
    protected HealpixAllsky(PlanBG planBG,int order) {
       this(planBG,order,(int)planBG.getZ());
@@ -74,6 +73,11 @@ class HealpixAllsky extends HealpixKey {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
 
+   }
+   
+   // On essaye de garder le plus longtemps possible les allsky en mémoire */
+   protected long getLiveTime() { 
+      return planBG.aladin.enoughMemory() ? -1 : PlanBG.LIVETIME; 
    }
    
    HealpixKey createOneKey(int npix,int width,byte [] pix) {

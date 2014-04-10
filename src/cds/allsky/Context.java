@@ -1049,8 +1049,8 @@ public class Context {
          "</TABLE>\n" +
 
          "This survey can be displayed by <A HREF=\"http://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
-         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=download\">Aladin</A> regular client\n" +
-         "(use directly the base URL)<BR>or any other HiPS aware clients .\n" +
+         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin</A> regular client\n" +
+         "(just open the base URL)<BR>or any other HiPS aware clients .\n" +
          "<HR>\n" +
          "<I>(*) The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
          "HiPS is based on HEALPix sky tessellation and it is designed for astronomical scientifical usages (low distorsion, true pixel values...)." +
@@ -1078,14 +1078,15 @@ public class Context {
       String sys = frame.equals("C") ? "equatorial" : frame.equals("E") ? "ecliptic" : "galactic";
       
       long nside = CDSHealpix.pow2(order);
-      double resol = CDSHealpix.pixRes(nside)/3600;
+      long nsideP = CDSHealpix.pow2(order+Constante.ORDER);
+      double resol = CDSHealpix.pixRes(nsideP)/3600;
       
       int width = Constante.SIDE;
 
       String res = INDEX.replace("$LABEL",label);
       StringBuilder info = new StringBuilder();
       info.append("   <LI> <B>Label:</B> "+label+"\n");
-      info.append("   <LI> <B>Type:</B>"+(depth>1?"HiPS cube ("+depth+" frames)" : isColor() ? "colored HiPS image" : "HiPS image")+"\n");
+      info.append("   <LI> <B>Type:</B> "+(depth>1?"HiPS cube ("+depth+" frames)" : isColor() ? "colored HiPS image" : "HiPS image")+"\n");
       info.append("   <LI> <B>Best pixel angular resolution:</B> "+Coord.getUnit( resol )+"\n");
       info.append("   <LI> <B>Max tile order:</B> "+order+" (NSIDE="+nside+")\n");
       info.append("   <LI> <B>Available encoding tiles:</B> "+getAvailableTileFormats()+"\n");

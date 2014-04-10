@@ -22,8 +22,8 @@ package cds.aladin;
 
 import cds.tools.Util;
 import java.awt.*;
-
-import javax.swing.JComponent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 public class CubeControl {
    
@@ -57,7 +57,7 @@ public class CubeControl {
    protected int mode=PLAY;
    protected int delay;         // Délai en ms entre deux Frames
    protected int nbFrame;       // Nombre de frames
-   protected int lastFrame=0;	// Dernière Frame affichée
+   protected int lastFrame=0;   // Dernière Frame affichée
    protected double transparency=-1; // Niveau de transparence [0..1], -1 si non appliqué
    
    protected long startTime;      // Date de démarrage afin de calculer la bonne frame
@@ -204,7 +204,9 @@ public class CubeControl {
       return m;
    }
    
-   protected int setMouseMove(JComponent c,int x,int y) {
+   protected int mouseMoved(MouseEvent e) {
+      int x = e.getX();
+      int y = e.getY();
       int m=getLogo(x,y);
       if( mouseMove!=NOTHING && m==NOTHING ) m =SHOULD_REPAINT;
       mouseMove=m;
@@ -216,19 +218,42 @@ public class CubeControl {
          Aladin.makeCursor(aladin,m==CubeControl.SHOULD_REPAINT?
             Aladin.DEFAULTCURSOR:Aladin.HANDCURSOR);
 
-      Util.toolTip(c,m==IN || m==SHOULD_REPAINT 
-            || m==NOTHING ? "" : HELP[mouseMove]);
+      Util.toolTip(v,m==IN || m==SHOULD_REPAINT  || m==NOTHING ? "" : HELP[mouseMove]);
       return m;
    }
    
-   protected int setMouseDown(int x,int y) {
+   protected int mousePressed(MouseEvent e) {
+      int x = e.getX();
+      int y = e.getY();
       int m=getLogo(x,y);
            if( m==PLUS    ) { mode=PLAY; decreaseDelay(); }
       else if( m==MOINS   ) { mode=PLAY; increaseDelay(); }
       else if( m==PAUSE || m==PLAY  ) { setMode(m); }
       else if( m==REWIND  ) { mode=PAUSE; transparency=-1; askStep(-1); }
       else if( m==FORWARD ) { mode=PAUSE; transparency=-1; askStep(1); }
+      else if( m==SLIDE ) {
+         aladin.view.setCubeFrame(v, getFrameLevel(x),e.isShiftDown());
+         aladin.view.repaintAll();
+      }
       return m;
+   }
+   
+   protected void mouseDragged(MouseEvent e) {
+      int x = e.getX();
+      aladin.view.setCubeFrame(v, getFrameLevel(x), e.isShiftDown());
+      aladin.view.repaintAll();
+   }
+   
+   protected boolean mouseWheelMoved(MouseWheelEvent e) {
+      int x = e.getX();
+      int y = e.getY();
+      int m=getLogo(x,y);
+      if( m!=SLIDE ) return false;
+      mode=PAUSE; 
+      transparency=-1; 
+      askStep( -e.getWheelRotation() );
+      aladin.calque.repaintAll();
+      return true;
    }
    
    /** Détermine le frame et le niveau de transparence pointée par la souris
@@ -247,6 +272,7 @@ public class CubeControl {
    
    /** Retourne l'indice de la frame courante */
    protected int getCurrentFrameIndex() {
+      
       if( delay==0 || nbFrame<=0 ) return lastFrame;
       int n,m=-1;
       int step = getNextFrameInfo();
@@ -271,7 +297,6 @@ public class CubeControl {
       else if( n<0 ) n = nbFrame-1;
       
       lastFrame=n;
-      if( m!=-1 ) System.out.println("CubeControl.getCurrentFrameIndex() lastFrame="+lastFrame+" frameReady="+m+" delai="+delay+" startTime="+startTime);
       
       return n;
    }
@@ -300,7 +325,8 @@ public class CubeControl {
    protected void setFrameLevel(double frameLevel) { setFrameLevel(frameLevel,true); }
    protected void setFrameLevel(double frameLevel,boolean pause) {
       int frame = (int)frameLevel;
-      transparency = frame==frameLevel ? -1 : frameLevel - frame;
+      transparency = frame==frameLevel || v.pref instanceof PlanBG ? -1 
+            : frameLevel - frame;
       
       p.changeImgID();
       long timeRef=System.currentTimeMillis();
@@ -370,13 +396,12 @@ public class CubeControl {
    // -1 - on demande la Frame précédente
    //  2 - on roule
    protected int getNextFrameInfo() {
-      int n=2;		// On suppose qu'on est en PLAY
+      int n=2;      // On suppose qu'on est en PLAY
       if( mode==PAUSE ) { n=step; askStep(0); }
       return n;
    }
       
    protected void draw(Graphics g, int x,int y,int size,int frame,int nbFrame) {
-      
       // Mémorisation de la position où l'on trace de blinkControl
       X=x; Y=y;
       
@@ -401,7 +426,7 @@ public class CubeControl {
       if( transparency!=-1 ) {
          g.drawString(Util.align2((int)((1-transparency)*100))+"%",x+labelPX,y+labelPY);
       } else {
-//         g.drawString(Util.align2("/"+nbFrame),x+labelPX,y+labelPY);
+         g.drawString("/  "+Util.align3(nbFrame),x+labelPX,y+labelPY);
       }
       
       // Tracé des petits tirets correspondant à chaque image

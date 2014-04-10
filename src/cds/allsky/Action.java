@@ -44,6 +44,7 @@ public enum Action {
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
    CHECK     ("** In progress: Check readability of all tiles"),
+//   INFO      ("Generate properties and index.html information files"),
    MAPTILES  ("** In progress: Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité
    ABORT, PAUSE, RESUME;

@@ -262,7 +262,7 @@ public class HealpixKeyCat extends HealpixKey {
              Util.align(getCounts()+"s",8)+
              Util.align(getLongFullMem(),8)+
              Util.align(getStatusString(),16)+
-             ( timer==-1 ? -1 : getLiveTime()/1000 ) +
+             ( timer==-1 ? -1 : getCurrentLiveTime()/1000 ) +
 //             "/"+t + "s => "+VIE[-getLive()]+
              "s => "+VIE[-getLive()]+
              (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"ms" : "")+

@@ -94,7 +94,8 @@ public class PlanBGCube extends PlanBG {
    
    /** retourne le Frame initial */
    protected double getZ() { return z; }
-   
+   protected double getZ(ViewSimple v) { return v.cubeControl.getCurrentFrameIndex(); }
+ 
    /** gestion de la pause pour le défilement d'un cube */
    protected void setPause(boolean t,ViewSimple v) { 
       if( t==pause ) return;
@@ -121,10 +122,10 @@ public class PlanBGCube extends PlanBG {
       if( p.x!=ox || p.y!=oy ) {
          for( int i=0;i<bit8.length; i++ ) bit8[i]=Double.NaN;
          ox=p.x; oy=p.y;
-         System.out.print("Reinit pix8[]");
+//         System.out.print("Reinit pix8[]");
       }
       
-      System.out.print(" z="+z+" ("+x+","+y+") => ("+p.x+","+p.y+") => ");
+//      System.out.print(" z="+z+" ("+x+","+y+") => ("+p.x+","+p.y+") => ");
       
       double pix;
       if( !Double.isNaN( bit8[z] ) ) {
@@ -133,7 +134,7 @@ public class PlanBGCube extends PlanBG {
       }
       else {
          pix = bit8[z] = getOnePixelFromCache(projd, p.x,p.y,-1,z,HealpixKey.PIX8);
-         System.out.println(pix);
+//         System.out.println(pix);
       }
       if( Double.isNaN(pix) ) pix=0;
       return (byte)( (int)pix & 0xFF);
@@ -225,18 +226,18 @@ public class PlanBGCube extends PlanBG {
       public void run() {
          encore=true;
          
-         System.out.println("loadingImmediatelyThread starts");
+//         System.out.println("loadingImmediatelyThread starts");
          
          while( encore ) {
             
-            initZ = z1 = (int)plan.getZ()+1;
+            initZ = z1 = (int)plan.getZ(v)+1;
             center = getCooCentre(v);
             
             int order = Math.min(maxOrder(v),maxOrder);
 //            int order = Math.max(ALLSKYORDER, Math.min(maxOrder(v),maxOrder) );
             initOrder=order;
             
-            System.out.println("loading immediatelyThread loop (z="+z1+" order="+initOrder+" center="+center+")");
+//            System.out.println("loading immediatelyThread loop (z="+z1+" order="+initOrder+" center="+center+")");
             
             long [] pix = null;
             boolean lowResolution = v.isAllSky() || order<=ALLSKYORDER;
@@ -249,29 +250,29 @@ public class PlanBGCube extends PlanBG {
                }
             }
 
-            System.out.print("Thread loadImmediately:");
-            if( pix==null ) System.out.println(" allsky");
-            else {
-               for( int i=0; i<pix.length; i++ ) if( pix[i]!=-1 ) System.out.print(" "+pix[i]);
-               System.out.println();
-            }
+//            System.out.print("Thread loadImmediately:");
+//            if( pix==null ) System.out.println(" allsky");
+//            else {
+//               for( int i=0; i<pix.length; i++ ) if( pix[i]!=-1 ) System.out.print(" "+pix[i]);
+//               System.out.println();
+//            }
 
             for( int i=0; i<depth && encore; i++, z1++ ) {
                if( isPause() ) { encore=false; break; }
                if( z1>=depth) z1=0;
                
-               System.out.println("Delta="+(z1-plan.getZ()));
+//               System.out.println("Delta="+(z1-plan.getZ()));
                
                // Suis-je toujours sur zone ?
                if( !onZone() ) {
-                  System.out.println("Restart loop immediately");
+//                  System.out.println("Restart loop immediately");
                   break;
                }
                
                // Je charge les allsky ?
                if( pix==null ) { 
                   HealpixKey h = new HealpixAllsky(plan, ALLSKYORDER, z1, HealpixKey.SYNC);
-                  System.out.println("load allsky: "+h);
+//                  System.out.println("load allsky: "+h);
                   
                // Ou je charge les losanges individuels ?
                } else {
@@ -279,18 +280,18 @@ public class PlanBGCube extends PlanBG {
                      if( pix[j]==-1 ) continue;
                      String key = key(order,pix[j],z1);
                      if( pixList.get(key)!=null ) {
-                        System.out.println("ready: "+pixList.get(key));
+//                        System.out.println("ready: "+pixList.get(key));
                         continue;
                      }
                      HealpixKey h = new HealpixKey(plan,order,pix[j],z1,HealpixKey.SYNC);
                      pixList.put( key, h);
-                     System.out.println("loaded: "+h);
+//                     System.out.println("loaded: "+h);
                   }
                }
                
                if( ox!=-1 ) {
                   bit8[z1] = getOnePixelFromCache(projd, ox,oy,-1,z1,HealpixKey.PIX8);
-                  System.out.println("Memorize z1="+z1+" => "+bit8[z1]);
+//                  System.out.println("Memorize z1="+z1+" => "+bit8[z1]);
                }
 
             }
@@ -299,12 +300,12 @@ public class PlanBGCube extends PlanBG {
             while( encore && onZone() ) {
                z1=0;
                if( isPause() ) { encore=false; break; }
-               System.out.println("Thread load immediately waiting new zone...");
+//               System.out.println("Thread load immediately waiting new zone...");
                Util.pause(1000);
             }
          }
          
-         System.out.println("loadingImmediatelyThread ends");
+//         System.out.println("loadingImmediatelyThread ends");
       }
    }
 
