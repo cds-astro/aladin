@@ -3561,6 +3561,11 @@ public class ViewSimple extends JComponent
          return;
       }
       
+      if( isPlanBlink() && cubeControl.isEditing() ) {
+         if( cubeControl.keyPress(e) ) repaint();
+         return;
+      }
+      
       if( hasCrop() && view.crop.isEditing() ) {
          if( view.crop.keyPress(this,e) ) repaint();
          return;
@@ -4918,6 +4923,13 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       // Calcul de la taille et de la position en fonction de la taille
       // de la vue et du nombre de vues simultanées
       int size=rv.width>=200?8:6;
+      
+      if( cubeControl.SIZE==-1 ) {
+         cubeControl.init(size);
+         getCurrentFrameIndex();
+         return;
+      }
+      
       if( aladin.view.getModeView()<=ViewControl.MVIEW9 || fullScreen ) {
 //         x=rv.width-blinkControl.getWidth()-10;
          x=rv.width/2 - cubeControl.getWidth()/2;
@@ -4929,7 +4941,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
       // Mise à jour des pixels 8 bits
       if( cubeControl.mode!=cubeControl.SLIDE ) {
-         if( selected ) pref.activePixels(this);
+         if( selected ) pref.activeCubePixels(this);
       }
 
        // Affichage du blinkControl
@@ -5132,7 +5144,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
    private Hashtable memoSeg; // Table de hachage de mémorisation des noeuds de la grille
    private final Boolean ok = new Boolean(true);  // Valeur bidon pour memoSeg
-   protected short oiz=-1;
+   protected long oiz=-1;
    private Vector grille = null;  // Memorise les segments de la grille de coordonnées
 
 
@@ -6060,7 +6072,7 @@ g.drawString(s,10,100);
    
    private int oFrame=-1;
    private double oAngle=-1;
-   private int oizAngle=-1;
+   private long oizAngle=-1;
    
    
    /** Retourne un identificateur unique de la vue et de son état. Si celui-ci a changé,

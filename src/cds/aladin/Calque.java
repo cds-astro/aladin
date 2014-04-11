@@ -3663,9 +3663,23 @@ public final class Calque extends JPanel implements Runnable {
           return true;
        }
        if( (p.isImage() || p.type==Plan.ALLSKYIMG) && !aladin.configuration.isTransparent() ) return false;
-       if( p.type==Plan.ALLSKYIMG && /*!p.ref */ !isRefForVisibleView && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+       if( p.type==Plan.ALLSKYIMG && !isRefForVisibleView && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
 
-       if( !p.flagOk  || !planeTypeCanBeTrans(p)
+       // S'il s'agit d'un folder, il faut qu'il contienne au moins un plan qui peut être transparent
+       boolean folderTrans=true;
+       if( p instanceof PlanFolder ) {
+          folderTrans=false;
+          Plan [] list = getFolderPlan(p);
+          for( Plan p1 : list ) {
+             if( canBeTransparent(p1) ) { folderTrans=true; break; }
+          }
+       }
+       if( folderTrans ) {
+          p.setDebugFlag(Plan.CANBETRANSP,true);
+          return true;
+       }
+       
+       if( !p.flagOk  || !folderTrans /* !planeTypeCanBeTrans(p) */
              || !Projection.isOk(p.projd) || p.isRefForVisibleView()
              || p.isImage() && p.projd.isLargeField() ) {
            p.setDebugFlag(Plan.CANBETRANSP,false);
@@ -3686,10 +3700,10 @@ public final class Calque extends JPanel implements Runnable {
 
     /** Vérifie si un plan peut etre transparent (vérification uniquement au niveau du type du plan)
      */
-    protected boolean planeTypeCanBeTrans(Plan p) {
-       if( p instanceof PlanFolder ) return false;
-       return true;
-    }
+//    protected boolean planeTypeCanBeTrans(Plan p) {
+//       if( p instanceof PlanFolder ) return false;
+//       return true;
+//    }
 
     protected void addOnStack(Plan p) {
        int n = aladin.calque.getStackIndex();

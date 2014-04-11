@@ -3601,7 +3601,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       setFlagTimer(true);
       timer = new Thread(this,"AladinTimer");
 //System.out.println("launch timer thread "+timer);
-//      timer.setPriority( Thread.NORM_PRIORITY -1);
+      timer.setPriority( Thread.NORM_PRIORITY -1);
       timer.start();
    }
 
@@ -3624,15 +3624,17 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    private void runC() {
       long debut = -1;
       long t;
-      boolean tagBlink,cropBlink,planBlink,sourceBlink,simbadBlink,scrolling,sablierBlink,taquinBlink;
+      boolean tagBlink,editBlink,planBlink,sourceBlink,simbadBlink,scrolling,sablierBlink,taquinBlink;
       int delais=getDefaultDelais();
 
       for( int tour=0; _flagTimer; tour++ ) {
          try {
             delais=getDefaultDelais();
-            planBlink=sourceBlink=scrolling=sablierBlink=taquinBlink=cropBlink=tagBlink=false;
+            planBlink=sourceBlink=scrolling=sablierBlink=taquinBlink=editBlink=tagBlink=false;
             int t0,t1,t2,t3,t4,t5,t6;
             t0=t1=t2=t3=t4=t5=t6=0;
+            
+            ViewSimple cv= getCurrentView();
 
             for( int i=0; i<modeView; i++ ) {
                ViewSimple v = viewSimple[i];
@@ -3642,15 +3644,16 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                boolean scroll = v.isScrolling();
                boolean sablier = v.isSablier();
                boolean taquin = flagTaquin;
-               boolean flagcrop = crop!=null && crop.isEditing();
+               boolean flagEdit = crop!=null && crop.isEditing() 
+                               || cv.isPlanBlink() && cv.cubeControl.isEditing();
                boolean flagtag = isTagEditing();
 
-               if( flagtag && v==getCurrentView() ) {
+               if( flagtag && v==cv ) {
                   v.repaint();
                   t6=500;
                   if( t6<delais ) delais=t6;
                }
-               if( flagcrop && v==getCurrentView() ) {
+               if( flagEdit && v==cv ) {
                   v.repaint();
                   t0=500;
                   if( t0<delais ) delais=t0;
@@ -3681,7 +3684,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                }
 
                tagBlink|=flagtag;
-               cropBlink|=flagcrop;
+               editBlink|=flagEdit;
                planBlink|=plan;
                sourceBlink|=source;
                scrolling|=scroll;
@@ -3709,7 +3712,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 //System.out.println("timer thread "+Thread.currentThread()+" gap=("+gap+") delais="+delais);
 
             // Arrêt au bout de 5 secondes sans blinking nécessaire
-            if( tagBlink|cropBlink|planBlink|sourceBlink
+            if( tagBlink|editBlink|planBlink|sourceBlink
                   |simbadBlink|scrolling|sablierBlink|taquinBlink ) debut=-1;
             else {
                if( debut==-1 ) debut=System.currentTimeMillis();
@@ -3724,6 +3727,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       timer=null;
 //System.out.println("stop blink thread");
    }
+//      long lastT=-1;
 
 //   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
 //   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }

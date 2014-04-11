@@ -815,7 +815,7 @@ public class PlanImageBlink extends PlanImage {
    /** Rend active la tranche courante de pixels (pour un contour...)
     * en profite pour remettre à jour le zoomview
     */
-   protected void activePixels(ViewSimple v) {
+   protected void activeCubePixels(ViewSimple v) {
       if( flagUpdating ) return;
       if( ooLastFrame==v.cubeControl.lastFrame ) return;
       if( v.cubeControl.mode==CubeControl.PAUSE ) activePixelsOrigin(v);

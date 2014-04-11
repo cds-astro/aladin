@@ -22,6 +22,7 @@ package cds.aladin;
 
 import cds.tools.Util;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
@@ -35,8 +36,9 @@ public class CubeControl {
    static protected int PLUS    = 5;
    static protected int MOINS   = 6;
    static protected int SLIDE   = 7;
-   static protected int SHOULD_REPAINT = 8;
-   static protected int IN      = 9;
+   static protected int EDIT    = 8;
+   static protected int SHOULD_REPAINT = 9;
+   static protected int IN      = 10;
    static protected int CURSOR  = 11;
    
    static final int MAX_TRANSPARENCY = 11;
@@ -50,9 +52,13 @@ public class CubeControl {
       "Increase the speed",
       "Decrease the speed",
       "Change the current frame",
+      "Edit the frame number",
+      "",
       "",
       "",
    };
+   
+   private StringBuilder sedit=null;
    
    protected int mode=PLAY;
    protected int delay;         // Délai en ms entre deux Frames
@@ -67,7 +73,7 @@ public class CubeControl {
    // Dernière position et taille où l'on a dessiné le blinkControl
    private int X=-1;
    private int Y=-1;
-   private int SIZE=-1;
+   protected int SIZE=-1;
    
    private int rewX[] = new int[3];
    private int rewY[] = new int[3];
@@ -94,6 +100,7 @@ public class CubeControl {
    private int moinsX[] = new int[4];
    private int moinsY[] = new int[4];
    
+   private int edit[] = new int[2];
    private int posX[] = new int[5];
    private int posY[] = new int[5];
    private int sliderX[] = new int[4];
@@ -134,6 +141,8 @@ public class CubeControl {
     */
    protected void init(int size) {
       int dx=0;
+      SIZE=size;
+      
       pauseX1[0]=3+dx; pauseX1[1]=3+dx; pauseX1[2]=4+dx; pauseX1[3]=4+dx; 
       pauseY1[0]=0; pauseY1[1]=size; pauseY1[2]=size; pauseY1[3]=0; 
       pauseX2[0]=6+dx; pauseX2[1]=6+dx; pauseX2[2]=7+dx; pauseX2[3]=7+dx;
@@ -200,9 +209,53 @@ public class CubeControl {
       else if( x>X+4*SIZE+SIZE/2 && x<X+5*SIZE+SIZE/2 ) m=FORWARD;
       else if( x>X+7*SIZE && x<X+8*SIZE ) m=PLUS;
       else if( x>X+8*SIZE+SIZE/2 && x<X+9*SIZE+SIZE/2 ) m=MOINS;
+      else if( x>X+9*SIZE+SIZE/2 && x<X+getWidth()+5 ) m = EDIT;
       else m=IN;
       return m;
    }
+   
+   protected boolean isEditing() { return sedit!=null; }
+   protected void stopEditing() { sedit=null; }
+   
+   /** Traitement d'un évènement caractère */
+   public boolean keyPress( KeyEvent e) {
+      if( !isEditing() ) return false;
+      
+      int key = e.getKeyCode();
+      char k = e.getKeyChar();
+      
+      if( key==KeyEvent.VK_ESCAPE ) {
+         stopEditing();
+         return true;
+      }
+      
+      if( key==KeyEvent.VK_ENTER ) {
+         try {
+            int frame = Integer.parseInt(sedit.toString())-1;
+            setFrameLevel((int)frame);
+         } catch( NumberFormatException e1 ) { }
+         stopEditing();
+         return true;
+      } 
+      
+      // On efface le dernier caractere
+      if( key==KeyEvent.VK_BACK_SPACE || key==KeyEvent.VK_DELETE ) {
+         int n = sedit.length();
+         if( n==0 ) return false;
+         sedit.deleteCharAt(n-1);
+         return true;
+      }
+      
+      // On insere un nouveau caractere
+      if( k>=31 && k<=255 ) {
+         sedit.append(k);
+         return true;
+      }
+      
+      return false;
+   }
+   
+
    
    protected int mouseMoved(MouseEvent e) {
       int x = e.getX();
@@ -225,16 +278,23 @@ public class CubeControl {
    protected int mousePressed(MouseEvent e) {
       int x = e.getX();
       int y = e.getY();
+      boolean flagEdit=false;
       int m=getLogo(x,y);
            if( m==PLUS    ) { mode=PLAY; decreaseDelay(); }
       else if( m==MOINS   ) { mode=PLAY; increaseDelay(); }
       else if( m==PAUSE || m==PLAY  ) { setMode(m); }
       else if( m==REWIND  ) { mode=PAUSE; transparency=-1; askStep(-1); }
       else if( m==FORWARD ) { mode=PAUSE; transparency=-1; askStep(1); }
-      else if( m==SLIDE ) {
+      else if( m==EDIT ) { 
+         sedit = new StringBuilder( Util.align3(lastFrame+1) );
+         setMode(PAUSE);
+         flagEdit=true;
+      } else if( m==SLIDE ) {
          aladin.view.setCubeFrame(v, getFrameLevel(x),e.isShiftDown());
          aladin.view.repaintAll();
       }
+           
+      if( !flagEdit ) stopEditing();
       return m;
    }
    
@@ -253,6 +313,7 @@ public class CubeControl {
       transparency=-1; 
       askStep( -e.getWheelRotation() );
       aladin.calque.repaintAll();
+      
       return true;
    }
    
@@ -324,6 +385,7 @@ public class CubeControl {
     *  et met la pause */
    protected void setFrameLevel(double frameLevel) { setFrameLevel(frameLevel,true); }
    protected void setFrameLevel(double frameLevel,boolean pause) {
+      if( frameLevel>=nbFrame || frameLevel<0 ) return;
       int frame = (int)frameLevel;
       transparency = frame==frameLevel || v.pref instanceof PlanBG ? -1 
             : frameLevel - frame;
@@ -406,7 +468,7 @@ public class CubeControl {
       X=x; Y=y;
       
       // Création ou adaptations des logos si nécessaires
-      if( size!=SIZE ) { SIZE=size; init(size); }
+      if( size!=SIZE ) init(size);
       this.nbFrame=nbFrame;  // mémorisation pour éventuel setFrame()
       
       double frameLevel = (double)frame;
@@ -419,10 +481,11 @@ public class CubeControl {
       // Tracage du blinkControl en fonction du mode courant PLAY/PAUSE
       Polygon p;
       
-      g.setColor(Color.red);
+      g.setColor(mouseMove==EDIT ? Aladin.GREEN : Color.red);
       g.setFont(Aladin.SPLAIN);
-      g.drawString(Util.align3(frame+1),x+labelX,y+labelY);
+      g.drawString(Util.align3(frame+1),edit[0]=x+labelX,edit[1]=y+labelY);
       
+      g.setColor(Color.red);
       if( transparency!=-1 ) {
          g.drawString(Util.align2((int)((1-transparency)*100))+"%",x+labelPX,y+labelPY);
       } else {
@@ -452,14 +515,36 @@ public class CubeControl {
           || (mouseMove==FORWARD &&  i==5)
           || (mouseMove==PLUS    && (i==6 || i==7))
           || (mouseMove==MOINS   &&  i==9)
-          || (mouseMove==SLIDE   &&  i==11) ) g.setColor(Color.green);
+          || (mouseMove==SLIDE   &&  i==11) ) g.setColor(Aladin.GREEN);
          else if( ((i==0 || i==1) && mode==PAUSE  )
                || ((i==2 || i==3) && mode==PLAY ) ) g.setColor(Color.blue);
          else g.setColor(Color.red);
          
          if( i!=CURSOR || transparency==-1 ) g.fillPolygon(p);
          g.drawPolygon(p);
-      }            
+      } 
+      
+      if( isEditing() ) drawEdit(g);
    }
-
+      
+   private void drawEdit(Graphics g) {
+      String s = sedit.toString();
+      Font ft = g.getFont();
+      g.setFont(ft.deriveFont(Font.BOLD));
+      int w=g.getFontMetrics().stringWidth(s);
+      int h=g.getFontMetrics().getHeight();
+      int x = edit[0];
+      int y = edit[1]-h+2;
+      Util.drawCartouche(g, x, y, w, h, 1f,  Color.black, Color.white);
+      g.setColor(Color.black);
+      g.drawString(s,x,y+h/2+5);
+      g.setFont(ft);
+      x = x+w-1;
+      boolean blink=(System.currentTimeMillis()/500)%2==0;
+      if( blink ) {
+         g.setColor(Color.black);
+         g.drawLine(x, y+2, x, y+h-2);
+         g.drawLine(x+1, y+2, x+1, y+h-2);
+      }
+   }
 }

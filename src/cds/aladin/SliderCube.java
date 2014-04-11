@@ -46,8 +46,12 @@ public class SliderCube extends SliderPlusMoins {
 //      else p.setCubeFrame((int)frame);
       
       int vn[] = aladin.view.getNumView(p);
-      for( int i=0; i<vn.length; i++ ) {
-         aladin.view.setCubeFrame(aladin.view.viewSimple[ vn[i] ], frame, true);
+      if( vn!=null ) {
+         for( int i=0; i<vn.length; i++ ) {
+            aladin.view.setCubeFrame(aladin.view.viewSimple[ vn[i] ], frame, true);
+         }
+      } else {
+         p.setCubeFrame(frame);
       }
       aladin.view.repaintAll();
    }

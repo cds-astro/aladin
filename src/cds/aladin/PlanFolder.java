@@ -127,4 +127,14 @@ public class PlanFolder extends Plan {
    }
    
    protected boolean isSync() { return flagOk; }
+   
+   /** Positionne le niveau d'opacité [0..1] (0: entièrement transparent, 1: entièrement opaque) */
+   public void setOpacityLevel(float opacityLevel) {
+      super.setOpacityLevel(opacityLevel);
+      Plan [] list = aladin.calque.getFolderPlan(this,false);
+      for( Plan p : list ) {
+         if( aladin.calque.canBeTransparent(p) ) p.setOpacityLevel(opacityLevel);
+      }
+   }
+
 }   

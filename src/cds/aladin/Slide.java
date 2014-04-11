@@ -529,24 +529,18 @@ public final class Slide {
             
             // Sinon, dessin du calque en fonction du mode activé ou non
          } else {
-            if( p.type==Plan.FOLDER ) g.setColor(!p.active? Color.yellow:jauneGris);
-            else if( /* p.ref */ isRefForVisibleView && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
-            else g.setColor( !p.active || /*!p.ref*/ !isRefForVisibleView && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
-//            else g.setColor( p.active && !canBeTransparent && p.isViewable() ? Color.gray : colorFillBG );
-//            if( g.getColor()==Color.blue &&  (colorForeground==Color.blue || colorForeground==Color.black) ) colorForeground=Color.white;
+            if( p.type==Plan.FOLDER ) g.setColor(!p.active || canBeTransparent ? Color.yellow:jauneGris);
+            else if( isRefForVisibleView && (p.isUnderImgBkgd() && p.type!=Plan.ALLSKYIMG) ) g.setColor(colorFillBG);
+            else g.setColor( !p.active || !isRefForVisibleView && isViewable && canBeTransparent  ? colorFillBG : colorFillFG ) ;
             g.fillPolygon(xc,yc,frX.length);
 
             if( canBeTransparent ) {
                float transp = p.getOpacityLevel();
                if( transp!=0 ) {
-                  xPoignee=fillTransparency(g,xc,yc,transp,p.active,colorFillFG); 
-//                  xPoignee=fillTransparency(g,xc,yc,transp,p.active || p.isImage(),colorFillFG ); 
+                  xPoignee=fillTransparency(g,xc,yc,transp,p.active, p.type==Plan.FOLDER ? jauneGris : colorFillFG); 
                }
             }
          }
-         
-//         if( p.type!=Plan.NO ) g.setColor( colorBorder = p.ref ? Color.black : Color.gray);
-//         else g.setColor(colorBorder = Aladin.MYGRAY);
          
          g.setColor( colorBorder );
          
@@ -742,9 +736,14 @@ public final class Slide {
             int xPos = xPoignee;
             if( xPos<dx+debut+largeur ) xPos = dx+debut+largeur;
             if( xPos>dx+fin-largeur ) xPos = dx+fin-largeur;
-            g.setColor( Color.black );
-            g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
-            g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
+            
+            // Pas de double trait pour un folder
+            if( p.type!=Plan.FOLDER ) {
+               g.setColor( Color.black );
+               g.drawLine( dx+debut,dy+haut,dx+fin,dy+haut);
+               g.drawLine( dx+debut,dy+haut+1,dx+fin,dy+haut+1);
+            }
+            
             float transp = p.getOpacityLevel();
 //            g.setColor( transp<=0.1 ? Color.white : transp>=0.9 ? Color.green : Color.yellow);
             g.setColor( transp<=0.1 ? Color.red : Color.green );

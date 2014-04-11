@@ -146,7 +146,7 @@ public class PlanBG extends PlanImage {
 
    static final String CACHE = "Background";
    static long MAXCACHE=4*1024*1024;                // taille max du cache en Ko
-   static final protected int LIVETIME = 3*1000;            // temps de vie des losanges en mémoire (ms)
+   static final protected int LIVETIME = 3*1000;    // temps de vie des losanges en mémoire (ms)
    
    protected MyProperties prop = null; // La liste des propriétés associées au HiPS
 

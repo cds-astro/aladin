@@ -767,7 +767,7 @@ public final class Command implements Runnable {
             if( item!=null ) res.append(item);
          }
 
-        if( a.calque.planeTypeCanBeTrans(plan) ) {
+        if( a.calque.canBeTransparent(plan) /* a.calque.planeTypeCanBeTrans(plan) */ ) {
             res.append("Opacity "+Util.myRound(plan.getOpacityLevel()*100+"",0)+"\n");
         }
       }

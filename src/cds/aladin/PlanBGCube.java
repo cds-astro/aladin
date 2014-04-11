@@ -76,11 +76,12 @@ public class PlanBGCube extends PlanBG {
       z=gSky.cubeFirstFrame;
    }
    
-   protected void activePixels(ViewSimple v) {
+   protected void activeCubePixels(ViewSimple v) {
       if( !setCubeFrame(v.cubeControl.lastFrame) ) return;
       v.cubeControl.startTime = System.currentTimeMillis();
-      changeImgID();
       askForRepaint();
+//      v.oiz=-System.currentTimeMillis();   // pour forcer juste l'image de cette vue à ce regénérer
+//      aladin.view.repaintAll();
    }
    
    protected boolean setCubeFrame(double frameLevel) {
@@ -89,12 +90,17 @@ public class PlanBGCube extends PlanBG {
       return true;
    }
    
-   /** Positionne le Frame initial (s'il s'agit d'un cube) */
+   /** Positionne le Frame par défaut (s'il s'agit d'un cube) */
    protected void setZ(double initFrame) { z=initFrame;  }
    
-   /** retourne le Frame initial */
+   /** retourne le Frame par défaut */
    protected double getZ() { return z; }
-   protected double getZ(ViewSimple v) { return v.cubeControl.getCurrentFrameIndex(); }
+   
+   /** Retourne le Frame courant, et si pas de vue attachée, le frame par défaut */
+   protected double getZ(ViewSimple v) {
+      if( v.pref==this ) return v.cubeControl.getCurrentFrameIndex(); 
+      return z;
+   }
  
    /** gestion de la pause pour le défilement d'un cube */
    protected void setPause(boolean t,ViewSimple v) { 

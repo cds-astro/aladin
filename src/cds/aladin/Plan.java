@@ -362,7 +362,7 @@ public class Plan implements Runnable {
    protected boolean isCube() { return false; }
    
    /** Active le frame propre au cube */
-   protected void activePixels(ViewSimple v) {}
+   protected void activeCubePixels(ViewSimple v) {}
    
    /** Retourne la profondeur du plan dans le cas d'un cube (1 sinon) */
    protected int getDepth() { return 1; }
@@ -1802,7 +1802,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
           colorBackground = c;
           aladin.calque.repaintAll();
        } else if( prop.equalsIgnoreCase("Opacity") ) {
-           if( !aladin.calque.planeTypeCanBeTrans(this) ) throw new Exception("opacity property only applicable for images and footprints !");
+           if( !aladin.calque.canBeTransparent(this) /* planeTypeCanBeTrans(this)*/ ) throw new Exception("opacity property only applicable for images and footprints !");
            float f;
            try {
                f = Float.parseFloat(value);
