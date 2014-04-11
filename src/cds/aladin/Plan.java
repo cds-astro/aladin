@@ -365,14 +365,14 @@ public class Plan implements Runnable {
    protected void activeCubePixels(ViewSimple v) {}
    
    /** Retourne la profondeur du plan dans le cas d'un cube (1 sinon) */
-   protected int getDepth() { return 1; }
+   public int getDepth() { return 1; }
    
    /** retourne la tranche courante (s'il s'agit d'un cube, sinon 0) */
    protected double getZ(ViewSimple v) { return 0; }
    protected double getZ() { return 0; }
    
-   /** Positionne le Frame initial (s'il s'agit d'un cube) */
-   protected void setZ(double initFrame) { }
+   /** Positionne le Frame courant (s'il s'agit d'un cube) */
+   protected void setZ(double z) { }
    
    /** Prévu pour les cubes */
    protected byte getPixel8bit(int z,double x,double y) { return 0; }

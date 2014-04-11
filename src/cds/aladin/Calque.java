@@ -3287,7 +3287,7 @@ public final class Calque extends JPanel implements Runnable {
    public int newPlanBG(URL url, String label, String target,String radius) { return newPlanBG(null,null,url,label,target,radius); }
    
    
-   protected int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
+   public int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(target,gSky);

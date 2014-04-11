@@ -20,14 +20,13 @@
 
 package cds.aladin;
 
-import java.awt.Point;
 import java.util.Hashtable;
 
 import cds.tools.Util;
 
 public class PlanBGCube extends PlanBG {
    
-   protected int depth;            // Profondeur du dube (-1 si inconnue)
+   public int depth;            // Profondeur du dube (-1 si inconnue)
    protected double z=0;           // Frame courante
    protected boolean pause;    // true si on est en pause
 
@@ -90,6 +89,13 @@ public class PlanBGCube extends PlanBG {
       return true;
    }
    
+   /** Positionnement (a posteriori) de la profondeur du cube - utilisé lors de sa construction par HipsGen */
+   public void setDepth(int depth) {
+      this.depth = depth;
+      int n[] = aladin.view.getNumView(this);
+      if( n!=null ) for( int i : n) aladin.view.viewSimple[ n[i] ].cubeControl.nbFrame=depth;
+   }
+   
    /** Positionne le Frame par défaut (s'il s'agit d'un cube) */
    protected void setZ(double initFrame) { z=initFrame;  }
    
@@ -111,7 +117,7 @@ public class PlanBGCube extends PlanBG {
    protected boolean isPause() { return pause; }
    
    /** Retourne la profondeur dans le cas d'un cube */
-   protected int getDepth() { return depth==-1 ? 1: depth; }
+   public int getDepth() { return depth==-1 ? 1: depth; }
    
    protected int getInitDelay() { return 500; }
    

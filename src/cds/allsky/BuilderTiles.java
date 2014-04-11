@@ -529,8 +529,8 @@ public class BuilderTiles extends Builder {
                for( int z=0; z<context.depth; z++ ) {
 //                  if( context.depth>1 ) context.info("Processing frame="+z+"/"+context.depth);
                   createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix, z);
-                  if( cell.order==3 ) setProgressBar((int)cell.npix);
                }
+               if( cell.order==3 ) setProgressBar((int)cell.npix);
 
             } catch( Throwable e ) {
                Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");

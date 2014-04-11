@@ -789,7 +789,7 @@ public class PlanImageBlink extends PlanImage {
    }
 
    /** Retourne le nombre de Frames */
-   protected int getDepth() {
+   public int getDepth() {
       return vFrames==null ?  0 : vFrames.size();
    }
       

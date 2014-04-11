@@ -27,7 +27,9 @@ import javax.swing.JProgressBar;
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
 import cds.aladin.PlanBG;
+import cds.aladin.PlanBGCube;
 import cds.aladin.PlanImage;
+import cds.aladin.TreeNodeAllsky;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -117,10 +119,11 @@ public class ContextGui extends Context {
    }
    
    private int lastShowAllSkyNorder3=-1;
-   public void updateAllskyPreview() {
+   public void updateHipsPreview() {
       try {
          String path = getOutputPath()+Util.FS+"Norder3";
          if( !isExistingAllskyDir() || !(new File(path)).isDirectory() ) return;
+         
          if( lastShowAllSkyNorder3==lastNorder3 ) return;  // Déjà calculé
          lastShowAllSkyNorder3=lastNorder3;
          (new BuilderAllsky(this)).run();
@@ -134,7 +137,8 @@ public class ContextGui extends Context {
             double[] res = CDSHealpix.pix2ang_nest(cds.tools.pixtools.Util.nside(3), npix);
             double[] radec = CDSHealpix.polarToRadec(new double[] { res[0], res[1] });
             radec = gal2ICRSIfRequired(radec);
-            int n = mainPanel.aladin.calque.newPlanBG(getOutputPath(), "="+mysky,
+            TreeNodeAllsky gSky = new TreeNodeAllsky(mainPanel.aladin, getOutputPath());
+            int n = mainPanel.aladin.calque.newPlanBG(gSky,getOutputPath(), null, "="+mysky,
                   Coord.getSexa(radec[0], radec[1]), "30");
             Aladin.trace(4, "ContextGui.preview(): create "+mysky);
             mainPanel.planPreview = (PlanBG) mainPanel.aladin.calque.getPlan(n);
@@ -142,7 +146,6 @@ public class ContextGui extends Context {
             mainPanel.planPreview.forceReload();
             mainPanel.aladin.calque.repaintAll();
             Aladin.trace(4, "ContextGui.preview(): update "+mysky);
-
          }
       } catch (Exception e) {
          e.printStackTrace();
@@ -160,7 +163,7 @@ public class ContextGui extends Context {
          progressBar.setValue((int)progress);
       }
       if( (action==Action.TILES || action==Action.JPEG
-            || action==Action.PNG || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
+            || action==Action.PNG || action==Action.RGB) && lastNorder3>=0 ) updateHipsPreview();
    }
    
    public void endAction() throws Exception { 
@@ -174,7 +177,7 @@ public class ContextGui extends Context {
          else progressBar.setString("Done !");
       }
       if( (action==Action.TILES || action==Action.JPEG
-            || action==Action.PNG || action==Action.RGB) && lastNorder3!=-1 ) updateAllskyPreview();
+            || action==Action.PNG || action==Action.RGB) && lastNorder3>=0 ) updateHipsPreview();
       
       if( action==Action.INDEX ) mainPanel.tabBuild.resumeWidgets();
       super.endAction();
