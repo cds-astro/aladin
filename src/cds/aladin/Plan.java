@@ -1568,6 +1568,9 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return s;
    }
    
+   // Prévu pour les cubes
+   protected String getFrameLabel(int frame) { return label; }
+   
    protected double getCompletude() { return -1; }
 
    /** Retourne l'url qui a permis de générer le plan */

@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 import java.util.Iterator;
 
 import cds.aladin.Aladin;
-import cds.aladin.HealpixIndex;
+import cds.aladin.HealpixProgen;
 import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
@@ -43,7 +43,7 @@ public class BuilderConcat extends BuilderTiles {
    private String inputPath;
    private String outputPathIndex;
    private String inputPathIndex;
-   private CoAddMode mode;
+   private Mode mode;
    private boolean doHpxFinder;
    private int tileMode;
 
@@ -117,7 +117,7 @@ public class BuilderConcat extends BuilderTiles {
       inputPath = context.getInputPath();
       outputPathIndex = cds.tools.Util.concatDir( outputPath,Constante.HPX_FINDER);
       inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.HPX_FINDER);
-      mode = context.getCoAddMode();
+      mode = context.getMode();
       tileMode=Context.FITS;
 
       if( inputPath==null ) throw new Exception("\"in\" parameter required !");
@@ -283,9 +283,9 @@ public class BuilderConcat extends BuilderTiles {
       // Traitement de la tuile index
       if( doHpxFinder ) {
          String inputIndexFile = Util.getFilePath(inputPathIndex,order,npix,z);
-         HealpixIndex inputIndex = loadIndex(inputIndexFile);
+         HealpixProgen inputIndex = loadIndex(inputIndexFile);
          String outIndexFile = Util.getFilePath(outputPathIndex,order,npix,z);
-         HealpixIndex outIndex = loadIndex(outIndexFile);
+         HealpixProgen outIndex = loadIndex(outIndexFile);
 
          switch(mode) {
             case REPLACETILE:
@@ -332,17 +332,17 @@ public class BuilderConcat extends BuilderTiles {
 //   }
    
    // Ecriture du fichier d'index HEALPix correspondant à la map passée en paramètre
-   private void writeIndex(String file,HealpixIndex map) throws Exception {
+   private void writeIndex(String file,HealpixProgen map) throws Exception {
       cds.tools.Util.createPath(file);
       map.writeStream(new FileOutputStream(file) );
    }
    
    /** Construction d'une tuile terminale. Lit le fichier est map les entrées de l'index
     * dans une TreeMap */
-   private HealpixIndex loadIndex(String file) throws Exception {
+   private HealpixProgen loadIndex(String file) throws Exception {
       File f = new File(file);
       if( !f.exists() ) return null;
-      HealpixIndex out = new HealpixIndex();
+      HealpixProgen out = new HealpixProgen();
       out.loadStream( new FileInputStream(f));
       return out;
    }

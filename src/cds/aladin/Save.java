@@ -2541,7 +2541,7 @@ lenLine=1;
       f.write(end);
       size += end.length;
       
-      System.out.println("p="+p+" system="+p.projd.c.getSystem());
+//      System.out.println("p="+p+" system="+p.projd.c.getSystem());
 
       // Generation de la deuxième HDU FITS
 //      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.GAL);
@@ -2566,12 +2566,12 @@ lenLine=1;
          double [] radec = CDSHealpix.polarToRadec(polar);
          c.al = radec[0];
          c.del = radec[1];
-         c=Localisation.frameToFrame(c, Localisation.GAL, Localisation.ICRS);
+         c=Localisation.frameToFrame(c, p.projd.frame, Localisation.ICRS);
          proj.getXY(c);
 
          if( !flagColor ) {
             double val;
-            if( Double.isNaN(c.x) || c.x<0 || c.x>p.width || c.y<0 || c.y>p.height ) val = Double.NaN;
+            if( Double.isNaN(c.x) || c.x<-1 || c.x>p.width+1 || c.y<-1 || c.y>p.height+1 ) val = Double.NaN;
 //            else  val = p.getPixelInDouble((int)c.x, (int)(p.height-c.y));
             else  val = p.getPixelInDouble((int)c.x, (int)c.y);
             PlanImage.setPixVal(buf, bitpix, pos++, val);

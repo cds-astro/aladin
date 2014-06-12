@@ -48,7 +48,7 @@ public class BuilderTiles extends Builder {
 
    // Liste des Threads de calcul
    protected ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
-   private CoAddMode coaddMode=CoAddMode.REPLACETILE;
+   private Mode coaddMode=Mode.REPLACETILE;
    
    protected int ordermin = 3;
    protected int ordermax;
@@ -174,7 +174,6 @@ public class BuilderTiles extends Builder {
             }
          }
 
-
          // repositionnement des cuts et blank passés par paramètre
          double [] cutOrig = context.getCutOrig();
          double bs = context.bScaleOrig;
@@ -202,8 +201,8 @@ public class BuilderTiles extends Builder {
       
 
       // Info sur la méthode
-      CoAddMode m = context.getCoAddMode();
-      if( !context.isColor() || m==CoAddMode.KEEPTILE || m==CoAddMode.REPLACETILE ) context.info("mode="+CoAddMode.getExplanation(m));
+      Mode m = context.getMode();
+      if( !context.isColor() || m==Mode.KEEPTILE || m==Mode.REPLACETILE ) context.info("mode="+Mode.getExplanation(m));
    }
    
    long lastTime = 0L;
@@ -360,7 +359,7 @@ public class BuilderTiles extends Builder {
       // Initialisation des variables
       isColor = context.isColor();
       bitpix = context.getBitpix();
-      coaddMode = context.getCoAddMode();
+      coaddMode = context.getMode();
 
       if( !isColor ) {
          bzero = context.getBZero();
@@ -378,7 +377,7 @@ public class BuilderTiles extends Builder {
       long oneRhomb = Constante.SIDE*Constante.SIDE*context.getNpix();
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
-      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
+//      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
       int nbThread = (int) (size / maxMemPerThread);
 
       //    int nbThread=nbProc;
@@ -439,7 +438,7 @@ public class BuilderTiles extends Builder {
       if( !context.isInMocTree(order,npix) ) return findLeaf(file);
       
       // si le losange a déjà été calculé on le renvoie
-      if( coaddMode==CoAddMode.KEEPTILE ) {
+      if( coaddMode==Mode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
             HealpixMoc moc = context.getRegion();
@@ -681,12 +680,12 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      if( !isColor && coaddMode!=CoAddMode.REPLACETILE && coaddMode!=CoAddMode.KEEPTILE ) {
+      if( !isColor && coaddMode!=Mode.REPLACETILE && coaddMode!=Mode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);
          if( oldOut!=null ) {
-            if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
-            else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-            else if( coaddMode==CoAddMode.KEEP ) {
+            if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut);
+            else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
+            else if( coaddMode==Mode.KEEP ) {
                // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
                // celui renseigné par l'utilisateur, et sinon celui par défaut
                if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
@@ -739,7 +738,7 @@ public class BuilderTiles extends Builder {
       
       boolean isInList = context.isInMoc(order,npix);
 
-      if( !isInList && coaddMode!=CoAddMode.REPLACETILE ) {
+      if( !isInList && coaddMode!=Mode.REPLACETILE ) {
          oldOut = findLeaf(file);
          if( !(oldOut==null && context.isMocDescendant(order,npix) ) ) {
             addFits(Thread.currentThread(), oldOut);
@@ -751,17 +750,17 @@ public class BuilderTiles extends Builder {
 
       if( out !=null  ) {
 
-         if( coaddMode!=CoAddMode.REPLACETILE ) {
+         if( coaddMode!=Mode.REPLACETILE ) {
             if( oldOut==null ) oldOut = findLeaf(file);
-            if( oldOut!=null && coaddMode==CoAddMode.KEEPTILE ) { 
+            if( oldOut!=null && coaddMode==Mode.KEEPTILE ) { 
                out=null;
                addFits(Thread.currentThread(), oldOut);
                return oldOut; 
             }
             if( oldOut!=null ) {
-               if( coaddMode==CoAddMode.AVERAGE ) out.coadd(oldOut);
-               else if( coaddMode==CoAddMode.OVERWRITE ) out.mergeOnNaN(oldOut);
-               else if( coaddMode==CoAddMode.KEEP ) {
+               if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut);
+               else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
+               else if( coaddMode==Mode.KEEP ) {
                   // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
                   // celui renseigné par l'utilisateur, et sinon celui par défaut
                   if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);

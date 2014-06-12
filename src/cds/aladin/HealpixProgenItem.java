@@ -33,7 +33,7 @@ import cds.tools.Util;
 /** Gère les infos d'un progéniteur 
  * (image originale qui ont permis de créer le survey Healpix)
  */
-public class HealpixIndexItem {
+public class HealpixProgenItem {
    
    private String json;     // La chaine des infos
    
@@ -41,10 +41,12 @@ public class HealpixIndexItem {
    private boolean stcError=false; // true si on ne parvient pas à extraire le stc
    
    
-   public HealpixIndexItem(String s) { json=s; }
+   public HealpixProgenItem(String s) { json=s; }
    
    /** retourne la ligne brute JSON */
    public String getJson() { return json; }
+   
+   static final char SEP = Util.FS.charAt(0);
    
    /** Retourne l'ID associé à une entrée dans un fichier d'index Healpix
     * Il s'agit : soit du champ "name", soit du champ "path" (sans l'extension optionnelle [x,y,w,h])
@@ -61,7 +63,7 @@ public class HealpixIndexItem {
       }
       
       // On ne garde que le dernier élément après le dernier '/' pour éviter de construire une arborescence
-      int offset = key.lastIndexOf('/');
+      int offset = key.lastIndexOf(SEP);
       if( offset>=0 ) key = key.substring(offset+1,key.length() );
       return key;
    }

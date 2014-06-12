@@ -28,7 +28,7 @@ public enum Action {
    MOC       ("(Re)build the output coverage map (MOC order=maxorder)"), 
    MOCINDEX  ("(Re)build the input coverage map (MOC order=maxorder) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
-   ALLSKY    ("(Re)build all Allsky files"),
+   ALLSKY    ("(Re)build all Allsky files + index.html"),
    GZIP      ("Compress some FITS tiles and Allsky.fits"),
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
    CLEAN     ("Delete all Hips files (index, tiles, dir, Allsky, MOC, ...)"), 

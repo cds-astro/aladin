@@ -1,40 +1,28 @@
 package cds.allsky;
 
-import healpix.newcore.HealpixProc;
 
-import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.StringTokenizer;
 
-import cds.aladin.Aladin;
-import cds.aladin.ColorMap;
-import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.MyProperties;
-import cds.aladin.Plan;
-import cds.aladin.PlanBG;
 import cds.aladin.PlanHealpix;
-import cds.aladin.PlanImage;
-import cds.aladin.PlanImageMosaic;
-import cds.aladin.PlanImageRGB;
-import cds.allsky.Context.JpegMethod;
-import cds.fits.Fits;
-import cds.tools.pixtools.CDSHealpix;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
 public class BuilderCube extends Builder {
 
-   static final int COPY = 0;
-   static final int LINK = 1;
-   
    private String inputPath [];
-   private int mode = COPY;
+   private Mode mode = Mode.COPY;
 
+   private int nbFmt=1;         // Nombre de formats de tuiles concernés
+   private boolean hasFITS=false,hasPNG=false,hasJPEG=false;    // Formats déjà rencontrés
    private int statNbFile;
-   private long statSize;
    private long startTime,totalTime;
 
    public BuilderCube(Context context) {
@@ -53,10 +41,19 @@ public class BuilderCube extends Builder {
       }
       if( !context.isTaskAborting() ) context.writePropertiesFile();
    }
+   
+   // Pour les stats, retourne le nombre de formats de tuiles rencontrés et ou estimés
+   private int getNbFmt() {
+      int n = 0;
+      if( hasFITS ) n++;
+      if( hasJPEG ) n++;
+      if( hasPNG ) n++;
+      return Math.max(n,nbFmt);
+   }
 
    // Demande d'affichage des stats (dans le TabRgb)
    public void showStatistics() {
-      context.showRgbStat(statNbFile, statSize, totalTime);
+      context.showJpgStat( statNbFile/getNbFmt(), totalTime,0,0);
    }
 
    public void validateContext() throws Exception { 
@@ -87,37 +84,70 @@ public class BuilderCube extends Builder {
                context.prop.load(in);
                in.close();
                propFound=true;
+               
+               // Pour la stat d'avancement => une idée du nombre de format de tuiles
+               try {
+                  String fmt = (String)context.prop.get(PlanHealpix.KEY_FORMAT);
+                  int n = (new StringTokenizer(fmt," ")).countTokens();
+                  if( n>1 ) nbFmt=n;
+               } catch( Exception e ) { }
             }
+         } 
+         
+         // Récupération des noms des bandes
+         String lab= getALabel(path);
+         context.setPropriete(PlanHealpix.KEY_LABEL+"_"+i, lab);
+         
+         // Estimation du MOC final (union)
+         try {
+            HealpixMoc m = new HealpixMoc();
+            m.read( path+Util.FS+BuilderMoc.MOCNAME);
+            if( context.moc==null ) context.moc=m;
+            else context.moc = context.moc.union(m);
+         } catch( Exception e ) {
+           context.warning("Missing original MOC in "+path+" => running time estimation will be wrong");
          }
       }
       
       // Check du répertoire de destination
       validateOutput();
+//      validateFrame();
+      validateLabel();
       
       // Ajout des paramètres propres aux cubes
       context.depth=inputPath.length;
-      if( !propFound ) context.frame=Localisation.GAL;  // Si rien n'est mentionné, c'est du GAL
+      
+      // Mode de travail (link ou copy)
+      if( context.getMode().equals(Mode.LINK) ) mode = context.getMode();
+      context.info(mode.getExplanation(mode));
    }
 
-   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
+   private void initStat() { statNbFile=0;  startTime = System.currentTimeMillis(); }
 
+   
    // Mise à jour des stats
-   private void updateStat(File f) {
+   private void updateStat() {
       statNbFile++;
-      statSize += f.length();
       totalTime = System.currentTimeMillis()-startTime;
    }
 
    public void build() throws Exception  {
       initStat();
       String output = context.getOutputPath();
+      String outputHpxFinder = output+Util.FS+Constante.HPX_FINDER;
       
       for( int z=0; z<context.depth; z++ ) {
          String input = inputPath[z];   
          
          for( int order = 3; order<=context.getOrder(); order++ ) {
-            String path ="Norder"+order;
-            treeCopy(input, output, path,z);
+            treeCopy(input, output, "Norder"+order,z);
+         }
+         
+         String inputHpxFinder = input+Util.FS+Constante.HPX_FINDER;
+         if( (new File(inputHpxFinder).isDirectory()) ) {
+            for( int order = 3; order<=context.getOrder(); order++ ) {
+               treeCopy(inputHpxFinder, outputHpxFinder, "Norder"+order,z);
+            }
          }
          
       }
@@ -146,12 +176,36 @@ public class BuilderCube extends Builder {
       String name = pos<0 ? s  : s.substring(0,pos);
       String suffixe = z==0 ? "" : "_"+z;
       
+      if( !hasPNG && ext.equals(".png") ) hasPNG=true;
+      else if( !hasFITS && ext.equals(".fits") ) hasFITS=true;
+      else if( !hasJPEG && ext.equals(".jpg") ) hasJPEG=true;
+      
       String subPath = (new File(path)).getParent();
       
       (new File(output+Util.FS+subPath)).mkdirs();
       File trg = new File( output+Util.FS+subPath+Util.FS+name+suffixe+ext );
-      copy(src,trg);
+      
+      if( mode==Mode.LINK ) link(src,trg);
+      else copy(src,trg);
+      
+      updateStat();
    }
+   
+   static private void link(File src, File trg) throws Exception {
+      Path pSrc = Paths.get(src.toURI() );
+      Path pTrg = Paths.get(trg.toURI() );
+      Files.createSymbolicLink(pTrg, pSrc);
+   }
+   
+//   static public void main(String [] args) {
+//      try {
+//         File src = new File("C:\\Users\\Pierre\\Desktop\\GALEXHiPS");
+//         File trg = new File("C:\\Users\\Pierre\\Desktop\\Link");
+//         link(src,trg);
+//      } catch( Exception e ) {
+//         e.printStackTrace();
+//      }
+//   }
 
    // Copie du fichier
    private void copy(File src, File trg) throws Exception {
@@ -170,7 +224,5 @@ public class BuilderCube extends Builder {
       } 
       catch( Exception e ) { e.printStackTrace(); }
       finally { if( r!=null ) r.close(); }
-      
-      updateStat(trg);
    }
 }

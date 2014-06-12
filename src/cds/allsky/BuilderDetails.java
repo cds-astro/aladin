@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
 import cds.aladin.Aladin;
-import cds.aladin.HealpixIndex;
+import cds.aladin.HealpixProgen;
 import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles d'index à partir des tuiles de plus bas
@@ -123,12 +123,12 @@ public class BuilderDetails extends Builder {
       initStat();
       context.setProgressMax(768);
       String output = context.getHpxFinderPath();
-      HealpixIndex allsky=null;
+      HealpixProgen allsky=null;
       
       for( int i=0; i<768; i++ ) {
-         HealpixIndex hi = createTree(output,3,i);
+         HealpixProgen hi = createTree(output,3,i);
          if( hi!=null /* && !allsky.hasTooMany() */ ) {
-            if( allsky==null ) allsky  = new HealpixIndex();
+            if( allsky==null ) allsky  = new HealpixProgen();
             allsky.putAll(hi);
          }
          context.setProgress(i);
@@ -155,7 +155,7 @@ public class BuilderDetails extends Builder {
    /** Construction récursive de la hiérarchie des tuiles FITS à partir des tuiles FITS
     * de plus bas niveau. La méthode employée est la moyenne
     */
-   private HealpixIndex createTree(String path,int order, long npix ) throws Exception {
+   private HealpixProgen createTree(String path,int order, long npix ) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
       
       // Si son père n'est pas dans le MOC, on passe
@@ -163,10 +163,10 @@ public class BuilderDetails extends Builder {
       
       String file = Util.getFilePath(path,order,npix);
 
-      HealpixIndex out = null;
+      HealpixProgen out = null;
       if( order==maxOrder ) out = createLeave(file);
       else {
-         HealpixIndex fils[] = new HealpixIndex[4];
+         HealpixProgen fils[] = new HealpixProgen[4];
          boolean found = false;
          for( int i =0; i<4; i++ ) {
             fils[i] = createTree(path,order+1,npix*4+i);
@@ -189,28 +189,28 @@ public class BuilderDetails extends Builder {
    }
    
    // Ecriture du fichier d'index HEALPix correspondant à la map passée en paramètre
-   private void writeIndexFile(String file,HealpixIndex map) throws Exception {
+   private void writeIndexFile(String file,HealpixProgen map) throws Exception {
       cds.tools.Util.createPath(file);
       map.writeStream(new FileOutputStream(file) );
    }
    
    /** Construction d'une tuile terminale. Lit le fichier est map les entrées de l'index
     * dans une TreeMap */
-   private HealpixIndex createLeave(String file) throws Exception {
+   private HealpixProgen createLeave(String file) throws Exception {
       File f = new File(file);
       if( !f.exists() ) return null;
 //      System.out.println("   createLeave("+file+")");
-      HealpixIndex out = new HealpixIndex();
+      HealpixProgen out = new HealpixProgen();
       out.loadStream( new FileInputStream(f));
       updateStat();
       return out;
    }
    
    /** Construction d'une tuile intermédiaire à partir des 4 tuiles filles */
-   private HealpixIndex createNode(HealpixIndex fils[]) throws Exception {
+   private HealpixProgen createNode(HealpixProgen fils[]) throws Exception {
 //      System.out.println("   createNode()");
     
-      HealpixIndex out = new HealpixIndex();
+      HealpixProgen out = new HealpixProgen();
       for( int i=0; i<4; i++ ) {
          if( fils[i]==null ) continue;
 //         if( fils[i].hasTooMany() ) { out.setTooMany(true); break; }

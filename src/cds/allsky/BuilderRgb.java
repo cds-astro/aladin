@@ -96,7 +96,7 @@ public class BuilderRgb extends Builder {
           tcm[c] = cds.tools.Util.getTableCM(cm, 2);
 //          tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
  
-          context.setProperty(c==0?"red":c==1?"green":"blue",p[c].label+" ["
+          context.setPropriete(c==0?"red":c==1?"green":"blue",p[c].label+" ["
                +p[c].getPixelMin()+" "+p[c].getPixelMiddle()+" "+p[c].getPixelMax()+" "
                +PlanImage.TRANSFERTFCT[ p[c].transfertFct ]+"]");
           int order = p[c].getMaxFileOrder();

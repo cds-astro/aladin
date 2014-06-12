@@ -102,9 +102,10 @@ public class Task extends Thread {
                    builder.showStatistics();
                 }
              } catch( Exception e ) {
-                if( Aladin.levelTrace>=3 ) e.printStackTrace();
                 context.taskAbort();
-                context.warning(e.getMessage());
+                String s = e.getMessage();
+                if( s!=null && s.length()>0 ) context.warning(e.getMessage());
+                else e.printStackTrace();
              } 
              context.endAction();
           }

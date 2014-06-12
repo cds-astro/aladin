@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.util.Properties;
 
 import cds.aladin.Localisation;
+import cds.aladin.MyProperties;
 import cds.aladin.PlanHealpix;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
@@ -234,14 +235,38 @@ public abstract class Builder {
          if( missingCut )   {
             cut[0]= imgCut[0];
             cut[1]= imgCut[1]; 
-            context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
+            if( cut[0]!=cut[1] ) context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
          }
       }
       
       // S'il me manque toujours le pixelCut, je vais tenter de les récupérer par le fichier des properties
       missingCut   = cut==null || cut[0]==0 && cut[1]==0;
       if( missingCut ) {
-          // TODO
+         try {
+            String propFile = context.getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
+            MyProperties prop = new MyProperties();
+            File f = new File( propFile );
+            if( f.exists() ) {
+               FileInputStream in = new FileInputStream(propFile); 
+               prop.load(in);
+               in.close();
+               String s = (String)prop.get(PlanHealpix.KEY_PIXELCUT);
+               context.setPixelCut(s);
+               pixelRangeCut = context.getPixelRangeCut();
+               
+               // Il me faut alors BZERO  et BSCALE
+               try {
+                  setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+                  if( cut==null ) cut = new double[5];
+                  for( int i=0; i<4; i++ ) {
+                     if( Double.isNaN(pixelRangeCut[i]) ) continue;
+                     cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;
+                  }
+                  context.info("Pixel cut from the propertie file => ["+ip(cut[0],context.bzero,context.bscale)+" .. "+ip(cut[1],context.bzero,context.bscale)+"]");
+               } catch( Exception e ) { }
+            }
+         } catch( Exception e ) {}
+        
       }
       
       context.setCut(cut);
@@ -254,6 +279,70 @@ public abstract class Builder {
       context.setValidateCut(true);
    }
    
+   
+   protected void validateBitpix() {
+      if( context.bitpix!=-1 ) return;
+      try {
+         setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
+      } catch( Exception e ) { }
+   }
+   
+   protected void validateLabel() {
+      if( context.label!=null ) return;
+      String label = getALabel(context.getOutputPath());
+      if( label!=null && label.length()>0 ) context.label=label;
+   }
+   
+   protected String getALabel(String path) {
+      String label=null;
+      
+      // Je vais essayé de le récupérer depuis le fichier des propriétés
+      try {
+         String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
+         MyProperties prop = new MyProperties();
+         File f = new File( propFile );
+         if( f.exists() ) {
+            FileInputStream in = new FileInputStream(propFile); 
+            prop.load(in);
+            in.close();
+            String s = (String)prop.get(PlanHealpix.KEY_LABEL);
+            if( s!=null && s.length()>0 ) label=s;
+         }
+      } catch( Exception e ) { }
+      if( label!=null ) return label;
+      
+      // Je vais le construire à partir du nom du répertoire
+      int offset = path.lastIndexOf(Util.FS);
+      if( offset<0 ) offset = path.lastIndexOf('/');
+      if( offset>=0 ) label=path.substring(offset+1);
+      else label=path;
+      
+      return label;
+   }
+   
+   
+//   protected void validateFrame() {
+//      String path = context.getOutputPath();
+//      String coordsys=null;
+//      
+//      // Je vais essayé de le récupérer depuis le fichier des propriétés
+//      try {
+//         String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
+//         MyProperties prop = new MyProperties();
+//         File f = new File( propFile );
+//         if( f.exists() ) {
+//            FileInputStream in = new FileInputStream(propFile); 
+//            prop.load(in);
+//            in.close();
+//            String s = (String)prop.get(PlanHealpix.KEY_COORDSYS);
+//            if( s!=null && s.length()>0 ) coordsys=s;
+//         }
+//      } catch( Exception e ) { }
+//      if( coordsys==null ) context.frame = Localisation.GAL;
+//      else context.setFrameName(coordsys);
+//   }
+   
+
 //   // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
 //   protected void validateCut() throws Exception {
 //      if( context.isValidateCut() ) return;
@@ -372,6 +461,15 @@ public abstract class Builder {
          double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
          context.bscale=bscale;
       } catch( Exception e ) { }
+      
+      // J'en profite
+      if( context.bitpix==-1 ) {
+         try {
+            double bitpix = f.headerFits.getDoubleFromHeader("BITPIX");
+            context.bitpix=(int)bitpix;
+         } catch( Exception e ) { }
+
+      }
    }
    
    /** Retourne le nombre d'octets disponibles en RAM */

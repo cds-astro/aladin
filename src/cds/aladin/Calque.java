@@ -2988,7 +2988,8 @@ public final class Calque extends JPanel implements Runnable {
 
       if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
       p.setActivated(true);
-      p.setSourceType(Source.getDefaultType(vSources.size()));
+      p.pcat.createDefaultProj();
+//      p.setSourceType(Source.getDefaultType(vSources.size()));
 
       return p;
    }
@@ -3296,7 +3297,7 @@ public final class Calque extends JPanel implements Runnable {
       Plan p;
       String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
       if( gSky!=null ) {
-         plan[n] = p = gSky.isProgen()  ? new PlanBGCatIndex(aladin,gSky,label, c, rad,startingTaskId) :
+         plan[n] = p = gSky.isProgen()  ? new PlanBGProgen(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
                        gSky.isMap()     ? new PlanHealpix(aladin,gSky,label, c,rad,startingTaskId) :
                        gSky.isCube()    ? new PlanBGCube(aladin, gSky, label, c,rad,startingTaskId):

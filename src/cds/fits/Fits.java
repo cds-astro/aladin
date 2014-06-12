@@ -1519,6 +1519,61 @@ final public class Fits {
 //      cut[1] = bscale * cut[1] + bzero;
 //      return cut;
 //   }
+   
+   
+   /** Détermine les paramètres d'une ellipse ou d'un rectangle qui contient les pixels observés, afin d'éliminer le bord.
+    * Par sur l'hypothèse que l'observation est connexe, mais pas nécessairement centrée.
+    * @return [x,y,rayonX,rayonY] dans le sens FITS
+    * @throws Exception
+    */
+   public double[] findData() throws Exception {
+      double [] shape = new double[4];
+      try {
+         if( isReleased() ) reloadBitmap();
+         double c;
+         double pixBord = getPixValDouble(pixels, bitpix,0);   // Pixel du coin qui sera la référence de la couleur du bord
+         int haut,bas,droite,gauche;
+         haut=bas=droite=gauche=-1;
+
+         haut: for( int y = 0; y< height; y++ ) {
+            for( int x = 0; x < width; x++ ) {
+               c = getPixValDouble(pixels, bitpix, y*width + x);
+               if( c!=pixBord ) { haut=y; break haut; }
+            }
+         }
+         bas: for( int y = height-1; y>=0; y-- ) {
+            for( int x = 0; x < width; x++ ) {
+               c = getPixValDouble(pixels, bitpix, y*width + x);
+               if( c!=pixBord ) { bas=y; break bas; }
+            }
+         }
+         gauche:  for( int x = 0; x < width; x++ ) {
+            for( int y = 0; y< height; y++ ) {
+               c = getPixValDouble(pixels, bitpix, y*width + x);
+               if( c!=pixBord ) { gauche=x; break gauche; }
+            }
+         }
+         droite:  for( int x = height-1; x >=0; x-- ) {
+            for( int y = 0; y< height; y++ ) {
+               c = getPixValDouble(pixels, bitpix, y*width + x);
+               if( c!=pixBord ) { droite=x; break droite; }
+            }
+         }
+         
+         
+         shape[0] = (droite+gauche)/2;
+         shape[1] = (haut+bas)/2;
+         shape[2] = (droite-gauche)/2;
+         shape[3] = (bas-haut)/2;
+         
+         if( droite==-1 || gauche==-1 ) { shape[0]=width/2;  shape[2]=width/2; } 
+         if( haut==-1   || bas==-1 )    { shape[1]=height/2; shape[3]=height/2; } 
+
+      } catch( Exception e ) {
+         shape=null;
+      }
+      return shape;
+   }
 
    /**
     * Détermine l'intervalle pour un autocut "à la Aladin".

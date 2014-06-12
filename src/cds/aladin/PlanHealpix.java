@@ -47,6 +47,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_OFFSET = "offset";
     static public final String KEY_SIZERECORD = "sizeRecord";
     static public final String KEY_PROCESSING_DATE = "processingDate";
+    static public final String KEY_FIRST_PROCESSING_DATE = "firstProcessingDate";
     static public final String KEY_LAST_MODIFICATON_DATE = "lastModified";
     static public final String KEY_NSIDE_PIXEL = "nsidePixel";
     static public final String KEY_NSIDE_FILE = "nsideFile";

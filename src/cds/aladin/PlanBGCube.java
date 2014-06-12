@@ -47,6 +47,12 @@ public class PlanBGCube extends PlanBG {
       pause = true;
       scanCubeProperties();
    }
+   
+   protected String getFrameLabel(int i) {
+      if( !active ) return label;
+      String s = prop.getProperty(PlanHealpix.KEY_LABEL+"_"+i); 
+      return s!=null ? s : label;
+   }
 
    protected boolean Free() {
       stopLoadingImmediately();
@@ -179,7 +185,7 @@ public class PlanBGCube extends PlanBG {
       Integer z2 = previousWorkingFrame.get( key );
       if( z2==null ) return null;
       int z1 = z2.intValue();
-      if( Math.abs(z1-z)>5 ) return null;
+//      if( Math.abs(z1-z)>5 ) return null;
       HealpixKey h =  pixList.get( key(order,npix, z1) );
       if( h==null || h.getStatus()!=HealpixKey.READY ) { previousWorkingFrame.remove(key); return null; }
 //      System.out.println("Je réutilise "+key(order,npix,z1));

@@ -34,7 +34,7 @@ import cds.tools.pixtools.Util;
  * (images originales qui ont permis de créer le survey Healpix)
  * => Cette arborescence Healpix se trouve toujours dans le répertoire "HpxFinder"
  */
-public class HealpixIndex extends TreeMap<String, HealpixIndexItem> implements Iterable<String>{
+public class HealpixProgen extends TreeMap<String, HealpixProgenItem> implements Iterable<String>{
    
 //   public static int TOOMANY = 500;   // Nombre maximum d'entrées autorisées
 //   private boolean tooMany = false;
@@ -52,7 +52,7 @@ public class HealpixIndex extends TreeMap<String, HealpixIndexItem> implements I
          in = new DataInputStream(new BufferedInputStream(stream));
          String s;
          while( (s=in.readLine())!=null ) {
-            HealpixIndexItem item = new HealpixIndexItem(s);
+            HealpixProgenItem item = new HealpixProgenItem(s);
             put( item.getID(), item);
          }
       } finally  {
@@ -74,11 +74,11 @@ public class HealpixIndex extends TreeMap<String, HealpixIndexItem> implements I
    public Iterator<String> iterator() { return keySet().iterator(); }
    
    /** Ajout des entrées d'un autre index */
-   public void merge(HealpixIndex hi) {
+   public void merge(HealpixProgen hi) {
       Iterator<String> it = hi.iterator();
       while( it.hasNext() ){
          String s = it.next();
-         HealpixIndexItem item = new HealpixIndexItem(s);
+         HealpixProgenItem item = new HealpixProgenItem(s);
          put( item.getID(), item);
       }
    }

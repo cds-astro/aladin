@@ -230,7 +230,7 @@ public class PlanBG extends PlanImage {
       coRadius=radius;
       if( label!=null && label.trim().length()>0 ) setLabel(label);
       setSpecificParams(gluSky);
-      if( copyrightUrl==null ) copyrightUrl=url;
+//      if( copyrightUrl==null ) copyrightUrl=url;
       aladin.trace(3,"AllSky creation: "+gluSky.toString1()+(c!=null ? " around "+c:""));
       suite();
    }

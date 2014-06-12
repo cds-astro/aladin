@@ -33,6 +33,8 @@ import cds.tools.pixtools.Util;
  */
 final public class BuilderAllsky  extends Builder {
    
+   private boolean abort=false;
+   
    public static final String FS = System.getProperty("file.separator");
    
    public BuilderAllsky(Context context) { super(context); }
@@ -44,18 +46,23 @@ final public class BuilderAllsky  extends Builder {
       context.setProgressMax(100);
    }
    
+   protected void abort() { abort=true; }
+   
    public void run() throws Exception { 
 //      if( !context.isColor() ) validateCut();
+      abort=false;
       validateDepth();
-      for( int z=0; z<context.depth; z++ ) {
+      for( int z=0; !abort && z<context.depth; z++ ) {
          if( !context.isColor() ) createAllSky(context.getOutputPath(),3, 64, z);
-         if( z==0 && !context.isColor() ) validateCut();
-         createAllSkyColor(context.getOutputPath(),3,"png",64, z);
-         createAllSkyColor(context.getOutputPath(),3,"jpeg",64, z);
+         try {
+            if( z==0 && !context.isColor() ) validateCut();
+            createAllSkyColor(context.getOutputPath(),3,"png",64, z);
+            createAllSkyColor(context.getOutputPath(),3,"jpeg",64, z);
+         } catch( Exception e ) { }
       }
-      context.writePropertiesFile();
+
+      postJob();
    }
-   
    
    public void runJpegOrPngOnly(String format) throws Exception { 
     validateDepth();
@@ -63,9 +70,16 @@ final public class BuilderAllsky  extends Builder {
     for( int z=0; z<context.depth; z++ ) {
        createAllSkyColor(context.getOutputPath(),3,format,64, z);
     }
-    context.writePropertiesFile();
+
+    postJob();
  }
- 
+   
+   private void postJob() throws Exception {
+//      validateFrame();
+      validateLabel();
+      validateBitpix();
+      context.writePropertiesFile();
+   }
 
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix
     * Rq : seule la méthode FIRST est supportée
@@ -92,7 +106,7 @@ final public class BuilderAllsky  extends Builder {
 //      double blank = context.getBlank();
       
       for( int npix=0; npix<n; npix++ ) {
-         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         if( abort || context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
          String name = Util.getFilePath("", order, npix,z);
          Fits in = new Fits();
@@ -189,7 +203,7 @@ final public class BuilderAllsky  extends Builder {
       Fits out = new Fits(outFileWidth,outFileHeight, 0);
       
       for( int npix=0; npix<n; npix++ ) {
-         if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         if( abort || context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
          String name = Util.getFilePath(order, npix, z);
          Fits in = new Fits();

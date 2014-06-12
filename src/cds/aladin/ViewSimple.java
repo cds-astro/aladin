@@ -1753,7 +1753,7 @@ public class ViewSimple extends JComponent
       int tool = aladin.toolBox.getTool();
       if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 || e.isAltDown() ) tool=ToolBox.PAN;
       
-      if( tool==ToolBox.SELECT && !aladin.calque.hasSelectableObjects() ) {
+      if( tool==ToolBox.SELECT && !Aladin.OUTREACH && !aladin.calque.hasSelectableObjects() ) {
          
          // En multiview, on garde la possibilité de déplacer les vues en attrapant
          // leur bord
@@ -3630,10 +3630,6 @@ public class ViewSimple extends JComponent
        markAvailableImages(x,y,aladin.treeView.mTree,shiftDown);
 
        showAvailableImages(x,y);
-       
-       // Idem pour les progeniteurs
-       if( aladin.view.getCurrentView()==this && aladin.frameProgen!=null 
-             && aladin.frameProgen.isVisible() ) aladin.frameProgen.updateCheckByMouse(this, (int)x, (int)y);
    }
 
    /**
@@ -4856,9 +4852,8 @@ testx1=x1; testy1=y1; testw=w; testh=h;
    private void drawLabel(Graphics g,int dx,int dy) {
       if( !aladin.calque.hasLabel() ) return;
       Color c = g.getColor();
-      String s=isPlotView() ? plot.getPlotLabel() :
-               pref instanceof PlanImageBlink?((PlanImageBlink)pref).getFrameLabel(getCurrentFrameIndex())
-                                         :pref.label;
+      String s=isPlotView() ? plot.getPlotLabel() : 
+         pref.isCube() ? pref.getFrameLabel(getCurrentFrameIndex()) : pref.label;
       if( s==null ) return;
       
       int x=getMarge()+dx;

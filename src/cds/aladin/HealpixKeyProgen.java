@@ -32,11 +32,11 @@ import java.util.regex.Pattern;
 
 import cds.xml.Field;
 
-public class HealpixKeyCatIndex extends HealpixKeyCat {
+public class HealpixKeyProgen extends HealpixKeyCat {
 
-   protected HealpixKeyCatIndex(PlanBG planBG) { super(planBG); }
+   protected HealpixKeyProgen(PlanBG planBG) { super(planBG); }
 
-   protected HealpixKeyCatIndex(PlanBG planBG,int order, long npix) {
+   protected HealpixKeyProgen(PlanBG planBG,int order, long npix) {
       super(planBG,order,npix);
    }
    

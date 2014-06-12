@@ -69,7 +69,7 @@ public final class FullScreen extends JFrame implements ActionListener {
    private int XSAVE=-1,YSAVE;  // Position du logo d'enregistrement (-1 si aucun)
    
    static final int YMARGE = 175; // Marge en ord. depuis le bas jusqu'au premier logo
-   static final int XMARGE = 30;  // Marge en abs. depuis la droite jusqu'au premier logo
+   static final int XMARGE = 40;  // Marge en abs. depuis la droite jusqu'au premier logo
    static final int YGAP = 18;    // Distance entre les logos (checkboxes)
    static final int MAXCHECK=20;
    private int nCheck=0;        // Nombre de checkbox utilisés
@@ -373,6 +373,7 @@ public final class FullScreen extends JFrame implements ActionListener {
      if( viewSimple.pref!=null && Projection.isOk(viewSimple.getProj()) ) {
         XGRID = getWidth()-(XMARGE+2);
         YGRID = getHeight()-ymarge+8;
+        aladin.grid.fillBG(g,XGRID,YGRID,Color.white);
         aladin.grid.drawGrid(g,XGRID,YGRID,aladin.calque.hasGrid()?Aladin.GREEN:Color.black);
      } else {
         XGRID=-1;

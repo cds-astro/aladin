@@ -109,6 +109,7 @@ public class BuilderIndex extends Builder {
             file.loadHeaderFITS(img);
             long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
             order = ((int) Util.order((int) nside) - Constante.ORDER);
+            if( order<3 ) order=3;
             context.setOrder(order);
          } catch (Exception e) {
             context.warning("The reference image has no astrometrical calibration ["+img+"] => order can not be computed");
@@ -221,8 +222,8 @@ public class BuilderIndex extends Builder {
       int o1 = filename.lastIndexOf('/');
       int o1b = filename.lastIndexOf('\\');
       if( o1b>o1 ) o1=o1b;
-      int o2 = filename.indexOf('.',o1);
-      if( o2==-1 ) o2 = filename.length();
+      int o2 = filename.lastIndexOf('.');
+      if( o2==-1 || o2<=o1 ) o2 = filename.length();
       String name = filename.substring(o1+1,o2);
       if( fitsVal==null ) fitsVal="";
       

@@ -970,6 +970,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( n==-1 ) {
          v= new ViewSimple(aladin,this,viewSimple[0].rv.width,viewSimple[0].rv.height,0);
       } else v = viewSimple[n];
+      
+      // Il faudrait tester s'il y a déjà une vue avec ce plan, et si c'est le
+      // cas faire un lock (en tout cas en mode OUTREACH)
+      // A FAIRE !!
 
       v.setPlanRef(p,false);
       p.setActivated(true);
@@ -1758,6 +1762,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
      *  @param p le plan à montrer
      */
      protected boolean  syncPlan(Plan p) {
+        if( !Projection.isOk(p.projd) ) return false;
 //        return gotoThere(p.co,0,true);
         Coord c = null;
         if( p instanceof PlanBG ) c = p.co;

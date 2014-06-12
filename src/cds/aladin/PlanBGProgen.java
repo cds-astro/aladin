@@ -25,15 +25,16 @@ import java.util.Iterator;
 import java.util.TreeMap;
 
 import cds.allsky.BuilderDetails;
+import cds.allsky.Constante;
 
-public class PlanBGCatIndex extends PlanBGCat {
+public class PlanBGProgen extends PlanBGCat {
 
 
-   protected PlanBGCatIndex(Aladin aladin) {
+   protected PlanBGProgen(Aladin aladin) {
       super(aladin);
    }
    
-   protected PlanBGCatIndex(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius,String startingTaskId) {
+   protected PlanBGProgen(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius,String startingTaskId) {
       super(aladin,gluSky,label, c,radius,startingTaskId);
    }
    
@@ -53,7 +54,7 @@ public class PlanBGCatIndex extends PlanBGCat {
    // est précédé du nom du survey
    private String getAssociatedSurvey() { 
       String s = url.replace('\\','/');
-      int fin = s.lastIndexOf("/HpxFinder");
+      int fin = s.lastIndexOf("/"+Constante.HPX_FINDER);
       int deb = s.lastIndexOf('/', fin-1);
       String associatedSurvey = s.substring(deb+1,fin);
 //      System.out.println("URL => "+url+" ["+associatedSurvey+"]");
@@ -67,7 +68,7 @@ public class PlanBGCatIndex extends PlanBGCat {
    /** Demande de chargement du losange repéré par order,npix */
    public HealpixKey askForHealpix(int order,long npix) {
       readyAfterDraw=false;
-      HealpixKey pixAsk = new HealpixKeyCatIndex(this,order,npix);
+      HealpixKey pixAsk = new HealpixKeyProgen(this,order,npix);
       pixList.put( key(order,npix), pixAsk);
       return pixAsk;
    }
@@ -79,13 +80,13 @@ public class PlanBGCatIndex extends PlanBGCat {
       pcat.draw(g, null, v, true, false, 0, 0);
    }
    
-   private HealpixAllskyCatIndex allsky;
+   private HealpixAllskyProgen allsky;
    
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(ViewSimple v,TreeMap<String, Source> map,int order) {
       boolean hasDrawnSomething=false;
       if( allsky==null ) {
-         allsky = new HealpixAllskyCatIndex(this,order);
+         allsky = new HealpixAllskyProgen(this,order);
          pixList.put( key(order,-1), allsky);
 
          if( local ) allsky.loadFromNet();
@@ -140,7 +141,7 @@ public class PlanBGCatIndex extends PlanBGCat {
          if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
          nTotal++;
 
-         HealpixKeyCatIndex healpix = (HealpixKeyCatIndex)getHealpix(order,pix[i], true);
+         HealpixKeyProgen healpix = (HealpixKeyProgen)getHealpix(order,pix[i], true);
          if( healpix==null ) continue;            // Inconnu => on ne dessine pas
          healpix.priority=250-(priority++);       // Positionnement de la priorité d'affichage
          int status = healpix.getStatus();

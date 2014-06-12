@@ -58,6 +58,7 @@ public class CacheFits {
 //   private TreeMap<String,FitsFile> sortedMap;        // Table trié par ordre de dernier accès
    Context context;
    private Hashtable<String, double[]> cutCache = new Hashtable<String, double[]>();
+   private Hashtable<String, double[]> shapeCache = new Hashtable<String, double[]>();
    
 
    //private boolean skyvalSub = false;// condition d'application d'une soustraction du skyval au moment 
@@ -218,11 +219,11 @@ public class CacheFits {
             int i;
             if( (i=jpgFile.indexOf(".jpg["))>0 ) racJpgFile = jpgFile.substring(0,i+4);
             if( (i=pngFile.indexOf(".png["))>0 ) racPngFile = pngFile.substring(0,i+4);
-            
-                 if( (new File(racJpgFile)).exists() ) mode |= JPEG;
+
+            if( (new File(racJpgFile)).exists() ) mode |= JPEG;
             else if( (new File(racPngFile)).exists() ) mode |= PNG;
          }
-              if( (mode&PNG)!=0  ) fileName=pngFile;
+         if( (mode&PNG)!=0  ) fileName=pngFile;
          else if( (mode&JPEG)!=0 ) fileName=jpgFile;
          else throw new Exception(".hhh file without associated .jpg or .png file");
       }
@@ -240,7 +241,8 @@ public class CacheFits {
       }
 
       // applique un filtre spécial
-      if (context.skyvalName!=null || context.expTimeName!=null || context.pixelGood!=null || flagChangeOrig ) delSkyval(f.fits,flagChangeOrig);
+      if (context.skyvalName!=null || context.expTimeName!=null 
+            || context.pixelGood!=null || flagChangeOrig || context.dataArea!=Context.ALL) delSkyval(f.fits,flagChangeOrig);
 
       return f;
    }
@@ -329,7 +331,7 @@ public class CacheFits {
    
    // Détermination des cuts d'une image,
    // et conservation dans un cache pour éviter de refaire plusieurs fois
-   // le calcul notamment dans le cas d'une image ouverte en mode "blocks"
+   // le calcul notamment dans le cas d'une image ouverte en mode "blocs"
    private double [] findAutocutRange(Fits f) throws Exception {
       String filename = f.getFilename()+f.getMefSuffix();
       double [] cut = cutCache.get(filename);
@@ -352,6 +354,29 @@ public class CacheFits {
    private String ip(double raw,double bzero,double bscale) {
       return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
    }
+   
+   /** Détermination de la zone des données observées (cercle, ellipse ou rectangle). Retourne
+    * Les coordonnées de la zone qui contient des pixels observées afin de supprimer le bord
+    * La connaissance de la forme (ellipse ou rectangle) doit être connue par ailleurs
+    * Conservation dans un cache, notamment dans le cas d'une image ouverte en mode blocs
+    * @param f
+    * @return x,y,xradius,yradius (sens FITS)
+    * @throws Exception
+    */
+   private double [] findDataArea(Fits f) throws Exception {
+      String filename = f.getFilename()+f.getMefSuffix();
+      double [] shape = shapeCache.get(filename);
+      if( shape!=null ) return shape;
+      
+      Fits f1 = new Fits();
+      f1.loadFITS(filename);
+      if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+      shape = f1.findData();
+      shapeCache.put(filename,shape);
+      context.info("Data area range => ["+shape[0]+","+shape[1]+" "+shape[2]+"x"+shape[3]+"] for "+filename);
+
+      return shape;
+   }
 
    
    private boolean first=true;
@@ -367,7 +392,10 @@ public class CacheFits {
 //      double newval = f.blank;
       boolean skyValTag=false;
       boolean expTimeTag=false;
+      double [] shape=null;
+      double marge=0;
       
+      // Faut-il retrancher le fond du ciel, et par quelle méthode ?
       if( context.skyvalName!=null ) {
 
          try {
@@ -398,6 +426,11 @@ public class CacheFits {
          } catch (Exception e) { }
       }
       
+      // Faut-il supprimer les bords dans le cas d'une observation ellipsoïde ou rectangulaire
+      if( context.dataArea!=Context.ALL ) {
+         try { shape = findDataArea(f); } catch (Exception e) { }
+      }
+      
       if( context.expTimeName!=null ) {
          try {
             expTime = f.headerFits.getDoubleFromHeader(context.expTimeName);
@@ -405,12 +438,22 @@ public class CacheFits {
          } catch (NullPointerException e) { }
       }
       
-      if( !skyValTag && !expTimeTag && !flagChangeOrig && /* f.bzero==0 && f.bscale==1 && */context.pixelGood==null ) return;
+      if( !skyValTag && !expTimeTag && !flagChangeOrig && context.pixelGood==null && shape==null ) return;
       
 //      System.out.println("SkyVal="+skyval+" => "+f.getFileNameExtended());
       
       
       double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;
+      double a2=0,b2=0;
+      if( shape!=null ) {
+         if( context.dataArea==Context.ELLIPSE ) { 
+            a2=(shape[2]-context.borderSize[0]-context.borderSize[2]); a2 *= a2;
+            b2=(shape[3]-context.borderSize[1]-context.borderSize[3]); b2 *= b2;
+         } else {
+            a2 = (shape[2]-context.borderSize[0]-context.borderSize[2])/2;
+            b2 = (shape[3]-context.borderSize[1]-context.borderSize[3])/2;
+         }
+      }
       
       for( int z=0; z<f.depthCell; z++ ) {
          for( int y=0; y<f.heightCell; y++ ) {
@@ -425,23 +468,42 @@ public class CacheFits {
                   continue;
                }
 
+               if( shape!=null ) {
+                  double x1 = x+f.xCell - shape[0];
+                  double y1 = y+f.yCell - shape[1];
+                  boolean out;
+                  if( context.dataArea==Context.ELLIPSE ) out = (x1*x1)/a2 + (y1*y1)/b2 >= 1;
+                  else out = Math.abs(x1)>=a2 || Math.abs(y1)>=b2;
+                  
+                  if( out ) {
+                     if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, blank);
+                     else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)blank); 
+                     continue;
+                  }
+               }
+
+
                if( context.hasAlternateBlank() ) {
                   if( pixelFull==context.getBlankOrig() ) continue;
                } else if( f.isBlankPixel(pixelFull) ) continue;
 
-               pixelFull = pixelFull*f.bscale + f.bzero;
 
                if( skyValTag  ) pixelFull -= skyval;
                if( expTimeTag ) pixelFull /= expTime;
 
-               pixelFull = (pixelFull - context.bZeroOrig) / context.bScaleOrig;
-
+               if( flagChangeOrig ) {
+                  pixelFull = pixelFull*f.bscale + f.bzero;
+                  pixelFull = (pixelFull - context.bZeroOrig) / context.bScaleOrig;
+               }
+               
                if( f.bitpix<0 ) f.setPixelDouble(x+f.xCell, y+f.yCell, z+f.zCell, pixelFull);
                else f.setPixelInt(x+f.xCell, y+f.yCell, z+f.zCell, (int)(pixelFull+0.5)); 
             }
          }
       }
    }
+   
+   static double obscale=-1;
 
    /** Retourne le nombre de fichiers ayant été ouverts */
    public int getStatNbOpen() { return statNbOpen; }

@@ -1105,6 +1105,14 @@ public final class Calib  implements Cloneable {
 
          //   System.out.println("DEC");
       }
+      try {
+         String  Syst = hf.getStringFromHeader("RADECSYS") ;
+         //if(flagadd == 1) WCSKeys.addElement("RADECSYS") ;
+         if (Syst.indexOf("ICRS")>=0) system = ICRS;
+         if (Syst.indexOf("FK5")>=0) system = FK5 ;
+         if (Syst.indexOf("FK4")>=0) system = FK4 ;
+         //        System.out.println("system "+system);
+      } catch(Exception e10) {}
       if (type1.startsWith("ELON"))
       {
          //                       System.out.println("ELON");
@@ -1133,14 +1141,6 @@ public final class Calib  implements Cloneable {
       }  
       if ((equinox == 1950.0)&&( system != GALACTIC) &&  ( system != ECLIPTIC) && ( system != SUPERGALACTIC)
             && (system != XYLINEAR)) system = FK4 ;
-      try {
-         String  Syst = hf.getStringFromHeader("RADECSYS") ;
-         //if(flagadd == 1) WCSKeys.addElement("RADECSYS") ;
-         if (Syst.indexOf("ICRS")>=0) system = ICRS;
-         if (Syst.indexOf("FK5")>=0) system = FK5 ;
-         if (Syst.indexOf("FK4")>=0) system = FK4 ;
-         //        System.out.println("system "+system);
-      } catch(Exception e10) {}
       try {
          adxpoly[0] = hf.getDoubleFromHeader("PV2_0   ");	 
       } catch(Exception e11) {}
@@ -1204,6 +1204,12 @@ public final class Calib  implements Cloneable {
       if( proj!=-1 ) {
          try { proj = getSubProjType(type1.substring(5)); } 
          catch( Exception e ) { proj=-1; }
+      }
+      
+      // Petit patch pour EGRET et autres vieilles missions
+      if( proj==-1 && hf.getStringFromHeader("GRIDTYPE")!=null ) {
+         proj=CAR; 
+         System.err.println("No projection specified in CTYPE, GRIDTYPE present => assuming CAR"); 
       }
       //                   proj = 0 ;
       //                   System.out.println("type1 "+type1+" type2"+type2);

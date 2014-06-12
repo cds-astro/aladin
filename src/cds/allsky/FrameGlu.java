@@ -250,13 +250,13 @@ public class FrameGlu extends JFrame implements KeyListener {
          String value = field[i].getText().trim();
          if( value.length()==0 ) continue;
          s.append( Util.align("%"+glup[FIELD],15)+" "+value+Util.CR);
-         if( glup[KEY].length()>0 ) context.setProperty(glup[KEY], value);
+         if( glup[KEY].length()>0 ) context.setPropriete(glup[KEY], value);
       }
       s.append( Util.align("%Aladin.XLabel",15) +" "+field[1].getText().trim()+Util.CR);
       s.append( Util.align("%Aladin.Profile",15) +" >6.1"+Util.CR);
       s.append( Util.align("%Aladin.HpxParam",15)+" "+getHpxParam()+Util.CR);
       
-      context.setProperty(PlanHealpix.KEY_LABEL,id);
+      context.setPropriete(PlanHealpix.KEY_LABEL,id);
       
       return s.toString();
    }

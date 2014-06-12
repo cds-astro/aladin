@@ -464,11 +464,11 @@ public class TabDesc extends JPanel implements ActionListener {
    public String getOutputField() { return outputField.getText(); }
    public void setOutputField(String output) { outputField.setText(output); }
 
-   public CoAddMode getCoaddModeField() {
-      return resetTiles.isSelected() ? CoAddMode.REPLACETILE : 
-         keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPTILE
-         :overwriteRadio.isSelected() ? CoAddMode.OVERWRITE 
-         : coaddRadio.isSelected() ? CoAddMode.AVERAGE : CoAddMode.REPLACETILE;
+   public Mode getCoaddModeField() {
+      return resetTiles.isSelected() ? Mode.REPLACETILE : 
+         keepRadio.isSelected() ? Mode.KEEP : keepCellRadio.isSelected() ? Mode.KEEPTILE
+         :overwriteRadio.isSelected() ? Mode.OVERWRITE 
+         : coaddRadio.isSelected() ? Mode.AVERAGE : Mode.REPLACETILE;
 
 //      return resetTiles.isSelected() || !resetTiles.isEnabled()? CoAddMode.REPLACETILE : 
 //         keepRadio.isSelected() ? CoAddMode.KEEP : keepCellRadio.isSelected() ? CoAddMode.KEEPTILE

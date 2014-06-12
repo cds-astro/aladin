@@ -461,6 +461,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Origine
       String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
       if( copyright!=null ) {
+         System.out.println("copyright="+copyright+"\nurl="+plan.copyrightUrl);
          PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,50,null,plan.copyrightUrl), g,c);
       }
 
@@ -1725,7 +1726,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       else if( SHOWFOVS.equals(what) || HIDEFOVS.equals(what) ) {
          boolean flagShow = SHOWFOVS.equals(what)?true:false;
          plan.showFootprints(flagShow);
-         if( plan instanceof PlanBGCatIndex ) ((PlanBGCatIndex)plan).setShowFootprint(flagShow);
+         if( plan instanceof PlanBGProgen ) ((PlanBGProgen)plan).setShowFootprint(flagShow);
       }
 
       // export pointing centers

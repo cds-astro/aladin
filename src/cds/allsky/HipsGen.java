@@ -142,7 +142,7 @@ public class HipsGen {
          
       } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
-         context.setCoAddMode(CoAddMode.valueOf(val.toUpperCase()));
+         context.setMode(Mode.valueOf(val.toUpperCase()));
          flagMode=true;
          
       } else if (opt.equalsIgnoreCase("region") || opt.equalsIgnoreCase("moc")) {
@@ -155,12 +155,11 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting") || opt.equalsIgnoreCase("partitioning")) {
          context.setPartitioning(val);
          
+      } else if( opt.equalsIgnoreCase("shape") ) {
+          context.setShape(val);
+         
       } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
-         try {
-            context.setCircle(val);
-         } catch (ParseException e) {
-            throw new Exception(e.getMessage());
-         }
+         try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
          
       } else if (opt.equalsIgnoreCase("border")) {
          try {
@@ -254,7 +253,7 @@ public class HipsGen {
                Action a = Action.valueOf(arg.toUpperCase());
                if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
                if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
-               if( a==Action.CONCAT && !flagMode ) context.setCoAddMode(CoAddMode.AVERAGE);
+               if( a==Action.CONCAT && !flagMode ) context.setMode(Mode.AVERAGE);
                if( a==Action.ABORT ) flagAbort=true;    // Bidouillage pour pouvoir tuer un skygen en cours d'exécution
                if( a==Action.PAUSE ) flagPause=true;    // Bidouillage pour pouvoir mettre en pause un skygen en cours d'exécution
                if( a==Action.RESUME ) flagResume=true;  // Bidouillage pour pouvoir remettre en route un skygen en pause
@@ -357,14 +356,16 @@ public class HipsGen {
             "out=dir            HiPS target directory (default $PWD+\""+Constante.ALLSKY+"\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
+            "                   Or LINK|COPY for CUBE action (default COPY)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
             "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
             "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
             "order=nn           Specifical HEALPix order" + "\n" +
 //            "diffOrder          Diff between MOC order and optimal order" + "\n" +
             "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
-            "border=...         Margins (in pixels) to ignore in the original images (N W S E or constant)" + "\n" +
-            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
+            "shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
+            "border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
+//            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
             "maxThread=nn       Max number of computing threads" + "\n" +
             "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
@@ -406,6 +407,7 @@ public class HipsGen {
             "ALLSKY     "+Action.ALLSKY.doc() + "\n"+
             "TREE       "+Action.TREE.doc() + "\n"+
             "CONCAT     "+Action.CONCAT.doc() + "\n"+
+            "CUBE       "+Action.CUBE.doc() + "\n"+
             "GZIP       "+Action.GZIP.doc() + "\n"+
             "DETAILS    "+Action.DETAILS.doc() + "\n"
             );

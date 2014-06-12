@@ -1779,7 +1779,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       Image img=null;
       try { img=createImage(); }
-      catch( Exception e ) { e.printStackTrace(); return 0; }
+      catch( Exception e ) {/* e.printStackTrace(); */ return 0; }
 
       Graphics2D g2d = (Graphics2D)g;
       float opacity = getFadingOpacity();

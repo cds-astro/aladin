@@ -20,9 +20,9 @@
 
 package cds.aladin;
 
-class HealpixAllskyCatIndex extends HealpixKeyCatIndex {
+class HealpixAllskyProgen extends HealpixKeyProgen {
 
-   protected HealpixAllskyCatIndex(PlanBG planBG,int order) {
+   protected HealpixAllskyProgen(PlanBG planBG,int order) {
       super(planBG);
       this.order=order;
       this.npix=-1;
