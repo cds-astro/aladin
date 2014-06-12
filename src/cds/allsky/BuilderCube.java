@@ -4,12 +4,10 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.StringTokenizer;
 
-import cds.aladin.Localisation;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanHealpix;
 import cds.moc.HealpixMoc;
@@ -192,15 +190,29 @@ public class BuilderCube extends Builder {
    }
    
    static private void link(File src, File trg) throws Exception {
-      Path pSrc = Paths.get(src.toURI() );
-      Path pTrg = Paths.get(trg.toURI() );
-      Files.createSymbolicLink(pTrg, pSrc);
+
+      // Lorsqu'on sera compatible 1.7 uniquement
+//      Files.createSymbolicLink(src.toPath(), trg.toPath() );
+
+      // En attendant, on travaille par "réflexion"
+      Method toPath = File.class.getDeclaredMethod("toPath",new Class[]{});
+      Object pathSrc = toPath.invoke((Object)src, new Object[] {});
+      Object pathTrg = toPath.invoke((Object)trg, new Object[] {});
+      Class files = Class.forName("java.nio.file.Files");
+      Class path  = Class.forName("java.nio.file.Path");
+      Class fileAttribute = Class.forName("java.nio.file.attribute.FileAttribute");
+      Object [] attrib = (Object[])Array.newInstance(fileAttribute, 0);
+      Class<?>[] a = { path, path, attrib.getClass() };
+      Method createSymbolicLink = files.getDeclaredMethod("createSymbolicLink", a);
+      createSymbolicLink.invoke((Object)null, new Object[] { pathSrc, pathTrg, attrib });
    }
+   
    
 //   static public void main(String [] args) {
 //      try {
-//         File src = new File("C:\\Users\\Pierre\\Desktop\\GALEXHiPS");
-//         File trg = new File("C:\\Users\\Pierre\\Desktop\\Link");
+//         File trg = new File("VISTA");
+//         File src = new File("C:\\Users\\Pierre\\Desktop\\Link");
+//         src.delete();
 //         link(src,trg);
 //      } catch( Exception e ) {
 //         e.printStackTrace();
