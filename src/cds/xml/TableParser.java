@@ -198,7 +198,7 @@ final public class TableParser implements XMLConsumer {
       byte b[] = new byte[len];   // un peu grand mais bon !
       int offset = 0;
       if( memoB!=null ) {
-         System.out.println("memoB!=null !! memoB.length="+memoB.length);
+//         System.out.println("memoB!=null !! memoB.length="+memoB.length);
          b = new byte[len+memoB.length]; 
          System.arraycopy(memoB,0,b,0,offset=memoB.length);
          memoB=null;
@@ -291,13 +291,13 @@ final public class TableParser implements XMLConsumer {
             // sinon ce sera pour la prochaine fois
             int n = length-position;
             if( n<nullMask.length ) {
-//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause du nullMask..");
+//System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause du nullMask..");
                memoB = new byte[n];
                System.arraycopy(b,position,memoB,0,n);
                return true;
             }
 
-            System.arraycopy(b, position, nullMask, 0, nullMask.length);
+//System.arraycopy(b, position, nullMask, 0, nullMask.length);
             position+=nullMask.length;
             maskRead=true;
          } else maskRead=false;
@@ -310,7 +310,7 @@ final public class TableParser implements XMLConsumer {
             // Y a-t-il encore au-moins 4 bytes ? sinon ce sera pour la prochaine fois
             int n = length-position;
             if( n<4 ) {
-//               System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause de la longueur d'un champ variable..");
+//System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause de la longueur d'un champ variable..");
                memoB = new byte[n];
                System.arraycopy(b,position,memoB,0,n);
                return true;
@@ -320,7 +320,7 @@ final public class TableParser implements XMLConsumer {
          }
          
          // Le flux à du bourrage à la fin, avec en plus un champ variable
-         if( nbBytes==0 ) {
+         else if( nbBytes==0 ) {
             return true;
          }
          int nextPosition = position + nbBytes;
@@ -330,7 +330,7 @@ final public class TableParser implements XMLConsumer {
             // Dans le cas d'un champ variable, il faut également garder sa taille
             if( len[nField]==-1 ) position-=4;
             int n = length-position;
-//            System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause d'un champ non complet..");
+//System.out.println("Memo de "+n+" bytes pour la prochaine lecture à cause d'un champ non complet..");
             memoB = new byte[n];
             System.arraycopy(b,position,memoB,0,n);
             return true;

@@ -1855,9 +1855,11 @@ public final class Glu implements Runnable {
          } while( num < 0 );
          
 
+         // S'agit-il bien d'un champ &toto=$1&, et non  &toto=yyyy$1xxxx&
+         boolean okToRemovePrefix = offsetNum>=2 && a[offsetNum-2]=='=' && (i>=a.length || a[i]=='&'); 
          // Recherche de la fin du prefixe
          fin = offsetNum - 1; // Par defaut
-         if( isurl && (num >= param.length || param[num].length() == 0) ) {
+         if( isurl && okToRemovePrefix && (num >= param.length || param[num].length() == 0) ) {
             while( fin > 0 && a[fin] != '&' && a[fin] != '?' ) fin--; // on supprime le "&name="
             if( fin==0 ) fin=offsetNum-1; // De fait avant le '?'
             else if( a[fin] == '?' ) fin++; // On laisse le '?'
