@@ -55,9 +55,9 @@ public class Position extends Obj {
    protected double xv[],yv[];   // Position de l'objet pour chaque vue
 
    /** Variables statiques utilisées pour le calcul des statistiques sur un polygone */
-   static int minx,maxx;
-   static int miny,maxy;
-   static int posx,posy;    // position pour l'accrochage du label (-1,-1 si non fourni)
+   static double minx,maxx;
+   static double miny,maxy;
+   static double posx,posy;    // position pour l'accrochage du label (-1,-1 si non fourni)
    static double total;
    static double carre;
    static int nombre;
@@ -662,7 +662,7 @@ public class Position extends Obj {
        if( !v.flagPhotometry || !v.pref.hasAvailablePixels() || v.pref instanceof PlanImageRGB ) return;
 
        if( !statCompute(g,v) ) return;
-
+       
        String cnt=Util.myRound(nombre);
        String sum=Util.myRound(total);
        String avg=Util.myRound(moyenne);
@@ -671,13 +671,15 @@ public class Position extends Obj {
        String surf=Coord.getUnit(surface,false,true)+"²";
 
        if( isWithStat() || isWithLabel() ) {
+          Color c1=g.getColor();
+          Color c2=null;
           Rectangle r = getStatPosition(v);
           if( r!=null && (isWithLabel() || v.aladin.view.isMultiView()) ) {
              r.x+=dx;
              r.y+=dy;
              g.drawLine(r.x,r.y,r.x,r.y+HAUTSTAT);
              if( posx==-1 ) {
-                posx = (int)( minx+3*(maxx-minx)/4. );
+                posx = minx+3*(maxx-minx)/4.;
                 posy = (maxy+miny)/2;
              }
              Point c = v.getViewCoord(posx,posy);
@@ -688,24 +690,24 @@ public class Position extends Obj {
                 r.x+=2; r.y+=STATDY-2;
 
                 g.setFont(Aladin.BOLD);
-                g.drawString("Cnt",r.x,r.y);
-                g.drawString(cnt,r.x+43,r.y);  r.y+=STATDY;
-                g.drawString("Sum",r.x,r.y);
-                g.drawString(sum,r.x+43,r.y);  r.y+=STATDY;
-                g.drawString("Avg",r.x,r.y);
-                g.drawString(avg,r.x+43,r.y);  r.y+=STATDY;
-                g.drawString("Sigma",r.x,r.y);
-                g.drawString(sig,r.x+43,r.y);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Cnt",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,cnt,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Sum",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,sum,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Avg",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,avg,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Sigma",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,sig,r.x+43,r.y,c1,c2);  r.y+=STATDY;
                 if( this instanceof Repere ) {
-                   g.drawString("Rad",r.x,r.y);
-                   g.drawString(Coord.getUnit( ((Repere)this).getRadius()),r.x+43,r.y); 
+                   Util.drawStringOutline(g,"Rad",r.x,r.y,c1,c2);
+                   Util.drawStringOutline(g,Coord.getUnit( ((Repere)this).getRadius()),r.x+43,r.y,c1,c2); 
                    r.y+=STATDY;
                 }
-                g.drawString("Surf",r.x,r.y);
-                g.drawString(surf,r.x+43,r.y);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Surf",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,surf,r.x+43,r.y,c1,c2);  r.y+=STATDY;
                 if( !Double.isNaN(mediane) ) {
-                   g.drawString("Med",r.x,r.y);
-                   g.drawString(med,r.x+43,r.y); 
+                   Util.drawStringOutline(g,"Med",r.x,r.y,c1,c2);
+                   Util.drawStringOutline(g,med,r.x+43,r.y,c1,c2); 
                    r.y+=STATDY;
                 }
              }

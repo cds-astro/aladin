@@ -2528,6 +2528,10 @@ TOOMANYIMG	You can not download\nso many images simultaneously !
 TOOMANYIMG.fr	Vous ne pouvez pas charger\nautant d'images simultanément !
 PARSING	Parsing report
 PARSING.fr Rapport de traitement
+CHECK Select all
+CHECK.fr Coche tout
+UNCHECK Unselect all
+UNCHECK.fr Décoche tout
 COORDCOLUMN	Coord. columns
 COORDCOLUMN.fr Colonnes des coord.
 COORDCOLUMNDETAIL The column called "Coo" allows you to modify the selection of the object coordinate columns. Either in a celestial reference (J2000), or in a cartesian reference (XY fits convention). Clic into the concerned cell.
@@ -2572,7 +2576,7 @@ YOUREXPR Which algebrical expression ? (after the "=")
 YOUREXPR.fr Quelle expression algébrique ? (après le signe "=")
 
 # Bookmarks strings
-BKMTITLE	Bookmarks controler
+BKMTITLE	Bookmarks controller
 BKMTITLE.fr	Gestionnaire des signets
 BKMDEFAULT	Reload bookmarks
 BKMDEFAULT.fr Recharge signets
@@ -2789,7 +2793,7 @@ BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all ast
 BEGIN2	Imagine your eye\nlooking through a stack of planes.\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them.\n \nUse File->Open for discovering all other data,\nor clic & drag your own files.
 BEGIN3	Stack controls:\n \n*the icon: show/hide a plane\n*size: change object size\n*zoom: adjust field size.\n*Opacity: adjust transparency.\n \nThe view is drawn according to the projection of a reference plane.\n \nFor changing the reference, click on its check box.
 BEGIN4	Mouse controls:\n \n*Left: source selection.\n*Middle: quick panning.\n*Right: constrast adjustement.\n*Wheel: quick zoom on the reticle.\n*Simple-clic: move the reticle.\n*Double-clic: re-center.\n \nLet you mouse pointer on an object for discovering associated Simbad data.
-BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it.\n \n-Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controler.
+BEGIN5	Basic controls:\n \n-Type any object name or coordinates for moving on it.\n \n-Select catalog sources for displaying associated data measurements.\n \nDisplay simultaneously several views via the "multiview" controller.
 
 BEGIN1.fr Bienvenue sur Aladin,\nvotre atlas professional du ciel.\n \n* Accédez à toutes les données astronomiques disponibles sur le net !\n \n* Comparez-les avec vos propre données.\n \n* Préparez vos missions d'observations.\n \n \nPour débuter, saisissez un nom d'objet, par exemple M1, puis validez par ENTER...
 BEGIN2.fr	Imaginez votre oeil regardant à travers une pile de calques.\n \nChaque calque représente une donnée: image, catalogues, graphiques...\n \nLa vue ci-contre est la combinaison de l'ensemble de ces calques.\n \nPour accéder à d'autres données utilisez le menu Fichier->Ouvrir,\nou glissez/déposez vos propres fichiers.

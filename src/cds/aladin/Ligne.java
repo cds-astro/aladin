@@ -484,7 +484,9 @@ public class Ligne extends Position {
       x1-=gap; y1-=gap+clipYId(); x2+=gap+clipXId(); y2+=gap+clipYId();
  
       // Peut être y a-t-il des stats affichées sur le côté
-      if( bout==3 && hasOneSelected() ) clip = unionRect(clip,getStatPosition(v));
+      if( bout==3 && hasOneSelected() ) {
+         clip = unionRect(clip,getStatPosition(v));
+      }
 
       return intersectRect(clip, x1,y1,x2-x1+1,y2-y1+1);
    }   
@@ -528,7 +530,7 @@ public class Ligne extends Position {
       boolean cut(double x, double y) {
          if( out ) return false;
          if( y<y1 ) return false;
-         if( y>y2 ) { out=true; return false; }
+         if( y>=y2 ) { out=true; return false; }
          if( cut ) return true;
          
          double d1 = y*dx - x*dy - dxb;
@@ -578,13 +580,20 @@ public class Ligne extends Position {
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
       statInit();    
 
-      int x,y,i;
+//      int x,y,i;
+      double x,y;
+      int i;
       int nb;
       Ligne tmp,deb,a,b;
       boolean flagHist = v==v.aladin.view.getCurrentView();
       
       minx=miny=Integer.MAX_VALUE;
       maxx=maxy=Integer.MIN_VALUE;
+      
+      double minx1,maxx1,miny1,maxy1;
+      minx1=miny1=Integer.MAX_VALUE;
+      maxx1=maxy1=Integer.MIN_VALUE;
+     
       
       tmp = deb=getFirstBout();
       for( nb=0; tmp.finligne!=null; tmp=tmp.finligne) nb++;
@@ -599,6 +608,12 @@ public class Ligne extends Position {
          if( fx<minx ) minx=fx;
          if( ty>maxy ) maxy=ty;
          if( fy<miny ) miny=fy;
+         
+         if( tmp.xv[v.n]<minx1 ) minx1=tmp.xv[v.n];
+         if( tmp.xv[v.n]>maxx1 ) maxx1=tmp.xv[v.n];
+         if( tmp.yv[v.n]<miny1 ) miny1=tmp.yv[v.n];
+         if( tmp.yv[v.n]>maxy1 ) maxy1=tmp.yv[v.n];
+         
          a=tmp; b=tmp.finligne;
          if( tmp.yv[v.n]> tmp.finligne.yv[v.n] ) { b=tmp ; a=tmp.finligne; }
          seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
@@ -617,28 +632,30 @@ public class Ligne extends Position {
       }
       
       // Position prévue pour l'accrochage de la légende
-      int deuxTiersX = (int)( minx+2*(maxx-minx)/3. );
-      int unTierY    = (int)( miny+(maxy-miny)/3. );
+      double deuxTiersX = minx1+2*(maxx1-minx1)/3.;
+      double unTierY    = miny1+(maxy1-miny1)/3.;
       
       int n=0;   // Premier segment à tester
       for( y=miny; y<=maxy; y++ )  {
          for( ; n<nb && seg[n].out; n++ );
          for( i=n; i<nb; i++ ) seg[i].init();
-         if( posy==-1 && y==unTierY ) posy=y;
+         if( posy==-1 && (int)y==(int)unTierY ) posy=unTierY;
          for( x=maxx+1; x>=minx-1; x-- ) {
             int inter=0;  // Nombre de segments intersectés
             for( i=n; i<nb; i++ ) {
-               if( seg[i].cut((double)x,(double)y) ) inter++;
+               if( seg[i].cut(x,y) ) inter++;
             }
             if( inter%2==1 ) {
-               double pix = statPixel(g, x, y, v, onMouse);
+               double pix = statPixel(g, (int)x, (int)y, v, onMouse);
                if( flagHist ) plan.aladin.view.zoomview.addPixelHist(pix);
-               if( posy!=-1 && x==deuxTiersX && posx==-1 ) posx=x;
+               if( posy!=-1 && (int)x==(int)deuxTiersX && posx==-1 ) posx=deuxTiersX;
             } else {
                if( posy!=-1 && posx==-1 && inter>0) posx=x+1;
             }
          }
       }
+      
+      minx=minx1; maxx=maxx1; miny=miny1; maxy1=maxy;
       
       if( flagHist ) plan.aladin.view.zoomview.createPixelHist("Pixels");
 

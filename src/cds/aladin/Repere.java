@@ -424,10 +424,10 @@ public class Repere extends Position {
       } else {
          try { pixelSurf = v.pref.projd.getPixResAlpha()* v.pref.projd.getPixResDelta();
          } catch( Exception e ) { }
-         for( int y=miny; y<=maxy; y++ ) {
-            for( int x=minx; x<=maxx; x++ ) {
+         for( double y=miny; y<=maxy; y++ ) {
+            for( double x=minx; x<=maxx; x++ ) {
                if( (x-xc)*(x-xc) + (y-yc)*(y-yc) > carreRayon ) continue;
-               double pix = statPixel(g, x, y, v,onMouse);
+               double pix = statPixel(g, (int)x, (int)y, v,onMouse);
                if( Double.isNaN(pix) ) continue;
                if( flagHist ) v.aladin.view.zoomview.addPixelHist(pix);
             }
@@ -436,14 +436,22 @@ public class Repere extends Position {
       
       if( flagHist ) v.aladin.view.zoomview.createPixelHist(v.pref.type==Plan.ALLSKYIMG ? "HEALPixels":"Pixels");
 
-      if( v.pref.type==Plan.ALLSKYIMG ) {
-         xc=xv[v.n]-0.5;
-         yc=yv[v.n]-0.5;
-         minx=(int)Math.floor(xc-r);
-         maxx=(int)Math.ceil(xc+r);
-         miny=(int)Math.floor(yc-r);
-         maxy=(int)Math.ceil(yc+r);
-      }
+//      if( v.pref.type==Plan.ALLSKYIMG ) {
+//         xc=xv[v.n]-0.5;
+//         yc=yv[v.n]-0.5;
+//         minx=(int)Math.floor(xc-r);
+//         maxx=(int)Math.ceil(xc+r);
+//         miny=(int)Math.floor(yc-r);
+//         maxy=(int)Math.ceil(yc+r);
+//      }
+      
+      // Valeurs en float pour la bounding box
+      xc=xv[v.n];
+      yc=yv[v.n];
+      minx=xc-r;
+      maxx=xc+r;
+      miny=yc-r;
+      maxy=yc+r;
 
       // Calculs des statistiques => sera utilisé immédiatement par le paint
       // Attention, il s'agit de variables statiques

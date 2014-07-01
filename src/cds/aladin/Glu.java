@@ -814,7 +814,7 @@ public final class Glu implements Runnable {
    private int findGluServer(String actionName) {
       for( int i = vGluServer.size()-1; i >=0; i-- ) {
          ServerGlu gs = (ServerGlu) vGluServer.elementAt(i);
-         if( actionName.equals(gs.actionName) ) return i;
+         if( gs!=null && gs.actionName!=null && actionName.equals(gs.actionName) ) return i;
       }
       return -1;
    }
@@ -1075,7 +1075,7 @@ public final class Glu implements Runnable {
          String aladinLabelPlane, String docUser, Hashtable paramDescription1, 
          Hashtable paramDataType1, Hashtable paramValue1,
          String resultDataType, String institute, Vector aladinFilter1,
-         String aladinLogo,String dir,String system,StringBuffer record) {
+         String aladinLogo,String dir,String system,StringBuffer record,String aladinProtocol) {
       int i;
 
       // Pour éviter les doublons
@@ -1109,15 +1109,6 @@ public final class Glu implements Runnable {
       if( system!=null && system.trim().length()==0 ) system=null;
       if( institute == null ) institute = description;
 
-//    ServerGlu g =  actionName.equals("SkyBoT.IMCCE") ? new ServerSkybot(aladin, actionName, description, verboseDescr, aladinMenu, 
-//    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-//    resultDataType, institute, aladinFilter, aladinLogo, record)
-//           : new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
-//    aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-//    resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
-//    vGluServer.addElement(g);
-//    if( !g.isHidden() )  lastGluServer = g;
-
       ServerGlu g=null;
       if( aladin!=null ) {  // test Glu.main()
          if( actionName.equals("SkyBoT.IMCCE") ) {
@@ -1127,7 +1118,7 @@ public final class Glu implements Runnable {
          } else {
             g = new ServerGlu(aladin, actionName, description, verboseDescr, aladinMenu, 
                   aladinMenuNumber, aladinLabel, aladinLabelPlane, docUser, paramDescription, paramDataType, paramValue, 
-                  resultDataType, institute, aladinFilter, aladinLogo, dir, system, record);
+                  resultDataType, institute, aladinFilter, aladinLogo, dir, system, record, aladinProtocol);
          }
          vGluServer.addElement(g);
          if( !g.isHidden() )  lastGluServer = g;
@@ -1222,6 +1213,7 @@ public final class Glu implements Runnable {
       String aladinLogo = null;// Le nom du logo associé
       String aladinTree = null;// L'arborescence dans le cas d'un Tree Outreach (ex: WP5:/Nebulae/HII)
       String aladinUrlDemo = null;//Url renvoyant un exemple (catalog ou image)
+      String aladinProtocol = null;//Protocole sous-jacent (TAP, CONESEARCH...)
       Vector recI = new Vector(); // Dans le cas d'indirections
       Hashtable paramDescription = null;// Les descriptions des parametres (cle=numero du
                           // param)
@@ -1282,6 +1274,7 @@ public final class Glu implements Runnable {
                  if( isKey(name,"Aladin.Menu",true) )  aladinMenu = subCR(value);
             else if( isKey(name,"Aladin.Tree",true) )  aladinTree=subCR(value);
             else if( isKey(name,"Aladin.UrlDemo") )    aladinUrlDemo=subCR(value);
+            else if( isKey(name,"Aladin.Protocol") )   aladinProtocol=subCR(value);
             else if( isKey(name,"ReleaseNumber") )     releaseNumber=subCR(value);
             else if( isKey(name,"Download") )          download=subCR(value);
             else if( isKey(name,"Jar") )               jar=subCR(value);
@@ -1328,11 +1321,11 @@ public final class Glu implements Runnable {
                                                   copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
                   else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                                                   aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
-                                                  resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record);
+                                                  resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record,aladinProtocol);
                }
                distribAladin = !testDomain;
                flagGluSky=flagPlastic=flagLabel = false;
-               aladinUrlDemo=aladinTree=aladinProfile=null;
+               aladinUrlDemo=aladinTree=aladinProfile=aladinProtocol=null;
 
                // On mémorise le filtre pour le serveurs non GLU
                if( !flagLabel ) putAladinFilter(actionName,aladinFilter);
@@ -1457,7 +1450,7 @@ public final class Glu implements Runnable {
                                             copyright,docUser,jar,javaParam,download,webstart,applet,dir,aladinActivated,system);
             else if( flagLabel ) memoServer(actionName,description,verboseDescr,aladinMenu,aladinMenuNumber,
                                             aladinLabel,aladinLabelPlane,docUser,paramDescription,paramDataType,paramValue,
-                                            resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record);
+                                            resultDataType,institute,aladinFilter,aladinLogo,dir,localFile?system:null,record,aladinProtocol);
          }
 
          // On mémorise le filtre pour le serveurs non GLU

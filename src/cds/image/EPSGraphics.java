@@ -347,27 +347,34 @@ public class EPSGraphics extends Graphics {
 
    
    public void drawLine(int x1, int y1, int x2, int y2) {
-      print(x1+" "+(height-y1)+" "+x2+" "+(height-y2)+" l\n");
-
+      print(x1+" "+(height-y1-1)+" "+x2+" "+(height-y2-1)+" l\n");
    }
 
    public void drawOval(int x, int y, int width, int height) {
       drawArc(x,y,width,height,0,360);
    }
+   
+   public void drawPolygon(Polygon p) { drawPolygon(p.xpoints,p.ypoints,p.npoints); }
+   public void fillPolygon(Polygon p) { fillPolygon(p.xpoints,p.ypoints,p.npoints); }
 
-   public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-      // TODO Auto-generated method stub
-
-   }
-
-   public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
-      // TODO Auto-generated method stub
-
+   public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) { drawPolygon(xPoints,yPoints,nPoints,false); } 
+   public void drawPolygon( int[] xPoints, int[] yPoints, int nPoints) { drawPolygon(xPoints,yPoints,nPoints,true); } 
+   private void drawPolygon(int[] xPoints, int[] yPoints, int nPoints,boolean close) {   
+      print("newpath\n");
+      for( int i=0; i<nPoints; i++ ) {
+         if( i==0 ) print(xPoints[i]+" "+(height-yPoints[i]-1)+" moveto\n");
+         else print(xPoints[i]+" "+(height-yPoints[i]-1)+" lineto\n");
+      }
+      if( nPoints>0 && close ) print(xPoints[0]+" "+(height-yPoints[0]-1)+" lineto\n");
+      print("closepath\n" +
+            (mode==STROKE?"stroke":mode==CLIP?"clip":"fill")+"\n");
    }
 
    public void drawRoundRect(int x, int y, int width, int height, int arcWidth,
          int arcHeight) {
       // TODO Auto-generated method stub
+      // POUR LE MOMENT
+      drawRect(x,y,width,height);
 
    }
 
@@ -383,13 +390,12 @@ public class EPSGraphics extends Graphics {
          }
          str = res.toString();
       }
-      print("("+str+") "+x+" "+(height-y)+"  t\n");
+      print("("+str+") "+x+" "+(height-y-1)+"  t\n");
 
    }
 
    public void drawString(AttributedCharacterIterator iterator, int x, int y) {
       // TODO Auto-generated method stub
-
    }
 
    public void fillArc(int x, int y, int width, int height, int startAngle,
@@ -403,12 +409,11 @@ public class EPSGraphics extends Graphics {
    }
 
    public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-      // TODO Auto-generated method stub
-
+      mode=FILL; drawPolygon(xPoints, yPoints, nPoints); mode=STROKE;
    }
    
    public void drawRect(int x, int y, int width, int height) {
-      y = this.height-y;
+      y = this.height-y-1;
       int xmax= x+width-1;
       int ymax = y-height+1;
       print(

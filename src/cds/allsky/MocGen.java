@@ -32,6 +32,7 @@ import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
@@ -49,6 +50,7 @@ public class MocGen {
    private double blank=Double.NaN; // Alternative blank value
    private int fmt=HealpixMoc.FITS;
    public  boolean verbose=false;
+   public boolean debug=false;
    private boolean strict=false;
    private boolean recursive=false;
    private boolean multWrite=false; // true for updating output MOC continously
@@ -61,6 +63,7 @@ public class MocGen {
    private boolean abort;       // Demande d'interruption de construction
    private String scanningDir=null; // Le répertoire en cours de scanning
    private int nbImg;           // Le nombre d'images sources
+   private long tStart=0;       // Date de lancement
    
    /** Génération d'un MOC à partir d'une ligne de commande */
    public MocGen(String [] args) {
@@ -130,73 +133,176 @@ public class MocGen {
    }
    
    // Ajout dans le MOC du fichier passé en paramètre avec scan des pixels
-   private boolean addInMocPixel(HealpixMoc moc,File file,int res) throws Exception {
+   private boolean addInMocPixel(HealpixMoc moc,File file,int order) throws Exception {
       boolean rep=false;
-      boolean flagFirstHdu = hdu==null;
-      boolean flagAllHdu = hdu!=null && hdu.length>0 && hdu[0]==-1;
       
-      for( int i=0; flagAllHdu || flagFirstHdu || i<hdu.length; i++ ) {
-         int ext = flagFirstHdu ? 0 : flagAllHdu ? i : hdu[i];
-         Fits f = new Fits();
-         f.setSkipHDU0( flagFirstHdu );
-         try { f.loadFITS(file.getAbsolutePath()+"["+ext+"]"); } 
-         catch( Exception e ) { return rep; }
+      String currentfile = file.getPath();
 
-         Calib c = f.getCalib();
-         if( c==null ) continue;
+      Fits f = new Fits();
+      boolean flagDefaultHDU = hdu==null;
+      boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
+      int cellSize = 2048;
+      int firstDepth=0;
+      
+      for( int i=0; flagAllHDU || flagDefaultHDU || i<hdu.length; i++ ) {
+         int ext = flagDefaultHDU ? 0 : flagAllHDU ? i : hdu[i];
          
-         Coord coo = new Coord();
+         
+         // L'image sera mosaiquée en cellSize x cellSize pour éviter de
+         // saturer la mémoire par la suite
+         try {
+            int code = f.loadHeaderFITS(currentfile+ (ext==0?"":"["+ext+"]"));
+            if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
+            
+           // S'agit-il d'une image calibrée ?
+            if( f.calib==null ) continue;
+            
+            if( firstDepth==0 ) firstDepth=f.depth;
+            else if( f.depth!=firstDepth ) continue;
+            
+            try {
 
-         double pix;
-         double gap=1;
-         double gapA=0;
-         try { 
-            gapA = Math.min(c.GetResol()[0],c.GetResol()[1]);
-            for( order=res; CDSHealpix.pixRes( CDSHealpix.pow2(order) )/3600. <= gapA*2; order--);
-         } catch( Exception e1 ) {
-            e1.printStackTrace();
-         }
-         if( verbose ) System.out.println("Adding pixel coverage of "+file.getName()+f.getCellSuffix()+"...");
+               // Test sur
+               //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
+               int width = f.width;
+               int height = f.height;
+               int heightSize= 1024*1024*1024/ (f.height*Math.abs(f.bitpix));
+               if( heightSize<1 ) heightSize=1;
+               else if( heightSize>height) heightSize=height;
+//               System.out.println("Scanning by cells "+width+"x"+heightSize+"...");
 
-         if( !Double.isNaN(blank) ) f.setBlank(blank);
-
-         long oNpix=-1;  
-         for( double y=0; y<f.height; y+=gap ) {
-            for( double x=0; x<f.width; x+=gap ) {
-               try {
-                  coo.x = x;
-                  coo.y = (f.height-y-1);
-
-                  // dans du vide - on test d'abord le buffers 8bits, et on vérifie si on tombe sur 0
-                  pix = f.getPixelDouble((int)x,(int)y);
-                  if( f.isBlankPixel(pix) ) continue;
-
-                  c.GetCoord(coo);
-                  long npix=0;
-                  npix = hpx.ang2pix(order, coo.al, coo.del);
-
-                  // Juste pour éviter d'insérer 2x de suite le même npix
-                  if( npix==oNpix ) continue;
-
-                  moc.add(order,npix);
-                  oNpix=npix;
-               } catch( Exception e ) {
-                  e.printStackTrace();
-               }
+//               for( int x=0; x<width; x+=cellSize ) {
+                  for( int y=0; y<height; y+=heightSize) { //cellSize ) {
+                     f.widthCell = width; //x + cellSize > width ? width - x : cellSize;
+                     f.heightCell = y + heightSize > height ? height - y : heightSize;
+                     f.depthCell = f.depth = 1;
+                     f.xCell=0; //x;
+                     f.yCell=y;
+                     f.zCell=0;
+                     f.ext = ext;
+                     String currentCell = f.getCellSuffix();
+                     rep |= addInMocPixel1(f, moc, currentfile, currentCell, order);
+                     moc.checkAndFix();
+                  }
+//               }
+            } catch (Exception e) {
+               if( Aladin.levelTrace>=3 ) e.printStackTrace();
+               break;
             }
+         }  catch (Exception e) {
+            Aladin.trace(3,e.getMessage() + " " + currentfile);
+            break;
          }
-         rep = true;
-         if( flagFirstHdu ) break;
+         if( flagDefaultHDU ) break;
       }
       return rep;
    }
    
+   private boolean addInMocPixel1(Fits f, HealpixMoc moc, String currentfile, String currentCell, int order) throws Exception {
+      boolean rep=false;
+      
+      int localOrder=0;
+      Calib c = f.getCalib();
+      if( c==null ) {
+         if( debug ) System.out.println(currentfile+currentCell+" ignored (no calibration) => "+currentfile);
+         return rep;
+      }
+      
+      f.loadFITS(currentfile+currentCell);
+      Coord coo = new Coord();
+
+      double pix;
+      double gap=1;
+      try { 
+         double resImage = Math.min(c.GetResol()[0],c.GetResol()[1]);
+         for( localOrder=order; CDSHealpix.pixRes( CDSHealpix.pow2(localOrder) )/3600. <= resImage; localOrder--);
+         if( gap<1 ) gap=1;
+      } catch( Exception e1 ) {
+         e1.printStackTrace();
+      }
+      if( verbose ) System.out.println("Adding pixel coverage of "+currentfile+currentCell+"...");
+
+      if( !Double.isNaN(blank) ) f.setBlank(blank);
+
+      int n=0,n1=0;
+      long oNpix=-1;  
+
+      for( int y=f.yCell; y<f.yCell+f.heightCell; y++ ) {
+         for( int x=f.xCell; x<f.xCell+f.widthCell; x++ ) {
+            
+            try {
+
+               pix = f.getPixelDouble(x,y);
+               if( f.isBlankPixel(pix) ) continue;
+               
+               coo.x = x;
+               coo.y = (f.height-y-1);
+
+               c.GetCoord(coo);
+               long npix=0;
+               npix = hpx.ang2pix(localOrder, coo.al, coo.del);
+
+               // Juste pour éviter d'insérer 2x de suite le même npix
+               if( npix==oNpix ) { n1++; continue; }
+               moc.add(localOrder,npix);
+               oNpix=npix;
+               n++;
+               if( n>100000 ) {
+                  n=0;
+                  moc.checkAndFix();
+                  updateMoc(moc,out,fmt);
+               }
+               rep=true;
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+         }
+      }
+//      System.out.println("Insert "+n+" pix, "+n1+" ignored");
+      return rep;
+   }
+
+   
+   // Ajout dans le MOC du losange indiqué à la condition que le pixel central correspondant soit dans l'image
+   // et ne soit pas BLANK, sinon appel récursif sur les 4 fils jusqu'à atteindre la résolution de l'image
+//   private boolean addInMocNpix(Fits f,HealpixMoc moc,int order, long npix) throws Exception {
+//      
+//      boolean rep=true;
+//      Calib c = f.getCalib();
+//      double resImg = Math.min(c.GetResol()[0],c.GetResol()[1]);
+//      long nside = CDSHealpix.pow2(order);
+//      double resOrder = CDSHealpix.pixRes( nside )/3600.;
+//      if( resOrder<resImg ) {
+//         return false;
+//      }
+//      
+//      double polar[] = CDSHealpix.pix2ang_nest(nside, npix);
+//      polar = CDSHealpix.polarToRadec(polar);
+//      Coord coo = new Coord();
+//      coo.al = polar[0]; coo.del = polar[1];
+//      
+//      c.GetXY(coo,false);
+//      coo.y = f.height-coo.y-1;
+//      if( coo.x<0 || coo.x>= f.width || coo.y<0 || coo.y>= f.height 
+//            || f.isBlankPixel( f.getPixelDirectAccess((int)coo.x, (int)coo.y)) ) {
+//         for( int i=0; i<4; i++ ) {
+//            rep |= addInMocNpix(f,moc,order+1,npix*4+i);
+//         }
+//      } else {
+//         System.out.println("AddInMocNpix("+order+"/"+npix+")");
+//         rep=moc.add(order,npix);
+//      }
+//      
+//      return rep;
+//   }
+   
    // Ajout dans le MOC de la Calib passé en paramètre
-   private boolean addInMocBox(HealpixMoc moc, Calib c,int order) throws Exception {
+   private boolean addInMocBox(Fits f,HealpixMoc moc,int order) throws Exception {
+      boolean res=true;
       Coord coo = new Coord();
       ArrayList<double[]> cooList = new ArrayList<double[]>(10);
+      Calib c = f.getCalib();
       Dimension dim = c.getImgSize();
-      
       for( int i=0; i<4; i++ ) {
          coo.x = (i==0 || i==3 ? 0 :dim.width);
          coo.y = (i<2 ? 0 : dim.height);
@@ -204,8 +310,8 @@ public class MocGen {
          cooList.add(new double[]{coo.al,coo.del});
       }
       long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
-      for (long npix : npixs ) moc.add(order,npix);
-      return true;
+      for( long npix : npixs ) moc.add(order,npix) ;
+      return res;
    }
    
    // Ajout dans le MOC du fichier indiqué
@@ -221,16 +327,17 @@ public class MocGen {
          int ext = flagFirstHdu ? 0 : flagAllHdu ? i : hdu[i];
          Fits f = new Fits();
          f.setSkipHDU0( flagFirstHdu );
-         try { f.loadFITS(file.getAbsolutePath()+"["+ext+"]"); } 
+         try { f.loadHeaderFITS(file.getAbsolutePath()+"["+ext+"]"); } 
          catch( Exception e ) { return rep; }
          Calib c = f.getCalib();
          if( c==null ) continue;
 
          if( verbose ) System.out.println("Adding footprint of "+file.getName()+f.getCellSuffix()+"...");
-         rep |= addInMocBox(moc,c,order);
+         if( !Double.isNaN(blank) ) f.setBlank(blank);
+         rep |= addInMocBox(f,moc,order);
          if( flagFirstHdu ) break;
      }
-      return rep;
+     return rep;
    }
    
    private boolean addInMoc(HealpixMoc moc, File file, int order,boolean strict) throws Exception {
@@ -238,65 +345,90 @@ public class MocGen {
       return addInMocPixel(moc,file,order);
    }
    
-   // Ajout dans le MOC de tous les fichiers FITS
-   // trouvés dans le répertoire
-   // Rq: méthode récursive en parcours en largeur d'abord.
-   // @return : le nombre de fichiers traité
-   private int scanAndDo(HealpixMoc moc,File rep,int order) throws Exception {
-      int n=0;
-      File [] list;
-      
-      scanningDir=rep.getCanonicalPath();
-      
-      // Pour supporter le cas où ce serait directement un fichier 
-      // etnon un répertoire
-      if( rep.isFile() ) list = new File[]{rep};
-      else list = rep.listFiles();
-      
-      for( File f : list ) {
-         if( abort ) throw new Exception("MOC aborted");
-         if( f.isFile() ) {
-            if( addInMoc(moc,f,order,strict) ) { n++; nbImg++; }
-            if( n>0 && n%100==0 ) {
-               moc.checkAndFix();
-               if( multWrite ) {
-                  if( verbose ) System.out.println("Updating output MOC ["+out+"]...");
-                  moc.write(out, fmt);
-               }
-            }
-         }
-      }
-      if( recursive ) {
-         for( File f : list ) {
-            if( f.isDirectory() ) n+=scanAndDo(moc,f,order);
-         } 
-      }
-      return n;
-   }
    
    // Ajout dans le MOC de tous les fichiers FITS
    // trouvés dans le répertoire
    // Rq: méthode récursive en parcours en largeur d'abord.
    // @return : le nombre de fichiers traité
-   private int scanStdin(HealpixMoc moc,int order) throws Exception {
-      int n=0;
-      String s;
-      BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-      try {
-         StringBuffer buf = new StringBuffer();
-         while( (s=in.readLine())!=null ) {
-            if( abort ) throw new Exception("MOC aborted");
-            if( s.trim().length()==0 ) {
-               HeaderFits header = new HeaderFits(buf.toString());
-               if( addInMocBox(moc,new Calib(header),order) ) n++;
-               buf = new StringBuffer();
+   private void scanAndDo(HealpixMoc moc,File rep,int order) throws Exception {
+      File [] list;
+      
+      scanningDir=rep.getCanonicalPath();
+      
+      // Pour supporter le cas où ce serait directement un fichier 
+      // et non un répertoire
+      if( rep.isFile() ) list = new File[]{rep};
+      else list = rep.listFiles();
+      
+      for( File f : list ) {
+         if( debug ) System.out.println("Scanning "+f);
+         if( abort ) throw new Exception("MOC aborted");
+         if( f.isFile() ) {
+            if( addInMoc(moc,f,order,strict) ) nbImg++;
+            if( nbImg>0 && nbImg%100==0 ) {
+               moc.checkAndFix();
+               updateMoc(moc,out,fmt);
             }
-            buf.append(s+"\n");
          }
-      } finally { in.close(); }
-
-      return n;
+      }
+      if( recursive ) {
+         for( File f : list ) {
+            if( f.isDirectory() ) scanAndDo(moc,f,order);
+         } 
+      }
    }
+   
+   
+   private long t1=0;
+   private long t2=0;
+   private int dot=0;
+   private boolean needNL=false;
+   
+   // Met à jour si nécessaire le Moc sur le disque (mode maj continue)
+   private boolean updateMoc(HealpixMoc moc, String out, int fmt) throws Exception {
+      long t = System.currentTimeMillis();
+      if( (t-t1)<6000 ) return false;
+      t1=t;
+      if( !verbose ) {
+         System.out.print(".");
+         needNL=true;
+         dot++;
+         if( dot>10 ) { dot=0; System.out.println(); needNL=false; }
+      }
+      if( t2>0 && t-t2>60000 ) {
+         if( needNL ) System.out.println();
+         String s = nbImg+1>1 ? "s":"";
+         System.out.println((nbImg+1)+" image"+s+" in progress (MOC size="+Util.getUnitDisk(moc.getMem())+" in "+Util.getTemps(t-tStart)+")...");
+         needNL=false;
+         t2=t;
+      }
+
+      if( !multWrite || moc.getSize()==0 ) return false;
+      if( verbose ) System.out.println("Updating output MOC ["+out+"]...");
+      moc.write(out, fmt);
+      return true;
+   }
+         
+   
+//   private int scanStdin(HealpixMoc moc,int order) throws Exception {
+//      int n=0;
+//      String s;
+//      BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+//      try {
+//         StringBuffer buf = new StringBuffer();
+//         while( (s=in.readLine())!=null ) {
+//            if( abort ) throw new Exception("MOC aborted");
+//            if( s.trim().length()==0 ) {
+//               HeaderFits header = new HeaderFits(buf.toString());
+//               if( addInMocBox(moc,new Calib(header),order) ) n++;
+//               buf = new StringBuffer();
+//            }
+//            buf.append(s+"\n");
+//         }
+//      } finally { in.close(); }
+//
+//      return n;
+//   }
    
    
    // parameter scanning and interpretation
@@ -334,6 +466,9 @@ public class MocGen {
             
          } else if( s.equals("-v") || s.equals("-verbose") ) {
             verbose=true;
+            
+         } else if( s.equals("-d") ) {
+            debug=verbose=true;
             
          } else if( s.equals("-r") ) {
             recursive=true;
@@ -405,20 +540,21 @@ public class MocGen {
    
    // Affichage d'un HELP
    private void usage() {
-      System.out.println("Usage: java -jar Aladin.jar -mocgen ... [in=inputDirOrFile] out=MocFile\n" +
+      System.out.println("Usage: java -jar Aladin.jar -mocgen ... in=inputDirOrFile out=MocFile\n" +
             "-h                 : This help\n" +
             "[-v]               : Verbose\n" +
       		"[-strict]          : Scan pixel values instead of using WCS image coverage\n" +
       		"[blank=value]      : Alternate BLANK value (-strict only)\n" +
-            "[order=nn]         : MOC resolution (default 10)\n" +
+            "[order=nn]         : MOC resolution (default 10 => 3.345')\n" +
             "[mocfmt=fits|json] : MOC output format (default Fits)\n" +
       		"[previous=moc.fits]: Previous MOC (if additions)\n" +
-      		"[in=fileOrDir]     : Directory of images/headers collection\n" +
       		"[hdu=n1,n2-n3|all] : List of concerned Fits extensions\n" +
             "[-r]               : Recursive directory scanning\n" +
             "[-o]               : Output MOC updated continuously rather than generated at the end\n" +
+            "in=fileOrDir       : Directory of images/headers collection\n" +
       		"[out=outMoc.fits]  : Output MOC file\n" +
-      		"\n" +
+            "[-d]               : Debug trace\n" +
+     		"\n" +
       		"Generate the MOC corresponding to a collection of images or WCS headers.\n" +
       		"A MOC is a a coverage map based on HEALPix sky tesselation.\n" +
       		"\n" +
@@ -426,7 +562,7 @@ public class MocGen {
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +
-      		"Version: 1.3 - based on Aladin "+Aladin.VERSION+" - Feb 2014 - P.Fernique [CDS]");
+      		"Version: 1.4 - based on Aladin "+Aladin.VERSION+" - June 2014 - P.Fernique [CDS]");
    }
    
    // Generation d'un MOC pour toute une hiérarchie de fichiers FITS (ou JPEG/PNG avec calibration)
@@ -447,14 +583,19 @@ public class MocGen {
          if( previous!=null ) moc.read(previous);
          moc.setMocOrder(order);
          moc.setCheckConsistencyFlag(false);
-         long t = System.currentTimeMillis();
-         if( in!=null ) n = scanAndDo(moc,new File(in),order);
-         else n = scanStdin(moc,order);
+         tStart = System.currentTimeMillis();
+//         if( in!=null ) scanAndDo(moc,new File(in),order);
+//         else scanStdin(moc,order);
+         scanAndDo(moc,new File(in),order);
          moc.checkAndFix();
-         long ms = System.currentTimeMillis()-t;
-         if( verbose ) System.out.println(n+" files added in the MOC in "+cds.tools.Util.getTemps(ms));
+         long ms = System.currentTimeMillis()-tStart;
+         if( needNL ) System.out.println();
+         if( verbose ) {
+            String s = nbImg>1?"s":"";
+            System.out.println(nbImg+" image"+s+" added in the MOC in "+cds.tools.Util.getTemps(ms));
+         }
          moc.write(out,fmt);
-         if( verbose ) System.out.println("MOC achieved => "+out);
+         System.out.println("MOC achieved in "+Util.getTemps(ms)+" => "+out);
          ready=true;
       } catch( Exception e ) {
          moc=null;

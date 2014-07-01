@@ -20,6 +20,7 @@
 package cds.aladin;
 
 import cds.tools.*;
+import cds.xml.Field;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -54,10 +55,10 @@ public class FrameInfoTable extends JFrame {
        // Le panel des tables
 	   JPanel p = new JPanel( new GridLayout(0,1,5,5) );
 	   JScrollPane sc = new JScrollPane(p);
-	   Vector legs = plan.getLegende();
+	   Vector<Legende> legs = plan.getLegende();
 	   boolean multiTable = plan.getNbTable()>1;
-	   Enumeration e = legs.elements();
-	   for( int i=1; e.hasMoreElements(); i++ ) {
+	   Enumeration<Legende> e = legs.elements();
+	   while( e.hasMoreElements() ) {
 	      Legende leg = (Legende)e.nextElement();
 	      JPanel p1 = new JPanel( new BorderLayout(5,5) );
           if( multiTable )  p1.setBorder(BorderFactory.createTitledBorder(leg.name));
@@ -71,6 +72,21 @@ public class FrameInfoTable extends JFrame {
 	   JPanel p2 = new JPanel();
 	   JButton b;
 	   if( plan.pcat!=null && plan.pcat.hasCatalogInfo() ) {
+	      
+          b = new JButton(aladin.chaine.getString("CHECK"));
+          b.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) { check(true); }
+          });
+          p2.add(b);
+          
+          b = new JButton(aladin.chaine.getString("UNCHECK"));
+          b.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) { check(false); }
+          });
+          p2.add(b);
+          
+          p2.add(new JLabel(" - "));
+	      
           b = new JButton(aladin.chaine.getString("PARSING"));
           b.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) { seeCatalogInfo(); }
@@ -82,6 +98,9 @@ public class FrameInfoTable extends JFrame {
              public void actionPerformed(ActionEvent e) { seeCoordColumnInfo(); }
           });
           p2.add(b);
+          
+          p2.add(new JLabel(" - "));
+
 	   }
 	   b = new JButton(aladin.chaine.getString("CLOSE"));
        b.addActionListener(new ActionListener() {
@@ -100,4 +119,16 @@ public class FrameInfoTable extends JFrame {
 	}
 	
 	private void seeCatalogInfo() { plan.pcat.seeCatalogInfo(); }
+	
+	// Affiche/cache tous les champs
+	private void check(boolean flag) { 
+       Vector<Legende> legs = plan.getLegende();
+       Enumeration<Legende> e = legs.elements();
+       while( e.hasMoreElements() ) {
+          Legende leg = (Legende)e.nextElement();
+          for( Field f : leg.field ) f.visible=flag;
+          leg.fireTableDataChanged();
+       }
+       aladin.mesure.redisplay();
+	}
 }

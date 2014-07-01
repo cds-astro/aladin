@@ -379,7 +379,13 @@ final public class TableParser implements XMLConsumer {
       String s;
       double x;
       
-      if( !hrefVotable ) initTable();
+      if( !hrefVotable ) {
+         initTable();
+         coosys = new Hashtable<String,String>(10);
+         cooepoch = new Hashtable<String,String>(10);
+         cooequinox = new Hashtable<String,String>(10);
+         cooFieldref = new Hashtable<String,String>(10);
+      }
       
       try {
                   
@@ -1061,9 +1067,11 @@ final public class TableParser implements XMLConsumer {
                }
             }
 
-            else if( att!=null &&
-                  (att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch") 
-                || att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch") )) {
+            else if( att!=null && 
+                  (Util.matchMaskIgnoreCase("stc:Astrocoords.Position?D.Epoch", att) 
+                  || att.equalsIgnoreCase("stc:AstroCoords.SpaceFrame.Epoch")) ) {
+//                || att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch") 
+//                || att.equalsIgnoreCase("stc:AstroCoords.Position3D.Epoch") )) {
                v = (String)atts.get("value");
                if( v!=null ) {
 //                  consumer.tableParserInfo("   -"+att+" => "+v);
@@ -1077,7 +1085,10 @@ final public class TableParser implements XMLConsumer {
                }
             }
 
-            else if( att!=null && att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch.yearDef") ) {
+            else if( att!=null && 
+                  Util.matchMaskIgnoreCase("stc:Astrocoords.Position?D.Epoch.yearDef", att) ) {
+//                  (att.equalsIgnoreCase("stc:AstroCoords.Position2D.Epoch.yearDef") 
+//                || att.equalsIgnoreCase("stc:AstroCoords.Position3D.Epoch.yearDef")) ) {
                v = (String)atts.get("value");
                if( v!=null ) {
 //                  consumer.tableParserInfo("   -"+att+" => "+v);
@@ -1122,7 +1133,9 @@ final public class TableParser implements XMLConsumer {
             
          } else if( name.equalsIgnoreCase("FIELDref") ) {
             att =  (String)atts.get("utype");
-            if( att!=null && att.startsWith("stc:AstroCoords.Position2D.Value2") ) {
+            if( att!=null && 
+                  Util.matchMaskIgnoreCase("stc:Astrocoords.Position?D.Value*", att) ) {
+//                  att.startsWith("stc:AstroCoords.Position2D.Value2") ) {
                v = (String)atts.get("ref");
                if( v!=null ) {
 //                  consumer.tableParserInfo("   -"+att+" => ref="+v);
@@ -1146,6 +1159,13 @@ final public class TableParser implements XMLConsumer {
                if( att!=null) filter="#"+att+"\n";
                att=(String)atts.get("ID");
                if( att!=null ) filter=filter+"filter "+att+" {\n";
+            }
+         } else if( name.equalsIgnoreCase("COOSYS") ) {
+            id=(String)atts.get("ID");
+            if( id!=null ) {
+               if( (att=(String)atts.get("system"))!=null )  coosys.put(id,att);
+               if( (att=(String)atts.get("epoch"))!=null )   cooepoch.put(id,att);
+               if( (att=(String)atts.get("equinox"))!=null ) cooequinox.put(id,att);
             }
          }
       }
@@ -1223,13 +1243,6 @@ final public class TableParser implements XMLConsumer {
                
                if( (att=(String)atts.get("name"))!=null ) consumer.setTableInfo("name",att);
                
-            } else if( name.equalsIgnoreCase("COOSYS") ) {
-               id=(String)atts.get("ID");
-               if( id!=null ) {
-                  if( (att=(String)atts.get("system"))!=null ) coosys.put(id,att);
-                  if( (att=(String)atts.get("epoch"))!=null ) cooepoch.put(id,att);
-                  if( (att=(String)atts.get("equinox"))!=null ) cooequinox.put(id,att);
-               }
             }
             break;
          case 4:
@@ -1496,16 +1509,16 @@ final public class TableParser implements XMLConsumer {
     * (-1 s'il ne s'agit a priori pas de cela)
     */
    private int raName(String s) {
-      if( s.equalsIgnoreCase("_RAJ2000") ) return 0;
-      if( s.equalsIgnoreCase("RAJ2000") )  return 1;
-      if( s.equalsIgnoreCase("_RA") )      return 2;
-      if( s.equalsIgnoreCase("RA(ICRS)") ) return 3;
-      if( s.equalsIgnoreCase("RA") )       return 4;
-      if( s.equalsIgnoreCase("ALPHA_J2000") ) return 5;
-      if( s.equalsIgnoreCase("GLON") )  { setGal(); return 0; }
-      if( s.equalsIgnoreCase("SGLON") ) { setSGal(); return 0; }
-      if( s.equalsIgnoreCase("SLON") )  { setSGal(); return 0; }
-      if( s.equalsIgnoreCase("ELON") )  { setEcl();  return 0; }
+      if( s.equalsIgnoreCase("_RAJ2000") ) { setEq(); return 0; }
+      if( s.equalsIgnoreCase("RAJ2000") )  { setEq(); return 1; }
+      if( s.equalsIgnoreCase("_RA") )      { setEq(); return 2; }
+      if( s.equalsIgnoreCase("RA(ICRS)") ) { setEq(); return 3; }
+      if( s.equalsIgnoreCase("RA") )       { setEq(); return 4; }
+      if( s.equalsIgnoreCase("ALPHA_J2000") ) { setEq(); return 5; }
+      if( s.equalsIgnoreCase("GLON") )  { setGal(); return 6; }
+      if( s.equalsIgnoreCase("SGLON") ) { setSGal(); return 6; }
+      if( s.equalsIgnoreCase("SLON") )  { setSGal(); return 6; }
+      if( s.equalsIgnoreCase("ELON") )  { setEcl();  return 6; }
       return -1;
    }
 
@@ -1513,10 +1526,10 @@ final public class TableParser implements XMLConsumer {
     * d'une sous chaine RA dans le nom de colonne (-1 sinon) */
    private int raSubName(String s) {
       s = s.toLowerCase();
-      if( s.indexOf("radius")>=0 ) return -1;
-      if( s.startsWith("_ra") ) return 0;
-      if( s.startsWith("ra") )   return 1;
-      if( s.startsWith("alpha") ) return 2;
+      if( s.indexOf("radius")>=0 ) { setEq(); return -1; }
+      if( s.startsWith("_ra") ) { setEq(); return 0; }
+      if( s.startsWith("ra") )   { setEq(); return 1; }
+      if( s.startsWith("alpha") ) { setEq(); return 2; }
       if( s.startsWith("GLON") )  { setGal();  return 0; }
       if( s.startsWith("SGLON") ) { setSGal(); return 0; }
       if( s.startsWith("SLON") )  { setSGal(); return 0; }
@@ -1529,21 +1542,21 @@ final public class TableParser implements XMLConsumer {
     * (-1 s'il ne s'agit a priori pas de cela)
     */
    private int deName(String s) {
-      if( s.equalsIgnoreCase("_DEJ2000") )  return 0;
-      if( s.equalsIgnoreCase("_DECJ2000") ) return 1;
-      if( s.equalsIgnoreCase("DEJ2000") )   return 2;
-      if( s.equalsIgnoreCase("DECJ2000") )  return 3;
-      if( s.equalsIgnoreCase("_DE") )       return 4;
-      if( s.equalsIgnoreCase("_DEC") )      return 5;
-      if( s.equalsIgnoreCase("DE(ICRS)") )  return 6;
-      if( s.equalsIgnoreCase("DEC(ICRS)") ) return 6;
-      if( s.equalsIgnoreCase("DE") )        return 8;
-      if( s.equalsIgnoreCase("DEC") )       return 9;
-      if( s.equalsIgnoreCase("DELTA_J2000") ) return 9;
-      if( s.equalsIgnoreCase("GLAT") )  { setGal();  return 0; }
-      if( s.equalsIgnoreCase("SGLAT") ) { setSGal(); return 0; }
-      if( s.equalsIgnoreCase("SLAT") )  { setSGal(); return 0; }
-      if( s.equalsIgnoreCase("ELAT") )  { setEcl();  return 0; }
+      if( s.equalsIgnoreCase("_DEJ2000") )  { setEq(); return 0; }
+      if( s.equalsIgnoreCase("_DECJ2000") ) { setEq(); return 1; }
+      if( s.equalsIgnoreCase("DEJ2000") )   { setEq(); return 2; }
+      if( s.equalsIgnoreCase("DECJ2000") )  { setEq(); return 3; }
+      if( s.equalsIgnoreCase("_DE") )       { setEq(); return 4; }
+      if( s.equalsIgnoreCase("_DEC") )      { setEq(); return 5; }
+      if( s.equalsIgnoreCase("DE(ICRS)") )  { setEq(); return 6; }
+      if( s.equalsIgnoreCase("DEC(ICRS)") ) { setEq(); return 6; }
+      if( s.equalsIgnoreCase("DEC") )       { setEq(); return 7; }
+      if( s.equalsIgnoreCase("DE") )        { setEq(); return 8; }
+      if( s.equalsIgnoreCase("DELTA_J2000") ) { setEq(); return 8; }
+      if( s.equalsIgnoreCase("GLAT") )  { setGal();  return 9; }
+      if( s.equalsIgnoreCase("SGLAT") ) { setSGal(); return 9; }
+      if( s.equalsIgnoreCase("SLAT") )  { setSGal(); return 9; }
+      if( s.equalsIgnoreCase("ELAT") )  { setEcl();  return 9; }
       return -1;
    }
 
@@ -1551,12 +1564,12 @@ final public class TableParser implements XMLConsumer {
     * d'une sous chaine DE dans le nom de colonne (-1 sinon) */
    private int deSubName(String s) {
       s = s.toLowerCase();
-      if( s.startsWith("_dec") ) return 0;
-      if( s.startsWith("_de") )  return 1;
-      if( s.startsWith("dec") )  return 2;
-      if( s.startsWith("de") )   return 3;
-      if( s.indexOf("de")>0 )    return 4;
-      if( s.startsWith("delta") )return 5;
+      if( s.startsWith("_dec") ) { setEq(); return 0; }
+      if( s.startsWith("_de") )  { setEq(); return 1; }
+      if( s.startsWith("dec") )  { setEq(); return 2; }
+      if( s.startsWith("de") )   { setEq(); return 3; }
+      if( s.indexOf("de")>0 )    { setEq(); return 4; }
+      if( s.startsWith("delta") ){ setEq(); return 5; }
       if( s.startsWith("GLAT") )  { setGal();  return 0; }
       if( s.startsWith("SGLAT") ) { setSGal(); return 0; }
       if( s.startsWith("SLAT") )  { setSGal(); return 0; }
@@ -1564,9 +1577,21 @@ final public class TableParser implements XMLConsumer {
       return -1;
    }
    
-   private void setGal()  { srcAstroFrame = AF_GAL;  coosys.put("Default","GAL"); }
-   private void setSGal() { srcAstroFrame = AF_SGAL; coosys.put("Default","SGAL"); }
-   private void setEcl()  { srcAstroFrame = AF_ECLI; coosys.put("Default","ECL"); }
+   private static final String DEFAULT = "Default";
+   private Astroframe lastCoordSys=null;             // Systeme de coordonnées associé au champ courant (avant validation)
+   
+   private void validLastCoordSys() {
+      srcAstroFrame = lastCoordSys;
+           if( srcAstroFrame==AF_GAL )  coosys.put(DEFAULT,"GAL");
+      else if( srcAstroFrame==AF_SGAL ) coosys.put(DEFAULT,"SGAL");
+      else if( srcAstroFrame==AF_SGAL ) coosys.put(DEFAULT,"ECL");
+      else coosys.remove(DEFAULT);
+   }
+   
+   private void setGal()  { lastCoordSys = AF_GAL;  }
+   private void setSGal() { lastCoordSys = AF_SGAL; }
+   private void setEcl()  { lastCoordSys = AF_ECLI; }
+   private void setEq()   { lastCoordSys = null; }
    
    /** Retourne un indice entre 0 (meilleur) et 9 en fonction de la reconnaissance
     * ou non du nom d'une colonne en tant que PMRA,
@@ -1708,8 +1733,7 @@ final public class TableParser implements XMLConsumer {
          nRA=nField; qualRA=qual;
          format= unit.length()==0 ? FMT_UNKNOWN : 
             unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
-//         knowFormat=unit.length()>0;
-//         flagSexa = unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0;
+         validLastCoordSys();
       }
       
       // Détection du DE et évaluation de la qualité de cette détection

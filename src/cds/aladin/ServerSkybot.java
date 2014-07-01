@@ -49,7 +49,7 @@ public class ServerSkybot extends ServerGlu {
          String [] PD, String [] PK, String [] PV, String R, String MI,
 		 String [] AF, String AL,StringBuffer record) {
 
-      super(aladin,A,D,MV,MP,ML,LP,PP,FU,PD,PK,PV,R,MI,AF,AL,null,null,record);
+      super(aladin,A,D,MV,MP,ML,LP,PP,FU,PD,PK,PV,R,MI,AF,AL,null,null,record,null);
       aladinLogo = "SkyBotLogo.gif";
 
       // Resolver d'astéroid

@@ -3155,7 +3155,7 @@ public class ViewSimple extends JComponent
       if( isPlanBlink() && cubeControl.mouseMoved(e)>CubeControl.NOTHING ) {
          flagBlinkControl=true;
          update(getGraphics());
-         return;
+//         return;
       }
 //      if( isPlanBlink() && cubeControl!=null ) {
 //         int m = cubeControl.setMouseMove(vs,(int)Math.round(x),(int)Math.round(y));
@@ -3167,7 +3167,7 @@ public class ViewSimple extends JComponent
 //      }
 
       // Juste pour éviter de le faire 2x
-      boolean isSelectOrTool = tool==ToolBox.SELECT || tool==ToolBox.PAN ||ToolBox.isForTool(tool);
+      boolean isSelectOrTool = tool==ToolBox.SELECT || tool==ToolBox.PAN || ToolBox.isForTool(tool);
       
       // Affichage du rectangle du zoom
       if( tool==ToolBox.ZOOM && !isScrolling() ) {
@@ -3207,6 +3207,7 @@ public class ViewSimple extends JComponent
             boolean testOnMovable = fullScreen && (plan.type==Plan.APERTURE
                                      || plan.type==Plan.TOOL);
 
+            
             // Determination du nombre d'objet sous la souris
             Iterator<Obj> it = plan.iterator(this);
             for( int j=0; it!=null && it.hasNext(); j++ ) {
@@ -3216,7 +3217,7 @@ public class ViewSimple extends JComponent
                   if( testOnMovable ) flagOnMovableObj=true;
 
                   // Objets rollables (APERTURE)
-                  if( allPlans[i].type==Plan.APERTURE  && j>1  /* Pour eviter de prendre le Repere central et le centre de rotation*/
+                  if( allPlans[i].type==Plan.APERTURE && j>1  /* Pour eviter de prendre le Repere central et le centre de rotation*/
                         && ((PlanField)allPlans[i]).isRollable() ) {
                     if( ((Position)o).inBout(vs,p.x,p.y) ) {
                        flagRollable=true;
@@ -5287,6 +5288,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
 
       Font f = g.getFont();
       g.setFont(Aladin.SITALIC);
+      g.setColor(view.gridColor);
       long t = Util.getTime();
 
       // (Re)calcul de la grille
@@ -5376,7 +5378,7 @@ testx1=x1; testy1=y1; testw=w; testh=h;
       }
 
       // Affichage de la grille en semi transparence
-      g.setColor(Aladin.GREEN);
+//      g.setColor(view.gridColor);
       Stroke st = null;
       if( g instanceof Graphics2D ) {
          ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,

@@ -117,6 +117,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    Font F = Aladin.SPLAIN;
    static protected int INITW = 512;
    static protected int INITH = 512;
+   protected Color gridColor = Aladin.GREEN;
+   protected Color gridColorRA  = gridColor.brighter();
+   protected Color gridColorDEC = gridColor.brighter().brighter();
 
    // Les references aux autres objets
    Aladin aladin;

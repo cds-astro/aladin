@@ -22,6 +22,7 @@ package cds.aladin;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.InputStream;
 import java.net.*;
@@ -41,6 +42,7 @@ import cds.tools.Util;
 public class ServerGlu extends Server implements Runnable {
    String HELP,ERR;
    private boolean flagSIAIDHA=false;
+   private boolean flagTAP=false;
    int fmt;		// Format de retour (PlanImage.fmt)
    String actionName,info1,/*info2,*/filter;
    String system;       // appel système dans le cas d'un enregistrement concernant une application locale, null sinon
@@ -76,7 +78,7 @@ public class ServerGlu extends Server implements Runnable {
                 String aladinMenu, String aladinMenuNumber, String aladinLabel, String planeLabel, 
                 String docUser, String [] paramDescription, String [] paramDataType, 
                 String [] paramValue, String resultDataType, String institute,
-				String [] aladinFilter, String aladinLogo, String dir, String system, StringBuffer record) {
+				String [] aladinFilter, String aladinLogo, String dir, String system, StringBuffer record,String aladinProtocol) {
 
       this.aladin = aladin;
       createChaine();
@@ -115,6 +117,7 @@ public class ServerGlu extends Server implements Runnable {
       }
       flagSIAIDHA = resultDataType!=null && (resultDataType.indexOf("sia")>=0 
             || resultDataType.indexOf("idha")>=0  || resultDataType.indexOf("ssa")>=0 );
+      flagTAP = aladinProtocol!=null && Util.indexOfIgnoreCase(aladinProtocol, "tap")==0; 
       if( flagSIAIDHA && type!=SPECTRUM ) type=IMAGE;
       DISCOVERY=flagSIAIDHA || type==SPECTRUM || type==CATALOG;
 
@@ -174,6 +177,7 @@ public class ServerGlu extends Server implements Runnable {
             JComboBox ch = new JComboBox();
             ch.setOpaque(false);
             while( pv.hasMoreTokens() ) ch.addItem(pv.nextToken());
+            if( flagTAP ) ch.addActionListener(this);
             co = ch;
 
          // Construction d'un champ de texte libre
@@ -186,9 +190,11 @@ public class ServerGlu extends Server implements Runnable {
                vD[nc]=paramValue[i];
 
                t = new JTextField(vD[nc],40); // Une seule valeur possible => valeur par defaut
+               
 
             } else t = new JTextField(40);
             t.addKeyListener(this);
+            if( flagTAP ) t.addActionListener(this);
 
             co = t;
 
@@ -213,15 +219,31 @@ public class ServerGlu extends Server implements Runnable {
             nc++;
          }
          vc.addElement(co);
+         
       }
 
       JScrollPane sc=null;
+      
       // Pour IDHA ou SIA
       if( flagSIAIDHA ) {
          tree = new MetaDataTree(aladin, null);
          sc = new JScrollPane(tree);
          tree.setScroll(sc);
          sc.setBackground(tree.bkgColor);
+         sc.setBounds(XTAB1,y,XWIDTH-2*XTAB1,180); y+=180;
+         add(sc);
+      }
+
+      // Pour TAP
+      else if( flagTAP ) {
+         tap = new JTextArea("",8,50);
+         tap.setFont(Aladin.ITALIC);
+         tap.setWrapStyleWord(true);
+         tap.setLineWrap(true);
+         tap.setEditable(false);
+         sc = new JScrollPane(tap);
+         
+         y+=15;
          sc.setBounds(XTAB1,y,XWIDTH-2*XTAB1,180); y+=180;
          add(sc);
       }
@@ -253,7 +275,7 @@ public class ServerGlu extends Server implements Runnable {
          add(b);
       }
 
-      if( flagSIAIDHA ) setMaxComp(sc);
+      if( flagSIAIDHA || flagTAP ) setMaxComp(sc);
 
    }
 
@@ -536,7 +558,6 @@ public class ServerGlu extends Server implements Runnable {
 
          // Pre-remplissage des champs concernant le radius
          if( radius!=null && radius.length()>0 ) resolveRadius(radius,true);
-         //      if( radius!=null && radius.length()>0 ) setRad(getRadius(radius,RADIUS)*2);
 
          // Pré-remplissage du champ concernant la date
          if( date!=null && date.getText().trim().length()==0 ) resolveDate(getDefaultDate());
@@ -779,14 +800,14 @@ public class ServerGlu extends Server implements Runnable {
 
    public void submit() {
       (new Thread(this,"GluServer submit") {
-         public void run() { submit1(); }
+         public void run() { submit1(true); }
       }).start();
    }
 
    /** Interrogation
     * IL FAUDRAIT GREFFER CETTE FONCTION A createPlane CI-DESSUS...
     */
-   private void submit1() {
+   private void submit1(boolean flagDoIt) {
       String s,objet="";
       Enumeration e;
       String code=null;
@@ -798,6 +819,7 @@ public class ServerGlu extends Server implements Runnable {
             objet=resolveQueryField();
             if( objet==null ) throw new Exception(UNKNOWNOBJ);
          } catch( Exception e1 ) {
+            if( !flagDoIt ) return;
             Aladin.warning(this,e1.getMessage());
             ball.setMode(Ball.NOK);
             return;
@@ -864,6 +886,12 @@ public class ServerGlu extends Server implements Runnable {
          label = aladin.glu.dollarSet(dollarQuerySet(planeLabel),param,Glu.NOURL).trim();
       }
       
+      // Generation de l'URL par appel au GLU
+      URL u = aladin.glu.getURL(actionName,p==null?"" : p.toString());
+      
+      // C'est juste pour avoir le texte ADQL
+      if( !flagDoIt && flagTAP ) { setInTap(u); return; }
+      
       // Il s'agit d'un appel système ?
       if( system!=null ) { exec(label, p==null?"" : p.toString() ); return; }
       
@@ -876,8 +904,6 @@ public class ServerGlu extends Server implements Runnable {
          aladin.console.printCommand(code+this.getTarget()+r);
       }
 
-      // Generation de l'URL par appel au GLU
-      URL u = aladin.glu.getURL(actionName,p==null?"" : p.toString());
       
       // S'agit-il d'un serveur SIA || IDHA
       if( flagSIAIDHA ) {
@@ -919,6 +945,16 @@ public class ServerGlu extends Server implements Runnable {
       lastPlan = aladin.calque.createPlan(u+"",label,"provided by "+institute,this);
       if( code!=null && lastPlan!=null ) lastPlan.setBookmarkCode(code+" $TARGET $RADIUS");
     }
+   
+   private void setInTap(URL u) {
+      String s = u.toString();
+      int offset = s.indexOf("QUERY=");
+      s = s.substring(offset+6);
+      s = URLDecoder.decode(s);
+      s=s.replace("FROM", "\n   FROM");
+      s=s.replace("WHERE","\n   WHERE");
+      tap.setText(s);
+   }
    
    /** Lance l'éxécution de l'application system */
    private boolean exec(final String label,String params) {
@@ -1080,6 +1116,14 @@ public class ServerGlu extends Server implements Runnable {
 
       super.clear();
    }
+   
+   protected boolean updateWidgets() {
+      if( flagTAP ) {
+         System.out.println("Je dois rééditer la chaine ADQL");
+         submit1(false);
+      }
+      return super.updateWidgets();
+   }
 
    public void actionPerformed(ActionEvent e) {
       Object o = e.getSource();
@@ -1088,6 +1132,7 @@ public class ServerGlu extends Server implements Runnable {
          else aladin.glu.showDocument(docUser,"");
          return;
       }
+      if( flagTAP ) updateWidgets();
 
       super.actionPerformed(e);
    }

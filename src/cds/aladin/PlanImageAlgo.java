@@ -297,8 +297,9 @@ public class PlanImageAlgo extends PlanImage {
          double [] inPixels = new double[width*height];
          for( i=y=0; y<height; y++ ) {
             for( x=0; x<width; x++ ) {
-               double pix = p1.getPixel(x,y);
-               if( Double.isNaN(pix) ) continue;
+               double pix = p1.getPixelOriginInDouble(x,y);
+//               double pix = p1.getPixel(x,y);
+//               if( Double.isNaN(pix) ) continue;
                inPixels[i++] = pix;
             }
          }

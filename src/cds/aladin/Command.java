@@ -1279,6 +1279,28 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          return "";
       }
       
+      else if( propertie.equalsIgnoreCase("gridcolor") ) {
+         Color c = Action.getColor(value);
+         if( c==null ) return "!!! Unknown color";
+         a.view.gridColor=c;
+         a.calque.repaintAll();
+         return "";
+      }
+      else if( propertie.equalsIgnoreCase("gridcolorRA") ) {
+         Color c = Action.getColor(value);
+         if( c==null ) return "!!! Unknown color";
+         a.view.gridColorRA=c;
+         a.calque.repaintAll();
+         return "";
+      }
+      else if( propertie.equalsIgnoreCase("gridcolorDEC") ) {
+         Color c = Action.getColor(value);
+         if( c==null ) return "!!! Unknown color";
+         a.view.gridColorDEC=c;
+         a.calque.repaintAll();
+         return "";
+      }
+     
       try { a.configuration.setconf(propertie,value); }
       catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();

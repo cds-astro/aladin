@@ -173,9 +173,13 @@ public class Segment {
 //      if( del2!=del1 ) g.drawString(d+"",(int)(x1+x2)/2,(int)(y1+y2)/2);
 
       if( label==null ) return;
+      Color  c = g.getColor();
+      if( labelMode==MILIEURA || labelMode==GAUCHE ) g.setColor( v.view.gridColorDEC );
+      else g.setColor( v.view.gridColorRA );
       if( labelMode==MILIEURA ) g.drawString(label,(int)(x1+x2)/2+dx,(int)y1+dy-5);
       else if( labelMode==MILIEUDE ) g.drawString(label,(int)(x1-30+dx),(int)(y1+y2)/2+dy-2);
       else if( labelMode==GAUCHE && y2>30 )g.drawString(label,5+dx,(int)(y1+y2)/2+dy-2);
       else if( labelMode==HAUT ) g.drawString(label,(int)(x1+x2)/2+dx,25+dy);
+      g.setColor(c);
    }
 }

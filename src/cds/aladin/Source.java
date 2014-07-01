@@ -472,10 +472,7 @@ public class Source extends Position implements Comparator {
                                 4);
       g.drawPolygon(pol);
       if( solid ) g.fillPolygon(pol);
-//      g.drawLine(p.x,p.y-L, p.x+L,p.y);
-//      g.drawLine(p.x+L,p.y, p.x,p.y+L);
-//      g.drawLine(p.x,p.y+L, p.x-L,p.y);
-//      g.drawLine(p.x-L,p.y, p.x,p.y-L);
+      
       if( isWithLabel() ) {
          setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);
@@ -492,9 +489,6 @@ public class Source extends Position implements Comparator {
       g.drawPolygon(pol);
       if( solid ) g.fillPolygon(pol);
 
-//      g.drawLine(p.x-L,p.y+L/3, p.x+L,p.y+L/3);
-//      g.drawLine(p.x-L,p.y+L/3, p.x,p.y-(2*L)/3);
-//      g.drawLine(p.x+L,p.y+L/3, p.x,p.y-(2*L)/3);
       if( isWithLabel() ) {
          setBox(g);
          g.drawString(id,p.x+L-box.x,p.y-L+box.y);

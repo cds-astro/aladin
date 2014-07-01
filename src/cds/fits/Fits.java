@@ -666,7 +666,13 @@ final public class Fits {
             pixels = new byte[size];
 
             // Lecture d'un coup
-            if( w == -1 ) dis.readFully(pixels);
+            if( w==-1 ) dis.readFully(pixels);
+            
+            // Lecture continue d'une cellule qui contient des lignes entières
+            else if( w==width && depth==1 ) {
+               dis.skip( (long)yCell * width * n);
+               dis.readFully(pixels);
+            }
 
             // Lecture ligne à ligne pour mémoriser uniquement la cellule
             else {
@@ -808,6 +814,8 @@ final public class Fits {
                if( !skipHDU0 ) return 0;
                headerFits = new HeaderFits(is);
             }
+            
+            bitmapOffset = is.getPos();
 
             try {
                bitpix = headerFits.getIntFromHeader("BITPIX");
@@ -1242,6 +1250,30 @@ final public class Fits {
       return x >= xCell && x < xCell + widthCell 
           && y >= yCell && y < yCell + heightCell
           && z >= zCell && z < zCell + depthCell;
+   }
+   
+   
+   private RandomAccessFile fDirectAccess=null;
+   
+   /**
+    * Retourne la valeur du pixel en (x,y,z) (y compté à partir du bas) sous forme d'un double
+    * en effectuant un accès direct au disque au bon endroit
+    * @param x,y,z position du pixel
+    */
+   public double getPixelDirectAccess(int x, int y) throws Exception { return getPixelDirectAccess(x,y,0); }
+   public double getPixelDirectAccess(int x, int y, int z) throws Exception {
+      if( filename == null || bitmapOffset == -1 ) throw new Exception(
+            "FITS stream not compatible (not a true file [" + filename + "])");
+      
+      if( fDirectAccess==null ) fDirectAccess = new RandomAccessFile(filename, "r");
+      int n = Math.abs(bitpix) / 8;
+      byte [] pixels = new byte[n];
+
+      long offset = bitmapOffset + ((long)z*width*height + (long)y * width  + (long)x) * n;
+      fDirectAccess.seek(offset);
+      fDirectAccess.readFully(pixels);
+
+      return getPixValDouble(pixels, bitpix, 0);
    }
 
    /**
@@ -1759,6 +1791,10 @@ final public class Fits {
       headerFits = null;
       width = height = bitpix = 0;
       widthCell = heightCell = depthCell = xCell = yCell = zCell = ext = depth = 0;
+      if( fDirectAccess!=null ) {
+         try { fDirectAccess.close(); } catch( Exception e ) {}
+         fDirectAccess=null;
+      }
    }
 
    @Override

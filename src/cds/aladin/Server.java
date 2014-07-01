@@ -76,6 +76,7 @@ public class Server extends JPanel
    // Les elements communs aux formulaires
    String ordre = "X";             // numéro d'ordre du formulaire
    MetaDataTree tree=null;	       // Le session tree si necessaire pour le formulaire
+   JTextArea tap=null;             // Chaine de la requete ADQL pour un serveur TAP
    static boolean message=true;    // Indique qu'il faut afficher une fenetre pour OK
    JTextField target=null;         // Le target (methode unifiee)
    JTextField radius;              // la taille (si necessaire)

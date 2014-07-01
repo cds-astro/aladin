@@ -318,8 +318,10 @@ protected void createChaine() {
 protected void submit() {
       try {
          PlanImage p1=(PlanImage)getPlan(ch[0]);
-         String conv = getConvCmd();
-         a.calque.newPlanImageAlgo(conv,p1,null,PlanImageAlgo.CONV,0,conv,0);
+         String conv = getConvCmd(); 
+         String label = conv.replace('=',':');
+         a.console.printCommand(label+"=conv "+Tok.quote(p1.label)+" "+Tok.quote(conv));
+         a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.CONV,0,conv,0);
 //         hide();
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();

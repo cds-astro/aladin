@@ -185,7 +185,8 @@ public class TreeNodeAllsky extends TreeNode {
          if( format!=null ) {
             int a,b;
             inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;
-            inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0 || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
+            inJPEG = (b=Util.indexOfIgnoreCase(format, "jpeg"))>=0 
+                   || (b=Util.indexOfIgnoreCase(format, "jpg"))>=0;
             inPNG  = (b=Util.indexOfIgnoreCase(format, "png"))>=0;
             truePixels = inFits && a<b;                         // On démarre dans le premier format indiqué
          } else {
@@ -281,7 +282,8 @@ public class TreeNodeAllsky extends TreeNode {
                if( Util.indexOfIgnoreCase(s, "color")>=0 ) color=true;
                if( Util.indexOfIgnoreCase(s, "cube")>=0 ) cube=true;
                if( Util.indexOfIgnoreCase(s, "fits")>=0 ) { inFits=true; if( first ) { first=false ; truePixels=true; } }
-               if( Util.indexOfIgnoreCase(s, "jpeg")>=0 ) { inJPEG=true; if( first ) { first=false ; truePixels=false;} } 
+               if( Util.indexOfIgnoreCase(s, "jpeg")>=0 
+                     || Util.indexOfIgnoreCase(s, "jpg")>=0) { inJPEG=true; if( first ) { first=false ; truePixels=false;} } 
                if( Util.indexOfIgnoreCase(s, "png")>=0 )  { inPNG=true; if( first ) { first=false ; truePixels=false;} } 
                if( Util.indexOfIgnoreCase(s, "gal")>=0 ) frame = Localisation.GAL;
                if( Util.indexOfIgnoreCase(s, "ecl")>=0 ) frame = Localisation.ECLIPTIC;
