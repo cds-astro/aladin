@@ -983,6 +983,7 @@ public class Source extends Position implements Comparator {
     	String ret;
       	try {
       	   ret = getCodedValue(index);
+      	   if( leg.isNullValue(ret, index) ) ret="";
 
            // Pierre: En cas de marques GLU
            if( ret.startsWith("<&") ) {
@@ -1133,6 +1134,9 @@ public class Source extends Position implements Comparator {
     /** Retourne la liste des Precisions pour chaque valeur */
     public String [] getPrecisions() { return getMeta(6); }
 
+    /** Retourne la liste des nullValues pour chaque valeur */
+    public String [] getNullValues() { return getMeta(7); }
+
     /** Retourne la liste d'une metadata particulière associée aux valeurs
      *  @param m 0:label, 1:unit,  2:ucd
      */
@@ -1148,6 +1152,7 @@ public class Source extends Position implements Comparator {
              case 4: u[i]=leg.field[i].arraysize;  break;
              case 5: u[i]=leg.field[i].width;  break;
              case 6: u[i]=leg.field[i].precision;  break;
+             case 7: u[i]=leg.field[i].nullValue;  break;
           }
        }
        return u;

@@ -467,10 +467,12 @@ Aladin.trace(3,"startTable "+name);
 
 
 
-   boolean [] hiddenField;	// Tableau des champs caches (1 pour cache 0 pour ok);
-   boolean firstTrace=true;	// Pour afficher la premiere source en cas de trace
-   private int indexOID=-1;     // Position de la colonne OID eventuelle
-   private TableParser res;     // Parser utilisé pour créer les objets
+   boolean [] hiddenField;	         // Tableau des champs caches (1 pour cache 0 pour ok);
+   boolean firstTrace=true;	         // Pour afficher la premiere source en cas de trace
+   private int indexAccessUrl=-1;    // Position de la colonne pour in access_url éventuel
+   private int indexAccessFormat=-1; // Position de la colonne pour un access_format éventuel
+   private int indexOID=-1;          // Position de la colonne OID eventuelle
+   private TableParser res;          // Parser utilisé pour créer les objets
    private StringBuffer line = new StringBuffer(500);
 
 
@@ -492,8 +494,8 @@ Aladin.trace(3,"startTable "+name);
          // uniquement fait a la premiere source (test sur flagFirstRecord)
 
          if( flagFirstRecord ) {
-            firstTrace = true; // Pour afficher la premiere source en cas de
-                               // trace
+            firstTrace = true; // Pour afficher la premiere source en cas de trace
+            indexAccessFormat=indexAccessUrl=-1;
             n = vField.size();
             Vector v = new Vector(n); // Ne contiendra que les champs conserves
 
@@ -615,8 +617,7 @@ Aladin.trace(3,"startTable "+name);
                href=value[i];
             }
 
-            String tag = (gref != null) ? gref : (href != null) ? "Http "
-                  + href : null;
+            String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;
             
             // JE LE REMETS ACTIF DE MANIERE GENERIQUE POUR N'IMPORTE QUEL SPECTRE - PF sept 2012
             if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
@@ -630,7 +631,7 @@ Aladin.trace(3,"startTable "+name);
             // TODO
             //else if( tag!=null && flagArchive!=null && flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
             
-
+            
             String text = (refText != null) ? refText : value[i];
 
             line.append("\t");
@@ -648,17 +649,24 @@ Aladin.trace(3,"startTable "+name);
             if( dec < minDec ) minDec = dec;
             if( dec > maxDec ) maxDec = dec;
          }
+         
 
          // Determination de label de la source
          String lab = (nId >= 0) ? value[nId] : "Source #" + (nb_o+1);
 
-         // Pour le debogage (ATTENTION, n'indique que la premiere source)
          if( firstTrace ) {
+            
+            // Pour le debogage (ATTENTION, n'indique que la premiere source)
             Aladin.trace(3, "setRecord "
                   + (oid != null ? "(oid=" + oid + ")" : "") + " \"" + lab
                   + "\" " + (flagXY ? "XY" : "pos") + "=(" + ra + "," + dec
                   + ") [" + line + "]");
             firstTrace = false;
+            
+            // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
+            // de la valeur MIME du champ "access_format"
+            indexAccessUrl = leg.find("access_url");
+            indexAccessFormat = leg.find("access_format");
          }
 
          // Creation de la source, soit en XY, soit en alph,delta
@@ -669,7 +677,8 @@ Aladin.trace(3,"startTable "+name);
          o[nb_o++] = source;
 
          // Fov STCS attaché ?
-         int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION);
+         int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION1);
+         if( idxSTCS<0 ) idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION2);
          if (idxSTCS>=0) {
              try {
                  source.setFootprint(source.getValue(idxSTCS));
@@ -678,6 +687,23 @@ Aladin.trace(3,"startTable "+name);
              catch(Exception e) {
                  e.printStackTrace();
              }
+         }
+         
+         // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <£xxx e la colonne "access_url"
+         // en fonction du MIME type de la colonne "access_format"
+         if( indexAccessFormat>=0 && indexAccessUrl>=0 ) {
+            try {
+               String fmt = source.getCodedValue(indexAccessFormat);
+               String val = source.getCodedValue(indexAccessUrl);
+               if( val.startsWith("<&") && fmt.length()>0 && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) { 
+                  String tag="^";
+                  if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
+                  val = "<&"+tag+val.substring(2);
+                  source.setValue(indexAccessUrl, val);
+               }
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
          }
 
          // Pour laisser la main aux autres threads
@@ -725,7 +751,11 @@ Aladin.trace(3,"startTable "+name);
     * delivering not crucial error
     */
    public void tableParserWarning(String msg) {
-      Aladin.trace(3,msg);
+      if( msg.startsWith("!!!") ) {
+         if( msg.indexOf("OVERFLOW")>=0 ) plan.error=msg;
+         if( msg.indexOf("ERROR")>=0 ) plan.error=msg;
+      }
+      tableParserInfo(msg);
    }
 
    /** This method is called by the TableParserConsumer for
@@ -1025,9 +1055,10 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
        }
 
        // par défaut, on montre les footprints associés à un plan catalogue
-       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
-           ((PlanCatalog) plan).showFootprints(true);
-       }
+       // NON, PAS UNE BONNE IDEE
+//       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
+//           ((PlanCatalog) plan).showFootprints(true);
+//       }
 
        return nb;
    }
@@ -1049,12 +1080,8 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
 			pf=null;
 
 			idx = s.findColumn("FoVRef");
-			if( idx<0 ) {
-			    idx = s.findUtype("char:SpatialAxis.coverage.support.id");
-			}
-			if( idx<0 ) {
-				continue;
-			}
+			if( idx<0 ) idx = s.findUtype("char:SpatialAxis.coverage.support.id");
+			if( idx<0 )  continue;
 
 			key = s.getValue(idx);
 			footprint = hash.get(key);

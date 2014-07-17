@@ -91,13 +91,16 @@ public final class MyInputStream extends FilterInputStream {
    static final public long DS9REG  = 1L<<37;
    static final public long SED     = 1L<<38;
    static final public long BZIP2   = 1L<<39;
+   static final public long AJTOOL  = 1L<<40;
+   static final public long TAP     = 1L<<41;
+   static final public long OBSTAP  = 1L<<42;
 
    static final String FORMAT[] = {
       "UNKNOWN","FITS","JPEG","GIF","MRCOMP","HCOMP","GZIP","XML","ASTRORES",
       "VOTABLE","AJ","AJS","IDHA","SIA","CSV","UNAVAIL","AJSx","PNG","XFITS",
       "FOV","FOV_ONLY","CATLIST","RGB","BSV","FITS-TABLE","FITS-BINTABLE","CUBE",
       "SEXTRACTOR","HUGE","AIPSTABLE","IPAC-TBL","BMP","RICE","HEALPIX","GLU","ARGB","PDS",
-      "HPXMOC","DS9REG","SED","BZIP2" };
+      "HPXMOC","DS9REG","SED","BZIP2","AJTOOL","TAP","OBSTAP" };
 
    // Recherche de signatures particulieres
    static private final int DEFAULT = 0; // Detection de la premiere occurence
@@ -337,8 +340,7 @@ public final class MyInputStream extends FilterInputStream {
          
          // Détection MOCORDER (ASCII - nouvelle définition #MOCORDER...)
          else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C' 
-               && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;
-
+               && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;                  
 
 //         // Detection de BMP
 //         else if( c[0]==66  && c[1]==77 ) type |= BMP;
@@ -496,7 +498,12 @@ public final class MyInputStream extends FilterInputStream {
          else if(  lookForSignature("#AJS",true)>0 ) type |= AJS;
 
          // Detection de TSV
-         else if( (csv=isCSV())==1 ) type |= CSV;
+         else if( (csv=isCSV())==1 ) {
+            type |= CSV;
+         }
+         
+         // Serait-ce du AJTOOL
+         else if( csv==5 ) type |= CSV|AJTOOL;
 
          // Detection de CATLIST (Liste de catalogues)
          else if(  lookForSignature("#CATLIST",true)>0 ) type |= CATLIST;
@@ -843,18 +850,18 @@ public long skip(long n) throws IOException {
 //System.out.println("cache (inCache="+inCache+"/offsetCache="+offsetCache+")");
    }
 
-   private void substituteIPC(int pos, int len, String s) throws Exception {
-//System.out.println("AVANT:["+(new String(cache,0,inCache))+"]");
-//System.out.println("Substitution dans cache (inCache="+inCache+"/offsetCache="+offsetCache+") pos="+pos+" len="+len+" ["+s+"]");
-      char a[] = s.toCharArray();
-      if( a.length>len || pos<offsetCache ) throw new Exception("MyInputStream substitution error");
-      int i,j;
-      for( i=0,j=pos; i<a.length; i++,j++ ) cache[j] = (byte) a[i];
-      System.arraycopy(cache,pos+len, cache, pos+a.length, inCache - (pos+len) );
-      inCache -= len - a.length;
-//System.out.println("APRES:["+(new String(cache,0,inCache))+"]");
-//System.out.println("cache (inCache="+inCache+"/offsetCache="+offsetCache+")");
-   }
+//   private void substituteIPC(int pos, int len, String s) throws Exception {
+////System.out.println("AVANT:["+(new String(cache,0,inCache))+"]");
+////System.out.println("Substitution dans cache (inCache="+inCache+"/offsetCache="+offsetCache+") pos="+pos+" len="+len+" ["+s+"]");
+//      char a[] = s.toCharArray();
+//      if( a.length>len || pos<offsetCache ) throw new Exception("MyInputStream substitution error");
+//      int i,j;
+//      for( i=0,j=pos; i<a.length; i++,j++ ) cache[j] = (byte) a[i];
+//      System.arraycopy(cache,pos+len, cache, pos+a.length, inCache - (pos+len) );
+//      inCache -= len - a.length;
+////System.out.println("APRES:["+(new String(cache,0,inCache))+"]");
+////System.out.println("cache (inCache="+inCache+"/offsetCache="+offsetCache+")");
+//   }
 
 
    /** Retourne le nombre de fois ou un caractere particulier est present dans
@@ -1043,14 +1050,15 @@ public long skip(long n) throws IOException {
     *                     #...
     *                           1  3.08751e-05   5.2560   0.0042  0.007450911 4.463027e-05     75.842     72.788  77.4363120  +1.7139901   0.02255782  0.009481858 -21.2  18
     *                           2 1.506869e-05   7.6853   0.0194   0.00145597 3.457046e-05    100.831      4.265  77.3946642  +1.5997848    0.0134634  0.005376848  -1.4  27
-    *         3 C'est du IPAC càd du BSV + entête:
+    *         4 C'est du IPAC càd du BSV + entête:
     *                     #\ ___ Ks photometric uncertainty of the associated 2MASS All-Sky PSC source
     *                     #\
     *                     #|       source_id|         ra|        dec|   sigra|  sigdec| sigradec| w1mpro|w1sigmpro|  w1snr|  w1rchi2| w2mpro|w2sigmpro|  w2snr|  w2rchi2| w3mpro|w3sigmpro|  w3snr|  w3rchi2| w4mpro|w4sigmpro|  w4snr|  w4rchi2|    rchi2|  nb|  na|  w1mag|w1sigm|w1flg|  w2mag|w2sigm|w2flg|  w3mag|w3sigm|w3flg|  w4mag|w4sigm|w4flg|cc_flags|det_bit|ph_qual|   sso_flg|r_2mass|pa_2mass|n_2mass|j_m_2mass|j_msig_2mass|h_m_2mass|h_msig_2mass|k_m_2mass|k_msig_2mass|             dist|           angle|
     *                     #|            char|     double|     double|  double|  double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double| double|   double|   double| int| int| double|double|  int| double|double|  int| double|double|  int| double|double|  int|    char|    int|   char|       int| double|  double|    int|   double|      double|   double|      double|   double|      double|           double|          double|
     *                     #|                |        deg|        deg|  arcsec|  arcsec|   arcsec|    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |         |    |    |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |        |       |       |          | arcsec|     deg|       |      mag|         mag|      mag|         mag|      mag|         mag|           arcsec|             deg|
     *                     #|            null|       null|       null|    null|    null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|     null|null|null|   null|  null| null|   null|  null| null|   null|  null| null|   null|  null| null|    null|   null|   null|      null|   null|    null|   null|     null|        null|     null|        null|     null|        null|             null|            null|
-    *                     # 02562a148-000137  83.6358261  22.0148582   1.4029   1.6771   -0.3636  11.750     0.407     2.7 9.340e-01  10.812     0.401     2.7 7.390e-01   7.589     0.315     3.4 9.000e-01   5.080      null     0.9 9.740e-01 8.210e-01    1    0   9.342   null    32   8.519   null    32   5.940  0.495     1   3.050  0.541     1     00dd       7    CCBU          0    null     null       0      null         null      null         null      null         null          9.255388        81.990647 
+    *                     # 02562a148-000137  83.6358261  22.0148582   1.4029   1.6771   -0.3636  11.750     0.407     2.7 9.340e-01  10.812     0.401     2.7 7.390e-01   7.589     0.315     3.4 9.000e-01   5.080      null     0.9 9.740e-01 8.210e-01    1    0   9.342   null    32   8.519   null    32   5.940  0.495     1   3.050  0.541     1     00dd       7    CCBU          0    null     null       0      null         null      null         null      null         null          9.255388        81.990647
+    *         5 C'est du AJTOOL càd du TSV avec entête RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo              
    */
     private int isCSV() throws Exception {
        if( inCache<BLOCCACHE-10 ) {
@@ -1069,6 +1077,7 @@ public long skip(long n) throws IOException {
        StringBuilder debugMsg=null;
        boolean flagSextra = false;   // true si on a détecté une entête Sextractor
        boolean flagIPAC = false;    // true si on a détecté une entête IPAC
+       boolean flagAJTool = false;  // ture si on a détecté du AJTOOL
        boolean firstComment = true; // True si on n'a pas encore traité le premier commentaire
        int sextraDeb = deb;         // Position du début de l'entête sextrator (s'il y a lieu)
        int sextraFin = 0;           // Position de fin de l'entête sextrator (s'il y a lieu)
@@ -1092,6 +1101,7 @@ public long skip(long n) throws IOException {
           bufLigne[bufN] = ligne;
           if( inHeader ) {
              if( ligne.trim().length()==0 ) continue;
+             if( i==0 && ligne.trim().equals("RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo") ) flagAJTool=true;
              char c = ligne.charAt(0);
              if( !flagIPAC && bufN==0 && (c=='\\' || c=='|') ) flagIPAC=true;
              if( flagIPAC ) {
@@ -1152,6 +1162,12 @@ public long skip(long n) throws IOException {
                 catch( Exception e ) { }
              }
           }
+          
+          if( flagAJTool ) {
+             Aladin.trace(3,"AJTOOL detected");
+             return 5;
+          }
+
           return 1;
        }
 
@@ -1170,7 +1186,7 @@ public long skip(long n) throws IOException {
           if( i==0 ) n=m;
           else if( m!=n ) return 0;
        }
-
+       
        Aladin.trace(3,"BSD detected (aligned column with blanks");
        return 2;
     }

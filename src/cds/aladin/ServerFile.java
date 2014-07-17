@@ -360,9 +360,10 @@ public class ServerFile extends Server implements XMLConsumer {
 
             if( (type & MyInputStream.AJS|type & MyInputStream.AJSx|MyInputStream.UNKNOWN)!=0) aladin.command.readFromStream(in);
             else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
+            else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
             else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
-
+            
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
                n=aladin.calque.newPlanMOC(in,label);
             }
@@ -422,7 +423,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   aladin.glu.reload(false,true);
                   n=1;
                }
-
+               
                // C'est peut être un planBG via HTTP
             } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
                
@@ -605,6 +606,19 @@ public class ServerFile extends Server implements XMLConsumer {
       aladin.calque.repaintAll();
       return (rep && loadError==null );
    }
+
+   /** Chargement d'un fichier au format AJTOOL
+    * @param in l'inputStream
+    * @return true si ok, false sinon
+    */
+   protected boolean loadTool(MyInputStream in) {
+      plan = ( new PlanTool(aladin));
+      inValue=true;
+      typePlan = AJTOOL;
+      return loadAJ(in);
+   }
+
+
 
    /* Variables temporaires associees au parsing du XML */
    private boolean inValue,inFilterScript,inFitsHeader,inFilter;  // Etat
@@ -1077,7 +1091,9 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param end le dernier indice valide
     * @return la nouvelle position dans ch[]
     */
-   private int getTool(char [] ch, int cur, int end) {
+   private int getTool(char [] ch, int cur, int end) { return getTool1(ch,cur,end,false); }
+   private int getToolAjtool(char [] ch, int cur, int end) { return getTool1(ch,cur,end,true); }
+   private int getTool1(char [] ch, int cur, int end, boolean ajtool) {
       double ra,de;
       int x,y;
       boolean flagSuite=false;
@@ -1089,16 +1105,29 @@ public class ServerFile extends Server implements XMLConsumer {
       // On skippe un eventuel \r
       while( cur<end && (ch[cur]=='\r' || ch[cur]=='\n') ) cur++;
 
-      // Recuperation du type, de l'info sur le suivant, de la position
-      // en ra,de et en x,y ainsi que l'identificateur
-      cur=getSourceField(ch,cur,end);	typeTool=rec;
-      cur=getSourceField(ch,cur,end);	flagSuite=rec.equals("+"); flagSpecial=rec.equals("*");
-      cur=getSourceField(ch,cur,end);	try{ ra=Double.valueOf(rec).doubleValue(); } catch( Exception e) { ra=0; }
-      cur=getSourceField(ch,cur,end);	try{ de=Double.valueOf(rec).doubleValue(); } catch( Exception e) { de=0; }
-      cur=getSourceField(ch,cur,end);	try{ x=Integer.parseInt(rec); } catch( Exception e) { x=0; }
-      cur=getSourceField(ch,cur,end);	try{ y=Integer.parseInt(rec); } catch( Exception e) { y=0; }
-      cur=getSourceField(ch,cur,end);	withlabel=(new Boolean(rec)).booleanValue();
-      cur=getSourceField(ch,cur,end);	id=rec;
+      if( ajtool ) {
+         cur=getSourceField(ch,cur,end);    try{ ra=Double.valueOf(rec).doubleValue(); } catch( Exception e) { ra=0; }
+         cur=getSourceField(ch,cur,end);    try{ de=Double.valueOf(rec).doubleValue(); } catch( Exception e) { de=0; }
+         
+         cur=getSourceField(ch,cur,end);    typeTool=rec;
+         cur=getSourceField(ch,cur,end);    flagSuite=rec.equals("+"); flagSpecial=rec.equals("*");
+         x=0;
+         y=0;
+         cur=getSourceField(ch,cur,end);    id=rec; 
+         withlabel=id!=null && id.length()>0;
+  
+      } else {
+         // Recuperation du type, de l'info sur le suivant, de la position
+         // en ra,de et en x,y ainsi que l'identificateur
+         cur=getSourceField(ch,cur,end);	typeTool=rec;
+         cur=getSourceField(ch,cur,end);	flagSuite=rec.equals("+"); flagSpecial=rec.equals("*");
+         cur=getSourceField(ch,cur,end);	try{ ra=Double.valueOf(rec).doubleValue(); } catch( Exception e) { ra=0; }
+         cur=getSourceField(ch,cur,end);	try{ de=Double.valueOf(rec).doubleValue(); } catch( Exception e) { de=0; }
+         cur=getSourceField(ch,cur,end);	try{ x=Integer.parseInt(rec); } catch( Exception e) { x=0; }
+         cur=getSourceField(ch,cur,end);	try{ y=Integer.parseInt(rec); } catch( Exception e) { y=0; }
+         cur=getSourceField(ch,cur,end);	withlabel=(new Boolean(rec)).booleanValue();
+         cur=getSourceField(ch,cur,end);	id=rec;
+      }
 
       // Ajout de l'objet dans le plan courant
       Position o=null;
@@ -1221,6 +1250,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
    // Type de plan modifié pour prendre en compte les catalogues inclues dans les tools
    static final int CATALOGTOOL = 1000;
+   static final int AJTOOL = 1001;
 
    /** Interface XMLConsumer */
    public void characters(char ch[], int start, int length){
@@ -1242,6 +1272,13 @@ public class ServerFile extends Server implements XMLConsumer {
                   cur++;
                }
                prevFlagSuite=false;	// pour ne pas accoler deux objets
+               break;
+            case AJTOOL:
+               while( cur<end ) {
+                  cur = getToolAjtool(ch,cur,end);
+                  cur++;
+               }
+               prevFlagSuite=false; // pour ne pas accoler deux objets
                break;
             case Plan.IMAGE:
             case Plan.IMAGEHUGE:

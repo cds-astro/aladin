@@ -698,6 +698,7 @@ public final class Slide {
                   if( p.error!=null ) {
                      boolean hasObj = p.pcat!=null && p.pcat.hasObj();
                      if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) drawBall(g,px,py-9,Aladin.ORANGE);
+                     else if( p.isSimpleCatalog() && p.error.indexOf("OVERFLOW")>=0 ) drawBall(g,px,py-9,Aladin.ORANGE);
                      else if( p.isSimpleCatalog() && !hasObj ) drawCross(g,px1,py-9);
                      else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) drawCross(g,px1,py-9);
                      else drawBall(g,px1,py-9,Color.red);

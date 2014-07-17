@@ -172,6 +172,12 @@ public final class Legende extends AbstractTableModel  {
       return -1;
    }
    
+   /** Retourne l'indice du champ (test sur le nom de colonne uniquement) */
+   protected int find(String name) {
+      for( int i=0; i<field.length; i++ ) if( name.equals(field[i].name) ) return i;
+      return -1;
+   }
+   
    /** Retourne l'indice du champ RA, sinon -1 */
    protected int getRa() {
       for( int i=0; i<field.length; i++ ) if( field[i].isRa() ) return i;
@@ -349,6 +355,17 @@ public final class Legende extends AbstractTableModel  {
          if( field[i].name!=null && Util.matchMaskIgnoreCase(name, field[i].name) ) return i;
       }
       return -1;
+   }
+   
+   
+   /** Retourne true si le champ correspond à une valeur mémorisée comme NULL
+    * pour le champ indiqué
+    */
+   protected boolean isNullValue(String text,int i) {
+      if( i>=field.length ) return false;
+      Field f = field[i];
+      return  f.nullValue!=null && f.nullValue.equals(text.trim());
+
    }
 
    /** Retourne l'UCD associee au champ.

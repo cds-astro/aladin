@@ -183,6 +183,7 @@ public final class FrameRGB extends FrameRGBBlink {
     * et d'en déduire sa longueur d'onde. Utilise les deux tableaux WAVEBAND
     * et WAVELEN ci-dessus */
    private double getWaveLen(String info) {
+      if( info==null ) return Double.MAX_VALUE;
       for(int i=0; i<WAVEBAND.length; i++ ) {
          int offset=-1;
          do {

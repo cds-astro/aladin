@@ -24,6 +24,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Composite;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -2015,32 +2016,34 @@ public class HealpixKey implements Comparable<HealpixKey> {
    final private void drawNumber(Graphics g,ViewSimple v,PointD [] b) {
       if( v.isAllSky() ) return;
       String s=getStringNumber();
-      int size=g.getFontMetrics().stringWidth(s);
+      FontMetrics m = g.getFontMetrics();
+      int size=m.stringWidth(s);
+      int h = m.getHeight();
 //      if( dist(b,0,1)< (v.rv.width/6)*(v.rv.width/6) ) return;
-      if( size<Math.abs(b[2].x-b[1].x)-18 ) {
-         int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4;
-         int y = (int)(b[0].y+b[1].y+b[2].y+b[3].y)/4-5;
+      double xMin = Math.min(Math.min(b[0].x,b[1].x),Math.min(b[2].x,b[3].x));
+      double xMax = Math.max(Math.max(b[0].x,b[1].x),Math.max(b[2].x,b[3].x));
+      double dist= xMax-xMin;
+      if( size<dist ) {
+         int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4 - size/2;
+         int y = (int)(b[0].y+b[1].y+b[2].y+b[3].y)/4 + h/2;
          
-//         if( Math.abs(b[2].x-b[1].x)>100) {
-//            try {
-//               s = s+" ("+CDSHealpix.nest2ring(CDSHealpix.pow2(order), npix)+")";
-//            } catch( Exception e ) { }
-//            size=g.getFontMetrics().stringWidth(s);
-//         }
-         x -= size/2;
-         y += 3;
-         if( x<3 ) x=3;
-         if( x+size+3>v.rv.width ) x=v.rv.width-size-3;
-         if( y<25 ) y=25;
-         if( y+25>v.rv.height ) y = v.rv.height-25;
-         
-         Polygon pol = new Polygon();
-         pol.addPoint((int)b[0].x,(int)b[0].y);
-         pol.addPoint((int)b[1].x,(int)b[1].y);
-         pol.addPoint((int)b[3].x,(int)b[3].y);
-         pol.addPoint((int)b[2].x,(int)b[2].y);
-         if( !pol.contains(x, y) && !pol.contains(x+size,y) ) return;
-         
+         boolean a=false,c=false;
+         if( a=(x<3) ) x=3;
+         else if( a=(x+size+3>v.rv.width) ) x=v.rv.width-size-3;
+         if( c=(y<25) ) y=25;
+         else if( c=(y+25>v.rv.height) ) y = v.rv.height-25;
+         if( a || c ) {
+            if( dist<150  ) return;
+            else {
+               Polygon pol = new Polygon();
+               pol.addPoint((int)b[0].x,(int)b[0].y);
+               pol.addPoint((int)b[1].x,(int)b[1].y);
+               pol.addPoint((int)b[3].x,(int)b[3].y);
+               pol.addPoint((int)b[2].x,(int)b[2].y);
+               if( !pol.contains(x, y) || !pol.contains(x+size,y) ) return;
+            }
+         }
+
          Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
       }
    }

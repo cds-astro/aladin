@@ -778,7 +778,9 @@ public class Context {
    protected boolean isExistingAllskyDir(String path) {
       if( path==null ) return false;
       File f = new File(path);
-      if( !f.exists() ) return false;
+      if( !f.exists() ) {
+         return false;
+      }
       int order = cds.tools.pixtools.Util.getMaxOrderByPath(path);
       return order!=-1;
    }

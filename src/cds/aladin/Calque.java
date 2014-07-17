@@ -2747,7 +2747,7 @@ public final class Calque extends JPanel implements Runnable {
         } catch( Exception e ) { }
         return createPlanTool(null);
      }
-
+     
      protected PlanTool newPlanTool(String label) { return createPlanTool(label); }
 
      protected PlanTool createPlanTool(String label) {
@@ -2776,13 +2776,13 @@ public final class Calque extends JPanel implements Runnable {
      protected int newPlanFov(String label, Fov[] fov) {
         int n=getStackIndex();
         /*if( fov.length==1 && fov[0].pf!=null ) {
-        	plan[n] = fov[0].pf;
-        	System.out.println("foo");
+            plan[n] = fov[0].pf;
+            System.out.println("foo");
         }
         else*/ plan[n] = new PlanFov(aladin,label,fov);
         suiteNew(plan[n]);
         return n;
-	}
+    }
 
 
    /** le prochain plan devient un plan contenant les contours

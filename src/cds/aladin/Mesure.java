@@ -615,7 +615,10 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source> {
                w = new Words("  FoV",o.leg.getWidth(i-1),o.leg.getPrecision(i-1),Words.LEFT,false,true);
             }
             // Creation du nouveau mot
-            else w = new Words(tag,o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);
+            else {
+               if( o.leg.isNullValue(tag, i-1) ) tag="";
+               w = new Words(tag,o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);
+            }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );
          wordLine.addElement(w);

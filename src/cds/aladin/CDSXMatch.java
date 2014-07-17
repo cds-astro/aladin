@@ -617,6 +617,7 @@ public final class CDSXMatch /*implements XMatchInterface*/ {
            else f.ucd = curF.ucd;
            f.datatype = curF.datatype;
            f.width = curF.width;
+           f.nullValue = curF.nullValue;
            f.arraysize = curF.arraysize;
            f.columnSize = curF.columnSize;
            f.precision = curF.precision;

@@ -145,6 +145,7 @@ final public class Field {
 
       datatype = typeVOTable2Fits((String)atts.get("datatype"));
       width    =(String)atts.get("width");
+      nullValue=(String)atts.get("nullValue");
 //      if( width==null ) width="10";
       precision=(String)atts.get("precision");
       type     =(String)atts.get("type");
@@ -177,6 +178,7 @@ final public class Field {
       sort = UNSORT;
       visible = f.visible;
       columnSize = f.columnSize;
+      nullValue = f.nullValue;
    }
 
    /** Get the field edition size (width, otherwise arraysize, otherwise 10) */
@@ -317,6 +319,7 @@ final public class Field {
              +(type==null?     "":" type="+type)
              +" coo="+getCooSignature()
              +(arraysize==null?"":" arraysize="+arraysize)
+             +(nullValue==null?"":" nullValue="+nullValue)
              ;
    }
 }
