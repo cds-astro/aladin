@@ -81,7 +81,7 @@ public class SAMPUtil {
         if (fileName == null ) {
             return null;
         }
-        return fileName.replaceAll("/", ".").replaceAll("[\\[|\\]]", " ").replaceAll(" ", "");
+        return fileName.replaceAll("/", ".").replaceAll("[\\[|\\]]", " ").replaceAll(" ", "").replaceAll("\\+", "");
     }
 
 }
