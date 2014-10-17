@@ -65,6 +65,36 @@
       </signjar>
    </target>
    
+   <target name="hipsgen" depends="compil" description="jar generation" >
+      <jar destfile="Hipsgen.jar" duplicate="preserve">
+        <fileset dir="${bin}"/>
+	    <zipfileset src="${lib}/jsamp.jar"/>
+	    <zipfileset src="${lib}/jhealpixSmall.jar"/>
+	    <zipfileset src="${lib}/microhub.jar"/>
+        <zipfileset src="${lib}/cds.savot.common.jar"/>
+        <zipfileset src="${lib}/cds.savot.model.jar"/>
+        <zipfileset src="${lib}/cds.savot.pull.jar"/>
+        <zipfileset src="${lib}/cds.savot.sax.jar"/>
+        <zipfileset src="${lib}/cds.savot.writer.jar"/>
+        <zipfileset src="${lib}/kxml2-2.3.0.jar"/>
+        <zipfileset src="${lib}/cds.astro.jar"/>
+	    <zipfileset src="${mocjar}"/>
+        <manifest>
+           <attribute name="Main-Class" value="cds.allsky.HipsGen" />
+           <attribute name="Permissions" value="all-permissions" />
+        </manifest>
+      </jar>
+      <signjar
+         jar="Hipsgen.jar"
+         signedjar="Hipsgen.jar"
+         lazy="true"
+         alias="1"
+         keystore="${basedir}/Aladin.jks"
+         storepass="ura1280"
+         preservelastmodified="true">
+      </signjar>
+   </target>
+   
    <target name="clean" description="Remove building directory" >
       <delete includeEmptyDirs="true" quiet="true">
 	     <fileset dir="${bin}" />
