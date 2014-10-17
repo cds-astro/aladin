@@ -1334,7 +1334,8 @@ final public class TableParser implements XMLConsumer {
          else consumer.setTableInfo("__XYPOS","true");
       }
       
-      consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY, qualRA==1000 || qualDEC==1000 );
+      consumer.setTableRaDecXYIndex(nRA,nDEC,nPMRA,nPMDEC,nX,nY, 
+            (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
       if( flagXY ) consumer.tableParserInfo("   -assuming XY positions (column "+(nX+1)+" for X and "+(nY+1)+" for Y)");
       else if( nRA>=0 ) {
          consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal":" in degrees"))+

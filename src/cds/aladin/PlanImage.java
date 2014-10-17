@@ -1828,14 +1828,24 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
       return (int)(t[i]&0xFF);
    }
    static final protected int getShort(byte[] t, int i) { 
-      return (t[i]<<8) | t[i+1]&0xFF; 
+      return ( (t[i]&0xFF)<<8) | t[i+1]&0xFF;
+   }
+   static final protected int getShortLSB(byte[] t, int i) { 
+      return ( (t[i+1]&0xFF)<<8) | t[i]&0xFF;
    }
    static final protected int getInt(byte[] t, int i) {
       return ((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF);
    }
+   static final protected int getIntLSB(byte[] t, int i) {
+      return ((t[i+3]<<24) | ((t[i+2]&0xFF)<<16) | ((t[i+1]&0xFF)<<8) | t[i]&0xFF);
+   }
    static final protected long getLong(byte[] t, int i) {
       return (((long)((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF))<<32)
       | ((((t[i+4]<<24) | ((t[i+5]&0xFF)<<16) | ((t[i+6]&0xFF)<<8) | t[i+7]&0xFF)) & 0xFFFFFFFFL);
+   }
+   static final protected long getLongLSB(byte[] t, int i) {
+      return (((long)((t[i+7]<<24) | ((t[i+6]&0xFF)<<16) | ((t[i+5]&0xFF)<<8) | t[i+4]&0xFF))<<32)
+      | ((((t[i+3]<<24) | ((t[i+2]&0xFF)<<16) | ((t[i+1]&0xFF)<<8) | t[i]&0xFF)) & 0xFFFFFFFFL);
    }
    static final protected double getFloat(byte[] t, int i) {
       return Float.intBitsToFloat(((t[i]<<24) | ((t[i+1]&0xFF)<<16) 
@@ -1863,6 +1873,11 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
             case  64: return getLong(t,i*8);
             case -32: return getFloat(t,i*4);
             case -64: return getDouble(t,i*8);
+            
+            // Pour les images PDS en inversions de bytes (LSB coding)
+            case 17: return getShortLSB(t,i*2);
+            case 33: return getIntLSB(t,i*2);
+            case 65: return getLongLSB(t,i*2);
          }
          return Double.NaN;
       } catch( Exception e ) { return Double.NaN; }
@@ -1876,32 +1891,20 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    }
 
 
-//   static final protected double getPixVal(byte[] t,int bitpix,int i) {
-//      try {
-//         switch(bitpix) {
-//            case   8: return ((t[i])&0xFF);
-//            case  16: i*=2; return ( ((t[i])<<8) | (t[i+1])&0xFF );
-//            case  32: i*=4; return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
-//            case  64: i*=8; 
-//                      return (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
-//                             | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
-//            case -32: i*=4; return Float.intBitsToFloat((((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF));
-//            case -64: i*=8;
-//                      long a = (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
-//                            | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
-//                       return Double.longBitsToDouble(a);
-//         }
-//         return 0.;
-//      } catch( Exception e ) { return Double.NaN; }
-//
-//   }
-
    // Conversion entier 32 en byte dans le tableau t[] à partir de l'emplacement i
    static final protected void setInt(byte[] t,int i,int val) {
       t[i]   = (byte)(0xFF & (val>>>24));
       t[i+1] = (byte)(0xFF & (val>>>16));
       t[i+2] = (byte)(0xFF & (val>>>8));
       t[i+3] = (byte)(0xFF &  val);
+   }
+
+   // Conversion entier 32 en byte dans le tableau t[] à partir de l'emplacement i
+   static final protected void setIntLSB(byte[] t,int i,int val) {
+      t[i+3] = (byte)(0xFF & (val>>>24));
+      t[i+2] = (byte)(0xFF & (val>>>16));
+      t[i+1] = (byte)(0xFF & (val>>>8));
+      t[i]   = (byte)(0xFF &  val);
    }
 
    /**
@@ -1943,6 +1946,23 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
                    setInt(t,i,c);
                    c = (int)(0xFFFFFFFFL & c1);
                    setInt(t,i+4,c);
+                   break;
+                   
+         // LSB byte order (for PDS images)
+         case  17: i*=2;
+                   c = (int)val;
+                   t[i+1]  =(byte)(0xFF & (c>>>8));
+                   t[i]=(byte)(0xFF & c);
+                   break;
+         case  33: i*=4;
+                   setIntLSB(t,i,(int)val);
+                   break;
+         case  65: i*=8;
+                   c1 = (long)val;
+                   c = (int)(0xFFFFFFFFL & (c1>>>32));
+                   setIntLSB(t,i,c);
+                   c = (int)(0xFFFFFFFFL & c1);
+                   setIntLSB(t,i+4,c);
                    break;
       }
    }
@@ -2292,10 +2312,12 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
    /** Retourne la chaine d'explication du mode de codage des pixels d'origine */
    protected String getPixelCodingInfo(int bitpix) {
-      String s = bitpix==-64?"double" : bitpix==-32?"real"
-            :bitpix==64?"long" :bitpix==32?"integer"
-                  :bitpix==16?"short" : bitpix==8?"byte" : "unknown";
-      return s+" (bitpix="+bitpix+")";
+      String s = bitpix==-64?"double" : bitpix==-32?"float"
+            :bitpix==64?"long" : bitpix==65?"LSB-long" :
+               bitpix==32?"integer" : bitpix==32?"LSB-integer" :
+                  bitpix==16?"short" : bitpix==17?"LSB-short" :
+                     bitpix==8?"byte" : "unknown";
+      return s+(bitpix%2==0?" (bitpix="+bitpix+")":"");
    }
    
    /** retourne la description du mode graphique */
@@ -3187,6 +3209,7 @@ Aladin.trace(3," => Hdecompressing in "+temps+" ms");
 
       int tailleImg;       // nombre d'octets de l'image
       int taille;          // nombre d'octets à lire
+      int prefixByte,suffixByte;    // Nombre de bytes éventuellement à écarter en début et en fin de chaque ligne
 
 Aladin.trace(2,"Loading PDS image");
 
@@ -3201,6 +3224,7 @@ Aladin.trace(2,"Loading PDS image");
       String mode = headerFits.getStringFromHeader("SAMPLE_TYPE");
       if( mode.indexOf("REAL")>=0 ) bitpix=-bitpix;
       taille=tailleImg=width*height*npix;    // Nombre d'octets
+      if( mode.indexOf("LSB")>=0 ) bitpix++;  // On indique l'inversion des bytes en incrémentant de 1 le bitpix (subtil)
       
       // Bscale et BZero ?
       try { bScale = headerFits.getDoubleFromHeader("SCALING_FACTOR"); }
@@ -3216,8 +3240,17 @@ Aladin.trace(2,"Loading PDS image");
       else skip = ( headerFits.getIntFromHeader("^IMAGE") -1)*recordBytes;
       dis.skip(skip-dis.getPos());
       
+      // Début et fin de chaque ligne à omettre
+      try { prefixByte = headerFits.getIntFromHeader("LINE_PREFIX_BYTES"); }
+      catch( Exception e ) { prefixByte=0; }
+      try { suffixByte = headerFits.getIntFromHeader("LINE_SUFFIX_BYTES"); }
+      catch( Exception e ) { suffixByte=0; }
+      
+      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size="+taille
+            +(prefixByte>0?" PREFIX_BYTES="+prefixByte:"")
+            +(suffixByte>0?" SUFFIX_BYTES="+suffixByte:"")
+            +" image offset="+skip);
       setPourcent(0);
-      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" BITPIX="+bitpix+" => size="+taille+" image offset="+skip);
 
       // Compression ?
       boolean isCompressed = headerFits.getStringFromHeader("ENCODING_TYPE")!=null;
@@ -3237,22 +3270,29 @@ Aladin.trace(2,"Loading PDS image");
       tailleLoad=taille;    // nombres d'octets a lire
       boolean cut = aladin.configuration.getCMCut();
 
+      // Lecture par lignes
+      offsetLoad=0;      // octets effectivement copiés
+//      int len = width*npix + prefixByte + suffixByte;
+      
       setBufPixels8(new byte[width*height]);
       pixelsOrigin = new byte[taille];
 
-      // Lecture par bloc pour afficher une progresse
-      offsetLoad=0;      // octets effectivement lus
-      int len = taille/100;  // taille des blocs par defaut
-      if( len<512 ) len=512;
-
-      // Lecture par tranches pour permettre l'affichage de la progression
+      // Lecture par tranches, ou lignes pour permettre l'affichage de la progression
       try {
-         while( offsetLoad<taille) {
-            if( taille-offsetLoad<len ) len=taille-offsetLoad;
-            dis.readFully(pixelsOrigin,offsetLoad,len);
-            offsetLoad+=len;
-            setPourcent(offsetLoad*85./taille);
+         for( int i=0; i<height; i++ ) {
+            if( prefixByte>0 ) dis.skip(prefixByte);
+            dis.readFully(pixelsOrigin,i*width*npix,width*npix);
+            if( suffixByte>0 ) dis.skip(suffixByte);
+            setPourcent((i*width*npix)*85./taille);
          }
+//         while( offsetLoad<taille) {
+//            if( taille-offsetLoad<len ) len=taille-offsetLoad;
+//            if( prefixByte>0 ) dis.skip(prefixByte);
+//            dis.readFully(pixelsOrigin,offsetLoad,len-prefixByte-suffixByte);
+//            dis.skip(suffixByte);
+//            
+//            offsetLoad+=len;
+//         }
       } catch( Exception e ) {
          error=aladin.error="Loading error: "+e.getMessage();
          e.printStackTrace();

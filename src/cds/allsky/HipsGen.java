@@ -128,6 +128,8 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
       } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
+      } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
+      } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
       } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
       } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
       
@@ -385,6 +387,8 @@ public class HipsGen {
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
             "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
             "label=name         Label of the survey (by default, input directory name)" + "\n"+
+            "target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
+            "targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
             "verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"
 //            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
 //            "red        all-sky used for RED component (see rgb action)\n" +

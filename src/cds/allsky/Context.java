@@ -129,7 +129,8 @@ public class Context {
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
-   
+   protected String target=null;             // ra,de en deg du "centre" du HiPS s'il est indiqué
+   protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
    
    // Modes supportés pour les tuiles
    static final public int PNG=0;
@@ -275,6 +276,8 @@ public class Context {
       while( st.hasMoreTokens() ) fitsKeys.add(st.nextToken());
    }
    public void setMode(Mode coAdd) { this.mode = coAdd; }
+   public void setTarget(String target) { this.target = target; }
+   public void setTargetRadius(String targetRadius) { this.targetRadius = targetRadius; }
    public void setBScaleOrig(double x) { bScaleOrig = x; bscaleBzeroOrigSet=true; }
    public void setBZeroOrig(double x) { bZeroOrig = x; bscaleBzeroOrigSet=true; }
 //   public void setBScale(double x) { bscale = x; bscaleBzeroSet=true; }
@@ -403,6 +406,17 @@ public class Context {
        // Il peut s'agit d'un fichier .hhh (sans pixel)
        try { initCut(fitsfile); } catch( Exception e ) { 
     	   Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage());
+       }
+       
+       
+       // Positionnement initiale du HiPS par défaut
+       if( target==null ) {
+          Coord c = fitsfile.calib.getImgCenter();
+          setTarget(Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5));
+          if( targetRadius==null ) {
+             double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
+             setTargetRadius(Util.round(r,5)+"");
+          }
        }
    }
    
@@ -1109,7 +1123,7 @@ public class Context {
          "</TABLE>\n" +
 
          "This survey can be displayed by <A HREF=\"http://aladin.u-strasbg.fr/AladinLite\">Aladin Lite</A> (see above), \n" +
-         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin</A> regular client\n" +
+         "by <A HREF=\"http://aladin.u-strasbg.fr/java/nph-aladin.pl?frame=downloading\">Aladin Desktop</A> client\n" +
          "(just open the base URL)<BR>or any other HiPS aware clients .\n" +
          "<HR>\n" +
          "<I>(*) The HiPS technology allows a dedicated client to access an astronomical survey at any location and at any scale. \n" +
@@ -1224,6 +1238,10 @@ public class Context {
       
       // Dans le cas d'un HiPS couleur
       if( isColor() ) setPropriete(PlanHealpix.KEY_ISCOLOR,"true");
+      
+      // Ajout du target et du radius par défaut
+      if( target!=null ) setPropriete(PlanHealpix.KEY_TARGET, target);
+      if( targetRadius!=null ) setPropriete(PlanHealpix.KEY_TARGETRADIUS, targetRadius);
       
       // Pour le cas d'un Cube
       if( depth>1 ) {

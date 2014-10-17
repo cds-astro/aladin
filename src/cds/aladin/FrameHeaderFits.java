@@ -115,7 +115,7 @@ public class FrameHeaderFits extends JFrame {
    /** Retourne l'objet de manipulation de l'entête Fits */
    protected HeaderFits getHeaderFits() { return headerFits; }
 
-   static private SimpleAttributeSet atKey=null,atValue,atComment,atCom,atHist,atYellow,atWhite;
+   static private SimpleAttributeSet atKey=null,atValue,atComment,atCom,atHist,atYellow,atWhite,atErr;
    private boolean first=true;  // Pour ne faire la mise en forme complète qu'une seule fois
 
    /** Mise en forme du texte de l'entête fits avec surlignage éventuel d'un mot */
@@ -134,6 +134,9 @@ public class FrameHeaderFits extends JFrame {
          atCom = new SimpleAttributeSet();
          atCom.addAttribute(StyleConstants.CharacterConstants.Foreground,Aladin.GREEN);
          atCom.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
+         atErr = new SimpleAttributeSet();
+         atErr.addAttribute(StyleConstants.CharacterConstants.Foreground,Color.red);
+         atErr.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
          atHist = new SimpleAttributeSet();
          atHist.addAttribute(StyleConstants.CharacterConstants.Foreground,new Color(127,0,85));
          atHist.addAttribute(StyleConstants.CharacterConstants.Background,Color.white);
@@ -149,16 +152,38 @@ public class FrameHeaderFits extends JFrame {
       if( first && s.length()<64*1024 ) {
          first =false;
          int opos=0;
-         while( (pos=s.indexOf("\n",opos))>=0 ) {
+         while( (pos=s.indexOf("\n",opos))>=0 ) {            
             String k="";
             if( opos+7<s.length() ) k=s.substring(opos,opos+8).trim();
-            if(  k.equals("HISTORY")  ) df.setCharacterAttributes(opos,pos,atHist,true);
+            if(  k.equals("HISTORY") || k.equals("CONTINUE") ) df.setCharacterAttributes(opos,pos,atHist,true);
             else if( k.startsWith("/")  || k.equals("COMMENT") ) df.setCharacterAttributes(opos,pos,atComment,true);
             else {
-               df.setCharacterAttributes(opos,opos+8,atKey,true);
-               df.setCharacterAttributes(opos+9,pos,atValue,true);
-               int com = s.indexOf('/',opos+30);
-               if( com>=0 ) df.setCharacterAttributes(com,pos,atCom,true);
+               boolean flagPDS = this instanceof FrameHeaderPDS;
+               if( flagPDS ) {
+                  int keyLen = s.indexOf('=',opos);
+                  if( keyLen>opos && (pos==-1 || keyLen<=pos)) {
+                     df.setCharacterAttributes(opos,keyLen,atKey,true);
+                     df.setCharacterAttributes(keyLen+1,pos,atValue,true);
+                  }
+               } else if( k.equals("HIERARCH") ) {
+                  int keyLen = s.indexOf('=',opos);
+                  if( keyLen>0 ) {
+                     df.setCharacterAttributes(opos,opos+8,atHist,true);
+                     df.setCharacterAttributes(opos+8,keyLen,atKey,true);
+                     df.setCharacterAttributes(keyLen+1,pos,atValue,true);
+                     int com = s.indexOf('/',keyLen);
+                     if( com>=0 ) df.setCharacterAttributes(com,pos,atCom,true);
+                  }
+               } else {
+                  boolean comment = s.indexOf('=',opos)!=opos+8;
+                  if( comment ) df.setCharacterAttributes(opos,pos,atErr,true);
+                  else {
+                     df.setCharacterAttributes(opos,opos+8,atKey,true);
+                     df.setCharacterAttributes(opos+9,pos,atValue,true);
+                     int com = s.indexOf('/',opos+30);
+                     if( com>=0 ) df.setCharacterAttributes(com,pos,atCom,true);
+                  }
+               }
             }
             opos=pos+1;
          }

@@ -1651,7 +1651,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // filtres prédéfinis à positionner
-      if( src instanceof JRadioButton && plan.isCatalog() ) {
+      if( src instanceof JRadioButton && plan.isCatalog()&& filterCB!=null  ) {
          String s = filterCB.getSelection().getActionCommand();
          int i= ServerGlu.getFilterIndex(plan.filters,s);
          toGenFilterButton.setEnabled(i>=0);
@@ -1661,7 +1661,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Peut être le sélecteur de déplacement des objets dans le cas d'un plan tool
       else if( src instanceof JRadioButton && plan.type==Plan.TOOL ) {
          String s = ((JRadioButton)src).getActionCommand();
-         System.out.println("==> "+s);
          try { ((PlanTool)plan).setMovable(s); } catch( Exception e1 ) { }
       }
 
@@ -1675,7 +1674,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          return;
       }
 
-
       // Cancel
       if( CLOSE.equals(what) ) dispose();
 
@@ -1683,16 +1681,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       else if( " ? ".equals(what) ) {
          aladin.info(this,HSCOPE);
       }
-
-//      // Flip Top/Bottom
-//      else if( TOPBOTTOM.equals(what) ) {
-//         aladin.flip((PlanImage)plan,0);
-//      }
-//
-//      // Flip Right/Left
-//      else if( RIGHTLEFT.equals(what) ) {
-//         aladin.flip((PlanImage)plan,1);
-//      }
 
       // Creation d'une nouvelle calib
       else if( NEWCALIB.equals(what) ) {

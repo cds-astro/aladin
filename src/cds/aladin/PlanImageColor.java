@@ -66,7 +66,7 @@ public class PlanImageColor extends PlanImageRGB {
       int temps;
 
       setPourcent(1);
-      Aladin.trace(2,"Loading colored image isSync()="+isSync());
+      Aladin.trace(2,"Loading colored image");
       long t1,t=System.currentTimeMillis();
 
       // Recuperation de l'image 3x8 bits

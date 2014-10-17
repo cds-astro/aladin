@@ -1671,6 +1671,7 @@ public class ViewSimple extends JComponent
       while( e.hasMoreElements() ) { 
          Obj o = (Obj)e.nextElement();
          if( !(o instanceof Repere) ) continue;
+         if( !o.plan.isMovable() ) continue;
          if( o instanceof Position && ((Position)o).plan.type == Plan.APERTURE ) continue;
          Repere t = (Repere)o;
          if( !t.isSelected() || !t.hasRayon() ) continue;
@@ -1706,6 +1707,7 @@ public class ViewSimple extends JComponent
       while( e.hasMoreElements() ) { 
          Obj o = (Obj)e.nextElement();
          if( !(o instanceof Tag) ) continue;
+         if( !o.plan.isMovable() ) continue;
          if( o instanceof Position && ((Position)o).plan.type == Plan.APERTURE ) continue;
          Tag t = (Tag)o;
          if( !t.isSelected() ) continue;
@@ -2907,10 +2909,10 @@ public class ViewSimple extends JComponent
          Enumeration<Obj> en = aladin.view.vselobj.elements();
          while( en.hasMoreElements() ) {
             Obj o = en.nextElement();
-            if( !((Position)o).plan.recalibrating ) {
-               if( ((Position)o).plan.type!=Plan.TOOL && ((Position)o).plan.type!=Plan.APERTURE
-                  || !((Position)o).plan.isMovable()
-                  || ((Position)o).plan.type==Plan.FOV ) continue; // pas de deplacement pour un objet de PlanContour ou PlanFov
+            if( !o.plan.recalibrating ) {
+               if( o.plan.type!=Plan.TOOL && o.plan.type!=Plan.APERTURE
+                  || !o.plan.isMovable()
+                  || o.plan.type==Plan.FOV ) continue; // pas de deplacement pour un objet de PlanContour ou PlanFov
             }
             
             // Creation ou extension du clip
@@ -2918,13 +2920,13 @@ public class ViewSimple extends JComponent
 //            extendClip(o.getClip(this));
 
             // Attention il y aura un FoV a reprojeter à la fin du déplacement
-            if( ((Position)o).plan.type==Plan.APERTURE ) {
+            if( o.plan.type==Plan.APERTURE ) {
                flagDragField |= poignee!=null ? ROLL
-                     : ((Position)o).plan==aladin.calque.planRotCenter ?
+                     : o.plan==aladin.calque.planRotCenter ?
                            MOVECENTER : MOVE;
 
-               for( i=0; i<nAperture; i++ ) if( aperture[i]==((Position)o).plan ) break;
-               if( i==nAperture ) aperture[nAperture++] = (PlanField)( ((Position)o).plan );
+               for( i=0; i<nAperture; i++ ) if( aperture[i]==o.plan ) break;
+               if( i==nAperture ) aperture[nAperture++] = (PlanField)( o.plan );
             }
 
              // Rotation ?
@@ -2932,13 +2934,13 @@ public class ViewSimple extends JComponent
                ((Position)o).rotatePosition(vs,angle,centerX,centerY);
 
            // Deplacement soit en ra,dec si possible, soit en xy
-            } else if( ((Position)o).plan.type!=Plan.APERTURE || ((PlanField)((Position)o).plan).isMovable()) {
+            } else if( o.plan.type!=Plan.APERTURE || o.plan.isMovable()) {
                if( flagDepRaDec
                      && !((Position)o).plan.recalibrating
                      && flagDragField==0 ) o.deltaRaDec(dra,dde);
                else o.deltaPosition(vs,dx,dy);
                
-               if( o instanceof Repere && ((Repere)o).hasRayon() ) {
+               if( o instanceof Repere && ((Repere)o).hasRayon() && o.plan.isMovable()) {
                   addObjSurfMove(o);
                }
                

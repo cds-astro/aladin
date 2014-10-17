@@ -2019,7 +2019,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       for( int i=0; i<modeView; i++ ) {
          ViewSimple v = viewSimple[i];
-         if( /* v.locked || */ !v.selected || v.isPlotView()!=vc.isPlotView() ) continue;
+         if( /* v.locked || */ !v.selected && v!=vc  || v.isPlotView()!=vc.isPlotView() ) continue;
 
          // Calcul du facteur de zoom pour les vues en fonction de la taille
          // du pixel
@@ -2073,7 +2073,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             // on effectue un simple zoom si pas de calibration, sinon on déselectionne
             // la vue
             if( !flag && nz!=v.zoom && v.pref!=null ) {
-               if( !Projection.isOk(proj) || v.isPlotView() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
+               if( !Projection.isOk(proj) || v.isPlotView() || proj.isXYLinear() ) v.setZoomXY(nz,v.xzoomView,v.yzoomView);
                else v.selected=false;   // on déselectionne
             }
          }

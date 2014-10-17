@@ -1058,7 +1058,7 @@ public long skip(long n) throws IOException {
     *                     #|                |        deg|        deg|  arcsec|  arcsec|   arcsec|    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |    mag|      mag|       |         |         |    |    |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |    mag|   mag|     |        |       |       |          | arcsec|     deg|       |      mag|         mag|      mag|         mag|      mag|         mag|           arcsec|             deg|
     *                     #|            null|       null|       null|    null|    null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|   null|     null|     null|null|null|   null|  null| null|   null|  null| null|   null|  null| null|   null|  null| null|    null|   null|   null|      null|   null|    null|   null|     null|        null|     null|        null|     null|        null|             null|            null|
     *                     # 02562a148-000137  83.6358261  22.0148582   1.4029   1.6771   -0.3636  11.750     0.407     2.7 9.340e-01  10.812     0.401     2.7 7.390e-01   7.589     0.315     3.4 9.000e-01   5.080      null     0.9 9.740e-01 8.210e-01    1    0   9.342   null    32   8.519   null    32   5.940  0.495     1   3.050  0.541     1     00dd       7    CCBU          0    null     null       0      null         null      null         null      null         null          9.255388        81.990647
-    *         5 C'est du AJTOOL càd du TSV avec entête RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo              
+    *         5 C'est du AJTOOL càd du TSV avec entête Object\tCont_Flag\tRAJ2000\tDEJ2000\tX\tY\tLabel_Flag\tInfo              
    */
     private int isCSV() throws Exception {
        if( inCache<BLOCCACHE-10 ) {
@@ -1101,7 +1101,7 @@ public long skip(long n) throws IOException {
           bufLigne[bufN] = ligne;
           if( inHeader ) {
              if( ligne.trim().length()==0 ) continue;
-             if( i==0 && ligne.trim().equals("RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo") ) flagAJTool=true;
+             if( i==0 && ligne.trim().equals("Object\tCont_Flag\tRAJ2000\tDEJ2000\tX\tY\tLabel_Flag\tInfo") ) flagAJTool=true;
              char c = ligne.charAt(0);
              if( !flagIPAC && bufN==0 && (c=='\\' || c=='|') ) flagIPAC=true;
              if( flagIPAC ) {

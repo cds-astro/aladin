@@ -68,8 +68,8 @@ public class BuilderCube extends Builder {
          
          // Mémorisation ou check du order
          int order = Util.getMaxOrderByPath( path );
-         if( i==0 ) context.order = order;
-         else if( order!=context.order ) throw new Exception("Error: No homogeneous input HiPS ["+path+" => order="+order+"]");
+         if( i==0 && context.order==-1) context.order = order;
+         else if( order<context.order ) context.warning("Input HiPS ["+path+" => order="+order+"] not enough depth => ignored");
          
          // Mémorisation des propriétés à partir du premier HiPS
          if( !propFound ) {

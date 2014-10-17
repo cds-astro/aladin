@@ -208,6 +208,23 @@ final public class Fits {
    public void loadJpeg(String filename) throws Exception {
       loadJpeg(filename, false, true);
    }
+   
+   // Ca particulier où le headerFits ne contient pas la dimension de l'image
+   private void bidouilleJPEGPNG(HeaderFits headerFits, String filename) {
+      try { headerFits.getIntFromHeader("NAXIS1"); }
+      catch( Exception e ) {
+         try{ 
+            Fits fits = new Fits();
+            MyInputStream is1 = new MyInputStream(new FileInputStream(filename));
+            fits.loadJpeg(is1);
+            headerFits.setKeyValue("NAXIS", "2");
+            headerFits.setKeyValue("NAXIS1", fits.width+"");
+            headerFits.setKeyValue("NAXIS2", fits.height+"");
+            headerFits.setKeyValue("NAXIS3", null);
+            fits.free();
+         }catch( Exception e1 ) {}
+      }
+   }
 
    public void loadJpeg(String filename, boolean color,boolean scanCommentCalib) throws Exception {
       filename = parseCell(filename); // extraction de la descrition d'une
@@ -220,6 +237,8 @@ final public class Fits {
             is.getType(); // Pour être sûr de lire le commentaire éventuel
             if( is.hasCommentCalib() ) {
                headerFits = is.createHeaderFitsFromCommentCalib();
+               bidouilleJPEGPNG(headerFits,filename);
+               
                try {
                   setCalib(new Calib(headerFits));
                } catch( Exception e ) {
@@ -446,6 +465,9 @@ final public class Fits {
             pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()).getData();
             if( RGBASFITS ) invImageLine(widthCell, heightCell, pixels);
          }
+         
+         try { dis.close(); }
+         catch( Exception e ) {}
 
          imgBuf.flush();
          imgBuf = null;
@@ -803,6 +825,7 @@ final public class Fits {
          } else if( is.hasCommentCalib() ) {
             headerFits = is.createHeaderFitsFromCommentCalib();
             bitpix = 0;
+            bidouilleJPEGPNG(headerFits,filename);
             
          // Cas habituel
          }  else {
@@ -857,6 +880,7 @@ final public class Fits {
                setCalib(new Calib(headerFits));
             } catch( Exception e ) {
                calib=null;
+               e.printStackTrace();
             }
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();

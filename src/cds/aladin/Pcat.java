@@ -664,9 +664,10 @@ Aladin.trace(3,"startTable "+name);
             firstTrace = false;
             
             // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
-            // de la valeur MIME du champ "access_format"
+            // de la valeur MIME du champ "access_format" (alternativement content-type)
             indexAccessUrl = leg.find("access_url");
             indexAccessFormat = leg.find("access_format");
+            if( indexAccessFormat==-1 ) indexAccessFormat = leg.find("content_type");
          }
 
          // Creation de la source, soit en XY, soit en alph,delta

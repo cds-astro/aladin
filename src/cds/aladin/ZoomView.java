@@ -537,7 +537,7 @@ try {
    
            Coord [] coin = v.getCouverture();
            if( coin!=null ) {
-               proj.frame = proj.frame;
+               proj.frame = aladin.localisation.getFrame();
                gbuf.setColor( Color.blue );
                for( int i=0; i<coin.length; i++ ) {
                   if( Double.isNaN(coin[i].al) ) continue;

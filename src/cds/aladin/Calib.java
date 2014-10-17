@@ -2720,7 +2720,7 @@ public void GetXY(Coord c,boolean withTest) throws Exception {
       al = c.al ;
       del = c.del ;
       // System.out.println(c.al+" "+c.del);
-      if( system!=ICRS ) {
+      if( system!=ICRS && system!=XYLINEAR ) {
          Astroframe af = system==FK4           ? AF_FK4 :
                          system==FK5           ? AF_FK5 :
                          system==GALACTIC      ? AF_GAL :
@@ -3825,7 +3825,7 @@ protected double GetEpoch() {
 /*
  * Retourne le centre de l'image en coord J2000 et en pixels
  */
-protected Coord getImgCenter() throws Exception {
+public Coord getImgCenter() throws Exception {
    Coord c = new Coord();
    c.x = xnpix/2.;
    c.y = ynpix/2.;

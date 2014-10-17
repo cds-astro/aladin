@@ -651,7 +651,7 @@ public final class Projection {
 //System.out.println("Projection "+(dist<=somme?"possible":"refusee"));
 
       // Champs très grands => toujours superposables
-      if( somme>45 ) return true;
+      if( rm>45 || p.rm>45 ) return true;
 
       return dist<=somme;
    }
@@ -664,7 +664,7 @@ public final class Projection {
    */
    public Coord getCoord(Coord coo) {
       Coord c = getCoordNative(coo);
-      if( modeCalib==PLOT ) return c;
+      if( modeCalib==PLOT || isXYLinear() ) return c;
       if( frame==Localisation.ICRS || coo.al==Double.NaN ) return c;
       Localisation.frameToFrame(c, frame,Localisation.ICRS);
       return c;
@@ -698,7 +698,7 @@ public final class Projection {
       if( Double.isNaN(coo.al) ) { coo.x=Double.NaN; coo.y=Double.NaN; return coo; }
       
       try {
-         if( frame==Localisation.ICRS ) c.GetXY(coo);
+         if( frame==Localisation.ICRS || isXYLinear() ) c.GetXY(coo);
          else {
             cotmp.al=coo.al; cotmp.del=coo.del;
             cotmp = Localisation.frameToFrame(cotmp, Localisation.ICRS, frame);
