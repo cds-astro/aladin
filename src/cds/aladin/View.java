@@ -3314,7 +3314,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       public void run() { 
          if( sourceName!=null ) resolveSourceName(); 
          else if( planObj!=null ) resolvePlan();
-         else System.out.println("SesameThread error, no plane, no planObj !");
+         else System.err.println("SesameThread error, no plane, no planObj !");
       }
       
       /** Résolution Sésame de l'objet central du plan passé au constructeur du Thread (Sésame) */
@@ -3631,7 +3631,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    private void runC() {
       long debut = -1;
-      long t;
+      long t,lastT=-1;
       boolean tagBlink,editBlink,planBlink,sourceBlink,simbadBlink,scrolling,sablierBlink,taquinBlink;
       int delais=getDefaultDelais();
 

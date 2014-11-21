@@ -41,7 +41,7 @@ class HealpixAllskyCat extends HealpixKeyCat {
       allSky=true;
       resetTimer();
       String nameNet = "Norder"+order+"/Allsky";
-      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
+      String nameCache = planBG.getCacheName()+"/"+"Norder"+order+"/Allsky";
       extCache=extNet=ext;
       fileCache = nameCache+ EXT[extCache];
       fileNet = nameNet+ EXT[extNet];
@@ -50,6 +50,9 @@ class HealpixAllskyCat extends HealpixKeyCat {
 
       setStatus(ASKING);
    }
+   
+   protected boolean isOutView(ViewSimple v) { return false; }
+   protected boolean isOutView(ViewSimple v,PointD []b) { return false; }
 
    protected int draw(Graphics g, ViewSimple v) {
       if( pcat==null || !pcat.hasObj() ) return 0;

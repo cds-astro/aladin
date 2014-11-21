@@ -44,49 +44,49 @@ public final class CreatObj implements Runnable {
 
 
       initTimer();
-      trace(1,"Creating Console window");
       a.console = new Console(a);
       a.console.printInfo("Aladin "+a.VERSION+" under JVM "+aladin.javaVersion+" with "+a.MAXMEM+"MB");
+      trace(1,"Creating Console window");
 
-      trace(1,"Creating Command interface");
       a.synchroServer = new Synchro(10000);
       a.synchroPlan = new Synchro(60000);
       a.command=new Command(a);
+      trace(1,"Creating Command interface");
 
-      trace(1,"Creating Button menu");
       a.vButton = new Vector(10);
+//      trace(1,"Creating Button menu");
 
-      trace(1,"Creating Glu gateway");
       a.glu = new Glu(a);
+      trace(1,"Creating Glu gateway");
       
-      trace(1,"Creating Aladin logo");
       a.logo = new Logo(a);
+//      trace(1,"Creating Aladin logo");
 
-      trace(1,"Creating Status object");
       a.status = new Status(a,a.WELCOME);
+//      trace(1,"Creating Status object");
 
-      trace(1,"Creating Sync, Split, Grid, Wink logo");
       a.sync = new Match(a);
       a.grid = new Grid(a);
       a.oeil = new Oeil(a);
       a.northup = new Northup(a);
+//      trace(1,"Creating Sync, Split, Grid, Wink logo");
 
-      trace(1,"Creating View control widget");
       a.viewControl = new ViewControl(a);
+      trace(1,"Creating View control widget");
 
-      trace(1,"Creating URL info line");
       a.urlStatus = new Tips(a);
+//      trace(1,"Creating URL info line");
 
-      trace(1,"Creating Memory status line");
       a.memStatus = new MyLabel("",Label.RIGHT,a.SPLAIN);
       a.memStatus.setForeground(Color.darkGray);
+//      trace(1,"Creating Memory status line");
 
-      trace(1,"Creating Measurement panel");
       a.mesure = new Mesure(a);
       a.search = new Search(a,true);
+      trace(1,"Creating Measurement panel");
 
-      trace(1,"Creating Toolbar panel");
       a.toolBox = new ToolBox(a);
+//      trace(1,"Creating Toolbar panel");
 
       a.calque = new Calque(a);
       trace(1,"Creating Calque object");
@@ -94,22 +94,24 @@ public final class CreatObj implements Runnable {
       a.treeView = new TreeView(a);
       trace(1,"Creating Treeview window");
 
-      trace(1,"Creating Coordinate widget");
       a.localisation = new Localisation(a);
+      trace(1,"Creating Localisation widget");
 
-//      trace(1,"Creating Pixel widget");
 //      a.pixel = new Pixel(a);
+//      trace(1,"Creating Pixel widget");
 
-      trace(1,"Creating Multiview Panel");
       a.view = new View(a);
+      trace(1,"Creating Multiview Panel");
 
-      trace(1,"Creating Help");
       a.help = new Help(a);
+//      trace(1,"Creating Help");
 
-      trace(1,"Creating Save");
+      
       a.save = new Save(a);
-
+      trace(1,"Creating Save");
+      
       a.setMemory();
+
 
    }
 

@@ -53,19 +53,24 @@ public class HealpixProgenItem {
     * et sinon la ligne en totalité (toujours sans l'extension optionnelle)
     */
    public String getID() {
-      String key = cds.tools.Util.extractJSON("name", json);
-      if( key==null ) {
-         int first=-1;
-         key = cds.tools.Util.extractJSON("path", json);
-         if( key==null ) key=json;
-         if( key.charAt(key.length()-1)==']' ) first = key.lastIndexOf('[');
-         if( first>0 ) key = key.substring(0, first);
-      }
       
-      // On ne garde que le dernier élément après le dernier '/' pour éviter de construire une arborescence
-      int offset = key.lastIndexOf(SEP);
-      if( offset>=0 ) key = key.substring(offset+1,key.length() );
-      return key;
+      // Evite les problèmes si le même nom est redondant
+      return getPath();
+      
+      
+//      String key = cds.tools.Util.extractJSON("name", json);
+//      if( key==null ) {
+//         int first=-1;
+//         key = cds.tools.Util.extractJSON("path", json);
+//         if( key==null ) key=json;
+//         if( key.charAt(key.length()-1)==']' ) first = key.lastIndexOf('[');
+//         if( first>0 ) key = key.substring(0, first);
+//      }
+//      
+//      // On ne garde que le dernier élément après le dernier '/' pour éviter de construire une arborescence
+//      int offset = key.lastIndexOf(SEP);
+//      if( offset>=0 ) key = key.substring(offset+1,key.length() );
+//      return key;
    }
 
    /** Retourne le path original associé à une entrée dans un fichier d'index Healpix
@@ -110,17 +115,17 @@ public class HealpixProgenItem {
    
    /** Retourne true si le XY (coord de la vue) se trouve dans le footprint */
    // ATTENTION, NE PREND PAS EN COMPTE QUE LE CAS D'UN UNIQUE POLYGONE
-   public boolean isIn(ViewSimple v,int xview,int yview) {
-      PointD [] somView = getProjViewCorners(v);
-      int x[] = new int[somView.length];
-      int y[] = new int[somView.length];
-      for( int i=0; i<somView.length; i++ ) {
-         x[i]=(int)somView[i].x;
-         y[i]=(int)somView[i].y;
-      }
-      Polygon pol = new Polygon(x,y,x.length);
-      return pol.contains(xview, yview);
-   }
+//   public boolean isIn(ViewSimple v,int xview,int yview) {
+//      PointD [] somView = getProjViewCorners(v);
+//      int x[] = new int[somView.length];
+//      int y[] = new int[somView.length];
+//      for( int i=0; i<somView.length; i++ ) {
+//         x[i]=(int)somView[i].x;
+//         y[i]=(int)somView[i].y;
+//      }
+//      Polygon pol = new Polygon(x,y,x.length);
+//      return pol.contains(xview, yview);
+//   }
    
    /** Retourne les coordonnées des sommets */
    public Coord [] getCorners() {

@@ -2425,12 +2425,12 @@ public final class Calque extends JPanel implements Runnable {
                   p = new PlanImageRice(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.AIPSTABLE)!=0 ) {
                   Aladin.trace(3,"MEF AIPS CC table detected => ignored !");
-                  new PlanCatalog(aladin,"",in,true,false);  // Juste pour le manger
+                  new PlanCatalog(aladin,"",in,true,false);  // Justess pour le manger
                } else {
                   PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt,false);
                   if( pc.label.equals("") ) pc.setLabel(file);
                   p=pc;
-                  if( /* aladin.OUTREACH && */ pc.pcat.badRaDecDetection 
+                  if( /* aladin.OUTREACH && */ (pc.pcat.badRaDecDetection || pc.pcat.getCount()==0)
                         && nExt>0 && v.size()>0 && ((Plan)v.elementAt(0)).isImage() ) {
                      p=null; // pour eviter les extensions DSS
                      aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
@@ -2496,17 +2496,19 @@ public final class Calque extends JPanel implements Runnable {
       p = (Plan)v.elementAt(0);
       if( v.size()==1 ) {
          if( label.charAt(0)=='=' ) label=label.substring(1);
-         p.label = label; // On récupère le label du folder
+//         p.label = label; // On récupère le label du folder
+         p.setLabel(label);// On récupère le label du folder
       }
       p.planReady(true);
 
       // On met tout ça dans la pile
       if( v.size()>1 ) {
-         Enumeration e = v.elements();
-         while( e.hasMoreElements() ) {
-            synchronized( pile ) {
+         synchronized( pile ) {
+            Enumeration e = v.elements();
+            while( e.hasMoreElements() ) {
                int n=getStackIndex();
                plan[n] = (Plan)e.nextElement();
+               plan[n].setLabel(plan[n].label);    // Pour s'assurer que son nom est unique dans la pile
                if( folder!=null ) permute(plan[n],folder);
             }
          }
@@ -2761,6 +2763,7 @@ public final class Calque extends JPanel implements Runnable {
            new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
                  90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
         suiteNew(p);
+        aladin.command.resetPreviousDrawing();
         return (PlanTool)p;
      }
 
@@ -3042,6 +3045,13 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       //PlanFilter.newPlan(plan[n]);
       return n;
+   }
+   
+   /** Generation d'un plan Image à partir d'un crop de la vue passée en paramètre (doit être un PlanBG) */
+   PlanImage createCropImage(ViewSimple v ) throws Exception {
+      if( !(v.pref instanceof PlanBG) ) throw new Exception("Cropping only on HiPS");
+      PointD p1 = v.getPosition(0.,0.);
+      return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),"Crop."+v.pref.label,v.zoom,1.,false,false);
    }
 
    protected Plan createPlanCatalog(MyInputStream in,String label) {

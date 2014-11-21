@@ -81,6 +81,7 @@ public class SIAPruner {
             while( e.hasMoreElements() ) {
                 key = (String)e.nextElement();
                 value = (String)prunerConstraint.fieldConstraints.get(key);
+                value = Tok.unQuote(value);   // PF - nov 2014
                 if( ! node.matchFieldConstraint(key, value, true) ) {
                     nodesToRemove.add(node);
                     continue;

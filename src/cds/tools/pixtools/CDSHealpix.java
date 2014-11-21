@@ -84,6 +84,99 @@ public final class CDSHealpix {
       return list.toArray();
    }
    
+   static public long[] query_region(long nside,ArrayList<double[]>cooList) throws Exception {
+      int order = init(nside);
+      ArrayList<Pointing[]> triangles = triangulate(cooList);
+      RangeSet total = new RangeSet();
+      for( Pointing [] vertex : triangles ) {
+         RangeSet list = hpxBase[order].queryPolygonInclusive(vertex,4);
+         if( list!=null ) total = total.union(list);
+      }
+      return total.toArray();
+   }
+   
+   static private ArrayList<Pointing[]> triangulate(ArrayList<double[]>cooList) {
+      Polygon p = new Polygon();
+      for( int i=0; i<cooList.size(); i++ ) {
+         double [] a = cooList.get(i);
+         p.p[i].x = a[0];
+         p.p[i].y = a[1];
+      }
+      p.n=cooList.size();
+      
+      Triangulation triangulation = Triangulate(p);
+      
+      ArrayList<Pointing[]> tr = new ArrayList<Pointing[]>();
+      for( int i=0; i<triangulation.t.size(); i++ ) {
+         int [] t = triangulation.t.get(i);
+         Pointing [] a = new Pointing[] {
+               new Pointing( p.p[ t[0] ].x,  p.p[ t[0] ].y ),    
+               new Pointing( p.p[ t[1] ].x,  p.p[ t[1] ].y ),    
+               new Pointing( p.p[ t[2] ].x,  p.p[ t[2] ].y ),    
+         };
+         tr.add(a);
+      }
+      return tr;
+   }
+   
+   
+   static final int MAXPOLY = 200;
+   static final double EPSILON = 0.000001;
+   static class Point {
+      double x,y;
+      
+      boolean inside(Point a, Point b, Point c) {
+         java.awt.Polygon pol = new java.awt.Polygon();
+         pol.addPoint((int)a.x, (int)a.y);
+         pol.addPoint((int)b.x, (int)b.y);
+         pol.addPoint((int)c.x, (int)c.y);
+         return pol.contains(x,y);
+      }
+   }
+
+   static class Polygon {
+      Point p[] = new Point[MAXPOLY];
+      int n;
+      Polygon() {
+         for(int i=0;i<MAXPOLY;i++) p[i] = new Point();
+      }
+   }
+   
+
+   static class Triangulation {
+      ArrayList<int[]> t = new ArrayList<int[]>();;
+   }
+
+
+   static Triangulation Triangulate(Polygon p) {
+      Triangulation t = new Triangulation();
+      int N = p.n;
+      
+      // determine if i-j-k is a circle with no interior points 
+      for (int i = 0; i < N; i++) {
+         for (int j = i+1; j < N; j++) {
+            for (int k = j+1; k < N; k++) {
+               boolean isTriangle = true;
+               for (int a = 0; a < N; a++) {
+                  if (a == i || a == j || a == k) continue;
+                  if (p.p[a].inside(p.p[i], p.p[j], p.p[k])) {
+                     isTriangle = false;
+                     break;
+                  }
+               }
+
+
+               if (isTriangle) {
+                  t.t.add( new int[] { i,j,k } );
+               }
+            }
+         }
+      }
+
+      return t;
+   }
+
+   
 //   static public long[] query_polygon(long nside,ArrayList<double[]>cooList) throws Exception {
 //      ArrayList vlist = new ArrayList(cooList.size());
 //      Iterator<double[]> it = cooList.iterator();
@@ -170,6 +263,10 @@ public final class CDSHealpix {
       return hpxBase[ init(nside) ].nest2ring(npix);
    }
    
+   static public long ring2nest(long nside, long npix) throws Exception  {
+      return hpxBase[ init(nside) ].ring2nest(npix);
+   }
+   
    /** Voir Healpix documentation */
    static public double pixRes(long nside) {
       double res = 0.;
@@ -218,6 +315,8 @@ public final class CDSHealpix {
       radec[0] = polar[1]*180./Math.PI;
       return radec;
    }
+   
+   
    
    public static void main(String argv[]) {
       try {

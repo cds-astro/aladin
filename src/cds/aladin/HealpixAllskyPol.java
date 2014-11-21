@@ -36,7 +36,7 @@ class HealpixAllskyPol extends HealpixKeyPol {
       allSky=true;
       resetTimer();
       String nameNet = "Norder"+order+"/Allsky";
-      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
+      String nameCache = planBG.getCacheName()+"/"+"Norder"+order+"/Allsky";
       extCache=extNet=planBG.getTileMode();
 //      if( planBG.color ) extCache=extNet=JPEG;
 //      if( planBG.truePixels ) extCache=extNet=FITS;

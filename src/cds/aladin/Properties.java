@@ -29,7 +29,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
-import java.net.URI;
 import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -80,7 +79,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    PlanFree  pmemo=null;         // un plan (bidon) pgr memoriser les caracteristiques courantes
    int  hcmemo=0;                // Memorisation du hashcode du plan memorise
    boolean flagHide=true;        // Vrai si la fenetre est cache
-
 
    // Memorisation temporaire
    JTextField label;              // Le label du plan
@@ -249,7 +247,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    void showProp(boolean force) {
       Plan p=plan;
       flagHide = false;
-
+      
       // Que des modifs mineures = > juste re-affichage
       if( !force && pmemo != null && hcmemo == p.hashCode() && pmemo.equals(p) ) {
         if (isShowing()) return;
@@ -918,50 +916,51 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
          PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
-         final JRadioButton b1 = new JRadioButton("borders");
+         final JCheckBox b1 = new JCheckBox("borders");
          b1.setSelected( pmoc.isDrawingBorder() );
          b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) { pmoc.setDrawingBorder(b1.isSelected()); aladin.calque.repaintAll(); }
          });
-         final JRadioButton b2a = new JRadioButton("fill in");
+         final JCheckBox b2a = new JCheckBox("fill in");
          b2a.setSelected( pmoc.isDrawingFillIn() );
          b2a.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) { pmoc.setDrawingFillIn(b2a.isSelected()); aladin.calque.repaintAll(); }
          });
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-         final JCheckBox b2 = new JCheckBox("diagonals");
-         b2.setSelected( pmoc.isDrawingDiagonal() );
-         b2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
-         });
-         p1.add(b1); p1.add(b2a); p1.add(b2);
+//         final JCheckBox b2 = new JCheckBox("diagonals");
+//         b2.setSelected( pmoc.isDrawingDiagonal() );
+//         b2.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
+//         });
+         p1.add(b1); p1.add(b2a); 
+//         p1.add(b2);
          PropPanel.addCouple(p,"Drawing method: ",p1,g,c);
          
-         boolean twoResMode = pmoc.getTwoResMode();
-         ButtonGroup bg = new ButtonGroup();
-         final JCheckBox b3 = new JCheckBox("on");
-         b3.setSelected(twoResMode);
-         b3.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
-         });
-         JCheckBox b4 = new JCheckBox("off");
-         b4.setSelected(!twoResMode);
-         b4.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-               if( mocSize>20000L ) {
-                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
-                     b3.setSelected(true);
-                     return;
-                  }
-               }
-               pmoc.setTwoResMode(b3.isSelected());
-               aladin.calque.repaintAll();
-            }
-         });
-         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-         bg.add(b3); bg.add(b4);
-         p1.add(b3); p1.add(b4);
-         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
+//         boolean twoResMode = pmoc.getTwoResMode();
+//         ButtonGroup bg = new ButtonGroup();
+//         final JCheckBox b3 = new JCheckBox("on");
+//         b3.setSelected(twoResMode);
+//         b3.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
+//         });
+//         JCheckBox b4 = new JCheckBox("off");
+//         b4.setSelected(!twoResMode);
+//         b4.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//               if( mocSize>20000L ) {
+//                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
+//                     b3.setSelected(true);
+//                     return;
+//                  }
+//               }
+//               pmoc.setTwoResMode(b3.isSelected());
+//               aladin.calque.repaintAll();
+//            }
+//         });
+//         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+//         bg.add(b3); bg.add(b4);
+//         p1.add(b3); p1.add(b4);
+//         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
 
       }
       
@@ -982,7 +981,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
-         PropPanel.addCouple(p, "HEALPix Coordsys:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
+         PropPanel.addCouple(p, "HiPS coord.sys.:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
+         String s = pbg.getNetSpeed();
+         if( s!=null ) {
+            JLabel lab = new JLabel(s);
+            if( s.indexOf("error")>=0 ) lab.setForeground(Color.red);
+            PropPanel.addCouple(p, "Avg net speed:", lab, g, c);
+         }
+         
          if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
             JPanel p1 = new JPanel();
             if( pbg.hasMoc() ) {

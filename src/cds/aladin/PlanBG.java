@@ -46,6 +46,10 @@ import java.util.*;
 import javax.swing.text.DefaultEditorKit.CutAction;
 
 
+
+
+
+import cds.allsky.Context;
 import cds.astro.Coo;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
@@ -238,13 +242,13 @@ public class PlanBG extends PlanImage {
    // Supprime le cache en le renommant simplement => il sera nettoyé par la suite
    // Puis recrée un répertoire pour accueillir les nouvelles données
    private void resetCache() {
-      String dirname = getCacheDir()+Util.FS+survey;
+      String dirname = getCacheDir()+Util.FS+getCacheName();
       File f = new File(dirname);
       for( int i=1; i<10; i++ ) {
-         if( f.renameTo(new File(getCacheDir()+Util.FS+survey+"."+i+".old")) ) break;
+         if( f.renameTo(new File(getCacheDir()+Util.FS+getCacheName()+"."+i+".old")) ) break;
       }
-      (new File(getCacheDir()+Util.FS+survey)).mkdir();
-      aladin.trace(3,"HEALPix local cache for "+survey+" is out of date => renamed => will be removed");
+      (new File(getCacheDir()+Util.FS+getCacheName())).mkdir();
+      aladin.trace(3,"HEALPix local cache for "+getCacheName()+" is out of date => renamed => will be removed");
    }
    
    
@@ -267,7 +271,7 @@ public class PlanBG extends PlanImage {
             // Eventuellement changera de site Web s'il y a mieux
             checkSite(false); 
             
-            String cacheFile = getCacheDir()+Util.FS+survey+Util.FS+PlanHealpix.PROPERTIES;
+            String cacheFile = getCacheDir()+Util.FS+getCacheName()+Util.FS+PlanHealpix.PROPERTIES;
             File f = new File(cacheFile);
             String urlFile = url+"/"+PlanHealpix.PROPERTIES;
             HttpURLConnection conn = (HttpURLConnection) (new URL(urlFile)).openConnection();
@@ -322,7 +326,7 @@ public class PlanBG extends PlanImage {
 
                // La version dans le cache est la bonne.
             } catch( Exception e ) { 
-               aladin.trace(3,"HEALPix local cache for "+survey+" is ok");
+               aladin.trace(3,"HEALPix local cache for "+survey+" is ok ["+cacheFile+"]");
             } finally {
                if( dis!=null ) dis.close();
             }
@@ -483,7 +487,7 @@ public class PlanBG extends PlanImage {
    
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
-      String f = url+"/HpxFinder/metadata.xml";
+      String f = url+"/HpxFinder/"+Context.METADATA;
       hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
       testHpxFinder=true;
       return hasHpxFinder;
@@ -512,13 +516,14 @@ public class PlanBG extends PlanImage {
    
    /** Chargement du MOC associé au HiPS, soit depuis le cache, soit depuis le net */
    protected void loadInternalMoc() throws Exception {
-      String fcache = getCacheDirPath()+"/"+survey+version+"/Moc.fits";
+      String fcache = getCacheDir()+"/"+getCacheName()+"/Moc.fits";
       if( !local && useCache ) {
          if( new File(fcache).exists() ) {
             InputStream in = null;
             try { 
                in = new FileInputStream(fcache);
                moc = new HealpixMoc(in);
+               moc.setMinLimitOrder(3);
                removeHealpixOutsideMoc();
             } finally { if( in!=null ) in.close(); }
             Aladin.trace(3,"Loading "+survey+" MOC from cache");
@@ -530,6 +535,7 @@ public class PlanBG extends PlanImage {
       try {
          mis=Util.openAnyStream(f);
          moc = new HealpixMoc(mis);
+         moc.setMinLimitOrder(3);
          removeHealpixOutsideMoc();
       } finally { if( mis!=null) mis.close(); }
       Aladin.trace(3,"Loading "+survey+" MOC from net");
@@ -644,6 +650,7 @@ public class PlanBG extends PlanImage {
    }
    
    static protected boolean isPlanBG(String path) {
+      if( isPlanHpxFinder(path) ) return true;
       String s = path+Util.FS+"Norder3";
       File f = new File(s);
       return f.isDirectory();
@@ -899,8 +906,8 @@ public class PlanBG extends PlanImage {
    }
    
    protected boolean flagRecut=true;
-//   protected boolean flagRecutRedo;    // Indique qu'il faut refaire un autocut voir HealpixKey.load...
-//   public boolean flagNoRecutRedo;  // inhibe le falgRecutRedo
+   protected double flagRecutRadius=0;
+   protected Coord flagRecutCoo=null;
    
    /** Postionne la taille approximative de tous les losanges en mémoire */
    protected void setMem() { return; }
@@ -910,12 +917,18 @@ public class PlanBG extends PlanImage {
       if( flag && aladin.calque.hasHpxGrid() ) System.out.println(getStats());
       return super.setActivated(flag);
    }
+   
+   
+   /** Retourne le nom du répertoire cache pour ce HiPS */
+   protected String getCacheName() {
+      return survey + version;
+   }
 
    // Pour éviter les tests à chaque fois
    private String dirCache=null;
    private boolean flagCache=false;
 
-   /** Retourne le répertoire du Cache ou null si impossible à créer */
+   /** Retourne et crée si nécessaire le répertoire qui contient le cache ou null si impossible à créer */
    protected String getCacheDir() {
       if( flagCache ) return dirCache;
       flagCache=true;
@@ -924,7 +937,7 @@ public class PlanBG extends PlanImage {
       if( !aladin.createCache() ) return null;
 
       // Création de $HOME/.aladin/Cache si ce n'est déjà fait
-      String dir = System.getProperty("user.home")+Util.FS+Aladin.CACHE+Util.FS+Cache.CACHE;
+      String dir = System.getProperty("user.home") + Util.FS + Aladin.CACHE + Util.FS + Cache.CACHE;
       File f = new File(dir);
       if( !f.isDirectory() && !f.mkdir() ) return null;
 
@@ -937,9 +950,9 @@ public class PlanBG extends PlanImage {
       return dir;
    }
 
-   static protected String getCacheDirPath() {
-        return System.getProperty("user.home") + Util.FS + Aladin.CACHE
-                + Util.FS + Cache.CACHE + Util.FS + CACHE;
+   /** Retourne le nom du répertoire qui contient le cache via une méthode static sans se soucier de son existence */
+   static protected String getCacheDirStatic() {
+        return System.getProperty("user.home") + Util.FS + Aladin.CACHE + Util.FS + Cache.CACHE + Util.FS + CACHE;
     }
    
    /** Positionne le niveau max du cache en Ko (minimum 500 Mo) */
@@ -980,7 +993,7 @@ public class PlanBG extends PlanImage {
             currentThread().setPriority(MIN_PRIORITY);
             long size=0;
             long t = System.currentTimeMillis();
-            String dir = PlanBG.getCacheDirPath();
+            String dir = PlanBG.getCacheDirStatic();
             if( dir==null ) {
                size=0;
                setCacheSize(0);
@@ -1041,7 +1054,7 @@ public class PlanBG extends PlanImage {
    
    /** Nettoyage complet du cache Healpix */
    static void clearCache() {
-      String dir = PlanBG.getCacheDirPath();
+      String dir = PlanBG.getCacheDirStatic();
       if( dir!=null ) Util.deleteDir(new File(dir));
       dir = PlanHealpix.getCacheDirPath();
       if( dir!=null ) Util.deleteDir(new File(dir));
@@ -1361,7 +1374,7 @@ public class PlanBG extends PlanImage {
 
    public String getSurveyDir() {
       if( local ) return url;
-      else  return getCacheDir() + Util.FS + survey+version;
+      return getCacheDir() + Util.FS + getCacheName();
    }
    
    /** Retourne sous forme d'une chaine éditable la valeur du pixel  */
@@ -1635,7 +1648,7 @@ public class PlanBG extends PlanImage {
       long t = System.currentTimeMillis();
       if( t-lastTouch<60*1000L ) return;     // On "touch" au mieux toutes les minutes
       lastTouch=t;
-      String pathName = getCacheDir()+Util.FS+survey+version;
+      String pathName = getCacheDir()+Util.FS+getCacheName();
       (new File(pathName)).setLastModified(t);
       Date d = new Date();
       d.setTime(lastTouch);
@@ -1690,6 +1703,8 @@ public class PlanBG extends PlanImage {
       FreePixList();
       changeImgID();
       flagRecut=true;
+      flagRecutCoo = new Coord( aladin.view.repere.raj, aladin.view.repere.dej );
+      flagRecutRadius = aladin.view.getCurrentView().getTaille()/2;
       freeHist();
    }
    
@@ -1712,22 +1727,6 @@ public class PlanBG extends PlanImage {
       long nside = CDSHealpix.pow2(getMaxHealpixOrder());
       return CDSHealpix.pixRes(nside)/3600;
    }
-
-
-// POUR FAIRE DES TESTS en utilisant la molette et le sélecteur de frame
-//   double chouilla=0;
-//
-//   boolean modifValue(int sens) {
-//      boolean rep=false;
-//      int mode = aladin.localisation.getFrameSelected();
-//      switch(mode) {
-//         case 1: chouilla+=sens; rep=true; break;
-//      }
-//      System.out.println("chouilla="+chouilla);
-//      aladin.view.repaintAll();
-//      return rep;
-//   }
-//
 
    /** Retourne true si l'image a été entièrement "drawé" à la résolution attendue */
    protected boolean isFullyDrawn() { return isDrawn () && allWaitingKeysDrawn; }
@@ -2698,7 +2697,6 @@ public class PlanBG extends PlanImage {
                   if( h!=null ) nb+=h.draw(g,v);
                   
                   continue;
-                  
                }
 
                // Juste pour tester la synchro
@@ -3053,6 +3051,96 @@ public class PlanBG extends PlanImage {
       
       return nb[HealpixKey.READY]==0 && nb[HealpixKey.ERROR]>5;
    }
+   
+   
+   /** Test réseau sur le HiPS. Se contente de charger un certain nombre de losange
+    * pour déterminer la qualité du serveur et du réseau pour le HiPS
+    * @throws Exception
+    */
+   public void testnet() throws Exception {
+      
+      try {
+         if( moc==null ) loadInternalMoc();
+      } catch( Exception e1 ) { }
+      long time=0L;
+      long size=0L;
+      int minOrder=3;
+      
+      long timeMax = 10*1000;
+      long sizeMax = 30*1024*1024;
+      
+      long start = System.currentTimeMillis();
+      
+      System.out.println("Testnet HiPS "+label+" maxOrder="+maxOrder+" from "+url+" :");
+      int n=0;
+      
+      int memo = aladin.levelTrace;
+      aladin.levelTrace=0;
+      
+      while( true ) {
+         
+         try {
+            // Fin du test
+            if( System.currentTimeMillis() - start > timeMax ) break;
+            if( size > sizeMax ) break;
+            int order = minOrder + (int)(Math.random()*(maxOrder-minOrder));
+            long npix;
+            long[] list=null;
+            if( moc!=null ) {
+               
+               // On prend une cellule du MOC au hasard
+               int length=0;
+               int i;
+               for( i=0; i<maxOrder && length==0; i++ ) {
+                  order++;
+                  if( order>maxOrder ) order=minOrder;
+                  list=moc.getPixLevel(order);
+                  length=list.length;
+               }
+               if( i==maxOrder ) return;   // MOC erroné ??
+               i = (int)(Math.random()*length);
+               if( i>=length ) i=list.length-1;
+               npix = list[i];
+               
+               // On choisit un fils au hasard dans sa descendance
+               int o = order+(int)(Math.random()*(maxOrder-order));
+               for( i=order; i<o; i++) {
+                  int j = (int)(Math.random()*4);
+                  npix = npix*4 + j;
+               }
+               order=o;
+               
+            } else {
+               long nbPix = 12*CDSHealpix.pow2(order)*CDSHealpix.pow2(order);
+               npix = (long)( Math.random()* nbPix );
+               if( npix>=nbPix ) npix=nbPix-1;
+            }
+            
+            System.out.print(".Loading "+order+"/"+npix+"... ");
+            HealpixKey hk = new HealpixKey(this, order, npix, HealpixKey.TESTNET);
+            
+            long t = hk.timeNet;
+            long s = hk.sizeStream;
+            if( s==0 ) System.out.println(" error => "+url+"/"+hk.getFileNet());
+            else System.out.println(Util.getUnitDisk(s)+" in "+Util.getTemps(t));
+            time += t;
+            size += s;
+            n++;
+         } catch( Exception e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+      }
+      
+      aladin.levelTrace=memo;
+      System.out.println("=> Downloaded "+n+" tiles in "+HealpixKey.EXT[getTileMode()]
+            +" : "+Util.getUnitDisk(size)+" in "+Util.getTemps(time));
+      
+      long rate = (long)( size/(time/1000.) );
+      String res = "=> Stream rate "+Util.getUnitDisk(rate)+"/s";
+      System.out.println(res);
+      aladin.console.printInfo(label+" net perf "+res);
+   }
 
    /**
     * Gère le chargement des losanges de manière asynchrone
@@ -3170,7 +3258,7 @@ public class PlanBG extends PlanImage {
                int status = healpix.getStatus();
                
                // Un peu de débuging si besoin
-               if( flagVerbose /* && status!=HealpixKey.ERROR */ ) {
+               if( flagVerbose && status!=HealpixKey.ERROR ) {
                   System.out.println((first?"\n":"")+healpix);
                   first=false;
                }
@@ -3227,7 +3315,7 @@ public class PlanBG extends PlanImage {
 //         System.out.println();
 
          if( error==null && detectServerError(nb) ) error="Server not available";
-
+         
          // Eventuel arrêt du chargement en cours si priorité désormais plus faible
          HealpixKey healpixMin=null,healpixNet=null;
          int min = Integer.MAX_VALUE;
@@ -3256,6 +3344,31 @@ public class PlanBG extends PlanImage {
 
          if( perhapsOneDeath ) shouldRefresh();
 
+      }
+   }
+   
+   
+   class MyEnum implements Enumeration<HealpixKey> {
+      HealpixKey [] tab;
+      int size;
+      int pos;
+      
+      MyEnum(Hashtable<String, HealpixKey> pixList) {
+         tab = new HealpixKey[ pixList.size() ];
+         Enumeration<HealpixKey> e = pixList.elements();
+         int i;
+         for( i=0; e.hasMoreElements() && i<tab.length; i++ ) tab[i] = e.nextElement();
+         size = i;
+         Arrays.sort(tab,0,size);
+         pos=0;
+      }
+
+      public boolean hasMoreElements() {
+         return pos<size;
+      }
+
+      public HealpixKey nextElement() {
+         return tab[pos++];
       }
    }
 
@@ -3311,7 +3424,10 @@ public class PlanBG extends PlanImage {
                if( !aladin.view.mustDrawFast() ) {
                   try {
                      ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
-                     Enumeration<HealpixKey> e = pixList.elements();
+//                     Enumeration<HealpixKey> e = pixList.elements();
+                     Enumeration<HealpixKey> e = new MyEnum(pixList);
+                     
+                     
 //                     int min = Integer.MAX_VALUE;
 //                     HealpixKey minHealpix=null;
 //                     if( e.hasMoreElements() ) System.out.println("Load :");
@@ -3325,7 +3441,7 @@ public class PlanBG extends PlanImage {
                            healpix.loadFromCache();
                            if( !healpix.allSky ) setLosangeOrder(healpix.getLosangeOrder());
                            flagLoad=true;
-//                           System.out.println("   Load "+healpix);
+//System.out.println("   Load "+healpix);
                            
                        // Du net on va voir si on a le temps
                        } else if( type==1 && status==HealpixKey.TOBELOADFROMNET ) {
@@ -3340,7 +3456,7 @@ public class PlanBG extends PlanImage {
                         for( HealpixKey h :  list ) {
                            if( h.getStatus()!=HealpixKey.TOBELOADFROMNET) continue;   // ca a changé, tant pis !
                           
-//                           System.out.println("   Load "+h);
+//System.out.println("   Load "+h);
                            if( type==0 ) h.loadFromCache();
                            else h.loadFromNet();
                            if( !h.allSky ) setLosangeOrder(h.getLosangeOrder());
@@ -3413,11 +3529,11 @@ public class PlanBG extends PlanImage {
    protected String getStats() {
       return "HealpixKey stats: "+label+":\n" +
             ".Created: "+nbCreated+"   Abort: "+nbAborted+"   Free: "+nbFree+"\n" +
-            ".Net   : "+nbLoadNet  +" => "+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb in ~" +Util.round(rateLoadNet(),0)  +"ms"
+            ".Net   : "+nbLoadNet  +" => "+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb in ~" +Util.round(avgLoadNet(),0)  +"ms"
                +" "+streamJpegPixel()+"\n"+
-            ".CacheR: "+nbLoadCache+" => "+Util.round(nByteReadCache/(1024*1024.),2)+"Mb in ~" +Util.round(rateLoadCache(),0)+"ms\n" +
-            ".CacheW: "+nbWriteCache+" => "+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb in ~" +Util.round(rateWriteCache(),0)+"ms\n" +
-            ".Img created: "+nbImgCreated+"    reused:"+nbImgInBuf+"    drawn "+nbImgDraw+" in ~"+Util.round(averageTimeDraw(),0)+"ms\n"
+            ".CacheR: "+nbLoadCache+" => "+Util.round(nByteReadCache/(1024*1024.),2)+"Mb in ~" +Util.round(avgLoadCache(),0)+"ms\n" +
+            ".CacheW: "+nbWriteCache+" => "+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb in ~" +Util.round(avgWriteCache(),0)+"ms\n" +
+            ".Img created: "+nbImgCreated+"    reused:"+nbImgInBuf+"    drawn "+nbImgDraw+" in ~"+Util.round(avgDraw(),0)+"ms\n"
             ;
    }
    
@@ -3434,9 +3550,9 @@ public class PlanBG extends PlanImage {
    protected String getShortStats() { 
       if( nbLoadNet==0 && nbLoadCache==0 ) return null;
       boolean flagLocal = isLocalAllSky();
-      return label+(flagLocal?" Local:":" Net["+getHost()+"]:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(rateLoadNet(),0)  +"ms"
-      +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(rateLoadCache(),0)+"ms"
-      +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(rateWriteCache(),0)+"ms";
+      return label+(flagLocal?" Local:":" Net["+getHost()+"]:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(avgLoadNet(),0)  +"ms"
+      +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(avgLoadCache(),0)+"ms"
+      +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(avgWriteCache(),0)+"ms";
    }
    
    /** Retourne le temps moyen pour le chargement réseau d'une image, sa décompression JPEG, l'extraction des pixels */
@@ -3446,28 +3562,68 @@ public class PlanBG extends PlanImage {
       +"/jpeg="+Util.round(cumulTimeJPEG/nbLoadNet,1)
       +"/getpix="+Util.round(cumulTimePixel/nbLoadNet,1)+")";
    }
+   
+   
+   /** Retourne une chaine indiquant la qualité du réseau entre le serveur et le client, null si la mesure n'est pas disponible */
+   protected String getNetSpeed() {
+      long r = rateLoadNet();
+      int er = nbTileError();
+      if( er==0 && r==0 ) return null;  // Rien à dire
+      StringBuilder s=new StringBuilder();
+      
+      // Débit
+      if( r!=0 ) s.append( Util.getUnitDisk(r)+"/s");
+      
+     // Il y a des losanges en erreur
+      if( er>0 ) {
+         if( s.length()>0 ) s.append(" - ");
+         s.append("tile errors: "+er+"/"+pixList.size()+" ("+Util.myRound(100.*(double)er/pixList.size())+"%)");
+      }
+      
+      return s.toString();
+   }
+   
+   
+   /** Retourne le nombre de losanges en erreur qui pourtant se trouvent dans le survey */
+   protected int nbTileError() {
+      if( moc==null ) return 0;   // non significatif car contient également les losanges hors champs
+      Enumeration<HealpixKey> e = pixList.elements();
+      int n=0;
+      while( e.hasMoreElements() ) {
+         HealpixKey h = e.nextElement();
+         if( h.getStatus()==HealpixKey.ERROR ) n++;
+      }
+      return n;
+   }
+   
+   /** Retourne le débit des chargements des losanges via le réseau (en octets/seconde) */
+   protected long rateLoadNet() {
+      if( cumulTimeLoadNet==0 ) return 0;
+      long r = (nByteReadNet/cumulTimeLoadNet)*1000;
+      return r;
+   }
 
-   /** retourne le temps moyen pour l'affichage d'un losange en ms */
-   protected double averageTimeDraw() {
+   /** Retourne le temps moyen pour l'affichage d'un losange en ms */
+   protected double avgDraw() {
       if( nbImgDraw==0 ) return 0;
       return ((double)cumulTimeDraw/nbImgDraw)/1000000;
    }
 
-   /** Retourne le nombre de mégaoctets traités par seconde en lecture sur le réseau */
-   protected double rateLoadNet() {
-      if( cumulTimeLoadNet==0 ) return 0;
+   /** Retourne le temps moyen de chargement d'un losange via le réseau (en ms) */
+   protected double avgLoadNet() {
+      if( nbLoadNet==0 ) return 0;
       return ((double)cumulTimeLoadNet/nbLoadNet);
    }
 
-   /** Retourne le nombre de mégaoctets traités par seconde en lecture depuis le cache */
-   protected double rateLoadCache() {
-      if( cumulTimeLoadCache==0 ) return 0;
+   /** Retourne le temps moyen de chargement d'un losange depuis le cache (en ms) */
+   protected double avgLoadCache() {
+      if( nbLoadCache==0 ) return 0;
       return ((double)cumulTimeLoadCache/nbLoadCache);
    }
 
-   /** Retourne le nombre de mégaoctets traités par seconde en écriture sur le cache */
-   protected double rateWriteCache() {
-      if( cumulTimeWriteCache==0 ) return 0;
+   /** Retourne le temps moyen de chargement d'un losange en écriture sur le cache (en ms) */
+   protected double avgWriteCache() {
+      if( nbWriteCache==0 ) return 0;
       return ((double)cumulTimeWriteCache/nbWriteCache);
    }
    

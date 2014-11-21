@@ -67,7 +67,9 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_COORDSYS = "coordsys";
     static public final String KEY_ISCOLOR = "isColored";
     static public final String KEY_ISCAT = "isCatalog";
+    static public final String KEY_ISMETA = "isMeta";
     static public final String KEY_MAXORDER = "maxOrder";
+    static public final String KEY_MINORDER = "minOrder";
     static public final String KEY_FORMAT = "format";
     static public final String KEY_LABEL = "label";
     static public final String KEY_DESCRIPTION = "description";
@@ -353,7 +355,7 @@ public class PlanHealpix extends PlanBG {
           suiteSpecif();
           return true;
        } catch (Exception e) {
-          error = e.getMessage();
+          error = "HEALPix error "+(e.getMessage()!=null ? ": "+e.getMessage():"");
           if( aladin.levelTrace>=3 ) e.printStackTrace();
           return false;
        }
@@ -487,6 +489,8 @@ public class PlanHealpix extends PlanBG {
        if( ! needProcessing(this.dirName, true) ) return;
        tmp.mkdir();
 
+       int nside=0;
+       ordering=null;
        double start = System.currentTimeMillis();
        MyInputStream isTmp=null;
        try {
@@ -497,6 +501,14 @@ public class PlanHealpix extends PlanBG {
           int naxis = headerFits.getIntFromHeader("NAXIS");
           // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
           if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
+             
+             // Peut être une vieille version de map HEALPix dont les paramètres
+             // sont dans la HDU0
+             try { nside = headerFits.getIntFromHeader("NSIDE"); } 
+             catch( Exception e) {}
+             try { ordering = headerFits.getStringFromHeader("ORDERING"); } 
+             catch( Exception e) {}
+             
              // Je saute l'éventuel baratin de la première HDU
              try {
                 naxis1 = headerFits.getIntFromHeader("NAXIS1");
@@ -517,10 +529,9 @@ public class PlanHealpix extends PlanBG {
           initialOffsetHpx = isTmp.getPos();
        } finally { if( isTmp!=null ) isTmp.close(); }
        
-       int nside=0;
        int nsideImage=0;
        int minLevel = 3; // Norder minimum désiré
-       nside = headerFits.getIntFromHeader("NSIDE");
+       if( nside==0 ) nside = headerFits.getIntFromHeader("NSIDE");
        int maxSizeGeneratedImage = 512;
        if( nside<maxSizeGeneratedImage ) maxSizeGeneratedImage=nside;      // PF : Pour pouvoir charger des "petits cieux"
        Aladin.trace(3, "maxSizeGeneratedImage: "+maxSizeGeneratedImage);
@@ -544,7 +555,7 @@ public class PlanHealpix extends PlanBG {
         naxis1 = sizeRecord = headerFits.getIntFromHeader("NAXIS1");
         naxis2 = nRecord = headerFits.getIntFromHeader("NAXIS2");
         nField = headerFits.getIntFromHeader("TFIELDS");
-        ordering = headerFits.getStringFromHeader("ORDERING");
+        if( ordering==null ) ordering = headerFits.getStringFromHeader("ORDERING");
         
 
         Aladin.trace(3, "sizeRecord: "+sizeRecord);
@@ -1282,9 +1293,10 @@ public class PlanHealpix extends PlanBG {
     }
 
     protected boolean hasPolarisationData() {
-        List<String> l = Arrays.asList(tfieldNames);
-        return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION"))
-            && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION"));
+       if( tfieldNames==null ) return false;
+       List<String> l = Arrays.asList(tfieldNames);
+       return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION"))
+             && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION"));
     }
 
     protected boolean isPartial() { return isPartial; }

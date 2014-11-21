@@ -22,7 +22,9 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
@@ -43,16 +45,12 @@ public class PlanMoc extends PlanBGCat {
    
    // Mode de tracé
    static final public int DRAW_BORDER   = 0x1;     // Tracé des bordures des cellules Healpix
-   static final public int DRAW_DIAGONAL = 0x2;     // Tracé des diagonales des cellules Healpix
    static final public int DRAW_FILLIN   = 0x4;     // Remplissage avec aplat de demi-opacité
    
    protected HealpixMoc moc = null;                 // Le MOC
    private int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
-   private boolean twoResMode=true;                 // Indique que le tracé se fera en deux modes de résolution distincts suivant le facteur de zoom
    
-   private Hpix [] hpixList = null;                 // Liste des cellules correspondant au MOC
-   private Hpix [] hpixListLow = null;              // Idem mais à faible résolution
-
+   private Hpix[][] arrayHpix = null;      // Liste des cellules correspondant au MOC (pour chaque ordre) 
    public PlanMoc(Aladin a) { super(a); }
       
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
@@ -67,6 +65,7 @@ public class PlanMoc extends PlanBGCat {
    
    protected PlanMoc(Aladin aladin, MyInputStream in, HealpixMoc moc, String label, Coord c, double radius) {
       super(aladin);
+      arrayHpix = new Hpix[CDSHealpix.MAXORDER+1][];
       this.dis   = in;
       this.moc   = moc;
       useCache = false;
@@ -94,7 +93,7 @@ public class PlanMoc extends PlanBGCat {
       pm.frameOrigin=frameOrigin;
       pm.moc = (HealpixMoc)moc.clone();
       pm.wireFrame=wireFrame;
-      pm.twoResMode=twoResMode;
+      pm.gapOrder=gapOrder;
    }
    
    /** Changement de référentiel si nécessaire */
@@ -143,7 +142,6 @@ public class PlanMoc extends PlanBGCat {
    public int getWireFrame() { return wireFrame; }
    
    public boolean isDrawingBorder() { return (wireFrame & DRAW_BORDER) !=0; }
-   public boolean isDrawingDiagonal() { return (wireFrame & DRAW_DIAGONAL) !=0; }
    public boolean isDrawingFillIn() { return (wireFrame & DRAW_FILLIN) !=0; }
    
    public void setDrawingBorder(boolean flag) { 
@@ -151,18 +149,10 @@ public class PlanMoc extends PlanBGCat {
       else wireFrame &= ~DRAW_BORDER;
    }
 
-   public void setDrawingDiagonal(boolean flag) { 
-      if( flag ) wireFrame |= DRAW_DIAGONAL;
-      else wireFrame &= ~DRAW_DIAGONAL;
-   }
-   
    public void setDrawingFillIn(boolean flag) { 
       if( flag ) wireFrame |= DRAW_FILLIN;
       else wireFrame &= ~DRAW_FILLIN;
    }
-   
-   public void setTwoResMode(boolean flag) { twoResMode=flag; }
-   public boolean getTwoResMode() { return twoResMode; }
    
    protected boolean hasSources() { return false; }
    protected int getCounts() { return 0; }
@@ -173,7 +163,6 @@ public class PlanMoc extends PlanBGCat {
          try {
             if( moc==null && dis!=null ) {
                moc = new HealpixMoc();
-               moc.setMinLimitOrder(3);
                if(  (dis.getType() & MyInputStream.FITS)!=0 ) moc.readFits(dis);
                else moc.readASCII(dis);
             }
@@ -200,6 +189,16 @@ public class PlanMoc extends PlanBGCat {
          }
       }
       
+      // Je force le MOC minOrder à 3 pour que l'affichage soit propre
+      if( moc!=null && moc.getMinLimitOrder()<3 ) {
+         try {
+            moc.setMinLimitOrder(3);
+         } catch( Exception e ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
+            return false;
+         }
+      }
+      
       return true;
    }
    
@@ -220,42 +219,52 @@ public class PlanMoc extends PlanBGCat {
       return m;
    }
    
-   // Retourne/construit la liste des cellules "graphiques" correspondantes au MOC
-   // en faible ou haute résolution suivant la valeur du flag "low".
-   private Hpix [] getHpixList(ViewSimple v,boolean low) {
-      if( hpixList==null ) {
-         hpixList = new Hpix[moc.getSize()];
-         int n=0;
-         Iterator<MocCell> it = moc.iterator();
-         while( it.hasNext() ) {
-            MocCell h = it.next();
-            hpixList[n++] = new Hpix(h.order,h.npix,frameOrigin);
-         }
-         
-         int N=6;
-         hpixListLow = hpixList;
-//         if( true || hpixList.length>12*Math.pow(4,N-1) ) {
-         HealpixMoc hpixLow = (HealpixMoc)moc.clone();
-         try { hpixLow.setMaxLimitOrder(N); } 
-         catch( Exception e ) { e.printStackTrace(); }
-         hpixListLow = new Hpix[moc.getSize()];
-         n=0;
-         it = hpixLow.iterator();
-         while( it.hasNext() ) {
-            MocCell h = it.next();
-            hpixListLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
-         }
-//         }
-
-      }
-      return low ? hpixListLow : hpixList;
+   
+   static int MAXGAPORDER=3;
+   private int gapOrder=0;
+   
+   protected int getGapOrder() { return gapOrder; }
+   protected void setGapOrder(int gapOrder) {
+      if( Math.abs(gapOrder)>MAXGAPORDER ) return;
+      this.gapOrder=gapOrder;
    }
    
-   private boolean oDrawAll=false; // dernier état connu pour le voyant d'état de la pile
-   private boolean drawAll=true;  // true si la totalité de ce qui doit être dessiné l'a été
+   // retourne/construit la liste des cellules "graphiques" correspondantes au MOC
+   // à l'ordre courant (mode progressif)
+   private Hpix [] getHpixListProg(int order) {
+//      int o = order;
+      int mo = moc.getMaxOrder();
+      if( mo<3 ) mo=3;
+      order += 5;
+      if( order<7 ) order=7;
+      order += gapOrder;
+      if( order<5 ) order=5;
+      if( order>mo ) order=mo;
+//      System.out.println("getHpixListProg("+o+") => "+order);
+      if( arrayHpix[order]==null ) {
+         HealpixMoc mocLow = order==mo ? moc : (HealpixMoc)moc.clone();
+         try { mocLow.setMocOrder(order); } 
+         catch( Exception e ) { e.printStackTrace(); }
+         Hpix [] hpixLow = new Hpix[moc.getSize()];
+         int n=0;
+         Iterator<MocCell> it = mocLow.iterator();
+         while( it.hasNext() ) {
+            MocCell h = it.next();
+            hpixLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
+         }
+         arrayHpix[order] = hpixLow;
+         
+      }
+      lastOrderDrawn = order;
+      return arrayHpix[order];
+   }
+   
+   private int lastOrderDrawn=-1;   // Dernier order tracé
    
    /** Retourne true si tout a été dessinée, sinon false */
-   protected boolean hasMoreDetails() { oDrawAll = drawAll; return !drawAll; }
+   protected boolean hasMoreDetails() { 
+      return moc!=null && lastOrderDrawn < moc.getMaxOrder(); 
+   }
    
    protected double getCompletude() { return -1; }
    
@@ -264,16 +273,13 @@ public class PlanMoc extends PlanBGCat {
       long t1 = Util.getTime();
       g.setColor(c);
       int max = Math.min(maxOrder(v),maxOrder)+1;
-      double taille = v.getTaille();
       
       try {
          HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
          int order=0;
          long t=0;
          int i;
-         boolean lowMoc = taille>30 && twoResMode;
-         Hpix [] hpixList = getHpixList(v,lowMoc);
-//      System.out.println("lowMoc="+lowMoc+" mustDrawFast="+mustDrawFast+" canDrawAll="+canDrawAll+" lastDrawAll="+delai);
+         Hpix [] hpixList = getHpixListProg(max+ (v.isAllSky()?0:1));
 
          for( i=0; i<hpixList.length; i++ ) {
             Hpix p = hpixList[i];
@@ -282,8 +288,10 @@ public class PlanMoc extends PlanBGCat {
             if( m!=null && !m.isIntersecting(order, p.getNpix())) continue;
             if( p.isOutView(v) ) continue;
             
+            boolean small = p.getDiag2(v)<25;
+            
             // Tracé en aplat avec demi-niveau d'opacité
-            if( isDrawingFillIn() && !lowMoc )  {
+            if( isDrawingFillIn() /* && !lowMoc */ && !small )  {
                if( g instanceof Graphics2D ) {
                   Graphics2D g2d = (Graphics2D)g;
                   Composite saveComposite = g2d.getComposite();
@@ -297,14 +305,11 @@ public class PlanMoc extends PlanBGCat {
             }
             
             // Tracé des bords et|ou des diagonales
-            if( isDrawingBorder() || isDrawingDiagonal() )  p.draw(g, v, isDrawingBorder(), isDrawingDiagonal() && !lowMoc );
+            if( isDrawingBorder() )  p.draw(g, v, isDrawingBorder());
          }
-         drawAll = i==hpixList.length;
          
-
          t = Util.getTime();
          statTimeDisplay = t-t1;
-         if( drawAll!=oDrawAll ) aladin.calque.select.repaint();  // pour faire évoluer le voyant d'état
          
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();

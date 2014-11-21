@@ -2181,6 +2181,11 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    private Color globalColor=null;  // Dernière couleur demandée
    private Plan oPlan=null;         // Dernier plan Tool ou FoV utilisé
    
+   /** Inhibe le fait qu'une commande draw va être dessiné dans le précédent
+    * plan Drawing utilisé
+    */
+   public void resetPreviousDrawing() { oPlan=null; }
+   
   /** Execution d'une commande get */
    protected boolean execDrawCmd(String cmd,String param) {
       Plan plan=null;	// Plan ou il faudra dessiner
@@ -2741,6 +2746,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("testcat") )testCalib(label,param,1);
       else if( cmd.equalsIgnoreCase("testscript"))testscript(param);
       else if( cmd.equalsIgnoreCase("testperf"))testperf(param);
+      else if( cmd.equalsIgnoreCase("testnet")) testnet();
       else if( cmd.equalsIgnoreCase("call"))    execFunction(param);
       else if( cmd.equalsIgnoreCase("="))       execEval(param);
       else if( cmd.equalsIgnoreCase("convert")) execConvert(param);
@@ -4129,6 +4135,23 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       a.console.printInPad(TEST.replace(';','\n') );
       execScript(TEST);
       a.glu.showDocument("Http","http://aladin.u-strasbg.fr/java/Testscript.jpg",true);
+   }
+   
+   /** Test la qualité du serveur et du réseau pour le HiPS courant
+    *  Les résultats s'affiche dans la console/pad
+    */
+   protected void testnet() {
+      Plan p = a.calque.getPlanBase();
+      if( !(p instanceof PlanBG) ) {
+         a.console.printError("testnet only on HiPS");
+         return;
+      }
+      try {
+         ((PlanBG)p).testnet();
+      } catch( Exception e ) {
+         a.console.printError("testnet error: "+e.getMessage());
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+      }
    }
    
    /** Test de lecture et d'écriture du disque */

@@ -20,7 +20,6 @@
 package cds.aladin;
 
 import cds.tools.*;
-
 import cds.image.*;
 
 import java.awt.*;
@@ -945,7 +944,7 @@ Aladin.trace(3,"Original pixels reloaded "
          openCache();
 
          int len = w*npix;
-
+         
          for( int i=naxis2-y-h, k=0; i<naxis2-y; i++,k++ ) {
             fCache.seek( cacheOffset+ (i*(long)naxis1 + x) * npix);
             fCache.readFully(pixels, k*w*npix, len);
@@ -1814,44 +1813,46 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    // Conversion byte[] en entier 32
    // Recupere sous la forme d'un entier 32bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
-//   static final protected int getInt(byte[] t,int i) {
+//   static final public int getInt(byte[] t,int i) {
 //      return (((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF);
 //   }
    // Conversion byte[] en entier 16
    // Recupere sous la forme d'un entier 16bits un nombre entier se trouvant
    // a l'emplacement i du tableau t[]
-//   static final protected int getShort(byte[] t,int i) {
+//   static final public int getShort(byte[] t,int i) {
 //      return  (((t[i])&0xFF)<<8) | (t[i+1])&0xFF;
 //   }
    
-   static final protected int getByte(byte[] t, int i) {
+   static final public int getByte(byte[] t, int i) {
       return (int)(t[i]&0xFF);
    }
-   static final protected int getShort(byte[] t, int i) { 
-      return ( (t[i]&0xFF)<<8) | t[i+1]&0xFF;
+   static final public int getShort(byte[] t, int i) { 
+//      return ( (t[i]&0xFF)<<8) | t[i+1]&0xFF;
+      return ( t[i]<<8) | t[i+1]&0xFF;
    }
-   static final protected int getShortLSB(byte[] t, int i) { 
+   static final public int getShortLSB(byte[] t, int i) { 
       return ( (t[i+1]&0xFF)<<8) | t[i]&0xFF;
+//      return (t[i+1]<<8) | t[i]&0xFF;
    }
-   static final protected int getInt(byte[] t, int i) {
+   static final public int getInt(byte[] t, int i) {
       return ((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF);
    }
-   static final protected int getIntLSB(byte[] t, int i) {
+   static final public int getIntLSB(byte[] t, int i) {
       return ((t[i+3]<<24) | ((t[i+2]&0xFF)<<16) | ((t[i+1]&0xFF)<<8) | t[i]&0xFF);
    }
-   static final protected long getLong(byte[] t, int i) {
+   static final public long getLong(byte[] t, int i) {
       return (((long)((t[i]<<24) | ((t[i+1]&0xFF)<<16) | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF))<<32)
       | ((((t[i+4]<<24) | ((t[i+5]&0xFF)<<16) | ((t[i+6]&0xFF)<<8) | t[i+7]&0xFF)) & 0xFFFFFFFFL);
    }
-   static final protected long getLongLSB(byte[] t, int i) {
+   static final public long getLongLSB(byte[] t, int i) {
       return (((long)((t[i+7]<<24) | ((t[i+6]&0xFF)<<16) | ((t[i+5]&0xFF)<<8) | t[i+4]&0xFF))<<32)
       | ((((t[i+3]<<24) | ((t[i+2]&0xFF)<<16) | ((t[i+1]&0xFF)<<8) | t[i]&0xFF)) & 0xFFFFFFFFL);
    }
-   static final protected double getFloat(byte[] t, int i) {
+   static final public double getFloat(byte[] t, int i) {
       return Float.intBitsToFloat(((t[i]<<24) | ((t[i+1]&0xFF)<<16) 
             | ((t[i+2]&0xFF)<<8) | t[i+3]&0xFF));
    }
-   static final protected double getDouble(byte[] t, int i) {
+   static final public double getDouble(byte[] t, int i) {
       long a = (((long)(((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF))<<32)
       | (((((t[i+4])<<24) | (((t[i+5])&0xFF)<<16) | (((t[i+6])&0xFF)<<8) | (t[i+7])&0xFF)) & 0xFFFFFFFFL);
       return Double.longBitsToDouble(a);
@@ -1864,7 +1865,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
     * @param i la position du pixel (sans tenir compte de la taille du pixel)
     * @return
     */
-   static final protected double getPixVal1(byte[] t,int bitpix,int i) {
+   static final public double getPixVal1(byte[] t,int bitpix,int i) {
       try {
          switch(bitpix) {
             case   8: return getByte(t,i);
@@ -1892,7 +1893,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
 
 
    // Conversion entier 32 en byte dans le tableau t[] à partir de l'emplacement i
-   static final protected void setInt(byte[] t,int i,int val) {
+   static final public void setInt(byte[] t,int i,int val) {
       t[i]   = (byte)(0xFF & (val>>>24));
       t[i+1] = (byte)(0xFF & (val>>>16));
       t[i+2] = (byte)(0xFF & (val>>>8));
@@ -2081,7 +2082,7 @@ Aladin.trace(3,"Creating calibration from hhh additional file");
    
    /** True si la coordonnée x,y se trouve dans l'image */
    protected boolean isInside(int x,int y) { return x>=0 && x<naxis1 && y>=0 && y<naxis2; }
-
+   
    /**
     * Détermination du min et max des pixels passés en paramètre
     * Met à jour les variables minPixCut et maxPixCut
@@ -2879,15 +2880,29 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
           aladin.calque.select.repaint();
 
           try {
-             int w=Math.min(1024,width);
+             int w = width/2  -Math.min(1024,width)/2;
              int h=Math.min(1024,height);
              int x = width/2  -w/2;
              int y = height/2 -h/2;
+             
+             // Jamais encore teste
+//             if( Projection.isOk(projd) ) {
+//                Coord c = new Coord(aladin.view.repere.raj,aladin.view.repere.dej);
+//                projd.getXY(c);
+//                x = (int)c.x;
+//                y = (int)c.y;
+//                ViewSimple v = aladin.view.getCurrentView();
+//                if( v.pref==this ) {
+//                   h = w = (int)( v.getTaille()/projd.getPixResDelta() )/2 ;
+//                }
+//             }
+             
              buf = new byte[w*h*npix];
              getPixelsFromCache(buf,npix,x,y,w,h);
              findMinMax(buf,bitpix,w,h,min,max,autocut,0);
              min=pixelMin; max=pixelMax;
 
+//             aladin.trace(4,"PlanImage.recut("+min+","+max+","+autocut+") on ["+x+","+y+"-"+w+"x"+h+"] => min="+min+" max="+max);
              buf = new byte[len];
              openCache();
              fCache.seek( cacheOffset );
@@ -2932,15 +2947,15 @@ Aladin.trace(3," => Waiting for server during "+temps+" ms");
    * @param n nombre d'octets par pixel
    * @return la marge a enlever en pixels pour que ca tienne en memoire, -1 si pb
    */
-   private int getMarge(int maxmem,int width, int height, int n) {
-      double a = 4, b=-2*(width+height), c=width*height-maxmem/n;
-      double marge = (-b-Math.sqrt(b*b-4*a*c))/(2*a);
-      marge += marge%n;
-      if( marge<0 || marge>width/2 ) {
-         marge=-1;	// Probleme !!
-      }
-      return (int)marge;
-   }
+//   private int getMarge(int maxmem,int width, int height, int n) {
+//      double a = 4, b=-2*(width+height), c=width*height-maxmem/n;
+//      double marge = (-b-Math.sqrt(b*b-4*a*c))/(2*a);
+//      marge += marge%n;
+//      if( marge<0 || marge>width/2 ) {
+//         marge=-1;	// Probleme !!
+//      }
+//      return (int)marge;
+//   }
 
 
    /** Cherche dans l'entête FITS les paramètres optionnels qui
@@ -3353,7 +3368,7 @@ Aladin.trace(2,"Loading PDS image");
     */
    public boolean setCmParam(String s) {
       int i;
-      boolean flagCM=false,flagPixel=false;
+      boolean flagCM=false,flagPixel=false,flagRescan=false;
       double minPix = pixelMin; // par défaut, on reprend le min/max du dernier cut
       double maxPix = pixelMax; // --
 //      boolean autocut=true;      // par défaut on applique l'autocut
@@ -3395,6 +3410,10 @@ Aladin.trace(2,"Loading PDS image");
             autocut=false;
             flagPixel=true;
 
+            // Faut-il ne pas appliquer un rescan ?
+         } else if( s.equalsIgnoreCase("rescan")) {
+            flagRescan=true;
+
             // Faut-il prendre tous les pixels ?
          } else if( s.equalsIgnoreCase("all") ) {
             minPix=this.dataMin;
@@ -3426,12 +3445,18 @@ Aladin.trace(2,"Loading PDS image");
                video==VIDEO_INVERSE,typeCM,transfertFct);
          setCM(cm);
       }
-
+      
+      // On doit faire un rescan
+      if( flagRescan ) {
+         if( !(this instanceof PlanBG) || !((PlanBG)this).isTruePixels() ) return false;
+         ((PlanBG)this).forceReload();
+      }
+      
       // On doit changer les pixels !
-      if( flagPixel) recut(minPix,maxPix,autocut);
+      else if( flagPixel) recut(minPix,maxPix,autocut);
 
       // on a rien pu changer !!
-      if( !flagCM && !flagPixel ) return false;
+      if( !flagCM && !flagPixel && !flagRescan ) return false;
 
       if( aladin.frameCM!=null ) aladin.frameCM.majCMByScript(this);
       changeImgID();

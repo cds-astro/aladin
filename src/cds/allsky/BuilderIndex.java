@@ -195,7 +195,7 @@ public class BuilderIndex extends Builder {
       statBlocFile += deltaBlocFile;
       if( (code & Fits.GZIP) !=0 ) statNbZipFile++;
       long size = f.length();
-      statPixSize += width*height;
+      statPixSize += width*height*depth;
       statMemFile += size;
       if( statMaxSize<size ) {
          statMaxSize=size;
@@ -219,12 +219,23 @@ public class BuilderIndex extends Builder {
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
    private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
    throws IOException {
+            
+      // Détermination d'un nom de produit à partir du filename
+      // 1.Suppression du path
       int o1 = filename.lastIndexOf('/');
       int o1b = filename.lastIndexOf('\\');
       if( o1b>o1 ) o1=o1b;
+      
+      // 2.Suppression d'une extension ?
       int o2 = filename.lastIndexOf('.');
+      
+      // 3.Suppression du suffixe [x,y-wxh] si nécessaire
+      int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
+      if( o3>o2 ) o2=o3;
+      
       if( o2==-1 || o2<=o1 ) o2 = filename.length();
       String name = filename.substring(o1+1,o2);
+      
       if( fitsVal==null ) fitsVal="";
       
       DataOutputStream dataoutputstream = null;

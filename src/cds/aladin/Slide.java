@@ -711,7 +711,9 @@ public final class Slide {
                                  || (p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting) 
                                  || (p instanceof PlanBG && ((PlanBG)p).isLoading()) )) )
                      {
-                        if( flag ) drawBlink(g,px,py-9,Color.orange,green);
+                        if( flag ) {
+                           drawBlink(g,px,py-9,Color.white,green);
+                        }
                         else drawBlink(g,px1,py-9);
                         
                         setBlink(true);

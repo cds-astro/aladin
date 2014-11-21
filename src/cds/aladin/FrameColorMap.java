@@ -548,10 +548,11 @@ public final class FrameColorMap extends JFrame implements ActionListener {
       // Les boutons
       b=getButton(REVERSE); validation.add(b);
       validation.add(new JLabel("  "));
-      b=getButton(RESET); validation.add(b);
       if( pimg instanceof PlanBG && ((PlanBG)pimg).isTruePixels() ) {
          b=getButton(RESCAN); validation.add(b);
+         Util.toolTip(b, aladin.chaine.getString("CMRESETBGTIP"));
       }
+      b=getButton(RESET); validation.add(b);
       if( isPlanRGB || isPlanBlink ) {
          b=getButton(CLOSE); validation.add(b);
       }

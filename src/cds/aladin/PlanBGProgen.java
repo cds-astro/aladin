@@ -26,6 +26,7 @@ import java.util.TreeMap;
 
 import cds.allsky.BuilderDetails;
 import cds.allsky.Constante;
+import cds.tools.Util;
 
 public class PlanBGProgen extends PlanBGCat {
 
@@ -43,21 +44,58 @@ public class PlanBGProgen extends PlanBGCat {
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
       scanProperties();
+      
+      // Récupération d'un éventuel minorder
+      if( prop!=null ) {
+         String s = prop.getProperty(PlanHealpix.KEY_MINORDER);
+         if( s!=null ) {
+            try { minOrder = Integer.parseInt(s); }
+            catch( Exception e ) {}
+         }
+      }
+
       frameOrigin=Localisation.ICRS;
       url = gluSky.getUrl();
       local = gluSky.isLocal();
-      survey = getAssociatedSurvey()+cds.tools.Util.FS+survey;
+      if( survey.equals(Constante.HPX_FINDER) ) survey = getAssociatedSurvey() + cds.tools.Util.FS + survey;
       loadGenericLegende();
+   }
+   
+   // retourne le nom du survey HiPS associé à ces progéniteurs.
+   private String getAssociatedSurvey() {
+      String dir = getAssociatedSurveyByProperties();
+      if( dir==null ) dir = getAssociatedSurveByUrl();
+      aladin.trace(3,"Associated HiPS survey ["+dir+"]");
+      return dir;
+   }
+   
+   // Retourne le nom du survey associé (le cherche dans les properties du
+   // HiPS parent (si il existe), null sinon
+   private String getAssociatedSurveyByProperties() {
+      String s = url.replace('\\','/');
+      int fin = s.lastIndexOf("/"+Constante.HPX_FINDER);
+      if( fin==-1 ) return null;
+      String propPath = s.substring(0,fin)+"/"+PlanHealpix.PROPERTIES;
+      MyInputStream in=null;
+      try {
+         in = cds.tools.Util.openStream(propPath);
+         prop = new MyProperties();
+         prop.load(in);
+         String label = prop.getProperty("label");
+         if( label!=null ) return label;
+      }
+      catch( Exception e ) {}
+      finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
+      return null;
    }
    
    // Retourne le nom du survey associé (se base sur le fait que HpxFinder
    // est précédé du nom du survey
-   private String getAssociatedSurvey() { 
+   private String getAssociatedSurveByUrl() { 
       String s = url.replace('\\','/');
       int fin = s.lastIndexOf("/"+Constante.HPX_FINDER);
       int deb = s.lastIndexOf('/', fin-1);
       String associatedSurvey = s.substring(deb+1,fin);
-//      System.out.println("URL => "+url+" ["+associatedSurvey+"]");
       return associatedSurvey; 
    }
 
@@ -122,7 +160,7 @@ public class PlanBGProgen extends PlanBGCat {
 //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
       
       // On n'a pas assez zoomé pour afficher le contenu des losanges
-      if( order<BuilderDetails.MINORDER && maxOrder>=BuilderDetails.MINORDER ) {
+      if( (order<BuilderDetails.MINORDER || order<minOrder) && maxOrder>=BuilderDetails.MINORDER ) {
          return false;
       }
       if( order>maxOrder ) order=maxOrder;
@@ -143,9 +181,9 @@ public class PlanBGProgen extends PlanBGCat {
 
          HealpixKeyProgen healpix = (HealpixKeyProgen)getHealpix(order,pix[i], true);
          if( healpix==null ) continue;            // Inconnu => on ne dessine pas
-         healpix.priority=250-(priority++);       // Positionnement de la priorité d'affichage
          int status = healpix.getStatus();
          if( status==HealpixKey.ERROR ) continue; // Losange erroné ?
+         healpix.priority=250-(priority++);       // Positionnement de la priorité d'affichage
          if( status==HealpixKey.ABORTING ) healpix.setStatus(HealpixKey.ASKING,true); // On change d'avis
          if( status!=HealpixKey.READY ) { moreDetails = true; continue; }             // Pas encore prêt
 
@@ -170,7 +208,7 @@ public class PlanBGProgen extends PlanBGCat {
          Iterator<Obj> it = pcat.iterator();
          while( it.hasNext() ) {
             Source src = (Source)it.next();
-            String id = src.id;
+            String id = src.id+src.raj+src.dej;
             boolean isInMap = map.containsKey(id); 
             if( isInMap || src.isSelected() ) map.put(id,src);
          }

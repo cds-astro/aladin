@@ -21,6 +21,8 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import java.util.TimeZone;
 import java.util.Vector;
 
 import cds.aladin.Aladin;
+import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
@@ -110,6 +113,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("verbose"))    { Context.setVerbose(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("blank"))      { context.setBlankOrig(Double.parseDouble(val));
       } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("minOrder"))   { context.setMinOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("diffOrder"))  { context.setDiffOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
@@ -293,13 +297,30 @@ public class HipsGen {
       boolean all=false;
       if( actions.size()==0 ) {
          all=true;
-         actions.add(Action.INDEX);
-         actions.add(Action.TILES);
+         
+         // S'agirait-il d'une map HEALPix
+         boolean flagMapFits=false;
+         File f = new File(context.getInputPath());
+         if( !f.isDirectory() && f.exists() ) {
+            try {
+               MyInputStream in = new MyInputStream( new FileInputStream(f));
+               in = in.startRead();
+               flagMapFits = (in.getType() & MyInputStream.HEALPIX)!=0;
+               in.close();
+            } catch( Exception e ) { }
+         }
+         
+         if( flagMapFits ) actions.add(Action.MAPTILES);
+         else {
+            actions.add(Action.INDEX);
+            actions.add(Action.TILES);
+         }
 
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
+            actions.add(Action.JPEG);
             actions.add(Action.PNG);
-            actions.add(Action.DETAILS);
+            if( !flagMapFits ) actions.add(Action.DETAILS);
          }
       }
      
@@ -313,6 +334,7 @@ public class HipsGen {
                     if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
                else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
                else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
+               else if( a==Action.MAPTILES ){ actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.JPEG )    { actions.add(i, Action.CLEANJPEG);    i++; }
                else if( a==Action.PNG )     { actions.add(i, Action.CLEANPNG);     i++; }
                else if( a==Action.CUBE )    { actions.add(i, Action.CLEAN);        i++; }
@@ -385,6 +407,7 @@ public class HipsGen {
             "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+            "minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
             "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
             "label=name         Label of the survey (by default, input directory name)" + "\n"+
             "target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
@@ -410,6 +433,7 @@ public class HipsGen {
 //            "MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
             "ALLSKY     "+Action.ALLSKY.doc() + "\n"+
             "TREE       "+Action.TREE.doc() + "\n"+
+            "MAPTILES   "+Action.MAPTILES.doc() + "\n"+
             "CONCAT     "+Action.CONCAT.doc() + "\n"+
             "CUBE       "+Action.CUBE.doc() + "\n"+
             "GZIP       "+Action.GZIP.doc() + "\n"+

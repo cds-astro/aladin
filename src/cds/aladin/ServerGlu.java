@@ -587,6 +587,8 @@ public class ServerGlu extends Server implements Runnable {
             if( posEgal>0 && cr.charAt(posEgal-1)!='\\' ) {
                String cName=cr.substring(0,posEgal).trim().toUpperCase();
                s = cr.substring(posEgal+1).trim();
+               s = Tok.unQuote(s);
+               
                //System.out.print(".Recherche initiale pour "+cName+"="+s);
 
                // Recherche du paramètre correspondant

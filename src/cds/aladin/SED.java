@@ -101,8 +101,19 @@ class SED extends JPanel {
     * si l'utilisateur déplace la souris sur le SED */
    protected void setRepere(Repere simRep) { this.simRep=simRep; }
    
+   
+   static boolean first=true;
+   
    /** Mémorise le source associée au SED */
-   protected void setSource(String source) { this.source=source; }
+   protected void setSource(String source) { 
+      if( source==null && first ) {
+         System.out.println("SED.setSource("+source+")");
+         first=false;
+         try { throw new Exception("ICI"); }
+         catch( Exception e ) { e.printStackTrace(); }
+      }
+      this.source=source;
+   }
    
    /** Mémorise le rayon associé au SED */
    protected void setRadius(double radius) { this.radius = radius; }
@@ -626,7 +637,12 @@ class SED extends JPanel {
    }
    
    private void more() {
-      if( source==null ) return;
+      if( source==null ) {
+         System.out.println("SED.more() source=null");
+         return;
+      }
+      System.out.println("SED.more() source="+source);
+      
       // Je dois utiliser le %20 plutôt que le '+' pour l'encodage des blancs
       // parce que l'outil VizieR photometry ne les supporte pas
       // CE N'EST PLUS LA PEINE
@@ -672,6 +688,7 @@ class SED extends JPanel {
 
       // Y a-t-il un point de SED sous la souris ?
       siIn=null;
+      if( sedList==null ) return;
       for( SEDItem si : sedList ) si.highLight=false;
       for( SEDItem si : sedList ) {
          if( si.contains(x,y) ) {

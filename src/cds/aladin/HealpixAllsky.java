@@ -50,7 +50,7 @@ class HealpixAllsky extends HealpixKey {
       resetTimer();
       String sZ = z<=0 ? "" : "_"+z;
       String nameNet = "Norder"+order+"/Allsky"+sZ;
-      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky"+sZ;
+      String nameCache = planBG.getCacheName()+"/"+"Norder"+order+"/Allsky"+sZ;
       extCache=extNet=planBG.getTileMode();
 //      if( planBG.truePixels ) extCache=extNet=FITS;
 //      else if( planBG.inPNG && !planBG.inJPEG ) extCache=extNet=PNG;
@@ -118,8 +118,7 @@ class HealpixAllsky extends HealpixKey {
    static boolean isCached(PlanBG planBG,int order) {
       String pathName = planBG.getCacheDir();
       if( pathName==null ) return false;
-//      String name = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky"+ (planBG.truePixels ? ".fits" : planBG.color ? ".jpg" : ".fits");
-      String name = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky"+ EXT[planBG.getTileMode()];
+      String name = planBG.getCacheName()+"/"+"Norder"+order+"/Allsky"+ EXT[planBG.getTileMode()];
       pathName = pathName+Util.FS+name;
       File f= new File(pathName);
       return f.exists() && f.canRead();

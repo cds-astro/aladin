@@ -242,9 +242,6 @@ public class PlanBGCat extends PlanBG {
             // Inconnu => on ne dessine pas
             if( healpix==null ) continue;
             
-            // Positionnement de la priorité d'affichage
-            healpix.priority=250-(priority++);
-
             int status = healpix.getStatus();
 //            debug.append(","+pix[i]+HealpixKey.STATUS[status]);
 
@@ -253,6 +250,9 @@ public class PlanBGCat extends PlanBG {
 
             // On change d'avis
             if( status==HealpixKey.ABORTING ) healpix.setStatus(HealpixKey.ASKING,true);
+            
+            // Positionnement de la priorité d'affichage
+            healpix.priority=250-(priority++);
 
             // Losange à gérer
             healpix.resetTimer();
@@ -310,7 +310,7 @@ public class PlanBGCat extends PlanBG {
       int nb=0;
       for( HealpixKey healpix : pixList.values() ) {
          if( healpix.order<=order ) continue;
-         if( healpix.allSky ) continue;
+//         if( healpix.allSky ) continue;
          if( healpix.getStatus()!=HealpixKey.READY ) continue;
          if( !((HealpixKeyCat)healpix).pcat.hasSelectedOrTaggedObj() ) continue;
          if( healpix.isOutView(v) ) continue;
@@ -484,6 +484,7 @@ public class PlanBGCat extends PlanBG {
       ObjIterator(ViewSimple v) {
          super();
          order = v!=null ? getCurrentMaxOrder(v) : -1;
+         if( order==1 ) order=2;
       }
 
       public boolean hasNext() {

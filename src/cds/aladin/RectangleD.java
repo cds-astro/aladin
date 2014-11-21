@@ -53,6 +53,8 @@ public class RectangleD {
    }
    
    public boolean equals(RectangleD r) {
+      if( r==this ) return true;
+      if( r==null ) return false;
       return x==r.x && y==r.y && width==r.width && height==r.height;
    }
    

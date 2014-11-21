@@ -39,7 +39,13 @@ public class SliderDensity extends SliderPlusMoins {
       Plan [] p = getPlanCatalog();
       if( p==null  ) return;
       for( Plan p1 : p ) {
-         try { ((PlanBGCat)p1).setGapOrder((int)slider.getValue()+inc);
+         try {
+            if( p1 instanceof PlanBGCat )  {
+               ((PlanBGCat)p1).setGapOrder((int)slider.getValue()+inc);
+            } else {
+               ((PlanMoc)p1).setGapOrder((int)slider.getValue()+inc);
+
+            }
          } catch( Exception e ) { }
       }
       //      aladin.calque.setScalingFactor(n);
@@ -52,15 +58,20 @@ public class SliderDensity extends SliderPlusMoins {
       
       // Décompte des plans concernés
       int n=0;
-      for( Plan p1 : p ) if( p1.selected && p1.type==Plan.ALLSKYCAT ) n++;
+      for( Plan p1 : p ) if( isOk(p1) ) n++;
       if( n==0 ) return null;
       
       // Génération du tableau des plans concernés
       Plan [] p2 = new Plan[n];
       n=0;
-      for( Plan p1 : p ) if( p1.selected && p1.type==Plan.ALLSKYCAT ) p2[n++]=p1;
+      for( Plan p1 : p ) if( isOk(p1) ) p2[n++]=p1;
       
       return p2;
+   }
+   
+   private boolean isOk(Plan p) {
+      return p.selected && 
+            (p.type==Plan.ALLSKYCAT || p.type==Plan.ALLSKYMOC );
    }
    
    public void paintComponent(Graphics g) {

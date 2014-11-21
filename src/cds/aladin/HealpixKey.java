@@ -111,6 +111,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean allSky;      // true si ne doit jamais être effacé
    protected boolean fromNet=true;// true si le losange provient du réseau et non du cache
    protected int timeStream;      // stat de lecture du stream, 
+   protected int timeNet;         // stat de lecture du stream via le net
+   protected long sizeStream;     // Nombre d'octets du stream
    private int timeJPEG, timePixel;  // stat de la création de l'image, de l'extraction des pixels
    private int typeColor;         // Mode couleur JPEG ou PNG
 
@@ -138,7 +140,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static protected final int PNG =4;
    static protected final int IDX =5;
 
-   static final String[] EXT = { ".jpg",".fits",".tsv",".xml",".png","" };
+   static final public String[] EXT = { ".jpg",".fits",".tsv",".xml",".png","" };
 
    protected int extCache=JPEG;         // Format d'image pour le cache
    protected int extNet=JPEG;           // Format d'image pour le net
@@ -155,6 +157,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static public final int ASYNC  = 1;
    static public final int SYNC   = 2;
    static public final int SYNCONLYIFLOCAL   = 3;
+   static public final int TESTNET   = 4;
 
    /**
     * Création d'un losange Healpix
@@ -164,6 +167,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @param z      profondeur (dans le cas d'un cube, 0 sinon)
     * @param mode : NOLOAD - pas de chargement, ASYNC - chargement asynchrone, SYNC - chargement synchrone, 
     *               SYNCONLYIFLOCAL - chargement synchrone si accès local, sinon asynchrone
+    *               NETTEST - Uniquement pour tester le temps de chargement réseau
     */
    protected HealpixKey(PlanBG planBG,int order, long npix,int mode) {
       this(planBG,order,npix,(int)planBG.getZ(),mode);
@@ -189,7 +193,16 @@ public class HealpixKey implements Comparable<HealpixKey> {
       
       // Chargement immédiat des données
       try {
-         if(  mode==SYNC ||
+         
+         // Juste pour un test - temps récupéré dans "timeStream"
+         if( mode==TESTNET ) {
+            stream = loadStream(planBG.url+"/"+fileNet);
+            if( stream!=null ) sizeStream = stream.length;
+            stream=null;
+         }
+         
+         // Normal
+         else if(  mode==SYNC ||
              (mode==SYNCONLYIFLOCAL && (planBG.useCache && isCached() || planBG.isLocalAllSky())) ) loadNow();
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
@@ -201,7 +214,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
    
    protected String getFileCache() {
-      return getFilePath(planBG.survey+planBG.version,order,npix,z)+ EXT[extCache];
+      return getFilePath(planBG.getCacheName(),order,npix,z)+ EXT[extCache];
    }
 
    /** Création d'un losange Healpix en fonction de son père (sous-échantillonnage)
@@ -423,7 +436,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       setStatus(LOADINGFROMNET);
       try {
 
-         long t = System.currentTimeMillis();
+//         long t = System.currentTimeMillis();
          String fileName = planBG.url+"/"+fileNet;
          
          char c = planBG.url.charAt(planBG.url.length()-1);
@@ -438,7 +451,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.nbLoadNet++;
          parente=0;
          fromNet=true;
-         planBG.cumulTimeLoadNet+=(System.currentTimeMillis()-t);
+         planBG.cumulTimeLoadNet+= timeNet;
          planBG.cumulTimeStream += timeStream;
          planBG.cumulTimeJPEG += timeJPEG;
          planBG.cumulTimePixel += timePixel;
@@ -707,6 +720,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     protected byte [] loadStream(String filename) throws Exception { return loadStream(filename,0); }
     protected byte [] loadStream(String filename,int skip) throws Exception {
        byte [] buf;
+       boolean local=true;
        long t1 = Util.getTime();
 //       planBG.aladin.trace(4,"loadStream("+filename+")...");
        MyInputStream dis=null;
@@ -714,6 +728,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
        
        // Fichier distant
        if( filename.startsWith("http://") ) {
+          local=false;
           try {
              dis = Util.openStream(filename,false,10000);
              if( skip>0 ) dis.skip(skip);
@@ -754,7 +769,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
           }
        }
        
-       timeStream = (int)(Util.getTime()-t1);
+       // Stats de lecture
+       int t = (int)(Util.getTime()-t1);
+       if( local ) timeStream = t;
+       else timeNet = t;
+       
        return buf;
     }
     
@@ -858,6 +877,42 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return pix;
    }
    
+   
+   /** Retourne un tableau w*w pixels d'origine (sous forme de byte[]) centré sur le pixel
+    * repéré par  healpixIdxPixel, null sinon */
+   protected byte [] getSample(Coord coo, int w, byte [] pixelsOrigin, int width ) throws Exception {
+
+      coo = Localisation.frameToFrame(coo,Localisation.ICRS,planBG.frameOrigin);
+      if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) throw new Exception();
+      
+      double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
+      long nside = CDSHealpix.pow2(order+ CDSHealpix.log2(width) );
+      long healpixIdxPixel = CDSHealpix.ang2pix_nest( nside, polar[0], polar[1]);
+
+      long startIdx =  npix * (long)width * (long)width;
+
+      if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
+         planBG.createHealpixOrder( (int)CDSHealpix.log2(width) );
+      }
+      int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
+      int xc = idx%width;
+      int yc = idx/width;
+      int n = Math.abs(planBG.bitpix)/8;
+
+      int w2=w/2;
+      byte sample[] = new byte[ w*w*n ];
+      for( int i=0; i<w*w; i++ ) PlanImage.setPixVal(sample, planBG.bitpix, i, planBG.blank);
+
+      int posSample = 0;
+      for( int y=yc-w2; y<yc+(w-w2); y++ ) {
+         for( int x=xc-w2; x<xc+(w-w2); x++ ) {
+            if( x<0 || x>=width || y<0 || y>=width ) continue;
+            int pos = (y*width+x)*n;
+            for( int i=0; i<n; i++ ) sample[posSample++] = pixelsOrigin[pos+i];
+         }
+      }
+      return sample;
+   }
       
    /** Retourne true si dans l'entête on trouve "COLORMOD  ARGB" */
    protected boolean isARGB(byte[] head){
@@ -870,12 +925,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    // Lecture d'un pixel full bits en position i (numéro de pixel) dans le tableau t[], codage bitpix
    final private int getPixValInt(byte[]t ,int bitpix,int i) {
+      PlanImage.getPixVal1(t, bitpix, i);
       switch(bitpix) {
          case   8: return ((t[i])&0xFF);
          case  16: i*=2;
-         return ( ((t[i])<<8) | (t[i+1])&0xFF );
+                   return ( ((t[i])<<8) | (t[i+1])&0xFF );
          case  32: i*=4;
-         return  ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF ;
+                   return  ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF ;
       }
       return 0;
    }
@@ -1003,7 +1059,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          byte [] in = new byte[taille];
          System.arraycopy(stream, 2880, in, 0, taille);
          
-         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut;
+         boolean flagInit = planBG.bitpix==0 || planBG.flagRecut ;
          
          if( flagInit ) {
             boolean init = planBG.bitpix==0;
@@ -1038,10 +1094,27 @@ public class HealpixKey implements Comparable<HealpixKey> {
             }
 
             if( !flagPixelCut && !flagPixelRange ) {
-               Fits tmp = new Fits(width,height,bitpix);
+               
+               // Je fais un autocut, soit sur la totalité du losange, soit sur une portion de celui-ci
+               // centrée sur un pixel particulier
+               int w = width;
+               if( planBG.flagRecutRadius>0 ) {
+                  double angRes = CDSHealpix.pixRes( CDSHealpix.pow2(order + CDSHealpix.log2(width) ) ) / 3600;
+                  w = (int)( planBG.flagRecutRadius/ angRes );
+               }
+               if( w>width ) w=width;
+                                               
+               Fits tmp = new Fits(w,w,bitpix);
                if( planBG.isBlank ) tmp.setBlank(planBG.blank);
                tmp.pixels = in;
+               if( planBG.flagRecutRadius>0 && w!=width) {
+                  try { tmp.pixels = getSample(planBG.flagRecutCoo, w, in, width); }
+                  catch( Exception e ) {
+                     if( planBG.aladin.levelTrace>=3 ) e.printStackTrace();
+                  }
+               }
                double [] range = tmp.findAutocutRange(0,0,true);
+               
                if( !flagPixelCut ) {
                   planBG.pixelMin = pixelMin = range[0];
                   planBG.pixelMax = pixelMax = range[1];
@@ -1051,7 +1124,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   planBG.dataMax  = range[3];
                }
 
-               planBG.aladin.trace(3,"Pixel range detection on "+getStringNumber()+" NaN="+Util.round(range[4]*100,1)
+               planBG.aladin.trace(3,"Pixel range detection on "+getStringNumber()+"["+w+"x"+w+"] NaN="+Util.round(range[4]*100,1)
                      +"% => PixelMinMax=["+Util.myRound(planBG.pixelMin)+","+Util.myRound(planBG.pixelMax)+"], " +
                      "DataMinMax=["+Util.myRound(planBG.dataMin)+","+Util.myRound(planBG.dataMax)+"] "+(planBG.isBlank?" Blank="+planBG.blank:"")
                      +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
@@ -1079,7 +1152,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          in=null;
       }
       
-      return 2880+taille;
+      return stream.length; //2880+taille;
    }
    
    private double [] split(String s) {
@@ -1741,7 +1814,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //               }
 //            }
             try {
-               if( !drawFast && !allSky && isTooLarge(b) ) {
+               if( !drawFast && /* !allSky && */ isTooLarge(b) ) {
                   resetTimer();
                   int m = drawFils(g,v,8/*,redraw*/);
 

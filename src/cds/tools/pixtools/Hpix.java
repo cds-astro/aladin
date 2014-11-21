@@ -90,26 +90,44 @@ public final class Hpix extends MocCell {
    }
    
    /** Trace les bords du losange, de sommet à sommet */
-   public void draw(Graphics g,ViewSimple v,boolean border,boolean diag) {
+   public void draw(Graphics g,ViewSimple v,boolean border) {
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
       boolean drawnOk=true;
       
       // Taille max d'un segment => sinon sans doute passe derrière le ciel
-      double maxSize=getMaxSize(v);
+//      double maxSize=getMaxSize(v);
       
+      double min=Double.MAX_VALUE;
       for( int i=0; i<4; i++ ) {
          int d = ORDRE[ i==0 ? 3 : i-1 ];
          int f = ORDRE[i];
          if( b[d]==null || b[f]==null ) { drawnOk=false; continue; }
-         if( HealpixKey.dist(b,d,f)>maxSize*maxSize ) { drawnOk=false; continue; }
-         if( border ) g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
+         double dist = Math.sqrt(HealpixKey.dist(b,d,f));
+         if( dist<min ) min=dist;
       }
+      if( min==Double.MAX_VALUE ) min=0;
       
-      if( drawnOk && diag ) {
-         g.drawLine((int)b[0].x,(int)b[0].y, (int)b[3].x,(int)b[3].y);
-         g.drawLine((int)b[2].x,(int)b[2].y, (int)b[1].x,(int)b[1].y);
+      if( drawnOk ) {
+         for( int i=0; i<4; i++ ) {
+            int d = ORDRE[ i==0 ? 3 : i-1 ];
+            int f = ORDRE[i];
+            if( b[d]==null || b[f]==null ) { drawnOk=false; continue; }
+            double dist =  Math.sqrt(HealpixKey.dist(b,d,f));
+            if( dist>1 && min>0 && dist>6*min ) { drawnOk=false; continue; }
+            if( border ) g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
+         }
       }
+   }
+   
+   /** Retourne le carré de la taille de la plus grande diagonale projetée */
+   public double getDiag2(ViewSimple v) {
+      PointD [] b = getProjViewCorners(v);
+      if( b==null ) return 0;
+      if( b[0]==null || b[1]==null ||b[2]==null ||b[3]==null ) return 0;
+      double d0 = HealpixKey.dist(b,3,0);
+      double d1 = HealpixKey.dist(b,2,1);
+      return Math.max(d0,d1);
    }
    
    /** Retourne les coordonnées X,Y des 4 coins du losange dans la projection de

@@ -903,8 +903,9 @@ try {
          sed.clear();
          flagSED=true;
          flagHist=false;
+         
          sed.addFromIterator( aladin.mesure.iterator() );
-         sed.setSource(null);
+//         sed.setSource(null);   // Pas possible d'ouvvrir l'outil d'Anne-Camille sinon
          sed.setHighLight(o);
       }
       repaint();

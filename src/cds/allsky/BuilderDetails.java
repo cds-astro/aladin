@@ -23,8 +23,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
+import sun.security.action.GetLongAction;
 import cds.aladin.Aladin;
 import cds.aladin.HealpixProgen;
+import cds.aladin.Localisation;
+import cds.aladin.MyProperties;
+import cds.aladin.PlanHealpix;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles d'index à partir des tuiles de plus bas
@@ -45,6 +50,7 @@ public class BuilderDetails extends Builder {
    
    private int detailOrder;
    private int maxOrder;
+   private long nbItemPerOrder[];
 
    private int statNbFile;
    private long startTime,totalTime;
@@ -75,19 +81,29 @@ public class BuilderDetails extends Builder {
       if( maxOrder==-1 ) throw new Exception("HpxFinder seems to be not yet ready ! (order=-1)");
       context.info("Order retrieved from HpxFinder => "+maxOrder);
       
-      validateImgWidth();
-      if( context.typicalImgWidth==-1 ) {
-         detailOrder = context.getOrder();
-         if( detailOrder==-1 ) throw new Exception("Typical original image size unknown => specify the target Order via \"order=\" parameter !");
-      } else detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -2; //-1;
+      // Pour compatibilité - on passait "order=xx" pour indiquer le minOrder avant a version 8.118
+      if( context.getOrder()<maxOrder )  context.setMinOrder(context.getOrder());
+      
       context.setOrder(maxOrder); // juste pour que les statistiques de progression s'affichent correctement
       
+      detailOrder = context.getMinOrder();
+      if( detailOrder!=-1 ) {
+         context.info("Detail table min order determined by \"minOrder\" parameter => "+detailOrder);
+      } else {
+
+         validateImgWidth();
+         if( context.typicalImgWidth==-1 ) {
+            detailOrder = maxOrder - 5;
+            context.warning("Detail table min order determined in function of max order => "+detailOrder);
+         } else {
+            detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -2; //-1;
+            context.info("Detail table min order determined by original image resolution => "+detailOrder);
+         }
+      }
       if( detailOrder<MINORDER ) detailOrder=MINORDER;
       if( detailOrder>maxOrder ) {
          context.warning("The target Order ("+detailOrder+") is greater than the index order ("+maxOrder+") => assuming "+maxOrder+"...");
          detailOrder=maxOrder;
-      } else {
-         context.info("Detail table at order "+detailOrder);
       }
 
       context.initRegion();
@@ -118,23 +134,41 @@ public class BuilderDetails extends Builder {
       context.showJpgStat(statNbFile, totalTime,0,0);
    }
    
-
    public void build() throws Exception {
       initStat();
       context.setProgressMax(768);
       String output = context.getHpxFinderPath();
       HealpixProgen allsky=null;
+      nbItemPerOrder = new long[maxOrder+1];
       
       for( int i=0; i<768; i++ ) {
          HealpixProgen hi = createTree(output,3,i);
-         if( hi!=null /* && !allsky.hasTooMany() */ ) {
+         if( hi!=null ) {
             if( allsky==null ) allsky  = new HealpixProgen();
-            allsky.putAll(hi);
+            if( !allsky.hasTooMany() ) {
+               allsky.merge(hi);
+               if( allsky.size()>HealpixProgen.TOOMANY ) allsky.setTooMany(true);
+            }
          }
          context.setProgress(i);
       }
       
-      if( allsky!=null /* && !allsky.hasTooMany() */ ) {
+      
+      // Suppression des niveaux ayant trop d'entrées.
+      if( detailOrder>3 ) {
+         long size=768;
+         int o;
+         for( o=3; o<detailOrder && nbItemPerOrder[o]> HealpixProgen.TOOMANY * size; o++, size *=4 ) {
+            String file = cds.tools.Util.concatDir(output, "Norder"+o);
+            context.info("Removing HpxFinder detail order "+o+" (too many entries ["+nbItemPerOrder[o]+"])...");
+            cds.tools.Util.deleteDir( new File(file) );
+            if( o==3 ) allsky=null;
+         }
+         detailOrder=o;
+      }
+      
+      // Génération du Allsky si nécessaire
+      if( allsky!=null && !allsky.hasTooMany() ) {
          String file = BuilderAllsky.getFileName(context.getHpxFinderPath(), 3,0);
 //         System.out.println("Create "+file);
          writeIndexFile(file, allsky);
@@ -176,15 +210,26 @@ public class BuilderDetails extends Builder {
       }
       
       // Si on a trop de Progen
-//      if( order<maxOrder && out!=null && out.size()>HealpixIndex.TOOMANY ) out.setTooMany(true);
+      if( order<detailOrder && out!=null && out.size()>HealpixProgen.TOOMANY ) {
+         out.setTooMany(true);
+      }
 
-      if( out!=null /* && !out.hasTooMany() */ && context.isInMocTree(order,npix) && order>=detailOrder) {
-         writeIndexFile(file,out);
-         Aladin.trace(4, "Writing " + file);
+      if( out!=null && context.isInMocTree(order,npix) /* && order>=detailOrder */ ) {
+         
+         // calcule du nombre d'entrées par niveau
+         nbItemPerOrder[order] += out.size();
 
+         if( !out.hasTooMany() ) {
+            writeIndexFile(file,out);
+            Aladin.trace(4, "Writing " + file);
+         }
       }
       
-      if( order<detailOrder ) return null;
+      if( out!=null && out.hasTooMany() ) out=null;
+      
+      
+      
+//      if( order<detailOrder ) return null;
       return out;
    }
    
@@ -213,8 +258,8 @@ public class BuilderDetails extends Builder {
       HealpixProgen out = new HealpixProgen();
       for( int i=0; i<4; i++ ) {
          if( fils[i]==null ) continue;
-//         if( fils[i].hasTooMany() ) { out.setTooMany(true); break; }
-         out.putAll(fils[i]);
+         if( fils[i].hasTooMany() ) { out.setTooMany(true); break; }
+         out.merge(fils[i]);
          fils[i]=null;
       }
       
@@ -270,11 +315,11 @@ public class BuilderDetails extends Builder {
                "      <TD>$[ra]</TD>\n" +
                "      <TD>$[dec]</TD>\n" +
                "      <TD>$[name]</TD>\n" +
-               "      <TD>$[path]</TD>\n" +
+               "      <TD>$[path:([^\\[]*).*]</TD>\n" +
                "      <TD>$[stc]</TD>\n" +
                "      <!-- Extended example via prefix and regular expression mapping\n" +
                "           (here, the instrument name is coded in the original path after \"data\" directory)\n" +
-               "           <TD>Instr.: $[path:.*/data/(.*+)/.*]</TD> \n" +
+               "           <TD>Instrument: $[path:.*/data/(.+)/.*]</TD> \n" +
                "        -->\n" +
                "      </TR>\n" +
                "   </TABLEDATA>\n" +
@@ -299,7 +344,31 @@ public class BuilderDetails extends Builder {
          context.info("Mapping hpxFinder/"+Context.METADATA+" file has been generated");
       }
 
+      writeProperties();
       context.writeIndexHtml();
+   }
+   
+   // On écrit le fichier des propriétés
+   private void writeProperties() throws Exception {
+      int frame = context.getFrame();
+      
+      MyProperties prop = new MyProperties();
+      prop.setProperty(PlanHealpix.KEY_LABEL, context.getLabel()+"/"+Constante.HPX_FINDER);
+      prop.setProperty(PlanHealpix.KEY_ISMETA, "true");
+      prop.setProperty(PlanHealpix.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
+      prop.setProperty(PlanHealpix.KEY_MAXORDER, context.getOrder()+"");
+      if( detailOrder>3 ) prop.setProperty(PlanHealpix.KEY_MINORDER, detailOrder+"");
+      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, context.getNow());
+      prop.setProperty(PlanHealpix.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+      
+      String propFile = context.getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
+      File f = new File(propFile);
+      if( f.exists() ) f.delete(); 
+      FileOutputStream out = null;
+      try { 
+         out = new FileOutputStream(f);
+         prop.store( out, null);
+      } finally {  if( out!=null ) out.close(); }
    }
    
 

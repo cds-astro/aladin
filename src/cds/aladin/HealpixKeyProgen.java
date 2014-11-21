@@ -45,6 +45,8 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       return json2TSV(stream);
    }
    
+//   static boolean flagP=false;
+   
    // Retourne un InputStream en TSV qui reprend les informations contenues dans en JSON HpxFinder/NorderX/DirY/NpixH
    // sous la forme d'une table classique
    private InputStream json2TSV(byte [] stream) throws Exception {
@@ -52,17 +54,20 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       MyByteArrayStream out = new MyByteArrayStream();
       BufferedReader reader =  new BufferedReader( new InputStreamReader( new ByteArrayInputStream(stream) ));
       String s,s1;
+      
+//      if( npix==8270 && order==5 ) flagP=true;
+      
       boolean first=true;
       while( (s=reader.readLine())!=null ) {
          if( s.trim().length()==0 ) continue;
          if( first ) {
             first=false;
             s1 = addLeg(leg);
-//            System.out.print("\n"+s1);
+//            if( flagP ) System.out.print("\n"+s1);
             out.write( s1 );
          }
          s1 = parseJson(s,leg);
-//         System.out.print(s1);
+//         if( flagP ) System.out.print(s1);
          out.write( s1 );
       }
       reader.close();
@@ -123,6 +128,8 @@ public class HealpixKeyProgen extends HealpixKeyCat {
                String nom = nv[1];
                String regex = nv[2];
                
+//               System.out.println("prefix=\""+nv[0]+"\" variable=\""+nv[1]+"\" regex=\""+nv[2]+"\"");
+               
                // Ajout du préfixe
                if( prefix!=null ) s1.append(prefix);
                
@@ -165,13 +172,15 @@ public class HealpixKeyProgen extends HealpixKeyCat {
                         for( int j=1; j<=n; j++ ) {
                            String s2 =  m.group(j);
                            s1.append(s2);
+//                           System.out.println(".regex=["+regex+"] n="+n+" group["+j+"]="+s2);
                         }
-                     }
+                     } else s1.append("**Regexp_error**");
                   }
                }
             }
             s = s1.toString();
          }
+//         System.out.print("==> s=["+s+"]");
          if( res.length()>0 ) res.append('\t');
          res.append(s);
       }
@@ -183,7 +192,8 @@ public class HealpixKeyProgen extends HealpixKeyCat {
    // voir le commentaire de parseJson(...)
    private int getSimplePattern(String [] nv,String s,int offset) {
       int mode=0;
-      int deb=0;
+      int debDeb=offset;
+      int deb=offset;
       int nb=0;
       int len=s.length();
       nv[0]=nv[1]=nv[2]=null;
@@ -211,7 +221,10 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       }
       
       // Le préfixe était tout seul, sans nom ni regex
-      if( deb>=0 ) nv[0] = s.substring(deb,offset);
+      if( deb>=0 ) {
+         nv[0] = s.substring(debDeb,offset);
+         nv[1] = nv[2] = null;
+      }
       return offset;
       
    }
@@ -271,7 +284,7 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       Iterator<Obj> it = pcat.iterator();
       while( it.hasNext() ) {
          Source src = (Source)it.next();
-         String id = src.id;
+         String id = src.id+src.raj+src.dej;
          if( progen.get(id)!=null ) continue;
          progen.put(id,src);
          nb++;

@@ -36,14 +36,14 @@ import cds.tools.pixtools.Util;
  */
 public class HealpixProgen extends TreeMap<String, HealpixProgenItem> implements Iterable<String>{
    
-//   public static int TOOMANY = 500;   // Nombre maximum d'entrées autorisées
-//   private boolean tooMany = false;
-//   
-//   /** Retourne si cet index est considéré comme saturé */
-//   public boolean hasTooMany() { return tooMany; }
-//   
-//   /** Positionne le flag de saturation de cet index */
-//   public void setTooMany(boolean flag) { tooMany=flag; }
+   public static int TOOMANY = 5000;   // Nombre maximum d'entrées autorisées
+   private boolean tooMany = false;
+
+   /** Retourne si cet index est considéré comme saturé */
+   public boolean hasTooMany() { return tooMany; }
+
+   /** Positionne le flag de saturation de cet index */
+   public void setTooMany(boolean flag) { tooMany=flag; }
    
    /** Parsing d'un flux d'entrées, et mémorisation de celles-ci */
    public void loadStream(InputStream stream) throws Exception {
@@ -70,16 +70,14 @@ public class HealpixProgen extends TreeMap<String, HealpixProgenItem> implements
       }
    }
    
-   /** Iterator sur chaque entrée */
+   /** Iterator sur chaque clé */
    public Iterator<String> iterator() { return keySet().iterator(); }
    
    /** Ajout des entrées d'un autre index */
    public void merge(HealpixProgen hi) {
-      Iterator<String> it = hi.iterator();
-      while( it.hasNext() ){
-         String s = it.next();
-         HealpixProgenItem item = new HealpixProgenItem(s);
-         put( item.getID(), item);
+      for( String k : hi ) {
+         HealpixProgenItem item = hi.get(k);
+         put( k, item);
       }
    }
    

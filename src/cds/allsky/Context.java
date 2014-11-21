@@ -120,12 +120,13 @@ public class Context {
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
    
-   protected int order = -1;                 // Ordre maximale de la boule HEALPix à générer              
+   protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer         
+   public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
    protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
    protected HealpixMoc mocArea = null;      // Zone du ciel à traiter (décrite par un MOC)
    protected HealpixMoc mocIndex = null;     // Zone du ciel correspondant à l'index Healpix
    protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
-   protected int diffOrder=4;           // Lors du calcul du MOC, différence entre ordre du MOC et ordre optimum
+   protected int diffOrder=4;                // Lors du calcul du MOC, différence entre ordre du MOC et ordre optimum
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
@@ -195,6 +196,7 @@ public class Context {
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
    public int getDiffOrder() { return diffOrder; }
+   public int getMinOrder() { return minOrder; }
 
    // Setters
    public void setPublisher(String s) { publisher=s; }
@@ -208,9 +210,10 @@ public class Context {
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
+   public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
    public void setDiffOrder(int diffOrder) { this.diffOrder = diffOrder; }
    public void setFrame(int frame) { this.frame=frame; }
-   public void setFrameName(String frame) { this.frame= (frame.equalsIgnoreCase("G"))?Localisation.GAL:Localisation.ICRS; }
+   public void setFrameName(String frame) { this.frame= (frame.startsWith("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setSkyValName(String s ) { 
       skyvalName=s; 
       if( s==null ) return;
@@ -935,7 +938,7 @@ public class Context {
    }
    
    static private SimpleDateFormat DATEFORMAT = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-   static private String getNow() { return DATEFORMAT.format( new Date() ); }
+   static protected String getNow() { return DATEFORMAT.format( new Date() ); }
    static long getTime(String date) throws Exception { return DATEFORMAT.parse(date).getTime(); }
 
    static private String getKeyActionStart(Action a) { return "Processing."+a+".start"; }
@@ -1165,7 +1168,7 @@ public class Context {
       info.append("   <LI> <B>Max tile order:</B> "+order+" (NSIDE="+nside+")\n");
       info.append("   <LI> <B>Available encoding tiles:</B> "+getAvailableTileFormats()+"\n");
       info.append("   <LI> <B>Tile size:</B> "+width+"x"+width+"\n");
-      if( bitpix!=0 ) info.append("   <LI> <B>FITS tile BITPIX:</B> "+bitpix+"\n");
+      if( bitpix!=0 && bitpix!=-1 ) info.append("   <LI> <B>FITS tile BITPIX:</B> "+bitpix+"\n");
       info.append("   <LI> <B>Processing date:</B> "+getNow()+"\n");
       info.append("   <LI> <B>HiPS builder:</B> "+"Aladin/HipsGen "+Aladin.VERSION+"\n");
       info.append("   <LI> <B>Coordinate frame:</B> " +sys+"\n");
@@ -1179,7 +1182,7 @@ public class Context {
       
       String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),METADATA);
       if( (new File(metadata)).exists() ) {
-         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/Metadata.xml\">Metadata.xml</A>\n");
+         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/"+METADATA+"\">"+METADATA+"</A>\n");
       }
 
       res = res.replace("$INFO",info);

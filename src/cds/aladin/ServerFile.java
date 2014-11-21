@@ -38,6 +38,7 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.xml.stream.events.EndElement;
 
+import cds.allsky.Context;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.XMLConsumer;
@@ -261,7 +262,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
 
                            // Catalogue ?
-                           else if(  (new File(f+"/metadata.xml")).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                           else if(  (new File(f+"/"+Context.METADATA)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                               gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }    
                         }
@@ -358,8 +359,15 @@ public class ServerFile extends Server implements XMLConsumer {
             String t = in.decodeType(type);
             Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
             aladin.log("load",mode+t);
+            
+            
+            // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
+            if( (type & (MyInputStream.DS9REG|MyInputStream.AJTOOL))!=0 ) {
+//               aladin.command.resetPreviousDrawing();
+               aladin.calque.newPlanTool(null);
+            }
 
-            if( (type & MyInputStream.AJS|type & MyInputStream.AJSx|MyInputStream.UNKNOWN)!=0) aladin.command.readFromStream(in);
+            if( (type & (MyInputStream.AJS|MyInputStream.AJSx|MyInputStream.UNKNOWN))!=0) aladin.command.readFromStream(in);
             else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;

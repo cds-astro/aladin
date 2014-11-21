@@ -29,7 +29,7 @@ class HealpixAllskyProgen extends HealpixKeyProgen {
       allSky=true;
       resetTimer();
       String nameNet = "Norder"+order+"/Allsky";
-      String nameCache = planBG.survey+planBG.version+"/"+"Norder"+order+"/Allsky";
+      String nameCache = planBG.getCacheName()+"/"+"Norder"+order+"/Allsky";
       extCache=extNet=IDX;
       fileCache = nameCache+ EXT[extCache];
       fileNet = nameNet+ EXT[extNet];

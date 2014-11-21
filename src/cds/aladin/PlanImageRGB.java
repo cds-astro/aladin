@@ -519,7 +519,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       setLabel(label);
       co = p.co;
       c = p.c;
-      projd = p.projd;
+      projd = p.projd.copy();
       projD = p.projD==null ? null : (Hashtable)p.projD.clone();
       copyright = "Colored composition by Aladin";
 

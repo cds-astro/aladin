@@ -1355,7 +1355,8 @@ CMLIMITS	Pixel cut:
 CMALGO	Use Aladin autocut algorithm
 CMERRORRANGE	The min value should be less than the max value !
 CMRESET	Reset
-CMRESETBG	Rescan
+CMRESETBG	Local cut
+CMRESETBGTIP Autocut based on an area centered on the reticle
 CMCLOSE	Close
 CMHELP	Help
 CMNOCUT	get all
@@ -1376,7 +1377,8 @@ CMLIMITS.fr	Seuils d'affichage:
 CMALGO.fr	Utiliser le seuillage automatique
 CMERRORRANGE.fr	La valeur minimale doit être inférieure à la valeur maximale !
 CMRESET.fr	Réinit.
-CMRESETBG.fr	Rescan
+CMRESETBG.fr	Seuil local
+CMRESETBGTIP.fr Seuillage automatique centré sur le réticule
 CMCLOSE.fr	Fermer
 CMHELP.fr	Aide
 CMNOCUT.fr	Récupérer tout

@@ -34,6 +34,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.ComboPopup;
 
 /**
  * Gestion du fichier de configuration Aladin. Il va être enregistré dans
@@ -1214,6 +1215,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
       
       // La projection par défaut pour les allsky
       projAllskyChoice = new JComboBox( Projection.getAlaProj() );
+      projAllskyChoice.setMaximumRowCount(10);  // Marche po !
       (l = new JLabel(PROJALLSKYB)).setFont(l.getFont().deriveFont(Font.BOLD));
       panel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
       panel.add(projAllskyChoice);
@@ -1492,7 +1494,7 @@ Aladin.trace(2,modeLang+" language ["+s+"] => assume ["+currentLang+"]");
          if( cacheSize==-1 ) {
             SwingUtilities.invokeLater(new Runnable() {
                public void run() {
-                  long cacheSize = PlanBG.getCacheSize(new File(PlanBG.getCacheDirPath()), null);
+                  long cacheSize = PlanBG.getCacheSize(new File(PlanBG.getCacheDirStatic()), null);
                   PlanBG.setCacheSize(cacheSize);
                   cache.setText((cacheSize/1024)+" / ");
                }

@@ -379,13 +379,17 @@ public final class FrameContour extends JFrame implements ActionListener {
        }
 
        
+       private RectangleD memoRzoom=null;
 
       /** Mise a jour de la fenetre si necessaire*/
        protected void majContour() {
           if( a.toolBox.tool[ToolBox.CONTOUR].mode==Tool.DOWN ) {
              
-//             PlanImage p = (PlanImage)a.calque.getFirstSelectedSimpleImage();
              PlanImage p = (PlanImage)a.calque.getFirstSelectedPlanImage();
+             
+//             Plan p1 = a.calque.getPlanBase();
+//             if( !(p1 instanceof PlanImage) ) return;
+//             PlanImage p = (PlanImage) p1;
              
              if( p!=null && p.flagOk && p.isPixel() ) {
                 int newEtat = p.getImgID();
@@ -393,8 +397,16 @@ public final class FrameContour extends JFrame implements ActionListener {
                 if( etat!=newEtat) {
                    etat=newEtat;
                    try {
-                     if( p instanceof PlanBG ) this.pimg = getCropImage(p);
-                      else this.pimg = p;
+                      
+                      // Dans le cas d'un plan BG, il est inutile de faire le crop à chaque changement d'etats
+                      // Je me base sur la valeur du rzoom de la vue 
+                     if( p instanceof PlanBG ) {
+                        ViewSimple v = a.view.getView(p);
+                        if( !v.rzoom.equals(memoRzoom) ) {
+                           this.pimg = getCropImage(p);
+                           memoRzoom=v.rzoom;
+                        } else return;
+                     } else this.pimg = p;
                   } catch( Exception e ) {
                     a.warning(this,e.getMessage());
                     return;
@@ -426,8 +438,7 @@ public final class FrameContour extends JFrame implements ActionListener {
           if( !(p instanceof PlanBG) ) throw new Exception("Contour cropping only on all-sky image");
           ViewSimple v = a.view.getCurrentView();
           if( v.pref!=p )  throw new Exception("All-sky image contour is only available on current view !");
-          PointD p1 = v.getPosition(0.,0.);
-          return v.cropAreaBG(new RectangleD(p1.x,p1.y,v.rv.width/v.zoom,v.rv.height/v.zoom),p.label,v.zoom,1.,false,false);
+          return a.calque.createCropImage(v);
        }
 
 
