@@ -817,13 +817,15 @@ public class Context {
    
    /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index et le MOC de la zone) */
    protected long getNbLowCells() { 
-      if( moc==null || getOrder()==-1 ) return -1;
-      HealpixMoc m = moc;
-      if( getOrder()!=moc.getMocOrder() ) {
-        m =  (HealpixMoc) moc.clone();
+      if( moc==null && mocIndex==null || getOrder()==-1 ) return -1;
+      HealpixMoc m = moc!=null ? moc : mocIndex;
+      if( getOrder()!=m.getMocOrder() ) {
+        m =  (HealpixMoc) m.clone();
         try { m.setMocOrder( getOrder() ); } catch( Exception e ) {}
       }
-      return m.getUsedArea() * depth;
+      long res = m.getUsedArea() * depth;
+//      Aladin.trace(4,"getNbLowsCells => mocOrder="+m.getMocOrder()+" => UsedArea="+m.getUsedArea()+"+ depth="+depth+" => "+res);
+      return res;
    }
    
    /** Retourne le volume du Allsky en fits en fonction du nombre de cellules prévues et du bitpix */
