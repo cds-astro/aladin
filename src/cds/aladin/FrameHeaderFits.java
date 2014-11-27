@@ -57,13 +57,11 @@ import cds.tools.Util;
  * @version 0.9 : (18 mai 99) Creation
  */
 public class FrameHeaderFits extends JFrame {
-   private StringBuffer	memoHeaderFits = null;	// Memorisation de l'entete FITS telle quelle (en Strings)
    private JTextPane ta;
    private JTextField ts;
    static String CLOSE,CLEAR,SAVE,CANCEL,SAVEINFO;
    private DefaultStyledDocument df;
    private JButton clear,cancel,save;
-   private static final boolean SAVABLE=true;
    private Plan plan;
 
    protected HeaderFits headerFits;
@@ -83,6 +81,7 @@ public class FrameHeaderFits extends JFrame {
 
    public FrameHeaderFits(HeaderFits headerFits) {
       this.headerFits = headerFits;
+      makeTA(false);
    }
 
   /** Creation du header.
@@ -92,7 +91,7 @@ public class FrameHeaderFits extends JFrame {
       super("FITS header");
       this.plan=plan;
       Aladin.setIcon(this);
-      makeTA();
+      makeTA(true);
       headerFits = new HeaderFits();
       headerFits.readHeader(dis,this);
    }
@@ -105,7 +104,7 @@ public class FrameHeaderFits extends JFrame {
    protected FrameHeaderFits(Plan plan,String s,boolean specialHHH) {
       Aladin.setIcon(this);
       this.plan=plan;
-      makeTA();
+      makeTA(true);
       headerFits = new HeaderFits();
       headerFits.readFreeHeader(s,specialHHH,this);
    }
@@ -230,7 +229,7 @@ public class FrameHeaderFits extends JFrame {
    }
    
    private void applyThisHeader(String s) throws Exception {
-      memoHeaderFits=null;
+      setOriginalHeaderFits(null);
       headerFits = new HeaderFits(s,this);
       if( plan!=null ) {
          Calib c = new Calib(headerFits);
@@ -239,9 +238,21 @@ public class FrameHeaderFits extends JFrame {
          plan.aladin.view.newView(1);
          plan.aladin.view.repaintAll();
       }
-      ta.setText(memoHeaderFits.toString());
+      ta.setText(getOriginalHeaderFits());
       search("");
    }
+   
+   /** Retourne le header FITS original (en Strings) */
+   protected String getOriginalHeaderFits() { return headerFits.getOriginalHeaderFits(); }
+   
+   /** Mémorise le header FITS original (en Strings) */
+   protected void setOriginalHeaderFits(String s) { headerFits.setOriginalHeaderFits(s); }
+
+  /** Ajoute la ligne courante a la memorisation du header FITS
+   * en supprimant les blancs en fin de ligne
+   * @param s la chaine a ajouter
+   */
+   public void appendMHF(String s) { headerFits.appendMHF(s); }
    
    protected void cancel() {
       try {
@@ -263,7 +274,7 @@ public class FrameHeaderFits extends JFrame {
    }
 
   /** Construction du Frame de visualisation du Header FITS */
-   public void makeTA() {
+   public void makeTA(boolean savable) {
       JButton b;
 
       df=new DefaultStyledDocument() ;
@@ -275,7 +286,7 @@ public class FrameHeaderFits extends JFrame {
       });
 
       ta.setFont( Aladin.COURIER );
-      ta.setEditable(SAVABLE); 
+      ta.setEditable(savable); 
 
       JScrollPane sc = new JScrollPane(ta);
       sc.setPreferredSize(new Dimension(600,600));
@@ -303,13 +314,13 @@ public class FrameHeaderFits extends JFrame {
       p.add(new JLabel(" - "));
       save = b =  new JButton(SAVE);
       b.setEnabled(false);
-      if( SAVABLE ) p.add(b);
+      if( savable ) p.add(b);
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { save(); }
       });
       cancel = b =  new JButton(CANCEL);
       b.setEnabled(false);
-      if( SAVABLE ) p.add(b);
+      if( savable ) p.add(b);
       b.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) { cancel(); }
       });
@@ -347,21 +358,6 @@ public class FrameHeaderFits extends JFrame {
       setVisible(true);
    }
 
-
-  /** Retourne le header FITS original (en Strings) */
-   protected String getOriginalHeaderFits() { return memoHeaderFits.toString(); }
-   
-   /** Mémorise le header FITS original (en Strings) */
-   protected void setOriginalHeaderFits(String s) { memoHeaderFits= new StringBuffer(s); }
-
-  /** Ajoute la ligne courante a la memorisation du header FITS
-   * en supprimant les blancs en fin de ligne
-   * @param s la chaine a ajouter
-   */
-   public void appendMHF(String s) {
-      if( memoHeaderFits==null ) memoHeaderFits=new StringBuffer();
-      memoHeaderFits.append(s.trim()+"\n");
-   }
 
   /** Taille en octets de l'entete FITS.
    * Uniquemenent mis a jour apres readHeader()

@@ -19,27 +19,7 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
-import java.io.OutputStream;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-
 import cds.fits.HeaderFits;
-import cds.tools.Util;
 
 /**
  * Classe dediee a la gestion d'un header PDS.
@@ -52,7 +32,7 @@ public final class FrameHeaderPDS extends FrameHeaderFits {
     protected FrameHeaderPDS(Plan plan,MyInputStream dis) throws Exception {
        super(plan,"PDS header");
        Aladin.setIcon(this);
-       makeTA();
+       makeTA(false);
        headerFits = new HeaderFits();
        headerFits.readHeaderPDS(dis,this);
     }

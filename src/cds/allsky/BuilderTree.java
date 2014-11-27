@@ -33,10 +33,10 @@ public class BuilderTree extends BuilderTiles {
    public Action getAction() { return Action.TREE; }
 
    public void run() throws Exception {
-      context.running("Creating "+context.getTileExt()+" tree and allsky (max depth="+context.getOrder()+")...");
+      context.info("Creating "+context.getTileExt()+" tree and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
       build();
-      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+//      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
 
@@ -54,9 +54,12 @@ public class BuilderTree extends BuilderTiles {
 //         context.initRegion();
 //      }
       
-      (new BuilderMoc(context)).run(); 
-      context.info("MOC rebuilt from low rhombs");
-      context.loadMoc();
+      try { context.loadMoc(); }
+      catch( Exception e ) {
+         (new BuilderMoc(context)).run(); 
+         context.info("MOC rebuilt from low rhombs");
+         context.loadMoc();
+      }
       context.initRegion();
    }
    

@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 
+import javax.swing.JProgressBar;
+
 import cds.aladin.MyInputStream;
 import cds.aladin.PlanImage;
 import cds.fits.Fits;
@@ -35,10 +37,21 @@ import cds.tools.pixtools.CDSHealpix;
  * @author Anaïs Oberto & Pierre Fernique [CDS]
  */
 public class BuilderMapTiles extends Builder {
+   
    private HeaderFits headerFits;
-   private long initialOffsetHpx;
    private CacheFitsWriter cache;       // Cache en écriture des tuiels
-
+   
+   protected int bitpixOrig=-1;
+   protected int maxOrder=-1;
+   private long nside=-1;               // NSIDE de la map
+   private String ordering=null;        // ORDERING de la map
+   private long initialOffsetHpx;       // Position dans la map des DATA
+   
+   private long startTime=0;
+   private long nbRecord=-1,cRecord=-1;
+   private String info="";
+   
+   private Builder b=null;
 
    public BuilderMapTiles(Context context) {
       super(context);
@@ -47,53 +60,66 @@ public class BuilderMapTiles extends Builder {
    public Action getAction() { return Action.MAPTILES; }
    
    public void run() throws Exception {
-      build();
-      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
-      if( !context.isTaskAborting() && context.getOrder()>3 ) { (new BuilderTree(context)).run();  context.info("HiPS tree done"); }
-      if( !context.isTaskAborting() ) {
-         (new BuilderAllsky(context)).createAllSky(context.getOutputPath(), 3, 64, 0);
-         context.info("Allsky done");
+       build();
+      
+      if( !context.isTaskAborting() ) { 
+         (b=new BuilderMoc(context)).run(); b=null;
+         
+         if( context.getOrder()<=3 ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
+         else { (new BuilderTree(context)).run();  context.info("HiPS tree done"); }
+         
+        context.setProgressLastNorder3(1);
       }
    }
    
    public void validateContext() throws Exception {
       validateMap();
       validateOutput();
-      // Il faudrait faire un validatCut avec les pixels de la map eux-même (ça va pas être simple)
+      
+      if( context instanceof ContextGui ) {
+         JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarTile();
+         context.setProgressBar(bar);
+      }
    }
    
-   private void validateMap() throws Exception {
+   protected void validateMap() throws Exception {
       String map = context.getInputPath();
       MyInputStream in=null;
       try {
          in = new MyInputStream( new FileInputStream(map));
          headerFits = new HeaderFits(in);
          int naxis = headerFits.getIntFromHeader("NAXIS");
+         
          // S'agit-il juste d'une entête FITS indiquant des EXTENSIONs
          if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
             // Je saute l'éventuel baratin de la première HDU
             try {
                int naxis1 = headerFits.getIntFromHeader("NAXIS1");
+               
+               // Peut être une vieille version de map HEALPix dont les paramètres
+               // sont dans la HDU0
+               try { nside = headerFits.getIntFromHeader("NSIDE"); } 
+               catch( Exception e) {}
+               try { ordering = headerFits.getStringFromHeader("ORDERING"); } 
+               catch( Exception e) {}
+
                in.skip(naxis1);
             } catch( Exception e) {}
 
             // On se cale sur le prochain segment de 2880
             in.skipOnNext2880();
             headerFits = new HeaderFits(in);
+            context.setHeader(headerFits);
          }
 
          initialOffsetHpx = in.getPos();
       } finally { if( in!=null ) in.close(); }
    }
    
-   
-   private long startTime=0;
-   private long nbRecord=-1,cRecord=-1;
-   
    private void initStat(long nbRecord) {
       this.nbRecord = nbRecord;
       cRecord=0;
-      context.setProgressMax(100);
+      context.setProgressMax(nbRecord);
       startTime = System.currentTimeMillis();
    }
    
@@ -104,21 +130,20 @@ public class BuilderMapTiles extends Builder {
 
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
+      if( b!=null ) { b.showStatistics(); return; }
+      
+      if( nbRecord<=0 ) return;
       long now = System.currentTimeMillis();
       long cTime = now-startTime;
       if( cTime<2000 ) return;
-      double pourcent = (double)cRecord/nbRecord;
-      long totalTime = (long)( cTime/pourcent);
-      long endsIn = totalTime-cTime;
-      context.nlstat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true)+" endsIn="+Util.getTemps(endsIn, true)
-            + " (record="+cRecord+"/"+nbRecord+")");
-      if( cache!=null && cache.getStatNbOpen()>0 ) context.stat(cache+"");
+      
+      context.showMapStat(cRecord, nbRecord, cTime,cache, info);
    }
    
-   private void build() throws Exception {
+   protected void build() throws Exception { build(false); }
+   protected void build(boolean flagSimpleLook) throws Exception {
       int idxTForm      = 0;                                          // Indice du TFORM concerné
       String path       = context.getOutputPath();                    // Répertoire pour la génération du HiPS
-      long nside        = headerFits.getIntFromHeader("NSIDE");       // NSIDE de la map
       int sizeRecord;                                                 // Taille des enregistrements
       long naxis1       = headerFits.getIntFromHeader("NAXIS1");      // Longueur des lignes
       long naxis2       = headerFits.getIntFromHeader("NAXIS2");      // Nombre de colonnes
@@ -132,13 +157,18 @@ public class BuilderMapTiles extends Builder {
       boolean isNested=true;                                          // Mode d'encodage HEALPix
       String s;
       
+      // récupération du NSIDE si pas déjà fait dans la première HDU
+      if( nside==-1 ) nside = headerFits.getIntFromHeader("NSIDE");
+      
       try { badData  = Double.parseDouble(headerFits.getStringFromHeader("BAD_DATA")); } catch( Exception e ) { }
       try { s = headerFits.getStringFromHeader("COORDSYS"); if( s!=null ) frame=s;     } catch (Exception e ) { }
       try { bzeroOrig    = headerFits.getDoubleFromHeader("BZERO");                    } catch( Exception e ) { }
       try { bscaleOrig   = headerFits.getDoubleFromHeader("BSCALE");                   } catch( Exception e ) { }
       try { blankOrig    = headerFits.getDoubleFromHeader("BLANK");                    } catch( Exception e ) { }
+     
+      // récupération du ORDERING si pas déjà fait dans la première HDU
       try { 
-         s    = headerFits.getStringFromHeader("ORDERING");    
+         s    = ordering!=null ? ordering : headerFits.getStringFromHeader("ORDERING");    
          if( s!=null && s.equals("RING") ) isNested=false;
       } catch( Exception e ) { }
       try { 
@@ -151,24 +181,25 @@ public class BuilderMapTiles extends Builder {
       } catch( Exception e ) { }
       context.setFrameName(frame);
       
+      int pixOrder = (int) CDSHealpix.log2( nside );
+      
       // A modifier par la suite pour le mettre en paramètre
-      if( isPartial ) {
-         idxTForm=1;
-      }
-      context.info("Map "+(isPartial?" PARTIAL":"")+" nside="+nside+" ordering="+(isNested?"NESTED":"RING")+" frame="+context.getFrameName()
-            +" pixelIndex="+idxTForm);
+      if( isPartial )  idxTForm=1;
+      
+      info = "HEALPix FITS map "+(isPartial?" PARTIAL":"")+" nside="+nside+" ordering="+(isNested?"NESTED":"RING")+" frame="+context.getFrameName();
+      if( !flagSimpleLook ) context.info( info );
       
       // Détermination du nombre de niveaux et de la taille des tuiles level 3
       int maxTileWidth = 512;
       if( nside<maxTileWidth ) maxTileWidth= (int) nside;      // Pour pouvoir charger des "tout-petits cieux"
       int tileWidth = 2*maxTileWidth;
-      int maxOrder;
       do {
          tileWidth /= 2;
          maxOrder = getLevelImage(nside, tileWidth);
       } while( maxOrder<3 );
+      long nsideFile = CDSHealpix.pow2(maxOrder);
       
-      context.info("HiPS maxOrder="+maxOrder+" tileWidth="+tileWidth);
+      if( !flagSimpleLook ) context.info("HiPS maxOrder="+maxOrder+" tileWidth="+tileWidth);
       context.setOrder(maxOrder);
       
       // Détermination de la taille des enregistrements et de la position
@@ -188,133 +219,218 @@ public class BuilderMapTiles extends Builder {
             sizeFieldVal = Util.binSizeOf(type, 1);
             if( form.length()>1 ) nbValPerSegment = Integer.parseInt(form.substring(0,form.length()-1));
             offsetVal=sizeRecord;
-         } else if( isPartial && i==0 ) {
+         } else if( isPartial && i==1 ) {
             typePixel = form.charAt(form.length()-1);
             sizeFieldPix = Util.binSizeOf(typePixel, 1);
             offsetPix=sizeRecord;
          }
-//         sizeRecord+=Util.binSizeOf(form.charAt(form.length()-1),1);
          sizeRecord+=Util.binSizeOf(form);
       }
       
-      long nRecord = (naxis1 * naxis2) / sizeRecord;
-      initStat(nRecord);
+      long nbRecord = (naxis1 * naxis2) / sizeRecord;
       
       // Détermination des paramètres FITS BZERO,BSCALE,BLANK en sortie 
-      int bitpixOrig = getBitpixFromFormat(type);
-      context.setBitpixOrig(bitpixOrig);
+      bitpixOrig = getBitpixFromFormat(type);
       
+      // C'était juste pour initialiser maxOrder et bitpixOrig
+      if( flagSimpleLook ) return;
+      
+      context.setBitpixOrig(bitpixOrig);
       context.setBlankOrig(blankOrig);
       context.setBZeroOrig(bzeroOrig);
       context.setBScaleOrig(bscaleOrig);
        
       context.info("Original BITPIX="+bitpixOrig+" BLANK="+blankOrig + (bzeroOrig!=0 ?" BZERO="+bzeroOrig:"") + (bscaleOrig!=1 ?" BSCALE="+bscaleOrig:""));
-      context.initParameters();
       
       double bscale    = context.getBScale();
       double bzero     = context.getBZero();
       double blank     = context.getBScale();
       int bitpix       = context.getBitpix();
-      double [] cutOrig= context.getCutOrig();
-      double [] cut    = context.getCut();
+      double [] pixelRangeCut = context.getPixelRangeCut();      
+      double [] cutOrig=null;
+      double [] cut=null;
       
       int bitpixP       = getBitpixFromFormat(typePixel);
       long nbPixPerTile = (long)( tileWidth * tileWidth );
       int tileOrder     = (int) CDSHealpix.log2(tileWidth);
       int hpx2xy[]      = cds.tools.pixtools.Util.createHpx2xy(tileOrder);
       
-      
-      context.info("nbRecord="+nRecord+" nbValPerSegment="+nbValPerSegment+" valType="+type);
+      context.info("MAP structure: nbRecord="+nbRecord+" nbValPerSegment="+nbValPerSegment+" valType="+type);
       
       // Lecture séquentiel enr par enr du fichier Map et création ou maj des tuiles corresdantes
       // On retient la dernière tuile pour gagner du temps
       RandomAccessFile f = null;
       Fits fits=null, lastFits=null;
       String lastFile="";
-      cache = new CacheFitsWriter( 512*1024*1024L);
+      long nbTiles = 12*nsideFile*nsideFile;
+      long tileMem = (nbPixPerTile * (Math.abs(bitpix)/8) + 4000);
+      long reqMem = nbTiles * tileMem;
+      long mem = (long)(context.getMem() * 0.75);
+      if( reqMem<mem ) mem=reqMem;
+      context.info("Writer cache RAM="+Util.getUnitDisk(mem)+" ("+(mem/tileMem)+" tiles)");
+      cache = new CacheFitsWriter( mem );
+      cache.setContext( context );
       
       int sizeBuf = 512;
       int nbRecordInBuf = sizeBuf/sizeRecord;
       if( nbRecordInBuf<1 ) nbRecordInBuf=1;
-      int cRecordInBuf=nbRecordInBuf;
+      int cRecordInBuf;
       sizeBuf = nbRecordInBuf * sizeRecord;
       byte buf [] = new byte[ sizeBuf ];
       
-      System.out.println("nbRecordInBuf="+nbRecordInBuf+" sizeBuf="+sizeBuf);
+//      System.out.println("nbRecordInBuf="+nbRecordInBuf+" sizeBuf="+sizeBuf);
       
-      long count=0,npix;
+      long count,npix;
+      int posSample;
+      Fits sample = null;
+      int nbValInSample=0;
       try {
-         f = new RandomAccessFile(context.getInputPath(), "rw");
-         f.seek(initialOffsetHpx);
          
-         for( long n=0; n<nRecord; n++, cRecordInBuf++ ) {
+         f = new RandomAccessFile(context.getInputPath(), "rw");
+         
+         // En cas de changement de bitpix sans valeur de cut indiquées
+         // on procéde en deux tours, l'un pour mesurer la dynamique,
+         // l'autre pour HiPSizer
+         boolean missingCut   = pixelRangeCut==null || Double.isNaN(pixelRangeCut[0]);
+         boolean missingRange = pixelRangeCut==null || Double.isNaN(pixelRangeCut[2]);
+         int nbStep =  missingCut || missingRange ? 2 : 1;
+         int gapSample=1;
+         
+         if( nbStep==2 ) {
+            int sizeVal = Math.abs(bitpixOrig)/8;
+            long nbPossibleVal = mem/sizeVal;
+            int nbVal = nbValInSample = (int)( nbRecord * nbValPerSegment );
+            int w = (int) Math.sqrt(nbValInSample);
+            for( gapSample=1; nbValInSample>nbPossibleVal || w>4096; gapSample++ ) {
+               nbValInSample = nbVal/gapSample;
+               w = (int) Math.sqrt(nbValInSample);
+            }
+            nbValInSample = (int)( w*w );
+            sample = new Fits(w,w,bitpixOrig);
+            sample.setBlank(blankOrig);
+            sample.setBzero(bzeroOrig);
+            sample.setBscale(bscaleOrig);
+            context.info("Pixel dynamic estimation on "+nbValInSample+" values"
+                           +(gapSample>1?" (gapSample="+gapSample+")":"")+"...");
+         }
+         
+         STEP2: for( int step=0; step<nbStep; step++ ) {
             
-            if( cRecordInBuf==nbRecordInBuf ) {
-               f.readFully(buf);
-               cRecordInBuf = 0;
+            if( step==nbStep-1 ) {
+               
+               initStat(nbRecord);
+               
+               if( sample!=null ) context.initCut(sample);
+               cutOrig= context.getCutOrig();
+               if( pixelRangeCut!=null && !Double.isNaN(pixelRangeCut[0]) ) {
+                  if( cutOrig==null ) cutOrig = new double[5];
+                  cutOrig[0]=pixelRangeCut[0];
+                  cutOrig[1]=pixelRangeCut[1];
+               }
+               if( pixelRangeCut!=null && !Double.isNaN(pixelRangeCut[2]) ) {
+                  if( cutOrig==null ) cut = new double[5];
+                  cutOrig[2]=pixelRangeCut[2];
+                  cutOrig[3]=pixelRangeCut[3];
+               }
+               context.setCutOrig(cutOrig);
+               context.initParameters();
+               cut    = context.getCut();
+               if( bitpixOrig!=bitpix ) {
+                  blank = context.getBlank();
+                  bzero = context.getBZero();
+                  bscale = context.getBScale();
+               }
+               if( sample!=null )sample.free();
+               context.setValidateCut(true);
+               context.info("Pixel dynamic range=["+ip(cut[2],bzero,bscale)+" .. "+ip(cut[3],bzero,bscale)
+                                         +"] cut=["+ip(cut[0],bzero,bscale)+" .. "+ip(cut[1],bzero,bscale)+"]");
             }
             
-            if( context.isTaskAborting() ) throw new Exception("Task abort !");
-            updateStat(n);
-            
+            posSample=0;
+            count=0;
+            cRecordInBuf=nbRecordInBuf;
+            f.seek(initialOffsetHpx);
 
-            for( int i=0; i<nbValPerSegment; i++ ){
+            for( long n=0; n<nbRecord; n++, cRecordInBuf++ ) {
 
-               // Détermination du numéro de pixel HEALPix
-               // soit séquentiel, soit explicite dans le cas d'une map PARTIAL
-               // en prenant en compte l'ordering RING ou NESTED
-               if( isPartial ) npix = getNpix(buf,bitpixP,offsetPix + cRecordInBuf*sizeRecord +i*sizeFieldPix);
-               else npix = count++;
-               if( !isNested ) npix = CDSHealpix.ring2nest(nside,npix);
-
-               // Récupération de la valeur associée
-               double val = getVal(buf,bitpixOrig,offsetVal + cRecordInBuf*sizeRecord +i*sizeFieldVal);
-               if( val==badData ) val=blankOrig;
-
-               // Changement de bitpix et/ou d'échelle
-               if( bitpix!=bitpixOrig ) {
-                  val = Double.isNaN(val) || val==blankOrig ? blank
-                        : val<=cutOrig[2] ? cut[2]
-                              : val>=cutOrig[3] ? cut[3]
-                                    : (val-cutOrig[2])*context.coef + cut[2];
-                              if( bitpix>0 && (long)val==blank && val!=blank ) val+=0.5;
+               if( cRecordInBuf==nbRecordInBuf ) {
+                  f.readFully(buf);
+                  cRecordInBuf = 0;
                }
 
-               // Ouverture de la tuile correspondante au pixel HEALPix
-               long npixFile = npix / nbPixPerTile ;
-               String file = cds.tools.pixtools.Util.getFilePath(path, maxOrder, npixFile)+".fits";
+               if( context.isTaskAborting() ) throw new Exception("Task abort !");
+               if( step==nbStep-1 ) updateStat(n);
 
-               // Continue-t-on à travailler sur la tuile précédente ?
-               if( file.equals(lastFile) ) fits=lastFits;
+               for( int i=0; i<nbValPerSegment; i++ ){
 
-               // Sinon, on va aller la chercher
-               else {
+                  // Détermination du numéro de pixel HEALPix
+                  // soit séquentiel, soit explicite dans le cas d'une map PARTIAL
+                  // en prenant en compte l'ordering RING ou NESTED
+                  if( isPartial ) npix = getNpix(buf,bitpixP,offsetPix + cRecordInBuf*sizeRecord +i*sizeFieldPix);
+                  else npix = count;
+                  count++;
+                  
+                  if( !isNested ) npix = CDSHealpix.ring2nest(nside,npix);
 
-                  // Récupération d'une tuile déjà existante
-                  try { fits = cache.getFits(file); }
-
-                  // Création de la tuile requise
-                  catch( FileNotFoundException e ) {
-                     fits = new Fits(tileWidth,tileWidth,bitpix);
-                     fits.setBlank(blank);
-                     fits.setBzero(bzero);
-                     fits.setBscale(bscale);
-                     for( int y=0; y<tileWidth; y++) {
-                        for( int x=0; x<tileWidth; x++ )  fits.setPixelDouble(x, y, blank);
-                     }
-                     cache.addFits(file, fits);
+                  // Récupération de la valeur associée
+                  double val = getVal(buf,bitpixOrig,offsetVal + cRecordInBuf*sizeRecord +i*sizeFieldVal);
+                  if( val==badData ) val=blankOrig;
+                  
+                  // Estimation de la dynamique et passage à la deuxième étape
+                  // dès que l'échantillon est suffisant
+                  if( step==0 && nbStep==2 ) {
+                     if( posSample>=sample.width*sample.width ) continue STEP2;
+                     
+                     if( count%gapSample==0 ) sample.setPixValDouble(sample.pixels, bitpixOrig, posSample++, val);
+                     continue;
                   }
-                  lastFits = fits;
+
+                  // Changement de bitpix et/ou d'échelle
+                  if( bitpix!=bitpixOrig ) {
+                     val = Double.isNaN(val) || val==blankOrig ? blank
+                           : val<=cutOrig[2] ? cut[2]
+                                 : val>=cutOrig[3] ? cut[3]
+                                       : (val-cutOrig[2])*context.coef + cut[2];
+                                 if( bitpix>0 && (long)val==blank && val!=blank ) val+=0.5;
+                  }
+
+                  // Ouverture de la tuile correspondante au pixel HEALPix
+                  long npixFile = npix / nbPixPerTile ;
+                  String file = cds.tools.pixtools.Util.getFilePath(path, maxOrder, npixFile)+".fits";
+
+                  // Continue-t-on à travailler sur la tuile précédente ?
+                  if( file.equals(lastFile) ) fits=lastFits;
+
+                  // Sinon, on va aller la chercher
+                  else {
+
+                     // Récupération d'une tuile déjà existante
+                     try { fits = cache.getFits(file); }
+
+                     // Création de la tuile requise
+                     catch( FileNotFoundException e ) {
+                        fits = new Fits(tileWidth,tileWidth,bitpix);
+                        fits.setBlank(blank);
+                        fits.setBzero(bzero);
+                        fits.setBscale(bscale);
+                        for( int y=0; y<tileWidth; y++) {
+                           for( int x=0; x<tileWidth; x++ )  fits.setPixelDouble(x, y, blank);
+                        }
+                        cache.addFits(file, fits);
+                     }
+                     lastFits = fits;
+                  }
+
+                  // Détermination de la position dans la tuile
+                  // et écriture de la valeur
+                  long startIdx =  npixFile * (long)tileWidth * (long)tileWidth;
+                  int idx = hpx2xy[ (int)(npix-startIdx) ];
+
+                  fits.setPixValDouble(fits.pixels, bitpix, idx, val);
+                  
+//                                 if( count<5 ) System.out.println("npix="+npix+" => npixFile "+npixFile+" idx="+idx+" val="+val);
                }
-
-               // Détermination de la position dans la tuile
-               // et écriture de la valeur
-               long startIdx =  npixFile * (long)tileWidth * (long)tileWidth;
-               int idx = hpx2xy[ (int)(npix-startIdx) ];
-
-               fits.setPixValDouble(fits.pixels, bitpix, idx, val);
-
-//               if( n==0 && i<5 ) System.out.println("npix="+npix+" => npixFile "+npixFile+" idx="+idx+" val="+val);
+               
             }
          }
          

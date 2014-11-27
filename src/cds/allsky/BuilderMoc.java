@@ -22,9 +22,15 @@ package cds.allsky;
 import static cds.tools.Util.FS;
 
 import java.io.File;
+import java.io.FileInputStream;
 
+import cds.aladin.Localisation;
+import cds.aladin.MyInputStream;
 import cds.aladin.PlanHealpix;
+import cds.aladin.PlanMoc;
+import cds.fits.Fits;
 import cds.moc.HealpixMoc;
+import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /** Création d'un fichier Moc.fits correspondant aux tuiles de plus bas niveau
@@ -35,13 +41,15 @@ public class BuilderMoc extends Builder {
    public static final String MOCNAME = "Moc.fits";
 
    protected HealpixMoc moc;
-
+   protected int mocOrder;
+   protected int fileOrder;
+   protected boolean isMocHight;
+   
    private String ext; // Extension à traiter, null si non encore affectée.
 
    public BuilderMoc(Context context) {
       super(context);
-      moc = new HealpixMoc();
-   }
+    }
    
    public Action getAction() { return Action.MOC; }
 
@@ -55,18 +63,68 @@ public class BuilderMoc extends Builder {
 
    /** Création d'un Moc associé à l'arborescence trouvée dans le répertoire path */
    protected void createMoc(String path) throws Exception {
-      createMoc(path, path + FS + MOCNAME);
-   }
-   
+      
+      moc = new HealpixMoc();
+      fileOrder = mocOrder = Util.getMaxOrderByPath(path);
 
-   protected void createMoc(String path, String outputFile) throws Exception {
-      moc.clear();
+      // dans le cas d'un survey à faible résolution
+      // ou qui couvre une petite partie du ciel, 
+      boolean isLarge=true;
+      try { 
+         if( context.mocIndex==null ) context.loadMocIndex();
+         isLarge = context.mocIndex.getCoverage()>1/6.;
+      } catch( Exception e ) { }
+      
+      // mocOrder explicitement fourni par l'utilisateur
+      if( context.getMocOrder()!=-1 ) mocOrder = context.getMocOrder();
+      
+      // mocOrder déterminé par la nature du survey
+      else {
+         if( mocOrder<Constante.DEFAULTMOCORDER || !isLarge ) {
+            mocOrder = context.getOrder()+Constante.ORDER-Constante.DIFFMOCORDER;
+         }
+         if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
+      }
+      isMocHight = mocOrder>fileOrder;
+      
+      moc.setMocOrder(mocOrder);
+
+      String outputFile = path + FS + MOCNAME;
+      
+      long t = System.currentTimeMillis();
+      context.info("MOC generation ("+(isMocHight?"hight resolution":"low resolution")+" mocOrder="+moc.getMocOrder()+")...");
       moc.setCoordSys(getFrame());
       moc.setCheckConsistencyFlag(false);
-      generateMoc(path);
+      generateMoc(moc,fileOrder, path);
       moc.setCheckConsistencyFlag(true);
-      moc.sort();
-      moc.write(outputFile, HealpixMoc.FITS);
+      moc.write(outputFile);
+      
+      long time = System.currentTimeMillis() - t;
+      context.info("MOC done in "+cds.tools.Util.getTemps(time,true)
+                        +": mocOrder="+moc.getMocOrder()
+                        +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
+   }
+   
+   
+   long startTime=0L;
+   int nbTiles = -1;
+   
+   private void initStat() {
+      startTime = System.currentTimeMillis();
+      nbTiles=1;
+   }
+   
+   private void updateStat() {
+      nbTiles++;
+   }
+   
+   /** Demande d'affichage des statistiques (via Task()) */
+   public void showStatistics() {
+      long now = System.currentTimeMillis();
+      long cTime = now-startTime;
+      if( cTime<2000 ) return;
+      
+      context.stat(nbTiles+" tile"+(nbTiles>1?"s":"")+" scanned in "+cds.tools.Util.getTemps(cTime) );
    }
    
    /** Retourne la surface du Moc (en nombre de cellules de plus bas niveau */
@@ -75,16 +133,14 @@ public class BuilderMoc extends Builder {
    /** Retourne le nombre de cellule de plus bas niveau pour la sphère complète */
    public long getArea() { return moc.getArea(); }
 
-   protected void generateMoc(String path) throws Exception {
+   protected void generateMoc(HealpixMoc moc, int fileOrder,String path) throws Exception {
+      
+      initStat();
+      
       ext = null;
-      int order = Util.getMaxOrderByPath(path);
-      File f = new File(path + Util.FS + "Norder" + order);
+      File f = new File(path + Util.FS + "Norder" + fileOrder );
       
 
-      // Ajout des pixels de plus bas niveau uniquement
-      // et création immédiate de l'arborescence par récursivité dès qu'on a 4
-      // frères
-      // consécutifs
       File[] sf = f.listFiles();
       if( sf==null || sf.length==0 ) throw new Exception("No tiles found !");
       for( int i = 0; i < sf.length; i++ ) {
@@ -102,25 +158,61 @@ public class BuilderMoc extends Builder {
             if( ext == null ) ext = e;
             else if( !ext.equals(e) ) continue;
 
-            generateTileMoc(moc,sf1[j],order,npix);
+            generateTileMoc(moc,sf1[j], fileOrder, npix);
          }
          moc.checkAndFix();
       }
    }
    
-   protected void generateTileMoc(HealpixMoc moc,File f,int order, long npix) throws Exception {
-      moc.add(order,npix);
+   private void generateTileMoc(HealpixMoc moc,File f,int fileOrder, long npix) throws Exception {
+      updateStat();
+      if( isMocHight ) generateHighTileMoc(moc,fileOrder,f,npix);
+      else moc.add(fileOrder,npix);
    }
    
-   // Retourne le code HEALPix correspondant au système de référence des coordonnées
-   // du survey HEALPix
-   protected String getFrame() {
-      try {
-         if( context.prop==null ) context.loadProperties();
-         return context.prop.getProperty(PlanHealpix.KEY_COORDSYS, "C");
-      } catch( Exception e ) { e.printStackTrace(); }
-      return "C";
+   private void generateHighTileMoc(HealpixMoc moc,int fileOrder, File f, long npix) throws Exception {
+      Fits fits = new Fits();
+      MyInputStream dis = new MyInputStream(new FileInputStream(f));
+      fits.loadFITS(dis);
+      dis.close();
+      
+      long nside = fits.width;
+      long min = nside * nside * npix;
+      int mocOrder = moc.getMocOrder();
+      int tileOrder = (int) CDSHealpix.log2(nside);
+      
+      int div = (fileOrder+tileOrder - mocOrder) *2;
+      context.createHealpixOrder( tileOrder );
+
+      
+      long oNpix=-1;  
+      for( int y=0; y<fits.height; y++ ) {
+         for( int x=0; x<fits.width; x++ ) {
+            try {
+               npix = min + context.xy2hpx(y * fits.width + x);
+               
+               npix = npix >>> div;
+               
+               // Juste pour éviter d'insérer 2x de suite le même npix
+               if( npix==oNpix ) continue;
+               
+               double pixel = fits.getPixelDouble(x,y);
+               
+               // Pixel vide
+               if( fits.isBlankPixel(pixel) ) continue;
+
+               moc.add(mocOrder,npix);
+               
+               oNpix=npix;
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+         }
+      }
+      
+      moc.checkAndFix();
    }
+
    
    // Retourne l'extension du fichier passé en paramètre, "" si aucune
    private String getExt(String file) {

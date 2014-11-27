@@ -639,9 +639,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       	// Format d'image
         JLabel fmtl = new JLabel(
-              plan instanceof PlanHealpix ? "HEALPix Fits map"+(((PlanHealpix)plan).isPartial()?" (partial mode)":"") :
+              plan instanceof PlanHealpix ? "HEALPix map" :
               plan instanceof PlanMoc ? "Multi-Order Coverage map (MOC)" :
-              plan instanceof PlanBG ? "Hierarchical Progressive Survey (HiPS)" :
+              plan instanceof PlanBG ? "HiPS" :
                  PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
         // Bouton de recuperation de visualisation du header FITS
@@ -913,7 +913,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          final long mocSize = pmoc.getMoc().getSize();
          PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
          PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
-               +" (max order="+pmoc.getMoc().getMaxOrder()+")"),g,c);
+               +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
          PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
          final JCheckBox b1 = new JCheckBox("borders");

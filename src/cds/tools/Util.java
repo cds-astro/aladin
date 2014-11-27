@@ -1510,7 +1510,7 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 	/** Permet le choix d'un répertoire */
 	static public String dirBrowser(Component c,String currentDirectoryPath) {
 	   JFileChooser fd = new JFileChooser(currentDirectoryPath);
-	   fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//	   fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	   fd.setAcceptAllFileFilterUsed(false);
 	   if (fd.showOpenDialog(c) == JFileChooser.APPROVE_OPTION) {
 	      try {
@@ -1522,6 +1522,34 @@ static public void setCloseShortcut(final JFrame f, final boolean dispose) {
 	   return null;
 	}
 
+
+	private static final String DEFAULT_FILENAME = "-";
+
+	/** Ouverture de la fenêtre de sélection d'un fichier ou d'un répertoire
+	 * Retourne null en cas d'annulation
+	 */
+	static public String dirBrowser(Frame parent, String title,String initDir,JTextField field) {
+	   FileDialog fd = new FileDialog(parent,title);
+	   if( initDir!=null ) fd.setDirectory(initDir);
+
+	   // (thomas) astuce pour permettre la selection d'un repertoire
+	   // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
+	   fd.setFile(DEFAULT_FILENAME);
+	   fd.setVisible(true);
+	   String dir = fd.getDirectory();
+	   String name =  fd.getFile();
+	   // si on n'a pas changé le nom, on a selectionne un repertoire
+	   boolean isDir = false;
+	   if( name!=null && name.equals(DEFAULT_FILENAME) ) {
+	      name = "";
+	      isDir = true;
+	   }
+	   String t = (dir==null?"":dir)+(name==null?"":name);
+	   if( field!=null ) field.setText(t);
+	   if( (name!=null && name.length()>0) || isDir ) return t;
+	   
+	   return null;
+	}
 
 	static private String HEX = "0123456789ABCDEF";
 

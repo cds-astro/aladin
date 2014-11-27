@@ -106,6 +106,7 @@ public class BuilderDetails extends Builder {
          detailOrder=maxOrder;
       }
 
+      context.mocIndex=null;
       context.initRegion();
    }
    
@@ -121,7 +122,7 @@ public class BuilderDetails extends Builder {
       String img = context.getImgEtalon();
       if( img==null && context.getInputPath()!=null) {
          img = context.justFindImgEtalon( context.getInputPath() );
-         context.info("Use this reference image => "+img);
+         if( img!=null ) context.info("Use this reference image => "+img);
       }
       if( img!=null ) {
          try { context.setImgEtalon(img); }
@@ -137,6 +138,7 @@ public class BuilderDetails extends Builder {
    public void build() throws Exception {
       initStat();
       context.setProgressMax(768);
+      
       String output = context.getHpxFinderPath();
       HealpixProgen allsky=null;
       nbItemPerOrder = new long[maxOrder+1];
@@ -221,7 +223,7 @@ public class BuilderDetails extends Builder {
 
          if( !out.hasTooMany() ) {
             writeIndexFile(file,out);
-            Aladin.trace(4, "Writing " + file);
+//            Aladin.trace(4, "Writing " + file);
          }
       }
       
@@ -333,15 +335,15 @@ public class BuilderDetails extends Builder {
    // Génération si nécessaire du fichier de MetaData afin d'exploiter l'index pour
    // un accès au progéniteur
    private void generateMedataFile() throws Exception {
-      String metadata = cds.tools.Util.concatDir(context.getHpxFinderPath(),context.METADATA);
+      String metadata = cds.tools.Util.concatDir(context.getHpxFinderPath(),context.METADATAXML);
       if( (new File(metadata)).exists() ) {
-         context.info("Pre-existing "+Context.METADATA+" file => keep it");
+         context.info("Pre-existing "+Context.METADATAXML+" file => keep it");
       } else {
          RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
          String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
          f.write(s.getBytes());
          f.close();
-         context.info("Mapping hpxFinder/"+Context.METADATA+" file has been generated");
+         context.info("Mapping hpxFinder/"+Context.METADATAXML+" file has been generated");
       }
 
       writeProperties();

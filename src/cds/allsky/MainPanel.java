@@ -22,13 +22,13 @@ package cds.allsky;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.plaf.ProgressBarUI;
 
 import cds.aladin.Aladin;
 import cds.aladin.PlanBG;
@@ -106,23 +106,47 @@ final public class MainPanel extends JPanel implements ActionListener {
     * @param text
     */
    public void init() {
+      boolean flagIsMap=false;
+      int order=3;
+      int bitpix=16;
+      
       String path = context.getInputPath();
       if( path.trim().length()==0 ) return;
-      boolean found = context.findImgEtalon(path);
-      if( !found ) {
-         context.warning("There is no available images in source directory !\n" + path);
-         return;
+      
+      File f = new File(path);
+      if( f.exists() && f.isFile() ) {
+         try {
+            BuilderMapTiles b = new BuilderMapTiles(context);
+            b.validateMap();
+            b.build(true);
+            flagIsMap=true;
+            order= b.maxOrder;
+            bitpix=b.bitpixOrig;
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
       }
-      String filename = context.getImgEtalon();
-      Fits file = new Fits();
-      try { file.loadHeaderFITS(filename); }
-      catch (Exception e) { e.printStackTrace(); }
-      tabBuild.setOriginalBitpixField(file.bitpix);
       
-      // calcule le meilleur nside
-      long nside = BuilderIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-      tabBuild.setSelectedOrder((int) Util.order((int)nside) - Constante.ORDER);
-      
+      if( !flagIsMap ) {
+         boolean found = context.findImgEtalon(path);
+         if( !found ) {
+            context.warning("There is no available images in source directory !\n" + path);
+            return;
+         }
+         String filename = context.getImgEtalon();
+         Fits file = new Fits();
+         try { file.loadHeaderFITS(filename); }
+         catch (Exception e) { e.printStackTrace(); }
+         bitpix = file.bitpix;
+
+         // calcule le meilleur nside
+         long nside = BuilderIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
+         order = (int) Util.order((int)nside) - Constante.ORDER;
+      }
+
+      context.setMap( flagIsMap );
+      tabBuild.setOriginalBitpixField( bitpix );
+      tabBuild.setSelectedOrder( order );
       newAllskyDir();
    }
    
@@ -135,7 +159,7 @@ final public class MainPanel extends JPanel implements ActionListener {
 
    protected void newAllskyDir() {
       tabPub.newAllskyDir(Constante.SURVEY);
-      try { context.loadMocIndex(); } catch( Exception e ) { }
+      try {  context.loadMocIndex(); } catch( Exception e ) { }
       resumeWidgets();
    }
    
@@ -151,7 +175,7 @@ final public class MainPanel extends JPanel implements ActionListener {
    }
 
    protected void clearForms() {
-      Constante.SURVEY = Constante.ALLSKY;
+      Constante.SURVEY = Constante.HIPS;
       context.reset();
       tabDesc.clearForms();
       tabBuild.clearForms();

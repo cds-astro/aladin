@@ -20,13 +20,10 @@
 package cds.allsky;
 
 import java.awt.image.ColorModel;
-import java.io.File;
 
-import cds.aladin.Aladin;
 import cds.aladin.ColorMap;
 import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
-import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles JPEG à partir des tuiles FITS de plus bas
  * niveau. La méthode employée est soit la médiane soit la moyenne pour passer des 4 pixels de niveau
@@ -71,25 +68,15 @@ public class BuilderJpg extends BuilderTiles {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No Fits tile found");
       validateOrder(context.getOutputPath());      
-      if( !context.isColor() ) {
-         
-//         try {
-            validateCut();
-//         } catch( Exception e ) {
-//            try {
-//               setFitsParamFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
-//               context.info("Will use pixelCut ["+context.cutOrig[0]+" .. "+context.cutOrig[1]+"], " +
-//                    "BLANK="+context.blank+" BZERO="+context.bzero+" BSCALE="+context.bscale+" found in Allsky.fits");
-//            } catch( Exception e1 ) {
-//               throw new Exception("Pixel cut unkown => use pixelcut parameter");
-//            }
-//         }
-      }
+      if( !context.isColor() ) validateCut();
       
       // Chargement du MOC réel à la place de celui de l'index (moins précis)
       try { context.loadMoc(); } catch( Exception e ) {
          context.warning("Tile MOC not found => use index MOC");
       }
+      
+      // reprise du frame si nécessaire depuis le fichier de propriété
+      if( !context.hasFrame() ) context.setFrameName( getFrame() );
       
       context.initRegion();
 //      context.initParameters();
@@ -149,7 +136,7 @@ public class BuilderJpg extends BuilderTiles {
       if( out==null ) return null;
       
       out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-      Aladin.trace(4, "Writing " + file+ext);
+//      Aladin.trace(4, "Writing " + file+ext);
       updateStat();
       return out;
    }
@@ -159,7 +146,7 @@ public class BuilderJpg extends BuilderTiles {
       Fits out = createNodeJpg(fils, method);
       if( out==null ) return null;
       out.writeCompressed(file+ext,cut[0],cut[1],tcm,fmt);
-      Aladin.trace(4, "Writing " + file+ext);
+//      Aladin.trace(4, "Writing " + file+ext);
       return out;
    }
    

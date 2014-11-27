@@ -42,10 +42,11 @@ import cds.aladin.Save;
  */
 public final class HeaderFits {
 
+   private StringBuffer   memoHeaderFits = null;  // Memorisation de l'entete FITS telle quelle (en Strings)
+   
   /** Les elements de l'entete */
    protected Hashtable header;
    protected Vector<String> keysOrder;
-
 
    /** La taille de l'entete FITS (en octets) */
     private int sizeHeader=0;
@@ -72,6 +73,22 @@ public final class HeaderFits {
     public HeaderFits(MyInputStream dis,FrameHeaderFits frameHeaderFits) throws Exception {
        readHeader(dis,frameHeaderFits);
     }
+    
+    /** Retourne le header FITS original (en Strings) */
+    public String getOriginalHeaderFits() { return memoHeaderFits.toString(); }
+    
+    /** Mémorise le header FITS original (en Strings) */
+    public void setOriginalHeaderFits(String s) { memoHeaderFits= new StringBuffer(s); }
+
+   /** Ajoute la ligne courante a la memorisation du header FITS
+    * en supprimant les blancs en fin de ligne
+    * @param s la chaine a ajouter
+    */
+    public void appendMHF(String s) {
+       if( memoHeaderFits==null ) memoHeaderFits=new StringBuffer();
+       memoHeaderFits.append(s.trim()+"\n");
+    }
+
 
   /** Taille en octets de l'entete FITS.
    * Uniquemenent mis a jour apres readHeader()
@@ -186,7 +203,7 @@ public final class HeaderFits {
             sizeHeader+=fieldsize;
             linesRead++;
             if( key.equals("END" ) ) break;
-            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF(new String(buffer,0));
+            appendMHF(new String(buffer,0));
             if( buffer[8] != '=' ) continue;
             value=getValue(buffer);
 //Aladin.trace(3,key+" ["+value+"]");
@@ -261,21 +278,21 @@ public final class HeaderFits {
          // Cas particulier d'une ligne vide
          c=getPos(buf,i,i+len,'\n');
          if( (new String(buf,i,c-i)).trim().length()==0 ) {
-            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF("");
+            appendMHF("");
 
          // Cas particulier pour COMMENT XXXX
          } else if( buf.length>i+7 && (new String(buf,i,7)).equals("COMMENT") ) {
             a=i+7;
             c = getPos(buf,a,i+len,'\n');
             com = (c-a>0) ? (new String(buf,a+1,c-a-1)).trim() : "";
-            if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLineComment(com))).trim());
+            appendMHF((new String(Save.getFitsLineComment(com))).trim());
 
          // Cas particulier pour HISTORY XXXX
          } else if( buf.length>i+7 && (new String(buf,i,7)).equals("HISTORY") ) {
                a=i+7;
                c = getPos(buf,a,i+len,'\n');
                com = (c-a>0) ? (new String(buf,a+1,c-a-1)).trim() : "";
-               if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLineHistory(com))).trim());
+               appendMHF((new String(Save.getFitsLineHistory(com))).trim());
 
             // Cas général
          } else {
@@ -298,7 +315,7 @@ public final class HeaderFits {
                header.put(key, value);
                keysOrder.addElement(key);
                //            }
-               if( frameHeaderFits!=null ) frameHeaderFits.appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
+               appendMHF((new String(Save.getFitsLine(key, value, com))).trim());
             }
          }
          i=c+1;

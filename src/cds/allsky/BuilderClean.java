@@ -44,7 +44,7 @@ public class BuilderClean extends Builder {
    
    public void showStatistics() { 
       if( context instanceof ContextGui ) return;
-      context.nlstat(nbFile+" file"+(nbFile>1?"s":"")+" deleted");
+      context.stat(nbFile+" file"+(nbFile>1?"s":"")+" deleted");
    }
    
    public boolean mustBeDeleted(File f) { return true; }

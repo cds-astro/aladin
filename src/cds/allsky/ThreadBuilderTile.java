@@ -37,6 +37,7 @@ import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -116,21 +117,21 @@ final public class ThreadBuilderTile {
       }
       if( !needMem(rqMem) ) return;
       if( isTheLastRunning() ) {
-         context.nlwarning(Thread.currentThread().getName()+" needs "+
+         context.warning(Thread.currentThread().getName()+" needs "+
                cds.tools.Util.getUnitDisk(rqMem)+" but can not stop (last thread running) !");
       }
       try {
          nbThreadRunning--;
          while( needMem(rqMem) ) {
             try { 
-               context.nlwarning(Thread.currentThread().getName()+" is waiting more memory (need "+
+               context.warning(Thread.currentThread().getName()+" is waiting more memory (need "+
                      cds.tools.Util.getUnitDisk(rqMem)+")...");
 
                cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
                context.cacheFits.forceClean();
                nbThreadRunning = builderTiles.nbThreadRunning(); // Pour etre vraiment sur
                if( nbThreadRunning<=1 ) {
-                  context.nlwarning(Thread.currentThread().getName()+" resumes (last thread runnning)");
+                  context.warning(Thread.currentThread().getName()+" resumes (last thread runnning)");
 //                  context.cacheFits.forceClean();
                   break;
                }
@@ -313,7 +314,7 @@ final public class ThreadBuilderTile {
          
          HealpixBase hpx = CDSHealpix.getHealpixBase(order+Constante.ORDER);
          
-         boolean gal2ICRS = context.frame!=Localisation.ICRS;
+         boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
          
          for (int y = 0; y < out.height; y++) {
             for (int x = 0; x < out.width; x++) {
@@ -359,7 +360,6 @@ final public class ThreadBuilderTile {
                      
                      // On a un pixel, pas besoin d'aller plus loin
                      if( !mixing ) break;
-
                   }
                   catch( Exception e ) {
                      e.printStackTrace();
@@ -419,9 +419,9 @@ final public class ThreadBuilderTile {
                
                // Mémorisation du poids du pixel (si nécessaire)
                if( weight!=null ) weight[y*Constante.SIDE+x]=totalCoef;
-               
             }
          }
+         
       } 
       catch( Exception e ) { 
          e.printStackTrace(); 

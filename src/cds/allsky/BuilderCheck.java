@@ -22,7 +22,7 @@ public class BuilderCheck extends Builder {
 
    @Override
    public void run() throws Exception {
-      context.running("Check your input files...");
+      context.info("Check your input files...");
       String pathSource = context.getInputPath();
       String readFiles = "", errFiles = "";
       testReadFiles(pathSource, readFiles, errFiles);

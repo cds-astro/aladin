@@ -43,14 +43,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import javax.swing.text.DefaultEditorKit.CutAction;
-
-
-
-
-
 import cds.allsky.Context;
 import cds.astro.Coo;
+import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.tools.Util;
@@ -343,6 +338,21 @@ public class PlanBG extends PlanImage {
       return prop;
    }
    
+   protected boolean scanMetadata() {
+      MyInputStream in=null;
+      try {
+         in = Util.openAnyStream(url+Util.FS+Context.METADATATXT);
+         byte [] res = in.readFully();
+         HeaderFits h = new HeaderFits();
+         h.readFreeHeader( new String(res) );
+         headerFits = new FrameHeaderFits(h);
+      } 
+      catch( Exception e ) { return false; }
+      finally { try { in.close(); } catch( Exception e) {} }
+      
+      return true;
+   }
+   
    protected boolean scanProperties() {
       // Information supplémentaire par le fichier properties ?
       try {
@@ -389,6 +399,7 @@ public class PlanBG extends PlanImage {
       cube = gluSky.isCube();
       
       scanProperties();
+      scanMetadata();
    }
    
    protected int getTileMode() {
@@ -413,6 +424,7 @@ public class PlanBG extends PlanImage {
       this.label=label;
       paramByTreeNode(new TreeNodeAllsky(aladin, url), c, radius);
       scanProperties();
+      scanMetadata();
       aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
       suite();
    }
@@ -436,6 +448,7 @@ public class PlanBG extends PlanImage {
       if( url.endsWith("/") ) n--;
       survey = this.label!=null && this.label.length()>0 ? this.label : url.substring(url.lastIndexOf('/',n-1)+1,n);
       scanProperties();
+      scanMetadata();
       aladin.trace(3,"AllSky http... "+this+(c!=null ? " around "+c:""));
       suite();
    }
@@ -487,7 +500,7 @@ public class PlanBG extends PlanImage {
    
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
-      String f = url+"/HpxFinder/"+Context.METADATA;
+      String f = url+"/HpxFinder/"+Context.METADATAXML;
       hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
       testHpxFinder=true;
       return hasHpxFinder;
@@ -1809,7 +1822,7 @@ public class PlanBG extends PlanImage {
 //      if( tooSmall(v,order) ) return false;
       children = healpix.getChildren(children);
       for( int i=0; i<4; i++ ){
-         if( moc!=null && !moc.isIntersecting(order,children[i]) ) continue;
+         if( isOutMoc(order,children[i]) ) continue;
          HealpixKey fils = getHealpix(order,children[i],healpix.z,false);
          if( fils==null ) fils = new HealpixKey(this,order,children[i],HealpixKey.NOLOAD);
          if( fils.isOutView(v) ) continue;
@@ -2003,8 +2016,8 @@ public class PlanBG extends PlanImage {
             long [] pixList = getPixList(v, null, ALLSKYORDER);
             for( int i=0; i<pixList.length; i++ ) {
                HealpixKey healpix = (allsky.getPixList())[ (int)pixList[i] ];
-               if( healpix==null || healpix.isOutView(v) ) continue;
-               if( moc!=null && !moc.isIntersecting(healpix.order,healpix.npix) ) continue;
+               if( healpix==null || isOutMoc(healpix.order,healpix.npix) 
+                     || healpix.isOutView(v) ) continue;
                if( drawMode==DRAWPIXEL ) healpix.draw(g,v);
                else if( drawMode==DRAWPOLARISATION ) ((HealpixKeyPol)healpix).drawPolarisation(g, v);
                statNbItems++;
@@ -2016,8 +2029,8 @@ public class PlanBG extends PlanImage {
             HealpixKey [] allSkyPixList = allsky.getPixList();
             for( int  i=0; i<allSkyPixList.length; i++ ) {
                HealpixKey healpix = allSkyPixList[i];
-               if( healpix==null  || healpix.isOutView(v) ) continue;
-               if( moc!=null && !moc.isIntersecting(healpix.order,healpix.npix) ) continue;
+               if( healpix==null  || isOutMoc(healpix.order,healpix.npix) 
+                     || healpix.isOutView(v) ) continue;
                if( drawMode==DRAWPIXEL ) healpix.draw(g,v);
                else if( drawMode==DRAWPOLARISATION ) ((HealpixKeyPol)healpix).drawPolarisation(g, v);
                statNbItems++;
@@ -2487,7 +2500,7 @@ public class PlanBG extends PlanImage {
       
       for( int i=0; i<pix.length; i++ ) {
          HealpixKey healpix = new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
-         if( healpix.isOutView(v) ) continue;
+         if( isOutMoc(order,pix[i]) || healpix.isOutView(v) ) continue;
 //         healpix.drawRealBorders(g, v);
          try {
             healpix.drawLosangeBorder(g, v);
@@ -2513,7 +2526,6 @@ public class PlanBG extends PlanImage {
          }
       }
       
-//      Vector<HealpixKey> localRedraw = new Vector<HealpixKey>(100);
       long [] pix;
       if( v.isAllSky() ) {
          pix = new long[12*(int)CDSHealpix.pow2(order)*(int)CDSHealpix.pow2(order)];
@@ -2521,7 +2533,7 @@ public class PlanBG extends PlanImage {
       } else pix = getPixList(v,getCooCentre(v),order); // via query_disc()
       
       for( int i=0; i<pix.length; i++ ) {
-         if( moc!=null && !moc.isIntersecting(order, pix[i]) ) continue;
+         if( isOutMoc(order, pix[i]) ) continue;
          if( (new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) continue;
          HealpixKey healpix;
          if( lowResolution && allsky!=null ) healpix = (allsky.getPixList())[i];
@@ -2535,8 +2547,6 @@ public class PlanBG extends PlanImage {
             healpix.draw(g,v/*,localRedraw*/);
          }
       }
-//      redraw(g,v,0,localRedraw);
-//      drawForeground(g,v);
    }
    
    // le synchronized permet d'éviter que 2 draw simultanés s'entremèlent (sur un crop par exemple)
@@ -2553,8 +2563,6 @@ public class PlanBG extends PlanImage {
 //      if( res ) System.out.println("en dehors du MOC "+order+"/"+npix);
       return res;
    }
-   
-//   protected Vector<HealpixKey> redraw = new Vector<HealpixKey>(100);
    
    /** Tracé des losanges disposibles dans la vue et demande de ceux manquants */
    protected void drawLosangesAsync(Graphics g,ViewSimple v) {
@@ -2604,18 +2612,17 @@ public class PlanBG extends PlanImage {
             for( int i=0; i<pix.length; i++ ) {
                HealpixKey healpix = getHealpix(max,pix[i],z, false);
                if( healpix==null ) {
-                  if( (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
+                  if( isOutMoc(max,pix[i]) || 
+                        (new HealpixKey(this,max,pix[i],HealpixKey.NOLOAD)).isOutView(v) ) {
                      pix[i]=-1; continue;
                   } else { allKeyReady=false;  break; }
                } else {
-                  if( healpix.isOutView(v) ) { pix[i]=-1; continue; }
+                  if( isOutMoc(max,pix[i] ) || healpix.isOutView(v) ) { pix[i]=-1; continue; }
+                  if( healpix.status!=HealpixKey.READY
+                        && healpix.status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
                   else {
-                     if( healpix.status!=HealpixKey.READY
-                           && healpix.status!=HealpixKey.ERROR ) { allKeyReady=false; break; }
-                     else {
-                        healpix.resetTimer();
-                        oneKeyReady=true;
-                     }
+                     healpix.resetTimer();
+                     oneKeyReady=true;
                   }
                }
             }
@@ -2680,7 +2687,7 @@ public class PlanBG extends PlanImage {
                healpix = getHealpix(order,pix[i],z, false);
                HealpixKey testIn = healpix!=null ? healpix : new HealpixKey(this,order,pix[i],HealpixKey.NOLOAD);
 
-               if( !allKeyReady && testIn.isOutView(v) ) {
+               if( !allKeyReady && (isOutMoc(order,pix[i]) || testIn.isOutView(v)) ) {
                   nOut1++;
                   pix[i]=-1;
                   continue;
@@ -2753,7 +2760,6 @@ public class PlanBG extends PlanImage {
          debug.append(" allsky3");
       }
 
-//      int nb1 =redraw(g,v,t1,redraw);
       hasDrawnSomething=(nb/*+nb1*/)>0;
 
       tryWakeUp();
@@ -2782,20 +2788,6 @@ public class PlanBG extends PlanImage {
    private int nStat=0;
    private long[] statTimeDisplayArray = new long[MAXSTAT];
    
-   
-//   private int redraw(Graphics g,ViewSimple v,long t1,Vector<HealpixKey> redraw) {
-//      int n=0;
-//      if( redraw.size()>0 ) {
-//         Object list[] = redraw.toArray();
-//         for( int i=0; i<list.length; i++ ) {
-//            HealpixKey healpix = (HealpixKey)list[i];
-//            try { n += healpix.draw(g, v, 8,redraw); } catch( Exception e ) { }
-//         }
-//      }
-//      statTimeDisplay = Util.getTime()-t1;
-//      return n;
-//   }
-   
    /** Retourne le Fps du dernier tracé des losanges */
    protected double getFps() { return statTimeDisplay>0 ? 1000./statTimeDisplay : -1 ; }
 
@@ -2816,8 +2808,6 @@ public class PlanBG extends PlanImage {
        }
       aladin.view.repaintAll();
    }
-   
-   
 
 //   protected int x=0,y=0,rayon=0,grandAxe=0;
 //   protected double angle=0;
@@ -3314,7 +3304,7 @@ public class PlanBG extends PlanImage {
 //         }
 //         System.out.println();
 
-         if( error==null && detectServerError(nb) ) error="Server not available";
+         if( detectServerError(nb) ) error="Server not available";
          
          // Eventuel arrêt du chargement en cours si priorité désormais plus faible
          HealpixKey healpixMin=null,healpixNet=null;
@@ -3587,11 +3577,16 @@ public class PlanBG extends PlanImage {
    /** Retourne le nombre de losanges en erreur qui pourtant se trouvent dans le survey */
    protected int nbTileError() {
       if( moc==null ) return 0;   // non significatif car contient également les losanges hors champs
+      removeHealpixOutsideMoc();
+      
       Enumeration<HealpixKey> e = pixList.elements();
       int n=0;
       while( e.hasMoreElements() ) {
          HealpixKey h = e.nextElement();
-         if( h.getStatus()==HealpixKey.ERROR ) n++;
+         if( h.getStatus()==HealpixKey.ERROR ) {
+            n++;
+            aladin.trace(4,"Error on "+h);
+         }
       }
       return n;
    }

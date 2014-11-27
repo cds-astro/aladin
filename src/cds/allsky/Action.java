@@ -25,8 +25,8 @@ public enum Action {
    TILES     ("Build all true value pixel tiles (FITS) + Allsky.fits + MOC"), 
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
-   MOC       ("(Re)build the output coverage map (MOC order=maxorder)"), 
-   MOCINDEX  ("(Re)build the input coverage map (MOC order=maxorder) in HpxFinder directory"),
+   MOC       ("(Re)build the MOC (MultiOrder Coverage map)"), 
+   MOCINDEX  ("(Re)build the index MOC (MultiOrder Coverage map) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
    ALLSKY    ("(Re)build all Allsky files + index.html"),
    GZIP      ("Compress some FITS tiles and Allsky.fits"),
@@ -45,7 +45,7 @@ public enum Action {
    RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
    CHECK     ("** In progress: Check readability of all tiles"),
 //   INFO      ("Generate properties and index.html information files"),
-   MAPTILES  ("** In progress: Build all FITS tiles from a HEALPix Fits map"),
+   MAPTILES  ("Build all FITS tiles from a HEALPix Fits map"),
    FINDER,PROGEN,  // Pour compatibilité
    ABORT, PAUSE, RESUME;
    

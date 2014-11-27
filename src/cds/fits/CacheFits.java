@@ -208,7 +208,17 @@ public class CacheFits {
    // Ouvre un fichier
    private FitsFile open(String fileName,int mode,boolean flagLoad) throws Exception {
       boolean flagChangeOrig=false;
-      if( !(new File(fileName)).exists() ) throw new FileNotFoundException();
+      
+      // Le fichier existe-t-il ? (suppression d'une éventuelle extension [x,y-wxh]
+      String file = fileName;
+      int fin =  file.length() - 1;
+      if( file.charAt( fin ) == ']' ) {
+         int deb = file.lastIndexOf( '[', fin );
+         if( deb>0 ) file = file.substring(0,deb);
+      }
+      if( !(new File(file)).exists() ) throw new FileNotFoundException();
+      
+      
       FitsFile f = new FitsFile();
       f.fits = new Fits();
       if( context!=null && context.skyvalName!=null ) { flagLoad=true; f.fits.setReleasable(false); }
@@ -326,8 +336,10 @@ public class CacheFits {
       long duree = System.currentTimeMillis() - now;
       String s1 = i>1 ? "s":"";
       long freeRam = getFreeMem();
-      context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
+      if( context!=null ) {
+         context.stat("Cache: freeRAM="+Util.getUnitDisk(freeMem)+" => "+nb+" files removed ("+Util.getUnitDisk(totMem)+") in "+i+" step"+s1+" in "+Util.getTemps(duree)
             +" => freeRAM="+Util.getUnitDisk(freeRam));
+      }
    }
    
    // Reset totalement le cache

@@ -414,7 +414,7 @@ public class PlanBGCat extends PlanBG {
 
    /** Charge la légende générique via le fichier metadata.xml (s'il existe) */
    protected void loadGenericLegende() {
-      String filename = getUrl()+"/"+Context.METADATA;
+      String filename = getUrl()+"/"+Context.METADATAXML;
       Pcat pcat = new Pcat(this);
       MyInputStream in = null;
       try {

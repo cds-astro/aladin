@@ -22,9 +22,7 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
 
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
@@ -98,7 +96,16 @@ public class PlanMoc extends PlanBGCat {
    
    /** Changement de référentiel si nécessaire */
    public HealpixMoc toReferenceFrame(String coordSys) throws Exception {
-      if( coordSys.equals(moc.getCoordSys()) ) return moc;
+      HealpixMoc moc1 = convertTo(moc,coordSys);
+      if( moc!=moc1 ) {
+         aladin.trace(2,"Moc reference frame conversion: "+moc.getCoordSys()+" => "+moc1.getCoordSys());
+      }
+      return moc1;
+   }
+   
+   /** Changement de référentiel si nécessaire */
+   static public HealpixMoc convertTo(HealpixMoc moc, String coordSys) throws Exception {
+      if( coordSys.equals( moc.getCoordSys()) ) return moc;
       
       char a = moc.getCoordSys().charAt(0);
       char b = coordSys.charAt(0);
@@ -107,7 +114,6 @@ public class PlanMoc extends PlanBGCat {
       
       Healpix hpx = new Healpix();
       int order = moc.getMaxOrder();
-      aladin.trace(2,"Moc reference frame conversion: "+a+" => "+b);
       HealpixMoc moc1 = new HealpixMoc(coordSys,moc.getMinLimitOrder(),moc.getMocOrder());
       moc1.setCheckConsistencyFlag(false);
       long onpix1=-1;
@@ -128,6 +134,9 @@ public class PlanMoc extends PlanBGCat {
       moc1.setCheckConsistencyFlag(true);
       return moc1;
    }
+   
+
+
    
    /** Retourne le Moc */
    protected HealpixMoc getMoc() { return moc; }

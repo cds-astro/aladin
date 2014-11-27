@@ -310,8 +310,10 @@ public class TabBuild extends JPanel implements ActionListener {
    
    protected void resumeWidgets() {
       try {
-         boolean readyToDo = context.isExistingDir() && mainPanel.tabDesc.outputField.getText().trim().length()>0;
          boolean isRunning = context.isTaskRunning();
+         boolean isMap = context.isMap();
+         boolean readyToDo = (isMap || context.isExistingDir())
+                          && mainPanel.tabDesc.outputField.getText().trim().length()>0;
          boolean isExistingMoc = context.getMocIndex()!=null;
          moc.setEnabled(isExistingMoc);
          note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
@@ -326,15 +328,32 @@ public class TabBuild extends JPanel implements ActionListener {
          bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
          bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
          bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         samplFast.setEnabled(readyToDo && !isRunning);
-         overlayFast.setEnabled(readyToDo && !isRunning);
-         samplBest.setEnabled(readyToDo && !isRunning);
-         overlayBest.setEnabled(readyToDo && !isRunning);
-         fading.setEnabled(readyToDo && !isRunning);
+         samplFast.setEnabled(readyToDo && !isRunning && !isMap);
+         overlayFast.setEnabled(readyToDo && !isRunning && !isMap);
+         samplBest.setEnabled(readyToDo && !isRunning && !isMap);
+         overlayBest.setEnabled(readyToDo && !isRunning && !isMap);
+         fading.setEnabled(readyToDo && !isRunning && !isMap);
          tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) 
                               : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
          tab.refresh();
+         
+         if( !isRunning ) {
+            if( isMap ) {
+               JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+               bar.setValue(bar.getMaximum());
+               bar.setString("No indexation for map!");
+            } else {
+               if( context.moc==null ) {
+                  JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+                  bar.setValue(0);
+                  bar.setString("");
+                  bar = ((ContextGui)context).mainPanel.getProgressBarTile();
+                  bar.setValue(0);
+                  bar.setString("");
+               }
+            }
+         }
       } catch( Exception e ) {
          e.printStackTrace();
       } 
@@ -456,13 +475,20 @@ public class TabBuild extends JPanel implements ActionListener {
       try {
          Vector<Action> actions = new Vector<Action>();
          
-         if( mainPanel.tabDesc.isResetIndex() ) actions.add(Action.CLEANINDEX);
-         actions.add(Action.INDEX);
+         boolean isMap = context.isMap();
+         
+         if( !isMap ) {
+            if( mainPanel.tabDesc.isResetIndex() ) actions.add(Action.CLEANINDEX);
+            actions.add(Action.INDEX);
+         }
          if( mainPanel.tabDesc.isResetTiles() ) actions.add(Action.CLEANTILES);
-         actions.add(Action.TILES);
+         
+         if( isMap ) actions.add(Action.MAPTILES);
+         else actions.add(Action.TILES);
+         
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
-            actions.add(Action.DETAILS);
+            if( !isMap ) actions.add(Action.DETAILS);
          }
 
          new Task(context, actions, false);

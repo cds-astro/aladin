@@ -69,18 +69,26 @@ public class BuildProgressPanel extends JPanel {
       srcFileStat.setText(s);
    }
 
+   protected void srcFileStat(String s) {
+      srcFileStat.setText(s);
+   }
+   
    protected void setMemStat(int nbRunningThread,int nbThread,CacheFits cacheFits) {
       long maxMem = Runtime.getRuntime().maxMemory();
       long totalMem = Runtime.getRuntime().totalMemory();
       long freeMem = Runtime.getRuntime().freeMemory();
       long usedMem = totalMem-freeMem;
 
-      String s= "thread: "+(nbRunningThread==-1?"":nbRunningThread+" / "+nbThread)
-      + " - RAM: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
+      String s= (nbThread>1?"thread: "+(nbRunningThread==-1?"":nbRunningThread+" / "+nbThread)+" - ":"")
+      + "RAM: "+Util.getUnitDisk(usedMem)+"/"+Util.getUnitDisk(maxMem)
       + " (FITS cache: "+Util.getUnitDisk(cacheFits.getMem())+")";
+      setMemStat(s);
+   }
+   
+   protected void setMemStat(String s) {
       memStat.setText(s);
    }
-
+   
    protected void setLowTileStat(int nbTile,int nbEmptyTile,long nbCells,long sizeTile,long minTime, long maxTime, long avgTime) {
       String s;
       if( nbTile==-1 ) s="";
@@ -88,6 +96,10 @@ public class BuildProgressPanel extends JPanel {
        s= nbTile+"+"+nbEmptyTile+"/"+nbCells+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - avg.proc.time: "+Util.getTemps(avgTime)+" ["+Util.getTemps(minTime)+" .. "+Util.getTemps(maxTime)+"]";
+      setLowTileStat(s);
+   }
+   
+   protected void setLowTileStat(String s) {
       lowTileStat.setText(s);
    }
    
@@ -98,6 +110,10 @@ public class BuildProgressPanel extends JPanel {
        s= nbTile+" tile"+(nbTile>1?"s":"")
           + " for "+Util.getUnitDisk(sizeTile*nbTile)
           + " - avg.proc.time: "+Util.getTemps(avgTime);
+      setNodeTileStat(s);
+   }
+   
+   protected void setNodeTileStat(String s) {
       nodeTileStat.setText(s);
    }
 
@@ -106,9 +122,13 @@ public class BuildProgressPanel extends JPanel {
       if( time!=-1 )  s.append((tempsTotalEstime>0?"running ":"")+Util.getTemps(time,true));
       if(  time>5000 && tempsTotalEstime>0 ) s.append(" - "+nbTilesPerMin+" tiles/mn");
       if( time>20000 && tempsTotalEstime>0 ) s.append(" - ends in "+Util.getTemps(tempsTotalEstime,true));
-      timeStat.setText(s+"");
+      setTimeStat(s+"");
    }
    
+   protected void setTimeStat(String s) {
+      timeStat.setText(s);
+   }
+
    private JLabel srcFileStat,memStat,lowTileStat,nodeTileStat,timeStat;
 
    private JPanel createStatPanel() {

@@ -68,9 +68,33 @@ public class BuilderIndex extends Builder {
 
    public void run() throws Exception {
       build();
+      report();
+      
       BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
       builderMocIndex.run();
       context.setMocIndex( builderMocIndex.getMoc() ) ;
+   }
+   
+   private ArrayList<String> badFiles=null;   // Liste des fichiers écartés
+   
+   /** Ajout d'un fichier à la liste des fichiers images sources écartés lors de l'indexation
+    * suivi de la raison de son éviction. */
+   private void addBadFile(String file, String error) {
+      if( badFiles==null ) badFiles = new ArrayList<String>();
+      badFiles.add( file+(error!=null && error.length()>0 ? " => "+error:"") );
+   }
+   
+   // fournit le rapport d'indexation notamment la liste des fichiers
+   // écartés
+   private void report() throws Exception {
+      if( badFiles!=null ) {
+         int n = badFiles.size();
+         context.warning("Index report: "+n+" input file"+(n>1?"s":"")+" not incorporated:");
+         for( String s : badFiles ) context.warning("   "+s);
+      }
+      context.info("Index report "+statNbFile+" file"+(statNbFile>1?"s":"")+" incorporated");
+      
+      if( statNbFile==0 ) throw new Exception("No available image found ! => Aborted");
    }
    
    
@@ -101,7 +125,7 @@ public class BuilderIndex extends Builder {
          String img = context.getImgEtalon();
          if( img==null ) {
             img = context.justFindImgEtalon( context.getInputPath() );
-            context.info("Use this reference image => "+img);
+            if( img!=null ) context.info("Use this reference image => "+img);
          }
          if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
          try {
@@ -156,6 +180,7 @@ public class BuilderIndex extends Builder {
    
    /** Demande d'affichage des stats (dans le TabBuild) */
    public void showStatistics() {
+      if( statNbFile<=0 ) return;
       long statDuree = System.currentTimeMillis()-statTime;
       context.showIndexStat(statNbFile, statBlocFile, statNbZipFile, statMemFile, statPixSize, statMaxSize,
             statMaxWidth, statMaxHeight, statMaxDepth, statMaxNbyte,statDuree);
@@ -177,7 +202,6 @@ public class BuilderIndex extends Builder {
       
       create(input, pathDest, order);
       
-      if( statNbFile==0 ) throw new Exception("No available image found ! Notice that Multi-Extension Fits is not supported (yet) by HiPS generator"); 
       return true;
    }
 
@@ -286,19 +310,22 @@ public class BuilderIndex extends Builder {
                if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
                
               // S'agit-il d'une image calibrée ?
-               if( fitsfile.calib==null ) continue;
+               if( fitsfile.calib==null ) {
+                  if( flagDefaultHDU ) break;
+                  else continue;
+               }
                
                if( firstDepth==0 ) firstDepth=fitsfile.depth;
                else if( fitsfile.depth!=firstDepth ) continue;
                
                Aladin.trace(4,"HiPS indexing "+currentfile+ (ext==0?"":"["+ext+"]..."));
-
+               
                try {
 
                   // Test sur l'image entière
                   if( !partitioning /* || fitsfile.width*fitsfile.height<=4*Constante.FITSCELLSIZE*Constante.FITSCELLSIZE */ ) {
-                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
                      testAndInsert(fitsfile, pathDest, currentfile, null, order);
+                     updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
 
                      // Découpage en blocs
                   } else {   
@@ -306,7 +333,6 @@ public class BuilderIndex extends Builder {
                      int width = fitsfile.width - borderSize[3];
                      int height = fitsfile.height - borderSize[2];
 
-                     updateStat(file, code, width, height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
 
                      for( int x=borderSize[1]; x<width; x+=cellSize ) {
 
@@ -322,9 +348,11 @@ public class BuilderIndex extends Builder {
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                         }
                      }
+                     
+                     updateStat(file, code, width, height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
                   }
-               } catch (Exception e) {
-                  if( Aladin.levelTrace>=3 ) e.printStackTrace();
+               } catch( Exception e1 ) {
+                  addBadFile(currentfile,e1.getMessage());
                   break;
                }
             }  catch (Exception e) {
@@ -358,79 +386,81 @@ public class BuilderIndex extends Builder {
       Coord center = new Coord();
       String fitsVal=null;
       
-      try {
-         // Recherche les 4 coins de l'image (cellule)
-         Calib c = fitsfile.getCalib();
-         ArrayList<double[]> cooList = new ArrayList<double[]>(4);
-         Coord coo = new Coord();
-         StringBuffer stc = new StringBuffer("POLYGON J2000");
-         boolean hasCell = fitsfile.hasCell();
-         for( int i=0; i<4; i++ ) {
-            coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
-            coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
+      // Recherche les 4 coins de l'image (cellule)
+      Calib c = fitsfile.getCalib();
+      ArrayList<double[]> cooList = new ArrayList<double[]>(4);
+      Coord coo = new Coord();
+      Coord corner[] = new Coord[4];
+      StringBuffer stc = new StringBuffer("POLYGON J2000");
+      boolean hasCell = fitsfile.hasCell();
+      for( int i=0; i<4; i++ ) {
+         coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
+         coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
+         if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+            coo.y = fitsfile.height - coo.y -1;
+         c.GetCoord(coo);
+         cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
+
+         corner[i] = new Coord(coo.al,coo.del);
+
+         // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
+         if( hasCell ) {
+            coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
+            coo.y = (i<2 ? 0 : fitsfile.height);
             if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
                coo.y = fitsfile.height - coo.y -1;
             c.GetCoord(coo);
-            cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
-            
-            // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
-            if( hasCell ) {
-               coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
-               coo.y = (i<2 ? 0 : fitsfile.height);
-               if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
-                  coo.y = fitsfile.height - coo.y -1;
-               c.GetCoord(coo);
-            }
-            stc.append(" "+coo.al+" "+coo.del);
-            
-            // On calcul également les coordonnées du centre de l'image
-            center.x = fitsfile.width/2;
-            center.y = fitsfile.height/2;
-            if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
-               center.y = fitsfile.height - center.y -1;
-            c.GetCoord(center);
-            
-            // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
-            if( context.fitsKeys!=null ) {
-               StringBuilder res=null; 
-               for( String key : context.fitsKeys ) {
-                  String val;
-                  if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
-                     if( fitsfile.headerFits0==null || fitsfile.headerFits0!=null 
-                           && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
-                  }
-                  if( res==null ) res = new StringBuilder();
-                  res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
-               }
-               if( res!=null ) fitsVal=res.toString();
-            }
-            
          }
-         
-         long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
-
-         // pour chacun des losanges concernés
-         for (int i = 0; i < npixs.length; i++) {
-            long npix = npixs[i];
-
-            // vérifie la validité du losange trouvé
-            if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
-
-            hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
-            out = openFile(hpxname);
-
-            // ajoute le chemin du fichier Source FITS, 
-            // suivi éventuellement de la définition de la cellule en question
-            // (mode mosaic), void du HDU particulier
-            String filename = currentFile + (suffix == null ? "" : suffix);
-            
-            createAFile(out, filename, center, stc.toString(), fitsVal);
-            out.close();
-         }
-      } catch( Exception e ) {
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         stc.append(" "+coo.al+" "+coo.del);
       }
 
+      // On teste le rapport largeur/longeur
+      double h = Coord.getDist(corner[0], corner[1]);
+      double w = Coord.getDist(corner[1], corner[2]);
+      if( h>w*10 || w>h*10 ) throw new Exception("Suspissious image calibration (" +Coord.getUnit(h)+"x"+Coord.getUnit(w)+")");
+
+      // On calcul également les coordonnées du centre de l'image
+      center.x = fitsfile.width/2;
+      center.y = fitsfile.height/2;
+      if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+         center.y = fitsfile.height - center.y -1;
+      c.GetCoord(center);
+
+      // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
+      if( context.fitsKeys!=null ) {
+         StringBuilder res=null; 
+         for( String key : context.fitsKeys ) {
+            String val;
+            if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
+               if( fitsfile.headerFits0==null || fitsfile.headerFits0!=null 
+                     && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
+            }
+            if( res==null ) res = new StringBuilder();
+            res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
+         }
+         if( res!=null ) fitsVal=res.toString();
+      }
+
+      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
+
+      // pour chacun des losanges concernés
+      for (int i = 0; i < npixs.length; i++) {
+         long npix = npixs[i];
+
+         // vérifie la validité du losange trouvé
+         if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;
+
+         hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
+         out = openFile(hpxname);
+
+         // ajoute le chemin du fichier Source FITS, 
+         // suivi éventuellement de la définition de la cellule en question
+         // (mode mosaic), void du HDU particulier
+         String filename = currentFile + (suffix == null ? "" : suffix);
+
+         createAFile(out, filename, center, stc.toString(), fitsVal);
+         out.close();
+      }
    }
 
    private boolean isInImage(Fits f, Coord[] corners) {

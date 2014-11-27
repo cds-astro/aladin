@@ -31,7 +31,6 @@ import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
-import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
@@ -54,11 +53,10 @@ public class BuilderTiles extends Builder {
    protected int ordermax;
    protected long nummin = 0;
    protected long nummax = 0;
-   protected HealpixMoc npix_list;
    protected Iterator<Long> npixIterator;
    protected double automin = 0;
    protected double automax = 0;
-
+   
    public static boolean DEBUG = true;
 
    public static String FS;
@@ -76,6 +74,7 @@ public class BuilderTiles extends Builder {
    protected long statNodeTotalTime,statNodeAvgTime;
    protected long startTime;                 // Date de lancement du calcul
    protected long totalTime;                 // Temps depuis le début du calcul
+   private Builder b=null;                   // Subtilité pour faire afficher des statistiques
 
    public BuilderTiles(Context context) { super(context); }
 
@@ -83,7 +82,7 @@ public class BuilderTiles extends Builder {
 
 
    public void run() throws Exception {
-      context.running("Creating "+context.getTileExt()+" tiles and allsky (max depth="+context.getOrder()+")...");
+      context.info("Creating "+context.getTileExt()+" tiles and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
 
       // Un peu de baratin
@@ -108,8 +107,9 @@ public class BuilderTiles extends Builder {
          if( context.good!=null ) context.info("Good pixel values ["+ip(context.good[0],bz,bs)+" .. "+ip(context.good[1],bz,bs)+"] => other values are ignored");
          context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
       }
+      
       build();
-      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+      if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
 
@@ -210,6 +210,8 @@ public class BuilderTiles extends Builder {
 
    /** Demande d'affichage des statistiques (via Task()) */
    public void showStatistics() {
+      if( b!=null ) { b.showStatistics(); return; }
+      if( statNbThreadRunning==0 || statNbTile==0 ) return;
       long now = System.currentTimeMillis();
       totalTime = now-startTime;
       long deltaTime = now-lastTime;
@@ -370,7 +372,7 @@ public class BuilderTiles extends Builder {
       int nbProc = Runtime.getRuntime().availableProcessors();
 
       // On utilisera pratiquement toute la mémoire pour le cache
-      long size = getMem();
+      long size = context.getMem();
 
 //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
       long bufMem =  4L * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpixOrig();
@@ -403,13 +405,17 @@ public class BuilderTiles extends Builder {
          cds.tools.Util.pause(1000);
       }
 
+      if( !context.isTaskAborting() ) {
+
+         if( ThreadBuilderTile.statMaxOverlays>0 )
+            context.info("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
+                  ThreadBuilderTile.statOnePass+" in one step, "+
+                  ThreadBuilderTile.statMultiPass+" in multi steps");
+         Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
+         Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
+      }
+
       context.cacheFits.reset();
-      if( ThreadBuilderTile.statMaxOverlays>0 )
-         context.info("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
-      		ThreadBuilderTile.statOnePass+" in one step, "+
-            ThreadBuilderTile.statMultiPass+" in multi steps");
-      Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
-      Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
    }
 
    /** Création d'un losange et de toute sa descendance si nécessaire.
@@ -511,6 +517,7 @@ public class BuilderTiles extends Builder {
       public void run() {
          mode=EXEC;
          updateStat(+1,0,0,0,0,0);
+         
          while( encore ) {
             MocCell cell = getNextNpix();
             if( cell==null ) {
@@ -530,13 +537,14 @@ public class BuilderTiles extends Builder {
                   createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix, z);
                }
                if( cell.order==3 ) setProgressBar((int)cell.npix);
-
+               
             } catch( Throwable e ) {
                Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
                e.printStackTrace(); 
                context.taskAbort();
             }
          }
+         
          updateStat(-1,0,0,0,0,0);
          mode=DIED;
          rmThread(Thread.currentThread());

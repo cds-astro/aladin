@@ -22,18 +22,10 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Locale;
-import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -41,7 +33,6 @@ import javax.swing.JProgressBar;
 
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
-import cds.aladin.HealpixKey;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
@@ -54,6 +45,7 @@ import cds.astro.Galactic;
 import cds.astro.ICRS;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
+import cds.fits.HeaderFits;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
@@ -67,7 +59,8 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
 
-   static final public String METADATA = "metadata.xml";
+   static final public String METADATAXML = "metadata.xml";
+   static final public String METADATATXT = "metadata.txt";
    
    // Zone d'observation dans l'image (tout, ellipsoïde, ou rectangulaire)
    static final public int ALL         = 0;
@@ -81,6 +74,7 @@ public class Context {
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
+   protected HeaderFits header=null;         // Entête FITS associée
    
    protected int depth=1;                    // profondeur du cube (1 pour une image)
    protected boolean depthInit=false;          // true si la profondeur du cube a été positionné
@@ -122,11 +116,11 @@ public class Context {
    
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer         
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
-   protected int frame = Localisation.ICRS;  // Système de coordonnée de la boule HEALPIX à générée
+   private int frame =-1;                    // Système de coordonnée de la boule HEALPIX à générée
    protected HealpixMoc mocArea = null;      // Zone du ciel à traiter (décrite par un MOC)
    protected HealpixMoc mocIndex = null;     // Zone du ciel correspondant à l'index Healpix
    protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
-   protected int diffOrder=4;                // Lors du calcul du MOC, différence entre ordre du MOC et ordre optimum
+   protected int mocOrder=-1;                // order du MOC des tuiles
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
@@ -153,6 +147,7 @@ public class Context {
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
       validateOutputDone=validateInputDone=validateCutDone=false;
+      isMap=false;
       prop=null;
       pixelGood=null;
       good=null;
@@ -166,8 +161,10 @@ public class Context {
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Context.ALL ?  borderSize : new int[]{0,0,0,0}; }
    public int getOrder() { return order; }
-   public int getFrame() { return frame; }
-   public String getFrameName() { return Localisation.getFrameName(frame); }
+   public boolean hasFrame() { return frame>=0; }
+   public int getFrame() { return hasFrame() ? frame : Localisation.ICRS; }
+   public String getFrameName() { return Localisation.getFrameName( getFrame()); }
+   public String getFrameCode() { return getFrame()==Localisation.GAL ? "G" : "C"; }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
@@ -195,10 +192,11 @@ public class Context {
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isMocDescendant(int order,long npix) { return moc==null || moc.isDescendant(order,npix); }
    public int getMaxNbThread() { return maxNbThread; }
-   public int getDiffOrder() { return diffOrder; }
+   public int getMocOrder() { return mocOrder; }
    public int getMinOrder() { return minOrder; }
 
    // Setters
+   public void setHeader(HeaderFits h) { header=h; }
    public void setPublisher(String s) { publisher=s; }
    public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
@@ -211,7 +209,7 @@ public class Context {
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
    public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
-   public void setDiffOrder(int diffOrder) { this.diffOrder = diffOrder; }
+   public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame= (frame.startsWith("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setSkyValName(String s ) { 
@@ -339,8 +337,6 @@ public class Context {
       return isColor() ? EXT[ targetColorMode ] : ".fits";
    }
    
-
-   
    protected enum JpegMethod { MEDIAN, MEAN; }
    
    /**
@@ -435,7 +431,7 @@ public class Context {
        if (w > 1024) { w = 1024; x=file.width/2 - 512; }
        if (h > 1024) { h = 1024; y=file.height/2 -512; }
        if (d > 1 ) { d = 1;  z=file.depth/2 - 1/2; }
-       file.loadFITS(file.getFilename(), 0, x, y, z, w, h, d);
+       if( file.getFilename()!=null ) file.loadFITS(file.getFilename(), 0, x, y, z, w, h, d);
 
        double[] cutOrig = file.findAutocutRange();
        
@@ -644,10 +640,10 @@ public class Context {
             bscale = bScaleOrig/coef;
             
 
-            Aladin.trace(3,"Change BITPIX from "+bitpixOrig+" to "+bitpix);
-            Aladin.trace(3,"Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
+            info("Change BITPIX from "+bitpixOrig+" to "+bitpix);
+            info("Map original pixel range ["+cutOrig[2]+" .. "+cutOrig[3]+"] " +
                   "to ["+cut[2]+" .. "+cut[3]+"]");
-            Aladin.trace(3,"Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
+            info("Change BZERO,BSCALE,BLANK="+bZeroOrig+","+bScaleOrig+","+blankOrig
                   +" to "+bzero+","+bscale+","+blank);
 
             if( Double.isInfinite(bzero) || Double.isInfinite(bscale) ) throw new Exception("pixelRange parameter required !");
@@ -676,9 +672,12 @@ public class Context {
     * seul sauf si besoin explicite */
    protected void initRegion() throws Exception {
       try {
-         if( mocIndex==null ) loadMocIndex();
+         if( mocIndex==null ) {
+            if( isMap() ) mocIndex=new HealpixMoc("0/0-11");
+            else loadMocIndex();
+         }
       } catch( Exception e ) {
-         warning("No MOC index found => assume all sky");
+//         warning("No MOC index found => assume all sky");
          mocIndex=new HealpixMoc("0/0-11");  // par défaut tout le ciel
       }
       if( mocArea==null ) moc = mocIndex;
@@ -819,8 +818,12 @@ public class Context {
    /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index et le MOC de la zone) */
    protected long getNbLowCells() { 
       if( moc==null || getOrder()==-1 ) return -1;
-      long nbcells = moc.getUsedArea() * depth;
-      return nbcells *= (long) Math.pow(4, (getOrder() - moc.getMaxOrder()) );
+      HealpixMoc m = moc;
+      if( getOrder()!=moc.getMocOrder() ) {
+        m =  (HealpixMoc) moc.clone();
+        try { m.setMocOrder( getOrder() ); } catch( Exception e ) {}
+      }
+      return m.getUsedArea() * depth;
    }
    
    /** Retourne le volume du Allsky en fits en fonction du nombre de cellules prévues et du bitpix */
@@ -846,13 +849,12 @@ public class Context {
                +" in "+Util.getTemps(statDuree)
                +(nbPerSec.length()==0 ? "":" => "+nbPerSec+"/s")
          + (statNbFile>0 && statNbZipFile==statNbFile ? " - all gzipped" : statNbZipFile>0 ? " ("+statNbZipFile+" gzipped)":"")
-//         + (statBlocFile>0 && statBlocFile==statNbFile? " - all splitted" : statBlocFile>0 ? "("+statBlocFile+" splitted)":"")
          + " => "+Util.getUnitDisk(statPixSize).replace("B","pix")
          + " using "+Util.getUnitDisk(statMemFile)
          + (statNbFile>1 && statMaxSize<0 ? "" : " => biggest: ["+statMaxWidth+"x"+statMaxHeight
                +(statMaxDepth>1?"x"+statMaxDepth:"")+" x"+statMaxNbyte+"]");
       }
-      nlstat(s);
+      stat(s);
    }
 
    // Demande d'affichage des stats (dans le TabBuild)
@@ -878,10 +880,20 @@ public class Context {
 //         +" using "+Util.getUnitDisk(usedMem)
          ;
 
-      nlstat(s);
+      stat(s);
       if( cacheFits!=null && cacheFits.getStatNbOpen()>0 ) stat(cacheFits+"");
 
       setProgress(statNbTile+statNbEmptyTile, nbCells);
+   }
+   
+   protected void showMapStat(long  cRecord,long nbRecord, long cTime,CacheFits cache, String info ) {
+      double pourcent = (double)cRecord/nbRecord;
+      long totalTime = (long)( cTime/pourcent);
+      long endsIn = totalTime-cTime;
+      stat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true)+" endsIn="+Util.getTemps(endsIn, true)
+            + " (record="+(cRecord+1)+"/"+nbRecord+")");
+      if( cache!=null && cache.getStatNbOpen()>0 ) stat(cache+"");
+      setProgress(cRecord,nbRecord);
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
@@ -898,7 +910,7 @@ public class Context {
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
             ;
 
-      nlstat(s);
+      stat(s);
    }
 
    // Demande d'affichage des stats (dans le TabRgb)
@@ -910,6 +922,11 @@ public class Context {
    protected JProgressBar progressBar=null;  // la progressBar attaché à l'action
    protected MyProperties prop=null;
    
+   private boolean isMap=false;       // true s'il s'agit d'une map HEALPix FITS
+   protected boolean isMap() { return isMap; }
+   protected void setMap(boolean flag ) {
+      isMap=flag;
+   }
    
    protected boolean ignoreStamp;
    public void setIgnoreStamp(boolean flag) { ignoreStamp=true; }
@@ -947,15 +964,15 @@ public class Context {
    public void startAction(Action a) throws Exception { 
       action=a; 
       action.startTime();
-      running(action+" in progress...");
+//      running("========= "+action+" ==========");
 //      updateProperties( getKeyActionStart(action), getNow(),true);
       setProgress(0,-1);
    }
    public void endAction() throws Exception {
       if( action==null ) return;
-      if( isTaskAborting() )  nldone(action+" abort (after "+Util.getTemps(action.getDuree())+")\n");
+      if( isTaskAborting() ) done(action+" abort (after "+Util.getTemps(action.getDuree())+")");
       else {
-         nldone(action+" done (in "+Util.getTemps(action.getDuree())+")\n");
+         done(action+" done (in "+Util.getTemps(action.getDuree())+")");
 //         updateProperties( getKeyActionEnd(action), getNow(),true);
       }
       action=null;
@@ -1002,7 +1019,7 @@ public class Context {
    public void setProgress(double progress,double progressMax) { setProgress(progress); setProgressMax(progressMax); }
    public void setProgress(double progress) { this.progress=progress; }
    public void setProgressMax(double progressMax) { this.progressMax=progressMax; }
-   public void progressStatus() { System.out.print('.'); }
+   public void progressStatus() { System.out.print('.'); flagNL=true; }
    public void enableProgress(boolean flag) { System.out.println("progress ["+action+"] enable="+flag); }
    public void setProgressBar(JProgressBar bar) { }
    public void resumeWidgets() { }
@@ -1044,16 +1061,19 @@ public class Context {
 	   }
    }
    
-   public void running(String string)  { System.out.println("RUN   : "+string); }
-   public void nldone(String string)   { System.out.println("\nDONE  : "+string);  }
-   public void done(String string)     { System.out.println("DONE  : "+string); }
-   public void info(String string)     { System.out.println("INFO  : "+string); }
-   public void nlwarning(String string){ System.out.println("\nWARN  : "+string); }
-   public void warning(String string)  { System.out.println("WARN  : "+string); }
-   public void error(String string)    { System.out.println("ERROR : "+string); }
-   public void action(String string)   { System.out.println("ACTION: "+string); }
-   public void nlstat(String string)   { System.out.println("\nSTAT  : "+string); }
-   public void stat(String string)     { System.out.println("STAT  : "+string); }
+   
+   private boolean flagNL=false;   // indique qu'il faut ou non insérer un NL dans les stats, infos...
+
+   // Insère un NL si nécessaire
+   private void nl() { if( flagNL ) System.out.println(); flagNL=false; }
+   
+   public void running(String s)  { nl(); System.out.println("RUN   : ================================ "+s+" ==============================="); }
+   public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
+   public void info(String s)     { nl(); System.out.println("INFO  : "+s); }
+   public void warning(String s)  { nl(); System.out.println("WARN  : "+s); }
+   public void error(String s)    { nl(); System.out.println("ERROR : "+s); }
+   public void action(String s)   { nl(); System.out.println("ACTION: "+s); }
+   public void stat(String s)     { nl(); System.out.println("STAT  : "+s); }
    
    private boolean validateOutputDone=false;
    public boolean isValidateOutput() { return validateOutputDone; }
@@ -1180,9 +1200,9 @@ public class Context {
          info.append("   <LI> <B>Associated coverage map:</B> <A HREF=\""+BuilderMoc.MOCNAME+"\">MOC</A>\n");
       }
       
-      String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),METADATA);
+      String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),METADATAXML);
       if( (new File(metadata)).exists() ) {
-         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/"+METADATA+"\">"+METADATA+"</A>\n");
+         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/"+METADATAXML+"\">"+METADATAXML+"</A>\n");
       }
 
       res = res.replace("$INFO",info);
@@ -1197,6 +1217,33 @@ public class Context {
          out = new FileOutputStream(ftmp);
          out.write(res.getBytes());
       } finally {  if( out!=null ) out.close(); }
+   }
+   
+   /** Création d'un fichier metadata.txt associé au HiPS */
+   protected void writeMetadataFits() throws Exception {
+      
+      // POUR LE MOMENT JE PREFERE NE PAS LE METTRE
+//      // Si je n'ai pas de Header spécifique, je récupère
+//      // celui de l'image étalon
+//      if( header==null && imgEtalon!=null ) {
+//         try {
+//            MyInputStream in = new MyInputStream( new FileInputStream( imgEtalon ) );
+//            header = new HeaderFits( in );
+//            in.close();
+//         } catch( Exception e ) { e.printStackTrace(); }
+//      }
+      
+      if( header==null )  return;
+      
+      String tmp = getOutputPath()+Util.FS+METADATATXT;
+      File ftmp = new File(tmp);
+      if( ftmp.exists() ) ftmp.delete();
+      FileOutputStream out = null;
+      try { 
+         out = new FileOutputStream(ftmp);
+         out.write(( header.getOriginalHeaderFits()).getBytes() );
+      } finally {  if( out!=null ) out.close(); }
+
    }
    
    /** Création, ou mise à jour du fichier des Properties associées au survey */
@@ -1269,6 +1316,9 @@ public class Context {
       
       // On en profite pour écrire le fichier index.html
       writeIndexHtml();
+      
+      // Et metadata.fits
+      writeMetadataFits();
    }
    
    // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)
@@ -1392,7 +1442,7 @@ public class Context {
 
    protected double[] gal2ICRSIfRequired(double al, double del) { return gal2ICRSIfRequired(new double[]{al,del}); }
    protected double[] gal2ICRSIfRequired(double [] aldel) {
-      if( frame==Localisation.ICRS ) return aldel;
+      if( getFrame()==Localisation.ICRS ) return aldel;
       Astrocoo coo = (Astrocoo) COO_GAL.clone(); 
       coo.set(aldel[0],aldel[1]);
       coo.convertTo(AF_ICRS1);
@@ -1402,7 +1452,7 @@ public class Context {
    }
    protected double[] ICRS2galIfRequired(double al, double del) { return ICRS2galIfRequired(new double[]{al,del}); }
    protected double[] ICRS2galIfRequired(double [] aldel) {
-      if( frame==Localisation.ICRS ) return aldel;
+      if( getFrame()==Localisation.ICRS ) return aldel;
       Astrocoo coo = (Astrocoo) COO_EQU.clone(); 
       coo.set(aldel[0], aldel[1]);
       coo.convertTo(AF_GAL1);
@@ -1434,12 +1484,12 @@ public class Context {
 
    /** Creation des tableaux de correspondance indice Healpix <=> indice XY */
    public void createHealpixOrder(int order) {
-      int nsize = (int) CDSHealpix.pow2(order);
-      xy2hpx = new int[nsize * nsize];
-      hpx2xy = new int[nsize * nsize];
-      fillUp(xy2hpx, nsize, null);
-      for (int i = 0; i < xy2hpx.length; i++)
-         hpx2xy[xy2hpx[i]] = i;
+      int nside = (int) CDSHealpix.pow2(order);
+      if( xy2hpx!=null && xy2hpx.length == nside*nside ) return;  // déja fait
+      xy2hpx = new int[nside * nside];
+      hpx2xy = new int[nside * nside];
+      fillUp(xy2hpx, nside, null);
+      for (int i = 0; i < xy2hpx.length; i++) hpx2xy[xy2hpx[i]] = i;
    }
 
    /**
@@ -1457,4 +1507,11 @@ public class Context {
    final public int hpx2xy(int xyOffset) {
       return hpx2xy[xyOffset];
    }
+   
+   /** Retourne le nombre d'octets disponibles en RAM */
+   public long getMem() {
+      return Runtime.getRuntime().maxMemory()-
+            (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
+   }
+
 }

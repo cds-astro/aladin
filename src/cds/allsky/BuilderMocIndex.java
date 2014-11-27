@@ -19,6 +19,10 @@
 
 package cds.allsky;
 
+import static cds.tools.Util.FS;
+import cds.moc.HealpixMoc;
+import cds.tools.pixtools.Util;
+
 /** Création d'un fichier Moc.fits correspondant à l'index HEALpix
  * @author Anaïs Oberto [CDS] & Pierre Fernique [CDS]
  */
@@ -27,7 +31,26 @@ public class BuilderMocIndex extends BuilderMoc {
    public BuilderMocIndex(Context context) { super(context); }
    
    public void run() throws Exception {
-      createMoc(context.getHpxFinderPath());
+      long t = System.currentTimeMillis();
+      
+      String path = context.getHpxFinderPath();
+      
+      moc = new HealpixMoc();
+      mocOrder = Util.getMaxOrderByPath(path);
+      moc.setMocOrder(mocOrder);
+
+      String outputFile = path + FS + MOCNAME;
+      moc.setCoordSys(getFrame());
+      moc.setCheckConsistencyFlag(false);
+      generateMoc(moc,mocOrder, path);
+      moc.setCheckConsistencyFlag(true);
+      moc.write(outputFile);
+      
+      long time = System.currentTimeMillis() - t;
+      context.info("MOC Index done in "+cds.tools.Util.getTemps(time,true)
+                        +": mocOrder="+moc.getMocOrder()
+                        +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
+
    }
    
    public Action getAction() { return Action.MOCINDEX; }

@@ -21,11 +21,12 @@ package cds.allsky;
 
 
 public class Constante {
+   
    public static final int INDEX = 0;
    public static final int TESS = 1;
    public static final int JPG = 2;
-   public static final String ALLSKY = "HiPS";
-   public static String SURVEY = ALLSKY; // sous répertoire final contenant la hierarchie healpix
+   public static final String HIPS = "HiPS";
+   public static String SURVEY = HIPS; // sous répertoire final contenant la hierarchie healpix
    public static final String HPX_FINDER = "HpxFinder";
 
    // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
@@ -36,9 +37,6 @@ public class Constante {
    final static public int SIDE = (int)Math.pow(2,ORDER);
    public static final int FITSCELLSIZE = 2*SIDE; 
    
-   // Nombre max de mégaoctets qu'un Thread BuilberHpx est "censé" pouvoir utiliser.
-// public static final int MAXMBPERTHREAD = 400;
- 
    public static final int GZIPMAXORDER = 5;  // On gzippe les tiles que jusqu'au niveau 5
    public static final int MAXDEPTHINRAM = 4;
    public static int NBTILESINRAM;
@@ -50,4 +48,10 @@ public class Constante {
 
    // Nombre max de recouvrement pris en compte
    public static final int MAXOVERLAY = 10; 
+   
+   // MOC ORDER minimal
+   public static final int DEFAULTMOCORDER = 8;
+   
+   // Différence entre l'ordre nominal du survey et son MOC dans le cas d'un MOC à haute résolution
+   public static final int DIFFMOCORDER = 4;
 }

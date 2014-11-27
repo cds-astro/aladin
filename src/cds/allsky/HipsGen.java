@@ -114,7 +114,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("blank"))      { context.setBlankOrig(Double.parseDouble(val));
       } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("minOrder"))   { context.setMinOrder(Integer.parseInt(val));
-      } else if (opt.equalsIgnoreCase("diffOrder"))  { context.setDiffOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("mocOrder"))   { context.setMocOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
       } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
@@ -183,7 +183,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
-         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
+//         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
       } else throw new Exception("Option unknown [" + opt + "]");
       
    }
@@ -292,7 +292,6 @@ public class HipsGen {
          return;
       }
 
-
       // Les tâches à faire si aucune n'est indiquées
       boolean all=false;
       if( actions.size()==0 ) {
@@ -351,7 +350,7 @@ public class HipsGen {
       try {
          long t = System.currentTimeMillis();
          new Task(context,actions,true);
-         context.done("The end (done in "+Util.getTemps(System.currentTimeMillis()-t)+")");
+         context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
       } catch (Exception e) {
          e.printStackTrace();
          context.error(e.getMessage());
@@ -376,16 +375,15 @@ public class HipsGen {
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
             "-n                 Just print process information, but do not execute it.\n"+
-            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS)" + "\n" +
-            "out=dir            HiPS target directory (default $PWD+\""+Constante.ALLSKY+"\")" + "\n" +
+            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS) or HEALPix map file" + "\n" +
+            "out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
             "                   Or LINK|COPY for CUBE action (default COPY)" + "\n" +
             "img=file           Specifical reference image for default initializations \n" +
             "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
             "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
-            "order=nn           Specifical HEALPix order" + "\n" +
-//            "diffOrder          Diff between MOC order and optimal order" + "\n" +
+            "order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
             "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
             "shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
@@ -408,6 +406,7 @@ public class HipsGen {
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
             "minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
+            "mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
             "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
             "label=name         Label of the survey (by default, input directory name)" + "\n"+
             "target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+

@@ -30,6 +30,7 @@ import cds.aladin.PlanBG;
 import cds.aladin.PlanBGCube;
 import cds.aladin.PlanImage;
 import cds.aladin.TreeNodeAllsky;
+import cds.fits.CacheFits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
@@ -97,6 +98,21 @@ public class ContextGui extends Context {
       setProgress(statNbTile+statNbEmptyTile, nbLowCells);
    }
    
+   protected void showMapStat(long  cRecord,long nbRecord, long cTime, CacheFits cache, String info ) {
+      double pourcent = (double)cRecord/nbRecord;
+      long totalTime = pourcent==0 ? 0 : (long)( cTime/pourcent);
+      long endsIn = totalTime==0 ? 0 : totalTime-cTime;
+      String s = Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true);
+      if( endsIn>0 ) s = s+" ends n="+Util.getTemps(endsIn, true);
+      mainPanel.tabBuild.buildProgressPanel.setTimeStat(s);
+      s = "Records: "+cRecord+ " / "+nbRecord;
+      mainPanel.tabBuild.buildProgressPanel.setLowTileStat(s);
+      mainPanel.tabBuild.buildProgressPanel.setMemStat(1,1,cache);
+      mainPanel.tabBuild.buildProgressPanel.srcFileStat(info);
+      setProgress(cRecord,nbRecord);
+   }
+
+   
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
       long nbLowCells = getNbLowCells();
@@ -107,11 +123,8 @@ public class ContextGui extends Context {
       if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime,true);
 
       mainPanel.tabJpg.setStat(s1,s2);
-      
       setProgress(statNbFile, nbLowCells);
-
    }
-
 
    // Demande d'affichage des stats (dans le TabRgb)
    protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
@@ -205,7 +218,7 @@ public class ContextGui extends Context {
          else if( taskAborting ) progressBar.setString("Aborted !");
          else progressBar.setString("Done !");
       }
-      if( (action==Action.TILES || action==Action.JPEG
+      if( (action==Action.TILES || action==Action.MAPTILES || action==Action.JPEG
             || action==Action.PNG || action==Action.RGB) && lastNorder3>=0 ) updateHipsPreview(true);
       
       if( action==Action.INDEX ) mainPanel.tabBuild.resumeWidgets();
@@ -332,8 +345,8 @@ public class ContextGui extends Context {
       } else {
          String cutMin = mainPanel.tabJpg.getCutMin();
          String cutMax = mainPanel.tabJpg.getCutMax();
-         cut[0] = Double.parseDouble(cutMin);
-         cut[1] = Double.parseDouble(cutMax);
+         try { cut[0] = Double.parseDouble(cutMin); } catch( Exception e ) {}
+         try { cut[1] = Double.parseDouble(cutMax); } catch( Exception e ) {}
          
 //         cut[0] = (Double.parseDouble(cutMin)-bzero)/bscale;
 //         cut[1] = (Double.parseDouble(cutMax)-bzero)/bscale;

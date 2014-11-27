@@ -2366,8 +2366,8 @@ TIPSTOPALLSKY Kill the building process
 TIPSTOPALLSKY.fr Interrompt le processus de construction
 TIPHIDEALLSKY Close this window (without killing the building process)
 TIPHIDEALLSKY.fr Ferme la fenetre (les calculs continuent)
-REPSALLSKY Source directory:
-REPSALLSKY.fr Rép. source:
+REPSALLSKY Source (dir or map):
+REPSALLSKY.fr Source (rep ou map):
 REPDALLSKY Target directory:
 REPDALLSKY.fr Rép. destination :
 PARAMALLSKY Advanced param:
@@ -2428,11 +2428,11 @@ IMGINDEXALLSKY Image indexation
 IMGINDEXALLSKY.fr Indexation des images
 TESSALLSKY HEALPix sampling
 TESSALLSKY.fr Rééchantillonnage HEALPix
-HELPDIRSRCALLSKY Folder and sub-folders of FITS source files (possibly gzipped)
-HELPDIRSRCALLSKY.fr Répertoire et sous-répertoires contenant les fichiers FITs originaux (éventuellement gzippés)
-HELPDIRTRGALLSKY Target folder for the generated HEALPix tile tree (ensure enough space)
-HELPDIRTRGALLSKY.fr Répertoire où va être généré l'arborescence des tuiles HEALPix (prévoir suffisamment de place - cf. formulaire 2)
-HELPLABELALLSKY Name/identifier of survey (e.g: DSS, 2MASS...)
+HELPDIRSRCALLSKY Folder and sub-folders of original images. The supported formats are FITS (possibly gzipped or hcompressed), JPEG or PNG. These images must have an astrometrical calibration (WCS) in header (FITS) or in comment segment (JPEG or PNG), or in a separated file with same name but ".hhh" extension.\nIt is also possible to use an HEALPix map as original data. In this case, use the file name of the map instead of directory name.
+HELPDIRSRCALLSKY.fr Répertoire et sous-répertoires contenant les images originales. Les formats supportés sont le FITS (éventuellement gzippés ou hcompressé), le JPEG ou le PNG. Ces images doivent disposer d'une calibration astrométrique (WCS) soit présente dans l'entête (FITS) ou dans un segment commentaire (JPEG et PNG), soit dans un fichier séparé de même nom mais avec l'extension ".hhh".\nIl est également possible d'utiliser comme image source une carte HEALPix. Dans ce cas, le nom de la carte sera utilisé en lieu et place du nom de répertoire.
+HELPDIRTRGALLSKY Target folder for the generated HiPS tile tree.
+HELPDIRTRGALLSKY.fr Répertoire où va être généré l'arborescence des tuiles HiPS.
+HELPLABELALLSKY Label/identifier of survey (e.g: DSS, 2MASS...)
 HELPLABELALLSKY.fr Nom/identificateur du relevé (ex: DSS, 2MASS...)
 HELPPARAMALLSKY Defines advanced parameters:\n 1) The first three lines define the strategy for resuming a previous calculation, due to an interruption, or a data addition\n 2) Limits the computation to an HEALPix area determined by cells numbers (eg, order/order number/start-end ...) \n 3) Specifies a BLANK  pixel value, especially if it is not specified in the FITS header of the original files \n 4) Indicates to ignore an edge in the source images, by a single value (in pixels) to cut off four sides, or by four values in the order North, West, South, East.
 HELPPARAMALLSKY.fr Définit les paramètres avancées :\n 1) Les 3 premières lignes déterminent la stratégie à adopter dans le cas d'une reprise d'un calcul précédent, soit à cause d'une interruption, soit à cause d'un ajout de données\n2) Limite le calcul à une zone HEALPix déterminée par des numéros des cellules (ex: ordre/numero order/deb-fin ...)\n3) Spécifie une valeur de pixel non valide, notamment dans le cas où celle-ci n'est pas spécifiée dans l'entête FITS des fichiers originaux\n4) Indique une bordure à ignorer dans les images sources, soit par une seule valeur (en pixels) retranchée aux 4 côtés, soit par 4 valeurs données dans l'ordre Nord, Ouest, Sud, Est.

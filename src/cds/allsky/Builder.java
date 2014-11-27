@@ -27,6 +27,7 @@ import cds.aladin.Localisation;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanHealpix;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
 
@@ -49,7 +50,6 @@ public abstract class Builder {
          case JPEG:      return new BuilderJpg(context);
          case PNG:       return new BuilderPng(context);
          case MOC:       return new BuilderMoc(context);
-         case MOCHIGHT:  return new BuilderMocHight(context);
          case MOCINDEX:  return new BuilderMocIndex(context);
          case CLEAN:     return new BuilderClean(context);
          case CLEANINDEX:return new BuilderCleanIndex(context);
@@ -113,7 +113,7 @@ public abstract class Builder {
       if( context.isValidateOutput() ) return;
       String output = context.getOutputPath();
       if( output==null ) {
-         output = context.getInputPath() + Constante.ALLSKY;
+         output = context.getInputPath() + Constante.HIPS;
          context.setOutputPath(output);
          context.info("the output directory will be "+output);
       }
@@ -142,7 +142,7 @@ public abstract class Builder {
       String img = context.getImgEtalon();
       if( img==null && context.getInputPath()!=null) {
          img = context.justFindImgEtalon( context.getInputPath() );
-         context.info("Use this reference image => "+img);
+         if( img!=null ) context.info("Use this reference image => "+img);
       }
       if( img!=null ) {
          try { context.setImgEtalon(img); }
@@ -187,7 +187,7 @@ public abstract class Builder {
             String img = context.getImgEtalon();
             if( img==null && context.getInputPath()!=null) {
                img = context.justFindImgEtalon( context.getInputPath() );
-               context.info("Use this reference image => "+img);
+               if( img!=null ) context.info("Use this reference image => "+img);
             }
             if( img!=null ) {
                try { context.setImgEtalon(img); }
@@ -222,7 +222,7 @@ public abstract class Builder {
          String img = context.getImgEtalon();
          if( img==null && context.getInputPath()!=null) {
             img = context.justFindImgEtalon( context.getInputPath() );
-            context.info("Use this reference image => "+img);
+            if( img!=null ) context.info("Use this reference image => "+img);
          }
          if( img!=null ) {
             try { context.setImgEtalon(img); }
@@ -321,6 +321,16 @@ public abstract class Builder {
       return label;
    }
    
+   // Retourne le code HEALPix correspondant au système de référence des coordonnées
+   // du survey HEALPix
+   protected String getFrame() {
+      if( context.hasFrame() ) return context.getFrameCode();
+      try {
+         if( context.prop==null ) context.loadProperties();
+         return context.prop.getProperty(PlanHealpix.KEY_COORDSYS, "C");
+      } catch( Exception e ) { e.printStackTrace(); }
+      return context.getFrameCode();
+   }
    
 //   protected void validateFrame() {
 //      String path = context.getOutputPath();
@@ -472,12 +482,4 @@ public abstract class Builder {
 
       }
    }
-   
-   /** Retourne le nombre d'octets disponibles en RAM */
-   public long getMem() {
-      return Runtime.getRuntime().maxMemory()-
-            (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
-   }
-   
-
 }

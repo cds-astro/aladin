@@ -21,6 +21,7 @@
 package cds.aladin;
 import java.awt.Dimension;
 import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.image.ColorModel;
@@ -262,7 +263,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
 
                            // Catalogue ?
-                           else if(  (new File(f+"/"+Context.METADATA)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                           else if(  (new File(f+"/"+Context.METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                               gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }    
                         }
@@ -567,29 +568,42 @@ public class ServerFile extends Server implements XMLConsumer {
 
       super.actionPerformed(e);
    }
-
+   
    /** Ouverture de la fenêtre de sélection d'un fichier */
    protected void browseFile() {
-      FileDialog fd = new FileDialog(aladin.dialog,description);
-      aladin.setDefaultDirectory(fd);
-
-      // (thomas) astuce pour permettre la selection d'un repertoire
-      // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
-      fd.setFile(DEFAULT_FILENAME);
-      fd.setVisible(true);
-      aladin.memoDefaultDirectory(fd);
-      String dir = fd.getDirectory();
-      String name =  fd.getFile();
-      // si on n'a pas changé le nom, on a selectionne un repertoire
-      boolean isDir = false;
-      if( name!=null && name.equals(DEFAULT_FILENAME) ) {
-         name = "";
-         isDir = true;
-      }
-      String t = (dir==null?"":dir)+(name==null?"":name);
-      file.setText(t);
-      if( (name!=null && name.length()>0) || isDir ) submit();
+      String path = Util.dirBrowser(aladin.dialog, description,
+                        aladin.getDefaultDirectory(),file);
+      if( path==null ) return;
+      
+      String dir = path;
+      File f = new File(dir);
+      if( !f.isDirectory() ) dir = f.getParent();
+      aladin.memoDefaultDirectory(dir);
+      submit();
    }
+      
+//   /** Ouverture de la fenêtre de sélection d'un fichier */
+//   protected void browseFile() {
+//      FileDialog fd = new FileDialog(aladin.dialog,description);
+//      aladin.setDefaultDirectory(fd);
+//
+//      // (thomas) astuce pour permettre la selection d'un repertoire
+//      // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
+//      fd.setFile(DEFAULT_FILENAME);
+//      fd.setVisible(true);
+//      aladin.memoDefaultDirectory(fd);
+//      String dir = fd.getDirectory();
+//      String name =  fd.getFile();
+//      // si on n'a pas changé le nom, on a selectionne un repertoire
+//      boolean isDir = false;
+//      if( name!=null && name.equals(DEFAULT_FILENAME) ) {
+//         name = "";
+//         isDir = true;
+//      }
+//      String t = (dir==null?"":dir)+(name==null?"":name);
+//      file.setText(t);
+//      if( (name!=null && name.length()>0) || isDir ) submit();
+//   }
 
 
    /** Chargement d'un fichier au format AJ
