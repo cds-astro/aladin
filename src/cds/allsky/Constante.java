@@ -19,6 +19,8 @@
 
 package cds.allsky;
 
+import cds.tools.pixtools.CDSHealpix;
+
 
 public class Constante {
    
@@ -34,7 +36,7 @@ public class Constante {
 
    // Taille des imagettes HEALPix
    final static public int ORDER = 9; // 2^9 = 512 = SIDE
-   final static public int SIDE = (int)Math.pow(2,ORDER);
+   final static public int SIDE = (int)CDSHealpix.pow2(ORDER);
    public static final int FITSCELLSIZE = 2*SIDE; 
    
    public static final int GZIPMAXORDER = 5;  // On gzippe les tiles que jusqu'au niveau 5
@@ -54,4 +56,7 @@ public class Constante {
    
    // Différence entre l'ordre nominal du survey et son MOC dans le cas d'un MOC à haute résolution
    public static final int DIFFMOCORDER = 4;
+   
+   // Rapport max par défaut entre la largeur et la longueur d'une image acceptable, pas testé si <0
+   public static final int MAXRATIO = 10;
 }

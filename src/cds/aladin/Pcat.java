@@ -879,6 +879,7 @@ Aladin.trace(3,"startTable "+name);
          else sep = aladin.CSVCHAR;
 
          res = new TableParser(aladin,this, sep);
+         res.setFileName( dis.getFileName() );
          ok = res.parse(dis,endTag);
       }
 

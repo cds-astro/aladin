@@ -28,6 +28,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 
+
 import cds.fits.HeaderFits;
 import cds.image.Bzip2;
 import cds.tools.Util;
@@ -117,6 +118,7 @@ public final class MyInputStream extends FilterInputStream {
    private boolean alreadyRead; // true si le flux a deja ete entame
    private long dejaLu;       // Nombre d'octets déjà lu sur le flux
    private String commentCalib=null;  // Calib trouvée dans un segment commentaire (pour JPEG ou PNG)
+   private String filename=null; // Nom du fichier d'origine si connu (pour debug)
    private boolean fitsHeadRead; // true si on a déjà charger (ou essayé)
                                  // toute l'entête fits courante dans le cache (voir hasFitsKey())
 
@@ -138,6 +140,12 @@ public final class MyInputStream extends FilterInputStream {
                    new BufferedInputStream(in) : in;
       NBOPENFILE++;
    }
+   
+   /** Positionnement du fichier d'origine (pour message d'erreur) */
+   public void setFileName(String file) { filename=file; }
+   
+   /** Retourne le fichier d'origine si connu */
+   public String getFileName() { return filename; }
    
    public void close() throws IOException {
       NBOPENFILE--;

@@ -93,7 +93,10 @@ public class HealpixKeyCat extends HealpixKey {
          planBG.aladin.levelTrace=0;
          Legende leg = planBG.getFirstLegende();
          if( leg!=null ) pcat.setGenericLegende(leg);   // Indique a priori la légende à utiliser
-         pcat.tableParsing(in=new MyInputStream( getInputStreamFromStream() ),null);
+         
+         in=new MyInputStream( getInputStreamFromStream() );
+         in.setFileName(filename);
+         pcat.tableParsing(in,null);
          planBG.aladin.levelTrace=trace;
 
          if( !planBG.useCache ) stream=null;

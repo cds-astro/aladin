@@ -164,6 +164,9 @@ public class HipsGen {
       } else if( opt.equalsIgnoreCase("shape") ) {
           context.setShape(val);
          
+      } else if (opt.equalsIgnoreCase("maxRatio")) {
+         try {  context.setMaxRatio(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
+         
       } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
          try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
          
@@ -317,7 +320,7 @@ public class HipsGen {
 
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
-            actions.add(Action.JPEG);
+//            actions.add(Action.JPEG);
             actions.add(Action.PNG);
             if( !flagMapFits ) actions.add(Action.DETAILS);
          }
@@ -386,6 +389,7 @@ public class HipsGen {
             "order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
             "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
             "shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
+            "maxRatio=nn        Max height vs width tolerated ratio for original obs (default 10, 0 for removing the test)" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
 //            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +

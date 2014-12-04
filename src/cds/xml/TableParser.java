@@ -103,6 +103,7 @@ final public class TableParser implements XMLConsumer {
    private String colsep,recsep;      // Séparateurs de champs et de lignes en mode CSV/TSV
    private String headlines; 	      // nombre de lignes de l'entête CSV
    private String error; 	          // Pour staicker le message d'erreur
+   private String filename;           // Fichier d'origine s'il est connu
    
    private int format;                // Format des coordonnées (FMT_UNKOWN | FMT_DECIMAL | FMT_SEXAGESIMAL)
 //   private boolean flagSexa;	      // ture s'il s'agit de coordonnées sexagésimal
@@ -152,6 +153,9 @@ final public class TableParser implements XMLConsumer {
       this.headerFits = headerFits;
       this.flagSkip = flagSkip;
    }
+   
+   /** Positionnement du fichier d'origine (pour message d'erreur) */
+   public void setFileName(String file) { filename=file; }
    
    /**
     * Parsing des données XML en récupération depuis une URI,
@@ -2087,7 +2091,8 @@ final public class TableParser implements XMLConsumer {
       while( cur<end && ch[cur]!=rs ) { cur=getField(ch,cur+un,end,rs,cs,nbRecord); un=1; }
       if( record!=null && row<record.length &&  !(row==1 && record[0].equals("[EOD]")) ) {
 //         throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
-         String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows) => ignored";
+         String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows nbRow="+row+"/"+record.length+") => ignored"
+               + (filename!=null?filename:"");
          aladin.command.printConsole(s);
       }
       return cur;

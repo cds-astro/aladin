@@ -36,6 +36,7 @@ import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Objet graphique pour une Ligne.
@@ -294,7 +295,7 @@ public class Ligne extends Position {
    public boolean hasPhot() { return isPolygone(); }
    public boolean hasPhot(Plan p) { 
       if( !hasPhot() ) return false;
-      if( p instanceof PlanBG ) return false;  // POUR LE MOMENT
+//      if( p instanceof PlanBG ) return false;  // POUR LE MOMENT
       return p.hasAvailablePixels();
    }
 
@@ -578,6 +579,9 @@ public class Ligne extends Position {
 //      }
 
       if( v==null || v.isFree() || !hasPhot(v.pref) ) return false;
+      
+      boolean isHiPS = (v.pref.type == Plan.ALLSKYIMG);
+      
       statInit();    
 
 //      int x,y,i;
@@ -590,10 +594,10 @@ public class Ligne extends Position {
       minx=miny=Integer.MAX_VALUE;
       maxx=maxy=Integer.MIN_VALUE;
       
-      double minx1,maxx1,miny1,maxy1;
-      minx1=miny1=Integer.MAX_VALUE;
-      maxx1=maxy1=Integer.MIN_VALUE;
-     
+      double minx1,maxx1,miny1,maxy1, mind,maxd, mina,maxa;
+      mina=mind=minx1=miny1=Integer.MAX_VALUE;
+      maxa=maxd=maxx1=maxy1=Integer.MIN_VALUE;
+      
       
       tmp = deb=getFirstBout();
       for( nb=0; tmp.finligne!=null; tmp=tmp.finligne) nb++;
@@ -609,14 +613,16 @@ public class Ligne extends Position {
          if( ty>maxy ) maxy=ty;
          if( fy<miny ) miny=fy;
          
-         if( tmp.xv[v.n]<minx1 ) minx1=tmp.xv[v.n];
-         if( tmp.xv[v.n]>maxx1 ) maxx1=tmp.xv[v.n];
-         if( tmp.yv[v.n]<miny1 ) miny1=tmp.yv[v.n];
-         if( tmp.yv[v.n]>maxy1 ) maxy1=tmp.yv[v.n];
+         if( tmp.xv[v.n]<minx1 ) { minx1=tmp.xv[v.n]; mina=tmp.raj; }
+         if( tmp.xv[v.n]>maxx1 ) { maxx1=tmp.xv[v.n]; maxa=tmp.raj; }
+         if( tmp.yv[v.n]<miny1 ) { miny1=tmp.yv[v.n]; mind=tmp.dej; }
+         if( tmp.yv[v.n]>maxy1 ) { maxy1=tmp.yv[v.n]; maxd=tmp.dej; }
          
          a=tmp; b=tmp.finligne;
          if( tmp.yv[v.n]> tmp.finligne.yv[v.n] ) { b=tmp ; a=tmp.finligne; }
-         seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
+         
+         if( isHiPS ) seg[i] = new Segment(a.raj,a.dej, b.raj,b.dej);
+         else seg[i] = new Segment(a.xv[v.n]-0.5,a.yv[v.n]-0.5, b.xv[v.n]-0.5,b.yv[v.n]-0.5);
       }
       
       Arrays.sort(seg, seg[0]);
@@ -635,27 +641,45 @@ public class Ligne extends Position {
       double deuxTiersX = minx1+2*(maxx1-minx1)/3.;
       double unTierY    = miny1+(maxy1-miny1)/3.;
       
-      int n=0;   // Premier segment à tester
-      for( y=miny; y<=maxy; y++ )  {
-         for( ; n<nb && seg[n].out; n++ );
-         for( i=n; i<nb; i++ ) seg[i].init();
-         if( posy==-1 && (int)y==(int)unTierY ) posy=unTierY;
-         for( x=maxx+1; x>=minx-1; x-- ) {
-            int inter=0;  // Nombre de segments intersectés
-            for( i=n; i<nb; i++ ) {
-               if( seg[i].cut(x,y) ) inter++;
-            }
-            if( inter%2==1 ) {
-               double pix = statPixel(g, (int)x, (int)y, v, onMouse);
-               if( flagHist ) plan.aladin.view.zoomview.addPixelHist(pix);
-               if( posy!=-1 && (int)x==(int)deuxTiersX && posx==-1 ) posx=deuxTiersX;
-            } else {
-               if( posy!=-1 && posx==-1 && inter>0) posx=x+1;
+      if( isHiPS ) {
+         PlanBG pbg = (PlanBG) v.pref;
+         double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getLosangeOrder() ) ) / 3600;
+         d /= 2;   // Pour être sur de ne pas sauter une ligne
+         System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
+         Coord haut = new Coord( (maxa+mina)/2, mind);
+         Coord bas  = new Coord( (maxa+mina)/2, maxd);
+         double dist = Coord.getDist(haut, bas);
+         int n = (int) (dist/d);
+         System.out.println("Distance entre "+haut+"  et "+bas+" => "+Coord.getUnit(dist)+" soit "+n+" itérations");
+         
+         
+         
+         return false;
+         
+      } else {
+
+         int n=0;   // Premier segment à tester
+         for( y=miny; y<=maxy; y++ )  {
+            for( ; n<nb && seg[n].out; n++ );
+            for( i=n; i<nb; i++ ) seg[i].init();
+            if( posy==-1 && (int)y==(int)unTierY ) posy=unTierY;
+            for( x=maxx+1; x>=minx-1; x-- ) {
+               int inter=0;  // Nombre de segments intersectés
+               for( i=n; i<nb; i++ ) {
+                  if( seg[i].cut(x,y) ) inter++;
+               }
+               if( inter%2==1 ) {
+                  double pix = statPixel(g, (int)x, (int)y, v, onMouse);
+                  if( flagHist ) plan.aladin.view.zoomview.addPixelHist(pix);
+                  if( posy!=-1 && (int)x==(int)deuxTiersX && posx==-1 ) posx=deuxTiersX;
+               } else {
+                  if( posy!=-1 && posx==-1 && inter>0) posx=x+1;
+               }
             }
          }
+
+         minx=minx1; maxx=maxx1; miny=miny1; maxy1=maxy;
       }
-      
-      minx=minx1; maxx=maxx1; miny=miny1; maxy1=maxy;
       
       if( flagHist ) plan.aladin.view.zoomview.createPixelHist("Pixels");
 

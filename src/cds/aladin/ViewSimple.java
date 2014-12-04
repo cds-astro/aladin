@@ -3230,7 +3230,7 @@ public class ViewSimple extends JComponent
                   // point se trouve sur le début de la polyligne pour faire un
                   // polygone => changement de curseur
                   else if( !flagOnFirstLine
-                         && !(pref instanceof PlanBG)
+                         && ( !(pref instanceof PlanBG) || ( pref instanceof PlanBG && pref.hasAvailablePixels() ))
                          && Ligne.isLigne(view.newobj)
                          && Ligne.isDebLigne(o)
                          && ((Ligne)o).plan==((Ligne)view.newobj).plan) {

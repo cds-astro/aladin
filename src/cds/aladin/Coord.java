@@ -133,8 +133,8 @@ public final class Coord {
    }
 
   /** Affichage dans la bonne unite.
-   * Retourne un angle en degres sous forme de chaine dans la bonne unite
-   * @param x l'angle
+   * Retourne un angle en décimal sous forme de chaine dans la bonne unite
+   * @param x l'angle (en degrés)
    * @return l'angle dans une unite coherente + l'unite utilisee
    */
    public static String getUnit(double x) { return getUnit(x,false,false); }

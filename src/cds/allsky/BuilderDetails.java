@@ -23,13 +23,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
-import sun.security.action.GetLongAction;
 import cds.aladin.Aladin;
 import cds.aladin.HealpixProgen;
 import cds.aladin.Localisation;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanHealpix;
-import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
 /** Construction de la hiérarchie des tuiles d'index à partir des tuiles de plus bas

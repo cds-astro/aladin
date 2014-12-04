@@ -92,6 +92,7 @@ public class Context {
    public int[] borderSize = {0,0,0,0};      // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    public int dataArea = ALL;                // Type d'observable (totalité, en ellipse ou en rectangle)
+   public int maxRatio = Constante.MAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
@@ -160,6 +161,7 @@ public class Context {
    public String getLabel() { return label; }
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Context.ALL ?  borderSize : new int[]{0,0,0,0}; }
+   public int getMaxRatio() { return maxRatio; }
    public int getOrder() { return order; }
    public boolean hasFrame() { return frame>=0; }
    public int getFrame() { return hasFrame() ? frame : Localisation.ICRS; }
@@ -205,6 +207,7 @@ public class Context {
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
    public void setPartitioning(String s) { partitioning = s.equalsIgnoreCase("false") ? false : true; }
    public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
+   public void setMaxRatio(String r) throws Exception { maxRatio = Integer.parseInt(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
@@ -828,11 +831,11 @@ public class Context {
       return res;
    }
    
-   /** Retourne le volume du Allsky en fits en fonction du nombre de cellules prévues et du bitpix */
+   /** Retourne le volume du HiPS en fits en fonction du nombre de cellules prévues et du bitpix */
    protected long getDiskMem() {
       long nbLowCells = getNbLowCells();
       if( nbLowCells==-1 || bitpix==0 ) return -1;
-      long mem = depth * nbLowCells * 512L*512L* (Math.abs(bitpix)/8);
+      long mem = nbLowCells * Constante.SIDE*Constante.SIDE * (Math.abs(bitpix)/8);
       
       return mem;
    }
