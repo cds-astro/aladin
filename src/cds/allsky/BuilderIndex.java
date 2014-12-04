@@ -48,6 +48,7 @@ public class BuilderIndex extends Builder {
    private int radius = 0;
    private String currentfile = null;
    private boolean partitioning;
+   private int maxRatio;
    private int [] hdu = null;
 
    // Pour les stat
@@ -92,7 +93,6 @@ public class BuilderIndex extends Builder {
          context.warning("Index report: "+n+" input file"+(n>1?"s":"")+" not incorporated:");
          for( String s : badFiles ) context.warning("   "+s);
       }
-      context.info("Index report "+statNbFile+" file"+(statNbFile>1?"s":"")+" incorporated");
       
       if( statNbFile==0 ) throw new Exception("No available image found ! => Aborted");
    }
@@ -194,6 +194,7 @@ public class BuilderIndex extends Builder {
       String output = context.getOutputPath();
       int order = context.getOrder();
       borderSize = context.getBorderSize();
+      maxRatio = context.getMaxRatio();
       radius = context.circle;
 
       File f = new File(output);
@@ -401,8 +402,6 @@ public class BuilderIndex extends Builder {
          c.GetCoord(coo);
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
 
-         corner[i] = new Coord(coo.al,coo.del);
-
          // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
          if( hasCell ) {
             coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
@@ -412,13 +411,16 @@ public class BuilderIndex extends Builder {
             c.GetCoord(coo);
          }
          stc.append(" "+coo.al+" "+coo.del);
+         corner[i] = new Coord(coo.al,coo.del);
       }
 
-      // On teste le rapport largeur/longeur
-      double h = Coord.getDist(corner[0], corner[1]);
-      double w = Coord.getDist(corner[1], corner[2]);
-      if( h>w*10 || w>h*10 ) throw new Exception("Suspissious image calibration (" +Coord.getUnit(h)+"x"+Coord.getUnit(w)+")");
-
+      // On teste le rapport largeur/longeur si nécessaire
+      if( maxRatio>0 ) {
+         double h = Coord.getDist(corner[0], corner[1]);
+         double w = Coord.getDist(corner[1], corner[2]);
+         if( h>w*maxRatio || w>h*maxRatio ) throw new Exception("Suspissious image calibration (" +Coord.getUnit(h)+"x"+Coord.getUnit(w)+")");
+      }
+      
       // On calcul également les coordonnées du centre de l'image
       center.x = fitsfile.width/2;
       center.y = fitsfile.height/2;
