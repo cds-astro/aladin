@@ -397,7 +397,7 @@ public class Repere extends Position {
             int orderFile = pbg.getOrder();
 //            if( pbg.maxOrder!=pbg.getOrder() ) return false;
             long nsideFile = CDSHealpix.pow2(orderFile);
-            long nsideLosange = CDSHealpix.pow2(pbg.getLosangeOrder());
+            long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
             long nside = nsideFile * nsideLosange;
             Coord coo = new Coord(raj,dej);
             coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);
@@ -493,7 +493,7 @@ public class Repere extends Position {
          int orderFile = pbg.getOrder();
 //         if( pbg.maxOrder!=pbg.getOrder() ) return false;
          long nsideFile = CDSHealpix.pow2(orderFile);
-         long nsideLosange = CDSHealpix.pow2(pbg.getLosangeOrder());
+         long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
          long nside = nsideFile * nsideLosange;
          Coord coo = new Coord(raj,dej);
          coo = Localisation.frameToFrame(coo,Localisation.ICRS,pbg.frameOrigin);

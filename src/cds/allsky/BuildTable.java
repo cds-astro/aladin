@@ -69,7 +69,7 @@ public class BuildTable extends JTable {
    };
 
    BuildTable(Context context,TabBuild tabBuild) {
-      super(createData(DEFAULT_BITPIX),columnNames);
+      super(createData(DEFAULT_BITPIX,context.getTileOrder()),columnNames);
       this.tabBuild=tabBuild;
       this.context = context;
       setAutoscrolls(true);
@@ -151,13 +151,13 @@ public class BuildTable extends JTable {
       return c;
    }
 
-   private static Object[][] createData(int bitpix) {
+   private static Object[][] createData(int bitpix,int tileOrder) {
       Object[][] data;
       // Tableau des résolutions
       data = new Object[MAXHEALPIXORDER-3][5];
 
       double surface = 4. * Math.PI * (180. / Math.PI) * (180. / Math.PI);
-      long pixelPerFile = (long)Math.pow(4,Constante.ORDER);
+      long pixelPerFile = (long)Math.pow(4,tileOrder);
       long nbBytePerPixel = (long)( Math.abs(bitpix)/8 );
 
       // colonne des checkbox
@@ -201,7 +201,7 @@ public class BuildTable extends JTable {
       if( column==VOL_IDX ) {
          double skyArea = context.getIndexSkyArea();
          long nbBytePerPixel = (long)( tabBuild.getNpix() );
-         int order = row+3+Constante.ORDER;
+         int order = row+3+context.getTileOrder();
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
          return Util.getUnitDisk((long)(nbPixel*nbBytePerPixel*skyArea*(row==1?1:1.33)));
@@ -209,10 +209,10 @@ public class BuildTable extends JTable {
       
       if( column==TILES_IDX && context.mocIndex!=null ) {
          double skyArea = context.getIndexSkyArea();
-         int order = row+3+Constante.ORDER;
+         int order = row+3+context.getTileOrder();
          long nside = CDSHealpix.pow2(order);
          long nbPixel = 12*nside*nside;
-         return (row+3)+" / "+(long)(nbPixel*skyArea)/(long)(Constante.SIDE*Constante.SIDE);
+         return (row+3)+" / "+(long)(nbPixel*skyArea)/(long)(context.getTileSide()*context.getTileSide());
       }
       
       return super.getModel().getValueAt(row, column);

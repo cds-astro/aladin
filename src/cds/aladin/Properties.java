@@ -883,7 +883,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          final PlanBG pbg = (PlanBG) plan;
          PropPanel.addFilet(p, g, c);
          long res = pbg.getMaxHealpixOrder();
-         long ord = pbg.getLosangeOrder();
+         long ord = pbg.getTileOrder();
          PropPanel.addSectionTitle(p, "HEALPix tesselation properties", g, c);
          PropPanel.addCouple(p, "Best pixel resolution", new JLabel(pbg.getMaxResolution()), g, c);
          PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);

@@ -247,61 +247,63 @@ public class HealpixProgenItem {
    // Si le remplacement se trouve dans la zone de paramètres d'une url, l'encodage HTTP est assuré
    // La "jsonKey" fait référence à une clé JSON de la chaine passée en paramètre.
    // Une clé vide (rien avant le ':') signifie que toute la chaine est prise en compte (path simple)
-   public String resolveImageSourcePath(String imageSourcePath) {
-      if( imageSourcePath==null ) return null;
-      try {
-         String jsonKey,value,pattern=null, replacement=null, result;
-         Tok tok = new Tok(imageSourcePath," ");
-         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath()  imageSourcePath => "+imageSourcePath);
-         while( tok.hasMoreTokens() ) {
-            boolean flagRegex=false;
-            String t = tok.nextToken();
-//            System.out.println("==> "+t);
-            
-            int o = t.indexOf(":");
-            if( o>=0 && t.charAt(o+1)=='/' ) flagRegex=true;
-            
-            // Recherche d'une règle de réécriture par une expression simple
-            // (ex: id:http://monserveur/mycgi?img=$1)
-            else {
-               if( o<0 ) {
-                  if( Aladin.levelTrace>=3 ) System.err.println("In \"properties\" imageSourcePath syntax error ["+t+"] => ignored");
-                  continue;
-               }
-               pattern="^(.*)$";
-               replacement = t.substring(o+1);
-               
-            }
-            
-            jsonKey = t.substring(0,o);
-            if( jsonKey.length()==0 ) value=json;
-            else if( jsonKey.equals("path") ) value=getPath();   // cas particulier du path qui pourrait être suffixé par [x,y,w,h]
-            else value = Util.extractJSON(jsonKey, json);
-            if( value==null ) continue;
-               
-            // Recherche d'une règle de réécriture par une expression régulière
-            // (ex: path:/\/([^\/]+)\.fits/http:\/\/monserveur\/mycgi?img=$1/  )
-            if( flagRegex ) {
-               int o1 = o+1;
-               while( (o1=t.indexOf('/',o1+1))!=-1 && t.charAt(o1-1)=='\\');
-               if( o1<0 ) throw new Exception("regex not found");
-               pattern = t.substring(o+2,o1);
-               int n=t.length();
-               if( t.charAt(n-1)=='/' ) n--;
-               replacement = t.substring(o1+1,n);
-            }
-            result = replaceAll(value,pattern, replacement);
-            Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath() jsonKey=["+jsonKey+"] pattern=["+pattern+"] value=["+value+"] => replacement=["+replacement+"] => resul=["+result+"]");
-            return result;
-         }
-         throw new Exception("imageSourcePath syntax error");
-      } catch( Exception e ) {
-         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
-         imageSourcePath=null;
-         if( Aladin.levelTrace>=3 ) e.printStackTrace();
-         return null;
-      }
-   }
+
+// A PRIORI NE SERT PLUS ! PF 4/1/2014   
+//   public String resolveImageSourcePath(String imageSourcePath) {
+//      if( imageSourcePath==null ) return null;
+//      try {
+//         String jsonKey,value,pattern=null, replacement=null, result;
+//         Tok tok = new Tok(imageSourcePath," ");
+//         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath()  imageSourcePath => "+imageSourcePath);
+//         while( tok.hasMoreTokens() ) {
+//            boolean flagRegex=false;
+//            String t = tok.nextToken();
+////            System.out.println("==> "+t);
+//            
+//            int o = t.indexOf(":");
+//            if( o>=0 && t.charAt(o+1)=='/' ) flagRegex=true;
+//            
+//            // Recherche d'une règle de réécriture par une expression simple
+//            // (ex: id:http://monserveur/mycgi?img=$1)
+//            else {
+//               if( o<0 ) {
+//                  if( Aladin.levelTrace>=3 ) System.err.println("In \"properties\" imageSourcePath syntax error ["+t+"] => ignored");
+//                  continue;
+//               }
+//               pattern="^(.*)$";
+//               replacement = t.substring(o+1);
+//               
+//            }
+//            
+//            jsonKey = t.substring(0,o);
+//            if( jsonKey.length()==0 ) value=json;
+//            else if( jsonKey.equals("path") ) value=getPath();   // cas particulier du path qui pourrait être suffixé par [x,y,w,h]
+//            else value = Util.extractJSON(jsonKey, json);
+//            if( value==null ) continue;
+//               
+//            // Recherche d'une règle de réécriture par une expression régulière
+//            // (ex: path:/\/([^\/]+)\.fits/http:\/\/monserveur\/mycgi?img=$1/  )
+//            if( flagRegex ) {
+//               int o1 = o+1;
+//               while( (o1=t.indexOf('/',o1+1))!=-1 && t.charAt(o1-1)=='\\');
+//               if( o1<0 ) throw new Exception("regex not found");
+//               pattern = t.substring(o+2,o1);
+//               int n=t.length();
+//               if( t.charAt(n-1)=='/' ) n--;
+//               replacement = t.substring(o1+1,n);
+//            }
+//            result = replaceAll(value,pattern, replacement);
+//            Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath() jsonKey=["+jsonKey+"] pattern=["+pattern+"] value=["+value+"] => replacement=["+replacement+"] => resul=["+result+"]");
+//            return result;
+//         }
+//         throw new Exception("imageSourcePath syntax error");
+//      } catch( Exception e ) {
+//         Aladin.trace(4,"HealpixIndexItem.resolveImageSourcePath ["+imageSourcePath+"] syntax error !");
+//         imageSourcePath=null;
+//         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+//         return null;
+//      }
+//   }
    
    // Remplacement par expression régulière avec support des encodages HTTP pour les URLs
    private String replaceAll(String value,String regex, String replacement) {

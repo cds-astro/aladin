@@ -30,8 +30,11 @@ import java.net.URLEncoder;
 import java.util.*;
 
 import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
 import cds.aladin.prop.Propable;
@@ -823,6 +826,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     * vues sélectionnées. */
    protected void createROI() {
       aladin.console.printCommand("thumbnail");
+      Aladin.makeCursor(aladin,Aladin.WAITCURSOR);
       createROIInternal(0,0,true);
    }
 
@@ -841,7 +845,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    private void createROIInternal(double tailleRadius,int taillePixel,boolean dialog) {
 
       int first = -1;
-
+      
       // Détermination des views images concernées
       Vector<ViewSimple> vcVect = new Vector<ViewSimple>();
       
@@ -898,6 +902,24 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Vector<Obj> vsel = new Vector<Obj>();
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) vsel.add(aladin.mesure.src[i]);
       
+      // Détermination de la taille si non précisée
+      if( tailleRadius==0 ) {
+         ViewSimple vc = vca[0];
+         
+         double taille = Math.min( vc.getTailleRA(), vc.getTailleDE() );
+         // Détermination de la taille du champ en se basant sur la première vue
+         if( taille<1 ) tailleRadius=taille;
+         
+         // Sinon des valeurs par défaut
+         else {
+            Projection proj = vc.getProj();
+            if( taillePixel==0 ) taillePixel= vc.pref instanceof PlanBG ? 20 : 40;  // 40 pixels par défaut
+            double sizePixel = proj.c.getImgWidth()/proj.c.getImgSize().width;
+            tailleRadius = sizePixel*taillePixel;
+         }
+      }
+
+      
       // Détermination des sources en éliminant les doublons ou les objets
       // trop proches ou les objets hors champ
       Position src[] = getSourceList(vsel,vca,tailleRadius==0?3./3600:tailleRadius/2);
@@ -906,6 +928,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          return;
       } else {
          if( !Aladin.NOGUI && dialog ) {
+            Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
+
             String pl = vca.length>1 ? "s" : "";
             StringBuffer stat = new StringBuffer();
             for( int i=0; i<vca.length; i++ ) {
@@ -913,7 +937,15 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             }
             pl = src.length>1 ? "s" : "";
             stat.append("\n   .Object"+pl+": "+src.length);
-            if( !aladin.confirmation(ROIINFO+stat) ) return;
+//            if( !aladin.confirmation(ROIINFO+stat) ) return;
+            
+            Panel panel = new Panel();
+            TextField radiusROI = new TextField(5);
+            radiusROI.setText( Coord.getUnit(tailleRadius) );
+            panel.add( new Label("Thumbnail size (arcmin):") );
+            panel.add(radiusROI);
+            if( Message.showFrame(this,ROIINFO+stat, panel, Message.QUESTION)!=Message.OUI ) return;
+            tailleRadius = Server.getRM( radiusROI.getText() )/60;
          }
       }
 
@@ -926,14 +958,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             ViewSimple vc=vca[i];
             if( vc.isFree() || !vc.pref.flagOk || !vc.pref.isPixel() ) continue;
             if( !vc.selected ) continue;
-
-            // Par défaut on prend un radius correspondant à "pixel" pixels de l'image
-            if( tailleRadius==0. ) {
-               Projection proj = vc.getProj();
-               if( taillePixel==0 ) taillePixel= vc.pref instanceof PlanBG ? 20 : 40;  // 40 pixels par défaut
-               double sizePixel = proj.c.getImgWidth()/proj.c.getImgSize().width;
-               tailleRadius = sizePixel*taillePixel;
-            }
 
             int n=getNextNumView();
             if( n==-1 ) {
@@ -965,7 +989,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repaintAll();
 //      if( first>=0 ) scrollOn(first);
    }
-
+   
    /** Création d'une vue pour le Plan en paramètre */
    protected ViewSimple createViewForPlan(Plan p) {
       int n=getNextNumView();

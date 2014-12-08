@@ -141,7 +141,7 @@ final public class MainPanel extends JPanel implements ActionListener {
 
          // calcule le meilleur nside
          long nside = BuilderIndex.calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-         order = (int) Util.order((int)nside) - Constante.ORDER;
+         order = (int) Util.order((int)nside) - context.getTileOrder();
       }
 
       context.setMap( flagIsMap );

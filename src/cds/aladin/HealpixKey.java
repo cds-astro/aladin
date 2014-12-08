@@ -547,7 +547,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       } else resetTimer();
       
       if( getStatus()==READY ) {
-         if( allSky ) planBG.setLosangeOrder( getLosangeOrder() );
+         if( allSky ) planBG.setTileOrder( getLosangeOrder() );
          if( planBG.isTruePixels() ) loadPixelsOrigin(ONLYIFDISKAVAIL);  // En SYNC, on préfère tout de suite garder les pixels d'origine en RAM
          if( planBG.useCache ) write();
       }

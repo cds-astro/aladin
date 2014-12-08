@@ -76,15 +76,16 @@ public class ContextGui extends Context {
          long statNodeAvgTime,long usedMem,long deltaTime,long deltaNbTile) {
 
       if( statNbTile==0 ) return;
-
+;
+      int tileSide = getTileSide();
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
 //      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
       long nbLowCells = getNbLowCells();
       mainPanel.tabBuild.buildProgressPanel.setLowTileStat(statNbTile,statNbEmptyTile,nbLowCells,
-            (long)( Constante.SIDE*Constante.SIDE*getNpix()),
+            (long)( tileSide*tileSide*getNpix()),
             statMinTime,statMaxTime,statAvgTime);
       mainPanel.tabBuild.buildProgressPanel.setNodeTileStat(statNodeTile,
-            (long)( Constante.SIDE*Constante.SIDE*getNpix()),
+            (long)( tileSide*tileSide*getNpix()),
             statNodeAvgTime);
       
       long nbCells = getNbLowCells();

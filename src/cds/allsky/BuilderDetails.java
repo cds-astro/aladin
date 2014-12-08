@@ -94,7 +94,7 @@ public class BuilderDetails extends Builder {
             detailOrder = maxOrder - 5;
             context.warning("Detail table min order determined in function of max order => "+detailOrder);
          } else {
-            detailOrder = maxOrder - context.typicalImgWidth/Constante.SIDE -2; //-1;
+            detailOrder = maxOrder - context.typicalImgWidth/context.getTileSide() -2; //-1;
             context.info("Detail table min order determined by original image resolution => "+detailOrder);
          }
       }
@@ -344,32 +344,33 @@ public class BuilderDetails extends Builder {
          context.info("Mapping hpxFinder/"+Context.METADATAXML+" file has been generated");
       }
 
-      writeProperties();
+//      writeProperties();
+      context.writeHpxFinderProperties();
       context.writeIndexHtml();
    }
    
-   // On écrit le fichier des propriétés
-   private void writeProperties() throws Exception {
-      int frame = context.getFrame();
-      
-      MyProperties prop = new MyProperties();
-      prop.setProperty(PlanHealpix.KEY_LABEL, context.getLabel()+"/"+Constante.HPX_FINDER);
-      prop.setProperty(PlanHealpix.KEY_ISMETA, "true");
-      prop.setProperty(PlanHealpix.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
-      prop.setProperty(PlanHealpix.KEY_MAXORDER, context.getOrder()+"");
-      if( detailOrder>3 ) prop.setProperty(PlanHealpix.KEY_MINORDER, detailOrder+"");
-      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, context.getNow());
-      prop.setProperty(PlanHealpix.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
-      
-      String propFile = context.getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
-      File f = new File(propFile);
-      if( f.exists() ) f.delete(); 
-      FileOutputStream out = null;
-      try { 
-         out = new FileOutputStream(f);
-         prop.store( out, null);
-      } finally {  if( out!=null ) out.close(); }
-   }
+//   // On écrit le fichier des propriétés
+//   private void writeProperties() throws Exception {
+//      int frame = context.getFrame();
+//      
+//      MyProperties prop = new MyProperties();
+//      prop.setProperty(PlanHealpix.KEY_LABEL, context.getLabel()+"/"+Constante.HPX_FINDER);
+//      prop.setProperty(PlanHealpix.KEY_ISMETA, "true");
+//      prop.setProperty(PlanHealpix.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
+//      prop.setProperty(PlanHealpix.KEY_MAXORDER, context.getOrder()+"");
+//      if( detailOrder>3 ) prop.setProperty(PlanHealpix.KEY_MINORDER, detailOrder+"");
+//      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, context.getNow());
+//      prop.setProperty(PlanHealpix.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+//      
+//      String propFile = context.getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
+//      File f = new File(propFile);
+//      if( f.exists() ) f.delete(); 
+//      FileOutputStream out = null;
+//      try { 
+//         out = new FileOutputStream(f);
+//         prop.store( out, null);
+//      } finally {  if( out!=null ) out.close(); }
+//   }
    
 
 

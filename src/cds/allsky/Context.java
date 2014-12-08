@@ -21,7 +21,10 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -70,11 +73,12 @@ public class Context {
    private static boolean verbose = false;
    protected String label;                   // Nom du survey
    
-   protected String inputPath;               // Répertoire des images origales
+   protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
    protected String outputPath;              // Répertoire de la boule HEALPix à générer
    protected String hpxFinderPath;           // Répertoire de l'index Healpix (null si défaut => dans outputPath/HpxFinder)
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    protected HeaderFits header=null;         // Entête FITS associée
+   protected boolean isInputFile=false;      // true si le paramètre input concerne un fichier unique
    
    protected int depth=1;                    // profondeur du cube (1 pour une image)
    protected boolean depthInit=false;          // true si la profondeur du cube a été positionné
@@ -92,7 +96,7 @@ public class Context {
    public int[] borderSize = {0,0,0,0};      // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
    public int dataArea = ALL;                // Type d'observable (totalité, en ellipse ou en rectangle)
-   public int maxRatio = Constante.MAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
+   public double maxRatio = Constante.MAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
@@ -122,6 +126,7 @@ public class Context {
    protected HealpixMoc mocIndex = null;     // Zone du ciel correspondant à l'index Healpix
    protected HealpixMoc moc = null;          // Intersection du mocArea et du mocIndex => regénérée par setParameters()
    protected int mocOrder=-1;                // order du MOC des tuiles
+   protected int tileOrder=-1;               // Valeur particulière d'un ordre pour les tuiles
    protected CacheFits cacheFits;            // Cache FITS pour optimiser les accès disques à la lecture
    protected Vector<String> keyAddProp=null; // Clés des propriétés additionnelles à mémoriser dans le fichier properties
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
@@ -161,7 +166,7 @@ public class Context {
    public String getLabel() { return label; }
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Context.ALL ?  borderSize : new int[]{0,0,0,0}; }
-   public int getMaxRatio() { return maxRatio; }
+   public double getMaxRatio() { return maxRatio; }
    public int getOrder() { return order; }
    public boolean hasFrame() { return frame>=0; }
    public int getFrame() { return hasFrame() ? frame : Localisation.ICRS; }
@@ -196,8 +201,11 @@ public class Context {
    public int getMaxNbThread() { return maxNbThread; }
    public int getMocOrder() { return mocOrder; }
    public int getMinOrder() { return minOrder; }
+   public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
+   public int getTileSide() { return (int) CDSHealpix.pow2( (long) getTileOrder() ); }
 
    // Setters
+   public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
    public void setPublisher(String s) { publisher=s; }
    public void setLabel(String s)     { label=s; }
@@ -207,12 +215,13 @@ public class Context {
    public void setMixing(String s) { mixing = s.equalsIgnoreCase("false") ? false : true; }
    public void setPartitioning(String s) { partitioning = s.equalsIgnoreCase("false") ? false : true; }
    public void setCircle(String r) throws Exception { this.circle = Integer.parseInt(r); }
-   public void setMaxRatio(String r) throws Exception { maxRatio = Integer.parseInt(r); }
+   public void setMaxRatio(String r) throws Exception { maxRatio = Double.parseDouble(r); }
    public void setBorderSize(String borderSize) throws ParseException { this.borderSize = parseBorderSize(borderSize); }
    public void setBorderSize(int[] borderSize) { this.borderSize = borderSize; }
    public void setOrder(int order) { this.order = order; }
    public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
    public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
+   public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame= (frame.startsWith("G"))?Localisation.GAL:Localisation.ICRS; }
    public void setSkyValName(String s ) { 
@@ -262,16 +271,7 @@ public class Context {
       return hdu;
    }
 
-   public void setInputPath(String path) {
-      
-      this.inputPath = path; 
-   		// cherche le dernier mot et le met dans le label
-//   	  if( label==null ) {
-//   	     int offset = path.lastIndexOf(Util.FS);
-//   	     if( offset==-1 ) offset = path.lastIndexOf('/');
-//   	     label = path==null ? null : path.substring(offset + 1);
-//   	  }
-   }
+   public void setInputPath(String path)  { this.inputPath = path;  }
    public void setOutputPath(String path) { this.outputPath = path; }
    public void setImgEtalon(String filename) throws Exception { imgEtalon = filename; initFromImgEtalon(); }
    public void setIndexFitskey(String list) {
@@ -455,6 +455,12 @@ public class Context {
     * @return true si trouvé
     */
    boolean findImgEtalon(String rootPath) { 
+      if( isInputFile ) {
+         try {
+            setImgEtalon(rootPath);
+         }  catch( Exception e) { return false; }
+         return true;
+      }
       nbFiles=0;
       return findImgEtalon1(rootPath);
    }
@@ -474,10 +480,7 @@ public class Context {
             if( !list[f].equals(Constante.SURVEY) ) dir.add(path);
             continue;
          }
-//         if( (new File(path)).isDirectory() ) {
-//            if( list[f].equals(Constante.SURVEY) ) continue;
-//            return findImgEtalon1(path);
-//         }
+         
          nbFiles++;
          if( nbFiles>100 ) {
             Aladin.trace(4, "Context.findImgEtalon: too many files - ignored this step...");
@@ -506,6 +509,8 @@ public class Context {
    }
    
    String justFindImgEtalon(String rootPath) {
+      if( isInputFile ) return rootPath;
+      
       File main = new File(rootPath);
       String[] list = main.list();
       if( list==null ) return null;
@@ -521,10 +526,6 @@ public class Context {
             if( !list[f].equals(Constante.SURVEY) ) dir.add(path);
             continue;
          }
-//         if( (new File(path)).isDirectory() ) {
-//            if( list[f].equals(Constante.SURVEY) ) continue;
-//            return justFindImgEtalon(path);
-//         }
          
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
@@ -760,6 +761,40 @@ public class Context {
          return false;
       }
       
+      
+      // Récupération d'un éventuel changement de TileOrder dans les propriétés du HpxFinder
+      InputStream in = null;
+      boolean flagTileOrderFound=false;
+      try {
+         String propFile = getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
+         MyProperties prop = new MyProperties();
+         prop.load( in=new FileInputStream( propFile ) );
+         o = Integer.parseInt( prop.getProperty(PlanHealpix.KEY_TILEORDER) );
+
+         if( o!=getTileOrder() ) {
+            if( tileOrder!=-1 && o!=tileOrder ) {
+               warning("Uncompatible tileOrder="+tileOrder+" compared to pre-existing survey tileOrder="+o);
+               return false;
+               
+            }
+            setTileOrder(o);
+            int w = getTileSide();
+            info("Specifical tileOrder="+o+" tileSize="+w+"x"+w);
+         }
+         flagTileOrderFound=true;
+      } 
+      catch( Exception e ) { }
+      finally { if( in!=null ) { try { in.close(); } catch( Exception e ) {} } }
+      
+      // Si rien d'indiqué dans Properties du HpxFinder, c'est que ce doit être l'ordre par défaut
+      if( !flagTileOrderFound ) {
+         if( getTileOrder()!=Constante.ORDER ) {
+            warning("Uncompatible tileOrder="+getTileOrder()+" compared to default pre-existing survey tileOrder="+Constante.ORDER);
+            return false;
+            
+         }
+      }
+      
       return true;
    }
 
@@ -835,7 +870,7 @@ public class Context {
    protected long getDiskMem() {
       long nbLowCells = getNbLowCells();
       if( nbLowCells==-1 || bitpix==0 ) return -1;
-      long mem = nbLowCells * Constante.SIDE*Constante.SIDE * (Math.abs(bitpix)/8);
+      long mem = nbLowCells *getTileSide()*getTileSide() * (Math.abs(bitpix)/8);
       
       return mem;
    }
@@ -1025,6 +1060,18 @@ public class Context {
    public void setProgress(double progress) { this.progress=progress; }
    public void setProgressMax(double progressMax) { this.progressMax=progressMax; }
    public void progressStatus() { System.out.print('.'); flagNL=true; }
+   
+//   static private char []  STATUS = { '|','/','-','\\' };
+//   private int indexStatus=0;
+//   
+//   public void progressStatus() {
+//      System.out.print( "\b" );
+//      System.out.print( STATUS[indexStatus] );
+//      indexStatus++;
+//      if( indexStatus>=STATUS.length ) indexStatus=0;
+//      flagNL=true;
+//   }
+   
    public void enableProgress(boolean flag) { System.out.println("progress ["+action+"] enable="+flag); }
    public void setProgressBar(JProgressBar bar) { }
    public void resumeWidgets() { }
@@ -1071,6 +1118,7 @@ public class Context {
 
    // Insère un NL si nécessaire
    private void nl() { if( flagNL ) System.out.println(); flagNL=false; }
+//   private void nl() { if( flagNL ) System.out.print("\b"); flagNL=false; }
    
    public void running(String s)  { nl(); System.out.println("RUN   : ================================ "+s+" ==============================="); }
    public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
@@ -1180,10 +1228,10 @@ public class Context {
       String sys = frame.equals("C") ? "equatorial" : frame.equals("E") ? "ecliptic" : "galactic";
       
       long nside = CDSHealpix.pow2(order);
-      long nsideP = CDSHealpix.pow2(order+Constante.ORDER);
+      long nsideP = CDSHealpix.pow2(order+getTileOrder());
       double resol = CDSHealpix.pixRes(nsideP)/3600;
       
-      int width = Constante.SIDE;
+      int width = getTileSide();
 
       String res = INDEX.replace("$LABEL",label);
       StringBuilder info = new StringBuilder();
@@ -1265,12 +1313,14 @@ public class Context {
             new String[] { PlanHealpix.KEY_PROCESSING_DATE, PlanHealpix.KEY_COORDSYS,
                            PlanHealpix.KEY_HIPSBUILDER,
                            PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER,
+                           PlanHealpix.KEY_TILEORDER,
                           },
             new String[] { getNow(),
                            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
                            "Aladin/HipsGen "+Aladin.VERSION,
                            label,
                            order+"",
+                           getTileOrder()+""
                          },
             true);
       
@@ -1324,6 +1374,30 @@ public class Context {
       
       // Et metadata.fits
       writeMetadataFits();
+   }
+   
+   /** Ecriture du fichier des propriétés pour le HpxFinder */
+   protected void writeHpxFinderProperties() throws Exception {
+      int frame = getFrame();
+
+      MyProperties prop = new MyProperties();
+      prop.setProperty(PlanHealpix.KEY_LABEL, getLabel()+"/"+Constante.HPX_FINDER);
+      prop.setProperty(PlanHealpix.KEY_ISMETA, "true");
+      prop.setProperty(PlanHealpix.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
+      prop.setProperty(PlanHealpix.KEY_MAXORDER, getOrder()+"");
+      prop.setProperty(PlanHealpix.KEY_TILEORDER, getTileOrder()+"");
+      if( minOrder>3 ) prop.setProperty(PlanHealpix.KEY_MINORDER, minOrder+"");
+      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, getNow());
+      prop.setProperty(PlanHealpix.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+
+      String propFile = getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
+      File f = new File(propFile);
+      if( f.exists() ) f.delete(); 
+      FileOutputStream out = null;
+      try { 
+         out = new FileOutputStream(f);
+         prop.store( out, null);
+      } finally {  if( out!=null ) out.close(); }
    }
    
    // Retourne les types de tuiles déjà construites (en regardant l'existence de allsky.xxx associé)

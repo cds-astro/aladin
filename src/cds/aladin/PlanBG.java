@@ -43,6 +43,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
@@ -179,6 +180,9 @@ public class PlanBG extends PlanImage {
    protected String pixelRange=null;   // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected String pixelCut=null;     // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected boolean flagNoTarget=false; // Par défaut pas de target indiquée
+   private int tileOrder=-1;        // Ordre des losanges
+   
+
    
    // Gestion du cache
 //   static volatile long cacheSize=MAXCACHE-1024*2;   // Taille actuelle du cache
@@ -381,6 +385,10 @@ public class PlanBG extends PlanImage {
          s = prop.getProperty(PlanHealpix.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
          s = prop.getProperty(PlanHealpix.KEY_PIXELRANGE);          if( s!=null ) pixelRange = s;
          s = prop.getProperty(PlanHealpix.KEY_PIXELCUT);            if( s!=null ) pixelCut = s;
+         s = prop.getProperty(PlanHealpix.KEY_TILEORDER);           
+         if( s!=null ){
+           try { tileOrder=Integer.parseInt(s); } catch( Exception e ) {};
+         }
          
       } catch( Exception e ) { aladin.trace(3,"No properties file found ...");  return false; }
       return true;
@@ -464,7 +472,7 @@ public class PlanBG extends PlanImage {
       color=gSky.isColored();
       cube=gSky.isCube();
       frameOrigin=gSky.getFrame();
-      losangeOrder=gSky.getLosangeOrder();
+      tileOrder=gSky.getLosangeOrder();
       local=gSky.isLocal();
       loadMocNow=gSky.loadMocNow();
       version = gSky.getVersion();
@@ -1233,7 +1241,7 @@ public class PlanBG extends PlanImage {
       HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1) );
       if( allsky==null || allsky.getStatus()!=HealpixKey.READY ) return null;
       
-      int orderLosange= getLosangeOrder();
+      int orderLosange= getTileOrder();
       if( orderLosange>0 && orderLosange <= getAllSkyOrder(allsky) ) {
          HealpixKey [] list = allsky.getPixList();
          if( list==null ) return null;
@@ -1336,20 +1344,16 @@ public class PlanBG extends PlanImage {
 
    protected double RES[]=null;
    
-   private static final int DEFAULTLOSANGEORDER = 9;
-
-   private int losangeOrder=-1;
-   
    /** Retourne le Nordre des losanges (images) */
-   protected int getLosangeOrder() {
-      if( losangeOrder==-1 ) return DEFAULTLOSANGEORDER;
-      return losangeOrder;
+   protected int getTileOrder() {
+      if( tileOrder==-1 ) return Constante.ORDER;
+      return tileOrder;
    }
    
    // Positionne l'ordre des losanges (trouvé lors de la lecture du premier losange
-   protected void setLosangeOrder(int losangeOrder) { 
-      if( this.losangeOrder!=-1 || losangeOrder<=0 ) return;
-      this.losangeOrder=losangeOrder;
+   protected void setTileOrder(int tileOrder) { 
+      if( this.tileOrder!=-1 || tileOrder<=0 ) return;
+      this.tileOrder=tileOrder;
    }
    
    private int allSkyOrder=-1;
@@ -1671,15 +1675,20 @@ public class PlanBG extends PlanImage {
    protected long lastIz=-1;
    protected int lastMaxOrder=3;
    
+   private int oLosangeOrder = -1;
+   
    protected int maxOrder(ViewSimple v) {
       long iz = v.getIZ();
       if( lastIz==iz ) return lastMaxOrder;
       lastIz=iz;
       
-      if( RES==null ) {
-         RES = new double[20];
+      // Découverte ou actualisation de la résolution des losanges ?
+      int myOrder = getTileOrder();
+      if( RES==null || oLosangeOrder!=myOrder ) {
+         oLosangeOrder = myOrder;
+         if( RES==null ) RES = new double[20];
          for( lastMaxOrder=0; lastMaxOrder<20; lastMaxOrder++ ) {
-            long nside = CDSHealpix.pow2(lastMaxOrder+getLosangeOrder()+1);
+            long nside = CDSHealpix.pow2(lastMaxOrder+myOrder+1);
             RES[lastMaxOrder]=CDSHealpix.pixRes(nside)/3600;
          }
       }
@@ -1732,7 +1741,7 @@ public class PlanBG extends PlanImage {
    
    /** Retourne l'ordre Healpix max */
    public int getMaxHealpixOrder() {
-      return maxOrder + getLosangeOrder();
+      return maxOrder + getTileOrder();
    }
    
    /** Retourne la résolution angulaire du pixel au NSIDE max (en degrés) */
@@ -3429,7 +3438,7 @@ public class PlanBG extends PlanImage {
                         // Du cache on charge immédiatement et en priorité
                         if( type==0 && status==HealpixKey.TOBELOADFROMCACHE ) {
                            healpix.loadFromCache();
-                           if( !healpix.allSky ) setLosangeOrder(healpix.getLosangeOrder());
+                           if( !healpix.allSky ) setTileOrder(healpix.getLosangeOrder());
                            flagLoad=true;
 //System.out.println("   Load "+healpix);
                            
@@ -3449,7 +3458,7 @@ public class PlanBG extends PlanImage {
 //System.out.println("   Load "+h);
                            if( type==0 ) h.loadFromCache();
                            else h.loadFromNet();
-                           if( !h.allSky ) setLosangeOrder(h.getLosangeOrder());
+                           if( !h.allSky ) setTileOrder(h.getLosangeOrder());
                            
                            // Trop long pour un autre ? =>  ça sera pour le prochain tour
                            if( System.currentTimeMillis() - t > MAXTIMETOBELOADFROMNET ) break;    

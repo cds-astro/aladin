@@ -81,10 +81,14 @@ public class BuilderMoc extends Builder {
       // mocOrder déterminé par la nature du survey
       else {
          if( mocOrder<Constante.DEFAULTMOCORDER || !isLarge ) {
-            mocOrder = context.getOrder()+Constante.ORDER-Constante.DIFFMOCORDER;
+            mocOrder = context.getOrder()+context.getTileOrder()-Constante.DIFFMOCORDER;
          }
          if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
       }
+      
+      // Couleur
+      if( context.isColor() ) mocOrder=fileOrder;
+      
       isMocHight = mocOrder>fileOrder;
       
       moc.setMocOrder(mocOrder);

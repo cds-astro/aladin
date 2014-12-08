@@ -60,6 +60,7 @@ final public class ThreadBuilderTile {
    private int radius;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
+   private int tileSide;
 
    public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
@@ -87,6 +88,7 @@ final public class ThreadBuilderTile {
       borderSize = context.getBorderSize();
       radius = context.circle;
       hpxFinderPath = context.getHpxFinderPath();
+      tileSide = context.getTileSide();
       
       downFiles = new ArrayList<SrcFile>(Constante.MAXOVERLAY);
    }
@@ -105,15 +107,15 @@ final public class ThreadBuilderTile {
    
    private boolean requiredMem(long nbProgen ) throws Exception {
       long rqMem = 4 * nbProgen * Constante.FITSCELLSIZE*Constante.FITSCELLSIZE*context.getNpixOrig();
-      rqMem += 2*Constante.SIDE*Constante.SIDE*context.getNpix();
+      rqMem += 2*tileSide*tileSide*context.getNpix();
       return needMem(nbThreadRunning*rqMem);
    }
    
    private void checkMem(long nbProgen ) throws Exception {
       long rqMem = 4 * nbProgen * Constante.FITSCELLSIZE*Constante.FITSCELLSIZE*context.getNpixOrig();
-      rqMem += 2*Constante.SIDE*Constante.SIDE*context.getNpix();
+      rqMem += 2*tileSide*tileSide*context.getNpix();
       if( nbProgen>Constante.MAXOVERLAY ) {
-         rqMem += 2*Constante.SIDE*Constante.SIDE*8;
+         rqMem += 2*tileSide*tileSide*8;
       }
       if( !needMem(rqMem) ) return;
       if( isTheLastRunning() ) {
@@ -185,7 +187,7 @@ final public class ThreadBuilderTile {
 
             // poids déjà calculés
             double [] weight = null;  
-            double [] fWeight = new double[Constante.SIDE*Constante.SIDE];
+            double [] fWeight = new double[tileSide*tileSide];
 
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
@@ -195,7 +197,7 @@ final public class ThreadBuilderTile {
                   if( out==null ) {
                      out=f;
                      weight=fWeight;
-                     fWeight = new double[Constante.SIDE*Constante.SIDE];
+                     fWeight = new double[tileSide*tileSide];
                   } else out.coadd(f,weight,fWeight);
                }
 
@@ -276,10 +278,11 @@ final public class ThreadBuilderTile {
       double blank  = this.blank;
       double bScale = this.bScale;
       double bZero  = this.bZero;
+      int tileSide = context.getTileSide();
 
       try {
          // cherche les numéros de pixels Healpix dans ce losange
-         min = npix_file * Constante.SIDE * Constante.SIDE;
+         min = npix_file * tileSide * tileSide;
 
          boolean flagModifBitpix = bitpix!=context.getBitpixOrig();
          
@@ -292,7 +295,7 @@ final public class ThreadBuilderTile {
             flagModifBitpix=false;
          }
 
-         out = new Fits(Constante.SIDE, Constante.SIDE, bitpix);
+         out = new Fits(tileSide, tileSide, bitpix);
          if( !flagColor ) {
             out.setBlank(blank);
             out.setBzero(bZero);
@@ -312,7 +315,7 @@ final public class ThreadBuilderTile {
          double [] pixcoef = new double[overlay];
          if( flagColor ) { pixvalG = new double[overlay]; pixvalB = new double[overlay]; }
          
-         HealpixBase hpx = CDSHealpix.getHealpixBase(order+Constante.ORDER);
+         HealpixBase hpx = CDSHealpix.getHealpixBase(order+context.getTileOrder());
          
          boolean gal2ICRS = context.getFrame()!=Localisation.ICRS;
          
@@ -418,7 +421,7 @@ final public class ThreadBuilderTile {
                }
                
                // Mémorisation du poids du pixel (si nécessaire)
-               if( weight!=null ) weight[y*Constante.SIDE+x]=totalCoef;
+               if( weight!=null ) weight[y*tileSide+x]=totalCoef;
             }
          }
          

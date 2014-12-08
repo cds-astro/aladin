@@ -643,7 +643,7 @@ public class Ligne extends Position {
       
       if( isHiPS ) {
          PlanBG pbg = (PlanBG) v.pref;
-         double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getLosangeOrder() ) ) / 3600;
+         double d = CDSHealpix.pixRes( CDSHealpix.pow2( pbg.getOrder() + pbg.getTileOrder() ) ) / 3600;
          d /= 2;   // Pour être sur de ne pas sauter une ligne
          System.out.println("From "+Coord.getUnit(mind)+" to "+Coord.getUnit(maxd)+" Delta = " + Coord.getUnit(d) );
          Coord haut = new Coord( (maxa+mina)/2, mind);

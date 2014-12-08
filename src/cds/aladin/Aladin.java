@@ -71,12 +71,19 @@ import cds.xml.XMLParser;
  * 
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> Hipsgen HEALPix FITS map support (any NSIDE, NESTED or RING)
- * @beta    <LI> Autocut around the reticle for HiPS
  * @beta    <LI> Full MOC adaptative drawing
  * @beta    <LI> Improvement of Planetary Data System image support (LSB,PREFIX,SUFFIX...)
  * @beta    <LI> ObsTAP VOTable result support
- * @beta    <LI> HiPS improvements : cube support, index.html, shape and maxRatio Hipsgen new parameters
+ * @beta    <LI> HiPS improvements : 
+ * @beta       <UL>
+ * @beta         <LI> Autocut around the reticle for HiPS
+ * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
+ * @beta         <LI> Cube support
+ * @beta         <LI> index.html HiPS directory description
+ * @beta         <LI> tileOrder Hipsgen parameter
+ * @beta         <LI> maxRatio Hipsgen parameter
+ * @beta         <LI> shape Hipsgen parameter
+ * @beta       </UL>
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
@@ -113,7 +120,7 @@ public class Aladin extends JApplet
     static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
     /** Numero de version */
-    static public final    String VERSION = "v8.123";
+    static public final    String VERSION = "v8.124";
     static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
     static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
     static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

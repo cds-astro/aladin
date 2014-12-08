@@ -376,7 +376,7 @@ public class BuilderTiles extends Builder {
 
 //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
       long bufMem =  4L * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpixOrig();
-      long oneRhomb = Constante.SIDE*Constante.SIDE*context.getNpix();
+      long oneRhomb = context.getTileSide()*context.getTileSide()*context.getNpix();
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
 //      context.info("Minimal RAM required per thread (upper estimation): "+cds.tools.Util.getUnitDisk(maxMemPerThread));
@@ -572,7 +572,7 @@ public class BuilderTiles extends Builder {
    private void launchThreadBuilderHpx(int nbThreads) throws Exception {
 
       initStat(nbThreads);
-      context.createHealpixOrder(Constante.ORDER);
+      context.createHealpixOrder(context.getTileOrder());
       ThreadBuilderTile.nbThreadRunning=nbThreads;
       
       for( int i=0; i<nbThreads; i++ ) {
@@ -617,7 +617,7 @@ public class BuilderTiles extends Builder {
     */
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[],int z) throws Exception {
       long t = System.currentTimeMillis();
-      int w=Constante.SIDE;
+      int w=context.getTileSide();
       double px[] = new double[4];
 
       boolean inTree = context.isInMocTree(order,npix);

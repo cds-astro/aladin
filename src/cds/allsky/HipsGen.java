@@ -115,6 +115,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("minOrder"))   { context.setMinOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("mocOrder"))   { context.setMocOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("tileOrder"))  { context.setTileOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
       } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
@@ -378,7 +379,7 @@ public class HipsGen {
       System.out.println(
             "-f                 Do not take into account possible previous computation\n"+
             "-n                 Just print process information, but do not execute it.\n"+
-            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS) or HEALPix map file" + "\n" +
+            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS), unique image or HEALPix map file" + "\n" +
             "out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
             "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
             "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
@@ -389,7 +390,7 @@ public class HipsGen {
             "order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
             "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
             "shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
-            "maxRatio=nn        Max height vs width tolerated ratio for original obs (default 10, 0 for removing the test)" + "\n" +
+            "maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
             "border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
 //            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
             "blank=nn           Specifical BLANK value" + "\n" +
@@ -409,6 +410,7 @@ public class HipsGen {
             "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
             "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
             "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+            "tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
             "minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
             "mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
             "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+

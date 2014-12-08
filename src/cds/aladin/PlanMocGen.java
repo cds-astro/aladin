@@ -154,7 +154,7 @@ public class PlanMocGen extends PlanMoc {
       PlanBG p = (PlanBG)p1;
       
       // Détermination de l'ordre pixel (order) et tuiles (fileOrder)
-      int order = p.getLosangeOrder();
+      int order = p.getTileOrder();
       int z = (int)p.getZ();
       
       int divOrder=0;

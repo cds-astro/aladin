@@ -142,7 +142,6 @@ public class PlanMoc extends PlanBGCat {
    protected HealpixMoc getMoc() { return moc; }
    
    protected void suiteSpecific() { isOldPlan=false; }
-   protected boolean isLoading() { return false; }
    protected boolean isSync() { return isReady(); }
    protected void reallocObjetCache() { }
    
@@ -242,6 +241,7 @@ public class PlanMoc extends PlanBGCat {
    // à l'ordre courant (mode progressif)
    private Hpix [] getHpixListProg(int order) {
 //      int o = order;
+      
       int mo = moc.getMaxOrder();
       if( mo<3 ) mo=3;
       order += 5;
@@ -251,23 +251,46 @@ public class PlanMoc extends PlanBGCat {
       if( order>mo ) order=mo;
 //      System.out.println("getHpixListProg("+o+") => "+order);
       if( arrayHpix[order]==null ) {
-         HealpixMoc mocLow = order==mo ? moc : (HealpixMoc)moc.clone();
-         try { mocLow.setMocOrder(order); } 
-         catch( Exception e ) { e.printStackTrace(); }
-         Hpix [] hpixLow = new Hpix[moc.getSize()];
-         int n=0;
-         Iterator<MocCell> it = mocLow.iterator();
-         while( it.hasNext() ) {
-            MocCell h = it.next();
-            hpixLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
-         }
-         arrayHpix[order] = hpixLow;
+         arrayHpix[order] = new Hpix[0];   // pour éviter de lancer plusieurs threads sur le meme calcul
+         final int myOrder = order;
+         final int myMo=mo;
+         (new Thread("PlanMoc building order="+order){
+            
+            public void run() {
+               Aladin.trace(4,"PlanMoc.getHpixListProg("+myOrder+") running...");
+               HealpixMoc mocLow = myOrder==myMo ? moc : (HealpixMoc)moc.clone();
+               try { mocLow.setMocOrder(myOrder); } 
+               catch( Exception e ) { e.printStackTrace(); }
+               Hpix [] hpixLow = new Hpix[moc.getSize()];
+               int n=0;
+               Iterator<MocCell> it = mocLow.iterator();
+               while( it.hasNext() ) {
+                  MocCell h = it.next();
+                  hpixLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
+               }
+               arrayHpix[myOrder] = hpixLow;
+               Aladin.trace(4,"PlanMoc.getHpixListProg("+myOrder+") done !");
+               askForRepaint();
+            }
+            
+         }).start();
          
       }
+      // peut être y a-t-il déjà un MOC de plus basse résolution déjà prêt
+      if( arrayHpix[order].length==0 ) {
+         isLoading=true;
+         int i=order;
+         for( ; i>=5 && (arrayHpix[i]==null || arrayHpix[i].length==0); i--);
+         if( i>=5 ) order=i;
+      } else isLoading=false;
+      
       lastOrderDrawn = order;
       return arrayHpix[order];
    }
    
+   private boolean isLoading=false;
+   protected boolean isLoading() { return isLoading; }
+
    private int lastOrderDrawn=-1;   // Dernier order tracé
    
    /** Retourne true si tout a été dessinée, sinon false */

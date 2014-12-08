@@ -19,6 +19,7 @@
 
 package cds.fits;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
@@ -225,6 +226,18 @@ final public class Fits {
          }catch( Exception e1 ) {}
       }
    }
+   
+   private Dimension getSizeJPEGPNG(String filename) {
+      Dimension dim=null;
+      try{ 
+         Fits fits = new Fits();
+         MyInputStream is1 = new MyInputStream(new FileInputStream(filename));
+         fits.loadJpeg(is1);
+         dim = new Dimension(fits.width,fits.height);
+         fits.free();
+      }catch( Exception e1 ) {}
+      return dim;
+   }
 
    public void loadJpeg(String filename, boolean color,boolean scanCommentCalib) throws Exception {
       filename = parseCell(filename); // extraction de la descrition d'une
@@ -236,7 +249,9 @@ final public class Fits {
          if( scanCommentCalib ) {
             is.getType(); // Pour être sûr de lire le commentaire éventuel
             if( is.hasCommentCalib() ) {
-               headerFits = is.createHeaderFitsFromCommentCalib();
+               Dimension dim = new Dimension(0,0);;
+               if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
+               headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
                bidouilleJPEGPNG(headerFits,filename);
                
                try {
@@ -303,7 +318,7 @@ final public class Fits {
 //   }
    
    // Mon propre ImageLoader pour éviter le MediaTracker qui nécessite un DISPLAY
-   // Attention : je ne supporte que les images ARGB et je ne teste pas les erreurs
+   // Attention : je ne teste pas les erreurs
    final class MyImageLoader implements ImageConsumer {
       
       boolean ready=false;
@@ -333,7 +348,7 @@ final public class Fits {
 //         }
          
          y = height - y - 1;
-         
+                  
          if( y+h<yCell || y>=yCell+heightCell ) return;
          
          for( int j=0; j<h; j++ ) {
@@ -372,7 +387,27 @@ final public class Fits {
          hasAlpha=model.hasAlpha();
       }
       public void setHints(int hintflags) { }
-      public void setPixels(int x, int y, int w, int h, ColorModel model, byte[] pixels, int off, int scansize) {
+      public void setPixels(int x, int y, int w, int h, ColorModel model, byte[] pixel, int off, int scansize) {
+         if( y+h<yCell || y>=yCell+heightCell ) return;
+         for( int j=0; j<h; j++ ) {
+            int y1 = j+y;
+            int yc = y1-yCell;
+            if( yc<0 || yc>=heightCell) continue;
+            for( int i=0; i<w; i++ ) {
+
+               // Coordonnées image originale
+               int x1 = i+x;
+
+               // Coordonnées cellules
+               int xc = x1-xCell;
+               if( xc<0 || xc>=widthCell ) continue;
+               
+               int pix = (0xFF & pixel[ off+scansize*j +i ]);
+               pix = (pix<<16) | (pix<<8) | pix;
+               if( !hasAlpha ) pix |=0xFF000000;
+               rgb[ yc*widthCell + xc ] = pix;
+            }
+         }
       }
    }
    
@@ -823,10 +858,11 @@ final public class Fits {
             // Cas d'un fichier PNG ou JPEG avec un commentaire contenant la
             // calib
          } else if( is.hasCommentCalib() ) {
-            headerFits = is.createHeaderFitsFromCommentCalib();
-            bitpix = 0;
+            Dimension dim = new Dimension(0,0);;
+            if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
+            headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
             bidouilleJPEGPNG(headerFits,filename);
-            
+           
          // Cas habituel
          }  else {
             moveOnHUD(is, ext);
@@ -835,6 +871,7 @@ final public class Fits {
             // Si jamais la première HDU est vide, on se cale automatiquement sur la suivante, sinon on sort
             if( ext==0 &&  headerFits.getIntFromHeader("NAXIS")==0 ) {
                if( !skipHDU0 ) return 0;
+               headerFits0 = headerFits;   // on garde la première HDU pour recherche éventuel de mots clés
                headerFits = new HeaderFits(is);
             }
             

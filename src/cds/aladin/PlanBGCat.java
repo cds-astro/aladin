@@ -126,7 +126,7 @@ public class PlanBGCat extends PlanBG {
 
    private HealpixAllskyCat allsky[] = new HealpixAllskyCat[4];
 
-   protected int getLosangeOrder() { return 9; }
+   protected int getTileOrder() { return 9; }
    
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(Graphics g,ViewSimple v,int order) {

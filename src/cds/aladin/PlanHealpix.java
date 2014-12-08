@@ -51,7 +51,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_LAST_MODIFICATON_DATE = "lastModified";
     static public final String KEY_NSIDE_PIXEL = "nsidePixel";
     static public final String KEY_NSIDE_FILE = "nsideFile";
-    static public final String KEY_ORDER_GENERATED_IMGS = "orderGeneratedImgs";
+    static public final String KEY_TILEORDER = "tileOrder";
     static public final String KEY_TFIELDS = "tfields";
     static public final String KEY_TTYPES = "ttypes";
     static public final String KEY_LENHPX = "lenhpx";
@@ -73,7 +73,7 @@ public class PlanHealpix extends PlanBG {
     static public final String KEY_FORMAT = "format";
     static public final String KEY_LABEL = "label";
     static public final String KEY_DESCRIPTION = "description";
-    static public final String KEY_DESCRIPTION_VERBOSE = "descriptionVerbose";
+    static public final String KEY_DESCRIPTION_VERBOSE = "verboseDescription";
     static public final String KEY_ACK = "acknowledgement";
     static public final String KEY_COPYRIGHT = "copyright";
     static public final String KEY_COPYRIGHT_URL = "copyrightUrl";
@@ -283,7 +283,7 @@ public class PlanHealpix extends PlanBG {
 
     /** Retourne le Nordre des losanges */
     @Override
-    protected int getLosangeOrder() { 
+    protected int getTileOrder() { 
        return (int)log2(nbPixGeneratedImage); 
     }
 
@@ -377,7 +377,7 @@ public class PlanHealpix extends PlanBG {
         prop.setProperty(KEY_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
         prop.setProperty(KEY_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
 
-        prop.setProperty(KEY_ORDER_GENERATED_IMGS, hpxOrderGeneratedImgs+"");
+        prop.setProperty(KEY_TILEORDER, hpxOrderGeneratedImgs+"");
 
         prop.setProperty(KEY_ORDERING, ordering);
 
@@ -874,7 +874,7 @@ public class PlanHealpix extends PlanBG {
             maxOrder = (int)log2(newNSideImage);
             newNSideFile = Integer.parseInt(prop.getProperty(KEY_NSIDE_PIXEL));
             hpxOrderGeneratedImgs = Integer.parseInt(prop
-                    .getProperty(KEY_ORDER_GENERATED_IMGS));
+                    .getProperty(KEY_TILEORDER));
             ordering = prop.getProperty(KEY_ORDERING);
 
             // on recupere le nombre de champs et leurs noms

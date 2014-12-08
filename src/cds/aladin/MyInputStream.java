@@ -29,6 +29,7 @@ import java.util.zip.InflaterInputStream;
 
 
 
+
 import cds.fits.HeaderFits;
 import cds.image.Bzip2;
 import cds.tools.Util;
@@ -1521,10 +1522,11 @@ public long skip(long n) throws IOException {
        if( commentCalib==null ) return;
        commentCalib =  "SIMPLE  = T\n"
                    +"BITPIX  = 8\n"
-                   +"NAXIS   = 3\n"
+//                   +"NAXIS   = 3\n"
+                   +"NAXIS   = 2\n"
                    +"NAXIS1  = "+width+"\n"
                    +"NAXIS2  = "+height+"\n"
-                   +"NAXIS3  = 3\n"
+//                   +"NAXIS3  = 3\n"
                    +commentCalib;
     }
 
@@ -1536,12 +1538,22 @@ public long skip(long n) throws IOException {
     
     /** Construction d'un HeaderFits à partir de l'entête JPEG si possible,
      * sinon génère une exception */
-    public HeaderFits createHeaderFitsFromCommentCalib() throws Exception {
-       return new HeaderFits(commentCalib);
+    public HeaderFits createHeaderFitsFromCommentCalib(int width,int height) throws Exception {
+       HeaderFits headerFits;
+       try {
+          headerFits=new HeaderFits(commentCalib);
+       } catch( Exception e ) {
+          jpegCalibAddNAXIS(width,height);
+          headerFits=new HeaderFits(commentCalib);
+       }
+
+       return headerFits;
     }
 
     /** Retourne true si ce flux dispose d'une calib dans un segment commentaire (JPEG ou PNG) */
     public boolean hasCommentCalib() { return commentCalib!=null || avm!=null; }
+    
+    public boolean hasCommentAVM() { return avm!=null; }
 
     /** Recherche dans un flux JPEG le segment commentaire qui peut contenir une
      * calibration. La mémorise (voir getJpegCabib() )

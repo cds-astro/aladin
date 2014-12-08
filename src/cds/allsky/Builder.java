@@ -102,7 +102,11 @@ public abstract class Builder {
       String input = context.getInputPath();
       if( input==null ) throw new Exception("Argument \"input\" is required");
       File f = new File(input);
-      if( !f.isDirectory() || !f.canRead()) throw new Exception("Input directory not available ["+input+"]");
+      if( !f.canRead()) throw new Exception("Input not available ["+input+"]");
+      if( f.isFile() ) {
+         context.info("Unique input image detected");
+         context.setFlagInputFile(true);
+      }
       context.setValidateInput(true);
    }
    

@@ -48,7 +48,7 @@ public class BuilderIndex extends Builder {
    private int radius = 0;
    private String currentfile = null;
    private boolean partitioning;
-   private int maxRatio;
+   private double maxRatio;
    private int [] hdu = null;
 
    // Pour les stat
@@ -70,6 +70,7 @@ public class BuilderIndex extends Builder {
    public void run() throws Exception {
       build();
       report();
+      context.writeHpxFinderProperties();
       
       BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
       builderMocIndex.run();
@@ -118,6 +119,7 @@ public class BuilderIndex extends Builder {
 
       validateInput();
       validateOutput();
+      validateLabel();
       
       // Tests order
       int order = context.getOrder();
@@ -132,7 +134,7 @@ public class BuilderIndex extends Builder {
             Fits file = new Fits();
             file.loadHeaderFITS(img);
             long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-            order = ((int) Util.order((int) nside) - Constante.ORDER);
+            order = ((int) Util.order((int) nside) - context.getTileOrder() );
             if( order<3 ) order=3;
             context.setOrder(order);
          } catch (Exception e) {
@@ -145,8 +147,10 @@ public class BuilderIndex extends Builder {
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
       } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
-         +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+Constante.ORDER))/3600. ) );
+         +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+context.getTileOrder()))/3600. ) );
       
+      int w = context.getTileSide();
+      context.info("TileOrder="+context.getTileOrder()+" => tileSize="+w+"x"+w+" pixels");
       
       // Récupération de la liste des HDU
       hdu = context.getHDU();
@@ -283,7 +287,7 @@ public class BuilderIndex extends Builder {
       File main = new File(pathSource);
 
       ArrayList<File> dir = new ArrayList<File>();
-      File[] list = main.listFiles();
+      File[] list = context.isInputFile ? new File[]{ main } : main.listFiles();
       if (list == null) return;
       
       int i=0;
@@ -414,11 +418,12 @@ public class BuilderIndex extends Builder {
          corner[i] = new Coord(coo.al,coo.del);
       }
 
-      // On teste le rapport largeur/longeur si nécessaire
+      // On teste le rapport largeur/longeur du pixel si nécessaire
       if( maxRatio>0 ) {
-         double h = Coord.getDist(corner[0], corner[1]);
-         double w = Coord.getDist(corner[1], corner[2]);
-         if( h>w*maxRatio || w>h*maxRatio ) throw new Exception("Suspissious image calibration (" +Coord.getUnit(h)+"x"+Coord.getUnit(w)+")");
+         double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
+         double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
+//         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
+         if( h>w*maxRatio || w>h*maxRatio ) throw new Exception("Suspicious image calibration (pixel size=" +Coord.getUnit(w)+"x"+Coord.getUnit(h)+")");
       }
       
       // On calcul également les coordonnées du centre de l'image
@@ -434,8 +439,8 @@ public class BuilderIndex extends Builder {
          for( String key : context.fitsKeys ) {
             String val;
             if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
-               if( fitsfile.headerFits0==null || fitsfile.headerFits0!=null 
-                     && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
+               if( fitsfile.headerFits0==null 
+                     || fitsfile.headerFits0!=null && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
             }
             if( res==null ) res = new StringBuilder();
             res.append(", \""+key+"\": \""+val.replace("\"","\\\"")+"\"");
