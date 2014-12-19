@@ -43,8 +43,8 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  */
 public final class ToolBox extends JComponent implements
-                   MouseMotionListener,MouseListener,
-                   WidgetFinder {
+MouseMotionListener,MouseListener,
+WidgetFinder {
    static int NUMBERTOOL=0;            // Numero croissant des tools plans (label par defaut)
 
    // Les differents outils possibles
@@ -74,13 +74,13 @@ public final class ToolBox extends JComponent implements
 
    // Ordre d'apparition des boutons
    private int [] drawn = {SELECT,PAN,/*ZOOM,*/DIST,PHOT,DRAW,TAG,
-                         FILTER,XMATCH,PLOT,RGB,BLINK,CROP,CONTOUR,HIST,PROP,
-                         DEL };
+         FILTER,XMATCH,PLOT,RGB,BLINK,CROP,CONTOUR,HIST,PROP,
+         DEL };
 
    // Ordre d'apparition des boutons
    static int [] OUTREACHDRAWN = {SELECT,PAN,/*ZOOM,*/DIST,PHOT,DRAW,TAG,
-                         CONTOUR,HIST,PROP,
-                         DEL };
+      CONTOUR,HIST,PROP,
+      DEL };
 
 
    // liste des boutons lies au plan tool
@@ -131,9 +131,9 @@ public final class ToolBox extends JComponent implements
    // Les variables de travail
    boolean flagDelAll;            // Vrai si on doit effacer ts les plans apres confirmation
 
-  /** Creation de la Tool bar
-   * @param aladin Reference
-   */
+   /** Creation de la Tool bar
+    * @param aladin Reference
+    */
    protected ToolBox(Aladin aladin) {
       this.aladin = aladin;
       addMouseListener(this);
@@ -148,11 +148,11 @@ public final class ToolBox extends JComponent implements
 
       init();
 
-    }
+   }
 
-  /** Recupere la reference au Calque et cree les outils
-   * @param calque Reference
-   */
+   /** Recupere la reference au Calque et cree les outils
+    * @param calque Reference
+    */
    protected void init() {
       // Fabrication de chaque outil
       tool = new Tool[NBTOOL];
@@ -160,46 +160,46 @@ public final class ToolBox extends JComponent implements
    }
 
 
-  /** Retourne le numero du tool utilise
-   * (uniquement parmi les outils to[])
-   * @return le numero du tool en cours d'utilisation,
-   *         <I>-1</I> sinon
-   */
+   /** Retourne le numero du tool utilise
+    * (uniquement parmi les outils to[])
+    * @return le numero du tool en cours d'utilisation,
+    *         <I>-1</I> sinon
+    */
    protected int getTool() {
       for( int i=0; i<to.length; i++ ) {
          if( tool[ to[i] ].mode==Tool.DOWN ) return to[i];
       }
       return -1;
    }
-   
-   
+
+
    private boolean firstTag=true;
    private boolean firstRepere=true;
 
 
-  /** Creation d'un nouveau objet en fonction du bouton appuye.
-   * Retourne un nouvel objet si un des tools est un cours d'utilisation
-   * @return Le nouvel objet a inserer dans le PlanTool, sinon <I>null</I>
-   */
+   /** Creation d'un nouveau objet en fonction du bouton appuye.
+    * Retourne un nouvel objet si un des tools est un cours d'utilisation
+    * @return Le nouvel objet a inserer dans le PlanTool, sinon <I>null</I>
+    */
    protected Obj newTool(Plan plan, ViewSimple v, double x, double y) {
       int tool = getTool();
       switch(tool) {
          case DRAW: Ligne ligne = new Ligne(plan,v,x,y); ligne.bout=4; return ligne;
          case TAG:
             if( firstTag && aladin.configuration.isHelp() &&
-               aladin.configuration.showHelpIfOk("TAGINFO") ) {
+                  aladin.configuration.showHelpIfOk("TAGINFO") ) {
                firstTag=false;
                return null;
             }
             return new Tag(plan,v,x,y);
          case PHOT:
             if( firstRepere && aladin.configuration.isHelp() && aladin.calque.getPlanBase().hasAvailablePixels() &&
-               aladin.configuration.showHelpIfOk("REPEREINFO") ) {
+                  aladin.configuration.showHelpIfOk("REPEREINFO") ) {
                firstRepere=false;
                return null;
             }
             Repere r = new Repere(plan,v,x,y);
-//            r.setWithLabel(true);
+            //            r.setWithLabel(true);
             return r;
          case DIST: return new Cote(plan,v,x,y);
          default: return null;
@@ -218,14 +218,14 @@ public final class ToolBox extends JComponent implements
    /** Positionne un des boutons d'ajout de graphiques, et remonte tous les autres */
    protected void setGraphicButton(int n) {
       tool[DRAW].mode = tool[TAG].mode = tool[PHOT].mode
-                      = tool[DIST].mode = tool[SELECT].mode = Tool.UP;
+            = tool[DIST].mode = tool[SELECT].mode = Tool.UP;
       tool[n].mode=Tool.DOWN;
       repaint();
    }
 
-  /** Mise en place de l'etat des boutons.
-   * Positionne les tools en fonction des vues sélectionnées
-   */
+   /** Mise en place de l'etat des boutons.
+    * Positionne les tools en fonction des vues sélectionnées
+    */
    protected void toolMode() { toolMode(true); }
    protected void toolMode(boolean withRepaint) {
       Plan [] allPlan = aladin.calque.getPlans();
@@ -247,47 +247,47 @@ public final class ToolBox extends JComponent implements
       for( i=0; i<omode.length; i++ ) {
          omode[i] = tool[i].mode;
          mode[i] = Tool.UNAVAIL;
-//         if( i==PAN ) mode[i]=Tool.UP;
+         //         if( i==PAN ) mode[i]=Tool.UP;
       }
       // Parcours tous les plans courants actifs et pour chacun d'eux
       // supprime les tools qui ne peuvent lui etre associes
       for( i=0; i<allPlan.length; i++ ) {
-        if( allPlan[i].type==Plan.NO || !allPlan[i].flagOk ) continue;
-        if( allPlan[i].isPixel() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
-        if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
-        if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
-        if( allPlan[i].isCatalog() ) nbCat++;
-        aucun=false;
-        if( !allPlan[i].selected ) continue;
+         if( allPlan[i].type==Plan.NO || !allPlan[i].flagOk ) continue;
+         if( allPlan[i].isPixel() || allPlan[i] instanceof PlanImageRGB )  nbSimpleImg++;
+         if( allPlan[i] instanceof PlanImageBlink )  nbBlinkImg++;
+         if( allPlan[i].type==Plan.CATALOG ) nbSimpleCat++;
+         if( allPlan[i].isCatalog() ) nbCat++;
+         aucun=false;
+         if( !allPlan[i].selected ) continue;
 
-        switch(allPlan[i].type) {        // Quelle est la liste d'exclusion
-           case Plan.IMAGERGB:
-           case Plan.IMAGERSP:
-           case Plan.IMAGEALGO:
-           case Plan.IMAGECUBE:
-           case Plan.IMAGECUBERGB:
-           case Plan.IMAGEBLINK:
-           case Plan.IMAGEMOSAIC:
-           case Plan.ALLSKYIMG:
-           case Plan.IMAGE:     ex = imgmode;     break;
-           case Plan.IMAGEHUGE: ex = imghugemode; break;
-           case Plan.ALLSKYCAT:
-           case Plan.CATALOG:   ex = catmode;     break;
-           case Plan.TOOL:      ex = toolmode;    break;
-           case Plan.APERTURE:  ex = fieldmode;   break;
-           case Plan.FOV:       ex = fieldmode;   break;
-           case Plan.FILTER:    ex = contourmode; break;
-        }
+         switch(allPlan[i].type) {        // Quelle est la liste d'exclusion
+            case Plan.IMAGERGB:
+            case Plan.IMAGERSP:
+            case Plan.IMAGEALGO:
+            case Plan.IMAGECUBE:
+            case Plan.IMAGECUBERGB:
+            case Plan.IMAGEBLINK:
+            case Plan.IMAGEMOSAIC:
+            case Plan.ALLSKYIMG:
+            case Plan.IMAGE:     ex = imgmode;     break;
+            case Plan.IMAGEHUGE: ex = imghugemode; break;
+            case Plan.ALLSKYCAT:
+            case Plan.CATALOG:   ex = catmode;     break;
+            case Plan.TOOL:      ex = toolmode;    break;
+            case Plan.APERTURE:  ex = fieldmode;   break;
+            case Plan.FOV:       ex = fieldmode;   break;
+            case Plan.FILTER:    ex = contourmode; break;
+         }
 
-        // thomas
-        if( allPlan[i] instanceof PlanContour) ex = contourmode;
+         // thomas
+         if( allPlan[i] instanceof PlanContour) ex = contourmode;
 
-        // Je positionne le complément du tableau ex[]
-        for( j=0; j<mode.length; j++ ) {
-           boolean flagEx=false;
-           for( int k=0; k<ex.length; k++ ) { if( j==ex[k] ) { flagEx=true; break; } }
-           if( !flagEx ) mode[j] = Tool.UP;
-        }
+         // Je positionne le complément du tableau ex[]
+         for( j=0; j<mode.length; j++ ) {
+            boolean flagEx=false;
+            for( int k=0; k<ex.length; k++ ) { if( j==ex[k] ) { flagEx=true; break; } }
+            if( !flagEx ) mode[j] = Tool.UP;
+         }
       }
 
       // S'il n'y a pas de catalogues on invalide FILTER
@@ -306,36 +306,36 @@ public final class ToolBox extends JComponent implements
 
       // Si la vue courante a un plan de référence qui n'a pas de pixels accessibles
       // on invalide CONTOUR
-//      if( aladin.calque.getFirstSelectedSimpleImage()==null 
-//            && !(v.pref instanceof PlanBG && v.pref.isPixel()) ) {
+      //      if( aladin.calque.getFirstSelectedSimpleImage()==null
+      //            && !(v.pref instanceof PlanBG && v.pref.isPixel()) ) {
       if( v==null || v.isFree() || !v.pref.isPixel() ) {
          mode[ToolBox.CONTOUR]=Tool.UNAVAIL;
       }
-      
+
       // Si le premier plan sélectionné est un MOC, on peut faire un crop
       if( aladin.calque.getFirstSelectedPlan() instanceof PlanMoc ) {
          mode[ToolBox.CROP]=Tool.UP;
       }
-      
-     // On invalide l'outil phot pour les plan BG
-//      if( v!=null && !v.isFree() && v.pref instanceof PlanBG ) mode[ToolBox.PHOT]=Tool.UNAVAIL;
+
+      // On invalide l'outil phot pour les plan BG
+      //      if( v!=null && !v.isFree() && v.pref instanceof PlanBG ) mode[ToolBox.PHOT]=Tool.UNAVAIL;
 
       // Si la vue courante a un plan de référence qui n'est pas une image simple
       // ni RGB on invalide HIST et PHOT
       Plan p = aladin.calque.getFirstSelectedPlan();
       if( p==null || !p.isPixel() && p.type!=Plan.IMAGERGB && p.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-      else if( p!=null && p.type==Plan.ALLSKYIMG && p instanceof PlanBG && ((PlanBG)p).color ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-      
-//      if( v==null || v.isFree() 
-//            || !v.pref.hasAvailablePixels()
-//        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
-     
-//      if( v!=null && !v.isFree() && v.pref instanceof PlanBG && ((PlanBG)v.pref).color ) {
-//         mode[ToolBox.HIST]=Tool.UNAVAIL;
-//      }
+      //      else if( p!=null && p.type==Plan.ALLSKYIMG && p instanceof PlanBG && ((PlanBG)p).color ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+
+      //      if( v==null || v.isFree()
+      //            || !v.pref.hasAvailablePixels()
+      //        && v.pref.type!=Plan.IMAGERGB && v.pref.type!=Plan.ALLSKYIMG ) mode[ToolBox.HIST]=Tool.UNAVAIL;
+
+      //      if( v!=null && !v.isFree() && v.pref instanceof PlanBG && ((PlanBG)v.pref).color ) {
+      //         mode[ToolBox.HIST]=Tool.UNAVAIL;
+      //      }
 
       if( v!=null && !v.isFree() && (v.pref instanceof PlanBG || v.northUp) ) mode[ToolBox.WEN]=Tool.UNAVAIL;
-      
+
       // Si aucun plan valide dans la pile, tous les boutons sont invalidés
       if( aucun ) for( i=0; i<mode.length; i++ ) mode[i]=Tool.UNAVAIL;
 
@@ -359,12 +359,12 @@ public final class ToolBox extends JComponent implements
 
       // Repaint si necessaire
       if( withRepaint && dorepaint ) repaint();
-  }
+   }
 
-  /** Test d'un bouton exclusif.
-   * @param n Numero du bouton a tester
-   * @return <I>true</I> le bouton est exclusif, <I>false</I> sinon
-   */
+   /** Test d'un bouton exclusif.
+    * @param n Numero du bouton a tester
+    * @return <I>true</I> le bouton est exclusif, <I>false</I> sinon
+    */
    protected boolean isExcTool(int n) {
       for( int i=0; i<exc.length; i++ ) {
          if( n==exc[i] ) return true;
@@ -372,10 +372,10 @@ public final class ToolBox extends JComponent implements
       return false;
    }
 
-  /** Test d'un bouton a creation automatique d'un plan TOOL
-   * @param n Numero du bouton a tester
-   * @return <I>true</I> Ok, <I>false</I> sinon
-   */
+   /** Test d'un bouton a creation automatique d'un plan TOOL
+    * @param n Numero du bouton a tester
+    * @return <I>true</I> Ok, <I>false</I> sinon
+    */
    protected static boolean isForTool(int n) {
 
       for( int i=0; i<forTool.length; i++ ) {
@@ -383,11 +383,11 @@ public final class ToolBox extends JComponent implements
       }
       return false;
    }
-   
+
    public void mouseDragged(MouseEvent e) {
-//      if( !flagDim ) return;
-//      deltaX = e.getX();
-//      deltaY = e.getY();
+      //      if( !flagDim ) return;
+      //      deltaX = e.getX();
+      //      deltaY = e.getY();
    }
 
    public void mouseReleased(MouseEvent e) {
@@ -399,14 +399,14 @@ public final class ToolBox extends JComponent implements
       // Recherche du bouton
       i = getToolNumber(x,y);
       if( i<0 ) return;
-      
+
       if( i==CROP ) {
          if( tool[i].mode!=Tool.DOWN ) {
             if( aladin.view.crop!=null ) aladin.view.crop.setVisible(false);
             else {
                if( aladin.view.crop!=null ) aladin.view.crop.reset();
             }
-         } 
+         }
          aladin.view.repaintAll();
       }
 
@@ -417,39 +417,39 @@ public final class ToolBox extends JComponent implements
          case PROP :
             // Propriétés sur un objet sélectionné
             if( aladin.view.isPropObjet() ) aladin.view.propSelectedObj();
-            
+
             // sinon sur le ou les plans sélectionnés
             else aladin.calque.select.propertiesOfSelectedPlanes();
             break;
-        case HIST :
-           aladin.updatePixel();
-           break;
-        case RGB :
-           aladin.updateRGB();
+         case HIST :
+            aladin.updatePixel();
             break;
-        case BLINK :
-           aladin.updateBlink(0);
-           break;
-        case XMATCH :
-           if( tool[i].mode==Tool.DOWN ) aladin.xmatch();
-           else if( aladin.frameCDSXMatch!=null ) aladin.frameCDSXMatch.setVisible(false);
-           break;
-        case PLOT :
-           if( tool[i].mode==Tool.DOWN ) aladin.createPlotCat();
-           break;
-//        case RESAMP :
-//           new FrameResample(aladin);
-//           break;
-//        case SYNC :
-//           aladin.viewControl.setSyncPanMode(tool[i].mode==Tool.DOWN);
-//           break;
-        case CONTOUR :
-           aladin.updateContour();
-           break;
-        case FILTER :
-           aladin.filter();
-           break;
-/*
+         case RGB :
+            aladin.updateRGB();
+            break;
+         case BLINK :
+            aladin.updateBlink(0);
+            break;
+         case XMATCH :
+            if( tool[i].mode==Tool.DOWN ) aladin.xmatch();
+            else if( aladin.frameCDSXMatch!=null ) aladin.frameCDSXMatch.setVisible(false);
+            break;
+         case PLOT :
+            if( tool[i].mode==Tool.DOWN ) aladin.createPlotCat();
+            break;
+            //        case RESAMP :
+            //           new FrameResample(aladin);
+            //           break;
+            //        case SYNC :
+            //           aladin.viewControl.setSyncPanMode(tool[i].mode==Tool.DOWN);
+            //           break;
+         case CONTOUR :
+            aladin.updateContour();
+            break;
+         case FILTER :
+            aladin.filter();
+            break;
+            /*
          case BNOTE:
             if( e.shiftDown() ) aladin.pad.reset();
             if( view.hasSelectedObjet() ) view.selObjToPad();
@@ -457,24 +457,24 @@ public final class ToolBox extends JComponent implements
             aladin.pad.show();
             aladin.pad.toFront();
             break;
-*/
+             */
          case DEL:
             // Suppression des objets selectionnes s'il y en a
             if( aladin.view.isDelSelObjet() ) { aladin.view.delSelObjet(); break; }
 
             // Suppression de toutes les vues
-//            else if( e.isShiftDown() && !aladin.view.isFree() && aladin.view.isMultiView() ) {
-//               aladin.view.freeAll();
-//               aladin.view.repaintAll();
-//               aladin.localisation.setTextAffichage("");
-//             }
+            //            else if( e.isShiftDown() && !aladin.view.isFree() && aladin.view.isMultiView() ) {
+            //               aladin.view.freeAll();
+            //               aladin.view.repaintAll();
+            //               aladin.localisation.setTextAffichage("");
+            //             }
 
             // Reset complet
             else if( e.isShiftDown() ) {
                aladin.reset();
                tool[ToolBox.DEL].setMode(Tool.UNAVAIL);
                aladin.console.printCommand("reset");
-             }
+            }
             // Suppression des vues sélectionnés
             else if( aladin.view.isViewSelected() && aladin.view.isMultiView() ) {
                aladin.view.freeSelected();
@@ -484,11 +484,11 @@ public final class ToolBox extends JComponent implements
             // Suppression de certaines vues ou plans
             else {
                // Il faut donc supprimer des plans
-//               if( Aladin.STANDALONE || Aladin.confirmation(WDEL) ) {
-                  aladin.calque.FreeSet(true);
-                  aladin.dialog.resume();	// Desactivation du GrabIt ?
-//               }
-               }
+               //               if( Aladin.STANDALONE || Aladin.confirmation(WDEL) ) {
+               aladin.calque.FreeSet(true);
+               aladin.dialog.resume();	// Desactivation du GrabIt ?
+               //               }
+            }
             aladin.gc();
             break;
       }
@@ -513,13 +513,13 @@ public final class ToolBox extends JComponent implements
 
       // Creation automatique d'un plan tool si on clique sur un des
       // boutons suivants et quel e plan sélectionné n'est pas déjà un plan tool
-//      try {
-//         if( isForTool(i)
-//               && (aladin.calque.getFirstSelectedPlan().type!=Plan.TOOL || e.isShiftDown() )
-//               && tool[i].mode==Tool.UP ) {
-//            newPlanTool();
-//         }
-//      } catch( Exception e1 ) { newPlanTool(); }
+      //      try {
+      //         if( isForTool(i)
+      //               && (aladin.calque.getFirstSelectedPlan().type!=Plan.TOOL || e.isShiftDown() )
+      //               && tool[i].mode==Tool.UP ) {
+      //            newPlanTool();
+      //         }
+      //      } catch( Exception e1 ) { newPlanTool(); }
 
       // Bouton non actif ? on ne fait rien
       if( tool[i].mode == Tool.UNAVAIL ) return;
@@ -540,7 +540,7 @@ public final class ToolBox extends JComponent implements
    }
 
    protected void newPlanTool() {
-//      aladin.calque.newPlanTool(DRAWING+" "+(++NUMBERTOOL));
+      //      aladin.calque.newPlanTool(DRAWING+" "+(++NUMBERTOOL));
       aladin.calque.selectPlanTool();
       toolMode(false);
    }
@@ -566,9 +566,9 @@ public final class ToolBox extends JComponent implements
    }
 
    public void mouseExited(MouseEvent e) {
-//      if( flagDim ) return;
+      //      if( flagDim ) return;
       oc=-1;
-//      inRedim=false;
+      //      inRedim=false;
       currentButton=-1;
       Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
       repaint();
@@ -617,24 +617,24 @@ public final class ToolBox extends JComponent implements
    }
 
 
-  /** Dessin d'un bouton (avec encadrement)
-   * @param order Numero d'ordre du bouton
-   * @param number Numero du bouton
-   * @param g Contexte graphique
-   * @param currentButton true si c'est le bouton courant (affichage vert)
-   */
+   /** Dessin d'un bouton (avec encadrement)
+    * @param order Numero d'ordre du bouton
+    * @param number Numero du bouton
+    * @param g Contexte graphique
+    * @param currentButton true si c'est le bouton courant (affichage vert)
+    */
    protected void drawButton(int order,int number, Graphics g,boolean currentButton) {
       int x = (order/nb)*W;                // Position en abscisse du bouton
       int y = (order%nb)*H;                // Position en ordonnee du bouton
       tool[number].drawIcone(g,x,y,currentButton);
    }
 
-  /** Adaptation de la taille de la Tool Bar.
-   * Calcul de la configuration de la boite a boutons
-   * en fonction de la hauteur indiquee
-   * @param hs La nouvelle hauteur de la Toolbar
-   * @return la largeur de la Toolbar (dependante du nombre de colonnes)
-   */
+   /** Adaptation de la taille de la Tool Bar.
+    * Calcul de la configuration de la boite a boutons
+    * en fonction de la hauteur indiquee
+    * @param hs La nouvelle hauteur de la Toolbar
+    * @return la largeur de la Toolbar (dependante du nombre de colonnes)
+    */
    protected void calcConf(int hs) {
       int nbtoolParCol=0; // Nombre moyen de boutons par col
       int nbtool = drawn.length;
@@ -647,7 +647,7 @@ public final class ToolBox extends JComponent implements
          H = hs/nbtoolParCol;                     // hauteur qu'aurait un bouton
          if( H>=HMIN ) break;
       }
-      
+
       // On ajuste la hauteur du bouton pour equilibrer les colonnes
       // en jouant sur la taille du bouton (entre minimal et recommandee)
       for( H=HREC; H>HMIN ; H--) {
@@ -667,41 +667,41 @@ public final class ToolBox extends JComponent implements
 
 
    // Pour tracer les petites triangles du logo de redimensionnement
-//   static private int XA[] = new int[3];
-//   static private int YA[] = new int[3];
+   //   static private int XA[] = new int[3];
+   //   static private int YA[] = new int[3];
 
-  /** Dessin de l'icone de changement de proportion.
-   * entre la boite de mesure et le reste
-   * Se situera toujours en dessous de la boite a outils
-   * @param g Contexte graphique
-   */
-//   protected void drawIconeProp(Graphics g) {
-//      int x=ws/2;
-//      int y=hs-L-2;
-//
-//      g.setColor(flagDim||inRedim?Color.blue:Color.black);
-//
-//      for( int i=0; i<4; i++ ) {
-//         switch(i) {
-//            case 0: XA[0] = x-2; XA[1] = x; XA[2] = x+2;
-//                    YA[0] = y-2; YA[1] = y-4; YA[2] = y-2;
-//                     break;
-//            case 1: YA[0] = y+2; YA[1] = y+4; YA[2] = y+2;
-//                    break;
-//            case 2: XA[0] = x+6; XA[1] = x+8; XA[2] = x+6;
-//                    YA[0] = y-2; YA[1] = y; YA[2] = y+2;
-//                    break;
-//            case 3: XA[0] = x-6; XA[1] = x-8; XA[2] = x-6;
-//                    break;
-//         }
-//         g.fillPolygon(XA,YA,XA.length);
-//         g.drawPolygon(XA,YA,XA.length);
-//      }
-//
-//      g.drawLine( x-6,y,x+6,y);
-//      g.drawLine( x, y-4,x,y+4);
-//
-//   }
+   /** Dessin de l'icone de changement de proportion.
+    * entre la boite de mesure et le reste
+    * Se situera toujours en dessous de la boite a outils
+    * @param g Contexte graphique
+    */
+   //   protected void drawIconeProp(Graphics g) {
+   //      int x=ws/2;
+   //      int y=hs-L-2;
+   //
+   //      g.setColor(flagDim||inRedim?Color.blue:Color.black);
+   //
+   //      for( int i=0; i<4; i++ ) {
+   //         switch(i) {
+   //            case 0: XA[0] = x-2; XA[1] = x; XA[2] = x+2;
+   //                    YA[0] = y-2; YA[1] = y-4; YA[2] = y-2;
+   //                     break;
+   //            case 1: YA[0] = y+2; YA[1] = y+4; YA[2] = y+2;
+   //                    break;
+   //            case 2: XA[0] = x+6; XA[1] = x+8; XA[2] = x+6;
+   //                    YA[0] = y-2; YA[1] = y; YA[2] = y+2;
+   //                    break;
+   //            case 3: XA[0] = x-6; XA[1] = x-8; XA[2] = x-6;
+   //                    break;
+   //         }
+   //         g.fillPolygon(XA,YA,XA.length);
+   //         g.drawPolygon(XA,YA,XA.length);
+   //      }
+   //
+   //      g.drawLine( x-6,y,x+6,y);
+   //      g.drawLine( x, y-4,x,y+4);
+   //
+   //   }
 
    private int currentButton=-1;
    private int oldCurrentButton=-1;
@@ -728,7 +728,7 @@ public final class ToolBox extends JComponent implements
       g.fillRect(0,0,ws,hs);
 
       // Dessin de l'icone de changt de proportion
-//      drawIconeProp(g);
+      //      drawIconeProp(g);
 
       // Dessin de chaque boutons
       for( int i=0; i<drawn.length; i++ ) drawButton(i,drawn[i],g,currentButton==i);
@@ -737,24 +737,24 @@ public final class ToolBox extends JComponent implements
    public Dimension getPreferredSize() { return new Dimension(ws,hs); }
 
 
- /** Affiche les textes d'aide adaptes a chaque bouton */
+   /** Affiche les textes d'aide adaptes a chaque bouton */
    protected String Help(int n) {
       if( n==-1 ) return aladin.chaine.getString("ToolBox.HELP1");
       if( n==-2 ) return aladin.chaine.getString("ToolBox.HELP2");
       return aladin.chaine.getString("ToolBox.HELP1")+"\n!Tool: "+Tool.label[n]+
-             "\n"+aladin.chaine.getString("Tool."+Tool.label[n])+"\n";
+            "\n"+aladin.chaine.getString("Tool."+Tool.label[n])+"\n";
    }
 
    /** Implémentation des méthodes de WidgetFinder */
 
    public boolean findWidget(String name) {
       if( name.equalsIgnoreCase("contour")
-       || name.equalsIgnoreCase("filter")
-       || name.equalsIgnoreCase("rgb") ) {
+            || name.equalsIgnoreCase("filter")
+            || name.equalsIgnoreCase("rgb") ) {
          return true;
-       }
+      }
 
-       return false;
+      return false;
    }
 
    /** Retourne la position du widget repéré par son nom
@@ -766,28 +766,28 @@ public final class ToolBox extends JComponent implements
       }
       return new Point(0,0);
 
-//      int ntool, tool;
-//      tool = -1;
-//      if( name.equalsIgnoreCase("contour") ) tool = CONTOUR;
-//      else if( name.equalsIgnoreCase("filter") ) tool = FILTER;
-//      else if( name.equalsIgnoreCase("rgb") ) tool = RGB;
-//
-//      ntool = getNTool(tool);
-//      Point p = new Point(0, 0);
-//      if( ntool!=-1 ) {
-//         p = new Point((ntool/nb)*W+W/2, (ntool%nb)*H+H/2);
-//      }
-//
-//      return p;
+      //      int ntool, tool;
+      //      tool = -1;
+      //      if( name.equalsIgnoreCase("contour") ) tool = CONTOUR;
+      //      else if( name.equalsIgnoreCase("filter") ) tool = FILTER;
+      //      else if( name.equalsIgnoreCase("rgb") ) tool = RGB;
+      //
+      //      ntool = getNTool(tool);
+      //      Point p = new Point(0, 0);
+      //      if( ntool!=-1 ) {
+      //         p = new Point((ntool/nb)*W+W/2, (ntool%nb)*H+H/2);
+      //      }
+      //
+      //      return p;
    }
 
-//   private int getNTool(int tool) {
-//      for( int i=0; i<sort.length; i++ ) {
-//         if( tool==sort[i] ) return i;
-//      }
-//
-//      return -1;
-//   }
+   //   private int getNTool(int tool) {
+   //      for( int i=0; i<sort.length; i++ ) {
+   //         if( tool==sort[i] ) return i;
+   //      }
+   //
+   //      return -1;
+   //   }
 
    public void mouseClicked(MouseEvent e) { }
 

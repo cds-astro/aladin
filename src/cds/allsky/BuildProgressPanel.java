@@ -162,8 +162,8 @@ public class BuildProgressPanel extends JPanel {
       p1Index.setLayout(new BorderLayout());
       p2Tess.setLayout(new BorderLayout());
 
-      select(true,Constante.INDEX);
-      select(true,Constante.TESS);
+      select(true,Constante.PANEL_INDEX);
+      select(true,Constante.PANEL_TESSELATION);
 
       p1Index.add(labelIndex, BorderLayout.NORTH);
       p2Tess.add(labelTess, BorderLayout.NORTH);
@@ -192,16 +192,16 @@ public class BuildProgressPanel extends JPanel {
       progressBarTile.setValue(0);
       progressBarIndex.setValue(0);
       labelIndex.setText(string1);
-      select(true,Constante.INDEX);
-      select(true,Constante.TESS);
+      select(true,Constante.PANEL_INDEX);
+      select(true,Constante.PANEL_TESSELATION);
       resetProgressBar();
    }
 
    public void select(boolean enabled, int index) {
       JLabel label = null;
       switch (index) {
-         case Constante.INDEX : label = labelIndex; break;
-         case Constante.TESS : label = labelTess; break;
+         case Constante.PANEL_INDEX : label = labelIndex; break;
+         case Constante.PANEL_TESSELATION : label = labelTess; break;
       }
       if (!enabled) {
          label.setFont(getFont().deriveFont(Font.ITALIC));

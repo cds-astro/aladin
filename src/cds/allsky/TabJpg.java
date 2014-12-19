@@ -297,7 +297,7 @@ public class TabJpg extends JPanel implements ActionListener {
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
          context.setJpegMethod(getMethod());
          context.setProgressBar(progressJpg);
-         Action action = getTileFormat()==Context.PNG ? Action.PNG : Action.JPEG;
+         Action action = getTileFormat()==Constante.TILE_PNG ? Action.PNG : Action.JPEG;
          context.setValidateCut(false);
          
          try {
@@ -332,7 +332,7 @@ public class TabJpg extends JPanel implements ActionListener {
    }
    
    private void loadMoc() {
-      String mocFile = context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String mocFile = context.getOutputPath()+Util.FS+Constante.FILE_MOC;
       mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 
@@ -367,7 +367,7 @@ public class TabJpg extends JPanel implements ActionListener {
    public String getCutMax() { return tCutMax.getText().trim(); }
    
    private boolean isExistingMoc() {
-      String moc = context.getOutputPath()+Util.FS+BuilderMoc.MOCNAME;
+      String moc = context.getOutputPath()+Util.FS+Constante.FILE_MOC;
       return  moc!=null && (new File(moc)).exists();
    }
    
@@ -387,8 +387,8 @@ public class TabJpg extends JPanel implements ActionListener {
    
    /**   retourne le format pour les tuiles compressées (JPEG ou PNG) */
    public int getTileFormat() {
-      if( pngFormat.isSelected() ) return Context.PNG;
-      return Context.JPEG;
+      if( pngFormat.isSelected() ) return Constante.TILE_PNG;
+      return Constante.TILE_JPEG;
    }
 
    protected void resumeWidgets() {

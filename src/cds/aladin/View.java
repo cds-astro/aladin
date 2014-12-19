@@ -825,9 +825,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Création de ROI autour de la position indiquée pour toutes les
     * vues sélectionnées. */
    protected void createROI() {
-      aladin.console.printCommand("thumbnail");
       Aladin.makeCursor(aladin,Aladin.WAITCURSOR);
-      createROIInternal(0,0,true);
+      double radius = createROIInternal(0,0,true);
+      if( radius>0 ) aladin.console.printCommand("thumbnail "+Coord.getUnit(radius));
    }
 
    /** Crée des vues ROI de taillePixel de large */
@@ -841,8 +841,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     * @param tailleRadius taille en arcmin
     * @param taillePixel taille en pixel (pris en compte ssi tailleRadius==0)
     * @param dialog true s'il y a dialogue avec l'utilisateur
+    * @return la taille des champs ROI en degrés
     */
-   private void createROIInternal(double tailleRadius,int taillePixel,boolean dialog) {
+   private double createROIInternal(double tailleRadius,int taillePixel,boolean dialog) {
 
       int first = -1;
       
@@ -925,7 +926,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Position src[] = getSourceList(vsel,vca,tailleRadius==0?3./3600:tailleRadius/2);
       if( src.length==0 ) {
          aladin.warning(ROIWNG);
-         return;
+         return 0;
       } else {
          if( !Aladin.NOGUI && dialog ) {
             Aladin.makeCursor(this,Aladin.DEFAULTCURSOR);
@@ -944,10 +945,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             radiusROI.setText( Coord.getUnit(tailleRadius) );
             panel.add( new Label("Thumbnail size (arcmin):") );
             panel.add(radiusROI);
-            if( Message.showFrame(this,ROIINFO+stat, panel, Message.QUESTION)!=Message.OUI ) return;
+            if( Message.showFrame(this,ROIINFO+stat, panel, Message.QUESTION)!=Message.OUI ) return 0;
             tailleRadius = Server.getRM( radiusROI.getText() )/60;
          }
       }
+      
+      if( !isMultiView() ) setModeView(ViewControl.MVIEW9);
 
       for( int j=0; j<src.length; j++ ) {
          Position o = src[j];
@@ -984,10 +987,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          }
       }
       aladin.log("createROI","["+src.length+" position(s)]");
-      if( !isMultiView() ) setModeView(ViewControl.MVIEW9);
       scrollOn(0);
       repaintAll();
 //      if( first>=0 ) scrollOn(first);
+      
+      return tailleRadius;
    }
    
    /** Création d'une vue pour le Plan en paramètre */
@@ -4168,7 +4172,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       setCurrentNumView(pos.y);
 
       // Nouvelle configuration de la scrollbar verticale
-      scrollV.setValues(pos.x/m,m,0,1+viewMemo.size()/m);
+      scrollV.setValues(pos.x/m,m, 0  ,1+viewMemo.size()/m);
+      int bloc = aladin.viewControl.getNbLig(m);
+      scrollV.setBlockIncrement(bloc);
 
       // Modification du JPanel multiview en fonction de la nouvelle
       // configuration d'affiche

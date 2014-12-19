@@ -47,7 +47,7 @@ public class PlanBGProgen extends PlanBGCat {
       
       // Récupération d'un éventuel minorder
       if( prop!=null ) {
-         String s = prop.getProperty(PlanHealpix.KEY_MINORDER);
+         String s = prop.getProperty(Constante.KEY_MINORDER);
          if( s!=null ) {
             try { minOrder = Integer.parseInt(s); }
             catch( Exception e ) {}
@@ -57,7 +57,7 @@ public class PlanBGProgen extends PlanBGCat {
       frameOrigin=Localisation.ICRS;
       url = gluSky.getUrl();
       local = gluSky.isLocal();
-      if( survey.equals(Constante.HPX_FINDER) ) survey = getAssociatedSurvey() + cds.tools.Util.FS + survey;
+      if( survey.equals(Constante.FILE_HPXFINDER) ) survey = getAssociatedSurvey() + cds.tools.Util.FS + survey;
       loadGenericLegende();
    }
    
@@ -73,9 +73,9 @@ public class PlanBGProgen extends PlanBGCat {
    // HiPS parent (si il existe), null sinon
    private String getAssociatedSurveyByProperties() {
       String s = url.replace('\\','/');
-      int fin = s.lastIndexOf("/"+Constante.HPX_FINDER);
+      int fin = s.lastIndexOf("/"+Constante.FILE_HPXFINDER);
       if( fin==-1 ) return null;
-      String propPath = s.substring(0,fin)+"/"+PlanHealpix.PROPERTIES;
+      String propPath = s.substring(0,fin)+"/"+Constante.FILE_PROPERTIES;
       MyInputStream in=null;
       try {
          in = cds.tools.Util.openStream(propPath);
@@ -93,7 +93,7 @@ public class PlanBGProgen extends PlanBGCat {
    // est précédé du nom du survey
    private String getAssociatedSurveByUrl() { 
       String s = url.replace('\\','/');
-      int fin = s.lastIndexOf("/"+Constante.HPX_FINDER);
+      int fin = s.lastIndexOf("/"+Constante.FILE_HPXFINDER);
       int deb = s.lastIndexOf('/', fin-1);
       String associatedSurvey = s.substring(deb+1,fin);
       return associatedSurvey; 

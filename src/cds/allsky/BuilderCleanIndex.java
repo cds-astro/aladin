@@ -55,7 +55,7 @@ public class BuilderCleanIndex extends BuilderClean {
    
    public boolean mustBeDeleted(File f) {
       String name = f.getName();
-      if( name.equals(Context.METADATAXML) ) return false;
+      if( name.equals(Constante.FILE_METADATAXML) ) return false;
       return true;
    }
 

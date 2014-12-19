@@ -35,6 +35,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
+import cds.allsky.Constante;
 import cds.moc.Healpix;
 import cds.tools.Util;
 
@@ -85,14 +86,14 @@ public class TreeNodeAllsky extends TreeNode {
       // Par http ou ftp ?
       try {
          InputStream in=null;
-         if( !local ) in = (new URL(pathOrUrl+"/"+PlanHealpix.PROPERTIES)).openStream();
-         else in = new FileInputStream(new File(pathOrUrl+Util.FS+PlanHealpix.PROPERTIES));
+         if( !local ) in = (new URL(pathOrUrl+"/"+Constante.FILE_PROPERTIES)).openStream();
+         else in = new FileInputStream(new File(pathOrUrl+Util.FS+Constante.FILE_PROPERTIES));
          if( in!=null ) { prop.load(in); in.close(); }
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
       
 
       // recherche du frame Healpix
-      String strFrame = prop.getProperty(PlanHealpix.KEY_COORDSYS,"G");
+      String strFrame = prop.getProperty(Constante.KEY_COORDSYS,"G");
       char c1 = strFrame.charAt(0);
       if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
       else if( c1=='E' ) frame=Localisation.ECLIPTIC;
@@ -100,7 +101,7 @@ public class TreeNodeAllsky extends TreeNode {
 
       url=pathOrUrl;
       
-      s = prop.getProperty(PlanHealpix.KEY_LABEL);
+      s = prop.getProperty(Constante.KEY_LABEL);
       if( s!=null ) label=s;
       else {
          char c = local?Util.FS.charAt(0):'/'; 
@@ -111,35 +112,35 @@ public class TreeNodeAllsky extends TreeNode {
       }
       id="__"+label;
       
-      s = prop.getProperty(PlanHealpix.KEY_VERSION);
+      s = prop.getProperty(Constante.KEY_VERSION);
       if( s!=null ) version=s;
       
-      description = prop.getProperty(PlanHealpix.KEY_DESCRIPTION);
-      verboseDescr = prop.getProperty(PlanHealpix.KEY_DESCRIPTION_VERBOSE);
-      copyright = prop.getProperty(PlanHealpix.KEY_COPYRIGHT);
-      copyrightUrl = prop.getProperty(PlanHealpix.KEY_COPYRIGHT_URL);
-      useCache = !local && Boolean.parseBoolean( prop.getProperty(PlanHealpix.KEY_USECACHE,"True") );
+      description = prop.getProperty(Constante.KEY_DESCRIPTION);
+      verboseDescr = prop.getProperty(Constante.KEY_DESCRIPTION_VERBOSE);
+      copyright = prop.getProperty(Constante.KEY_COPYRIGHT);
+      copyrightUrl = prop.getProperty(Constante.KEY_COPYRIGHT_URL);
+      useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.KEY_USECACHE,"True") );
       
-      s = prop.getProperty(PlanHealpix.KEY_TARGET);
+      s = prop.getProperty(Constante.KEY_TARGET);
       if( s==null ) target=null;
       else {
          try { target = new Coord(s); }
          catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
       }
-      s = prop.getProperty(PlanHealpix.KEY_TARGETRADIUS);
+      s = prop.getProperty(Constante.KEY_TARGETRADIUS);
       if( s==null ) radius=-1;
       else {
          try { radius=Server.getAngle(s, Server.RADIUSd); }
          catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
       }
       
-      s = prop.getProperty(PlanHealpix.KEY_NSIDE);
+      s = prop.getProperty(Constante.KEY_NSIDE);
       if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
          aladin.trace(3,"NSIDE number not parsable !");
          nside=-1;
       }
       
-      try { maxOrder = new Integer(prop.getProperty(PlanHealpix.KEY_MAXORDER)); }
+      try { maxOrder = new Integer(prop.getProperty(Constante.KEY_MAXORDER)); }
       catch( Exception e ) {
          maxOrder = getMaxOrderByPath(pathOrUrl,local);
          if( maxOrder==-1 ) {
@@ -149,10 +150,10 @@ public class TreeNodeAllsky extends TreeNode {
       }
       
       // Les paramètres liés aux cubes
-      try { cube = new Boolean(prop.getProperty(PlanHealpix.KEY_ISCUBE)); }
+      try { cube = new Boolean(prop.getProperty(Constante.KEY_ISCUBE)); }
       catch( Exception e ) { cube=false; }
       if( cube ) {
-         s = prop.getProperty(PlanHealpix.KEY_CUBEDEPTH);
+         s = prop.getProperty(Constante.KEY_CUBEDEPTH);
          if( s!=null ) {
             try { cubeDepth = Integer.parseInt(s); }
             catch( Exception e ) {
@@ -160,7 +161,7 @@ public class TreeNodeAllsky extends TreeNode {
                cubeDepth=-1;
             }
          }
-         s = prop.getProperty(PlanHealpix.KEY_CUBEFIRSTFRAME);
+         s = prop.getProperty(Constante.KEY_CUBEFIRSTFRAME);
          if( s!=null ) {
             try { cubeFirstFrame = Integer.parseInt(s); }
             catch( Exception e ) {
@@ -172,16 +173,16 @@ public class TreeNodeAllsky extends TreeNode {
       
       progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
 
-      s = prop.getProperty(PlanHealpix.KEY_ISCAT);
+      s = prop.getProperty(Constante.KEY_ISCAT);
       if( s!=null ) cat = new Boolean(s);
       else cat = getFormatByPath(pathOrUrl,local,2);
       
       // Détermination du format des cellules dans le cas d'un survey pixels
-      String keyColor = prop.getProperty(PlanHealpix.KEY_ISCOLOR);
+      String keyColor = prop.getProperty(Constante.KEY_ISCOLOR);
       if( keyColor!=null ) color = new Boolean(keyColor);
 //      if( color ) inJPEG=true;
       if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
-         String format = prop.getProperty(PlanHealpix.KEY_FORMAT);
+         String format = prop.getProperty(Constante.KEY_FORMAT);
          if( format!=null ) {
             int a,b;
             inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;

@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.StringTokenizer;
 
 import cds.aladin.MyProperties;
-import cds.aladin.PlanHealpix;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
 
@@ -73,7 +72,7 @@ public class BuilderCube extends Builder {
          
          // Mémorisation des propriétés à partir du premier HiPS
          if( !propFound ) {
-            String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
+            String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
             context.prop = new MyProperties();
             File f = new File( propFile );
             if( f.exists() ) {
@@ -85,7 +84,7 @@ public class BuilderCube extends Builder {
                
                // Pour la stat d'avancement => une idée du nombre de format de tuiles
                try {
-                  String fmt = (String)context.prop.get(PlanHealpix.KEY_FORMAT);
+                  String fmt = (String)context.prop.get(Constante.KEY_FORMAT);
                   int n = (new StringTokenizer(fmt," ")).countTokens();
                   if( n>1 ) nbFmt=n;
                } catch( Exception e ) { }
@@ -94,12 +93,12 @@ public class BuilderCube extends Builder {
          
          // Récupération des noms des bandes
          String lab= getALabel(path);
-         context.setPropriete(PlanHealpix.KEY_LABEL+"_"+i, lab);
+         context.setPropriete(Constante.KEY_LABEL+"_"+i, lab);
          
          // Estimation du MOC final (union)
          try {
             HealpixMoc m = new HealpixMoc();
-            m.read( path+Util.FS+BuilderMoc.MOCNAME);
+            m.read( path+Util.FS+Constante.FILE_MOC);
             if( context.moc==null ) context.moc=m;
             else context.moc = context.moc.union(m);
          } catch( Exception e ) {
@@ -132,7 +131,7 @@ public class BuilderCube extends Builder {
    public void build() throws Exception  {
       initStat();
       String output = context.getOutputPath();
-      String outputHpxFinder = output+Util.FS+Constante.HPX_FINDER;
+      String outputHpxFinder = output+Util.FS+Constante.FILE_HPXFINDER;
       
       for( int z=0; z<context.depth; z++ ) {
          String input = inputPath[z];   
@@ -141,7 +140,7 @@ public class BuilderCube extends Builder {
             treeCopy(input, output, "Norder"+order,z);
          }
          
-         String inputHpxFinder = input+Util.FS+Constante.HPX_FINDER;
+         String inputHpxFinder = input+Util.FS+Constante.FILE_HPXFINDER;
          if( (new File(inputHpxFinder).isDirectory()) ) {
             for( int order = 3; order<=context.getOrder(); order++ ) {
                treeCopy(inputHpxFinder, outputHpxFinder, "Norder"+order,z);

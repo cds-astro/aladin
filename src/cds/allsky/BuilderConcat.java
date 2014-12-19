@@ -57,8 +57,8 @@ public class BuilderConcat extends BuilderTiles {
       build();
       
       // Regeneration de l'arborescence pour la zone concernée
-//      (new BuilderTree(context)).run();
-//      context.info("tree updated");
+      (new BuilderTree(context)).run();
+      context.info("tree updated");
       
       boolean inJpg=false,inPng=false;
       
@@ -79,11 +79,11 @@ public class BuilderConcat extends BuilderTiles {
       // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
       outputMoc = new HealpixMoc();
-      File f = new File(outputPath+Util.FS+BuilderMoc.MOCNAME);
+      File f = new File(outputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) {
          outputMoc.read( f.getCanonicalPath() );
          outputMoc = outputMoc.union(inputMoc);
-         outputMoc.write( context.getOutputPath()+Util.FS+"Moc.fits");
+         outputMoc.write( context.getOutputPath()+Util.FS+Constante.FILE_MOC);
          context.info("MOC updated");
       } else {
          (new BuilderMoc(context)).run();
@@ -95,7 +95,7 @@ public class BuilderConcat extends BuilderTiles {
          f = new File(outputPathIndex);
          if( f.isDirectory() ) {
             f.renameTo( new File(outputPathIndex+"-partial"));
-            context.warning("Previous HpxFinder has been removed as "+Constante.HPX_FINDER+"-partial");
+            context.warning("Previous HpxFinder has been removed as "+Constante.FILE_HPXFINDER+"-partial");
          }
       } else {
          // Il faut refaire le MOC de l'index cumulé
@@ -115,10 +115,10 @@ public class BuilderConcat extends BuilderTiles {
    public void validateContext() throws Exception {
       outputPath = context.getOutputPath();
       inputPath = context.getInputPath();
-      outputPathIndex = cds.tools.Util.concatDir( outputPath,Constante.HPX_FINDER);
-      inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.HPX_FINDER);
+      outputPathIndex = cds.tools.Util.concatDir( outputPath,Constante.FILE_HPXFINDER);
+      inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.FILE_HPXFINDER);
       mode = context.getMode();
-      tileMode=Context.FITS;
+      tileMode=Constante.TILE_FITS;
 
       if( inputPath==null ) throw new Exception("\"in\" parameter required !");
       File f = new File(inputPath);
@@ -140,13 +140,13 @@ public class BuilderConcat extends BuilderTiles {
          allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png";
          if( (new File(allsky)).exists() ) {
             context.setColor("png");
-            tileMode=Context.PNG;
+            tileMode=Constante.TILE_PNG;
             context.info("Processing HiPS colored in "+context.getTileExt()+" tiles");
          } else {
             allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg";
             if( (new File(allsky)).exists() ) {
                context.setColor("jpg");
-               tileMode=Context.JPEG;
+               tileMode=Constante.TILE_JPEG;
                context.info("Processing HiPS colored in "+context.getTileExt()+" tiles");
             }
          }
@@ -157,19 +157,25 @@ public class BuilderConcat extends BuilderTiles {
       if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
 
       inputMoc = new HealpixMoc();
-      f = new File(inputPath+Util.FS+BuilderMoc.MOCNAME);
+      f = new File(inputPath+Util.FS+Constante.FILE_MOC);
       if( f.exists() ) inputMoc.read( f.getCanonicalPath() );
       else {
          context.info("No input MOC found => generate it...");
          context.setOutputPath(inputPath);
          (new BuilderMoc(context)).run();
          context.setOutputPath(outputPath);
-         f = new File(inputPath+Util.FS+BuilderMoc.MOCNAME);
+         f = new File(inputPath+Util.FS+Constante.FILE_MOC);
          inputMoc.read( f.getCanonicalPath() );
       }
       
       if( context.mocArea!=null ) inputMoc = inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
+      
+      // Dans le cas de rénégération des allsky.png il faut connaître les cuts
+      double [] cut = context.getCut();
+      updateCutByProperties(cut);
+      context.setCut(cut);
+      context.setValidateCut(true);
 
    }
    
@@ -312,9 +318,9 @@ public class BuilderConcat extends BuilderTiles {
    private Fits loadTile(String file) throws Exception {
       Fits f = new Fits();
       try {
-         if( tileMode==Context.FITS ) f.loadFITS(file+".fits");
-         else if( tileMode==Context.PNG ) f.loadJpeg(file+".png",true,false);
-         else if( tileMode==Context.JPEG ) f.loadJpeg(file+".jpg",true,false);
+         if( tileMode==Constante.TILE_FITS ) f.loadFITS(file+".fits");
+         else if( tileMode==Constante.TILE_PNG ) f.loadPreview(file+".png",true,false,Fits.PREVIEW_PNG);
+         else if( tileMode==Constante.TILE_JPEG ) f.loadPreview(file+".jpg",true,false,Fits.PREVIEW_JPEG);
       } catch( Exception e ) {
          f=null;
       }

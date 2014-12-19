@@ -65,6 +65,7 @@ public class Position extends Obj {
    static double moyenne;
    static double variance;
    static double sigma;
+   static double minimum,maximum;
    static double mediane;
    static final int MAXMEDIANE = 10000;
    static int medianeArrayNb=0;
@@ -549,6 +550,8 @@ public class Position extends Obj {
       carre=total=0;
       medianeArrayNb=0;
       posx=posy=-1;
+      minimum=Double.MAX_VALUE;
+      maximum=-Double.MAX_VALUE;
    }
 
    /** Utilisé pour le calcul des statistiques sur un polygone */
@@ -632,6 +635,8 @@ public class Position extends Obj {
    protected double statPixel(double pix) {
       if( Double.isNaN(pix) ) return pix;
       nombre++;
+      if( pix<minimum ) minimum=pix;
+      if( pix>maximum ) maximum=pix;
       if( medianeArrayNb<MAXMEDIANE ) medianeArray[medianeArrayNb++] = pix;
       total+=pix;
       carre+=pix*pix;
@@ -642,7 +647,7 @@ public class Position extends Obj {
    protected boolean statCompute(Graphics g, ViewSimple v) { return false; };
 
    static final int STATDY = 13;            // Hauteur d'une ligne de texte pour les stats
-   static final int HAUTSTAT = STATDY*7;    // Hauteur de la boite des stats
+   static final int HAUTSTAT = STATDY*9;    // Hauteur de la boite des stats
    static final int LARGSTAT = 120;         // Largeur de la boite des stats
 
    /** Retourne la position en unité View des stats */
@@ -669,6 +674,8 @@ public class Position extends Obj {
        String med=Double.isNaN(mediane) ? "" : Util.myRound(mediane);
        String sig=Util.myRound(sigma);
        String surf=Coord.getUnit(surface,false,true)+"²";
+       String min=Util.myRound(minimum);
+       String max=Util.myRound(maximum);
 
        if( isWithStat() || isWithLabel() ) {
           Color c1=g.getColor();
@@ -694,10 +701,19 @@ public class Position extends Obj {
                 Util.drawStringOutline(g,cnt,r.x+43,r.y,c1,c2);  r.y+=STATDY;
                 Util.drawStringOutline(g,"Sum",r.x,r.y,c1,c2);
                 Util.drawStringOutline(g,sum,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                Util.drawStringOutline(g,"Avg",r.x,r.y,c1,c2);
-                Util.drawStringOutline(g,avg,r.x+43,r.y,c1,c2);  r.y+=STATDY;
                 Util.drawStringOutline(g,"Sigma",r.x,r.y,c1,c2);
                 Util.drawStringOutline(g,sig,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Min",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,min,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                Util.drawStringOutline(g,"Avg",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,avg,r.x+43,r.y,c1,c2);  r.y+=STATDY;
+                if( !Double.isNaN(mediane) ) {
+                   Util.drawStringOutline(g,"Med",r.x,r.y,c1,c2);
+                   Util.drawStringOutline(g,med,r.x+43,r.y,c1,c2); 
+                   r.y+=STATDY;
+                }
+                Util.drawStringOutline(g,"max",r.x,r.y,c1,c2);
+                Util.drawStringOutline(g,max,r.x+43,r.y,c1,c2);  r.y+=STATDY;
                 if( this instanceof Repere ) {
                    Util.drawStringOutline(g,"Rad",r.x,r.y,c1,c2);
                    Util.drawStringOutline(g,Coord.getUnit( ((Repere)this).getRadius()),r.x+43,r.y,c1,c2); 
@@ -705,21 +721,19 @@ public class Position extends Obj {
                 }
                 Util.drawStringOutline(g,"Surf",r.x,r.y,c1,c2);
                 Util.drawStringOutline(g,surf,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                if( !Double.isNaN(mediane) ) {
-                   Util.drawStringOutline(g,"Med",r.x,r.y,c1,c2);
-                   Util.drawStringOutline(g,med,r.x+43,r.y,c1,c2); 
-                   r.y+=STATDY;
-                }
              }
           }
        }
 
        if( v.pref==plan.aladin.calque.getPlanBase() ) {
-          id="Cnt "+cnt+" / Sum "+sum+" / Avg "+avg
+          id="Cnt "+cnt+" / Sum "+sum
                +" / Sigma "+sig
+               +" / Min "+min
+               +" / Avg "+avg
+               +(Double.isNaN(mediane)?"":" / Med "+med)
+               +" / Max "+max
                + (this instanceof Repere ? " / Rad "+Coord.getUnit( ((Repere)this).getRadius()):"")
                +" / Surf "+surf
-               +(Double.isNaN(mediane)?"":" / Med "+med)
                ;
           histOn();
        }

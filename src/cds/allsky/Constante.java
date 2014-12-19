@@ -19,44 +19,92 @@
 
 package cds.allsky;
 
-import cds.tools.pixtools.CDSHealpix;
-
 
 public class Constante {
    
-   public static final int INDEX = 0;
-   public static final int TESS = 1;
-   public static final int JPG = 2;
-   public static final String HIPS = "HiPS";
-   public static String SURVEY = HIPS; // sous répertoire final contenant la hierarchie healpix
-   public static final String HPX_FINDER = "HpxFinder";
+   // Noms des différents fichiers HiPS
+   static final public String FILE_PROPERTIES  = "properties";
+   static final public String FILE_HPXFINDER   = "HpxFinder";
+   public static final String FILE_MOC         = "Moc.fits";
+   static final public String FILE_METADATAXML = "metadata.xml";
+   static final public String FILE_METADATATXT = "metadata.txt";
+   
+   // Clés utilisés dans le fichier properties
+   static public final String KEY_CUBEFIRSTFRAME        = "cubeFirstFrame";
+   static public final String KEY_CUBEDEPTH             = "cubeDepth";
+   static public final String KEY_ISCUBE                = "isCube";
+   static public final String KEY_PIXELCUT              = "pixelCut";
+   static public final String KEY_PIXELRANGE            = "pixelRange";
+   static public final String KEY_PUBLISHER             = "publisher";
+   static public final String KEY_CATEGORY              = "category";
+   static public final String KEY_VERSION               = "version";
+   static public final String KEY_SURVEY                = "survey";
+   static public final String KEY_USECACHE              = "useCache";
+   static public final String KEY_TARGETRADIUS          = "targetRadius";
+   static public final String KEY_TARGET                = "target";
+   static public final String KEY_NSIDE                 = "nside";
+   static public final String KEY_COPYRIGHT_URL         = "copyrightUrl";
+   static public final String KEY_COPYRIGHT             = "copyright";
+   static public final String KEY_ACK                   = "acknowledgement";
+   static public final String KEY_DESCRIPTION_VERBOSE   = "verboseDescription";
+   static public final String KEY_DESCRIPTION           = "description";
+   static public final String KEY_LABEL                 = "label";
+   static public final String KEY_FORMAT                = "format";
+   static public final String KEY_MINORDER              = "minOrder";
+   static public final String KEY_MAXORDER              = "maxOrder";
+   static public final String KEY_ISMETA                = "isMeta";
+   static public final String KEY_ISCAT                 = "isCatalog";
+   static public final String KEY_ISCOLOR               = "isColored";
+   static public final String KEY_COORDSYS              = "coordsys";
+   static public final String KEY_HIPSBUILDER           = "HiPSBuilder";
+   static public final String KEY_ALADINVERSION         = "aladinVersion";
+   static public final String KEY_CURTFORMBITPIX        = "curTFormBitpix";
+   static public final String KEY_NBPIXGENERATEDIMAGE   = "nbPixGeneratedImage";
+   static public final String KEY_ORDERING              = "ordering";
+   static public final String KEY_ISPARTIAL             = "isPartial";
+   static public final String KEY_ARGB                  = "ARGB";
+   static public final String KEY_TYPEHPX               = "typehpx";
+   static public final String KEY_LENHPX                = "lenhpx";
+   static public final String KEY_TTYPES                = "ttypes";
+   static public final String KEY_TFIELDS               = "tfields";
+   static public final String KEY_TILEORDER             = "tileOrder";
+   static public final String KEY_NSIDE_FILE            = "nsideFile";
+   static public final String KEY_NSIDE_PIXEL           = "nsidePixel";
+   static public final String KEY_LAST_MODIFICATON_DATE = "lastModified";
+   static public final String KEY_FIRST_PROCESSING_DATE = "firstProcessingDate";
+   static public final String KEY_PROCESSING_DATE       = "processingDate";
+   static public final String KEY_SIZERECORD            = "sizeRecord";
+   static public final String KEY_OFFSET                = "offset";
+   static public final String KEY_GZ                    = "gzipped";
+   static public final String KEY_LOCAL_DATA            = "localData";
+   static public final String KEY_ORIGINAL_PATH         = "dataPath";
 
-   // Taille max d'une cellule FITS dans le cas d'une ouverture en mode Mosaic
-   // => voir cds.fits.loadFits(InputStream,x,y,w,h)
+   // Numéro des fomulaires lors de l'Hipselisation via GUI
+   static public final int PANEL_INDEX       = 0;
+   static public final int PANEL_TESSELATION = 1;
+   static public final int PANEL_PREVIEW     = 2;
+   
+   static public final String HIPS = "HiPS";
+   static public String SURVEY = HIPS;  // sous répertoire final contenant la hierarchie healpix
 
-   // Taille des imagettes HEALPix
-   final static public int ORDER = 9; // 2^9 = 512 = SIDE
-//   final static public int SIDE = (int)CDSHealpix.pow2(ORDER);
-   public static final int FITSCELLSIZE = 1024; 
+   static public final int ORDER           = 9;    // Taille des imagettes HEALPix
+   static public final int ORIGCELLWIDTH   = 1024; // Taille des cellules des images originales lors de la Hipselisation 
+   static public final int GZIPMAXORDER    = 5;    // On gzippe les tiles que jusqu'au niveau 5
+   static public final int MAXOVERLAY      = 10;   // Nombre max de recouvrement pris en compte
+   static public final int DEFAULTMOCORDER = 8;    // MOC ORDER minimal
+   static public final int DIFFMOCORDER    = 4;    // Différence entre l'ordre nominal du survey et son MOC dans le cas d'un MOC à haute résolution
+   static public final int PIXELMAXRATIO   = 2;    // Rapport max par défaut entre la largeur et la longueur d'une image acceptable, pas testé si <0
    
-   public static final int GZIPMAXORDER = 5;  // On gzippe les tiles que jusqu'au niveau 5
-   public static final int MAXDEPTHINRAM = 4;
-   public static int NBTILESINRAM;
-   static {
-      NBTILESINRAM=1;
-      for( int i=1; i<=MAXDEPTHINRAM; i++ ) NBTILESINRAM+=Math.pow(4,i);
-//      System.out.println("NBTILESINRAM = "+NBTILESINRAM+ " side="+SIDE);
-   }
-
-   // Nombre max de recouvrement pris en compte
-   public static final int MAXOVERLAY = 10; 
+   // Zone d'observation dans les images originales lors de lHipselisation (tout, ellipsoïde, ou rectangulaire)
+   static final public int SHAPE_UNKNOWN     = 0;
+   static final public int SHAPE_ELLIPSE     = 1;
+   static final public int SHAPE_RECTANGULAR = 2;
    
-   // MOC ORDER minimal
-   public static final int DEFAULTMOCORDER = 8;
+   // Modes supportés pour les tuiles
+   static final public int TILE_PNG=0;
+   static final public int TILE_JPEG=1;
+   static final public int TILE_FITS=2;
+   static final public String [] TILE_EXTENSION = { ".png",".jpg", ".fits" };
+   static final public String [] TILE_MODE      = { "png", "jpeg", "fits" };
    
-   // Différence entre l'ordre nominal du survey et son MOC dans le cas d'un MOC à haute résolution
-   public static final int DIFFMOCORDER = 4;
-   
-   // Rapport max par défaut entre la largeur et la longueur d'une image acceptable, pas testé si <0
-   public static final int MAXRATIO = 2;
 }

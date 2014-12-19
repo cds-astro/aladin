@@ -39,7 +39,7 @@ public class BuilderMocIndex extends BuilderMoc {
       mocOrder = Util.getMaxOrderByPath(path);
       moc.setMocOrder(mocOrder);
 
-      String outputFile = path + FS + MOCNAME;
+      String outputFile = path + FS + Constante.FILE_MOC;
       moc.setCoordSys(getFrame());
       moc.setCheckConsistencyFlag(false);
       generateMoc(moc,mocOrder, path);

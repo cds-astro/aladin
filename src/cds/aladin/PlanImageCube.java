@@ -31,10 +31,10 @@ import java.util.*;
  * @version 1.0 : juillet 2006
  */
 public class PlanImageCube extends PlanImageBlink {
-   
+
    private double crval3,crpix3,cdelt3;
    protected boolean fromCanal;
-   
+
    /** Creation d'un plan de type IMAGECUBE (via un stream)
     * @param in le stream
     */
@@ -44,32 +44,32 @@ public class PlanImageCube extends PlanImageBlink {
       type=IMAGECUBE;
       initDelay=400;
    }
-   
+
    private int precision = -1;
-   
+
    /** Retourne la valeur physique correspondant au numéro du canal */
    protected String getCanalValue(int n) {
       if( precision==-1 ) {
          double f = Math.abs(cdelt3);
          precision = f<0.001 ? 3 : f<0.01 ? 2 : f<100 ? 1 : 0;
       }
-//      return Util.myRound( ""+(n-crpix3)*cdelt3+crval3,precision);
+      //      return Util.myRound( ""+(n-crpix3)*cdelt3+crval3,precision);
       return ""+(int)Math.round(1000 * ((n+1-crpix3)*cdelt3+crval3))/1000.;
    }
-   
+
    protected boolean cacheImageFits(MyInputStream dis) throws Exception {
       int naxis;
       long taille;		// nombre d'octets a lire
       int n;			// nombre d'octets pour un pixel
-      
-Aladin.trace(2,"Loading FITS "+Tp[type]);
+
+      Aladin.trace(2,"Loading FITS "+Tp[type]);
 
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
- 
+
       bitpix = headerFits.getIntFromHeader("BITPIX");
       naxis = headerFits.getIntFromHeader("NAXIS");
-      
+
       // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
       if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
          error="_HEAD_XFITS_";
@@ -84,20 +84,20 @@ Aladin.trace(2,"Loading FITS "+Tp[type]);
 
          return false;
       }
-            
+
       naxis1=width = headerFits.getIntFromHeader("NAXIS1");
       naxis2=height = headerFits.getIntFromHeader("NAXIS2");
       depth = headerFits.getIntFromHeader("NAXIS3");
-      
+
       pixMode = PIX_TRUE;
       npix = n = Math.abs(bitpix)/8;  // Nombre d'octets par valeur
       taille=(long)width*height*depth*n;	  // Nombre d'octets
       setPourcent(0);
-Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="+bitpix+" => size="+taille);
+      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="+bitpix+" => size="+taille);
 
       //Les paramètres FITS facultatifs
       loadFitsHeaderParam(headerFits);
-      
+
       // Les paramètres Fits de la 3eme dimension
       try {
          crpix3 = headerFits.getDoubleFromHeader("CRPIX3");
@@ -109,17 +109,17 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
       // Il s'agit d'une image MEF que l'on ne va pas garder, on se contente de skipper l'image
       if( flagSkip ) {
          dis.skip( taille );
-          
-      // Lecture effective
+
+         // Lecture effective
       } else {
          // Pour des stats
          Date d = new Date();
          Date d1;
-         int temps;      
+         int temps;
          boolean dejaCharge=false;
          int frameToBeLoad = depth;
 
-         double requiredMo =  (double)width*height*depth*(npix+1)/(1024.*1024); 
+         double requiredMo =  (double)width*height*depth*(npix+1)/(1024.*1024);
          boolean loadInRam = aladin.getMem() - requiredMo > Aladin.MARGERAM;
          boolean partialInRam = false;
          Aladin.trace(4,"PlanImageCube.loadImageFits() ask for "+requiredMo+"MB "+(loadInRam?"try in Ram":"=> not enough space in RAM"));
@@ -132,26 +132,26 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
             Aladin.trace(4,"PlanImageCube.loadImageFits() [2nd test]  ask for "+requiredMo+"MB "+(loadInRam?"try in Ram "+frameToBeLoad+" frames":"not in RAM")+ " freeRAM="+free/(1024*1024.)+"MB, one frame="+t1/(1024*1024.)+"MB");
          }
 
-         cacheFromOriginalFile = setCacheFromFile(dis);     // Positionnement de l'accès direct aux pixels sur fichier d'origine         
-         RandomAccessFile f=null;         
-         
+         cacheFromOriginalFile = setCacheFromFile(dis);     // Positionnement de l'accès direct aux pixels sur fichier d'origine
+         RandomAccessFile f=null;
+
          int tailleImg = floor(taille/depth);
          pixelsOrigin = new byte[tailleImg];
-         
+
          int m = (depth/2)+1;     // Tranche souhaitée pour l'autocut
          byte[] buffer = null;    // Buffer pour la recherche de la tranche utilisée pour l'autocut
          long pos2emeLecture=0L;  // En cas de relecture du début du cube, mémorisation de la position initiale
-         
+
          try {
             // Pas de 2ème passe possible => on mémorise dans buffer jusqu'à la tranche prévue
             // pour l'autocut
             if( !Aladin.STANDALONE ) {
                dejaCharge = true;
-               int maxM = floor( (taille/4)/tailleImg ); 
+               int maxM = floor( (taille/4)/tailleImg );
                if( m>maxM ) m=maxM;   // Tranche trop loin, on prend plus près du début sinon on va exploser la mémoire
                buffer = new byte[round(tailleImg * m) ];
                dis.readFully(buffer);
-               //System.out.println("Chargement d'un coup de "+buffer.length+" octets ("+m+" tranches) du début du cube"     );                   
+               //System.out.println("Chargement d'un coup de "+buffer.length+" octets ("+m+" tranches) du début du cube"     );
 
                System.arraycopy(buffer,(m-1)*tailleImg,pixelsOrigin,0,tailleImg);
 
@@ -180,9 +180,9 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
             }
 
             // Autocut sur le plan au 1/4 du cube
-            Aladin.trace(3," => Cube autocut uses the frame "+m);         
+            Aladin.trace(3," => Cube autocut uses the frame "+m);
             boolean cut = aladin.configuration.getCMCut();
-            findMinMax(pixelsOrigin,bitpix,width,height,dataMinFits,dataMaxFits,cut,0);
+            findMinMax(pixelsOrigin,bitpix,width,height,dataMinFits,dataMaxFits,cut,0,0,0,0);
 
             double mem,amem=0,delta,adelta=0;
 
@@ -217,7 +217,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
                         // Il s'agit d'un fichier local et non du cache (puisque pos2emeLecture!=0),
                         // il faut réouvrir le fichier pour ne pas saboter le dataInputStream
                         if( pos2emeLecture!=0 ) {
-                           //System.out.println("Réouverture du fichier d'origine à la position "+pos2emeLecture);                        
+                           //System.out.println("Réouverture du fichier d'origine à la position "+pos2emeLecture);
                            f = new RandomAccessFile(cacheID,"r");
                         }
                         f.seek( pos2emeLecture );
@@ -237,7 +237,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
                invImageLine(width,height,getBufPixels8());
                String s = (fromCanal ? getCanalValue(i): label);
                try {
-                  if( loadInRam && frameToBeLoad<0 ) { 
+                  if( loadInRam && frameToBeLoad<0 ) {
                      Aladin.trace(4,"PlanImageCube.loadImageFits(): low memory2 (frame="+i+") => other frames not in RAM...");
                      partialInRam=true;
                      loadInRam=false;
@@ -256,27 +256,27 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
                }
                cacheOffset+=pixelsOrigin.length;
 
-               setPourcent((99.*i)/depth);       
+               setPourcent((99.*i)/depth);
 
                // On calcule l'imagette du zoom
                if( i==0 ) calculPixelsZoom();
 
             }
          } finally { if( f!=null ) f.close(); }
-         
+
          buffer=null;
          noOriginalPixels();
-         
+
          d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
          Aladin.trace(3," => Reading "+(!dejaCharge?"(2 pass) ":"")+"and analyzing "+getDepth()+" frames in "+Util.round(temps/0.001,3)+" s => "
                +(temps!=0 ? Util.round((taille/temps)/1024*1.024,2)+" Mbyte/s" : "--")
                +(loadInRam ? " (fully in RAM)": partialInRam?" (partially in RAM)":""));
 
-//         if( u!=null ) networkPerf(u.toString(),pixelsOrigin.length,temps);
+         //         if( u!=null ) networkPerf(u.toString(),pixelsOrigin.length,temps);
       }
 
 
-       
+
       // On se recale si jamais il y a encore une extension FITS qui suit
       if( naxis>3 ) {
          try {
@@ -286,14 +286,14 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3="+depth+" BITPIX="
             dis.skip(offset);
          } catch( Exception e ) { e.printStackTrace(); return false; }
       }
-      
+
       // Dans le cas d'un MEF dont on skippe l'image, on peut sortir tout de suite
       if( flagSkip ) return true;
-            
+
       creatDefaultCM();
 
       setPourcent(-1);
       return true;
-   }   
-   
+   }
+
 }

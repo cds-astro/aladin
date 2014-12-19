@@ -957,7 +957,7 @@ public final class FilterProperties extends Properties implements MouseListener,
 
          else if( what.equals(RAINBOWCM)) {
              double[] minmax = pf.getUCDFilter().getRainbowMinMax();
-             aladin.view.showRainbowFilter(ColorMap.getRainbowCM(false), minmax[0], minmax[1]);
+             aladin.view.showRainbowFilter(CanvasColorMap.getRainbowCM(false), minmax[0], minmax[1]);
              aladin.view.getCurrentView().rainbowF.setTitle(pf.label);
 
              aladin.view.getCurrentView().repaint();

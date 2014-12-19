@@ -106,13 +106,13 @@ final public class ThreadBuilderTile {
    }
    
    private boolean requiredMem(long nbProgen ) throws Exception {
-      long rqMem = 4 * nbProgen * Constante.FITSCELLSIZE*Constante.FITSCELLSIZE*context.getNpixOrig();
+      long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
       rqMem += 2*tileSide*tileSide*context.getNpix();
       return needMem(nbThreadRunning*rqMem);
    }
    
    private void checkMem(long nbProgen ) throws Exception {
-      long rqMem = 4 * nbProgen * Constante.FITSCELLSIZE*Constante.FITSCELLSIZE*context.getNpixOrig();
+      long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
       rqMem += 2*tileSide*tileSide*context.getNpix();
       if( nbProgen>Constante.MAXOVERLAY ) {
          rqMem += 2*tileSide*tileSide*8;
@@ -303,7 +303,7 @@ final public class ThreadBuilderTile {
             
          // remplissage transparent
          } else {
-            if( context.targetColorMode==Context.PNG ) {
+            if( context.targetColorMode==Constante.TILE_PNG ) {
                for( int i=0; i<out.rgb.length; i++ ) out.rgb[i]=0xFF000000;
             }
          }

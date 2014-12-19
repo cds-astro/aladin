@@ -375,7 +375,7 @@ public class BuilderTiles extends Builder {
       long size = context.getMem();
 
 //      long maxMemPerThread = 4L * Constante.MAXOVERLAY * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpix();
-      long bufMem =  4L * Constante.FITSCELLSIZE * Constante.FITSCELLSIZE * context.getNpixOrig();
+      long bufMem =  4L * Constante.ORIGCELLWIDTH * Constante.ORIGCELLWIDTH * context.getNpixOrig();
       long oneRhomb = context.getTileSide()*context.getTileSide()*context.getNpix();
       long maxMemPerThread = 4*oneRhomb + bufMem;
       if( isColor )  maxMemPerThread += oneRhomb*(ordermax-ordermin);
@@ -728,7 +728,7 @@ public class BuilderTiles extends Builder {
    
    protected void write(String file, Fits out) throws Exception {
       String filename = file+context.getTileExt();
-      if( isColor ) out.writeCompressed(filename,0,0,null, context.MODE[ context.targetColorMode ]);
+      if( isColor ) out.writeCompressed(filename,0,0,null, Constante.TILE_MODE[ context.targetColorMode ]);
       else out.writeFITS(filename);
    }
    
@@ -809,7 +809,7 @@ public class BuilderTiles extends Builder {
       MyInputStream is = null;
       try {
          is = new MyInputStream( new FileInputStream(f));
-         if( isColor ) out.loadJpeg(is, true);
+         if( isColor ) out.loadPreview(is, true);
          else out.loadFITS(is);
          out.setFilename(filename);
       } 

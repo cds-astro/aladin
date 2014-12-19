@@ -21,7 +21,7 @@ package cds.allsky;
 
 import java.awt.image.ColorModel;
 
-import cds.aladin.ColorMap;
+import cds.aladin.CanvasColorMap;
 import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
 
@@ -86,7 +86,7 @@ public class BuilderJpg extends BuilderTiles {
    protected int getMinCM() { return 0; }
 
    public void run() throws Exception {
-      ColorModel cm = context.getFct()==null ? null : ColorMap.getCM(0, 128, 255,false, 
+      ColorModel cm = context.getFct()==null ? null : CanvasColorMap.getCM(0, 128, 255,false, 
             0/*PlanImage.CMGRAY*/, context.getFct().code());
       tcm = cm==null ? null : cds.tools.Util.getTableCM(cm,2);
       cut = context.getCut();

@@ -294,7 +294,7 @@ public class BuilderDetails extends Builder {
                "       -->\n" +
                "     </FIELD>\n" +
                "    <FIELD name=\"access\" datatype=\"char\" arraysize=\"9*\">\n" +
-               "      <DESCRIPTION>Load original this original image</DESCRIPTION>\n" +
+               "      <DESCRIPTION>Display original image</DESCRIPTION>\n" +
                "       <LINK content-type=\"image/fits\" href=\"${access}\"/>\n" +
                "       <!--  Image HTTP link description (Aladin will load it)\n" +
                "          <LINK content-type=\"image/fits\" href=\"http://your.server.edu/getdata?param=${id}&amp;otherparam=foo\" title=\"remote img\"/>\n" +
@@ -333,15 +333,15 @@ public class BuilderDetails extends Builder {
    // Génération si nécessaire du fichier de MetaData afin d'exploiter l'index pour
    // un accès au progéniteur
    private void generateMedataFile() throws Exception {
-      String metadata = cds.tools.Util.concatDir(context.getHpxFinderPath(),context.METADATAXML);
+      String metadata = cds.tools.Util.concatDir(context.getHpxFinderPath(),Constante.FILE_METADATAXML);
       if( (new File(metadata)).exists() ) {
-         context.info("Pre-existing "+Context.METADATAXML+" file => keep it");
+         context.info("Pre-existing "+Constante.FILE_METADATAXML+" file => keep it");
       } else {
          RandomAccessFile f = new RandomAccessFile(metadata ,"rw");
          String s = METADATA.replace("YOUR_SURVEY_LABEL",context.getLabel()+" details");
          f.write(s.getBytes());
          f.close();
-         context.info("Mapping hpxFinder/"+Context.METADATAXML+" file has been generated");
+         context.info("Mapping hpxFinder/"+Constante.FILE_METADATAXML+" file has been generated");
       }
 
 //      writeProperties();

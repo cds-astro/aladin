@@ -540,7 +540,7 @@ class Hist implements Runnable {
          fm = g.getFontMetrics();
          g.setColor(Color.red);
          StringTokenizer st = new StringTokenizer(texte,"/");
-         y = 25;
+         y = 17;
          int h= fm.getHeight();
          int h1 = fm.getAscent();
 //         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);

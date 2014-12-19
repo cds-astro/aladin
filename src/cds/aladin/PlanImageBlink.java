@@ -42,7 +42,7 @@ public class PlanImageBlink extends PlanImage {
    protected Vector<PlanImageBlinkItem> vFrames;
    protected int depth;
    private PlanImage tmpP[];    // Subtilité de programmation pour traiter la création
-                                // au même titre qu'un ajout
+   // au même titre qu'un ajout
    protected boolean flagAppend;  // True si la prochaine action sur run() ajoutera un frame
 
    /** Creation d'un plan de type IMAGEBLINK (via 2 plans ou plus)
@@ -60,7 +60,7 @@ public class PlanImageBlink extends PlanImage {
 
       pRef=p[0];
       vFrames=new Vector<PlanImageBlinkItem>();
-       
+
       Aladin.trace(3,"Blink ref plane: " + pRef.label);
 
       // Initialisation des parametres communs
@@ -82,20 +82,20 @@ public class PlanImageBlink extends PlanImage {
          runme.start();
       }
    }
-   
+
    /** Gestion de la pause pour le défilement d'un cube */
    protected void setPause(boolean flag,ViewSimple v) { flagPause = flag; }
    protected boolean isPause() { return flagPause; }
-   
+
    /** Positionne le Frame courant (s'il s'agit d'un cube) */
    protected void setZ(double z) { this.z = z; };
    protected double getZ() { return z; }
-   
+
    protected PlanImageBlink(Aladin aladin,String file,MyInputStream in,String label,String from,
          Obj o,ResourceNode imgNode,boolean skip,boolean doClose,Plan forPourcent) {
       super(aladin,file,in,label,from,o,imgNode,skip,doClose,forPourcent);
    }
-   
+
    /** Nettoyage du plan pour aider le GC
     */
    protected boolean Free() {
@@ -107,12 +107,12 @@ public class PlanImageBlink extends PlanImage {
       cacheIDBis=null;
       return true;
    }
-   
+
    /** Copie les parametres
     * @param p le plan de reference pour le reechantillonage
     */
    protected void init(String label,PlanImage p) {
-      
+
       p.copy(this);
       type=IMAGEBLINK;
       flagOk=false;
@@ -128,62 +128,62 @@ public class PlanImageBlink extends PlanImage {
       setLabel(label);
       copyright="Blink sequence by Aladin";
       param="";
-      
+
       // On met une table de couleur linéaire car on va appliquer à chaque pixel 8 bits à insérer
       // la table des couleurs et la fonction de transfert de son image d'origine
       transfertFct=PlanImage.LINEAR;
       video = VIDEO_NORMAL;
       typeCM = p.typeCM;
       cmControl[0] = 0; cmControl[1] = 128; cmControl[2] = 255;
-      cm = ColorMap.getCM(0,128,255,false,typeCM,transfertFct);
+      cm = CanvasColorMap.getCM(0,128,255,false,typeCM,transfertFct);
       vFrames.addElement( new PlanImageBlinkItem(p));
       dataMin=pixelMin=0;
       dataMax=pixelMax=255;
       bZero=0;
       bScale=1;
    }
-   
+
    static public final int PERM0 = 0; // PERM0 : naxis1 x naxis2 sur naxis3 niveaux
    static public final int PERM1 = 1; // PERM1 : naxis1 x naxis3 sur naxis2 niveaux
    static public final int PERM2 = 2; // PERM2 : naxis3 x naxis2 sur naxis1 niveaux
-   
+
    static public final int W2D  = 0;  // Permute Width et Depth
    static public final int H2D  = 1;  // Permute height et Depth
    static public final int CP   = 2;  // Cycle naxis3 -> naxis1 -> naxis2 -> naxis3
    static public final int CM   = 3;  // Cycle inverse
-   
-   
+
+
    /** Permutation courante */
    private int modePerm = PERM0;
-   
+
    /** Retourne la permutation courante */
    public int getPermutation() { return modePerm; }
-   
+
    /** Détermine et effectue la permutation à effectuer en fonction de l'état courant
     * et de celui à obtenir */
    public void permutation(int m) {
       int action=-1;
       if( m==modePerm ) return;     // déjà fait
-           if( modePerm==PERM0 && m==PERM1 
+      if( modePerm==PERM0 && m==PERM1
             || modePerm==PERM1 && m==PERM0 ) action=H2D;
-      else if( modePerm==PERM0 && m==PERM2 
+      else if( modePerm==PERM0 && m==PERM2
             || modePerm==PERM2 && m==PERM0 ) action=W2D;
       else if( modePerm==PERM1 && m==PERM2 ) action=CP;
       else if( modePerm==PERM2 && m==PERM1 ) action=CM;
-           
+
       boolean full = modePerm==PERM0 ? loadInRam(0, depth) : isFullyInRam(0, depth);
-      
+
       flagProcessing=true;
       pourcent=-1;
       aladin.calque.repaintAll();
       (new ThreadPermute(m,action,full)).start();
    }
-   
+
    class ThreadPermute extends Thread {
       int m;
       int action;
       boolean full;
-      
+
       public ThreadPermute(int m,int action,boolean full) {
          super();
          this.m=m; this.action=action; this.full=full;
@@ -198,21 +198,21 @@ public class PlanImageBlink extends PlanImage {
          aladin.calque.repaintAll();
       }
    }
-   
+
    // Effectue une permutation particulière
    private void doPermute(int a,boolean full) {
-      
+
       // Nouvelles dimensions
       int w = a==W2D || a==CP ? depth : a==CM ? height : width;
       int h = a==H2D || a==CM ? depth : a==CP ? width : height;
       int d = a==CP || a==H2D ? height : width;
-      
+
       ArrayList<PlanImageBlinkItem> v=null;
-      
-      
+
+
       // On teste 2 fois en full, en cas de OutOfMemory
       for( int j=full?1:0; j<2; j++ )  {
-         
+
          // On ne peut pas travailler sur les true pixels, autant faire de
          // la place avant.
          if( !full ) {
@@ -229,7 +229,7 @@ public class PlanImageBlink extends PlanImage {
                v.add( new PlanImageBlinkItem(label,pixels,pixelsOrign,false,null,0) );
             }
             break; // C'est bon
-            
+
          } catch( OutOfMemoryError e ) {
             aladin.console.printError("!!! Not enough memory => trying Cube permutation without true pixels...");
             full=false;
@@ -237,9 +237,9 @@ public class PlanImageBlink extends PlanImage {
             System.gc();
          }
       }
-      
+
       double deltaPourcent = 100./depth;
-      
+
       // Permutation des pixels
       for( int z=0; z<depth; z++ ) {
          pourcent+=deltaPourcent;
@@ -248,21 +248,21 @@ public class PlanImageBlink extends PlanImage {
             for( int x=0; x<width; x++ ) {
                PlanImageBlinkItem p = v.get( a==CP || a==H2D ? y : x );
                int src = y*width + x;
-               int trg = (a==H2D || a==CM ? z : a==CP ? x : y)* w 
-                       + (a==W2D || a==CP ? z : a==CM ? y : x);
+               int trg = (a==H2D || a==CM ? z : a==CP ? x : y)* w
+                     + (a==W2D || a==CP ? z : a==CM ? y : x);
                p.pixels[ trg ] = pi.pixels[ src ];
                if( full ) {
                   System.arraycopy(pi.pixelsOrigin,src*npix,p.pixelsOrigin,trg*npix,npix);
                }
-               
+
             }
          }
       }
-      
+
       // Mise sous forme vecteur
       Vector<PlanImageBlinkItem> v1 = new Vector<PlanImageBlinkItem>(d);
       for( PlanImageBlinkItem p : v ) v1.add(p);
-      
+
       // Remplacement
       synchronized( this ) {
          vFrames = v1;
@@ -273,15 +273,15 @@ public class PlanImageBlink extends PlanImage {
          setCubeFrame(0);
       }
    }
-   
-   
+
+
    // Ajustement de la calibration originale en fonction de la permutation demandée
    // Travaille par substitution des préfixes numériques des mots clés FITS originaux
    private void permuteCalib(int m) {
       try {
          if( headerFits==null ) return;
          String originalHeaderFits = headerFits.getOriginalHeaderFits();
-              if( m==PERM1 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "2-3","3-2" });
+         if( m==PERM1 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "2-3","3-2" });
          else if( m==PERM2 ) originalHeaderFits = modifCalib(originalHeaderFits,new String[] { "1-3","3-1" });
          Projection proj = new Projection(Projection.WCS,new Calib( new HeaderFits(originalHeaderFits) ));
          setNewProjD(proj);
@@ -293,7 +293,7 @@ public class PlanImageBlink extends PlanImage {
          return;
       }
    }
-   
+
    // Substitutions dans le headerfits d'un certain nombre de suffixes numériques
    // des mots clés. Par exemple rules = { "2-3", "3-2" } signifie que tous
    // les mots clés finissant par "2" vont être remplacé par "3" et réciproquement
@@ -313,7 +313,7 @@ public class PlanImageBlink extends PlanImage {
                      char avant = rules[i].charAt(0);
                      char apres = rules[i].charAt( rules[i].length()-1 );
                      if( ch==avant ) {
-                        line = line.substring(0,pos)+apres+line.substring(pos+1); 
+                        line = line.substring(0,pos)+apres+line.substring(pos+1);
                         break;
                      }
                   }
@@ -324,12 +324,12 @@ public class PlanImageBlink extends PlanImage {
       }
       return res.toString();
    }
-   
-//   protected void noOriginalPixels() {
-//      vFrames.elementAt(0).cacheID=null;
-//      super.noOriginalPixels();
-//   }
-   
+
+   //   protected void noOriginalPixels() {
+   //      vFrames.elementAt(0).cacheID=null;
+   //      super.noOriginalPixels();
+   //   }
+
    //   protected boolean setActivated() { return setActivated(askActive); }
    protected boolean setActivated(boolean flag) {
       flag=super.setActivated(flag);
@@ -378,24 +378,24 @@ public class PlanImageBlink extends PlanImage {
          runme.start();
       }
    }
-   
+
    synchronized protected void addFrame(String label,byte pixels[],byte pixelsOrigin[],
          boolean cacheFromOriginalFile,String cacheID, long cacheOffset) {
-      
+
       if( vFrames==null ) vFrames = new Vector<PlanImageBlinkItem>();
       vFrames.addElement( new PlanImageBlinkItem(label,pixels,pixelsOrigin,cacheFromOriginalFile,cacheID,cacheOffset));
    }
-   
+
    synchronized protected void addFrame(PlanImage p[]) {
 
       Aladin.trace(3,"Adding "+p.length+" frame(s)...");
-      
+
       Coord coo=new Coord();
       int x=0, y=0;
       int w=width;
       int taille = width*height;
       int i;
-      
+
       byte c[][]=new byte[p.length][taille];
       boolean theSame[]=new boolean[p.length];
       boolean flagAllTheSame=true;
@@ -426,7 +426,7 @@ public class PlanImageBlink extends PlanImage {
                   x=(int) Math.round(coo.x);
                   y=(int) Math.round(coo.y);
                   if( x >= 0 && x < p2.width && y >= 0 && y < p2.height ) {
-                     int pix = 0xff & (int)p2.getBufPixels8()[y* p2.width + x];
+                     int pix = 0xff & p2.getBufPixels8()[y* p2.width + x];
                      c[n][i]=(byte) p2.cm.getBlue(pix);
                   }
                }
@@ -445,7 +445,7 @@ public class PlanImageBlink extends PlanImage {
       for( int n=0; n < p.length; n++ ) {
          PlanImage pi = p[n];
          vFrames.addElement( new PlanImageBlinkItem(pi.label,c[n], null,
-                                     pi.cacheFromOriginalFile,pi.cacheID,pi.cacheOffset));
+               pi.cacheFromOriginalFile,pi.cacheID,pi.cacheOffset));
       }
       setPourcent(-1);
       flagOk=true;
@@ -457,21 +457,21 @@ public class PlanImageBlink extends PlanImage {
       changeImgID();
       aladin.view.repaintAll();
    }
-   
+
    /** Retourne true si on dispose (ou peut disposer) des pixels originaux */
    protected boolean hasOriginalPixels() {
-     PlanImageBlinkItem p = vFrames.elementAt(0);
-     return p.pixelsOrigin!=null || p.cacheID!=null;
+      PlanImageBlinkItem p = vFrames.elementAt(0);
+      return p.pixelsOrigin!=null || p.cacheID!=null;
    }
-     
-   
+
+
    private boolean  flagRecut=false;   // Pour l'aiguillage du thread sur le recutCube
    private double _min,_max;           // passage de paramètres pour le thread
    private boolean _autocut;           // idem
    private boolean _restart;           // Flag de relance du recutCube
    protected Thread threadRecut=null;  // thread du recut, null si aucun
-   
-   
+
+
    /** Recut sur le plan courant, puis lancement ou réinitialisation du thread pour
     * le recut du cube complet */
    protected boolean recut(double min,double max,boolean autocut) {
@@ -480,20 +480,20 @@ public class PlanImageBlink extends PlanImage {
       flagUpdating=true;
       if( min==-1 && max==-1 ) { min=dataMinFits; max=dataMaxFits; }
       _min=min; _max=max; _autocut=autocut; flagRecut=true; _restart=false;
-            
+
       ViewSimple vc = aladin.view.getCurrentView();
       int frame = vc.cubeControl.lastFrame;
       activePixelsOrigin(frame);
       PlanImageBlinkItem pbi = vFrames.elementAt(frame);
       pixelsOriginFromCache();
-      getPix8Bits(pbi.pixels,pixelsOrigin,bitpix,width,height,min,max,autocut);
+      getPix8Bits(pbi.pixels,pixelsOrigin,bitpix,width,height,min,max,autocut,0,0,0);
       invImageLine(width,height,pbi.pixels);
       changeImgID();
       calculPixelsZoom(pbi.pixels);
       aladin.calque.select.repaint();
       aladin.calque.zoom.zoomView.repaint();
       vc.repaint();
-      
+
       // Pour que le cut soit homogène sur tout le cube
       _autocut=false;
       _min=pixelMin;
@@ -501,14 +501,14 @@ public class PlanImageBlink extends PlanImage {
 
       if( !isThreadingRecut() ) setThreadRecut( new Thread(this,"AladinBlinkRecut") ).start();
       else recutCubeAgain();
-      
+
 
       return true;
    }
-   
+
    synchronized Thread setThreadRecut(Thread t) { threadRecut=t; return t; }
    synchronized boolean isThreadingRecut() { return threadRecut!=null; }
-   
+
    // Gestion d'un lock pour le passage de paramètres au thread du recut */
    private boolean lock;
    private synchronized void setLock(boolean l) { lock=l; }
@@ -516,19 +516,19 @@ public class PlanImageBlink extends PlanImage {
    private void getLock() {
       while( isLocked() ) Util.pause(10);
    }
-   
+
    synchronized void setRestart(boolean f) { _restart=f; }
    synchronized boolean isRestart() { return _restart; }
-   
+
    /** Relance du thread du recutCube() via le positionnement du flag _restart */
    private void recutCubeAgain() {
-//System.out.println("Restart recut all cube");
+      //System.out.println("Restart recut all cube");
       setRestart(true);
    }
-   
+
    /** Initialisation du thread du recutCube() */
    private void runRecut() {
-//System.out.println("Start recut all cube");
+      //System.out.println("Start recut all cube");
       recutCube(_min,_max,_autocut);
    }
 
@@ -537,28 +537,28 @@ public class PlanImageBlink extends PlanImage {
    protected boolean recutCube(double min,double max,boolean autocut) {
       setRestart(false);
       setLock(false);
-                  
-      Date d=new Date(); 
+
+      Date d=new Date();
       String ocacheID=null;
-      
+
       // Travaille sur son propre buffer pour ne pas interférer avec pixelsOrigin[]
       byte [] buffer = new byte[width*height*npix];
       byte [] buf = null;
 
       RandomAccessFile f=null;
-      Aladin.trace(3,"Original cube pixels reloaded frame by frame");            
-      
+      Aladin.trace(3,"Original cube pixels reloaded frame by frame");
+
       for( int frame=0; frame<depth; frame++ ) {
          if( frame%5==0 ) Util.pause(10);  // petite pause pour souffler
          try {
-            
+
             // Relance du recut récursivement (par commodité)
             if( isRestart() ) {
                if( f!=null ) f.close();
                buffer=null;  // Pour éviter d'empiler les buffer
                return recutCube(_min,_max,_autocut);
             }
-            
+
             // Traitement de la frame j avec fermeture/ouverture en cas de changement de fichier
             // par rapport à la frame j-1
             PlanImageBlinkItem pbi = vFrames.elementAt(frame);
@@ -573,58 +573,58 @@ public class PlanImageBlink extends PlanImage {
                f.readFully(buffer);
                buf = buffer;
             }
-            getPix8Bits(pbi.pixels,buf,bitpix,width,height,min,max,autocut);
+            getPix8Bits(pbi.pixels,buf,bitpix,width,height,min,max,autocut,0,0,0);
             invImageLine(width,height,pbi.pixels);
-            setPourcent((99.*frame)/depth);      
+            setPourcent((99.*frame)/depth);
          } catch( Exception e ) { System.err.println("Error on frame "+frame); e.printStackTrace(); }
       }
-      
+
       try { f.close(); } catch( Exception e ) {}
       Date d1=new Date(); long temps = (int)(d1.getTime()-d.getTime()); d=d1;
       Aladin.trace(3," => Full cube contrast adjustement in "+temps+" ms");
-      
+
       buffer=null;
-//      permutation(modePerm);
-      
-      flagOk=true;    
+      //      permutation(modePerm);
+
+      flagOk=true;
       flagUpdating=false;
-      
+
       changeImgID();
-//      sendLog("RecutPixel","["+getLogInfo()+"]");
+      //      sendLog("RecutPixel","["+getLogInfo()+"]");
 
       setPourcent(-1);
       aladin.view.repaintAll();
-      
+
       // Pour éviter de tuer trop vite le thread si c'est un excité de la souris
-      Util.pause(1000);           
+      Util.pause(1000);
       if( _restart )  return recutCube(_min,_max,_autocut);
 
-//System.out.println("End of recut thread");
+      //System.out.println("End of recut thread");
       getLock();
       setThreadRecut(null);
       setLock(false);
       return true;
    }
-   
+
    private RandomAccessFile fCacheBis=null;
    private String cacheIDBis=null;
    private byte bufCache[]=null;
-   
+
    protected boolean getFromCache() {
-      if( pixelsOrigin!=null ) return true;      
+      if( pixelsOrigin!=null ) return true;
       if( oLastFrame!=-1 ) {
          PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
          if( pbi.pixelsOrigin!=null ) { pixelsOrigin = pbi.pixelsOrigin; return true; }
       }
       return super.getFromCache();
    }
-   
+
    /** Libération de toutes les tranches pixelsOrigin du cube encore en mémoire RAM */
-   synchronized protected boolean freeRam() { 
+   synchronized protected boolean freeRam() {
       if( loadInRamInProgress ) loadInRamAborting=true;
       return freeRam(-1)>0;
    }
-   
+
    /** Libération de suffisamment de tranches pixelsOrigin du cube pour askMem octets, ou la totalité si -1
     * @return le montant de la mémoire libérée
     */
@@ -642,20 +642,20 @@ public class PlanImageBlink extends PlanImage {
       if( mem>0 ) aladin.trace(4,"PlanImageBlink.freeRam("+askMem+") ["+label+"] (free "+mem/(1024.*1024)+"MB) ...");
       return mem;
    }
-   
+
    /** Il s'agit d'un cube */
    protected boolean isCube() { return true; }
-   
+
    synchronized boolean isFullyInRam(int z1, int d) {
-      for( int z=z1; z<depth && z<z1+d; z++ ) { 
+      for( int z=z1; z<depth && z<z1+d; z++ ) {
          if( vFrames.elementAt(z).pixelsOrigin==null ) return false;
       }
       return true;
    }
-   
+
    private boolean loadInRamInProgress = false;   // true si on est en train de recharger les pixels d'origine d'un cube
    private boolean loadInRamAborting=false;       // true si on demande d'interrompre le chargement des pixels d'origine d'un cube
-   
+
    // return true si le cube est soit déjà en RAM soit a pu être chargé
    synchronized private boolean loadInRam(int z1, int d) {
       if( isFullyInRam(z1,d) ) {
@@ -667,11 +667,11 @@ public class PlanImageBlink extends PlanImage {
          if( taille>= Integer.MAX_VALUE ) return false;  // c'est trop grand pour un tableau de byte[]
          if( loadInRamInProgress ) {
             Aladin.trace(4,"PlanImageBlink.loadInRam("+z1+","+d+"): loading still in progress => no launch new one");
-            return false;   
+            return false;
          }
          loadInRamAborting=false;
          loadInRamInProgress=true;
-         
+
          double requiredMo = (double)width*height*d*(npix+1) / (1024.*1024);
          boolean ok = aladin.getMem()-requiredMo > Aladin.MARGERAM;
          if( !ok && aladin.freeSomeRam((long)(requiredMo*1024*1024),this)>0 ) {
@@ -683,7 +683,7 @@ public class PlanImageBlink extends PlanImage {
             loadInRamInProgress=false;
             return false;       // Pas assez de place
          }
-         
+
          // On charge les tranches une à une
          int length = width*height*npix;
          for( int z=z1; z<depth && z<z1+d; z++ ) {
@@ -695,26 +695,26 @@ public class PlanImageBlink extends PlanImage {
                fCacheBis = new RandomAccessFile(new File(cacheIDBis=pbi.cacheID),"r");
             }
             if( loadInRamAborting ) throw new Exception("LoadInRam abort by freeRam call");
-//            if( z%(depth/10)==0 ) Aladin.trace(4,"PlanImageBlink.loadInRam("+z1+","+d+"): loading in progress (frame "+z+"...)");
+            //            if( z%(depth/10)==0 ) Aladin.trace(4,"PlanImageBlink.loadInRam("+z1+","+d+"): loading in progress (frame "+z+"...)");
             seekAndRead(fCacheBis,pbi.cacheOffset,pbi.pixelsOrigin,0,length);
          }
          loadInRamInProgress=false;
-//         Aladin.trace(4,"PlanImageBlink.loadInRam("+z1+","+d+"): done");
+         //         Aladin.trace(4,"PlanImageBlink.loadInRam("+z1+","+d+"): done");
          return true;
-      } catch( Exception e ) { 
+      } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
       loadInRamInProgress=false;
       return false;
    }
-   
+
    /** Retourne 1 pixel depuis le disque (sert pour les plugins) */
    protected double getPixel(int x, int y, int z) throws Exception {
-//      loadInRam();
+      //      loadInRam();
       PlanImageBlinkItem pbi = vFrames.elementAt(z);
       byte [] pixelsOrigin;
       if( (pixelsOrigin=pbi.pixelsOrigin)!=null ) return getPixVal(pixelsOrigin,bitpix,y*width+x)*bScale+bZero;
-      
+
       if( cacheIDBis!=pbi.cacheID ) {
          if( fCacheBis!=null ) try { fCacheBis.close();  } catch( Exception e) {}
          fCacheBis = new RandomAccessFile(new File(cacheIDBis=pbi.cacheID),"r");
@@ -723,10 +723,10 @@ public class PlanImageBlink extends PlanImage {
       seekAndRead(fCacheBis,pbi.cacheOffset + npix*(y*width+x),bufCache,0,bufCache.length);
       return getPixVal(bufCache,bitpix,x)*bScale+bZero;
    }
-   
+
    long t,t1;
-   
-   
+
+
    /** Déplacement et lecture atomique pour éviter les problèmes en cas de threading */
    synchronized private void seekAndRead(RandomAccessFile f,long pos,byte buf[],int offset, int length) throws Exception {
       f.seek(pos);
@@ -742,14 +742,14 @@ public class PlanImageBlink extends PlanImage {
    protected double [][][] getCube(double [][][] cube,int x, int y, int z, int w, int h, int d) throws Exception {
       if( cube==null ) cube = new double[w][h][d];
       loadInRam(z,d);
-      
+
       // Travaille sur son propre buffer pour ne pas interférer avec pixelsOrigin[]
       byte [] buffer = new byte[w*npix];
 
       // On charge chaque tranche concernée
       for( int z1=z; z1<z+d; z1++ ) {
          PlanImageBlinkItem pbi = vFrames.elementAt(z1);
-         
+
          // Cool les pixels sont en mémoire
          byte [] pixelsOrigin;
          if( (pixelsOrigin=pbi.pixelsOrigin)!=null ) {
@@ -759,8 +759,8 @@ public class PlanImageBlink extends PlanImage {
                   cube[x1-x][y1-y][z1-z] = getPixVal(pixelsOrigin,bitpix,y1*width+x1)*bScale+bZero;
                }
             }
-            
-         // Va falloir les chercher sur le disque
+
+            // Va falloir les chercher sur le disque
          } else {
             if( cacheIDBis!=pbi.cacheID ) {
                if( fCacheBis!=null ) try { fCacheBis.close();  } catch( Exception e) {}
@@ -777,11 +777,11 @@ public class PlanImageBlink extends PlanImage {
             }
          }
       }
-      
+
       return cube;
    }
 
-   
+
    /** Retourne la chaine d'explication de la taille et du codage de l'image
     * d'origine */
    protected String getSizeInfo() {
@@ -792,7 +792,7 @@ public class PlanImageBlink extends PlanImage {
    public int getDepth() {
       return vFrames==null ?  0 : vFrames.size();
    }
-      
+
    protected String getFrameLabel(int i) {
       if( !active ) return label;
       return vFrames.elementAt(i).label;
@@ -802,16 +802,16 @@ public class PlanImageBlink extends PlanImage {
    protected byte[] getFrame(int n) {
       return vFrames.elementAt(n).pixels;
    }
-   
+
    /** Retourne le Pixel x,y de la frame n ATTENTION, SANS DOUTE LENT */
    protected byte getPixel8bit(int z,double x,double y) {
       return vFrames.elementAt(z).pixels[(int)y*width+(int)x];
    }
-   
+
    // POur ne pas recharger tous le temps les pixels courants lorsque l'on déplace
    // simplement la souris sur l'image
-   private int ooLastFrame=-1, oLastFrame = -1; 
-   
+   private int ooLastFrame=-1, oLastFrame = -1;
+
    /** Rend active la tranche courante de pixels (pour un contour...)
     * en profite pour remettre à jour le zoomview
     */
@@ -825,12 +825,12 @@ public class PlanImageBlink extends PlanImage {
       PlanImageBlinkItem pbi = vFrames.elementAt(oLastFrame);
       setBufPixels8(pbi.pixels);
       pixelsOrigin=pbi.pixelsOrigin;
-//      if( type==IMAGECUBERGB ) ((PlanRGBInterface)this).calculPixelsZoomRGB();
-//      else calculPixelsZoom();
+      //      if( type==IMAGECUBERGB ) ((PlanRGBInterface)this).calculPixelsZoomRGB();
+      //      else calculPixelsZoom();
       aladin.calque.zoom.zoomView.resetImgID();
       aladin.calque.zoom.zoomView.repaint();
    }
-   
+
    protected boolean setCubeFrame(double frameLevel) {
       int frame= (int)frameLevel;
       if( flagUpdating ) return false;
@@ -841,13 +841,13 @@ public class PlanImageBlink extends PlanImage {
       pixelsOrigin=pbi.pixelsOrigin;
       return true;
    }
-   
+
    /** Rend active la tranche courante des pixels d'origine, soit pour le planBlink lui-même
     * soit pourun planImage désigné (dans le cas d'une extraction d'une frame */
    protected void activePixelsOrigin(ViewSimple v) { activePixelsOrigin(v,this); }
-   protected void activePixelsOrigin(int frame) { activePixelsOrigin(this,frame); }   
+   protected void activePixelsOrigin(int frame) { activePixelsOrigin(this,frame); }
    protected void activePixelsOrigin(ViewSimple v,PlanImage p) { activePixelsOrigin(p,v.cubeControl.lastFrame); }
-   
+
    private void activePixelsOrigin(PlanImage p,int frame) {
       ooLastFrame = frame;
       PlanImageBlinkItem pbi = vFrames.elementAt(frame);
@@ -856,7 +856,7 @@ public class PlanImageBlink extends PlanImage {
       p.cacheFromOriginalFile=pbi.cacheFromOriginalFile;
       p.pixelsOrigin=pbi.pixelsOrigin;
    }
-   
+
    /** Extraction d'une portion de l'image.
     * Retourne une portion de l'image sur la forme d'un tableau de pixels
     * @param newpixels Le tableau a remplir (il doit etre assez grand)
@@ -885,16 +885,16 @@ public class PlanImageBlink extends PlanImage {
          }
          return;
       }
-      
+
       // Fondu enchainé avec la prochaine frame
       byte p1[] = getFrame(frame);
       byte p2[] = getFrame(frame==getDepth()-1 ? 0 : frame+1);
       double complement = 1-transparency;
-      
+
       for( i=y, n=y + h; i<n; i++ ) {
          for( j=x, m=x+w; j<m; j++ ) {
             int q = i*width +j;
-            double pix = ((int)p1[q]&0xFF)*complement + ((int)p2[q]&0xFF)*transparency;
+            double pix = (p1[q]&0xFF)*complement + (p2[q]&0xFF)*transparency;
             newpixels[k++] = (byte)((int)pix & 0xFF);
          }
          if( aw!=0 ) k+=aw;

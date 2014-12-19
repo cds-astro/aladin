@@ -61,8 +61,8 @@ public class BuilderCleanDetails extends BuilderClean {
    
    public boolean mustBeDeleted(File f) {
       String name = f.getName();
-      if( name.equals(Context.METADATAXML) ) return false;
-      else if( name.equals("Moc.fits") ) return false;
+      if( name.equals(Constante.FILE_METADATAXML) ) return false;
+      else if( name.equals(Constante.FILE_MOC) ) return false;
       return true;
    }
 

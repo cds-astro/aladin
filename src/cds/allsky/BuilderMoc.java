@@ -38,11 +38,10 @@ import cds.tools.pixtools.Util;
  */
 public class BuilderMoc extends Builder {
 
-   public static final String MOCNAME = "Moc.fits";
-
    protected HealpixMoc moc;
    protected int mocOrder;
    protected int fileOrder;
+   protected int tileOrder;
    protected boolean isMocHight;
    
    private String ext; // Extension à traiter, null si non encore affectée.
@@ -57,7 +56,10 @@ public class BuilderMoc extends Builder {
       createMoc(context.getOutputPath());
    }
    
-   public void validateContext() throws Exception { validateOutput(); }
+   public void validateContext() throws Exception { 
+      validateOutput();
+      if( !context.verifTileOrder() ) throw new Exception("Uncompatible tileOrder !");
+   }
 
    public HealpixMoc getMoc() { return moc; }
 
@@ -66,6 +68,7 @@ public class BuilderMoc extends Builder {
       
       moc = new HealpixMoc();
       fileOrder = mocOrder = Util.getMaxOrderByPath(path);
+      tileOrder = context.getTileOrder();
 
       // dans le cas d'un survey à faible résolution
       // ou qui couvre une petite partie du ciel, 
@@ -86,6 +89,9 @@ public class BuilderMoc extends Builder {
          if( mocOrder< Constante.DEFAULTMOCORDER ) mocOrder = Constante.DEFAULTMOCORDER;
       }
       
+      // On ne peut prendre un MOC order supérieur à la résolution nomimale
+      if( mocOrder>tileOrder+fileOrder ) mocOrder=tileOrder+fileOrder;
+      
       // Couleur
       if( context.isColor() ) mocOrder=fileOrder;
       
@@ -93,7 +99,7 @@ public class BuilderMoc extends Builder {
       
       moc.setMocOrder(mocOrder);
 
-      String outputFile = path + FS + MOCNAME;
+      String outputFile = path + FS + Constante.FILE_MOC;
       
       long t = System.currentTimeMillis();
       context.info("MOC generation ("+(isMocHight?"hight resolution":"low resolution")+" mocOrder="+moc.getMocOrder()+")...");
@@ -213,7 +219,6 @@ public class BuilderMoc extends Builder {
             }
          }
       }
-      
       moc.checkAndFix();
    }
 

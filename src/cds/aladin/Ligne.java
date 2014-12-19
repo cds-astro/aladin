@@ -23,15 +23,8 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
 import java.util.*;
 
-import javax.swing.JTextField;
-
-import cds.aladin.Forme.ObjetIterator;
 import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
@@ -651,8 +644,6 @@ public class Ligne extends Position {
          double dist = Coord.getDist(haut, bas);
          int n = (int) (dist/d);
          System.out.println("Distance entre "+haut+"  et "+bas+" => "+Coord.getUnit(dist)+" soit "+n+" itérations");
-         
-         
          
          return false;
          

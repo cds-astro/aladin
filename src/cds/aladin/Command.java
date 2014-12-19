@@ -101,22 +101,22 @@ public final class Command implements Runnable {
       "   @select x1 [x2..]                   @select v1 [v2..]\n" +
       "   @set [x1] [x2..] prop=value         @zoom ...\n" +
       "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
-      "   @mv|@copy x1 x2                      @lock|@unlock [v1] [v2..]\n" +
-      "   @rm [x1] [x2..] | -all              @match [-scale] [v|x|off]\n" +
-      "   @export [-fmt] x filename           @mv|@copy v1 v2\n" +
-      "                                      @rm [v1] [v2..] | -lock\n" +
-      "#IMAGE:#                                @save [-fmt] [-lk] [WxH] [filename]\n" +
-      "   @cm [x1|v1...] [colorMap...]        @coord|@object\n" +
-      "   @RGB|@RGBdiff [x1|v1...]\n" +
-      "   @blink|@mosaic [x1] [x2...]          #CATALOG:#\n" +
-      "   @+ | @- | @* | @/ ...                  @filter ...\n" +
-      "   @norm [-cut] [x]                    @addcol ...\n" +
-      "   @conv [x] ...                       @xmatch x1 x2 [dist] ...\n" +
-      "   @kernel ...                         @cplane [name]\n" +
-      "   @resamp x1 x2 ...                   @search {expr|+|-}\n" +
-      "   @crop [x|v] [[X,Y] WxH]             @tag|@untag\n\n" +
-      "   @flipflop [x|v] [V|H]               @select -tag\n" +
-      "   @contour [nn] [nosmooth] [zoom]\n" +
+      "   @mv|@copy x1 x2                      @thumbnail [radius]\n" +
+      "   @rm [x1] [x2..] | -all              @lock|@unlock [v1] [v2..]\n" +
+      "   @export [-fmt] x filename           @match [-scale] [v|x|off]\n" +
+      "                                      @mv|@copy v1 v2\n" +
+      "#IMAGE:#                                @rm [v1] [v2..] | -lock\n" +
+      "   @cm [x1|v1...] [colorMap...]        @save [-fmt] [-lk] [WxH] [filename]\n" +
+      "   @RGB|@RGBdiff [x1|v1...]             @coord|@object\n" +
+      "   @blink|@mosaic [x1] [x2...]\n" +
+      "   @+ | @- | @* | @/ ...                #CATALOG:#\n" +
+      "   @norm [-cut] [x]                    @filter ...\n" +
+      "   @conv [x] ...                       @addcol ...\n" +
+      "   @kernel ...                         @xmatch x1 x2 [dist] ...\n" +
+      "   @resamp x1 x2 ...                   @cplane [name]\n" +
+      "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
+      "   @flipflop [x|v] [V|H]               @tag|@untag\n" +
+      "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
       "   @grey|@bitpix [-cut] [x] BITPIX\n" +
       "  \n" +
       "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
@@ -129,7 +129,7 @@ public final class Command implements Runnable {
       "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
       "   @help ...            @trace        @mem        @info msg\n" +
       "   @macro script param  @call fct     @list [fct] @reset\n" +
-      "   @setconf prop=value  @function ... @= ...      @convert      @quit" +
+      "   @setconf prop=value  @function ... @= ...      @convert      @quit   " +
       "";
  ;
 
@@ -1547,10 +1547,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       try {
          if( param.length()==0 ) a.view.createROI();
 
-         // Spécification en secondes d'arc
-         else if( param.charAt(param.length()-1)=='"' ) {
-            double radius = Double.valueOf(param.substring(0,param.length()-1)).doubleValue();
-            a.view.createROI(radius/3600);
+         // Spécification en distance angulaire
+         else if( !Character.isDigit( param.charAt(param.length()-1) ) ) {
+            double radius = Server.getRM( param.substring(0,param.length()-1));
+            a.view.createROI(radius/60);
+//            double radius = Double.valueOf(param.substring(0,param.length()-1)).doubleValue();
+//            a.view.createROI(radius/3600);
 
          // Spécification en pixels
          } else {

@@ -64,54 +64,38 @@ import cds.tools.Util;
  * Classe de manipulation d'un fichier image FITS
  */
 final public class Fits {
+   
+   // Modes previews supportés
+   static public final int PREVIEW_UNKOWN = 0;
+   static public final int PREVIEW_JPEG   = 1;
+   static public final int PREVIEW_PNG    = 2;
 
-   static public final int PIX_ARGB = 0; // FITS ARGB, PNG couleur => couleur
-                                         // avec transparence
+   static public final int PIX_ARGB = 0; // FITS ARGB, PNG couleur => couleur avec transparence
+   static public final int PIX_RGB = 1;  // FITS RGB, JPEG couleur => Couleur sans transparence
+   static public final int PIX_TRUE = 2; // FITS => vraie valeur (définie par le BITPIX) => transparence sur NaN ou BLANK
+   static public final int PIX_256 = 3;  // JPEG N&B => 256 niveaux
+   static public final int PIX_255 = 4;  // PNG N&B => 255 niveaux - gère la transparence
 
-   static public final int PIX_RGB = 1; // FITS RGB, JPEG couleur => Couleur
-                                        // sans transparence
-
-   static public final int PIX_TRUE = 2; // FITS => vraie valeur (définie par le
-                                         // BITPIX) => transparence sur NaN ou
-                                         // BLANK
-
-   static public final int PIX_256 = 3; // JPEG N&B => 256 niveaux
-
-   static public final int PIX_255 = 4; // PNG N&B => 255 niveaux - gère la
-                                        // transparence
-
-   protected int pixMode; // Mode du losange (PIX_ARGB,PIX_RGB, PIX_TRUE,
-                          // PIX_256, PIX_255
+   protected int pixMode; // Mode du losange (PIX_ARGB,PIX_RGB, PIX_TRUE, PIX_256, PIX_255
 
    public static final double DEFAULT_BLANK = Double.NaN;
-
    public static final double DEFAULT_BSCALE = 1.;
-
    public static final double DEFAULT_BZERO = 0.;
 
    public HeaderFits headerFits; // header Fits
    public HeaderFits headerFits0; // Header Fits du HDU0
 
    public byte[] pixels; // Pixels d'origine "fullbits" (y compté depuis le bas)
+   public int bitpix;    // Profondeur des pixels (codage FITS 8,16,32,-32,-64)
+   public int width;     // Largeur totale de l'image
+   public int height;    // Hauteur totale de l'image
+   public int depth=1;   // profondeur de l'image (dans le cas d'un cube)
 
-   public int bitpix; // Profondeur des pixels (codage FITS 8,16,32,-32,-64)
+   public double bzero  = DEFAULT_BZERO;  // BZERO Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
+   public double bscale = DEFAULT_BSCALE; // BSCALE Fits pour la valeur physique du pixel (BSCALE*pix+BZEO)
+   public double blank  = DEFAULT_BLANK;  // valeur BLANK
 
-   public int width; // Largeur totale de l'image
-
-   public int height; // Hauteur totale de l'image
-   
-   public int depth=1; // profondeur de l'image (dans le cas d'un cube)
-
-   public double bzero = DEFAULT_BZERO; // BZERO Fits pour la valeur physique du
-                                        // pixel (BSCALE*pix+BZEO)
-
-   public double bscale = DEFAULT_BSCALE; // BSCALE Fits pour la valeur physique
-                                          // du pixel (BSCALE*pix+BZEO)
-
-   public double blank = DEFAULT_BLANK; // valeur BLANK
-
-   public long bitmapOffset = -1; // Repère le positionnement du bitmap des
-                                   // pixels (voir releaseBitmap());
+   public long bitmapOffset = -1; // Repère le positionnement du bitmap des pixels (voir releaseBitmap());
 
    // Dans le cas où il s'agit d'une cellule sur l'image (seule une portion de
    // l'image sera accessible)
@@ -195,19 +179,19 @@ final public class Fits {
       return calib;
    }
 
-   /* Chargement d'une image N&B sous forme d'un JPEG */
-   public void loadJpeg(MyInputStream dis) throws Exception {
-      loadJpeg(dis, false);
+   /* Chargement d'une image preview N&B sous forme d'un JPEG ou d'un PNG */
+   public void loadPreview(MyInputStream dis) throws Exception {
+      loadPreview(dis, false);
    }
 
-   /** Chargement d'une image JPEG depuis un fichier */
-   public void loadJpeg(String filename, int x, int y, int w, int h)
+   /** Chargement d'une image Preview (JPEG|PNG) depuis un fichier */
+   public void loadPreview(String filename, int x, int y, int w, int h)
          throws Exception {
-      loadJpeg(filename + "[" + x + "," + y + "-" + w + "x" + h + "]");
+      loadPreview(filename + "[" + x + "," + y + "-" + w + "x" + h + "]");
    }
 
-   public void loadJpeg(String filename) throws Exception {
-      loadJpeg(filename, false, true);
+   public void loadPreview(String filename) throws Exception {
+      loadPreview(filename, false, true, PREVIEW_UNKOWN);
    }
    
    // Ca particulier où le headerFits ne contient pas la dimension de l'image
@@ -217,7 +201,7 @@ final public class Fits {
          try{ 
             Fits fits = new Fits();
             MyInputStream is1 = new MyInputStream(new FileInputStream(filename));
-            fits.loadJpeg(is1);
+            fits.loadPreview(is1);
             headerFits.setKeyValue("NAXIS", "2");
             headerFits.setKeyValue("NAXIS1", fits.width+"");
             headerFits.setKeyValue("NAXIS2", fits.height+"");
@@ -232,14 +216,14 @@ final public class Fits {
       try{ 
          Fits fits = new Fits();
          MyInputStream is1 = new MyInputStream(new FileInputStream(filename));
-         fits.loadJpeg(is1);
+         fits.loadPreview(is1);
          dim = new Dimension(fits.width,fits.height);
          fits.free();
       }catch( Exception e1 ) {}
       return dim;
    }
 
-   public void loadJpeg(String filename, boolean color,boolean scanCommentCalib) throws Exception {
+   public void loadPreview(String filename, boolean color,boolean scanCommentCalib,int format) throws Exception {
       filename = parseCell(filename); // extraction de la descrition d'une
                                       // cellule éventuellement en suffixe du
                                       // nom fichier.fits[x,y-wxh]
@@ -263,15 +247,15 @@ final public class Fits {
 
             }
          }
-         loadJpeg(is, xCell, yCell, widthCell, heightCell, color);
+         loadPreview(is, xCell, yCell, widthCell, heightCell, color, format);
       } finally {
          if( is != null ) is.close();
       }
       this.setFilename(filename);
    }
 
-   public void loadJpeg(MyInputStream dis, boolean flagColor) throws Exception {
-      loadJpeg(dis, 0, 0, -1, -1, flagColor);
+   public void loadPreview(MyInputStream dis, boolean flagColor) throws Exception {
+      loadPreview(dis, 0, 0, -1, -1, flagColor, PREVIEW_UNKOWN);
    }
 
 //   /** Chargement d'une image N&B ou COULEUR sous forme d'un JPEG */
@@ -428,21 +412,28 @@ final public class Fits {
 //      }
 //   }
 
-   public void loadJpeg(MyInputStream dis, int x, int y, int w, int h, boolean flagColor) throws Exception {
+   public void loadPreview(MyInputStream dis, int x, int y, int w, int h, boolean flagColor, int format) throws Exception {
       BufferedImage imgBuf;
       
       bitpix = flagColor ? 0 : 8;
+      
+      if( (long)width*height>Integer.MAX_VALUE ) throw new Exception("Too large image for JAVA API");
+      
+      // Détermination du format si inconnu
+      if( format==PREVIEW_UNKOWN ) {
+         format = dis.getType() == MyInputStream.PNG ? PREVIEW_PNG : PREVIEW_JPEG;
+      }
       
       // Lecture de l'image complète avec la méthode de base (plus rapide que le
       // BufferedImage loader)
       // En revanche il faut réimplanter un ImageConsumer pour éviter l'usage
       // d'un Component qui recquière un DISPLAY (via MediaTracker)
-      if( w==-1 && flagColor ) {
+      if(( w==-1 && flagColor)  ) {
          widthCell = w;
          heightCell = h;
          xCell = x;
          yCell = y;
-         pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
+         pixMode = format==PREVIEW_PNG ? PIX_ARGB : PIX_RGB;
          Image img = Toolkit.getDefaultToolkit().createImage(dis.readFully());
          MyImageLoader loader = new MyImageLoader();
          img.getSource().startProduction(loader);
@@ -451,7 +442,7 @@ final public class Fits {
 
       // Lecture par cellules, plus lente
       } else {
-         String coding = dis.getType() == MyInputStream.PNG ? "png" : "jpeg";
+         String coding = format==PREVIEW_PNG ? "png" : "jpeg";
          Iterator readers = ImageIO.getImageReadersByFormatName(coding);
          ImageReader reader = (ImageReader) readers.next();
          ImageInputStream iis = null;
@@ -489,14 +480,14 @@ final public class Fits {
          } finally { if( iis!=null ) iis.close(); }
 
          if( flagColor ) {
-            pixMode = dis.getType() == MyInputStream.PNG ? PIX_ARGB : PIX_RGB;
+            pixMode = format==PREVIEW_PNG ? PIX_ARGB : PIX_RGB;
             int[] rgb1 = imgBuf.getRGB(0, 0, widthCell, heightCell, null, 0, widthCell);
             if( RGBASFITS ) invImageLine(widthCell, heightCell, rgb1);
             rgb = rgb1;
             rgb1 = null;
 
          } else {
-            pixMode = dis.getType() == MyInputStream.PNG ? PIX_255 : PIX_256;
+            pixMode = format==PREVIEW_PNG ? PIX_255 : PIX_256;
             pixels = ((DataBufferByte) imgBuf.getRaster().getDataBuffer()).getData();
             if( RGBASFITS ) invImageLine(widthCell, heightCell, pixels);
          }
@@ -1125,7 +1116,7 @@ final public class Fits {
       FileOutputStream fos = null;
       try {
          fos = new FileOutputStream(new File(file));
-         writeCompressed(fos, pixelMin, pixelMax, tcm, format);
+         writePreview(fos, pixelMin, pixelMax, tcm, format);
          setReleasable(false);
       } finally {
          if( fos!=null ) fos.close();
@@ -1133,7 +1124,7 @@ final public class Fits {
       this.setFilename(file);
    }
 
-   public void writeCompressed(OutputStream os, double pixelMin,
+   public void writePreview(OutputStream os, double pixelMin,
          double pixelMax, byte[] tcm, String format) throws Exception {
       Image imgSrc;
       BufferedImage imgTarget;
@@ -1186,17 +1177,17 @@ final public class Fits {
     * Génération d'un fichier JPEG ou PNG à partir des pixels RGB
     * @param format "jpeg" ou "png"
     */
-   public void writeRGBcompressed(String file, String format) throws Exception {
+   public void writeRGBPreview(String file, String format) throws Exception {
       createDir(file);
       FileOutputStream fos = null;
       try{
          fos = new FileOutputStream(new File(file));
-         writeRGBcompressed(fos, format);
+         writeRGBPreview(fos, format);
       } finally { if( fos!=null )  fos.close(); }
       this.setFilename(file);
    }
 
-   public void writeRGBcompressed(OutputStream os, String format)
+   public void writeRGBPreview(OutputStream os, String format)
          throws Exception {
       Image img;
       int typeInt = format.equals("png") ? BufferedImage.TYPE_INT_ARGB

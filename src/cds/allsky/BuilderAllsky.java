@@ -194,9 +194,10 @@ final public class BuilderAllsky  extends Builder {
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
       int outFileHeight = nbOutLosangeHeight*outLosangeWidth;
       boolean first = true;
-      String ext = mode=="png" ? ".png" : ".jpg";
+      String ext = mode.equals("png") ? ".png" : ".jpg";
+      int format =  mode.equals("png") ? Fits.PREVIEW_PNG : Fits.PREVIEW_JPEG;
      
-      Aladin.trace(3,"Creation Allsky order="+order+(z>0?"_"+z:"")+" mode=FIRST color"
+      Aladin.trace(3,"Creation Allsky"+ext+" order="+order+(z>0?"_"+z:"")+" mode=FIRST color"
       +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
       +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
@@ -210,11 +211,11 @@ final public class BuilderAllsky  extends Builder {
          String filename = path+FS+name;
          try {
             if( !(new File(filename+ext)).exists() ) continue;
-            in.loadJpeg(filename+ext,true,false);
+            in.loadPreview(filename+ext,true,false,format);
             if( first ) {
                if( in.width!=0 && in.width<outLosangeWidth ) {
-                  context.info("createAllsky: reducing width=>"+in.width+" ...");
-                  createAllSkyColor(path,order,ext,in.width, z);
+                  Aladin.trace(3,"restart createAllsky: reducing width=>"+in.width+" ...");
+                  createAllSkyColor(path,order,mode,in.width, z);
                   return;
                }
             }

@@ -541,8 +541,8 @@ public final class Configuration extends JFrame
          for( i=0; i<FrameColorMap.CMA.length; i++ ) {
             if( s.indexOf(FrameColorMap.CMA[i])>=0 ) return i;
          }
-         if( ColorMap.customCMName!=null ) {
-            Enumeration e = ColorMap.customCMName.elements();
+         if( CanvasColorMap.customCMName!=null ) {
+            Enumeration e = CanvasColorMap.customCMName.elements();
             for( ;e.hasMoreElements(); i++ ) {
                String t = (String)e.nextElement();
                if( s.indexOf(t)>=0 ) return i;

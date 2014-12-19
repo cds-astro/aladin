@@ -115,7 +115,7 @@ public class BuilderIndex extends Builder {
       }
       
       partitioning = context.partitioning;
-      if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.FITSCELLSIZE+"x"+Constante.FITSCELLSIZE+" pixels");
+      if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
 
       validateInput();
       validateOutput();
@@ -301,7 +301,7 @@ public class BuilderIndex extends Builder {
          Fits fitsfile = new Fits();
          boolean flagDefaultHDU = hdu==null;
          boolean flagAllHDU = hdu!=null && hdu.length>0 && hdu[0]==-1;
-         int cellSize = Constante.FITSCELLSIZE;
+         int cellSize = Constante.ORIGCELLWIDTH;
          int firstDepth=0;
 
          // Multi Extension ou non ?
@@ -353,6 +353,7 @@ public class BuilderIndex extends Builder {
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                         }
                      }
+                     
                      
                      updateStat(file, code, width, height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
                   }

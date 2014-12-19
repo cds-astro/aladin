@@ -23,10 +23,8 @@ package cds.aladin;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Scrollbar;
 import java.io.EOFException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
@@ -60,9 +58,9 @@ public final class Calque extends JPanel implements Runnable {
    Select select;         // Le selecteur de manipulation des plans
    Zoom  zoom;            // Le zoom
    protected Plan plan []; // les plans
-//   PlanBG planBG;         // Fond du ciel
+   //   PlanBG planBG;         // Fond du ciel
 
-//   Vector plan;
+   //   Vector plan;
    int maxPlan=0; 	  // Nombre total de plan actuellement alloue
 
    // Les valeurs a memoriser
@@ -76,14 +74,14 @@ public final class Calque extends JPanel implements Runnable {
    protected boolean flagSimbad; // True si la résolution quickSimbad est lancé
    protected boolean flagVizierSED;  // True si la résolution SED est lancé
    protected boolean flagTip;    // True si les tooptips s'affichent sur les sources pointées
-//   protected boolean flagSyncView=false; // True si le zoom est synchronisé entre les vues
+   //   protected boolean flagSyncView=false; // True si le zoom est synchronisé entre les vues
 
    protected Fov[] curFov; // FOVs pour le noeud courant
    Projection fovProj; // pour forcer la projection de curFov
    protected Fov[] cutoutFov = null; // champs (FOV) pour cutout
-   
+
    protected int overlayFlag;
-   
+
    static final private int SCALE   = 1;
    static final private int LABEL   = 2;
    static final private int SIZE    = 4;
@@ -93,13 +91,13 @@ public final class Calque extends JPanel implements Runnable {
    static final private int TARGET  = 64;
    static final private int PIXEL = 128;
    static final private int HPXGRID = 256;
-   
+
    static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid" };
    static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID };
-   
+
    /** Retourne le champ de bits qui contrôle les overlays */
    public int getOverlayFlag() { return overlayFlag; }
-   
+
    /** Indique les flags d'overlays actifs */
    public boolean hasScale()   { return (overlayFlag & SCALE)   == SCALE; }
    public boolean hasLabel()   { return (overlayFlag & LABEL)   == LABEL; }
@@ -110,7 +108,7 @@ public final class Calque extends JPanel implements Runnable {
    public boolean hasTarget()  { return (overlayFlag & TARGET)  == TARGET; }
    public boolean hasPixel()   { return (overlayFlag & PIXEL)   == PIXEL; }
    public boolean hasHpxGrid() { return (overlayFlag & HPXGRID) == HPXGRID; }
-   
+
    /** Positionnement d'un flag d'overlay - ex: setOverlayFlag("grid",true);
     * @param name le nom de la fonction d'overlay
     * @param flag true pour l'activation, false pour la désactivation
@@ -123,7 +121,7 @@ public final class Calque extends JPanel implements Runnable {
       else overlayFlag &= ~OVERLAYFLAGVAL[i];
       return true;
    }
-   
+
    /** Mise à jour des flags d'overlays (les noms séparés par une simple virgule).
     * Si la liste commence par '+' ou '-', il s'agit d'une mise à jour */
    public void setOverlayList(String names) {
@@ -133,7 +131,7 @@ public final class Calque extends JPanel implements Runnable {
          else if( names.charAt(0)=='-' ) { mode=-1; names=names.substring(1); }
       }
       if( mode==0 ) { overlayFlag=0; mode=1; }
-      
+
       int mask=0;
       Tok tok = new Tok(names,",");
       while( tok.hasMoreTokens() ) {
@@ -144,8 +142,8 @@ public final class Calque extends JPanel implements Runnable {
       if( mode==1 ) overlayFlag |= mask;
       else overlayFlag &= ~mask;
    }
-   
-   /** Retourne sous la forme d'une chaine de caractères, tous les overlays actifs 
+
+   /** Retourne sous la forme d'une chaine de caractères, tous les overlays actifs
     * ex : grid,scale,NE */
    public String getOverlayList() {
       StringBuffer s = new StringBuffer();
@@ -161,9 +159,9 @@ public final class Calque extends JPanel implements Runnable {
    protected void createChaine() {
 
    }
-   
-//   protected Source sourceToShow; // source à montrer (thomas, votech)
-//   protected Source osourceToShow; // ancienne source à montrer (thomas, votech)
+
+   //   protected Source sourceToShow; // source à montrer (thomas, votech)
+   //   protected Source osourceToShow; // ancienne source à montrer (thomas, votech)
 
    /** Creation de l'objet calque */
    protected Calque(Aladin aladin) {
@@ -181,7 +179,7 @@ public final class Calque extends JPanel implements Runnable {
       flagAutoDist = aladin.configuration.getAutoDist();
       flagSimbad = aladin.configuration.getSimbadFlag();
       flagVizierSED = aladin.configuration.getVizierSEDFlag();
-      
+
       setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
 
       // Panel principal : contient le selecteur de plans et le zoom
@@ -189,7 +187,7 @@ public final class Calque extends JPanel implements Runnable {
       add(select,BorderLayout.CENTER);
       add(zoom,BorderLayout.SOUTH);
    }
-   
+
    /** Insère ou enlève la scrollbar verticale de la pile si nécessaire
     * @return true s'il y a eu un changement d'état
     */
@@ -198,15 +196,15 @@ public final class Calque extends JPanel implements Runnable {
       if( lastPlan==-1 ) return false;
       boolean hideScroll = !scroll.getRequired();
 
-//      System.out.println("lastPlan="+lastPlan+" required="+scroll.getRequired()+" value="+scroll.getValue()+" ["+scroll.getMinimum()+".."+scroll.getMaximum()+"] hideScroll => "+hideScroll);
+      //      System.out.println("lastPlan="+lastPlan+" required="+scroll.getRequired()+" value="+scroll.getValue()+" ["+scroll.getMinimum()+".."+scroll.getMaximum()+"] hideScroll => "+hideScroll);
       if( scroll.isShowing() && hideScroll  ) { remove(scroll); validate(); return true; }
       else if( !scroll.isShowing() && !hideScroll  ) { add(scroll,"East"); validate(); return true; }
       return false;
    }
 
-   public Dimension getPreferredSize() { 
+   public Dimension getPreferredSize() {
       return new Dimension(select.frMax+select.sizeLabel+MyScrollbar.LARGEUR,200);
-//      return new Dimension(select.getPreferredSize().width- (Aladin.NEWLOOK_V7 && scroll.isShowing()?scroll.getPreferredSize().width:0),200);
+      //      return new Dimension(select.getPreferredSize().width- (Aladin.NEWLOOK_V7 && scroll.isShowing()?scroll.getPreferredSize().width:0),200);
    }
 
    /** Verrou d'accès à plan[] */
@@ -237,12 +235,12 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Retourne une copie du tableau de tous les plans de la pile */
    protected Plan [] getPlans() {
-//      synchronized( pile ) {
-//return plan;
-         Plan [] p = new Plan[plan.length];
-         System.arraycopy(plan, 0, p, 0, plan.length);
-         return p;
-//      }
+      //      synchronized( pile ) {
+      //return plan;
+      Plan [] p = new Plan[plan.length];
+      System.arraycopy(plan, 0, p, 0, plan.length);
+      return p;
+      //      }
    }
 
    /** Retourne le premier Plan Folder qui limite le scope du plan, null si aucun */
@@ -304,8 +302,8 @@ public final class Calque extends JPanel implements Runnable {
       return p;
    }
 
-  /** Retourne vrai si le folder est ferme. Cherche simplement si
-   * le plan suivant est collapse */
+   /** Retourne vrai si le folder est ferme. Cherche simplement si
+    * le plan suivant est collapse */
    protected boolean isCollapsed(Plan f) {
       int i;
       if( f.type!=Plan.FOLDER ) return false;
@@ -335,7 +333,7 @@ public final class Calque extends JPanel implements Runnable {
          //Recopie avec decalage
          if( maxPlan>0 ) {
             System.arraycopy(plan,0,newP,bloc,maxPlan);
-//            newP[0] = plan[0];
+            //            newP[0] = plan[0];
             //         n=scroll.getValue()-bloc+1;
             n=scroll.getValue()+bloc;
          } else {
@@ -387,7 +385,7 @@ public final class Calque extends JPanel implements Runnable {
       taggedSrc=false;
    }
 
-  /** Retourne le nombre de plans actuellement sélectionnés */
+   /** Retourne le nombre de plans actuellement sélectionnés */
    protected int getNbSelectedPlans() {
       int n=0;
       Plan [] plan = getPlans();
@@ -396,9 +394,9 @@ public final class Calque extends JPanel implements Runnable {
       }
       return n;
    }
-   
 
-  /** Retourne le nombre de plans actuellement utilises */
+
+   /** Retourne le nombre de plans actuellement utilises */
    protected int getNbUsedPlans() {
       int n=0;
       Plan [] plan = getPlans();
@@ -407,7 +405,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return n;
    }
-   
+
    /** Retourne lea moyenne des FPS des plans allsky image dans la pile */
    protected double getFps() {
       Plan [] plan = getPlans();
@@ -443,15 +441,15 @@ public final class Calque extends JPanel implements Runnable {
     * @return le nombre de plans instance of c
     */
    protected int getNbPlanByClass(Class<?> c) {
-       int n=0;
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( c.isInstance(plan[i]) && plan[i].flagOk ) {
-             n++;
-          }
-       }
-       return n;
-    }
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( c.isInstance(plan[i]) && plan[i].flagOk ) {
+            n++;
+         }
+      }
+      return n;
+   }
 
    /** Retourne le nombre d'images (non BG) sélectionnées */
    protected int getNbPlanImgSelected() {
@@ -484,8 +482,8 @@ public final class Calque extends JPanel implements Runnable {
       }
       return n;
    }
-   
-   /** Retourne true s'l y a au-moins un plan actif dont les objets 
+
+   /** Retourne true s'l y a au-moins un plan actif dont les objets
     * sont sélectionnables */
    protected boolean hasSelectableObjects() {
       Plan [] plan = getPlans();
@@ -529,7 +527,7 @@ public final class Calque extends JPanel implements Runnable {
    }
 
    /** Positionnement du mode du réticule 0-sans, 1-normal, 2-large */
-   protected void setReticle(int mode) { 
+   protected void setReticle(int mode) {
       reticleMode=mode;
       setOverlayFlag("reticle", mode>0);
    }
@@ -543,29 +541,29 @@ public final class Calque extends JPanel implements Runnable {
    protected void switchGrid(boolean verbose) {
       if( !hasGrid() ) {
          setOverlayFlag("grid", true);
-//         aladin.view.activeGrid();
+         //         aladin.view.activeGrid();
          if( verbose ) aladin.console.printCommand("grid on");
       }
       else {
          setOverlayFlag("grid", false);
-//         aladin.view.unactiveGrid();
+         //         aladin.view.unactiveGrid();
          if( verbose ) aladin.console.printCommand("grid off");
       }
       repaintAll();
    }
 
-//   /** Active/Désactive le background */
-//   protected void switchPlanBG() {
-//      if( planBG.survey==null ) return;
-//      ViewSimple v = aladin.view.getCurrentView();
-//      if( v.isFree() && !planBG.active ) v.setPlanRef(planBG, false);
-//      planBG.active = !planBG.active;
-//      aladin.view.repaint();
-//   }
+   //   /** Active/Désactive le background */
+   //   protected void switchPlanBG() {
+   //      if( planBG.survey==null ) return;
+   //      ViewSimple v = aladin.view.getCurrentView();
+   //      if( v.isFree() && !planBG.active ) v.setPlanRef(planBG, false);
+   //      planBG.active = !planBG.active;
+   //      aladin.view.repaint();
+   //   }
 
    /** Activation/desactivation des informations  */
    protected void setOverlay(boolean flag) { flagOverlay=flag; }
-   
+
    private boolean flagFirstAutoDist=true;
    /** Activation/desactivation de l'outil de mesure automatique des distances */
    protected void setAutoDist(boolean flag) {
@@ -607,15 +605,15 @@ public final class Calque extends JPanel implements Runnable {
       return null;
    }
 
-  /** Test si un plan est deja charge dans la pile.
-   * @param type  Le type de plan
-   * @param objet l'objet ou les coordonnees au centre
-   * @param param les parametres du plan
-   *              (Le format de la chaine param reprend celui de la class Plan)
-   * @param other dependant du type de plan, eventuellement null
-   * 		  pour IMAGE: concatenation fmt et resol
-   * @return      <I>true</I> si le plan decrit n'est pas deja, sinon <I>false</I>
-   */
+   /** Test si un plan est deja charge dans la pile.
+    * @param type  Le type de plan
+    * @param objet l'objet ou les coordonnees au centre
+    * @param param les parametres du plan
+    *              (Le format de la chaine param reprend celui de la class Plan)
+    * @param other dependant du type de plan, eventuellement null
+    * 		  pour IMAGE: concatenation fmt et resol
+    * @return      <I>true</I> si le plan decrit n'est pas deja, sinon <I>false</I>
+    */
    protected boolean dejaCharge(int type,String objet,String param) {
       return dejaCharge(type,objet,param,null);
    }
@@ -629,94 +627,94 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Retourne vrai si la pile est vide à part le plan passé en paramètre
     * ou s'il y a une vue libre */
-    protected boolean isFreeX(Plan p) {
-//       View view = aladin.view;
-//       for( int i=0;i<view.getModeView(); i++) {
-//          if( view.viewSimple[i].isFree() ) return true;
-//       }
+   protected boolean isFreeX(Plan p) {
+      //       View view = aladin.view;
+      //       for( int i=0;i<view.getModeView(); i++) {
+      //          if( view.viewSimple[i].isFree() ) return true;
+      //       }
 
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i]==p ) continue;
-           if( plan[i].type!=Plan.NO &&
-                 (plan[i] instanceof PlanBG && ((PlanBG)plan[i]).flagOk
-                 || plan[i].isSync()) ) {
-//              System.out.println(plan[i]+" is sync");
-              return false;
-           }
-       }
-       return true;
-    }
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i]==p ) continue;
+         if( plan[i].type!=Plan.NO &&
+               (plan[i] instanceof PlanBG && ((PlanBG)plan[i]).flagOk
+                     || plan[i].isSync()) ) {
+            //              System.out.println(plan[i]+" is sync");
+            return false;
+         }
+      }
+      return true;
+   }
 
-    /** Retourne vrai si la pile contient au moins une image (ne prend pas en compte
-     * le plan passé en paramètre */
-    protected boolean hasImage(Plan p) {
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i]==p ) continue;
-          if( plan[i].isSync() && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return true;
-       }
-       return false;
-    }
+   /** Retourne vrai si la pile contient au moins une image (ne prend pas en compte
+    * le plan passé en paramètre */
+   protected boolean hasImage(Plan p) {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i]==p ) continue;
+         if( plan[i].isSync() && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return true;
+      }
+      return false;
+   }
 
-    /** Test s'il n'y a aucun plan utilise */
-    protected boolean isFree() { return getNbPlans(false)==0; }
+   /** Test s'il n'y a aucun plan utilise */
+   protected boolean isFree() { return getNbPlans(false)==0; }
 
-    /** retourne le nombre de plans dans la pile */
-    protected int getNbPlans(boolean onlyReady) {
-       int n=0;
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
+   /** retourne le nombre de plans dans la pile */
+   protected int getNbPlans(boolean onlyReady) {
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type!=Plan.NO ) {
             if( !onlyReady || plan[i].flagOk ) n++;
          }
-       }
+      }
       return n;
    }
 
-    /** Retourne La liste des noms de plans en cours de traitement (séparés par ,) */
-    protected String getBlinkingInfo() {
-       StringBuffer s = new StringBuffer();
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( p.type==Plan.NO ) continue;
-          if( !p.flagOk && p.error==null
-                || p.flagProcessing
-                || p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting ) {
-             if( s.length()>0 ) s.append(", ");
-             s.append(p.label);
-          }
-       }
-       return s.toString();
-    }
+   /** Retourne La liste des noms de plans en cours de traitement (séparés par ,) */
+   protected String getBlinkingInfo() {
+      StringBuffer s = new StringBuffer();
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( p.type==Plan.NO ) continue;
+         if( !p.flagOk && p.error==null
+               || p.flagProcessing
+               || p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting ) {
+            if( s.length()>0 ) s.append(", ");
+            s.append(p.label);
+         }
+      }
+      return s.toString();
+   }
 
-    /** Retourne true si au moins un plan est en cours de traitement */
-    protected boolean isBlinking() {
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( p.type==Plan.NO ) continue;
-          if( !p.flagOk && p.error==null ) return true;
-          if( p.flagProcessing ) return true;
-          if( p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting ) return true;
+   /** Retourne true si au moins un plan est en cours de traitement */
+   protected boolean isBlinking() {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( p.type==Plan.NO ) continue;
+         if( !p.flagOk && p.error==null ) return true;
+         if( p.flagProcessing ) return true;
+         if( p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting ) return true;
 
-       }
-       return false;
-    }
+      }
+      return false;
+   }
 
-    /** Retourne true si j'attends le premier plan */
-    protected boolean waitingFirst() {
-//       if( !aladin.command.isSync() ) return true;
-       boolean rep=false;
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( p.type==Plan.NO ) continue;
-          rep=true;
-          if( p.flagOk ) return false;
-       }
-       return rep;
-    }
+   /** Retourne true si j'attends le premier plan */
+   protected boolean waitingFirst() {
+      //       if( !aladin.command.isSync() ) return true;
+      boolean rep=false;
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( p.type==Plan.NO ) continue;
+         rep=true;
+         if( p.flagOk ) return false;
+      }
+      return rep;
+   }
 
    /** Libere le plan courant */
    protected void Free() {
@@ -728,9 +726,9 @@ public final class Calque extends JPanel implements Runnable {
    /**  Libère le plan passé en paramètre */
    protected void Free(Plan p) { Free( getIndex(p)); }
 
-  /** Libere le plan indique
-   * @param n numero du plan dans la pile
-   */
+   /** Libere le plan indique
+    * @param n numero du plan dans la pile
+    */
    protected void Free(int n) {
       if( n!=-1 ) {
          final int [] param = new int[1];
@@ -839,10 +837,10 @@ public final class Calque extends JPanel implements Runnable {
                if( verbose ) aladin.console.printCommand("rm "+Tok.quote(plan[i].label));
                if( !plan[i].Free() ) continue;  // Le plan n'est pas libérable
                scroll.rm(i);
-//               Plan ptmp = plan[i];
+               //               Plan ptmp = plan[i];
                for( j=i; j>1; j-- ) plan[j]=plan[j-1];
                i++;
-//               plan[1]=ptmp;
+               //               plan[1]=ptmp;
                plan[0]=new PlanFree(aladin);
             }
          }
@@ -874,7 +872,7 @@ public final class Calque extends JPanel implements Runnable {
       return false;
    }
 
-  /** Selection de tous les objets dans les plans selectionnes */
+   /** Selection de tous les objets dans les plans selectionnes */
    protected void selectAllObjectInPlans() {
       selectAllObject(1);
    }
@@ -894,10 +892,10 @@ public final class Calque extends JPanel implements Runnable {
       // envoi d'un message PLASTIC de sélection des objets
       if( Aladin.PLASTIC_SUPPORT && aladin.getMessagingMgr().isRegistered() ) {
          try {
-      	 	aladin.getMessagingMgr().sendSelectObjectsMsg();
+            aladin.getMessagingMgr().sendSelectObjectsMsg();
          } catch( Throwable e) {}
       }
-      
+
       aladin.view.repaintAll();
       aladin.mesure.mcanvas.repaint();
    }
@@ -919,12 +917,12 @@ public final class Calque extends JPanel implements Runnable {
 
    }
 
-  /** Selectionne tous les objets qui se trouve dans le rectangle.
-   * Exception faite pour les plans de type FIELD
-   * @param r rectangle de selection
-   * @return vecteur des objets trouves
-   * @see aladin.PlanCat#setMultiSelect(java.awt.Rectangle)
-   */
+   /** Selectionne tous les objets qui se trouve dans le rectangle.
+    * Exception faite pour les plans de type FIELD
+    * @param r rectangle de selection
+    * @return vecteur des objets trouves
+    * @see aladin.PlanCat#setMultiSelect(java.awt.Rectangle)
+    */
    protected Vector<Obj> setMultiSelect(ViewSimple v,RectangleD r) {
       int i;
       Vector<Obj> res = new Vector<Obj>(5000);
@@ -944,13 +942,13 @@ public final class Calque extends JPanel implements Runnable {
       return res;
    }
 
-  /** Retourne tous les objets qui contiennent (x,y).
-   * Dans le cas d'un plan FIELD, il suffit qu'un seul objet contienne
-   * (x,y) pour que tous les objets du plan soient pris.
-   * @param (x,y) coordonnees image
-   * @return vecteur des objets trouves
-   * @see aladin.PlanCat#getObjWith(int,int)
-   */
+   /** Retourne tous les objets qui contiennent (x,y).
+    * Dans le cas d'un plan FIELD, il suffit qu'un seul objet contienne
+    * (x,y) pour que tous les objets du plan soient pris.
+    * @param (x,y) coordonnees image
+    * @return vecteur des objets trouves
+    * @see aladin.PlanCat#getObjWith(int,int)
+    */
    protected Vector<Obj> getObjWith(ViewSimple v,double x,double y) {
       int i;
       Vector<Obj> res = new Vector<Obj>(500,500);
@@ -962,12 +960,12 @@ public final class Calque extends JPanel implements Runnable {
          Plan p = plan[i];
          if( !p.active ) continue;
          // Selection pour un pylogone
-         if( p.type==Plan.TOOL ) 
-         
-         // Selection pour une FIELD
-         if( (!p.isCatalog()
-                 && p.type!=Plan.TOOL
-                 && p.type!=Plan.APERTURE ) ) continue;
+         if( p.type==Plan.TOOL )
+
+            // Selection pour une FIELD
+            if( (!p.isCatalog()
+                  && p.type!=Plan.TOOL
+                  && p.type!=Plan.APERTURE ) ) continue;
          if( folder!=getMyScopeFolder(p) ) continue;
          Enumeration<Obj> e = p.getObjWith(v,x,y).elements();
          while( e.hasMoreElements() ) res.addElement(e.nextElement());
@@ -975,10 +973,10 @@ public final class Calque extends JPanel implements Runnable {
       return res;
    }
 
-  /** Retourne toutes les Sources indiquees par leur OID
-   * @param oid le tableau des OID a trouver
-   * @return Le tableau des Sources
-   */
+   /** Retourne toutes les Sources indiquees par leur OID
+    * @param oid le tableau des OID a trouver
+    * @return Le tableau des Sources
+    */
    protected Source[] getSources(String oid[]) {
       int i,j,k;
       if( oid==null ) return new Source[0];
@@ -1013,9 +1011,9 @@ public final class Calque extends JPanel implements Runnable {
       return s;
    }
 
-  /** Traitement à  faire suite à un changement de frame */
+   /** Traitement à  faire suite à un changement de frame */
    protected void resumeFrame() {
-      
+
       int frame = aladin.localisation.getFrame();
       aladin.command.setDrawMode( frame==Localisation.XY ? Command.DRAWXY : Command.DRAWRADEC);
 
@@ -1033,38 +1031,38 @@ public final class Calque extends JPanel implements Runnable {
             }
          }
       }
-      
+
       // Réaffichage éventuel du formulaire courant pour convertir
       // la position par défaut
-//      if( aladin.dialog.isVisible() ){
-         Server srv = aladin.dialog.server[aladin.dialog.current];
+      //      if( aladin.dialog.isVisible() ){
+      Server srv = aladin.dialog.server[aladin.dialog.current];
 
-         // on le vide juste avant en cas de formulaire avec tree, sinon impossible à modifier le target
-         if( srv.target!=null && srv.tree!=null ) srv.target.setText("");
+      // on le vide juste avant en cas de formulaire avec tree, sinon impossible à modifier le target
+      if( srv.target!=null && srv.tree!=null ) srv.target.setText("");
 
-//      }
-         aladin.dialog.adjustParameters();
-         aladin.dialog.resume();
-      
+      //      }
+      aladin.dialog.adjustParameters();
+      aladin.dialog.resume();
+
       // Conversion de la position d'un cut out pour le frameInfo courant (s'il y a lieu)
       if( aladin.frameInfo!=null ) aladin.frameInfo.initTarget();
 
       // Invalidation des grilles de coordonnées
       aladin.view.grilAgain();
       aladin.view.repaintAll();
-      
+
    }
 
    /** Traitement d'un changement de mode d'affichage pixel */
-    protected void resumePixel() {
-       if( aladin.frameCM!=null ) aladin.frameCM.changePixelUnit();
-       if( aladin.calque.freeUnusedPixelsOrigin() ) aladin.gc();
-    }
+   protected void resumePixel() {
+      //      if( aladin.frameCM!=null ) aladin.frameCM.changePixelUnit();
+      if( aladin.calque.freeUnusedPixelsOrigin() ) aladin.gc();
+   }
 
-  /** Insertion d'un objet graphique dans le plan courant.
-   * Le plan courant doit etre du type TOOL
-   * @param newobj l'objet a inserer
-   */
+   /** Insertion d'un objet graphique dans le plan courant.
+    * Le plan courant doit etre du type TOOL
+    * @param newobj l'objet a inserer
+    */
    private Obj oNewobj=null;
    protected void setObjet(Obj newobj) {
       if( newobj==oNewobj ) return;   // Déjà inséré juste avant
@@ -1073,10 +1071,10 @@ public final class Calque extends JPanel implements Runnable {
       oNewobj=newobj;
    }
 
-  /** Suppression d'un objet.
-   * L'objet doit se trouver dans l'un des plans TOOL visibles
-   * @param newobj l'objet a supprimer
-   */
+   /** Suppression d'un objet.
+    * L'objet doit se trouver dans l'un des plans TOOL visibles
+    * @param newobj l'objet a supprimer
+    */
    protected boolean  delObjet(Obj obj) {
       Plan p = ((Position)obj).plan;
       if( !p.active || p.pcat==null ) return false;
@@ -1092,7 +1090,7 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected void majPlanFlag() {
 
-   	  // maj des ref
+      // maj des ref
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type==Plan.NO ) continue;
@@ -1112,7 +1110,7 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected boolean freeUnusedPixelsOrigin() {
       boolean rep=false;
-//      boolean flagFreeAll = aladin.pixel.getPixelMode()==Pixel.LEVEL;
+      //      boolean flagFreeAll = aladin.pixel.getPixelMode()==Pixel.LEVEL;
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type!=Plan.IMAGE && !(plan[i] instanceof PlanBG) || !plan[i].flagOk ) continue;
@@ -1124,25 +1122,25 @@ public final class Calque extends JPanel implements Runnable {
 
 
    /** Retourne vrai si le plan peut etre de reference
-   * @param p le plan à tester
-   */
+    * @param p le plan à tester
+    */
    protected boolean canBeRef(Plan p) {
       if( p==null ) return false;
       if( p.hasXYorig ) return true;
-   	  // ajout thomas : PlanFov peut être un plan de référence
+      // ajout thomas : PlanFov peut être un plan de référence
       return (p.isImage() || p.type==Plan.ALLSKYIMG || p.isPlanBGOverlay()
-              || p.isCatalog()
-              || p.isTool() );
-//              || p.type==Plan.APERTURE || p.type==Plan.FOV
-//              || p.type==Plan.TOOL && !Projection.isOk(p.projd)) ;
+            || p.isCatalog()
+            || p.isTool() );
+      //              || p.type==Plan.APERTURE || p.type==Plan.FOV
+      //              || p.type==Plan.TOOL && !Projection.isOk(p.projd)) ;
    }
-   
-  /** Positionne le plan comme etant de reference.
-   * On passe l'objet plan lui-meme (pas terrible... je sais, mais il faut
-   * que je retrouve son numero).
-   * @param p le plan
-   * @return <I>true</I> si ca a marche, sinon <I>false</I>
-   */
+
+   /** Positionne le plan comme etant de reference.
+    * On passe l'objet plan lui-meme (pas terrible... je sais, mais il faut
+    * que je retrouve son numero).
+    * @param p le plan
+    * @return <I>true</I> si ca a marche, sinon <I>false</I>
+    */
    protected boolean setPlanRef(Plan p) { return setPlanRef(p,aladin.view.getLastNumView(p)); }
    protected boolean setPlanRef(Plan p,int nview) {
 
@@ -1161,10 +1159,10 @@ public final class Calque extends JPanel implements Runnable {
 
       // On sélectionne le plan dans la pile
       selectPlan(p);
-      
+
       return true;
    }
-   
+
    /** Positionne le plan BG comme étant de référence. Si la vue que l'on va utilisée
     * est déjà un plan BG, centre automatiquement la nouvelle vue sur le même champ
     * Si pas possible, garde la position par défaut
@@ -1173,7 +1171,7 @@ public final class Calque extends JPanel implements Runnable {
       int nview = aladin.view.getLastNumView(p);
       if( nview<0 || !canBeRef(p) )  return false;
       ViewSimple v = aladin.view.viewSimple[nview];
-      
+
       if( v.isFree() || !Projection.isOk(v.pref.projd) ) return setPlanRef(p,nview);  // pas possible de se mettre à la même position
       Coord c = v.getProj().getProjCenter();
       aladin.trace(4,"Calque.setPlanRefOnSameTarget() sur "+c);
@@ -1188,11 +1186,11 @@ public final class Calque extends JPanel implements Runnable {
       return true;
    }
 
-  /** Positionne le plan de reference
-   * @param n le numero du plan
-   * @param nview le numero de la vue
-   * @return <I>true</I> si ca a marche, sinon <I>false</I>
-   */
+   /** Positionne le plan de reference
+    * @param n le numero du plan
+    * @param nview le numero de la vue
+    * @return <I>true</I> si ca a marche, sinon <I>false</I>
+    */
    protected boolean setPlanRef(int n) { return setPlanRef(n,aladin.view.getLastNumView(plan[n])); }
    protected boolean setPlanRef(int n,int nview) {
       return setPlanRef(getPlan(n),nview);
@@ -1250,13 +1248,13 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected void showPlan(Plan p) { showPlan(p,true); }
    protected void showPlan(Plan p,boolean flagPaint) {
-//      if( p.active ) return;
+      //      if( p.active ) return;
       if( select.canBeNewRef(p) ) {
          if( setPlanRef(p) ) aladin.view.newView();
       } else if( !aladin.view.tryToShow(p) ) p.setActivated(true);
       if( flagPaint ) repaintAll();
    }
-   
+
    /** Désactivation de tous les plans BG au-dessus du plan passé en paramètre qui le cache */
    protected void switchOffBGOver(Plan p) {
       Plan [] plan = getPlans();
@@ -1271,7 +1269,7 @@ public final class Calque extends JPanel implements Runnable {
    }
 
    private boolean memoClinDoeil=false; // Vrai si on a mémorisé un état via le clin d'oeil
-   
+
    protected boolean hasClinDoeil() { return memoClinDoeil; }
 
    /** Pour "oublier" qu'on utilisait l'oeil */
@@ -1327,7 +1325,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return rep;
    }
-   */
+    */
 
    /** Retourne l'index d'un plan, -1 si non trouvé */
    protected int getIndex(Plan p) {
@@ -1430,7 +1428,7 @@ public final class Calque extends JPanel implements Runnable {
             int planSpecialType = getSpecialType(pc);
             if( (type & planSpecialType) == 0 ) continue;
 
-         // Sélection "à l'ancienne" des images (SANS DOUTE A VIRER)
+            // Sélection "à l'ancienne" des images (SANS DOUTE A VIRER)
          } else if( type==Plan.IMAGE ) {
             if( pc.type!=Plan.IMAGE
                   && pc.type!=Plan.IMAGEHUGE
@@ -1477,31 +1475,31 @@ public final class Calque extends JPanel implements Runnable {
     * @param type IMAGE|CATALOG... ou 999 pour IMAGE avec pixels originaux
     * @return le Vector des plans, ou null si aucun
     */
-//   protected Vector getPlans(int t) {
-//      Vector v=null;
-//
-//      int type = t==999 ? Plan.IMAGE : t;
-//
-//      // Recherche des plans qui correspondent
-//      synchronized( pile ) {
-//         for( int i=0; i<plan.length; i++ ) {
-//            Plan pc = plan[i];
-//            if( pc.hasError() ) continue;
-//            if( type==Plan.IMAGE ) {
-////               if( !(pc instanceof PlanImage) ) continue;
-//               if( pc.type!=Plan.IMAGE
-//                     && pc.type!=Plan.IMAGEHUGE
-//                     && pc.type!=Plan.IMAGERSP
-//                     && pc.type!=Plan.IMAGEALGO
-//                     && pc.type!=Plan.IMAGEMOSAIC ) continue;
-//               if( t==999 && !((PlanImage)pc).hasOriginalPixels() ) continue;
-//            } else if( pc.type!=type ) continue;
-//            if( v==null ) v = new Vector(plan.length);
-//            v.addElement(pc);
-//         }
-//      }
-//      return v;
-//   }
+   //   protected Vector getPlans(int t) {
+   //      Vector v=null;
+   //
+   //      int type = t==999 ? Plan.IMAGE : t;
+   //
+   //      // Recherche des plans qui correspondent
+   //      synchronized( pile ) {
+   //         for( int i=0; i<plan.length; i++ ) {
+   //            Plan pc = plan[i];
+   //            if( pc.hasError() ) continue;
+   //            if( type==Plan.IMAGE ) {
+   ////               if( !(pc instanceof PlanImage) ) continue;
+   //               if( pc.type!=Plan.IMAGE
+   //                     && pc.type!=Plan.IMAGEHUGE
+   //                     && pc.type!=Plan.IMAGERSP
+   //                     && pc.type!=Plan.IMAGEALGO
+   //                     && pc.type!=Plan.IMAGEMOSAIC ) continue;
+   //               if( t==999 && !((PlanImage)pc).hasOriginalPixels() ) continue;
+   //            } else if( pc.type!=type ) continue;
+   //            if( v==null ) v = new Vector(plan.length);
+   //            v.addElement(pc);
+   //         }
+   //      }
+   //      return v;
+   //   }
 
    /** Recupere la liste des plans images valides */
    protected Vector<Plan> getPlanImg() { return getPlans(Plan.IMAGE); }
@@ -1519,28 +1517,28 @@ public final class Calque extends JPanel implements Runnable {
    protected Vector<Plan> getPlanSelected() { return getPlans(SELECTED); }
 
 
-  /** Retourne le plan de reference courant.
-   * @return le plan de ref ou <I>null</I> si aucun
-   */
+   /** Retourne le plan de reference courant.
+    * @return le plan de ref ou <I>null</I> si aucun
+    */
    protected Plan getPlanRef() {
       ViewSimple v = aladin.view.getCurrentView();
       return v==null?null:v.pref;
-  }
+   }
 
-  /** Retourne l'index du plan de reference
-   * @return le numero du plan de ref ou <I>-1</I> si aucun
-   */
+   /** Retourne l'index du plan de reference
+    * @return le numero du plan de ref ou <I>-1</I> si aucun
+    */
    protected int getIndexPlanRef() { return getIndex(getPlanRef()); }
 
-  /** Retourne le plan de base (premier raster non-transparent)
-   * @return le plan de base ou <I>null</I> si aucun
-   */
+   /** Retourne le plan de base (premier raster non-transparent)
+    * @return le plan de base ou <I>null</I> si aucun
+    */
    public Plan getPlanBase() {
       Plan p = getPlanRef();
       return p!=null && p.isPixel() ? p: null;
    }
-   
-   /** true si le plan de référence est un plan en mode Allsky 
+
+   /** true si le plan de référence est un plan en mode Allsky
     * => changement de centre de projection */
    public boolean isModeAllSky() {
       Plan p = getPlanRef();
@@ -1559,14 +1557,14 @@ public final class Calque extends JPanel implements Runnable {
       return pref;
    }
 
-  /** Retourne l'index plan de base (plan ref si image et actif)
-   * @return le numero du plan de base ou <I>-1</I> si aucun
-   */
+   /** Retourne l'index plan de base (plan ref si image et actif)
+    * @return le numero du plan de base ou <I>-1</I> si aucun
+    */
    protected int getIndexPlanBase() {
       int i = getIndexPlanRef();
       if( i==-1 || !plan[i].isImage() || !plan[i].active ) return -1;
       return i;
-  }
+   }
 
    /** Retourne la liste des labels des plans en commençant par celui du
     * bas de la pile */
@@ -1584,29 +1582,29 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Découpage du chaine de mesures d'info statistiques sur les pixels
     * afin de préparer une entrée dans le plan "Photometry" */
-//   private String [] splitVal(String id,Position o) {
-//      String [] r = new String[9];
-//      Coord c = new Coord(o.raj,o.dej);
-//      r[0] = id;
-//      r[1] = o.raj+"";
-//      r[2] = o.dej+"";
-//      StringTokenizer tok = new StringTokenizer(o.id,"/");
-//      for( int i=3; i<=7; i++ ) {
-//         String s = tok.nextToken().trim();
-//         int offset = s.indexOf(' ');
-//         r[i] = s.substring(offset+1);
-//      }
-//      r[8] = o instanceof Repere ? "Circle "+Coord.getUnit( ((Repere)o).getRadius()) : "Polygon";
-//      return r;
-//   }
-   
-   
+   //   private String [] splitVal(String id,Position o) {
+   //      String [] r = new String[9];
+   //      Coord c = new Coord(o.raj,o.dej);
+   //      r[0] = id;
+   //      r[1] = o.raj+"";
+   //      r[2] = o.dej+"";
+   //      StringTokenizer tok = new StringTokenizer(o.id,"/");
+   //      for( int i=3; i<=7; i++ ) {
+   //         String s = tok.nextToken().trim();
+   //         int offset = s.indexOf(' ');
+   //         r[i] = s.substring(offset+1);
+   //      }
+   //      r[8] = o instanceof Repere ? "Circle "+Coord.getUnit( ((Repere)o).getRadius()) : "Polygon";
+   //      return r;
+   //   }
+
+
    /** Met à jour le plan "Photometry" en fonction des paramètres de iqe */
    protected void updatePhotometryPlane(Repere r, double [] iqe) {
-      
+
       final PlanTool p = selectPlanTool();
       final Source s = p.addPhot( (PlanImage)aladin.view.getMouseView().pref, r.raj, r.dej, iqe);
-      
+
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {
             Util.pause(100);
@@ -1616,13 +1614,13 @@ public final class Calque extends JPanel implements Runnable {
          }
       });
    }
-   
+
    /** Met à jour le plan "Tag" */
    protected void updateTagPlane(Tag tag) {
-      
+
       final PlanTool p = selectPlanTool();
       final Source s = p.addTag( (PlanImage)aladin.view.getMouseView().pref, tag.raj, tag.dej);
-      
+
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {
             Util.pause(100);
@@ -1632,29 +1630,29 @@ public final class Calque extends JPanel implements Runnable {
          }
       });
    }
-   
+
 
    Plan planRotCenter=null; // mémorise le PlanField donc on déplace uniquement le centre de rotation
 
-  /** Recalcul les plans FoV en fonction de leur centre en x,y,al,del
-   * et de leur rotation
-   *  Necessaire apres une translation par la souris
-   * @param flag ViewSimple.MOVE | ViewSimple.ROLL | ViewSimple.MOVECENTER
-   * @param aperture la liste des plans apertures concernés
-   * @param n nombre de plans dans aperture
-   */
+   /** Recalcul les plans FoV en fonction de leur centre en x,y,al,del
+    * et de leur rotation
+    *  Necessaire apres une translation par la souris
+    * @param flag ViewSimple.MOVE | ViewSimple.ROLL | ViewSimple.MOVECENTER
+    * @param aperture la liste des plans apertures concernés
+    * @param n nombre de plans dans aperture
+    */
    protected void resetPlanField(int flag,PlanField[] plan,int n) {
       for( int i=0; i<n; i++ ) {
-//         if( plan[i]==planRotCenter ) plan[i].moveRotCenter();
+         //         if( plan[i]==planRotCenter ) plan[i].moveRotCenter();
          plan[i].reset(flag);
       }
    }
 
-  /** Cree un nouveau plan Filter
-   * @param aladinLabel Le nom du plan
-   * @param script le code initial du script
-   * @return le plan créé
-   */
+   /** Cree un nouveau plan Filter
+    * @param aladinLabel Le nom du plan
+    * @param script le code initial du script
+    * @return le plan créé
+    */
    protected Plan newPlanFilter() { return newPlanFilter(null,null); }
    protected Plan newPlanFilter(String label,String script) {
       Plan pc = null;
@@ -1668,20 +1666,20 @@ public final class Calque extends JPanel implements Runnable {
       return plan[ newFolder(label,folderNiv,localScope) ];
    }
 
-  /** Cree un nouveau plan Folder
-   * @param label Le nom du plan
-   * @param le niveau de folder
-   * @param Etendue des prorpriétés du folder
-   * @return le numero du plan dans la pile
-   */
+   /** Cree un nouveau plan Folder
+    * @param label Le nom du plan
+    * @param le niveau de folder
+    * @param Etendue des prorpriétés du folder
+    * @return le numero du plan dans la pile
+    */
    protected int newFolder(String label,int folderNiv,boolean localScope) {
       int n= n=getStackIndex();
       plan[n] = new PlanFolder(aladin,label,folderNiv,localScope);
       return n;
    }
-   
+
    static final String  DMAPGLU = "getDMap";
-   
+
    /** Chargement de la carte de densité associée à un catalogue */
    protected int newPlanDMap(String catID) throws Exception {
       String u = ""+aladin.glu.getURL(DMAPGLU,aladin.glu.quote(catID));
@@ -1698,16 +1696,16 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-  /** Enregistre une image RGB dans le prochain plan libre.
-   * @param r le plan Red
-   * @param g le plan Green
-   * @param b le plan Blue
-   * @param ref le plan de reference du reechantillonage
-   * @param label le nom du futur plan , ou null si défaut
-   * @param diff true s'il s'agit d'une difference sur 2 plans
-   */
+   /** Enregistre une image RGB dans le prochain plan libre.
+    * @param r le plan Red
+    * @param g le plan Green
+    * @param b le plan Blue
+    * @param ref le plan de reference du reechantillonage
+    * @param label le nom du futur plan , ou null si défaut
+    * @param diff true s'il s'agit d'une difference sur 2 plans
+    */
    protected int newPlanImageRGB(PlanImage r,PlanImage g,PlanImage b,
-                                 PlanImage ref,String label,boolean diff) {
+         PlanImage ref,String label,boolean diff) {
       int n=getStackIndex(label);
       label=prepareLabel(label);
       plan[n] = new PlanImageRGB(aladin,r,g,b,ref,label,diff);
@@ -1763,7 +1761,7 @@ public final class Calque extends JPanel implements Runnable {
       p2.launchResampleBy(p,methode,fullPixel);
       return 1;
    }
-   
+
    /** Crée un plan MOC en faisant un crop */
    protected int newPlanMoc(String label,PlanMoc source,Coord [] coo) {
       int n;
@@ -1783,7 +1781,7 @@ public final class Calque extends JPanel implements Runnable {
    }
 
 
-   
+
    /** Crée un plan MOC en fonction d'un ou plusieurs plans MOCs et d'un opérateur */
    protected int newPlanMoc(String label,PlanMoc [] pList,int op,int order) {
       int n;
@@ -1801,7 +1799,7 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(pa);
       return n;
    }
-   
+
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
    protected int newPlanMocColl(Aladin aladin,String label,String directory,int order,
          boolean strict,boolean recursive,double blank,int [] hdu) {
@@ -1853,7 +1851,7 @@ public final class Calque extends JPanel implements Runnable {
          p1 = (PlanImage)getPlanBase();
          if( label==null ) label = "="+p1.getLabel();
 
-      // Va créer un nouveau plan pour le résultat
+         // Va créer un nouveau plan pour le résultat
       } else if( label==null ) label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
 
       n=getStackIndex(label);
@@ -1882,7 +1880,7 @@ public final class Calque extends JPanel implements Runnable {
          p1 = (PlanHealpix)getPlanBase();
          if( label==null ) label = "="+p1.getLabel();
 
-      // Va créer un nouveau plan pour le résultat
+         // Va créer un nouveau plan pour le résultat
       } else if( label==null ) label = "="+p1.getUniqueLabel("["+p1.getLabel()+"]");
 
       n=getStackIndex(label);
@@ -1903,7 +1901,7 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-  /** Enregistre une image Blink dans le prochain plan libre. */
+   /** Enregistre une image Blink dans le prochain plan libre. */
    protected int newPlanImageBlink(PlanImage p[],String label,int delay) {
       int n=getStackIndex(label);
       label=prepareLabel(label);
@@ -1925,18 +1923,18 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-  /** Enregistre une image Aladin dans le prochain plan libre.
-   * @param u     l'URL qu'il va falloir appeler
-   * @param label le nom du plan (dans la pile des plans)
-   * @param objet le target central (objet ou coord)
-   * @param param les parametres de l'image (SERC J MAMA...)
-   * @param fmt   le format de l'image (JPEG, FITS...)
-   * @param res La resolution de l'image (FULL, PLATE...)
-   */
+   /** Enregistre une image Aladin dans le prochain plan libre.
+    * @param u     l'URL qu'il va falloir appeler
+    * @param label le nom du plan (dans la pile des plans)
+    * @param objet le target central (objet ou coord)
+    * @param param les parametres de l'image (SERC J MAMA...)
+    * @param fmt   le format de l'image (JPEG, FITS...)
+    * @param res La resolution de l'image (FULL, PLATE...)
+    */
    protected int newPlanImage(URL u,int orig, String label, String objet,
-                                    String param,String from,
-                                    int fmt,int res,
-                                    Obj o) {
+         String param,String from,
+         int fmt,int res,
+         Obj o) {
       return newPlanImage(u,null,orig,label,objet,param,from,fmt,res,o);
    }
    /** Enregistre une image Aladin dans le prochain plan libre.
@@ -1948,22 +1946,22 @@ public final class Calque extends JPanel implements Runnable {
     * @param res La resolution de l'image (FULL, PLATE...)
     * @param imgNode noeud image décrivant l'image à charger
     */
-    protected int newPlanImage(URL u,int orig, String label, String objet,
-                                     String param,String from,
-                                     int fmt,int res,
-                                     Obj o, ResourceNode imgNode) {
-       int n=getStackIndex(label);
-       label = prepareLabel(label);
-       plan[n] = new PlanImage(aladin,null,orig,u,label,objet,param,from,
-             fmt,res,o,imgNode);
-       n=bestPlace(n);
-       suiteNew(plan[n]);
-       return n;
-    }
+   protected int newPlanImage(URL u,int orig, String label, String objet,
+         String param,String from,
+         int fmt,int res,
+         Obj o, ResourceNode imgNode) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanImage(aladin,null,orig,u,label,objet,param,from,
+            fmt,res,o,imgNode);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
    protected int newPlanImage(URL u,MyInputStream inImg,int orig, String label, String objet,
-                                    String param,String from,
-                                    int fmt,int res,
-                                    Obj o) {
+         String param,String from,
+         int fmt,int res,
+         Obj o) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       plan[n] = new PlanImage(aladin,inImg,orig,u,label,objet,param,from,
@@ -1995,14 +1993,14 @@ public final class Calque extends JPanel implements Runnable {
    // du bricolo pas beau !
    // c'est vraiment le bordel entre les url et les input stream
    protected int newPlanImageCube(URL u,MyInputStream inImg,int orig, String label, String objet,
-	        String param,String from,
-	        int fmt,int res,
-	        Obj o, ResourceNode imgNode) {
+         String param,String from,
+         int fmt,int res,
+         Obj o, ResourceNode imgNode) {
       if( inImg==null ) {
          try {
             inImg = Util.openStream(u);
-//            inImg = new MyInputStream(u.openStream());
-//            inImg = inImg.startRead();
+            //            inImg = new MyInputStream(u.openStream());
+            //            inImg = inImg.startRead();
          }
          catch(Exception e) {
             e.printStackTrace();
@@ -2014,7 +2012,7 @@ public final class Calque extends JPanel implements Runnable {
       n=bestPlace(n);
       suiteNew(plan[n]);
       return n;
-	}
+   }
 
 
    /** Determine la meilleure place A PRIORI dans la pile des plans
@@ -2045,8 +2043,8 @@ public final class Calque extends JPanel implements Runnable {
       Plan pc;
 
       for( i=n+1; i<plan.length &&
-      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
-         pc.isOverlay() && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
+            ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV ||
+            pc.isOverlay() && (t1.equals(pc.getTargetQuery()) || pc instanceof PlanBG)); i++);
       if( i>plan.length || i<=0 || i-1==n ) return n;
       permute(plan[n],plan[i-1]);   //On permute les plans pour prendre en compte le folder
       p.folder=folder;
@@ -2060,22 +2058,22 @@ public final class Calque extends JPanel implements Runnable {
    protected void bestPlacePost(Plan p) {
       int i;
       if( p.noBestPlacePost || p instanceof PlanBG /* || p.isImage() */ || !Projection.isOk(p.projd) ) return;
-//System.out.println("BestPlacePost pour "+p+" "+Thread.currentThread().getId());
+      //System.out.println("BestPlacePost pour "+p+" "+Thread.currentThread().getId());
 
       boolean overlay = p.isOverlay();
       int folder = p.folder;
       Plan pc;
       int n = getIndex(p);
-//      for( i=n+1; i<plan.length &&
-//      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
-//            (pc.isCatalog()
-//                  || pc.type==Plan.FOLDER
-//                  || pc.type==Plan.APERTURE
-//                  || pc.type==Plan.TOOL && pc instanceof PlanContour)
-//                  && p.projd.agree(pc.projd,null)); i++);
-      
+      //      for( i=n+1; i<plan.length &&
+      //      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
+      //            (pc.isCatalog()
+      //                  || pc.type==Plan.FOLDER
+      //                  || pc.type==Plan.APERTURE
+      //                  || pc.type==Plan.TOOL && pc instanceof PlanContour)
+      //                  && p.projd.agree(pc.projd,null)); i++);
+
       for( i=n+1; i<plan.length &&
-      ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
+            ((pc=plan[i]).type==Plan.FILTER || pc.type==Plan.FOV || !pc.flagOk ||
             !overlay && pc.isOverlay() && p.projd.agree(pc.projd,null)); i++);
 
       if( i>plan.length || i<=0 || i-1==n ) return;
@@ -2098,80 +2096,80 @@ public final class Calque extends JPanel implements Runnable {
     */
    protected Plan dupPlan(PlanImage p,String label,int type,boolean flagIns) throws Exception {
       if( !(p.isImage() || p instanceof PlanBG) ) throw new Exception("Not yet supported for this kind of plane");
-//      if( !p.hasAvailablePixels() ) throw new Exception("Not yet supported for this kind of plane");
-       if( !p.flagOk ) throw new Exception("This plane is not yet ready");
+      //      if( !p.hasAvailablePixels() ) throw new Exception("Not yet supported for this kind of plane");
+      if( !p.flagOk ) throw new Exception("This plane is not yet ready");
 
-       Plan pc=null;
-       synchronized( pile ) {
-          int n = getStackIndex(label);
-          int m = getIndex(p);
+      Plan pc=null;
+      synchronized( pile ) {
+         int n = getStackIndex(label);
+         int m = getIndex(p);
 
-          // Insertion du plan juste au-dessus, sans création de nouvelle vue
-          if( flagIns ) {
-             for( int i=n; i<m-1; i++ ) plan[i]=plan[i+1];
-             n = m-1;
-          }
+         // Insertion du plan juste au-dessus, sans création de nouvelle vue
+         if( flagIns ) {
+            for( int i=n; i<m-1; i++ ) plan[i]=plan[i+1];
+            n = m-1;
+         }
 
-          // Duplication effective
-          if( n!=m ) {
-             if( type==-1 ) type = p.type;
-             switch( type ) {
-                case Plan.IMAGERGB:
-                case Plan.IMAGECUBERGB :
-                   pc = new PlanImageRGB(aladin,p);
-                   break;
-                case Plan.IMAGEALGO :
-                   pc = new PlanImageAlgo(aladin,p);
-                   break;
-                case Plan.IMAGERSP :
-                   pc = new PlanImageResamp(aladin,p);
-                   break;
-                case Plan.IMAGEMOSAIC :
-                   pc = new PlanImageMosaic(aladin,p);
-                   break;
-                case Plan.IMAGE :
-                case Plan.IMAGEBLINK :
-                case Plan.IMAGECUBE :
-                   pc = new PlanImage(aladin,p);
-                   break;
-                case Plan.ALLSKYIMG :
-                   if( ((PlanBG)p).color ) pc = new PlanImageRGB(aladin,p);
-                   else pc = new PlanImage(aladin,p);
-                   break;
-                case Plan.IMAGEHUGE :
-                   pc = new PlanImage(aladin,p);
-                   ((PlanImage)pc).initZoom /= ((PlanImageHuge)p).getStep();
-                   break;
-             }
-             plan[n]=pc;
-             label = prepareLabel(label);
-             if( label==null ) label="["+p.label+"]";
-             pc.setLabel(label);
-             
-             // VOIR MODIF PF JAN 12 ci-dessous (ligne à supprimer pour revenir à l'état antérieur)
-//             pc.isOldPlan=false;
+         // Duplication effective
+         if( n!=m ) {
+            if( type==-1 ) type = p.type;
+            switch( type ) {
+               case Plan.IMAGERGB:
+               case Plan.IMAGECUBERGB :
+                  pc = new PlanImageRGB(aladin,p);
+                  break;
+               case Plan.IMAGEALGO :
+                  pc = new PlanImageAlgo(aladin,p);
+                  break;
+               case Plan.IMAGERSP :
+                  pc = new PlanImageResamp(aladin,p);
+                  break;
+               case Plan.IMAGEMOSAIC :
+                  pc = new PlanImageMosaic(aladin,p);
+                  break;
+               case Plan.IMAGE :
+               case Plan.IMAGEBLINK :
+               case Plan.IMAGECUBE :
+                  pc = new PlanImage(aladin,p);
+                  break;
+               case Plan.ALLSKYIMG :
+                  if( ((PlanBG)p).color ) pc = new PlanImageRGB(aladin,p);
+                  else pc = new PlanImage(aladin,p);
+                  break;
+               case Plan.IMAGEHUGE :
+                  pc = new PlanImage(aladin,p);
+                  ((PlanImage)pc).initZoom /= ((PlanImageHuge)p).getStep();
+                  break;
+            }
+            plan[n]=pc;
+            label = prepareLabel(label);
+            if( label==null ) label="["+p.label+"]";
+            pc.setLabel(label);
 
-          }  else {
-             p.isOldPlan=true;
-             pc=p;
-          }
-       }
+            // VOIR MODIF PF JAN 12 ci-dessous (ligne à supprimer pour revenir à l'état antérieur)
+            //             pc.isOldPlan=false;
 
-       suiteNew(pc);
+         }  else {
+            p.isOldPlan=true;
+            pc=p;
+         }
+      }
 
-       // MODIF PF JAN 12 pour que le nouveau plan deviennent celui de référence
-       if( flagIns ) {
-          pc.selected=false;
-          pc.active=false;
-       } else {
-          pc.folder=0;
-          pc.planReady(true);
-       }
-//       if( !flagIns ) pc.folder=0;
-//       pc.planReady(true);
-       
-       return pc;
-    }
+      suiteNew(pc);
+
+      // MODIF PF JAN 12 pour que le nouveau plan deviennent celui de référence
+      if( flagIns ) {
+         pc.selected=false;
+         pc.active=false;
+      } else {
+         pc.folder=0;
+         pc.planReady(true);
+      }
+      //       if( !flagIns ) pc.folder=0;
+      //       pc.planReady(true);
+
+      return pc;
+   }
 
    protected PlanImageResamp rspPlan(PlanImage p) {
       if( p.type!=Plan.IMAGE ) return null;
@@ -2199,11 +2197,11 @@ public final class Calque extends JPanel implements Runnable {
       p2.pixelsOrigin = p.getGreyPixels();
       p2.bitpix=8;
       p2.npix=1;
-      p2.setBufPixels8(p2.getPix8Bits(null, p2.pixelsOrigin, 8, p.width, p.height, p.dataMinFits, p.dataMaxFits, false));
+      p2.setBufPixels8(p2.getPix8Bits(null, p2.pixelsOrigin, 8, p.width, p.height, p.dataMinFits, p.dataMaxFits, false, 0,0,0));
       p2.calculPixelsZoom();
       p2.fmt=PlanImage.JPEG;   // Comme ça on n'inverse pas les pixels à la sauvegarde !!
       p2.video=PlanImage.VIDEO_NORMAL;
-      p2.cm = ColorMap.getCM(0,128,255,p2.video==PlanImage.VIDEO_INVERSE, 
+      p2.cm = CanvasColorMap.getCM(0,128,255,p2.video==PlanImage.VIDEO_INVERSE,
             aladin.configuration.getCMMap(),aladin.configuration.getCMFct());
       p2.cmControl[0] = 0; p2.cmControl[1] = 128; p2.cmControl[2] = 255;
       p2.pixMode = PlanImage.PIX_256;
@@ -2229,14 +2227,14 @@ public final class Calque extends JPanel implements Runnable {
    }
 
    protected int newPlanImage(InputStream inImg,String label, String from) {
-       Plan pc=null;
-       int n=-1;
-       n=getStackIndex(label);
-       label = prepareLabel(label);
-       plan[n] = pc = new PlanImage(aladin,inImg,label,from);
-       suiteNew(pc);
-       return n;
-    }
+      Plan pc=null;
+      int n=-1;
+      n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = pc = new PlanImage(aladin,inImg,label,from);
+      suiteNew(pc);
+      return n;
+   }
 
    /**
     * Interprétation de numéros d'extensions fits qui auraient été indiqués
@@ -2310,9 +2308,9 @@ public final class Calque extends JPanel implements Runnable {
 
       Thread runme = new Thread(this,"AladinFitsExtQuery");
       Util.decreasePriority(Thread.currentThread(), runme);
-//      runme.setPriority( Thread.NORM_PRIORITY -1);
+      //      runme.setPriority( Thread.NORM_PRIORITY -1);
       Plan.aladinQueryThread(runme);
-      
+
       runme.start();
    }
 
@@ -2390,7 +2388,7 @@ public final class Calque extends JPanel implements Runnable {
       if( file!=null ) numext = getNumExt(file);
 
       unlock();
-      
+
       Vector v = new Vector();
       try {
          for( int nExt=0; !allFitsExt(numext); nExt++ )  {
@@ -2436,9 +2434,9 @@ public final class Calque extends JPanel implements Runnable {
                      aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
                   }
                }
-           } else {
-              Aladin.trace(3,"One MEF extension not supported => ignored!");
-              break;
+            } else {
+               Aladin.trace(3,"One MEF extension not supported => ignored!");
+               break;
             }
 
             if( folder!=null ) folder.setPourcent(nExt);
@@ -2485,7 +2483,7 @@ public final class Calque extends JPanel implements Runnable {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
 
-      try { in.close(); } catch(Exception e) { e.printStackTrace(); } 
+      try { in.close(); } catch(Exception e) { e.printStackTrace(); }
 
       folder.planReady(true);
 
@@ -2496,7 +2494,7 @@ public final class Calque extends JPanel implements Runnable {
       p = (Plan)v.elementAt(0);
       if( v.size()==1 ) {
          if( label.charAt(0)=='=' ) label=label.substring(1);
-//         p.label = label; // On récupère le label du folder
+         //         p.label = label; // On récupère le label du folder
          p.setLabel(label);// On récupère le label du folder
       }
       p.planReady(true);
@@ -2513,7 +2511,7 @@ public final class Calque extends JPanel implements Runnable {
             }
          }
       }
-      
+
    }
 
    /**
@@ -2554,9 +2552,9 @@ public final class Calque extends JPanel implements Runnable {
       }
    }
 
-    /** Enregistre une image LOCALE dans le prochain plan libre.
-     * @param file   Le nom du fichier .fits, .fits.h ou .fits.gz
-     */
+   /** Enregistre une image LOCALE dans le prochain plan libre.
+    * @param file   Le nom du fichier .fits, .fits.h ou .fits.gz
+    */
    protected int newPlanImage(String file,MyInputStream inImg,String label,String from,Obj o,ResourceNode imgNode) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
@@ -2582,227 +2580,227 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-    /** Retourne true si le label indique que l'on veut un nouveau plan
-     * (ne commence pas par =)
-     * ou au contraire réutiliser un plan du même nom déjà existant */
-    static protected boolean isNewPlan(String label) {
-       return !(label!=null && label.length()>0 && label.charAt(0)=='=');
-    }
+   /** Retourne true si le label indique que l'on veut un nouveau plan
+    * (ne commence pas par =)
+    * ou au contraire réutiliser un plan du même nom déjà existant */
+   static protected boolean isNewPlan(String label) {
+      return !(label!=null && label.length()>0 && label.charAt(0)=='=');
+   }
 
-    /** Crée un plan Image sur la pile avec le label indiqué.
-     * Cette méthode est dédiée au plugin (voir Aladin.createAladinImage()
-     * @param name nom du plan proposé
-     * @return nom du plan effectif
-     */
-    protected String newPlanPlugImg(String name) {
-       int n=getStackIndex();
-       PlanImage p;
-       plan[n] = p = new PlanImage(aladin);
-       p.setLabel(name);
-       p.creatDefaultCM();
-       p.orig = PlanImage.COMPUTED;
-       p.flagOk=true;
-       return p.getLabel();
-    }
+   /** Crée un plan Image sur la pile avec le label indiqué.
+    * Cette méthode est dédiée au plugin (voir Aladin.createAladinImage()
+    * @param name nom du plan proposé
+    * @return nom du plan effectif
+    */
+   protected String newPlanPlugImg(String name) {
+      int n=getStackIndex();
+      PlanImage p;
+      plan[n] = p = new PlanImage(aladin);
+      p.setLabel(name);
+      p.creatDefaultCM();
+      p.orig = PlanImage.COMPUTED;
+      p.flagOk=true;
+      return p.getLabel();
+   }
 
-    /** Crée un plan Catalogue sur la pile avec le label indiqué.
-     * Cette méthode est dédiée au plugin (voir Aladin.createAladinCatalog()
-     * @param name nom du plan proposé
-     * @return nom du plan effectif
-     */
-    protected String newPlanPlugCat(String name) {
-       int n=getStackIndex();
-       Plan p;
-       plan[n] = p = new PlanCatalog(aladin);
-       p.setLabel(name);
-       return p.getLabel();
-    }
+   /** Crée un plan Catalogue sur la pile avec le label indiqué.
+    * Cette méthode est dédiée au plugin (voir Aladin.createAladinCatalog()
+    * @param name nom du plan proposé
+    * @return nom du plan effectif
+    */
+   protected String newPlanPlugCat(String name) {
+      int n=getStackIndex();
+      Plan p;
+      plan[n] = p = new PlanCatalog(aladin);
+      p.setLabel(name);
+      return p.getLabel();
+   }
 
-//    protected int newPlanImage(String file,MyInputStream inImg) {
-//    	return newPlanImage(file, inImg, null, null, null);
-//    }
+   //    protected int newPlanImage(String file,MyInputStream inImg) {
+   //    	return newPlanImage(file, inImg, null, null, null);
+   //    }
 
-    /** Enregistre une image RGB/FITS dans le prochain plan libre.
-     * @param file   Le nom du fichier
-     */
-    protected int newPlanImageRGB(String file,URL u, MyInputStream inImg) {
-       int n=getStackIndex();
-       if( n<0 ) return -1;
-       plan[n] = new PlanImageRGB(aladin,file,u,inImg);
+   /** Enregistre une image RGB/FITS dans le prochain plan libre.
+    * @param file   Le nom du fichier
+    */
+   protected int newPlanImageRGB(String file,URL u, MyInputStream inImg) {
+      int n=getStackIndex();
+      if( n<0 ) return -1;
+      plan[n] = new PlanImageRGB(aladin,file,u,inImg);
 
-       bestPlace(n);
-       suiteNew(plan[n]);
-       return n;
-    }
+      bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-    /** Enregistre une image RGB/FITS dans le prochain plan libre. */
-    protected int newPlanImageRGB(URL u,MyInputStream inImg,int orig, String label, String objet,
-          String param,String from,
-          int fmt,int res,
-          Obj o, ResourceNode imgNode) {
-       int n=getStackIndex(label);
-       label = prepareLabel(label);
-       plan[n] = new PlanImageRGB(aladin,inImg,orig,u,label,objet,param,from,
-             fmt,res,o, imgNode);
-       n=bestPlace(n);
-       suiteNew(plan[n]);
-       return n;
-    }
+   /** Enregistre une image RGB/FITS dans le prochain plan libre. */
+   protected int newPlanImageRGB(URL u,MyInputStream inImg,int orig, String label, String objet,
+         String param,String from,
+         int fmt,int res,
+         Obj o, ResourceNode imgNode) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanImageRGB(aladin,inImg,orig,u,label,objet,param,from,
+            fmt,res,o, imgNode);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-    /** Enregistre une image RGB/FITS dans le prochain plan libre.
-     * @param file   Le nom du fichier
-     * @param imgNode noeud décrivant l'image
-     */
-     protected int newPlanImageRGB(String file,URL u, MyInputStream inImg,ResourceNode imgNode) {
-        int n=getStackIndex();
-        plan[n] = new PlanImageRGB(aladin,file,u,inImg,imgNode);
+   /** Enregistre une image RGB/FITS dans le prochain plan libre.
+    * @param file   Le nom du fichier
+    * @param imgNode noeud décrivant l'image
+    */
+   protected int newPlanImageRGB(String file,URL u, MyInputStream inImg,ResourceNode imgNode) {
+      int n=getStackIndex();
+      plan[n] = new PlanImageRGB(aladin,file,u,inImg,imgNode);
 
-        n=bestPlace(n);
-        suiteNew(plan[n]);
-        return n;
-     }
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-     /** Enregistre un Allsky HEALPIX dans le prochain plan libre.
-      * @param file   Le nom du fichier
-      * @param imgNode noeud décrivant l'image
-      * @param label le label du plan, null sinon
-      * @param mode PlanBG.[DRAWPIXEL|DRAWPOLARISATION|DRAWANGLE]
-      * @param indice champ à lire
-      */
-     protected int newPlanHealpix(String file,MyInputStream inImg, String label,
-           int mode, int idxFieldToRead, boolean fromProperties) {
-        return newPlanHealpix(file,inImg,label,mode,idxFieldToRead,fromProperties,null,null);
-     }
-     protected int newPlanHealpix(String file,MyInputStream inImg, String label,
-              int mode, int idxFieldToRead, boolean fromProperties,String target,String radius) {
-         Coord c=getTargetBG(target,null);
-         double rad=getRadiusBG(target,radius,null);
-         int n=getStackIndex();
-         plan[n] = new PlanHealpix(aladin,file,inImg,label,mode,idxFieldToRead,fromProperties,c,rad);
+   /** Enregistre un Allsky HEALPIX dans le prochain plan libre.
+    * @param file   Le nom du fichier
+    * @param imgNode noeud décrivant l'image
+    * @param label le label du plan, null sinon
+    * @param mode PlanBG.[DRAWPIXEL|DRAWPOLARISATION|DRAWANGLE]
+    * @param indice champ à lire
+    */
+   protected int newPlanHealpix(String file,MyInputStream inImg, String label,
+         int mode, int idxFieldToRead, boolean fromProperties) {
+      return newPlanHealpix(file,inImg,label,mode,idxFieldToRead,fromProperties,null,null);
+   }
+   protected int newPlanHealpix(String file,MyInputStream inImg, String label,
+         int mode, int idxFieldToRead, boolean fromProperties,String target,String radius) {
+      Coord c=getTargetBG(target,null);
+      double rad=getRadiusBG(target,radius,null);
+      int n=getStackIndex();
+      plan[n] = new PlanHealpix(aladin,file,inImg,label,mode,idxFieldToRead,fromProperties,c,rad);
 
-         n=bestPlace(n);
-         suiteNew(plan[n]);
-         return n;
-      }
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
    /** Enregistre une image COLOR dans le prochain plan libre.
     * @param file   Le nom du fichier
     */
-    protected int newPlanImageColor(String file,URL u, MyInputStream inImg) {
-       int n=getStackIndex();
-       plan[n] = new PlanImageColor(aladin,file,u,inImg);
+   protected int newPlanImageColor(String file,URL u, MyInputStream inImg) {
+      int n=getStackIndex();
+      plan[n] = new PlanImageColor(aladin,file,u,inImg);
 
-       n=bestPlace(n);
-       suiteNew(plan[n]);
-       return n;
-    }
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-    /** Enregistre une image COLOR dans le prochain plan libre. */
-    protected int newPlanImageColor(URL u,MyInputStream inImg,int orig, String label, String objet,
-          String param,String from, int fmt,int res, Obj o, ResourceNode imgNode) {
-       int n=getStackIndex(label);
-       label = prepareLabel(label);
-       plan[n] = new PlanImageColor(aladin,inImg,orig,u,label,objet,param,from,
-             fmt,res,o, imgNode);
-       n=bestPlace(n);
-       suiteNew(plan[n]);
-       return n;
-    }
+   /** Enregistre une image COLOR dans le prochain plan libre. */
+   protected int newPlanImageColor(URL u,MyInputStream inImg,int orig, String label, String objet,
+         String param,String from, int fmt,int res, Obj o, ResourceNode imgNode) {
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      plan[n] = new PlanImageColor(aladin,inImg,orig,u,label,objet,param,from,
+            fmt,res,o, imgNode);
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-    /** Enregistre une image COLOR dans le prochain plan libre.
-     * @param file   Le nom du fichier
-     * @param imgNode noeud décrivant l'image
-     */
-     protected int newPlanImageColor(String file,URL u, MyInputStream inImg,ResourceNode imgNode) {
-        int n=getStackIndex();
-        plan[n] = new PlanImageColor(aladin,file,u,inImg,imgNode);
+   /** Enregistre une image COLOR dans le prochain plan libre.
+    * @param file   Le nom du fichier
+    * @param imgNode noeud décrivant l'image
+    */
+   protected int newPlanImageColor(String file,URL u, MyInputStream inImg,ResourceNode imgNode) {
+      int n=getStackIndex();
+      plan[n] = new PlanImageColor(aladin,file,u,inImg,imgNode);
 
-        n=bestPlace(n);
-        suiteNew(plan[n]);
-        return n;
-     }
-     
-     // Retourne true si le plan passé en paramètre peut servir à ajouter des outils draws
-     protected boolean planToolOk(Plan p, boolean flagWithFoV) {
-        return (p.type==Plan.TOOL || flagWithFoV && p.type==Plan.APERTURE) && p.isReady() && p.isSelectable();
-     }
-     
-     /** sélectionne et retourne le plan tool le plus adéquat, où le crée si nécessaire */
-     protected PlanTool selectPlanTool() { return (PlanTool)selectPlanTool1(false); }
-     
-     /** sélectionne et retourne le plan tool ou FoV (APERTURE), où crée un plan tool si nécessaire */
-     protected Plan selectPlanToolOrFoV() { return selectPlanTool1(true); }
-     
-     private Plan selectPlanTool1(boolean flagWithFoV) {
-        try {
-           Plan p = getFirstSelectedPlan();
-           ViewSimple v = aladin.view.getCurrentView();
-           int indexView = getIndex(v.pref);
-           if( planToolOk(p,flagWithFoV) && getIndex(p)<indexView ) return p;
-           Plan [] plan = getPlans();
-           for( int i=0; i<plan.length && i<indexView; i++ ) {
-              if( planToolOk(plan[i],flagWithFoV) ) {
-                 selectPlan(plan[i]);
-                 return plan[i];
-              }
-           }
-        } catch( Exception e ) { }
-        return createPlanTool(null);
-     }
-     
-     protected PlanTool newPlanTool(String label) { return createPlanTool(label); }
+      n=bestPlace(n);
+      suiteNew(plan[n]);
+      return n;
+   }
 
-     protected PlanTool createPlanTool(String label) {
-        int n=getStackIndex();
-        Plan p;
-        plan[n] = p = new PlanTool(aladin,label);
-        p.selected=true;
-        p.active = true;
-        Plan pref = getPlanRef();
-        p.projd = pref==null || !Projection.isOk(pref.projd)? null : 
-           new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
-                 90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
-        suiteNew(p);
-        aladin.command.resetPreviousDrawing();
-        return (PlanTool)p;
-     }
+   // Retourne true si le plan passé en paramètre peut servir à ajouter des outils draws
+   protected boolean planToolOk(Plan p, boolean flagWithFoV) {
+      return (p.type==Plan.TOOL || flagWithFoV && p.type==Plan.APERTURE) && p.isReady() && p.isSelectable();
+   }
 
-     protected PlanField createPlanField(String label,Coord center,double angle,boolean canbeRoll,boolean canbeMove) {
-        int n=getStackIndex();
-        Plan p;
-        plan[n] = p = new PlanField(aladin,label,center,angle,canbeRoll,canbeMove);
-        p.active = true;
-        suiteNew(p);
-        return (PlanField)p;
-     }
+   /** sélectionne et retourne le plan tool le plus adéquat, où le crée si nécessaire */
+   protected PlanTool selectPlanTool() { return (PlanTool)selectPlanTool1(false); }
 
-     protected int newPlanFov(String label, Fov[] fov) {
-        int n=getStackIndex();
-        plan[n] = new PlanFov(aladin,label,fov);
-        suiteNew(plan[n]);
-        return n;
-    }
+   /** sélectionne et retourne le plan tool ou FoV (APERTURE), où crée un plan tool si nécessaire */
+   protected Plan selectPlanToolOrFoV() { return selectPlanTool1(true); }
+
+   private Plan selectPlanTool1(boolean flagWithFoV) {
+      try {
+         Plan p = getFirstSelectedPlan();
+         ViewSimple v = aladin.view.getCurrentView();
+         int indexView = getIndex(v.pref);
+         if( planToolOk(p,flagWithFoV) && getIndex(p)<indexView ) return p;
+         Plan [] plan = getPlans();
+         for( int i=0; i<plan.length && i<indexView; i++ ) {
+            if( planToolOk(plan[i],flagWithFoV) ) {
+               selectPlan(plan[i]);
+               return plan[i];
+            }
+         }
+      } catch( Exception e ) { }
+      return createPlanTool(null);
+   }
+
+   protected PlanTool newPlanTool(String label) { return createPlanTool(label); }
+
+   protected PlanTool createPlanTool(String label) {
+      int n=getStackIndex();
+      Plan p;
+      plan[n] = p = new PlanTool(aladin,label);
+      p.selected=true;
+      p.active = true;
+      Plan pref = getPlanRef();
+      p.projd = pref==null || !Projection.isOk(pref.projd)? null :
+         new Projection("Myproj",Projection.WCS,pref.projd.alphai,pref.projd.deltai,
+               90*60,250,250,500,0,false,Calib.AIT,Calib.FK5);
+      suiteNew(p);
+      aladin.command.resetPreviousDrawing();
+      return (PlanTool)p;
+   }
+
+   protected PlanField createPlanField(String label,Coord center,double angle,boolean canbeRoll,boolean canbeMove) {
+      int n=getStackIndex();
+      Plan p;
+      plan[n] = p = new PlanField(aladin,label,center,angle,canbeRoll,canbeMove);
+      p.active = true;
+      suiteNew(p);
+      return (PlanField)p;
+   }
+
+   protected int newPlanFov(String label, Fov[] fov) {
+      int n=getStackIndex();
+      plan[n] = new PlanFov(aladin,label,fov);
+      suiteNew(plan[n]);
+      return n;
+   }
 
 
    /** le prochain plan devient un plan contenant les contours
-   * @param label  - nom du plan
-   * @param levels  - tableau des niveaux
-   * @param cAlgo  - algorithme de contour utilise
-   * @param useSmoothing  - utilisation du lissage ?
-   * @param useOnlyCurrentZoom  - calcul sur la vue courante uniquement ?
-   * @param indiceCouleurs  - tableau des indices dans Couleur.DC des couleurs de chaque niveau
-   */
+    * @param label  - nom du plan
+    * @param levels  - tableau des niveaux
+    * @param cAlgo  - algorithme de contour utilise
+    * @param useSmoothing  - utilisation du lissage ?
+    * @param useOnlyCurrentZoom  - calcul sur la vue courante uniquement ?
+    * @param indiceCouleurs  - tableau des indices dans Couleur.DC des couleurs de chaque niveau
+    */
    protected int newPlanContour(String label, PlanImage pimg, double[] levels,
-                                ContourAlgorithm cAlgo, boolean useSmoothing,
-                                int smoothingLevel, boolean useOnlyCurrentZoom,
-                                boolean reduceNoise, Color[] couleurs) {
+         ContourAlgorithm cAlgo, boolean useSmoothing,
+         int smoothingLevel, boolean useOnlyCurrentZoom,
+         boolean reduceNoise, Color[] couleurs) {
       int n=getStackIndex();
       if (levels == null) plan[n] = new PlanContour(aladin,label);
       else {
          Color coul = PlanContour.getNextColor(aladin.calque);
          plan[n] = new PlanContour(aladin,label, pimg, levels, cAlgo, useSmoothing,
-                                   smoothingLevel, useOnlyCurrentZoom,
-                                   reduceNoise, couleurs, coul);
+               smoothingLevel, useOnlyCurrentZoom,
+               reduceNoise, couleurs, coul);
       }
       n=bestPlace(n);
       suiteNew(plan[n]);
@@ -2810,11 +2808,11 @@ public final class Calque extends JPanel implements Runnable {
    }
 
 
-  /** le prochain plan libre devient un plan de champ de vue.
-   * @param target Nm de l'objet ou coordonnees
-   * @param roll Angle de rotation par rapport au nord
-   * @param instr le nom du plan et de l'instrument
-   */
+   /** le prochain plan libre devient un plan de champ de vue.
+    * @param target Nm de l'objet ou coordonnees
+    * @param roll Angle de rotation par rapport au nord
+    * @param instr le nom du plan et de l'instrument
+    */
    protected int newPlanField(String target,double roll,String instr,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
@@ -2858,9 +2856,9 @@ public final class Calque extends JPanel implements Runnable {
    }
 
 
-  /** Positionnement du centre des plans FoV en attente de resolution
-   * Simbad. Ces plans ont leur flagOk a false.
-   */
+   /** Positionnement du centre des plans FoV en attente de resolution
+    * Simbad. Ces plans ont leur flagOk a false.
+    */
    protected void setCenterForField(double al,double del) {
       int i;
       for( i=0; i<plan.length; i++ ) {
@@ -2868,7 +2866,7 @@ public final class Calque extends JPanel implements Runnable {
          ((PlanField)plan[i]).resolveTarget(al,del);
       }
    }
-   
+
    /** Extraction d'un tranche d'un cube. Si n==-1, tranche courante */
    protected void newPlanImageFromBlink(PlanImageBlink cube, int frame) throws Exception {
       if( frame==-1 ) frame = aladin.view.getView(cube).cubeControl.lastFrame;
@@ -2883,18 +2881,18 @@ public final class Calque extends JPanel implements Runnable {
       pi.flagOk=true;
       pi.type=Plan.IMAGE;
       pi.copyright = "Extract from "+cube.label+" (frame #"+(frame+1)+")";
-//      pi.setBufPixels8( cube.getFrame(n) );
+      //      pi.setBufPixels8( cube.getFrame(n) );
    }
-   
+
    /** Création d'un plan image à partir des pixels visibles dans la vue passée en paramètre */
    protected void newPlanImageByCrop(final ViewSimple v,final RectangleD rcrop,final double resMult,final boolean fullRes) {
       final double zoom = v.zoom;
       (new Thread("crop"){
-        @Override
-        public void run() {
-           v.cropArea(rcrop,null,zoom,resMult,fullRes,true);
-           repaintAll();
-        }
+         @Override
+         public void run() {
+            v.cropArea(rcrop,null,zoom,resMult,fullRes,true);
+            repaintAll();
+         }
       }).start();
    }
 
@@ -2923,7 +2921,7 @@ public final class Calque extends JPanel implements Runnable {
 
    /** Création d'un nouveau plan catalogue avec les sources
     *  sélectionnées. Je sélectionne tous les nouveaux objets
-   */
+    */
    protected void newPlanCatalogBySelectedObjet(boolean uniqTable) {newPlanCatalogBySelectedObjet("Select.src",uniqTable); }
    protected void newPlanCatalogBySelectedObjet(String name,boolean uniqTable) {
       Vector v = aladin.view.getSelectedObjet();
@@ -2988,7 +2986,7 @@ public final class Calque extends JPanel implements Runnable {
       if(aladin.calque.getPlanRef()!=null) p.objet = aladin.calque.getPlanRef().objet;
       p.setActivated(true);
       p.pcat.createDefaultProj();
-//      p.setSourceType(Source.getDefaultType(vSources.size()));
+      //      p.setSourceType(Source.getDefaultType(vSources.size()));
 
       return p;
    }
@@ -3015,14 +3013,14 @@ public final class Calque extends JPanel implements Runnable {
       return info.toString();
    }
 
-  /** Enregistre un catalogue dans le prochain plan libre.
-   * @param u     l'URL qu'il va falloir appeler
-   * @param label le nom du plan (dans la pile des plans)
-   * @param objet le target central (objet ou coord)
-   * @param param les parametres du plan (radius...)
-   * @param from  l'origine des donnees
-   * @param Server le serveur d'origine
-   */
+   /** Enregistre un catalogue dans le prochain plan libre.
+    * @param u     l'URL qu'il va falloir appeler
+    * @param label le nom du plan (dans la pile des plans)
+    * @param objet le target central (objet ou coord)
+    * @param param les parametres du plan (radius...)
+    * @param from  l'origine des donnees
+    * @param Server le serveur d'origine
+    */
    protected int newPlanCatalog(URL u,String label, String objet,String param,String from, Server server) {
       return newPlanCatalog(u,null,label,objet,param,from,server);
    }
@@ -3035,9 +3033,9 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-  /** Enregistre un catalog LOCAL dans le prochain plan libre.
-   * @param file   Le nom du fichier FITS
-   */
+   /** Enregistre un catalog LOCAL dans le prochain plan libre.
+    * @param file   Le nom du fichier FITS
+    */
    protected int newPlanCatalog(String file) { return newPlanCatalog(file,null); }
    protected int newPlanCatalog(String file,MyInputStream in) {
       int n=getStackIndex();
@@ -3046,7 +3044,7 @@ public final class Calque extends JPanel implements Runnable {
       //PlanFilter.newPlan(plan[n]);
       return n;
    }
-   
+
    /** Generation d'un plan Image à partir d'un crop de la vue passée en paramètre (doit être un PlanBG) */
    PlanImage createCropImage(ViewSimple v ) throws Exception {
       if( !(v.pref instanceof PlanBG) ) throw new Exception("Cropping only on HiPS");
@@ -3058,7 +3056,7 @@ public final class Calque extends JPanel implements Runnable {
       int n =  newPlanCatalog(in,label);
       return plan[n];
    }
-   
+
    /** Ajoute un plan déjà préparé dans la pile */
    protected int newPlan(Plan p) {
       int n=getStackIndex();
@@ -3067,9 +3065,9 @@ public final class Calque extends JPanel implements Runnable {
       return n;
    }
 
-  /** Pour VOApp et ExtApp
-   * @param in  L'input Stream
-   */
+   /** Pour VOApp et ExtApp
+    * @param in  L'input Stream
+    */
    protected int newPlanCatalog(MyInputStream in,String label) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
@@ -3085,7 +3083,7 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
-   
+
    /** Subtilité. Si le nom du plan désigne commence par =, Aladin
     * doit réutiliser une case de la pile.
     * Si le plan désigné est un numéro (=@nn), je retourne le label du plan
@@ -3155,7 +3153,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return v;
    }
-   
+
    /** Découpage d'un catalogue : une table par plan */
    protected void splitCatalog(PlanCatalog p) {
       if( p.getNbTable()==1 ) return;
@@ -3176,10 +3174,10 @@ public final class Calque extends JPanel implements Runnable {
 
    // thomas (AVO)
    /** Enregistre un catalog via InputStream dans le prochain plan libre.
-	* @param dis  L'input Stream
-	* @param aladinLabel nom du plan
-	* @param origin origine du catalogue
-	*
+    * @param dis  L'input Stream
+    * @param aladinLabel nom du plan
+    * @param origin origine du catalogue
+    *
 	protected int newPlanCatalog(MyInputStream in, String label, String origin) {
 	   int n=getFirstFree();
 	   if( n<0 ) return -1;
@@ -3191,23 +3189,23 @@ public final class Calque extends JPanel implements Runnable {
 
 // thomas
   /** Cree un nouveau PlanCatalog vide
-   */
+    */
    protected int newPlanCatalog() {
       int n=getStackIndex();
       plan[n] = new PlanCatalog(aladin);
-      
-//	  // la projection est celle du plan de reference
-//	  Plan pRef = getPlanRef();
-//	  plan[n].projd = (pRef!=null)?pRef.projd:null;
-	  
-	  // La projection est celle de la vue de base
-	  Projection proj = aladin.view.getCurrentView().getProj();
-	  plan[n].projd = proj==null ? null : proj.copy();
+
+      //	  // la projection est celle du plan de reference
+      //	  Plan pRef = getPlanRef();
+      //	  plan[n].projd = (pRef!=null)?pRef.projd:null;
+
+      // La projection est celle de la vue de base
+      Projection proj = aladin.view.getCurrentView().getProj();
+      plan[n].projd = proj==null ? null : proj.copy();
 
       suiteNew(plan[n]);
       return n;
    }
-// fin thomas
+   // fin thomas
 
 
    /** Retourne true si le plan de base est un plan Background */
@@ -3216,19 +3214,19 @@ public final class Calque extends JPanel implements Runnable {
       return p!=null && p.type==Plan.ALLSKYIMG;
    }
 
-//   private int planBGLaunching = 0;
-//   synchronized private void launchPlanBG() { planBGLaunching++; }
-//   synchronized protected void planBGLaunched() { planBGLaunching--; }
-//   
-//   protected boolean isPlanBGSync() {
-//      if( planBGLaunching>0  ) {
-//         aladin.trace(3,"Waiting planBG (in creation phase)");
-//         return false;
-//      }
-////      aladin.trace(3,"All planBG has been launched");
-//      return true;
-//   }
-   
+   //   private int planBGLaunching = 0;
+   //   synchronized private void launchPlanBG() { planBGLaunching++; }
+   //   synchronized protected void planBGLaunched() { planBGLaunching--; }
+   //
+   //   protected boolean isPlanBGSync() {
+   //      if( planBGLaunching>0  ) {
+   //         aladin.trace(3,"Waiting planBG (in creation phase)");
+   //         return false;
+   //      }
+   ////      aladin.trace(3,"All planBG has been launched");
+   //      return true;
+   //   }
+
    // Détermination du target de démarrage pour un plan BG
    private Coord getTargetBG(String target,TreeNodeAllsky gSky) {
       Coord c=null;
@@ -3237,7 +3235,7 @@ public final class Calque extends JPanel implements Runnable {
             if( !View.notCoord(target) ) c = new Coord(target);
             else c = aladin.view.sesame(target);
          } catch( Exception e ) { e.printStackTrace(); }
-         
+
       } else {
          if( gSky!=null && gSky.getTarget()!=null ) c=gSky.getTarget();
          else {
@@ -3246,7 +3244,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return c;
    }
-   
+
    // Détermination du radius de démarrage pour un plan BG
    private double getRadiusBG(String target,String radius,TreeNodeAllsky gSky) {
       double rad=-1;
@@ -3263,7 +3261,7 @@ public final class Calque extends JPanel implements Runnable {
       }
       return rad;
    }
-   
+
    /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un flux */
    protected int newPlanMOC(MyInputStream in,String label) {
       int n=getStackIndex(label);
@@ -3275,7 +3273,7 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
-   
+
    /** Création d'un plan Healpix Multi-Order Coverage Map à partir d'un MOC */
    protected int newPlanMOC(HealpixMoc moc,String label) {
       int n=getStackIndex(label);
@@ -3287,60 +3285,60 @@ public final class Calque extends JPanel implements Runnable {
       suiteNew(plan[n]);
       return n;
    }
-   
+
    /** Création d'un plan BG */
    public int newPlanBG(String path, String label, String target,String radius) { return newPlanBG(null,path,null,label,target,radius); }
    public int newPlanBG(TreeNodeAllsky gSky, String label, String target,String radius) { return newPlanBG(gSky,null,null,label,target,radius); }
    public int newPlanBG(URL url, String label, String target,String radius) { return newPlanBG(null,null,url,label,target,radius); }
-   
-   
+
+
    public int newPlanBG(TreeNodeAllsky gSky,String path,URL url, String label, String target,String radius) {
       int n=getStackIndex(label);
       label = prepareLabel(label);
       Coord c=getTargetBG(target,gSky);
       double rad=getRadiusBG(target,radius,gSky);
-      
+
       Plan p;
       String startingTaskId = aladin.synchroPlan.start("Calque.newPlanBG/creating"+(label==null?"":"/"+label));
       if( gSky!=null ) {
          plan[n] = p = gSky.isProgen()  ? new PlanBGProgen(aladin,gSky,label, c, rad,startingTaskId) :
-                       gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
-                       gSky.isMap()     ? new PlanHealpix(aladin,gSky,label, c,rad,startingTaskId) :
-                       gSky.isCube()    ? new PlanBGCube(aladin, gSky, label, c,rad,startingTaskId):
-                                          new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
+            gSky.isCatalog() ? new PlanBGCat(aladin,gSky,label, c, rad,startingTaskId) :
+               gSky.isMap()     ? new PlanHealpix(aladin,gSky,label, c,rad,startingTaskId) :
+                  gSky.isCube()    ? new PlanBGCube(aladin, gSky, label, c,rad,startingTaskId):
+                     new PlanBG(aladin, gSky, label, c,rad,startingTaskId);
       } else {
-         plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId) 
-                                  : new PlanBG(aladin, url, label, c, rad, startingTaskId);
+         plan[n] = p = path!=null ? new PlanBG(aladin, path, label, c, rad,startingTaskId)
+         : new PlanBG(aladin, url, label, c, rad, startingTaskId);
       }
       n=bestPlace(n);
       suiteNew(p);
       return n;
    }
-   
-   
-//   /** Création d'un plan BG à partir d'un répertoire local */
-//   public int newPlanBG(String path,String label) {
-//	   return newPlanBG(path, label,null,-1);
-//   }
-//   /**
-//    *
-//    * @param path
-//    * @param coo coordonnées de la position centrale de la vue en J2000, ou null si non spécifiée
-//    * @param radius taille du champ en degrés ou <=0 si non spécifié
-//    * @return
-//    */
-//   public int newPlanBG(String path, String label, Coord coo, double radius) {
-//      launchPlanBG();
-//      int n=getStackIndex(label);
-//      label = prepareLabel(label);
-//      PlanBG p;
-//      plan[n] = p = new PlanBG(aladin, path, label, coo, radius);
-//      suiteNew(p);
-//      p.modifyProj( Calib.getProjName(Calib.AIT) );
-//      //      p.initZoom = 1./32;
-//      //      aladin.calque.repaintAll();
-//      return n;
-//   }
+
+
+   //   /** Création d'un plan BG à partir d'un répertoire local */
+   //   public int newPlanBG(String path,String label) {
+   //	   return newPlanBG(path, label,null,-1);
+   //   }
+   //   /**
+   //    *
+   //    * @param path
+   //    * @param coo coordonnées de la position centrale de la vue en J2000, ou null si non spécifiée
+   //    * @param radius taille du champ en degrés ou <=0 si non spécifié
+   //    * @return
+   //    */
+   //   public int newPlanBG(String path, String label, Coord coo, double radius) {
+   //      launchPlanBG();
+   //      int n=getStackIndex(label);
+   //      label = prepareLabel(label);
+   //      PlanBG p;
+   //      plan[n] = p = new PlanBG(aladin, path, label, coo, radius);
+   //      suiteNew(p);
+   //      p.modifyProj( Calib.getProjName(Calib.AIT) );
+   //      //      p.initZoom = 1./32;
+   //      //      aladin.calque.repaintAll();
+   //      return n;
+   //   }
 
    /** Creation d'un plan à partir d'un nom de fichier ou d'une url
     * issu d'une source */
@@ -3374,24 +3372,24 @@ public final class Calque extends JPanel implements Runnable {
       return plan[n];
    }
 
-  /** Actions a faire apres la demande de creation d'un nouveau plan */
+   /** Actions a faire apres la demande de creation d'un nouveau plan */
    protected void suiteNew(Plan p) {
       if( p==null ) return;
-//      bestPlacePost(p);
+      //      bestPlacePost(p);
 
       // Affectation du plan aux vues qui utilisaient son prédécesseur
       // dans le cas d'une réutilisation de plan
       aladin.view.adjustViews(p);
-      
+
       select.repaint();
 
-//      if( select!=null ) select.clinDoeil();
+      //      if( select!=null ) select.clinDoeil();
       aladin.toolBox.toolMode();
    }
 
-  /** Test d'un eventuel plan selectionne (label enfonce)
-   * @return <I>true</I> si au moins un plan, sinon <I>false</I>
-   */
+   /** Test d'un eventuel plan selectionne (label enfonce)
+    * @return <I>true</I> si au moins un plan, sinon <I>false</I>
+    */
    protected boolean noSelected() {
       Plan [] plan = getPlans();
       for( int i=0; i<plan.length; i++ ) {
@@ -3403,7 +3401,7 @@ public final class Calque extends JPanel implements Runnable {
    private void permute(int s,int t,int n) {
       int sens=(s<t)?1:-1;
       if( sens==-1) t++;
-//System.out.println("de "+s+"/"+plan[s].label+" vers "+t+"/"+plan[t].label+" pour "+n+"x (sens="+sens+")");
+      //System.out.println("de "+s+"/"+plan[s].label+" vers "+t+"/"+plan[t].label+" pour "+n+"x (sens="+sens+")");
 
       for( int i=0; i<n; i++ ) {
          int k=(sens==-1)?s+i:s;
@@ -3423,358 +3421,357 @@ public final class Calque extends JPanel implements Runnable {
     * @param source Le plan a deplacer
     * @param target Le nouvel emplacement
     */
-    public void permute(Plan source, Plan target) {
-       int i,k=0,m=0;
-       int n=1;      // nombre de plans a permuter
-       int targetFolder=0;
+   public void permute(Plan source, Plan target) {
+      int i,k=0,m=0;
+      int n=1;      // nombre de plans a permuter
+      int targetFolder=0;
 
- //System.out.println("Permutation "+source.label+" vers "+target.label);
-       boolean isCollapsed = isCollapsed(target) || target.collapse;
+      //System.out.println("Permutation "+source.label+" vers "+target.label);
+      boolean isCollapsed = isCollapsed(target) || target.collapse;
 
-       // Determination du niveau du folder (plan target)
-       targetFolder=target.folder;
-       if( target.type==Plan.FOLDER ) targetFolder++;
+      // Determination du niveau du folder (plan target)
+      targetFolder=target.folder;
+      if( target.type==Plan.FOLDER ) targetFolder++;
 
-       synchronized( pile ) {
+      synchronized( pile ) {
 
-          // Y a-t-il plusieurs plans consecutifs a permuter (folder)
-          if( source.type==Plan.FOLDER ) {
-             Plan p[] = getFolderPlan(source);
-             int deltaFolder = targetFolder-source.folder;
-             //System.out.println("deltaFolder="+deltaFolder);
+         // Y a-t-il plusieurs plans consecutifs a permuter (folder)
+         if( source.type==Plan.FOLDER ) {
+            Plan p[] = getFolderPlan(source);
+            int deltaFolder = targetFolder-source.folder;
+            //System.out.println("deltaFolder="+deltaFolder);
 
-             source.folder+=deltaFolder;
-             for( i=0; i<p.length; i++ ) p[i].folder+=deltaFolder;
-             n=p.length+1;
+            source.folder+=deltaFolder;
+            for( i=0; i<p.length; i++ ) p[i].folder+=deltaFolder;
+            n=p.length+1;
 
-          } else source.folder=targetFolder;
+         } else source.folder=targetFolder;
 
-          for( i=0; i<plan.length; i++ ) {
-             if( source==plan[i] ) k=i;
-             else if( target==plan[i] ) m=i;
-          }
-          permute(k,m,n);
-
-          // Si le target était un folder collapsé, on le décollapse
-          if( isCollapsed ) {
-             Plan p[] = getFolderPlan( getFolder(target) );
-             for( i=0; i<p.length; i++ ) p[i].collapse=false;
-          }
-       }
-
-       // thomas
-       // si la source ou la cible est un PlanCatalog, l'update pour un filtre (voir ci-dessous) est inutile
-       if( source.isCatalog() ) {
-          PlanFilter.updatePlan(source,k,m);
-          return;
-       }
-       if( target.isCatalog() ) {
-          PlanFilter.updatePlan(target,m,k);
-          return;
-       }
-
-       if( source.type==Plan.FILTER ) {
-          ((PlanFilter)source).positionChange();
-       }
-       if( target.type==Plan.FILTER ) {
-          ((PlanFilter)target).positionChange();
-       }
-    }
-
-    /** Retourne le premier plan catalogue de la pile
-     */
-      protected Plan getFirstCatalog() {
-         for( int i=0; i<plan.length; i++ ) {
-            if( plan[i].isReady() && plan[i].isSimpleCatalog() ) return plan[i];
+         for( i=0; i<plan.length; i++ ) {
+            if( source==plan[i] ) k=i;
+            else if( target==plan[i] ) m=i;
          }
-         return null;
+         permute(k,m,n);
+
+         // Si le target était un folder collapsé, on le décollapse
+         if( isCollapsed ) {
+            Plan p[] = getFolderPlan( getFolder(target) );
+            for( i=0; i<p.length; i++ ) p[i].collapse=false;
+         }
       }
 
-  /** Retourne le numero du premier plan selectionne
-   * @return le numero du plan, <I>-1</I> si aucun
-   */
-    protected int getFirstSelected() {
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i].selected ) return i;
-       }
-       return -1;
-    }
+      // thomas
+      // si la source ou la cible est un PlanCatalog, l'update pour un filtre (voir ci-dessous) est inutile
+      if( source.isCatalog() ) {
+         PlanFilter.updatePlan(source,k,m);
+         return;
+      }
+      if( target.isCatalog() ) {
+         PlanFilter.updatePlan(target,m,k);
+         return;
+      }
+
+      if( source.type==Plan.FILTER ) {
+         ((PlanFilter)source).positionChange();
+      }
+      if( target.type==Plan.FILTER ) {
+         ((PlanFilter)target).positionChange();
+      }
+   }
+
+   /** Retourne le premier plan catalogue de la pile
+    */
+   protected Plan getFirstCatalog() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].isReady() && plan[i].isSimpleCatalog() ) return plan[i];
+      }
+      return null;
+   }
+
+   /** Retourne le numero du premier plan selectionne
+    * @return le numero du plan, <I>-1</I> si aucun
+    */
+   protected int getFirstSelected() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].selected ) return i;
+      }
+      return -1;
+   }
 
    /** Retourne le premier plan sélectionné, ou null si aucun */
-    protected Plan getFirstSelectedPlan() {
-       int n = getFirstSelected();
-       if( n<0 ) return null;
-       return plan[n];
-    }
+   protected Plan getFirstSelectedPlan() {
+      int n = getFirstSelected();
+      if( n<0 ) return null;
+      return plan[n];
+   }
 
    /** Retourne le premier plan Catalog sélectionné, ou null si aucun */
-    protected PlanCatalog getFirstSelectedPlanCatalog() {
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i].selected && plan[i].isSimpleCatalog() ) return (PlanCatalog)plan[i];
-       }
-       return null;
+   protected PlanCatalog getFirstSelectedPlanCatalog() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].selected && plan[i].isSimpleCatalog() ) return (PlanCatalog)plan[i];
+      }
+      return null;
    }
 
    /** Retourne le premier plan Image sélectionné, ou null si aucun */
-    protected PlanImage getFirstSelectedPlanImage() {
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i].selected
-                && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return (PlanImage)plan[i];
-       }
-       return null;
+   protected PlanImage getFirstSelectedPlanImage() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].selected
+               && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return (PlanImage)plan[i];
+      }
+      return null;
    }
 
-    /** Retourne le premier plan Image simple sélectionné, ou null si aucun */
-    protected PlanImage getFirstSelectedSimpleImage() {
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i].selected && plan[i].isImage() ) return (PlanImage)plan[i];
-       }
-       return null;
+   /** Retourne le premier plan Image simple sélectionné, ou null si aucun */
+   protected PlanImage getFirstSelectedSimpleImage() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].selected && plan[i].isImage() ) return (PlanImage)plan[i];
+      }
+      return null;
    }
 
-    /** Retourne le premier plan Image sélectionné, ou null si aucun */
-    protected PlanImage getFirstSelectedImage() {
-       for( int i=0; i<plan.length; i++ ) {
-          if( plan[i].selected && plan[i].isPixel() ) return (PlanImage)plan[i];
-       }
-       return null;
+   /** Retourne le premier plan Image sélectionné, ou null si aucun */
+   protected PlanImage getFirstSelectedImage() {
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].selected && plan[i].isPixel() ) return (PlanImage)plan[i];
+      }
+      return null;
    }
 
 
    /** Retourne le numero du premier plan selectionne
     * @return le numero du plan, <I>-1</I> si aucun
     */
-    protected int getLastSelected() {
-       for( int i=plan.length-1; i>=0; i-- ) {
-          if( plan[i].selected ) return i;
-       }
-       return -1;
-    }
+   protected int getLastSelected() {
+      for( int i=plan.length-1; i>=0; i-- ) {
+         if( plan[i].selected ) return i;
+      }
+      return -1;
+   }
 
-    /** Retourne la liste des plans sélectionnés */
-    protected Vector getSelectedPlanes() {
-       Vector v = new Vector(10);
+   /** Retourne la liste des plans sélectionnés */
+   protected Vector getSelectedPlanes() {
+      Vector v = new Vector(10);
 
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( !plan[i].selected ) continue;
-          v.addElement(plan[i]);
-       }
-       return v;
-    }
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( !plan[i].selected ) continue;
+         v.addElement(plan[i]);
+      }
+      return v;
+   }
 
-    /** Retourne la liste des plans sélectionnés */
-    protected Vector getSelectedSimpleImage() {
-       Vector v = new Vector(10);
+   /** Retourne la liste des plans sélectionnés */
+   protected Vector getSelectedSimpleImage() {
+      Vector v = new Vector(10);
 
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( !plan[i].flagOk || !plan[i].selected || !plan[i].isSimpleImage() ) continue;
-          v.addElement(plan[i]);
-       }
-       return v;
-    }
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( !plan[i].flagOk || !plan[i].selected || !plan[i].isSimpleImage() ) continue;
+         v.addElement(plan[i]);
+      }
+      return v;
+   }
 
-    /** Sélectionne tous les plans images simples et en retourne la liste */
-    protected Vector setSelectedSimpleImage() {
-       Vector v = new Vector(10);
+   /** Retourne la totalité des images  */
+   protected Vector getSelectedImagesWithPixels() {
+      Vector v = new Vector(10);
 
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          if( !plan[i].flagOk || !plan[i].isSimpleImage() ) continue;
-          plan[i].selected=true;
-          v.addElement(plan[i]);
-       }
-       return v;
-    }
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( !plan[i].flagOk || !plan[i].selected || !plan[i].hasAvailablePixels() ) continue;
+         v.addElement(plan[i]);
+      }
+      return v;
+   }
 
-    /** Change pour toute la pile le niveau d'opacité des images */
-    protected void setOpacityLevelImage(float opacity) {
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( !p.flagOk || !p.isSimpleImage() ) continue;
-          p.setOpacityLevel(opacity);
-       }
-    }
-    
-    
-    /** Change pour tous les plans sélectionnés le niveau d'opacité */
-    protected void setOpacityLevel(float opacity) {
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( !p.flagOk || !p.selected || !p.hasCanBeTranspState() ) continue;
-          p.setOpacityLevel(opacity);
-          if( opacity>=0.1 ) p.setActivated(true);
-       }
-    }
-
-    /** Change pour tous les plans sélectionnés le facteur de taille des sources */
-    protected void setScalingFactor(float scalingFactor) {
-       Plan [] plan = getPlans();
-       for( int i=0; i<plan.length; i++ ) {
-          Plan p = plan[i];
-          if( !p.flagOk || !p.selected || !(p.isCatalog() || p.type==Plan.TOOL) ) continue;
-          p.setScalingFactor(scalingFactor);
-       }
-    }
-
-    /** Détermine si le plan doit être activé comme un plan de référence ou simplement afficher en overlay */
-    protected boolean mustBeSetPlanRef(Plan p) {
-       boolean setRef=false;
-       
-       // prochaine vue à utiliser
-       ViewSimple v = aladin.view.viewSimple[ aladin.view.getLastNumView(p) ];
-       
-       // Juste pour du débuging
-       String sDebug=null;
-
-       // La pile est vide => ref
-       if( aladin.calque.isFreeX(p) ) { setRef=true; sDebug="Stack Vide"; }
-
-       // Il s'agit d'un simple remplacement de plan => activate 
-       else if( p.isOldPlan ) { setRef=false; sDebug="Flag IsOldPlan=true"; }
-
-       // Dans une case vide sans être un simple overlay => ref
-       else if( v.isFree() && !p.isOverlay() ) { setRef=true; sDebug="Image dans la prochaine view vide"; }
-
-       // Le plan de ref est une image normal et on charge une autre image => ref
-       else if( v.pref!=null && v.pref.isImage() && p.isImage() ) { setRef=true; sDebug="Image sur image"; }
-
-       // Le plan de ref est catalogue normal  et on charge image ou un plan allsky => ref
-       else if( v.pref!=null && (v.pref.isSimpleCatalog() && (p.isImage() || p instanceof PlanBG)) ) { setRef=true; sDebug="Image ou Allsky sur catalogue"; }
-
-       // Le plan de ref n'est pas allsky et le catalogue n'est pas visible
-       else if( v.pref!=null && !(v.pref instanceof PlanBG) && p.isSimpleCatalog() && !p.isViewable() ) { setRef=true; sDebug="Catalogue non visible autrement"; }
-       
-       // Dans le cas d'un multiview on priviligiera la création du plan
-       else if( aladin.view.isMultiView() && p.isImage() ) { setRef=true; sDebug="Image sur multivue"; }
-       
-       aladin.trace(4,"Calque.mustBeSetPlanRef("+p.label+") => "+setRef+(sDebug!=null?" ("+sDebug+")":""));
-       return setRef;
-    }
+   /** Change pour toute la pile le niveau d'opacité des images */
+   protected void setOpacityLevelImage(float opacity) {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( !p.flagOk || !p.isSimpleImage() ) continue;
+         p.setOpacityLevel(opacity);
+      }
+   }
 
 
-    /** Retourne true si le plan passé en paramètre peut être transparent
-     *  Vérifie que la compatibilité des projections
-     */
-    protected boolean canBeTransparent(Plan p) {
-       boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
-       if( p==null || p.type==Plan.FILTER || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
-          if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
-          return false;
-       }
-       if( p.isOverlay() ) {
-          p.setDebugFlag(Plan.CANBETRANSP,true);
-          return true;
-       }
-       if( (p.isImage() || p.type==Plan.ALLSKYIMG) && !aladin.configuration.isTransparent() ) return false;
-       if( p.type==Plan.ALLSKYIMG && !isRefForVisibleView && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+   /** Change pour tous les plans sélectionnés le niveau d'opacité */
+   protected void setOpacityLevel(float opacity) {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( !p.flagOk || !p.selected || !p.hasCanBeTranspState() ) continue;
+         p.setOpacityLevel(opacity);
+         if( opacity>=0.1 ) p.setActivated(true);
+      }
+   }
 
-       // S'il s'agit d'un folder, il faut qu'il contienne au moins un plan qui peut être transparent
-       boolean folderTrans=true;
-       if( p instanceof PlanFolder ) {
-          folderTrans=false;
-          Plan [] list = getFolderPlan(p);
-          for( Plan p1 : list ) {
-             if( canBeTransparent(p1) ) { folderTrans=true; break; }
-          }
-       }
-       if( folderTrans ) {
-          p.setDebugFlag(Plan.CANBETRANSP,true);
-          return true;
-       }
-       
-       if( !p.flagOk  || !folderTrans /* !planeTypeCanBeTrans(p) */
-             || !Projection.isOk(p.projd) || p.isRefForVisibleView()
-             || p.isImage() && p.projd.isLargeField() ) {
-           p.setDebugFlag(Plan.CANBETRANSP,false);
-           return false;
-       }
+   /** Change pour tous les plans sélectionnés le facteur de taille des sources */
+   protected void setScalingFactor(float scalingFactor) {
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         Plan p = plan[i];
+         if( !p.flagOk || !p.selected || !(p.isCatalog() || p.type==Plan.TOOL) ) continue;
+         p.setScalingFactor(scalingFactor);
+      }
+   }
 
-       ViewSimple vc = aladin.view.getCurrentView();
-       Plan plan[] = getPlans();
-       boolean audessus=true;
-       for( int i=0; i<plan.length; i++ ) {
-          if( audessus ) { if( plan[i]==p ) audessus=false; continue; }
-          if( /*!plan[i].ref*/ !plan[i].isRefForVisibleView() || !Projection.isOk(plan[i].projd)) continue;
-          if( plan[i].projd.agree(p.projd,vc) ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
-       }
-       p.setDebugFlag(Plan.CANBETRANSP,false);
-       return false;
-    }
+   /** Détermine si le plan doit être activé comme un plan de référence ou simplement afficher en overlay */
+   protected boolean mustBeSetPlanRef(Plan p) {
+      boolean setRef=false;
 
-    /** Vérifie si un plan peut etre transparent (vérification uniquement au niveau du type du plan)
-     */
-//    protected boolean planeTypeCanBeTrans(Plan p) {
-//       if( p instanceof PlanFolder ) return false;
-//       return true;
-//    }
+      // prochaine vue à utiliser
+      ViewSimple v = aladin.view.viewSimple[ aladin.view.getLastNumView(p) ];
 
-    protected void addOnStack(Plan p) {
-       int n = aladin.calque.getStackIndex();
-       aladin.calque.plan[n]=p;
-    }
+      // Juste pour du débuging
+      String sDebug=null;
 
-  /** Retourne l'emplacement à utiliser dans la pile. Si on passe un label préfixé
-   * par le caractère "=", on cherchera l'emplacement d'un éventuel plan pré-existant
-   * ayant le même label, sinon on utilise un plan libre.
-   * Si on passe un nombre, s'assure qu'il y a au-moins autant de plan libre que demandé
-   */
-    private int getStackIndex() { return getStackIndex(null,1); }
-    private int getStackIndex(String label) { return getStackIndex(label,1); }
-    private int getStackIndex(String label,int nombre) {
-       int i;
-       // Remplacement d'un plan déjà utilisé ?
-       // Le label doit commencer par '='( ex: =toto). Il peut également s'agir d'un numéro
-       // de plan dans la pile suivant la syntaxe "=@nnn"
-       if( !isNewPlan(label) ) {
-          int n;
-          if( label.charAt(1)=='@' ) {
-             try { n = Integer.parseInt(label.substring(2)); } catch( Exception e ) { n=-1; }
-             n = plan.length-n;
-          } else n=getIndexPlan(label.substring(1), 1);
-          if( n>=0 ) return n;
-       }
+      // La pile est vide => ref
+      if( aladin.calque.isFreeX(p) ) { setRef=true; sDebug="Stack Vide"; }
 
-       for( i=0; i<plan.length && plan[i].type==Plan.NO; i++ );
-       if( i>nombre ) i--;
-       else {
-          reallocPlan();
-          return getStackIndex(null,nombre);
-       }
+      // Il s'agit d'un simple remplacement de plan => activate
+      else if( p.isOldPlan ) { setRef=false; sDebug="Flag IsOldPlan=true"; }
 
-       return i;
-    }
+      // Dans une case vide sans être un simple overlay => ref
+      else if( v.isFree() && !p.isOverlay() ) { setRef=true; sDebug="Image dans la prochaine view vide"; }
 
-  /** Re-affichage de l'ensemble des composantes du calque. */
+      // Le plan de ref est une image normal et on charge une autre image => ref
+      else if( v.pref!=null && v.pref.isImage() && p.isImage() ) { setRef=true; sDebug="Image sur image"; }
+
+      // Le plan de ref est catalogue normal  et on charge image ou un plan allsky => ref
+      else if( v.pref!=null && (v.pref.isSimpleCatalog() && (p.isImage() || p instanceof PlanBG)) ) { setRef=true; sDebug="Image ou Allsky sur catalogue"; }
+
+      // Le plan de ref n'est pas allsky et le catalogue n'est pas visible
+      else if( v.pref!=null && !(v.pref instanceof PlanBG) && p.isSimpleCatalog() && !p.isViewable() ) { setRef=true; sDebug="Catalogue non visible autrement"; }
+
+      // Dans le cas d'un multiview on priviligiera la création du plan
+      else if( aladin.view.isMultiView() && p.isImage() ) { setRef=true; sDebug="Image sur multivue"; }
+
+      aladin.trace(4,"Calque.mustBeSetPlanRef("+p.label+") => "+setRef+(sDebug!=null?" ("+sDebug+")":""));
+      return setRef;
+   }
+
+
+   /** Retourne true si le plan passé en paramètre peut être transparent
+    *  Vérifie que la compatibilité des projections
+    */
+   protected boolean canBeTransparent(Plan p) {
+      boolean isRefForVisibleView = p!=null && p.isRefForVisibleView();
+      if( p==null || p.type==Plan.FILTER || !isFree() && isRefForVisibleView && !p.isOverlay() ) {
+         if (p!=null ) p.setDebugFlag(Plan.CANBETRANSP,false);
+         return false;
+      }
+      if( p.isOverlay() ) {
+         p.setDebugFlag(Plan.CANBETRANSP,true);
+         return true;
+      }
+      if( (p.isImage() || p.type==Plan.ALLSKYIMG) && !aladin.configuration.isTransparent() ) return false;
+      if( p.type==Plan.ALLSKYIMG && !isRefForVisibleView && p.flagOk && !p.isUnderImg() ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+
+      // S'il s'agit d'un folder, il faut qu'il contienne au moins un plan qui peut être transparent
+      boolean folderTrans=true;
+      if( p instanceof PlanFolder ) {
+         folderTrans=false;
+         Plan [] list = getFolderPlan(p);
+         for( Plan p1 : list ) {
+            if( canBeTransparent(p1) ) { folderTrans=true; break; }
+         }
+      }
+      if( folderTrans ) {
+         p.setDebugFlag(Plan.CANBETRANSP,true);
+         return true;
+      }
+
+      if( !p.flagOk  || !folderTrans /* !planeTypeCanBeTrans(p) */
+            || !Projection.isOk(p.projd) || p.isRefForVisibleView()
+            || p.isImage() && p.projd.isLargeField() ) {
+         p.setDebugFlag(Plan.CANBETRANSP,false);
+         return false;
+      }
+
+      ViewSimple vc = aladin.view.getCurrentView();
+      Plan plan[] = getPlans();
+      boolean audessus=true;
+      for( int i=0; i<plan.length; i++ ) {
+         if( audessus ) { if( plan[i]==p ) audessus=false; continue; }
+         if( /*!plan[i].ref*/ !plan[i].isRefForVisibleView() || !Projection.isOk(plan[i].projd)) continue;
+         if( plan[i].projd.agree(p.projd,vc) ) { p.setDebugFlag(Plan.CANBETRANSP,true); return true; }
+      }
+      p.setDebugFlag(Plan.CANBETRANSP,false);
+      return false;
+   }
+
+   /** Vérifie si un plan peut etre transparent (vérification uniquement au niveau du type du plan)
+    */
+   //    protected boolean planeTypeCanBeTrans(Plan p) {
+   //       if( p instanceof PlanFolder ) return false;
+   //       return true;
+   //    }
+
+   protected void addOnStack(Plan p) {
+      int n = aladin.calque.getStackIndex();
+      aladin.calque.plan[n]=p;
+   }
+
+   /** Retourne l'emplacement à utiliser dans la pile. Si on passe un label préfixé
+    * par le caractère "=", on cherchera l'emplacement d'un éventuel plan pré-existant
+    * ayant le même label, sinon on utilise un plan libre.
+    * Si on passe un nombre, s'assure qu'il y a au-moins autant de plan libre que demandé
+    */
+   private int getStackIndex() { return getStackIndex(null,1); }
+   private int getStackIndex(String label) { return getStackIndex(label,1); }
+   private int getStackIndex(String label,int nombre) {
+      int i;
+      // Remplacement d'un plan déjà utilisé ?
+      // Le label doit commencer par '='( ex: =toto). Il peut également s'agir d'un numéro
+      // de plan dans la pile suivant la syntaxe "=@nnn"
+      if( !isNewPlan(label) ) {
+         int n;
+         if( label.charAt(1)=='@' ) {
+            try { n = Integer.parseInt(label.substring(2)); } catch( Exception e ) { n=-1; }
+            n = plan.length-n;
+         } else n=getIndexPlan(label.substring(1), 1);
+         if( n>=0 ) return n;
+      }
+
+      for( i=0; i<plan.length && plan[i].type==Plan.NO; i++ );
+      if( i>nombre ) i--;
+      else {
+         reallocPlan();
+         return getStackIndex(null,nombre);
+      }
+
+      return i;
+   }
+
+   /** Re-affichage de l'ensemble des composantes du calque. */
    public void repaintAll() {
-   	  if( select!=null  ) {
+      if( select!=null  ) {
          select.repaint();
          zoom.zoomSliderReset();
          zoom.zoomView.repaint();
          aladin.view.repaintAll();
          aladin.toolBox.toolMode();
-   	  }
+      }
    }
 
    /**
-	 * Update footprint opacity level for already loaded footprint planes
-	 * The level is updated if and only if the current level is equal to oldLevel
-	 *
-	 * @param oldLevel
-	 * @param newLevel
-	 */
-	public void updateFootprintOpacity(float oldLevel, float newLevel) {
-		for (int i = 0; i < plan.length; i++) {
-			if (Aladin.isFootprintPlane(plan[i])) {
+    * Update footprint opacity level for already loaded footprint planes
+    * The level is updated if and only if the current level is equal to oldLevel
+    *
+    * @param oldLevel
+    * @param newLevel
+    */
+   public void updateFootprintOpacity(float oldLevel, float newLevel) {
+      for (int i = 0; i < plan.length; i++) {
+         if (Aladin.isFootprintPlane(plan[i])) {
 
-				if (plan[i].getOpacityLevel() == oldLevel) {
-					plan[i].setOpacityLevel(newLevel);
-				}
-			}
-		}
-	}
+            if (plan[i].getOpacityLevel() == oldLevel) {
+               plan[i].setOpacityLevel(newLevel);
+            }
+         }
+      }
+   }
 
 }

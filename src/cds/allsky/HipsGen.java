@@ -372,77 +372,82 @@ public class HipsGen {
    
    // Aladin.jar -hipsgen
    private static void usage(String launcher) {
-      System.out.println("Usage: java -jar "+launcher+" [-f] options... [ACTION ...]");
-      System.out.println("       java -jar "+launcher+" [-f] -param=configfile\n\n");
-      System.out.println("This config file must contains these following options, or use them\n" +
-      		"             directly in the comand line :");
+      System.out.println("Usage: java -jar "+launcher+" in=file|dir [otherParams ... ACTIONs ...]");
+      System.out.println("       java -jar "+launcher+" -param=configfile\n");
+      System.out.println("The config file must contain these following options, or use them\n" +
+      		             "directly on the comand line :\n");
       System.out.println(
-            "-f                 Do not take into account possible previous computation\n"+
-            "-n                 Just print process information, but do not execute it.\n"+
-            "in=dir             Source image directory (fits or jpg|png +hhh or HiPS), unique image or HEALPix map file" + "\n" +
-            "out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
-            "mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
-            "                   or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
-            "                   Or LINK|COPY for CUBE action (default COPY)" + "\n" +
-            "img=file           Specifical reference image for default initializations \n" +
-            "                   (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
-            "bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
-            "order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
-            "hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
-            "shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
-            "maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
-            "border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
-//            "circle=nn          Circle mask (in pixels) centered on each original images" + "\n" +
-            "blank=nn           Specifical BLANK value" + "\n" +
-            "maxThread=nn       Max number of computing threads" + "\n" +
-            "region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
-            "                   or Moc.fits file (all sky by default)" + "\n" +
-            "pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
-            "                   conversion - ex: \"120 140 log\")" + "\n" +
-            "pixelRange=min max Specifical pixel value range (required for bitpix\n" +
-            "                   conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
-//            "pixelGood=min [max] Range of pixel values kept" + "\n" +
-            "skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
-//            "exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
-            "fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" + 
-            "fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
-            "mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
-            "partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
-            "method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (jpeg|png)" + "\n" +
-            "color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
-            "tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
-            "minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-            "mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
-            "publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
-            "label=name         Label of the survey (by default, input directory name)" + "\n"+
-            "target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
-            "targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
-            "verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"
-//            "debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
-//            "red        all-sky used for RED component (see rgb action)\n" +
-//            "green      all-sky used for BLUE component (see rgb action)\n" +
-//            "blue       all-sky used for GREEN component (see rgb action)\n" +
-//            "redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
-//            "greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
-//            "bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
-//            "frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
+            "Required parameter:\n"+
+            "   in=dir             Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
+            "                      unique image or HEALPix map file" + "\n" +
+            "\n"+
+            "Basic optional parameters:\n"+
+            "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
+            "   label=name         Label of the survey (by default, input directory name)" + "\n"+
+            "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
+            "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
+            "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
+            "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
+            "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+            "   blank=nn           Specifical BLANK value" + "\n" +
+            "   skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
+            "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
+            "   -f                 clear previous computations\n"+
+            "   -n                 Just print process information, but do not execute it.\n"+
+            "\n"+
+            "Advanced optional parameters:\n"+
+            "   order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
+            "   bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
+            "   pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
+            "                      conversion - ex: \"120 140 log\")" + "\n" +
+            "   pixelRange=min max Specifical pixel value range (required for bitpix\n" +
+            "                      conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
+            "   pixelGood=min [max] Range of pixel values kept" + "\n" +
+            "   img=file           Specifical reference image for default initializations \n" +
+            "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
+            "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
+            "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
+            "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
+            "   fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
+            "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
+            "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
+            "   region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
+            "                      or Moc.fits file (all sky by default)" + "\n" +
+            "   maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
+//          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
+            "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" + 
+            "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
+            "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (JPEG|PNG)" + "\n" +
+            "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
+            "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
+            "   maxThread=nn       Max number of computing threads" + "\n" +
+            "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
+            "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"
+//          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
+//          "   red        all-sky used for RED component (see rgb action)\n" +
+//          "   green      all-sky used for BLUE component (see rgb action)\n" +
+//          "   blue       all-sky used for GREEN component (see rgb action)\n" +
+//          "   redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
+//          "   greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
+//          "   bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
+//          "   frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
       );
       
-      System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP PROGEN\"):" + "\n" +
-            "INDEX      "+Action.INDEX.doc() + "\n" +
-            "TILES      "+Action.TILES.doc() + "\n" +
-            "JPEG       "+Action.JPEG.doc() + "\n" +
-            "PNG        "+Action.PNG.doc() + "\n" +
-//            "RGB        "+Action.RGB.doc() + "\n" +
-            "MOC        "+Action.MOC.doc() + "\n" +
-//            "MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
-            "ALLSKY     "+Action.ALLSKY.doc() + "\n"+
-            "TREE       "+Action.TREE.doc() + "\n"+
-            "MAPTILES   "+Action.MAPTILES.doc() + "\n"+
-            "CONCAT     "+Action.CONCAT.doc() + "\n"+
-            "CUBE       "+Action.CUBE.doc() + "\n"+
-            "GZIP       "+Action.GZIP.doc() + "\n"+
-            "DETAILS    "+Action.DETAILS.doc() + "\n"
+      System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP DETAILS\"):" + "\n" +
+            "   INDEX      "+Action.INDEX.doc() + "\n" +
+            "   TILES      "+Action.TILES.doc() + "\n" +
+            "   JPEG       "+Action.JPEG.doc() + "\n" +
+            "   PNG        "+Action.PNG.doc() + "\n" +
+//            "   RGB        "+Action.RGB.doc() + "\n" +
+            "   MOC        "+Action.MOC.doc() + "\n" +
+//            "   MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
+            "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
+            "   TREE       "+Action.TREE.doc() + "\n"+
+            "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
+            "   CONCAT     "+Action.CONCAT.doc() + "\n"+
+            "   CUBE       "+Action.CUBE.doc() + "\n"+
+            "   GZIP       "+Action.GZIP.doc() + "\n"+
+            "   DETAILS    "+Action.DETAILS.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
       		             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +

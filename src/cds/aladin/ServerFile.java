@@ -20,8 +20,6 @@
 
 package cds.aladin;
 import java.awt.Dimension;
-import java.awt.FileDialog;
-import java.awt.Frame;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.image.ColorModel;
@@ -37,9 +35,8 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.*;
-import javax.xml.stream.events.EndElement;
 
-import cds.allsky.Context;
+import cds.allsky.Constante;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.XMLConsumer;
@@ -263,7 +260,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            if( PlanBG.isPlanHpxFinder(f) ) gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 progen");
 
                            // Catalogue ?
-                           else if(  (new File(f+"/"+Context.METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
+                           else if(  (new File(f+"/"+Constante.FILE_METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                               gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
                            }    
                         }
@@ -982,7 +979,7 @@ public class ServerFile extends Server implements XMLConsumer {
                   || typePlan==Plan.IMAGERSP || typePlan==Plan.IMAGEALGO) {
                // Creation de la table des couleurs
                PlanImage pi = (PlanImage)plan;
-               pi.cm=ColorMap.getCM(pi.cmControl[0],pi.cmControl[1],pi.cmControl[2],
+               pi.cm=CanvasColorMap.getCM(pi.cmControl[0],pi.cmControl[1],pi.cmControl[2],
                      pi.video==PlanImage.VIDEO_INVERSE,
                      pi.typeCM,
                      pi.transfertFct);

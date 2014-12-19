@@ -70,7 +70,7 @@ public class BuilderClean extends Builder {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
 
       for( File f : dir.listFiles() ) {
-         if( f.getName().equals(Constante.HPX_FINDER) ) continue;
+         if( f.getName().equals(Constante.FILE_HPXFINDER) ) continue;
          deleteDir(f);
       }
    }

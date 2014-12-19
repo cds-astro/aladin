@@ -49,7 +49,6 @@ import java.io.RandomAccessFile;
 import javax.swing.*;
 
 import cds.aladin.Aladin;
-import cds.aladin.PlanHealpix;
 import cds.aladin.prop.PropPanel;
 import cds.tools.Util;
 
@@ -73,13 +72,13 @@ public class FrameGlu extends JFrame implements KeyListener {
       { "*", "Survey ID",      "Id",            "",                         "",           "One word survey identifier (ex: P/DSS/2)"  },
       { "*", "Name",           "Description",   "",                         "",           "Survey name (ex: DSS blue" },
       { "*", "Url access",     "Url",           "",                         "http://...", "Url for accessing the Healpix data (a Healpix FITS file map or a Healpix Aladin directory)" },
-      { "-", "Category",       "Aladin.Tree",   PlanHealpix.KEY_CATEGORY,   "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
-      { "-", "Description",    "Description",   PlanHealpix.KEY_DESCRIPTION,"",           "Short description" },
-      { "-", "Full descript.", "VerboseDescr",  PlanHealpix.KEY_DESCRIPTION_VERBOSE,"",   "Full data description (can be a long paragraph)" },
+      { "-", "Category",       "Aladin.Tree",   Constante.KEY_CATEGORY,   "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
+      { "-", "Description",    "Description",   Constante.KEY_DESCRIPTION,"",           "Short description" },
+      { "-", "Full descript.", "VerboseDescr",  Constante.KEY_DESCRIPTION_VERBOSE,"",   "Full data description (can be a long paragraph)" },
       { "-", "Web info",       "Doc.User",      "",                         "",           "Web page describing the data" },
       { "-", "Institute",      "Institute",     "",                         "",           "Institute/origin of the data" },
-      { "-", "Copyright",      "Copyright",     PlanHealpix.KEY_COPYRIGHT,  "",           "Copyright mention (ex: (c) Institute of ....)" },
-      { "-", "Web site",       "Copyright.url", PlanHealpix.KEY_COPYRIGHT_URL,"",         "Web link for copyright mention" },
+      { "-", "Copyright",      "Copyright",     Constante.KEY_COPYRIGHT,  "",           "Copyright mention (ex: (c) Institute of ....)" },
+      { "-", "Web site",       "Copyright.url", Constante.KEY_COPYRIGHT_URL,"",         "Web link for copyright mention" },
    };
    
    
@@ -256,7 +255,7 @@ public class FrameGlu extends JFrame implements KeyListener {
       s.append( Util.align("%Aladin.Profile",15) +" >6.1"+Util.CR);
       s.append( Util.align("%Aladin.HpxParam",15)+" "+getHpxParam()+Util.CR);
       
-      context.setPropriete(PlanHealpix.KEY_LABEL,id);
+      context.setPropriete(Constante.KEY_LABEL,id);
       
       return s.toString();
    }

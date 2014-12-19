@@ -24,7 +24,6 @@ import cds.tools.Util;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.FileInputStream;
 import java.net.*;
 import java.util.*;
 
@@ -56,30 +55,30 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
    protected boolean diff;	// true s'il s'agit d'une difference sur 2 plans
 
    private boolean mustResample=false;	// true si on l'image RGB provient d'une construction Aladin (voir waitForPlan())
-   
+
    // Pour pouvoir recharger du AJ
-   protected PlanImageRGB(Aladin aladin) { 
+   protected PlanImageRGB(Aladin aladin) {
       super(aladin);
       type=IMAGERGB;
    }
 
    /** Creation d'un plan de type IMAGE (via 2 ou 3 autres plans)
-   * @param r    Le plan correspondant a la bande rouge
-   * @param g    Le plan correspondant a la bande verte
-   * @param b    Le plan correspondant a la bande bleue
-   * @param ref  Le plan de reference pour le reechantillonage
-   * @param label
-   * @param d    true s'il s'git d'une différence
-   */
+    * @param r    Le plan correspondant a la bande rouge
+    * @param g    Le plan correspondant a la bande verte
+    * @param b    Le plan correspondant a la bande bleue
+    * @param ref  Le plan de reference pour le reechantillonage
+    * @param label
+    * @param d    true s'il s'git d'une différence
+    */
    protected PlanImageRGB(Aladin aladin, PlanImage r, PlanImage g,
-                          PlanImage b, PlanImage ref, String label, boolean d) {
+         PlanImage b, PlanImage ref, String label, boolean d) {
       super(aladin);
       mustResample=true;  // Pour que le waitForPlan() face le resampling
       type=IMAGERGB;
       isOldPlan=false;
-      
+
       pixMode = PIX_RGB;
-      if( (r==null || r.isTransparent() ) && (g==null || g.isTransparent() ) 
+      if( (r==null || r.isTransparent() ) && (g==null || g.isTransparent() )
             && (g==null || g.isTransparent()) ) pixMode=PIX_ARGB;
 
       planRed=r; planGreen=g; planBlue=b;
@@ -90,7 +89,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       // Determination du plan de reference si ce n'est pas indique
       double x=Double.MAX_VALUE;
       if( ref==null ) {
-         if( !Projection.isOk(r.projd) || !Projection.isOk(r.projd) 
+         if( !Projection.isOk(r.projd) || !Projection.isOk(r.projd)
                || !Projection.isOk(r.projd) ) ref= r!=null ? r : g!=null ? g:b;
          else {
             if( r!=null &&  Math.abs(r.projd.c.incA)<x ) { ref=r; x=Math.abs(r.projd.c.incA); }
@@ -108,33 +107,33 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       synchronized( this ) {
          runme = new Thread(this,"AladinBuildRGB");
          Util.decreasePriority(Thread.currentThread(), runme);
-//         runme.setPriority( Thread.NORM_PRIORITY -1);
+         //         runme.setPriority( Thread.NORM_PRIORITY -1);
          runme.start();
       }
-    }
-   
-//   public PlanImageRGB(Aladin aladin, String fRed, double [] minMaxRed, 
-//                                         String fGreen, double [] minMaxGreen, 
-//                                         String fBlue, double [] minMaxBlue) throws Exception {
-//      super(aladin);
-//      type=IMAGERGB;
-//      
-//      planRed   = fRed==null ? null : new PlanImage(aladin,fRed);
-//      planGreen = fGreen==null ? null : new PlanImage(aladin,fGreen);
-//      planBlue  = fBlue==null ? null : new PlanImage(aladin,fBlue);
-//      flagRed = planRed!=null;
-//      flagGreen = planGreen!=null;
-//      flagBlue = planBlue!=null;
-//      pRef=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
-//      if( flagRed && minMaxRed!=null ) planRed.recut(minMaxRed[0], minMaxRed[1], false);
-//      if( flagGreen && minMaxGreen!=null ) planGreen.recut(minMaxGreen[0], minMaxGreen[1], false);
-//      if( flagBlue && minMaxBlue!=null ) planBlue.recut(minMaxBlue[0], minMaxBlue[1], false);
-//      if( !flagRed ) pRef=planGreen;
-//      diff=false;
-//      init("RGB",pRef);
-//      mustResample=true;
-//      waitForPlan();
-//   }
+   }
+
+   //   public PlanImageRGB(Aladin aladin, String fRed, double [] minMaxRed,
+   //                                         String fGreen, double [] minMaxGreen,
+   //                                         String fBlue, double [] minMaxBlue) throws Exception {
+   //      super(aladin);
+   //      type=IMAGERGB;
+   //
+   //      planRed   = fRed==null ? null : new PlanImage(aladin,fRed);
+   //      planGreen = fGreen==null ? null : new PlanImage(aladin,fGreen);
+   //      planBlue  = fBlue==null ? null : new PlanImage(aladin,fBlue);
+   //      flagRed = planRed!=null;
+   //      flagGreen = planGreen!=null;
+   //      flagBlue = planBlue!=null;
+   //      pRef=(planRed!=null)?planRed:(planGreen!=null)?planGreen:planBlue;
+   //      if( flagRed && minMaxRed!=null ) planRed.recut(minMaxRed[0], minMaxRed[1], false);
+   //      if( flagGreen && minMaxGreen!=null ) planGreen.recut(minMaxGreen[0], minMaxGreen[1], false);
+   //      if( flagBlue && minMaxBlue!=null ) planBlue.recut(minMaxBlue[0], minMaxBlue[1], false);
+   //      if( !flagRed ) pRef=planGreen;
+   //      diff=false;
+   //      init("RGB",pRef);
+   //      mustResample=true;
+   //      waitForPlan();
+   //   }
 
    protected PlanImageRGB(Aladin aladin, String file,URL u,MyInputStream inImg, ResourceNode imgNode) {
       this(aladin,file,u,inImg);
@@ -154,12 +153,12 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
    }
 
    protected PlanImageRGB(Aladin aladin,
-                          MyInputStream inImg,
-                          int orig, URL u,
-                          String label,String objet,
-                          String param, String from,
-                          int fmt,int res,
-                          Obj o, ResourceNode imgNode) {
+         MyInputStream inImg,
+         int orig, URL u,
+         String label,String objet,
+         String param, String from,
+         int fmt,int res,
+         Obj o, ResourceNode imgNode) {
       super(aladin,inImg,orig,u,label,objet,param,from,fmt,res,o,imgNode);
       type=IMAGERGB;
       active=true;
@@ -167,7 +166,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       initCMControl();
       labels[0]="red";labels[1]="green";labels[2]="blue";
    }
-   
+
    protected void initCMControl() {
       RGBControl = new int[RGBCONTROL.length];
       for( int i=0; i<RGBCONTROL.length; i++) RGBControl[i] = RGBCONTROL[i];
@@ -178,7 +177,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       super(aladin,p);
       type=IMAGERGB;
    }
-   
+
    public int [] getPixelsRGB() { return pixelsRGB; }
    public int [] getPixelsZoomRGB() { return pixelsZoomRGB; }
 
@@ -230,7 +229,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
 
       // On perd la référence aux pixels d'origine (A VOIR ?)
       red = green = blue = null;
-//      flagRed = flagGreen = flagBlue = false;
+      //      flagRed = flagGreen = flagBlue = false;
 
       crop1(x,y,w,h,repaint);
       return true;
@@ -244,7 +243,7 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
       int n;			// nombre d'octets pour un pixel
       boolean isARGB = (dis.getType() & MyInputStream.ARGB) != 0;
 
-Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
+      Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
 
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
@@ -263,7 +262,7 @@ Aladin.trace(2,"Loading "+(isARGB?"A":"")+"RGB FITS image");
       npix = Math.abs(bitpix)/8;
       taille=width*height*3;	// Nombre d'octets
       setPourcent(0);
-Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+" => size="+taille);
+      Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+" => size="+taille);
 
       // Pour des stats
       Date d = new Date();
@@ -276,7 +275,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+
       blue = new byte[width*height];
       d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
       Aladin.trace(3," => Allocating ("+taille+"b) in "+temps+" ms");
-      
+
       // Mode ARGB => les valeurs des composantes sont rangées dans un entier 32 bits en mode ARGB
       if( isARGB ) {
          byte [] buf = new byte[width*4];   // On lira ligne par ligne
@@ -290,17 +289,17 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+
                final int mod = i%4;
                int pos = i/4;
                switch(mod) {
-                  case 1: red[pos]  =buf[j]; break; 
-                  case 2: green[pos]=buf[j]; break; 
-                  case 3: blue[pos] =buf[j]; break; 
+                  case 1: red[pos]  =buf[j]; break;
+                  case 2: green[pos]=buf[j]; break;
+                  case 3: blue[pos] =buf[j]; break;
                }
             }
          }
          buf=null;
-         
-      // mode RGB => les valeurs des composantes sont rangées dans trois tableaux consécutifs R, G et B
+
+         // mode RGB => les valeurs des composantes sont rangées dans trois tableaux consécutifs R, G et B
       } else {
-         
+
          byte [] buf;
          for( i=0; i<3; i++ ) {
             buf = i==0 ? red : i==1 ? green : blue;
@@ -310,7 +309,7 @@ Aladin.trace(3," => NAXIS1="+width+" NAXIS2="+height+" NAXIS3=3 BITPIX="+bitpix+
       }
 
       d1=new Date(); temps = (int)(d1.getTime()-d.getTime()); d=d1;
-Aladin.trace(3," => Reading in "+temps+" ms");
+      Aladin.trace(3," => Reading in "+temps+" ms");
 
       // Retournement des images (les lignes ne sont pas rangees dans le meme ordre
       // en FITS et en JAVA)
@@ -324,7 +323,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       setPourcent(99);
       return true;
    }
-   
+
    // Lecture d'une couleur
    private void readColor(byte [] pOut, MyInputStream dis, int width, int height, int bitpix) throws Exception {
       if( bitpix==8 ) dis.readFully(pOut);
@@ -332,7 +331,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
          int taille = width*height * Math.abs(bitpix)/8;
          byte [] pIn = new byte[taille];
          dis.readFully(pIn);
-         getPix8Bits(pOut,pIn,bitpix,width,height,0.,0.,true);
+         getPix8Bits(pOut,pIn,bitpix,width,height,0.,0.,true,0,0,0);
          pIn=null;
       }
    }
@@ -342,13 +341,13 @@ Aladin.trace(3," => Reading in "+temps+" ms");
     * C'est très rapide et le rendu visuel est quasi le même que par interpolation
     */
    public void calculPixelsZoomRGB() { pixelsZoomRGB = calculPixelsZoomRGB1(pixelsZoomRGB,pixelsRGB,width,height); }
-   
+
    static public int [] calculPixelsZoomRGB1(int [] pixelsZoomRGB,int [] pixelsRGB,int width,int height) {
       // calcul du rapport Largeur/Hauteur de l'image
       int W = ZoomView.SIZE;
       int H = (int)(((double)ZoomView.SIZE/width)*height);
       if( H>W ) {
-         W = (int)((double)W*W / (double)H);
+         W = (int)((double)W*W / H);
          H = ZoomView.SIZE;
       }
 
@@ -379,7 +378,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       }
       return pix;
    }
-   
+
    /** Conversion en double niveau de gris d'un pixel ARGB */
    static public double getGreyPixel(int pixRGB) {
       int red   = getPixRGB(pixRGB, 0);
@@ -387,7 +386,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       int blue  = getPixRGB(pixRGB, 2);
       return red*0.299  + green*0.587 + blue*0.114;
    }
-   
+
    /** Retourne la valeur du pixel en double (niveau de gris issu des 3 composantes RGB */
    protected double getPixelInDouble(int x,int y) {
       int pixelRGB = pixelsRGB[ (height-y-1)*width+x ];
@@ -400,18 +399,18 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       return width + "x" + height +"x3 pixels" ;
    }
 
-//   /** Crée les tableaux des composantes en fonction de l'image courante */
-//   protected void createRGB() { }
-//
-//   /** Retourne la composante rouge initiale */
-//   protected byte[] getRed() { return red; }
-//
-//   /** Retourne la composante bleue initiale */
-//   protected byte[] getBlue() { return blue; }
-//
-//   /** Retourne la composante verte initiale */
-//   protected byte[] getGreen() { return green; }
-//
+   //   /** Crée les tableaux des composantes en fonction de l'image courante */
+   //   protected void createRGB() { }
+   //
+   //   /** Retourne la composante rouge initiale */
+   //   protected byte[] getRed() { return red; }
+   //
+   //   /** Retourne la composante bleue initiale */
+   //   protected byte[] getBlue() { return blue; }
+   //
+   //   /** Retourne la composante verte initiale */
+   //   protected byte[] getGreen() { return green; }
+   //
    /** Crée les tableaux des composantes en fonction de l'image courante */
    protected void createRGB() {
       if( pixelsRGB==null ) return;  // Sera fait dans l'autre sens reg+green+blue=>pixelsRGB
@@ -441,13 +440,13 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       return rgb;
    }
 
-   /** Utilise un tableau de bytes avec les composantes RGB de chaque pixel sans la composante alpha 
+   /** Utilise un tableau de bytes avec les composantes RGB de chaque pixel sans la composante alpha
     * pour créer le tableau pixelRGB[] */
    protected void setByteRGB(byte [] rgb) {
       int size = rgb.length;
       pixelsRGB = new int[size/3];
       for( int i=0; i < size; i+=3 ) {
-         pixelsRGB[i/3]  = (((int)rgb[i] & 0xFF) <<16) | (((int)rgb[i+1] & 0xFF) <<8) | ((int)rgb[i+2] & 0xFF);
+         pixelsRGB[i/3]  = ((rgb[i] & 0xFF) <<16) | ((rgb[i+1] & 0xFF) <<8) | (rgb[i+2] & 0xFF);
       }
    }
 
@@ -474,8 +473,8 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       if( green==null && green.length!=pixelsRGB.length) createRGB();
       return green;
    }
-   
-   /** Retourne les pixels 8 bits correspondants à l'image en N&B 
+
+   /** Retourne les pixels 8 bits correspondants à l'image en N&B
     *  pour par exemple l'extraction des contours */
    protected byte [] getBufPixels8() {
       return getGreyPixels();
@@ -483,30 +482,30 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
    /** Nettoyage du plan pour aider le GC
     */
-    protected boolean Free() {
-       if( !super.Free() ) return false;
-       pixelsRGB=null;
-       red=green=blue=null;
-       planRed=planGreen=planBlue=null;
-       flagRed=flagGreen=flagBlue=false;
-       pi[0]=pi[1]=pi[2]=-1;
-       return true;
-    }
+   protected boolean Free() {
+      if( !super.Free() ) return false;
+      pixelsRGB=null;
+      red=green=blue=null;
+      planRed=planGreen=planBlue=null;
+      flagRed=flagGreen=flagBlue=false;
+      pi[0]=pi[1]=pi[2]=-1;
+      return true;
+   }
 
-  /** Copie les parametres
-   * @param p le plan de reference pour le reechantillonage
-   */
+   /** Copie les parametres
+    * @param p le plan de reference pour le reechantillonage
+    */
    protected void init(String label, PlanImage p){
 
       flagOk=false;
       askActive=true;
-//      selected = true;
+      //      selected = true;
 
       headerFits = null;
       if( Projection.isOk(p.projd) ) setHasSpecificCalib();
       naxis1=width = p.width;
       naxis2=height = p.height;
-//      video = diff?VIDEO_INVERSE:VIDEO_NORMAL;
+      //      video = diff?VIDEO_INVERSE:VIDEO_NORMAL;
       video = VIDEO_NORMAL;
       fmt = RGB;
       transfertFct=LINEAR;
@@ -523,12 +522,12 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       projD = p.projD==null ? null : (Hashtable)p.projD.clone();
       copyright = "Colored composition by Aladin";
 
-/*
+      /*
       // La memorisation du dernier zoom associe au plan
       xzoom = p.xzoom;
       yzoom = p.yzoom;
       zoom = p.zoom;
-*/
+       */
       // Acces vers les PlanImage sources
       pi[0] = flagRed?planRed.hashCode():0;
       pi[1] = flagGreen?planGreen.hashCode():0;
@@ -540,8 +539,8 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       for( int i=0; i<RGBCONTROL.length; i++) RGBControl[i] = RGBCONTROL[i];
 
       param =  "R:"+labels[0]+
-              " G:"+labels[1]+
-              " B:"+labels[2];
+            " G:"+labels[1]+
+            " B:"+labels[2];
    }
 
    /** Positionne la composante couleur d'un pixel directement dans le tableau ARGB
@@ -575,7 +574,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    static protected int getPixRGB(int pixelsRGB[], int offset, int color) {
       return getPixRGB(pixelsRGB[offset],color);
    }
-   
+
    /** Récupère la composante couleur d'un pixel directement depuis sa valeur ARGB
     * @param pixelRGB pixel ARGB
     * @param color numéro de la composante 0-Red, 1-Green, 2-Blue
@@ -588,9 +587,9 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       }
    }
 
-  /** Attente pendant la construction du plan.
-   * @return <I>true</I> si ok, <I>false</I> sinon.
-   */
+   /** Attente pendant la construction du plan.
+    * @return <I>true</I> si ok, <I>false</I> sinon.
+    */
    protected boolean waitForPlan() {
       if( !mustResample ) {
          if( !super.waitForPlan() ) return false;
@@ -603,11 +602,11 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       PlanImage pA=null,pB=null;
       byte [] refCm,pACm,pBCm;
 
-           if( pRef==planRed )   { pA=planGreen; pB=planBlue;  tR=0; tA=1; tB=2; }
+      if( pRef==planRed )   { pA=planGreen; pB=planBlue;  tR=0; tA=1; tB=2; }
       else if( pRef==planGreen ) { pA=planRed;   pB=planBlue;  tR=1; tA=0; tB=2; }
       else if( pRef==planBlue )  { pA=planRed;   pB=planGreen; tR=2; tA=0; tB=1; }
 
-     //Reechantillonage
+      //Reechantillonage
       Coord coo = new Coord();
       int x=0,y=0;
       int w = pRef.width;
@@ -627,7 +626,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       boolean refRev = pRef.video==PlanImage.VIDEO_INVERSE;
       boolean pARev = pA!=null && pA.video==PlanImage.VIDEO_INVERSE;
       boolean pBRev = pB!=null && pB.video==PlanImage.VIDEO_INVERSE;
-      
+
       // Pour accélérer l'accès aux tables des couleurs
       refCm = pRef==null ? null : Util.getTableCM(pRef.cm, 2);
       pACm  = pA==null   ? null : Util.getTableCM(pA.cm, 2);
@@ -694,7 +693,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       // Specification dans le cas de 2 couleurs
       twoColors = planRed==null || planGreen==null || planBlue==null;
 
-           if( planRed==null )   createLastColor(pixelsRGB,0);
+      if( planRed==null )   createLastColor(pixelsRGB,0);
       else if( planGreen==null ) createLastColor(pixelsRGB,1);
       else if( planBlue==null )  createLastColor(pixelsRGB,2);
 
@@ -704,14 +703,14 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       sendLog("RGB"," [R:"+labels[0]+",G:"+labels[1]+",B:"+labels[2]+"]");
 
       // Pour ne pas garder de références inutiles
-//      Red=Green=Blue=Ref=null;
+      //      Red=Green=Blue=Ref=null;
 
       return true;
    }
 
    /** Creation du tableau des pixels couleurs a partir des
-   *     3 tableaux de pixels sources.
-   */
+    *     3 tableaux de pixels sources.
+    */
    protected void createImgRGB() {
       createRGB();      // Au cas où les composantes n'auraient pas été extraites au préalable
       int size = width * height;
@@ -719,13 +718,13 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
       for (int y = 0 ; y < size ; y++) {
          pixelsRGB[y] = 0xFF000000 |
-                          ( ( ((int) red[y])   & 0xFF ) << 16) |
-                          ( ( ((int) green[y]) & 0xFF ) << 8) |
-                            ( ((int) blue[y])  & 0xFF );
+               ( ( (red[y])   & 0xFF ) << 16) |
+               ( ( (green[y]) & 0xFF ) << 8) |
+               ( (blue[y])  & 0xFF );
       }
 
       // Dans le cas de l'inverse video on recalcule l'image
-//      if( video==PlanImage.VIDEO_INVERSE ) inverseRGB();
+      //      if( video==PlanImage.VIDEO_INVERSE ) inverseRGB();
 
       // Et on calcule encore l'imagette pour le zoomView
       calculPixelsZoomRGB();
@@ -735,7 +734,7 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    /** Creation du tableau des pixels de la derniere couleur
     * dans le cas de 2 couleurs affecte la moyenne des valeurs
     */
-  protected void createLastColor(int pixelsRGB[],int color) {
+   protected void createLastColor(int pixelsRGB[],int color) {
       int j,k;
 
       // j et k : indice des couleurs existantes
@@ -769,33 +768,33 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    }
 
    /** Creation du tableau des pixels de la derniere couleur dans le cas de 2 couleurs
-   *    Affecte la moyenne des valeurs
-   */
-//   protected void createLastColor(byte x[],byte a[],byte b[]) {
-//
-//      int size=width*height;
-//      for (int i = 0 ; i < size ; i++) {
-//
-//         // difference entre les 2 bandes
-//         if( diff ) {
-//            int a1 = ((int) a[i]) & 0xFF;
-//            int b1 = ((int) b[i]) & 0xFF;
-//            if( a1==b1 ) a[i]=b[i]=x[i]=0;
-//            else if ( (a1-b1)>0 ) {
-//               a[i] = (byte)(0xFF & (a1-b1));
-//               b[i]=x[i] = 0;
-//            } else {
-//               b[i] = (byte)(0xFF & (b1-a1));
-//               a[i]=x[i] = 0;
-//            }
-////         } else x[i] = (byte)((int) Math.min ( ((int) a[i]) & 0xFF,
-////               ((int) b[i]) & 0xFF )  & 0xFF );
-//           } else x[i] = (byte)( 0xFF & ((((int)(a[i])&0xFF) + ((int)(b[i])&0xFF))/2) );
-//      }
-//
-//      // Normalisation pour augmenter le constraste des différences
-//      if( diff ) normalisation(a,b);
-//   }
+    *    Affecte la moyenne des valeurs
+    */
+   //   protected void createLastColor(byte x[],byte a[],byte b[]) {
+   //
+   //      int size=width*height;
+   //      for (int i = 0 ; i < size ; i++) {
+   //
+   //         // difference entre les 2 bandes
+   //         if( diff ) {
+   //            int a1 = ((int) a[i]) & 0xFF;
+   //            int b1 = ((int) b[i]) & 0xFF;
+   //            if( a1==b1 ) a[i]=b[i]=x[i]=0;
+   //            else if ( (a1-b1)>0 ) {
+   //               a[i] = (byte)(0xFF & (a1-b1));
+   //               b[i]=x[i] = 0;
+   //            } else {
+   //               b[i] = (byte)(0xFF & (b1-a1));
+   //               a[i]=x[i] = 0;
+   //            }
+   ////         } else x[i] = (byte)((int) Math.min ( ((int) a[i]) & 0xFF,
+   ////               ((int) b[i]) & 0xFF )  & 0xFF );
+   //           } else x[i] = (byte)( 0xFF & ((((int)(a[i])&0xFF) + ((int)(b[i])&0xFF))/2) );
+   //      }
+   //
+   //      // Normalisation pour augmenter le constraste des différences
+   //      if( diff ) normalisation(a,b);
+   //   }
 
    /** Normalisation conjointes des deux composantes produites par la soustraction
     * de deux images afin d'augmenter les contrastes
@@ -803,34 +802,34 @@ Aladin.trace(3," => Reading in "+temps+" ms");
     * @param b deuxième composante (différences négatives)
     */
    private void normalisation(byte a[],byte b[]) {
-       double min = Double.POSITIVE_INFINITY;
-       double max = Double.NEGATIVE_INFINITY;
-       double c;
+      double min = Double.POSITIVE_INFINITY;
+      double max = Double.NEGATIVE_INFINITY;
+      double c;
 
-       for( int i=0; i<2; i++ ) {
-          byte x[] = i==0 ? a : b;
-          for( int j=0; j<x.length; j++ ) {
-             c = ((int)x[j]) & 0xFF;
-             if( c<min ) min=c;
-             if( c>max ) max=c;
-          }
-       }
-//System.out.println("RGBdiff min="+min+" max="+max);
+      for( int i=0; i<2; i++ ) {
+         byte x[] = i==0 ? a : b;
+         for( int j=0; j<x.length; j++ ) {
+            c = (x[j]) & 0xFF;
+            if( c<min ) min=c;
+            if( c>max ) max=c;
+         }
+      }
+      //System.out.println("RGBdiff min="+min+" max="+max);
 
-       double r = 256./(max - min);
-       for( int i=0; i<2; i++ ) {
-          byte x[] = i==0 ? a : b;
-          for( int j=0; j<x.length; j++ ) {
-             c = ((int)x[j]) & 0xFF;
-             x[j] = (byte)( c<=min?0x00:c>=max?0xff:(int)( ((c-min)*r) ) & 0xff);
-          }
-       }
+      double r = 256./(max - min);
+      for( int i=0; i<2; i++ ) {
+         byte x[] = i==0 ? a : b;
+         for( int j=0; j<x.length; j++ ) {
+            c = (x[j]) & 0xFF;
+            x[j] = (byte)( c<=min?0x00:c>=max?0xff:(int)( ((c-min)*r) ) & 0xff);
+         }
+      }
 
    }
 
    /** Modifie le tableau des pixels couleurs lors d'un changement dans
-   *    l'inverse video
-   */
+    *    l'inverse video
+    */
    protected void inverseRGB () {
       int size = width * height;
 
@@ -841,78 +840,78 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
 
    /** Filtre le tableau de pixels couleurs en fonction de l'histogramme
-   * @param triangle []   Tableau des positions des triangles
-   * @param size          Taille totale de la zone de l'image a parcourir
-   * @param x,y          Position initiale sur l'image
-   * @param color         Couleur de l'histogramme modifie :
+    * @param triangle []   Tableau des positions des triangles
+    * @param size          Taille totale de la zone de l'image a parcourir
+    * @param x,y          Position initiale sur l'image
+    * @param color         Couleur de l'histogramme modifie :
                         0 -> rouge
                         1 -> vert
                         2 -> bleu
-   */
-//   public void filterRGB(int [] triangle, int size, int x, int y, int color) {
-//      int w = x+size;
-//      int h = y+size;
-//      int [] out = aladin.view.getCurrentView().pixelsCMRGB;
-//
-//      changeImgID();
-//
-//      int tr0 = triangle[0];
-//      int tr1 = triangle[1];
-//      int tr2 = triangle[2];
-//      int r,g,b;
-//
-//      for ( int i=y; i<h; i++ ) {
-//         for ( int j=x; j<w; j++ ) {
-//            int pos=i*width+j;
-//            // recuperation des couleurs courantes
-//            int pixel = pixelsRGB[pos];
-//            r = (int) ( (pixel & 0x00FF0000) >> 16 ) ;
-//            g = (int) ( (pixel & 0x0000FF00) >> 8 ) ;
-//            b = (int) ( (pixel & 0x000000FF) ) ;
-//
-//            // modification uniquement de celle concernee
-//                 if (color==0) r = filter(tr0,tr1,tr2,(int)red[pos]&0xFF);
-//            else if (color==1) g = filter(tr0,tr1,tr2,(int)green[pos]&0xFF);
-//            else b = filter(tr0,tr1,tr2,(int)blue[pos]&0xFF);
-//
-//            // inversion si necessaire
-//            if( video==VIDEO_INVERSE ) {
-//               if( color==0 ) r=~r;
-//               else if( color==1 ) g=~g;
-//               else b=~b;
-//
-//               if (twoColors) {
-//                  if( !flagR ) r = Math.max(g & 0xFF, b & 0xFF);
-//                  else if( !flagG ) g = Math.max(r & 0xFF, b & 0xFF);
-//                  else b = Math.max(r & 0xFF, g & 0xFF);
-//               }
-//
-//            } else {
-//               if (twoColors) {
-//                  if( !flagR ) r = Math.min(g & 0xFF, b & 0xFF);
-//                  else if( !flagG ) g = Math.min(r & 0xFF, b & 0xFF);
-//                  else b = Math.min(r & 0xFF, g & 0xFF);
-//               }
-//            }
-//
-//            // ecriture en sortie
-//            out[(i-y)*(w-x)+j-x]=  0xFF000000 | ((r&0xFF)<<16) | ((g&0xFF)<<8) | (b&0xFF);
-//         }
-//      }
-//   }
+    */
+   //   public void filterRGB(int [] triangle, int size, int x, int y, int color) {
+   //      int w = x+size;
+   //      int h = y+size;
+   //      int [] out = aladin.view.getCurrentView().pixelsCMRGB;
+   //
+   //      changeImgID();
+   //
+   //      int tr0 = triangle[0];
+   //      int tr1 = triangle[1];
+   //      int tr2 = triangle[2];
+   //      int r,g,b;
+   //
+   //      for ( int i=y; i<h; i++ ) {
+   //         for ( int j=x; j<w; j++ ) {
+   //            int pos=i*width+j;
+   //            // recuperation des couleurs courantes
+   //            int pixel = pixelsRGB[pos];
+   //            r = (int) ( (pixel & 0x00FF0000) >> 16 ) ;
+   //            g = (int) ( (pixel & 0x0000FF00) >> 8 ) ;
+   //            b = (int) ( (pixel & 0x000000FF) ) ;
+   //
+   //            // modification uniquement de celle concernee
+   //                 if (color==0) r = filter(tr0,tr1,tr2,(int)red[pos]&0xFF);
+   //            else if (color==1) g = filter(tr0,tr1,tr2,(int)green[pos]&0xFF);
+   //            else b = filter(tr0,tr1,tr2,(int)blue[pos]&0xFF);
+   //
+   //            // inversion si necessaire
+   //            if( video==VIDEO_INVERSE ) {
+   //               if( color==0 ) r=~r;
+   //               else if( color==1 ) g=~g;
+   //               else b=~b;
+   //
+   //               if (twoColors) {
+   //                  if( !flagR ) r = Math.max(g & 0xFF, b & 0xFF);
+   //                  else if( !flagG ) g = Math.max(r & 0xFF, b & 0xFF);
+   //                  else b = Math.max(r & 0xFF, g & 0xFF);
+   //               }
+   //
+   //            } else {
+   //               if (twoColors) {
+   //                  if( !flagR ) r = Math.min(g & 0xFF, b & 0xFF);
+   //                  else if( !flagG ) g = Math.min(r & 0xFF, b & 0xFF);
+   //                  else b = Math.min(r & 0xFF, g & 0xFF);
+   //               }
+   //            }
+   //
+   //            // ecriture en sortie
+   //            out[(i-y)*(w-x)+j-x]=  0xFF000000 | ((r&0xFF)<<16) | ((g&0xFF)<<8) | (b&0xFF);
+   //         }
+   //      }
+   //   }
 
 
    /** Filtre tout le tableau de pixels couleurs en fonction de l'histogramme
-   * @param triangle []   Tableau des positions des triangles
-   * @param color         Couleur de l'histogramme modifie :
+    * @param triangle []   Tableau des positions des triangles
+    * @param color         Couleur de l'histogramme modifie :
                         0 -> rouge
                         1 -> vert
                         2 -> bleu
-   */
+    */
    public void filterRGB(int [] triangle, int color) {
 
       changeImgID();
-      
+
       if( red==null ) createRGB();
 
       int tr0 = triangle[0];
@@ -924,14 +923,14 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
       for ( int pos=0; pos<size; pos++ ) {
          // Recuperation des couleurs courantes
-         r = (int) ( (pixelsRGB[pos] & 0x00FF0000) >> 16 ) ;
-         g = (int) ( (pixelsRGB[pos] & 0x0000FF00) >> 8 ) ;
-         b = (int) ( (pixelsRGB[pos] & 0x000000FF) ) ;
+         r = (pixelsRGB[pos] & 0x00FF0000) >> 16 ;
+      g = (pixelsRGB[pos] & 0x0000FF00) >> 8 ;
+         b = ( (pixelsRGB[pos] & 0x000000FF) ) ;
 
          // Modification uniquement de celle concernee
-         if (color == 0) r = filter(tr0,tr1,tr2,(int)red[pos]&0xFF);
-         else if (color == 1) g = filter(tr0,tr1,tr2,(int)green[pos]&0xFF);
-         else b = filter(tr0,tr1,tr2,(int)blue[pos]&0xFF);
+         if (color == 0) r = filter(tr0,tr1,tr2,red[pos]&0xFF);
+         else if (color == 1) g = filter(tr0,tr1,tr2,green[pos]&0xFF);
+         else b = filter(tr0,tr1,tr2,blue[pos]&0xFF);
 
          // inversion si necessaire
          if( video==VIDEO_INVERSE ) {
@@ -945,13 +944,13 @@ Aladin.trace(3," => Reading in "+temps+" ms");
                else b = Math.max(r & 0xFF, g & 0xFF);
             }
 
-          } else {
-             if (twoColors) {
-                if( !flagRed ) r = ((g & 0xFF) +  (b & 0xFF))/2;
-                else if( !flagGreen ) g = ((r & 0xFF) +  (b & 0xFF))/2;
-                else b = ((r & 0xFF) +  (g & 0xFF))/2;
-             }
-          }
+         } else {
+            if (twoColors) {
+               if( !flagRed ) r = ((g & 0xFF) +  (b & 0xFF))/2;
+               else if( !flagGreen ) g = ((r & 0xFF) +  (b & 0xFF))/2;
+               else b = ((r & 0xFF) +  (g & 0xFF))/2;
+            }
+         }
 
          // ecriture en sortie
          pixelsRGB[pos]= 0xFF000000 | ((r&0xFF)<<16) | ((g&0xFF)<<8) | (b&0xFF);
@@ -960,11 +959,11 @@ Aladin.trace(3," => Reading in "+temps+" ms");
 
 
    /** Calcul des nouvelles valeurs ds pixels suivant l'histogramme
-   * Retourne la valeur calculee
-   * @param tr0, tr1, tr2   Les positions des triangles
-   * @param var            La valeur initiale
-   */
-   protected int filter(int tr0, int tr1, int tr2, int var){
+    * Retourne la valeur calculee
+    * @param tr0, tr1, tr2   Les positions des triangles
+    * @param var            La valeur initiale
+    */
+   static final protected int filter(int tr0, int tr1, int tr2, int var){
       double dy = 128.0;
       double dx, alpha, beta;
 
@@ -975,19 +974,19 @@ Aladin.trace(3," => Reading in "+temps+" ms");
          return 255;
       else if (var>tr0 && var<=tr1) {
          // Premier segment de droite pour la 1ere moitie de la dynamique
-         dx = (double)(tr1-tr0);
+         dx = tr1-tr0;
          if( dx>0.0 ) {
             alpha = dy/dx;
             beta = -alpha*tr0;
-               return (byte)(var*alpha+beta);
+            return (byte)(var*alpha+beta);
          }
       } else {
          // Deuxieme segment de droite pour la 2eme moitie de la dynamique
-         dx = (double)(tr2-tr1);
+         dx = tr2-tr1;
          if( dx>0.0 ) {
             alpha = dy/dx;
             beta = 128.0-alpha*tr1;
-               return (byte)(var*alpha+beta);
+            return (byte)(var*alpha+beta);
          }
       }
       return var;
@@ -997,82 +996,82 @@ Aladin.trace(3," => Reading in "+temps+" ms");
    /** Retournement de l'image
     * @param methode 0-N/S, 1-D/G, 2-N/S+D/G
     */
-    protected void flip(int methode) {
-       createRGB();
-       if( methode==0 || methode==2 ) invImageLine(width,height,pixelsRGB);
-       if( methode==1 || methode==2 ) invImageRow(width,height,pixelsRGB);
-       for( int i=0; i<3; i++ ) {
-          byte [] pixels = i==0 ? red : i==1 ? green : blue;
-          if( methode==0 || methode==2 ) invImageLine(width,height,pixels);
-          if( methode==1 || methode==2 ) invImageRow(width,height,pixels);
-       }
-       if( Projection.isOk(projd) ) projd.flip(methode);
-       changeImgID();
+   protected void flip(int methode) {
+      createRGB();
+      if( methode==0 || methode==2 ) invImageLine(width,height,pixelsRGB);
+      if( methode==1 || methode==2 ) invImageRow(width,height,pixelsRGB);
+      for( int i=0; i<3; i++ ) {
+         byte [] pixels = i==0 ? red : i==1 ? green : blue;
+         if( methode==0 || methode==2 ) invImageLine(width,height,pixels);
+         if( methode==1 || methode==2 ) invImageRow(width,height,pixels);
+      }
+      if( Projection.isOk(projd) ) projd.flip(methode);
+      changeImgID();
 
-       calculPixelsZoomRGB();
-       aladin.calque.zoom.zoomView.repaint();
+      calculPixelsZoomRGB();
+      aladin.calque.zoom.zoomView.repaint();
 
-       aladin.view.newView(1);
-       aladin.view.repaintAll();
-    }
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+   }
 
-    /** Retournement de l'image (Inversion des colonnes)
-     * @param width largeur de l'image
-     * @param height hauteur de l'image
-     * @param pixelsRGB Tableau des pixels (en entree et en sortie)
-     */
-    protected static void invImageRow(int width, int height,int [] pixelsRGB) {
-       int tmp;
-       for( int h=0; h<height; h++) {
-          int offset1=h*width;
-          for( int w=width/2-1; w>=0; w-- ) {
-             int offset2=offset1+width-w-1;
-             tmp = pixelsRGB[offset1+w];
-             pixelsRGB[offset1+w]=pixelsRGB[offset2];
-             pixelsRGB[offset2]=tmp;
-          }
-       }
-    }
+   /** Retournement de l'image (Inversion des colonnes)
+    * @param width largeur de l'image
+    * @param height hauteur de l'image
+    * @param pixelsRGB Tableau des pixels (en entree et en sortie)
+    */
+   protected static void invImageRow(int width, int height,int [] pixelsRGB) {
+      int tmp;
+      for( int h=0; h<height; h++) {
+         int offset1=h*width;
+         for( int w=width/2-1; w>=0; w-- ) {
+            int offset2=offset1+width-w-1;
+            tmp = pixelsRGB[offset1+w];
+            pixelsRGB[offset1+w]=pixelsRGB[offset2];
+            pixelsRGB[offset2]=tmp;
+         }
+      }
+   }
 
-    /** Retournement de l'image (inversion des lignes)
-     * @param width largeur de l'image
-     * @param height hauteur de l'image
-     * @param pixelsRGB Tableau des pixels (en entree et en sortie)
-     */
-    protected static void invImageLine(int width, int height,int [] pixelsRGB) {
-       int[] tmp = new int[width];
-       for( int h=height/2-1; h>=0; h-- ) {
-          int offset1=h*width;
-          int offset2=(height-h-1)*width;
-          System.arraycopy(pixelsRGB,offset1, tmp,0, width);
-          System.arraycopy(pixelsRGB,offset2, pixelsRGB,offset1, width);
-          System.arraycopy(tmp,0, pixelsRGB,offset2, width);
-       }
-    }
+   /** Retournement de l'image (inversion des lignes)
+    * @param width largeur de l'image
+    * @param height hauteur de l'image
+    * @param pixelsRGB Tableau des pixels (en entree et en sortie)
+    */
+   protected static void invImageLine(int width, int height,int [] pixelsRGB) {
+      int[] tmp = new int[width];
+      for( int h=height/2-1; h>=0; h-- ) {
+         int offset1=h*width;
+         int offset2=(height-h-1)*width;
+         System.arraycopy(pixelsRGB,offset1, tmp,0, width);
+         System.arraycopy(pixelsRGB,offset2, pixelsRGB,offset1, width);
+         System.arraycopy(tmp,0, pixelsRGB,offset2, width);
+      }
+   }
 
-    /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
-     * si ce n'est pas nécessaire */
-    protected Image getImage(ViewSimple v,boolean now) {
-       if( oImgID==imgID ) return image;
-       image = Toolkit.getDefaultToolkit().createImage(
-             new MemoryImageSource(width,height,cm, pixelsRGB, 0, width));
-       oImgID=imgID;
-       return image;
-    }
+   /** Return une Image (au sens Java). Mémorise cette image pour éviter de la reconstruire
+    * si ce n'est pas nécessaire */
+   protected Image getImage(ViewSimple v,boolean now) {
+      if( oImgID==imgID ) return image;
+      image = Toolkit.getDefaultToolkit().createImage(
+            new MemoryImageSource(width,height,cm, pixelsRGB, 0, width));
+      oImgID=imgID;
+      return image;
+   }
 
    /** Retourne les 3 composantes du pixel repéré dans l'image */
    public int getPixel8(int x,int y) {
       return pixelsRGB[y*width+x];
    }
-   
+
    /** Retourne la valeur 8 bits du pixel indiqué en coordonnées image*/
    protected byte getPixel8Byte(int x,int y) {
       return pixelsRGB==null ? 0 : (byte) getGreyPixel( getPixel8(x,y) );
    }
-   
+
    // Pour ne vaire postAJLoad() qu'une fois
    private boolean postAJDone=false;
-   
+
    // Après une lecture d'un fichier AJ, il faut éventuellement récupérer les plans correspondant
    // au labelRed, labelGreen et labelBlue (si présent dans la pile) afin de pouvoir
    // visualiser les valeurs des pixels d'origine
@@ -1081,35 +1080,35 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       postAJDone=true;
       try {
          if( labelRed!=null )   {
-            planRed   = (PlanImage)aladin.calque.getPlan(labelRed, 1);  
+            planRed   = (PlanImage)aladin.calque.getPlan(labelRed, 1);
             flagRed = planRed!=null;
             if( flagRed ) pi[0] = planRed.hashCode();
          }
          if( labelGreen!=null )   {
-            planGreen   = (PlanImage)aladin.calque.getPlan(labelGreen, 1);  
+            planGreen   = (PlanImage)aladin.calque.getPlan(labelGreen, 1);
             flagGreen = planGreen!=null;
             if( flagGreen ) pi[1] = planGreen.hashCode();
          }
          if( labelBlue!=null )   {
-            planBlue   = (PlanImage)aladin.calque.getPlan(labelBlue, 1);  
+            planBlue   = (PlanImage)aladin.calque.getPlan(labelBlue, 1);
             flagBlue = planBlue!=null;
             if( flagBlue ) pi[2] = planBlue.hashCode();
          }
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
-   
+
    protected boolean hasOriginalPixels() { return true; }
 
    /** Retourne les valeurs des trois pixels d'origine */
    protected String getPixelInfo(int x,int y,int mode) {
-//      if( mode!=Pixel.LEVEL ) return UNK;
-      
+      //      if( mode!=Pixel.LEVEL ) return UNK;
+
       if( !Projection.isOk(projd) || x<0 || x>=width || y<0 || y>=height ) return "";
-      
+
       // Post traitement nécessaire éventuellement après le chargement d'un RGB issu
       // d'un fichier AJ
       if( !postAJDone ) postAJLoad();
-      
+
       // On recherche les valeurs des pixels dans les images originales
       // si elles sont encore présentes dans la pile
       Coord c = new Coord();
@@ -1132,12 +1131,12 @@ Aladin.trace(3," => Reading in "+temps+" ms");
       }
       return n==0 ? "" : s1.toString();
 
-//      int i = y*width+x;
-//      if( i>=pixelsRGB.length || i<0 ) return "";
-//      return "R:"+Util.align3((pixelsRGB[i]>>16) & 0xFF)+"  "+
-//             "G:"+Util.align3((pixelsRGB[i]>> 8) & 0xFF)+"  "+
-//             "B:"+Util.align3((pixelsRGB[i]    ) & 0xFF);
-    }
+      //      int i = y*width+x;
+      //      if( i>=pixelsRGB.length || i<0 ) return "";
+      //      return "R:"+Util.align3((pixelsRGB[i]>>16) & 0xFF)+"  "+
+      //             "G:"+Util.align3((pixelsRGB[i]>> 8) & 0xFF)+"  "+
+      //             "B:"+Util.align3((pixelsRGB[i]    ) & 0xFF);
+   }
 
    /** Extraction d'une portion de l'image.
     * Retourne une portion de l'image sur la forme d'un tableau
@@ -1146,61 +1145,61 @@ Aladin.trace(3," => Reading in "+temps+" ms");
     * @param x,y,w,h   Le rectangle de la zone a extraire
     */
    protected void getPixels(byte [] newpixels,int x,int y,int w,int h) {
-       int i,n;
-       int k=0;
-       int aw,ah;	// Difference en abs et ord lorsqu'on depasse l'image
+      int i,n;
+      int k=0;
+      int aw,ah;	// Difference en abs et ord lorsqu'on depasse l'image
 
-       // Ajustement de la taille en cas de depassement
-       aw=ah=0;
-       if( x+w>width )  { aw = x+w-width;  w-=aw; }
-       if( y+h>height ) { ah = y+h-height; h-=ah;}
+      // Ajustement de la taille en cas de depassement
+      aw=ah=0;
+      if( x+w>width )  { aw = x+w-width;  w-=aw; }
+      if( y+h>height ) { ah = y+h-height; h-=ah;}
 
-       for( i=y, n=y+h; i<n; i++ ) {
-          for( int j=0; j<w; j++, k++ ) {
-             int c = pixelsRGB[i*width+x+j];
-             newpixels[k] = (byte)( 0xFF & ( ( (c & 0xFF0000)>>16 +
-                                               (c & 0xFF00)>>8 +
-                                               (c & 0xFF) )/3) );
-          }
-       }
-    }
+      for( i=y, n=y+h; i<n; i++ ) {
+         for( int j=0; j<w; j++, k++ ) {
+            int c = pixelsRGB[i*width+x+j];
+            newpixels[k] = (byte)( 0xFF & ( ( (c & 0xFF0000)>>16 +
+            (c & 0xFF00)>>8 +
+            (c & 0xFF) )/3) );
+         }
+      }
+   }
 
-    /** Extraction d'une portion de l'image en double (moyenne des R, G et B
-     * Retourne une portion de l'image sur la forme d'un tableau de pixels
-     * sens des lignes FITS
-     * @param newpixels Le tableau a remplir (il doit etre assez grand)
-     * @param x,y,w,h   Le rectangle de la zone a extraire
-     * A VERIFIER LE SENS DE LA BOITE
-     */
-    protected void getPixels(double [] newpixels,int x,int y,int w,int h) {
-       int i,j;
-       int aw,ah;   // Difference en abs et ord lorsqu'on depasse l'image
+   /** Extraction d'une portion de l'image en double (moyenne des R, G et B
+    * Retourne une portion de l'image sur la forme d'un tableau de pixels
+    * sens des lignes FITS
+    * @param newpixels Le tableau a remplir (il doit etre assez grand)
+    * @param x,y,w,h   Le rectangle de la zone a extraire
+    * A VERIFIER LE SENS DE LA BOITE
+    */
+   protected void getPixels(double [] newpixels,int x,int y,int w,int h) {
+      int i,j;
+      int aw,ah;   // Difference en abs et ord lorsqu'on depasse l'image
 
-       // Ajustement de la taille en cas de depassement
-       aw=ah=0;
-       if( x+w>width )  { aw = x+w-width;  w-=aw; }
-       if( y+h>height ) { ah = y+h-height; h-=ah; }
+      // Ajustement de la taille en cas de depassement
+      aw=ah=0;
+      if( x+w>width )  { aw = x+w-width;  w-=aw; }
+      if( y+h>height ) { ah = y+h-height; h-=ah; }
 
-       for( i=0; i<h; i++ ) {
-          for( j=0; j<w; j++ ) {
-             int c = pixelsRGB[(height-(i+y)-1)*width+j+x];
-             newpixels[i*w+j] = ((0xFF &(c>>24)) + (0xFF &(c>>16)) + (0xFF &c) ) /3;
-          }
-       }
-    }
+      for( i=0; i<h; i++ ) {
+         for( j=0; j<w; j++ ) {
+            int c = pixelsRGB[(height-(i+y)-1)*width+j+x];
+            newpixels[i*w+j] = ((0xFF &(c>>24)) + (0xFF &(c>>16)) + (0xFF &c) ) /3;
+         }
+      }
+   }
 
 
    /** Extraction d'une portion de l'image en entier ARGB.
-   * Retourne une portion de l'image sur la forme d'un tableau de pixels
-   * sens des lignes JPEG
-   * @param newpixels Le tableau a remplir (il doit etre assez grand)
-   * @param x,y,w,h   Le rectangle de la zone a extraire
-   */
+    * Retourne une portion de l'image sur la forme d'un tableau de pixels
+    * sens des lignes JPEG
+    * @param newpixels Le tableau a remplir (il doit etre assez grand)
+    * @param x,y,w,h   Le rectangle de la zone a extraire
+    */
    public void getPixels(int [] newpixels,int x,int y,int w,int h) {
       int i,n;
       int k=0;
       int aw,ah;   // Difference en abs et ord lorsqu'on depasse l'image
-      
+
       // Ajustement de la taille en cas de depassement
       aw=ah=0;
       if( x+w>width )  { aw = x+w-width;  w-=aw; }

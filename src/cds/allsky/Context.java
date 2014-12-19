@@ -21,9 +21,7 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,7 +38,6 @@ import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanBG;
-import cds.aladin.PlanHealpix;
 import cds.aladin.PlanImage;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
@@ -62,15 +59,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Context {
 
-   static final public String METADATAXML = "metadata.xml";
-   static final public String METADATATXT = "metadata.txt";
-   
-   // Zone d'observation dans l'image (tout, ellipsoïde, ou rectangulaire)
-   static final public int ALL         = 0;
-   static final public int ELLIPSE     = 1;
-   static final public int RECTANGULAR = 2;
-   
-   private static boolean verbose = false;
+   private static boolean verbose=false;
    protected String label;                   // Nom du survey
    
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
@@ -95,8 +84,8 @@ public class Context {
    public double[] good=null;                // Plage des valeurs de pixels conservés (raw)
    public int[] borderSize = {0,0,0,0};      // Bords à couper sur les images originales
    protected int circle = 0;                 // Rayon du cercle à garder, <=0 pour tout
-   public int dataArea = ALL;                // Type d'observable (totalité, en ellipse ou en rectangle)
-   public double maxRatio = Constante.MAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
+   public int dataArea = Constante.SHAPE_UNKNOWN; // Type d'observable (totalité, en ellipse ou en rectangle)
+   public double maxRatio = Constante.PIXELMAXRATIO; // Rapport max tolérable entre hauteur et largeur d'une image source
    protected boolean fading=true;            // Activation du fading entre les images originales
    protected boolean mixing=true;            // Activation du mélange des pixels des images originales
    protected boolean fake=false;             // Activation du mode "just-print norun"
@@ -114,7 +103,7 @@ public class Context {
 //   protected boolean bscaleBzeroSet=false;   // true si le bScale/bZero de sortie a été positionnés
    protected double[] cut;   // Valeurs cutmin,cutmax, datamin,datamax pour la boule Healpix à générer
    protected TransfertFct fct = TransfertFct.LINEAR; // Fonction de transfert des pixels fits -> jpg
-   private JpegMethod jpegMethod = Context.JpegMethod.MEDIAN;
+   private JpegMethod jpegMethod = JpegMethod.MEDIAN;
    protected Mode mode=Mode.getDefault();   // Methode de traitement par défaut
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
@@ -133,14 +122,7 @@ public class Context {
    protected String target=null;             // ra,de en deg du "centre" du HiPS s'il est indiqué
    protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
    
-   // Modes supportés pour les tuiles
-   static final public int PNG=0;
-   static final public int JPEG=1;
-   static final public int FITS=2;
-   static final public String [] EXT = { ".png",".jpg",".fits" };
-   static final public String [] MODE = { "png","jpeg","fits" };
-   
-   protected int targetColorMode = JPEG;       // Mode de compression des tuiles couleurs
+   protected int targetColorMode = Constante.TILE_JPEG;       // Mode de compression des tuiles couleurs
    
    public Context() {}
    
@@ -148,7 +130,6 @@ public class Context {
       mocArea=mocIndex=moc=null;
       mode=Mode.getDefault();
       hasAlternateBlank=false;
-//      bscaleBzeroSet=false;
       bscaleBzeroOrigSet=false;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
@@ -165,7 +146,7 @@ public class Context {
    // Getters
    public String getLabel() { return label; }
    public boolean getFading() { return fading; }
-   public int[] getBorderSize() { return dataArea==Context.ALL ?  borderSize : new int[]{0,0,0,0}; }
+   public int[] getBorderSize() { return dataArea==Constante.SHAPE_UNKNOWN ?  borderSize : new int[]{0,0,0,0}; }
    public double getMaxRatio() { return maxRatio; }
    public int getOrder() { return order; }
    public boolean hasFrame() { return frame>=0; }
@@ -175,7 +156,7 @@ public class Context {
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
-   public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.HPX_FINDER); }
+   public String getHpxFinderPath() { return hpxFinderPath!=null ? hpxFinderPath : Util.concatDir( getOutputPath(),Constante.FILE_HPXFINDER); }
    public String getImgEtalon() { return imgEtalon; }
    public int getBitpixOrig() { return bitpixOrig; }
    public int getBitpix() { return isColor() ? bitpixOrig : bitpix; }
@@ -235,14 +216,14 @@ public class Context {
    
    public void setShape(String s) {
       if( Util.indexOfIgnoreCase(s,"circle")>=0      || Util.indexOfIgnoreCase(s,"ellipse")>=0 ) {
-         dataArea=ELLIPSE;
+         dataArea=Constante.SHAPE_ELLIPSE;
          info("Ellipse shape data area autodetection");
       }
       else if( Util.indexOfIgnoreCase(s,"square")>=0 || Util.indexOfIgnoreCase(s,"rectangular")>=0 ) {
-         dataArea=RECTANGULAR;
+         dataArea=Constante.SHAPE_RECTANGULAR;
          info("Rectangular shape data area autodetection");
       }
-      else dataArea=ALL;
+      else dataArea=Constante.SHAPE_UNKNOWN;
    }
    
    // Construit le tableau des HDU à partir d'une syntaxe "1,3,4-7" ou "all"
@@ -295,8 +276,8 @@ public class Context {
    public void setColor(String colorMode) { 
       if( colorMode.equalsIgnoreCase("false")) return;
       bitpixOrig=0;
-      if( colorMode.equalsIgnoreCase("png")) targetColorMode=PNG;
-      else targetColorMode=JPEG;
+      if( colorMode.equalsIgnoreCase("png")) targetColorMode=Constante.TILE_PNG;
+      else targetColorMode=Constante.TILE_JPEG;
    }
    public void setCut(double [] cut) { this.cut=cut; }
    public void setPixelCut(String scut) throws Exception {
@@ -337,7 +318,7 @@ public class Context {
    
    /** Donne l'extension des fichiers losanges */
    public String getTileExt() {
-      return isColor() ? EXT[ targetColorMode ] : ".fits";
+      return isColor() ? Constante.TILE_EXTENSION[ targetColorMode ] : ".fits";
    }
    
    protected enum JpegMethod { MEDIAN, MEAN; }
@@ -694,14 +675,14 @@ public class Context {
    /** Chargement du MOC de l'index */
    protected void loadMocIndex() throws Exception {
       HealpixMoc mocIndex = new HealpixMoc();
-      mocIndex.read( getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME);
+      mocIndex.read( getHpxFinderPath()+Util.FS+Constante.FILE_MOC);
       this.mocIndex=mocIndex;
    }
    
    /** Chargement du MOC réel */
    protected void loadMoc() throws Exception {
       HealpixMoc mocIndex = new HealpixMoc();
-      mocIndex.read( getOutputPath()+Util.FS+BuilderMoc.MOCNAME);
+      mocIndex.read( getOutputPath()+Util.FS+Constante.FILE_MOC);
       this.mocIndex=mocIndex;
    }   
 
@@ -725,7 +706,48 @@ public class Context {
 //      return cut;
 //   }
    
+   public boolean verifTileOrder() {
+      
+      // Récupération d'un éventuel changement de TileOrder dans les propriétés du HpxFinder
+      InputStream in = null;
+      boolean flagTileOrderFound=false;
+      try {
+         String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
+         MyProperties prop = new MyProperties();
+         prop.load( in=new FileInputStream( propFile ) );
+         int o = Integer.parseInt( prop.getProperty(Constante.KEY_TILEORDER) );
+
+         if( o!=getTileOrder() ) {
+            if( tileOrder!=-1 && o!=tileOrder ) {
+               warning("Uncompatible tileOrder="+tileOrder+" compared to pre-existing survey tileOrder="+o);
+               return false;
+               
+            }
+            setTileOrder(o);
+            int w = getTileSide();
+            info("Specifical tileOrder="+o+" tileSize="+w+"x"+w);
+         }
+         flagTileOrderFound=true;
+      } 
+      catch( Exception e ) { }
+      finally { if( in!=null ) { try { in.close(); } catch( Exception e ) {} } }
+      
+      // Si rien d'indiqué dans Properties du HpxFinder, c'est que ce doit être l'ordre par défaut
+      if( !flagTileOrderFound ) {
+         if( getTileOrder()!=Constante.ORDER ) {
+            warning("Uncompatible tileOrder="+getTileOrder()+" compared to default pre-existing survey tileOrder="+Constante.ORDER);
+            return false;
+            
+         }
+      }
+      
+      return true;
+   }
+   
    public boolean verifCoherence() {
+      
+       if( !verifTileOrder() ) return false;
+
       if( mode==Mode.REPLACETILE ) return true;
       
       if( !isColor() ) {
@@ -755,46 +777,12 @@ public class Context {
          }
       }
       
-      int o = cds.tools.pixtools.Util.getMaxOrderByPath(getOutputPath());
-      if( o!=-1 && o!=getOrder() ) {
-         warning("Uncompatible order="+getOrder()+" compared to pre-existing survey order="+o);
+      int or = cds.tools.pixtools.Util.getMaxOrderByPath(getOutputPath());
+      if( or!=-1 && or!=getOrder() ) {
+         warning("Uncompatible order="+getOrder()+" compared to pre-existing survey order="+or);
          return false;
       }
-      
-      
-      // Récupération d'un éventuel changement de TileOrder dans les propriétés du HpxFinder
-      InputStream in = null;
-      boolean flagTileOrderFound=false;
-      try {
-         String propFile = getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
-         MyProperties prop = new MyProperties();
-         prop.load( in=new FileInputStream( propFile ) );
-         o = Integer.parseInt( prop.getProperty(PlanHealpix.KEY_TILEORDER) );
-
-         if( o!=getTileOrder() ) {
-            if( tileOrder!=-1 && o!=tileOrder ) {
-               warning("Uncompatible tileOrder="+tileOrder+" compared to pre-existing survey tileOrder="+o);
-               return false;
-               
-            }
-            setTileOrder(o);
-            int w = getTileSide();
-            info("Specifical tileOrder="+o+" tileSize="+w+"x"+w);
-         }
-         flagTileOrderFound=true;
-      } 
-      catch( Exception e ) { }
-      finally { if( in!=null ) { try { in.close(); } catch( Exception e ) {} } }
-      
-      // Si rien d'indiqué dans Properties du HpxFinder, c'est que ce doit être l'ordre par défaut
-      if( !flagTileOrderFound ) {
-         if( getTileOrder()!=Constante.ORDER ) {
-            warning("Uncompatible tileOrder="+getTileOrder()+" compared to default pre-existing survey tileOrder="+Constante.ORDER);
-            return false;
             
-         }
-      }
-      
       return true;
    }
 
@@ -913,7 +901,7 @@ public class Context {
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
      
       String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes computed in "+Util.getTemps(totalTime,true)+" ("
-         +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndIn="+Util.getTemps(tempsTotalEstime,true))+") "
+         +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndsIn="+Util.getTemps(tempsTotalEstime,true))+") "
          +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
          +Util.getTemps(statNodeAvgTime)+"/node"
          +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
@@ -939,14 +927,17 @@ public class Context {
    // Demande d'affichage des stats (dans le TabJpeg)
    protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
       long nbLowCells = getNbLowCells();
+      
+      double pourcent = nbLowCells<=0 ? 0 : (double)statNbFile/nbLowCells;
+      long tempsTotalEstime = (long)( totalTime*(pourcent - 1) );
       String pourcentNbCells = nbLowCells==-1 ? "" : 
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
-      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
+//      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
       
       String s;
-      if( nbLowCells==-1 ) s = s=statNbFile+" tiles created in "+Util.getTemps(totalTime,true);
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles created in "+Util.getTemps(totalTime,true);
       else s=statNbFile+"/"+nbLowCells+" tiles created in "+Util.getTemps(totalTime,true)+" ("
-            +pourcentNbCells+" EndIn="+Util.getTemps(tempsTotalEstime,true)
+            +pourcentNbCells+" EndsIn="+Util.getTemps(tempsTotalEstime,true)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
             ;
 
@@ -1224,7 +1215,7 @@ public class Context {
       
       if( moc==null ) try { loadMoc(); } catch( Exception e ) { }
       if( prop==null ) loadProperties();
-      String frame = prop.getProperty(PlanHealpix.KEY_COORDSYS);
+      String frame = prop.getProperty(Constante.KEY_COORDSYS);
       String sys = frame.equals("C") ? "equatorial" : frame.equals("E") ? "ecliptic" : "galactic";
       
       long nside = CDSHealpix.pow2(order);
@@ -1250,12 +1241,12 @@ public class Context {
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
          info.append("   <LI> <B>Sky area:</B> "+Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2\n");
-         info.append("   <LI> <B>Associated coverage map:</B> <A HREF=\""+BuilderMoc.MOCNAME+"\">MOC</A>\n");
+         info.append("   <LI> <B>Associated coverage map:</B> <A HREF=\""+Constante.FILE_MOC+"\">MOC</A>\n");
       }
       
-      String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),METADATAXML);
+      String metadata = cds.tools.Util.concatDir( getHpxFinderPath(),Constante.FILE_METADATAXML);
       if( (new File(metadata)).exists() ) {
-         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/"+METADATAXML+"\">"+METADATAXML+"</A>\n");
+         info.append("   <LI> <B>Original data access template:</B> <A HREF=\"HpxFinder/"+Constante.FILE_METADATAXML+"\">"+Constante.FILE_METADATAXML+"</A>\n");
       }
 
       res = res.replace("$INFO",info);
@@ -1288,7 +1279,7 @@ public class Context {
       
       if( header==null )  return;
       
-      String tmp = getOutputPath()+Util.FS+METADATATXT;
+      String tmp = getOutputPath()+Util.FS+Constante.FILE_METADATATXT;
       File ftmp = new File(tmp);
       if( ftmp.exists() ) ftmp.delete();
       FileOutputStream out = null;
@@ -1310,10 +1301,10 @@ public class Context {
       
       // Propriétés à mettre à jour de toutes manières
       updateProperties(
-            new String[] { PlanHealpix.KEY_PROCESSING_DATE, PlanHealpix.KEY_COORDSYS,
-                           PlanHealpix.KEY_HIPSBUILDER,
-                           PlanHealpix.KEY_LABEL,           PlanHealpix.KEY_MAXORDER,
-                           PlanHealpix.KEY_TILEORDER,
+            new String[] { Constante.KEY_PROCESSING_DATE, Constante.KEY_COORDSYS,
+                           Constante.KEY_HIPSBUILDER,
+                           Constante.KEY_LABEL,           Constante.KEY_MAXORDER,
+                           Constante.KEY_TILEORDER,
                           },
             new String[] { getNow(),
                            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
@@ -1332,31 +1323,31 @@ public class Context {
 //            TransfertFct f = getFct();
 //            if( f!=TransfertFct.LINEAR ) s1 = " "+PlanImage.getTransfertFctInfo(f.code());
             
-           setPropriete(PlanHealpix.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
+           setPropriete(Constante.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
          }
-         if( cut[2]!=0 || cut[3]!=0 )  setPropriete(PlanHealpix.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+         if( cut[2]!=0 || cut[3]!=0 )  setPropriete(Constante.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
       
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
-      if( fmt.length()>0 ) setPropriete(PlanHealpix.KEY_FORMAT,fmt);
+      if( fmt.length()>0 ) setPropriete(Constante.KEY_FORMAT,fmt);
       
       // Dans le cas d'un HiPS couleur
-      if( isColor() ) setPropriete(PlanHealpix.KEY_ISCOLOR,"true");
+      if( isColor() ) setPropriete(Constante.KEY_ISCOLOR,"true");
       
       // Ajout du target et du radius par défaut
-      if( target!=null ) setPropriete(PlanHealpix.KEY_TARGET, target);
-      if( targetRadius!=null ) setPropriete(PlanHealpix.KEY_TARGETRADIUS, targetRadius);
+      if( target!=null ) setPropriete(Constante.KEY_TARGET, target);
+      if( targetRadius!=null ) setPropriete(Constante.KEY_TARGETRADIUS, targetRadius);
       
       // Pour le cas d'un Cube
       if( depth>1 ) {
-         setPropriete(PlanHealpix.KEY_ISCUBE,"true");
-         setPropriete(PlanHealpix.KEY_CUBEDEPTH,depth+"");
-         setPropriete(PlanHealpix.KEY_CUBEFIRSTFRAME,"0");
+         setPropriete(Constante.KEY_ISCUBE,"true");
+         setPropriete(Constante.KEY_CUBEDEPTH,depth+"");
+         setPropriete(Constante.KEY_CUBEFIRSTFRAME,"0");
       }
       
       // Y a-t-il un publisher indiqué ?
-      if( publisher!=null ) setPropriete(PlanHealpix.KEY_PUBLISHER,publisher);
+      if( publisher!=null ) setPropriete(Constante.KEY_PUBLISHER,publisher);
       
       // Propriétés additionnelles
       if( keyAddProp!=null ) {
@@ -1381,16 +1372,16 @@ public class Context {
       int frame = getFrame();
 
       MyProperties prop = new MyProperties();
-      prop.setProperty(PlanHealpix.KEY_LABEL, getLabel()+"/"+Constante.HPX_FINDER);
-      prop.setProperty(PlanHealpix.KEY_ISMETA, "true");
-      prop.setProperty(PlanHealpix.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
-      prop.setProperty(PlanHealpix.KEY_MAXORDER, getOrder()+"");
-      prop.setProperty(PlanHealpix.KEY_TILEORDER, getTileOrder()+"");
-      if( minOrder>3 ) prop.setProperty(PlanHealpix.KEY_MINORDER, minOrder+"");
-      prop.setProperty(PlanHealpix.KEY_PROCESSING_DATE, getNow());
-      prop.setProperty(PlanHealpix.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+      prop.setProperty(Constante.KEY_LABEL, getLabel()+"/"+Constante.FILE_HPXFINDER);
+      prop.setProperty(Constante.KEY_ISMETA, "true");
+      prop.setProperty(Constante.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
+      prop.setProperty(Constante.KEY_MAXORDER, getOrder()+"");
+      prop.setProperty(Constante.KEY_TILEORDER, getTileOrder()+"");
+      if( minOrder>3 ) prop.setProperty(Constante.KEY_MINORDER, minOrder+"");
+      prop.setProperty(Constante.KEY_PROCESSING_DATE, getNow());
+      prop.setProperty(Constante.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
 
-      String propFile = getHpxFinderPath()+Util.FS+PlanHealpix.PROPERTIES;
+      String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
       File f = new File(propFile);
       if( f.exists() ) f.delete(); 
       FileOutputStream out = null;
@@ -1404,11 +1395,11 @@ public class Context {
    protected String getAvailableTileFormats() {
       String path = BuilderAllsky.getFileName(getOutputPath(),3,0);
       StringBuffer res = new StringBuffer();
-      for( int i=0; i<EXT.length; i++ ) {
-         File f = new File(path+EXT[i]);
+      for( int i=0; i<Constante.TILE_EXTENSION.length; i++ ) {
+         File f = new File(path+Constante.TILE_EXTENSION[i]);
          if( !f.exists() ) continue;
          if( res.length()>0 ) res.append(' ');
-         res.append(MODE[i]);
+         res.append(Constante.TILE_MODE[i]);
       }
       return res.toString();
    }
@@ -1429,7 +1420,7 @@ public class Context {
       
       waitingPropertieFile();
       try {
-         String propFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
+         String propFile = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES;
 
          // Chargement des propriétés existantes
          prop = new MyProperties();
@@ -1446,11 +1437,11 @@ public class Context {
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
             
-            if( key.equals(PlanHealpix.KEY_PROCESSING_DATE) ) {
+            if( key.equals(Constante.KEY_PROCESSING_DATE) ) {
                // Conservation de la première date de processing si nécessaire
-               if( prop.getProperty(PlanHealpix.KEY_FIRST_PROCESSING_DATE)==null 
-                     && (v=prop.getProperty(PlanHealpix.KEY_PROCESSING_DATE))!=null ) {
-                  prop.setProperty(PlanHealpix.KEY_FIRST_PROCESSING_DATE, v);
+               if( prop.getProperty(Constante.KEY_FIRST_PROCESSING_DATE)==null 
+                     && (v=prop.getProperty(Constante.KEY_PROCESSING_DATE))!=null ) {
+                  prop.setProperty(Constante.KEY_FIRST_PROCESSING_DATE, v);
                }
             }
 
@@ -1467,7 +1458,7 @@ public class Context {
          }
 
          // Remplacement du précédent fichier
-         String tmp = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES+".tmp";
+         String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
          File ftmp = new File(tmp);
          if( ftmp.exists() ) ftmp.delete();
          File dir = new File( getOutputPath() );
@@ -1489,7 +1480,7 @@ public class Context {
    protected void loadProperties() throws Exception {
       waitingPropertieFile();
       try {
-         String propFile = getOutputPath()+Util.FS+PlanHealpix.PROPERTIES;
+         String propFile = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES;
          prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {

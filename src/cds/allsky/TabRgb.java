@@ -257,8 +257,8 @@ public class TabRgb extends JPanel implements ActionListener {
 
    /**   retourne le format de codage pour les tuiles couleurs (JPEG ou PNG) */
    public int getFormat() {
-      if( formatJpeg.isSelected() ) return Context.JPEG;
-      return Context.PNG;
+      if( formatJpeg.isSelected() ) return Constante.TILE_JPEG;
+      return Constante.TILE_PNG;
    }
 
    /** Recupere la liste des plans Allsky valides */

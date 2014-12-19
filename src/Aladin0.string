@@ -1349,48 +1349,69 @@ VWNIF.fr	Cible hors image !
 
 # FrameCM.java Strings
 CMTITRE	Pixel mapping
+CMPREVIEW Preview
+CMPREVIEWTIP "Preview" mode: the fastest mode,\nthe range of visible pixels is precomputed and not adjustable,\n and the physical associated values are unknown.
+CMFULLFITS Full dynamic
+CMFULLFITSTIP "Full dynamic" mode: provide the physical values associated to pixel values.\nThe whole image dynamic is available.
 CMREVERSE	Reverse
-CMRANGE	Pixel range:
-CMLIMITS	Pixel cut:
-CMALGO	Use Aladin autocut algorithm
+CMRANGE	Range of values
+CMLIMITS	Visible pixels
+CMCM	Color map
 CMERRORRANGE	The min value should be less than the max value !
+CMBACK Default conf.
+CMBACKTIP Back to the initial configuration
 CMRESET	Reset
-CMRESETBG	Local cut
-CMRESETBGTIP Autocut based on an area centered on the reticle
+CMRESET1TIP reset the color map stretch
+CMRESET2TIP Back to the default user colormap configuration
+CMLOCALCUT	Local cut
+CMLOCALCUTTIP Autocut based on an current visible area of the image. Adjust the zoom and the reticle position before.
 CMCLOSE	Close
-CMHELP	Help
-CMNOCUT	get all
-CMREPLAY	Apply
-CMALL	On all planes
-CMMETHODE	Adjust the colormap by modifying the transfer\n function and/or by moving the three triangles.
-CMMETHODEX	Adjust the colormap simultaneously for all selected images\nby modifying the transfert function and/or the pixel ranges.
+#CMHELP	Help
+CMNOCUT	All values
+CMNOCUTTIP Display the whole range of pixel values
+CMAPPLYALL	Apply on other images
+CMAPPLYALLTIP	Apply this pixel mapping on all other compatible images selected in the stack
+CMMETHOD Select the range\nof visible pixels\nand adjust its associated\ncolor map
 CMMETHODERGB	Adjust the contrast by moving\nthe three triangles for each component
-CMNOFULLPIXEL	The full pixels are not available for this image\nYou can not apply this function
-CMMESSAGE	This histogram represents the number count \nof each pixel value (in a logarithm scale).\n \nSeveral transfert functions are available (log, sqr, linear...)\nto adjust the default contrast.\nYou can tune this contrast with the curves overlayed on the histogram:\nThe three triangles allows you to modify thes curves:\n  .the left one adjusts the cut-low pixel value,\n  .the right one adjusts the cut-hight pixel value,\n  .the middle one adjusts the dynamic mapping.\n \nYou can move the triangles by clicking/dragging them or\nwith the arrow keys after having pointed the relevant triangle.\n \nThe result is immediately displayed in the frame view (press CTRL for desactivating it).\nFor colored images, pressing SHIFT key will synchronize the 3 components.\n \nNotice: when Aladin loads an image, it applies an autocut algorithm to determine the min and max "relevant" pixel values from the original image. These values are represented in the histogram. But if these values are not determined correctly for your work, you can "re-play" the autocut algorithm by forcing manually the range of original pixels on which this algorithm will be applied. Even, you can keep all original pixels by clicking the "get all" button.
-CMPIXTOOL Toolbox
+CMMESSAGE	The pixel dynamic of astronomical images is generally not adapted to the human eye sensibility. In preview mode (JPEG, PNG,...), Aladin can not provides the physical value associated to each pixel value. You can just modify the constrast of the provided pixels.\nIn the case of full dynamic mode (FITS), Aladin displays the physical values associated to the pixel values and select automatically the best visible range amongst the whole dynamic. This range is drawn as a gray rectangular below. The minimum and the maximum physical values - if known - are displayed on each side of the graphic.\n \nYou can modify this visible range either by the mouse, or directly by editing the two text fields.\nYou can also re-estimate this visible range based on the pixels localized around the current position of the reticle in the image (button "local cut").\nYou can also display the whole range of values (button "All values").
+CMMESSAGE1	This histogram represents the distribution of visible pixel value (in a logarithm scale). The overlay curves/lines illustrate the transfert function between these values and the current color map (below).\n \nYou can adjust dynamically the resulting image contrast by moving the three triangles at the bottom of the graph, or by clicking/dragging your mouse "a la DS9" either in the histogram or directly in the image main view.
+CMMESSAGE2	Aladin uses 256 channel color maps for displaying the images. Each channel is associated to a color or a gray level. You can select one of these color maps usually used in astronomy (gray, BB, A, stern, rainbow, eosb, fire, cubehlx, polar).\nYou can also select the transfert function used to associate a color map channel to a range of pixel values (hsin, log, sqrt, linear - the default, sqr).\nYou can also reverse the color map in order to obtain an inverse picture effect.
+CMPIXTOOL Calculator...
+CMPIXTOOLTIP Open the pixel calculator...
 CMONVIEW CM on view
+CMONVIEWTIP	Direct colormap display over the image
 
 CMTITRE.fr	Dynamique des pixels
+CMPREVIEW.fr Prévisualisation
+CMPREVIEWTIP.fr Mode "prévisualisation": privilégie la vitesse,\nla plage des pixels visibles est prédéterminée et non modifiable,\n et les valeurs physiques ne sont pas disponibles.
+CMFULLFITS.fr Dynamique complète
+CMFULLFITSTIP.fr Mode "Dynamique complète": offre l'accès aux grandeurs physiques associées à chaque valeur de pixel.\nToute la dynamique de l'image est disponible.
 CMREVERSE.fr	Inverser
-CMRANGE.fr	Intervalle des pixels:
-CMLIMITS.fr	Seuils d'affichage:
-CMALGO.fr	Utiliser le seuillage automatique
+CMRANGE.fr	Plage des valeurs:
+CMLIMITS.fr	Pixels visibles
+CMCM.fr	Table des couleurs
 CMERRORRANGE.fr	La valeur minimale doit être inférieure à la valeur maximale !
+CMBACK.fr Conf. par défaut
+CMBACKTIP.fr Revenir à la configuration initiale
 CMRESET.fr	Réinit.
-CMRESETBG.fr	Seuil local
-CMRESETBGTIP.fr Seuillage automatique centré sur le réticule
+CMRESET1TIP.fr Revenir à l'étirement initial de la table des couleurs
+CMRESET2TIP.fr Reprendre la configuration par défaut de la table des couleurs
+CMLOCALCUT.fr	Seuil local
+CMLOCALCUTTIP.fr Seuillage automatique basé sur la portion de l'image actuellement visible. Ajuster le zoom et la position du réticule au préalable.
 CMCLOSE.fr	Fermer
-CMHELP.fr	Aide
-CMNOCUT.fr	Récupérer tout
-CMREPLAY.fr	Appliquer
-CMALL.fr	Sur ts les plans
-CMMETHODE.fr	Ajustez la table des couleurs en sélectionnant une fonction de transfer\net/ou en déplaçant les triangles de contrôle
-CMMETHODEX.fr	Ajustez la table des couleurs simultanément\nde toutes les images sélectionnées en désignant\nune fonction de transfert et/ou en en ajustant\nles limites des pixels.
+CMNOCUT.fr	Toutes les valeurs
+CMNOCUTTIP.fr Affiche la totalité des valeurs des pixels
+CMAPPLYALL.fr	Appliquer aux autres images
+CMAPPLYALLTIP.fr	Applique cet dynamique de pixel à toutes les images compatibles sélectionnées dans la pile.
+CMMETHOD.fr Ajuster la plage\des pixels visibles\nainsi que la table\ndes couleurs associée
 CMMETHODERGB.fr	Ajuster le contraste en déplaçant\nles triangles de contrôle
-CMNOFULLPIXEL.fr	Les pixels originaux de cette image ne sont pas accessibles\nVous ne pouvez utiliser cette fonction
-CMMESSAGE.fr	Cet histogramme représente le nombre de pixels dans chaque niveau de gris (en échelle logarithmique).\n \nPlusieurs fonctions de transfert sont possibles (log, sqrt, linear...) pour ajuster globalement le contraste initial. Vous pouvez également préciser ce contraste en manipulant les courbes superposées à l'histogramme: Trois triangles de contrôle vous permettent ainsi:\n  .A gauche de seuiller les valeurs basses;\n  .A droite de seuiller les valeurs hautres;\n  .Au milieu d'ajuster la dynamique.\n \nVous pouvez déplacer ces triangles en cliquant/glissant dessus ou simplement en utilisant les flêches droite/gauche après avoir placé la souris sur le triangle choisi.\n \nLe résultat est immédiatement affiché dans la vue de l'image. Vous pouvez inhiber cette mise à jour immédiate en appuyant sur la touche CTRL.\nDans le cas d'une image couleur, les trois composantes seront synchronisées par l'appui de la touche MAJ. \nA noter: Lorsque Aladin charge une image, il applique automatiquement un algorithme de seuillage afin de déterminer les limites des valeurs pertinentes. Ce sont ces valeurs qui sont représentées dans l'histogramme. Si ce seuillage ne convient pas à votre travail, vous pouvez "réutiliser" cet algorithme en modifiant manuellement l'intervalle initiale. Vous pouvez même prendre en compte toutes les valeurs originales en cliquant sur le bouton "Récupère tout".
-CMPIXTOOL.fr Outils
+CMMESSAGE.fr	Les images astronomiques ont généralement une plage de valeurs bien plus large que ce que l'oeil humain peut discerner. En mode de prévisualisation (JPEG, PNG...), Aladin ne connait pas les valeurs physiques correspondantes, et vous ne pouvez qu'adapter le contraste des pixels fournis. \nEn revanche, dans le cas du mode dynamique complète (FITS), Aladin affiche les valeurs physiques correspondantes aux valeurs des pixels et sélectionne automatiquement l'intervalle visible qui lui semble le plus adapté. Celui-ci est representé par la barre grisée ci-dessous. Les valeurs minimum et maximum - si elles sont connues - s'affichent à droite et à gauche du graphique.\n \nVous pouvez ajuster manuellement la plage visible via les deux champs de saisie, ou utiliser votre souris pour ajuster ou déplacer la zone grisée.\nVous pouvez également recalculer l'estimation automatique en se basant sur la position courante du réticule dans l'image (bouton "local cut").\nVous pouvez afin afficher toute la plage des valeurs possibles (bouton "Toutes les valeurs").
+CMMESSAGE1.fr	Cet histogramme représente la distribution des valeurs visibles des pixels (en échelle logarithmique). La ligne/courbe tracée en superposition illustre la fonction de transfert appliquée aux valeurs vers la table des couleurs (ci-dessous).\n \nVous pouvez ajuster dynamiquement le contraste de l'image en agissant sur les 3 triangles situés sous le graphique. Alternativement, vous pouvez cliquer/glisser votre souris "à la DS9" soit dans l'histogramme, soit directement sur l'image dans la vue principale.
+CMMESSAGE2.fr	Pour visualiser l'image, Aladin utilise des tables de couleurs à 256 canaux. Chaque canal est associé à une couleur ou à un niveau de gris. Vous disposez de plusieurs tables de couleurs classiques en astronomie (gray, BB, A, stern, rainbow, eosb, fire, cubehlx, polar).\nVous pouvez également modifier la fonction de transfert qui permet d'associer une plage de valeurs de pixel à un canal de la table des couleurs. Par défaut linéaire, cette fonction peut être hsin, log, sqrt ou sqr ce qui correspond à des contrastes décroisssants. Il vous est également possible d'inverser la table des couleurs afin d'obtenir un effet de négatif photo.
+CMPIXTOOL.fr Calculette...
+CMPIXTOOLTIP.fr Ouvrir la calculette à pixel
 CMONVIEW.fr CM sur vue 
+CMONVIEWTIP.fr Affichage direct de la table des couleurs en superposition de l'image
 
 # FilterProperties.java strings
 FTBEGINNER	Beginner mode

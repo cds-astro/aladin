@@ -246,7 +246,7 @@ public class TabBuild extends JPanel implements ActionListener {
    }
    
    private void loadMoc() {
-      String mocFile = mainPanel.context.getHpxFinderPath()+Util.FS+BuilderMoc.MOCNAME;
+      String mocFile = mainPanel.context.getHpxFinderPath()+Util.FS+Constante.FILE_MOC;
       mainPanel.aladin.execAsyncCommand("load "+mocFile);
    }
 

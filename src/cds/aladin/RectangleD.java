@@ -31,33 +31,34 @@ import cds.tools.Util;
 public class RectangleD {
 
    public double x,y,width,height;
+   public RectangleD() { };
    public RectangleD(double x, double y, double width, double height) {
       this.x=x; this.y=y;
       this.width=width; this.height=height;
    }
-   
+
    /** Copie du rectangle */
    public RectangleD copy() {
       return new RectangleD(x,y,width,height);
    }
-   
-  /** Return true if (x,y) is in the rectangle */
+
+   /** Return true if (x,y) is in the rectangle */
    public boolean contains(double xc, double yc) {
       return xc>=x && xc<=x+width && yc>=y && yc<=y+height;
    }
-   
+
    /** Retourne true si le rectangle passée en paramètre est
     * contenu dans le rectangle */
    public boolean inside(RectangleD r) {
       return r.x>=x && r.x<=x+width && r.y>=y && r.y<=y+height;
    }
-   
+
    public boolean equals(RectangleD r) {
       if( r==this ) return true;
       if( r==null ) return false;
       return x==r.x && y==r.y && width==r.width && height==r.height;
    }
-   
+
    public String toString() { return Util.myRound(""+x,2)+","+Util.myRound(""+y,2)+" "
          +Util.myRound(""+width,2)+"x"+Util.myRound(""+height,2); }
 }

@@ -247,7 +247,10 @@ public class CacheFits {
       }
       
       if( (mode&(PNG|JPEG))!=0 ) {
-         f.fits.loadJpeg(fileName,true, (mode&HHH)==0);
+         int format = (mode&PNG)!=0 ? Fits.PREVIEW_PNG 
+                    : (mode&JPEG)!=0 ? Fits.PREVIEW_JPEG 
+                    : Fits.PREVIEW_UNKOWN;
+         f.fits.loadPreview(fileName,true, (mode&HHH)==0, format);
       }
       else {
          f.fits.loadFITS(fileName, false, flagLoad);
@@ -262,7 +265,7 @@ public class CacheFits {
 
       // applique un filtre spécial
       if ( context!=null && (context.skyvalName!=null || context.expTimeName!=null 
-            || context.pixelGood!=null || flagChangeOrig || context.dataArea!=Context.ALL)) delSkyval(f.fits,flagChangeOrig);
+            || context.pixelGood!=null || flagChangeOrig || context.dataArea!=Constante.SHAPE_UNKNOWN)) delSkyval(f.fits,flagChangeOrig);
 
       return f;
    }
@@ -459,7 +462,7 @@ public class CacheFits {
       }
       
       // Faut-il supprimer les bords dans le cas d'une observation ellipsoïde ou rectangulaire
-      if( context.dataArea!=Context.ALL ) {
+      if( context.dataArea!=Constante.SHAPE_UNKNOWN ) {
          try { shape = findDataArea(f); } catch (Exception e) { }
       }
       
@@ -478,7 +481,7 @@ public class CacheFits {
       double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;
       double a2=0,b2=0;
       if( shape!=null ) {
-         if( context.dataArea==Context.ELLIPSE ) { 
+         if( context.dataArea==Constante.SHAPE_ELLIPSE ) { 
             a2=(shape[2]-context.borderSize[0]-context.borderSize[2]); a2 *= a2;
             b2=(shape[3]-context.borderSize[1]-context.borderSize[3]); b2 *= b2;
          } else {
@@ -504,7 +507,7 @@ public class CacheFits {
                   double x1 = x+f.xCell - shape[0];
                   double y1 = y+f.yCell - shape[1];
                   boolean out;
-                  if( context.dataArea==Context.ELLIPSE ) out = (x1*x1)/a2 + (y1*y1)/b2 >= 1;
+                  if( context.dataArea==Constante.SHAPE_ELLIPSE ) out = (x1*x1)/a2 + (y1*y1)/b2 >= 1;
                   else out = Math.abs(x1)>=a2 || Math.abs(y1)>=b2;
                   
                   if( out ) {

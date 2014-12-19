@@ -22,6 +22,7 @@ package cds.aladin;
 
 import java.util.Hashtable;
 
+import cds.allsky.Constante;
 import cds.tools.Util;
 
 public class PlanBGCube extends PlanBG {
@@ -50,7 +51,7 @@ public class PlanBGCube extends PlanBG {
    
    protected String getFrameLabel(int i) {
       if( !active ) return label;
-      String s = prop.getProperty(PlanHealpix.KEY_LABEL+"_"+i); 
+      String s = prop.getProperty(Constante.KEY_LABEL+"_"+i); 
       return s!=null ? s : label;
    }
 
@@ -65,10 +66,10 @@ public class PlanBGCube extends PlanBG {
          if( prop==null ) throw new Exception();
          
          String s;
-         s = prop.getProperty(PlanHealpix.KEY_CUBEDEPTH); 
+         s = prop.getProperty(Constante.KEY_CUBEDEPTH); 
          if( s!=null )  try { depth = Integer.parseInt(s); } catch( Exception e ) { Aladin.trace(3,"PlanBGCube error on cubeDepth property ["+s+"]"); }
          
-         s = prop.getProperty(PlanHealpix.KEY_CUBEFIRSTFRAME); 
+         s = prop.getProperty(Constante.KEY_CUBEFIRSTFRAME); 
          if( s!=null )  try { z = Integer.parseInt(s); } catch( Exception e ) { Aladin.trace(3,"PlanBGCube error on cubeFirstFrame property ["+s+"]"); }
          
       } catch( Exception e ) { return false; }

@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
-import cds.allsky.Context;
+import cds.allsky.Constante;
 import cds.tools.Util;
 
 public class PlanBGCat extends PlanBG {
@@ -414,7 +414,7 @@ public class PlanBGCat extends PlanBG {
 
    /** Charge la légende générique via le fichier metadata.xml (s'il existe) */
    protected void loadGenericLegende() {
-      String filename = getUrl()+"/"+Context.METADATAXML;
+      String filename = getUrl()+"/"+Constante.FILE_METADATAXML;
       Pcat pcat = new Pcat(this);
       MyInputStream in = null;
       try {

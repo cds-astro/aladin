@@ -1117,12 +1117,8 @@ public final class PlanField extends Plan {
 
        String vot = Util.createVOTable(pointings);
 
-        try {
-           aladin.calque.newPlanCatalog(new MyInputStream(new BufferedInputStream(
-                            new ByteArrayInputStream(vot.getBytes()))), "Pointings");
-        } catch (IOException e) {
-           e.printStackTrace();
-        }
+       aladin.calque.newPlanCatalog(new MyInputStream(new BufferedInputStream(
+                       new ByteArrayInputStream(vot.getBytes()))), "Pointings");
    }
 
    protected boolean isAlmaFP() {

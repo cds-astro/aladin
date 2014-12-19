@@ -47,25 +47,25 @@ import cds.tools.Util;
 public class FramePixelToolbox extends JFrame {
 
    protected Aladin aladin;
-   
+
    // Taille de chaque colonne du tableau des pixels
    static final private int W [] = {100,100,50,75,25 };
-   
+
    // Les lignes de la table des pixels
    private PixelLine pVal,pCutMin,pCutMax,pDataMin,pDataMax,pMin,pMax;
 
    // Les champs annexes
    private JTextField bzeroField,bscaleField,bitpixField,blankField;
-   
+
    private double raw;                  // La valeur du pixel courant (en raw)
-   private int bitpix=0;          
+   private int bitpix=0;
    private double bzero=0;
    private double bscale=1;
    private double blank=Double.NaN;
    private double cutMin,cutMax,dataMin,dataMax;
    private ColorModel cm;               // La table des couleurs courantes
    private boolean isTransparent;       // Indique si l'image associée gère la transparence
-   
+
    protected FramePixelToolbox(Aladin aladin) {
       super();
       this.aladin = aladin;
@@ -79,7 +79,7 @@ public class FramePixelToolbox extends JFrame {
       pack();
       setVisible(true);
    }
-   
+
    public void processWindowEvent(WindowEvent e) {
       if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
          aladin.framePixelTool=null;
@@ -101,7 +101,7 @@ public class FramePixelToolbox extends JFrame {
       JPanel p = new JPanel();
       p.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
       p.setLayout(g);
-      
+
       JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
       p1.add( new MyLabel("Physical","Physical value associated to the raw pixel value",W[0]) );
       p1.add( new MyLabel("Raw","Encoded pixel value",W[1]) );
@@ -109,7 +109,7 @@ public class FramePixelToolbox extends JFrame {
       p1.add( new MyLabel("R G B","Color map Red,Green,Blue components",W[3]) );
       p1.add( new MyLabel("Color","Displayed color",W[4]) );
       PropPanel.addCouple(p,"", p1, g,c);
-      
+
       PixelLine pl;
       pMin = pl = new PixelLine("Min enc.","Smallest encodable value",false,false);
       PropPanel.addCouple(p,pl.label, pl.getPanel(), g,c);
@@ -127,7 +127,7 @@ public class FramePixelToolbox extends JFrame {
       PropPanel.addCouple(p,pl.label, pl.getPanel(), g,c);
       return p;
    }
-   
+
    // Panel indiquant les paramètres annexes BSCALE,BZERO,BLANK et BITPIX
    private JPanel createPanelBottom() {
       JPanel p = new JPanel( new BorderLayout());
@@ -135,7 +135,7 @@ public class FramePixelToolbox extends JFrame {
       p.add( createPanelBottomRight(), BorderLayout.EAST );
       return p;
    }
-   
+
    private JPanel createPanelBottomRight() {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g =  new GridBagLayout();
@@ -147,7 +147,7 @@ public class FramePixelToolbox extends JFrame {
       JPanel p = new JPanel();
       p.setBorder(BorderFactory.createEmptyBorder(10,5,5,20));
       p.setLayout(g);
-      
+
       bitpixField = new JTextField(10);
       bitpixField.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { modify(-1); }
@@ -156,13 +156,13 @@ public class FramePixelToolbox extends JFrame {
       blankField.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { modify(-1); }
       });
-     
+
       PropPanel.addCouple(p,new JLabel("BITPIX"), bitpixField, g,c);
       PropPanel.addCouple(p,new JLabel("BLANK"), blankField, g,c);
-      
+
       return p;
    }
-   
+
    private JPanel createPanelBottomLeft() {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g =  new GridBagLayout();
@@ -174,7 +174,7 @@ public class FramePixelToolbox extends JFrame {
       JPanel p = new JPanel();
       p.setBorder(BorderFactory.createEmptyBorder(10,20,5,5));
       p.setLayout(g);
-      
+
       bzeroField = new JTextField(10);
       bzeroField.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { modify(-1); }
@@ -183,13 +183,13 @@ public class FramePixelToolbox extends JFrame {
       bscaleField.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { modify(-1); }
       });
-      
+
       PropPanel.addCouple(p,new JLabel("BZERO"), bzeroField, g,c);
       PropPanel.addCouple(p,new JLabel("BSCALE"), bscaleField, g,c);
-      
+
       return p;
    }
-   
+
    // Action lors d'une modification de la valeur d'un champ
    // from==0 si l'on vient du tableau des pixels, champ "Physical"
    // from==1 si l'on vient du tableau des pixels, champ "Raw"
@@ -204,7 +204,7 @@ public class FramePixelToolbox extends JFrame {
             if( blankField.getText().equalsIgnoreCase("NaN") ) blank=Double.NaN;
             else blank = Double.parseDouble( blankField.getText() );
          }
-         
+
          if( from==1 ) {
             raw = Double.parseDouble(pVal.field[from].getText() );
             cutMin = Double.parseDouble(pCutMin.field[from].getText() );
@@ -218,10 +218,10 @@ public class FramePixelToolbox extends JFrame {
             dataMin = (Double.parseDouble(pDataMin.field[from].getText() )-bzero)/bscale;
             dataMax = (Double.parseDouble(pDataMax.field[from].getText() )-bzero)/bscale;
          }
-         
+
          if( bitpixField.getText().length()>0 ) {
             bitpix = (int)Double.parseDouble( bitpixField.getText() );
-            bitpix = (int)(bitpix/8) * 8;
+            bitpix = bitpix/8 * 8;
             if( Math.abs(bitpix)>64 ) throw new Exception();
          }
       } catch( Exception e ) { }
@@ -258,7 +258,7 @@ public class FramePixelToolbox extends JFrame {
       }
       setParams(p,pixel);
    }
-      
+
    protected void setParams(PlanImage p,double pixel) {
       bzero = p.bZero;
       bscale = p.bScale;
@@ -273,7 +273,7 @@ public class FramePixelToolbox extends JFrame {
       cm = p.getCM();
       resume();
    }
-   
+
    // Regénération de l'ensemble des valeurs à partir des éléments connus
    private void resume() {
       if( pVal==null ) return;
@@ -286,36 +286,36 @@ public class FramePixelToolbox extends JFrame {
       bscaleField.setText(Util.myRound(bscale));
       bitpixField.setText(bitpix+"");
       blankField.setText(blank+"");
-      
+
       pMin.setValue(dataMin);
-      String min = bitpix==0 ? "" : bitpix==8 ? "0" : bitpix==16 ? Short.MIN_VALUE+"" 
+      String min = bitpix==0 ? "" : bitpix==8 ? "0" : bitpix==16 ? Short.MIN_VALUE+""
             : bitpix==32 ? Integer.MIN_VALUE+"" : bitpix==64 ? "-2^63"
-            : bitpix==-32 ? Util.myRound(-Float.MAX_VALUE+"",2) : Util.myRound(-Double.MAX_VALUE+"",2);
-      pMin.setValue(min,1);
-      if( bzero==0 && bscale==1 ) pMin.setValue(min,0);
-      else {
-         String minp =bitpix==0 ? "" : bitpix==8 ? ""+bzero : bitpix==16 ? Util.myRound(""+(Short.MIN_VALUE*bscale+bzero),2)
-               : bitpix==32 ?  Util.myRound(""+(Long.MIN_VALUE*bscale+bzero),2) : bitpix==64 ? Util.myRound(""+(-Math.pow(2,63)*bscale+bzero),2)
-               : bitpix==-32 ? Util.myRound(""+(-Float.MAX_VALUE*bscale+bzero),2) : Util.myRound(""+(-Double.MAX_VALUE*bscale+bzero),2);
-         pMin.setValue(minp,0);
-      }
-      
-      pMax.setValue(dataMax);
-      String max = bitpix==0 ? "" : bitpix==8 ? "255" : bitpix==16 ? Short.MAX_VALUE+"" 
-            : bitpix==32 ? Integer.MAX_VALUE+"" : bitpix==64 ? "2^63"
-            : bitpix==-32 ? Util.myRound(Float.MAX_VALUE+"",2) : Util.myRound(Double.MAX_VALUE+"",2);
-      pMax.setValue(max,1);
-      if( bzero==0 && bscale==1 ) pMax.setValue(max,0);
-      else {
-         String maxp = bitpix==0 ? "" : bitpix==8 ? ""+(255*bscale+bzero) : bitpix==16 ? Util.myRound(""+(Short.MAX_VALUE*bscale+bzero),2)
-               : bitpix==32 ?  Util.myRound(""+(Long.MAX_VALUE*bscale+bzero),2) : bitpix==64 ? Util.myRound(""+(Math.pow(2,63)*bscale+bzero),2)
-               : bitpix==-32 ? Util.myRound(""+(Float.MAX_VALUE*bscale+bzero),2) : Util.myRound(""+(Double.MAX_VALUE*bscale+bzero),2);
-         pMax.setValue(maxp,0);
-      }
-      
-      aladin.glu.log("PixelToolbox","");
+                  : bitpix==-32 ? Util.myRound(-Float.MAX_VALUE+"",2) : Util.myRound(-Double.MAX_VALUE+"",2);
+                  pMin.setValue(min,1);
+                  if( bzero==0 && bscale==1 ) pMin.setValue(min,0);
+                  else {
+                     String minp =bitpix==0 ? "" : bitpix==8 ? ""+bzero : bitpix==16 ? Util.myRound(""+(Short.MIN_VALUE*bscale+bzero),2)
+                           : bitpix==32 ?  Util.myRound(""+(Long.MIN_VALUE*bscale+bzero),2) : bitpix==64 ? Util.myRound(""+(-Math.pow(2,63)*bscale+bzero),2)
+                                 : bitpix==-32 ? Util.myRound(""+(-Float.MAX_VALUE*bscale+bzero),2) : Util.myRound(""+(-Double.MAX_VALUE*bscale+bzero),2);
+                                 pMin.setValue(minp,0);
+                  }
+
+                  pMax.setValue(dataMax);
+                  String max = bitpix==0 ? "" : bitpix==8 ? "255" : bitpix==16 ? Short.MAX_VALUE+""
+                        : bitpix==32 ? Integer.MAX_VALUE+"" : bitpix==64 ? "2^63"
+                              : bitpix==-32 ? Util.myRound(Float.MAX_VALUE+"",2) : Util.myRound(Double.MAX_VALUE+"",2);
+                              pMax.setValue(max,1);
+                              if( bzero==0 && bscale==1 ) pMax.setValue(max,0);
+                              else {
+                                 String maxp = bitpix==0 ? "" : bitpix==8 ? ""+(255*bscale+bzero) : bitpix==16 ? Util.myRound(""+(Short.MAX_VALUE*bscale+bzero),2)
+                                       : bitpix==32 ?  Util.myRound(""+(Long.MAX_VALUE*bscale+bzero),2) : bitpix==64 ? Util.myRound(""+(Math.pow(2,63)*bscale+bzero),2)
+                                             : bitpix==-32 ? Util.myRound(""+(Float.MAX_VALUE*bscale+bzero),2) : Util.myRound(""+(Double.MAX_VALUE*bscale+bzero),2);
+                                             pMax.setValue(maxp,0);
+                              }
+
+                              aladin.glu.log("PixelToolbox","");
    }
-   
+
    // Permet de bloquer la taille d'un Label
    class MyLabel extends JLabel {
       int width=75;
@@ -324,8 +324,8 @@ public class FramePixelToolbox extends JFrame {
          Util.toolTip(this, tip);
          width=w;
       }
-      public Dimension getPreferredSize() { 
-         return new Dimension(width,super.getPreferredSize().height); 
+      public Dimension getPreferredSize() {
+         return new Dimension(width,super.getPreferredSize().height);
       }
    }
 
@@ -333,16 +333,16 @@ public class FramePixelToolbox extends JFrame {
    class MyField extends JTextField {
       int width=75;
       MyField(int w) { width=w; }
-      public Dimension getPreferredSize() { 
-         return new Dimension(width,super.getPreferredSize().height); 
+      public Dimension getPreferredSize() {
+         return new Dimension(width,super.getPreferredSize().height);
       }
    }
-   
+
    // Gestion d'une ligne du tableau des pixels
-   class PixelLine { 
+   class PixelLine {
       JLabel label;                             // Un label...
       MyField [] field = new MyField[W.length]; // ...et 4 champs par ligne
-      
+
       /**
        * Création d'une ligne pour le tableau des pixels
        * @param label Le label en début de ligne
@@ -350,11 +350,11 @@ public class FramePixelToolbox extends JFrame {
        * @param bold true s'il faut l'afficher en gras
        * @param editable true si la ligne autorise des modifications de ses valeurs
        */
-      PixelLine(String label,String tip,boolean bold,boolean editable) { 
-         this.label = new JLabel(label); 
+      PixelLine(String label,String tip,boolean bold,boolean editable) {
+         this.label = new JLabel(label);
          Util.toolTip(this.label, tip);
          if( bold ) this.label.setFont( this.label.getFont().deriveFont(Font.BOLD));
-         
+
          for( int i=0; i<field.length; i++ ) {
             MyField f = field[i] = new MyField(W[i]);
             if( i==4 ) field[i].setOpaque(true);
@@ -370,14 +370,14 @@ public class FramePixelToolbox extends JFrame {
             if( bold ) f.setFont( f.getFont().deriveFont(Font.BOLD));
          }
       }
-      
+
       // Construit et retourne le panel qui contient les 4 cases de la ligne
       JPanel getPanel() {
          JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
          for( int i=0; i<field.length; i++ ) p.add( field[i] );
          return p;
       }
-      
+
       // Positionne les valeurs de la ligne à partir de la valeur RAW (colonne 1)
       void setValue(double raw) {
          field[0].setText( Double.isNaN(raw) || raw==blank ? "" : Util.myRound(raw*bscale+bzero) );
@@ -396,12 +396,12 @@ public class FramePixelToolbox extends JFrame {
             field[4].setBackground( Color.white );
          }
       }
-      
+
       // Affiche s dans la colonne i, sans recalcul
       void setValue(String s,int i) {
          field[i].setText(s);
       }
-      
+
       // Retourne l'indice pour la colormap correspondant à la valeur du pixel
       // en raw (même code que dans PixelImage.cut(...)
       // L'indice 0 peut être réservé à la transparence le cas échéant

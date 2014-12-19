@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import cds.aladin.Aladin;
-import cds.aladin.ColorMap;
+import cds.aladin.CanvasColorMap;
 import cds.aladin.Coord;
 import cds.aladin.Plan;
 import cds.aladin.PlanBG;
@@ -48,7 +48,7 @@ public class BuilderRgb extends Builder {
     public void run() throws Exception {
        build();       
        if( !context.isTaskAborting() ) {
-          (new BuilderAllsky(context)).createAllSkyColor(path,3,Context.MODE[format],64,0);
+          (new BuilderAllsky(context)).createAllSkyColor(path,3,Constante.TILE_MODE[format],64,0);
        }
        if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(path);
     }
@@ -91,7 +91,7 @@ public class BuilderRgb extends Builder {
              return;
           }
           
-          IndexColorModel cm = ColorMap.getCM(p[c].cmControl[0],p[c].cmControl[1],p[c].cmControl[2],
+          IndexColorModel cm = CanvasColorMap.getCM(p[c].cmControl[0],p[c].cmControl[1],p[c].cmControl[2],
                 false, p[c].typeCM,p[c].transfertFct,p[c].isTransparent());
           tcm[c] = cds.tools.Util.getTableCM(cm, 2);
 //          tcm[c] = cds.tools.Util.getTableCM(p[c].getCM(), 2);
@@ -125,7 +125,7 @@ public class BuilderRgb extends Builder {
        for( int i=0; i<768; i++ ) {
           if( context.isTaskAborting() ) new Exception("Task abort !");
           // Si le fichier existe déjà on ne l'écrase pas
-          String rgbfile = Util.getFilePath(path,3, i)+Context.EXT[format];
+          String rgbfile = Util.getFilePath(path,3, i)+Constante.TILE_EXTENSION[format];
           if( !context.isInMocTree(3, i) ) continue;
           if ((new File(rgbfile)).exists()) continue;
           createRGB(3,i);
@@ -290,7 +290,7 @@ public class BuilderRgb extends Builder {
        for( int c=0; c<3; c++ ) {
           if( c==missing || out[c]==null ) continue;
           pixx8[c] = out[c].toPix8(p[c].getCutMin(),p[c].getCutMax(), tcm[c], 
-                format==Context.PNG ? Fits.PIX_255 : Fits.PIX_256);
+                format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256);
       }
        
        Fits rgb = new Fits(width,width,0);
@@ -316,8 +316,8 @@ public class BuilderRgb extends Builder {
        }
        String file="";
 
-       file = Util.getFilePath(path,order, npix)+Context.EXT[format];
-       rgb.writeRGBcompressed(file,Context.MODE[format]);
+       file = Util.getFilePath(path,order, npix)+Constante.TILE_EXTENSION[format];
+       rgb.writeRGBPreview(file,Constante.TILE_MODE[format]);
        rgb.free();
 
        File f = new File(file);
