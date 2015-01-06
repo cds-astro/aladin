@@ -87,6 +87,8 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    private JComboBox<String> cmCombo, fctCombo;
    private JCheckBox reverseCb;
    private JRadioButton rPreview,rFull;
+   
+   private DefaultConf defaultConf = new DefaultConf();   // Gère les resets
 
    //Les valeurs a memoriser
    private int imgID=-1;             // Memorisation de l'etat de l'image (numero de version)
@@ -164,6 +166,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          memoControl();
 
          PlanImage p=(PlanImage)aladin.calque.getPlanBase();
+         if( pimg!=null && pimg.selected ) p =pimg;  // On ne change pas de plan s'il est encore sélectionné
 
          if( p!=null && p.flagOk ) {
 
@@ -176,9 +179,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
                if( !isPlanImageRGB && !isPlanBGRGB )  cm.getCM();
 
             } else {
-
-               // L'image a changé d'état
-               int nImgID = p.getImgID();
+               int nImgID = pimg.getImgID();
                if( imgID==-1 || imgID!=nImgID ) {
                   cm.repaint();
                   if( cm2!=null ) cm2.repaint();
@@ -196,7 +197,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    /** Force le rechargement de l'histogramme dans le cas d'un blink */
    protected void blinkUpdate(Plan pref) {
       if( pimg!=pref ) return;
-      pimg.histOk(false);
+      pimg.resetHist();
       imgID= -1;
       if( isVisible() ) majCM();
    }
@@ -262,7 +263,6 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       boolean memo() {
          if( pimg.hashCode() == pimgHash ) return false;   // on est toujours sur le même objets
          pimgHash = pimg.hashCode();
-
          rawPixelCutMin = pimg.pixelMin;
          rawPixelCutMax = pimg.pixelMax;
          cmIndex        = pimg.typeCM;
@@ -271,16 +271,20 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          return true;
       }
 
+      // reset si nécessaire de l'ensemble
       void resetAll() { resetMinMax(); resetCM(); resetTriangle(); }
 
+      // Une modif a été opérée
       boolean isModif() {
          return isModifCM() || isModifTriangle() || isModifMinMax();
       }
 
+      // Une modif sur la table des couleur a été opérée
       boolean isModifCM() {
          return pimg.getTransfertFct()!=fctIndex || pimg.typeCM!=cmIndex || pimg.video!=videoIndex;
       }
 
+      // reset si nécessaire de la table des couleurs
       void resetCM() {
          if( !isModifCM() ) return;
          pimg.setTransfertFct(fctIndex);
@@ -289,32 +293,35 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          setCM( cm.getCM() );
       }
 
+      // Une modif sur les triangles d'ajustement linéaire a été opérée
       boolean isModifTriangle() {
          return 0!=cm.triangle[0] || 128!=cm.triangle[1] || 255!=cm.triangle[2];
       }
 
+      // reset si nécessaire des triangles d'ajustement linéaire de la table des couleurs
       void resetTriangle() {
          if( !isModifTriangle() ) return;
          cm.reset();
          setCM( cm.getCM() );
       }
 
+      // Une modif sur le cut min ou max a été opérée
       boolean isModifMinMax() {
          return rawPixelCutMin!=pimg.pixelMin || rawPixelCutMax!=pimg.pixelMax;
       }
 
+      // reset si nécessaire des cut min et max
       void resetMinMax() {
          if( !isModifMinMax() ) return;
          pimg.recut(rawPixelCutMin,rawPixelCutMax,false);
-         pimg.freeHist();
          setCM(cm.getCM());
          pixelCutMinField.setText(pimg.getPixelMinInfo());
          pixelCutMaxField.setText(pimg.getPixelMaxInfo());
       }
    }
 
-   DefaultConf defaultConf = new DefaultConf();
 
+   // réinitialisation de tous les widgets du panel
    protected void resumeWidgets() {
       int cmIndex = pimg.typeCM;
       int fctIndex =  pimg.getTransfertFct();
@@ -327,7 +334,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
       if( localCutButton!=null ) localCutButton.setEnabled( fullPixel );
       if( getAllButton!=null )   getAllButton.setEnabled( fullPixel && !hasAll );
-      if( applyOnAll!=null ) applyOnAll.setEnabled( hasSeveralImg && fullPixel);
+      if( applyOnAll!=null )     applyOnAll.setEnabled( hasSeveralImg && fullPixel);
 
       if( rFull!=null ) {
          rFull.setSelected( fullPixel );
@@ -338,13 +345,13 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          rPreview.setEnabled( hasPreview );
       }
 
-      if( resetAllButton!=null ) resetAllButton.setEnabled( defaultConf.isModif() );
+      if( resetAllButton!=null )     resetAllButton.setEnabled( defaultConf.isModif() );
       if( resetDistribButton!=null ) resetDistribButton.setEnabled( defaultConf.isModifTriangle());
-      if( resetCMButton!=null ) resetCMButton.setEnabled( defaultConf.isModifCM() );
+      if( resetCMButton!=null )      resetCMButton.setEnabled( defaultConf.isModifCM() );
 
       if( reverseCb!=null ) reverseCb.setSelected( videoIndex==PlanImage.VIDEO_INVERSE );
 
-      if( cmCombo!=null ) cmCombo.setSelectedIndex( cmIndex );
+      if( cmCombo!=null )  cmCombo.setSelectedIndex( cmIndex );
       if( fctCombo!=null ) fctCombo.setSelectedIndex( fctIndex );
 
       if( pixelCutMinField!=null ) {
@@ -479,12 +486,12 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       p.add(cc);
 
       JPanel p1 = new JPanel( new GridLayout(1,2,1,1) );
-      cmCombo=cb = createChoiceCM();
+      cmCombo=cb = createComboCM();
       cb.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { changeCM((JComboBox)e.getSource() ); resumeWidgets(); }
       });
       p1.add(cb);
-      fctCombo=cb = createChoiceFct();
+      fctCombo=cb = createComboFct();
       cb.addActionListener( new ActionListener() {
          public void actionPerformed(ActionEvent e) { changeTransfertFct(); resumeWidgets(); }
       });
@@ -572,6 +579,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    }
 
 
+   // le Panel associé à une image en niveaux de gris
    private void showCMGrey() {
       if( p!=null ) getContentPane().remove(p);
 
@@ -589,6 +597,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       toFront();
    }
 
+   // Le Panel associé à une image couleur
    private void showCMRGB() {
       JButton b;
 
@@ -677,31 +686,26 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          cm2.reset();
          cm3.reset();
       } else {
-         if( ((PlanImageRGB)pimg).flagRed ) cm.reset();
+         if( ((PlanImageRGB)pimg).flagRed )   cm.reset();
          if( ((PlanImageRGB)pimg).flagGreen ) cm2.reset();
-         if( ((PlanImageRGB)pimg).flagBlue ) cm3.reset();
+         if( ((PlanImageRGB)pimg).flagBlue )  cm3.reset();
          ((PlanImageRGB)pimg).createImgRGB();
       }
    }
 
    static private Insets MARGIN = new Insets(1, 3, 1, 3);
 
+   // Constructeur d'un bouton avec une petite marge
    private JButton getButton(String label) {
       JButton b=new JButton(label);
       b.setMargin(MARGIN);
-      //      b.addActionListener(this);
       return b;
    }
 
    public Dimension getMinimumSize() { return new Dimension(200,300); }
 
-   //   private JComponent noBold(JComponent c) {
-   //      c.setFont(c.getFont().deriveFont(Font.PLAIN));
-   //      return c;
-   //   }
-
    /** Création d'un Combo des CM possibles */
-   protected static JComboBox<String> createChoiceCM() {
+   protected static JComboBox<String> createComboCM() {
       JComboBox<String> c = new JComboBox<String>();
       for( String s : CanvasColorMap.getCMList() ) c.addItem(s);
       c.addItem(" -- ");
@@ -709,25 +713,17 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    }
 
    /** Création d'un Combo des Fonctions de transferts possibles */
-   protected static JComboBox<String> createChoiceFct() {
+   protected static JComboBox<String> createComboFct() {
       JComboBox<String> c = new JComboBox<String>( PlanImage.TRANSFERTFCT );
       return c;
    }
 
-   /** Réaffiche les valeurs des pixels dans l'unité courante */
-   //   private void changePixelUnit() {
-   //      if( !pimg.hasAvailablePixels() ) return;
-   //
-   //      minCut.setText(pimg.getPixelMinInfo());
-   //      maxCut.setText(pimg.getPixelMaxInfo());
-   //      labelOriginalPixel.setText(CMRANGE+" ["+pimg.getDataMinInfo()+" .. "+pimg.getDataMaxInfo()+"]");
-   //      cm.repaint();
-   //   }
 
    /** Retourne true si on est en train de draguer les triangles de la colormap
     * Voir ViewSimple.getImage() */
    final protected boolean isDragging() { return cm==null ? false : cm.isDragging(); };
 
+   // Exécution d'un cut localisé autour du réticule
    private void localcut() {
       if( pimg instanceof PlanBG ) ((PlanBG)pimg).forceReload();
       else pimg.recut(0, 0, true);
@@ -735,7 +731,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       aladin.view.repaintAll();
    }
 
-   /** Gestion du bouton REVERSE */
+   // Exécution d'une inversion de pixels
    private void reverse() {
       if( pimg.video==PlanImage.VIDEO_NORMAL ) pimg.video=PlanImage.VIDEO_INVERSE;
       else pimg.video=PlanImage.VIDEO_NORMAL;
@@ -756,7 +752,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       aladin.calque.zoom.zoomView.repaint();
    }
 
-   /** Gestion du bouton "get all" */
+   // Exécution de la récupération de la totalité de la dynamique
    private void getAll() {
       Aladin.makeCursor(this, Aladin.WAITCURSOR);
       pixelCutMinField.setText(pimg.getDataMinInfo());
@@ -764,7 +760,6 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       Aladin.makeCursor(this, Aladin.WAITCURSOR);
       if( !pimg.recut(pimg.dataMin,pimg.dataMax,false) ) {
          Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
-         //         aladin.warning(this,CMNOFULLPIXEL);
          return;
       }
       Aladin.makeCursor(this, Aladin.DEFAULTCURSOR);
@@ -793,7 +788,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    }
 
-
+   // Application des choix courants sur toutes les autres images sélectionnées
    private void applyOnOtherImg() {
       vimg = aladin.calque.getSelectedImagesWithPixels();
       vimg.remove(pimg);
@@ -853,11 +848,10 @@ public final class FrameColorMap extends JFrame implements MouseListener {
          aladin.console.printCommand("cm "+pixelCutMinField.getText()+".."+pixelCutMaxField.getText() );
 
          if( !pimg.recut(min,max,false) ) {
-            //            aladin.warning(this,CMNOFULLPIXEL);
             return;
          }
 
-         pimg.freeHist();
+         pimg.resetHist();
          setCM(cm.getCM());
          pixelCutMinField.setText(pimg.getPixelMinInfo());
          pixelCutMaxField.setText(pimg.getPixelMaxInfo());
@@ -942,7 +936,6 @@ public final class FrameColorMap extends JFrame implements MouseListener {
     */
    @Override
    public void dispose() {
-      if( isPlanBGRGB ) ((PlanBG)pimg).freeFilterRGB();
       setVisible(false);
       aladin.gc();
       memoControl();
@@ -987,6 +980,5 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       // TODO Auto-generated method stub
 
    }
-
 }
 

@@ -31,7 +31,6 @@ import java.util.*;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -46,11 +45,11 @@ import cds.tools.Util;
  * @version 1.1 : juin 08 preview + améliorations diverses
  * @version 1.0 : mars 08 création
  */
-public final class FullScreen extends JFrame implements ActionListener {
+public final class FrameFullScreen extends JFrame implements ActionListener {
    static GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
    static GraphicsDevice device = env.getDefaultScreenDevice();
    static DisplayMode display = device.getDisplayMode();
-   
+
    private Aladin aladin=null;
    protected ViewSimple viewSimple; // La vue affichée en plein écran
    private Rectangle bounds;    // La taille précédédente de la vue (pour pouvoir la redimensionner)
@@ -67,23 +66,23 @@ public final class FullScreen extends JFrame implements ActionListener {
    private int XGRID=-1,YGRID;    // Position du logo de la grille (-1 si aucun)
    private int XARROW=-1,YARROW;  // Position du logo de l'image suivante (-1 si aucun)
    private int XSAVE=-1,YSAVE;  // Position du logo d'enregistrement (-1 si aucun)
-   
+
    static final int YMARGE = 175; // Marge en ord. depuis le bas jusqu'au premier logo
    static final int XMARGE = 40;  // Marge en abs. depuis la droite jusqu'au premier logo
    static final int YGAP = 18;    // Distance entre les logos (checkboxes)
    static final int MAXCHECK=20;
    private int nCheck=0;        // Nombre de checkbox utilisés
    private Check [] memoCheck = null;  // Permet la mémorisation de la position d'une checkbox associée à un plan
-   
+
    /** Object pour mémoriser le plan et la position d'une checkbox */
    class Check {
       int x,y;
       Plan p;
       boolean in(int a,int b) { return a>=x && a<=x+10 && b>=y && b<=y+10; }
    }
-   
+
    /** Création d'une fenêtre plein écran contenant une unique vue */
-   protected FullScreen(Aladin aladin,ViewSimple v,boolean full,boolean startHidden) {
+   protected FrameFullScreen(Aladin aladin,ViewSimple v,boolean full,boolean startHidden) {
       super(env.getDefaultScreenDevice().getDefaultConfiguration());
       this.aladin=aladin;
       setTitle(Aladin.TITRE+" "+aladin.getReleaseNumber());
@@ -91,124 +90,124 @@ public final class FullScreen extends JFrame implements ActionListener {
       viewSimple=v;
       this.full=full;
       createPopupMenu();
-      
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { end(); /*full();*/ }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_F11,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { end(); /*window();*/ }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_F12,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { end1(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
 
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { delete(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
 
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { grid(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_G,InputEvent.ALT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { hpxGrid(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_W,InputEvent.ALT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
-//      getRootPane().registerKeyboardAction(new ActionListener() {
-//         public void actionPerformed(ActionEvent e) { undo(); }
-//      }, 
-//      KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,InputEvent.ALT_MASK),
-//      JComponent.WHEN_IN_FOCUSED_WINDOW
-//      );
-//      
-//      getRootPane().registerKeyboardAction(new ActionListener() {
-//         public void actionPerformed(ActionEvent e) { redo(); }
-//      }, 
-//      KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,InputEvent.ALT_MASK),
-//      JComponent.WHEN_IN_FOCUSED_WINDOW
-//      );
-      
+            );
+
+      //      getRootPane().registerKeyboardAction(new ActionListener() {
+      //         public void actionPerformed(ActionEvent e) { undo(); }
+      //      },
+      //      KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,InputEvent.ALT_MASK),
+      //      JComponent.WHEN_IN_FOCUSED_WINDOW
+      //      );
+      //
+      //      getRootPane().registerKeyboardAction(new ActionListener() {
+      //         public void actionPerformed(ActionEvent e) { redo(); }
+      //      },
+      //      KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,InputEvent.ALT_MASK),
+      //      JComponent.WHEN_IN_FOCUSED_WINDOW
+      //      );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { dist(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_D,InputEvent.ALT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { prop(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,InputEvent.ALT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { pixel(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_M,InputEvent.CTRL_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { open(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_O,InputEvent.CTRL_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-            
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { openDialog(); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_L,InputEvent.CTRL_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-            
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { zoom(-1); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_F2,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { zoom(1); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_F3,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
 
       v.setFocusTraversalKeysEnabled(false);
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { next(1); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { next(-1); }
-      }, 
+      },
       KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
-      
+            );
+
       getContentPane().setBackground(Color.white);
       getContentPane().add(v,BorderLayout.CENTER);
       bounds = v.getBounds();
@@ -216,21 +215,21 @@ public final class FullScreen extends JFrame implements ActionListener {
       if( full ) full();
       else window();
       if( !startHidden ) setVisible(true);
-      if( !aladin.isApplet() || aladin.flagDetach ) aladin.f.setVisible(false);    
+      if( !aladin.isApplet() || aladin.flagDetach ) aladin.f.setVisible(false);
    }
-   
+
    private void prop() { Properties.createProperties(aladin.calque.getPlanBase()); }
    private void pixel() { aladin.pixel(); }
    private void open() {      ((ServerFile)aladin.dialog.localServer).browseFile(); }
    private void openDialog() { aladin.dialog.show(); }
-   
+
    /**  Passage en plein écran */
    private void full() {
       setUndecorated(true);
       setLocation(0,0);
-      setSize(Aladin.SCREENSIZE);     
+      setSize(Aladin.SCREENSIZE);
    }
-   
+
    /** Passage en mode preview avec récupération de la position et de la
     * taille adéquate */
    private void window() {
@@ -245,7 +244,7 @@ public final class FullScreen extends JFrame implements ActionListener {
          setLocation(aladin.f.getLocation());
       }
    }
-   
+
    public void processWindowEvent(WindowEvent e) {
       if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
          if( !full ) {
@@ -257,14 +256,14 @@ public final class FullScreen extends JFrame implements ActionListener {
       }
       super.processWindowEvent(e);
    }
-   
-   
+
+
    /** Le premier ESC nettoie éventuellement la commande en cours */
    private void end1() {
       if( hasCmd() && !aladin.view.isFree() ) Util.resetString(cmd);
       else end();
    }
-   
+
    /** Fin du mode plein écran => réintégration de la vue dans son container originale */
    protected void end() {
       viewSimple.aladin.fullScreen=null;
@@ -278,49 +277,49 @@ public final class FullScreen extends JFrame implements ActionListener {
       currentPlan=null;
       dispose();
    }
-   
+
    private void delete() {
       aladin.calque.Free(viewSimple.pref);
       aladin.view.findBestDefault();
    }
-   
+
    /** Passage à la prochaine image */
    private void next(int sens) { aladin.view.next(sens); }
-   
-//   /** Précédente position mémorisée */
-//   private void undo() { aladin.view.undo(false); }
-//   
-//   /** Prochaine position mémorisée */
-//   private void redo() { aladin.view.redo(false); }
-   
+
+   //   /** Précédente position mémorisée */
+   //   private void undo() { aladin.view.undo(false); }
+   //
+   //   /** Prochaine position mémorisée */
+   //   private void redo() { aladin.view.redo(false); }
+
    /** Activation/désactivation de la grille */
-   private void grid() { 
+   private void grid() {
       aladin.calque.setGrid(!aladin.calque.hasGrid(),true);
    }
-   
+
    /** Activation/désactivation de la grille Healpix */
    private void hpxGrid() {
       aladin.calque.setOverlayFlag("hpxgrid", !aladin.calque.hasHpxGrid() );
       aladin.view.repaintAll();
    }
-   
+
    /** Activation de l'outil de mesure de distance */
    private void dist() {
       aladin.graphic(ToolBox.DIST);
       aladin.makeCursor(viewSimple, Aladin.CROSSHAIRCURSOR);
    }
-   
+
    /** Zoom (+1) ou unzoom (-1) */
    private void zoom(int sens) {
       aladin.command.exec("zoom "+(sens==1?'+':'-'));
    }
-   
+
    /** Initialisation de la mémorisation des checkboxes en superposition */
    protected void startMemo() {
       if( memoCheck==null ) memoCheck = new Check[MAXCHECK];
       nCheck=0;
    }
-   
+
    /** retourne le plan correspondant à la checkbox sous la position x,y,
     * null si aucun */
    private Plan getCheckPlan(int x, int y) {
@@ -333,7 +332,7 @@ public final class FullScreen extends JFrame implements ActionListener {
       } catch( Exception e ) {}
       return null;
    }
-   
+
    /** Mémorisation des checkboxes en superposition */
    protected void setCheck(Plan p) {
       if( nCheck>=MAXCHECK ) return;
@@ -344,7 +343,7 @@ public final class FullScreen extends JFrame implements ActionListener {
       c.p=p;
       nCheck++;
    }
-   
+
    /** Dessin des checkboxes en superposition */
    protected void drawChecks(Graphics g) {
       if( memoCheck==null || aladin.calque.isFree() ) return;
@@ -353,104 +352,104 @@ public final class FullScreen extends JFrame implements ActionListener {
          Util.drawCheckbox(g, c.x, c.y, c.p.c , null, null, c.p.active);
       }
    }
-   
+
    private Image cross=null,arrow=null,save=null;
    private int XOUT,YOUT;
-   
+
    protected void drawIcons(Graphics g) {
       int ymarge=YMARGE;
-      
-      // Dessin du logo de sortie du fullscreen
-     if( cross==null ) {
-        cross=aladin.getImagette("Preview.gif");
-        YOUT = 3;
-     }
-     XOUT = viewSimple.getWidth()-18;
-     try { g.drawImage(cross,XOUT,YOUT,viewSimple); }
-     catch( Exception e ) {}  
-     
-     // Dessin du logo de la grille
-     if( viewSimple.pref!=null && Projection.isOk(viewSimple.getProj()) ) {
-        XGRID = getWidth()-(XMARGE+2);
-        YGRID = getHeight()-ymarge+8;
-        aladin.grid.fillBG(g,XGRID,YGRID,Color.white);
-        aladin.grid.drawGrid(g,XGRID,YGRID,aladin.calque.hasGrid()?Aladin.GREEN:Color.black);
-     } else {
-        XGRID=-1;
-//        ymarge=100;
-     }
-     
-     // dessin du logo d'enregistrement
-     if( viewSimple.pref!=null ) {
-        if( save==null ) save=aladin.getImagette("Export.gif");
-        try { 
-           XSAVE=getWidth()-(XMARGE+1);
-           YSAVE=getHeight()-ymarge+YGAP+6;
-           g.drawImage(save,XSAVE,YSAVE,viewSimple); }
-        catch( Exception e ) { XSAVE=-1; }        
-     } else XSAVE=-1;
 
-     // dessin du logo de l'image suivate
-     if( aladin.calque.getNbPlanImg()>1 ) {
-        if( arrow==null ) arrow=aladin.getImagette("Next.gif");
-        try { 
-           XARROW=getWidth()-XMARGE;
-           YARROW=getHeight()-ymarge+2*YGAP+6;
-           g.drawImage(arrow,XARROW,YARROW,viewSimple); }
-        catch( Exception e ) { XARROW=-1; }        
-     } else XARROW=-1;
-     
+      // Dessin du logo de sortie du fullscreen
+      if( cross==null ) {
+         cross=aladin.getImagette("Preview.gif");
+         YOUT = 3;
+      }
+      XOUT = viewSimple.getWidth()-18;
+      try { g.drawImage(cross,XOUT,YOUT,viewSimple); }
+      catch( Exception e ) {}
+
+      // Dessin du logo de la grille
+      if( viewSimple.pref!=null && Projection.isOk(viewSimple.getProj()) ) {
+         XGRID = getWidth()-(XMARGE+2);
+         YGRID = getHeight()-ymarge+8;
+         aladin.grid.fillBG(g,XGRID,YGRID,Color.white);
+         aladin.grid.drawGrid(g,XGRID,YGRID,aladin.calque.hasGrid()?Aladin.GREEN:Color.black);
+      } else {
+         XGRID=-1;
+         //        ymarge=100;
+      }
+
+      // dessin du logo d'enregistrement
+      if( viewSimple.pref!=null ) {
+         if( save==null ) save=aladin.getImagette("Export.gif");
+         try {
+            XSAVE=getWidth()-(XMARGE+1);
+            YSAVE=getHeight()-ymarge+YGAP+6;
+            g.drawImage(save,XSAVE,YSAVE,viewSimple); }
+         catch( Exception e ) { XSAVE=-1; }
+      } else XSAVE=-1;
+
+      // dessin du logo de l'image suivante
+      if( aladin.calque.getNbPlanImg()>1 ) {
+         if( arrow==null ) arrow=aladin.getImagette("Next.gif");
+         try {
+            XARROW=getWidth()-XMARGE;
+            YARROW=getHeight()-ymarge+2*YGAP+6;
+            g.drawImage(arrow,XARROW,YARROW,viewSimple); }
+         catch( Exception e ) { XARROW=-1; }
+      } else XARROW=-1;
+
    }
-   
+
    /** Retourne true si le curseur est sur l'icone de sortie */
    private boolean inIconOut(int x,int y) {
       x-=XOUT; y-=YOUT;
       try {
-         return x>=0 && x<cross.getWidth(viewSimple) 
-             && y>=0 && y<cross.getHeight(viewSimple);
+         return x>=0 && x<cross.getWidth(viewSimple)
+               && y>=0 && y<cross.getHeight(viewSimple);
       } catch( Exception e ) { }
       return false;
    }
-   
+
    /** Retourne true si le curseur est sur l'icone de sortie */
    private boolean inIconArrow(int x,int y) {
       if( XARROW<0 ) return false;
       x-=XARROW; y-=YARROW;
       try {
-         return x>=0 && x<arrow.getWidth(viewSimple) 
-             && y>=0 && y<arrow.getHeight(viewSimple);
+         return x>=0 && x<arrow.getWidth(viewSimple)
+               && y>=0 && y<arrow.getHeight(viewSimple);
       } catch( Exception e ) { }
       return false;
    }
-   
+
    /** Retourne true si le curseur est sur l'icone d'enregistrement */
    private boolean inIconSave(int x,int y) {
       if( XSAVE<0 ) return false;
       x-=XSAVE; y-=YSAVE;
       try {
-         return x>=0 && x<save.getWidth(viewSimple) 
-             && y>=0 && y<save.getHeight(viewSimple);
+         return x>=0 && x<save.getWidth(viewSimple)
+               && y>=0 && y<save.getHeight(viewSimple);
       } catch( Exception e ) { }
       return false;
    }
-   
+
    /** retourne true s'il y a une commande en cours de saisie */
    protected boolean hasCmd() { return cmd.length()>0; }
-   
+
    /** La commande en cours reçoit un nouveau caractère
     * @return true s'il faut regénérer le imgBuf de la vue
     */
    protected boolean sendKey(KeyEvent e) {
       boolean fullRepaint=false;
-      
+
       int key = e.getKeyCode();
       char k = e.getKeyChar();
-      
+
       aladin.endMsg();
-      
+
       if( e.isControlDown() || e.isAltDown() ) return fullRepaint;
       blinkState=true;
-      
+
       if( key==KeyEvent.VK_ENTER ) {
          aladin.execAsyncCommand(cmd.toString());
          cmd.delete(0, cmd.length());
@@ -460,15 +459,15 @@ public final class FullScreen extends JFrame implements ActionListener {
          if( cmd.length()>0 ) cmd.deleteCharAt(cmd.length()-1);
          if( cmd.length()==0 ) fullRepaint=true;
 
-      // On insere un nouveau caractere
+         // On insere un nouveau caractere
       } else if( k>=31 && k<=255 ) cmd.append(k);
-      
+
       return fullRepaint;
    }
-   
-   
+
+
    private Image logo=null;
-   
+
    /** Affichage en surimpression de la commande en cours */
    protected void drawBlinkInfo(Graphics g) {
       boolean blink = aladin.calque.isBlinking();
@@ -478,10 +477,10 @@ public final class FullScreen extends JFrame implements ActionListener {
          if( timer!=null && timer.isRunning() ) timer.stop();
          return;
       }
-      
-      
+
+
       int YC=0;
-      
+
       // Affichage de la commande en cours de saisie
       if( command || form ) {
          int w=200, h=20;
@@ -503,7 +502,7 @@ public final class FullScreen extends JFrame implements ActionListener {
          if( blinkState ) s=s+"_";
          g.drawString(s, x+5, y+h-5);
       }
-      
+
       // Affichage du logo au-dessus de la commande si la pile est vide
       if( form ) {
          try {
@@ -518,12 +517,12 @@ public final class FullScreen extends JFrame implements ActionListener {
          XBLINK=getWidth()-XMARGE;
          YBLINK=getHeight()-YMARGE - nCheck*YGAP -YGAP;
          Slide.drawBall(g, XBLINK, YBLINK, blinkState ? Color.green : Color.white);
-       } else XBLINK=-1;
-      
+      } else XBLINK=-1;
+
       if( timer==null ) timer = new Timer(500,this);
       if( !timer.isRunning() ) timer.start();
    }
-   
+
    public void actionPerformed(ActionEvent e) {
       Object src = e.getSource();
       if( src instanceof JMenuItem ) {
@@ -535,26 +534,37 @@ public final class FullScreen extends JFrame implements ActionListener {
       blinkState=!blinkState;
       if( !Aladin.NOGUI ) repaint();
    }
-   
+
    /** Affichage en surimpression des mesures associées à la première source sélectionnée */
-   protected void drawMesures(Graphics g) {
+   protected void showMesures() {
       int nbSource = aladin.mesure.getNbSrc();
-      if( nbSource>0 ) {
-         Source src = aladin.mesure.getFirstSrc();
-         int y=getHeight()-120;
-         int x=0;
-         ligne = aladin.mesure.getWordLine(src);
-         aladin.mesure.mcanvas.drawHead(g,x,y,src,-1);
-         aladin.mesure.mcanvas.drawLigne(g,x,y+28,ligne,true,-1);
-         src.print(g, x+20, y-6);
-         g.setColor(Color.blue);
-         g.setFont(Aladin.BOLD);
-         String s = src.plan.label;
-         if( nbSource>1 ) s=s+" (and "+(nbSource-1)+" other source"+(nbSource==2?"":"s")+")";
-         g.drawString(s,x+30,y-2);
-      } else ligne=null;
+      if( nbSource==0 || aladin.mesure.f!=null && aladin.mesure.f.isVisible() ) return;
+
+      if( aladin.mesure.f==null ) aladin.mesure.split();
+      else if( !aladin.mesure.isVisible() ) {
+         aladin.mesure.setReduced(false);
+         aladin.mesure.f.setVisible(true);
+      }
    }
-   
+
+   //      protected void drawMesures(Graphics g) {
+   //      int nbSource = aladin.mesure.getNbSrc();
+   //      if( nbSource>0 ) {
+   //         Source src = aladin.mesure.getFirstSrc();
+   //         int y=getHeight()-120;
+   //         int x=0;
+   //         ligne = aladin.mesure.getWordLine(src);
+   //         aladin.mesure.mcanvas.drawHead(g,x,y,src,-1);
+   //         aladin.mesure.mcanvas.drawLigne(g,x,y+28,ligne,true,-1);
+   //         src.print(g, x+20, y-6);
+   //         g.setColor(Color.blue);
+   //         g.setFont(Aladin.BOLD);
+   //         String s = src.plan.label;
+   //         if( nbSource>1 ) s=s+" (and "+(nbSource-1)+" other source"+(nbSource==2?"":"s")+")";
+   //         g.drawString(s,x+30,y-2);
+   //      } else ligne=null;
+   //   }
+
    // Cree le popup menu associe au select
    private void createPopupMenu() {
       Select select = aladin.view.calque.select;
@@ -566,7 +576,7 @@ public final class FullScreen extends JFrame implements ActionListener {
       j.addActionListener(this);
       getContentPane().add(popMenu);
    }
-   
+
    // Affiche le popup
    private void showPopMenu(int x,int y) {
       popMenu.show(this,x,y);
@@ -579,25 +589,25 @@ public final class FullScreen extends JFrame implements ActionListener {
       int x = e1.getX();
       int y = e1.getY();
       boolean rep=false;
-      
+
       // Passage en interface complète
       if( inIconOut(x,y) ) {
          end();
          return true;
       }
-      
+
       // Passage à l'image suivante (ou précédente avec SHIFT)
       if( inIconArrow(x,y) ) {
          next(e1.isShiftDown() ? 1 : -1);
          return true;
       }
-      
+
       // Sauvegarde de la vue
       if( inIconSave(x,y) ) {
          aladin.save.saveFile(1,e1.isShiftDown() ? Save.JPEG : Save.PNG,-1);
          return true;
       }
-      
+
       // Sous une checkbox ?
       Plan p = getCheckPlan(x, y);
       if( p!=null ) {
@@ -611,7 +621,7 @@ public final class FullScreen extends JFrame implements ActionListener {
             aladin.view.repaintAll();
          }
       }
-      
+
       // Dans le logo de la grille
       else if( XGRID>0 && x>=XGRID && x<=XGRID+15 && y>=YGRID && y<=YGRID+15 ) {
          aladin.calque.switchGrid(true);
@@ -627,7 +637,7 @@ public final class FullScreen extends JFrame implements ActionListener {
                Words w = (Words) e.nextElement();
                if( w.inside(x,y) ) {
                   rep=true;
-                  if( !w.glu ) continue; 
+                  if( !w.glu ) continue;
                   w.haspushed=true;
                   if( w.archive ) { end(); w.callArchive(aladin,o); }
                   else w.callGlu(aladin.glu,aladin.mesure.mcanvas);
@@ -639,7 +649,7 @@ public final class FullScreen extends JFrame implements ActionListener {
       return rep;
    }
 
-   
+
    /** Récupération d'une événement mouseMoved (issu de ViwSimple.mousePressed())
     * @return true si l'évènement est pris en compte à ce niveau
     */
@@ -648,29 +658,29 @@ public final class FullScreen extends JFrame implements ActionListener {
       int cursor=Aladin.DEFAULTCURSOR;
       Plan p;
       currentPlan=null;
-      
+
       // Dans l'icone de sortie du mode fullscreen
       if( inIconOut(x,y)  ) {
          cursor= Aladin.HANDCURSOR;
          rep=true;
          Util.toolTip(viewSimple,aladin.FULLINT);
       }
-      
+
       // Dans l'icone de l'image suivante
       else if( inIconArrow(x,y)  ) {
          cursor= Aladin.HANDCURSOR;
          rep=true;
          Util.toolTip(viewSimple,aladin.NEXT);
       }
-      
+
       // Dans l'icone de la sauvegarde
       else if( inIconSave(x,y)  ) {
          cursor= Aladin.HANDCURSOR;
          rep=true;
          Util.toolTip(viewSimple,"Save currentview (PNG format)");
       }
-      
-     // Dans le voyant d'état blink
+
+      // Dans le voyant d'état blink
       else if( XBLINK>0 && x>=XBLINK && x<=XBLINK+10 && y>=YBLINK && y<=YBLINK+10 ) {
          String s=aladin.calque.getBlinkingInfo();
          if( s.length()>0 ) s="Waiting "+s+"...";
@@ -691,7 +701,7 @@ public final class FullScreen extends JFrame implements ActionListener {
          rep=true;
          Util.toolTip(viewSimple,p.getInfo());
       }
-      
+
       // Modification de l'apparence du curseur en fonction de la position éventuelle
       // de la souris sur une ancre ou sur un bouton d'une mesure
       else {
@@ -702,7 +712,7 @@ public final class FullScreen extends JFrame implements ActionListener {
             while( e.hasMoreElements() ) {
                Words w = (Words) e.nextElement();
                if( w.inside(x,y) ) {
-                  if( !w.glu ) continue; 
+                  if( !w.glu ) continue;
                   cursor=Aladin.HANDCURSOR;
                   rep=true;
                   break;
@@ -710,7 +720,7 @@ public final class FullScreen extends JFrame implements ActionListener {
             }
          }
       }
-      
+
       if( cursor!=ocursor ) { ocursor=cursor; Aladin.makeCursor(viewSimple, cursor); }
       return rep;
    }

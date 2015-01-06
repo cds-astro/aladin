@@ -20,9 +20,6 @@
 package cds.aladin;
 
 import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -54,6 +51,22 @@ public class Plan implements Runnable {
 
    static String NOREDUCTION;
 
+   // Les différents états possibles d'un plan
+   static final protected int STATUS_UNKNOWN              = 0x0;
+   static final protected int STATUS_INPROGRESS           = 0x1;
+   static final protected int STATUS_MOREDETAILSAVAILABLE = 0x1<<1;
+   static final protected int STATUS_ERROR                = 0x1<<2;
+   static final protected int STATUS_EMPTYMOC             = 0x1<<3;
+   static final protected int STATUS_OVERFLOW             = 0x1<<4;
+   static final protected int STATUS_NOCALIB              = 0x1<<5;
+   static final protected int STATUS_EMPTYCAT             = 0x1<<6;
+   static final protected int STATUS_LOADING              = 0x1<<7;
+   static final protected int STATUS_READY                = 0x1<<8;
+
+   static final private String STATUS[] = { "STATUS_UNKNOWN","STATUS_INPROGRESS","STATUS_MOREDETAILSAVAILABLE",
+      "STATUS_ERROR","STATUS_EMPTYMOC","STATUS_OVERFLOW","STATUS_NOCALIB","STATUS_EMPTYCAT","STATUS_LOADING",
+   "STATUS_READY" };
+
    // Les valeurs decrivant les differents types de plan
    static final int NO       = 0;  // Le plan est vide
    static final int IMAGE    = 1;  // Le plan contient une image raster
@@ -80,12 +93,12 @@ public class Plan implements Runnable {
    static final int ALLSKYCUBE=22; // Plan HiPS cube
 
    static String [] Tp       = { "","Image","RGB","Blink","Cube","Resampled","Mosaic","Algo",
-                                    "Catalog",
-                                    "Tool","Aperture","Folder","Filter",
-                                    "Image FoV","In progress","ImageHuge",
-                                    "HipsImage","HipsPolarisation","HipsCatalog",
-                                    "MOC","CubeColor","HipsFinder","HipsCube",
-                                    };
+      "Catalog",
+      "Tool","Aperture","Folder","Filter",
+      "Image FoV","In progress","ImageHuge",
+      "HipsImage","HipsPolarisation","HipsCatalog",
+      "MOC","CubeColor","HipsFinder","HipsCube",
+   };
 
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
    protected int folder;	     // niveau du folder, 0 si aucun
@@ -104,8 +117,8 @@ public class Plan implements Runnable {
 
    protected double coRadius;      // le rayon du champ de vue demandée (J2000 deg) => voir allsky
    protected Coord co;           // Les coordonnees J2000 du target de l'interrogation
-                                 // ou null si non encore calcule
-//   protected Thread	sr;	         // Thread pour la resolution Simbad */
+   // ou null si non encore calcule
+   //   protected Thread	sr;	         // Thread pour la resolution Simbad */
    protected Color c;            // La couleur associee au plan
    protected Astrotime epoch;    // Epoque pour catalogue (par défaut J2000)
    protected Projection projd;   // La projection PAR DEFAUT associee au plan
@@ -145,8 +158,9 @@ public class Plan implements Runnable {
    int hasPM=-1;               // le plan a du PM : -1 - on ne sait pas encore, 0 - non,  1 - oui
    protected boolean memoClinDoeil; // Vrai si ce plan devra être réactivé si on clique sur l'oeil
    Projection proj[] = new Projection[ViewControl.MAXVIEW];
-                               // Les projections COURANTES associees au plan
+   // Les projections COURANTES associees au plan
    String     error;           // La chaine d'erreur en cas de probleme
+   int        status;          // Code du status
    boolean    flagLocal;       // Le plan est issu d'un fichier local
    protected boolean hasXYorig;   // true si dans le cas d'un plan objet on bloque les xy
    protected boolean recalibrating; // true si on est en train de recalibrer le plan (catalogue)
@@ -173,12 +187,12 @@ public class Plan implements Runnable {
    int sourceType=Obj.SQUARE;  // Le type de source dans le cas d'un plan CATALOG ou PlanBGCAT
    boolean fullSource=false;   // Source pleine ou non (coloriée)
    MyInputStream dis=null;     // Le flux de donnees
-//   int streamType=0;           // le type de stream trouvé par MyInputStream
+   //   int streamType=0;           // le type de stream trouvé par MyInputStream
 
    // Les variables et objets de travail
    Thread runme;               // Pour charger les images et les plans en asynchrone
    URL    u;                   // L'URL qui va nous servir pour la prochaine requete
-//   String plasticID;
+   //   String plasticID;
    Vector<String> plasticIDs;          // ensemble des ID Plastic pour ce plan
 
    // Les references aux autres objets
@@ -191,13 +205,13 @@ public class Plan implements Runnable {
 
    protected Plan() { type=X; aladin=Aladin.aladin; flagOk=false; label=""; startTime = System.currentTimeMillis(); }
    protected Plan(Aladin aladin) { this.aladin=aladin; }
-   
+
    /** retourne la commande script qui a permit de créer le plan */
    private String bookmarkCode=null;
    protected String getBookmarkCode() { return bookmarkCode; }
    protected void setBookmarkCode(String code) { bookmarkCode=code; }
 
-    /** Duplication du Plan */
+   /** Duplication du Plan */
    protected void copy(Plan p) {
       p.type=type;
       p.folder=folder;
@@ -242,7 +256,7 @@ public class Plan implements Runnable {
       p.active=active;
       p.ref=ref;
    }
-   
+
    /** Retourne true si ce plan contient un SED
     * (on ne test que le premier élément) */
    protected boolean isSED() {
@@ -250,33 +264,33 @@ public class Plan implements Runnable {
       Obj s = iterator().next();
       return s instanceof Source && ((Source)s).leg.isSED();
    }
-   
+
    // Il s'agit d'un plan qui s'applique en overlay d'une image */
    protected boolean isOverlay() {
-      return isCatalog() || isPlanBGOverlay() || this instanceof PlanTool 
-      || this instanceof PlanField || this instanceof PlanFov || this instanceof PlanFilter;
+      return isCatalog() || isPlanBGOverlay() || this instanceof PlanTool
+            || this instanceof PlanField || this instanceof PlanFov || this instanceof PlanFilter;
    }
-   
+
    /** Retourne true s'il s'agit d'un plan avec pixel */
    protected boolean isPixel() { return isImage() || type==ALLSKYIMG; }
 
    /** Retourne true s'il s'agit d'un plan image */
    final protected boolean isImage() { return type==IMAGE || type==IMAGERGB || type==IMAGEHUGE
-      || type==IMAGEBLINK || type==IMAGECUBE || type==IMAGERSP
-      || type==IMAGEALGO || type==IMAGEMOSAIC || type==IMAGECUBERGB; }
+         || type==IMAGEBLINK || type==IMAGECUBE || type==IMAGERSP
+         || type==IMAGEALGO || type==IMAGEMOSAIC || type==IMAGECUBERGB; }
 
    /** Retourne true s'il s'agit d'un plan image "simple" */
    final protected boolean isSimpleImage() { return type==IMAGE || type==IMAGERSP || type==IMAGEALGO
-      || type==IMAGEMOSAIC || type==IMAGEHUGE
-      ; }
+         || type==IMAGEMOSAIC || type==IMAGEHUGE
+         ; }
 
    /** Retourne true s'il s'agit d'un plan qui a des pixels */
    final public boolean hasAvailablePixels() {
-//      return isSimpleImage() ||  type==IMAGEBLINK || type==IMAGECUBE
-//      || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
+      //      return isSimpleImage() ||  type==IMAGEBLINK || type==IMAGECUBE
+      //      || this instanceof PlanBG && type==Plan.ALLSKYIMG && ((PlanBG)this).hasOriginalPixels();
       return hasOriginalPixels();
    }
-   
+
    /** Retourne ture s'il s'agit d'un plan qui a des pixels avec leur valeur d'origine */
    protected boolean hasOriginalPixels() { return false; };
 
@@ -285,6 +299,21 @@ public class Plan implements Runnable {
 
    /** Retourne true si le plan est prêt */
    protected boolean isReady() { return type!=NO && flagOk && (error==null || hasNoReduction()); }
+
+
+   /** Retourne la description du statut du plan (souris sur le voyant d'état dans la pile) */
+   protected String getStackStatus() {
+      if( status==0 ) return "";
+      StringBuilder rep = new StringBuilder();
+      int code=1;
+      for( int i=1; i<STATUS.length; i++, code<<=1 ) {
+         if( (code & status) != 0) {
+            if( rep.length()>0 ) rep.append(", ");
+            rep.append(aladin.chaine.getString(STATUS[i]));
+         }
+      }
+      return rep.toString();
+   }
 
    /** Retourne true s'il s'agit d'un plan en erreur
     * => càd avec un message d'erreur avec l'exception du message d'absence de réduction
@@ -301,40 +330,40 @@ public class Plan implements Runnable {
     * @param sourceType type de representation (Source.CARRE...)
     * @see aladin.Source
     */
-    protected void setSourceType(int sourceType) {
-       Iterator<Obj> it = iterator();
-       while( it.hasNext() ) {
-          Obj o = it.next();
-          if( !(o instanceof Source) ) continue;
-          Source s = (Source)o;
-          s.setSourceType(sourceType);
-       }
-       this.sourceType=sourceType;
-    }
+   protected void setSourceType(int sourceType) {
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof Source) ) continue;
+         Source s = (Source)o;
+         s.setSourceType(sourceType);
+      }
+      this.sourceType=sourceType;
+   }
 
-    /** Positionne le flag indiquant que le plan possède des objets sélectionnables, ou non 
-     * (par défaut, true) */
-    public void setSelectable(boolean flag) { isSelectable=flag; }
+   /** Positionne le flag indiquant que le plan possède des objets sélectionnables, ou non
+    * (par défaut, true) */
+   public void setSelectable(boolean flag) { isSelectable=flag; }
 
-    /** True si les objets appartenant au plan sont sélectionnable */
-    public boolean  isSelectable() { return isSelectable; }
+   /** True si les objets appartenant au plan sont sélectionnable */
+   public boolean  isSelectable() { return isSelectable; }
 
-    /** retourne true si le plan est vide */
-    public boolean isFree() { return type==NO; }
+   /** retourne true si le plan est vide */
+   public boolean isFree() { return type==NO; }
 
-    /** Retourne true si le plan est en erreur ou s'il ne contient aucun objet */
-    protected boolean isEmpty() {
-       if( type==NO) return false;
-       return hasError() || ( (isCatalog() || type==Plan.TOOL) && getCounts()==0);
-    }
+   /** Retourne true si le plan est en erreur ou s'il ne contient aucun objet */
+   protected boolean isEmpty() {
+      if( type==NO) return false;
+      return hasError() || ( (isCatalog() || type==Plan.TOOL) && getCounts()==0);
+   }
 
-    /** Retourne true si le plan dispose d'une header Fits */
+   /** Retourne true si le plan dispose d'une header Fits */
    protected boolean hasFitsHeader() {
       return headerFits!=null;
-//      if( this instanceof PlanImage   && ((PlanImage)this).headerFits!=null )   return true;
-//      if( this instanceof PlanCatalog && ((PlanCatalog)this).headerFits!=null ) return true;
-//      if( this instanceof PlanFolder  && ((PlanFolder)this).headerFits!=null )  return true;
-//      return false;
+      //      if( this instanceof PlanImage   && ((PlanImage)this).headerFits!=null )   return true;
+      //      if( this instanceof PlanCatalog && ((PlanCatalog)this).headerFits!=null ) return true;
+      //      if( this instanceof PlanFolder  && ((PlanFolder)this).headerFits!=null )  return true;
+      //      return false;
    }
 
    /** retourne true si le plan a des sources */
@@ -347,45 +376,45 @@ public class Plan implements Runnable {
    protected boolean isPlanBGOverlay() {
       return type==ALLSKYPOL || type==ALLSKYCAT;
    }
-   
+
    /** Retourne true si le point (xImg,yImg) est bien sur un pixel */
    protected boolean isOnPixel(int xImg, int yImg) { return false; }
 
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() {
-      return type==CATALOG || type==TOOL && 
+      return type==CATALOG || type==TOOL &&
             (((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null)
             || type==ALLSKYCAT;
    }
-   
+
    /** Retourne true si le plan est un cube */
    protected boolean isCube() { return false; }
-   
+
    /** Active le frame propre au cube */
    protected void activeCubePixels(ViewSimple v) {}
-   
+
    /** Retourne la profondeur du plan dans le cas d'un cube (1 sinon) */
    public int getDepth() { return 1; }
-   
+
    /** retourne la tranche courante (s'il s'agit d'un cube, sinon 0) */
    protected double getZ(ViewSimple v) { return 0; }
    protected double getZ() { return 0; }
-   
+
    /** Positionne le Frame courant (s'il s'agit d'un cube) */
    protected void setZ(double z) { }
-   
+
    /** Prévu pour les cubes */
    protected byte getPixel8bit(int z,double x,double y) { return 0; }
-   
+
    /** gestion de la pause pour le défilement d'un cube */
    protected void setPause(boolean t,ViewSimple v) { }
    protected boolean isPause() { return true; }
-   
+
    protected int getInitDelay() { return 400; }
-   
+
    /** Juste pour pouvoir le dérivée tranquillement => ne s'applique qu'aux images*/
    synchronized void changeImgID() { }
-   
+
    /** Juste pour pouvoir le dérivée tranquillement => ne s'applique qu'aux cubes*/
    protected boolean setCubeFrame(double frame) { return false; }
 
@@ -396,20 +425,20 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan catalogue non progressif */
    protected boolean isSimpleCatalog() {
-      return type==CATALOG || type==TOOL && 
+      return type==CATALOG || type==TOOL &&
             ( ((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null);
    }
 
    /** Retourne true si le plan catalogue peut effacer les sources individuellement */
    protected boolean isSourceRemovable() { return pcat!=null && pcat.removable; }
-   
+
    /** true si les objets du plan peuvent être déplacés */
    protected boolean isMovable() { return true; }
 
    /** Modifie le statut d'un plan catalogue afin de rendre possible la suppression
     * individuelle de sources */
    protected void setSourceRemovable(boolean flag) {
-//      if( !isSimpleCatalog() ) return;
+      //      if( !isSimpleCatalog() ) return;
       pcat.removable=flag;
    }
 
@@ -428,8 +457,8 @@ public class Plan implements Runnable {
          if( filter && s.isSelectedInFilter() ) nbFiltered++;
       }
       return nbo+" src"+
-             (filter ? "/"+nbFiltered+" filt":"")+
-             (nbSelected!=0?"/"+nbSelected+" sel":"");
+      (filter ? "/"+nbFiltered+" filt":"")+
+      (nbSelected!=0?"/"+nbSelected+" sel":"");
    }
 
    protected Legende getFirstLegende() { return null; }
@@ -437,23 +466,23 @@ public class Plan implements Runnable {
    protected int getNbTable() { return 0; }
    protected int getCounts() { return 0; }
    protected void reallocObjetCache() { if( pcat!=null ) pcat.reallocObjetCache(); }
-   
-   protected Astrotime getEpoch() { 
+
+   protected Astrotime getEpoch() {
       try {
          if( epoch==null ) epoch = new Astrotime("J2000");
       } catch( ParseException e ) { }
       return epoch;
    }
-   
+
    /** Positionne une nouvelle epoque, et recalcule les positions de tous les objets
     * en fonction de cette nouvelle epoque */
-   protected void setEpoch(String s) throws Exception { 
+   protected void setEpoch(String s) throws Exception {
       if( Character.isDigit( s.charAt(0)) ) s = "J"+s;
       if( epoch==null ) epoch = new Astrotime(s);
       else epoch.set(s);
       if( !recomputePosition() ) throw new Exception("Unknown proper motion fields !");
    }
-   
+
    protected Obj[] getObj() { return new Obj[0]; }
 
    protected float scalingFactor = 1.0f; // facteur d'échelle pour l'affichage des filtres (circle et proper motion)
@@ -470,9 +499,9 @@ public class Plan implements Runnable {
 
       // Le plan n'a pas d'objet sélectionnable
       if( !isSelectable() ) return new Vector<Obj>();
-      
+
       // objets ne sont pas projetable dans cette vue (ACCELERATION POUR PLAN SIMPLE)
-      if( pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>();
+      if( !(this instanceof PlanBG) && pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>();
 
       Vector<Obj> res = new Vector<Obj>(5000);
 
@@ -482,10 +511,10 @@ public class Plan implements Runnable {
          if( !(o instanceof Position) ) continue;
          Position p = (Position)o;
          if( p.plan.type==Plan.FOV || p instanceof Forme) continue;
-         
+
          // on ne sélectionne que les sources "filtrées"
          if( p.inRectangle(v,r) &&
-                ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
+               ( !( p instanceof Source) || ((Source)p).noFilterInfluence() || ((Source)p).isSelectedInFilter() ) ) {
             p.setSelect(true);
             res.addElement(p);
          }
@@ -502,226 +531,226 @@ public class Plan implements Runnable {
     * @param x,y Position de la souris (coordonnees Image)
     * @return Le vecteur des objets qui contient le point
     */
-    protected Vector<Obj> getObjWith(ViewSimple v,double x, double y) {
-       int i;
+   protected Vector<Obj> getObjWith(ViewSimple v,double x, double y) {
+      int i;
 
-       // Le plan n'a pas d'objet sélectionnable
-       if( !isSelectable() ) return new Vector<Obj>();
-       
-       // objets ne sont pas projetable dans cette vue
-       if( pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>(1);
+      // Le plan n'a pas d'objet sélectionnable
+      if( !isSelectable() ) return new Vector<Obj>();
 
-       Vector<Obj> res = new Vector<Obj>(500);
+      // objets ne sont pas projetable dans cette vue
+      if( pcat!=null && !pcat.isDrawnInSimpleView(v.n) ) return new Vector<Obj>(1);
 
-       Iterator<Obj> it = iterator(v);
-       if( it==null ) return new Vector<Obj>(1);
-       
-       if( type==Plan.APERTURE ) {
-          for( i=0; it.hasNext() ; i++ ) {
-             Obj o = it.next();
-             if( o.in(v,x,y) ) {
-                if( i==0 && Aladin.ROTATEFOVCENTER 
-                      && ((PlanField)this).isRollable() && ((PlanField)this).isCenterRollable() ) {
-                   aladin.calque.planRotCenter=((Repere)o).plan;
-                   res.addElement(o);
-                } else {
-                   aladin.calque.planRotCenter=null;
-                   Iterator<Obj> it1 = iterator(v);
-                   while( it1.hasNext() ) res.addElement(it1.next());
-                }
-                break;
-             }
-          }
+      Vector<Obj> res = new Vector<Obj>(500);
 
-       } else {
-          Vector<Ligne> vo = new Vector<Ligne>();
-          while( it.hasNext() ) {
-             Obj o = it.next();
+      Iterator<Obj> it = iterator(v);
+      if( it==null ) return new Vector<Obj>(1);
 
-             // On mémorise les points de controles d'un polygone si on a cliqué dessus 
-             if( o instanceof Ligne && ((Ligne)o).inPolygon(v, (int)x, (int)y) ) vo.addElement((Ligne)o);
-             boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
-             if( in && ( !(o instanceof Source) ||
-                   ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
-                res.addElement(o);
-             }
-          }
+      if( type==Plan.APERTURE ) {
+         for( i=0; it.hasNext() ; i++ ) {
+            Obj o = it.next();
+            if( o.in(v,x,y) ) {
+               if( i==0 && Aladin.ROTATEFOVCENTER
+                     && ((PlanField)this).isRollable() && ((PlanField)this).isCenterRollable() ) {
+                  aladin.calque.planRotCenter=((Repere)o).plan;
+                  res.addElement(o);
+               } else {
+                  aladin.calque.planRotCenter=null;
+                  Iterator<Obj> it1 = iterator(v);
+                  while( it1.hasNext() ) res.addElement(it1.next());
+               }
+               break;
+            }
+         }
 
-          // On sélectionne tous les points de controle du polygone dans lequel on a cliqué (sur la surface)
-          for( Ligne o : vo ) {
-             for( o=o.getFirstBout(); o!=null; o = o.finligne ) {
-                if( !res.contains(o) ) res.addElement(o);
-             }
-          }
-       }
+      } else {
+         Vector<Ligne> vo = new Vector<Ligne>();
+         while( it.hasNext() ) {
+            Obj o = it.next();
 
-       return res;
-    }
-       
-    /** Retourne true si le plan a des champs indiquant un mouvement Propre */
-    public boolean hasPM() {
-       if( !flagOk || !isCatalog() ) return false;
-       if( hasPM<0 ) {
-          Vector<Legende> legs = getLegende();
-          if( legs==null ) return false;
-          Iterator<Legende> it = legs.iterator();
-          while( it.hasNext() ) {
-             Legende leg = it.next();
-             if( leg==null ) continue;
-             if( leg.getPmRa()>0 &&  leg.getPmDe()>0 ) { hasPM=1; return true; }
-          }
-          hasPM=0;
-          return false;
-       }
-       return hasPM==1;
-    }
-    
-    /** Recalcule toutes les positions internes 
-     * @return true si au moins une position a été effectivement modifié
-     */
-    public boolean recomputePosition() {
-       boolean rep=false;
-       Vector<Legende> legs = getLegende();
-       if( legs==null ) return false;
-//       aladin.trace(3,label+": reprocessing all internal coordinates...");
-       Iterator<Legende> it = legs.iterator();
-       while( it.hasNext() ) {
-          Legende leg = it.next();
-          int npmra = leg.getPmRa();
-          int npmde = leg.getPmDe();
-          if( npmra<=0 || npmde<=0 ) continue;  // Inutile, pas de PM
-          int nra   = leg.getRa();
-          int nde   = leg.getDe();
-          recomputePosition(iterator(),leg,nra,nde,npmra,npmde);
-          rep=true;
-       }
-       if( rep ) aladin.view.newView(1);
+            // On mémorise les points de controles d'un polygone si on a cliqué dessus
+            if( o instanceof Ligne && ((Ligne)o).inPolygon(v, (int)x, (int)y) ) vo.addElement((Ligne)o);
+            boolean in = o instanceof Cercle ? o.in(v,x,y) : o.inside(v,x,y);
+            if( in && ( !(o instanceof Source) ||
+                  ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) ) {
+               res.addElement(o);
+            }
+         }
 
-       return rep;
-    }
-    
-    /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
-    public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
-       double epoch = getEpoch().getJyr();
-       int format = TableParser.FMT_UNKNOWN;
-       int nError=0;
-       
-       double J2000=Double.NaN;
-       try { J2000 = (new Astrotime("J2000")).getJyr(); }
-       catch( Exception e ) {}
-       
-//       boolean first=true;
+         // On sélectionne tous les points de controle du polygone dans lequel on a cliqué (sur la surface)
+         for( Ligne o : vo ) {
+            for( o=o.getFirstBout(); o!=null; o = o.finligne ) {
+               if( !res.contains(o) ) res.addElement(o);
+            }
+         }
+      }
 
-       Astropos c = new Astropos();
-       while( it.hasNext() ) {
-          try {
-             Source s = (Source)it.next();
-             if( s.leg!=leg ) continue;
-             String ra = s.getValue(nra);
-             String dec= s.getValue(ndec);
-             format = TableParser.getRaDec(c, ra, dec, format);
-//             if( first ) System.out.println("c="+c);
-             if( npmra>0 && npmde>0 ) {
-                try {
-                   Unit mu1 = new Unit();
-                   try {
-                      mu1.setUnit(s.getUnit(npmra));
-                      mu1.setValue(s.getValue(npmra));
-                   } catch( Exception e1 ) { e1.printStackTrace(); }
-                   Unit mu2 = new Unit();
-                   try {
-                      mu2.setUnit(s.getUnit(npmde));
-                      mu2.setValue(s.getValue(npmde));
-                   } catch( Exception e1 ) { e1.printStackTrace();  }
-                   if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
-                      try {
-                         mu1.convertTo(new Unit("mas/yr"));
-                      } catch( Exception e) { 
-                         // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
-                         mu1.setUnit(s.getUnit(npmra));
-                         mu1.setValue(s.getValue(npmra));
-                         mu1.convertTo(new Unit("ms/yr"));
-                         double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);
-                         mu1 = new Unit(v+"mas/yr");
-                      };
-                      
-                      double pmra = mu1.getValue();
-                      //                   if( first ) System.out.println("pmra="+s1+" => mu1="+mu1+" => val="+pmra);
-                      mu2.convertTo(new Unit("mas/yr"));
-                      double pmde = mu2.getValue();
-                      //                   if( first ) System.out.println("pmde="+s1+" => mu2="+mu2+" => val="+pmde);
+      return res;
+   }
 
-                      c.set(c.getLon(),c.getLat(),J2000,pmra,pmde);
-                      //                   if( first ) System.out.println("set c : "+c);
-                      c.toEpoch(epoch);
-                      //                   if( first ) System.out.println("set epoch="+epoch+" : "+c);
-                      //                   if( pmra!=0 || pmde!=0 ) first=false;
-                   }
-                } catch( Exception e ) {
-                   nError++;
-                   if( nError>100 ) {
-                      if( aladin.levelTrace>=3 ) e.printStackTrace();
-                      aladin.warning("Too many error during proper motion computation !\n"
-                        + e.getMessage());
-                      break;
-                   }
-                }
-             }
+   /** Retourne true si le plan a des champs indiquant un mouvement Propre */
+   public boolean hasPM() {
+      if( !flagOk || !isCatalog() ) return false;
+      if( hasPM<0 ) {
+         Vector<Legende> legs = getLegende();
+         if( legs==null ) return false;
+         Iterator<Legende> it = legs.iterator();
+         while( it.hasNext() ) {
+            Legende leg = it.next();
+            if( leg==null ) continue;
+            if( leg.getPmRa()>0 &&  leg.getPmDe()>0 ) { hasPM=1; return true; }
+         }
+         hasPM=0;
+         return false;
+      }
+      return hasPM==1;
+   }
 
-             s.raj = c.getLon();
-             s.dej = c.getLat();
-             
-          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-       }
-       
-    }
+   /** Recalcule toutes les positions internes
+    * @return true si au moins une position a été effectivement modifié
+    */
+   public boolean recomputePosition() {
+      boolean rep=false;
+      Vector<Legende> legs = getLegende();
+      if( legs==null ) return false;
+      //       aladin.trace(3,label+": reprocessing all internal coordinates...");
+      Iterator<Legende> it = legs.iterator();
+      while( it.hasNext() ) {
+         Legende leg = it.next();
+         int npmra = leg.getPmRa();
+         int npmde = leg.getPmDe();
+         if( npmra<=0 || npmde<=0 ) continue;  // Inutile, pas de PM
+         int nra   = leg.getRa();
+         int nde   = leg.getDe();
+         recomputePosition(iterator(),leg,nra,nde,npmra,npmde);
+         rep=true;
+      }
+      if( rep ) aladin.view.newView(1);
 
-    /** Modification des champs utilisés pour la position céleste */
-    public void modifyRaDecField(Legende leg, int nra,int ndec,int npmra,int npmde) {
-       aladin.trace(3,label+" new J2000 => RA pos="+(nra+1)+" DE pos="+(ndec+1)
-             +" PMRA pos="+(npmra+1)+" PMDE pos="+(npmde+1));
-       
-       recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
+      return rep;
+   }
 
-       if( hasXYorig ) {
-          hasXYorig=false;
-          error=null;
-       }
+   /** recalcule les positions internes de toutes les sources ayant la légende indiqué */
+   public void recomputePosition(Iterator<Obj> it,Legende leg, int nra,int ndec,int npmra,int npmde) {
+      double epoch = getEpoch().getJyr();
+      int format = TableParser.FMT_UNKNOWN;
+      int nError=0;
 
-       aladin.view.newView(1);
-       aladin.view.repaintAll();
+      double J2000=Double.NaN;
+      try { J2000 = (new Astrotime("J2000")).getJyr(); }
+      catch( Exception e ) {}
 
-       String s = "New J2000 fields for "+label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
-             +(npmra>0 ? " -  PMRA column "+(npmra+1):"")
-             +(npmde>0 ? " -  PMDEC column "+(npmde+1):"");
-       aladin.trace(2,s);
-       aladin.info(aladin,s);
-    }
+      //       boolean first=true;
 
-    /** Modification des champs utilisés pour la position en XY */
-    public void modifyXYField(Legende leg, int nx,int ny) {
+      Astropos c = new Astropos();
+      while( it.hasNext() ) {
+         try {
+            Source s = (Source)it.next();
+            if( s.leg!=leg ) continue;
+            String ra = s.getValue(nra);
+            String dec= s.getValue(ndec);
+            format = TableParser.getRaDec(c, ra, dec, format);
+            //             if( first ) System.out.println("c="+c);
+            if( npmra>0 && npmde>0 ) {
+               try {
+                  Unit mu1 = new Unit();
+                  try {
+                     mu1.setUnit(s.getUnit(npmra));
+                     mu1.setValue(s.getValue(npmra));
+                  } catch( Exception e1 ) { e1.printStackTrace(); }
+                  Unit mu2 = new Unit();
+                  try {
+                     mu2.setUnit(s.getUnit(npmde));
+                     mu2.setValue(s.getValue(npmde));
+                  } catch( Exception e1 ) { e1.printStackTrace();  }
+                  if( mu1.getValue()!=0 || mu2.getValue()!=0 ) {
+                     try {
+                        mu1.convertTo(new Unit("mas/yr"));
+                     } catch( Exception e) {
+                        // Il faut reinitialiser parce que mu1 a changé d'unité malgré l'échec !
+                        mu1.setUnit(s.getUnit(npmra));
+                        mu1.setValue(s.getValue(npmra));
+                        mu1.convertTo(new Unit("ms/yr"));
+                        double v = 15*mu1.getValue()*Math.cos(c.getLat()*Math.PI/180);
+                        mu1 = new Unit(v+"mas/yr");
+                     };
 
-       aladin.trace(3,label+" new XY coordinate fields => X pos="+(nx+1)+" Y pos="+(ny+1));
-       Iterator<Obj> it = iterator();
-       while( it.hasNext() ) {
-          try {
-             Source s = (Source)it.next();
-             if( s.leg!=leg ) continue;
-             s.x = Double.parseDouble( s.getValue(nx) );
-             s.y = Double.parseDouble( s.getValue(ny) );
-          } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-       }
+                     double pmra = mu1.getValue();
+                     //                   if( first ) System.out.println("pmra="+s1+" => mu1="+mu1+" => val="+pmra);
+                     mu2.convertTo(new Unit("mas/yr"));
+                     double pmde = mu2.getValue();
+                     //                   if( first ) System.out.println("pmde="+s1+" => mu2="+mu2+" => val="+pmde);
 
-       if( !hasXYorig ) {
-          hasXYorig=true;
-          error=Plan.NOREDUCTION;
-       }
+                     c.set(c.getLon(),c.getLat(),J2000,pmra,pmde);
+                     //                   if( first ) System.out.println("set c : "+c);
+                     c.toEpoch(epoch);
+                     //                   if( first ) System.out.println("set epoch="+epoch+" : "+c);
+                     //                   if( pmra!=0 || pmde!=0 ) first=false;
+                  }
+               } catch( Exception e ) {
+                  nError++;
+                  if( nError>100 ) {
+                     if( aladin.levelTrace>=3 ) e.printStackTrace();
+                     aladin.warning("Too many error during proper motion computation !\n"
+                           + e.getMessage());
+                     break;
+                  }
+               }
+            }
 
-       aladin.view.newView(1);
-       aladin.view.repaintAll();
+            s.raj = c.getLon();
+            s.dej = c.getLat();
 
-       aladin.info(aladin,"New XY fields for "+label+"\n=> X column "+(nx+1)+" -  Y column "+(ny+1) );
-    }
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      }
+
+   }
+
+   /** Modification des champs utilisés pour la position céleste */
+   public void modifyRaDecField(Legende leg, int nra,int ndec,int npmra,int npmde) {
+      aladin.trace(3,label+" new J2000 => RA pos="+(nra+1)+" DE pos="+(ndec+1)
+            +" PMRA pos="+(npmra+1)+" PMDE pos="+(npmde+1));
+
+      recomputePosition(iterator(),leg,nra,ndec,npmra,npmde);
+
+      if( hasXYorig ) {
+         hasXYorig=false;
+         error=null;
+      }
+
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+
+      String s = "New J2000 fields for "+label+"\n=> RA column "+(nra+1)+" -  DE column "+(ndec+1)
+            +(npmra>0 ? " -  PMRA column "+(npmra+1):"")
+            +(npmde>0 ? " -  PMDEC column "+(npmde+1):"");
+      aladin.trace(2,s);
+      aladin.info(aladin,s);
+   }
+
+   /** Modification des champs utilisés pour la position en XY */
+   public void modifyXYField(Legende leg, int nx,int ny) {
+
+      aladin.trace(3,label+" new XY coordinate fields => X pos="+(nx+1)+" Y pos="+(ny+1));
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         try {
+            Source s = (Source)it.next();
+            if( s.leg!=leg ) continue;
+            s.x = Double.parseDouble( s.getValue(nx) );
+            s.y = Double.parseDouble( s.getValue(ny) );
+         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      }
+
+      if( !hasXYorig ) {
+         hasXYorig=true;
+         error=Plan.NOREDUCTION;
+      }
+
+      aladin.view.newView(1);
+      aladin.view.repaintAll();
+
+      aladin.info(aladin,"New XY fields for "+label+"\n=> X column "+(nx+1)+" -  Y column "+(ny+1) );
+   }
 
 
 
@@ -743,15 +772,15 @@ public class Plan implements Runnable {
       return true;
    }
 
-  /** Test d'equivalence de plan.
-   * Retourne vrai si les parametres decrivent le meme plan
-   * @param type  Le typ du plan
-   * @param objet l'objet ou les coordonnees au centre
-   * @param param les parametres de description du plan (ex: SERC J MAMA)
-   * @param other dependant du type de plan, sinon null
-   * 		  pour IMAGE: concatenation "code_fmt/code_resol"
-   * @return <I>true</I> si ok, <I>false</I> sinon.
-   */
+   /** Test d'equivalence de plan.
+    * Retourne vrai si les parametres decrivent le meme plan
+    * @param type  Le typ du plan
+    * @param objet l'objet ou les coordonnees au centre
+    * @param param les parametres de description du plan (ex: SERC J MAMA)
+    * @param other dependant du type de plan, sinon null
+    * 		  pour IMAGE: concatenation "code_fmt/code_resol"
+    * @return <I>true</I> si ok, <I>false</I> sinon.
+    */
    protected boolean theSame(int type,String objet,String param) {
       return theSame(type,objet,param,null);
    }
@@ -778,11 +807,11 @@ public class Plan implements Runnable {
       return false;
    }
 
-  /** Test d'equivalence de plan.
-   * Retourne vrai si il s'agit du meme plan dans le meme etat
-   * @param p le plan a comparer avec le plan courant
-   * @return <I>true</I> si ok, <I>false</I> sinon.
-   */
+   /** Test d'equivalence de plan.
+    * Retourne vrai si il s'agit du meme plan dans le meme etat
+    * @param p le plan a comparer avec le plan courant
+    * @return <I>true</I> si ok, <I>false</I> sinon.
+    */
    protected boolean equals(Plan p ) {
 
       // Meme plan ?
@@ -839,9 +868,9 @@ public class Plan implements Runnable {
     */
    void setLogMode(boolean mode) { log=mode; }
 
-  /** Libere le plan.
-   * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
-   */
+   /** Libere le plan.
+    * cad met toutes ses variables a <I>null</I> ou a <I>false</I>
+    */
    protected boolean Free() {
       setLogMode(false);
 
@@ -889,42 +918,42 @@ public class Plan implements Runnable {
    }
 
    /** Initialise toutes les variables */
-    protected void init() {
-       type = NO;
-       hasPM=-1;
-       flagOk=false;
-       flagWaitTarget=isOldPlan=false;
-       hasSpecificCalib=false;
-       objet=error=label=param=description=verboseDescr=ack=copyright=copyrightUrl=null;
-       flagSkip=false;
-       co=null;
-       projd=projInit = null;
-       projD=null;
-       pcat = null;
-       headerFits=null;
-       memoClinDoeil=collapse=flagOk=selected=active=ref
-          =hasXYorig=underMouse=recalibrating = false;
-       resetProj();
-       folder=0;
-       initZoom=1;
-       filename=null;
-       dis=null;
-       server=null;
-       filters=null;
-       slide=null;
-    }
-    
-    /** Bloque ou nom le mode de calcul des x,y des objets.
-     * @param lock <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
-     */
-     protected void setXYorig(boolean lock) {
-        hasXYorig = lock;
-     }
+   protected void init() {
+      type = NO;
+      hasPM=-1;
+      flagOk=false;
+      flagWaitTarget=isOldPlan=false;
+      hasSpecificCalib=false;
+      objet=error=label=param=description=verboseDescr=ack=copyright=copyrightUrl=null;
+      flagSkip=false;
+      co=null;
+      projd=projInit = null;
+      projD=null;
+      pcat = null;
+      headerFits=null;
+      memoClinDoeil=collapse=flagOk=selected=active=ref
+            =hasXYorig=underMouse=recalibrating = false;
+      resetProj();
+      folder=0;
+      initZoom=1;
+      filename=null;
+      dis=null;
+      server=null;
+      filters=null;
+      slide=null;
+   }
 
-    /** Retourne l'etat du plan tool (locke ou non).
-     * @return <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
-     */
-     protected boolean hasXYorig() { return hasXYorig; }
+   /** Bloque ou nom le mode de calcul des x,y des objets.
+    * @param lock <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
+    */
+   protected void setXYorig(boolean lock) {
+      hasXYorig = lock;
+   }
+
+   /** Retourne l'etat du plan tool (locke ou non).
+    * @return <I>true</I> les objets gardent leurs x,y, sinon <I>false</I>
+    */
+   protected boolean hasXYorig() { return hasXYorig; }
 
    /**
     * Génère des XY "natifs" en fonction de la projection courante
@@ -932,7 +961,7 @@ public class Plan implements Runnable {
     * ATTENTION NE MARCHE QUE POUR LES PLANS QUI N'ONT QUE DES OBJETS POSITIONS
     */
    protected void setXYorig() {
-Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
+      Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       Iterator<Obj> it = pcat.iterator();
       while( it.hasNext() ) ((Position)it.next()).setXY(projd);
       hasXYorig=true;
@@ -954,17 +983,17 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       int i = findFilter(s);
       setFilter(i);
 
-//      for( int i=0; i<filters.length; i++ ) {
-//         String fs = Server.getFilterDescription(filters[i]);
-//         if( fs!=null ) {
-//            if( Util.indexOfIgnoreCase(fs,s)>=0 ) { setFilter(i); return; }
-//         }
-//         fs = Server.getFilterName(filters[i]);
-//         if( fs!=null ) {
-//            if( Util.indexOfIgnoreCase(fs,s)>=0 ) { setFilter(i); return; }
-//         }
-//      }
-//      setFilter(-1);
+      //      for( int i=0; i<filters.length; i++ ) {
+      //         String fs = Server.getFilterDescription(filters[i]);
+      //         if( fs!=null ) {
+      //            if( Util.indexOfIgnoreCase(fs,s)>=0 ) { setFilter(i); return; }
+      //         }
+      //         fs = Server.getFilterName(filters[i]);
+      //         if( fs!=null ) {
+      //            if( Util.indexOfIgnoreCase(fs,s)>=0 ) { setFilter(i); return; }
+      //         }
+      //      }
+      //      setFilter(-1);
    }
 
    /** Retourne l'indice du filter, ou -1 si non trouvé */
@@ -1028,13 +1057,13 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          planFilter = new PlanFilter(aladin,name,script,this);
          planFilter.applyFilter();
          PlanFilter.updateAllFilters(aladin);
-//System.out.println("XXXXXXX Creation du filtre "+name+" ["+script+"]");
+         //System.out.println("XXXXXXX Creation du filtre "+name+" ["+script+"]");
       }
       else {
          planFilter.updateDefinition(script,name,null);
-//System.out.println("XXXXXXX Application du filtre "+name+" ["+script+"]");
+         //System.out.println("XXXXXXX Application du filtre "+name+" ["+script+"]");
       }
-    }
+   }
 
    protected void updateDedicatedFilter() {
       if( planFilter==null ) return;
@@ -1056,7 +1085,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    /**
     * Détermination des minx,maxx, miny, maxy respectivement mémorisés
     * dans m[0],m[1],m[2] et m[3]
-   * ATTENTION NE MARCHE QUE POUR LES PLANS QUI N'ONT QUE DES OBJETS POSITIONS
+    * ATTENTION NE MARCHE QUE POUR LES PLANS QUI N'ONT QUE DES OBJETS POSITIONS
     */
    protected void getXYRange(double m[]) {
       m[0]=m[2]=Double.POSITIVE_INFINITY;
@@ -1089,11 +1118,11 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       projd.modify(label,modeCalib,alphai,deltai,rm,rm,cx,cy,r,r,rot,sym,t,system);
       syncProjLocal();
    }
-   
-   
+
+
    /** Mise à jour des projections adaptées à chaque vue (pour les planBG) */
    protected void syncProjLocal() { }
-   
+
    /** Force le recalcul de la projection n */
    protected void resetProj(int n) { proj[n]=null; }
 
@@ -1102,20 +1131,20 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       for( int i=0; i<ViewControl.MAXVIEW; i++ ) resetProj(i);
    }
 
-  /** Positionne le flag indiquant que la calibration de ce plan n'est plus
-   *  celle d'origine (fichier FITS WCS)
-   */
+   /** Positionne le flag indiquant que la calibration de ce plan n'est plus
+    *  celle d'origine (fichier FITS WCS)
+    */
    protected void setHasSpecificCalib() { hasSpecificCalib=true; }
 
    /** Retourne true si la calib du plan n'est pas celle d'origine FITS */
    protected boolean hasSpecificCalib() { return hasSpecificCalib; }
 
-  /** Memorisation d'une nouvelle projection possible pour le plan
-   * qui devient la projection par defaut (projd)
-   * Rq: mise a jour de projD
-   * @param name le nom de la projection (il doit etre unique pour le plan
-   * @param p la nouvelle projection
-   */
+   /** Memorisation d'une nouvelle projection possible pour le plan
+    * qui devient la projection par defaut (projd)
+    * Rq: mise a jour de projD
+    * @param name le nom de la projection (il doit etre unique pour le plan
+    * @param p la nouvelle projection
+    */
    protected void setNewProjD(Projection p) {
       if( projD==null ) { projD = new Hashtable(); projInit=p; }
       projD.put(p.label,p);
@@ -1125,9 +1154,9 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       if( error!=null && hasNoReduction() ) error=null;
    }
 
-  /** Determination de tous les plans de reference possibles pour le plan
-   * @return le tableau des plans de reference possibles
-   */
+   /** Determination de tous les plans de reference possibles pour le plan
+    * @return le tableau des plans de reference possibles
+    */
    protected Plan [] getAvailablePlanRef() {
       Vector<Plan> v = new Vector<Plan>();
       if( isImage() || this instanceof PlanBG /* type==IMAGE || type==IMAGEHUGE */ ) v.addElement(this);
@@ -1149,10 +1178,10 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return pRef;
    }
 
-  /** Determination de toutes les projections par defaut utilisable pour
-   * le plan
-   * @return le tableau des projection
-   */
+   /** Determination de toutes les projections par defaut utilisable pour
+    * le plan
+    * @return le tableau des projection
+    */
    protected Projection [] getAvailableProj() {
       Projection p;
       int i;
@@ -1221,7 +1250,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    protected void setHasCheckBox(boolean flag) { hasCheckBox=flag; }
    protected boolean hasCheckBox() { return hasCheckBox; }
 
-   
+
    /** positionnement d'un flag de débugging du plan */
    protected void setDebugFlag(int type,boolean flag) {
       if( flag ) debugFlag |= type;
@@ -1250,111 +1279,112 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       }
       return rep.toString();
    }
-   
-    /** Retourne vrai si le plan peut etre visible dans au moins une des vues visibles
-   * @return <I>true</I> si ok, <I>false</I> sinon.
-   */
+
+   /** Retourne vrai si le plan peut etre visible dans au moins une des vues visibles
+    * @return <I>true</I> si ok, <I>false</I> sinon.
+    */
    protected boolean isViewable() {
       if( hasXYorig || isSED() ) { setDebugFlag(VIEWABLE,true); return true; }
-   	  if( type==NO || type==X || !flagOk ) { setDebugFlag(VIEWABLE,false); return false; }
-  	  if( !isCatalog() && !isPlanBGOverlay()
-  	        && !(isImage() || type==ALLSKYIMG) ) { setDebugFlag(VIEWABLE,true); return true; }
+      if( type==NO || type==X || !flagOk ) { setDebugFlag(VIEWABLE,false); return false; }
+      if( !isCatalog() && !isPlanBGOverlay()
+            && !(isImage() || type==ALLSKYIMG) ) { setDebugFlag(VIEWABLE,true); return true; }
 
-   	  // Parcours de l'ensemble des vues visibles
-   	  for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
-   	  	 ViewSimple v = aladin.view.viewSimple[i];
-   	  	 if( v.isFree() ) continue;
+      // Parcours de l'ensemble des vues visibles
+      for( int i=aladin.view.getModeView()-1; i>=0; i-- ) {
+         ViewSimple v = aladin.view.viewSimple[i];
+         if( v.isFree() ) continue;
 
-   	  	 // Sans astrométrie, il suffit que le plan soit en référence
-   	  	 // pour au moins une vue visible
-   	  	 if( projd==null ) {
-   	  	    if( v.pref==this ) { setDebugFlag(VIEWABLE,true); return true; }
+         // Sans astrométrie, il suffit que le plan soit en référence
+         // pour au moins une vue visible
+         if( projd==null ) {
+            if( v.pref==this ) { setDebugFlag(VIEWABLE,true); return true; }
 
-   	  	 // Sinon il faut que le plan soit compatible avec au-moins
-   	  	 // une vue visible
-    	 } else {
-   	  	    if( isCompatibleWith(v) ) { setDebugFlag(VIEWABLE,true); return true; }
-   	  	 }
-   	  }
+            // Sinon il faut que le plan soit compatible avec au-moins
+            // une vue visible
+         } else {
+            if( isCompatibleWith(v) ) { setDebugFlag(VIEWABLE,true); return true; }
+         }
+      }
 
-   	  setDebugFlag(VIEWABLE,false);
-   	  return false;
+      setDebugFlag(VIEWABLE,false);
+      return false;
    }
-   
-   /** retourne vrai s'il s'agit d'un plan overlay qui peut être vu en transparence sur au-moins un autre plan 
+
+   /** retourne vrai s'il s'agit d'un plan overlay qui peut être vu en transparence sur au-moins un autre plan
     * qui se trouve en dessous de lui dans la pile */
-//   protected boolean isOverlayable() {
-//      setDebugFlag(OVERLAYABLE,false);
-//      
-//      
-//      if( !isReady() ) return false;
-//      if( !isOverlay() ) return false;
-//      int n = aladin.calque.getIndex(this);
-//      
-//      Plan [] p = aladin.calque.getPlans();
-//      for( int i=n+1; i<p.length; i++ ) {
-//         if( !p[i].isReady() ) continue;
-//         if( p[i] instanceof PlanBG || isCompatibleWith(p[i]) ) {
-//            setDebugFlag(OVERLAYABLE,true);
-//            return true;
-//         }
-//      }
-//      return false;
-//   }
-   
+   //   protected boolean isOverlayable() {
+   //      setDebugFlag(OVERLAYABLE,false);
+   //
+   //
+   //      if( !isReady() ) return false;
+   //      if( !isOverlay() ) return false;
+   //      int n = aladin.calque.getIndex(this);
+   //
+   //      Plan [] p = aladin.calque.getPlans();
+   //      for( int i=n+1; i<p.length; i++ ) {
+   //         if( !p[i].isReady() ) continue;
+   //         if( p[i] instanceof PlanBG || isCompatibleWith(p[i]) ) {
+   //            setDebugFlag(OVERLAYABLE,true);
+   //            return true;
+   //         }
+   //      }
+   //      return false;
+   //   }
+
    /** Ce plan devrait avoir une checkbox afin de pouvoir le sélectionner dans la pile
     * ==> Dépend des autres plans présents dans la pile */
    protected boolean shouldHaveARefCheckBox() {
-      
+
       if( !isReady() ) return false;
-      
-//      // Un plan pris en référence quel qu'il soit doit avoir une coche
-//      // s'il n'est pas tout seul dans la pile
-//      if( ref && aladin.calque.getNbUsedPlans()>1 ) return true;
-      
+      if( ref ) return true;
+
+      //      // Un plan pris en référence quel qu'il soit doit avoir une coche
+      //      // s'il n'est pas tout seul dans la pile
+      //      if( ref && aladin.calque.getNbUsedPlans()>1 ) return true;
+
       boolean isImage = isImage();
       boolean isCatalog = isSimpleCatalog();
       boolean isImgBg = type==ALLSKYIMG;
       boolean isCatBg = isPlanBGOverlay();
-      
+
       // réponse par défaut
       boolean rep = isCatalog ? true : false;
-      
+
       int n = aladin.calque.getIndex(this);
-      
+
       Plan [] p = aladin.calque.getPlans();
       for( int i=0; i<p.length; i++ ) {
          if( !p[i].isReady() || p[i]==this ) continue;
-         
+
          // pour une image, la checkbox doit apparaître...
          if( isImage ) {
             // s'il y a au-moins un catalogue dont la projection n'est pas compatible
             if( p[i].isSimpleCatalog() && !isCompatibleWith(p[i])
-            // Ou qu'il y a une autre image, ou un allsky image
-             || p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
+                  // Ou qu'il y a une autre image, ou un allsky image
+                  || p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
          }
-         
+
          // pour un catalogue...
          if( isCatalog ) {
             // si j'ai une image ou allskyimg compatible , c'est inutile
             if( p[i].isImage() && isCompatibleWith(p[i]) || p[i] instanceof PlanBG  ) return false;
-            
+
             // Si j'ai un catalogue situé en dessous compatible, c'est inutile
             if( p[i].isSimpleCatalog() && isCompatibleWith(p[i]) && i>n ) return false;
          }
-         
+
          // Pour un allsky image...
          if( isImgBg ) {
             // Il suffit d'un autre plan BG image ou d'une image
             if( p[i].isImage() || p[i].type==ALLSKYIMG ) return true;
          }
-         
+
          // Et ce n'est jamais le cas pour un allsky cat
       }
       return rep;
    }
 
-   
+
    /** Retourne true si la coordonnée est dans le plan */
    protected boolean contains(Coord c) { return false; }
 
@@ -1387,7 +1417,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * superposable
     */
    protected boolean isCompatibleWith(Plan p) {
-   	  return Projection.isOk(p.projd) && p.projd.agree(projd,aladin.view.getCurrentView());
+      return Projection.isOk(p.projd) && p.projd.agree(projd,aladin.view.getCurrentView());
    }
 
    /** Retourne true si le plan passé est susceptible d'être visible en partie dans la vue indiquée */
@@ -1398,10 +1428,10 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return true;
       }
 
-      if( !(aladin.view.isMultiView() && v.pref.ref) 
+      if( !(aladin.view.isMultiView() && v.pref.ref)
             && v.pref.isImage() && (type==Plan.IMAGE /* || type==Plan.ALLSKYIMG */  ) && aladin.calque.getIndex(this)>aladin.calque.getIndex(v.pref)) {
          setDebugFlag(UNDERIMG, true);
-//System.out.println("IMG:"+label+" sous IMG?:"+v.pref+" dans le pile");
+         //System.out.println("IMG:"+label+" sous IMG?:"+v.pref+" dans le pile");
          return false;
 
       } else setDebugFlag(UNDERIMG, false);
@@ -1410,36 +1440,36 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       if( !setUnderBackGroundFlag(v) ) {
          return false;
       }
-      
+
       boolean rep = isOutView(v);
-//System.out.println(this+" isOutView("+v+") = "+rep);
+      //System.out.println(this+" isOutView("+v+") = "+rep);
       return !rep;
    }
-   
+
    // Peut être sous un plan Background ?
    private boolean setUnderBackGroundFlag(ViewSimple v) {
       boolean under=false;
-      
+
       // Si l'on force l'affichage des overlays qq soit leur position dans la pile
       // on peut simplifier comme suit
       if( ViewSimple.OVERLAYFORCEDISPLAY && !isPixel() ) {
          setDebugFlag(UNDERBKGD, under);
          return !under;
       }
-      
+
       Plan [] allPlan = aladin.calque.getPlans();
       int n = aladin.calque.getIndex(allPlan,this);
       for( int i=n-1; i>=0; i-- ) {
          Plan p=allPlan[i];
-         if( p.type==ALLSKYIMG && p.active 
-               && (p.getOpacityLevel()==1 || p.isRefForVisibleView()) 
+         if( p.type==ALLSKYIMG && p.active
+               && (p.getOpacityLevel()==1 || p.isRefForVisibleView())
                && !((PlanImage)p).isTransparent() ) {
             under=true;
             break;
          }
       }
       if( under && aladin.view.isMultiView() ) under=false;
-      
+
       setDebugFlag(UNDERBKGD, under);
       return !under;
 
@@ -1472,7 +1502,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
          // Tout à droite ou tout à gauche, Au-dessus ou en dessous
          if( minX<0 && maxX<0 || minX>=w && maxX>=w
-            || minY<0 && maxY<0 || minY>=h && maxY>=h ) {
+               || minY<0 && maxY<0 || minY>=h && maxY>=h ) {
             setDebugFlag(OUTOFVIEW,true);
             return true;
          }
@@ -1481,7 +1511,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return false;  // Mais attention, ce n'est pas certain !!
 
       } else {
-//         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView(),false);
+         //         boolean rep = !v.pref.projd.agree(projd,aladin.view.getCurrentView(),false);
          boolean rep = !v.getProj().agree(projd,aladin.view.getCurrentView(),false);
          setDebugFlag(OUTOFVIEW,rep);
          return rep;
@@ -1498,7 +1528,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return "";
    }
 
-  /** Retourne la ligne d'informations concernant le plan dans le statut d'Aladin*/
+   /** Retourne la ligne d'informations concernant le plan dans le statut d'Aladin*/
    protected String getInfo() { return getInfo(false); }
    protected String getInfo(boolean full) {
       try {
@@ -1526,7 +1556,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
          return s;
       } catch( Exception e ) {}
       return "";
-  }
+   }
 
    /** Ajout d'info de debugging et de stat */
    protected String addDebugInfo() {
@@ -1552,25 +1582,25 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return s.toString();
    }
 
-  /** Generation du label du plan.
-   * Retourne le label en fonction de l'etat courant du plan
-   * Il s'agit simplement d'ajouter des "..." quand le plan est en
-   * cours de construction
-   * @return Le label genere
-   */
+   /** Generation du label du plan.
+    * Retourne le label en fonction de l'etat courant du plan
+    * Il s'agit simplement d'ajouter des "..." quand le plan est en
+    * cours de construction
+    * @return Le label genere
+    */
    protected String getLabel() {
       String s=label;
       int p= (int)getPourcent();
-//      int c= (int)getCompletude();
+      //      int c= (int)getCompletude();
       if( p>0 && p<100) s=Util.align((label.length()>6 ? label.substring(0,6):label)+"... ",9)+p+"%";
       else if( error==null && !flagOk ) s= label+"...";
-//      else if( c>0 && c<100) s=Util.align((label.length()>9 ? label.substring(0,9):label),11)+c+"%";
+      //      else if( c>0 && c<100) s=Util.align((label.length()>9 ? label.substring(0,9):label),11)+c+"%";
       return s;
    }
-   
+
    // Prévu pour les cubes
    protected String getFrameLabel(int frame) { return label; }
-   
+
    protected double getCompletude() { return -1; }
 
    /** Retourne l'url qui a permis de générer le plan */
@@ -1601,10 +1631,10 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @return
     */
    protected String getLastPlasticID() {
-   	  if( plasticIDs!=null && plasticIDs.size()>0 )
-   	     return plasticIDs.get(plasticIDs.size()-1);
-   	  return getUrl();
-//      return plasticID!=null ? plasticID : getUrl();
+      if( plasticIDs!=null && plasticIDs.size()>0 )
+         return plasticIDs.get(plasticIDs.size()-1);
+      return getUrl();
+      //      return plasticID!=null ? plasticID : getUrl();
    }
 
    /**
@@ -1612,9 +1642,9 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @return
     */
    protected String getPlasticID() {
- 	  if( plasticIDs!=null && plasticIDs.size()>0 )
-  	     return plasticIDs.get(0);
-  	  return getUrl();
+      if( plasticIDs!=null && plasticIDs.size()>0 )
+         return plasticIDs.get(0);
+      return getUrl();
    }
 
    /**
@@ -1623,34 +1653,34 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @param id
     */
    protected boolean hasPlasticID(String id) {
-   	  if( id==null ) return false;
-   	  String str;
-   	  try {
-   	  	if( ! id.startsWith("file") ) str = id;
-   	  	else {
-   	  		URL url = new URL(id);
-   	  		//	pour éviter des pbs avec les URL locales !!
-   	  		str = url.getFile();
-   	  	}
-   	  }
-   	  catch(MalformedURLException mue) {
-   	  	str = id;
-   	  }
-   	  if( plasticIDs!=null ) {
-   	  	Enumeration<String> enumID = plasticIDs.elements();
-   	  	String tmp;
-   	  	while( enumID.hasMoreElements() ) {
-   	  		tmp = enumID.nextElement();
-   	  		if( tmp.startsWith("file") ) {
-   	  			try {
-   	  				URL url = new URL(tmp);
-   	  				tmp = url.getFile();
-   	  			}
-   	  			catch(MalformedURLException mue) {}
-   	  		}
-   	  		if( str.equals(tmp) ) return true;
-   	  	}
-   	  }
+      if( id==null ) return false;
+      String str;
+      try {
+         if( ! id.startsWith("file") ) str = id;
+         else {
+            URL url = new URL(id);
+            //	pour éviter des pbs avec les URL locales !!
+            str = url.getFile();
+         }
+      }
+      catch(MalformedURLException mue) {
+         str = id;
+      }
+      if( plasticIDs!=null ) {
+         Enumeration<String> enumID = plasticIDs.elements();
+         String tmp;
+         while( enumID.hasMoreElements() ) {
+            tmp = enumID.nextElement();
+            if( tmp.startsWith("file") ) {
+               try {
+                  URL url = new URL(tmp);
+                  tmp = url.getFile();
+               }
+               catch(MalformedURLException mue) {}
+            }
+            if( str.equals(tmp) ) return true;
+         }
+      }
 
       // en dernier recours
       String url = getUrl();
@@ -1664,17 +1694,17 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     */
    protected void addPlasticID(String id) {
       if (id==null) {
-          return;
+         return;
       }
 
-   	  if( plasticIDs==null ) plasticIDs = new Vector<String>();
+      if( plasticIDs==null ) plasticIDs = new Vector<String>();
 
       if( plasticIDs.indexOf(id)<0 ) plasticIDs.addElement(id);
    }
 
-  /** Enregistrement du label du plan (ce qui apparaitra a cote du logo
-   * du plan) en le modifiant éventuellement pour qu'il soit unique
-   */
+   /** Enregistrement du label du plan (ce qui apparaitra a cote du logo
+    * du plan) en le modifiant éventuellement pour qu'il soit unique
+    */
    protected void setLabel(String label) {
       String x = getUniqueLabel(label);
       if( x==null ) return;
@@ -1702,7 +1732,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
 
       for( int i=0; i<a.length; i++ ) {
          if( a[i]=='\n' ) a[i]=' ';
-//         if( a[i]=='/' ) a[i]='.';
+         //         if( a[i]=='/' ) a[i]='.';
       }
       String s=new String(a);
       String x =s;
@@ -1737,7 +1767,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return false;
    }
 
-  /** Retourne l'origine en tronquant la chaine si trop longue */
+   /** Retourne l'origine en tronquant la chaine si trop longue */
    protected String getFrom() {
       if( copyright==null ) return null;
       int n=copyright.length();
@@ -1750,7 +1780,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       return copyright;
    }
 
-  /** Positionnement de l'origine */
+   /** Positionnement de l'origine */
    protected void setFrom(String from) {
       this.copyright = from;
    }
@@ -1770,97 +1800,97 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
    }
 
    /** Retourne le Target du plan en J2000 ou null si non défini */
-    protected String getTarget() {
-       if( co==null ) return null;
-       return co.getSexa(":");
-    }
+   protected String getTarget() {
+      if( co==null ) return null;
+      return co.getSexa(":");
+   }
 
-    /** Modifie (si possible) une propriété du plan (dépend du type de plan) */
-    protected void setPropertie(String prop,String specif,String value) throws Exception {
-       if( prop.equalsIgnoreCase("PlaneID") ) {
-          if( isExistingLabel(value,false) ) throw new Exception("PlaneID already existing");
-          setLabel(value);
-       } else if( prop.equalsIgnoreCase("proj") ) {
-          modifyProj(value);
-       } else if( prop.equalsIgnoreCase("epoch") ) {
-          if( !isCatalog() ) throw new Exception("Epoch can be modified only for catalog planes");
-          if( !hasPM() ) throw new Exception("Unknown proper motion fields");
-          setEpoch(value);
-          aladin.calque.repaintAll();
-       } else if( prop.equalsIgnoreCase("info") ) {
-          verboseDescr=value;
-       } else if( prop.equalsIgnoreCase("ack") ) {
-          ack=value;
-       } else if( prop.equalsIgnoreCase("Color") ) {
-          Color c = Action.getColor(value);
-          if( c==null ) throw new Exception("Syntax error in color function (ex: rgb(30,60,255) )");
-          this.c = c;
-          aladin.calque.repaintAll();
-       } else if( prop.equalsIgnoreCase("Status") ) {
-          if( value.indexOf("shown")>=0 ) setActivated(true);
-          else if( value.indexOf("hidden")>=0 ) setActivated(false);
-          else throw new Exception("Status unknown");
-       } else if( prop.equalsIgnoreCase("Background") ) {
-          Color c = value.equalsIgnoreCase("white") ? Color.white : value.equalsIgnoreCase("black") ? Color.black : null;
-          colorBackground = c;
-          aladin.calque.repaintAll();
-       } else if( prop.equalsIgnoreCase("Opacity") ) {
-           if( !aladin.calque.canBeTransparent(this) /* planeTypeCanBeTrans(this)*/ ) throw new Exception("opacity property only applicable for images and footprints !");
-           float f;
-           try {
-               f = Float.parseFloat(value);
-           }
-           catch(NumberFormatException nfe) {
-               throw new Exception(value+" is not a valid value for opacity level !");
-           }
-           if( f>100 || f<0 ) throw new Exception("Opacity value must be between 0 and 100 !");
-           setOpacityLevel(f/100f);
-           aladin.calque.repaintAll();
-       } else if( prop.equalsIgnoreCase("scalingFactor") || prop.equalsIgnoreCase("size")) {
-          float n;
-          try {
-             n = Float.parseFloat(value);   
-             if( n<=0 ) throw new Exception();
-          } catch( Exception e ) {
-             throw new Exception(value+" is not a valid value for scalingFactor ]0..5] !");
-          }
-          setScalingFactor(n);
-          aladin.calque.repaintAll();
+   /** Modifie (si possible) une propriété du plan (dépend du type de plan) */
+   protected void setPropertie(String prop,String specif,String value) throws Exception {
+      if( prop.equalsIgnoreCase("PlaneID") ) {
+         if( isExistingLabel(value,false) ) throw new Exception("PlaneID already existing");
+         setLabel(value);
+      } else if( prop.equalsIgnoreCase("proj") ) {
+         modifyProj(value);
+      } else if( prop.equalsIgnoreCase("epoch") ) {
+         if( !isCatalog() ) throw new Exception("Epoch can be modified only for catalog planes");
+         if( !hasPM() ) throw new Exception("Unknown proper motion fields");
+         setEpoch(value);
+         aladin.calque.repaintAll();
+      } else if( prop.equalsIgnoreCase("info") ) {
+         verboseDescr=value;
+      } else if( prop.equalsIgnoreCase("ack") ) {
+         ack=value;
+      } else if( prop.equalsIgnoreCase("Color") ) {
+         Color c = Action.getColor(value);
+         if( c==null ) throw new Exception("Syntax error in color function (ex: rgb(30,60,255) )");
+         this.c = c;
+         aladin.calque.repaintAll();
+      } else if( prop.equalsIgnoreCase("Status") ) {
+         if( value.indexOf("shown")>=0 ) setActivated(true);
+         else if( value.indexOf("hidden")>=0 ) setActivated(false);
+         else throw new Exception("Status unknown");
+      } else if( prop.equalsIgnoreCase("Background") ) {
+         Color c = value.equalsIgnoreCase("white") ? Color.white : value.equalsIgnoreCase("black") ? Color.black : null;
+         colorBackground = c;
+         aladin.calque.repaintAll();
+      } else if( prop.equalsIgnoreCase("Opacity") ) {
+         if( !aladin.calque.canBeTransparent(this) /* planeTypeCanBeTrans(this)*/ ) throw new Exception("opacity property only applicable for images and footprints !");
+         float f;
+         try {
+            f = Float.parseFloat(value);
+         }
+         catch(NumberFormatException nfe) {
+            throw new Exception(value+" is not a valid value for opacity level !");
+         }
+         if( f>100 || f<0 ) throw new Exception("Opacity value must be between 0 and 100 !");
+         setOpacityLevel(f/100f);
+         aladin.calque.repaintAll();
+      } else if( prop.equalsIgnoreCase("scalingFactor") || prop.equalsIgnoreCase("size")) {
+         float n;
+         try {
+            n = Float.parseFloat(value);
+            if( n<=0 ) throw new Exception();
+         } catch( Exception e ) {
+            throw new Exception(value+" is not a valid value for scalingFactor ]0..5] !");
+         }
+         setScalingFactor(n);
+         aladin.calque.repaintAll();
 
-       } else if( prop.startsWith("FITS:") ) {
-          prop = prop.substring(5);
-          if( headerFits==null ) headerFits=new FrameHeaderFits(this,prop+"="+value);
-          else {
-             if( value.length()==0 ) value=null;
-             headerFits.setToHeader(prop,value);
-          }
-          try {
-             setNewProjD(new Projection(Projection.WCS,new Calib(headerFits.getHeaderFits())));
-             setHasSpecificCalib();
-             aladin.command.console("Astrometrical calibration has been modified on "+label);
-             aladin.view.newView();
-             aladin.view.repaintAll();
-          } catch( Exception e ) { }
+      } else if( prop.startsWith("FITS:") ) {
+         prop = prop.substring(5);
+         if( headerFits==null ) headerFits=new FrameHeaderFits(this,prop+"="+value);
+         else {
+            if( value.length()==0 ) value=null;
+            headerFits.setToHeader(prop,value);
+         }
+         try {
+            setNewProjD(new Projection(Projection.WCS,new Calib(headerFits.getHeaderFits())));
+            setHasSpecificCalib();
+            aladin.command.console("Astrometrical calibration has been modified on "+label);
+            aladin.view.newView();
+            aladin.view.repaintAll();
+         } catch( Exception e ) { }
 
-       } else throw new Exception("Unknown plane propertie ["+prop+"]");
+      } else throw new Exception("Unknown plane propertie ["+prop+"]");
 
-       Properties.majProp(this);
-    }
-    
-    
-    private long startCheckBoxBlink=0L;  // Date de début d'une séquence de checkbox blink
-    
-    /** Lance la séquence de blink de la check box du plan (voir isCheckBoxBlink() */
-    protected void startCheckBoxBlink() {
-       startCheckBoxBlink = System.currentTimeMillis();
-    }
-    
-    /** Retourne true si la checkbox du plan (dans la pile) doit être affiché
-     * temporairement en rouge afin d'indiquer à l'utilisateur qu'il doit éventuellement l'utiliser */
-    protected boolean isCheckBoxBlink() {
-       long t = System.currentTimeMillis();
-       return t-startCheckBoxBlink<4000;
-    }
+      Properties.majProp(this);
+   }
+
+
+   private long startCheckBoxBlink=0L;  // Date de début d'une séquence de checkbox blink
+
+   /** Lance la séquence de blink de la check box du plan (voir isCheckBoxBlink() */
+   protected void startCheckBoxBlink() {
+      startCheckBoxBlink = System.currentTimeMillis();
+   }
+
+   /** Retourne true si la checkbox du plan (dans la pile) doit être affiché
+    * temporairement en rouge afin d'indiquer à l'utilisateur qu'il doit éventuellement l'utiliser */
+   protected boolean isCheckBoxBlink() {
+      long t = System.currentTimeMillis();
+      return t-startCheckBoxBlink<4000;
+   }
 
    /** Demande d'activation/désactivation d'un plan
     * On mémorise le dernier état demandé au cas où ce n'est pas possible
@@ -1869,76 +1899,76 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @param flag true pour activer le plan, false sinon
     * @return true si le plan a pu être activé, false sinon
     */
-    protected boolean setActivated(boolean flag) {
-   	   askActive = flag;
-   	   return setActivated();
-    }
+   protected boolean setActivated(boolean flag) {
+      askActive = flag;
+      return setActivated();
+   }
 
-    /** Demande d'activation suivant le dernier choix mémorisé */
-    protected boolean setActivated() {
+   /** Demande d'activation suivant le dernier choix mémorisé */
+   protected boolean setActivated() {
       boolean flag=askActive;
 
-   	  // Vérification que l'activation est possible en fonction des vues visibles
-   	  if( askActive && !isViewable() ) flag=false;
+      // Vérification que l'activation est possible en fonction des vues visibles
+      if( askActive && !isViewable() ) flag=false;
 
-   	  // Inutile, déjà fait
-   	  if( active==flag ) return active;
+      // Inutile, déjà fait
+      if( active==flag ) return active;
 
-   	  // Activation/Desactivation effective
-   	  active=flag;
-//   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
+      // Activation/Desactivation effective
+      active=flag;
+      //   	  if( active && getOpacityLevel()<0.1f && !ref ) setOpacityLevel(1f);
       if( !active ) aladin.view.deSelect(this);
       else aladin.view.addTaggedSource(this);
-      
+
       // Activation automatique du SED associé au plan (le cas échéant)
       if( active && isSED() ) {
          Source sEtalon = aladin.view.addSEDSource(this);
-//         System.out.println("Plan.setActivated() setSED("+sEtalon+")");
+         //         System.out.println("Plan.setActivated() setSED("+sEtalon+")");
          if( sEtalon!=null ) aladin.view.zoomview.setSED(sEtalon);
       }
-      
+
       return active;
    }
 
-  /** Arret de chargement en parallele du plan */
+   /** Arret de chargement en parallele du plan */
    synchronized public void stop() {
-//      runme.stop();
+      //      runme.stop();
       runme = null;
    }
-   
+
    /** Dessin du plan
     * @param op niveau d'opacité forcé, -1 si prendre celui du plan
     */
-//   protected void draw(Graphics g,ViewSimple v,int dx, int dy, float op) {
-//      if( v==null ) return;
-//      if( op==-1 ) op=getOpacityLevel();
-//      if(  op<=0.1 ) return;
-//
-//      if( g instanceof Graphics2D ) {
-//         Graphics2D g2d = (Graphics2D)g;
-//         Composite saveComposite = g2d.getComposite();
-//         try {
-//            if( op < 0.9 ) {
-//               Composite myComposite = Util.getImageComposite(op);
-//               g2d.setComposite(myComposite);
-//            }
-//            draw(g2d, v, dx, dy);
-//         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
-//         g2d.setComposite(saveComposite);
-//
-//      } else draw(g, v, dx, dy);
-//   };
-//   
-//   protected void draw(Graphics g,ViewSimple v,int dx, int dy) { }
+   //   protected void draw(Graphics g,ViewSimple v,int dx, int dy, float op) {
+   //      if( v==null ) return;
+   //      if( op==-1 ) op=getOpacityLevel();
+   //      if(  op<=0.1 ) return;
+   //
+   //      if( g instanceof Graphics2D ) {
+   //         Graphics2D g2d = (Graphics2D)g;
+   //         Composite saveComposite = g2d.getComposite();
+   //         try {
+   //            if( op < 0.9 ) {
+   //               Composite myComposite = Util.getImageComposite(op);
+   //               g2d.setComposite(myComposite);
+   //            }
+   //            draw(g2d, v, dx, dy);
+   //         } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+   //         g2d.setComposite(saveComposite);
+   //
+   //      } else draw(g, v, dx, dy);
+   //   };
+   //
+   //   protected void draw(Graphics g,ViewSimple v,int dx, int dy) { }
 
 
-  /** Attente pendant la construction du plan.
-   * Il est necessaire de voir les specialisations des cette methode
-   * dans les classes PlanImage et PlanObjet pour comprendre
-   * @return <I>true</I> si ok, <I>false</I> sinon.
-   * @see aladin.PlanImage#waitForPlan()
-   * @see aladin.PlanCatalog#waitForPlan()
-   */
+   /** Attente pendant la construction du plan.
+    * Il est necessaire de voir les specialisations des cette methode
+    * dans les classes PlanImage et PlanObjet pour comprendre
+    * @return <I>true</I> si ok, <I>false</I> sinon.
+    * @see aladin.PlanImage#waitForPlan()
+    * @see aladin.PlanCatalog#waitForPlan()
+    */
    protected boolean waitForPlan() { return false; }
 
    private Vector listeners = new Vector();
@@ -1948,7 +1978,7 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @param listener
     */
    protected synchronized void addPlaneLoadListener(PlaneLoadListener listener) {
-       this.listeners.add(listener);
+      this.listeners.add(listener);
    }
 
    /**
@@ -1957,14 +1987,14 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
     * @return si listener faisait partie de la liste des listeners
     */
    protected synchronized boolean removeListener(PlaneLoadListener listener) {
-       return this.listeners.remove(listener);
+      return this.listeners.remove(listener);
    }
 
    protected void callAllListeners(PlaneLoadEvent ple) {
-       Enumeration eListeners = this.listeners.elements();
-       while( eListeners.hasMoreElements() ) {
-           ((PlaneLoadListener)eListeners.nextElement()).planeLoaded(ple);
-       }
+      Enumeration eListeners = this.listeners.elements();
+      while( eListeners.hasMoreElements() ) {
+         ((PlaneLoadListener)eListeners.nextElement()).planeLoaded(ple);
+      }
    }
 
    protected static final String ALADINQUERY = "AladinQuery";
@@ -1981,16 +2011,16 @@ Aladin.trace(3,"create original XY from RA,DEC for plane "+this);
       else {
          runme = new Thread(this,"AladinQueryBis");
          Util.decreasePriority(Thread.currentThread(), runme);
-//         runme.setPriority( Thread.NORM_PRIORITY -1);
+         //         runme.setPriority( Thread.NORM_PRIORITY -1);
          aladinQueryThread(runme);
          runme.start();
       }
 
    }
 
-  /** Lance le chargement du plan */
+   /** Lance le chargement du plan */
    public void run() {
-Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
+      Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label);
       if( server!=null ) server.setStatus();
       boolean rep=true;
       try { rep = waitForPlan();
@@ -2003,21 +2033,21 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
    private long startTime;
 
-  /** Positionne le flag ``ready'' du plan.
-   * En fonction de la valeur du flag "ready" positionne les
-   * parametres de l'etat courant du plan et demande les
-   * re-affichages necessaires
-   * @param ready l'etat a positionner
-   */
+   /** Positionne le flag ``ready'' du plan.
+    * En fonction de la valeur du flag "ready" positionne les
+    * parametres de l'etat courant du plan et demande les
+    * re-affichages necessaires
+    * @param ready l'etat a positionner
+    */
    protected void planReady(boolean ready) {
       if( flagSkip ) return;
-      
+
       if( doClose && dis!=null ) {
          try { dis.close(); } catch( IOException e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
-      
+
       aladin.endMsg();
 
       if( !ready ) {
@@ -2034,34 +2064,34 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
       // Dans le cas d'une image ou si la pile est vide (cas d'un catalogue
       // qui arriverait en premier), le plan devient un plan de référence
-//      if( !isOldPlan && isImage() || aladin.calque.isFreeX() ) aladin.calque.setPlanRef(this);
-//      else setActivated(true);
+      //      if( !isOldPlan && isImage() || aladin.calque.isFreeX() ) aladin.calque.setPlanRef(this);
+      //      else setActivated(true);
 
 
       setPourcent(-1);
       flagOk = ready;
 
-      
-//      if( aladin.calque.mustBeSetPlanRef(this) ) {
-//         aladin.calque.setPlanRef(this);
-//         setOpacityLevel( isOverlay()?1f : 0f);
-//         
-//      } else setActivated(true);
-      
-       
+
+      //      if( aladin.calque.mustBeSetPlanRef(this) ) {
+      //         aladin.calque.setPlanRef(this);
+      //         setOpacityLevel( isOverlay()?1f : 0f);
+      //
+      //      } else setActivated(true);
+
+
       boolean un,deux,trois;
       un=deux=trois=false;
-      
+
       if( (un=!isOldPlan && (isImage() || type==ALLSKYIMG && !(this instanceof PlanBGCat)))
             || (deux=aladin.calque.isFreeX(this))
             || (trois=isSimpleCatalog() && !isViewable() && !aladin.calque.isBackGround() ) ) {
          aladin.calque.setPlanRef(this);
          if( !isOverlay() )  setOpacityLevel(0f);
-//         setOpacityLevel( isOverlay()?1f : 0f);
+         //         setOpacityLevel( isOverlay()?1f : 0f);
       } else {
          if( !isViewable() ) aladin.view.syncPlan(this);
          setActivated(true);
-         
+
          // Voir si ca marche
          aladin.calque.unSelectAllPlan();
          selected=true;
@@ -2084,14 +2114,14 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
       // Libération de l'attente possible sur le target (voir Command.waitingPlanInProgress)
       flagWaitTarget=false;
-      
+
       flagProcessing = false;
 
       aladin.calque.repaintAll();
    }
 
    public String toString() {
-   	   return label+"["+Tp[type]+"]";
+      return label+"["+Tp[type]+"]";
    }
 
    // Arrondi plus facile à écrire que (int)Math.round()
@@ -2101,15 +2131,15 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
 
    // Recupération d'un itérator sur les Obj
    protected Iterator<Obj> iterator() { return pcat==null ? null : pcat.iterator(); }
-   
+
    // Recupération d'un itérator sur les objets visible dans la vue v (voir spécificité PlanBGCat)
    protected Iterator<Obj> iterator(ViewSimple v) { return iterator(); }
-   
-   
+
+
    /**
-   *
-   * @return true if there are at least one source with one associated source
-   */
+    *
+    * @return true if there are at least one source with one associated source
+    */
    protected boolean hasAssociatedFootprints() {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
@@ -2147,15 +2177,15 @@ Aladin.trace(1,(flagSkip?"Skipping":"Creating")+" the "+Tp[type]+" plane "+label
          if( !(o instanceof Source) ) continue;
          Source s = (Source)o;
          if( s.getFootprint()!=null ) {
-             PlanField pf = s.getFootprint().getFootprint();
-             if (pf != null) {
-                 pf.pcat.reallocObjetCache();
-             }
+            PlanField pf = s.getFootprint().getFootprint();
+            if (pf != null) {
+               pf.pcat.reallocObjetCache();
+            }
          }
       }
 
    }
-   
+
 
 
 }

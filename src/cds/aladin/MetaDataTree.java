@@ -41,7 +41,7 @@ import cds.tools.Util;
  *           0.6 5 Juin 2003 - Découplement de cette classe avec TreeView
  * 		     0.5 Février 2003 - Création
  */
-public class MetaDataTree extends BasicTree implements WidgetFinder, KeyListener /*, Runnable*/ {
+public class MetaDataTree extends BasicTree implements SwingWidgetFinder, KeyListener /*, Runnable*/ {
 
 	static final String OPENWITHALADIN = "Aladin";
 //	static final String OPENWITHVOSPEC = "VOSpec";

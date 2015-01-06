@@ -23,17 +23,13 @@ package cds.aladin;
 import java.lang.reflect.Constructor;
 import java.awt.Color;
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 
-import javax.imageio.stream.FileImageInputStream;
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import cds.allsky.Context;
 import cds.allsky.HipsGen;
-import cds.astro.AstroMath;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
 import cds.moc.HealpixMoc;
@@ -60,7 +56,7 @@ import cds.xml.Field;
 public final class Command implements Runnable {
 
    static final long TIMEOUT = 15L;	 // 15 minutes de chien de garde
-                                                 // pour la commande "sync"
+   // pour la commande "sync"
    static long timeout = TIMEOUT*60000;
 
    // Gestion du systeme de coordonnees pour la commande "draw"
@@ -74,19 +70,19 @@ public final class Command implements Runnable {
    private boolean stop;        // passe à true pour tuer les threads de lecture
 
    private String lastCmd="";		// Dernière commande exécutée
-   
-//   protected boolean syncNeedSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
+
+   //   protected boolean syncNeedSave=false;  // True si on doit attendre la fin d'un Save,Export ou Backup pour quitter
    protected Synchro syncSave = new Synchro();
-   
+
    private Thread thread;   // Le thread de lecture des commandes
    JFrame robotInfo;
    String curTuto;
    JTextArea infoTxt;
-   
+
    HashMap<String, String> var  = new HashMap<String, String>(100);
 
    MyRobot robot;
-   
+
    public boolean robotMode = false;      // pour robot : vrai si en mode "robot"
    boolean filterMode = false;            // vrai si on est en mode "definition de filtre"
    StringBuffer filterDef = null;         // objet contenant la def. du filtre
@@ -94,44 +90,44 @@ public final class Command implements Runnable {
    PlanImage planRGBRef;   // Particularite pour traiter la commande RGB
 
    static final String execHelp =
-      "\n" +
-      "#PLANE:#                              #VIEW:#\n" +
-      "   @get servers [target] [radius]      @mview [1|2|4|9|16] [n]\n" +
-      "   @load filename                      @cview [-plot] [[x] v]\n" +
-      "   @select x1 [x2..]                   @select v1 [v2..]\n" +
-      "   @set [x1] [x2..] prop=value         @zoom ...\n" +
-      "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
-      "   @mv|@copy x1 x2                      @thumbnail [radius]\n" +
-      "   @rm [x1] [x2..] | -all              @lock|@unlock [v1] [v2..]\n" +
-      "   @export [-fmt] x filename           @match [-scale] [v|x|off]\n" +
-      "                                      @mv|@copy v1 v2\n" +
-      "#IMAGE:#                                @rm [v1] [v2..] | -lock\n" +
-      "   @cm [x1|v1...] [colorMap...]        @save [-fmt] [-lk] [WxH] [filename]\n" +
-      "   @RGB|@RGBdiff [x1|v1...]             @coord|@object\n" +
-      "   @blink|@mosaic [x1] [x2...]\n" +
-      "   @+ | @- | @* | @/ ...                #CATALOG:#\n" +
-      "   @norm [-cut] [x]                    @filter ...\n" +
-      "   @conv [x] ...                       @addcol ...\n" +
-      "   @kernel ...                         @xmatch x1 x2 [dist] ...\n" +
-      "   @resamp x1 x2 ...                   @cplane [name]\n" +
-      "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
-      "   @flipflop [x|v] [V|H]               @tag|@untag\n" +
-      "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
-      "   @grey|@bitpix [-cut] [x] BITPIX\n" +
-      "  \n" +
-      "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
-      "   @draw [color] fct(param)            @md [-localscope] [name]\n" +
-      "   @grid [on|off]                      @mv|@rm [name]\n" +
-      "   @reticle [on|off]                   @collapse|@expand [name]\n" +
-      "   @overlay [on|off]                   @show|@hide [name]\n" +
-      " \n" +
-      "#MISCELLANEOUS:#\n" +
-      "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
-      "   @help ...            @trace        @mem        @info msg\n" +
-      "   @macro script param  @call fct     @list [fct] @reset\n" +
-      "   @setconf prop=value  @function ... @= ...      @convert      @quit   " +
-      "";
- ;
+         "\n" +
+               "#PLANE:#                              #VIEW:#\n" +
+               "   @get servers [target] [radius]      @mview [1|2|4|9|16] [n]\n" +
+               "   @load filename                      @cview [-plot] [[x] v]\n" +
+               "   @select x1 [x2..]                   @select v1 [v2..]\n" +
+               "   @set [x1] [x2..] prop=value         @zoom ...\n" +
+               "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
+               "   @mv|@copy x1 x2                      @thumbnail [radius]\n" +
+               "   @rm [x1] [x2..] | -all              @lock|@unlock [v1] [v2..]\n" +
+               "   @export [-fmt] x filename           @match [-scale] [v|x|off]\n" +
+               "                                      @mv|@copy v1 v2\n" +
+               "#IMAGE:#                                @rm [v1] [v2..] | -lock\n" +
+               "   @cm [x1|v1...] [colorMap...]        @save [-fmt] [-lk] [WxH] [filename]\n" +
+               "   @RGB|@RGBdiff [x1|v1...]             @coord|@object\n" +
+               "   @blink|@mosaic [x1] [x2...]\n" +
+               "   @+ | @- | @* | @/ ...                #CATALOG:#\n" +
+               "   @norm [-cut] [x]                    @filter ...\n" +
+               "   @conv [x] ...                       @addcol ...\n" +
+               "   @kernel ...                         @xmatch x1 x2 [dist] ...\n" +
+               "   @resamp x1 x2 ...                   @cplane [name]\n" +
+               "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
+               "   @flipflop [x|v] [V|H]               @tag|@untag\n" +
+               "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
+               "   @grey|@bitpix [-cut] [x] BITPIX\n" +
+               "  \n" +
+               "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
+               "   @draw [color] fct(param)            @md [-localscope] [name]\n" +
+               "   @grid [on|off]                      @mv|@rm [name]\n" +
+               "   @reticle [on|off]                   @collapse|@expand [name]\n" +
+               "   @overlay [on|off]                   @show|@hide [name]\n" +
+               " \n" +
+               "#MISCELLANEOUS:#\n" +
+               "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
+               "   @help ...            @trace        @mem        @info msg\n" +
+               "   @macro script param  @call fct     @list [fct] @reset\n" +
+               "   @setconf prop=value  @function ... @= ...      @convert      @quit   " +
+               "";
+   ;
 
    private String execHelp() {
       if( Aladin.levelTrace>0 ) {
@@ -150,7 +146,7 @@ public final class Command implements Runnable {
       "status",/*"stick",*/"sync","tag","thumbnail","trace","unlock",/* "unstick",*/
       "untag","xmatch","moreonxmatch","zoom","+","-","*","/","=",
    };
-   
+
    // Liste des commandes qui ne requierent pas un sync() avant d'être exécutée
    static final private String NOSYNCCMD[] = {
       "call","collapse","demo","expand","function","=",
@@ -159,33 +155,33 @@ public final class Command implements Runnable {
       "scale",/*"setconf",*/
       "status","stick","sync","timeout","trace","unlock","unstick",
    };
-   
+
    /** retourne true si la commande requiert un sync() avant d'être exécutée */
    private boolean needSync(String cmd) {
       return Util.indexInArrayOf(cmd, NOSYNCCMD)== -1;
    }
 
-  /** Creation d'un module de commande.
-   * @param aladin la reference habituelle
-   */
+   /** Creation d'un module de commande.
+    * @param aladin la reference habituelle
+    */
    Command(Aladin aladin) {
       a=aladin;
       ds9 = new CommandDS9(aladin);
       testRobot();
       if( Aladin.ROBOTSUPPORT ) {
-          robot = new MyRobot(a);
-          Aladin.trace(3, "Creating robot");
+         robot = new MyRobot(a);
+         Aladin.trace(3, "Creating robot");
       }
    }
 
    /** Arrêt forcer du thread de lecture des commandes */
    protected void stop() { stop=true; }
-   
+
    public void printConsole(String s) {
       print(s);
       console(s);
    }
-   
+
    public void console(String s) {
       if( !s.startsWith("!!!") ) a.console.printInfo(s);
       else a.console.printError(s);
@@ -198,12 +194,12 @@ public final class Command implements Runnable {
       if( Aladin.NOGUI && !s.startsWith("!!!")  ) return;
       if( !Aladin.isApplet() ) System.out.print(s);
    }
-   
-  /** Lance la lecture asynchrone du standard input */
+
+   /** Lance la lecture asynchrone du standard input */
    protected void readStandardInput() {
       thread = new Thread(this,"AladinReadStdin");
       Util.decreasePriority(Thread.currentThread(), thread);
-//      thread.setPriority( Thread.NORM_PRIORITY -1);
+      //      thread.setPriority( Thread.NORM_PRIORITY -1);
       thread.start();
    }
 
@@ -211,24 +207,24 @@ public final class Command implements Runnable {
    Stack<InputStream> stackStream = new Stack<InputStream>();
    synchronized void setStream(InputStream in ) {
       if( in==null ) {
-      	// thomas 02/02/2005
-//      	in=(InputStream)(stackStream.empty()?System.in:stackStream.pop()); // original, commenté
+         // thomas 02/02/2005
+         //      	in=(InputStream)(stackStream.empty()?System.in:stackStream.pop()); // original, commenté
 
-      	if( stackStream.empty() ) in = System.in;
-      	// thomas 02/02/2005 : le pb du pop() est que dans certains cas, on dépile le stream qu'on venait de consommer entièrement
-      	// ce qui provoquait un dépilage en série non désiré (du coup, on perdait certaines commandes !!)
-      	else {
-      		in = stackStream.pop();
-      		if( in==stream && in!=System.in && !stackStream.empty() ) {
-      			in = stackStream.peek();
-      		}
-      	}
+         if( stackStream.empty() ) in = System.in;
+         // thomas 02/02/2005 : le pb du pop() est que dans certains cas, on dépile le stream qu'on venait de consommer entièrement
+         // ce qui provoquait un dépilage en série non désiré (du coup, on perdait certaines commandes !!)
+         else {
+            in = stackStream.pop();
+            if( in==stream && in!=System.in && !stackStream.empty() ) {
+               in = stackStream.peek();
+            }
+         }
       }
       else stackStream.push(in);
       stream=in;
    }
 
-  /** Lance la lecture asynchrone du standard input */
+   /** Lance la lecture asynchrone du standard input */
    protected void readFromStream(InputStream in) { setStream(in); }
 
    /** Module de controle des commandes asynchrones.
@@ -239,13 +235,13 @@ public final class Command implements Runnable {
     */
    public void run() {
       a.waitDialog();
-//      if( Aladin.BANNER && !Aladin.NOGUI && !a.isLoading() && !a.flagLaunch ) {
-//         try { Thread.currentThread().sleep(3000); } catch( Exception e ) {}
-//         if( !a.pad.hasHistoryCmd() && a.msgOn ) {
-//            if( !a.dialog.isShowing() ) a.dialog.show();
-//         }
-//      }
-//      println("Aladin is waiting commands...");
+      //      if( Aladin.BANNER && !Aladin.NOGUI && !a.isLoading() && !a.flagLaunch ) {
+      //         try { Thread.currentThread().sleep(3000); } catch( Exception e ) {}
+      //         if( !a.pad.hasHistoryCmd() && a.msgOn ) {
+      //            if( !a.dialog.isShowing() ) a.dialog.show();
+      //         }
+      //      }
+      //      println("Aladin is waiting commands...");
       scriptFromInputStream();
       a.trace(2,"Command interpreter stopped !");
    }
@@ -253,8 +249,8 @@ public final class Command implements Runnable {
    private boolean sleepFlag=false;
    synchronized protected void readNow() {
 
-//      // Contournement Bug Windows JAVA 1.1.8 sur le read bloquant après available()==1
-//      if( Aladin.BUGPARAD118 ) { execScript(a.pad.popCmd()); return; }
+      //      // Contournement Bug Windows JAVA 1.1.8 sur le read bloquant après available()==1
+      //      if( Aladin.BUGPARAD118 ) { execScript(a.pad.popCmd()); return; }
 
       if( sleepFlag )thread.interrupt();
    }
@@ -262,11 +258,11 @@ public final class Command implements Runnable {
    synchronized private void setFlagSleep(boolean flag) { sleepFlag=flag; }
 
    int X = 0;
-   
+
    /** Retourne true s'il y a encore une commande dans le flux d'entrée */
    protected boolean hasCommand() {
       try {
-//         System.out.println("stream="+stream+" available="+stream.available()+" isSyncServer="+isSyncServer());
+         //         System.out.println("stream="+stream+" available="+stream.available()+" isSyncServer="+isSyncServer());
          return stream!=System.in && stream.available()>-1 || stream.available()>0 || !isSyncServer();
       } catch( Exception e ) { e.printStackTrace(); }
       return false;
@@ -278,7 +274,7 @@ public final class Command implements Runnable {
       StringBuffer s = new StringBuffer();
       boolean encore=true;
       int b=0;
-      int acc=0;  // Profondeur de crochets pour éviter les fausses détections de ';' au sein d'une UCD  
+      int acc=0;  // Profondeur de crochets pour éviter les fausses détections de ';' au sein d'une UCD
 
       do {
          // Une commande qui provient du pad et prioritaire sur stdin
@@ -290,8 +286,8 @@ public final class Command implements Runnable {
 
             // Petite garantie pour éviter une boucle bloquante en cas de
             // problème sur stream.available (ex. sous Tomcat)
-//            if( X>100000 ) Util.pause(1000);
-//            X++;
+            //            if( X>100000 ) Util.pause(1000);
+            //            X++;
 
             if( stream==null || stream==System.in && stream.available()==0 ) {
                setFlagSleep(true);
@@ -303,15 +299,15 @@ public final class Command implements Runnable {
 
          try {
             b=stream.read();
-//            System.out.println("Read b="+b+"=>"+((char)b)+" from "+stream+" available="+stream.available());
+            //            System.out.println("Read b="+b+"=>"+((char)b)+" from "+stream+" available="+stream.available());
          } catch( Exception e ) {stream=null; continue; }
 
          // Fin de lecture d'un stream alternatif
          if( stream!=System.in && b==-1 ) {
-	        setStream(null);
-	        encore=false;
-	        
-	     // Ajout a la commande courante
+            setStream(null);
+            encore=false;
+
+            // Ajout a la commande courante
          } else {
             s.append((char)b);
             if( b=='[' ) acc++;
@@ -323,19 +319,19 @@ public final class Command implements Runnable {
    }
 
    protected String getPrompt() {
-//      return filterMode ? "Command - Filter def.> ":
-//         "Command> ";
+      //      return filterMode ? "Command - Filter def.> ":
+      //         "Command> ";
       return filterMode ?  "Filter> ":
-             fonct!=null ? "Function> ":
-                           "Command> ";
+         fonct!=null ? "Function> ":
+            "Command> ";
    }
-   
+
    //** Retourne true si Aladin attend la suite de la commande (filtre, fonction....) */
    protected boolean waitingMore() { return !filterMode && fonct==null; }
 
-  /** Lecture d'un script
-   * @param dis InputStream
-   */
+   /** Lecture d'un script
+    * @param dis InputStream
+    */
    protected void scriptFromInputStream() {
       String s=null;
       boolean prompt=(stream==System.in);
@@ -384,10 +380,10 @@ public final class Command implements Runnable {
       }
       return nview;
    }
-   
+
    /** Extraction des indices des colonnes pour un paramètre
     * suivant la syntaxe suivante :  NomPlan(Column1,Column2).
-    * S'il n'y a pas de colonne mentionnée, retourne 0,1   
+    * S'il n'y a pas de colonne mentionnée, retourne 0,1
     * @return : le nom de la table sans les parenthèses
     */
    protected String parseColumnIndex(String [] col, String s) {
@@ -398,10 +394,10 @@ public final class Command implements Runnable {
       String plane = s.substring(0,offset);
       col[0] = s.substring(offset+1,offset1);
       col[1] = s.substring(offset1+1,s.length()-1);
-//      System.out.println("Table=["+plane+"] col1=["+col[0]+"] col2=["+col[1]+"]");
+      //      System.out.println("Table=["+plane+"] col1=["+col[0]+"] col2=["+col[1]+"]");
       return plane;
    }
-   
+
    /** Retourne le plan en fonction de son numero, ou de son label
     *  ou d'un masque (jokers).
     * dans la pile (1 etant celui tout en bas).
@@ -463,8 +459,8 @@ public final class Command implements Runnable {
       // Un plan par son nom ou son numéro ?
       if( p == null ) {
          p = getNumber(s,1,atStrict,false);
-//         int n=getNumber(s,1,atStrict,false);
-//         if( n >= 0 ) p=a.calque.plan[n];
+         //         int n=getNumber(s,1,atStrict,false);
+         //         if( n >= 0 ) p=a.calque.plan[n];
       }
       return p;
    }
@@ -483,7 +479,7 @@ public final class Command implements Runnable {
     */
    protected Plan getFirstPlan(String planID) {
       if( planID.indexOf(' ')>=0 && planID.indexOf('"')<0 ) planID= '"'+planID+'"';
-//System.out.println("planID=["+planID+"]");
+      //System.out.println("planID=["+planID+"]");
       Plan p[] = getPlan(planID);
       if( p.length==0) return null;
       return p[0];
@@ -513,7 +509,7 @@ public final class Command implements Runnable {
             if( p.flagOk && p.selected ) v.addElement(p);
          }
 
-      // Les plans images spécifiés par le paramètre
+         // Les plans images spécifiés par le paramètre
       } else {
          Tok st = new Tok(param);
          while( st.hasMoreTokens() ) {
@@ -531,80 +527,80 @@ public final class Command implements Runnable {
       return v.toArray(new Plan[v.size()]);
    }
 
-//   protected boolean isSyncServer1() {
-//      for( int i=0; i<a.dialog.server.length; i++ ) {
-//         if( !a.dialog.server[i].isSync() ) {
-//            Aladin.trace(4,"Command.isSyncServer() : waiting server["+i+"] \""+a.dialog.server[i].aladinLabel+"\"...");
-//            return false;
-//         }
-//      }
-//      return true;
-//   }
+   //   protected boolean isSyncServer1() {
+   //      for( int i=0; i<a.dialog.server.length; i++ ) {
+   //         if( !a.dialog.server[i].isSync() ) {
+   //            Aladin.trace(4,"Command.isSyncServer() : waiting server["+i+"] \""+a.dialog.server[i].aladinLabel+"\"...");
+   //            return false;
+   //         }
+   //      }
+   //      return true;
+   //   }
    /** Retourne true si tous les serveurs sont syncrhonisés */
    protected boolean isSyncServer() {
       if( a.synchroServer.isReady() ) return true;
       Aladin.trace(4,"Command.isSyncServer() : waiting server...\n" +
-      		         "==> "+a.synchroServer);
+            "==> "+a.synchroServer);
       return false;
    }
-   
+
    /** Retourne true si tous les plugins sont syncrhonisés */
-   protected boolean isSyncPlugin() { 
+   protected boolean isSyncPlugin() {
       if( a.plugins==null ) return true;
       boolean rep=a.plugins.isSync();
       if( !rep ) Aladin.trace(4,"Command.isSyncPlugin() : waiting a plugin...\n");
       return rep;
    }
-   
+
    /** Retourne true si tous les plans sont syncrhonisés */
    protected boolean isSyncPlan() {
       if( a.synchroPlan.isReady() ) return true;
       Aladin.trace(4,"Command.isSyncPlan() : waiting plane...\n" +
-                     "==> "+a.synchroPlan);
+            "==> "+a.synchroPlan);
       return false;
    }
-   
+
    /** Retourne true si tous les serveurs sont syncrhonisés */
    protected boolean isSyncSave() {
       if( syncSave.isReady() ) return true;
       Aladin.trace(4,"Command.isSyncSave() : waiting save process...\n" +
-                     "==> "+syncSave);
+            "==> "+syncSave);
       return false;
    }
-   
+
 
 
    protected boolean syncNeedRepaint=false;
    protected boolean syncNeedSesame=false;
-   
-  /** Retourne vrai si tous les plans sont flagOk et que tous les serveurs
-   * sont ok */
+
+   /** Retourne vrai si tous les plans sont flagOk et que tous les serveurs
+    * sont ok */
    protected boolean isSync() {
       if( a.dialog==null || a.calque==null ) {
          a.trace(4,"Command.isSync() : waiting (Aladin.dialog not ready)...");
          return false;
       }
-      
+
       if( syncNeedSesame && a.view.isSesameInProgress() ) {
          a.trace(4,"Command.isSync() : waiting sesame...\n" +
-         		   "==> "+a.view.sesameSynchro);
+               "==> "+a.view.sesameSynchro);
          return false;
       }
       syncNeedSesame=false;
-      
+
       if( syncNeedRepaint ) {
          a.trace(4,"Command.isSync() : waiting viewSimple.paintComponent()...");
          a.view.repaintAll();
          return false;
       }
-      
+
       if( !isSyncServer() ) return false;
       if( !isSyncPlan() ) return false;
       if( !isSyncPlugin() ) return false;
       if( !isSyncSave() ) return false;
-      
-//      if( !a.calque.isPlanBGSync() ) return false;
-      
+
+      //      if( !a.calque.isPlanBGSync() ) return false;
+
       Plan [] plan = a.calque.getPlans();
       for( int i=plan.length-1; i>=0; i-- ) {
          if( plan[i].type!=Plan.NO && !plan[i].isSync()  ) {
@@ -612,14 +608,14 @@ public final class Command implements Runnable {
             if( plan[i].label==null ) {
                System.err.println("isSync label==null : type="+plan[i].type+" state="+plan[i].getDebugFlag());
             }
-//            if( Aladin.NOGUI && plan[i] instanceof PlanBG && !((PlanBG)plan[i]).isFullyDrawn() ) {
-//               syncNeedRepaint=true;
-//            }
+            //            if( Aladin.NOGUI && plan[i] instanceof PlanBG && !((PlanBG)plan[i]).isFullyDrawn() ) {
+            //               syncNeedRepaint=true;
+            //            }
             return false;
          }
       }
-      
-//      System.out.println("All is sync");
+
+      //      System.out.println("All is sync");
       return true;
    }
 
@@ -635,32 +631,32 @@ public final class Command implements Runnable {
    }
 
    private boolean inSync = false; // true si un sync est en cours
-   
-   
+
+
    // Les différents modes de synchronisation des plans
    final protected static int SYNCOFF = 0;
    final protected static int SYNCON  = 1;
    protected int syncMode = SYNCON;   // mode de synchronisation courant
-   
+
    /** Positionnement du mode de synchronisation, SYNCON = automatique,
     * SYNCOFF = explicite par la commande sync */
    protected void setSyncMode(int mode) { syncMode=mode; }
 
-  /** Attend que tous les plans soient Ok */
+   /** Attend que tous les plans soient Ok */
    public void sync() {
-   	  inSync = true;
+      inSync = true;
       if( robotMode ) {
-          robotSync();
-          Util.pause(1000);
+         robotSync();
+         Util.pause(1000);
       }
       long d = System.currentTimeMillis();
       while( !isSync() ) {
-      	 if( killSync ) {
-      	 	killSync = false;
+         if( killSync ) {
+            killSync = false;
             println("!!! Command sync has been killed !");
             inSync = false;
             return;
-      	 }
+         }
          if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
             println("!!! Time out error ("+(timeout/60000)+" minutes).");
             inSync = false;
@@ -671,7 +667,7 @@ public final class Command implements Runnable {
       inSync = false;
    }
 
-   private void syncServer() { 
+   private void syncServer() {
       try {
          a.synchroServer.waitUntil(timeout);
       } catch( Exception e ) {
@@ -681,45 +677,45 @@ public final class Command implements Runnable {
 
    /** teste si robot est supporté, et fixe la valeur de Aladin.ROBOTSUPPORT */
    private void testRobot() {
-       try {
-            Class<?> x = Class.forName("java.awt.Robot");
-            Constructor<?> cons = x.getConstructor(new Class[]{});
-            cons.newInstance(new Object[] {});
-           // robot supporte !
-           Aladin.trace(3, "Robot supported");
-           Aladin.ROBOTSUPPORT = true;
-       }
-       catch(Exception e) {
-           // robot non supporte
-           Aladin.trace(3, "Robot NOT supported");
-           Aladin.ROBOTSUPPORT = false;
-       }
+      try {
+         Class<?> x = Class.forName("java.awt.Robot");
+         Constructor<?> cons = x.getConstructor(new Class[]{});
+         cons.newInstance(new Object[] {});
+         // robot supporte !
+         Aladin.trace(3, "Robot supported");
+         Aladin.ROBOTSUPPORT = true;
+      }
+      catch(Exception e) {
+         // robot non supporte
+         Aladin.trace(3, "Robot NOT supported");
+         Aladin.ROBOTSUPPORT = false;
+      }
    }
 
    /** Attends que l'action soit exécutée */
-    private void robotSync() {
-       long d = System.currentTimeMillis();
-       while( !ActionExecutor.ready || ActionExecutor.interruptAction ) {
-          if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
-             println("!!! Time out error ("+(timeout/60000)+" minutes).");
-             return;
-          }
-          Util.pause(500);
-       }
-       Util.pause(1000);
-    }
+   private void robotSync() {
+      long d = System.currentTimeMillis();
+      while( !ActionExecutor.ready || ActionExecutor.interruptAction ) {
+         if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
+            println("!!! Time out error ("+(timeout/60000)+" minutes).");
+            return;
+         }
+         Util.pause(500);
+      }
+      Util.pause(1000);
+   }
 
    static String[] UNIT = { "m","arcmin","'",
-                            "s","sec","\"",
-                            "d","deg","°" };
+      "s","sec","\"",
+      "d","deg","°" };
 
-  /** Affichage du status */
+   /** Affichage du status */
    private String execStatusCmd(String param) {
       String status = getStatus(param);
       println(status);
       return status;
    }
-   
+
    /** Retourne le status */
    protected String getStatus(String param) {
       StringBuffer res =new StringBuffer();
@@ -736,12 +732,12 @@ public final class Command implements Runnable {
                + (plan.verboseDescr!=null ? "Info    "+plan.verboseDescr+"\n" : "")
                + (plan.ack!=null ? "Ack     "+plan.ack+"\n" : "")
                + "Status  "+(plan.active ? "shown":"hidden")+" "
-                           +(plan.selected ? "selected":"")
-                           +(!plan.flagOk && plan.error!=null ? " error":"")
-                           +"\n"
+               +(plan.selected ? "selected":"")
+               +(!plan.flagOk && plan.error!=null ? " error":"")
+               +"\n"
                + (plan.u!=null  ? "Url     "+plan.getUrl()+"\n" : "")
                + (plan.co!=null ? "Target  "+plan.getTarget()+"\n" : "")
-         );
+               );
          if( plan.colorBackground!=null )  res.append("Background "+(plan.colorBackground==Color.white ? "white": "black")+"\n");
          if( plan.type==Plan.APERTURE ) {
             res.append("Roll    "+((PlanField)plan).getRoll()+"\n");
@@ -759,19 +755,19 @@ public final class Command implements Runnable {
             res.append("Movable "+(plan.isMovable()?"on":"off")+"\n");
          } else if( plan.type==Plan.IMAGE || plan.type==Plan.IMAGEHUGE ) {
             res.append("Width   "+((PlanImage)plan).naxis1+"\n"
-                     + "Height  "+((PlanImage)plan).naxis2+"\n"
-            );
+                  + "Height  "+((PlanImage)plan).naxis2+"\n"
+                  );
          } else if( plan.type==Plan.FOLDER ) {
             res.append("Scope   "+(((PlanFolder)plan).localScope?"local":"global")+"\n");
             String item = ((PlanFolder)plan).getStatusItems();
             if( item!=null ) res.append(item);
          }
 
-        if( a.calque.canBeTransparent(plan) /* a.calque.planeTypeCanBeTrans(plan) */ ) {
+         if( a.calque.canBeTransparent(plan) /* a.calque.planeTypeCanBeTrans(plan) */ ) {
             res.append("Opacity "+Util.myRound(plan.getOpacityLevel()*100+"",0)+"\n");
-        }
+         }
       }
-      
+
       // statut des vues (soit par leur ID, soit toutes si aucune spécification)
       StringBuffer x = new StringBuffer();
       if( param==null || param.equals("") || param.equals("*")|| param.equals("views") ) x = a.view.getStatus();
@@ -790,92 +786,92 @@ public final class Command implements Runnable {
       return res.toString();
    }
 
-  /** Extraction d'un radius donne en dernier champ d'un target.
-   * Exemple de syntaxe: "10 20 30 +40 50 60 12arcmin"
-   * @param radius le radius qui sera trouve
-   * @param tX le target qui en sera deduit
-   * @param t la chaine a analyser
-   * @return true si on trouve effectivement un radius indique
-   */
-  private boolean extractRadius(StringBuffer radius,StringBuffer tX,String t) {
-     char a[] = t.toCharArray();
-     int i,j;
+   /** Extraction d'un radius donne en dernier champ d'un target.
+    * Exemple de syntaxe: "10 20 30 +40 50 60 12arcmin"
+    * @param radius le radius qui sera trouve
+    * @param tX le target qui en sera deduit
+    * @param t la chaine a analyser
+    * @return true si on trouve effectivement un radius indique
+    */
+   private boolean extractRadius(StringBuffer radius,StringBuffer tX,String t) {
+      char a[] = t.toCharArray();
+      int i,j;
 
 
-     // Extraction du dernier mot
-     for( i=a.length-1; i>0 && (a[i]<'0' || a[i]>'9'); i--);
-     String unit = new String(a,i+1,a.length-i-1);
+      // Extraction du dernier mot
+      for( i=a.length-1; i>0 && (a[i]<'0' || a[i]>'9'); i--);
+      String unit = new String(a,i+1,a.length-i-1);
 
-     // Il ne s'agit pas d'une unite
-     for( j=0; j<UNIT.length && !unit.equalsIgnoreCase(UNIT[j]); j++ );
-     if( j==UNIT.length ) return false;
+      // Il ne s'agit pas d'une unite
+      for( j=0; j<UNIT.length && !unit.equalsIgnoreCase(UNIT[j]); j++ );
+      if( j==UNIT.length ) return false;
 
-     // Recuperation de la valeur du rayon
-     for( j=i; j>0 && a[j]!=' '; j--);
-     if( j==0 ) return false;
-     String s = new String(a,j+1,a.length-j-1);
+      // Recuperation de la valeur du rayon
+      for( j=i; j>0 && a[j]!=' '; j--);
+      if( j==0 ) return false;
+      String s = new String(a,j+1,a.length-j-1);
 
-     // Petit ajustement
-     if( s.endsWith("'") ) s = s.substring(0,s.length()-1)+"m";
-     else if( s.endsWith("\"") ) s = s.substring(0,s.length()-1)+"s";
+      // Petit ajustement
+      if( s.endsWith("'") ) s = s.substring(0,s.length()-1)+"m";
+      else if( s.endsWith("\"") ) s = s.substring(0,s.length()-1)+"s";
 
-     radius.append(""+Server.getAngle(s,Server.RADIUS));
-     tX.append( new String(a,0,j));
-     return true;
-  }
+      radius.append(""+Server.getAngle(s,Server.RADIUS));
+      tX.append( new String(a,0,j));
+      return true;
+   }
 
-  /** Retourne true s'il s'agit d'une commande script */
-  protected boolean isCommand(String c) {
-     return Util.indexInArrayOf(c, CMD, true)>=0;
-  }
+   /** Retourne true s'il s'agit d'une commande script */
+   protected boolean isCommand(String c) {
+      return Util.indexInArrayOf(c, CMD, true)>=0;
+   }
 
-  static final private String OP = "+-*/";
+   static final private String OP = "+-*/";
 
-  /** Cherche un éventuel opérateur arithmétique
-   * en vérifiant que les opérandes potentielles sont bien des noms de plans
-   * ou des scalaires.
-   * @return la position de l'opérateur, 0 si unaire, -1 si pas trouvé
-   */
-  private int findPosAlgebre(String cmd) {
-     for( int i=0; i<OP.length(); i++ ) {
-        char op = OP.charAt(i);
-        int pos=-1;
-        while( (pos=cmd.indexOf(op,pos+1))!=-1) {
-           double n1=Double.NaN,n2=Double.NaN;
+   /** Cherche un éventuel opérateur arithmétique
+    * en vérifiant que les opérandes potentielles sont bien des noms de plans
+    * ou des scalaires.
+    * @return la position de l'opérateur, 0 si unaire, -1 si pas trouvé
+    */
+   private int findPosAlgebre(String cmd) {
+      for( int i=0; i<OP.length(); i++ ) {
+         char op = OP.charAt(i);
+         int pos=-1;
+         while( (pos=cmd.indexOf(op,pos+1))!=-1) {
+            double n1=Double.NaN,n2=Double.NaN;
 
-           String p2 = cmd.substring(pos+1).trim();
-           try { n2 = Double.parseDouble(p2); } catch( Exception e) {}
-           boolean f2 = getNumber(Tok.unQuote(p2),1,true,false)!=null;
-           if( pos==0 && (!Double.isNaN(n2) || f2) ) {
-//System.out.println("Trouvé algèbre unaire pos="+pos+" ["+op+p2+"]");
-              return pos;  // Cas unaire
-           }
+            String p2 = cmd.substring(pos+1).trim();
+            try { n2 = Double.parseDouble(p2); } catch( Exception e) {}
+            boolean f2 = getNumber(Tok.unQuote(p2),1,true,false)!=null;
+            if( pos==0 && (!Double.isNaN(n2) || f2) ) {
+               //System.out.println("Trouvé algèbre unaire pos="+pos+" ["+op+p2+"]");
+               return pos;  // Cas unaire
+            }
 
-           String p1 = cmd.substring(0,pos).trim();
-           try { n1 = Double.parseDouble(p1); } catch( Exception e) {}
-           boolean f1 = getNumber(Tok.unQuote(p1),1,true,false)!=null;
-           if( (!Double.isNaN(n1) || f1) && (!Double.isNaN(n2) || f2)
-                 && !(!Double.isNaN(n1) && !Double.isNaN(n2)) ) {
-//System.out.println("Trouvé algèbre binaire pos="+pos+" ["+p1+op+p2+"]");
-              return pos;
-           }
-        }
-     }
-     return -1;
-  }
+            String p1 = cmd.substring(0,pos).trim();
+            try { n1 = Double.parseDouble(p1); } catch( Exception e) {}
+            boolean f1 = getNumber(Tok.unQuote(p1),1,true,false)!=null;
+            if( (!Double.isNaN(n1) || f1) && (!Double.isNaN(n2) || f2)
+                  && !(!Double.isNaN(n1) && !Double.isNaN(n2)) ) {
+               //System.out.println("Trouvé algèbre binaire pos="+pos+" ["+p1+op+p2+"]");
+               return pos;
+            }
+         }
+      }
+      return -1;
+   }
 
-  /** Extrait le nom d'un plan qui aurait été spécifié en préfixe d'une commande.
-   * Retourne la commande sans le préfixe. Le nom du plan peut être éventuellement
-   * quoté, il sera automatiquement "déquoté".
-   * De plus, en profite pour ajouter des blancs autour d'un opérateur arithmétique
-   * éventuel
-   * Ex : toto = get aladin(dss1) m1
-   * => targetPlane = toto
-   * => return : get aladin(dss1) m1
-   * @param targetPlane Le nom du plan, ou inchangé si non spécifié
-   * @param cmd la commande avec un éventuel préfixe "nomplan = "
-   * @return la commande sans son préfixe, avec des blancs autour d'opérateur arith.
-   */
+   /** Extrait le nom d'un plan qui aurait été spécifié en préfixe d'une commande.
+    * Retourne la commande sans le préfixe. Le nom du plan peut être éventuellement
+    * quoté, il sera automatiquement "déquoté".
+    * De plus, en profite pour ajouter des blancs autour d'un opérateur arithmétique
+    * éventuel
+    * Ex : toto = get aladin(dss1) m1
+    * => targetPlane = toto
+    * => return : get aladin(dss1) m1
+    * @param targetPlane Le nom du plan, ou inchangé si non spécifié
+    * @param cmd la commande avec un éventuel préfixe "nomplan = "
+    * @return la commande sans son préfixe, avec des blancs autour d'opérateur arith.
+    */
    protected String getTargetPlane(StringBuffer targetPlane,String cmd) {
       String s;
       int pos = cmd.indexOf('=');
@@ -901,118 +897,117 @@ public final class Command implements Runnable {
       if( pos==-1 ) return s;
       String c = (new Tok(s)).nextToken();
       if( !isCommand(c) && findAlgebre(s)<0
-                        && getNumber(s,1,false,false)==null ) return cmd;
+            && getNumber(s,1,false,false)==null ) return cmd;
       targetPlane.append(Tok.unQuote(cmd.substring(0,pos).trim()));
       return s;
    }
 
-  /** Decoupage des champs d'une commande "get [serveur...] target [radius]" */
+   /** Decoupage des champs d'une commande "get [serveur...] target [radius]" */
    protected boolean splitGetCmd(StringBuffer servers, StringBuffer target,
-                               StringBuffer radius,String cmd,boolean withServer) {
-       char b[]=cmd.toCharArray();
-       int d,i;
-       int inPar;	// Niveau de parenthesage
+         StringBuffer radius,String cmd,boolean withServer) {
+      char b[]=cmd.toCharArray();
+      int d,i;
+      int inPar;	// Niveau de parenthesage
 
-       // chargement des records GLU additionels
-       if( withServer && (servers.indexOf("IVOA")>=0 || cmd.indexOf("IVOA")>=0)
-               && ! a.dialog.ivoaServersLoaded ) {
-           a.dialog.appendIVOAServer();
-       }
-       
-       // On passe les espaces en debut de chaine
-       for( d=0; d<b.length && b[d]==' '; d++);
+      // chargement des records GLU additionels
+      if( withServer && (servers.indexOf("IVOA")>=0 || cmd.indexOf("IVOA")>=0)
+            && ! a.dialog.ivoaServersLoaded ) {
+         a.dialog.appendIVOAServer();
+      }
 
-       // Parcours de tous les serveurs
-       for( inPar=0, i=d; i<b.length; i++ ) {
-          if( inPar==0 ) {
-             if( b[i]=='(' ) inPar++;
-             else if( b[i]==' ' ) break;
-          } else if( b[i]==')' ) inPar--;
-       }
+      // On passe les espaces en debut de chaine
+      for( d=0; d<b.length && b[d]==' '; d++);
 
-       // Memorisation temporaire
-       String s = new String(b,d,i-d);
+      // Parcours de tous les serveurs
+      for( inPar=0, i=d; i<b.length; i++ ) {
+         if( inPar==0 ) {
+            if( b[i]=='(' ) inPar++;
+            else if( b[i]==' ' ) break;
+         } else if( b[i]==')' ) inPar--;
+      }
 
-       // On passe les espaces apres les serveurs
-       for( d=i; d<b.length && b[d]==' '; d++);
+      // Memorisation temporaire
+      String s = new String(b,d,i-d);
 
-       // On prend tout le reste pour le target
-       String t = (new String(b,d,b.length-d)).trim();
+      // On passe les espaces apres les serveurs
+      for( d=i; d<b.length && b[d]==' '; d++);
 
-       // Si le premier serveur n'existe pas, il s'agit sans
-       // doute uniquement d'un target
-       StringTokenizer st = new StringTokenizer(s,",(");
-       String server = st.nextToken();
-       if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
-       if( !withServer || a.dialog.getServer(server)<0 ) {
+      // On prend tout le reste pour le target
+      String t = (new String(b,d,b.length-d)).trim();
 
-          // Si la vue courante est vide il faut prendre
-          // la liste des serveurs par defaut
-          if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
-             t=cmd;
-             if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"P/DSS2/color\")";
-             else {
-                s=a.configuration.getServer();
-                if( s==null || s.trim().length()==0 || s.equalsIgnoreCase("allsky")) s="hips";
-                String p = a.configuration.getSurvey();
-                if( p!=null && p.trim().length()>0 ) s=s+"("+p+")";
-             }
-             
-             String rep = a.view.sesameResolve(cmd,true);
-             if( rep==null ) {
-                a.warning(a.dialog.server[0].UNKNOWNOBJ);
-                return false;
-             } else t=rep;
-             a.console.printCommand("get "+s+" "+cmd);
+      // Si le premier serveur n'existe pas, il s'agit sans
+      // doute uniquement d'un target
+      StringTokenizer st = new StringTokenizer(s,",(");
+      String server = st.nextToken();
+      if( server.equalsIgnoreCase("allsky") ) server="hips";   // pour compatibilité
+      if( !withServer || a.dialog.getServer(server)<0 ) {
 
-          // sinon il s'agit d'un simple deplacement du repere
-          } else {
-             syncNeedRepaint=true;
-             syncNeedSesame=true;
-             
-             // Via une adresse healpix norder/npi
-             if( execHpxCmd(cmd) ) return false;
-             
-             // ou via une position ou une target
-             a.view.sesameResolve(cmd);
-             a.dialog.setDefaultTarget(cmd);
-             
-             return false;
-          }
-       }
+         // Si la vue courante est vide il faut prendre
+         // la liste des serveurs par defaut
+         if( a.view.getCurrentView().isFree() /* || a.isFullScreen() */ ) {
+            t=cmd;
+            if( Aladin.OUTREACH || a.isFullScreen() ) s="hips(\"P/DSS2/color\")";
+            else {
+               s=a.configuration.getServer();
+               String p = a.configuration.getSurvey();
+               if( p!=null && p.trim().length()>0 ) s=s+"("+p+")";
+            }
 
-       // On memorise les serveurs
-       servers.append(s);
+            String rep = a.view.sesameResolve(cmd,true);
+            if( rep==null ) {
+               a.warning(a.dialog.server[0].UNKNOWNOBJ);
+               return false;
+            } else t=rep;
+            a.console.printCommand("get "+s+" "+cmd);
 
-//       // Si le target n'est pas mentionne,
-//       // on prend la position du dernier repere dans View
-//       if( t.length()==0 ) {
-//          waitingPlanInProgress();
-//          t=a.dialog.getDefaultTarget();
-//
-//       // Sinon on regarde si le dernier champ ne serait pas un radius
-//       } else {
-          
-       if( t.length()!=0 ) {
-          StringBuffer tX = new StringBuffer();
-          if( extractRadius(radius,tX,t) ) {
-             t=tX.toString();
-             a.dialog.setDefaultTaille(radius.toString());
-          }
+            // sinon il s'agit d'un simple deplacement du repere
+         } else {
+            syncNeedRepaint=true;
+            syncNeedSesame=true;
 
-          // On mémorise le target comme nouveau target par défaut
-          a.dialog.setDefaultTarget(t);
-       }
+            // Via une adresse healpix norder/npi
+            if( execHpxCmd(cmd) ) return false;
 
-       target.append(t);
+            // ou via une position ou une target
+            a.view.sesameResolve(cmd);
+            a.dialog.setDefaultTarget(cmd);
 
-       // On recherche le rayon par défaut si nécessaire
-       if( radius.length()==0 ) {
-          waitingPlanInProgress();
-          radius.append(Server.getRM(a.dialog.getDefaultTaille())+"'");
-       }
+            return false;
+         }
+      }
 
-       return true;
+      // On memorise les serveurs
+      servers.append(s);
+
+      //       // Si le target n'est pas mentionne,
+      //       // on prend la position du dernier repere dans View
+      //       if( t.length()==0 ) {
+      //          waitingPlanInProgress();
+      //          t=a.dialog.getDefaultTarget();
+      //
+      //       // Sinon on regarde si le dernier champ ne serait pas un radius
+      //       } else {
+
+      if( t.length()!=0 ) {
+         StringBuffer tX = new StringBuffer();
+         if( extractRadius(radius,tX,t) ) {
+            t=tX.toString();
+            a.dialog.setDefaultTaille(radius.toString());
+         }
+
+         // On mémorise le target comme nouveau target par défaut
+         a.dialog.setDefaultTarget(t);
+      }
+
+      target.append(t);
+
+      // On recherche le rayon par défaut si nécessaire
+      if( radius.length()==0 ) {
+         waitingPlanInProgress();
+         radius.append(Server.getRM(a.dialog.getDefaultTaille())+"'");
+      }
+
+      return true;
    }
 
    /** Attend que les plans en cours de chargement aient pu positionner le target
@@ -1021,62 +1016,62 @@ public final class Command implements Runnable {
       return;
 
       // POUR LE MOMENT JE NE LE METS PAS EN PLACE CAR J'AI PEUR DE MAUVAISES SURPRISES
-//      boolean encore;
-//      long t = System.currentTimeMillis();
-//      synchronized( a.calque ) {
-//         do {
-//            encore=false;
-//            Plan p=null;
-//            for( int i=0; i<a.calque.plan.length; i++ ) {
-//               p = a.calque.plan[i];
-//               if( !p.flagOk && p.flagWaitTarget ) {
-//                  encore=true;
-//                  break;
-//               }
-//            }
-//            if( encore ) {
-//               // Au cas où ça tarde trop, je sors quand même
-//               //TODO IL FAUDRA QUE J'AUGMENTE LE TIMEOUT A 1MN
-//               if( t-System.currentTimeMillis()>30000 ) {
-//                  System.err.println("Command.waitingFileInProgress timeout");
-//                  return;
-//               }
-//               System.out.println("J'attends le plan "+(p!=null ? p.label : "null"));
-//               Util.pause(100);
-//            }
-//         } while( encore);
-//      }
+      //      boolean encore;
+      //      long t = System.currentTimeMillis();
+      //      synchronized( a.calque ) {
+      //         do {
+      //            encore=false;
+      //            Plan p=null;
+      //            for( int i=0; i<a.calque.plan.length; i++ ) {
+      //               p = a.calque.plan[i];
+      //               if( !p.flagOk && p.flagWaitTarget ) {
+      //                  encore=true;
+      //                  break;
+      //               }
+      //            }
+      //            if( encore ) {
+      //               // Au cas où ça tarde trop, je sors quand même
+      //               //TODO IL FAUDRA QUE J'AUGMENTE LE TIMEOUT A 1MN
+      //               if( t-System.currentTimeMillis()>30000 ) {
+      //                  System.err.println("Command.waitingFileInProgress timeout");
+      //                  return;
+      //               }
+      //               System.out.println("J'attends le plan "+(p!=null ? p.label : "null"));
+      //               Util.pause(100);
+      //            }
+      //         } while( encore);
+      //      }
    }
 
    /** Decoupage du serveur courant et de ses criteres eventuels */
-    protected int getServerInfo(StringBuffer server,StringBuffer criteria,
-                              char a[],int i) {
+   protected int getServerInfo(StringBuffer server,StringBuffer criteria,
+         char a[],int i) {
       int inPar;	// Niveau de parenthesage
       int d;
 
       for( d=i, inPar=0; i<a.length; i++ ) {
-//System.out.println("a["+i+"]="+a[i]+" inPar="+inPar);
-          if( inPar==0 ) {
-             if( a[i]=='(' ) {
-                inPar++;
-                server.append(new String(a,d,i-d));
-                d=i+1;
-             } else if( a[i]==',' ) break;
-          } else if( a[i]==')' ) {
-                    inPar--;
-                    criteria.append(new String(a,d,i-d));
-                 }
-       }
-       if( server.length()==0 ) server.append(new String(a,d,i-d));
-       if( i<a.length && a[i]==',' ) i++;
-       return i;
-    }
+         //System.out.println("a["+i+"]="+a[i]+" inPar="+inPar);
+         if( inPar==0 ) {
+            if( a[i]=='(' ) {
+               inPar++;
+               server.append(new String(a,d,i-d));
+               d=i+1;
+            } else if( a[i]==',' ) break;
+         } else if( a[i]==')' ) {
+            inPar--;
+            criteria.append(new String(a,d,i-d));
+         }
+      }
+      if( server.length()==0 ) server.append(new String(a,d,i-d));
+      if( i<a.length && a[i]==',' ) i++;
+      return i;
+   }
 
    /** retourne false si la ligne designant les serveurs ne contient
     * que le serveur Local(...) ou MyData(...) ou File(...) ou Aladin(allsky),
     * càd n'a pas besoin de désignation de target
     */
-    private boolean isTargetRequired(StringBuffer s) {
+   private boolean isTargetRequired(StringBuffer s) {
       char b[]=s.toString().toCharArray();
       StringBuffer serverX= new StringBuffer();
       StringBuffer criteriaX= new StringBuffer();
@@ -1085,23 +1080,23 @@ public final class Command implements Runnable {
       String server = serverX.toString().trim();
       return ! (server.equalsIgnoreCase("Local")
             || server.equalsIgnoreCase("MyData")
-         || server.equalsIgnoreCase("VizieRX")
-         || (server.equalsIgnoreCase("VizieR")
-                && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
-         || server.equalsIgnoreCase("allsky")
-         || server.equalsIgnoreCase("hips")
-         || (server.equalsIgnoreCase("Aladin")
-                && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
-		 || server.equalsIgnoreCase("File") ) && i==b.length;
-    }
+            || server.equalsIgnoreCase("VizieRX")
+            || (server.equalsIgnoreCase("VizieR")
+                  && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
+                  || server.equalsIgnoreCase("allsky")
+                  || server.equalsIgnoreCase("hips")
+                  || (server.equalsIgnoreCase("Aladin")
+                        && Util.indexOfIgnoreCase(criteriaX.toString(),"allsky")>=0)
+                        || server.equalsIgnoreCase("File") ) && i==b.length;
+   }
 
-  /** Execution d'une commande get */
+   /** Execution d'une commande get */
    protected String execGetCmd(String cmd,String label,boolean withServer) {
       StringBuffer targetX=new StringBuffer();
       StringBuffer radiusX=new StringBuffer();
       StringBuffer serversX=new StringBuffer();
       StringBuffer erreur=new StringBuffer();	 // Liste des erreurs
-      
+
       // Extraction des trois champs de la commande
       if( !splitGetCmd(serversX,targetX,radiusX,cmd,withServer) ) return null;
       String target = a.localisation.getICRSCoord(targetX.toString().trim());
@@ -1144,7 +1139,7 @@ public final class Command implements Runnable {
          String server = serverX.toString();
          if( server.equalsIgnoreCase("allsky") ) server="hips";  // pour assurer la compatibilité
          String criteria = criteriaX.toString();
-Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
+         Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] criteria=["+criteria+"] target=["+target+"] radius=["+radius+"])");
          if( server.equalsIgnoreCase("VizierX") ) server="VizieR";   // Pour charger tout un catalogue sans poser un problème de compatibilité
 
 
@@ -1170,46 +1165,46 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
 
       return "";
    }
-   
+
    protected HipsGen hipsgen=null;            // pour la génération des allskys via commande script
-   
+
    /** Lancement via une commande script de la génération d'un allsky */
-//   protected void execSkyGen(String param)  {
-//      try {
-//         Tok tok = new Tok(param);
-//         String [] arg = new String[ tok.countTokens() ];
-//         for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
-//         
-//         
-//         // Interruption d'une exécution précédente en cours
-//         if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0 
-//               || Util.indexOfIgnoreCase(param, "resume")>=0) {
-//            Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
-//            if( context==null ) throw new Exception("There is no running skygen task");
-//            if( Aladin.NOGUI )  skygen.execute(arg);
-//            else skygen.executeAsync(arg);
-//            return;
-//         }
-//         
-//         if( skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ) {
-//            throw new Exception("There is already a running skygen task !");
-//         }
-//         skygen = new SkyGen();
-//         if( Aladin.NOGUI )  skygen.execute(arg);
-//         else skygen.executeAsync(arg);
-//      } catch( Exception e ) {
-//         if( a.levelTrace>=3 ) e.printStackTrace();
-//         a.warning("skygen error !"+e.getMessage()+"\n",1);
-//      }
-//   }
-   
+   //   protected void execSkyGen(String param)  {
+   //      try {
+   //         Tok tok = new Tok(param);
+   //         String [] arg = new String[ tok.countTokens() ];
+   //         for( int i=0; i<arg.length; i++ ) arg[i] = tok.nextToken();
+   //
+   //
+   //         // Interruption d'une exécution précédente en cours
+   //         if( Util.indexOfIgnoreCase(param, "abort")>=0 || Util.indexOfIgnoreCase(param, "pause")>=0
+   //               || Util.indexOfIgnoreCase(param, "resume")>=0) {
+   //            Context context = skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ? skygen.context : null;
+   //            if( context==null ) throw new Exception("There is no running skygen task");
+   //            if( Aladin.NOGUI )  skygen.execute(arg);
+   //            else skygen.executeAsync(arg);
+   //            return;
+   //         }
+   //
+   //         if( skygen!=null && skygen.context!=null && skygen.context.isTaskRunning() ) {
+   //            throw new Exception("There is already a running skygen task !");
+   //         }
+   //         skygen = new SkyGen();
+   //         if( Aladin.NOGUI )  skygen.execute(arg);
+   //         else skygen.executeAsync(arg);
+   //      } catch( Exception e ) {
+   //         if( a.levelTrace>=3 ) e.printStackTrace();
+   //         a.warning("skygen error !"+e.getMessage()+"\n",1);
+   //      }
+   //   }
+
    /** Lancement d'une macro par script */
    protected void execMacro(String param) {
       MyInputStream scriptStream = null;
       MyInputStream paramStream = null;
       try {
          Tok tok = new Tok(param);
-         
+
          // Récupération des lignes de commandes de la macro
          String scriptFile = a.getFullFileName(tok.nextToken());
          scriptStream = (new MyInputStream(Util.openAnyStream(scriptFile))).startRead();
@@ -1220,10 +1215,10 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
             v.addElement(s1);
          }
          Object [] cmd = v.toArray();
-          
+
          // Instanciation du controler de macro
          MacroModel macro = new MacroModel(a);
-         
+
          // Récupération des paramètres de la macro
          String paramFile = a.getFullFileName(tok.nextToken());
          paramStream = (new MyInputStream(Util.openAnyStream(paramFile))).startRead();
@@ -1236,19 +1231,19 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
                params.put("$"+i,s1);
             }
             params.put("$"+i,s.substring(deb).trim());
-            
+
             for( i=0; i<cmd.length; i++ ) macro.executeScript((String)cmd[i], params);
          }
       } catch( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
          a.warning("macro error !"+e.getMessage()+"\n",1);
-      } 
+      }
       finally {
          if( scriptStream!=null ) try { scriptStream.close(); } catch( Exception e) {}
          if( paramStream!=null )  try { paramStream.close(); }  catch( Exception e) {}
       }
    }
-   
+
    /** Execution d'une commande setconfig propertie = value*/
    protected String execSetconfCmd(String param) {
 
@@ -1258,13 +1253,13 @@ Aladin.trace(4,"Command.execGetCmd("+cmd+","+label+") => server=["+server+"] cri
       String value = param.substring(egaleOffset+1).trim();
 
 
-Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=["+value+"])");
+      Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=["+value+"])");
 
       if( propertie.equalsIgnoreCase("bookmarks") ) {
          a.bookmarks.setBookmarkList(value);
          return "";
       }
-      
+
       else if( propertie.equalsIgnoreCase("timeout") ) {
          int n;
          if( param.equals("off") ) n=0;
@@ -1278,7 +1273,7 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          a.calque.repaintAll();
          return "";
       }
-      
+
       else if( propertie.equalsIgnoreCase("gridcolor") ) {
          Color c = Action.getColor(value);
          if( c==null ) return "!!! Unknown color";
@@ -1293,6 +1288,17 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          a.calque.repaintAll();
          return "";
       }
+      else if( propertie.equalsIgnoreCase("gridFontSize") ) {
+         boolean flagPlus=false;
+         int n;
+         if( value.startsWith("+")) { flagPlus=true; value=value.substring(1); }
+         try { n = Integer.parseInt(value); }
+         catch( Exception e) { return "!!! gridFontSize syntax error"; }
+         if( flagPlus || n<0) a.view.gridFontSize+=n;
+         else a.view.gridFontSize=n;
+         a.calque.repaintAll();
+         return "";
+      }
       else if( propertie.equalsIgnoreCase("gridcolorDEC") ) {
          Color c = Action.getColor(value);
          if( c==null ) return "!!! Unknown color";
@@ -1300,14 +1306,14 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
          a.calque.repaintAll();
          return "";
       }
-     
+
       try { a.configuration.setconf(propertie,value); }
       catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
          printConsole("!!! setconf error: "+e.getMessage());
          return e.getMessage();
       }
-      
+
       // On met automatiquement le mode de drawing correspondant au frame courant
       if( propertie.equalsIgnoreCase("frame") ) {
          if( Util.indexOfIgnoreCase(value, "XY")>=0 ) setDrawMode(DRAWXY);
@@ -1353,11 +1359,11 @@ Aladin.trace(4,"Command.execSetconfCmd("+param+") => prop=["+propertie+"] value=
 
       // Récupération de la désignation des plans concernés
       String plans = (new String(b,0,i)).trim();
-//      String plans = param.substring(0,i).trim();
+      //      String plans = param.substring(0,i).trim();
 
-Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
-      +(specif!=null ? "specif=["+specif+"]":"")
-      +"prop=["+propertie+"] value=["+value+"]");
+      Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
+            +(specif!=null ? "specif=["+specif+"]":"")
+            +"prop=["+propertie+"] value=["+value+"]");
 
       Plan [] p = getPlan(plans,2);
 
@@ -1438,63 +1444,63 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       return "";
    }
 
-//  // voir getDrawParam();
-//   private int getOneDrawParam(StringBuffer p,char a[],int i) {
-//      boolean flagText,bslash;
-//      boolean first=true;
-//
-//      for( bslash=flagText=false; i<a.length; i++) {
-//         if( !flagText) {
-//            if( a[i]==',' || a[i]==' ' || a[i]==')' ) { i++; break; }
-//            else if( first && a[i]=='"' ) { flagText=true; continue; }
-//         } else {
-//            if( a[i]=='"' ) {
-//               if( !bslash ) { i++; break; }
-//            }
-//            if( a[i]=='\\' ) { bslash=true; continue; }
-//            else bslash=false;
-//         }
-//         p.append(a[i]);
-//         first=false;
-//      }
-//      return i;
-//   }
+   //  // voir getDrawParam();
+   //   private int getOneDrawParam(StringBuffer p,char a[],int i) {
+   //      boolean flagText,bslash;
+   //      boolean first=true;
+   //
+   //      for( bslash=flagText=false; i<a.length; i++) {
+   //         if( !flagText) {
+   //            if( a[i]==',' || a[i]==' ' || a[i]==')' ) { i++; break; }
+   //            else if( first && a[i]=='"' ) { flagText=true; continue; }
+   //         } else {
+   //            if( a[i]=='"' ) {
+   //               if( !bslash ) { i++; break; }
+   //            }
+   //            if( a[i]=='\\' ) { bslash=true; continue; }
+   //            else bslash=false;
+   //         }
+   //         p.append(a[i]);
+   //         first=false;
+   //      }
+   //      return i;
+   //   }
 
-  /** Decoupe dans un tableau de String une ligne de parametres separes
-   * par des , ou blancs. Les parametres peuvent etre
-   * des chaines de caracteres qui, si elles ont des blancs, doivent
-   * etre enquotees par ", (avec \" si exception)
-   * Utilise getOneDrawParam().
-   */
-//   private String [] getDrawParam(String param) {
-//      if( param.trim().length()==0 ) return new String[0];
-//      char a[] = param.toCharArray();
-//      int i=0;
-//      StringBuffer p=null;
-//      Vector<StringBuffer> v = new Vector<StringBuffer>(5);
-//
-//      while( i<a.length ) {
-//         while( i<a.length && (a[i]==' ' || a[i]==',') ) i++;	// passe les separateurs
-//         p = new StringBuffer();
-//         i = getOneDrawParam(p,a,i);
-//         v.addElement(p);
-//      }
-//
-//      Enumeration<StringBuffer> e = v.elements();
-//      String s[] = new String[v.size()];
-//      for( i=0; e.hasMoreElements(); i++ ) {
-//         s[i] = new String(e.nextElement());
-//      }
-//      if( Aladin.levelTrace>=4 ) {
-//         System.out.print("Command.getDrawParam: ");
-//         for( i=0; s!=null && i<s.length; i++ ) {
-//            System.out.print(" p["+i+"]=["+s[i]+"]");
-//         }
-//         System.out.println();
-//      }
-//
-//      return s;
-//   }
+   /** Decoupe dans un tableau de String une ligne de parametres separes
+    * par des , ou blancs. Les parametres peuvent etre
+    * des chaines de caracteres qui, si elles ont des blancs, doivent
+    * etre enquotees par ", (avec \" si exception)
+    * Utilise getOneDrawParam().
+    */
+   //   private String [] getDrawParam(String param) {
+   //      if( param.trim().length()==0 ) return new String[0];
+   //      char a[] = param.toCharArray();
+   //      int i=0;
+   //      StringBuffer p=null;
+   //      Vector<StringBuffer> v = new Vector<StringBuffer>(5);
+   //
+   //      while( i<a.length ) {
+   //         while( i<a.length && (a[i]==' ' || a[i]==',') ) i++;	// passe les separateurs
+   //         p = new StringBuffer();
+   //         i = getOneDrawParam(p,a,i);
+   //         v.addElement(p);
+   //      }
+   //
+   //      Enumeration<StringBuffer> e = v.elements();
+   //      String s[] = new String[v.size()];
+   //      for( i=0; e.hasMoreElements(); i++ ) {
+   //         s[i] = new String(e.nextElement());
+   //      }
+   //      if( Aladin.levelTrace>=4 ) {
+   //         System.out.print("Command.getDrawParam: ");
+   //         for( i=0; s!=null && i<s.length; i++ ) {
+   //            System.out.print(" p["+i+"]=["+s[i]+"]");
+   //         }
+   //         System.out.println();
+   //      }
+   //
+   //      return s;
+   //   }
 
    /** Supprime les marques de liens dans une chaine de caractères */
    protected String removeLinks(String help) {
@@ -1504,12 +1510,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       for( int i=0; i<a.length; i++ ) if( a[i]!='@' ) s.append(a[i]);
       return s.toString();
    }
-   
+
    private static final String OTHERS = "+-*/";
    private boolean isLetter(char c) {
       return Character.isLetterOrDigit(c) || OTHERS.indexOf(c)>=0;
    }
-   
+
    /** Transforme les marques des liens en équivalent HTML */
    protected String translateLinks(String help) {
       StringBuffer s = new StringBuffer();
@@ -1525,22 +1531,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          } else if( w.startsWith("_") && w.endsWith("_")) {
             String w1 = w.substring(1,w.length()-1);
             s.append("<B><FONT SIZE=\"+2\" COLOR=\"darkgreen\">"+w1+"</FONT></B>");
-          
+
          } else if( w.startsWith("#") && w.endsWith("#")) {
             String w1 = w.substring(1,w.length()-1);
             s.append("<B>"+w1+"</B>");
-          
+
          } else if( w.startsWith("\\") ) {
             String w1 = w.substring(1,w.length());
             s.append(w1);
-          
+
          } else s.append(w);
 
       }
       return s.toString();
    }
 
-   
+
 
    /** Execution de la commande createROI */
    protected void execROICmd(String param) {
@@ -1551,15 +1557,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          else if( !Character.isDigit( param.charAt(param.length()-1) ) ) {
             double radius = Server.getRM( param.substring(0,param.length()-1));
             a.view.createROI(radius/60);
-//            double radius = Double.valueOf(param.substring(0,param.length()-1)).doubleValue();
-//            a.view.createROI(radius/3600);
+            //            double radius = Double.valueOf(param.substring(0,param.length()-1)).doubleValue();
+            //            a.view.createROI(radius/3600);
 
-         // Spécification en pixels
+            // Spécification en pixels
          } else {
             int pixels = Integer.parseInt(param);
             a.view.createROI(pixels);
          }
-      } catch( Exception e ) { 
+      } catch( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
          printConsole("!!! thumbnail error: "+e.getMessage());
       }
@@ -1569,8 +1575,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    protected String execXMatchCmd(String s,String label) {
       String[] tokens = Util.split( s, " ", '(', ')' );
       int nbTokens = tokens.length;
-//   	System.out.println("tokens.length : "+tokens.length);
-//   	for( int i=0; i<tokens.length; i++ ) System.out.println("tokens["+i+"] : "+tokens[i]);
+      //   	System.out.println("tokens.length : "+tokens.length);
+      //   	for( int i=0; i<tokens.length; i++ ) System.out.println("tokens["+i+"] : "+tokens[i]);
       int curIdx = 1; // on commence à 1 car tokens[0] == "xmatch"
       double dist=-1;
       int mode = CDSXMatch.BESTMATCH; // mode de xmatch par défaut : best match
@@ -1583,30 +1589,30 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       p1Cols = p2Cols = null;
 
       if( curIdx<nbTokens ) {
-        tmp = tokens[curIdx++];
-      	k1 = tmp.indexOf('(');
-      	k2 = tmp.lastIndexOf(')');
+         tmp = tokens[curIdx++];
+         k1 = tmp.indexOf('(');
+         k2 = tmp.lastIndexOf(')');
 
-        if( k1>=0 && k2>=0 ) {
-        	p1Cols = tmp.substring(k1+1,k2);
-//        	System.out.println("p1Cols : "+p1Cols);
-        	pCat1 = getNumber(tmp.substring(0,k1));
-        }
-        else pCat1 = getNumber(tmp);
+         if( k1>=0 && k2>=0 ) {
+            p1Cols = tmp.substring(k1+1,k2);
+            //        	System.out.println("p1Cols : "+p1Cols);
+            pCat1 = getNumber(tmp.substring(0,k1));
+         }
+         else pCat1 = getNumber(tmp);
 
       }
 
       if( curIdx<nbTokens ) {
-        tmp = tokens[curIdx++];
-      	k1 = tmp.indexOf('(');
-      	k2 = tmp.lastIndexOf(')');
+         tmp = tokens[curIdx++];
+         k1 = tmp.indexOf('(');
+         k2 = tmp.lastIndexOf(')');
 
-        if( k1>=0 && k2>=0 ) {
-        	p2Cols = tmp.substring(k1+1,k2);
-//        	System.out.println("p2Cols : "+p2Cols);
-        	pCat2 = getNumber(tmp.substring(0,k1));
-        }
-        else pCat2 = getNumber(tmp);
+         if( k1>=0 && k2>=0 ) {
+            p2Cols = tmp.substring(k1+1,k2);
+            //        	System.out.println("p2Cols : "+p2Cols);
+            pCat2 = getNumber(tmp.substring(0,k1));
+         }
+         else pCat2 = getNumber(tmp);
       }
 
       if( curIdx<nbTokens ) {
@@ -1632,26 +1638,26 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       if( pCat1==null || pCat2==null || dist<0. ) printConsole("!!! xmatch error: missing or incorrect parameters");
       else {
-        if( !(pCat1 instanceof PlanCatalog) || !(pCat2 instanceof PlanCatalog) ) {
+         if( !(pCat1 instanceof PlanCatalog) || !(pCat2 instanceof PlanCatalog) ) {
             printConsole("!!! xmatch error: can only be performed on catalog planes !");
             return "";
-        }
-        CDSXMatch xMatch = new CDSXMatch(a);
+         }
+         CDSXMatch xMatch = new CDSXMatch(a);
 
-        // une fois qu'on a les indices des plans, et qu'on s'est assuré qu'il s'agit
-        // de PlanCatalog, on peut analyser les noms des col. de coordonnées (si elles ont été fournies)
-        int[] p1CoordIdx, p2CoordIdx;
-        p1CoordIdx = p2CoordIdx = null;
-        if( p1Cols!=null ) {
-        	p1CoordIdx = getCoordIdx( (PlanCatalog)pCat1, p1Cols);
-        }
-        if( p2Cols!=null ) {
-        	p2CoordIdx = getCoordIdx( (PlanCatalog)pCat2, p2Cols);
-        }
+         // une fois qu'on a les indices des plans, et qu'on s'est assuré qu'il s'agit
+         // de PlanCatalog, on peut analyser les noms des col. de coordonnées (si elles ont été fournies)
+         int[] p1CoordIdx, p2CoordIdx;
+         p1CoordIdx = p2CoordIdx = null;
+         if( p1Cols!=null ) {
+            p1CoordIdx = getCoordIdx( (PlanCatalog)pCat1, p1Cols);
+         }
+         if( p2Cols!=null ) {
+            p2CoordIdx = getCoordIdx( (PlanCatalog)pCat2, p2Cols);
+         }
 
-        xMatch.setColFilter(null);
-        xMatch.posXMatch(pCat1, pCat2,label,
-                         p1CoordIdx, p2CoordIdx, new double[]{0.0,dist}, mode, a, true);
+         xMatch.setColFilter(null);
+         xMatch.posXMatch(pCat1, pCat2,label,
+               p1CoordIdx, p2CoordIdx, new double[]{0.0,dist}, mode, a, true);
       }
       return "";
    }
@@ -1663,35 +1669,35 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
     * @return
     */
    private int[] getCoordIdx(PlanCatalog pc, String colStr) {
-      	String[] coord = Util.split(colStr, ",", ' ', ' ', true);
-      	if( coord.length<2 ) {
-      		printConsole("!!! xmatch error: there should be 2 coordinate columns !");
-      		return null;
-      	}
-      	int idxRa, idxDe;
-      	idxRa = idxDe = -1;
+      String[] coord = Util.split(colStr, ",", ' ', ' ', true);
+      if( coord.length<2 ) {
+         printConsole("!!! xmatch error: there should be 2 coordinate columns !");
+         return null;
+      }
+      int idxRa, idxDe;
+      idxRa = idxDe = -1;
 
-      	try {
-      		Field[] fields = pc.getFirstLegende().field;
-      		for( int i=0; i<fields.length && (idxRa<0 || idxDe<0 ); i++ ) {
-      			if( fields[i].name.equals(coord[0]) ) {
-      				idxRa = i;
-      				continue;
-      			}
-      			if( fields[i].name.equals(coord[1]) ) {
-      				idxDe = i;
-      				continue;
-      			}
-      		}
-      	}
-		catch( Exception e ) {e.printStackTrace(); return null;}
+      try {
+         Field[] fields = pc.getFirstLegende().field;
+         for( int i=0; i<fields.length && (idxRa<0 || idxDe<0 ); i++ ) {
+            if( fields[i].name.equals(coord[0]) ) {
+               idxRa = i;
+               continue;
+            }
+            if( fields[i].name.equals(coord[1]) ) {
+               idxDe = i;
+               continue;
+            }
+         }
+      }
+      catch( Exception e ) {e.printStackTrace(); return null;}
 
-		if( idxRa<0 || idxDe<0 ) {
-		    printConsole("!!! xmatch error: could not find coordinate columns "+colStr+" for plane "+pc.getLabel());
-			println("Cross-match will be performed using coordinate columns found by UCD !");
-			return null;
-		}
-		return new int[]{idxRa, idxDe};
+      if( idxRa<0 || idxDe<0 ) {
+         printConsole("!!! xmatch error: could not find coordinate columns "+colStr+" for plane "+pc.getLabel());
+         println("Cross-match will be performed using coordinate columns found by UCD !");
+         return null;
+      }
+      return new int[]{idxRa, idxDe};
 
    }
 
@@ -1709,7 +1715,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          println(removeLinks(execHelp()));
          return;
       }
-      
+
       if( param.equals("off")) { a.cardView.show(a.bigView,"View"); a.inScriptHelp=false; }
       else if( param.equals("all")) execAllHelp();
       else if( param.equals("allhtml")) execHTMLHelp();
@@ -1733,7 +1739,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          println(removeLinks(getHelpString(CMD[i])));
       }
    }
-   
+
    /** Affiche le Help des commandes à la queue leuleu en HTML */
    private void execHTMLHelp() {
       println("<PRE>\n"+translateLinks(execHelp())+"</PRE>\n");
@@ -1808,7 +1814,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       return res.toString();
    }
-  
+
    /** Mise en forme HTML d'un texte de help avec éventuellement
     * récupération au préalable du paragraphe du help associé à une commande
     * @param p chaine du help (commence par #) ou nom de commande
@@ -1850,46 +1856,46 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          // Détermination d'un éventuel titre de section
          if( c!=oc ) {
             res.append("<P>\n"+(c=='n'?"":
-                                c=='s'?"<P><I><B>Synopsis</B></I>:<BR>":
-                                c=='d'?"<P><I><B>Description</B></I><BR>":
-                                c=='e'?"<P><I><B>Example</B></I>:<BR>":
-                                c=='t'?"<P><I><B>Note</B></I> - ":
-                                c=='g'?"<P><I><B>See also</B></I>: "
-                                      :"")+"\n");
+               c=='s'?"<P><I><B>Synopsis</B></I>:<BR>":
+                  c=='d'?"<P><I><B>Description</B></I><BR>":
+                     c=='e'?"<P><I><B>Example</B></I>:<BR>":
+                        c=='t'?"<P><I><B>Note</B></I> - ":
+                           c=='g'?"<P><I><B>See also</B></I>: "
+                                 :"")+"\n");
          } else res.append("<BR>\n");
          oc=c;
-         
+
          res.append(s);
 
-//         // Découpage du texte par ligne avec éventuellement repli des lignes
-//         StringTokenizer st1 = new StringTokenizer(s,"\n");
-//         while( st1.hasMoreTokens() ) {
-//            StringBuffer line = new StringBuffer(indent.toString());
-//            StringTokenizer st2= new StringTokenizer(st1.nextToken()," ",true);
-//            String mot=null;
-//            while( mot!=null || st2.hasMoreTokens() ) {
-//               if( mot==null ) mot = st2.nextToken();
-//               if( line.length() + mot.length() >70 ) {
-//                  res.append(line+"\n");
-//                  line = new StringBuffer(indent.toString());
-//               }
-//               line.append(mot); mot=null;
-//            }
-//            if( line.length()>indent.length() ) res.append(line+"\n");
-//         }
+         //         // Découpage du texte par ligne avec éventuellement repli des lignes
+         //         StringTokenizer st1 = new StringTokenizer(s,"\n");
+         //         while( st1.hasMoreTokens() ) {
+         //            StringBuffer line = new StringBuffer(indent.toString());
+         //            StringTokenizer st2= new StringTokenizer(st1.nextToken()," ",true);
+         //            String mot=null;
+         //            while( mot!=null || st2.hasMoreTokens() ) {
+         //               if( mot==null ) mot = st2.nextToken();
+         //               if( line.length() + mot.length() >70 ) {
+         //                  res.append(line+"\n");
+         //                  line = new StringBuffer(indent.toString());
+         //               }
+         //               line.append(mot); mot=null;
+         //            }
+         //            if( line.length()>indent.length() ) res.append(line+"\n");
+         //         }
       }
       return res.toString();
    }
-   
- 
+
+
    /** Interprétation d'une position healpix donnée par norder/npix */
    protected boolean execHpxCmd(String param) {
-      try { 
+      try {
          int offset = param.indexOf('/');
          if( offset==-1 ) return false;
          int order = Integer.parseInt(param.substring(0,offset).trim());
          int npix = Integer.parseInt(param.substring(offset+1).trim());
-         
+
          long nSide = CDSHealpix.pow2(order);
          double x[];
          x = CDSHealpix.polarToRadec(CDSHealpix.pix2ang_nest(nSide, npix));
@@ -1901,7 +1907,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             a.localisation.frameToFrame(c, ((PlanBG)pref).frameOrigin, Localisation.ICRS);
          }
          a.view.setRepere(c);
-//         printConsole("Healpix "+order+"/"+npix+" => "+c);
+         //         printConsole("Healpix "+order+"/"+npix+" => "+c);
          return true;
       } catch( Exception e ) { }
       return false;
@@ -1920,19 +1926,19 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       int nview=-1;
       int n=-1;
       boolean first=true;
-//      a.view.unSelectAllView();
-//      a.view.deSelect();
-//      a.calque.unSelectAllPlan();
+      //      a.view.unSelectAllView();
+      //      a.view.deSelect();
+      //      a.calque.unSelectAllPlan();
       Tok st = new Tok(param);
       while( st.hasMoreTokens() ) {
          String x = st.nextToken();
-         
+
          // Indication d'une frame particulière dans le cas d'un cube
          if( Util.indexOfIgnoreCase(x, "frame=")==0 ) {
             try {
                // Récupération du numéro de frame (peut être un nombre non-entier
                double frame = Double.parseDouble(x.substring(6))-1;
-               
+
                // Un plan particulier => toutes les vues dont c'est la référence
                if( n>=0) {
                   int np[] = a.view.getNumView(a.calque.getPlan(n));
@@ -1941,14 +1947,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                      a.view.viewSimple[np[i]].cubeControl.setFrameLevel(frame);
                      a.view.viewSimple[np[i]].repaint();
                   }
-                  
-               // Une vue particulière
+
+                  // Une vue particulière
                } else if( nview>=0 ) {
                   if( a.view.viewSimple[nview].cubeControl==null ) continue;
                   a.view.viewSimple[nview].cubeControl.setFrameLevel(frame);
                   a.view.viewSimple[nview].repaint();
-                 
-               // Toutes les vues sélectionnées
+
+                  // Toutes les vues sélectionnées
                } else {
                   ViewSimple v[] = a.view.getSelectedView();
                   for( int i=0; i<v.length; i++ ) {
@@ -1958,12 +1964,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   }
                }
             } catch( Exception e ) {
-               printConsole("!!! select cube frame error: "+e.getMessage()); 
+               printConsole("!!! select cube frame error: "+e.getMessage());
             }
-            return;         
-         
-         // On ne le fait que maintenant dans le cas d'une sélection d'une frame particulière
-         // pour l'ensemble des vues précédemment sélectionnées
+            return;
+
+            // On ne le fait que maintenant dans le cas d'une sélection d'une frame particulière
+            // pour l'ensemble des vues précédemment sélectionnées
          } else {
             if( first ) {
                first=false;
@@ -1973,25 +1979,25 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             }
          }
          Plan p = getNumber(x,1,false,false);
-//         n=getNumber(x,1,false,false);
+         //         n=getNumber(x,1,false,false);
          nview=getViewNumber(x,false);
          if( nview >= 0 ) {
-           a.view.selectView(nview);
-           a.view.setCurrentNumView(nview);
-           defaultView=-1;
+            a.view.selectView(nview);
+            a.view.setCurrentNumView(nview);
+            defaultView=-1;
          } else {
-           if( p!=null ) {
-              p.selected=true;
-              nview = a.view.selectView(p);
-              if( defaultView!=-1 && nview!=-1 ) {
-                 a.view.setCurrentNumView(nview);
-                 defaultView=-1;
-              }
-              if( p.isCatalog() ) {
-                 a.view.selectAllInPlanWithoutFree(p,0);
-                 a.mesure.mcanvas.repaint();
-              }
-           }
+            if( p!=null ) {
+               p.selected=true;
+               nview = a.view.selectView(p);
+               if( defaultView!=-1 && nview!=-1 ) {
+                  a.view.setCurrentNumView(nview);
+                  defaultView=-1;
+               }
+               if( p.isCatalog() ) {
+                  a.view.selectAllInPlanWithoutFree(p,0);
+                  a.mesure.mcanvas.repaint();
+               }
+            }
          }
       }
       // Si aucune view sélectionnée, on remet la dernière
@@ -2039,7 +2045,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          printConsole("!!! fliflop error: "+e.getMessage());
       }
    }
-   
+
    /** Execution de la commande match */
    protected void execMatchCmd(String param) {
       StringTokenizer tok = new StringTokenizer(param);
@@ -2055,7 +2061,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( mode==0 ) {
          if( a.view.isSelectCompatibleViews() ) a.view.unselectViewsPartial();
          a.match(0);
-         
+
       } else a.switchMatch(mode==3);
    }
 
@@ -2124,25 +2130,25 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                h=v.rzoom.height;
             }
          } catch( Exception e ) { }
-         
+
       }
       if( pi instanceof PlanBG ) { w /=v.zoom; h/=v.zoom; }
 
-    // On essaye la position du repere, sinon le centre de la vue, si nécessaire
+      // On essaye la position du repere, sinon le centre de la vue, si nécessaire
       if( !flagPos ) {
          try {
             c1 = pi instanceof PlanBG ? v.getCooCentre()
                   : new Coord(a.view.repere.raj,a.view.repere.dej);
             pi.projd.getXY(c1);
-//            x = c1.x;
-//            y = c1.y;
+            //            x = c1.x;
+            //            y = c1.y;
             x = c1.x-w/2.;
             y = c1.y-h/2.;
             y = pi.naxis2-(y+h);
          } catch( Exception e1 ) {
             e1.printStackTrace();
             x=v.rzoom.x;
-            y=v.rzoom.y; 
+            y=v.rzoom.y;
          }
       }
 
@@ -2157,10 +2163,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       a.view.repaintAll();
       return pi;
    }
-   
-   
+
+
    protected void setDrawMode(int mode) { drawMode=mode; }
-   
+
    /** Recupération d'une couleur spécifique, et recalage du Tok si nécessaire
     * dans le cas d'un rgb(r,g,b) qui nécessite de lire 3 paramètres
     * @param s le nom de la couleur ou de la fonction de couleur
@@ -2178,17 +2184,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       } else c = Action.getColor(s);
       return c;
    }
-   
+
    private boolean flagFoV=false;   // Une commande de création de FoV a été passée au préalable
    private Color globalColor=null;  // Dernière couleur demandée
    private Plan oPlan=null;         // Dernier plan Tool ou FoV utilisé
-   
+
    /** Inhibe le fait qu'une commande draw va être dessiné dans le précédent
     * plan Drawing utilisé
     */
    public void resetPreviousDrawing() { oPlan=null; }
-   
-  /** Execution d'une commande get */
+
+   /** Execution d'une commande get */
    protected boolean execDrawCmd(String cmd,String param) {
       Plan plan=null;	// Plan ou il faudra dessiner
       int height;		// On va compter XY à partir du bas
@@ -2196,24 +2202,24 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       Coord c=null;	    // Position de l'objet si drawMode==DRAWRADEC;
       double x=0,y=0;	// Position de l'objet si drawMode==DRAWXY;
       Color specifColor=null;  // Couleur spécifique à l'objet
-      
-      
-//      StringTokenizer st = new StringTokenizer(param,"(");
-//      String fct = st.nextToken();
-//      String parameter =  fct.length()<param.length() ? param.substring(fct.length()+1,param.length()-1) : "";
-//      String p [] = getDrawParam(parameter);
-      
+
+
+      //      StringTokenizer st = new StringTokenizer(param,"(");
+      //      String fct = st.nextToken();
+      //      String parameter =  fct.length()<param.length() ? param.substring(fct.length()+1,param.length()-1) : "";
+      //      String p [] = getDrawParam(parameter);
+
       Tok tok = new Tok(param,"(, )");
       String fct = tok.nextToken();
-      
+
       // Couleur spécifique ? => on la traite, et on se recale
       specifColor=getSpecifColor(fct,tok);
       if( specifColor!=null )  fct = tok.nextToken();
-      
+
       // Recupération des paramètres de la fonction
       String p [] = new String[ tok.countTokens() ];
       for( int i=0; i<p.length; i++ ) p[i] = tok.nextToken();
-      
+
       // Détermination de la hauteur de l'image de base,
       // sinon on prendra 500 par défaut
       height = 500;
@@ -2229,10 +2235,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             return false;
          }
          console("Draw mode: "+(drawMode==DRAWXY ? "XY coordinates":"celestial coordinates"));
-         
+
          return true;
       }
-      
+
       // Commande global(prop=value,prop=value...)
       if( fct.equalsIgnoreCase("global") ) {
          memoGlobal(p);
@@ -2247,7 +2253,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( globalColor!=null ) plan.c=globalColor;
          return true;
       }
-      
+
       // Création d'un plan FoV => draw newFOV(xc,yc[,angle,mytool])
       try {
          if( fct.equalsIgnoreCase("newfov") ) {
@@ -2272,21 +2278,21 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( Aladin.levelTrace!=0 ) e.printStackTrace();
          return false;
       }
-      
+
       // Determination du plan TOOL, ou creation si necessaire
       // On essaye de reprendre le précédent si possible
       if( oPlan!=null && oPlan.type!=Plan.APERTURE && flagFoV ) oPlan=null; // Il faut passer à un plan FoV
       if( oPlan!=null && a.calque.planToolOk(oPlan,flagFoV) ) plan=oPlan;   // On reprend le précédent
       else plan = flagFoV ? a.calque.selectPlanToolOrFoV() : a.calque.selectPlanTool();
       oPlan=plan;
-      
+
       // Positionnement des variables globales au plan
       if( globalColor!=null ) {
          if( globalColor!=plan.c && plan.type==Plan.TOOL && plan.getCounts()>0 ) plan=a.calque.createPlanTool(null); // Création automatique au changement de couleur
          plan.c=globalColor;
       }
       if( drawMode==DRAWRADEC ) plan.setXYorig(false);
-      
+
       try {
 
          // Recuperation de la position (toujours les 2 premiers parametres)
@@ -2308,7 +2314,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             // Commande tag(x,y...)
          } else if( fct.equalsIgnoreCase("tag") || fct.equalsIgnoreCase("string")) {
             Tag tag;
-            String id = p.length<3 ? null : p[2]; 
+            String id = p.length<3 ? null : p[2];
             if( drawMode==DRAWRADEC ) newobj = tag = new Tag(plan,c,id);
             else newobj = tag = new Tag(plan,a.view.getCurrentView(),x,y,id);
             try {
@@ -2321,7 +2327,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                return false;
             }
 
-         // Commande phot(x,y,r)
+            // Commande phot(x,y,r)
          } else if( fct.equalsIgnoreCase("phot") ) {
             Repere phot;
             ViewSimple v = a.view.getCurrentView();
@@ -2366,7 +2372,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          } else if( fct.equalsIgnoreCase("box") ) {
             double angle=0;
             String label=null;
-            try { angle = parseDouble(p[4]); } catch( Exception e ) { 
+            try { angle = parseDouble(p[4]); } catch( Exception e ) {
                try { label = p[4]; } catch( Exception e1) {};
             }
             if( label==null ) try { label = p[5]; } catch( Exception e) {};
@@ -2416,9 +2422,9 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                double r2 = parseDouble(p[3]);
                newobj = new Pickle(plan,a.view.getCurrentView(),x,y,r1,r2,startAngle,angle);
             }
-            
-         } else if( fct.equalsIgnoreCase("line") 
-                 || fct.equalsIgnoreCase("polygon") ) {
+
+         } else if( fct.equalsIgnoreCase("line")
+               || fct.equalsIgnoreCase("polygon") ) {
             newobj=null;
             Ligne p1,op1 = null;
             ViewSimple v = a.view.getCurrentView();
@@ -2468,8 +2474,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                addObj(plan,p1);
                op1=p1;
             }
-            
-        // Commande draw inconnue
+
+            // Commande draw inconnue
          } else {
             printConsole("!!! draw error: function unknown ("+fct+")");
             return false;
@@ -2485,12 +2491,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( specifColor!=null ) newobj.setColor(specifColor);
          addObj(plan,newobj);
       }
-      
+
       plan.resetProj();
       a.view.repaintAll();
       return true;
    }
-   
+
    // Parsing d'un double avec prise en compte d'un éventuel format
    // en suffixe (à la IRAF, ex: 23.7686d)
    // prend également en compte le signe '+' en préfixe
@@ -2501,22 +2507,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       int deb= s.length()>0 && s.charAt(0)=='+' ? 1 : 0;
       return Double.parseDouble(s.substring(deb,fin+1));
    }
-   
+
    // Ajout d'un objet graphique => dans le cas d'un ajout dans un plan FoV (PlanField)
    // Il est nécessaire de calculer également les (x,y) tangentiels
    private void addObj(Plan plan,Obj newobj) {
       plan.pcat.setObjetFast(newobj);
-      
+
       // Il faut encore calculer les tangentes par rapport au centre de la projection
       if( plan.type!=Plan.APERTURE ) return;
       ((Position)newobj).setXYTan(plan.co);
    }
-   
+
    private void memoGlobal(String [] p) {
       for( int i=0; i<p.length; i++ ) {
          if( p[i].startsWith("color=") ) {
             globalColor=Action.getColor(p[i].substring(6));
-//            System.out.println("globalColor found="+p[i].substring(6)+" c="+globalColor);
+            //            System.out.println("globalColor found="+p[i].substring(6)+" c="+globalColor);
          }
       }
    }
@@ -2526,9 +2532,9 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
     * @param param texte a afficher
     */
    private void execInfo(String param) {
-       a.status.setText(param);
+      a.status.setText(param);
    }
-   
+
    /** Execute une chaine contenant un script comme un flux afin de garantir l'ordre des commandes
     * lorsqu'il y a des "load" ou "get" de scripts et filtres "emboités" */
    protected void execScriptAsStream(String s) {
@@ -2541,22 +2547,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          try { if( bis!=null ) bis.close(); } catch( IOException e ) { }
       }
    }
-   
-  /** Traitement d'une ligne de script eventuellement avec des ";"
-   * @param s la ligne a traiter
-   * @param verbose true si on baratine
-   * @return null si la premiere commande n'est pas trouvee
-   */
+
+   /** Traitement d'une ligne de script eventuellement avec des ";"
+    * @param s la ligne a traiter
+    * @param verbose true si on baratine
+    * @return null si la premiere commande n'est pas trouvee
+    */
    public String execScript(String s) { return execScript(s,true,false); }
    synchronized public String execScript(String s,boolean verbose,boolean flagOnlyFunction) {
-//      StringTokenizer st = new StringTokenizer(s,";\n\r");
+      //      StringTokenizer st = new StringTokenizer(s,";\n\r");
       // thomas, 16/11/06 : permet de ne pas couper la déf. des filtres (pb des ';' dans les UCD !)
       String[] commands = Util.split(s, ";\n\r", '[', ']');
       int i=0;		// Compteur de commandes
       StringBuffer rep = new StringBuffer();
       String s1=null;
 
-//      while( st.hasMoreTokens() ) {
+      //      while( st.hasMoreTokens() ) {
       for( int k=0; k<commands.length; k++ ) {
          try {
             String cmd = commands[k].trim();
@@ -2564,7 +2570,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( i==0 ) { if( (s1=exec(cmd,verbose,flagOnlyFunction))==null ) return null; }
                else s1=exec(cmd,verbose,flagOnlyFunction);
             }
-            
+
             if( s1!=null && s1.length()>0 ) rep.append(s1);
             i++;
          } catch( Exception e ) {
@@ -2574,7 +2580,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       return rep.toString();
    }
 
-  /** Retourne la dernière commande exécutée */
+   /** Retourne la dernière commande exécutée */
    protected String getLastCmd() { return lastCmd; }
 
    /** Retourne le code du calcul algébrique ou -1 si non trouvé */
@@ -2583,24 +2589,24 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( s.startsWith("-") ) return PlanImageAlgo.SUB;
       if( s.startsWith("* ") ) return PlanImageAlgo.MUL;
       if( s.startsWith("/") ) return PlanImageAlgo.DIV;
-      
+
       if( s.indexOf(" + ")>0 ) return PlanImageAlgo.ADD;
       if( s.indexOf(" - ")>0 ) return PlanImageAlgo.SUB;
       if( s.indexOf(" * ")>0 ) return PlanImageAlgo.MUL;
       if( s.indexOf(" / ")>0 ) return PlanImageAlgo.DIV;
-      
+
       return -1;
    }
-      
+
    StringBuffer comment=null;           // Last comment
    Function fonct=null;
-   
-  /** Traitement d'une commande aladin
-   * @param s la commande a traiter
-   * @param verbose true si ca doit etre bavard
-   * @return null si la commande n'existe pas
-   */
-   
+
+   /** Traitement d'une commande aladin
+    * @param s la commande a traiter
+    * @param verbose true si ca doit etre bavard
+    * @return null si la commande n'existe pas
+    */
+
    protected void execLater(String s) {
       if( SwingUtilities.isEventDispatchThread() ) {
          exec(s);
@@ -2615,18 +2621,18 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    protected String exec(String s) { return exec(s,true,false); }
    protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);
-      
+
       // mémorisation du dernier commentaire pour une éventuelle définition de fonction
       if( s1.trim().charAt(0)=='#' ) {
          if( comment==null ) comment = new StringBuffer(s1.trim().substring(1));
          else comment.append(" "+s1.trim().substring(1));
          return "";
       } else if( !s1.startsWith("function") ) comment=null;
-      
-      
+
+
       // Attente que les serveurs soient OK
       syncServer();
-      
+
       if( !filterMode && fonct==null ) {
          // Petit ajustement éventuelle pour une commande "=expression" ou "expression="
          s1 = evalAdjust(s1.trim());
@@ -2634,24 +2640,24 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          // Petit adjustement éventuelle pour une commande " val Unit1 in Unit2"
          s1 = convertAdjust(s1);
       }
-      
+
       // Compatibilité pour les commandes "region" de DS9
-      try { 
+      try {
          String s2 = ds9.translate(s1);
          if( s2!=null ) {
             if( s2.length()==0 ) return ""; // Commande jugée inutile (par exemple changement de frame)
             return execScript(s2, verbose, flagOnlyFunction);
          }
       } catch( Exception e) { printConsole(e.getMessage()); return "";}
-      
+
       // Extraction d'un éventuel préfixe désignant le plan target
       // ex: toto = get Simbad m1
       StringBuffer tp = new StringBuffer();
       String s = getTargetPlane(tp, s1);
       String label = tp.length()==0 ? null : "="+tp.toString();
-//System.out.println("TargetPlane=["+tp+"] => s="+s+" label="+label);
-      
-      
+      //System.out.println("TargetPlane=["+tp+"] => s="+s+" label="+label);
+
+
       Tok st = new Tok(s);
       String cmd = st.nextToken();
       String param;
@@ -2664,19 +2670,19 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       int n,fct;
 
       lastCmd=cmd;
-      
+
       // Faut-il faire écho de la commande ?
       boolean echo = verbose && (a.getInstanceId()>0 || a.getInstanceId()==0 && !a.flagLaunch);
 
       // Echo sur la sortie standard
       if( echo  ) println("["+s1+"]...");
-      
+
       // sync automatique pour les commandes concernées
       if( syncMode==SYNCON && needSync(cmd) ) {
          if( !isSync() ) a.trace(4,"Command.exec() : command \""+cmd+"\" needs sync...");
          sync();
       }
-      
+
       // est-ce le debut d'une nouvelle definition de fonction ?
       if( s1.trim().startsWith("function") ) {
          fonct = new Function();
@@ -2691,16 +2697,16 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          } catch( Exception e ) { printConsole("!!! "+e.getMessage()); fonct=null; }
          return "";
       }
-      
+
       // Ne fait que charger les fonctions
       if( flagOnlyFunction ) return "";
 
       //thomas
-	  // est-ce le debut d'une nouvelle definition de filtre ?
+      // est-ce le debut d'une nouvelle definition de filtre ?
       if( s.toLowerCase().startsWith("filter") && s.indexOf("{")>=0 ) {
-      	println("Enter the constraints for the new filter");
-      	filterMode = true;
-      	filterDef = new StringBuffer();
+         println("Enter the constraints for the new filter");
+         filterMode = true;
+         filterDef = new StringBuffer();
       }
 
       if (filterMode) {
@@ -2708,7 +2714,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
          // a-t-on atteint la fin de la definition ?
          if (Action.countNbOcc('{', filterDef.toString()) <=
-            Action.countNbOcc('}', filterDef.toString())) {
+               Action.countNbOcc('}', filterDef.toString())) {
             filterMode = false;
             // robot
             if( robotMode &&  Aladin.ROBOTSUPPORT ) {
@@ -2725,23 +2731,23 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if (Action.countNbOcc('\n', filterDef.toString()) > 1) println("Enter other constraints for the new filter");
          return "";
       }
-      
+
       // Echo sur la console
       if( echo ) a.console.printCommand(s1);
-      
+
       // Commentaire
       if( s1.length()>0 && s1.trim().charAt(0)=='#' ) return "";
-      
+
       if( robotMode &&  Aladin.ROBOTSUPPORT ) {
-          if( robot.executeCommand(cmd, param) ) return "";
+         if( robot.executeCommand(cmd, param) ) return "";
       }
-      
+
       a.trace(4,"Command.exec() : execute now \""+cmd+" "+param+"\"...");
-      
-           if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
-//      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
+
+      if( cmd.equalsIgnoreCase("taquin") ) a.view.taquin(param);
+      //      else if( cmd.equalsIgnoreCase("skygen") ) execSkyGen(param);
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
-//      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
+      //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("test") )   hop();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
       else if( cmd.equalsIgnoreCase("testimg") )testCalib(label,param,0);
@@ -2814,52 +2820,52 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             a.calque.setGrid(flag,false);
          }
          a.calque.repaintAll();
-           }
-//      else if( cmd.equalsIgnoreCase("hist") || cmd.equals("h") )   {
-//            try { n=Integer.parseInt(param); }
-//            catch( Exception e ) { n=10; }
-//            a.pad.hist(n);
-//           }
+      }
+      //      else if( cmd.equalsIgnoreCase("hist") || cmd.equals("h") )   {
+      //            try { n=Integer.parseInt(param); }
+      //            catch( Exception e ) { n=10; }
+      //            a.pad.hist(n);
+      //           }
       else if( cmd.equalsIgnoreCase("pause") ) {
-               double m;
-               try { m=Double.parseDouble(param); if( m<=0 ) m=1; }
-               catch( Exception e ) { m=1; }
-               Util.pause((int)(Math.round(m*1000)));
-           }
+         double m;
+         try { m=Double.parseDouble(param); if( m<=0 ) m=1; }
+         catch( Exception e ) { m=1; }
+         Util.pause((int)(Math.round(m*1000)));
+      }
       else if( cmd.equalsIgnoreCase("timeout") ) {   // pour compatibilité
-               return execSetconfCmd("timeout="+param);
-           }
+         return execSetconfCmd("timeout="+param);
+      }
       else if( cmd.equalsIgnoreCase("reticle")) {
-              int mode = param.equals("off") ? 0 : param.equals("large") ? 2:1;
-              a.calque.setReticle(mode);
-              a.calque.repaintAll();
-           }
+         int mode = param.equals("off") ? 0 : param.equals("large") ? 2:1;
+         a.calque.setReticle(mode);
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("target")) {
-              boolean flag= !param.equals("off");
-              a.calque.setOverlayFlag("target", flag);
-              a.calque.repaintAll();
-           }
+         boolean flag= !param.equals("off");
+         a.calque.setOverlayFlag("target", flag);
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("scale") || cmd.equalsIgnoreCase("overlay") ) {
-              boolean flag= !param.equals("off");
-              a.calque.setOverlay(flag);
-              a.calque.repaintAll();
-           }
+         boolean flag= !param.equals("off");
+         a.calque.setOverlay(flag);
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("flipflop") ) {
-            execFlipFlop(param,label);
+         execFlipFlop(param,label);
       }
       else if( cmd.equalsIgnoreCase("reverse") ) {    // Pour compatibilité
-              boolean flag= !param.equals("off");
-              execCM(flag?"reverse":"noreverse");
-            }
+         boolean flag= !param.equals("off");
+         execCM(flag?"reverse":"noreverse");
+      }
       else if( cmd.equalsIgnoreCase("blink") ) {
-              PlanImage p[] = getPlanImage(param);
-              if( p.length<2 ) {
-                 printConsole("!!! blink error: 2 images are required for blinking");
-                 return "";
-              }
-              a.calque.newPlanImageBlink(p,label,400);
-              syncNeedRepaint=true;
-           }
+         PlanImage p[] = getPlanImage(param);
+         if( p.length<2 ) {
+            printConsole("!!! blink error: 2 images are required for blinking");
+            return "";
+         }
+         a.calque.newPlanImageBlink(p,label,400);
+         syncNeedRepaint=true;
+      }
       else if( cmd.equalsIgnoreCase("mosaic") ) {
          PlanImage p[] = getPlanImage(param);
          if( p.length<2 ) {
@@ -2870,26 +2876,26 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          syncNeedRepaint=true;
       }
       else if( cmd.equalsIgnoreCase("resamp") || cmd.equalsIgnoreCase("rsamp")) {
-             try {
-                boolean fullPixel=false;
-                int methode=PlanImageResamp.BILINEAIRE;
-                st = new Tok(param);
-                PlanImage p1 = (PlanImage)getPlanFromParam(st.nextToken());
-                PlanImage p2 = (PlanImage)getPlanFromParam(st.nextToken());
-                while( st.hasMoreTokens() ) {
-                   char c = st.nextToken().charAt(0);
-                   if( c=='8' ) fullPixel=false;
-                   if( c=='F' || c=='f' ) fullPixel=true;
-                   if( c=='C' || c=='c' ) methode=PlanImageResamp.PPV;
-                   if( c=='B' || c=='b' ) methode=PlanImageResamp.BILINEAIRE;
-                }
-                a.calque.newPlanImageResamp(p1,p2,label,methode,fullPixel,true);
-                syncNeedRepaint=true;
-            } catch( Exception e ) {
-                printConsole("Resamp error: "+e.getMessage());
-                return "";
-             }
-           }
+         try {
+            boolean fullPixel=false;
+            int methode=PlanImageResamp.BILINEAIRE;
+            st = new Tok(param);
+            PlanImage p1 = (PlanImage)getPlanFromParam(st.nextToken());
+            PlanImage p2 = (PlanImage)getPlanFromParam(st.nextToken());
+            while( st.hasMoreTokens() ) {
+               char c = st.nextToken().charAt(0);
+               if( c=='8' ) fullPixel=false;
+               if( c=='F' || c=='f' ) fullPixel=true;
+               if( c=='C' || c=='c' ) methode=PlanImageResamp.PPV;
+               if( c=='B' || c=='b' ) methode=PlanImageResamp.BILINEAIRE;
+            }
+            a.calque.newPlanImageResamp(p1,p2,label,methode,fullPixel,true);
+            syncNeedRepaint=true;
+         } catch( Exception e ) {
+            printConsole("Resamp error: "+e.getMessage());
+            return "";
+         }
+      }
       else if( (fct=findAlgebre(s))>=0 ) {
          if( syncMode==SYNCON ) sync();
          try {
@@ -2904,7 +2910,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                if( p2==null ) try { coef = Double.parseDouble(v2); } catch( Exception e ) {}
                if( p1==null && p2==null && Double.isNaN(coef)) throw new Exception();
                a.calque.newPlanImageAlgo(label,p1,p2,fct,coef,null,PlanImageAlgo.BILINEAIRE);
-           } else if( n==3 ) {
+            } else if( n==3 ) {
                v1 = st.nextToken();
                st.nextToken();
                v2 = st.nextToken();
@@ -2929,13 +2935,13 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,null,0);
             syncNeedRepaint=true;
          } catch( Exception e ) { printConsole("!!! norm error: "+e.getMessage()); return "error"; }
-       }
+      }
       else if( cmd.equalsIgnoreCase("kernel") ) {
          String s2="";
-         
+
          // Pas de paramètre => retourne la liste des noms de kernels
          if( param.trim().length()==0 ) s2 = a.kernelList.getKernelList();
-         
+
          else {
             // tente d'ajouter une définition suivant la syntaxe toto=1 1 1 1 1 1 1 1 1
             if( param.indexOf('=')>0 ) {
@@ -2944,10 +2950,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                catch( Exception e ) {}
                try { a.kernelList.addKernel(param,pixRes);
                } catch( Exception e ) {
-                  printConsole("!!! conv error: kernel definition error"); 
+                  printConsole("!!! conv error: kernel definition error");
                   return "error";
                }
-            // Affichage les kernels qui correspondent au masque passé en paramètre
+               // Affichage les kernels qui correspondent au masque passé en paramètre
             } else s2 = a.kernelList.getKernelDef(param);
          }
          print(s2);
@@ -2964,7 +2970,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             else conv=param;
             a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.CONV,0,conv,0);
             syncNeedRepaint=true;
-        } catch( Exception e ) { printConsole("!!! conv error: "+e.getMessage()); return "error"; }
+         } catch( Exception e ) { printConsole("!!! conv error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("bitpix") ) {
          try {
@@ -2978,212 +2984,212 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             p1 = (PlanImage)getPlanFromParam(v1,0,true);
             if( p1!=null ) v1=v2;
             String bitpix=v1;
-            
-            if( p1!=null && !p1.isSimpleImage() 
-             || p1==null && !a.calque.getPlanBase().isSimpleImage() ) { throw new Exception("Uncompatible image");  }
+
+            if( p1!=null && !p1.isSimpleImage()
+                  || p1==null && !a.calque.getPlanBase().isSimpleImage() ) { throw new Exception("Uncompatible image");  }
 
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,bitpix,0);
             syncNeedRepaint=true;
-           
+
          } catch( Exception e ) { printConsole("!!! bitpix error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("RGB") ) {
-               PlanImage p[] = getPlanImage(param);
-               if( p.length<2 ) {
-                  printConsole("!!! RGB error: not enough images");
-                  return "";
-               }
-               a.calque.newPlanImageRGB(p[0],p.length>2?p[1]:null,
-                                        p.length>2?p[2]:p[1],p[0],label,false);
-               syncNeedRepaint=true;
-           }
+         PlanImage p[] = getPlanImage(param);
+         if( p.length<2 ) {
+            printConsole("!!! RGB error: not enough images");
+            return "";
+         }
+         a.calque.newPlanImageRGB(p[0],p.length>2?p[1]:null,
+               p.length>2?p[2]:p[1],p[0],label,false);
+         syncNeedRepaint=true;
+      }
       else if( cmd.equalsIgnoreCase("RGBdiff") ) {
-               PlanImage p[] = getPlanImage(param);
-               if( p.length!=2 ) {
-                  printConsole("!!! RGBdiff error: requires two images");
-                  return "";
-               }
-               a.calque.newPlanImageRGB(p[0],p[1],null,p[0],label,true);
-               syncNeedRepaint=true;
+         PlanImage p[] = getPlanImage(param);
+         if( p.length!=2 ) {
+            printConsole("!!! RGBdiff error: requires two images");
+            return "";
+         }
+         a.calque.newPlanImageRGB(p[0],p[1],null,p[0],label,true);
+         syncNeedRepaint=true;
       }
       else if (cmd.equalsIgnoreCase("cm") ) execCM(param);
       else if( cmd.equalsIgnoreCase("sync") ) sync();
       else if( cmd.equalsIgnoreCase("md") ) {
-               boolean local=false;
-               if( param.length()>11 && param.substring(0,11).equalsIgnoreCase("-localscope")) {
-                  local=true;
-                  param = param.substring(11).trim();
-               }
-               if( param.length()==0 ) a.calque.newFolder(null,0,local);
-               else a.calque.newFolder(param,0,local);
-               a.calque.select.repaint();
-           }
-      else if( cmd.equalsIgnoreCase("collapse") ) {
-              Plan p[] = getPlan(param,3);
-              for( int i=0; i<p.length; i++ ) {
-                 if( a.calque.isCollapsed(p[i]) ) continue;
-                 a.calque.select.switchCollapseFolder(p[i]);
-              }
-              a.calque.repaintAll();
-          }
-      else if( cmd.equalsIgnoreCase("expand") ) {
-              Plan p[] = getPlan(param,3);
-              for( int i=0; i<p.length; i++ ) {
-                 if( !a.calque.isCollapsed(p[i]) ) continue;
-                 a.calque.select.switchCollapseFolder(p[i]);
-              }
-              a.calque.repaintAll();
-          }
-      else if( cmd.equalsIgnoreCase("copy") ) {
-           st = new Tok(param);
-           String p1,p2;
-           int mview1 = getViewNumber(p1=st.nextToken(),false);
-           int mview2 = getViewNumber(p2=st.nextToken(),false);
-           if( mview1>=0 && mview2>=0 ) a.view.copyView(mview1,mview2);
-
-           // Il doit s'agir d'un plan
-           else {
-              Plan p=null;
-              Plan plan = getNumber(p1,1,false,false);
-              if( plan==null || p2.length()==0 ) {   // plan par défaut (
-                 p2=p1;
-                 p = a.calque.getFirstSelectedPlan();
-              } else p = plan;
-              if( label!=null ) p2=label;
-              try { 
-                 if( p instanceof PlanImageBlink ) a.calque.newPlanImageFromBlink( (PlanImageBlink)p, -1);
-                 else a.calque.dupPlan((PlanImage)p,p2.trim().length()==0 ? null:p2,p.type,true);
-                 syncNeedRepaint=true;
-              } catch( Exception e ) {
-                 printConsole("!!! copy error: "+e.getMessage());
-                 return "";
-              }
-           }
+         boolean local=false;
+         if( param.length()>11 && param.substring(0,11).equalsIgnoreCase("-localscope")) {
+            local=true;
+            param = param.substring(11).trim();
          }
+         if( param.length()==0 ) a.calque.newFolder(null,0,local);
+         else a.calque.newFolder(param,0,local);
+         a.calque.select.repaint();
+      }
+      else if( cmd.equalsIgnoreCase("collapse") ) {
+         Plan p[] = getPlan(param,3);
+         for( int i=0; i<p.length; i++ ) {
+            if( a.calque.isCollapsed(p[i]) ) continue;
+            a.calque.select.switchCollapseFolder(p[i]);
+         }
+         a.calque.repaintAll();
+      }
+      else if( cmd.equalsIgnoreCase("expand") ) {
+         Plan p[] = getPlan(param,3);
+         for( int i=0; i<p.length; i++ ) {
+            if( !a.calque.isCollapsed(p[i]) ) continue;
+            a.calque.select.switchCollapseFolder(p[i]);
+         }
+         a.calque.repaintAll();
+      }
+      else if( cmd.equalsIgnoreCase("copy") ) {
+         st = new Tok(param);
+         String p1,p2;
+         int mview1 = getViewNumber(p1=st.nextToken(),false);
+         int mview2 = getViewNumber(p2=st.nextToken(),false);
+         if( mview1>=0 && mview2>=0 ) a.view.copyView(mview1,mview2);
+
+         // Il doit s'agir d'un plan
+         else {
+            Plan p=null;
+            Plan plan = getNumber(p1,1,false,false);
+            if( plan==null || p2.length()==0 ) {   // plan par défaut (
+               p2=p1;
+               p = a.calque.getFirstSelectedPlan();
+            } else p = plan;
+            if( label!=null ) p2=label;
+            try {
+               if( p instanceof PlanImageBlink ) a.calque.newPlanImageFromBlink( (PlanImageBlink)p, -1);
+               else a.calque.dupPlan((PlanImage)p,p2.trim().length()==0 ? null:p2,p.type,true);
+               syncNeedRepaint=true;
+            } catch( Exception e ) {
+               printConsole("!!! copy error: "+e.getMessage());
+               return "";
+            }
+         }
+      }
       else if( cmd.equalsIgnoreCase("mv") || cmd.equalsIgnoreCase("move") ) {
-               // Pour les vues
-               st = new Tok(param);
-               if( st.countTokens()==2 ) {
-                  int mview1 = getViewNumber(st.nextToken(),false);
-                  int mview2 = getViewNumber(st.nextToken(),false);
-                  if( mview1>=0 && mview2>=0 ) {
-                     a.view.moveView(mview1,mview2);
-                     return "";
-                  }
-               }
-               // Pour les plans
-               st = new Tok(param);
-               try {
-                  Vector<Plan> vp = new Vector<Plan>(10);
-                  while( st.hasMoreTokens() ) {
-                     vp.addElement( getNumber(st.nextToken()) );
-                  }
-                  int j=vp.size();
-                  Plan target=vp.elementAt(j-1);
-                  for( int i=j-2; i>=0; i--) {
-                     a.calque.permute(vp.elementAt(i),target);
-                  }
-                  syncNeedRepaint=true;
-                  a.view.newView(1);
-                  a.calque.repaintAll();
-               } catch( Exception eMv ) {
-                  printConsole("!!! mv error: "+eMv.getMessage());
-                  return "";
-               }
-           }
+         // Pour les vues
+         st = new Tok(param);
+         if( st.countTokens()==2 ) {
+            int mview1 = getViewNumber(st.nextToken(),false);
+            int mview2 = getViewNumber(st.nextToken(),false);
+            if( mview1>=0 && mview2>=0 ) {
+               a.view.moveView(mview1,mview2);
+               return "";
+            }
+         }
+         // Pour les plans
+         st = new Tok(param);
+         try {
+            Vector<Plan> vp = new Vector<Plan>(10);
+            while( st.hasMoreTokens() ) {
+               vp.addElement( getNumber(st.nextToken()) );
+            }
+            int j=vp.size();
+            Plan target=vp.elementAt(j-1);
+            for( int i=j-2; i>=0; i--) {
+               a.calque.permute(vp.elementAt(i),target);
+            }
+            syncNeedRepaint=true;
+            a.view.newView(1);
+            a.calque.repaintAll();
+         } catch( Exception eMv ) {
+            printConsole("!!! mv error: "+eMv.getMessage());
+            return "";
+         }
+      }
       else if( cmd.equalsIgnoreCase("rm") || cmd.equalsIgnoreCase("free") ) {
-              if( param.equals("lock") || param.equals("-lock")
-                    ||param.equals("ROI") || param.equals("-ROI")) a.view.freeLock();
-              else if( param.equals("all") || param.equals("-all")) a.calque.FreeAll();
+         if( param.equals("lock") || param.equals("-lock")
+               ||param.equals("ROI") || param.equals("-ROI")) a.view.freeLock();
+         else if( param.equals("all") || param.equals("-all")) a.calque.FreeAll();
 
-               // Suppression par la sélection
-               else if( param.length()==0 ) {
-                  a.delete();
+         // Suppression par la sélection
+         else if( param.length()==0 ) {
+            a.delete();
 
-               // Suppression par les paramètres
-               } else {
-                  // Les vues éventuelles
-                  ViewSimple v[] = getViews(param);
-                  if( v.length>0 ) a.view.free(v);
+            // Suppression par les paramètres
+         } else {
+            // Les vues éventuelles
+            ViewSimple v[] = getViews(param);
+            if( v.length>0 ) a.view.free(v);
 
-                  // Les plans
-                  a.calque.unSelectAllPlan();
-                  Plan p[] = getPlan(param,4);
-                  if( p.length>0 ) {
-                     for( int i=0; i<p.length; i++ ) p[i].selected=true;
-                     a.calque.FreeSet(false);
-                  }
-                  a.view.setSelectFromView(true);
-               }
+            // Les plans
+            a.calque.unSelectAllPlan();
+            Plan p[] = getPlan(param,4);
+            if( p.length>0 ) {
+               for( int i=0; i<p.length; i++ ) p[i].selected=true;
+               a.calque.FreeSet(false);
+            }
+            a.view.setSelectFromView(true);
+         }
 
-               a.gc();
-               a.calque.repaintAll();
-           }
+         a.gc();
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("modeview") || cmd.equalsIgnoreCase("mview")) {
-               try { n=Integer.parseInt(st.nextToken());
-               if( n!=1 && n!=2 && n!=4 && n!=9 && n!=16 ) n=1; }
-               catch( Exception e ) { n=1; }
-               a.view.setModeView(n);
-               try{
-                  n=Integer.parseInt(st.nextToken());
-                  a.view.scrollOn(n-1);
-               } catch( Exception e ) { }
-           }
+         try { n=Integer.parseInt(st.nextToken());
+         if( n!=1 && n!=2 && n!=4 && n!=9 && n!=16 ) n=1; }
+         catch( Exception e ) { n=1; }
+         a.view.setModeView(n);
+         try{
+            n=Integer.parseInt(st.nextToken());
+            a.view.scrollOn(n-1);
+         } catch( Exception e ) { }
+      }
       else if( cmd.equalsIgnoreCase("createview") || cmd.equalsIgnoreCase("cview") ) {
-               boolean plot=false;
-               String [] col = new String[2];
-               Plan p=null;
-               if( param.length()==0 ) p=a.calque.getFirstSelectedPlan();
-               else {
-                  String p1 = st.nextToken();
-                  if( p1.equals("-plot") ) {
-                     plot=true;
-                     if( !st.hasMoreTokens() ) p=a.calque.getFirstSelectedPlan();
-                     else p1 = st.nextToken();
-                  }
-                  if( plot ) p1 = parseColumnIndex(col, p1);
-                  if( p==null ) p = getNumber(p1);
-               }
-               if( p==null ) return "";
-               
-               int nview=-1;
-               if( st.hasMoreTokens()) {
-                  nview = getViewNumber(st.nextToken());
-                  a.calque.setPlanRef(p,nview);
-               } else nview = a.view.getLastNumView(p);
-               if( nview<0 ) return "";
-               
-               if( !a.view.viewSimple[nview].isPlotView() ) a.view.setPlanRef(nview, p);
-               if( plot ) {
-                  try {
-                     a.view.viewSimple[nview].addPlotTable(p, col[0], col[1] ,false);
-                  } catch( Exception e ) {
-                     printConsole("!!! cview -plot error: "+e.getMessage());
-                  }
-               }
-               a.calque.repaintAll();
-           }
+         boolean plot=false;
+         String [] col = new String[2];
+         Plan p=null;
+         if( param.length()==0 ) p=a.calque.getFirstSelectedPlan();
+         else {
+            String p1 = st.nextToken();
+            if( p1.equals("-plot") ) {
+               plot=true;
+               if( !st.hasMoreTokens() ) p=a.calque.getFirstSelectedPlan();
+               else p1 = st.nextToken();
+            }
+            if( plot ) p1 = parseColumnIndex(col, p1);
+            if( p==null ) p = getNumber(p1);
+         }
+         if( p==null ) return "";
+
+         int nview=-1;
+         if( st.hasMoreTokens()) {
+            nview = getViewNumber(st.nextToken());
+            a.calque.setPlanRef(p,nview);
+         } else nview = a.view.getLastNumView(p);
+         if( nview<0 ) return "";
+
+         if( !a.view.viewSimple[nview].isPlotView() ) a.view.setPlanRef(nview, p);
+         if( plot ) {
+            try {
+               a.view.viewSimple[nview].addPlotTable(p, col[0], col[1] ,false);
+            } catch( Exception e ) {
+               printConsole("!!! cview -plot error: "+e.getMessage());
+            }
+         }
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("hide") ) {
-               Plan p[] = getPlan(param,2);
-               for( int i=0; i<p.length; i++ ) {
-                  if( p[i].type==Plan.FOLDER ) a.calque.setActiveFolder(p[i],false);
-                  else p[i].setActivated(false);
-               }
-               a.calque.repaintAll();
-           }
+         Plan p[] = getPlan(param,2);
+         for( int i=0; i<p.length; i++ ) {
+            if( p[i].type==Plan.FOLDER ) a.calque.setActiveFolder(p[i],false);
+            else p[i].setActivated(false);
+         }
+         a.calque.repaintAll();
+      }
       else if( cmd.equalsIgnoreCase("show")
             || cmd.equalsIgnoreCase("ref") ) {
-               Plan p[] = getPlan(param,2);
-               for( int i=0; i<p.length; i++ ) {
-                  if( p[i].type==Plan.FOLDER ) a.calque.setActiveFolder(p[i],true);
-                  else a.calque.showPlan(p[i]);
-               }
-           }
+         Plan p[] = getPlan(param,2);
+         for( int i=0; i<p.length; i++ ) {
+            if( p[i].type==Plan.FOLDER ) a.calque.setActiveFolder(p[i],true);
+            else a.calque.showPlan(p[i]);
+         }
+      }
       else if( cmd.equalsIgnoreCase("zoom") ) {
-               syncNeedRepaint=true;
-               if( !a.calque.zoom.setZoom(param) ) {
-                  printConsole("!!! zoom error: factor \""+param+"\" unknown !");
-               }
+         syncNeedRepaint=true;
+         if( !a.calque.zoom.setZoom(param) ) {
+            printConsole("!!! zoom error: factor \""+param+"\" unknown !");
+         }
       }
       else if( cmd.equalsIgnoreCase("backup") ) {
          String syncId = syncSave.start("Command.backup");
@@ -3199,125 +3205,125 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else if( cmd.equalsIgnoreCase("save") ) {
          String syncId = syncSave.start("Command.save");
          try {
-              if( a.save==null ) a.save = new Save(a);
+            if( a.save==null ) a.save = new Save(a);
 
-              String tmp=null;
-              String file=null;
-              int w=500,h=500;
-              boolean flagDim=false;
-              boolean flagROI=false;
-              int mode=0;
-              int posFile=cmd.length();   // Position du nom du fichier (cochonnerie de blancs)
-              float qual=-1;
+            String tmp=null;
+            String file=null;
+            int w=500,h=500;
+            boolean flagDim=false;
+            boolean flagROI=false;
+            int mode=0;
+            int posFile=cmd.length();   // Position du nom du fichier (cochonnerie de blancs)
+            float qual=-1;
 
-              if( st.hasMoreTokens() ) tmp = st.nextToken();
-              if( tmp!=null ) {
+            if( st.hasMoreTokens() ) tmp = st.nextToken();
+            if( tmp!=null ) {
 
-                 // Les ROI ?
-                 if( tmp.equals("-ROI" ) || tmp.equals("-allviews") ) {
-                    flagROI=true;
-                    posFile = s.indexOf(tmp)+tmp.length()+1;
-                    tmp = st.nextToken();
-                 }
+               // Les ROI ?
+               if( tmp.equals("-ROI" ) || tmp.equals("-allviews") ) {
+                  flagROI=true;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  tmp = st.nextToken();
+               }
 
-                 // Un format indiqué ?
-                 if( tmp.startsWith("-jpeg") || tmp.startsWith("-jpg") ) {
-                    mode=Save.JPEG;
-                    try {
-                       qual = Float.parseFloat(tmp.substring(tmp.indexOf('g')+1,tmp.length()));
-                       if( qual>1 ) qual/=100;
-                    } catch( Exception e ) { qual=-1; }
-                    
-                    posFile = s.indexOf(tmp)+tmp.length()+1;
-                    if( st.hasMoreTokens() ) tmp = st.nextToken();
-                    else tmp=null;
+               // Un format indiqué ?
+               if( tmp.startsWith("-jpeg") || tmp.startsWith("-jpg") ) {
+                  mode=Save.JPEG;
+                  try {
+                     qual = Float.parseFloat(tmp.substring(tmp.indexOf('g')+1,tmp.length()));
+                     if( qual>1 ) qual/=100;
+                  } catch( Exception e ) { qual=-1; }
 
-                 } else if( tmp.equals("-eps")  ) {
-                    mode=Save.EPS;
-                    posFile = s.indexOf(tmp)+tmp.length()+1;
-                    if( st.hasMoreTokens() ) tmp = st.nextToken();
-                    else tmp=null;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  if( st.hasMoreTokens() ) tmp = st.nextToken();
+                  else tmp=null;
 
-                 } else if( tmp.equals("-png")  ) {
-                    mode=Save.PNG;
-                    posFile = s.indexOf(tmp)+tmp.length()+1;
-                    if( st.hasMoreTokens() ) tmp = st.nextToken();
-                    else tmp=null;
-                 }
+               } else if( tmp.equals("-eps")  ) {
+                  mode=Save.EPS;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  if( st.hasMoreTokens() ) tmp = st.nextToken();
+                  else tmp=null;
 
-                 // Faut-il un fichier de links ?
-                 if( tmp!=null && tmp.equals("-lk")  ) {
-                    mode|=Save.LK;
-                    posFile = s.indexOf(tmp)+tmp.length()+1;
-                    if( st.hasMoreTokens() ) tmp = st.nextToken();
-                    else tmp=null;
-                 }
-                 // Fichier de links pour viewer Flex
-                 else if( tmp!=null && tmp.equals("-lkflex")  ) {
-                     mode|=Save.LK_FLEX;
+               } else if( tmp.equals("-png")  ) {
+                  mode=Save.PNG;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  if( st.hasMoreTokens() ) tmp = st.nextToken();
+                  else tmp=null;
+               }
+
+               // Faut-il un fichier de links ?
+               if( tmp!=null && tmp.equals("-lk")  ) {
+                  mode|=Save.LK;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  if( st.hasMoreTokens() ) tmp = st.nextToken();
+                  else tmp=null;
+               }
+               // Fichier de links pour viewer Flex
+               else if( tmp!=null && tmp.equals("-lkflex")  ) {
+                  mode|=Save.LK_FLEX;
+                  posFile = s.indexOf(tmp)+tmp.length()+1;
+                  if( st.hasMoreTokens() ) tmp = st.nextToken();
+               }
+
+            }
+
+            // Une Dimension ?
+            if( tmp!=null ) {
+               try {
+                  int x = tmp.indexOf('x');
+                  w = Integer.parseInt(tmp.substring(0,x));
+                  h = Integer.parseInt(tmp.substring(x+1));
+                  flagDim=true;
+                  if( st.hasMoreTokens() ) {
                      posFile = s.indexOf(tmp)+tmp.length()+1;
-                     if( st.hasMoreTokens() ) tmp = st.nextToken();
-                 }
+                     file=st.nextToken();
+                  }
+               } catch( Exception e ) { w=h=View.INITW; file=tmp; }
+            }
 
-              }
+            // Pour s'assurer que l'on n'a pas que le premier mot du nom du fichier
+            // en cas de blancs
+            if( file!=null ) file = s.substring(posFile).trim();
 
-              // Une Dimension ?
-              if( tmp!=null ) {
-                 try {
-                    int x = tmp.indexOf('x');
-                    w = Integer.parseInt(tmp.substring(0,x));
-                    h = Integer.parseInt(tmp.substring(x+1));
-                    flagDim=true;
-                    if( st.hasMoreTokens() ) {
-                       posFile = s.indexOf(tmp)+tmp.length()+1;
-                       file=st.nextToken();
-                    }
-                 } catch( Exception e ) { w=h=View.INITW; file=tmp; }
-              }
+            //System.out.println("save mode="+mode+" w="+w+" h="+h+" file="+(file==null?"null":file));
 
-              // Pour s'assurer que l'on n'a pas que le premier mot du nom du fichier
-              // en cas de blancs
-              if( file!=null ) file = s.substring(posFile).trim();
+            //              if( flagDim && !a.NOGUI) {
+            //                 tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
+            //                 a.warning("save error: "+tmp,1);
+            //                 w=h=View.INITW;
+            //              }
 
-//System.out.println("save mode="+mode+" w="+w+" h="+h+" file="+(file==null?"null":file));
+            if( file==null && !a.NOGUI) {
+               tmp="saving on standard output required NOGUI mode (-nogui parameter)";
+               a.warning("save error: "+tmp,1);
+               return tmp;
+            } else file = Tok.unQuote(file);
 
-//              if( flagDim && !a.NOGUI) {
-//                 tmp="dimension specification required NOGUI mode (-nogui parameter), assume window size";
-//                 a.warning("save error: "+tmp,1);
-//                 w=h=View.INITW;
-//              }
+            // Ajustement de la taille dans le mode NOGUI & attente en conséquence (PlanBG)
+            if( a.NOGUI ) {
+               ViewSimple v = a.view.getCurrentView();
+               if( w==-1 || h==-1 ) {
+                  v.setDimension(((PlanImage)v.pref).width,((PlanImage)v.pref).height);
+                  v.setZoomXY(1, -1, -1);
+               } else v.setDimension(w,h);
+               v.paintComponent(null);
+            }
 
-              if( file==null && !a.NOGUI) {
-                 tmp="saving on standard output required NOGUI mode (-nogui parameter)";
-                 a.warning("save error: "+tmp,1);
-                 return tmp;
-              } else file = Tok.unQuote(file);
+            // Mode Image non précisé ?
+            if( mode==0 || mode==Save.LK || mode==Save.LK_FLEX ) {
+               if( file!=null && (file.endsWith(".jpg") || file.endsWith(".jpeg"))) mode|=Save.JPEG;
+               else if( file!=null && file.endsWith(".eps")) mode|=Save.EPS;
+               else if( file!=null && file.endsWith(".png")) mode|=Save.PNG;
+               else if( file!=null && file.endsWith(".bmp")) mode|=Save.BMP;
+               else if( file!=null && file.endsWith(".lk")) mode|=Save.LK;
+               else mode|=Save.PNG;
+            }
 
-              // Ajustement de la taille dans le mode NOGUI & attente en conséquence (PlanBG)
-              if( a.NOGUI ) {
-                 ViewSimple v = a.view.getCurrentView();
-                 if( w==-1 || h==-1 ) {
-                    v.setDimension(((PlanImage)v.pref).width,((PlanImage)v.pref).height);
-                    v.setZoomXY(1, -1, -1);
-                 } else v.setDimension(w,h);
-                 v.paintComponent(null);
-              }
-              
-             // Mode Image non précisé ?
-              if( mode==0 || mode==Save.LK || mode==Save.LK_FLEX ) {
-                 if( file!=null && (file.endsWith(".jpg") || file.endsWith(".jpeg"))) mode|=Save.JPEG;
-                 else if( file!=null && file.endsWith(".eps")) mode|=Save.EPS;
-                 else if( file!=null && file.endsWith(".png")) mode|=Save.PNG;
-                 else if( file!=null && file.endsWith(".bmp")) mode|=Save.BMP;
-                 else if( file!=null && file.endsWith(".lk")) mode|=Save.LK;
-                 else mode|=Save.PNG;
-              }
-
-              if( flagROI ) {
-                 int dot = file.lastIndexOf('.');
-                 if( dot>=0 ) file = file.substring(0,dot);
-                 a.view.saveROI(file,w,h,mode);
-              } else (a.save).saveView(file,w,h,mode,qual);
+            if( flagROI ) {
+               int dot = file.lastIndexOf('.');
+               if( dot>=0 ) file = file.substring(0,dot);
+               a.view.saveROI(file,w,h,mode);
+            } else (a.save).saveView(file,w,h,mode,qual);
          }
          catch( Exception e ) { e.printStackTrace(); }
          finally {
@@ -3404,32 +3410,32 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                }
             }
          } catch( Exception e ) { if( a.levelTrace>=3 ) e.printStackTrace(); }
-           finally {
-              syncSave.stop(syncId);
+         finally {
+            syncSave.stop(syncId);
          }
       }
       else if( cmd.equalsIgnoreCase("trace") ) {
-               if( param.equals("off") || param.equals("0")) {
-                   a.setTraceLevel(0);
-                   return "";
-               }
-               try { n=Integer.parseInt(param);
-                     if( n>Aladin.MAXLEVELTRACE || n<0 ) n=1;
-               } catch( Exception e ) { n=1; }
-               a.setTraceLevel(n);
-            }
+         if( param.equals("off") || param.equals("0")) {
+            a.setTraceLevel(0);
+            return "";
+         }
+         try { n=Integer.parseInt(param);
+         if( n>Aladin.MAXLEVELTRACE || n<0 ) n=1;
+         } catch( Exception e ) { n=1; }
+         a.setTraceLevel(n);
+      }
       else if( cmd.equalsIgnoreCase("mem") ) {
-               a.gc();
-               long total = Runtime.getRuntime().totalMemory()/(1024*1024);
-               long free = Runtime.getRuntime().freeMemory()/(1024*1024);
-               long max = Runtime.getRuntime().maxMemory()/(1024*1024);
-               printConsole("Total used memory: "+
-                 (int)(total - free)+ "Mb (total="+total+"Mb free="+free+"Mb max="+max+"Mb)\n");
-            }
+         a.gc();
+         long total = Runtime.getRuntime().totalMemory()/(1024*1024);
+         long free = Runtime.getRuntime().freeMemory()/(1024*1024);
+         long max = Runtime.getRuntime().maxMemory()/(1024*1024);
+         printConsole("Total used memory: "+
+               (int)(total - free)+ "Mb (total="+total+"Mb free="+free+"Mb max="+max+"Mb)\n");
+      }
       else if( cmd.equalsIgnoreCase("gc") ) {
-              if( param.equals("off") ) a.gc=false;
-              else a.gc=true;
-            }
+         if( param.equals("off") ) a.gc=false;
+         else a.gc=true;
+      }
       else if( cmd.equalsIgnoreCase("load") ) {
          a.load(Tok.unQuote(param),label);
       }
@@ -3438,50 +3444,50 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       // Creation d'un nouveau plan tool
       // arguments; nom du plan
       else if( cmd.equalsIgnoreCase("ptool") )  {
-               String nom = st.nextToken();
-               printConsole("Creating new PlanTool "+nom);
-               a.calque.newPlanTool(nom);
-               a.calque.repaintAll();
-             }
+         String nom = st.nextToken();
+         printConsole("Creating new PlanTool "+nom);
+         a.calque.newPlanTool(nom);
+         a.calque.repaintAll();
+      }
 
       // Pour CFHT-QSO: Renaud Savalle
       // Creation d'un repere (tag) pour une position en pixels
       // arguments: numero du plan de reference (image), coordonnees du repere en pixels
       else if( cmd.equalsIgnoreCase("rep") )  {
-               String p = st.nextToken();
-               Plan plan = getNumber(p);
-               if( plan==null ) return "";
-               // Coordonnees en pixels
-               int x = Integer.parseInt(st.nextToken());
-               int y = Integer.parseInt(st.nextToken());
-               // Creation du repere
-               printConsole("Creating repere ("+x+","+y+") on plane "+p);
-               Repere repere = new Repere(plan,a.view.getCurrentView(),x,y);
-               // Ajoute le repere sur le plan courant, il doit etre du type PlanTool sinon rien ne se passe
-               a.calque.setObjet(repere);
-               a.calque.repaintAll();
-             }
+         String p = st.nextToken();
+         Plan plan = getNumber(p);
+         if( plan==null ) return "";
+         // Coordonnees en pixels
+         int x = Integer.parseInt(st.nextToken());
+         int y = Integer.parseInt(st.nextToken());
+         // Creation du repere
+         printConsole("Creating repere ("+x+","+y+") on plane "+p);
+         Repere repere = new Repere(plan,a.view.getCurrentView(),x,y);
+         // Ajoute le repere sur le plan courant, il doit etre du type PlanTool sinon rien ne se passe
+         a.calque.setObjet(repere);
+         a.calque.repaintAll();
+      }
 
       // pour mise on/off du robot
       else if( cmd.equalsIgnoreCase("demo") || cmd.equalsIgnoreCase("robot") ) {
-          if( !Aladin.ROBOTSUPPORT ) {
-              Aladin.warning(a.chaine.getString("NOROBOT"), 1);
-              return "";
-          }
-          if( param.trim().equals("end") && robotInfo!=null ) {
-             MyRobot.info("\n\n         T H E     E N D\n\n\n", a);
-             // TODO : thomas : pourquoi ? la fin est un peu abrupte ...
-//             robotInfo.dispose();
-             robotInfo=null;
-             robotMode = false;
-             if( robot!=null ) robot.reset();
+         if( !Aladin.ROBOTSUPPORT ) {
+            Aladin.warning(a.chaine.getString("NOROBOT"), 1);
+            return "";
+         }
+         if( param.trim().equals("end") && robotInfo!=null ) {
+            MyRobot.info("\n\n         T H E     E N D\n\n\n", a);
+            // TODO : thomas : pourquoi ? la fin est un peu abrupte ...
+            //             robotInfo.dispose();
+            robotInfo=null;
+            robotMode = false;
+            if( robot!=null ) robot.reset();
 
-          } else if( param.trim().equals("off") ) {
-              robotMode = false;
-//              if( infoTxt!=null ) FilterProperties.insertInTA(infoTxt,"\n\n",infoTxt.getText().length());
-          }
-          else { robotMode = true; }
-          return "";
+         } else if( param.trim().equals("off") ) {
+            robotMode = false;
+            //              if( infoTxt!=null ) FilterProperties.insertInTA(infoTxt,"\n\n",infoTxt.getText().length());
+         }
+         else { robotMode = true; }
+         return "";
       }
 
       // thomas : cross-match (les colonnes de coordonnées sont automatiquement reconnues grace aux UCDs)
@@ -3489,109 +3495,109 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       // thomas
       else if( cmd.equals("contour") ) {
-               PlanImage p = (PlanImage)a.calque.getPlanBase();
-               if( p==null || !p.flagOk ) {
-                  printConsole("!!! contour error: no image ready !");
-                  return "";
-               }
-               if( p.type==Plan.IMAGERGB || p instanceof PlanImageBlink ) {
-                  printConsole("!!! contour error: can't produce contours on this image");
-                 return "";
-               }
+         PlanImage p = (PlanImage)a.calque.getPlanBase();
+         if( p==null || !p.flagOk ) {
+            printConsole("!!! contour error: no image ready !");
+            return "";
+         }
+         if( p.type==Plan.IMAGERGB || p instanceof PlanImageBlink ) {
+            printConsole("!!! contour error: can't produce contours on this image");
+            return "";
+         }
 
-			   // 4 niveaux par defaut
-      	       int nbContours=4;
-               if( st.hasMoreTokens() ) {
-			     String p1 = st.nextToken();
-                 try{ nbContours = Integer.parseInt(p1);}
-                 catch (NumberFormatException e) { printConsole("!!! contour error: incorrect or missing parameter");return "";}
-               }
+         // 4 niveaux par defaut
+         int nbContours=4;
+         if( st.hasMoreTokens() ) {
+            String p1 = st.nextToken();
+            try{ nbContours = Integer.parseInt(p1);}
+            catch (NumberFormatException e) { printConsole("!!! contour error: incorrect or missing parameter");return "";}
+         }
 
-               int tmp[] = new int[nbContours];
-               tmp = FrameContour.generateLevels(nbContours);
+         int tmp[] = new int[nbContours];
+         tmp = FrameContour.generateLevels(nbContours);
 
-               double levels[] = new double[nbContours];
+         double levels[] = new double[nbContours];
 
-               for(int i=0;i<levels.length;i++) levels[i] = tmp[i];
+         for(int i=0;i<levels.length;i++) levels[i] = tmp[i];
 
-               boolean useSmoothing = true; // vrai par defaut
+         boolean useSmoothing = true; // vrai par defaut
 
-               boolean currentZoomOnly = false; // faux par defaut
+         boolean currentZoomOnly = false; // faux par defaut
 
-               try{
+         try{
 
-                 String p2 = st.nextToken();
+            String p2 = st.nextToken();
 
 
-                 if (p2.equals("smooth") || p2.equals("nosmooth")) {
-                   useSmoothing = p2.equals("smooth")?true:false;
-                   String p3 = st.nextToken();
-                   currentZoomOnly = p3.equals("zoom")?true:false;
-                 }
-                 else currentZoomOnly = p2.equals("zoom")?true:false;
-               }
-               catch(Exception e) {}
+            if (p2.equals("smooth") || p2.equals("nosmooth")) {
+               useSmoothing = p2.equals("smooth")?true:false;
+               String p3 = st.nextToken();
+               currentZoomOnly = p3.equals("zoom")?true:false;
+            }
+            else currentZoomOnly = p2.equals("zoom")?true:false;
+         }
+         catch(Exception e) {}
 
-               a.calque.newPlanContour(label!=null?label:"Contours",null,levels,new ContourPlot(),useSmoothing,2,currentZoomOnly,true,null);
-             }
+         a.calque.newPlanContour(label!=null?label:"Contours",null,levels,new ContourPlot(),useSmoothing,2,currentZoomOnly,true,null);
+      }
 
       // thomas
       // activation/desactivation d'un filtre
       else if( cmd.equals("filter") ) {
-      	    String correctSyntax = "Syntax is : filter [filter name] on|off";
-      	    int nbParam = st.countTokens();
-      	    // dans ce cas, on active tous les filtres
-      	    if(nbParam == 1) {
-      	    	String onOff = st.nextToken().toLowerCase();
+         String correctSyntax = "Syntax is : filter [filter name] on|off";
+         int nbParam = st.countTokens();
+         // dans ce cas, on active tous les filtres
+         if(nbParam == 1) {
+            String onOff = st.nextToken().toLowerCase();
 
-      	    	if(onOff.equals("on")) {
-                    PlanFilter.activateAllFilters();
-      	    	}
-      	    	else if(onOff.equals("off")) {
-                    PlanFilter.desactivateAllFilters();
-                    PlanCatalog.desactivateAllDedicatedFilters(a);
-      	    	}
-      	    	else {
-      	    	    printConsole("!!! filter error: incorrect parameter \""+onOff+"\"");
-      	    	    println(correctSyntax);
-      	    	}
-      	    }
-      	    else if(nbParam==2) {
-      	       String fName = st.nextToken();
-      	       String onOff = st.nextToken().toLowerCase();
+            if(onOff.equals("on")) {
+               PlanFilter.activateAllFilters();
+            }
+            else if(onOff.equals("off")) {
+               PlanFilter.desactivateAllFilters();
+               PlanCatalog.desactivateAllDedicatedFilters(a);
+            }
+            else {
+               printConsole("!!! filter error: incorrect parameter \""+onOff+"\"");
+               println(correctSyntax);
+            }
+         }
+         else if(nbParam==2) {
+            String fName = st.nextToken();
+            String onOff = st.nextToken().toLowerCase();
 
-      	       PlanFilter pf = null;
-      	       if( (pf=PlanFilter.getFilterByName(fName,a))!=null) {
+            PlanFilter pf = null;
+            if( (pf=PlanFilter.getFilterByName(fName,a))!=null) {
 
 
-      	          if(onOff.equals("on")) {
+               if(onOff.equals("on")) {
 
-      	             pf.setActivated(true);
-      	             pf.updateState();
-      	             a.calque.select.repaint();
+                  pf.setActivated(true);
+                  pf.updateState();
+                  a.calque.select.repaint();
 
-      	             //if(a.frameConstraint != null && a.frameConstraint.isShowing()) a.frameConstraint.majFrameConstraint();
-      	          }
-      	          else if(onOff.equals("off")) {
-      	             pf.setActivated(false);
-      	             pf.updateState();
-      	             a.calque.select.repaint();
-      	          }
-      	          else {
-      	             printConsole("!!! filter error: incorrect parameter \""+onOff+"\"");
-      	             println(correctSyntax);
-      	          }
+                  //if(a.frameConstraint != null && a.frameConstraint.isShowing()) a.frameConstraint.majFrameConstraint();
+               }
+               else if(onOff.equals("off")) {
+                  pf.setActivated(false);
+                  pf.updateState();
+                  a.calque.select.repaint();
+               }
+               else {
+                  printConsole("!!! filter error: incorrect parameter \""+onOff+"\"");
+                  println(correctSyntax);
+               }
 
-      	       }
+            }
 
-      	       else {
-      	          printConsole("!!! filter error: the filter "+fName+" does not exist");
-      	       }
-      	    }
-      	    else {
-      	       printConsole("!!! filter error: incorrect number of parameters");
-      	       println(correctSyntax);
-      	    }
+            else {
+               printConsole("!!! filter error: the filter "+fName+" does not exist");
+            }
+         }
+         else {
+            printConsole("!!! filter error: incorrect number of parameters");
+            println(correctSyntax);
+         }
       }
 
       // Peut être une commande associée à un plugin ?
@@ -3600,17 +3606,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          String p [] = st.getStrings();
          return a.plugins.execPluginByScript(cmd,p);
       }
-           
+
       // S'agit-il d'un traitement d'une variable
       else if( execVar(s) ) return "";
 
       // Bon on va donc simplement activer Sesame et déplacer le repere
-      else { 
+      else {
          return execGetCmd(s,label,false);
       }
       return "";
    }
-   
+
    // Traitement d'une commande propre a une variable (genre A = A+1)
    // PAS ENCORE IMPLANTE
    private boolean execVar(String s) {
@@ -3627,7 +3633,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          int nview = getViewNumber(st.nextToken(),false);
          if( nview>=0 ) tmp.addElement(a.view.viewSimple[nview]);
       }
-      
+
       return tmp.toArray(new ViewSimple[tmp.size()]);
    }
 
@@ -3654,12 +3660,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       for( int i=0; i<v.length; i++ ) {
          if( v[i]==null || v[i].isFree() ) continue;
          switch(cmd) {
-         case STICKVIEW:    v[i].sticked=true;  break;
-         case UNSTICKVIEW:  v[i].sticked=false; break;
-         case LOCKVIEW:     v[i].locked=true;      break;
-         case UNLOCKVIEW:   v[i].locked=false;     break;
-         case NORTHUP:      v[i].northUp=true;      break;
-         case UNNORTHUP:    v[i].northUp=false;     break;
+            case STICKVIEW:    v[i].sticked=true;  break;
+            case UNSTICKVIEW:  v[i].sticked=false; break;
+            case LOCKVIEW:     v[i].locked=true;      break;
+            case UNLOCKVIEW:   v[i].locked=false;     break;
+            case NORTHUP:      v[i].northUp=true;      break;
+            case UNNORTHUP:    v[i].northUp=false;     break;
          }
       }
       a.view.repaintAll();
@@ -3668,27 +3674,27 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
    /** Cree un nouveau filtre en se basant
     *  sur la definition contenue dans def
-	*  @param def - definition complete du filtre a creer
+    *  @param def - definition complete du filtre a creer
     *  @return retourne le planFilter ou null si problème
-	*/
+    */
    protected PlanFilter createFilter(String def) {
 
-        // lorsque le label est null, le nom du filtre est dans la definition
-        PlanFilter pf = (PlanFilter)a.calque.newPlanFilter(null, def);
+      // lorsque le label est null, le nom du filtre est dans la definition
+      PlanFilter pf = (PlanFilter)a.calque.newPlanFilter(null, def);
 
-      	if( pf!=null && pf.isValid() ) {
+      if( pf!=null && pf.isValid() ) {
 
-      	    printConsole("Filter "+pf.label+" created");
-            pf.setActivated(true);   // PF
-            pf.updateState();        // PF
-      	}
-      	else {
-      	 printConsole("!!! Bad filter syntax !");
-           pf=null;
-      	// FAIRE QQCH DU GENRE F.CHECKSYNTAX()
-   }
+         printConsole("Filter "+pf.label+" created");
+         pf.setActivated(true);   // PF
+         pf.updateState();        // PF
+      }
+      else {
+         printConsole("!!! Bad filter syntax !");
+         pf=null;
+         // FAIRE QQCH DU GENRE F.CHECKSYNTAX()
+      }
 
-        return pf;
+      return pf;
    }
 
    /** Traitement de la commande "addcol"
@@ -3696,8 +3702,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
     * @param s commande complète
     */
    private void execAddCol(String s) {
-       s = s.trim();
-       /*
+      s = s.trim();
+      /*
        int begin = s.indexOf('(');
        if( begin<0 ) {
            toConsoleln("addcol : syntax is addcol(plane,name,ucd,unit,expr)");
@@ -3707,75 +3713,75 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
        if( end<0 ) end = s.length()-1;
        s = s.substring(begin+1, end);
        //toConsole(s);
-*/
-       s = s.substring(6).trim();
+       */
+      s = s.substring(6).trim();
 
-       String syntax = "addcol : syntax is addcol plane,name,expr,unit,ucd,nb decimals";
+      String syntax = "addcol : syntax is addcol plane,name,expr,unit,ucd,nb decimals";
 
-       String param[] = new String[6];
-       for( int i=0; i<param.length; i++ ) param[i] = "";
+      String param[] = new String[6];
+      for( int i=0; i<param.length; i++ ) param[i] = "";
 
-       StringTokenizer st = new StringTokenizer(s, ",", true);
-       String curToken, oldToken;
-       oldToken = "";
-       int i = 0;
-       while( st.hasMoreTokens() ) {
-           curToken = st.nextToken();
-           if( curToken.equals(",") ) {
-               if( oldToken.equals(",") ) param[i++] = "";
-           }
-           else {
-               param[i++] = curToken;
-           }
-           oldToken = curToken;
-       }
-       String plane, name, ucd, unit, expr;
-       plane = param[0].trim();
-       name = param[1].trim();
-       expr = param[2].trim();
-       unit = param[3].trim();
-       ucd = param[4].trim();
-       int nbDec;
-       try {
-       	nbDec = Integer.parseInt(param[5].trim());
-       }
-       catch( NumberFormatException e ) {nbDec = 4; }
+      StringTokenizer st = new StringTokenizer(s, ",", true);
+      String curToken, oldToken;
+      oldToken = "";
+      int i = 0;
+      while( st.hasMoreTokens() ) {
+         curToken = st.nextToken();
+         if( curToken.equals(",") ) {
+            if( oldToken.equals(",") ) param[i++] = "";
+         }
+         else {
+            param[i++] = curToken;
+         }
+         oldToken = curToken;
+      }
+      String plane, name, ucd, unit, expr;
+      plane = param[0].trim();
+      name = param[1].trim();
+      expr = param[2].trim();
+      unit = param[3].trim();
+      ucd = param[4].trim();
+      int nbDec;
+      try {
+         nbDec = Integer.parseInt(param[5].trim());
+      }
+      catch( NumberFormatException e ) {nbDec = 4; }
 
-       Aladin.trace(3,"expr: "+expr);
-       // on cherche le plan en question
-       Plan plan = getNumber(plane);
-       if( plan==null ) {
-          printConsole("!!! addcol error : plane "+plane+" is not in current stack");
-          println(syntax);
-          return;
-       }
-       if( !plan.isSimpleCatalog() ) {
-          printConsole("!!! addcol error : plane "+plane+" is not a catalogue plane");
-          println(syntax);
-          return;
-       }
+      Aladin.trace(3,"expr: "+expr);
+      // on cherche le plan en question
+      Plan plan = getNumber(plane);
+      if( plan==null ) {
+         printConsole("!!! addcol error : plane "+plane+" is not in current stack");
+         println(syntax);
+         return;
+      }
+      if( !plan.isSimpleCatalog() ) {
+         printConsole("!!! addcol error : plane "+plane+" is not a catalogue plane");
+         println(syntax);
+         return;
+      }
 
-       PlanCatalog pc = (PlanCatalog)plan;
+      PlanCatalog pc = (PlanCatalog)plan;
 
-       // on vérifie que le nom de la nouvelle colonne n'est pas déja utilisé !
-       if( FrameColumnCalculator.colExist(name, pc) ) {
-          printConsole("!!! addcol error : A column with label \""+name+"\"already exists in this plane !");
-          println(syntax);
-          return;
-       }
+      // on vérifie que le nom de la nouvelle colonne n'est pas déja utilisé !
+      if( FrameColumnCalculator.colExist(name, pc) ) {
+         printConsole("!!! addcol error : A column with label \""+name+"\"already exists in this plane !");
+         println(syntax);
+         return;
+      }
 
-       SavotField f = new SavotField();
-       f.setName(name);
-       f.setUcd(ucd);
-       f.setUnit(unit);
+      SavotField f = new SavotField();
+      f.setName(name);
+      f.setUcd(ucd);
+      f.setUnit(unit);
 
-       ColumnCalculator cc = new ColumnCalculator(new SavotField[] {f}, new String[] {expr}, pc, nbDec, a);
-       if( !cc.createParser() ) {
-          printConsole("!!! addcol error : "+cc.getError());
-          println(syntax);
-          return;
-       }
-       cc.compute();
+      ColumnCalculator cc = new ColumnCalculator(new SavotField[] {f}, new String[] {expr}, pc, nbDec, a);
+      if( !cc.createParser() ) {
+         printConsole("!!! addcol error : "+cc.getError());
+         println(syntax);
+         return;
+      }
+      cc.compute();
    }
 
    /** efface le contenu de la frame d'info en mode robot
@@ -3787,46 +3793,46 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
    protected void goTo(String param) {
       StringTokenizer st = new StringTokenizer(param);
       a.view.gotoThere(param);
-//      try {
-//         int x = Integer.parseInt(st.nextToken());
-//         int y = Integer.parseInt(st.nextToken());
-//         a.view.getCurrentView().goTo(x,y);
-//      } catch( Exception e ) { e.printStackTrace(); }
+      //      try {
+      //         int x = Integer.parseInt(st.nextToken());
+      //         int y = Integer.parseInt(st.nextToken());
+      //         a.view.getCurrentView().goTo(x,y);
+      //      } catch( Exception e ) { e.printStackTrace(); }
    }
-   
-   
+
+
    /************************************* Gestion des fonctions *************************************************/
-   
+
    private ArrayList<Function> function=new ArrayList<Function>();
    private boolean functionLocalDefinition = false;
-   
+
    public void setFunctionLocalDefinition(boolean flag) { functionLocalDefinition=flag; }
    public boolean getFunctionLocalDefinition() { return functionLocalDefinition; }
-   
+
    /** Retourne le nombre de fonctions */
    public int getNbFunctions() {
       return function.size();
    }
-   
+
    /** Retourne la fonction à l'indice indiqué */
    public Function getFunction(int i) {
       if( function==null || i<0 || i>=function.size() ) return null;
       return function.get(i);
    }
-   
+
    /** Retourne la fonction repérée par son nom, ou null si introuvable */
    public Function getFunction(String name) {
       int i = findFunction(name);
       return i<0 ? null : getFunction(i);
    }
-   
+
    private int findFunction(String name) {
       for( int i=0; i<function.size(); i++ ) {
          if( (function.get(i)).getName().equals(name) ) return i;
       }
       return -1;
    }
-   
+
    public void addFunction(Function f) {
       String name = f.getName();
       f.setLocalDefinition(functionLocalDefinition);
@@ -3835,14 +3841,14 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       else function.add(f);
       functionModif=true;
    }
-   
+
    public void removeFunction(Function f) {
       int i = findFunction(f.getName());
       if( i<0 ) return;
       function.remove(i);
       functionModif=true;
    }
-   
+
    public void setFunctionModif(boolean flag) {
       functionModif=flag;
       Iterator it = function.iterator();
@@ -3852,7 +3858,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          f.setModif(false);
       }
    }
-   
+
    private boolean functionModif=false;
    public boolean functionModif() {
       if( functionModif ) return true;
@@ -3864,7 +3870,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       return false;
    }
-   
+
    // Ajustement d'une syntaxe partielle d'une commande convto où seul
    // le mot clé " to " est repéré => insertion de la commande "convert" en préfixe
    private String convertAdjust(String s) {
@@ -3873,7 +3879,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( n<=0 ) return s;
       return "convert "+s.substring(0,n)+" to "+s.substring(n+4);
    }
-   
+
    // Traitement d'une commande de conversion d'unité
    private String execConvert(String s) {
       String res;
@@ -3893,10 +3899,10 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          String from = s.substring(0,n);
          char c;
          int m=from.length()-1;
-         while( m>0 && !Character.isDigit(c=from.charAt(m)) 
+         while( m>0 && !Character.isDigit(c=from.charAt(m))
                && c!=')'/*  && !Character.isSpaceChar(c) */) m--;
          String to = s.substring(n+4);
-         try { 
+         try {
             from = Computer.compute( from.substring(0,m+1) )+from.substring(m+1);
             Unit m1 = new Unit(from);
             Unit m2 = new Unit();
@@ -3907,12 +3913,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             res="!!! Conversion error ["+e.getMessage()+"]";
          }
          a.localisation.setTextSaisie(res);
-//         printConsole(res);
+         //         printConsole(res);
          a.console.printInPad(s+"\n = "+res+"\n");
       }
       return res;
    }
-   
+
    // Traitement de l'évaluation d'une expression arithmétique
    private String execEval(String p) {
       String res;
@@ -3927,12 +3933,12 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             res="!!! Eval error ["+e.getMessage()+"]";
          }
          a.localisation.setTextSaisie(res);
-//         printConsole(res);
+         //         printConsole(res);
          a.console.printInPad(p+"\n = "+res+"\n");
       }
       return res;
    }
-   
+
    // Petit ajustement éventuel pour une commande "=expression" ou "expression="
    // afin de retourner la chaine "= expression"
    private String evalAdjust(String s) {
@@ -3942,7 +3948,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       if( s.charAt(n-1)=='=' ) return "= "+s.substring(0,n-1).trim();
       return s;
    }
-   
+
    private String execFunction(String p) {
       try {
          String name=p;
@@ -3960,7 +3966,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          return "Function syntax error ["+p+"]";
       }
    }
-   
+
    private String listFunction(String mask) {
       try {
          boolean verbose=false;
@@ -3978,22 +3984,22 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          print(s.toString());
          a.console.printInPad(s.toString());
          return s.toString();
-         
+
       } catch( Exception e ) {
          e.printStackTrace();
          return e.getMessage();
       }
    }
-   
+
    public void resetBookmarks() {
       if( function==null ) return;
       Iterator<Function> e = function.iterator();
       while( e.hasNext() ) (e.next()).setBookmark(false);
    }
-   
+
    public Vector<Function> getBookmarkFunctions() { return getFunctions(0); }
    protected Vector<Function> getLocalFunctions() { return getFunctions(1); }
-   
+
    /** Récupération d'une liste de fonctions
     * @param mode  0 - les fonctions bookmarkées,  1- Les fonctions locales
     */
@@ -4008,125 +4014,125 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       }
       return v;
    }
-   
-   
+
+
    /**************************************  Test de non régression du code **************************************/
 
    private String TEST =
-      "info Aladin test script in progress...;" +
-      "reset;" +
-      "setconf frame=ICRS;" +
-      "setconf timeout=1;" +
-      "mview 4;" +
-      "get ESO(dss1,25,25),Aladin(DSS2) M1;" +
-      "get skyview(Surveys=2MASS,400,Sin) m1;" +
-      "cview DSS* A1;" +
-      "cview Sk* B1;" +
-      "cview ESO* A2;" +
-      "set ESO* planeID=ESO.DSS1;" +
-      "cm A2 noreverse 2200..13000 log;" +
-      "mv A2 B2;" +
-      "mv B1 A2;" +
-      "mv B2 B1;" +
-      "select Sk*;" +
-      "contour;" +
-      "select DSS*;" +
-      "contour;" +
-      "select Sk*;" +
-      "draw mode(radec);" +
-      "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);" +
-      "set Draw* color=yellow;" +
-      "draw mode(xy);" +
-      "draw phot(63 57 15);" +
-      "get LEDA M1;" +
-      "hide Contours;" +
-      "select ESO*;" +
-      "zoom 1x;" +
-      "backup back.aj;" +
-      "reset;" +
-      "pause 2;" +
-      "load back.aj;" +
-      "RGB = RGB ESO* DSS*;" +
-      "zoom 1x;" +
-      "rm DSS*;" +
-      "rm Contours~1;" +
-      "show Contours;" +
-      "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" +
-      "Gauss1 = Gauss;" +
-      "set Gauss1 FITS:CRPIX1=203;" +
-      "Gauss = Gauss / Gauss1;" +
-      "rm Gauss1;" +
-      "setconf frame=Gal;"+
-      "184.57316 -05.83741;" +
-      "flipflop Gauss V;" +
-      "Crop = crop Gauss 100x100;" +
-      "rm Gauss;" +
-      "rm A2;" +
-      "Cube=blink Sk* Crop ESO*;" +
-      "rm Sk*;" +
-      "PR=get Press;" +
-      "set PR opacity=65;" +
-      "rm A2;" +
-      "pause 2;" +
-      "get Simbad M1 14';" +
-      "call NED(M1,\"10'\");" +
-      "get Vizier(USNO);" +
-      "md Fold;" +
-      "mv RGB Fold;" +
-      "sync;" +
-      "mv I/284 Fold;" +
-      "filter Magn {;" +
-      "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };" +
-      "};" +
-      "mv Magn Fold;" +
-      "set Fold scope=local;" +
-      "rm USNO;" +
-      "XMatch = xmatch Simbad NED 45;" +
-      "addcol XMatch,B-V,${B_tab1}-${V_tab1};" +
-      "select XMatch;" +
-      "search -B-V=\"\";" +
-      "tag;" +
-      "cplane B-V;" +
-      "rm XMatch;" +
-      "get Fov(HST);" +
-      "mv HST Fold;" +
-      "export Simbad Cat.xml;" +
-      "export NED Cat1.tsv;" +
-      "export Crop Img.jpg;" +
-      "rm Simbad NED Crop;" +
-      "load Img.jpg;" +
-      "grey Img.jpg;" +
-      "rm A2;" +
-      "load Cat.xml;" +
-      "load Cat1.tsv;" +
-      "mv Img.jpg Fold;" +
-      "mv Cat.xml Fold;" +
-      "mv Cat1.tsv Fold;" +
-      "set Img.jpg opacity=20;" +
-      "collapse Fold;" +
-      "get hips(SHASSA);" +
-      "set proj=AITOFF;" +
-      "zoom 180°;" +
-      "rm B1;" +
-      "get hips(Mellinger);" +
-      "m1;" +
-      "zoom 15';" +
-      "rm B1;" +
-      "set Melling* opacity=30;" +
-      "get hips(\"Simbad density\");" +
-      "set proj=CARTESIAN;" +
-      "cm eosb reverse log;" +
-      "M1;" +
-      "zoom 30°;" +
-      "set opacity=30;" +
-      "rm B1;" +
-      "cview -plot I/284(Imag,R2mag) B1;" +
-      "sync;" +
-      "select B-V;" +
-      "grid on;" +
-      "setconf overlays=-label;" +
-      "info The end !;"
-      ;
+         "info Aladin test script in progress...;" +
+               "reset;" +
+               "setconf frame=ICRS;" +
+               "setconf timeout=1;" +
+               "mview 4;" +
+               "get ESO(dss1,25,25),Aladin(DSS2) M1;" +
+               "get skyview(Surveys=2MASS,400,Sin) m1;" +
+               "cview DSS* A1;" +
+               "cview Sk* B1;" +
+               "cview ESO* A2;" +
+               "set ESO* planeID=ESO.DSS1;" +
+               "cm A2 noreverse 2200..13000 log;" +
+               "mv A2 B2;" +
+               "mv B1 A2;" +
+               "mv B2 B1;" +
+               "select Sk*;" +
+               "contour;" +
+               "select DSS*;" +
+               "contour;" +
+               "select Sk*;" +
+               "draw mode(radec);" +
+               "draw tag(05:34:30.87,+22:01:02.1,\"Crab nebulae\",50,-30,circle,14);" +
+               "set Draw* color=yellow;" +
+               "draw mode(xy);" +
+               "draw phot(63 57 15);" +
+               "get LEDA M1;" +
+               "hide Contours;" +
+               "select ESO*;" +
+               "zoom 1x;" +
+               "backup back.aj;" +
+               "reset;" +
+               "pause 2;" +
+               "load back.aj;" +
+               "RGB = RGB ESO* DSS*;" +
+               "zoom 1x;" +
+               "rm DSS*;" +
+               "rm Contours~1;" +
+               "show Contours;" +
+               "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" +
+               "Gauss1 = Gauss;" +
+               "set Gauss1 FITS:CRPIX1=203;" +
+               "Gauss = Gauss / Gauss1;" +
+               "rm Gauss1;" +
+               "setconf frame=Gal;"+
+               "184.57316 -05.83741;" +
+               "flipflop Gauss V;" +
+               "Crop = crop Gauss 100x100;" +
+               "rm Gauss;" +
+               "rm A2;" +
+               "Cube=blink Sk* Crop ESO*;" +
+               "rm Sk*;" +
+               "PR=get Press;" +
+               "set PR opacity=65;" +
+               "rm A2;" +
+               "pause 2;" +
+               "get Simbad M1 14';" +
+               "call NED(M1,\"10'\");" +
+               "get Vizier(USNO);" +
+               "md Fold;" +
+               "mv RGB Fold;" +
+               "sync;" +
+               "mv I/284 Fold;" +
+               "filter Magn {;" +
+               "$[phot.mag*]<15 {draw rainbow(${Imag}) fillcircle(-$[phot.mag*]) };" +
+               "};" +
+               "mv Magn Fold;" +
+               "set Fold scope=local;" +
+               "rm USNO;" +
+               "XMatch = xmatch Simbad NED 45;" +
+               "addcol XMatch,B-V,${B_tab1}-${V_tab1};" +
+               "select XMatch;" +
+               "search -B-V=\"\";" +
+               "tag;" +
+               "cplane B-V;" +
+               "rm XMatch;" +
+               "get Fov(HST);" +
+               "mv HST Fold;" +
+               "export Simbad Cat.xml;" +
+               "export NED Cat1.tsv;" +
+               "export Crop Img.jpg;" +
+               "rm Simbad NED Crop;" +
+               "load Img.jpg;" +
+               "grey Img.jpg;" +
+               "rm A2;" +
+               "load Cat.xml;" +
+               "load Cat1.tsv;" +
+               "mv Img.jpg Fold;" +
+               "mv Cat.xml Fold;" +
+               "mv Cat1.tsv Fold;" +
+               "set Img.jpg opacity=20;" +
+               "collapse Fold;" +
+               "get hips(SHASSA);" +
+               "set proj=AITOFF;" +
+               "zoom 180°;" +
+               "rm B1;" +
+               "get hips(Mellinger);" +
+               "m1;" +
+               "zoom 15';" +
+               "rm B1;" +
+               "set Melling* opacity=30;" +
+               "get hips(\"Simbad density\");" +
+               "set proj=CARTESIAN;" +
+               "cm eosb reverse log;" +
+               "M1;" +
+               "zoom 30°;" +
+               "set opacity=30;" +
+               "rm B1;" +
+               "cview -plot I/284(Imag,R2mag) B1;" +
+               "sync;" +
+               "select B-V;" +
+               "grid on;" +
+               "setconf overlays=-label;" +
+               "info The end !;"
+               ;
 
    /** Test des vues et des opérations arithmétiques sur les images
     * 1) Je crée une image test
@@ -4138,7 +4144,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       execScript(TEST);
       a.glu.showDocument("Http","http://aladin.u-strasbg.fr/java/Testscript.jpg",true);
    }
-   
+
    /** Test la qualité du serveur et du réseau pour le HiPS courant
     *  Les résultats s'affiche dans la console/pad
     */
@@ -4155,7 +4161,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
-   
+
    /** Test de lecture et d'écriture du disque */
    private void testperf(final String param) {
       final long GB = 1024*1024*1024;
@@ -4186,7 +4192,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                RandomAccessFile f = new RandomAccessFile(filename, "rw");
                while( size>0 ) {
                   f.write(buf);
-                  size-= (long) buf.length;
+                  size-= buf.length;
                   cpt+= buf.length;
                   if( cpt>=1024*1024*10 ) { print("."); cpt=0; }
                }
@@ -4194,24 +4200,24 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                f.close();
                long msw = System.currentTimeMillis() -t;
                double debitw = (GB/(msw/1000.))/(1024*1024);
-               
-//               println("testperf cache flush...");
-//               t = System.currentTimeMillis();
-//               try {
-//                  testDiskFlush(new File("/"),GB/8);
-//               } catch( Exception e1 ) {
-//                  e1.printStackTrace();
-//               }
-//               long msf = System.currentTimeMillis() -t;
-//               toStdoutln(" reading 1GB tree file in "+Util.getTemps(msf));
-              
+
+               //               println("testperf cache flush...");
+               //               t = System.currentTimeMillis();
+               //               try {
+               //                  testDiskFlush(new File("/"),GB/8);
+               //               } catch( Exception e1 ) {
+               //                  e1.printStackTrace();
+               //               }
+               //               long msf = System.currentTimeMillis() -t;
+               //               toStdoutln(" reading 1GB tree file in "+Util.getTemps(msf));
+
                print("testperf disk reading...");
                t = System.currentTimeMillis();
                f = new RandomAccessFile(filename, "rw");
                size = f.length();
                while( size>0 ) {
                   f.read(buf);
-                  size-= (long) buf.length;
+                  size-= buf.length;
                   cpt+= buf.length;
                   if( cpt>=1024*1024*10 ) { print("."); cpt=0; }
                }
@@ -4219,7 +4225,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                f.close();
                long msr = System.currentTimeMillis() -t;
                double debitr = (GB/(msr/1000.))/(1024*1024);
-               
+
                double debitmw=0;
                try {
                   println("testperf memory...");
@@ -4234,15 +4240,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                   size=0;
                   for( int j=0; j<buf.length; j++ ) size += buf[j];
                   println("Optimiser obfuscator...("+size+")...");
-                  
+
                   long msmw = System.currentTimeMillis() -t;
                   debitmw = ((MEM/(msmw/1000.))/(1024*1024*1024) )*NBTEST;
                } catch( Exception e ) { }
-               
-               
+
+
                printConsole("testperf: Disk: w="+ Util.myRound(debitw)+"MB/s r="+Util.myRound(debitr)+"MB/s" +
-               		" - Memory: r/w="+ Util.myRound(debitmw)+"GB/s"
-               		                        );
+                     " - Memory: r/w="+ Util.myRound(debitmw)+"GB/s"
+                     );
 
                file.delete();
 
@@ -4252,31 +4258,31 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
             }
          } }).start();
    }
-   
+
    /** Méthode pour saturer les caches mémoires systèmes en lisant le début de l'arborescence du disque */
    private long testDiskFlush(File dir,long size) {
       if( size<=0 ) return size;
-      
+
       File f[] = dir.listFiles();
       for( int i=0; f!=null && i<f.length; i++ ) {
          if( f[i].isDirectory() ) {
             size = testDiskFlush(f[i],size);
          } else {
-            if( f[i].length()<1024*1024 ) continue; 
+            if( f[i].length()<1024*1024 ) continue;
             try {
                RandomAccessFile a = new RandomAccessFile(f[i], "r");
                byte [] buf = new byte[512];
                long length = a.length();
                while( length>0 ) {
-                  a.read(buf,0, length>buf.length ? buf.length : (int)length); 
+                  a.read(buf,0, length>buf.length ? buf.length : (int)length);
                   length-=buf.length;
-               }               
+               }
                size-=a.length();
                a.close();
             } catch(Exception e ) { e.printStackTrace(); }
          }
          if( size<=0 ) return size;
-//         System.out.println(f[i].getAbsolutePath()+" => "+size/(1024*1024)+"MB");
+         //         System.out.println(f[i].getAbsolutePath()+" => "+size/(1024*1024)+"MB");
       }
       return size;
    }
@@ -4314,17 +4320,17 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
       String fileCat="Test.txt";
 
       String s = "Calibration grid test:\n"+
-        (flagCat?"- Catalog file: "+fileCat+"\n"+
-                 "   .catalog size        : "+(w*h/25)+" objects\n"+
-                 "   .Dist. between ojects: "+szPixel*300+"\"\n":"")+
-         (flagImg?"- Image file  : "+fileImg+"\n"+
-                 "   .bitpix              : "+bitpix+"\n"+
-                 "   .Image size          : "+w+"x"+h+"\n"+
-                 "   .Central coord       : "+coo+"\n"+
-                 "   .Pixel size          : "+szPixel*60+"\"\n"+
-                 "   .Projection          : "+Calib.projType[type]:"");
+            (flagCat?"- Catalog file: "+fileCat+"\n"+
+                  "   .catalog size        : "+(w*h/25)+" objects\n"+
+                  "   .Dist. between ojects: "+szPixel*300+"\"\n":"")+
+                  (flagImg?"- Image file  : "+fileImg+"\n"+
+                        "   .bitpix              : "+bitpix+"\n"+
+                        "   .Image size          : "+w+"x"+h+"\n"+
+                        "   .Central coord       : "+coo+"\n"+
+                        "   .Pixel size          : "+szPixel*60+"\"\n"+
+                        "   .Projection          : "+Calib.projType[type]:"");
       System.out.println(s);
-//      a.info(s);
+      //      a.info(s);
 
       if( flagImg ) {
          createFitsTest(fileImg,w,h,bitpix,coo.al,coo.del,szPixel,type);
@@ -4336,19 +4342,19 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          a.load(fileCat,label+(mode==2 ? " cat":""));
       }
    }
-   
-//   // Juste pour montrer à Anaïs
-//   private void testCreateRGB(String param) {
-//      try {
-//         StringTokenizer st = new StringTokenizer(param);
-//         String rgbFile = st.nextToken();
-//         PlanImageRGB rgb = new PlanImageRGB(a,st.nextToken(),null, st.nextToken(), null, st.nextToken(),null);
-//         a.save.saveImageColor(rgbFile, rgb, 2);
-//      } catch( Exception e ) {
-//         e.printStackTrace();
-//      }
-//   }
-   
+
+   //   // Juste pour montrer à Anaïs
+   //   private void testCreateRGB(String param) {
+   //      try {
+   //         StringTokenizer st = new StringTokenizer(param);
+   //         String rgbFile = st.nextToken();
+   //         PlanImageRGB rgb = new PlanImageRGB(a,st.nextToken(),null, st.nextToken(), null, st.nextToken(),null);
+   //         a.save.saveImageColor(rgbFile, rgb, 2);
+   //      } catch( Exception e ) {
+   //         e.printStackTrace();
+   //      }
+   //   }
+
    /**
     * Création d'un fichier TSV de test */
    protected void createTSVTest(String file,int width,int height,double raj,double dej,double pxSize) {
@@ -4405,7 +4411,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          int cx = width/2;
          int cy = height/2;
          Projection p = new Projection("Test",Projection.SIMPLE,raj,dej,rm,rm1,
-                                              cx-0.5,cy-0.5,width,height,0,true,type,Calib.FK5);
+               cx-0.5,cy-0.5,width,height,0,true,type,Calib.FK5);
 
          File g = new File(a.getDefaultDirectory()+Util.FS+file);
          g.delete();
@@ -4462,15 +4468,15 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          for( int lig=0; lig<height; lig++ ) {
             for( int col=0; col<width; col++ ) {
                double c = lig==cy && col==cx ? 900 :
-                      lig==cy || col==cx ? 700 :
-                      lig>cy-100 && lig<cy && col>cx && col<cx+100? -100 :
-                     (lig-cy)%100==0 || (col-cx)%100==0 ? 500 :
-                     (lig-cy)%10==0 || (col-cx)%10==0 ? 300 :
-                     (lig-cy)%5==0 || (col-cx)%5==0 ? 200 :
-                      lig<cy && col<cx ? (lig+col)/fct -100 :
-                      lig%2==0 || col%2==0 ? 0:-100;
-               if( bitpix==8) c = (c+100)/4;
-               PlanImage.setPixVal(out,bitpix,pos++,c);
+                  lig==cy || col==cx ? 700 :
+                     lig>cy-100 && lig<cy && col>cx && col<cx+100? -100 :
+                        (lig-cy)%100==0 || (col-cx)%100==0 ? 500 :
+                           (lig-cy)%10==0 || (col-cx)%10==0 ? 300 :
+                              (lig-cy)%5==0 || (col-cx)%5==0 ? 200 :
+                                 lig<cy && col<cx ? (lig+col)/fct -100 :
+                                    lig%2==0 || col%2==0 ? 0:-100;
+                                 if( bitpix==8) c = (c+100)/4;
+                                 PlanImage.setPixVal(out,bitpix,pos++,c);
             }
             if( flagHuge ) { gf.write(out); pos=0; }
          }
@@ -4495,8 +4501,8 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
                      if( y<height && y>=0 && x<width && x>=0 ) {
                         PlanImage.setPixVal(out,bitpix,y*width+x,c);
                      }
-                     x= (int)cx+(col-m/2+ck);
-                     y= (int)cy-(100-(lig-m/2+lk) );
+                     x= cx+(col-m/2+ck);
+                     y= cy-(100-(lig-m/2+lk) );
                      if( y<height && y>=0 && x<width && x>=0 ) {
                         PlanImage.setPixVal(out,bitpix,y*width+x,c);
                      }
@@ -4509,7 +4515,7 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
 
       }catch( Exception e ) { e.printStackTrace();  }
    }
-   
+
    private void hop() {
       try {
 
@@ -4519,18 +4525,18 @@ Aladin.trace(4,"Command.execSetCmd("+param+") =>plans=["+plans+"] "
          Iterator<Obj> itRef = adRef.iteratorObj();
 
          while (itRef.hasNext() ) {
-           Obj objRef = itRef.next();
-           double ra  = objRef.getRa();
-           double dec = objRef.getDec();
-           System.out.println(ra+" | "+dec);
-           objRef.setRaDec(ra+0.1, dec+0.1);
+            Obj objRef = itRef.next();
+            double ra  = objRef.getRa();
+            double dec = objRef.getDec();
+            System.out.println(ra+" | "+dec);
+            objRef.setRaDec(ra+0.1, dec+0.1);
          }
-         
+
          adRef.repaint();
 
-       } catch (AladinException e) {
+      } catch (AladinException e) {
          e.printStackTrace();
-       }
+      }
 
    }
 

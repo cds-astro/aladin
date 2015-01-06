@@ -23,7 +23,6 @@ package cds.aladin;
 import java.awt.*;
 import java.awt.dnd.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -241,6 +240,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       PointD p=null;
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       int mult=1;
+
+      if( isFullScreen() && voControl!=null && voControl.mouseWheel(e) ) {
+         repaint(); return;
+      }
 
       if( isPlanBlink() && cubeControl.mouseWheelMoved(e) ) return;
 
@@ -1771,7 +1774,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    public void mouseClicked(MouseEvent e) {}
 
-   public void mousePressed(MouseEvent e) { mousePressed1(e.getX(),e.getY(),e); }
+   public void mousePressed(MouseEvent e) {
+      if( isFullScreen() && voControl!=null && voControl.mousePressed(e) ) {
+         repaint(); return;
+      }
+
+      mousePressed1(e.getX(),e.getY(),e);
+   }
 
    private int xDrag=-1,yDrag=-1;
    private boolean rainbowUsed=false;
@@ -1942,19 +1951,20 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Initialisation d'un clic-and-drag de la vue
       if( tool==ToolBox.PAN
-            || (fullScreen && !flagOnMovableObj && tool==ToolBox.SELECT) ) {
+            //            || (fullScreen && !flagOnMovableObj && tool==ToolBox.SELECT) ) {
+            ) {
          vs.scrollX=(int)Math.round(x); vs.scrollY=(int)Math.round(y);
          setScrollable(true);
          wasScrolling = vs.isScrolling();
          vs.initScroll();
-         if( !fullScreen ) return;
+         //         if( !fullScreen ) return;
       }
 
       // Création automatique d'une vue associé au plan Draw ?
       if( isFree() ) {
          Plan pc = aladin.calque.getFirstSelectedPlan();
          if( !aladin.toolBox.isForTool(tool) || pc==null || pc.type!=Plan.TOOL ) return/* false*/;
-         //System.out.println("J'affecte à la vue "+this+" le plan TOOL "+pc);
+         //         System.out.println("J'affecte à la vue "+this+" le plan TOOL "+pc);
          aladin.calque.setPlanRef(pc,vs.n);
       }
 
@@ -2165,9 +2175,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Creation d'un nouvel objet
-      Plan plan = aladin.calque.selectPlanTool();
-      view.newobj = aladin.toolBox.newTool( plan ,vs,p.x,p.y);
-
+      if( ToolBox.isForTool(tool) ) {
+         Plan plan = aladin.calque.selectPlanTool();
+         view.newobj = aladin.toolBox.newTool( plan ,vs,p.x,p.y);
+      } else view.newobj=null;
 
       // Le debut d'une cote est insere immediatement
       // et on travaille sur le deuxieme bout
@@ -2254,13 +2265,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     */
 
    public void mouseReleased(MouseEvent e) {
+      if( isFullScreen() && voControl!=null && voControl.mouseReleased(e) ) {
+         repaint(); return;
+      }
       mouseReleased1(e.getX(),e.getY(),e);
       if( createCoteDist() ) repaint();
    }
    public void mouseReleased1(double x, double y,MouseEvent e) {
 
       //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
-
 
       if( pref!=null && pref instanceof PlanBG ) ((PlanBG)pref).resetDrawFastDetection();
 
@@ -2768,6 +2781,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    // et non une extension du rectangle de la sélection
 
    public void mouseDragged(MouseEvent e) {
+
+      if( isFullScreen() && voControl!=null && voControl.mouseDragged(e) ) {
+         repaint(); return;
+      }
+
       int x = e.getX();
       int y = e.getY();
       int tool = getTool(e);
@@ -3101,7 +3119,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    //      return pix>20;
    //   }
 
-   public void mouseMoved(MouseEvent e) { mouseMoved1(e.getX(),e.getY(),e); }
+   public void mouseMoved(MouseEvent e) {
+      if( isFullScreen() && voControl!=null && voControl.mouseMoved(e) ) {
+         repaint(); return;
+      }
+      mouseMoved1(e.getX(),e.getY(),e);
+   }
+
    protected void mouseMoved1(double x, double y,MouseEvent e) {
       boolean trouve = false;
       boolean flagRollable=false;
@@ -3490,6 +3514,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( hasRainbow() && rainbow.isSelected() ) return;
       if( rainbowF!=null && rainbowF.isSelected() ) return;
       if( aladin.lockCursor ) return;
+
+      if( voControl!=null && voControl.getCursor()!=null ) { setCursor(  voControl.getCursor() ); return; }
+
       oc=-1;
       currentCursor = tool==ToolBox.PHOT ||
             aladin.view.isRecalibrating() && tool==ToolBox.SELECT? (isTagCentered(isShift) ? Aladin.TAGCURSOR : Aladin.CROSSHAIRCURSOR) :
@@ -4420,7 +4447,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
          g.fillRect(1,1,getWidth()-2,getHeight()-2);
 
-         if( pref!=null && pref instanceof PlanBG ) {
+         if( pref!=null && pref instanceof PlanBG && pref.active ) {
             ((PlanBG)pref).drawBackground(g, this);
          }
       } catch( Exception e ) {
@@ -4432,8 +4459,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Dessin du foreground
     * mode 0x1 image, 0x2 overlay
     */
-   protected void drawForeGround(Graphics g,int mode) {
-      if( pref!=null && pref instanceof PlanBG ) {
+   protected void drawForeGround(Graphics g,int mode, boolean flagBordure) {
+      if( flagBordure && pref!=null && pref instanceof PlanBG ) {
          if( (mode&0x1)!=0 && pref.isPixel() || (mode&0x2)!=0 && pref.isOverlay() ) {
             ((PlanBG)pref).drawForeground(g, this);
          }
@@ -5206,12 +5233,17 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          switch(sens) {
             case 0: seg.del2+=dde; seg.iso=Segment.ISORA; break;
             case 1: seg.del2-=dde; seg.iso=Segment.ISORA; break;
-            case 2: seg.al2+=dra;  seg.iso=Segment.ISODE; if( seg.al2>360. )    seg.al2-=360.;  break;
+            case 2: seg.al2+=dra;  seg.iso=Segment.ISODE; if( seg.al2>=360. )  seg.al2-=360.;  break;
             case 3: seg.al2-=dra;  seg.iso=Segment.ISODE; if( seg.al2<=0   )    seg.al2+=360.;  break;
          }
          if( oseg.del2<= -91. || oseg.del2>= 91. ) return; // On ne traverse pas les pôles
          if( seg.del2==oseg.del1 && seg.al2==oseg.al1 ) continue; // Je reviens sur mes pas
-         if( !seg.projection(this) ) continue;
+         //         if( !seg.projection(this) ) continue;
+
+         // On triche pour pouvoir continuer la récursivité afin de s'approcher du bord
+         if( !seg.projection(this) ){
+            seg.x2=-1; seg.y2=-1;
+         }
          if( horsChamp(oseg,seg) ) continue;
          if( !memoSegment(seg) ) continue;
 
@@ -5262,9 +5294,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          else { s0=oseg; s1=seg; }
 
          // On insérer le segment, si il n'est pas trop courbé et si
-         // ça taille est inférieure à 250.
+         // ça taille est inférieure à une certaine valeur en fonction du zoom courant.
          double taille = seg.distXY();
-         if( p>3 || !Segment.courbe(s0,s1) && taille<limiteSegmentSize ) {
+
+         if( zoom<1 ) limiteSegmentSize *= zoom;
+         if( limiteSegmentSize<20 ) limiteSegmentSize=20;
+
+         if( p>5 || !Segment.courbe(s0,s1) && taille<limiteSegmentSize ) {
             if( taille<limiteSegmentSize ) addGrilleSeg(seg,allsky);
             if( grille.size()>4000 ) return false; // Y a sans doute un problème
             return true;
@@ -5298,7 +5334,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( isFree() || (proj=getProj())==null ) return;
 
       Font f = g.getFont();
-      g.setFont(Aladin.SITALIC);
+      g.setFont( new Font("SansSerif",Font.ITALIC,view.gridFontSize) );
       g.setColor(view.gridColor);
       long t = Util.getTime();
 
@@ -5383,7 +5419,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          // Calcul de tous les segments de la grille (méthode récursive de proche
          // en proche).
-         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 250 : proj.t==Calib.TAN || proj.t==Calib.SIP ? 4000 : 2000;
+         //         double limiteSegmentSize = proj.t==Calib.AIT || proj.t==Calib.MOL ? 50 : proj.t==Calib.TAN || proj.t==Calib.SIP ? 4000 : 2000;
+         double limiteSegmentSize=50;
          calcul3Voisins(seg,-1,pasa,pasd,rajc,dejc,isAllSky() && getFullSkySize()>200,0,limiteSegmentSize);
          freeMemoSegment();
       }
@@ -5483,7 +5520,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          Projection p =  proj.copy();
          double angle = -p.c.getProjRot();
          p.setProjRot(0);
-
          p.frame=Localisation.ICRS;
          p.setProjCenter(0,0.1);
          Coord c =p.c.getProjCenter();
@@ -5729,6 +5765,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected boolean paintOverlays(Graphics g,Rectangle clip,int dx,int dy,
          boolean now,int mode) {
       boolean fullScreen = isFullScreen();
+      boolean flagBordure=false;   // true si on devra dessiner le cache elliptique pour cacher le feston des PlanBG
+
       if( isFree() ) {
          drawFovs(g,this,dx,dy);
          if( fullScreen ) { aladin.fullScreen.drawBlinkInfo(g); }
@@ -5814,7 +5852,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
 
             if( p==pref && p instanceof PlanBG ) {
-               if( p.active ) ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
+               if( p.active ) {
+                  ((PlanBG)p).draw(g,vs,dx,dy, 1,now);
+                  if( p.isPixel() ) flagBordure=true;
+               }
                continue;
             }
 
@@ -5835,7 +5876,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( (p.isImage() || p instanceof PlanBG ) && Projection.isOk(p.projd) ) {
                if( p.isImage() && (mode & 0x1) == 0 ) continue;
                if( p.isOverlay() && (mode & 0x2) == 0 ) continue;
-               if( flagActive && !p.isRefForVisibleView() ) ((PlanImage)p).draw(g,vs,dx,dy,-1);
+               if( flagActive && !p.isRefForVisibleView() ) {
+                  ((PlanImage)p).draw(g,vs,dx,dy,-1);
+                  if( p instanceof PlanBG && p.isPixel() && p.getOpacityLevel()>0.1) flagBordure=true;
+               }
                if( fullScreen &&  p.hasObj() && p.isOverlay() ) aladin.fullScreen.setCheck(p);
 
                // Cas des plans TOOL et CATALOG
@@ -5892,7 +5936,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !drawBord ) oldPlanBord=null;
 
       if( (mode & 0x2)==0 ) {
-         drawForeGround(g,mode);
+         drawForeGround(g,mode,flagBordure);
          return flagDisplay;
       }
 
@@ -5903,7 +5947,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
       else  g.setFont(Aladin.SSBOLD);
 
-      if( !vs.isPlotView() ) drawForeGround(g,mode);
+      if( !vs.isPlotView() ) drawForeGround(g,mode,flagBordure);
 
       if( calque.flagOverlay  ) {
          drawLabel(g,dx,dy);
@@ -6302,17 +6346,17 @@ g.drawString(s,10,100);
       g.drawImage(imgbuf,0,0,this);
 
       // Cas du fullScreen
-      if( fullScreen && gr!=null) {
+      if( fullScreen && g!=null) {
 
          // Ajout des infos clignotantes pour le mode fullScreen (curseur, voyant clignotant...)
-         aladin.fullScreen.drawChecks(g);
+         //         aladin.fullScreen.drawChecks(g);
          aladin.fullScreen.drawBlinkInfo(g);
 
          // Gestion d'un message d'accueil
          if( aladin.msgOn ) {
             aladin.help.setText( aladin.logo.Help());
             aladin.help.setSize(aladin.fullScreen.getSize());
-            aladin.help.paintComponent(gr);
+            aladin.help.paintComponent(g);
             return ;
          }
       }
@@ -6352,9 +6396,13 @@ g.drawString(s,10,100);
       }
 
       if( fullScreen )  {
-         aladin.fullScreen.drawMesures(g);
+         //         aladin.fullScreen.drawMesures(g);
+         //         aladin.fullScreen.showMesures();
          aladin.fullScreen.drawIcons(g);
-         //                  drawOverlayControls(g);
+
+         //         drawOverlayControls(g);
+         initVO();
+         if( voControl!=null ) voControl.paint(g);
       }
 
       // Affichage du buffer
@@ -6374,37 +6422,71 @@ g.drawString(s,10,100);
       ((PlanBG)pref).drawHealpixMouse(g,this);
    }
 
-   // Quelques tests de superposition des boites de controle
-   protected void drawOverlayControls(Graphics g) {
-      if( aladin.calque.isFree() ) return;
+   private WidgetController voControl=null;
+   private final int MG=3;
 
-      Graphics2D g2d = (Graphics2D)g;
-      AffineTransform saveTransform = g2d.getTransform();
-      Composite saveComposite = g2d.getComposite();
-      Shape saveClip = g2d.getClip();
+   private void initVO() {
+      if( voControl!=null ) return;
+      voControl = new WidgetController();
 
-      Composite myComposite = Util.getImageComposite(0.5f);
-      g2d.setComposite(myComposite);
+      int width = -1;
+      int height = 300;
+      aladin.toolBox.createWidgetControl(MG,50,width,height,0.7f,this);
+      voControl.addWidget( aladin.toolBox );
 
-      g2d.translate(0,50);
-      aladin.toolBox.setSize(200,280);
-      aladin.toolBox.paintComponent(g2d);
-      g2d.setTransform(saveTransform);
-      g2d.setClip(saveClip);
+      aladin.calque.select.createWidgetControl(getWidth()-aladin.calque.select.getWidth()-MG,50,-1,-1,0.7f,this);
+      voControl.addWidget( aladin.calque.select );
 
-      g2d.translate(getWidth()-aladin.calque.select.getWidth(),50);
-      aladin.calque.select.paintComponent(g2d);
-      g2d.setTransform(saveTransform);
-      g2d.setClip(saveClip);
+      int x = getWidth()-aladin.calque.zoom.zoomView.SIZE-75;
+      int y = getHeight()-aladin.calque.zoom.zoomView.SIZE-MG;
+      aladin.calque.zoom.zoomView.createWidgetControl(x,y,aladin.calque.zoom.zoomView.SIZE,aladin.calque.zoom.zoomView.SIZE,0.7f,this);
+      voControl.addWidget( aladin.calque.zoom.zoomView );
 
-      g2d.translate(getWidth()-aladin.calque.zoom.zoomView.getWidth()-100,
-            getHeight()-aladin.calque.zoom.zoomView.getHeight());
-      aladin.calque.zoom.zoomView.paintComponent(g2d);
-      g2d.setTransform(saveTransform);
-      g2d.setClip(saveClip);
+      aladin.mesure.mcanvas.createWidgetControl(MG,getHeight()-125-MG,x-MG-10,100,0.7f,this);
+      voControl.addWidget( aladin.mesure.mcanvas );
 
-      g2d.setComposite(saveComposite);
+
+      //      aladin.calque.zoom.zoomSlider.createVOC(200,getHeight()-aladin.calque.zoom.zoomSlider.getHeight()-MG,-1,-1,1.0f,this);
+      //      voControl.addVOClient(aladin.calque.zoom.zoomSlider);
+
+      //
+      //      RainbowPixel r =  new RainbowPixel(aladin, this);
+      //      r.createVOC(100,100,300,50, 1f);
+      //      voControl.addVOClient( r);
    }
+
+   // Quelques tests de superposition des boites de controle
+   //   protected void drawOverlayControls1(Graphics g) {
+   //      if( aladin.calque.isFree() ) return;
+   //
+   //      Graphics2D g2d = (Graphics2D)g;
+   //      AffineTransform saveTransform = g2d.getTransform();
+   //      Composite saveComposite = g2d.getComposite();
+   //      Shape saveClip = g2d.getClip();
+   //
+   //      Composite myComposite = Util.getImageComposite(0.7f);
+   //      g2d.setComposite(myComposite);
+   //
+   //      g2d.translate(0,50);
+   //      aladin.toolBox.setSize(200,280);
+   //      aladin.toolBox.paintComponent(g2d);
+   //      g2d.setTransform(saveTransform);
+   //      g2d.setClip(saveClip);
+   //
+   //      g2d.translate(getWidth()-aladin.calque.select.getWidth(),50);
+   //      aladin.calque.select.paintComponent(g2d);
+   //      g2d.setTransform(saveTransform);
+   //      g2d.setClip(saveClip);
+   //
+   //      g2d.translate(getWidth()-aladin.calque.zoom.zoomView.getWidth()-100,
+   //            getHeight()-aladin.calque.zoom.zoomView.getHeight());
+   //      g2d.setClip(0,0,aladin.calque.zoom.zoomView.getWidth(),aladin.calque.zoom.zoomView.getHeight());
+   //      aladin.calque.zoom.zoomView.paintComponent(g2d);
+   //      g2d.setTransform(saveTransform);
+   //      g2d.setClip(saveClip);
+   //
+   //      g2d.setComposite(saveComposite);
+   //   }
 
    protected String lastPixel="";
 
@@ -6459,14 +6541,15 @@ g.drawString(s,10,100);
 
    /** Dessine la colormap en superposition de l'image (pendant un ajustement dynamique bouton de droite) */
    private void drawColorMap(Graphics g) {
-      if( !( pref.hasAvailablePixels() || pref.type==Plan.ALLSKYIMG && !((PlanBG)pref).color) ) return;
+      if( pref instanceof PlanImageRGB ) return;
+      if( !( pref.hasAvailablePixels()
+            || pref.type==Plan.ALLSKYIMG && !((PlanBG)pref).isColored() ) ) return;
       if( aladin.frameCM==null ) {
          aladin.frameCM = new FrameColorMap(aladin);
          aladin.frameCM.initCM((PlanImage)pref);
       }
       aladin.frameCM.cm.drawColorMap(g, 1, 1, getWidth(), 20);
    }
-
 
    /** Retourne le facteur de zoom courant.
     * Convertit le cas échéant le facteur de zoom en facteur de zoom réel dans le

@@ -62,9 +62,9 @@ import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
 
 /**
-  * Gère un losange Healpix pour un PlanBG
-  * @author Anaïs Oberto + Pierre Fernique [CDS]
-  */
+ * Gère un losange Healpix pour un PlanBG
+ * @author Anaïs Oberto + Pierre Fernique [CDS]
+ */
 public class HealpixKey implements Comparable<HealpixKey> {
 
    static final int UNKNOWN           = 0;
@@ -77,13 +77,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final int ERROR             = 7;
    static final int ABORTING          = 8;
    static final int PURGING           = 9;
-   
-   
+
+
    static public int NBSTATUS = PURGING+1;
 
    static public final String [] STATUS = { "UNKOWN","ASKING","TOBELOADFROMCACHE","TOBELOADFROMNET",
-                                     "LOADINGFROMCACHE","LOADINGFROMNET",
-                                     "READY","ERROR","ABORTING","PURGING" };
+      "LOADINGFROMCACHE","LOADINGFROMNET",
+      "READY","ERROR","ABORTING","PURGING" };
 
    protected int status=UNKNOWN;  // status courant du losange
    protected long timer;        // Date de la dernière utilisation du losange, -1 si jamais encore utilisé
@@ -110,7 +110,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean alreadyCached; // true si le losange est en cache
    protected boolean allSky;      // true si ne doit jamais être effacé
    protected boolean fromNet=true;// true si le losange provient du réseau et non du cache
-   protected int timeStream;      // stat de lecture du stream, 
+   protected int timeStream;      // stat de lecture du stream,
    protected int timeNet;         // stat de lecture du stream via le net
    protected long sizeStream;     // Nombre d'octets du stream
    private int timeJPEG, timePixel;  // stat de la création de l'image, de l'extraction des pixels
@@ -125,13 +125,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
    int vHashCode=-1;
 
    protected HealpixKey() { }
-   
+
    // Mode de récupération d'un true pixel (voir getTruePixel(...)
    static final public int NOW = 0;                // Retourne la valeur du pixel quitte à attendre le chargement des données
    static final public int ONLYIFRAMAVAIL = 1;     // Retourne la valeur du pixel si les données sont disponibles en mémoire
    static final public int ONLYIFDISKAVAIL = 2;    // Retourne la valeur du pixel quitte à attendre le chargement des données si elles sont locales (cache, ou locales)
    static final public int PIX8 = 3;               // Retourne la valeur du pixel 8 bits si présent en mémoire
-  
+
    // Type de tuiles
    static protected final int JPEG=0;
    static protected final int FITS=1;
@@ -144,14 +144,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    protected int extCache=JPEG;         // Format d'image pour le cache
    protected int extNet=JPEG;           // Format d'image pour le net
-   
+
    protected HealpixKey(PlanBG planBG) { this.planBG = planBG; }
 
 
    protected HealpixKey(PlanBG planBG,int order, long npix) {
       this(planBG,order,npix,ASYNC);
    }
-   
+
    // Différents mode de construction possible
    static public final int NOLOAD = 0;
    static public final int ASYNC  = 1;
@@ -165,7 +165,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @param order  order heapix (nside = 2^order)
     * @param npix   numéro healpix du pixel à l'ordre indiqué
     * @param z      profondeur (dans le cas d'un cube, 0 sinon)
-    * @param mode : NOLOAD - pas de chargement, ASYNC - chargement asynchrone, SYNC - chargement synchrone, 
+    * @param mode : NOLOAD - pas de chargement, ASYNC - chargement asynchrone, SYNC - chargement synchrone,
     *               SYNCONLYIFLOCAL - chargement synchrone si accès local, sinon asynchrone
     *               NETTEST - Uniquement pour tester le temps de chargement réseau
     */
@@ -178,8 +178,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
       this.npix=npix;
       this.z=z;
       hpix = new Hpix(order,npix,planBG.frameOrigin);
-//      corners = computeCorners();
-      
+      //      corners = computeCorners();
+
       // Pas de chargement demandée
       if( mode==NOLOAD ) return;
 
@@ -190,29 +190,29 @@ public class HealpixKey implements Comparable<HealpixKey> {
       extCache=extNet=planBG.getTileMode();
       fileNet = getFileNet();
       fileCache = getFileCache();
-      
+
       // Chargement immédiat des données
       try {
-         
+
          // Juste pour un test - temps récupéré dans "timeStream"
          if( mode==TESTNET ) {
             stream = loadStream(planBG.url+"/"+fileNet);
             if( stream!=null ) sizeStream = stream.length;
             stream=null;
          }
-         
+
          // Normal
          else if(  mode==SYNC ||
-             (mode==SYNCONLYIFLOCAL && (planBG.useCache && isCached() || planBG.isLocalAllSky())) ) loadNow();
+               (mode==SYNCONLYIFLOCAL && (planBG.useCache && isCached() || planBG.isLocalAllSky())) ) loadNow();
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
    }
-   
+
    protected String getFileNet() {
       return getFilePath(null,order,npix,z)+ EXT[extNet];
    }
-   
+
    protected String getFileCache() {
       return getFilePath(planBG.getCacheName(),order,npix,z)+ EXT[extCache];
    }
@@ -237,7 +237,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       pixels=null;
       rgb = null;
       alreadyCached=true;
-//      allSky=false;
+      //      allSky=false;
       allSky=father.allSky;
       setStatus(UNKNOWN);
    }
@@ -247,7 +247,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( getStatus()!=READY ) return null;
       try {
          if( fils!=null && fils[0].getStatus()==READY && fils[1].getStatus()==READY
-                        && fils[2].getStatus()==READY && fils[3].getStatus()==READY) return fils;
+               && fils[2].getStatus()==READY && fils[3].getStatus()==READY) return fils;
       } catch( Exception e ) { }
 
       HealpixKey f1 [] = new HealpixKey[4];
@@ -265,20 +265,20 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Génération du tableau des pixels d'un losange issu d'une filiation en fonction
     * des pixels de son ancètre
     */
-   protected byte [] getPixelFromAncetre() throws Exception { 
+   protected byte [] getPixelFromAncetre() throws Exception {
       byte [] pixAnc = anc.pixels==null ? anc.getPixelFromAncetre() : anc.pixels;
       byte [] pixels = new byte[width*height];
-      
+
       for( int y=0; y<width; y++) {
          for( int x=0; x<width; x++) {
             pixels[ y*width+x ] = pixAnc[ (y+p.y)*anc.width + (x+p.x) ];
          }
       }
-      
+
       return pixels;
-      
+
    }
-   
+
    /** Génération du tableau des pixels rgb d'un losange issu d'une filiation en fonction
     * des pixels de son ancêtre */
    private int [] getPixelFromAncetreRGB() throws Exception {
@@ -295,12 +295,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Retourne le nom de fichier complet en fonction du survey, de l'ordre et du numéro healpix */
    static protected String getFilePath(String survey,int order, long npix,int z) {
       return
-      (survey!=null ? survey + "/" :"") + cds.tools.pixtools.Util.getFilePath(order, npix, z);
-//      "Norder" + order + "/" +
-//      "Dir" + ((npix / 10000)*10000) + "/" +
-//      "Npix" + npix;
+            (survey!=null ? survey + "/" :"") + cds.tools.pixtools.Util.getFilePath(order, npix, z);
+      //      "Norder" + order + "/" +
+      //      "Dir" + ((npix / 10000)*10000) + "/" +
+      //      "Npix" + npix;
    }
-   
+
    /** Retourne le numéro du losange sous la forme : Norder+parente/npix[-] (pour débogage) */
    protected String getStringNumber() {
       return order+"/"+npix+(z<=0?"":"_"+z);
@@ -312,45 +312,45 @@ public class HealpixKey implements Comparable<HealpixKey> {
       String code = status==HealpixKey.LOADINGFROMNET || status==HealpixKey.LOADINGFROMCACHE ? ">>" :
          status==HealpixKey.TOBELOADFROMNET || status==HealpixKey.TOBELOADFROMCACHE ? " >" : " .";
 
-//      long t = (int)(getAskRepaintTime()/1000L);
+      //      long t = (int)(getAskRepaintTime()/1000L);
       return code+"["+Util.align(priority+"",5)+"] "+
-             Util.align(getStringNumber()+(fils!=null?">":" "),8)+
-             Util.align(getLongFullMem(),8)+
-             (truePixels ? " truePix ":"         ")+
-             Util.align(getStatusString(),16)+
-             ( timer==-1 ? -1 : getCurrentLiveTime()/1000 ) +
-//             "/"+t + "s => "+VIE[-getLive()]+
-              "s => "+VIE[-getLive()]+
-             (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"+"+
-             timeJPEG+"+"+timePixel+"ms" : "");
+      Util.align(getStringNumber()+(fils!=null?">":" "),8)+
+      Util.align(getLongFullMem(),8)+
+      (truePixels ? " truePix ":"         ")+
+      Util.align(getStatusString(),16)+
+      ( timer==-1 ? -1 : getCurrentLiveTime()/1000 ) +
+      //             "/"+t + "s => "+VIE[-getLive()]+
+      "s => "+VIE[-getLive()]+
+      (getStatus()==READY?(fromNet?" Net":" Cache")+":"+timeStream+"+"+
+            timeJPEG+"+"+timePixel+"ms" : "");
    }
 
-//   private String toStringCorners() {
-//      if( corners==null ) return "    ";
-//      StringBuffer res = new StringBuffer();
-//      for( int i=0; i<corners.length; i++ ) {
-//         res.append( corners[i]==null ? '-' :
-//            Double.isNaN(corners[i].al) || Double.isNaN(corners[i].del) ? 'N' :
-//            corners[i].al==0 && corners[i].del==0? '0' : '1' );
-//      }
-//      return res.toString();
-//   }
-//
-//   private String toStringCoins() {
-//      if( coins==null ) return "    ";
-//      StringBuffer res = new StringBuffer();
-//      for( int i=0; i<coins.length; i++ ) {
-//         res.append( coins[i]==null ? '-' :
-//            coins[i].x==0 && coins[i].y==0? '0' : '1' );
-//      }
-//      return res.toString();
-//   }
+   //   private String toStringCorners() {
+   //      if( corners==null ) return "    ";
+   //      StringBuffer res = new StringBuffer();
+   //      for( int i=0; i<corners.length; i++ ) {
+   //         res.append( corners[i]==null ? '-' :
+   //            Double.isNaN(corners[i].al) || Double.isNaN(corners[i].del) ? 'N' :
+   //            corners[i].al==0 && corners[i].del==0? '0' : '1' );
+   //      }
+   //      return res.toString();
+   //   }
+   //
+   //   private String toStringCoins() {
+   //      if( coins==null ) return "    ";
+   //      StringBuffer res = new StringBuffer();
+   //      for( int i=0; i<coins.length; i++ ) {
+   //         res.append( coins[i]==null ? '-' :
+   //            coins[i].x==0 && coins[i].y==0? '0' : '1' );
+   //      }
+   //      return res.toString();
+   //   }
 
    /** Libération des ressources d'un losange et de ses fils (pour aider GC)
     * retourne le nombre de losanges pour qui vraisemblablement il y a eu libération de mémoire
     * pour forcer un éventuel gc() */
    protected int free() {
-//      if( allSky ) return 0;
+      //      if( allSky ) return 0;
       int rep = 0;
       try {
          rep+=free1();
@@ -358,7 +358,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       } catch( Exception e ) { }
       return rep;
    }
-   
+
    /** Libération des ressources (sans la récursivité - voir HealpixKeyPol) */
    protected int free1() {
       int rep=0;
@@ -375,7 +375,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( rgb!=null ) {  rgb=null; rep=1; }
       if( imgBuf!=null ) {  imgBuf.flush(); imgBuf=null;  rep=1; }
       if( pixelsOrigin!=null ) { pixelsOrigin=null; rep=1; }
-      
+
       return rep;
    }
 
@@ -417,7 +417,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Nettoyage de la mémoire temporaire, ainsi que pour les fils */
    protected void clearBuf() {
       if( pixelsOrigin!=null ) {
-//         Aladin.trace(4,"clearBuf.pixelsOrigin pour "+this);
+         //         Aladin.trace(4,"clearBuf.pixelsOrigin pour "+this);
          pixelsOrigin=null;
       }
       if( imgBuf==null ) return;
@@ -428,7 +428,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       imgBuf=null;
    }
-   
+
    boolean retry=false;
 
    /** Chargement depuis le réseau */
@@ -436,13 +436,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
       setStatus(LOADINGFROMNET);
       try {
 
-//         long t = System.currentTimeMillis();
+         //         long t = System.currentTimeMillis();
          String fileName = planBG.url+"/"+fileNet;
-         
+
          char c = planBG.url.charAt(planBG.url.length()-1);
          if( c=='\\' || c=='/' ) fileName = planBG.url+fileNet;  // Directement sur root
-         
-//System.out.println("Start load from NET "+fileName+"...");
+
+         //System.out.println("Start load from NET "+fileName+"...");
          planBG.nByteReadNet+=loadNet(fileName);
          alreadyCached=false;
          resetTimer();
@@ -456,33 +456,33 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.cumulTimeJPEG += timeJPEG;
          planBG.cumulTimePixel += timePixel;
          planBG.askForRepaint();
-//System.out.println("Loaded from NET in "+(System.currentTimeMillis()-t)+"ms : "+this);
+         //System.out.println("Loaded from NET in "+(System.currentTimeMillis()-t)+"ms : "+this);
 
       } catch( Throwable e ) {
          pixels=null;
          rgb=null;
          if( getStatus()!=ABORTING ) {
-            
-//            System.err.println("Throwable: "+e.getMessage());
-//            e.printStackTrace();
-            
+
+            //            System.err.println("Throwable: "+e.getMessage());
+            //            e.printStackTrace();
+
             // Le test sur FileNotFoundException ne peut suffire car en keepAlive il n'est pas généré
             boolean notFoundError = e instanceof FileNotFoundException || e.getMessage().indexOf("HTTP response code: 40")>=0;
-            
+
             // Peut-on retenter sur un autre site mirroir
             if( !notFoundError && !retry && planBG.checkSite(true) ) {
                retry=true;
                loadFromNet();
                return;
             }
-            
+
             setStatus(ERROR);
             if( this instanceof HealpixAllsky ) planBG.askForRepaint();
-//            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
+            //            if( Aladin.levelTrace>=3 ) System.err.println("HealpixKey.loadFromNet error: "+e.getMessage());
          }
       }
    }
-   
+
    protected long loadNet(String fileName) throws Exception {
       long n=0;
       if( extNet==JPEG || extNet==PNG ) n=loadJpeg(fileName);
@@ -504,7 +504,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          try {
             planBG.nByteReadCache+=loadCache(pathName);
             alreadyCached=true;
-//System.out.println("Loaded from CACHE in "+(System.currentTimeMillis()-t)+"ms "+this);
+            //System.out.println("Loaded from CACHE in "+(System.currentTimeMillis()-t)+"ms "+this);
             resetTimer();
             setTimerLoad();
             setStatus(READY);
@@ -525,13 +525,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
          }
       }
    }
-   
+
    protected void updateCacheIfRequired(int time) throws Exception { }
-   
-   
+
+
    /** Chargement synchrone */
    protected void loadNow() throws Exception {
-      
+
       if( getStatus()!=READY ) {
          // Dans le cache ?
          if( planBG.useCache && isCached() ) {
@@ -545,20 +545,20 @@ public class HealpixKey implements Comparable<HealpixKey> {
             loadFromNet();
          }
       } else resetTimer();
-      
+
       if( getStatus()==READY ) {
          if( allSky ) planBG.setTileOrder( getLosangeOrder() );
          if( planBG.isTruePixels() ) loadPixelsOrigin(ONLYIFDISKAVAIL);  // En SYNC, on préfère tout de suite garder les pixels d'origine en RAM
          if( planBG.useCache ) write();
       }
    }
-   
+
    protected long loadCache(String pathName) throws Exception {
       long n;
       if( extCache==JPEG || extCache==PNG ) n=loadJpeg(pathName);
       else n=loadFits(pathName);
       stream=null;     // Inutile de conserver le stream puisqu'on le prend du cache
-      
+
       File f = new File(pathName);
       f.setLastModified(System.currentTimeMillis());
       return n;
@@ -580,7 +580,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       return false;
    }
-   
+
    /** Retourne true si le losange peut/doit être caché */
    protected boolean shouldBeCached() {
       if( alreadyCached ) return false;
@@ -602,24 +602,24 @@ public class HealpixKey implements Comparable<HealpixKey> {
       } catch( Exception e ) {}
       alreadyCached = true;
    }
-   
+
    protected int writeCache() throws Exception {
       int n=0;
       if( stream!=null /* extCache==JPEG */ ) {
          n=writeStream();
          stream=null;        // Inutile de conserver le stream plus longtemps
       } else n=writeFits();
-     return n;
+      return n;
    }
 
    /** Interrompt les chargements */
    protected void abort() {
-//      System.out.println("*** ABORTING "+this);
+      //      System.out.println("*** ABORTING "+this);
       if( npix==-1 ) {
-//         if( Aladin.levelTrace>=3 ) {
-//            Aladin.trace(4,"Tentative d'ABORT sur un allsky");
-//            try { throw new Exception(); } catch( Exception e ) { e.printStackTrace(); }
-//         }
+         //         if( Aladin.levelTrace>=3 ) {
+         //            Aladin.trace(4,"Tentative d'ABORT sur un allsky");
+         //            try { throw new Exception(); } catch( Exception e ) { e.printStackTrace(); }
+         //         }
          return;        // on n'aborte pas les allsky
       }
       planBG.nbAborted++;
@@ -638,15 +638,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
       FileOutputStream ois = new FileOutputStream(pathName);
       return ois;
    }
-   
+
    static final int SIZESLOW = 512;
    static final int SIZEFAST = 8*1024;
-   
+
    // Force le ralentissement du chargement du losange dans le cas d'un clic and drag
    private boolean slowDown() {
       return planBG.aladin.view.mustDrawFast();
    }
-   
+
    /**
     * Lecture de la totalite du flux dans un tableau de bytes
     * sans savoir a priori la taille du flux
@@ -654,129 +654,129 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * a la fin de la lecture
     * @return le tableau de byte
     */
-    public byte [] readFully(MyInputStream in,boolean fastLoad) throws Exception {
+   public byte [] readFully(MyInputStream in,boolean fastLoad) throws Exception {
 
-       Vector<byte[]> v = new Vector<byte[]>(10);
-       Vector<Integer> vSize = new Vector<Integer>(10);
-       int n=0,m=0,i=0,j=0;
-       byte [] tmp;
-       long t = System.currentTimeMillis();
-//       long t0=t;
-       boolean letTimeForDragging = slowDown();
-//       boolean oletTime = letTimeForDragging;
-//       boolean slowdown=false;
-       int size=SIZESLOW;
-       
-       tmp = new byte[size];
-       while( (n=in.read(tmp,0,size))!=-1 ) {
-          i++;
-// System.out.println("Je lis "+n+" octets (tranche "+i+")");
-          if( getStatus()==ABORTING ) {
-//             System.out.println("readFully aborted for "+this);
-             throw new Exception("readFullly aborted !");
-          }
-          v.addElement(tmp);
-          
-          long t1 = System.currentTimeMillis();
-          if( t1-t>10 ) {
-             letTimeForDragging = slowDown();
-//             if( oletTime!=letTimeForDragging ) slowdown=true;
-             t=t1;
-          }
-          
-          // Faut laisser un peu souffler la bête => sinon il y a des à-coups dans la souris
-          if( !fastLoad && letTimeForDragging ) {
-             Util.pause(10);
-             size=SIZESLOW;
-          } else size=SIZEFAST;
-          
-          vSize.addElement( new Integer(n) );
-          m+=n;
-          tmp = new byte[size];
-       }
+      Vector<byte[]> v = new Vector<byte[]>(10);
+      Vector<Integer> vSize = new Vector<Integer>(10);
+      int n=0,m=0,i=0,j=0;
+      byte [] tmp;
+      long t = System.currentTimeMillis();
+      //       long t0=t;
+      boolean letTimeForDragging = slowDown();
+      //       boolean oletTime = letTimeForDragging;
+      //       boolean slowdown=false;
+      int size=SIZESLOW;
 
-// System.out.println("La taille totale est de m="+m);
-       byte [] tab = new byte[m];
-       j=v.size();
-       for( n=i=0; i<j; i++ ) {
-          tmp = (byte[])v.elementAt(i);
-          m = ((Integer)vSize.elementAt(i)).intValue();
-// System.out.println("Je copie la tranche "+(i+1)+" => "+m+" octets");
-          System.arraycopy(tmp,0,tab,n,m);
-          n+=m;
+      tmp = new byte[size];
+      while( (n=in.read(tmp,0,size))!=-1 ) {
+         i++;
+         // System.out.println("Je lis "+n+" octets (tranche "+i+")");
+         if( getStatus()==ABORTING ) {
+            //             System.out.println("readFully aborted for "+this);
+            throw new Exception("readFullly aborted !");
+         }
+         v.addElement(tmp);
 
-       }
-//       Aladin.trace(4,"Load ("+(fastLoad?"faster":"fast")+(slowdown?" => slowdown":"")+" mode) "+getStringNumber()+" in "+(System.currentTimeMillis()-t0)+"ms");
-       return tab;
-    }
-    
+         long t1 = System.currentTimeMillis();
+         if( t1-t>10 ) {
+            letTimeForDragging = slowDown();
+            //             if( oletTime!=letTimeForDragging ) slowdown=true;
+            t=t1;
+         }
+
+         // Faut laisser un peu souffler la bête => sinon il y a des à-coups dans la souris
+         if( !fastLoad && letTimeForDragging ) {
+            Util.pause(10);
+            size=SIZESLOW;
+         } else size=SIZEFAST;
+
+         vSize.addElement( new Integer(n) );
+         m+=n;
+         tmp = new byte[size];
+      }
+
+      // System.out.println("La taille totale est de m="+m);
+      byte [] tab = new byte[m];
+      j=v.size();
+      for( n=i=0; i<j; i++ ) {
+         tmp = v.elementAt(i);
+         m = vSize.elementAt(i).intValue();
+         // System.out.println("Je copie la tranche "+(i+1)+" => "+m+" octets");
+         System.arraycopy(tmp,0,tab,n,m);
+         n+=m;
+
+      }
+      //       Aladin.trace(4,"Load ("+(fastLoad?"faster":"fast")+(slowdown?" => slowdown":"")+" mode) "+getStringNumber()+" in "+(System.currentTimeMillis()-t0)+"ms");
+      return tab;
+   }
 
 
-    /** Chargement total du fichier en mémoire soit en un coup si fichier local, soit morceau
-     * par morceau via le réseau
-     * @param filename le nom du fichier, éventuellement une URL. Le fichier peut être gzippé
-     * @param skip le nombre d'octets à sauter en début de fichier
-     */
-    protected byte [] loadStream(String filename) throws Exception { return loadStream(filename,0); }
-    protected byte [] loadStream(String filename,int skip) throws Exception {
-       byte [] buf;
-       boolean local=true;
-       long t1 = Util.getTime();
-//       planBG.aladin.trace(4,"loadStream("+filename+")...");
-       MyInputStream dis=null;
-       boolean fastLoad = this instanceof HealpixAllsky;
-       
-       // Fichier distant
-       if( filename.startsWith("http://") ) {
-          local=false;
-          try {
-             dis = Util.openStream(filename,false,10000);
-             if( skip>0 ) dis.skip(skip);
-             buf = readFully(dis, fastLoad );
-          } finally { if( dis!=null ) dis.close(); }
 
-       // Fichier local (zippé ou non)
-       } else {
-          RandomAccessFile f = null;
-          
-          // est-ce que le fichier est gzippé ?
-          try {
-             f = new RandomAccessFile(filename,"r");
-             byte [] c = new byte[8];
-             f.readFully(c);
-             
-             // Detection de JPEG
-             if( ((int)c[0] & 0xFF)==255 && ((int)c[1] & 0xFF)==216 ) typeColor = JPEG;
-             else if( ((int)c[0] & 0xFF)==137 && c[1]==80 && c[2]==78 && c[3]==71
-                   && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
+   /** Chargement total du fichier en mémoire soit en un coup si fichier local, soit morceau
+    * par morceau via le réseau
+    * @param filename le nom du fichier, éventuellement une URL. Le fichier peut être gzippé
+    * @param skip le nombre d'octets à sauter en début de fichier
+    */
+   protected byte [] loadStream(String filename) throws Exception { return loadStream(filename,0); }
+   protected byte [] loadStream(String filename,int skip) throws Exception {
+      byte [] buf;
+      boolean local=true;
+      long t1 = Util.getTime();
+      //       planBG.aladin.trace(4,"loadStream("+filename+")...");
+      MyInputStream dis=null;
+      boolean fastLoad = this instanceof HealpixAllsky;
 
-             if( ((int)c[0] & 0xFF)==31 && ((int)c[1] & 0xFF)==139 ) {
-//                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
-                FileInputStream fgz = new FileInputStream(new File(filename));
-                dis = new MyInputStream( new GZIPInputStream(fgz) );
-                if( skip>0 ) dis.skip(skip);
-                buf = readFully(dis, fastLoad);
+      // Fichier distant
+      if( filename.startsWith("http://") ) {
+         local=false;
+         try {
+            dis = Util.openStream(filename,false,10000);
+            if( skip>0 ) dis.skip(skip);
+            buf = readFully(dis, fastLoad );
+         } finally { if( dis!=null ) dis.close(); }
 
-                // Le fichier est normal
-             } else {
-                f.seek(skip);
-                buf = new byte[(int)(f.length()-skip)];
-                f.readFully(buf);
-             }
-          } finally { 
-             if( f!=null ) f.close(); 
-             if( dis!=null ) dis.close();
-          }
-       }
-       
-       // Stats de lecture
-       int t = (int)(Util.getTime()-t1);
-       if( local ) timeStream = t;
-       else timeNet = t;
-       
-       return buf;
-    }
-    
+         // Fichier local (zippé ou non)
+      } else {
+         RandomAccessFile f = null;
+
+         // est-ce que le fichier est gzippé ?
+         try {
+            f = new RandomAccessFile(filename,"r");
+            byte [] c = new byte[8];
+            f.readFully(c);
+
+            // Detection de JPEG
+            if( (c[0] & 0xFF)==255 && (c[1] & 0xFF)==216 ) typeColor = JPEG;
+            else if( (c[0] & 0xFF)==137 && c[1]==80 && c[2]==78 && c[3]==71
+                  && c[4]==13 && c[5]==10 && c[6]==26 && c[7]==10)  typeColor = PNG;
+
+            if( (c[0] & 0xFF)==31 && (c[1] & 0xFF)==139 ) {
+               //                Aladin.trace(4,"HealpixKey.loadStream: "+filename+" gzipped => reading by MyInputStream rather than RandomAccessFile");
+               FileInputStream fgz = new FileInputStream(new File(filename));
+               dis = new MyInputStream( new GZIPInputStream(fgz) );
+               if( skip>0 ) dis.skip(skip);
+               buf = readFully(dis, fastLoad);
+
+               // Le fichier est normal
+            } else {
+               f.seek(skip);
+               buf = new byte[(int)(f.length()-skip)];
+               f.readFully(buf);
+            }
+         } finally {
+            if( f!=null ) f.close();
+            if( dis!=null ) dis.close();
+         }
+      }
+
+      // Stats de lecture
+      int t = (int)(Util.getTime()-t1);
+      if( local ) timeStream = t;
+      else timeNet = t;
+
+      return buf;
+   }
+
    /** Chargement du losange sous forme de JPEG
     * @return le nombre de bytes du flux JPEG
     */
@@ -803,14 +803,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       height=img.getHeight(Aladin.aladin);
       if( width==-1 ) { throw new Exception("width = -1"); }
       timeJPEG = (int)(Util.getTime()-t1);
-      
+
       // Détermination a posteriori de la couleur ou non du survey
       if( planBG.colorUnknown && this instanceof HealpixAllsky ) {
          planBG.color = Util.isColoredImage(stream);
          planBG.colorUnknown = false;
          planBG.aladin.trace(4,"HealpixKey.loadJpeg("+filename+") => "+(typeColor==PNG?"PNG":"JPEG")+" "+(planBG.color?"color":" grey levels"));
       }
-      
+
       if( !planBG.color ) {
          if( planBG.pixMode==-1 ) planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
          pixels = getPixels(img);
@@ -824,12 +824,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.video = PlanImage.VIDEO_NORMAL;
          rgb = getPixelsRGB(img);
       }
-      
+
       if( this instanceof HealpixAllsky ) {
          if( planBG.cm==null ) planBG.creatDefaultCM();
          planBG.colorPNG = typeColor==PNG;
       }
-      
+
       return n;
    }
 
@@ -842,17 +842,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( !(k.equals(key)) ) continue;
          for( pos=i*80+9; head[pos]==' '; pos++);
          for( len=0; Character.isDigit( (char)head[pos+len]) || (char)head[pos+len]=='-'
-            || (char)head[pos+len]=='.' || Character.toUpperCase((char)head[pos+len])=='E'; len++ );
+               || (char)head[pos+len]=='.' || Character.toUpperCase((char)head[pos+len])=='E'; len++ );
          return Double.parseDouble(new String(head,pos,len));
       }
       throw new Exception();
    }
-   
+
    /** Retourne le pixel (true bits) d'indice healpixIdxPixel (l'order de référence est celui du pixel final)
     * @param mode NOW, ONLYIFAVAIL, ONLYIFLOCALAVAIL - prêt à attendre le chargement des données ou pas
     */
    protected double getPixelValue(long healpixIdxPixel,int mode) {
-      long startIdx =  npix * (long)width * (long)width;
+      long startIdx =  npix * width * width;
       int order = (int)CDSHealpix.log2(width);
       if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
          try { planBG.createHealpixOrder(order); } catch( Exception e ) { return Double.NaN; }
@@ -860,7 +860,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       int idx = planBG.hpx2xy((int)(healpixIdxPixel-startIdx));
       return getPixel(idx,mode);
    }
-   
+
    /** Retourne la valeur du pixel à l'emplacement idx (idx = y*width + x) */
    protected double getPixel(int idx,int mode) {
       if( mode==PIX8 ) {
@@ -868,7 +868,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          int y = width - idx/width -1;
          return pixels[ y*width+x ];
       }
-      
+
       if( !loadPixelsOrigin(mode) ) return Double.NaN;
       resetTimer();
       double pix = planBG.bitpix>0 ? (double)getPixValInt(pixelsOrigin,planBG.bitpix,idx)
@@ -876,20 +876,20 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( planBG.isBlank(pix) ) pix = Double.NaN;
       return pix;
    }
-   
-   
+
+
    /** Retourne un tableau w*w pixels d'origine (sous forme de byte[]) centré sur le pixel
     * repéré par  healpixIdxPixel, null sinon */
    protected byte [] getSample(Coord coo, int w, byte [] pixelsOrigin, int width ) throws Exception {
 
       coo = Localisation.frameToFrame(coo,Localisation.ICRS,planBG.frameOrigin);
       if( Double.isNaN(coo.al) || Double.isNaN(coo.del) ) throw new Exception();
-      
+
       double[] polar = CDSHealpix.radecToPolar(new double[] {coo.al, coo.del});
       long nside = CDSHealpix.pow2(order+ CDSHealpix.log2(width) );
       long healpixIdxPixel = CDSHealpix.ang2pix_nest( nside, polar[0], polar[1]);
 
-      long startIdx =  npix * (long)width * (long)width;
+      long startIdx =  npix * width * width;
 
       if( planBG.hpx2xy == null || planBG.hpx2xy.length!=width*width ) {
          planBG.createHealpixOrder( (int)CDSHealpix.log2(width) );
@@ -913,7 +913,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       return sample;
    }
-      
+
    /** Retourne true si dans l'entête on trouve "COLORMOD  ARGB" */
    protected boolean isARGB(byte[] head){
       int n=head.length/80;
@@ -929,9 +929,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       switch(bitpix) {
          case   8: return ((t[i])&0xFF);
          case  16: i*=2;
-                   return ( ((t[i])<<8) | (t[i+1])&0xFF );
+         return ( ((t[i])<<8) | (t[i+1])&0xFF );
          case  32: i*=4;
-                   return  ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF ;
+         return  ((t[i])<<24) | (((t[i+1])&0xFF)<<16) | (((t[i+2])&0xFF)<<8) | (t[i+3])&0xFF ;
       }
       return 0;
    }
@@ -958,10 +958,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
     *                  PIX_255: 255 valeurs de 1 à 254 - on réserve le 0 pour la transparence
     * @return la tableau de pixels 8 bits
     */
-   
+
    final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max, int pixMode) {
       byte [] out = new byte[pixels.length/(Math.abs(bitpix)/8)];
-      
+
       int range  = pixMode==PlanBG.PIX_255 ? 255 : 256;
       int gapTransp = pixMode==PlanBG.PIX_255 ?   1 :   0;
 
@@ -974,31 +974,31 @@ public class HealpixKey implements Comparable<HealpixKey> {
             else  out[ (height-1-y)*width +x ] = (byte)( ( (int)( gapTransp+ (pixIn<=min ? 0 : pixIn>=max ? range : (pixIn-min)*r))  ) & 0xFF );
          }
       }
-      
+
       return out;
    }
 
-//   final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max) {
-//      byte [] out = new byte[pixels.length/(Math.abs(bitpix)/8)];
-//
-//      double r = 256./(max - min);
-//      if( bitpix>0 ) {
-//         for( int y=0; y<height; y++ ) {
-//            for( int x=0; x<width; x++ ) {
-//               int pixIn = getPixValInt(pixels,bitpix,(y*width)+x);
-//               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-//            }
-//         }
-//      } else {
-//         for( int y=0; y<height; y++ ) {
-//            for( int x=0; x<width; x++ ) {
-//               double pixIn = getPixValDouble(pixels,bitpix,(y*width)+x);
-//               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
-//            }
-//         }
-//      }
-//      return out;
-//   }
+   //   final private byte [] to8bits(byte [] pixels, int bitpix, double min, double max) {
+   //      byte [] out = new byte[pixels.length/(Math.abs(bitpix)/8)];
+   //
+   //      double r = 256./(max - min);
+   //      if( bitpix>0 ) {
+   //         for( int y=0; y<height; y++ ) {
+   //            for( int x=0; x<width; x++ ) {
+   //               int pixIn = getPixValInt(pixels,bitpix,(y*width)+x);
+   //               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
+   //            }
+   //         }
+   //      } else {
+   //         for( int y=0; y<height; y++ ) {
+   //            for( int x=0; x<width; x++ ) {
+   //               double pixIn = getPixValDouble(pixels,bitpix,(y*width)+x);
+   //               out[(height-1-y)*width +x] = (byte)( pixIn<=min || planBG.isBlank(pixIn) ?0x00:pixIn>=max ? 0xff : (int)( ((pixIn-min)*r) ) & 0xff);
+   //            }
+   //         }
+   //      }
+   //      return out;
+   //   }
 
    /** Inversion des lignes */
    protected void invLine(byte src[],byte dst[],int bitpix) {
@@ -1015,7 +1015,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected int loadFits(String filename) throws Exception {
 
       stream = loadStream(filename);
-      
+
       boolean initPixMode = planBG.pixMode==-1;
       if( initPixMode ) planBG.pixMode = PlanBG.PIX_TRUE;
 
@@ -1033,34 +1033,34 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( flagARGB =isARGB(head) ) {
             bitpix=0;
             if( initPixMode ) planBG.pixMode = PlanBG.PIX_ARGB;
-//            System.out.println("HealpixKey FITS in ARGB");
+            //            System.out.println("HealpixKey FITS in ARGB");
          }
          if( bitpix!=8 && !flagARGB ) truePixels=true;
 
       } catch( Exception e ) { width=height=512; bitpix=8; }
 
       int taille=width*height*(Math.abs(bitpix)/8);
-      
+
       // Lecture FITS couleur ARGB
       if( flagARGB ) {
          planBG.color=true;     // PEUT ETRE PAS VRAIMENT NECESSAIRE
          rgb = new int[width*height];
          for( int i=0; i<width*height; i++ ) {
-            rgb[i]  =  ((int)stream[2880 + i*4]   & 0xFF)  << 24 
-                    | ((int)stream[2880 + i*4+1] & 0xFF)  << 16
-                    | ((int)stream[2880 + i*4+2] & 0xFF)  << 8
-                    | ((int)stream[2880 + i*4+3] & 0xFF) ;
+            rgb[i]  =  (stream[2880 + i*4]   & 0xFF)  << 24
+                  | (stream[2880 + i*4+1] & 0xFF)  << 16
+                  | (stream[2880 + i*4+2] & 0xFF)  << 8
+                  | (stream[2880 + i*4+3] & 0xFF) ;
          }
-         
-      // Lecture FITS classique
+
+         // Lecture FITS classique
       } else {
 
          // Allocation puis lecture
          byte [] in = new byte[taille];
          System.arraycopy(stream, 2880, in, 0, taille);
-         
+
          boolean flagInit = planBG.bitpix==0 || planBG.flagRecut ;
-         
+
          if( flagInit ) {
             boolean init = planBG.bitpix==0;
             planBG.bitpix=bitpix;
@@ -1068,11 +1068,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
             try { planBG.bScale = getValue(head,"BSCALE"); } catch( Exception e ) { planBG.bScale=1; }
             try { planBG.bZero  = getValue(head,"BZERO");  } catch( Exception e ) { planBG.bZero=0;  }
             try { planBG.blank  = getValue(head,"BLANK"); planBG.isBlank = true; } catch( Exception e ) { planBG.isBlank = false; }
-            
+
             // Est-ce que j'ai des informations de range et de cut via le fichier de properties ?
             boolean flagPixelRange=false;
             boolean flagPixelCut=false;
-            
+
             if( init ) {
                if( planBG.pixelRange!=null ) {
                   double [] a = split(planBG.pixelRange);
@@ -1087,14 +1087,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   if( a!=null ) {
                      planBG.pixelMin = pixelMin =(a[0]-planBG.bZero)/planBG.bScale;
                      planBG.pixelMax = pixelMax =(a[1]-planBG.bZero)/planBG.bScale;
-//                     planBG.transfertFct = (int)a[2]; 
+                     //                     planBG.transfertFct = (int)a[2];
                      flagPixelCut=true;
                   }
                }
             }
 
             if( !flagPixelCut && !flagPixelRange ) {
-               
+
                // Je fais un autocut, soit sur la totalité du losange, soit sur une portion de celui-ci
                // centrée sur un pixel particulier
                int w = width;
@@ -1103,7 +1103,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   w = (int)( planBG.flagRecutRadius/ angRes );
                }
                if( w>width ) w=width;
-                                               
+
                Fits tmp = new Fits(w,w,bitpix);
                if( planBG.isBlank ) tmp.setBlank(planBG.blank);
                tmp.pixels = in;
@@ -1114,7 +1114,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   }
                }
                double [] range = tmp.findAutocutRange(0,0,true);
-               
+
                if( !flagPixelCut ) {
                   planBG.pixelMin = pixelMin = range[0];
                   planBG.pixelMax = pixelMax = range[1];
@@ -1132,13 +1132,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
                planBG.aladin.trace(3,"Pixel properties PixelMinMax=["+Util.myRound(planBG.pixelMin)+","+Util.myRound(planBG.pixelMax)+"], " +
                      "DataMinMax=["+Util.myRound(planBG.dataMin)+","+Util.myRound(planBG.dataMax)+"] "+(planBG.isBlank?" Blank="+planBG.blank:"")
                      +" bzero="+planBG.bZero+" bscale="+planBG.bScale);
-               
+
             }
             planBG.restoreCM();
-            if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) planBG.aladin.frameCM.showCM();
-
+            if( planBG.aladin.frameCM!=null && planBG.aladin.frameCM.isVisible() ) {
+               planBG.aladin.frameCM.showCM();
+            }
          }
-         
+
          pixels = to8bits(in,bitpix,pixelMin,pixelMax, PlanBG.PIX_255);
 
          if( flagInit && !planBG.color) {
@@ -1151,10 +1152,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
          }
          in=null;
       }
-      
+
       return stream.length; //2880+taille;
    }
-   
+
    private double [] split(String s) {
       double [] a = new double[3];
       StringTokenizer st = new StringTokenizer(s);
@@ -1166,7 +1167,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       return a;
    }
-   
+
    /** Construit le pathName du fichier, où qu'il soit (cache, local, ou réseau) */
    private String getFileNameForPixelsOrigin() {
       String fileName;
@@ -1179,17 +1180,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( c=='\\' || c=='/' ) fileName = planBG.url+fileNet;  // Directement sur root
       return fileName;
    }
-   
+
    /** Chargement (si nécessaire) des pixels d'origine dans pixelsOrigin[]
     * Attention, il doit nécessairement s'agir d'un flux FITS */
    protected boolean loadPixelsOrigin(int mode) {
-      
+
       // Déjà en mémoire
       if( pixelsOrigin!=null ) return true;
 
       // Ce n'est pas du FITS
       if( !planBG.hasOriginalPixels() ) return false;
-      
+
       // Coup de bol, le flux original est encore en mémoire
       if( stream!=null ) {
          Aladin.trace(4,"HealpixKey.loadPixelsOrigin: from stream for "+this);
@@ -1198,18 +1199,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
          System.arraycopy(stream, 2880, pixelsOrigin, 0, taille);
          return true;
       }
-         
+
       // Les données ne sont pas en mémoire, et on n'est pas prêt à attendre
       if( mode==ONLYIFRAMAVAIL ) return false;
-      
+
       if( mode==ONLYIFDISKAVAIL ) {
          // Les données ne sont disponible qu'à distance et on n'est pas prêt à attendre
          if( !planBG.isLocalAllSky() && (!planBG.useCache || !isCached()) ) return false;
       }
-      
+
       // On lit (ou relit) le fichier, en sautant l'entête
       String fileName = getFileNameForPixelsOrigin();
-//      Aladin.trace(4,"HealpixKey.loadPixelsOrigin(): "+getStringNumber()+" from ["+fileName+"]");
+      //      Aladin.trace(4,"HealpixKey.loadPixelsOrigin(): "+getStringNumber()+" from ["+fileName+"]");
       try {
          pixelsOrigin = loadStream(fileName,2880);
       } catch( Exception e) {
@@ -1217,36 +1218,36 @@ public class HealpixKey implements Comparable<HealpixKey> {
          return false;
       }
       return true;
-      
+
    }
 
-//   private void setSize(int w) { factor(width/w); }
-//   private void factor(int z) {
-//      imgBuf=null;
-//      imgID=-2;
-//      int w = width/z;
-//      int h = height/z;
-//      if( pixels!=null ) {
-//         byte [] pixels1 = new byte[pixels.length/z];
-//         for( int y=0; y<h; y++) {
-//            for( int x=0; x<w; x++ ) {
-//               pixels1[y*w + x] = pixels[ (y*z)*width + x*z ];
-//            }
-//         }
-//         pixels = pixels1;
-//      }
-//      if( rgb!=null ) {
-//         int [] rgb1 = new int[rgb.length/z];
-//         for( int y=0; y<h; y++) {
-//            for( int x=0; x<w; x++ ) {
-//               rgb1[y*w + x] = rgb[ (y*z)*width + x*z ];
-//            }
-//         }
-//         rgb = rgb1;
-//      }
-//      width=w;;
-//      height=h;
-//   }
+   //   private void setSize(int w) { factor(width/w); }
+   //   private void factor(int z) {
+   //      imgBuf=null;
+   //      imgID=-2;
+   //      int w = width/z;
+   //      int h = height/z;
+   //      if( pixels!=null ) {
+   //         byte [] pixels1 = new byte[pixels.length/z];
+   //         for( int y=0; y<h; y++) {
+   //            for( int x=0; x<w; x++ ) {
+   //               pixels1[y*w + x] = pixels[ (y*z)*width + x*z ];
+   //            }
+   //         }
+   //         pixels = pixels1;
+   //      }
+   //      if( rgb!=null ) {
+   //         int [] rgb1 = new int[rgb.length/z];
+   //         for( int y=0; y<h; y++) {
+   //            for( int x=0; x<w; x++ ) {
+   //               rgb1[y*w + x] = rgb[ (y*z)*width + x*z ];
+   //            }
+   //         }
+   //         rgb = rgb1;
+   //      }
+   //      width=w;;
+   //      height=h;
+   //   }
 
    /** Ecriture du losange dans le cache sous forme de JPEG couleur
     *  à partir du stream de lecture qui a été conservé
@@ -1259,10 +1260,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
       ois.write(stream);
       ois.close();
 
-//System.out.println("*** Ecriture dans le cache de "+this);
+      //System.out.println("*** Ecriture dans le cache de "+this);
       return stream.length;
    }
-   
+
    /** Ecriture du losange dans le cache sous forme de FITS 8bits
     * @return le nombre d'octets écrits
     */
@@ -1291,7 +1292,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       out=null;
       ois.close();
 
-//System.out.println("*** Ecriture dans le cache de "+this);
+      //System.out.println("*** Ecriture dans le cache de "+this);
       return pixels.length+2880;
    }
 
@@ -1300,35 +1301,35 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Ecriture du losange dans le cache sous forme de FITS 8bits
     * @return le nombre d'octets écrits
     */
-//   private int writeFitsError() throws Exception {
-//      FileOutputStream ois = openOutputStream();
-//      if( ois==null ) return 0;
-//
-//      // Ecriture de l'entête Fits
-//      int n=0;
-//      ois.write(Save.getFitsLine("SIMPLE","T",null) );        n+=80;
-//      ois.write(Save.getFitsLine("BITPIX","8",null) );        n+=80;
-//      ois.write(Save.getFitsLine("NAXIS","0",null) );         n+=80;
-//      ois.write(Save.getFitsLine("NAXIS1",0+"",null) );       n+=80;
-//      ois.write(Save.getFitsLine("NAXIS2",0+"",null) );       n+=80;
-//      ois.write(Save.getFitsLine("NORDER",order+"",null) );   n+=80;
-//      ois.write(Save.getFitsLine("NPIX",npix+"",null) );      n+=80;
-//      ois.write(Save.getEndBourrage(n));
-//
-//      ois.close();
-//
-//System.out.println("*** Ecriture dans le cache de "+this);
-//      return 2880;
-//   }
+   //   private int writeFitsError() throws Exception {
+   //      FileOutputStream ois = openOutputStream();
+   //      if( ois==null ) return 0;
+   //
+   //      // Ecriture de l'entête Fits
+   //      int n=0;
+   //      ois.write(Save.getFitsLine("SIMPLE","T",null) );        n+=80;
+   //      ois.write(Save.getFitsLine("BITPIX","8",null) );        n+=80;
+   //      ois.write(Save.getFitsLine("NAXIS","0",null) );         n+=80;
+   //      ois.write(Save.getFitsLine("NAXIS1",0+"",null) );       n+=80;
+   //      ois.write(Save.getFitsLine("NAXIS2",0+"",null) );       n+=80;
+   //      ois.write(Save.getFitsLine("NORDER",order+"",null) );   n+=80;
+   //      ois.write(Save.getFitsLine("NPIX",npix+"",null) );      n+=80;
+   //      ois.write(Save.getEndBourrage(n));
+   //
+   //      ois.close();
+   //
+   //System.out.println("*** Ecriture dans le cache de "+this);
+   //      return 2880;
+   //   }
 
-   static private final Component observer = (Component) new Label();
-   
+   static private final Component observer = new Label();
+
    // Regénération des pixels 8 bits
    protected byte [] getPixels(Image img) throws Exception {
       long t1=Util.getTime();
       byte [] pixels=null;
       BufferedImage imgBuf;
-      
+
       // Mode PNG B&W => Je ne trouve pas comment faire autrement
       if( planBG.pixMode==PlanImage.PIX_255 ) {
          int [] rgb = getPixelsRGB1(img);
@@ -1342,8 +1343,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
             }
          }
          rgb = null;
-         
-      // Mode JPEG B&W
+
+         // Mode JPEG B&W
       } else {
          imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_GRAY);
          Graphics g = imgBuf.getGraphics();
@@ -1365,13 +1366,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
       try {
          return getPixelsRGB1(img);
 
-      // On ressaye en faisant de la place avant
+         // On ressaye en faisant de la place avant
       } catch( Throwable e ) {
          planBG.clearBuf();
          return getPixelsRGB1(img);
       }
    }
-   
+
    // Regénération des pixels RGB
    protected int [] getPixelsRGB1(Image img) throws Exception {
       long t1=Util.getTime();
@@ -1379,9 +1380,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       Graphics g = imgBuf.getGraphics();
       g.drawImage(img,0,0,observer);
       g.finalize(); g=null;
-      
+
       int [] rgb = ((DataBufferInt)imgBuf.getRaster().getDataBuffer()).getData();
-      
+
       imgBuf.flush(); imgBuf=null;
       timePixel = (int)(Util.getTime()-t1);
 
@@ -1390,22 +1391,22 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
 
    // Regénération des pixels RGB
-//   protected int [] getPixelsRGB2(Image img) throws Exception {
-//      long t1=Util.getTime();
-////      BufferedImage imgBuf = planBG.aladin.getGraphicsConfiguration().createCompatibleImage(width,height);
-//      BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-//      Graphics g = imgBuf.getGraphics();
-//      g.drawImage(img,0,0,Aladin.aladin);
-//      g.finalize(); g=null;
-//
-//      int taille=width*height;
-//      int rgb[] = new int[taille];
-//      imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
-//      imgBuf.flush(); imgBuf=null;
-//      timePixel = (int)(Util.getTime()-t1);
-//
-//      return rgb;
-//   }
+   //   protected int [] getPixelsRGB2(Image img) throws Exception {
+   //      long t1=Util.getTime();
+   ////      BufferedImage imgBuf = planBG.aladin.getGraphicsConfiguration().createCompatibleImage(width,height);
+   //      BufferedImage imgBuf = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+   //      Graphics g = imgBuf.getGraphics();
+   //      g.drawImage(img,0,0,Aladin.aladin);
+   //      g.finalize(); g=null;
+   //
+   //      int taille=width*height;
+   //      int rgb[] = new int[taille];
+   //      imgBuf.getRGB(0, 0, width, height, rgb, 0, width);
+   //      imgBuf.flush(); imgBuf=null;
+   //      timePixel = (int)(Util.getTime()-t1);
+   //
+   //      return rgb;
+   //   }
 
    private Object lockStatus = new Object();
 
@@ -1436,9 +1437,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected int getLive() {
 
       int status = getStatus();
-      
+
       long time = getLiveTime();
-      
+
       // Ne meurt jamais pour une durée de vie négative
       if( time==-1 ) return INLIFE;
 
@@ -1449,36 +1450,36 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( getCurrentLiveTime()>time+2000 ) return DEATH;
       return MAYBEDEATH;
    }
-   
+
    protected long getLiveTime() { return PlanBG.LIVETIME; }
-   
+
    /** Retourne le temps de vie courant du losange (en ms) */
    protected long getCurrentLiveTime() {
       return System.currentTimeMillis()-timer;
    }
 
-//   /** Retourne le temps depuis la dernière demande de réaffichage (en ms) */
-//   synchronized protected long getAskRepaintTime() {
-//      if( timeAskRepaint==0 ) return 0;
-//      return System.currentTimeMillis()-timeAskRepaint;
-//   }
+   //   /** Retourne le temps depuis la dernière demande de réaffichage (en ms) */
+   //   synchronized protected long getAskRepaintTime() {
+   //      if( timeAskRepaint==0 ) return 0;
+   //      return System.currentTimeMillis()-timeAskRepaint;
+   //   }
 
 
-//   long timeAskRepaint=0;
+   //   long timeAskRepaint=0;
 
-//   /** Positionne le temps de demande de réaffichage forcé */
-//   synchronized protected void setTimeAskRepaint(long t) {
-//      if( fils!=null ) {
-//         for( int i=0; i<4; i++ ) fils[i].setTimeAskRepaint(t);
-//      }
-//      if( timeAskRepaint!=0 ) return;
-//      timeAskRepaint = t;
-//   }
+   //   /** Positionne le temps de demande de réaffichage forcé */
+   //   synchronized protected void setTimeAskRepaint(long t) {
+   //      if( fils!=null ) {
+   //         for( int i=0; i<4; i++ ) fils[i].setTimeAskRepaint(t);
+   //      }
+   //      if( timeAskRepaint!=0 ) return;
+   //      timeAskRepaint = t;
+   //   }
 
-// /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
-// synchronized protected void resetTimeAskRepaint() {
-//    timeAskRepaint=0;
-// }
+   // /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
+   // synchronized protected void resetTimeAskRepaint() {
+   //    timeAskRepaint=0;
+   // }
 
 
    /** Force le losange a dépasser son temps de vie afin d'être rapidement testé */
@@ -1490,7 +1491,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected void resetTimer() {
       timer = System.currentTimeMillis();
    }
-   
+
    // Positionne la date du chargement
    private void setTimerLoad() {
       timerLoad = System.currentTimeMillis();
@@ -1510,7 +1511,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       for( int i=0; i<2; i++ ) {
          int a= i==1 ? 1 : 0;
          int c= i==1 ? 2 : 3;
-         
+
          if( b1[a]==null ) {
             int d,g;
             if( a==0 || a==3 ) { d=1; g=2; }
@@ -1524,7 +1525,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             b1[c] = new PointD((b1[d].x+b1[g].x)/2,(b1[d].y+b1[g].y)/2);
          }
          if( b1[a]==null || b1[c]==null ) continue;
-         
+
          double angle = Math.atan2(b1[c].y-b1[a].y, b1[c].x-b1[a].x);
          double chouilla = val*Math.cos(angle);
          b1[a].x-=chouilla;
@@ -1553,94 +1554,94 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return n;
    }
 
-//   /** Création de l'image du losange à tracer en fonction du tableau des pixels
-//    * Cette image est conservé s'il y a assez de place en mémoire pour un usage ultérieur */
-//   private Image createImage() throws Exception {
-//      if( imgVolatileOk(imgBuf) && imgID==planBG.imgID ) { if( !allSky ) nbImgInBuf++; return imgBuf; }
-//      
-//      VolatileImage imgv = planBG.aladin.createVolatileImage(width, height);
-//      do {
-//         int code = imgv.validate(planBG.aladin.getGraphicsConfiguration());
-//         switch( code ) {
-//            case VolatileImage.IMAGE_INCOMPATIBLE:
-//               imgv = planBG.aladin.createVolatileImage(width, height);
-//            case VolatileImage.IMAGE_RESTORED:
-//               MemoryImageSource imgSrc;
-//               if( planBG.color ) {
-//                  int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
-//                  imgSrc=new MemoryImageSource(width,height,ColorModel.getRGBdefault(), pix, 0, width);
-//               } else {
-//                  byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
-//                  imgSrc=new MemoryImageSource(width,height,planBG.cm, pix, 0, width);
-//               }
-//               Graphics2D g = imgv.createGraphics();
-//               g.drawImage(planBG.aladin.createImage(imgSrc), 0, 0, null);
-//               if( !allSky ) nbImgCreated++;
-//               imgID=planBG.imgID;
-//        }
-//      } while( imgv.contentsLost());
-//      
-//      // On a de place en mémoire, on conserve l'image
-//      if( planBG.aladin.enoughMemory() ) imgBuf=imgv;
-//      return imgv;
-//   }
-//   
-//   
-//   private boolean imgVolatileOk(Image imgBuf) {
-//      VolatileImage imgv = (VolatileImage)imgBuf;
-//      if( imgv==null ) return false;
-//      int code = imgv.validate(planBG.aladin.getGraphicsConfiguration());
-//      return code!=VolatileImage.IMAGE_INCOMPATIBLE
-//      && code!=VolatileImage.IMAGE_RESTORED && !imgv.contentsLost();
-//   }
-   
+   //   /** Création de l'image du losange à tracer en fonction du tableau des pixels
+   //    * Cette image est conservé s'il y a assez de place en mémoire pour un usage ultérieur */
+   //   private Image createImage() throws Exception {
+   //      if( imgVolatileOk(imgBuf) && imgID==planBG.imgID ) { if( !allSky ) nbImgInBuf++; return imgBuf; }
+   //
+   //      VolatileImage imgv = planBG.aladin.createVolatileImage(width, height);
+   //      do {
+   //         int code = imgv.validate(planBG.aladin.getGraphicsConfiguration());
+   //         switch( code ) {
+   //            case VolatileImage.IMAGE_INCOMPATIBLE:
+   //               imgv = planBG.aladin.createVolatileImage(width, height);
+   //            case VolatileImage.IMAGE_RESTORED:
+   //               MemoryImageSource imgSrc;
+   //               if( planBG.color ) {
+   //                  int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
+   //                  imgSrc=new MemoryImageSource(width,height,ColorModel.getRGBdefault(), pix, 0, width);
+   //               } else {
+   //                  byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
+   //                  imgSrc=new MemoryImageSource(width,height,planBG.cm, pix, 0, width);
+   //               }
+   //               Graphics2D g = imgv.createGraphics();
+   //               g.drawImage(planBG.aladin.createImage(imgSrc), 0, 0, null);
+   //               if( !allSky ) nbImgCreated++;
+   //               imgID=planBG.imgID;
+   //        }
+   //      } while( imgv.contentsLost());
+   //
+   //      // On a de place en mémoire, on conserve l'image
+   //      if( planBG.aladin.enoughMemory() ) imgBuf=imgv;
+   //      return imgv;
+   //   }
+   //
+   //
+   //   private boolean imgVolatileOk(Image imgBuf) {
+   //      VolatileImage imgv = (VolatileImage)imgBuf;
+   //      if( imgv==null ) return false;
+   //      int code = imgv.validate(planBG.aladin.getGraphicsConfiguration());
+   //      return code!=VolatileImage.IMAGE_INCOMPATIBLE
+   //      && code!=VolatileImage.IMAGE_RESTORED && !imgv.contentsLost();
+   //   }
+
    /** Création de l'image du losange à tracer en fonction du tableau des pixels
     * Cette image est conservé s'il y a assez de place en mémoire pour un usage ultérieur */
    private Image createImage() throws Exception {
-      if( imgBuf!=null && (planBG.color || imgID==planBG.imgID) ) { 
-         if( !allSky ) planBG.nbImgInBuf++; 
-         return imgBuf; 
+      if( imgBuf!=null && (planBG.color || imgID==planBG.imgID) ) {
+         if( !allSky ) planBG.nbImgInBuf++;
+         return imgBuf;
       }
-      
-//      BufferedImage img = null;
+
+      //      BufferedImage img = null;
       Image img = null;
-      
+
       if( planBG.color ) {
          int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
-         DataBuffer dbuf = (DataBuffer) new DataBufferInt(pix, width*height);
+         DataBuffer dbuf = new DataBufferInt(pix, width*height);
          int bitMasks[] = new int[]{0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000   };
          SampleModel sampleModel = new SinglePixelPackedSampleModel(
                DataBuffer.TYPE_INT, width, height, bitMasks);
          ColorModel colorModel = ColorModel.getRGBdefault();
          WritableRaster raster = Raster.createWritableRaster(sampleModel, dbuf, null);
          img = new BufferedImage(colorModel, raster, true, null);
-         
-//         MemoryImageSource x = new MemoryImageSource(width, height, ColorModel.getRGBdefault(), pix, 0, width);
-//         img = Toolkit.getDefaultToolkit().createImage(x);
 
-         
+         //         MemoryImageSource x = new MemoryImageSource(width, height, ColorModel.getRGBdefault(), pix, 0, width);
+         //         img = Toolkit.getDefaultToolkit().createImage(x);
+
+
       } else {
          byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
-         
-//         MemoryImageSource x = new MemoryImageSource(width, height, planBG.getCM(), pix, 0, width);
-//         img = Toolkit.getDefaultToolkit().createImage(x);
-         
+
+         //         MemoryImageSource x = new MemoryImageSource(width, height, planBG.getCM(), pix, 0, width);
+         //         img = Toolkit.getDefaultToolkit().createImage(x);
+
          img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED,(IndexColorModel)planBG.getCM());
          WritableRaster wr = ((BufferedImage)img).getRaster();
          wr.setDataElements (0, 0, width, height, pix);
-         
-// N'ARRIVE PAS A ETRE ACCELERE PAR LA CARTE GRAPHIQUE, PAS DE CHANCE !
-//         DataBuffer dbuf = (DataBuffer) new DataBufferByte(pix, width*height);
-//         int[] offsets = new int[] {0};
-//         SampleModel sampleModel = new ComponentSampleModel(DataBuffer.TYPE_BYTE, width, height, 1, width, offsets);
-//         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-//         int[] nBits = {8};
-//         ColorModel colorModel = new ComponentColorModel(cs, nBits, false, true,
-//               Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
-//         int[] offsets = new int[] {0};
-//         img = new BufferedImage(colorModel, raster, true, null);
+
+         // N'ARRIVE PAS A ETRE ACCELERE PAR LA CARTE GRAPHIQUE, PAS DE CHANCE !
+         //         DataBuffer dbuf = (DataBuffer) new DataBufferByte(pix, width*height);
+         //         int[] offsets = new int[] {0};
+         //         SampleModel sampleModel = new ComponentSampleModel(DataBuffer.TYPE_BYTE, width, height, 1, width, offsets);
+         //         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+         //         int[] nBits = {8};
+         //         ColorModel colorModel = new ComponentColorModel(cs, nBits, false, true,
+         //               Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+         //         int[] offsets = new int[] {0};
+         //         img = new BufferedImage(colorModel, raster, true, null);
       }
-//      img.setAccelerationPriority(1f);
+      //      img.setAccelerationPriority(1f);
       if( !allSky ) planBG.nbImgCreated++;
       imgID=planBG.imgID;
 
@@ -1649,35 +1650,35 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       return img;
    }
-   
+
    /** Création de l'image du losange à tracer en fonction du tableau des pixels
     * Cette image est conservé s'il y a assez de place en mémoire pour un usage ultérieur */
-//   private Image createImage() throws Exception {
-//      if( imgBuf!=null && imgID==planBG.imgID ) { if( !allSky ) planBG.nbImgInBuf++; return imgBuf; }
-//      MemoryImageSource imgSrc=null;
-//      if( planBG.color ) {
-//         int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
-//         imgSrc=new MemoryImageSource(width,height,ColorModel.getRGBdefault(), pix, 0, width);
-//      } else {
-//         byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
-//         imgSrc=new MemoryImageSource(width,height,planBG.cm, pix, 0, width);
-//      }
-//      if( !allSky ) planBG.nbImgCreated++;
-//      imgID=planBG.imgID;
-//      Image img=Toolkit.getDefaultToolkit().createImage(imgSrc);
-//
-//      // On a de place en mémoire, on conserve l'image
-//      if( planBG.aladin.enoughMemory() ) imgBuf=img;
-//
-//      return img;
-//   }
+   //   private Image createImage() throws Exception {
+   //      if( imgBuf!=null && imgID==planBG.imgID ) { if( !allSky ) planBG.nbImgInBuf++; return imgBuf; }
+   //      MemoryImageSource imgSrc=null;
+   //      if( planBG.color ) {
+   //         int pix[] = parente==0 ? rgb : getPixelFromAncetreRGB();
+   //         imgSrc=new MemoryImageSource(width,height,ColorModel.getRGBdefault(), pix, 0, width);
+   //      } else {
+   //         byte pix[] = parente==0 ? pixels : getPixelFromAncetre();
+   //         imgSrc=new MemoryImageSource(width,height,planBG.cm, pix, 0, width);
+   //      }
+   //      if( !allSky ) planBG.nbImgCreated++;
+   //      imgID=planBG.imgID;
+   //      Image img=Toolkit.getDefaultToolkit().createImage(imgSrc);
+   //
+   //      // On a de place en mémoire, on conserve l'image
+   //      if( planBG.aladin.enoughMemory() ) imgBuf=img;
+   //
+   //      return img;
+   //   }
 
    /** Retourne la taille approximative du losange en bytes */
    protected int getMem() {
       int mem =0;
       if( pixels!=null ) mem+=pixels.length*2;
       else if( rgb!=null ) mem+=rgb.length*8;
-//      if( imgBuf!=null ) mem*=2;
+      //      if( imgBuf!=null ) mem*=2;
       if( stream!=null ) mem+=stream.length;
       if( pixelsOrigin!=null ) mem+=pixelsOrigin.length;
       return mem;
@@ -1691,7 +1692,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       return mem;
    }
-   
+
    /** Retourne la taille du losange et de tous ses fytes dans une unité compréhensible */
    protected String getLongFullMem() {
       int n = getFullMem()/1024;
@@ -1710,15 +1711,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final double M = 300*300;
    static final double N = 150*150;
    static final double RAP=0.7;
-   
+
    protected boolean isTooLarge(PointD b[] ) throws Exception {
-      
+
       if( planBG.DEBUGMODE ) return false;
       double d1,d2;
       if( (d1=dist(b,0,1))>M || (d2=dist(b,0,2))>M ) return true;
       if( d1==0 || d2==0 ) throw new Exception("Rhomb error");
       double diag1 = dist(b,0,3);
-      double diag2 = dist(b,1,2); 
+      double diag2 = dist(b,1,2);
       if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
       double rap = diag1/diag2;
       if( rap>1 ) rap = 1/rap;
@@ -1738,10 +1739,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @param maxParente parente maximale autorisée pour le tracé des fils (longueur de la descendance, -1 si aucune)
     * @return le nombre d'images (java) tracés
     */
-   
+
    private boolean flagSym;
-   
-//   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
+
+   //   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
    protected int draw(Graphics g, ViewSimple v/*,Vector<HealpixKey> redraw*/) { return draw(g,v,-1/*,redraw*/); }
    protected int draw(Graphics g, ViewSimple v,int maxParente/*,Vector<HealpixKey> redraw*/) {
       long t1 = Util.getTime(0);
@@ -1749,19 +1750,19 @@ public class HealpixKey implements Comparable<HealpixKey> {
       PointD[] b = getProjViewCorners(v);
 
       nDraw++;
-      
+
       boolean out=false;
       if( b==null  || (out=isOutView(v,b)) ) {
          if( out ) nOut++;
          return 0;
       }
-      
+
       try { b = grow(b, 1); } catch( Exception e ) {  }
-      
+
       // Détermination des triangles à tracer
       double p1,p2;
       boolean flagLosange=false;
-      
+
       flagSym = false;
 
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
@@ -1772,13 +1773,13 @@ public class HealpixKey implements Comparable<HealpixKey> {
             double d12=dist(b,1,2);
             double d03=dist(b,0,3);
             // CA NE FONCTIONNE PAS SI BIEN, MEME SI C'EST PLUS RAPIDE
-//            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
+            //            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
             boolean flagPatate=false;
             flagSym=flagPatate;
             if( d12<d03 ) {
                p1 = distCentre(b[0],b[1],b[2]);
                p2 = distCentre(b[3],b[1],b[2]);
-               
+
                if( flagPatate ) {
                   if( p1<p2 ) symetric(b[3],b[0],b[1],b[2]);
                   else symetric(b[0],b[3],b[1],b[2]);
@@ -1786,11 +1787,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   if( p1<p2 ) b[3]=null;
                   else b[0]=null;
                }
-               
+
             } else {
                p1 = distCentre(b[1],b[0],b[3]);
                p2 = distCentre(b[2],b[0],b[3]);
-               
+
                if( flagPatate ) {
                   if( p1<p2 ) symetric(b[2],b[1],b[0],b[3]);
                   else symetric(b[1],b[2],b[0],b[3]);
@@ -1799,20 +1800,20 @@ public class HealpixKey implements Comparable<HealpixKey> {
                   else b[1]=null;
                }
             }
-            
+
          } else {
-            
+
             boolean drawFast = planBG.mustDrawFast();
- 
+
             // Test losange trop grand,  A retracer
-//            if( !drawFast && isTooLarge(b) ) {
-//               if( parente==0 && maxParente==-1 ) redraw.add(this);
-//               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
-//                  resetTimer();
-//                  resetTimeAskRepaint();
-//                  return n;
-//               }
-//            }
+            //            if( !drawFast && isTooLarge(b) ) {
+            //               if( parente==0 && maxParente==-1 ) redraw.add(this);
+            //               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
+            //                  resetTimer();
+            //                  resetTimeAskRepaint();
+            //                  return n;
+            //               }
+            //            }
             try {
                if( !drawFast && /* !allSky && */ isTooLarge(b) ) {
                   resetTimer();
@@ -1864,7 +1865,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       try {
          if( th!=-1 ) n+=drawTriangle(g2d, img, b, th, !flagLosange);
          if( tb!=-1 && !flagLosange ) n+=drawTriangle(g2d, img, b, tb, true);
-      } 
+      }
       catch( Throwable e ) { planBG.clearBuf(); }
       finally {
          g2d.setComposite(saveComposite);
@@ -1873,33 +1874,33 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( parente>0 ) { pixels=null; rgb=null; }
 
       drawLosangeBorder(g,b);
-      
+
       long t2 = Util.getTime(0);
       if( !allSky ) planBG.nbImgDraw++;
       planBG.cumulTimeDraw += (t2-t1);
 
       resetTimer();
-//      resetTimeAskRepaint();
-      
+      //      resetTimeAskRepaint();
+
       if( opacity<1f ) planBG.updateFading(true);
 
       return n;
    }
-   
+
    private long loadDate = System.currentTimeMillis();
-   
+
    static private final long TIMEFADER = 1500;
    static private final float MINFADER = 0.6f;
-   
+
    // Pour le moment pas d'animation de fondu-enchainé
    // EN FAIT IL FAUDRAIT MELANGER LES PIXELS AVEC LES VALEURS DU LOSANGE PERE
    // PLUTOT QUE DE JOUER SUR L'OPACITY
    private float getFadingOpacity() {
       return 1f;
-//      if( allSky ) return 1f;
-//      long t = System.currentTimeMillis() - loadDate;
-//      float op = t>=TIMEFADER ? 1f : MINFADER +( (float)t/TIMEFADER)*(1f-MINFADER);
-//      return op;
+      //      if( allSky ) return 1f;
+      //      long t = System.currentTimeMillis() - loadDate;
+      //      float op = t>=TIMEFADER ? 1f : MINFADER +( (float)t/TIMEFADER)*(1f-MINFADER);
+      //      return op;
    }
 
    /** Retourne >0 si le point a est "à droite" de la droite passant par g et d */
@@ -1915,28 +1916,28 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double my=(g.y+d.y)/2;
       return (a.x-mx)*(a.x-mx) + (a.y-my)*(a.y-my) ;
    }
-   
+
    /** calcul dans b la symétrie orthogonale de a par rapport à la droite gd */
    public static void symetric(PointD b, PointD a, PointD g, PointD d) {
-      
+
       // Calcul de l'angle theta entre la droite gd et ga
       double alpha = Math.atan2(d.y-g.y,d.x-g.x);
       double beta  = Math.atan2(a.y-g.y,a.x-g.x);
       double theta = alpha - beta;
-      
+
       // on décale l'origine sur "g"
       double ax = a.x - g.x;
       double ay = a.y - g.y;
-      
+
       // Rotation de -2*theta
       double cost = Math.cos( -2*theta );
       double sint = Math.sin( -2*theta );
       double x = ax*cost + ay*sint;
       double y = - ax*sint + ay*cost;
-      
+
       // on recale
       b.x = x + g.x;
-      b.y = y + g.y;     
+      b.y = y + g.y;
    }
 
    /** Retourne le carré de la distance des coins d'indice g et d */
@@ -1949,7 +1950,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    /** Tracé du triangle dont l'indice de l'angle dans le losange est "h"
     * flagClip=true s'il y a positionnement d'un clip */
    protected int drawTriangle(Graphics2D g2d, Image img,PointD []b, int h,boolean flagClip) {
-      
+
       int d,g;
       switch(h) {
          case 0:   d=2; g=1; break;
@@ -1998,7 +1999,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
             planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || /*(!planBG.color || planBG.truePixels) &&*/ order-parente>=planBG.maxOrder
             ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR :
-            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+               RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
       if( img==null ) return 0;
       g2d.drawImage(img,tr,planBG.aladin);
@@ -2009,15 +2010,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final Color BLUE1 = new Color(0,0,255);
    static final Color BLUE2 = new Color(10,52,128);
    static final Color BLUE3 = new Color(51,144,198);
-   
+
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
     * => commandé par le menu Aladin.aladin.hpxCtrl */
-//   final protected void drawLosangeDiagonale(Graphics g,PointD b1[]) {
-//      if( !planBG.ref ) return;
-//      int debugIn = planBG.isDebugIn(npix);
-//      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
-//      PointD b [] = new PointD[4];
-//   }
+   //   final protected void drawLosangeDiagonale(Graphics g,PointD b1[]) {
+   //      if( !planBG.ref ) return;
+   //      int debugIn = planBG.isDebugIn(npix);
+   //      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
+   //      PointD b [] = new PointD[4];
+   //   }
 
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
     * => commandé par le menu Aladin.aladin.hpxCtrl */
@@ -2041,30 +2042,30 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
 
       Color c= parente>0 ? new Color(100,100,0) : Color.green;
-//      if( parente>0 ) {
-//         int n=200-(parente*50);
-//         if( n<0 ) c = Color.blue;
-//         else c=new Color(n,n,0);
-//      }
+      //      if( parente>0 ) {
+      //         int n=200-(parente*50);
+      //         if( n<0 ) c = Color.blue;
+      //         else c=new Color(n,n,0);
+      //      }
       g.setColor(flagSym ? Color.magenta : j==3?Color.red:c);
       g.drawPolygon(p);
 
-//      if( j==4 ) drawNumber(g,b);
+      //      if( j==4 ) drawNumber(g,b);
 
-//      for( int i=0; i<4; i++ ) {
-//         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
-//         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
-//         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
-//         g.drawString(i+"", x,y+10);
-//      }
+      //      for( int i=0; i<4; i++ ) {
+      //         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
+      //         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
+      //         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
+      //         g.drawString(i+"", x,y+10);
+      //      }
 
-//      if( st!=null ) {
-//         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-//            RenderingHints.VALUE_ANTIALIAS_OFF);
-//         ((Graphics2D)g).setStroke(st);
-//      }
+      //      if( st!=null ) {
+      //         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+      //            RenderingHints.VALUE_ANTIALIAS_OFF);
+      //         ((Graphics2D)g).setStroke(st);
+      //      }
    }
-   
+
    /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
     * => commandé par le menu Aladin.aladin.hpxCtrl */
    final protected void drawLosangeBorder(Graphics g,ViewSimple v) {
@@ -2081,10 +2082,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( c1<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[2].x,(int)b[2].y);
       if( c2<min2 ) g.drawLine((int)b[1].x,(int)b[1].y,(int)b[3].x,(int)b[3].y);
       if( c3<min2 ) g.drawLine((int)b[2].x,(int)b[2].y,(int)b[3].x,(int)b[3].y);
-      
+
       drawNumber(g,v,b);
    }
-   
+
    // Affichage du label (order/npix)
    final private void drawNumber(Graphics g,ViewSimple v,PointD [] b) {
       if( v.isAllSky() ) return;
@@ -2092,14 +2093,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       FontMetrics m = g.getFontMetrics();
       int size=m.stringWidth(s);
       int h = m.getHeight();
-//      if( dist(b,0,1)< (v.rv.width/6)*(v.rv.width/6) ) return;
+      //      if( dist(b,0,1)< (v.rv.width/6)*(v.rv.width/6) ) return;
       double xMin = Math.min(Math.min(b[0].x,b[1].x),Math.min(b[2].x,b[3].x));
       double xMax = Math.max(Math.max(b[0].x,b[1].x),Math.max(b[2].x,b[3].x));
       double dist= xMax-xMin;
       if( size<dist ) {
          int x = (int)(b[0].x+b[1].x+b[2].x+b[3].x)/4 - size/2;
          int y = (int)(b[0].y+b[1].y+b[2].y+b[3].y)/4 + h/2;
-         
+
          boolean a=false,c=false;
          if( a=(x<3) ) x=3;
          else if( a=(x+size+3>v.rv.width) ) x=v.rv.width-size-3;
@@ -2120,7 +2121,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
       }
    }
-   
+
    /** Tracé des bords du losange Healpix (au plus juste) */
    protected void drawRealBorders(Graphics g, ViewSimple v) {
       try {
@@ -2140,7 +2141,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       } catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) e.printStackTrace();
       }
-  }
+   }
 
 
    /** Affichage de controle de la position du losange */
@@ -2169,15 +2170,15 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
       g.drawString(s, x-size/2,y+3);
 
-//      // Les indices des coins
-//      if( Math.abs(b[2].x-b[1].x)>30 ) {
-//         for( int i=0; i<4; i++ ) {
-//            int j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
-//            int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
-//            int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
-//            g.drawString(i+"", x,y+10);
-//         }
-//      }
+      //      // Les indices des coins
+      //      if( Math.abs(b[2].x-b[1].x)>30 ) {
+      //         for( int i=0; i<4; i++ ) {
+      //            int j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
+      //            int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
+      //            int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
+      //            g.drawString(i+"", x,y+10);
+      //         }
+      //      }
 
       g.setColor(c);
    }
@@ -2200,149 +2201,149 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected Coord [] getCorners() {
       return hpix.getCorners();
    }
-   
-//   protected Coord [] getCorners() { hpix.getCorners(); }
-//      if( corners==null ) corners = computeCorners();
-//      return corners;
-//   }
+
+   //   protected Coord [] getCorners() { hpix.getCorners(); }
+   //      if( corners==null ) corners = computeCorners();
+   //      return corners;
+   //   }
 
    protected boolean isOutView(ViewSimple v) { return hpix.isOutView(v,null); }
    protected boolean isOutView(ViewSimple v,PointD []b) { return hpix.isOutView(v,b); }
- 
-//   /** Retourne true si le losange est à coup sûr hors de la vue - je teste
-//    * uniquement les cas en-dessous, au-dessous, à droite ou à gauche */
-//   protected boolean isOutView(ViewSimple v) { return isOutView(v,null); }
-//
-//   protected boolean isOutView(ViewSimple v,PointD []b) {
-//      int w = v.getWidth();
-//      int h = v.getHeight();
-//      if( b==null ) b = getProjViewCorners(v);
-//      if( b==null ) return true;
-//      if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return false;
-//
-//      double minX,maxX,minY,maxY;
-//      minX=maxX=b[0].x;
-//      minY=maxY=b[0].y;
-//      for( int i=1; i<4; i++ ) {
-//         if( b[i].x<minX ) minX = b[i].x;
-//         else if( b[i].x>maxX ) maxX = b[i].x;
-//         if( b[i].y<minY ) minY = b[i].y;
-//         else if( b[i].y>maxY ) maxY = b[i].y;
-//      }
-//
-//      // Tout à droite ou tout à gauche
-//      if( minX<0 && maxX<0 || minX>=w && maxX>=w ) return true;
-//
-//      // Au-dessus ou en dessous
-//      if( minY<0 && maxY<0 || minY>=h && maxY>=h ) return true;
-//
-//      return false;  // Mais attention, ce n'est pas certain !!
-//   }
 
-//   private int oframe = -1;
+   //   /** Retourne true si le losange est à coup sûr hors de la vue - je teste
+   //    * uniquement les cas en-dessous, au-dessous, à droite ou à gauche */
+   //   protected boolean isOutView(ViewSimple v) { return isOutView(v,null); }
+   //
+   //   protected boolean isOutView(ViewSimple v,PointD []b) {
+   //      int w = v.getWidth();
+   //      int h = v.getHeight();
+   //      if( b==null ) b = getProjViewCorners(v);
+   //      if( b==null ) return true;
+   //      if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return false;
+   //
+   //      double minX,maxX,minY,maxY;
+   //      minX=maxX=b[0].x;
+   //      minY=maxY=b[0].y;
+   //      for( int i=1; i<4; i++ ) {
+   //         if( b[i].x<minX ) minX = b[i].x;
+   //         else if( b[i].x>maxX ) maxX = b[i].x;
+   //         if( b[i].y<minY ) minY = b[i].y;
+   //         else if( b[i].y>maxY ) maxY = b[i].y;
+   //      }
+   //
+   //      // Tout à droite ou tout à gauche
+   //      if( minX<0 && maxX<0 || minX>=w && maxX>=w ) return true;
+   //
+   //      // Au-dessus ou en dessous
+   //      if( minY<0 && maxY<0 || minY>=h && maxY>=h ) return true;
+   //
+   //      return false;  // Mais attention, ce n'est pas certain !!
+   //   }
+
+   //   private int oframe = -1;
 
 
-//   protected Coord [] computeCorners() {
-//      Coord [] corners;
-//      try {
-//         long nside = (long)Math.pow(2,order);
-//         double [][] x = CDSHealpix.corners_nest(nside,npix);
-//         corners = new Coord[4];
-//         for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
-//         corners = computeCornersToICRS(corners);
-//      } catch( Exception e ) { return null; }
-//      return corners;
-//   }
-   
-//   protected Coord [] computeCornersToICRS(Coord [] corners) {
-//      int frameOrigin = planBG!=null ? planBG.frameOrigin : Localisation.GAL;
-//      if( frameOrigin!=Localisation.ICRS ) {
-//         for( int i=0; i<4; i++ ) corners[i]=Localisation.frameToFrame(corners[i],frameOrigin,Localisation.ICRS);
-//      }
-//      return corners;
-//   }
-   
+   //   protected Coord [] computeCorners() {
+   //      Coord [] corners;
+   //      try {
+   //         long nside = (long)Math.pow(2,order);
+   //         double [][] x = CDSHealpix.corners_nest(nside,npix);
+   //         corners = new Coord[4];
+   //         for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
+   //         corners = computeCornersToICRS(corners);
+   //      } catch( Exception e ) { return null; }
+   //      return corners;
+   //   }
+
+   //   protected Coord [] computeCornersToICRS(Coord [] corners) {
+   //      int frameOrigin = planBG!=null ? planBG.frameOrigin : Localisation.GAL;
+   //      if( frameOrigin!=Localisation.ICRS ) {
+   //         for( int i=0; i<4; i++ ) corners[i]=Localisation.frameToFrame(corners[i],frameOrigin,Localisation.ICRS);
+   //      }
+   //      return corners;
+   //   }
+
    final protected PointD[] getProjViewCorners(ViewSimple v) {
       return hpix.getProjViewCorners(v);
    }
 
-//   private int nNull;
-//
-//   /**
-//    * Retourne les coordonnées ra,de des 4 coins du losange dans la projection de
-//    * la vue ou null si problème
-//    */
-//   final protected PointD[] getProjViewCorners(ViewSimple v) {
-//      Projection proj;
-//      if( (proj=v.getProj())==null || corners==null ) return null;
-//      if( oiz==v.iz && vHashCode==v.hashCode() ) {
-//         if( nNull>1 ) return null;
-//         return coins;
-//      }
-//      nNull=0;
-//
-//      // On calcul les xy projection des 4 coins
-//      for (int i = 0; i<4; i++) {
-//         Coord c = corners[i];
-//         proj.getXY(c);
-//         if( Double.isNaN(c.x)) {
-//            nNull++;
-//            if( nNull>1 ) return null;
-//            else { coins[i]=null; continue; }
-//         }
-//         if( coins[i]==null ) coins[i]=new PointD(c.x,c.y);
-//         else { coins[i].x=c.x; coins[i].y=c.y; }
-//      }
-//
-//      // On augmente d'un pixel écran pour couvrir les coutures
-//      if( Aladin.macPlateform && Aladin.ISJVM15 ) {
-//         double val = 2/v.zoom;
-//         if( val>0.5 ) {
-//            boolean aNull=false,cNull=false;
-//            for( int i=0; i<2; i++ ) {
-//               int a= i==1 ? 1 : 0;
-//               int c= i==1 ? 2 : 3;
-//               if( coins[a]==null ) {
-//                  int d,g;
-//                  if( a==0 || a==3 ) { d=1; g=2; }
-//                  else { d=0; g=3; }
-//                  coins[a] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
-//                  val*=2;  // Les triangles doivent être encore un peu agrandis
-//                  aNull=true;
-//               } else if( coins[c]==null ) {
-//                  int d,g;
-//                  if( c==0 || c==3 ) { d=1; g=2; }
-//                  else { d=0; g=3; }
-//                  coins[c] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
-//                  val*=2;
-//                  cNull=true;
-//               } else aNull=cNull=false;
-//
-//               double angle = Math.atan2(coins[c].y-coins[a].y, coins[c].x-coins[a].x);
-//               double chouilla =val*Math.cos(angle);
-//               coins[a].x-=chouilla;
-//               coins[c].x+=chouilla;
-//               chouilla = val*Math.sin(angle);
-//               coins[a].y-=chouilla;
-//               coins[c].y+=chouilla;
-//               if( aNull ) coins[a]=null;
-//               else if( cNull ) coins[c]=null;
-//            }
-//         }
-//      }
-//
-//      // On calcule les xy de la vue
-//      for( int i=0; i<4; i++ ) {
-//         if( coins[i]!=null )  v.getViewCoordDble(coins[i],coins[i].x, coins[i].y);
-//      }
-//
-//      oiz=v.iz;
-//      vHashCode=v.hashCode();
-//      return coins;
-//   }
-   
+   //   private int nNull;
+   //
+   //   /**
+   //    * Retourne les coordonnées ra,de des 4 coins du losange dans la projection de
+   //    * la vue ou null si problème
+   //    */
+   //   final protected PointD[] getProjViewCorners(ViewSimple v) {
+   //      Projection proj;
+   //      if( (proj=v.getProj())==null || corners==null ) return null;
+   //      if( oiz==v.iz && vHashCode==v.hashCode() ) {
+   //         if( nNull>1 ) return null;
+   //         return coins;
+   //      }
+   //      nNull=0;
+   //
+   //      // On calcul les xy projection des 4 coins
+   //      for (int i = 0; i<4; i++) {
+   //         Coord c = corners[i];
+   //         proj.getXY(c);
+   //         if( Double.isNaN(c.x)) {
+   //            nNull++;
+   //            if( nNull>1 ) return null;
+   //            else { coins[i]=null; continue; }
+   //         }
+   //         if( coins[i]==null ) coins[i]=new PointD(c.x,c.y);
+   //         else { coins[i].x=c.x; coins[i].y=c.y; }
+   //      }
+   //
+   //      // On augmente d'un pixel écran pour couvrir les coutures
+   //      if( Aladin.macPlateform && Aladin.ISJVM15 ) {
+   //         double val = 2/v.zoom;
+   //         if( val>0.5 ) {
+   //            boolean aNull=false,cNull=false;
+   //            for( int i=0; i<2; i++ ) {
+   //               int a= i==1 ? 1 : 0;
+   //               int c= i==1 ? 2 : 3;
+   //               if( coins[a]==null ) {
+   //                  int d,g;
+   //                  if( a==0 || a==3 ) { d=1; g=2; }
+   //                  else { d=0; g=3; }
+   //                  coins[a] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
+   //                  val*=2;  // Les triangles doivent être encore un peu agrandis
+   //                  aNull=true;
+   //               } else if( coins[c]==null ) {
+   //                  int d,g;
+   //                  if( c==0 || c==3 ) { d=1; g=2; }
+   //                  else { d=0; g=3; }
+   //                  coins[c] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
+   //                  val*=2;
+   //                  cNull=true;
+   //               } else aNull=cNull=false;
+   //
+   //               double angle = Math.atan2(coins[c].y-coins[a].y, coins[c].x-coins[a].x);
+   //               double chouilla =val*Math.cos(angle);
+   //               coins[a].x-=chouilla;
+   //               coins[c].x+=chouilla;
+   //               chouilla = val*Math.sin(angle);
+   //               coins[a].y-=chouilla;
+   //               coins[c].y+=chouilla;
+   //               if( aNull ) coins[a]=null;
+   //               else if( cNull ) coins[c]=null;
+   //            }
+   //         }
+   //      }
+   //
+   //      // On calcule les xy de la vue
+   //      for( int i=0; i<4; i++ ) {
+   //         if( coins[i]!=null )  v.getViewCoordDble(coins[i],coins[i].x, coins[i].y);
+   //      }
+   //
+   //      oiz=v.iz;
+   //      vHashCode=v.hashCode();
+   //      return coins;
+   //   }
+
    HealpixKey [] getPixList() { return null; }
-   
+
    /** Retourne le Norder du losange */
    protected int getLosangeOrder() { return (int)CDSHealpix.log2(width); }
 
@@ -2350,5 +2351,5 @@ public class HealpixKey implements Comparable<HealpixKey> {
    public int compareTo(HealpixKey o) {
       return priority - o.priority;
    }
-   
+
 }

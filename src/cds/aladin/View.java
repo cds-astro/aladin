@@ -30,11 +30,8 @@ import java.net.URLEncoder;
 import java.util.*;
 
 import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
 import cds.aladin.prop.Propable;
@@ -123,6 +120,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected Color gridColor = Aladin.GREEN;
    protected Color gridColorRA  = gridColor.brighter();
    protected Color gridColorDEC = gridColor.brighter().brighter();
+   protected int gridFontSize = Aladin.SSIZE;
 
    // Les references aux autres objets
    Aladin aladin;
@@ -157,10 +155,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    // Gestion de la configuratin d'affichage Multiview
    protected JPanel mviewPanel;        // JPanel du multiview (on n'utilise pas directement
-                                      // celui de this car on veut pouvoir le bidouiller
-                                      // facilement (remove...)
+   // celui de this car on veut pouvoir le bidouiller
+   // facilement (remove...)
    protected ViewMemo viewMemo;       // Objet mémorisant les paramètres de toutes les vues
-                                      // même celles non visibles (scrollBar)
+   // même celles non visibles (scrollBar)
    protected ViewMemo viewSticked;	  // Mémorisation des vues stickées
    private boolean memoStick[];       // Flag sur les vues stickées
    protected int mouseView=-1;        // La vue sous la souris
@@ -170,11 +168,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected MyScrollbar scrollV;     // La scrollbar Vertical
    private int previousScrollGetValue=0; // Indice de la première vue visible
    private Point memoPos=null;        // sert à mémoriser la précédente position
-                                      // du scroll (x) et de la vue courante (y)
-                                      // dans le cas où on reviendrait à un modeView
-                                      // compatible avec cette mémorisation
+   // du scroll (x) et de la vue courante (y)
+   // dans le cas où on reviendrait à un modeView
+   // compatible avec cette mémorisation
    protected boolean selectFromView=false; // true si la dernière selection d'un plan a été
-                                      // faite en cliquant dans un SimpleView
+   // faite en cliquant dans un SimpleView
 
    // Gestion du MegaDrag (déplacement/affectation de vue)
    private ViewSimple megaDragViewSource=null;  // Vue source, ou null si aucune
@@ -186,8 +184,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean flagHighlight=false;       // true si on est en mode highlight des sources (voir hist[] dans ZommView)
 
    static protected String NOZOOM,MSTICKON,MSTICKOFF,MOREVIEWS,
-         MLABELON,MCOPY,MCOPYIMG,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
-         VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
+   MLABELON,MCOPY,MCOPYIMG,MLABELOFF,/*MROI,*/MNEWROI,MDELROI,MSEL,MDELV,
+   VIEW,ROIWNG,ROIINFO,HCLIC,HCLIC1,NIF,NEXT;
 
    protected void createChaine() {
       NOZOOM    = aladin.chaine.getString("VWNOZOOM");
@@ -199,7 +197,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       MLABELOFF = aladin.chaine.getString("VWMLABELOFF");
       MOREVIEWS = aladin.chaine.getString("VWMOREVIEWS");
       NEXT      = aladin.chaine.getString("VWNEXT");
-//      MROI      = aladin.chaine.getString("VWMROI");
+      //      MROI      = aladin.chaine.getString("VWMROI");
       MNEWROI   = aladin.chaine.getString("VWMNEWROI");
       MDELROI   = aladin.chaine.getString("VWMDELROI");
       MSEL      = aladin.chaine.getString("VWMSEL");
@@ -212,16 +210,16 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       NIF       = aladin.chaine.getString("VWNIF");
    }
 
-  /** Creation de l'objet View
-   * @param aladin Reference
-   */
+   /** Creation de l'objet View
+    * @param aladin Reference
+    */
    protected View(Aladin aladin) {
       this.aladin = aladin;
       createChaine();
       this.status = aladin.status;
       this.calque = aladin.calque;
       this.zoomview = aladin.calque.zoom.zoomView;
-//      if( aladin.STANDALONE ) INITW=700;
+      //      if( aladin.STANDALONE ) INITW=700;
 
       int nitem = aladin.viewControl.getNbCol(ViewControl.DEFAULT);
       scrollV = new MyScrollbar(Scrollbar.VERTICAL,0,nitem,0,ViewControl.MAXVIEW/nitem);
@@ -233,7 +231,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       setLayout( new BorderLayout(0,0) );
       add("Center",mviewPanel);
-//      add("West",scrollV);
+      //      add("West",scrollV);
 
       // Création du repère
       createRepere();
@@ -259,13 +257,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       },
       KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
       registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { next(-1); }
       },
       KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
-      );
+            );
    }
 
    /** Pour déterminer par la suite si la dernière sélection d'un SimpleView
@@ -274,215 +272,215 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  On en profite pour éventuellement scroller la pile pour rendre visible
     *  le slide correspondant au plan de base
     */
-    protected void setSelectFromView(boolean flag) {
-       selectFromView=flag;
-       if( flag ) aladin.calque.select.showSelectedPlan();
-    }
+   protected void setSelectFromView(boolean flag) {
+      selectFromView=flag;
+      if( flag ) aladin.calque.select.showSelectedPlan();
+   }
 
-    /** Retourne true si on peut/doit effacer au-moins une ou plusieurs vues */
-    protected boolean isViewSelected() {
-       if( !selectFromView ) return false;
-//       if( modeView==ViewControl.MVIEW1 ) return false;
-       for( int i=0; i<ViewControl.MAXVIEW; i++ ) if( viewSimple[i].selected ) return true;
-       return false;
-    }
+   /** Retourne true si on peut/doit effacer au-moins une ou plusieurs vues */
+   protected boolean isViewSelected() {
+      if( !selectFromView ) return false;
+      //       if( modeView==ViewControl.MVIEW1 ) return false;
+      for( int i=0; i<ViewControl.MAXVIEW; i++ ) if( viewSimple[i].selected ) return true;
+      return false;
+   }
 
-    /**
-     * Sélection de la vue indiquée
-     */
-    protected void setSelect(ViewSimple v) {
-       for( int i=0; i<viewSimple.length; i++ ) {
-          if( v==viewSimple[i] ) { setSelect(i); paintBordure(); return; }
-       }
-       return;
-    }
+   /**
+    * Sélection de la vue indiquée
+    */
+   protected void setSelect(ViewSimple v) {
+      for( int i=0; i<viewSimple.length; i++ ) {
+         if( v==viewSimple[i] ) { setSelect(i); paintBordure(); return; }
+      }
+      return;
+   }
 
-    /**
-     * Sélection de la vue indiquée afin que l'on puisse proprement
-     * effacer le plan au cas où ! (comprenne qui pourra)
-     */
-    protected void setSelect(int nview) {
-       setSelectFromView(false);
-       unSelectAllView();
-       viewSimple[nview].selected=true;
-    }
+   /**
+    * Sélection de la vue indiquée afin que l'on puisse proprement
+    * effacer le plan au cas où ! (comprenne qui pourra)
+    */
+   protected void setSelect(int nview) {
+      setSelectFromView(false);
+      unSelectAllView();
+      viewSimple[nview].selected=true;
+   }
 
-    /** Sélection de toutes les vues (via le menu) */
-    protected void selectAllViews() {
-       for( int i=0; i<modeView; i++ ) {
-          if( !viewSimple[i].isFree() ) selectView(i);
-          viewSimple[i].paintBordure();
-       }
-    }
+   /** Sélection de toutes les vues (via le menu) */
+   protected void selectAllViews() {
+      for( int i=0; i<modeView; i++ ) {
+         if( !viewSimple[i].isFree() ) selectView(i);
+         viewSimple[i].paintBordure();
+      }
+   }
 
-    /** Déselection de toutes les vues sauf la vue courante */
-    protected void unselectViewsPartial() {
-       for( int i=0; i<modeView; i++ ) {
-          if( !viewSimple[i].isFree() && i!=currentView ) {
-             viewSimple[i].selected = false;
-             if( viewSimple[i].pref!=null  ) viewSimple[i].pref.selected=false;
-             viewSimple[i].paintBordure();
-          }
-       }
-       aladin.calque.select.repaint();
-    }
+   /** Déselection de toutes les vues sauf la vue courante */
+   protected void unselectViewsPartial() {
+      for( int i=0; i<modeView; i++ ) {
+         if( !viewSimple[i].isFree() && i!=currentView ) {
+            viewSimple[i].selected = false;
+            if( viewSimple[i].pref!=null  ) viewSimple[i].pref.selected=false;
+            viewSimple[i].paintBordure();
+         }
+      }
+      aladin.calque.select.repaint();
+   }
 
-    /**
-     * Positionnement d'une frame donnée pour une vue blink. Possibilité de
-     * synchroniser toutes les vues ayant le même plan de référence
-     * @param v vue concernée
-     * @param frameLevel numéro de la frame
-     * @param sync true si on doit l'appliquer, non pas uniquement à "v" mais
-     *             à toutes les vues.
-     */
-    protected void setCubeFrame(ViewSimple v,double frameLevel, boolean sync) {
-       // Pas de synchronisation des frames, facile !
-       if( !sync ) { v.cubeControl.setFrameLevel(frameLevel); return; }
+   /**
+    * Positionnement d'une frame donnée pour une vue blink. Possibilité de
+    * synchroniser toutes les vues ayant le même plan de référence
+    * @param v vue concernée
+    * @param frameLevel numéro de la frame
+    * @param sync true si on doit l'appliquer, non pas uniquement à "v" mais
+    *             à toutes les vues.
+    */
+   protected void setCubeFrame(ViewSimple v,double frameLevel, boolean sync) {
+      // Pas de synchronisation des frames, facile !
+      if( !sync ) { v.cubeControl.setFrameLevel(frameLevel); return; }
 
-       // Synchronisation de toutes les vues ayant le même plan blink de référence
-       for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].pref==v.pref && viewSimple[i].pref.selected ) viewSimple[i].cubeControl.setFrameLevel(frameLevel);
-       }
-    }
+      // Synchronisation de toutes les vues ayant le même plan blink de référence
+      for( int i=0; i<modeView; i++ ) {
+         if( viewSimple[i].pref==v.pref && viewSimple[i].pref.selected ) viewSimple[i].cubeControl.setFrameLevel(frameLevel);
+      }
+   }
 
-    /**
-     * Synchronisation de toutes les vues blinks sur le même plan de référence
-     * @param v la vue de référence
-     */
-    protected void syncCube(ViewSimple v) {
-       for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].pref==v.pref && viewSimple[i].cubeControl!=v.cubeControl ) {
-             viewSimple[i].cubeControl.syncBlink(v.cubeControl);
-          }
-       }
-    }
+   /**
+    * Synchronisation de toutes les vues blinks sur le même plan de référence
+    * @param v la vue de référence
+    */
+   protected void syncCube(ViewSimple v) {
+      for( int i=0; i<modeView; i++ ) {
+         if( viewSimple[i].pref==v.pref && viewSimple[i].cubeControl!=v.cubeControl ) {
+            viewSimple[i].cubeControl.syncBlink(v.cubeControl);
+         }
+      }
+   }
 
-    /** Active un Rainbow en superpostion de la vue courante
-     * @param cm la table des couleurs à visualiser
-     * @param min la valeur correspondante au 0 de la cm
-     * @param max la valeur correspondante au 255 de la cm
-     */
-    public Rainbow showRainbowFilter(ColorModel cm,double min, double max) {
-       getCurrentView().rainbowF = new Rainbow(aladin,cm,min,max);
-       return getCurrentView().rainbowF;
-    }
+   /** Active un Rainbow en superpostion de la vue courante
+    * @param cm la table des couleurs à visualiser
+    * @param min la valeur correspondante au 0 de la cm
+    * @param max la valeur correspondante au 255 de la cm
+    */
+   public Rainbow showRainbowFilter(ColorModel cm,double min, double max) {
+      getCurrentView().rainbowF = new Rainbow(aladin,cm,min,max);
+      return getCurrentView().rainbowF;
+   }
 
-    public void showRainbow(boolean active) {
-       ViewSimple v = getCurrentView();
-       if( active && v.rainbow==null ) v.rainbow = new RainbowPixel(aladin,v);
-       else v.rainbow.setVisible(active);
-    }
+   public void showRainbow(boolean active) {
+      ViewSimple v = getCurrentView();
+      if( active && v.rainbow==null ) v.rainbow = new RainbowPixel(aladin,v);
+      else v.rainbow.setVisible(active);
+   }
 
-    public boolean hasRainbow() {
-       return getCurrentView().hasRainbow();
-    }
+   public boolean hasRainbow() {
+      return getCurrentView().hasRainbow();
+   }
 
-    public boolean rainbowAvailable() {
-       return getCurrentView().rainbowAvailable();
-    }
+   public boolean rainbowAvailable() {
+      return getCurrentView().rainbowAvailable();
+   }
 
-    // Valeurs des zoom des vues sélectionnées par selectCompatibleViews(), -1 sinon
-//    private ViewMemo cpView = new ViewMemo();
+   // Valeurs des zoom des vues sélectionnées par selectCompatibleViews(), -1 sinon
+   //    private ViewMemo cpView = new ViewMemo();
 
-//    /** Déselection des vues précédemment sélectionnées via selectCompatibleViews()
-//     *  (SHIFT dans le ZoomView) - utilise le talbeau initialZoomCompatibleViews[]
-//     * pour lequel les valeurs != -1 indiquent les vues concernées
-//     */
-//    protected void unselectCompatibleViews() {
-//       return;
-//       ViewSimple v ;
-//       for( int i=0; i<modeView; i++ ) {
-//          if( (v=cpView.get(i,viewSimple[i]))==null ) continue;
-//          v.setZoomXY(v.zoom,v.xzoomView,v.yzoomView);
-//          v.newView(1);
-//       }
-//       repaint();
-//    }
+   //    /** Déselection des vues précédemment sélectionnées via selectCompatibleViews()
+   //     *  (SHIFT dans le ZoomView) - utilise le talbeau initialZoomCompatibleViews[]
+   //     * pour lequel les valeurs != -1 indiquent les vues concernées
+   //     */
+   //    protected void unselectCompatibleViews() {
+   //       return;
+   //       ViewSimple v ;
+   //       for( int i=0; i<modeView; i++ ) {
+   //          if( (v=cpView.get(i,viewSimple[i]))==null ) continue;
+   //          v.setZoomXY(v.zoom,v.xzoomView,v.yzoomView);
+   //          v.newView(1);
+   //       }
+   //       repaint();
+   //    }
 
-    /** Sélectionne toutes les vues compatibles si ce n'est déjà fait,
-     * sinon déselectionne toutes les vues sauf la vue courante
-     * @return true si on sélectionne, false si on déselectionne
-     */
-    protected boolean switchSelectCompatibleViews() {
-       if( isSelectCompatibleViews() ) {
-          unselectViewsPartial();
-          return false;
-       } else { selectCompatibleViews(); return true; }
-    }
+   /** Sélectionne toutes les vues compatibles si ce n'est déjà fait,
+    * sinon déselectionne toutes les vues sauf la vue courante
+    * @return true si on sélectionne, false si on déselectionne
+    */
+   protected boolean switchSelectCompatibleViews() {
+      if( isSelectCompatibleViews() ) {
+         unselectViewsPartial();
+         return false;
+      } else { selectCompatibleViews(); return true; }
+   }
 
-    /** Sélection de toutes les vues compatibles avec la vue courante (SHIFT zoomView) */
-    protected void selectCompatibleViews() {
-       ViewSimple cv = getCurrentView();
-       if( !Projection.isOk(cv.pref.projd) ) return;
-       for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].isFree() ) continue;
-          if( cv==viewSimple[i] ) continue;
-          if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
-//          cpView.set(i,viewSimple[i]);
-          selectView(i);
-          viewSimple[i].paintBordure();
-       }
-    }
+   /** Sélection de toutes les vues compatibles avec la vue courante (SHIFT zoomView) */
+   protected void selectCompatibleViews() {
+      ViewSimple cv = getCurrentView();
+      if( !Projection.isOk(cv.pref.projd) ) return;
+      for( int i=0; i<modeView; i++ ) {
+         if( viewSimple[i].isFree() ) continue;
+         if( cv==viewSimple[i] ) continue;
+         if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
+         //          cpView.set(i,viewSimple[i]);
+         selectView(i);
+         viewSimple[i].paintBordure();
+      }
+   }
 
-    /** Retourne true si toutes les vues compatibles sont déjà sélectionnées */
-    protected boolean isSelectCompatibleViews() {
-       ViewSimple cv = getCurrentView();
-       if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
-       for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].isFree() ) continue;
-          if( cv==viewSimple[i] ) continue;
-          if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
-          if( !viewSimple[i].selected ) return false;
-       }
-       return true;
-    }
+   /** Retourne true si toutes les vues compatibles sont déjà sélectionnées */
+   protected boolean isSelectCompatibleViews() {
+      ViewSimple cv = getCurrentView();
+      if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
+      for( int i=0; i<modeView; i++ ) {
+         if( viewSimple[i].isFree() ) continue;
+         if( cv==viewSimple[i] ) continue;
+         if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
+         if( !viewSimple[i].selected ) return false;
+      }
+      return true;
+   }
 
-    /** Retourne true s'il y a au moins une vue compatible avec la vue courante (SHIFT zoomView)
-     * non déjà sélectionnée, n'utilisant pas le même plan de référence
-     */
-    protected boolean hasCompatibleViews() {
-       try {
+   /** Retourne true s'il y a au moins une vue compatible avec la vue courante (SHIFT zoomView)
+    * non déjà sélectionnée, n'utilisant pas le même plan de référence
+    */
+   protected boolean hasCompatibleViews() {
+      try {
          ViewSimple cv = getCurrentView();
-          if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
-          for( int i=0; i<modeView; i++ ) {
-             if( viewSimple[i].isFree() || cv==viewSimple[i] ) continue;
-             if( cv.pref==viewSimple[i].pref && cv.pref.getZ()==viewSimple[i].pref.getZ() ) continue;
-             if( viewSimple[i].selected ) continue;
-             if( cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) return true;
-          }
+         if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
+         for( int i=0; i<modeView; i++ ) {
+            if( viewSimple[i].isFree() || cv==viewSimple[i] ) continue;
+            if( cv.pref==viewSimple[i].pref && cv.pref.getZ()==viewSimple[i].pref.getZ() ) continue;
+            if( viewSimple[i].selected ) continue;
+            if( cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) return true;
+         }
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
       }
-       return false;
-    }
+      return false;
+   }
 
-    /** Retourne le nombre de vues sélectionnées */
-    protected int nbSelectedViews() {
-       int i=0;
-       for( i=0; i<modeView; i++ ) if( viewSimple[i].selected ) i++;
-       return i;
-    }
+   /** Retourne le nombre de vues sélectionnées */
+   protected int nbSelectedViews() {
+      int i=0;
+      for( i=0; i<modeView; i++ ) if( viewSimple[i].selected ) i++;
+      return i;
+   }
 
-    /** Selection de la vue */
-    protected void selectView(int nview) {
-       setSelectFromView(true);
-       viewSimple[nview].selected=true;
-    }
+   /** Selection de la vue */
+   protected void selectView(int nview) {
+      setSelectFromView(true);
+      viewSimple[nview].selected=true;
+   }
 
-    /** Retourne la première vue sélectionnée, sinon retourne -1 */
-    protected int getFirstSelectedView() {
-       for( int i=0; i<modeView; i++ ) if( viewSimple[i].selected ) return i;
-       return -1;
-    }
+   /** Retourne la première vue sélectionnée, sinon retourne -1 */
+   protected int getFirstSelectedView() {
+      for( int i=0; i<modeView; i++ ) if( viewSimple[i].selected ) return i;
+      return -1;
+   }
 
-    /** Retourne la première vue sélectionnée, visible
-     * dont le plan de référence est celui passé en paramètre, sinon null */
-    protected ViewSimple getFirstSelectedView(Plan p) {
-       for( int i=0; i<modeView; i++ ) {
-          if( viewSimple[i].selected && viewSimple[i].pref==p ) return viewSimple[i];
-       }
-       return null;
-    }
+   /** Retourne la première vue sélectionnée, visible
+    * dont le plan de référence est celui passé en paramètre, sinon null */
+   protected ViewSimple getFirstSelectedView(Plan p) {
+      for( int i=0; i<modeView; i++ ) {
+         if( viewSimple[i].selected && viewSimple[i].pref==p ) return viewSimple[i];
+      }
+      return null;
+   }
 
    /** Sélectionne toutes les vues qui ont p comme plan de référence
     *  mais ne déselectionne pas les vues déjà sélectionnées
@@ -533,8 +531,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne true si le MegaDrag peut être réalisé a priori */
    protected boolean isMegaDrag() {
-      return flagMegaDrag;
-  }
+      return flagMegaDrag && !aladin.isFullScreen();
+   }
 
    /** Démarre un MegaDrag potentiel sur une vue vSource */
    protected void startMegaDrag(ViewSimple vSource) {
@@ -583,7 +581,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          }
          on=n;
       }
-//      System.out.println("Permutation : "+perm);
+      //      System.out.println("Permutation : "+perm);
    }
 
    /** Effectue si possible un MegaDrag en fonction des paramètres positionnés
@@ -593,6 +591,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean stopMegaDrag(Object target,int x, int y,boolean ctrlPressed) {
       boolean rep=true;
 
+      if( !isMegaDrag() ) return false;
+
       aladin.makeCursor(aladin.toolBox,Aladin.DEFAULTCURSOR);
       setMyCursor(Aladin.DEFAULTCURSOR);
 
@@ -601,12 +601,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       megaDragViewTarget = i<0?null:viewSimple[i];
 
       if( !flagMegaDrag
-         || megaDragViewSource==null && megaDragPlanSource==null
-         || megaDragViewTarget==null ) {
+            || megaDragViewSource==null && megaDragPlanSource==null
+            || megaDragViewTarget==null ) {
          rep=false;
       }
 
-//if( rep ) System.out.println("MegaDrag Source = "+ (megaDragViewSource!=null?(megaDragViewSource+""):(""+megaDragPlanSource))+" Target="+megaDragViewTarget);
+      //if( rep ) System.out.println("MegaDrag Source = "+ (megaDragViewSource!=null?(megaDragViewSource+""):(""+megaDragPlanSource))+" Target="+megaDragViewTarget);
 
       // La cible est soit-même => on ne fait rien
       if( rep && megaDragViewTarget==megaDragViewSource ) rep=false;
@@ -614,22 +614,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       // En mode Taquin la source doit être vide et juste à coté
       if( rep && flagTaquin &&
             (megaDragPlanSource!=null
-                  || !megaDragViewTarget.isFree()
-                  || !isAcote(megaDragViewSource.n,megaDragViewTarget.n)) ) rep=false;
+            || !megaDragViewTarget.isFree()
+            || !isAcote(megaDragViewSource.n,megaDragViewTarget.n)) ) rep=false;
 
       flagMegaDrag=false;
 
       // Ajout a une vue ayant un plan BLINK ou MOSAIC
       if( rep && !megaDragViewTarget.isFree()
             && (megaDragViewTarget.pref instanceof PlanImageBlink
-                || megaDragViewTarget.pref.type==Plan.IMAGEMOSAIC) ) {
+                  || megaDragViewTarget.pref.type==Plan.IMAGEMOSAIC) ) {
          Plan p = megaDragPlanSource!=null?megaDragPlanSource:megaDragViewSource.pref;
          if( p==null || !p.isSimpleImage() || !Projection.isOk(p.projd)
                || !Projection.isOk(megaDragViewTarget.pref.projd) ) rep=false;
          else {
             if( !aladin.confirmation(aladin.chaine.getString("ADDFRAMECONF"))) rep=false;
             else if( megaDragViewTarget.pref instanceof PlanImageBlink)
-            ((PlanImageBlink)megaDragViewTarget.pref).addPlan((PlanImage)p);
+               ((PlanImageBlink)megaDragViewTarget.pref).addPlan((PlanImage)p);
             else ((PlanImageMosaic)megaDragViewTarget.pref).addPlan((PlanImage)p);
             megaDragViewSource=null;
             megaDragPlanSource=null;
@@ -647,23 +647,23 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          v.addPlotTable(p, 0, 1,true);
       }
 
-//      // Creation d'un plan MOSAIC
-//      // TROP SURPRENANT, POUR L'INSTANT ON NE L'IMPLANTE PAS
-//      else if( rep && !megaDragViewTarget.isFree()
-//            && megaDragViewTarget.pref.isSimpleImage() ) {
-//         Plan p = megaDragPlanSource!=null?megaDragPlanSource:megaDragViewSource.pref;
-//         if( p==null || !p.isSimpleImage() ) rep=false;
-//         else {
-//            PlanImage pi[] = new PlanImage[2];
-//            pi[0] = (PlanImage) megaDragViewTarget.pref;
-//            pi[1] = (PlanImage) p;
-//            aladin.calque.newPlanImageMosaic(pi,megaDragViewTarget);
-//            megaDragViewSource=null;
-//            megaDragPlanSource=null;
-//            megaDragViewTarget=null;
-//            return rep;
-//         }
-//      }
+      //      // Creation d'un plan MOSAIC
+      //      // TROP SURPRENANT, POUR L'INSTANT ON NE L'IMPLANTE PAS
+      //      else if( rep && !megaDragViewTarget.isFree()
+      //            && megaDragViewTarget.pref.isSimpleImage() ) {
+      //         Plan p = megaDragPlanSource!=null?megaDragPlanSource:megaDragViewSource.pref;
+      //         if( p==null || !p.isSimpleImage() ) rep=false;
+      //         else {
+      //            PlanImage pi[] = new PlanImage[2];
+      //            pi[0] = (PlanImage) megaDragViewTarget.pref;
+      //            pi[1] = (PlanImage) p;
+      //            aladin.calque.newPlanImageMosaic(pi,megaDragViewTarget);
+      //            megaDragViewSource=null;
+      //            megaDragPlanSource=null;
+      //            megaDragViewTarget=null;
+      //            return rep;
+      //         }
+      //      }
 
       // Copie ou déplacement d'une vue
       else if( rep && megaDragViewSource!=null ) {
@@ -679,7 +679,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( !aladin.calque.canBeRef( megaDragPlanSource ) ) rep=false;
          if( rep ) {
             aladin.console.printCommand("cview "+Tok.quote(megaDragPlanSource.label)+
-                              " "+getIDFromNView(megaDragViewTarget.n));
+                  " "+getIDFromNView(megaDragViewTarget.n));
             unSelectAllView();
             setPlanRef(megaDragViewTarget.n,megaDragPlanSource);
          }
@@ -747,7 +747,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          y = origY;
       } else if( source instanceof ViewSimple ) {
          int currentView = ((ViewSimple)source).isProjSync() ?((ViewSimple)source).n
-                             : getCurrentNumView();
+               : getCurrentNumView();
          x = (currentView%vueInCol)*vueDim.width + origX;
          y = (currentView/vueInCol)*vueDim.height + origY;
       } else return -1;
@@ -786,7 +786,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             int y=(int)s.yv[vc[i].n];
             if( x<=0 || y<=0 || x>p.naxis1 || y>p.naxis2 ) { flagOut=true; break; }
          }
-//if( flagOut ) System.out.println("*** "+s.id+" est en dehors");
+         //if( flagOut ) System.out.println("*** "+s.id+" est en dehors");
          if( flagOut ) continue;
 
          a[n++]=s;
@@ -805,7 +805,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          for( int j=i+1; j<n; j++ ) {
             o2.al  = a[j].raj;
             o2.del = a[j].dej;
-           if( Coord.getDist(o1,o2)<=dist ) { tooClose[j]=true; m--; }
+            if( Coord.getDist(o1,o2)<=dist ) { tooClose[j]=true; m--; }
          }
       }
 
@@ -846,22 +846,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    private double createROIInternal(double tailleRadius,int taillePixel,boolean dialog) {
 
       int first = -1;
-      
+
       // Détermination des views images concernées
       Vector<ViewSimple> vcVect = new Vector<ViewSimple>();
-      
+
       // On commence par les plans sélectionnés
       // CA NE MARCHE PAS
-//      if( vcVect.size()==0 ) {
-//         Plan [] plan = aladin.calque.getPlans();
-//         for( Plan p : plan ) {
-//            if( !p.flagOk || !p.isPixel() || !p.selected ) continue;
-//            if( isUsed(p) ) continue;
-//            ViewSimple v = createViewForPlan(p);
-//            vcVect.add(v);
-//         }
-//      }
-      
+      //      if( vcVect.size()==0 ) {
+      //         Plan [] plan = aladin.calque.getPlans();
+      //         for( Plan p : plan ) {
+      //            if( !p.flagOk || !p.isPixel() || !p.selected ) continue;
+      //            if( isUsed(p) ) continue;
+      //            ViewSimple v = createViewForPlan(p);
+      //            vcVect.add(v);
+      //         }
+      //      }
+
       // On prend en compte les vues correspondnantes
       for( int i=0; i<modeView; i++ ) {
          ViewSimple vc=viewSimple[i];
@@ -869,10 +869,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( !vc.selected ) continue;
          if( !vcVect.contains(vc ) ) vcVect.add(vc);
       }
-      
+
       // Toujours aucune vue => on prend la vue de base
       if( vcVect.size()==0 ) vcVect.add(getCurrentView());
-      
+
       ViewSimple vca[] = new ViewSimple[vcVect.size()];
       Enumeration<ViewSimple> e = vcVect.elements();
       for( int i=0; e.hasMoreElements(); i++ ) vca[i]=e.nextElement();
@@ -898,19 +898,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          }
       }
 
-      
+
       // Récupération des sources concernées dans l'ordre des mesures
       Vector<Obj> vsel = new Vector<Obj>();
       for( int i=0; i<aladin.mesure.nbSrc; i++ ) vsel.add(aladin.mesure.src[i]);
-      
+
       // Détermination de la taille si non précisée
       if( tailleRadius==0 ) {
          ViewSimple vc = vca[0];
-         
+
          double taille = Math.min( vc.getTailleRA(), vc.getTailleDE() );
          // Détermination de la taille du champ en se basant sur la première vue
          if( taille<1 ) tailleRadius=taille;
-         
+
          // Sinon des valeurs par défaut
          else {
             Projection proj = vc.getProj();
@@ -920,7 +920,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          }
       }
 
-      
+
       // Détermination des sources en éliminant les doublons ou les objets
       // trop proches ou les objets hors champ
       Position src[] = getSourceList(vsel,vca,tailleRadius==0?3./3600:tailleRadius/2);
@@ -938,8 +938,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             }
             pl = src.length>1 ? "s" : "";
             stat.append("\n   .Object"+pl+": "+src.length);
-//            if( !aladin.confirmation(ROIINFO+stat) ) return;
-            
+            //            if( !aladin.confirmation(ROIINFO+stat) ) return;
+
             Panel panel = new Panel();
             TextField radiusROI = new TextField(5);
             radiusROI.setText( Coord.getUnit(tailleRadius) );
@@ -949,12 +949,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             tailleRadius = Server.getRM( radiusROI.getText() )/60;
          }
       }
-      
+
       if( !isMultiView() ) setModeView(ViewControl.MVIEW9);
 
       for( int j=0; j<src.length; j++ ) {
          Position o = src[j];
-//System.out.println("Source "+o.id);
+         //System.out.println("Source "+o.id);
 
          for( int i=0; i<vca.length; i++ ) {
             ViewSimple v;
@@ -972,12 +972,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             v.setCenter(o.raj,o.dej);
             v.setZoomByRadius(tailleRadius,width);
             v.locked=true;
-//            if( !(v.pref instanceof PlanBG) ) v.locked= true;
-//            else {
-////               v.setZoomXY(v.zoom,-1,-1);
-//               System.out.println("zoom="+v.zoom+" v.rzoom="+v.rzoom);
-//               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false,true);
-//            }
+            //            if( !(v.pref instanceof PlanBG) ) v.locked= true;
+            //            else {
+            ////               v.setZoomXY(v.zoom,-1,-1);
+            //               System.out.println("zoom="+v.zoom+" v.rzoom="+v.rzoom);
+            //               v.pref=v.cropAreaBG(v.rzoom,Coord.getSexa(o.raj, o.dej),v.zoom,1,false,true);
+            //            }
 
             if( n==-1 ) {
                n=viewMemo.setAfter(previousScrollGetValue+modeView-1 -getNbStickedView(),v);
@@ -989,11 +989,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.log("createROI","["+src.length+" position(s)]");
       scrollOn(0);
       repaintAll();
-//      if( first>=0 ) scrollOn(first);
-      
+      //      if( first>=0 ) scrollOn(first);
+
       return tailleRadius;
    }
-   
+
    /** Création d'une vue pour le Plan en paramètre */
    protected ViewSimple createViewForPlan(Plan p) {
       int n=getNextNumView();
@@ -1001,7 +1001,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( n==-1 ) {
          v= new ViewSimple(aladin,this,viewSimple[0].rv.width,viewSimple[0].rv.height,0);
       } else v = viewSimple[n];
-      
+
       // Il faudrait tester s'il y a déjà une vue avec ce plan, et si c'est le
       // cas faire un lock (en tout cas en mode OUTREACH)
       // A FAIRE !!
@@ -1010,7 +1010,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       p.setActivated(true);
 
       if( n== -1) viewMemo.setAfter(previousScrollGetValue+modeView-1
-                     -getNbStickedView(),v);
+            -getNbStickedView(),v);
       return v;
    }
 
@@ -1021,7 +1021,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     */
    synchronized protected boolean setCurrentView(ViewSimple v) {
       if( currentView>=0 && currentView<viewSimple.length
-          && viewSimple[currentView]==v )  {
+            && viewSimple[currentView]==v )  {
          if( !v.isFree() && aladin.dialog!=null && !(v.pref instanceof PlanBG) ) aladin.dialog.setDefaultParameters(aladin.dialog.getCurrent(),4);
          return false;
       }
@@ -1040,116 +1040,116 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  les vues déjà sélectionnées
     *  @return true si on a pu le faire, sinon false
     */
-    protected boolean setCurrentView() {
-       for( int i=0; i<modeView; i++ ) {
-          if( !viewSimple[i].isFree() && viewSimple[i].selected ) {
-             setCurrentView(viewSimple[i]);
-             return true;
-          }
-       }
-       return false;
-    }
+   protected boolean setCurrentView() {
+      for( int i=0; i<modeView; i++ ) {
+         if( !viewSimple[i].isFree() && viewSimple[i].selected ) {
+            setCurrentView(viewSimple[i]);
+            return true;
+         }
+      }
+      return false;
+   }
 
-    /** Positionne le curseur en fonction de l'outil courant */
-    protected void setDefaultCursor() {
-       int tool=aladin.toolBox.getTool();
-       for( int i=0; i<modeView; i++ ) viewSimple[i].setDefaultCursor(tool,false);
-    }
+   /** Positionne le curseur en fonction de l'outil courant */
+   protected void setDefaultCursor() {
+      int tool=aladin.toolBox.getTool();
+      for( int i=0; i<modeView; i++ ) viewSimple[i].setDefaultCursor(tool,false);
+   }
 
-    /** Création du réticule par défaut, notamment lorsque je charge du AJ */
-    protected void setDefaultRepere() {
-       try {
-          ViewSimple v = getCurrentView();
-          Coord c = v.getCooCentre();
-          if( c!=null ) setRepere(c);
-       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+   /** Création du réticule par défaut, notamment lorsque je charge du AJ */
+   protected void setDefaultRepere() {
+      try {
+         ViewSimple v = getCurrentView();
+         Coord c = v.getCooCentre();
+         if( c!=null ) setRepere(c);
+      } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
 
-    }
+   }
 
-    /** Dans le cas où on a remplacé un plan par un autre (cas d'un calcul
-     * arithmétique par exemple), il faut réaffecter le "nouveau" plan aux
-     * anciennes vues qui l'utilisaient. Ces vues seront celles dont le plans
-     * de référence n'appartient plus à la pile
-     * @param p
-     */
-    protected void adjustViews(Plan p) {
-       for( int i=0; i<viewSimple.length; i++ ) {
-          ViewSimple v = viewSimple[i];
-          if( v.isFree() ) continue;
-          if( aladin.calque.getIndex(v.pref)>=0 ) continue;
-//System.out.println("La vue "+getIDFromNView(i)+" change son pref="+p.label);
-          v.pref = p;
-          v.newView(1);
-          v.repaint();
-       }
-    }
+   /** Dans le cas où on a remplacé un plan par un autre (cas d'un calcul
+    * arithmétique par exemple), il faut réaffecter le "nouveau" plan aux
+    * anciennes vues qui l'utilisaient. Ces vues seront celles dont le plans
+    * de référence n'appartient plus à la pile
+    * @param p
+    */
+   protected void adjustViews(Plan p) {
+      for( int i=0; i<viewSimple.length; i++ ) {
+         ViewSimple v = viewSimple[i];
+         if( v.isFree() ) continue;
+         if( aladin.calque.getIndex(v.pref)>=0 ) continue;
+         //System.out.println("La vue "+getIDFromNView(i)+" change son pref="+p.label);
+         v.pref = p;
+         v.newView(1);
+         v.repaint();
+      }
+   }
 
-    /**
-     * Positionne la vue et/ou le plan par défaut (en cas de suppression)
-     */
-    protected void findBestDefault() {
-       int i,j;
+   /**
+    * Positionne la vue et/ou le plan par défaut (en cas de suppression)
+    */
+   protected void findBestDefault() {
+      int i,j;
 
-       // pas encore pret
-       if( currentView==-1 ) return;
+      // pas encore pret
+      if( currentView==-1 ) return;
 
-       // Si la vue courante n'est pas vide...
-       if( !viewSimple[currentView].isFree() ) {
+      // Si la vue courante n'est pas vide...
+      if( !viewSimple[currentView].isFree() ) {
 
-          Plan p = viewSimple[currentView].pref;
+         Plan p = viewSimple[currentView].pref;
 
-          // Si le repère n'a jamais été initialisé, je vais
-          // le faire au centre de la vue
-          if( repere.raj==Double.NaN ) {
-             try { moveRepere( p.projd.c.getImgCenter() ); }
-             catch( Exception e ) {}
-          }
+         // Si le repère n'a jamais été initialisé, je vais
+         // le faire au centre de la vue
+         if( repere.raj==Double.NaN ) {
+            try { moveRepere( p.projd.c.getImgCenter() ); }
+            catch( Exception e ) {}
+         }
 
-          // plan correspondant déjà sélectionné alors rien à faire
-          if( p.selected ) return;
+         // plan correspondant déjà sélectionné alors rien à faire
+         if( p.selected ) return;
 
-          // On sélectionne le plan tout comme il faut
-          aladin.calque.setPlanRef(p,currentView);
+         // On sélectionne le plan tout comme il faut
+         aladin.calque.setPlanRef(p,currentView);
 
-          return;
-       }
+         return;
+      }
 
-       // Y aurait-il une autre vue déjà créée que je pourrais prendre
-       // comme vue par défaut
-       for( i=0, j=currentView+1; i<viewSimple.length; i++,j++ ) {
-       	  if( j==viewSimple.length ) j=0;
-       	  if( !viewSimple[j].isFree() ) {
-//System.out.println("Nouvelle vue par défaut "+viewSimple[j]);
-       	  	 setCurrentView(viewSimple[j]);
-       	  	 return;
-       	  }
-       }
+      // Y aurait-il une autre vue déjà créée que je pourrais prendre
+      // comme vue par défaut
+      for( i=0, j=currentView+1; i<viewSimple.length; i++,j++ ) {
+         if( j==viewSimple.length ) j=0;
+         if( !viewSimple[j].isFree() ) {
+            //System.out.println("Nouvelle vue par défaut "+viewSimple[j]);
+            setCurrentView(viewSimple[j]);
+            return;
+         }
+      }
 
-       // Il n'y a plus aucune vue, je vais donc rechercher
-       // un plan de référence parmi les images dans la piles
-       Plan allPlans[] = aladin.calque.getPlans();
-       for( j=-1, i=0; i<allPlans.length; i++ ) {
-          Plan p=allPlans[i];
-       	  if( !aladin.calque.canBeRef(p) ) continue;
-          if( !(p.isImage() || p instanceof PlanBG) ) { j=i; continue; }
-//System.out.println("Le plan image "+p+" va être choisi comme réf");
-          aladin.calque.setPlanRef(p,currentView);
-          return;
-       }
+      // Il n'y a plus aucune vue, je vais donc rechercher
+      // un plan de référence parmi les images dans la piles
+      Plan allPlans[] = aladin.calque.getPlans();
+      for( j=-1, i=0; i<allPlans.length; i++ ) {
+         Plan p=allPlans[i];
+         if( !aladin.calque.canBeRef(p) ) continue;
+         if( !(p.isImage() || p instanceof PlanBG) ) { j=i; continue; }
+         //System.out.println("Le plan image "+p+" va être choisi comme réf");
+         aladin.calque.setPlanRef(p,currentView);
+         return;
+      }
 
-       // Il n'y a plus d'images dans la pile, peut être
-       // y a-t-il tout de même un catalogue qui pourrait
-       // servir de référence par défaut
-       if( j!=-1 ) {
-//System.out.println("Le plan "+allPlans[j]+" va être choisi comme réf");
-       	 aladin.calque.setPlanRef(allPlans[j]);
-       }
+      // Il n'y a plus d'images dans la pile, peut être
+      // y a-t-il tout de même un catalogue qui pourrait
+      // servir de référence par défaut
+      if( j!=-1 ) {
+         //System.out.println("Le plan "+allPlans[j]+" va être choisi comme réf");
+         aladin.calque.setPlanRef(allPlans[j]);
+      }
 
-       currentView=0;
-//System.out.println("Je n'ai rien à prendre comme défaut !");
-//       aladin.calque.zoom.reset();
-       aladin.calque.zoom.zoomView.repaint();
-    }
+      currentView=0;
+      //System.out.println("Je n'ai rien à prendre comme défaut !");
+      //       aladin.calque.zoom.reset();
+      aladin.calque.zoom.zoomView.repaint();
+   }
 
    /** Sélection des vues dont le plan de référence est sélectionné.
     *  Si la vue courante n'est plus sélectionné, on resélectionnera automatiquement
@@ -1222,9 +1222,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
 
    /** Retourne true s'il y a un fond de ciel actif */
-//   protected boolean hasBackGround() {
-//      return calque.planBG!=null && calque.planBG.active;
-//   }
+   //   protected boolean hasBackGround() {
+   //      return calque.planBG!=null && calque.planBG.active;
+   //   }
 
    /** Retourne true s'il y a au-moins une vue stickée (un sauvegarde() doit avoir été
     * opéré au préalable) */
@@ -1255,7 +1255,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne la vue courante */
    protected ViewSimple getCurrentView() {
       if( currentView>=modeView ) {
-//         System.err.println("View.getCurrentView() error: currentView ("+currentView+") > modeView ("+modeView+")");
+         //         System.err.println("View.getCurrentView() error: currentView ("+currentView+") > modeView ("+modeView+")");
          setCurrentNumView(modeView-1);
       }
       return viewSimple[currentView];
@@ -1273,7 +1273,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne le numéro de la vue courante */
    synchronized protected int getCurrentNumView() {
-      
+
       return currentView;
    }
 
@@ -1282,7 +1282,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected int getNextNumView() {
       for( int i=0; i<modeView; i++) {
          if( viewSimple[i].isFree() ) return i;
-     }
+      }
       return -1;
    }
 
@@ -1293,22 +1293,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     * @param p le plan pour lequel on cherche une vue libre.
     */
    protected int getLastNumView(Plan p) {
-   	  // Dans le cas où le plan pour lequel on cherche une vue est une image
-   	  // et que la dernière vue sélectionnée a un plan CATALOG comme ref,
-   	  // si tout deux couvrent la même région du ciel, on va écraser la vue
-   	  // du catalogue par celle de l'image. Il y aura donc superposition
-   	  // automatique
-	  ViewSimple v = getCurrentView();
+      // Dans le cas où le plan pour lequel on cherche une vue est une image
+      // et que la dernière vue sélectionnée a un plan CATALOG comme ref,
+      // si tout deux couvrent la même région du ciel, on va écraser la vue
+      // du catalogue par celle de l'image. Il y aura donc superposition
+      // automatique
+      ViewSimple v = getCurrentView();
 
-   	  // Si la case est vide, on la donne
-   	  if( v!=null && v.isFree() ) return getCurrentNumView();
+      // Si la case est vide, on la donne
+      if( v!=null && v.isFree() ) return getCurrentNumView();
 
-   	  // S'il s'agit d'une case contenant un catalogue compatible
-   	  // avec la nouvelle image, on remplace
+      // S'il s'agit d'une case contenant un catalogue compatible
+      // avec la nouvelle image, on remplace
       if( v!=null && !v.isFree() && p.isImage() && v.pref.isCatalog() /* !v.pref.isImage() */
-          && (!Projection.isOk(p.projd) || p.projd.agree(v.pref.projd,null)) ) return getCurrentNumView();
+            && (!Projection.isOk(p.projd) || p.projd.agree(v.pref.projd,null)) ) return getCurrentNumView();
 
-   	  // Sinon on retourne la prochaine case libre
+      // Sinon on retourne la prochaine case libre
       int n = getNextNumView();
 
       // Si ce n'est pas possible, on prend la dernière case qui n'est pas un scatter plot
@@ -1321,7 +1321,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       return n;
    }
-   
+
    /** true s'il y a une vue encore libre */
    public boolean hasFreeView() {
       for( int i=0; i<modeView; i++ ) {
@@ -1356,7 +1356,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repere.projection(viewSimple[currentView]);
       int x = (int)Math.round(repere.xv[currentView]-1);
       int y = (int)Math.round(repere.yv[currentView]);
-//      return ((PlanImage)p).getPixelInDouble(x,y);
+      //      return ((PlanImage)p).getPixelInDouble(x,y);
       return ((PlanImage)p).getPixelOriginInDouble(x,((PlanImage)p).naxis2-y-1);
    }
 
@@ -1420,7 +1420,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       setCurrentView(viewSimple[nview]);
 
       // Juste pour faire un test
-//      if( p.type==Plan.CATALOG ) viewSimple[nview].addPlotTable(null, p, 0, 1);
+      //      if( p.type==Plan.CATALOG ) viewSimple[nview].addPlotTable(null, p, 0, 1);
    }
 
    /** Positionne le prochain plan image dans la vue courante */
@@ -1516,7 +1516,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       aladin.console.printCommand("rm "+cmd);
       sauvegarde();
-//      viewMemo.freeSelected();
+      //      viewMemo.freeSelected();
    }
 
 
@@ -1566,9 +1566,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Libère la memoView correspondant à une vue
     * @param i l'indice de la vue
     */
-//   private void freeMemoView(int i) {
-//      viewMemo.free(previousScrollGetValue+i);
-//   }
+   //   private void freeMemoView(int i) {
+   //      viewMemo.free(previousScrollGetValue+i);
+   //   }
 
    /** Libération de toutes les vues */
    protected void freeAll() {
@@ -1576,7 +1576,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       sauvegarde();
       viewMemo.freeAll();
       viewSticked.freeAll();
-//      resetUndo();
+      //      resetUndo();
       scrollOn(0);
    }
 
@@ -1675,232 +1675,232 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Fabrication d'un taquin, juste pour rire
     * @param val niveau de difficulté
     */
-    protected boolean taquin(String s) {
-       if( flagTaquin ) { endTaquin(); return false; }
-       ViewSimple vc = getCurrentView();
-       if( isMultiView() || vc.sticked || vc.hasBord() || vc.northUp ||
-             vc.isFree() || !vc.pref.isImage() || !vc.pref.flagOk ) return false;
-       taquinRef=(PlanImage)vc.pref;
-       try {
-          taquinP = (PlanImage)aladin.command.execCropCmd("","Taquin");
-          vc.setPlanRef(taquinP, true);
-          aladin.calque.selectPlan(taquinP);
-       } catch( Exception e ) {
-          e.printStackTrace();
-          return false;
-       }
+   protected boolean taquin(String s) {
+      if( flagTaquin ) { endTaquin(); return false; }
+      ViewSimple vc = getCurrentView();
+      if( isMultiView() || vc.sticked || vc.hasBord() || vc.northUp ||
+            vc.isFree() || !vc.pref.isImage() || !vc.pref.flagOk ) return false;
+      taquinRef=(PlanImage)vc.pref;
+      try {
+         taquinP = (PlanImage)aladin.command.execCropCmd("","Taquin");
+         vc.setPlanRef(taquinP, true);
+         aladin.calque.selectPlan(taquinP);
+      } catch( Exception e ) {
+         e.printStackTrace();
+         return false;
+      }
 
-       if( taquinP.hasNoReduction() ) {
-          taquinP.projd = new Projection("taquin",Projection.SIMPLE,
-                0,0,15,15,taquinP.width/2,taquinP.height/2,
-                taquinP.width,taquinP.height,0,false,Calib.TAN,Calib.FK5);
-       }
-       int niveau=2;
-       try { niveau=Integer.parseInt(s); } catch( Exception e) { niveau=3; }
+      if( taquinP.hasNoReduction() ) {
+         taquinP.projd = new Projection("taquin",Projection.SIMPLE,
+               0,0,15,15,taquinP.width/2,taquinP.height/2,
+               taquinP.width,taquinP.height,0,false,Calib.TAN,Calib.FK5);
+      }
+      int niveau=2;
+      try { niveau=Integer.parseInt(s); } catch( Exception e) { niveau=3; }
 
-       int m = niveau<=1?4:niveau==2?9:16;
-       double z = vc.zoom;
-       double W = aladin.calque.zoom.zoomView.SIZE;
-       double delta = W/Math.sqrt(m);
-       double debut = delta/2.;
-       double x=debut,y=debut;
-       setModeView(m);
-       ViewSimple v;
+      int m = niveau<=1?4:niveau==2?9:16;
+      double z = vc.zoom;
+      double W = aladin.calque.zoom.zoomView.SIZE;
+      double delta = W/Math.sqrt(m);
+      double debut = delta/2.;
+      double x=debut,y=debut;
+      setModeView(m);
+      ViewSimple v;
 
-       int ordre[] = new int[m];
-       for( int i=0; i<m; i++ ) ordre[i]=m-i-1;
+      int ordre[] = new int[m];
+      for( int i=0; i<m; i++ ) ordre[i]=m-i-1;
 
-       // on mélange
-       int n = (int)(Math.random()*1000)+100;
-       int w = (int)Math.sqrt(m);
-       int pos,npos;
-       npos = pos=0;
-       int sens,osens=-1;
-       for( int i=0; i<n; i++ ) {
-          while( (sens = (int)(Math.random()*4))==osens);
-          switch(sens) {
-             case 0 : if( pos>w ) { npos=pos-w; break; }
-             case 3 : if( pos<m-w ) { npos=pos+w; break; }
-             case 1 : if( pos%w!=0 ) { npos=pos-1; break; }
-             case 2 : if( (pos+1)%w!=0 ) { npos=pos+1; break; }
-          }
-          osens = sens==0 ? 3 : sens==3 ? 0 : sens==1 ? 2 : 1;
-          int t = ordre[npos]; ordre[npos]=ordre[pos]; ordre[pos]=t;
-          pos=npos;
-       }
+      // on mélange
+      int n = (int)(Math.random()*1000)+100;
+      int w = (int)Math.sqrt(m);
+      int pos,npos;
+      npos = pos=0;
+      int sens,osens=-1;
+      for( int i=0; i<n; i++ ) {
+         while( (sens = (int)(Math.random()*4))==osens);
+         switch(sens) {
+            case 0 : if( pos>w ) { npos=pos-w; break; }
+            case 3 : if( pos<m-w ) { npos=pos+w; break; }
+            case 1 : if( pos%w!=0 ) { npos=pos-1; break; }
+            case 2 : if( (pos+1)%w!=0 ) { npos=pos+1; break; }
+         }
+         osens = sens==0 ? 3 : sens==3 ? 0 : sens==1 ? 2 : 1;
+         int t = ordre[npos]; ordre[npos]=ordre[pos]; ordre[pos]=t;
+         pos=npos;
+      }
 
 
-       for( int i=0; i<m; i++, x+=delta ) {
-          int rang=0;
-          while( i!=ordre[rang] ) rang++;
-          v=viewSimple[rang];
-          if( x>W ) { x=debut; y+=delta; }
-          vc.copyIn(v);
-          v.setZoomXY(z,x,y);
-          v.ordreTaquin=i;
-          v.locked=true;
-          if( i==m-1 ) v.free();
-       }
+      for( int i=0; i<m; i++, x+=delta ) {
+         int rang=0;
+         while( i!=ordre[rang] ) rang++;
+         v=viewSimple[rang];
+         if( x>W ) { x=debut; y+=delta; }
+         vc.copyIn(v);
+         v.setZoomXY(z,x,y);
+         v.ordreTaquin=i;
+         v.locked=true;
+         if( i==m-1 ) v.free();
+      }
 
-       sauvegarde();
-       calque.flagOverlay=false;
-       flagTaquin=true;
-       aladin.calque.zoom.zoomView.startTaquinTime=0L;
-       record=null;
-       startTimer();
-       repaintAll();
-       aladin.status.setText("*** For Your Pleasure - offered by the Aladin Team **** ");
-       return true;
-     }
+      sauvegarde();
+      calque.flagOverlay=false;
+      flagTaquin=true;
+      aladin.calque.zoom.zoomView.startTaquinTime=0L;
+      record=null;
+      startTimer();
+      repaintAll();
+      aladin.status.setText("*** For Your Pleasure - offered by the Aladin Team **** ");
+      return true;
+   }
 
-    public boolean isOpaque() { return false; }
+   public boolean isOpaque() { return false; }
 
-    /** Il y a une recalibration par Quadruplet en cours */
-    public boolean isRecalibrating() {
-       return aladin.frameNewCalib!=null
-       && aladin.frameNewCalib.isShowing()
-       && aladin.frameNewCalib.getModeCalib()==FrameNewCalib.QUADRUPLET
-       ;
-    }
+   /** Il y a une recalibration par Quadruplet en cours */
+   public boolean isRecalibrating() {
+      return aladin.frameNewCalib!=null
+            && aladin.frameNewCalib.isShowing()
+            && aladin.frameNewCalib.getModeCalib()==FrameNewCalib.QUADRUPLET
+            ;
+   }
 
-    protected boolean syncSimple(Source o) {
-       Coord c = new Coord(o.raj,o.dej);
-       ViewSimple v = aladin.view.getCurrentView();
-       if( v.isPlotView() ) {
-          double [] val = v.plot.getValues(o);
-          c.al = val[0];
-          c.del = val[1];
-       }
-       boolean rep=true;
-       if( !v.isInView(c.al,c.del) ) rep = v.setZoomRaDec(0,c.al,c.del);
-       if( rep ) {
-          repaintAll();
-          aladin.calque.zoom.newZoom();
-          aladin.calque.zoom.zoomView.repaint();
-       }
-//       memoUndo(v,c,o);
-       moveRepere(c);
-       showSource(o,false,false);
-       resetBlinkSource();
-       return rep;
-    }
+   protected boolean syncSimple(Source o) {
+      Coord c = new Coord(o.raj,o.dej);
+      ViewSimple v = aladin.view.getCurrentView();
+      if( v.isPlotView() ) {
+         double [] val = v.plot.getValues(o);
+         c.al = val[0];
+         c.del = val[1];
+      }
+      boolean rep=true;
+      if( !v.isInView(c.al,c.del) ) rep = v.setZoomRaDec(0,c.al,c.del);
+      if( rep ) {
+         repaintAll();
+         aladin.calque.zoom.newZoom();
+         aladin.calque.zoom.zoomView.repaint();
+      }
+      //       memoUndo(v,c,o);
+      moveRepere(c);
+      showSource(o,false,false);
+      resetBlinkSource();
+      return rep;
+   }
 
-    protected void resetBlinkSource() {
-       for( int i=0; i<modeView; i++ ) viewSimple[i].resetBlinkSource();
-    }
+   protected void resetBlinkSource() {
+      for( int i=0; i<modeView; i++ ) viewSimple[i].resetBlinkSource();
+   }
 
-    /** Synchronisation sur le plan pour la vue courante
-     *  @param p le plan à montrer
-     */
-     protected boolean  syncPlan(Plan p) {
-        if( !Projection.isOk(p.projd) ) return false;
-//        return gotoThere(p.co,0,true);
-        Coord c = null;
-        if( p instanceof PlanBG ) c = p.co;
-        else c = p.projd.getProjCenter();
-        return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
-     }
+   /** Synchronisation sur le plan pour la vue courante
+    *  @param p le plan à montrer
+    */
+   protected boolean  syncPlan(Plan p) {
+      if( !Projection.isOk(p.projd) ) return false;
+      //        return gotoThere(p.co,0,true);
+      Coord c = null;
+      if( p instanceof PlanBG ) c = p.co;
+      else c = p.projd.getProjCenter();
+      return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
+   }
 
-     /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
-      * @param target Identificateur valide, ou coordonnées J2000
-      * @return true si ok
-      */
-     public  boolean gotoThere(String target) {
-        try {
-           Coord c1 = getCurrentView().getCooCentre();
-           Coord c;
-           if( !View.notCoord(target) ) c = new Coord(target);
-           else c = sesame(target);
-           gotoAnimation(c1, c);
-        } catch( Exception e ) { }
-        return false;
-     }
+   /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
+    * @param target Identificateur valide, ou coordonnées J2000
+    * @return true si ok
+    */
+   public  boolean gotoThere(String target) {
+      try {
+         Coord c1 = getCurrentView().getCooCentre();
+         Coord c;
+         if( !View.notCoord(target) ) c = new Coord(target);
+         else c = sesame(target);
+         gotoAnimation(c1, c);
+      } catch( Exception e ) { }
+      return false;
+   }
 
-     /** Va montrer la source
-      * @param s la source à montrer
-      * @return true si ok
-      */
-     public boolean gotoThere(Source s) {
-        boolean rep = gotoThere(new Coord(s.raj,s.dej),0,false);
-        setRepere(s);  // pour d'éventuels plots
-        showSource(s,false,false); // pour blinker la source   CA FAIT TOUT DE MEME UN CALLBACK EN BOULCE AVEC SAMP
-        return rep;
-     }
+   /** Va montrer la source
+    * @param s la source à montrer
+    * @return true si ok
+    */
+   public boolean gotoThere(Source s) {
+      boolean rep = gotoThere(new Coord(s.raj,s.dej),0,false);
+      setRepere(s);  // pour d'éventuels plots
+      showSource(s,false,false); // pour blinker la source   CA FAIT TOUT DE MEME UN CALLBACK EN BOULCE AVEC SAMP
+      return rep;
+   }
 
-     /** Va montrer la coordonnée indiquée.
-      * @param c la coordonnée en J2000
-      * @param zoom le facteur de zoom souhaitée, 0 si on ne le modifie pas
-      * @return true si ok
-      */
-     public boolean gotoThere(Coord c) { return gotoThere(c,0,false); }
-     public boolean gotoThere(Coord c, double zoom, boolean force) {
-        
-        ViewSimple v = getCurrentView();
-        if( v.locked || c==null ) return false;
-        if( !force && !v.shouldMove(c.al,c.del) ) return false;
+   /** Va montrer la coordonnée indiquée.
+    * @param c la coordonnée en J2000
+    * @param zoom le facteur de zoom souhaitée, 0 si on ne le modifie pas
+    * @return true si ok
+    */
+   public boolean gotoThere(Coord c) { return gotoThere(c,0,false); }
+   public boolean gotoThere(Coord c, double zoom, boolean force) {
 
-        if( v.pref instanceof PlanBG ) {
-           v.getProj().setProjCenter(c.al,c.del);
-           v.newView(1);
-        }
+      ViewSimple v = getCurrentView();
+      if( v.locked || c==null ) return false;
+      if( !force && !v.shouldMove(c.al,c.del) ) return false;
 
-        double z = zoom<=0 ? v.zoom : aladin.calque.zoom.getNearestZoomFct(zoom);
-        v.setZoomRaDec(z,c.al,c.del);
+      if( v.pref instanceof PlanBG ) {
+         v.getProj().setProjCenter(c.al,c.del);
+         v.newView(1);
+      }
 
-        setRepere(c);
-        showSource();  // On force le réaffichage de la source blink en cas de vues bougées
+      double z = zoom<=0 ? v.zoom : aladin.calque.zoom.getNearestZoomFct(zoom);
+      v.setZoomRaDec(z,c.al,c.del);
 
-        aladin.calque.zoom.newZoom();
-        aladin.view.zoomview.repaint();
-        return true;
-     }
-     
-     public void gotoAnimation(final Coord from, final Coord to) {
-        final ViewSimple v = getCurrentView();
-        if( v.locked || to==null ) return;
-        final double zoom = v.zoom;
-              double z = v.zoom;
-              
-              double dist = Coord.getDist(from, to);
-              int n=(int) (dist);
-              int mode=0;
-              int i=0;
-              boolean encore=true;
-              double fct=0;
-              while( encore ) {
-                 
-                 switch(mode) {
-                    case 0: 
-                       if( z<0.1 ) i++;
-                       if( z>0.05 ) z=z/1.05; 
-                       else mode=1; 
-                       break;
-                    case 1: 
-                       i++;
-                       if( i>=n-3 ) mode=2;
-                       break;
-                    case 2:
-                       if( z<0.1 && i<n ) i++;
-                       if( z<zoom ) z=z*1.05; 
-                       if( z>=zoom ) {z=zoom; encore=false; }
-                       break;
-                   
-                }
-                fct = i/(double)n;
-                Coord c = new Coord( from.al + (to.al-from.al)*fct, 
-                       from.del + (to.del-from.del)*fct);
-                
-                int frameNumber = v.frameNumber;
-                gotoThere(c,z,true);
-                while( frameNumber==v.frameNumber ) Util.pause(10);
-//                System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
-//                Util.pause(75);
-              }
-              gotoThere(to,zoom,true);
-           }
-//     }
+      setRepere(c);
+      showSource();  // On force le réaffichage de la source blink en cas de vues bougées
 
-    /** Ajustement de toutes les vues (non ROI )
+      aladin.calque.zoom.newZoom();
+      aladin.view.zoomview.repaint();
+      return true;
+   }
+
+   public void gotoAnimation(final Coord from, final Coord to) {
+      final ViewSimple v = getCurrentView();
+      if( v.locked || to==null ) return;
+      final double zoom = v.zoom;
+      double z = v.zoom;
+
+      double dist = Coord.getDist(from, to);
+      int n=(int) (dist);
+      int mode=0;
+      int i=0;
+      boolean encore=true;
+      double fct=0;
+      while( encore ) {
+
+         switch(mode) {
+            case 0:
+               if( z<0.1 ) i++;
+               if( z>0.05 ) z=z/1.05;
+               else mode=1;
+               break;
+            case 1:
+               i++;
+               if( i>=n-3 ) mode=2;
+               break;
+            case 2:
+               if( z<0.1 && i<n ) i++;
+               if( z<zoom ) z=z*1.05;
+               if( z>=zoom ) {z=zoom; encore=false; }
+               break;
+
+         }
+         fct = i/(double)n;
+         Coord c = new Coord( from.al + (to.al-from.al)*fct,
+               from.del + (to.del-from.del)*fct);
+
+         int frameNumber = v.frameNumber;
+         gotoThere(c,z,true);
+         while( frameNumber==v.frameNumber ) Util.pause(10);
+         //                System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
+         //                Util.pause(75);
+      }
+      gotoThere(to,zoom,true);
+   }
+   //     }
+
+   /** Ajustement de toutes les vues (non ROI )
     *  afin que leur centre corresponde à la coordonnée
     *  passée en paramètre ( et que leur zoom s'accroisse du
     *  facteur indiquée)
@@ -1908,8 +1908,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *  @param coo nouvelle position, (null si aligné sur repere)
     *  @param force : true => force le déplacement même pour les PlanBG et autres cas spéciaux
     */
-     protected void syncView(double fct,Coord coo,ViewSimple vOrig) { syncView(fct,coo,vOrig,false); }
-     protected void syncView(double fct,Coord coo,ViewSimple vOrig,boolean force) {
+   protected void syncView(double fct,Coord coo,ViewSimple vOrig) { syncView(fct,coo,vOrig,false); }
+   protected void syncView(double fct,Coord coo,ViewSimple vOrig,boolean force) {
       ViewSimple v;
       Coord c = coo!=null ? coo : new Coord(repere.raj,repere.dej);
 
@@ -1941,30 +1941,30 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.view.zoomview.repaint();
    }
 
-     /** Mémorise la valeur du pixel courante dans chaque ViewSimple pour la coordonnée indiquée
-      * afin 'être affichée en surimpression de l'image */
-      protected void setPixelInfo(Coord coo) {
-         String s;
-         for( int i=0; i<aladin.view.modeView; i++ ) {
-            ViewSimple v = aladin.view.viewSimple[i];
-            if( v.isFree() || !v.pref.hasAvailablePixels() || v.isPlotView() ) continue;
-            s=null;
-            Projection proj = v.pref.projd;
-            if( Projection.isOk(proj) && coo!=null ) {
-               proj.getXY(coo);
-               if( !Double.isNaN(coo.x) /* && v.isInView(coo.al, coo.del) */) {
-                  PointD p = new PointD(coo.x,coo.y);
-                  if( v.pref instanceof PlanBG ) s = ((PlanBG)v.pref).getPixelInfo(p.x, p.y,getPixelMode());
-                  else s = ((PlanImage)v.pref).getPixelInfo( (int)Math.floor(p.x), (int)Math.floor(p.y),getPixelMode());
-                  if( s==PlanImage.UNK ) s="";
-               }
+   /** Mémorise la valeur du pixel courante dans chaque ViewSimple pour la coordonnée indiquée
+    * afin 'être affichée en surimpression de l'image */
+   protected void setPixelInfo(Coord coo) {
+      String s;
+      for( int i=0; i<aladin.view.modeView; i++ ) {
+         ViewSimple v = aladin.view.viewSimple[i];
+         if( v.isFree() || !v.pref.hasAvailablePixels() || v.isPlotView() ) continue;
+         s=null;
+         Projection proj = v.pref.projd;
+         if( Projection.isOk(proj) && coo!=null ) {
+            proj.getXY(coo);
+            if( !Double.isNaN(coo.x) /* && v.isInView(coo.al, coo.del) */) {
+               PointD p = new PointD(coo.x,coo.y);
+               if( v.pref instanceof PlanBG ) s = ((PlanBG)v.pref).getPixelInfo(p.x, p.y,getPixelMode());
+               else s = ((PlanImage)v.pref).getPixelInfo( (int)Math.floor(p.x), (int)Math.floor(p.y),getPixelMode());
+               if( s==PlanImage.UNK ) s="";
             }
-            v.setPixelInfo(s);
          }
+         v.setPixelInfo(s);
       }
+   }
 
-      /** Retourne le mode courant d'affichage de la valeur du pixel */
-      protected int getPixelMode() { return REAL; }
+   /** Retourne le mode courant d'affichage de la valeur du pixel */
+   protected int getPixelMode() { return REAL; }
 
    /** Flip d'un plan et recentrage de toutes les vues utilisant ce plan en tant que
     * plan de référence afin d'afficher toujours les mêmes régions.
@@ -1974,10 +1974,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       if( p.type==Plan.IMAGECUBE || p.type==Plan.ALLSKYIMG ) throw new Exception("Flip not available for this kind of plane");
 
-//      if( !Projection.isOk(p.projd) ) {
-//         aladin.warning("Cannot flip uncalibrated image !");
-//         return;
-//      }
+      //      if( !Projection.isOk(p.projd) ) {
+      //         aladin.warning("Cannot flip uncalibrated image !");
+      //         return;
+      //      }
 
       // Je mémorise le centre de chaque vue dont le plan de ref est "p"
       if( Projection.isOk(p.projd) ) {
@@ -2020,22 +2020,22 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       double size=-1;
       double cSize;
       double nz;
-//      
-//      System.out.println("setZoom("+coo+","+z+","+zoomRepaint+")");
-//      if( coo!=null ) {
-//         try {
-//            throw new Exception("ici");
-//         } catch( Exception e) {
-//            e.printStackTrace();
-//         }
-//      }
+      //
+      //      System.out.println("setZoom("+coo+","+z+","+zoomRepaint+")");
+      //      if( coo!=null ) {
+      //         try {
+      //            throw new Exception("ici");
+      //         } catch( Exception e) {
+      //            e.printStackTrace();
+      //         }
+      //      }
 
       suspendQuickSimbad();
-      
+
       boolean flagMoveRepere=coo!=null;
-      
+
       if( vc==null ) vc = getCurrentView();
-      
+
       Projection proj = vc.pref.projd;
 
       // Récupération de la taille du pixel de la vue courante afin de déterminer
@@ -2056,9 +2056,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                cSize = proj.c.getImgWidth() / proj.c.getImgSize().width;
                if( v.pref.type==Plan.IMAGEHUGE ) cSize *= ((PlanImageHuge)v.pref).getStep();
                nz = aladin.calque.zoom.getNearestZoomFct(z/(size/cSize));
-           } catch( Exception e ) { nz=z; if( aladin.levelTrace>=3) e.printStackTrace(); }
+            } catch( Exception e ) { nz=z; if( aladin.levelTrace>=3) e.printStackTrace(); }
          } else nz=z;
-         
+
          // En cas de recalibration on va éviter de déplacer la vue intempestivement
          // dans le cas où il y a déjà une mauvaise calibration
          // Et pour un plot, on n'a pas de repere
@@ -2070,8 +2070,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
             // Déplacement soit sur le repère, soit sur la coordonnée passée en paramètre
             boolean flag;
-            
-//            if( coo==null ) coo = new Coord(repere.raj,repere.dej);
+
+            //            if( coo==null ) coo = new Coord(repere.raj,repere.dej);
             // On va désomais pointer à la mi-distance entre la position centrale et le repere
             // pour faire un effet de glissement
             if( coo==null ) {
@@ -2081,12 +2081,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                      coo = v.getProj().getXY(coo);
                      Coord c1 = v.getCooCentre();
                      coo = new Coord(c1.al+(coo.al-c1.al)/3,c1.del+(coo.del-c1.del)/3);
-                     
+
                      // Si ce point est en dehors de la vue, on va directement au repere
                      v.getProj().getXY(coo);
                      PointD p = v.getPositionInView(coo.x, coo.y);
                      if( p.x<0 || p.x>v.rv.width || p.y<0 || p.y>v.rv.height ) coo = new Coord(repere.raj,repere.dej);
-                     
+
                   } catch( Exception e ) { }
                }
             }
@@ -2113,14 +2113,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       // Réaffichages nécessaires
       if( flagMoveRepere ) moveRepere(coo);
       else repaintAll();
-      
+
       aladin.dialog.adjustParameters();
 
       if( zoomRepaint ) {
          aladin.calque.zoom.newZoom();
          aladin.calque.repaintAll();
       }
-      
+
    }
 
    /** Force le recalcul de la grille de coordonnées */
@@ -2139,26 +2139,26 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Desactivation du mode Dynamic Color Map de la vue courante */
-//   protected void endDynamicCM() { getCurrentView().endDynamicCM(); }
+   //   protected void endDynamicCM() { getCurrentView().endDynamicCM(); }
 
    /** Activation du mode Dynamic Color Map de la vue courante*/
-//   protected void dynamicCM(Object cm) { getCurrentView().dynamicCM(cm); }
+   //   protected void dynamicCM(Object cm) { getCurrentView().dynamicCM(cm); }
 
-//   private boolean flagLockRepaint=false;
-//
-//   // Positionnement du flag du lockRepaint (pour le mode script)
-//   protected synchronized void setLockRepaint(boolean flag) {
-//      flagLockRepaint=flag;
-//   }
-//
-//   // Positionnement du flag du lockRepaint (pour le mode script)
-//   private synchronized boolean lockRepaint() {
-//      return flagLockRepaint;
-//   }
+   //   private boolean flagLockRepaint=false;
+   //
+   //   // Positionnement du flag du lockRepaint (pour le mode script)
+   //   protected synchronized void setLockRepaint(boolean flag) {
+   //      flagLockRepaint=flag;
+   //   }
+   //
+   //   // Positionnement du flag du lockRepaint (pour le mode script)
+   //   private synchronized boolean lockRepaint() {
+   //      return flagLockRepaint;
+   //   }
 
-  /** Indique s'il y a des objets selectionnes.
-   * @return <I>true</I> s'il y a des objets selectionnes, <I>false</I> sinon
-   */
+   /** Indique s'il y a des objets selectionnes.
+    * @return <I>true</I> s'il y a des objets selectionnes, <I>false</I> sinon
+    */
    protected boolean hasSelectedObj() {
       return( vselobj.size()>0 );
    }
@@ -2205,7 +2205,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne le tableau des Source sélectionnées (uniquement les Source) */
    protected Source[] getSelectedSources() {
-   	  if( vselobj==null ) return new Source[]{};
+      if( vselobj==null ) return new Source[]{};
       Vector<Source> vSources = new Vector<Source>();
       Enumeration<Obj> eObj = vselobj.elements();
       Obj o;
@@ -2229,24 +2229,24 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       return rep;
    }
-   
-   /** Indique s'il y a au-moins à objet sélectionné susceptible d'avoir des propriétés */
-    protected boolean isPropObjet() { return selectFromView && getLastPropableObj()!=null; }
-    
-    protected void propResume() { 
-       if( aladin.frameProp==null ) return;
-       aladin.frameProp.resume(); 
-    }
-    protected void propSelectedObj() {
-       Propable obj = getLastPropableObj();
-       if( obj==null ) return;
-       if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,obj);
-       else aladin.frameProp.updateAndShow(obj);
-    }
 
-  /** Indique s'il y a au-moins une suppression effective a faire
-   * @return <I>true</I> s'il y a des objets a supprimer, <I>false</I> sinon
-   */
+   /** Indique s'il y a au-moins à objet sélectionné susceptible d'avoir des propriétés */
+   protected boolean isPropObjet() { return selectFromView && getLastPropableObj()!=null; }
+
+   protected void propResume() {
+      if( aladin.frameProp==null ) return;
+      aladin.frameProp.resume();
+   }
+   protected void propSelectedObj() {
+      Propable obj = getLastPropableObj();
+      if( obj==null ) return;
+      if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,obj);
+      else aladin.frameProp.updateAndShow(obj);
+   }
+
+   /** Indique s'il y a au-moins une suppression effective a faire
+    * @return <I>true</I> s'il y a des objets a supprimer, <I>false</I> sinon
+    */
    protected boolean isDelSelObjet() {
       if( !selectFromView ) return false;
       Enumeration<Obj> e = vselobj.elements();
@@ -2258,7 +2258,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return false;
    }
 
-  /** Recopie les id des objets selectionnes dans le bloc note */
+   /** Recopie les id des objets selectionnes dans le bloc note */
    protected void selObjToPad() {
       Enumeration<Obj> e = vselobj.elements();
       StringBuffer res = new StringBuffer("\n");
@@ -2273,24 +2273,24 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Extension des clips de chaque vue pour contenir l'objet o */
    protected void extendClip(Obj o) {
-//      for( int i=0; i<modeView; i++ ) viewSimple[i].extendClip(o);
+      //      for( int i=0; i<modeView; i++ ) viewSimple[i].extendClip(o);
    }
 
-  /** Supprime les objets selectionnes.
-   * Effectue un reaffichage si necessaire
-   * Dans le cas ou il y aurait un objet Cote, il faut demander l'arret
-   * de l'affichage de la coupe dans le zoomView.
-   * @return <I>true</I> s'il y en a eu au moins une suppression,
-   *         <I>false</I> sinon
-   */
+   /** Supprime les objets selectionnes.
+    * Effectue un reaffichage si necessaire
+    * Dans le cas ou il y aurait un objet Cote, il faut demander l'arret
+    * de l'affichage de la coupe dans le zoomView.
+    * @return <I>true</I> s'il y en a eu au moins une suppression,
+    *         <I>false</I> sinon
+    */
    protected boolean delSelObjet() {
 
       Enumeration<Obj> e = vselobj.elements();
-      
+
       // décompte des tags
       int tags = 0;
       for( Obj o : vselobj ) { if( o instanceof Source && o.plan!=null && o.plan instanceof PlanTool ) tags++; }
-      
+
       e = vselobj.elements();
 
       boolean ok = !vselobj.isEmpty();
@@ -2300,14 +2300,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          Obj o = e.nextElement();
          if( o instanceof Cote ) flagCote=true;
          extendClip(o);
-         
+
          // On ne supprime pas s'il y a plus de 1 tags sélectionnés
          if( tags>1 && o instanceof Source && o.plan!=null && o.plan instanceof PlanTool )  continue;
-         
+
          if( o instanceof Source && ((Source)o).plan.isSourceRemovable() ) {
             aladin.mesure.remove((Source)o);
          }
-         
+
          calque.delObjet(o);
       }
       vselobj.removeAllElements();
@@ -2332,47 +2332,47 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return false;
    }
 
-  /** Affichage de l'identificateur des objets selectionnes.
-   * Positionne ou non le label (identificateur) des objets selectionnes
-   * Il faut que tous les objets aient le label pour qu'ils soient
-   * supprimes, sinon ils sont ajoutes.
-   */
+   /** Affichage de l'identificateur des objets selectionnes.
+    * Positionne ou non le label (identificateur) des objets selectionnes
+    * Il faut que tous les objets aient le label pour qu'ils soient
+    * supprimes, sinon ils sont ajoutes.
+    */
    protected void setSourceLabel() {
       int i/*,j,k*/;
       boolean enleve=false;  // true s'il faut enlever les labels, false sinon
 
-//      // Label sur les plans courants
-//      if( vselobj.size()==0 ) {
-//
-//         // deux tours : 1 pour le pre-traitement et l'autre pour le traitement
-//         for( k=0; k<2; k++ ) {
-//            encore:
-//            for( i=0; i<calque.plan.length; i++ ) {
-//               if( calque.plan[i].type!=Plan.CATALOG
-//                  && calque.plan[i].type!=Plan.TOOL
-//                  || !calque.plan[i].selected ) continue;
-//               PlanObjet pcat = calque.plan[i].pcat;
-//
-//               for( j=0; j<pcat.o.length; j++ ) {
-//                  Position o = (Position) pcat.o[j];
-//                  if( !(o instanceof Source || o instanceof Repere) ) continue;
-//
-//                  // Preparation du traitement
-//                  if( k==0 ) {
-//                     if( o.withlabel ) {
-//                        enleve=true;
-//                        break encore;
-//                     }
-//
-//                 // Traitement
-//                 } else o.withlabel=!enleve;
-//               }
-//            }
-//         }
-//
-//         repaintAll();
-//         return;
-//      }
+      //      // Label sur les plans courants
+      //      if( vselobj.size()==0 ) {
+      //
+      //         // deux tours : 1 pour le pre-traitement et l'autre pour le traitement
+      //         for( k=0; k<2; k++ ) {
+      //            encore:
+      //            for( i=0; i<calque.plan.length; i++ ) {
+      //               if( calque.plan[i].type!=Plan.CATALOG
+      //                  && calque.plan[i].type!=Plan.TOOL
+      //                  || !calque.plan[i].selected ) continue;
+      //               PlanObjet pcat = calque.plan[i].pcat;
+      //
+      //               for( j=0; j<pcat.o.length; j++ ) {
+      //                  Position o = (Position) pcat.o[j];
+      //                  if( !(o instanceof Source || o instanceof Repere) ) continue;
+      //
+      //                  // Preparation du traitement
+      //                  if( k==0 ) {
+      //                     if( o.withlabel ) {
+      //                        enleve=true;
+      //                        break encore;
+      //                     }
+      //
+      //                 // Traitement
+      //                 } else o.withlabel=!enleve;
+      //               }
+      //            }
+      //         }
+      //
+      //         repaintAll();
+      //         return;
+      //      }
 
 
       // label sur les objets selectionnees
@@ -2396,11 +2396,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repaintAll();
    }
 
-  /** Deselection des objets par rapport au vecteur vselobj.
-   * Deselectionne tous les objets, demande la mise a jour
-   * de la fenetre des infos
-   * @return Retourne <I>true</I> si au-moins un objet a ete deselectionne
-   */
+   /** Deselection des objets par rapport au vecteur vselobj.
+    * Deselectionne tous les objets, demande la mise a jour
+    * de la fenetre des infos
+    * @return Retourne <I>true</I> si au-moins un objet a ete deselectionne
+    */
    protected boolean deSelect() {
       if( vselobj.isEmpty() ) return false;
       Enumeration<Obj> e = vselobj.elements();
@@ -2412,7 +2412,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       vselobj.removeAllElements();
       aladin.mesure.removeAllElements();
-      
+
       return true;
    }
 
@@ -2435,12 +2435,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( n==m ) return;
 
          vselobj.setSize(n);
-//       System.out.println("J'ai déselectionné "+(m-n)+" objets");
+         //       System.out.println("J'ai déselectionné "+(m-n)+" objets");
       }
       resetClip();
       repaintAll();
    }
-   
+
    /** Ajoute les sources taggées dans la sélection et dans la fenêtre des mesures */
    protected void addTaggedSource(Plan p) {
       if( p.getCounts()==0 ) return;
@@ -2461,7 +2461,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.mesure.mcanvas.repaint();
       }
    }
-   
+
    /** Ajoute toutes les sources SED du plan passé en paramètre dans la fenêtre des mesures
     * si ce n'est déjà fait
     * @return la première source SED trouvée, sinon null
@@ -2473,7 +2473,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       while( it.hasNext() ) {
          Obj s = it.next();
          if( !(s instanceof Source) || !((Source)s).leg.isSED() ) continue;
-//         if( ((Source)s).isSelected() ) return null;
+         //         if( ((Source)s).isSelected() ) return null;
          v.add( (Source) s);
       }
       if( v.size()==0 ) return null;
@@ -2482,7 +2482,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          for( Source s1 : v ) {
             s1.setSelect(true);
             vselobj.add(s1);
-            aladin.mesure.insertInfo((Source)s1);
+            aladin.mesure.insertInfo(s1);
          }
       }
       aladin.mesure.adjustScroll();
@@ -2490,10 +2490,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return v.elementAt(0);
    }
 
-  /** Deselection d'une source du vecteur vselobj.
-   * Demande la mise a jour de la fenetre des infos
-   * @return Retourne true si ok
-   */
+   /** Deselection d'une source du vecteur vselobj.
+    * Demande la mise a jour de la fenetre des infos
+    * @return Retourne true si ok
+    */
    protected boolean deSelect(Source src) {
       if( vselobj.isEmpty() ) return false;
       Enumeration<Obj> e = vselobj.elements();
@@ -2518,11 +2518,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    /** Ajustement de la selection des sources du vecteur vselobj.
-   * en fonction du tableau des mesures (suites à une déselection des objets
-   * tagués/non-tagués
-   * On va simplement parcourir tous les objets sélectionnés dans vselobj
-   * et supprimer ceux qui n'ont pas leur flag SELECT positionné
-   */
+    * en fonction du tableau des mesures (suites à une déselection des objets
+    * tagués/non-tagués
+    * On va simplement parcourir tous les objets sélectionnés dans vselobj
+    * et supprimer ceux qui n'ont pas leur flag SELECT positionné
+    */
    protected void majSelect() {
       int n=0,i,m=vselobj.size();
       for( i=0; i<m; i++ ){
@@ -2535,7 +2535,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( n==m ) return;
 
       vselobj.setSize(n);
-//System.out.println("J'ai déselectionné "+(m-n)+" objets");
+      //System.out.println("J'ai déselectionné "+(m-n)+" objets");
       resetClip();
       repaintAll();
    }
@@ -2575,19 +2575,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       else showSource(src, false, false);
    }
 
-  /** Selection d'un unique objet
-   * @param Obj o
-   */
-//   protected void selectOne(Obj o) {
-//      deSelect();
-//      o.setSelect(true);
-//      resetClip();
-//      vselobj.addElement(o);
-//      aladin.mesure.insertInfo((Source)o);
-//      repaintAll();
-//      aladin.toolbox.toolMode();
-//      aladin.mesure.mcanvas.repaint();
-//   }
+   /** Selection d'un unique objet
+    * @param Obj o
+    */
+   //   protected void selectOne(Obj o) {
+   //      deSelect();
+   //      o.setSelect(true);
+   //      resetClip();
+   //      vselobj.addElement(o);
+   //      aladin.mesure.insertInfo((Source)o);
+   //      repaintAll();
+   //      aladin.toolbox.toolMode();
+   //      aladin.mesure.mcanvas.repaint();
+   //   }
 
    /** Selection d'une Cote dont on indique un des bouts */
    protected void selectCote(Obj c1) {
@@ -2628,25 +2628,25 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       Source curObj;
       Obj [] o = pc.pcat.getObj();
       for( int i=0; i<rowIdx.length; i++ ) {
-      	curObj = (Source)o[rowIdx[i]];
-      	((Obj)curObj).setSelect(true);
-        if( !curObj.plan.active ) curObj.plan.setActivated(true);
-        vselobj.addElement(curObj);
-        if( i==rowIdx.length-1 ) aladin.mesure.setInfo(curObj);
-        else aladin.mesure.insertInfo(curObj);
+         curObj = (Source)o[rowIdx[i]];
+         ((Obj)curObj).setSelect(true);
+         if( !curObj.plan.active ) curObj.plan.setActivated(true);
+         vselobj.addElement(curObj);
+         if( i==rowIdx.length-1 ) aladin.mesure.setInfo(curObj);
+         else aladin.mesure.insertInfo(curObj);
       }
       aladin.calque.repaintAll();
       aladin.mesure.mcanvas.repaint();
       repaint();
    }
 
-  /** Deselection de tous les objets d'un plan.
-   * Puis selectionne tous les objets d'un plan demande la mise a jour
-   * de la fenetre des infos et retourne Vrai si au-moins un objet
-   * a ete deselectionne
-   * @param plan Le plan pour lequel il faut deselectionner les objets
-   * @return Retourne <I>true</I> si au-moins un objet a ete deselectionne
-   */
+   /** Deselection de tous les objets d'un plan.
+    * Puis selectionne tous les objets d'un plan demande la mise a jour
+    * de la fenetre des infos et retourne Vrai si au-moins un objet
+    * a ete deselectionne
+    * @param plan Le plan pour lequel il faut deselectionner les objets
+    * @return Retourne <I>true</I> si au-moins un objet a ete deselectionne
+    */
    protected boolean selectAllInPlan(Plan plan) {
 
       // Deselection des precedents
@@ -2668,9 +2668,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return true;
    }
 
-  /** Selection de tous les objets d'un plan CATALOG ou TOOLS
-   * @param mode 0-tous les objets, 1-seuls les objets taggués (uniquement pour les sources)
-   */
+   /** Selection de tous les objets d'un plan CATALOG ou TOOLS
+    * @param mode 0-tous les objets, 1-seuls les objets taggués (uniquement pour les sources)
+    */
    protected void selectAllInPlanWithoutFree(Plan plan,int mode) {
       boolean flagSource=false;
       Iterator<Obj> it = plan.iterator();
@@ -2736,7 +2736,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( mode==STR ) {
          val.append(s);
          return STR;
-       }
+      }
 
       // Extraction nom de colonne et valeur
       colName.append( s.substring(0,i).trim() );
@@ -2794,11 +2794,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          double v = Double.parseDouble(colVal);
          if( abs ) v=Math.abs(v);
          return mode==EGAL ? v==numS
-              : mode==DIFF ? v!=numS
-              : mode==SUP  ? v>numS
-              : mode==INF  ? v<numS
-              : mode==SUPEG? v>=numS
-              : v<=numS;
+               : mode==DIFF ? v!=numS
+               : mode==SUP  ? v>numS
+                     : mode==INF  ? v<numS
+                           : mode==SUPEG? v>=numS
+                           : v<=numS;
       } catch( Exception e) {}
       return false;
 
@@ -2842,7 +2842,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                   try { numS = Double.parseDouble(s); }
                   catch(Exception e) {}
                }
-//             System.out.println("In selection mode="+mode+" col="+col+" val="+v+" colIndex="+colIndex+" dataType="+dataType+" numeric="+numeric+" numS="+numS);
+               //             System.out.println("In selection mode="+mode+" col="+col+" val="+v+" colIndex="+colIndex+" dataType="+dataType+" numeric="+numeric+" numS="+numS);
             }
 
             if( !o.noFilterInfluence() && !o.isSelectedInFilter() ) continue;
@@ -2864,7 +2864,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                list.add(new Integer(i));
             }
          }
-//       System.out.println("Je vais supprimer "+list.size()+" sources de la liste");
+         //       System.out.println("Je vais supprimer "+list.size()+" sources de la liste");
          if( list.size()>0 ) {
             aladin.mesure.rmSrc(list);
             majSelect();
@@ -2896,7 +2896,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                      try { numS = Double.parseDouble(s); }
                      catch(Exception e) {}
                   }
-//                System.out.println(p.label+" mode="+mode+" col="+col+" val="+v+" colIndex="+colIndex+" dataType="+dataType+" numeric="+numeric+" numS="+numS);
+                  //                System.out.println(p.label+" mode="+mode+" col="+col+" val="+v+" colIndex="+colIndex+" dataType="+dataType+" numeric="+numeric+" numS="+numS);
                }
 
                if( !o.noFilterInfluence() && !(o).isSelectedInFilter() ) continue;
@@ -2925,9 +2925,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       aladin.trace(2, (flagAdd==-1?"Search [Sub]:":flagAdd==1?"Search [Add]:":"Search:")
             + (col.length()>0 ? " column \""+(abs?"|":"")+col+(abs?"|":"")+"\""
-                              : " string ")
-            + OP[mode] + "\""+s+"\""
-            + " => "+n+" matched sources");
+                  : " string ")
+                  + OP[mode] + "\""+s+"\""
+                  + " => "+n+" matched sources");
 
       if( flagAdd==1 || n>0 ) {
          aladin.mesure.adjustScroll();
@@ -2939,7 +2939,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Selection de tous les objets du plan uniquement (sans réaffichage ni mise à jour
     * du Frame measurements. */
    protected void selectObjetPlanField(Plan p) {
-//      deSelect();
+      //      deSelect();
       Iterator<Obj> it = p.iterator();
       while( it.hasNext() ) {
          Obj o = it.next();
@@ -2957,7 +2957,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
    }
 
-  /** Deselectionne tous les objets et demande un reaffichage si necessaire */
+   /** Deselectionne tous les objets et demande un reaffichage si necessaire */
    protected void unSelect() {
       if( deSelect() ) {
          repaintAll();
@@ -2965,10 +2965,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
    }
 
-  /** Positionne les mesures dans la fenetre des infos.
-   * et reaffiche la fenetre des tools et des vues
-   * en fonctions des objets selectionnes
-   */
+   /** Positionne les mesures dans la fenetre des infos.
+    * et reaffiche la fenetre des tools et des vues
+    * en fonctions des objets selectionnes
+    */
    protected void setMesure() {
       boolean flagExtApp = aladin.hasExtApp();
       String listOid[] = null;
@@ -2979,7 +2979,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          plasticFlag = aladin.getMessagingMgr().isRegistered();
       } else plasticFlag=false;
 
-      
+
       aladin.mesure.removeAllElements();
 
       Enumeration<Obj> e = vselobj.elements();
@@ -2995,27 +2995,27 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
          if( o instanceof Source ) {
             // pas de selection pour les objets ne "passant" pas le filtre
-               if( ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) {
-                  o.info(aladin);
-               }
-               else {
-                   ((Source)o).setSelect(false);
-                   v.addElement( (Source) o);
-               }
+            if( ((Source)o).noFilterInfluence() || ((Source)o).isSelectedInFilter() ) {
+               o.info(aladin);
+            }
+            else {
+               ((Source)o).setSelect(false);
+               v.addElement( (Source) o);
+            }
 
-              // Test si cette source provient d'une application cooperative
-              // type VOPlot, et si oui, fera le callBack adequat
-             if( flagExtApp /* || plasticFlag */ ) {
-                String oid = ((Source)o).getOID();
-                if( oid!=null ) listOid[nbOid++]=oid;
-             }
+            // Test si cette source provient d'une application cooperative
+            // type VOPlot, et si oui, fera le callBack adequat
+            if( flagExtApp /* || plasticFlag */ ) {
+               String oid = ((Source)o).getOID();
+               if( oid!=null ) listOid[nbOid++]=oid;
+            }
          }
       }
 
       // on supprime de vselobj toutes les sources qui doivent l'etre
       Enumeration<Source> eObjTodel = v.elements();
       while( eObjTodel.hasMoreElements() ) vselobj.removeElement(eObjTodel.nextElement());
-      
+
       //long end = System.currentTimeMillis();
       //System.out.println(end-b);
       aladin.toolBox.toolMode();
@@ -3026,8 +3026,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( flagExtApp ) aladin.callbackSelectVOApp(listOid,nbOid);
       // thomas, pour PLASTIC 08/12/2005
       if( Aladin.PLASTIC_SUPPORT && plasticFlag ) {
-      	try { aladin.getMessagingMgr().sendSelectObjectsMsg(); }
-        catch( Throwable e1 ) { }
+         try { aladin.getMessagingMgr().sendSelectObjectsMsg(); }
+         catch( Throwable e1 ) { }
       }
 
       repaintAll();
@@ -3043,167 +3043,167 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Modification du texte associé au repère */
    protected void setRepereId(String s) {
       repere.setId("");
-//      repere.setId("Reticle location => "+s);
+      //      repere.setId("Reticle location => "+s);
    }
 
-//   private Vector undoStack = new Vector();  // Mémorise les positions (repere,vue courante, zoom)
-//   private int nUndo=-1;   // indice de la position courante dans la liste undo
+   //   private Vector undoStack = new Vector();  // Mémorise les positions (repere,vue courante, zoom)
+   //   private int nUndo=-1;   // indice de la position courante dans la liste undo
 
    /** Permet la mémorisation des position pour la liste undo */
-//   class Undo {
-//      double zoom;                // issu du viewSimple courant
-//      double xzoomView,yzoomView; // idem
-//      double ra,de;               // Position du repère
-//      Source source;              // Source courante s'il y a lieu
-//      int vn;                     // Numéro de la vue
-//      int nbView;                 // Nombre de vue
-//      int prefSignature;          // signature du plan de référence de la vue (pour comparaison)
-//
-//      Undo(ViewSimple v,Coord c,Source s) {
-//         zoom=v.zoom;
-//         xzoomView=v.xzoomView;
-//         yzoomView=v.yzoomView;
-//         ra=c.al;
-//         de=c.del;
-//         source=s;
-//         vn=v.n;
-//         nbView=modeView;
-//         prefSignature=v.pref.hashCode();
-//      }
-//
-//      /** retourne true si la postion */
-//      boolean samePos(Undo u) {
-//         if( ra!=u.ra || de!=u.de ) return false;
-//         if( vn!=u.vn ) return false;
-//         if( prefSignature!=u.prefSignature ) return false;
-//         return true;
-//      }
-//
-//      /** Mise à jour du zoom uniquement */
-//      void update(Undo u) {
-//         zoom=u.zoom;
-//         xzoomView = u.xzoomView;
-//         yzoomView=u.yzoomView;
-//      }
-//
-//      public String toString() {
-//         return "Stack zoom="+zoom+" x,y="+xzoomView+","+yzoomView+" ra,dec="+new Coord(ra,de)+
-//         " v.n="+vn+" prefSignature="+prefSignature;
-//      }
-//   }
-//
-//   /** reset de la liste undo */
-//   protected void resetUndo() {
-//      synchronized( undoStack ) {
-//         undoStack.clear();
-//         nUndo=-1;
-//      }
-//   }
-//
-//   /** Retourne true si on est au bout de la liste undo */
-//   protected boolean onUndoTop() {
-//      synchronized( undoStack ) { return undoStack.size()-1==nUndo; }
-//   }
-//
-//   /** Mémorise une position sur le haut de la liste undo, et repositionne le cursuer
-//    * de la liste en haut de la pile. Dans le cas ou le haut de la pile concerne
-//    * la même vue à la même position, se contente de mettre à jour les variables
-//    * associées au zoom */
-//   protected void memoUndo(ViewSimple v,Coord coo,Source source) {
-//      if( Aladin.NOGUI ) return;
-//      if( coo==null ) coo = new Coord(repere.raj,repere.dej);
-//      Undo u = new Undo(v,coo,source);
-//      synchronized( undoStack ) {
-//         int n = undoStack.size()-1;
-//         if( n>0 ) {
-//            Undo ou = (Undo)undoStack.elementAt(n);
-//            if( ou.samePos(u) ) {
-//               ou.update(u);
-//               return;
-//            }
-//         }
-//
-//         // On supprime toute la fin de la la file
-//         while( undoStack.size()>nUndo+1 ) undoStack.remove(nUndo+1);
-//
-//         undoStack.addElement(u);
-//         purgeUndo();
-//         nUndo=undoStack.size()-1;
-//      }
-//   }
-//
-//   /** Nettoyage de la file undo pour toutes les vues qui ont changé de plan de réf */
-//   private void purgeUndo() {
-//      synchronized( undoStack ) {
-//         for(int i=0; i<undoStack.size(); i++ ) {
-//            Undo u = (Undo)undoStack.elementAt(i);
-//            if( viewSimple[u.vn].pref==null
-//                  || u.prefSignature!=viewSimple[u.vn].pref.hashCode() ) {
-//               undoStack.remove(i);
-//               if( nUndo>i ) nUndo--;
-//               i--;
-//            }
-//         }
-//      }
-//   }
-//
-//   /** Retourne true si l'on peut revenir en arrière sur la liste undo */
-//   protected boolean canActivePrevUndo() {
-//      synchronized( undoStack ) { return nUndo>0; }
-//   }
-//
-//   /** Retourne true si l'on peut aller en avant sur la liste undo */
-//   protected boolean canActiveNextUndo() {
-//      synchronized( undoStack ) { return nUndo<undoStack.size()-1; }
-//   }
-//
-//   /** Effectue un undo */
-//   protected void undo(boolean flagFirst) {
-//      synchronized( undoStack ) {
-//         if( nUndo<=0 ) return;
-//         try {
-//            nUndo= flagFirst ? 0 : nUndo-1;
-//            setUndo((Undo)undoStack.elementAt(nUndo));
-//         } catch( Exception e) {}
-//      }
-//   }
-//
-//   /** Effectue un redo */
-//   protected void redo(boolean flagLast) {
-//      synchronized( undoStack ) {
-//         if( nUndo==undoStack.size()-1 ) return;
-//         try {
-//            nUndo= flagLast ? undoStack.size()-1 : nUndo+1;
-//            setUndo((Undo)undoStack.elementAt(nUndo));
-//         } catch( Exception e) {}
-//      }
-//   }
-//
-//   /** Exécute le undo passé en paramètre => repositionne la vue courante,
-//    * le zoom et le repère en conséquence */
-//   private void setUndo(Undo u) {
-//      if( Aladin.NOGUI ) return;
-//      setModeView(u.nbView);
-//      ViewSimple v = viewSimple[u.vn];
-//      if( v.pref.hashCode()!=u.prefSignature ) {
-////System.out.println("Pref modifié => ignore");
-//         return;
-//      }
-//
-//      aladin.calque.unSelectAllPlan();
-//      setSelect(u.vn);
-//
-//      currentView=-1;   // Pour contourner le test dans setCurrentView()
-//      setCurrentView(viewSimple[u.vn]);
-//      moveRepere(u.ra,u.de);
-//      if( v.pref instanceof PlanBG ) setRepere(new Coord(u.ra,u.de));
-//      else v.setZoomXY(u.zoom,u.xzoomView,u.yzoomView);
-//
-//      if( u.source!=null ) aladin.mesure.mcanvas.show(u.source, 2);
-//
-//      aladin.calque.repaintAll();
-//      aladin.log("Undo","");
-//   }
+   //   class Undo {
+   //      double zoom;                // issu du viewSimple courant
+   //      double xzoomView,yzoomView; // idem
+   //      double ra,de;               // Position du repère
+   //      Source source;              // Source courante s'il y a lieu
+   //      int vn;                     // Numéro de la vue
+   //      int nbView;                 // Nombre de vue
+   //      int prefSignature;          // signature du plan de référence de la vue (pour comparaison)
+   //
+   //      Undo(ViewSimple v,Coord c,Source s) {
+   //         zoom=v.zoom;
+   //         xzoomView=v.xzoomView;
+   //         yzoomView=v.yzoomView;
+   //         ra=c.al;
+   //         de=c.del;
+   //         source=s;
+   //         vn=v.n;
+   //         nbView=modeView;
+   //         prefSignature=v.pref.hashCode();
+   //      }
+   //
+   //      /** retourne true si la postion */
+   //      boolean samePos(Undo u) {
+   //         if( ra!=u.ra || de!=u.de ) return false;
+   //         if( vn!=u.vn ) return false;
+   //         if( prefSignature!=u.prefSignature ) return false;
+   //         return true;
+   //      }
+   //
+   //      /** Mise à jour du zoom uniquement */
+   //      void update(Undo u) {
+   //         zoom=u.zoom;
+   //         xzoomView = u.xzoomView;
+   //         yzoomView=u.yzoomView;
+   //      }
+   //
+   //      public String toString() {
+   //         return "Stack zoom="+zoom+" x,y="+xzoomView+","+yzoomView+" ra,dec="+new Coord(ra,de)+
+   //         " v.n="+vn+" prefSignature="+prefSignature;
+   //      }
+   //   }
+   //
+   //   /** reset de la liste undo */
+   //   protected void resetUndo() {
+   //      synchronized( undoStack ) {
+   //         undoStack.clear();
+   //         nUndo=-1;
+   //      }
+   //   }
+   //
+   //   /** Retourne true si on est au bout de la liste undo */
+   //   protected boolean onUndoTop() {
+   //      synchronized( undoStack ) { return undoStack.size()-1==nUndo; }
+   //   }
+   //
+   //   /** Mémorise une position sur le haut de la liste undo, et repositionne le cursuer
+   //    * de la liste en haut de la pile. Dans le cas ou le haut de la pile concerne
+   //    * la même vue à la même position, se contente de mettre à jour les variables
+   //    * associées au zoom */
+   //   protected void memoUndo(ViewSimple v,Coord coo,Source source) {
+   //      if( Aladin.NOGUI ) return;
+   //      if( coo==null ) coo = new Coord(repere.raj,repere.dej);
+   //      Undo u = new Undo(v,coo,source);
+   //      synchronized( undoStack ) {
+   //         int n = undoStack.size()-1;
+   //         if( n>0 ) {
+   //            Undo ou = (Undo)undoStack.elementAt(n);
+   //            if( ou.samePos(u) ) {
+   //               ou.update(u);
+   //               return;
+   //            }
+   //         }
+   //
+   //         // On supprime toute la fin de la la file
+   //         while( undoStack.size()>nUndo+1 ) undoStack.remove(nUndo+1);
+   //
+   //         undoStack.addElement(u);
+   //         purgeUndo();
+   //         nUndo=undoStack.size()-1;
+   //      }
+   //   }
+   //
+   //   /** Nettoyage de la file undo pour toutes les vues qui ont changé de plan de réf */
+   //   private void purgeUndo() {
+   //      synchronized( undoStack ) {
+   //         for(int i=0; i<undoStack.size(); i++ ) {
+   //            Undo u = (Undo)undoStack.elementAt(i);
+   //            if( viewSimple[u.vn].pref==null
+   //                  || u.prefSignature!=viewSimple[u.vn].pref.hashCode() ) {
+   //               undoStack.remove(i);
+   //               if( nUndo>i ) nUndo--;
+   //               i--;
+   //            }
+   //         }
+   //      }
+   //   }
+   //
+   //   /** Retourne true si l'on peut revenir en arrière sur la liste undo */
+   //   protected boolean canActivePrevUndo() {
+   //      synchronized( undoStack ) { return nUndo>0; }
+   //   }
+   //
+   //   /** Retourne true si l'on peut aller en avant sur la liste undo */
+   //   protected boolean canActiveNextUndo() {
+   //      synchronized( undoStack ) { return nUndo<undoStack.size()-1; }
+   //   }
+   //
+   //   /** Effectue un undo */
+   //   protected void undo(boolean flagFirst) {
+   //      synchronized( undoStack ) {
+   //         if( nUndo<=0 ) return;
+   //         try {
+   //            nUndo= flagFirst ? 0 : nUndo-1;
+   //            setUndo((Undo)undoStack.elementAt(nUndo));
+   //         } catch( Exception e) {}
+   //      }
+   //   }
+   //
+   //   /** Effectue un redo */
+   //   protected void redo(boolean flagLast) {
+   //      synchronized( undoStack ) {
+   //         if( nUndo==undoStack.size()-1 ) return;
+   //         try {
+   //            nUndo= flagLast ? undoStack.size()-1 : nUndo+1;
+   //            setUndo((Undo)undoStack.elementAt(nUndo));
+   //         } catch( Exception e) {}
+   //      }
+   //   }
+   //
+   //   /** Exécute le undo passé en paramètre => repositionne la vue courante,
+   //    * le zoom et le repère en conséquence */
+   //   private void setUndo(Undo u) {
+   //      if( Aladin.NOGUI ) return;
+   //      setModeView(u.nbView);
+   //      ViewSimple v = viewSimple[u.vn];
+   //      if( v.pref.hashCode()!=u.prefSignature ) {
+   ////System.out.println("Pref modifié => ignore");
+   //         return;
+   //      }
+   //
+   //      aladin.calque.unSelectAllPlan();
+   //      setSelect(u.vn);
+   //
+   //      currentView=-1;   // Pour contourner le test dans setCurrentView()
+   //      setCurrentView(viewSimple[u.vn]);
+   //      moveRepere(u.ra,u.de);
+   //      if( v.pref instanceof PlanBG ) setRepere(new Coord(u.ra,u.de));
+   //      else v.setZoomXY(u.zoom,u.xzoomView,u.yzoomView);
+   //
+   //      if( u.source!=null ) aladin.mesure.mcanvas.show(u.source, 2);
+   //
+   //      aladin.calque.repaintAll();
+   //      aladin.log("Undo","");
+   //   }
 
    /** Déplacement du repere courant sur la source passée en paramètre et réaffichage
     *  @param coo on utilise les champs ra,dec uniquement
@@ -3234,12 +3234,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=0; i<modeView; i++ ) {
          viewSimple[i].repaint();
          rep |= viewSimple[i].isInImage(coo.al,coo.del);
-         
+
          // Petite subtilité pour éviter tous les bugs liés à l'utilisation du ViewSimple.projLocal
          // à la place de pref.projd.
-         if( currentView==i && !viewSimple[i].isFree() 
+         if( currentView==i && !viewSimple[i].isFree()
                && viewSimple[i].pref instanceof PlanBG && viewSimple[i].projLocal!=null ) {
-//            viewSimple[i].pref.projd = viewSimple[i].projLocal.copy();
+            //            viewSimple[i].pref.projd = viewSimple[i].projLocal.copy();
             viewSimple[i].pref.projd.setProjCenter(coo.al, coo.del);
          }
       }
@@ -3253,18 +3253,18 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected void moveRepere(double ra, double dec) {
       repere.raj=ra;
       repere.dej=dec;
-      
+
       if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
-      
+
       // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
-//      aladin.dialog.adjustParameters();
+      //      aladin.dialog.adjustParameters();
    }
 
 
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
       ViewSimple v = getCurrentView();
-//      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
+      //      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;
    }
 
@@ -3282,7 +3282,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       return lastDelai > 500;
    }
 
-  /** Action sur le ENTER dans la boite de localisation */
+   /** Action sur le ENTER dans la boite de localisation */
    protected void sesameResolve(String coord) { sesameResolve(coord,false); }
    protected String sesameResolve(String coord,boolean flagNow) {
       saisie=coord;
@@ -3293,12 +3293,12 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          coord = aladin.localisation.getICRSCoord(coord);
 
          if( notCoord(coord) ) {
-            
+
             // resolution synchrone
             if( flagNow ) {
                result=(new SesameThread(saisie,null)).resolveSourceName();
-               
-            // resolution a-synchrone
+
+               // resolution a-synchrone
             } else {
                String sesameSyncID = sesameSynchro.start("sesame/"+coord,7000);
                SesameThread sesameThread = new  SesameThread(saisie, sesameSyncID);
@@ -3312,13 +3312,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       }
       return result ? saisie : null;
    }
-   
+
    /** Thread de résolution Sésame */
    class SesameThread extends Thread {
       private Plan planObj=null;
-      private String sourceName=null; 
+      private String sourceName=null;
       private String sesameTaskId;
-      
+
       /** Constructeur pour une résolution par nom de source
        * @param sourceName Nom de la source à résoudre
        * @param sesameTaskId ID du gestionnaire de task (voir synchroSesame)
@@ -3328,7 +3328,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          this.sourceName=sourceName;
          this.sesameTaskId=sesameTaskId;
       }
-      
+
       /** Constructeur pour une résolution d'un nom d'objet attaché à un plan
        * @param plan pour lequel il faut résoudre le nom d'objet
        * @param sesameTaskId ID du gestionnaire de task (voir synchroSesame)
@@ -3338,13 +3338,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          this.planObj=plan;
          this.sesameTaskId=sesameTaskId;
       }
-      
-      public void run() { 
-         if( sourceName!=null ) resolveSourceName(); 
+
+      public void run() {
+         if( sourceName!=null ) resolveSourceName();
          else if( planObj!=null ) resolvePlan();
          else System.err.println("SesameThread error, no plane, no planObj !");
       }
-      
+
       /** Résolution Sésame de l'objet central du plan passé au constructeur du Thread (Sésame) */
       void resolvePlan() {
          try {
@@ -3358,7 +3358,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             }
          } finally{ sesameSynchro.stop(sesameTaskId); }
       }
-      
+
       /** résolution Sésame d'une source passée au constructeur du Thread (sourceName) */
       boolean resolveSourceName() {
          try {
@@ -3395,13 +3395,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
-//   private String _sesameTaskId=null;
-//   private String _saisie;
-//   private Plan _planWaitSimbad=null;
+   //   private String _sesameTaskId=null;
+   //   private String _saisie;
+   //   private Plan _planWaitSimbad=null;
    static Coord oco=null;
    static String oobjet=null;
 
-  /** resolution Simbad pour le repere d'un plan */
+   /** resolution Simbad pour le repere d'un plan */
    protected boolean sesameResolveForPlan(Plan p) {
 
       // Mini-cache du dernier objet resolu
@@ -3414,38 +3414,38 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       SesameThread sesameThread = new SesameThread(p, sesameTaskId);
       Util.decreasePriority(Thread.currentThread(), sesameThread);
       sesameThread.start();
-      
-//      // Lancement du Thread de resolution Simbad pour le plan indique
-////      setSesameInProgress(true);
-//      waitLockSesame();
-//      _planWaitSimbad = p;
-//      _sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
-//      Thread sr = new Thread(this,"AladinSesameBis");
-//      Util.decreasePriority(Thread.currentThread(), sr);
-////      sr.setPriority( Thread.NORM_PRIORITY -1);
-//      sr.start();
+
+      //      // Lancement du Thread de resolution Simbad pour le plan indique
+      ////      setSesameInProgress(true);
+      //      waitLockSesame();
+      //      _planWaitSimbad = p;
+      //      _sesameTaskId = sesameSynchro.start("sesameResolveForPlan/"+p);
+      //      Thread sr = new Thread(this,"AladinSesameBis");
+      //      Util.decreasePriority(Thread.currentThread(), sr);
+      ////      sr.setPriority( Thread.NORM_PRIORITY -1);
+      //      sr.start();
       return false;
    }
 
-//   private boolean lock=false;
-//
-//   /** Attente sur le lock pour passage de paramètre à Sesame */
-//   private void waitLockSesame() {
-//      while( !getLockSesame() ) {
-//         Util.pause(10);
-//         System.out.println("View.waitlockSesame...");
-//      }
-//   }
-//
-//   /** Tentative de récupération du lock */
-//   synchronized private boolean getLockSesame() {
-//      if( lock ) return false;
-//      lock=true;
-//      return true;
-//   }
-//
-//   /** Libération du lock */
-//   synchronized private void unlockSesame() { lock=false; }
+   //   private boolean lock=false;
+   //
+   //   /** Attente sur le lock pour passage de paramètre à Sesame */
+   //   private void waitLockSesame() {
+   //      while( !getLockSesame() ) {
+   //         Util.pause(10);
+   //         System.out.println("View.waitlockSesame...");
+   //      }
+   //   }
+   //
+   //   /** Tentative de récupération du lock */
+   //   synchronized private boolean getLockSesame() {
+   //      if( lock ) return false;
+   //      lock=true;
+   //      return true;
+   //   }
+   //
+   //   /** Libération du lock */
+   //   synchronized private void unlockSesame() { lock=false; }
 
 
    /**
@@ -3487,18 +3487,18 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          v.pref.projd.getCoord(c);
       }
 
-//      if( Aladin.levelTrace>=3 ) {
-//         System.out.println("["+s+"] calibration : "+v.pref.projd.getName());
-//         System.out.println("   XY=>RADEC : c.x="+c.x+" c.y="+c.y+" => "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+")");
-//         double x1=c.x,y1=c.y;
-//         v.pref.projd.getXY(c);
-//         System.out.println("   RADEC=>XY : "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+") => c.x="+c.x+" c.y="+c.y);
-//         System.out.println("   décalage en X="+(c.x-x1)+" en Y="+(c.y-y1));
-//      }
+      //      if( Aladin.levelTrace>=3 ) {
+      //         System.out.println("["+s+"] calibration : "+v.pref.projd.getName());
+      //         System.out.println("   XY=>RADEC : c.x="+c.x+" c.y="+c.y+" => "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+")");
+      //         double x1=c.x,y1=c.y;
+      //         v.pref.projd.getXY(c);
+      //         System.out.println("   RADEC=>XY : "+Coord.getSexa(c.al,c.del)+" ("+c.al+","+c.del+") => c.x="+c.x+" c.y="+c.y);
+      //         System.out.println("   décalage en X="+(c.x-x1)+" en Y="+(c.y-y1));
+      //      }
       return c;
    }
 
-  /** Positionnement du repere en fonction des coordonnees de la chaine "saisie" */
+   /** Positionnement du repere en fonction des coordonnees de la chaine "saisie" */
    protected boolean setRepereByString() {
       boolean rep=false;
       try {
@@ -3542,7 +3542,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       suiteSetRepere(p.co);
    }
 
-  /** Suite de la procedure du positionnement du repere d'un plan */
+   /** Suite de la procedure du positionnement du repere d'un plan */
    private void suiteSetRepere(Coord c) {
       setRepere(c);
 
@@ -3552,14 +3552,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
-  /** Aiguillage pour les 2 differents types de resolution simbad
+   /** Aiguillage pour les 2 differents types de resolution simbad
     * et un éventuel blinking
     */
    public void run() {
-//System.out.println("run: flagBlink="+flagBlink);
-         /* if( _flagSesameResolve ) { _flagSesameResolve=false; runB(); }
+      //System.out.println("run: flagBlink="+flagBlink);
+      /* if( _flagSesameResolve ) { _flagSesameResolve=false; runB(); }
          else */ if( _flagTimer ) runC();
-//         else if( _planWaitSimbad!=null ) runA();
+         //         else if( _planWaitSimbad!=null ) runA();
    }
 
    /** Zoom sur la source passée en paramètre */
@@ -3583,34 +3583,34 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( !force && lastShowSource==o ) return;   // déjà fait
       lastShowSource=o;
 
-       for( int i=0; i<modeView; i++ ) {
-          ViewSimple v = viewSimple[i];
+      for( int i=0; i<modeView; i++ ) {
+         ViewSimple v = viewSimple[i];
 
-          // Pas projetable dans cette vue
-          if( o!=null && o.plan!=null && o.plan.pcat!=null
-              && !o.plan.pcat.isDrawnInSimpleView(v.getProjSyncView().n) ) continue;
+         // Pas projetable dans cette vue
+         if( o!=null && o.plan!=null && o.plan.pcat!=null
+               && !o.plan.pcat.isDrawnInSimpleView(v.getProjSyncView().n) ) continue;
 
-          // C'est bon
-          else v.changeBlinkSource(o);
-       }
-       blinkMode=0;
-       startTimer();
+         // C'est bon
+         else v.changeBlinkSource(o);
+      }
+      blinkMode=0;
+      startTimer();
 
-       // Test si cette source provient d'une application cooperative
-       // type VOPlot, et si oui, fait le callBack adequat
-       if( callback && aladin.hasExtApp() ) {
-          String oid = o==null ? null : (o).getOID();
-          aladin.callbackShowVOApp(oid);
-       }
+      // Test si cette source provient d'une application cooperative
+      // type VOPlot, et si oui, fait le callBack adequat
+      if( callback && aladin.hasExtApp() ) {
+         String oid = o==null ? null : (o).getOID();
+         aladin.callbackShowVOApp(oid);
+      }
 
-       // envoi d'un message PLASTIC si nécessaire
-       if( callback && Aladin.PLASTIC_SUPPORT ) {
-          try { aladin.getMessagingMgr().sendHighlightObjectsMsg(o); }
-          catch( Throwable e ) { }
-       }
+      // envoi d'un message PLASTIC si nécessaire
+      if( callback && Aladin.PLASTIC_SUPPORT ) {
+         try { aladin.getMessagingMgr().sendHighlightObjectsMsg(o); }
+         catch( Throwable e ) { }
+      }
    }
 
-  /** Ne montre plus la source precedemment montree */
+   /** Ne montre plus la source precedemment montree */
    protected void hideSource() { showSource(null); }
 
    /** Positionne le mode Timer ou non des vues */
@@ -3629,14 +3629,14 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( Aladin.NOGUI ) return;
       setDefaultDelais(delais);
       if( timer!=null ) {
-//System.out.println("Timer thread already running");
+         //System.out.println("Timer thread already running");
          try { timer.interrupt(); return; }
          catch( Exception e ) {}
 
       }
       setFlagTimer(true);
       timer = new Thread(this,"AladinTimer");
-//System.out.println("launch timer thread "+timer);
+      //System.out.println("launch timer thread "+timer);
       timer.setPriority( Thread.NORM_PRIORITY -1);
       timer.start();
    }
@@ -3645,7 +3645,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Arrêt du mode Timer */
    protected void stopTimer() {
-//System.out.println("stopTimer");
+      //System.out.println("stopTimer");
       setFlagTimer(false);
    }
 
@@ -3669,7 +3669,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             planBlink=sourceBlink=scrolling=sablierBlink=taquinBlink=editBlink=tagBlink=false;
             int t0,t1,t2,t3,t4,t5,t6;
             t0=t1=t2=t3=t4=t5=t6=0;
-            
+
             ViewSimple cv= getCurrentView();
 
             for( int i=0; i<modeView; i++ ) {
@@ -3680,8 +3680,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                boolean scroll = v.isScrolling();
                boolean sablier = v.isSablier();
                boolean taquin = flagTaquin;
-               boolean flagEdit = crop!=null && crop.isEditing() 
-                               || cv.isPlanBlink() && cv.cubeControl.isEditing();
+               boolean flagEdit = crop!=null && crop.isEditing()
+                     || cv.isPlanBlink() && cv.cubeControl.isEditing();
                boolean flagtag = isTagEditing();
 
                if( flagtag && v==cv ) {
@@ -3732,7 +3732,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
             if( t2>0 ) blinkMode++;
 
-            // Peut être faut-il lancer une résolution quick Simbad ? 
+            // Peut être faut-il lancer une résolution quick Simbad ?
             // et/ou VizierSED ?
             if( simbadBlink && startQuickSimbad>0 ) {
                if( System.currentTimeMillis()-startQuickSimbad>500) {
@@ -3742,10 +3742,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                }
             }
 
-//t = System.currentTimeMillis();
-//int gap= lastT>=0? (int)(t-lastT) : -1;
-//lastT=t;
-//System.out.println("timer thread "+Thread.currentThread()+" gap=("+gap+") delais="+delais);
+            //t = System.currentTimeMillis();
+            //int gap= lastT>=0? (int)(t-lastT) : -1;
+            //lastT=t;
+            //System.out.println("timer thread "+Thread.currentThread()+" gap=("+gap+") delais="+delais);
 
             // Arrêt au bout de 5 secondes sans blinking nécessaire
             if( tagBlink|editBlink|planBlink|sourceBlink
@@ -3757,29 +3757,29 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
          } catch( Exception e) {}
          try { Thread.currentThread().sleep(delais);} catch(Exception e) {
-//System.out.println("recu une interruption");
+            //System.out.println("recu une interruption");
          }
       }
       timer=null;
-//System.out.println("stop blink thread");
+      //System.out.println("stop blink thread");
    }
-//      long lastT=-1;
+   //      long lastT=-1;
 
-//   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
-//   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }
-//   synchronized private void setSesameInProgress(boolean flag) { if( flag ) sesameInProgress++; else sesameInProgress--; }
-   
+   //   private int sesameInProgress=0;  // Nombre de sésames en attente de résolution
+   //   synchronized protected boolean isSesameInProgress() { return sesameInProgress>0; }
+   //   synchronized private void setSesameInProgress(boolean flag) { if( flag ) sesameInProgress++; else sesameInProgress--; }
+
    // Synchro sur les résolutions de sésame
    protected Synchro sesameSynchro = new Synchro(10000);
    protected boolean isSesameInProgress() { return !sesameSynchro.isReady(); }
 
-  /** Resolution Sesame a proprement parle
-   * @param objet le nom d'objet
-   * @return les coordonnées de l'objet (J2000) ou null si non trouvé
-   */
+   /** Resolution Sesame a proprement parle
+    * @param objet le nom d'objet
+    * @return les coordonnées de l'objet (J2000) ou null si non trouvé
+    */
    protected Coord sesame(String objet) throws Exception {
-     URL url=null;
-     String s=null;
+      URL url=null;
+      String s=null;
 
       // Mini-cache du dernier objet resolu
       if( oobjet!=null && oco!=null && objet.equals(oobjet) ) {
@@ -3795,7 +3795,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          StringTokenizer st = new StringTokenizer(res,"\n");
          while( st.hasMoreTokens() ) {
             s = st.nextToken();
-//            System.out.println("Sesame read :["+s+"]");
+            //            System.out.println("Sesame read :["+s+"]");
             if( s.startsWith("%J ") ) {
                StringTokenizer st1 = new StringTokenizer(s);
                st1.nextToken();
@@ -3817,19 +3817,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                return sesame(objet);
             }
          }
-         
+
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          throw new Exception(aladin.chaine.getString("NOSESAME"));
       }
       return oco;
    }
-   
+
    private int nbSesameCheck=0;                     // Nombre de fois où l'on a changé de site Sesame
    private static final int MAXSESAMECHECK = 2;     // Nombre MAX de changement de site Sesame
 
    // Object pour afficher la distance entre 2 objets sélectionnés
    protected CoteDist coteDist = null;
-   
+
    protected Repere simRep = null;
    private long startQuickSimbad=0L;
    private double ox=0, oy=0;		// Pour vérifier qu'on déplace suffisemment
@@ -3870,9 +3870,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       ViewSimple v = getMouseView();
       Coord coo = new Coord();
       if( v==null || v.pref==null
-                  || v.pref.projd==null
+            || v.pref.projd==null
             || v.lastMove==null  ) return;
-      
+
 
       String s=null;
       ox = coo.x = v.lastMove.x;
@@ -3883,7 +3883,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Est-on sur un objet avec pixel ?
       // CA NE MARCHE PAS BIEN, JE PREFERE LAISSER DE COTE
-//      if( !v.isMouseOnSomething() ) return;
+      //      if( !v.isMouseOnSomething() ) return;
 
       // Quelle est le rayon de l'interrogation (15 pixels écran au dessus) Max 1°
       double d = coo.del;
@@ -3892,15 +3892,15 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       coo.x=p.x; coo.y=p.y;
       v.getProj().getCoord(coo);
       double radius = Util.round(Math.abs(coo.del-d),7);
-      
+
       Aladin.makeCursor(v,Aladin.WAITCURSOR);
-      
+
       // Faut-il également charger un SED ?
       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
       boolean flagSED=true;
       Source o;
       if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
-      
+
       InputStream is = null;
       DataInputStream cat = null;
       try {
@@ -3947,7 +3947,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             if( flagSED && calque.flagVizierSED ) {
                String s2 = s.substring( s.indexOf('/')+1,s.indexOf('(')).trim();
                aladin.trace(2,"Loading VizieR phot. for \""+s2+"\"...");
-               Repere sedRep = null; 
+               Repere sedRep = null;
                sedRep = new Repere(null,coo);
                sedRep.setType(Repere.CARTOUCHE);
                sedRep.setSize(TAILLEARROW);
@@ -3963,32 +3963,32 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       v.repaint();
    }
-   
+
    /** Resolution d'une requête VizieRSED sur la position courante
     * afin de récupérer le SED sous la souris */
    protected void quickVizierSED() {
       ViewSimple v = getMouseView();
       Coord coo = new Coord();
       if( v==null || v.pref==null
-                  || v.pref.projd==null
+            || v.pref.projd==null
             || v.lastMove==null  ) return;
-      
+
       ox = coo.x = v.lastMove.x;
       oy = coo.y = v.lastMove.y;
       v.getProj().getCoord(coo);
       if( Double.isNaN(coo.al) ) return;
       String target = coo.getSexa();
-      
+
       // Est-on sur un objet avec pixel ?
-//      if( !v.isMouseOnSomething() ) return;
-      
+      //      if( !v.isMouseOnSomething() ) return;
+
       Aladin.makeCursor(v,Aladin.WAITCURSOR);
-      
-       // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
+
+      // S'il y a déjà un SED affiché à partir d'un catalogue de la pile, on ne le fera pas.
       boolean flagSED=true;
       Source o;
       if( aladin.view.zoomview.flagSED && (o=aladin.mesure.getFirstSrc())!=null && o.leg.isSED() ) flagSED=false;
-      
+
       try {
          if( flagSED ) zoomview.setSED((String)null);
          Repere sedRep = null; //new Repere(plan)
@@ -4005,13 +4005,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          return;
       }
-       
+
       Aladin.makeCursor(v,Cursor.DEFAULT_CURSOR);
       v.repaint();
    }
 
-   
-  /** Retourne vrai si la chaine contient au moins une lettre */
+
+   /** Retourne vrai si la chaine contient au moins une lettre */
    static protected boolean notCoord(String s) {
       char a[] = s.toCharArray();
       for( int i=0; i<a.length; i++ ) {
@@ -4048,13 +4048,13 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
          // La vue peut être rendue visible mais elle est dans une vue stickée
          // il va donc falloire changer de mode de vue pour la rendre visible
-//System.out.println("*** On va ripper sur la vue stickée en position "+pos);
+         //System.out.println("*** On va ripper sur la vue stickée en position "+pos);
          setModeView(ViewControl.MAXVIEW);
          p.setActivated(true);
          return true;
       }
 
-//System.out.println("*** On va ripper sur la vue "+n);
+      //System.out.println("*** On va ripper sur la vue "+n);
       scrollOn(n);
       p.setActivated(true);
       return true;
@@ -4076,7 +4076,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     * à l'affichage précédent. S'il n'est pas possible de revenir à la
     * configuration d'affichage mémorisée, la vue courante sera la première
     * vue.
-     */
+    */
 
    /** Retourne le nombre de vues stickées avant la vue d'indice n
     * s'il est mentionné */
@@ -4087,7 +4087,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=0; i<n; i++ ) if( viewSimple[i].sticked ) nbStick++;
       return nbStick;
    }
-   
+
    /**
     * Positionne le nombre de vues visiblement simultanément.
     * @param m nombre de vues (ViewControl.MVIEW1, MVIEW4, MVIEW9, VIEW16)
@@ -4095,16 +4095,16 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected void setModeView(int m) {
       if( aladin.viewControl.modeView!=m ) aladin.viewControl.setModeView(m);
       if( modeView==m ) return;
-      
+
       // Peut être faut-il générer quelques vues ??
       // AVEC LES TRASNPARENCE DES IMAGES, JE TROUVE QUE CA COMPLIQUE PLUS QUE CA NE SIMPLIFIE
-//      autoSimpleViewGenerator();
+      //      autoSimpleViewGenerator();
       Point pos=null;
-      
+
       // Sauvegarde des vues de la configuration d'affichage actuelle
       sauvegarde();
 
-//      int currentNumView=getCurrentNumView();
+      //      int currentNumView=getCurrentNumView();
 
       // Combien y a-t-il de vues fixées avant la vue courante
 
@@ -4113,17 +4113,17 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       // courante ne peut s'y trouver, la nouvelle configuration d'affichage
       // aura comme première vue la vue courante
       if( memoPos!=null && memoPos.y+currentView<m ) {
-//System.out.println("memoPos à partir de "+memoPos.x+" en position "+memoPos.y);
+         //System.out.println("memoPos à partir de "+memoPos.x+" en position "+memoPos.y);
          pos=new Point(memoPos.x,memoPos.y+currentView);
       } else {
          // Il faut que je soustraits le nombre de vues stickées
          // avant la vue courante pour retomber sur la bonne
          // dans viewMemo.
          pos = new Point(previousScrollGetValue+currentView
-                          -getNbStickedView(currentView),0);
+               -getNbStickedView(currentView),0);
       }
 
-//System.out.println("Je recharge "+m+" vues à partir de "+pos.x+" currentView="+pos.y);
+      //System.out.println("Je recharge "+m+" vues à partir de "+pos.x+" currentView="+pos.y);
 
       // Mémorisation de la nouvelle configuration d'affichage dans
       // le cas où l'utilisateur souhaite y revenir
@@ -4137,7 +4137,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          int x=getStickPos(currentView);
          viewSimple[0].sticked = memoStick[x];
          if( viewSimple[0].sticked ) {
-//System.out.println("Je copie viewStick["+x+"] à l'emplacement 0");
+            //System.out.println("Je copie viewStick["+x+"] à l'emplacement 0");
             viewSticked.set(0,viewSticked.get(x,viewSimple[0]));
          }
       }
@@ -4147,10 +4147,10 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       modeView=m;
 
       // Ajustement des flags stick en fonction du nouveau mode Multiview
-       if( m!=ViewControl.MVIEW1 ) {
+      if( m!=ViewControl.MVIEW1 ) {
          for( int i=0; i<m; i++ ) {
-//            int x = getStickPos(i);
-//if( memoStick[x] ) System.out.println("Je dois sticker la vue "+i);
+            //            int x = getStickPos(i);
+            //if( memoStick[x] ) System.out.println("Je dois sticker la vue "+i);
             viewSimple[i].sticked = memoStick[ getStickPos(i) ];
          }
       }
@@ -4166,7 +4166,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       for( int i=pos.x,j=0; i<max;j++ ) {
          if( viewSimple[j].sticked ) continue;
          rechargeFromMemo(i++,j);
-       }
+      }
 
       previousScrollGetValue=pos.x;
       setCurrentNumView(pos.y);
@@ -4197,7 +4197,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    protected void exportROI(String prefix) { exportSaveROI(prefix,0,0,0,0); }
    protected void saveROI(String prefix,int w,int h,int fmt) {
       System.out.println("No yet debugged !!!");
-//      exportSaveROI(prefix,1,w,h,fmt);
+      //      exportSaveROI(prefix,1,w,h,fmt);
    }
    private void exportSaveROI(String prefix,int mode,int w,int h,int fmt) {
       if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";
@@ -4205,38 +4205,38 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       sauvegarde();	// pour être sûr que tout est dans viewMemo
       Save save = ( aladin.save!=null ? aladin.save : new Save(aladin) );
 
-Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
-                       "Saving locked views in "+(fmt==Save.BMP?"BMP":fmt==Save.PNG?"PNG":"JPEG")+" "+w+"x"+h)
-               +" files prefixed by ["+prefix+"]");
+      Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
+         "Saving locked views in "+(fmt==Save.BMP?"BMP":fmt==Save.PNG?"PNG":"JPEG")+" "+w+"x"+h)
+         +" files prefixed by ["+prefix+"]");
       int n = viewMemo.size();
       int m=0;
       for( int i=0; i<n; i++ ) {
          if( viewMemo.get(i,v)==null ) continue;
          if( v.isFree() ) continue;
-         
+
          if( !v.pref.isPixel() ) continue;
-//         if( !(v.pref instanceof PlanBG) ) continue;
-         
+         //         if( !(v.pref instanceof PlanBG) ) continue;
+
          v.rv = new Rectangle(0,0,viewSimple[0].rv.width,viewSimple[0].rv.height);
-//         v.rv = new Rectangle(0,0,w,h);
+         //         v.rv = new Rectangle(0,0,w,h);
          v.setSize(v.rv.width, v.rv.height);
          v.pref.projd = v.projLocal;
-         
+
          v.newView(1);
          v.setZoomXY(v.zoom,v.xzoomView,v.yzoomView);
-         
-//         v.n=ViewControl.MAXVIEW;
-//         v.n=0;
-//         
-//         
-//         // Duplication du plan de référence pour ne pas "l'abimer"
-//         PlanImage p = new PlanImage(aladin);
-//         v.pref.copy(p);
-//         v.pref = p;
-//
-//         ((PlanImage)v.pref).crop((int)Math.floor(v.rzoom.x),(int)Math.floor(v.rzoom.y),
-//               (int)Math.ceil(v.rzoom.width),(int)Math.ceil(v.rzoom.height),false);
-         
+
+         //         v.n=ViewControl.MAXVIEW;
+         //         v.n=0;
+         //
+         //
+         //         // Duplication du plan de référence pour ne pas "l'abimer"
+         //         PlanImage p = new PlanImage(aladin);
+         //         v.pref.copy(p);
+         //         v.pref = p;
+         //
+         //         ((PlanImage)v.pref).crop((int)Math.floor(v.rzoom.x),(int)Math.floor(v.rzoom.y),
+         //               (int)Math.ceil(v.rzoom.width),(int)Math.ceil(v.rzoom.height),false);
+
          m++;
          String name = prefix+Util.align3(m);
          if( mode==0 ) save.saveImage(name+".fits",v.pref,0);
@@ -4255,7 +4255,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
     */
    protected void sauvegarde() {
       if( previousScrollGetValue==-1 ) return;
-//System.out.println("Je memorise "+modeView+" vues à partir de "+previousScrollGetValue);
+      //System.out.println("Je memorise "+modeView+" vues à partir de "+previousScrollGetValue);
       for( int i=0,j=previousScrollGetValue; i<modeView; i++) {
          if( viewSimple[i].sticked ) viewSticked.set(getStickPos(i),viewSimple[i]);
          else {
@@ -4337,7 +4337,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
     * où se trouve chaque vue pour les autres modes */
    private void memoStick(int i,boolean flag) {
       int pos = getStickPos(i);
-//System.out.println("je "+(flag?"":"un")+"stick la vue "+i+" en position "+pos);
+      //System.out.println("je "+(flag?"":"un")+"stick la vue "+i+" en position "+pos);
       memoStick[pos]=flag;
    }
 
@@ -4370,8 +4370,8 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
       viewMemo.decale(previousScrollGetValue+modeView-1);
 
       // INUTILE, C'EST FAIT DANS SAUVEGARDE
-//      // Je libère la viewSticked correspondante à v
-//      viewSticked.set(previousScrollGetValue+v.n,(ViewSimple)null);
+      //      // Je libère la viewSticked correspondante à v
+      //      viewSticked.set(previousScrollGetValue+v.n,(ViewSimple)null);
 
       // Je mémorise l'état courant
       sauvegarde();
@@ -4393,7 +4393,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
     */
    private void rechargeFromStick(int i) {
       ViewSimple v = viewSimple[i]
-                   = viewSticked.get(getStickPos(i),viewSimple[i]);
+            = viewSticked.get(getStickPos(i),viewSimple[i]);
       if( v==null ) return;
       v.n=i;
       if( v.isFree() ) return;
@@ -4413,7 +4413,7 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
    protected void scrollOn(int n,int current,int mode) {
       scrollV.setValue(n/aladin.viewControl.getNbCol(modeView));
       if( mode!=1 ) sauvegarde();
-//System.out.println("Je recharge "+modeView+" vues à partir de "+n+" current="+current);
+      //System.out.println("Je recharge "+modeView+" vues à partir de "+n+" current="+current);
 
       // D'abord les vues stickées
       int nbStick=0;
@@ -4426,12 +4426,12 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
       for( int i=n,j=0; i<m;j++ ) {
          if( viewSimple[j].sticked ) continue;
          rechargeFromMemo(i++,j);
-       }
+      }
 
       previousScrollGetValue=n;
       setCurrentNumView(current);
       memoPos=null;   // Il ne sera plus possible de revenir à une configuration
-                      // d'affichage qui avait été au préalable sauvegardée.
+      // d'affichage qui avait été au préalable sauvegardée.
 
       aladin.calque.majPlanFlag();
       aladin.calque.select.repaint();
@@ -4566,15 +4566,15 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
          boolean hideScroll = getLastUsedView()< modeView && !hasStickedView();
          if( scrollV.isShowing() && hideScroll  ) { remove(scrollV); validate(); }
          else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV, "West" ); validate(); }
-//System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
+         //System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
 
-         
+
          // Repaint avec Scroll
          if( n!=previousScrollGetValue ) {
             int newCurrent = getCurrentNumView() - (n-previousScrollGetValue);
             if( newCurrent<0 ) {
                if( aladin.levelTrace>3 ) System.err.println("View.repaintAll1(): There is a problem with the scroll value ("+newCurrent+") => I assume 0 !");
-               newCurrent=1; 
+               newCurrent=1;
             }
             scrollOn(n,newCurrent,0);
 
@@ -4597,6 +4597,10 @@ Aladin.trace(1,(mode==0?"Exporting locked images in FITS":
 
          // Ajustement de la taille du scrollV
          scrollV.setMaximum((viewMemo.size()/aladin.viewControl.getNbCol(modeView)));
+
+         // repaint du gestionnaire de colormap si nécessaire
+         if( aladin.frameCM!=null && aladin.frameCM.isVisible() ) aladin.frameCM.majCM();
+
       } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
 

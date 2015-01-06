@@ -90,6 +90,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Some grid drawing bugs (missing segments or labels)
  * @beta    <LI> Contour parameter bug refresh on HiPS planes
  * @beta    <LI> DS9 region multi plane bug
  * @beta    <LI> HiPS catalog object selection bug (allsky level 2)
@@ -122,7 +123,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.126";
+   static public final    String VERSION = "v8.129";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -308,7 +309,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private Banner banner=null;
 
    // Les objets associees a l'interface
-   FullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
+   FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
@@ -975,8 +976,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       BROADCASTIMAGE = chaine.getString("SLMBDCASTIMAGES");
       BROADCASTTABLE = chaine.getString("SLMBDCASTTABLES");
       SAMPPREFS = chaine.getString("PWPREFS").replaceAll("SAMP", name);
-      STARTINTERNALHUB = chaine.getString("PWSTARTINTERNALHUB");
-      STOPINTERNALHUB = chaine.getString("PWSTOPINTERNALHUB");
+      STARTINTERNALHUB = BETAPREFIX+chaine.getString("PWSTARTINTERNALHUB");
+      STOPINTERNALHUB = BETAPREFIX+chaine.getString("PWSTOPINTERNALHUB");
    }
 
    /** Création du menu principal sous la forme d'un tableau à trois dimensions permettant
@@ -2693,7 +2694,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          boolean full = mode==0;
          boolean startHidden = mode==2;
          pan(false);
-         fullScreen = new FullScreen(this,view.getCurrentView(),full,startHidden);
+         fullScreen = new FrameFullScreen(this,view.getCurrentView(),full,startHidden);
          //          f.setVisible(false);
       } else {
          fullScreen.end();
@@ -4363,7 +4364,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    static private Point computeLocation1(Frame f) {
       Dimension d;
-      if( f instanceof FrameColorMap )       return new Point(180,aladin.getY());
       if( f instanceof FrameRGBBlink ) return new Point(500,500);
       if( f instanceof Properties )    return new Point(20,10);
       if( f instanceof ServerDialog )  return new Point(0,SCREENSIZE.height-f.getSize().height-MARGEB-100);
@@ -4379,6 +4379,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( f instanceof Console )       return new Point(0,SCREENSIZE.height-f.getSize().height-MARGEB);
       if( f instanceof Configuration ) return new Point(20,10);
       if( f instanceof FrameInfoTable )return new Point(0,50);
+      if( f instanceof FramePixelToolbox && aladin.frameCM!=null && aladin.frameCM.isVisible() ) {
+         Point p = aladin.frameCM.getLocation();
+         p.y += aladin.frameCM.getHeight();
+         return p;
+      }
+      if( f instanceof FrameColorMap && aladin.f!=null ) {
+         Point p = aladin.f.getLocation();
+         p.x+=aladin.f.getWidth();
+         if( p.x+459>SCREENSIZE.width ) {
+            p.x-=aladin.f.getWidth()+459;
+            if( p.x<0 ) p.x=0;
+         }
+         return p;
+      }
 
       // Pour aladin lui-même
       //      d = f.getSize();

@@ -403,7 +403,7 @@ public class PlanImageHuge extends PlanImage implements Runnable {
       ow=-1;           // Pour forcer le rechargement de la subimage le cas échéant
       flagUpdating=false;
       flagOk=true;
-      freeHist();
+      resetHist();
 
       return true;
    }

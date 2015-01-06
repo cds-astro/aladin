@@ -76,9 +76,9 @@ public class ComponentResolver {
      */
     public Object findByName(String name, Object start) {
         // first, test if start implements WidgetFinder
-        if( start instanceof WidgetFinder) {
+        if( start instanceof SwingWidgetFinder) {
             // we return start itself, as name is not a real object
-            if( ((WidgetFinder)start).findWidget(name) ) return start;
+            if( ((SwingWidgetFinder)start).findWidget(name) ) return start;
         }
         
         // second : if start does not implement WidgetFinder, 
@@ -130,8 +130,8 @@ public class ComponentResolver {
     }
     
     public boolean isHomeMade(String name, Object start) {
-        if( start instanceof WidgetFinder) {
-            if( ((WidgetFinder)start).findWidget(name) ) return true;
+        if( start instanceof SwingWidgetFinder) {
+            if( ((SwingWidgetFinder)start).findWidget(name) ) return true;
         }
         
         return false;

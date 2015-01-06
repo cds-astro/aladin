@@ -60,13 +60,13 @@ import cds.tools.pixtools.CDSHealpix;
 public class Properties extends JFrame implements ActionListener, ChangeListener {
 
    String SEEFITS,SEEPARSING,TABLEINFO,/* LOADURL, */NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
-          TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
-          LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
-          ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
-          LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
-          GENERATEPOLAAMP,GENERATEPOLAANG,CURRENTFIELD,POLAOPTIONS,SEGMENTLEN,SEGMENTTHICK,SEGMENTDENSITY,
-          SCALINGFACTOR,POINTING,POINTINGLABEL,FULLDESCR;
-   
+   TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
+   LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
+   ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
+   LOCAL,GLOBAL,SCOPE,HSCOPE,OPACITY,OPACITYLEVEL,DENSITY,WHITE,BLACK,AUTO,COLORBG,POLA,DISPLAYPOLA,
+   GENERATEPOLAAMP,GENERATEPOLAANG,CURRENTFIELD,POLAOPTIONS,SEGMENTLEN,SEGMENTTHICK,SEGMENTDENSITY,
+   SCALINGFACTOR,POINTING,POINTINGLABEL,FULLDESCR;
+
    String ON="On",OFF="Off";
 
    // Les references aux objets
@@ -123,7 +123,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    JSlider opacityLevel;
    JSlider gapOrder;
 
-   JSlider epochSlider; 
+   JSlider epochSlider;
    JSlider scalingFactor; // facteur d'échelle pour les filtres des plans CATALOG
 
    JSlider polaSegmentLen; // Pour plan POLARISATION, longueur max segments
@@ -141,7 +141,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       SEEFITS = aladin.chaine.getString("PROPSEEFITS");
       SEEPARSING = aladin.chaine.getString("VWTABLEINFO");
       TABLEINFO = aladin.chaine.getString("PROPTABLEINFO");
-//      LOADURL = aladin.chaine.getString("PROPLOADURL");
+      //      LOADURL = aladin.chaine.getString("PROPLOADURL");
       NEWCALIB = aladin.chaine.getString("PROPNEWCALIB");
       MODCALIB = aladin.chaine.getString("PROPMODCALIB");
       SHOWFOVS = aladin.chaine.getString("PROPSHOWFOVS");
@@ -215,9 +215,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       FULLDESCR = aladin.chaine.getString("PROPFULLDESCR");
    }
 
-  /** Creation du Frame donnant les proprietes du plan.
-   * @param aladin Reference
-   */
+   /** Creation du Frame donnant les proprietes du plan.
+    * @param aladin Reference
+    */
    protected Properties(Plan p) {
       super();
       this.aladin = p.aladin;
@@ -238,7 +238,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       t.y+=i*20;
       setLocation(t);
 
-  }
+   }
 
    /** Initialisation d'un JPanel en fonction d'un plan
     * @param force true si on force la réinitiailisation
@@ -247,17 +247,17 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    void showProp(boolean force) {
       Plan p=plan;
       flagHide = false;
-      
+
       // Que des modifs mineures = > juste re-affichage
       if( !force && pmemo != null && hcmemo == p.hashCode() && pmemo.equals(p) ) {
-        if (isShowing()) return;
-        setVisible(true);
-        return;
+         if (isShowing()) return;
+         setVisible(true);
+         return;
       }
 
       // On compare le type du precedent plan pour eviter un pack()
       boolean noPack = (pmemo!=null && pmemo.type==p.type
-                        && pmemo.flagOk==p.flagOk && pmemo.projd==p.projd);
+            && pmemo.flagOk==p.flagOk && pmemo.projd==p.projd);
 
 
       // On memorise les caracteristiques du plan afin de pouvoir
@@ -276,14 +276,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       couleur=null;
       sField=sEquinox=null;
       epField=eqField=rollField=null;
-      
+
       rotateCenter = null;
 
       // On reconstruit le panel
       if( panel!=null ) remove(panel);
       panel = new JPanel();
       panel.setLayout( new BorderLayout(5,5) );
-      
+
       propPanel=getPanelProperties();
       JScrollPane scrollPane = new JScrollPane(propPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -294,7 +294,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       Aladin.makeAdd(panel,getPanelValid(),"South");
 
       Aladin.makeAdd(this,panel,"Center");
-//      ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+      //      ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
 
       if( !noPack ) pack();
 
@@ -304,25 +304,25 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    /** Construction du panel des boutons de validation
     * @return Le panel contenant les boutons Apply/Close
     */
-    protected JPanel getPanelValid() {
-       JPanel p = new JPanel();
-       p.setLayout( new FlowLayout(FlowLayout.CENTER));
-       JButton b;
-       p.add( b=new JButton(APPLY)); b.addActionListener(this);
-       b.setFont( b.getFont().deriveFont(Font.BOLD) );
-       if( plan.getBookmarkCode()!=null ) {
-          p.add( new JLabel(" ") );
-          p.add( b=new JButton(BOOKMARK)); b.addActionListener(this);
-       }
-       p.add( b=new JButton(CLOSE)); b.addActionListener(this);
-       return p;
-    }
+   protected JPanel getPanelValid() {
+      JPanel p = new JPanel();
+      p.setLayout( new FlowLayout(FlowLayout.CENTER));
+      JButton b;
+      p.add( b=new JButton(APPLY)); b.addActionListener(this);
+      b.setFont( b.getFont().deriveFont(Font.BOLD) );
+      if( plan.getBookmarkCode()!=null ) {
+         p.add( new JLabel(" ") );
+         p.add( b=new JButton(BOOKMARK)); b.addActionListener(this);
+      }
+      p.add( b=new JButton(CLOSE)); b.addActionListener(this);
+      return p;
+   }
 
-  private ButtonGroup filterCB;
+   private ButtonGroup filterCB;
 
    /**
-	 * Construit le panel des filtres prédéfinis
-	 */
+    * Construit le panel des filtres prédéfinis
+    */
    private JPanel getPanelFilter(Plan plan) {
       GridBagConstraints c = new GridBagConstraints();
       GridBagLayout g =  new GridBagLayout();
@@ -366,18 +366,18 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       return p;
    }
 
-//   private void showInfo() {
-//      aladin.info(this,plan.verboseDescr);
-//   }
-   
-   
+   //   private void showInfo() {
+   //      aladin.info(this,plan.verboseDescr);
+   //   }
+
+
    /** Genère un Label, éventuellement sur plusieurs lignes, qui peut avoir à la fin un lien (more...) pour de l'info
     * additionnel, ou une url complète associée. Les deux simultanément ne sont pas possibles.
     */
    class Anchor extends JLabel {
       String url,more;
       int width;
-      
+
       /**
        * @param text Texte du baratin (ou null si début du texte supplémentaire à afficher)
        * @param width nombre de caractères avant repli (-1 si pas de repli), ou césure si text==null
@@ -416,7 +416,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                public void mouseDragged(MouseEvent e) { }
             });
             addMouseListener(new MouseListener() {
-               public void mouseReleased(MouseEvent e) { 
+               public void mouseReleased(MouseEvent e) {
                   if( url!=null ) aladin.glu.showDocument(url);
                   else aladin.info(c,more1.replace("\\n","\n"));
                }
@@ -431,8 +431,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
 
    /** Construction du panel des proprietes du plan courant.
-   * @return Le panel des proprietes du plan courant
-   */
+    * @return Le panel des proprietes du plan courant
+    */
    protected JPanel getPanelProperties() {
       JButton b;
       GridBagConstraints c = new GridBagConstraints();
@@ -447,7 +447,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       label = new JTextField(plan.label,15);
       label.setMinimumSize(label.getPreferredSize());
       PropPanel.addCouple(p, LABEL, label, g,c);
-      
+
       if( plan.verboseDescr!=null || plan.description!=null ) {
          PropPanel.addCouple(p,"Description: ", new Anchor(plan.description,50,plan.verboseDescr,null), g,c);
       }
@@ -463,9 +463,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,50,null,plan.copyrightUrl), g,c);
       }
 
+      // Unique ID
+      if( plan instanceof PlanBG && ((PlanBG)plan).id!=null ) {
+         PropPanel.addCouple(p,"Id.: ", new JLabel(((PlanBG)plan).id), g,c);
+      }
+
       //La couleur
       if( !(plan.isImage() || plan.type==Plan.ALLSKYIMG)
-          && plan.type!=Plan.FOLDER && !(plan instanceof PlanContour)) {
+            && plan.type!=Plan.FOLDER && !(plan instanceof PlanContour)) {
          couleur = new Couleur(plan.c);
          PropPanel.addCouple(p,COLOR, couleur, g,c);
          couleur.addActionListener(new ActionListener() {
@@ -519,48 +524,48 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          // cas d'un PlanContour
          if (plan instanceof PlanContour) {
-           PlanContour pcont = (PlanContour)plan;
+            PlanContour pcont = (PlanContour)plan;
 
-           // ajout du label de l'image sur laquelle a ete faite le contour
-           PropPanel.addCouple(p,IMG,new JLabel(pcont.p.label + " - " + pcont.p.objet),g,c);
+            // ajout du label de l'image sur laquelle a ete faite le contour
+            PropPanel.addCouple(p,IMG,new JLabel(pcont.p.label + " - " + pcont.p.objet),g,c);
 
-           int[] contoursLevels = pcont.getIntLevels();
-           contoursCB = new JCheckBox[contoursLevels.length];
-           contoursCouleurs = new Couleur[contoursLevels.length];
+            int[] contoursLevels = pcont.getIntLevels();
+            contoursCB = new JCheckBox[contoursLevels.length];
+            contoursCouleurs = new Couleur[contoursLevels.length];
 
-           int scrollWidth = 330;
-           int scrollHeight = 200;
-           panelScroll = new JPanel();  // panel qui sera integre dans le JScrollPane
-           panelScroll.setLayout(g);
+            int scrollWidth = 330;
+            int scrollHeight = 200;
+            panelScroll = new JPanel();  // panel qui sera integre dans le JScrollPane
+            panelScroll.setLayout(g);
 
-           for (int i=0;i<contoursLevels.length;i++) {
-             contoursCB[i] = new JCheckBox(VIEWABLE,pcont.isViewable(i));
-             contoursCB[i].addActionListener(this);
-             panelCont = new JPanel();
-             panelCont.add(contoursCB[i]);
-             contoursCouleurs[i] = new Couleur(pcont.couleursContours[i],15,3,Couleur.getBrighterColors(pcont.c,4));
-             panelCont.add(contoursCouleurs[i]);
+            for (int i=0;i<contoursLevels.length;i++) {
+               contoursCB[i] = new JCheckBox(VIEWABLE,pcont.isViewable(i));
+               contoursCB[i].addActionListener(this);
+               panelCont = new JPanel();
+               panelCont.add(contoursCB[i]);
+               contoursCouleurs[i] = new Couleur(pcont.couleursContours[i],15,3,Couleur.getBrighterColors(pcont.c,4));
+               panelCont.add(contoursCouleurs[i]);
 
-             String suffix = (i==0) ? "1st" : ((i==1)? "2nd" : ((i==2)?"3rd": (i+1)+"th"));
-             PropPanel.addCouple(panelScroll,suffix + " level",panelCont,g,c);
-           }
-           scroll = new JScrollPane(panelScroll); // JScrollPane pour le choix des couleurs
-           scroll.setSize(scrollWidth,scrollHeight);
-           g.setConstraints(scroll, c);
-           p.add(scroll);
+               String suffix = (i==0) ? "1st" : ((i==1)? "2nd" : ((i==2)?"3rd": (i+1)+"th"));
+               PropPanel.addCouple(panelScroll,suffix + " level",panelCont,g,c);
+            }
+            scroll = new JScrollPane(panelScroll); // JScrollPane pour le choix des couleurs
+            scroll.setSize(scrollWidth,scrollHeight);
+            g.setConstraints(scroll, c);
+            p.add(scroll);
 
-           // affichage de l'histogramme des niveaux de gris
-           Histogramme hist = new Histogramme((PlanImage)pcont.p);
-           PropPanel.addCouple(p,LEVEL,hist,g,c);
+            // affichage de l'histogramme des niveaux de gris
+            Histogramme hist = new Histogramme((PlanImage)pcont.p);
+            PropPanel.addCouple(p,LEVEL,hist,g,c);
 
-           // affichage des differents niveaux
-           curs = new Curseur(hist);
-           curs.nbNiveaux = contoursLevels.length;
-           curs.couleurTriangle = pcont.couleursContours;
-           for (int i=0;i<contoursLevels.length;i++) {
-             curs.niveaux[i] = contoursLevels[i];
-           }
-           PropPanel.addCouple(p,"",curs,g,c);
+            // affichage des differents niveaux
+            curs = new Curseur(hist);
+            curs.nbNiveaux = contoursLevels.length;
+            curs.couleurTriangle = pcont.couleursContours;
+            for (int i=0;i<contoursLevels.length;i++) {
+               curs.niveaux[i] = contoursLevels[i];
+            }
+            PropPanel.addCouple(p,"",curs,g,c);
          }
 
          // Une ligne de separation
@@ -605,9 +610,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          // button to retrieve pointing centers
          if (pf.isAlmaFP()) {
-             JButton bPointing = new JButton(POINTINGLABEL);
-             bPointing.addActionListener(this);
-             PropPanel.addCouple(p, POINTING, bPointing, g, c);
+            JButton bPointing = new JButton(POINTINGLABEL);
+            bPointing.addActionListener(this);
+            PropPanel.addCouple(p, POINTING, bPointing, g, c);
          }
 
          // panel with sub-FoVs
@@ -623,80 +628,80 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Plan MultiExtension
       // Bouton de recuperation de visualisation du header FITS
       if( plan instanceof PlanFolder  && ((PlanFolder)plan).headerFits!=null ||
-          plan instanceof PlanCatalog && ((PlanCatalog)plan).headerFits!=null ) {
+            plan instanceof PlanCatalog && ((PlanCatalog)plan).headerFits!=null ) {
          PropPanel.addCouple(p,"Fits extension", b=new JButton(SEEFITS), g,c);
          b.addActionListener(this);
       }
 
       // Info sur les images
       if( plan.isImage() || plan instanceof PlanBG   ) {
-        final PlanImage pimg = (PlanImage)plan;
+         final PlanImage pimg = (PlanImage)plan;
 
-      	// Survey de l'image
-        String survey=pimg.survey();
-      	if( survey!=null && survey.length()>0 )
-             PropPanel.addCouple(p,INF, new JLabel(pimg.survey()), g,c);
+         // Survey de l'image
+         String survey=pimg.survey();
+         if( survey!=null && survey.length()>0 )
+            PropPanel.addCouple(p,INF, new JLabel(pimg.survey()), g,c);
 
-      	// Format d'image
-        JLabel fmtl = new JLabel(
-              plan instanceof PlanHealpix ? "HEALPix map" :
-              plan instanceof PlanMoc ? "Multi-Order Coverage map (MOC)" :
-              plan instanceof PlanBG ? "HiPS" :
-                 PlanImage.describeFmtRes(pimg.dis,pimg.res));
+         // Format d'image
+         JLabel fmtl = new JLabel(
+               plan instanceof PlanHealpix ? "HEALPix map" :
+                  plan instanceof PlanMoc ? "Multi-Order Coverage map (MOC)" :
+                     plan instanceof PlanBG ? "HiPS" :
+                        PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
-        // Bouton de recuperation de visualisation du header FITS
-        if( pimg.headerFits!=null ) {
-           JPanel fmtp = new JPanel();
-           fmtp.setLayout(new FlowLayout(FlowLayout.LEFT));
-           fmtp.add(fmtl);
-           fmtp.add( b=new JButton(SEEFITS) );
-           b.addActionListener(this);
-           PropPanel.addCouple(p,FMT, fmtp, g,c);
-        } else PropPanel.addCouple(p,FMT, fmtl, g,c);
-        
-        
-        if( pimg.isImage() ) {
-           // Mode graphique
-           PropPanel.addCouple(p,PIXMODE, new JLabel(pimg.getPixModeInfo()), g,c);
+         // Bouton de recuperation de visualisation du header FITS
+         if( pimg.headerFits!=null ) {
+            JPanel fmtp = new JPanel();
+            fmtp.setLayout(new FlowLayout(FlowLayout.LEFT));
+            fmtp.add(fmtl);
+            fmtp.add( b=new JButton(SEEFITS) );
+            b.addActionListener(this);
+            PropPanel.addCouple(p,FMT, fmtp, g,c);
+         } else PropPanel.addCouple(p,FMT, fmtl, g,c);
 
-           // Info d'image
-           if(  plan.flagOk && plan.projd!=null ) {
-              String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
-              PropPanel.addCouple(p, "Pixel angular res.", new JLabel(s), g, c);
 
-              double ep = plan.projd.c.GetEpoch();
-              if( !Double.isNaN(ep) ) {
-                 PropPanel.addCouple(p,EPOCH, new JLabel(Astrodate.JDToDate(Astrodate.YdToJD(ep))+" ("+ep+")"), g,c);
-              } else {
-                 String d = ((PlanImage)plan).getDateObs();
-                 if( d!=null ) PropPanel.addCouple(p,DATEOBS, new JLabel(d), g,c);
-              }
-              double eq = plan.projd.c.GetEquinox();
-              if( eq!=0.0 ) {
-                 eq= (int)(eq*1000)/1000.0;
-                 PropPanel.addCouple(p,WCSEQ, new JLabel(""+eq), g,c);
+         if( pimg.isImage() ) {
+            // Mode graphique
+            PropPanel.addCouple(p,PIXMODE, new JLabel(pimg.getPixModeInfo()), g,c);
 
-              // On autorise la modification de l'equinoxe par defaut
-              } else {
-                 sEquinox="2000.0";	// IL FAUDRA FAIRE PLUS MALIN
-                 eqField = new JTextField(sEquinox);
-                 PropPanel.addCouple(p,WCSEQ, eqField, g,c);
-              }
-           }
+            // Info d'image
+            if(  plan.flagOk && plan.projd!=null ) {
+               String s = Coord.getUnit(plan.projd.c.GetResol()[0])+" x "+Coord.getUnit(plan.projd.c.GetResol()[1]);
+               PropPanel.addCouple(p, "Pixel angular res.", new JLabel(s), g, c);
 
-           if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
+               double ep = plan.projd.c.GetEpoch();
+               if( !Double.isNaN(ep) ) {
+                  PropPanel.addCouple(p,EPOCH, new JLabel(Astrodate.JDToDate(Astrodate.YdToJD(ep))+" ("+ep+")"), g,c);
+               } else {
+                  String d = ((PlanImage)plan).getDateObs();
+                  if( d!=null ) PropPanel.addCouple(p,DATEOBS, new JLabel(d), g,c);
+               }
+               double eq = plan.projd.c.GetEquinox();
+               if( eq!=0.0 ) {
+                  eq= (int)(eq*1000)/1000.0;
+                  PropPanel.addCouple(p,WCSEQ, new JLabel(""+eq), g,c);
 
-        }
+                  // On autorise la modification de l'equinoxe par defaut
+               } else {
+                  sEquinox="2000.0";	// IL FAUDRA FAIRE PLUS MALIN
+                  eqField = new JTextField(sEquinox);
+                  PropPanel.addCouple(p,WCSEQ, eqField, g,c);
+               }
+            }
+
+            if( pimg.width!=0 && !(pimg instanceof PlanBG) ) PropPanel.addCouple(p,SIZE, new JLabel(pimg.getSizeInfo()), g,c);
+
+         }
       }
-      
+
       // Valeur BLANK alternative
       if( plan.hasAvailablePixels() ) {
          final PlanImage pimg = (PlanImage)plan;
          String vBlank = pimg.getBlankString();
          blankField = new TextField(vBlank);
          blankField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { 
-               actionBlank(); 
+            public void actionPerformed(ActionEvent e) {
+               actionBlank();
                blankField.setText( pimg.getBlankString() );
                aladin.calque.repaintAll();
             }
@@ -738,7 +743,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          perm.setEnabled(pb.getPermutation()!=PlanImageBlink.PERM2);
          panel.add(perm);
          PropPanel.addCouple(p,"Permutations",panel, g,c);
-            
+
       }
 
 
@@ -749,19 +754,19 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Panel pour les informations techniques
-//      if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {
-//
-//         JPanel panelInfo = new JPanel();
-//         panelInfo.setBorder(BorderFactory.createEmptyBorder());
-//         panelInfo.setLayout(new FlowLayout(FlowLayout.CENTER));
-//         if( plan.getUrl()!=null ) {
-//            panelInfo.add(b=new JButton(LOADURL));
-//            b.addActionListener(this);
-//         }
-//         c.fill = GridBagConstraints.NONE;
-//         PropPanel.addCouple(p,"",panelInfo, g,c);
-//         c.fill = GridBagConstraints.BOTH;
-//      }
+      //      if( plan.hasRemoteUrl() || (plan.isSimpleCatalog() || plan.type==Plan.FOLDER) ) {
+      //
+      //         JPanel panelInfo = new JPanel();
+      //         panelInfo.setBorder(BorderFactory.createEmptyBorder());
+      //         panelInfo.setLayout(new FlowLayout(FlowLayout.CENTER));
+      //         if( plan.getUrl()!=null ) {
+      //            panelInfo.add(b=new JButton(LOADURL));
+      //            b.addActionListener(this);
+      //         }
+      //         c.fill = GridBagConstraints.NONE;
+      //         PropPanel.addCouple(p,"",panelInfo, g,c);
+      //         c.fill = GridBagConstraints.BOTH;
+      //      }
 
       if( plan.isCatalog() ) {
          Vector<Legende> legs = plan.getLegende();
@@ -771,7 +776,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( n==1 ) PropPanel.addCouple(p,TABLEINFO, b, g,c);
          else {
             StringBuffer s = new StringBuffer("<html>");
-            for( int i=0; i<legs.size(); i++ ) s.append((i>0?"<br>":"")+(i+1)+": "+((Legende)legs.elementAt(i)).name);
+            for( int i=0; i<legs.size(); i++ ) s.append((i>0?"<br>":"")+(i+1)+": "+legs.elementAt(i).name);
             s.append("</html>");
             PropPanel.addCouple(p,TABLEINFO, new JLabel(s.toString()), g,c);
             PropPanel.addCouple(p,"", b, g,c);
@@ -796,87 +801,87 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // champ à afficher (PlanHealpix)
       if( plan instanceof PlanHealpix ) {
-          final PlanHealpix ph = (PlanHealpix)plan;
+         final PlanHealpix ph = (PlanHealpix)plan;
 
-          if ( ph.type==PlanBG.ALLSKYPOL ) {
-              PropPanel.addFilet(p,g,c);
-              PropPanel.addSectionTitle(p,POLAOPTIONS,g,c);
+         if ( ph.type==PlanBG.ALLSKYPOL ) {
+            PropPanel.addFilet(p,g,c);
+            PropPanel.addSectionTitle(p,POLAOPTIONS,g,c);
 
-              polaSegmentLen = new JSlider(0, 200);
-              polaSegmentLen.setValue((int)ph.getSegmentLenFactor()*200);
-              polaSegmentLen.setPaintTicks(true);
-              polaSegmentLen.addChangeListener(this);
-              PropPanel.addCouple(p, SEGMENTLEN, polaSegmentLen, g, c);
+            polaSegmentLen = new JSlider(0, 200);
+            polaSegmentLen.setValue((int)ph.getSegmentLenFactor()*200);
+            polaSegmentLen.setPaintTicks(true);
+            polaSegmentLen.addChangeListener(this);
+            PropPanel.addCouple(p, SEGMENTLEN, polaSegmentLen, g, c);
 
-              polaSegmentThickness = new JSlider(1, 5);
-              polaSegmentThickness.setValue(ph.getSegmentThickness());
-//              System.out.println(ph.getSegmentThickness());
-              polaSegmentThickness.setMajorTickSpacing(1);
-              polaSegmentThickness.setPaintTicks(true);
-              polaSegmentThickness.setSnapToTicks(true);
-              polaSegmentThickness.setPaintLabels(false);
-              polaSegmentThickness.addChangeListener(this);
-              PropPanel.addCouple(p, SEGMENTTHICK, polaSegmentThickness, g, c);
+            polaSegmentThickness = new JSlider(1, 5);
+            polaSegmentThickness.setValue(ph.getSegmentThickness());
+            //              System.out.println(ph.getSegmentThickness());
+            polaSegmentThickness.setMajorTickSpacing(1);
+            polaSegmentThickness.setPaintTicks(true);
+            polaSegmentThickness.setSnapToTicks(true);
+            polaSegmentThickness.setPaintLabels(false);
+            polaSegmentThickness.addChangeListener(this);
+            PropPanel.addCouple(p, SEGMENTTHICK, polaSegmentThickness, g, c);
 
-              polaSegmentDensity = new JSlider(0, 200);
-              polaSegmentDensity.setValue(100);
-              polaSegmentDensity.setMajorTickSpacing(25);
-              polaSegmentDensity.setPaintTicks(true);
-              polaSegmentDensity.setSnapToTicks(true);
-              polaSegmentDensity.addChangeListener(this);
-              PropPanel.addCouple(p, SEGMENTDENSITY, polaSegmentDensity, g, c);
-          }
-          else {
-              if (ph.tfieldNames!=null && ph.idxTFormToRead>=0 ) {
-                 // nom du field affiché
-                 PropPanel.addFilet(p, g, c);
-                 PropPanel.addCouple(p, CURRENTFIELD, new JLabel(ph.tfieldNames[ph.idxTFormToRead]), g, c);
-              }
-
-              if( ph.hasPolarisationData() || ph.tfieldNames.length>1 ) {
-                  PropPanel.addFilet(p, g, c);
-              }
-                // bouton pour demander affichage de la polarisation
-                if (ph.hasPolarisationData()) {
-                    JPanel pPola = new JPanel(new GridLayout(0, 1));
-                    btnDisplayPola = new JButton(DISPLAYPOLA);
-                    btnDisplayPola.addActionListener(this);
-                    pPola.add(btnDisplayPola);
-
-                    btnDisplayAmp = new JButton(GENERATEPOLAAMP);
-                    btnDisplayAmp.addActionListener(this);
-                    pPola.add(btnDisplayAmp);
-
-                    btnDisplayAng = new JButton(GENERATEPOLAANG);
-                    btnDisplayAng.addActionListener(this);
-                    pPola.add(btnDisplayAng);
-
-                    c.fill = GridBagConstraints.NONE;
-                    PropPanel.addCouple(null, p, POLA, null, pPola, g, c, GridBagConstraints.NORTHWEST);
-                }
-
-                // affichage autres champs disponibles
-                if (ph.tfieldNames.length > 1) {
-                    JPanel pAvailableFields = new JPanel(new GridLayout(0, 1));
-                    JScrollPane scrollPane = new JScrollPane(pAvailableFields, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                    scrollPane.setPreferredSize(new Dimension(200, 300));
-
-                    for (int i = 0; i < ph.tfieldNames.length; i++) {
-                        if (i == ph.idxTFormToRead) {
-                            continue;
-                        }
-                        pAvailableFields
-                                .add(b = new JButton(ph.tfieldNames[i]));
-                        final int idx = i;
-                        b.addActionListener(new ActionListener() {
-                            public void actionPerformed(ActionEvent e) {
-                                ph.loadNewField(idx);
-                            }
-                        });
-                    }
-                    PropPanel.addCouple(null, p, SELECTFIELD, null, pAvailableFields, g, c, GridBagConstraints.NORTHWEST);
-                }
+            polaSegmentDensity = new JSlider(0, 200);
+            polaSegmentDensity.setValue(100);
+            polaSegmentDensity.setMajorTickSpacing(25);
+            polaSegmentDensity.setPaintTicks(true);
+            polaSegmentDensity.setSnapToTicks(true);
+            polaSegmentDensity.addChangeListener(this);
+            PropPanel.addCouple(p, SEGMENTDENSITY, polaSegmentDensity, g, c);
+         }
+         else {
+            if (ph.tfieldNames!=null && ph.idxTFormToRead>=0 ) {
+               // nom du field affiché
+               PropPanel.addFilet(p, g, c);
+               PropPanel.addCouple(p, CURRENTFIELD, new JLabel(ph.tfieldNames[ph.idxTFormToRead]), g, c);
             }
+
+            if( ph.hasPolarisationData() || ph.tfieldNames.length>1 ) {
+               PropPanel.addFilet(p, g, c);
+            }
+            // bouton pour demander affichage de la polarisation
+            if (ph.hasPolarisationData()) {
+               JPanel pPola = new JPanel(new GridLayout(0, 1));
+               btnDisplayPola = new JButton(DISPLAYPOLA);
+               btnDisplayPola.addActionListener(this);
+               pPola.add(btnDisplayPola);
+
+               btnDisplayAmp = new JButton(GENERATEPOLAAMP);
+               btnDisplayAmp.addActionListener(this);
+               pPola.add(btnDisplayAmp);
+
+               btnDisplayAng = new JButton(GENERATEPOLAANG);
+               btnDisplayAng.addActionListener(this);
+               pPola.add(btnDisplayAng);
+
+               c.fill = GridBagConstraints.NONE;
+               PropPanel.addCouple(null, p, POLA, null, pPola, g, c, GridBagConstraints.NORTHWEST);
+            }
+
+            // affichage autres champs disponibles
+            if (ph.tfieldNames.length > 1) {
+               JPanel pAvailableFields = new JPanel(new GridLayout(0, 1));
+               JScrollPane scrollPane = new JScrollPane(pAvailableFields, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+               scrollPane.setPreferredSize(new Dimension(200, 300));
+
+               for (int i = 0; i < ph.tfieldNames.length; i++) {
+                  if (i == ph.idxTFormToRead) {
+                     continue;
+                  }
+                  pAvailableFields
+                  .add(b = new JButton(ph.tfieldNames[i]));
+                  final int idx = i;
+                  b.addActionListener(new ActionListener() {
+                     public void actionPerformed(ActionEvent e) {
+                        ph.loadNewField(idx);
+                     }
+                  });
+               }
+               PropPanel.addCouple(null, p, SELECTFIELD, null, pAvailableFields, g, c, GridBagConstraints.NORTHWEST);
+            }
+         }
       }
 
       if( plan.type==Plan.ALLSKYIMG ) {
@@ -890,7 +895,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
          if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
-//            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
+            //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
             JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
             bt.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) {
@@ -927,57 +932,57 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             public void actionPerformed(ActionEvent e) { pmoc.setDrawingFillIn(b2a.isSelected()); aladin.calque.repaintAll(); }
          });
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-//         final JCheckBox b2 = new JCheckBox("diagonals");
-//         b2.setSelected( pmoc.isDrawingDiagonal() );
-//         b2.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
-//         });
-         p1.add(b1); p1.add(b2a); 
-//         p1.add(b2);
+         //         final JCheckBox b2 = new JCheckBox("diagonals");
+         //         b2.setSelected( pmoc.isDrawingDiagonal() );
+         //         b2.addActionListener(new ActionListener() {
+         //            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
+         //         });
+         p1.add(b1); p1.add(b2a);
+         //         p1.add(b2);
          PropPanel.addCouple(p,"Drawing method: ",p1,g,c);
-         
-//         boolean twoResMode = pmoc.getTwoResMode();
-//         ButtonGroup bg = new ButtonGroup();
-//         final JCheckBox b3 = new JCheckBox("on");
-//         b3.setSelected(twoResMode);
-//         b3.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
-//         });
-//         JCheckBox b4 = new JCheckBox("off");
-//         b4.setSelected(!twoResMode);
-//         b4.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//               if( mocSize>20000L ) {
-//                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
-//                     b3.setSelected(true);
-//                     return;
-//                  }
-//               }
-//               pmoc.setTwoResMode(b3.isSelected());
-//               aladin.calque.repaintAll();
-//            }
-//         });
-//         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-//         bg.add(b3); bg.add(b4);
-//         p1.add(b3); p1.add(b4);
-//         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
+
+         //         boolean twoResMode = pmoc.getTwoResMode();
+         //         ButtonGroup bg = new ButtonGroup();
+         //         final JCheckBox b3 = new JCheckBox("on");
+         //         b3.setSelected(twoResMode);
+         //         b3.addActionListener(new ActionListener() {
+         //            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
+         //         });
+         //         JCheckBox b4 = new JCheckBox("off");
+         //         b4.setSelected(!twoResMode);
+         //         b4.addActionListener(new ActionListener() {
+         //            public void actionPerformed(ActionEvent e) {
+         //               if( mocSize>20000L ) {
+         //                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
+         //                     b3.setSelected(true);
+         //                     return;
+         //                  }
+         //               }
+         //               pmoc.setTwoResMode(b3.isSelected());
+         //               aladin.calque.repaintAll();
+         //            }
+         //         });
+         //         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+         //         bg.add(b3); bg.add(b4);
+         //         p1.add(b3); p1.add(b4);
+         //         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
 
       }
-      
-//      // Accès au MOC des catalogues VizieR
-//      if( Aladin.PROTO &&
-//            (plan.server instanceof ServerVizieR || plan.server instanceof ServerVizieRMission) ) {
-//         JPanel p1 = new JPanel();
-//         final String cat = ((PlanCatalog)plan).getFirstTableName();
-//         JButton bt = new JButton("MOC");
-//         bt.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//               ((ServerVizieR)aladin.dialog.server[ServerDialog.VIZIER]).createMocPlane(cat);
-//            }
-//         });
-//         p1.add(bt);
-//         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
-//      }
+
+      //      // Accès au MOC des catalogues VizieR
+      //      if( Aladin.PROTO &&
+      //            (plan.server instanceof ServerVizieR || plan.server instanceof ServerVizieRMission) ) {
+      //         JPanel p1 = new JPanel();
+      //         final String cat = ((PlanCatalog)plan).getFirstTableName();
+      //         JButton bt = new JButton("MOC");
+      //         bt.addActionListener(new ActionListener() {
+      //            public void actionPerformed(ActionEvent e) {
+      //               ((ServerVizieR)aladin.dialog.server[ServerDialog.VIZIER]).createMocPlane(cat);
+      //            }
+      //         });
+      //         p1.add(bt);
+      //         PropPanel.addCouple(p,cat+" coverage map",p1,g,c);
+      //      }
 
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
@@ -988,7 +993,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             if( s.indexOf("error")>=0 ) lab.setForeground(Color.red);
             PropPanel.addCouple(p, "Avg net speed:", lab, g, c);
          }
-         
+
          if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
             JPanel p1 = new JPanel();
             if( pbg.hasMoc() ) {
@@ -1009,7 +1014,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             }
             PropPanel.addCouple(p,"More info",p1,g,c);
          }
-         
+
       }
 
       if( plan.flagOk && (plan.isSimpleCatalog() || plan instanceof PlanBG) ) {
@@ -1023,9 +1028,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          // Les projections possibles par défaut s'il n'y a pas d'images dessous ou si PlanBG
          else if( plan.ref && Projection.isOk(plan.projd) )  {
             defCatProj = new JComboBox( Projection.getAlaProj() );
-//            String pr[]=Projection.getAlaProj();
-//            for( int i=0; i<pr.length; i++ ) defCatProj.addItem(pr[i]);
-//            defCatProj.setSelectedIndex(plan.projd.c.getProjSys()-1);
+            //            String pr[]=Projection.getAlaProj();
+            //            for( int i=0; i<pr.length; i++ ) defCatProj.addItem(pr[i]);
+            //            defCatProj.setSelectedIndex(plan.projd.c.getProjSys()-1);
             defCatProj.setSelectedIndex( Projection.getAlaProjIndex( Calib.getProjName(plan.projd.c.getProj()) ) );
             defCatProj.addActionListener(new ActionListener() {
                public void actionPerformed(ActionEvent e) { actionDefCatProj(); }
@@ -1044,6 +1049,17 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                });
                PropPanel.addCouple(p,".frame", defFrame, g,c);
             }
+            //            else if( plan.ref && plan instanceof PlanCatalog ) {
+            //               defFrame = Localisation.createFrameComboBis();
+            //               int i;
+            //               for( i=0; i<Localisation.FRAMEVAL.length && plan.projd.frame!=i; i++ );
+            //               if( i>Localisation.FRAMEVAL.length ) i=0;
+            //               defFrame.setSelectedIndex(i);
+            //               defFrame.addActionListener(new ActionListener() {
+            //                  public void actionPerformed(ActionEvent e) { actionFrameProjCat(); }
+            //               });
+            //               PropPanel.addCouple(p,".frame", defFrame, g,c);
+            //            }
          }
       }
 
@@ -1051,10 +1067,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       boolean filet=false;
 
       if( plan.isCatalog() ) {
-         
+
          // Epoque pour un catalogue
          if( plan.flagOk && plan.projd!=null && plan.hasPM() ) {
-            
+
             if( !filet ) PropPanel.addFilet(p, g, c); filet=false;
 
             String sEpoch = plan.getEpoch().toString("J");
@@ -1068,7 +1084,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                public void keyPressed(KeyEvent arg0) { }
             });
             pEpoch.add(epField);
-            
+
             b = new JButton("Img epoch");
             Plan pi = aladin.calque.getPlanBase();
             b.setEnabled( pi instanceof PlanImage && ((PlanImage)pi).getDateObs()!=null );
@@ -1099,11 +1115,11 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                public void actionPerformed(ActionEvent arg0) {
                   epField.setText("J2000");
                   apply();
-              }
+               }
             });
             pEpoch.add(b);
             PropPanel.addCouple(p,EPOCH, pEpoch, g,c);
-            
+
             double y=2000;
             try { y = Double.parseDouble(sEpoch.substring(1));
             } catch( NumberFormatException e ) { }
@@ -1117,51 +1133,51 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             epochSlider.addChangeListener(this);
             PropPanel.addCouple(p, "", epochSlider, g, c);
          }
-         
-          if( !filet ) PropPanel.addFilet(p, g, c); filet=true;
-          scalingFactor = new JSlider(0, 300);
-          scalingFactor.setMinimumSize(scalingFactor.getPreferredSize());
-          scalingFactor.setValue((int)plan.getScalingFactor()*100);
-          scalingFactor.setMajorTickSpacing(50);
-          scalingFactor.setPaintLabels(true);
-          scalingFactor.setPaintTicks(true);
-          scalingFactor.setPaintTrack(true);
-          scalingFactor.addChangeListener(this);
-          PropPanel.addCouple(p, SCALINGFACTOR, scalingFactor, g, c);
+
+         if( !filet ) PropPanel.addFilet(p, g, c); filet=true;
+         scalingFactor = new JSlider(0, 300);
+         scalingFactor.setMinimumSize(scalingFactor.getPreferredSize());
+         scalingFactor.setValue((int)plan.getScalingFactor()*100);
+         scalingFactor.setMajorTickSpacing(50);
+         scalingFactor.setPaintLabels(true);
+         scalingFactor.setPaintTicks(true);
+         scalingFactor.setPaintTrack(true);
+         scalingFactor.addChangeListener(this);
+         PropPanel.addCouple(p, SCALINGFACTOR, scalingFactor, g, c);
       }
 
 
       // niveau d'opacité des images et des footprints
       if( aladin.calque.canBeTransparent(plan) ) {
          if( !filet ) PropPanel.addFilet(p, g, c); filet=true;
-          JPanel pTransp = new JPanel(new FlowLayout());
-          opacityLevel = new JSlider(0, 100);
-          opacityLevel.setValue((int)(100*plan.getOpacityLevel()));
-          opacityLevel.setMajorTickSpacing(20);
-          opacityLevel.setPaintLabels(true);
-          opacityLevel.setPaintTicks(true);
-          opacityLevel.setPaintTrack(true);
-          opacityLevel.setToolTipText(OPACITYLEVEL+" : "+opacityLevel.getValue());
-          opacityLevel.addChangeListener(this);
-          pTransp.add(opacityLevel);
-          PropPanel.addCouple(p,OPACITY, pTransp, g,c);
+         JPanel pTransp = new JPanel(new FlowLayout());
+         opacityLevel = new JSlider(0, 100);
+         opacityLevel.setValue((int)(100*plan.getOpacityLevel()));
+         opacityLevel.setMajorTickSpacing(20);
+         opacityLevel.setPaintLabels(true);
+         opacityLevel.setPaintTicks(true);
+         opacityLevel.setPaintTrack(true);
+         opacityLevel.setToolTipText(OPACITYLEVEL+" : "+opacityLevel.getValue());
+         opacityLevel.addChangeListener(this);
+         pTransp.add(opacityLevel);
+         PropPanel.addCouple(p,OPACITY, pTransp, g,c);
       }
 
       // Ajustement de l'ordre max
       if( plan instanceof PlanBGCat && !(plan instanceof PlanMoc)) {
          if( !filet ) PropPanel.addFilet(p, g, c); filet=true;
-          JPanel pGapOrder = new JPanel(new FlowLayout());
-          gapOrder = new JSlider(-PlanBGCat.MAXGAPORDER, PlanBGCat.MAXGAPORDER);
-          gapOrder.setValue(((PlanBGCat)plan).getGapOrder());
-          gapOrder.setMajorTickSpacing(1);
-          gapOrder.setPaintLabels(true);
-          gapOrder.setPaintTicks(true);
-          gapOrder.setPaintTrack(true);
-          gapOrder.addChangeListener(this);
-          pGapOrder.add(gapOrder);
-          PropPanel.addCouple(p,DENSITY, pGapOrder, g,c);
+         JPanel pGapOrder = new JPanel(new FlowLayout());
+         gapOrder = new JSlider(-PlanBGCat.MAXGAPORDER, PlanBGCat.MAXGAPORDER);
+         gapOrder.setValue(((PlanBGCat)plan).getGapOrder());
+         gapOrder.setMajorTickSpacing(1);
+         gapOrder.setPaintLabels(true);
+         gapOrder.setPaintTicks(true);
+         gapOrder.setPaintTrack(true);
+         gapOrder.addChangeListener(this);
+         pGapOrder.add(gapOrder);
+         PropPanel.addCouple(p,DENSITY, pGapOrder, g,c);
       }
-      
+
       // Propriété de déplacement des objets du plan
       if( plan.type == Plan.TOOL && !(plan instanceof PlanContour) ) {
          JRadioButton r;
@@ -1205,12 +1221,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // DANS LE CAS D'UN CATALOGUE, JE N'AFFICHE LE CHOICE QUE DANS LE CAS D'UNE
       // RECALIBRATION XY OU S'IL N'Y A PAS D'IMAGE EN DESSOUS
       if( plan.flagOk &&
-          (plan.isImage()
-                || (plan.isSimpleCatalog() && plan.hasXYorig)) ) {
+            (plan.isImage()
+                  || (plan.isSimpleCatalog() && plan.hasXYorig)) ) {
 
          PropPanel.addFilet(p,g,c);
          String s = plan.isImage()?ASTRED:
-                    plan.hasXYorig?XYRED:PROJ;
+            plan.hasXYorig?XYRED:PROJ;
          PropPanel.addSectionTitle(p,s,g,c);
 
          // Les plans de reference possibles pour le plan
@@ -1265,58 +1281,58 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    // implementation d'EventListener pour les differents sliders
    public void stateChanged(ChangeEvent e) {
-       Object src = e.getSource();
+      Object src = e.getSource();
 
-       // modification du niveau de transparence
-       if (src == opacityLevel) {
-          float level = (float) (opacityLevel.getValue() / 100.0);
-          plan.setOpacityLevel(level);
-          opacityLevel.setToolTipText(OPACITYLEVEL + " : "  + (int) (level * 100));
-          aladin.calque.repaintAll();
-       }
-       // Modification de la correction de densité pour un catalogue progressif
-       else if( src == gapOrder ) {
-          int v = gapOrder.getValue();
-          ((PlanBGCat)plan).setGapOrder(v);
-          aladin.calque.repaintAll();
-       }
-       // modification de la taille des segments de polarisation
-       else if (src==polaSegmentLen) {
-          float factor = (float)(polaSegmentLen.getValue()/100.0);
-          ((PlanBG)plan).setSegmentLenFactor(factor);
-          aladin.calque.repaintAll();
-       }
-       // modification de l'épaisseur des segments de polarisation
-       else if (src==polaSegmentThickness) {
-           int thickness = polaSegmentThickness.getValue();
-           int othickness = ((PlanBG)plan).getSegmentThickness();
-           if (thickness==othickness) {
-               return;
-           }
+      // modification du niveau de transparence
+      if (src == opacityLevel) {
+         float level = (float) (opacityLevel.getValue() / 100.0);
+         plan.setOpacityLevel(level);
+         opacityLevel.setToolTipText(OPACITYLEVEL + " : "  + (int) (level * 100));
+         aladin.calque.repaintAll();
+      }
+      // Modification de la correction de densité pour un catalogue progressif
+      else if( src == gapOrder ) {
+         int v = gapOrder.getValue();
+         ((PlanBGCat)plan).setGapOrder(v);
+         aladin.calque.repaintAll();
+      }
+      // modification de la taille des segments de polarisation
+      else if (src==polaSegmentLen) {
+         float factor = (float)(polaSegmentLen.getValue()/100.0);
+         ((PlanBG)plan).setSegmentLenFactor(factor);
+         aladin.calque.repaintAll();
+      }
+      // modification de l'épaisseur des segments de polarisation
+      else if (src==polaSegmentThickness) {
+         int thickness = polaSegmentThickness.getValue();
+         int othickness = ((PlanBG)plan).getSegmentThickness();
+         if (thickness==othickness) {
+            return;
+         }
 
-           ((PlanBG)plan).setSegmentThickness(thickness);
-           aladin.calque.repaintAll();
-       }
-       // modification du nombre de segments de polarisation
-       else if (src==polaSegmentDensity) {
-           float factor = (float) ((200-polaSegmentDensity.getValue()) / 100.0);
-           ((PlanBG)plan).setSegmentDensityFactor(factor);
-           aladin.calque.repaintAll();
-       }
-       // modification du scaling factor
-       else if (src==scalingFactor) {
-           float factor = (float)(scalingFactor.getValue()/100.0);
-           plan.setScalingFactor(factor);
-           aladin.calque.repaintAll();
-           
-        // modification de l'époque   
-       } else if (src==epochSlider) {
-          try {
-             plan.setEpoch(epochSlider.getValue()+"");
-             epField.setText( plan.getEpoch().toString("J"));
-             aladin.calque.repaintAll();
-          } catch( Exception e1 ) { e1.printStackTrace(); }
-       }
+         ((PlanBG)plan).setSegmentThickness(thickness);
+         aladin.calque.repaintAll();
+      }
+      // modification du nombre de segments de polarisation
+      else if (src==polaSegmentDensity) {
+         float factor = (float) ((200-polaSegmentDensity.getValue()) / 100.0);
+         ((PlanBG)plan).setSegmentDensityFactor(factor);
+         aladin.calque.repaintAll();
+      }
+      // modification du scaling factor
+      else if (src==scalingFactor) {
+         float factor = (float)(scalingFactor.getValue()/100.0);
+         plan.setScalingFactor(factor);
+         aladin.calque.repaintAll();
+
+         // modification de l'époque
+      } else if (src==epochSlider) {
+         try {
+            plan.setEpoch(epochSlider.getValue()+"");
+            epField.setText( plan.getEpoch().toString("J"));
+            aladin.calque.repaintAll();
+         } catch( Exception e1 ) { e1.printStackTrace(); }
+      }
    }
 
    // Mise-a-jour des plans de reference possibles pour le plan
@@ -1353,46 +1369,46 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    // normal, projs[] et projsChoice memorise les projections possibles du
    // plan de reference courant.
    protected void majProjs() {
-    if( !plan.isCatalog() && !plan.isImage() || planRef==null ) return;
+      if( !plan.isCatalog() && !plan.isImage() || planRef==null ) return;
 
-    int j = 0;             // Index de la projection courante
-    Plan pref = null;
+      int j = 0;             // Index de la projection courante
+      Plan pref = null;
 
-    // Cas d'un catalogue n'ayant que des XY
-    if( plan.hasXYorig ) projs = plan.getAvailableProj();
-    else {
-      if( planRefChoice.getSelectedIndex() >= 0 ) {
-        pref = planRef[planRefChoice.getSelectedIndex()];
-        projs = pref.getAvailableProj();
+      // Cas d'un catalogue n'ayant que des XY
+      if( plan.hasXYorig ) projs = plan.getAvailableProj();
+      else {
+         if( planRefChoice.getSelectedIndex() >= 0 ) {
+            pref = planRef[planRefChoice.getSelectedIndex()];
+            projs = pref.getAvailableProj();
+         }
       }
-    }
-    if( projsChoice == null ) projsChoice = new JComboBox();
-    projsChoice.removeAllItems();
+      if( projsChoice == null ) projsChoice = new JComboBox();
+      projsChoice.removeAllItems();
 
-    if( projs != null && projs.length > 0 ) {
-      for( int i = 0; i < projs.length; i++ ) {
-        projsChoice.addItem(projs[i].label);
-        if( plan.hasXYorig ) {
-          if( plan.projd == projs[i] ) j = i;
-        } else {
-          if( pref != null && pref.projd == projs[i] ) j = i;
-        }
+      if( projs != null && projs.length > 0 ) {
+         for( int i = 0; i < projs.length; i++ ) {
+            projsChoice.addItem(projs[i].label);
+            if( plan.hasXYorig ) {
+               if( plan.projd == projs[i] ) j = i;
+            } else {
+               if( pref != null && pref.projd == projs[i] ) j = i;
+            }
+         }
+         projsChoice.setSelectedIndex(j);
+         if( modCalib!=null ) modCalib.setEnabled(j >= 0 && projs[j].isModifiable());
+         projsChoice.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { actionDefCatProj(); }
+         });
+
       }
-      projsChoice.setSelectedIndex(j);
-      if( modCalib!=null ) modCalib.setEnabled(j >= 0 && projs[j].isModifiable());
-      projsChoice.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { actionDefCatProj(); }
-      });
-
-    }
-    else {
-      if( modCalib!=null ) modCalib.setEnabled(false);
-    }
+      else {
+         if( modCalib!=null ) modCalib.setEnabled(false);
+      }
    }
-   
+
    private void actionBlank() {
-     ((PlanImage)plan).setBlankString(blankField.getText());
-     showProp(true);
+      ((PlanImage)plan).setBlankString(blankField.getText());
+      showProp(true);
    }
 
    // Changement de projection par défaut d'un catalogue
@@ -1403,11 +1419,25 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
    // Changement de la frame de traçage d'un planBG
    private void actionFrameProj() {
-      if( defFrame==null
+      if( !(plan instanceof PlanBG ) || defFrame==null
             || ((PlanBG)plan).getFrameDrawing()==defFrame.getSelectedIndex() ) return;
       ((PlanBG)plan).setFrameDrawing( defFrame.getSelectedIndex() );
       if( defFrame.getSelectedIndex()!=0 ) aladin.info(this,aladin.chaine.getString("PROPFRAMEINFO"));
    }
+
+   // Util.indexInArrayOf(Localisation.REPERE[plan.projd.frame], Localisation.FRAMEBIS)
+
+   // Changement de la frame de traçage d'un PlanCatalog (tout seul)
+   // NE FONCTIONNE PAS POUR LE MOMENT
+   //   private void actionFrameProjCat() {
+   //      if( !(plan instanceof PlanCatalog) || defFrame==null ) return;
+   //      int i = defFrame.getSelectedIndex();
+   //      int f = Localisation.FRAMEVAL[i];
+   //      if( f==plan.projd.frame ) return;
+   //      plan.projd.modifyFrame(f);
+   //      aladin.view.newView(1);
+   //      aladin.calque.repaintAll();
+   //   }
 
    // Changement de couleur
    private void actionCouleur() {
@@ -1432,61 +1462,61 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    // Changement de projection pour le calcul des alpha,delta
    // pour un plan n'ayant que des XY
    private void actionPlanXYProjs() {
-     if (projsChoice==null ||
-         projsChoice.getSelectedIndex() < 0)  return;
-     Projection p = projs[projsChoice.getSelectedIndex()];
-     plan.pcat.setCoord(p);
-     plan.setNewProjD(p);
-     plan.setHasSpecificCalib();
-     aladin.view.newView(1);
-     aladin.calque.repaintAll();
+      if (projsChoice==null ||
+            projsChoice.getSelectedIndex() < 0)  return;
+      Projection p = projs[projsChoice.getSelectedIndex()];
+      plan.pcat.setCoord(p);
+      plan.setNewProjD(p);
+      plan.setHasSpecificCalib();
+      aladin.view.newView(1);
+      aladin.calque.repaintAll();
    }
 
    // Changement de plan de ref et/ou de projection en fonction
    // des choix dans planRefChoice et projsChoice
    private void actionPlanRefProjs() {
-     // thomas : correction d'un bug :
-     // ArrayIndexOutOfBounds -1 dans actionPlanRefProjs
-     // quand on apply un filtre au bout d'un moment
-     // je ne suis pas sur que ce soit la bonne solution, à voir avec pierre
-     if( planRefChoice.getSelectedIndex() < 0 ||
-         projsChoice==null ||
-         projsChoice.getSelectedIndex() < 0 ) {
-       //System.out.println("The bug was catched");
-       return;
-     }
-     Plan pref = planRef[planRefChoice.getSelectedIndex()];
-     boolean flagAction = false;
+      // thomas : correction d'un bug :
+      // ArrayIndexOutOfBounds -1 dans actionPlanRefProjs
+      // quand on apply un filtre au bout d'un moment
+      // je ne suis pas sur que ce soit la bonne solution, à voir avec pierre
+      if( planRefChoice.getSelectedIndex() < 0 ||
+            projsChoice==null ||
+            projsChoice.getSelectedIndex() < 0 ) {
+         //System.out.println("The bug was catched");
+         return;
+      }
+      Plan pref = planRef[planRefChoice.getSelectedIndex()];
+      boolean flagAction = false;
 
-     // JE PENSE QUE CELA NE SERT PLUS A RIEN PUISQUE
-     // JE NE PEUX PLUS ASSOCIER MANUELLEMENT LE PLAN DE REF (PF-7 oct 09)
-//     if( !pref.ref ) {
-//       Aladin.trace(2, "New reference plane => " + pref.label);
-//       aladin.calque.setPlanRef(pref);
-//       majProjs();
-//       flagAction = true;
-//     }
-     // pour éviter un ArrayIndexOutofBoundsException
-     // je ne suis pas sur que ce soit la bonne solution
-     // 2e condition : du à un pb que j'avais avec export (démo avo)
-     if( projsChoice.getSelectedIndex() < 0 || projsChoice.getSelectedIndex()>=projs.length ) return;
+      // JE PENSE QUE CELA NE SERT PLUS A RIEN PUISQUE
+      // JE NE PEUX PLUS ASSOCIER MANUELLEMENT LE PLAN DE REF (PF-7 oct 09)
+      //     if( !pref.ref ) {
+      //       Aladin.trace(2, "New reference plane => " + pref.label);
+      //       aladin.calque.setPlanRef(pref);
+      //       majProjs();
+      //       flagAction = true;
+      //     }
+      // pour éviter un ArrayIndexOutofBoundsException
+      // je ne suis pas sur que ce soit la bonne solution
+      // 2e condition : du à un pb que j'avais avec export (démo avo)
+      if( projsChoice.getSelectedIndex() < 0 || projsChoice.getSelectedIndex()>=projs.length ) return;
 
-     Projection p = projs[projsChoice.getSelectedIndex()];
+      Projection p = projs[projsChoice.getSelectedIndex()];
 
-     if( pref.projd != p ) {
-       Aladin.trace(2, "New proj. method for plane "+
-                    pref.label+" => "+p.label);
-       pref.projd = p;
-       flagAction = true;
-     }
+      if( pref.projd != p ) {
+         Aladin.trace(2, "New proj. method for plane "+
+               pref.label+" => "+p.label);
+         pref.projd = p;
+         flagAction = true;
+      }
 
-     if (!flagAction) return;
+      if (!flagAction) return;
 
-     aladin.view.newView(1);
-     aladin.calque.repaintAll();
-     majPlanRef();
+      aladin.view.newView(1);
+      aladin.calque.repaintAll();
+      majPlanRef();
    }
-   
+
    private void bookmark(){
       FrameBookmarks fb = aladin.bookmarks.getFrameBookmarks();
       fb.setVisibleEdit();
@@ -1509,7 +1539,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          label.setText(plan.label);
          setTitre(BANNER+" \""+plan.label+"\"");
       }
-      
+
       if( blankField!=null ) actionBlank();
 
       // Changement de projection catalogue par défaut ?
@@ -1517,6 +1547,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Changement du frame par défaut ?
       actionFrameProj();
+      //      actionFrameProjCat();
 
       if( planRefChoice != null ) {
          if( plan.hasXYorig ) actionPlanXYProjs();
@@ -1535,31 +1566,31 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       if( plan instanceof PlanContour) {
-        int i;
-        PlanContour pCont = (PlanContour)plan;
-        int nbLevels = pCont.getIntLevels().length;
+         int i;
+         PlanContour pCont = (PlanContour)plan;
+         int nbLevels = pCont.getIntLevels().length;
 
- 		// a remplacer par un appel ou on passe le tableau des niveaux et basta
- 		// vérifier la cohérence des couleurs
-        for (i=0;i<nbLevels;i++) {
-          pCont.setViewable(i,contoursCB[i].isSelected());
-          pCont.adjustColor(contoursCouleurs[i].getCouleur(),i);
-        }
-        double[] levelTab = new double[curs.niveaux.length];
-        for( i=0;i<levelTab.length;i++ ) {
-        	levelTab[i] = curs.niveaux[i];
-        }
-        pCont.adjustContour(levelTab);
+         // a remplacer par un appel ou on passe le tableau des niveaux et basta
+         // vérifier la cohérence des couleurs
+         for (i=0;i<nbLevels;i++) {
+            pCont.setViewable(i,contoursCB[i].isSelected());
+            pCont.adjustColor(contoursCouleurs[i].getCouleur(),i);
+         }
+         double[] levelTab = new double[curs.niveaux.length];
+         for( i=0;i<levelTab.length;i++ ) {
+            levelTab[i] = curs.niveaux[i];
+         }
+         pCont.adjustContour(levelTab);
 
-        curs.repaint();
+         curs.repaint();
 
-        Color couleurBase = couleur.getCouleur();
+         Color couleurBase = couleur.getCouleur();
 
-        pCont.updateColorIfNeeded(couleurBase);
+         pCont.updateColorIfNeeded(couleurBase);
 
-          // bidouille pour forcer le reaffichage des objets Couleur
-          pmemo = null;
-          showProp();
+         // bidouille pour forcer le reaffichage des objets Couleur
+         pmemo = null;
+         showProp();
       }
 
       // Changement du centre ou de l'angle de rotation de l'instrument (plan FIELD)
@@ -1578,7 +1609,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                if( (s2==null || s2.equals(rotateCenterField)) && s1!=null && s1.equals(sRoll)) {
                   ((PlanField)plan).changeTarget(projCenter.al,projCenter.del);
 
-               // Réajustement des paramètres individuellement
+                  // Réajustement des paramètres individuellement
                } else {
                   Coord rotCenter = new Coord(aladin.localisation.getICRSCoord(s2!=null?s2:s));
                   ((PlanField)plan).setParameters(projCenter.al,projCenter.del, rotCenter.al,rotCenter.del,roll);
@@ -1591,31 +1622,31 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( eqField!=null ) {
          String s=eqField.getText();
          if( !s.equals(sEquinox) ) {
-//System.out.println("Je positionne l'equinoxe par defaut :"+s);
+            //System.out.println("Je positionne l'equinoxe par defaut :"+s);
             ((PlanImage)plan).projd.c.SetEquinox(Double.valueOf(s).doubleValue());
             aladin.view.newView(1);
          }
       }
-      
+
       if( epField!=null ) {
          String s=epField.getText();
          if( !s.equals(plan.getEpoch().getJyr()) ) {
-//System.out.println("Je positionne la nouvelle époque :"+s);
-            try { 
+            //System.out.println("Je positionne la nouvelle époque :"+s);
+            try {
                plan.setEpoch(s) ;
                epField.setText(plan.getEpoch().toString("J"));
                epField.setForeground(Color.black);
-//               double y=2000;
-//               try { y = Double.parseDouble(s.substring(1));
-//               } catch( NumberFormatException e ) { }
-//               epochSlider.setValue((int)y);
+               //               double y=2000;
+               //               try { y = Double.parseDouble(s.substring(1));
+               //               } catch( NumberFormatException e ) { }
+               //               epochSlider.setValue((int)y);
                aladin.view.newView(1);
-               
+
             } catch(Exception e ) {
                Aladin.warning(this,"Proper motion adjustement error\n=>"+e.getMessage());
                epField.setForeground(Color.red);
             }
-            
+
          }
       }
 
@@ -1639,10 +1670,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Affichage ou non de la polarisation dédiée à un PlanHealpix
       else if( src==btnDisplayPola || src==btnDisplayAmp || src==btnDisplayAng) {
-          int mode = src==btnDisplayPola ? PlanHealpix.POLA_SEGMENT_MAGIC_CODE :
-                         src==btnDisplayAmp ? PlanHealpix.POLA_AMPLITUDE_MAGIC_CODE
-                             : PlanHealpix.POLA_ANGLE_MAGIC_CODE;
-          ((PlanHealpix)plan).displayPolarisation(mode);
+         int mode = src==btnDisplayPola ? PlanHealpix.POLA_SEGMENT_MAGIC_CODE :
+            src==btnDisplayAmp ? PlanHealpix.POLA_AMPLITUDE_MAGIC_CODE
+                  : PlanHealpix.POLA_ANGLE_MAGIC_CODE;
+         ((PlanHealpix)plan).displayPolarisation(mode);
       }
 
       // Peut être un checkbox concernant un sub FoV
@@ -1663,7 +1694,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          toGenFilterButton.setEnabled(i>=0);
          plan.setFilter(i);
       }
-      
+
       // Peut être le sélecteur de déplacement des objets dans le cas d'un plan tool
       else if( src instanceof JRadioButton && plan.type==Plan.TOOL ) {
          String s = ((JRadioButton)src).getActionCommand();
@@ -1690,23 +1721,23 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Creation d'une nouvelle calib
       else if( NEWCALIB.equals(what) ) {
-//         Plan p = plan.hasXYorig?plan:aladin.calque.getPlanRef();
+         //         Plan p = plan.hasXYorig?plan:aladin.calque.getPlanRef();
          Plan p= plan;
          aladin.launchRecalibImg(p);
 
-      // Modification d'une calib
+         // Modification d'une calib
       }else if( MODCALIB.equals(what) ) {
-//         Plan p = plan.hasXYorig?plan:aladin.calque.getPlanRef();
+         //         Plan p = plan.hasXYorig?plan:aladin.calque.getPlanRef();
          Plan p = plan;
          if( aladin.frameNewCalib==null ) {
             aladin.frameNewCalib = new FrameNewCalib(aladin,
-                 p,projs[projsChoice.getSelectedIndex()]);
+                  p,projs[projsChoice.getSelectedIndex()]);
          } else aladin.frameNewCalib.majFrameNewCalib(p,
-                           projs[projsChoice.getSelectedIndex()]);
+               projs[projsChoice.getSelectedIndex()]);
 
-      // Submit PLAN
+         // Submit PLAN
       } else if( APPLY.equals(what) ) apply();
-      
+
       // Creation d'un bookmark
       else if( BOOKMARK.equals(what) ) bookmark();
 
@@ -1725,7 +1756,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // export pointing centers
       else if( POINTINGLABEL.equals(what)) {
-          ((PlanField)plan).exportAlmaPointings();
+         ((PlanField)plan).exportAlmaPointings();
       }
    }
 
@@ -1737,13 +1768,13 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( border==null ) border=BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5,5,5,5), BorderFactory.createCompoundBorder(
             BorderFactory.createTitledBorder(null, s, TitledBorder.CENTER, TitledBorder.TOP, Aladin.LBOLD),
             BorderFactory.createEmptyBorder(5,5,1,5)));
-       propPanel.setBorder(border);
+      propPanel.setBorder(border);
    }
 
    // Supprime la fenetre des Properties
    public void dispose() {
-     frameProp.removeElement(this);
-     super.dispose();
+      frameProp.removeElement(this);
+      super.dispose();
    }
 
    protected void processWindowEvent(WindowEvent e) {
@@ -1763,14 +1794,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
     * @param p le plan en question
     */
    static protected void createProperties(Plan p) {
-     // Si la fenetre des properties existe deja, on la reaffiche simplement
-     Properties pc = getProperties(p);
-     if( pc!=null ) { pc.toFront(); return; }
-     if( p.type==Plan.FILTER ) pc = new FilterProperties(p);
-     else pc = new Properties(p);
+      // Si la fenetre des properties existe deja, on la reaffiche simplement
+      Properties pc = getProperties(p);
+      if( pc!=null ) { pc.toFront(); return; }
+      if( p.type==Plan.FILTER ) pc = new FilterProperties(p);
+      else pc = new Properties(p);
 
 
-     pc.showProp();
+      pc.showProp();
    }
 
    /**
@@ -1779,8 +1810,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
     * @param p le plan en question
     */
    static protected void disposeProperties(Plan p) {
-     Properties pc = getProperties(p);
-     if( pc!=null ) pc.dispose();
+      Properties pc = getProperties(p);
+      if( pc!=null ) pc.dispose();
    }
 
 
@@ -1789,12 +1820,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
     * null sinon
     */
    static protected Properties getProperties(Plan p) {
-     Enumeration e = frameProp.elements();
-     while( e.hasMoreElements() ) {
-       Properties pc = (Properties)e.nextElement();
-       if( pc.plan==p ) return pc;
-     }
-     return null;
+      Enumeration e = frameProp.elements();
+      while( e.hasMoreElements() ) {
+         Properties pc = (Properties)e.nextElement();
+         if( pc.plan==p ) return pc;
+      }
+      return null;
    }
 
    /**
@@ -1804,7 +1835,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
     */
    static boolean flagFullMaj=false;
    static synchronized protected void setFlagFullMaj(boolean flag) {
-     flagFullMaj=flag;
+      flagFullMaj=flag;
    }
 
    /** Maj de la fenêtre des propriétés du plan indiqué en paramètre
@@ -1813,9 +1844,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
    static protected void majProp(Plan plan) {
       Enumeration e = frameProp.elements();
       while( e.hasMoreElements() ) {
-        Properties propc = (Properties) e.nextElement();
-        if( propc.plan!=plan ) continue;
-        propc.showProp(true);
+         Properties propc = (Properties) e.nextElement();
+         if( propc.plan!=plan ) continue;
+         propc.showProp(true);
       }
    }
 
@@ -1826,17 +1857,17 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
     */
    static protected void majProp() { majProp(0); }
    static protected void majProp(int methode) {
-     Enumeration e = frameProp.elements();
-     while( e.hasMoreElements() ) {
-       Properties propc = (Properties) e.nextElement();
-       if( propc.plan.type==Plan.FILTER ) continue;
-       if( !flagFullMaj && methode==1 ) {
-          if( propc.plan.flagOk ) continue;
-       }
-       propc.showProp(methode==2 ? true : false);
-       propc.majPlanRef();
-       propc.majProjs();
-     }
-     setFlagFullMaj(false);
+      Enumeration e = frameProp.elements();
+      while( e.hasMoreElements() ) {
+         Properties propc = (Properties) e.nextElement();
+         if( propc.plan.type==Plan.FILTER ) continue;
+         if( !flagFullMaj && methode==1 ) {
+            if( propc.plan.flagOk ) continue;
+         }
+         propc.showProp(methode==2 ? true : false);
+         propc.majPlanRef();
+         propc.majProjs();
+      }
+      setFlagFullMaj(false);
    }
 }

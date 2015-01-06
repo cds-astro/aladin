@@ -24,6 +24,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+
 import javax.swing.JComponent;
 
 import cds.tools.Util;
@@ -44,7 +45,7 @@ import cds.tools.Util;
  */
 public final class ToolBox extends JComponent implements
 MouseMotionListener,MouseListener,
-WidgetFinder {
+SwingWidgetFinder, Widget {
    static int NUMBERTOOL=0;            // Numero croissant des tools plans (label par defaut)
 
    // Les differents outils possibles
@@ -600,6 +601,7 @@ WidgetFinder {
 
       // Montre le bouton courant
       showCurrentButton(i);
+
    }
 
    /** Retourne le numéro du bouton sous la position x,y, ou -1 si aucun */
@@ -641,7 +643,7 @@ WidgetFinder {
 
       // On determine le nombre de colonnes en fonction de la hauteur
       // minimale d'un bouton
-      for( nc=1; nc<6; nc++ ) {
+      for( nc=1; nc<50; nc++ ) {
          nbtoolParCol=nbtool/nc;
          if( nbtool%nc!=0 ) nbtoolParCol++;      // on majore
          H = hs/nbtoolParCol;                     // hauteur qu'aurait un bouton
@@ -656,12 +658,13 @@ WidgetFinder {
 
       // Nombre de boutons par colonne pleine
       nb = hs/H;
+      if( nb<1 ) { nb=1; hs=H; }
 
       // Largeur et hauteur de la boite a outils
       this.ws = ws = nc*W;
       this.hs = hs+ICONEGAP;
-      setSize(ws,hs+ICONEGAP);
-      aladin.validate();
+      super.setSize(ws,hs+ICONEGAP);
+      //      aladin.validate();
       Tool.resize(W,H);      // Changement de taille des boutons
    }
 
@@ -714,6 +717,10 @@ WidgetFinder {
       if( currentButton>=0 ) drawButton(getToolOrder(currentButton),currentButton,g,true);
    }
 
+   public void setSize(int width, int height) {
+      calcConf(height-ICONEGAP);
+   }
+
    public void paintComponent(Graphics g) {
 
       if( getSize().width!=ws || getSize().height!=hs ) {
@@ -724,15 +731,17 @@ WidgetFinder {
       aladin.setAliasing(g);
 
       // Remplissage du fond
-      g.setColor( getBackground() );
-      g.fillRect(0,0,ws,hs);
+      //      g.setColor( getBackground() );
+      //      g.fillRect(dx,dy,ws,hs);
 
       // Dessin de l'icone de changt de proportion
       //      drawIconeProp(g);
 
       // Dessin de chaque boutons
       for( int i=0; i<drawn.length; i++ ) drawButton(i,drawn[i],g,currentButton==i);
+      showCurrentButton(currentButton);
    }
+
 
    public Dimension getPreferredSize() { return new Dimension(ws,hs); }
 
@@ -790,5 +799,23 @@ WidgetFinder {
    //   }
 
    public void mouseClicked(MouseEvent e) { }
+
+
+   private WidgetControl voc=null;
+
+   @Override
+   public WidgetControl getWidgetControl() { return voc; }
+
+   @Override
+   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+      voc = new WidgetControl(this,x,y,width,height,opacity,parent);
+      voc.setResizable(true);
+      voc.setCollapsed(false);
+   }
+
+   @Override
+   public void paintCollapsed(Graphics g) {
+      Tool.drawVOPointer(g,10,5);
+   }
 
 }

@@ -56,27 +56,27 @@ MouseMotionListener, MouseListener, KeyListener
 {
 
    // Les constantes representants les 3 triangles de controles
-   static final int MIN = 0;      // Seuil minimal
-   static final int MIL = 1;      // Seuil moyen
-   static final int MAX = 2;      // Seuil maximal
-   static final int NO =  3;      // Aucun seuil
+   static final private   int MIN = 0;      // Seuil minimal
+   static final private   int MIL = 1;      // Seuil moyen
+   static final private   int MAX = 2;      // Seuil maximal
+   static final private   int NO =  3;      // Aucun seuil
 
    // Demi largeur de la palette BAND
    static private final int SIZEBAND = 16;
 
    // Les constantes d'affichage
-   static final int mX = 5;      // Marge en abscisse
-   static final int mY = 0  ;     // Marge en ordonnee
-   static final int Hp = 120;     // Hauteur de l'historgramme
-   static final int cmH = 25;     // Hauteur de la colormap
-   static final int cmY = Hp+10+cmH;  // Ordonnée de la colormap
-   static final int W = 256+mX+10; // Largeur totale du graphique
-   static final int H = Hp+cmH+mY+35; // Hauteur totale du graphique
+   static final private   int mX = 5;      // Marge en abscisse
+   static final private   int mY = 0  ;     // Marge en ordonnee
+   static final protected int Hp = 120;     // Hauteur de l'historgramme
+   static final private   int cmH = 25;     // Hauteur de la colormap
+   static final private   int cmY = Hp+10+cmH;  // Ordonnée de la colormap
+   static final private   int W = 256+mX+10; // Largeur totale du graphique
+   static final private   int H = Hp+cmH+mY+35; // Hauteur totale du graphique
 
    // Ordonnees (cas normal ou cas Inverse) de la courbe de
    // reponse des gris
-   static final int Y[]  = {mY+Hp,mY+Hp,mY+Hp/2,mY+1, mY+1 };
-   static final int Yr[] = {mY+1, mY+1, mY+Hp/2,mY+Hp,mY+Hp};
+   static final private   int Y[]  = {mY+Hp,mY+Hp,mY+Hp/2,mY+1, mY+1 };
+   static final private   int Yr[] = {mY+1, mY+1, mY+Hp/2,mY+Hp,mY+Hp};
 
    // les references
    protected PlanImage pimg;                // le plan image concerne
@@ -95,8 +95,7 @@ MouseMotionListener, MouseListener, KeyListener
    static private Vector customCM;        // mémorisation des color maps personnalisées
    static protected Vector customCMName;  // mémorisation des noms des color maps personnalisés
 
-   /* anais */
-   int COLOR = -1;      // couleur, utilise pour le PlanImageRGB
+   int rgb = -1;      // couleur, utilise pour le PlanImageRGB
    // 0: rouge, 1: vert, 2: bleu
 
    // tableau des composantes pour Stern
@@ -368,10 +367,7 @@ MouseMotionListener, MouseListener, KeyListener
          for( i=0; i<3; i++ ) triangle[i]=pimg.cmControl[i];
       }
 
-      COLOR=color;
-
-      // Generation de l'histogramme
-      generateHist(pimg,color);
+      rgb=color;
    }
 
    private CanvasColorMap cm1=null,cm2=null;
@@ -403,67 +399,6 @@ MouseMotionListener, MouseListener, KeyListener
    public static String getCMName(int i) { return getCMList()[i]; }
 
 
-   /** La génération de l'histogramme va se faire dans deux buffers PlanImage.hist[]
-    * et PlanImage.histA[]. S'il faut le régénérer, il suffit d'appeler PlanImage.freeHist()
-    * avant de rappeler cette fonction.
-    * Dans le cas d'un plan en couleur, les 3 histogrammes seront mis l'un derrière
-    * l'autre
-    * @param pimg
-    * @param rgb -1: niveau de gris, 0-Rouge, 1-Vert, 2-Bleu
-    */
-   protected void generateHist(PlanImage pimg,int rgb ) {
-      double max=0;       // Maximum de l'histogramme pour un changt d'echelle
-      int i;
-      boolean isRGB = rgb!=-1;
-
-      if( pimg.hist==null ) {
-         int size = 256;
-         if( isRGB ) size*=3;   // Les 3 histogrammes RGB seront mis l'un derrière l'autre
-         pimg.histA = new double[size];
-         pimg.hist  = new double[size];
-      }
-
-
-      byte pixels []=null;
-
-      if( isPlanImageRGB ) {
-         switch( rgb ) {
-            case 0 : pixels = ((PlanImageRGB)pimg).getRed();   break;
-            case 1 : pixels = ((PlanImageRGB)pimg).getGreen(); break;
-            case 2 : pixels = ((PlanImageRGB)pimg).getBlue();  break;
-         }
-      } else if( isPlanBGRGB ) {
-         switch( rgb ) {
-            case 0 : pixels = ((PlanBG)pimg).red;   break;
-            case 1 : pixels = ((PlanBG)pimg).green; break;
-            case 2 : pixels = ((PlanBG)pimg).blue;  break;
-         }
-      } else pixels = pimg.getBufPixels8();
-
-      if( pixels==null ) return;
-      int offset = isRGB ? rgb*256 : 0;
-      for( i=0; i<pixels.length; i++ ) {
-         int pix = (pixels[i])&0xFF;
-         double c=pimg.histA[offset+pix]++;
-         if( c>max ) max=c;
-      }
-
-      // passage au log
-      max = Math.log(max+1);
-      for( i=offset; i<offset+256; i++ ) {
-         pimg.hist[i] = (i>0 && pimg.histA[i]==0)?0:Math.log( pimg.histA[i]+1 );
-      }
-
-      // Mise a l'echelle des histogrammes
-      max+=max/5;
-      double total=pimg.width*pimg.height;
-      for( i=offset; i<offset+256; i++ ) {
-         pimg.hist[i] =  (pimg.hist[i]*Hp)/max;
-         pimg.histA[i]=pimg.histA[i]/total;
-      }
-
-      if( rgb==-1 || rgb==2 ) pimg.histOk(true);
-   }
 
    /** Positionnement des triangles par defaut */
    protected void reset() {
@@ -595,7 +530,7 @@ MouseMotionListener, MouseListener, KeyListener
     */
    // des triangles
    public static IndexColorModel getCM(int tr0,int tr1,int tr2, boolean inverse,int typeCM,int fct) {
-      return getCM(-tr0,tr1,tr2,inverse,typeCM,fct,false);
+      return getCM(tr0,tr1,tr2,inverse,typeCM,fct,false);
    }
    public static IndexColorModel getCM(int tr0,int tr1,int tr2, boolean inverse,int typeCM,int fct,boolean transp) {
       int i,n;
@@ -705,26 +640,6 @@ MouseMotionListener, MouseListener, KeyListener
       g.fillPolygon(tx,ty,tx.length);
    }
 
-   /** Dessin d'un triangle.
-    * @param g le contexte graphique
-    * @param x l'abcisse du triangle a dessinner
-    */
-   protected void drawLosange(Graphics g,int x) {
-      int [] tx = new int[4];
-      int [] ty = new int[4];
-
-      tx[0] = x+mX;
-      tx[1] = tx[0]-6;
-      tx[2] = tx[0];
-      tx[3] = tx[0]+6;
-
-      ty[0] = Hp+4+mY;
-      ty[1] = ty[3] = ty[0]+6;
-      ty[2] = ty[0]+12;
-
-      g.fillPolygon(tx,ty,tx.length);
-   }
-
    /** Ajustement des valeurs des triangles pour concerver un ordre coherent MIN<=MIL<=MAX */
    protected void ajustTriangle() {
       int i;
@@ -739,7 +654,6 @@ MouseMotionListener, MouseListener, KeyListener
          if( triangle[i]<0 ) triangle[i]=0;
          if( triangle[i]>255 ) triangle[i]=255;
       }
-
    }
 
    /** Tracage de la courbe de reponse des gris
@@ -753,15 +667,12 @@ MouseMotionListener, MouseListener, KeyListener
       x[1]=mX+triangle[MIN]; x[2]=mX+triangle[MIL];  x[3]=mX+triangle[MAX];
       x[4]=mX+256;
 
-      /* anais */
       g.setColor( Color.black );
-      //g.setColor( Color.green );
       for( i=0; i<4; i++ ) {
          g.drawLine(x[i],y[i], x[i+1],y[i+1]);
          g.drawLine(x[i],y[i]-1, x[i+1],y[i+1]-1);
       }
 
-      //g.setColor( Color.black );
       for( i=1; i<4; i++ ) g.drawLine(x[i],mY+Hp+3, x[i],y[i]);
    }
 
@@ -826,7 +737,7 @@ MouseMotionListener, MouseListener, KeyListener
    public void mousePressed(MouseEvent e) {
       int x = e.getX();
       x-=mX;
-      oy=e.getY();
+      oy=0;
 
       repaint();
 
@@ -879,13 +790,14 @@ MouseMotionListener, MouseListener, KeyListener
 
       // Pour pouvoir également controler les cuts haut et bas par clic&drag à ls DS9
       if( currentTriangle==1 && flagLosange ) {
+         int fct = 256/Hp;
          triangle[0]-=ox-triangle[1];
          triangle[2]-=ox-triangle[1];
          int deltaY = y-oy;
          if( oy!=-1 && deltaY!=0 ) {
-            triangle[0]+=deltaY*2;
+            triangle[0]+=(int)( deltaY*fct );
             if( triangle[0]>triangle[1]-5 ) triangle[0]=triangle[1]-5;
-            triangle[2]-=deltaY*2;
+            triangle[2]-= (int)( deltaY*fct) ;
             if( triangle[2]<triangle[1]+5 ) triangle[2]=triangle[1]+5;
          }
          oy=y;
@@ -911,10 +823,10 @@ MouseMotionListener, MouseListener, KeyListener
       }
 
       if( isPlanImageRGB ) {
-         pimg.aladin.view.getCurrentView().setFilter(triangle,COLOR);
+         pimg.aladin.view.getCurrentView().setFilter(triangle,rgb);
          pimg.aladin.calque.zoom.zoomView.repaint();
       } else if( isPlanBGRGB ){
-         ((PlanBG)pimg).filterRGB(triangle,COLOR);
+         ((PlanBG)pimg).filterRGB(triangle,rgb);
       } else pimg.setCM(getCM());
 
       pimg.aladin.view.getCurrentView().repaint();
@@ -945,10 +857,10 @@ MouseMotionListener, MouseListener, KeyListener
       pimg.aladin.view.recreateMemoryBufferFor(pimg);  // Pour palier au bug linux
 
       if( isPlanImageRGB ) {
-         pimg.aladin.view.getCurrentView().setFilter(triangle,COLOR);
+         pimg.aladin.view.getCurrentView().setFilter(triangle,rgb);
          pimg.aladin.calque.zoom.zoomView.repaint();
       } else if( isPlanBGRGB ){
-         ((PlanBG)pimg).filterRGB(triangle,COLOR);
+         ((PlanBG)pimg).filterRGB(triangle,rgb);
       } else pimg.setCM(getCM());
 
       frameColorMap.resumeWidgets();
@@ -966,48 +878,44 @@ MouseMotionListener, MouseListener, KeyListener
       repaint();
    }
 
-   public void updateHist() {
+   private long lastHistID=-1;
+
+   public void updateImageHist() {
       int i;
-      if( !pimg.hasHist() ) generateHist(pimg,COLOR);
+      if( imgHist!=null && pimg.getHistID()==lastHistID ) return;
+//      System.out.println("updateImageHist lastHistID="+lastHistID+" pimg.getHistID="+pimg.getHistID());
+      lastHistID=pimg.getHistID();
       if( imgHist==null ) {
-         //         imgHist = getGraphicsConfiguration().createCompatibleImage(256,Hp+20);
          imgHist = pimg.aladin.createImage(257,Hp+20);
          gHist=imgHist.getGraphics();
       }
-      //      else if( flagDrag ) { paint(gr); return; }
 
       gHist.setColor( BKGD );
       gHist.fillRect(0,Hp,256,Hp);
       gHist.setColor( Color.white );
       gHist.fillRect(0,0,256,Hp);
 
-      /* anais */
+      double hist[] = pimg.getHist(rgb);
+
       // S'il s'agit d'un des histogrammes couleurs
       // on affecte une couleur correspondante
-      if( COLOR>-1 ) {
+      if( rgb>-1 ) {
          // Dans le cas de la video inverse, on inverse la couleur des histogrammes
          if( pimg.video==PlanImage.VIDEO_INVERSE ) {
-            gHist.setColor( (COLOR==0)?Color.cyan:
-               ( (COLOR==1)?Color.magenta:
-                  Color.yellow ) );
+            gHist.setColor( (rgb==0)?Color.cyan:
+               ( (rgb==1)?Color.magenta: Color.yellow ) );
          } else { // sauf dans le cas de 2 couleurs
-            gHist.setColor( (COLOR==0)?Color.red:
-               ( (COLOR==1)?Color.green:
-                  Color.blue ) );
+            gHist.setColor( (rgb==0)?Color.red:
+               ( (rgb==1)?Color.green: Color.blue ) );
          }
-         int offset = COLOR*256;
-         for( i=0; i<256; i++ ) gHist.drawLine( i,Hp, i,(int)(Hp-pimg.hist[i+offset]) );
       } else {
-         for( i=0; i<256; i++ ) {
-            gHist.setColor( !flagCMBand || i<minb || i>maxb ? Color.cyan
-                  : new Color(getRBandColor(i),0,0) );
-            gHist.drawLine( i,Hp, i,(int)(Hp-pimg.hist[i]) );
-         }
+         gHist.setColor( Color.cyan );
       }
+      for( i=0; i<256; i++ ) gHist.drawLine( i,Hp, i,(int)(Hp-hist[i]) );
 
       gHist.setColor( Color.black );
-      if( isPlanImageRGB && ((PlanImageRGB)pimg).labels[COLOR]!=null )
-         gHist.drawString(((PlanImageRGB)pimg).labels[COLOR],100,20);
+      if( isPlanImageRGB && ((PlanImageRGB)pimg).labels[rgb]!=null )
+         gHist.drawString(((PlanImageRGB)pimg).labels[rgb],100,20);
 
       gHist.drawRect(0,0,256,Hp);
       gHist.setFont(Aladin.SPLAIN);
@@ -1015,6 +923,8 @@ MouseMotionListener, MouseListener, KeyListener
       for( i=0; i<c.length(); i++ ) {
          gHist.drawString(c.substring(i,i+1),mX+256+20,50+12*i);
       }
+
+//      System.out.println("updateImageHist rgb="+rgb);
    }
 
    @Override
@@ -1022,7 +932,7 @@ MouseMotionListener, MouseListener, KeyListener
       int i;
       super.paintComponent(gd);
 
-      if( imgHist==null || !pimg.hasHist()) updateHist();
+      updateImageHist();
       gd.setColor(BKGD);
       gd.fillRect(0,0,W,H);
 
@@ -1030,14 +940,29 @@ MouseMotionListener, MouseListener, KeyListener
 
       for( i=0; i<3; i++ ) {
          gd.setColor( i==currentTriangle ? Color.red : Color.black);
-         if( flagLosange && i==1 ) drawLosange(gd,triangle[i]);
-         else drawTriangle(gd,triangle[i]);
+         drawTriangle(gd,triangle[i]);
       }
 
       if( isPlanImageRGB || isPlanBGRGB ) drawLinear(gd);
       else drawFct(gd);
    }
-
+   
+   
+   /** Méthode static pour le tracer de n'importe quelle CM */
+   static protected void drawColorMap(Graphics gr,int dx,int dy,int width,int height,
+         int typeCM,boolean reverse) {
+      IndexColorModel idm = getCM(0,128,255,reverse,typeCM,PlanImage.LINEAR);
+      double gapx = width/256.;
+      double x=0;
+      for( int i=0,xc=0; i<256; i++, x+=gapx ) {
+         int red = idm.getRed(i);
+         int green = idm.getGreen(i);
+         int blue = idm.getBlue(i);
+         gr.setColor( new Color(red,green,blue) );
+         for( ;xc<x; xc++) gr.drawLine(dx+xc,dy,dx+xc,dy+height);
+      }
+   }
+   
    protected void drawColorMap(Graphics gr,int dx,int dy,int width,int height) {
       double gapx = width/256.;
       double x=0;

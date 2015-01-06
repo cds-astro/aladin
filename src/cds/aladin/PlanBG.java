@@ -150,6 +150,7 @@ public class PlanBG extends PlanImage {
    protected MyProperties prop = null; // La liste des propriétés associées au HiPS
 
    protected String gluTag=null;   // Identificateur dans le dico GLU
+   protected String id=null;       // Identification unique
    protected String survey;        // Nom du background
    protected String version="";    // Numéro de version du background si existant (ex: -v1.2)
    protected String url;           // Préfixe de l'url permettant d'accéder au background
@@ -216,6 +217,7 @@ public class PlanBG extends PlanImage {
       initCache();
 
       gluTag = gluSky.getID();
+      id = gluSky.internalId;
       url = gluSky.getUrl();
       survey = gluSky.label;
       version = gluSky.version;
@@ -386,6 +388,7 @@ public class PlanBG extends PlanImage {
          s = prop.getProperty(Constante.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
          s = prop.getProperty(Constante.KEY_PIXELRANGE);          if( s!=null ) pixelRange = s;
          s = prop.getProperty(Constante.KEY_PIXELCUT);            if( s!=null ) pixelCut = s;
+         s = prop.getProperty(Constante.KEY_ID);                  if( s!=null ) id = s;
          s = prop.getProperty(Constante.KEY_TILEORDER);
          if( s!=null ){
             try { tileOrder=Integer.parseInt(s); } catch( Exception e ) {};
@@ -931,7 +934,7 @@ public class PlanBG extends PlanImage {
       int size = pixelsOrigin.length/(Math.abs(bitpix)/8);
       if( pixels==null || pixels.length!=size ) pixels = new byte[size];
       to8bits(pixels, 0, pixelsOrigin, size, bitpix, pixelMin, pixelMax, false);
-      freeHist();
+      resetHist();
 
       return true;
    }
@@ -1737,7 +1740,7 @@ public class PlanBG extends PlanImage {
       flagRecut=true;
       flagRecutCoo = new Coord( aladin.view.repere.raj, aladin.view.repere.dej );
       flagRecutRadius = aladin.view.getCurrentView().getTaille()/2;
-      freeHist();
+      resetHist();
    }
 
    /** Retourne la résolution angulaire du pixel au NSIDE max (en degrés)
@@ -2220,10 +2223,12 @@ public class PlanBG extends PlanImage {
    @Override
    protected Image getImage(ViewSimple v,boolean now) {
       if( now ) {
-         Image img = aladin.createImage(v.rv.width,v.rv.height);
+         //         Image img = aladin.createImage(v.rv.width,v.rv.height);
+         BufferedImage img = new BufferedImage(v.rv.width,v.rv.height, BufferedImage.TYPE_INT_ARGB_PRE);
          Graphics g = img.getGraphics();
          v.drawBackground(g);
          drawLosanges(g,v,now);
+         adjustCM( img );
          g.dispose();
          return img;
       }
@@ -2270,75 +2275,89 @@ public class PlanBG extends PlanImage {
       return v.imageBG;
    }
 
+
+   private int lastHistID=-1;   // ID associé au dernier histogramme
+
    private void adjustCM( BufferedImage img) {
       if( !isColored() ) return;
 
       int width=img.getWidth();
       int height=img.getHeight();
-      boolean modif=(RGBControl[0]!=0 || RGBControl[1]!=128 || RGBControl[2]!=255
+      boolean modif= (RGBControl[0]!=0 || RGBControl[1]!=128 || RGBControl[2]!=255
             || RGBControl[3]!=0 || RGBControl[4]!=128 || RGBControl[5]!=255
             || RGBControl[6]!=0 || RGBControl[7]!=128 || RGBControl[8]!=255
             || video!=VIDEO_NORMAL);
 
-      boolean initRGB = initRGB(width*height);
+      int size = width*height;
+      boolean flagInitRGB = lastHistID!=imgID;
+      if( flagInitRGB ) {
+         lastHistID=imgID;
+         if( red==null || size!=red.length ) {
+            red = new byte[size];
+            green = new byte[size];
+            blue = new byte[size];
+         }
+      }
 
-      if( !initRGB && !modif ) return;
+      if( !flagInitRGB && !modif ) return;
 
       int a,r,g,b ;
-
       int [] pixelsRGB = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
-
-      //      System.out.println("adjustCM modif="+modif);
 
       for( int pos=0; pos<pixelsRGB.length ; pos++ ) {
 
          int rgb = pixelsRGB[pos];
          a = (rgb & 0xFF000000) >> 24 ; r = (rgb & 0x00FF0000) >> 16 ; g = (rgb & 0x0000FF00) >> 8 ; b = (rgb & 0x000000FF);
 
-         r = PlanImageRGB.filter(RGBControl[0],RGBControl[1],RGBControl[2],r&0xFF);
-         g = PlanImageRGB.filter(RGBControl[3],RGBControl[4],RGBControl[5],g&0xFF);
-         b = PlanImageRGB.filter(RGBControl[6],RGBControl[7],RGBControl[8],b&0xFF);
-
-         if( video==VIDEO_INVERSE ) { r=~r; g=~g; b=~b; }
-
-         if( initRGB ) {
+         if( flagInitRGB ) {
             red[pos]   = (byte)(0xFF & r);
             green[pos] = (byte)(0xFF & g);
             blue[pos]  = (byte)(0xFF & b);
          }
 
-         if( modif ) pixelsRGB[pos] = ((a&0xFF)<<24) | ((r&0xFF)<<16) | ((g&0xFF)<<8) | (b&0xFF);
+         if( modif ) {
+            r = PlanImageRGB.filter(RGBControl[0],RGBControl[1],RGBControl[2],r&0xFF);
+            g = PlanImageRGB.filter(RGBControl[3],RGBControl[4],RGBControl[5],g&0xFF);
+            b = PlanImageRGB.filter(RGBControl[6],RGBControl[7],RGBControl[8],b&0xFF);
+
+            if( video==VIDEO_INVERSE ) { r=~r; g=~g; b=~b; }
+
+            pixelsRGB[pos] = ((a&0xFF)<<24) | ((r&0xFF)<<16) | ((g&0xFF)<<8) | (b&0xFF);
+         }
       }
-      img.setRGB(0, 0, width, height, pixelsRGB, 0, width);
+      if( modif ) img.setRGB(0, 0, width, height, pixelsRGB, 0, width);
+      if( flagInitRGB ) {
+         resetHist();
+         //         System.out.println("adjustCM/resetHist histID="+histID+" lastHistID="+lastHistID);
+         if( aladin.frameCM!=null ) aladin.frameCM.repaint();
+      }
    }
 
-   public void filterRGB(int [] triangle, int color) {
+   protected void filterRGB(int [] triangle, int color) {
       changeImgID();
       RGBControl[color*3]   = triangle[0];
       RGBControl[color*3+1] = triangle[1];
       RGBControl[color*3+2] = triangle[2];
    }
 
+   private double histRed[]  = new double[256];
+   private double histGreen[]= new double[256];
+   private double histBlue[] = new double[256];
 
-
-   private boolean initRGB(int size) {
-      if( red!=null && red.length==size || !hasDrawnSomething ) return false;
-      red = new byte[size];
-      green = new byte[size];
-      blue = new byte[size];
-      return true;
+   /** Retourne le tableau de l'histogramme avant initialisation */
+   protected double [] getHistArray(int rgb) {
+      return rgb==0 ? histRed : rgb==1 ? histGreen : histBlue;
    }
 
-   // TODO
-   protected void freeFilterRGB() {
-      //      red = blue = green = null;
-      //      freeHist();
+   /** Retourne le tableau des pixels servants à l'histogramme */
+   protected byte [] getPixelHist(int rgb) {
+      return rgb== -1 ? super.getPixelHist(rgb)
+            : rgb==0 ? red : rgb==1 ? green : blue;
    }
 
    protected byte [] red;        // Tableau des pixels de l'image Rouge
    protected byte [] green;        // Tableau des pixels de l'image Verte
    protected byte [] blue;        // Tableau des pixels de l'image Bleue
-
 
    private Timer timer = null;
    synchronized protected void redrawAsap() {
@@ -2658,6 +2677,7 @@ public class PlanBG extends PlanImage {
    protected void drawLosangesAsync(Graphics g,ViewSimple v) {
       allWaitingKeysDrawn = false;
 
+      boolean first=true;
       long t1 = Util.getTime(0);
       int nb=0;
       long [] pix=null;
@@ -2749,27 +2769,27 @@ public class PlanBG extends PlanImage {
          if( max>=ALLSKYORDER )
             for( int order=cmin; order<=max || !oneKeyReady && order<=max+3 && order<=maxOrder; order++ ) {
 
-               if( !allKeyReady ) {
-                  pix = getPixList(v,center,order);
-                  if( pix.length==0 ) break;
+               //               if( !allKeyReady ) {
+               pix = getPixList(v,center,order);
+               if( pix.length==0 ) break;
 
-                  nDraw1+=pix.length;
+               nDraw1+=pix.length;
 
-                  // On place le losange central en premier dans la liste
-                  try {
-                     if( center!=null ) {
-                        long firstPix = CDSHealpix.ang2pix_nest(CDSHealpix.pow2(order),theta, phi);
+               // On place le losange central en premier dans la liste
+               try {
+                  if( center!=null ) {
+                     long firstPix = CDSHealpix.ang2pix_nest(CDSHealpix.pow2(order),theta, phi);
 
-                        // Permutation en début de liste
-                        for( int i=0; i<pix.length; i++ ) {
-                           if( pix[i]==firstPix ) {
-                              long a = pix[0]; pix[0] = pix[i]; pix[i]=a;
-                              break;
-                           }
+                     // Permutation en début de liste
+                     for( int i=0; i<pix.length; i++ ) {
+                        if( pix[i]==firstPix ) {
+                           long a = pix[0]; pix[0] = pix[i]; pix[i]=a;
+                           break;
                         }
                      }
-                  } catch( Exception e ) { }
-               }
+                  }
+               } catch( Exception e ) { }
+               //               }
 
                boolean debugOrder=false; // passe à true si on a dessiné au-moins un losange de cet ordre
                for( int i=0; i<pix.length; i++ ) {
@@ -2834,6 +2854,14 @@ public class PlanBG extends PlanImage {
                   nb+=healpix.draw(g,v);
                   setHealpixPreviousFrame(order,pix[i]);
 
+                  if( first && !isColored() ) {
+                     first=false;
+                     pixels=healpix.pixels;
+                     pixelsOrigin = healpix.pixelsOrigin;
+                     //                     System.out.println("drawLosange memo Pixels4Hist healpix="+healpix);
+                     resetHist();
+                  }
+
                   if( !debugOrder ) { debug.append(" "+order); debugOrder=true; }
                }
             }
@@ -2850,7 +2878,7 @@ public class PlanBG extends PlanImage {
          debug.append(" allsky3");
       }
 
-      hasDrawnSomething=(nb/*+nb1*/)>0;
+      hasDrawnSomething= nb>0;
 
       tryWakeUp();
 
@@ -3106,14 +3134,6 @@ public class PlanBG extends PlanImage {
       long t = System.currentTimeMillis();
       if( t - timerLastDrawBG < 500 ) return;
       timerLastDrawBG = t;
-      //      System.out.println("PlanBG.shouldRefresh !");
-      //      if( pixList!=null ) {
-      //         Enumeration<HealpixKey> e = pixList.elements();
-      //         while( e.hasMoreElements() ) {
-      //            HealpixKey healpix = e.nextElement();
-      //            if( healpix!=null ) healpix.setTimeAskRepaint(t);
-      //         }
-      //      }
       changeImgID();
       aladin.view.repaintAll();
    }
@@ -3332,9 +3352,14 @@ public class PlanBG extends PlanImage {
 
          // Parcours de la liste en commençant par les résolutions les plus mauvaises
          try {
+            ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
             Enumeration<HealpixKey> e = pixList.elements();
-            while( e.hasMoreElements() ) {
-               final HealpixKey healpix = e.nextElement();
+            while( e.hasMoreElements() ) list.add(e.nextElement());
+            Collections.sort(list);
+
+            Iterator<HealpixKey> it = list.iterator();
+            while( it.hasNext() ) {
+               final HealpixKey healpix = it.next();
                int status = healpix.getStatus();
 
                // Un peu de débuging si besoin
@@ -3388,11 +3413,11 @@ public class PlanBG extends PlanImage {
                nbReady=nb[HealpixKey.READY];
 
 
-               //         System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
-               //         for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
-               //            if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
-               //         }
-               //         System.out.println();
+               //                        System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
+               //                        for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
+               //                           if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
+               //                        }
+               //                        System.out.println();
 
                if( detectServerError(nb) ) error="Server not available";
 

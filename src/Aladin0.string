@@ -1623,7 +1623,7 @@ UPFILTERH	This selector allows you to automatically apply default dedicated filt
 UPTRANSB		Transparency/opacity
 UPTRANSH	This slider allows you to select the default\ntransparency level
 UPTRANSL	Opacity level
-UPIMGB	Image survey
+UPIMGB	Default survey
 UPIMGH	Choose the image server, the survey and/or the color\nwhich will be used by default
 UPIMGS	Server
 UPIMGC	Survey/Color
@@ -1696,7 +1696,7 @@ UPFILTERH.fr	Ce sélecteur vous permet d'activer par défaut\nle filtre dédié pour
 UPTRANSB.fr		Opacité FoV
 UPTRANSH.fr	Cette réglette vous permet de positionner le niveau de semi-transparent \npar défaut
 UPTRANSL.fr	Niveau d'opacité
-UPIMGB.fr	Relevé image
+UPIMGB.fr	Relevé par défaut
 UPIMGH.fr	Indiquez le serveur d'image, le relevé et/ou la couleur qui sera utilisé par défaut
 UPIMGS.fr	Serveur
 UPIMGC.fr	Relevé/Couleur
@@ -2811,6 +2811,26 @@ TIP40.fr  Affichez la table des couleurs avec l'image => Graphique>Table des cou
 TIP41.fr  Saisissez un nom d'objet dans le champ "Location" pour connaître sa position
 TIP42.fr  Utilisez les macros pour effectuer plusieurs fois le même traitement => Outil>Macros
 TIP43.fr  Refaire le même traitement via un signet => Outil>Signets
+
+STATUS_LOADING Loading data...
+STATUS_INPROGRESS Computing...
+STATUS_MOREDETAILSAVAILABLE More details available
+STATUS_ERROR Error
+STATUS_EMPTYMOC No coverage
+STATUS_OVERFLOW Partial response
+STATUS_NOCALIB No astrometrical reduction
+STATUS_EMPTYCAT No source
+STATUS_READY Ready
+
+STATUS_LOADING.fr Données en cours de chargement...
+STATUS_INPROGRESS.fr En cours de calcul...
+STATUS_MOREDETAILSAVAILABLE.fr Plus de détails sont disponibles
+STATUS_ERROR.fr Erreur
+STATUS_EMPTYMOC.fr Aucune couverture
+STATUS_OVERFLOW.fr Réponse partielle
+STATUS_NOCALIB.fr Aucune solution astrométrique
+STATUS_EMPTYCAT.fr Aucune source
+STATUS_READY.fr Ok
 
 BEGIN1	Bienvenue on Aladin,\nyour professional sky atlas.\n \n* Discover all astronomical data available over the net!\n \n* Compare them with your own data.\n \n* Prepare your observation missions.\n \n \nTo start, type any object name, such as M1, and press ENTER...
 BEGIN2	Imagine your eye\nlooking through a stack of planes.\n \nEach plane contains its own data set: image, catalog, graphical overlays...\n \nYou see the combination of them.\n \nUse File->Open for discovering all other data,\nor clic & drag your own files.

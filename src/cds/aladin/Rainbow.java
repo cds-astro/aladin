@@ -24,6 +24,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 
+import javax.swing.JComponent;
+
 import cds.tools.Util;
 
 /**
@@ -31,7 +33,7 @@ import cds.tools.Util;
  * @author Pierre Fernique [CDS]
  * @version 1 (création Avril 2011)
  */
-public class Rainbow {
+public class Rainbow  extends JComponent implements Widget  {
    // Poignées pour étirer le rectangle
    static final int IN=0,HG=1,HD=2,BD=3,BG=4,H=5,D=6,B=7,G=8,START=9;
 
@@ -462,4 +464,21 @@ public class Rainbow {
    }
 
    private int oCursor=-1;
+
+
+   private WidgetControl voc=null;
+
+   @Override
+   public WidgetControl getWidgetControl() { return voc; }
+
+   @Override
+   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+      voc = new WidgetControl(this,x,y,width,height,opacity,parent);
+      voc.setResizable(true);
+   }
+
+   @Override
+   public void paintCollapsed(Graphics g) {}
+
+
 }

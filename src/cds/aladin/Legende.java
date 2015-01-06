@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -36,12 +35,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListDataListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import cds.savot.model.CoosysSet;
 import cds.tools.Util;
 import cds.xml.Field;
 
@@ -77,21 +74,21 @@ public final class Legende extends AbstractTableModel  {
       computed = new boolean[ vField.size() ];
       Enumeration<Field> e = vField.elements();
       for( int i=0; e.hasMoreElements(); i++ ) {
-          field[i]=e.nextElement();
-          computed[i] = false;
+         field[i]=e.nextElement();
+         computed[i] = false;
       }
    }
-   
+
    /** Construction d'une légende générique en fonction d'un tableau de légendes */
    protected Legende(ArrayList<Legende> leg) {
       ArrayList<Field> f = new ArrayList<Field>(100);
       for(int i=0; i<leg.size(); i++ ) {
-         Legende lg = (Legende)leg.get(i);
+         Legende lg = leg.get(i);
          for( int j=0; j<lg.field.length; j++) {
             int k=0;
-            for( ; k<f.size(); k++ ) if( f.get(k).equals(lg.field[j]) ) break; 
+            for( ; k<f.size(); k++ ) if( f.get(k).equals(lg.field[j]) ) break;
             if( k==f.size() ) f.add( new Field(lg.field[j]) );
-            
+
          }
       }
       field = new Field[f.size()];
@@ -99,7 +96,7 @@ public final class Legende extends AbstractTableModel  {
       name = "[Concatenated]";
       for( int i=0; i<field.length; i++ ) field[i] = f.get(i);
    }
-   
+
    // constructeur par recopie (Thomas, 19/01/2005)
    // Modif pour Pierre jan 2009 pour copier également le name et computed[]
    protected Legende(Legende l) {
@@ -147,16 +144,16 @@ public final class Legende extends AbstractTableModel  {
       }
       return leg;
    }
-   
+
    /** Associe une liste de GROUPs à la légende */
-   public void setGroup(Vector<String> group) { 
+   public void setGroup(Vector<String> group) {
       this.group = group;
-//      Aladin.trace(4,"Legende.setGroup: ==> ["+getGroupDef()+"]");
+      //      Aladin.trace(4,"Legende.setGroup: ==> ["+getGroupDef()+"]");
    }
-   
+
    /** retourne true si la légende dispose de GROUPs de définition */
    public boolean hasGroup() { return group!=null; }
-   
+
    /** retourne sous la forme d'une chaine les définitions GROUPs associées à la table */
    public String getGroup() {
       if( group==null ) return "";
@@ -171,49 +168,49 @@ public final class Legende extends AbstractTableModel  {
       for( int i=0; i<field.length; i++ ) if( field[i].equals(f) ) return i;
       return -1;
    }
-   
+
    /** Retourne l'indice du champ (test sur le nom de colonne uniquement) */
    protected int find(String name) {
       for( int i=0; i<field.length; i++ ) if( name.equals(field[i].name) ) return i;
       return -1;
    }
-   
+
    /** Retourne l'indice du champ RA, sinon -1 */
    protected int getRa() {
       for( int i=0; i<field.length; i++ ) if( field[i].isRa() ) return i;
       return -1;
    }
-   
+
    /** Retourne l'indice du champ DE, sinon -1 */
    protected int getDe() {
       for( int i=0; i<field.length; i++ ) if( field[i].isDe() ) return i;
       return -1;
    }
-   
+
    /** Retourne l'indice du champ PMDE, sinon -1 */
-  protected int getPmRa() {
+   protected int getPmRa() {
       for( int i=0; i<field.length; i++ ) if( field[i].isPmRa() ) return i;
       return -1;
    }
-   
-  /** Retourne l'indice du champ PMDE, sinon -1 */
+
+   /** Retourne l'indice du champ PMDE, sinon -1 */
    protected int getPmDe() {
       for( int i=0; i<field.length; i++ ) if( field[i].isPmDe() ) return i;
       return -1;
    }
-   
+
    /** Retourne l'indice du champ X, sinon -1 */
-  protected int getX() {
+   protected int getX() {
       for( int i=0; i<field.length; i++ ) if( field[i].isX() ) return i;
       return -1;
    }
-   
-  /** Retourne l'indice du champ Y, sinon -1 */
+
+   /** Retourne l'indice du champ Y, sinon -1 */
    protected int getY() {
       for( int i=0; i<field.length; i++ ) if( field[i].isY() ) return i;
       return -1;
    }
-   
+
    /** Retourne true si le champ est visible */
    protected boolean isVisible(int index) {
       try { return field[index].visible; }
@@ -229,7 +226,7 @@ public final class Legende extends AbstractTableModel  {
       nField[n]=f;
       field=nField;
    }
-   
+
    /** Modification du nom, unité, ucd ou taille d'affichage d'une colonne.
     * Les valeurs null ou <0 ne sont pas modifiées.
     * Si l'index de position est supérieur au nombre de colonnes, les nouvelles
@@ -276,13 +273,13 @@ public final class Legende extends AbstractTableModel  {
 
       return res;
    }
-   
+
    /** J'ajuste le numéro du champ dans le cas où il y aurait des champs non visibles avant */
    protected int getRealFieldNumber(int nField) {
       if( nField==-1 ) return nField;
       int nVisible=0;
       int nInvisible=0;
-      
+
       if( nField==0 ) {
          for( int i=0; !field[i].visible; i++ ) nInvisible++;
       } else {
@@ -296,8 +293,8 @@ public final class Legende extends AbstractTableModel  {
 
    /** Change le champ qui porte le tri */
    protected boolean switchSort(int nField) {
-      
-     // Quel était l'ancien tri posé sur ce champ ?
+
+      // Quel était l'ancien tri posé sur ce champ ?
       int sort = field[nField].sort;
 
       // Je supprime un éventuel tri précédemment posé sur un autre champ
@@ -305,7 +302,7 @@ public final class Legende extends AbstractTableModel  {
 
       // Je positionne le nouveau tri sur le champ et je le retourne
       field[nField].sort = sort==Field.SORT_ASCENDING ?
-                                    Field.SORT_DESCENDING : Field.SORT_ASCENDING;
+            Field.SORT_DESCENDING : Field.SORT_ASCENDING;
 
       sorted=true;
       return field[nField].sort==Field.SORT_ASCENDING;
@@ -324,7 +321,7 @@ public final class Legende extends AbstractTableModel  {
       sorted=false;
    }
 
-   
+
    /** retourne true s'il s'agit d'une légende comportant un point de SED */
    protected boolean isSED() {
       for( Field f : field ) {
@@ -335,7 +332,7 @@ public final class Legende extends AbstractTableModel  {
 
    /** Retourne true s'il y a un champ trié */
    protected boolean isSorted() { return sorted; }
-   
+
 
    /** Retourne le nombre de champs de la légende */
    public int getSize() { return field.length; }
@@ -356,8 +353,8 @@ public final class Legende extends AbstractTableModel  {
       }
       return -1;
    }
-   
-   
+
+
    /** Retourne true si le champ correspond à une valeur mémorisée comme NULL
     * pour le champ indiqué
     */
@@ -372,64 +369,74 @@ public final class Legende extends AbstractTableModel  {
     * @param i numero du champ
     * @return l'UCD, "" si erreur ou non decrit
     */
-    protected String getUCD(int i) {
-       if( i>=field.length ) return null;
-       Field f = field[i];
-       return   (f.ucd!=null?f.ucd:"");
-    }
-    
-    protected int getPrecision(int i) {
-       if( i>=field.length ) return -1;
-       Field f = field[i];
-       try { return Integer.parseInt(f.precision); }
-       catch( Exception e ) {}
-       return -1;
-    }
+   protected String getUCD(int i) {
+      if( i>=field.length ) return null;
+      Field f = field[i];
+      return   (f.ucd!=null?f.ucd:"");
+   }
 
-  /** Retourne la desc
+   protected int getPrecision(int i) {
+      if( i>=field.length ) return -1;
+      Field f = field[i];
+      try { return Integer.parseInt(f.precision); }
+      catch( Exception e ) {}
+      return -1;
+   }
+
+   /** Retourne la desc
   /** Retourne le nombre de caracteres associes au champ.
-   * @param i numero du champ
-   * @return le nombre de caracteres, 10 si non specifie, -1 si erreur
-   *
-   * DETAIL PAS DROLE: Pour le cas des boutons (associes a l'acces aux archives)
-   * la taille est en fait le nombre de caractere du label du bouton +1
-   * Malheureusement ce label peut se confondre avec le texte pour un lien.
-   * J'ai pris comme element discriminant la presence d'une variable ${..}
-   * en supposant que le nom des boutons est constant sur toute la colonne
-   * ... je sens que ca me jouera des tours tot ou tard.
-   */
+    * @param i numero du champ
+    * @return le nombre de caracteres, 10 si non specifie, -1 si erreur
+    *
+    * DETAIL PAS DROLE: Pour le cas des boutons (associes a l'acces aux archives)
+    * la taille est en fait le nombre de caractere du label du bouton +1
+    * Malheureusement ce label peut se confondre avec le texte pour un lien.
+    * J'ai pris comme element discriminant la presence d'une variable ${..}
+    * en supposant que le nom des boutons est constant sur toute la colonne
+    * ... je sens que ca me jouera des tours tot ou tard.
+    */
    protected int getWidth(int i) {
       if( i>=field.length ) return -1;
       Field f = field[i];
-      
+
       if( f.refText!=null && f.refText.indexOf("${")<0 ) return f.refText.length()+1;
       return f.columnSize;
 
-//      // VOTable compatibility
-//      if( f.width !=null ) {
-//        if( f.refText!=null && f.refText.indexOf("${")<0 ) return f.refText.length()+1;
-//        if( f.width==null ) return 10;
-//        try { j=Integer.parseInt(f.width); }
-//        catch( Exception e ) { return 10; }
-//      }
-//      else {
-//         if( f.arraysize != null && f.arraysize.trim().length()>0 ) {
-//            try {
-//               // (thomas) to support arraysize="*"
-//               if( f.arraysize.equals("*") ) return 0;
-//               if( f.arraysize.endsWith("*") == false ) j = Integer.parseInt(f.arraysize);
-//               else j = Integer.parseInt((f.arraysize).substring(0, (f.arraysize).length()-1));
-//            } catch( Exception e ) { return -1; }
-////        System.out.println("and now the arraysize " + j);
-//         }
-//      }
-//      return j;
+      //      // VOTable compatibility
+      //      if( f.width !=null ) {
+      //        if( f.refText!=null && f.refText.indexOf("${")<0 ) return f.refText.length()+1;
+      //        if( f.width==null ) return 10;
+      //        try { j=Integer.parseInt(f.width); }
+      //        catch( Exception e ) { return 10; }
+      //      }
+      //      else {
+      //         if( f.arraysize != null && f.arraysize.trim().length()>0 ) {
+      //            try {
+      //               // (thomas) to support arraysize="*"
+      //               if( f.arraysize.equals("*") ) return 0;
+      //               if( f.arraysize.endsWith("*") == false ) j = Integer.parseInt(f.arraysize);
+      //               else j = Integer.parseInt((f.arraysize).substring(0, (f.arraysize).length()-1));
+      //            } catch( Exception e ) { return -1; }
+      ////        System.out.println("and now the arraysize " + j);
+      //         }
+      //      }
+      //      return j;
    }
 
-  /** Retourne le nombre de caractere (+1) de la chaine refText
-   * @param i numero du champ
-   * @return 0 si non defini, -1 si erreur
-   */
+   /** Retourne la taille en pixel de la ligne complète (tous les champs visibles uniquement) */
+   protected int getWidth() {
+      int width=0;
+      for( int i=0; i<field.length; i++ ) {
+         if( !field[i].visible ) continue;
+         width += getWidth(i);
+      }
+      return width;
+   }
+
+   /** Retourne le nombre de caractere (+1) de la chaine refText
+    * @param i numero du champ
+    * @return 0 si non defini, -1 si erreur
+    */
    protected int getRefTextLength(int i) {
       if( i>=field.length ) return -1;
       if( field[i].refText==null ) return 0;
@@ -456,15 +463,15 @@ public final class Legende extends AbstractTableModel  {
       firstLink=-1;
       return firstLink;
    }
-   
+
    /*******************************  Structure de la JTable *******************************/
-   
+
    static final private String [] HEAD = {
       "","Visible","Coo","Name","Description","Unit","Datatype","UCD","Utype","Width","Arraysize","Precision"
    };
-   
+
    static final private int [] WHEAD = { 30, 50, 30,100, 190, 50, 70, 110, -1, 40,40,40 };
-   
+
    static final private int N=0;
    static final private int VISIBLE=1;
    static final private int COO=2;
@@ -477,11 +484,11 @@ public final class Legende extends AbstractTableModel  {
    static final public int WIDTH=9;
    static final public int ARRAYSIZE=10;
    static final public int PRECISION=11;
-   
+
    private JTable table;
    private Aladin aladin;
    public Plan plan=null;
-   
+
    /** Génère le JPanel de la table */
    protected JPanel getTablePanel(Aladin aladin,Plan plan) {
       this.aladin=aladin;
@@ -491,7 +498,7 @@ public final class Legende extends AbstractTableModel  {
       p.add(sc,BorderLayout.CENTER);
       return p;
    }
-   
+
    protected JComboBox createCombo() {
       JComboBox combo = new JComboBox();
       combo.setMaximumRowCount(15);
@@ -503,7 +510,7 @@ public final class Legende extends AbstractTableModel  {
       if( table==null ) createTable();
       return table;
    }
-   
+
    /** Creation de la JTable des rubriques */
    private JTable createTable() {
       table=new JTable(this);
@@ -522,17 +529,17 @@ public final class Legende extends AbstractTableModel  {
       table.setPreferredScrollableViewportSize(new Dimension(width+50,height));
       return table;
    }
-   
+
    class MyComboBoxEditor extends DefaultCellEditor {
       public MyComboBoxEditor() {
          super(new JComboBox(Field.COOSIGN) );
       }
-   }  
+   }
 
    public String getColumnName(int col) { return HEAD[col]; }
    public int getColumnCount() { return HEAD.length; }
    public int getRowCount() { return field.length; }
-   
+
    public Class<?> getColumnClass(int col) {
       if( col==VISIBLE ) return (new Boolean(true)).getClass();
       return super.getColumnClass(col);
@@ -555,17 +562,17 @@ public final class Legende extends AbstractTableModel  {
       }
       return "";
    }
-   
+
    public boolean isCellEditable(int row, int col) { return col>0; }
    public void setValueAt(Object value,int row, int col) {
       switch(col) {
          case NAME:        field[row].name = (String)value; break;
-         case COO:         String s = (String) value; 
-                           if( !s.equals( field[row].getCooSignature() ) ) {
-                              int coo = Util.indexInArrayOf(s, Field.COOSIGN);
-                              modifyRaDecXYField(row,coo);
-                           }
-                           break;
+         case COO:         String s = (String) value;
+         if( !s.equals( field[row].getCooSignature() ) ) {
+            int coo = Util.indexInArrayOf(s, Field.COOSIGN);
+            modifyRaDecXYField(row,coo);
+         }
+         break;
          case VISIBLE:     field[row].visible = ((Boolean)value).booleanValue(); break;
          case UNIT:        field[row].unit = (String)value; break;
          case DESCRIPTION: field[row].description = (String)value; break;
@@ -578,36 +585,36 @@ public final class Legende extends AbstractTableModel  {
       }
       aladin.mesure.redisplay();
    }
-   
+
    class MyRenderer extends DefaultTableCellRenderer {
 
       public Component getTableCellRendererComponent(JTable table,Object value,
             boolean isSelected,boolean hasFocus, int row, int col ) {
          Component cell = super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,col);
          if( !(cell instanceof JLabel ) ) return cell;
-         
+
          JLabel j = (JLabel)cell;
-         
+
          if( col==N ) j.setFont(j.getFont().deriveFont(Font.ITALIC));
          else if( col==NAME ) j.setFont(j.getFont().deriveFont(Font.BOLD));
          else j.setFont(j.getFont().deriveFont(Font.PLAIN));
 
          if( col==N || col==DATATYPE  || col==WIDTH || col==ARRAYSIZE ) j.setHorizontalAlignment(JLabel.CENTER);
          else j.setHorizontalAlignment(JLabel.LEFT);
-         
+
          return cell;
       }
    }
-   
+
    /** Modification des champs utilisés pour la position céleste ou cartésienne */
    public void modifyRaDecXYField(int index, int coo) {
       if( plan==null || plan.pcat==null ) return;
       plan.hasPM=-1;
-      
+
       // Pour les coordonnées célestes
       if( coo==Field.RA || coo==Field.DE || coo==Field.PMRA || coo==Field.PMDE ) {
          int nra=-1,ndec=-1,npmra=-1,npmde=-1;
-              if( coo==Field.RA )   nra=index;
+         if( coo==Field.RA )   nra=index;
          else if( coo==Field.DE )   ndec=index;
          else if( coo==Field.PMRA ) npmra=index;
          else if( coo==Field.PMDE ) npmde=index;
@@ -618,25 +625,25 @@ public final class Legende extends AbstractTableModel  {
                if( coo==Field.RA ) f.coo=0;
                if( nra==-1 )  nra=i;
             }
-            if( f.coo==Field.DE ) { 
+            if( f.coo==Field.DE ) {
                if( coo==Field.DE ) f.coo=0;
                if( ndec==-1 ) ndec=i;
             }
-            if( f.coo==Field.PMRA ) { 
+            if( f.coo==Field.PMRA ) {
                if( coo==Field.PMRA ) f.coo=0;
                if( npmra==-1 ) npmra=i;
             }
-            if( f.coo==Field.PMDE ) { 
+            if( f.coo==Field.PMDE ) {
                if( coo==Field.PMDE ) f.coo=0;
                if( npmde==-1 ) npmde=i;
             }
             if( f.coo==Field.X || f.coo==Field.Y ) f.coo=0;
          }
          field[index].coo = coo;
-//         System.out.println("nra="+nra+" ndec="+ndec);
+         //         System.out.println("nra="+nra+" ndec="+ndec);
          if( nra>=0 && ndec>=0 && coo!=0 ) plan.modifyRaDecField(this, nra, ndec,npmra,npmde);
-         
-      // Pour les coordonnées cartésiennes
+
+         // Pour les coordonnées cartésiennes
       } else {
          int nx=-1,ny=-1;
          if( coo==Field.X ) nx=index;
@@ -648,21 +655,21 @@ public final class Legende extends AbstractTableModel  {
                if( coo==Field.X ) f.coo=0;
                if( nx==-1 )  nx=i;
             }
-            if( f.coo==Field.Y ) { 
+            if( f.coo==Field.Y ) {
                if( coo==Field.Y ) f.coo=0;
                if( ny==-1 ) ny=i;
             }
             if( f.coo==Field.RA || f.coo==Field.DE || f.coo==Field.PMRA || f.coo==Field.PMDE) f.coo=0;
          }
          field[index].coo = coo;
-//         System.out.println("nx="+nx+" ny="+ny);
+         //         System.out.println("nx="+nx+" ny="+ny);
          if( nx>=0 && ny>=0 && coo!=0 ) plan.modifyXYField(this, nx, ny);
-         
+
       }
-      
+
       fireTableDataChanged();
    }
-   
+
    // Juste pour de debuging
    public String toString() { return field[0].name+" "+field[0].ucd+" ..."; }
 }

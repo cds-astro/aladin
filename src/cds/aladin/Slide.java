@@ -110,6 +110,12 @@ public final class Slide {
    protected Plan getPlan() {
       return p;
    }
+   
+   /** retourne vrai si on est sur le voyant lumineux */
+   protected boolean inBall(int x) {
+      if( p.collapse ) return false;
+      return x>Select.ws-12;
+   }
 
    // Retourne vrai si on est sur le triangle de ref
    protected boolean inCheck(int x) {
@@ -691,30 +697,37 @@ public final class Slide {
             
            //le voyant d'état
             if( mode!=DRAG ) {
-               if( p.type==Plan.FOLDER && !p.isSync() ) { drawBlink(g,px,py-9);setBlink(true); }
+               p.status=0;
+               if( p.type==Plan.FOLDER && !p.isSync() ) { drawBlink(g,px,py-9);setBlink(true); p.status|=Plan.STATUS_INPROGRESS; }
                else if( p.isSimpleCatalog() || p.isImage()
                      || p instanceof PlanContour || p.type==Plan.FILTER
                      || p instanceof PlanBG ) {
                   if( p.error!=null ) {
                      boolean hasObj = p.pcat!=null && p.pcat.hasObj();
-                     if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) drawBall(g,px,py-9,Aladin.ORANGE);
-                     else if( p.isSimpleCatalog() && p.error.indexOf("OVERFLOW")>=0 ) drawBall(g,px,py-9,Aladin.ORANGE);
-                     else if( p.isSimpleCatalog() && !hasObj ) drawCross(g,px1,py-9);
-                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) drawCross(g,px1,py-9);
-                     else drawBall(g,px1,py-9,Color.red);
+                     if( p.hasNoReduction() && (!p.isSimpleCatalog() || hasObj)) { drawBall(g,px,py-9,Aladin.ORANGE); p.status|=Plan.STATUS_NOCALIB; }
+                     else if( p.isSimpleCatalog() && p.error.indexOf("OVERFLOW")>=0 ) { drawBall(g,px,py-9,Aladin.ORANGE); p.status|=Plan.STATUS_OVERFLOW; }
+                     else if( p.isSimpleCatalog() && !hasObj ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYCAT; }
+                     else if( p instanceof PlanMoc && ((PlanMoc)p).getMoc().getSize()==0 ) { drawCross(g,px1,py-9); p.status|=Plan.STATUS_EMPTYMOC; }
+                     else { drawBall(g,px1,py-9,Color.red); p.status|=Plan.STATUS_ERROR; }
                   } else {
                      boolean flag=false;
-                     Color green = p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ? Aladin.LIGHTORANGE : Color.green; // Color.green: Aladin.GREEN ;
+                     Color green;
+                     if( p instanceof PlanBG && ((PlanBG)p).hasMoreDetails() ) {
+                        green = Aladin.LIGHTORANGE;
+                        p.status|=Plan.STATUS_MOREDETAILSAVAILABLE;
+                     } else {
+                        green =  Color.green;
+                     }
                      if( !p.flagOk ||
                            ( (p instanceof PlanContour) && (((PlanContour)p).mustAdjustContour)) ||
                            (flag=(p.flagProcessing 
                                  || (p.type==Plan.IMAGEHUGE && ((PlanImageHuge)p).isExtracting) 
                                  || (p instanceof PlanBG && ((PlanBG)p).isLoading()) )) )
                      {
+                        p.status|=Plan.STATUS_LOADING;
                         if( flag ) {
                            drawBlink(g,px,py-9,Color.white,green);
-                        }
-                        else drawBlink(g,px1,py-9);
+                        } else drawBlink(g,px1,py-9);
                         
                         setBlink(true);
                         
@@ -723,7 +736,9 @@ public final class Slide {
                            drawBall(g,px,py-9, green );
                          }
                      }
-                     if( p.getCompletude()>=0 && p.active ) drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
+                     if( p.getCompletude()>=0 && p.active ) {
+                        drawProportion(g,x+60,py-1,Select.sizeLabel+10-60,(int)p.getCompletude(),green);
+                     }
                   }
                }
             }
@@ -771,7 +786,7 @@ public final class Slide {
       if( mode==DRAG ) return;
       
       // Plan overlays qui peut être projeté sur un autre plan => on évite de mettre
-      // la checkbox pour ne pas surcharger les contrôles
+      // la checkbox pour ne pas surcharger les contrôles sauf s'il est déjà en ref
       if( !p.shouldHaveARefCheckBox() ) return;
       
       // Faut-il faire temporairement clignoter la checkbox pour signaler à l'utilisateur

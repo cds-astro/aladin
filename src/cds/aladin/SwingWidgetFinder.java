@@ -20,7 +20,7 @@
 /*
  * Created on 2 févr. 2004
  *
- * To change this generated comment go to 
+ * To change this generated comment go to
  * Window>Preferences>Java>Code Generation>Code Template
  */
 package cds.aladin;
@@ -28,24 +28,24 @@ package cds.aladin;
 import java.awt.Point;
 
 /**
- * <p>Title : WidgetFinder</p>
+ * <p>Title : SwingWidgetFinder</p>
  * <p>Description : Interface to find and locate "home-made" widgets</p>
  * @author Thomas Boch [CDS]
  * @version 0.1 (kickoff : 02/02/2004)
  */
-public interface WidgetFinder {
-    
-    /** Find a "home-made" widget by its name
-     * 
-     * @param name name of the widget we look for
-     * @return boolean <i>true</i> if widget found, <i>false</i> otherwise
-     */
-    public boolean findWidget(String name);
-    
-    /** Get location of a "home-made" widget
-     * 
-     * @param name name of the widget
-     * @return Point location of the widget within the object
-     */
-    public Point getWidgetLocation(String name);
+public interface SwingWidgetFinder {
+
+   /** Find a "home-made" widget by its name
+    *
+    * @param name name of the widget we look for
+    * @return boolean <i>true</i> if widget found, <i>false</i> otherwise
+    */
+   public boolean findWidget(String name);
+
+   /** Get location of a "home-made" widget
+    *
+    * @param name name of the widget
+    * @return Point location of the widget within the object
+    */
+   public Point getWidgetLocation(String name);
 }

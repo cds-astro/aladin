@@ -21,10 +21,6 @@
 package cds.aladin;
 
 import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import cds.tools.Util;
 
@@ -42,7 +38,7 @@ import cds.tools.Util;
 public final class Tool {
    // Couleurs geres
    static final Color CS  = Color.black;     // Couleur si l'outil est selectionnable
-//   static final Color CNS = Color.gray;      // COuleur si l'outil n'est pas selectionnable
+   //   static final Color CNS = Color.gray;      // COuleur si l'outil n'est pas selectionnable
    static final Color CNS = Aladin.MYGRAY;      // COuleur si l'outil n'est pas selectionnable
    static final Color CD = Aladin.MAXBLUE;   // Couleur du bouton appuyé
    static final Color CU = Aladin.BLUE;      // Couleur du bouton releve
@@ -67,7 +63,7 @@ public final class Tool {
    int omode;                          // Precedent mode;
    public int mode;                           // Mode du bouton
 
-    // Liste des outils n'ayant pas d'une icone
+   // Liste des outils n'ayant pas d'une icone
    static final int [] noIcone = { };
 
    // Les labels de chaque outils
@@ -81,52 +77,52 @@ public final class Tool {
 
    // Decalage du logo par rapport au centre du bouton (vers la droite)
    static final int [] dX = {
-/* 0 */      7,
-/* 1 */      6,
-/* 2 */      12,
-/* 3 */      9,
-/* 4 */      13,
-/* 5 */      10,
-/* 6 */      12,
-/* 7 */      12,
-/* 8 */      10,
-/* 9 */      12,
-/*10 */      13,
-/*11 */      5,
-/*12 */      9,
-/*13 */      -6,
-/*14 */      0,
-/*15 */      12,
-/*16 */  	 7,
-/*17 */      15,
-/*18 */      15,
-/*19 */      9,
-/*20 */      9,
+      /* 0 */      7,
+      /* 1 */      6,
+      /* 2 */      12,
+      /* 3 */      9,
+      /* 4 */      13,
+      /* 5 */      10,
+      /* 6 */      12,
+      /* 7 */      12,
+      /* 8 */      10,
+      /* 9 */      12,
+      /*10 */      13,
+      /*11 */      5,
+      /*12 */      9,
+      /*13 */      -6,
+      /*14 */      0,
+      /*15 */      12,
+      /*16 */  	 7,
+      /*17 */      15,
+      /*18 */      15,
+      /*19 */      9,
+      /*20 */      9,
    };
 
    // Décalage du logo par rapport au centre du bouton (vers le haut)
    static final int [] dY = {
-/* 0 */      9,
-/* 1 */      10,
-/* 2 */      10,
-/* 3 */      9,
-/* 4 */      2,
-/* 5 */      10,
-/* 6 */      10,
-/* 7 */      10,
-/* 8 */      12,
-/* 9 */      11,
-/*10 */      9,
-/*11 */      8,
-/*12 */      7,
-/*13 */      9,
-/*14 */      2,
-/*15 */      10,
-/*16 */      10,
-/*17 */      12,
-/*18 */      15,
-/*19 */      9,
-/*20 */      9,
+      /* 0 */      9,
+      /* 1 */      10,
+      /* 2 */      10,
+      /* 3 */      9,
+      /* 4 */      2,
+      /* 5 */      10,
+      /* 6 */      10,
+      /* 7 */      10,
+      /* 8 */      12,
+      /* 9 */      11,
+      /*10 */      9,
+      /*11 */      8,
+      /*12 */      7,
+      /*13 */      9,
+      /*14 */      2,
+      /*15 */      10,
+      /*16 */      10,
+      /*17 */      12,
+      /*18 */      15,
+      /*19 */      9,
+      /*20 */      9,
    };
 
    // La fleche de selection
@@ -153,13 +149,13 @@ public final class Tool {
    static final int [] bAX = {  8,15, 8};
    static final int [] bAY = { 10,10,10};
 
-//   //Le dessin du repere (rectangle horizontal)
-//   static final int []  = {  0,18,18,0, 0 };
-//   static final int [] hRhRXY = { 10,10, 8,8,10 };
-//
-//   //Le dessin du repere (rectangle vertical)
-//   static final int [] vRX = {  10,10, 8,8,10 };
-//   static final int [] vRY = {   0,18,18,0, 0 };
+   //   //Le dessin du repere (rectangle horizontal)
+   //   static final int []  = {  0,18,18,0, 0 };
+   //   static final int [] hRhRXY = { 10,10, 8,8,10 };
+   //
+   //   //Le dessin du repere (rectangle vertical)
+   //   static final int [] vRX = {  10,10, 8,8,10 };
+   //   static final int [] vRY = {   0,18,18,0, 0 };
 
    //Le dessin de la fleche de mesure de distance
    static final int [] fmX = { 0,5,3,21,19,24,19,21,3, 5,  0  };
@@ -172,10 +168,10 @@ public final class Tool {
    //Le repere 2 de la fleche de mesure de distance
    static final int [] t2mX = {  fmX[5],fmX[5] };
    static final int [] t2mY = {  fmY[1],fmY[6] };
-   
+
    // Petit histogramme au-dessus de la fleche
    static final int cutG[] = { 11,10,9,7,5,3,2,2,3,5,7,9,10,11 };
-   
+
    // Les segments X1,X2,Y pour les ciseaux (extérieurs)
    static final int CROPN[][] = {
       {0,0,0}, {15,15,0},
@@ -202,7 +198,7 @@ public final class Tool {
    };
 
 
-/*
+   /*
    //Le carre du label
    static final int [] clX = {  8, 3, 3,14,14};
    static final int [] clY = {  0, 0,11,11, 8};
@@ -213,7 +209,7 @@ public final class Tool {
 
    // Le texte du label
    static final String lS = "AZ";
-*/
+    */
    // La croix
    static final int [] crX = { 2,9,16,17,10,17,16, 9, 2, 1,8,1,2 };
    static final int [] crY = { 0,7, 0, 1, 8,15,16, 9,16,15,8,1,0 };
@@ -229,43 +225,43 @@ public final class Tool {
    // Les 2 rectangles du resampling
    static final int [] r1X = { 5,15,15,5 };
    static final int [] r1Y = { 13,13,3,3 };
-   static final int [] r2X = { 6,12,18,12 }; 
+   static final int [] r2X = { 6,12,18,12 };
    static final int [] r2Y = { 6,0,6,12 };
 
    // Le manche de la loupe
    static final int [] lpX = { 12,19,17,10,12 };
    static final int [] lpY = {  9,16,18,11, 9 };
-   
+
    // Cercle pour la loupe (X1,X2,Y)  et comme c'est symétrique...
    // On prend le même tableau en Y1,Y2,X
    static final int [][] C = {{4,7,0},{4,7,11},
-                               {2,3,1},{8,9,1}, {2,3,10},{8,9,10},
-                              };
-   
+      {2,3,1},{8,9,1}, {2,3,10},{8,9,10},
+   };
+
    // Les ellipses concentriques pour les contours : (X1,X2,Y)
    static final int [][] ctH = { {5,11,0},
-                                 {3,4,1},{7,13,1},
-                                 {2,2,2},{6,6,2},{12,12,2},{14,14,2},
-                                 {1,1,3},{5,5,3},{9,11,3},{13,13,3},{15,15,3},
-                                 {9,11,6},
-                                 {5,5,7},{13,13,7},
-                                 {6,6,8},{12,12,8},
-                                 {1,1,9},{7,11,9},{15,15,9},
-                                 {2,2,10},{14,14,10},
-                                 {3,4,11},{12,13,11},
-                                 {5,11,12} };
-   
-   // Les ellipses concentriques pour les contours : (Y1,Y2,X) 
+      {3,4,1},{7,13,1},
+      {2,2,2},{6,6,2},{12,12,2},{14,14,2},
+      {1,1,3},{5,5,3},{9,11,3},{13,13,3},{15,15,3},
+      {9,11,6},
+      {5,5,7},{13,13,7},
+      {6,6,8},{12,12,8},
+      {1,1,9},{7,11,9},{15,15,9},
+      {2,2,10},{14,14,10},
+      {3,4,11},{12,13,11},
+      {5,11,12} };
+
+   // Les ellipses concentriques pour les contours : (Y1,Y2,X)
    static final int [][] ctV = { {4,8,0},{4,6,4},{4,5,8},{4,5,12},{4,6,14},{4,8,16} };
 
    // La main du Move (vecteurs verticaux, horizontaux et les rectangles de remplissage)
    static final int [][] pV = { {3,12,6}, {2,10,9},{2,10,12},{3,10,15},{5,16,17},
-                                {11,12,2},{13,15,3},{17,19,6},{17,19,16} }; 
+      {11,12,2},{13,15,3},{17,19,6},{17,19,16} };
    static final int [][] pH = { {10,11,1},{7,8,2},{13,14,2},{16,16,4},{1,3,9},{0,0,10},
-                                {4,5,10},{1,1,11},{4,5,16},{17,17,17},{7,15,19}, };
+      {4,5,10},{1,1,11},{4,5,16},{17,17,17},{7,15,19}, };
    static final int [][] pF = {{ 6,3,10,17}, {16,5,2,12},{4,11,2,5},{2,10,3,1},{3,11,1,2}};
-   
-      
+
+
    // Le Z du Zoom
    static final int [] zX = { 0,11,11, 2,11,11, 0, 0,9,0,   0 };
    static final int [] zY = { 0, 0, 2,13,13,15,15,13,2,2,   0 };
@@ -274,13 +270,13 @@ public final class Tool {
    static final int [] cmX = { 0, 0,  0,16};      // L'abscisse
    static final int [] cmY = { 0,16, 24,16};      // L'ordonnee
    static final int [][] cmb = {{ 3,9, 4, 7},    // Les barres
-                         {  6, 3, 4,13},
-                         {  9, 0, 4,16},
-                         { 12, 2, 4,14},
-                         { 15, 7, 4,9}};
+      {  6, 3, 4,13},
+      {  9, 0, 4,16},
+      { 12, 2, 4,14},
+      { 15, 7, 4,9}};
    static final int [] cmlX= { 1,15,25};         // Les X de la courbe de reponse
    static final int [] cmlY= {15, 9, 0};         // Les X de la courbe de reponse
-   
+
    // Le graphique des allumettes
    static final int [] m1X = { 2, 14, 16,  4, 3,  2};  // Le baton
    static final int [] m1Y = { 17, 5,  7, 19, 19, 18};
@@ -290,8 +286,8 @@ public final class Tool {
 
    // Les points pour le diagramme de dispersion
    int [][] plot = { { 2,3 }, {4,4}, {5,5}, {5,7}, { 7,5}, {6,4}, {7,9}, {9,10}, {11,12}, {13,13}, {14, 5} };
-   
-/*
+
+   /*
    // Le graphique pour le SED
    static final int [] sedX= {  4,8,12,16,20,22};  // Les X de la courbe
    static final int [] sedY= { 14,4,12, 8,12,12};  // Les Y de la courbe
@@ -299,11 +295,11 @@ public final class Tool {
    // Le graphique pour le ACE
    static final int [] aceX= {  4, 5,11,12,16,18,19,20};  // Les X des objets
    static final int [] aceY= {  8,14, 4,10,15,8, 8,13};  // Les Y des objets
-*/
-  /** Construction d'un outil
-   * @param n numero de l'outil (cf ToolBox.DRAW...)
-   * @param aladin Reference
-   */
+    */
+   /** Construction d'un outil
+    * @param n numero de l'outil (cf ToolBox.DRAW...)
+    * @param aladin Reference
+    */
    protected Tool(int ntool,Aladin aladin) {
       this.aladin = aladin;
       this.calque = aladin.calque;
@@ -313,7 +309,7 @@ public final class Tool {
       omode = DOWN;
       nom = label[ntool];
    }
-   
+
    private void createChaine() {
       label=new String[]{
             aladin.chaine.getString("SELECT"),
@@ -338,7 +334,7 @@ public final class Tool {
             aladin.chaine.getString("CROP"),
             aladin.chaine.getString("PLOT"),
       };
-      
+
       explanation=new String[]{
             aladin.chaine.getString("HSELECT"),
             aladin.chaine.getString("HDRAW"),
@@ -364,25 +360,25 @@ public final class Tool {
       };
    }
 
-  /** Fixe la taille des boutons
-   * @param newW,newH Nouvelles tailles
-   */
+   /** Fixe la taille des boutons
+    * @param newW,newH Nouvelles tailles
+    */
    protected static void resize(int newW,int newH) {
       W=newW;
       H=newH;
    }
 
-  /** Selection/Deselection de l'outil (mode UP <-> DOWN) */
+   /** Selection/Deselection de l'outil (mode UP <-> DOWN) */
    protected boolean Push() {
       if( mode==UNAVAIL ) return false;
       mode=-mode;
       return true;
    }
 
-  /** Positionnement du mode du bouton */
+   /** Positionnement du mode du bouton */
    protected void setMode(int m) { mode=m; }
 
-  /** Retourne la description associee a l'outil */
+   /** Retourne la description associee a l'outil */
    protected String getInfo() {
       if( ntool>=explanation.length ) return "";
       return explanation[ntool];
@@ -401,32 +397,32 @@ public final class Tool {
    // Retourne le decallage en X et en Y d'une icone
    int dX() { return ntool<dX.length?dX[ntool]:0; }
    int dY() { return ntool<dY.length?dY[ntool]:0; }
-   
+
    /** Retourne true si la coordonnée est dans le bouton */
    protected boolean in(int x,int y) {
       return x>=X && x<=X+W && y>=Y && y<=Y+H;
    }
-   
+
    /** Retourne la position centrale du bouton ou null s'il n'a pas été tracé */
    protected Point getWidgetLocation() {
       if( X==-1 && Y==-1 ) return null;
       return new Point( X+W/2, Y+H/2);
    }
 
-  /** Dessin du bouton de FORCE
-   * @param g       Contexte graphique a utiliser
-   * @param idx,idy Origine du dessin
-   * @param currentButton true si c'est le bouton courant (affichage vert)
-   */
+   /** Dessin du bouton de FORCE
+    * @param g       Contexte graphique a utiliser
+    * @param idx,idy Origine du dessin
+    * @param currentButton true si c'est le bouton courant (affichage vert)
+    */
    protected void drawIcone(Graphics g,int idx, int idy, boolean currentButton) {
       updateIcone(g,idx,idy,true,currentButton);
    }
 
-  /** Dessin du bouton de SI NECESSAIRE
-   * @param g       Contexte graphique a utiliser
-   * @param idx,idy Origine du dessin
-   * @param currentButton true si c'est le bouton courant (affichage vert)
-   */
+   /** Dessin du bouton de SI NECESSAIRE
+    * @param g       Contexte graphique a utiliser
+    * @param idx,idy Origine du dessin
+    * @param currentButton true si c'est le bouton courant (affichage vert)
+    */
    protected void updateIcone(Graphics g,int idx, int idy, boolean currentButton) {
       updateIcone(g,idx,idy,false,currentButton);
    }
@@ -438,51 +434,51 @@ public final class Tool {
       omode=mode;
 
       Polygon p;
-//      boolean flagIsForTool = ToolBox.isForTool(ntool) /* || ntool==ToolBox.FILTER */;
+      //      boolean flagIsForTool = ToolBox.isForTool(ntool) /* || ntool==ToolBox.FILTER */;
       boolean flagIsForTool = false;
       int dx = idx + W/2 - dX();
       int dy = idy + mode + H/3 - dY()+3;
       Color c1 = (mode==UNAVAIL && !flagIsForTool)?CNS:currentButton?CS:CS;
       Color c2 = (mode==UNAVAIL && !flagIsForTool)?CNS:CS;
-      
+
       // Mémorisation de la position du tracé
       X=idx;
       Y=idy;
-      
+
       Color CBG = aladin.toolBox.getBackground();
       Color CBU = new Color(250,249,254);
-      
+
       g.setColor( mode==DOWN ? CU : currentButton && mode!=UNAVAIL ? CBU : CBG);
       g.fillRect(idx+2,idy+2,W-3,H-3);
       if( mode==DOWN ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, Color.darkGray, Color.white);
       else if( mode==UP && currentButton ) Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, Color.white, Color.darkGray);
       else Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, CBG, CBG);
-             
 
-//      // Couleur du fond
-//      if( mode==DOWN ) {
-//         g.setColor(CD);
-//         g.fillRect(idx+2,idy+2,W-3,H-3);
-//      } else if( mode==UP ) {
-//         g.setColor(currentButton && mode==UP ? Aladin.MYBLUE : CU);
-//         g.fillRect(idx+2,idy+2,W-3,H-3);
-//      } else {
-//         if( flagIsForTool ) g.setColor( currentButton ? Aladin.MYBLUE : CU);
-//         else g.setColor(aladin.toolbox.getBackground());
-//         g.fillRect(idx+1,idy+1,W-1,H-1);
-//      }
-//
-//      // Dessin des bords
-//      if( mode!=UNAVAIL ) {
-//         
-//         Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4,
-//               mode==UP?Color.white:Color.darkGray, mode==UP?Color.darkGray:Color.white);
-//
-//      } else if( flagIsForTool ) {
-//         g.setColor( CS );
-//         Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, CS, Color.white);
-//      }
-      
+
+      //      // Couleur du fond
+      //      if( mode==DOWN ) {
+      //         g.setColor(CD);
+      //         g.fillRect(idx+2,idy+2,W-3,H-3);
+      //      } else if( mode==UP ) {
+      //         g.setColor(currentButton && mode==UP ? Aladin.MYBLUE : CU);
+      //         g.fillRect(idx+2,idy+2,W-3,H-3);
+      //      } else {
+      //         if( flagIsForTool ) g.setColor( currentButton ? Aladin.MYBLUE : CU);
+      //         else g.setColor(aladin.toolbox.getBackground());
+      //         g.fillRect(idx+1,idy+1,W-1,H-1);
+      //      }
+      //
+      //      // Dessin des bords
+      //      if( mode!=UNAVAIL ) {
+      //
+      //         Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4,
+      //               mode==UP?Color.white:Color.darkGray, mode==UP?Color.darkGray:Color.white);
+      //
+      //      } else if( flagIsForTool ) {
+      //         g.setColor( CS );
+      //         Util.drawRoundRect(g, idx+1, idy+1,W-2,H-2, 4, CS, Color.white);
+      //      }
+
       Color cPapier = Color.white;
 
 
@@ -496,7 +492,7 @@ public final class Tool {
             g.drawPolygon(p);
             break;
          case ToolBox.DRAW:                // dessin du crayon
-//            g.setColor( cPapier );
+            //            g.setColor( cPapier );
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
             p = setPolygon(craymX,craymY,dx,dy);
             g.fillPolygon(p);
@@ -511,14 +507,14 @@ public final class Tool {
             break;
          case ToolBox.TAG:                // dessin du grand A avec le réticule
             p = setPolygon(exAX,exAY,dx,dy);
-//            g.setColor(cPapier);
+            //            g.setColor(cPapier);
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
             g.fillPolygon(p);
             g.setColor(c1);
             g.drawPolygon(p);
             p = setPolygon(bAX,bAY,dx,dy);
             g.drawPolygon(p);
-            
+
             g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
             g.drawLine(dx+4,dy+3,dx+4,dy+3+6);
             g.drawLine(dx+4-3,dy+6,dx+4+3,dy+6);
@@ -529,24 +525,24 @@ public final class Tool {
             g.fillOval(dx+1,dy,15,15);
             g.setColor(c1);
             g.drawOval(dx+1,dy,14,14);
-//            g.setColor(c1);
+            //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
             g.drawLine(dx+8,dy+4,dx+8,dy+4+6);
             g.drawLine(dx+8-3,dy+7,dx+8+3,dy+7);
             break;
          case ToolBox.DIST:                // la fleche
-         	p = setPolygon(fmX,fmY,dx,dy);
-//            g.setColor(cPapier);
+            p = setPolygon(fmX,fmY,dx,dy);
+            //            g.setColor(cPapier);
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
             g.fillPolygon(p);
             g.setColor(c1);
             g.drawPolygon(p);
-//            g.setColor(cPapier);
+            //            g.setColor(cPapier);
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 85,121,203) );
             for( i=0; i<cutG.length; i++) g.drawLine(dx+i+5,dy+cutG[i]-8,dx+i+5,dy+3);
             break;
          case ToolBox.DEL:                // la croix
-//            g.setColor(c1);
+            //            g.setColor(c1);
             p = setPolygon(crX,crY,dx,dy);
             g.setColor( mode==UNAVAIL ? c1 : Color.red.darker() );
             g.fillPolygon(p);
@@ -565,7 +561,7 @@ public final class Tool {
             break;
          case ToolBox.BLINK:
             g.setColor(c1);
-         	g.fillRect(dx+1,dy+2,23,13);
+            g.fillRect(dx+1,dy+2,23,13);
             g.setColor(cPapier);
             g.setColor( mode==UNAVAIL ? cPapier : new Color( 236,226,181) );
             g.fillRect(dx+1,dy+5,4,7);
@@ -578,7 +574,7 @@ public final class Tool {
             break;
          case ToolBox.XMATCH:
             for( int j=0; j<2; j++,dx+=8 ) {
-//               g.setColor(c1);
+               //               g.setColor(c1);
                g.setColor( mode==UNAVAIL ? c1 : new Color( 127,88,0) );
                p = setPolygon(m1X,m1Y,dx,dy);
                g.fillPolygon(p);
@@ -596,7 +592,7 @@ public final class Tool {
             drawRsampIcon(g,c1,dx,dy,true);
             break;
          case ToolBox.PROP:
-//            g.setColor(c1);
+            //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203) );
             p = setPolygon(p1X,p1Y,dx,dy);
             g.fillPolygon(p);
@@ -610,7 +606,7 @@ public final class Tool {
             g.drawLine(dx+3,dy+9,dx+3,dy+9); g.drawLine(dx+6,dy+9,dx+12,dy+9);
             break;
          case ToolBox.WEN:                // la loupe
-//            g.setColor(c1);
+            //            g.setColor(c1);
             g.setColor( mode==UNAVAIL ? c1 : new Color( 127,88,0) );
             p = setPolygon(lpX,lpY,dx,dy);
             g.fillPolygon(p);
@@ -636,7 +632,7 @@ public final class Tool {
             for( i=0; i<pH.length; i++ ) g.drawLine(pH[i][0]+dx,pH[i][2]+dy,pH[i][1]+dx,pH[i][2]+dy);
             break;
          case ToolBox.HIST:                // l'histogramme de la table des couleurs
-//            g.setColor( c1 );
+            //            g.setColor( c1 );
             g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203) );
             for( i=0; i<5; i++ ) g.fillRect(cmb[i][0]+dx,cmb[i][1]+dy, cmb[i][2],cmb[i][3]);
             g.setColor( c1 );
@@ -647,7 +643,7 @@ public final class Tool {
             for( i=0; i<cmlX.length-1; i++ )
                g.drawLine(cmlX[i]+dx,cmlY[i]+dy, cmlX[i+1]+dx,cmlY[i+1]+dy);
             break;
-/*
+            /*
          case ToolBox.SED:                // Le SED
             int x1,y1,x2,y2;
             int t=2;
@@ -670,29 +666,29 @@ public final class Tool {
                g.drawLine(x,y-t1,x,y+t1);
             }
             break;
-*/
+             */
          case ToolBox.CONTOUR:
             g.setColor( cPapier );
             g.fillRect(dx+9,dy+4,3,2);
-//            g.setColor( c1);
-	        g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203));
+            //            g.setColor( c1);
+            g.setColor( mode==UNAVAIL ? c1 : new Color( 85,121,203));
             for( i=0; i<ctH.length; i++ )
                g.drawLine(dx+ctH[i][0],dy+ctH[i][2],dx+ctH[i][1],dy+ctH[i][2]);
             for( i=0; i<ctV.length; i++ )
                g.drawLine(dx+ctV[i][2],dy+ctV[i][0],dx+ctV[i][2],dy+ctV[i][1]);
 
-	        break;
+            break;
          case ToolBox.FILTER:
             Slide.drawLogoFilter(g,dx-20,dy,mode==UP,true,c1,mode==UNAVAIL ? c1 :  new Color( 215,198,142) );
-	        break;
-//         case ToolBox.SYNC:
-//            g.setColor(c1);
-//            int L=8;
-//            g.drawLine(dx-L, dy,   dx-3, dy);
-//            g.drawLine(dx+3, dy,   dx+L, dy);
-//            g.drawLine(dx,   dy-L, dx,   dy-3);
-//            g.drawLine(dx,   dy+3, dx,   dy+L);
-//	        break;
+            break;
+            //         case ToolBox.SYNC:
+            //            g.setColor(c1);
+            //            int L=8;
+            //            g.drawLine(dx-L, dy,   dx-3, dy);
+            //            g.drawLine(dx+3, dy,   dx+L, dy);
+            //            g.drawLine(dx,   dy-L, dx,   dy-3);
+            //            g.drawLine(dx,   dy+3, dx,   dy+L);
+            //	        break;
          case ToolBox.CROP:
             g.setColor(c1);
             for(i=0; i<CROPN.length; i++) { int s[] = CROPN[i]; g.drawLine(dx+s[0],dy+s[2],dx+s[1],dy+s[2]); }
@@ -720,7 +716,7 @@ public final class Tool {
       if( label!=null && ntool<label.length) {
          int x,y;
 
-//         g.setColor(currentButton && mode==UP ? Color.white : c2);
+         //         g.setColor(currentButton && mode==UP ? Color.white : c2);
          g.setColor(c2);
 
          // Positionnement du label en fonction de la presence
@@ -741,7 +737,7 @@ public final class Tool {
          g.drawString(label[ntool],x,y);
       }
    }
-   
+
    // Trace un cercle de diamètre 12
    private void drawCercle(Graphics g,int dx, int dy) {
       for( int i=0; i<C.length; i++ ) {
@@ -750,7 +746,7 @@ public final class Tool {
       }
 
    }
-   
+
    /** Dessin du logo associé au Resampling (également utilisé dans
     * ViewSimple. Le flag "plein" entraine le remplissage en blanc */
    protected void drawRsampIcon(Graphics g,Color c1,int dx,int dy,boolean plein) {
@@ -765,4 +761,53 @@ public final class Tool {
       }
       g.drawPolygon(p);
    }
+
+   static protected void drawVOPointer(Graphics g,int dx,int dy) {
+      Polygon p = setPolygon(selectX,selectY,dx,dy);
+      g.setColor(Color.white);
+      g.fillPolygon(p);
+      g.setColor( Color.gray );
+      g.drawPolygon(p);
+   }
+
+   static protected void drawVOHand(Graphics g,int dx,int dy) {
+      int i;
+      g.setColor( Color.white );
+      for( i=0; i<pF.length; i++) g.fillRect(pF[i][0]+dx,pF[i][1]+dy,pF[i][2],pF[i][3]);
+      g.setColor(Color.gray);
+      for( i=0; i<pV.length; i++ ) g.drawLine(pV[i][2]+dx,pV[i][0]+dy,pV[i][2]+dx,pV[i][1]+dy);
+      for( i=0; i<pH.length; i++ ) g.drawLine(pH[i][0]+dx,pH[i][2]+dy,pH[i][1]+dx,pH[i][2]+dy);
+   }
+
+   static protected void drawVOTable(Graphics g,int dx,int dy) {
+      int w=18,h=12;
+      g.setColor( Color.white );
+      g.fillRect(dx, dy, w, h);
+
+      g.setColor( Color.gray);
+      g.drawRect(dx,dy,w,h);
+      g.drawLine(dx+1,dy+1,dx+w-2,dy+1);
+      g.drawLine(dx+1,dy-1,dx+w-2,dy-1);
+
+      for( int i=0; i<3 ; i++ ) {
+         int y = dy+4+i*2;
+         g.drawLine(dx+3,y,dx+3,y); g.drawLine(dx+5,y,dx+10,y); g.drawLine(dx+12,y,dx+14,y);
+      }
+   }
+   static final int[] FRX = { 7,7-3,18+3,18 };
+   static final int[] FRY = { 12,19,19,12 };
+
+   static protected void drawVOStack(Graphics g,int dx,int dy) {
+      Polygon p = new Polygon(FRX,FRY,FRX.length);
+      p.translate(dx,dy);
+      for( int i=2; i>=0; i-- ) {
+         g.setColor( Color.white );
+         g.fillPolygon(p);
+         g.setColor( Color.gray );
+         g.drawPolygon(p);
+         g.drawLine(p.xpoints[1],p.ypoints[1]+1,p.xpoints[2],p.ypoints[2]+1);
+         p.translate(0, -4);
+      }
+   }
+
 }

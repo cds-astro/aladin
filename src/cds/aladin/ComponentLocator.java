@@ -113,7 +113,7 @@ public class ComponentLocator {
      * @param comp WidgetFinder where stands widgetName
      * @return Point points corresponding to the coordinates on the screen of this component, <i>null</i> if widgetName was not found
      */
-    public Point getLocation(String widgetName, WidgetFinder comp) {
+    public Point getLocation(String widgetName, SwingWidgetFinder comp) {
         Point loc = comp.getWidgetLocation(widgetName);
         Point compLoc = new Point(0,0);
         if( comp instanceof Component ) {

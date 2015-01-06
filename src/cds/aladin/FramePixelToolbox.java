@@ -127,6 +127,8 @@ public class FramePixelToolbox extends JFrame {
       PropPanel.addCouple(p,pl.label, pl.getPanel(), g,c);
       return p;
    }
+   
+   public Dimension getPreferredSize() { return new Dimension( 459,super.getPreferredSize().height); }
 
    // Panel indiquant les paramètres annexes BSCALE,BZERO,BLANK et BITPIX
    private JPanel createPanelBottom() {

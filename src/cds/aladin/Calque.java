@@ -89,11 +89,12 @@ public final class Calque extends JPanel implements Runnable {
    static final private int NE      = 16;
    static final private int RETICLE = 32;
    static final private int TARGET  = 64;
-   static final private int PIXEL = 128;
+   static final private int PIXEL   = 128;
    static final private int HPXGRID = 256;
+   static final private int COLORMAP= 512;
 
-   static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid" };
-   static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID };
+   static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid", "colormap" };
+   static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID, COLORMAP };
 
    /** Retourne le champ de bits qui contrôle les overlays */
    public int getOverlayFlag() { return overlayFlag; }
@@ -108,6 +109,7 @@ public final class Calque extends JPanel implements Runnable {
    public boolean hasTarget()  { return (overlayFlag & TARGET)  == TARGET; }
    public boolean hasPixel()   { return (overlayFlag & PIXEL)   == PIXEL; }
    public boolean hasHpxGrid() { return (overlayFlag & HPXGRID) == HPXGRID; }
+   public boolean hasColormap(){ return (overlayFlag & COLORMAP)== COLORMAP; }
 
    /** Positionnement d'un flag d'overlay - ex: setOverlayFlag("grid",true);
     * @param name le nom de la fonction d'overlay
@@ -141,6 +143,8 @@ public final class Calque extends JPanel implements Runnable {
       }
       if( mode==1 ) overlayFlag |= mask;
       else overlayFlag &= ~mask;
+
+      if( aladin.view!=null ) aladin.view.showRainbow( hasColormap() );
    }
 
    /** Retourne sous la forme d'une chaine de caractères, tous les overlays actifs
@@ -192,6 +196,8 @@ public final class Calque extends JPanel implements Runnable {
     * @return true s'il y a eu un changement d'état
     */
    protected boolean scrollAdjustement() {
+      if( aladin.isFullScreen() ) return false;
+
       int lastPlan = scroll.getLastVisiblePlan();
       if( lastPlan==-1 ) return false;
       boolean hideScroll = !scroll.getRequired();

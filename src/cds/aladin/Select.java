@@ -22,7 +22,6 @@ package cds.aladin;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
@@ -45,13 +44,13 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  */
 public final class Select extends JComponent  implements
-             AdjustmentListener,ActionListener,
-             MouseMotionListener, MouseListener, MouseWheelListener, 
-             Runnable, WidgetFinder {
+AdjustmentListener,ActionListener,
+MouseMotionListener, MouseListener, MouseWheelListener,
+Runnable, SwingWidgetFinder, Widget {
 
    String HSTACK0,HSTACK,HEYE,WAITMIN,NOPROJ,MSELECT,MBROADCASTALL,MALLAPPS,MBROADCASTTABLE,MBROADCASTIMAGE,
-          MDEL,MDELALL,MDELEMPTY,MCREATFOLD,HSTACK2,
-          MINSFOLD,MCOL,MEXP,MPROP,SHOW,GOTO,HIDE,WARNING,WARNINGSLIDER;
+   MDEL,MDELALL,MDELEMPTY,MCREATFOLD,HSTACK2,
+   MINSFOLD,MCOL,MEXP,MPROP,SHOW,GOTO,HIDE,WARNING,WARNINGSLIDER;
    String [] BEGIN;
 
    // Les references aux autres objets
@@ -70,8 +69,8 @@ public final class Select extends JComponent  implements
    Polygon logo;                  // Logo en cours de deplacement
    Rectangle r;                   // Clip en cas de repaint (eye, blink)
    boolean flagRClip;             // Vrai si le clip "r" doit etre utilise
-//   boolean clinDoeil=false;       // Vrai si je dois faire un clin d'oeil
-//   Thread clin=null;              // Thread d'attente pour le clin d'oeil
+   //   boolean clinDoeil=false;       // Vrai si je dois faire un clin d'oeil
+   //   Thread clin=null;              // Thread d'attente pour le clin d'oeil
    Plan newRef=null;              // !=null si on est entrain de changer de ref.
    Plan planIn=null;		      // si !=null, dernier plan sous la souris
 
@@ -86,7 +85,7 @@ public final class Select extends JComponent  implements
    // test AVO
    //static final int sizeLabel = 156-MyScrollbar.LARGEUR;   // Nbre de pixels pour les labels (test AVO)
    static final int gapL      =   16;   // Marge de gauche (reserve pour les controles)
-//   static final int gapLL      =  14;   // Marge de gauche (reserve pour le radio)
+   //   static final int gapLL      =  14;   // Marge de gauche (reserve pour le radio)
    static final int gapB      =   5;   // Marge du bas
    static final int DX	      =  33;   // Largeur du logo
 
@@ -98,17 +97,17 @@ public final class Select extends JComponent  implements
    static final int MILIEU = (frX[2]+frX[1])/2;       // Le centre de la pile des calques
 
    // L'oeil (sourcil - ext - int - pupille)
-//   static int [] o1x = { 0,11,22,36,36,22,10, 0,0 };      // Sourcil
-//   static int [] o1y = { 10, 6, 6, 13,15, 9, 9,13,10 };
-//   static int [] o2x = {  2, 3,12,18,24,32,36,36,32,18, 6, 2, 2 }; // Exterieur de l'oeil
-//   static int [] o2y = { 18,18,12,10,12,18,20,23,22,24,21,21,18 };
-//   static int [] o3x = {  6,16,22,28,30,18, 6 };         // Interieur de l'oeil
-//   static int [] o3y = { 18,12,14,19,19,21,18 };
-//   static int o4d = o3y[5]-o2y[3];                        // Taille (hors tout) de la pupille
-//   static int o4xc = o2x[3]-o4d/2;                        // Abscisse du centre de la pupille
-//   static int o4yc = (o2y[3]+o3y[5])/2-o4d/2;            // Ordonnee du centre de la pupille
-//   static int eyeWidth=o1x[3];                           // Largeur
-//   static int eyeHeight=o2y[7];                           // Hauteur
+   //   static int [] o1x = { 0,11,22,36,36,22,10, 0,0 };      // Sourcil
+   //   static int [] o1y = { 10, 6, 6, 13,15, 9, 9,13,10 };
+   //   static int [] o2x = {  2, 3,12,18,24,32,36,36,32,18, 6, 2, 2 }; // Exterieur de l'oeil
+   //   static int [] o2y = { 18,18,12,10,12,18,20,23,22,24,21,21,18 };
+   //   static int [] o3x = {  6,16,22,28,30,18, 6 };         // Interieur de l'oeil
+   //   static int [] o3y = { 18,12,14,19,19,21,18 };
+   //   static int o4d = o3y[5]-o2y[3];                        // Taille (hors tout) de la pupille
+   //   static int o4xc = o2x[3]-o4d/2;                        // Abscisse du centre de la pupille
+   //   static int o4yc = (o2y[3]+o3y[5])/2-o4d/2;            // Ordonnee du centre de la pupille
+   //   static int eyeWidth=o1x[3];                           // Largeur
+   //   static int eyeHeight=o2y[7];                           // Hauteur
 
    // Les variables de gestion du graphisme
    static int ws=frMax+sizeLabel;        // Largeur du canvas (doit etre divisible par ViewZoom.WENZOOM)
@@ -116,7 +115,7 @@ public final class Select extends JComponent  implements
    int hsp;                       // Hauteur de la portion pour les plans
    Image img;                     // Image du buffer du paint
    Graphics g;                    // GC du buffer du pain
-//   private boolean mouseIn=false; // true si la souris est sur l'oeil
+   //   private boolean mouseIn=false; // true si la souris est sur l'oeil
 
    protected void createChaine() {
       String appMsgProtocolName = a.getMessagingMgr().getProtocolName();
@@ -145,16 +144,16 @@ public final class Select extends JComponent  implements
       WARNINGSLIDER = a.chaine.getString("SWARNINGSLIDER");
    }
 
-  /** Creation de l'interface de la pile des plans.
-   * @param calque,aladin References
-   */
+   /** Creation de l'interface de la pile des plans.
+    * @param calque,aladin References
+    */
    protected Select(Aladin aladin) {
       this.a = aladin;
       createChaine();
       addMouseMotionListener(this);
       addMouseListener(this);
       addMouseWheelListener(this);
-      
+
       setBackground( a.toolBox.getBackground() );
 
       // Calcule des tailles
@@ -162,41 +161,54 @@ public final class Select extends JComponent  implements
       hsp= hs-/*eyeHeight-*/gapB;      // Hauteur de la portion pour les plans
       createPopupMenu();
    }
-   
-   
+
+
    private long lastMouseWheelEventTime = -1;
-   
+
    /** Modification de la transparence du plan sous la souris par action sur la molette */
    public void mouseWheelMoved(MouseWheelEvent e) {
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
-      int sens = -e.getWheelRotation();
-      Plan p = getPlan(e.getY());
-      if( p==null || !a.calque.canBeTransparent(p) ) return;
-      float opacity = p.getOpacityLevel();
-      float oOpacity=opacity;
-      long delta = e.getWhen()-lastMouseWheelEventTime;
-      lastMouseWheelEventTime = e.getWhen();
-      float acc = delta<50 ? 0.4f : delta<100 ? 0.2f : delta<200 ? 0.1f : 0.05f;
-      opacity += sens*acc;
-      if( opacity<0 ) opacity=0f;
-      else if( opacity>1 ) opacity=1f;
-      if( opacity==oOpacity ) return;
-      setOpacityLevel( p, opacity );
-      Properties.majProp(p);
-      a.calque.repaintAll();
+      int sens = e.getWheelRotation();
+
+      // Changement de niveau de transparence
+      if( e.getX()<=frMax && e.getX()>=frMin) {
+         Plan p = getPlan(e.getY());
+         if( p==null || !a.calque.canBeTransparent(p) ) return;
+         float opacity = p.getOpacityLevel();
+         float oOpacity=opacity;
+         long delta = e.getWhen()-lastMouseWheelEventTime;
+         lastMouseWheelEventTime = e.getWhen();
+         float acc = delta<50 ? 0.4f : delta<100 ? 0.2f : delta<200 ? 0.1f : 0.05f;
+         opacity += sens*acc;
+         if( opacity<0 ) opacity=0f;
+         else if( opacity>1 ) opacity=1f;
+         if( opacity==oOpacity ) return;
+         setOpacityLevel( p, opacity );
+         Properties.majProp(p);
+         a.calque.repaintAll();
+      }
+
+      // Scrolling vertical
+      else {
+         if( a.calque.scroll==null ) return;
+         int v = a.calque.scroll.getValue();
+         v += e.getWheelRotation();
+         a.calque.scroll.setValue(v);
+         a.calque.repaintAll();
+      }
    }
-   
+
    // Ajustement de la transparence avec réactivation automatique du plan si nécessaire */
    private void setOpacityLevel(Plan p,float opacity) {
       p.setOpacityLevel( opacity );
       if( !p.active && opacity>0.1 ) p.setActivated(true);
    }
 
-//   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
+   //   public Dimension getPreferredSize() { return new Dimension(ws+5,hs); }
 
    JMenuItem menuBroadcast,menuDel,menuDelEmpty,menuDelAll,menuShow,menuGoto,
-            menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
-            menuConcat1,menuConcat2,menuTableInfo,menuPlot,menuCreateMulti,menuCreateUniq;
+   menuColl,menuCreatFold,menuInsertFold,menuProp,menuSelect,menuUnselect,
+   menuConcat1,menuConcat2,menuTableInfo,menuPlot,menuCreateMulti,menuCreateUniq;
 
    JMenu menuBroadcastTable,menuBroadcastImg,menuConcat,menuExport;
 
@@ -257,93 +269,93 @@ public final class Select extends JComponent  implements
    }
 
    /** Reactions aux differents boutons du menu */
-    public void actionPerformed(ActionEvent e) {
-       Object src = e.getSource();
-       String o="";
+   public void actionPerformed(ActionEvent e) {
+      Object src = e.getSource();
+      String o="";
 
-       if( src instanceof JMenuItem && ((JMenuItem)src).getParent() instanceof JMenu ) {
-          o=((JMenuItem)src).getActionCommand();
-       }
+      if( src instanceof JMenuItem && ((JMenuItem)src).getParent() instanceof JMenu ) {
+         o=((JMenuItem)src).getActionCommand();
+      }
 
-            if( src==menuCreatFold )  a.fold();
-       else if( src==menuTableInfo )  a.tableInfo(null);
-       else if( src==menuPlot )       a.createPlotCat();
-       else if( src==menuConcat1 )    a.concat(true);
-       else if( src==menuConcat2 )    a.concat(false);
-       else if( src==menuInsertFold ) insertFolder();
-       else if( src==menuSelect )     a.select();
-       else if( src==menuUnselect )   a.unSelect();
-       else if( src==menuCreateMulti )a.cloneObj(false);
-       else if( src==menuCreateUniq ) a.cloneObj(true);
-       else if( src==menuShow )       a.calque.setActivatedSet(((JMenuItem)src).getActionCommand().equals(SHOW));
-       else if( src==menuGoto )       a.view.syncPlan(a.calque.getFirstSelectedPlan());
-       else if( src==menuDel )        a.calque.FreeSet(true);
-       else if( src==menuDelEmpty )   a.calque.FreeEmpty();
-       else if( src==menuDelAll )     a.calque.FreeAll();
-       else if( src==menuBroadcast )  a.broadcastSelectedPlanes(null);
-       else if( src==menuProp )       propertiesOfSelectedPlanes();
-       else if( src==menuColl ) {
-          switchCollapseFolder( a.calque.getFirstSelectedPlan() );
-//          for( int i=menuPlan.size()-1; i>=0; i-- ) {
-//             switchCollapseFolder((Plan)menuPlan.elementAt(i));
-//          }
-       // envoi de plans catalogues via PLASTIC
-       } else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTTABLE )) {
-          o = ((JMenuItem)src).getText();
-          // broadcast à toutes les applis
-          if( o.equals(MALLAPPS) ) {
-             a.broadcastSelectedTables(null);
-          }
-          else {
-             a.broadcastSelectedTables(new String[]{o.toString()});
-          }
-       // envoi de plans images via PLASTIC
-       } else if( src instanceof JMenuItem
-             && ((JMenuItem)src).getActionCommand().equals(MBROADCASTIMAGE)  ) {
-           o = ((JMenuItem)src).getText();
-           // broadcast à toutes les applis
-          if( o.equals(MALLAPPS) ) {
-             a.broadcastSelectedImages(null);
-          }
-          // envoi à une appli particulière
-          else {
-             a.broadcastSelectedImages(new String[]{o.toString()});
-          }
+      if( src==menuCreatFold )  a.fold();
+      else if( src==menuTableInfo )  a.tableInfo(null);
+      else if( src==menuPlot )       a.createPlotCat();
+      else if( src==menuConcat1 )    a.concat(true);
+      else if( src==menuConcat2 )    a.concat(false);
+      else if( src==menuInsertFold ) insertFolder();
+      else if( src==menuSelect )     a.select();
+      else if( src==menuUnselect )   a.unSelect();
+      else if( src==menuCreateMulti )a.cloneObj(false);
+      else if( src==menuCreateUniq ) a.cloneObj(true);
+      else if( src==menuShow )       a.calque.setActivatedSet(((JMenuItem)src).getActionCommand().equals(SHOW));
+      else if( src==menuGoto )       a.view.syncPlan(a.calque.getFirstSelectedPlan());
+      else if( src==menuDel )        a.calque.FreeSet(true);
+      else if( src==menuDelEmpty )   a.calque.FreeEmpty();
+      else if( src==menuDelAll )     a.calque.FreeAll();
+      else if( src==menuBroadcast )  a.broadcastSelectedPlanes(null);
+      else if( src==menuProp )       propertiesOfSelectedPlanes();
+      else if( src==menuColl ) {
+         switchCollapseFolder( a.calque.getFirstSelectedPlan() );
+         //          for( int i=menuPlan.size()-1; i>=0; i-- ) {
+         //             switchCollapseFolder((Plan)menuPlan.elementAt(i));
+         //          }
+         // envoi de plans catalogues via PLASTIC
+      } else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTTABLE )) {
+         o = ((JMenuItem)src).getText();
+         // broadcast à toutes les applis
+         if( o.equals(MALLAPPS) ) {
+            a.broadcastSelectedTables(null);
+         }
+         else {
+            a.broadcastSelectedTables(new String[]{o.toString()});
+         }
+         // envoi de plans images via PLASTIC
+      } else if( src instanceof JMenuItem
+            && ((JMenuItem)src).getActionCommand().equals(MBROADCASTIMAGE)  ) {
+         o = ((JMenuItem)src).getText();
+         // broadcast à toutes les applis
+         if( o.equals(MALLAPPS) ) {
+            a.broadcastSelectedImages(null);
+         }
+         // envoi à une appli particulière
+         else {
+            a.broadcastSelectedImages(new String[]{o.toString()});
+         }
 
-       } else return;
+      } else return;
 
-       a.calque.repaintAll();
+      a.calque.repaintAll();
    }
 
-    /** Affichage des propriétés des plans sélectionnés */
-    protected void propertiesOfSelectedPlanes() {
-       Plan [] allPlan = a.calque.getPlans();
-       for( int i=0; i<allPlan.length; i++ ) {
-          Plan p = allPlan[i];
-          if( p.type!=Plan.NO && p.selected ) Properties.createProperties(p);
-       }
-    }
+   /** Affichage des propriétés des plans sélectionnés */
+   protected void propertiesOfSelectedPlanes() {
+      Plan [] allPlan = a.calque.getPlans();
+      for( int i=0; i<allPlan.length; i++ ) {
+         Plan p = allPlan[i];
+         if( p.type!=Plan.NO && p.selected ) Properties.createProperties(p);
+      }
+   }
 
    // demo AVO
-//   private void exportAsVOT(PlanCatalog pc) {
-//      FileDialog fd = new FileDialog(a.f,"Choose file",FileDialog.SAVE);
-//      fd.setFile(pc.label.replace(' ','_')+"-"+pc.objet.replace(' ','_')+".xml");
-//      fd.show();
-//      String dir = fd.getDirectory();
-//      String name =  fd.getFile();
-//      String s = (dir==null?"":dir)+(name==null?"":name);
-//      if( name==null ) return;
-//      File file = new File(s);
-//
-//      try {
-//         DataOutputStream out = new DataOutputStream(
-//            new BufferedOutputStream(new FileOutputStream(file)));
-//         a.writePlaneInVOTable(pc, out);
-//         out.close();
-//      }
-//      catch(IOException ioe) {Aladin.warning(this,"I/O error, could not export plane : "+ioe);}
-//
-//   }
+   //   private void exportAsVOT(PlanCatalog pc) {
+   //      FileDialog fd = new FileDialog(a.f,"Choose file",FileDialog.SAVE);
+   //      fd.setFile(pc.label.replace(' ','_')+"-"+pc.objet.replace(' ','_')+".xml");
+   //      fd.show();
+   //      String dir = fd.getDirectory();
+   //      String name =  fd.getFile();
+   //      String s = (dir==null?"":dir)+(name==null?"":name);
+   //      if( name==null ) return;
+   //      File file = new File(s);
+   //
+   //      try {
+   //         DataOutputStream out = new DataOutputStream(
+   //            new BufferedOutputStream(new FileOutputStream(file)));
+   //         a.writePlaneInVOTable(pc, out);
+   //         out.close();
+   //      }
+   //      catch(IOException ioe) {Aladin.warning(this,"I/O error, could not export plane : "+ioe);}
+   //
+   //   }
 
 
    Vector menuPlan=null;
@@ -374,7 +386,7 @@ public final class Select extends JComponent  implements
          canBeColl = canBeColl && pc.type==Plan.FOLDER;
          allCollapse = allCollapse && a.calque.isCollapsed(pc);
          canBeRef = a.calque.canBeRef(pc) && pc.ref==false
-                              && pc.flagOk;
+               && pc.flagOk;
       }
       canBeRef = canBeRef && menuPlan.size()==1;
 
@@ -402,66 +414,66 @@ public final class Select extends JComponent  implements
          AppMessagingInterface mMgr = a.getMessagingMgr();
 
          boolean canBroadcast = mMgr.isRegistered()
-                                 && (nbCatalog>0 || nbImg>0);;
+               && (nbCatalog>0 || nbImg>0);;
 
-         ArrayList<String> imgApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_FITS);
-         ArrayList<String> tabApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_VOT_FROM_URL);
-         menuBroadcast.setEnabled(canBroadcast && (tabApps.size()>0 || imgApps.size()>0));
-         menuBroadcastTable.setEnabled(canBroadcast&&nbCatalog>0 && tabApps.size()>0);
-         menuBroadcastImg.setEnabled(canBroadcast&&nbImg>0 && imgApps.size()>0);
+               ArrayList<String> imgApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_FITS);
+               ArrayList<String> tabApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_VOT_FROM_URL);
+               menuBroadcast.setEnabled(canBroadcast && (tabApps.size()>0 || imgApps.size()>0));
+               menuBroadcastTable.setEnabled(canBroadcast&&nbCatalog>0 && tabApps.size()>0);
+               menuBroadcastImg.setEnabled(canBroadcast&&nbImg>0 && imgApps.size()>0);
 
-         JMenuItem item;
+               JMenuItem item;
 
-         // pour envoi des catalogues sélectionnés
-         menuBroadcastTable.removeAll();
-         menuBroadcastTable.add(item = new JMenuItem(MALLAPPS));
-         item.setActionCommand(MBROADCASTTABLE);
-         item.addActionListener(this);
-         menuBroadcastTable.addSeparator();
-         if( tabApps!=null ) {
-         	for (String appName: tabApps) {
-         		menuBroadcastTable.add(item = new JMenuItem(appName));
-         		item.setActionCommand(MBROADCASTTABLE);
-                item.addActionListener(this);
-         	}
-         }
+               // pour envoi des catalogues sélectionnés
+               menuBroadcastTable.removeAll();
+               menuBroadcastTable.add(item = new JMenuItem(MALLAPPS));
+               item.setActionCommand(MBROADCASTTABLE);
+               item.addActionListener(this);
+               menuBroadcastTable.addSeparator();
+               if( tabApps!=null ) {
+                  for (String appName: tabApps) {
+                     menuBroadcastTable.add(item = new JMenuItem(appName));
+                     item.setActionCommand(MBROADCASTTABLE);
+                     item.addActionListener(this);
+                  }
+               }
 
-         // pour envoi des images sélectionnées
-         menuBroadcastImg.removeAll();
-         menuBroadcastImg.add(item = new JMenuItem(MALLAPPS));
-         item.setActionCommand(MBROADCASTIMAGE);
-         item.addActionListener(this);
-         menuBroadcastImg.addSeparator();
-         if( imgApps!=null ) {
-         	for (String appName: imgApps) {
-         		menuBroadcastImg.add(item = new JMenuItem(appName));
-         		item.setActionCommand(MBROADCASTIMAGE);
-                item.addActionListener(this);
-         	}
-         }
+               // pour envoi des images sélectionnées
+               menuBroadcastImg.removeAll();
+               menuBroadcastImg.add(item = new JMenuItem(MALLAPPS));
+               item.setActionCommand(MBROADCASTIMAGE);
+               item.addActionListener(this);
+               menuBroadcastImg.addSeparator();
+               if( imgApps!=null ) {
+                  for (String appName: imgApps) {
+                     menuBroadcastImg.add(item = new JMenuItem(appName));
+                     item.setActionCommand(MBROADCASTIMAGE);
+                     item.addActionListener(this);
+                  }
+               }
 
       }
       popMenu.show(this,x-15,y);
    }
 
-//  /** Retourne vrai si on est dans l'oeil.
-//   * @param x,y Position de la souris
-//   * @return <I>true</I> si on est dans l'oeil <I>false</I> sinon
-//   */
-//   protected boolean inEye(int x, int y) { return(x-gapL<eyeWidth && y<eyeHeight); }
+   //  /** Retourne vrai si on est dans l'oeil.
+   //   * @param x,y Position de la souris
+   //   * @return <I>true</I> si on est dans l'oeil <I>false</I> sinon
+   //   */
+   //   protected boolean inEye(int x, int y) { return(x-gapL<eyeWidth && y<eyeHeight); }
 
 
-  /** Generation si necessaire du message "Image in progress...".
-   * @param p le plan a attendre
-   * @return <I>true</I> si c'est pret <I>false</I> sinon
-   */
+   /** Generation si necessaire du message "Image in progress...".
+    * @param p le plan a attendre
+    * @return <I>true</I> si c'est pret <I>false</I> sinon
+    */
    protected boolean planOk(Plan p) {
       String s;
       if( p.type!=Plan.NO && p.type!=Plan.FILTER && !p.flagOk ) {
          if( p.error==null ) {
-//            if( p.isImage() ) s=WAITMIN+"\n \n"+((PlanImage)p).getStatus();
-//            else s=WAITMIN;
-//            Aladin.warning(s);
+            //            if( p.isImage() ) s=WAITMIN+"\n \n"+((PlanImage)p).getStatus();
+            //            else s=WAITMIN;
+            //            Aladin.warning(s);
 
             a.status.setText("*** "+WAITMIN+" ***");
          }
@@ -471,18 +483,18 @@ public final class Select extends JComponent  implements
    }
 
    boolean memoBoutonDroit = false;
-  /** Gestion de la souris */
+   /** Gestion de la souris */
    public void mousePressed(MouseEvent e) {
-       if( a.inHelp ) return;
+      if( a.inHelp ) return;
 
-       int x = e.getX();
-       int y = e.getY();
+      int x = e.getX();
+      int y = e.getY();
 
       // On va ouvrir le Popup sur le mouseUp()
       if( e.isPopupTrigger() ) {
-          // indispensable car sous MacOS, isPopupTrigger ne répond true que dans mousePressed, pas dans mouseReleased
-          memoBoutonDroit = true;
-          return;
+         // indispensable car sous MacOS, isPopupTrigger ne répond true que dans mousePressed, pas dans mouseReleased
+         memoBoutonDroit = true;
+         return;
       }
 
       // Fin du message d'accueil
@@ -490,13 +502,13 @@ public final class Select extends JComponent  implements
 
       // Juste pour faire plaisir à Seb
       if( a.calque.isFree() ) { a.dialog.show(); return; }
-      
-//      // Gestion de l'oeil (selection de tous les plans simultanement, ou avec
-//      if( inEye(x,y) ) {
-//         a.calque.clinDoeil();
-//         a.view.repaintAll();
-//         clinDoeil();
-//      }
+
+      //      // Gestion de l'oeil (selection de tous les plans simultanement, ou avec
+      //      if( inEye(x,y) ) {
+      //         a.calque.clinDoeil();
+      //         a.view.repaintAll();
+      //         clinDoeil();
+      //      }
 
       // Recherche du plan clique
       if( (currentPlan = getPlan(y))==null ) return;
@@ -506,11 +518,11 @@ public final class Select extends JComponent  implements
       oldy=y; oldx=x;
    }
 
-//   /** Pour faire un clin d'oeil */
-//   protected void clinDoeil() {
-//      clinDoeil=true;
-//      repaint();
-//   }
+   //   /** Pour faire un clin d'oeil */
+   //   protected void clinDoeil() {
+   //      clinDoeil=true;
+   //      repaint();
+   //   }
 
    /** Permet de déterminer si le plan peut devenir de référence
     * comme si l'utilisateur avait cliqué sur le petit triangle */
@@ -522,10 +534,10 @@ public final class Select extends JComponent  implements
 
    /** Détermine s'il s'agit d'un clic souris destiné à changer le plan de référence */
    protected boolean canBeNewRef(MouseEvent e, int x,Plan currentPlan) {
-//      if( e==null ) return false;
+      //      if( e==null ) return false;
       boolean shiftDown = e!=null && e.isShiftDown();
 
-//      System.out.println("Double clic: "+(e.getWhen()-lastClick)+"ms");
+      //      System.out.println("Double clic: "+(e.getWhen()-lastClick)+"ms");
 
       if( e!=null && e.getClickCount()==1 ) lastClick=e.getWhen();
 
@@ -540,14 +552,14 @@ public final class Select extends JComponent  implements
       if( currentPlan.type==Plan.FILTER
             || currentPlan instanceof PlanContour
             || currentPlan.type==Plan.FOLDER
-//            || currentPlan.type==Plan.CATALOG
+            //            || currentPlan.type==Plan.CATALOG
             || currentPlan.type==Plan.TOOL) return false;
 
       // Image sans astrométrie non encore pris comme référence
       if( !Projection.isOk(currentPlan.projd) && !currentPlan.hasXYorig && !currentPlan.ref ) return x<frMax;
 
       // Un double clic sur le logo, sur ca marche
-//      if( x>gapL && x<gapL+DX && e.getClickCount()>1 && e.getWhen()-lastClick<250) return true;
+      //      if( x>gapL && x<gapL+DX && e.getClickCount()>1 && e.getWhen()-lastClick<250) return true;
 
       // Un plan déjà pris en référence visible ne pourra être repris en référence
       if( currentPlan.isRefForVisibleView() ) return false;
@@ -561,7 +573,7 @@ public final class Select extends JComponent  implements
       if( x<gapL && currentPlan.type==Plan.ALLSKYIMG ) return true;
 
       // Cas d'un plan catalogue qui ne peut être projeté sur une image
-//      if( !currentPlan.isImage() && !currentPlan.isViewable() ) return x<frMax;
+      //      if( !currentPlan.isImage() && !currentPlan.isViewable() ) return x<frMax;
       if( currentPlan.isCatalog() && !currentPlan.isViewable() ) return x<frMax;
 
       // Cas d'un plan catalogue où l'on force la projection
@@ -573,10 +585,10 @@ public final class Select extends JComponent  implements
       return x<frMax;
    }
 
-  /** Deplacement (mode drag) de la souris.
-   * Uniquement utilise pour le deplacement d'un plan
-   * par rapport a un autre
-   */
+   /** Deplacement (mode drag) de la souris.
+    * Uniquement utilise pour le deplacement d'un plan
+    * par rapport a un autre
+    */
    public void mouseDragged(MouseEvent e) {
       if( a.inHelp ) return;
 
@@ -611,9 +623,9 @@ public final class Select extends JComponent  implements
          }
 
          if( flagDrag==VERTICAL ) {
-//System.out.println("Déplacement verticale "+dy);
+            //System.out.println("Déplacement verticale "+dy);
             if( oldSlide!=null  ) {
-//System.out.println("Restitution opacity du plan "+oldSlide.p.label);
+               //System.out.println("Restitution opacity du plan "+oldSlide.p.label);
                oldSlide.p.setOpacityLevel(oldTransp);
 
                if( oldSlide.p!=null ) Properties.majProp(oldSlide.p);
@@ -625,11 +637,11 @@ public final class Select extends JComponent  implements
             repaint();
 
          } else if( flagDrag==HORIZONTAL ) {
-//System.out.println("Déplacement horizontal "+dx);
+            //System.out.println("Déplacement horizontal "+dx);
             if( oldSlide==null ) {
                oldSlide=cSlide;
                oldTransp = oldSlide.p.getOpacityLevel();
-//System.out.println("Sélection opacity "+oldTransp+" du plan "+oldSlide.p.label);
+               //System.out.println("Sélection opacity "+oldTransp+" du plan "+oldSlide.p.label);
             }
             float t = (x-oldSlide.x1)/(float)(oldSlide.x2-oldSlide.x1);
 
@@ -639,7 +651,7 @@ public final class Select extends JComponent  implements
             // sinon changement de transparence pour tous les plans sélectionnés
             else setOpacityLevel(t);
 
-//System.out.println("Positionnement opacity "+t+" du plan "+oldSlide.p.label);
+            //System.out.println("Positionnement opacity "+t+" du plan "+oldSlide.p.label);
             a.view.repaintAll();
             repaint();
             if( oldSlide.p!=null ) Properties.majProp(oldSlide.p);
@@ -667,7 +679,7 @@ public final class Select extends JComponent  implements
    private float oldTransp;
 
    // Creation d'un folder qui va contenir tous les plans qui sont dans
-  // menuPlan
+   // menuPlan
    protected void insertFolder() {
       Enumeration e = a.calque.getSelectedPlanes().elements();
       Plan op = (Plan)e.nextElement();
@@ -680,26 +692,26 @@ public final class Select extends JComponent  implements
       }
    }
 
-  /** Creation d'un plan Folder juste au-dessus du plan p dans la pile */
+   /** Creation d'un plan Folder juste au-dessus du plan p dans la pile */
    protected Plan createFolder(Plan p) {
 
       Plan fp = a.calque.createFolder(p.objet,p.folder,false);
       a.calque.permute(fp,p);
       return fp;
 
-//      int i;
-//      for( i=0; i<a.calque.plan.length && a.calque.plan[i]!=p; i++);
-//      int n;
-//
-//      n=a.calque.newFolder(p.objet,p.folder,false);
-//      Plan fp = a.calque.plan[n];
-//      permute(n,i);
-//      return fp;
+      //      int i;
+      //      for( i=0; i<a.calque.plan.length && a.calque.plan[i]!=p; i++);
+      //      int n;
+      //
+      //      n=a.calque.newFolder(p.objet,p.folder,false);
+      //      Plan fp = a.calque.plan[n];
+      //      permute(n,i);
+      //      return fp;
    }
 
-  /** Mise a jour ou creation d'un folder avec les plans p1 et p2
-   * p2 peut etre doit etre du type folder
-   */
+   /** Mise a jour ou creation d'un folder avec les plans p1 et p2
+    * p2 peut etre doit etre du type folder
+    */
    protected void folder(Plan p1, Plan p2) {
       int i;
 
@@ -727,47 +739,52 @@ public final class Select extends JComponent  implements
    /** Tente de montrer/cacher le plan passer en paramètre (par exemple
     * lorsque l'utilisateur clique sur le logo */
    protected boolean switchShow(Plan p,boolean inCheckBox) {
+
+      // On accepte pas le clic à l'emplacement de la checkbox, si celle-ci n'eest pas
+      // dessinée, ou si elle est déjà validée
+      if( inCheckBox && (p.isRefForVisibleView() || !p.shouldHaveARefCheckBox()) ) return false;
+
       if( p.type==Plan.FILTER ) {
          p.setActivated(!p.active);
          ((PlanFilter)p).updateState();
       } else {
          if( !planOk(p) ) return false;
          if(  !inCheckBox || !a.view.tryToShow(p) )  {
-            
+
             boolean activeBefore = p.active;
             boolean isRefForVisibleView = p.isRefForVisibleView();
-         
+
             if( a.calque.isBackGround() && !p.isViewable() && !(p instanceof PlanBG) && a.view.syncPlan(p) ) {
-//               System.out.println("switchShow: Je synchronise sur l'image et je l'active");
+               //               System.out.println("switchShow: Je synchronise sur l'image et je l'active");
                boolean ok = p.setActivated(true);
                if( !activeBefore && !ok ) {
                   setCheckBoxBlinkPlan(p);
-//                  System.out.println("Impossible !");
+                  //                  System.out.println("Impossible !");
                } else if( ok && p.getOpacityLevel()<0.1f ) p.setOpacityLevel(1f);
             } else {
                if( p.getOpacityLevel()<0.1f && p.active && !isRefForVisibleView ) {
                   if( a.calque.isBackGround() && p.type==Plan.ALLSKYIMG ) {
-//                     System.out.println("switchShow: déjà activé mais transparence max => on indique que le slider est une meilleur idée");
+                     //                     System.out.println("switchShow: déjà activé mais transparence max => on indique que le slider est une meilleur idée");
                      p.startCheckBoxBlink();
                      a.calque.unSelectAllPlan();
                      p.selected=true;
                      setLastMessage(WARNINGSLIDER);
                      return true;
                   }
-//                  System.out.println("switchShow: déjà activé mais transparence max => je rends opaque");
+                  //                  System.out.println("switchShow: déjà activé mais transparence max => je rends opaque");
                   p.setOpacityLevel(1f);
                } else {
-//                  System.out.println("switchShow: j'inverse l'activation "+p.active+" => "+!p.active);
+                  //                  System.out.println("switchShow: j'inverse l'activation "+p.active+" => "+!p.active);
                   boolean ok = p.setActivated(!p.active);
                   if( p.active && p.getOpacityLevel()<0.1f && !isRefForVisibleView ) p.setOpacityLevel(1f);
                   if( !activeBefore && !ok ) {
                      setCheckBoxBlinkPlan(p);
-//                     System.out.println("Impossible !");
+                     //                     System.out.println("Impossible !");
                   }
                }
             }
-         
-//            p.setActivated(!p.active);
+
+            //            p.setActivated(!p.active);
             if( !p.active ) a.console.printCommand("hide "+Tok.quote(p.label));
             else a.console.printCommand("show "+Tok.quote(p.label));
          }
@@ -777,7 +794,7 @@ public final class Select extends JComponent  implements
       }
       return true;
    }
-   
+
    // Positionne toutes les checkboxes en mode blink des plans qui peuvent être utilisées pour afficher
    // en overlay le plan passé en paramètre, lui compris (=> changement de ref)
    private void setCheckBoxBlinkPlan(Plan p1) {
@@ -789,14 +806,14 @@ public final class Select extends JComponent  implements
       }
       setLastMessage(WARNING);
    }
-   
-   
+
+
    private String lastMessage="";
    protected void setLastMessage(String s) { lastMessage=s; }
    protected String getLastMessage() {
       return lastMessage;
    }
-   
+
    // Postionne le plan courant et met le repère en son centre si hors champs
    // => sinon problème par la suite en cas de zoom via le slider
    private boolean setPlanRef(Plan p) {
@@ -807,7 +824,7 @@ public final class Select extends JComponent  implements
       return rep;
    }
 
-  /** Gestion de la souris */
+   /** Gestion de la souris */
    public void mouseReleased(MouseEvent e) {
       Plan newPlan;
       this.x=e.getX(); this.y=e.getY();
@@ -838,19 +855,19 @@ public final class Select extends JComponent  implements
       if( flagDrag==VERTICAL ) {
          flagDrag=0;
          Slide s = getSousSlide(y);
-         
+
          if( s!=null ) {
             newPlan = s.getPlan();
-//       System.out.println("Je suis SOUS le slide du plan "+(newPlan!=null?newPlan.label:"null"));
+            //       System.out.println("Je suis SOUS le slide du plan "+(newPlan!=null?newPlan.label:"null"));
          }
-         
+
          // On est sans doute au-dessus de la pile
          else if( x>0 && x<getWidth() && y>0 && y<oldy ) {
             int n;
             for( n=0; a.calque.plan[n].type==Plan.NO; n++);
             if( n>0 ) n--;
             newPlan = a.calque.plan[n];
-//          System.out.println("Je suis sur le dessus de la pile");
+            //          System.out.println("Je suis sur le dessus de la pile");
          } else return;
 
          //Permutation des plans
@@ -874,7 +891,7 @@ public final class Select extends JComponent  implements
       currentPlan = p;
 
       Plan [] allPlan = a.calque.getPlans();
-      
+
       boolean itsDone=false;
 
       if( !canBeNewRef(e,x,p) ||  (!a.view.isMultiView() && p.ref)  ) newRef=null;
@@ -882,7 +899,7 @@ public final class Select extends JComponent  implements
 
       if( !itsDone && p.type!=Plan.NO ) {
          if( newRef!=null ) {
-//            boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
+            //            boolean recenter= a.calque.isBackGround() && p instanceof PlanBG;
             boolean recenter= p instanceof PlanBG;
             if( recenter && a.calque.setPlanRefOnSameTarget((PlanBG)p) || !recenter && setPlanRef(p) ) {
                a.view.newView();
@@ -898,7 +915,6 @@ public final class Select extends JComponent  implements
                switchActiveFolder(p);         // Le double clic est tjrs précédé d'un simple clic
             } else {
                if( !switchShow(p, s.inCheck(x) ) ) {
-                  System.out.println("switchShow returns false");
                   return;
                }
             }
@@ -968,7 +984,7 @@ public final class Select extends JComponent  implements
             }
          }
 
-          if( newRef!=null ) {
+         if( newRef!=null ) {
             if( a.calque.setPlanRef(p) ) {
                a.view.newView();
                a.console.printCommand("cview "+Tok.quote(p.label));
@@ -1008,11 +1024,11 @@ public final class Select extends JComponent  implements
 
       // Determine le nombre de plans collapses de meme niveau
       for( m=n=i=0; i<p.length; i++) {
-          if( p[i].folder==f.folder+1 ) {
-             m++;
-             if( p[i].collapse ) n++;
-          }
-       }
+         if( p[i].folder==f.folder+1 ) {
+            m++;
+            if( p[i].collapse ) n++;
+         }
+      }
 
       // Activation ou desactivation ?
       if( n==m ) flag=false;
@@ -1021,7 +1037,7 @@ public final class Select extends JComponent  implements
       // on active/desactive les plans du folder
       for( i=0; i<p.length; i++ ) {
          if( !flag ) {
-             if( p[i].folder==f.folder+1 ) p[i].collapse=p[i].selected=false;
+            if( p[i].folder==f.folder+1 ) p[i].collapse=p[i].selected=false;
          } else  {
             p[i].collapse=true;
          }
@@ -1037,13 +1053,13 @@ public final class Select extends JComponent  implements
 
       if( p==null  ) return;
 
-//      // Determine le nombre de plans actifs
-//      for( n=i=0; i<p.length; i++) if( p[i].active ) n++;
-//
-//      // Activation ou desactivation ?
-//      if( p.length==0 ) flag = !f.active;
-//      else if( n==p.length ) flag=false;
-//      else flag=true;
+      //      // Determine le nombre de plans actifs
+      //      for( n=i=0; i<p.length; i++) if( p[i].active ) n++;
+      //
+      //      // Activation ou desactivation ?
+      //      if( p.length==0 ) flag = !f.active;
+      //      else if( n==p.length ) flag=false;
+      //      else flag=true;
 
       // on active/desactive les plans du folder
       for( i=0; i<p.length; i++ ) p[i].setActivated(flag);
@@ -1051,13 +1067,13 @@ public final class Select extends JComponent  implements
       f.setActivated(flag);
    }
 
-//   VIEUX CODE
-//   /** Selection d'un plan particulier */
-//   protected void selectPlan(int i) {
-//      for( int j=0; j<a.calque.plan.length; j++ ) a.calque.plan[j].selected=false;
-//      a.calque.plan[i].selected=true;
-//
-//   }
+   //   VIEUX CODE
+   //   /** Selection d'un plan particulier */
+   //   protected void selectPlan(int i) {
+   //      for( int j=0; j<a.calque.plan.length; j++ ) a.calque.plan[j].selected=false;
+   //      a.calque.plan[i].selected=true;
+   //
+   //   }
 
    /** Indication du plan sous la souris et
     *  reaffichage des bordures des vues si nécessaire */
@@ -1072,39 +1088,39 @@ public final class Select extends JComponent  implements
    }
 
 
-//   private Slide oSlide=null;
+   //   private Slide oSlide=null;
 
-  /** Gestion de la souris */
+   /** Gestion de la souris */
    public void mouseMoved(MouseEvent e) {
       if( a.inHelp ) return;
 
       int x = e.getX();
       int y = e.getY();
-      
+
       Slide s = getSlide(y);
       Plan p = s==null?null:s.getPlan();
-      
+
       // Specification du plan sous la souris
       underMouse(p);
 
       planIn=null;
 
-//      if( inEye(x,y) )  {
-//         mouseIn=a.calque.getNbUsedPlans()>0; // implique l'affichage en vert
-//         handCursor();
-//         Util.toolTip(this,HEYE);
-//      } else mouseIn=false;
+      //      if( inEye(x,y) )  {
+      //         mouseIn=a.calque.getNbUsedPlans()>0; // implique l'affichage en vert
+      //         handCursor();
+      //         Util.toolTip(this,HEYE);
+      //      } else mouseIn=false;
 
       // Necessaire pour afficher les surlignages vert
       this.x=x;
       this.y=y;
 
-//      // Pour éviter de tout redessinner
-//      Graphics g = getGraphics();
-//      if( oSlide!=null && oSlide!=s ) oSlide.redraw(g, x, y);
-//      if( s!=null ) s.redraw(g,x,y);
-//      else repaint();
-//      oSlide=s;
+      //      // Pour éviter de tout redessinner
+      //      Graphics g = getGraphics();
+      //      if( oSlide!=null && oSlide!=s ) oSlide.redraw(g, x, y);
+      //      if( s!=null ) s.redraw(g,x,y);
+      //      else repaint();
+      //      oSlide=s;
       repaint();
 
       // Gestion des helps
@@ -1113,7 +1129,9 @@ public final class Select extends JComponent  implements
          if( s.inCheck(x) && s.p.hasCheckBox() && !p.ref ) { Util.toolTip(this,Util.fold(HSTACK0,25,true)); return; }
          else if( s.inLogo(x) ) { Util.toolTip(this,Util.fold(HSTACK,25,true)); return; }
       }
-      Util.toolTip(this,p==null ? null : Util.fold(p.getInfo(),30,true));
+
+      if( s!=null && s.inBall(x)) Util.toolTip(this,Util.fold(p.getStackStatus(),25,true));
+      else Util.toolTip(this,p==null ? null : Util.fold(p.getInfo(),30,true));
 
       // Infos sur les plans
       if( p==null ) { defaultCursor(); return; }
@@ -1143,10 +1161,10 @@ public final class Select extends JComponent  implements
    private void setInfo(Plan p) {
       String s = p.getInfo();
       a.status.setText(s);
-//      Util.toolTip(this,s);
+      //      Util.toolTip(this,s);
    }
 
-  /** Gestion de la souris */
+   /** Gestion de la souris */
    public void mouseExited(MouseEvent e) {
       a.calque.unSelectUnderMouse();
       a.view.resetBorder();
@@ -1155,20 +1173,20 @@ public final class Select extends JComponent  implements
 
       // Peut etre s'agit-il d'un MegaDrag ?
       if( a.view.isMegaDrag() ) { flagDrag=0;
-          Aladin.makeCursor(a, Aladin.PLANCURSOR);
+      Aladin.makeCursor(a, Aladin.PLANCURSOR);
       }
 
       // Effacement des surcharges vertes eventuelles
-//      mouseIn=false;
+      //      mouseIn=false;
       x=y=-1;
       a.view.repaintAll();
       repaint();
    }
-   
-  /** Retourne le slide juste au-dessus en fonction de l'ordonnee y
-   * @param y Ordonnee de la souris
-   * @return le slide concerne, null si aucun
-   */
+
+   /** Retourne le slide juste au-dessus en fonction de l'ordonnee y
+    * @param y Ordonnee de la souris
+    * @return le slide concerne, null si aucun
+    */
    protected Slide getSousSlide(int y) {
       if( slides==null ) return null;
       Enumeration e = slides.elements();
@@ -1179,10 +1197,10 @@ public final class Select extends JComponent  implements
       return null;
    }
 
-  /** Retourne le slide en fonction de l'ordonnee y
-   * @param y Ordonnee de la souris
-   * @return le slide concerne, null si aucun
-   */
+   /** Retourne le slide en fonction de l'ordonnee y
+    * @param y Ordonnee de la souris
+    * @return le slide concerne, null si aucun
+    */
    protected Slide getSlide(int y) {
       if( slides==null ) return null;
       Enumeration e = slides.elements();
@@ -1193,23 +1211,23 @@ public final class Select extends JComponent  implements
       return null;
    }
 
-  /** Retourne le plan en fonction de l'ordonnee y
-   * @param y Ordonnee de la souris
-   * @return le slide concerne, null si aucun
-   */
+   /** Retourne le plan en fonction de l'ordonnee y
+    * @param y Ordonnee de la souris
+    * @return le slide concerne, null si aucun
+    */
    protected Plan getPlan(int y) {
       Slide s = getSlide(y);
       return s==null?null:s.getPlan();
-   }   
- 
+   }
+
    boolean beginnerHelp=true;
-   
+
    protected void setBeginnerHelp(boolean flag) { beginnerHelp=flag; }
-   
+
    int lastBegin=-1;
    int lastYMax;  // Dernière ordonnée mesurée de la fin de la pile
-   
-   /** Affichage d'un message au-dessus de la pile des plans 
+
+   /** Affichage d'un message au-dessus de la pile des plans
     * => arrête automatique les messages pour les débutants */
    protected void drawMessage(Graphics g,String s,Color c) {
       setBeginnerHelp(false);
@@ -1220,55 +1238,55 @@ public final class Select extends JComponent  implements
    private void drawBeginnerHelp(Graphics g,int nbVisiblePlan,int yMax) {
       if( BEGIN==null ) {
          BEGIN = new String[6];
-         for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i); 
+         for( int i=1; i<BEGIN.length; i++ ) BEGIN[i] = a.chaine.getString("BEGIN"+i);
       }
       int begin = nbVisiblePlan+1;
-      
+
       // Pour n'afficher qu'une fois le même message
       if( lastBegin!=-1 && lastBegin!=begin ) BEGIN[lastBegin]=null;
       String s = BEGIN[begin];
       lastBegin=begin;
       if( s==null ) return;
       int y= drawBeginnerHelp1(g,s,Aladin.MYBLUE,yMax);
-//      drawControlHelp(g,y);
+      //      drawControlHelp(g,y);
    }
-   
-//   private void drawControlHelp(Graphics g,int y) {
-//      drawCross(g,Color.red.darker(),145,20);
-//      drawArrow(g,Color.lightGray,130,y-10,-1);
-//      drawArrow(g,Color.gray,142,y-10,1);
-//   }
-//   
-//   static private final int X = 6;
-//   private void drawCross(Graphics g, Color c, int x, int y) {
-//    g.setColor(c);
-//      g.setColor( Color.red.darker() );
-//      g.drawLine(x,y,x+X,y+X);
-//      g.drawLine(x+1,y,x+X+1,y+X);
-//      g.drawLine(x+2,y,x+X+2,y+X);
-//      g.drawLine(x+X,y,x,y+X);
-//      g.drawLine(x+X+1,y,x+1,y+X);
-//      g.drawLine(x+X+2,y,x+2,y+X);
-////      cross = new Rectangle(x,y,X,X);
-//   }
-//   
-//   private void drawArrow(Graphics g, Color c, int x, int y,int sens) {
-//      int h=4;
-//      int w=8;
-//      g.setColor(c);
-//      g.fillRect(x, y, w, h);
-//      if( sens==1 ) {
-//         g.drawLine(x+w-3,y-2,x+w-3,y+h+2);
-//         g.drawLine(x+w-2,y-1,x+w-2,y+h+1);
-//         g.drawLine(x+w,y+h/2,x+w,y+h/2);
-//      } else {
-//         g.drawLine(x+2,y-2,x+2,y+h+2);
-//         g.drawLine(x+1,y-1,x+1,y+h+1);
-//         g.drawLine(x-1,y+h/2,x-1,y+h/2);
-//      }
-//   }
-                                             
-      
+
+   //   private void drawControlHelp(Graphics g,int y) {
+   //      drawCross(g,Color.red.darker(),145,20);
+   //      drawArrow(g,Color.lightGray,130,y-10,-1);
+   //      drawArrow(g,Color.gray,142,y-10,1);
+   //   }
+   //
+   //   static private final int X = 6;
+   //   private void drawCross(Graphics g, Color c, int x, int y) {
+   //    g.setColor(c);
+   //      g.setColor( Color.red.darker() );
+   //      g.drawLine(x,y,x+X,y+X);
+   //      g.drawLine(x+1,y,x+X+1,y+X);
+   //      g.drawLine(x+2,y,x+X+2,y+X);
+   //      g.drawLine(x+X,y,x,y+X);
+   //      g.drawLine(x+X+1,y,x+1,y+X);
+   //      g.drawLine(x+X+2,y,x+2,y+X);
+   ////      cross = new Rectangle(x,y,X,X);
+   //   }
+   //
+   //   private void drawArrow(Graphics g, Color c, int x, int y,int sens) {
+   //      int h=4;
+   //      int w=8;
+   //      g.setColor(c);
+   //      g.fillRect(x, y, w, h);
+   //      if( sens==1 ) {
+   //         g.drawLine(x+w-3,y-2,x+w-3,y+h+2);
+   //         g.drawLine(x+w-2,y-1,x+w-2,y+h+1);
+   //         g.drawLine(x+w,y+h/2,x+w,y+h/2);
+   //      } else {
+   //         g.drawLine(x+2,y-2,x+2,y+h+2);
+   //         g.drawLine(x+1,y-1,x+1,y+h+1);
+   //         g.drawLine(x-1,y+h/2,x-1,y+h/2);
+   //      }
+   //   }
+
+
    private int drawBeginnerHelp1(Graphics g,String s,Color c,int yMax) {
       int xMax=getWidth();
       g.setColor(c);
@@ -1301,123 +1319,123 @@ public final class Select extends JComponent  implements
          }
          if( first ) { first=false; g.setFont(Aladin.PLAIN); }
       }
-      
+
       // Bordure en marge gauche si on a écrit au-moins une ligne
       if( !first ) {
          g.setColor( Color.lightGray );
          g.drawLine(2,y0-10,2,y);
       }
-      
+
       return y;
    }
-   
+
    private void drawString(Graphics g,String s,int x, int y) {
       if( s.length()==0 ) return;
       if( s.charAt(0)=='*' ) { Util.drawCircle5(g, x+2, y-4); g.drawString(s.substring(1),x+7,y); }
       else g.drawString(s,x,y);
    }
-   
-//   long timeTips=0L;
-//   String tip=null;
-//   void drawTipHelp(Graphics g) {
-//      long t = System.currentTimeMillis();
-//      if( t-timeTips>5000 ) {
-//         tip = ((Tips)a.urlStatus).getNextTips();
-//         timeTips=t;
-//      }
-//      drawBeginnerHelp(g,tip);
-//   }
 
-//   // Dessin de l'oeil
-//   void drawEye(Graphics g,boolean open) {
-//      if( Aladin.NEWLOOK_V7 ) return;
-////      Color c = eyeInGreen?Aladin.GREEN:Color.black;
-//
-//      Color c = a.calque.isFree() ? Color.gray : mouseIn ? Aladin.MYBLUE : Color.black;
-//      if( firstEye ) {
-//         int i;
-//         int gap=gapL-2;
-//         for( i=0; i<o1x.length; i++ ) o1x[i]+=gap;
-//         for( i=0; i<o2x.length; i++ ) o2x[i]+=gap;
-//         for( i=0; i<o3x.length; i++ ) o3x[i]+=gap;
-//         o4xc+=gap;
-//         firstEye=false;
-//      }
-//      g.setColor(c);
-//      g.fillPolygon(o1x,o1y,o1x.length);
-//      g.fillPolygon(o2x,o2y,o2x.length);
-//      if( open ) {
-//         g.setColor( a.calque.isFree() ? Aladin.LBLUE : !Aladin.NETWORK ? Color.red : Color.white );
-//         g.fillPolygon(o3x,o3y,o3x.length);
-//         g.setColor( c);
-//         g.fillOval(o4xc,o4yc,o4d,o4d);
-//         g.setColor( Color.white );
-//         int x = o4xc+o4d/2+1;
-//         int y = o4yc+o4d/2+1;
-//         g.drawLine(x+1,y-1,x+2,y-1);
-//         g.drawLine(x+2,y-2,x+2,y-2);
-////         g.fillOval(o4xc+(2*o4d)/3,o4yc+o4d/3,2,3);
-//      }
-//   }
+   //   long timeTips=0L;
+   //   String tip=null;
+   //   void drawTipHelp(Graphics g) {
+   //      long t = System.currentTimeMillis();
+   //      if( t-timeTips>5000 ) {
+   //         tip = ((Tips)a.urlStatus).getNextTips();
+   //         timeTips=t;
+   //      }
+   //      drawBeginnerHelp(g,tip);
+   //   }
 
-//   static final int eyeO [][]
-//       = { {0, 13,23 },
-//           {1, 9,26},
-//           {2, 7,28},
-//           {3, 5,11}, {3, 16,21}, {3,27,30},
-//           {4, 3,8}, {4, 17,22}, {4,29,32},
-//           {5, 2,6}, {5, 18,23}, {5,31,33},
-//           {6, 1,4}, {6, 13,14}, {6, 18,23}, {6, 32,35},
-//           {7, 0,3}, {7, 13,23}, {7, 33,35},
-//           {8, 1,2}, {8, 13,23}, {8, 33,34},
-//           {9, 2,2}, {9, 13,23}, {9, 33,33},
-//           {10, 3,4}, {10, 14,22}, {10,31,32},
-//           {11, 5,6}, {11, 15,21}, {11,29,30},
-//           {12, 7,8}, {12, 16,20}, {12,27,28},
-//           {13, 9,11}, {13, 24,26},
-//           {14, 12,23}
-//   };
-//
-//   static final int eyeC [][]
-//                            = { {0, 13,23 },
-//                                {1, 9,26},
-//                                {2, 7,28},
-//                                {3, 5,30},
-//                                {4, 3,32},
-//                                {5, 2,33},
-//                                {6, 1,35},
-//                                {7, 0,35},
-//                                {8, 1,34},
-//                                {9, 2,33},
-//                                {10, 3,32},
-//                                {11, 5,30},
-//                                {12, 7,28},
-//                                {13, 9,26},
-//                                {14, 12,23}
-//                        };
-//   // Dessin de l'oeil
-//   void drawEye(Graphics g,boolean open) {
-//      int x=gapL-2, y=10;
-//      int [][] e ;
-//
-//      if( !this.a.calque.isFree() ) {
-//         g.setColor(!Aladin.NETWORK ? Color.red : Color.white);
-//         e = eyeC;
-//         for( int i=0; i<e.length; i++ ) {
-//            int [] a = e[i];
-//            int y1 = y+a[0];
-//            g.drawLine(x+a[1],y1,x+a[2],y1);
-//         }
-//      }
-//
-//      g.setColor(this.a.calque.isFree() ? Color.gray : mouseIn ? Aladin.MYBLUE : Color.black);
-//      e = open ? eyeO : eyeC;
-//      for( int i=0; i<e.length; i++ ) {
-//         int [] a = e[i];
-//         int y1 = y+a[0];
-//         g.drawLine(x+a[1],y1,x+a[2],y1);
-//      }
-//   }
+   //   // Dessin de l'oeil
+   //   void drawEye(Graphics g,boolean open) {
+   //      if( Aladin.NEWLOOK_V7 ) return;
+   ////      Color c = eyeInGreen?Aladin.GREEN:Color.black;
+   //
+   //      Color c = a.calque.isFree() ? Color.gray : mouseIn ? Aladin.MYBLUE : Color.black;
+   //      if( firstEye ) {
+   //         int i;
+   //         int gap=gapL-2;
+   //         for( i=0; i<o1x.length; i++ ) o1x[i]+=gap;
+   //         for( i=0; i<o2x.length; i++ ) o2x[i]+=gap;
+   //         for( i=0; i<o3x.length; i++ ) o3x[i]+=gap;
+   //         o4xc+=gap;
+   //         firstEye=false;
+   //      }
+   //      g.setColor(c);
+   //      g.fillPolygon(o1x,o1y,o1x.length);
+   //      g.fillPolygon(o2x,o2y,o2x.length);
+   //      if( open ) {
+   //         g.setColor( a.calque.isFree() ? Aladin.LBLUE : !Aladin.NETWORK ? Color.red : Color.white );
+   //         g.fillPolygon(o3x,o3y,o3x.length);
+   //         g.setColor( c);
+   //         g.fillOval(o4xc,o4yc,o4d,o4d);
+   //         g.setColor( Color.white );
+   //         int x = o4xc+o4d/2+1;
+   //         int y = o4yc+o4d/2+1;
+   //         g.drawLine(x+1,y-1,x+2,y-1);
+   //         g.drawLine(x+2,y-2,x+2,y-2);
+   ////         g.fillOval(o4xc+(2*o4d)/3,o4yc+o4d/3,2,3);
+   //      }
+   //   }
+
+   //   static final int eyeO [][]
+   //       = { {0, 13,23 },
+   //           {1, 9,26},
+   //           {2, 7,28},
+   //           {3, 5,11}, {3, 16,21}, {3,27,30},
+   //           {4, 3,8}, {4, 17,22}, {4,29,32},
+   //           {5, 2,6}, {5, 18,23}, {5,31,33},
+   //           {6, 1,4}, {6, 13,14}, {6, 18,23}, {6, 32,35},
+   //           {7, 0,3}, {7, 13,23}, {7, 33,35},
+   //           {8, 1,2}, {8, 13,23}, {8, 33,34},
+   //           {9, 2,2}, {9, 13,23}, {9, 33,33},
+   //           {10, 3,4}, {10, 14,22}, {10,31,32},
+   //           {11, 5,6}, {11, 15,21}, {11,29,30},
+   //           {12, 7,8}, {12, 16,20}, {12,27,28},
+   //           {13, 9,11}, {13, 24,26},
+   //           {14, 12,23}
+   //   };
+   //
+   //   static final int eyeC [][]
+   //                            = { {0, 13,23 },
+   //                                {1, 9,26},
+   //                                {2, 7,28},
+   //                                {3, 5,30},
+   //                                {4, 3,32},
+   //                                {5, 2,33},
+   //                                {6, 1,35},
+   //                                {7, 0,35},
+   //                                {8, 1,34},
+   //                                {9, 2,33},
+   //                                {10, 3,32},
+   //                                {11, 5,30},
+   //                                {12, 7,28},
+   //                                {13, 9,26},
+   //                                {14, 12,23}
+   //                        };
+   //   // Dessin de l'oeil
+   //   void drawEye(Graphics g,boolean open) {
+   //      int x=gapL-2, y=10;
+   //      int [][] e ;
+   //
+   //      if( !this.a.calque.isFree() ) {
+   //         g.setColor(!Aladin.NETWORK ? Color.red : Color.white);
+   //         e = eyeC;
+   //         for( int i=0; i<e.length; i++ ) {
+   //            int [] a = e[i];
+   //            int y1 = y+a[0];
+   //            g.drawLine(x+a[1],y1,x+a[2],y1);
+   //         }
+   //      }
+   //
+   //      g.setColor(this.a.calque.isFree() ? Color.gray : mouseIn ? Aladin.MYBLUE : Color.black);
+   //      e = open ? eyeO : eyeC;
+   //      for( int i=0; i<e.length; i++ ) {
+   //         int [] a = e[i];
+   //         int y1 = y+a[0];
+   //         g.drawLine(x+a[1],y1,x+a[2],y1);
+   //      }
+   //   }
 
 
    // Dessin du logo entrain d'etre deplace
@@ -1426,49 +1444,49 @@ public final class Select extends JComponent  implements
       Slide s = new Slide(a,cSlide.p);
       s.mode=cSlide.mode;
       if( x>=0 ) s.dragDraw(g,x,y);
-      }
+   }
 
-//   // Ecrit le nom de l'objet central du plan de reference
-//   // a cote de l'oeil
-//   void writeTitle(Graphics g) {
-//      if( Aladin.NEWLOOK_V7 ) return;
-//      Plan p =a.calque.getPlanRef();
-//      if( p==null || p.objet==null || p.flagOk==false ) return;
-//      g.setFont( Aladin.LBOLD );
-//      g.setColor( Color.black );
-//      FontMetrics m = g.getFontMetrics(Aladin.LBOLD);
-//      int largeur = ws-(gapL+eyeWidth);
-//      int stext = m.stringWidth(p.objet);
-//      if( stext>largeur ) {
-//         g.setFont( Aladin.ITALIC );
-//         m = g.getFontMetrics(Aladin.BOLD);
-//         stext = m.stringWidth(p.objet);
-//      }
-//      if( stext>sizeLabel) return;
-//      int xo = (gapL+eyeWidth+ws)/2-stext/2;
-//      g.drawString( p.objet, xo , eyeHeight-5);
-//   }
+   //   // Ecrit le nom de l'objet central du plan de reference
+   //   // a cote de l'oeil
+   //   void writeTitle(Graphics g) {
+   //      if( Aladin.NEWLOOK_V7 ) return;
+   //      Plan p =a.calque.getPlanRef();
+   //      if( p==null || p.objet==null || p.flagOk==false ) return;
+   //      g.setFont( Aladin.LBOLD );
+   //      g.setColor( Color.black );
+   //      FontMetrics m = g.getFontMetrics(Aladin.LBOLD);
+   //      int largeur = ws-(gapL+eyeWidth);
+   //      int stext = m.stringWidth(p.objet);
+   //      if( stext>largeur ) {
+   //         g.setFont( Aladin.ITALIC );
+   //         m = g.getFontMetrics(Aladin.BOLD);
+   //         stext = m.stringWidth(p.objet);
+   //      }
+   //      if( stext>sizeLabel) return;
+   //      int xo = (gapL+eyeWidth+ws)/2-stext/2;
+   //      g.drawString( p.objet, xo , eyeHeight-5);
+   //   }
 
-//   protected int getFirstVisible() {
-//      int j;
-//      int y=hs-22;
-//      for( j = a.calque.scroll.getLastVisiblePlan(); j>=0 && y>eyeHeight; j-- ) {
-//         if( a.calque.plan[j].collapse ) continue;
-//         y -= Slide.DY;
-//      }
-//      return(j+1);
-//   }
+   //   protected int getFirstVisible() {
+   //      int j;
+   //      int y=hs-22;
+   //      for( j = a.calque.scroll.getLastVisiblePlan(); j>=0 && y>eyeHeight; j-- ) {
+   //         if( a.calque.plan[j].collapse ) continue;
+   //         y -= Slide.DY;
+   //      }
+   //      return(j+1);
+   //   }
 
    /** Si nécessaire décale la scrollbar du select pour montrer le "slide"
     * correspondant au plan de base */
    protected void showSelectedPlan() {
       int n = a.calque.getFirstSelected();
-//      int n = a.calque.getIndexPlanBase();
+      //      int n = a.calque.getIndexPlanBase();
       int lastPlan = a.calque.scroll.getLastVisiblePlan();
       int firstPlan = a.calque.scroll.getFirstVisiblePlan();
       int nb = a.calque.scroll.getNbVisiblePlan();
       if( lastPlan<0 || firstPlan<0 || n<0 ) return;
-//      int nb = lastPlan-firstPlan;
+      //      int nb = lastPlan-firstPlan;
       if( n<firstPlan ) a.calque.scroll.setValue(n+nb);
       else if( n>lastPlan ) a.calque.scroll.setValue(n);
    }
@@ -1476,12 +1494,12 @@ public final class Select extends JComponent  implements
    private boolean firstUpdate=true;
 
    public void paintComponent(Graphics g) {
-      
+
       if( a.calque.scrollAdjustement() ) {
          repaint();
          return;
       }
-      
+
       // Pas très joli
       if( a.calque.zoom.opacitySlider!=null ) a.calque.zoom.opacitySlider.repaint();
       if( a.calque.zoom.sizeSlider!=null )    a.calque.zoom.sizeSlider.repaint();
@@ -1489,7 +1507,7 @@ public final class Select extends JComponent  implements
       if( a.calque.zoom.epochSlider!=null )   a.calque.zoom.epochSlider.repaint();
       if( a.calque.zoom.cubeSlider!=null )    a.calque.zoom.cubeSlider.repaint();
       if( a.calque.zoom.densitySlider!=null ) a.calque.zoom.densitySlider.repaint();
-      
+
       // Positionnement du curseur apres le demarrage d'Aladin
       if( firstUpdate ) {
          Aladin.makeCursor(a,Aladin.DEFAULTCURSOR);
@@ -1506,11 +1524,11 @@ public final class Select extends JComponent  implements
       g.fillRect(0,0,ws,hs);
 
       // Le pourtour
-//      Util.drawEdge(g,ws,hs);
+      //      Util.drawEdge(g,ws,hs);
 
       // Le clip Rect pour ne pas depasser
       g.clipRect(2,2,ws-3,hs-3);
-      
+
       // AntiAliasing
       a.setAliasing(g);
 
@@ -1547,14 +1565,14 @@ public final class Select extends JComponent  implements
       }
       a.calque.scroll.setFirstVisiblePlan(j+1);
       a.calque.scroll.setNbVisiblePlan(nbPlanVisible);
-      a.calque.scroll.setRequired(y<0 || a.calque.scroll.getLastVisiblePlan()!=plan.length-1);
-      
+      a.calque.scroll.setRequired( (y<0 || a.calque.scroll.getLastVisiblePlan()!=plan.length-1)) ;
+
       // Dans le cas d'un deplacement de plan
       if( flagDrag==VERTICAL ) moveLogo(g);
 
       lastYMax = y;
       if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
-      
+
       long t = System.currentTimeMillis();
       if( t-300>ot ) {
          ot=t;
@@ -1592,7 +1610,7 @@ public final class Select extends JComponent  implements
       //Clignotement des voyants si besoin
       if( slideBlink ) startBlink();
    }
-   
+
    private long ot=0;
 
    private boolean slideBlink=false;
@@ -1603,35 +1621,35 @@ public final class Select extends JComponent  implements
    private boolean flagThreadBlink=false;
    synchronized void setFlagThreadBlink(boolean a) { flagThreadBlink = a; }
 
-  // Gestion du blinking d'une source par thread (pour supporter JVM 1.4)
+   // Gestion du blinking d'une source par thread (pour supporter JVM 1.4)
    private void startBlink() {
       if( !slideBlink ) return;
       if( flagThreadBlink ) {
-//System.out.println("blink thread already running ");
+         //System.out.println("blink thread already running ");
          return;
       }
       thread = new Thread(this,"AladinSelectBlink");
-//System.out.println("launch blink thread "+thread);
+      //System.out.println("launch blink thread "+thread);
       Util.decreasePriority(Thread.currentThread(), thread);
       setFlagThreadBlink(true);
       thread.start();
    }
 
-  // Gestion du Blinking 0.5 secondes
+   // Gestion du Blinking 0.5 secondes
    public void run() {
       while( flagThreadBlink && slideBlink ) {
-//System.out.println("blink thread (slideBlink="+slideBlink+") j'attends 0.5 sec "+thread);
+         //System.out.println("blink thread (slideBlink="+slideBlink+") j'attends 0.5 sec "+thread);
          Util.pause(500);
          Slide.blinkState=!Slide.blinkState;
          repaint();
       }
       setFlagThreadBlink(false);
-//System.out.println("fin du thread du blink "+thread);
+      //System.out.println("fin du thread du blink "+thread);
       repaint();
    }
 
    /** Gestion du Help */
-    protected String Help() { return a.chaine.getString("Select.HELP"); }
+   protected String Help() { return a.chaine.getString("Select.HELP"); }
 
    // implémentation de WidgetFinder
 
@@ -1639,32 +1657,32 @@ public final class Select extends JComponent  implements
     *
     */
    public boolean findWidget(String name) {
-       if( name.startsWith("ref") ) name = name.substring(3);
-       return a.command.getNumber(name,1,false,false)!=null;
+      if( name.startsWith("ref") ) name = name.substring(3);
+      return a.command.getNumber(name,1,false,false)!=null;
    }
 
    public Point getWidgetLocation(String name) {
-       boolean ref = false;
-       if( name.startsWith("ref") ) {
-           ref = true;
-           name = name.substring(3);
-       }
+      boolean ref = false;
+      if( name.startsWith("ref") ) {
+         ref = true;
+         name = name.substring(3);
+      }
 
-       Plan plan = a.command.getNumber(name,1,false,false);
-       int idx = plan==null ? 0 : a.calque.getIndex(plan);
-       int oyShift = hs-(a.calque.plan.length-idx)*Slide.DY;
-       // pour tenir compte de la scrollbar
-       int yShift = oyShift+(a.calque.maxPlan-a.calque.scroll.getValue()-1)*Slide.DY;
+      Plan plan = a.command.getNumber(name,1,false,false);
+      int idx = plan==null ? 0 : a.calque.getIndex(plan);
+      int oyShift = hs-(a.calque.plan.length-idx)*Slide.DY;
+      // pour tenir compte de la scrollbar
+      int yShift = oyShift+(a.calque.maxPlan-a.calque.scroll.getValue()-1)*Slide.DY;
 
-       // dans ce cas, on va agir sur la scrollbar
-       if( yShift<0/*eyeHeight*/ || yShift>hs ) {
-          a.calque.scroll.setValue(idx);
-          yShift = oyShift+(a.calque.maxPlan-idx-1)*Slide.DY;
+      // dans ce cas, on va agir sur la scrollbar
+      if( yShift<0/*eyeHeight*/ || yShift>hs ) {
+         a.calque.scroll.setValue(idx);
+         yShift = oyShift+(a.calque.maxPlan-idx-1)*Slide.DY;
 
-          validate();
-          repaint();
-       }
-       return new Point(ref?2:gapL+DX/2,yShift);
+         validate();
+         repaint();
+      }
+      return new Point(ref?2:gapL+DX/2,yShift);
    }
 
    public void mouseClicked(MouseEvent e) { }
@@ -1676,6 +1694,24 @@ public final class Select extends JComponent  implements
    public void adjustmentValueChanged(AdjustmentEvent e) {
       repaint();
    }
+
+   private WidgetControl voc=null;
+
+   @Override
+   public WidgetControl getWidgetControl() { return voc; }
+
+   @Override
+   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+      voc = new WidgetControl(this,x,y,width,height,opacity,parent);
+      voc.setResizable(true);
+   }
+
+
+   @Override
+   public void paintCollapsed(Graphics g) {
+      Tool.drawVOStack(g, 0, 0);
+   }
+
 
 }
 

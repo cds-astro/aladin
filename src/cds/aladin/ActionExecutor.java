@@ -115,7 +115,7 @@ public class ActionExecutor implements Runnable {
         if( dotIndex>=0 ) singleName = comp.substring(dotIndex+1);
         singleName = ScriptFactory.decode(singleName);
         try {
-           if( cr.isHomeMade(singleName, c) ) location = cl.getLocation(singleName, (WidgetFinder)c);
+           if( cr.isHomeMade(singleName, c) ) location = cl.getLocation(singleName, (SwingWidgetFinder)c);
            else location = cl.getLocation(c);
         } catch( Exception e ) { location = cl.getLocation(c); }
 

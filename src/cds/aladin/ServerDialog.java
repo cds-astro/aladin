@@ -45,7 +45,7 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  */
 public final class ServerDialog extends JFrame
-implements WidgetFinder, Runnable, ActionListener,
+implements SwingWidgetFinder, Runnable, ActionListener,
 DropTargetListener, DragSourceListener, DragGestureListener {
    static final int MAXSERVER = 10;
 

@@ -120,7 +120,7 @@ public class PlanImage extends Plan {
    public int typeCM;			  // memorise la table des couleurs (CMGRAY ou CMBB ou CMA)
    public int cmControl[];	      // Valeurs de controle de la table des couleurs
    public int transfertFct;           // Fonction de transfert (LINEAR,LOG,SQR...)
-   protected double hist[],histA[];   // Histogrammes des pixels (voir ColorMap)
+   protected double hist[]=new double[256]; // Histogrammes des pixels (voir ColorMap)
    protected boolean flagHist;        // true si on dispose de l'histogramme des pixels à jour
    protected int width;				  // largeur de l'image
    protected int height;			  // hauteur de l'image
@@ -765,14 +765,55 @@ public class PlanImage extends Plan {
          res.equalsIgnoreCase("PLATE")?PLATE:res.equalsIgnoreCase("STAND")?STAND:UNDEF;
    }
 
-   /** Supprime la mémorisation des histogramme de pixels (voir ColorMap) */
-   protected void freeHist() { hist=histA = null; }
+   /** Reset de l'histogramme */
+   protected void resetHist() { histID++; }
 
-   /** Indique que l'histogramme des pixels n'est plus à jour */
-   protected void histOk(boolean flag) { flagHist=flag; }
+   /** Retourne le tableau des pixels servants à l'histogramme */
+   protected byte [] getPixelHist(int rgb) { return pixels; }
 
-   /** Retourne true si on dispose de l'histogramme des pixels à jour */
-   protected boolean hasHist() { return !(hist==null || !flagHist); };
+   /** retourne le tableau de l'histogramme avant initialisation */
+   protected double [] getHistArray(int rgb) { return hist; }
+
+   protected int histID = 0;  // Identificateur de l'histogramme
+   protected int[] lastHistID = new int[]{-1,-1,-1};  // ID du dernier histogramme généré
+
+   protected long getHistID() { return histID; }
+
+   /** Retourne l'histogramme des pixels, le génère si nécessaire */
+   protected double [] getHist(int rgb) {
+      double max=0;       // Maximum de l'histogramme pour un changt d'echelle
+      double hist[] = getHistArray(rgb);
+
+      if( histID!=lastHistID[ rgb<0 ? 0 : rgb ] ) {
+         lastHistID[ rgb<0 ? 0 : rgb ] = histID;
+         double [] histA = new double[hist.length];
+
+         byte pixels []= getPixelHist(rgb);
+         if( pixels==null ) return hist;
+
+         for( int i=0; i<pixels.length; i++ ) {
+            int pix = (pixels[i])&0xFF;
+            double c=histA[pix]++;
+            if( c>max ) max=c;
+         }
+
+         // passage au log
+         max = Math.log(max+1);
+         for( int i=0; i<hist.length; i++ ) {
+            hist[i] = (i>0 && histA[i]==0)?0:Math.log( histA[i]+1 );
+         }
+
+         // Mise a l'echelle des histogrammes
+         max+=max/5;
+         double total=pixels.length;
+         for( int i=0; i<hist.length; i++ ) {
+            hist[i] =  (hist[i]*CanvasColorMap.Hp)/max;
+            histA[i]=histA[i]/total;
+         }
+      }
+
+      return hist;
+   }
 
    protected void setPourcent(double x) {
       if( forPourcent!=null ) forPourcent.setPourcent(x);
@@ -812,7 +853,7 @@ public class PlanImage extends Plan {
       fmt=res=0;
       video=aladin.configuration.getCMVideo();
       typeCM=aladin.configuration.getCMFct();
-      freeHist();
+      resetHist();
       isBlank = false;
       forPourcent=null;
       if( image!=null ) image.flush();
@@ -2970,9 +3011,9 @@ public class PlanImage extends Plan {
          setBufPixels8(getPix8Bits(getBufPixels8(),pixelsOrigin,bitpix,width,height,min,max,autocut,xc,yc,wc));
       }
 
-      freeHist();
       if( fmt!=JPEG ) invImageLine(width,height,getBufPixels8());
       changeImgID();
+      resetHist();
       //       sendLog("RecutPixel","["+getLogInfo()+"]");
 
       setPourcent(-1);

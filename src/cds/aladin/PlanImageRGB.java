@@ -464,14 +464,28 @@ public class PlanImageRGB extends PlanImage implements PlanRGBInterface {
 
    /** Retourne la composante bleue initiale */
    protected byte[] getBlue() {
-      if( blue==null && blue.length!=pixelsRGB.length) createRGB();
+      if( blue==null || blue.length!=pixelsRGB.length) createRGB();
       return blue;
    }
 
    /** Retourne la composante verte initiale */
    protected byte[] getGreen() {
-      if( green==null && green.length!=pixelsRGB.length) createRGB();
+      if( green==null || green.length!=pixelsRGB.length) createRGB();
       return green;
+   }
+
+   private double histRed[]  = new double[256];
+   private double histGreen[]= new double[256];
+   private double histBlue[] = new double[256];
+
+   /** Retourne le tableau de l'histogramme avant initialisation */
+   protected double [] getHistArray(int rgb) {
+      return rgb==0 ? histRed : rgb==1 ? histGreen : histBlue;
+   }
+
+   /** Retourne le tableau des pixels servants à l'histogramme */
+   protected byte [] getPixelHist(int rgb) {
+      return rgb==0 ? getRed() : rgb==1 ? getGreen() : getBlue();
    }
 
    /** Retourne les pixels 8 bits correspondants à l'image en N&B
