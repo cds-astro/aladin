@@ -21,6 +21,7 @@
 package cds.aladin.bookmark;
 
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -31,6 +32,7 @@ import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JToolBar;
 
 import cds.aladin.Aladin;
@@ -40,70 +42,81 @@ import cds.aladin.Function;
 import cds.aladin.Glu;
 import cds.aladin.MyInputStream;
 import cds.aladin.Tok;
+import cds.aladin.Widget;
+import cds.aladin.WidgetControl;
 
 /**
  * Liste des bookmarks
  * @author Pierre Fernique [CDS]
  * @version 1.0 - Mars 2011 - mise en place
  */
-public class Bookmarks {
+public class Bookmarks extends JToolBar implements Widget {
    private Aladin aladin;
    private FrameBookmarks frameBookmarks;     // Gère la fenêtre de consultation/édition des favoris
-   private JToolBar toolBar;            // JToolbar des bookmarks sélectionnés
+   //   private JToolBar toolBar;            // JToolbar des bookmarks sélectionnés
 
    private String memoDefaultList="";
-   
+
    public Bookmarks(Aladin aladin) {
-       this.aladin = aladin;
-       frameBookmarks = null;
-       toolBar = null;
+      this.aladin = aladin;
+      frameBookmarks = null;
+      //      toolBar = null;
+
+      setRollover(true);
+      setFloatable(false);
+      setBorder(BorderFactory.createEmptyBorder());
+      //      populateToolBar(this);
    }
-   
+
    /** Initialisation des bookmarks */
    public void init(boolean noCache) {
       createBookmarks(noCache);
       aladin.getCommand().setFunctionModif(false);
       if( aladin.hasGUI() ) resumeToolBar();
    }
-   
+
    public FrameBookmarks getFrameBookmarks() {
       if( frameBookmarks==null ) frameBookmarks = new FrameBookmarks(aladin,this);
       return frameBookmarks;
    }
-   
+
    /** Réinitialisation (rechargement) des bookmarks "officielles" */
    synchronized public void reload() {
       String list = aladin.configuration.getBookmarks();
       aladin.configuration.resetBookmarks();
       init(true);
-      
+
       // On réactive les bookmarks locaux
       StringTokenizer tok = new StringTokenizer(list==null?"":list,",");
       while( tok.hasMoreTokens() ) {
          String name = tok.nextToken();
          Function f = aladin.getCommand().getFunction(name);
-         if( f.isLocalDefinition() ) f.setBookmark(true); 
+         if( f.isLocalDefinition() ) f.setBookmark(true);
       }
       if( aladin.hasGUI() ) resumeToolBar();
    }
-   
+
    /** Fournit la toolbar des signets (éventuellement la crée) */
+   //   public JToolBar getToolBar() {
+   //      if( toolBar==null ) {
+   //         toolBar = new JToolBar();
+   //         toolBar.setRollover(true);
+   //         toolBar.setFloatable(false);
+   //         toolBar.setBorder(BorderFactory.createEmptyBorder());
+   //         populateToolBar(toolBar);
+   //      }
+   //      return toolBar;
+   //   }
+
    public JToolBar getToolBar() {
-      if( toolBar==null ) {
-         toolBar = new JToolBar();
-         toolBar.setRollover(true);
-         toolBar.setFloatable(false);
-         toolBar.setBorder(BorderFactory.createEmptyBorder());
-         populateToolBar(toolBar);
-      }
-      return toolBar;
+      return this;
    }
-   
+
    /** Retourne un nom unique pour un nouveau signet */
    public String getUniqueName(String name) {
       int j = name.indexOf('(');
       if( j>0 ) name = name.substring(0,j);
-      
+
       Vector<Function> v = aladin.getCommand().getBookmarkFunctions();
       for( int i=0; true; i++ ) {
          boolean trouve=false;
@@ -116,16 +129,21 @@ public class Bookmarks {
          if( !trouve ) return sn;
       }
    }
-   
+
    // Ajoute les boutons qu'il faut dans la toolbar
    private void populateToolBar(JToolBar toolBar) {
-      Enumeration<Function> e = aladin.getCommand().getBookmarkFunctions().elements();
+      Enumeration<Function> e;
+      try {
+         e = aladin.getCommand().getBookmarkFunctions().elements();
+      } catch( Exception e1 ) {
+         return;
+      }
       while( e.hasMoreElements() ) {
          Function f = e.nextElement();
          ButtonBookmark bkm = new ButtonBookmark(aladin,f);
          toolBar.add(bkm);
       }
-      
+
       if( !Aladin.OUTREACH ) {
          JButton plus = new JButton("+");
          plus.setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
@@ -137,31 +155,40 @@ public class Bookmarks {
          toolBar.add(plus);
       }
    }
-   
+
    /** Remet à jour la toolbar des signets suite à des modifs internes */
+   //   public void resumeToolBar() {
+   //      toolBar.removeAll();
+   //      populateToolBar(toolBar);
+   //      toolBar.validate();
+   //      aladin.validate();
+   //      aladin.repaint();
+   //   }
+
    public void resumeToolBar() {
-      toolBar.removeAll();
-      populateToolBar(toolBar);
-      toolBar.validate();
+      removeAll();
+      populateToolBar(this);
+      validate();
       aladin.validate();
       aladin.repaint();
    }
-   
+
+
    /** Affichage de la frame de consultation des signets */
    public void showFrame() { getFrameBookmarks().setVisible(true); }
-   
+
    /** Affichage de la frame d'édition et de consultation des signets */
    public void editFrame() { getFrameBookmarks().setVisibleEdit(); }
-   
+
    /** Retourne true si la liste courante des bookmarks correspond à la liste par défaut
     * définie par l'enregistrement GLU (voir glu.createBookmarks()) */
    public boolean isDefaultList() {
       return memoDefaultList.equals(getBookmarkList());
    }
-   
+
    /** Mémorise la liste courante des bookmarks */
    public void memoDefaultList(String s) { memoDefaultList = s; }
-   
+
    /** Retourne la liste des bookmarks */
    public String getBookmarkList() { return getBookmarkList(false); }
    public String getBookmarkList(boolean onlyLocal) {
@@ -174,15 +201,15 @@ public class Bookmarks {
          bkm.append(f.getName());
       }
       return bkm.toString();
-   }   
-   
+   }
+
    private boolean remoteBookmarksLoaded=false; // true si les bookmarks distants ont été correctement chargés
-   
+
    /** Retourne true si la liste des bookmarks peut être sauvegardée dans le fichier de configuration */
    public boolean canBeSaved() {
       return remoteBookmarksLoaded;
    }
-   
+
    /** Mise à jour de la liste des bookmarks sélectionnés (les noms séparés par une simple virgule).
     * Si la liste commence par '+' ou '-', il s'agit d'une mise à jour */
    public void setBookmarkList(String names) {
@@ -192,7 +219,7 @@ public class Bookmarks {
          else if( names.charAt(0)=='-' ) { mode=-1; names=names.substring(1); }
       }
       if( mode==0 ) { aladin.getCommand().resetBookmarks(); mode=1; }
-      
+
       Tok tok = new Tok(names,",");
       while( tok.hasMoreTokens() ) {
          String name = tok.nextToken().trim();
@@ -200,21 +227,21 @@ public class Bookmarks {
          if( f==null ) continue;
          f.setBookmark(mode==1);
       }
-      
+
       resumeToolBar();
    }
 
-   
+
    private String defaultBookmarkListByGlu=null;     // Liste des bookmarks trouvés via l'enregistrement GLU dedié aux BookMarks (%Aladin.Bookmarks)
    private String gluTag=null;                       // Identificateur de l'enregistrement de bookmarks
-   
+
    // Mémorise les infos pour générer les bookmarks (voir createBookmarks() */
    public void memoGluBookmarks(String actionName, String aladinBookmarks) {
-      Aladin.trace(4,"Bookmarks.memoBookmarks() %A="+actionName+" %Aladin.Bookmarks="+aladinBookmarks); 
+      Aladin.trace(4,"Bookmarks.memoBookmarks() %A="+actionName+" %Aladin.Bookmarks="+aladinBookmarks);
       gluTag=actionName;
       defaultBookmarkListByGlu=aladinBookmarks;
    }
-   
+
    /** Création des bookmarks par défaut :
     * 1) Chargement à distance des définitions de fonctions scripts
     * 2) Assignation de certaines d'entre-elles en tant que bookmarks.
@@ -223,7 +250,7 @@ public class Bookmarks {
       Glu glu = aladin.getGlu();
       Cache cache = aladin.getCache();
       Command command = aladin.getCommand();
-      
+
       if( gluTag!=null ) {
          try {
             aladin.trace(3,"Remote bookmarks loaded...");
@@ -241,7 +268,7 @@ public class Bookmarks {
             System.err.println("Remote bookmarks error: "+e.getMessage());
          }
       }
-      
+
       File f = new File(aladin.getConfiguration().getLocalBookmarksFileName());
       if( !aladin.isOutreach() && f.canRead() ) {
          try {
@@ -254,10 +281,10 @@ public class Bookmarks {
             e.printStackTrace();
             System.err.println("Local bookmarks error: "+e.getMessage());
          }
-     }
-      
+      }
+
       if( defaultBookmarkListByGlu!=null ) memoDefaultList(defaultBookmarkListByGlu);
-      
+
       String t="Default ";
       String s = aladin.configuration.getBookmarks();
       if( s==null || s.trim().length()==0 ) s=defaultBookmarkListByGlu;
@@ -266,9 +293,25 @@ public class Bookmarks {
          aladin.trace(2,t+"bookmarks: "+s);
          setBookmarkList(s);
       }
-      
+
       command.setFunctionLocalDefinition(true);  // Toutes les autres fonctions seront considérées comme locales
    }
-   
+
+   private WidgetControl voc=null;
+
+   @Override
+   public WidgetControl getWidgetControl() { return voc; }
+
+   @Override
+   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+      voc = new WidgetControl(this,x,y,width,height,opacity,parent);
+      voc.setResizable(true);
+      voc.setCollapsed(false);
+   }
+
+   @Override
+   public void paintCollapsed(Graphics g) { }
+
+
 
 }

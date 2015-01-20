@@ -55,15 +55,15 @@ import cds.tools.Util;
 public class WidgetControl {
 
    // Poignées pour étirer le rectangle
-   static final private int IN=0,HG=1,HD=2,BD=3,BG=4,H=5,D=6,B=7,G=8,INHEAD=9,INCOLLAPSED=10;
+   static final private int IN=0,HG=1,H=2,HD=3,D=4,BD=5,B=6,BG=7,G=8,INHEAD=9,INCOLLAPSED=10;
    static final private int NW=00, NE=0x10 , SE=0x11, SW=0x01;
 
    static final public int NOTHING=0, DISPOSE=1, UP=2;
 
    // Curseur en fonction de la position de la souris
-   static final int [] CURSOR = { Cursor.HAND_CURSOR, Cursor.NW_RESIZE_CURSOR, Cursor.SW_RESIZE_CURSOR,
-      Cursor.SE_RESIZE_CURSOR, Cursor.NE_RESIZE_CURSOR, Cursor.N_RESIZE_CURSOR,
-      Cursor.E_RESIZE_CURSOR, Cursor.S_RESIZE_CURSOR, Cursor.W_RESIZE_CURSOR,Cursor.SE_RESIZE_CURSOR };
+   static final int [] CURSOR = { Cursor.HAND_CURSOR, Cursor.NW_RESIZE_CURSOR, Cursor.N_RESIZE_CURSOR,
+      Cursor.NE_RESIZE_CURSOR, Cursor.E_RESIZE_CURSOR,Cursor.SE_RESIZE_CURSOR,
+      Cursor.S_RESIZE_CURSOR, Cursor.SW_RESIZE_CURSOR, Cursor.W_RESIZE_CURSOR };
 
    static final private Color BLUE = new Color(150,150,255);    // Couleur de l'entête
    static final private int HB=12;                              // Hauteur de l'entête
@@ -85,9 +85,11 @@ public class WidgetControl {
    // les différents flags d'état
    private boolean isCollapsed=false;   // true si le widget est collapsé (sous forme de bouton)
    private boolean in=false;            // true si la souris se trouve dans le widget
-   private boolean inHead=false;        // true si la souris se tourve dans l'entête au-dessus du widget
+   private boolean inHead=false;        // true si la souris se trouve dans l'entête au-dessus du widget
+   private boolean inCollapsed=false;   // true si la souris se trouve dans le bouton du collapse
    private boolean inShowHead=false;    // true si l'entête est actuellement visible
    private boolean flagControl=false;   // true si les poignées de controle de dimensionnement sont visibles
+   private int poignee=-1;              // Code de la poignée sous la souris
 
    // Flags liés à un drag en cours
    private int dragPoignee=-1;          // Index de la poignée en cours d'utilisation
@@ -237,7 +239,8 @@ public class WidgetControl {
          return in;
       }
 
-      boolean inNow = x<=xm && xm<=x+width && y-HB<=ym && ym<y+height;
+      int m = flagControl ? W/2 : 0;
+      boolean inNow = x-m<=xm && xm<=x+width+m && y-HB-m<=ym && ym<y+height+m;
 
       // Si on est entré, ou sorti, l'évènement est transmis au component
       if( c instanceof MouseListener && in!=inNow) {
@@ -263,9 +266,11 @@ public class WidgetControl {
       int x = getX();
       int y = getY();
 
+      inCollapsed=(closeButton!=null && closeButton.contains(e.getX()-x, e.getY()-y));
+
       if( flagControl ) {
-         int poignee = getPoignee(e.getX()-x, e.getY()-y);
-         if( poignee>IN && poignee<INHEAD ) {
+         poignee = getPoignee(e.getX()-x, e.getY()-y);
+         if( poignee>=0 ) {
             Cursor cursor = Cursor.getPredefinedCursor(CURSOR[poignee]);
             c.setCursor(cursor);
          }
@@ -333,7 +338,8 @@ public class WidgetControl {
 
       // Fin d'un redimensionnement
       else if( flagControl ) {
-         draggedDone=flagControl=false;
+         flagControl = !draggedDone && !(poignee>IN && poignee<INHEAD) ? false : true;
+         draggedDone=false;
          setSize(width, height);
       }
 
@@ -429,12 +435,12 @@ public class WidgetControl {
    // Retourne la poignée sous la souris (coordonnées images)
    private int getPoignee(int xm, int ym) {
       if( width==1 || height==1 ) return BD;
+      if( closeButton!=null && closeButton.contains(xm,ym)) return INCOLLAPSED;
       for( int i=1; i<=8; i++ ) {
          Rectangle rc = getRectPoignee(i);
          if( rc.contains(xm,ym) ) return i;
       }
-      if( closeButton!=null && closeButton.contains(xm,ym)) return INCOLLAPSED;
-      return inHead ? INHEAD : IN;
+      return inHead ? INHEAD : in ? IN : -1;
    }
 
    // Retourne l'action qu'il faudra effectuer
@@ -449,15 +455,15 @@ public class WidgetControl {
       int w = W;
       int w2 = w/2;
       switch(poignee) {
-         case HG:  return new Rectangle(-w2,-w2, w,w);
-         case HD:  return new Rectangle(width-w2,-w2, w,w);
+         case HG:  return new Rectangle(-w2,-w2-HB, w,w);
+         case HD:  return new Rectangle(width-w2,-w2-HB, w,w);
          case BD:  return new Rectangle(width-w2,height-w2, w,w);
          case BG:  return new Rectangle(-w2,height-w2, w,w);
 
-         case H:   return new Rectangle(w,-w2, width-2*w,w);
-         case D:   return new Rectangle(width-w2,w, w,height-2*w);
-         case G:   return new Rectangle(-w2,w, w,height-2*w);
-         case B:   return new Rectangle(w,height-w2, width-2*w,w);
+         case H:   return new Rectangle(width/2-w2,-w2-HB, w,w);
+         case D:   return new Rectangle(width-w2,height/2-w2, w,w);
+         case G:   return new Rectangle(-w2,height/2-w2, w,w);
+         case B:   return new Rectangle(width/2-w2,height-w2, w,w);
       }
       return null;
    }
@@ -468,13 +474,13 @@ public class WidgetControl {
       for( int i=0; i<8; i++ ) {
          int xp = (i==0 || i>=6 ? 0 : i==1 || i ==5 ?width/2 : width)-DS/2;
          int yp = (i<=2 ? -HB : i==3 || i==7 ? height/2 : height)-DS/2;
+         g.setColor( (i+1)==poignee ? Color.red : Color.green );
          drawPoignee(g,xp,yp);
       }
    }
 
    // Dessin d'une poignée (coordonnée locale)
    protected void drawPoignee(Graphics g, int xp,int yp) {
-      g.setColor( Color.green );
       g.fillRect( xp+1,yp+1 , DS,DS );
       g.setColor( Color.black );
       g.drawRect( xp,yp , DS,DS );
@@ -487,9 +493,9 @@ public class WidgetControl {
       int w=HB/2 +1;
       int yc=-(HB+w)/2 -1;
       int xc=width-w-3;
-      g.setColor( new Color(220,220,220) );
+      g.setColor( inCollapsed ? Color.red : new Color(220,220,220) );
       g.fillRect(xc,yc,w+1,w+1);
-      g.setColor(Color.red);
+      g.setColor( inCollapsed ? Color.white : Color.red);
       g.drawLine(xc+w/2-3,yc+w/2-3,xc+w/2+3,yc+w/2+3);
       g.drawLine(xc+w/2-2,yc+w/2-3,xc+w/2+4,yc+w/2+3);
       g.drawLine(xc+w/2-3,yc+w/2+3,xc+w/2+3,yc+w/2-3);

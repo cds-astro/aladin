@@ -21,9 +21,6 @@
 package cds.aladin;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.*;
 
 /**
@@ -41,19 +38,19 @@ import javax.swing.*;
 public final class Zoom extends JPanel {
 
    // Les valeurs generiques
-//   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
-//   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
-//   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
-//   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
-   
+   //   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
+   //   static int mzd[] = {  128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
+   //   static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
+   //   static final int MAXZOOM=25;   // en puissance de 2, valeur maximal du zoom
+
    static int mzn[] = {     1,  1,  1,  1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
    static int mzd[] = {  1024,512,256,128, 64, 32, 16, 8, 4, 2, 3 }; // Valeur zoom < 1, Denominateur
    static final int MINZOOM=mzn.length; // Nombre de valeurs zoom <1
    static final int MAXZOOM=67;   // en puissance de 2, valeur maximal du zoom
-   
+
    static public final int MINSLIDERBG=0;
    static public final int MAXSLIDERBG=MAXZOOM-7;
-   
+
    static public final int MINSLIDER=mzn.length-7;
    static public final int MAXSLIDER=mzn.length+7;
 
@@ -68,33 +65,33 @@ public final class Zoom extends JPanel {
    protected SliderCube  cubeSlider;
    protected SliderDensity densitySlider;
    protected JPanel sliderPanel;
-   
+
    // Les references aux objets
-//   protected ViewSimple v;      // La vue associée au zoom
+   //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
 
-  /** Creation du JPanel du zoom.
-   * @param calque,aladin References
-   */
+   /** Creation du JPanel du zoom.
+    * @param calque,aladin References
+    */
    protected Zoom(Aladin aladin) {
       int i;
       this.aladin = aladin;
       zoomView = new ZoomView(aladin);
-     
+
       setLayout( new BorderLayout(5,10) );
 
       cZoom = new JComboBox();
       cZoom.setFont(cZoom.getFont().deriveFont(Font.PLAIN));
       for( i=0; i<MINZOOM; i++ ) cZoom.addItem(mzn[i]+"/"+mzd[i]+"x");
       for( i=0; i<MAXZOOM; i++ ) cZoom.addItem((0x1<<i)+"x");
-      
+
       cZoom.setSelectedIndex(MINZOOM);   // Selectionne par defaut le zoom a 1x
       zoomChoicePanel = new ZoomChoice(aladin,cZoom);
-//      cZoom.addActionListener(new ActionListener() {
-//         public void actionPerformed(ActionEvent e) { submit(); }
-//      });
-//      cZoom.addMouseWheelListener( zoomView );
-      
+      //      cZoom.addActionListener(new ActionListener() {
+      //         public void actionPerformed(ActionEvent e) { submit(); }
+      //      });
+      //      cZoom.addMouseWheelListener( zoomView );
+
       cubeSlider    = new SliderCube(aladin);
       epochSlider   = new SliderEpoch(aladin);
       sizeSlider    = new SliderSize(aladin);
@@ -106,10 +103,10 @@ public final class Zoom extends JPanel {
       adjustSliderPanel();
 
       add(sliderPanel,BorderLayout.NORTH);
-      
+
       Aladin.makeAdd(this,zoomView,"Center");
    }
-   
+
    private JPanel slp=null;
    protected void adjustSliderPanel() {
       JPanel p = new JPanel( new GridLayout(0,1,1,1));
@@ -125,11 +122,11 @@ public final class Zoom extends JPanel {
       sliderPanel.add(p,BorderLayout.CENTER);
       slp=p;
    }
-   
+
    /** Retourne le JPanel contenant le menu déroulant du sélecteur
     *  du facteur du zoom
     */
-   protected JPanel getZoomChoicePanel() { return (JPanel)zoomChoicePanel; }
+   protected JPanel getZoomChoicePanel() { return zoomChoicePanel; }
 
    /** Retourne le facteur de zoom existant le plus proche de
     *  celui passé en paramètre
@@ -147,25 +144,25 @@ public final class Zoom extends JPanel {
       return nz;
    }
 
-  /** Retourne le numero d'index du zoom.
-   * @param sZoom libelle du zoom (1/16x, ... , 1x, ... 32x)
-   * @return index dans le selecteur, -1 si non trouve
-   */
-//   protected int getIndex(String sZoom) {
-//      for( int i=cZoom.getItemCount()-1; i>=0; i-- ) {
-//         String s=(String)cZoom.getItemAt(i);
-//         if( s.equals(sZoom) ) return i;
-//      }
-//      return -1;
-//   }
-   
+   /** Retourne le numero d'index du zoom.
+    * @param sZoom libelle du zoom (1/16x, ... , 1x, ... 32x)
+    * @return index dans le selecteur, -1 si non trouve
+    */
+   //   protected int getIndex(String sZoom) {
+   //      for( int i=cZoom.getItemCount()-1; i>=0; i-- ) {
+   //         String s=(String)cZoom.getItemAt(i);
+   //         if( s.equals(sZoom) ) return i;
+   //      }
+   //      return -1;
+   //   }
+
    protected double getNearestZoom(String sZoom) {
       double z;
       if( sZoom.indexOf('x')>0 ) z=parseZoomString(sZoom);
       else z = getNearestZoomFromRadius(sZoom);
       return getNearestZoomFct(z);
    }
-   
+
    // Parsing d'une chaine suivant la syntaxe 1/16x, ... , 1x, ... 32x
    // pour retourner la valeur réelle du zoom
    private double parseZoomString(String sZoom) {
@@ -181,7 +178,7 @@ public final class Zoom extends JPanel {
       }
       return res;
    }
-   
+
    /** Retourn le facteur de zoom le plus proche pour un angle donné.
     * L'angle est par défaut en ARCMIN, mais peut être suivi d'une unité
     * Le calcul est opéré sur la vue par défaut */
@@ -198,11 +195,11 @@ public final class Zoom extends JPanel {
          return -1;
       }
    }
-   
-  /** Retourne la valeur courante du zoom.
-   * @return le facteur d'agrandissement du zoom courant
-   * (x1/4,x1/3,x1/2,x1,x2,x4,x8...x32)
-   */
+
+   /** Retourne la valeur courante du zoom.
+    * @return le facteur d'agrandissement du zoom courant
+    * (x1/4,x1/3,x1/2,x1,x2,x4,x8...x32)
+    */
    protected double getValue() {
       int n;
       if( zoomSlider!=null ) {
@@ -211,63 +208,64 @@ public final class Zoom extends JPanel {
       } else n=cZoom.getSelectedIndex();
       return getValue(n);
    }
-   
-   protected double getValue(int i) {
+
+   protected double getValue(int i) { return getValue(i,false); }
+   protected double getValue(int i,boolean flagPow2) {
       ViewSimple v = aladin.view.getCurrentView();
       Plan p = aladin.calque.getPlanBase();
-      if( p!=null && p instanceof PlanBG 
-      || v!=null && v.isPlotView() ) return getValueTest(i);
+      if( !flagPow2 && (p!=null && p instanceof PlanBG
+            || v!=null && v.isPlotView()) ) return getValueTest(i);
       return getValuePow2(i);
    }
-   
+
    protected double getValueTest(int i) {
       double z;
       z = Math.pow(1.2,i-MINZOOM);
       z=z/10;
-//      System.out.println("i="+i+" => "+z);
+      //      System.out.println("i="+i+" => "+z);
       return z;
    }
-   
+
    protected double getValuePow2(int i) {
       double z;
       if( i>=MINZOOM ) z = (0x1<<(i-MINZOOM));
       else z =  (double)mzn[i]/mzd[i];
-//      System.out.println("i="+i+" => "+z);
+      //      System.out.println("i="+i+" => "+z);
       return z;
    }
 
 
-  /** Retourne le nombre de pixels "sources" pour un zoom donné */
+   /** Retourne le nombre de pixels "sources" pour un zoom donné */
    protected int getNbPixelSrc(double z) {
       int i = this.getIndex(z);
       return (i>=MINZOOM)?1:mzd[i];
    }
 
-  /** Retourne le nombre de pixels "destinations" pour un zoom donné */
+   /** Retourne le nombre de pixels "destinations" pour un zoom donné */
    protected int getNbPixelDst(double z) {
       int i = this.getIndex(z);
       return (i>=MINZOOM)?(0x1<<(i-MINZOOM)):mzn[i];
    }
-      
+
    /** Retourne l'item (fraction) correspondant au zoom */
    protected String  getItem(double z) { return (String)cZoom.getItemAt(getIndex(z)); }
 
-  /** Retourne l'index courant du zoom.
-   * @return l'index du zoom
-   */
+   /** Retourne l'index courant du zoom.
+    * @return l'index du zoom
+    */
    protected int getIndex() {
       return cZoom.getSelectedIndex();
    }
-   
-  /** Retourne la prochaine valeur du zoom.
-   * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
-   * @return le nouveau fct de zoom, ou -1 si problème
-   */
-   protected double getNextValue(double z,int sens) {
-      int i = getIndex(z);
+
+   /** Retourne la prochaine valeur du zoom.
+    * @param sens Sens de la modif 1 -> plus grand,-1 -> plus petit.
+    * @return le nouveau fct de zoom, ou -1 si problème
+    */
+   protected double getNextValue(double z,int sens,boolean flagPow2) {
+      int i = getIndex(z,flagPow2);
       if( i+sens<0 || i+sens>MINZOOM+MAXZOOM ) return -1;
       i=i+sens;
-      return getValue(i);
+      return getValue(i,flagPow2);
    }
 
    /** Positionne le zoom à un facteur donné et demande un réaffichage
@@ -278,31 +276,31 @@ public final class Zoom extends JPanel {
       if( fct.equals("+") || fct.equals("plus")) incZoom(1);
       else if( fct.equals("-") ) incZoom(-1);
       else {
-//         double z = -1;
-//         int i = getIndex(fct);                // Valeur particulière de zoom ? ex: 4x
-//         if( i>=0 ) z = getValue(i);
-//         else z = getNearestZoomFromRadius(fct);   // Expression d'une angle sur le ciel ? ex: 1°
+         //         double z = -1;
+         //         int i = getIndex(fct);                // Valeur particulière de zoom ? ex: 4x
+         //         if( i>=0 ) z = getValue(i);
+         //         else z = getNearestZoomFromRadius(fct);   // Expression d'une angle sur le ciel ? ex: 1°
          double z = getNearestZoom(fct);
          if( z<0 ) return false;
          aladin.view.setZoomRaDecForSelectedViews(z,null);
       }
       return true;
    }
-   
+
    /** Incrément, ou décrément du zoom */
    protected void incZoom(int sens) {
       double z1 = getValue();
-      double z = getNextValue(z1,sens);
+      double z = getNextValue(z1,sens,false);
       if( z==-1 ) return;
       aladin.view.setZoomRaDecForSelectedViews(z,null);
    }
-   
-  /** Recalcul le zoom a l'emplacement courant */
+
+   /** Recalcul le zoom a l'emplacement courant */
    protected void newZoom() {
       ViewSimple v = aladin.view.getCurrentView();
       if( v!=null ) zoomView.newZoom(v.xzoomView,v.yzoomView);
    }
-   
+
    // Pour éviter que la mise à jour du choice du zoom effectue une synchronisation intempestive
    private boolean flagNoAction=false;
 
@@ -311,18 +309,18 @@ public final class Zoom extends JPanel {
       if( !flagNoAction ) aladin.view.setZoomRaDecForSelectedViews(getValue(),null);
    }
 
-  /** Obtention du zoom courant.
-   * Retourne le rectangle du zoom dans les coord. de l'image courante
-   * de la vue courante
-   * @param Le rectangle du zoom ou <I>null</I> si pb.
-   */
+   /** Obtention du zoom courant.
+    * Retourne le rectangle du zoom dans les coord. de l'image courante
+    * de la vue courante
+    * @param Le rectangle du zoom ou <I>null</I> si pb.
+    */
    protected Rectangle getZoom() {
       ViewSimple v = aladin.view.getCurrentView();
       if( v==null || v.rzoom==null ) return null;
       return new Rectangle(floor(v.rzoom.x),floor(v.rzoom.y),top(v.rzoom.width),top(v.rzoom.height));
    }
 
-  /** Positionne la valeur courante du zoom en fonction d'un double */
+   /** Positionne la valeur courante du zoom en fonction d'un double */
    protected void setValue(double z) {
       int i=getIndex(z);
       if( i!=-1 && cZoom.getSelectedIndex()!=i ) {
@@ -332,67 +330,68 @@ public final class Zoom extends JPanel {
          if( zoomSlider!=null ) zoomSlider.setValue(i);
          flagNoAction=false;
       }
-  }
-   
+   }
+
    protected boolean isBG() {
       Plan p = aladin.calque.getPlanBase();
       return p!=null && p instanceof PlanBG;
    }
 
-  /** Retourne l'indice du Choice en fonction d'une valeur réelle
-   *  de zoom. -1 si rien ne correspond
-   */
-   private int getIndex(double z) {
+   /** Retourne l'indice du Choice en fonction d'une valeur réelle
+    *  de zoom. -1 si rien ne correspond
+    */
+   private int getIndex(double z) { return getIndex(z,false); }
+   private int getIndex(double z, boolean flagPow2) {
       int n=cZoom.getItemCount()+250;
       for( int i=0; i<n; i++ ) {
-         if( getValue(i)>=z ) return i;
+         if( getValue(i,flagPow2)>=z ) return i;
       }
       return -1;
    }
-   
+
    public void zoomSliderReset() {
       if( zoomSlider!=null ) zoomSlider.setEnabled( !aladin.calque.isFree() );
    }
-   
-  /** Réinitialise le zoom
-   * @param withImagette true si on resette également l'imagette
-   */
+
+   /** Réinitialise le zoom
+    * @param withImagette true si on resette également l'imagette
+    */
    protected void reset() { reset(true); }
    protected void reset(boolean withImagette) {
-      
+
       // Pour que le zoomView reextrait une imagette
       if( withImagette ) zoomView.resetImgID();
-      
-// FAIT DANS ZOOMVIEW.CALCULZOOM
-//      ViewSimple v = aladin.view.getCurrentView();
-//      if( v!=null ) setValue(v.zoom);
-      
+
+      // FAIT DANS ZOOMVIEW.CALCULZOOM
+      //      ViewSimple v = aladin.view.getCurrentView();
+      //      if( v!=null ) setValue(v.zoom);
+
       newZoom();
    }
-   
-  /** Activation de la loupe */
+
+   /** Activation de la loupe */
    protected void wenOn() {
       if( aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN ) zoomView.wenOn();
    }
 
-  /** Desactivation de la loupe */
+   /** Desactivation de la loupe */
    protected void wenOff() {
       if( aladin.toolBox.tool[ToolBox.WEN].mode!=Tool.UP ) zoomView.wenOff();
    }
 
-  /** Mise a jour la loupe si necessaire.
-   * @param x,y Centre courant
-   */
+   /** Mise a jour la loupe si necessaire.
+    * @param x,y Centre courant
+    */
    protected boolean redrawWen(double x, double y) {
       if( aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN ) { zoomView.wen(x,y); return true; }
       return false;
    }
-   
+
    /** Mise a jour la coupe si necessaire */
-    protected void redrawCut() {
-       if( zoomView.flagCut ) zoomView.repaint();
-    }
-    
+   protected void redrawCut() {
+      if( zoomView.flagCut ) zoomView.repaint();
+   }
+
    // Arrondi plus facile à écrire que (int)Math.round()
    static protected int round(double x) { return (int)(x+0.5); }
    static protected int floor(double x) { return (int)x; }

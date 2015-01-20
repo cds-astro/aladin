@@ -241,7 +241,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( e.getClickCount()==2 ) return;    // SOUS LINUX, J'ai un double évènement à chaque fois !!!
       int mult=1;
 
-      if( isFullScreen() && voControl!=null && voControl.mouseWheel(e) ) {
+      if( isFullScreen() && widgetControl!=null && widgetControl.mouseWheel(e) ) {
          repaint(); return;
       }
 
@@ -310,7 +310,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.toolBox.getTool()==ToolBox.ZOOM ) { flagDrag=false; rselect = null; }
       if( e.isShiftDown() ) aladin.view.selectCompatibleViews();
 
-      vs.syncZoom(-e.getWheelRotation()*mult,coo);
+      vs.syncZoom(-e.getWheelRotation()*mult,coo,false);
    }
 
    /**
@@ -318,9 +318,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param sens 1:augmentation, -1:diminution
     * @param coo centre du zoom, null si Repere courant
     */
-   private void syncZoom(int sens,Coord coo) {
+   private void syncZoom(int sens,Coord coo,boolean flagPow2) {
       if( isFree() ) return;
-      double nz = aladin.calque.zoom.getNextValue(zoom,sens);
+      double nz = aladin.calque.zoom.getNextValue(zoom,sens,flagPow2);
       //      aladin.trace(4,"ViewSimple.syncZoom("+sens+","+(coo==null?null:aladin.localisation.frameToString(coo.al, coo.del))+") zoom="+zoom+" => nz="+nz);
       if( nz==-1 ) return;
 
@@ -1198,11 +1198,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       imgH=d.height;
 
       // Calcul de la proportion (si l'image n'est pas carree)
-      double W = ZoomView.SIZE;
+      double W = aladin.calque.zoom.zoomView.getWidth();
       double H = (W/imgW)*imgH;
       if( H>W ) {
          W = W*W /H;
-         H = ZoomView.SIZE;
+         H = aladin.calque.zoom.zoomView.getWidth();
       }
 
       // On part sur la position centrale
@@ -1775,7 +1775,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public void mouseClicked(MouseEvent e) {}
 
    public void mousePressed(MouseEvent e) {
-      if( isFullScreen() && voControl!=null && voControl.mousePressed(e) ) {
+      if( isFullScreen() && widgetControl!=null && widgetControl.mousePressed(e) ) {
          repaint(); return;
       }
 
@@ -2265,7 +2265,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     */
 
    public void mouseReleased(MouseEvent e) {
-      if( isFullScreen() && voControl!=null && voControl.mouseReleased(e) ) {
+      if( isFullScreen() && widgetControl!=null && widgetControl.mouseReleased(e) ) {
          repaint(); return;
       }
       mouseReleased1(e.getX(),e.getY(),e);
@@ -2341,7 +2341,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                vs.getProj().getCoord(coo);
             }
          } catch( Exception e1 ) { coo=null; }
-         vs.syncZoom(e.isShiftDown() ?-1:1,coo);
+         vs.syncZoom(e.isShiftDown() ?-1:1,coo,true);
          return;
       }
 
@@ -2782,7 +2782,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    public void mouseDragged(MouseEvent e) {
 
-      if( isFullScreen() && voControl!=null && voControl.mouseDragged(e) ) {
+      if( isFullScreen() && widgetControl!=null && widgetControl.mouseDragged(e) ) {
          repaint(); return;
       }
 
@@ -3120,7 +3120,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    //   }
 
    public void mouseMoved(MouseEvent e) {
-      if( isFullScreen() && voControl!=null && voControl.mouseMoved(e) ) {
+      if( isFullScreen() && widgetControl!=null && widgetControl.mouseMoved(e) ) {
          repaint(); return;
       }
       mouseMoved1(e.getX(),e.getY(),e);
@@ -3354,9 +3354,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          repereshow=ok;
       }
 
-      // Je démarre le décompte des 2 secondes en attendant une résolution QuickSimbad
-      if( aladin.calque.flagSimbad || aladin.calque.flagVizierSED ) {
-         aladin.view.waitQuickSimbad(vs);
+      // je suspends une éventuelle résolution en cours
+      if( tool!=ToolBox.SELECT && tool!=ToolBox.PAN) aladin.view.suspendQuickSimbad();
+      else {
+         // Je démarre le décompte des 2 secondes en attendant une résolution QuickSimbad
+         if( aladin.calque.flagSimbad || aladin.calque.flagVizierSED ) {
+            aladin.view.waitQuickSimbad(vs);
+         }
       }
 
       boolean rep=false;
@@ -3515,7 +3519,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( rainbowF!=null && rainbowF.isSelected() ) return;
       if( aladin.lockCursor ) return;
 
-      if( voControl!=null && voControl.getCursor()!=null ) { setCursor(  voControl.getCursor() ); return; }
+      if( widgetControl!=null && widgetControl.getCursor()!=null ) { setCursor(  widgetControl.getCursor() ); return; }
 
       oc=-1;
       currentCursor = tool==ToolBox.PHOT ||
@@ -6401,8 +6405,8 @@ g.drawString(s,10,100);
          aladin.fullScreen.drawIcons(g);
 
          //         drawOverlayControls(g);
-         initVO();
-         if( voControl!=null ) voControl.paint(g);
+         widgetInit();
+         if( widgetControl!=null ) widgetControl.paint(g);
       }
 
       // Affichage du buffer
@@ -6422,28 +6426,35 @@ g.drawString(s,10,100);
       ((PlanBG)pref).drawHealpixMouse(g,this);
    }
 
-   private WidgetController voControl=null;
+   private WidgetController widgetControl=null;
    private final int MG=3;
 
-   private void initVO() {
-      if( voControl!=null ) return;
-      voControl = new WidgetController();
+   private void widgetInit() {
+      if( widgetControl!=null ) return;
+      widgetControl = new WidgetController();
 
+      // La toolbox
       int width = -1;
-      int height = 300;
-      aladin.toolBox.createWidgetControl(MG,50,width,height,0.7f,this);
-      voControl.addWidget( aladin.toolBox );
+      int height = 280;
+      aladin.toolBox.createWidgetControl(25,40,width,height,-1f,this);
+      widgetControl.addWidget( aladin.toolBox );
 
+      // La pile
       aladin.calque.select.createWidgetControl(getWidth()-aladin.calque.select.getWidth()-MG,50,-1,-1,0.7f,this);
-      voControl.addWidget( aladin.calque.select );
+      widgetControl.addWidget( aladin.calque.select );
 
+      // Le zoomView
       int x = getWidth()-aladin.calque.zoom.zoomView.SIZE-75;
       int y = getHeight()-aladin.calque.zoom.zoomView.SIZE-MG;
       aladin.calque.zoom.zoomView.createWidgetControl(x,y,aladin.calque.zoom.zoomView.SIZE,aladin.calque.zoom.zoomView.SIZE,0.7f,this);
-      voControl.addWidget( aladin.calque.zoom.zoomView );
+      widgetControl.addWidget( aladin.calque.zoom.zoomView );
 
+      //Et les mesures
       aladin.mesure.mcanvas.createWidgetControl(MG,getHeight()-125-MG,x-MG-10,100,0.7f,this);
-      voControl.addWidget( aladin.mesure.mcanvas );
+      widgetControl.addWidget( aladin.mesure.mcanvas );
+
+      //      aladin.bookmarks.createWidgetControl(50,MG,-1,-1,-1,this);
+      //      widgetControl.addWidget( aladin.bookmarks );
 
 
       //      aladin.calque.zoom.zoomSlider.createVOC(200,getHeight()-aladin.calque.zoom.zoomSlider.getHeight()-MG,-1,-1,1.0f,this);
@@ -6455,38 +6466,6 @@ g.drawString(s,10,100);
       //      voControl.addVOClient( r);
    }
 
-   // Quelques tests de superposition des boites de controle
-   //   protected void drawOverlayControls1(Graphics g) {
-   //      if( aladin.calque.isFree() ) return;
-   //
-   //      Graphics2D g2d = (Graphics2D)g;
-   //      AffineTransform saveTransform = g2d.getTransform();
-   //      Composite saveComposite = g2d.getComposite();
-   //      Shape saveClip = g2d.getClip();
-   //
-   //      Composite myComposite = Util.getImageComposite(0.7f);
-   //      g2d.setComposite(myComposite);
-   //
-   //      g2d.translate(0,50);
-   //      aladin.toolBox.setSize(200,280);
-   //      aladin.toolBox.paintComponent(g2d);
-   //      g2d.setTransform(saveTransform);
-   //      g2d.setClip(saveClip);
-   //
-   //      g2d.translate(getWidth()-aladin.calque.select.getWidth(),50);
-   //      aladin.calque.select.paintComponent(g2d);
-   //      g2d.setTransform(saveTransform);
-   //      g2d.setClip(saveClip);
-   //
-   //      g2d.translate(getWidth()-aladin.calque.zoom.zoomView.getWidth()-100,
-   //            getHeight()-aladin.calque.zoom.zoomView.getHeight());
-   //      g2d.setClip(0,0,aladin.calque.zoom.zoomView.getWidth(),aladin.calque.zoom.zoomView.getHeight());
-   //      aladin.calque.zoom.zoomView.paintComponent(g2d);
-   //      g2d.setTransform(saveTransform);
-   //      g2d.setClip(saveClip);
-   //
-   //      g2d.setComposite(saveComposite);
-   //   }
 
    protected String lastPixel="";
 

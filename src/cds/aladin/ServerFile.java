@@ -215,11 +215,11 @@ public class ServerFile extends Server implements XMLConsumer {
     * @param f path du fichier
     * @param resNode noeud décrivant le fichier à charger, peut être <i>null</i>
     */
-   protected int creatLocalPlane(String f,String label,String origin, Obj o, 
+   protected int creatLocalPlane(String f,String label,String origin, Obj o,
          ResourceNode resNode,InputStream is,Server server,String target,String radius) {
       String serverTaskId = aladin.synchroServer.start("ServerFile.creatLocalPlane/"+label);
       try {
-//         setSync(false);
+         //         setSync(false);
          int n=0;
          MyInputStream in=null;
          long type;
@@ -245,9 +245,9 @@ public class ServerFile extends Server implements XMLConsumer {
                try {
                   final File x = new File(f);
                   if( x.isDirectory() ) {
-//                     setSync(true);
+                     //                     setSync(true);
                      Aladin.trace(4,"ServerFile.creatLocalPlane("+f+"...) => detect: DIR");
-                     
+
                      if( PlanBG.isPlanBG(f) ) {
 
                         // recherche des propriétés
@@ -262,7 +262,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            // Catalogue ?
                            else if(  (new File(f+"/"+Constante.FILE_METADATAXML)).exists() || (new File(f+"/Norder3/Allsky.xml")).exists() ) {
                               gSky = new TreeNodeAllsky(aladin, null, null, null, null, null,null, null, null, null, null, null, f, "15 cat");
-                           }    
+                           }
                         }
 
                         if( gSky!=null ) n=aladin.calque.newPlanBG(gSky,label,target,radius);
@@ -274,7 +274,7 @@ public class ServerFile extends Server implements XMLConsumer {
                            public void run() {
                               try {
                                  aladin.log("load", "dir");
-                                 MyInputStream mi = new MyInputStream((new IDHAGenerator()).getStream(x,th)); 
+                                 MyInputStream mi = new MyInputStream((new IDHAGenerator()).getStream(x,th));
                                  updateMetaData(mi,th,"",null);
                                  mi.close();
                               } catch( IOException e ) {
@@ -357,11 +357,11 @@ public class ServerFile extends Server implements XMLConsumer {
             String t = in.decodeType(type);
             Aladin.trace(3,(f==null?"stream":f)+" => detect: "+t);
             aladin.log("load",mode+t);
-            
-            
+
+
             // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
             if( (type & (MyInputStream.DS9REG|MyInputStream.AJTOOL))!=0 ) {
-//               aladin.command.resetPreviousDrawing();
+               //               aladin.command.resetPreviousDrawing();
                aladin.calque.newPlanTool(null);
             }
 
@@ -370,7 +370,7 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
             else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
-            
+
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
                n=aladin.calque.newPlanMOC(in,label);
             }
@@ -395,7 +395,7 @@ public class ServerFile extends Server implements XMLConsumer {
                         label,null,f, origin,
                         PlanImage.UNKNOWN,PlanImage.UNDEF,
                         o,resNode);
-               } else 
+               } else
                   n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
             }
             else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
@@ -430,10 +430,10 @@ public class ServerFile extends Server implements XMLConsumer {
                   aladin.glu.reload(false,true);
                   n=1;
                }
-               
+
                // C'est peut être un planBG via HTTP
             } else if( mode.equals("http") && f!=null && f.indexOf('?')<0 ) {
-               
+
                // Cubes ?
                TreeNodeAllsky gSky=null;
                try { gSky = new TreeNodeAllsky(aladin, f); }
@@ -449,23 +449,23 @@ public class ServerFile extends Server implements XMLConsumer {
                      ) {
                   n=aladin.calque.newPlanBG(new URL(f),label,null,null);
 
-               // ou progen ?
+                  // ou progen ?
                } else if( f.endsWith("HpxFinder") || f.endsWith("HpxFinder/") ) {
-//                     try { gSky = new TreeNodeAllsky(aladin, f); }
-//                     catch( Exception e ) {
-//                        aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
-//                        gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
-//                     }
-                     gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
-                     n=aladin.calque.newPlanBG(gSky,label,null,null);
+                  //                     try { gSky = new TreeNodeAllsky(aladin, f); }
+                  //                     catch( Exception e ) {
+                  //                        aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
+                  //                        gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
+                  //                     }
+                  gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 progen");
+                  n=aladin.calque.newPlanBG(gSky,label,null,null);
 
-               // ou catalogue ?
+                  // ou catalogue ?
                } else if( Util.isUrlResponding(new URL(f+"/Norder3/Allsky.xml")) ) {
-//                  try { gSky = new TreeNodeAllsky(aladin, f); }
-//                  catch( Exception e ) {
-//                     aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
-//                     gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
-//                  }
+                  //                  try { gSky = new TreeNodeAllsky(aladin, f); }
+                  //                  catch( Exception e ) {
+                  //                     aladin.trace(4, "ServerFile.creatLocalPlane(...) HiPS properties file not found, assume default params");
+                  //                     gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
+                  //                  }
                   gSky = new TreeNodeAllsky(aladin, null, null, null, f, null, null, null, null, null, null, null, null, "15 cat");
                   n=aladin.calque.newPlanBG(gSky,label,null,null);
                }
@@ -488,12 +488,12 @@ public class ServerFile extends Server implements XMLConsumer {
             Aladin.warning(this,""+e,1);
             defaultCursor();
             ball.setMode(Ball.NOK);
-//            setSync(true);
+            //            setSync(true);
             return -1;
          }
          defaultCursor();
-//         setSync(true);
-         
+         //         setSync(true);
+
          if( n>0 && (f!=null || u!=null)) aladin.memoLastFile(f!=null?f:u.toString());
          return n;
       } finally { aladin.synchroServer.stop(serverTaskId); }
@@ -565,42 +565,42 @@ public class ServerFile extends Server implements XMLConsumer {
 
       super.actionPerformed(e);
    }
-   
+
    /** Ouverture de la fenêtre de sélection d'un fichier */
    protected void browseFile() {
       String path = Util.dirBrowser(aladin.dialog, description,
-                        aladin.getDefaultDirectory(),file);
+            aladin.getDefaultDirectory(),file);
       if( path==null ) return;
-      
+
       String dir = path;
       File f = new File(dir);
       if( !f.isDirectory() ) dir = f.getParent();
       aladin.memoDefaultDirectory(dir);
       submit();
    }
-      
-//   /** Ouverture de la fenêtre de sélection d'un fichier */
-//   protected void browseFile() {
-//      FileDialog fd = new FileDialog(aladin.dialog,description);
-//      aladin.setDefaultDirectory(fd);
-//
-//      // (thomas) astuce pour permettre la selection d'un repertoire
-//      // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
-//      fd.setFile(DEFAULT_FILENAME);
-//      fd.setVisible(true);
-//      aladin.memoDefaultDirectory(fd);
-//      String dir = fd.getDirectory();
-//      String name =  fd.getFile();
-//      // si on n'a pas changé le nom, on a selectionne un repertoire
-//      boolean isDir = false;
-//      if( name!=null && name.equals(DEFAULT_FILENAME) ) {
-//         name = "";
-//         isDir = true;
-//      }
-//      String t = (dir==null?"":dir)+(name==null?"":name);
-//      file.setText(t);
-//      if( (name!=null && name.length()>0) || isDir ) submit();
-//   }
+
+   //   /** Ouverture de la fenêtre de sélection d'un fichier */
+   //   protected void browseFile() {
+   //      FileDialog fd = new FileDialog(aladin.dialog,description);
+   //      aladin.setDefaultDirectory(fd);
+   //
+   //      // (thomas) astuce pour permettre la selection d'un repertoire
+   //      // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
+   //      fd.setFile(DEFAULT_FILENAME);
+   //      fd.setVisible(true);
+   //      aladin.memoDefaultDirectory(fd);
+   //      String dir = fd.getDirectory();
+   //      String name =  fd.getFile();
+   //      // si on n'a pas changé le nom, on a selectionne un repertoire
+   //      boolean isDir = false;
+   //      if( name!=null && name.equals(DEFAULT_FILENAME) ) {
+   //         name = "";
+   //         isDir = true;
+   //      }
+   //      String t = (dir==null?"":dir)+(name==null?"":name);
+   //      file.setText(t);
+   //      if( (name!=null && name.length()>0) || isDir ) submit();
+   //   }
 
 
    /** Chargement d'un fichier au format AJ
@@ -714,6 +714,7 @@ public class ServerFile extends Server implements XMLConsumer {
             if( (s=(String)atts.get("radius"))!=null ) rm=Double.valueOf(s).doubleValue();
             if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);;
             break;
+         case Plan.APERTURE:
          case Plan.TOOL:
             plan = ( new PlanTool(aladin));
             if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);
@@ -828,8 +829,8 @@ public class ServerFile extends Server implements XMLConsumer {
             }
          }
 
+         plan.flagOk=true;
       }
-      plan.flagOk=true;
       return plan;
    }
 

@@ -264,7 +264,7 @@ public final class Tool {
 
    // Le Z du Zoom
    static final int [] zX = { 0,11,11, 2,11,11, 0, 0,9,0,   0 };
-   static final int [] zY = { 0, 0, 2,13,13,15,15,13,2,2,   0 };
+   static final int [] zY = { 1, 1, 4,13,13,15,15,12,3,3,   1 };
 
    // Le graphique des couleurs
    static final int [] cmX = { 0, 0,  0,16};      // L'abscisse
@@ -618,9 +618,10 @@ public final class Tool {
             g.drawLine(dx+6,dy+5,dx+7,dy+5); g.drawLine(dx+6,dy+5,dx+6,dy+6);
             break;
          case ToolBox.ZOOM:                // le Z du Zoom
-            g.setColor(c1);
             p = setPolygon(zX,zY,dx,dy);
+            g.setColor( mode==UNAVAIL ? cPapier : new Color( 215,198,142) );
             g.fillPolygon(p);
+            g.setColor(c1);
             g.drawPolygon(p);
             break;
          case ToolBox.PAN:                // la main du PAN

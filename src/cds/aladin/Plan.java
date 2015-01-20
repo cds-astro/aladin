@@ -257,6 +257,8 @@ public class Plan implements Runnable {
       p.ref=ref;
    }
 
+   public void finalize()  throws Throwable { Free(); }
+
    /** Retourne true si ce plan contient un SED
     * (on ne test que le premier élément) */
    protected boolean isSED() {

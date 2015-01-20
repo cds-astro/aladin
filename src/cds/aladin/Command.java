@@ -184,7 +184,9 @@ public final class Command implements Runnable {
 
    public void console(String s) {
       if( !s.startsWith("!!!") ) a.console.printInfo(s);
-      else a.console.printError(s);
+      else {
+         a.console.printError(s);
+      }
 
    }
 

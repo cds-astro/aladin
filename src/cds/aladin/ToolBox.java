@@ -74,8 +74,8 @@ SwingWidgetFinder, Widget {
    static int NBTOOL = 21;        // Nombre d'outils existants
 
    // Ordre d'apparition des boutons
-   private int [] drawn = {SELECT,PAN,/*ZOOM,*/DIST,PHOT,DRAW,TAG,
-         FILTER,XMATCH,PLOT,RGB,BLINK,CROP,CONTOUR,HIST,PROP,
+   private int [] drawn = {SELECT,PAN,ZOOM,DIST,PHOT,DRAW,TAG,
+         FILTER,/*XMATCH,PLOT,*/RGB,/*BLINK,*/CROP,CONTOUR,HIST,PROP,
          DEL };
 
    // Ordre d'apparition des boutons

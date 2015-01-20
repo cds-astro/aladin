@@ -270,7 +270,10 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       viewSimple.setToolTipText(null);
       viewSimple.setBounds(bounds);
       aladin.view.adjustPanel();
-      if( !full ) aladin.f.setSize(getSize());
+      if( !full ) {
+         aladin.toolBox.calcConf(500);   // juste pour remettre les choses en place
+         aladin.f.setSize(getSize());
+      }
       aladin.f.setVisible(true);
       aladin.calque.repaintAll();
       memoCheck=null;

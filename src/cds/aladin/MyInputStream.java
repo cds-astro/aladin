@@ -1463,17 +1463,30 @@ public final class MyInputStream extends FilterInputStream {
       } catch( Exception e ) {};
 
 
+      boolean refSpacial = false;
       try {
          st = new StringTokenizer( avm.get("Spatial.ReferencePixel") );
          fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
          fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
+         refSpacial=true;
       } catch( Exception e ) {};
 
       try {
          st = new StringTokenizer( avm.get("Spatial.ReferenceValue") );
          fits.append("CRVAL1  = "+st.nextToken()+"\n");
          fits.append("CRVAL2  = "+st.nextToken()+"\n");
+         refSpacial=true;
       } catch( Exception e ) {};
+
+      if( !refSpacial ) {
+         try {
+            st = new StringTokenizer( avm.get("Spatial.Notes") );
+            fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())+"\n");
+            fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())+"\n");
+            fits.append("CRVAL1  = "+st.nextToken()+"\n");
+            fits.append("CRVAL2  = "+st.nextToken()+"\n");
+         } catch( Exception e ) {};
+      }
 
       try {
          st = new StringTokenizer( avm.get("Spatial.Scale") );

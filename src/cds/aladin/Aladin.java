@@ -71,6 +71,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Widgets in fullscreen mode
  * @beta    <LI> New colormap controller
  * @beta    <LI> Full MOC adaptative drawing
  * @beta    <LI> Improvement of Planetary Data System image support (LSB,PREFIX,SUFFIX...)
@@ -90,6 +91,8 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> AVM Spacial.Note astrometry.net bug workaround.
+ * @beta    <LI> HiPS generation with PNG black pixel bug
  * @beta    <LI> Some grid drawing bugs (missing segments or labels)
  * @beta    <LI> Contour parameter bug refresh on HiPS planes
  * @beta    <LI> DS9 region multi plane bug
@@ -123,7 +126,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.129";
+   static public final    String VERSION = "v8.132";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

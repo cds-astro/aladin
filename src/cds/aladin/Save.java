@@ -94,7 +94,7 @@ public final class Save extends JFrame implements ActionListener {
 
    static final int CURRENTVIEW = 0;
    static final int ALLROIS = 2;
-   
+
    static final int SAVEVIEW    = 0;
    static final int EXPORTPLANS = 1;
    static final int BACKUPSTACK = 2;
@@ -108,7 +108,7 @@ public final class Save extends JFrame implements ActionListener {
    static String [] CHOICE;
 
    static String TITLE,INFO,FISTINFO,SECONDINFO,CLOSE,EXPORT,DIR,
-                 CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,ENCODER;
+   CANNOT,CANNOT1,INFOIMG,SAVEIN,SAVERGBIN,ENCODER;
 
    // Memorisation temporaire
    JTextField directory;
@@ -152,7 +152,7 @@ public final class Save extends JFrame implements ActionListener {
                aladin.chaine.getString("SFHCH1"),
                aladin.chaine.getString("SFHCH6"),
          };
-         
+
       } else {
          CHOICE = new String[] {
                aladin.chaine.getString("SFCH3"),
@@ -169,10 +169,10 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-  /** Creation du Frame donnant les proprietes du plan.
-   * @param aladin Reference
-   * @param show true s'il faut afficher le Canvas
-   */
+   /** Creation du Frame donnant les proprietes du plan.
+    * @param aladin Reference
+    * @param show true s'il faut afficher le Canvas
+    */
    protected Save(Aladin aladin) { this(aladin,false); }
    protected Save(Aladin aladin,boolean show) {
       super();
@@ -192,9 +192,9 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-  /** Donne le panel de la fenetre de choix (save, export planes,
-   * ou export current view
-   */
+   /** Donne le panel de la fenetre de choix (save, export planes,
+    * ou export current view
+    */
    private JPanel getFirstPanel() {
 
       // JPanel des boutons de choix de sauvegarde et d'exportation
@@ -269,7 +269,7 @@ public final class Save extends JFrame implements ActionListener {
 
    private JFrame frameExport;
 
-  /** Sauvegarde des plans individuellement */
+   /** Sauvegarde des plans individuellement */
    protected void exportPlans() {
       frameExport = new JFrame();
 
@@ -324,7 +324,7 @@ public final class Save extends JFrame implements ActionListener {
    // sur les sauvegardes FITS
    boolean firstFlagFits=true;
 
-  /** Aiguillage de sauvegarde */
+   /** Aiguillage de sauvegarde */
    protected void actionExportPlans() {
       boolean res=true;	// Resultat final des sauvegardes
       boolean flagFits=false;	// True si on a sauvegarde au-moins 1 FITS
@@ -342,6 +342,7 @@ public final class Save extends JFrame implements ActionListener {
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res &= saveMoc(s,(PlanMoc)p,jsonMocCb!=null && jsonMocCb.isSelected() ? HealpixMoc.ASCII : HealpixMoc.FITS);
                break;
+               //            case Plan.APERTURE:
             case Plan.TOOL:
                res&= (tsvCb!=null && tsvCb.isSelected()) || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
                break;
@@ -356,7 +357,7 @@ public final class Save extends JFrame implements ActionListener {
             case Plan.IMAGEMOSAIC:
                s = directory.getText()+Util.FS+fileSavePlan[i].getText();
                res&=saveImage(s,p,pngCb!=null && pngCb.isSelected() ? 3 :
-                                  jpgCb!=null && jpgCb.isSelected() ? 2 : 0 );
+                  jpgCb!=null && jpgCb.isSelected() ? 2 : 0 );
                break;
          }
       }
@@ -372,7 +373,7 @@ public final class Save extends JFrame implements ActionListener {
       aladin.memoDefaultDirectory(directory.getText());
    }
 
-  /** Construction du panel de sauvegarde des plans */
+   /** Construction du panel de sauvegarde des plans */
    protected JPanel getPlanPanel() {
       int i,j=0;
       GridBagConstraints c = new GridBagConstraints();
@@ -395,14 +396,14 @@ public final class Save extends JFrame implements ActionListener {
       Plan [] allPlan = aladin.calque.getPlans();
       for( i=0; i<allPlan.length; i++ ) {
          Plan pl =allPlan[i];
-         if( pl.type==Plan.NO || pl.type==Plan.APERTURE  || pl.type==Plan.FOLDER || !pl.flagOk ) continue;
+         if( pl.type==Plan.NO || pl.type==Plan.APERTURE || pl.type==Plan.FOLDER || !pl.flagOk ) continue;
          if( pl instanceof PlanBG && pl.type!=Plan.ALLSKYMOC ) continue;
          if( pl.isSimpleCatalog() && noCatalog ) noCatalog = false;
          if( pl.isImage() && noImage) noImage = false;
          if( pl instanceof PlanMoc && noMoc ) noMoc = false;
          listPlan[j]=pl;
          cbPlan[j] = new JCheckBox(j+".- ",pl.selected);
-//         String s = pl.label+((pl.objet!=null)?"-"+pl.objet:"");
+         //         String s = pl.label+((pl.objet!=null)?"-"+pl.objet:"");
          String s = pl.label;
          JLabel name = new JLabel(s);
          name.setForeground(pl.c);
@@ -430,7 +431,7 @@ public final class Save extends JFrame implements ActionListener {
          g.setConstraints(type,c); p.add(type);
          j++;
       }
-      
+
       if( j==0 ) {
          aladin.warning(this,"There is no available plan to export !");
          return null;
@@ -438,90 +439,90 @@ public final class Save extends JFrame implements ActionListener {
 
       // s'il y a au moins un plan catalogue
       if( !noCatalog ) {
-          c.gridwidth = 2;
-          c.anchor = GridBagConstraints.EAST;
-          JLabel nil = new JLabel("");
-          g.setConstraints(nil,c); p.add(nil);
+         c.gridwidth = 2;
+         c.anchor = GridBagConstraints.EAST;
+         JLabel nil = new JLabel("");
+         g.setConstraints(nil,c); p.add(nil);
 
-          c.gridwidth = 1;
-          c.anchor = GridBagConstraints.WEST;
-          JLabel l = new JLabel(SAVEIN);
-          l.setFont(Aladin.BOLD);
-          g.setConstraints(l,c); p.add(l);
+         c.gridwidth = 1;
+         c.anchor = GridBagConstraints.WEST;
+         JLabel l = new JLabel(SAVEIN);
+         l.setFont(Aladin.BOLD);
+         g.setConstraints(l,c); p.add(l);
 
-          JPanel pFormat = new JPanel();
-          pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
-          ButtonGroup cg = new ButtonGroup();
-          tsvCb = new JRadioButton("TSV");      tsvCb.setActionCommand("TSV");
-          votCb = new JRadioButton("VOTABLE");  votCb.setActionCommand("VOTABLE");
-          cg.add(tsvCb); cg.add(votCb); tsvCb.setSelected(true);
-          pFormat.add(tsvCb);
-          pFormat.add(votCb);
-          tsvCb.addActionListener(this);
-          votCb.addActionListener(this);
-          c.gridwidth = 1;
-          if( !noImage || !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
-          g.setConstraints(pFormat,c); p.add(pFormat);
+         JPanel pFormat = new JPanel();
+         pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
+         ButtonGroup cg = new ButtonGroup();
+         tsvCb = new JRadioButton("TSV");      tsvCb.setActionCommand("TSV");
+         votCb = new JRadioButton("VOTABLE");  votCb.setActionCommand("VOTABLE");
+         cg.add(tsvCb); cg.add(votCb); tsvCb.setSelected(true);
+         pFormat.add(tsvCb);
+         pFormat.add(votCb);
+         tsvCb.addActionListener(this);
+         votCb.addActionListener(this);
+         c.gridwidth = 1;
+         if( !noImage || !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
+         g.setConstraints(pFormat,c); p.add(pFormat);
       }
 
       // s'il y a au moins une image
       if( !noImage ) {
-          c.gridwidth = 2;
-          c.anchor = GridBagConstraints.EAST;
-          JLabel nil = new JLabel("");
-          g.setConstraints(nil,c); p.add(nil);
+         c.gridwidth = 2;
+         c.anchor = GridBagConstraints.EAST;
+         JLabel nil = new JLabel("");
+         g.setConstraints(nil,c); p.add(nil);
 
-          c.gridwidth = 1;
-          c.anchor = GridBagConstraints.WEST;
-          JLabel l = new JLabel(SAVERGBIN);
-          l.setFont(Aladin.BOLD);
-          g.setConstraints(l,c); p.add(l);
+         c.gridwidth = 1;
+         c.anchor = GridBagConstraints.WEST;
+         JLabel l = new JLabel(SAVERGBIN);
+         l.setFont(Aladin.BOLD);
+         g.setConstraints(l,c); p.add(l);
 
-          JPanel pFormat = new JPanel();
-          pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
-          ButtonGroup cg = new ButtonGroup();
-          fitsCb = new JRadioButton("FITS"); fitsCb.setActionCommand("FITS");
-          jpgCb = new JRadioButton("JPEG");  jpgCb.setActionCommand("JPEG");
-          pngCb = new JRadioButton("PNG");   pngCb.setActionCommand("PNG");
-          cg.add(fitsCb); cg.add(jpgCb); cg.add(pngCb); fitsCb.setSelected(true);
-          pFormat.add(fitsCb);
-          pFormat.add(jpgCb);
-          pFormat.add(pngCb);
-          fitsCb.addActionListener(this);
-          jpgCb.addActionListener(this);
-          pngCb.addActionListener(this);
-          c.gridwidth = 1;
-          c.insets.bottom = c.insets.top = 2;
-          if( !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
-          g.setConstraints(pFormat,c); p.add(pFormat);
+         JPanel pFormat = new JPanel();
+         pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
+         ButtonGroup cg = new ButtonGroup();
+         fitsCb = new JRadioButton("FITS"); fitsCb.setActionCommand("FITS");
+         jpgCb = new JRadioButton("JPEG");  jpgCb.setActionCommand("JPEG");
+         pngCb = new JRadioButton("PNG");   pngCb.setActionCommand("PNG");
+         cg.add(fitsCb); cg.add(jpgCb); cg.add(pngCb); fitsCb.setSelected(true);
+         pFormat.add(fitsCb);
+         pFormat.add(jpgCb);
+         pFormat.add(pngCb);
+         fitsCb.addActionListener(this);
+         jpgCb.addActionListener(this);
+         pngCb.addActionListener(this);
+         c.gridwidth = 1;
+         c.insets.bottom = c.insets.top = 2;
+         if( !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
+         g.setConstraints(pFormat,c); p.add(pFormat);
       }
-      
+
       // s'il y a au moins un plan Moc
       if( !noMoc ) {
-          c.gridwidth = 2;
-          c.anchor = GridBagConstraints.EAST;
-          JLabel nil = new JLabel("");
-          g.setConstraints(nil,c); p.add(nil);
+         c.gridwidth = 2;
+         c.anchor = GridBagConstraints.EAST;
+         JLabel nil = new JLabel("");
+         g.setConstraints(nil,c); p.add(nil);
 
-          c.gridwidth = 1;
-          c.anchor = GridBagConstraints.WEST;
-          JLabel l = new JLabel(SAVEIN);
-          l.setFont(Aladin.BOLD);
-          g.setConstraints(l,c); p.add(l);
+         c.gridwidth = 1;
+         c.anchor = GridBagConstraints.WEST;
+         JLabel l = new JLabel(SAVEIN);
+         l.setFont(Aladin.BOLD);
+         g.setConstraints(l,c); p.add(l);
 
-          JPanel pFormat = new JPanel();
-          pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
-          ButtonGroup cg = new ButtonGroup();
-          fitsMocCb = new JRadioButton("FITS");      fitsMocCb.setActionCommand("FITS");
-          jsonMocCb = new JRadioButton("ASCII/JSON");      jsonMocCb.setActionCommand("ASCII/JSON");
-          cg.add(fitsMocCb); cg.add(jsonMocCb); fitsMocCb.setSelected(true);
-          pFormat.add(fitsMocCb);
-          pFormat.add(jsonMocCb);
-          fitsMocCb.addActionListener(this);
-          jsonMocCb.addActionListener(this);
-          c.gridwidth = 1;
-          c.gridwidth = GridBagConstraints.REMAINDER;
-          g.setConstraints(pFormat,c); p.add(pFormat);
+         JPanel pFormat = new JPanel();
+         pFormat.setLayout(new FlowLayout(FlowLayout.LEFT));
+         ButtonGroup cg = new ButtonGroup();
+         fitsMocCb = new JRadioButton("FITS");      fitsMocCb.setActionCommand("FITS");
+         jsonMocCb = new JRadioButton("ASCII/JSON");      jsonMocCb.setActionCommand("ASCII/JSON");
+         cg.add(fitsMocCb); cg.add(jsonMocCb); fitsMocCb.setSelected(true);
+         pFormat.add(fitsMocCb);
+         pFormat.add(jsonMocCb);
+         fitsMocCb.addActionListener(this);
+         jsonMocCb.addActionListener(this);
+         c.gridwidth = 1;
+         c.gridwidth = GridBagConstraints.REMAINDER;
+         g.setConstraints(pFormat,c); p.add(pFormat);
       }
 
 
@@ -530,11 +531,11 @@ public final class Save extends JFrame implements ActionListener {
 
       return p;
    }
-   
-  /** Backup ou Save view
-   * @param mode 0-backup, 1-view, 2-allview
-   * @param format BMP, JPEG, PNG, EPS, PNG|LK (ignoré si mode=0)
-   */
+
+   /** Backup ou Save view
+    * @param mode 0-backup, 1-view, 2-allview
+    * @param format BMP, JPEG, PNG, EPS, PNG|LK (ignoré si mode=0)
+    */
    protected void saveFile(int mode) { saveFile(mode,BMP,-1); }
    protected void saveFile(int mode,int format,float qual) {
       boolean res;
@@ -595,30 +596,30 @@ public final class Save extends JFrame implements ActionListener {
    static private int nbuf=0;
    static private FileOutputStream f;
 
-  /** Prepare le buffer de sauvegarde */
+   /** Prepare le buffer de sauvegarde */
    static private void open(File file) throws java.io.IOException {
       f = new FileOutputStream(file);
       nbuf=0;
    }
 
-  /** flush de la sauvegarde courante */
+   /** flush de la sauvegarde courante */
    static private void flush() throws java.io.IOException {
       f.write(buf,0,nbuf);
       nbuf=0;
    }
 
-  /** Prepare le buffer de sauvegarde */
+   /** Prepare le buffer de sauvegarde */
    static private void close() throws java.io.IOException {
       flush();
       f.close();
    }
 
-  /** Sauvegarde avec bufferisation minimale */
+   /** Sauvegarde avec bufferisation minimale */
    static private void append(String s) throws java.io.IOException {
       append(s.toCharArray());
    }
 
-  /** Sauvegarde avec bufferisation minimale */
+   /** Sauvegarde avec bufferisation minimale */
    static private void append(char a[]) throws java.io.IOException {
       for( int i=0; i<a.length; i++ ) {
          buf[nbuf++]=(byte) a[i];
@@ -626,7 +627,7 @@ public final class Save extends JFrame implements ActionListener {
       }
    }
 
-  /** Sauvegarde d'Aladin */
+   /** Sauvegarde d'Aladin */
    protected boolean saveAJ(String filename) {
       filename = aladin.getFullFileName(filename);
       File file = new File(filename);
@@ -641,9 +642,9 @@ public final class Save extends JFrame implements ActionListener {
 
          // Entete du fichier de sauvegarde
          append("<?xml version = \"1.0\"?>\n"+
-                "<!-- This file has been produced by the Aladin Java interface,"+CR+
-                "     Please do not modify it -->"+CR+CR+
-                "<ALADINJAVA vers=\"1.0\">"+CR);
+               "<!-- This file has been produced by the Aladin Java interface,"+CR+
+               "     Please do not modify it -->"+CR+CR+
+               "<ALADINJAVA vers=\"1.0\">"+CR);
 
 
          // Generation XML pour chaque plan
@@ -655,12 +656,14 @@ public final class Save extends JFrame implements ActionListener {
                case Plan.FILTER:  appendPlanFilterXML(p);  break;
                case Plan.FOLDER:  appendPlanFolderXML(p);  break;
                case Plan.CATALOG: appendPlanCatalogXML(p); break;
+               //               case Plan.APERTURE:
                case Plan.TOOL:    appendPlanToolXML(p);    break;
                case Plan.IMAGERSP:
                case Plan.IMAGEALGO:
                case Plan.IMAGEMOSAIC:
                case Plan.IMAGE:   appendPlanImageXML(p);   break;
                case Plan.IMAGERGB:appendPlanImageRGBXML(p);break;
+               //               default: appendGenericCommand(p); break;    // PAS ENCORE SUPPORTE - A REFLECHIR
             }
 
          }
@@ -671,8 +674,8 @@ public final class Save extends JFrame implements ActionListener {
          append("  <MODEVIEW");
          append(CR+"    overlays=\""+aladin.calque.getOverlayList()+"\"");
          append(CR+"    overlay=\""+aladin.calque.flagOverlay+"\"");
-//         append(CR+"    grid=\""+aladin.calque.hasGrid()+"\"");
-//         append(CR+"    target=\""+aladin.calque.hasTarget()+"\"");
+         //         append(CR+"    grid=\""+aladin.calque.hasGrid()+"\"");
+         //         append(CR+"    target=\""+aladin.calque.hasTarget()+"\"");
          append(CR+"    mode=\""+aladin.view.getModeView()+"\"");
          append(CR+"    position=\""+aladin.view.getScrollValue()+"\">"+CR);
 
@@ -714,7 +717,7 @@ public final class Save extends JFrame implements ActionListener {
          append(CR+"       pref=\""+m.pref.label+"\"");
          append(CR+"       locked=\""+m.locked+"\"");
          append(CR+"       northUp=\""+m.northUp+"\"");
-//         append(CR+"       sync=\""+m.sync+"\"");
+         //         append(CR+"       sync=\""+m.sync+"\"");
       } catch( Exception e ) {}
    }
 
@@ -735,7 +738,7 @@ public final class Save extends JFrame implements ActionListener {
          fileSavePlan[i].setText(label.substring(0, offset)+newSuffix);
       }
    }
-   
+
 
    /** appelé lorsque l'utilisateur a modifie le format de sauvegarde des cats :
     * on modifie le suffixe des noms de fichiers
@@ -753,7 +756,7 @@ public final class Save extends JFrame implements ActionListener {
          fileSavePlan[i].setText(label.substring(0, label.length()-4)+newSuffix);
       }
    }
-   
+
    // les extensions à tester dans le cas d'une substitution */
    static final private String [] EXTENSIONS = { ".png",".jpg",".jpeg",".fits",".fit" };
 
@@ -791,57 +794,57 @@ public final class Save extends JFrame implements ActionListener {
    }
 
    static private String B64 =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
    static int [] b642a=null;
-   
-//   public static int get64(byte [] b, int k,
-//         char [] a, int start, int length) {
-//      byte [] res = decode(new String(a,start,length));
-//      System.arraycopy(res, 0, b, k, res.length);
-//      return k+res.length;
-//   }
-//   
-//   private final static char[] ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
-//
-//   private static int[]  toInt   = new int[128];
-//
-//   static {
-//       for(int i=0; i< ALPHABET.length; i++) toInt[ALPHABET[i]]= i;
-//   }
-//   
-//   public static byte[] decode(String s){
-//      int delta = s.endsWith( "==" ) ? 2 : s.endsWith( "=" ) ? 1 : 0;
-//      byte[] buffer = new byte[s.length()*3/4 - delta];
-//      int mask = 0xFF;
-//      int index = 0;
-//      for(int i=0; i< s.length(); i+=4){
-//          int c0 = toInt[s.charAt( i )];
-//          int c1 = toInt[s.charAt( i + 1)];
-//          buffer[index++]= (byte)(((c0 << 2) | (c1 >> 4)) & mask);
-//          if(index >= buffer.length){
-//              return buffer;
-//          }
-//          int c2 = toInt[s.charAt( i + 2)];
-//          buffer[index++]= (byte)(((c1 << 4) | (c2 >> 2)) & mask);
-//          if(index >= buffer.length){
-//              return buffer;
-//          }
-//          int c3 = toInt[s.charAt( i + 3 )];
-//          buffer[index++]= (byte)(((c2 << 6) | c3) & mask);
-//      }
-//      return buffer;
-//  } 
 
-  /** Decodage d'une image en base 64. - Merci Fox pour le code
-   *  Le traitement peut etre en fait en plusieurs fois.
-   * @param b[] le tableau des pixels en sortie
-   * @param k   l'offset dans le tableau b[]
-   * @param a[] les caracteres base 64 a traiter
-   * @param start la position de depart dans a[]
-   * @param length le nombre de caracteres a traiter dans a[]
-   * @return la prochaine position a remplir dans b[]
-   */
+   //   public static int get64(byte [] b, int k,
+   //         char [] a, int start, int length) {
+   //      byte [] res = decode(new String(a,start,length));
+   //      System.arraycopy(res, 0, b, k, res.length);
+   //      return k+res.length;
+   //   }
+   //
+   //   private final static char[] ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+   //
+   //   private static int[]  toInt   = new int[128];
+   //
+   //   static {
+   //       for(int i=0; i< ALPHABET.length; i++) toInt[ALPHABET[i]]= i;
+   //   }
+   //
+   //   public static byte[] decode(String s){
+   //      int delta = s.endsWith( "==" ) ? 2 : s.endsWith( "=" ) ? 1 : 0;
+   //      byte[] buffer = new byte[s.length()*3/4 - delta];
+   //      int mask = 0xFF;
+   //      int index = 0;
+   //      for(int i=0; i< s.length(); i+=4){
+   //          int c0 = toInt[s.charAt( i )];
+   //          int c1 = toInt[s.charAt( i + 1)];
+   //          buffer[index++]= (byte)(((c0 << 2) | (c1 >> 4)) & mask);
+   //          if(index >= buffer.length){
+   //              return buffer;
+   //          }
+   //          int c2 = toInt[s.charAt( i + 2)];
+   //          buffer[index++]= (byte)(((c1 << 4) | (c2 >> 2)) & mask);
+   //          if(index >= buffer.length){
+   //              return buffer;
+   //          }
+   //          int c3 = toInt[s.charAt( i + 3 )];
+   //          buffer[index++]= (byte)(((c2 << 6) | c3) & mask);
+   //      }
+   //      return buffer;
+   //  }
+
+   /** Decodage d'une image en base 64. - Merci Fox pour le code
+    *  Le traitement peut etre en fait en plusieurs fois.
+    * @param b[] le tableau des pixels en sortie
+    * @param k   l'offset dans le tableau b[]
+    * @param a[] les caracteres base 64 a traiter
+    * @param start la position de depart dans a[]
+    * @param length le nombre de caracteres a traiter dans a[]
+    * @return la prochaine position a remplir dans b[]
+    */
    public static int get64(byte [] b, int k, char [] a, int start, int length) {
       char [] tab = B64.toCharArray();
       int  c, c3, i,j, colno, lineno;
@@ -890,9 +893,9 @@ public final class Save extends JFrame implements ActionListener {
                   " line "+lineno+", col "+colno);
             c3 >>>= 4;
 
-         if( k>=size ) return k;
-         b[k++]=(byte)c3;
-         continue;
+      if( k>=size ) return k;
+      b[k++]=(byte)c3;
+      continue;
          }
          c3 |= i;
          c3 <<= 6;
@@ -904,11 +907,11 @@ public final class Save extends JFrame implements ActionListener {
             if( i!=0xff && Aladin.levelTrace>=3 ) System.err.println("****Bad input char (3) "+((char)c)+
                   " line "+lineno+", col "+colno);
             c3 >>>= 2;
-         if( k>=size ) return k;
-         b[k++]=(byte)(c3>>>8);
-         if( k>=size ) return k;
-         b[k++]=(byte)c3;
-         continue ;
+            if( k>=size ) return k;
+            b[k++]=(byte)(c3>>>8);
+            if( k>=size ) return k;
+            b[k++]=(byte)c3;
+            continue ;
          }
          c3 |= i;
          c3 <<= 6;
@@ -918,7 +921,7 @@ public final class Save extends JFrame implements ActionListener {
          i = b642a[c&0xff] ;
          if( (i&0x40)!=0 && i!=0xff ) {
             if( Aladin.levelTrace>=3 ) System.err.println("****Bad input char (4) "+((char)c)+
-               " line "+lineno+", col "+colno);
+                  " line "+lineno+", col "+colno);
          } else c3 |= i;
          if( k>=size ) return k;
          b[k++]=(byte)(c3>>>16);
@@ -967,17 +970,25 @@ public final class Save extends JFrame implements ActionListener {
       }
    }
 
-  /** Sauvegarde du plan Catalog p sous forme XML (utilise le buffer f) */
+   // PAS ENCORE UTILISE - A REFLECHIR
+   private void appendGenericCommand(Plan p) throws java.io.IOException {
+      String cmd = p.getBookmarkCode();
+      if( cmd==null || cmd.length()==0 ) return;   // Pas supporté
+      appendXMLHeadPlan(p);
+      append("    <VALUE><![CDATA["+cmd+"]]></VALUE>"+CR+"  </PLANE>"+CR);
+   }
+
+   /** Sauvegarde du plan Catalog p sous forme XML (utilise le buffer f) */
    private void appendPlanCatalogXML(Plan p) throws java.io.IOException {
       appendXMLHeadPlan(p);
-      appendPCatXML(p.pcat); 
+      appendPCatXML(p.pcat);
       append("  </PLANE>"+CR);
    }
-   
+
    /** Sauvegarde du contenu d'un plan Catalog ou des sources d'un paln Tool sous forme XML (utilise le buffer f) */
    private void appendPCatXML(Pcat pcat) throws java.io.IOException {
       Legende leg=null;
-      
+
       // Parcours des objets
       Iterator<Obj> it = pcat.iterator();
       while( it.hasNext() ) {
@@ -1026,10 +1037,10 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-  /** Sauvegarde du plan tool p sous forme XML (utilise le buffer f)*/
+   /** Sauvegarde du plan tool p sous forme XML (utilise le buffer f)*/
    protected void appendPlanToolXML(Plan p) throws java.io.IOException {
       boolean flagSource=false;
-      
+
       // Entete du plan courant
       appendXMLHeadPlan(p);
 
@@ -1042,25 +1053,25 @@ public final class Save extends JFrame implements ActionListener {
          Position o = (Position)it.next();
 
          if( o instanceof Source ) { flagSource=true; continue; }
-         
+
          // Beurk - PF nov 2010
          if (o instanceof Cercle) {
-             Cercle c = (Cercle)o;
-             append(getInstance(c)+"\t"+"."+"\t"+c.o[0].raj+"\t"+c.o[0].dej+
-                    "\t"+c.o[0].x+"\t"+c.o[0].y+"\t"+c.isWithLabel()+
-                    "\t"+c.getSpecificAJInfo()+CR);
-             append(getInstance(c)+"\t"+"+"+"\t"+c.o[1].raj+"\t"+c.o[1].dej+
-                     "\t"+c.o[1].x+"\t"+c.o[1].y+"\t"+c.isWithLabel()+
-                     "\t"+c.getSpecificAJInfo()+CR);
-             
+            Cercle c = (Cercle)o;
+            append(getInstance(c)+"\t"+"."+"\t"+c.o[0].raj+"\t"+c.o[0].dej+
+                  "\t"+c.o[0].x+"\t"+c.o[0].y+"\t"+c.isWithLabel()+
+                  "\t"+c.getSpecificAJInfo()+CR);
+            append(getInstance(c)+"\t"+"+"+"\t"+c.o[1].raj+"\t"+c.o[1].dej+
+                  "\t"+c.o[1].x+"\t"+c.o[1].y+"\t"+c.isWithLabel()+
+                  "\t"+c.getSpecificAJInfo()+CR);
+
          } else append(getInstance(o)+"\t"+suite(o)+
-                  "\t"+o.raj+"\t"+o.dej+"\t"+o.x+"\t"+o.y+"\t"+o.isWithLabel()+
-                  "\t"+o.getSpecificAJInfo()+CR);
+               "\t"+o.raj+"\t"+o.dej+"\t"+o.x+"\t"+o.y+"\t"+o.isWithLabel()+
+               "\t"+o.getSpecificAJInfo()+CR);
       }
 
       // Fin de la table concernant les objets classques
       append(getXMLTailTable());
-      
+
       // Dans le cas où il y a des Source (outil PHOT)
       if( flagSource) appendPCatXML(p.pcat);
 
@@ -1068,16 +1079,16 @@ public final class Save extends JFrame implements ActionListener {
       append("  </PLANE>"+CR);
 
    }
-   
-  /** Retourne le nom de l'objet graphique */
+
+   /** Retourne le nom de l'objet graphique */
    protected String getToolName(Obj o) { return "Undefined"; }
 
-  /** Retourne la fin XML d'une table */
+   /** Retourne la fin XML d'une table */
    protected String getXMLTailTable() {
       return "]]></VALUE></TABLE>"+CR;
    }
 
-  /** retourne l'entete XML d'une table */
+   /** retourne l'entete XML d'une table */
    protected String getXMLHeadTable(Legende leg) {
       int i;
       StringBuffer s = new StringBuffer();
@@ -1114,9 +1125,9 @@ public final class Save extends JFrame implements ActionListener {
       return s.toString();
    }
 
-  /** retourne l'entete XML d'un plan */
+   /** retourne l'entete XML d'un plan */
    private void appendXMLHeadPlan(Plan p) throws java.io.IOException {
-       int i;
+      int i;
 
       append("  <PLANE");
       append(CR+"     type=\""+XMLParser.XMLEncode(Plan.Tp[p.type])+"\"");
@@ -1152,34 +1163,34 @@ public final class Save extends JFrame implements ActionListener {
          if( Projection.isOk(p.projd) ) {
             Calib c = p.projd.c;
             append(CR+"     calib=\""+c.aladin
-                     +","+c.epoch
-                     +","+c.alpha
-                     +","+c.delta
-                     +","+c.yz
-                     +","+c.xz
-                     +","+c.focale
-                     +","+c.Xorg
-                     +","+c.Yorg
-                     +","+c.incX
-                     +","+c.incY
-                     +","+c.alphai
-                     +","+c.deltai
-                     +","+c.incA
-                     +","+c.incD
-                     +","+c.Xcen
-                     +","+c.Ycen
-                     +","+c.widtha
-                     +","+c.widthd
-                     +","+c.xnpix
-                     +","+c.ynpix
-                     +","+c.rota
-                     +","+c.cdelz
-                     +","+c.sdelz
-                     +","+c.type1
-                     +","+c.type2
-                     +","+c.equinox
-                     +","+c.proj
-            +"\"");
+                  +","+c.epoch
+                  +","+c.alpha
+                  +","+c.delta
+                  +","+c.yz
+                  +","+c.xz
+                  +","+c.focale
+                  +","+c.Xorg
+                  +","+c.Yorg
+                  +","+c.incX
+                  +","+c.incY
+                  +","+c.alphai
+                  +","+c.deltai
+                  +","+c.incA
+                  +","+c.incD
+                  +","+c.Xcen
+                  +","+c.Ycen
+                  +","+c.widtha
+                  +","+c.widthd
+                  +","+c.xnpix
+                  +","+c.ynpix
+                  +","+c.rota
+                  +","+c.cdelz
+                  +","+c.sdelz
+                  +","+c.type1
+                  +","+c.type2
+                  +","+c.equinox
+                  +","+c.proj
+                  +"\"");
             append(CR+"     projection=\""+Calib.getProjName(c.proj)+"\"");
             append(CR+"     system=\""+c.system+"\"");
             append(CR+"     flagepoch=\""+c.flagepoc+"\"");
@@ -1196,9 +1207,9 @@ public final class Save extends JFrame implements ActionListener {
             for( i=1; i<10; i++ ) append(","+c.xydpoly[i]);
             append("\"");
             append(CR+"     CD=\""+c.CD[0][0]+","+c.CD[0][1]+","
-                                    +c.CD[1][0]+","+c.CD[1][1]+"\"");
+                  +c.CD[1][0]+","+c.CD[1][1]+"\"");
             append(CR+"     ID=\""+c.ID[0][0]+","+c.ID[0][1]+","
-                                    +c.ID[1][0]+","+c.ID[1][1]+"\"");
+                  +c.ID[1][0]+","+c.ID[1][1]+"\"");
 
          }
       }
@@ -1236,7 +1247,7 @@ public final class Save extends JFrame implements ActionListener {
          }
       }
       append(" >"+CR);
-      
+
       // Filtres prédéfinis ?
       if( p.filters!=null ) {
          append("    <FILTERS filterIndex=\""+p.filterIndex+"\" nFilter=\""+p.filters.length+"\">"+CR);
@@ -1268,8 +1279,8 @@ public final class Save extends JFrame implements ActionListener {
    }
 
    protected boolean saveCatalog(File file, Plan p ,boolean tsv) {
-       if( tsv ) return saveCatTSV(file,p);
-       else return saveCatVOTable(file,p,false);
+      if( tsv ) return saveCatTSV(file,p);
+      else return saveCatVOTable(file,p,false);
    }
 
    /** Ajout d'un suffixe en cas de multi-table en TSV */
@@ -1303,7 +1314,7 @@ public final class Save extends JFrame implements ActionListener {
       }
       return ".";
    }
-   
+
    /**
     * Sauvegarde TSV d'un plan Tool
     * @param file le fichier dans lequel sauvegarder
@@ -1316,7 +1327,7 @@ public final class Save extends JFrame implements ActionListener {
       FileOutputStream f=null;
 
       try{
-//         s.append("RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo"+CR);
+         //         s.append("RAJ2000\tDEJ2000\tObject\tCont_Flag\tInfo"+CR);
          s.append("Object\tCont_Flag\tRAJ2000\tDEJ2000\tX\tY\tLabel_Flag\tInfo"+CR);
 
          Iterator<Obj> it = pcat.iterator();
@@ -1327,25 +1338,25 @@ public final class Save extends JFrame implements ActionListener {
 
                // Beurk - PF nov 2010
                if (o instanceof Cercle) {
-                   Cercle c = (Cercle)o;
-                   s.append(getInstance(c)+"\t"+"."+"\t"+c.o[0].raj+"\t"+c.o[0].dej+
-                          "\t"+c.o[0].x+"\t"+c.o[0].y+"\t"+c.isWithLabel()+
-                          "\t"+c.getSpecificAJInfo()+CR);
-                   s.append(getInstance(c)+"\t"+"+"+"\t"+c.o[1].raj+"\t"+c.o[1].dej+
-                           "\t"+c.o[1].x+"\t"+c.o[1].y+"\t"+c.isWithLabel()+
-                           "\t"+c.getSpecificAJInfo()+CR);
-                   
-               } else s.append(getInstance(o)+"\t"+suite(o)+
-                        "\t"+o.raj+"\t"+o.dej+"\t"+o.x+"\t"+o.y+"\t"+o.isWithLabel()+
-                        "\t"+o.getSpecificAJInfo()+CR);
+                  Cercle c = (Cercle)o;
+                  s.append(getInstance(c)+"\t"+"."+"\t"+c.o[0].raj+"\t"+c.o[0].dej+
+                        "\t"+c.o[0].x+"\t"+c.o[0].y+"\t"+c.isWithLabel()+
+                        "\t"+c.getSpecificAJInfo()+CR);
+                  s.append(getInstance(c)+"\t"+"+"+"\t"+c.o[1].raj+"\t"+c.o[1].dej+
+                        "\t"+c.o[1].x+"\t"+c.o[1].y+"\t"+c.isWithLabel()+
+                        "\t"+c.getSpecificAJInfo()+CR);
 
-               
-//               Position o = (Position)it.next();
-//               String info = "";
-//               if( o instanceof Source ) info = getInfo( (Source)o );
-//               else if( o.id!=null ) info=o.id;
-//               s.append(Util.myRound(o.raj+"",13)+"\t"+Util.myRound(o.dej+"",13)
-//                     +"\t"+getInstance(o)+"\t"+suite(o)+"\t"+info+CR);
+               } else s.append(getInstance(o)+"\t"+suite(o)+
+                     "\t"+o.raj+"\t"+o.dej+"\t"+o.x+"\t"+o.y+"\t"+o.isWithLabel()+
+                     "\t"+o.getSpecificAJInfo()+CR);
+
+
+               //               Position o = (Position)it.next();
+               //               String info = "";
+               //               if( o instanceof Source ) info = getInfo( (Source)o );
+               //               else if( o.id!=null ) info=o.id;
+               //               s.append(Util.myRound(o.raj+"",13)+"\t"+Util.myRound(o.dej+"",13)
+               //                     +"\t"+getInstance(o)+"\t"+suite(o)+"\t"+info+CR);
             }
             // flush intermédiaire si nécessaire, et final
             if( s.length()>MAXBUF-100 || i==nb) {
@@ -1430,7 +1441,7 @@ public final class Save extends JFrame implements ActionListener {
     * @throws Exception
     */
    private FileOutputStream writeByteTSV(FileOutputStream f, File file,
-                 int nbTable, StringBuffer s) throws Exception {
+         int nbTable, StringBuffer s) throws Exception {
       if( f==null ) {
          if( nbTable>0 ) file=nextSuffixFile(file,nbTable);
          file.delete();
@@ -1451,37 +1462,37 @@ public final class Save extends JFrame implements ActionListener {
     * @return boolean true si la sauvegarde s'est bien effectuee, false sinon
     */
    protected boolean saveCatVOTable(File file, Plan p, boolean addXY ) {
-       try {
-          DataOutputStream out = new DataOutputStream(
-             new BufferedOutputStream(new FileOutputStream(file)));
-          aladin.writePlaneInVOTable(p, out, addXY);
-          out.close();
-       }
-       catch(IOException ioe) {errorFile=errorFile+"\n"+file;return false;}
-       aladin.log("export","catalog VOTABLE");
-       return true;
+      try {
+         DataOutputStream out = new DataOutputStream(
+               new BufferedOutputStream(new FileOutputStream(file)));
+         aladin.writePlaneInVOTable(p, out, addXY);
+         out.close();
+      }
+      catch(IOException ioe) {errorFile=errorFile+"\n"+file;return false;}
+      aladin.log("export","catalog VOTABLE");
+      return true;
    }
 
-//   protected void JPEGwriter(Image img,OutputStream o) throws Exception {
-//      BufferedImage bufferedImage = new BufferedImage(
-//            img.getWidth(null),
-//            img.getHeight(null),
-//            BufferedImage.TYPE_INT_RGB );
-//      Graphics g = bufferedImage.createGraphics();
-//      g.drawImage(img,0,0,null);
-//      g.dispose();
-//
-//      try {
-//         com.sun.image.codec.jpeg.JPEGImageEncoder code
-//               = com.sun.image.codec.jpeg.JPEGCodec.createJPEGEncoder(o);
-//         JPEGEncodeParam p = code.getDefaultJPEGEncodeParam(bufferedImage);
-//         p.setQuality((float)0.8,true);
-//         code.setJPEGEncodeParam(p);
-//         code.encode(bufferedImage);
-//   } catch( Exception e ) {
-//         throw new Exception(ENCODER);
-//      }
-//   }
+   //   protected void JPEGwriter(Image img,OutputStream o) throws Exception {
+   //      BufferedImage bufferedImage = new BufferedImage(
+   //            img.getWidth(null),
+   //            img.getHeight(null),
+   //            BufferedImage.TYPE_INT_RGB );
+   //      Graphics g = bufferedImage.createGraphics();
+   //      g.drawImage(img,0,0,null);
+   //      g.dispose();
+   //
+   //      try {
+   //         com.sun.image.codec.jpeg.JPEGImageEncoder code
+   //               = com.sun.image.codec.jpeg.JPEGCodec.createJPEGEncoder(o);
+   //         JPEGEncodeParam p = code.getDefaultJPEGEncodeParam(bufferedImage);
+   //         p.setQuality((float)0.8,true);
+   //         code.setJPEGEncodeParam(p);
+   //         code.encode(bufferedImage);
+   //   } catch( Exception e ) {
+   //         throw new Exception(ENCODER);
+   //      }
+   //   }
 
    /** Il semblerait que le writer JPEG de java ne sache pas faire du GRAY !!
     * En clair, l'option !RGB est inutile pour le moment
@@ -1551,19 +1562,19 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-  /** Sauvegarde de vues
-   * Sauvegarde en BMP 24 bits ou JPEG ou EPS
-   * @param file Descripteur du fichier destination, ou null pour sortie standard
-   * @param w la largeur de l'image de destination (uniquement mode nogui)
-   * @param h la hauteur de l'image de destination (uniquement mode nogui)
-   * @param format JPEG, PNG ou BMP ou EPS
-   * @param qual qualité (pour JPEG uniquement) [0..1]
-   * @param mode CURRENTVIEW, ALLVIEWS, ALLROIS
-   * @return True si Ok false sinon
-   *
-   * REMARQUE : ACTUELLEMENT SEUL LE MODE CURRENTVIEW EST SUPPORTE. LE PROBLEME
-   * SE POSE POUR LES VIEWSIMPLES NON CREEES
-   */
+   /** Sauvegarde de vues
+    * Sauvegarde en BMP 24 bits ou JPEG ou EPS
+    * @param file Descripteur du fichier destination, ou null pour sortie standard
+    * @param w la largeur de l'image de destination (uniquement mode nogui)
+    * @param h la hauteur de l'image de destination (uniquement mode nogui)
+    * @param format JPEG, PNG ou BMP ou EPS
+    * @param qual qualité (pour JPEG uniquement) [0..1]
+    * @param mode CURRENTVIEW, ALLVIEWS, ALLROIS
+    * @return True si Ok false sinon
+    *
+    * REMARQUE : ACTUELLEMENT SEUL LE MODE CURRENTVIEW EST SUPPORTE. LE PROBLEME
+    * SE POSE POUR LES VIEWSIMPLES NON CREEES
+    */
    protected boolean saveView(String filename,int w, int h,int format,float qual) {
       return saveView(filename,w,h,format,qual,CURRENTVIEW);
    }
@@ -1574,21 +1585,21 @@ public final class Save extends JFrame implements ActionListener {
       }
       return saveOneView(filename,w,h,format,qual,aladin.view.getCurrentView());
    }
-   
-   
+
+
    /** Sauvegarde toutes les vues */
    protected boolean saveAllViews(String prefix,int fmt) {
       boolean res=false;
       try {
          if( prefix==null || prefix.trim().length()==0 ) prefix="ROI";
          ViewSimple v = new ViewSimple(aladin,aladin.view,0,0,0);
-         
+
          // pour être sûr que tout est dans viewMemo
          aladin.view.sauvegarde();
-         
+
          // on fait une copie pour éviter de se marcher sur les pieds
          ViewMemo viewMemo = aladin.view.viewMemo.copy();
-         
+
          // On prend la taille du premier cadre
          Rectangle rv = new Rectangle(0,0,aladin.view.viewSimple[0].rv.width,aladin.view.viewSimple[0].rv.height);
 
@@ -1599,7 +1610,7 @@ public final class Save extends JFrame implements ActionListener {
 
             if( !v.pref.isPixel() ) continue;
             //       if( !(v.pref instanceof PlanBG) ) continue;
-            
+
             v.rv = rv;
             v.setSize(rv.width, rv.height);     // BEURK - mais sinon j'ai de gros souci
             if( v.pref instanceof PlanBG ) v.pref.projd = v.projLocal;
@@ -1610,22 +1621,22 @@ public final class Save extends JFrame implements ActionListener {
             String name = prefix+Util.align3(i+1)+(fmt==BMP?".bmp":fmt==PNG?".png":".jpg");
             info("Saving "+(i+1)+"/"+n+" "+Util.getShortPath(name, 40)+"...");
             res = saveOneView(name,-1,-1,fmt,-1,v) || res;
-            
+
          }
          v.free();
-         
+
       } catch( Exception e ) {
          if( aladin.levelTrace>=3 ) e.printStackTrace();
          res=false;
       }
-      
+
       return res;
    }
-   
+
    /** Positionnement d'un message associé au traitement en cours */
    private void info(String s) { info.setText(s+" "); }
 
-   
+
    protected boolean saveOneView(String filename,int w, int h,int format,float qual,ViewSimple v) {
       boolean rep=false;
       try { rep=saveOneView1(filename,w,h,format,qual,v); }
@@ -1633,7 +1644,7 @@ public final class Save extends JFrame implements ActionListener {
       return rep;
    }
 
-    /** Sauvegarde d'une vue
+   /** Sauvegarde d'une vue
     * Sauvegarde en BMP 24 bits ou JPEG ou EPS
     * @param file Descripteur du fichier destination, ou null pour sortie standard
     * @param w la largeur de l'image de destination (uniquement mode nogui)
@@ -1645,32 +1656,32 @@ public final class Save extends JFrame implements ActionListener {
     *
     */
    private boolean saveOneView1(String filename,int w, int h,int format,float qual,ViewSimple v) throws Exception {
-     
-//      System.out.println("saneOneView1 "+filename+" avant ...");
+
+      //      System.out.println("saneOneView1 "+filename+" avant ...");
       boolean rep=false;
-//      v.setLockRepaint(true);
-      
+      //      v.setLockRepaint(true);
+
       OutputStream o=null;
       try {
-          o = filename==null ?
+         o = filename==null ?
                (OutputStream)System.out :
-               (OutputStream)new FileOutputStream(aladin.getFullFileName(filename));
-        if( (format&EPS)==EPS  ) saveEPS(v,w,h,o);
-        else {
-            Image img = v.getImage(w,h);
-            if( (format&JPEG)==JPEG )  {
-               String s = generateFitsHeaderString(v);
-               ImageWriter(img,"jpg",qual,true,new JpegOutputFilter(o,s));
-            }
-            else if( (format&PNG)==PNG )  {
-               String s = generateFitsHeaderString(v);
-               ImageWriter(img,"png",-1,true,new PNGOutputFilter(o,s));
-            }
-//            else if( (format&PNG)==PNG ) ImageWriter( img ,"png",-1,true,o);
-            else if( (format&BMP)==BMP  ) BMPWriter.write( img ,o);
-            else throw new Exception("Unsupported output image format !");
-         }
-         rep=true;
+                  (OutputStream)new FileOutputStream(aladin.getFullFileName(filename));
+               if( (format&EPS)==EPS  ) saveEPS(v,w,h,o);
+               else {
+                  Image img = v.getImage(w,h);
+                  if( (format&JPEG)==JPEG )  {
+                     String s = generateFitsHeaderString(v);
+                     ImageWriter(img,"jpg",qual,true,new JpegOutputFilter(o,s));
+                  }
+                  else if( (format&PNG)==PNG )  {
+                     String s = generateFitsHeaderString(v);
+                     ImageWriter(img,"png",-1,true,new PNGOutputFilter(o,s));
+                  }
+                  //            else if( (format&PNG)==PNG ) ImageWriter( img ,"png",-1,true,o);
+                  else if( (format&BMP)==BMP  ) BMPWriter.write( img ,o);
+                  else throw new Exception("Unsupported output image format !");
+               }
+               rep=true;
       } catch(Exception e) {
          if( filename!=null ) System.out.println("!!! image error ["+filename+"]");
          System.err.println(e.getMessage());
@@ -1687,48 +1698,48 @@ public final class Save extends JFrame implements ActionListener {
             String linkFilename = filename+(lkFlex?".lkflex":".lk");
             o = new FileOutputStream(aladin.getFullFileName(linkFilename));
             linkWriter(v,o,lkFlex);
-            
+
             Projection proj = v.pref.projd;
-//            Projection proj = v.getProj();
+            //            Projection proj = v.getProj();
 
             // écriture position des 4 coins de la vue
             if( lkFlex ) {
-                String cornersFilename = filename+".corners";
+               String cornersFilename = filename+".corners";
 
-                OutputStream oCorners = new FileOutputStream(aladin.getFullFileName(cornersFilename));
-                PrintStream out = new PrintStream(oCorners);
+               OutputStream oCorners = new FileOutputStream(aladin.getFullFileName(cornersFilename));
+               PrintStream out = new PrintStream(oCorners);
 
-                PointD pp =  v.getPosition(0.0, 0.0);
-                Coord coo1 = new Coord();
-                coo1.x = pp.x;
-                coo1.y = pp.y;
-                proj.getCoord(coo1);
+               PointD pp =  v.getPosition(0.0, 0.0);
+               Coord coo1 = new Coord();
+               coo1.x = pp.x;
+               coo1.y = pp.y;
+               proj.getCoord(coo1);
 
-                pp = v.getPosition(0.0, v.rv.height);
-                Coord coo2 = new Coord();
-                coo2.x = pp.x;
-                coo2.y = pp.y;
-                proj.getCoord(coo2);
+               pp = v.getPosition(0.0, v.rv.height);
+               Coord coo2 = new Coord();
+               coo2.x = pp.x;
+               coo2.y = pp.y;
+               proj.getCoord(coo2);
 
-                pp = v.getPosition((double)v.rv.width, (double)v.rv.height);
-                Coord coo3 = new Coord();
-                coo3.x = pp.x;
-                coo3.y = pp.y;
-                proj.getCoord(coo3);
+               pp = v.getPosition((double)v.rv.width, (double)v.rv.height);
+               Coord coo3 = new Coord();
+               coo3.x = pp.x;
+               coo3.y = pp.y;
+               proj.getCoord(coo3);
 
-                pp = v.getPosition(v.rv.width, 0.0);
-                Coord coo4 = new Coord();
-                coo4.x = pp.x;
-                coo4.y = pp.y;
-                proj.getCoord(coo4);
+               pp = v.getPosition(v.rv.width, 0.0);
+               Coord coo4 = new Coord();
+               coo4.x = pp.x;
+               coo4.y = pp.y;
+               proj.getCoord(coo4);
 
-                out.print("# C0 "+"0.0"+" "+"0.0"+" "+coo1.al+" "+coo1.del+"\n");
-                out.print("# C1 "+"0.0"+" "+v.rv.height+" "+coo2.al+" "+coo2.del+"\n");
-                out.print("# C2 "+v.rv.width+" "+v.rv.height+" "+coo3.al+" "+coo3.del+"\n");
-                out.print("# C3 "+v.rv.width+" "+"0.0"+" "+coo4.al+" "+coo4.del+"\n");
+               out.print("# C0 "+"0.0"+" "+"0.0"+" "+coo1.al+" "+coo1.del+"\n");
+               out.print("# C1 "+"0.0"+" "+v.rv.height+" "+coo2.al+" "+coo2.del+"\n");
+               out.print("# C2 "+v.rv.width+" "+v.rv.height+" "+coo3.al+" "+coo3.del+"\n");
+               out.print("# C3 "+v.rv.width+" "+"0.0"+" "+coo4.al+" "+coo4.del+"\n");
 
-                out.flush();
-                out.close();
+               out.flush();
+               out.close();
             }
 
             Aladin.trace(3, "HTTP link file generated ["+linkFilename+"]");
@@ -1781,17 +1792,17 @@ public final class Save extends JFrame implements ActionListener {
       EPSGraphics epsg = new EPSGraphics(out,"Aladin-chart",null,0,0,v.rv.width,v.rv.height);
 
       // Affichage de l'image
-       if( /* v.imgprep!=null && */ v.pref.active ) {
-          epsg.drawImage(v.getImage(w,h,false),0,0,v.aladin);
-       }
+      if( /* v.imgprep!=null && */ v.pref.active ) {
+         epsg.drawImage(v.getImage(w,h,false),0,0,v.aladin);
+      }
 
-//      if( v.imgprep!=null && v.pref.active ) epsg.drawImage(v.imgprep,v.dx,v.dy,v.aladin);
+      //      if( v.imgprep!=null && v.pref.active ) epsg.drawImage(v.imgprep,v.dx,v.dy,v.aladin);
 
 
       // Affichage des overlays
       if( Projection.isOk(v.getProj() ) ) {
          v.paintOverlays(epsg,null,0,0,true,0x2);
-//         v.drawRepere(epsg,0,0);
+         //         v.drawRepere(epsg,0,0);
       }
       v.drawCredit(epsg,0,0);
       epsg.end();
@@ -1799,13 +1810,13 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-  /** Sauvegarde de la vue courante.
-   * Pour l'instant, la sauvegarde se fait en FITS (8 bits => niveaux de gris)
-   * Il serait souhaitable de trouver un format plus adequat a une eventuelle
-   * importation dans un logiciel graphique (genre GIF sans pour autant payer
-   * les droits)
-   * @param file Descripteur du fichier destination
-   * @return True si Okm false sinon
+   /** Sauvegarde de la vue courante.
+    * Pour l'instant, la sauvegarde se fait en FITS (8 bits => niveaux de gris)
+    * Il serait souhaitable de trouver un format plus adequat a une eventuelle
+    * importation dans un logiciel graphique (genre GIF sans pour autant payer
+    * les droits)
+    * @param file Descripteur du fichier destination
+    * @return True si Okm false sinon
    protected boolean saveView(String filename) {
       File file = new File(filename);
 
@@ -1832,8 +1843,8 @@ public final class Save extends JFrame implements ActionListener {
       // Sauvegarde Fits
       return saveImageFITS(file,w,h,a,null);
    }
-   */
-   
+    */
+
    protected boolean saveMoc(String filename, PlanMoc p, int format) {
       try {
          HealpixMoc moc = p.getMoc();
@@ -1858,9 +1869,9 @@ public final class Save extends JFrame implements ActionListener {
       return true;
    }
 
-  /** Sauvegarde d'un plan image.
-   * @param mode 0 - FIts classique, 1 - FITS HEALPIX, 2 - JPEG,  3 - PNG
-   */
+   /** Sauvegarde d'un plan image.
+    * @param mode 0 - FIts classique, 1 - FITS HEALPIX, 2 - JPEG,  3 - PNG
+    */
    protected boolean saveImage(String s,Plan p,int mode) {
       s=aladin.getFullFileName(s);
       File f = new File(s);
@@ -1909,7 +1920,7 @@ public final class Save extends JFrame implements ActionListener {
       }
       return true;
    }
-   
+
 
    /**
     * Sauvegarde d'un plan image dans un fichier FITS. Prend en compte le fait que l'image
@@ -1943,7 +1954,7 @@ public final class Save extends JFrame implements ActionListener {
    }
 
 
-   /** Génération de l'entête FITS (mode strings) obtenu par generateFitsHeader(PlanImage p) 
+   /** Génération de l'entête FITS (mode strings) obtenu par generateFitsHeader(PlanImage p)
     * pour une image JPEG ou PNG */
    protected String generateFitsHeaderStringForNativeImage(PlanImage p) {
       Vector v =  generateFitsHeader1(p.projInit,p.projd,
@@ -2017,7 +2028,7 @@ public final class Save extends JFrame implements ActionListener {
             p instanceof PlanImageAlgo,
             p.bitpix,p.bZero,p.bScale,p.width,p.height);
    }
-   
+
    static final private String BYALADIN = "This astrometrical calibration was computed via Aladin";
 
    /** Idem mais avec les paramètres individuels pour pouvoir l'appliquer à
@@ -2054,7 +2065,7 @@ public final class Save extends JFrame implements ActionListener {
                // faire désordre si on les met à la fin du fichier
                if( k.equals("NAXIS1") || k.equals("NAXIS2") || k.equals("EPOCH") ) continue;
                qKey.put(k,"");
-//               aladin.trace(3,"remove FITS key ["+k+"]");
+               //               aladin.trace(3,"remove FITS key ["+k+"]");
             }
          }
          qKey.put("END","");
@@ -2070,19 +2081,19 @@ public final class Save extends JFrame implements ActionListener {
             v.addElement( getFitsLine("NAXIS1",""+width,"Length of x axis") );
             v.addElement( getFitsLine("NAXIS2",""+height,"Length of y axis") );
             v.addElement( getFitsLine("NAXIS3","3","Number of colors") );
-//            v.addElement( getFitsLine("CTYPE3","RGB","Red Green Blue planes") );
-        } else {
-             v.addElement( getFitsLine("NAXIS","2","Number of dimensions") );
+            //            v.addElement( getFitsLine("CTYPE3","RGB","Red Green Blue planes") );
+         } else {
+            v.addElement( getFitsLine("NAXIS","2","Number of dimensions") );
             v.addElement( getFitsLine("NAXIS1",""+width,"Length of x axis") );
             v.addElement( getFitsLine("NAXIS2",""+height,"Length of y axis") );
 
          }
 
-      // J'ai une entete FITS, je la copie en virant les champs WCS si besoin est
+         // J'ai une entete FITS, je la copie en virant les champs WCS si besoin est
       } else {
 
          int naxis=2;
-         try { naxis = headerFits.getIntFromHeader("NAXIS"); } 
+         try { naxis = headerFits.getIntFromHeader("NAXIS"); }
          catch( Exception e1 ) { }
          boolean flagModif=false;
 
@@ -2092,17 +2103,17 @@ public final class Save extends JFrame implements ActionListener {
          StringTokenizer st = new StringTokenizer(headerFits.getOriginalHeaderFits(),"\n");
          while( st.hasMoreTokens() ) {
             String s = st.nextToken();
-            
+
             // Traitement d'une ligne vide
-            if( s.trim().length()==0 ) { 
+            if( s.trim().length()==0 ) {
                v.addElement( getFitsLineBlank() );
                continue;
             }
-            
+
             String k = HeaderFits.getKey(s);
-            
+
             if( k!=null ){
-               
+
                // Traitement simplifié pour les COMMENT et HISTORY
                if( k.equals("COMMENT") ) {
                   String s1=s.substring(7).trim();
@@ -2127,7 +2138,7 @@ public final class Save extends JFrame implements ActionListener {
                   v.addElement( getFitsLine("SIMPLE","T","Generated by Aladin (CDS)") );
                   continue;
                }
-               
+
                // Dans le cas d'une sauvegarde d'une image JPEG ou RGB convertie en FITS
                if( k.equals("SIMPLE") && (!hasBITPIX || !hasNAXIS) ) {
                   v.addElement( getFitsLine("SIMPLE","T","Generated by Aladin (CDS)") );
@@ -2170,10 +2181,10 @@ public final class Save extends JFrame implements ActionListener {
                if( k.equals("EXTEND")) { flagModif=true; continue; }
 
                // On omet les champs NAXISn si n>2 (et non imageRGB)
-//               if( k.startsWith("NAXIS")
-//                     && !k.equals("NAXIS")
-//                     && !k.equals("NAXIS1")
-//                     && !k.equals("NAXIS2") && !imageRGB ) { flagModif=true; continue; }
+               //               if( k.startsWith("NAXIS")
+               //                     && !k.equals("NAXIS")
+               //                     && !k.equals("NAXIS1")
+               //                     && !k.equals("NAXIS2") && !imageRGB ) { flagModif=true; continue; }
 
                // On force NAXIS à 3 si imageRGB
                if( imageRGB && naxis!=3 && k.equals("NAXIS") ) {
@@ -2183,29 +2194,29 @@ public final class Save extends JFrame implements ActionListener {
                }
 
                // On force NAXIS à 2 (ou 3 si imageRGB)
-//               if( naxis>2 && k.equals("NAXIS") ) {
-//                  flagModif=true;
-//                  v.addElement( getFitsLine("NAXIS",imageRGB ? "3":"2" ,"") );
-//                  continue;
-//               }
+               //               if( naxis>2 && k.equals("NAXIS") ) {
+               //                  flagModif=true;
+               //                  v.addElement( getFitsLine("NAXIS",imageRGB ? "3":"2" ,"") );
+               //                  continue;
+               //               }
 
                // Si on a du WCS specifique (recalibré, resamplé, ou croppé )
                if( hasSpecificWCS  ) {
 
                   // S'il s'agit d'une image resamplée ou croppée, il faut forcer le NAXIS1,NAXIS2
                   // en fonction de la nouvelle taille
-//                  if( p instanceof PlanImageResamp || p.) {
-                     if( k.equals("NAXIS1") && width!=headerFits.getIntFromHeader(k) ) {
-                        v.addElement( getFitsLine("NAXIS1",width+"","Length of x axis") );
-                        flagModif=true;
-                        continue;
-                     }
-                     if( k.equals("NAXIS2") && height!=headerFits.getIntFromHeader(k)) {
-                        v.addElement( getFitsLine("NAXIS2",height+"","Length of y axis") );
-                        flagModif=true;
-                        continue;
-                     }
-//                  }
+                  //                  if( p instanceof PlanImageResamp || p.) {
+                  if( k.equals("NAXIS1") && width!=headerFits.getIntFromHeader(k) ) {
+                     v.addElement( getFitsLine("NAXIS1",width+"","Length of x axis") );
+                     flagModif=true;
+                     continue;
+                  }
+                  if( k.equals("NAXIS2") && height!=headerFits.getIntFromHeader(k)) {
+                     v.addElement( getFitsLine("NAXIS2",height+"","Length of y axis") );
+                     flagModif=true;
+                     continue;
+                  }
+                  //                  }
 
                   // On omet les champs WCS de l'image initiale.
                   if( hasSpecificWCS && qKey.get(k)!=null ) continue;
@@ -2229,15 +2240,15 @@ public final class Save extends JFrame implements ActionListener {
                   }
                }
             }
-            
+
             String valOrig = HeaderFits.getValue(s);
             String valC = (String)headerFits.getHeaderFits().getHashHeader().get(k);
             if( valC==null ) continue;      // La clé a été supprimé
             if( Tok.unQuote(valC).trim().equals(valOrig) ) v.addElement( getFullFitsLine(s));  // La clé n'a pas été touchée
             else v.addElement( getFitsLine(k,valC,"Aladin modif") );   // La clé a été modifiée
          }
-         
-        // On vérifie qu'on a rien oublié
+
+         // On vérifie qu'on a rien oublié
          if( hasFitsHeader ) {
             Enumeration e = headerFits.getHeaderFits().getHashHeader().keys();
             while( e.hasMoreElements() ) {
@@ -2262,7 +2273,7 @@ public final class Save extends JFrame implements ActionListener {
             if( skey.trim().equals("NAXIS1")
                   || skey.trim().equals("NAXIS2")
                   || skey.trim().equals("NAXIS3") ) continue;
-//            aladin.trace(3,"add FITS key ["+skey+"]");
+            //            aladin.trace(3,"add FITS key ["+skey+"]");
             v.addElement( getFitsLine(skey,svalue,"") );
 
             if( imageRGB && !hasCTYPE3 && skey.trim().equals("CTYPE2") ) {
@@ -2304,10 +2315,10 @@ public final class Save extends JFrame implements ActionListener {
       boolean hasSpecificWCS = p.hasSpecificCalib();
       boolean imageRGB = p instanceof PlanImageRGB;
 
-Aladin.trace(3,"Export "+p.label+" (orig. Fits header:"+hasFitsHeader+
-                               ", orig. pixels:"+hasFitsPixels+
-                               ", specif.calib:"+hasSpecificWCS+
-                               ", RGB:"+imageRGB+")");
+      Aladin.trace(3,"Export "+p.label+" (orig. Fits header:"+hasFitsHeader+
+            ", orig. pixels:"+hasFitsPixels+
+            ", specif.calib:"+hasSpecificWCS+
+            ", RGB:"+imageRGB+")");
 
       // Generation de l'entête FITS
       Vector v = generateFitsHeader(p);
@@ -2329,7 +2340,7 @@ Aladin.trace(3,"Export "+p.label+" (orig. Fits header:"+hasFitsHeader+
             size+=n;
          }
 
-      // Sauvegarde des pixels d'une image simple (soit les vrais, soit les 8 bits)
+         // Sauvegarde des pixels d'une image simple (soit les vrais, soit les 8 bits)
       } else {
          if( hasFitsPixels ) bb = p.getFitsPixels(); // p.invImageLine(p.width,p.height,bb,p.npix); }
          else bb = p.getFits8Pixels();
@@ -2367,9 +2378,9 @@ Aladin.trace(3,"Export "+p.label+" (orig. Fits header:"+hasFitsHeader+
       long nside = CDSHealpix.pow2(norder);
       long nbPix = 12*nside*nside;
       int npix = Math.abs(bitpix)/8;
-lenLine=1;
+      lenLine=1;
       String tForm = bitpix==8 ? "XX" : bitpix==16 ? "I" : bitpix==32 ? "J" :
-                     bitpix==-32 ? "E" : "D";
+         bitpix==-32 ? "E" : "D";
       v.addElement( getFitsLine("XTENSION","BINTABLE","binary table extension") );
       v.addElement( getFitsLine("BITPIX","8","array data type") );
       v.addElement( getFitsLine("NAXIS","2","2-dimensional binary table") );
@@ -2388,7 +2399,7 @@ lenLine=1;
       if( frame!=Localisation.GAL ) {
          v.addElement( getFitsLine("COORDSYS",frame==Localisation.ECLIPTIC ? "E": frame==Localisation.GAL ? "G" : "C","Coordinate system") );
       }
-//      v.addElement( getFitsLine("INDXSCHM","IMPLICIT","Indexing: IMPLICIT or EXPLICIT") );
+      //      v.addElement( getFitsLine("INDXSCHM","IMPLICIT","Indexing: IMPLICIT or EXPLICIT") );
       return v;
    }
 
@@ -2408,7 +2419,7 @@ lenLine=1;
    }
 
    byte[] nan ;
-   
+
    /**
     * Sauvegarde d'un plan image dans stream en format HEALPIX FITS.
     * @param os le stream de sortie ou null si création d'un inputStream de retour
@@ -2422,92 +2433,92 @@ lenLine=1;
       int size=0;
 
       try {
-      if( os!=null ) f = os;
-      else f = bas = new MyByteArrayStream(10000);
+         if( os!=null ) f = os;
+         else f = bas = new MyByteArrayStream(10000);
 
-      int N = 9; // 9 a priori puisqu'on est en 512x512
-      int losangeWidth = cds.tools.pixtools.Util.nside(N); 
-      int order=N+3;
-      int bitpix= p.bitpix;
-     
-      int nbits=Math.abs(bitpix)/8;
+         int N = 9; // 9 a priori puisqu'on est en 512x512
+         int losangeWidth = cds.tools.pixtools.Util.nside(N);
+         int order=N+3;
+         int bitpix= p.bitpix;
 
-      long nside = CDSHealpix.pow2(order);
-//      long nbPix = 12*nside*nside;
-      long nbPix3 = 12*8*8;// 12 x 2^3 x 2^3 // à l'ordre 3
-      boolean ring = false;
-      int lenLine=1024;
-      Aladin.trace(3,"Export "+p.label+"\" in healpix NSIDE="+nside+" ["+(ring?"RING":"NESTED")+"] bitpix="+
-            bitpix);
+         int nbits=Math.abs(bitpix)/8;
 
-     // Generation de la première HDU FITS
-      Vector v = generateHealpixHDU0(false);
-      size=writeFitsLines(f,v,size);
-      byte [] end = getEndBourrage(size);
-      f.write(end);
-      size += end.length;
+         long nside = CDSHealpix.pow2(order);
+         //      long nbPix = 12*nside*nside;
+         long nbPix3 = 12*8*8;// 12 x 2^3 x 2^3 // à l'ordre 3
+         boolean ring = false;
+         int lenLine=1024;
+         Aladin.trace(3,"Export "+p.label+"\" in healpix NSIDE="+nside+" ["+(ring?"RING":"NESTED")+"] bitpix="+
+               bitpix);
 
-      // Generation de la deuxième HDU FITS
-      v = generateHealpixHDU1(order,bitpix,ring,lenLine,p.getFrameOrigin());
-      size=writeFitsLines(f,v,size);
-      end = getEndBourrage(size);
-      f.write(end);
-      size += end.length;
+         // Generation de la première HDU FITS
+         Vector v = generateHealpixHDU0(false);
+         size=writeFitsLines(f,v,size);
+         byte [] end = getEndBourrage(size);
+         f.write(end);
+         size += end.length;
 
-      // Sauvegarde des pixels (on parcourt les pixels Healpix dans l'ordre)
-      // et on écrit ligne par ligne (lenLigne valeurs à chaque fois)
-      Projection proj = p.projd;
-      Coord c = new Coord();
-      byte [] buf = new byte[lenLine*nbits];
-      int pos=0;
-      // nb pixels par losange
-      int nbPix = losangeWidth*losangeWidth;
-      nan = new byte[nbPix*nbits];
-      for (int i = 0 ; i < nbPix ; i++) {
-    	  PlanImage.setPixVal(nan, bitpix, i, Double.NaN);
-      }
-      int[] hpx2xy = cds.tools.pixtools.Util.createHpx2xy(N);
-//      for( long ipix=0; ipix<nbPix; ipix++) {
-      for (int i = 0 ; i < nbPix3 ; i++) {
-    	  boolean found = true;
-    	  double val;
-    	  // récupère le losange de niveau 3
-    	  String filename = cds.tools.pixtools.Util.getFilePath(p.url,order-N, i);
-    	  Fits los = new Fits();
-    	  try {
-    		  los.loadFITS(filename+".fits");
-    	  } catch (FileNotFoundException e) {
-    		  // ne rien dire, il va y en avoir plein si c'est partiel !
-    		  found=false;
-    	  }
-    	  if (!found) {
-    		  // on finit d'écrire ce qu'il restait dans le buffer
-    		  f.write(buf,0,pos); size+=pos; pos=0;
-    		  // on ajoute tout le losange en nan
-    		  f.write(nan); pos=0; size+=nan.length; p.pourcent=(100.*i)/nbPix3; 
-    	  }
-    	  else {
-    		  for( int ipix = 0 ; ipix < nbPix ; ipix++) {
-//    			  int[] xy = cds.tools.pixtools.Util.hpx2XY(ipix+1,N);
-//    			  val = los.getPixelDouble(xy[0],losangeWidth-1-xy[1]);
-    			  int idx = hpx2xy[ipix];
-    	          int yy = idx/losangeWidth;
-    	          int xx = idx-yy*losangeWidth;
-    	          val = los.getPixelDouble(xx,yy);
-    			  PlanImage.setPixVal(buf, bitpix, pos++, val);
+         // Generation de la deuxième HDU FITS
+         v = generateHealpixHDU1(order,bitpix,ring,lenLine,p.getFrameOrigin());
+         size=writeFitsLines(f,v,size);
+         end = getEndBourrage(size);
+         f.write(end);
+         size += end.length;
 
-    			  if( pos==lenLine ) { f.write(buf); pos=0; size+=buf.length; p.pourcent=(100.*i)/nbPix3; }
-    		  }
-    	  }
-      }
-      if( pos>0 ) { f.write(buf,0,pos); size+=pos; }
+         // Sauvegarde des pixels (on parcourt les pixels Healpix dans l'ordre)
+         // et on écrit ligne par ligne (lenLigne valeurs à chaque fois)
+         Projection proj = p.projd;
+         Coord c = new Coord();
+         byte [] buf = new byte[lenLine*nbits];
+         int pos=0;
+         // nb pixels par losange
+         int nbPix = losangeWidth*losangeWidth;
+         nan = new byte[nbPix*nbits];
+         for (int i = 0 ; i < nbPix ; i++) {
+            PlanImage.setPixVal(nan, bitpix, i, Double.NaN);
+         }
+         int[] hpx2xy = cds.tools.pixtools.Util.createHpx2xy(N);
+         //      for( long ipix=0; ipix<nbPix; ipix++) {
+         for (int i = 0 ; i < nbPix3 ; i++) {
+            boolean found = true;
+            double val;
+            // récupère le losange de niveau 3
+            String filename = cds.tools.pixtools.Util.getFilePath(p.url,order-N, i);
+            Fits los = new Fits();
+            try {
+               los.loadFITS(filename+".fits");
+            } catch (FileNotFoundException e) {
+               // ne rien dire, il va y en avoir plein si c'est partiel !
+               found=false;
+            }
+            if (!found) {
+               // on finit d'écrire ce qu'il restait dans le buffer
+               f.write(buf,0,pos); size+=pos; pos=0;
+               // on ajoute tout le losange en nan
+               f.write(nan); pos=0; size+=nan.length; p.pourcent=(100.*i)/nbPix3;
+            }
+            else {
+               for( int ipix = 0 ; ipix < nbPix ; ipix++) {
+                  //    			  int[] xy = cds.tools.pixtools.Util.hpx2XY(ipix+1,N);
+                  //    			  val = los.getPixelDouble(xy[0],losangeWidth-1-xy[1]);
+                  int idx = hpx2xy[ipix];
+                  int yy = idx/losangeWidth;
+                  int xx = idx-yy*losangeWidth;
+                  val = los.getPixelDouble(xx,yy);
+                  PlanImage.setPixVal(buf, bitpix, pos++, val);
 
-      // Bourrage final
-      if( size%2880!=0 ) {
-         int bourrage = 2880-size%2880;
-         byte [] bb = new byte[bourrage];
-         f.write(bb);
-      }
+                  if( pos==lenLine ) { f.write(buf); pos=0; size+=buf.length; p.pourcent=(100.*i)/nbPix3; }
+               }
+            }
+         }
+         if( pos>0 ) { f.write(buf,0,pos); size+=pos; }
+
+         // Bourrage final
+         if( size%2880!=0 ) {
+            int bourrage = 2880-size%2880;
+            byte [] bb = new byte[bourrage];
+            f.write(bb);
+         }
 
       } catch( Exception e ) { e.printStackTrace(); }
       p.pourcent=-1;
@@ -2528,90 +2539,90 @@ lenLine=1;
     * @throws IOException
     */
    protected InputStream saveImageHPX(OutputStream os,PlanImage p) throws Exception {
-	   if (p instanceof PlanBG) return saveImageHPX(os, (PlanBG)p);
-	   
+      if (p instanceof PlanBG) return saveImageHPX(os, (PlanBG)p);
+
       MyByteArrayStream bas = null;
       OutputStream f;
       int size=0;
       boolean flagColor = p instanceof PlanImageRGB;
 
       try {
-      if( os!=null ) f = os;
-      else f = bas = new MyByteArrayStream(10000);
+         if( os!=null ) f = os;
+         else f = bas = new MyByteArrayStream(10000);
 
-// A modifier par la suite
-//      int order=9;
-      int order=10; // pour mellinger
-      int bitpix=flagColor ? 32 : p.bitpix==8 ? 16 : p.bitpix;    // Pour le moment les bytes de sont pas supportés
-      int npix=Math.abs(bitpix)/8;
+         // A modifier par la suite
+         //      int order=9;
+         int order=10; // pour mellinger
+         int bitpix=flagColor ? 32 : p.bitpix==8 ? 16 : p.bitpix;    // Pour le moment les bytes de sont pas supportés
+         int npix=Math.abs(bitpix)/8;
 
-      long nside = CDSHealpix.pow2(order);
-      long nbPix = 12*nside*nside;
-      boolean ring = false;
-      int lenLine=1024;
+         long nside = CDSHealpix.pow2(order);
+         long nbPix = 12*nside*nside;
+         boolean ring = false;
+         int lenLine=1024;
 
-      Aladin.trace(3,"Export "+p.label+"\" in healpix NSIDE="+nside+" ["+(ring?"RING":"NESTED")+"] bitpix="+
-            bitpix+(flagColor?" ARGB":""));
+         Aladin.trace(3,"Export "+p.label+"\" in healpix NSIDE="+nside+" ["+(ring?"RING":"NESTED")+"] bitpix="+
+               bitpix+(flagColor?" ARGB":""));
 
-     // Generation de la première HDU FITS
-      Vector v = generateHealpixHDU0(flagColor);
-      size=writeFitsLines(f,v,size);
-      byte [] end = getEndBourrage(size);
-      f.write(end);
-      size += end.length;
-      
-//      System.out.println("p="+p+" system="+p.projd.c.getSystem());
+         // Generation de la première HDU FITS
+         Vector v = generateHealpixHDU0(flagColor);
+         size=writeFitsLines(f,v,size);
+         byte [] end = getEndBourrage(size);
+         f.write(end);
+         size += end.length;
 
-      // Generation de la deuxième HDU FITS
-//      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.GAL);
-      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.ICRS);
-      size=writeFitsLines(f,v,size);
-      end = getEndBourrage(size);
-      f.write(end);
-      size += end.length;
+         //      System.out.println("p="+p+" system="+p.projd.c.getSystem());
 
-      // Sauvegarde des pixels (on parcourt les pixels Healpix dans l'ordre)
-      // et on écrit ligne par ligne (lenLigne valeurs à chaque fois)
-      Projection proj = p.projd;
-      Coord c = new Coord();
-      byte [] buf = new byte[lenLine*npix];
-      int pos=0;
-      p.pourcent=1;
-      p.setLockCacheFree(true);
-      p.pixelsOriginFromCache();
-      for( long ipix=0; ipix<nbPix; ipix++) {
-//         double [] polar = ring ? CDSHealpix.pix2ang_ring(nside,ipix) : CDSHealpix.pix2ang_nest(nside,ipix);
-         double [] polar = CDSHealpix.pix2ang_nest(nside,ipix);
-         double [] radec = CDSHealpix.polarToRadec(polar);
-         c.al = radec[0];
-         c.del = radec[1];
-         c=Localisation.frameToFrame(c, p.projd.frame, Localisation.ICRS);
-         proj.getXY(c);
+         // Generation de la deuxième HDU FITS
+         //      v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.GAL);
+         v = generateHealpixHDU1(order,bitpix,ring,lenLine,Localisation.ICRS);
+         size=writeFitsLines(f,v,size);
+         end = getEndBourrage(size);
+         f.write(end);
+         size += end.length;
 
-         if( !flagColor ) {
-            double val;
-            if( Double.isNaN(c.x) || c.x<-1 || c.x>p.width+1 || c.y<-1 || c.y>p.height+1 ) val = Double.NaN;
-//            else  val = p.getPixelInDouble((int)c.x, (int)(p.height-c.y));
-            else  val = p.getPixelInDouble((int)c.x, (int)c.y);
-            PlanImage.setPixVal(buf, bitpix, pos++, val);
-         } else {
-            int val;
-            if( Double.isNaN(c.x) || c.x<0 || c.x>p.width || c.y<0 || c.y>p.height ) val = 0;
-            else  val = p.getPixel8((int)c.x, (int)(c.y));
-            PlanImage.setInt(buf, pos*4, val);
-            pos++;
+         // Sauvegarde des pixels (on parcourt les pixels Healpix dans l'ordre)
+         // et on écrit ligne par ligne (lenLigne valeurs à chaque fois)
+         Projection proj = p.projd;
+         Coord c = new Coord();
+         byte [] buf = new byte[lenLine*npix];
+         int pos=0;
+         p.pourcent=1;
+         p.setLockCacheFree(true);
+         p.pixelsOriginFromCache();
+         for( long ipix=0; ipix<nbPix; ipix++) {
+            //         double [] polar = ring ? CDSHealpix.pix2ang_ring(nside,ipix) : CDSHealpix.pix2ang_nest(nside,ipix);
+            double [] polar = CDSHealpix.pix2ang_nest(nside,ipix);
+            double [] radec = CDSHealpix.polarToRadec(polar);
+            c.al = radec[0];
+            c.del = radec[1];
+            c=Localisation.frameToFrame(c, p.projd.frame, Localisation.ICRS);
+            proj.getXY(c);
+
+            if( !flagColor ) {
+               double val;
+               if( Double.isNaN(c.x) || c.x<-1 || c.x>p.width+1 || c.y<-1 || c.y>p.height+1 ) val = Double.NaN;
+               //            else  val = p.getPixelInDouble((int)c.x, (int)(p.height-c.y));
+               else  val = p.getPixelInDouble((int)c.x, (int)c.y);
+               PlanImage.setPixVal(buf, bitpix, pos++, val);
+            } else {
+               int val;
+               if( Double.isNaN(c.x) || c.x<0 || c.x>p.width || c.y<0 || c.y>p.height ) val = 0;
+               else  val = p.getPixel8((int)c.x, (int)(c.y));
+               PlanImage.setInt(buf, pos*4, val);
+               pos++;
+            }
+
+            if( pos==lenLine ) { f.write(buf); pos=0; size+=buf.length; p.pourcent=(100.*ipix)/nbPix; }
          }
+         if( pos>0 ) { f.write(buf,0,pos); size+=pos; }
 
-         if( pos==lenLine ) { f.write(buf); pos=0; size+=buf.length; p.pourcent=(100.*ipix)/nbPix; }
-      }
-      if( pos>0 ) { f.write(buf,0,pos); size+=pos; }
-
-      // Bourrage final
-      if( size%2880!=0 ) {
-         int bourrage = 2880-size%2880;
-         byte [] bb = new byte[bourrage];
-         f.write(bb);
-      }
+         // Bourrage final
+         if( size%2880!=0 ) {
+            int bourrage = 2880-size%2880;
+            byte [] bb = new byte[bourrage];
+            f.write(bb);
+         }
 
       } catch( Exception e ) { e.printStackTrace(); }
       p.pourcent=-1;
@@ -2621,7 +2632,7 @@ lenLine=1;
       if( bas==null ) return null;
       else return bas.getInputStream();
    }
-   
+
    static public byte[] getFitsLineBlank() {
       byte [] b = new byte[80];
       for( int i=0; i<b.length; i++ ) b[i]=' ';
@@ -2725,7 +2736,7 @@ lenLine=1;
             for( j=0; j<20-a.length; j++)  b[i++]=(byte)' ';
             for( j=0; i<80 && j<a.length; j++,i++) b[i]=(byte)a[j];
 
-         // Chaine de caractères => formatage
+            // Chaine de caractères => formatage
          } else {
             a = formatFitsString(a);
             for( j=0; i<80 && j<a.length; j++,i++) b[i]=(byte)a[j];
@@ -2766,21 +2777,21 @@ lenLine=1;
 
    /** Recuperation des infos liees a une source sous forme d'une chaine d'infos séparées
     * par "sep" (deballage des marques GLU) */
-    static protected String getSourceInfo(Source o,String sep) {
-       StringBuffer s = new StringBuffer();
+   static protected String getSourceInfo(Source o,String sep) {
+      StringBuffer s = new StringBuffer();
 
-       StringTokenizer st = new StringTokenizer(o.info,"\t");
-       st.nextElement();     // On saute le triangle
-       while( st.hasMoreTokens() ) {
-          Words w = new Words(st.nextToken());
-          if( s.length()!=0 ) s.append(sep);
-          s.append(w.getText());
-       }
+      StringTokenizer st = new StringTokenizer(o.info,"\t");
+      st.nextElement();     // On saute le triangle
+      while( st.hasMoreTokens() ) {
+         Words w = new Words(st.nextToken());
+         if( s.length()!=0 ) s.append(sep);
+         s.append(w.getText());
+      }
 
-       return s.toString();
-    }
+      return s.toString();
+   }
 
-  /** Construction d'un header TSV A a partir d'une legende
+   /** Construction d'un header TSV A a partir d'une legende
     */
    protected String getShortHeader(Legende leg) {
       int i;
@@ -2806,15 +2817,15 @@ lenLine=1;
 
    // Gestion des evenement
    @Override
-public boolean action(Event evt, Object what) {
+   public boolean action(Event evt, Object what) {
 
-//      if( CHOICE[0].equals(what) ) { aladin.printer(); hide(); }
-//      else 
-           if( CHOICE[SAVEVIEW].equals(what) ) saveFile(1,getCodedFormat(format.getSelectedIndex()),-1);
+      //      if( CHOICE[0].equals(what) ) { aladin.printer(); hide(); }
+      //      else
+      if( CHOICE[SAVEVIEW].equals(what) ) saveFile(1,getCodedFormat(format.getSelectedIndex()),-1);
       else if( CHOICE[BACKUPSTACK].equals(what) ) saveFile(0);
       else if( CHOICE[EXPORTPLANS].equals(what) ) exportPlans();
       else if( Aladin.BETA && CHOICE[ALLVIEWS].equals(what) ) saveFile(2,getCodedFormat(format1.getSelectedIndex()),-1);
-//      else if( CHOICE[5].equals(what) ) aladin.saveHTML();
+      //      else if( CHOICE[5].equals(what) ) aladin.saveHTML();
       else if( evt.target instanceof Checkbox && tsvCb!=null ) changeCatFormat();
       else if( evt.target instanceof Checkbox && fitsCb!=null ) changeImgFormat();
       else if( evt.target instanceof Checkbox && fitsMocCb!=null ) changeMocFormat();
@@ -2831,7 +2842,7 @@ public boolean action(Event evt, Object what) {
 
    // Gestion des evenement
    @Override
-public boolean handleEvent(Event e) {
+   public boolean handleEvent(Event e) {
 
       // On supprime le frame
       if( e.id==Event.WINDOW_DESTROY ) hide();
@@ -2907,9 +2918,9 @@ public boolean handleEvent(Event e) {
          out.close();
       }
    }
-   
+
    final String COMPNG = "tEXtComment";
-   
+
    /**
     * Classe filtrant une sortie PNG afin d'insérer à la volée un segment commentaire
     * juste en début de fichier
@@ -2940,24 +2951,24 @@ public boolean handleEvent(Event e) {
          // Ecriture
          out.write(buf,0,4);
          out.write(comment,0,comment.length);
-         
+
          //Calcul du CRC
          crc.reset();
          crc.update(comment);
          long c = crc.getValue();
-//         System.out.println("CRC=["+c+"]");
+         //         System.out.println("CRC=["+c+"]");
          buf[0] = (byte)( c>>24 & 0xFF ); buf[1] = (byte)( c>>16 & 0xFF );
          buf[2] = (byte)( c>>8 & 0xFF );  buf[3] = (byte)( c & 0xFF );
          out.write(buf,0,4);
       }
 
       private final byte buf[] = new byte[8];
-      
+
       private int mode=0;  // Etat courant de la machine à état repérant l'emplacement de l'insertion du comment
       private int offset=0; // offset courant depuis le début du fichier
       private int sizeHeader=0; // Taille de l'entête PNG
       private int header=0; // emplacement courant dans le header
-      
+
       // Pour trouver le premier emplacement où l'on peut insérer le commentaire
       // même si les bytes sont fournis en plusieurs fois
       // @return l'emplacement de l'insertion en comptant depuis "off". -1 si toujours pas bon
@@ -2965,20 +2976,20 @@ public boolean handleEvent(Event e) {
          for( int i=0; i<len; i++,offset++ ) {
             switch(mode) {
                case 0: // Dans le magic code
-                       if( offset==7 ) mode=1;
-                       break;
+                  if( offset==7 ) mode=1;
+                  break;
                case 1: // Dans la taille du segment IHDR
-                       sizeHeader = (sizeHeader<<8) | (int)b[off+i] & 0xFF;
-                       if( offset==11 ) {
-                          mode=2; 
-//                          System.out.println("Segment HEADER size="+sizeHeader);
-                       }
-                       break;
+                  sizeHeader = (sizeHeader<<8) | b[off+i] & 0xFF;
+                  if( offset==11 ) {
+                     mode=2;
+                     //                          System.out.println("Segment HEADER size="+sizeHeader);
+                  }
+                  break;
                case 2: // Dans la signature du segment, le segment et le CTR
-                       header++;
-                       if( header==sizeHeader+8 ) return i+1; // On a fini l'entête, on pourra insérer le commentaire
-                       break;
-                     
+                  header++;
+                  if( header==sizeHeader+8 ) return i+1; // On a fini l'entête, on pourra insérer le commentaire
+                  break;
+
             }
          }
          return -1;
@@ -2995,10 +3006,10 @@ public boolean handleEvent(Event e) {
                insertComment();
                out.write(b,off+fold,len-fold);
                writeComment=true;
-               
+
             } else out.write(b,off,len);
 
-         // Puis simple recopie
+            // Puis simple recopie
          } else out.write(b,off,len);
       }
 

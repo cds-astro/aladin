@@ -2334,21 +2334,22 @@ public class PlanImage extends Plan {
    protected void calculPixelsZoom(byte pixels[]) {
 
       // calcul du rapport Largeur/Hauteur de l'image
-      int W = ZoomView.SIZE;
-      int H = (int)(((double)ZoomView.SIZE/width)*height);
+      int zoomViewWidth = aladin.calque.zoom.zoomView.getWidth();
+      int W = zoomViewWidth;
+      int H = (int)(((double)W/width)*height);
       if( H>W ) {
          W = (int)((double)W*W / H);
-         H = ZoomView.SIZE;
+         H = zoomViewWidth;
       }
 
       double fctX = (double)width/W;
       double fctY = (double)height/H;
 
-      if( pixelsZoom==null ) pixelsZoom = new byte[ZoomView.SIZE*ZoomView.SIZE];
+      if( pixelsZoom==null ) pixelsZoom = new byte[W*W];
       else for( int i=0; i<pixelsZoom.length; i++ ) pixelsZoom[i]=0;
 
       for( int y=0; y<H; y++ ) {
-         int i = y*ZoomView.SIZE;
+         int i = y*W;
          int j = (int)(y*fctY);
          for( int x=0; x<W; x++ ) {
             pixelsZoom[i++] = pixels[ j*width + (int)(x*fctX) ];

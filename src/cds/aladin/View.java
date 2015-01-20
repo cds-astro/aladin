@@ -367,6 +367,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
    public void showRainbow(boolean active) {
       ViewSimple v = getCurrentView();
+      if( !active && v.rainbow==null ) return;
       if( active && v.rainbow==null ) v.rainbow = new RainbowPixel(aladin,v);
       else v.rainbow.setVisible(active);
    }
@@ -3372,7 +3373,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
                System.err.println(e.getMessage());
             }
             if( c==null ) {
-               if( sourceName.length()>0 ) aladin.command.printConsole("!!! Command or object identifier unknown ("+sourceName+") !");
+               if( sourceName.length()>0 ) {
+                  String s = "Command or object identifier unknown ("+sourceName+") !";
+                  //                  aladin.command.printConsole(s);
+                  aladin.warning(s,1);
+               }
                saisie=sourceName;
                rep=false;
             } else {
