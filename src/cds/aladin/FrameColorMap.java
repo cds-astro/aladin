@@ -87,7 +87,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    private JComboBox<String> cmCombo, fctCombo;
    private JCheckBox reverseCb;
    private JRadioButton rPreview,rFull;
-   
+
    private DefaultConf defaultConf = new DefaultConf();   // Gère les resets
 
    //Les valeurs a memoriser
@@ -165,13 +165,18 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       if( aladin.toolBox.tool[ToolBox.HIST].mode==Tool.DOWN ) {
          memoControl();
 
-         PlanImage p=(PlanImage)aladin.calque.getPlanBase();
-         if( pimg!=null && pimg.selected ) p =pimg;  // On ne change pas de plan s'il est encore sélectionné
+         //         PlanImage p=(PlanImage)aladin.calque.getPlanBase();
+         //         if( pimg!=null && pimg.selected ) p =pimg;  // On ne change pas de plan s'il est encore sélectionné
+
+         ViewSimple v = aladin.view.getLastClickView();
+         PlanImage p = v.pref.isPixel() ? (PlanImage)v.pref : null;
+         System.out.println("majCM => p="+p);
 
          if( p!=null && p.flagOk ) {
 
             // On a changé d'image ?
             if( this.p==null || pimg!=p ) {
+               setTitle(CMTITRE+": "+p.label);
                initCM(p);
                showCM();
 

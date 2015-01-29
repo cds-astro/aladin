@@ -42,7 +42,7 @@ public class ServerHips extends ServerTree  {
       aladinLabel = "hips";
       aladinLogo  = "Hips.png";
    }
-   
+
    // boutons radio pour choix JPEG/FITS
    protected int addTailPanel(int y) {
       int h=25;
@@ -61,14 +61,14 @@ public class ServerHips extends ServerTree  {
       b.setBackground(Aladin.BLUE);
       group.add(b);
       formatPanel.add(b);
-      
+
       formatPanel.setBackground(Aladin.BLUE);
       formatPanel.setBounds(0,y,XWIDTH,h); y+=h;
 
       add(formatPanel);
       return y;
    }
-   
+
    protected int makeTarget(int y) {
       JPanel tPanel = new JPanel();
       int h = makeTargetPanel(tPanel,0);
@@ -82,7 +82,7 @@ public class ServerHips extends ServerTree  {
    protected void createChaine() {
       super.createChaine();
       title = aladin.chaine.getString("ALLSKYTITLE");
-//      info = aladin.chaine.getString("ALLSKYINFO");
+      //      info = aladin.chaine.getString("ALLSKYINFO");
       info=null;
       info1 = null;
       description = aladin.chaine.getString("ALLSKYDESC");
@@ -92,23 +92,23 @@ public class ServerHips extends ServerTree  {
    protected ServerHips(Aladin aladin) { super(aladin); }
 
    @Override
-   protected int createPlane(String target,String radius,String criteria, 
+   protected int createPlane(String target,String radius,String criteria,
          String label, String origin) {
       String survey;
       int defaultMode=PlanBG.UNKNOWN;
-      
+
       if( criteria==null || criteria.trim().length()==0 ) survey="DSS colored";
       else {
          Tok tok = new Tok(criteria,", ");
          survey = tok.nextToken();
-         
+
          while( tok.hasMoreTokens() ) {
             String s = tok.nextToken();
             if( s.equalsIgnoreCase("Fits") ) defaultMode=PlanBG.FITS;
-            else if( s.equalsIgnoreCase("Jpeg") || s.equalsIgnoreCase("jpg") ) defaultMode=PlanBG.JPEG;
+            else if( s.equalsIgnoreCase("Jpeg") || s.equalsIgnoreCase("jpg") || s.equalsIgnoreCase("png") ) defaultMode=PlanBG.JPEG;
          }
       }
-      
+
       int j = aladin.glu.findGluSky(survey,2);
       if( j<0 ) {
          Aladin.warning(this,"Progressive survey (HiPS) unknown ["+survey+"]",1);
@@ -116,29 +116,30 @@ public class ServerHips extends ServerTree  {
       }
 
       TreeNodeAllsky gSky = aladin.glu.getGluSky(j);
-      
-      try { gSky.setDefaultMode(defaultMode);
+
+      try {
+         if( defaultMode!=PlanBG.UNKNOWN ) gSky.setDefaultMode(defaultMode);
       } catch( Exception e ) {
          aladin.command.printConsole("!!! "+e.getMessage());
       }
 
       return aladin.hips(gSky,label,target,radius);
-      
-//      return j;
-      
+
+      //      return j;
+
    }
 
    @Override
    protected boolean is(String s) { return s.equalsIgnoreCase(aladinLabel); }
 
    @Override
-   protected void initTree() { 
+   protected void initTree() {
       if( populated ) return;
       populated=true;
       tree.freeTree();
       tree.populateTree( aladin.glu.vGluSky.elements() );
    }
-   
+
    public void submit() {
       String mode = fitsRadio!=null && fitsRadio.isSelected() ? ",fits":"";
       for( TreeNode n : tree ) {
@@ -157,21 +158,21 @@ public class ServerHips extends ServerTree  {
       }
       reset();
 
-      
-//      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
-//      for( TreeNode n : tree ) {
-//         if( !(n instanceof TreeNodeAllsky) ) continue;
-//         ((TreeNodeAllsky)n).setDefaultMode( mode );
-//      }
-//      super.submit();
+
+      //      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
+      //      for( TreeNode n : tree ) {
+      //         if( !(n instanceof TreeNodeAllsky) ) continue;
+      //         ((TreeNodeAllsky)n).setDefaultMode( mode );
+      //      }
+      //      super.submit();
    }
-   
-//   public void submit(TreeNode n) {
-//      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
-//      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
-//      
-//      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
-//   }
+
+   //   public void submit(TreeNode n) {
+   //      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
+   //      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
+   //
+   //      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
+   //   }
 
 
 }

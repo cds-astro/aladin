@@ -21,14 +21,10 @@ package cds.allsky;
 
 
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
@@ -45,7 +41,6 @@ import cds.tools.pixtools.Util;
 public class BuilderIndex extends Builder {
 
    private int [] borderSize= {0,0,0,0};
-   private int radius = 0;
    private String currentfile = null;
    private boolean partitioning;
    private double maxRatio;
@@ -64,28 +59,28 @@ public class BuilderIndex extends Builder {
    boolean stopped = false;
 
    public BuilderIndex(Context context) { super(context); }
-   
+
    public Action getAction() { return Action.INDEX; }
 
    public void run() throws Exception {
       build();
       report();
       context.writeHpxFinderProperties();
-      
+
       BuilderMocIndex builderMocIndex = new BuilderMocIndex(context);
       builderMocIndex.run();
       context.setMocIndex( builderMocIndex.getMoc() ) ;
    }
-   
+
    private ArrayList<String> badFiles=null;   // Liste des fichiers écartés
-   
+
    /** Ajout d'un fichier à la liste des fichiers images sources écartés lors de l'indexation
     * suivi de la raison de son éviction. */
    private void addBadFile(String file, String error) {
       if( badFiles==null ) badFiles = new ArrayList<String>();
       badFiles.add( file+(error!=null && error.length()>0 ? " => "+error:"") );
    }
-   
+
    // fournit le rapport d'indexation notamment la liste des fichiers
    // écartés
    private void report() throws Exception {
@@ -94,11 +89,11 @@ public class BuilderIndex extends Builder {
          context.warning("Index report: "+n+" input file"+(n>1?"s":"")+" not incorporated:");
          for( String s : badFiles ) context.warning("   "+s);
       }
-      
+
       if( statNbFile==0 ) throw new Exception("No available image found ! => Aborted");
    }
-   
-   
+
+
    public boolean isAlreadyDone() {
       if( !context.isExistingIndexDir() ) return false;
       if( !context.actionAlreadyDone(Action.INDEX)) return false;
@@ -108,19 +103,19 @@ public class BuilderIndex extends Builder {
       context.info("Pre-existing HEALPix index seems to be ready");
       return true;
    }
-   
-   public void validateContext() throws Exception { 
+
+   public void validateContext() throws Exception {
       if( context instanceof ContextGui ) {
          context.setProgressBar( ((ContextGui)context).mainPanel.getProgressBarIndex() );
       }
-      
+
       partitioning = context.partitioning;
       if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
 
       validateInput();
       validateOutput();
       validateLabel();
-      
+
       // Tests order
       int order = context.getOrder();
       if( order==-1 ) {
@@ -134,7 +129,7 @@ public class BuilderIndex extends Builder {
             Fits file = new Fits();
             file.loadHeaderFITS(img);
             long nside = calculateNSide(file.getCalib().GetResol()[0] * 3600.);
-            order = ((int) Util.order((int) nside) - context.getTileOrder() );
+            order = (Util.order((int) nside) - context.getTileOrder() );
             if( order<3 ) order=3;
             context.setOrder(order);
          } catch (Exception e) {
@@ -147,11 +142,11 @@ public class BuilderIndex extends Builder {
       } else if( order>context.getOrder() ) {
          context.warning("The provided order ["+order+"] is greater than the optimal order ["+context.getOrder()+"] => SUB-sample will be applied");
       } else context.info("Order="+context.getOrder()+" => PixelAngularRes="
-         +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+context.getTileOrder()))/3600. ) );
-      
+            +Coord.getUnit( CDSHealpix.pixRes( CDSHealpix.pow2(context.getOrder()+context.getTileOrder()))/3600. ) );
+
       int w = context.getTileSide();
       context.info("TileOrder="+context.getTileOrder()+" => tileSize="+w+"x"+w+" pixels");
-      
+
       // Récupération de la liste des HDU
       hdu = context.getHDU();
       if( hdu==null ) context.info("MEF stategy => extension 0, otherwise 1");
@@ -174,14 +169,14 @@ public class BuilderIndex extends Builder {
          context.info("Extended metadata extraction based on FITS keys: "+res);
       }
    }
-   
+
    static public int calculateNSide(double pixsize) {
       double arcsec2rad=Math.PI/(180.*60.*60.);
       double nsd = Math.sqrt(4*Math.PI/12.)/(arcsec2rad*pixsize);
       int order_req=Math.max(0,Math.min(29,1+(int)CDSHealpix.log2((long)(nsd))));
       return 1<<order_req;
-  }
-   
+   }
+
    /** Demande d'affichage des stats (dans le TabBuild) */
    public void showStatistics() {
       if( statNbFile<=0 ) return;
@@ -199,14 +194,13 @@ public class BuilderIndex extends Builder {
       int order = context.getOrder();
       borderSize = context.getBorderSize();
       maxRatio = context.getMaxRatio();
-      radius = context.circle;
 
       File f = new File(output);
       if (!f.exists()) f.mkdir();
       String pathDest = context.getHpxFinderPath();
-      
+
       create(input, pathDest, order);
-      
+
       return true;
    }
 
@@ -247,33 +241,33 @@ public class BuilderIndex extends Builder {
 
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
    private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
-   throws IOException {
-            
+         throws IOException {
+
       // Détermination d'un nom de produit à partir du filename
       // 1.Suppression du path
       int o1 = filename.lastIndexOf('/');
       int o1b = filename.lastIndexOf('\\');
       if( o1b>o1 ) o1=o1b;
-      
+
       // 2.Suppression d'une extension ?
       int o2 = filename.lastIndexOf('.');
-      
+
       // 3.Suppression du suffixe [x,y-wxh] si nécessaire
       int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
       if( o3>o2 ) o2=o3;
-      
+
       if( o2==-1 || o2<=o1 ) o2 = filename.length();
       String name = filename.substring(o1+1,o2);
-      
+
       if( fitsVal==null ) fitsVal="";
-      
+
       DataOutputStream dataoutputstream = null;
       try {
          dataoutputstream = new DataOutputStream(out);
          dataoutputstream.writeBytes(
                "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
-                 "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
-                 "\"stc\": \""+stc+"\""+fitsVal+" }\n");
+                     "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
+                     "\"stc\": \""+stc+"\""+fitsVal+" }\n");
          dataoutputstream.flush();
       } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
    }
@@ -282,14 +276,14 @@ public class BuilderIndex extends Builder {
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS
    private void create(String pathSource, String pathDest, int order) throws Exception {
-      
+
       // pour chaque fichier dans le sous répertoire
       File main = new File(pathSource);
 
       ArrayList<File> dir = new ArrayList<File>();
       File[] list = context.isInputFile ? new File[]{ main } : main.listFiles();
       if (list == null) return;
-      
+
       int i=0;
       context.setProgress(0,list.length-1);
       for( File file : list ) {
@@ -307,24 +301,24 @@ public class BuilderIndex extends Builder {
          // Multi Extension ou non ?
          for( int j=0; flagAllHDU || flagDefaultHDU ||  j<hdu.length; j++ ) {
             int ext = flagDefaultHDU ? 0 : flagAllHDU ? j : hdu[j];
-            
+
             // L'image sera mosaiquée en cellSize x cellSize pour éviter de
             // saturer la mémoire par la suite
             try {
                int code = fitsfile.loadHeaderFITS(currentfile+ (ext==0?"":"["+ext+"]"));
                if( flagAllHDU && (code & Fits.HDU0SKIP) != 0 ) continue;
-               
-              // S'agit-il d'une image calibrée ?
+
+               // S'agit-il d'une image calibrée ?
                if( fitsfile.calib==null ) {
                   if( flagDefaultHDU ) break;
                   else continue;
                }
-               
+
                if( firstDepth==0 ) firstDepth=fitsfile.depth;
                else if( fitsfile.depth!=firstDepth ) continue;
-               
+
                Aladin.trace(4,"HiPS indexing "+currentfile+ (ext==0?"":"["+ext+"]..."));
-               
+
                try {
 
                   // Test sur l'image entière
@@ -333,7 +327,7 @@ public class BuilderIndex extends Builder {
                      updateStat(file, code, fitsfile.width, fitsfile.height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 0);
 
                      // Découpage en blocs
-                  } else {   
+                  } else {
                      //                     context.info("Scanning by cells "+cellSize+"x"+cellSize+"...");
                      int width = fitsfile.width - borderSize[3];
                      int height = fitsfile.height - borderSize[2];
@@ -353,8 +347,8 @@ public class BuilderIndex extends Builder {
                            testAndInsert(fitsfile, pathDest, currentfile, currentCell, order);
                         }
                      }
-                     
-                     
+
+
                      updateStat(file, code, width, height, fitsfile.depth, fitsfile.bitpix==0 ? 4 : Math.abs(fitsfile.bitpix) / 8, 1);
                   }
                } catch( Exception e1 ) {
@@ -374,7 +368,7 @@ public class BuilderIndex extends Builder {
          for( File f1 : dir ) {
             if( !f1.isDirectory() ) continue;
             currentfile = f1.getPath();
-//            System.out.println("Look into dir " + currentfile);
+            //            System.out.println("Look into dir " + currentfile);
             try {
                create(currentfile, pathDest, order);
             } catch( Exception e ) {
@@ -385,13 +379,13 @@ public class BuilderIndex extends Builder {
       }
    }
 
-   private void testAndInsert(Fits fitsfile, String pathDest, String currentFile, 
+   private void testAndInsert(Fits fitsfile, String pathDest, String currentFile,
          String suffix, int order) throws Exception {
       String hpxname;
       FileOutputStream out;
       Coord center = new Coord();
       String fitsVal=null;
-      
+
       // Recherche les 4 coins de l'image (cellule)
       Calib c = fitsfile.getCalib();
       ArrayList<double[]> cooList = new ArrayList<double[]>(4);
@@ -402,7 +396,7 @@ public class BuilderIndex extends Builder {
       for( int i=0; i<4; i++ ) {
          coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
          coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
-         if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+         if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
             coo.y = fitsfile.height - coo.y -1;
          c.GetCoord(coo);
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
@@ -411,7 +405,7 @@ public class BuilderIndex extends Builder {
          if( hasCell ) {
             coo.x = (i==0 || i==3 ? 0 : fitsfile.width);
             coo.y = (i<2 ? 0 : fitsfile.height);
-            if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+            if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
                coo.y = fitsfile.height - coo.y -1;
             c.GetCoord(coo);
          }
@@ -423,24 +417,24 @@ public class BuilderIndex extends Builder {
       if( maxRatio>0 ) {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
          double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
-//         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
+         //         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
          if( h>w*maxRatio || w>h*maxRatio ) throw new Exception("Suspicious image calibration (pixel size=" +Coord.getUnit(w)+"x"+Coord.getUnit(h)+")");
       }
-      
+
       // On calcul également les coordonnées du centre de l'image
       center.x = fitsfile.width/2;
       center.y = fitsfile.height/2;
-      if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 ) 
+      if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
          center.y = fitsfile.height - center.y -1;
       c.GetCoord(center);
 
       // Faut-il récupérer des infos dans l'entête fits, ou dans la première HDU
       if( context.fitsKeys!=null ) {
-         StringBuilder res=null; 
+         StringBuilder res=null;
          for( String key : context.fitsKeys ) {
             String val;
             if( (val=fitsfile.headerFits.getStringFromHeader(key))==null ) {
-               if( fitsfile.headerFits0==null 
+               if( fitsfile.headerFits0==null
                      || fitsfile.headerFits0!=null && (val=fitsfile.headerFits0.getStringFromHeader(key))==null ) continue;
             }
             if( res==null ) res = new StringBuilder();
@@ -461,7 +455,7 @@ public class BuilderIndex extends Builder {
          hpxname = cds.tools.Util.concatDir(pathDest,Util.getFilePath("", order,npix));
          out = openFile(hpxname);
 
-         // ajoute le chemin du fichier Source FITS, 
+         // ajoute le chemin du fichier Source FITS,
          // suivi éventuellement de la définition de la cellule en question
          // (mode mosaic), void du HDU particulier
          String filename = currentFile + (suffix == null ? "" : suffix);

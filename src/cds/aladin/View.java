@@ -1016,6 +1016,19 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
+   private ViewSimple lastClickView=null;   // dernière vue cliqué
+
+   /** Mémorise la dernière vue cliquée */
+   protected void setLastClickView(ViewSimple v) {
+      lastClickView=v;
+   }
+
+   /** Retourne la dernière vue cliquée, et à défaut la vue courante */
+   protected ViewSimple getLastClickView() {
+      return lastClickView!=null ? lastClickView : getCurrentView();
+   }
+
+
    /** Positionnement de la vue courante et réaffichage
     *  @return true s'il y a eu effectivement changement de vue
     *          false si c'était déjà celle-là
@@ -1027,6 +1040,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          return false;
       }
 
+      setLastClickView(null);
       currentView = v.n;
       setMouseView(v);
       if( !v.isFree() ) v.pref.selected=true;

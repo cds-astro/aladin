@@ -1716,13 +1716,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
       if( planBG.DEBUGMODE ) return false;
       double d1,d2;
-      if( (d1=dist(b,0,1))>M || (d2=dist(b,0,2))>M ) return true;
+      if( (d1=dist(b,0,2))>M || (d2=dist(b,2,1))>M ) return true;
       if( d1==0 || d2==0 ) throw new Exception("Rhomb error");
       double diag1 = dist(b,0,3);
       double diag2 = dist(b,1,2);
       if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
-      double rap = diag1/diag2;
-      if( rap>1 ) rap = 1/rap;
+      double rap = diag2>diag1 ? diag1/diag2 : diag2/diag1;
       return rap<RAP && (diag1>N || diag2>N);
    }
 

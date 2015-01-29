@@ -1882,6 +1882,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             aladin.calque.repaintAll();
          }
 
+         // Pour pouvoir changer la Colormap associée à cette vue même en mode synchronisé
+         if( selected && aladin.sync.isProjSync()  ) {
+            aladin.view.setLastClickView(this);
+            aladin.calque.repaintAll();
+         }
+
          // Mise à jour du CutGraph courant si il existe
          Obj c = aladin.view.zoomview.getObjCut();
          if( c!=null && !c.cutOn() ) aladin.view.zoomview.suspendCut();
@@ -2683,7 +2689,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Modification de la colormap par déplacement direct dans la vue - à la  DS9 */
    private void setCMByMouse(int x, int y) {
-      Plan pref = aladin.calque.getFirstSelectedPlanImage();
+
+      Plan pref = view.getLastClickView().pref;
+      //      Plan pref = aladin.calque.getFirstSelectedPlanImage();
       if(  !(pref.isImage() || pref.type==Plan.ALLSKYIMG )  ) return;
       //      if( pref.type==Plan.ALLSKYIMG && ((PlanBG)pref).color ) return;
       y=getHeight()-y;

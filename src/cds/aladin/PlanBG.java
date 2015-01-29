@@ -412,6 +412,8 @@ public class PlanBG extends PlanImage {
 
       scanProperties();
       scanMetadata();
+
+      gluSky.reset();
    }
 
    protected int getTileMode() {

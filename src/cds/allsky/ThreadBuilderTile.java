@@ -22,9 +22,11 @@ package cds.allsky;
 import healpix.newcore.HealpixBase;
 import healpix.newcore.Pointing;
 
+import java.awt.Polygon;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
@@ -56,10 +59,13 @@ final public class ThreadBuilderTile {
    private double[] cutOrig;
    private double[] cut;
    private int[] borderSize;
-   private int radius;
+   private int circle;
+   private Polygon polygon;
    private ArrayList<SrcFile> downFiles;
    private boolean mixing;
    private int tileSide;
+
+   static protected HashMap<File, Polygon> hashPolygon=null;   // Polygones associés à chaque fichier ou répertoire
 
    public ThreadBuilderTile(Context context,BuilderTiles builderTiles) {
       this.context = context;
@@ -85,7 +91,8 @@ final public class ThreadBuilderTile {
       }
       fading = context.getFading();
       borderSize = context.getBorderSize();
-      radius = context.circle;
+      circle = context.circle;
+      polygon=context.polygon;
       hpxFinderPath = context.getHpxFinderPath();
       tileSide = context.getTileSide();
 
@@ -344,7 +351,7 @@ final public class ThreadBuilderTile {
 
                      // Cas RGB
                      if( flagColor ) {
-                        int pix = getBilinearPixelRGB(file.fitsfile,coo);
+                        int pix = getBilinearPixelRGB(file,coo);
                         if( pix==0 ) continue;
                         pixval[nbPix] = 0xFF & (pix>>16);
                         pixvalG[nbPix] = 0xFF & (pix>>8);
@@ -352,7 +359,7 @@ final public class ThreadBuilderTile {
 
                         // Cas normal
                      } else {
-                        double pix = getBilinearPixel(file.fitsfile,coo,z,file.blank);
+                        double pix = getBilinearPixel(file,coo,z,file.blank);
                         if( Double.isNaN(pix) ) continue;
                         pixval[nbPix]=pix;
                      }
@@ -440,17 +447,20 @@ final public class ThreadBuilderTile {
 
 
    // détermine si le pixel doit être pris en compte, ou s'il est dans la marge
-   private boolean isIn(Fits f, Coord coo) {
-      if( radius>0 ) {
+   private boolean isIn(SrcFile srcFile, Coord coo) {
+      Fits f = srcFile.fitsfile;
+      if( circle>0 ) {
          double cx = f.width/2;
          double cy = f.height/2;
          double dx = coo.x-cx;
          double dy = coo.y-cy;
          double d = dx*dx + dy*dy;
-         if( d>radius*radius ) return false;
+         if( d>circle*circle ) return false;
       }
       if( coo.x<borderSize[1] || coo.x>f.width-borderSize[3] ) return false;
       if( coo.y<borderSize[0] || coo.y>f.height-borderSize[2] ) return false;
+      if( polygon!=null && !polygon.contains(coo.x, coo.y) ) return false;
+      if( srcFile.polygon!=null && !srcFile.polygon.contains(coo.x, coo.y) ) return false;
       return true;
    }
 
@@ -472,14 +482,14 @@ final public class ThreadBuilderTile {
 
       double c=0;
       try {
-         if( radius>0 ) {
+         if( circle>0 ) {
             double cx = f.width/2;
             double cy = f.height/2;
             double dx = coo.x-cx;
             double dy = coo.y-cy;
             double d = Math.sqrt(dx*dx + dy*dy);
-            if( d<radius-radius*OVERLAY_PROPORTION ) c=1;
-            else c = (radius - d)/radius;
+            if( d<circle-circle*OVERLAY_PROPORTION ) c=1;
+            else c = (circle - d)/circle;
          } else {
             double width  = f.width -(borderSize[1]+borderSize[3]);
             double height = f.height-(borderSize[0]+borderSize[2]);
@@ -513,8 +523,10 @@ final public class ThreadBuilderTile {
    //   }
 
 
-   private double getBilinearPixel(Fits f,Coord coo,int z,double myBlank) {
-      if( !isIn(f,coo) ) return Double.NaN;
+   private double getBilinearPixel(SrcFile srcFile,Coord coo,int z,double myBlank) {
+
+      Fits f = srcFile.fitsfile;
+      if( !isIn(srcFile,coo) ) return Double.NaN;
 
       double x = coo.x;
       double y = coo.y;
@@ -608,8 +620,9 @@ final public class ThreadBuilderTile {
    //      return bilineaire(x1,y1,x2,y2,x,y,a0,a1,a2,a3);
    //   }
 
-   private int getBilinearPixelRGB(Fits f,Coord coo) {
-      if( !isIn(f,coo) ) return 0;
+   private int getBilinearPixelRGB(SrcFile srcFile,Coord coo) {
+      Fits f = srcFile.fitsfile;
+      if( !isIn(srcFile,coo) ) return 0;
 
       double x = coo.x;
       double y = coo.y;
@@ -791,11 +804,81 @@ final public class ThreadBuilderTile {
       }
    }
 
+
+   // retourne le polygone associé au fichier ou null si aucun
+   // Soit il s'agit du même nom de fichier avec l'extension ".fov"
+   // soit c'est le premier répertoire parent qui a un fichier associé avec l'extension ".fov"
+   // sinon null
+   private Polygon getPolygon(Fits fits) {
+      File last = (new File( context.getInputPath() )).getParentFile();
+      File dir = (new File( fits.getFilename() ));
+      Polygon p;
+      for( p=null; p==null && !dir.equals(last); dir = dir.getParentFile() ) {
+         p = getPolygon(fits,dir);
+      }
+      return p;
+   }
+
+
+   // retourne le Polygone associé au nom de fichier ou de répertoire (extension ".fov")
+   // (utilise une hashmap comme cache pour éviter les accès disques répétitifs)
+   private Polygon getPolygon(Fits fits,File dir) {
+
+      if( hashPolygon.containsKey(dir) ) return hashPolygon.get(dir);
+      synchronized( hashPolygon ) {
+         if( hashPolygon.containsKey(dir) ) return hashPolygon.get(dir);
+         Polygon pol = null;
+         String file;
+         if( dir.isDirectory() ) file = dir.getAbsoluteFile()+".fov";
+         else {
+            String name = dir.getName();
+            int dot = name.lastIndexOf('.');
+            if( dot>0 ) name = name.substring(0,dot);
+            file = dir.getParent()+Util.FS+name+".fov";
+         }
+         File f = new File(file);
+         if( f.isFile() ) {
+            FileInputStream fr = null;
+            try {
+               fr = new FileInputStream(f);
+               InputStreamReader in = new InputStreamReader(fr);
+               BufferedReader dis = new BufferedReader(in);
+               String s;
+               StringBuilder res = new StringBuilder();
+               while( (s=dis.readLine())!=null ) {
+                  if( res.length()>0 ) res.append(' ');
+                  res.append(s.trim());
+               }
+               dis.close();
+               in.close();
+               pol = Context.createPolygon(res.toString());
+               if( pol!=null ) context.info("FoV detected: "+f.getName()+" => "+pol2String(pol));
+            }
+            catch( Exception e) { e.printStackTrace(); }
+            finally { if( fr!=null ) { try { fr.close(); } catch( Exception e1) {} } }
+         }
+         hashPolygon.put(dir,pol);
+         return pol;
+      }
+   }
+
+   private String pol2String(Polygon pol) {
+      int i;
+      StringBuilder rep= new StringBuilder();
+      for( i=0; i<pol.npoints && i<5; i++ ) {
+         if( i>0 ) rep.append(' ');
+         rep.append(pol.xpoints[i]+","+pol.ypoints[i]);
+      }
+      if( i<pol.npoints ) rep.append("...");
+      return rep.toString();
+   }
+
    class SrcFile {
       Fits fitsfile;
       int isOpened=-1;   // numero du frame ouvert, -1 si aucun
       String name=null;
       double blank;
+      Polygon polygon=null;
 
       SrcFile(String name ) {
          this.name=name;
@@ -822,6 +905,9 @@ final public class ThreadBuilderTile {
             name = addFrameToName(name,frame);
             fitsfile=context.cacheFits.getFits(name,mode,true);
          }
+
+         // Faut-il associer un Polygon particulier
+         if( context.scanFov ) polygon = getPolygon(fitsfile);
 
          isOpened=frame;
          fitsfile.addUser();

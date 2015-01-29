@@ -399,7 +399,10 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          this.url=url;
          if( width>0 ) {
             if( (text.startsWith("http://") || text.startsWith("ftp://")) && text.length()>width ) text=text.substring(0,width)+"...";
-            else text = Util.fold(text,width);
+            else {
+               if( url!=null ) text = Util.fold(text,width,true);
+               text = Util.fold(text,width);
+            }
          }
          if( url!=null ) {
             text = "<html><A HREF=\"\">"+text+"</A></html>";
@@ -459,8 +462,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       // Origine
       String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
       if( copyright!=null ) {
-         System.out.println("copyright="+copyright+"\nurl="+plan.copyrightUrl);
-         PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,50,null,plan.copyrightUrl), g,c);
+         //         System.out.println("copyright="+copyright+"\nurl="+plan.copyrightUrl);
+         PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,40,null,plan.copyrightUrl), g,c);
       }
 
       // Unique ID

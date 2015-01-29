@@ -85,12 +85,13 @@ import cds.xml.XMLParser;
  * @beta         <LI> index.html HiPS directory description
  * @beta         <LI> tileOrder Hipsgen parameter
  * @beta         <LI> maxRatio Hipsgen parameter
- * @beta         <LI> shape Hipsgen parameter
+ * @beta         <LI> shape & polygon Hipsgen parameters
  * @beta       </UL>
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Colormap adjustement in "match" mode bug
  * @beta    <LI> AVM Spacial.Note astrometry.net bug workaround.
  * @beta    <LI> HiPS generation with PNG black pixel bug
  * @beta    <LI> Some grid drawing bugs (missing segments or labels)

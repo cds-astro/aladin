@@ -21,14 +21,9 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Vector;
@@ -46,7 +41,7 @@ public class HipsGen {
    private boolean flagMode=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
-   
+
    public String launcher = "Aladin.jar -hipsgen";
 
    private Vector<Action> actions;
@@ -59,7 +54,7 @@ public class HipsGen {
    /**
     * Analyse le fichier contenant les paramètres de config de la construction
     * du allsky sous le format : option = valeur
-    * 
+    *
     * @throws Exception
     *             si l'erreur dans le parsing des options nécessite une
     *             interrption du programme
@@ -71,7 +66,7 @@ public class HipsGen {
 
       // Ouverture et lecture du fichier
       MyProperties properties = new MyProperties();
-//      Reader reader = new FileReader(file);
+      //      Reader reader = new FileReader(file);
       FileInputStream reader = new FileInputStream(file);
       properties.load(reader);
 
@@ -137,76 +132,79 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
       } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
       } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
-      
+
       } else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
-         
+
       } else if (opt.equalsIgnoreCase("in") || opt.equalsIgnoreCase("input")) {
          context.setInputPath(val);
-         
+
       } else if (opt.equalsIgnoreCase("out") || opt.equalsIgnoreCase("output")) {
          context.setOutputPath(val);
-         
+
       } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
          if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setMode(Mode.valueOf(val.toUpperCase()));
          flagMode=true;
-         
+
       } else if (opt.equalsIgnoreCase("region") || opt.equalsIgnoreCase("moc")) {
          if (val.endsWith("fits")) {
             HealpixMoc moc = new HealpixMoc();
             moc.read(val);
             context.setMocArea(moc);
          } else context.setMocArea(val);
-         
+
       } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting") || opt.equalsIgnoreCase("partitioning")) {
          context.setPartitioning(val);
-         
+
       } else if( opt.equalsIgnoreCase("shape") ) {
-          context.setShape(val);
-         
+         context.setShape(val);
+
       } else if (opt.equalsIgnoreCase("maxRatio")) {
          try {  context.setMaxRatio(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-         
+
       } else if (opt.equalsIgnoreCase("circle") || opt.equalsIgnoreCase("radius")) {
          try {  context.setCircle(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
-         
+
+      } else if (opt.equalsIgnoreCase("polygon") || opt.equalsIgnoreCase("fov") ) {
+         try {  context.setPolygon(val); } catch (ParseException e) { throw new Exception(e.getMessage()); }
+
       } else if (opt.equalsIgnoreCase("border")) {
          try {
             context.setBorderSize(val);
          } catch (ParseException e) {
             throw new Exception(e.getMessage());
          }
-         
+
       } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
          if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          context.setMethod(val);
-         
+
       } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
       } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
          if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
-//         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
+         //         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
       } else throw new Exception("Option unknown [" + opt + "]");
-      
+
    }
-   
+
    static private SimpleDateFormat SDF;
    static {
       SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
       SDF.setTimeZone(TimeZone.getDefault());
    }
-   
+
    public void execute(String [] args) {
       int length = args.length;
       boolean first=true;
-      
+
       if (length == 0) {
          usage(launcher);
          return;
       }
-      
+
       // extrait les options en ligne de commande, et les analyse
       for (String arg : args) {
          // si c'est dans un fichier
@@ -220,17 +218,17 @@ public class HipsGen {
             }
             continue;
          }
-         
+
          // Juste pour pouvoir appeler directement par le main() de cette classe
          // et non celle d'Aladin
          else if( arg.equalsIgnoreCase("-skygen") || arg.equalsIgnoreCase("-hipsgen")) continue;
-         
+
          // help
          else if (arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("-help")) {
             HipsGen.usage(launcher);
             return;
          }
-         
+
          if( first ) {
             first=false;
             context.info("Starting HipsGen "+SDF.format(new Date())+" (based on Aladin "+Aladin.VERSION+")...");
@@ -274,21 +272,21 @@ public class HipsGen {
             }
          }
       }
-      
+
       // Permet de tuer proprement une tache déjà en cours d'exécution
       if( flagAbort ) {
          try { context.taskAbort(); }
          catch( Exception e ) { context.error(e.getMessage()); }
          return;
       }
-      
+
       // Permet de mettre en pause temporaire une tache en cours d'exécution
       if( flagPause ) {
          try { context.setTaskPause(true); }
          catch( Exception e ) { context.error(e.getMessage()); }
          return;
       }
-      
+
       // Permet de mettre reprendre une tache en pause
       if( flagResume ) {
          try { context.setTaskPause(false); }
@@ -300,7 +298,7 @@ public class HipsGen {
       boolean all=false;
       if( actions.size()==0 ) {
          all=true;
-         
+
          // S'agirait-il d'une map HEALPix
          boolean flagMapFits=false;
          File f = new File(context.getInputPath());
@@ -312,7 +310,7 @@ public class HipsGen {
                in.close();
             } catch( Exception e ) { }
          }
-         
+
          if( flagMapFits ) actions.add(Action.MAPTILES);
          else {
             actions.add(Action.INDEX);
@@ -321,12 +319,12 @@ public class HipsGen {
 
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
-//            actions.add(Action.JPEG);
+            //            actions.add(Action.JPEG);
             actions.add(Action.PNG);
             if( !flagMapFits ) actions.add(Action.DETAILS);
          }
       }
-     
+
       // Nettoyage avant ?
       if( force ) {
          context.setIgnoreStamp(true);
@@ -334,7 +332,7 @@ public class HipsGen {
          else {
             for( int i=0; i<actions.size() ;i++ ) {
                Action a = actions.get(i);
-                    if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
+               if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
                else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
                else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.MAPTILES ){ actions.add(i, Action.CLEANTILES);   i++; }
@@ -344,7 +342,7 @@ public class HipsGen {
             }
          }
       }
-      
+
       if( context.fake ) context.warning("NO RUN MODE (option -n), JUST PRINT INFORMATION !!!");
       for( Action a : actions ) {
          context.info("Action => "+a+": "+a.doc());
@@ -361,7 +359,7 @@ public class HipsGen {
          return;
       }
    }
-   
+
    /** Juste pour pouvoir exécuter skygen comme une commande script Aladin */
    public void executeAsync(String [] args) { new ExecuteAsyncThread(args); }
    class ExecuteAsyncThread extends Thread {
@@ -369,78 +367,79 @@ public class HipsGen {
       public ExecuteAsyncThread(String [] args) { this.args=args; start(); }
       public void run() { execute(args); }
    }
-   
+
    // Aladin.jar -hipsgen
    private static void usage(String launcher) {
       System.out.println("Usage: java -jar "+launcher+" in=file|dir [otherParams ... ACTIONs ...]");
       System.out.println("       java -jar "+launcher+" -param=configfile\n");
       System.out.println("The config file must contain these following options, or use them\n" +
-      		             "directly on the comand line :\n");
+            "directly on the comand line :\n");
       System.out.println(
             "Required parameter:\n"+
-            "   in=dir             Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
-            "                      unique image or HEALPix map file" + "\n" +
-            "\n"+
-            "Basic optional parameters:\n"+
-            "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
-            "   label=name         Label of the survey (by default, input directory name)" + "\n"+
-            "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
-            "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
-            "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
-            "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
-            "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
-            "   blank=nn           Specifical BLANK value" + "\n" +
-            "   skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
-            "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
-            "   -f                 clear previous computations\n"+
-            "   -n                 Just print process information, but do not execute it.\n"+
-            "\n"+
-            "Advanced optional parameters:\n"+
-            "   order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
-            "   bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
-            "   pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
-            "                      conversion - ex: \"120 140 log\")" + "\n" +
-            "   pixelRange=min max Specifical pixel value range (required for bitpix\n" +
-            "                      conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
-            "   pixelGood=min [max] Range of pixel values kept" + "\n" +
-            "   img=file           Specifical reference image for default initializations \n" +
-            "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
-            "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
-            "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
-            "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
-            "   fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
-            "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
-            "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
-            "   region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
-            "                      or Moc.fits file (all sky by default)" + "\n" +
-            "   maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
-//          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
-            "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" + 
-            "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-            "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (JPEG|PNG)" + "\n" +
-            "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
-            "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
-            "   maxThread=nn       Max number of computing threads" + "\n" +
-            "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
-            "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"
-//          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
-//          "   red        all-sky used for RED component (see rgb action)\n" +
-//          "   green      all-sky used for BLUE component (see rgb action)\n" +
-//          "   blue       all-sky used for GREEN component (see rgb action)\n" +
-//          "   redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
-//          "   greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
-//          "   bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
-//          "   frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
-      );
-      
+                  "   in=dir             Source image directory (FITS or JPEG|PNG +hhh or HiPS),\n"+
+                  "                      unique image or HEALPix map file" + "\n" +
+                  "\n"+
+                  "Basic optional parameters:\n"+
+                  "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
+                  "   label=name         Label of the survey (by default, input directory name)" + "\n"+
+                  "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
+                  "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
+                  "   blank=nn           Specifical BLANK value" + "\n" +
+                  "   skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
+                  "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+                  "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
+                  "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
+                  "   fov=true|x1,y1..   Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
+                  "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
+                  "   -f                 clear previous computations\n"+
+                  "   -n                 Just print process information, but do not execute it.\n"+
+                  "\n"+
+                  "Advanced optional parameters:\n"+
+                  "   order=nn           Specifical HEALPix order - by default, adapted to the original resolution" + "\n" +
+                  "   bitpix=nn          Specifical target bitpix (-64|-32|8|16|32|64)" + "\n" +
+                  "   pixelCut=min max   Specifical pixel cut and/or transfert function for PNG/JPEG 8 bits\n" +
+                  "                      conversion - ex: \"120 140 log\")" + "\n" +
+                  "   pixelRange=min max Specifical pixel value range (required for bitpix\n" +
+                  "                      conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
+                  "   pixelGood=min [max] Range of pixel values kept" + "\n" +
+                  "   img=file           Specifical reference image for default initializations \n" +
+                  "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
+                  "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
+                  "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
+                  "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
+                  "   fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
+                  "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
+                  "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
+                  "   region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
+                  "                      or Moc.fits file (all sky by default)" + "\n" +
+                  "   maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
+                  //          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
+                  "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" +
+                  "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
+                  "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (JPEG|PNG)" + "\n" +
+                  "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
+                  "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
+                  "   maxThread=nn       Max number of computing threads" + "\n" +
+                  "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
+                  "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"
+                  //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
+                  //          "   red        all-sky used for RED component (see rgb action)\n" +
+                  //          "   green      all-sky used for BLUE component (see rgb action)\n" +
+                  //          "   blue       all-sky used for GREEN component (see rgb action)\n" +
+                  //          "   redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
+                  //          "   greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
+                  //          "   bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
+                  //          "   frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
+            );
+
       System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP DETAILS\"):" + "\n" +
             "   INDEX      "+Action.INDEX.doc() + "\n" +
             "   TILES      "+Action.TILES.doc() + "\n" +
             "   JPEG       "+Action.JPEG.doc() + "\n" +
             "   PNG        "+Action.PNG.doc() + "\n" +
-//            "   RGB        "+Action.RGB.doc() + "\n" +
+            //            "   RGB        "+Action.RGB.doc() + "\n" +
             "   MOC        "+Action.MOC.doc() + "\n" +
-//            "   MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
+            //            "   MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
             "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
             "   TREE       "+Action.TREE.doc() + "\n"+
             "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
@@ -450,14 +449,14 @@ public class HipsGen {
             "   DETAILS    "+Action.DETAILS.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
-      		             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +
-      		             "\n           The FITS tiles will be coded in short integers, the preview tiles" +
-      		             "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
-                         "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
-                         "\n           The original pixels in the border or equal to 0 will be ignored."+
-                         "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT   => Concatenate HiPS to HiPStarget"
-//                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
-                         );
+            "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +
+            "\n           The FITS tiles will be coded in short integers, the preview tiles" +
+            "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
+            "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
+            "\n           The original pixels in the border or equal to 0 will be ignored."+
+            "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT   => Concatenate HiPS to HiPStarget"
+            //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
+            );
    }
 
    private void setConfigFile(String configfile) throws Exception {

@@ -56,22 +56,25 @@ class Hist implements Runnable {
    int width;               // Largeur totale de l'histogramme
    int height;              // Hauteur totale de l'histogramme
    String texte=null;       // Texte en surcharge, ou null (retour à la ligne par "/")
-   
+
    // Paramètres pour un histogramme de pixels
    static final int MAX = 200000;   // nombre max de pixels pris en compte
    private double [] pixelList;    // liste des valeurs des pixels (lors de la construction)
    private int nPix;               // nombre de pixels
    protected boolean flagHistPixel;  // true s'il s'agit d'un histogramme de pixels
-   
+
    Hist(Aladin aladin,int width,int height) {
       this.aladin=aladin;
       this.width=width;
       this.height=height;
    }
-   
+
    /** Positionnement d'un texte en surcharge de l'histogramme, null si aucun */
    protected void setText(String s) { texte=s; }
-   
+
+   /** retourne du texte pour le clipboard */
+   protected String getCopier() { return texte; }
+
    /** Commence ou recommence la mémorisation des pixels d'un histogramme de pixels */
    protected void startHistPixel() {
       if( pixelList==null ) pixelList = new double[MAX];
@@ -79,19 +82,19 @@ class Hist implements Runnable {
       flagHistPixel=true;
       texte=null;
    }
-   
+
    protected boolean isOverFlow() { return nPix==MAX; }
-   
+
    /** Ajoute une valeur pour un future histogramme de pixels */
    protected boolean addPixel(double pix) {
       if( nPix==MAX ) return false;
       pixelList[nPix++] = pix;
       return true;
    }
-   
+
    /** Construction de l'histogramme de pixels en fonction de la liste des valeurs passées */
    protected void createHistPixel(String titre) { {
-//      titre="Pixels";
+      //      titre="Pixels";
       this.titre = titre;
       setHist(pixelList); }
    }
@@ -111,7 +114,7 @@ class Hist implements Runnable {
       boolean in(int xc,int yc) {
          return xc>=x && xc<=x+larg;
       }
-      
+
       /** Retourne true si la valeur du pixel se trouve entre les bornes */
       boolean contains(double value) {
          return min<=value && value<max;
@@ -179,7 +182,7 @@ class Hist implements Runnable {
    }
 
    /** Ajustement du nombre de cases */
-  void setNbHist(int n) {
+   void setNbHist(int n) {
       NBHIST=n;
       if( NBHIST<4 ) NBHIST=4;
       if( NBHIST>30 ) NBHIST=30;
@@ -197,12 +200,12 @@ class Hist implements Runnable {
       setNbHist(n);
       return true;
    }
-   
+
    /**
     * Initialisation de l'histogramme avec une liste de valeurs numériques
     */
    protected void setHist(double [] x) {
-      
+
       int length = flagHistPixel ? nPix : x.length;
 
       // Recherche du min et max
@@ -214,7 +217,7 @@ class Hist implements Runnable {
          if( c<min ) min=c;
          if( c>max ) max=c;
       }
-      
+
       if( min==Double.MAX_VALUE || max==-Double.MAX_VALUE
             || min==max || length<=1 ) { hist=null; return; }
 
@@ -231,7 +234,7 @@ class Hist implements Runnable {
          hist[i].max = hist[i].min + sizeBean;
       }
 
-     // répartition dans l'histogramme
+      // répartition dans l'histogramme
       for( int i=0; i<length; i++ ) {
          if( Double.isNaN(x[i]) ) continue;
          int index = (int) ( (x[i]-min)/sizeBean );
@@ -436,8 +439,8 @@ class Hist implements Runnable {
                s=Util.myRound(hist[i].max);
                g.drawString(s,width-fm.stringWidth(s)+dx,height-2+dy);
             }
-            
-         // Les labels des catégories sinon
+
+            // Les labels des catégories sinon
          } else {
             s=hist[i].categorie;
             while( fm.stringWidth(s)>hist[i].larg ) s=s.substring(0,s.length()-1);
@@ -452,7 +455,7 @@ class Hist implements Runnable {
                Util.fillCircle5(g, (int)(x+gap+j*6)+dx,y-15+dy);
             }
 
-         // Tracé de la case courante
+            // Tracé de la case courante
          } else {
             g.setColor( hist[i]==onMouse ? Aladin.GREEN : Color.cyan );
             g.fillRect((int)x+dx, y-hist[i].haut+dy, (int)larg, hist[i].haut);
@@ -498,7 +501,7 @@ class Hist implements Runnable {
          }
          g.drawString(s,(int)x,14);
 
-      // Général
+         // Général
       } else {
          s=titre;
          if( nbCategorie>0 ) {
@@ -519,7 +522,7 @@ class Hist implements Runnable {
          g.drawLine( xc-1, WCROIX+16, xc-1, height-15);
          g.setColor(Color.black);
          g.fillPolygon(new Polygon(new int [] {xc-3 ,xc+2,xc-3},
-                                   new int [] {pos-3,pos,pos+3}, 3));
+               new int [] {pos-3,pos,pos+3}, 3));
       }
 
       // L'icone pour fermer l'histogramme
@@ -533,7 +536,7 @@ class Hist implements Runnable {
          g.drawLine(width-w-3,w+2,width-3,2);
          g.drawLine(width-w-3,w+3,width-3,3);
       }
-      
+
       // Des informations textuelles en surcharge
       if( texte!=null ) {
          g.setFont(Aladin.SBOLD);
@@ -543,7 +546,7 @@ class Hist implements Runnable {
          y = 17;
          int h= fm.getHeight();
          int h1 = fm.getAscent();
-//         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
+         //         Util.drawArea(aladin, g, width/2, y-10, width/2-5, st.countTokens()*15, Color.white, 0.7f, false);
          g.setColor(Color.black);
          while( st.hasMoreTokens() ) {
             s = st.nextToken().trim();

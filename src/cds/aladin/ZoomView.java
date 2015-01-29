@@ -1263,6 +1263,13 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       return WENZOOM>=32;
    }
 
+   protected void copier() {
+      String s;
+      if( flagHist ) s = hist.getCopier();
+      else return;
+      aladin.copyToClipBoard(s);
+   }
+
    public void paintComponent(Graphics gr) {
       if( Aladin.NOGUI ) return;
 

@@ -95,7 +95,7 @@ public class PlanImage extends Plan {
 
    // Formats possibles
    protected static final int UNKNOWN= 0;  // Inconnu a priori
-   protected static final int JPEG   = 1;  // JPEG niveau de gris (dédié au serveur Aladin)
+   protected static final int JPEG   = 1;  // JPEG niveaux de gris (dédié au serveur Aladin)
    protected static final int FITS   = 2;  // FITS
    protected static final int HFITS  = 3;  // FITS hcompressed
    protected static final int GFITS  = 4;  // FITS gzipped

@@ -1328,10 +1328,12 @@ public final class MyInputStream extends FilterInputStream {
    double avmRefWidth=-1;
 
    /** Mémorisation d'un mot clé/valeur AVM */
-   private void memoOneAVM(StringBuilder key, StringBuilder value) {
+   private void memoOneAVM(StringBuilder key, StringBuilder val) {
+      String value = val.toString().trim();
+      if( value.length()==0 ) return;
       if( avm==null ) avm=new Hashtable<String,String>(30);
-      avm.put(key.toString().trim(),value.toString().trim());
-      if( Aladin.levelTrace>=3 ) System.out.println("AVM tag: "+key+"=["+value.toString().trim()+"] ");
+      avm.put(key.toString().trim(),value);
+      if( Aladin.levelTrace>=3 ) System.out.println("AVM tag: "+key+"=["+value+"] ");
    }
 
    /** Ajout d'un caractère à une chaine en évitant les doublons des blancs
@@ -1362,7 +1364,7 @@ public final class MyInputStream extends FilterInputStream {
    private boolean memoJpegAVMCalib(int pos,int size) {
       boolean rep=false;
       int mode=0;
-      //       int omode=-1;
+      int omode=-1;
       int depth=0;
       avm=null;
       avmRefWidth=-1;
@@ -1374,9 +1376,9 @@ public final class MyInputStream extends FilterInputStream {
 
       for( int i=0; i<size; i++) {
          char c = (char)cache[pos+i];
-         //if( mode==omode ) System.out.print(c);
-         //else System.out.print("\n"+mode+" ["+depth+"] : "+c);
-         //omode=mode;
+         //         if( mode==omode ) System.out.print(c);
+         //         else System.out.print("\n"+mode+" ["+depth+"] : "+c);
+         //         omode=mode;
          switch(mode) {
             // recherche de "<avm:"
             case 0:
@@ -1409,12 +1411,15 @@ public final class MyInputStream extends FilterInputStream {
                else depth++;
                mode=4;
                break;
-               // Parcours du tag courant
+               // Parcours du tag courant (attention à une fermeture immédiate possible <.... />)
             case 4:
                if( c=='>' ) {
+                  if( flag0 ) depth--;
                   if( depth==0 ) { memoOneAVM(key,value); rep=true; mode=0; }
                   else { appendValue(value,' '); mode=2; }
                }
+               flag0=c==' '?flag0:c=='/';
+               flag0=c=='/';
                break;
                // Mémorisation du mot clé XXXX dans avm:XXXX=
             case 10:
@@ -1463,30 +1468,30 @@ public final class MyInputStream extends FilterInputStream {
       } catch( Exception e ) {};
 
 
-      boolean refSpacial = false;
+      //      boolean refSpacial = false;
       try {
          st = new StringTokenizer( avm.get("Spatial.ReferencePixel") );
          fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
          fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())*ratio+"\n");
-         refSpacial=true;
+         //         refSpacial=true;
       } catch( Exception e ) {};
 
       try {
          st = new StringTokenizer( avm.get("Spatial.ReferenceValue") );
          fits.append("CRVAL1  = "+st.nextToken()+"\n");
          fits.append("CRVAL2  = "+st.nextToken()+"\n");
-         refSpacial=true;
+         //         refSpacial=true;
       } catch( Exception e ) {};
 
-      if( !refSpacial ) {
-         try {
-            st = new StringTokenizer( avm.get("Spatial.Notes") );
-            fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())+"\n");
-            fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())+"\n");
-            fits.append("CRVAL1  = "+st.nextToken()+"\n");
-            fits.append("CRVAL2  = "+st.nextToken()+"\n");
-         } catch( Exception e ) {};
-      }
+      //      if( !refSpacial ) {
+      //         try {
+      //            st = new StringTokenizer( avm.get("Spatial.Notes") );
+      //            fits.append("CRPIX1  = "+Double.parseDouble(st.nextToken())+"\n");
+      //            fits.append("CRPIX2  = "+Double.parseDouble(st.nextToken())+"\n");
+      //            fits.append("CRVAL1  = "+st.nextToken()+"\n");
+      //            fits.append("CRVAL2  = "+st.nextToken()+"\n");
+      //         } catch( Exception e ) {};
+      //      }
 
       try {
          st = new StringTokenizer( avm.get("Spatial.Scale") );
