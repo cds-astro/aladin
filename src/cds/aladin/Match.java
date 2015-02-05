@@ -35,7 +35,7 @@ import java.util.*;
 public class Match extends MyIcon {
    static final int L = 12;      // Taille d'un logo
    static String MATCH;
-   protected boolean megaSync=false;
+   protected boolean megaMatch=false;
 
   /** Creation */
    protected Match(Aladin aladin) {
@@ -95,7 +95,7 @@ public class Match extends MyIcon {
    protected int getMode() {
       boolean active = aladin.view.hasCompatibleViews();
       boolean sync = aladin.view.getNbSelectedView()>1  && !active;
-      return  sync && megaSync ? 3 :
+      return  sync && megaMatch ? 3 :
               sync ? 2 :
               active ? 1 : 0; 
    }

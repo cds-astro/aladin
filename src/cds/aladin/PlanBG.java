@@ -43,6 +43,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import com.sun.jmx.remote.util.OrderClassLoaders;
+
 import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;
@@ -1777,6 +1779,9 @@ public class PlanBG extends PlanImage {
 
    /** retourne true s'il est encore possible de zoomer en avant pour avoir plus de détail */
    protected boolean hasMoreDetails() { return hasMoreDetails; }
+   
+   /** retourne l'ordre courant sur l'ordre max */
+   protected String getInfoDetails() { return getOrder()+"/"+maxOrder; }
 
    /** positionne le flage indiquant qu'il y a ou non encore plus de détails disponibles */
    protected void setHasMoreDetails(boolean flag) { hasMoreDetails=flag; }

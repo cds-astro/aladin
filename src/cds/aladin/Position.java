@@ -679,7 +679,7 @@ public class Position extends Obj {
 
        if( isWithStat() || isWithLabel() ) {
           Color c1=g.getColor();
-          Color c2=null;
+          Color c2=c1==Color.red || c1==Color.blue?Color.white:null;
           Rectangle r = getStatPosition(v);
           if( r!=null && (isWithLabel() || v.aladin.view.isMultiView()) ) {
              r.x+=dx;

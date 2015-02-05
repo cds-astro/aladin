@@ -757,7 +757,7 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      Fits out = hpx.buildHealpix(this,order, npix,z);
+      Fits out= hpx.buildHealpix(this,order, npix,z);
 
       if( out !=null  ) {
 

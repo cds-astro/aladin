@@ -71,6 +71,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Astrometrical calibration improvements (SCAMP PV)
  * @beta    <LI> Widgets in fullscreen mode
  * @beta    <LI> New colormap controller
  * @beta    <LI> Full MOC adaptative drawing
@@ -91,8 +92,9 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
- * @beta    <LI> Colormap adjustement in "match" mode bug
- * @beta    <LI> AVM Spacial.Note astrometry.net bug workaround.
+ * @beta    <LI> Astrometrical calibration ZPN & SIN bugs
+ * @beta    <LI> "Match" mode bugs (colormap, phot and fov tools)
+ * @beta    <LI> AVM XML bug.
  * @beta    <LI> HiPS generation with PNG black pixel bug
  * @beta    <LI> Some grid drawing bugs (missing segments or labels)
  * @beta    <LI> Contour parameter bug refresh on HiPS planes
@@ -127,7 +129,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.132";
+   static public final    String VERSION = "v8.133";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -317,7 +319,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
-   Match sync;                   // Gere le logo pour la grille
+   Match match;                   // Gere le logo pour la grille
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
@@ -2056,7 +2058,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       y.add(grid);
       if( !OUTREACH ) { y.add(oeil); y.add(northup); }
       y.add(viewControl);
-      if( !OUTREACH ) y.add(sync);
+      if( !OUTREACH ) y.add(match);
 
       makeAdd(searchPanel,y,"West");
       makeAdd(searchPanel,status,"Center");
@@ -3471,7 +3473,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param byProjection : true si synchronisation par projection, sinon par zoom
     */
    protected void switchMatch(boolean byProjection) {
-      int syncMode = sync.getMode();
+      int syncMode = match.getMode();
       boolean syncOk = syncMode==2 && byProjection ||
             syncMode==3 && !byProjection ? true :
                view.switchSelectCompatibleViews();
@@ -3481,12 +3483,19 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Cycle sur les modes match (aucun, simple match, match + orientation)
     */
    protected void cycleMatch() {
-      int syncMode = sync.getMode();
+      int syncMode = match.getMode();
+      int mode = syncMode==3 ? 0 :  3;
+
+      // Pour conserver la même position approximative après un retour à la normal
+      if( mode==0 ) view.setZoomRaDecForSelectedViews(view.getCurrentView().getZoom(),null);
+
       view.switchSelectCompatibleViews();
       //       int mode = syncMode==3 ? 0 : syncMode==1 ? 2 : 3;
-      int mode = syncMode==3 ? 0 :  3;
+
       if( (mode==2 || mode==3) && !view.isSelectCompatibleViews() ) view.selectCompatibleViews();
-      else if( mode==0 || mode==1 && view.isSelectCompatibleViews() ) view.unselectViewsPartial();
+      else if( mode==0 || mode==1 && view.isSelectCompatibleViews() ) {
+         if( mode==0 )  view.unselectViewsPartial();
+      }
       match(mode);
    }
 
@@ -3495,15 +3504,15 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    protected void match(int mode) {
       if( mode==2 || mode==3 ) {
-         sync.megaSync=mode==3;
+         match.megaMatch=mode==3;
          //          view.setZoomRaDecForSelectedViews(aladin.calque.zoom.getValue(),null);
-         view.setZoomRaDecForSelectedViews(0,null);
+         view.setZoomRaDecForSelectedViews(0,null,null,true,true);
          log("match",mode==3?"scale+angle":"scale");
       } else {
          view.repaintAll();
-         sync.megaSync=false;
+         match.megaMatch=false;
       }
-      sync.repaint();
+      match.repaint();
    }
 
    /** Activation ou désactivation du zoom pointé via la Jbar */
@@ -4792,7 +4801,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
          if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);
-         int syncMode=sync.getMode();
+         int syncMode=match.getMode();
          if( miSync!=null ) {
             miSync.setEnabled(syncMode!=0);
             miSync.setSelected(syncMode==2);

@@ -1242,8 +1242,8 @@ public class PlanHealpix extends PlanBG {
    protected boolean hasPolarisationData() {
       if( tfieldNames==null ) return false;
       List<String> l = Arrays.asList(tfieldNames);
-      return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION"))
-            && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION"));
+      return (l.contains("U-POLARISATION") || l.contains("U_POLARISATION") || l.contains("U_Stokes"))
+            && (l.contains("Q-POLARISATION") || l.contains("Q_POLARISATION") || l.contains("Q_Stokes"));
    }
 
    protected boolean isPartial() { return isPartial; }
@@ -1388,12 +1388,10 @@ public class PlanHealpix extends PlanBG {
                // les donnees WMAP ont des noms de champ legerement
                // differents
                // :(
-               if (idxPolaU < 0) {
-                  idxPolaU = l.indexOf("U_POLARISATION");
-               }
-               if (idxPolaQ < 0) {
-                  idxPolaQ = l.indexOf("Q_POLARISATION");
-               }
+               if (idxPolaU < 0) idxPolaU = l.indexOf("U_POLARISATION");
+               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_POLARISATION");
+               if (idxPolaU < 0) idxPolaU = l.indexOf("U_Stokes");
+               if (idxPolaQ < 0) idxPolaQ = l.indexOf("Q_Stokes");
 
                if (idxPolaU < 0 || idxPolaQ < 0) {
                   System.err.println("Can't find polarisation indexes");

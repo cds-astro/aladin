@@ -170,7 +170,6 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
          ViewSimple v = aladin.view.getLastClickView();
          PlanImage p = v.pref.isPixel() ? (PlanImage)v.pref : null;
-         System.out.println("majCM => p="+p);
 
          if( p!=null && p.flagOk ) {
 

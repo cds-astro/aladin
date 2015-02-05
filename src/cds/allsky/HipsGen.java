@@ -446,6 +446,7 @@ public class HipsGen {
             "   CONCAT     "+Action.CONCAT.doc() + "\n"+
             "   CUBE       "+Action.CUBE.doc() + "\n"+
             "   GZIP       "+Action.GZIP.doc() + "\n"+
+            "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
             "   DETAILS    "+Action.DETAILS.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +

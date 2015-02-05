@@ -270,7 +270,7 @@ public class WidgetControl {
 
       if( flagControl ) {
          poignee = getPoignee(e.getX()-x, e.getY()-y);
-         if( poignee>=0 ) {
+         if( poignee>=0 && poignee<CURSOR.length) {
             Cursor cursor = Cursor.getPredefinedCursor(CURSOR[poignee]);
             c.setCursor(cursor);
          }

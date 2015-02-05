@@ -305,14 +305,19 @@ public class Plan implements Runnable {
 
    /** Retourne la description du statut du plan (souris sur le voyant d'état dans la pile) */
    protected String getStackStatus() {
-      if( status==0 ) return "";
       StringBuilder rep = new StringBuilder();
-      int code=1;
-      for( int i=1; i<STATUS.length; i++, code<<=1 ) {
-         if( (code & status) != 0) {
-            if( rep.length()>0 ) rep.append(", ");
-            rep.append(aladin.chaine.getString(STATUS[i]));
+      if( status!=0 ) {
+         int code=1;
+         for( int i=1; i<STATUS.length; i++, code<<=1 ) {
+            if( (code & status) != 0) {
+               if( rep.length()>0 ) rep.append("\n");
+               rep.append(aladin.chaine.getString(STATUS[i]));
+            }
          }
+      }
+      if( this instanceof PlanBG ) {
+         if( rep.length()>0 ) rep.append("\n");
+         rep.append( "HiPS order: "+((PlanBG)this).getInfoDetails() );
       }
       return rep.toString();
    }

@@ -298,7 +298,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
          // Multi-vue
       } else {
-         aladin.view.setZoomRaDecForSelectedViews(0,coo,vc,false);
+         aladin.view.setZoomRaDecForSelectedViews(0,coo,vc,false,true);
          aladin.view.syncView(1,coo,null);
       }
 
@@ -447,7 +447,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             PlanImage pi = (PlanImage)v.pref;
 
             // Dessin de l'image zoomee si cela n'a pas deja ete fait
-            if( lastImgID!=pi.getImgID() ) {
+            if( lastImgID!=pi.getImgID() || pi.pixelsZoom.length!=w*h ) {
 
                // Affichage du zoom suivant l'echelle
                gbuf.setColor(Aladin.LBLUE);
@@ -458,7 +458,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                   if( ((PlanRGBInterface)pi).getPixelsZoomRGB()==null ) ((PlanRGBInterface)pi).calculPixelsZoomRGB();
                   pimg = createImage( new MemoryImageSource(w,h,((PlanRGBInterface)pi).getPixelsZoomRGB(), 0,w));
                } else {
-                  if( pi.pixelsZoom==null ) pi.calculPixelsZoom();
+                  pi.calculPixelsZoom();
                   pimg = createImage( new MemoryImageSource(w,h,pi.cm,pi.pixelsZoom,0,w));
                }
                gbuf.drawImage(pimg,0,0,this);
@@ -1213,17 +1213,17 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       }
    }
 
-   private void drawInfo(Graphics g) {
+   private void drawInfo(Graphics g,int w,int h) {
       try {
          Projection proj = aladin.view.getCurrentView().pref.projd;
          if( proj.isXYLinear() ) return;
          Calib c = proj.c;
-         String w = Coord.getUnit(c.getImgWidth());
-         String h = Coord.getUnit(c.getImgHeight());
+         String w1 = Coord.getUnit(c.getImgWidth());
+         String h1 = Coord.getUnit(c.getImgHeight());
          g.setFont(Aladin.SPLAIN);
          g.setColor(Color.blue);
-         String s = w+" x "+h;
-         g.drawString(s,SIZE/2-g.getFontMetrics().stringWidth(s)/2,SIZE-10);
+         String s = w1+" x "+h1;
+         g.drawString(s,w/2-g.getFontMetrics().stringWidth(s)/2,h-10);
       } catch( Exception e ) {}
    }
 
@@ -1353,7 +1353,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          drawArea(gr, (int)Math.round(rectzoom.x),(int)Math.round(rectzoom.y),
                (int)Math.round(rectzoom.width-1),(int)Math.round(rectzoom.height-1));
          gr.setColor(Color.blue);
-         drawInfo(gr);
+         drawInfo(gr,w,h);
       }
 
       // Repere dans la loupe et les flèches dans les 4 directions

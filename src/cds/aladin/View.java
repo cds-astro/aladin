@@ -2028,10 +2028,9 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
     *           si null, on utilisera la vue courante.
     */
    protected void setZoomRaDecForSelectedViews(double z,Coord coo) {
-      setZoomRaDecForSelectedViews(z,coo,null,true);
+      setZoomRaDecForSelectedViews(z,coo,null,true,false);
    }
-   protected void setZoomRaDecForSelectedViews(double z,Coord coo,
-         ViewSimple vc,boolean zoomRepaint) {
+   protected void setZoomRaDecForSelectedViews(double z,Coord coo, ViewSimple vc,boolean zoomRepaint,boolean flagNow) {
       double size=-1;
       double cSize;
       double nz;
@@ -2064,6 +2063,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
          ViewSimple v = viewSimple[i];
          if( /* v.locked || */ !v.selected && v!=vc  || v.isPlotView()!=vc.isPlotView() ) continue;
 
+
          // Calcul du facteur de zoom pour les vues en fonction de la taille
          // du pixel
          if( size>0 && z!=0.) {
@@ -2087,11 +2087,11 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
             boolean flag;
 
             //            if( coo==null ) coo = new Coord(repere.raj,repere.dej);
-            // On va désomais pointer à la mi-distance entre la position centrale et le repere
+            // Sauf mention contraire, on va désomais pointer à la mi-distance entre la position centrale et le repere
             // pour faire un effet de glissement
             if( coo==null ) {
                coo = new Coord(repere.raj,repere.dej);
-               if( v.pref instanceof PlanBG ) {
+               if( !flagNow && v.pref instanceof PlanBG ) {
                   try {
                      coo = v.getProj().getXY(coo);
                      Coord c1 = v.getCooCentre();
@@ -4573,7 +4573,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       try{
          aladin.viewControl.repaint();
          aladin.grid.repaint();
-         aladin.sync.repaint();
+         aladin.match.repaint();
          aladin.northup.repaint();
          aladin.oeil.repaint();
 

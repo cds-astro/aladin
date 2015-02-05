@@ -25,6 +25,7 @@ import healpix.newcore.Pointing;
 import java.awt.Polygon;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -342,7 +343,14 @@ final public class ThreadBuilderTile {
                for( int i=deb; i<fin; i++ ) {
                   try {
                      file = downFiles.get(i);
-                     file.open(z);
+                     if( file.flagRemoved ) continue;
+                     try {
+                        file.open(z);
+                     } catch( EOFException e ) {
+                        file.flagRemoved=true;
+                        context.warning("Truncated file: "+file.fitsfile.getFilename()+" => ignored!");
+                        continue;
+                     }
 
                      // Détermination du pixel dans l'image à traiter
                      file.fitsfile.calib.GetXY(coo,false);
@@ -879,6 +887,7 @@ final public class ThreadBuilderTile {
       String name=null;
       double blank;
       Polygon polygon=null;
+      boolean flagRemoved=false;   // true si ce fichier est supprimé a posteriori
 
       SrcFile(String name ) {
          this.name=name;

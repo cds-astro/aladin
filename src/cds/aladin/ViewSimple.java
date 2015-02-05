@@ -332,7 +332,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          aladin.view.setSelectFromView(true);
       }
 
-      aladin.view.setZoomRaDecForSelectedViews(nz,coo,this,true);
+      aladin.view.setZoomRaDecForSelectedViews(nz,coo,this,true,false);
       //      if( aladin.view.onUndoTop() ) aladin.view.memoUndo(this, coo, null);
    }
 
@@ -1202,7 +1202,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       double H = (W/imgW)*imgH;
       if( H>W ) {
          W = W*W /H;
-         H = aladin.calque.zoom.zoomView.getWidth();
+         H = aladin.calque.zoom.zoomView.getHeight();
       }
 
       // On part sur la position centrale
@@ -1646,7 +1646,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * et force la sélection courante aux seuls objets de son Plan d'appartenance
     * @param v liste des objets à tester
     */
-   private Position testFoVRollable(Vector v,double x,double y) {
+   private Position testFoVRollable(ViewSimple vs,Vector v,double x,double y) {
       Position poignee=null;
       Enumeration e = v.elements();
       if( e.hasMoreElements() ) e.nextElement();    // On saute le centre de rotation FoV (premier objet de type Repere)
@@ -1656,7 +1656,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( o.plan instanceof PlanField
                && o.plan.active
                && ((PlanField)o.plan).isRollable()
-               && o.inBout(this,x,y) ) { poignee = o; break; }
+               && o.inBout(vs,x,y) ) { poignee = o; break; }
       }
       if( poignee==null || poignee.plan==null ) return null;
 
@@ -1669,7 +1669,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Teste si l'objet sous la souris est un Repere circulaire, non seulement sélectionné
     * mais pour lequel la position de la souris se trouve sur une des 4 poignées d'extensions (bas,haut,droite,gauche)
     * Si c'est le cas, mémorise cet objet dans poigneeRepere pour permettre sa manipulation via mouseDrag */
-   private Repere testPhot(double x,double y,boolean withPoignee) {
+   private Repere testPhot(ViewSimple vs,double x,double y,boolean withPoignee) {
       Enumeration e = aladin.view.getSelectedObjet().elements();
       while( e.hasMoreElements() ) {
          Obj o = (Obj)e.nextElement();
@@ -1678,8 +1678,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( o instanceof Position && ((Position)o).plan.type == Plan.APERTURE ) continue;
          Repere t = (Repere)o;
          if( !t.isSelected() || !t.hasRayon() ) continue;
-         if( withPoignee ) { if( !t.onPoignee(this, x, y) ) continue; }
-         else { if( !t.inside(this,x,y) ) continue; }
+         if( withPoignee ) { if( !t.onPoignee(vs, x, y) ) continue; }
+         else { if( !t.inside(vs,x,y) ) continue; }
          return t;
       }
       return null;
@@ -1883,7 +1883,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
 
          // Pour pouvoir changer la Colormap associée à cette vue même en mode synchronisé
-         if( selected && aladin.sync.isProjSync()  ) {
+         if( selected && aladin.match.isProjSync()  ) {
             aladin.view.setLastClickView(this);
             aladin.calque.repaintAll();
          }
@@ -2019,7 +2019,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Juste pour éviter de créer un deuxième PHOT sur le premier en ayant
       // oublié de rebasculer en SELECT
-      if( tool==ToolBox.PHOT && testPhot(p.x,p.y,false)!=null ) {
+      if( tool==ToolBox.PHOT && testPhot(vs,p.x,p.y,false)!=null ) {
          tool = ToolBox.SELECT;
          aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
          aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
@@ -2072,12 +2072,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
 
             // S'agirait-il d'une rotation d'un Plan Field
-         } else if( (poignee=vs.testFoVRollable(v,p.x,p.y))!=null ) {
+         } else if( (poignee=vs.testFoVRollable(vs,v,p.x,p.y))!=null ) {
             return;
 
 
             // S'agirait-il d'un changement de taille d'un Repere circulaire ?
-         } else if( (poigneePhot = testPhot(p.x,p.y,true))!=null ) {
+         } else if( (poigneePhot = testPhot(vs,p.x,p.y,true))!=null ) {
             return;
 
             // Sinon on deselectionne les precedents, et on reselectionne
@@ -5757,7 +5757,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected boolean isProjSync() {
       ViewSimple v=aladin.view.getCurrentView();
       return !locked && !isPlotView()  && selected && (v==null || v!=this )
-            && aladin.sync.isProjSync();
+            && aladin.match.isProjSync();
 
    }
 
@@ -6045,7 +6045,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       boolean current =  aladin.view.getCurrentView()==this;
       boolean select =  current || selected;
-      int syncMode = aladin.sync.getMode();
+      int syncMode = aladin.match.getMode();
       ViewSimple v = aladin.view.getMouseView();
       boolean showFromStack = v==null && !isFree() && pref.underMouse;
       boolean show = v==this || showFromStack;

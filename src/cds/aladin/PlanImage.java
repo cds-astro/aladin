@@ -2333,26 +2333,20 @@ public class PlanImage extends Plan {
    protected void calculPixelsZoom() { calculPixelsZoom( getBufPixels8() ); }
    protected void calculPixelsZoom(byte pixels[]) {
 
-      // calcul du rapport Largeur/Hauteur de l'image
-      int zoomViewWidth = aladin.calque.zoom.zoomView.getWidth();
-      int W = zoomViewWidth;
-      int H = (int)(((double)W/width)*height);
-      if( H>W ) {
-         W = (int)((double)W*W / H);
-         H = zoomViewWidth;
-      }
+      int w = aladin.calque.zoom.zoomView.getWidth();
+      int h = aladin.calque.zoom.zoomView.getHeight();
+      
+      // Initialisation du buffer si nécessaire
+      if( pixelsZoom==null || pixelsZoom.length!=w*w) pixelsZoom = new byte[w*h];
 
-      double fctX = (double)width/W;
-      double fctY = (double)height/H;
-
-      if( pixelsZoom==null ) pixelsZoom = new byte[W*W];
-      else for( int i=0; i<pixelsZoom.length; i++ ) pixelsZoom[i]=0;
-
-      for( int y=0; y<H; y++ ) {
-         int i = y*W;
-         int j = (int)(y*fctY);
-         for( int x=0; x<W; x++ ) {
-            pixelsZoom[i++] = pixels[ j*width + (int)(x*fctX) ];
+      double fct = Math.max( (double)width/w, (double)height/h);
+      
+      // Remplissage de l'imagette
+      for( int y=0; y<h; y++) {
+         for( int x=0; x<w; x++ ) {
+            int xi = (int)( x*fct + 0.5);
+            int yi = (int)( y*fct + 0.5);
+            pixelsZoom[y*w+x] = ( xi>=width || yi>=height ) ? 0 : pixels[ yi*width + xi];
          }
       }
    }

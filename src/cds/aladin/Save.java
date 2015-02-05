@@ -1195,16 +1195,16 @@ public final class Save extends JFrame implements ActionListener {
             append(CR+"     system=\""+c.system+"\"");
             append(CR+"     flagepoch=\""+c.flagepoc+"\"");
             append(CR+"     adxpoly=\""+c.adxpoly[0]);
-            for( i=1; i<10; i++ ) append(","+c.adxpoly[i]);
+            for( i=1; i<c.adxpoly.length; i++ ) append(","+c.adxpoly[i]);
             append("\"");
             append(CR+"     adypoly=\""+c.adypoly[0]);
-            for( i=1; i<10; i++ ) append(","+c.adypoly[i]);
+            for( i=1; i<c.adypoly.length; i++ ) append(","+c.adypoly[i]);
             append("\"");
             append(CR+"     xyapoly=\""+c.xyapoly[0]);
-            for( i=1; i<10; i++ ) append(","+c.xyapoly[i]);
+            for( i=1; i<c.xyapoly.length; i++ ) append(","+c.xyapoly[i]);
             append("\"");
             append(CR+"     xydpoly=\""+c.xydpoly[0]);
-            for( i=1; i<10; i++ ) append(","+c.xydpoly[i]);
+            for( i=1; i<c.xydpoly.length; i++ ) append(","+c.xydpoly[i]);
             append("\"");
             append(CR+"     CD=\""+c.CD[0][0]+","+c.CD[0][1]+","
                   +c.CD[1][0]+","+c.CD[1][1]+"\"");
