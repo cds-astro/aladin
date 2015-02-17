@@ -43,8 +43,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import com.sun.jmx.remote.util.OrderClassLoaders;
-
 import cds.allsky.Constante;
 import cds.astro.Coo;
 import cds.fits.HeaderFits;

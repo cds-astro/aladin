@@ -26,9 +26,11 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import cds.aladin.prop.PropPanel;
 import cds.allsky.HipsGen;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
@@ -759,15 +761,26 @@ public final class Command implements Runnable {
             res.append("Width   "+((PlanImage)plan).naxis1+"\n"
                   + "Height  "+((PlanImage)plan).naxis2+"\n"
                   );
+            if(  plan.flagOk && plan.projd!=null ) {
+               String s = Coord.getUnit(plan.projd.c.GetResol()[0]);
+               res.append("PixelRes "+s);
+            }
+            
          } else if( plan.type==Plan.FOLDER ) {
             res.append("Scope   "+(((PlanFolder)plan).localScope?"local":"global")+"\n");
             String item = ((PlanFolder)plan).getStatusItems();
             if( item!=null ) res.append(item);
          }
+         
+         if( plan instanceof PlanBG && plan.isPixel() ) {
+            res.append("PixelRes "+((PlanBG)plan).getMaxResolution());
+         }
+         
 
          if( a.calque.canBeTransparent(plan) /* a.calque.planeTypeCanBeTrans(plan) */ ) {
             res.append("Opacity "+Util.myRound(plan.getOpacityLevel()*100+"",0)+"\n");
-         }
+            
+         } 
       }
 
       // statut des vues (soit par leur ID, soit toutes si aucune spécification)

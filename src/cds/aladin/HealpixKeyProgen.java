@@ -45,7 +45,7 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       return json2TSV(stream);
    }
    
-//   static boolean flagP=false;
+//   static boolean flagP=true;
    
    // Retourne un InputStream en TSV qui reprend les informations contenues dans en JSON HpxFinder/NorderX/DirY/NpixH
    // sous la forme d'une table classique
@@ -54,8 +54,6 @@ public class HealpixKeyProgen extends HealpixKeyCat {
       MyByteArrayStream out = new MyByteArrayStream();
       BufferedReader reader =  new BufferedReader( new InputStreamReader( new ByteArrayInputStream(stream) ));
       String s,s1;
-      
-//      if( npix==8270 && order==5 ) flagP=true;
       
       boolean first=true;
       while( (s=reader.readLine())!=null ) {
@@ -70,6 +68,7 @@ public class HealpixKeyProgen extends HealpixKeyCat {
 //         if( flagP ) System.out.print(s1);
          out.write( s1 );
       }
+//      flagP=false;
       reader.close();
       InputStream in = out.getInputStream();
       out.close();
@@ -128,8 +127,7 @@ public class HealpixKeyProgen extends HealpixKeyCat {
                String nom = nv[1];
                String regex = nv[2];
                
-//               System.out.println("prefix=\""+nv[0]+"\" variable=\""+nv[1]+"\" regex=\""+nv[2]+"\"");
-               
+//               System.out.println("prefix=\""+prefix+"\" variable=\""+nom+"\" regex=\""+regex+"\"");
                // Ajout du préfixe
                if( prefix!=null ) s1.append(prefix);
                

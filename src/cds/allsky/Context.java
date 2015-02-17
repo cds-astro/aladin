@@ -946,21 +946,20 @@ public class Context {
    }
 
    // Demande d'affichage des stats (dans le TabJpeg)
-   protected void showJpgStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
+   protected void showJpgStat(int statNbFile, long cTime,int statNbThread,int statNbThreadRunning) {
       long nbLowCells = getNbLowCells();
 
       double pourcent = nbLowCells<=0 ? 0 : (double)statNbFile/nbLowCells;
-      long tempsTotalEstime = (long)( totalTime*(pourcent - 1) );
+      long totalTime = (long)( cTime/pourcent );
+      long endsIn = totalTime-cTime;
       String pourcentNbCells = nbLowCells==-1 ? "" :
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
-      //      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
 
       String s;
-      if( nbLowCells<=0 ) s = s=statNbFile+" tiles created in "+Util.getTemps(totalTime,true);
-      else s=statNbFile+"/"+nbLowCells+" tiles created in "+Util.getTemps(totalTime,true)+" ("
-            +pourcentNbCells+" EndsIn="+Util.getTemps(tempsTotalEstime,true)
-            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
-            ;
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles created in "+Util.getTemps(cTime,true);
+      else s=statNbFile+"/"+nbLowCells+" tiles created in "+Util.getTemps(cTime,true)+" ("
+            +pourcentNbCells+" endsIn="+Util.getTemps(endsIn,true)
+            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
    }
