@@ -1392,7 +1392,14 @@ public class Context {
       int frame = getFrame();
 
       MyProperties prop = new MyProperties();
-      prop.setProperty(Constante.KEY_LABEL, getLabel()+"/"+Constante.FILE_HPXFINDER);
+      String label = getLabel();
+      if( label==null || label.trim().length()==0 ) {
+         String path = getOutputPath();
+         if( path!=null ) label = (new File(path)).getName();
+      }
+      if( label==null || label.trim().length()==0) label= "XXX_"+(System.currentTimeMillis()/1000);
+
+      prop.setProperty(Constante.KEY_LABEL, label+"/"+Constante.FILE_HPXFINDER);
       prop.setProperty(Constante.KEY_ISMETA, "true");
       prop.setProperty(Constante.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
       prop.setProperty(Constante.KEY_MAXORDER, getOrder()+"");

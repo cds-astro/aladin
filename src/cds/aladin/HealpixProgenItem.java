@@ -306,32 +306,32 @@ public class HealpixProgenItem {
 //   }
    
    // Remplacement par expression régulière avec support des encodages HTTP pour les URLs
-   private String replaceAll(String value,String regex, String replacement) {
-      Matcher m = Pattern.compile(regex).matcher(value);
-      
-      // s'il ne s'agit pas d'une url, pas besoin de se fatiguer
-      if( !replacement.startsWith("http:") && !replacement.startsWith("https:") 
-            && !replacement.startsWith("ftp:") ) return m.replaceAll(replacement);
-      
-      // On est obligé de faire un mapping bidon pour récupérer les groupes extraits
-      // puis on effectue la substitution avec la méthode Glu.dollarSet(...)
-      int n = m.groupCount();
-      StringBuffer split = new StringBuffer();
-      for( int i=0; i<n; i++ ) split.append("$"+(i+1)+"\n");
-//      System.out.println("split=>"+split);
-      String tmp =  m.replaceAll(split.toString());
-//      System.out.println("tmp=>"+tmp);
-      Tok tok = new Tok(tmp,"\n");
-      String param [] = new String[tok.countTokens() ];
-      for( int i=0; tok.hasMoreTokens(); i++ ) {
-         param[i]=tok.nextToken();
-//        System.out.println("tok["+i+"]="+param[i]);
-      }
-      
-      String s = Glu.dollarSet(replacement, param, Glu.URL);
-      System.out.println("Glu => "+s);
-      return s;
-   }
+//   private String replaceAll(String value,String regex, String replacement) {
+//      Matcher m = Pattern.compile(regex).matcher(value);
+//      
+//      // s'il ne s'agit pas d'une url, pas besoin de se fatiguer
+//      if( !replacement.startsWith("http:") && !replacement.startsWith("https:") 
+//            && !replacement.startsWith("ftp:") ) return m.replaceAll(replacement);
+//      
+//      // On est obligé de faire un mapping bidon pour récupérer les groupes extraits
+//      // puis on effectue la substitution avec la méthode Glu.dollarSet(...)
+//      int n = m.groupCount();
+//      StringBuffer split = new StringBuffer();
+//      for( int i=0; i<n; i++ ) split.append("$"+(i+1)+"\n");
+////      System.out.println("split=>"+split);
+//      String tmp =  m.replaceAll(split.toString());
+////      System.out.println("tmp=>"+tmp);
+//      Tok tok = new Tok(tmp,"\n");
+//      String param [] = new String[tok.countTokens() ];
+//      for( int i=0; tok.hasMoreTokens(); i++ ) {
+//         param[i]=tok.nextToken();
+////        System.out.println("tok["+i+"]="+param[i]);
+//      }
+//      
+//      String s = Glu.dollarSet(replacement, param, Glu.URL);
+//      System.out.println("Glu => "+s);
+//      return s;
+//   }
 
 
 }
