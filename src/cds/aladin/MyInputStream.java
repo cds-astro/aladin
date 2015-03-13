@@ -1315,7 +1315,8 @@ public final class MyInputStream extends FilterInputStream {
     * @param size taille du segment
     * @return true si ça ressemble au moins un peu à une entête FITS
     */
-   private boolean memoJpegCalib(int pos,int size) {
+   private boolean memoJpegCalib(int pos,int size) { return memoJpegCalib(pos,size,cache); }
+   private boolean memoJpegCalib(int pos,int size,byte [] cache) {
       commentCalib = new String(cache,pos,size);
       if( commentCalib.indexOf("CTYPE1")<0 ) {
          commentCalib=null;
@@ -1361,7 +1362,8 @@ public final class MyInputStream extends FilterInputStream {
     *
     * @return true si une entête AVM a été trouvée
     */
-   private boolean memoJpegAVMCalib(int pos,int size) {
+   private boolean memoJpegAVMCalib(int pos,int size) { return memoJpegAVMCalib(pos,size,cache); }
+   private boolean memoJpegAVMCalib(int pos,int size,byte [] cache) {
       boolean rep=false;
       int mode=0;
       int omode=-1;
@@ -1568,6 +1570,48 @@ public final class MyInputStream extends FilterInputStream {
       }
 
       return headerFits;
+   }
+
+   /** Extraction directe et rapide des données AVM ou CalibFits du fichier
+    * JPEG ou PNG. Il est nécessaire de réouvrir le fichier pour pouvoir
+    * faire les seeks qui vont bien => ne peut s'appliquerà un simple Stream
+    * => Ne change rien au flux initial (cache, pos...)
+    */
+   public HeaderFits fastExploreCommentOrAvmCalib(String filename) throws Exception {
+      HeaderFits headerFits=null;
+      RandomAccessFile file = null;
+      try {
+         file = new RandomAccessFile(filename, "rw");
+         if( (type&JPEG)!=0 ) fastExploreJpg(file);
+         //         else if( (type&PNG)!=0 ) explorePNG(file);   // A FAIRE QUAND J'AURAIS LE TEMPS PF Mars 2015
+         else return null;
+      }
+      finally { if( file!=null) try { file.close(); } catch( Exception e) {} }
+      return headerFits;
+   }
+
+   // Extraction directe et rapide des données AVM ou CalibFits du bon
+   // segment commentaire d'un fichier JPEG
+   private boolean fastExploreJpg(RandomAccessFile file) throws Exception {
+      int c;
+      file.seek(2);  // on saute le magic code
+      while( (c=file.read())!=-1 ) {
+         if( c!=0xFF ) return false;  // Pb de début de segment
+         int mode = file.read();
+         int size = file.read()<<8 | file.read();
+         long pos = file.getFilePointer();
+         if( mode==0xE1 ) {
+            byte [] buf = new byte[size-2];
+            file.readFully(buf);
+            if( memoJpegAVMCalib(0,buf.length,buf) ) return true;
+         } else if( mode==0xFE ) {
+            byte [] buf = new byte[size-2];
+            file.readFully(buf);
+            if( memoJpegCalib(0,buf.length,buf) ) return true;
+         }
+         file.seek(pos+size-2);
+      }
+      return false;
    }
 
    /** Retourne true si ce flux dispose d'une calib dans un segment commentaire (JPEG ou PNG) */

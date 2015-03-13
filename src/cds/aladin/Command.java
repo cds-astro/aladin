@@ -26,11 +26,9 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import cds.aladin.prop.PropPanel;
 import cds.allsky.HipsGen;
 import cds.astro.Astrocoo;
 import cds.astro.Unit;
@@ -765,22 +763,22 @@ public final class Command implements Runnable {
                String s = Coord.getUnit(plan.projd.c.GetResol()[0]);
                res.append("PixelRes "+s);
             }
-            
+
          } else if( plan.type==Plan.FOLDER ) {
             res.append("Scope   "+(((PlanFolder)plan).localScope?"local":"global")+"\n");
             String item = ((PlanFolder)plan).getStatusItems();
             if( item!=null ) res.append(item);
          }
-         
+
          if( plan instanceof PlanBG && plan.isPixel() ) {
             res.append("PixelRes "+((PlanBG)plan).getMaxResolution());
          }
-         
+
 
          if( a.calque.canBeTransparent(plan) /* a.calque.planeTypeCanBeTrans(plan) */ ) {
             res.append("Opacity "+Util.myRound(plan.getOpacityLevel()*100+"",0)+"\n");
-            
-         } 
+
+         }
       }
 
       // statut des vues (soit par leur ID, soit toutes si aucune spécification)
@@ -2363,7 +2361,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("circle") ) {
 
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double r = Server.getAngle(p[2],Server.RADIUSd)/60.;
                newobj = new Cercle(plan,c,r);
             } else {
                double r = parseDouble(p[2]);
@@ -2374,8 +2372,8 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("ellipse") ) {
             double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double semiMA = Server.getAngle(p[2],Server.RADIUSs)/60.;
-               double semiMI = Server.getAngle(p[3],Server.RADIUSs)/60.;
+               double semiMA = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double semiMI = Server.getAngle(p[3],Server.RADIUSd)/60.;
                newobj = new Ellipse(plan,c,semiMA,semiMI,angle);
             } else {
                double semiMA = parseDouble(p[2]);
@@ -2392,8 +2390,8 @@ public final class Command implements Runnable {
             }
             if( label==null ) try { label = p[5]; } catch( Exception e) {};
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
-               double h = Server.getAngle(p[3],Server.RADIUSs)/60.;
+               double w = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double h = Server.getAngle(p[3],Server.RADIUSd)/60.;
                newobj = new Box(plan,c,w,h,angle,label);
             } else {
                double w = parseDouble(p[2]);
@@ -2405,7 +2403,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("vector") ) {
             double angle = parseDouble(p[3]);
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double w = Server.getAngle(p[2],Server.RADIUSd)/60.;
                newobj = new Vecteur(plan,c,w,angle);
             } else {
                double w = parseDouble(p[2]);
@@ -2417,7 +2415,7 @@ public final class Command implements Runnable {
             double startAngle = parseDouble(p[3]);
             double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUSs)/60.;
+               double r = Server.getAngle(p[2],Server.RADIUSd)/60.;
                newobj = new Arc(plan,c,r,startAngle,angle);
             } else {
                double r = parseDouble(p[2]);
@@ -2429,8 +2427,8 @@ public final class Command implements Runnable {
             double startAngle = parseDouble(p[4]);
             double angle   = parseDouble(p[5]);
             if( drawMode==DRAWRADEC ) {
-               double r1 = Server.getAngle(p[2],Server.RADIUSs)/60.;
-               double r2 = Server.getAngle(p[3],Server.RADIUSs)/60.;
+               double r1 = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double r2 = Server.getAngle(p[3],Server.RADIUSd)/60.;
                newobj = new Pickle(plan,c,r1,r2,startAngle,angle);
             } else {
                double r1 = parseDouble(p[2]);

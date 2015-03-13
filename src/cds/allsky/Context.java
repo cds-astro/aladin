@@ -382,11 +382,16 @@ public class Context {
       depthInit=true;
    }
 
+   private String lastImgEtalon = null;
+
    /**
     * Lit l'image etalon, et affecte les données d'origines (bitpix, bscale, bzero, blank, cut)
     * @throws Exception s'il y a une erreur à la lecture du fichier
     */
    protected void initFromImgEtalon() throws Exception {
+      // Déja fait ,
+      if( lastImgEtalon!=null && lastImgEtalon.equals(imgEtalon)) return;
+
       String path = imgEtalon;
       Fits fitsfile = new Fits();
 
@@ -422,6 +427,8 @@ public class Context {
             setTargetRadius(Util.round(r,5)+"");
          }
       }
+
+      lastImgEtalon = imgEtalon;
    }
 
    /**
@@ -627,7 +634,7 @@ public class Context {
             cutOrig[2] = bitpixOrig==-64?-Double.MAX_VALUE : bitpixOrig==-32? -Float.MAX_VALUE
                   : bitpixOrig==64?Long.MIN_VALUE+1 : bitpixOrig==32?Integer.MIN_VALUE+1 : bitpixOrig==16?Short.MIN_VALUE+1:1;
             cutOrig[3] = bitpixOrig==-64?Double.MAX_VALUE : bitpixOrig==-32? Float.MAX_VALUE
-                  : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpix==16?Short.MAX_VALUE:255;
+                  : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpixOrig==16?Short.MAX_VALUE:255;
          }
 
          // Y a-t-il un changement de bitpix ?
@@ -975,9 +982,7 @@ public class Context {
 
    private boolean isMap=false;       // true s'il s'agit d'une map HEALPix FITS
    protected boolean isMap() { return isMap; }
-   protected void setMap(boolean flag ) {
-      isMap=flag;
-   }
+   protected void setMap(boolean flag ) { isMap=flag; }
 
    protected boolean ignoreStamp;
    public void setIgnoreStamp(boolean flag) { ignoreStamp=true; }
@@ -1194,7 +1199,7 @@ public class Context {
          "//hipsDir = hipsDir.substring(0,hipsDir.lastIndexOf(\"/\",hipsDir.length));\n" +
          "var aladin = $.aladin(\"#aladin-lite-div\");\n" +
          "aladin.setImageSurvey(aladin.createImageSurvey('$LABEL', '$LABEL',\n" +
-         "hipsDir, '$SYS', $ORDER));\n" +
+         "hipsDir, '$SYS', $ORDER, {imgFormat: '$FMT'}));\n" +
 
          "</script>    \n" +
 
@@ -1243,6 +1248,8 @@ public class Context {
       double resol = CDSHealpix.pixRes(nsideP)/3600;
 
       int width = getTileSide();
+      String tiles = getAvailableTileFormats();
+      String fmt = tiles.indexOf("png")>=0 ? "png" : "jpg";
 
       String res = INDEX.replace("$LABEL",label);
       StringBuilder info = new StringBuilder();
@@ -1250,7 +1257,7 @@ public class Context {
       info.append("   <LI> <B>Type:</B> "+(depth>1?"HiPS cube ("+depth+" frames)" : isColor() ? "colored HiPS image" : "HiPS image")+"\n");
       info.append("   <LI> <B>Best pixel angular resolution:</B> "+Coord.getUnit( resol )+"\n");
       info.append("   <LI> <B>Max tile order:</B> "+order+" (NSIDE="+nside+")\n");
-      info.append("   <LI> <B>Available encoding tiles:</B> "+getAvailableTileFormats()+"\n");
+      info.append("   <LI> <B>Available encoding tiles:</B> "+tiles+"\n");
       info.append("   <LI> <B>Tile size:</B> "+width+"x"+width+"\n");
       if( bitpix!=0 && bitpix!=-1 ) info.append("   <LI> <B>FITS tile BITPIX:</B> "+bitpix+"\n");
       info.append("   <LI> <B>Processing date:</B> "+getNow()+"\n");
@@ -1272,6 +1279,7 @@ public class Context {
       res = res.replace("$INFO",info);
       res = res.replace("$ORDER",order+"");
       res = res.replace("$SYS",sys);
+      res = res.replace("$FMT",fmt);
 
       String tmp = getOutputPath()+Util.FS+"index.html";
       File ftmp = new File(tmp);

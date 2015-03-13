@@ -25,7 +25,6 @@ import healpix.newcore.Pointing;
 import java.awt.Polygon;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -340,15 +339,18 @@ final public class ThreadBuilderTile {
                int nbPix=0;
                double totalCoef=0;
 
+               int removed=0;
                for( int i=deb; i<fin; i++ ) {
                   try {
                      file = downFiles.get(i);
                      if( file.flagRemoved ) continue;
                      try {
                         file.open(z);
-                     } catch( EOFException e ) {
+                     } catch( Exception e ) {
                         file.flagRemoved=true;
-                        context.warning("Truncated file: "+file.fitsfile.getFilename()+" => ignored!");
+                        removed++;
+                        context.warning("File not found or truncated file: "+file.fitsfile.getFilename()+" => ignored!");
+                        if( removed>=fin-deb ) return null;  // Aucun fichier source disponible
                         continue;
                      }
 

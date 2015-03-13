@@ -644,9 +644,9 @@ public class BuilderTiles extends Builder {
       for( int dg=0; dg<2; dg++ ) {
          for( int hb=0; hb<2; hb++ ) {
             int quad = dg<<1 | hb;
-            in = fils[quad];
             int offX = (dg*w)>>>1;
             int offY = ((1-hb)*w)>>>1;
+      in = fils[quad];
 
       for( int y=0; y<w; y+=2 ) {
          for( int x=0; x<w; x+=2 ) {
@@ -670,20 +670,25 @@ public class BuilderTiles extends Builder {
             } else {
 
                // On prend la moyenne des 4
-               double pix=0;
+               double pix=blank;
                int nbPix=0;
                if( in!=null ) {
                   for( int i=0;i<4; i++ ) {
                      int gx = i==1 || i==3 ? 1 : 0;
                      int gy = i>1 ? 1 : 0;
                      px[i] = in.getPixelDouble(x+gx,y+gy);
-                     if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
+                     if( !in.isBlankPixel(px[i]) ) nbPix++;
+                     //                     if( !Double.isNaN(px[i]) && px[i]!=blank ) nbPix++;
+                  }
+                  if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
+                  else {
+                     pix=0;
+                     for( int i=0; i<4; i++ ) {
+                        if( !in.isBlankPixel(px[i]) ) pix += (px[i]/nbPix);
+                        //                        if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
+                     }
                   }
                }
-               for( int i=0; i<4; i++ ) {
-                  if( !Double.isNaN(px[i]) && px[i]!=blank ) pix+=px[i]/nbPix;
-               }
-               if( nbPix==0 ) pix=blank;  // aucune valeur => BLANK
                out.setPixelDouble(offX+(x>>>1), offY+(y>>>1), pix);
             }
          }
@@ -693,19 +698,26 @@ public class BuilderTiles extends Builder {
 
       if( !isColor && coaddMode!=Mode.REPLACETILE && coaddMode!=Mode.KEEPTILE ) {
          Fits oldOut = findLeaf(file);
-         if( oldOut!=null ) {
-            if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut);
-            else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
-            else if( coaddMode==Mode.KEEP ) {
-               // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
-               // celui renseigné par l'utilisateur, et sinon celui par défaut
-               if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
-               oldOut.mergeOnNaN(out);
-               out=oldOut;
-               oldOut=null;
-            }
-         }
+         if( oldOut!=null ) out.mergeOnNaN(oldOut);
       }
+
+
+      //      if( !isColor && coaddMode!=Mode.REPLACETILE && coaddMode!=Mode.KEEPTILE ) {
+      //         Fits oldOut = findLeaf(file);
+      //         if( oldOut!=null ) {
+      //            if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,true);
+      //            else if( coaddMode==Mode.ADD ) out.coadd(oldOut,false);
+      //            else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
+      //            else if( coaddMode==Mode.KEEP ) {
+      //               // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
+      //               // celui renseigné par l'utilisateur, et sinon celui par défaut
+      //               if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
+      //               oldOut.mergeOnNaN(out);
+      //               out=oldOut;
+      //               oldOut=null;
+      //            }
+      //         }
+      //      }
 
       //      String filename = file+context.getTileExt();
       //      if( isColor ) out.writeCompressed(filename,0,0,null, context.MODE[ context.targetColorMode ]);
@@ -769,12 +781,14 @@ public class BuilderTiles extends Builder {
                return oldOut;
             }
             if( oldOut!=null ) {
-               if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut);
+               // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
+               // celui renseigné par l'utilisateur, et sinon celui par défaut
+               if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
+
+               if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,true);
+               else if( coaddMode==Mode.ADD ) out.coadd(oldOut,false);
                else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
                else if( coaddMode==Mode.KEEP ) {
-                  // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
-                  // celui renseigné par l'utilisateur, et sinon celui par défaut
-                  if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
                   oldOut.mergeOnNaN(out);
                   out=oldOut;
                   oldOut=null;

@@ -80,6 +80,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> Pixel autocut estimation around the reticle (localcut)
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
+ * @beta         <LI> ADD mode
  * @beta         <LI> Colormap control for colored HiPS
  * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
  * @beta         <LI> Cube support
@@ -92,6 +93,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> HiPS building by iterations
  * @beta    <LI> Astrometrical calibration ZPN & SIN bugs
  * @beta    <LI> "Match" mode bugs (colormap, phot and fov tools)
  * @beta    <LI> AVM XML bug.
@@ -129,7 +131,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.136";
+   static public final    String VERSION = "v8.137";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

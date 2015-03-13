@@ -39,6 +39,7 @@ public class HipsGen {
    private File file;
    private boolean force=false;
    private boolean flagMode=false;
+   private boolean flagFading=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
 
@@ -116,7 +117,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval"))     { context.setSkyval(val);
       } else if (opt.equalsIgnoreCase("exptime"))    { context.setExpTime(val);
-      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val);
+      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); flagFading=true;
       } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
       } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
       } else if (opt.equalsIgnoreCase("red"))        { context.setRgbInput(val, 0);
@@ -325,6 +326,11 @@ public class HipsGen {
          }
       }
 
+      if( context.getMode()==Mode.ADD && !flagFading ) {
+         context.setFading(false);
+         context.info("Pixel mode=ADD => default fading effect off");
+      }
+
       // Nettoyage avant ?
       if( force ) {
          context.setIgnoreStamp(true);
@@ -404,7 +410,7 @@ public class HipsGen {
                   "   pixelGood=min [max] Range of pixel values kept" + "\n" +
                   "   img=file           Specifical reference image for default initializations \n" +
                   "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
-                  "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|AVERAGE) \n" +
+                  "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|ADD|AVERAGE) \n" +
                   "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
                   "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
                   "   fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +

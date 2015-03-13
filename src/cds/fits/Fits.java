@@ -829,13 +829,19 @@ final public class Fits {
       // cellule éventuellement en suffixe du
       // nom fichier.fits[ext:x,y-wxh]
       int code = 0;
-      MyInputStream is = new MyInputStream(new FileInputStream(filename));
+      MyInputStream is = null;
       try {
+         is = new MyInputStream(new FileInputStream(filename));
          if( is.isGZ() ) {
             code |= GZIP;
             is = is.startRead();
          }
+         //         long type = is.getType();
          long type = is.getType(10000);
+
+         if( (type&(MyInputStream.JPEG|MyInputStream.PNG))!=0 && !is.hasCommentCalib() ) {
+            is.fastExploreCommentOrAvmCalib(filename);
+         }
 
          // Cas spécial d'un fichier .hhhh
          if( filename.endsWith(".hhh") ) {
@@ -2189,16 +2195,25 @@ final public class Fits {
    //   }
 
 
-   /** Coadditionne les pixels (pixels[] et rgb[] */
-   public void coadd(Fits a) throws Exception {
+   /** Retourne la plus grande valeur codable en double en fonction du bitpix */
+   static public double getMax(int bitpixOrig) {
+      return bitpixOrig==-64?Double.MAX_VALUE : bitpixOrig==-32? Float.MAX_VALUE
+            : bitpixOrig==64?Long.MAX_VALUE : bitpixOrig==32?Integer.MAX_VALUE : bitpixOrig==16?Short.MAX_VALUE:255;
+
+   }
+
+   /** Coadditionne les pixels (pixels[] et rgb[], en faisant la moyenne ou par simple addition en bloquant sur la valeur max */
+   public void coadd(Fits a,boolean average) throws Exception {
       int taille = widthCell * heightCell * depthCell;
 
       if( a.pixels != null && pixels != null ) {
+         double max = getMax(bitpix);
          for( int i = 0; i < taille; i++ ) {
             double v1 = getPixValDouble(pixels, bitpix, i);
             double v2 = a.getPixValDouble(a.pixels, a.bitpix, i);
-            double v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1
-                  : (v1 + v2) / 2;
+            double v;
+            if( average ) v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : (v1 + v2) / 2;
+            else v = isBlankPixel(v1) ? v2 : a.isBlankPixel(v2) ? v1 : ((v1/2) + (v2/2) > max/2) ? max :  (v1 + v2);
             setPixValDouble(pixels, bitpix, i, v);
          }
       }
@@ -2206,9 +2221,21 @@ final public class Fits {
          for( int i = 0; i < taille; i++ ) {
             if( (a.rgb[i] & 0xFF000000)==0 ) continue;
             if( (rgb[i] & 0xFF000000)==0 ) { rgb[i]=a.rgb[i]; continue; }
-            int r = (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
-            int g = (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
-            int b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2;
+            int r,g,b;
+            if( average ) {
+               r = (((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF))/2 << 16;
+               g = (((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF))/2 << 8;
+               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF))/2;
+            } else {
+               r = ((rgb[i] >> 16) & 0xFF)  + ((a.rgb[i] >> 16) & 0xFF);
+               g = ((rgb[i] >> 8) & 0xFF) + ((a.rgb[i] >> 8) & 0xFF);
+               b = ((rgb[i] & 0xFF) + (a.rgb[i] & 0xFF));
+               if( r>255 ) r=255;
+               if( g>255 ) g=255;
+               if( b>255 ) b=255;
+               r = r << 16;
+               g = g << 8;
+            }
             rgb[i] = 0xFF000000 | r | g | b;
          }
       }

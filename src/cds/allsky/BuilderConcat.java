@@ -22,11 +22,7 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Iterator;
-
-import cds.aladin.Aladin;
 import cds.aladin.HealpixProgen;
-import cds.allsky.Context.JpegMethod;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
@@ -35,9 +31,9 @@ import cds.tools.pixtools.Util;
  * @author Pierre Fernique
  */
 public class BuilderConcat extends BuilderTiles {
-//   private int statNbFile;
-//   private long statSize;
-//   private long startTime,totalTime;
+   //   private int statNbFile;
+   //   private long statSize;
+   //   private long startTime,totalTime;
    private HealpixMoc inputMoc,outputMoc;
    private String outputPath;
    private String inputPath;
@@ -52,16 +48,16 @@ public class BuilderConcat extends BuilderTiles {
    }
 
    public Action getAction() { return Action.CONCAT; }
-   
+
    public void run() throws Exception {
       build();
-      
+
       // Regeneration de l'arborescence pour la zone concernée
       (new BuilderTree(context)).run();
       context.info("tree updated");
-      
+
       boolean inJpg=false,inPng=false;
-      
+
       if( !context.isColor() ) {
          // Regeneration des tuiles jpeg et de l'arborescence pour la zone concernée si nécessaire
          inJpg = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.jpg")).exists();
@@ -71,11 +67,11 @@ public class BuilderConcat extends BuilderTiles {
          inPng = (new File(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.png")).exists();
          if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
       }
-      
+
       // Regeneration des allsky si non encore fait
       if( !inJpg && !inPng ) (new BuilderAllsky(context)).run();
       context.info("Allsky updated");
-      
+
       // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
       outputMoc = new HealpixMoc();
@@ -89,7 +85,7 @@ public class BuilderConcat extends BuilderTiles {
          (new BuilderMoc(context)).run();
          context.info("MOC done");
       }
-      
+
       // Post traitement sur le HpxFinder si nécessaire
       if( !doHpxFinder ) {
          f = new File(outputPathIndex);
@@ -101,7 +97,7 @@ public class BuilderConcat extends BuilderTiles {
          // Il faut refaire le MOC de l'index cumulé
          (new BuilderMocIndex(context)).run();
          context.info("Index MOC updated");
-        
+
          // Faut-il lancer également une commande PROGEN
          f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
          if( f.isDirectory() ) {
@@ -110,7 +106,7 @@ public class BuilderConcat extends BuilderTiles {
          }
       }
    }
-   
+
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       outputPath = context.getOutputPath();
@@ -131,7 +127,7 @@ public class BuilderConcat extends BuilderTiles {
       if( inputOrder==-1 )  throw new Exception("No HiPS found in input dir");
       if( order!=inputOrder ) throw new Exception("Uncompatible HiPS: out.order="+order+" input.order="+inputOrder);
       context.info("Order retrieved from ["+inputPath+"] => "+order);
-      
+
       String allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
       if( (new File(allsky)).exists() ) {
          setContextParamFromPreviousAllskyFile(allsky);
@@ -151,7 +147,7 @@ public class BuilderConcat extends BuilderTiles {
             }
          }
       }
-      
+
       // faudra-t-il traiter les index
       doHpxFinder = (new File(inputPathIndex)).isDirectory() && (new File(outputPathIndex)).isDirectory();
       if( doHpxFinder ) context.info("HpxFinder will be also concatenated (mode="+mode+")");
@@ -167,10 +163,10 @@ public class BuilderConcat extends BuilderTiles {
          f = new File(inputPath+Util.FS+Constante.FILE_MOC);
          inputMoc.read( f.getCanonicalPath() );
       }
-      
+
       if( context.mocArea!=null ) inputMoc = inputMoc.intersection(context.mocArea);
       context.moc = inputMoc;
-      
+
       // Dans le cas de rénégération des allsky.png il faut connaître les cuts
       double [] cut = context.getCut();
       updateCutByProperties(cut);
@@ -178,7 +174,7 @@ public class BuilderConcat extends BuilderTiles {
       context.setValidateCut(true);
 
    }
-   
+
    protected void setContextParamFromPreviousAllskyFile(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
@@ -192,50 +188,50 @@ public class BuilderConcat extends BuilderTiles {
          cut[3] = f.headerFits.getDoubleFromHeader("DATAMAX");
       } catch( Exception e ) { cut[2]=cut[3]=0; }
       context.setCut(cut);
-      
+
       try {
          double blank = f.headerFits.getDoubleFromHeader("BLANK");
          context.blank = blank;
       } catch( Exception e ) { }
-    
+
       try {
          double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
          context.bscale = bscale;
       } catch( Exception e ) { }
-    
+
       try {
          double bzero = f.headerFits.getDoubleFromHeader("BZERO");
          context.bzero = bzero;
       } catch( Exception e ) { }
-    
+
       try {
          int bitpix = f.headerFits.getIntFromHeader("BITPIX");
          context.bitpix = bitpix;
       } catch( Exception e ) { }
-    
+
    }
 
-   
+
    /** Vérifie l'adéquation des deux HiPS en fonction du fichier allsky.fits input */
    public void validateParams(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
-      
+
       int bitpix = f.headerFits.getIntFromHeader("BITPIX");
       if( bitpix!=context.bitpix ) throw new Exception("Uncompatible HiPS => input.BITPIX="+bitpix+" output.BITPIX="+context.bitpix);
-    
+
       double bscale=1;
       try {
          bscale = f.headerFits.getDoubleFromHeader("BSCALE");
       } catch( Exception e ) { }
       if( bscale!=context.bscale ) context.warning("BSCALE modification => ignored (input.BSCALE="+bscale+" output.BSCALE="+context.bscale+")");
-    
+
       double bzero=0;
       try {
          bzero = f.headerFits.getDoubleFromHeader("BZERO");
       } catch( Exception e ) { }
       if( bzero!=context.bzero ) context.warning("BZERO modification =>ignored (input.BZERO="+bzero+" output.BZERO="+context.bzero+")");
-      
+
       double blank=Double.NaN;
       try {
          blank = f.headerFits.getDoubleFromHeader("BLANK");
@@ -243,11 +239,11 @@ public class BuilderConcat extends BuilderTiles {
       if( !Double.isNaN(blank) && blank!=context.blank ) context.warning("BLANK modification => ignored (input.BLANK="+blank+" output.BLANK="+context.blank+")");
    }
 
-   
+
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits out=null;
-      
+
       String inputFile = Util.getFilePath(inputPath,order,npix,z);
       Fits input = loadTile(inputFile);
       if( input==null ) {
@@ -259,7 +255,7 @@ public class BuilderConcat extends BuilderTiles {
       // traitement de la tuile
       String outFile = Util.getFilePath(outputPath,order,npix,z);
       out = loadTile(outFile);
-      
+
       switch(mode) {
          case REPLACETILE:
             out=input;
@@ -268,22 +264,26 @@ public class BuilderConcat extends BuilderTiles {
             if( out==null ) out=input;
             break;
          case AVERAGE:
-            if( out!=null ) input.coadd(out);
+            if( out!=null ) input.coadd(out,true);
+            out=input;
+            break;
+         case ADD:
+            if( out!=null ) input.coadd(out,false);
             out=input;
             break;
          case OVERWRITE:
             if( out!=null ) out.mergeOnNaN(input);
-            else out=input; 
+            else out=input;
             break;
          case KEEP:
-            if( out!=null ) input.mergeOnNaN(out); 
+            if( out!=null ) input.mergeOnNaN(out);
             out=input;
             break;
       }
 
       if( out==null ) throw new Exception("Y a un blème ! out==null");
       else write(outFile,out);
-      
+
       if( context.isTaskAborting() )  throw new Exception("Task abort !");
 
       // Traitement de la tuile index
@@ -300,6 +300,7 @@ public class BuilderConcat extends BuilderTiles {
             case KEEPTILE :
                if( outIndex==null ) outIndex=inputIndex;
                break;
+            case ADD:
             case AVERAGE:
             case OVERWRITE:
             case KEEP:
@@ -314,7 +315,7 @@ public class BuilderConcat extends BuilderTiles {
       updateStat(0,1,0,duree,0,0);
       return out;
    }
-   
+
    private Fits loadTile(String file) throws Exception {
       Fits f = new Fits();
       try {
@@ -326,23 +327,23 @@ public class BuilderConcat extends BuilderTiles {
       }
       return f;
    }
-   
-//   private void writeTile(Fits out,String file) throws Exception {
-//      String s=null;
-//      if( tileMode==Context.FITS )  out.writeFITS(s=file+".fits");
-//      else if( tileMode==Context.PNG ) out.writeRGBcompressed(s=file+".png","png");
-//      else if( tileMode==Context.JPEG ) out.writeRGBcompressed(s=file+".jpg","jpg");
-//      
-//      File f = new File(s);
-//      updateStat(f);
-//   }
-   
+
+   //   private void writeTile(Fits out,String file) throws Exception {
+   //      String s=null;
+   //      if( tileMode==Context.FITS )  out.writeFITS(s=file+".fits");
+   //      else if( tileMode==Context.PNG ) out.writeRGBcompressed(s=file+".png","png");
+   //      else if( tileMode==Context.JPEG ) out.writeRGBcompressed(s=file+".jpg","jpg");
+   //
+   //      File f = new File(s);
+   //      updateStat(f);
+   //   }
+
    // Ecriture du fichier d'index HEALPix correspondant à la map passée en paramètre
    private void writeIndex(String file,HealpixProgen map) throws Exception {
       cds.tools.Util.createPath(file);
       map.writeStream(new FileOutputStream(file) );
    }
-   
+
    /** Construction d'une tuile terminale. Lit le fichier est map les entrées de l'index
     * dans une TreeMap */
    private HealpixProgen loadIndex(String file) throws Exception {
@@ -352,16 +353,16 @@ public class BuilderConcat extends BuilderTiles {
       out.loadStream( new FileInputStream(f));
       return out;
    }
-   
 
-   
-//   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
-//
-//   // Mise à jour des stats
-//   private void updateStat(File f) {
-//      statNbFile++;
-//      statSize += f.length();
-//      totalTime = System.currentTimeMillis()-startTime;
-//   }
+
+
+   //   private void initStat() { statNbFile=0; statSize=0; startTime = System.currentTimeMillis(); }
+   //
+   //   // Mise à jour des stats
+   //   private void updateStat(File f) {
+   //      statNbFile++;
+   //      statSize += f.length();
+   //      totalTime = System.currentTimeMillis()-startTime;
+   //   }
 
 }

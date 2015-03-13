@@ -360,7 +360,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
 
             // Dans le cas d'un chargement d'une région ou d'un ancien contour, on va forcer la création d'un nouveau plan
-            if( (type & (MyInputStream.DS9REG|MyInputStream.AJTOOL))!=0 ) {
+            if( (type & (MyInputStream.DS9REG /* |MyInputStream.AJTOOL */))!=0 ) {
                //               aladin.command.resetPreviousDrawing();
                aladin.calque.newPlanTool(null);
             }
@@ -1142,10 +1142,11 @@ public class ServerFile extends Server implements XMLConsumer {
 
       // Ajout de l'objet dans le plan courant
       Position o=null;
-      if( typeTool.equals("tag") )       o = ( new Repere(plan) );   // Pour compatibilité avec les versions <7
+      if( typeTool.equals("tag") )        o = ( new Repere(plan) );   // Pour compatibilité avec les versions <7
       else if( typeTool.equals("text") )      o = ( new Tag(plan) );      // Pour compatibilité avec les versions <7
 
       else if( typeTool.equals("phot") )      o = ( new Repere(plan) );
+      else if( typeTool.equals("source") )    o = ( new Repere(plan) );
       else if( typeTool.equals("taglabel") )  o = ( new Tag(plan) );
       else if( typeTool.equals("line") )      o = ( new Ligne(plan) );
       else if( typeTool.equals("arrow") )     o = ( new Cote(plan) );

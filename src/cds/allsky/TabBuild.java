@@ -30,8 +30,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -46,11 +44,8 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.table.AbstractTableModel;
-
 import cds.aladin.Aladin;
 import cds.aladin.Coord;
-import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
 public class TabBuild extends JPanel implements ActionListener {
@@ -101,7 +96,7 @@ public class TabBuild extends JPanel implements ActionListener {
    private String canceltip;
    MainPanel mainPanel;
    Context context;
-   
+
    protected BuildProgressPanel buildProgressPanel;
 
    private String getString(String k) { return mainPanel.aladin.getChaine().getString(k); }
@@ -223,28 +218,28 @@ public class TabBuild extends JPanel implements ActionListener {
       // boutons
       initBtn();
    }
-   
+
    private void initBtn() {
       JButton bt;
       previous = bt=new JButton(getString("PREVIOUS"));
       bt.addActionListener(this);
-      
+
       moc = bt=new JButton(getString("LOADMOC"));
       bt.addActionListener(this);
-      
-      start = bt=new JButton(getString("START"));  
+
+      start = bt=new JButton(getString("START"));
       bt.addActionListener(this);
-      
-      pause = bt=new JButton(getString("PAUSE"));  
+
+      pause = bt=new JButton(getString("PAUSE"));
       bt.addActionListener(this);
-      
+
       abort = bt=new JButton(getString("ABORT"));
-      bt.addActionListener(this); bt.setToolTipText(canceltip); 
-      
+      bt.addActionListener(this); bt.setToolTipText(canceltip);
+
       next = bt=new JButton(getString("NEXT"));
-      bt.addActionListener(this); 
+      bt.addActionListener(this);
    }
-   
+
    private void loadMoc() {
       String mocFile = mainPanel.context.getHpxFinderPath()+Util.FS+Constante.FILE_MOC;
       mainPanel.aladin.execAsyncCommand("load "+mocFile);
@@ -299,7 +294,7 @@ public class TabBuild extends JPanel implements ActionListener {
       mainPanel.init();
       mainPanel.resumeWidgets();
    }
-   
+
    private String getCoverageString() {
       double cov = context.getIndexSkyArea();
       if( cov==1 ) return "whole sky ";
@@ -307,58 +302,59 @@ public class TabBuild extends JPanel implements ActionListener {
       double skyArea = 4.*Math.PI*degrad*degrad;
       return Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2 ";
    }
-   
+
    protected void resumeWidgets() {
       try {
          boolean isRunning = context.isTaskRunning();
-         boolean isMap = context.isMap();
-         boolean readyToDo = (isMap || context.isExistingDir())
-                          && mainPanel.tabDesc.outputField.getText().trim().length()>0;
-         boolean isExistingMoc = context.getMocIndex()!=null;
-         moc.setEnabled(isExistingMoc);
-         note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
-         previous.setEnabled(readyToDo && !isRunning);
-         next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
-         start.setEnabled(readyToDo && !isRunning && !(isRunning));
-         pause.setEnabled(isRunning);
-         abort.setEnabled(readyToDo && isRunning);
-         
-         bit8.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         bit16.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
-         samplFast.setEnabled(readyToDo && !isRunning && !isMap);
-         overlayFast.setEnabled(readyToDo && !isRunning && !isMap);
-         samplBest.setEnabled(readyToDo && !isRunning && !isMap);
-         overlayBest.setEnabled(readyToDo && !isRunning && !isMap);
-         fading.setEnabled(readyToDo && !isRunning && !isMap);
-         tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
-         setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) 
-                              : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
-         tab.refresh();
-         
-         if( !isRunning ) {
-            if( isMap ) {
-               JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
-               bar.setValue(bar.getMaximum());
-               bar.setString("No indexation for map!");
-            } else {
-               if( context.moc==null ) {
-                  JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
-                  bar.setValue(0);
-                  bar.setString("");
-                  bar = ((ContextGui)context).mainPanel.getProgressBarTile();
-                  bar.setValue(0);
-                  bar.setString("");
+         boolean isMap  = context.isMap();
+         boolean isFile = context.isInputFile;
+         boolean readyToDo = (isFile || isMap || context.isExistingDir())
+               && mainPanel.tabDesc.outputField.getText().trim().length()>0;
+               boolean isExistingMoc = context.getMocIndex()!=null;
+               moc.setEnabled(isExistingMoc);
+               note.setText("<html><i>(*) "+getCoverageString()+"</i></html>");
+               previous.setEnabled(readyToDo && !isRunning);
+               next.setEnabled(readyToDo && !isRunning && context.isExistingAllskyDir() );
+               start.setEnabled(readyToDo && !isRunning && !(isRunning));
+               pause.setEnabled(isRunning);
+               abort.setEnabled(readyToDo && isRunning);
+
+               bit8.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+               bit16.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+               bit32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+               bit_32.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+               bit_64.setEnabled(readyToDo && !isRunning && bitpixOrig!=0 );
+               samplFast.setEnabled(readyToDo && !isRunning && !isMap);
+               overlayFast.setEnabled(readyToDo && !isRunning && !isMap);
+               samplBest.setEnabled(readyToDo && !isRunning && !isMap);
+               overlayBest.setEnabled(readyToDo && !isRunning && !isMap);
+               fading.setEnabled(readyToDo && !isRunning && !isMap);
+               tab.setBackground( readyToDo && !isRunning ? Color.white : getBackground() );
+               setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+                     : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+               tab.refresh();
+
+               if( !isRunning ) {
+                  if( isMap ) {
+                     JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+                     bar.setValue(bar.getMaximum());
+                     bar.setString("No indexation for map!");
+                  } else {
+                     if( context.moc==null ) {
+                        JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
+                        bar.setValue(0);
+                        bar.setString("");
+                        bar = ((ContextGui)context).mainPanel.getProgressBarTile();
+                        bar.setValue(0);
+                        bar.setString("");
+                     }
+                  }
                }
-            }
-         }
       } catch( Exception e ) {
          e.printStackTrace();
-      } 
+      }
    }
-   
+
    public void clearForms() {
       bitpixOrig = -1;
       bit8.setSelected(false);
@@ -369,25 +365,25 @@ public class TabBuild extends JPanel implements ActionListener {
       samplBest.setSelected(true);
       overlayBest.setSelected(true);
       fading.setSelected(true);
-      ((BuildTable) tab).reset();
+      tab.reset();
       resumeWidgets();
    }
 
    public int setSelectedOrder(int val) {
-      int i = ((BuildTable) tab).setSelectedOrder(val);
-      ((BuildTable) tab).setDefaultRow(i);
+      int i = tab.setSelectedOrder(val);
+      tab.setDefaultRow(i);
       tab.repaint();
       return i;
    }
 
    /**
-    * 
+    *
     * @return order choisi ou -1 s'il doit etre calculé
     */
    public int getOrder() {
-      return ((BuildTable) tab).getOrder();
+      return tab.getOrder();
    }
-   
+
    public void setOrder(int order) { setSelectedOrder(order); }
 
    public void setOriginalBitpixField(int bitpix) {
@@ -421,7 +417,7 @@ public class TabBuild extends JPanel implements ActionListener {
 
    /**
     * Renvoie le bitpix sélectionné dans le formulaire
-    * 
+    *
     * @return
     */
    public int getBitpixField() {
@@ -435,7 +431,7 @@ public class TabBuild extends JPanel implements ActionListener {
       }
       return i;
    }
-   
+
    /** Retourne le nombre de bytes qui correspond au bitpix sélectionné dans le formulaire */
    protected int getNpix() {
       return context.isColor() ? 4 : Math.abs(getBitpixField())/8;
@@ -443,19 +439,19 @@ public class TabBuild extends JPanel implements ActionListener {
 
    public void actionPerformed(ActionEvent e) {
       // on applique aussi la modification dans le tableau (calcul des volumes disques)
-      ((BuildTable) tab).setBitpix(getBitpixField());
+      tab.setBitpix(getBitpixField());
 
-           if (e.getSource() == start)    perform();
+      if (e.getSource() == start)    perform();
       else if (e.getSource() == abort)    abort();
       else if (e.getSource() == pause)    pause();
       else if (e.getSource() == moc)      loadMoc();
       else if (e.getSource() == next)     mainPanel.showJpgTab();
       else if (e.getSource() == previous) mainPanel.showDescTab();
-      
+
       mainPanel.resumeWidgets();
       resumeWidgets();
    }
-   
+
    private void pause() {
       if( context.isTaskPause() ) {
          context.setTaskPause(false);
@@ -465,27 +461,27 @@ public class TabBuild extends JPanel implements ActionListener {
          pause.setText(getString("RESUME"));
       }
    }
-   
+
    private void abort() {
       if( !Aladin.confirmation(mainPanel, "Do you really want to abort the HEALPix survey computation ?") ) return;
       context.taskAbort();
    }
-   
+
    private void perform() {
       try {
          Vector<Action> actions = new Vector<Action>();
-         
+
          boolean isMap = context.isMap();
-         
+
          if( !isMap ) {
             if( mainPanel.tabDesc.isResetIndex() ) actions.add(Action.CLEANINDEX);
             actions.add(Action.INDEX);
          }
          if( mainPanel.tabDesc.isResetTiles() ) actions.add(Action.CLEANTILES);
-         
+
          if( isMap ) actions.add(Action.MAPTILES);
          else actions.add(Action.TILES);
-         
+
          if( !context.isColor() ) {
             actions.add(Action.GZIP);
             if( !isMap ) actions.add(Action.DETAILS);
