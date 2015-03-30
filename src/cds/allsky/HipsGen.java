@@ -191,7 +191,7 @@ public class HipsGen {
 
    }
 
-   static private SimpleDateFormat SDF;
+   static public SimpleDateFormat SDF;
    static {
       SDF = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
       SDF.setTimeZone(TimeZone.getDefault());
@@ -326,9 +326,11 @@ public class HipsGen {
          }
       }
 
-      if( context.getMode()==Mode.ADD && !flagFading ) {
+      if( context.getMode()==Mode.ADD  ) {
          context.setFading(false);
-         context.info("Pixel mode=ADD => default fading effect off");
+         context.setPartitioning("false");
+         context.setMixing("true");
+         context.info("Pixel mode=ADD => fading, partitioning and no mixing parameter ignored");
       }
 
       // Nettoyage avant ?

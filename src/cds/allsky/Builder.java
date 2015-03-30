@@ -32,10 +32,10 @@ import cds.tools.pixtools.Util;
  *
  */
 public abstract class Builder {
-   
+
    protected Context context;
    protected Builder(Context context) { this.context=context; }
-   
+
    /** Constructeur général pour toutes les actions possibles */
    static public Builder createBuilder(Context context,Action action) throws Exception {
       switch(action) {
@@ -69,28 +69,28 @@ public abstract class Builder {
 
    /** Valide les préconditions à l'exécution de la tâche */
    public abstract void validateContext() throws Exception;
-   
+
    /** Retourne true si l'exécution de la tâche est inutile (ex: déjà faite) */
    public boolean isAlreadyDone() { return false; }
-   
+
    /** Exécute la tâche */
    public abstract void run() throws Exception;
-   
+
    /** Retourne l'identificateur de l'action */
    public abstract Action getAction();
-   
+
    /** Affiche des statistiques de progression */
    public void showStatistics() { }
-   
+
    /** Indique le mode Just-print - not run -> retourne true si c'est le cas avec un message d'info */
    public boolean isFake() {
       if( !context.fake ) return false;
       context.info("Action "+getAction()+" not run due to the -n option");
       return true;
    }
-   
+
    // Quelques validateurs génériques utilisés par les différents Builders.
-   
+
    // Vérifie que le répertoire Input a été passé en paramètre et est utilisable
    protected void validateInput() throws Exception {
       if( context.isValidateInput() ) return;
@@ -104,7 +104,7 @@ public abstract class Builder {
       }
       context.setValidateInput(true);
    }
-   
+
    // Vérifie que le répertoire Output a été passé en paramètre, sinon essaye de le déduire
    // du répertoire Input en ajoutant le suffixe ALLSKY
    // S'il existe déjà, vérifie qu'il s'agit bien d'un répertoire utilisable
@@ -120,7 +120,7 @@ public abstract class Builder {
       if( f.exists() && (!f.isDirectory() || !f.canWrite() || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
       context.setValidateOutput(true);
    }
-   
+
    // Récupère l'ordre en fonction d'un répertoire. Si un order particulier a été passé en paramètre,
    // vérifie sa cohérence avec celui trouvé
    protected void validateOrder(String path) throws Exception {
@@ -131,12 +131,12 @@ public abstract class Builder {
          context.setOrder(orderIndex);
       } else if( order!=orderIndex ) throw new Exception("Detected order ["+orderIndex+"] does not correspond to the param order ["+order+"]");
    }
-   
+
    /** Récupération de la profondeur (cube) */
    protected void validateDepth() throws Exception {
-      
+
       if( context.depthInit ) return;
-      
+
       // tentative de récupération de la profondeur par une image étalon
       String img = context.getImgEtalon();
       if( img==null && context.getInputPath()!=null) {
@@ -147,31 +147,32 @@ public abstract class Builder {
          try { context.setImgEtalon(img); }
          catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
       }
-      
+
       // Tentative de récupération de la profondeur par le fichier des properties
       if( !context.depthInit ) {
          try {
             context.loadProperties();
-            String s = (String)context.prop.get(Constante.KEY_CUBEDEPTH);
+            String s = context.prop.getProperty(Constante.KEY_CUBE_DEPTH);
+            if( s==null ) s = context.prop.getProperty(Constante.OLD_CUBE_DEPTH);
             if( s!=null ) {
                int depth = Integer.parseInt(s);
                if( depth>1 ) context.setDepth( depth );
             }
          } catch( Exception e ) { context.warning("Propertie file problem => "+e.getMessage()); }
       }
-      
+
       if( context.depthInit && context.depth>1 ) context.info("Working on HiPS cube => depth="+context.depth);
    }
-   
+
    // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
    protected void validateCut() throws Exception {
       if( context.isValidateCut() ) return;
       double [] cut = null;
-//      double [] cut = context.getCut();
-      
+      //      double [] cut = context.getCut();
+
       double [] pixelGood = context.pixelGood;
       boolean missingGood = pixelGood!=null && context.good!=null;
-      
+
       boolean missingCut   = cut==null || cut[0]==0 && cut[1]==0;
       boolean missingRange = cut==null || cut[2]==0 && cut[3]==0;
 
@@ -199,9 +200,9 @@ public abstract class Builder {
             for( int i=0; i<4; i++ ) {
                if( Double.isNaN(pixelRangeCut[i]) ) continue;
                cut[i] = (pixelRangeCut[i] - context.bzero)/context.bscale;
-//               System.out.println("Retreiving from user pixelRangeCut["+i+"]="+pixelRangeCut[i]+" => cut["+i+"]="+cut[i]);
+               //               System.out.println("Retreiving from user pixelRangeCut["+i+"]="+pixelRangeCut[i]+" => cut["+i+"]="+cut[i]);
             }
-            
+
             if( missingGood ) {
                context.good = new double[2];
                for( int i=0; i<2; i++ ) {
@@ -213,7 +214,7 @@ public abstract class Builder {
             throw new Exception("Cannot retrieve BZERO & BSCALE from previous Allsky.fits file or reference image");
          }
       }
-      
+
       // S'il me manque le cut du pixelCut ou du pixelRange, il faut que je récupère une image étalon
       // que j'en déduise les cutOrig, bzeroOrig, bscaleOrig, puis que j'en calcule le bzero, bscale et donc les cut
       missingCut   = cut==null || cut[0]==0 && cut[1]==0;
@@ -227,24 +228,24 @@ public abstract class Builder {
             try { context.setImgEtalon(img); }
             catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
          }
-         
+
          context.initParameters();
-         
+
          double [] imgCut = context.getCut();
          if( cut==null ) cut = new double[5];
          if( missingCut )   {
             cut[0]= imgCut[0];
-            cut[1]= imgCut[1]; 
+            cut[1]= imgCut[1];
             if( cut[0]!=cut[1] ) context.info("Estimating pixel cut from the reference image => ["+cut[0]+" .. "+cut[1]+"]");
          }
       }
-      
+
       // S'il me manque toujours le pixelCut, je vais tenter de les récupérer par le fichier des properties
       missingCut   = cut==null || cut[0]==0 && cut[1]==0;
       if( missingCut ) updateCutByProperties(cut);
-      
+
       context.setCut(cut);
-      
+
       double bz=context.bzero;
       double bs=context.bscale;
       if( cut==null || cut[0]==0 && cut[1]==0 ) throw new Exception("Argument \"pixelCut\" required");
@@ -252,8 +253,8 @@ public abstract class Builder {
       context.info("pixel cut ["+ip(cut[0],bz,bs)+" .. "+ip(cut[1],bz,bs)+"]");
       context.setValidateCut(true);
    }
-   
-   
+
+
    /** Met à jour les champs manquants du cut[] via les infos du fichier des properties */
    protected void updateCutByProperties(double [] cut) {
       try {
@@ -261,13 +262,14 @@ public abstract class Builder {
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            FileInputStream in = new FileInputStream(propFile); 
+            FileInputStream in = new FileInputStream(propFile);
             prop.load(in);
             in.close();
-            String s = (String)prop.get(Constante.KEY_PIXELCUT);
+            String s = prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
+            if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_PIXEL_CUT);
             context.setPixelCut(s);
             double [] pixelRangeCut = context.getPixelRangeCut();
-            
+
             // Il me faut alors BZERO  et BSCALE
             try {
                setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
@@ -281,93 +283,107 @@ public abstract class Builder {
          }
       } catch( Exception e ) {}
    }
-   
-   
+
+
    protected void validateBitpix() {
       if( context.bitpix!=-1 ) return;
       try {
          setBzeroBscaleFromPreviousAllsky(context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits");
       } catch( Exception e ) { }
    }
-   
+
    protected void validateLabel() {
       if( context.label!=null ) return;
-      String label = getALabel(context.getOutputPath());
+      String label = getALabel(context.getOutputPath(),context.getInputPath());
       if( label!=null && label.length()>0 ) context.label=label;
    }
-   
-   protected String getALabel(String path) {
+
+   protected String getALabel(String outputPath,String inputPath) {
       String label=null;
-      
+
       // Je vais essayé de le récupérer depuis le fichier des propriétés
       try {
-         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
+         String propFile = outputPath+Util.FS+Constante.FILE_PROPERTIES;
          MyProperties prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            FileInputStream in = new FileInputStream(propFile); 
+            FileInputStream in = new FileInputStream(propFile);
             prop.load(in);
             in.close();
-            String s = (String)prop.get(Constante.KEY_LABEL);
+            String s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
+            if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
             if( s!=null && s.length()>0 ) label=s;
          }
       } catch( Exception e ) { }
       if( label!=null ) return label;
-      
+
       // Je vais le construire à partir du nom du répertoire
-      int offset = path.lastIndexOf(Util.FS);
-      if( offset<0 ) offset = path.lastIndexOf('/');
-      if( offset>=0 ) label=path.substring(offset+1);
-      else label=path;
-      
+      if( inputPath!=null ) {
+         int offset = inputPath.lastIndexOf(Util.FS);
+         if( offset<0 ) offset = inputPath.lastIndexOf('/');
+         if( offset>=0 ) label=inputPath.substring(offset+1);
+         else label=inputPath;
+      } else {
+         int offset = outputPath.lastIndexOf(Util.FS);
+         if( offset<0 ) offset = outputPath.lastIndexOf('/');
+         if( offset>=0 ) label=outputPath.substring(offset+1);
+         else label=outputPath;
+      }
+
       return label;
    }
-   
+
    // Retourne le code HEALPix correspondant au système de référence des coordonnées
    // du survey HEALPix
    protected String getFrame() {
       if( context.hasFrame() ) return context.getFrameCode();
       try {
          if( context.prop==null ) context.loadProperties();
-         return context.prop.getProperty(Constante.KEY_COORDSYS, "C");
+         String s = context.prop.getProperty(Constante.KEY_HIPS_FRAME);
+         if( s==null ) s = context.prop.getProperty(Constante.OLD_HIPS_FRAME);
+         if( s==null ) s="C";
+         if( s.equals("equatorial") ) return "C";
+         if( s.equals("ecliptic")) return "E";
+         if( s.equals("galactic")) return "G";
+         return s;
       } catch( Exception e ) { e.printStackTrace(); }
       return context.getFrameCode();
    }
-   
-//   protected void validateFrame() {
-//      String path = context.getOutputPath();
-//      String coordsys=null;
-//      
-//      // Je vais essayé de le récupérer depuis le fichier des propriétés
-//      try {
-//         String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
-//         MyProperties prop = new MyProperties();
-//         File f = new File( propFile );
-//         if( f.exists() ) {
-//            FileInputStream in = new FileInputStream(propFile); 
-//            prop.load(in);
-//            in.close();
-//            String s = (String)prop.get(PlanHealpix.KEY_COORDSYS);
-//            if( s!=null && s.length()>0 ) coordsys=s;
-//         }
-//      } catch( Exception e ) { }
-//      if( coordsys==null ) context.frame = Localisation.GAL;
-//      else context.setFrameName(coordsys);
-//   }
-   
+
+   //   protected void validateFrame() {
+   //      String path = context.getOutputPath();
+   //      String coordsys=null;
+   //
+   //      // Je vais essayé de le récupérer depuis le fichier des propriétés
+   //      try {
+   //         String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
+   //         MyProperties prop = new MyProperties();
+   //         File f = new File( propFile );
+   //         if( f.exists() ) {
+   //            FileInputStream in = new FileInputStream(propFile);
+   //            prop.load(in);
+   //            in.close();
+   //            String s = (String)prop.get(PlanHealpix.KEY_COORDSYS);
+   //            if( s!=null && s.length()>0 ) coordsys=s;
+   //         }
+   //      } catch( Exception e ) { }
+   //      if( coordsys==null ) context.frame = Localisation.GAL;
+   //      else context.setFrameName(coordsys);
+   //   }
+
    protected String ip(double raw,double bzero,double bscale) {
       return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
    }
-   
+
    /**
     * Initialisation des paramètres FITS à partir d'un Allsky.fits précédent
     */
    protected void setFitsParamFromPreviousAllsky(String allskyFile) throws Exception {
       Fits f = new Fits();
-      
+
       f.loadFITS(allskyFile);
       double [] cut = f.findAutocutRange(0,0,true);
-      
+
       context.setBitpix(f.bitpix);
       context.setCut(cut);
       try {
@@ -382,9 +398,9 @@ public abstract class Builder {
          double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
          context.bscale=bscale;
       } catch( Exception e ) { }
-    
+
    }
-   
+
    protected void setBzeroBscaleFromPreviousAllsky(String allskyFile) throws Exception {
       Fits f = new Fits();
       f.loadHeaderFITS(allskyFile);
@@ -396,7 +412,7 @@ public abstract class Builder {
          double bscale = f.headerFits.getDoubleFromHeader("BSCALE");
          context.bscale=bscale;
       } catch( Exception e ) { }
-      
+
       // J'en profite
       if( context.bitpix==-1 ) {
          try {

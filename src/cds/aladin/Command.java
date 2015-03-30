@@ -2310,8 +2310,11 @@ public final class Command implements Runnable {
 
          // Recuperation de la position (toujours les 2 premiers parametres)
          if( drawMode==DRAWRADEC ) {
-            c = new Coord(p[0]+" "+p[1]);
-            c=a.localisation.frameToICRS(c);
+            if( p[0].equals("-") &&  p[1].equals("-") ) c= a.localisation.getLastCoord();
+            else {
+               c = new Coord(p[0]+" "+p[1]);
+               c=a.localisation.frameToICRS(c);
+            }
          } else {
             x = parseDouble(p[0])-0.5;
             y = height-parseDouble(p[1])+0.5;
@@ -3958,7 +3961,7 @@ public final class Command implements Runnable {
       int n=s.length();
       if( n==0 || (s.charAt(0)!='=' && s.charAt(n-1)!='=') ) return s;
       if( s.charAt(0)=='=' && !Character.isSpace( s.charAt(1) ) ) return "= "+s.substring(1);
-      if( s.charAt(n-1)=='=' ) return "= "+s.substring(0,n-1).trim();
+      if( s.charAt(n-1)=='=' && !s.startsWith("http://")) return "= "+s.substring(0,n-1).trim();
       return s;
    }
 

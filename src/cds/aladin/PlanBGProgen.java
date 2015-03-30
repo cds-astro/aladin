@@ -26,7 +26,6 @@ import java.util.TreeMap;
 
 import cds.allsky.BuilderDetails;
 import cds.allsky.Constante;
-import cds.tools.Util;
 
 public class PlanBGProgen extends PlanBGCat {
 
@@ -34,20 +33,21 @@ public class PlanBGProgen extends PlanBGCat {
    protected PlanBGProgen(Aladin aladin) {
       super(aladin);
    }
-   
+
    protected PlanBGProgen(Aladin aladin, TreeNodeAllsky gluSky,String label, Coord c, double radius,String startingTaskId) {
       super(aladin,gluSky,label, c,radius,startingTaskId);
    }
-   
+
    protected void setSpecificParams(TreeNodeAllsky gluSky) {
       type = ALLSKYCAT;
       c = Couleur.getNextDefault(aladin.calque);
       setOpacityLevel(1.0f);
       scanProperties();
-      
+
       // Récupération d'un éventuel minorder
       if( prop!=null ) {
-         String s = prop.getProperty(Constante.KEY_MINORDER);
+         String s = prop.getProperty(Constante.KEY_HIPS_ORDER_MIN);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER_MIN);
          if( s!=null ) {
             try { minOrder = Integer.parseInt(s); }
             catch( Exception e ) {}
@@ -60,7 +60,7 @@ public class PlanBGProgen extends PlanBGCat {
       if( survey.equals(Constante.FILE_HPXFINDER) ) survey = getAssociatedSurvey() + cds.tools.Util.FS + survey;
       loadGenericLegende();
    }
-   
+
    // retourne le nom du survey HiPS associé à ces progéniteurs.
    private String getAssociatedSurvey() {
       String dir = getAssociatedSurveyByProperties();
@@ -68,7 +68,7 @@ public class PlanBGProgen extends PlanBGCat {
       aladin.trace(3,"Associated HiPS survey ["+dir+"]");
       return dir;
    }
-   
+
    // Retourne le nom du survey associé (le cherche dans les properties du
    // HiPS parent (si il existe), null sinon
    private String getAssociatedSurveyByProperties() {
@@ -88,21 +88,21 @@ public class PlanBGProgen extends PlanBGCat {
       finally { if( in!=null ) try { in.close(); } catch( Exception e) {} }
       return null;
    }
-   
+
    // Retourne le nom du survey associé (se base sur le fait que HpxFinder
    // est précédé du nom du survey
-   private String getAssociatedSurveByUrl() { 
+   private String getAssociatedSurveByUrl() {
       String s = url.replace('\\','/');
       int fin = s.lastIndexOf("/"+Constante.FILE_HPXFINDER);
       int deb = s.lastIndexOf('/', fin-1);
       String associatedSurvey = s.substring(deb+1,fin);
-      return associatedSurvey; 
+      return associatedSurvey;
    }
 
    protected int getTileMode() { return HealpixKey.IDX; }
-   
+
    protected boolean hasAssociatedFootprints() { return true; }
-   
+
    /** Demande de chargement du losange repéré par order,npix */
    public HealpixKey askForHealpix(int order,long npix) {
       readyAfterDraw=false;
@@ -110,16 +110,16 @@ public class PlanBGProgen extends PlanBGCat {
       pixList.put( key(order,npix), pixAsk);
       return pixAsk;
    }
-   
+
    protected void draw(Graphics g,ViewSimple v) {
       prepareDraw(v);
-      
+
       if( pcat==null || !pcat.hasObj() ) return;
       pcat.draw(g, null, v, true, false, 0, 0);
    }
-   
+
    private HealpixAllskyProgen allsky;
-   
+
    /** Dessin du ciel complet en rapide à l'ordre indiqué */
    protected boolean drawAllSky(ViewSimple v,TreeMap<String, Source> map,int order) {
       boolean hasDrawnSomething=false;
@@ -146,7 +146,7 @@ public class PlanBGProgen extends PlanBGCat {
       return allsky.getStatus()!=HealpixKey.ERROR;
    }
 
-   
+
    private boolean prepareDraw(ViewSimple v) {
       long [] pix=null;
       int nb=0;
@@ -154,21 +154,21 @@ public class PlanBGProgen extends PlanBGCat {
       long nTotal=0L;
       TreeMap<String, Source> map = new TreeMap<String, Source>();
       setHasMoreDetails(true);
-      
+
       int order = maxOrder(v)+1;
       if( order<BuilderDetails.MINORDER ) order=BuilderDetails.MINORDER;
-//      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
-      
+      //      System.out.println("Order="+order+" maxOrder="+maxOrder+" isAllsky="+v.isAllSky()+ " nop = "+(order<BuilderProgenIndex.MINORDER && maxOrder>=BuilderProgenIndex.MINORDER || v.isAllSky()));
+
       // On n'a pas assez zoomé pour afficher le contenu des losanges
       if( (order<BuilderDetails.MINORDER || order<minOrder) && maxOrder>=BuilderDetails.MINORDER ) {
          return false;
       }
       if( order>maxOrder ) order=maxOrder;
-      
+
       hasDrawnSomething=false;
-      
+
       if( drawAllSky(v, map, 3) )  return hasDrawnSomething;
-      
+
       setMem();
       resetPriority();
       pix = getPixListView(v,order);
@@ -191,17 +191,17 @@ public class PlanBGProgen extends PlanBGCat {
          if( nb>0 ) healpix.resetTimer(); // Losange à gérer
          nLoaded++;
       }
-      
-//      completude  = !moreDetails ? 100 : 100 * ((double)nLoaded/nTotal);
+
+      //      completude  = !moreDetails ? 100 : 100 * ((double)nLoaded/nTotal);
       setHasMoreDetails(moreDetails);
       allWaitingKeysDrawn = nTotal==nLoaded;
-      
+
       fusion(map);
       hasDrawnSomething=hasObj();
       if( pix!=null && pix.length>0  ) tryWakeUp();
       return hasDrawnSomething;
    }
-   
+
    private void fusion(TreeMap<String, Source> map) {
       Pcat pcat1 = new Pcat(this);
       if( pcat!=null && pcat.hasObj() ) {
@@ -209,29 +209,29 @@ public class PlanBGProgen extends PlanBGCat {
          while( it.hasNext() ) {
             Source src = (Source)it.next();
             String id = src.id+src.raj+src.dej;
-            boolean isInMap = map.containsKey(id); 
+            boolean isInMap = map.containsKey(id);
             if( isInMap || src.isSelected() ) map.put(id,src);
          }
       }
-      
+
       for( Source src : map.values() ) {
          if( showFootprint ) src.setShowFootprint(true, false);
          pcat1.setObjetFast(src);
       }
       pcat=pcat1;
    }
-   
+
    private boolean showFootprint=false;
    protected void setShowFootprint(boolean flag) {
       showFootprint = flag;
    }
-      
+
    protected void resetProj(int n) { if( pcat!=null ) pcat.projpcat[n]=null; }
 
    protected void reallocObjetCache() { if( pcat!=null ) pcat.reallocObjetCache(); }
 
    protected int getNbTable() { return 1; }
-   
+
    protected boolean hasObj() { return pcat==null ? false : pcat.hasObj(); }
 
    protected boolean hasSources() { return hasObj(); }
@@ -239,12 +239,12 @@ public class PlanBGProgen extends PlanBGCat {
    protected int getCounts() { return pcat==null ? 0 : pcat.getCount(); }
 
    protected Iterator<Obj> iterator() { return pcat==null ? null : pcat.iterator(); }
-   
+
    protected Iterator<Obj> iterator(ViewSimple v) { return iterator(); }
-   
+
    protected boolean detectServerError(int nb[]) { completude=-1; pourcent=-1; return false; }
 
 
 
-   
+
 }

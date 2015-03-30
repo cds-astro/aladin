@@ -551,6 +551,14 @@ MouseWheelListener, Widget
          if( i>=0 ) {
             int pos = w.precision>0 ? w.precision+1 : w.precision;
             if( i+pos<text.length() ) text = text.substring(0,i+pos);
+
+            try {
+               double v = Double.parseDouble(text);
+               System.out.println(w.text);
+               text = String.format("%0."+w.precision+"f", v);
+               text.replace(',','.');
+               System.out.println(" => prec="+w.precision+" => "+text);
+            } catch( Exception e) {}
          }
       }
 

@@ -92,16 +92,18 @@ public class TreeNodeAllsky extends TreeNode {
       } catch( Exception e ) { aladin.trace(3,"No properties file found => auto discovery..."); }
 
 
-      // recherche du frame Healpix
-      String strFrame = prop.getProperty(Constante.KEY_COORDSYS,"G");
-      char c1 = strFrame.charAt(0);
-      if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
-      else if( c1=='E' ) frame=Localisation.ECLIPTIC;
-      else if( c1=='G' ) frame=Localisation.GAL;
+      // recherche du frame Healpix (ancienne & nouvelle syntaxe)
+      String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME);
+      if( strFrame==null  ) strFrame = prop.getProperty(Constante.OLD_HIPS_FRAME);
+      if( strFrame==null  ) strFrame = "galactic";
+      if( strFrame.equals("equatorial") || strFrame.equals("C") || strFrame.equals("Q") ) frame=Localisation.ICRS;
+      else if( strFrame.equals("ecliptic") || strFrame.equals("E") ) frame=Localisation.ECLIPTIC;
+      else if( strFrame.equals("galactic") || strFrame.equals("G") ) frame=Localisation.GAL;
 
       url=pathOrUrl;
 
-      s = prop.getProperty(Constante.KEY_LABEL);
+      s = prop.getProperty(Constante.KEY_OBS_COLLECTION);
+      if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
       if( s!=null ) label=s;
       else {
          char c = local?Util.FS.charAt(0):'/';
@@ -112,35 +114,52 @@ public class TreeNodeAllsky extends TreeNode {
       }
       id="__"+label;
 
-      s = prop.getProperty(Constante.KEY_VERSION);
+      s = prop.getProperty(Constante.OLD_VERSION);
       if( s!=null ) version=s;
 
-      description = prop.getProperty(Constante.KEY_DESCRIPTION);
-      verboseDescr = prop.getProperty(Constante.KEY_DESCRIPTION_VERBOSE);
-      copyright = prop.getProperty(Constante.KEY_COPYRIGHT);
-      copyrightUrl = prop.getProperty(Constante.KEY_COPYRIGHT_URL);
-      useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.KEY_USECACHE,"True") );
+      description = prop.getProperty(Constante.KEY_OBS_TITLE);
+      if( description==null ) description = prop.getProperty(Constante.OLD_OBS_TITLE);
+      verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
+      if( verboseDescr==null ) verboseDescr = prop.getProperty(Constante.OLD_OBS_DESCRIPTION);
+      copyright = prop.getProperty(Constante.KEY_DATA_COPYRIGHT);
+      if( copyright==null ) copyright = prop.getProperty(Constante.OLD_DATA_COPYRIGHT);
+      copyrightUrl = prop.getProperty(Constante.KEY_DATA_COPYRIGHT_URL);
+      if( copyrightUrl==null ) copyrightUrl = prop.getProperty(Constante.OLD_DATA_COPYRIGHT_URL);
+      useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.OLD_USECACHE,"True") );
 
-      s = prop.getProperty(Constante.KEY_TARGET);
+      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
+      if( s!=null) {
+         String s1 = prop.getProperty(Constante.KEY_HIPS_INITIAL_DEC);
+         if( s1!=null ) s = s+" "+s1;
+         else s=null;
+      }
+
+      // Pour supporter l'ancien vocabulaire
+      if( s==null )  s = prop.getProperty(Constante.OLD_TARGET);
+
       if( s==null ) target=null;
       else {
          try { target = new Coord(s); }
          catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
       }
-      s = prop.getProperty(Constante.KEY_TARGETRADIUS);
+      s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
+      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_INITIAL_FOV);
       if( s==null ) radius=-1;
       else {
          try { radius=Server.getAngle(s, Server.RADIUSd); }
          catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
       }
 
-      s = prop.getProperty(Constante.KEY_NSIDE);
+      s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_TILE_WIDTH);
       if( s!=null ) try { nside = Integer.parseInt(s); } catch( Exception e) {
          aladin.trace(3,"NSIDE number not parsable !");
          nside=-1;
       }
 
-      try { maxOrder = new Integer(prop.getProperty(Constante.KEY_MAXORDER)); }
+      s = prop.getProperty(Constante.KEY_HIPS_ORDER);
+      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER);
+      try { maxOrder = new Integer(s); }
       catch( Exception e ) {
          maxOrder = getMaxOrderByPath(pathOrUrl,local);
          if( maxOrder==-1 ) {
@@ -150,10 +169,17 @@ public class TreeNodeAllsky extends TreeNode {
       }
 
       // Les paramètres liés aux cubes
-      try { cube = new Boolean(prop.getProperty(Constante.KEY_ISCUBE)); }
-      catch( Exception e ) { cube=false; }
+      String s1 = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+      if( s1!=null ) cube = s1.indexOf("cube")>=0;
+
+      // Pour compatibilité avec l'ancien vocabulaire
+      else {
+         try { cube = new Boolean(prop.getProperty(Constante.OLD_ISCUBE)); }
+         catch( Exception e ) { cube=false; }
+      }
       if( cube ) {
-         s = prop.getProperty(Constante.KEY_CUBEDEPTH);
+         s = prop.getProperty(Constante.KEY_CUBE_DEPTH);
+         if( s==null ) s = prop.getProperty(Constante.OLD_CUBE_DEPTH);
          if( s!=null ) {
             try { cubeDepth = Integer.parseInt(s); }
             catch( Exception e ) {
@@ -161,7 +187,8 @@ public class TreeNodeAllsky extends TreeNode {
                cubeDepth=-1;
             }
          }
-         s = prop.getProperty(Constante.KEY_CUBEFIRSTFRAME);
+         s = prop.getProperty(Constante.KEY_CUBE_FIRSTFRAME);
+         if( s==null ) s = prop.getProperty(Constante.OLD_CUBE_FIRSTFRAME);
          if( s!=null ) {
             try { cubeFirstFrame = Integer.parseInt(s); }
             catch( Exception e ) {
@@ -173,16 +200,31 @@ public class TreeNodeAllsky extends TreeNode {
 
       progen = pathOrUrl.endsWith("HpxFinder") || pathOrUrl.endsWith("HpxFinder/");
 
-      s = prop.getProperty(Constante.KEY_ISCAT);
-      if( s!=null ) cat = new Boolean(s);
-      else cat = getFormatByPath(pathOrUrl,local,2);
+      s = prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE);
+      if( s!=null) {
+         cat = s.indexOf("catalog")>=0;
+
+         // Pour compatibilité avec l'ancien vocabulaire
+      } else {
+         s = prop.getProperty(Constante.OLD_ISCAT);
+         if( s!=null ) cat = new Boolean(s);
+         else cat = getFormatByPath(pathOrUrl,local,2);
+      }
 
       // Détermination du format des cellules dans le cas d'un survey pixels
-      String keyColor = prop.getProperty(Constante.KEY_ISCOLOR);
-      if( keyColor!=null ) color = new Boolean(keyColor);
+      String keyColor = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
+      if( keyColor!=null ) color = keyColor.indexOf("color")>=0;
+
+      // Pour compatibilité avec l'ancien vocabulaire
+      else {
+         keyColor = prop.getProperty(Constante.OLD_ISCOLOR);
+         if( keyColor!=null ) color = new Boolean(keyColor);
+      }
+
       //      if( color ) inJPEG=true;
       if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
-         String format = prop.getProperty(Constante.KEY_FORMAT);
+         String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+         if( format==null ) format = prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
          if( format!=null ) {
             int a,b;
             inFits = (a=Util.indexOfIgnoreCase(format, "fit"))>=0;

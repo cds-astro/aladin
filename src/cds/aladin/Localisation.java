@@ -459,6 +459,7 @@ public final class Localisation extends MyBox {
    private String lastPosition="";
    protected String getLastPosition() { return lastPosition; }
    protected Coord getLastCoord() { return coo; }
+   protected void setLastCoord(double ra,double dec) { coo=new Coord(ra,dec); }
 
    static final Astroframe AF_FK4 = new FK4();
    static final Astroframe AF_FK5 = new FK5();

@@ -29,8 +29,8 @@ public class BuilderCube extends Builder {
    public Action getAction() { return Action.CUBE; }
 
    public void run() throws Exception {
-      build();       
-      
+      build();
+
       if( !context.isTaskAborting() ) {
          BuilderMoc bm = new BuilderMoc(context);
          bm.createMoc( context.getOutputPath() );
@@ -38,7 +38,7 @@ public class BuilderCube extends Builder {
       }
       if( !context.isTaskAborting() ) context.writePropertiesFile();
    }
-   
+
    // Pour les stats, retourne le nombre de formats de tuiles rencontrés et ou estimés
    private int getNbFmt() {
       int n = 0;
@@ -53,10 +53,10 @@ public class BuilderCube extends Builder {
       context.showJpgStat( statNbFile/getNbFmt(), totalTime,0,0);
    }
 
-   public void validateContext() throws Exception { 
-      
+   public void validateContext() throws Exception {
+
       boolean propFound=false;
-      
+
       // découpage et vérification de la liste des HiPS sources
       String s = context.getInputPath();
       StringTokenizer st = new StringTokenizer(s," ");
@@ -64,12 +64,12 @@ public class BuilderCube extends Builder {
       for( int i=0; i<inputPath.length; i++ ) {
          String path = inputPath[i]=st.nextToken();
          if( !(new File(path)).isDirectory() ) throw new Exception("Input HiPS error ["+path+"]");
-         
+
          // Mémorisation ou check du order
          int order = Util.getMaxOrderByPath( path );
          if( i==0 && context.order==-1) context.order = order;
          else if( order<context.order ) context.warning("Input HiPS ["+path+" => order="+order+"] not enough depth => ignored");
-         
+
          // Mémorisation des propriétés à partir du premier HiPS
          if( !propFound ) {
             String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
@@ -77,24 +77,25 @@ public class BuilderCube extends Builder {
             File f = new File( propFile );
             if( f.exists() ) {
                if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
-               FileInputStream in = new FileInputStream(propFile); 
+               FileInputStream in = new FileInputStream(propFile);
                context.prop.load(in);
                in.close();
                propFound=true;
-               
+
                // Pour la stat d'avancement => une idée du nombre de format de tuiles
                try {
-                  String fmt = (String)context.prop.get(Constante.KEY_FORMAT);
+                  String fmt = context.prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
+                  if( fmt==null ) fmt = context.prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
                   int n = (new StringTokenizer(fmt," ")).countTokens();
                   if( n>1 ) nbFmt=n;
                } catch( Exception e ) { }
             }
-         } 
-         
+         }
+
          // Récupération des noms des bandes
-         String lab= getALabel(path);
-         context.setPropriete(Constante.KEY_LABEL+"_"+i, lab);
-         
+         String lab= getALabel(path,null);
+         context.setPropriete(Constante.KEY_OBS_COLLECTION+"_"+i, lab);
+
          // Estimation du MOC final (union)
          try {
             HealpixMoc m = new HealpixMoc();
@@ -102,18 +103,18 @@ public class BuilderCube extends Builder {
             if( context.moc==null ) context.moc=m;
             else context.moc = context.moc.union(m);
          } catch( Exception e ) {
-           context.warning("Missing original MOC in "+path+" => running time estimation will be wrong");
+            context.warning("Missing original MOC in "+path+" => running time estimation will be wrong");
          }
       }
-      
+
       // Check du répertoire de destination
       validateOutput();
-//      validateFrame();
+      //      validateFrame();
       validateLabel();
-      
+
       // Ajout des paramètres propres aux cubes
       context.depth=inputPath.length;
-      
+
       // Mode de travail (link ou copy)
       if( context.getMode().equals(Mode.LINK) ) mode = context.getMode();
       context.info(mode.getExplanation(mode));
@@ -121,7 +122,7 @@ public class BuilderCube extends Builder {
 
    private void initStat() { statNbFile=0;  startTime = System.currentTimeMillis(); }
 
-   
+
    // Mise à jour des stats
    private void updateStat() {
       statNbFile++;
@@ -132,32 +133,32 @@ public class BuilderCube extends Builder {
       initStat();
       String output = context.getOutputPath();
       String outputHpxFinder = output+Util.FS+Constante.FILE_HPXFINDER;
-      
+
       for( int z=0; z<context.depth; z++ ) {
-         String input = inputPath[z];   
-         
+         String input = inputPath[z];
+
          for( int order = 3; order<=context.getOrder(); order++ ) {
             treeCopy(input, output, "Norder"+order,z);
          }
-         
+
          String inputHpxFinder = input+Util.FS+Constante.FILE_HPXFINDER;
          if( (new File(inputHpxFinder).isDirectory()) ) {
             for( int order = 3; order<=context.getOrder(); order++ ) {
                treeCopy(inputHpxFinder, outputHpxFinder, "Norder"+order,z);
             }
          }
-         
+
       }
    }
-   
+
    // Parcours récursive du cube source input à copier dans output avec comme profondeur z
    private void treeCopy(String input, String output, String path,int z) throws Exception {
-      File src = new File( input+Util.FS+path );    
+      File src = new File( input+Util.FS+path );
       if( !src.exists() ) return;
-      
+
       // procédure récursive par répertoire
       if( src.isDirectory() ) {
-         
+
          File [] list = src.listFiles();
          for( int i=0; i<list.length; i++ ) {
             String s1 = list[i].getName();
@@ -165,33 +166,33 @@ public class BuilderCube extends Builder {
          }
          return;
       }
-      
+
       // Copie simple
       String s = src.getName();
       int pos = s.lastIndexOf('.');
       String ext  = pos<0 ? "" : s.substring(pos);
       String name = pos<0 ? s  : s.substring(0,pos);
       String suffixe = z==0 ? "" : "_"+z;
-      
+
       if( !hasPNG && ext.equals(".png") ) hasPNG=true;
       else if( !hasFITS && ext.equals(".fits") ) hasFITS=true;
       else if( !hasJPEG && ext.equals(".jpg") ) hasJPEG=true;
-      
+
       String subPath = (new File(path)).getParent();
-      
+
       (new File(output+Util.FS+subPath)).mkdirs();
       File trg = new File( output+Util.FS+subPath+Util.FS+name+suffixe+ext );
-      
+
       if( mode==Mode.LINK ) link(src,trg);
       else copy(src,trg);
-      
+
       updateStat();
    }
-   
+
    static private void link(File src, File trg) throws Exception {
 
       // Lorsqu'on sera compatible 1.7 uniquement
-//      Files.createSymbolicLink(src.toPath(), trg.toPath() );
+      //      Files.createSymbolicLink(src.toPath(), trg.toPath() );
 
       // En attendant, on travaille par "réflexion"
       Method toPath = File.class.getDeclaredMethod("toPath",new Class[]{});
@@ -205,24 +206,24 @@ public class BuilderCube extends Builder {
       Method createSymbolicLink = files.getDeclaredMethod("createSymbolicLink", a);
       createSymbolicLink.invoke((Object)null, new Object[] { pathSrc, pathTrg, attrib });
    }
-   
-   
-//   static public void main(String [] args) {
-//      try {
-//         File trg = new File("VISTA");
-//         File src = new File("C:\\Users\\Pierre\\Desktop\\Link");
-//         src.delete();
-//         link(src,trg);
-//      } catch( Exception e ) {
-//         e.printStackTrace();
-//      }
-//   }
+
+
+   //   static public void main(String [] args) {
+   //      try {
+   //         File trg = new File("VISTA");
+   //         File src = new File("C:\\Users\\Pierre\\Desktop\\Link");
+   //         src.delete();
+   //         link(src,trg);
+   //      } catch( Exception e ) {
+   //         e.printStackTrace();
+   //      }
+   //   }
 
    // Copie du fichier
    private void copy(File src, File trg) throws Exception {
       RandomAccessFile r = null;
       byte buf [] =null;
-      try { 
+      try {
          r = new RandomAccessFile(src, "r");
          buf = new byte[ (int)src.length() ];
          r.read( buf );
@@ -232,7 +233,7 @@ public class BuilderCube extends Builder {
       try {
          r = new RandomAccessFile(trg, "rw");
          r.write(buf);
-      } 
+      }
       catch( Exception e ) { e.printStackTrace(); }
       finally { if( r!=null ) r.close(); }
    }

@@ -23,7 +23,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -52,15 +51,15 @@ public final class PlanField extends Plan {
    private static final int CFH12K    = 0;
    private static final int EPICMOS   = 1;
    private static final int EPICPN    = 2;
-//   private static final int WFPC2     = 3;
+   //   private static final int WFPC2     = 3;
    private static final int MEGACAM   = 3;
    private static final int MEGAPRIME = 4;
    private static final int WIRCAM    = 5;
    private static final int ESPADONS  = 6;
 
    private static String [] INSTR= { "CFH12K", "EPICMOS", "EPICpn", // "WFPC2",
-                                     "MEGACAM", "MEGAPRIME", "WIRCAM",
-                                     "ESPADONS",};
+      "MEGACAM", "MEGAPRIME", "WIRCAM",
+      "ESPADONS",};
 
    private int instr;		   // Instrument FoV code (CFH12K, EPICMOS...)
    private boolean flagRoll=true;   // True if the Aperture is rollable
@@ -107,7 +106,7 @@ public final class PlanField extends Plan {
 
    // CFH12K CCD labels (specifical definitions)
    private static final String CFH12K_CCD[] =   {  	"06","07","08","09","10","11",
-						   	"00","01","02","03","04","05"};
+      "00","01","02","03","04","05"};
 
    private static final double MEGACAM_RA = 2048*0.187/3600.;
    private static final double MEGACAM_DE = 4612*0.187/3600.;
@@ -120,13 +119,13 @@ public final class PlanField extends Plan {
                                                    -5.5,-4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5,
                                                         -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
                                                  };
-   */
+    */
    // Mosaique sans les "oreilles"
    private static final double MEGACAM_DRA[] =   {      -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
-                                                   	-4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
-                                                   	-4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
-                                                        -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
-                                                 };
+      -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
+      -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
+      -4.5,-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,
+   };
 
    /* Mosaique avec les "oreilles" - non utilise
    private static final double MEGACAM_DDE[] =   {    -2,-2,-2,-2,-2,-2,-2,-2,-2,
@@ -134,13 +133,13 @@ public final class PlanField extends Plan {
                                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1                                                							  };
    						 };
-   */
+    */
    // Mosaique sans les "oreilles"
    private static final double MEGACAM_DDE[] =   {    -2,-2,-2,-2,-2,-2,-2,-2,-2,
-                                                      -1,-1,-1,-1,-1,-1,-1,-1,-1,
-                                                       0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                       1, 1, 1, 1, 1, 1, 1, 1, 1
-						 };
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 1, 1, 1, 1, 1, 1
+   };
    // Gaps (additifs) entre les CCDs de la mosaique MEGACAM
    /* Mosaique avec les "oreilles" - non utilise
    private static final double MEGACAM_GAPRA[] = {     -56,-42,-28,-14,0,14,28,42,56,
@@ -148,13 +147,13 @@ public final class PlanField extends Plan {
                                                    -70,-56,-42,-28,-14,0,14,28,42,56,70,
                                                        -56,-42,-28,-14,0,14,28,42,56,
                                                  };
-   */
+    */
    // Mosaique sans les "oreilles"
    private static final double MEGACAM_GAPRA[] = {     -56,-42,-28,-14,0,14,28,42,56,
-                                                       -56,-42,-28,-14,0,14,28,42,56,
-                                                       -56,-42,-28,-14,0,14,28,42,56,
-                                                       -56,-42,-28,-14,0,14,28,42,56,
-                                                 };
+      -56,-42,-28,-14,0,14,28,42,56,
+      -56,-42,-28,-14,0,14,28,42,56,
+      -56,-42,-28,-14,0,14,28,42,56,
+   };
 
    /* Mosaique avec les "oreilles" - non utilise
    private static final double MEGACAM_GAPDE[] = {        -88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,
@@ -162,18 +161,18 @@ public final class PlanField extends Plan {
                                                       5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,
                                                            88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5,
                                                  };
-   */
+    */
    // Mosaique sans les "oreilles"
    private static final double MEGACAM_GAPDE[] = {        -88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,-88.5,
-                                                          -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5,
-                                                           5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,
-                                                           88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5,
-                                                 };
+      -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5, -5.5,
+      5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,  5.5,
+      88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5, 88.5,
+   };
 
-    // Offset du centre optique par rapport au centre de la mosaique MEGACAM
-    // Per CV,2003.01 (15as,15as) of NW corner of Amp 44, chip 22
-    private static final double MEGACAM_ORA = (15.0/3600.0); 	// 15 arcsecs
-    private static final double MEGACAM_ODE = (-20.5/3600.0); 	// 15 arcsecs + 1/2gap=5.5 = 20.5 arcsecs
+   // Offset du centre optique par rapport au centre de la mosaique MEGACAM
+   // Per CV,2003.01 (15as,15as) of NW corner of Amp 44, chip 22
+   private static final double MEGACAM_ORA = (15.0/3600.0); 	// 15 arcsecs
+   private static final double MEGACAM_ODE = (-20.5/3600.0); 	// 15 arcsecs + 1/2gap=5.5 = 20.5 arcsecs
 
    // Nom des CCDs a afficher sur la mosaique MEGACAM: NB: Les 2 CCDs exterieurs W et E ne sont pas couvertes
    // par les filtres et sont donc en dernier
@@ -184,72 +183,72 @@ public final class PlanField extends Plan {
                                                     "37","17","16","15","14","13","12","11","10","09","36",
                                                          "08","07","06","05","04","03","02","01","00",
                                                  };
-   */
+    */
    private static final String MEGACAM_CCD[] =   {       "35","34","33","32","31","30","29","28","27",
-                                                    	 "26","25","24","23","22","21","20","19","18",
-                                                         "17","16","15","14","13","12","11","10","09",
-                                                         "08","07","06","05","04","03","02","01","00",
-                                                 };
+      "26","25","24","23","22","21","20","19","18",
+      "17","16","15","14","13","12","11","10","09",
+      "08","07","06","05","04","03","02","01","00",
+   };
 
-    // MEGAPRIME = MEGACAM + MEGAGUI (zones de guidage). On definit la les zones de guidage...
-    // Taille des zones de guidage
-    private static final double MEGAGUI_RA = 1233.0/3600.0; // per BC,2002.01.08 90mm*13.7as/mm old:6144*0.187/3600.;
-    private static final double MEGAGUI_DE = 890.5/3600.0;  // per BC,2002.01.08 65mm*13.7as/mm old:2048*0.187/3600.;
-    // Geometrie des zones de guidage
-    private static final double MEGAGUI_DRA[] =   {-0.5,-0.5	};
-    private static final double MEGAGUI_DDE[] =   {-1,0};
-    // Gaps pour positionner les zones de guidage
-    private static final double MEGAGUI_GAPRA[] = {0,0};
-    // per BC,2002.01.08, 127mm*13.7as
-    private static final double MEGAGUI_GAPDE[] = {-1739.9,+1739.9};  // in arcsec
-    // Nom des zones de guidage: S=South, N=North
-    private static final String MEGAGUI_BOX[] =   {"S","N"};
+   // MEGAPRIME = MEGACAM + MEGAGUI (zones de guidage). On definit la les zones de guidage...
+   // Taille des zones de guidage
+   private static final double MEGAGUI_RA = 1233.0/3600.0; // per BC,2002.01.08 90mm*13.7as/mm old:6144*0.187/3600.;
+   private static final double MEGAGUI_DE = 890.5/3600.0;  // per BC,2002.01.08 65mm*13.7as/mm old:2048*0.187/3600.;
+   // Geometrie des zones de guidage
+   private static final double MEGAGUI_DRA[] =   {-0.5,-0.5	};
+   private static final double MEGAGUI_DDE[] =   {-1,0};
+   // Gaps pour positionner les zones de guidage
+   private static final double MEGAGUI_GAPRA[] = {0,0};
+   // per BC,2002.01.08, 127mm*13.7as
+   private static final double MEGAGUI_GAPDE[] = {-1739.9,+1739.9};  // in arcsec
+   // Nom des zones de guidage: S=South, N=North
+   private static final String MEGAGUI_BOX[] =   {"S","N"};
 
-    // Define WIRCAM field of view
-    private static final double WIRCAM_RA = 2048*0.3/3600.;
-    private static final double WIRCAM_DE = 2048*0.3/3600.;
+   // Define WIRCAM field of view
+   private static final double WIRCAM_RA = 2048*0.3/3600.;
+   private static final double WIRCAM_DE = 2048*0.3/3600.;
 
-    private static final double WIRCAM_DRA[] = {-1, 0, -1, 0};
-    private static final double WIRCAM_DDE[] = {-1, -1, 0, 0};
+   private static final double WIRCAM_DRA[] = {-1, 0, -1, 0};
+   private static final double WIRCAM_DDE[] = {-1, -1, 0, 0};
 
-    private static final double WIRCAM_GAPRA[] = {-45, 0, -45, 0};
-    private static final double WIRCAM_GAPDE[] = {-45,-45,  0, 0};
+   private static final double WIRCAM_GAPRA[] = {-45, 0, -45, 0};
+   private static final double WIRCAM_GAPDE[] = {-45,-45,  0, 0};
 
-    private static final double WIRCAM_ORA = (30/3600.0);
-    private static final double WIRCAM_ODE = (30/3600.0);
+   private static final double WIRCAM_ORA = (30/3600.0);
+   private static final double WIRCAM_ODE = (30/3600.0);
 
-    private static final String WIRCAM_CCD[] = {"52","54","77","60"};
-    private static final double WIRCAM_RD = 0.;
+   private static final String WIRCAM_CCD[] = {"52","54","77","60"};
+   private static final double WIRCAM_RD = 0.;
 
-    //Define ESPADON field of view.
-    private static final double ESPADONS_RA = 2/60.;
-    private static final double ESPADONS_DE = 2/60.;
+   //Define ESPADON field of view.
+   private static final double ESPADONS_RA = 2/60.;
+   private static final double ESPADONS_DE = 2/60.;
 
-    private static final double ESPADONS_DRA[] = {-0.5};
-    private static final double ESPADONS_DDE[] = {-0.5};
+   private static final double ESPADONS_DRA[] = {-0.5};
+   private static final double ESPADONS_DDE[] = {-0.5};
 
-    private static final double ESPADONS_GAPRA[] = {0};
-    private static final double ESPADONS_GAPDE[] = {0};
+   private static final double ESPADONS_GAPRA[] = {0};
+   private static final double ESPADONS_GAPDE[] = {0};
 
-    private static final double ESPADONS_ORA = (0);
-    private static final double ESPADONS_ODE = (0);
+   private static final double ESPADONS_ORA = (0);
+   private static final double ESPADONS_ODE = (0);
 
-    private static final String ESPADONS_CCD[] = {""};
-    private static final double ESPADONS_RD = 0.;
+   private static final String ESPADONS_CCD[] = {""};
+   private static final double ESPADONS_RD = 0.;
 
-    public static final double tand(double x) { return Math.tan( x*(Math.PI/180.0) ); }
+   public static final double tand(double x) { return Math.tan( x*(Math.PI/180.0) ); }
 
-    private boolean showSubFPInProperties = true; // doit-on montrer les sous-parties du footprint dans les properties
+   private boolean showSubFPInProperties = true; // doit-on montrer les sous-parties du footprint dans les properties
 
 
-/** Plan Field creation
-   * @param target target astronomical object or J2000 coordinates
-   * @param roll roll angle
-   * @param label Aladin plane label
-   * @param instrument instrument name (see INST[])
-   */
+   /** Plan Field creation
+    * @param target target astronomical object or J2000 coordinates
+    * @param roll roll angle
+    * @param label Aladin plane label
+    * @param instrument instrument name (see INST[])
+    */
    protected PlanField(Aladin aladin, String target ,double roll,
-   		       String label,String instrument) {
+         String label,String instrument) {
       this.aladin= aladin;
       type       = APERTURE;
       c          = Couleur.getNextDefault(aladin.calque);
@@ -277,7 +276,7 @@ public final class PlanField extends Plan {
          this.roll=roll;
          if( target.length()>0 ) objet=target;
 
-      // The FoV instrument can be immediately built
+         // The FoV instrument can be immediately built
       } else {
          Coord co;
          try { co = new Coord(target); }
@@ -342,7 +341,7 @@ public final class PlanField extends Plan {
 		setPolygons(xOffset, yOffset, boundary, names);
 
 	}
-	*/
+    */
 
    /** Constructor for PlanField
     *
@@ -363,7 +362,7 @@ public final class PlanField extends Plan {
       this.fpBean = fpBean;
       setObjects(fpBean);
       needTarget=false;
-    }
+   }
 
    protected PlanField(Aladin aladin,String target,FootprintBean fpBean,String label,double roll) {
       this.aladin = aladin;
@@ -404,19 +403,19 @@ public final class PlanField extends Plan {
          setActivated(true);
          make(co.al,co.del,roll);
       }
-    }
+   }
 
    protected void setLabel(String s) {
       if( s==null ) s="FoV";
       super.setLabel(s);
    }
 
-	/** Constructeur par recopie
-	 * (marche pas très bien pour le moment)
-	 * @param aladin
-	 * @param pf
-	 * @param target
-	 * @param roll
+   /** Constructeur par recopie
+    * (marche pas très bien pour le moment)
+    * @param aladin
+    * @param pf
+    * @param target
+    * @param roll
 
 	protected PlanField(Aladin aladin,PlanField pf,String target,double roll,String label) {
 	      this.aladin= aladin;
@@ -458,7 +457,7 @@ public final class PlanField extends Plan {
 	         make(co.al,co.del,roll);
 	      }
 	}
-	*/
+    */
 
    /**
     * Post treatement for the creation of the FoV after a required CDS sesame
@@ -467,8 +466,8 @@ public final class PlanField extends Plan {
     * @return false if the FoV is already ok, true otherwise
     */
    protected boolean resolveTarget(double ra,double de) {
-//      if( flagOk ) return false;
-//System.out.println("setCenter for "+this+" ra="+ra+" de="+de);
+      //      if( flagOk ) return false;
+      //System.out.println("setCenter for "+this+" ra="+ra+" de="+de);
       needTarget=false;
       make(ra,de,roll);
       planReady(true);
@@ -494,227 +493,227 @@ public final class PlanField extends Plan {
       make(ra,de,ra,de,roll);
    }
    protected void make(double ra,double de,double raRot, double deRot, double roll) {
-       projd = new Projection(null,Projection.SIMPLE,
-                              ra,de,/*instr==WFPC2?5:*/instr==MEGACAM || instr==MEGAPRIME ?100:45,
-                              250,250,500,
-                              0,false,Calib.TAN,Calib.FK5);
-       switch(instr) {
-          case MEGACAM:
-             setRollable(false);
-             makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGACAM_RA,MEGACAM_DE,MEGACAM_DRA,MEGACAM_DDE,
-                   MEGACAM_GAPRA,MEGACAM_GAPDE,MEGACAM_CCD);
-             break;
-          case MEGAPRIME:
-             setRollable(false);
-             makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGACAM_RA,MEGACAM_DE,MEGACAM_DRA,MEGACAM_DDE,
-                   MEGACAM_GAPRA,MEGACAM_GAPDE,MEGACAM_CCD);
-             makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGAGUI_RA,MEGAGUI_DE,MEGAGUI_DRA,MEGAGUI_DDE,
-                   MEGAGUI_GAPRA,MEGAGUI_GAPDE,MEGAGUI_BOX);
-             break;
-          case CFH12K:
-             setRollable(false);
-             makeCCDs(CFH12K_ORA,CFH12K_ODE,CFH12K_RA,CFH12K_DE,CFH12K_DRA,CFH12K_DDE,
-                CFH12K_GAPRA,CFH12K_GAPDE,CFH12K_CCD);
-             break;
-          case WIRCAM:
-             setRollable(false);
-             makeCCDs(WIRCAM_ORA,WIRCAM_ODE,WIRCAM_RA,WIRCAM_DE,WIRCAM_DRA,WIRCAM_DDE,
-                WIRCAM_GAPRA,WIRCAM_GAPDE,WIRCAM_CCD);
-             break;
-          case ESPADONS:
-             setRollable(false);
-             makeCCDs(ESPADONS_ORA,ESPADONS_ODE,ESPADONS_RA,ESPADONS_DE,ESPADONS_DRA,
-                ESPADONS_DDE,ESPADONS_GAPRA,ESPADONS_GAPDE,ESPADONS_CCD);
-             break;
-          case EPICMOS:
-             setRollable(true);
-             makeCCDs(0,0,EPICMOS_RA,EPICMOS_DE,EPICMOS_DRA,EPICMOS_DDE,null,null,null);
-             break;
-          case EPICPN:
-             setRollable(true);
-             makeCCDs(0,0,EPICPN_RA,EPICPN_DE,EPICPN_DRA,EPICPN_DDE,null,null,null);
-             break;
-//          case WFPC2:
-//             setRollable(true);
-//             makeWFPC2();
-//             break;
-       }
-       setTarget(ra,de,raRot,deRot,roll);
-    }
+      projd = new Projection(null,Projection.SIMPLE,
+            ra,de,/*instr==WFPC2?5:*/instr==MEGACAM || instr==MEGAPRIME ?100:45,
+                  250,250,500,
+                  0,false,Calib.TAN,Calib.FK5);
+      switch(instr) {
+         case MEGACAM:
+            setRollable(false);
+            makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGACAM_RA,MEGACAM_DE,MEGACAM_DRA,MEGACAM_DDE,
+                  MEGACAM_GAPRA,MEGACAM_GAPDE,MEGACAM_CCD);
+            break;
+         case MEGAPRIME:
+            setRollable(false);
+            makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGACAM_RA,MEGACAM_DE,MEGACAM_DRA,MEGACAM_DDE,
+                  MEGACAM_GAPRA,MEGACAM_GAPDE,MEGACAM_CCD);
+            makeCCDs(MEGACAM_ORA,MEGACAM_ODE,MEGAGUI_RA,MEGAGUI_DE,MEGAGUI_DRA,MEGAGUI_DDE,
+                  MEGAGUI_GAPRA,MEGAGUI_GAPDE,MEGAGUI_BOX);
+            break;
+         case CFH12K:
+            setRollable(false);
+            makeCCDs(CFH12K_ORA,CFH12K_ODE,CFH12K_RA,CFH12K_DE,CFH12K_DRA,CFH12K_DDE,
+                  CFH12K_GAPRA,CFH12K_GAPDE,CFH12K_CCD);
+            break;
+         case WIRCAM:
+            setRollable(false);
+            makeCCDs(WIRCAM_ORA,WIRCAM_ODE,WIRCAM_RA,WIRCAM_DE,WIRCAM_DRA,WIRCAM_DDE,
+                  WIRCAM_GAPRA,WIRCAM_GAPDE,WIRCAM_CCD);
+            break;
+         case ESPADONS:
+            setRollable(false);
+            makeCCDs(ESPADONS_ORA,ESPADONS_ODE,ESPADONS_RA,ESPADONS_DE,ESPADONS_DRA,
+                  ESPADONS_DDE,ESPADONS_GAPRA,ESPADONS_GAPDE,ESPADONS_CCD);
+            break;
+         case EPICMOS:
+            setRollable(true);
+            makeCCDs(0,0,EPICMOS_RA,EPICMOS_DE,EPICMOS_DRA,EPICMOS_DDE,null,null,null);
+            break;
+         case EPICPN:
+            setRollable(true);
+            makeCCDs(0,0,EPICPN_RA,EPICPN_DE,EPICPN_DRA,EPICPN_DDE,null,null,null);
+            break;
+            //          case WFPC2:
+            //             setRollable(true);
+            //             makeWFPC2();
+            //             break;
+      }
+      setTarget(ra,de,raRot,deRot,roll);
+   }
 
-    /** Generic CCD instrument creation */
-    private void makeCCDs(double ORA,double ODE, double RA,double DE,
-    	       double DRA[],double DDE[],double GAPRA[],double GAPDE[],String CCD[]) {
-        int j=0;		// current drawing object index in pcat.o[]
+   /** Generic CCD instrument creation */
+   private void makeCCDs(double ORA,double ODE, double RA,double DE,
+         double DRA[],double DDE[],double GAPRA[],double GAPDE[],String CCD[]) {
+      int j=0;		// current drawing object index in pcat.o[]
 
-       // pcat allocation or reallocation
-       if( pcat.o!=null ) {
-           Obj o[] = pcat.o;
-           pcat.o = new Obj[ pcat.nb_o=(o.length + DRA.length*5 + (CCD==null ? 0 : CCD.length) ) ];
-           System.arraycopy(o,0,pcat.o,0,o.length);
-           j=o.length;
-       } else {
-          pcat.o = new Obj[pcat.nb_o=(DRA.length*5+2+ (CCD==null ? 0 : CCD.length))];
-          j=2;
+      // pcat allocation or reallocation
+      if( pcat.o!=null ) {
+         Obj o[] = pcat.o;
+         pcat.o = new Obj[ pcat.nb_o=(o.length + DRA.length*5 + (CCD==null ? 0 : CCD.length) ) ];
+         System.arraycopy(o,0,pcat.o,0,o.length);
+         j=o.length;
+      } else {
+         pcat.o = new Obj[pcat.nb_o=(DRA.length*5+2+ (CCD==null ? 0 : CCD.length))];
+         j=2;
 
-          // Field of View projection center
-          Repere center = new Repere(this); // in x=0, y=0 position by default
-          center.setType(Repere.CENTER);
-          pcat.o[1] = center;
+         // Field of View projection center
+         Repere center = new Repere(this); // in x=0, y=0 position by default
+         center.setType(Repere.CENTER);
+         pcat.o[1] = center;
 
-          // Field of View rotation center
-          Repere rotCenter = new Repere(this); // in x=0, y=0 position by default
-          rotCenter.setRotCenterType(center);
-          pcat.o[0] = rotCenter;
-       }
+         // Field of View rotation center
+         Repere rotCenter = new Repere(this); // in x=0, y=0 position by default
+         rotCenter.setRotCenterType(center);
+         pcat.o[0] = rotCenter;
+      }
 
-       // i: rectangle counter
-       for( int i=0; i<DRA.length; i++ ) {  // i = compteur de rectangles
-          Ligne p=null;
+      // i: rectangle counter
+      for( int i=0; i<DRA.length; i++ ) {  // i = compteur de rectangles
+         Ligne p=null;
 
-          // k: rectangle side counter
-          for( int k=0; k<5; k++, j++ ) {
-             p = new Ligne(this);
-             pcat.o[j] = p;
+         // k: rectangle side counter
+         for( int k=0; k<5; k++, j++ ) {
+            p = new Ligne(this);
+            pcat.o[j] = p;
 
-             double gapra=(GAPRA==null)?0.:GAPRA[i]/3600.;
-             double gapde=(GAPDE==null)?0.:GAPDE[i]/3600.;
+            double gapra=(GAPRA==null)?0.:GAPRA[i]/3600.;
+            double gapde=(GAPDE==null)?0.:GAPDE[i]/3600.;
 
-             p.x = Util.tand( (DRA[i]+((k==1||k==2)?1.0:0.0))*RA+gapra -ORA );
-             p.y = Util.tand( (DDE[i]+((k==2||k==3)?1.0:0.0))*DE+gapde -ODE );
+            p.x = Util.tand( (DRA[i]+((k==1||k==2)?1.0:0.0))*RA+gapra -ORA );
+            p.y = Util.tand( (DDE[i]+((k==2||k==3)?1.0:0.0))*DE+gapde -ODE );
 
-             if( k>0 ) p.debligne=(Ligne)pcat.o[j-1];
-             if( k<4 ) p.finligne=(Ligne)pcat.o[j+1];
-          }
+            if( k>0 ) p.debligne=(Ligne)pcat.o[j-1];
+            if( k<4 ) p.finligne=(Ligne)pcat.o[j+1];
+         }
 
-          // CCD labels ?
-          if( CCD!=null  ) {
-             Tag t = new Tag(this,null,0,0,CCD[i]);
-             t.x = p.x + Util.tand(RA/3 -ORA);
-             t.y = p.y + Util.tand(60.0/3600.0 -ODE);
-             pcat.o[j++] = t;
-          }
+         // CCD labels ?
+         if( CCD!=null  ) {
+            Tag t = new Tag(this,null,0,0,CCD[i]);
+            t.x = p.x + Util.tand(RA/3 -ORA);
+            t.y = p.y + Util.tand(60.0/3600.0 -ODE);
+            pcat.o[j++] = t;
+         }
 
-       }
-    }
+      }
+   }
 
-    /** Modifie le target, le centre de roatation et la rotation. Si la rotation ne peut être modifiée,
-     * la précédente valeur sera conservée. Idem pour le centre
-     * @param raProjCenter nouvelle ascension droite du centre de la projection
-     * @param deProjCenter nouvelle déclinaison du centre de la projection
-     * @param raRotCenter nouvelle ascension droite du centre de rotation
-     * @param deRotCenter nouvelle déclinaison du centre de rotation
-     * @param roll nouvelle rotation
-     */
-    protected void setParameters(double raProjCenter, double deProjCenter,
-          double raRotCenter, double deRotCenter,
-          double roll) {
-       Position p = getProjCenterObjet();
-       if( !flagMove || Double.isNaN(raProjCenter) || Double.isNaN(deProjCenter) ) {
-          raProjCenter = p.raj;
-          deProjCenter = p.dej;
-       }
-       if( !flagRoll || Double.isNaN(raRotCenter) || Double.isNaN(deRotCenter)) {
-          roll = this.roll;
-          raRotCenter=raProjCenter;
-          deRotCenter=deProjCenter;
-       } else {
-          roll = angle(roll);
-       }
+   /** Modifie le target, le centre de roatation et la rotation. Si la rotation ne peut être modifiée,
+    * la précédente valeur sera conservée. Idem pour le centre
+    * @param raProjCenter nouvelle ascension droite du centre de la projection
+    * @param deProjCenter nouvelle déclinaison du centre de la projection
+    * @param raRotCenter nouvelle ascension droite du centre de rotation
+    * @param deRotCenter nouvelle déclinaison du centre de rotation
+    * @param roll nouvelle rotation
+    */
+   protected void setParameters(double raProjCenter, double deProjCenter,
+         double raRotCenter, double deRotCenter,
+         double roll) {
+      Position p = getProjCenterObjet();
+      if( !flagMove || Double.isNaN(raProjCenter) || Double.isNaN(deProjCenter) ) {
+         raProjCenter = p.raj;
+         deProjCenter = p.dej;
+      }
+      if( !flagRoll || Double.isNaN(raRotCenter) || Double.isNaN(deRotCenter)) {
+         roll = this.roll;
+         raRotCenter=raProjCenter;
+         deRotCenter=deProjCenter;
+      } else {
+         roll = angle(roll);
+      }
 
-       setTarget(raProjCenter,deProjCenter,raRotCenter,deRotCenter,roll);
-    }
+      setTarget(raProjCenter,deProjCenter,raRotCenter,deRotCenter,roll);
+   }
 
-    synchronized private void setTarget(double raP,double deP,double raR, double deR,double roll) {
-       double x,y;
-       Proj3 a;
-       double cosr=1.,sinr=0.;
-       double offsetX,offsetY;
+   synchronized private void setTarget(double raP,double deP,double raR, double deR,double roll) {
+      double x,y;
+      Proj3 a;
+      double cosr=1.,sinr=0.;
+      double offsetX,offsetY;
 
-       // Pour pouvoir empiler la stack correctement
-       if( co==null ) co=new Coord();
-       co.al=raP; co.del=deP;
-       objet=co.getSexa();
+      // Pour pouvoir empiler la stack correctement
+      if( co==null ) co=new Coord();
+      co.al=raP; co.del=deP;
+      objet=co.getSexa();
 
-       // Quelle était la position du centre de projection lorsque this.roll==0
-//       if( this.roll!=0 ) {
-//          a = new Proj3(Proj3.TAN,raR,deR);
-//          cosr=AstroMath.cosd(-this.roll);
-//          sinr=AstroMath.sind(-this.roll);
-//          a.set( new Coo(raP,deP));
-////          a.computeXY(raP, deP);
-//          offsetX = a.getX();
-//          offsetY = a.getY();
-//          x =  offsetX*cosr + offsetY*sinr;
-//          y = -offsetX*sinr + offsetY*cosr;
-//          a.set(x,y);
-////          a.computeAngles(x,y);
-//          raP = a.getLon();
-//          deP = a.getLat();
-//       }
+      // Quelle était la position du centre de projection lorsque this.roll==0
+      //       if( this.roll!=0 ) {
+      //          a = new Proj3(Proj3.TAN,raR,deR);
+      //          cosr=AstroMath.cosd(-this.roll);
+      //          sinr=AstroMath.sind(-this.roll);
+      //          a.set( new Coo(raP,deP));
+      ////          a.computeXY(raP, deP);
+      //          offsetX = a.getX();
+      //          offsetY = a.getY();
+      //          x =  offsetX*cosr + offsetY*sinr;
+      //          y = -offsetX*sinr + offsetY*cosr;
+      //          a.set(x,y);
+      ////          a.computeAngles(x,y);
+      //          raP = a.getLon();
+      //          deP = a.getLat();
+      //       }
 
-       a = new Proj3(Proj3.TAN,raP,deP);
+      a = new Proj3(Proj3.TAN,raP,deP);
 
-       Position rot = getRotCenterObjet();
-       a.set( new Coo(raR,deR));
-//      a.computeXY(raR, deR);
-       offsetX = a.getX();
-       offsetY = a.getY();
-       rot.x = offsetX;
-       rot.y = offsetY;
-       rot.raj=raR;
-       rot.dej=deR;
+      Position rot = getRotCenterObjet();
+      a.set( new Coo(raR,deR));
+      //      a.computeXY(raR, deR);
+      offsetX = a.getX();
+      offsetY = a.getY();
+      rot.x = offsetX;
+      rot.y = offsetY;
+      rot.raj=raR;
+      rot.dej=deR;
 
-       this.roll = roll;
-       if( roll!=0. ) { cosr=AstroMath.cosd(roll); sinr=AstroMath.sind(roll); }
+      this.roll = roll;
+      if( roll!=0. ) { cosr=AstroMath.cosd(roll); sinr=AstroMath.sind(roll); }
 
-       for( int i=1; i<pcat.nb_o; i++ ) {
-          Position p = (Position)pcat.o[i];
+      for( int i=1; i<pcat.nb_o; i++ ) {
+         Position p = (Position)pcat.o[i];
 
-          if( p instanceof Forme ) {
-             Forme f = (Forme)p;
-             for( int j=0; j<f.o.length; j++ ) {
-                p = f.o[j];
-                x = p.x;
-                y = p.y;
-                if( roll!=0. ) {
-                   x-=offsetX;
-                   y-=offsetY;
-                   double xr = x*cosr+y*sinr;
-                   double yr = -x*sinr+y*cosr;
-                   x=xr + offsetX;
-                   y=yr + offsetY;
-                }
-//                a.computeAngles(x,y);
-                a.set(x,y);
-                p.raj = a.getLon();
-                p.dej = a.getLat();
+         if( p instanceof Forme ) {
+            Forme f = (Forme)p;
+            for( int j=0; j<f.o.length; j++ ) {
+               p = f.o[j];
+               x = p.x;
+               y = p.y;
+               if( roll!=0. ) {
+                  x-=offsetX;
+                  y-=offsetY;
+                  double xr = x*cosr+y*sinr;
+                  double yr = -x*sinr+y*cosr;
+                  x=xr + offsetX;
+                  y=yr + offsetY;
+               }
+               //                a.computeAngles(x,y);
+               a.set(x,y);
+               p.raj = a.getLon();
+               p.dej = a.getLat();
 
-             }
-          } else {
-             x = p.x;
-             y = p.y;
-             if( roll!=0. ) {
-                x-=offsetX;
-                y-=offsetY;
-                double xr = x*cosr+y*sinr;
-                double yr = -x*sinr+y*cosr;
-                x=xr + offsetX;
-                y=yr + offsetY;
-             }
-//             a.computeAngles(x,y);
-             a.set(x,y);
-             p.raj = a.getLon();
-             p.dej = a.getLat();
-          }
-       }
+            }
+         } else {
+            x = p.x;
+            y = p.y;
+            if( roll!=0. ) {
+               x-=offsetX;
+               y-=offsetY;
+               double xr = x*cosr+y*sinr;
+               double yr = -x*sinr+y*cosr;
+               x=xr + offsetX;
+               y=yr + offsetY;
+            }
+            //             a.computeAngles(x,y);
+            a.set(x,y);
+            p.raj = a.getLon();
+            p.dej = a.getLat();
+         }
+      }
 
-       // Mise à jour des propriétés si nécessaires
-       Properties.majProp(this);
+      // Mise à jour des propriétés si nécessaires
+      Properties.majProp(this);
 
-    }
+   }
 
-  /** Reset the FoV for recomputing all drawing objects (after a translation
+   /** Reset the FoV for recomputing all drawing objects (after a translation
     * or a rotation to avoid distortions and repaint it
     * @param flag ViewSimple.MOVE|ViewSimple.ROLL|ViewSimple.MOVECENTER
     */
@@ -765,7 +764,7 @@ public final class PlanField extends Plan {
     * @param cont true si on doit préfixer de "..." pour indiquer un évènement transitoire
     */
    protected void sendTargetObserver(boolean cont) {
-//      System.out.println("set "+Tok.quote(label)+" Target="+getTarget()+(cont?" ...":""));
+      //      System.out.println("set "+Tok.quote(label)+" Target="+getTarget()+(cont?" ...":""));
       if( observer==null ) return;
       observer.execCommand("set "+Tok.quote(label)+" Target="+getTarget()+(cont?" ...":""));
    }
@@ -774,7 +773,7 @@ public final class PlanField extends Plan {
     * @param cont true si on doit préfixer de "..." pour indiquer un évènement transitoire
     */
    protected void sendRotCenterObserver(boolean cont) {
-//      System.out.println("set "+Tok.quote(label)+" RotCenter="+getRotCenter()+(cont?" ...":""));
+      //      System.out.println("set "+Tok.quote(label)+" RotCenter="+getRotCenter()+(cont?" ...":""));
       if( observer==null ) return;
       observer.execCommand("set "+Tok.quote(label)+" RotCenter="+getRotCenter()+(cont?" ...":""));
    }
@@ -783,7 +782,7 @@ public final class PlanField extends Plan {
     * @param cont true si on doit préfixer de "..." pour indiquer un évènement transitoire
     */
    protected void sendRollObserver(boolean cont) {
-//      System.out.println("set "+Tok.quote(label)+" Roll="+roll+(cont?" ...":""));
+      //      System.out.println("set "+Tok.quote(label)+" Roll="+roll+(cont?" ...":""));
       if( observer==null ) return;
       observer.execCommand("set "+Tok.quote(label)+" Roll="+roll+(cont?" ...":""));
    }
@@ -799,39 +798,39 @@ public final class PlanField extends Plan {
     *
     * @param bean bean holding infos to build the corresponding FoV (PlanField)
     */
-	private void setObjects(FootprintBean bean) {
-		SubFootprintBean[] fovParts = bean.getBeans();
-		int nbO = 0;
+   private void setObjects(FootprintBean bean) {
+      SubFootprintBean[] fovParts = bean.getBeans();
+      int nbO = 0;
 
-		int nbSubFov = fovParts.length;
+      int nbSubFov = fovParts.length;
 
-		Obj[][] o = new Obj[nbSubFov][];
-		for( int i=0; i<nbSubFov; i++ ) {
-			o[i] = fovParts[i].buildObjets(this);
-			nbO += o[i].length;
-		}
+      Obj[][] o = new Obj[nbSubFov][];
+      for( int i=0; i<nbSubFov; i++ ) {
+         o[i] = fovParts[i].buildObjets(this);
+         nbO += o[i].length;
+      }
 
-		pcat.o = new Obj[pcat.nb_o = nbO+2];
-//		System.out.println("nbO : "+nbO);
+      pcat.o = new Obj[pcat.nb_o = nbO+2];
+      //		System.out.println("nbO : "+nbO);
 
-        // Field of View center
-        Repere projCenter = new Repere(this);
-        projCenter.setType(Repere.CENTER);  // in x=0, y=0 position by default
-        pcat.o[1] = projCenter;
+      // Field of View center
+      Repere projCenter = new Repere(this);
+      projCenter.setType(Repere.CENTER);  // in x=0, y=0 position by default
+      pcat.o[1] = projCenter;
 
-        // Field of View center
-        Repere rotCenter = new Repere(this);
-        rotCenter.setRotCenterType(projCenter);  // in x=0, y=0 position by default
-        pcat.o[0] = rotCenter;
+      // Field of View center
+      Repere rotCenter = new Repere(this);
+      rotCenter.setRotCenterType(projCenter);  // in x=0, y=0 position by default
+      pcat.o[0] = rotCenter;
 
-		int idxStart = 2;
-		for( int i=0; i<nbSubFov; i++ ) {
-			System.arraycopy(o[i], 0, pcat.o, idxStart, o[i].length);
-			addSubFoV(fovParts[i].getName(),fovParts[i].getDesc(),
-			        idxStart,idxStart+o[i].length-1,true,fovParts[i].getColor());
-			idxStart += o[i].length;
-		}
-	}
+      int idxStart = 2;
+      for( int i=0; i<nbSubFov; i++ ) {
+         System.arraycopy(o[i], 0, pcat.o, idxStart, o[i].length);
+         addSubFoV(fovParts[i].getName(),fovParts[i].getDesc(),
+               idxStart,idxStart+o[i].length-1,true,fovParts[i].getColor());
+         idxStart += o[i].length;
+      }
+   }
 
    /**
     * Create a FoV based on polygons
@@ -886,7 +885,7 @@ public final class PlanField extends Plan {
       // Creation of sub-FOV
       addSubFoV(names[0],names[0],1,4,true,null);
    }
-   */
+    */
 
    /** Return instrument code, or -1 if not found */
    private void setInstr(String instrument) {
@@ -906,14 +905,14 @@ public final class PlanField extends Plan {
     * @param flag true pour activer le plan, false sinon
     * @return true si le plan a pu être activé, false sinon
     */
-    protected boolean setActivated(boolean flag) {
-   	   askActive = flag;
-   	   boolean rep=setActivated();
-   	   if( rep==flag && observer!=null ) {
-   	      observer.execCommand("set "+Tok.quote(label)+" Status="+( flag ? "shown":"hidden"));
-   	   }
-   	   return rep;
-    }
+   protected boolean setActivated(boolean flag) {
+      askActive = flag;
+      boolean rep=setActivated();
+      if( rep==flag && observer!=null ) {
+         observer.execCommand("set "+Tok.quote(label)+" Status="+( flag ? "shown":"hidden"));
+      }
+      return rep;
+   }
 
    /** Modifie (si possible) une propriété du plan (dépend du type de plan) */
    protected void setPropertie(String prop,String specif,String value) throws Exception {
@@ -939,14 +938,14 @@ public final class PlanField extends Plan {
          }
 
       } else if( prop.equalsIgnoreCase("Rollable") ) {
-        if( value.equalsIgnoreCase("True") ) setRollable(true);
-        else if( value.equalsIgnoreCase("False") ) setRollable(false);
-        else throw new Exception("Rollable propertie should be \"true\" or \"false\" !");
+         if( value.equalsIgnoreCase("True") ) setRollable(true);
+         else if( value.equalsIgnoreCase("False") ) setRollable(false);
+         else throw new Exception("Rollable propertie should be \"true\" or \"false\" !");
 
       } else if( prop.equalsIgnoreCase("Movable") ) {
-        if( value.equalsIgnoreCase("True") ) setMovable(true);
-        else if( value.equalsIgnoreCase("False") ) setMovable(false);
-        else throw new Exception("Movable propertie should be \"true\" or \"false\" !");
+         if( value.equalsIgnoreCase("True") ) setMovable(true);
+         else if( value.equalsIgnoreCase("False") ) setMovable(false);
+         else throw new Exception("Movable propertie should be \"true\" or \"false\" !");
 
       } else if( prop.equalsIgnoreCase("Status") && specif!=null ) {
          int n [] = findSubFoVs(specif);
@@ -968,9 +967,15 @@ public final class PlanField extends Plan {
       aladin.view.newView(1);
    };
 
-  /** Return plan information */
+   /** Return plan information */
    protected String getInfo() {
-       return label+super.addDebugInfo();
+      return label+super.addDebugInfo();
+   }
+
+   /** Return the central coordinate */
+   protected Coord getCenter() {
+      Position pos = getProjCenterObjet();
+      return new Coord(pos.raj,pos.dej);
    }
 
    /** Return the FoV projection center as a Position java object, or null  */
@@ -1017,9 +1022,9 @@ public final class PlanField extends Plan {
       return afs.toString("2:");
    }
 
-  /** Return FoV rotation angle */
+   /** Return FoV rotation angle */
    protected String getRoll() {
-//      if( !flagRoll ) return "0.0";
+      //      if( !flagRoll ) return "0.0";
       return ((int)Math.round(roll*10))/10.+"";
    }
 
@@ -1046,7 +1051,7 @@ public final class PlanField extends Plan {
       this.roll = angle(x);
    }
 
-  /** Return true if the FoV is rollable */
+   /** Return true if the FoV is rollable */
    protected boolean isRollable() { return flagRoll; }
 
    /** Positionne l'attibut Rollable pour l'Aperture */
@@ -1108,25 +1113,25 @@ public final class PlanField extends Plan {
     * Export pointing centers, as a new catalogue plane (dedicated to ALMA footprints)
     */
    protected void exportAlmaPointings() {
-       List<Forme> pointings = new ArrayList<Forme>();
-       for (Obj obj: pcat.o) {
-           if (obj instanceof Cercle && ! (obj instanceof Pickle)) {
-               pointings.add((Forme)obj);
-           }
-       }
+      List<Forme> pointings = new ArrayList<Forme>();
+      for (Obj obj: pcat.o) {
+         if (obj instanceof Cercle && ! (obj instanceof Pickle)) {
+            pointings.add((Forme)obj);
+         }
+      }
 
-       String vot = Util.createVOTable(pointings);
+      String vot = Util.createVOTable(pointings);
 
-       aladin.calque.newPlanCatalog(new MyInputStream(new BufferedInputStream(
-                       new ByteArrayInputStream(vot.getBytes()))), "Pointings");
+      aladin.calque.newPlanCatalog(new MyInputStream(new BufferedInputStream(
+            new ByteArrayInputStream(vot.getBytes()))), "Pointings");
    }
 
    protected boolean isAlmaFP() {
-       return almaFP;
+      return almaFP;
    }
 
    protected void setIsAlmaFP(boolean b) {
-       this.almaFP = b;
+      this.almaFP = b;
    }
 
    /**
@@ -1196,12 +1201,12 @@ public final class PlanField extends Plan {
     * @return index in subFoV Vector or -1 if not found
     */
    protected int findSubFoV(int index) {
-    if( subFoV==null ) return -1;
-    for( int i=subFoV.size()-1; i>=0; i-- ) {
-    	PlanFieldSub sFov = (PlanFieldSub)subFoV.elementAt(i);
-    	if( sFov.first<=index && index<=sFov.last ) return i;
-    }
-    return -1;
+      if( subFoV==null ) return -1;
+      for( int i=subFoV.size()-1; i>=0; i-- ) {
+         PlanFieldSub sFov = (PlanFieldSub)subFoV.elementAt(i);
+         if( sFov.first<=index && index<=sFov.last ) return i;
+      }
+      return -1;
    }
 
    /**
@@ -1209,7 +1214,7 @@ public final class PlanField extends Plan {
     * @param n index of sub FoV in subFoV Vector
     */
    protected PlanFieldSub getSubFoV(int n) {
-//      if( subFoV==null || n<0 || n>=subFoV.size() ) return null;
+      //      if( subFoV==null || n<0 || n>=subFoV.size() ) return null;
       return (PlanFieldSub)subFoV.elementAt(n);
    }
 
@@ -1239,24 +1244,24 @@ public final class PlanField extends Plan {
    }
 
    protected String getInstrumentName() {
-       if( fpBean!=null ) return fpBean.getInstrumentName();
-       return "";
+      if( fpBean!=null ) return fpBean.getInstrumentName();
+      return "";
    }
 
    protected String getInstrumentDesc() {
-       if( fpBean!=null ) return fpBean.getInstrumentDesc();
-       return "";
+      if( fpBean!=null ) return fpBean.getInstrumentDesc();
+      return "";
    }
 
    protected String getTelescopeName() {
       if( fpBean!=null ) return fpBean.getTelescopeName();
       return "";
-  }
+   }
 
    protected String getOrigine() {
       if( fpBean!=null ) return fpBean.getOrigin();
       return "";
-  }
+   }
 
 
    /**

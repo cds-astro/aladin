@@ -1812,6 +1812,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       //        return gotoThere(p.co,0,true);
       Coord c = null;
       if( p instanceof PlanBG ) c = p.co;
+      else if( p instanceof PlanField ) c = ((PlanField)p).getCenter();
       else c = p.projd.getProjCenter();
       return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
    }
@@ -3270,6 +3271,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       repere.dej=dec;
 
       if( aladin.frameCooTool!=null ) aladin.frameCooTool.setReticle(ra,dec);
+
+      aladin.localisation.setLastCoord(ra,dec);
 
       // TEST : mise à jour des champs des formulaires de saisie en fonction de la position du repère
       //      aladin.dialog.adjustParameters();

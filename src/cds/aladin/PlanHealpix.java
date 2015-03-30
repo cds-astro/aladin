@@ -21,7 +21,6 @@ package cds.aladin;
 
 import java.awt.Graphics;
 import java.io.*;
-import java.text.DateFormat;
 import java.util.*;
 
 import cds.allsky.Constante;
@@ -308,6 +307,13 @@ public class PlanHealpix extends PlanBG {
       }
    }
 
+   // Pour compatibilité avec le nouveau vocabulaire
+   private String getCoordSys(char c) {
+      if( c=='C' || c=='Q' ) return "equatorial";
+      if( c=='E') return "ecliptic";
+      return "galactic";
+   }
+
    // the properties file will be used to check the file modification date
    // and to store other parameters
    private boolean writePropertiesFile(String dir) {
@@ -316,21 +322,23 @@ public class PlanHealpix extends PlanBG {
       if (isLocal) {
          try {
             String modifDate = new File(originalPath).lastModified() + "";
-            prop.setProperty(Constante.KEY_LAST_MODIFICATON_DATE, modifDate);
+            prop.setProperty(Constante.OLD_LAST_MODIFICATON_DATE, modifDate);
          } catch (Exception e) {}
       }
-      prop.setProperty(Constante.KEY_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
-      prop.setProperty(Constante.KEY_MAXORDER, maxOrder+"");
-      prop.setProperty(Constante.KEY_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
-      prop.setProperty(Constante.KEY_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
+      //      prop.setProperty(Constante.OLD_PROCESSING_DATE, DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(new Date()));
+      prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, Constante.getDate());
 
-      prop.setProperty(Constante.KEY_TILEORDER, hpxOrderGeneratedImgs+"");
+      prop.setProperty(Constante.KEY_HIPS_ORDER, maxOrder+"");
+      prop.setProperty(Constante.OLD_NSIDE_FILE, newNSideImage+""); // TODO : oui, je sais, j'ai merdé sur les noms !! newNSideImage devrait s'appeler newNSideFile
+      prop.setProperty(Constante.OLD_NSIDE_PIXEL, newNSideFile+""); // et newNSideFile devrait s'appeler newNSidePixel
 
-      prop.setProperty(Constante.KEY_ORDERING, ordering);
+      prop.setProperty(Constante.KEY_HIPS_TILE_WIDTH, CDSHealpix.pow2(hpxOrderGeneratedImgs)+"");
 
-      prop.setProperty(Constante.KEY_TFIELDS, nField+"");
+      prop.setProperty(Constante.OLD_ORDERING, ordering);
 
-      prop.setProperty(Constante.KEY_TTYPES, Util.join(tfieldNames, ','));
+      prop.setProperty(Constante.OLD_TFIELDS, nField+"");
+
+      prop.setProperty(Constante.OLD_TTYPES, Util.join(tfieldNames, ','));
 
       prop.setProperty(Constante.KEY_LOCAL_DATA, isLocal+"");
 
@@ -340,21 +348,21 @@ public class PlanHealpix extends PlanBG {
 
       prop.setProperty(Constante.KEY_SIZERECORD, sizeRecord+"");
 
-      prop.setProperty(Constante.KEY_ISPARTIAL, isPartial+"");
+      prop.setProperty(Constante.OLD_ISPARTIAL, isPartial+"");
 
-      prop.setProperty(Constante.KEY_ARGB, isARGB+"");
+      prop.setProperty(Constante.OLD_ARGB, isARGB+"");
 
-      prop.setProperty(Constante.KEY_NBPIXGENERATEDIMAGE, nbPixGeneratedImage+"");
+      prop.setProperty(Constante.OLD_NBPIXGENERATEDIMAGE, nbPixGeneratedImage+"");
 
-      prop.setProperty(Constante.KEY_CURTFORMBITPIX, curTFormBitpix+"");
+      prop.setProperty(Constante.OLD_CURTFORMBITPIX, curTFormBitpix+"");
 
-      prop.setProperty(Constante.KEY_COORDSYS, coordsys+"");
+      prop.setProperty(Constante.KEY_HIPS_FRAME, getCoordSys(coordsys));
 
-      prop.setProperty(Constante.KEY_LENHPX, Util.join(lenHpx, ','));
+      prop.setProperty(Constante.OLD_LENHPX, Util.join(lenHpx, ','));
 
-      prop.setProperty(Constante.KEY_TYPEHPX, Util.join(typeHpx, ','));
+      prop.setProperty(Constante.OLD_TYPEHPX, Util.join(typeHpx, ','));
 
-      prop.setProperty(Constante.KEY_ALADINVERSION, aladin.VERSION);
+      prop.setProperty(Constante.OLD_ALADINVERSION, aladin.VERSION);
 
 
       try {
@@ -763,7 +771,7 @@ public class PlanHealpix extends PlanBG {
 
       // if local file, check last modification date
       if (isLocal) {
-         String modifDate = prop.getProperty(Constante.KEY_LAST_MODIFICATON_DATE);
+         String modifDate = prop.getProperty(Constante.OLD_LAST_MODIFICATON_DATE);
          double modifDateValue;
          try {
             modifDateValue = Double.valueOf(modifDate).doubleValue();
@@ -789,7 +797,7 @@ public class PlanHealpix extends PlanBG {
 
       try {
          // check Aladin version, and force reprocessing if it differs from current version
-         String version = prop.getProperty(Constante.KEY_ALADINVERSION);
+         String version = prop.getProperty(Constante.OLD_ALADINVERSION);
          if (version==null || ! version.equals(aladin.VERSION)) {
             Aladin.trace(3, "Detected a different version of Aladin, recreate the Healpix files");
             File dirToRemove = new File(getCacheDir() + Util.FS + getDirname());
@@ -798,8 +806,10 @@ public class PlanHealpix extends PlanBG {
          }
 
          // coordsys
-         String s = prop.getProperty(Constante.KEY_COORDSYS, "G");
-         coordsys = s.charAt(0);
+         String s = prop.getProperty(Constante.KEY_HIPS_FRAME);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_FRAME);
+         if( s==null ) s = "galactic";
+         coordsys = coordsys(s);
          frameOrigin = coordsysToFrame(coordsys);
 
          isLocal = new Boolean(prop.getProperty(Constante.KEY_LOCAL_DATA))
@@ -807,7 +817,7 @@ public class PlanHealpix extends PlanBG {
 
          isGZ = new Boolean(prop.getProperty(Constante.KEY_GZ)).booleanValue();
 
-         isARGB = new Boolean(prop.getProperty(Constante.KEY_ARGB)).booleanValue();
+         isARGB = new Boolean(prop.getProperty(Constante.OLD_ARGB)).booleanValue();
 
          originalPath = prop.getProperty(Constante.KEY_ORIGINAL_PATH);
 
@@ -817,35 +827,40 @@ public class PlanHealpix extends PlanBG {
 
          // on va remplir les valeurs de newNSideImage et newSideFile dont a
          // besoin getOnePixelFromCache
-         newNSideImage = Integer.parseInt(prop.getProperty(Constante.KEY_NSIDE_FILE));
+         newNSideImage = Integer.parseInt(prop.getProperty(Constante.OLD_NSIDE_FILE));
          maxOrder = (int)log2(newNSideImage);
-         newNSideFile = Integer.parseInt(prop.getProperty(Constante.KEY_NSIDE_PIXEL));
-         hpxOrderGeneratedImgs = Integer.parseInt(prop
-               .getProperty(Constante.KEY_TILEORDER));
-         ordering = prop.getProperty(Constante.KEY_ORDERING);
+         newNSideFile = Integer.parseInt(prop.getProperty(Constante.OLD_NSIDE_PIXEL));
+
+         s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+         if( s!=null ) {
+            hpxOrderGeneratedImgs = (int)CDSHealpix.log2( Integer.parseInt(s) );
+         } else {
+            hpxOrderGeneratedImgs = Integer.parseInt(prop.getProperty(Constante.OLD_TILEORDER));
+         }
+         ordering = prop.getProperty(Constante.OLD_ORDERING);
 
          // on recupere le nombre de champs et leurs noms
-         nField = Integer.parseInt(prop.getProperty(Constante.KEY_TFIELDS));
-         tfieldNames = Util.split(prop.getProperty(Constante.KEY_TTYPES), ",");
+         nField = Integer.parseInt(prop.getProperty(Constante.OLD_TFIELDS));
+         tfieldNames = Util.split(prop.getProperty(Constante.OLD_TTYPES), ",");
 
          // healpix partiel
-         isPartial = new Boolean(prop.getProperty(Constante.KEY_ISPARTIAL))
+         isPartial = new Boolean(prop.getProperty(Constante.OLD_ISPARTIAL))
          .booleanValue();
 
          // nbPixGeneratedImage
          nbPixGeneratedImage = Integer.parseInt(prop
-               .getProperty(Constante.KEY_NBPIXGENERATEDIMAGE));
+               .getProperty(Constante.OLD_NBPIXGENERATEDIMAGE));
 
          // curTFormBitpix
          curTFormBitpix = Integer.parseInt(prop
-               .getProperty(Constante.KEY_CURTFORMBITPIX));
+               .getProperty(Constante.OLD_CURTFORMBITPIX));
 
 
          // lenHpx
-         lenHpx = Util.splitAsInt(prop.getProperty(Constante.KEY_LENHPX), ",");
+         lenHpx = Util.splitAsInt(prop.getProperty(Constante.OLD_LENHPX), ",");
 
          // typeHpx
-         typeHpx = Util.splitAschar(prop.getProperty(Constante.KEY_TYPEHPX), ",");
+         typeHpx = Util.splitAschar(prop.getProperty(Constante.OLD_TYPEHPX), ",");
 
 
       } catch (Exception e) {
@@ -1849,6 +1864,14 @@ public class PlanHealpix extends PlanBG {
          default:
             return Localisation.GAL;
       }
+   }
+
+   // Pour compatibilité avec le vieux vocabulaire
+   private char coordsys(String s) {
+      if( s.equals("equatorial")) return 'C';
+      if( s.equals("galactic")) return 'G';
+      if( s.equals("ecliptic")) return 'E';
+      return s.charAt(0);
    }
 
    /** Dessin du ciel complet en rapide */

@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -125,6 +124,7 @@ public class Context {
    protected Vector<String> valueAddProp=null;// Valeurs des propriétés additionnelles à mémoriser dans le fichier properties
    protected String target=null;             // ra,de en deg du "centre" du HiPS s'il est indiqué
    protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
+   protected String resolution=null;         // resolution en arcsec du pixel des images originales
 
    protected int targetColorMode = Constante.TILE_JPEG;       // Mode de compression des tuiles couleurs
 
@@ -427,6 +427,10 @@ public class Context {
             setTargetRadius(Util.round(r,5)+"");
          }
       }
+
+      // Mémorisation de la résolution initiale
+      double [] res = fitsfile.calib.GetResol();
+      resolution = Util.myRound(Math.min(res[0],res[1]));
 
       lastImgEtalon = imgEtalon;
    }
@@ -743,7 +747,10 @@ public class Context {
          String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
          MyProperties prop = new MyProperties();
          prop.load( in=new FileInputStream( propFile ) );
-         int o = Integer.parseInt( prop.getProperty(Constante.KEY_TILEORDER) );
+         int o;
+         String s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+         if( s!=null ) o = (int)CDSHealpix.log2( Integer.parseInt(s));
+         else o = Integer.parseInt( prop.getProperty(Constante.OLD_TILEORDER) );
 
          if( o!=getTileOrder() ) {
             if( tileOrder!=-1 && o!=tileOrder ) {
@@ -1011,7 +1018,8 @@ public class Context {
    }
 
    static private SimpleDateFormat DATEFORMAT = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-   static protected String getNow() { return DATEFORMAT.format( new Date() ); }
+   //   static protected String getNow() { return DATEFORMAT.format( new Date() ); }
+   static protected String getNow() { return Constante.getDate(); }
    static long getTime(String date) throws Exception { return DATEFORMAT.parse(date).getTime(); }
 
    static private String getKeyActionStart(Action a) { return "Processing."+a+".start"; }
@@ -1162,6 +1170,7 @@ public class Context {
    static private Astroframe AF_ICRS1 = new ICRS();
 
    /** Mémorisation d'une propriété à ajouter dans le fichier properties */
+   protected void setComment(String comment) { setPropriete("#","#"+comment); }
    protected void setPropriete(String key, String value) {
       if( keyAddProp==null ) {
          keyAddProp = new Vector<String>();
@@ -1240,8 +1249,8 @@ public class Context {
 
       if( moc==null ) try { loadMoc(); } catch( Exception e ) { }
       if( prop==null ) loadProperties();
-      String frame = prop.getProperty(Constante.KEY_COORDSYS);
-      String sys = frame.equals("C") ? "equatorial" : frame.equals("E") ? "ecliptic" : "galactic";
+      String sys = prop.getProperty(Constante.KEY_HIPS_FRAME);
+      if( sys==null ) sys="galactic";
 
       long nside = CDSHealpix.pow2(order);
       long nsideP = CDSHealpix.pow2(order+getTileOrder());
@@ -1327,57 +1336,105 @@ public class Context {
       String label = getLabel();
       if( label==null || label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
 
-      // Propriétés à mettre à jour de toutes manières
-      updateProperties(
-            new String[] { Constante.KEY_PROCESSING_DATE, Constante.KEY_COORDSYS,
-                  Constante.KEY_HIPSBUILDER,
-                  Constante.KEY_LABEL,           Constante.KEY_MAXORDER,
-                  Constante.KEY_TILEORDER,
-            },
-            new String[] { getNow(),
-                  getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G",
-                        "Aladin/HipsGen "+Aladin.VERSION,
-                        label,
-                        order+"",
-                        getTileOrder()+""
-            },
-            true);
+      setPropriete("#"+Constante.KEY_OBS_PUBLISHER_DID,"[Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)]");
+      //      setPropriete("#"+Constante.KEY_PUBLISHER_ID,"[The IVOA ID for the data provider (ex: ivo://CDS)]");
+      setPropriete(Constante.KEY_OBS_COLLECTION,label);
+      setPropriete("#"+Constante.KEY_OBS_TITLE,"[Dataset text title]");
+      setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"[Dataset text description]");
+      setPropriete("#"+Constante.KEY_OBS_ACK,"[Acknowledgement mention]");
+      setPropriete("#"+Constante.KEY_PROV_PROGENITOR,"[Provenance of the original data (free text)]");
+      setPropriete("#"+Constante.KEY_BIB_REFERENCE,"[Bibcode for bibliographic reference]");
+      setPropriete("#"+Constante.KEY_BIB_REFERENCE_URL,"[URL to bibliographic reference]");
+      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT,"[Copyright mention]");
+      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT_URL,"[URL to copyright page]");
+      setPropriete("#"+Constante.KEY_T_MIN,"[Start time in MJD]");
+      setPropriete("#"+Constante.KEY_T_MAX,"[Stop time in MJD]");
+      setPropriete("#"+Constante.KEY_EM_MIN,"[Start in spectral coordinates in meters]");
+      setPropriete("#"+Constante.KEY_EM_MAX,"[Stop in spectral coordinates in meters]");
+      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"[ex: Image/Gas-lines/Halpha/VTSS]");
+      setPropriete("#"+Constante.KEY_CLIENT_SORT_KEY,"[ex: 06-03-01]");
+
+
+      setPropriete(Constante.KEY_HIPS_BUILDER,"Aladin/HipsGen "+Aladin.VERSION);
+      setPropriete(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
+      setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
+
+      // Y a-t-il un publisher indiqué ?
+      if( publisher!=null ) setPropriete(Constante.KEY_PUBLISHER,publisher);
+      else setPropriete("#"+Constante.KEY_PUBLISHER,"[HiPS publisher (institute or person)]");
+
+      setPropriete(Constante.KEY_HIPS_FRAME,getFrame()==Localisation.ICRS ? "equatorial" :
+         getFrame()==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
+      setPropriete(Constante.KEY_HIPS_ORDER,order+"");
+      setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
+
+      // Ajout des formats de tuiles supportés
+      String fmt = getAvailableTileFormats();
+      if( fmt.length()>0 ) setPropriete(Constante.KEY_HIPS_TILE_FORMAT,fmt);
+
+      if( fmt.indexOf("fits")>=0) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
 
       if( cut!=null ) {
          if( cut[0]!=0 || cut[1]!=0 ) {
             String s1="";
-
-            // FAUSSE BONNE IDEE => SI ON PASSE DU PNG AU FITS, IL FAUT ALORS CHANGER DE FCT DE TRANSFERT MANUELLEMENT
-            //            TransfertFct f = getFct();
-            //            if( f!=TransfertFct.LINEAR ) s1 = " "+PlanImage.getTransfertFctInfo(f.code());
-
-            setPropriete(Constante.KEY_PIXELCUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
+            setPropriete(Constante.KEY_HIPS_PIXEL_CUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
          }
-         if( cut[2]!=0 || cut[3]!=0 )  setPropriete(Constante.KEY_PIXELRANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+         if( cut[2]!=0 || cut[3]!=0 ) setPropriete(Constante.KEY_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
 
-      // Ajout des formats de tuiles supportés
-      String fmt = getAvailableTileFormats();
-      if( fmt.length()>0 ) setPropriete(Constante.KEY_FORMAT,fmt);
-
-      // Dans le cas d'un HiPS couleur
-      if( isColor() ) setPropriete(Constante.KEY_ISCOLOR,"true");
-
       // Ajout du target et du radius par défaut
-      if( target!=null ) setPropriete(Constante.KEY_TARGET, target);
-      if( targetRadius!=null ) setPropriete(Constante.KEY_TARGETRADIUS, targetRadius);
+      if( target!=null ) {
+         int offset = target.indexOf(' ');
+         setPropriete(Constante.KEY_HIPS_INITIAL_RA,  target.substring(0,offset));
+         setPropriete(Constante.KEY_HIPS_INITIAL_DEC, target.substring(offset+1));
+      }
+      if( targetRadius!=null ) setPropriete(Constante.KEY_HIPS_INITIAL_FOV, targetRadius);
+
+      // Resolution du hiPS
+      double res = CDSHealpix.pixRes( CDSHealpix.pow2( order + getTileOrder()) );
+      setPropriete(Constante.KEY_HIPS_PIXEL_SCALE, Util.myRound(res/3600.) );
+
+      if( resolution!=null ) setPropriete(Constante.KEY_S_PIXEL_SCALE, resolution);
 
       // Pour le cas d'un Cube
       if( depth>1 ) {
-         setPropriete(Constante.KEY_ISCUBE,"true");
-         setPropriete(Constante.KEY_CUBEDEPTH,depth+"");
-         setPropriete(Constante.KEY_CUBEFIRSTFRAME,"0");
+         setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"cube");
+         setPropriete(Constante.KEY_CUBE_DEPTH,depth+"");
+         setPropriete(Constante.KEY_CUBE_FIRSTFRAME,"0");
+
+         // Sinon c'est un HiPS image
+      } else setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"image");
+
+      // Dans le cas d'un HiPS couleur
+      if( isColor() ) setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"color");
+
+      HealpixMoc m = moc!=null ? moc : mocIndex;
+      if( m!=null ) {
+         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( m.getCoverage() ) );
+
+         long tileSizeFits = Math.abs(bitpix/8) * CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder()) + 2048L;
+         long tileSizeJpeg = 70000;
+         long tileSizePng = 100000;
+         long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
+         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.3) )/1024L;
+         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.3) )/1024L;
+         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.3) )/1024L;
+         long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
+               + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
+               + (fmt.indexOf("png")>=0 ? pngSize : 0)
+               + 4;
+
+         setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
       }
 
-      // Y a-t-il un publisher indiqué ?
-      if( publisher!=null ) setPropriete(Constante.KEY_PUBLISHER,publisher);
+      //      // Pour garantir la compatibilité ascendante de Aladin Lite (A virer en 2016)
+      //      setPropriete(Constante.OLD_HIPS_FRAME,
+      //            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G");
+      //      if( target!=null ) setPropriete(Constante.OLD_TARGET, target);
+      //      if( targetRadius!=null ) setPropriete(Constante.OLD_S_FOV, targetRadius);
+      //
 
-      // Propriétés additionnelles
+      // Mise en place effective des proprétés
       if( keyAddProp!=null ) {
          String k[] = new String[ keyAddProp.size() ];
          String v[] = new String[ k.length ];
@@ -1407,14 +1464,18 @@ public class Context {
       }
       if( label==null || label.trim().length()==0) label= "XXX_"+(System.currentTimeMillis()/1000);
 
-      prop.setProperty(Constante.KEY_LABEL, label+"/"+Constante.FILE_HPXFINDER);
-      prop.setProperty(Constante.KEY_ISMETA, "true");
-      prop.setProperty(Constante.KEY_COORDSYS, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
-      prop.setProperty(Constante.KEY_MAXORDER, getOrder()+"");
-      prop.setProperty(Constante.KEY_TILEORDER, getTileOrder()+"");
-      if( minOrder>3 ) prop.setProperty(Constante.KEY_MINORDER, minOrder+"");
-      prop.setProperty(Constante.KEY_PROCESSING_DATE, getNow());
-      prop.setProperty(Constante.KEY_HIPSBUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+      prop.setProperty(Constante.KEY_OBS_COLLECTION, label+"_"+Constante.FILE_HPXFINDER);
+      prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
+      prop.setProperty(Constante.KEY_HIPS_FRAME, frame==Localisation.ICRS ? "equatorial" : frame==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
+
+      // Pour compatibilité - A virer en 2016
+      prop.setProperty(Constante.OLD_HIPS_FRAME, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
+
+      prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
+      if( minOrder>3 ) prop.setProperty(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
+      prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
+      prop.setProperty(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
+      prop.setProperty(Constante.KEY_HIPS_BUILDER, "Aladin/HipsGen "+Aladin.VERSION);
 
       String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
       File f = new File(propFile);
@@ -1438,6 +1499,96 @@ public class Context {
       }
       return res.toString();
    }
+
+   private void replaceKey(MyProperties prop, String oldKey, String key) {
+      if( prop.getProperty(key)==null ) prop.replaceKey(oldKey,key);
+   }
+
+   private void replaceKeys(MyProperties prop) {
+      replaceKey(prop,Constante.OLD_HIPS_BUILDER,Constante.KEY_HIPS_BUILDER);
+      replaceKey(prop,Constante.OLD_OBS_PUBLISHER_DID,Constante.KEY_OBS_PUBLISHER_DID);
+      replaceKey(prop,Constante.OLD_OBS_COLLECTION,Constante.KEY_OBS_COLLECTION);
+      replaceKey(prop,Constante.OLD_OBS_TITLE,Constante.KEY_OBS_TITLE);
+      replaceKey(prop,Constante.OLD_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
+      replaceKey(prop,Constante.OLD1_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
+      replaceKey(prop,Constante.OLD_OBS_ACK,Constante.KEY_OBS_ACK);
+      replaceKey(prop,Constante.OLD_DATA_COPYRIGHT,Constante.KEY_DATA_COPYRIGHT);
+      replaceKey(prop,Constante.OLD_DATA_COPYRIGHT_URL,Constante.KEY_DATA_COPYRIGHT_URL);
+      replaceKey(prop,Constante.OLD_CUBE_DEPTH,Constante.KEY_CUBE_DEPTH);
+      replaceKey(prop,Constante.OLD_CUBE_FIRSTFRAME,Constante.KEY_CUBE_FIRSTFRAME);
+      replaceKey(prop,Constante.OLD_HIPS_RELEASE_DATE,Constante.KEY_HIPS_RELEASE_DATE);
+      replaceKey(prop,Constante.OLD_HIPS_DATA_RANGE,Constante.KEY_HIPS_DATA_RANGE);
+      replaceKey(prop,Constante.OLD_HIPS_PIXEL_CUT,Constante.KEY_HIPS_PIXEL_CUT);
+      replaceKey(prop,Constante.OLD_HIPS_ORDER,Constante.KEY_HIPS_ORDER);
+      replaceKey(prop,Constante.OLD_HIPS_ORDER_MIN,Constante.KEY_HIPS_ORDER_MIN);
+      replaceKey(prop,Constante.OLD_HIPS_TILE_FORMAT,Constante.KEY_HIPS_TILE_FORMAT);
+      replaceKey(prop,Constante.OLD_HIPS_TILE_WIDTH,Constante.KEY_HIPS_TILE_WIDTH);
+      replaceKey(prop,Constante.OLD_CLIENT_CATEGORY,Constante.KEY_CLIENT_CATEGORY);
+
+      String s;
+      // Certains champs seront en plus convertis
+      s = prop.getProperty(Constante.OLD_HIPS_CREATION_DATE);
+      if( s!=null && prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null) {
+         try {
+            String v = Constante.sdf.format( HipsGen.SDF.parse(s) )+"Z";
+            prop.replaceKey(Constante.OLD_HIPS_CREATION_DATE, Constante.KEY_HIPS_CREATION_DATE);
+            prop.replaceValue(Constante.KEY_HIPS_CREATION_DATE, v);
+         } catch( ParseException e ) { }
+      }
+      s = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE);
+      if( s!=null && prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE)==null) {
+         try {
+            String v = Constante.sdf.format( HipsGen.SDF.parse(s) )+"Z";
+            prop.replaceKey(Constante.OLD_HIPS_RELEASE_DATE, Constante.KEY_HIPS_RELEASE_DATE);
+            prop.replaceValue(Constante.KEY_HIPS_RELEASE_DATE, v);
+         } catch( ParseException e ) { }
+      }
+
+      s = prop.getProperty(Constante.OLD_HIPS_FRAME);
+      if( s!=null && prop.getProperty(Constante.KEY_HIPS_FRAME)==null) {
+         String v = s.equals("C") || s.equals("Q") ? "equatorial"
+               : s.equals("E") ? "ecliptic" : "galactic";
+         prop.replaceKey(Constante.OLD_HIPS_FRAME, Constante.KEY_HIPS_FRAME);
+         prop.replaceValue(Constante.KEY_HIPS_FRAME, v);
+      }
+      s = prop.getProperty(Constante.OLD_TARGET);
+      if( s!=null ) {
+         int i = s.indexOf(' ');
+         prop.setProperty(Constante.KEY_HIPS_INITIAL_RA,s.substring(0,i));
+         prop.setProperty(Constante.KEY_HIPS_INITIAL_DEC,s.substring(i+1));
+         prop.remove(Constante.OLD_TARGET);
+      }
+      s = prop.getProperty(Constante.OLD_HIPS_INITIAL_FOV);
+      if( s!=null ) prop.replaceKey(Constante.OLD_HIPS_INITIAL_FOV,Constante.KEY_HIPS_INITIAL_FOV);
+
+      // Certains champs sont remplacés sous une autre forme, à moins qu'ils n'aient été
+      // déjà mis à jour
+      s = prop.getProperty(Constante.OLD_ISCOLOR);
+      if( s!=null ) {
+         if( s.equals("true")
+               && prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_SUBTYPE, "color");
+         prop.remove(Constante.OLD_ISCOLOR);
+      }
+      s = prop.getProperty(Constante.OLD_ISCAT);
+      if( s!=null ) {
+         if( s.equals("true")
+               && prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "catalog");
+         prop.remove(Constante.OLD_ISCAT);
+      }
+      s = prop.getProperty(Constante.OLD_ISCUBE);
+      if( s!=null ) {
+         if( s.equals("true")
+               && prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "cube");
+         prop.remove(Constante.OLD_ISCUBE);
+      }
+
+      prop.remove(Constante.OLD_ALADINVERSION);
+
+      s = prop.getProperty(Constante.KEY_HIPS_STATUS);
+      if( s==null ) setPropriete(Constante.KEY_HIPS_STATUS,"master");
+
+   }
+
 
    /** Mise à jour d'une propriété => voir updatePropertie(String [],String []) */
    protected void updateProperties(String key, String value, boolean overwrite) throws Exception {
@@ -1467,17 +1618,24 @@ public class Context {
             in.close();
          }
 
+         // Changement éventuel de vocabulaire
+         replaceKeys(prop);
 
          String v;
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
 
-            if( key.equals(Constante.KEY_PROCESSING_DATE) ) {
+            if( key.equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
                // Conservation de la première date de processing si nécessaire
-               if( prop.getProperty(Constante.KEY_FIRST_PROCESSING_DATE)==null
-                     && (v=prop.getProperty(Constante.KEY_PROCESSING_DATE))!=null ) {
-                  prop.setProperty(Constante.KEY_FIRST_PROCESSING_DATE, v);
+               if( prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null
+                     && (v=prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE))!=null) {
+                  prop.setProperty(Constante.KEY_HIPS_CREATION_DATE, v);
                }
+            }
+
+            // Je n'ajoute une proposition de clé que si elle n'y est pas déjà
+            if( key[i].charAt(0)=='#') {
+               if( prop.getProperty(key[i].substring(1))!=null ) continue;
             }
 
             // insertion ou remplacement
@@ -1489,6 +1647,11 @@ public class Context {
             } else {
                v = prop.getProperty(key[i]);
                if( v==null && value[i]!=null ) prop.setProperty(key[i], value[i]);
+            }
+
+            // Suppression d'une ancienne proposition de clé éventuelle
+            if( value[i]!=null && key[i].charAt(0)!='#') {
+               if( prop.getProperty("#"+key[i])!=null ) prop.remove("#"+key[i]);
             }
          }
 

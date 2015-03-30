@@ -48,6 +48,8 @@ final public class ThreadBuilderTile {
    private Context context;
    private BuilderTiles builderTiles;
    private int bitpix;
+   private Mode coaddMode;
+   private double max;
    private boolean hasAlternateBlank;
    private double blankOrig;
    private double blank;
@@ -72,6 +74,8 @@ final public class ThreadBuilderTile {
       this.builderTiles=builderTiles;
 
       bitpix=context.getBitpix();
+      coaddMode=context.getMode();
+      max = Fits.getMax( context.getBitpixOrig() );
       flagColor = context.isColor();
       mixing = context.mixing;
       if( !flagColor ) {
@@ -178,7 +182,7 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1) ) {
+         if( coaddMode==Mode.ADD || !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1) ) {
 
             statOnePass++;
             checkMem(mixing ? n : 1);
@@ -349,7 +353,6 @@ final public class ThreadBuilderTile {
                      } catch( Exception e ) {
                         file.flagRemoved=true;
                         removed++;
-                        context.warning("File not found or truncated file: "+file.fitsfile.getFilename()+" => ignored!");
                         if( removed>=fin-deb ) return null;  // Aucun fichier source disponible
                         continue;
                      }
@@ -392,7 +395,22 @@ final public class ThreadBuilderTile {
 
                   if( nbPix!=0 ) {
                      if( totalCoef==0 )  pixelFinal = 0xFF000000 | (((int)pixval[0] & 0xFF)<<16) | (((int)pixvalG[0] & 0xFF)<<8) | ((int)pixvalB[0] & 0xFF);
-                     else {
+
+                     // Addition simple
+                     else if( coaddMode==Mode.ADD ) {
+                        double r=0,g=0,b=0;
+                        for( int i=0; i<nbPix; i++ ) {
+                           r += pixval[i];
+                           g += pixvalG[i];
+                           b += pixvalB[i];
+                        }
+                        if( r>255 ) r=255;
+                        if( g>255 ) g=255;
+                        if( b>255 ) b=255;
+                        pixelFinal = 0xFF000000 | (((int)r & 0xFF)<<16) | (((int)g & 0xFF)<<8) | ((int)b & 0xFF);
+
+                        // Calcul de moyenne
+                     } else {
                         double r=0,g=0,b=0;
                         for( int i=0; i<nbPix; i++ ) {
                            r += (pixval[i]*pixcoef[i])/totalCoef;
@@ -416,7 +434,19 @@ final public class ThreadBuilderTile {
                }  else {
                   double pixelFinal=0;
                   if( nbPix==0 ) pixelFinal = Double.NaN;
+
+                  // Mode ADD simple
+                  else if( coaddMode==Mode.ADD ) {
+                     empty=false;
+                     for( int i=0; i<nbPix; i++ ) {
+                        if( pixelFinal/2. + pixval[i]/2 > max/2. ) { pixelFinal=max; break; }
+                        pixelFinal += pixval[i];
+                     }
+                  }
+
                   else if( totalCoef==0 )  { empty=false; pixelFinal = pixval[0]; }
+
+                  // Prise en compte des coef.
                   else {
                      empty=false;
                      for( int i=0; i<nbPix; i++ ) {
@@ -479,6 +509,7 @@ final public class ThreadBuilderTile {
    // adjacentes (dû au fait que le pixel des bords de cellules auront sinon un poids
    // double voire quadruple, ce qui va se voir en cas de superpostion avec une autre image)
    private double getCoef(Fits f,Coord coo) {
+
       int x1 = (int)coo.x;
       int y1 = (int)coo.y;
 

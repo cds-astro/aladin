@@ -72,16 +72,16 @@ public class FrameGlu extends JFrame implements KeyListener {
       { "*", "Survey ID",      "Id",            "",                         "",           "One word survey identifier (ex: P/DSS/2)"  },
       { "*", "Name",           "Description",   "",                         "",           "Survey name (ex: DSS blue" },
       { "*", "Url access",     "Url",           "",                         "http://...", "Url for accessing the Healpix data (a Healpix FITS file map or a Healpix Aladin directory)" },
-      { "-", "Category",       "Aladin.Tree",   Constante.KEY_CATEGORY,   "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
-      { "-", "Description",    "Description",   Constante.KEY_DESCRIPTION,"",           "Short description" },
-      { "-", "Full descript.", "VerboseDescr",  Constante.KEY_DESCRIPTION_VERBOSE,"",   "Full data description (can be a long paragraph)" },
+      { "-", "Category",       "Aladin.Tree",   Constante.KEY_CLIENT_CATEGORY,     "Test",       "Aladin tree menu category - use / as separator (ex: Image/Test)" },
+      { "-", "Description",    "Description",   Constante.KEY_OBS_TITLE,   "",          "Short description" },
+      { "-", "Full descript.", "VerboseDescr",  Constante.KEY_OBS_DESCRIPTION,"",     "Full data description (can be a long paragraph)" },
       { "-", "Web info",       "Doc.User",      "",                         "",           "Web page describing the data" },
       { "-", "Institute",      "Institute",     "",                         "",           "Institute/origin of the data" },
-      { "-", "Copyright",      "Copyright",     Constante.KEY_COPYRIGHT,  "",           "Copyright mention (ex: (c) Institute of ....)" },
-      { "-", "Web site",       "Copyright.url", Constante.KEY_COPYRIGHT_URL,"",         "Web link for copyright mention" },
+      { "-", "Copyright",      "Copyright",     Constante.KEY_DATA_COPYRIGHT,  "",             "Copyright mention (ex: (c) Institute of ....)" },
+      { "-", "Web site",       "Copyright.url", Constante.KEY_DATA_COPYRIGHT_URL,"",           "Web link for copyright mention" },
    };
-   
-   
+
+
    private JTextField [] field;  // Les champs de saisie du formulaires
    private Aladin aladin;
    Context context;
@@ -106,9 +106,9 @@ public class FrameGlu extends JFrame implements KeyListener {
       JPanel panel = new JPanel();
       JLabel message = new JLabel(
             "<html><center>Fill up these fields and test your survey description<br>" +
-            "in your Aladin session. Since is ok, send the generated parameter GLU file<br>" +
-            "to your collaborators, or even send it to the CDS team in order to offer<br>" +
-      "a full access to your data.</center></html>");
+                  "in your Aladin session. Since is ok, send the generated parameter GLU file<br>" +
+                  "to your collaborators, or even send it to the CDS team in order to offer<br>" +
+            "a full access to your data.</center></html>");
       panel.add(message);
       return panel;
    }
@@ -228,7 +228,7 @@ public class FrameGlu extends JFrame implements KeyListener {
       } catch( Exception e ) { e.printStackTrace(); }
       updateProperties();
    }
-   
+
    private void updateProperties() {
       try {
          context.writePropertiesFile();
@@ -242,7 +242,7 @@ public class FrameGlu extends JFrame implements KeyListener {
    // En profite pour mettre à jour les propriétés du context pour la mise à jour du fichier properties
    private String getGluRecord() {
       StringBuffer s = new StringBuffer();
-      String id = field[0].getText().trim().replace('/','-');
+      String id = field[0].getText().trim().replace('/','_');
       s.append( Util.align("%ActionName",15)+" "+id+".htx"+Util.CR);
       for( int i=0; i<GLUPARAM.length; i++ ) {
          String [] glup = GLUPARAM[i];
@@ -254,15 +254,15 @@ public class FrameGlu extends JFrame implements KeyListener {
       s.append( Util.align("%Aladin.XLabel",15) +" "+field[1].getText().trim()+Util.CR);
       s.append( Util.align("%Aladin.Profile",15) +" >6.1"+Util.CR);
       s.append( Util.align("%Aladin.HpxParam",15)+" "+getHpxParam()+Util.CR);
-      
-      context.setPropriete(Constante.KEY_LABEL,id);
-      
+
+      context.setPropriete(Constante.KEY_OBS_COLLECTION,id);
+
       return s.toString();
    }
-   
+
    // Retourne les paramètres HPX en fonction du survey
    private String getHpxParam() {
-//      return orderMax+" "+(isJpg?"jpeg":"")+" fits";
+      //      return orderMax+" "+(isJpg?"jpeg":"")+" fits";
       return context.getOrder()+" "+context.getAvailableTileFormats();
    }
 

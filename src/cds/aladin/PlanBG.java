@@ -367,36 +367,96 @@ public class PlanBG extends PlanImage {
          if( prop==null ) throw new Exception();
 
          Aladin.trace(4,"PlanBG.setSpecificParams() found a \"properties\" file");
+
          // Frame
-         String strFrame = prop.getProperty(Constante.KEY_COORDSYS,"X");
-         char c1 = strFrame.charAt(0);
          int frame=-1;
-         if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
-         else if( c1=='E' ) frame=Localisation.ECLIPTIC;
-         else if( c1=='G' ) frame=Localisation.GAL;
+         String strFrame = prop.getProperty(Constante.KEY_HIPS_FRAME,"X");
+         if( strFrame.equals("equatorial"))  frame=Localisation.ICRS;
+         else if( strFrame.equals("galactic"))  frame=Localisation.GAL;
+         else if( strFrame.equals("ecliptic"))  frame=Localisation.ECLIPTIC;
+
+         // Pour compatibilité avec le vieux vocabulaire
+         else if( strFrame.equals("X")) {
+            strFrame = prop.getProperty(Constante.OLD_HIPS_FRAME,"X");
+            char c1 = strFrame.charAt(0);
+            if( c1=='C' || c1=='Q' ) frame=Localisation.ICRS;
+            else if( c1=='E' ) frame=Localisation.ECLIPTIC;
+            else if( c1=='G' ) frame=Localisation.GAL;
+         }
+
          if( frame!=-1 && frame!=frameOrigin ) {
             aladin.trace(1,"Coordinate frame found in properties file ("+Localisation.getFrameName(frame)
-                  +") differs from the GLU record ("+Localisation.getFrameName(frameOrigin)+") => assume "+Localisation.getFrameName(frame));
+                  +") differs from the remote information ("+Localisation.getFrameName(frameOrigin)+") => assume "+Localisation.getFrameName(frame));
             frameOrigin=frame;
          }
 
          String s;
-         s = prop.getProperty(Constante.KEY_DESCRIPTION);         if( s!=null ) description = s;
-         s = prop.getProperty(Constante.KEY_DESCRIPTION_VERBOSE); if( s!=null ) verboseDescr = s;
-         s = prop.getProperty(Constante.KEY_ACK);                 if( s!=null ) ack = s;
-         s = prop.getProperty(Constante.KEY_COPYRIGHT);           if( s!=null ) copyright = s;
-         s = prop.getProperty(Constante.KEY_COPYRIGHT_URL);       if( s!=null ) copyrightUrl = s;
-         s = prop.getProperty(Constante.KEY_PIXELRANGE);          if( s!=null ) pixelRange = s;
-         s = prop.getProperty(Constante.KEY_PIXELCUT);            if( s!=null ) pixelCut = s;
-         s = prop.getProperty(Constante.KEY_ID);                  if( s!=null ) id = s;
-         s = prop.getProperty(Constante.KEY_TILEORDER);
-         if( s!=null ){
-            try { tileOrder=Integer.parseInt(s); } catch( Exception e ) {};
+         s = prop.getProperty(Constante.KEY_OBS_TITLE);
+         if( s==null ) s = prop.getProperty(Constante.OLD_OBS_TITLE);
+         if( s!=null ) description = s;
+
+         s = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
+         if( s==null ) s = prop.getProperty(Constante.OLD_OBS_DESCRIPTION);
+         if( s!=null ) verboseDescr = s;
+
+         s = prop.getProperty(Constante.KEY_OBS_ACK);
+         if( s==null ) s = prop.getProperty(Constante.OLD_OBS_ACK);
+         if( s!=null ) ack = s;
+
+         s = prop.getProperty(Constante.KEY_DATA_COPYRIGHT);
+         if( s==null ) s = prop.getProperty(Constante.OLD_DATA_COPYRIGHT);
+         if( s!=null ) copyright = s;
+
+         s = prop.getProperty(Constante.KEY_DATA_COPYRIGHT_URL);
+         if( s==null ) s = prop.getProperty(Constante.OLD_DATA_COPYRIGHT_URL);
+         if( s!=null ) copyrightUrl = s;
+
+         s = prop.getProperty(Constante.KEY_HIPS_DATA_RANGE);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_DATA_RANGE);
+         if( s!=null ) pixelRange = s;
+
+         s = prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
+         if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_PIXEL_CUT);
+         if( s!=null ) pixelCut = s;
+
+         String obsPublisherDid=null;
+         String publisherId=null;
+
+         s = prop.getProperty(Constante.KEY_OBS_PUBLISHER_DID);
+         if( s!=null ) s = prop.getProperty(Constante.OLD_OBS_PUBLISHER_DID);
+         if( s!=null ) obsPublisherDid = s;
+
+         s = prop.getProperty(Constante.KEY_PUBLISHER_ID);
+         if( s!=null ) publisherId = s;
+
+         if( obsPublisherDid!=null ) id = getId(publisherId,obsPublisherDid);
+
+         s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
+         if( s!=null ) {
+            try {
+               int w=Integer.parseInt(s);
+               tileOrder=(int)CDSHealpix.log2(w);
+            } catch( Exception e ) {};
+
+            // Ancien vocabulaire
+         } else {
+            s = prop.getProperty(Constante.OLD_TILEORDER);
+            if( s!=null ){
+               try { tileOrder=Integer.parseInt(s); } catch( Exception e ) {};
+            }
          }
 
       } catch( Exception e ) { aladin.trace(3,"No properties file found ...");  return false; }
       return true;
 
+   }
+
+   private String getId(String publisherId, String obsPublisherDid) {
+      if( publisherId==null) publisherId="";
+      if( publisherId.startsWith("ivo://")) publisherId=publisherId.substring(6);
+      String id = publisherId+"_"+obsPublisherDid;
+      id = id.replace("/","_");
+      return id;
    }
 
 
@@ -1777,7 +1837,7 @@ public class PlanBG extends PlanImage {
 
    /** retourne true s'il est encore possible de zoomer en avant pour avoir plus de détail */
    protected boolean hasMoreDetails() { return hasMoreDetails; }
-   
+
    /** retourne l'ordre courant sur l'ordre max */
    protected String getInfoDetails() { return getOrder()+"/"+maxOrder; }
 

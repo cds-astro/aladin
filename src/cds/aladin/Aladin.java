@@ -80,7 +80,8 @@ import cds.xml.XMLParser;
  * @beta    <LI> Pixel autocut estimation around the reticle (localcut)
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
- * @beta         <LI> ADD mode
+ * @beta         <LI> Obscore vocabulary support
+ * @beta         <LI> Hipsgen ADD mode
  * @beta         <LI> Colormap control for colored HiPS
  * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
  * @beta         <LI> Cube support
@@ -131,7 +132,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.137";
+   static public final    String VERSION = "v8.141";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

@@ -19,8 +19,15 @@
 
 package cds.allsky;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 
 public class Constante {
+
+   static final public String HIPS_VERSION  = "1.3";
+
 
    // Noms des différents fichiers HiPS
    static final public String FILE_PROPERTIES  = "properties";
@@ -30,50 +37,95 @@ public class Constante {
    static final public String FILE_METADATATXT = "metadata.txt";
 
    // Clés utilisés dans le fichier properties
-   static public final String KEY_CUBEFIRSTFRAME        = "cubeFirstFrame";
-   static public final String KEY_CUBEDEPTH             = "cubeDepth";
-   static public final String KEY_ISCUBE                = "isCube";
-   static public final String KEY_PIXELCUT              = "pixelCut";
-   static public final String KEY_PIXELRANGE            = "pixelRange";
-   static public final String KEY_PUBLISHER             = "publisher";
-   static public final String KEY_CATEGORY              = "category";
-   static public final String KEY_VERSION               = "version";
-   static public final String KEY_SURVEY                = "survey";
-   static public final String KEY_USECACHE              = "useCache";
-   static public final String KEY_TARGETRADIUS          = "targetRadius";
-   static public final String KEY_TARGET                = "target";
-   static public final String KEY_NSIDE                 = "nside";
-   static public final String KEY_COPYRIGHT_URL         = "copyrightUrl";
-   static public final String KEY_COPYRIGHT             = "copyright";
-   static public final String KEY_ACK                   = "acknowledgement";
-   static public final String KEY_DESCRIPTION_VERBOSE   = "verboseDescription";
-   static public final String KEY_DESCRIPTION           = "description";
-   static public final String KEY_ID                    = "id";
-   static public final String KEY_LABEL                 = "label";
-   static public final String KEY_FORMAT                = "format";
-   static public final String KEY_MINORDER              = "minOrder";
-   static public final String KEY_MAXORDER              = "maxOrder";
-   static public final String KEY_ISMETA                = "isMeta";
-   static public final String KEY_ISCAT                 = "isCatalog";
-   static public final String KEY_ISCOLOR               = "isColored";
-   static public final String KEY_COORDSYS              = "coordsys";
-   static public final String KEY_HIPSBUILDER           = "HiPSBuilder";
-   static public final String KEY_ALADINVERSION         = "aladinVersion";
-   static public final String KEY_CURTFORMBITPIX        = "curTFormBitpix";
-   static public final String KEY_NBPIXGENERATEDIMAGE   = "nbPixGeneratedImage";
-   static public final String KEY_ORDERING              = "ordering";
-   static public final String KEY_ISPARTIAL             = "isPartial";
-   static public final String KEY_ARGB                  = "ARGB";
-   static public final String KEY_TYPEHPX               = "typehpx";
-   static public final String KEY_LENHPX                = "lenhpx";
-   static public final String KEY_TTYPES                = "ttypes";
-   static public final String KEY_TFIELDS               = "tfields";
-   static public final String KEY_TILEORDER             = "tileOrder";
-   static public final String KEY_NSIDE_FILE            = "nsideFile";
-   static public final String KEY_NSIDE_PIXEL           = "nsidePixel";
-   static public final String KEY_LAST_MODIFICATON_DATE = "lastModified";
-   static public final String KEY_FIRST_PROCESSING_DATE = "firstProcessingDate";
-   static public final String KEY_PROCESSING_DATE       = "processingDate";
+   static public final String OLD_VERSION               = "version";
+   static public final String KEY_HIPS_VERSION          = "hips_version";
+   static public final String KEY_HIPS_PIXEL_CUT        = "hips_pixel_cut";
+   static public final String OLD_HIPS_PIXEL_CUT        = "pixelCut";
+   static public final String KEY_HIPS_DATA_RANGE       = "hips_data_range";
+   static public final String OLD_HIPS_DATA_RANGE       = "pixelRange";
+   static public final String KEY_PUBLISHER             = "hips_publisher";
+   static public final String KEY_PUBLISHER_ID          = "publisher_id";
+   static public final String KEY_CLIENT_CATEGORY       = "client_category";
+   static public final String OLD_CLIENT_CATEGORY       = "category";
+   static public final String KEY_CLIENT_SORT_KEY       = "client_sort_key";
+   static public final String OLD_SURVEY                = "survey";
+   static public final String OLD_USECACHE              = "useCache";
+   static public final String KEY_HIPS_INITIAL_FOV      = "hips_initial_fov";
+   static public final String OLD_HIPS_INITIAL_FOV      = "targetRadius";
+   static public final String KEY_HIPS_INITIAL_RA       = "hips_initial_ra";
+   static public final String KEY_HIPS_INITIAL_DEC      = "hips_initial_dec";
+   static public final String OLD_TARGET                = "target";
+   static public final String KEY_HIPS_TILE_WIDTH       = "hips_tile_width";
+   static public final String OLD_HIPS_TILE_WIDTH       = "nside";
+   static public final String KEY_DATA_COPYRIGHT        = "obs_copyright";
+   static public final String OLD_DATA_COPYRIGHT        = "copyright";
+   static public final String KEY_DATA_COPYRIGHT_URL    = "obs_copyright_url";
+   static public final String OLD_DATA_COPYRIGHT_URL    = "copyrightUrl";
+   static public final String KEY_OBS_ACK               = "obs_ack";
+   static public final String KEY_PROV_PROGENITOR       = "prov_progenitor";
+   static public final String OLD_OBS_ACK               = "acknowledgement";
+   static public final String KEY_HIPS_STATUS           = "master";
+   static public final String KEY_OBS_PUBLISHER_DID     = "publisher_did";
+   static public final String OLD_OBS_PUBLISHER_DID     = "id";
+   static public final String KEY_OBS_COLLECTION        = "obs_collection";
+   static public final String OLD_OBS_COLLECTION        = "label";
+   static public final String KEY_OBS_TITLE             = "obs_title";
+   static public final String OLD_OBS_TITLE             = "description";
+   static public final String KEY_OBS_DESCRIPTION       = "obs_description";
+   static public final String OLD_OBS_DESCRIPTION       = "verboseDescription";
+   static public final String OLD1_OBS_DESCRIPTION      = "descriptionVerbose";
+   static public final String KEY_HIPS_TILE_FORMAT      = "hips_tile_format";
+   static public final String KEY_HIPS_PIXEL_BITPIX     = "hips_pixel_bitpix";
+   static public final String KEY_HIPS_ESTSIZE          = "hips_estsize";
+   static public final String OLD_HIPS_TILE_FORMAT      = "format";
+   static public final String KEY_HIPS_ORDER            = "hips_order";
+   static public final String OLD_HIPS_ORDER            = "maxOrder";
+   static public final String KEY_HIPS_ORDER_MIN        = "hips_order_min";
+   static public final String OLD_HIPS_ORDER_MIN        = "minOrder";
+   static public final String KEY_DATAPRODUCT_TYPE      = "dataproduct_type";
+   static public final String KEY_CUBE_FIRSTFRAME       = "hips_cube_firstframe";
+   static public final String OLD_CUBE_FIRSTFRAME       = "cubeFirstFrame";
+   static public final String KEY_CUBE_DEPTH            = "hips_cube_depth";
+   static public final String OLD_CUBE_DEPTH            = "cubeDepth";
+   static public final String KEY_DATAPRODUCT_SUBTYPE   = "color";
+   static public final String KEY_HIPS_FRAME            = "hips_frame";
+   static public final String OLD_HIPS_FRAME            = "coordsys";
+   static public final String KEY_HIPS_BUILDER          = "hips_builder";
+   static public final String OLD_HIPS_BUILDER          = "HiPSBuilder";
+   static public final String KEY_HIPS_CREATION_DATE    = "hips_creation_date";
+   static public final String OLD_HIPS_CREATION_DATE    = "firstProcessingDate";
+   static public final String KEY_HIPS_RELEASE_DATE     = "hips_release_date";
+   static public final String OLD_HIPS_RELEASE_DATE     = "processingDate";
+   static public final String KEY_S_PIXEL_SCALE         = "s_pixel_scale";
+   static public final String KEY_HIPS_PIXEL_SCALE      = "hips_pixel_scale";
+   static public final String KEY_T_MIN                 = "t_min";
+   static public final String KEY_T_MAX                 = "t_max";
+   static public final String KEY_EM_MIN                = "em_min";
+   static public final String KEY_EM_MAX                = "em_max";
+   static public final String KEY_BIB_REFERENCE         = "bib_reference";
+   static public final String KEY_BIB_REFERENCE_URL     = "bib_reference_url";
+   static public final String KEY_MOC_SKY_FRACTION      = "moc_sky_fraction";
+
+   static public final String OLD_ALADINVERSION         = "aladinVersion";
+   static public final String OLD_LAST_MODIFICATON_DATE = "lastModified";
+   static public final String OLD_CURTFORMBITPIX        = "curTFormBitpix";
+   static public final String OLD_NBPIXGENERATEDIMAGE   = "nbPixGeneratedImage";
+   static public final String OLD_ORDERING              = "ordering";
+   static public final String OLD_ISPARTIAL             = "isPartial";
+   static public final String OLD_ARGB                  = "ARGB";
+   static public final String OLD_TYPEHPX               = "typehpx";
+   static public final String OLD_LENHPX                = "lenhpx";
+   static public final String OLD_TTYPES                = "ttypes";
+   static public final String OLD_TFIELDS               = "tfields";
+   static public final String OLD_TILEORDER             = "tileOrder";
+   static public final String OLD_NSIDE_FILE            = "nsideFile";
+   static public final String OLD_NSIDE_PIXEL           = "nsidePixel";
+   static public final String OLD_ISCUBE                = "isCube";
+   static public final String OLD_ISMETA                = "isMeta";
+   static public final String OLD_ISCAT                 = "isCatalog";
+   static public final String OLD_ISCOLOR               = "isColored";
+
+
    static public final String KEY_SIZERECORD            = "sizeRecord";
    static public final String KEY_OFFSET                = "offset";
    static public final String KEY_GZ                    = "gzipped";
@@ -107,5 +159,23 @@ public class Constante {
    static final public int TILE_FITS=2;
    static final public String [] TILE_EXTENSION = { ".png",".jpg", ".fits" };
    static final public String [] TILE_MODE      = { "png", "jpeg", "fits" };
+
+
+   static final public String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm";
+   static final public SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+   static {
+      TimeZone utc = TimeZone.getTimeZone("UTC");
+      sdf.setTimeZone(utc);
+   }
+
+   /** Retourne le temps passé en paramètre au format ISO8601 */
+   static public String getDate() { return getDate( System.currentTimeMillis() ); }
+   static public String getDate(long time) { return sdf.format(new Date(time))+"Z"; }
+
+   /** Retourne une date passée en ISO8601 en temps */
+   static public long getTime(String date) throws Exception {
+      if( date.endsWith("Z")) date=date.substring(0,date.length()-1);
+      return sdf.parse(date).getTime();
+   }
 
 }

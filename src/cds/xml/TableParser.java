@@ -1776,7 +1776,9 @@ final public class TableParser implements XMLConsumer {
       // on est juste après la colonne RA - une petite gratification
       if( qual>0 && nRA==nField-1 && nRA>=0 ) qual--;
 
-      if( qual>=0 && qualDEC>qual ) { nDEC=nField; qualDEC=qual; }
+      if( qual>=0 && qualDEC>qual ) {
+         nDEC=nField; qualDEC=qual;
+      }
 
       // Détection du PMRA et évaluation de la qualité de cette détection
       qual=-1;
@@ -2159,6 +2161,15 @@ final public class TableParser implements XMLConsumer {
       return ch[cur]==rs;
    }
 
+   /** Dans le mode CSV, retourne true si c'est une ligne de tirets (sans blancs
+    * @param ch,cur,end  désignation de l'emplacement courant
+    * @param rs le caractère de séparation des enregistrements
+    */
+   private boolean isSimpleDahsLine(char ch[],int cur, int end,char rs) {
+      while( cur<end && ch[cur]=='-' ) cur++;
+      return ch[cur]==rs;
+   }
+
    private String colSepInfo(char cs[] ) {
       String s=null;
       for( int i=0; i<cs.length; i++ ) {
@@ -2227,7 +2238,8 @@ final public class TableParser implements XMLConsumer {
       for( n=0; cur<end && (flagTSV || n<h); n++ ) {
 
          // Saute les commentaires et les lignes vides
-         if( vide(ch,cur,end,rs) ) {
+         if( vide(ch,cur,end,rs)
+               || (n==1 && isSimpleDahsLine( ch,cur,end,rs))) {
             //System.out.println("on saute ["+(new String(ch,cur,12)).replace('\n',' ')+"...] ("+(end-cur)+" car.)");
             n--;
             cur=skipRec(ch,cur,rs);

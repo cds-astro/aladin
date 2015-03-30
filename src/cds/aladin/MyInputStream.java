@@ -953,9 +953,18 @@ public final class MyInputStream extends FilterInputStream {
    //      return flagFirstComment;
    //   }
 
+   // Détecte une ligne de tirets (sans espace ni TAB)
+   static public boolean isSimpleDashLine(String s) {
+      for( int i=s.length()-1; i>=0; i--) {
+         if( s.charAt(i)!='-') return false;
+      }
+      return true;
+   }
+
    static private int analyseCSV1(String [] s,int size,boolean flagQuote) {
       int [][] m = new int[size][];
       for( int i=0; i<size; i++ ) {
+         if( i==1 && isSimpleDashLine(s[i].trim())) { m[i]=m[i-1]; continue; }
          if( Aladin.levelTrace>=4 ) {
             String s1 = s[i];
             if( s1.length()>0 && s1.charAt(s1.length()-1)=='\n' ) s1 = s1.substring(0,s1.length()-1);
