@@ -309,6 +309,7 @@ public class HipsGen {
                in = in.startRead();
                flagMapFits = (in.getType() & MyInputStream.HEALPIX)!=0;
                in.close();
+               context.setMap(flagMapFits);
             } catch( Exception e ) { }
          }
 
@@ -332,6 +333,7 @@ public class HipsGen {
          context.setMixing("true");
          context.info("Pixel mode=ADD => fading, partitioning and no mixing parameter ignored");
       }
+
 
       // Nettoyage avant ?
       if( force ) {

@@ -41,6 +41,7 @@ import javax.swing.event.ChangeListener;
 
 import cds.aladin.bookmark.FrameBookmarks;
 import cds.aladin.prop.PropPanel;
+import cds.allsky.Constante;
 import cds.astro.Astrotime;
 import cds.tools.Astrodate;
 import cds.tools.Util;
@@ -386,6 +387,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
        */
       Anchor(String text,int width, String more,final String url) {
          super();
+
+         if( text==null && more==null && url!=null ) text=url;
+
          if( text==null && more!=null ) {
             if( more.length()>width ) {
                int n = more.lastIndexOf(' ',width);
@@ -460,15 +464,37 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Origine
-      String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
-      if( copyright!=null ) {
-         //         System.out.println("copyright="+copyright+"\nurl="+plan.copyrightUrl);
-         PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,40,null,plan.copyrightUrl), g,c);
+      if( !(plan instanceof PlanBG) ||
+            (((PlanBG)plan).getProperty(Constante.KEY_DATA_COPYRIGHT)==null && ((PlanBG)plan).getProperty(Constante.KEY_DATA_COPYRIGHT_URL)==null) ) {
+         String copyright = plan.copyright==null ? plan.copyrightUrl : plan.copyright;
+         if( copyright!=null ) {
+            PropPanel.addCouple(p,ORIGIN, new Anchor(copyright,40,null,plan.copyrightUrl), g,c);
+         }
       }
 
-      // Unique ID
-      if( plan instanceof PlanBG && ((PlanBG)plan).id!=null ) {
-         PropPanel.addCouple(p,"Id.: ", new JLabel(((PlanBG)plan).id), g,c);
+      if( plan instanceof PlanBG ) {
+         PlanBG pbg = (PlanBG)plan;
+         String s,su;
+
+         s = pbg.getProperty(Constante.KEY_BIB_REFERENCE);
+         su = pbg.getProperty(Constante.KEY_BIB_REFERENCE_URL);
+         if( s!=null || su!=null ) PropPanel.addCouple(p,"Bib. reference", new Anchor(s,40,null,su), g,c);
+
+         s = pbg.getProperty(Constante.KEY_PUBLISHER);
+         su = pbg.getProperty(Constante.KEY_PUBLISHER_DID);
+         if( su!=null ) {
+            int i = su.indexOf('/',6);
+            if( i>6 ) su= su.substring(6,i);
+         }
+         if( s==null ) s=su;
+         else if( su!=null && s.indexOf(su)<0 ) s=s+" ("+su+")";
+         if( s!=null ) PropPanel.addCouple(p,"Publisher", new JLabel(s), g,c);
+
+         if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"Id: ", new JLabel(((PlanBG)plan).id), g,c);
+
+         s = pbg.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
+         if( s!=null ) PropPanel.addCouple(p,"Release date", new JLabel(s), g,c);
+
       }
 
       //La couleur
@@ -892,24 +918,24 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addFilet(p, g, c);
          long res = pbg.getMaxHealpixOrder();
          long ord = pbg.getTileOrder();
-         PropPanel.addSectionTitle(p, "HEALPix tesselation properties", g, c);
+         PropPanel.addSectionTitle(p, "HiPS properties", g, c);
          PropPanel.addCouple(p, "Best pixel resolution", new JLabel(pbg.getMaxResolution()), g, c);
-         PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
-         if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
-         if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
-            //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
-            JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
-            bt.addActionListener(new ActionListener() {
-               public void actionPerformed(ActionEvent e) {
-                  pbg.switchFormat();
-                  showProp(true);
-                  aladin.view.repaintAll();
-
-               }
-            } );
-            PropPanel.addCouple(p,"",bt, g, c);
-         }
+         //         PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
+         //         if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
+         //         if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
+         //            //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
+         //            JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
+         //            bt.addActionListener(new ActionListener() {
+         //               public void actionPerformed(ActionEvent e) {
+         //                  pbg.switchFormat();
+         //                  showProp(true);
+         //                  aladin.view.repaintAll();
+         //
+         //               }
+         //            } );
+         //            PropPanel.addCouple(p,"",bt, g, c);
+         //         }
       }
 
       if( plan.type==Plan.ALLSKYMOC ) {
@@ -989,35 +1015,114 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
-         PropPanel.addCouple(p, "HiPS coord.sys.:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
-         String s = pbg.getNetSpeed();
+         PropPanel.addCouple(p, "Coord.sys.:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
+         String s = Aladin.BETA ? pbg.getNetSpeed() : null;
          if( s!=null ) {
             JLabel lab = new JLabel(s);
             if( s.indexOf("error")>=0 ) lab.setForeground(Color.red);
             PropPanel.addCouple(p, "Avg net speed:", lab, g, c);
          }
 
-         if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
-            JPanel p1 = new JPanel();
-            if( pbg.hasMoc() ) {
-               JButton bt = new JButton(aladin.MOC);
+         if( plan.type==Plan.ALLSKYIMG ) {
+            long ord = pbg.getTileOrder();
+            PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
+            if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
+            if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
+               //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
+               JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
                bt.addActionListener(new ActionListener() {
-                  public void actionPerformed(ActionEvent e) { pbg.loadMoc(); }
-               });
-               p1.add(bt);
+                  public void actionPerformed(ActionEvent e) {
+                     pbg.switchFormat();
+                     showProp(true);
+                     aladin.view.repaintAll();
+
+                  }
+               } );
+               PropPanel.addCouple(p,"",bt, g, c);
             }
-            if( pbg.hasHpxFinder() ) {
+         }
+
+
+
+         //         if( pbg.hasMoc() || pbg.hasHpxFinder() ) {
+         //            JPanel p1 = new JPanel();
+         //            if( pbg.hasMoc() ) {
+         //               JButton bt = new JButton(aladin.MOC);
+         //               bt.addActionListener(new ActionListener() {
+         //                  public void actionPerformed(ActionEvent e) { pbg.loadMoc(); }
+         //               });
+         //               p1.add(bt);
+         //            }
+         //            if( pbg.hasHpxFinder() ) {
+         //               JButton bt = new JButton(aladin.chaine.getString("PROGENITOR"));
+         //               bt.addActionListener(new ActionListener() {
+         //                  public void actionPerformed(ActionEvent e) {
+         //                     pbg.loadProgen();
+         //                  }
+         //               });
+         //               p1.add(bt);
+         //            }
+         //            PropPanel.addCouple(p,"More info",p1,g,c);
+         //         }
+
+         // Description de l'origine des données
+         String sTmin = pbg.getProperty(Constante.KEY_T_MIN);
+         String sTmax = pbg.getProperty(Constante.KEY_T_MAX);
+         String sEMmin = pbg.getProperty(Constante.KEY_EM_MIN);
+         String sEMmax = pbg.getProperty(Constante.KEY_EM_MAX);
+         String sR = pbg.getProperty(Constante.KEY_OBS_REGIME);
+         String sS  = pbg.getProperty(Constante.KEY_MOC_SKY_FRACTION);
+         boolean hasMoc = pbg.hasMoc();
+         if( sS!=null || sTmin!=null || sTmax!=null || sEMmin!=null || sEMmax!=null || sR!=null || sS!=null || hasMoc ) {
+            PropPanel.addFilet(p, g, c);
+            PropPanel.addSectionTitle(p,"Coverage",g,c);
+
+            if( sTmin!=null  || sTmax!=null )  PropPanel.addCouple(p,"Time range", new JLabel( getCoverageTime(sTmin,sTmax)), g,c);
+            if( sEMmin!=null || sEMmax!=null ) PropPanel.addCouple(p,"Energy range", new JLabel( getCoverageEnergy(sEMmin,sEMmax)), g,c);
+            if( hasMoc || sS!=null ) {
+               if( sS==null && pbg.moc!=null ) sS = pbg.moc.getCoverage()+"";
+               JPanel p1 = new JPanel();
+               if( sS!=null ) {
+                  try { sS = Util.myRound( Double.parseDouble(sS)*100); } catch( Exception e) {}
+                  p1.add( new JLabel(sS+" % of sky"));
+               }
+               if( hasMoc ) {
+                  JButton bt = new JButton(aladin.MOC);
+                  bt.addActionListener(new ActionListener() {
+                     public void actionPerformed(ActionEvent e) {
+                        pbg.loadMoc();
+                     }
+                  });
+                  p1.add(bt);
+               }
+               PropPanel.addCouple(p,"Space",p1,g,c);
+            }
+         }
+
+
+         // Description de l'origine des données
+         String sP  = pbg.getProperty(Constante.KEY_PROV_PROGENITOR);
+         String sC  = pbg.getProperty(Constante.KEY_DATA_COPYRIGHT);
+         String sCU = pbg.getProperty(Constante.KEY_DATA_COPYRIGHT_URL);
+         boolean hasProgen = pbg.hasHpxFinder();
+         if( sP!=null || sC!=null || sCU!=null || hasProgen ) {
+            PropPanel.addFilet(p, g, c);
+            PropPanel.addSectionTitle(p,"Original data",g,c);
+
+            if( sP!=null ) PropPanel.addCouple(p,"Provenance", new JLabel(sP), g,c);
+            if( sC!=null || sCU!=null ) PropPanel.addCouple(p,"Copyright", new Anchor(sC,40,null,sCU), g,c);
+            if( hasProgen ) {
                JButton bt = new JButton(aladin.chaine.getString("PROGENITOR"));
                bt.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) {
                      pbg.loadProgen();
                   }
                });
+               JPanel p1 = new JPanel();
                p1.add(bt);
+               PropPanel.addCouple(p,"Access",p1,g,c);
             }
-            PropPanel.addCouple(p,"More info",p1,g,c);
          }
-
       }
 
       if( plan.flagOk && (plan.isSimpleCatalog() || plan instanceof PlanBG) ) {
@@ -1280,6 +1385,14 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       return p;
+   }
+
+   private String getCoverageTime(String s1,String s2) {
+      return "[ "+ (s1==null ? " " : Util.getDateFromMJD(s1)) + " .. "+ (s2==null ? " " : Util.getDateFromMJD(s2)) + " ]";
+   }
+
+   private String getCoverageEnergy(String s1,String s2) {
+      return "[ "+ (s1==null ? " " : s1) + (s2==null ? " " : s2) + " ]";
    }
 
    // implementation d'EventListener pour les differents sliders

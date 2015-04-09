@@ -1336,7 +1336,7 @@ public class Context {
       String label = getLabel();
       if( label==null || label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
 
-      setPropriete("#"+Constante.KEY_OBS_PUBLISHER_DID,"[Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)]");
+      setPropriete("#"+Constante.KEY_PUBLISHER_DID,"[Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)]");
       //      setPropriete("#"+Constante.KEY_PUBLISHER_ID,"[The IVOA ID for the data provider (ex: ivo://CDS)]");
       setPropriete(Constante.KEY_OBS_COLLECTION,label);
       setPropriete("#"+Constante.KEY_OBS_TITLE,"[Dataset text title]");
@@ -1368,11 +1368,26 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
+
+      // L'url =>  NON, CAR SINON ELLE RISQUE D'ETRE RECOPIEE TELLE QUE LORS D'UN CLONAGE
+      //      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"[ex: http://yourHipsServer/"+label+"]");
+
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
       if( fmt.length()>0 ) setPropriete(Constante.KEY_HIPS_TILE_FORMAT,fmt);
 
-      if( fmt.indexOf("fits")>=0) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
+      if( fmt.indexOf("fits")>=0) {
+         if( bitpix!=-1 ) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
+         if( bitpixOrig!=-1 ) setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,bitpixOrig+"");
+         setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, isMap() ? "none" : "bilinear");
+         setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
+               skyvalName==null ? "none" : skyvalName.equals("true")?"hips_estimation":"fits_keyword");
+      }
+      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
+            isMap() ? "none" : mode==Mode.ADD ? "add" :
+               fading ? "border_fading" : mixing ? "mean" : "first");
+      setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, "mean");
+
 
       if( cut!=null ) {
          if( cut[0]!=0 || cut[1]!=0 ) {
@@ -1415,10 +1430,11 @@ public class Context {
          long tileSizeFits = Math.abs(bitpix/8) * CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder()) + 2048L;
          long tileSizeJpeg = 70000;
          long tileSizePng = 100000;
+         double coverage = m.getCoverage();
          long numberOfTiles =  CDSHealpix.pow2(order) *  CDSHealpix.pow2(order) * 12L;
-         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.3) )/1024L;
-         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.3) )/1024L;
-         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.3) )/1024L;
+         long fitsSize = (long)( ( tileSizeFits*numberOfTiles * 1.3 * coverage) )/1024L;
+         long jpegSize = (long)( ( tileSizeJpeg*numberOfTiles * 1.3 * coverage) )/1024L;
+         long pngSize = (long)( ( tileSizePng*numberOfTiles * 1.3 * coverage) )/1024L;
          long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
                + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
                + (fmt.indexOf("png")>=0 ? pngSize : 0)
@@ -1506,7 +1522,7 @@ public class Context {
 
    private void replaceKeys(MyProperties prop) {
       replaceKey(prop,Constante.OLD_HIPS_BUILDER,Constante.KEY_HIPS_BUILDER);
-      replaceKey(prop,Constante.OLD_OBS_PUBLISHER_DID,Constante.KEY_OBS_PUBLISHER_DID);
+      replaceKey(prop,Constante.OLD_PUBLISHER_DID,Constante.KEY_PUBLISHER_DID);
       replaceKey(prop,Constante.OLD_OBS_COLLECTION,Constante.KEY_OBS_COLLECTION);
       replaceKey(prop,Constante.OLD_OBS_TITLE,Constante.KEY_OBS_TITLE);
       replaceKey(prop,Constante.OLD_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);

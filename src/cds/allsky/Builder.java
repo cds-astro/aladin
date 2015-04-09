@@ -62,6 +62,7 @@ public abstract class Builder {
          case CUBE:      return new BuilderCube(context);
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);
+         case UPDATE:    return new BuilderUpdate(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");

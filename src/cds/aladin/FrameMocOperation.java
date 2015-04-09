@@ -25,13 +25,9 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JRadioButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import cds.tools.Util;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -115,9 +111,9 @@ public final class FrameMocOperation extends FrameRGBBlink {
       JPanel pp=new JPanel();
       JRadioButton cb;
       cb=new JRadioButton(SUNION); cb.setActionCommand(SUNION);
-      cbg.add(cb); pp.add(cb);  cb.setSelected(true);
-      cb=new JRadioButton(INTER); cb.setActionCommand(INTER);
       cbg.add(cb); pp.add(cb);
+      cb=new JRadioButton(INTER); cb.setActionCommand(INTER);
+      cbg.add(cb); pp.add(cb); cb.setSelected(true);
       cb=new JRadioButton(SUB); cb.setActionCommand(SUB);
       cbg.add(cb); pp.add(cb);
       cb=new JRadioButton(DIFF); cb.setActionCommand(DIFF);
@@ -133,7 +129,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
 
       return p;
    }
-   
+
 
    private int getOperation(String s) {
       if( s.equals(SUNION) ) return PlanMocAlgo.UNION;
@@ -142,7 +138,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
       if( s.equals(DIFF) )   return PlanMocAlgo.DIFFERENCE;
       return PlanMocAlgo.COMPLEMENT;
    }
-   
+
    protected PlanMoc [] getPlans() {
       ArrayList<PlanMoc> pListA = new ArrayList<PlanMoc>();
       for( JComboBox c : ch ) {
@@ -150,7 +146,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
          if (i<0) continue;
          pListA.add((PlanMoc)choicePlan[i]);
       }
-      
+
       PlanMoc [] pList = new PlanMoc[pListA.size()];
       pListA.toArray(pList);
       return pList;

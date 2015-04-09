@@ -285,8 +285,9 @@ public class PlanBG extends PlanImage {
                InputStream in1 = new FileInputStream(f);
                prop.load(in1);
                in1.close();
-               dateRef = prop.getProperty("processingDate","");
-               //               System.out.println("Cache processingDate="+dateRef);
+               dateRef = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
+               if( dateRef==null ) dateRef = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
+               //               System.out.println("Cache hips_release_date="+dateRef);
             }
 
             MyInputStream dis = null;
@@ -308,10 +309,11 @@ public class PlanBG extends PlanImage {
                   InputStream in1 = new ByteArrayInputStream(buf);
                   prop.load(in1);
                   in1.close();
-                  String dateRef1 = prop.getProperty("processingDate","");
-                  //                  System.out.println("Remote processingDate="+dateRef1);
+                  String dateRef1= prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
+                  if( dateRef1==null ) dateRef1 = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
+                  //                  System.out.println("Remote hips_release_date="+dateRef1);
                   if( dateRef1.equals(dateRef) ) {
-                     //                     aladin.trace(4,"PlanBG.loadPropertieFile() => processingDate identical !");
+                     //                     aladin.trace(4,"PlanBG.loadPropertieFile() => hips_release_date identical !");
                      throw new Exception();
                   }
 
@@ -419,17 +421,9 @@ public class PlanBG extends PlanImage {
          if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_PIXEL_CUT);
          if( s!=null ) pixelCut = s;
 
-         String obsPublisherDid=null;
-         String publisherId=null;
-
-         s = prop.getProperty(Constante.KEY_OBS_PUBLISHER_DID);
-         if( s!=null ) s = prop.getProperty(Constante.OLD_OBS_PUBLISHER_DID);
-         if( s!=null ) obsPublisherDid = s;
-
-         s = prop.getProperty(Constante.KEY_PUBLISHER_ID);
-         if( s!=null ) publisherId = s;
-
-         if( obsPublisherDid!=null ) id = getId(publisherId,obsPublisherDid);
+         s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+         if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
+         id = s;
 
          s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
          if( s!=null ) {
@@ -449,14 +443,6 @@ public class PlanBG extends PlanImage {
       } catch( Exception e ) { aladin.trace(3,"No properties file found ...");  return false; }
       return true;
 
-   }
-
-   private String getId(String publisherId, String obsPublisherDid) {
-      if( publisherId==null) publisherId="";
-      if( publisherId.startsWith("ivo://")) publisherId=publisherId.substring(6);
-      String id = publisherId+"_"+obsPublisherDid;
-      id = id.replace("/","_");
-      return id;
    }
 
 
@@ -564,19 +550,31 @@ public class PlanBG extends PlanImage {
     * et avoir le nom Moc.fits */
    protected boolean hasMoc() {
       if( hasMoc || testMoc ) return hasMoc;
-      String moc = url+"/"+Constante.FILE_MOC;
-      hasMoc = local ? (new File(moc)).exists() : Util.isUrlResponding(moc);
-      testMoc=true;
+      String s = getProperty(Constante.KEY_MOC_ACCESS_URL);
+      if( s!=null ) { hasMoc=testMoc=true; }
+      else {
+         String moc = url+"/"+Constante.FILE_MOC;
+         hasMoc = local ? (new File(moc)).exists() : Util.isUrlResponding(moc);
+         testMoc=true;
+      }
       return hasMoc;
    }
 
    private boolean testHpxFinder=false; // true : la présence d'un HpxFinder a été testé
 
+
+   // Juste pour se simplifier la vie sur le test de prop==null
+   protected String getProperty(String key) { return prop==null ? null : prop.getProperty(key); }
+
    protected boolean hasHpxFinder() {
       if( hasHpxFinder || testHpxFinder ) return hasHpxFinder;
-      String f = url+"/"+Constante.FILE_HPXFINDER+"/"+Constante.FILE_METADATAXML;
-      hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
-      testHpxFinder=true;
+      String s = getProperty(Constante.KEY_HIPS_PROGENITOR_URL);
+      if( s!=null ) { hasHpxFinder=testHpxFinder=true; }
+      else {
+         String f = url+"/"+Constante.FILE_HPXFINDER+"/"+Constante.FILE_METADATAXML;
+         hasHpxFinder = local ? (new File(f)).exists() : Util.isUrlResponding(f);
+         testHpxFinder=true;
+      }
       return hasHpxFinder;
    }
 
@@ -617,7 +615,8 @@ public class PlanBG extends PlanImage {
             return;
          }
       }
-      String f = getUrl()+"/"+Constante.FILE_MOC;
+      String f = getProperty(Constante.KEY_MOC_ACCESS_URL);
+      if( f==null ) f = getUrl()+"/"+Constante.FILE_MOC;
       MyInputStream mis = null;
       try {
          mis=Util.openAnyStream(f);
@@ -665,7 +664,8 @@ public class PlanBG extends PlanImage {
 
    /** Chargement d'un plan Progen associé au survey */
    protected void loadProgen() {
-      String progen = url+"/"+Constante.FILE_HPXFINDER;
+      String progen = getProperty(Constante.KEY_HIPS_PROGENITOR_URL);
+      if( progen==null ) progen = url+"/"+Constante.FILE_HPXFINDER;
       aladin.execAsyncCommand("'Details "+label+"'=load "+progen);
    }
 

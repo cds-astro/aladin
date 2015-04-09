@@ -63,10 +63,12 @@ public class Constante {
    static public final String OLD_DATA_COPYRIGHT_URL    = "copyrightUrl";
    static public final String KEY_OBS_ACK               = "obs_ack";
    static public final String KEY_PROV_PROGENITOR       = "prov_progenitor";
+   static public final String KEY_HIPS_PROGENITOR_URL   = "hips_progenitor_url";
+   static public final String KEY_MOC_ACCESS_URL        = "moc_access_url";
    static public final String OLD_OBS_ACK               = "acknowledgement";
-   static public final String KEY_HIPS_STATUS           = "master";
-   static public final String KEY_OBS_PUBLISHER_DID     = "publisher_did";
-   static public final String OLD_OBS_PUBLISHER_DID     = "id";
+   static public final String KEY_HIPS_STATUS           = "hips_status";
+   static public final String KEY_PUBLISHER_DID         = "publisher_did";
+   static public final String OLD_PUBLISHER_DID         = "id";
    static public final String KEY_OBS_COLLECTION        = "obs_collection";
    static public final String OLD_OBS_COLLECTION        = "label";
    static public final String KEY_OBS_TITLE             = "obs_title";
@@ -75,7 +77,13 @@ public class Constante {
    static public final String OLD_OBS_DESCRIPTION       = "verboseDescription";
    static public final String OLD1_OBS_DESCRIPTION      = "descriptionVerbose";
    static public final String KEY_HIPS_TILE_FORMAT      = "hips_tile_format";
+   static public final String KEY_HIPS_SERVICE_URL      = "hips_service_url";
    static public final String KEY_HIPS_PIXEL_BITPIX     = "hips_pixel_bitpix";
+   static public final String KEY_DATA_PIXEL_BITPIX     = "data_pixel_bitpix";
+   static public final String KEY_HIPS_PROCESS_SAMPLING = "hips_sampling";
+   static public final String KEY_HIPS_PROCESS_OVERLAY  = "hips_overlay";
+   static public final String KEY_HIPS_PROCESS_SKYVAL   = "hips_skyval";
+   static public final String KEY_HIPS_PROCESS_HIERARCHY= "hips_hierarchy";
    static public final String KEY_HIPS_ESTSIZE          = "hips_estsize";
    static public final String OLD_HIPS_TILE_FORMAT      = "format";
    static public final String KEY_HIPS_ORDER            = "hips_order";
@@ -102,6 +110,7 @@ public class Constante {
    static public final String KEY_T_MAX                 = "t_max";
    static public final String KEY_EM_MIN                = "em_min";
    static public final String KEY_EM_MAX                = "em_max";
+   static public final String KEY_OBS_REGIME            = "obs_regime";
    static public final String KEY_BIB_REFERENCE         = "bib_reference";
    static public final String KEY_BIB_REFERENCE_URL     = "bib_reference_url";
    static public final String KEY_MOC_SKY_FRACTION      = "moc_sky_fraction";

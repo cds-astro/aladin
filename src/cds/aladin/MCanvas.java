@@ -24,7 +24,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Formatter;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -547,18 +549,35 @@ MouseWheelListener, Widget
 
       // Prise en compte de la precision
       if( w.precision>=0 ) {
-         int i = text.lastIndexOf('.');
-         if( i>=0 ) {
-            int pos = w.precision>0 ? w.precision+1 : w.precision;
-            if( i+pos<text.length() ) text = text.substring(0,i+pos);
+         //         int i = text.lastIndexOf('.');
+         int j = text.indexOf(' ');
+         if( j<0 ) {
+            //            int pos = w.precision>0 ? w.precision+1 : w.precision;
+            //            if( i+pos<text.length() ) text = text.substring(0,i+pos);
 
             try {
-               double v = Double.parseDouble(text);
-               System.out.println(w.text);
-               text = String.format("%0."+w.precision+"f", v);
-               text.replace(',','.');
-               System.out.println(" => prec="+w.precision+" => "+text);
-            } catch( Exception e) {}
+               double v = Double.parseDouble(w.text);
+               text = (new Formatter(Locale.ENGLISH)).format("%."+w.precision+"f", v).toString();
+               int i = text.lastIndexOf('.');
+               if( i>0 ) {
+                  int k;
+                  int n = text.length();
+                  for( k=n-1; k>i && text.charAt(k)=='0'; k--);
+                  if( k!=n-1) {
+                     if( text.charAt(k)=='.') k--;
+                     StringBuilder trail = new StringBuilder(16);
+                     for( j=k;j<n-1;j++) trail.append(' ');
+                     text = text.substring(0,k+1)+trail.toString();
+                  }
+               }
+
+               //               StringBuilder fmt = new StringBuilder(10);
+               //               fmt.append("#.");
+               //               for( int k=0; k<w.precision; k++) fmt.append('#');
+               //               DecimalFormat df = new DecimalFormat(fmt.toString());
+               //               text = df.format(v);
+               //               text=text.replace(",",".");
+            } catch( Exception e) { }
          }
       }
 

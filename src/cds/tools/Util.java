@@ -1642,6 +1642,16 @@ public final class Util {
       } catch( Exception e ) {}
    }
 
+   /** retourne une date ISO 8601 (YYYY-MM-DD) à partir d'une valeur MJD */
+   static public String getDateFromMJD(String mjd) {
+      try {
+         String s = Astrodate.JDToDate( Astrodate.MJDToJD( Double.parseDouble(mjd)));
+         int i = s.indexOf("T");
+         return i>0 ? s.substring(0,i) : s;
+      }catch( Exception e) {}
+      return "";
+   }
+
    /** retourne un temps en milliseconde sous une forme lisible 3j 5h 10mn 3.101s */
    static public String getTemps(long ms) { return getTemps(ms,false);  }
    static public String getTemps(long ms,boolean round) {
