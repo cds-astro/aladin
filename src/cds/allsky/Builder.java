@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import cds.aladin.MyProperties;
+import cds.aladin.PlanBG;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
@@ -342,7 +343,7 @@ public abstract class Builder {
          if( context.prop==null ) context.loadProperties();
          String s = context.prop.getProperty(Constante.KEY_HIPS_FRAME);
          if( s==null ) s = context.prop.getProperty(Constante.OLD_HIPS_FRAME);
-         if( s==null ) s="C";
+         if( s==null ) s="G";
          if( s.equals("equatorial") ) return "C";
          if( s.equals("ecliptic")) return "E";
          if( s.equals("galactic")) return "G";
@@ -351,28 +352,7 @@ public abstract class Builder {
       return context.getFrameCode();
    }
 
-   //   protected void validateFrame() {
-   //      String path = context.getOutputPath();
-   //      String coordsys=null;
-   //
-   //      // Je vais essayé de le récupérer depuis le fichier des propriétés
-   //      try {
-   //         String propFile = path+Util.FS+PlanHealpix.PROPERTIES;
-   //         MyProperties prop = new MyProperties();
-   //         File f = new File( propFile );
-   //         if( f.exists() ) {
-   //            FileInputStream in = new FileInputStream(propFile);
-   //            prop.load(in);
-   //            in.close();
-   //            String s = (String)prop.get(PlanHealpix.KEY_COORDSYS);
-   //            if( s!=null && s.length()>0 ) coordsys=s;
-   //         }
-   //      } catch( Exception e ) { }
-   //      if( coordsys==null ) context.frame = Localisation.GAL;
-   //      else context.setFrameName(coordsys);
-   //   }
-
-   protected String ip(double raw,double bzero,double bscale) {
+  protected String ip(double raw,double bzero,double bscale) {
       return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
    }
 

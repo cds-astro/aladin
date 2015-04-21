@@ -44,7 +44,7 @@ public class BuilderMoc extends Builder {
    protected int tileOrder;
    protected boolean isMocHight;
    
-   private String ext; // Extension à traiter, null si non encore affectée.
+   private String ext=null; // Extension à traiter, null si non encore affectée.
 
    public BuilderMoc(Context context) {
       super(context);
@@ -95,7 +95,11 @@ public class BuilderMoc extends Builder {
       // Couleur
       if( context.isColor() ) mocOrder=fileOrder;
       
-      isMocHight = mocOrder>fileOrder;
+      // Quel type de tuile utiliser ?
+      ext = getDefaultExt(path);
+      if( ext!=null ) context.info("MOC generation based on "+ext+" tiles");
+      
+      isMocHight = mocOrder>fileOrder && ext!=null && ext.equals("fits");
       
       moc.setMocOrder(mocOrder);
 
@@ -113,6 +117,13 @@ public class BuilderMoc extends Builder {
       context.info("MOC done in "+cds.tools.Util.getTemps(time,true)
                         +": mocOrder="+moc.getMocOrder()
                         +" size="+cds.tools.Util.getUnitDisk( moc.getSize()));
+   }
+   
+   private String getDefaultExt(String path) {
+      if( (new File(path+FS+"Norder3"+FS+"Allsky.fits")).exists() ) return "fits";
+      if( (new File(path+FS+"Norder3"+FS+"Allsky.jpg")).exists() ) return "jpg";
+      if( (new File(path+FS+"Norder3"+FS+"Allsky.png")).exists() ) return "png";
+      return null;
    }
    
    
@@ -147,7 +158,6 @@ public class BuilderMoc extends Builder {
       
       initStat();
       
-      ext = null;
       File f = new File(path + Util.FS + "Norder" + fileOrder );
       
 
@@ -183,7 +193,13 @@ public class BuilderMoc extends Builder {
    private void generateHighTileMoc(HealpixMoc moc,int fileOrder, File f, long npix) throws Exception {
       Fits fits = new Fits();
       MyInputStream dis = new MyInputStream(new FileInputStream(f));
-      fits.loadFITS(dis);
+      dis=dis.startRead();
+      try {
+         fits.loadFITS(dis);
+      }catch( Exception e ) {
+         System.err.println("f="+f.getAbsolutePath());
+         throw e;
+      }
       dis.close();
       
       long nside = fits.width;
@@ -193,7 +209,6 @@ public class BuilderMoc extends Builder {
       
       int div = (fileOrder+tileOrder - mocOrder) *2;
       context.createHealpixOrder( tileOrder );
-
       
       long oNpix=-1;  
       for( int y=0; y<fits.height; y++ ) {

@@ -357,6 +357,10 @@ public class HipsGen {
       for( Action a : actions ) {
          context.info("Action => "+a+": "+a.doc());
       }
+      
+      
+      // Positionnement du frame par défaut
+      setDefaultFrame();
 
       // C'est parti
       try {
@@ -369,6 +373,46 @@ public class HipsGen {
          return;
       }
    }
+   
+   // Positionnement du frame par défaut (equatorial, sauf s'il y a déjà
+   // un HiPS existant, auquel cas il faut regarder dans ses propriétés,
+   // et s'il n'y en a a pas, c'est du galactic
+   private void setDefaultFrame() {
+      // Le frame est explicite => rien à faire
+      if( context.hasFrame() ) return;
+      
+      String path = context.getOutputPath();
+      String frame=null;
+
+      // Je vais essayer de récupérer le frame précédent depuis le fichier des propriétés
+      try {
+         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
+         MyProperties prop = new MyProperties();
+         File f = new File( propFile );
+         if( f.exists() ) {
+            FileInputStream in = new FileInputStream(propFile);
+            prop.load(in);
+            in.close();
+            String s =prop.getProperty(Constante.KEY_HIPS_FRAME);
+            if( s==null ) s =prop.getProperty(Constante.OLD_HIPS_FRAME);
+            
+            // Good trouvé !
+            if( s!=null && s.length()>0 ) frame=s;
+            
+            // pas de propriété hips_frame positionnée => galactic
+            else frame="galactic";
+            
+         // Pas trouvé ! si le HiPS existe déjà, alors c'est pas défaut du galactic
+         // sinon de l'equatorial
+         } else {
+            if( context.isExistingAllskyDir() ) frame="galactic";
+            else frame="equatorial";
+         }
+      } catch( Exception e ) { }
+      context.setFrameName(frame);
+   }
+
+
 
    /** Juste pour pouvoir exécuter skygen comme une commande script Aladin */
    public void executeAsync(String [] args) { new ExecuteAsyncThread(args); }

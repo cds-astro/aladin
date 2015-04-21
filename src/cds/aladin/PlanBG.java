@@ -1015,9 +1015,36 @@ public class PlanBG extends PlanImage {
    }
 
 
+   private String cacheName=null;   // Nom du cache (pour éviter de le reconstruire à chaque fois)
+
    /** Retourne le nom du répertoire cache pour ce HiPS */
    protected String getCacheName() {
-      return survey + version;
+      if( cacheName!=null ) return cacheName;
+
+      // On prend désormais l'identificateur (sans le préfixe ivo://) qu'il faut aller
+      // pêcher dans le fichier properties.
+      // on remplae les / et \ par des _
+      try {
+         MyProperties prop = new MyProperties();
+         String urlFile = url+"/"+Constante.FILE_PROPERTIES;
+         InputStream in = null;
+         try {
+            in=Util.openAnyStream(urlFile);
+            prop.load(in);
+         } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+
+         String s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+         if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
+         if( s.startsWith("ivo://") ) s=s.substring(6);
+         s = s.replace("/","_");
+         s = s.replace("\\","_");
+         cacheName = s;
+      } catch( Exception e ) {
+         cacheName = survey + version;
+      }
+
+      Aladin.trace(4,"getCacheName(): Cache name = ["+cacheName+"]");
+      return cacheName;
    }
 
    // Pour éviter les tests à chaque fois

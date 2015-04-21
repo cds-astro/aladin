@@ -19,8 +19,8 @@
 
 package cds.allsky;
 
-import healpix.newcore.HealpixBase;
-import healpix.newcore.Pointing;
+import healpix.essentials.HealpixBase;
+import healpix.essentials.Pointing;
 
 import java.awt.Polygon;
 import java.io.BufferedReader;

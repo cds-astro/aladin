@@ -480,7 +480,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          su = pbg.getProperty(Constante.KEY_BIB_REFERENCE_URL);
          if( s!=null || su!=null ) PropPanel.addCouple(p,"Bib. reference", new Anchor(s,40,null,su), g,c);
 
-         s = pbg.getProperty(Constante.KEY_PUBLISHER);
+         if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"Id: ", new JLabel(((PlanBG)plan).id), g,c);
+
+         s = pbg.getProperty(Constante.KEY_HIPS_PUBLISHER);
          su = pbg.getProperty(Constante.KEY_PUBLISHER_DID);
          if( su!=null ) {
             int i = su.indexOf('/',6);
@@ -488,9 +490,8 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          }
          if( s==null ) s=su;
          else if( su!=null && s.indexOf(su)<0 ) s=s+" ("+su+")";
-         if( s!=null ) PropPanel.addCouple(p,"Publisher", new JLabel(s), g,c);
+         if( s!=null ) PropPanel.addCouple(p,"HiPS publisher", new JLabel(s), g,c);
 
-         if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"Id: ", new JLabel(((PlanBG)plan).id), g,c);
 
          s = pbg.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
          if( s!=null ) PropPanel.addCouple(p,"Release date", new JLabel(s), g,c);

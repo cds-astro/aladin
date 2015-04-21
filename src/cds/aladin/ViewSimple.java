@@ -3269,7 +3269,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                   // point se trouve sur le début de la polyligne pour faire un
                   // polygone => changement de curseur
                   else if( !flagOnFirstLine
-                        && ( !(pref instanceof PlanBG) || ( pref instanceof PlanBG && pref.hasAvailablePixels() ))
+                        //                        && ( !(pref instanceof PlanBG) || ( pref instanceof PlanBG && pref.hasAvailablePixels() ))
                         && Ligne.isLigne(view.newobj)
                         && Ligne.isDebLigne(o)
                         && ((Ligne)o).plan==((Ligne)view.newobj).plan) {
@@ -6335,7 +6335,7 @@ g.drawString(s,10,100);
       if( !Aladin.NOGUI ) resetBlinkSource();
 
       // Si aucun clip, on prend au minimum la taille de la fenêtre
-      if( clip==null ) clip=rv;
+      if( clip==null ) clip=(Rectangle)rv.clone();
 
       //Positionnement des clips rect si necessaire
       if( gr!=null ) setClip(gr);

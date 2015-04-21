@@ -43,7 +43,7 @@ public class Constante {
    static public final String OLD_HIPS_PIXEL_CUT        = "pixelCut";
    static public final String KEY_HIPS_DATA_RANGE       = "hips_data_range";
    static public final String OLD_HIPS_DATA_RANGE       = "pixelRange";
-   static public final String KEY_PUBLISHER             = "hips_publisher";
+   static public final String KEY_HIPS_PUBLISHER        = "hips_publisher";
    static public final String KEY_PUBLISHER_ID          = "publisher_id";
    static public final String KEY_CLIENT_CATEGORY       = "client_category";
    static public final String OLD_CLIENT_CATEGORY       = "category";
@@ -95,7 +95,7 @@ public class Constante {
    static public final String OLD_CUBE_FIRSTFRAME       = "cubeFirstFrame";
    static public final String KEY_CUBE_DEPTH            = "hips_cube_depth";
    static public final String OLD_CUBE_DEPTH            = "cubeDepth";
-   static public final String KEY_DATAPRODUCT_SUBTYPE   = "color";
+   static public final String KEY_DATAPRODUCT_SUBTYPE   = "dataproduct_subtype";
    static public final String KEY_HIPS_FRAME            = "hips_frame";
    static public final String OLD_HIPS_FRAME            = "coordsys";
    static public final String KEY_HIPS_BUILDER          = "hips_builder";
@@ -114,6 +114,13 @@ public class Constante {
    static public final String KEY_BIB_REFERENCE         = "bib_reference";
    static public final String KEY_BIB_REFERENCE_URL     = "bib_reference_url";
    static public final String KEY_MOC_SKY_FRACTION      = "moc_sky_fraction";
+
+   static public final String KEY_HIPS_RGB_RED          = "hips_rgb_red";
+   static public final String OLD_HIPS_RGB_RED          = "red";
+   static public final String KEY_HIPS_RGB_GREEN        = "hips_rgb_green";
+   static public final String OLD_HIPS_RGB_GREEN        = "green";
+   static public final String KEY_HIPS_RGB_BLUE         = "hips_rgb_blue";
+   static public final String OLD_HIPS_RGB_BLUE         = "blue";
 
    static public final String OLD_ALADINVERSION         = "aladinVersion";
    static public final String OLD_LAST_MODIFICATON_DATE = "lastModified";

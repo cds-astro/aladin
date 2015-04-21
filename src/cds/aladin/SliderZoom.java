@@ -29,19 +29,19 @@ import java.awt.Graphics;
  */
 public class SliderZoom extends SliderPlusMoins {
    private Zoom zoom;
-   
+
    public SliderZoom(Zoom zoom) {
       super(zoom.aladin,zoom.aladin.getChaine().getString("ZOOM"),Zoom.MINSLIDER,Zoom.MAXSLIDER,1);
       setTooltip(aladin.getChaine().getString("ZOOMTIP"));
       this.zoom = zoom;
    }
-   
+
    void submit(int inc) {
       if( zoom==null ) return;
       if( inc==0 ) zoom.submit();
       else zoom.incZoom(inc);
    }
-   
+
    public void paintComponent(Graphics g) {
       if( aladin.calque.isFree() ) slider.setValue(slider.min);
       else {

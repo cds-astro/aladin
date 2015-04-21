@@ -75,7 +75,6 @@ final public class BuilderAllsky  extends Builder {
  }
    
    private void postJob() throws Exception {
-//      validateFrame();
       validateLabel();
       validateBitpix();
       context.writePropertiesFile();

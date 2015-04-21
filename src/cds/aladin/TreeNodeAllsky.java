@@ -142,11 +142,12 @@ public class TreeNodeAllsky extends TreeNode {
          try { target = new Coord(s); }
          catch( Exception e) { aladin.trace(3,"target error!"); target=null; }
       }
+      double div2=2;
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_FOV);
-      if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_INITIAL_FOV);
+      if( s==null ) { s = prop.getProperty(Constante.OLD_HIPS_INITIAL_FOV); div2=1; }
       if( s==null ) radius=-1;
       else {
-         try { radius=Server.getAngle(s, Server.RADIUSd); }
+         try { radius=(Server.getAngle(s, Server.RADIUSd)/60.)/div2; }
          catch( Exception e) { aladin.trace(3,"radius error!"); radius=-1; }
       }
 
@@ -415,8 +416,8 @@ public class TreeNodeAllsky extends TreeNode {
    protected String getVersion() { return version==null ? "" : version; }
 
    protected int getLosangeOrder() {
-      if( progen || cat || nside==-1 || maxOrder==-1) return -1;
-      return (int)Healpix.log2(nside) - maxOrder;
+      if( progen || cat || nside==-1 /*|| maxOrder==-1 */) return -1;
+      return (int)Healpix.log2(nside) /*- maxOrder*/;
    }
 
    protected boolean isLocal() { return local; }

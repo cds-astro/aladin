@@ -199,7 +199,7 @@ public final class HeaderFits {
             dis.readFully(buffer);
 //System.out.println(Thread.currentThread().getName()+":"+linesRead+":["+new String(buffer,0)+"]");
             key =  getKey(buffer);
-            if( linesRead==0 && !key.equals("SIMPLE") && !key.equals("XTENSION") ) throw new Exception();
+            if( linesRead==0 && !key.equals("SIMPLE") && !key.equals("XTENSION") ) throw new Exception("probably not a FITS file");
             sizeHeader+=fieldsize;
             linesRead++;
             if( key.equals("END" ) ) break;

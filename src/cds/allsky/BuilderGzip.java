@@ -108,7 +108,6 @@ public class BuilderGzip extends Builder {
             }
          }
       }
-      if( nbFile==0 ) context.warning("No tile found !");
       
    }
    

@@ -208,7 +208,9 @@ public class Context {
    public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
-   public void setFrameName(String frame) { this.frame= (frame.startsWith("G"))?Localisation.GAL:Localisation.ICRS; }
+   public void setFrameName(String frame) {
+      this.frame= (frame.equals("G")||frame.equals("galactic"))? Localisation.GAL:
+         frame.equals("E") || frame.equals("ecliptic") ? Localisation.ECLIPTIC : Localisation.ICRS; }
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
@@ -1333,26 +1335,28 @@ public class Context {
       int order = getOrder();
       if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
 
+      //      loadProperties();
+
       String label = getLabel();
       if( label==null || label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
 
-      setPropriete("#"+Constante.KEY_PUBLISHER_DID,"[Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)]");
+      setPropriete("#"+Constante.KEY_PUBLISHER_DID,"Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)");
       //      setPropriete("#"+Constante.KEY_PUBLISHER_ID,"[The IVOA ID for the data provider (ex: ivo://CDS)]");
       setPropriete(Constante.KEY_OBS_COLLECTION,label);
-      setPropriete("#"+Constante.KEY_OBS_TITLE,"[Dataset text title]");
-      setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"[Dataset text description]");
-      setPropriete("#"+Constante.KEY_OBS_ACK,"[Acknowledgement mention]");
-      setPropriete("#"+Constante.KEY_PROV_PROGENITOR,"[Provenance of the original data (free text)]");
-      setPropriete("#"+Constante.KEY_BIB_REFERENCE,"[Bibcode for bibliographic reference]");
-      setPropriete("#"+Constante.KEY_BIB_REFERENCE_URL,"[URL to bibliographic reference]");
-      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT,"[Copyright mention]");
-      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT_URL,"[URL to copyright page]");
-      setPropriete("#"+Constante.KEY_T_MIN,"[Start time in MJD]");
-      setPropriete("#"+Constante.KEY_T_MAX,"[Stop time in MJD]");
-      setPropriete("#"+Constante.KEY_EM_MIN,"[Start in spectral coordinates in meters]");
-      setPropriete("#"+Constante.KEY_EM_MAX,"[Stop in spectral coordinates in meters]");
-      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"[ex: Image/Gas-lines/Halpha/VTSS]");
-      setPropriete("#"+Constante.KEY_CLIENT_SORT_KEY,"[ex: 06-03-01]");
+      setPropriete("#"+Constante.KEY_OBS_TITLE,"Dataset text title");
+      setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
+      setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
+      setPropriete("#"+Constante.KEY_PROV_PROGENITOR,"Provenance of the original data (free text)");
+      setPropriete("#"+Constante.KEY_BIB_REFERENCE,"Bibcode for bibliographic reference");
+      setPropriete("#"+Constante.KEY_BIB_REFERENCE_URL,"URL to bibliographic reference");
+      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT,"Copyright mention");
+      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT_URL,"URL to copyright page");
+      setPropriete("#"+Constante.KEY_T_MIN,"Start time in MJD");
+      setPropriete("#"+Constante.KEY_T_MAX,"Stop time in MJD");
+      setPropriete("#"+Constante.KEY_EM_MIN,"Start in spectral coordinates in meters");
+      setPropriete("#"+Constante.KEY_EM_MAX,"Stop in spectral coordinates in meters");
+      //      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"ex: Image/Gas-lines/Halpha/VTSS");
+      //      setPropriete("#"+Constante.KEY_CLIENT_SORT_KEY,"ex: 06-03-01");
 
 
       setPropriete(Constante.KEY_HIPS_BUILDER,"Aladin/HipsGen "+Aladin.VERSION);
@@ -1360,17 +1364,24 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
 
       // Y a-t-il un publisher indiqué ?
-      if( publisher!=null ) setPropriete(Constante.KEY_PUBLISHER,publisher);
-      else setPropriete("#"+Constante.KEY_PUBLISHER,"[HiPS publisher (institute or person)]");
+      if( publisher!=null ) setPropriete(Constante.KEY_HIPS_PUBLISHER,publisher);
+      else setPropriete("#"+Constante.KEY_HIPS_PUBLISHER,"HiPS publisher (institute or person)");
 
-      setPropriete(Constante.KEY_HIPS_FRAME,getFrame()==Localisation.ICRS ? "equatorial" :
-         getFrame()==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
+      int f = getFrame();
+      setPropriete(Constante.KEY_HIPS_FRAME,f==Localisation.ICRS ? "equatorial" :
+         f==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
+
+      // Pour compatibilité - A virer en 2016
+      setPropriete(Constante.OLD_HIPS_FRAME, f==Localisation.ICRS ? "C" : f==Localisation.ECLIPTIC ? "E" : "G");
+
+
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
 
-      // L'url =>  NON, CAR SINON ELLE RISQUE D'ETRE RECOPIEE TELLE QUE LORS D'UN CLONAGE
-      //      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"[ex: http://yourHipsServer/"+label+"]");
+      // L'url
+      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
+      setPropriete("#"+Constante.KEY_HIPS_STATUS,"ex: public master clonable");
 
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
@@ -1379,13 +1390,13 @@ public class Context {
       if( fmt.indexOf("fits")>=0) {
          if( bitpix!=-1 ) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
          if( bitpixOrig!=-1 ) setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,bitpixOrig+"");
-         setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, isMap() ? "none" : "bilinear");
-         setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
-               skyvalName==null ? "none" : skyvalName.equals("true")?"hips_estimation":"fits_keyword");
+         //         setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, isMap() ? "none" : "bilinear");
+         //         setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
+         //               skyvalName==null ? "none" : skyvalName.equals("true")?"hips_estimation":"fits_keyword");
       }
-      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
-            isMap() ? "none" : mode==Mode.ADD ? "add" :
-               fading ? "border_fading" : mixing ? "mean" : "first");
+      //      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
+      //            isMap() ? "none" : mode==Mode.ADD ? "add" :
+      //               fading ? "border_fading" : mixing ? "mean" : "first");
       setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, "mean");
 
 
@@ -1424,8 +1435,10 @@ public class Context {
       if( isColor() ) setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"color");
 
       HealpixMoc m = moc!=null ? moc : mocIndex;
-      if( m!=null ) {
-         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( m.getCoverage() ) );
+      double skyFraction = m==null ? 0 : m.getCoverage();
+      if( skyFraction>0 ) {
+
+         setPropriete(Constante.KEY_MOC_SKY_FRACTION, Util.myRound( skyFraction ) );
 
          long tileSizeFits = Math.abs(bitpix/8) * CDSHealpix.pow2( getTileOrder()) * CDSHealpix.pow2( getTileOrder()) + 2048L;
          long tileSizeJpeg = 70000;
@@ -1438,7 +1451,7 @@ public class Context {
          long size = (fmt.indexOf("fits")>=0 ? fitsSize : 0)
                + (fmt.indexOf("jpeg")>=0 ? jpegSize : 0)
                + (fmt.indexOf("png")>=0 ? pngSize : 0)
-               + 4;
+               + 8;
 
          setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
       }
@@ -1451,15 +1464,13 @@ public class Context {
       //
 
       // Mise en place effective des proprétés
-      if( keyAddProp!=null ) {
-         String k[] = new String[ keyAddProp.size() ];
-         String v[] = new String[ k.length ];
-         for( int i=0; i<k.length; i++ ) {
-            k[i] = keyAddProp.get(i);
-            v[i] = valueAddProp.get(i);
-         }
-         updateProperties(k,v,true);
+      String k[] = new String[ keyAddProp==null ? 0 : keyAddProp.size() ];
+      String v[] = new String[ k.length ];
+      for( int i=0; i<k.length; i++ ) {
+         k[i] = keyAddProp.get(i);
+         v[i] = valueAddProp.get(i);
       }
+      updateProperties(k,v,true);
 
       // On en profite pour écrire le fichier index.html
       writeIndexHtml();
@@ -1540,6 +1551,9 @@ public class Context {
       replaceKey(prop,Constante.OLD_HIPS_TILE_FORMAT,Constante.KEY_HIPS_TILE_FORMAT);
       replaceKey(prop,Constante.OLD_HIPS_TILE_WIDTH,Constante.KEY_HIPS_TILE_WIDTH);
       replaceKey(prop,Constante.OLD_CLIENT_CATEGORY,Constante.KEY_CLIENT_CATEGORY);
+      replaceKey(prop,Constante.OLD_HIPS_RGB_RED,Constante.KEY_HIPS_RGB_RED);
+      replaceKey(prop,Constante.OLD_HIPS_RGB_GREEN,Constante.KEY_HIPS_RGB_GREEN);
+      replaceKey(prop,Constante.OLD_HIPS_RGB_BLUE,Constante.KEY_HIPS_RGB_BLUE);
 
       String s;
       // Certains champs seront en plus convertis
@@ -1564,8 +1578,9 @@ public class Context {
       if( s!=null && prop.getProperty(Constante.KEY_HIPS_FRAME)==null) {
          String v = s.equals("C") || s.equals("Q") ? "equatorial"
                : s.equals("E") ? "ecliptic" : "galactic";
-         prop.replaceKey(Constante.OLD_HIPS_FRAME, Constante.KEY_HIPS_FRAME);
-         prop.replaceValue(Constante.KEY_HIPS_FRAME, v);
+         //         prop.replaceKey(Constante.OLD_HIPS_FRAME, Constante.KEY_HIPS_FRAME);
+         //         prop.replaceValue(Constante.KEY_HIPS_FRAME, v);
+         prop.setProperty(Constante.KEY_HIPS_FRAME,v);
       }
       s = prop.getProperty(Constante.OLD_TARGET);
       if( s!=null ) {
@@ -1599,10 +1614,6 @@ public class Context {
       }
 
       prop.remove(Constante.OLD_ALADINVERSION);
-
-      s = prop.getProperty(Constante.KEY_HIPS_STATUS);
-      if( s==null ) setPropriete(Constante.KEY_HIPS_STATUS,"master");
-
    }
 
 
@@ -1641,7 +1652,7 @@ public class Context {
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
 
-            if( key.equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
+            if( key[i].equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
                // Conservation de la première date de processing si nécessaire
                if( prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null
                      && (v=prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE))!=null) {
@@ -1702,7 +1713,12 @@ public class Context {
             FileInputStream in = new FileInputStream(propFile);
             prop.load(in);
             in.close();
+
+            // Changement éventuel de vocabulaire
+            replaceKeys(prop);
          }
+
+
       }
       finally { releasePropertieFile(); }
    }

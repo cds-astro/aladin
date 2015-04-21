@@ -20,6 +20,12 @@
 
 package cds.aladin;
 
+import healpix.essentials.Moc;
+import healpix.essentials.MocQuery;
+import healpix.essentials.MocUtil;
+import healpix.essentials.Pointing;
+import healpix.essentials.Vec3;
+
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.awt.*;
@@ -52,7 +58,6 @@ import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
 import cds.tools.VOObserver;
-import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
 import cds.xml.XMLParser;
 
@@ -132,7 +137,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.143";
+   static public final    String VERSION = "v8.148";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -899,7 +904,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       ARITHM  = chaine.getString("MARITHM");
       MOC    =  chaine.getString("MMOC");
       MOCGENIMG   =chaine.getString("MMOCGENIMG");
-      MOCREGION = PROTOPREFIX + "Extract MOC from current region";
+      MOCREGION = BETAPREFIX + "Extract MOC from current region";
       MOCGENIMGS  =chaine.getString("MMOCGENIMGS");
       MOCGENCAT   =chaine.getString("MMOCGENCAT");
       MOCM     =chaine.getString("MMOCOP");
@@ -910,10 +915,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       MOCLOAD =chaine.getString("MMOCLOAD");
       MOCHIPS =chaine.getString("MMOCHIPS");
       HEALPIXARITHM = PROTOPREFIX + chaine.getString("MHEALPIXARITHM");
-      //       ADD     = chaine.getString("MADD");
-      //       SUB     = chaine.getString("MSUB");
-      //       MUL     = chaine.getString("MMUL");
-      //       DIV     = chaine.getString("MDIV");
       NORM    = chaine.getString("MNORM");
       BITPIX  = chaine.getString("MBITPIX");
       PIXEXTR = chaine.getString("MPIXEXTR");
@@ -3704,23 +3705,24 @@ DropTargetListener, DragSourceListener, DragGestureListener
       frameMocGenImgs.maj();
    }
 
+   /**Creation d'un MOC à partir du polygone sélectionné */
    protected void createMocRegion() {
       try {
          Obj o = view.vselobj.get(0);
          boolean poly = o instanceof Ligne && ((Ligne)o).isPolygone();
          if( !poly ) return;
 
-         ArrayList<double[]> cooList = new ArrayList<double[]>();
+         ArrayList<Vec3> cooList = new ArrayList<Vec3>();
          for( Ligne a = ((Ligne)o).getFirstBout(); a.finligne!=null; a=a.finligne ) {
-            cooList.add( new double [] { a.getRa(), a.getDec() } );
+            double theta = Math.PI/2 - Math.toRadians( a.dej );
+            double phi = Math.toRadians( a.raj );
+            cooList.add(new Vec3(new Pointing(theta,phi)));
          }
 
-         int order=10;
-         long nside = CDSHealpix.pow2(order);
-         long [] npix = CDSHealpix.query_region(nside, cooList);
-         if( npix.length==0 ) return;
-         HealpixMoc moc = new HealpixMoc();
-         for( int i=0; i<npix.length; i++ ) moc.add(order, npix[i]);
+         int order=13;
+         Moc m=MocQuery.queryGeneralPolygon (cooList,order);
+         String s = MocUtil.mocToStringJSON(m);
+         HealpixMoc moc = new HealpixMoc(s);
 
          calque.newPlanMOC(moc,"Moc reg");
       } catch( Exception e ) {
