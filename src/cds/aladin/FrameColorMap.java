@@ -165,11 +165,14 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       if( aladin.toolBox.tool[ToolBox.HIST].mode==Tool.DOWN ) {
          memoControl();
 
+         PlanImage p=aladin.calque.getFirstSelectedPlanImage();
+         if( pimg!=null && pimg.selected && !p.isPixel() ) p =pimg;  // On ne change pas de plan s'il est encore sélectionné
+
          //         PlanImage p=(PlanImage)aladin.calque.getPlanBase();
          //         if( pimg!=null && pimg.selected ) p =pimg;  // On ne change pas de plan s'il est encore sélectionné
 
-         ViewSimple v = aladin.view.getLastClickView();
-         PlanImage p = v.pref.isPixel() ? (PlanImage)v.pref : null;
+         //         ViewSimple v = aladin.view.getLastClickView();
+         //         PlanImage p = v.pref!=null && v.pref.isPixel() ? (PlanImage)v.pref : null;
 
          if( p!=null && p.flagOk ) {
 

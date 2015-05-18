@@ -31,6 +31,7 @@ import java.util.Vector;
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
+import cds.allsky.Context.JpegMethod;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
 
@@ -39,6 +40,7 @@ public class HipsGen {
    private File file;
    private boolean force=false;
    private boolean flagMode=false;
+   private boolean flagMethod=false;
    private boolean flagFading=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
@@ -179,6 +181,7 @@ public class HipsGen {
 
       } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
          if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
+         flagMethod=true;
          context.setMethod(val);
 
       } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
@@ -325,6 +328,13 @@ public class HipsGen {
             actions.add(Action.PNG);
             if( !flagMapFits ) actions.add(Action.DETAILS);
          }
+
+      }
+
+      // Ajustement de la méthode par défaut (moyenne pour les FITS, médiane pour les couleurs)
+      // à moins qu'elle n'ait été spécifiquement indiquée
+      if( context.isColor() && !flagMethod ) {
+         context.setJpegMethod( JpegMethod.MEDIAN );
       }
 
       if( context.getMode()==Mode.ADD  ) {
@@ -357,8 +367,8 @@ public class HipsGen {
       for( Action a : actions ) {
          context.info("Action => "+a+": "+a.doc());
       }
-      
-      
+
+
       // Positionnement du frame par défaut
       setDefaultFrame();
 
@@ -373,14 +383,14 @@ public class HipsGen {
          return;
       }
    }
-   
+
    // Positionnement du frame par défaut (equatorial, sauf s'il y a déjà
    // un HiPS existant, auquel cas il faut regarder dans ses propriétés,
    // et s'il n'y en a a pas, c'est du galactic
    private void setDefaultFrame() {
       // Le frame est explicite => rien à faire
       if( context.hasFrame() ) return;
-      
+
       String path = context.getOutputPath();
       String frame=null;
 
@@ -395,13 +405,13 @@ public class HipsGen {
             in.close();
             String s =prop.getProperty(Constante.KEY_HIPS_FRAME);
             if( s==null ) s =prop.getProperty(Constante.OLD_HIPS_FRAME);
-            
+
             // Good trouvé !
             if( s!=null && s.length()>0 ) frame=s;
-            
+
             // pas de propriété hips_frame positionnée => galactic
             else frame="galactic";
-            
+
          // Pas trouvé ! si le HiPS existe déjà, alors c'est pas défaut du galactic
          // sinon de l'equatorial
          } else {
@@ -470,7 +480,7 @@ public class HipsGen {
                   //          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
                   "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" +
                   "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-                  "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating compressed tiles (JPEG|PNG)" + "\n" +
+                  "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating colored compressed tiles (JPEG|PNG)" + "\n" +
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +

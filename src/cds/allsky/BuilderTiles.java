@@ -46,6 +46,7 @@ public class BuilderTiles extends Builder {
    protected double bzero;
    protected double bscale;
    protected double blank;
+   private Context.JpegMethod method;
 
    // Liste des Threads de calcul
    protected ArrayList<ThreadBuilder> threadList = new ArrayList<ThreadBuilder>();
@@ -364,6 +365,7 @@ public class BuilderTiles extends Builder {
       isColor = context.isColor();
       bitpix = context.getBitpix();
       coaddMode = context.getMode();
+      method = context.getJpegMethod();
 
       if( !isColor ) {
          bzero = context.getBZero();
@@ -623,6 +625,7 @@ public class BuilderTiles extends Builder {
       int w=context.getTileSide();
       double px[] = new double[4];
 
+
       boolean inTree = context.isInMocTree(order,npix);
       if( !inTree ||
             fils[0]==null && fils[1]==null && fils[2]==null && fils[3]==null) {
@@ -653,17 +656,85 @@ public class BuilderTiles extends Builder {
 
             // Couleur
             if( isColor ) {
+
                int pix=0;
                if( in!=null ) {
-                  for( int i=0;i<4; i++ ) {
-                     int gx = i==1 || i==3 ? 1 : 0;
-                     int gy = i>1 ? 1 : 0;
-                     int p = in.getPixelRGBJPG(x+gx,y+gy);
-                     pix=p;
-                     break;
-                     //	                        pix+=p/4;
+                  if( method==Context.JpegMethod.MEAN ) {
+                     int pixR=0,pixG=0,pixB=0;
+                     int nbPix=0;
+                     for( int i=0;i<4; i++ ) {
+                        int gx = i==1 || i==3 ? 1 : 0;
+                        int gy = i>1 ? 1 : 0;
+                        int p = in.getPixelRGBJPG(x+gx,y+gy);
+                        int alpha = (p>>24)&0xFF;
+                        if( alpha!=0 ) {
+                           nbPix++;
+                           pixR += (p>>16)&0xFF;
+                           pixG += (p>>8)&0xFF;
+                           pixB += p&0xFF;
+                        }
+                     }
+                     if( nbPix!=0 ) pix= 0xFF000000 | ((pixR/nbPix)<<16) | ((pixG/nbPix)<<8) | (pixB/nbPix);
+
+                  } else if( method==Context.JpegMethod.MEDIAN ) {
+                     int pixR[]=new int[4], pixG[]=new int[4], pixB[]=new int[4];
+                     int nbPix=0;
+                     for( int i=0;i<4; i++ ) {
+                        int gx = i==1 || i==3 ? 1 : 0;
+                        int gy = i>1 ? 1 : 0;
+                        int p = in.getPixelRGBJPG(x+gx,y+gy);
+                        int alpha = (p>>24)&0xFF;
+                        if( alpha!=0 ) {
+                           nbPix++;
+                           pixR[i] = (p>>16)&0xFF;
+                           pixG[i] = (p>>8)&0xFF;
+                           pixB[i] = p&0xFF;
+                        }
+                     }
+                     if( nbPix!=0 ) {
+                        int pR,pB,pG;
+
+                        // Mediane en Red
+                        if( pixR[0]>pixR[1] && (pixR[0]<pixR[2] || pixR[0]<pixR[3]) || pixR[0]<pixR[1] && (pixR[0]>pixR[2] || pixR[0]>pixR[3]) ) pR=pixR[0];
+                        else if( pixR[1]>pixR[0] && (pixR[1]<pixR[2] || pixR[1]<pixR[3]) || pixR[1]<pixR[0] && (pixR[1]>pixR[2] || pixR[1]>pixR[3]) ) pR=pixR[1];
+                        else if( pixR[2]>pixR[0] && (pixR[2]<pixR[1] || pixR[2]<pixR[3]) || pixR[2]<pixR[0] && (pixR[2]>pixR[1] || pixR[2]>pixR[3]) ) pR=pixR[2];
+                        else pR=pixR[3];
+
+                        // Mediane en Green
+                        if( pixG[0]>pixG[1] && (pixG[0]<pixG[2] || pixG[0]<pixG[3]) || pixG[0]<pixG[1] && (pixG[0]>pixG[2] || pixG[0]>pixG[3]) ) pG=pixG[0];
+                        else if( pixG[1]>pixG[0] && (pixG[1]<pixG[2] || pixG[1]<pixG[3]) || pixG[1]<pixG[0] && (pixG[1]>pixG[2] || pixG[1]>pixG[3]) ) pG=pixG[1];
+                        else if( pixG[2]>pixG[0] && (pixG[2]<pixG[1] || pixG[2]<pixG[3]) || pixG[2]<pixG[0] && (pixG[2]>pixG[1] || pixG[2]>pixG[3]) ) pG=pixG[2];
+                        else pG=pixG[3];
+
+                        // Médiane en Blue
+                        if( pixB[0]>pixB[1] && (pixB[0]<pixB[2] || pixB[0]<pixB[3]) || pixB[0]<pixB[1] && (pixB[0]>pixB[2] || pixB[0]>pixB[3]) ) pB=pixB[0];
+                        else if( pixB[1]>pixB[0] && (pixB[1]<pixB[2] || pixB[1]<pixB[3]) || pixB[1]<pixB[0] && (pixB[1]>pixB[2] || pixB[1]>pixB[3]) ) pB=pixB[1];
+                        else if( pixB[2]>pixB[0] && (pixB[2]<pixB[1] || pixB[2]<pixB[3]) || pixB[2]<pixB[0] && (pixB[2]>pixB[1] || pixB[2]>pixB[3]) ) pB=pixB[2];
+                        else pB=pixB[3];
+
+                        pix = 0xFF000000 | (pR<<16) | (pG<<8) | pB;
+                     }
+
+
+                  } else {
+                     pix = in.getPixelRGBJPG(x,y);
+
                   }
                }
+
+               //               int pix=0;
+               //               if( in!=null ) {
+               //                  for( int i=0;i<4; i++ ) {
+               //                     int gx = i==1 || i==3 ? 1 : 0;
+               //                     int gy = i>1 ? 1 : 0;
+               //                     int p = in.getPixelRGBJPG(x+gx,y+gy);
+               //                     pix=p;
+               //                     break;
+               //                     //	                        pix+=p/4;
+               //                  }
+               //               }
+
+
                out.setPixelRGBJPG(offX+(x>>>1), offY+(y>>>1), pix);
 
                // Normal

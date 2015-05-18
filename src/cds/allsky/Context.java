@@ -344,7 +344,7 @@ public class Context {
       return isColor() ? Constante.TILE_EXTENSION[ targetColorMode ] : ".fits";
    }
 
-   protected enum JpegMethod { MEDIAN, MEAN; }
+   protected enum JpegMethod { MEDIAN, MEAN, FIRST; }
 
    /**
     * @param jpegMethod the method to set

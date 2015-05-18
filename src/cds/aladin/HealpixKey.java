@@ -467,7 +467,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
             //            e.printStackTrace();
 
             // Le test sur FileNotFoundException ne peut suffire car en keepAlive il n'est pas généré
-            boolean notFoundError = e instanceof FileNotFoundException || e.getMessage().indexOf("HTTP response code: 40")>=0;
+            boolean notFoundError = e instanceof FileNotFoundException ||
+                  e.getMessage()!=null && e.getMessage().indexOf("HTTP response code: 40")>=0;
 
             // Peut-on retenter sur un autre site mirroir
             if( !notFoundError && !retry && planBG.checkSite(true) ) {

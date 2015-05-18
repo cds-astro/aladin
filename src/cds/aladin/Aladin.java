@@ -137,7 +137,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.148";
+   static public final    String VERSION = "v8.149";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -323,7 +323,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    private Banner banner=null;
 
    // Les objets associees a l'interface
-   FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
+   public FrameFullScreen fullScreen=null;   // Gère le Frame du mode plein écran, null si non actif
    public Bookmarks bookmarks;          // Gère les favoris
    View view;                    // Gere la "View frame"
    Status status;                // Gere la ligne de "Status"
@@ -6327,7 +6327,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       command.execLater("robot off");
 
       command.curTuto = null;
-
    }
 
 

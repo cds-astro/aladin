@@ -6413,8 +6413,11 @@ g.drawString(s,10,100);
          aladin.fullScreen.drawIcons(g);
 
          //         drawOverlayControls(g);
-         widgetInit();
-         if( widgetControl!=null ) widgetControl.paint(g);
+
+         if( Aladin.PROTO ) {
+            widgetInit();
+            if( widgetControl!=null ) widgetControl.paint(g);
+         }
       }
 
       // Affichage du buffer

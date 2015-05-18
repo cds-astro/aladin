@@ -20,7 +20,6 @@
 package cds.allsky;
 
 import cds.fits.Fits;
-import cds.moc.HealpixMoc;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
  * @author Standard Anaïs Oberto [CDS] & Pierre Fernique [CDS]
@@ -36,7 +35,7 @@ public class BuilderTree extends BuilderTiles {
       context.info("Creating "+context.getTileExt()+" tree and allsky (max depth="+context.getOrder()+")...");
       context.info("sky area to process: "+context.getNbLowCells()+" low level HEALPix cells");
       build();
-//      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
+      //      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
 
@@ -44,25 +43,25 @@ public class BuilderTree extends BuilderTiles {
    public void validateContext() throws Exception {
       validateOutput();
       if( !context.isExistingAllskyDir() ) throw new Exception("No tile found");
-      validateOrder(context.getOutputPath());  
-      
-//      if( !context.isColor() ) {
-//         validateCut();
-//         context.initParameters();
-//      } else {
-//         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
-//         context.initRegion();
-//      }
-      
+      validateOrder(context.getOutputPath());
+
+      //      if( !context.isColor() ) {
+      //         validateCut();
+      //         context.initParameters();
+      //      } else {
+      //         context.info("Building tree for a colored HiPS ("+context.getTileExt()+")");
+      //         context.initRegion();
+      //      }
+
       try { context.loadMoc(); }
       catch( Exception e ) {
-         (new BuilderMoc(context)).run(); 
+         (new BuilderMoc(context)).run();
          context.info("MOC rebuilt from low rhombs");
          context.loadMoc();
       }
       context.initRegion();
    }
-   
+
    private boolean first=true;
    protected void setConstantes(Fits f) {
       first=false;
@@ -70,7 +69,8 @@ public class BuilderTree extends BuilderTiles {
       context.blank  = blank  = f.blank;
       context.bzero  = bzero  = f.bzero;
       context.bscale = bscale = f.bscale;
-      context.info("Found in first low rhomb: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
+      if( context.bitpix!=0 ) context.info("Found in first low rhomb: BITPIX="+bitpix+" BLANK="+blank+" BZERO="+bzero+" BSCALE="+bscale);
+      else context.info("Colored pixels found in first low rhomb");
    }
 
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
@@ -83,5 +83,5 @@ public class BuilderTree extends BuilderTiles {
       else updateStat(0,1,0,duree,0,0);
       return f;
    }
-   
+
 }
