@@ -20,10 +20,18 @@
 
 package cds.aladin;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.HashSet;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import cds.tools.Util;
 
 /**
  * Le formulaire d'interrogation de l'arbre des Allskys
@@ -127,6 +135,64 @@ public class ServerHips extends ServerTree  {
 
       //      return j;
 
+   }
+
+
+   // Dernier champs interrogé sur le MocServer
+   private Coord oc=null;
+   private double osize=-1;
+
+   /** Interroge le MocServer pour connaître les HiPS disponibles dans le champ.
+    * Met à jour l'arbre en conséquence
+    */
+   protected void hipsUpdate() {
+      try {
+         BufferedReader in=null;
+         try {
+
+            ViewSimple v = aladin.view.getCurrentView();
+            if( v.isFree() ) return;
+            Coord c = v.getCooCentre();
+            double size = v.getTaille();
+            if( c.equals(oc) && size==osize ) return;
+            oc=c;
+            osize=size;
+
+            String params = "client_application=AladinDesktop&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
+            URL u = aladin.glu.getURL("MocServer", params, true);
+            Aladin.trace(4,"ServerHips.hipsUpdate: Contacting MocServer : "+u);
+            in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
+            String s;
+
+            // récupération de chaque IVORN concernée (1 par ligne)
+            HashSet<String> set = new HashSet<String>();
+            while( (s=in.readLine())!=null ) set.add( getId(s) );
+
+            // Nettoyage préalable de l'arbre
+            for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.ok=false;
+
+            // Positionnement des datasets dans le champ
+            for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) {
+               gSky.ok = set.contains(gSky.internalId);
+               //               if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
+            }
+
+            DefaultMutableTreeNode root = tree.getRoot();
+            tree.setOkTree(root);
+            validate();
+            repaint();
+
+         } finally{ if( in!=null ) in.close(); }
+      } catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
+
+   }
+
+   // Extraction du suffixe de l'IVORN pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
+   private String getId(String ivorn) {
+      if( ivorn.length()<6 ) return "";
+      int offset = ivorn.indexOf("/",6);
+      String id = ivorn.substring(offset+1);
+      return id;
    }
 
    @Override

@@ -937,8 +937,14 @@ public final class Calib  implements Cloneable {
 
             //if(flagadd == 1) WCSKeys.addElement("CD2_2    ") ;
             // Dans ce cas on recalcule les increments par pixel
-            incA = Math.sqrt(CD[0][0]*CD[0][0]+CD[0][1]*CD[0][1])*(CD[0][0]/Math.abs(CD[0][0])) ;
-            incD = Math.sqrt(CD[1][0]*CD[1][0]+CD[1][1]*CD[1][1])*(CD[1][1]/Math.abs(CD[1] [1])) ;
+
+// MODIF PIERRE POUR EVITER LA DIVISION PAR ZERO
+//                  incA = Math.sqrt(CD[0][0]*CD[0][0]+CD[0][1]*CD[0][1])*(CD[0][0]/Math.abs(CD[0][0])) ;
+//                  incD = Math.sqrt(CD[1][0]*CD[1][0]+CD[1][1]*CD[1][1])*(CD[1][1]/Math.abs(CD[1] [1])) ;
+            int sgnA = CD[0][0]<0 ? -1 : 1;
+            int sgnD = CD[1][1]<0 ? -1 : 1;
+            incA = Math.sqrt(CD[0][0]*CD[0][0]+CD[0][1]*CD[0][1])*sgnA ;
+            incD = Math.sqrt(CD[1][0]*CD[1][0]+CD[1][1]*CD[1][1])*sgnD ;
             // Et la rotation
             //                   if (CD[1][1] < 0)
             //                    rota = 180. + Math.acos(CD[0][0]/incA)*(180./Math.PI) ;

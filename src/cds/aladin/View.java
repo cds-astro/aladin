@@ -1853,6 +1853,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
 
       ViewSimple v = getCurrentView();
       if( v.locked || c==null ) return false;
+      setRepere(c);
       if( !force && !v.shouldMove(c.al,c.del) ) return false;
 
       if( v.pref instanceof PlanBG ) {
@@ -1863,7 +1864,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       double z = zoom<=0 ? v.zoom : aladin.calque.zoom.getNearestZoomFct(zoom);
       v.setZoomRaDec(z,c.al,c.del);
 
-      setRepere(c);
       showSource();  // On force le réaffichage de la source blink en cas de vues bougées
 
       aladin.calque.zoom.newZoom();
@@ -3885,6 +3885,7 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       startTimer();
    }
 
+
    /** Resolution d'une requête quickSimbad sur la position courante
     * afin de récupérer les informations de base sur l'objet sous
     * la souris */
@@ -3894,7 +3895,6 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       if( v==null || v.pref==null
             || v.pref.projd==null
             || v.lastMove==null  ) return;
-
 
       String s=null;
       ox = coo.x = v.lastMove.x;

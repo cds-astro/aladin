@@ -35,6 +35,7 @@ public class TreeNode  implements Comparator {
    String label;
    String path;
    String ordre;
+   boolean ok;      // le noeud est valide = affiché en noir, sinon en gris clair
 
    protected JCheckBox checkbox;
    private JPanel panel;
@@ -42,7 +43,7 @@ public class TreeNode  implements Comparator {
    protected GridBagConstraints gc;
    protected GridBagLayout gb;
    protected static Color background = Color.white;
-   
+
    public TreeNode() {}
 
    TreeNode(Aladin aladin, String id, String ordre, String label, String path) {
@@ -51,10 +52,12 @@ public class TreeNode  implements Comparator {
       this.label = label;
       this.path  = path;
       this.ordre = ordre==null ? "Z" : ordre;
+      this.ok=true;
       createPanel();
    }
 
    String getID() { return id; }
+
    void noCheckbox() { checkbox=null; }
    boolean hasCheckBox() { return checkbox!=null; }
    void setCheckBox(boolean f) {
@@ -65,27 +68,30 @@ public class TreeNode  implements Comparator {
       if( !hasCheckBox() ) return false;
       return checkbox.isSelected();
    }
-   
+
+   void setOk( boolean ok ) { this.ok=ok; };
+   boolean isOk() { return ok; }
+
    JPanel getPanel() { return panel; }
-   
+
    public void setForeground(Color fg) { checkbox.setForeground(fg); }
-   
+
    public Color getForeground() { return checkbox.getForeground(); }
 
    private void createPanel() {
       checkbox = new JCheckBox(label);
-//      checkbox.setBackground(background);
+      //      checkbox.setBackground(background);
       checkbox.setBorder(BorderFactory.createEmptyBorder());
       gc = new GridBagConstraints();
       gc.fill = GridBagConstraints.VERTICAL;
       gc.anchor = GridBagConstraints.CENTER;
       gc.gridx = GridBagConstraints.RELATIVE;
-//      gc.insets = new Insets(2,0,4,5);
+      //      gc.insets = new Insets(2,0,4,5);
       gc.insets = new Insets(0,0,0,5);
       gb = new GridBagLayout();
       panel = new JPanel(gb);
       panel.setOpaque(true);
-//      panel.setBackground(background);
+      //      panel.setBackground(background);
       gb.setConstraints(checkbox,gc);
       panel.add(checkbox);
    }
@@ -94,7 +100,7 @@ public class TreeNode  implements Comparator {
 
    @Override
    public String toString() { return label; }
-   
+
    /** Fournit un Comparator de mouvement pour les tris */
    static protected Comparator getComparator() { return new TreeNode(); }
 
@@ -106,7 +112,7 @@ public class TreeNode  implements Comparator {
       if( a2.ordre==null ) return 1;
       return a1.ordre.compareTo(a2.ordre);
    }
-   
+
    public boolean equals(Object o) {
       TreeNode a1= (TreeNode)o;
       return a1.id.equals(id);

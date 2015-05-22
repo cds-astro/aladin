@@ -23,12 +23,6 @@ package cds.aladin;
 import cds.astro.*;
 import cds.tools.Util;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
-
 /**
  * Manipulation des coordonnees
  *
@@ -51,92 +45,97 @@ public final class Coord {
    protected double xstand ;
    /** 2eme coordonnee standard */
    protected double ystand ;
-   
+
    // L'objet de traitement de la coordonnees
    static Astrocoo coo = new Astrocoo();
 
-  /** Creation */
+   /** Creation */
    public Coord() {}
    public Coord(double ra,double dej) { al=ra; del=dej; coo.set(al,del); }
-   
-  /** Creation et affection al,del en fonction d'une chaine sexagesimale
-   * ou degre */
+
+   /** Creation et affection al,del en fonction d'une chaine sexagesimale
+    * ou degre */
    public Coord(String sexa) throws Exception {
       coo.set(sexa);
       al  = coo.getLon();
       del = coo.getLat();
    }
 
-  /** Affichage sexagesimal de coordonnees passees en parametre.
-   * @param al ascension droite
-   * @param del declinaison
-   * @return la chaine contenant la forme sexagesimale
-   */
+   public boolean equals(Coord c) {
+      if( c==null ) return false;
+      return al==c.al && del==c.del;
+   }
+
+   /** Affichage sexagesimal de coordonnees passees en parametre.
+    * @param al ascension droite
+    * @param del declinaison
+    * @return la chaine contenant la forme sexagesimale
+    */
    public static String getSexa(double al, double del) { return getSexa(al,del,"s"); }
 
-  /** Affichage sexagesimal de coordonnees passees en parametre.
-   * @param al ascension droite
-   * @param del declinaison
-   * @param c le caractere seperateur des h,m,s,d
-   * @return la chaine contenant la forme sexagesimale
-   */
+   /** Affichage sexagesimal de coordonnees passees en parametre.
+    * @param al ascension droite
+    * @param del declinaison
+    * @param c le caractere seperateur des h,m,s,d
+    * @return la chaine contenant la forme sexagesimale
+    */
    public static String getSexa(double al, double del, String c) {
       Astrocoo coo = new Astrocoo();
       coo.set(al,del);
-      coo.setPrecision(Astrocoo.ARCSEC+1);      
+      coo.setPrecision(Astrocoo.ARCSEC+1);
       try{
          String o = "2s"+(!c.equals(" ")?c:"");
-//System.out.println("al="+al+" del="+del+" Options="+o+" coo="+coo.toString(o+"f"));
+         //System.out.println("al="+al+" del="+del+" Options="+o+" coo="+coo.toString(o+"f"));
          return coo.toString(o);
       } catch( Exception e ) { System.err.println(e); }
       return "";
    }
-   
-  /** Affichage sexagesimal de l'objet.
-   * @param c le caractere seperateur des h,m,s,d
-   * @return la chaine contenant la forme sexagesimale
-   */
+
+   /** Affichage sexagesimal de l'objet.
+    * @param c le caractere seperateur des h,m,s,d
+    * @return la chaine contenant la forme sexagesimale
+    */
    public String getSexa() { return getSexa(""); }
    public String getSexa(String c) { return getSexa(al,del,c); }
-   
-   public String toString() { return getSexa(); }
-   
 
-  /** Retourne RA en sexagesimal, separateur par defaut :
-   * @param sep le separateur des champs
-   * @return RA en sexagesimal
-   */
+   public String toString() { return getSexa(); }
+
+
+   /** Retourne RA en sexagesimal, separateur par defaut :
+    * @param sep le separateur des champs
+    * @return RA en sexagesimal
+    */
    public String getRA() { return getRA(':'); }
    public String getRA(char sep) {
       try {
          String s = getSexa(sep+"");
          int i = s.indexOf('+');
-         if( i==-1 ) i=s.indexOf('-');      
+         if( i==-1 ) i=s.indexOf('-');
          return s.substring(0,i-1);
       } catch( Exception e ) { }
       return "";
    }
 
-  /** Retourne DE en sexagesimal, separateur par defaut :
-   * @param sep le separateur des champs
-   * @return DE en sexagesimal
-   */
+   /** Retourne DE en sexagesimal, separateur par defaut :
+    * @param sep le separateur des champs
+    * @return DE en sexagesimal
+    */
    public String getDE() { return getDE(':'); }
    public String getDE(char sep) {
       try {
          String s = getSexa(sep+"");
          int i = s.indexOf('+');
-         if( i==-1 ) i=s.indexOf('-');      
+         if( i==-1 ) i=s.indexOf('-');
          return s.substring(i);
       } catch( Exception e ) { }
       return "";
    }
 
-  /** Affichage dans la bonne unite.
-   * Retourne un angle en décimal sous forme de chaine dans la bonne unite
-   * @param x l'angle (en degrés)
-   * @return l'angle dans une unite coherente + l'unite utilisee
-   */
+   /** Affichage dans la bonne unite.
+    * Retourne un angle en décimal sous forme de chaine dans la bonne unite
+    * @param x l'angle (en degrés)
+    * @return l'angle dans une unite coherente + l'unite utilisee
+    */
    public static String getUnit(double x) { return getUnit(x,false,false); }
    public static String getUnit(double x,boolean entier,boolean flagSurface) {
       if( x==0 ) return "";
@@ -148,19 +147,19 @@ public final class Coord {
       if( Math.abs(x)<1.0 ) { s="\""; x=x*fct; }
       if( Math.abs(x)<1.0 ) { s="mas"; x=x*fct1; }
       if( Math.abs(x)<1.0 ) { s="µas"; x=x*fct1; }
-      
+
       if( entier && ((int)x)!=0 ) return ((int)x)+s;
-      
+
       s=Util.myRound(x)+s;
 
       return s;
    }
 
-  /** Affichage dans la bonne unite (H:M:S).
-   * Retourne un angle en degres sous forme de chaine dans la bonne unite
-   * @param x l'angle
-   * @return l'angle dans une unite coherente + l'unite utilisee
-   */
+   /** Affichage dans la bonne unite (H:M:S).
+    * Retourne un angle en degres sous forme de chaine dans la bonne unite
+    * @param x l'angle
+    * @return l'angle dans une unite coherente + l'unite utilisee
+    */
    public static String getUnitTime(double x) {
       String s=null;
       if( x>=1.0 ) s="h";
@@ -172,10 +171,10 @@ public final class Coord {
       return s;
    }
 
-  /** Calcul d'un distance entre deux points reperes par leurs coord
-   * @param c1 premier point
-   * @param c2 deuxieme point
-   * @return La distance angulaire en degres
+   /** Calcul d'un distance entre deux points reperes par leurs coord
+    * @param c1 premier point
+    * @param c2 deuxieme point
+    * @return La distance angulaire en degres
    protected static double getDist1(Coord c1, Coord c2) {
       double dra = c2.al-c1.al;
       double dde = Math.abs(c1.del-c2.del);
@@ -184,7 +183,7 @@ public final class Coord {
       double drac = dra*Astropos.cosd(c1.del);
       return Math.sqrt(drac*drac+dde*dde);
    }
-   */
+    */
 
    public static double getDist(Coord c1, Coord c2) {
       return Coo.distance(c1.al,c1.del,c2.al,c2.del);

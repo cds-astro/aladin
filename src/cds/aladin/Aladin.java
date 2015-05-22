@@ -137,7 +137,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.149";
+   static public final    String VERSION = "v8.151";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -239,6 +239,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // true si on charge les bookmarks
    static boolean BOOKMARKS=true;
+
+   // true si on effectue un test de présence du réseau
+   static boolean TESTNETWORK=true;
 
    // true si on compare le numéro de version avec la version courante
    static boolean TESTRELEASE=true;
@@ -5102,6 +5105,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                || args[i].equals("-nosamp") )   { PLASTIC_SUPPORT=false; lastArg=i+1; }
          else if( args[i].equals("-noconsole") )   { CONSOLE=false; lastArg=i+1; }
          else if( args[i].equals("-noreleasetest") )   { TESTRELEASE=false; lastArg=i+1; }
+         else if( args[i].equals("-nonetworktest") )   { TESTNETWORK=false; lastArg=i+1; }
          else if( args[i].equals("-nohub") )       { NOHUB=true; lastArg=i+1; }
          else if( args[i].equals("-hub") )         { NOHUB=false; lastArg=i+1; }
          else if( args[i].equals("-noplugin") )    { NOPLUGIN=true; lastArg=i+1; }

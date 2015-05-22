@@ -88,7 +88,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // pour robot
    Server curServer, localServer, vizierServer,vizierArchives,vizierSurveys,
-   vizierBestof,discoveryServer, aladinServer, fovServer, almaFovServer, vizierSED;
+   vizierBestof,discoveryServer, aladinServer, fovServer, almaFovServer, vizierSED, hipsServer;
    JButton submit;
 
    // Les references aux autres objets
@@ -361,8 +361,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // liste
       if( !Aladin.OUTREACH ) sv = triServer(sv);
 
-      // L'arbre des allsky
-      sv.addElement(new ServerHips(aladin));
+      // L'arbre des HiPS
+      sv.addElement(hipsServer = new ServerHips(aladin));
 
       // L'acces local/url
       sv.addElement(localServer = new ServerFile(aladin));
@@ -995,8 +995,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                   && (server[i].target==null || server[i].target.getText().trim().length()!=0 ) ) return;
 
             server[i].setTarget(defTarget);
-            if( defTaille != null && defTaille.trim().length()!=0
-                  && server[i].modeRad != Server.NOMODE ) server[i].resolveRadius(defTaille, true);
+            try {
+               if( defTaille != null && defTaille.trim().length()!=0
+                     && server[i].modeRad != Server.NOMODE ) server[i].resolveRadius(defTaille, true);
+            } catch( Exception e ) {
+               if( aladin.levelTrace>=3 ) e.printStackTrace();
+            }
 
    }
 
@@ -1112,6 +1116,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !isVisible() ) setVisible(true);
       super.toFront();
    }
+
+
 
    /** retourne l'indice d'un serveur */
    private int findIndiceServer(Server x) {
@@ -1296,4 +1302,48 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( name.equalsIgnoreCase("aladin") ) return cl.getLocation( buttons[ALADIN], this);
       return null;
    }
+
+
+   public void show() {
+      super.show();
+      startHipsUpdater();
+   }
+
+   public void hide() {
+      stopHipsUpdater();
+      super.hide();
+   }
+
+   private Thread threadUpdater=null;
+   private boolean encore=true;
+
+   private void startHipsUpdater() {
+      if( threadUpdater==null ) {
+         threadUpdater = new Updater("HipsUpdater");
+         threadUpdater.start();
+      } else encore=true;
+   }
+
+   private void stopHipsUpdater() { encore=false; }
+
+   class Updater extends Thread {
+      public Updater(String s) { super(s); }
+
+      public void run() {
+         encore=true;
+         //         System.out.println("Hips updater running");
+         while( encore ) {
+            try {
+               //               System.out.println("Hips updater checking...");
+               ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
+               Thread.currentThread().sleep(1000);
+            } catch( Exception e ) { }
+         }
+         //         System.out.println("Hips updater stopped");
+         threadUpdater=null;
+      }
+   }
+
+
+
 }

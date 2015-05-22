@@ -21,14 +21,10 @@
 package cds.aladin;
 
 import java.awt.*;
-import java.awt.event.MouseEvent;
 import java.util.*;
 
 import javax.swing.*;
 import javax.swing.tree.*;
-
-import cds.aladin.Pcat.PlanObjetIterator;
-import cds.tools.Util;
 
 /**
  * Formulaire d'interrogation sous la forme d'un arbre
@@ -82,14 +78,14 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
          l.setBounds(30,y,440, 20); y+=20;
          add(l);
       }
-      
+
       // Ajout en fin de formulaire si nécessaire
       y = addTailPanel(y);
 
       modeCoo = COO|SIMBAD;
       modeRad = RADIUS;
    }
-   
+
    /** A surcharger si on veut compléter la fin du formulaire (voir par exemple ServerAllsky) */
    protected int addTailPanel(int y) {return y; }
 
@@ -102,7 +98,7 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
 
    @Override
    public void show() {
-     initTree();
+      initTree();
       super.show();
    }
 
@@ -113,15 +109,34 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
    /** Interrogation */
    @Override
    public void submit() { tree.submit(); }
-   
+
    public Iterator<TreeNode> iterator() { return tree.iterator(); }
-   
+
    class TreeForServer extends MyTree {
-      
+
       TreeForServer(Aladin aladin) { super(aladin); }
 
       protected void warning() {
          aladin.warning(aladin.dialog,WNEEDCHECK,1);
+      }
+
+      /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
+      protected boolean setOkTree(DefaultMutableTreeNode node) {
+         TreeNode gSky = (TreeNode) node.getUserObject();
+         if( node.isLeaf() )  return gSky.isOk();
+
+         boolean rep=false;
+         DefaultMutableTreeNode subNode = null;
+         //         System.out.println("setOkTree "+node+" #subnode="+node.getChildCount());
+         Enumeration e = node.children();
+         while( e.hasMoreElements() ) {
+            subNode = (DefaultMutableTreeNode) e.nextElement();
+            if( setOkTree(subNode) ) rep=true;
+         }
+
+         gSky.setOk(rep);
+         //         System.out.println("*** "+gSky+" => "+rep);
+         return rep;
       }
    }
 }
