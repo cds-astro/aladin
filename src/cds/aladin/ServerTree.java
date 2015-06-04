@@ -120,6 +120,13 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
          aladin.warning(aladin.dialog,WNEEDCHECK,1);
       }
 
+
+      // EN ATTENDANT QUE CELA SOIT ENLEVE DU GLU
+      protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
+         if( noeud.path.startsWith("Progressive catalog")) return;
+         super.createTreeBranch(node,noeud, opos);
+      }
+
       /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
       protected boolean setOkTree(DefaultMutableTreeNode node) {
          TreeNode gSky = (TreeNode) node.getUserObject();

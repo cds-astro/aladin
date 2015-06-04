@@ -412,8 +412,8 @@ public class HipsGen {
             // pas de propriété hips_frame positionnée => galactic
             else frame="galactic";
 
-         // Pas trouvé ! si le HiPS existe déjà, alors c'est pas défaut du galactic
-         // sinon de l'equatorial
+            // Pas trouvé ! si le HiPS existe déjà, alors c'est pas défaut du galactic
+            // sinon de l'equatorial
          } else {
             if( context.isExistingAllskyDir() ) frame="galactic";
             else frame="equatorial";
@@ -480,7 +480,7 @@ public class HipsGen {
                   //          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
                   "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" +
                   "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-                  "   method=m           Method (MEDIAN|MEAN) (default MEDIAN) for aggregating colored compressed tiles (JPEG|PNG)" + "\n" +
+                  "   method=m           Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored compressed tiles (JPEG|PNG)" + "\n" +
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +

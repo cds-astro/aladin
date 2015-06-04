@@ -52,6 +52,7 @@ public class TreeNodeAllsky extends TreeNode {
    public String hpxParam;      // Les paramètres propres à HEALPIX
    public String version="";    // Le numéro de version du survey
    public String aladinProfile; // profile de l'enregistrement GLU (notamment "localdef")*
+   private String skyFraction;  // Fraction du ciel (0..1)
    public String aladinLabel;
    public int minOrder=-1;      // Min order Healpix
    public int maxOrder=-1;      // Max order Healpix
@@ -126,6 +127,7 @@ public class TreeNodeAllsky extends TreeNode {
       copyrightUrl = prop.getProperty(Constante.KEY_DATA_COPYRIGHT_URL);
       if( copyrightUrl==null ) copyrightUrl = prop.getProperty(Constante.OLD_DATA_COPYRIGHT_URL);
       useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.OLD_USECACHE,"True") );
+      skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
 
       s = prop.getProperty(Constante.KEY_HIPS_INITIAL_RA);
       if( s!=null) {
@@ -287,7 +289,7 @@ public class TreeNodeAllsky extends TreeNode {
 
    public TreeNodeAllsky(Aladin aladin,String actionName,String id,String aladinMenuNumber, String url,String aladinLabel,
          String description,String verboseDescr,String ack,String aladinProfile,String copyright,String copyrightUrl,String path,
-         String aladinHpxParam) {
+         String aladinHpxParam,String skyFraction) {
       super(aladin,actionName,aladinMenuNumber,aladinLabel,path);
       this.aladinLabel  = aladinLabel;
       this.url          = url;
@@ -299,6 +301,7 @@ public class TreeNodeAllsky extends TreeNode {
       this.hpxParam     = aladinHpxParam;
       this.aladinProfile= aladinProfile;
       this.internalId   = id;
+      this.skyFraction  = skyFraction;
 
       if( this.url!=null ) {
          char c = this.url.charAt(this.url.length()-1);
@@ -355,6 +358,7 @@ public class TreeNodeAllsky extends TreeNode {
       if( url!=null && !url.startsWith("http") && !url.startsWith("ftp") ) useCache=false;
 
       if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
+      setMoc();
 
       //      Aladin.trace(3,this.toString1());
    }
@@ -503,6 +507,33 @@ public class TreeNodeAllsky extends TreeNode {
    protected void reset() {
       truePixelsSet=false;
    }
+
+   void setMoc() {
+      if( skyFraction==null || skyFraction.equals("1") ) return;
+
+      JButton b = new JButton(" (get Moc)");
+      b.setFont(b.getFont().deriveFont(Font.ITALIC));
+      b.setForeground(Color.blue);
+      b.setBackground(background);
+      b.setContentAreaFilled(false);
+      b.setBorder( BorderFactory.createMatteBorder(0, 0, 1, 0, Color.blue) );
+      b.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { loadMoc(); }
+      });
+      gc.insets.bottom=7;
+      gb.setConstraints(b,gc);
+      getPanel().add(b);
+   }
+
+   void loadMoc() {
+      MyInputStream mis = null;
+      try {
+         mis = Util.openAnyStream( getUrl()+"/Moc.fits" );
+         aladin.calque.newPlanMOC(mis,label+" MOC");
+      }
+      catch( Exception e) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+   }
+
 
    void setUrl(String url) { this.url=url; }
    void setCopyright(String copyright) {

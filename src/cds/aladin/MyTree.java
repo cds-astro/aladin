@@ -142,7 +142,17 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
     */
    protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
       int pos;
-      String label = (pos=noeud.path.indexOf('/',opos))<0 ? noeud.path.substring(opos) : noeud.path.substring(opos,pos);
+
+      // On découpe par "/" mais sans prendre en compte "\/"
+      int index=opos;
+      do  {
+         pos=noeud.path.indexOf('/',index);
+         index=pos;
+         if( pos>1 && noeud.path.charAt(pos-1)=='\\') index++;
+         else index=-1;
+      } while( index!=-1 );
+
+      String label = pos<0 ? noeud.path.substring(opos) : noeud.path.substring(opos,pos);
       ((TreeNode)node.getUserObject()).noCheckbox();
 
       try {
@@ -159,7 +169,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
             subNode = new DefaultMutableTreeNode( pos!=-1? new TreeNode(aladin,"",null,label,"") : noeud );
             node.add(subNode);
             if( pos!=-1 ) createTreeBranch(subNode, noeud, pos + 1);
-         } else createTreeBranch(subNode, noeud, pos + 1);
+         } else if( pos!=-1 ) createTreeBranch(subNode, noeud, pos + 1);
       } catch( Exception e ) {
          e.printStackTrace();
       }
@@ -184,6 +194,19 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       }
       return rep;
    }
+
+   /** Suppression d'une branche (désignée par son label) */
+   //   protected boolean removeTreeTrunk(DefaultMutableTreeNode node, String label ) {
+   //      DefaultMutableTreeNode subNode = null;
+   //      boolean rep=false;
+   //      Enumeration e = node.children();
+   //      while( e.hasMoreElements() ) {
+   //         subNode = (DefaultMutableTreeNode) e.nextElement();
+   //         TreeNode fils = (TreeNode) subNode.getUserObject();
+   //         if( fils.label!=null && fils.label.equals(label) ) { node.remove(subNode); rep=true;  break; }
+   //      }
+   //      return rep;
+   //   }
 
    /** Préparation de l'arbre afin qu'il "pré-ouvre" les branches terminales */
    protected void defaultExpand() {

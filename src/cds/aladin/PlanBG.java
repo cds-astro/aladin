@@ -866,12 +866,14 @@ public class PlanBG extends PlanImage {
       if( co!=null ) aladin.view.setRepere(co);
 
       // Chargement du MOC associé, avec ou sans création d'un plan dédié
-      if( loadMocNow ) {
-         (new Thread() { public void run() { loadMoc(); } }).start();
-      } else if( hasMoc() ) {
-         (new Thread() {
-            public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
-         }).start();
+      if( !(this instanceof PlanMoc) ) {
+         if( loadMocNow ) {
+            (new Thread() { public void run() { loadMoc(); } }).start();
+         } else if( hasMoc() ) {
+            (new Thread() {
+               public void run() { try{ loadInternalMoc(); } catch( Exception e ) {} }
+            }).start();
+         }
       }
    }
 

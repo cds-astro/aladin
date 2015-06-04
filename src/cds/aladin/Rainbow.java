@@ -399,43 +399,56 @@ public class Rainbow  extends JComponent implements Widget  {
 
          ColorModel cm = this.cm!=null ? this.cm : ((PlanImage)v.pref).getCM();
 
-
          // (Re)génération du buffer image si nécessaire
          int w = (int)Math.ceil(r.width/z)+1;
          int h = (int)Math.ceil(r.height/z)+1;
-         if( img==null || img.getWidth()!=w || img.getHeight()!=h ) {
-            img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            g = img.getGraphics();
-         }
+         //         if( img==null || img.getWidth()!=w || img.getHeight()!=h ) {
+         //            img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+         //            g = img.getGraphics();
+         //         }
 
          // Tracé de la table des couleurs dans le buffer image
          int y = 0;
          int x = 0;
          double currentPos = 0;
          double gap = (vertical ? r.width/z : r.height/z)/256.;
-         int larg = (int)(vertical ? r.height/z : r.width/z);
+         double larg = vertical ? r.height/z : r.width/z;
 
          // Le fond
          int j = vertical ? 255 : 0;
-         g.setColor( new Color(cm.getRed(j), cm.getGreen(j), cm.getBlue(j)) );
-         g.fillRect(0,0,(int)(r.width/z),(int)(r.height/z));
+         gr.setColor( new Color(cm.getRed(j), cm.getGreen(j), cm.getBlue(j)) );
+         //         g.fillRect(0,0,(int)(r.width/z),(int)(r.height/z));
+         gr.fillRect((int)(r.x/z),(int)(r.y/z),(int)(r.width/z),(int)(r.height/z));
 
          // La colormap
-         for( int i=0,incr=(int)currentPos; i<256; i++, currentPos+=gap ) {
+         double incr=currentPos;
+         for( int i=0; i<256; i++, currentPos+=gap ) {
             j = vertical ? i : 255-i;
-            g.setColor( new Color(cm.getRed(j), cm.getGreen(j), cm.getBlue(j)) );
-            for( ; incr<currentPos; incr++ ) {
-               if( vertical ) g.drawLine(incr,y,incr,y+larg);
-               else g.drawLine(x,incr,x+larg,incr);
+            gr.setColor( new Color(cm.getRed(j), cm.getGreen(j), cm.getBlue(j)) );
+            if( vertical ) {
+               gr.fillRect((int)(currentPos+r.x/z), (int)(y+r.y/z), (int)gap+2, (int)larg);
+               gr.drawRect((int)(currentPos+r.x/z), (int)(y+r.y/z), (int)gap+2, (int)larg);
+            } else {
+               gr.fillRect((int)(x+r.x/z), (int)(currentPos+r.y/z), (int)larg, (int)gap);
+               gr.drawRect((int)(x+r.x/z), (int)(currentPos+r.y/z), (int)larg, (int)gap);
             }
+
+            //            for( ; incr<currentPos; incr++ ) {
+            //               //               if( vertical ) g.drawLine(incr,y,incr,y+larg);
+            //               //               else g.drawLine(x,incr,x+larg,incr);
+            //               if( vertical ) gr.drawLine((int)(incr+r.x/z),(int)(y+r.y/z),(int)(incr+r.x/z),(int)(y+larg+r.y/z));
+            //               else gr.drawLine((int)(x+r.x/z),(int)(incr+r.y/z),(int)(x+larg+r.x/z),(int)(incr+r.y/z));
+            //
+            //            }
          }
 
          // Le bord
-         g.setColor(Color.black);
-         g.drawRect(0,0,(int)(r.width/z),(int)(r.height/z));
+         gr.setColor(Color.black);
+         //         gr.drawRect(0,0,(int)(r.width/z),(int)(r.height/z));
+         gr.drawRect((int)(r.x/z),(int)(r.y/z),(int)(r.width/z),(int)(r.height/z));
 
          // Tracé effective de la table des couleurs
-         gr.drawImage(img,(int)(r.x/z),(int)(r.y/z),aladin);
+         //         gr.drawImage(img,(int)(r.x/z),(int)(r.y/z),aladin);
 
          // L'axe
          gr.setColor(Color.black);

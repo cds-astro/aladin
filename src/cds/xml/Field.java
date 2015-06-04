@@ -21,8 +21,6 @@
 package cds.xml;
 
 import java.util.Hashtable;
-import java.util.regex.Pattern;
-
 import cds.tools.Util;
 
 /** Field description according to the Astrores XML standard.
@@ -89,12 +87,12 @@ final public class Field {
 
    /** link type */
    public String refValue;
-   
+
    /** null value */
    public String nullValue;
 
    /** true if it is a RA or DE field */
-//   public boolean coo;
+   //   public boolean coo;
 
    /** Column size (edition only) */
    public int columnSize=10;
@@ -103,13 +101,13 @@ final public class Field {
    static public final int RA=1,DE=2,PMRA=3,PMDE=4,X=5,Y=6;
    static public final String [] COOSIGN = { "", "RA","DE","PMRA","PMDE","X","Y" };
    public int coo;
-   
+
    static public final int FREQ=1,FLUX=2,FLUXERR=3,SEDID=4;
    static public final String SEDLABEL[] = { "","SED_FREQ","SED_FLUX","SED_FLUXERR","SED_SEDID" };
    public int sed;
 
-//   /** True if it is the DE coordinate field */
-//   public boolean isDE;
+   //   /** True if it is the DE coordinate field */
+   //   public boolean isDE;
 
    /** XML internal reference, typically for coordinate frame reference */
    public String ref;
@@ -122,16 +120,16 @@ final public class Field {
 
    // Pattern pour l'extration de la valeur du champ en fonction d'une série d'expression régulière *.
    public String hpxFinderPattern;
-   
+
    static public final int UNSORT = 0;
    static public final int SORT_ASCENDING  = 1;
    static public final int SORT_DESCENDING = 2;
-//   static public final int HISTO = 3;
+   //   static public final int HISTO = 3;
 
-  /** Field object creation.
-   * @param atts Hashtable of XML attributs (ID, UCD-ucd, format, unit, datatype, wdith, precision, type
-   *
-   */
+   /** Field object creation.
+    * @param atts Hashtable of XML attributs (ID, UCD-ucd, format, unit, datatype, wdith, precision, type
+    *
+    */
    public Field(Hashtable atts) {
       ID       =(String)atts.get("ID");
       name     =(String)atts.get("name");
@@ -146,7 +144,7 @@ final public class Field {
       datatype = typeVOTable2Fits((String)atts.get("datatype"));
       width    =(String)atts.get("width");
       nullValue=(String)atts.get("nullValue");
-//      if( width==null ) width="10";
+      //      if( width==null ) width="10";
       precision=(String)atts.get("precision");
       type     =(String)atts.get("type");
       arraysize=(String)atts.get("arraysize");
@@ -192,6 +190,7 @@ final public class Field {
          try {
             if( !arraysize.endsWith("*") ) n = Integer.parseInt(arraysize);
             else n = Integer.parseInt(arraysize.substring(0, arraysize.length()-1));
+            if( n>20 ) n=0;
          } catch( Exception e) { n=0; }
       }
       if( n==0 ) n=10;
@@ -207,37 +206,37 @@ final public class Field {
       if( name!=null && !name.equals(f.name) ) return false;
       if( unit!=null && !unit.equals(f.unit) ) return false;
       if( ucd!=null && !ucd.equals(f.ucd) ) return false;
-//      if( datatype!=null && !datatype.equals(f.datatype) ) return false;
+      //      if( datatype!=null && !datatype.equals(f.datatype) ) return false;
       return true;
    }
-   
+
    /** Retourne le tag de la colonne (RA, DE, PMRA, PMDE, X ou Y) */
    public int getFieldSignature() { return coo; }
-   
+
    public boolean isRa()   { return coo==RA; }
    public boolean isDe()   { return coo==DE; }
    public boolean isPmRa() { return coo==PMRA; }
    public boolean isPmDe() { return coo==PMDE; }
    public boolean isX()    { return coo==X; }
    public boolean isY()    { return coo==Y; }
-   
+
    /** Return the positional Field signature (RA, DE, PMRA, PMDE, X, Y ou "") */
    public String getCooSignature() { return COOSIGN[coo]; }
 
-  /** Field object creation.
-   * @param name Field name
-   */
+   /** Field object creation.
+    * @param name Field name
+    */
    public Field(String name) { this.name=name; }
 
- /** Add addtional informations.
-   * @param name  type of the information (name, description or title)
-   * @param value value of the information
-   */
+   /** Add addtional informations.
+    * @param name  type of the information (name, description or title)
+    * @param value value of the information
+    */
    public void addInfo(String name, String value) {
-           if( name.equals("DESCRIPTION") )
-                description=(description==null?"":description)+value;
+      if( name.equals("DESCRIPTION") )
+         description=(description==null?"":description)+value;
       else if( name.equals("TITLE") )
-                title=(title==null?"":title)+value;
+         title=(title==null?"":title)+value;
       else if( name.equals("href") )     href=value;
       else if( name.equals("gref") )     gref=value;
       else if( name.equals("refText") )  refText=value;
@@ -250,13 +249,13 @@ final public class Field {
    public boolean isNumDataType() {
       return datatype!=null && NUMDATATYPE.indexOf(datatype)>=0;
    }
-   
+
    /** Récupère le label du flag SED du champ, ou null si aucun sur ce champ */
    public String getSEDtag() {
       if( sed==0 || sed>=SEDLABEL.length ) return null;
       return SEDLABEL[sed];
    }
-   
+
    /** Positionne le flag SED en fonction du label passé en paramètre (provient d'une lecture d'une fichier AJ) */
    private void setSEDtag(String tag) {
       int i = Util.indexInArrayOf(tag, SEDLABEL, true);
@@ -306,20 +305,20 @@ final public class Field {
       if( s.equals("doubleComplex") ) return "M";
       return "E";
    }
-   
+
 
    public String toString() {
       return  (ID==null?       "":" ID="+ID)
-             +(name==null?     "":" name="+name)
-             +(unit==null?     "":" unit="+unit)
-             +(ucd==null?      "":" ucd="+ucd)
-             +(utype==null?    "":" utype="+utype)
-             +(datatype==null? "":" datatype="+datatype)
-             +(precision==null?"":" precision="+precision)
-             +(type==null?     "":" type="+type)
-             +" coo="+getCooSignature()
-             +(arraysize==null?"":" arraysize="+arraysize)
-             +(nullValue==null?"":" nullValue="+nullValue)
-             ;
+            +(name==null?     "":" name="+name)
+            +(unit==null?     "":" unit="+unit)
+            +(ucd==null?      "":" ucd="+ucd)
+            +(utype==null?    "":" utype="+utype)
+            +(datatype==null? "":" datatype="+datatype)
+            +(precision==null?"":" precision="+precision)
+            +(type==null?     "":" type="+type)
+            +" coo="+getCooSignature()
+            +(arraysize==null?"":" arraysize="+arraysize)
+            +(nullValue==null?"":" nullValue="+nullValue)
+            ;
    }
 }

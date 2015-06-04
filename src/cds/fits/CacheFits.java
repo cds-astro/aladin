@@ -27,6 +27,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
+import cds.aladin.Aladin;
 import cds.allsky.Constante;
 import cds.allsky.Context;
 import cds.tools.Util;
@@ -144,9 +145,9 @@ public class CacheFits {
     * @return l'objet Fits
     * @throws Exception
     */
-   public Fits getFits(String fileName) throws Exception { return getFits(fileName,FITS,true); }
-   public Fits getFits(String fileName,int mode,boolean flagLoad) throws Exception {
-      if( cacheOutOfMem )  return open(fileName,mode,flagLoad).fits;
+   public Fits getFits(String fileName) throws Exception { return getFits(fileName,FITS,true,true); }
+   public Fits getFits(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
+      if( cacheOutOfMem )  return open(fileName,mode,flagLoad,keepHeader).fits;
 
       synchronized( lockObj  ) {
          FitsFile f = find(fileName);
@@ -161,20 +162,20 @@ public class CacheFits {
          else {
             if( isOver() ) clean();
             try {
-               f=add(fileName,mode,flagLoad);
+               f=add(fileName,mode,flagLoad,keepHeader);
             } catch( OutOfMemoryError e ) {
                System.err.println("CacheFits.getFits("+fileName+") out of memory... clean and try again...");
                if( maxMem<0 ) maxMem*=2;
                else maxMem /= 2;
                try {
                   clean();
-                  f=add(fileName,mode,flagLoad);
+                  f=add(fileName,mode,flagLoad,keepHeader);
                } catch( OutOfMemoryError e1 ) {
                   System.err.println("CacheFits.getFits("+fileName+") out of memory... double error... removing the cache...");
                   e1.printStackTrace();
                   reset();
                   cacheOutOfMem=true;
-                  return open(fileName,mode,flagLoad).fits;
+                  return open(fileName,mode,flagLoad,keepHeader).fits;
                }
             }
             statNbOpen++;
@@ -190,8 +191,8 @@ public class CacheFits {
    }
 
    // Ajoute un fichier Fits au cache. Celui-ci est totalement chargé en mémoire
-   private FitsFile add(String name,int mode,boolean flagLoad) throws Exception {
-      FitsFile f = open(name,mode,flagLoad);
+   private FitsFile add(String name,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
+      FitsFile f = open(name,mode,flagLoad,keepHeader);
       map.put(name, f);
       return f;
    }
@@ -204,7 +205,7 @@ public class CacheFits {
    private boolean firstChangeOrig=true;
 
    // Ouvre un fichier
-   private FitsFile open(String fileName,int mode,boolean flagLoad) throws Exception {
+   private FitsFile open(String fileName,int mode,boolean flagLoad,boolean keepHeader) throws Exception {
       boolean flagChangeOrig=false;
 
       // Le fichier existe-t-il ? (suppression d'une éventuelle extension [x,y-wxh]
@@ -265,6 +266,8 @@ public class CacheFits {
       if ( context!=null && (context.skyvalName!=null || context.expTimeName!=null
             || context.pixelGood!=null || flagChangeOrig || context.dataArea!=Constante.SHAPE_UNKNOWN)) delSkyval(f.fits,flagChangeOrig);
 
+      // On ne conserve pas le HeaderFits
+      if( !keepHeader ) f.fits.freeHeader();
       return f;
    }
 
@@ -378,34 +381,48 @@ public class CacheFits {
       int width = f1.width;
       int height = f1.height;
 
+      // pour debug
+      int ox,oy,oz,ow,oh,od;
+      ox=oy=oz=ow=oh=od=-1;
+
       // Estimation au centre
-      int w=f1.width>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.width;
-      int h=f1.height>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.height;
-      int d=f1.depth>10 ? 10 : f1.depth;
-      int x = f.width/2-w/2, y=f.height/2-h/2, z=f.depth/3-d/3;
-      f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
-      if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
-      cut = f1.findAutocutRange();
+      try {
+         int w=f1.width>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.width;
+         int h=f1.height>WIDTHAUTOCUT ? WIDTHAUTOCUT : f1.height;
+         int d=f1.depth>10 ? 10 : f1.depth;
+         int x = f.width/2-w/2, y=f.height/2-h/2, z=f.depth/3-d/3;
 
-      //      System.out.println("cut central: "+cut[0]+" pour "+filename);
+         // Pour debug
+         ox=x; oy=y; oz=z; ow=w; oh=h; od=d;
 
-      // Si l'image est assez grande on va faire 4 autres mesures
-      // et prendre la médiane des 5
-      if( width>3*WIDTHAUTOCUT &&height>3*WIDTHAUTOCUT ) {
-         int gapx = (width-2*WIDTHAUTOCUT)/3;
-         int gapy = (height-2*WIDTHAUTOCUT)/3;
-         for( int i=0; i<4; i++ ) {
-            x = i==0 || i==2 ? gapx : width-WIDTHAUTOCUT-gapx;
-            y = i<2 ? gapy : height-WIDTHAUTOCUT-gapy;
-            f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
-            cut1[i] = new Cut();
-            cut1[i].cut = f1.findAutocutRange();
-            //            System.out.println("cut coin "+i+" en ("+x+","+y+"): "+cut1[i].cut[0]);
+         f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
+         if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
+         cut = f1.findAutocutRange();
+
+         //      System.out.println("cut central: "+cut[0]+" pour "+filename);
+
+         // Si l'image est assez grande on va faire 4 autres mesures
+         // et prendre la médiane des 5
+         if( width>3*WIDTHAUTOCUT &&height>3*WIDTHAUTOCUT ) {
+            int gapx = (width-2*WIDTHAUTOCUT)/3;
+            int gapy = (height-2*WIDTHAUTOCUT)/3;
+            for( int i=0; i<4; i++ ) {
+               x = i==0 || i==2 ? gapx : width-WIDTHAUTOCUT-gapx;
+               y = i<2 ? gapy : height-WIDTHAUTOCUT-gapy;
+               f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
+               cut1[i] = new Cut();
+               cut1[i].cut = f1.findAutocutRange();
+               //            System.out.println("cut coin "+i+" en ("+x+","+y+"): "+cut1[i].cut[0]);
+            }
+            cut1[4] = new Cut(); cut1[4].cut = new double[ cut.length ];
+            for( int j=0; j<cut.length; j++ ) cut1[4].cut[j]=cut[j];
+            Arrays.sort(cut1);
+            for( int j=0; j<cut.length; j++ ) cut[j] = cut1[2].cut[j];
          }
-         cut1[4] = new Cut(); cut1[4].cut = new double[ cut.length ];
-         for( int j=0; j<cut.length; j++ ) cut1[4].cut[j]=cut[j];
-         Arrays.sort(cut1);
-         for( int j=0; j<cut.length; j++ ) cut[j] = cut1[2].cut[j];
+      } catch( Exception e ) {
+         System.err.println("findAutocutRange exception: on "+filename+" width="+width+" height="+height+" box="+ox+","+oy+","+oz+" "+ow+"x"+oh+"x"+od);
+         e.printStackTrace();
+         throw e;
       }
       cutCache.put(filename,cut);
       //      context.info("Skyval estimation => "+ip(cut[0],f1.bzero,f1.bscale)+" for "+filename);
@@ -465,6 +482,7 @@ public class CacheFits {
       boolean expTimeTag=false;
       double [] shape=null;
       double marge=0;
+      boolean flagAuto=true;
 
       // Faut-il retrancher le fond du ciel, et par quelle méthode ?
       if( context.skyvalName!=null ) {
@@ -481,6 +499,7 @@ public class CacheFits {
                   skyval = (skyval - context.bZeroOrig)/context.bScaleOrig;
                   double cutOrig [] = context.getCutOrig();
                   skyval = skyval - cutOrig[0];
+                  flagAuto=false;
                } catch( Exception e ) {
                   double cut [] = findAutocutRange(f);
                   double cutOrig [] = context.getCutOrig();
@@ -511,7 +530,7 @@ public class CacheFits {
 
       if( !skyValTag && !expTimeTag && !flagChangeOrig && context.pixelGood==null && shape==null ) return;
 
-      //      System.out.println("SkyVal="+skyval+" => "+f.getFileNameExtended());
+      Aladin.trace(4,"SkyVal="+skyval+(flagAuto?"( estimation)":"( from header)")+" => "+f.getFileNameExtended());
 
 
       double blank = context.hasAlternateBlank() ? context.getBlankOrig() : f.blank;

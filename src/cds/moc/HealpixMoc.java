@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
  * A MOC is used to define a sky region by using HEALPix sky tesselation
  *
  * @authors Pierre Fernique [CDS], Martin Reinecke [Max Plank]
+ * @version 4.4 Jun 2015 - Empty MOC FITS bug fix
  * @version 4.2 oct 2014 - setMinLimitOrder() bug fix
  * @version 4.1 nov 2013 - pixelIterator 4.0 bug fix
  * @version 4.0 sep 2013 - upgrade for MOC WD 1.0 1 sept 2013 compliance
@@ -52,7 +53,7 @@ import java.util.StringTokenizer;
 public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
    /** Healpix MOC API version number */
-   static public final String VERSION = "4.3";
+   static public final String VERSION = "4.4";
 
    /** FITS encoding format */
    static public final int FITS  = 0;

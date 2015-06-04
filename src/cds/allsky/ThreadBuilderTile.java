@@ -944,8 +944,8 @@ final public class ThreadBuilderTile {
 
          // Mode normal
          else {
-            name = addFrameToName(name,frame);
-            fitsfile=context.cacheFits.getFits(name,mode,true);
+            if( context.depth>1 || frame>0 ) name = addFrameToName(name,frame);
+            fitsfile=context.cacheFits.getFits(name,mode,true,false);
          }
 
          // Faut-il associer un Polygon particulier
@@ -957,7 +957,6 @@ final public class ThreadBuilderTile {
          blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
       }
 
-
       // J'ai [ext;x,y-wxh] et je veux [ext;x,y,z-w*h*d]
       String addFrameToName(String name,int frame) throws Exception {
          Fits tmp = new Fits();
@@ -968,42 +967,6 @@ final public class ThreadBuilderTile {
       }
 
    }
-
-   //   class SrcFile {
-   //      Fits fitsfile;
-   //      boolean isOpened=false;
-   //      String name=null;
-   //      double blank;
-   //
-   //      SrcFile(String name ) {
-   //         this.name=name;
-   //      }
-   //
-   //      @Override
-   //      public String toString() {
-   //          return fitsfile.getFilename();
-   //      }
-   //
-   //      protected void open() throws Exception {
-   //         if( isOpened ) return;
-   //         int mode = (name.endsWith(".hhh") || name.indexOf(".hhh[")>0) ? CacheFits.HHH
-   //               : (name.endsWith(".jpg") || name.indexOf(".jpg[")>0) ? CacheFits.JPEG
-   //               : (name.endsWith(".png") || name.indexOf(".png[")>0) ? CacheFits.PNG
-   //               : CacheFits.FITS;
-   //
-   //         // Mode FITS couleur
-   //         if( mode==CacheFits.FITS && bitpix==0 ) fitsfile.loadFITS(name,true,true);
-   //
-   //         // Mode normal
-   //         else fitsfile=context.cacheFits.getFits(name,mode,true);
-   //
-   //         isOpened=true;
-   //         fitsfile.addUser();
-   //
-   //         blank = !hasAlternateBlank ? fitsfile.blank : blankOrig;
-   //      }
-   //
-   //  }
 
 
    int n =0;

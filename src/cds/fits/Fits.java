@@ -120,6 +120,7 @@ final public class Fits {
       long mem = 12 * 4 + 4 * 8;
       if( calib != null ) mem += calib.getMem();
       if( headerFits != null ) mem += headerFits.getMem();
+      if( headerFits0 != null ) mem += headerFits0.getMem();
       if( pixels != null ) mem += pixels.length;
       // if( pix8!=null ) mem+=pix8.length;
       if( rgb != null ) mem += 4*rgb.length;
@@ -129,8 +130,7 @@ final public class Fits {
    public static String FS = System.getProperty("file.separator");
 
    /** Création en vue d'une lecture */
-   public Fits() {
-   }
+   public Fits() { }
 
    /**
     * Création en vu d'une construction "manuelle"
@@ -1843,13 +1843,17 @@ final public class Fits {
       pixels = null;
       rgb = null;
       calib = null;
-      headerFits = null;
+      headerFits = headerFits0 = null;
       width = height = bitpix = 0;
       widthCell = heightCell = depthCell = xCell = yCell = zCell = ext = depth = 0;
       if( fDirectAccess!=null ) {
          try { fDirectAccess.close(); } catch( Exception e ) {}
          fDirectAccess=null;
       }
+   }
+
+   public void freeHeader() {
+      headerFits = headerFits0 = null;
    }
 
    @Override

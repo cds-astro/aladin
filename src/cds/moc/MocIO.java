@@ -26,10 +26,10 @@ import java.util.StringTokenizer;
 
 /** HEALPix Multi Order Coverage Map (MOC) IO routines
  * Compliante with IVOA MOC Working Draft 1.0 10 sept 2013
- * 
+ *
  * Example : HealpixMoc moc = new HealpixMoc();
  *           (new IO(moc).read(String filename);
- * 
+ *
  * @author Pierre Fernique [CDS]
  * @version 1.3 Sep 2013 - WD 1.0 10/9/2013 compliante
  * @version 1.2 Avr 2012 - JSON ASCII support
@@ -37,16 +37,16 @@ import java.util.StringTokenizer;
  * @version 1.0 Oct 2011 - Dedicated class (removed from HealpixMoc)
  */
 public final class MocIO {
-   
+
    static public final int FITS = HealpixMoc.FITS;   // standard format
    static public final int JSON = HealpixMoc.JSON;   // non standard alternative
    static public final int ASCII = HealpixMoc.ASCII; // idem que JSON
    static public final int OBSOLETE = HealpixMoc.OBSOLETE; // ASCII obsolete format
 
    static private String CR = System.getProperty("line.separator");
-   
+
    /** Standardized MOC FITS keyword list */
-   private String [][] FITSKEY = { 
+   private String [][] FITSKEY = {
          {"COORDSYS","Reference frame"},
          {"MOCORDER","MOC resolution (best order)"},
          {"MOCTOOL", "Name of the MOC generator"},
@@ -64,8 +64,8 @@ public final class MocIO {
    private byte firstChar=0; // Use for storing first character (mode detection)
 
    public MocIO(HealpixMoc m) { moc=m; }
-   
-   /** Read HEALPix MOC from a file. 
+
+   /** Read HEALPix MOC from a file.
     * Support standard FITS format and ASCII non standard alternatives (JSON, ASCII)
     * @param filename file name
     * @throws Exception
@@ -93,8 +93,8 @@ public final class MocIO {
    public void read(String filename,int mode) throws Exception {
       read(filename);
    }
-   
-   /** Read HEALPix MOC from a stream. 
+
+   /** Read HEALPix MOC from a stream.
     * Support standard FITS format and ASCII non standard alternatives (JSON, ASCII)
     * @param in input stream
     * @throws Exception
@@ -114,15 +114,15 @@ public final class MocIO {
     * @throws Exception
     * @deprecated see read(InputStream)
     */
-   public void read(InputStream in,int mode) throws Exception {      
+   public void read(InputStream in,int mode) throws Exception {
       if( mode==FITS ) readFits(in);
       else readASCII(in);
       moc.trim();
    }
-   
+
    /** Read MOC from an ASCII stream
     * Support simultaneously various ASCII format (OBSOLETE, JSON)
-    * 
+    *
     * OBSOLETE
     *    #MOCORDER MAX
     *    ORDER|NSIDE=xxx1
@@ -131,14 +131,14 @@ public final class MocIO {
     *    ...
     *    NSIDE|ORDER=xxx2
     *    ...
-    *    
+    *
     * JSON
     *    #MOCORDER MAX
     *    {"ORDER1":[nn1,nn2,...],
     *     "ORDER2":[nn
     *     ...
     *    }
-    *    
+    *
     * @param in input stream
     * @throws Exception
     */
@@ -158,21 +158,21 @@ public final class MocIO {
          parseASCIILine(s);
       }
    }
-   
+
    /** Read HEALPix MOC from an Binary FITS stream */
    public void readFits(InputStream in) throws Exception {
       moc.clear();
       moc.setCheckConsistencyFlag(false); // We assume that the Moc is already consistent
       HeaderFits header = new HeaderFits();
       header.readHeader(in);
-      
+
       //For compatibility
       String v = header.getStringFromHeader("HPXMOC");
       if( v!=null ) moc.setProperty("MOCORDER", v);
 
       try {
          header.readHeader(in);
-         
+
          //For compatibility
          v = header.getStringFromHeader("HPXMOC");
          if( v!=null ) moc.setProperty("MOCORDER", v);
@@ -182,7 +182,7 @@ public final class MocIO {
             String value = header.getStringFromHeader(key);
             if( value!=null ) moc.setProperty(key, value);
          }
-         
+
          int naxis1 = header.getIntFromHeader("NAXIS1");
          int naxis2 = header.getIntFromHeader("NAXIS2");
          String tform = header.getStringFromHeader("TFORM1");
@@ -193,7 +193,7 @@ public final class MocIO {
          createUniq((naxis1*naxis2)/nbyte,nbyte,buf);
       } catch( EOFException e ) { }
    }
-   
+
    /** Write HEALPix MOC to a file
     * @param filename name of file
     */
@@ -212,7 +212,7 @@ public final class MocIO {
       if( f.exists() ) f.delete();
       FileOutputStream fo = null;
       BufferedOutputStream fb = null;
-      
+
       try {
          fo = new FileOutputStream(f);
          fb = new BufferedOutputStream(fo);
@@ -225,7 +225,7 @@ public final class MocIO {
          else if( fo!=null ) fo.close();
       }
    }
-   
+
    /** Write HEALPix MOC to an output stream
     * @param out output stream
     */
@@ -243,14 +243,14 @@ public final class MocIO {
       if( mode==FITS ) writeFits(out);
       else writeJSON(out);
    }
-   
+
    private void testMocNotNull() throws Exception {
       if( moc==null ) throw new Exception("No MOC assigned (use setMoc(HealpixMoc))");
    }
-   
+
    private static final int MAXWORD=20;
    private static final int MAXSIZE=80;
-   
+
    /** Write HEALPix MOC to an output stream IN ASCII encoded format
     * @param out output stream
     * @deprecated use FITS format
@@ -287,7 +287,7 @@ public final class MocIO {
 
       writeASCIIFlush(out,res);
    }
-   
+
    /** Write HEALPix MOC to an output stream IN JSON encoded format
     * @param out output stream
     * @deprecated use FITS format
@@ -347,7 +347,7 @@ public final class MocIO {
     * @param out output stream
     */
    public void writeFits(OutputStream out) throws Exception { writeFits(out,false); }
-   
+
    /** @deprecated */
    public void writeFits(OutputStream out,boolean compressed) throws Exception {
       testMocNotNull();
@@ -396,13 +396,13 @@ public final class MocIO {
       // C'est ORDERING=NESTED|RING => ignoré
    }
 
-   // Parsing de la ligne COORDSYS=G|C 
+   // Parsing de la ligne COORDSYS=G|C
    private void setCoord(String s) throws Exception {
       int i = s.indexOf('=');
       moc.setCoordSys(s.substring(i+1));
    }
 
-  // Parse une ligne d'un flux (reconnait JSON et basic ASCII)
+   // Parse une ligne d'un flux (reconnait JSON et basic ASCII)
    private void parseASCIILine(String s) throws Exception {
       char a = s.charAt(0);
       if( a=='#' ) return;
@@ -480,12 +480,12 @@ public final class MocIO {
       out.write( getFitsLine("TTYPE1","UNIQ","HEALPix UNIQ pixel number") ); n+=80;
       out.write( getFitsLine("PIXTYPE","HEALPIX","HEALPix magic code") );    n+=80;
       out.write( getFitsLine("ORDERING","NUNIQ","NUNIQ coding method") );    n+=80;
-      
+
       for( int i=0; i<FITSKEY.length; i++ ) {
          String key = FITSKEY[i][0];
          String value = moc.getProperty(key);
          if( value==null ) continue;
-         out.write( getFitsLine(key,value,FITSKEY[i][1]) ); 
+         out.write( getFitsLine(key,value,FITSKEY[i][1]) );
          n+=80;
       }
       out.write( getEndBourrage(n) );
@@ -493,6 +493,7 @@ public final class MocIO {
 
    // Write the UNIQ FITS HDU Data
    private void writeData(OutputStream out,int nbytes,boolean compressed) throws Exception {
+      if( moc.getSize()<=0 ) return;
       if( compressed ) writeDataCompressed(out,nbytes);
       else writeData(out,nbytes);
    }
@@ -729,17 +730,17 @@ public final class MocIO {
 
          header = new Hashtable<String,String>(200);
          byte[] buffer = new byte[fieldsize];
-         
+
          while (true) {
             if( firstChar==0 ) readFully(dis,buffer);
-            
+
             // The first character may be already read to determine the mode
             else {
                buffer[0] = firstChar;
                firstChar=0;
                readFully(dis,buffer,1,buffer.length-1);
             }
-            
+
             key =  getKey(buffer);
             if( linesRead==0 && !key.equals("SIMPLE") && !key.equals("XTENSION") ) throw new Exception("Not a MOC FITS format");
             sizeHeader+=fieldsize;

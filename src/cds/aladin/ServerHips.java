@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashSet;
@@ -158,7 +159,7 @@ public class ServerHips extends ServerTree  {
             oc=c;
             osize=size;
 
-            String params = "client_application=AladinDesktop&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
+            String params = "client_application=AladinDesktop&hips_service_url=*&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
             URL u = aladin.glu.getURL("MocServer", params, true);
             Aladin.trace(4,"ServerHips.hipsUpdate: Contacting MocServer : "+u);
             in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
@@ -198,14 +199,6 @@ public class ServerHips extends ServerTree  {
    @Override
    protected boolean is(String s) { return s.equalsIgnoreCase(aladinLabel); }
 
-   @Override
-   protected void initTree() {
-      if( populated ) return;
-      populated=true;
-      tree.freeTree();
-      tree.populateTree( aladin.glu.vGluSky.elements() );
-   }
-
    public void submit() {
       String mode = fitsRadio!=null && fitsRadio.isSelected() ? ",fits":"";
       for( TreeNode n : tree ) {
@@ -225,20 +218,46 @@ public class ServerHips extends ServerTree  {
       reset();
 
 
-      //      int mode = fitsRadio!=null && fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG;
-      //      for( TreeNode n : tree ) {
-      //         if( !(n instanceof TreeNodeAllsky) ) continue;
-      //         ((TreeNodeAllsky)n).setDefaultMode( mode );
-      //      }
-      //      super.submit();
    }
 
-   //   public void submit(TreeNode n) {
-   //      TreeNodeAllsky gsky = (TreeNodeAllsky)n;
-   //      gsky.setDefaultMode( fitsRadio.isSelected() ? PlanBG.FITS : PlanBG.JPEG);
-   //
-   //      aladin.calque.newPlanBG(gsky, null, getTarget(false), getRadius(false) );
+   //   @Override
+   //   protected void initTree() {
+   //      if( populated ) return;
+   //      populated=true;
+   //      tree.freeTree();
+   //      tree.populateTree( aladin.glu.vGluSky.elements() );
    //   }
 
 
+   private boolean dynTree=false;
+   protected void initTree() {
+      if( dynTree ) return;
+      (new Thread("initTree") {
+         public void run() {
+            loadRemoteTree();
+            tree.populateTree(aladin.glu.vGluSky.elements());
+
+            // Suppression de la branche "Progressive catalog" (A virer lorsqu'ils disparaitront du Glu)
+            //            tree.removeTreeTrunk(tree.getRoot(), "Progressive catalog");
+            //            tree.defaultExpand();
+         }
+      }).start();
+   }
+
+   /** Chargement des descriptions de l'arbre */
+   protected void loadRemoteTree() {
+      if( dynTree ) return;
+      DataInputStream dis=null;
+      try {
+         dynTree=true;
+         Aladin.trace(3,"Loading Tree definitions...");
+         String params = "client_application=AladinDesktop&hips_service_url=*&fmt=glu&get=record";
+         String u = aladin.glu.getURL("MocServer", params, true).toString();
+         dis = new DataInputStream(aladin.cache.getWithBackup(u));
+         aladin.glu.loadGluDic(dis,0,false,true,false,false);
+
+      } catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
+      finally { if( dis!=null ) { try { dis.close(); } catch( Exception e) {} }
+      }
+   }
 }

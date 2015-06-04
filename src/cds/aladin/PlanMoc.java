@@ -177,7 +177,7 @@ public class PlanMoc extends PlanBGCat {
             }
             String c = moc.getCoordSys();
             frameOrigin = ( c==null || c.charAt(0)=='G' ) ? Localisation.GAL : Localisation.ICRS;
-
+            if( moc.getSize()==0 ) error="Empty MOC";
          }
          catch( Exception e ) {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
