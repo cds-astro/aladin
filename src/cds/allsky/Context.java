@@ -69,9 +69,10 @@ public class Context {
    protected String imgEtalon;               // Nom (complet) de l'image qui va servir d'étalon
    protected HeaderFits header=null;         // Entête FITS associée
    protected boolean isInputFile=false;      // true si le paramètre input concerne un fichier unique
-
-   protected int depth=1;                    // profondeur du cube (1 pour une image)
-   protected boolean depthInit=false;          // true si la profondeur du cube a été positionné
+   public int depth=1;                    // profondeur du cube (1 pour une image)
+   protected boolean depthInit=false;        // true si la profondeur du cube a été positionné
+   public double crpix3=0,crval3=0,cdelt3=0;    // paramètre pour un cube
+   public String bunit3=null;
    protected int [] hdu = null;              // Liste des HDU à prendre en compte
    public int bitpixOrig = -1;               // BITPIX des images originales
    protected double blankOrig= Double.NaN;   // Valeur du BLANK en entrée
@@ -145,6 +146,8 @@ public class Context {
       pixelRangeCut=null;
       depth=1;
       depthInit=false;
+      crpix3=crval3=cdelt3=0;
+      bunit3=null;
    }
 
    // Getters
@@ -179,6 +182,8 @@ public class Context {
    public double[] getCutOrig() throws Exception { return cutOrig; }
    public String getSkyval() { return skyvalName; }
    public boolean isColor() { return bitpixOrig==0; }
+   public boolean isCube() { return depth>1; }
+   public boolean isCubeCanal() { return crpix3!=0 || crval3!=0 || cdelt3!=0; }
    //   public boolean isBScaleBZeroSet() { return bscaleBzeroSet; }
    public boolean isInMocTree(int order,long npix)  { return moc==null || moc.isIntersecting(order,npix); }
    public boolean isInMoc(int order,long npix) { return moc==null || moc.isIntersecting(order,npix); }
@@ -412,6 +417,14 @@ public class Context {
       // Peut être s'agit-il d'un cube ?
       try {
          setDepth( fitsfile.headerFits.getIntFromHeader("NAXIS3") );
+
+         try {
+            crpix3 = fitsfile.headerFits.getDoubleFromHeader("CRPIX3");
+            crval3 = fitsfile.headerFits.getDoubleFromHeader("CRVAL3");
+            cdelt3 = fitsfile.headerFits.getDoubleFromHeader("CDELT3");
+            bunit3 = fitsfile.headerFits.getStringFromHeader("BUNIT3");
+         }catch( Exception e ) { crpix3=crval3=cdelt3=0; bunit3=null; }
+
       } catch( Exception e ) { setDepth(1); }
 
       // Il peut s'agit d'un fichier .hhh (sans pixel)
@@ -1426,7 +1439,14 @@ public class Context {
       if( depth>1 ) {
          setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"cube");
          setPropriete(Constante.KEY_CUBE_DEPTH,depth+"");
-         setPropriete(Constante.KEY_CUBE_FIRSTFRAME,"0");
+         setPropriete(Constante.KEY_CUBE_FIRSTFRAME,depth/2+"");
+
+         if( isCubeCanal() ) {
+            setPropriete(Constante.KEY_CUBE_CRPIX3,crpix3+"");
+            setPropriete(Constante.KEY_CUBE_CRVAL3,crval3+"");
+            setPropriete(Constante.KEY_CUBE_CDELT3,cdelt3+"");
+            setPropriete(Constante.KEY_CUBE_BUNIT3,bunit3+"");
+         }
 
          // Sinon c'est un HiPS image
       } else setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"image");

@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import cds.aladin.MyProperties;
-import cds.aladin.PlanBG;
 import cds.fits.Fits;
 import cds.tools.pixtools.Util;
 
@@ -131,7 +130,7 @@ public abstract class Builder {
       if( order==-1 || context instanceof ContextGui ) {
          context.info("Order retrieved from ["+path+"] => "+orderIndex);
          context.setOrder(orderIndex);
-      } else if( order!=orderIndex ) throw new Exception("Detected order ["+orderIndex+"] does not correspond to the param order ["+order+"]");
+      } else if( orderIndex!=-1 && order!=orderIndex ) throw new Exception("Detected order ["+orderIndex+"] does not correspond to the param order ["+order+"]");
    }
 
    /** Récupération de la profondeur (cube) */
@@ -163,7 +162,13 @@ public abstract class Builder {
          } catch( Exception e ) { context.warning("Propertie file problem => "+e.getMessage()); }
       }
 
-      if( context.depthInit && context.depth>1 ) context.info("Working on HiPS cube => depth="+context.depth);
+      if( context.depthInit && context.depth>1 ) {
+         String s="";
+         if( context.isCubeCanal() ) {
+            s=" (crpix3="+context.crpix3+" crval3="+context.crval3+" cdelt3="+context.cdelt3+")";
+         }
+         context.info("Working on HiPS cube => depth="+context.depth+s);
+      }
    }
 
    // Valide les cuts passés en paramètre, ou à défaut cherche à en obtenir depuis une image étalon
@@ -352,7 +357,7 @@ public abstract class Builder {
       return context.getFrameCode();
    }
 
-  protected String ip(double raw,double bzero,double bscale) {
+   protected String ip(double raw,double bzero,double bscale) {
       return cds.tools.Util.myRound(raw) + (bzero!=0 || bscale!=1 ? "/"+cds.tools.Util.myRound(raw*bscale+bzero) : "");
    }
 

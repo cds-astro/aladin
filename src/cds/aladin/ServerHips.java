@@ -159,7 +159,7 @@ public class ServerHips extends ServerTree  {
             oc=c;
             osize=size;
 
-            String params = "client_application=AladinDesktop&hips_service_url=*&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
+            String params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
             URL u = aladin.glu.getURL("MocServer", params, true);
             Aladin.trace(4,"ServerHips.hipsUpdate: Contacting MocServer : "+u);
             in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
@@ -236,10 +236,6 @@ public class ServerHips extends ServerTree  {
          public void run() {
             loadRemoteTree();
             tree.populateTree(aladin.glu.vGluSky.elements());
-
-            // Suppression de la branche "Progressive catalog" (A virer lorsqu'ils disparaitront du Glu)
-            //            tree.removeTreeTrunk(tree.getRoot(), "Progressive catalog");
-            //            tree.defaultExpand();
          }
       }).start();
    }
@@ -251,7 +247,7 @@ public class ServerHips extends ServerTree  {
       try {
          dynTree=true;
          Aladin.trace(3,"Loading Tree definitions...");
-         String params = "client_application=AladinDesktop&hips_service_url=*&fmt=glu&get=record";
+         String params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&fmt=glu&get=record";
          String u = aladin.glu.getURL("MocServer", params, true).toString();
          dis = new DataInputStream(aladin.cache.getWithBackup(u));
          aladin.glu.loadGluDic(dis,0,false,true,false,false);

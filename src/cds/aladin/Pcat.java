@@ -29,9 +29,6 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import cds.astro.Astrocoo;
-import cds.astro.Astropos;
-import cds.tools.Astrodate;
 import cds.tools.Util;
 import cds.xml.Field;
 import cds.xml.TableParser;
@@ -71,7 +68,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    Color c;			   // Couleur des objets par defaut
    int nbTable=0;
    int iz=-1;			   // Numero d'ordre du dernier zoom
-//   int nRa,nDec;           // Indice des columnes RA et DEC si connues, sinon -1
+   //   int nRa,nDec;           // Indice des columnes RA et DEC si connues, sinon -1
    int nId=-1;		       // Indice de la colonne de l'identificateur
    int nIdVraisemblance=0; // 10-nom commence par ID, 20-nom contient "name" ou "designation", 30-ucd=ID_main 40-ucd=meta.id,meta.main
    boolean badRaDecDetection;       // true si la détection des colonnes RA et DEC est plus qu'incertaine
@@ -96,20 +93,20 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       CATABORT = chaine.getString("POCATABORT");
    }
 
-  /** Creation de l'objet.
-   * @param plan Plan d'appartenance des objets
-   * @param c    Couleur par defaut
-   * @param calque,status,aladin References
-   */
+   /** Creation de l'objet.
+    * @param plan Plan d'appartenance des objets
+    * @param c    Couleur par defaut
+    * @param calque,status,aladin References
+    */
    protected Pcat(Plan plan,Color c,Calque calque,
-                       Status status,Aladin aladin) {
+         Status status,Aladin aladin) {
       this.aladin = aladin;
       this.status = status;
       this.calque = calque;
       this.plan = plan;
       this.c=c;                        // Couleur du plan
       nb_o = 0;
-//      nRa=nDec=-1;
+      //      nRa=nDec=-1;
    }
 
    protected void free() {
@@ -147,9 +144,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    // Nécessaire pour les planBGCat qui possèdent autant de PlanObjet que de HealpixKeyCat
    protected Projection [] projpcat = new Projection[ViewControl.MAXVIEW];
 
-  /** Projection de tous les objets en fonction du plan de reference courant.
-   * La projection n'est effective que si necessaire
-   */
+   /** Projection de tous les objets en fonction du plan de reference courant.
+    * La projection n'est effective que si necessaire
+    */
    protected void projection(ViewSimple v) {
       long t1 = Util.getTime();
 
@@ -162,9 +159,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       if( plan.proj[v.n]==proj && Projection.isOk(proj)
             && !(plan instanceof PlanBGCat)
             && projpcat[v.n]==proj   // Dans le cas d'un planBGCat
-         ) {
-//Aladin.trace(3,"NO Proj. ra/dec->XY (view "+v.n+") of \""+plan.label+"\" on \""
-//               +v+"\" => déjà fait !");
+            ) {
+         //Aladin.trace(3,"NO Proj. ra/dec->XY (view "+v.n+") of \""+plan.label+"\" on \""
+         //               +v+"\" => déjà fait !");
          drawnInViewSimple[v.n]=true;
          return;        // Deja fait
       }
@@ -189,8 +186,8 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       // Pour que les (x,y) soient recalcules dans la vue courante
       v.newView();
-//Aladin.trace(3,(proj==null?"Copie xy natif":"Proj. ra/dec")+"->XY (view "+v.n+") of \""+plan.label+"\" on \""
-//               +v+"/"+(plan.projd==null?"null":plan.projd.label)+"\"");
+      //Aladin.trace(3,(proj==null?"Copie xy natif":"Proj. ra/dec")+"->XY (view "+v.n+") of \""+plan.label+"\" on \""
+      //               +v+"/"+(plan.projd==null?"null":plan.projd.label)+"\"");
       drawnInViewSimple[v.n]=true;
 
       long t2 = Util.getTime();
@@ -198,12 +195,12 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       plan.statNbComputing++;
    }
 
-  /** Positionne les coordonnees RA/DE de tous les objets du plan (CATALOG)
-   * en fonction des coordonnees x,y
-   */
+   /** Positionne les coordonnees RA/DE de tous les objets du plan (CATALOG)
+    * en fonction des coordonnees x,y
+    */
    protected void setCoord(Projection proj) {
       if( !plan.hasXYorig ) {
-System.err.println("Recalibration on a no-XYlocked planed !!! Aborted");
+         System.err.println("Recalibration on a no-XYlocked planed !!! Aborted");
          return;
       }
 
@@ -211,7 +208,7 @@ System.err.println("Recalibration on a no-XYlocked planed !!! Aborted");
       if( v==null ) {
          System.out.println("Y a un probs !");
       }
-Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\"");
+      Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\"");
       for( int i=0; i<nb_o; i++ ) {
          Position p = (Position)o[i];
          p.xv[v.n] = p.x;
@@ -234,13 +231,13 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
 
    /** L'interface AstroRes */
    public void startResource(String name) {
-   	  if( plan.label.equals("PLASTIC") && name!=null && name.length()>0 ) {
-      	plan.setLabel(name);
+      if( plan.label.equals("PLASTIC") && name!=null && name.length()>0 ) {
+         plan.setLabel(name);
       }
       catalog=plan.label;
       table=plan.label;
    }
-   
+
    /** Interface pour le positionnement d'un filtre dédié */
    public void setFilter(String filter) {
       plan.addFilter(filter);
@@ -271,9 +268,9 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
       postJob(rajc,dejc,rm,true);
    }
 
-  /** Post treatement du chargement d'objet (source) pour mettre a jour
-   * le type de forme par defaut et la projection par defaut
-   */
+   /** Post treatement du chargement d'objet (source) pour mettre a jour
+    * le type de forme par defaut et la projection par defaut
+    */
    protected void postJob(double rajc,double dejc,double rm,boolean setSourceType) {
 
       if( plan.type==Plan.X ) return;
@@ -288,12 +285,12 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
          plan.hasXYorig=true;
          plan.error=Plan.NOREDUCTION;
 
-//         aladin.info(aladin.chaine.getString("INFOXY"));
-//
-//         // Creation d'une astrometrie
-//         if( aladin.frameNewCalib==null ) {
-//            aladin.frameNewCalib = new FrameNewCalib(aladin,plan,null);
-//         } else aladin.frameNewCalib.majFrameNewCalib(plan);
+         //         aladin.info(aladin.chaine.getString("INFOXY"));
+         //
+         //         // Creation d'une astrometrie
+         //         if( aladin.frameNewCalib==null ) {
+         //            aladin.frameNewCalib = new FrameNewCalib(aladin,plan,null);
+         //         } else aladin.frameNewCalib.majFrameNewCalib(plan);
          return;
 
       }
@@ -303,10 +300,10 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
       int typeProj = Projection.getDefaultType(rm/60.);
 
       plan.setNewProjD(new Projection(null,Projection.SIMPLE,
-                                      rajc,dejc,rm*2,
-                                      250.0,250.0,500.0,
-                                      0.0,false,
-                                      typeProj,Calib.FK5));
+            rajc,dejc,rm*2,
+            250.0,250.0,500.0,
+            0.0,false,
+            typeProj,Calib.FK5));
 
       // Positionnement du centre
       plan.co=new Coord(rajc,dejc);
@@ -314,11 +311,11 @@ Aladin.trace(3,"Recalibration \""+proj.label+"\" XY->ra/dec on \""+plan.label+"\
 
    /** L'interface AstroRes */
    public void startTable(String name) {
-Aladin.trace(3,"startTable "+name);
+      Aladin.trace(3,"startTable "+name);
       if( plan.label.equals("PLASTIC") && name!=null && name.length()>0 ) {
-      	plan.setLabel(name);
-      	catalog = plan.label;
-      	table = plan.label;
+         plan.setLabel(name);
+         catalog = plan.label;
+         table = plan.label;
       }
       if( name!=null && name.length()>0 ) table=name;
       flagFirstRecord=true;
@@ -388,12 +385,12 @@ Aladin.trace(3,"startTable "+name);
       return -1;
    }
 
-  /** Substitution des variable ${XXX} ou $XXX par leur valeur
-   * @param s La chaine a filtrer
-   * @param value[] Les valeurs correspondantes a chaque variable
-   * @param methode 0: sans encodage http
-   *                1: avec encodage http (test automatiquement si on est avant le ? ou après)
-   */
+   /** Substitution des variable ${XXX} ou $XXX par leur valeur
+    * @param s La chaine a filtrer
+    * @param value[] Les valeurs correspondantes a chaque variable
+    * @param methode 0: sans encodage http
+    *                1: avec encodage http (test automatiquement si on est avant le ? ou après)
+    */
    private String dollarSub(String s,String [] value,int methode) {
       StringBuffer res = new StringBuffer();
       int mode =0;
@@ -402,7 +399,7 @@ Aladin.trace(3,"startTable "+name);
       int startVar=0;
       boolean acco=false;
 
-//System.out.println("*** resolution de "+s);
+      //System.out.println("*** resolution de "+s);
 
 
       if( methode==1 ) methode=2;
@@ -411,54 +408,54 @@ Aladin.trace(3,"startTable "+name);
          char c=(i==a.length)?0:a[i];
          switch(mode) {
 
-          // Je cherche un $
-          case 0:
-             if( methode==2 && c=='?' ) methode=1;
-            if( c=='$' ) { mode=1; res.append(a,prev,i-prev); prev=i;}
-            break;
+            // Je cherche un $
+            case 0:
+               if( methode==2 && c=='?' ) methode=1;
+               if( c=='$' ) { mode=1; res.append(a,prev,i-prev); prev=i;}
+               break;
 
-          // Je test la premiere lettre d'un nom de variable (cas {} )
-          // et memorise son emplacement
-          case 1:
-            startVar=i;
-            if( c=='{' ) { mode=10; acco=true; }
-            else { mode=2; acco=false; }
-            break;
+               // Je test la premiere lettre d'un nom de variable (cas {} )
+               // et memorise son emplacement
+            case 1:
+               startVar=i;
+               if( c=='{' ) { mode=10; acco=true; }
+               else { mode=2; acco=false; }
+               break;
 
-            // Je cherche le prochain '}'
+               // Je cherche le prochain '}'
             case 10: if( c=='}' ) mode=3;
-                     break;
-
-          // Je cherche le prochain caractere particulier
-          case 2:
-            if( !(c>='a' && c<='z' || c>='A' && c<='Z'
-              || c>='0' && c<='9' || c=='_' ) ) mode=3;
             break;
 
-          // Je tente de remplacer le nom de variable par sa valeur
-          case 3:
-            boolean httpEncode=false;
-            if( acco ) startVar++;
-            int length=i-startVar-1;
+            // Je cherche le prochain caractere particulier
+            case 2:
+               if( !(c>='a' && c<='z' || c>='A' && c<='Z'
+               || c>='0' && c<='9' || c=='_' ) ) mode=3;
+               break;
 
-            httpEncode=(methode==1);	// L'encodage HTTP est demande par parametre
+               // Je tente de remplacer le nom de variable par sa valeur
+            case 3:
+               boolean httpEncode=false;
+               if( acco ) startVar++;
+               int length=i-startVar-1;
 
-            // Cas particulier du signe -, + ou * en debut de nom de variable
-            if( a[startVar]=='-' ) { httpEncode=false; startVar++; length--; }
-            if( a[startVar]=='+' ) { httpEncode=true; startVar++; length--; }
-            if( a[startVar]=='*' ) { startVar++; length--; }
+               httpEncode=(methode==1);	// L'encodage HTTP est demande par parametre
 
-            String var = new String(a,startVar,length);
-            int n=getFieldIndex(var);
-//System.out.println("*** var=["+var+"] n="+n+" value="+(n>=0?value[n]:"null")+" httpEncode="+httpEncode);
-            if( n<0 ) { mode=0; break; }
-            // ici ca plante
-            res.append(httpEncode?URLEncoder.encode(value[n]):value[n]);
-            //
-            prev=acco?i:i-1;
-            mode=0;
-            i--;
-            break;
+               // Cas particulier du signe -, + ou * en debut de nom de variable
+               if( a[startVar]=='-' ) { httpEncode=false; startVar++; length--; }
+               if( a[startVar]=='+' ) { httpEncode=true; startVar++; length--; }
+               if( a[startVar]=='*' ) { startVar++; length--; }
+
+               String var = new String(a,startVar,length);
+               int n=getFieldIndex(var);
+               //System.out.println("*** var=["+var+"] n="+n+" value="+(n>=0?value[n]:"null")+" httpEncode="+httpEncode);
+               if( n<0 ) { mode=0; break; }
+               // ici ca plante
+               res.append(httpEncode?URLEncoder.encode(value[n]):value[n]);
+               //
+               prev=acco?i:i-1;
+               mode=0;
+               i--;
+               break;
          }
       }
       res.append(a,prev,a.length-prev);
@@ -483,7 +480,7 @@ Aladin.trace(3,"startTable "+name);
    protected void setGenericLegende(Legende leg) {
       genericLeg=leg;
    }
-   
+
    /** L'interface TableParserConsumer */
    public void setRecord(double ra, double dec, String[] value) {
       int n;
@@ -531,10 +528,10 @@ Aladin.trace(3,"startTable "+name);
 
                if( f.type != null
                      && (f.type.indexOf("hidden") >= 0 || f.type
-                           .indexOf("trigger") >= 0) ) {
+                     .indexOf("trigger") >= 0) ) {
                   hiddenField[i] = true;
                   f.visible=false;
-//                  continue;
+                  //                  continue;
                }
 
                v.addElement(f);
@@ -543,8 +540,8 @@ Aladin.trace(3,"startTable "+name);
             // Si champs RAJ2000 et DEJ2000 on cache _RAJ2000 et _DEJ2000
             if( RA != -1 && DE != -1 && underRA != -1 && underDE != -1 ) {
                hiddenField[underRA] = hiddenField[underDE] = true;
-//               v.removeElement(fRA);
-//               v.removeElement(fDE);
+               //               v.removeElement(fRA);
+               //               v.removeElement(fDE);
                fRA.visible = fDE.visible = false;
             }
 
@@ -560,7 +557,7 @@ Aladin.trace(3,"startTable "+name);
             nbTable++;
             flagFirstRecord = false;
          }
-         
+
          // Dans le cas de la génération a posterio de la légende pour une table vide
          if( value==null ) return;
 
@@ -572,9 +569,9 @@ Aladin.trace(3,"startTable "+name);
          }
 
          // Generation de la ligne d'info
-//         line = new StringBuffer(500);
+         //         line = new StringBuffer(500);
          Util.resetString(line);
-//         line.append(table);
+         //         line.append(table);
          if( catalog!=null && catalog.equals("Simbad") ) line.append("<&_SIMBAD |Simbad>");
          else if( catalog!=null && (catalog.equals("NED") || catalog.equals("Ned")) ) line.append("<&_NED |NED>");
          else line = line.append("<&_getReadMe " + table + " |" + table + ">");
@@ -582,7 +579,7 @@ Aladin.trace(3,"startTable "+name);
          // Construction de la ligne des mesures
          n = value.length;
          int j = -1; // Veritable index de la mesure (en fonction des champs
-                     // caches)
+         // caches)
          for( int i = 0; i < n; i++ ) {
             // "<" et ">" n'étaient pas décodés
             // ajout thomas pour démo AVO
@@ -590,12 +587,12 @@ Aladin.trace(3,"startTable "+name);
             // Rectification Pierre pour éviter de charger WriteDocument dans le
             // .jar
             if( value[i]==null ) value[i]="";	// En cas de VOTable <TD/>
-//            value[i] = cds.xml.XMLParser.XMLDecode(value[i]);
+            //            value[i] = cds.xml.XMLParser.XMLDecode(value[i]);
 
             // Memorisation d'un eventuel OID
             if( indexOID >= 0 && i == indexOID ) oid = value[i];
 
-//            if( hiddenField != null && i < hiddenField.length && hiddenField[i] ) continue;
+            //            if( hiddenField != null && i < hiddenField.length && hiddenField[i] ) continue;
             j++;
 
             // pas d'info sur la mesure ou mesure vide ou nulle
@@ -613,25 +610,25 @@ Aladin.trace(3,"startTable "+name);
             String flagArchive = leg.getRefValue(j);
 
             // On met un lien sur les urls ?
-            if( href==null && (value[i].startsWith("http://") || value[i].startsWith("https://"))) {
+            if( href==null && (value[i].startsWith("http://") || value[i].startsWith("https://") || value[i].startsWith("ftp://"))) {
                href=value[i];
             }
 
             String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;
-            
+
             // JE LE REMETS ACTIF DE MANIERE GENERIQUE POUR N'IMPORTE QUEL SPECTRE - PF sept 2012
             if( tag!=null && flagArchive!=null && (flagArchive.startsWith("spectr") && flagArchive.indexOf('/')>0) ) tag="£"+tag;
-            
+
             else if( tag != null && flagArchive != null && flagArchive.indexOf('/')>0  ) tag = "^" + tag;
-            
+
             // AVO, support de Specview, je dois tester sur spectrumavo car les
             // spectres
             // accessibles à partir de VizieR sont gzippés et ne rentrent pas
             // directement dans Specview
             // TODO
             //else if( tag!=null && flagArchive!=null && flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
-            
-            
+
+
             String text = (refText != null) ? refText : value[i];
 
             line.append("\t");
@@ -649,20 +646,20 @@ Aladin.trace(3,"startTable "+name);
             if( dec < minDec ) minDec = dec;
             if( dec > maxDec ) maxDec = dec;
          }
-         
+
 
          // Determination de label de la source
          String lab = (nId >= 0) ? value[nId] : "Source #" + (nb_o+1);
 
          if( firstTrace ) {
-            
+
             // Pour le debogage (ATTENTION, n'indique que la premiere source)
             Aladin.trace(3, "setRecord "
                   + (oid != null ? "(oid=" + oid + ")" : "") + " \"" + lab
                   + "\" " + (flagXY ? "XY" : "pos") + "=(" + ra + "," + dec
                   + ") [" + line + "]");
             firstTrace = false;
-            
+
             // Dans le cas d'un résultat ObsTAP, on devra post-traiter le tag sur le champ "access_url" en fonction
             // de la valeur MIME du champ "access_format" (alternativement content-type)
             indexAccessUrl = leg.find("access_url");
@@ -681,22 +678,22 @@ Aladin.trace(3,"startTable "+name);
          int idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION1);
          if( idxSTCS<0 ) idxSTCS = source.findUtype(TreeBuilder.UTYPE_STCS_REGION2);
          if (idxSTCS>=0) {
-             try {
-                 source.setFootprint(source.getValue(idxSTCS));
-                 source.setIdxFootprint(idxSTCS);
-             }
-             catch(Exception e) {
-                 e.printStackTrace();
-             }
+            try {
+               source.setFootprint(source.getValue(idxSTCS));
+               source.setIdxFootprint(idxSTCS);
+            }
+            catch(Exception e) {
+               e.printStackTrace();
+            }
          }
-         
+
          // Post-traitement ObsTap => on remplace le <&xxx par <^xxx ou <£xxx e la colonne "access_url"
          // en fonction du MIME type de la colonne "access_format"
          if( indexAccessFormat>=0 && indexAccessUrl>=0 ) {
             try {
                String fmt = source.getCodedValue(indexAccessFormat);
                String val = source.getCodedValue(indexAccessUrl);
-               if( val.startsWith("<&") && fmt.length()>0 && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) { 
+               if( val.startsWith("<&") && fmt.length()>0 && fmt.indexOf("html")<0 && fmt.indexOf("plain")<0 ) {
                   String tag="^";
                   if( fmt.startsWith("spectr") && fmt.indexOf('/')>0 ) tag="£";
                   val = "<&"+tag+val.substring(2);
@@ -723,7 +720,7 @@ Aladin.trace(3,"startTable "+name);
    protected boolean hasSelectedOrTaggedObj() {
       Iterator<Obj> it = iterator();
       while( it.hasNext() ) {
-         Obj o = (Obj)it.next();
+         Obj o = it.next();
          if( o.isSelected() ) return true;
          if( o instanceof Source && ((Source)o).isTagged() ) return true;
       }
@@ -736,7 +733,7 @@ Aladin.trace(3,"startTable "+name);
       if( parsingInfo==null && description==null ) return;
       JFrame f = new JFrame("Catalog information");
       Util.setCloseShortcut(f, false, aladin);
-//      f.setBackground(Aladin.BKGD);
+      //      f.setBackground(Aladin.BKGD);
       f.setIconImage(aladin.getImagette("AladinIconSS.gif"));
       JTextArea t = new JTextArea(25,80);
       t.setFont( Aladin.COURIER );
@@ -783,19 +780,19 @@ Aladin.trace(3,"startTable "+name);
       plan.hasPM=-1;
    }
 
-//   /** Retourne l'indice de la colonne RA si connu, sinon -1 */
-//   public int getRaIndex()  { return nRa; }
-//
-//   /** Retourne l'indice de la colonne DEC si connu, sinon -1 */
-//   public int getDecIndex() { return nDec; }
+   //   /** Retourne l'indice de la colonne RA si connu, sinon -1 */
+   //   public int getRaIndex()  { return nRa; }
+   //
+   //   /** Retourne l'indice de la colonne DEC si connu, sinon -1 */
+   //   public int getDecIndex() { return nDec; }
 
 
    // PEUT ETRE FUSIONNER setTarget() et parseTarget()
    public void setTarget(String target) {
-     double []tmp = parseTarget(target);
-     if( tmp==null ) return;
-     flagTarget = true;		// Il sera inutile de calculer le target en fct des donnees
-     rajc=tmp[0]; dejc=tmp[1]; rm=tmp[2];
+      double []tmp = parseTarget(target);
+      if( tmp==null ) return;
+      flagTarget = true;		// Il sera inutile de calculer le target en fct des donnees
+      rajc=tmp[0]; dejc=tmp[1]; rm=tmp[2];
    }
 
    /** Data access via XML/VOTable
@@ -804,40 +801,40 @@ Aladin.trace(3,"startTable "+name);
     * @return
     * @throws Exception
     */
-//   private int votableParsing(MyInputStream dis) throws Exception {
-//     try {
-//        o= new Objet[DEFAULTBLOC];
-//        nb_o = 0;
-//        catalog=plan.label;
-//        table=plan.label;
-//        leg=null;
-//        flagTarget=false;
-//        minRa=minDec = Double.MAX_VALUE;
-//        maxRa=maxDec = -Double.MAX_VALUE;
-//        hiddenField=null;
-//        flagEndResource = false;
-//        VOTable res = new VOTable(this);
-//        boolean ok = res.parse(dis);
-//
-//        if( ok ) {
-//           if( !flagEndResource ) endResource();
-//           if( rm == 0.0 ) {
-//              plan.error = "no RA or DE rows";
-//              aladin.error = plan.error;
-//           }
-//        } else {
-//           plan.error = "Error: "+res.getError();
-//           aladin.error = plan.error;
-//        }
-//        if( plan.error!=null )
-//          System.out.println("!!! "+plan.label+": "+plan.error);
-//        return ok?nb_o:-1;
-//        } catch( Exception e) {
-//          System.out.println("votableParsing : " + e);
-//          plan.sendLog("Error","votableParsing() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
-//        }
-//        return -1;
-//   }
+   //   private int votableParsing(MyInputStream dis) throws Exception {
+   //     try {
+   //        o= new Objet[DEFAULTBLOC];
+   //        nb_o = 0;
+   //        catalog=plan.label;
+   //        table=plan.label;
+   //        leg=null;
+   //        flagTarget=false;
+   //        minRa=minDec = Double.MAX_VALUE;
+   //        maxRa=maxDec = -Double.MAX_VALUE;
+   //        hiddenField=null;
+   //        flagEndResource = false;
+   //        VOTable res = new VOTable(this);
+   //        boolean ok = res.parse(dis);
+   //
+   //        if( ok ) {
+   //           if( !flagEndResource ) endResource();
+   //           if( rm == 0.0 ) {
+   //              plan.error = "no RA or DE rows";
+   //              aladin.error = plan.error;
+   //           }
+   //        } else {
+   //           plan.error = "Error: "+res.getError();
+   //           aladin.error = plan.error;
+   //        }
+   //        if( plan.error!=null )
+   //          System.out.println("!!! "+plan.label+": "+plan.error);
+   //        return ok?nb_o:-1;
+   //        } catch( Exception e) {
+   //          System.out.println("votableParsing : " + e);
+   //          plan.sendLog("Error","votableParsing() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
+   //        }
+   //        return -1;
+   //   }
 
    /**
     * Parsing de la table
@@ -865,12 +862,12 @@ Aladin.trace(3,"startTable "+name);
       boolean ok;
 
       // Parsing FITS table
-       if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
+      if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
          plan.headerFits = new FrameHeaderFits(plan,dis);
          res = new TableParser(aladin,this,((PlanCatalog)plan).headerFits.getHeaderFits(),plan.flagSkip);
          ok = res.parse(dis);
 
-      // Parsing XML/CSV
+         // Parsing XML/CSV
       } else {
          String sep;
          if( plan instanceof PlanBGCat ) sep = "\t";
@@ -893,7 +890,7 @@ Aladin.trace(3,"startTable "+name);
          if( !flagEndResource ) endResource();
          long duree=System.currentTimeMillis()-d;
          String s = "Catalog parsed in "+Util.myRound(""+duree/1000.,3)+"s"+(nb_o<1000?"":" ("
-                  +Util.myRound(""+1000.*nb_o/duree)+" objects per sec)");
+               +Util.myRound(""+1000.*nb_o/duree)+" objects per sec)");
          tableParserInfo("\n"+s);
          Aladin.trace(3,s);
          if( !flagXY && rm==0.0 ) plan.error = aladin.error = "no RA or DE rows";
@@ -916,10 +913,10 @@ Aladin.trace(3,"startTable "+name);
       postJob(rajc,dejc,rm,false);
    }
 
-  /** Determine le target des donnees en fonction.
-   * en fonction de minRa, maxRa, minDec, maxDec et
-   * met a jour rajc, dejc et rm en fonction
-   */
+   /** Determine le target des donnees en fonction.
+    * en fonction de minRa, maxRa, minDec, maxDec et
+    * met a jour rajc, dejc et rm en fonction
+    */
    private void computeTarget() {
       if( maxDec-minDec>90 ) {
          dejc=rajc=0;
@@ -934,7 +931,7 @@ Aladin.trace(3,"startTable "+name);
                Math.abs(minDec-dejc));
          rm = (nb_o==1 || r==0.)?7:r*60.0*1.4142;
       }
-Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+".."+maxDec+"]=>"+dejc+" rm=["+rm+"]");
+      Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+".."+maxDec+"]=>"+dejc+" rm=["+rm+"]");
    }
 
    // Analyse de la chaine indiquant le target
@@ -969,35 +966,35 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       return tmp;
    }
 
-  /** Remplissage d'un Plan de catalogue
-   * @param plan Le plan d'appartenance
-   * @param u L'URL d'acces aux données a analyser
-   * @param verbose true si on peut afficher des messages d'erreur
-   * @return le nombre d'objets ou <I>-1</I> si probleme
-   */
+   /** Remplissage d'un Plan de catalogue
+    * @param plan Le plan d'appartenance
+    * @param u L'URL d'acces aux données a analyser
+    * @param verbose true si on peut afficher des messages d'erreur
+    * @return le nombre d'objets ou <I>-1</I> si probleme
+    */
    protected int setPlanCat(Plan plan, URL u,boolean verbose) {
       return setPlanCat(plan,u,null,null,verbose);
    }
 
-  /** Remplissage d'un Plan de catalogue
-   * @param plan Le plan d'appartenance
-   * @param dis le flux d'acces axdonnées a analyser (ou null)
-   * @param endTag en cas de parsing partiel, le tag de fin
-   * @param verbose true si on peut afficher des messages d'erreur
-   * @return le nombre d'objets ou <I>-1</I> si probleme
-   */
+   /** Remplissage d'un Plan de catalogue
+    * @param plan Le plan d'appartenance
+    * @param dis le flux d'acces axdonnées a analyser (ou null)
+    * @param endTag en cas de parsing partiel, le tag de fin
+    * @param verbose true si on peut afficher des messages d'erreur
+    * @return le nombre d'objets ou <I>-1</I> si probleme
+    */
    protected int setPlanCat(Plan plan, MyInputStream dis,String endTag,boolean verbose) {
-       return setPlanCat(plan,null,dis,endTag,verbose);
+      return setPlanCat(plan,null,dis,endTag,verbose);
    }
 
-  /** Remplissage d'un Plan de catalogue
-   * @param plan Le plan d'appartenance
-   * @param u L'URL d'acces au TSV a analyser	(ou null)
-   * @param dis le flux d'acces aux données a analyser (ou null)
-   * @param endTag en cas de parsing XML partiel, le tag de fin, sinon null
-   * @param verbose true si on peut afficher des messages d'erreur
-   * @return le nombre d'objets ou <I>-1</I> si probleme
-   */
+   /** Remplissage d'un Plan de catalogue
+    * @param plan Le plan d'appartenance
+    * @param u L'URL d'acces au TSV a analyser	(ou null)
+    * @param dis le flux d'acces aux données a analyser (ou null)
+    * @param endTag en cas de parsing XML partiel, le tag de fin, sinon null
+    * @param verbose true si on peut afficher des messages d'erreur
+    * @return le nombre d'objets ou <I>-1</I> si probleme
+    */
    protected int setPlanCat(Plan plan, URL u, MyInputStream dis,String endTag,boolean verbose) {
       int nb=-1;
       boolean flagFootprint = false;
@@ -1009,8 +1006,8 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
 
          // Deux tentatives... cochonnerie de JAVA
          if( dis==null ) {
-//            try { dis = new MyInputStream(u.openStream()); }
-//            catch( Exception efirst ) { dis = new MyInputStream(u.openStream()); }
+            //            try { dis = new MyInputStream(u.openStream()); }
+            //            catch( Exception efirst ) { dis = new MyInputStream(u.openStream()); }
             try { dis =Util.openStream(u); }
             catch( Exception efirst ) { dis =Util.openStream(u); }
          }
@@ -1019,10 +1016,10 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
          flagVOTable=(dis.getType() & MyInputStream.VOTABLE)!=0;
          flagFootprint = (dis.getType() & MyInputStream.FOV)!=0;
          if( flagFootprint ) {
-         	// devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)
-         	endTag = "TABLE";
+            // devrait etre RESOURCE, mais il y a un bug dans getUnreadBuffer (mange un tag trop en avant)
+            endTag = "TABLE";
          }
-//System.out.println("flagFOV : "+flagFootprint);
+         //System.out.println("flagFOV : "+flagFootprint);
          nb = tableParsing(dis,endTag);
       }
       catch( OutOfMemoryError e ) {
@@ -1045,24 +1042,24 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
             System.out.println("!!! "+(plan==null ? "":plan.label+": ")+aladin.error);
             Aladin.warning(aladin.error);
          }
-//         if( plan!=null ) plan.sendLog("Error","setPlanCat() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
+         //         if( plan!=null ) plan.sendLog("Error","setPlanCat() ["+e+"] u="+(plan.u==null?"null":plan.u.toString()));
          nb=-1;
       }
 
-       // s'il s'agit d'un stream FOV, on doit encore parser la suite !!
-       if( flagFootprint ) {
-           FootprintParser fParser = new FootprintParser(dis, res.getUnreadBuffer());
-           Hashtable<String, FootprintBean> idToFootprint = fParser.getFooprintHash();
-           attachFootprintToSources(idToFootprint);
-       }
+      // s'il s'agit d'un stream FOV, on doit encore parser la suite !!
+      if( flagFootprint ) {
+         FootprintParser fParser = new FootprintParser(dis, res.getUnreadBuffer());
+         Hashtable<String, FootprintBean> idToFootprint = fParser.getFooprintHash();
+         attachFootprintToSources(idToFootprint);
+      }
 
-       // par défaut, on montre les footprints associés à un plan catalogue
-       // NON, PAS UNE BONNE IDEE
-//       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
-//           ((PlanCatalog) plan).showFootprints(true);
-//       }
+      // par défaut, on montre les footprints associés à un plan catalogue
+      // NON, PAS UNE BONNE IDEE
+      //       if (plan instanceof PlanCatalog && ((PlanCatalog) plan).hasAssociatedFootprints()) {
+      //           ((PlanCatalog) plan).showFootprints(true);
+      //       }
 
-       return nb;
+      return nb;
    }
 
    /**
@@ -1070,52 +1067,52 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
     *
     * @param hash le hash donnant la correspondance ID --> footprint
     */
-	private void attachFootprintToSources(Hashtable<String, FootprintBean> hash) {
-		Source s;
-		int idx = -1;
-		String key;
-		FootprintBean footprint;
-		PlanField pf;
-		for( int i=0; i<nb_o; i++ ) {
-			if( ! (o[i] instanceof Source) ) continue;
-			s = (Source)o[i];
-			pf=null;
+   private void attachFootprintToSources(Hashtable<String, FootprintBean> hash) {
+      Source s;
+      int idx = -1;
+      String key;
+      FootprintBean footprint;
+      PlanField pf;
+      for( int i=0; i<nb_o; i++ ) {
+         if( ! (o[i] instanceof Source) ) continue;
+         s = (Source)o[i];
+         pf=null;
 
-			idx = s.findColumn("FoVRef");
-			if( idx<0 ) idx = s.findUtype("char:SpatialAxis.coverage.support.id");
-			if( idx<0 )  continue;
+         idx = s.findColumn("FoVRef");
+         if( idx<0 ) idx = s.findUtype("char:SpatialAxis.coverage.support.id");
+         if( idx<0 )  continue;
 
-			key = s.getValue(idx);
-			footprint = hash.get(key);
-			s.setIdxFootprint(idx);
-			// we attach the found footprint to the current source
-			if( footprint!=null ) {
-				s.setFootprint(pf = new PlanField(aladin, footprint, key));
-			}
-			// we will now attach the position angle to the source
-			idx = s.findUCD("pos.posAng");
-			if( idx<0 ) continue;
+         key = s.getValue(idx);
+         footprint = hash.get(key);
+         s.setIdxFootprint(idx);
+         // we attach the found footprint to the current source
+         if( footprint!=null ) {
+            s.setFootprint(pf = new PlanField(aladin, footprint, key));
+         }
+         // we will now attach the position angle to the source
+         idx = s.findUCD("pos.posAng");
+         if( idx<0 ) continue;
 
-			String angle = s.getValue(idx);
-			if( angle==null ) angle = "";
+         String angle = s.getValue(idx);
+         if( angle==null ) angle = "";
 
-			double angleD;
-		   	try {
-		       angleD = Double.valueOf(angle).doubleValue();
-		    }
-		   	catch(NumberFormatException e) {angleD=0;}
-			if( pf != null ) {
-				pf.make(s.raj, s.dej, angleD);
-			}
-		}
-	}
+         double angleD;
+         try {
+            angleD = Double.valueOf(angle).doubleValue();
+         }
+         catch(NumberFormatException e) {angleD=0;}
+         if( pf != null ) {
+            pf.make(s.raj, s.dej, angleD);
+         }
+      }
+   }
 
-	private int nextID=0;
+   private int nextID=0;
 
-	/** Retourne un indice unique afin de pouvoir générer un ID de l'objet.
-	 * Celui-ci peut être différent de l'index de l'objet, notamment si des objets
-	 * sont supprimés en cours de traitement */
-	protected int getNextID() { return nextID; }
+   /** Retourne un indice unique afin de pouvoir générer un ID de l'objet.
+    * Celui-ci peut être différent de l'index de l'objet, notamment si des objets
+    * sont supprimés en cours de traitement */
+   protected int getNextID() { return nextID; }
 
    // Retourne le prochain index libre dans le tableau des objets
    // et met à jour un numéro unique pour pouvoir faire  un identificateur (voir getnextID())
@@ -1148,7 +1145,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
          Tag t = (Tag) newobj;
          t.setEditing(false);
 
-      // Pour gerer le blocNote
+         // Pour gerer le blocNote
       } else if( newobj instanceof Cote ) {
          Cote c = (Cote)newobj;
          if( c.debligne!=null ) {
@@ -1177,24 +1174,24 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
          Source s = (Source)o[i];
          if( s.leg==leg ) { s.fixInfo(); j++; }
       }
-//System.out.println("FIX J'ai fixé "+j+" sources du plan "+plan);
+      //System.out.println("FIX J'ai fixé "+j+" sources du plan "+plan);
    }
 
    /** Retourne l'indice d'un objet, ou -1 si non trouvé */
    protected int getIndex(Obj x) {
-   	  for( int i=0; i<nb_o; i++ ) if( x==o[i] ) return i;
-   	  return -1;
+      for( int i=0; i<nb_o; i++ ) if( x==o[i] ) return i;
+      return -1;
    }
 
    protected boolean removable = false;     // Possibilité de changer le statut d'un plan catalogue
 
-  /** Suppression d'un objet.
-   * Suppression d'un objet par ecrasement de sa reference
-   * avec le dernier element du tableau
-   * @param obj L'objet a supprimer
-   * @param force true si on peut supprimer même les sources des catalogues
-   * @return <I>true</I> si trouve, sinon <I>false</I>
-   */
+   /** Suppression d'un objet.
+    * Suppression d'un objet par ecrasement de sa reference
+    * avec le dernier element du tableau
+    * @param obj L'objet a supprimer
+    * @param force true si on peut supprimer même les sources des catalogues
+    * @return <I>true</I> si trouve, sinon <I>false</I>
+    */
    protected boolean delObjet(Obj obj) { return delObjet(obj,removable); }
    protected boolean delObjet(Obj obj,boolean force) {
       int i;
@@ -1208,7 +1205,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       // Parcours de tous les objets du plan
       for( i=0; i<nb_o && obj!=o[i]; i++ );
       if( i<nb_o ) {
-//         if( i!=nb_o-1 ) o[i] = o[nb_o-1];
+         //         if( i!=nb_o-1 ) o[i] = o[nb_o-1];
          for( ; i<nb_o-1; i++ ) o[i]=o[i+1];  // Pour conserver l'ordonnancement
          nb_o--;
          return true;
@@ -1216,9 +1213,9 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       return false;
    }
 
-  /** Affiche l'id associe a un objet.
-   * @param i Indice de l'objet
-   */
+   /** Affiche l'id associe a un objet.
+    * @param i Indice de l'objet
+    */
    protected void showBaratin(int i) { o[i].status(aladin); }
 
    /** Avant un Draw ou un writeLink, refait la projection si nécessaire,
@@ -1232,7 +1229,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
 
       // Projection suivant la vue
       if( plan.isCatalog() || plan.type==Plan.TOOL ||
-         plan.type==Plan.APERTURE || plan.type==Plan.FOV ) projection(v);
+            plan.type==Plan.APERTURE || plan.type==Plan.FOV ) projection(v);
 
       // Ces objets sont-ils projetables dans cette vue ?
       if( !drawnInViewSimple[v.n] ) return false;
@@ -1240,14 +1237,14 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
       return draw;
    }
 
-  /** Dessin des objets.
-   * Affiche tous les objets du plan qui se trouve dans le rectangle
-   * @param g Le contexte graphique
-   * @param r Le rectangle qui delimite la zone concernee
-   * @param draw <I>true</I> pour que l'affichage soit effectif,
-   *             sinon il n'y aura qu'un simple calcul de position
-   * @param dx,dy Offset pour le tracage
-   */
+   /** Dessin des objets.
+    * Affiche tous les objets du plan qui se trouve dans le rectangle
+    * @param g Le contexte graphique
+    * @param r Le rectangle qui delimite la zone concernee
+    * @param draw <I>true</I> pour que l'affichage soit effectif,
+    *             sinon il n'y aura qu'un simple calcul de position
+    * @param dx,dy Offset pour le tracage
+    */
    protected int draw(Graphics g, Rectangle r,ViewSimple v,boolean draw,int dx,int dy) {
       return draw(g,r,v,draw,false,dx,dy);
    }
@@ -1265,7 +1262,7 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
          if( dx==0 && plan!=null && Aladin.isFootprintPlane(plan) &&
                Aladin.ENABLE_FOOTPRINT_OPACITY && plan.getOpacityLevel()>0.02 && g instanceof Graphics2D ) {
             drawFovInTransparency(g, r, v, draw, dx, dy);
-         } 
+         }
 
          g.setColor(c);
          for( int i=0; i<nb_o; i++ ) {
@@ -1284,77 +1281,77 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
    }
 
    private void drawFovInTransparency(Graphics g, Rectangle r, ViewSimple v, boolean draw, int dx, int dy) {
-	   Graphics2D g2d=null;
-	   Composite saveComposite=null;
-	   g2d = (Graphics2D)g;
-	   g2d.setColor(plan.c);
-	   saveComposite = g2d.getComposite();
-	   Composite myComposite = Util.getFootprintComposite(plan.getOpacityLevel());
-	   g2d.setComposite(myComposite);
+      Graphics2D g2d=null;
+      Composite saveComposite=null;
+      g2d = (Graphics2D)g;
+      g2d.setColor(plan.c);
+      saveComposite = g2d.getComposite();
+      Composite myComposite = Util.getFootprintComposite(plan.getOpacityLevel());
+      g2d.setComposite(myComposite);
 
-       ArrayList linesToProcess = new ArrayList(); // pour retrouver l'ensemble des lignes
-	   for( int i=0; i<nb_o; i++ ) {
+      ArrayList linesToProcess = new ArrayList(); // pour retrouver l'ensemble des lignes
+      for( int i=0; i<nb_o; i++ ) {
 
-		   // cas d'un Cercle
-		   if( o[i] instanceof Cercle ) {
-			   // on ne fait rien ici, intégré dans Cercle.draw
-		   }
+         // cas d'un Cercle
+         if( o[i] instanceof Cercle ) {
+            // on ne fait rien ici, intégré dans Cercle.draw
+         }
 
-		   // cas d'un Polygone
-		   else if( o[i] instanceof Ligne ) {
-               linesToProcess.add(o[i]);
-		   }
-	   }
+         // cas d'un Polygone
+         else if( o[i] instanceof Ligne ) {
+            linesToProcess.add(o[i]);
+         }
+      }
 
-       // traitement et affichage des polylignes trouvés
-       if( linesToProcess.size()>0 ) {
-           Ligne[] lArray = (Ligne[])linesToProcess.toArray(new Ligne[linesToProcess.size()]);
-           Ligne curLine, startLine;
-           ArrayList<Ligne> polyLine = new ArrayList();
-           Point[] points;
-           int[] x;
-           int[] y;
-           int k;
-           // parcours du tableau en partant de la fin
-           for( int i=lArray.length-1; i>=0; i-- ) {
-               // déja traité ? on passe au suivant
-               if( ! linesToProcess.contains(lArray[i]) ) continue;
+      // traitement et affichage des polylignes trouvés
+      if( linesToProcess.size()>0 ) {
+         Ligne[] lArray = (Ligne[])linesToProcess.toArray(new Ligne[linesToProcess.size()]);
+         Ligne curLine, startLine;
+         ArrayList<Ligne> polyLine = new ArrayList();
+         Point[] points;
+         int[] x;
+         int[] y;
+         int k;
+         // parcours du tableau en partant de la fin
+         for( int i=lArray.length-1; i>=0; i-- ) {
+            // déja traité ? on passe au suivant
+            if( ! linesToProcess.contains(lArray[i]) ) continue;
 
-               polyLine.clear();
-               curLine = lArray[i];
-               startLine = curLine;
+            polyLine.clear();
+            curLine = lArray[i];
+            startLine = curLine;
+            linesToProcess.remove(curLine);
+            // parcours du polygone
+            while( curLine.debligne!=null && curLine.debligne!=startLine ) {
+               curLine = curLine.debligne;
+               polyLine.add(curLine);
                linesToProcess.remove(curLine);
-               // parcours du polygone
-               while( curLine.debligne!=null && curLine.debligne!=startLine ) {
-                   curLine = curLine.debligne;
-                   polyLine.add(curLine);
-                   linesToProcess.remove(curLine);
+            }
+            // dessin du polygone trouvé
+            if( polyLine.size()>0 ) {
+               points = new Point[polyLine.size()];
+               x = new int[polyLine.size()];
+               y = new int[polyLine.size()];
+               Iterator<Ligne> it = polyLine.iterator();
+               k = 0;
+               while( it.hasNext() ) {
+                  points[k] = (it.next()).getViewCoord(v);
+                  if( points[k]==null ) {
+                     g2d.setComposite(saveComposite);
+                     return;
+                  }
+                  x[k] = points[k].x;
+                  y[k] = points[k].y;
+                  k++;
                }
-               // dessin du polygone trouvé
-               if( polyLine.size()>0 ) {
-                   points = new Point[polyLine.size()];
-                   x = new int[polyLine.size()];
-                   y = new int[polyLine.size()];
-                   Iterator<Ligne> it = polyLine.iterator();
-                   k = 0;
-                   while( it.hasNext() ) {
-                       points[k] = (it.next()).getViewCoord(v);
-                       if( points[k]==null ) {
-                          g2d.setComposite(saveComposite);
-                          return;
-                       }
-                       x[k] = points[k].x;
-                       y[k] = points[k].y;
-                       k++;
-                   }
-                   g2d.setColor(curLine.getColor());
-                   // TODO : toute la gestion de la transparence serait simplifié avec un objet PolyLigne
-                   if( curLine.isVisible() ) g2d.fill(new Polygon(x, y, k));
-               }
-           }
-       }
+               g2d.setColor(curLine.getColor());
+               // TODO : toute la gestion de la transparence serait simplifié avec un objet PolyLigne
+               if( curLine.isVisible() ) g2d.fill(new Polygon(x, y, k));
+            }
+         }
+      }
 
-	   g2d.setComposite(saveComposite);
+      g2d.setComposite(saveComposite);
    }
 
 
@@ -1371,12 +1368,12 @@ Aladin.trace(3,"computeTarget ra=["+minRa+".."+maxRa+"]=>"+rajc+" de=["+minDec+"
    }
 
    synchronized protected void writeLinkFlex(OutputStream out, ViewSimple v,boolean draw) throws Exception {
-       if( !computeAndTestDraw(v,draw) ) return;
-       for( int i=0; i<nb_o; i++ ) {
-           if( ! (o[i] instanceof Source) ) continue;
-           ((Source)o[i]).writeLinkFlex(out,v);
-       }
-    }
+      if( !computeAndTestDraw(v,draw) ) return;
+      for( int i=0; i<nb_o; i++ ) {
+         if( ! (o[i] instanceof Source) ) continue;
+         ((Source)o[i]).writeLinkFlex(out,v);
+      }
+   }
 
    /** retourne le nombre d'objets */
    protected int getCount() { return nb_o; }

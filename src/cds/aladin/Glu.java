@@ -2165,7 +2165,6 @@ public final class Glu implements Runnable {
          if( Aladin.STANDALONE ) u = new URL(uri);
          else u = getURL("Http",uri,true,withLog);
 
-         //         is = new MyInputStream( u.openStream());
          is = Util.openStream(u);
       }
       return is;

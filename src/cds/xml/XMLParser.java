@@ -68,22 +68,22 @@ public final class XMLParser {
    private int offset,max;		// index on the reader buffer tmp[]
    private String error;		// error report
    private boolean beforeXML;	// true if the parser waits <?xml...> tag
-   private String endTag;	    // Contient le tag de fin de parsing (si parsing partiel)
+   private String endTag;	    // Contient le tag de fin de parsing (siHparsing partiel)
    private int line;            // Ligne courante (en cas d'erreur)
 
    static final int BUFSIZE = 64*1024;  // Reader buffer size
    static final int MAXBUF  = BUFSIZE-1024; // number of chars before a flush
-   
-//   private boolean formatQuest = false;
+
+   //   private boolean formatQuest = false;
 
    // Default macros and their equivalence
    static final String [] mKey   = { "&amp;","&gt;","&lt;","&apos;","&quot;" };
    static final String [] mValue = { "&",    ">",   "<",   "'",     "\""      };
 
-  /** Create a new XMLParser object
-   * @param ac an object implementing the XMLConsumer interface
-   * @param withStack true si on gère une pile des tags (méthode in() et getStack() possible)
-   */
+   /** Create a new XMLParser object
+    * @param ac an object implementing the XMLConsumer interface
+    * @param withStack true si on gère une pile des tags (méthode in() et getStack() possible)
+    */
    public XMLParser(XMLConsumer ac) { this(ac,false); }
    public XMLParser(XMLConsumer ac,boolean withStack) {
       this.ac = ac;
@@ -95,19 +95,19 @@ public final class XMLParser {
       beforeXML=true;
       error=null;
    }
-   
-   
+
+
    /** pour du debug, récupération du numéro de la ligne courante */
    public int getCurrentLine() { return line; }
 
-  /** Launch the XML parsing.
-   * In case of errors, the report is accessible by getError()
-   * @param dis the input stream
-   * @return true or false according to the parsing result
-   * @throws Exception
-   */
+   /** Launch the XML parsing.
+    * In case of errors, the report is accessible by getError()
+    * @param dis the input stream
+    * @return true or false according to the parsing result
+    * @throws Exception
+    */
    public boolean parse(MyInputStream dis) throws Exception {
-//      formatQuest = false;
+      //      formatQuest = false;
       this.dis = dis;
       endTag=null;
       line=0;
@@ -130,42 +130,42 @@ public final class XMLParser {
     * @return true ou false suivant le parsing
     * @throws Exception
     */
-    public boolean parse(MyInputStream dis,String endTag) throws Exception {
-//       formatQuest = false;
-       this.dis = dis;
-       this.endTag=endTag;
-       line=0;
-       setTestBeforeXML(dis);
-       boolean rep;
-       try { rep=xmlBeforeTag(); }
-       catch( Exception e ) {
-          if( Aladin.levelTrace>=3 ) System.out.println("XML parse error at line "+line);
-          throw e;
-       }
-       return rep;
-    }
-    
-    private void setTestBeforeXML(MyInputStream dis) throws Exception {
-       beforeXML = (dis.getType() & MyInputStream.VOTABLE) ==0; 
-    }
+   public boolean parse(MyInputStream dis,String endTag) throws Exception {
+      //       formatQuest = false;
+      this.dis = dis;
+      this.endTag=endTag;
+      line=0;
+      setTestBeforeXML(dis);
+      boolean rep;
+      try { rep=xmlBeforeTag(); }
+      catch( Exception e ) {
+         if( Aladin.levelTrace>=3 ) System.out.println("XML parse error at line "+line);
+         throw e;
+      }
+      return rep;
+   }
 
-  /** Return the stack of the tag name.
-   *@return The stack of the XML tag name
-   */
+   private void setTestBeforeXML(MyInputStream dis) throws Exception {
+      beforeXML = (dis.getType() & MyInputStream.VOTABLE) ==0;
+   }
+
+   /** Return the stack of the tag name.
+    *@return The stack of the XML tag name
+    */
    public Stack getStack() throws Exception {
       if( stack==null ) throw new Exception("No XML stack");
       return stack;
-   }   
-   
+   }
+
    public int getDepth() { return nstack; }
 
-  /** Return true if the tag name list in parameter is found
-   * in the XML stack (with the same order) and ends with the last
-   * tag name in the list.
-   * @param nameList List of tag names, separated by spaces
-   * @return true if all names are found in the XML stack respecting
-   *              the same order
-   */
+   /** Return true if the tag name list in parameter is found
+    * in the XML stack (with the same order) and ends with the last
+    * tag name in the list.
+    * @param nameList List of tag names, separated by spaces
+    * @return true if all names are found in the XML stack respecting
+    *              the same order
+    */
    public boolean in(String nameList) throws Exception {
       if( stack==null ) throw new Exception("No XML stack");
       Enumeration e = stack.elements();
@@ -178,27 +178,27 @@ public final class XMLParser {
 
          // Stack loop
          while( e.hasMoreElements()
-            && !(found=s.equals((String)e.nextElement())) );
+               && !(found=s.equals(e.nextElement())) );
          if( !found ) return false;
       }
       return !e.hasMoreElements();
    }
 
-  /** Return the error report.
-   *@return The string containing the error report
-   *        or null if there isn't
-   */
+   /** Return the error report.
+    *@return The string containing the error report
+    *        or null if there isn't
+    */
    public String getError() { return error; }
 
-  /** Set error message
-   * @param s
-   */
+   /** Set error message
+    * @param s
+    */
    private void setError(String s) { error=s+"\n"; }
 
-  /** Encode XML macros
-   * @param s the string to encode
-   * @return the string encoded
-   */
+   /** Encode XML macros
+    * @param s the string to encode
+    * @return the string encoded
+    */
    static public String XMLEncode(String s) {
       StringBuffer b = new StringBuffer();
       int j;
@@ -214,10 +214,10 @@ public final class XMLParser {
       return b.toString();
    }
 
-  /** Decode XML macros
-   * @param s the string to decode
-   * @return the string decoded, null if macro error
-   */
+   /** Decode XML macros
+    * @param s the string to decode
+    * @return the string decoded, null if macro error
+    */
    static public String XMLDecode(String s) {
       StringBuffer b = new StringBuffer();	// for the result
       StringBuffer c=null;			// for the current macro
@@ -242,7 +242,7 @@ public final class XMLParser {
                   else {
                      if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.XMLDecode("+s+") macro unknown => ignored !");
                      return s;  // Macro non trouvée, on retourne simplement la macro
-//                     return null;
+                     //                     return null;
                   }
                   mode=0;
                }
@@ -255,21 +255,21 @@ public final class XMLParser {
 
       return b.toString();
    }
-   
+
    /** Retourne les caractères non lus du buffer courant, ou null si lecture terminée */
-   public byte [] getUnreadBuffer() { 
+   public byte [] getUnreadBuffer() {
       if( max== -1 ) return null;
       byte [] buf = new byte[max-offset];
       System.arraycopy(tmp,offset,buf,0,max-offset);
       return buf;
    }
-   
+
    static private final char EOF = 26;
 
-  /** Get the next character from the stream
-   *
-   * @return char
-   */
+   /** Get the next character from the stream
+    *
+    * @return char
+    */
    private char xmlGetc() {
       if( offset>=max ) {
          try { max=dis.read(tmp); }
@@ -280,37 +280,37 @@ public final class XMLParser {
       return (char)tmp[offset++];
    }
 
-  /** Return true if the charater is a space (' ', '\t', '\n' or '\r')
-   * @param ch
-   * @return boolean
-   */
-//   private static final boolean isSpace(char ch) {
-//      return ch==' ' || ch=='\t' || ch=='\n' || ch=='\r';
-//   }
-   
-   static private final char COM[] = { '!','-','-' }; 
+   /** Return true if the charater is a space (' ', '\t', '\n' or '\r')
+    * @param ch
+    * @return boolean
+    */
+   //   private static final boolean isSpace(char ch) {
+   //      return ch==' ' || ch=='\t' || ch=='\n' || ch=='\r';
+   //   }
+
+   static private final char COM[] = { '!','-','-' };
    private boolean flagCOM;
-   static private final char CDATA[] = { '!','[','C','D','A','T','A','[' }; 
+   static private final char CDATA[] = { '!','[','C','D','A','T','A','[' };
    private boolean flagCDATA;
    private boolean flagDoublePoint;
-   
-   
+
+
    private StringBuilder curString = new StringBuilder();
    private StringBuilder macro = new StringBuilder();
-      
-  /** Recherche la chaine courante en fonction du mode du parsing
-   * La mémorisation se fait dans le tableau ch[], et les variables start et length.
-   * Par défaut les blancs sont concaténés en 1 unique espace et les macros XML sont résolues
-   * @param mode 0 jusqu'à '>' ou espace
-   *             1 jusqu'à '>'
-   *             2 jusqu'à '<' (pas de mémorisation)
-   *             3 jusqu'à "]]" (pas de concaténation des blancs ni de résolution des macros)
-   *             4 jusqu'à "-->" (pas de concaténation des blancs ni de résolution des macros)
-   *             5 jusqu'à "<?xml....>" ou <?XML...>
-   *              (pas de concaténation des blancs ni de résolution des macros)
-   * @return le dernier caractère ou EOF si fin du stream ou error (=> error!=null)
-   * @throws Exception
-   */
+
+   /** Recherche la chaine courante en fonction du mode du parsing
+    * La mémorisation se fait dans le tableau ch[], et les variables start et length.
+    * Par défaut les blancs sont concaténés en 1 unique espace et les macros XML sont résolues
+    * @param mode 0 jusqu'à '>' ou espace
+    *             1 jusqu'à '>'
+    *             2 jusqu'à '<' (pas de mémorisation)
+    *             3 jusqu'à "]]" (pas de concaténation des blancs ni de résolution des macros)
+    *             4 jusqu'à "-->" (pas de concaténation des blancs ni de résolution des macros)
+    *             5 jusqu'à "<?xml....>" ou <?XML...>
+    *              (pas de concaténation des blancs ni de résolution des macros)
+    * @return le dernier caractère ou EOF si fin du stream ou error (=> error!=null)
+    * @throws Exception
+    */
    private char xmlGetString(int mode) throws Exception {
       int l=0;				               // taille dans a[]
       int ol=-1;				           // en mode 5, <?xml...> l'offset du suffixe
@@ -335,11 +335,11 @@ public final class XMLParser {
 
       Util.resetString(curString);         // Pour mémoriser la chaine courante
       Util.resetString(macro);             // Pour mémoriser la macro courante
-      
-//System.out.print("mode="+mode+": [");
+
+      //System.out.print("mode="+mode+": [");
       while( encore && (c1=c=xmlGetc())!=EOF ) {
-//System.out.print(c);
-         
+         //System.out.print(c);
+
          // Traitement des macros (si besoin est)
          if( (mode==0 || mode==2) /* mode<3 */ && (c=='&' || macro.length()>0) ) {
             macro.append(c);
@@ -353,8 +353,8 @@ public final class XMLParser {
                } catch( Exception e ) {
                   if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.xmlGetString(...) unresolved macro ["+m+"] => ignored !");
 
-                   // Pas de macro, on continue tout de même (PF 2013)
-//                  error="unresolved macro ["+m+"]"; return 0; 
+                  // Pas de macro, on continue tout de même (PF 2013)
+                  //                  error="unresolved macro ["+m+"]"; return 0;
                }
             } else {
                int i;
@@ -363,78 +363,78 @@ public final class XMLParser {
                else {
                   // Pas de macro, on continue tout de même (PF 2013)
                   if( Aladin.levelTrace>=3 ) System.err.println("XMlParser.xmlGetString(...) unknown macro ["+m+"] => ignored !");
-//                  error="unknown macro ["+m+"]"; return 0;
+                  //                  error="unknown macro ["+m+"]"; return 0;
                }
             }
             Util.resetString(macro);
          }
-         
+
          space=Character.isSpace(c);
          if( space ) spaceChar=c;
-         
+
          switch(mode) {
-            case 0: encore=(!space && c!='>'); 
-            
-                    // Pour repérer s'il y a un éventuel nom de domaine
-                    if( c==':' ) flagDoublePoint=true;
-                    
-                    // test sur !-- en debut
-                    if( inCOM ) {
-                       if( c!=COM[l] ) inCOM=false;
-                       else if( l==COM.length-1 ) { flagCOM=true; return c; }
-                    }
-           
-                    // test sur ![CDATA[ en début
-                    if( inCDATA ) {
-                       if( c!=CDATA[l] ) inCDATA=false;
-                       else if( l==CDATA.length-1 ) { flagCDATA=true; return c; }
-                    }
-                    break;
+            case 0: encore=(!space && c!='>');
+
+            // Pour repérer s'il y a un éventuel nom de domaine
+            if( c==':' ) flagDoublePoint=true;
+
+            // test sur !-- en debut
+            if( inCOM ) {
+               if( c!=COM[l] ) inCOM=false;
+               else if( l==COM.length-1 ) { flagCOM=true; return c; }
+            }
+
+            // test sur ![CDATA[ en début
+            if( inCDATA ) {
+               if( c!=CDATA[l] ) inCDATA=false;
+               else if( l==CDATA.length-1 ) { flagCDATA=true; return c; }
+            }
+            break;
             case 1: encore=(c!='>'); break;
             case 2: encore=(c!='<');
-                                
-                    // Flush temporaire pour eviter les out of mem
-                    if( l>=MAXBUF && flagNL ) {
-                       ch=curString.toString().toCharArray();
-                       ac.characters(ch,0,ch.length-1);
-                       Util.resetString(curString);
-                       ol=l=0;
-                    }
-                    break;
-            case 3: encore = !(endbracket && c=='>');
-                    bracket=(c==']');
-                    endbracket = (obracket && bracket);
-                    obracket=bracket;
 
-                    // Flush temporaire pour eviter les out of mem
-                    if( l>=MAXBUF && flagNL ) {
-                       ch=curString.toString().toCharArray();
-                       ac.characters(ch,0,ch.length-1);
-                       Util.resetString(curString);
-                       ol=l=0;
-                    }
-                    break;
+            // Flush temporaire pour eviter les out of mem
+            if( l>=MAXBUF && flagNL ) {
+               ch=curString.toString().toCharArray();
+               ac.characters(ch,0,ch.length-1);
+               Util.resetString(curString);
+               ol=l=0;
+            }
+            break;
+            case 3: encore = !(endbracket && c=='>');
+            bracket=(c==']');
+            endbracket = (obracket && bracket);
+            obracket=bracket;
+
+            // Flush temporaire pour eviter les out of mem
+            if( l>=MAXBUF && flagNL ) {
+               ch=curString.toString().toCharArray();
+               ac.characters(ch,0,ch.length-1);
+               Util.resetString(curString);
+               ol=l=0;
+            }
+            break;
             case 4: encore = !(endminus && c=='>');
-                    minus=(c=='-');
-                    endminus = (ominus && minus);
-                    ominus=minus;
-                    break;
+            minus=(c=='-');
+            endminus = (ominus && minus);
+            ominus=minus;
+            break;
             case 5: encore = !(xml4 && c=='>');
-                    xml4=(xml3 && (c=='l' || c=='L') || xml4);
-                    xml3=(xml2 && (c=='m' || c=='M'));
-                    xml2=(xml1 && (c=='x' || c=='X'));
-                    xml1=(xml0 && c=='?');
-                    xml0=(c=='<');
-                    if( xml0 ) ol=l;	// Pour ne pas memoriser le <?xml..>
-                    break;
+            xml4=(xml3 && (c=='l' || c=='L') || xml4);
+            xml3=(xml2 && (c=='m' || c=='M'));
+            xml2=(xml1 && (c=='x' || c=='X'));
+            xml1=(xml0 && c=='?');
+            xml0=(c=='<');
+            if( xml0 ) ol=l;	// Pour ne pas memoriser le <?xml..>
+            break;
          }
-         
+
          if( (mode==3 || mode==5 || (!space || space && !ospace) && mode<3) ) {
             if( mode!=3 && mode!=5 && space ) c1= ' '; // spaceChar; // substitution des blancs
             curString.append(c1);
             l++;
          }
-         
+
          ospace=space;
          flagNL=(c=='\n' || c=='\r');
          if( c=='\n' ) line++;
@@ -445,17 +445,17 @@ public final class XMLParser {
       start=0;
       length=(mode==3)?ch.length-3:(mode==5 && xml4 && ol>=0 )?ol:ch.length-1;
       if( length<0 ) length=0;
-//System.out.println("]");
+      //System.out.println("]");
       return c1;
    }
 
-  /** Get from ch[] work buffer the current param name for an XML tag
-   * <XXX name=value ...>.
-   * At the beginning, the start index points after the XXX tag name.
-   * At the end, the start index points to the fist character after the
-   * tag name.
-   * @return the param name in lower case
-   */
+   /** Get from ch[] work buffer the current param name for an XML tag
+    * <XXX name=value ...>.
+    * At the beginning, the start index points after the XXX tag name.
+    * At the end, the start index points to the fist character after the
+    * tag name.
+    * @return the param name in lower case
+    */
    private String getNameParam() {
 
       // skip blanks
@@ -469,8 +469,8 @@ public final class XMLParser {
          start++;
       }
 
-//System.out.println("name=["+(new String(ch,a,start-a))+"]");
-      
+      //System.out.println("name=["+(new String(ch,a,start-a))+"]");
+
       // Résolution de macros ?
       if( flagMacro ) {
          String s = XMLDecode( new String(ch,a,start-a));
@@ -480,14 +480,14 @@ public final class XMLParser {
       return new String(ch,a,start-a);
    }
 
-  /** Get from ch[] work buffer the current param value for an XML tag
-   * <XXX name=value ...>.
-   * The param value can be quoted by " or '.
-   * At the beginning, the start index points on the blanks or = character
-   * before the value.
-   * At the end, the start index has been reached the end of the ch buffer
-   * @return the param value, null if error
-   */
+   /** Get from ch[] work buffer the current param value for an XML tag
+    * <XXX name=value ...>.
+    * The param value can be quoted by " or '.
+    * At the beginning, the start index points on the blanks or = character
+    * before the value.
+    * At the end, the start index has been reached the end of the ch buffer
+    * @return the param value, null if error
+    */
    private String getValueParam() {
 
       // skip the blanks and/or =
@@ -504,7 +504,7 @@ public final class XMLParser {
       int a = start;
       boolean flagMacro=false;  // true si susceptible d'y avoir une macro
       while( start<end && ( (stop==' ' && !Character.isSpace(ch[start]))
-                         || (stop!=' ' && ch[start]!=stop) ) ) {
+            || (stop!=' ' && ch[start]!=stop) ) ) {
          if( !flagMacro && ch[start]=='&' ) flagMacro=true;
          start++;
       }
@@ -513,9 +513,9 @@ public final class XMLParser {
       // Go to the next param
       if( stop!=' ' ) start++;	// skip the quote
       while( start<end && Character.isSpace(ch[start]) ) start++;	// skip the blanks
-//System.out.println("value=["+s+"]");
-//      return s;
-      
+      //System.out.println("value=["+s+"]");
+      //      return s;
+
       // Résolution de macros ?
       if( flagMacro ) {
          String s = XMLDecode( new String(ch,a,debut-a));
@@ -524,16 +524,16 @@ public final class XMLParser {
       }
       return new String(ch,a,debut-a);
    }
-   
-  /** Récupère le contenu du tag courant
-   * @param mode -1 Sans parsing des paramètres et jusqu'à  "--"
-   *              0 Sans parsing des paramètres
-   *              1 Avec parsing des paramètres => mémorisation dans la Hashtable param
-   * @return -1 : error
-   *          0 : Ok
-   *          3 : C'est un end tag (ex: <name param/>)
-   * @throws Exception
-   */
+
+   /** Récupère le contenu du tag courant
+    * @param mode -1 Sans parsing des paramètres et jusqu'à  "--"
+    *              0 Sans parsing des paramètres
+    *              1 Avec parsing des paramètres => mémorisation dans la Hashtable param
+    * @return -1 : error
+    *          0 : Ok
+    *          3 : C'est un end tag (ex: <name param/>)
+    * @throws Exception
+    */
    private int xmlGetParamTag(int mode) throws Exception {
       char c;
       int code=0;
@@ -542,7 +542,7 @@ public final class XMLParser {
       // Récupère la chaine courante en fonction du mode de parsing
       c=xmlGetString(mode==-1?4:1);
 
-       // traitement particulier du tag <XXX/>
+      // traitement particulier du tag <XXX/>
       if( length>0 && ch[start+length-1]=='/' ) {
          code=3;
          length--;
@@ -569,16 +569,16 @@ public final class XMLParser {
       return code;
    }
 
-  /** Recupère le nom du tag (en supprimant un éventuel namespace)
-   * @return -1 : erreur
-   *          0 : il y a des paramètres après le nom du tag
-   *          1 : tag de debut simple <XXX>
-   *          2 : tag de fin </XXX>
-   *          3 : tag de fin avec attribut <XXX ????/>
-   *          4 : il s'agit en fait d'une balise <![CDATA[
-   *          5 : il s'agit en fait d'une balise <!--
-   * @throws Exception
-   */
+   /** Recupère le nom du tag (en supprimant un éventuel namespace)
+    * @return -1 : erreur
+    *          0 : il y a des paramètres après le nom du tag
+    *          1 : tag de debut simple <XXX>
+    *          2 : tag de fin </XXX>
+    *          3 : tag de fin avec attribut <XXX ????/>
+    *          4 : il s'agit en fait d'une balise <![CDATA[
+    *          5 : il s'agit en fait d'une balise <!--
+    * @throws Exception
+    */
    private int xmlGetNameTag() throws Exception {
       char c; 		// le caractère courant
       int code=1;	// le code de retour
@@ -588,7 +588,7 @@ public final class XMLParser {
          setError("stream truncated");
          return -1;
       }
-      
+
       if( flagCDATA ) return 4;
       if( flagCOM ) return 5;
 
@@ -598,7 +598,7 @@ public final class XMLParser {
          start++;
          length--;
 
-      // Triatement du tag <XXX/>
+         // Triatement du tag <XXX/>
       } else if( length>1 && ch[start+length-1]=='/' ) {
          code=3;
          length--;
@@ -606,21 +606,21 @@ public final class XMLParser {
 
       // Il y a-t-il des paramètres après le nom ?
       if( code==1 && c!='>' ) code=0;
-      
+
       // Supprime un éventuel namespace (cochonnerie de XML)
       if( flagDoublePoint ) {
          int debut=start;
          int longueur=length;
          for( int i=start; i<start+length; i++) if( ch[i]==':' ) { debut=i+1; longueur=length-(i-start)-1; break; }
          name = new String(ch,debut,longueur);
-         
+
       } else {
          name = new String(ch,start,length);
       }
 
       return code;
    }
-   
+
    /**
     * Retourne true si on a terminé un parsing partiel. Teste simplement si le
     * tag courant est égale au endTag indiqué au démarrage du parsing
@@ -631,7 +631,7 @@ public final class XMLParser {
       return endTag!=null && endTag.equals(tag);
    }
 
-  /** Parsing du tag courant
+   /** Parsing du tag courant
     * @return 1 ok, 0 erreur, -1 fin de parsing partiel
     * @throws Exception
     */
@@ -644,10 +644,10 @@ public final class XMLParser {
       // Analyse d'une séquence d'échappement CDATA
       if( code==4 ) {
          char c=xmlGetString(3);
-         
+
          // Si la séquence CDATA commence par un retour chariot, je le saute
          int gap= ch[start]=='\n' ? 1 : 0;
-         
+
          // normalement le test devrait être "length>0" mais il peut y avoir
          // éventuellement juste un \n dans le cas de lecture par blocs, ce qui fait
          // planter la suite. Comme de toutes façons je ne vois pas une table n'ayant qu'une
@@ -658,9 +658,9 @@ public final class XMLParser {
 
       // Commentaire XML <!-- ... -->  => ignoré
       if( code==5 ) return xmlGetParamTag(-1)>=0?1:0;
-//      char c = ch[start];
-//      if( length>=3 && c=='!'
-//          && ch[start+1]=='-' && ch[start+2]=='-') return xmlGetParamTag(-1)>=0?1:0;
+      //      char c = ch[start];
+      //      if( length>=3 && c=='!'
+      //          && ch[start+1]=='-' && ch[start+2]=='-') return xmlGetParamTag(-1)>=0?1:0;
 
       char c = ch[start];
       // Tags spéciaux <!..., <?... => ignoré
@@ -670,7 +670,7 @@ public final class XMLParser {
       if( code==0 ) code=xmlGetParamTag(1);
       else if( code==1 ) param.clear();
 
-//System.out.println("code="+code);
+      //System.out.println("code="+code);
 
       // Traitement des erreurs
       if( code<0 ) return 0;
@@ -678,73 +678,73 @@ public final class XMLParser {
       // Fin de tag directement dans le tag => on dépile
       if( code==3 ) {
 
-          // On envoit au consommateur
-          // La pile doit être mise à jour au préalable, puis dépilé immédiatement
-          if( stack!=null ) stack.push(name);
-          nstack++;
-          ac.startElement(name,param);
-          if( stack!=null ) stack.pop();
-          nstack--;
-          ac.endElement(name);
-          return partialParsing(name)?-1:1;
+         // On envoit au consommateur
+         // La pile doit être mise à jour au préalable, puis dépilé immédiatement
+         if( stack!=null ) stack.push(name);
+         nstack++;
+         ac.startElement(name,param);
+         if( stack!=null ) stack.pop();
+         nstack--;
+         ac.endElement(name);
+         return partialParsing(name)?-1:1;
 
-      // Fin de tag en deux morceaux => On dépile et on compare avec le haut de la pile
+         // Fin de tag en deux morceaux => On dépile et on compare avec le haut de la pile
       } else if( code==2 ) {
 
-          if( nstack==0 /* stack.empty() */ ) {
-             setError("Unexpected end tag (</"+name+">)");
-             return 0;
-          }
-          nstack--;
-          if( stack!=null ) {
-             String s = (String)stack.pop();
-//           System.out.println("pop "+s+" compare to "+name);
-             if( !s.equals(name) ) {
-                setError("Tags unbalanced (<"+s+">...</"+name+">)");
-                return 0;
-             }
-          }
+         if( nstack==0 /* stack.empty() */ ) {
+            setError("Unexpected end tag (</"+name+">)");
+            return 0;
+         }
+         nstack--;
+         if( stack!=null ) {
+            String s = (String)stack.pop();
+            //           System.out.println("pop "+s+" compare to "+name);
+            if( !s.equals(name) ) {
+               setError("Tags unbalanced (<"+s+">...</"+name+">)");
+               return 0;
+            }
+         }
 
-          // envoi au consommateur
-          ac.endElement(name);
-          return partialParsing(name)?-1:1;
-       }
+         // envoi au consommateur
+         ac.endElement(name);
+         return partialParsing(name)?-1:1;
+      }
 
-       // on empile
-       if( stack!=null ) stack.push(name);
-       nstack++;
-//System.out.println("push "+name);
+      // on empile
+      if( stack!=null ) stack.push(name);
+      nstack++;
+      //System.out.println("push "+name);
 
-       // envoi au consommateur
-       ac.startElement(name,param);
-       // if format testing and element found then the parsing must stop
-//       if (formatQuest == true) {
-//        if (name.compareTo("VOTABLE") == 0 || name.compareTo("ASTRO") == 0)
-//          return 0;
-//       }
-       return 1;
+      // envoi au consommateur
+      ac.startElement(name,param);
+      // if format testing and element found then the parsing must stop
+      //       if (formatQuest == true) {
+      //        if (name.compareTo("VOTABLE") == 0 || name.compareTo("ASTRO") == 0)
+      //          return 0;
+      //       }
+      return 1;
    }
 
-  /** recherche du prochain tag <XXX ...>.
-   * Rq: Si le stream ne commence pas par du XML, les caractères seront
-   * envoyés au consommateur tels quels
-   * @return true ou false en conftion du résultat du parsing XML
-   * @throws Exception
-   */
+   /** recherche du prochain tag <XXX ...>.
+    * Rq: Si le stream ne commence pas par du XML, les caractères seront
+    * envoyés au consommateur tels quels
+    * @return true ou false en conftion du résultat du parsing XML
+    * @throws Exception
+    */
    private boolean xmlBeforeTag() throws Exception {
       char c;	// caractère courant
 
       while(true ) {
          c = xmlGetString(beforeXML?5:2);       	// va au prochain '<'
          if( length>0 && !(length==1 && ch[start]==' '))
-               ac.characters(ch,start,length);	   // Envoi au consommateur
+            ac.characters(ch,start,length);	   // Envoi au consommateur
          if( beforeXML ) { beforeXML=false; continue; }
          if( c==EOF ) return (error==null);	       // Fin du stream
-         switch( xmlInTag() ) { 
+         switch( xmlInTag() ) {
             case 0: return false;	// Fin sur erreur
             case -1:
-               xmlGetString(1); 
-//             System.out.println("J'ai fini le parsing pour "+endTag);
+               xmlGetString(1);
+               //             System.out.println("J'ai fini le parsing pour "+endTag);
                return true;	// Fin d'un parsing partiel
          }
       }

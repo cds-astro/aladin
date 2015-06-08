@@ -4947,7 +4947,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * un fondu enchainé */
    protected double getCurrentFrameLevel() {
       if( cubeControl==null ) return 1;
-      double frame = cubeControl.getCurrentFrameIndex();
+      double frame = getCurrentFrameIndex();
+      if( frame==-1 ) frame=0;
       double transparency = cubeControl.getTransparency();
       if( transparency==-1 || transparency==0 ) return frame;
       if( transparency==1 ) return frame<cubeControl.nbFrame ? frame+1 : 0;
@@ -4956,7 +4957,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Retourne l'indice de la frame courante dans le cas d'un plan blink de référence. */
    protected int getCurrentFrameIndex() {
-      return cubeControl.getCurrentFrameIndex();
+      double f = cubeControl.getCurrentFrameIndex();
+      if( f==-1 ) f=0;
+      return (int)f;
    }
 
 

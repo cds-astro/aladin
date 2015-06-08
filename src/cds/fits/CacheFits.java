@@ -256,8 +256,31 @@ public class CacheFits {
          if( context!=null ) {
             flagChangeOrig = f.fits.bzero!=context.bZeroOrig || f.fits.bscale!=context.bScaleOrig;
             if( flagChangeOrig && firstChangeOrig ) {
-               context.warning("All original images do no used the same BZERO & BSCALE factors => rescaling will be applied");
+               context.warning("All original data sets do no used the same BZERO & BSCALE factors => rescaling will be applied");
                firstChangeOrig=false;
+            }
+            if( context.isCube() ) {
+               int d=1;
+               try {
+                  d = f.fits.headerFits.getIntFromHeader("NAXIS3");
+                  if( d!=context.depth )  throw new Exception();
+               } catch( Exception e ) {
+                  throw new Exception("Uncompatible cube depth ("+d+") => file ignored ["+f.fits.getFilename()+"]");
+               }
+               if( context.isCubeCanal() ) {
+                  try {
+                     double crpix3 = f.fits.headerFits.getDoubleFromHeader("CRPIX3");
+                     double crval3 = f.fits.headerFits.getDoubleFromHeader("CRVAL3");
+                     double cdelt3 = f.fits.headerFits.getDoubleFromHeader("CDELT3");
+                     if( context.crpix3!=crpix3 || context.crval3!=crval3 || context.cdelt3!=cdelt3 ) {
+                        throw new Exception();
+                     }
+                  } catch( Exception e) {
+                     context.warning("All original data sets do no used the same CRPIX3,CRVAL3 & CDELT3 factors => factors ignored");
+                     context.crpix3=context.crval3=context.cdelt3=0;
+                     context.bunit3=null;
+                  }
+               }
             }
          }
       }

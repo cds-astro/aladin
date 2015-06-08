@@ -29,6 +29,7 @@ public class PlanBGCube extends PlanBG {
 
    public int depth;            // Profondeur du dube (-1 si inconnue)
    protected double z=0;           // Frame courante
+   protected int zInit;        // Premier frame à afficher
    protected boolean pause;    // true si on est en pause
 
    protected PlanBGCube(Aladin aladin) {
@@ -44,16 +45,32 @@ public class PlanBGCube extends PlanBG {
       super.setSpecificParams(gluSky);
       //      type = ALLSKYCUBE;    // POUR LE MOMENT AFIN D'EVITER D'AVOIR A FAIRE LE DOUBLE TEST PARTOUT
       depth = gluSky.cubeDepth;
-      z = gluSky.cubeFirstFrame;
+      z = zInit = gluSky.cubeFirstFrame;
       pause = true;
       scanCubeProperties();
    }
 
    protected String getFrameLabel(int i) {
       if( !active ) return label;
+      if( fromCanal ) return getCanalValue(i);
       String s = prop.getProperty(Constante.OLD_OBS_COLLECTION+"_"+i);
       if( s==null ) s = prop.getProperty(Constante.KEY_OBS_COLLECTION+"_"+i);
       return s!=null ? s : label;
+   }
+
+   private double crval3,crpix3,cdelt3;
+   private String bunit3;
+   protected boolean fromCanal;
+   private int precision = -1;
+
+   /** Retourne la valeur physique correspondant au numéro du canal */
+   protected String getCanalValue(int n) {
+      if( precision==-1 ) {
+         double f = Math.abs(cdelt3);
+         precision = f<0.001 ? 3 : f<0.01 ? 2 : f<100 ? 1 : 0;
+      }
+      //      return Util.myRound( ""+(n-crpix3)*cdelt3+crval3,precision);
+      return ""+(int)Math.round(1000 * ((n+1-crpix3)*cdelt3+crval3))/1000.+(bunit3!=null?" "+bunit3:"");
    }
 
    protected boolean Free() {
@@ -73,7 +90,19 @@ public class PlanBGCube extends PlanBG {
 
          s = prop.getProperty(Constante.KEY_CUBE_FIRSTFRAME);
          if( s==null ) s = prop.getProperty(Constante.OLD_CUBE_FIRSTFRAME);
-         if( s!=null )  try { z = Integer.parseInt(s); } catch( Exception e ) { Aladin.trace(3,"PlanBGCube error on cubeFirstFrame property ["+s+"]"); }
+         if( s!=null )  try { z = zInit = Integer.parseInt(s); } catch( Exception e ) { Aladin.trace(3,"PlanBGCube error on cubeFirstFrame property ["+s+"]"); }
+
+         // Lecture de la valeur physique du canal ?
+         try {
+            s = prop.getProperty(Constante.KEY_CUBE_CRPIX3);
+            crpix3 = Double.parseDouble(s);
+            s = prop.getProperty(Constante.KEY_CUBE_CRVAL3);
+            crval3 = Double.parseDouble(s);
+            s = prop.getProperty(Constante.KEY_CUBE_CDELT3);
+            cdelt3 = Double.parseDouble(s);
+            fromCanal=true;
+            bunit3 = prop.getProperty(Constante.KEY_CUBE_BUNIT3);
+         } catch( Exception e ) { fromCanal=false; }
 
       } catch( Exception e ) { return false; }
       return true;
@@ -114,7 +143,11 @@ public class PlanBGCube extends PlanBG {
 
    /** Retourne le Frame courant, et si pas de vue attachée, le frame par défaut */
    protected double getZ(ViewSimple v) {
-      if( v.pref==this ) return v.cubeControl.getCurrentFrameIndex();
+      if( v.pref==this ) {
+         int f = v.cubeControl.getCurrentFrameIndex();
+         if( f==-1 ) f = v.cubeControl.lastFrame=zInit;
+         return f;
+      }
       return z;
    }
 
