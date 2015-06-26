@@ -256,7 +256,7 @@ public class CacheFits {
          if( context!=null ) {
             flagChangeOrig = f.fits.bzero!=context.bZeroOrig || f.fits.bscale!=context.bScaleOrig;
             if( flagChangeOrig && firstChangeOrig ) {
-               context.warning("All original data sets do no used the same BZERO & BSCALE factors => rescaling will be applied");
+               context.warning("All original data sets do no used the same BZERO & BSCALE factors => rescaling will be applied => "+fileName);
                firstChangeOrig=false;
             }
             if( context.isCube() ) {

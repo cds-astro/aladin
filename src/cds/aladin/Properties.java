@@ -1103,7 +1103,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             PropPanel.addFilet(p, g, c);
             PropPanel.addSectionTitle(p,"Original data",g,c);
 
-            if( sP!=null ) PropPanel.addCouple(p,"Provenance", new JLabel(sP), g,c);
+            if( sP!=null ) PropPanel.addCouple(p,"Provenance", new Anchor(null,40,sP,null), g,c);
             if( sC!=null || sCU!=null ) PropPanel.addCouple(p,"Copyright", new Anchor(sC,40,null,sCU), g,c);
             if( hasProgen ) {
                JButton bt = new JButton(aladin.chaine.getString("PROGENITOR"));

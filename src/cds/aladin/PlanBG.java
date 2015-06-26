@@ -2358,7 +2358,9 @@ public class PlanBG extends PlanImage {
       drawLosanges(v.g2BG,v,now);
 
       // Ajustement de la table des couleurs
-      adjustCM( v.imageBG );
+      try {
+         adjustCM( v.imageBG );
+      } catch( Exception e ) { }
 
       // Pour pouvoir détecter s'il y a un objet sous la souris
       //      v.pixelsRGB = ((DataBufferInt)v.imageBG.getRaster().getDataBuffer()).getData();

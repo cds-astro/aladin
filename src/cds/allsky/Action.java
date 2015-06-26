@@ -43,6 +43,7 @@ public enum Action {
    CUBE      ("Create a HiPS cube based on a list of HiPS"),
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),
    UPDATE    ("Upgrade HiPS metadata additionnal files to HiPS version "+Constante.HIPS_VERSION),
+   MIRROR    ("Mirror a remote HiPS locally"),
    RGB       ("** In progress: Build and RGB HiPS from 2 or 3 other HiPS"),
    CHECK     ("** In progress: Check readability of all tiles"),
    //   INFO      ("Generate properties and index.html information files"),

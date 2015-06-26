@@ -63,6 +63,7 @@ public abstract class Builder {
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);
          case UPDATE:    return new BuilderUpdate(context);
+         case MIRROR:    return new BuilderMirror(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");
@@ -113,7 +114,16 @@ public abstract class Builder {
       if( context.isValidateOutput() ) return;
       String output = context.getOutputPath();
       if( output==null ) {
-         output = context.getInputPath() + Constante.HIPS;
+         output = context.getInputPath();
+         if( output.startsWith("http://") || output.startsWith("https://")) {
+            output = context.getInputPath();
+            int n = output.length();
+            if( output.charAt(n-1)=='/' ) n--;
+            int offset = output.lastIndexOf('/',n);
+            output = output.substring(offset+1,n);
+         } else {
+            output = output + Constante.HIPS;
+         }
          context.setOutputPath(output);
          context.info("the output directory will be "+output);
       }

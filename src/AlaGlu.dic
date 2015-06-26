@@ -300,7 +300,7 @@
 %O CDS'aladin
 %Z ALADIN
 %U http://alasky.u-strasbg.fr/healpix-maps/planets/mars512.hpx.gz
-%Aladin.Profile >6.1 proto
+%Aladin.Profile >9 proto
 %Aladin.XLabel Mars topographic map
 %Aladin.Tree Test/Planet
 %Aladin.HpxParam map
@@ -311,7 +311,7 @@
 %O CDS'aladin
 %Z ALADIN
 %U http://alasky.u-strasbg.fr/healpix-maps/planets/moon512.hpx.gz
-%Aladin.Profile >6.1 proto
+%Aladin.Profile >9 proto
 %Aladin.XLabel Moon topographic map
 %Aladin.Tree Test/Planet
 %Aladin.HpxParam map
@@ -322,7 +322,7 @@
 %O CDS'aladin
 %Z ALADIN
 %U http://alasky.u-strasbg.fr/healpix-maps/planets/earth512.hpx.gz
-%Aladin.Profile >6.1 proto
+%Aladin.Profile >9 proto
 %Aladin.XLabel Earth topographic map
 %Aladin.Tree Test/Planet
 %Aladin.HpxParam map

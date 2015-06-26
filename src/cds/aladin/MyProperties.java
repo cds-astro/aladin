@@ -20,6 +20,15 @@ public class MyProperties extends Properties {
       prop = new Vector<ConfigurationItem>();
    }
 
+   public String [] getKeys() {
+      String [] keys = new String[ prop.size() ];
+      int i=0;
+      for( ConfigurationItem item : prop ) {
+         keys[i++] = item.key;
+      }
+      return keys;
+   }
+
    // Contient les propriétés (ConfigurationItem)
    private Vector<ConfigurationItem>          prop;
 

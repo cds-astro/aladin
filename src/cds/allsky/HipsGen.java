@@ -160,6 +160,9 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("blocking") || opt.equalsIgnoreCase("cutting") || opt.equalsIgnoreCase("partitioning")) {
          context.setPartitioning(val);
 
+      } else if( opt.equalsIgnoreCase("tileTypes") ) {
+         context.setTileTypes(val);
+
       } else if( opt.equalsIgnoreCase("shape") ) {
          context.setShape(val);
 
@@ -242,6 +245,7 @@ public class HipsGen {
          if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) Context.setVerbose(4);
          else if (arg.equalsIgnoreCase("-fast") ) context.mixing=true;
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
+         else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
 
          // toutes les autres options écrasent les précédentes
@@ -353,6 +357,7 @@ public class HipsGen {
             for( int i=0; i<actions.size() ;i++ ) {
                Action a = actions.get(i);
                if( a==Action.INDEX )   { actions.add(i, Action.CLEANINDEX);   i++; }
+               else if( a==Action.MIRROR )  { actions.add(i, Action.CLEAN); i++; }
                else if( a==Action.DETAILS ) { actions.add(i, Action.CLEANDETAILS); i++; }
                else if( a==Action.TILES )   { actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.MAPTILES ){ actions.add(i, Action.CLEANTILES);   i++; }
@@ -483,9 +488,11 @@ public class HipsGen {
                   "   method=m           Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored compressed tiles (JPEG|PNG)" + "\n" +
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
+                  "   tileTypes          List of tile format to copy (mirror action)" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +
                   "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
-                  "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"
+                  "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
+                  "   -nice              Slow download for avoiding to overload remote http server (dedicated to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
                   //          "   red        all-sky used for RED component (see rgb action)\n" +
                   //          "   green      all-sky used for BLUE component (see rgb action)\n" +
@@ -511,7 +518,8 @@ public class HipsGen {
             "   CUBE       "+Action.CUBE.doc() + "\n"+
             "   GZIP       "+Action.GZIP.doc() + "\n"+
             "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
-            "   DETAILS    "+Action.DETAILS.doc() + "\n"
+            "   DETAILS    "+Action.DETAILS.doc() + "\n"+
+            "   MIRROR    "+Action.MIRROR.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +

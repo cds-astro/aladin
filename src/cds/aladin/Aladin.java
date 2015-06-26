@@ -91,6 +91,7 @@ import cds.xml.XMLParser;
  * @beta         <LI> Colormap control for colored HiPS
  * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
  * @beta         <LI> Cube support
+ * @beta         <LI> HTTPS support
  * @beta         <LI> index.html HiPS directory description
  * @beta         <LI> tileOrder Hipsgen parameter
  * @beta         <LI> maxRatio Hipsgen parameter
@@ -138,7 +139,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.154";
+   static public final    String VERSION = "v8.158";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -155,7 +156,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+
          " - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2014 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2015 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore

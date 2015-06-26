@@ -99,6 +99,7 @@ public class Context {
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    protected ArrayList<String> fitsKeys=null;// Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
    protected int typicalImgWidth=-1;         // Taille typique d'une image d'origine
+   protected int mirrorDelay=0;              // délais entre deux récupérartion de fichier lors d'un MIRROR (0 = sans délai)
 
    protected int bitpix = -1;                // BITPIX de sortie
    protected double blank = Double.NaN;      // Valeur du BLANK en sortie
@@ -129,6 +130,8 @@ public class Context {
 
    protected int targetColorMode = Constante.TILE_JPEG;       // Mode de compression des tuiles couleurs
 
+   protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
+
    public Context() {}
 
    public void reset() {
@@ -138,7 +141,7 @@ public class Context {
       bscaleBzeroOrigSet=false;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
-      validateOutputDone=validateInputDone=validateCutDone=false;
+      validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
       isMap=false;
       prop=null;
       pixelGood=null;
@@ -148,6 +151,7 @@ public class Context {
       depthInit=false;
       crpix3=crval3=cdelt3=0;
       bunit3=null;
+      tileTypes = null;
    }
 
    // Getters
@@ -214,8 +218,8 @@ public class Context {
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) {
-      this.frame= (frame.equals("G")||frame.equals("galactic"))? Localisation.GAL:
-         frame.equals("E") || frame.equals("ecliptic") ? Localisation.ECLIPTIC : Localisation.ICRS; }
+      this.frame= (frame.equals("G")||frame.startsWith("gal"))? Localisation.GAL:
+         frame.equals("E") || frame.startsWith("ecl") ? Localisation.ECLIPTIC : Localisation.ICRS; }
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
@@ -251,6 +255,33 @@ public class Context {
          p.addPoint(x, y);
       }
       return p;
+   }
+
+   /** Indication des types de tuiles à copier lors d'une action MIRROR */
+   protected void setTileTypes(String s) {
+      Tok tok = new Tok(s);
+      while( tok.hasMoreTokens() ) addTileType(tok.nextToken());
+   }
+
+   /** Mémorisation d'une extension pour le mirroring HiPS (MIRROR).
+    * Ajoute le '.' en préfixe, sauf si l'extension est vide */
+   protected void addTileType(String s) {
+      if( s.equalsIgnoreCase("jpeg") ) s="jpg";
+      if( tileTypes==null ) tileTypes = new ArrayList<String>();
+      tileTypes.add( s.length()==0 ? s : "."+s.toLowerCase() );
+   }
+
+   /** Retourne la liste des formats de tuiles mirrorées */
+   protected String getTileTypes() {
+      if( tileTypes==null ) return null;
+      StringBuilder format = new StringBuilder();
+      for( String s :tileTypes) {
+         if( s.length()==0 ) continue;
+         if( format.length()>0 ) format.append(' ');
+         if( s.equals(".jpg")) format.append("jpeg");
+         else format.append(s.substring(1));
+      }
+      return format.toString();
    }
 
 
@@ -703,6 +734,7 @@ public class Context {
    /** Détermination de la zone du ciel à calculer (appeler par initParameters()) ne pas utiliser tout
     * seul sauf si besoin explicite */
    protected void initRegion() throws Exception {
+      if( isValidateRegion() ) return;
       try {
          if( mocIndex==null ) {
             if( isMap() ) mocIndex=new HealpixMoc("0/0-11");
@@ -714,6 +746,7 @@ public class Context {
       }
       if( mocArea==null ) moc = mocIndex;
       else moc = mocIndex.intersection(mocArea);
+      setValidateRegion(true);
    }
 
    /** Retourne la zone du ciel à calculer */
@@ -893,11 +926,12 @@ public class Context {
 
    /** Retourne le nombre de cellules à calculer (baser sur le MOC de l'index et le MOC de la zone) */
    protected long getNbLowCells() {
-      if( moc==null && mocIndex==null || getOrder()==-1 ) return -1;
+      int o = getOrder();
+      if( moc==null && mocIndex==null || o==-1 ) return -1;
       HealpixMoc m = moc!=null ? moc : mocIndex;
-      if( getOrder()!=m.getMocOrder() ) {
+      if( o!=m.getMocOrder() ) {
          m =  (HealpixMoc) m.clone();
-         try { m.setMocOrder( getOrder() ); } catch( Exception e ) {}
+         try { m.setMocOrder( o ); } catch( Exception e ) {}
       }
       long res = m.getUsedArea() * depth;
       //      Aladin.trace(4,"getNbLowsCells => mocOrder="+m.getMocOrder()+" => UsedArea="+m.getUsedArea()+"+ depth="+depth+" => "+res);
@@ -950,8 +984,8 @@ public class Context {
 
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
 
-      String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes computed in "+Util.getTemps(totalTime,true)+" ("
-            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndsIn="+Util.getTemps(tempsTotalEstime,true))+") "
+      String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime,true)+" ("
+            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime,true))+") "
             +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
             +Util.getTemps(statNodeAvgTime)+"/node"
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
@@ -968,7 +1002,7 @@ public class Context {
       double pourcent = (double)cRecord/nbRecord;
       long totalTime = (long)( cTime/pourcent);
       long endsIn = totalTime-cTime;
-      stat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true)+" endsIn="+Util.getTemps(endsIn, true)
+      stat(Util.round(pourcent*100,1)+"% in " +Util.getTemps(cTime, true)+" endsIn:"+Util.getTemps(endsIn, true)
             + " (record="+(cRecord+1)+"/"+nbRecord+")");
       if( cache!=null && cache.getStatNbOpen()>0 ) stat(cache+"");
       setProgress(cRecord,nbRecord);
@@ -985,9 +1019,33 @@ public class Context {
          (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
 
       String s;
-      if( nbLowCells<=0 ) s = s=statNbFile+" tiles created in "+Util.getTemps(cTime,true);
-      else s=statNbFile+"/"+nbLowCells+" tiles created in "+Util.getTemps(cTime,true)+" ("
-            +pourcentNbCells+" endsIn="+Util.getTemps(endsIn,true)
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
+            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn,true)
+            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
+
+      stat(s);
+   }
+
+   // Demande d'affichage des stats (dans le TabJpeg)
+   protected void showMirrorStat(int statNbFile, long cumul, long lastCumulPerSec,
+         long cTime,int statNbThread,int statNbThreadRunning) {
+      long nbLowCells = getNbLowCells();
+
+      double pourcent = nbLowCells<=0 ? 0 : (double)statNbFile/nbLowCells;
+      long totalTime = (long)( cTime/pourcent );
+      long endsIn = totalTime-cTime;
+      String pourcentNbCells = nbLowCells==-1 ? "" :
+         (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
+
+      String debit = cTime>1000L ? Util.getUnitDisk( cumul/(cTime/1000L) )+"/s" : "OB/s";
+      String debitI = Util.getUnitDisk( lastCumulPerSec )+"/s";
+
+      String s;
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
+            +pourcentNbCells+"endsIn:"+Util.getTemps(endsIn,true)
+            +" speed:"+ debitI + " avg:"+debit +" for "+Util.getUnitDisk(cumul)
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
 
       stat(s);
@@ -1178,6 +1236,10 @@ public class Context {
    private boolean validateCutDone=false;
    public boolean isValidateCut() { return validateCutDone; }
    public void setValidateCut(boolean flag) { validateCutDone=flag; }
+
+   private boolean validateRegion=false;
+   public boolean isValidateRegion() { return validateRegion; }
+   public void setValidateRegion(boolean flag) { validateRegion=flag; }
 
    static private final Astrocoo COO_GAL = new Astrocoo(new Galactic());
    static private final Astrocoo COO_EQU = new Astrocoo(new ICRS());

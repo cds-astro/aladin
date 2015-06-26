@@ -77,7 +77,7 @@ public class BuilderTiles extends Builder {
    protected long statNodeTotalTime,statNodeAvgTime;
    protected long startTime;                 // Date de lancement du calcul
    protected long totalTime;                 // Temps depuis le début du calcul
-   private Builder b=null;                   // Subtilité pour faire afficher des statistiques
+   protected Builder b=null;                 // Subtilité pour faire afficher des statistiques
 
    public BuilderTiles(Context context) { super(context); }
 

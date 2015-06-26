@@ -608,15 +608,24 @@ public class HealpixMoc implements Iterable<MocCell>,Cloneable,Comparable {
 
    /** Return the number of low level pixels of the Moc  */
    public long getUsedArea() {
+      //      long n=0;
+      //      long sizeCell = 1L;
+      //      for( int order=nOrder-1; order>=0; order--, sizeCell*=4L ) n += getSize(order)*sizeCell;
+      //      return n;
+
       long n=0;
       long sizeCell = 1L;
-      for( int order=nOrder-1; order>=0; order--, sizeCell*=4L ) n += getSize(order)*sizeCell;
+      for( int order=getMocOrder(); order>=0; order--, sizeCell*=4L ) n += getSize(order)*sizeCell;
       return n;
    }
 
    /** return the area of the Moc computed in pixels at the most low level */
    public long getArea() {
-      if( nOrder==0 ) return 0;
+      //      if( nOrder==0 ) return 0;
+      //      long nside = pow2(nOrder-1);
+      //      return 12L*nside*nside;
+
+      int nOrder = getMocOrder()+1;
       long nside = pow2(nOrder-1);
       return 12L*nside*nside;
    }

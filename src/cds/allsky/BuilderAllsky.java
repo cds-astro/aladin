@@ -32,24 +32,23 @@ import cds.tools.pixtools.Util;
  * @author Anaïs Oberto [CDS] & Pierre Fernique [CDS]
  */
 final public class BuilderAllsky  extends Builder {
-   
+
    private boolean abort=false;
-   
+
    public static final String FS = System.getProperty("file.separator");
-   
+
    public BuilderAllsky(Context context) { super(context); }
-   
+
    public Action getAction() { return Action.ALLSKY; }
-   
+
    public void validateContext() throws Exception {
       validateOutput();
       context.setProgressMax(100);
    }
-   
+
    protected void abort() { abort=true; }
-   
-   public void run() throws Exception { 
-//      if( !context.isColor() ) validateCut();
+
+   public void run() throws Exception {
       abort=false;
       validateDepth();
       for( int z=0; !abort && z<context.depth; z++ ) {
@@ -58,22 +57,22 @@ final public class BuilderAllsky  extends Builder {
             if( z==0 && !context.isColor() ) validateCut();
             createAllSkyColor(context.getOutputPath(),3,"png",64, z);
             createAllSkyColor(context.getOutputPath(),3,"jpeg",64, z);
-         } catch( Exception e ) { }
+         } catch( Exception e ) { e.printStackTrace(); }
       }
 
       postJob();
    }
-   
-   public void runJpegOrPngOnly(String format) throws Exception { 
-    validateDepth();
-    validateCut();
-    for( int z=0; z<context.depth; z++ ) {
-       createAllSkyColor(context.getOutputPath(),3,format,64, z);
-    }
 
-    postJob();
- }
-   
+   public void runJpegOrPngOnly(String format) throws Exception {
+      validateDepth();
+      validateCut();
+      for( int z=0; z<context.depth; z++ ) {
+         createAllSkyColor(context.getOutputPath(),3,format,64, z);
+      }
+
+      postJob();
+   }
+
    private void postJob() throws Exception {
       validateLabel();
       validateBitpix();
@@ -93,17 +92,17 @@ final public class BuilderAllsky  extends Builder {
       int nbOutLosangeHeight = (int)((double)n/nbOutLosangeWidth);
       if( (double)n/nbOutLosangeWidth!=nbOutLosangeHeight ) nbOutLosangeHeight++;
       int outFileWidth = outLosangeWidth * nbOutLosangeWidth;
-      
+
       boolean findParam=false;
       double bzero=0,bscale=1,blank=Double.NaN;
-      
-//      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
-//      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
-//      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
+
+      //      Aladin.trace(3,"Création Allsky order="+order+" mode=FIRST "
+      //      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
+      //      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
       Fits out = null;
-      
-//      double blank = context.getBlank();
-      
+
+      //      double blank = context.getBlank();
+
       for( int npix=0; npix<n; npix++ ) {
          if( abort || context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
@@ -121,7 +120,7 @@ final public class BuilderAllsky  extends Builder {
                   return;
                }
                out = new Fits(outFileWidth,nbOutLosangeHeight*outLosangeWidth,in.bitpix);
-               
+
                // initilialise toutes les valeurs à Blank
                if( blank!=0 ) {
                   for( int y=0; y<out.height; y++ ) {
@@ -131,7 +130,7 @@ final public class BuilderAllsky  extends Builder {
                   }
                }
             }
-                    
+
             int yLosange=npix/nbOutLosangeWidth;
             int xLosange=npix%nbOutLosangeWidth;
             int gap = in.width/outLosangeWidth;
@@ -146,37 +145,37 @@ final public class BuilderAllsky  extends Builder {
             }
          } catch( Exception e ) { }
       }
-      
+
       // Détermination des pixCutmin..pixCutmax et min..max directement dans le fichier AllSky
       if( out==null ) {
-//         context.warning("createAllsky: no FITS tiles found !");
+         //         context.warning("createAllsky: no FITS tiles found !");
          return;
       }
-      
+
       out.setBlank(blank);
       out.setBzero(bzero);
       out.setBscale(bscale);
-      
 
-   // Ecriture du FITS (true bits)
+
+      // Ecriture du FITS (true bits)
       String filename = getFileName(path, order,z);
       out.writeFITS(filename+".fits",true);
-      
+
       // Dans le cas d'un cube, il est possible que le Allsky.fits n'ait pas été créé (vide),
       // on va alors dupliquer le premier Allsky_nnn.fits en Allsky.fits pour s'en sortir
       if( z>1 ) {
          String f = getFileName(path,order,0);
          if( !(new File(f+".fits")).isFile() ) out.writeFITS(f+".fits",true);
       }
-      
+
       Aladin.trace(2,"BuilderAllsky.createAllSky()... bitpix="+out.bitpix+" bzero="+out.bzero+" bscale="+out.bscale
             +"] created in "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }
 
    static public String getFileName(String path, int order, int z) {
-	   return path+FS+"Norder"+order+FS+"Allsky"+(z>0?"_"+z : "");
+      return path+FS+"Norder"+order+FS+"Allsky"+(z>0?"_"+z : "");
    }
-   
+
    /** Création d'un AllSky JPEG couleur à partir des images JPEG ou PNG à l'ordre indiqué
     * Rq : seule la méthode FIRST est supportée
     * @param order order Healpix
@@ -195,13 +194,13 @@ final public class BuilderAllsky  extends Builder {
       boolean first = true;
       String ext = mode.equals("png") ? ".png" : ".jpg";
       int format =  mode.equals("png") ? Fits.PREVIEW_PNG : Fits.PREVIEW_JPEG;
-     
+
       Aladin.trace(3,"Creation Allsky"+ext+" order="+order+(z>0?"_"+z:"")+" mode=FIRST color"
-      +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
-      +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
+            +": "+n+" losanges ("+nbOutLosangeWidth+"x"+nbOutLosangeHeight
+            +" de "+outLosangeWidth+"x"+outLosangeWidth+" soit "+outFileWidth+"x"+nbOutLosangeHeight*outLosangeWidth+" pixels)...");
 
       Fits out = new Fits(outFileWidth,outFileHeight, 0);
-      
+
       for( int npix=0; npix<n; npix++ ) {
          if( abort || context.isTaskAborting() ) throw new Exception("Task abort !");
          if( context.getAction()==getAction() ) context.setProgress(npix*100./n);
@@ -231,27 +230,27 @@ final public class BuilderAllsky  extends Builder {
                }
             }
          }
-         catch( Exception e ) { }
+         catch( Exception e ) { e.printStackTrace(); }
       }
-      
+
       if( first ) {
-//         context.warning("createAllSkyColor : no "+ext+" tiles found!");
+         //         context.warning("createAllSkyColor : no "+ext+" tiles found!");
          return;
       }
 
       String filename = getFileName(path, order, z);
       out.writeCompressed(filename+ext,0,0,null,mode);
-      
+
       // Dans le cas d'un cube, il est possible que le Allsky.ext n'ait pas été créé (vide),
       // on va alors dupliquer le premier Allsky_nnn.ext en Allsky.ext pour s'en sortir
       if( z>1 ) {
          String f = getFileName(path,order,0);
          if( !(new File(f+ext)).isFile() ) out.writeCompressed(f+ext,0,0,null,mode);
       }
-      
 
-      
+
+
       context.trace(4,"SkyGenerator.createAllSkyColor()... "+ (int)((System.currentTimeMillis()-t)/1000)+"s");
    }
-   
+
 }
