@@ -33,10 +33,46 @@ public class MocQuery
     public MocQueryOp op;
     public Vec3 center;
     public double radius;
+    public int nops;
     public MocQueryComponent(MocQueryOp op_) throws Exception
       {
       op= op_;
       HealpixUtils.check(op_!=MocQueryOp.NONE,"bad operator");
+      switch (op)
+        {
+        case AND:
+        case OR:
+        case XOR:
+          nops=2;
+          break;
+        case NOT:
+          nops=1;
+          break;
+        case NONE:
+          nops=0;
+          break;
+        }
+      }
+    public MocQueryComponent(MocQueryOp op_, int nops_) throws Exception
+      {
+      op= op_;
+      nops=nops_;
+      switch (op)
+        {
+        case AND:
+        case OR:
+          HealpixUtils.check(nops>=2,"bad nops");
+          break;
+        case XOR:
+          HealpixUtils.check(nops==2,"bad nops");
+          break;
+        case NOT:
+          HealpixUtils.check(nops==1,"bad nops");
+          break;
+        case NONE:
+          HealpixUtils.check(false,"bad operator");
+          break;
+        }
       }
     public MocQueryComponent(Vec3 cnt, double rad)
       {
@@ -44,6 +80,7 @@ public class MocQuery
       center = new Vec3(cnt);
       center.normalize();
       radius = rad;
+      nops=0;
       }
     }
 
@@ -83,6 +120,7 @@ public class MocQuery
     private double cr[], crmin[][], crmax[][];
     private int shortcut[];
     private MocQueryOp op[];
+    private int nops[];
     private Vec3 center[];
 
     private pstack stk; // stack for pixel numbers and their orders
@@ -143,20 +181,8 @@ public class MocQuery
       {
       int myloc=loc--;
       HealpixUtils.check((myloc>=0)&&(myloc<ncomp),"inconsistency");
-      switch (op[myloc])
-        {
-        case AND:
-        case OR:
-        case XOR:
-          correctLoc();
-          correctLoc();
-          break;
-        case NOT:
-          correctLoc();
-          break;
-        case NONE:
-          break;
-        }
+      for (int i=0; i<nops[myloc]; ++i)
+        correctLoc();
       }
     int getZone (int zmin, int zmax)
       {
@@ -166,13 +192,17 @@ public class MocQuery
         {
         case AND:
           {
-          int z1=getZone(zmin,zmax);
-          return getZone(zmin,z1);
+          int z1=zmax;
+          for (int i=0; i<nops[myloc]; ++i)
+            z1 = getZone(zmin,z1);
+          return z1;
           }
         case OR:
           {
-          int z1=getZone(zmin,zmax);
-          return getZone(z1,zmax);
+          int z1=zmin;
+          for (int i=0; i<nops[myloc]; ++i)
+            z1 = getZone(z1,zmax);
+          return z1;
           }
         case XOR:
           {
@@ -213,10 +243,12 @@ public class MocQuery
       HealpixUtils.check(omax<=HealpixBase.order_max,"omax too high");
 
       op=new MocQueryOp[ncomp];
+      nops=new int[ncomp];
       center=new Vec3[ncomp];
       for (int i=0; i<ncomp; ++i)
         {
         op[i]=comp.get(i).op;
+        nops[i]=comp.get(i).nops;
         center[i]=comp.get(i).center;
         if (op[i]==MocQueryOp.NONE) // it's a cap
           cr[i]=Math.cos(comp.get(i).radius);
@@ -274,11 +306,29 @@ public class MocQuery
     throws Exception
     { return (new queryHelper(order,order,false,comp)).result(); }
 
+  static public Moc doMocQueryInclusive (int order, int omax,
+    ArrayList<MocQueryComponent> comp)
+    throws Exception
+    {
+    HealpixUtils.check ((omax>=order) && (omax<=HealpixBase.order_max),
+      "invalid omax");
+
+    return (new queryHelper(order,omax,true,comp)).result();
+    }
+
   static private double isLeft (Vec3 a, Vec3 b, Vec3 c)
     {
     return (a.cross(b)).dot(c);
     }
 
+  // adapted from code available at http://geomalgorithms.com/a12-_hull-3.html
+  // Original copyright notice follows:
+  // Copyright 2001 softSurfer, 2012 Dan Sunday
+  // This code may be freely used and modified for any purpose
+  // providing that this copyright notice is included with it.
+  // SoftSurfer makes no warranty for this code, and cannot be held
+  // liable for any real or imagined damage resulting from its use.
+  // Users of this code must verify correctness for their application.
   static private int[] getHull (Vec3 vert[], int P[])
     throws Exception
     {
@@ -316,7 +366,7 @@ public class MocQuery
       // get the leftmost tangent at the deque top
       while (isLeft(vert[D[top-1]], vert[D[top]], vert[P[i]]) <= 0)
         --top;                 // pop top of deque
-      D[++top] = P[i];           // push P[i] onto top of deque
+      D[++top] = P[i];         // push P[i] onto top of deque
       }
 
     // transcribe deque D[] to the output hull array H[]
@@ -333,18 +383,13 @@ public class MocQuery
     throws Exception
     {
     int hull[]=getHull(vv,P);
-    // add convex hull
-    for (int i=0; i<hull.length; ++i)
-      comp.add(new MocQueryComponent
-        (vv[hull[i]].cross(vv[hull[(i+1)%hull.length]]).norm(),0.5*Math.PI));
-    for (int i=1; i<hull.length; ++i)
-      comp.add(new MocQueryComponent(MocQueryOp.AND));
 
     // sync both sequences at the first point of the convex hull
     int ihull=0, ipoly=0, nhull=hull.length, npoly=P.length;
     while (hull[ihull]!=P[ipoly]) ++ipoly;
 
     // iterate over the pockets between the polygon and its convex hull
+    int npockets=0;
     do
       {
       int ihull_next = (ihull+1)%nhull,
@@ -353,6 +398,7 @@ public class MocQuery
         { ihull=ihull_next; ipoly=ipoly_next; }
       else // query pocket
         {
+        ++npockets;
         int nvpocket=2; // number of vertices for this pocket
         while (P[ipoly_next]!=hull[ihull_next])
           {
@@ -370,17 +416,30 @@ public class MocQuery
         ppocket[idx]=hull[ihull];
         // process pocket recursively
         comp=prepPolyHelper (vv, ppocket, comp);
-        comp.add(new MocQueryComponent(MocQueryOp.NOT));
-        comp.add(new MocQueryComponent(MocQueryOp.AND));
         ihull=ihull_next;
         ipoly=ipoly_next;
         }
       } while (ihull!=0);
 
+    if (npockets>1) 
+      comp.add(new MocQueryComponent(MocQueryOp.OR,npockets));
+    if (npockets>0) 
+      comp.add(new MocQueryComponent(MocQueryOp.NOT));
+
+    // add convex hull
+    for (int i=0; i<hull.length; ++i)
+      comp.add(new MocQueryComponent
+        (vv[hull[i]].cross(vv[hull[(i+1)%hull.length]]).norm(),0.5*Math.PI));
+
+    if (npockets>0) 
+      comp.add(new MocQueryComponent(MocQueryOp.AND,hull.length+1));
+    else
+      comp.add(new MocQueryComponent(MocQueryOp.AND,hull.length));
+
     return comp;
     }
 
-  static public ArrayList<MocQueryComponent> prepPolygon (ArrayList<Vec3> vertex)
+  static public ArrayList<MocQueryComponent> prepPolygon(ArrayList<Vec3> vertex)
     throws Exception
     {
     HealpixUtils.check(vertex.size()>=3,"not enough vertices in polygon");
@@ -398,4 +457,8 @@ public class MocQuery
   static public Moc queryGeneralPolygon (ArrayList<Vec3> vertex, int order)
     throws Exception
     { return doMocQuery (order, MocQuery.prepPolygon(vertex)); }
+  static public Moc queryGeneralPolygonInclusive (ArrayList<Vec3> vertex,
+    int order, int omax)
+    throws Exception
+    { return doMocQueryInclusive (order, omax, MocQuery.prepPolygon(vertex)); }
   }

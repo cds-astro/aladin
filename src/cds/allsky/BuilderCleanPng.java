@@ -27,7 +27,7 @@ import java.io.File;
 public class BuilderCleanPng extends BuilderCleanFits {
 
    public BuilderCleanPng(Context context) { super(context); }
-   
+
    public Action getAction() { return Action.CLEANPNG; }
 
    public boolean mustBeDeleted(File f) {

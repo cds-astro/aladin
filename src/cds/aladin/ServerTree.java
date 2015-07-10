@@ -121,11 +121,11 @@ public abstract class ServerTree extends Server implements Iterable<TreeNode>  {
       }
 
 
-      // EN ATTENDANT QUE CELA SOIT ENLEVE DU GLU
-      protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
-         if( noeud.path.startsWith("Progressive catalog")) return;
-         super.createTreeBranch(node,noeud, opos);
-      }
+      //      // EN ATTENDANT QUE CELA SOIT ENLEVE DU GLU
+      //      protected void createTreeBranch(DefaultMutableTreeNode node, TreeNode noeud, int opos) {
+      //         if( noeud.path.startsWith("Progressive catalog")) return;
+      //         super.createTreeBranch(node,noeud, opos);
+      //      }
 
       /** Activation ou non des branches de l'arbre en fonction de l'activation des feuilles */
       protected boolean setOkTree(DefaultMutableTreeNode node) {

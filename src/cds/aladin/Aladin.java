@@ -22,7 +22,7 @@ package cds.aladin;
 
 import healpix.essentials.Moc;
 import healpix.essentials.MocQuery;
-import healpix.essentials.MocUtil;
+//import healpix.essentials.MocUtil;
 import healpix.essentials.Pointing;
 import healpix.essentials.Vec3;
 
@@ -87,6 +87,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
  * @beta         <LI> Obscore vocabulary support
+ * @beta         <LI> Hipsgen MIRROR action
  * @beta         <LI> Hipsgen ADD mode
  * @beta         <LI> Colormap control for colored HiPS
  * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
@@ -139,7 +140,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.158";
+   static public final    String VERSION = "v8.162";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3725,9 +3726,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
          }
 
          int order=13;
-         Moc m=MocQuery.queryGeneralPolygon (cooList,order);
-         String s = MocUtil.mocToStringJSON(m);
-         HealpixMoc moc = new HealpixMoc(s);
+         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+         HealpixMoc moc = new HealpixMoc();
+         moc.rangeSet = m.getRangeSet();
+         moc.toHealpixMoc();
+
+         //         String s = MocUtil.mocToStringJSON(m);
+         //         HealpixMoc moc = new HealpixMoc(s);
 
          calque.newPlanMOC(moc,"Moc reg");
       } catch( Exception e ) {

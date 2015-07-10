@@ -20,8 +20,10 @@
 
 package cds.aladin;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -33,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import cds.aladin.MyTree.NoeudEditor;
 import cds.tools.Util;
 
 /**
@@ -162,19 +165,21 @@ public class ServerHips extends ServerTree  {
             } else {
                String params;
 
+               // Pour éviter de faire 2x la même chose
+               Coord c = v.getCooCentre();
+               double size = v.getTaille();
+               if( c.equals(oc) && size==osize ) return;
+               oc=c;
+               osize=size;
+
                // Interrogation par cercle
                if( v.getTaille()>45 ) {
-                  Coord c = v.getCooCentre();
-                  double size = v.getTaille();
-                  if( c.equals(oc) && size==osize ) return;
-                  oc=c;
-                  osize=size;
                   params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&RA="+c.al+"&DEC="+c.del+"&SR="+size*Math.sqrt(2);
 
                   // Interrogation par rectangle
                } else {
                   StringBuilder s1 = new StringBuilder("Polygon");
-                  for( Coord c: v.getCooCorners())  s1.append(" "+c.al+" "+c.del);
+                  for( Coord c1: v.getCooCorners())  s1.append(" "+c1.al+" "+c1.del);
                   params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&stc="+URLEncoder.encode(s1.toString());
                }
 
@@ -197,6 +202,21 @@ public class ServerHips extends ServerTree  {
                }
             }
 
+            // Mise à jour de la cellule de l'arbre en cours d'édition
+            try {
+               NoeudEditor c = (NoeudEditor)tree.getCellEditor();
+               if( c!=null ) {
+                  TreeNode n = (TreeNode)c.getCellEditorValue();
+                  if( n!=null &&  n.hasCheckBox() ) {
+                     if( n.isOk() ) n.checkbox.setForeground(Color.black);
+                     else n.checkbox.setForeground(Color.lightGray);
+                  }
+               }
+            } catch( Exception e ) {
+               if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            }
+
+            // Mise à jour des branches de l'arbre
             DefaultMutableTreeNode root = tree.getRoot();
             tree.setOkTree(root);
             validate();
@@ -235,17 +255,7 @@ public class ServerHips extends ServerTree  {
          if( m!=-1 ) aladin.calque.getPlan(m).setBookmarkCode(code+" $TARGET $RADIUS");
       }
       reset();
-
-
    }
-
-   //   @Override
-   //   protected void initTree() {
-   //      if( populated ) return;
-   //      populated=true;
-   //      tree.freeTree();
-   //      tree.populateTree( aladin.glu.vGluSky.elements() );
-   //   }
 
 
    private boolean dynTree=false;
@@ -255,6 +265,7 @@ public class ServerHips extends ServerTree  {
          public void run() {
             loadRemoteTree();
             tree.populateTree(aladin.glu.vGluSky.elements());
+            aladin.gluSkyReload();
          }
       }).start();
    }
@@ -263,15 +274,29 @@ public class ServerHips extends ServerTree  {
    protected void loadRemoteTree() {
       if( dynTree ) return;
       DataInputStream dis=null;
+
+      // Recherche sur le site principal, et sinon dans le cache local
       try {
          dynTree=true;
-         Aladin.trace(3,"Loading Tree definitions...");
+         Aladin.trace(3,"Loading HiPS Tree definitions...");
          String params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&fmt=glu&get=record";
          String u = aladin.glu.getURL("MocServer", params, true).toString();
-         dis = new DataInputStream(aladin.cache.getWithBackup(u));
-         aladin.glu.loadGluDic(dis,0,false,true,false,false);
+         InputStream in;
+         try {
+            in = aladin.cache.getWithBackup(u);
 
-      } catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
+            // Peut être un site esclave actif ?
+         } catch( Exception e) {
+            if( !aladin.glu.checkIndirection("MocServer", null) ) throw e;
+            u = aladin.glu.getURL("MocServer", params, true).toString();
+            in = Util.openStream(u);
+         }
+         dis = new DataInputStream(in);
+         aladin.glu.loadGluDic(dis,0,false,true,false,false);
+         aladin.glu.tri();
+
+      }
+      catch( Exception e1 ) { if( Aladin.levelTrace>=3 ) e1.printStackTrace(); }
       finally { if( dis!=null ) { try { dis.close(); } catch( Exception e) {} }
       }
    }

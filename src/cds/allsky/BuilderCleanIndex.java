@@ -33,10 +33,10 @@ public class BuilderCleanIndex extends BuilderClean {
    public BuilderCleanIndex(Context context) {
       super(context);
    }
-   
+
    public Action getAction() { return Action.CLEANINDEX; }
-   
-   public void validateContext() throws Exception { 
+
+   public void validateContext() throws Exception {
       super.validateContext();
       if( context instanceof ContextGui ) {
          JProgressBar bar = ((ContextGui)context).mainPanel.getProgressBarIndex();
@@ -45,14 +45,14 @@ public class BuilderCleanIndex extends BuilderClean {
          bar.setString("Cleaning previous index...");
       }
    }
-   
+
    public boolean isAlreadyDone() { return !(new File(context.getHpxFinderPath())).exists(); }
-   
+
    public void run() throws Exception {
       if( context instanceof ContextGui ) Util.pause(1000); // Juste pour faire beau
       deleteDir( new File(context.getHpxFinderPath()) );
    }
-   
+
    public boolean mustBeDeleted(File f) {
       String name = f.getName();
       if( name.equals(Constante.FILE_METADATAXML) ) return false;

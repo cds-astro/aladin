@@ -579,7 +579,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne le serveur d'images par défaut */
    protected String getServer() {
       String s = get(SERVER);
-      s = s==null || s.equalsIgnoreCase("allsky")? "hips" : s;
+      s = s==null || s.equalsIgnoreCase("allsky") || s.trim().length()==0 ? "hips" : s;
       return s;
    }
 

@@ -246,6 +246,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-fast") ) context.mixing=true;
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
          else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
+         else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
 
          // toutes les autres options écrasent les précédentes
@@ -455,9 +456,11 @@ public class HipsGen {
                   "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
                   "   blank=nn           Specifical BLANK value" + "\n" +
                   "   skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
-                  "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be produced in jpeg (resp. png)" + "\n" +
+                  "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be " + "\n" +
+                  "                      produced in jpeg (resp. png)" + "\n" +
                   "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +
-                  "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or constant)" + "\n" +
+                  "   border=...         Margins (in pixels) to ignore in the original observations (N W S E or " + "\n" +
+                  "                      constant)" + "\n" +
                   "   fov=true|x1,y1..   Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
                   "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
                   "   -f                 clear previous computations\n"+
@@ -472,27 +475,35 @@ public class HipsGen {
                   "                      conversion, or for removing bad pixels - ex: \"-5 110\")" + "\n" +
                   "   pixelGood=min [max] Range of pixel values kept" + "\n" +
                   "   img=file           Specifical reference image for default initializations \n" +
-                  "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,dataRange)" + "\n" +
+                  "                      (BITPIX,BSCALE,BZERO,BLANK,order,pixelCut,pixelRange)" + "\n" +
                   "   mode=xx            Coadd mode when restart: pixel level(OVERWRITE|KEEP|ADD|AVERAGE) \n" +
                   "                      or tile level (REPLACETILE|KEEPTILE) - (default OVERWRITE)" + "\n" +
                   "                      Or LINK|COPY for CUBE action (default COPY)" + "\n" +
-                  "   fading=true|false  False to avoid fading effect on overlapping original images (default is true)" + "\n" +
-                  "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images (default is true)" + "\n" +
-                  "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 (default is true)" + "\n" +
+                  "   fading=true|false  False to avoid fading effect on overlapping original images " + "\n" +
+                  "                      (default is true)" + "\n" +
+                  "   mixing=true|false  False to avoid mixing (and fading) effect on overlapping original images " + "\n" +
+                  "                      (default is true)" + "\n" +
+                  "   partitioning=true|false True for cutting large original images in blocks of 1024x1024 " + "\n" +
+                  "                      (default is true)" + "\n" +
                   "   region=moc         Specifical HEALPix region to compute (ex: 3/34-38 50 53)\n" +
                   "                      or Moc.fits file (all sky by default)" + "\n" +
-                  "   maxRatio=nn        Max pixel height width pixel ratio tolerated for original obs (default 2, 0 for removing the test)" + "\n" +
+                  "   maxRatio=nn        Max height/width pixel ratio tolerated for original obs " + "\n" +
+                  "                      (default 2, 0 for removing the test)" + "\n" +
                   //          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
-                  "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value to memorized in the HiPS index" + "\n" +
+                  "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
+                  "                      to memorized in the HiPS index" + "\n" +
                   "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
-                  "   method=m           Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored compressed tiles (JPEG|PNG)" + "\n" +
+                  "   method=m           Method (MEDIAN|MEAN|FIRST) (default MEDIAN) for aggregating colored " + "\n" +
+                  "                      compressed tiles (JPEG|PNG)" + "\n" +
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
-                  "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default auto-adapted to the HiPS" + "\n" +
+                  "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
+                  "                      auto-adapted to the HiPS" + "\n" +
                   "   tileTypes          List of tile format to copy (mirror action)" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +
                   "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
-                  "   -nice              Slow download for avoiding to overload remote http server (dedicated to MIRROR action)" + "\n"
+                  "   -nice              Slow download for avoiding to overload remote http server (dedicated " + "\n" +
+                  "                      to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
                   //          "   red        all-sky used for RED component (see rgb action)\n" +
                   //          "   green      all-sky used for BLUE component (see rgb action)\n" +
@@ -525,9 +536,9 @@ public class HipsGen {
             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +
             "\n           The FITS tiles will be coded in short integers, the preview tiles" +
             "\n           will map the physical values [-1..100] with a log function contrast in [0..255]." +
-            "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE    => recompute tiles" +
-            "\n           The original pixels in the border or equal to 0 will be ignored."+
-            "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT   => Concatenate HiPS to HiPStarget"
+            "\n    java -jar "+launcher+" in=/MyImages blank=0 border=\"100 50 100 50\" mode=REPLACETILE   " + "\n" +
+            "           => recompute tiles. The original pixels in the border or null will be ignored."+
+            "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT => Concatenate HiPS to HiPStarget"
             //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
             );
    }

@@ -131,6 +131,7 @@ public class Context {
    protected int targetColorMode = Constante.TILE_JPEG;       // Mode de compression des tuiles couleurs
 
    protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
+   protected boolean testClonable=true;
 
    public Context() {}
 
@@ -1574,6 +1575,9 @@ public class Context {
       if( label==null || label.trim().length()==0) label= "XXX_"+(System.currentTimeMillis()/1000);
 
       prop.setProperty(Constante.KEY_OBS_COLLECTION, label+"_"+Constante.FILE_HPXFINDER);
+      // Pour compatibilité - A virer en 2016
+      prop.setProperty(Constante.OLD_OBS_COLLECTION, label+"_"+Constante.FILE_HPXFINDER);
+
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, frame==Localisation.ICRS ? "equatorial" : frame==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
 

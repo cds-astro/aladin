@@ -22,6 +22,7 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -42,6 +43,8 @@ public class BuilderMirror extends BuilderTiles {
    private MyProperties prop;           // Correspond aux propriétés distantes
    private boolean isPartial=false;     // indique que la copie sera partielle (spatialement, order ou format des tuiles)
    private boolean isSmaller=false;     // indique que la copie concerne une zone spatial plus petite que l'original
+   private boolean isUpdate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié
+   private long lastReleaseDate=0L;     // Date of last release date of the local copy
 
    public BuilderMirror(Context context) {
       super(context);
@@ -61,9 +64,15 @@ public class BuilderMirror extends BuilderTiles {
          prop.load(in);
       } finally{  if( in!=null ) in.close(); }
 
+      // Détermination du statut
+      String s = prop.getProperty(Constante.KEY_HIPS_STATUS);
+      if( s!=null && context.testClonable && s.indexOf("unclonable")>=0 ) {
+         throw new Exception("This HiPS is unclonable => status: "+s);
+      }
+
       // Détermination de l'ordre max: si non précisé, récupéré depuis
       // les propriétés distantes
-      String s = prop.getProperty(Constante.KEY_HIPS_ORDER);
+      s = prop.getProperty(Constante.KEY_HIPS_ORDER);
       if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER);
       if( s==null ) throw new Exception("Order max unknown");
       int o = Integer.parseInt(s) ;
@@ -144,6 +153,17 @@ public class BuilderMirror extends BuilderTiles {
             if( dLocal!=null && dRemote!=null && dLocal.equals(dRemote) ) {
                throw new Exception("Local copy already up-to-date ("+dLocal+") => "+context.getOutputPath());
             }
+
+            // IL FAUDRAIT VERIFIER ICI QUE
+            //   1) SI LE MOC LOCAL COUVRE UNE ZONE EN DEHORS DU MODE DISTANT
+            //   2) SI L'ORDER LOCAL EST PLUS GRAND QUE L'ORDER DISTANT
+            //   3) SI LES TYPES DE TUILES EN LOCAL NE SONT PLUS DISTRIBUES PAR LE SITE DISTANT
+            // => ALORS IL FAUDRAIT FAIRE LE MENAGE EN LOCAL, OU FORCER UN CLEAN LOCAL AVANT
+
+            isUpdate=true;
+            context.info("Updating a previous HiPS copy ["+context.getOutputPath()+"]...");
+            lastReleaseDate = Constante.getTime(dLocal);
+
          } finally{  if( in!=null ) in.close(); }
       }
    }
@@ -165,6 +185,17 @@ public class BuilderMirror extends BuilderTiles {
          }
       }
 
+      // Nettoyage des vieilles tuiles (non remise à jour)
+      // CA NE VA PAS MARCHER CAR CERTAINES TUILES PEUVENT NE PAS AVOIR ETE MIS A JOUR SUR LE SERVEUR DISTANT
+      // BIEN QUE LA RELEASE DATE AIT EVOLUEE. ELLES SERONT ALORS SUPPRIMEES PAR ERREUR
+
+      //      if( isUpdate && !context.isTaskAborting()) {
+      //         b=new BuilderCleanDate(context);
+      //         ((BuilderCleanDate)b).setDate(lastReleaseDate);
+      //         b.run();
+      //         b=null;
+      //      }
+
       // Maj des properties
       if( !context.isTaskAborting() ) {
 
@@ -178,13 +209,17 @@ public class BuilderMirror extends BuilderTiles {
          prop.replaceValue(Constante.KEY_HIPS_TILE_FORMAT, context.getTileTypes() );
 
          String status = prop.getProperty(Constante.KEY_HIPS_STATUS);
-         Tok tok = new Tok(status);
-         StringBuilder status1 = new StringBuilder();
-         while( tok.hasMoreTokens() ) {
-            String s = tok.nextToken();
-            if( s.equals("master")) s= isPartial ? "partial" : "mirror";
-            if( status1.length()>0 ) status1.append(' ');
-            status1.append(s);
+         StringBuilder status1;
+         if( status==null ) status1 = new StringBuilder("public mirror clonable");
+         else {
+            Tok tok = new Tok(status);
+            status1 = new StringBuilder();
+            while( tok.hasMoreTokens() ) {
+               String s = tok.nextToken();
+               if( s.equals("master")) s= isPartial ? "partial" : "mirror";
+               if( status1.length()>0 ) status1.append(' ');
+               status1.append(s);
+            }
          }
          prop.replaceValue(Constante.KEY_HIPS_STATUS, status1.toString());
 
@@ -206,7 +241,7 @@ public class BuilderMirror extends BuilderTiles {
    public void showStatistics() {
       long t = System.currentTimeMillis();
       long delai = t-lastTime;
-      long lastCumulPerSec = delai>1 && lastTime>0 ? lastCumul/(delai/1000L) : 0L;
+      long lastCumulPerSec = delai>1000L && lastTime>0 ? lastCumul/(delai/1000L) : 0L;
       lastTime=t;
       lastCumul=0;
       context.showMirrorStat(statNbFile, statCumul, lastCumulPerSec, totalTime,
@@ -284,19 +319,26 @@ public class BuilderMirror extends BuilderTiles {
             fOut = new File(fileOut);
             if( fOut.exists() && fOut.length()>0 ) {
                size = conn.getContentLength();
-               if( size==fOut.length() && lastModified<=fOut.lastModified() ) return 0;  // déjà fait
+               if( size==fOut.length() && lastModified<=fOut.lastModified() ) {
+                  if( conn instanceof HttpURLConnection ) ((HttpURLConnection)conn).disconnect();
+                  return 0;  // déjà fait
+               }
             }
 
             dis = new MyInputStream(conn.getInputStream());
             buf = dis.readFully();
-         } finally { if( dis!=null ) dis.close(); }
+            dis.close();
+            dis=null;
+         } finally { if( dis!=null ) try{ dis.close(); } catch( Exception e) {}  }
 
          RandomAccessFile f = null;
          try {
             Util.createPath(fileOut);
             f = new RandomAccessFile(fileOut, "rw");
             f.write(buf);
-         } finally { if( f!=null ) f.close(); }
+            f.close();
+            f=null;
+         } finally { if( f!=null ) try{ f.close(); } catch( Exception e) {} }
          fOut.setLastModified(lastModified);
 
          if( size>0 && (new File(fileOut)).length()<size) {

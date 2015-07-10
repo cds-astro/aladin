@@ -237,7 +237,7 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
 
          //         System.out.println("getTreeCellRendererComponent ["+node.toString()+"] => "+n.isOk());
 
-         if( n.hasCheckBox() ) {
+         if( n!=null && n.hasCheckBox() ) {
             if( n.isOk() ) n.checkbox.setForeground(Color.black);
             else n.checkbox.setForeground(Color.lightGray);
 
@@ -258,11 +258,12 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
          return c;
       }
    }
-
+   
    /** Classe pour la modification d'un noeud de l'arbre => à savoir checkbox */
    class NoeudEditor extends AbstractCellEditor implements TreeCellEditor {
       JTree tree;
       NoeudRenderer renderer = new NoeudRenderer();
+      TreeNode n1 = null;
 
       public NoeudEditor(JTree tree) {
          this.tree = tree;
@@ -280,13 +281,20 @@ public class MyTree extends JTree implements Iterable<TreeNode>  {
       public Component getTreeCellEditorComponent(JTree tree, Object obj, boolean isSelected, boolean expanded, boolean leaf, int row){
          DefaultMutableTreeNode node = (DefaultMutableTreeNode)obj;
          TreeNode n = (TreeNode)node.getUserObject();
-         if( n.hasCheckBox() ) {
+         n1 = n;
+         if( n!=null &&  n.hasCheckBox() ) {
+            if( n.isOk() ) n.checkbox.setForeground(Color.black);
+            else n.checkbox.setForeground(Color.lightGray);
             return n.getPanel();
          }
-         return renderer.getTreeCellRendererComponent(tree, obj, true, expanded, leaf, row, true);
+         Component c = renderer.getTreeCellRendererComponent(tree, obj, true, expanded, leaf, row, true);
+         if( n.isOk() ) c.setForeground( Color.black);
+         else c.setForeground( Color.lightGray );
+         return c;
+
       }
       public Object getCellEditorValue() {
-         return null;
+         return n1;
       }
    }
 

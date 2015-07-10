@@ -756,7 +756,8 @@ public final class Glu implements Runnable {
     * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
     * @param mode 0 - match exact
     *             1 - substring
-    *             2 - match exact puis substring dernier élément du menu  (ex DssColored ok pour Optical/DSS/DssColored)
+    *             2 - match exact puis substring en fin sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
+    *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
     * @return l'indice du ciel dans Glu.vGluSky, sinon -1
     */
    protected int findGluSky(String A) { return findGluSky(A,0); }
@@ -766,6 +767,8 @@ public final class Glu implements Runnable {
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label, A)>=0 ) return i;
          if( mode==2 ) {
+            if( gs.internalId.endsWith(A) ) return i;
+
             int offset = gs.label.lastIndexOf('/');
             if( A.equals(gs.label.substring(offset+1)) ) return i;
          }
@@ -2040,7 +2043,8 @@ public final class Glu implements Runnable {
                   String data = in.getData();
                   boolean trouve;
                   //                  System.out.println("data=["+data+"] pattern=["+pattern+"]");
-                  if( !regex ) trouve=Util.matchMask(pattern, data);
+                  //                  if( !regex ) trouve=Util.matchMask(pattern, data);
+                  if( !regex ) trouve=data.indexOf(pattern)>=0;
                   else trouve=data.matches(pattern);
 
                   if( !trouve ) throw new Exception("Pattern not found");

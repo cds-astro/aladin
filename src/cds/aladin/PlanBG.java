@@ -3751,7 +3751,8 @@ public class PlanBG extends PlanImage {
    protected String getShortStats() {
       if( nbLoadNet==0 && nbLoadCache==0 ) return null;
       boolean flagLocal = isLocalAllSky();
-      return label+(flagLocal?" Local:":" Net["+getHost()+"]:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(avgLoadNet(),0)  +"ms"
+      String name = id!=null?id:label;
+      return name+(flagLocal?" Local:":" Net["+getHost()+"]:")+nbLoadNet  +"/"+Util.round(nByteReadNet/(1024*1024.),2)  +"Mb/" +Util.round(avgLoadNet(),0)  +"ms"
       +" CacheR:"+nbLoadCache+"/"+Util.round(nByteReadCache/(1024*1024.),2)+"Mb/" +Util.round(avgLoadCache(),0)+"ms"
       +" CacheW:"+nbWriteCache+"/"+Util.round(nByteWriteCache/(1024*1024.),2)+"Mb/" +Util.round(avgWriteCache(),0)+"ms";
    }
