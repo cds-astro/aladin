@@ -145,7 +145,6 @@ public class Constante {
    static public final String OLD_ISCAT                 = "isCatalog";
    static public final String OLD_ISCOLOR               = "isColored";
 
-
    static public final String KEY_SIZERECORD            = "sizeRecord";
    static public final String KEY_OFFSET                = "offset";
    static public final String KEY_GZ                    = "gzipped";

@@ -22,7 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -32,6 +31,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Vector;
@@ -149,6 +150,9 @@ public class TabRgb extends JPanel implements ActionListener {
          public void actionPerformed(ActionEvent e) { dirBrowser(outputField); }
       });
       dirPanel.add(outputField);
+      outputField.addKeyListener( new KeyAdapter() {
+         public void keyReleased(KeyEvent e) { resumeWidgets(); }
+      });
       dirPanel.add(browse);
       c.gridwidth=GridBagConstraints.REMAINDER;
       pCenter.add(dirPanel,c);
@@ -175,7 +179,7 @@ public class TabRgb extends JPanel implements ActionListener {
       p.add(rb);
       pCenter.add(p,c);
       c.insets.top=m;
-      
+
       m=c.insets.top;
       c.insets.top=0;
       p = new JPanel();
@@ -291,10 +295,10 @@ public class TabRgb extends JPanel implements ActionListener {
       JPanel p = new JPanel(g);
 
       tileStat = new JLabel("--");
-      PropPanel.addCouple(p, ".RGB tiles: ", tileStat, g, c);           
+      PropPanel.addCouple(p, ".RGB tiles: ", tileStat, g, c);
 
       timeStat = new JLabel("--");
-      PropPanel.addCouple(p, ".Time: ", timeStat, g, c);           
+      PropPanel.addCouple(p, ".Time: ", timeStat, g, c);
 
       return p;
    }
@@ -312,9 +316,14 @@ public class TabRgb extends JPanel implements ActionListener {
    public void actionPerformed(ActionEvent e) {
       if (e.getSource() == start ) {
          // récupère les 2 ou 3 plans sélectionnés
-         Object[] plans = new Object[3];
          for (int i=0; i<3; i++) {
-            plans[i] = ch[i].getSelectedItem();
+            Object s1 = ch[i].getSelectedItem();
+            if( s1==null || s1 instanceof String ) continue;
+            PlanBG p = (PlanBG) s1;
+            context.setRgbInput(p.getUrl(), i);
+
+            String s = p.getPixelMin()+" "+p.getPixelMiddle()+" "+p.getPixelMax()+" "+p.getTransfertFctInfo();
+            context.setRgbCmParam(s, i);
          }
          // verifie si le champ du répertoire de sorie n'est pas vide ou invalide
          if ("".equals(outputField.getText()) || !(new File(outputField.getText())).isDirectory() ) {
@@ -323,7 +332,7 @@ public class TabRgb extends JPanel implements ActionListener {
          }
 
          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-         context.setRgbPlans(plans);
+         //         context.setRgbPlans(plans);
          context.setRgbOutput(outputField.getText());
          context.setRgbMethod(getMethod());
          context.setRgbFormat(getFormat());
@@ -338,7 +347,7 @@ public class TabRgb extends JPanel implements ActionListener {
       else if (e.getSource() == pause)      pause();
       resumeWidgets();
    }
-   
+
    private void pause() {
       if( context.isTaskPause() ) {
          context.setTaskPause(false);
@@ -348,30 +357,38 @@ public class TabRgb extends JPanel implements ActionListener {
          pause.setText(getString("RESUME"));
       }
    }
-   
+
    private void abort() {
       if( !Aladin.confirmation(mainPanel, "Do you really want to abort the RGB computation ?") ) return;
       context.taskAbort();
    }
-   
 
 
-   /** Ouverture de la fenêtre de sélection d'un fichier */
+
+   //   /** Ouverture de la fenêtre de sélection d'un fichier */
+   //   private void dirBrowser(JTextField dir) {
+   //      String path = dir.getText().trim();
+   //      if( path.length()==0 ) path = aladin.getDefaultDirectory();
+   //      String t = Util.dirBrowser(this,path);
+   //      if( t==null ) return;
+   //      dir.setText(t);
+   //      actionPerformed(new ActionEvent(dir,-1, "dirBrowser Action"));
+   //   }
+
    private void dirBrowser(JTextField dir) {
-      String path = dir.getText().trim();
-      if( path.length()==0 ) path = aladin.getDefaultDirectory();
-      String t = Util.dirBrowser(this,path);
-      if( t==null ) return;
-      dir.setText(t);
-      actionPerformed(new ActionEvent(dir,-1, "dirBrowser Action"));
+      String currentDirectoryPath = dir.getText().trim();
+      String path = Util.dirBrowser(null, "",currentDirectoryPath,dir);
+      if( path==null ) return;
+      actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
    }
+
 
    protected void init() {
       // sauvegarde les anciennes selections
       Object[] save = new Object[]{ch[0].getSelectedItem(),
             ch[1].getSelectedItem(),
             ch[2].getSelectedItem()};
-      
+
       // rachaichit les combo box avec la liste des plans allsky
       PlanBG[] plans = getPlan();
       for (int i=0; i<3; i++) {
@@ -387,7 +404,7 @@ public class TabRgb extends JPanel implements ActionListener {
          }
       }
    }
-   
+
    public void show() {
       super.show();
       init();
@@ -397,7 +414,7 @@ public class TabRgb extends JPanel implements ActionListener {
       JOptionPane.showMessageDialog(this, HELP, titlehelp,
             JOptionPane.INFORMATION_MESSAGE);
    }
-   
+
    private boolean hasPlanSelection() {
       int nb=0;
       for( int i=0; i<ch.length; i++ ) {
@@ -406,7 +423,7 @@ public class TabRgb extends JPanel implements ActionListener {
       }
       return nb>1;
    }
-   
+
    protected void resumeWidgets() {
       try {
          boolean readyToDo = hasPlanSelection() && outputField.getText().trim().length()>0;
@@ -416,7 +433,7 @@ public class TabRgb extends JPanel implements ActionListener {
          abort.setEnabled(isRunning);
          setCursor( isRunning ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
                : Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
-      } catch( Exception e ) { } 
+      } catch( Exception e ) { }
    }
 
 

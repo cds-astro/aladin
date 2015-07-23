@@ -71,10 +71,10 @@ public class PlanImage extends Plan {
    IMGERR1,LOADIMG,HTTPERR,UNK,ONEDIM,NAXIS2,LOCFILE,VOAPP;
 
    // Type de table des couleurs supportees
-   static final int CMGRAY = 0;
-   static final int CMBB   = 1;
-   static final int CMA    = 2;
-   static final int CMSTERN= 3;
+   static final public int CMGRAY = 0;
+   static final public int CMBB   = 1;
+   static final public int CMA    = 2;
+   static final public int CMSTERN= 3;
 
    // modes video possibles
    public static final int VIDEO_NORMAL  = 0;  // Video mode normal
@@ -2335,12 +2335,12 @@ public class PlanImage extends Plan {
 
       int w = aladin.calque.zoom.zoomView.getWidth();
       int h = aladin.calque.zoom.zoomView.getHeight();
-      
+
       // Initialisation du buffer si nécessaire
       if( pixelsZoom==null || pixelsZoom.length!=w*w) pixelsZoom = new byte[w*h];
 
       double fct = Math.max( (double)width/w, (double)height/h);
-      
+
       // Remplissage de l'imagette
       for( int y=0; y<h; y++) {
          for( int x=0; x<w; x++ ) {
@@ -2714,15 +2714,15 @@ public class PlanImage extends Plan {
     * @param pixels Tableau des pixels (en entree et en sortie)
     * @param bitpix nombre d'octets par pixel (1 par défaut)
     */
-   protected static void invImageLine(int width, int height,byte [] pixels) { invImageLine(width,height,pixels,1); }
-   protected static void invImageLine(int width, int height,byte [] pixels,int bitpix) {
-      byte[] tmp = new byte[width*bitpix];
+   public static void invImageLine(int width, int height,byte [] pixels) { invImageLine(width,height,pixels,1); }
+   public static void invImageLine(int width, int height,byte [] pixels,int length) {
+      byte[] tmp = new byte[width*length];
       for( int h=height/2-1; h>=0; h-- ) {
-         int offset1=h*width *bitpix;
-         int offset2=(height-h-1)*width *bitpix;
-         System.arraycopy(pixels,offset1, tmp,0, width*bitpix);
-         System.arraycopy(pixels,offset2, pixels,offset1, width*bitpix);
-         System.arraycopy(tmp,0, pixels,offset2, width*bitpix);
+         int offset1=h*width *length;
+         int offset2=(height-h-1)*width *length;
+         System.arraycopy(pixels,offset1, tmp,0, width*length);
+         System.arraycopy(pixels,offset2, pixels,offset1, width*length);
+         System.arraycopy(tmp,0, pixels,offset2, width*length);
       }
       tmp=null;
    }

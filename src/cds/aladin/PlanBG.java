@@ -174,7 +174,7 @@ public class PlanBG extends PlanImage {
    private boolean hasMoc=false;     // true si on on peut disposer du MOC correspondant au survey
    private boolean hasHpxFinder=false;     // true si on on peut disposer du HpxFinder correspondant au survey
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
-   protected int frameDrawing=aladin.configuration.getFrameDrawing();   // Frame de tracé, 0 si utilisation du repère général
+   protected int frameDrawing=aladin!=null && aladin.configuration!=null ? aladin.configuration.getFrameDrawing() : 0;   // Frame de tracé, 0 si utilisation du repère général
    protected boolean local;
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    protected String pixelRange=null;   // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
@@ -1833,6 +1833,7 @@ public class PlanBG extends PlanImage {
       flagRecutRadius = aladin.view.getCurrentView().getTaille()/2;
       resetHist();
    }
+
 
    /** Retourne la résolution angulaire du pixel au NSIDE max (en degrés)
     *  avec une unité adéquate */

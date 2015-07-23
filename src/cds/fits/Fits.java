@@ -2086,7 +2086,7 @@ final public class Fits {
       }
    }
 
-   public void setPixValDouble(byte[] t, int bitpix, int i, double val) {
+   static public void setPixValDouble(byte[] t, int bitpix, int i, double val) {
       int c;
       switch( bitpix ) {
          case -32:
@@ -2164,7 +2164,7 @@ final public class Fits {
       }
    }
 
-   private void setInt(byte[] t, int i, int val) {
+   static private void setInt(byte[] t, int i, int val) {
       t[i] = (byte) (0xFF & (val >>> 24));
       t[i + 1] = (byte) (0xFF & (val >>> 16));
       t[i + 2] = (byte) (0xFF & (val >>> 8));

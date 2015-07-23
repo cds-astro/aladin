@@ -42,6 +42,7 @@ public class HipsGen {
    private boolean flagMode=false;
    private boolean flagMethod=false;
    private boolean flagFading=false;
+   private boolean flagRGB=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
 
@@ -122,15 +123,16 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); flagFading=true;
       } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
       } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
-      } else if (opt.equalsIgnoreCase("red"))        { context.setRgbInput(val, 0);
-      } else if (opt.equalsIgnoreCase("green"))      { context.setRgbInput(val, 1);
-      } else if (opt.equalsIgnoreCase("blue"))       { context.setRgbInput(val, 2);
-      } else if (opt.equalsIgnoreCase("redparam"))   { context.setRgbCmParam(val, 0);
-      } else if (opt.equalsIgnoreCase("greenparam")) { context.setRgbCmParam(val, 1);
-      } else if (opt.equalsIgnoreCase("blueparam"))  { context.setRgbCmParam(val, 2);
+      } else if (opt.equalsIgnoreCase("inRed"))      { context.setRgbInput(val, 0); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("inGreen"))    { context.setRgbInput(val, 1); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("inBlue"))     { context.setRgbInput(val, 2); flagRGB=true;
+      } else if (opt.equalsIgnoreCase("cmRed"))      { context.setRgbCmParam(val, 0);
+      } else if (opt.equalsIgnoreCase("cmGreen"))    { context.setRgbCmParam(val, 1);
+      } else if (opt.equalsIgnoreCase("cmBlue"))     { context.setRgbCmParam(val, 2);
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
       } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
+      } else if (opt.equalsIgnoreCase("ivorn"))      { context.setIvorn(val);
       } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
       } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
       } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
@@ -308,33 +310,46 @@ public class HipsGen {
       if( actions.size()==0 ) {
          all=true;
 
-         // S'agirait-il d'une map HEALPix
-         boolean flagMapFits=false;
-         File f = new File(context.getInputPath());
-         if( !f.isDirectory() && f.exists() ) {
-            try {
-               MyInputStream in = new MyInputStream( new FileInputStream(f));
-               in = in.startRead();
-               flagMapFits = (in.getType() & MyInputStream.HEALPIX)!=0;
-               in.close();
-               context.setMap(flagMapFits);
-            } catch( Exception e ) { }
-         }
+         // S'agirait-il de la génération d'un HiPS RGB
+         if( flagRGB ) actions.add(Action.RGB);
 
-         if( flagMapFits ) actions.add(Action.MAPTILES);
          else {
-            actions.add(Action.INDEX);
-            actions.add(Action.TILES);
-         }
 
-         if( !context.isColor() ) {
-            actions.add(Action.GZIP);
-            //            actions.add(Action.JPEG);
-            actions.add(Action.PNG);
-            if( !flagMapFits ) actions.add(Action.DETAILS);
+            // S'agirait-il d'une map HEALPix
+            boolean flagMapFits=false;
+            File f = new File(context.getInputPath());
+            if( !f.isDirectory() && f.exists() ) {
+               try {
+                  MyInputStream in = new MyInputStream( new FileInputStream(f));
+                  in = in.startRead();
+                  flagMapFits = (in.getType() & MyInputStream.HEALPIX)!=0;
+                  in.close();
+                  context.setMap(flagMapFits);
+               } catch( Exception e ) { }
+            }
+
+
+            // d'une map FITS peut être ?
+            if( flagMapFits ) actions.add(Action.MAPTILES);
+
+            // d'une collection d'images ?
+            else {
+               actions.add(Action.INDEX);
+               actions.add(Action.TILES);
+            }
+
+            if( !context.isColor() ) {
+               actions.add(Action.GZIP);
+               //            actions.add(Action.JPEG);
+               actions.add(Action.PNG);
+               if( !flagMapFits ) actions.add(Action.DETAILS);
+            }
          }
 
       }
+
+      // Ajustement du mode par défaut dans le cas d'une génération d'une HiPS RGB
+      if( flagRGB && !flagMode ) context.setMode(Mode.REPLACETILE);
 
       // Ajustement de la méthode par défaut (moyenne pour les FITS, médiane pour les couleurs)
       // à moins qu'elle n'ait été spécifiquement indiquée
@@ -374,9 +389,16 @@ public class HipsGen {
          context.info("Action => "+a+": "+a.doc());
       }
 
-
       // Positionnement du frame par défaut
-      setDefaultFrame();
+      if( !flagRGB ) setDefaultFrame();
+
+      // Positionnement du pubDid
+      if( context.ivorn==null ) {
+         String s = context.checkIvorn("", false);
+         context.setIvorn(s);
+         context.warning("IVORN identifier is strongly recommended (parameter ivorn=xxx) => assuming "+s);
+         context.info("The IVORN can be modified after the process by editing the properties file)");
+      }
 
       // C'est parti
       try {
@@ -498,20 +520,20 @@ public class HipsGen {
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
                   "                      auto-adapted to the HiPS" + "\n" +
-                  "   tileTypes          List of tile format to copy (mirror action)" + "\n" +
+                  "   inRed              HiPS red path component (RGB action)\n" +
+                  "   inGreen            HiPS green path component (RGB action)\n" +
+                  "   inBlue             HiPS blue path component (RGB action)\n" +
+                  "   cmRed              Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
+                  "   cmGreen            Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
+                  "   cmBlue             Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
+                  "   tileTypes          List of tile format to copy (MIRROR action)" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +
                   "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+
                   "   targetRadius=rad   Default HiPS radius view (deg)" + "\n"+
                   "   -nice              Slow download for avoiding to overload remote http server (dedicated " + "\n" +
                   "                      to MIRROR action)" + "\n"
                   //          "   debug=true|false   to set output display as te most verbose or just statistics" + "\n" +
-                  //          "   red        all-sky used for RED component (see rgb action)\n" +
-                  //          "   green      all-sky used for BLUE component (see rgb action)\n" +
-                  //          "   blue       all-sky used for GREEN component (see rgb action)\n" +
-                  //          "   redcm      Transfert function for RED component (hsin, log, sqrt, linear or sqr)\n" +
-                  //          "   greencm    Transfert function for BLUE component (hsin, log, sqrt, linear or sqr)\n" +
-                  //          "   bluecm    Transfert function for GREEN component (hsin, log, sqrt, linear or sqr)\n" +
-                  //          "   frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
+                  //                            "   frame           Healpix frame (C or G - default C for ICRS)" + "\n" +
             );
 
       System.out.println("\nSpecifical actions (by default: \"INDEX TILES PNG GZIP DETAILS\"):" + "\n" +
@@ -519,7 +541,7 @@ public class HipsGen {
             "   TILES      "+Action.TILES.doc() + "\n" +
             "   JPEG       "+Action.JPEG.doc() + "\n" +
             "   PNG        "+Action.PNG.doc() + "\n" +
-            //            "   RGB        "+Action.RGB.doc() + "\n" +
+            "   RGB        "+Action.RGB.doc() + "\n" +
             "   MOC        "+Action.MOC.doc() + "\n" +
             //            "   MOCHIGHT   "+Action.MOCHIGHT.doc() + "\n" +
             "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+

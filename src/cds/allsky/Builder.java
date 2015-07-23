@@ -33,6 +33,8 @@ import cds.tools.pixtools.Util;
  */
 public abstract class Builder {
 
+   protected Builder b=null;                 // Subtilité pour faire afficher des statistiques
+
    protected Context context;
    protected Builder(Context context) { this.context=context; }
 

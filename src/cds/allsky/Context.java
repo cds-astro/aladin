@@ -37,8 +37,6 @@ import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
-import cds.aladin.PlanBG;
-import cds.aladin.PlanImage;
 import cds.aladin.Tok;
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
@@ -61,6 +59,7 @@ import cds.tools.pixtools.CDSHealpix;
 public class Context {
 
    private static boolean verbose=false;
+   protected String ivorn=null;              // ivorn du survey (ex: ivo://CDS/P/2MASS/J)
    protected String label;                   // Nom du survey
 
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
@@ -112,6 +111,9 @@ public class Context {
    protected Mode mode=Mode.getDefault();   // Methode de traitement par défaut
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
+   protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
+   protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
+   protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
 
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
@@ -128,7 +130,7 @@ public class Context {
    protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
    protected String resolution=null;         // resolution en arcsec du pixel des images originales
 
-   protected int targetColorMode = Constante.TILE_JPEG;       // Mode de compression des tuiles couleurs
+   protected int targetColorMode = Constante.TILE_PNG;       // Mode de compression des tuiles couleurs
 
    protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
    protected boolean testClonable=true;
@@ -153,18 +155,38 @@ public class Context {
       crpix3=crval3=cdelt3=0;
       bunit3=null;
       tileTypes = null;
+      outputRGB = null;
+      redInfo=blueInfo=greenInfo=null;
+      plansRGB = new String [3];
+      cmsRGB = new String [3];
+
    }
 
+   // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
+   static public String getFrameName(int frame) { return frame==Localisation.GAL ? "galactic"
+         : frame==Localisation.ECLIPTIC ? "ecliptic" : frame==-1 ? "?" : "equatorial"; }
+   static public String getFrameCode(int frame ) { return frame==Localisation.GAL ? "G"
+         : frame==Localisation.ECLIPTIC ? "E" : frame==-1 ? "?" : "C"; }
+   static public int getFrameVal( String frame) {
+      return (frame.equals("G")||frame.startsWith("gal"))? Localisation.GAL:
+         frame.equals("E") || frame.startsWith("ecl") ? Localisation.ECLIPTIC : Localisation.ICRS;
+   }
+   static public String getCanonicalFrameName( String s) { return getFrameName( getFrameVal(s)); }
+
    // Getters
-   public String getLabel() { return label; }
+   public String getLabel() {
+      if( label==null ) return getLabelFromIvorn();
+      return label;
+
+   }
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Constante.SHAPE_UNKNOWN ?  borderSize : new int[]{0,0,0,0}; }
    public double getMaxRatio() { return maxRatio; }
    public int getOrder() { return order; }
    public boolean hasFrame() { return frame>=0; }
    public int getFrame() { return hasFrame() ? frame : Localisation.ICRS; }
-   public String getFrameName() { return Localisation.getFrameName( getFrame()); }
-   public String getFrameCode() { return getFrame()==Localisation.GAL ? "G" : "C"; }
+   public String getFrameName() { return getFrameName( getFrame() ); }
+   public String getFrameCode() { return getFrameCode( getFrame() ); }
    public CacheFits getCache() { return cacheFits; }
    public String getInputPath() { return inputPath; }
    public String getOutputPath() { return outputPath; }
@@ -203,6 +225,7 @@ public class Context {
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
    public void setPublisher(String s) { publisher=s; }
+   public void setIvorn(String s) { ivorn=checkIvorn(s,true); }
    public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
@@ -218,9 +241,7 @@ public class Context {
    public void setMocOrder(int mocOrder) { this.mocOrder = mocOrder; }
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
-   public void setFrameName(String frame) {
-      this.frame= (frame.equals("G")||frame.startsWith("gal"))? Localisation.GAL:
-         frame.equals("E") || frame.startsWith("ecl") ? Localisation.ECLIPTIC : Localisation.ICRS; }
+   public void setFrameName(String frame) { this.frame=getFrameVal(frame); }
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
@@ -242,9 +263,74 @@ public class Context {
       else dataArea=Constante.SHAPE_UNKNOWN;
    }
 
+   public String getRgbOutput() { return getOutputPath(); }
+   public JpegMethod getRgbMethod() { return getJpegMethod(); }
+   public int getRgbFormat() { return targetColorMode; }
+
    public void setPolygon(String r) throws Exception {
       scanFov = r.equalsIgnoreCase("true") || (polygon = createPolygon(r))!=null;
       if( scanFov ) info("FoV files associated to the original images");
+   }
+
+
+   /** Vérifie l'IVORN passé en paramètre, et s'il n'est pas bon le met en forme */
+   public String checkIvorn(String s,boolean verbose) {
+      String auth,id;
+      if( s.startsWith("ivo://")) s=s.substring(6);
+
+      // Check de l'authority
+      int offset = s.indexOf('/');
+      if( offset==-1) {
+         auth="UNKNOWN.AUTHORITY";
+         if( verbose ) warning("ivorn error => missing authority => assuming "+auth);
+      } else {
+         auth = s.substring(0,offset);
+         s=s.substring(offset+1);
+         if( auth.length()<3) {
+            while( auth.length()<3) auth=auth+"_";
+            if( verbose ) warning("ivorn authority error => at least 3 characters are required => assuming "+auth);
+         }
+         StringBuilder a = new StringBuilder();
+         boolean bug=false;
+         for( char c : auth.toCharArray()) {
+            if( !Character.isLetterOrDigit(c) && c!='.' && c!='-' ) { c='.'; bug=true; }
+            a.append(c);
+         }
+         if( bug ) {
+            auth=a.toString();
+            if( verbose ) warning("ivorn authority error => some characters are not allowed => assuming "+auth);
+         }
+      }
+
+      // Check de l'identifier
+      id=s.trim();
+      if( id.length()==0) {
+         id="ID_"+(System.currentTimeMillis()/1000);
+         if( verbose ) warning("ivorn error => missing ID => assuming "+id);
+      } else {
+         StringBuilder a = new StringBuilder();
+         boolean bug=false;
+         for( char c : auth.toCharArray()) {
+            if( Character.isSpaceChar(c) ) { c='.'; bug=true; }
+            a.append(c);
+         }
+         if( bug ) {
+            id=a.toString();
+            if( verbose ) warning("ivorn identifier error => some characters are not allowed => assuming "+id);
+         }
+      }
+
+      return "ivo://"+auth+"/"+id;
+   }
+
+   /** retourne un label issu de l'iVORN */
+   public String getLabelFromIvorn() {
+      if( ivorn==null ) return null;
+      int offset = ivorn.indexOf('/',6);
+      if( offset==-1 ) return null;
+      String s = ivorn.substring(offset+1);
+      if( s.startsWith("P/") ) s=s.substring(2);
+      return s;
    }
 
    static public Polygon createPolygon(String r) throws Exception {
@@ -610,22 +696,16 @@ public class Context {
       return null;
    }
 
-   protected Object [] plansRgb;
-   protected String outputRgb;
+   protected String outputRGB;
    protected JpegMethod methodRgb;
-
-   static final private String LABELRGB [] = {"red","gree","blue"};
+   protected String [] plansRGB = new String [3];
+   protected String [] cmsRGB = new String [3];
 
    public void setRgbInput(String path,int c) {
-      if( plansRgb==null ) plansRgb = new Object[3];
-      plansRgb[c] = new PlanBG(Aladin.aladin,path, LABELRGB[c], new Coord(0,0), 0, null);
-      ((PlanImage)plansRgb[c]).transfertFct=PlanImage.LINEAR;
+      plansRGB[c] = path;
    }
 
-   public void setRgbCmParam(String cmParam,int c) throws Exception {
-      if( plansRgb==null || plansRgb[c]==null ) throw new Exception("Color component folder must be defined first");
-      ((PlanImage)plansRgb[c]).setCmParam(cmParam);
-   }
+   public void setRgbCmParam(String cmParam,int c) { cmsRGB[c] = cmParam; }
 
    public void setSkyval(String fieldName) {
       this.skyvalName = fieldName.toUpperCase();
@@ -1053,7 +1133,9 @@ public class Context {
    }
 
    // Demande d'affichage des stats (dans le TabRgb)
-   protected void showRgbStat(int statNbFile, long statSize, long totalTime) { }
+   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
+      if( statNbFile>0 ) showJpgStat(statNbFile, totalTime, 1, 1);
+   }
 
    protected Action action=null;      // Action en cours (voir Action)
    protected double progress=-1;       // Niveau de progression de l'action en cours, -1 si non encore active, =progressMax si terminée
@@ -1221,8 +1303,8 @@ public class Context {
    public void running(String s)  { nl(); System.out.println("RUN   : ================================ "+s+" ==============================="); }
    public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
    public void info(String s)     { nl(); System.out.println("INFO  : "+s); }
-   public void warning(String s)  { nl(); System.out.println("WARN  : "+s); }
-   public void error(String s)    { nl(); System.out.println("ERROR : "+s); }
+   public void warning(String s)  { nl(); System.out.println("*WARN*: "+s); }
+   public void error(String s)    { nl(); System.out.println("*ERROR: "+s); }
    public void action(String s)   { nl(); System.out.println("ACTION: "+s); }
    public void stat(String s)     { nl(); System.out.println("STAT  : "+s); }
 
@@ -1408,17 +1490,18 @@ public class Context {
    /** Création, ou mise à jour du fichier des Properties associées au survey */
    protected void writePropertiesFile() throws Exception {
 
+
+      // Ajout de l'IVORN si besoin
+      if( ivorn==null ) setIvorn("");
+
+      // Ajout de l'order si besoin
       int order = getOrder();
       if( order==-1 ) order = cds.tools.pixtools.Util.getMaxOrderByPath( getOutputPath() );
 
       //      loadProperties();
 
-      String label = getLabel();
-      if( label==null || label.length()==0 ) label= "XXX_"+(System.currentTimeMillis()/1000);
-
-      setPropriete("#"+Constante.KEY_PUBLISHER_DID,"Dataset identifier (IVORN) given by the publisher (ex: ivo://CDS/P/2MASS/J)");
-      //      setPropriete("#"+Constante.KEY_PUBLISHER_ID,"[The IVOA ID for the data provider (ex: ivo://CDS)]");
-      setPropriete(Constante.KEY_OBS_COLLECTION,label);
+      setPropriete(Constante.KEY_PUBLISHER_DID,ivorn);
+      setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
       setPropriete("#"+Constante.KEY_OBS_TITLE,"Dataset text title");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
       setPropriete("#"+Constante.KEY_OBS_ACK,"Acknowledgement mention");
@@ -1443,21 +1526,13 @@ public class Context {
       if( publisher!=null ) setPropriete(Constante.KEY_HIPS_PUBLISHER,publisher);
       else setPropriete("#"+Constante.KEY_HIPS_PUBLISHER,"HiPS publisher (institute or person)");
 
-      int f = getFrame();
-      setPropriete(Constante.KEY_HIPS_FRAME,f==Localisation.ICRS ? "equatorial" :
-         f==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
-
-      // Pour compatibilité - A virer en 2016
-      setPropriete(Constante.OLD_HIPS_FRAME, f==Localisation.ICRS ? "C" : f==Localisation.ECLIPTIC ? "E" : "G");
-
-
+      setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
-
       // L'url
       setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
-      setPropriete("#"+Constante.KEY_HIPS_STATUS,"ex: public master clonable");
+      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonable");
 
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
@@ -1515,7 +1590,12 @@ public class Context {
       } else setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"image");
 
       // Dans le cas d'un HiPS couleur
-      if( isColor() ) setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"color");
+      if( isColor() ) {
+         setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"color");
+         if( redInfo!=null )   setPropriete(Constante.KEY_HIPS_RGB_RED,redInfo);
+         if( greenInfo!=null ) setPropriete(Constante.KEY_HIPS_RGB_GREEN,greenInfo);
+         if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);
+      }
 
       HealpixMoc m = moc!=null ? moc : mocIndex;
       double skyFraction = m==null ? 0 : m.getCoverage();
@@ -1538,13 +1618,6 @@ public class Context {
 
          setPropriete(Constante.KEY_HIPS_ESTSIZE, size+"" );
       }
-
-      //      // Pour garantir la compatibilité ascendante de Aladin Lite (A virer en 2016)
-      //      setPropriete(Constante.OLD_HIPS_FRAME,
-      //            getFrame()==Localisation.ICRS ? "C" : getFrame()==Localisation.ECLIPTIC ? "E" : "G");
-      //      if( target!=null ) setPropriete(Constante.OLD_TARGET, target);
-      //      if( targetRadius!=null ) setPropriete(Constante.OLD_S_FOV, targetRadius);
-      //
 
       // Mise en place effective des proprétés
       String k[] = new String[ keyAddProp==null ? 0 : keyAddProp.size() ];
@@ -1662,10 +1735,7 @@ public class Context {
 
       s = prop.getProperty(Constante.OLD_HIPS_FRAME);
       if( s!=null && prop.getProperty(Constante.KEY_HIPS_FRAME)==null) {
-         String v = s.equals("C") || s.equals("Q") ? "equatorial"
-               : s.equals("E") ? "ecliptic" : "galactic";
-         //         prop.replaceKey(Constante.OLD_HIPS_FRAME, Constante.KEY_HIPS_FRAME);
-         //         prop.replaceValue(Constante.KEY_HIPS_FRAME, v);
+         String v = getCanonicalFrameName(s);
          prop.setProperty(Constante.KEY_HIPS_FRAME,v);
       }
       s = prop.getProperty(Constante.OLD_TARGET);
@@ -1684,19 +1754,19 @@ public class Context {
       if( s!=null ) {
          if( s.equals("true")
                && prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_SUBTYPE, "color");
-         prop.remove(Constante.OLD_ISCOLOR);
+         //         prop.remove(Constante.OLD_ISCOLOR);
       }
       s = prop.getProperty(Constante.OLD_ISCAT);
       if( s!=null ) {
          if( s.equals("true")
                && prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "catalog");
-         prop.remove(Constante.OLD_ISCAT);
+         //         prop.remove(Constante.OLD_ISCAT);
       }
       s = prop.getProperty(Constante.OLD_ISCUBE);
       if( s!=null ) {
          if( s.equals("true")
                && prop.getProperty(Constante.KEY_DATAPRODUCT_TYPE)==null) prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "cube");
-         prop.remove(Constante.OLD_ISCUBE);
+         //         prop.remove(Constante.OLD_ISCUBE);
       }
 
       prop.remove(Constante.OLD_ALADINVERSION);
@@ -1768,6 +1838,16 @@ public class Context {
             }
          }
 
+
+         // Gestion de la compatibilité
+         // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
+         prop.setProperty(Constante.OLD_OBS_COLLECTION,getLabel());
+         prop.setProperty(Constante.OLD_HIPS_FRAME, getFrameCode() );
+         prop.setProperty(Constante.OLD_HIPS_ORDER,order+"" );
+         String fmt = getAvailableTileFormats();
+         if( fmt.length()>0 ) prop.setProperty(Constante.OLD_HIPS_TILE_FORMAT,fmt);
+         if( isColor() ) prop.setProperty(Constante.OLD_ISCOLOR,"true");
+
          // Remplacement du précédent fichier
          String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
          File ftmp = new File(tmp);
@@ -1778,6 +1858,8 @@ public class Context {
          try {
             out = new FileOutputStream(ftmp);
             prop.store( out, null);
+
+
          } finally {  if( out!=null ) out.close(); }
 
          if( f.exists() && !f.delete() ) throw new Exception("Propertie file locked ! (cannot delete)");

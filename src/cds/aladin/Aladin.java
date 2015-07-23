@@ -87,7 +87,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
  * @beta         <LI> Obscore vocabulary support
- * @beta         <LI> Hipsgen MIRROR action
+ * @beta         <LI> Hipsgen MIRROR and RGB actions
  * @beta         <LI> Hipsgen ADD mode
  * @beta         <LI> Colormap control for colored HiPS
  * @beta         <LI> HEALPix FITS map support (any NSIDE, NESTED or RING)
@@ -140,7 +140,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.162";
+   static public final    String VERSION = "v8.163";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
