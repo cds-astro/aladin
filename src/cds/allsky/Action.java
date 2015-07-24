@@ -31,7 +31,7 @@ public enum Action {
    ALLSKY    ("(Re)build all Allsky files + index.html"),
    GZIP      ("Compress some FITS tiles and Allsky.fits"),
    GUNZIP    ("Uncompress FITS tiles and Allsky.fits"),
-   CLEAN     ("Delete all Hips files (index, tiles, dir, Allsky, MOC, ...)"),
+   CLEAN     ("Delete all Hips files (except properties file)"),
    CLEANINDEX("Delete index (HpxFinder dir)"),
    CLEANDETAILS("Delete detail index (HpxFinder tree except last order dir)"),
    CLEANTILES("Delete all HiPS files except index (tiles, dir, Allsky, MOC, ...)"),

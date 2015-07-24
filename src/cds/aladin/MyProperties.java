@@ -65,13 +65,22 @@ public class MyProperties extends Properties {
       super.remove(key);
    }
 
+
    public synchronized Object put(Object key, Object value) {
+      if( ((String)key).equals("!")) key = "!"+System.currentTimeMillis();
       ConfigurationItem item = getItem((String)key);
       if( item == null ) {
          item = new ConfigurationItem((String)key, (String)value);
          prop.addElement(item);
       } else item.value = (String)value;
       return super.put(key,value);
+   }
+
+
+   /** Ajout/remplacement en fin */
+   public Object add(String key, String value) {
+      remove(key);
+      return put(key,value);
    }
 
    public synchronized void load(InputStream in) throws IOException {
@@ -143,8 +152,9 @@ public class MyProperties extends Properties {
       BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
 
       for( ConfigurationItem item : prop ) {
-         if( item.key.equals("#") ) bw.write(item.value); // Commentaires
-         else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key, 20) +" = "+ item.value); // Propriétés
+         //         if( item.key.equals("#") ) bw.write(item.value); // Commentaires
+         //         else if( item.key.trim().length() > 0 ) bw.write(Util.align(item.key, 20) +" = "+ item.value); // Propriétés
+         bw.write(item.toString());
          bw.newLine();
       }
       bw.flush();
@@ -162,6 +172,11 @@ public class MyProperties extends Properties {
       private ConfigurationItem(String key, String value) {
          this.key = key;
          this.value = value;
+      }
+
+      public String toString() {
+         if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
+         return Util.align(key, 20) +" = "+ value; // Propriétés
       }
 
    }

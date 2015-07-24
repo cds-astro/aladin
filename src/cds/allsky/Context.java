@@ -179,6 +179,7 @@ public class Context {
       return label;
 
    }
+   public String getIvorn() { return ivorn; }
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Constante.SHAPE_UNKNOWN ?  borderSize : new int[]{0,0,0,0}; }
    public double getMaxRatio() { return maxRatio; }
@@ -273,15 +274,25 @@ public class Context {
    }
 
 
-   /** Vérifie l'IVORN passé en paramètre, et s'il n'est pas bon le met en forme */
+   /** Vérifie l'IVORN passé en paramètre, et s'il n'est pas bon le met en forme
+    * @param s ivorn proposée, null si générataion automatique
+    * @param verbose false pour n'avoir aucun message d'alerte
+    * @return l'ivorn canonique
+    */
    public String checkIvorn(String s,boolean verbose) {
+
       String auth,id;
+      if( s==null || s.trim().length()==0 ) {
+         verbose=false;
+         s=getLabel()!=null?getLabel():"";
+      }
+
       if( s.startsWith("ivo://")) s=s.substring(6);
 
       // Check de l'authority
       int offset = s.indexOf('/');
       if( offset==-1) {
-         auth="UNKNOWN.AUTHORITY";
+         auth="UNK.AUTH";
          if( verbose ) warning("ivorn error => missing authority => assuming "+auth);
       } else {
          auth = s.substring(0,offset);
@@ -304,14 +315,16 @@ public class Context {
 
       // Check de l'identifier
       id=s.trim();
+      if( id.startsWith("P/") || id.startsWith("C/")) id=id.substring(2);
+
       if( id.length()==0) {
-         id="ID_"+(System.currentTimeMillis()/1000);
+         id="ID"+(System.currentTimeMillis()/1000);
          if( verbose ) warning("ivorn error => missing ID => assuming "+id);
       } else {
          StringBuilder a = new StringBuilder();
          boolean bug=false;
-         for( char c : auth.toCharArray()) {
-            if( Character.isSpaceChar(c) ) { c='.'; bug=true; }
+         for( char c : id.toCharArray()) {
+            if( Character.isSpaceChar(c) ) { c='-'; bug=true; }
             a.append(c);
          }
          if( bug ) {
@@ -320,7 +333,9 @@ public class Context {
          }
       }
 
-      return "ivo://"+auth+"/"+id;
+      String mode = isCube() ? "C": "P";
+
+      return "ivo://"+auth+"/"+mode+"/"+id;
    }
 
    /** retourne un label issu de l'iVORN */
@@ -330,6 +345,7 @@ public class Context {
       if( offset==-1 ) return null;
       String s = ivorn.substring(offset+1);
       if( s.startsWith("P/") ) s=s.substring(2);
+      s=s.replace('/',' ');
       return s;
    }
 
@@ -1492,7 +1508,7 @@ public class Context {
 
 
       // Ajout de l'IVORN si besoin
-      if( ivorn==null ) setIvorn("");
+      if( ivorn==null ) setIvorn(null);
 
       // Ajout de l'order si besoin
       int order = getOrder();
@@ -1553,8 +1569,7 @@ public class Context {
 
       if( cut!=null ) {
          if( cut[0]!=0 || cut[1]!=0 ) {
-            String s1="";
-            setPropriete(Constante.KEY_HIPS_PIXEL_CUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero)+s1);
+            setPropriete(Constante.KEY_HIPS_PIXEL_CUT,  Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
          }
          if( cut[2]!=0 || cut[3]!=0 ) setPropriete(Constante.KEY_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
       }
@@ -1637,31 +1652,31 @@ public class Context {
 
    /** Ecriture du fichier des propriétés pour le HpxFinder */
    protected void writeHpxFinderProperties() throws Exception {
-      int frame = getFrame();
+
+      // Ajout de l'IVORN si besoin
+      if( ivorn==null ) setIvorn(null);
 
       MyProperties prop = new MyProperties();
-      String label = getLabel();
-      if( label==null || label.trim().length()==0 ) {
-         String path = getOutputPath();
-         if( path!=null ) label = (new File(path)).getName();
-      }
-      if( label==null || label.trim().length()==0) label= "XXX_"+(System.currentTimeMillis()/1000);
+      String label = getLabel()+"-meta";
+      String ivorn = getIvorn()+"/meta";
 
-      prop.setProperty(Constante.KEY_OBS_COLLECTION, label+"_"+Constante.FILE_HPXFINDER);
-      // Pour compatibilité - A virer en 2016
-      prop.setProperty(Constante.OLD_OBS_COLLECTION, label+"_"+Constante.FILE_HPXFINDER);
-
+      prop.setProperty(Constante.KEY_PUBLISHER_DID,ivorn);
+      prop.setProperty(Constante.KEY_OBS_COLLECTION, label);
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
-      prop.setProperty(Constante.KEY_HIPS_FRAME, frame==Localisation.ICRS ? "equatorial" : frame==Localisation.ECLIPTIC ? "ecliptic" : "galactic");
-
-      // Pour compatibilité - A virer en 2016
-      prop.setProperty(Constante.OLD_HIPS_FRAME, frame==Localisation.ICRS ? "C" : frame==Localisation.ECLIPTIC ? "E" : "G");
-
+      prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
       prop.setProperty(Constante.KEY_HIPS_ORDER, getOrder()+"");
-      if( minOrder>3 ) prop.setProperty(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
+      if( minOrder>3 ) prop.setProperty(Constante.KEY_HIPS_ORDER_MIN, minOrder+"");
       prop.setProperty(Constante.KEY_HIPS_RELEASE_DATE, getNow());
       prop.setProperty(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
       prop.setProperty(Constante.KEY_HIPS_BUILDER, "Aladin/HipsGen "+Aladin.VERSION);
+
+      // Gestion de la compatibilité
+      // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
+      prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
+      prop.add(Constante.OLD_OBS_COLLECTION,label);
+      prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
+      prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
+      if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
 
       String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
       File f = new File(propFile);
@@ -1773,11 +1788,6 @@ public class Context {
    }
 
 
-   /** Mise à jour d'une propriété => voir updatePropertie(String [],String []) */
-   protected void updateProperties(String key, String value, boolean overwrite) throws Exception {
-      updateProperties( new String[] { key }, new String [] { value }, overwrite );
-   }
-
    /** Mise à jour du fichier des propriétés associées au survey HEALPix (propertie file dans la racine)
     * Conserve les clés/valeurs existantes.
     * @param key liste des clés à mettre à jour
@@ -1838,15 +1848,23 @@ public class Context {
             }
          }
 
-
          // Gestion de la compatibilité
          // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
-         prop.setProperty(Constante.OLD_OBS_COLLECTION,getLabel());
-         prop.setProperty(Constante.OLD_HIPS_FRAME, getFrameCode() );
-         prop.setProperty(Constante.OLD_HIPS_ORDER,order+"" );
+         prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
+         prop.add(Constante.OLD_OBS_COLLECTION,getLabel());
+         prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
+         prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
          String fmt = getAvailableTileFormats();
-         if( fmt.length()>0 ) prop.setProperty(Constante.OLD_HIPS_TILE_FORMAT,fmt);
-         if( isColor() ) prop.setProperty(Constante.OLD_ISCOLOR,"true");
+         if( fmt.length()>0 ) prop.add(Constante.OLD_HIPS_TILE_FORMAT,fmt);
+         if( fmt.indexOf("fits")>=0 && cut!=null ) {
+            if( cut[0]!=0 || cut[1]!=0 ) prop.add(Constante.OLD_HIPS_PIXEL_CUT, Util.myRound(bscale*cut[0]+bzero)+" "+Util.myRound(bscale*cut[1]+bzero));
+            if( cut[2]!=0 || cut[3]!=0 ) prop.add(Constante.OLD_HIPS_DATA_RANGE,Util.myRound(bscale*cut[2]+bzero)+" "+Util.myRound(bscale*cut[3]+bzero));
+         }
+         if( isColor() ) prop.add(Constante.OLD_ISCOLOR,"true");
+         if( isCube() ) {
+            prop.add(Constante.OLD_ISCUBE,"true");
+            prop.add(Constante.OLD_CUBE_DEPTH,depth+"");
+         }
 
          // Remplacement du précédent fichier
          String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
@@ -1885,8 +1903,6 @@ public class Context {
             // Changement éventuel de vocabulaire
             replaceKeys(prop);
          }
-
-
       }
       finally { releasePropertieFile(); }
    }

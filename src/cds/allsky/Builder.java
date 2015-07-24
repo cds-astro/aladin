@@ -313,7 +313,7 @@ public abstract class Builder {
    }
 
    protected void validateLabel() {
-      if( context.label!=null ) return;
+      if( context.getLabel()!=null ) return;
       String label = getALabel(context.getOutputPath(),context.getInputPath());
       if( label!=null && label.length()>0 ) context.label=label;
    }

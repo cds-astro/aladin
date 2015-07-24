@@ -145,7 +145,7 @@ public class BuilderRgb extends Builder {
       if( context.getOrder()==-1 ) {
          context.setOrder(maxOrder);
          context.info("Using order = "+maxOrder);
-      }
+      } else maxOrder=context.getOrder();
 
       // Mise à jour du context
       if( !context.hasFrame() ) {

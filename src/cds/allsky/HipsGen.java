@@ -394,7 +394,7 @@ public class HipsGen {
 
       // Positionnement du pubDid
       if( context.ivorn==null ) {
-         String s = context.checkIvorn("", false);
+         String s = context.checkIvorn(null, false);
          context.setIvorn(s);
          context.warning("IVORN identifier is strongly recommended (parameter ivorn=xxx) => assuming "+s);
          context.info("The IVORN can be modified after the process by editing the properties file)");
