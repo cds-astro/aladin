@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.fits.CacheFits;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
-import cds.moc.MocCell;
 import cds.tools.pixtools.Util;
 
 /** Permet la génération du survey HEALPix à partir d'un index préalablement généré
@@ -56,7 +56,7 @@ public class BuilderTiles extends Builder {
    protected int ordermax;
    protected long nummin = 0;
    protected long nummax = 0;
-   protected Iterator<Long> npixIterator;
+   protected LinkedList<Item> fifo;
    protected double automin = 0;
    protected double automax = 0;
 
@@ -111,6 +111,7 @@ public class BuilderTiles extends Builder {
       }
 
       build();
+      
       if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
@@ -297,6 +298,20 @@ public class BuilderTiles extends Builder {
       if( m==null ) return;
       m.remove(f);
    }
+   
+   // Libère les bitmaps des Fits en cours de construction pour faire de la place
+   protected long releaseBitmap() {
+      long size=0L;
+      try {
+         for( Thread t : memPerThread.keySet() ) {
+            ArrayList<Fits> m = memPerThread.get(t);
+            for( Fits f : m ) {
+               if( f.isReleasable() ) size += f.releaseBitmap();
+            }
+         }
+      } catch( Exception e ) { }
+      return size;
+   }
 
    private long getUsedMem() {
       long mem=0L;
@@ -350,7 +365,49 @@ public class BuilderTiles extends Builder {
          }
       }
    }
-
+   
+   class Item {
+      int order;
+      long npix;
+      int z;
+      boolean keepResult;
+      Fits fits;
+      boolean ready;
+      Thread th;
+      
+      Item(int order, long npix, int z,Thread th ) {
+         this.order=order;
+         this.npix=npix;
+         this.z=z;
+         this.th=th;
+         ready=false;
+      }
+      
+      private boolean isReady() {
+         synchronized( objItem ) { 
+            return ready; 
+         }
+      }
+      
+      private Fits getFits() {
+         synchronized( objItem ) { return fits; }
+      }
+      
+      private void setFits(Fits fits) throws Exception {
+         if( th==null ) return;
+         synchronized( objItem ) { 
+            this.fits=fits;
+            ready=true;
+         }
+         th.interrupt();
+      }
+      
+      public String toString() { return order+"/"+npix+(z>0?"-"+z:"")+(isReady()?"R":""); }
+      
+   }
+   
+   static final private Object objItem = new Object();
+   
    protected void build() throws Exception {
       this.ordermax = context.getOrder();
       long t = System.currentTimeMillis();
@@ -358,8 +415,16 @@ public class BuilderTiles extends Builder {
       HealpixMoc moc = new HealpixMoc();
       moc.add( context.getRegion() );
       moc.setMocOrder(3);
-      npixIterator = moc.pixelIterator();
-
+      int depth = context.getDepth();
+      fifo = new LinkedList<Item>();
+      Iterator<Long> it = moc.pixelIterator();
+      while( it.hasNext() ) {
+         long npix=it.next();
+         for( int z=0; z<depth; z++ ) {
+            fifo.add( new Item(3, npix,z,null ) );
+         }
+      }
+      
       // Initialisation des variables
       isColor = context.isColor();
       bitpix = context.getBitpix();
@@ -403,11 +468,11 @@ public class BuilderTiles extends Builder {
       launchThreadBuilderHpx(nbThread);
 
       // Attente de la fin du travail
-      while( stillAlive() ) {
-         if( stopped ) { destroyThreadBuilderHpx(); return; }
-         cds.tools.Util.pause(1000);
-      }
-
+//      while( stillAlive() ) {
+      while( !stopped && !(allWaiting() && fifo.isEmpty()) ) cds.tools.Util.pause(1000);
+      destroyThreadBuilderHpx();
+      if( stopped ) return;
+      
       if( !context.isTaskAborting() ) {
 
          if( ThreadBuilderTile.statMaxOverlays>0 )
@@ -454,7 +519,7 @@ public class BuilderTiles extends Builder {
             moc = moc.intersection(new HealpixMoc(order+"/"+npix));
             int nbTiles = (int)moc.getUsedArea();
             updateStat(0,0,nbTiles,0,nbTiles/4,0);
-            oldOut.releaseBitmap();
+//            oldOut.releaseBitmap();
             return oldOut;
          }
       }
@@ -474,10 +539,18 @@ public class BuilderTiles extends Builder {
       } else {
 
          Fits fils[] = new Fits[4];
-         for( int i =0; !stopped && i<4; i++ ) {
-            if( context.isTaskAborting() ) throw new Exception("Task abort !");
-            fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
+         
+         if( fifo.isEmpty() && oneWaiting() ) {
+            multiThreadCreateHpx(hpx, fils, path,order,npix, z);
+            
+         } else {
+         
+            for( int i =0; !stopped && i<4; i++ ) {
+               if( context.isTaskAborting() ) throw new Exception("Task abort !");
+               fils[i] = createHpx(hpx, path,order+1,npix*4+i, z);
+            }
          }
+
          try { f = createNodeHpx(file,path,order,npix,fils,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createNodeHpx error: "+file);
@@ -488,18 +561,45 @@ public class BuilderTiles extends Builder {
 
       // On soulage la mémoire RAM des losanges qui ne vont pas servir tout de suite
       // on les relira lorsqu'on en aura besoin dans createNodeHpx(...)
-      if( f!=null && f.isReleasable() ) f.releaseBitmap();
+//      if( f!=null && f.isReleasable() ) f.releaseBitmap();
       return f;
    }
-
+   
+   
+   // Génération des 4 fils en parallèle
+   private void multiThreadCreateHpx(ThreadBuilderTile hpx, Fits [] fils, String path,int order,long npix, int z) throws Exception {
+      Item [] item = new Item[3];
+      
+      // Ajout des travaux dans la file d'attente des threads de travail
+      for( int i=0; i<3; i++ ) {
+         item[i] = addNpix(order+1,npix*4+i, z,Thread.currentThread());
+      }
+      
+      // Il faudrait ici réveiller les threads de calculs en attente
+      wakeUp();
+            
+      // Un des fils est calculé par le thread courant lui-même
+      fils[3] = createHpx(hpx, path,order+1,npix*4+3, z);
+      
+      // Attente et récupération des fils
+      while( !(item[0].isReady() && item[1].isReady() && item[2].isReady()) ) {
+         try { Thread.currentThread().sleep(500); } catch( Exception e ) { }
+      }
+      for( int i=0; i<3; i++ ) fils[i] = item[i].getFits();
+   }
+   
+   static final String [] MODE =  { "START","WAIT","EXEC","DIED" };
+   
    // Classe des threads de calcul
    private class ThreadBuilder extends Thread {
-      ThreadBuilderTile threadBuilderTile;
-      static final int WAIT =0;
-      static final int EXEC =1;
-      static final int DIED =3;
+      static final int START =0;
+      static final int WAIT  =1;
+      static final int EXEC  =2;
+      static final int DIED  =3;
+      
 
-      private int mode=WAIT;
+      ThreadBuilderTile threadBuilderTile;
+      private int mode=START;
       private boolean encore=true;
 
       public ThreadBuilder(String name,ThreadBuilderTile threadBuilderTile) {
@@ -507,6 +607,8 @@ public class BuilderTiles extends Builder {
          this.threadBuilderTile = threadBuilderTile;
          Aladin.trace(3,"Creating "+getName());
       }
+      
+      public String getMode() { return MODE[mode]; }
 
       /** Le thread est mort */
       public boolean isDied() { return mode==DIED; }
@@ -514,41 +616,44 @@ public class BuilderTiles extends Builder {
       /** Le thread travaille */
       public boolean isExec() { return mode==EXEC; }
 
+      /** Le thread travaille */
+      public boolean isWait() { return mode==WAIT; }
+
       /** Demande la mort du thread */
       public void tue() { encore=false; }
 
       public void run() {
-         mode=EXEC;
-         updateStat(+1,0,0,0,0,0);
 
          while( encore ) {
-            MocCell cell = getNextNpix();
-            if( cell==null ) {
-               //               Aladin.trace(4,Thread.currentThread().getName()+" no more high level cell to process !");
-               break;
+            Item item=null;
+            while( encore && (item = getNextNpix())==null ) {
+               mode=WAIT;
+               try { Thread.currentThread().sleep(100); } catch( Exception e) { };
             }
-            mode=EXEC;
-            try {
-               //               Aladin.trace(4,Thread.currentThread().getName()+" process high level cell "+cell+"...");
+            if( encore ) {
+               mode=EXEC;
+               updateStat(+1,0,0,0,0,0);
+               try {
+                  Aladin.trace(4,Thread.currentThread().getName()+" process high level cell "+item+"...");
 
-               // si le process a été arrêté on essaie de ressortir au plus vite
-               if (stopped) break;
-               if( context.isTaskAborting() ) break;
+                  // si le process a été arrêté on essaie de ressortir au plus vite
+                  if (stopped) break;
+                  if( context.isTaskAborting() ) break;
 
-               for( int z=0; z<context.depth; z++ ) {
-                  //                  if( context.depth>1 ) context.info("Processing frame="+z+"/"+context.depth);
-                  createHpx(threadBuilderTile, context.getOutputPath(), cell.order, cell.npix, z);
+                  Fits fits = createHpx(threadBuilderTile, context.getOutputPath(), item.order, item.npix, item.z);
+                  item.setFits(fits);
+                  
+                  if( item.order==3 && item.z==0 ) setProgressBar((int)item.npix);
+
+               } catch( Throwable e ) {
+                  Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
+                  e.printStackTrace();
+                  context.taskAbort();
                }
-               if( cell.order==3 ) setProgressBar((int)cell.npix);
-
-            } catch( Throwable e ) {
-               Aladin.trace(1,"*** "+Thread.currentThread().getName()+" exception !!! ("+e.getMessage()+")");
-               e.printStackTrace();
-               context.taskAbort();
+               updateStat(-1,0,0,0,0,0);
             }
          }
 
-         updateStat(-1,0,0,0,0,0);
          mode=DIED;
          rmThread(Thread.currentThread());
          //         Aladin.trace(3,Thread.currentThread().getName()+" died !");
@@ -559,15 +664,21 @@ public class BuilderTiles extends Builder {
    protected void setProgressBar(int npix) { context.setProgressLastNorder3(npix); }
 
 
-   private MocCell getNextNpix() {
-      MocCell pix=null;
+   private Item getNextNpix() {
+      Item pix=null;
       synchronized( lockObj ) {
-         if( !npixIterator.hasNext() ) return null;
-         pix = new MocCell(ordermin,npixIterator.next().longValue());
+         if( fifo.isEmpty() ) return null;
+         pix = fifo.removeFirst();
       }
       return pix;
    }
-
+   
+   private Item addNpix(int order, long npix,int z,Thread th) {
+      Item item=new Item(order,npix,z,th);
+      synchronized( lockObj ) { fifo.add(item); }
+      return item;
+   }
+   
    private Object lockObj = new Object();
 
 
@@ -588,12 +699,13 @@ public class BuilderTiles extends Builder {
       }
    }
 
-   void destroyOneThreadBuilderHpx(ThreadBuilder x) { }
-
    // Demande l'arrêt de tous les threads de calcul
    void destroyThreadBuilderHpx() {
       Iterator<ThreadBuilder> it = threadList.iterator();
-      while( it.hasNext() ) it.next().tue();
+      while( it.hasNext() ) {
+         ThreadBuilder tb = it.next();
+         tb.tue();
+      }
    }
 
    int nbThreadRunning() {
@@ -610,6 +722,32 @@ public class BuilderTiles extends Builder {
       Iterator<ThreadBuilder> it = threadList.iterator();
       while( it.hasNext() ) if( !it.next().isDied() ) return true;
       return false;
+   }
+
+   // Retourne true si tous les threads de calculs sont en attente
+   boolean allWaiting() {
+      Iterator<ThreadBuilder> it = threadList.iterator();
+      while( it.hasNext() ) if( !it.next().isWait() ) return false;
+      return true;
+   }
+   
+   boolean oneWaiting() {
+      try {
+         Iterator<ThreadBuilder> it = threadList.iterator();
+         while( it.hasNext() ) if( it.next().isWait() ) return true;
+      } catch( Exception e ) { }
+      return false;
+   }
+   
+   void wakeUp() {
+      try {
+         Iterator<ThreadBuilder> it = threadList.iterator();
+         while( it.hasNext() ) {
+            ThreadBuilder tb = it.next();
+            if( tb.isWait() ) tb.interrupt();
+         }
+      } catch( Exception e ) {
+      }
    }
 
    /** Création d'un losange par concaténation de ses 4 fils

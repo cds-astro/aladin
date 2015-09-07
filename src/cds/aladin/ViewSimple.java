@@ -20,14 +20,53 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.dnd.*;
-import java.awt.event.*;
+import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Composite;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -6331,6 +6370,20 @@ g.drawString(s,10,100);
       if( !getImgView(gr,pi) || isFree() ) {
          drawBackground(gr);
          drawBordure(gr);
+
+         // Ajout des infos clignotantes pour le mode fullScreen (curseur, voyant clignotant...)
+         //         aladin.fullScreen.drawChecks(g);
+         if( fullScreen && gr!=null) {
+            aladin.fullScreen.drawBlinkInfo(gr);
+
+            // Gestion d'un message d'accueil
+            if( aladin.msgOn ) {
+               aladin.help.setText( aladin.logo.Help());
+               aladin.help.setSize(aladin.fullScreen.getSize());
+               aladin.help.paintComponent(gr);
+            }
+         }
+
          return;
       }
 
@@ -6368,12 +6421,12 @@ g.drawString(s,10,100);
          aladin.fullScreen.drawBlinkInfo(g);
 
          // Gestion d'un message d'accueil
-         if( aladin.msgOn ) {
-            aladin.help.setText( aladin.logo.Help());
-            aladin.help.setSize(aladin.fullScreen.getSize());
-            aladin.help.paintComponent(g);
-            return ;
-         }
+//         if( aladin.msgOn ) {
+//            aladin.help.setText( aladin.logo.Help());
+//            aladin.help.setSize(aladin.fullScreen.getSize());
+//            aladin.help.paintComponent(g);
+//            return ;
+//         }
       }
 
       // Un objet en cours ?
@@ -6417,7 +6470,7 @@ g.drawString(s,10,100);
 
          //         drawOverlayControls(g);
 
-         if( Aladin.PROTO ) {
+         if( aladin.fullScreen.getMode()!=FrameFullScreen.CINEMA ) {
             widgetInit();
             if( widgetControl!=null ) widgetControl.paint(g);
          }

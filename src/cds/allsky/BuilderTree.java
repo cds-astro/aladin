@@ -38,6 +38,7 @@ public class BuilderTree extends BuilderTiles {
       //      if( !context.isTaskAborting() ) { (new BuilderMoc(context)).run();  context.info("MOC done"); }
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
    }
+   
 
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {

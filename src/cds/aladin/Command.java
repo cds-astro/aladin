@@ -20,10 +20,19 @@
 
 package cds.aladin;
 
-import java.lang.reflect.Constructor;
 import java.awt.Color;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
@@ -3171,11 +3180,18 @@ public final class Command implements Runnable {
          int nview=-1;
          if( st.hasMoreTokens()) {
             nview = getViewNumber(st.nextToken());
+//            AJOUT LAURENT M. POUR ARCHES
+//            Plan pref = a.calque.getPlanRef();
+//          if( pref instanceof PlanBG )  a.calque.setPlanRefOnSameTarget((PlanBG)pref) ;
             a.calque.setPlanRef(p,nview);
          } else nview = a.view.getLastNumView(p);
          if( nview<0 ) return "";
 
-         if( !a.view.viewSimple[nview].isPlotView() ) a.view.setPlanRef(nview, p);
+         if( !a.view.viewSimple[nview].isPlotView() ) {
+//          AJOUT LAURENT M. POUR ARCHES
+            if( p instanceof PlanBG )  a.calque.setPlanRefOnSameTarget((PlanBG)p) ;
+            else a.view.setPlanRef(nview, p);
+         }
          if( plot ) {
             try {
                a.view.viewSimple[nview].addPlotTable(p, col[0], col[1] ,false);

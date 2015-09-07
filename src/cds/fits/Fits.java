@@ -1773,21 +1773,23 @@ final public class Fits {
     * le fichier pourra être relu ultérieurement) Rq : ne fonctionne que pour
     * les fichiers FITS locaux (RandomAccessFile)
     */
-   public void releaseBitmap() throws Exception {
-      if( bitpix == 0 ) return; // De fait du JPEG
-      if( hasUsers() ) return; // Pas possible, qq s'en sert
-      if( filename==null ) return;
+   synchronized public long releaseBitmap() throws Exception {
+      if( bitpix == 0 ) return 0; // De fait du JPEG
+      if( hasUsers() ) return 0; // Pas possible, qq s'en sert
+      if( filename==null ) return 0;
       testBitmapReleaseFeature();
+      long size = pixels.length;
       pixels = null;
       bitmapReleaseDone = true;
       //      System.out.println("releaseBitmap() size="+width+"x"+height+"x"+Math.abs(bitpix)/8+" offset="+bitmapOffset+" "+getCellSuffix()+" de "+filename);
+      return size;
    }
 
    /**
     * Rechargmeent de la mémoire utilisée par le bitmap des pixels ==> voir
     * releaseBitmap()
     */
-   public void reloadBitmap() throws Exception {
+   synchronized public void reloadBitmap() throws Exception {
       if( bitpix == 0 ) return; // De fait du JPEG
       if( pixels != null ) return;
       if( filename==null ) return;

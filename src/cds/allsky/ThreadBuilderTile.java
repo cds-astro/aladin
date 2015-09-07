@@ -120,6 +120,8 @@ final public class ThreadBuilderTile {
       rqMem += 2*tileSide*tileSide*context.getNpix();
       return needMem(nbThreadRunning*rqMem);
    }
+   
+   private Object objRel = new Object();
 
    private void checkMem(long nbProgen ) throws Exception {
       long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
@@ -128,29 +130,42 @@ final public class ThreadBuilderTile {
          rqMem += 2*tileSide*tileSide*8;
       }
       if( !needMem(rqMem) ) return;
-      if( isTheLastRunning() ) {
-         context.warning(Thread.currentThread().getName()+" needs "+
-               cds.tools.Util.getUnitDisk(rqMem)+" but can not stop (last thread running) !");
-      }
-      try {
-         nbThreadRunning--;
-         while( needMem(rqMem) ) {
-            try {
-               context.warning(Thread.currentThread().getName()+" is waiting more memory (need "+
-                     cds.tools.Util.getUnitDisk(rqMem)+")...");
+      synchronized( objRel ) {
+         if( !needMem(rqMem) ) return;
 
-               cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
-               context.cacheFits.forceClean();
-               nbThreadRunning = builderTiles.nbThreadRunning(); // Pour etre vraiment sur
-               if( nbThreadRunning<=1 ) {
-                  context.warning(Thread.currentThread().getName()+" resumes (last thread runnning)");
-                  //                  context.cacheFits.forceClean();
-                  break;
-               }
-            } catch( Exception e ) { }
-            if( context.isTaskAborting() ) throw new Exception("Task abort !");
+         // On fait d'abord le ménage dans les Fits à générer
+         long sizeReleaseBitmap;
+         if( (sizeReleaseBitmap=builderTiles.releaseBitmap())>0 ) {
+            System.gc();
+            cds.tools.Util.pause(100);
+            context.info("Need more RAM: output Fits bitmap release => "+cds.tools.Util.getUnitDisk(sizeReleaseBitmap));
+            if( !needMem(rqMem) ) return;
          }
-      } finally { nbThreadRunning++; }
+
+         if( isTheLastRunning() ) {
+            context.warning(Thread.currentThread().getName()+" needs "+
+                  cds.tools.Util.getUnitDisk(rqMem)+" but can not stop (last thread running) !");
+         }
+         try {
+            nbThreadRunning--;
+            while( needMem(rqMem) ) {
+               try {
+                  context.warning(Thread.currentThread().getName()+" is waiting more memory (need "+
+                        cds.tools.Util.getUnitDisk(rqMem)+")...");
+
+                  cds.tools.Util.pause((int)( 1000*(1+Math.random()*5)));
+                  context.cacheFits.forceClean();
+                  nbThreadRunning = builderTiles.nbThreadRunning(); // Pour etre vraiment sur
+                  if( nbThreadRunning<=1 ) {
+                     context.warning(Thread.currentThread().getName()+" resumes (last thread runnning)");
+                     //                  context.cacheFits.forceClean();
+                     break;
+                  }
+               } catch( Exception e ) { }
+               if( context.isTaskAborting() ) throw new Exception("Task abort !");
+            }
+         } finally { nbThreadRunning++; }
+      }
    }
 
    static protected int nbThreadRunning=0;

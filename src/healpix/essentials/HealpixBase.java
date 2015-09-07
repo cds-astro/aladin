@@ -65,7 +65,7 @@ public class HealpixBase extends HealpixTables
 
   private static long spread_bits (int v)
     {
-    return (long)(utab[ v      &0xff])      | ((long)(utab[(v>>> 8)&0xff])<<16)
+    return (utab[ v      &0xff])      | ((long)(utab[(v>>> 8)&0xff])<<16)
         | ((long)(utab[(v>>>16)&0xff])<<32) | ((long)(utab[(v>>>24)&0xff])<<48);
     }
   private static int compress_bits (long v)
@@ -92,12 +92,12 @@ public class HealpixBase extends HealpixTables
 
   private long xyf2ring(int ix, int iy, int face_num)
     {
-    long jr = ((long)jrll[face_num]*nside) - (long)ix - (long)iy  - 1L;
+    long jr = (jrll[face_num]*nside) - ix - iy  - 1L;
 
     RingInfoSmall ris = get_ring_info_small(jr);
     long nr=ris.ringpix>>>2, kshift=ris.shifted ? 0:1;
 
-    long jp = (jpll[face_num]*nr + (long)ix - (long)iy + 1L + kshift) / 2L;
+    long jp = (jpll[face_num]*nr + ix - iy + 1L + kshift) / 2L;
     if (jp>nl4)
       jp-=nl4;
     else
@@ -148,8 +148,8 @@ public class HealpixBase extends HealpixTables
       ret.face = 8 + (int)((iphi-1)/nr);
       }
 
-    long irt = iring - ((long)jrll[ret.face]*nside) + 1L;
-    long ipt = 2L*iphi- (long)jpll[ret.face]*nr - kshift -1L;
+    long irt = iring - (jrll[ret.face]*nside) + 1L;
+    long ipt = 2L*iphi- jpll[ret.face]*nr - kshift -1L;
     if (ipt>=nl2) ipt-=8L*nside;
 
     ret.ix = (int)(( ipt-irt)>>>1);
@@ -484,7 +484,7 @@ public class HealpixBase extends HealpixTables
         loc.z = (nl2-jr)*fact1;
         }
 
-      long tmp=(long)(jpll[xyf.face])*nr+xyf.ix-xyf.iy;
+      long tmp=(jpll[xyf.face])*nr+xyf.ix-xyf.iy;
       assert(tmp<8*nr); // must not happen
       if (tmp<0) tmp+=8*nr;
       loc.phi = (nr==nside) ? 0.75*Constants.halfpi*tmp*fact1 :

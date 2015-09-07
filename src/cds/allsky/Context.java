@@ -221,6 +221,7 @@ public class Context {
    public int getMinOrder() { return minOrder; }
    public int getTileOrder() { return tileOrder==-1 ? Constante.ORDER : tileOrder; }
    public int getTileSide() { return (int) CDSHealpix.pow2( getTileOrder() ); }
+   public int getDepth() { return depth; }
 
    // Setters
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }

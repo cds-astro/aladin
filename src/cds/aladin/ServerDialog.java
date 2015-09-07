@@ -20,16 +20,47 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.dnd.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Event;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Label;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 
 import cds.tools.Util;
 
@@ -1335,7 +1366,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          while( encore ) {
             try {
                //               System.out.println("Hips updater checking...");
-               ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
+               if( isOpened() ) ((ServerHips)aladin.dialog.hipsServer).hipsUpdate();
                Thread.currentThread().sleep(1000);
             } catch( Exception e ) { }
          }
@@ -1344,6 +1375,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
    }
 
+   private boolean isOpened() {
+//      Window window = SwingUtilities.windowForComponent(this);
+      return isVisible();
+   }
 
 
 }

@@ -20,14 +20,23 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.DisplayMode;
+import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -46,6 +55,14 @@ import cds.tools.Util;
  * @version 1.0 : mars 08 création
  */
 public final class FrameFullScreen extends JFrame implements ActionListener {
+   
+   static final int WINDOW = 0;             // en mode fenêtré - 1 unique panel
+   static final int WINDOW_HIDDEN = 1;      // idem mais iconifié au démarrage
+   static final int FULL = 2;               // En mode plein écran, mais avec gestion des fenêtres par l'OS
+   static final int CINEMA = 3;             // idem mais en mode exclusif (pas d'overlay de fenêtre/menu possible)
+   
+   static private String [] MODE = { "Window","Window-hidden","Full","Cinema" };
+   
    static GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
    static GraphicsDevice device = env.getDefaultScreenDevice();
    static DisplayMode display = device.getDisplayMode();
@@ -55,7 +72,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    private Rectangle bounds;    // La taille précédédente de la vue (pour pouvoir la redimensionner)
    private Vector ligne=null;   // La ligne de mesure courante (null si aucune)
    private int ocursor=-1;      // Curseur courant (ex: Aladin.HAND)
-   private boolean full;        // true si plein écran, sinon une fenêtre simple
+//   private boolean full;        // true si plein écran, sinon une fenêtre simple
+   private int mode;            // mode de fonctionnement (WINDOW, WINDOW_HIDDEN, FULL, CINEMA, ...)
    private Timer timer=null;    // Timer pour les choses qui clignotent
    private JPopupMenu popMenu;
    private JMenuItem menuDel,menuProp;
@@ -82,13 +100,15 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    }
 
    /** Création d'une fenêtre plein écran contenant une unique vue */
-   protected FrameFullScreen(Aladin aladin,ViewSimple v,boolean full,boolean startHidden) {
+   protected FrameFullScreen(Aladin aladin,ViewSimple v,/* boolean full,boolean startHidden,*/int mode) {
       super(env.getDefaultScreenDevice().getDefaultConfiguration());
       this.aladin=aladin;
       setTitle(Aladin.TITRE+" "+aladin.getReleaseNumber());
       Aladin.setIcon(this);
       viewSimple=v;
-      this.full=full;
+//      this.full=full;
+      this.mode = mode;
+      Aladin.trace(4,"FrameFullScreen(mode="+MODE[mode]+")");
       createPopupMenu();
 
       getRootPane().registerKeyboardAction(new ActionListener() {
@@ -145,76 +165,80 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       //      JComponent.WHEN_IN_FOCUSED_WINDOW
       //      );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { dist(); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_D,InputEvent.ALT_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+      if( mode!=CINEMA ) {
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { dist(); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_D,InputEvent.ALT_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { prop(); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,InputEvent.ALT_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { prop(); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,InputEvent.ALT_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { pixel(); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_M,InputEvent.CTRL_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { pixel(); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_M,InputEvent.CTRL_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { open(); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_O,InputEvent.CTRL_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { open(); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_O,InputEvent.CTRL_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { openDialog(); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_L,InputEvent.CTRL_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { openDialog(); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_L,InputEvent.CTRL_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { zoom(-1); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_F2,0),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { zoom(-1); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_F2,0),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { zoom(1); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_F3,0),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { zoom(1); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_F3,0),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
 
-      v.setFocusTraversalKeysEnabled(false);
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { next(1); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_MASK),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
-      getRootPane().registerKeyboardAction(new ActionListener() {
-         public void actionPerformed(ActionEvent e) { next(-1); }
-      },
-      KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),
-      JComponent.WHEN_IN_FOCUSED_WINDOW
-            );
+         v.setFocusTraversalKeysEnabled(false);
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { next(1); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_MASK),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
+         getRootPane().registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) { next(-1); }
+         },
+         KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),
+         JComponent.WHEN_IN_FOCUSED_WINDOW
+               );
+      }
 
       getContentPane().setBackground(Color.white);
       getContentPane().add(v,BorderLayout.CENTER);
       bounds = v.getBounds();
       v.setBounds(getBounds());
-      if( full ) full();
+//      if( full ) full();
+      if( mode==FULL || mode==CINEMA ) full();
       else window();
-      if( !startHidden ) setVisible(true);
+//      if( !startHidden ) setVisible(true);
+      if( mode!=WINDOW_HIDDEN ) setVisible(true);
       if( !aladin.isApplet() || aladin.flagDetach ) aladin.f.setVisible(false);
    }
 
@@ -222,12 +246,20 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    private void pixel() { aladin.pixel(); }
    private void open() {      ((ServerFile)aladin.dialog.localServer).browseFile(); }
    private void openDialog() { aladin.dialog.show(); }
+   
+   /** Retourne le mode d'affichage courant WINDOW, WINDOW_HIDDEN, FULL ou CINEMA */
+   protected int getMode() { return mode; }
 
    /**  Passage en plein écran */
    private void full() {
       setUndecorated(true);
-      setLocation(0,0);
-      setSize(Aladin.SCREENSIZE);
+      if( mode==FULL ) {
+         setLocation(0,0);
+         setSize(Aladin.SCREENSIZE);
+      } else if( mode==CINEMA ) {
+         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+         gd.setFullScreenWindow(this);
+      }
    }
 
    /** Passage en mode preview avec récupération de la position et de la
@@ -247,7 +279,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
 
    public void processWindowEvent(WindowEvent e) {
       if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
-         if( !full ) {
+//         if( !full ) {
+         if( mode!=FULL && mode!=CINEMA ) {
             if( aladin.isApplet() ) setVisible(false);
             else aladin.quit(0);
          }
@@ -266,11 +299,14 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
 
    /** Fin du mode plein écran => réintégration de la vue dans son container originale */
    protected void end() {
+      if( mode==CINEMA ) return;
+      
       viewSimple.aladin.fullScreen=null;
       viewSimple.setToolTipText(null);
       viewSimple.setBounds(bounds);
       aladin.view.adjustPanel();
-      if( !full ) {
+//      if( !full ) {
+      if( mode!=FULL && mode!=CINEMA ) {
          aladin.toolBox.calcConf(500);   // juste pour remettre les choses en place
          aladin.f.setSize(getSize());
       }
@@ -360,6 +396,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    private int XOUT,YOUT;
 
    protected void drawIcons(Graphics g) {
+      if( mode==CINEMA ) return;
+      
       int ymarge=YMARGE;
 
       // Dessin du logo de sortie du fullscreen

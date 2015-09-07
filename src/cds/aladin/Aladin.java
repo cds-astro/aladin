@@ -28,21 +28,97 @@ import healpix.essentials.Vec3;
 
 import java.applet.Applet;
 import java.applet.AppletContext;
-import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.dnd.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.MediaTracker;
+import java.awt.Panel;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.MemoryImageSource;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JApplet;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
@@ -50,8 +126,8 @@ import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 import cds.aladin.bookmark.Bookmarks;
 import cds.allsky.Context;
-import cds.allsky.MocGen;
 import cds.allsky.HipsGen;
+import cds.allsky.MocGen;
 import cds.moc.HealpixMoc;
 import cds.tools.CDSFileDialog;
 import cds.tools.ExtApp;
@@ -87,6 +163,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
  * @beta         <LI> Obscore vocabulary support
+ * @beta         <LI> Hipsgen full multi-threading support
  * @beta         <LI> Hipsgen MIRROR and RGB actions
  * @beta         <LI> Hipsgen ADD mode
  * @beta         <LI> Colormap control for colored HiPS
@@ -140,7 +217,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.165";
+   static public final    String VERSION = "v8.166";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2279,6 +2356,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( SCREEN.equals("full") ) {
          detach(false);
          fullScreen(0);
+      } else if( SCREEN.equals("cinema") ) {
+         detach(false);
+         fullScreen(3);
       } else if( SCREEN.startsWith("preview") ) {
          detach(false);
          fullScreen(SCREEN.equals("previewhidden") ? 2 : 1);
@@ -2704,19 +2784,23 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param mode 0-plein écran classique,
     *             1-fenêtre preview
     *             2-fenêtre preview mais démarre caché (très utile en mode applet
+    *             3-plein écran mode cinéma (exclusif)
     */
    protected void fullScreen(int mode) {
       if( fullScreen==null ) {
-         boolean full = mode==0;
-         boolean startHidden = mode==2;
+//         boolean full = mode==0;
+//         boolean startHidden = mode==2;
+         
+         int m = mode==0 ? FrameFullScreen.FULL : mode==3 ? FrameFullScreen.CINEMA
+               : mode==2 ? FrameFullScreen.WINDOW_HIDDEN : FrameFullScreen.WINDOW;
          pan(false);
-         fullScreen = new FrameFullScreen(this,view.getCurrentView(),full,startHidden);
-         //          f.setVisible(false);
+//         fullScreen = new FrameFullScreen(this,view.getCurrentView(),full,startHidden);
+         fullScreen = new FrameFullScreen(this,view.getCurrentView(),m);
       } else {
          fullScreen.end();
          fullScreen=null;
-         //          f.setVisible(true);
       }
+
    }
 
    // Juste pour eviter que la classe Save.class ne soit chargee
@@ -4946,8 +5030,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "\n"+
                "   Options:\n"+
                "       -local: without Internet test access\n"+
-               "       -screen=\"full|preview\": starts Aladin in full screen\n" +
-               "               or in a simple preview window\n"+
+               "       -screen=\"full|cinema|preview\": starts Aladin in full screen\n" +
+               "               cinema mode or in a simple preview window\n"+
                "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
                "               additionnal data servers compatible with Aladin \n"+
                "       -stringfile=\"pathname[;...]\": string files for additionnal\n" +
@@ -5679,14 +5763,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( s==null ) return;
       if( methode==1 ) aladin.command.printConsole("!!! "+s);
       if( NOGUI ) return;
-      if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;
+      if( aladin.isFullScreen() ) {
+         if( aladin.fullScreen.getMode()==FrameFullScreen.CINEMA ) return;
+         if( c==aladin.f ) c=aladin.fullScreen;
+      }
       Message.showWarning(c,s);
    }
 
    static public boolean confirmation(String s) { return confirmation(Aladin.aladin.f,s); }
    static public boolean confirmation(Component c,String s) {
       if( NOGUI ) return false;
-      if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;
+      if( aladin.isFullScreen() ) {
+         if( aladin.fullScreen.getMode()==FrameFullScreen.CINEMA ) return false;
+         if( c==aladin.f ) c=aladin.fullScreen;
+      }
       boolean n=(Message.showConfirme(c,s)==Message.OUI);
       return n;
    }
@@ -5694,7 +5784,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected boolean question(String s,Panel myPanel) { return question(Aladin.aladin.f,s,myPanel); }
    static protected boolean question(Component c,String s,Panel myPanel) {
       if( NOGUI ) return false;
-      if( aladin.isFullScreen() && c==aladin.f ) c=aladin.fullScreen;
+      if( aladin.isFullScreen() ) {
+         if( aladin.fullScreen.getMode()==FrameFullScreen.CINEMA ) return false;
+         if( c==aladin.f ) c=aladin.fullScreen;
+      }
       boolean n=(Message.showQuestion(c,s,myPanel)==Message.OUI);
       return n;
    }

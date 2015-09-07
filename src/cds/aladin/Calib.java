@@ -21,16 +21,25 @@
 
 package cds.aladin;
 
-import cds.astro.*;
-import cds.fits.HeaderFits;
-import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix ;
-
 import healpix.essentials.FastMath;
 
-import java.awt.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.io.DataInputStream;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import cds.astro.Astrocoo;
+import cds.astro.Astroframe;
+import cds.astro.Ecliptic;
+import cds.astro.FK4;
+import cds.astro.FK5;
+import cds.astro.Galactic;
+import cds.astro.ICRS;
+import cds.astro.Supergal;
+import cds.fits.HeaderFits;
+import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestion d'une calibration aladin
@@ -146,7 +155,9 @@ public final class Calib  implements Cloneable {
 
          // En attendant de supporter TANSIP
          if( s.indexOf(array[i])>=0 ) {
-            Aladin.aladin.command.printConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
+            String err = "!!! Unknown projection ["+s1+"] : assume "+projType[i];
+            if( Aladin.aladin!=null && Aladin.aladin.command!=null ) Aladin.aladin.command.printConsole(err);
+            else Aladin.aladin.trace(3, err);
             return i;
          }
       }
@@ -154,7 +165,9 @@ public final class Calib  implements Cloneable {
       // En attendant de supporter TNX
       if( s.indexOf("TNX")>=0 || s.indexOf("COE")>=0 ) {
          i=TAN;
-         Aladin.aladin.command.printConsole("!!! Unknown projection ["+s1+"] : assume "+projType[i]);
+         String err = "!!! Unknown projection ["+s1+"] : assume "+projType[i];
+         if( Aladin.aladin!=null && Aladin.aladin.command!=null ) Aladin.aladin.command.printConsole(err);
+         else Aladin.aladin.trace(3, err);
          return i;
       }
       return -1;

@@ -340,7 +340,7 @@ public class CacheFits {
       // en premier tour, on supprime les fits non utilisés
       // depuis plus de 5s, et si pas assez de mémoire, on ne regarde plus la date
       int i;
-      for( i=0; i<2 && encore; i++) {
+      for( i=0; i<3 && encore; i++) {
          Enumeration<String> e = map.keys();
          while( e.hasMoreElements() ) {
             String key = e.nextElement();
