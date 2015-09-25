@@ -21,10 +21,6 @@ package cds.allsky;
 
 import java.io.File;
 
-import javax.swing.JProgressBar;
-
-import cds.tools.Util;
-
 /** Permet de nettoyer les détails d'un index HEALPix
  * @author Pierre Fernique [CDS]
  */

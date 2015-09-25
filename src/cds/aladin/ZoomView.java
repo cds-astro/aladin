@@ -20,17 +20,25 @@
 
 package cds.aladin;
 
-import cds.tools.*;
-
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.image.*;
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.MemoryImageSource;
 
 import javax.swing.JComponent;
+
+import cds.tools.Util;
 
 /**
  * Le Zoom montre l'image de base de la ``View frame'' (en vignette) et
@@ -447,7 +455,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             PlanImage pi = (PlanImage)v.pref;
 
             // Dessin de l'image zoomee si cela n'a pas deja ete fait
-            if( lastImgID!=pi.getImgID() || pi.pixelsZoom.length!=w*h ) {
+            if( lastImgID!=pi.getImgID() || pi.pixelsZoom==null || pi.pixelsZoom.length!=w*h ) {
 
                // Affichage du zoom suivant l'echelle
                gbuf.setColor(Aladin.LBLUE);

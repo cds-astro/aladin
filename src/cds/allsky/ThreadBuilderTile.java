@@ -179,7 +179,7 @@ final public class ThreadBuilderTile {
    //   static private long totalDelay1=0L;
    //   static private long nRead1=0L;
 
-   Fits buildHealpix(BuilderTiles bt, int order, long npix_file, int z) throws Exception {
+   Fits buildHealpix(BuilderTiles bt, String path, int order, long npix_file, int z) throws Exception {
       ArrayList<SrcFile> downFiles = null;
       Fits out=null;
 
@@ -197,7 +197,7 @@ final public class ThreadBuilderTile {
 
          // Pas trop de progéniteurs => on peut tout faire d'un coup
          // Pour les cubes, on va pour le moment travailler en 1 seule passe (A VOIR PAR LA SUITE S'IL FAUT AMELIORER)
-         if( coaddMode==Mode.ADD || !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1) ) {
+         if( !context.live && (coaddMode==Mode.ADD || !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1)) ) {
 
             statOnePass++;
             checkMem(mixing ? n : 1);
@@ -254,9 +254,16 @@ final public class ThreadBuilderTile {
                out = out1;
                out1=null;
             }
+            
+            // Sauvegarde de la tuile de poids
+            if( out!=null && context.live  ) {
+               String file = Util.getFilePath(path,order,npix_file,z);
+               writeWeight(file,weight,tileSide);
+            }
+
          }
-      }
-      catch( Exception e ) {
+          
+      } catch( Exception e ) {
          e.printStackTrace();
       }
 
@@ -269,8 +276,54 @@ final public class ThreadBuilderTile {
       }
 
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
-
+      
       return out;
+   }
+   
+   /**
+    * Sauvegarde des poids des pixels d'une tuile sous la forme d'une FITS
+    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+    * @param weight  La matrice des poids
+    * @param w       La largeur de la tuile
+    * @throws Exception
+    */
+   static public void writeWeight(String file, double [] weight, int w) throws Exception {
+      if( weight==null ) return;
+      Fits fits = new Fits(w,w,-32);
+      int i=0;
+      for( int y=0; y<fits.height; y++ ) {
+         for( int x=0; x<fits.width; x++ ) {
+            fits.setPixelDouble(x,y,weight[i++]);
+         }
+      }
+      fits.writeFITS(file+"_w.fits");
+   }
+
+   /**
+    *  Chargement des poids des pixels d'une tuile sous la forme d'une FITS
+    * La nomenclature suit la même que pour les tuiles classiques, avec le suffixe "_w"
+    * @param file    Le nom de fichier (sans le suffixe "_w" ni l'extension ".fits)
+    * @return        La matrice des poids - remplie de la valeur par défaut si le fichier n'existe pas
+    * @throws Exception
+    */
+   static public double [] loadWeight(String file,int w,double defaultWeight) throws Exception {
+      double [] weight = new double[ w *w ];
+      String filename = file+"_w.fits";
+      if( !(new File(filename)).exists() ) {
+         for( int i=0; i<weight.length; i++ ) weight[i]=defaultWeight;
+         return weight;
+      }
+      
+      Fits fits = new Fits();
+      fits.loadFITS(filename);
+      int i=0;
+      for( int y=0; y<fits.height; y++ ) {
+         for( int x=0; x<fits.width; x++ ) {
+            weight[i++] = fits.getPixelDouble(x,y);
+         }
+      }
+      return weight;
    }
 
    static long statOnePass=0L;

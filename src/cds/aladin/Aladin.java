@@ -152,11 +152,12 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
- * @beta    <LI> MOC Server support (data set coverage server)
+ * @beta    <LI> MocServer support (remote server of coverages)
  * @beta    <LI> Astrometrical calibration improvements (SCAMP PV)
  * @beta    <LI> Widgets in fullscreen mode
  * @beta    <LI> New colormap controller
  * @beta    <LI> Full MOC adaptative drawing
+ * @beta    <LI> draw MOC ... script command
  * @beta    <LI> Improvement of Planetary Data System image support (LSB,PREFIX,SUFFIX...)
  * @beta    <LI> ObsTAP VOTable result support
  * @beta    <LI> Pixel autocut estimation around the reticle (localcut)
@@ -217,7 +218,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.166";
+   static public final    String VERSION = "v8.171";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -498,7 +499,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miVOtool,miGluSky,miGluTool,miPref,miPlasReg,miPlasUnreg,miPlasBroadcast,
    miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
    miLock,miDelLock,miStick,miOne,miNorthUp,
-   miProp,miGrid,miReticle,miReticleL,miNoReticle,
+   miProp,miGrid,miNoGrid,miReticle,miReticleL,miNoReticle,
    miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
@@ -556,7 +557,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    String MBGKG; // menus pour les backgrounds
 
    // Sous-menus
-   String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,RETICLE,RETICLEL,NORETICLE,
+   String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,HPXGRID,NOGRID,RETICLE,RETICLEL,NORETICLE,
    TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,
    COOTOOL,PIXELTOOL,CALCULATOR, SESAME,NEW,PREF,
    /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
@@ -571,7 +572,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
-   HPXCREATE,HPXGRID,HPXDUMP,FOVEDITOR,HPXGENERATE,GETOBJ;
+   HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,GETOBJ;
    String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
 
    /** Retourne l'objet gérant les chaines */
@@ -907,6 +908,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PIXEL   = chaine.getString("MPIXEL");
       CONTOUR = chaine.getString("MCONTOUR");
       GRID    = chaine.getString("VWMGRID");
+      NOGRID   =chaine.getString("VWMNOGRID");
       RETICLE = chaine.getString("VWMRETICLE");
       RETICLEL= chaine.getString("VWMRETICLEL");
       NORETICLE=chaine.getString("VWMNORETICLE");
@@ -1174,7 +1176,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                {},{NTOOL+"|"+alt+" N"},
                {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
-               {"?"+GRID+"|"+alt+" G"},/*{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},*/
+//               {"?"+GRID+"|"+alt+" G"},/*{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},*/
+               {},{"%"+GRID+"|"+alt+" G"},{"%"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},{"%"+NOGRID},
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
@@ -1402,7 +1405,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          memoMenuItem(s,jm);
 
          for( int j=1; j<menu[i].length; j++ ) {
-            if( menu[i][j].length==0 ) { if( !separator ) { jm.addSeparator(); separator=true; } continue; }
+            if( menu[i][j].length==0 ) { if( !separator ) { jm.addSeparator(); separator=true; mg=null; } continue; }
             s=menu[i][j][0];
             if( (s = isSpecialMenu(s))==null ) continue;
 
@@ -1412,7 +1415,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                for( int k=1; k<menu[i][j].length; k++ ) {
                   s=menu[i][j][k];
                   if( (s = isSpecialMenu(s))==null ) continue;
-                  if( s.length()==0 ) { if( !separator ) { jms.addSeparator(); separator=true; } continue; }
+                  if( s.length()==0 ) { if( !separator ) { jms.addSeparator(); separator=true; mg=null; } continue; }
                   StringBuffer key = new StringBuffer();
                   s = hasKeyStroke(key,s);
                   if( s.charAt(0)=='%' ) {
@@ -1753,6 +1756,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,DELLOCKVIEW)) miDelLock= ji;
       else if( isMenu(m,STICKVIEW)) miStick = ji;
       else if( isMenu(m,GRID))    miGrid    = ji;
+      else if( isMenu(m,NOGRID))  miNoGrid    = ji;
       else if( isMenu(m,HPXGRID)) miHpxGrid = ji;
       else if( isMenu(m,RETICLE)) miReticle = ji;
       else if( isMenu(m,RETICLEL))  miReticleL  = ji;
@@ -3069,8 +3073,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,TARGET)) { target();
       } else if( isMenu(s,OVERLAY)){ overlay();
       } else if( isMenu(s,RAINBOW)){ rainbow();
-      } else if( isMenu(s,GRID))   { grid();
-      } else if( isMenu(s,HPXGRID)){ hpxGrid();
+      } else if( isMenu(s,NOGRID)) { grid(0);
+      } else if( isMenu(s,GRID))   { grid(1);
+      } else if( isMenu(s,HPXGRID)){ grid(2);
+//      } else if( isMenu(s,HPXGRID)){ hpxGrid();
       //      } else if( isMenu(s,HISTORY)){ history();
       } else if( isMenu(s,ZOOMP))  { calque.zoom.setZoom("+");
       } else if( isMenu(s,ZOOMM))  { calque.zoom.setZoom("-");
@@ -3544,9 +3550,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
 
    /** Activation ou désactivation de la grille via la Jbar */
-   protected void grid() {
-      calque.setGrid(miGrid.isSelected(),true);
-      calque.repaintAll();
+   protected void grid(int mode) {
+      calque.setGrid(mode);
+      view.repaintAll();
    }
 
    /** Permute l'activation/désactivation de la grille HEALPix */
@@ -4802,8 +4808,13 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miRGB!=null ) miRGB.setEnabled(nbPlanImgWithoutBG>1);
          if( miMosaic!=null ) miMosaic.setEnabled(nbPlanImgWithoutBG>1);
          if( miBlink!=null ) miBlink.setEnabled(nbPlanImgWithoutBG>1);
-         if( miGrid!=null ) miGrid.setSelected( calque.hasGrid() );
-         if( miHpxGrid!=null ) miHpxGrid.setSelected(calque.hasHpxGrid() );
+//         if( miGrid!=null ) miGrid.setSelected( calque.hasGrid() );
+//         if( miHpxGrid!=null ) miHpxGrid.setSelected(calque.hasHpxGrid() );
+         if( miGrid!=null ) {
+            if( !calque.hasGrid() ) miNoGrid.setSelected( true );
+            else if( calque.gridMode==1 || miHpxGrid==null ) miGrid.setSelected( true );
+            else miHpxGrid.setSelected( true );
+         }
          if( miOverlay!=null ) miOverlay.setSelected(calque.flagOverlay);
          if( miRainbow!=null ) {
             miRainbow.setEnabled( view.rainbowAvailable());

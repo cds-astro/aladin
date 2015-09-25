@@ -25,7 +25,7 @@ import java.io.File;
  * @author Anaïs Oberto & Pierre Fernique [CDS]
  */
 public class BuilderClean extends Builder {
-   private int nbFile;      // Nombre de fichiers supprimés
+   private int nbFile;       // Nombre de fichiers supprimés
 
    public BuilderClean(Context context) {
       super(context);
@@ -37,8 +37,10 @@ public class BuilderClean extends Builder {
    public void run() throws Exception {
       deleteDir(new File(context.getOutputPath()));
    }
-
-   public void validateContext() throws Exception { validateOutput(); }
+   
+   public void validateContext() throws Exception {      
+      validateOutput();
+   }
 
    public boolean isAlreadyDone() { return !(new File(context.getOutputPath())).exists(); }
 
@@ -52,7 +54,7 @@ public class BuilderClean extends Builder {
       if( name.equals(Constante.FILE_PROPERTIES) ) return false;
       return true;
    }
-
+   
    public void deleteDir(File dir) throws Exception {
       if( context.isTaskAborting() ) throw new Exception("Task abort !");
 

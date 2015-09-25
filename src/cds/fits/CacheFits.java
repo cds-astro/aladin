@@ -484,7 +484,7 @@ public class CacheFits {
       if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
       shape = f1.findData();
       shapeCache.put(filename,shape);
-      context.info("Data area range => ["+shape[0]+","+shape[1]+" "+shape[2]+"x"+shape[3]+"] for "+filename);
+//      context.info("Data area range => ["+shape[0]+","+shape[1]+" "+shape[2]+"x"+shape[3]+"] for "+filename);
 
       return shape;
    }

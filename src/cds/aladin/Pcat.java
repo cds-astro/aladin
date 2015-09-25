@@ -19,11 +19,22 @@
 
 
 package cds.aladin;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -612,6 +623,24 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             // On met un lien sur les urls ?
             if( href==null && (value[i].startsWith("http://") || value[i].startsWith("https://") || value[i].startsWith("ftp://"))) {
                href=value[i];
+               
+               // SIA 1.0
+               if( flagArchive==null ) {
+                  String ucd = leg.getUCD(j);
+                  if( ucd!=null && ucd.indexOf("Image_AccessReference")>=0 ) flagArchive="image/fits";
+               }
+               // SSA - spectrum
+               if( flagArchive==null ) {
+                  String utype = leg.getUtype(j);
+                  if( utype!=null && utype.indexOf("ssa:Access.Reference")>=0 ) {
+                     flagArchive="spectrum/???";
+                  }
+               }
+               // SSA - preview
+               if( flagArchive==null ) {
+                  String ucd = leg.getUCD(j);
+                  if( ucd!=null && ucd.indexOf("meta.ref.url;datalink.preview")>=0 ) flagArchive="image/???";
+               }
             }
 
             String tag = (gref != null) ? gref : (href != null) ? "Http " + href : null;

@@ -108,6 +108,7 @@ public class BuilderTiles extends Builder {
          else context.info("BLANK="+ (Double.isNaN(bl1)?"NaN":bl1));
          if( context.good!=null ) context.info("Good pixel values ["+ip(context.good[0],bz,bs)+" .. "+ip(context.good[1],bz,bs)+"] => other values are ignored");
          context.info("Tile aggregation method="+Context.JpegMethod.MEAN);
+         if( context.live ) context.info("Live HiPS => Weight tiles saved for potential future additions"); 
       }
 
       build();
@@ -528,7 +529,7 @@ public class BuilderTiles extends Builder {
 
       // Création d'un losange terminal
       if( order==ordermax )  {
-         try { f = createLeaveHpx(hpx,file,order,npix,z); }
+         try { f = createLeaveHpx(hpx,file,path,order,npix,z); }
          catch( Exception e ) {
             System.err.println("BuilderTiles.createLeave error: "+file);
             e.printStackTrace();
@@ -962,7 +963,7 @@ public class BuilderTiles extends Builder {
     * @param z numéro de la frame (pour un cube)
     * @return null si rien trouvé pour construire ce fichier
     */
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix,int z) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path, int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
 
       Fits oldOut=null;
@@ -977,7 +978,7 @@ public class BuilderTiles extends Builder {
          }
       }
 
-      Fits out= hpx.buildHealpix(this,order, npix,z);
+      Fits out= hpx.buildHealpix(this,path, order, npix,z);
 
       if( out !=null  ) {
 

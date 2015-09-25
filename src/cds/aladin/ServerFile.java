@@ -34,7 +34,11 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import cds.allsky.Constante;
 import cds.tools.Util;
@@ -369,7 +373,7 @@ public class ServerFile extends Server implements XMLConsumer {
             else if( (type & MyInputStream.AJ)!=0) n=loadAJ(in)?1:0;
             else if( (type & MyInputStream.AJTOOL)!=0 ) n=loadTool(in,label)?1:0;
             else if( (type & MyInputStream.IDHA)!=0) n=updateMetaData(in,server,"",null)?1:0;
-            else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
+//            else if( (type & MyInputStream.SIA_SSA)!=0)  n=updateMetaData(in,server,"",null)?1:0;
 
             else if( (type & MyInputStream.HPXMOC)!=0 ) {
                n=aladin.calque.newPlanMOC(in,label);
@@ -480,7 +484,7 @@ public class ServerFile extends Server implements XMLConsumer {
 
             // Dans le cas de Meta-donnee (SIA ou IDHA) on va automatiquement ouvrir
             // et positionner la fenetre des formulaires toFront
-            if( (type & (MyInputStream.SIA_SSA|MyInputStream.IDHA))!=0 ) {
+            if( (type & (/*MyInputStream.SIA_SSA|*/MyInputStream.IDHA))!=0 ) {
                aladin.dialog.show();
                aladin.dialog.setCurrent(aladinLabel);
             }

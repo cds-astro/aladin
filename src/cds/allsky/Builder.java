@@ -152,14 +152,16 @@ public abstract class Builder {
       if( context.depthInit ) return;
 
       // tentative de récupération de la profondeur par une image étalon
-      String img = context.getImgEtalon();
-      if( img==null && context.getInputPath()!=null) {
-         img = context.justFindImgEtalon( context.getInputPath() );
-         if( img!=null ) context.info("Use this reference image => "+img);
-      }
-      if( img!=null ) {
-         try { context.setImgEtalon(img); }
-         catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+      if( !context.isColor() ) {
+         String img = context.getImgEtalon();
+         if( img==null && context.getInputPath()!=null) {
+            img = context.justFindImgEtalon( context.getInputPath() );
+            if( img!=null ) context.info("Use this reference image => "+img);
+         }
+         if( img!=null ) {
+            try { context.setImgEtalon(img); }
+            catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+         }
       }
 
       // Tentative de récupération de la profondeur par le fichier des properties

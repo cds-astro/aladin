@@ -19,16 +19,20 @@
 
 package cds.aladin;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
-
-
-
 
 import cds.fits.HeaderFits;
 import cds.image.Bzip2;
@@ -268,7 +272,7 @@ public final class MyInputStream extends FilterInputStream {
       if( hasFitsKey("EXTEND",null) ) type |= XFITS;
 
       if( hasFitsKey("CTYPE3","RGB")
-            || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3") ) type |= RGB;
+            /* || (type&CUBE)==CUBE && hasFitsKey("NAXIS3","3")*/ ) type |= RGB;
 
       // Détection d'une image HUGE
       if( (type & (CUBE|RGB))==0 ) {

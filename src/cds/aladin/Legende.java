@@ -375,6 +375,16 @@ public final class Legende extends AbstractTableModel  {
       return   (f.ucd!=null?f.ucd:"");
    }
 
+   /** Retourne le utype associee au champ.
+    * @param i numero du champ
+    * @return le utype, "" si erreur ou non decrit
+    */
+   protected String getUtype(int i) {
+      if( i>=field.length ) return null;
+      Field f = field[i];
+      return   (f.utype!=null?f.utype:"");
+   }
+
    protected int getPrecision(int i) {
       if( i>=field.length ) return -1;
       Field f = field[i];

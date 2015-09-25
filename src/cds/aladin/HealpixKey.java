@@ -209,6 +209,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       }
    }
 
+   /** Juste pour dessiner la grille */
+   protected HealpixKey(int order, long npix, int frame) {
+      this.order=order;
+      this.npix=npix;
+      hpix = new Hpix(order,npix,frame);
+   }
+
+
    protected String getFileNet() {
       return getFilePath(null,order,npix,z)+ EXT[extNet];
    }
@@ -2066,8 +2074,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       //      }
    }
 
-   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
-    * => commandé par le menu Aladin.aladin.hpxCtrl */
+   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix */
    final protected void drawLosangeBorder(Graphics g,ViewSimple v) {
       PointD b [] = getProjViewCorners(v);
       if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return;
@@ -2076,8 +2083,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double c2 = dist(b,1,3);
       double c3 = dist(b,2,3);
       double min = Math.min(Math.min(c0,c1),Math.min(c2,c3));
-      double min2 = 15*min;
-      g.setColor(Color.green);
+      double min2 = 20*min;
       if( c0<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[1].x,(int)b[1].y);
       if( c1<min2 ) g.drawLine((int)b[0].x,(int)b[0].y,(int)b[2].x,(int)b[2].y);
       if( c2<min2 ) g.drawLine((int)b[1].x,(int)b[1].y,(int)b[3].x,(int)b[3].y);
@@ -2118,7 +2124,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
             }
          }
 
-         Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
+//         Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
+         
+         int w = m.stringWidth(order+"");
+//         Util.drawStringOutline(g, order+"", x,y-3, Color.green, Color.black);
+//         Util.drawStringOutline(g, npix+"", x+w+2,y+3, Color.green, Color.black);
+         g.drawString(order+"", x,y-4);
+         g.drawString(npix+"", x+w+4,y+4);
+         g.drawString("/",x+w,y);
       }
    }
 

@@ -20,16 +20,17 @@
 package cds.allsky;
 
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.aladin.Localisation;
 import cds.fits.Fits;
+import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Util;
 
@@ -45,6 +46,8 @@ public class BuilderIndex extends Builder {
    private boolean partitioning;
    private double maxRatio;
    private int [] hdu = null;
+   private HealpixMoc area;                // région de travail
+   private boolean flagAppend;             // true => inutile de vérifier les doublons
 
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
@@ -112,10 +115,15 @@ public class BuilderIndex extends Builder {
       partitioning = context.partitioning;
       if( partitioning ) context.info("Partitioning large original image files in blocks of "+Constante.ORIGCELLWIDTH+"x"+Constante.ORIGCELLWIDTH+" pixels");
 
+      
       validateInput();
       validateOutput();
       validateLabel();
 
+      // S'il existe déjà un hpxFinder, on va vérifier qu'on inséère pas de doublons
+      flagAppend = !context.isExistingIndexDir();
+      if( !flagAppend ) context.info("Pre-existing HpxFinder index => will add new images only...");
+      
       // Tests order
       int order = context.getOrder();
       if( order==-1 ) {
@@ -168,6 +176,9 @@ public class BuilderIndex extends Builder {
          }
          context.info("Extended metadata extraction based on FITS keys: "+res);
       }
+      
+      // récupération du MOC de travail
+      area = context.getArea();
    }
 
    static public int calculateNSide(double pixsize) {
@@ -228,49 +239,98 @@ public class BuilderIndex extends Builder {
          statMaxNbyte = nbyte;
       }
    }
-
+   
    // Création si nécessaire du fichier passé en paramètre et ouverture en écriture
-   private FileOutputStream openFile(String filename) throws Exception {
-      File f = new File( filename/*.replaceAll(FS+FS, FS)*/ );
-      if( !f.exists() ) {
-         cds.tools.Util.createPath(filename);
-         return new FileOutputStream(f);
-      }
-      return new FileOutputStream(f, true);
+   private RandomAccessFile openFile(String filename) throws Exception {
+      File f = new File( filename );
+      if( !f.exists() ) cds.tools.Util.createPath(filename);
+      return new RandomAccessFile(f,"rw");
    }
 
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
-   private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
+   private void createAFile(RandomAccessFile out, String filename, Coord center, String stc, String fitsVal)
          throws IOException {
 
-      // Détermination d'un nom de produit à partir du filename
-      // 1.Suppression du path
-      int o1 = filename.lastIndexOf('/');
-      int o1b = filename.lastIndexOf('\\');
-      if( o1b>o1 ) o1=o1b;
-
-      // 2.Suppression d'une extension ?
-      int o2 = filename.lastIndexOf('.');
-
-      // 3.Suppression du suffixe [x,y-wxh] si nécessaire
-      int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
-      if( o3>o2 ) o2=o3;
-
-      if( o2==-1 || o2<=o1 ) o2 = filename.length();
-      String name = filename.substring(o1+1,o2);
-
-      if( fitsVal==null ) fitsVal="";
-
-      DataOutputStream dataoutputstream = null;
       try {
-         dataoutputstream = new DataOutputStream(out);
-         dataoutputstream.writeBytes(
-               "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
-                     "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
-                     "\"stc\": \""+stc+"\""+fitsVal+" }\n");
-         dataoutputstream.flush();
-      } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
+         // Détermination d'un nom de produit à partir du filename
+         // 1.Suppression du path
+         int o1 = filename.lastIndexOf('/');
+         int o1b = filename.lastIndexOf('\\');
+         if( o1b>o1 ) o1=o1b;
+
+         // 2.Suppression d'une extension ?
+         int o2 = filename.lastIndexOf('.');
+
+         // 3.Suppression du suffixe [x,y-wxh] si nécessaire
+         int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
+         if( o3>o2 ) o2=o3;
+
+         if( o2==-1 || o2<=o1 ) o2 = filename.length();
+         String name = filename.substring(o1+1,o2);
+
+         if( fitsVal==null ) fitsVal="";
+
+         String line = "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
+               "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
+               "\"stc\": \""+stc+"\""+fitsVal+" }\n";
+
+         if( flagAppend ) out.seek( out.length() );
+         else {
+            String s;
+            while( (s=out.readLine())!=null ) {
+               if( (s+"\n").equals(line) ) {
+//                  System.out.println("Bloc déjà présent dans la tuile => "+line);
+                  return;       // déjà présent dans la tuile d'index
+               }
+            }
+         }
+         out.write( line.getBytes() );
+      } finally { if( out!=null ) out.close(); }
    }
+
+
+//   // Création si nécessaire du fichier passé en paramètre et ouverture en écriture
+//   private FileOutputStream openFile(String filename) throws Exception {
+//      File f = new File( filename/*.replaceAll(FS+FS, FS)*/ );
+//      if( !f.exists() ) {
+//         cds.tools.Util.createPath(filename);
+//         return new FileOutputStream(f);
+//      }
+//      return new FileOutputStream(f, true);
+//   }
+//
+//   // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
+//   private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
+//         throws IOException {
+//
+//      // Détermination d'un nom de produit à partir du filename
+//      // 1.Suppression du path
+//      int o1 = filename.lastIndexOf('/');
+//      int o1b = filename.lastIndexOf('\\');
+//      if( o1b>o1 ) o1=o1b;
+//
+//      // 2.Suppression d'une extension ?
+//      int o2 = filename.lastIndexOf('.');
+//
+//      // 3.Suppression du suffixe [x,y-wxh] si nécessaire
+//      int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
+//      if( o3>o2 ) o2=o3;
+//
+//      if( o2==-1 || o2<=o1 ) o2 = filename.length();
+//      String name = filename.substring(o1+1,o2);
+//
+//      if( fitsVal==null ) fitsVal="";
+//
+//      DataOutputStream dataoutputstream = null;
+//      try {
+//         dataoutputstream = new DataOutputStream(out);
+//         dataoutputstream.writeBytes(
+//               "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
+//                     "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
+//                     "\"stc\": \""+stc+"\""+fitsVal+" }\n");
+//         dataoutputstream.flush();
+//      } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
+//   }
 
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
@@ -382,7 +442,7 @@ public class BuilderIndex extends Builder {
    private void testAndInsert(Fits fitsfile, String pathDest, String currentFile,
          String suffix, int order) throws Exception {
       String hpxname;
-      FileOutputStream out;
+      RandomAccessFile out;
       Coord center = new Coord();
       String fitsVal=null;
 
@@ -393,13 +453,18 @@ public class BuilderIndex extends Builder {
       Coord corner[] = new Coord[4];
       StringBuffer stc = new StringBuffer("POLYGON J2000");
       boolean hasCell = fitsfile.hasCell();
+//      System.out.print("draw polygon");
       for( int i=0; i<4; i++ ) {
          coo.x = (i==0 || i==3 ? fitsfile.xCell : fitsfile.xCell +fitsfile.widthCell);
          coo.y = (i<2 ? fitsfile.yCell : fitsfile.yCell+fitsfile.heightCell);
          if( !Fits.JPEGORDERCALIB || Fits.JPEGORDERCALIB && fitsfile.bitpix!=0 )
             coo.y = fitsfile.height - coo.y -1;
          c.GetCoord(coo);
+         
+//         System.out.print(" "+coo.al+" "+coo.del);
+
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
+         
 
          // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
          if( hasCell ) {
@@ -412,7 +477,8 @@ public class BuilderIndex extends Builder {
          stc.append(" "+coo.al+" "+coo.del);
          corner[i] = new Coord(coo.al,coo.del);
       }
-
+//      System.out.println();
+      
       // On teste le rapport largeur/longeur du pixel si nécessaire
       if( maxRatio>0 ) {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
@@ -443,11 +509,15 @@ public class BuilderIndex extends Builder {
          if( res!=null ) fitsVal=res.toString();
       }
 
-      long [] npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
+      long[] npixs;
+      npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
 
       // pour chacun des losanges concernés
       for (int i = 0; i < npixs.length; i++) {
          long npix = npixs[i];
+         
+         // Suis-je dans la région de travail ?
+         if( area!=null && !area.isIntersecting(order, npix) ) continue;
 
          // vérifie la validité du losange trouvé
          if (!isInImage(fitsfile, Util.getCorners(order, npix)))  continue;

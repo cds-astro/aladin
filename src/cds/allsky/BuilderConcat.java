@@ -22,7 +22,9 @@ package cds.allsky;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+
 import cds.aladin.HealpixProgen;
+import cds.aladin.MyProperties;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
@@ -42,6 +44,9 @@ public class BuilderConcat extends BuilderTiles {
    private Mode mode;
    private boolean doHpxFinder;
    private int tileMode;
+   private int tileSide;
+   private boolean live=false;            // true si on doit utiliser les cartes de poids
+   private boolean liveIn,liveOut;
 
    public BuilderConcat(Context context) {
       super(context);
@@ -68,9 +73,10 @@ public class BuilderConcat extends BuilderTiles {
          if( inPng ) { (new BuilderPng(context)).run(); context.info("PNG tiles updated"); }
       }
 
-      // Regeneration des allsky si non encore fait
-      if( !inJpg && !inPng ) (new BuilderAllsky(context)).run();
-      context.info("Allsky updated");
+      // INUTILE CAR DEJA FAIT
+//      // Regeneration des allsky si non encore fait
+//      if( !inJpg && !inPng ) (new BuilderAllsky(context)).run();
+//      context.info("Allsky updated");
 
       // Mise à jour ou generation du MOC final
       String outputPath = context.getOutputPath();
@@ -115,6 +121,7 @@ public class BuilderConcat extends BuilderTiles {
       inputPathIndex = cds.tools.Util.concatDir( inputPath,Constante.FILE_HPXFINDER);
       mode = context.getMode();
       tileMode=Constante.TILE_FITS;
+      tileSide=context.getTileSide();
 
       if( inputPath==null ) throw new Exception("\"in\" parameter required !");
       File f = new File(inputPath);
@@ -127,6 +134,9 @@ public class BuilderConcat extends BuilderTiles {
       if( inputOrder==-1 )  throw new Exception("No HiPS found in input dir");
       if( order!=inputOrder ) throw new Exception("Uncompatible HiPS: out.order="+order+" input.order="+inputOrder);
       context.info("Order retrieved from ["+inputPath+"] => "+order);
+      
+      // Mise à jour des propriétés pour le suivi des addendum
+      addAddendum( context.getInputPath(), context.getOutputPath() );
 
       String allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
       if( (new File(allsky)).exists() ) {
@@ -172,7 +182,57 @@ public class BuilderConcat extends BuilderTiles {
       updateCutByProperties(cut);
       context.setCut(cut);
       context.setValidateCut(true);
+      
+      // Il faut voir si on peut utiliser les tuiles de poids
+      liveOut = checkLiveByProperties(context.getOutputPath());
+      liveIn = checkLiveByProperties(context.getInputPath());
+      live = liveIn && liveOut;
+      if( mode==Mode.AVERAGE ) {
+         if( !live ) context.warning("Both HiPS to merge do not provide weight tiles => assuming basic average");
+         else if( !liveOut ) context.warning("Target HiPS do not provide weight tiles => assuming weigth 1 for each output pixel");
+         else if( !liveIn ) context.warning("Source HiPS do not provide weight tiles => assuming weigth 1 for each input pixel");
+         
+      }
+      
+   }
+   
+   /** Vérifie que les 2 hips disposent des cartes de poids */
+   protected boolean checkLiveByProperties(String path) {
+      try {
+         String s = loadProperty(path,Constante.KEY_DATAPRODUCT_SUBTYPE);
+         return s!=null && s.indexOf("live")>=0;
+      } catch( Exception e ) {}
+      return false;
+   }
 
+   /** Ajoute le Addendum_did aux propriétés, et génère une exception si déjà existant */
+   protected void addAddendum(String sourcePath, String targetPath) throws Exception {
+      String ivornTarget = loadProperty(targetPath,Constante.KEY_PUBLISHER_DID);
+      context.setIvorn(ivornTarget);
+      String addendum = loadProperty(targetPath,Constante.KEY_ADDENDUM_DID);
+      context.setAddendum(addendum);
+
+      String ivornSource = loadProperty(sourcePath,Constante.KEY_PUBLISHER_DID);
+      context.addAddendum(ivornSource);
+      context.info("Merging "+ivornSource+" into "+ivornTarget+"...");
+   }
+   
+   /** Charge une valeur d'un mot clé d'un fichier de properties pour un répertoire particulier, null sinon */
+   protected String loadProperty(String path,String key) throws Exception {
+      FileInputStream in = null;
+      try {
+         String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
+         MyProperties prop = new MyProperties();
+         File f = new File( propFile );
+         if( f.exists() ) {
+            in = new FileInputStream(propFile);
+            prop.load(in);
+            in.close();
+            in=null;
+            return prop.getProperty(key);
+         }
+       } finally { if( in!=null ) in.close(); }
+      return null;
    }
 
    protected void setContextParamFromPreviousAllskyFile(String allskyFile) throws Exception {
@@ -240,7 +300,7 @@ public class BuilderConcat extends BuilderTiles {
    }
 
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix,int z) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix,int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits out=null;
 
@@ -251,38 +311,68 @@ public class BuilderConcat extends BuilderTiles {
          updateStat(0,0,1,duree,0,0);
          return null;
       }
-
+      
+      double [] weightOut=null;
+      double [] weightIn=null;
+      
       // traitement de la tuile
       String outFile = Util.getFilePath(outputPath,order,npix,z);
-      out = loadTile(outFile);
-
+      if( mode!=Mode.REPLACETILE ) {
+         out = loadTile(outFile);
+         if( out!=null && live ) weightOut  = ThreadBuilderTile.loadWeight(outFile,tileSide,1);
+      }
+      if( live ) weightIn = ThreadBuilderTile.loadWeight(inputFile,tileSide,1);
+      
       switch(mode) {
          case REPLACETILE:
             out=input;
+            weightOut=weightIn;
             break;
          case KEEPTILE :
-            if( out==null ) out=input;
+            if( out==null ) {
+               out=input;
+               weightOut=weightIn;
+            }
             break;
          case AVERAGE:
-            if( out!=null ) input.coadd(out,true);
+            if( out!=null ) {
+               if( !live ) input.coadd(out,true);
+               else input.coadd(out, weightIn, weightOut);
+            }
             out=input;
+            weightOut=weightIn;
             break;
          case ADD:
-            if( out!=null ) input.coadd(out,false);
+            if( out!=null ) {
+               input.coadd(out,false);
+               if( live ) for( int i=0; i<weightOut.length; i++ ) weightIn[i] += weightOut[i];
+            }
             out=input;
+            weightOut=weightIn;
             break;
          case OVERWRITE:
-            if( out!=null ) out.mergeOnNaN(input);
-            else out=input;
+            if( out!=null ) {
+               if( !live ) out.mergeOnNaN(input);
+               else out.mergeOnNaN(input,weightOut, weightIn);
+            }  else {
+               out=input;
+               weightOut=weightIn;
+            }
             break;
          case KEEP:
-            if( out!=null ) input.mergeOnNaN(out);
+            if( out!=null ) {
+               if( !live ) input.mergeOnNaN(out);
+               else out.mergeOnNaN(out,weightIn, weightOut);
+            }
             out=input;
+            weightOut=weightIn;
             break;
       }
 
       if( out==null ) throw new Exception("Y a un blème ! out==null");
-      else write(outFile,out);
+      
+      write(outFile,out);
+      if( liveOut ) ThreadBuilderTile.writeWeight(outFile,weightOut,tileSide);
 
       if( context.isTaskAborting() )  throw new Exception("Task abort !");
 

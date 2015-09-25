@@ -27,7 +27,11 @@ import java.awt.Scrollbar;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -68,6 +72,7 @@ public final class Calque extends JPanel implements Runnable {
    int runme_n= -1;
    ScrollbarStack scroll;		 // La scrollbar verticale si necessaire
    protected int reticleMode;    //  1-normal, 2-large
+   protected int gridMode=1;     //  1-normal, 2-HEALPix
    protected boolean flagOverlay;// True si l'echelle doit etre affichee
    protected boolean flagHpxPolar;// True si la polarisation HEALPix doit etre affichee
    protected boolean flagAutoDist; // True si l'outil de mesure automatique des distances est activé
@@ -537,6 +542,12 @@ public final class Calque extends JPanel implements Runnable {
       reticleMode=mode;
       setOverlayFlag("reticle", mode>0);
    }
+   
+   /** Indication du mode de la grille 0-NOGRID, 1-GRID coord, 2- GRID HEALPix */
+   protected void setGrid(int mode) {
+      gridMode=mode;
+      setGrid(mode!=0,false);
+   }
 
    /** Activation/desactivation de la grille */
    protected void setGrid(boolean flag,boolean verbose) {
@@ -547,12 +558,10 @@ public final class Calque extends JPanel implements Runnable {
    protected void switchGrid(boolean verbose) {
       if( !hasGrid() ) {
          setOverlayFlag("grid", true);
-         //         aladin.view.activeGrid();
          if( verbose ) aladin.console.printCommand("grid on");
       }
       else {
          setOverlayFlag("grid", false);
-         //         aladin.view.unactiveGrid();
          if( verbose ) aladin.console.printCommand("grid off");
       }
       repaintAll();

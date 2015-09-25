@@ -41,7 +41,17 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
 
 import cds.allsky.Constante;
 import cds.astro.Coo;
@@ -1142,6 +1152,9 @@ public class PlanBG extends PlanImage {
             size += getCacheSizePlanHealpix(new File(PlanHealpix.getCacheDirPath()), listCache);
             Collections.sort(listCache,(new Comparator() {
                public int compare(Object o1, Object o2) {
+                  if( o1==o2 ) return 0;
+                  if( o1==null ) return -1;
+                  if( o2==null ) return 1;
                   long t1 = ((File)o1).lastModified();
                   long t2 = ((File)o2).lastModified();
                   return t1==t2 ? 0: t1>t2 ? 1 : -1;

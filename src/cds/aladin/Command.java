@@ -986,6 +986,10 @@ public final class Command implements Runnable {
          } else {
             syncNeedRepaint=true;
             syncNeedSesame=true;
+            
+            // Notamment pour prendre en compte les identificateurs du genre "* alf Cen"
+            // Sinon il va tenter une multiplication
+            cmd = Tok.unQuote(cmd);
 
             // Via une adresse healpix norder/npi
             if( execHpxCmd(cmd) ) return false;
@@ -1922,14 +1926,14 @@ public final class Command implements Runnable {
          double x[];
          x = CDSHealpix.polarToRadec(CDSHealpix.pix2ang_nest(nSide, npix));
          Coord c = new Coord(x[0], x[1]);
-         ViewSimple v = a.view.getCurrentView();
-         Plan pref = null;
-         if( v!=null && !v.isFree() ) pref=v.pref;
-         if( pref!=null && pref instanceof PlanBG ) {
-            a.localisation.frameToFrame(c, ((PlanBG)pref).frameOrigin, Localisation.ICRS);
-         }
+         a.localisation.frameToFrame(c, a.localisation.getFrameGeneric(), Localisation.ICRS);
+//         ViewSimple v = a.view.getCurrentView();
+//         Plan pref = null;
+//         if( v!=null && !v.isFree() ) pref=v.pref;
+//         if( pref!=null && pref instanceof PlanBG ) {
+//            a.localisation.frameToFrame(c, ((PlanBG)pref).frameOrigin, Localisation.ICRS);
+//         }
          a.view.setRepere(c);
-         //         printConsole("Healpix "+order+"/"+npix+" => "+c);
          return true;
       } catch( Exception e ) { }
       return false;
@@ -2237,6 +2241,27 @@ public final class Command implements Runnable {
       // Couleur spécifique ? => on la traite, et on se recale
       specifColor=getSpecifColor(fct,tok);
       if( specifColor!=null )  fct = tok.nextToken();
+      
+      // Commande moc(3/124-126,133 4/566 ...)
+      if( fct.equalsIgnoreCase("moc") ) {
+         String m;
+         int i = param.indexOf('(');
+         int j = param.lastIndexOf(')');
+         if( i>0 && i<j ) m = param.substring(i+1, j);
+         else {
+            i=param.indexOf(' ');
+            m=param.substring(i+1);
+         }
+         try {
+            HealpixMoc moc = new HealpixMoc(m);
+            Plan p = a.calque.getPlan( a.calque.newPlanMOC(moc, "Moc" ));
+            if( specifColor!=null ) p.c = specifColor;
+            return true;
+         } catch( Exception e) {
+            printConsole("!!! draw moc error: syntax error ["+m+"]");
+            return false;
+         }
+      }
 
       // Recupération des paramètres de la fonction
       String p [] = new String[ tok.countTokens() ];
@@ -2260,7 +2285,7 @@ public final class Command implements Runnable {
 
          return true;
       }
-
+      
       // Commande global(prop=value,prop=value...)
       if( fct.equalsIgnoreCase("global") ) {
          memoGlobal(p);
@@ -2622,6 +2647,20 @@ public final class Command implements Runnable {
 
       return -1;
    }
+   
+   /** Retourne true si la chaine est un MOC suivant la syntaxe
+    * du genre 3/123-124,156 ... */
+   private boolean findMoc(String s) {
+     int slash=-1, dashComma=-1;
+     char[] a = s.toCharArray();
+     for( int i=0; i<a.length; i++ ) {
+        if( slash==-1 && a[i]=='/' ) slash=i;
+        else if( dashComma==-1 && (a[i]=='-' || a[i]==',') ) dashComma=i;
+        else if( !Character.isDigit(a[i]) && !Character.isSpaceChar(a[i]) ) return false; 
+     }
+     return slash>0 && slash<dashComma;
+      
+   }
 
    StringBuffer comment=null;           // Last comment
    Function fonct=null;
@@ -2816,6 +2855,7 @@ public final class Command implements Runnable {
             || cmd.equalsIgnoreCase("createROI")
             || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);
       else if( cmd.equalsIgnoreCase("stc") )    execDrawCmd("draw",param);
+      else if( findMoc(cmd) )                   execDrawCmd("draw","MOC "+cmd);
       else if( cmd.equalsIgnoreCase("draw") )   execDrawCmd(cmd,param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) {  // For compatibility
          try {
@@ -2838,11 +2878,13 @@ public final class Command implements Runnable {
       }
       else if( cmd.equalsIgnoreCase("grid") ) {
          if( param.equalsIgnoreCase("healpix") || param.equalsIgnoreCase("hpx") ) {
-            if( !a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", true);
+//            if( !a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", true);
+            a.calque.setGrid(2);
          } else {
-            boolean flag= !param.equals("off");
-            if( !flag && a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", false);
-            a.calque.setGrid(flag,false);
+//            boolean flag= !param.equals("off");
+//            if( !flag && a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", false);
+//            a.calque.setGrid(flag,false);
+            a.calque.setGrid( param.equals("off") ? 0 : 1);
          }
          a.calque.repaintAll();
       }

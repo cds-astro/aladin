@@ -40,5 +40,6 @@ public class BuilderCleanFits extends BuilderClean  {
 
    public void run() throws Exception {
       deleteDirExceptIndex(new File(context.getOutputPath()));
+      context.writePropertiesFile();
    }
 }

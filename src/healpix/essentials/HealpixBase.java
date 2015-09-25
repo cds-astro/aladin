@@ -1151,7 +1151,7 @@ public class HealpixBase extends HealpixTables
       {
       normal[i]=vv[i].cross(vv[(i+1)%nv]);
       double hnd=normal[i].dot(vv[(i+2)%nv]);
-      HealpixUtils.check(Math.abs(hnd)>1e-10,"degenerate corner");
+//      HealpixUtils.check(Math.abs(hnd)>1e-10,"degenerate corner");
       if (i==0)
         flip = (hnd<0.) ? -1 : 1;
       else

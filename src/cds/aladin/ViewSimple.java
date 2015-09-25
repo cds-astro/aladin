@@ -62,6 +62,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MemoryImageSource;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -73,7 +74,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import cds.astro.AstroMath;
+import cds.moc.Healpix;
 import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestionnaire de la vue. Il s'agit d'afficher les plans acifs (voir
@@ -4488,6 +4491,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** Remplissage du fond suivant la bonne couleur */
    protected void drawBackground(Graphics g) {
+      if( g==null ) return;
       try {
          if( pref!=null && pref.colorBackground!=null) {
             g.setColor(pref.colorBackground);
@@ -4639,9 +4643,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    /** Retourne les coordonnées des 4 coins dans le sens HG,HD,BD,BG */
-   protected Coord [] getCooCorners() {
-      Projection proj=null;
-      if( isFree() || !Projection.isOk(proj=pref.projd) ) return null;
+   protected Coord [] getCooCorners() { return getCooCorners(pref.projd); }
+   protected Coord [] getCooCorners(Projection proj) {
+      if( isFree() || !Projection.isOk(proj) ) return null;
       Coord coo[] = new Coord[4];
       for( int i=0; i<4;i++ ) {
          double x = i==0 || i==3 ? 0 : rv.width;
@@ -5381,16 +5385,88 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // True si je trace la grille en antialias (dépend de la vitesse du dernier tracé)
    private boolean antiAliasGrid=true;
+   
+   /** Dessine la grille HEALPix */
+   private void drawHpxGrid(Graphics g,Rectangle clip,int dx,int dy) {
+      
+      // Récupération de l'ordre le plus approprié
+      int order=3;
+      long nside=8;
+      double taille = getTaille();
+      if( taille<30 ) {
+         for( order=CDSHealpix.MAXORDER; order>=3; order-- ) {
+            nside = Healpix.pow2(order);
+            double resDeg = CDSHealpix.pixRes(nside)/3600;
+            if( taille/resDeg<8 ) break;
+         }
+         if( order<3 ) order=3;
+      }
+      
+      // Récupération du frame courant
+      int frame = aladin.localisation.getFrameGeneric();
+      if( frame==-1 || frame==Localisation.SGAL ) return;   // Pas de système de coord ou non supporté par HEALPix
+      
+      CDSHealpix hpx = new CDSHealpix();
+      
+      // récupération de la liste des losanges HEALPix qui couvre le champ de vue
+      // dans le système de coordonnées courant
+      // Si le champ est <30°, on va utiliser une requête par rectangle
+      long[] npix=null;
+      int max=0;
+      if( taille>30 ) max = (int)( nside*nside*12 );
+      else {
+         Coord [] coo = getCooCorners();
+         ArrayList<double[]> a = new ArrayList<double[]>();
+         for( Coord c : coo ) {
+            c=Localisation.frameToFrame(c,Localisation.ICRS,frame);
+            a.add(new double[]{c.al,c.del});
+         }
+         try { npix = hpx.query_polygon(nside, a); }
+         catch( Exception e ) { return; }
+      }
+      
+      // Affichage de la grille en semi transparence
+      Stroke st = null;
+      if( g instanceof Graphics2D ) {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_ON);
+         st = ((Graphics2D)g).getStroke();
+         ((Graphics2D)g).setStroke(new BasicStroke(0.4f));
+      }
 
+      
+      for( int i=0; i< (npix==null ? max : npix.length); i++ ) {
+         long pix = npix==null ? i : npix[i];
+         HealpixKey hpix = new HealpixKey(order, pix, frame);
+         hpix.drawLosangeBorder(g, this);
+//         hpix.drawRealBorders(g, this);
+      }
+      
+      if( st!=null ) {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_OFF);
+         ((Graphics2D)g).setStroke(st);
+      }
+
+   }
+   
    /** Dessine et calcule si besoin est la grille de coordonnées */
    private void drawGrid(Graphics g,Rectangle clip,int dx,int dy) {
       Projection proj;
       if( isFree() || (proj=getProj())==null ) return;
 
       Font f = g.getFont();
-      g.setFont( new Font("SansSerif",Font.ITALIC,view.gridFontSize) );
       g.setColor(view.gridColor);
       long t = Util.getTime();
+      
+      if( calque.gridMode==2 ) {
+         g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
+         drawHpxGrid(g, clip, dx, dy);
+         g.setFont(f);
+         return;
+      }
+      
+      g.setFont( new Font("SansSerif",Font.ITALIC,view.gridFontSize) );
 
       // (Re)calcul de la grille
       if( oiz!=iz ) {
@@ -5700,6 +5776,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // Message d'attente de l'image dans la vue
    void waitImg(Graphics gr ) {
+      if( gr==null ) return;
       gr.setFont( Aladin.LLITALIC );
       FontMetrics m = gr.getFontMetrics();
       gr.setColor( Color.red );
@@ -6076,7 +6153,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     *  et du plan associé
     */
    protected void drawBordure(Graphics g) {
-      if( aladin.msgOn || aladin.isFullScreen() ) return;
+      if( g==null || aladin.msgOn || aladin.isFullScreen() ) return;
       int w = getWidth();
       int h = getHeight();
       if( !aladin.view.isMultiView() ) {
@@ -6317,20 +6394,24 @@ g.drawString(s,10,100);
       quickInfo=flagDrag=quickBlink=flagBlinkControl=quickBordure=false;
    }
 
+   // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
    public void paintComponent(Graphics gr) {
       try { paintComponent1(gr); }
       catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
          drawBackground(gr);
          drawBordure(gr);
-         gr.setColor(Color.red);
-         gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
+         if( gr!=null ) {
+            gr.setColor(Color.red);
+            gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
+         }
       }
       resetClip();
       aladin.view.setPaintTimer();
       aladin.command.syncNeedRepaint=false;
    }
 
+   // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
    private void paintComponent1(Graphics gr) {
       long t = Util.getTime();
 
@@ -6356,7 +6437,7 @@ g.drawString(s,10,100);
       // Message pour patienter si on est entrain de modifier le plan de ref.
       if( !isFree() && pref.flagProcessing ) {
          drawBackground(gr);
-         if( imgprep!=null ) gr.drawImage(imgprep,dx,dy,this);
+         if( imgprep!=null && gr!=null ) gr.drawImage(imgprep,dx,dy,this);
          waitImg(gr);
          drawBordure(gr);
          if( !flagDrag ) return;
@@ -6395,7 +6476,7 @@ g.drawString(s,10,100);
 
       //Positionnement des clips rect si necessaire
       if( gr!=null ) setClip(gr);
-      setClip(g);
+      if( g!=null ) setClip(g);
 
       // Buffer du fond
       if( imgbuf==null || imgbuf.getWidth(this)!=rv.width || imgbuf.getHeight(this)!=rv.height ) {
@@ -6411,7 +6492,7 @@ g.drawString(s,10,100);
          //System.out.println("paint");
       }
 
-      g.drawImage(imgbuf,0,0,this);
+      if( g!=null ) g.drawImage(imgbuf,0,0,this);
 
       // Cas du fullScreen
       if( fullScreen && g!=null) {

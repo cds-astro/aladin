@@ -66,6 +66,7 @@ public class BuilderTree extends BuilderTiles {
    private boolean first=true;
    protected void setConstantes(Fits f) {
       first=false;
+      if( context.isColor() ) return;
       context.bitpix = bitpix = f.bitpix;
       context.blank  = blank  = f.blank;
       context.bzero  = bzero  = f.bzero;
@@ -74,7 +75,7 @@ public class BuilderTree extends BuilderTiles {
       else context.info("Colored pixels found in first low rhomb");
    }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
       long t = System.currentTimeMillis();
       Fits f = findLeaf(file);
       if( first && f!=null ) setConstantes(f);

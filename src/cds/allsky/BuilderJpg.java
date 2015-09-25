@@ -133,7 +133,7 @@ public class BuilderJpg extends BuilderTiles {
       super.build();
    }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
       Fits out = createLeaveJpg(file);
       if( out==null ) return null;
 

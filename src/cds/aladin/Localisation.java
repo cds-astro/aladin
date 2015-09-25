@@ -31,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 
 import javax.swing.JComboBox;
+
 import cds.astro.Astrocoo;
 import cds.astro.Astroframe;
 import cds.astro.Coo;
@@ -370,6 +371,30 @@ public final class Localisation extends MyBox {
 
    /** Retourne la position du menu deroulant */
    protected int getFrame() { return frame; }
+   
+//   static final public int ICRS   = 0;
+//   static final public int ICRSD  = 1;
+//   static final public int ECLIPTIC = 2;
+//   static final public int GAL    = 3;
+//   static final public int SGAL   = 4;
+//   static final public int J2000  = 5;
+//   static final public int J2000D = 6;
+//   static final public int B1950  = 7;
+//   static final public int B1950D = 8;
+//   static final public int B1900  = 9;
+//   static final public int B1875  = 10;
+//   static final public int XY     = 11;
+//   static final public int XYNAT  = 12;
+//   static final public int XYLINEAR  = 13;
+
+   
+   /** Retourne le frame "générique" courant (ICRS | GAL | SGAL | ECLIPTIC | -1) */
+   protected int getFrameGeneric() {
+      return frame==GAL ? GAL :
+             frame==ECLIPTIC ? ECLIPTIC :
+             frame==SGAL ? SGAL :
+             (frame!=XY || frame!=XYNAT || frame!=XYLINEAR) ? ICRS : -1;
+   }
 
    /** Insère le résultat d'une résolution Sésame dans le champ de commande avec le label
     * POSITION histoire que cela se comprenne */
@@ -560,7 +585,7 @@ public final class Localisation extends MyBox {
 
                      if( s.indexOf("--")>=0 ) return "";
                      return s;
-      } catch( Exception e ) { e.printStackTrace(); return coo; }
+      } catch( Exception e ) { return coo; }
    }
 
    /** Retourne la position d'un objet en fonction du frame

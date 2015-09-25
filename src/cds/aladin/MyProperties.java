@@ -44,6 +44,7 @@ public class MyProperties extends Properties {
          if( item.key.equals(key) ) { item.value=value; break; }
       }
    }
+   
 
    public void replaceKey(String oldKey, String key) {
       for( ConfigurationItem item : prop ) {
@@ -66,17 +67,20 @@ public class MyProperties extends Properties {
    }
 
 
-   public synchronized Object put(Object key, Object value) {
+   public synchronized Object put(Object key, Object value) { return put(key,value,false); }
+   public synchronized Object put(Object key, Object value,boolean flagAdd) {
       if( ((String)key).equals("!")) key = "!"+System.currentTimeMillis();
       ConfigurationItem item = getItem((String)key);
       if( item == null ) {
          item = new ConfigurationItem((String)key, (String)value);
          prop.addElement(item);
-      } else item.value = (String)value;
+      } else {
+         if( flagAdd ) item.value += "\t" + (String)value;
+         else item.value = (String)value;
+      }
       return super.put(key,value);
    }
-
-
+   
    /** Ajout/remplacement en fin */
    public Object add(String key, String value) {
       remove(key);
@@ -142,7 +146,7 @@ public class MyProperties extends Properties {
          }
 
          //         Aladin.trace(4, "MyProperties.load() [" + key + "] = [" + value + "]");
-         put(key, value);
+         put(key, value,true);
       }
       br.close();
 
@@ -174,9 +178,22 @@ public class MyProperties extends Properties {
          this.value = value;
       }
 
+//      public String toString() {
+//         if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
+//         return Util.align(key, 20) +" = "+ value; // Propriétés
+//      }
+      
       public String toString() {
          if( key.equals("#")) return value; // Commentaire unique (pour compatibilité)
-         return Util.align(key, 20) +" = "+ value; // Propriétés
+         if( key==null || value==null ) return "";
+         if( value.indexOf('\t')==-1 ) return  Util.align(key, 20) +" = "+ value; // Propriété simple
+         StringBuilder s = new StringBuilder();
+         Tok tok = new Tok(value,"\t");
+         while( tok.hasMoreTokens() ) {
+            if( s.length()>0 ) s.append(Util.CR);
+            s.append( Util.align(key, 20) +" = "+ tok.nextToken());
+         }
+         return s.toString();
       }
 
    }

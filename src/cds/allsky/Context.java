@@ -134,6 +134,7 @@ public class Context {
 
    protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
    protected boolean testClonable=true;
+   protected boolean live=false;             // true si on doit garder les tuiles de poids
 
    public Context() {}
 
@@ -144,7 +145,7 @@ public class Context {
       bscaleBzeroOrigSet=false;
       imgEtalon=hpxFinderPath=inputPath=outputPath=null;
       lastNorder3=-2;
-      validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
+      live=validateOutputDone=validateInputDone=validateCutDone=validateRegion=false;
       isMap=false;
       prop=null;
       pixelGood=null;
@@ -224,6 +225,7 @@ public class Context {
    public int getDepth() { return depth; }
 
    // Setters
+   public void setLive(boolean flag) { live=flag; }
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
    public void setPublisher(String s) { publisher=s; }
@@ -253,7 +255,7 @@ public class Context {
    public int [] getHDU() { return hdu; }
    public void setHDU(String s) throws Exception { hdu = parseHDU(s); }
 
-   public void setShape(String s) {
+   public void setShape(String s) throws Exception {
       if( Util.indexOfIgnoreCase(s,"circle")>=0      || Util.indexOfIgnoreCase(s,"ellipse")>=0 ) {
          dataArea=Constante.SHAPE_ELLIPSE;
          info("Ellipse shape data area autodetection");
@@ -262,7 +264,22 @@ public class Context {
          dataArea=Constante.SHAPE_RECTANGULAR;
          info("Rectangular shape data area autodetection");
       }
-      else dataArea=Constante.SHAPE_UNKNOWN;
+      else {
+         dataArea=Constante.SHAPE_UNKNOWN;
+         throw new Exception("Unknown observation shape ["+s+"] (=> circle, ellipse, square, rectangular)");
+      }
+   }
+   
+   private String addendum_did=null;
+   public void setAddendum(String addIvorn) { addendum_did=addIvorn; }
+   public void addAddendum(String addIvorn) throws Exception {
+      if( addIvorn.equals(ivorn) ) throw new Exception("Addendum_did identical to the original IVORN ["+ivorn+"]");
+      if( addendum_did==null ) addendum_did=addIvorn;
+      else {
+         Tok tok = new Tok(addendum_did,"\t");
+         while( tok.hasMoreTokens() ) { if( tok.nextToken().equals(addIvorn) ) throw new Exception("Addendum_did already used  ["+addendum_did+"]"); }
+         addendum_did += "\t"+addIvorn;
+      }
    }
 
    public String getRgbOutput() { return getOutputPath(); }
@@ -1348,7 +1365,7 @@ public class Context {
 
    /** Mémorisation d'une propriété à ajouter dans le fichier properties */
    protected void setComment(String comment) { setPropriete("#","#"+comment); }
-   protected void setPropriete(String key, String value) {
+      protected void setPropriete(String key, String value) {
       if( keyAddProp==null ) {
          keyAddProp = new Vector<String>();
          valueAddProp = new Vector<String>();
@@ -1518,6 +1535,7 @@ public class Context {
       //      loadProperties();
 
       setPropriete(Constante.KEY_PUBLISHER_DID,ivorn);
+      if( addendum_did!=null ) setPropriete(Constante.KEY_ADDENDUM_DID,addendum_did);
       setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
       setPropriete("#"+Constante.KEY_OBS_TITLE,"Dataset text title");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
@@ -1529,6 +1547,7 @@ public class Context {
       setPropriete("#"+Constante.KEY_DATA_COPYRIGHT_URL,"URL to copyright page");
       setPropriete("#"+Constante.KEY_T_MIN,"Start time in MJD");
       setPropriete("#"+Constante.KEY_T_MAX,"Stop time in MJD");
+      setPropriete("#"+Constante.KEY_OBS_REGIME,"Waveband keyword (Radio IR optical UV EUV X-ray Gamma-ray)");
       setPropriete("#"+Constante.KEY_EM_MIN,"Start in spectral coordinates in meters");
       setPropriete("#"+Constante.KEY_EM_MAX,"Stop in spectral coordinates in meters");
       //      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"ex: Image/Gas-lines/Halpha/VTSS");
@@ -1603,11 +1622,16 @@ public class Context {
          }
 
          // Sinon c'est un HiPS image
-      } else setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"image");
+      } else {
+         setPropriete(Constante.KEY_DATAPRODUCT_TYPE,"image");
+      }
+      
+      // En cas de HiPS pouvant être étendu
+      if( live ) setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"live");
 
       // Dans le cas d'un HiPS couleur
       if( isColor() ) {
-         setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"color");
+         setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,live ? "color live" : "color");
          if( redInfo!=null )   setPropriete(Constante.KEY_HIPS_RGB_RED,redInfo);
          if( greenInfo!=null ) setPropriete(Constante.KEY_HIPS_RGB_GREEN,greenInfo);
          if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);

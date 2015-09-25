@@ -254,11 +254,11 @@ public class BuilderMirror extends BuilderTiles {
       super.build();
    }
 
-   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z) throws Exception {
-      return createLeaveHpx(hpx,file,order,npix,z,true);
+   protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
+      return createLeaveHpx(hpx,file,path,order,npix,z,true);
    }
 
-   private Fits createLeaveHpx(ThreadBuilderTile hpx, String file,int order,long npix, int z,boolean stat) throws Exception {
+   private Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z,boolean stat) throws Exception {
       String fileInX = context.getInputPath()+"/"+cds.tools.pixtools.Util.getFilePath(order,npix,z);
 
       try {
@@ -355,7 +355,7 @@ public class BuilderMirror extends BuilderTiles {
    // Dans le cas d'un mirroir complet, on copie également les noeuds. En revanche pour un miroir partiel
    // on regénérera l'arborescence à la fin
    protected Fits createNodeHpx(String file,String path,int order,long npix,Fits fils[], int z) throws Exception {
-      if( !isSmaller ) return createLeaveHpx(null,file,order,npix,z,false);
+      if( !isSmaller ) return createLeaveHpx(null,file,path,order,npix,z,false);
       return bidon;
    }
 

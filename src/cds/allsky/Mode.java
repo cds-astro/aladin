@@ -23,7 +23,7 @@ public enum Mode {
    public static String getExplanation(Mode m) {
       if( m==KEEP )        return m+": "+"Add pixel values only for pixels not yet computed or BLANK";
       if( m==OVERWRITE )   return m+": "+"Replace existing pixel values if the new value is not BLANK";
-      if( m==AVERAGE )     return m+": "+"Compute the mean value of new new pixel value and the existing one";
+      if( m==AVERAGE )     return m+": "+"Compute the weighted average value based on the new pixel value and the existing one";
       if( m==ADD )         return m+": "+"Compute the sum value of new new pixel value and the existing one";
       if( m==REPLACETILE ) return m+": "+"Add new tiles, and if necessary, replace existing tiles (low level tiles)";
       if( m==KEEPTILE )    return m+": "+"Add new tiles but only for those not yet computed (low level tiles)";

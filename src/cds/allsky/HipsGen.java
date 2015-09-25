@@ -40,8 +40,8 @@ public class HipsGen {
    private File file;
    private boolean force=false;
    private boolean flagMode=false;
+   private boolean flagConcat=false;
    private boolean flagMethod=false;
-   private boolean flagFading=false;
    private boolean flagRGB=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
    public Context context;
@@ -120,7 +120,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval"))     { context.setSkyval(val);
       } else if (opt.equalsIgnoreCase("exptime"))    { context.setExpTime(val);
-      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); flagFading=true;
+      } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); 
       } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
       } else if (opt.equalsIgnoreCase("color"))      { context.setColor(val);
       } else if (opt.equalsIgnoreCase("inRed"))      { context.setRgbInput(val, 0); flagRGB=true;
@@ -249,6 +249,7 @@ public class HipsGen {
          else if (arg.equalsIgnoreCase("-force") || arg.equalsIgnoreCase("-f") )  force=true;
          else if (arg.equalsIgnoreCase("-nice") ) context.mirrorDelay=500;
          else if (arg.equalsIgnoreCase("-clone") ) context.testClonable=false;
+         else if (arg.equalsIgnoreCase("-live") ) context.setLive(true);
          else if (arg.equalsIgnoreCase("-n") )  context.fake=true;
 
          // toutes les autres options écrasent les précédentes
@@ -272,7 +273,10 @@ public class HipsGen {
                Action a = Action.valueOf(arg.toUpperCase());
                if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
                if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
-               if( a==Action.CONCAT && !flagMode ) context.setMode(Mode.AVERAGE);
+               if( a==Action.CONCAT ) {
+                  flagConcat=true;
+                  if( !flagMode ) context.setMode(Mode.AVERAGE);
+               }
                if( a==Action.ABORT ) flagAbort=true;    // Bidouillage pour pouvoir tuer un skygen en cours d'exécution
                if( a==Action.PAUSE ) flagPause=true;    // Bidouillage pour pouvoir mettre en pause un skygen en cours d'exécution
                if( a==Action.RESUME ) flagResume=true;  // Bidouillage pour pouvoir remettre en route un skygen en pause
@@ -393,7 +397,7 @@ public class HipsGen {
       if( !flagRGB ) setDefaultFrame();
 
       // Positionnement du pubDid
-      if( context.ivorn==null ) {
+      if( context.ivorn==null && !flagConcat ) {
          String s = context.checkIvorn(null, false);
          context.setIvorn(s);
          context.warning("IVORN identifier is strongly recommended (parameter ivorn=xxx) => assuming "+s);

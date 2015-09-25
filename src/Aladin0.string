@@ -1280,7 +1280,8 @@ VWCPLANE	Create a new plane with selected sources...
 VWCPLANEUNIQ	in one homogeneous table
 VWCPLANEMULTI	in multi-tables (if required)
 VWTABLEINFO	Column information...
-VWMGRID	Grid
+VWMGRID	Coordinate grid
+VWMNOGRID No grid
 VWMSCALE	Overlayed info
 VWMRETICLE	Simple reticle
 VWMRETICLEL	Large reticle
@@ -1318,7 +1319,8 @@ VWCPLANE.fr	Crée un nouveau plan avec les objets sélectionnés
 VWCPLANEUNIQ.fr	en une table
 VWCPLANEMULTI.fr	en multi-tables (si nécessaire)
 VWTABLEINFO.fr	Information sur les colonnes...
-VWMGRID.fr	Grille
+VWMGRID.fr	Grille de coordonnées
+VWMNOGRID.fr Sans grille
 VWMSCALE.fr	Info
 VWMRETICLE.fr	Réticule classique
 VWMRETICLEL.fr	Réticule large

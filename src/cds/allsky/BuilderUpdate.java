@@ -19,8 +19,8 @@
 
 package cds.allsky;
 
-/** Permet de nettoyer la totalité d'un survey généré
- * @author Anaïs Oberto & Pierre Fernique [CDS]
+/** Permet de mettre à jour un survey préalablement généré
+ * @author Pierre Fernique [CDS]
  */
 public class BuilderUpdate extends Builder {
 
