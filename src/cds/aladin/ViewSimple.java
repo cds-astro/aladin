@@ -3609,7 +3609,23 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected void moveRepere(Coord repCoord,boolean flagSync) {
       if( isPlotView() ) return;
       String s = aladin.localisation.J2000ToString(repCoord.al,repCoord.del);
-      aladin.console.printCommand(s);
+      
+      // Affichage dans la console de la position HEALPIX
+      if( aladin.calque.gridMode==2 && aladin.calque.hasGrid() ) {
+         try {
+            Coord c = new Coord(repCoord.al,repCoord.del);
+            c = aladin.localisation.frameToFrame(c,Localisation.ICRS,aladin.localisation.getFrameGeneric() );
+            double [] d = new double[]{ c.al,c.del };
+            d=CDSHealpix.radecToPolar(d);
+            int order = getLastGridHpxOrder();
+            long nside = CDSHealpix.pow2(order);
+            long npix = CDSHealpix.ang2pix_nest(nside, d[0], d[1]);
+            aladin.console.printCommand(order+"/"+npix);
+         } catch( Exception e ) { }
+         
+      // Sinon affichage de la coordonnée
+      } else aladin.console.printCommand(s);
+      
       aladin.view.setRepereId(s);
       //      aladin.view.memoUndo(this,repCoord,null);
       //      if( flagSync ) aladin.view.syncView(1,repCoord,this);
@@ -5385,9 +5401,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // True si je trace la grille en antialias (dépend de la vitesse du dernier tracé)
    private boolean antiAliasGrid=true;
+   private int gridHpxOrder=3;
+   
+   private int getLastGridHpxOrder() { return gridHpxOrder; }
    
    /** Dessine la grille HEALPix */
-   private void drawHpxGrid(Graphics g,Rectangle clip,int dx,int dy) {
+   private void drawGridHpx(Graphics g,Rectangle clip,int dx,int dy) {
       
       // Récupération de l'ordre le plus approprié
       int order=3;
@@ -5401,6 +5420,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          }
          if( order<3 ) order=3;
       }
+      
+      // mémorisation pour usage éventuel dans moveRepere pour affichage dans la console
+      gridHpxOrder=order;
       
       // Récupération du frame courant
       int frame = aladin.localisation.getFrameGeneric();
@@ -5461,7 +5483,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       
       if( calque.gridMode==2 ) {
          g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
-         drawHpxGrid(g, clip, dx, dy);
+         drawGridHpx(g, clip, dx, dy);
          g.setFont(f);
          return;
       }
