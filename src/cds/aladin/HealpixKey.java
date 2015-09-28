@@ -2127,10 +2127,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
 //         Util.drawStringOutline(g, s, x,y, Color.green, Color.black);
          
          int w = m.stringWidth(order+"");
-//         Util.drawStringOutline(g, order+"", x,y-3, Color.green, Color.black);
-//         Util.drawStringOutline(g, npix+"", x+w+2,y+3, Color.green, Color.black);
-         g.drawString(order+"", x,y-4);
-         g.drawString(npix+"", x+w+4,y+4);
+         Util.drawStringOutline(g, order+"", x,y-4, Color.green, Color.black);
+         Util.drawStringOutline(g, npix+"", x+w+4,y+4, Color.green, Color.black);
+//         g.drawString(order+"", x,y-4);
+//         g.drawString(npix+"", x+w+4,y+4);
          g.drawString("/",x+w,y);
       }
    }

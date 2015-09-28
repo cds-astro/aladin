@@ -340,6 +340,11 @@ public class PlanBG extends PlanImage {
 
                // La version dans le cache est la bonne.
             } catch( Exception e ) {
+               
+               // Pour éviter un nettoyage intempestif du cache
+               touch( new File(getCacheDir()+Util.FS+getCacheName()) ); 
+               touch( new File(cacheFile) );
+               
                aladin.trace(3,"HEALPix local cache for "+survey+" is ok ["+cacheFile+"]");
             } finally {
                if( dis!=null ) dis.close();
@@ -356,6 +361,8 @@ public class PlanBG extends PlanImage {
       } catch( Exception e ) { prop=null; }
       return prop;
    }
+   
+   static final void touch(File f) { f.setLastModified( System.currentTimeMillis() ); }
 
    protected boolean scanMetadata() {
       MyInputStream in=null;
@@ -1120,7 +1127,40 @@ public class PlanBG extends PlanImage {
    /** Scan du cache et suppression des vieux fichiers */
    static synchronized void scanCache() {
       if( (cacheSize!=-1 && cacheSize<MAXCACHE) ) return;
-      if( scanCache!=null) return;
+      cleanCache();
+   }
+   
+   static public synchronized void cleanCache() {
+      if( scanCache!=null) {
+         Aladin.trace(4,"Scan cache already running !");
+         return;
+      }
+      
+      String dir = PlanBG.getCacheDirStatic();
+      if( dir==null ) {
+         setCacheSize(0);
+         return;
+      }
+      
+      // Vérifie qu'une autre instance n'est pas déjà en train de faire le même boulot
+      // en regardant la présence ou non du fichier ScanRunning.bin
+      File ft = new File(Cache.getCacheDir()+Util.FS+"ScanRunning.bin");
+      if( ft.exists() ) {
+         long t = System.currentTimeMillis();
+         
+         // Peut être un vieux scan qui s'est mal fini
+         if(  t - ft.lastModified() <3600 ) ft.setLastModified(t);
+         
+         // Sinon, c'est que quelqu'un fait déjà le boulot
+         else {
+            Aladin.trace(4,"Detect concurrent scanning HiPS cache => abort");
+            return;
+         }
+         
+      }
+      // Sinon je le crée
+      try { (new RandomAccessFile(ft,"rw")).close(); } catch( Exception e) {}
+      
 
       (scanCache=new Thread("Scan cache") {
          @Override
@@ -1129,13 +1169,8 @@ public class PlanBG extends PlanImage {
             long size=0;
             long t = System.currentTimeMillis();
             String dir = PlanBG.getCacheDirStatic();
-            if( dir==null ) {
-               size=0;
-               setCacheSize(0);
-               return;
-            }
 
-            Aladin.trace(3,"Scanning allsky cache...");
+            Aladin.trace(3,"Scanning HiPS cache...");
 
             // Premier parcours pour virer les surveys obsoletes
             File fold[] = new File(dir).listFiles();
@@ -1147,47 +1182,71 @@ public class PlanBG extends PlanImage {
             }
 
             // Parcours du cache
-            Vector<File> listCache = new Vector<File>(2000);
+            Vector<FileItem> listCache = new Vector<FileItem>(2000);
             size  = getCacheSize(new File(dir),listCache);
             size += getCacheSizePlanHealpix(new File(PlanHealpix.getCacheDirPath()), listCache);
-            Collections.sort(listCache,(new Comparator() {
-               public int compare(Object o1, Object o2) {
-                  if( o1==o2 ) return 0;
-                  if( o1==null ) return -1;
-                  if( o2==null ) return 1;
-                  long t1 = ((File)o1).lastModified();
-                  long t2 = ((File)o2).lastModified();
-                  return t1==t2 ? 0: t1>t2 ? 1 : -1;
-               }
-            }));
-
-
-            // Suppression des vieux fichiers si nécessaires
-            Enumeration<File> e = listCache.elements();
-            while( e.hasMoreElements() && size > (3*MAXCACHE)/4 ) {
-               File f = e.nextElement();
-               if( size > (3*MAXCACHE)/4 ) {
-
-                  Aladin.trace(4,"PlanBG.scanCache(): removing "+ f+" ("+f.lastModified()+")");
-                  if( f.isFile() ) {
-                     size-=f.length()/1024;
-                     f.delete();
+            try {
+               Collections.sort(listCache,(new Comparator() {
+                  public int compare(Object o1, Object o2) {
+                     if( o1==o2 ) return 0;
+                     if( o1==null ) return -1;
+                     if( o2==null ) return 1;
+                     long t1 = ((FileItem)o1).date;
+                     long t2 = ((FileItem)o2).date;
+                     return t1==t2 ? 0: t1>t2 ? 1 : -1;
                   }
-                  // cache HPX des fichiers locaux
-                  else if( f.isDirectory()) {
-                     long dirSize = Util.dirSize(f)/1024;
-                     size-=dirSize;
-                     // TODO : vérifier qu'on n'efface pas des données d'un PlanHealpix dans la pile
-                     Util.deleteDir(f);
-                     //                      System.out.println("je vire le repertoire "+f.getAbsolutePath()+" de taille "+dirSize);
+               }));
+
+
+               // Suppression des vieux fichiers si nécessaires
+               Enumeration<FileItem> e = listCache.elements();
+               while( e.hasMoreElements() && size > (3*MAXCACHE)/4 ) {
+                  FileItem fi = e.nextElement();
+                  File f = fi.f;
+                  if( !fi.hasBeenModified() && size > (3*MAXCACHE)/4 ) {
+
+                     Aladin.trace(4,"PlanBG.scanCache(): removing "+ f+" ("+fi.date+")");
+                     if( f.isFile() ) {
+                        size-=f.length()/1024;
+                        if( fi.hasBeenModified() ) throw new Exception("File :"+f.getAbsolutePath());
+                        f.delete();
+                     }
+                     // cache HPX des fichiers locaux
+                     else if( f.isDirectory()) {
+                        long dirSize = Util.dirSize(f)/1024;
+                        size-=dirSize;
+                        // TODO : vérifier qu'on n'efface pas des données d'un PlanHealpix dans la pile
+                        if( fi.hasBeenModified() ) throw new Exception("Dir :"+f.getAbsolutePath());
+                        Util.deleteDir(f);
+                        //                      System.out.println("je vire le repertoire "+f.getAbsolutePath()+" de taille "+dirSize);
+                     }
                   }
                }
+               Aladin.trace(3," => Cache size="+Util.getUnitDisk(size*1024)+" maxCache="+Util.getUnitDisk(MAXCACHE*1024)+" scan in "+(System.currentTimeMillis()-t)+"ms");
+               setCacheSize(size);
+               
+            } catch( Exception e1 ) {
+               Aladin.trace(3,"Simultaneous access on cache => Clean aborted for avoiding conflict"
+                        +(e1.getMessage()!=null?" => "+e1.getMessage():""));
             }
-            Aladin.trace(3," => Cache size="+(size/1024)+"MB maxCache="+(MAXCACHE/1024)+"MB scan in "+(System.currentTimeMillis()-t)+"ms");
-            setCacheSize(size);
-            scanCache=null;
+            finally {
+
+               // C'est terminé, j'enlève le fichier de lock
+               File ft = new File(Cache.getCacheDir()+Util.FS+"ScanRunning.bin");
+               ft.delete();
+
+               scanCache=null;
+            }
          }
       }).start();
+   }
+   
+   static class FileItem {
+      File f;
+      long date;
+      
+      FileItem(File f) { this.f=f; date = f.lastModified(); }
+      boolean hasBeenModified() { return date!=f.lastModified(); }
    }
 
    /** Nettoyage complet du cache Healpix */
@@ -1202,7 +1261,7 @@ public class PlanBG extends PlanImage {
    static private long  NBFILE=0;
 
    /** Méthode récursive pour le scan du cache */
-   static public long getCacheSize(File dir,Vector<File> listCache) {
+   static public long getCacheSize(File dir,Vector<FileItem> listCache) {
       long size=0;
       File f[] = dir.listFiles();
       for( int i=0; f!=null && i<f.length; i++ ) {
@@ -1212,10 +1271,10 @@ public class PlanBG extends PlanImage {
             long n = getCacheSize(f[i],listCache);
             if( n==0 ) f[i].delete();       // répertoire vide
             else size +=n;
-         }
-         else {
+            
+         } else {
             size+=f[i].length()/1024;
-            if( listCache!=null ) listCache.addElement(f[i]);
+            if( listCache!=null ) listCache.addElement( new FileItem(f[i]));
          }
       }
       return size;
@@ -1227,7 +1286,7 @@ public class PlanBG extends PlanImage {
     * @param listCache
     * @return
     */
-   static private long getCacheSizePlanHealpix(File dir, Vector<File> listCache) {
+   static private long getCacheSizePlanHealpix(File dir, Vector<FileItem> listCache) {
       File f[] = dir.listFiles();
       long size = 0;
       for (int i=0; f!=null && i<f.length; i++) {
@@ -1235,7 +1294,7 @@ public class PlanBG extends PlanImage {
             continue;
          }
          size  += Util.dirSize(f[i]);
-         listCache.addElement(f[i]);
+         listCache.addElement(new FileItem(f[i]));
          Util.pause(100);
       }
 
@@ -3574,7 +3633,7 @@ public class PlanBG extends PlanImage {
          int i;
          for( i=0; e.hasMoreElements() && i<tab.length; i++ ) tab[i] = e.nextElement();
          size = i;
-         Arrays.sort(tab,0,size);
+         try { Arrays.sort(tab,0,size); } catch( Exception e1 ) { }
          pos=0;
       }
 

@@ -5435,7 +5435,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Si le champ est <30°, on va utiliser une requête par rectangle
       long[] npix=null;
       int max=0;
-      if( taille>30 ) max = (int)( nside*nside*12 );
+      if( taille>125 ) max = (int)( nside*nside*12 );
       else {
          Coord [] coo = getCooCorners();
          ArrayList<double[]> a = new ArrayList<double[]>();
@@ -5460,6 +5460,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       for( int i=0; i< (npix==null ? max : npix.length); i++ ) {
          long pix = npix==null ? i : npix[i];
          HealpixKey hpix = new HealpixKey(order, pix, frame);
+         if( hpix.isOutView(this) ) continue;
          hpix.drawLosangeBorder(g, this);
 //         hpix.drawRealBorders(g, this);
       }
@@ -6428,9 +6429,11 @@ g.drawString(s,10,100);
             gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
          }
       }
-      resetClip();
-      aladin.view.setPaintTimer();
-      aladin.command.syncNeedRepaint=false;
+      finally {
+         aladin.command.setSyncNeedRepaint(false);
+         resetClip();
+         aladin.view.setPaintTimer();
+      }
    }
 
    // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI

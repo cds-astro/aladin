@@ -542,7 +542,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
             gbuf.drawLine(x,y-pa,x,y+pa);
 
             //            Projection proj = v.getProj();
-
+            
             Coord [] coin = v.getCouverture();
             if( coin!=null ) {
                proj.frame = aladin.localisation.getFrame();
@@ -556,7 +556,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                }
                c = v.getCooCentre();
                if( c== null ) {
-                  System.out.println("Gag ++ ");
+//                  System.out.println("Gag ++ ");
                   proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
                   v.pref.projd.frame = aladin.localisation.getFrame();
                   v.projLocal = v.pref.projd.copy();
@@ -927,7 +927,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          sed.clear();
          flagSED=true;
          flagHist=false;
-
+         
          sed.addFromIterator( aladin.mesure.iterator() );
          //         sed.setSource(null);   // Pas possible d'ouvvrir l'outil d'Anne-Camille sinon
          sed.setHighLight(o);

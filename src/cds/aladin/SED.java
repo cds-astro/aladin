@@ -27,9 +27,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseWheelEvent;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -139,7 +137,7 @@ class SED extends JPanel {
       planeAlreadyCreated=true;
       readyToDraw=false;
       try {
-         plan = new PlanCatalog(aladin);
+         if( plan==null ) plan = new PlanCatalog(aladin);
          createSEDlist(it);
          setPosition();
          aladin.calque.zoom.zoomView.flagSED=true;
@@ -707,7 +705,7 @@ class SED extends JPanel {
       // Quels sont le flux et la fréquence sous la souris
       Dimension dim = getDimension();
       if( x>margeGauche && x<dim.width-margeDroite ) {
-         currentAbs = getCurrentAbs( (double)(x-margeGauche) );
+         currentAbs = getCurrentAbs( x-margeGauche );
       } else currentAbs = Double.NaN;
 
       if( y>margeHaut+14 && y<dim.height-margeBas-(x>margeGauche+30?0:14) ) {

@@ -64,7 +64,7 @@ import cds.xml.Field;
  */
 public final class Command implements Runnable {
 
-   static final long TIMEOUT = 15L;	 // 15 minutes de chien de garde
+   static final long TIMEOUT = 3L;	 // 3 minutes de chien de garde
    // pour la commande "sync"
    static long timeout = TIMEOUT*60000;
 
@@ -581,8 +581,25 @@ public final class Command implements Runnable {
 
 
 
-   protected boolean syncNeedRepaint=false;
+   // Gestion du flag sur la synchronisation Sesame
+   static Object lockSyncNeedSesame = new Object();
    protected boolean syncNeedSesame=false;
+   public void setSyncNeedSesame(boolean flag) {
+         synchronized( lockSyncNeedSesame ) { syncNeedSesame=flag; }
+   }
+   public boolean isSyncNeedSesame() {
+      synchronized( lockSyncNeedSesame ) { return syncNeedSesame; }
+   }
+
+   // Gestion du flag sur la synchronisation du Repaint
+   static Object lockSyncNeedRepaint = new Object();
+   protected boolean syncNeedRepaint=false;
+   public void setSyncNeedRepaint(boolean flag) {
+         synchronized( lockSyncNeedRepaint ) { syncNeedRepaint=flag; }
+   }
+   public boolean isSyncNeedRepaint() {
+      synchronized( lockSyncNeedRepaint ) { return syncNeedRepaint; }
+   }
 
    /** Retourne vrai si tous les plans sont flagOk et que tous les serveurs
     * sont ok */
@@ -592,14 +609,14 @@ public final class Command implements Runnable {
          return false;
       }
 
-      if( syncNeedSesame && a.view.isSesameInProgress() ) {
+      if( isSyncNeedSesame() && a.view.isSesameInProgress() ) {
          a.trace(4,"Command.isSync() : waiting sesame...\n" +
                "==> "+a.view.sesameSynchro);
          return false;
       }
-      syncNeedSesame=false;
+      setSyncNeedSesame(false);
 
-      if( syncNeedRepaint ) {
+      if( isSyncNeedRepaint() ) {
          a.trace(4,"Command.isSync() : waiting viewSimple.paintComponent()...");
          a.view.repaintAll();
          return false;
@@ -668,8 +685,14 @@ public final class Command implements Runnable {
             inSync = false;
             return;
          }
+         // Passage en mode trace pour essayer de comprendre ce qu'il se passe
+         if( timeout>0 && System.currentTimeMillis()-d>(4*timeout)/5 && a.levelTrace!=4 ) {
+            println("!!! Command.sync() TOO LONG => trace mode actived");
+            a.levelTrace=4;
+         }
          if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
-            println("!!! Time out error ("+(timeout/60000)+" minutes).");
+            println("!!! Auto Sync time out error ("+(timeout/60000)+" minutes) in Command.sync(). => sync ignored");
+            System.err.println("Command.sync() timeout => status:\n"+getStatus("*"));
             inSync = false;
             return;
          }
@@ -682,7 +705,7 @@ public final class Command implements Runnable {
       try {
          a.synchroServer.waitUntil(timeout);
       } catch( Exception e ) {
-         println("!!! Time out error ("+(timeout/60000)+" minutes).");
+         println("!!! Time out error ("+(timeout/60000)+" minutes) in Command.syncServer().");
       }
    }
 
@@ -984,8 +1007,8 @@ public final class Command implements Runnable {
 
             // sinon il s'agit d'un simple deplacement du repere
          } else {
-            syncNeedRepaint=true;
-            syncNeedSesame=true;
+            setSyncNeedRepaint(true);
+            setSyncNeedSesame(true);
             
             // Notamment pour prendre en compte les identificateurs du genre "* alf Cen"
             // Sinon il va tenter une multiplication
@@ -2185,7 +2208,7 @@ public final class Command implements Runnable {
          System.err.println("crop error: view ["+v+"] not usable!");
          return null;
       }
-      syncNeedRepaint=true;
+      setSyncNeedRepaint(true);
       a.view.repaintAll();
       return pi;
    }
@@ -2813,6 +2836,7 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("macro") )  execMacro(param);
       //      else if( cmd.equalsIgnoreCase("createRGB") ) testCreateRGB(param);
       else if( cmd.equalsIgnoreCase("test") )   hop();
+      else if( cmd.equalsIgnoreCase("cleancache") )   PlanBG.cleanCache();
       else if( cmd.equalsIgnoreCase("testlang") ) a.chaine.testLanguage(param);
       else if( cmd.equalsIgnoreCase("testimg") )testCalib(label,param,0);
       else if( cmd.equalsIgnoreCase("testcat") )testCalib(label,param,1);
@@ -2931,7 +2955,7 @@ public final class Command implements Runnable {
             return "";
          }
          a.calque.newPlanImageBlink(p,label,400);
-         syncNeedRepaint=true;
+         setSyncNeedRepaint(true);
       }
       else if( cmd.equalsIgnoreCase("mosaic") ) {
          PlanImage p[] = getPlanImage(param);
@@ -2940,7 +2964,7 @@ public final class Command implements Runnable {
             return "";
          }
          a.calque.newPlanImageMosaic(p,label,null);
-         syncNeedRepaint=true;
+         setSyncNeedRepaint(true);
       }
       else if( cmd.equalsIgnoreCase("resamp") || cmd.equalsIgnoreCase("rsamp")) {
          try {
@@ -2957,7 +2981,7 @@ public final class Command implements Runnable {
                if( c=='B' || c=='b' ) methode=PlanImageResamp.BILINEAIRE;
             }
             a.calque.newPlanImageResamp(p1,p2,label,methode,fullPixel,true);
-            syncNeedRepaint=true;
+            setSyncNeedRepaint(true);
          } catch( Exception e ) {
             printConsole("Resamp error: "+e.getMessage());
             return "";
@@ -3000,7 +3024,7 @@ public final class Command implements Runnable {
             if( v1!=null && v1.equals("-cut") ) { fct=PlanImageAlgo.NORMCUT; v1=v2; }
             if( v1!=null ) p1 = (PlanImage)getPlanFromParam(v1);
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,null,0);
-            syncNeedRepaint=true;
+            setSyncNeedRepaint(true);
          } catch( Exception e ) { printConsole("!!! norm error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("kernel") ) {
@@ -3036,7 +3060,7 @@ public final class Command implements Runnable {
             if( p1!=null ) conv = param.substring(v1.length()).trim();
             else conv=param;
             a.calque.newPlanImageAlgo(label,p1,null,PlanImageAlgo.CONV,0,conv,0);
-            syncNeedRepaint=true;
+            setSyncNeedRepaint(true);
          } catch( Exception e ) { printConsole("!!! conv error: "+e.getMessage()); return "error"; }
       }
       else if( cmd.equalsIgnoreCase("bitpix") ) {
@@ -3056,7 +3080,7 @@ public final class Command implements Runnable {
                   || p1==null && !a.calque.getPlanBase().isSimpleImage() ) { throw new Exception("Uncompatible image");  }
 
             a.calque.newPlanImageAlgo(label,p1,null,fct,0,bitpix,0);
-            syncNeedRepaint=true;
+            setSyncNeedRepaint(true);
 
          } catch( Exception e ) { printConsole("!!! bitpix error: "+e.getMessage()); return "error"; }
       }
@@ -3068,7 +3092,7 @@ public final class Command implements Runnable {
          }
          a.calque.newPlanImageRGB(p[0],p.length>2?p[1]:null,
                p.length>2?p[2]:p[1],p[0],label,false);
-         syncNeedRepaint=true;
+         setSyncNeedRepaint(true);
       }
       else if( cmd.equalsIgnoreCase("RGBdiff") ) {
          PlanImage p[] = getPlanImage(param);
@@ -3077,7 +3101,7 @@ public final class Command implements Runnable {
             return "";
          }
          a.calque.newPlanImageRGB(p[0],p[1],null,p[0],label,true);
-         syncNeedRepaint=true;
+         setSyncNeedRepaint(true);
       }
       else if (cmd.equalsIgnoreCase("cm") ) execCM(param);
       else if( cmd.equalsIgnoreCase("sync") ) sync();
@@ -3126,7 +3150,7 @@ public final class Command implements Runnable {
             try {
                if( p instanceof PlanImageBlink ) a.calque.newPlanImageFromBlink( (PlanImageBlink)p, -1);
                else a.calque.dupPlan((PlanImage)p,p2.trim().length()==0 ? null:p2,p.type,true);
-               syncNeedRepaint=true;
+               setSyncNeedRepaint(true);
             } catch( Exception e ) {
                printConsole("!!! copy error: "+e.getMessage());
                return "";
@@ -3156,7 +3180,7 @@ public final class Command implements Runnable {
             for( int i=j-2; i>=0; i--) {
                a.calque.permute(vp.elementAt(i),target);
             }
-            syncNeedRepaint=true;
+            setSyncNeedRepaint(true);
             a.view.newView(1);
             a.calque.repaintAll();
          } catch( Exception eMv ) {
@@ -3260,7 +3284,7 @@ public final class Command implements Runnable {
          }
       }
       else if( cmd.equalsIgnoreCase("zoom") ) {
-         syncNeedRepaint=true;
+         setSyncNeedRepaint(true);
          if( !a.calque.zoom.setZoom(param) ) {
             printConsole("!!! zoom error: factor \""+param+"\" unknown !");
          }

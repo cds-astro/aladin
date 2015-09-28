@@ -180,6 +180,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> Multi-session cache bug
  * @beta    <LI> HiPS building by iterations
  * @beta    <LI> Astrometrical calibration ZPN & SIN bugs
  * @beta    <LI> "Match" mode bugs (colormap, phot and fov tools)
@@ -218,7 +219,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.171";
+   static public final    String VERSION = "v8.173";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
