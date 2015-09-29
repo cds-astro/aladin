@@ -408,7 +408,9 @@ public class HipsGen {
       try {
          long t = System.currentTimeMillis();
          new Task(context,actions,true);
-         context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         else context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         
       } catch (Exception e) {
          e.printStackTrace();
          context.error(e.getMessage());

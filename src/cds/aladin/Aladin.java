@@ -153,7 +153,7 @@ import cds.xml.XMLParser;
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
  * @beta    <LI> MocServer support (remote server of coverages)
- * @beta    <LI> Astrometrical calibration improvements (SCAMP PV)
+ * @beta    <LI> Astrometrical calibration improvements (SCAMP PV, TPV, SINSIP)
  * @beta    <LI> Widgets in fullscreen mode
  * @beta    <LI> New colormap controller
  * @beta    <LI> Full MOC adaptative drawing
@@ -219,7 +219,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.173";
+   static public final    String VERSION = "v8.174";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

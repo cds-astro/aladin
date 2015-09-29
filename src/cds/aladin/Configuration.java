@@ -20,19 +20,59 @@
 
 package cds.aladin;
 
-import cds.aladin.prop.PropPanel;
-import cds.tools.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import cds.aladin.prop.PropPanel;
+import cds.tools.Util;
 
 /**
  * Gestion du fichier de configuration Aladin. Il va être enregistré dans
@@ -2160,12 +2200,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       set(MOD,s);
    }
 
-   static private final int MAXLASTFILE = 10;
+   static private final int MAXLASTFILE = 20;
 
    /** Mémorise un nouveau path de fichier récemment ouvert */
    protected void setLastFile(String path,boolean checkDoublon) {
       if( lastFile==null ) lastFile = new LinkedBlockingDeque<String>(MAXLASTFILE);
       if( checkDoublon ) {
+         path=path.replace('\\','/');
          File f1 = new File(path);
          for( String f2 : lastFile ) {
             if( f1.equals(new File(f2)) ) { lastFile.remove(f2); break; }

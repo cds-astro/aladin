@@ -390,7 +390,8 @@ MouseWheelListener, Widget
       if( Aladin.PLASTIC_SUPPORT ) {
          AppMessagingInterface mMgr = aladin.getMessagingMgr();
 
-         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
+//         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
+         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_FITS);
          //         menuBroadcast.setEnabled(spectrumApps.size()>0);
          menuBroadcastSpectrum.setEnabled(spectrumApps.size()>0);
 

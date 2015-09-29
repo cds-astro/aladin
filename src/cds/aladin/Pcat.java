@@ -629,6 +629,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                   String ucd = leg.getUCD(j);
                   if( ucd!=null && ucd.indexOf("Image_AccessReference")>=0 ) flagArchive="image/fits";
                }
+               
                // SSA - spectrum
                if( flagArchive==null ) {
                   String utype = leg.getUtype(j);

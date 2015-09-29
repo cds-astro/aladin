@@ -65,8 +65,8 @@ public class BuilderMapTiles extends Builder {
       if( !context.isTaskAborting() ) {
          (b=new BuilderMoc(context)).run(); b=null;
 
-         if( context.getOrder()<=3 ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
-         else { (new BuilderTree(context)).run();  context.info("HiPS tree done"); }
+         if( context.getOrder()<=3 ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
+         else { (new BuilderTree(context)).run();  context.info("HiPS TREE done"); }
 
          context.setProgressLastNorder3(1);
       }

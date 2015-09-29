@@ -107,6 +107,9 @@ public abstract class Builder {
          context.info("Unique input image detected");
          context.setFlagInputFile(true);
       }
+      if( context.isExistingAllskyDir(input) && context.hasPropertyFile(input) ) {
+         throw new Exception("The input directory must be a image collection, not a HiPS => aborted");
+      }
       context.setValidateInput(true);
    }
 
@@ -118,14 +121,14 @@ public abstract class Builder {
       String output = context.getOutputPath();
       if( output==null ) {
          output = context.getInputPath();
-         if( output.startsWith("http://") || output.startsWith("https://")) {
+         if( output!=null && (output.startsWith("http://") || output.startsWith("https://"))) {
             output = context.getInputPath();
             int n = output.length();
             if( output.charAt(n-1)=='/' ) n--;
             int offset = output.lastIndexOf('/',n);
             output = output.substring(offset+1,n);
          } else {
-            output = output + Constante.HIPS;
+            output = (output==null?"":output) + Constante.HIPS;
          }
          context.setOutputPath(output);
          context.info("the output directory will be "+output);

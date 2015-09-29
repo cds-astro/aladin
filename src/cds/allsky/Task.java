@@ -116,7 +116,8 @@ public class Task extends Thread {
        }
        catch( Exception e) { 
           if( Aladin.levelTrace>=3 ) e.printStackTrace();
-          context.warning(e.getMessage());
+          context.error(e.getMessage());
+          context.taskAbort();
        }
        finally{ context.setTaskRunning(false); if( progressBar!=null ) progressBar.end(); }
     }

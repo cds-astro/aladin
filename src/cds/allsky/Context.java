@@ -1024,6 +1024,11 @@ public class Context {
       int order = cds.tools.pixtools.Util.getMaxOrderByPath(path);
       return order!=-1;
    }
+   
+   protected boolean hasPropertyFile(String path) {
+      File f = new File(path+Util.FS+Constante.FILE_PROPERTIES);
+      return f.exists();
+   }
 
    protected boolean isExistingIndexDir() {
       String path = getHpxFinderPath();
@@ -1224,7 +1229,7 @@ public class Context {
    }
    public void endAction() throws Exception {
       if( action==null ) return;
-      if( isTaskAborting() ) done(action+" abort (after "+Util.getTemps(action.getDuree())+")");
+      if( isTaskAborting() ) abort(action+" abort (after "+Util.getTemps(action.getDuree())+")");
       else {
          done(action+" done (in "+Util.getTemps(action.getDuree())+")");
          //         updateProperties( getKeyActionEnd(action), getNow(),true);
@@ -1336,6 +1341,7 @@ public class Context {
 
    public void running(String s)  { nl(); System.out.println("RUN   : ================================ "+s+" ==============================="); }
    public void done(String r)     { nl(); System.out.println("DONE  : "+r); }
+   public void abort(String r)    { nl(); System.out.println("ABORT : "+r); }
    public void info(String s)     { nl(); System.out.println("INFO  : "+s); }
    public void warning(String s)  { nl(); System.out.println("*WARN*: "+s); }
    public void error(String s)    { nl(); System.out.println("*ERROR: "+s); }

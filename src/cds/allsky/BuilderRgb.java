@@ -53,7 +53,7 @@ public class BuilderRgb extends Builder {
       build();
 
       if( !context.isTaskAborting() ) (new BuilderMoc(context)).createMoc(output);
-      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("Allsky done"); }
+      if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
 
    }
 
@@ -122,16 +122,16 @@ public class BuilderRgb extends Builder {
             }
             setCmParamExact(s, c);
 
-            // Ajustement de la région qu'il faudra calculer
-            HealpixMoc m = moc[c] = loadMoc( inputs[c] );
-            if( context.moc==null ) context.moc = m;
-            else context.moc = context.moc.union(m);
-
             // Mémorisation de l'ordre le plus profond
             int o = getOrderFromProp( prop[c], inputs[c] );
             if( o>maxOrder ) maxOrder=o;
 
-            // Vérification de la cohérence des systèmes de coordonnées
+            // Ajustement de la région qu'il faudra calculer
+            HealpixMoc m = moc[c] = loadMoc( inputs[c] );
+            if( context.moc==null ) context.moc = m;
+            else context.moc = context.moc.union(m);
+            
+           // Vérification de la cohérence des systèmes de coordonnées
             String f = getFrameFromProp( prop[c] );
             if( frame==null ) frame=f;
             else if( !frame.equals(f) ) throw new Exception("Uncompatible coordsys for "+labels[c]);
@@ -360,12 +360,14 @@ public class BuilderRgb extends Builder {
          }
       }
 
-      // S'il n'existe pas au-moins 1 composante en fichiers fits, c'est une branche morte
+      // S'il n'existe pas au-moins 1 tuile de la composante à cette position, c'est une branche morte
       boolean trouve=false;
       for( int c=0; !trouve && c<3; c++ ) {
          if( c==missing ) continue;
-         String file = Util.getFilePath(inputs[c],order,npix)+".fits";
-         trouve = new File(file).exists();
+// JE NE PASSE PLUS PAR L'EXISTENCE DU FICHIER CAR SI LES MAXORDER SONT DIFFERENTS, CA NE MARCHE PLUS
+//         String file = Util.getFilePath(inputs[c],order,npix)+".fits";
+//         trouve = new File(file).exists();
+         trouve = moc[c].isIntersecting(order, npix);
       }
       if( !trouve ) return null;
 
