@@ -21,15 +21,6 @@
 package cds.aladin;
 
 import java.awt.Graphics;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-
-import cds.tools.Util;
 
 class HealpixAllskyCat extends HealpixKeyCat {
 
@@ -56,7 +47,7 @@ class HealpixAllskyCat extends HealpixKeyCat {
 
    protected int draw(Graphics g, ViewSimple v) {
       if( pcat==null || !pcat.hasObj() ) return 0;
-      pcat.draw(g, null, v, true, 0, 0);
+      pcat.draw(g, v.rv, v, true, 0, 0);
       return pcat.getCount();
    }
 

@@ -26,7 +26,9 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.JPanel;
 
@@ -209,7 +211,7 @@ public final class CanvasPixelRange extends JPanel  implements MouseMotionListen
       // Les différents label
       // Le titre
       g.setColor( Aladin.MYBLUE );
-      s = frameColorMap.CMRANGE;
+      s = isFullDynamic ? frameColorMap.CMRANGE : frameColorMap.CMRANGE1;
       ws = fm.stringWidth( s );
       x = rectRange.x + rectRange.width/2 - ws/2;
       //      y = rectRange.y +rectRange.height/2 + fm.getDescent()+1;

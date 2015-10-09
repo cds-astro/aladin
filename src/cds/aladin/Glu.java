@@ -20,13 +20,22 @@
 
 package cds.aladin;
 
-import java.net.*;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.io.*;
-import java.util.*;
-
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import cds.tools.UrlLoader;
 import cds.tools.Util;
@@ -755,8 +764,8 @@ public final class Glu implements Runnable {
     * @param A le tagGlu du ciel à chercher
     * @param flagSubstring true si on prend en compte le cas d'une sous-chaine
     * @param mode 0 - match exact
-    *             1 - substring
-    *             2 - match exact puis substring en fin sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
+    *             1 - substring sur label
+    *             2 - match exact puis substring sur l'IVORN (ex: Simbad ok pour CDS/Simbad)
     *                 puis du menu  (ex DssColored ok pour Optical/DSS/DssColored)
     * @return l'indice du ciel dans Glu.vGluSky, sinon -1
     */
@@ -765,9 +774,10 @@ public final class Glu implements Runnable {
       for( int i = vGluSky.size()-1; i >=0; i-- ) {
          TreeNodeAllsky gs = vGluSky.elementAt(i);
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
-         if( mode==1 && Util.indexOfIgnoreCase(gs.label, A)>=0 ) return i;
+         if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
          if( mode==2 ) {
             if( gs.internalId.endsWith(A) ) return i;
+//            if( Util.indexOfIgnoreCase(gs.internalId, A)>=0 ) return i;
 
             int offset = gs.label.lastIndexOf('/');
             if( A.equals(gs.label.substring(offset+1)) ) return i;

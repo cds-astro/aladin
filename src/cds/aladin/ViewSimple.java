@@ -6609,7 +6609,7 @@ g.drawString(s,10,100);
       // La toolbox
       int width = -1;
       int height = 280;
-      aladin.toolBox.createWidgetControl(25,40,width,height,-1f,this);
+      aladin.toolBox.createWidgetControl(/*25*/MG,40,width,height,-1f,this);
       widgetControl.addWidget( aladin.toolBox );
 
       // La pile

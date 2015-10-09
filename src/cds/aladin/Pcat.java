@@ -168,11 +168,11 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
       Projection proj = v.getProj();
       if( plan.proj[v.n]==proj && Projection.isOk(proj)
-            && !(plan instanceof PlanBGCat)
-            && projpcat[v.n]==proj   // Dans le cas d'un planBGCat
+            && (!(plan instanceof PlanBGCat)
+               ||  plan instanceof PlanBGCat && projpcat[v.n]==proj )   // Dans le cas d'un planBGCat
             ) {
-         //Aladin.trace(3,"NO Proj. ra/dec->XY (view "+v.n+") of \""+plan.label+"\" on \""
-         //               +v+"\" => déjà fait !");
+//         Aladin.trace(3,"NO Proj. ra/dec->XY (view "+v.n+") of \""+plan.label+"\" on \""
+//                        +v+"\" => déjà fait !");
          drawnInViewSimple[v.n]=true;
          return;        // Deja fait
       }

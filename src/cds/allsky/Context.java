@@ -1502,6 +1502,10 @@ public class Context {
 
    /** Création d'un fichier metadata.txt associé au HiPS */
    protected void writeMetadataFits() throws Exception {
+      writeMetadataFits(getOutputPath(),header);
+   }
+   
+   static public void writeMetadataFits(String path, HeaderFits header) throws Exception {
 
       // POUR LE MOMENT JE PREFERE NE PAS LE METTRE
       //      // Si je n'ai pas de Header spécifique, je récupère
@@ -1516,7 +1520,7 @@ public class Context {
 
       if( header==null )  return;
 
-      String tmp = getOutputPath()+Util.FS+Constante.FILE_METADATATXT;
+      String tmp = path+Util.FS+Constante.FILE_METADATATXT;
       File ftmp = new File(tmp);
       if( ftmp.exists() ) ftmp.delete();
       FileOutputStream out = null;
@@ -1633,11 +1637,11 @@ public class Context {
       }
       
       // En cas de HiPS pouvant être étendu
-      if( live ) setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,"live");
+      setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,live ? "live" : null);
 
       // Dans le cas d'un HiPS couleur
       if( isColor() ) {
-         setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE,live ? "color live" : "color");
+         setPropriete(Constante.KEY_DATAPRODUCT_SUBTYPE, live ? "color live" : "color");
          if( redInfo!=null )   setPropriete(Constante.KEY_HIPS_RGB_RED,redInfo);
          if( greenInfo!=null ) setPropriete(Constante.KEY_HIPS_RGB_GREEN,greenInfo);
          if( blueInfo!=null )  setPropriete(Constante.KEY_HIPS_RGB_BLUE,blueInfo);

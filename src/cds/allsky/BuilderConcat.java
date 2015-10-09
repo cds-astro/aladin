@@ -107,7 +107,9 @@ public class BuilderConcat extends BuilderTiles {
          // Faut-il lancer également une commande PROGEN
          f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
          if( f.isDirectory() ) {
-            (new BuilderDetails(context)).run();
+            BuilderDetails  b = new BuilderDetails(context);
+            b.validateContext();
+            b.run();
             context.info("PROGEN tiles updated");
          }
       }

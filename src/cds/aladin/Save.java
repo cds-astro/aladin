@@ -20,19 +20,40 @@
 
 package cds.aladin;
 
-import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix;
-import cds.xml.*;
-import cds.fits.Fits;
-import cds.fits.HeaderFits;
-import cds.image.*;
-import cds.moc.HealpixMoc;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Checkbox;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Label;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.MemoryImageSource;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.zip.CRC32;
 
 import javax.imageio.IIOImage;
@@ -40,7 +61,27 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+
+import cds.fits.Fits;
+import cds.fits.HeaderFits;
+import cds.image.BMPWriter;
+import cds.image.EPSGraphics;
+import cds.moc.HealpixMoc;
+import cds.tools.Util;
+import cds.tools.pixtools.CDSHealpix;
+import cds.xml.Field;
+import cds.xml.XMLParser;
 
 /**
  * Gestion de la fenetre des sauvegardes
@@ -2020,8 +2061,13 @@ public final class Save extends JFrame implements ActionListener {
     * @return un vector contenant les lignes de l'entête FITS alignées sur 80 bytes
     */
    protected Vector generateFitsHeader(PlanImage p) {
+      
+      // S'il s'agit d'une entête d'une table FITS (typiquement une map HEALPix)
+      // je ne prends pas en compte l'entête FITS
+      boolean flagTable = p.headerFits!=null && p.headerFits.hasKey("TTYPE1");
+
       return generateFitsHeader1(p.projInit,p.projd,
-            p.headerFits,
+            flagTable ? null : p.headerFits,
             p.hasOriginalPixels(),
             p.hasSpecificCalib(),
             p instanceof PlanImageRGB,
@@ -2089,7 +2135,7 @@ public final class Save extends JFrame implements ActionListener {
 
          }
 
-         // J'ai une entete FITS, je la copie en virant les champs WCS si besoin est
+         // J'ai une entete FITS, je la copie en virant les champs WCS, .. si besoin est
       } else {
 
          int naxis=2;
@@ -2179,6 +2225,11 @@ public final class Save extends JFrame implements ActionListener {
 
                // On omet le champ EXTEND (Aladin ne sauvegarde pas les extensions)
                if( k.equals("EXTEND")) { flagModif=true; continue; }
+               
+//               // On omet une série de mot clé qui ne doivent pas être repris
+//               if( mustBeRemoved(k)) { 
+//                  System.out.println("remove "+k);
+//                  flagModif=true; continue; }
 
                // On omet les champs NAXISn si n>2 (et non imageRGB)
                //               if( k.startsWith("NAXIS")
@@ -2290,7 +2341,34 @@ public final class Save extends JFrame implements ActionListener {
 
       return v;
    }
-
+   
+//   // Liste des mots clés à supprimer d'une entête
+//   private static final String [] FORGET = {
+//     "EXTEND","PCOUNT", "GCOUNT", "TFIELDS",
+//     "EXTVERS","TTYPE*","TFORM*", "TUNIT*",
+//     "EXTNAME", "PIXTYPE", "COORDSYS",
+//     "ORDERING", "NSIDE", "FIRSTPIX", "LASTPIX", "BAD_DATA",
+//   };
+//   
+//   // True si le mot clé doit être supprimé de l'entête FITS en cours de génération
+//   private boolean mustBeRemoved(String s) {
+//      for( String k : FORGET) {
+//         
+//         // Mot clé simple
+//         if( !k.endsWith("*") ) { if( s.equals(k) ) return true; }
+//         
+//         // Mot clé avec un suffixe numérique (se termine par "*" dans la liste FORGET)
+//         else {
+//            int i;
+//            for( i=s.length()-1; i>=0 && Character.isDigit( s.charAt(i) ); i--);
+//            String s1 = s.substring(0,i+1);
+//            
+//            if( k.substring(0,k.length()-1).equals( s1 ) ) return true;
+//         }
+//      }
+//      return false;
+//   }
+   
    /**
     * Sauvegarde d'un plan image dans stream en format FITS. Prend en compte le fait que l'image
     * ait pu être recalibrée ou rééchantillonnéé, que le plan dispose ou non des vraies pixels,

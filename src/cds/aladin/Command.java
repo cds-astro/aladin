@@ -691,7 +691,7 @@ public final class Command implements Runnable {
             a.levelTrace=4;
          }
          if( timeout>0 && System.currentTimeMillis()-d>timeout ) {
-            println("!!! Auto Sync time out error ("+(timeout/60000)+" minutes) in Command.sync(). => sync ignored");
+            println("!!! Auto Sync time out error ("+(timeout/60000)+" minutes) in Command.sync() => sync ignored");
             System.err.println("Command.sync() timeout => status:\n"+getStatus("*"));
             inSync = false;
             return;
@@ -2762,7 +2762,7 @@ public final class Command implements Runnable {
       boolean echo = verbose && (a.getInstanceId()>0 || a.getInstanceId()==0 && !a.flagLaunch);
 
       // Echo sur la sortie standard
-      if( echo  ) println("["+s1+"]...");
+      if( echo  || Aladin.NOGUI ) println("["+s1+"]...");
 
       // sync automatique pour les commandes concernées
       if( syncMode==SYNCON && needSync(cmd) ) {
@@ -3522,17 +3522,18 @@ public final class Command implements Runnable {
          } catch( Exception e ) { n=1; }
          a.setTraceLevel(n);
       }
-      else if( cmd.equalsIgnoreCase("mem") ) {
-         a.gc();
-         long total = Runtime.getRuntime().totalMemory()/(1024*1024);
-         long free = Runtime.getRuntime().freeMemory()/(1024*1024);
-         long max = Runtime.getRuntime().maxMemory()/(1024*1024);
-         printConsole("Total used memory: "+
-               (int)(total - free)+ "Mb (total="+total+"Mb free="+free+"Mb max="+max+"Mb)\n");
-      }
-      else if( cmd.equalsIgnoreCase("gc") ) {
+      else if( cmd.equalsIgnoreCase("gc") || cmd.equalsIgnoreCase("mem") ) {
          if( param.equals("off") ) a.gc=false;
-         else a.gc=true;
+         else { 
+            a.gc=true;
+            a.gc();
+
+            long total = Runtime.getRuntime().totalMemory()/(1024*1024);
+            long free = Runtime.getRuntime().freeMemory()/(1024*1024);
+            long max = Runtime.getRuntime().maxMemory()/(1024*1024);
+            printConsole("Total used memory: "+
+                  (int)(total - free)+ "Mb (total="+total+"Mb free="+free+"Mb max="+max+"Mb)\n");
+         }
       }
       else if( cmd.equalsIgnoreCase("load") ) {
          a.load(Tok.unQuote(param),label);

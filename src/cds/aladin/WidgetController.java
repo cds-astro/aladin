@@ -104,7 +104,7 @@ public class WidgetController {
       WidgetControl voc = vo.getWidgetControl();
       switch( action ) {
          case 0: voc.mouseMoved(e);     return true;
-         case 1: voc.mouseDragged(e); return true;
+         case 1: voc.mouseDragged(e);   return true;
          case 2: voc.mousePressed(e);   return true;
          case 3:
             int code = voc.mouseReleased(e);

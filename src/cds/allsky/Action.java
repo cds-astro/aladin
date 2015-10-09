@@ -38,6 +38,7 @@ public enum Action {
    CLEANFITS ("Delete all FITS tiles and Allsky.fits"),
    CLEANJPEG ("Delete all JPEG tiles and Allsky.jpg"),
    CLEANPNG  ("Delete all PNG tiles and Allsky.png"),
+   CLEANWEIGHT ("Delete all WEIGHT tiles"),
    CLEANDATE ("Delete all tiles older than a specifical date"),
    TREE      ("(Re)build HiPS tree structure from already existing tiles"),
    CONCAT    ("Concatenate one HiPS to another HiPS"),

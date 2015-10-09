@@ -1357,6 +1357,7 @@ CMFULLFITS Full dynamic
 CMFULLFITSTIP "Full dynamic" mode: provide the physical values associated to pixel values.\nThe whole image dynamic is available.
 CMREVERSE	Reverse
 CMRANGE	Range of values
+CMRANGE1	Range of values unkwown (preview mode)
 CMLIMITS	Visible pixels
 CMCM	Color map
 CMERRORRANGE	The min value should be less than the max value !
@@ -1389,7 +1390,8 @@ CMPREVIEWTIP.fr Mode "prévisualisation": privilégie la vitesse,\nla plage des pi
 CMFULLFITS.fr Dynamique complète
 CMFULLFITSTIP.fr Mode "Dynamique complète": offre l'accès aux grandeurs physiques associées à chaque valeur de pixel.\nToute la dynamique de l'image est disponible.
 CMREVERSE.fr	Inverser
-CMRANGE.fr	Plage des valeurs:
+CMRANGE.fr	Plage des valeurs
+CMRANGE1.fr Valeurs originales inconnues (prévisualisation)
 CMLIMITS.fr	Pixels visibles
 CMCM.fr	Table des couleurs
 CMERRORRANGE.fr	La valeur minimale doit être inférieure à la valeur maximale !

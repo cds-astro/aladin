@@ -20,10 +20,23 @@
 package cds.aladin;
 
 import java.awt.Graphics;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 
 import cds.allsky.Constante;
+import cds.allsky.Context;
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
 import cds.tools.Util;
@@ -387,7 +400,7 @@ public class PlanHealpix extends PlanBG {
       color = isARGB;
       Aladin.trace(3, this+"");
 
-      copyright="local";
+//      copyright="local";
 
       //       co = new Coord(0,0);
       //       Localisation.frameToFrame(co, Localisation.GAL, Localisation.ICRS);
@@ -405,6 +418,8 @@ public class PlanHealpix extends PlanBG {
       pixList = new Hashtable<String, HealpixKey>(1000);
       //       allsky=null;
       loader = new HealpixLoader();
+      
+      scanMetadata();
 
       postProd();
    }
@@ -593,9 +608,11 @@ public class PlanHealpix extends PlanBG {
 
       newNSideFile = nside;
 
-
       generateHierarchy(idxTFormToRead);
       double end = System.currentTimeMillis();
+      
+      // Sauvegarde de l'entête FITS initiale
+      Context.writeMetadataFits(getSurveyDir(), headerFits.getHeaderFits());
 
       Aladin.trace(3, "TOTAL TIME: "+(end-start)/1000.0+" s");
 

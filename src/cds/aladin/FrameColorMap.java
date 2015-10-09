@@ -82,7 +82,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    CMPIXTOOL,CMPREVIEW,CMFULLFITS,CMLOCALCUTTIP,CMMESSAGE1,CMMESSAGE2,CMAPPLYALLTIP,CMMETHOD,
    CMRESET1TIP,CMRESET2TIP,CMBACK,CMBACKTIP,CMNOCUT,CMNOCUTTIP,CMPREVIEWTIP,CMFULLFITSTIP,CMPIXTOOLTIP,CMONVIEWTIP;
 
-   protected String CMCM,CMRANGE;
+   protected String CMCM,CMRANGE,CMRANGE1;
 
    // Les references
    private PlanImage pimg;          // L'image concernee
@@ -140,6 +140,7 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       CMBACKTIP = aladin.chaine.getString("CMBACKTIP");
       CMCM = aladin.chaine.getString("CMCM");
       CMRANGE = aladin.chaine.getString("CMRANGE");
+      CMRANGE1 = aladin.chaine.getString("CMRANGE1");
       CMPREVIEWTIP = aladin.chaine.getString("CMPREVIEWTIP");
       CMFULLFITSTIP = aladin.chaine.getString("CMFULLFITSTIP");
       CMPIXTOOLTIP = aladin.chaine.getString("CMPIXTOOLTIP");

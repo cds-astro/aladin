@@ -424,6 +424,7 @@ public final class Calque extends JPanel implements Runnable {
       int n=0;
       for( int i=0; i<plan.length; i++ ) {
          if( plan[i].type!=Plan.ALLSKYIMG || !plan[i].flagOk ) continue;
+         if( !plan[i].active ) continue;
          double x;
          try { x = ((PlanBG)plan[i]).getFps(); }
          catch( Exception e ) { continue; }
@@ -864,6 +865,7 @@ public final class Calque extends JPanel implements Runnable {
       if( isFree() ) zoom.zoomView.free();
       aladin.view.findBestDefault();
       repaintAll();
+      aladin.gc();
    }
 
    // Juste pour accélérer un peu

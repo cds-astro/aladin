@@ -1772,7 +1772,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
       boolean flagLosange=false;
 
       flagSym = false;
-
+      
+      boolean drawFast = planBG.mustDrawFast();
+      
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
 
          // Test losange sur le bord du ciel
@@ -1811,7 +1813,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
          } else {
 
-            boolean drawFast = planBG.mustDrawFast();
 
             // Test losange trop grand,  A retracer
             //            if( !drawFast && isTooLarge(b) ) {
@@ -1823,7 +1824,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             //               }
             //            }
             try {
-               if( !drawFast && /* !allSky && */ isTooLarge(b) ) {
+               if( !drawFast && isTooLarge(b) ) {
                   resetTimer();
                   int m = drawFils(g,v,8/*,redraw*/);
 
@@ -1854,7 +1855,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       else { th=0; tb=3; }
 
       /** Dessin des fils */
-      if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) {
+      if( !drawFast && (b[0]==null || b[1]==null || b[2]==null || b[3]==null) ) {
          if( (n=drawFils(g,v/*,redraw*/))>0 ) return n;
       }
 
@@ -1874,7 +1875,10 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( th!=-1 ) n+=drawTriangle(g2d, img, b, th, !flagLosange);
          if( tb!=-1 && !flagLosange ) n+=drawTriangle(g2d, img, b, tb, true);
       }
-      catch( Throwable e ) { planBG.clearBuf(); }
+      catch( Throwable e ) { 
+         if( Aladin.levelTrace>=3 ) e.printStackTrace();
+         planBG.clearBuf();
+      }
       finally {
          g2d.setComposite(saveComposite);
          g2d.setClip(clip);
@@ -2033,7 +2037,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    final protected void drawLosangeBorder(Graphics g,PointD b1[]) {
       if( !planBG.ref ) return;
       int debugIn = planBG.isDebugIn(npix);
-      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
+//      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
+      if( debugIn==0 && planBG.aladin.levelTrace<6 ) return;
       PointD b [] = new PointD[4];
       int j=0;
       for( int i=0; i<4; i++ ) if( b1[i]!=null ) b[j++]=b1[i];

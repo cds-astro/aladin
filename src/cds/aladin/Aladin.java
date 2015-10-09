@@ -152,6 +152,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Dynamic display improvements (faster, without GC "stop all" effect)
  * @beta    <LI> MocServer support (remote server of coverages)
  * @beta    <LI> Astrometrical calibration improvements (SCAMP PV, TPV, SINSIP)
  * @beta    <LI> Widgets in fullscreen mode
@@ -180,6 +181,7 @@ import cds.xml.XMLParser;
  * @beta
  * @beta <B>Major fixed bugs:</B>
  * @beta <UL>
+ * @beta    <LI> HEALPix map crop save
  * @beta    <LI> Multi-session cache bug
  * @beta    <LI> HiPS building by iterations
  * @beta    <LI> Astrometrical calibration ZPN & SIN bugs
@@ -219,7 +221,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.174";
+   static public final    String VERSION = "v8.176";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -525,7 +527,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static private boolean warningRestricted = false;
 
    // Gestion du niveau de trace
-   static final int MAXLEVELTRACE = 4;
+   static final int MAXLEVELTRACE = 6;
    static public int levelTrace=0;
 
    // Variables associees au mode de fonctionnement
@@ -5284,6 +5286,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       // des versions postérieures de JVM
       //      while( img.getWidth(this)<0 ) Util.pause(10);
    }
+   
+   private boolean messReady=false;   // pour ne l'afficher qu'une fois
 
    /** Verifie que l'objet dialog a bien ete cree, sinon se met en attente */
    protected void waitDialog() {
@@ -5295,8 +5299,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
          //         trace(3,"Waiting dialog...");
          Util.pause(100);
       }
+      if( messReady ) return;
       long tps = System.currentTimeMillis() - startTime;
       aladin.trace(3, "Aladin is fully ready (in "+(tps/1000.)+"s)");
+      messReady=true;
    }
 
    /** Retourne true si le dialog est prêt */
@@ -6449,11 +6455,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Libère toute la mémoire inutile */
    protected void gc() {
       if( gc ) {
+         trace(4,"Aladin.gc()...");
+//         try { throw new Exception("gc"); } catch( Exception e ) { e.printStackTrace(); }
          System.runFinalization();
          System.gc();
-         Util.pause(100);
+         Util.pause(30);
       }
       setMemory();
+   }
+   
+   protected void gcIfRequired() {
+      double mem=getMem();
+      if( mem>100) return;
+//      System.out.println("Memory="+mem+"MB");
+      gc();
    }
 
    /** Génération d'un log via le glu */
@@ -6537,7 +6552,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          System.runFinalization();
          //         System.out.println("C'est parti pour gc...");
          System.gc();
-         Util.pause(100);
+         Util.pause(30);
          //         System.out.println("C'est termine...");
       }
       if( MB==null ) MB="Mb";
@@ -6546,7 +6561,6 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int nbSel = view.vselobj.size();
       long nbSrc = calque.getNbSrc();
       double fps = calque.getFps();
-      // XXX A VOIR XXX      long cache = calque.isBkgdActive() ? (int)(calque.planBG.getCacheSize()/(1024*1024)) : 0;
       long cache=0;
       cache += (int)(sizeCache/(1024*1024));
       int mem = (int)( (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())/(1024*1024));

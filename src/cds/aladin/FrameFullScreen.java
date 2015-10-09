@@ -547,7 +547,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       // Affichage du logo au-dessus de la commande si la pile est vide
       if( form ) {
          try {
-            if( logo==null ) logo=aladin.getImagette("Aladin.gif");
+            if( logo==null ) logo=aladin.getImagette("Aladin.png");
             else g.drawImage(logo,getWidth()/2-logo.getWidth(viewSimple)/2,
                   YC-logo.getHeight(viewSimple)-10,viewSimple);
          } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); }

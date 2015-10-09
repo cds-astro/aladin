@@ -1330,12 +1330,14 @@ public class PlanBG extends PlanImage {
    private boolean memCpt=true;
 
    protected void gc() {
-      if( System.currentTimeMillis()-lastGc<1000 ) return;
+      long t= System.currentTimeMillis();
+      if(t-lastGc<1000 ) return;
+      lastGc=t;
 
       // Si on a de la mémoire en rab, on s'assure qu'on va libérer au-moins
       // 40Mo pour lancer un gc(). Comme le gc prend du temps on ne peut pas mesurer
       // immédiatement son résultat, on le fera au coup suivant en alternant lastMemP et lastMemI
-      if( aladin.enoughMemory() ) {
+      if( aladin.getMem()<256 ) {
          if( memCpt ) lastMemP=Runtime.getRuntime().freeMemory();
          else lastMemI=Runtime.getRuntime().freeMemory();
          if( Math.abs(lastMemP-lastMemI)<MEMREQUIREDFORGC ) {
@@ -1344,21 +1346,24 @@ public class PlanBG extends PlanImage {
          }
          //         System.out.println("GC dernière libération "+Math.abs(lastMemP-lastMemI)/(1024*1024)+"Mo");
       }
+      
+      nbFlush=0;
+      memCpt=!memCpt;
+      aladin.gcIfRequired();
 
-      (new Thread("gc"){
-         @Override
-         public void run() {
-            memCpt=!memCpt;
-            nbFlush=0;
-            System.runFinalization();
-            System.gc();
-            lastGc=System.currentTimeMillis();
-            aladin.setMemory();
-            //      System.out.println("GC done");
-            //            if( Aladin.BETA ) System.out.println(HealpixKey.getStats()
-            //                  +"."+nbReady+" hpx in mem ("+memSize/(1024*1024)+"Mb) - "+getCacheSize()/1024+"Mb in cache");
-         }
-      }).start();
+//      (new Thread("gc"){
+//         @Override
+//         public void run() {
+//            memCpt=!memCpt;
+//            nbFlush=0;
+//            System.runFinalization();
+//            System.gc();
+//            aladin.setMemory();
+//            //      System.out.println("GC done");
+//            //            if( Aladin.BETA ) System.out.println(HealpixKey.getStats()
+//            //                  +"."+nbReady+" hpx in mem ("+memSize/(1024*1024)+"Mb) - "+getCacheSize()/1024+"Mb in cache");
+//         }
+//      }).start();
    }
 
    /** Suppression d'un losange */
@@ -1401,10 +1406,8 @@ public class PlanBG extends PlanImage {
       if( healpix!=null ) return healpix;
 
       // Peut être peut-on se servir du allsky.fits|.jpeg ?
-      if( healpix==null ) {
-         healpix = getHealpixFromAllSky(order,npix);
-         if( healpix!=null ) return healpix;
-      }
+      healpix = getHealpixFromAllSky(order,npix);
+      if( healpix!=null ) return healpix;
 
       if( flagLoad ) return askForHealpix(order,npix);
       return null;
@@ -2007,18 +2010,21 @@ public class PlanBG extends PlanImage {
 
    /** Retourne true si tous les fils du losange "susceptibles" d'être
     * tracés sont déjà prêts à être dessiné */
-   private boolean childrenReady(HealpixKey healpix,ViewSimple v) {
-      int order = healpix.order+1;
-      //      if( tooSmall(v,order) ) return false;
+   private boolean childrenReady(HealpixKey healpix,ViewSimple v,int maxOrder) {
+      int nextOrder = healpix.order+1;
       children = healpix.getChildren(children);
       for( int i=0; i<4; i++ ){
-         if( isOutMoc(order,children[i]) ) continue;
-         HealpixKey fils = getHealpix(order,children[i],healpix.z,false);
-         if( fils==null ) fils = new HealpixKey(this,order,children[i],HealpixKey.NOLOAD);
+         if( isOutMoc(nextOrder,children[i]) ) continue;
+         HealpixKey fils = getHealpix(nextOrder,children[i],healpix.z,false);
+         if( fils==null ) fils = new HealpixKey(this,nextOrder,children[i],HealpixKey.NOLOAD);
          if( fils.isOutView(v) ) continue;
-         if( fils.getStatus()!=HealpixKey.READY ) return false;
+         if( fils.getStatus()!=HealpixKey.READY ) {
+            if( nextOrder==maxOrder-1 ) return false;
+            // Mais peut être que la generation en dessous est dejà prête ?
+            if( nextOrder<maxOrder-1 && !childrenReady(fils,v,maxOrder) ) return false;
+         }
       }
-      //System.out.println("***** "+ healpix+" inutile car a tout ses fils");
+//      System.out.println("***** "+ healpix+" inutile car a tout ses fils ou petits fils");
       return true;
    }
 
@@ -2743,7 +2749,7 @@ public class PlanBG extends PlanImage {
    //   }
 
 
-   static final int DRAWFASTMS = 150;     // Tps max autorisé pour un tracé complet, si > mode rapide
+   static final int DRAWFASTMS = 100;     // Tps max autorisé pour un tracé complet, si > mode rapide
    private boolean computeDrawFast=true;  // true autorise une nouvelle évaluation du temps de tracé
    private boolean lastMustDrawFast=true; // Dernière mesure du mustDrawFast
 
@@ -2883,7 +2889,7 @@ public class PlanBG extends PlanImage {
          }
 
          // Recherche des losanges qui couvrent la vue à la résolution max
-         // uniquement si on est au-dela de l'order 3 (sauf si cest le dernier)
+         // uniquement si on est au-dela de l'order 3 (sauf si c'est le dernier)
          allKeyReady=true;
          if( max<ALLSKYORDER ) allKeyReady=false;
          else {
@@ -2933,10 +2939,10 @@ public class PlanBG extends PlanImage {
          resetPriority();
          //         redraw.clear();
          HealpixKey healpix = null;
-         int cmin = min<max && allKeyReady ? max : min<max-4 ? max-4 : min;
+         int cmin = min<max && allKeyReady ? max : min<max-3 ? max-3 : min;
 
          if( max>=ALLSKYORDER )
-            for( int order=cmin; order<=max || !oneKeyReady && order<=max+3 && order<=maxOrder; order++ ) {
+            for( int order=cmin; order<=max || !oneKeyReady && order<=max+2 && order<=maxOrder; order++ ) {
 
                //               if( !allKeyReady ) {
                pix = getPixList(v,center,order);
@@ -3013,12 +3019,12 @@ public class PlanBG extends PlanImage {
                      continue;
                   }
 
-                  // Tous les fils à tracer sont déjà prêts => on passe
-                  if( order<max && childrenReady(healpix,v) ) {
-                     healpix.filsFree();
-                     //                  healpix.resetTimeAskRepaint();
-                     continue;
-                  }
+                  // EN FAIT CA N'ARRIVE QUASI JAMAIS - JE LAISSE TOMBER
+                  // Tous les fils, ou petits-fils à tracer sont déjà prêts => on passe
+//                  if( order<max && childrenReady(healpix,v,max) ) {
+////                     healpix.filsFree();  POURQUOI DIABLE AI-JE FAIT CELA ???
+//                     continue;
+//                  }
 
                   nb+=healpix.draw(g,v);
                   setHealpixPreviousFrame(order,pix[i]);
@@ -3468,6 +3474,8 @@ public class PlanBG extends PlanImage {
       private void setSleep(boolean flag) {
          synchronized( lockSleep ) { isSleeping=flag; }
       }
+      
+      private long ot = -1;
 
       /** retourne true tant que le thread du loader a quelque chose sur le feu */
       private boolean shouldRun() {
@@ -3482,16 +3490,17 @@ public class PlanBG extends PlanImage {
          do {
             sleep=true;
             try {
-               try { launchJob(); } catch( Exception e ) { e.printStackTrace(); };
+               try { launchJob(); }
+               catch( Exception e ) { e.printStackTrace(); };
 
                if( useCache ) scanCache();
 
                if( sleep ) {
                   setSleep(true);
-                  // System.out.println("Thread dort !");
+                   Aladin.trace(5,"PlanBG.HealpixLoader sleeping");
                   try { Thread.currentThread().sleep(DELAI); }
                   catch( Exception e ) {
-                     //System.out.println("Thread réveillé !");
+                     Aladin.trace(5,"PlanBG.HealpixLoader wake up !");
                   }
                   setSleep(false);
                }
@@ -3501,9 +3510,9 @@ public class PlanBG extends PlanImage {
          if( useCache ) cacheLoader.stop();
          netLoader.stop();
          thread=null;
-         //System.out.println("Plus rien à faire => Thread meurt");
+         Aladin.trace(5,"PlanBG.HealpixLoader died");
          nbFlush=0;
-         aladin.gc();
+         aladin.gcIfRequired();
       }
 
       /** Parcours de la liste des losanges healpix et lancement du chargement de ceux
@@ -3514,7 +3523,8 @@ public class PlanBG extends PlanImage {
          boolean stillOnePurge=false;
          boolean perhapsOneDeath=false;
          int [] nb = new int[HealpixKey.NBSTATUS];
-         boolean flagVerbose =  aladin.calque.hasHpxGrid();
+//         boolean flagVerbose =  aladin.calque.hasHpxGrid();
+         boolean flagVerbose =  aladin.levelTrace>=5;
 
          boolean first=true;
          int n=0;
@@ -3541,9 +3551,11 @@ public class PlanBG extends PlanImage {
                int live = healpix.getLive();
                if( live==HealpixKey.DEATH ) purge(healpix);
                else {
-                  if( live==HealpixKey.MAYBEDEATH ) perhapsOneDeath=true;
+                  if( live==HealpixKey.MAYBEDEATH ) {
+                     perhapsOneDeath=true;
+                     stillOnePurge=true;
+                  }
                   else if( status==HealpixKey.READY ) healpix.purgeFils();
-                  stillOnePurge=true;
                }
 
                switch( status ) {
@@ -3668,7 +3680,7 @@ public class PlanBG extends PlanImage {
          encore=true;
          if( thread!=null ) thread.interrupt();
          thread = new Thread(this,label);
-         Util.decreasePriority(Thread.currentThread(), thread);
+         if( !Aladin.NOGUI ) Util.decreasePriority(Thread.currentThread(), thread);
          thread.start();
       }
 
@@ -3715,6 +3727,8 @@ public class PlanBG extends PlanImage {
                            healpix.loadFromCache();
                            if( !healpix.allSky ) setTileOrder(healpix.getLosangeOrder());
                            flagLoad=true;
+//                           Aladin.trace(5,"PlanBG.Loader ("+label+") loading "+healpix);
+
                            //System.out.println("   Load "+healpix);
 
                            // Du net on va voir si on a le temps
@@ -3734,6 +3748,7 @@ public class PlanBG extends PlanImage {
                            if( type==0 ) h.loadFromCache();
                            else h.loadFromNet();
                            if( !h.allSky ) setTileOrder(h.getLosangeOrder());
+//                           Aladin.trace(5,"PlanBG.Loader ("+label+") loading "+h);
 
                            // Trop long pour un autre ? =>  ça sera pour le prochain tour
                            if( System.currentTimeMillis() - t > MAXTIMETOBELOADFROMNET ) break;
@@ -3745,17 +3760,19 @@ public class PlanBG extends PlanImage {
 
                if( flagLoad ) loader.wakeUp();
                else {
-                  //System.out.println(label+"'s sleeping");
+//                  Aladin.trace(5,"PlanBG.Loader ("+label+") sleeping...");
                   try {
                      setPause(true);
                      Thread.currentThread().sleep(10000);
                   } catch( Exception e ) {
-                     //                     System.out.println(label+" wakeup !");
+//                     Aladin.trace(5,"PlanBG.Loader ("+label+") wake up !");
                   }
                }
             } catch( Throwable t ) { if( Aladin.levelTrace>=3 ) t.printStackTrace(); }
          }
+//            Aladin.trace(5,"PlanBG.Loader ("+label+") died !");
          thread=null;
+
       }
    }
 

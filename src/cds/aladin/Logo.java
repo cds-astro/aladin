@@ -20,9 +20,16 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JComponent;
 
 import cds.tools.Util;
 
@@ -62,7 +69,7 @@ public final class Logo extends JComponent implements MouseListener {
    */
    protected Logo(Aladin aladin) {
       this.aladin=aladin;
-      img = aladin.getImagette("logo.gif");
+      img = aladin.getImagette("logo.png");
       addMouseListener(this);
       addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) {

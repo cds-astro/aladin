@@ -20,7 +20,9 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -490,7 +492,7 @@ SwingWidgetFinder, Widget {
                aladin.dialog.resume();	// Desactivation du GrabIt ?
                //               }
             }
-            aladin.gc();
+//            aladin.gc();
             break;
       }
 
@@ -810,7 +812,7 @@ SwingWidgetFinder, Widget {
    public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
       voc = new WidgetControl(this,x,y,width,height,opacity,parent);
       voc.setResizable(true);
-      voc.setCollapsed(false);
+//      voc.setCollapsed(false);
    }
 
    @Override
