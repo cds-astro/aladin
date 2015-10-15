@@ -20,15 +20,12 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import healpix.essentials.FastMath;
 
-import javax.swing.*;
-import javax.swing.Timer;
+import java.awt.Color;
+import java.awt.Graphics;
+
+import javax.swing.JComponent;
 
 import cds.tools.Util;
 
@@ -62,8 +59,8 @@ public final class Sablier extends JComponent {
       int c=170;
       startAngle = ((System.currentTimeMillis() - timer)/DELAY ) * DEG;
       for( double theta=0; theta<2*Math.PI; theta+=DEG  ) {
-         int x = (int)Math.round( xCenter + rho*Math.cos( theta+startAngle ) );
-         int y = (int)Math.round( yCenter + rho*Math.sin( theta+startAngle ) );
+         int x = (int)Math.round( xCenter + rho*FastMath.cos( theta+startAngle ) );
+         int y = (int)Math.round( yCenter + rho*FastMath.sin( theta+startAngle ) );
          g.setColor(new Color(c,c,c));
          c-=10;
          Util.fillCircle7(g,x,y);

@@ -21,6 +21,7 @@
 package cds.aladin;
 
 import java.io.File;
+
 import cds.tools.Util;
 import cds.tools.pixtools.Hpix;
 
@@ -143,7 +144,7 @@ class HealpixAllsky extends HealpixKey {
          byte [] pix = new byte[w*w];
          int yLosange=(i/nbLosangeWidth)*w;
          int xLosange=(i%nbLosangeWidth)*w;
-         if( i%100==0 ) Util.pause(10);
+//         if( i%100==0 ) Util.pause(10);
          for( int y=0; y<w; y++ ) {
             for( int x=0; x<w; x++) {
                int offset = (yLosange+y)*width + (xLosange+x);
@@ -185,7 +186,7 @@ class HealpixAllsky extends HealpixKey {
          int [] pix = new int[w*w];
          int yLosange=(npix/nbLosangeWidth)*w;
          int xLosange=(npix%nbLosangeWidth)*w;
-         if( npix%100==0 ) Util.pause(10);
+//         if( npix%100==0 ) Util.pause(10);
          for( int y=0; y<w; y++ ) {
             for( int x=0; x<w; x++) {
                pix[y*w +x] = rgb[ (yLosange+y)*width + (xLosange+x) ];

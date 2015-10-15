@@ -58,6 +58,8 @@
 //
 package cds.tools;
 
+import healpix.essentials.FastMath;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -690,17 +692,17 @@ public final class Util {
 
       double theta,delta;
       if( x!=x1) {
-         theta = Math.atan( (y1-y)/(x1-x) );
+         theta = FastMath.atan( (y1-y)/(x1-x) );
          if( x>x1 ) theta += Math.PI;
       } else {
          if( y<y1 ) theta = Math.PI/2;
          else theta = -Math.PI/2;
       }
       delta = 3.0*Math.PI/4;
-      double dx1 = L*Math.cos( theta+delta);
-      double dy1 = L*Math.sin( theta+delta);
-      double dx2 = L*Math.cos( theta-delta);
-      double dy2 = L*Math.sin( theta-delta);
+      double dx1 = L*FastMath.cos( theta+delta);
+      double dy1 = L*FastMath.sin( theta+delta);
+      double dx2 = L*FastMath.cos( theta-delta);
+      double dy2 = L*FastMath.sin( theta-delta);
 
       g.drawLine((int)(x1+dx1),(int)(y1+dy1),(int)x1,(int)y1);
       g.drawLine((int)x1,(int)y1,(int)(x1+dx2),(int)(y1+dy2));
@@ -1079,11 +1081,11 @@ public final class Util {
       // first, we fill the array
       for(int i=0; i<nbIt; i++) {
          curAngle = 2.0*i/nbIt*Math.PI;
-         tmpX = semiMA*Math.cos(curAngle);
-         tmpY = semiMI*Math.sin(curAngle);
+         tmpX = semiMA*FastMath.cos(curAngle);
+         tmpY = semiMI*FastMath.sin(curAngle);
          // rotation
-         x = tmpX*Math.cos(angle)-tmpY*Math.sin(angle)+xCenter;
-         y = tmpX*Math.sin(angle)+tmpY*Math.cos(angle)+yCenter;
+         x = tmpX*FastMath.cos(angle)-tmpY*FastMath.sin(angle)+xCenter;
+         y = tmpX*FastMath.sin(angle)+tmpY*FastMath.cos(angle)+yCenter;
 
          //System.out.println(x+" "+y);
          p[i] = new Point((int)x,(int)y);

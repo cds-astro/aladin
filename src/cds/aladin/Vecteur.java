@@ -20,13 +20,11 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import healpix.essentials.FastMath;
 
-import cds.astro.Proj3;
+import java.awt.Graphics;
+import java.awt.Point;
+
 import cds.tools.Util;
 
 /**
@@ -56,8 +54,8 @@ public class Vecteur extends Forme {
       double a = Math.toRadians(angle);
       double b = Math.toRadians(90);
       d= b+a;
-      x = xv + w*Math.sin(d);
-      y = yv + w*Math.cos(d);
+      x = xv + w*FastMath.sin(d);
+      y = yv + w*FastMath.cos(d);
       o[1] = new Position(plan,v,x,y,0,0,XY|RADE_COMPUTE,null);
       setObjet(o);
    }

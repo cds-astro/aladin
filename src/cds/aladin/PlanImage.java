@@ -19,16 +19,31 @@
 
 package cds.aladin;
 
-import cds.tools.*;
-import cds.image.*;
+import healpix.essentials.FastMath;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.image.ColorModel;
+import java.awt.image.ImageProducer;
+import java.awt.image.IndexColorModel;
+import java.awt.image.MemoryImageSource;
+import java.io.File;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.util.Date;
+import java.util.StringTokenizer;
 import java.util.zip.Inflater;
+
+import cds.image.Hdecomp;
+import cds.image.Iqefunc;
+import cds.tools.Util;
 
 /**
  * Plan dedie a une image (IMAGE)
@@ -3799,7 +3814,7 @@ public class PlanImage extends Plan {
       // On tourne l'image pour l'aligner sur 0-3
       double b03x = b[3].x - b[0].x;
       double b03y = b[3].y - b[0].y;
-      double angle = Math.atan2(b03y,b03x);
+      double angle = FastMath.atan2(b03y,b03x);
 
       // On écrase la longueur
       double d03 = Math.sqrt( b03x*b03x + b03y*b03y );
@@ -3809,8 +3824,8 @@ public class PlanImage extends Plan {
       double b01x = b[1].x - b[0].x;
       double b01y = b[1].y - b[0].y;
       double d01 = Math.sqrt( b01x*b01x + b01y*b01y );
-      double angle01 = Math.atan2(b01y,b01x) - angle;
-      double my= (d01*Math.sin(angle01))/height;
+      double angle01 = FastMath.atan2(b01y,b01x) - angle;
+      double my= (d01*FastMath.sin(angle01))/height;
 
       // On fait glisser selon les x pour longer l'axe 0-1
       double sx = ( d01*Math.cos(angle01) )/ d03;

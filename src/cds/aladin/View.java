@@ -129,7 +129,7 @@ import cds.tools.Util;
  * @version 0.91 - 3 dec 1998   Nettoyage du code
  * @version 0.9 - 31 mars 1998
  */
-public final class View extends JPanel implements Runnable,AdjustmentListener {
+public class View extends JPanel implements Runnable,AdjustmentListener {
 
    // Les valeurs generiques
    static final String WNOZOOM = "You have reached the zoom limit";
@@ -230,14 +230,17 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
       NIF       = aladin.chaine.getString("VWNIF");
    }
 
+   
+   protected View(Aladin aladin) { this.aladin=aladin; aladin.view=this; }
+   
    /** Creation de l'objet View
     * @param aladin Reference
     */
-   protected View(Aladin aladin) {
+   protected View(Aladin aladin,Calque calque) {
       this.aladin = aladin;
       createChaine();
       this.status = aladin.status;
-      this.calque = aladin.calque;
+      this.calque = calque;
       this.zoomview = aladin.calque.zoom.zoomView;
       //      if( aladin.STANDALONE ) INITW=700;
 
@@ -3302,6 +3305,8 @@ public final class View extends JPanel implements Runnable,AdjustmentListener {
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
       ViewSimple v = getCurrentView();
+      if( v instanceof ViewSimpleStatic ) return true;
+      
       //      System.out.println("mustDrawFast: v.flagScrolling="+v.flagScrolling+" zoomView.flagdrag="+aladin.calque.zoom.zoomView.flagdrag);
       return v.flagScrolling || aladin.calque.zoom.zoomView.flagdrag;
    }

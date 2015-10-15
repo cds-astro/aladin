@@ -49,7 +49,7 @@ import cds.tools.Util;
  * @version 0.91 : Revisite le 1 dec 98
  * @version 0.9  : (??) creation
  */
-public final class Calque extends JPanel implements Runnable {
+public class Calque extends JPanel implements Runnable {
 
    // les variables generiques
    int FIRSTBLOC = 25;
@@ -87,16 +87,16 @@ public final class Calque extends JPanel implements Runnable {
 
    protected int overlayFlag;
 
-   static final private int SCALE   = 1;
-   static final private int LABEL   = 2;
-   static final private int SIZE    = 4;
-   static final private int GRID    = 8;
-   static final private int NE      = 16;
-   static final private int RETICLE = 32;
-   static final private int TARGET  = 64;
-   static final private int PIXEL   = 128;
-   static final private int HPXGRID = 256;
-   static final private int COLORMAP= 512;
+   static final protected int SCALE   = 1;
+   static final protected int LABEL   = 2;
+   static final protected int SIZE    = 4;
+   static final protected int GRID    = 8;
+   static final protected int NE      = 16;
+   static final protected int RETICLE = 32;
+   static final protected int TARGET  = 64;
+   static final protected int PIXEL   = 128;
+   static final protected int HPXGRID = 256;
+   static final protected int COLORMAP= 512;
 
    static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid", "colormap" };
    static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID, COLORMAP };
@@ -165,12 +165,12 @@ public final class Calque extends JPanel implements Runnable {
       return s.toString();
    }
 
-   protected void createChaine() {
-
-   }
+   protected void createChaine() { }
 
    //   protected Source sourceToShow; // source à montrer (thomas, votech)
    //   protected Source osourceToShow; // ancienne source à montrer (thomas, votech)
+   
+   protected Calque() { super(); }
 
    /** Creation de l'objet calque */
    protected Calque(Aladin aladin) {

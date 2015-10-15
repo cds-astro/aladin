@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import healpix.essentials.FastMath;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -444,7 +446,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       setStatus(LOADINGFROMNET);
       try {
 
-         //         long t = System.currentTimeMillis();
+         long t = System.currentTimeMillis();
          String fileName = planBG.url+"/"+fileNet;
 
          char c = planBG.url.charAt(planBG.url.length()-1);
@@ -464,7 +466,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.cumulTimeJPEG += timeJPEG;
          planBG.cumulTimePixel += timePixel;
          planBG.askForRepaint();
-         //System.out.println("Loaded from NET in "+(System.currentTimeMillis()-t)+"ms : "+this);
+         Aladin.trace(5,"HealpixKey.LoadFromNet() in "+(System.currentTimeMillis()-t)+"ms : "+this);
 
       } catch( Throwable e ) {
          pixels=null;
@@ -513,7 +515,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          try {
             planBG.nByteReadCache+=loadCache(pathName);
             alreadyCached=true;
-            //System.out.println("Loaded from CACHE in "+(System.currentTimeMillis()-t)+"ms "+this);
+            Aladin.trace(5,"HealpixKey.LoadFromCache() in "+(System.currentTimeMillis()-t)+"ms "+this);
             resetTimer();
             setTimerLoad();
             setStatus(READY);
@@ -653,7 +655,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    // Force le ralentissement du chargement du losange dans le cas d'un clic and drag
    private boolean slowDown() {
-      return planBG.aladin.view.mustDrawFast();
+      return planBG.aladin.view!=null && planBG.aladin.view.mustDrawFast();
    }
 
    /**
@@ -1535,11 +1537,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
          }
          if( b1[a]==null || b1[c]==null ) continue;
 
-         double angle = Math.atan2(b1[c].y-b1[a].y, b1[c].x-b1[a].x);
-         double chouilla = val*Math.cos(angle);
+         double angle = FastMath.atan2(b1[c].y-b1[a].y, b1[c].x-b1[a].x);
+         double chouilla = val*FastMath.cos(angle);
          b1[a].x-=chouilla;
          b1[c].x+=chouilla;
-         chouilla = val*Math.sin(angle);
+         chouilla = val*FastMath.sin(angle);
          b1[a].y-=chouilla;
          b1[c].y+=chouilla;
       }
@@ -1942,8 +1944,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double ay = a.y - g.y;
 
       // Rotation de -2*theta
-      double cost = Math.cos( -2*theta );
-      double sint = Math.sin( -2*theta );
+      double cost = FastMath.cos( -2*theta );
+      double sint = FastMath.sin( -2*theta );
       double x = ax*cost + ay*sint;
       double y = - ax*sint + ay*cost;
 
@@ -1986,7 +1988,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       // On tourne l'image pour l'aligner sur h-d
       double hdx = b[h].x - b[d].x;    if( h==0 || h==2 ) hdx= -hdx;
       double hdy = b[h].y - b[d].y;    if( h==0 || h==2 ) hdy= -hdy;
-      double angle = Math.atan2(hdy,hdx);
+      double angle = FastMath.atan2(hdy,hdx);
 
       // On écrase la longueur
       double hd = Math.sqrt( hdx*hdx + hdy*hdy );
@@ -1996,11 +1998,11 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double hgx = b[h].x - b[g].x;   if( h==0 || h==2 ) hgx= -hgx;
       double hgy = b[h].y - b[g].y;   if( h==0 || h==2 ) hgy= -hgy;
       double dhg = Math.sqrt( hgx*hgx + hgy*hgy );
-      double anglehg = Math.atan2(hgy,hgx) - angle;
-      double my= dhg*Math.sin(anglehg)/width;
+      double anglehg = FastMath.atan2(hgy,hgx) - angle;
+      double my= dhg*FastMath.sin(anglehg)/width;
 
       // On fait glisser selon les x pour longer l'axe d-h
-      double sx = ( dhg*Math.cos(anglehg) )/ hd;
+      double sx = ( dhg*FastMath.cos(anglehg) )/ hd;
       AffineTransform tr = new AffineTransform();
       if( h==3 || h==1 )  tr.translate(b[d].x+b[g].x-b[h].x,b[d].y+b[g].y-b[h].y);
       else tr.translate(b[h].x,b[h].y);

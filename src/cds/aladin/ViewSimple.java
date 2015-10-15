@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import healpix.essentials.FastMath;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -257,7 +259,10 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
             this, DnDConstants.ACTION_COPY_OR_MOVE, this);
    }
-
+   
+   // pour les classes dérivées
+   protected ViewSimple(Aladin aladin) { this.aladin=aladin; }
+   
    public void dragGestureRecognized(DragGestureEvent dragGestureEvent) { }
    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
       aladin.view.setCurrentView(this);
@@ -1238,10 +1243,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       Dimension d = getPRefDimension();
       imgW=d.width;
       imgH=d.height;
-
+      
+ 
       // Calcul de la proportion (si l'image n'est pas carree)
-      double W = aladin.calque.zoom.zoomView.getWidth();
-      double H = (W/imgW)*imgH;
+      double W,H;
+      W = aladin.calque.zoom.zoomView.getWidth();
+      H = (W/imgW)*imgH;
       if( H>W ) {
          W = W*W /H;
          H = aladin.calque.zoom.zoomView.getHeight();
@@ -1260,7 +1267,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       double yzImg = (imgH/H)*yc;
       double wzImg = rv.width/zoom;
       double hzImg = rv.height/zoom;
-
+      
       // Avec mémorisation des infos
       if( memorisation ) {
 
@@ -4844,7 +4851,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Affichage de la taille du champ courant. S'il s'agit d'une
     * impression (dx==0) on met aussi la position centrale
     */
-   private void drawSize(Graphics g,int dx,int dy) {
+   protected void drawSize(Graphics g,int dx,int dy) {
       if( !aladin.calque.hasSize() ) return;
       int mode=1;  // Par défaut on l'affiche au milieu en bas
 
@@ -4959,7 +4966,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
 
    /** Affichage du label de la vue */
-   private void drawLabel(Graphics g,int dx,int dy) {
+   protected void drawLabel(Graphics g,int dx,int dy) {
       if( !aladin.calque.hasLabel() ) return;
       Color c = g.getColor();
       String s=isPlotView() ? plot.getPlotLabel() :
@@ -5094,7 +5101,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    /** Positionnement d'un repere Nord et Est */
-   private void drawNE(Graphics g,Projection proj,int dx,int dy) {
+   protected void drawNE(Graphics g,Projection proj,int dx,int dy) {
       //flagAllSky=false;
       if( !aladin.calque.hasNE() || isAllSky() ) return;
 
@@ -5129,16 +5136,16 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( Double.isNaN(c1.x) ) return;
          x1=c1.x; y1=c1.y;
          alpha = Math.atan2(y1-y,x1-x);
-         x1 = x+L*Math.cos(alpha); y1 = y+L*Math.sin(alpha);
+         x1 = x+L*Math.cos(alpha); y1 = y+L*FastMath.sin(alpha);
 
-         c1 = new Coord(c.al+delta/Math.cos(c.del*Math.PI/180.),c.del);
+         c1 = new Coord(c.al+delta/FastMath.cos(c.del*Math.PI/180.),c.del);
          if( !flagBG ) c1 = aladin.localisation.frameToICRS(c1);
          //         proj.getXYNative(c1);
          proj.getXY(c1);
          if( Double.isNaN(c1.x) ) return;
          x2=c1.x; y2=c1.y;
-         alpha = Math.atan2(y2-y,x2-x);
-         x2 = x+L*Math.cos(alpha); y2 = y+L*Math.sin(alpha);
+         alpha = FastMath.atan2(y2-y,x2-x);
+         x2 = x+L*FastMath.cos(alpha); y2 = y+L*FastMath.sin(alpha);
 
          // On force l'affichage orthogonal si on est proche du Nord pile-poil en haut
          if( northUp && Math.abs( 180-Math.toDegrees(alpha))<1 ) { x1=x; y2=y; }
@@ -5474,7 +5481,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
    
    /** Dessine et calcule si besoin est la grille de coordonnées */
-   private void drawGrid(Graphics g,Rectangle clip,int dx,int dy) {
+   protected void drawGrid(Graphics g,Rectangle clip,int dx,int dy) {
       Projection proj;
       if( isFree() || (proj=getProj())==null ) return;
 
@@ -5482,7 +5489,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       g.setColor(view.gridColor);
       long t = Util.getTime();
       
-      if( calque.gridMode==2 ) {
+      if( calque!=null && calque.gridMode==2 ) {
          g.setFont( new Font("SansSerif",Font.PLAIN,view.gridFontSize) );
          drawGridHpx(g, clip, dx, dy);
          g.setFont(f);

@@ -20,10 +20,19 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import healpix.essentials.FastMath;
+
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Arrays;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JTextField;
 
@@ -601,8 +610,8 @@ public class Repere extends Position {
       //      Point pCenter2=v.getViewCoord(center2.x, center2.y);
 
       for( double theta=0; theta<6.3; theta+=0.1 ) {
-         c.del = dej + radius*Math.sin(theta);
-         c.al  = raj + radius*Math.cos(theta);
+         c.del = dej + radius*FastMath.sin(theta);
+         c.al  = raj + radius*FastMath.cos(theta);
          proj.getXY(c);
          if( Double.isNaN(c.x) ) continue;
          p2=v.getViewCoord(p2, c.x, c.y);

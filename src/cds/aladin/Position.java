@@ -20,6 +20,8 @@
 
 package cds.aladin;
 
+import healpix.essentials.FastMath;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -27,11 +29,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Vector;
-
-import javax.swing.JTextField;
 
 import cds.aladin.Hist.HistItem;
 import cds.tools.Util;
@@ -347,7 +344,7 @@ public class Position extends Obj {
       double x = xv[v.n]-x0;
       double y = yv[v.n]-y0;
       double cost,sint;
-      xv[v.n] = x0+ x*(cost=Math.cos(theta)) - y*(sint=Math.sin(theta));
+      xv[v.n] = x0+ x*(cost=FastMath.cos(theta)) - y*(sint=FastMath.sin(theta));
       yv[v.n] = y0+ x*sint + y*cost;
       setCoord(v);
    }

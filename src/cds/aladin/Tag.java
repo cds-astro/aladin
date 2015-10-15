@@ -20,22 +20,25 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import healpix.essentials.FastMath;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
@@ -545,7 +548,7 @@ public final class Tag extends Position {
    
    /** Changement de fond/bord, (via la roulette) */
    protected void modifyFond(int sens) {
-      fond+= (float)sens*0.2f;
+      fond+= sens*0.2f;
       if( fond>1 ) { fond=0f; bord = bord==0 ? 1 : 0; }
       else if( fond<0 ) { fond=1f; bord = bord==0 ? 1 : 0; }
    }
@@ -631,12 +634,12 @@ public final class Tag extends Position {
          else if( angle>5*Math.PI/4 && angle<7*Math.PI/4 ) y=-L;
          return new Point(x,y);
       }
-      return new Point( (int)Math.round( L*Math.cos(angle) ), (int)Math.round( L*Math.sin(angle) ));
+      return new Point( (int)Math.round( L*Math.cos(angle) ), (int)Math.round( L*FastMath.sin(angle) ));
    }
    
    // Retourne les coordonnées de la poignée de rotation (le tag est en 0,0)
    private Point getXYPoignee() {
-      return new Point( (int)Math.round( dist*Math.cos(angle) ), (int)Math.round( dist*Math.sin(angle) ));
+      return new Point( (int)Math.round( dist*Math.cos(angle) ), (int)Math.round( dist*FastMath.sin(angle) ));
    }
    
    private Font getFont() {

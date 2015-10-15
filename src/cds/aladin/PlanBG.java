@@ -784,7 +784,7 @@ public class PlanBG extends PlanImage {
       p.frame = getCurrentFrameDrawing();
       if( Aladin.OUTREACH ) p.frame = Localisation.GAL;
       setNewProjD(p);
-
+      
       typeCM = aladin.configuration.getCMMap();
       transfertFct = aladin.configuration.getCMFct();
       video = aladin.configuration.getCMVideo();
@@ -818,10 +818,12 @@ public class PlanBG extends PlanImage {
 
    /** Positionne la taille initiale du champ. */
    protected void setDefaultZoom(Coord c,double radius) {
+      setDefaultZoom(c,radius,aladin.view.getCurrentView().getWidth());
+   }
+   protected void setDefaultZoom(Coord c,double radius,int width) {
       initZoom=-1;
       if( radius>0 && c!=null ) {
          double projPixelRes = (projd.rm/60) / projd.r;
-         double width = aladin.view.getCurrentView().getWidth();
          double taille = width * projPixelRes;
          double z = taille/radius;
          initZoom = aladin.calque.zoom.getNearestZoomFct(z);
@@ -1488,19 +1490,27 @@ public class PlanBG extends PlanImage {
       //      }
       //      return b;
    }
-
+   
+   
    /** Retourne la liste des losanges susceptibles de recouvrir la vue pour un order donné */
    protected long [] getPixList(ViewSimple v, Coord center, int order) {
-
-      long nside = CDSHealpix.pow2(order);
-      double r1 = CDSHealpix.pixRes(nside)/3600;
-      double r2 = Math.max(v.getTailleRA(),v.getTailleDE());
-      double radius = Math.max(r1,r2);
-
+      
       try {
          if( center==null ) center = getCooCentre(v);
-         return filterByMoc( getNpixList(order,center,radius), order );
+ 
+         double radius;
+         double r2 = Math.max(v.getTailleRA(),v.getTailleDE());
+         
+         // C'ETAIT BCP TROP LARGE, JE ME RESTREINS DESORMAIS AU CHAMP DE VUE COURANT 
+//         long nside = CDSHealpix.pow2(order);
+//         double r1 = CDSHealpix.pixRes(nside)/3600;
+//         radius = Math.max(r1,r2);
+         radius=r2;
+
+         return filterByMoc( getNpixList(order,center,radius), order ).clone();
+         
       } catch( Exception e ) { if( Aladin.levelTrace>=3 ) e.printStackTrace(); return new long[]{}; }
+      
    }
 
    /** Supprime du tableau les losanges qui sont hors du MOC */
@@ -1874,6 +1884,7 @@ public class PlanBG extends PlanImage {
       double pixSize = v.getPixelSize();
       for( lastMaxOrder=1; lastMaxOrder<RES.length && RES[lastMaxOrder]>pixSize; lastMaxOrder++ );
       lastMaxOrder=adjustMaxOrder(lastMaxOrder,pixSize);
+      
       return lastMaxOrder;
    }
 
@@ -3095,6 +3106,7 @@ public class PlanBG extends PlanImage {
    /** Demande de réaffichage des vues */
    protected void askForRepaint() {
       changeImgID();
+      if( aladin.view==null ) return;
       if( first ) {
          first=false;
          aladin.view.setRepere(this);
@@ -3623,7 +3635,7 @@ public class PlanBG extends PlanImage {
                if( nb[HealpixKey.TOBELOADFROMNET]>0 )   netLoader.wakeUp();
 
                // Pour faire blinker le plan
-               if( oLoading!=loading ) {
+               if( aladin.calque!=null && oLoading!=loading ) {
                   oLoading=loading;
                   aladin.calque.select.repaint();
                }

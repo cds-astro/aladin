@@ -20,8 +20,13 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
+
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
 
 /**
  * JPanel de gestion du Zoom et de la loupe
@@ -35,7 +40,7 @@ import javax.swing.*;
  * @version 0.91 : Revisite le 1 dec 98
  * @version 0.9 : (??) creation
  */
-public final class Zoom extends JPanel {
+public class Zoom extends JPanel {
 
    // Les valeurs generiques
    //   static int mzn[] = {    1,  1,  1,  1, 1, 1, 1, 2 }; // Valeur zoom < 1, Numerateur
@@ -69,6 +74,8 @@ public final class Zoom extends JPanel {
    // Les references aux objets
    //   protected ViewSimple v;      // La vue associée au zoom
    Aladin aladin;
+   
+   protected Zoom() { super(); }
 
    /** Creation du JPanel du zoom.
     * @param calque,aladin References

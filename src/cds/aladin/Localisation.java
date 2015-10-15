@@ -54,7 +54,7 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  * @see aladin.LCoord()
  */
-public final class Localisation extends MyBox {
+public class Localisation extends MyBox {
    // les constantes associees a chaque repere
    static final public int ICRS   = 0;
    static final public int ICRSD  = 1;
@@ -137,6 +137,8 @@ public final class Localisation extends MyBox {
    /* Pour gerer les changements de frame */
    Astrocoo afs = new Astrocoo(AF_ICRS);	// Frame ICRS (la reference de base)
 
+   protected Localisation() { super(); }
+   
    /** Creation de l'objet de localisation. */
    protected Localisation(Aladin aladin) {
       super(aladin,aladin.chaine.getString("POSITION"));

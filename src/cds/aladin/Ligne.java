@@ -20,10 +20,19 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import healpix.essentials.FastMath;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Vector;
 
 import cds.aladin.Hist.HistItem;
 import cds.aladin.prop.Prop;
@@ -939,10 +948,10 @@ public class Ligne extends Position {
                   else theta = -Math.PI/2;
                }
                delta = 3.0*Math.PI/4;
-               int dx1 = (int)( L*Math.cos( theta+delta) );
-               int dy1 = (int)( L*Math.sin( theta+delta) );
-               int dx2 = (int)( L*Math.cos( theta-delta) );
-               int dy2 = (int)( L*Math.sin( theta-delta) );
+               int dx1 = (int)( L*FastMath.cos( theta+delta) );
+               int dy1 = (int)( L*FastMath.sin( theta+delta) );
+               int dx2 = (int)( L*FastMath.cos( theta-delta) );
+               int dy2 = (int)( L*FastMath.sin( theta-delta) );
                g.drawLine(p2.x+dx1,p2.y+dy1,p2.x,p2.y);
                g.drawLine(p2.x,p2.y,p2.x+dx2,p2.y+dy2);
                if( bout==2 ) {

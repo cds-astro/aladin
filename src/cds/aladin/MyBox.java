@@ -21,10 +21,25 @@
 package cds.aladin;
 
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 /**
  * Classe gerant l'affichage conjoint d'un champ d'affichage et d'un champ
@@ -62,6 +77,7 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
 
    static final Font FONT = new Font("Sans serif",Font.BOLD,12);
 
+   protected MyBox() { super(); }
 
    protected MyBox(Aladin aladin,String titre) {
 

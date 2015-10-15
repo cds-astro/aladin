@@ -22,7 +22,11 @@ package cds.aladin;
 import java.awt.Color;
 import java.awt.Label;
 import java.net.URL;
-import java.util.*;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -100,7 +104,7 @@ public final class CreatObj implements Runnable {
 //      a.pixel = new Pixel(a);
 //      trace(1,"Creating Pixel widget");
 
-      a.view = new View(a);
+      a.view = new View(a,a.calque);
       trace(1,"Creating Multiview Panel");
 
       a.help = new Help(a);

@@ -21,7 +21,13 @@
 package cds.aladin;
 
 
-import java.awt.*;
+import healpix.essentials.FastMath;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 import cds.tools.pixtools.CDSHealpix;
 
@@ -292,8 +298,8 @@ protected int loadFits(String filename) throws Exception {
 //   }
 
    private void drawSegment(Graphics g,double x, double y, double angle, double norme, int thickness) {
-      double x1 = x+norme*Math.cos(angle);
-      double y1 = y+norme*Math.sin(angle);
+      double x1 = x+norme*FastMath.cos(angle);
+      double y1 = y+norme*FastMath.sin(angle);
       double dx = (x1-x)/2;
       double dy = (y1-y)/2;
       if (thickness>1 && g instanceof Graphics2D ) {

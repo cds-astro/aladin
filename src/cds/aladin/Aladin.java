@@ -221,7 +221,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.176";
+   static public final    String VERSION = "v8.177";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -2729,7 +2729,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Fin du message d'accueil */
    protected void endMsg() {
-      if( !msgOn ) return;
+      if( !msgOn || cardView==null ) return;
       cardView.show(bigView,"View");
       msgOn=false;
       if( isFullScreen() ) fullScreen.repaint();
@@ -6645,6 +6645,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //      if( n>0 ) pixel.addDebugItem();   // ajout de la possibilité Pixel FITS value
       if( n==0 ) command.println("Trace off");
       else command.println("Trace on (level "+n+")");
+      view.newView();
+      view.repaintAll();
 
    }
 

@@ -20,7 +20,10 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
 
 /**
  * Un segment d'une grille de coordonnées. Celui-ci comporte les éléments suivants
