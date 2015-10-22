@@ -13,9 +13,8 @@ public class ViewSimpleStatic extends ViewSimple {
       setDoubleBuffered(false);
    }
    
-   protected void setViewParam(PlanBG p,String label,int width, int height, Coord c, double radius) {
+   protected void setViewParam(PlanBG p, int width, int height, Coord c, double radius) {
       pref=p;
-      pref.label=label;
       setDimension(width,height);
       p.projd.setProjCenter(c.al, c.del);
       p.setDefaultZoom( c, radius, width);

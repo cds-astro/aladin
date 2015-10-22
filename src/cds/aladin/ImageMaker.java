@@ -40,13 +40,14 @@ public class ImageMaker {
    protected ImageMaker(Aladin aladin,OutputStream output, String label, int width, int height, String fmt, Coord c, double radius) throws Exception {
       
       // Generation d'un PlanBG de travail
-      PlanBG p = new PlanBGStatic(aladin, /* "C:\\Users\\Pierre\\.aladin\\Cache\\Background\\CDS_P_DSS2_color" */
+      PlanBG p = new PlanBGStatic(aladin, label,
+            /* "C:\\Users\\Pierre\\.aladin\\Cache\\Background\\CDS_P_DSS2_color" */
              "http://alasky.u-strasbg.fr/DSS/DSSColor");
       
 //      ViewSimpleStatic vs = (ViewSimpleStatic) aladin.view.getCurrentView();
       ViewSimpleStatic vs = new ViewSimpleStatic(aladin);
       ((ViewStatic)aladin.view).setViewSimple(vs);
-      vs.setViewParam(p, label, width,height, c,radius);
+      vs.setViewParam(p, width,height, c,radius);
       
       // Il me faut un BufferImage de travail
       BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -63,11 +64,11 @@ public class ImageMaker {
       p.drawForeground(g, vs);
       
       // Quelques overlays
-      vs.drawScale(g, vs, 0, 0);
-      vs.drawGrid(g, null, 0, 0);
-      vs.drawLabel(g,0, 0);
-      vs.drawSize(g,0, 0);
-      vs.drawNE(g,p.projd,0, 0);
+//      vs.drawScale(g, vs, 0, 0);
+//      vs.drawGrid(g, null, 0, 0);
+//      vs.drawLabel(g,0, 0);
+//      vs.drawSize(g,0, 0);
+//      vs.drawNE(g,p.projd,0, 0);
       
       // Je génère le flux de l'image finale
       ImageIO.write(img, fmt, output);
@@ -96,8 +97,8 @@ public class ImageMaker {
          t0 = System.currentTimeMillis();
 
          for( int i=0; i<n; i++ ) {
-            FileOutputStream output = new FileOutputStream( new File("/Test"+i+".png"));
-            new ImageMaker(aladin,output, "M101 test", 800,400, "png", new Coord(210.80242,+54.34875/*056.61431,+24.13817*/), 0.2);
+            FileOutputStream output = new FileOutputStream( new File("/Test"+i+".jpg"));
+            new ImageMaker(aladin,output, "M101 test", 15000,15000, "jpeg", new Coord(210.80242,+54.34875/*056.61431,+24.13817*/), 2);
          }
 
          long t1 =System.currentTimeMillis();

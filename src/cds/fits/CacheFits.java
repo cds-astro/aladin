@@ -391,9 +391,11 @@ public class CacheFits {
    private static final int WIDTHAUTOCUT=1024;
 
    // Détermination des cuts d'une image,
+   // @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003)
+   // @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995)
    // et conservation dans un cache pour éviter de refaire plusieurs fois
    // le calcul notamment dans le cas d'une image ouverte en mode "blocs"
-   private double [] findAutocutRange(Fits f) throws Exception {
+   private double [] findAutocutRange(Fits f,double pourcentMin, double pourcentMax) throws Exception {
       String filename = f.getFilename()+f.getMefSuffix();
       double [] cut = cutCache.get(filename);
       if( cut!=null ) return cut;
@@ -420,7 +422,7 @@ public class CacheFits {
 
          f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
          if( context.hasAlternateBlank() ) f1.setBlank( context.getBlankOrig() );
-         cut = f1.findAutocutRange();
+         cut = f1.findAutocutRange(pourcentMin,pourcentMax);
 
          //      System.out.println("cut central: "+cut[0]+" pour "+filename);
 
@@ -434,7 +436,7 @@ public class CacheFits {
                y = i<2 ? gapy : height-WIDTHAUTOCUT-gapy;
                f1.loadFITS(f.getFilename(),f.ext,x,y,z,w,h,d);
                cut1[i] = new Cut();
-               cut1[i].cut = f1.findAutocutRange();
+               cut1[i].cut = f1.findAutocutRange(pourcentMin,pourcentMax);
                //            System.out.println("cut coin "+i+" en ("+x+","+y+"): "+cut1[i].cut[0]);
             }
             cut1[4] = new Cut(); cut1[4].cut = new double[ cut.length ];
@@ -506,13 +508,15 @@ public class CacheFits {
       double [] shape=null;
       double marge=0;
       boolean flagAuto=true;
+      double pourcentMin = context.pourcentMin;
+      double pourcentMax = context.pourcentMax;
 
       // Faut-il retrancher le fond du ciel, et par quelle méthode ?
       if( context.skyvalName!=null ) {
 
          try {
             if( context.skyvalName.equalsIgnoreCase("true") ) {
-               double cut [] = findAutocutRange(f);
+               double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);
                double cutOrig [] = context.getCutOrig();
                skyval = cut[0] - cutOrig[0];
                //               skyval = cut[0];
@@ -524,7 +528,7 @@ public class CacheFits {
                   skyval = skyval - cutOrig[0];
                   flagAuto=false;
                } catch( Exception e ) {
-                  double cut [] = findAutocutRange(f);
+                  double cut [] = findAutocutRange(f,pourcentMin,pourcentMax);
                   double cutOrig [] = context.getCutOrig();
                   skyval = cut[0] - cutOrig[0];
                   //                skyval = cut[0];

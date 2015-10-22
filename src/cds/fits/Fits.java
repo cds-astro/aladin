@@ -662,6 +662,9 @@ final public class Fits {
       height = headerFits.getIntFromHeader("NAXIS2");
       try { depth = headerFits.getIntFromHeader("NAXIS3"); }
       catch( Exception e ) { depth=1; }
+      
+      // ATTENTION RICE IMAGE NON ENCORE SUPPORTEE
+      if( headerFits.getStringFromHeader("ZBITPIX")!=null ) throw new Exception("RICE image not supported");
 
       // Ouverture complète de l'image
       if( w == -1 ) {
@@ -857,7 +860,7 @@ final public class Fits {
             if( is.hasCommentAVM() )  dim = getSizeJPEGPNG(filename);  // il me faut les dimensions a priori
             headerFits = is.createHeaderFitsFromCommentCalib(dim.width,dim.height);
             bidouilleJPEGPNG(headerFits,filename);
-
+            
             // Cas habituel
          }  else {
             moveOnHUD(is, ext);
@@ -868,6 +871,16 @@ final public class Fits {
                if( !skipHDU0 ) return 0;
                headerFits0 = headerFits;   // on garde la première HDU pour recherche éventuel de mots clés
                headerFits = new HeaderFits(is);
+               
+            }
+            
+            // Cas particulier d'une image RICE
+            if( headerFits.getStringFromHeader("ZBITPIX")!=null ) {
+               // Nécessaire pour que la création de la Calib ne se plante pas
+               headerFits.setKeyword("BITPIX", headerFits.getStringFromHeader("ZBITPIX") );
+               headerFits.setKeyword("NAXIS1", headerFits.getStringFromHeader("ZNAXIS1") );
+               headerFits.setKeyword("NAXIS2", headerFits.getStringFromHeader("ZNAXIS2") );
+               headerFits.setKeyword("NAXIS","2");
             }
 
             bitmapOffset = is.getPos();
@@ -878,7 +891,7 @@ final public class Fits {
                bitpix = 0;
             }
          }
-
+         
          if( bitpix == 0 ) code |= COLOR;
 
          try {
@@ -1661,6 +1674,11 @@ final public class Fits {
       }
       return shape;
    }
+   
+   
+   static final private double POURCENT_MIN = 0.003;
+   static final private double POURCENT_MAX = 0.9995;
+   
 
    /**
     * Détermine l'intervalle pour un autocut "à la Aladin".
@@ -1668,7 +1686,18 @@ final public class Fits {
     *         minPix..maxPix
     */
    public double[] findAutocutRange() throws Exception {
-      return findAutocutRange(0, 0, false);
+      return findAutocutRange(0, 0, -1, -1, false);
+   }
+
+   /**
+    * Détermine l'intervalle pour un autocut "à la Aladin".
+    * @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003), -1 pour défaut
+    * @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995), -1 pour défaut
+    * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
+    *         minPix..maxPix
+    */
+   public double[] findAutocutRange(double pourcentMin, double pourcentMax) throws Exception {
+      return findAutocutRange(0, 0, pourcentMin,pourcentMax, false);
    }
 
 
@@ -1678,15 +1707,24 @@ final public class Fits {
     * Rq: pour un cube, on prend la tranche du milieu
     * @param min valeur initiale du cut bas (0 si aucune)
     * @param max valeur initiale du cut haut (0 si aucune)
+    * @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003)
+    * @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995)
     * @param full true si on opère sur toute l'image, sinon juste la partie centrale
     * @return range[0]..[1] => minPixCut..maxPixCut range[2]..[3] =>
     *         minPix..maxPix  range[4]=[0..1]: proportion pixel significatif
     */
-   public double[] findAutocutRange(double min, double max,boolean full) throws Exception {
+   public double[] findAutocutRange(double min, double max, boolean full) throws Exception {
+      return findAutocutRange(min,max,-1,-1,full);
+   }
+   public double[] findAutocutRange(double min, double max,
+         double pourcentMin, double pourcentMax, boolean full) throws Exception {
       double[] range = new double[5];
+      if( pourcentMin==-1 ) pourcentMin=POURCENT_MIN;
+      if( pourcentMax==-1 ) pourcentMax=POURCENT_MAX;
       try {
          if( isReleased() ) reloadBitmap();
-         findMinMax(range, pixels, bitpix, widthCell, heightCell, depthCell, min, max, true, full,0);
+         findMinMax(range, pixels, bitpix, widthCell, heightCell, depthCell, min, max, 
+               pourcentMin, pourcentMax,true, full,0);
       } catch( Exception e ) {
          range[0] = range[2] = min;
          range[1] = range[3] = max;
@@ -1882,11 +1920,14 @@ final public class Fits {
     * @param depth indice de la frame (pour un cube, sinon 0)
     * @param minCut Limite min, ou 0 si aucune
     * @param maxCut limite max, ou 0 si aucune
+    * @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003)
+    * @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995)
     * @param autocut true si on doit appliquer l'autocut
     * @param ntest Nombre d'appel en cas de traitement récursif.
     */
    private void findMinMax(double[] range, byte[] pIn, int bitpix, int width,
-         int height, int depth, double minCut, double maxCut, boolean autocut, boolean full, int ntest)
+         int height, int depth, double minCut, double maxCut, 
+         double pourcentMin, double pourcentMax, boolean autocut, boolean full, int ntest)
                throws Exception {
       int i, j, k;
       boolean flagCut = (ntest > 0 || minCut != 0. && maxCut != 0.);
@@ -1950,12 +1991,15 @@ final public class Fits {
                      if( c == max ) nmax++;
                   }
 
+                  // On mémorise les extremums et les "penultièmes" extremums
                   if( c < min1 && c > min || min1 == min && c < max1 ) min1 = c;
                   else if( c > max1 && c < max || max1 == max && c > min1 ) max1 = c;
                }
             }
          }
 
+         // On ne prend pas en compte les 2 extremums (uniquement si l'intervalle
+         // est plus grand que 256)
          if( autocut && max - min > 256 ) {
             if( min1 - min > max1 - min1 && min1 != Double.MAX_VALUE
                   && min1 != max ) min = min1;
@@ -1989,7 +2033,7 @@ final public class Fits {
 
          // Selection du min et du max en fonction du volume de l'information
          // que l'on souhaite garder
-         int[] mmBean = getMinMaxBean(bean);
+         int[] mmBean = getMinMaxBean(bean,pourcentMin,pourcentMax);
 
          // Verification que tout s'est bien passe
          if( mmBean[0] == -1 || mmBean[1] == -1 ) {
@@ -2003,7 +2047,8 @@ final public class Fits {
          if( mmBean[0] != -1 && mmBean[0] > mmBean[1] - 5 && ntest < 3 ) {
             if( min1 > min ) min = min1;
             if( max1 < max ) max = max1;
-            findMinMax(range, pIn, bitpix, width, height, depth, min, max, autocut, full,
+            findMinMax(range, pIn, bitpix, width, height, depth, 
+                  min, max, pourcentMin, pourcentMax, autocut, full,
                   ntest + 1);
             return;
          }
@@ -2021,11 +2066,11 @@ final public class Fits {
     * Determination pour un tableau de bean[] de l'indice du bean min et du bean
     * max en fonction d'un pourcentage d'information desire
     * @param bean les valeurs des beans provenant de l'analyse d'une image
+    * @param pourcentMin % de l'info ignoré en début d'histogramme (ex: 0.003)
+    * @param pourcentMax % de l'info ignoré en fin d'histogramme (ex: 0.9995);
     * @return mmBean[2] qui contient les indices du bean min et du bean max
     */
-   private int[] getMinMaxBean(int[] bean) {
-      double minLimit = 0.003; // On laisse 3 pour mille du fond
-      double maxLimit = 0.9995; // On laisse 1 pour mille des etoiles
+   private int[] getMinMaxBean(int[] bean, double pourcentMin,double pourcentMax) {
       int totInfo; // Volume de l'information
       int curInfo; // Volume courant en cours d'analyse
       int[] mmBean = new int[2]; // indice du bean min et du bean max
@@ -2042,8 +2087,8 @@ final public class Fits {
          curInfo += bean[i];
          double p = (double) curInfo / totInfo;
          if( mmBean[0] == -1 ) {
-            if( p > minLimit ) mmBean[0] = i;
-         } else if( p > maxLimit ) {
+            if( p > pourcentMin ) mmBean[0] = i;
+         } else if( p > pourcentMax ) {
             mmBean[1] = i;
             break;
          }

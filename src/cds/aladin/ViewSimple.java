@@ -3468,6 +3468,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected int getNbSourceUnderMouse() { return nbSourceUnderMouse; }
 
    public void mouseExited(MouseEvent e) {
+      
       aladin.setMemory();
 
       if( aladin.menuActivated() ) return;

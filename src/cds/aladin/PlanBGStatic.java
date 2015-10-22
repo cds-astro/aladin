@@ -5,10 +5,11 @@ import java.util.Hashtable;
 
 public class PlanBGStatic extends PlanBG {
    
-   PlanBGStatic(Aladin aladin, String url /* ,String sProj */) {
+   PlanBGStatic(Aladin aladin, String label, String url) {
       super(aladin);
       
       this.url = url;
+      this.label = label;
       
       dataMin=pixelMin=0;
       dataMax=pixelMax=255;

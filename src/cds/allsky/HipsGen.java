@@ -189,6 +189,7 @@ public class HipsGen {
          flagMethod=true;
          context.setMethod(val);
 
+      } else if (opt.equalsIgnoreCase("histoPercent")) { context.setHistoPercent(val);
       } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
       } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
@@ -242,6 +243,10 @@ public class HipsGen {
             first=false;
             context.info("Starting HipsGen "+SDF.format(new Date())+" (based on Aladin "+Aladin.VERSION+")...");
          }
+         
+         // Mémorisation de la commande
+         if( context.scriptCommand==null ) context.scriptCommand=arg;
+         else context.scriptCommand+=" "+arg;
 
          // debug
          if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) Context.setVerbose(4);
@@ -483,7 +488,8 @@ public class HipsGen {
                   "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
                   "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
                   "   blank=nn           Specifical BLANK value" + "\n" +
-                  "   skyval=true|key    Fits key to use for removing a sky background, true for automatic detection" + "\n" +
+                  "   skyval=key|true|%info|%min %max   Fits key to use for removing a sky background, true auto detection " + "\n" +
+                  "                      or percents of pixel histogram kept (central ex 99, or min max ex 0.3 99.7)" + "\n" +
                   "   color=jpeg|png     The source images are colored images (jpg or png) and the tiles will be " + "\n" +
                   "                      produced in jpeg (resp. png)" + "\n" +
                   "   shape=...          Shape of the observations (ellipse|rectangle)" + "\n" +

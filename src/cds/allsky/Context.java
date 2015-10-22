@@ -94,6 +94,8 @@ public class Context {
    protected boolean fake=false;             // Activation du mode "just-print norun"
    protected boolean partitioning=true;      // Activation de la lecture par blocs des fimages originales
    public String skyvalName;                 // Nom du champ à utiliser dans le header pour soustraire un valeur de fond (via le cacheFits)
+   public double pourcentMin=-1;             // Pourcentage de l'info à garder en début d'histog. si autocut (ex: 0.003), -1 = défaut
+   public double pourcentMax=-1;             // Pourcentage de l'info à garder en fin d'histog. si autocut (ex: 0.9995), -1 = défaut
    public String expTimeName;                // Nom du champ à utiliser dans le header pour diviser par une valeur (via le cacheFits)
    protected double coef;                    // Coefficient permettant le calcul dans le BITPIX final => voir initParameters()
    protected ArrayList<String> fitsKeys=null;// Liste des mots clés dont la valeur devra être mémorisée dans les fichiers d'index JSON
@@ -129,7 +131,7 @@ public class Context {
    protected String target=null;             // ra,de en deg du "centre" du HiPS s'il est indiqué
    protected String targetRadius=null;       // radius en deg de la taille du premier champ HiPS à afficher
    protected String resolution=null;         // resolution en arcsec du pixel des images originales
-
+   protected String scriptCommand;           // Mémorisation de la commande  script
    protected int targetColorMode = Constante.TILE_PNG;       // Mode de compression des tuiles couleurs
 
    protected ArrayList<String> tileTypes=null;          // Liste des formats de tuiles à copier (mirror) séparés par un espace
@@ -160,7 +162,6 @@ public class Context {
       redInfo=blueInfo=greenInfo=null;
       plansRGB = new String [3];
       cmsRGB = new String [3];
-
    }
 
    // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
@@ -476,6 +477,7 @@ public class Context {
       }
       if( i==1 || i>2 ) throw new Exception("pixelCut parameter error");
    }
+   
    public void setPixelGood(String sGood) throws Exception {
       StringTokenizer st = new StringTokenizer(sGood," ");
       if( pixelGood==null ) pixelGood = new double[]{Double.NaN,Double.NaN};
@@ -485,6 +487,35 @@ public class Context {
          else pixelGood[1] = pixelGood[0];
       } catch( Exception e ) { throw new Exception("pixelGood parameter error"); }
    }
+   
+   /** positionnement des pourcentages pour le cut de l'histogramme, soit
+    * sous la forme d'une seule valeur (pourcentage centrale retenue => ex:99)
+    * soit sous la forme de deux valeurs (pourcentage min et pourcentage max
+    * ex => 0.3 et 99.7
+    * @param sHist
+    * @throws Exception
+    */
+   public void setHistoPercent(String sHist) throws Exception {
+      StringTokenizer st = new StringTokenizer(sHist," ");
+      int n = st.countTokens();
+      
+      try {
+         if( n>2 ) throw new Exception();
+         pourcentMin = Double.parseDouble(st.nextToken())/100.;
+         
+         // Une seule valeur => représente le pourcentage central retenue
+         // ex: 99 => pourcentMin=0.005 et pourcentMax=0.995
+         if( n==1 ) {
+            pourcentMin = (1-pourcentMin)/2;
+            pourcentMax = 1-pourcentMin;
+            
+         // Deux valeurs => représente le pourcentMin et pourcentMax directement
+         } else {
+            pourcentMax = Double.parseDouble(st.nextToken())/100;
+         }
+      } catch( Exception e ) { throw new Exception("histoPercent parameter error"); }
+   }
+
 
    public double [] getPixelRangeCut() throws Exception { return pixelRangeCut; }
 
@@ -741,8 +772,26 @@ public class Context {
 
    public void setRgbCmParam(String cmParam,int c) { cmsRGB[c] = cmParam; }
 
-   public void setSkyval(String fieldName) {
-      this.skyvalName = fieldName.toUpperCase();
+   public void setSkyval(String fieldName) throws Exception {
+      boolean flagNum = false;
+      
+      // S'agit-il de valeurs numériques pour indiquer un
+      // pourcentage de l'histogramme à conserver ?
+      try {
+         StringTokenizer st = new StringTokenizer(fieldName);
+         Double.parseDouble( st.nextToken() );
+         flagNum = true;
+      } catch( Exception e ) { }
+      
+      // Va pour les valeurs numériques
+      if( flagNum ) {
+         this.skyvalName = "true";
+         setHistoPercent(fieldName);
+         
+      // Simple mot clé
+      } else {
+         this.skyvalName = fieldName.toUpperCase();
+      }
    }
 
    public void setExpTime(String expTime) {
@@ -1852,7 +1901,7 @@ public class Context {
          String v;
          // Mise à jour des propriétés
          for( int i=0; i<key.length; i++ ) {
-
+ 
             if( key[i].equals(Constante.KEY_HIPS_RELEASE_DATE) ) {
                // Conservation de la première date de processing si nécessaire
                if( prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null
@@ -1881,8 +1930,17 @@ public class Context {
             if( value[i]!=null && key[i].charAt(0)!='#') {
                if( prop.getProperty("#"+key[i])!=null ) prop.remove("#"+key[i]);
             }
+            
          }
-
+         
+         // Mémorisation des paramètres de générations
+         if( scriptCommand!=null ) {
+            int n=0;
+            while( prop.getProperty("hipsgen_params"+(n==0?"":"_"+n))!=null) n++;
+            prop.add("hipsgen_date"+(n==0?"":"_"+n),getNow());
+            prop.add("hipsgen_params"+(n==0?"":"_"+n),scriptCommand);
+         }
+         
          // Gestion de la compatibilité
          // Pour compatibilité (A VIRER D'ICI UN OU DEUX ANS (2017?))
          prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
@@ -1900,7 +1958,7 @@ public class Context {
             prop.add(Constante.OLD_ISCUBE,"true");
             prop.add(Constante.OLD_CUBE_DEPTH,depth+"");
          }
-
+         
          // Remplacement du précédent fichier
          String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
          File ftmp = new File(tmp);

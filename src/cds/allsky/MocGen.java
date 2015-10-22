@@ -20,16 +20,13 @@
 package cds.allsky;
 
 import java.awt.Dimension;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import cds.aladin.Aladin;
 import cds.aladin.Calib;
 import cds.aladin.Coord;
 import cds.fits.Fits;
-import cds.fits.HeaderFits;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
@@ -327,8 +324,9 @@ public class MocGen {
          int ext = flagFirstHdu ? 0 : flagAllHdu ? i : hdu[i];
          Fits f = new Fits();
          f.setSkipHDU0( flagFirstHdu );
-         try { f.loadHeaderFITS(file.getAbsolutePath()+"["+ext+"]"); } 
-         catch( Exception e ) { return rep; }
+         try {
+            f.loadHeaderFITS(file.getAbsolutePath()+"["+ext+"]");
+         }  catch( Exception e ) { return rep; }
          Calib c = f.getCalib();
          if( c==null ) continue;
 
@@ -562,7 +560,7 @@ public class MocGen {
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +
-      		"Version: 1.4 - based on Aladin "+Aladin.VERSION+" - June 2014 - P.Fernique [CDS]");
+      		"Version: 1.5 - based on Aladin "+Aladin.VERSION+" - Oct 2015 - P.Fernique [CDS]");
    }
    
    // Generation d'un MOC pour toute une hiérarchie de fichiers FITS (ou JPEG/PNG avec calibration)
