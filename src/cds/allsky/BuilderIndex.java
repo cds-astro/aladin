@@ -510,8 +510,16 @@ public class BuilderIndex extends Builder {
       }
 
       long[] npixs;
-      npixs = CDSHealpix.query_polygon(CDSHealpix.pow2(order), cooList);
-
+      long nside = CDSHealpix.pow2(order);
+      double radius = Coord.getDist(center, new Coord(cooList.get(0)[0],cooList.get(0)[1]));
+      
+      // Si le rayon est trop grand on préfèrera une requête pour cone pour
+      // éviter le risque d'un polygone sphérique concave
+      if( radius<30 ) {
+         npixs = CDSHealpix.query_polygon(nside, cooList);
+      } else {
+         npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
+      }
       // pour chacun des losanges concernés
       for (int i = 0; i < npixs.length; i++) {
          long npix = npixs[i];

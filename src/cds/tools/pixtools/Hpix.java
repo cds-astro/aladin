@@ -130,6 +130,18 @@ public final class Hpix extends MocCell {
       return Math.max(d0,d1);
    }
    
+   /** Retourne true si le losange est l'un des 8 coins des poles HEALPix */
+   public boolean isPoleCorner() {
+      long n = CDSHealpix.pow2(order);
+      n *= n;
+      long max = 12*n;
+      for( int i=1; i<=4; i++ ) {
+         long m=n*i;
+         if( npix==m-1 || npix==max-m ) return true;
+      }
+      return false;
+   }
+   
    /** Retourne les coordonnées X,Y des 4 coins du losange dans la projection de
     * la vue ou null si problème */
    public PointD[] getProjViewCorners(ViewSimple v) {

@@ -97,9 +97,10 @@ public class Calque extends JPanel implements Runnable {
    static final protected int PIXEL   = 128;
    static final protected int HPXGRID = 256;
    static final protected int COLORMAP= 512;
+   static final protected int CONST   =1024;
 
-   static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid", "colormap" };
-   static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID, COLORMAP };
+   static final private String [] OVERLAYFLAG = { "scale","label","size","grid","NE","reticle","target","pixel","HPXgrid", "colormap","const" };
+   static final private int [] OVERLAYFLAGVAL = { SCALE,  LABEL,  SIZE,  GRID,  NE,  RETICLE,  TARGET,  PIXEL,  HPXGRID, COLORMAP, CONST };
 
    /** Retourne le champ de bits qui contrôle les overlays */
    public int getOverlayFlag() { return overlayFlag; }
@@ -115,6 +116,7 @@ public class Calque extends JPanel implements Runnable {
    public boolean hasPixel()   { return (overlayFlag & PIXEL)   == PIXEL; }
    public boolean hasHpxGrid() { return (overlayFlag & HPXGRID) == HPXGRID; }
    public boolean hasColormap(){ return (overlayFlag & COLORMAP)== COLORMAP; }
+   public boolean hasConst()   { return (overlayFlag & CONST)   == CONST; }
 
    /** Positionnement d'un flag d'overlay - ex: setOverlayFlag("grid",true);
     * @param name le nom de la fonction d'overlay
@@ -548,6 +550,10 @@ public class Calque extends JPanel implements Runnable {
    protected void setGrid(int mode) {
       gridMode=mode;
       setGrid(mode!=0,false);
+   }
+   
+   protected void setConstellation(boolean mode) {
+      setOverlayFlag("const", mode);
    }
 
    /** Activation/desactivation de la grille */

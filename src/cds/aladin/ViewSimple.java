@@ -1635,7 +1635,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       calque.setObjet(view.newobj);
       if( view.newobj instanceof Ligne && !(view.newobj instanceof Cote) ) ((Ligne)view.newobj).getFirstBout().bout=0;
       if( view.newobj instanceof Tag ) {
-         ((Tag)view.newobj).setDistAngulaireOrig(getProjSyncView());
       }
       view.extendClip(view.newobj);
       aladin.console.printCommand(view.newobj.getCommand());
@@ -4693,7 +4692,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( aladin.view.mustDrawFast() )  return new Coord[0];
       if( oCouverture!=iz) {
          oCouverture=iz;
-         int nseg = Math.max(4,(int)getTaille()/4);
+         int nseg = Math.max(4,(int)getTaille()/6);
          Projection proj=getProj();
          if( isFree() || !Projection.isOk(proj) ) couverture = null;
          else {
@@ -5413,6 +5412,31 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    
    private int getLastGridHpxOrder() { return gridHpxOrder; }
    
+   // Dessine les constellations
+   private void drawConstellation(Graphics g,int dx,int dy) {
+      if( !aladin.calque.hasConst() ) return;
+      if( aladin.view.constellation==null ) aladin.view.constellation = new Constellation(aladin);
+      
+      // Affichage en semi transparence
+      Stroke st = null;
+      if( g instanceof Graphics2D ) {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_ON);
+         st = ((Graphics2D)g).getStroke();
+         ((Graphics2D)g).setStroke(new BasicStroke(0.3f));
+      }
+
+
+      aladin.view.constellation.draw(g,this,dx,dy);
+      
+      if( st!=null ) {
+         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+               RenderingHints.VALUE_ANTIALIAS_OFF);
+         ((Graphics2D)g).setStroke(st);
+      }
+
+   }
+   
    /** Dessine la grille HEALPix */
    private void drawGridHpx(Graphics g,Rectangle clip,int dx,int dy) {
       
@@ -6109,7 +6133,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       else if( rv.width>200 ) g.setFont(Aladin.SBOLD);
       else  g.setFont(Aladin.SSBOLD);
 
-      if( !vs.isPlotView() ) drawForeGround(g,mode,flagBordure);
+      if( !vs.isPlotView() ) {
+         
+         // tracé des constellations
+         drawConstellation(g,dx,dy);
+
+         // Pourtour cache misère
+         drawForeGround(g,mode,flagBordure);
+      }
 
       if( calque.flagOverlay  ) {
          drawLabel(g,dx,dy);
@@ -6118,7 +6149,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if( !vs.isPlotView() )  {
 
-         if( !proj.isXYLinear() && calque.flagOverlay ) {
+        if( !proj.isXYLinear() && calque.flagOverlay ) {
             int x=vs.drawScale(g,vs,dx,dy);
             if( aladin.calque.flagOverlay ) {
                if( isProjSync ) drawSync(g,x+10,rv.height-getMarge()-5,Color.red);
@@ -6153,7 +6184,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Tracé du rainbow
       if( hasRainbow() ) rainbow.draw(g,this,dx,dy);
       if( rainbowF!=null ) rainbowF.draw(g,this,dx,dy);
-
+      
 
       // Juste parce que le drawForeGround cache en partie
       if( dx==0 ) drawBlinkControl(g);

@@ -138,7 +138,9 @@ public class BuilderConcat extends BuilderTiles {
       context.info("Order retrieved from ["+inputPath+"] => "+order);
       
       // Mise à jour des propriétés pour le suivi des addendum
-      addAddendum( context.getInputPath(), context.getOutputPath() );
+     try {
+        addAddendum( context.getInputPath(), context.getOutputPath() );
+     } catch( Exception e ) { e.printStackTrace(); }
 
       String allsky = context.getOutputPath()+Util.FS+"Norder3"+Util.FS+"Allsky.fits";
       if( (new File(allsky)).exists() ) {

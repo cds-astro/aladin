@@ -57,7 +57,7 @@ import cds.tools.Util;
  * @version 1.0 : (5 mai 99) Toilettage du code
  * @version 0.9 : (??) creation
  */
-public final class Tag extends Position {
+public class Tag extends Position {
 
    static private final int MINDIST=3, MAXDIST=300;        // Distances min - max
    static private final int MINFONT=7, MAXFONT=60;          // Taille de la fonte min - max
@@ -642,7 +642,7 @@ public final class Tag extends Position {
       return new Point( (int)Math.round( dist*Math.cos(angle) ), (int)Math.round( dist*FastMath.sin(angle) ));
    }
    
-   private Font getFont() {
+   protected Font getFont() {
       double z = plan!=null ? plan.getScalingFactor() : 1;
       if( z==1 ) return F;
       float size = F.getSize();
@@ -712,7 +712,7 @@ public final class Tag extends Position {
       return p1;
    }
    
-   private void drawLabel(Graphics g,int x, int y) {
+   protected void drawLabel(Graphics g,int x, int y) {
       Dimension dim = getDimLabel();
       Point p = getXYLabel();
       

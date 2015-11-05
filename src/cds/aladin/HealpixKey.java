@@ -1719,7 +1719,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    /** Retourne true si le losange décrit par ses quatres coins est trop
     * grand pour être tracé en une seule fois => subdivision */
-   static final double M = 300*300;
+   static final double M = 280*280;
    static final double N = 150*150;
    static final double RAP=0.7;
 
@@ -1855,12 +1855,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
       else if( b[1]==null ) th=2;
       else if( b[2]==null ) tb=1;
       else { th=0; tb=3; }
+      
+      // Tratement spécifique pour les coins des poles
+      if( !drawFast && (maxParente==-1 || parente<maxParente) && hpix.isPoleCorner() ) {
+         if( (n=drawFils(g,v,parente+1))>0 ) return n;
+      }
 
-      /** Dessin des fils */
+      // Dessin des fils
       if( !drawFast && (b[0]==null || b[1]==null || b[2]==null || b[3]==null) ) {
          if( (n=drawFils(g,v/*,redraw*/))>0 ) return n;
       }
-
+      
       if( th==-1 && tb==-1 ) return 0;
 
       Image img=null;

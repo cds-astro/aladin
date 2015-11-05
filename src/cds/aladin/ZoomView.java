@@ -499,7 +499,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    private short oiz=-2;
    private Projection proj = null;
 
-   private void drawAllSkyControl(Graphics g,ViewSimple v ) {
+   private void drawHipsControl(Graphics g,ViewSimple v ) {
       try {
 
          int w = getWidth();
@@ -560,7 +560,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                   proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
                   v.pref.projd.frame = aladin.localisation.getFrame();
                   v.projLocal = v.pref.projd.copy();
-                  drawAllSkyControl(g, v);
+                  drawHipsControl(g, v);
                   return;
                }
                proj.getXY(c);
@@ -1331,7 +1331,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
 
       // La vue AITOFF pour le mode allsky
       if( v.pref instanceof PlanBG ) {
-         drawAllSkyControl(gr,v);
+         drawHipsControl(gr,v);
          return;
       }
 

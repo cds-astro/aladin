@@ -152,6 +152,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Constellation drawing
  * @beta    <LI> Dynamic display improvements (faster, without GC "stop all" effect)
  * @beta    <LI> MocServer support (remote server of coverages)
  * @beta    <LI> Astrometrical calibration improvements (SCAMP PV, TPV, SINSIP)
@@ -223,7 +224,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v8.178";
+   static public final    String VERSION = "v9.000";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -505,7 +506,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miDel,miDelAll,miPixel,miContour,miSave,miPrint,miSaveG,miScreen,miPScreen,miMore,miNext,
    miLock,miDelLock,miStick,miOne,miNorthUp,
    miProp,miGrid,miNoGrid,miReticle,miReticleL,miNoReticle,
-   miTarget,miOverlay,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
+   miTarget,miOverlay,miConst,miRainbow,miZoomPt,miZoom,miSync,miSyncProj,miCopy1,miPaste,
    /* miPrevPos,miNextPos, */
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
@@ -562,7 +563,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    String MBGKG; // menus pour les backgrounds
 
    // Sous-menus
-   String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,HPXGRID,NOGRID,RETICLE,RETICLEL,NORETICLE,
+   String CMD,MBKM,XMATCH,CALIMG,PIXEL,CONTOUR,GRID,CONST,HPXGRID,NOGRID,RETICLE,RETICLEL,NORETICLE,
    TARGET,OVERLAY,RAINBOW,DEL,DELALL,CALCAT,ADDCOL,ROI,VOTOOL,SIMBAD,VIZIERSED,AUTODIST,/*TIP,*/MSCROLL,
    COOTOOL,PIXELTOOL,CALCULATOR, SESAME,NEW,PREF,
    /*CEA_TOOLS,*/MACRO,TUTO,HELP,HELPSCRIPT,FAQ,MAN,FILTER,FILTERB,
@@ -913,6 +914,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       PIXEL   = chaine.getString("MPIXEL");
       CONTOUR = chaine.getString("MCONTOUR");
       GRID    = chaine.getString("VWMGRID");
+      CONST   = chaine.getString("VWMCONST");
       NOGRID   =chaine.getString("VWMNOGRID");
       RETICLE = chaine.getString("VWMRETICLE");
       RETICLEL= chaine.getString("VWMRETICLEL");
@@ -1119,7 +1121,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                { {MOVERLAY},
                   {CONTOUR},
                   {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
-                  {},{"?"+GRID+"|"+alt+" G"},{"?"+OVERLAY+"|"+alt+" O"},
+                  {},{"?"+GRID+"|"+alt+" G"},{"?"+CONST},{"?"+OVERLAY+"|"+alt+" O"},
                },
                { {MTOOLS},
                   {SESAME+"|"+meta+" R"},{VOTOOL,VOINFO},
@@ -1180,7 +1182,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                //                {MOC,MOCGEN,MOCFILTERING,MOCCROP,MOCM},
                {},{DIST+"|"+alt+" D"},{PHOT},{DRAW},{TAG},
                {},{NTOOL+"|"+alt+" N"},
-               {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},
+               {},{"?"+OVERLAY+"|"+alt+" O"},{"?"+RAINBOW+"|"+alt+" R"},{"?"+TARGET+"|"+alt+" T"},{"?"+CONST+"|"+alt+" C"},
 //               {"?"+GRID+"|"+alt+" G"},/*{"?"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},*/
                {},{"%"+GRID+"|"+alt+" G"},{"%"+HPXGRID+"|"+(macPlateform?"meta shift":"alt")+" W"},{"%"+NOGRID},
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
@@ -1768,6 +1770,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,NORETICLE)) miNoReticle = ji;
       else if( isMenu(m,TARGET))  miTarget  = ji;
       else if( isMenu(m,OVERLAY)) miOverlay = ji;
+      else if( isMenu(m,CONST))   miConst = ji;
       else if( isMenu(m,RAINBOW)) miRainbow = ji;
       else if( isMenu(m,ZOOM))    miZoom    = ji;
       else if( isMenu(m,COPIER))   miCopy1    = ji;
@@ -2905,7 +2908,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    // Pour afficher les nouveautes
    private void newsReport() {
-      glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV8.png", true);
+      glu.showDocument("Http", "http://aladin.u-strasbg.fr/java/NewInV9.png", true);
    }
 
    // Pour affiche la page d'info sur les plugins
@@ -3078,6 +3081,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,TARGET)) { target();
       } else if( isMenu(s,OVERLAY)){ overlay();
       } else if( isMenu(s,RAINBOW)){ rainbow();
+      } else if( isMenu(s,CONST))   { constellation();
       } else if( isMenu(s,NOGRID)) { grid(0);
       } else if( isMenu(s,GRID))   { grid(1);
       } else if( isMenu(s,HPXGRID)){ grid(2);
@@ -3552,6 +3556,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
       calque.setOverlay(miOverlay.isSelected());
       console.printCommand("overlay "+(calque.flagOverlay?"on":"off"));
       calque.repaintAll();
+   }
+
+   /** Activation ou désactivation des constellations */
+   protected void constellation() {
+      boolean flag = miConst.isSelected();
+      calque.setOverlayFlag("const", flag);
+      console.printCommand("setconf overlay="+(flag?"+":"-")+"const");
+      view.repaintAll();
    }
 
    /** Activation ou désactivation de la grille via la Jbar */
@@ -4821,6 +4833,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
             else miHpxGrid.setSelected( true );
          }
          if( miOverlay!=null ) miOverlay.setSelected(calque.flagOverlay);
+         if( miConst!=null ) miConst.setSelected(calque.hasConst());
          if( miRainbow!=null ) {
             miRainbow.setEnabled( view.rainbowAvailable());
             miRainbow.setSelected(view.hasRainbow());

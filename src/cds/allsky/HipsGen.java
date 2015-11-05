@@ -523,7 +523,6 @@ public class HipsGen {
                   "                      or Moc.fits file (all sky by default)" + "\n" +
                   "   maxRatio=nn        Max height/width pixel ratio tolerated for original obs " + "\n" +
                   "                      (default 2, 0 for removing the test)" + "\n" +
-                  //          "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
                   "   fitskeys=list      Fits key list (blank separator) designing metadata FITS keyword value " + "\n" +
                   "                      to memorized in the HiPS index" + "\n" +
                   "   minOrder=nn        Specifical HEALPix min order (only for DETAILS action)" + "\n" +
@@ -532,6 +531,7 @@ public class HipsGen {
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
                   "                      auto-adapted to the HiPS" + "\n" +
+                  "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
                   "   inRed              HiPS red path component (RGB action)\n" +
                   "   inGreen            HiPS green path component (RGB action)\n" +
                   "   inBlue             HiPS blue path component (RGB action)\n" +

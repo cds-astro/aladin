@@ -160,6 +160,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    boolean nextSaisie=true;    // Va remettre a zero saisie a la prochaine frappe
    protected Repere repere;    // Le repère de la position courante
    protected CropTool crop; // Le rectangle de sélection pour un crop
+   protected Constellation constellation; // Tracé des constellations
 
    // Les valeurs a memoriser
    boolean first=true;           // Pour afficher au demarrage du Help

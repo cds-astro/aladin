@@ -114,6 +114,22 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       getRootPane().registerKeyboardAction(new ActionListener() {
          public void actionPerformed(ActionEvent e) { end(); /*full();*/ }
       },
+      
+      
+      KeyStroke.getKeyStroke(KeyEvent.VK_F3,0),
+      JComponent.WHEN_IN_FOCUSED_WINDOW
+            );
+      getRootPane().registerKeyboardAction(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { zoom(1); }
+      },
+      KeyStroke.getKeyStroke(KeyEvent.VK_F2,0),
+      JComponent.WHEN_IN_FOCUSED_WINDOW
+            );
+      getRootPane().registerKeyboardAction(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { zoom(-1); }
+      },
+
+      
       KeyStroke.getKeyStroke(KeyEvent.VK_F11,0),
       JComponent.WHEN_IN_FOCUSED_WINDOW
             );
@@ -148,6 +164,13 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
          public void actionPerformed(ActionEvent e) { hpxGrid(); }
       },
       KeyStroke.getKeyStroke(KeyEvent.VK_W,InputEvent.ALT_MASK),
+      JComponent.WHEN_IN_FOCUSED_WINDOW
+            );
+
+      getRootPane().registerKeyboardAction(new ActionListener() {
+         public void actionPerformed(ActionEvent e) { constellation(); }
+      },
+      KeyStroke.getKeyStroke(KeyEvent.VK_C,InputEvent.ALT_MASK),
       JComponent.WHEN_IN_FOCUSED_WINDOW
             );
 
@@ -339,6 +362,14 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    /** Activation/désactivation de la grille Healpix */
    private void hpxGrid() {
       aladin.calque.setOverlayFlag("hpxgrid", !aladin.calque.hasHpxGrid() );
+      aladin.view.repaintAll();
+   }
+   
+   // Activation/désactivation des constellations
+   private void constellation() {
+      boolean flag = !aladin.calque.hasConst();
+      aladin.calque.setOverlayFlag("const", flag);
+      aladin.console.printCommand("setconf overlay="+(flag?"+":"-")+"const");
       aladin.view.repaintAll();
    }
 

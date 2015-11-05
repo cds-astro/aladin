@@ -2900,6 +2900,9 @@ public final class Command implements Runnable {
             return "";
          }
       }
+      else if( cmd.equalsIgnoreCase("constellation") ) {
+         a.calque.setConstellation( param.equals("off") ? false : true);
+      }
       else if( cmd.equalsIgnoreCase("grid") ) {
          if( param.equalsIgnoreCase("healpix") || param.equalsIgnoreCase("hpx") ) {
 //            if( !a.calque.hasHpxGrid() ) a.calque.setOverlayFlag("hpxgrid", true);
