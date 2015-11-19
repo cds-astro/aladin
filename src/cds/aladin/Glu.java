@@ -776,7 +776,7 @@ public final class Glu implements Runnable {
          if( A.equals(gs.id) || A.equals(gs.label) || A.equals(gs.internalId) ) return i;
          if( mode==1 && Util.indexOfIgnoreCase(gs.label,A)>=0 ) return i;
          if( mode==2 ) {
-            if( gs.internalId.endsWith(A) ) return i;
+            if( gs.internalId!=null && gs.internalId.endsWith(A) ) return i;
 //            if( Util.indexOfIgnoreCase(gs.internalId, A)>=0 ) return i;
 
             int offset = gs.label.lastIndexOf('/');
