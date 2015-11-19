@@ -152,6 +152,7 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> JSON catalog export
  * @beta    <LI> Constellation drawing
  * @beta    <LI> Dynamic display improvements (faster, without GC "stop all" effect)
  * @beta    <LI> MocServer support (remote server of coverages)
@@ -224,7 +225,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.000";
+   static public final    String VERSION = "v9.001";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -241,7 +242,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+
          " - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2015 UDS/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2015 Unistra/CNRS - by CDS - Distributed under GNU GPL v3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -514,7 +515,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
-   miInFold,miConv,miArithm,miMocHips,miMocGenImg,miMocGenCat,miMocOp,miMocToOrder,miMocFiltering,miMocCrop,
+   miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenCat,miMocOp,miMocToOrder,miMocFiltering,miMocCrop,
    miHealpixArithm,miNorm,miBitpix,miPixExtr,miHead,miFlip,
    miSAMPRegister,miSAMPUnregister,miSAMPStartHub,miSAMPStopHub,miLastFile,
    miBroadcastAll,miBroadcastTables,miBroadcastImgs; // Pour pouvoir modifier ces menuItems
@@ -573,7 +574,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    RGB,MOSAIC,BLINK,GREY,SELECT,SELECTTAG,DETAG,TAGSELECT,SELECTALL,UNSELECT,PANEL,
    PANEL1,PANEL2C,PANEL2L,PANEL4,PANEL9,PANEL16,NTOOL,DIST,DRAW,PHOT,TAG,STATSURF,STATSURFCIRC,
    STATSURFPOLY,CUT,TRANSP,TRANSPON,CROP,COPY,CLONE,CLONE1,CLONE2,PLOTCAT,CONCAT,CONCAT1,CONCAT2,TABLEINFO,
-   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCREGION,MOCGENIMGS,MOCGENCAT,
+   SAVEVIEW,EXPORTEPS,EXPORT,BACKUP,FOLD,INFOLD,ARITHM,MOC,MOCGENIMG,MOCGEN,MOCPOL,MOCGENIMGS,MOCGENCAT,
    MOCM,MOCTOORDER,MOCFILTERING,MOCCROP,MOCHELP,MOCLOAD,MOCHIPS,
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
@@ -995,8 +996,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       INFOLD  = chaine.getString("SLMINSFOLD");
       ARITHM  = chaine.getString("MARITHM");
       MOC    =  chaine.getString("MMOC");
+      MOCGEN   =chaine.getString("MMOCGEN");
       MOCGENIMG   =chaine.getString("MMOCGENIMG");
-      MOCREGION = BETAPREFIX + "Extract MOC from current region";
+      MOCPOL =chaine.getString("MMOCGENPOL");
       MOCGENIMGS  =chaine.getString("MMOCGENIMGS");
       MOCGENCAT   =chaine.getString("MMOCGENCAT");
       MOCM     =chaine.getString("MMOCOP");
@@ -1188,7 +1190,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"%"+RETICLE},{"%"+RETICLEL},{"%"+NORETICLE},
             },
             { {MOC},
-               {MOCHIPS},{MOCLOAD},{MOCGENCAT},{MOCGENIMG},{MOCREGION},{},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCGENIMGS},{MOCHELP}
+               {MOCHIPS},{MOCLOAD}, {MOCGEN, MOCPOL, MOCGENCAT,MOCGENIMG,MOCGENIMGS},
+               {},{MOCM},{MOCTOORDER},{},{MOCFILTERING},{MOCCROP},{},{MOCHELP}
             },
             { {MTOOLS},
                {SESAME+"|"+meta+" R"},{COOTOOL},{PIXELTOOL},{CALCULATOR},
@@ -1837,6 +1840,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,MOCCROP) )   miMocCrop  = ji;
       else if( isMenu(m,MOCGENIMG) )   miMocGenImg  = ji;
       else if( isMenu(m,MOCHIPS) )   miMocHips  = ji;
+      else if( isMenu(m,MOCPOL) )   miMocPol  = ji;
       else if( isMenu(m,MOCGENCAT) )   miMocGenCat  = ji;
       else if( isMenu(m,HEALPIXARITHM) ) miHealpixArithm  = ji;
       else if( isMenu(m,NORM) )   miNorm    = ji;
@@ -2877,8 +2881,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
             chaine.getString("CDS")+
             "Authors: Pierre Fernique, Thomas Boch,\n      Anaïs Oberto, François Bonnarel\n" +
             "      (see also the Aladin FAQ for all other contributers)\n \n" +
-            "* Copyright: UDS/CNRS - distributed under GNU GPL v3\n  \n" +
-            "Portions of the code (progressive catalogs, PM facility) have been developped  in the framework of GAIA CU9 (2012-2022)." +
+            "* Copyright: Unistra/CNRS - distributed under GNU GPL v3\n  \n" +
+            "Portions of the code (HiPS & MOCs) have been developped  in the framework of ASTERICS project (2015-2018)." +
+            "Progressive catalogs, PM facility, have been developped  in the framework of GAIA CU9 (2012-2022)." +
             "The outreach mode has been developed in the framework of EuroVO AIDA & ICE projects (2008-2012)." +
             "WCS in JPEG, extended SIA, IDL bridge, FoV advanced integration, Fits cubes, Xmatcher by ellipses, SAMP " +
             "integration have been developed in the framework of the EuroVO VOTech project (2005-2008). " +
@@ -3117,8 +3122,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,SELECTALL)){ selectAll();
       } else if( isMenu(s,UNSELECT)) { unSelect();
       } else if( isMenu(s,TABLEINFO))  { tableInfo(null);
-      } else if( isMenu(s,CLONE1))  { cloneObj(true);
-      } else if( isMenu(s,CLONE2))  { cloneObj(false);
+      } else if( isMenu(s,CLONE1))  { cloneObj(false);
+      } else if( isMenu(s,CLONE2))  { cloneObj(true);
       } else if( isMenu(s,PLOTCAT))  { createPlotCat();
       } else if( isMenu(s,CONCAT1)){ concat(true);
       } else if( isMenu(s,CONCAT2)){ concat(false);
@@ -3158,7 +3163,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,MCLOSE) ){ quit(0);
       } else if( isMenu(s,ARITHM) ){ updateArithm();
       } else if( isMenu(s,MOCGENIMG) ){ updateMocGenImg();
-      } else if( isMenu(s,MOCREGION) ){ createMocRegion();
+      } else if( isMenu(s,MOCPOL) ){ createMocRegion();
       } else if( isMenu(s,MOCGENIMGS) ){ updateMocGenImgs();
       } else if( isMenu(s,MOCGENCAT) ){ updateMocGenCat();
       } else if( isMenu(s,MOCM) )  { updateMocOp();
@@ -3817,6 +3822,25 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       frameMocGenImgs.maj();
    }
+   
+   
+   /**
+    * Détermination de l'ordre pour avoir 50 cellules dans la distance
+    * @param size taille à couvrir (en degrés)
+    * @return order HEALPix approprié
+    */
+   private int getAppropriateOrder(double size) {
+      int order = 4;
+      if( size==0 ) order=HealpixMoc.MAXORDER;
+      else {
+         double pixRes = size/50;
+         double degrad = Math.toDegrees(1.0);
+         double skyArea = 4.*Math.PI*degrad*degrad;
+         double res = Math.sqrt(skyArea/(12*16*16));
+         while( order<HealpixMoc.MAXORDER && res>pixRes) { res/=2; order++; }
+      }
+      return order;
+   }
 
    /**Creation d'un MOC à partir du polygone sélectionné */
    protected void createMocRegion() {
@@ -3824,15 +3848,34 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Obj o = view.vselobj.get(0);
          boolean poly = o instanceof Ligne && ((Ligne)o).isPolygone();
          if( !poly ) return;
+         double maxSize=0;
+         Coord c1=null;
+         boolean first=true;
 
          ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+
+         // On tente dans un sens
          for( Ligne a = ((Ligne)o).getFirstBout(); a.finligne!=null; a=a.finligne ) {
+
+            // Mémorisation de la plus grande diagonale
+            if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
+            else {
+               double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
+               if( size>maxSize ) maxSize=size;
+            }
+
             double theta = Math.PI/2 - Math.toRadians( a.dej );
             double phi = Math.toRadians( a.raj );
             cooList.add(new Vec3(new Pointing(theta,phi)));
          }
 
-         int order=13;
+
+         // L'ordre est déterminé automatiquement par la largeur du polygone
+         int order=getAppropriateOrder(maxSize);
+         trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+         if( order<10 ) order=10;
+         else if( order>29 ) order=29;
+
          Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
          HealpixMoc moc = new HealpixMoc();
          moc.rangeSet = m.getRangeSet();
@@ -3842,8 +3885,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
          //         HealpixMoc moc = new HealpixMoc(s);
 
          calque.newPlanMOC(moc,"Moc reg");
+
       } catch( Exception e ) {
-         e.printStackTrace();
+         if( levelTrace>=3 ) e.printStackTrace();
+         String s = e.getMessage();
+         warning("!!! MOC creation error !"+(s!=null ? "["+s+"]":""),1);
       }
    }
 
@@ -4776,6 +4822,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int nbPlanTranspImg = calque.getNbPlanTranspImg();
          int nbPlanImgWithoutBG = calque.getNbPlanImg(false);
          boolean hasSelectedObj = view.hasSelectedObj();
+         boolean hasMocPol = view.hasMocPolSelected();
          boolean hasSelectedSrc = view.hasSelectedSource();
          boolean hasTagSrc = calque.hasTaggedSrc();
          boolean hasSelectedPlane = pc!=null;
@@ -4912,6 +4959,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miTagSelect!=null ) miTagSelect.setEnabled(hasSelectedSrc);
          //         if( miHistory!=null ) miHistory.setEnabled(treeView!=null);        // IL FAUDRAIT UN TEST isFree()
          if( miArithm!=null ) miArithm.setEnabled(nbPlanImg>0 && !isBG && !isCube);
+         if( miMocPol!=null ) miMocPol.setEnabled(hasMocPol);
          if( miMocHips!=null ) miMocHips.setEnabled( pi instanceof PlanBG && ((PlanBG)pi).hasMoc()
                || base instanceof PlanBG && ((PlanBG)base).hasMoc() );
          if( miMocGenImg!=null ) miMocGenImg.setEnabled( nbPlanImg>0 );
@@ -5051,23 +5099,24 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    static private final String USAGE =
          "Usage: Aladin [options...] [filenames...]\n"+
-               "       Aladin -chart=\"[server[,server...]\" object\n"+
                "       Aladin -hipsgen ...\n"+
                "       Aladin -mocgen ...\n"+
                "       Aladin -help\n"+
                "       Aladin -version\n"+
                "\n"+
                "   Options:\n"+
+               "       -help: display this help\n"+
+               "       -version: display the Aladin release number\n"+
                "       -local: without Internet test access\n"+
                "       -screen=\"full|cinema|preview\": starts Aladin in full screen\n" +
                "               cinema mode or in a simple preview window\n"+
-               "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
-               "               additionnal data servers compatible with Aladin \n"+
-               "       -stringfile=\"pathname[;...]\": string files for additionnal\n" +
-               "               supported languages\n"+
-               "       -scriptfile=\"pathname|url[;...]\": script by local files or url \n"+
+//               "       -glufile=\"pathname|url[;...]\": local/remote GLU dictionaries describing\n"+
+//               "               additionnal data servers compatible with Aladin \n"+
+//               "       -stringfile=\"pathname[;...]\": string files for additionnal\n" +
+//               "               supported languages\n"+
+//               "       -scriptfile=\"pathname|url[;...]\": script by local files or url \n"+
                "       -script=\"cmd1;cmd2...\": script commands passed by parameter\n"+
-               "       -nogui: no graphical interface (for script mode only) " +
+               "       -nogui: no graphical interface (for script mode only)\n" +
                "               => noplugin, nobanner, nobookmarks, nohub\n"+
                "       -nobanner: no Aladin banner\n"+
                "       -noreleasetest: no Aladin new release test\n"+
@@ -5079,18 +5128,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
                "       -[no]proto: with/without prototype features for demonstrations and tests\n"+
                "       -trace: trace mode for debugging purpose\n"+
                "       -debug: debug mode (very verbose)\n"+
-               "\n"+
-               "       -chart=: build a png field chart directly on stdout\n"+
-               "       -hipsgen: build HEALPix progressive sky by script (see -hipsgen -h for help)\n"+
+//               "       -chart=: build a png field chart directly on stdout\n"+
+                "\n"+
+               "       -hipsgen: build HiPS by script (see -hipsgen -h for help)\n"+
                "       -mocgen: build MOC by script (see -mocgen -h for help)\n"+
-               "       -help: display this help\n"+
-               "       -version: display the Aladin release number\n"+
                "\n"+
                "   The files specified in the command line can be :\n"+
                "       - images: FITS (gzipped,RICE,MEF,...), HEALPix maps, JPEG,GIF,PNG\n"+
                "       - tables: FITS, XML/VOTable, CSV, TSV, S-extractor, IPAC-TBL, Skycat or ASCII tables\n"+
                "       - graphics: Aladin or IDL or DS9 regions, MOCs\n"+
-               "       - directories: all-sky HEALPix folders\n"+
+               "       - directories: HiPS\n"+
                "       - Aladin backup : \".aj\" extension\n"+
                "       - Aladin scripts : \".ajs\" extension\n"+
                "";

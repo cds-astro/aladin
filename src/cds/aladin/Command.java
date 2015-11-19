@@ -1311,14 +1311,18 @@ public final class Command implements Runnable {
 
       else if( propertie.equalsIgnoreCase("timeout") ) {
          int n;
-         if( param.equals("off") ) n=0;
-         else n=Integer.parseInt(param);
+         if( value.equals("off") ) n=0;
+         else n=Integer.parseInt(value);
          timeout=n*60000;
          return "";
       }
 
-      else if( propertie.equalsIgnoreCase("overlays") ) {
-         a.calque.setOverlayList(value);
+      else if( propertie.equalsIgnoreCase("overlays") || propertie.equalsIgnoreCase("overlay")) {
+         try {
+            a.calque.setOverlayList(value);
+         } catch( Exception e) {
+            return "!!! "+e.getMessage();
+         }
          a.calque.repaintAll();
          return "";
       }
@@ -2644,7 +2648,10 @@ public final class Command implements Runnable {
                else s1=exec(cmd,verbose,flagOnlyFunction);
             }
 
-            if( s1!=null && s1.length()>0 ) rep.append(s1);
+            if( s1!=null && s1.length()>0 ) {
+               if( s1.startsWith("!!!") ) printConsole(s1);
+               rep.append(s1);
+            }
             i++;
          } catch( Exception e ) {
             if( a.levelTrace==3 ) e.printStackTrace();
@@ -3145,7 +3152,7 @@ public final class Command implements Runnable {
          else {
             Plan p=null;
             Plan plan = getNumber(p1,1,false,false);
-            if( plan==null || p2.length()==0 ) {   // plan par défaut (
+            if( plan==null && p2.length()==0 ) {   // plan par défaut (
                p2=p1;
                p = a.calque.getFirstSelectedPlan();
             } else p = plan;
@@ -4150,6 +4157,7 @@ public final class Command implements Runnable {
                "hide Contours;" +
                "select ESO*;" +
                "zoom 1x;" +
+               "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" +
                "backup back.aj;" +
                "reset;" +
                "pause 2;" +
@@ -4159,11 +4167,11 @@ public final class Command implements Runnable {
                "rm DSS*;" +
                "rm Contours~1;" +
                "show Contours;" +
-               "Gauss = conv Skw* gauss(fwhm=10\",radius=12);" +
                "Gauss1 = Gauss;" +
                "set Gauss1 FITS:CRPIX1=203;" +
                "Gauss = Gauss / Gauss1;" +
                "rm Gauss1;" +
+               "cview Gauss;" +
                "setconf frame=Gal;"+
                "184.57316 -05.83741;" +
                "flipflop Gauss V;" +
@@ -4171,8 +4179,8 @@ public final class Command implements Runnable {
                "rm Gauss;" +
                "rm A2;" +
                "Cube=blink Sk* Crop ESO*;" +
-               "rm Sk*;" +
                "PR=get Press;" +
+               "cview Sk* A2;" +
                "set PR opacity=65;" +
                "rm A2;" +
                "pause 2;" +

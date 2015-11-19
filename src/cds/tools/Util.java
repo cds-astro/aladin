@@ -1378,8 +1378,8 @@ public final class Util {
          HttpURLConnection conn = (HttpURLConnection) url.openConnection();
          conn.setRequestMethod("HEAD");
          int code = conn.getResponseCode();
-         //          System.out.println(url+" => ["+code+"]");
-         //          if( code/100 == 4 ) return false;
+//                   System.out.println(url+" => ["+code+"]");
+//                   if( code/100 == 4 ) return false;
          return code/100 == 2;
       } catch( Exception e ) { }
       return false;
@@ -1973,6 +1973,22 @@ public final class Util {
       return res.toString();
    }
 
+   /** Backslash ce qu'il faut en JSON */
+   static public String escapeJSON( String s ) {
+      if( s.indexOf('"')<0 && s.indexOf('\\')<0 ) return s;
+      char [] a = s.toCharArray();
+      StringBuilder s1 = new StringBuilder(a.length);
+      for( int i=0; i<a.length; i++ ) {
+         char ch = a[i];
+         if( ch=='"' ) s1.append('\\');
+         else if( ch=='\\' && i<a.length-1 ) {
+            char ch1=a[i+1];
+            if( ch1!='n' && ch1!='t' ) s1.append('\\');
+         }
+         s1.append(ch);
+      }
+      return s1.toString();
+   }
 
 
    // PAS ENCORE TESTE

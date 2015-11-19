@@ -20,14 +20,32 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import cds.tools.Util;
 
@@ -1701,7 +1719,7 @@ Runnable, SwingWidgetFinder, Widget {
    public WidgetControl getWidgetControl() { return voc; }
 
    @Override
-   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+   public void createWidgetControl(int x, int y, int width, int height, float opacity, JComponent parent) {
       voc = new WidgetControl(this,x,y,width,height,opacity,parent);
       voc.setResizable(true);
    }

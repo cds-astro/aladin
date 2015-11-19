@@ -110,6 +110,11 @@ public final class Save extends JFrame implements ActionListener {
    static final int PNG=8;
    static final int LK=16;
    static final int LK_FLEX=32;
+   
+   // Modes de sauvegarde pour un catalogue
+   static final private int TSV  = 0;
+   static final private int JSON = 1;
+   static final private int XML  = 2;
 
    /** Retourne la liste des formats supportés pour le save View */
    static protected String [] getFormat() { return FORMAT; }
@@ -158,7 +163,7 @@ public final class Save extends JFrame implements ActionListener {
    int nbSavePlan;
    JComboBox format,format1;
    JCheckBox [] cbPlan;
-   JRadioButton tsvCb, votCb;
+   JRadioButton tsvCb, votCb, jsonCb;
    JRadioButton jsonMocCb, fitsMocCb;
    JRadioButton fitsCb, jpgCb, pngCb;
    JLabel info;
@@ -389,7 +394,7 @@ public final class Save extends JFrame implements ActionListener {
                break;
             case Plan.ALLSKYCAT:
             case Plan.CATALOG:
-               res&=saveCatalog(f,p,tsvCb.isSelected());
+               res&=saveCatalog(f,p,tsvCb.isSelected()? TSV : jsonCb!=null && jsonCb.isSelected() ? JSON : XML);
                break;
             case Plan.IMAGE:
             case Plan.IMAGERSP:
@@ -496,11 +501,14 @@ public final class Save extends JFrame implements ActionListener {
          ButtonGroup cg = new ButtonGroup();
          tsvCb = new JRadioButton("TSV");      tsvCb.setActionCommand("TSV");
          votCb = new JRadioButton("VOTABLE");  votCb.setActionCommand("VOTABLE");
-         cg.add(tsvCb); cg.add(votCb); tsvCb.setSelected(true);
+         jsonCb = new JRadioButton("JSON");    jsonCb.setActionCommand("JSON");
+         cg.add(tsvCb); cg.add(votCb); cg.add(jsonCb); tsvCb.setSelected(true);
          pFormat.add(tsvCb);
          pFormat.add(votCb);
+         pFormat.add(jsonCb);
          tsvCb.addActionListener(this);
          votCb.addActionListener(this);
+         jsonCb.addActionListener(this);
          c.gridwidth = 1;
          if( !noImage || !noMoc ) c.gridwidth = GridBagConstraints.REMAINDER;
          g.setConstraints(pFormat,c); p.add(pFormat);
@@ -785,16 +793,18 @@ public final class Save extends JFrame implements ActionListener {
     * on modifie le suffixe des noms de fichiers
     */
    private void changeCatFormat() {
-      boolean tsv = tsvCb.isSelected();
-      String newSuffix = tsv?".txt":".xml";
-      String oldSuffix = tsv?".xml":".txt";
+      
+      System.out.println("changeCatFormat");
+      
+      String newSuffix = tsvCb.isSelected() ? ".txt" : jsonCb!=null && jsonCb.isSelected() ? ".json" : ".xml";
 
       for( int i=0; i<listPlan.length; i++ ) {
          Plan p =listPlan[i];
          if( p==null || !p.isCatalog() ) continue;
          String label = fileSavePlan[i].getText();
-         if( !label.endsWith(oldSuffix) ) continue;
-         fileSavePlan[i].setText(label.substring(0, label.length()-4)+newSuffix);
+         int offset = label.lastIndexOf(".");
+         if( offset==-1 ) offset=label.length();
+         fileSavePlan[i].setText(label.substring(0, offset)+newSuffix);
       }
    }
 
@@ -1319,8 +1329,9 @@ public final class Save extends JFrame implements ActionListener {
       return rep;
    }
 
-   protected boolean saveCatalog(File file, Plan p ,boolean tsv) {
-      if( tsv ) return saveCatTSV(file,p);
+   protected boolean saveCatalog(File file, Plan p ,int mode) {
+      if( mode==TSV ) return saveCatTSV(file,p);
+      else if( mode==JSON ) return saveCatJSON(file,p);
       else return saveCatVOTable(file,p,false);
    }
 
@@ -1363,7 +1374,7 @@ public final class Save extends JFrame implements ActionListener {
     * @¶eturn boolean true si sauvegarde s'est deroulee correctement, false sinon
     */
    protected boolean saveToolTSV(File file,Plan p) {
-      StringBuffer s = new StringBuffer(MAXBUF);
+      StringBuilder s = new StringBuilder(MAXBUF);
       Pcat pcat = p.pcat;
       FileOutputStream f=null;
 
@@ -1402,7 +1413,7 @@ public final class Save extends JFrame implements ActionListener {
             // flush intermédiaire si nécessaire, et final
             if( s.length()>MAXBUF-100 || i==nb) {
                f=writeByteTSV(f,file,0,s);
-               s = new StringBuffer(MAXBUF);
+               s = new StringBuilder(MAXBUF);
             }
          }
       }catch(Exception e) {
@@ -1424,7 +1435,7 @@ public final class Save extends JFrame implements ActionListener {
     * @¶eturn boolean true si sauvegarde s'est deroulee correctement, false sinon
     */
    protected boolean saveCatTSV(File file,Plan p) {
-      StringBuffer s = new StringBuffer(MAXBUF);
+      StringBuilder s = new StringBuilder(MAXBUF);
       Pcat pcat = p.pcat;
       int nbTable=0;
       FileOutputStream f=null;
@@ -1440,6 +1451,7 @@ public final class Save extends JFrame implements ActionListener {
 
             // Ecriture de la table courante (ou de sa fin)
             if( o==null || o.leg!=leg ) {
+               if( i<nb ) s.append(CR);
                f=writeByteTSV(f,file,nbTable,s);
                if( o==null ) {
                   f.close();
@@ -1449,7 +1461,7 @@ public final class Save extends JFrame implements ActionListener {
 
                // Recherche de la la légende de la prochaine table
                if( o!=null ) {
-                  s = new StringBuffer(MAXBUF);
+                  s = new StringBuilder(MAXBUF);
                   leg = (o).leg;
                   s.append(getShortHeader(leg));
                }
@@ -1459,7 +1471,7 @@ public final class Save extends JFrame implements ActionListener {
             // flush intermédiaire si nécessaire
             if( s.length()>MAXBUF ) {
                f=writeByteTSV(f,file,nbTable,s);
-               s = new StringBuffer(MAXBUF);
+               s = new StringBuilder(MAXBUF);
             }
          }
       }catch(Exception e) {
@@ -1472,6 +1484,71 @@ public final class Save extends JFrame implements ActionListener {
       return true;
    }
 
+   
+   /**
+    * Sauvegarde JSON d'un plan catalogue
+    * @param file le fichier dans lequel sauvegarder
+    * @param p plan catalogue a sauvegarder en JSON
+    * @param verbose true pour mémoriser dans le pad la commande script correspondante
+    * @¶eturn boolean true si sauvegarde s'est deroulee correctement, false sinon
+    */
+   protected boolean saveCatJSON(File file,Plan p) {
+      StringBuilder s = new StringBuilder(MAXBUF);
+      Pcat pcat = p.pcat;
+      int nbTable=0;
+      FileOutputStream f=null;
+      boolean first=true;
+
+      try{
+         Legende leg = ((PlanCatalog)p).getFirstLegende();
+         s.append("{");
+
+         int nb = pcat.getCount();
+         Iterator<Obj> it = pcat.iterator();
+         for( int i=0; i<=nb; i++ ) {
+            Source o = (Source)(i<nb?it.next():null);
+
+            // Ecriture de la table courante (ou de sa fin)
+            if( o==null || o.leg!=leg ) {
+               s.append(CR+"}"+CR);
+               f=writeByteTSV(f,file,nbTable,s);
+               if( o==null ) {
+                  f.close();
+                  f=null;
+               }
+               nbTable++;
+
+               // Recherche de la la légende de la prochaine table
+               if( o!=null ) {
+                  s = new StringBuilder(MAXBUF);
+                  leg = o.leg;
+                  s.append(","+CR+"{");
+               }
+            }
+            if( o!=null ) {
+               if( !first ) s.append(",");
+               s.append(CR);
+               s.append("   "+getJSON(leg,o));
+               first=false;
+            }
+
+            // flush intermédiaire si nécessaire
+            if( s.length()>MAXBUF ) {
+               f=writeByteTSV(f,file,nbTable,s);
+               s = new StringBuilder(MAXBUF);
+            }
+         }
+      }catch(Exception e) {
+         errorFile=errorFile+"\n"+file;
+         return false;
+      }
+
+      aladin.log("export","catalog JSON");
+
+      return true;
+   }
+
+
    /** Ecriture de s dans le fichier déjà ouvert f ou qu'il faut ouvrir via
     * file et nbTable. Retourne le descripteur du fichier
     * @param f Descripteur de fichier si déjà ouvert, sinon null
@@ -1482,7 +1559,7 @@ public final class Save extends JFrame implements ActionListener {
     * @throws Exception
     */
    private FileOutputStream writeByteTSV(FileOutputStream f, File file,
-         int nbTable, StringBuffer s) throws Exception {
+         int nbTable, StringBuilder s) throws Exception {
       if( f==null ) {
          if( nbTable>0 ) file=nextSuffixFile(file,nbTable);
          file.delete();
@@ -2856,7 +2933,7 @@ public final class Save extends JFrame implements ActionListener {
    /** Recuperation des infos liees a une source sous forme d'une chaine d'infos séparées
     * par "sep" (deballage des marques GLU) */
    static protected String getSourceInfo(Source o,String sep) {
-      StringBuffer s = new StringBuffer();
+      StringBuilder s = new StringBuilder();
 
       StringTokenizer st = new StringTokenizer(o.info,"\t");
       st.nextElement();     // On saute le triangle
@@ -2868,9 +2945,28 @@ public final class Save extends JFrame implements ActionListener {
 
       return s.toString();
    }
+   
+   
+   /** retourne la ligne des données au format JSON { "cle": "valeur", ... } */
+   static protected String getJSON(Legende leg,Source o) {
+      StringBuilder s = new StringBuilder();
+      boolean first=true;
+      
+      s.append("{ ");
+      String [] values = o.getValues();
 
-   /** Construction d'un header TSV A a partir d'une legende
-    */
+      for( int i=0; i<leg.field.length; i++ ) {
+         Field f = leg.field[i];
+         if( !f.visible ) continue;
+         if( !first ) s.append(", ");
+         s.append( "\""+Util.escapeJSON(f.name)+"\": \""+ Util.escapeJSON(values[i]) +"\"" );
+         first=false;
+      }
+      s.append(" }");
+      return s.toString();
+   }
+
+   /** Construction d'un header TSV A a partir d'une legende */
    protected String getShortHeader(Legende leg) {
       int i;
       StringBuffer s = new StringBuffer();
@@ -2904,7 +3000,7 @@ public final class Save extends JFrame implements ActionListener {
       else if( CHOICE[EXPORTPLANS].equals(what) ) exportPlans();
       else if( Aladin.BETA && CHOICE[ALLVIEWS].equals(what) ) saveFile(2,getCodedFormat(format1.getSelectedIndex()),-1);
       //      else if( CHOICE[5].equals(what) ) aladin.saveHTML();
-      else if( evt.target instanceof Checkbox && tsvCb!=null ) changeCatFormat();
+      else if( evt.target instanceof Checkbox && (tsvCb!=null ) ) changeCatFormat();
       else if( evt.target instanceof Checkbox && fitsCb!=null ) changeImgFormat();
       else if( evt.target instanceof Checkbox && fitsMocCb!=null ) changeMocFormat();
       return true;

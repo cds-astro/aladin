@@ -476,8 +476,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    /** True si le plan de référence de cette vue peut être forcée Nord en haut */
    protected boolean canBeNorthUp() {
-      return !isFree() && Projection.isOk(pref.projd) /* && pref.isImage() */
-            && (!(pref instanceof PlanBG) || pref instanceof PlanBG && pref.projd.rot!=0 )
+      Projection proj = getProj();
+      return !isFree() && Projection.isOk(proj) /* && pref.isImage() */
+            && (!(pref instanceof PlanBG) || pref instanceof PlanBG && proj.rot!=0 )
             && !isProjSync();
    }
 
@@ -485,7 +486,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    protected boolean switchNorthUp() {
       if( !canBeNorthUp() ) return false;
       if( pref instanceof PlanBG ) {
-         pref.projd.setProjRot(0);
+//         pref.projd.setProjRot(0);
+         getProj().setProjRot(0);
       } else {
          Coord coo = getCooCentre();
          northUp=!northUp;
@@ -4439,7 +4441,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                if( memImg==null  ) {
                   if( p.type==Plan.IMAGECUBERGB ) memImg = new MemoryImageSource(w,h,p.cm, pixelsRGB, 0,w);
                   else memImg = new MemoryImageSource(w,h,p.cm,pixels, 0, w);
-                  //System.out.println("PlanImageBlink create new memImg "+memImg);
                   memImg.setAnimated(true);
                } else {
                   //                  memImg.newPixels();
@@ -6464,6 +6465,7 @@ g.drawString(s,10,100);
          drawBackground(gr);
          drawBordure(gr);
          if( gr!=null ) {
+            if( aladin.levelTrace>=3 ) e.printStackTrace();
             gr.setColor(Color.red);
             gr.drawString("Repaint error ("+e.getMessage()+")",10,15);
          }
@@ -6647,18 +6649,19 @@ g.drawString(s,10,100);
 
       // La toolbox
       int width = -1;
-      int height = 280;
+      int height = 200;
       aladin.toolBox.createWidgetControl(/*25*/MG,40,width,height,-1f,this);
       widgetControl.addWidget( aladin.toolBox );
 
       // La pile
-      aladin.calque.select.createWidgetControl(getWidth()-aladin.calque.select.getWidth()-MG,50,-1,-1,0.7f,this);
+      aladin.calque.select.createWidgetControl(getWidth()-aladin.calque.select.getWidth()-MG,50,-1,100,0.7f,this);
       widgetControl.addWidget( aladin.calque.select );
 
       // Le zoomView
       int x = getWidth()-aladin.calque.zoom.zoomView.SIZE-75;
       int y = getHeight()-aladin.calque.zoom.zoomView.SIZE-MG;
       aladin.calque.zoom.zoomView.createWidgetControl(x,y,aladin.calque.zoom.zoomView.SIZE,aladin.calque.zoom.zoomView.SIZE,0.7f,this);
+      
       widgetControl.addWidget( aladin.calque.zoom.zoomView );
 
       //Et les mesures

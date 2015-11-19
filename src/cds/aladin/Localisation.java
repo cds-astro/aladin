@@ -285,6 +285,14 @@ public class Localisation extends MyBox {
       text.requestFocusInWindow();
       text.setCaretPosition(text.getText().length());
    }
+   
+   // Pause pouvant être interrompue prématurément
+   private void myPause(int delai) {
+      long start=System.currentTimeMillis();
+      while( !flagStopInfo && System.currentTimeMillis()-start < delai ) {
+         Util.pause(20);
+      }
+   }
 
    protected void infoStart() {
       if( !aladin.calque.isFree() || text.getText().length()>0  || aladin.dialog==null || aladin.dialog.isVisible() ) return;
@@ -302,11 +310,11 @@ public class Localisation extends MyBox {
                if( !flagStopInfo ) {
                   text.setText("");
                   text.setForeground(Color.gray);
-                  Util.pause(100);
+                  myPause(100);
                }
                if( !flagStopInfo ) {
                   text.setText(s);
-                  Util.pause(1500);
+                  myPause(1500);
                }
             }
             if( flagStopInfo ) {

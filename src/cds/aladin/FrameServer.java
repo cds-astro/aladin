@@ -20,22 +20,44 @@
 
 package cds.aladin;
 
-import cds.tools.TwoColorJTable;
-import cds.tools.Util;
-
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParserException;
+
+import cds.tools.TwoColorJTable;
+import cds.tools.Util;
 
 /**
  * Gestion de la fenetre associee à la sélection des servers VO pour AllVO
@@ -335,7 +357,7 @@ public final class FrameServer extends JFrame implements ActionListener,KeyListe
    /** Coche ou non (flag) tous les serveurs d'un type donnée (Server.CATALOG... (-1 pour tous)) */
    protected void check(int type,boolean flag) {
       for( int i=0; i<aladin.dialog.server.length; i++ ) {
-         if( !aladin.dialog.server[i].filterAllVO ) continue;
+         if( flag && !aladin.dialog.server[i].filterAllVO ) continue;
          if( aladin.dialog.server[i].cbAllVO==null ) continue;
          if( type!=-1 && aladin.dialog.server[i].type!=type ) continue;
          aladin.dialog.server[i].cbAllVO.setSelected(flag);

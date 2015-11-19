@@ -133,7 +133,7 @@ public class Calque extends JPanel implements Runnable {
 
    /** Mise à jour des flags d'overlays (les noms séparés par une simple virgule).
     * Si la liste commence par '+' ou '-', il s'agit d'une mise à jour */
-   public void setOverlayList(String names) {
+   public void setOverlayList(String names) throws Exception {
       int mode = 0;
       if( names.length()>1 ) {
          if( names.charAt(0)=='+' ) { mode=1; names=names.substring(1); }
@@ -147,6 +147,7 @@ public class Calque extends JPanel implements Runnable {
          String name = tok.nextToken().trim();
          int i = Util.indexInArrayOf(name, OVERLAYFLAG, true);
          if( i>=0 ) mask |= OVERLAYFLAGVAL[i];
+         else throw new Exception("overlay parameter unknown ["+name+"]");
       }
       if( mode==1 ) overlayFlag |= mask;
       else overlayFlag &= ~mask;
@@ -191,7 +192,9 @@ public class Calque extends JPanel implements Runnable {
       flagSimbad = aladin.configuration.getSimbadFlag();
       flagVizierSED = aladin.configuration.getVizierSEDFlag();
 
-      setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
+      try {
+         setOverlayList("label,scale,size,NE,target,reticle,target,pixel");
+      } catch( Exception e) {}
 
       // Panel principal : contient le selecteur de plans et le zoom
       setLayout( new BorderLayout(0,5) );

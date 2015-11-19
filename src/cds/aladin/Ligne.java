@@ -300,8 +300,7 @@ public class Ligne extends Position {
       //      if( p instanceof PlanBG ) return false;  // POUR LE MOMENT
       return p.hasAvailablePixels();
    }
-
-
+   
    /** Redessine tout le polygone avec un aplat - ne fonctionne que pour le dernier segment */
    private void fillPolygon(Graphics g,ViewSimple v,int dx, int dy) {
       if( bout!=3 ) return;

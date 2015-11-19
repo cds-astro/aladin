@@ -21,6 +21,8 @@ package cds.allsky;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -314,21 +316,37 @@ public class BuilderMirror extends BuilderTiles {
          try {
             URL u = new URL(fileIn);
             URLConnection conn = u.openConnection();
-            lastModified = conn.getLastModified();
+            HttpURLConnection httpc = (HttpURLConnection)conn;
+//            httpc.setRequestMethod("HEAD");
+            lastModified = httpc.getLastModified();
 
             fOut = new File(fileOut);
             if( fOut.exists() && fOut.length()>0 ) {
-               size = conn.getContentLength();
+               size = httpc.getContentLength();
                if( size==fOut.length() && lastModified<=fOut.lastModified() ) {
-                  if( conn instanceof HttpURLConnection ) ((HttpURLConnection)conn).disconnect();
+//                  httpc.disconnect();   => Coupe le keep-alive
+                  InputStream es = httpc.getInputStream();
+                  byte [] buf1 = new byte[512];
+                  while( es.read(buf1) > 0) { }
+                  es.close();  
                   return 0;  // déjà fait
                }
             }
-
-            dis = new MyInputStream(conn.getInputStream());
-            buf = dis.readFully();
-            dis.close();
-            dis=null;
+            
+//            httpc.setRequestMethod("GET");
+            dis = new MyInputStream(httpc.getInputStream());
+            try {
+               buf = dis.readFully();
+               dis.close();
+               dis=null;
+               
+            // Vidange du flux d'erreur => nécessaire pour Keepalive
+            } catch( IOException e ) {
+               InputStream es = httpc.getErrorStream();
+               byte [] buf1 = new byte[512];
+               while( es.read(buf1) > 0) { }
+               es.close();  
+            }
          } finally { if( dis!=null ) try{ dis.close(); } catch( Exception e) {}  }
 
          RandomAccessFile f = null;

@@ -3546,7 +3546,7 @@ public class PlanBG extends PlanImage {
             ArrayList<HealpixKey> list = new ArrayList<HealpixKey>();
             Enumeration<HealpixKey> e = pixList.elements();
             while( e.hasMoreElements() ) list.add(e.nextElement());
-            Collections.sort(list);
+            try { Collections.sort(list); } catch( Exception e1 ) { }
 
             Iterator<HealpixKey> it = list.iterator();
             while( it.hasNext() ) {

@@ -20,8 +20,24 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Formatter;
@@ -29,7 +45,11 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.Timer;
 
 import cds.tools.Util;
 import cds.xml.Field;
@@ -142,7 +162,7 @@ MouseWheelListener, Widget
    }
 
    JPopupMenu popMenu,popMenuTag;
-   JMenuItem menuTriA,menuTriD,menuCopyVal,menuCopyCoord,menuCopyMeasurement,
+   JMenuItem menuTriA,menuTriD,menuCopyVal,menuCopyCoord,menuCopyMeasurement,menuCopyMeasurement1,
    menuCopyAll,menuCopyAllAscii,
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
@@ -178,6 +198,8 @@ MouseWheelListener, Widget
       m.add( menuCopyCoord=j=new JMenuItem(c.getString("MFCOPYCOORD")));
       j.addActionListener(this);
       m.add( menuCopyMeasurement=j=new JMenuItem(c.getString("MFCOPYMEASUREMENT")));
+      j.addActionListener(this);
+      m.add( menuCopyMeasurement1=j=new JMenuItem(c.getString("MFCOPYMEASUREMENT1")));
       j.addActionListener(this);
       m.add( menuCopyAllAscii=j=new JMenuItem(c.getString("MFCOPYASCII")));
       j.addActionListener(this);
@@ -232,7 +254,8 @@ MouseWheelListener, Widget
       else if( src==menuCopyAllAscii ) aladin.copyToClipBoard(aladin.mesure.getText(true));
       else if( src==menuCopyCoord ) aladin.copyToClipBoard(aladin.mesure.getCurObjCoord());
       else if( src==menuCopyVal ) aladin.copyToClipBoard(aladin.mesure.getCurObjVal());
-      else if( src==menuCopyMeasurement ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement());
+      else if( src==menuCopyMeasurement ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement(false));
+      else if( src==menuCopyMeasurement1 ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement(true));
       else if( src==menuUnselect ) deselect(objSelect);
       else if( src==menuDel ) delete(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);

@@ -1456,9 +1456,9 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    public WidgetControl getWidgetControl() { return voc; }
 
    @Override
-   public void createWidgetControl(int x, int y, int width, int height, float opacity,JComponent parent) {
+   public void createWidgetControl(int x, int y, int width, int height, float opacity, JComponent parent) {
       voc = new WidgetControl(this,x,y,width,height,opacity,parent);
-      voc.setResizable(true);
+      voc.setResizable(Aladin.PROTO);
    }
 
    @Override

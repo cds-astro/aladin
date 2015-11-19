@@ -256,7 +256,7 @@ public class Repere extends Position {
       // Cas d'un repère avec surface
       double r = getRayon(v);
       if( r>0 ) {
-         return (x-xv[v.n])*(x-xv[v.n]) + (y-yv[v.n])*(y-yv[v.n]) <= (r+1)*(r+1);
+         return (x-xv[v.n])*(x-xv[v.n]) + (y-yv[v.n])*(y-yv[v.n]) <= r*r; // +1;
 
          // Cas courant
       } else {

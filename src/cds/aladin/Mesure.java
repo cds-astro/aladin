@@ -20,8 +20,16 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Scrollbar;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -747,29 +755,55 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return res.toString();
    }
 
-   // retourne sous forme de chaine la ligne des mesures pour l'objet couramment sélectionné
-   protected String getCurObjMeasurement() {
-      StringBuffer sb = new StringBuffer();
+   // retourne sous forme de chaine la ligne des mesures pour l'objet couramment sélectionné (en TSV ou en JSON)
+   protected String getCurObjMeasurement(boolean json) {
+      StringBuilder sb = new StringBuilder();
       Source s = mcanvas.objSelect;
-      if( s==null ) return "";
-
-      Vector v = getWordLine(s);
-
-      Enumeration e = v.elements();
-      e.nextElement();                  // Je saute l'objet lui-meme
-
-      while( e.hasMoreElements() ) {
-         Words w = (Words) e.nextElement();   // Les mots
-         if( w.repere ) {
-            int deb=w.text.indexOf('"');
-            int fin=w.text.lastIndexOf('"');
-            if( deb>=0 && fin>deb ) sb.append( w.text.substring(deb+1,fin)+":"+"\t");
+      
+      Legende leg = s.leg;
+      String [] values = s.getValues();
+      boolean first=true;
+      
+      if( json ) sb.append("{ ");
+      
+      for( int i=0; i<leg.field.length; i++ ) {
+         if( !leg.field[i].visible ) continue;
+         if( json ) {
+            if( !first ) sb.append(", ");
+            sb.append( "\""+Util.escapeJSON(leg.field[i].name)+"\": "+Util.escapeJSON(values[i])+"\"");
+            
+         } else {
+            if( !first ) sb.append('\t');
+            sb.append(values[i]);            
          }
-         else {
-            sb.append(w.text);
-            if( e.hasMoreElements() ) sb.append("\t");
-         }
+         first=false;
       }
+      
+      if( json ) sb.append(" }");
+
+      
+      
+//      if( s==null ) return "";
+//
+//      Vector v = getWordLine(s);
+//      
+//      Enumeration e = v.elements();
+//      e.nextElement();                  // Je saute l'objet lui-meme
+//      
+//      if( json ) sb.append("{ ");
+//
+//      while( e.hasMoreElements() ) {
+//         Words w = (Words) e.nextElement();   // Les mots
+//         if( w.repere ) {
+//            int deb=w.text.indexOf('"');
+//            int fin=w.text.lastIndexOf('"');
+//            if( deb>=0 && fin>deb ) sb.append( w.text.substring(deb+1,fin)+":"+"\t");
+//         }
+//         else {
+//            sb.append(w.text);
+//            if( e.hasMoreElements() ) sb.append("\t");
+//         }
+//      }
 
       return sb.toString();
    }

@@ -35,7 +35,7 @@ public final class TagConstellation extends Tag {
    }
    
    protected boolean draw(Graphics g,ViewSimple v,int dx,int dy) {
-      if( !isVisible() || v.isAllSky() ) return false;
+      if( !isVisible() /* || v.isAllSky() */ ) return false;
       Point p = getViewCoord(v,50,50);
       if( p==null ) return false;
       p.x+=dx; p.y+=dy;

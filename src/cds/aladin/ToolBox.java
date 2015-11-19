@@ -77,7 +77,7 @@ SwingWidgetFinder, Widget {
 
    // Ordre d'apparition des boutons
    private int [] drawn = {SELECT,PAN,ZOOM,DIST,PHOT,DRAW,TAG,
-         FILTER,/*XMATCH,PLOT,*/RGB,/*BLINK,*/CROP,CONTOUR,HIST,PROP,
+         FILTER,/*XMATCH,*/PLOT,RGB,/*BLINK,*/CROP,CONTOUR,HIST,PROP,
          DEL };
 
    // Ordre d'apparition des boutons

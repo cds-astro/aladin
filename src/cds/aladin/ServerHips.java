@@ -157,9 +157,9 @@ public class ServerHips extends ServerTree  {
          try {
 
             ViewSimple v = aladin.view.getCurrentView();
-            if( v.isFree() ) return;
+//            if( v.isFree() ) return;
 
-            if( v.isAllSky() ) {
+            if( v.isFree() || v.isAllSky() ) {
                for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) gSky.ok=true;
 
             } else {

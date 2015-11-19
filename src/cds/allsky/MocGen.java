@@ -556,7 +556,7 @@ public class MocGen {
       		"Generate the MOC corresponding to a collection of images or WCS headers.\n" +
       		"A MOC is a a coverage map based on HEALPix sky tesselation.\n" +
       		"\n" +
-      		"The supported formats are : FITS files, MEF files (only first HDU), jpeg or png files\n" +
+      		"The supported formats are : FITS files, MEF files, jpeg or png files\n" +
       		"(WCS header in the comment segment), .hhh file (FITS header files without pixels)\n" +
       		"and .txt simple ASCII file (FITS header as keyword = value basic ASCII lines).\n" +
       		"\n" +

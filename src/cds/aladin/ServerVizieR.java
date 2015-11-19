@@ -20,20 +20,30 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.ActionListener;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.event.ActionListener;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import cds.vizier.*;
+import cds.tools.CDSConstants;
+import cds.vizier.VizieRCatalogs;
+import cds.vizier.VizieRList;
+import cds.vizier.VizieRPanel;
+import cds.vizier.VizieRQuery;
 import cds.xml.XMLParser;
-import cds.tools.*;
 
 /**
  * Le formulaire d'interrogation de Vizir
@@ -238,7 +248,7 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       //vp = new VizieRPanel(aladin.glu, true, false, null, null);
 
 
-      vp = new VizieRPanel(aladin.glu, FRAME, false, null, null, 10);
+      vp = new VizieRPanel(this, FRAME, false, null, null, 10);
       vp.setBounds(XTAB1,y,XWIDTH-2*XTAB1,280); y+=280;
       add(vp);
 
@@ -439,8 +449,9 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       int n = createPlane(objet,rm+"",cata,null,null);
       if( n!=-1 ) aladin.calque.getPlan(n).setBookmarkCode(bookmarkCode+" $TARGET $RADIUS");
 
-      catalog.setText("");
-      resetFlagBoxes();
+      // Suggestion de FOX pour éviter d'avoir à réécrire le catalogue si on fait plusieurs interrogations
+//      catalog.setText("");
+//      resetFlagBoxes();
       defaultCursor();
    }
 
@@ -516,6 +527,14 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       catalog.setText("");
       vp.resetAll();
    }
+   
+   /** Surcharge de show() pour remettre à jour les Choice Input */
+   public void setVisible(boolean flag) {
+      resetCatalog();
+      super.setVisible(flag);
+   }
+   
+   public void resetCatalog() { catalog.setText(""); }
 
    protected void reset() {
       resetFlagBoxes();
@@ -530,12 +549,12 @@ public final class ServerVizieR extends Server implements CDSConstants,Runnable 
       radius.setEnabled(true);
    }
 
-  /** Re-affichage avec regeneration du panel du formulaire.
-   * Rq : Eh oui, il faut bien ruser pour supporter Netscape 3.0
-   */
-   protected void reaffiche() {
-      hide();show();
-   }
+//  /** Re-affichage avec regeneration du panel du formulaire.
+//   * Rq : Eh oui, il faut bien ruser pour supporter Netscape 3.0
+//   */
+//   protected void reaffiche() {
+//      hide();show();
+//   }
    
    private String oCat=null; // Juste pour éviter de faire plusieurs fois la même chose
    

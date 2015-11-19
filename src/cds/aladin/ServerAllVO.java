@@ -20,12 +20,23 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import cds.tools.Util;
 
@@ -112,7 +123,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
       dataTypePanel.add(panelCbImg);
       c.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            if( frameServer!=null && frameServer.isVisible() ) {
+            if( frameServer!=null  ) {
                frameServer.check(Server.IMAGE,   cbImg.isSelected());
             }
          }
@@ -123,7 +134,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
       dataTypePanel.add(panelCbCat);
       c.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            if( frameServer!=null && frameServer.isVisible() ) {
+            if( frameServer!=null  ) {
                frameServer.check(Server.CATALOG,   cbCat.isSelected());
             }
          }
@@ -134,7 +145,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
       dataTypePanel.add(panelCbSpec);
       c.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            if( frameServer!=null && frameServer.isVisible() ) {
+            if( frameServer!=null  ) {
                frameServer.check(Server.SPECTRUM,   cbSpec.isSelected());
             }
          }
@@ -236,7 +247,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
    * @param s La chaine a mettre dans le champ target
    */
    protected void setTarget(String s) {
-//      System.out.println("setTarget("+s+")");
+      System.out.println("setTarget("+s+")");
       if( flagClear && otarget!=null && !otarget.equals(s) ) {
 //return;
 // 9 oct - JE NE COMPRENDS PAS POURQUOI J'AVAIS COMMENTE CE CLEAR. JE LE REMETS
@@ -345,11 +356,13 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
       if( s instanceof JButton
             && ((JButton)s).getActionCommand().equals(MORE)) {
          loadIVOAdic();
-         if( frameServer==null ) frameServer = new FrameServer(aladin,this);
+         if( frameServer==null ) {
+            frameServer = new FrameServer(aladin,this);
+            frameServer.check(Server.IMAGE,   cbImg.isSelected());
+            frameServer.check(Server.CATALOG, cbCat.isSelected());
+            frameServer.check(Server.SPECTRUM,cbSpec.isSelected());
+         }
          else frameServer.setVisible(true);
-         frameServer.check(Server.IMAGE,   cbImg.isSelected());
-         frameServer.check(Server.CATALOG, cbCat.isSelected());
-         frameServer.check(Server.SPECTRUM,cbSpec.isSelected());
       }
 
       else if( s instanceof JButton
@@ -430,6 +443,7 @@ public class ServerAllVO extends Server implements Runnable,MyListener {
             Server server = aladin.dialog.server[i];
             if( !server.isDiscovery() ) continue;
             if( !server.isAllVOChecked() ) continue;
+            if( !aladin.dialog.server[i].filterAllVO ) continue;
             if( frameServer==null || !frameServer.isVisible() ) {
                if( !cbImg.isSelected() && server.type==IMAGE ) continue;
                if( !cbCat.isSelected() && server.type==CATALOG ) continue;

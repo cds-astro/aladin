@@ -20,15 +20,38 @@
 
 package cds.vizier;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Label;
 import java.io.DataInputStream;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListModel;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListDataListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-import cds.tools.*;
-import cds.aladin.*;
+import cds.aladin.Aladin;
+import cds.aladin.Chaine;
+import cds.aladin.MyInputStream;
+import cds.aladin.MyLabel;
+import cds.aladin.ServerVizieR;
+import cds.tools.CDSConstants;
+import cds.tools.CDSMethods;
 
 /**
  * VizieR panel
@@ -80,6 +103,7 @@ public class VizieRPanel extends JPanel implements CDSConstants {
    static final int DEFAULTROWS = 6;
 
    VizieRQuery vq = null;
+   private ServerVizieR vizier;
 
    protected BorderLayout borderLayout1 = new BorderLayout();
 
@@ -114,15 +138,17 @@ public class VizieRPanel extends JPanel implements CDSConstants {
   * @param radius
   * @param rows
   */
-   public VizieRPanel(Glu glu, int outputMode, boolean withparam, String target, String radius, int rows) {
+   public VizieRPanel(ServerVizieR vizier, int outputMode, boolean withparam, String target, String radius, int rows) {
     try {
-      this.aladin = glu.aladin;		// pas très beau tout ça !
+      this.vizier = vizier;
+      aladin= vizier.aladin;
+      
       createChaine();
       this.outputMode = outputMode;
 
       //
       vq = new VizieRQuery();
-      vq.setGLU(glu);
+      vq.setGLU(aladin.glu);
 
       // VizieR call for meta information
       if( vq.metaDataQuery() == false || vq.getNameKey().size() == 0 ) {
@@ -391,6 +417,11 @@ public class VizieRPanel extends JPanel implements CDSConstants {
         lk[j] = new JList(v);
         lk[j].setVisibleRowCount(rows);
         lk[j].setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        lk[j].addListSelectionListener( new ListSelectionListener() {
+         public void valueChanged(ListSelectionEvent e) {
+           vizier.resetCatalog(); 
+         }
+      });
       }
 //      Enumeration e = v.elements();
 //      while( e.hasMoreElements() )

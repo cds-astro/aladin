@@ -41,6 +41,7 @@ public class HipsGen {
    private boolean force=false;
    private boolean flagMode=false;
    private boolean flagConcat=false;
+   private boolean flagMirror=false;
    private boolean flagMethod=false;
    private boolean flagRGB=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
@@ -278,6 +279,7 @@ public class HipsGen {
                Action a = Action.valueOf(arg.toUpperCase());
                if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
                if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
+               if( a==Action.MIRROR ) flagMirror=true;
                if( a==Action.CONCAT ) {
                   flagConcat=true;
                   if( !flagMode ) context.setMode(Mode.AVERAGE);
@@ -402,7 +404,7 @@ public class HipsGen {
       if( !flagRGB ) setDefaultFrame();
 
       // Positionnement du pubDid
-      if( context.ivorn==null && !flagConcat ) {
+      if( context.ivorn==null && !flagConcat && !flagMirror ) {
          String s = context.checkIvorn(null, false);
          context.setIvorn(s);
          context.warning("IVORN identifier is strongly recommended (parameter ivorn=xxx) => assuming "+s);
