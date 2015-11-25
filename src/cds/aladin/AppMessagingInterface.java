@@ -69,7 +69,7 @@ public interface AppMessagingInterface {
 
 //    public abstract void sendAsyncMessage(URI message, List args, List recipients);
 
-    // TODO : harmoniser nom des méthodes et gueule des argumentss
+    // TODO : homogenize method names and arguments list
 
     /**
      * si recipients==null --> broadcast
