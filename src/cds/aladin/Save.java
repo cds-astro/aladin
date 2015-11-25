@@ -20,40 +20,13 @@
 
 package cds.aladin;
 
-import java.awt.BorderLayout;
-import java.awt.Checkbox;
-import java.awt.Dimension;
-import java.awt.Event;
-import java.awt.FileDialog;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Label;
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.io.*;
+import java.util.*;
 import java.util.zip.CRC32;
 
 import javax.imageio.IIOImage;
@@ -61,17 +34,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
@@ -110,7 +73,7 @@ public final class Save extends JFrame implements ActionListener {
    static final int PNG=8;
    static final int LK=16;
    static final int LK_FLEX=32;
-   
+
    // Modes de sauvegarde pour un catalogue
    static final private int TSV  = 0;
    static final private int JSON = 1;
@@ -793,9 +756,9 @@ public final class Save extends JFrame implements ActionListener {
     * on modifie le suffixe des noms de fichiers
     */
    private void changeCatFormat() {
-      
+
       System.out.println("changeCatFormat");
-      
+
       String newSuffix = tsvCb.isSelected() ? ".txt" : jsonCb!=null && jsonCb.isSelected() ? ".json" : ".xml";
 
       for( int i=0; i<listPlan.length; i++ ) {
@@ -1484,7 +1447,7 @@ public final class Save extends JFrame implements ActionListener {
       return true;
    }
 
-   
+
    /**
     * Sauvegarde JSON d'un plan catalogue
     * @param file le fichier dans lequel sauvegarder
@@ -1500,8 +1463,10 @@ public final class Save extends JFrame implements ActionListener {
       boolean first=true;
 
       try{
+         s.append("[" + CR); // global parent. Inside this, each table is a [ ... ]
+
          Legende leg = ((PlanCatalog)p).getFirstLegende();
-         s.append("{");
+         s.append("[");
 
          int nb = pcat.getCount();
          Iterator<Obj> it = pcat.iterator();
@@ -1510,11 +1475,19 @@ public final class Save extends JFrame implements ActionListener {
 
             // Ecriture de la table courante (ou de sa fin)
             if( o==null || o.leg!=leg ) {
-               s.append(CR+"}"+CR);
+               s.append(CR+"]"+CR);
+
+               if (o==null) {
+                   s.append("]" + CR); // closing global parent
+               }
                f=writeByteTSV(f,file,nbTable,s);
                if( o==null ) {
+
                   f.close();
                   f=null;
+               }
+               else {
+                   first = true;
                }
                nbTable++;
 
@@ -1522,7 +1495,7 @@ public final class Save extends JFrame implements ActionListener {
                if( o!=null ) {
                   s = new StringBuilder(MAXBUF);
                   leg = o.leg;
-                  s.append(","+CR+"{");
+                  s.append(","+CR+"[");
                }
             }
             if( o!=null ) {
@@ -2138,7 +2111,7 @@ public final class Save extends JFrame implements ActionListener {
     * @return un vector contenant les lignes de l'entête FITS alignées sur 80 bytes
     */
    protected Vector generateFitsHeader(PlanImage p) {
-      
+
       // S'il s'agit d'une entête d'une table FITS (typiquement une map HEALPix)
       // je ne prends pas en compte l'entête FITS
       boolean flagTable = p.headerFits!=null && p.headerFits.hasKey("TTYPE1");
@@ -2302,9 +2275,9 @@ public final class Save extends JFrame implements ActionListener {
 
                // On omet le champ EXTEND (Aladin ne sauvegarde pas les extensions)
                if( k.equals("EXTEND")) { flagModif=true; continue; }
-               
+
 //               // On omet une série de mot clé qui ne doivent pas être repris
-//               if( mustBeRemoved(k)) { 
+//               if( mustBeRemoved(k)) {
 //                  System.out.println("remove "+k);
 //                  flagModif=true; continue; }
 
@@ -2418,7 +2391,7 @@ public final class Save extends JFrame implements ActionListener {
 
       return v;
    }
-   
+
 //   // Liste des mots clés à supprimer d'une entête
 //   private static final String [] FORGET = {
 //     "EXTEND","PCOUNT", "GCOUNT", "TFIELDS",
@@ -2426,26 +2399,26 @@ public final class Save extends JFrame implements ActionListener {
 //     "EXTNAME", "PIXTYPE", "COORDSYS",
 //     "ORDERING", "NSIDE", "FIRSTPIX", "LASTPIX", "BAD_DATA",
 //   };
-//   
+//
 //   // True si le mot clé doit être supprimé de l'entête FITS en cours de génération
 //   private boolean mustBeRemoved(String s) {
 //      for( String k : FORGET) {
-//         
+//
 //         // Mot clé simple
 //         if( !k.endsWith("*") ) { if( s.equals(k) ) return true; }
-//         
+//
 //         // Mot clé avec un suffixe numérique (se termine par "*" dans la liste FORGET)
 //         else {
 //            int i;
 //            for( i=s.length()-1; i>=0 && Character.isDigit( s.charAt(i) ); i--);
 //            String s1 = s.substring(0,i+1);
-//            
+//
 //            if( k.substring(0,k.length()-1).equals( s1 ) ) return true;
 //         }
 //      }
 //      return false;
 //   }
-   
+
    /**
     * Sauvegarde d'un plan image dans stream en format FITS. Prend en compte le fait que l'image
     * ait pu être recalibrée ou rééchantillonnéé, que le plan dispose ou non des vraies pixels,
@@ -2945,13 +2918,13 @@ public final class Save extends JFrame implements ActionListener {
 
       return s.toString();
    }
-   
-   
+
+
    /** retourne la ligne des données au format JSON { "cle": "valeur", ... } */
    static protected String getJSON(Legende leg,Source o) {
       StringBuilder s = new StringBuilder();
       boolean first=true;
-      
+
       s.append("{ ");
       String [] values = o.getValues();
 
