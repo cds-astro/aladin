@@ -41,6 +41,7 @@ import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Formatter;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Vector;
@@ -289,7 +290,8 @@ MouseWheelListener, Widget
       // une petite animation pour informer l'utilisateur que qqch se passe
       try {
          mMgr.getPlasticWidget().animateWidgetSend();
-         mMgr.sendMessageLoadSpectrum(url, url, "Spectrum", new Hashtable(), recipientsList);
+         if( plasticApp.equals("topcat") ) mMgr.sendMessageLoadVOTable(url, url, "Data", new Hashtable(), recipientsList);
+         else mMgr.sendMessageLoadSpectrum(url, url, "Spectrum", new Hashtable(), recipientsList);
 
          aladin.glu.log(mMgr.getProtocolName(), "sending data or spectrum URL");
       } catch( Exception e ) {
@@ -297,7 +299,7 @@ MouseWheelListener, Widget
          aladin.warning("SAMP error: "+e.getMessage());
       }
    }
-
+   
    private String urlSamp;
 
    /** Mémorise l'url d'un spectre qui va être envoyé via SAMP lorsque l'utilisateur aura indiqué
@@ -413,21 +415,23 @@ MouseWheelListener, Widget
       if( Aladin.PLASTIC_SUPPORT ) {
          AppMessagingInterface mMgr = aladin.getMessagingMgr();
 
-//         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
-         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_FITS);
-         //         menuBroadcast.setEnabled(spectrumApps.size()>0);
+         ArrayList<String> spectrumApps = mMgr.getAppsSupporting(AppMessagingInterface.ABSTRACT_MSG_LOAD_SPECTRUM_FROM_URL);
+         
+         // On ajoute Topcat manu-militari si présent (ajustement pour Petr Skoda)
+         for( String s :mMgr.getAppsSupportingTables() ) {
+            if( s.equals("topcat") ) { spectrumApps.add(s); break; }
+         }
+
          menuBroadcastSpectrum.setEnabled(spectrumApps.size()>0);
 
          JMenuItem item;
-
-         // pour envoi des images sélectionnées
          menuBroadcastSpectrum.removeAll();
-         //         menuBroadcastSpectrum.add(item = new JMenuItem(MALLAPPS));
-         //         item.setActionCommand(MBROADCASTSPECTRUM);
-         //         item.addActionListener(this);
-         //         menuBroadcastSpectrum.addSeparator();
+         
+         HashSet<String> set = new HashSet<String>();
          if( spectrumApps!=null && spectrumApps.size()>0) {
             for (String appName: spectrumApps) {
+               if( set.contains(appName) ) continue;
+               set.add(appName);
                menuBroadcastSpectrum.add(item = new JMenuItem(appName));
                item.setActionCommand(MBROADCASTSPECTRUM);
                item.addActionListener(this);

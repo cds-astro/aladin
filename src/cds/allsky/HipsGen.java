@@ -133,6 +133,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
       } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
+      } else if (opt.equalsIgnoreCase("status"))     { context.setStatus(val);
       } else if (opt.equalsIgnoreCase("ivorn"))      { context.setIvorn(val);
       } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
       } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
@@ -488,6 +489,8 @@ public class HipsGen {
                   "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
                   "   label=name         Label of the survey (by default, input directory name)" + "\n"+
                   "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
+                  "   status=xx          HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
+                  "                      (default: public clonableOnce)" +
                   "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +
                   "   blank=nn           Specifical BLANK value" + "\n" +
                   "   skyval=key|true|%info|%min %max   Fits key to use for removing a sky background, true auto detection " + "\n" +

@@ -25,14 +25,37 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
 import net.ladypleaser.rmilite.Client;
 
@@ -501,6 +524,8 @@ public class PlasticManager implements PlasticListener, AppMessagingInterface {
 
         sendAsyncMessage(MSG_LOAD_FITS, argList, recipients);
     }
+    
+    public void sendMessageLoadVOTable(String url, String id, String spectrumName, Map metadata, List recipients) { }
 
     public void sendMessageLoadSpectrum(String url, String spectrumId, String spectrumName, Map metadata, List recipients) {
         List argList = new ArrayList();

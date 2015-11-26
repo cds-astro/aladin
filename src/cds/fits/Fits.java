@@ -925,7 +925,7 @@ final public class Fits {
                setCalib(new Calib(headerFits));
             } catch( Exception e ) {
                calib=null;
-               if( Aladin.levelTrace >= 3 ) e.printStackTrace();
+//               if( Aladin.levelTrace >= 3 ) e.printStackTrace();
             }
          } catch( Exception e ) {
             if( Aladin.levelTrace >= 3 ) e.printStackTrace();

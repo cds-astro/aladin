@@ -198,7 +198,7 @@ public class Ligne extends Position {
       propList.add( Prop.propFactory("color","Color","Alternative color",col,null,changeCouleur) );
       return propList;
    }
-
+   
    ///// FIN des constructeurs /////
 
    /** Retourne le type d'objet */

@@ -35,6 +35,16 @@ public class Constante {
    public static final String FILE_MOC         = "Moc.fits";
    static final public String FILE_METADATAXML = "metadata.xml";
    static final public String FILE_METADATATXT = "metadata.txt";
+   
+   // Les différents status HiPS
+   static final public String PRIVATE      = "private";
+   static final public String PUBLIC       = "public";
+   static final public String MASTER       = "master";
+   static final public String PARTIAL      = "partial";
+   static final public String MIRROR       = "mirror";
+   static final public String CLONABLE     = "clonable";
+   static final public String CLONABLEONCE = "clonableOnce";
+   static final public String UNCLONABLE   = "unclonable";
 
    // Clés utilisés dans le fichier properties
    static public final String OLD_VERSION               = "version";

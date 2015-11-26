@@ -212,13 +212,14 @@ public class BuilderMirror extends BuilderTiles {
 
          String status = prop.getProperty(Constante.KEY_HIPS_STATUS);
          StringBuilder status1;
-         if( status==null ) status1 = new StringBuilder("public mirror clonable");
+         if( status==null ) status1 = new StringBuilder(Constante.PUBLIC+" "+Constante.MIRROR+" "+Constante.CLONABLEONCE);
          else {
             Tok tok = new Tok(status);
             status1 = new StringBuilder();
             while( tok.hasMoreTokens() ) {
                String s = tok.nextToken();
-               if( s.equals("master")) s= isPartial ? "partial" : "mirror";
+               if( s.equals(Constante.MASTER)) s= isPartial ? Constante.PARTIAL : Constante.MIRROR;
+               if( s.equals(Constante.CLONABLEONCE) ) s=Constante.UNCLONABLE;
                if( status1.length()>0 ) status1.append(' ');
                status1.append(s);
             }

@@ -57,7 +57,7 @@ import cds.tools.pixtools.CDSHealpix;
  *
  */
 public class Context {
-
+   
    private static boolean verbose=false;
    protected String ivorn=null;              // ivorn du survey (ex: ivo://CDS/P/2MASS/J)
    protected String label;                   // Nom du survey
@@ -113,6 +113,7 @@ public class Context {
    protected Mode mode=Mode.getDefault();   // Methode de traitement par défaut
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
    protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
+   protected String status=null;             // status du HiPs (private|public clonable|unclonable|clonableOnce)
    protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
    protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
@@ -230,6 +231,7 @@ public class Context {
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
    public void setPublisher(String s) { publisher=s; }
+   public void setStatus(String s ) { status=s; }
    public void setIvorn(String s) { ivorn=checkIvorn(s,true); }
    public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
@@ -1627,7 +1629,20 @@ public class Context {
 
       // L'url
       setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
-      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonable");
+      
+      // le status du HiPS : par defaut "public master clonableOnce"
+      String pub = Constante.PUBLIC;
+      String clone = Constante.CLONABLEONCE;
+      if( status!=null ) {
+         Tok tok = new Tok(status);
+         while( tok.hasMoreTokens() ) {
+            String s = tok.nextToken().toLowerCase();
+            if( s.equals(Constante.PRIVATE) ) pub = Constante.PRIVATE;
+            else if( s.equals(Constante.UNCLONABLE) ) pub=Constante.UNCLONABLE;
+            else if( s.equals(Constante.CLONABLE) ) pub=Constante.CLONABLE;
+         }
+      }
+      setPropriete(Constante.KEY_HIPS_STATUS,pub+" "+Constante.MASTER+" "+clone);
 
       // Ajout des formats de tuiles supportés
       String fmt = getAvailableTileFormats();
@@ -1761,6 +1776,8 @@ public class Context {
       prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
       prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
       if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
+      prop.add(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
+
 
       String propFile = getHpxFinderPath()+Util.FS+Constante.FILE_PROPERTIES;
       File f = new File(propFile);

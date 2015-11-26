@@ -19,7 +19,9 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -148,16 +150,16 @@ public class FrameHeaderFits extends JFrame {
       int pos;
 
       // Mise en forme de base (uniquement sur les couleurs des lettres)
-      if( first && s.length()<64*1024 ) {
+      if( first && s.length()<128*1024 ) {
          first =false;
          int opos=0;
          while( (pos=s.indexOf("\n",opos))>=0 ) {            
             String k="";
             if( opos+7<s.length() ) k=s.substring(opos,opos+8).trim();
             if(  k.equals("HISTORY") || k.equals("CONTINUE") ) df.setCharacterAttributes(opos,pos,atHist,true);
-            else if( k.startsWith("/")  || k.equals("COMMENT") ) df.setCharacterAttributes(opos,pos,atComment,true);
+            else if( k.startsWith("/")  || k.equals("COMMENT") || k.startsWith("#") ) df.setCharacterAttributes(opos,pos,atComment,true);
             else {
-               boolean flagPDS = this instanceof FrameHeaderPDS;
+               boolean flagPDS = this instanceof FrameHeaderPDS || this instanceof FrameHipsProperties;
                if( flagPDS ) {
                   int keyLen = s.indexOf('=',opos);
                   if( keyLen>opos && (pos==-1 || keyLen<=pos)) {

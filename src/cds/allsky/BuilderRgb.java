@@ -65,6 +65,7 @@ public class BuilderRgb extends Builder {
    public void validateContext() throws Exception {
 
       String path = context.getRgbOutput();
+      
       JpegMethod method = context.getRgbMethod();
       format= context.getRgbFormat();
       coaddMode = context.getMode();
@@ -86,8 +87,6 @@ public class BuilderRgb extends Builder {
       pixelMax = new double[3];
       transfertFcts = new String[3];
 
-      this.output = path;
-
       bitpix = new int[3];
       for( int c=0; c<3; c++ ) bitpix[c]=0;
       blank = new double[3];
@@ -106,6 +105,10 @@ public class BuilderRgb extends Builder {
             missing=c;
          } else {
 
+            if( !context.isExistingAllskyDir(inputs[c]) ) {
+               throw new Exception("Input HiPS missing ["+inputs[c]+"]");
+            }
+                  
             if( pathRef==null ) pathRef=inputs[c];
 
             // Récupération des propriétés
@@ -138,6 +141,15 @@ public class BuilderRgb extends Builder {
 
          }
       }
+      
+      // Si le répertoire de destination est absent, je donne une valeur par défaut
+      if( path==null ) {
+         int n = pathRef.length()-1;
+         int offset = Math.max(pathRef.lastIndexOf('/',n),pathRef.lastIndexOf('\\',n));
+         path = pathRef.substring(0,offset+1)+"RGBHiPS";
+         context.warning("Missing \"out\" parameter. Assuming \""+path+"\"");
+      }
+      this.output = path;
 
       if( context instanceof ContextGui ) ((ContextGui)context).mainPanel.clearForms();
 

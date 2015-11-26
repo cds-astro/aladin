@@ -293,7 +293,7 @@ public class PlanBG extends PlanImage {
                conn.setIfModifiedSince( f.lastModified() );
                prop = new MyProperties();
                InputStream in1 = new FileInputStream(f);
-               prop.load(in1);
+               prop.load(in1,true);
                in1.close();
                dateRef = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
                if( dateRef==null ) dateRef = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
@@ -317,7 +317,7 @@ public class PlanBG extends PlanImage {
                   // (nécessaire dans le cas de sites miroirs, ou d'accès via CGI FX)
                   prop = new MyProperties();
                   InputStream in1 = new ByteArrayInputStream(buf);
-                  prop.load(in1);
+                  prop.load(in1,true);
                   in1.close();
                   String dateRef1= prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
                   if( dateRef1==null ) dateRef1 = prop.getProperty(Constante.OLD_HIPS_RELEASE_DATE,"");
@@ -356,7 +356,7 @@ public class PlanBG extends PlanImage {
          }
          if( in==null ) throw new Exception();
          prop = new MyProperties();
-         prop.load(in);
+         prop.load(in,true);
          in.close();
       } catch( Exception e ) { prop=null; }
       return prop;
@@ -930,6 +930,17 @@ public class PlanBG extends PlanImage {
       FreePixList();
       prop=null;
       return super.Free();
+   }
+   
+   
+   private FrameHipsProperties frameHipsProperties = null;
+   
+   /** Visualisation des propriétés */
+   protected void seeHipsProp() {
+      try {
+         if( frameHipsProperties==null ) frameHipsProperties = new FrameHipsProperties(this);
+         frameHipsProperties.seeHeaderFits();
+      } catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
    }
 
    /** Libération de la pixList du plan */

@@ -95,6 +95,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Locale;
@@ -134,6 +135,7 @@ import cds.tools.ExtApp;
 import cds.tools.Util;
 import cds.tools.VOApp;
 import cds.tools.VOObserver;
+import cds.tools.pixtools.CDSHealpix;
 import cds.xml.Field;
 import cds.xml.XMLParser;
 
@@ -167,6 +169,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> MOC improvements (Mocgen)
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
+ * @beta         <LI> properties display
  * @beta         <LI> Obscore vocabulary support
  * @beta         <LI> Hipsgen full multi-threading support
  * @beta         <LI> Hipsgen MIRROR and RGB actions
@@ -225,7 +228,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.001";
+   static public final    String VERSION = "v9.002";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3275,7 +3278,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Affichage du header fits du plan passé en paramètre */
    protected void header(Plan plan) {
       if( plan==null ) return;
-      if( plan instanceof PlanImage ) ((PlanImage)plan).headerFits.seeHeaderFits();
+      if( plan instanceof PlanBG )  ((PlanBG)plan).seeHipsProp();
+      else if( plan instanceof PlanImage ) ((PlanImage)plan).headerFits.seeHeaderFits();
       else if( plan instanceof PlanFolder ) ((PlanFolder)plan).headerFits.seeHeaderFits();
       else ((PlanCatalog)plan).headerFits.seeHeaderFits();
    }
@@ -3825,7 +3829,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    
    /**
-    * Détermination de l'ordre pour avoir 50 cellules dans la distance
+    * Détermination de l'ordre pour avoir 75 cellules dans la distance
     * @param size taille à couvrir (en degrés)
     * @return order HEALPix approprié
     */
@@ -3833,7 +3837,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       int order = 4;
       if( size==0 ) order=HealpixMoc.MAXORDER;
       else {
-         double pixRes = size/50;
+         double pixRes = size/75;
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
          double res = Math.sqrt(skyArea/(12*16*16));
@@ -3841,56 +3845,126 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       return order;
    }
-
-   /**Creation d'un MOC à partir du polygone sélectionné */
+   
+   /**Creation d'un MOC à partir de tous les polygones sélectionnés */
    protected void createMocRegion() {
-      try {
-         Obj o = view.vselobj.get(0);
-         boolean poly = o instanceof Ligne && ((Ligne)o).isPolygone();
-         if( !poly ) return;
-         double maxSize=0;
-         Coord c1=null;
-         boolean first=true;
+      HealpixMoc moc = new HealpixMoc();
+      HashSet<Obj> set = new HashSet<Obj>();
+      for( Obj o : view.vselobj ) {
+         
+         // Ajout des cercles
+         if( o instanceof Repere ) {
+            if( !((Repere)o).hasRayon() ) continue;
+            try {
+               HealpixMoc m = createMocRegionCircle( (Repere)o );
+               if( m==null || m.getSize()==0 ) continue;
+               moc.add(m);
+            } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
+         }
+         
+         // Ajout des polygones
+         if( !(o instanceof Ligne) ) continue;
+         o = ((Ligne)o).getLastBout();
+         if( ((Ligne)o).bout!=3 ) continue;
+         if( set.contains(o) ) continue;
+         set.add(o);
+         try {
+            HealpixMoc m = createMocRegionPol( (Ligne)o );
+            if( m==null || m.getSize()==0 ) continue;
+            moc.add(m);
+         } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
 
+      }
+      
+      if( moc.getSize()==0 ) {
+         warning("MOC creation error !\n",1);
+         return;
+      }
+      
+
+      calque.newPlanMOC(moc,"Moc reg");
+
+   }
+   
+   /** Création d'un MOC à partir d'un cercle (Repere avec rayon) */
+   protected HealpixMoc createMocRegionCircle(Repere o) throws Exception {
+      HealpixMoc m = new HealpixMoc();
+      double ra = o.getRa();
+      double de = o.getDec();
+      double radius = o.getRadius();
+      int order=getAppropriateOrder(radius);
+      
+      long i=0;
+      m.setCheckConsistencyFlag(false);
+      for( long pix : CDSHealpix.query_disc( CDSHealpix.pow2(order), ra, de, Math.toRadians(radius)) ) {
+         m.add(order,pix);
+         i++;
+         if( i%10000L==0 ) m.checkAndFix();
+      }
+      m.setCheckConsistencyFlag(true);
+      
+      return m;
+   }
+
+
+   /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets
+    * Tente de faire les deux sens d'orientation du polygone et ne garde que celui qui
+    * fournit une surface inférieure à la moitié du ciel */
+   protected HealpixMoc createMocRegionPol(Ligne o) throws Exception {
+      HealpixMoc moc=null;
+
+      double maxSize=0;
+      Coord c1=null;
+      boolean first=true;
+      int order=0;
+
+      for( int sens=0; sens<2; sens++ ) {
          ArrayList<Vec3> cooList = new ArrayList<Vec3>();
+         if( sens==1 ) trace(3,"createMocRegion("+o+") trying reverse polygon order...");
+         try {
+            Ligne a = sens==0 ? o.getFirstBout() : o.getLastBout();
+            while( a!=null ) {
 
-         // On tente dans un sens
-         for( Ligne a = ((Ligne)o).getFirstBout(); a.finligne!=null; a=a.finligne ) {
+               // Mémorisation de la plus grande diagonale
+               if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
+               else {
+                  double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
+                  if( size>maxSize ) maxSize=size;
+               }
 
-            // Mémorisation de la plus grande diagonale
-            if( first ) { c1 = new Coord(a.raj,a.dej); first=false; }
-            else {
-               double size = Coord.getDist(c1, new Coord(a.raj,a.dej));
-               if( size>maxSize ) maxSize=size;
+               double theta = Math.PI/2 - Math.toRadians( a.dej );
+               double phi = Math.toRadians( a.raj );
+               cooList.add(new Vec3(new Pointing(theta,phi)));
+
+               // Prochain sommet ?
+               a = sens==0 ? a.finligne : a.debligne;
             }
 
-            double theta = Math.PI/2 - Math.toRadians( a.dej );
-            double phi = Math.toRadians( a.raj );
-            cooList.add(new Vec3(new Pointing(theta,phi)));
+
+            if( sens==0 ) {
+               // L'ordre est déterminé automatiquement par la largeur du polygone
+               order=getAppropriateOrder(maxSize);
+               trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
+               if( order<10 ) order=10;
+               else if( order>29 ) order=29;
+            }
+
+            Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
+            moc = new HealpixMoc();
+            moc.rangeSet = m.getRangeSet();
+            moc.toHealpixMoc();
+
+            // moins de la moitié du ciel => ca doit être bon
+            if( moc.getCoverage()<0.5 ) break;
+
+            // On va essayer dans l'autre sens avant d'estimer que ça ne fonctionne pas
+         } catch( Throwable e ) {
+            if( sens==1 && e instanceof Exception ) throw (Exception)e;
          }
-
-
-         // L'ordre est déterminé automatiquement par la largeur du polygone
-         int order=getAppropriateOrder(maxSize);
-         trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
-         if( order<10 ) order=10;
-         else if( order>29 ) order=29;
-
-         Moc m=MocQuery.queryGeneralPolygonInclusive(cooList,order,order+4>29?29:order+4);
-         HealpixMoc moc = new HealpixMoc();
-         moc.rangeSet = m.getRangeSet();
-         moc.toHealpixMoc();
-
-         //         String s = MocUtil.mocToStringJSON(m);
-         //         HealpixMoc moc = new HealpixMoc(s);
-
-         calque.newPlanMOC(moc,"Moc reg");
-
-      } catch( Exception e ) {
-         if( levelTrace>=3 ) e.printStackTrace();
-         String s = e.getMessage();
-         warning("!!! MOC creation error !"+(s!=null ? "["+s+"]":""),1);
       }
+
+
+      return moc;
    }
 
    /** Mise à jour de la fenêtre pour la génération d'un MOC */

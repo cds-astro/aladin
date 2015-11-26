@@ -20,7 +20,20 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -33,7 +46,18 @@ import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -60,7 +84,7 @@ import cds.tools.pixtools.CDSHealpix;
  */
 public class Properties extends JFrame implements ActionListener, ChangeListener {
 
-   String SEEFITS,SEEPARSING,TABLEINFO,/* LOADURL, */NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
+   String SEEFITS,SEEHIPSPROP,SEEPARSING,TABLEINFO,/* LOADURL, */NEWCALIB,MODCALIB,/*,TOPBOTTOM,RIGHTLEFT,NEWCOL*/SHOWFOVS,HIDEFOVS,
    TITLE,BANNER,APPLY,BOOKMARK,CLOSE,NOFILTER,LABEL,COLOR,ERROR,STATE,UNDER,SHAPE,IMG,VIEWABLE,
    LEVEL,REFCOORD,REFROTATE,ANGLE,COMPONENT,SOURCE,INF,FMT,EPOCH,DATEOBS,WCSEQ,SIZE,PIXMODE,FRAME,DELAY,
    ORIGIN,FILTER,FILTERB,ASTRED,XYRED,PROJ,NONE,METHOD,CENTER,SELECTFIELD,DEFCATPROJ,FLIPFLOP,ASSFOV,
@@ -140,6 +164,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( SEEFITS!=null ) return;       // Déjà fait
 
       SEEFITS = aladin.chaine.getString("PROPSEEFITS");
+      SEEHIPSPROP = aladin.chaine.getString("PROPSEEHIPSPROP");
       SEEPARSING = aladin.chaine.getString("VWTABLEINFO");
       TABLEINFO = aladin.chaine.getString("PROPTABLEINFO");
       //      LOADURL = aladin.chaine.getString("PROPLOADURL");
@@ -672,7 +697,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
                      plan instanceof PlanBG ? "HiPS" :
                         PlanImage.describeFmtRes(pimg.dis,pimg.res));
 
-         // Bouton de recuperation de visualisation du header FITS
+         // Bouton de visualisation du header FITS
          if( pimg.headerFits!=null ) {
             JPanel fmtp = new JPanel();
             fmtp.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -680,6 +705,16 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             fmtp.add( b=new JButton(SEEFITS) );
             b.addActionListener(this);
             PropPanel.addCouple(p,FMT, fmtp, g,c);
+            
+            // Bouton de visualisation des properties HiPS
+         } else if( pimg instanceof PlanBG && ((PlanBG)pimg).prop!=null ) {
+            JPanel fmtp = new JPanel();
+            fmtp.setLayout(new FlowLayout(FlowLayout.LEFT));
+            fmtp.add(fmtl);
+            fmtp.add( b=new JButton(SEEHIPSPROP) );
+            b.addActionListener(this);
+            PropPanel.addCouple(p,FMT, fmtp, g,c);
+            
          } else PropPanel.addCouple(p,FMT, fmtl, g,c);
 
 
@@ -1853,6 +1888,9 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       // Visualisation du header fits
       else if( SEEFITS.equals(what) ) aladin.header(plan);
+
+      // Visualisation du header fits
+      else if( SEEHIPSPROP.equals(what) ) aladin.header(plan);
 
       // Visualisation des informations de parsing
       else if( SEEPARSING.equals(what) ) aladin.tableInfo(plan);

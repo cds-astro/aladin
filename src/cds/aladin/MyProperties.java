@@ -14,6 +14,8 @@ import cds.tools.Util;
 
 
 public class MyProperties extends Properties {
+   
+   private StringBuilder propOriginal = null;   // String des properties originales (telles que)
 
    public MyProperties() {
       super();
@@ -87,7 +89,14 @@ public class MyProperties extends Properties {
       return put(key,value);
    }
 
-   public synchronized void load(InputStream in) throws IOException {
+   /** Retourne le flux des propriétés originales */
+   public String getPropOriginal() { return propOriginal!=null ? propOriginal.toString() : null; }
+   
+   public synchronized void load(InputStream in) throws IOException { load(in,false); }
+   public synchronized void load(InputStream in,boolean flagKeepOriginal) throws IOException {
+      
+      // Pour conserver le flux original
+      if( flagKeepOriginal ) propOriginal = new StringBuilder();
 
       prop = new Vector<ConfigurationItem>();
       BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -96,6 +105,7 @@ public class MyProperties extends Properties {
       String s;
       int line = 0;
       while( (s = br.readLine()) != null ) {
+         if( flagKeepOriginal ) propOriginal.append(s+"\n");
          line++;
          if( s.trim().length() == 0 ) {
             prop.addElement(new ConfigurationItem(" ", null));

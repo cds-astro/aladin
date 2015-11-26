@@ -25,13 +25,42 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
 import org.apache.xmlrpc.WebServer;
 import org.apache.xmlrpc.XmlRpcClient;
@@ -1092,6 +1121,28 @@ public class SAMPManager implements AppMessagingInterface, XmlRpcHandler, PlaneL
 
         sendNotification(message, (String[])recipients.toArray(new String[recipients.size()]));
     }
+    
+    
+    // Bricolage PIERRE pour Petr Skoda - nov 2015
+    // TOPcat refuse de recevoir un spectre ou une série temporelle, je lui envoie comme une table simple
+    public void sendMessageLoadVOTable(String url, String id, String name, Map metadata, List recipients) {
+       Map paramMap = new Hashtable();
+       // ajout de l'url
+       paramMap.put("url", url);
+       // ajout du spectrum-id
+       paramMap.put("table-id", id);
+       // ajout des métadonnées
+       paramMap.put("meta", metadata);
+       // ajout du name
+       paramMap.put("name", name);
+
+       Map message = new Hashtable();
+       message.put(KEY_MTYPE, MSG_LOAD_VOT_FROM_URL);
+       message.put(KEY_PARAMS, paramMap);
+
+       sendNotification(message, recipients==null?null:(String[])recipients.toArray(new String[recipients.size()]));
+   }
+
 
     public void sendMessageLoadSpectrum(String url, String spectrumId, String spectrumName, Map metadata, List recipients) {
         Map paramMap = new Hashtable();

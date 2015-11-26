@@ -74,6 +74,8 @@ public interface AppMessagingInterface {
     /**
      * si recipients==null --> broadcast
      */
+    public abstract void sendMessageLoadVOTable(String url, String id, String name, Map metadata, List recipients);
+
     public abstract void sendMessageLoadSpectrum(String url, String spectrumId, String spectrumName, Map metadata, List recipients);
 
     public abstract void sendMessageLoadCharac(String url, String name, List recipients);
