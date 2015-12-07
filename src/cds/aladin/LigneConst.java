@@ -38,5 +38,8 @@ public class LigneConst extends Ligne {
       double taille = v.getTaille();
       return taille>=30 && dist>50 || taille<30 && dist>v.rv.width;
    }
+   
+   public boolean hasPhot() { return false; }
+
 
 }

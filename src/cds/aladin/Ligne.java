@@ -292,8 +292,7 @@ public class Ligne extends Position {
       s.append(')');
       return s.toString();
    }
-
-   /** Retourne true si l'objet contient des informations de photométrie  */
+   
    public boolean hasPhot() { return isPolygone(); }
    public boolean hasPhot(Plan p) {
       if( !hasPhot() ) return false;
@@ -311,7 +310,8 @@ public class Ligne extends Position {
          pol.addPoint(dx+p2.x, dy+p2.y);
          tmp=tmp.debligne;
       }
-      Util.drawFillPolygon(g, pol, 0.1f * plan.getOpacityLevel(), null);
+      float opacity = plan==null ? 1f : plan.getOpacityLevel();
+      Util.drawFillPolygon(g, pol, 0.1f * opacity, null);
    }
 
    /** Test d'appartenance a la Ligne

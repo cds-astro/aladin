@@ -4946,13 +4946,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miRGB!=null ) miRGB.setEnabled(nbPlanImgWithoutBG>1);
          if( miMosaic!=null ) miMosaic.setEnabled(nbPlanImgWithoutBG>1);
          if( miBlink!=null ) miBlink.setEnabled(nbPlanImgWithoutBG>1);
-//         if( miGrid!=null ) miGrid.setSelected( calque.hasGrid() );
-//         if( miHpxGrid!=null ) miHpxGrid.setSelected(calque.hasHpxGrid() );
-         if( miGrid!=null ) {
-            if( !calque.hasGrid() ) miNoGrid.setSelected( true );
-            else if( calque.gridMode==1 || miHpxGrid==null ) miGrid.setSelected( true );
-            else miHpxGrid.setSelected( true );
-         }
+         
+         if( !calque.hasGrid() ) { if( miNoGrid!=null ) miNoGrid.setSelected( true ); }
+         else if( calque.gridMode==1 || miHpxGrid==null ) miGrid.setSelected( true );
+         else { if( miHpxGrid!=null ) miHpxGrid.setSelected( true ); }
+         
          if( miOverlay!=null ) miOverlay.setSelected(calque.flagOverlay);
          if( miConst!=null ) miConst.setSelected(calque.hasConst());
          if( miRainbow!=null ) {

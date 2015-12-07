@@ -71,12 +71,12 @@ public class Constellation {
             s=is.readLine();
             if( s==null ) encore=false;
             
-            Tok tok = new Tok(s," ");
             try {
                double ra=0,dec=0;
                String cst;
                if( !encore ) cst="";
                else {
+                  Tok tok = new Tok(s," ");
                   ra = Double.parseDouble(tok.nextToken());
                   dec = Double.parseDouble(tok.nextToken());
                   cst = tok.nextToken();

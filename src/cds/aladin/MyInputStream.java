@@ -357,6 +357,9 @@ public final class MyInputStream extends FilterInputStream {
          else if( c[0]=='#' && c[1]=='M' && c[2]=='O' && c[3]=='C'
                && c[4]=='O' && c[5]=='R' && c[6]=='D' ) type |=HPXMOC;
 
+         // Détection MOC JSON (une ligne de blanc \n{"  )
+         else if( isJsonMoc(c) ) type |=HPXMOC;
+         
          //         // Detection de BMP
          //         else if( c[0]==66  && c[1]==77 ) type |= BMP;
 
@@ -1057,6 +1060,53 @@ public final class MyInputStream extends FilterInputStream {
       nHead.append("\n");
       return nHead.toString();
    }
+   
+   // Recherche d'une chaine {"nn":[
+   private boolean isJsonMoc(int c[] ) {
+      int mode=0;
+      for( int i=0; i<c.length; i++ ) {
+         char ch = (char) c[i];
+         switch(mode) {
+            case 0: // Je cherche le premier non blanc
+               if( Character.isSpace(ch) ) continue;
+               mode=1;
+            case 1: // je dois avoir un {
+               if( ch!='{' ) return false;
+               mode=2;
+               break;
+            case 2: // Je cherche le prochain non blanc
+               if( Character.isSpace(ch) ) continue;
+               mode=3;
+            case 3: // Je dois avoir un "
+               if( ch!='\"' ) return false;
+               mode=4;
+               break;
+            case 4: // Je dois avoir un nombre jusqu'au prochain "
+               if( ch=='\"' ) { mode=5; continue; }
+               if( !Character.isDigit(ch) ) return false;
+               break;
+            case 5: // Je cherche le prochain non blanc
+               if( Character.isSpace(ch) ) continue;
+               mode=6;
+            case 6: // Je dois avoir un :
+               if( ch!=':' ) return false;
+               mode=7;
+               break;
+            case 7: // Je peux avoir un blanc
+               if( Character.isSpace(ch) ) continue;
+               mode=8;
+            case 8: // Je dois avoir un [
+               if( ch!='[' ) return false;
+               return true;
+         }
+      }
+      return true;
+      
+//      else if( c[0]=='{' && c[1]=='"' ) type |=HPXMOC;
+//   else if( c[0]=='\n' && c[1]=='{' && c[2]=='"' ) type |=HPXMOC;
+//   else if( c[0]=='\r' && c[1]=='\n' && c[2]=='{' && c[3]=='"' ) type |=HPXMOC;
+   }
+
 
    /**
     * Determine s'il s'agit d'un flux en CSV.

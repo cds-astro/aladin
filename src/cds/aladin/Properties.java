@@ -977,7 +977,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
          PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
-         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
+//         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
          final JCheckBox b1 = new JCheckBox("borders");
          b1.setSelected( pmoc.isDrawingBorder() );

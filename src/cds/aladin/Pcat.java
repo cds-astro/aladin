@@ -711,8 +711,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             try {
                source.setFootprint(source.getValue(idxSTCS));
                source.setIdxFootprint(idxSTCS);
-            }
-            catch(Exception e) {
+            } catch(Exception e) {
                e.printStackTrace();
             }
          }

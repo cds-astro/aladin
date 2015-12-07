@@ -484,7 +484,6 @@ public class MocGen {
          } else if( s.startsWith("mocfmt=") ) {
             String a=s.substring(x);
             if( a.equalsIgnoreCase("fits") ) fmt=HealpixMoc.FITS;
-            else if( a.equalsIgnoreCase("obsolete") ) fmt=HealpixMoc.OBSOLETE;
             else if( a.equalsIgnoreCase("json") 
                   || a.equalsIgnoreCase("ascii") ) fmt=HealpixMoc.JSON;
             else {
