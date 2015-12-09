@@ -20,14 +20,12 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import javax.swing.JComponent;
 
@@ -103,6 +101,11 @@ public final class ViewControl extends JComponent implements
    /** Remise à jour des indices des vues dans les objets ViewSimple */
    static protected void setGoodViewNumber(ViewSimple[] v) {
       for( int i=0; i<MAXVIEW; i++ ) v[i].n=i;
+   }
+   
+   /** Retourne le nombre de vues en fonction du mode courant */
+   protected int getNbView(int mode) {
+      return mode==MVIEW2L ? 2 : mode;
    }
    
    /** Retourne le nombre de lignes de vues en fonction du mode */

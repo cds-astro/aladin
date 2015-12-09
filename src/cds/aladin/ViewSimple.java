@@ -3703,7 +3703,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             Tag t = (Tag) view.newobj;
             t.setText( t.id + k );
          }
-      } else {
+      } else if( key!=KeyEvent.VK_UP && key!=KeyEvent.VK_DOWN && key!=KeyEvent.VK_PAGE_DOWN ) {
          if( isFullScreen() ) { flagDrag = !aladin.fullScreen.sendKey(e); repaint(); }
          else aladin.localisation.sendKey(e);
       }
@@ -3711,13 +3711,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Extension du ClipRect
       if( view.newobj!=null ) view.extendClip(view.newobj);
 
-      // Peut etre un ajustement fin par les fleches
       else {
+         // Peut etre un ajustement fin par les fleches (si on a la loupe active)
          if( aladin.toolBox.tool[ToolBox.WEN].mode==Tool.DOWN &&
                (key==KeyEvent.VK_UP || key==KeyEvent.VK_DOWN
                || key==KeyEvent.VK_LEFT || key==KeyEvent.VK_RIGHT
-               || k=='+' || k=='-' ||
-               key==KeyEvent.VK_ENTER) ) {
+//               || k=='+' || k=='-'
+               || key==KeyEvent.VK_ENTER) ) {
             if( k=='+' ) aladin.calque.zoom.zoomView.changeWen(1);
             else if( k=='-' ) aladin.calque.zoom.zoomView.changeWen(-1);
             else if( key!=KeyEvent.VK_ENTER ) {
@@ -3735,6 +3735,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                requestFocusInWindow();
                return;
             }
+         } else {
+            if( key==KeyEvent.VK_UP || key==KeyEvent.VK_DOWN 
+                  || key==KeyEvent.VK_PAGE_DOWN ) aladin.localisation.sendKey(e);
          }
       }
    }
@@ -5879,7 +5882,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // Jamais d'effacement de la vue
    public void update(Graphics gr ) {
-      if( aladin.view.modeView<=n ) return;
+      if( aladin.view.getNbView()<=n ) return;
 
       //      if( isLockRepaint() ) return;   // Pas de repaint() pendant un saveView()
 

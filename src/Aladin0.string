@@ -1242,7 +1242,7 @@ SLMEXP	Expand the selected folders
 #SLMPROP	Properties of the selected planes
 SHOW	Show
 HIDE	Hide
-GOTO	Reticle to the center of this plane
+GOTO	Reticle to the initial plane location
 SWARNING For displaying this plane, activate before a reference plane with compatible projection
 SWARNINGSLIDER For displaying this plane, use the opacity slider.\noR activate it as the projection reference
 
@@ -1272,7 +1272,7 @@ SLMEXP.fr	Ouvrir les dossiers sélectionnés
 #SLMPROP.fr	Afficher les propriétés des plans sélectionnés
 SHOW.fr	Montrer
 HIDE.fr	Cacher
-GOTO.fr	Centrer le réticule sur ce plan
+GOTO.fr	Réticule sur la position initiale du plan
 SWARNING.fr Pour visualiser ce plan, activez au préalable un plan de reférence avec une projection compatible
 SWARNINGSLIDER.fr Pour visualiser ce plan, utilisez le curseur de transparence.\nOu activez-le en tant que référence de projection
 

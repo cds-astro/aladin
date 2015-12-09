@@ -711,7 +711,8 @@ public class PlanBG extends PlanImage {
 
    /** Adaptation des projLocal dans chaque vue */
    protected void syncProjLocal() {
-      for( int j=0; j<aladin.view.modeView; j++ ) {
+      int m=aladin.view.getNbView();
+      for( int j=0; j<m; j++ ) {
          ViewSimple v = aladin.view.viewSimple[j];
          if( v.pref!=this ) continue;
          Coord c = v.projLocal.getProjCenter();

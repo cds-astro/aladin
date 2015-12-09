@@ -331,7 +331,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Sélection de toutes les vues (via le menu) */
    protected void selectAllViews() {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( !viewSimple[i].isFree() ) selectView(i);
          viewSimple[i].paintBordure();
       }
@@ -339,7 +340,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Déselection de toutes les vues sauf la vue courante */
    protected void unselectViewsPartial() {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( !viewSimple[i].isFree() && i!=currentView ) {
             viewSimple[i].selected = false;
             if( viewSimple[i].pref!=null  ) viewSimple[i].pref.selected=false;
@@ -362,7 +364,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( !sync ) { v.cubeControl.setFrameLevel(frameLevel); return; }
 
       // Synchronisation de toutes les vues ayant le même plan blink de référence
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].pref==v.pref && viewSimple[i].pref.selected ) viewSimple[i].cubeControl.setFrameLevel(frameLevel);
       }
    }
@@ -372,7 +375,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     * @param v la vue de référence
     */
    protected void syncCube(ViewSimple v) {
-      for( int i=0; i<modeView; i++ ) {
+      int m =getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].pref==v.pref && viewSimple[i].cubeControl!=v.cubeControl ) {
             viewSimple[i].cubeControl.syncBlink(v.cubeControl);
          }
@@ -437,7 +441,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void selectCompatibleViews() {
       ViewSimple cv = getCurrentView();
       if( !Projection.isOk(cv.pref.projd) ) return;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].isFree() ) continue;
          if( cv==viewSimple[i] ) continue;
          if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
@@ -451,7 +456,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean isSelectCompatibleViews() {
       ViewSimple cv = getCurrentView();
       if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].isFree() ) continue;
          if( cv==viewSimple[i] ) continue;
          if( !cv.pref.projd.agree(viewSimple[i].pref.projd,viewSimple[i]) ) continue;
@@ -467,7 +473,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       try {
          ViewSimple cv = getCurrentView();
          if( cv==null || cv.pref==null || !Projection.isOk(cv.pref.projd) ) return false;
-         for( int i=0; i<modeView; i++ ) {
+         int m=getNbView();
+         for( int i=0; i<m; i++ ) {
             if( viewSimple[i].isFree() || cv==viewSimple[i] ) continue;
             if( cv.pref==viewSimple[i].pref && cv.pref.getZ()==viewSimple[i].pref.getZ() ) continue;
             if( viewSimple[i].selected ) continue;
@@ -482,7 +489,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne le nombre de vues sélectionnées */
    protected int nbSelectedViews() {
       int i=0;
-      for( i=0; i<modeView; i++ ) if( viewSimple[i].selected ) i++;
+      int m =getNbView();
+      for( i=0; i<m; i++ ) if( viewSimple[i].selected ) i++;
       return i;
    }
 
@@ -494,14 +502,16 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne la première vue sélectionnée, sinon retourne -1 */
    protected int getFirstSelectedView() {
-      for( int i=0; i<modeView; i++ ) if( viewSimple[i].selected ) return i;
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) if( viewSimple[i].selected ) return i;
       return -1;
    }
 
    /** Retourne la première vue sélectionnée, visible
     * dont le plan de référence est celui passé en paramètre, sinon null */
    protected ViewSimple getFirstSelectedView(Plan p) {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].selected && viewSimple[i].pref==p ) return viewSimple[i];
       }
       return null;
@@ -532,17 +542,19 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Reset du tracage des bords des autres images en cours de visualisation
     * (souris sort de la pile) */
    protected void resetBorder() {
-      for( int i=0; i<modeView; i++ ) viewSimple[i].oldPlanBord=null;
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].oldPlanBord=null;
    }
 
    /** Force la recreation de tous les buffers MemoryImage qui affiche
-    * une portion de l'image passée en paramètre. Sert à pallier un bug sous Linux
+    * une portion de l'image passée en paramètre. Sert à palier un bug sous Linux
     * On met simplement à 0 une variable d'état qui entrainera a regénération du buffer
     * voir ViewSimple.getImageView();
     * @param pimg L'image concernée
     */
    protected void recreateMemoryBufferFor(PlanImage pimg) {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].pref==pimg ) viewSimple[i].pHashCode=0;
       }
    }
@@ -587,7 +599,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne true si on a fini le taquin */
    private boolean isTaquinOk() {
       boolean rep=true;
-      for( int i=0; i<modeView-1; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m-1; i++ ) {
          System.out.print(" "+viewSimple[i].ordreTaquin);
          if( viewSimple[i].ordreTaquin!=i ) rep=false;
       }
@@ -778,7 +791,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       } else return -1;
 
       int t = vueInCol*(y/vueDim.height) + (x/vueDim.width);
-      if( t<0 || t>=modeView ) t=-1;
+      if( t<0 || t>=getNbView() ) t=-1;
       return t;
    }
 
@@ -887,8 +900,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       //         }
       //      }
 
+      int m = getNbView();
+      
       // On prend en compte les vues correspondnantes
-      for( int i=0; i<modeView; i++ ) {
+      for( int i=0; i<m; i++ ) {
          ViewSimple vc=viewSimple[i];
          if( vc.isFree() || !vc.pref.flagOk || !vc.pref.isPixel() ) continue;
          if( !vc.selected ) continue;
@@ -976,6 +991,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       }
 
       if( !isMultiView() ) setModeView(ViewControl.MVIEW9);
+      
+      m = getNbView();
 
       for( int j=0; j<src.length; j++ ) {
          Position o = src[j];
@@ -1005,7 +1022,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
             //            }
 
             if( n==-1 ) {
-               n=viewMemo.setAfter(previousScrollGetValue+modeView-1 -getNbStickedView(),v);
+               n=viewMemo.setAfter(previousScrollGetValue+m-1 -getNbStickedView(),v);
             }
             if( first==-1 ) first=n;
 
@@ -1034,7 +1051,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       v.setPlanRef(p,false);
       p.setActivated(true);
 
-      if( n== -1) viewMemo.setAfter(previousScrollGetValue+modeView-1
+      if( n== -1) viewMemo.setAfter(previousScrollGetValue+getNbView()-1
             -getNbStickedView(),v);
       return v;
    }
@@ -1080,7 +1097,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     *  @return true si on a pu le faire, sinon false
     */
    protected boolean setCurrentView() {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( !viewSimple[i].isFree() && viewSimple[i].selected ) {
             setCurrentView(viewSimple[i]);
             return true;
@@ -1092,7 +1110,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Positionne le curseur en fonction de l'outil courant */
    protected void setDefaultCursor() {
       int tool=aladin.toolBox.getTool();
-      for( int i=0; i<modeView; i++ ) viewSimple[i].setDefaultCursor(tool,false);
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].setDefaultCursor(tool,false);
    }
 
    /** Création du réticule par défaut, notamment lorsque je charge du AJ */
@@ -1200,7 +1219,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       setSelectFromView(false);
       boolean rep=false;
       int n=0,j=-1;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
          v.selected=false;
          if( v.isFree() ) continue;
@@ -1273,12 +1293,17 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean hasLockedView() {
       return true;
    }
-
+   
+   /** retourne le nombre de vues */
+   protected int getNbView() {
+      return aladin.viewControl.getNbView(modeView);
+   }
 
    /** Retourne le nombre de vues sélectionnées */
    protected  int getNbSelectedView() {
       int n=0;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i]!=null && viewSimple[i].selected ) n++;
       }
       return n;
@@ -1293,9 +1318,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne la vue courante */
    protected ViewSimple getCurrentView() {
-      if( currentView>=modeView ) {
+      int m =getNbView();
+      if( currentView>=m ) {
          //         System.err.println("View.getCurrentView() error: currentView ("+currentView+") > modeView ("+modeView+")");
-         setCurrentNumView(modeView-1);
+         setCurrentNumView(m-1);
       }
       return viewSimple[currentView];
    }
@@ -1304,7 +1330,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected ViewSimple[] getSelectedView() {
       int n,i;
       ViewSimple v[] = new ViewSimple[getNbSelectedView()];
-      for( n=i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( n=i=0; i<m; i++ ) {
          if( viewSimple[i].selected ) v[n++]=viewSimple[i];
       }
       return v;
@@ -1319,7 +1346,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne l'indice de la première vue libre visible,
     *  si aucune, retourne -1 */
    protected int getNextNumView() {
-      for( int i=0; i<modeView; i++) {
+      int m = getNbView();
+      for( int i=0; i<m; i++) {
          if( viewSimple[i].isFree() ) return i;
       }
       return -1;
@@ -1349,21 +1377,24 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       // Sinon on retourne la prochaine case libre
       int n = getNextNumView();
+      
+      int nbViews = getNbView();
 
       // Si ce n'est pas possible, on prend la dernière case qui n'est pas un scatter plot
       if( n==-1 ) {
-         for( int i=modeView-1; i>=0; i--) if( !viewSimple[i].isPlotView() ) { n=i; break; }
+         for( int i=nbViews-1; i>=0; i--) if( !viewSimple[i].isPlotView() ) { n=i; break; }
       }
 
       // Si c'est pas possible, on écrase la dernière case
-      if( n==-1 ) return modeView-1;
+      if( n==-1 ) return nbViews-1;
 
       return n;
    }
 
    /** true s'il y a une vue encore libre */
    public boolean hasFreeView() {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].isFree() ) return true;
       }
       return false;
@@ -1378,7 +1409,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne le status des vues visibles (voir command status views) */
    protected StringBuffer getStatus() {
       StringBuffer res = new StringBuffer();
-      for( int i=0; i<modeView; i++ ) {
+      int m =getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].isFree() ) continue;
          res.append( viewSimple[i].getStatus()+"\n");
       }
@@ -1388,7 +1420,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Retourne sous la forme d'un double la valeur du pixel courant de la vue courante,
     * NaN si impossible. Cette méthode est utilisée pour l'interface VoObserver */
    protected double getPixelValue() {
-      if( currentView<0 || currentView>=modeView ) return Double.NaN;
+      int m=getNbView();
+      if( currentView<0 || currentView>=m ) return Double.NaN;
       Plan p = viewSimple[currentView].pref;
       if( p==null ) return Double.NaN;
       if( !p.hasAvailablePixels() ) return Double.NaN;
@@ -1423,7 +1456,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          default:
             int lig = aladin.viewControl.getNbLig(modeView);
             int col = aladin.viewControl.getNbCol(modeView);
-            for( int i=0; i<modeView; i++ ) viewSimple[i].setDimension(w/col,h/lig);
+            int m=getNbView();
+            for( int i=0; i<m; i++ ) viewSimple[i].setDimension(w/col,h/lig);
             break;
       }
    }
@@ -1431,7 +1465,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Positionne un curseur pour toutes les vues */
    void setMyCursor(int type) {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          aladin.makeCursor(viewSimple[i], type);
       }
    }
@@ -1478,7 +1513,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected boolean isUsed(Plan p) { return find(p)!=-1; }
    protected int find(Plan p) {
-      for( int i=0; i<modeView/*viewSimple.length BUG*/; i++ ) {
+      int m = getNbView();
+      for( int i=0; i<m/*viewSimple.length BUG*/; i++ ) {
          if( viewSimple[i]!=null && viewSimple[i].pref==p ) return i;
       }
       return viewMemo.find(p,0);
@@ -1645,7 +1681,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Retourne la première vue qui utilise le plan p ou null si non trouvé */
    protected ViewSimple getView(Plan p) {
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          if( viewSimple[i].pref==p ) return viewSimple[i];
       }
       return null;
@@ -1659,11 +1696,12 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int i;
 
       // Nombre d'éléments (pour l'allocation)
-      for( nb=i=0; i<modeView; i++ ) if( viewSimple[i].pref==p ) nb++;
+      int m=getNbView();
+      for( nb=i=0; i<m; i++ ) if( viewSimple[i].pref==p ) nb++;
       if( nb==0 ) return null;
       int [] num = new int[nb];
 
-      for( nb=i=0; i<modeView; i++ ) if( viewSimple[i].pref==p ) num[nb++]=i;
+      for( nb=i=0; i<m; i++ ) if( viewSimple[i].pref==p ) num[nb++]=i;
       return num;
    }
 
@@ -1690,9 +1728,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          public void run() {
             record = aladin.calque.zoom.zoomView.getTaquinTime();
             unSelectAllView();
-            for( int i=0; i<modeView; i++ ) {
+            int m=getNbView();
+            for( int i=0; i<m; i++ ) {
                int j;
-               do { j = (int)(Math.random()*modeView); }
+               do { j = (int)(Math.random()*m); }
                while( viewSimple[j].selected );
                mouseView=j;
                paintBordure();
@@ -1825,7 +1864,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
    protected void resetBlinkSource() {
-      for( int i=0; i<modeView; i++ ) viewSimple[i].resetBlinkSource();
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].resetBlinkSource();
    }
 
    /** Synchronisation sur le plan pour la vue courante
@@ -1985,8 +2025,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     * afin 'être affichée en surimpression de l'image */
    protected void setPixelInfo(Coord coo) {
       String s;
-      for( int i=0; i<aladin.view.modeView; i++ ) {
-         ViewSimple v = aladin.view.viewSimple[i];
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
+         ViewSimple v = viewSimple[i];
          if( v.isFree() || !v.pref.hasAvailablePixels() || v.isPlotView() ) continue;
          s=null;
          Projection proj = v.pref.projd;
@@ -2084,7 +2125,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          if( vc.pref.type==Plan.IMAGEHUGE ) size *= ((PlanImageHuge)vc.pref).getStep();
       } catch( Exception e) {  };
 
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
          if( /* v.locked || */ !v.selected && v!=vc  || v.isPlotView()!=vc.isPlotView() ) continue;
 
@@ -2166,7 +2208,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    /** Force le recalcul de la grille de coordonnées */
    protected void grilAgain() {
       if( !aladin.calque.hasGrid() ) return;
-      for( int i=0; i<modeView; i++ ) viewSimple[i].oiz=-2;
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].oiz=-2;
    }
 
    /** Demande de rafraichissement des buffers de calculs de position
@@ -2175,7 +2218,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void newView() { newView(1); }
    protected void newView(int mode) {
-      for( int i=0; i<modeView; i++ ) viewSimple[i].newView(mode);
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].newView(mode);
    }
 
    /** Desactivation du mode Dynamic Color Map de la vue courante */
@@ -2595,7 +2639,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Reset de tous les clips des vues */
    protected void resetClip() {
-      for( int i=0; i<modeView; i++ ) viewSimple[i].resetClip();
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].resetClip();
    }
 
    /** Sélection ou désélection d'un objet (Source ou simple Position) sans réaffichage
@@ -3265,7 +3310,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean setRepere(Source s) {
       Coord coo = new Coord(s.raj,s.dej);
       boolean rep = setRepere(coo);
-      for( int i=0 ;i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0 ;i<m; i++ ) {
          ViewSimple v = viewSimple[i];
          if( !v.isPlotView() ) continue;
          rep |= v.setZoomSource(0,s);
@@ -3284,7 +3330,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       syncView(1,null,null,force);              // <= POUR THOMAS
       boolean rep=false;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          viewSimple[i].repaint();
          rep |= viewSimple[i].isInImage(coo.al,coo.del);
 
@@ -3644,7 +3691,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( !force && lastShowSource==o ) return;   // déjà fait
       lastShowSource=o;
 
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
 
          // Pas projetable dans cette vue
@@ -3733,7 +3781,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
             ViewSimple cv= getCurrentView();
 
-            for( int i=0; i<modeView; i++ ) {
+            int m=getNbView();
+            for( int i=0; i<m; i++ ) {
                ViewSimple v = viewSimple[i];
 
                boolean plan = v.isPlanBlink() && v.cubeControl.mode!=CubeControl.PAUSE;
@@ -4085,12 +4134,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    public void paintBordure() {
       if( aladin.menuActivated() ) return;
       if( aladin.inScriptHelp || aladin.inHelp) return;
-      for( int i=0; i<modeView; i++ ) viewSimple[i].paintBordure();
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) viewSimple[i].paintBordure();
    }
 
    /** Retourne true si le plan est actuellement visible */
    protected boolean isVisible(Plan p) {
-      for( int i=0; i<modeView; i++ ) if( viewSimple[i].pref==p ) return true;
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) if( viewSimple[i].pref==p ) return true;
       return false;
    }
 
@@ -4098,7 +4149,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     *  on va la rendre visible  */
    protected boolean tryToShow(Plan p) {
       int debut=previousScrollGetValue;
-      int fin = debut+modeView;
+      int m=getNbView();
+      int fin = debut+m;
 
       // Est-ce déjà visible ?
       if( isVisible(p) ) return false;
@@ -4317,7 +4369,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void sauvegarde() {
       if( previousScrollGetValue==-1 ) return;
       //System.out.println("Je memorise "+modeView+" vues à partir de "+previousScrollGetValue);
-      for( int i=0,j=previousScrollGetValue; i<modeView; i++) {
+      int m=getNbView();
+      for( int i=0,j=previousScrollGetValue; i<m; i++) {
          if( viewSimple[i].sticked ) viewSticked.set(getStickPos(i),viewSimple[i]);
          else {
             viewSticked.set(getStickPos(i),(ViewSimple)null);  // Pour reseter au cas où
@@ -4374,13 +4427,14 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       StringBuffer sID= new StringBuffer();
       ViewSimple v;
       boolean all=true;
-      for( int i=0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i=0; i<m; i++ ) {
          v=viewSimple[i];
          if( v.selected && !v.sticked ) all=false;
       }
       boolean flag=!all;
 
-      for( int i=0; i<modeView; i++ ) {
+      for( int i=0; i<m; i++ ) {
          v=viewSimple[i];
          if( v.selected ) {
             sID.append(" "+getIDFromNView(v.n));
@@ -4414,7 +4468,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       sauvegarde();
       // Je décale les viewMemo qui suivent pour écraser la viewMemo
       // désormais inutile
-      viewMemo.cale(previousScrollGetValue+modeView);
+      int m=getNbView();
+      viewMemo.cale(previousScrollGetValue+m);
 
    }
 
@@ -4428,7 +4483,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       memoStick(v.n,false);
       // Je décale les viewMemo qui suivent pour libérer la place
       // pour une nouvelle viewMemo
-      viewMemo.decale(previousScrollGetValue+modeView-1);
+      int m=getNbView();
+      viewMemo.decale(previousScrollGetValue+m-1);
 
       // INUTILE, C'EST FAIT DANS SAUVEGARDE
       //      // Je libère la viewSticked correspondante à v
@@ -4472,19 +4528,20 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
     */
    protected void scrollOn(int n) { scrollOn(n,0,0); }
    protected void scrollOn(int n,int current,int mode) {
+      int m=getNbView();
       scrollV.setValue(n/aladin.viewControl.getNbCol(modeView));
       if( mode!=1 ) sauvegarde();
       //System.out.println("Je recharge "+modeView+" vues à partir de "+n+" current="+current);
 
       // D'abord les vues stickées
       int nbStick=0;
-      for( int i=0; i<modeView; i++) {
+      for( int i=0; i<m; i++) {
          if( viewSimple[i].sticked ) { nbStick++; rechargeFromStick(i); }
       }
 
       // Puis les vues normales
-      int m = n+modeView-nbStick;
-      for( int i=n,j=0; i<m;j++ ) {
+      int k = n+m-nbStick;
+      for( int i=n,j=0; i<k;j++ ) {
          if( viewSimple[j].sticked ) continue;
          rechargeFromMemo(i++,j);
       }
@@ -4496,7 +4553,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       aladin.calque.majPlanFlag();
       aladin.calque.select.repaint();
-      for( int i=0; i<modeView; i++ ) viewSimple[i].repaint();
+      for( int i=0; i<m; i++ ) viewSimple[i].repaint();
    }
 
    protected int getScrollValue() {
@@ -4508,7 +4565,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       JPanel p1 = null;
       int n=0;
       JTabbedPane tab = new JTabbedPane();
-      for( int i =0; i<modeView; i++ ) {
+      int m=getNbView();
+      for( int i =0; i<m; i++ ) {
          ViewSimple v = viewSimple[i];
          if( v.isFree() || !v.isPlotView() ) continue;
          p1 = v.plot.getPlotControlPanelForPlan(plan);
@@ -4624,7 +4682,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          int n = getScrollValue();
 
          // Insertion ou suppression de la scrollbar verticale
-         boolean hideScroll = getLastUsedView()< modeView && !hasStickedView();
+         int m=getNbView();
+         boolean hideScroll = getLastUsedView()< m && !hasStickedView();
          if( scrollV.isShowing() && hideScroll  ) { remove(scrollV); validate(); }
          else if( !scrollV.isShowing() && !hideScroll  ) { add(scrollV, "West" ); validate(); }
          //System.out.println("getLastUsedView="+getLastUsedView()+" hasSticked="+hasStickedView()+" => hideScroll="+hideScroll);
@@ -4643,7 +4702,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          } else {
             aladin.calque.majPlanFlag();
             aladin.calque.select.repaint();
-            for( int i=0; i<modeView; i++ ) {
+            for( int i=0; i<m; i++ ) {
                if( mode==2 ) viewSimple[i].update(viewSimple[i].getGraphics());
                else if( mode==1 ) viewSimple[i].paintComponent(viewSimple[i].getGraphics());
                else {

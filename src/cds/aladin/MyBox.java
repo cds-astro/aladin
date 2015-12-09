@@ -31,6 +31,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -206,6 +207,11 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
 
    /** Positionne le menu deroulant */
    protected void setChoiceIndex(int m) { c.setSelectedIndex(m); }
+   
+   
+   // Uniquement utilisé pour pouvoir transmettre à l'objet qui la surchage le fait que les flèches
+   // UP ou DOWN ont été tapées.
+   protected void sendKey(KeyEvent e) { };
 
    /** Classe pour un JLabel de taille fixe */
    class Lab extends JLabel {
@@ -257,6 +263,12 @@ public abstract class MyBox extends JPanel implements MouseListener,MouseMotionL
          g.drawLine(x+X+1,y,x+1,y+X);
          g.drawLine(x+X+2,y,x+2,y+X);
          cross = new Rectangle(x,y,X,X);
+      }
+      
+      protected void processComponentKeyEvent(KeyEvent e) {
+         int key = e.getKeyCode();
+         if( e.getID()==KeyEvent.KEY_PRESSED && (key==KeyEvent.VK_UP || key==KeyEvent.VK_DOWN || key==KeyEvent.VK_PAGE_DOWN ) ) sendKey(e);
+         else super.processComponentKeyEvent(e);
       }
 
 

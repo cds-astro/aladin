@@ -20,8 +20,20 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,9 +41,19 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.TimeZone;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -129,6 +151,8 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    public void printCommand(String cmd) {
       if( cmd==null || cmd.trim().length()==0 ) return;
       cmdHistory.addElement( new Command(cmd) );
+      resetArrowHistory();
+
       resumeTable();
    }
 
@@ -192,7 +216,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
    /** Dépile la prochaine commande à traiter */
    synchronized public String popCmd() {
       if( cmd.size()==0 ) return "";
-      String s = (String)cmd.elementAt(0);
+      String s = cmd.elementAt(0);
       cmd.removeElementAt(0);
       return s;
    }
@@ -327,6 +351,40 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       }
    }
    
+   /********* History pour l'affichage dans le champ Location (controle avec les flèches) ************/
+   
+   private int indexArrowHistory=-1;   // -1 signifie dernière commande, sinon indice dans cmdHistory 
+   
+   /** Reset car une nouvelle commande a été ajoutée */
+   private void resetArrowHistory() { indexArrowHistory=-1; }
+   
+   public int getIndexArrowHistory() { return indexArrowHistory; }
+   
+   /** Visualisation de la commande suivante ou précédente dans l'historiques */
+   public String getNextArrowHistory(int sens) {
+      
+      // On se recale tout en haut
+      if( sens==2 ) resetArrowHistory();
+      
+      if( indexArrowHistory==-1 && cmdHistory.size()>0 ) indexArrowHistory = cmdHistory.size();
+      
+      Command cmd=null;
+      
+      
+      try {
+         for( indexArrowHistory+=sens; indexArrowHistory>=0 || indexArrowHistory<=cmdHistory.size(); indexArrowHistory+=sens ) {
+            cmd = cmdHistory.get(indexArrowHistory);
+            if( cmd.isCmd() ) break;
+         }
+      } catch( Exception e ) { }
+      
+      if( indexArrowHistory<0 ) indexArrowHistory=0;
+      if( indexArrowHistory>=cmdHistory.size() ) indexArrowHistory=-1;
+      if( indexArrowHistory==-1 ) return null;
+      
+      return cmd==null || !cmd.isCmd() ? null : cmd.getCommand();
+   }
+   
    
    /**************************************** Gestion de l'interface graphique *************************/
    
@@ -341,6 +399,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
          exec.setEnabled( qq && isCmdComplete(fieldCmd.getText())!=null );
          delete.setEnabled( cmdHistory.size()>0 );
       } catch( Exception e ) { }
+      
    }
    
    public void setEnabledDumpButton(boolean flag) { dump.setEnabled(flag); }
@@ -357,6 +416,7 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
             table.scrollRectToVisible( table.getCellRect(cmdHistory.size()-1,0,true) );
             resumeButton();
       }});
+      
    }
 
    // Création du Panel du champ de saisie d'une commande
@@ -638,6 +698,9 @@ public final class Console extends JFrame implements ActionListener,KeyListener,
       private String getType()    { return TYPES[type]; }
       private String getDate()    { return date==0 ? " ? " : SDF.format(date); }
       private String getCommand() { return cmd; }
+      
+      // Retourne true s'il s'agit d'une vraie commande (pas une erreur, ni une info)
+      public boolean isCmd() { return type==CMD; }
       
       // Postionnement de la date exprimée sous la forme JJ/MM/AA HH/MM/SS
       private boolean setDate(String s) { 

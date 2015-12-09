@@ -89,7 +89,7 @@ public class Position extends Obj {
    */
 
    protected void createCacheXYVP() {
-      createCacheXYVP(plan==null?ViewControl.MAXVIEW:plan.type==Plan.X?0:plan.aladin.view.modeView);
+      createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.type==Plan.X ? 0:plan.aladin.view.getNbView());
    }
    protected void createCacheXYVP(int dim) {
      if( dim==0 ) return;
@@ -223,7 +223,8 @@ public class Position extends Obj {
 
       if( ok ) {
          View view= plan.aladin.view;
-         for( int i=0; i<view.modeView; i++ ) {
+         int m = view.getNbView();
+         for( int i=0; i<m; i++ ) {
             ViewSimple vx = view.viewSimple[i];
             if( vx!=v && !vx.isFree() ) projection(vx);
          }
@@ -361,7 +362,8 @@ public class Position extends Obj {
 //      if( raj>=360.) raj-=360;
 //      if( raj<0.) raj+=360;
       View view= plan.aladin.view;
-      for( int i=0; i<view.modeView; i++ ) {
+      int m = view.getNbView();
+      for( int i=0; i<m; i++ ) {
          ViewSimple v = view.viewSimple[i];
          if( !v.isFree() ) projection(v);
       }

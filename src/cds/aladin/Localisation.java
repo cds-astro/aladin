@@ -54,7 +54,7 @@ import cds.tools.Util;
  * @version 0.9 : (??) creation
  * @see aladin.LCoord()
  */
-public class Localisation extends MyBox {
+public class Localisation extends MyBox  {
    // les constantes associees a chaque repere
    static final public int ICRS   = 0;
    static final public int ICRSD  = 1;
@@ -207,10 +207,10 @@ public class Localisation extends MyBox {
          first =false;
          if( cmd.length()>0 ) cmd.deleteCharAt(cmd.length()-1);
 
-         //      } else if( key==KeyEvent.VK_DOWN || key==KeyEvent.VK_UP) {
-         //         first=true;
-         //         String s = aladin.pad.getHistCommand(key);
-         //         if( s!=null ) cmd = new StringBuffer(s);
+      // On remonte/descend dans l'historique des commandes précédentes
+      } else if( key==KeyEvent.VK_UP || key==KeyEvent.VK_DOWN || key==KeyEvent.VK_PAGE_DOWN) {
+         String s1 = browseHistory( key==KeyEvent.VK_PAGE_DOWN ? 2 : key==KeyEvent.VK_UP ? -1 : 1 );
+         if( s1!=null ) cmd = new StringBuffer( s1 );
 
          // On insere un nouveau caractere
       } else {
@@ -222,6 +222,29 @@ public class Localisation extends MyBox {
       String s = cmd.toString();
       if( s.startsWith(aladin.GETOBJ) ) s = s.substring(aladin.GETOBJ.length());
       super.setTextSaisie(s);
+   }
+   
+   // Chaine en cours d'édition
+   private String lastEditingCmd=null;
+   
+   /** Permet d'afficher l'historique récent des commandes */
+   protected String browseHistory(int sens) {
+      boolean flagHead=false;
+      if( aladin.console.getIndexArrowHistory()==-1 ) {
+         lastEditingCmd = text.getText();
+         flagHead=true;
+      };
+            
+      String s = aladin.console.getNextArrowHistory( sens );
+      
+      // on est au début de la pile, et la commande est encore affichée => on la saute 
+      if( s!=null && flagHead && lastEditingCmd.equals(s) ) s=aladin.console.getNextArrowHistory( sens );
+      
+      if( s==null ) { s=lastEditingCmd; lastEditingCmd=null; }
+      if( s==null ) return null;
+//      System.out.println("sens="+sens+" flagHead="+flagHead+" ==> "+s);
+      first=false;
+      return s;
    }
 
    private boolean flagReadyToClear=false;     // Indique que le champ de saisie est prêt à être effacé (voir testClear())
@@ -701,6 +724,11 @@ public class Localisation extends MyBox {
          // Change la dernière coordonnée mémorisée
          setTextSaisie( convert(getTextSaisie(),previousFrame,getFrame()));
       } catch( Exception e ) {  if( Aladin.levelTrace>=3 ) e.printStackTrace(); }
+   }
+   public void keyTyped(KeyEvent e) { }
+   public void keyReleased(KeyEvent e) { }
+   public void keyPressed(KeyEvent e) {
+      System.out.println("keyPressed : "+e);
    }
 
 }
