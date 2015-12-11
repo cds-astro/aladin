@@ -2361,7 +2361,26 @@ public class Calque extends JPanel implements Runnable {
       }
    }
 
-   public void run() { newFitsExtThread(); }
+   public void run() {
+      newFitsExtThread();
+      stack();
+   }
+   
+   /** Suppression des plans vides intermédiaires dans la pile */
+   protected void stack() {
+      synchronized( pile ) {
+         int j=plan.length-1;
+         for( int i=plan.length-1; i>=0; i-- ) {
+            if( plan[i].isEmpty() || plan[i].type==Plan.NO ) continue; 
+            plan[j--] = plan[i];
+         }
+         for( ; j>=0; j-- ) {
+            if( plan[j].isEmpty() || plan[j].type==Plan.NO ) continue; 
+           plan[j]= new PlanFree(aladin);
+         }
+      }
+   }
+
 
    /**
     * Indique si l'extension n doit être retenue. Pour cela, soit numext==null
@@ -3196,8 +3215,10 @@ public class Calque extends JPanel implements Runnable {
             if( i>1 ) p1.c = Couleur.getNextDefault(this);
          }
       }
+      
+      stack();
    }
-
+   
    // thomas (AVO)
    /** Enregistre un catalog via InputStream dans le prochain plan libre.
     * @param dis  L'input Stream

@@ -4628,23 +4628,8 @@ public final class Command implements Runnable {
 
    private void hop() {
       try {
-
-         // reference slits from LMS
-         AladinData adRef = Aladin.aladin.getAladinData("toto");
-         // centroids slits
-         Iterator<Obj> itRef = adRef.iteratorObj();
-
-         while (itRef.hasNext() ) {
-            Obj objRef = itRef.next();
-            double ra  = objRef.getRa();
-            double dec = objRef.getDec();
-            System.out.println(ra+" | "+dec);
-            objRef.setRaDec(ra+0.1, dec+0.1);
-         }
-
-         adRef.repaint();
-
-      } catch (AladinException e) {
+        a.calque.stack();
+      } catch (Exception e) {
          e.printStackTrace();
       }
 
