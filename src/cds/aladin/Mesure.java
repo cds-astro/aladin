@@ -577,7 +577,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
 
       for( int i=0; i<leg.field.length; i++ )  {
          if( !leg.isVisible(i) ) continue;
-         Words w = new Words(leg.field[i].name,o.leg.getWidth(i),o.leg.getPrecision(i),
+         Words w = new Words(leg.field[i].name,null,o.leg.getWidth(i),o.leg.getPrecision(i),
                Words.CENTER,o.leg.computed.length==0?false:o.leg.computed[i],
                      leg.field[i].sort);
          w.pin = i==0;
@@ -617,7 +617,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
             // Creation du nouveau mot
             else {
                if( o.leg.isNullValue(tag, i-1) ) tag="";
-               w = new Words(tag,o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);
+               w = new Words(tag,o.leg.getRefText(i-1),o.leg.getWidth(i-1),o.leg.getPrecision(i-1),align,o.leg.computed.length==0?false:o.leg.computed[i-1],Field.UNSORT);
             }
          }
          w.show= (o==mcanvas.objSelect || o==mcanvas.objShow );

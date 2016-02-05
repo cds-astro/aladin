@@ -2114,7 +2114,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                      o.setSelect(true);
                   }
                } else {
-                  if( !((Source)o).isTagged() ) {
+                  if( o instanceof Source && !((Source)o).isTagged() ) {
                      o.setSelect(false);
                      aladin.view.vselobj.removeElement(o);
                   }
@@ -3905,7 +3905,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       return flagchange;
    }
 
-   private int[] createZoomPixelsRGB(PlanImage p,int [] oldPixelsRGB) { return createZoomPixelsRGB(p,oldPixelsRGB,-1); }
+   private int[] createZoomPixelsRGB(PlanImage p,int [] oldPixelsRGB) { 
+      try {
+         return createZoomPixelsRGB(p,oldPixelsRGB,-1);
+      } catch( Exception e ) {
+         if( aladin.levelTrace>=3 ) e.printStackTrace();
+         return null;
+      }
+   }
    private int[] createZoomPixelsRGB(PlanImage p,int [] oldPixelsRGB, double frame) {
 
 
@@ -3933,7 +3940,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( frame==-1) ((PlanRGBInterface)p).getPixels(newPixelsRGB,x1,y1,w,h);
       else ((PlanImageCubeRGB)p).getPixels(newPixelsRGB,x1,y1,w,h,(int)frame) ;
       //     }
-
+      
       // Zoom en agrandissement
       if( zoom>1 ) {
 
@@ -4024,7 +4031,11 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
          int taille = dw*dh;
          if( taille<0 ) return null;
-         reducePixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int[taille];
+         try {
+            reducePixelsRGB = oldPixelsRGB!=null && oldPixelsRGB.length==taille ? oldPixelsRGB : new int[taille];
+         } catch( Throwable e ) {
+            return null;
+         }
 
          // cas 1/x
          if( dst==1  ) {

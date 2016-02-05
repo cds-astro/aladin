@@ -52,7 +52,7 @@ public class BuilderIndex extends Builder {
    // Pour les stat
    private int statNbFile;                 // Nombre de fichiers sources
    private int statNbZipFile;              // Nombre de fichiers sources gzippés
-   private int statBlocFile;              // Nombre de fichiers qu'il aura fallu découper en blocs
+   private int statBlocFile;               // Nombre de fichiers qu'il aura fallu découper en blocs
    private long statMemFile;               // Taille totale des fichiers sources (en octets)
    private long statPixSize;               // Nombre total de pixels
    private long statMaxSize;               // taille du plus gros fichier trouvé
@@ -248,7 +248,7 @@ public class BuilderIndex extends Builder {
    }
 
    // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
-   private void createAFile(RandomAccessFile out, String filename, Coord center, String stc, String fitsVal)
+   private void createAFile(RandomAccessFile out, String filename, Coord center, long cellMem, String stc, String fitsVal)
          throws IOException {
 
       try {
@@ -272,6 +272,7 @@ public class BuilderIndex extends Builder {
 
          String line = "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
                "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
+               "\"cellmem\": \""+cellMem+"\", " +
                "\"stc\": \""+stc+"\""+fitsVal+" }\n";
 
          if( flagAppend ) out.seek( out.length() );
@@ -349,7 +350,7 @@ public class BuilderIndex extends Builder {
       for( File file : list ) {
          if( context.isTaskAborting() ) throw new Exception("Task abort !");
          context.setProgress(i++);
-         if( file.isDirectory() ) { dir.add(file); continue; }
+         if( !context.isInputFile && file.isDirectory() ) { dir.add(file); continue; }
          currentfile = file.getPath();
 
          Fits fitsfile = new Fits();
@@ -428,7 +429,7 @@ public class BuilderIndex extends Builder {
          for( File f1 : dir ) {
             if( !f1.isDirectory() ) continue;
             currentfile = f1.getPath();
-            //            System.out.println("Look into dir " + currentfile);
+//            System.out.println("Look into dir " + currentfile);
             try {
                create(currentfile, pathDest, order);
             } catch( Exception e ) {
@@ -484,7 +485,8 @@ public class BuilderIndex extends Builder {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
          double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
          //         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));
-         if( h>w*maxRatio || w>h*maxRatio ) throw new Exception("Suspicious image calibration (pixel size=" +Coord.getUnit(w)+"x"+Coord.getUnit(h)+")");
+         if( h>w*maxRatio || w>h*maxRatio ) throw 
+         new Exception("Suspicious image calibration (pixel size=" +Coord.getUnit(w)+"x"+Coord.getUnit(h)+") => see -maxRatio=xx parameter");
       }
 
       // On calcul également les coordonnées du centre de l'image
@@ -508,6 +510,9 @@ public class BuilderIndex extends Builder {
          }
          if( res!=null ) fitsVal=res.toString();
       }
+      
+      // On estime la RAM nécessaire au chargement d'une cellule du fichier
+      long cellMem = fitsfile.widthCell * fitsfile.heightCell * (fitsfile.bitpix==0 ?32 : Math.abs( fitsfile.bitpix ) /8);
 
       long[] npixs;
       long nside = CDSHealpix.pow2(order);
@@ -518,7 +523,11 @@ public class BuilderIndex extends Builder {
       if( radius<30 ) {
          npixs = CDSHealpix.query_polygon(nside, cooList);
       } else {
-         npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
+         try {
+            npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
+         } catch( Exception e ) {
+          throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
+         }
       }
       // pour chacun des losanges concernés
       for (int i = 0; i < npixs.length; i++) {
@@ -538,7 +547,7 @@ public class BuilderIndex extends Builder {
          // (mode mosaic), void du HDU particulier
          String filename = currentFile + (suffix == null ? "" : suffix);
 
-         createAFile(out, filename, center, stc.toString(), fitsVal);
+         createAFile(out, filename, center, cellMem, stc.toString(), fitsVal);
          out.close();
       }
    }

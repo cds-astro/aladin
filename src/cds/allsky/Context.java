@@ -59,7 +59,7 @@ import cds.tools.pixtools.CDSHealpix;
 public class Context {
    
    private static boolean verbose=false;
-   protected String ivorn=null;              // ivorn du survey (ex: ivo://CDS/P/2MASS/J)
+   protected String hipsId=null;             // Identificateur du HiPS (publisher_did, sinon publisher_id/obs_id sans le préfixe ivo://)
    protected String label;                   // Nom du survey
 
    protected String inputPath;               // Répertoire des images origales ou path de l'image originale (unique)
@@ -112,7 +112,7 @@ public class Context {
    private JpegMethod jpegMethod = JpegMethod.MEDIAN;
    protected Mode mode=Mode.getDefault();   // Methode de traitement par défaut
    protected int maxNbThread=-1;             // Nombre de threads de calcul max imposé par l'utilisateur
-   protected String publisher=null;          // Le nom de la personne qui a fait le HiPS
+   protected String creator=null;          // Le nom de la personne qui a fait le HiPS
    protected String status=null;             // status du HiPs (private|public clonable|unclonable|clonableOnce)
    protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
@@ -178,11 +178,11 @@ public class Context {
 
    // Getters
    public String getLabel() {
-      if( label==null ) return getLabelFromIvorn();
+      if( label==null ) return getLabelFromHipsId();
       return label;
 
    }
-   public String getIvorn() { return ivorn; }
+   public String getHipsId() { return hipsId; }
    public boolean getFading() { return fading; }
    public int[] getBorderSize() { return dataArea==Constante.SHAPE_UNKNOWN ?  borderSize : new int[]{0,0,0,0}; }
    public double getMaxRatio() { return maxRatio; }
@@ -230,9 +230,9 @@ public class Context {
    public void setLive(boolean flag) { live=flag; }
    public void setFlagInputFile(boolean flag) { isInputFile=flag; }
    public void setHeader(HeaderFits h) { header=h; }
-   public void setPublisher(String s) { publisher=s; }
+   public void setCreator(String s) { creator=s; }
    public void setStatus(String s ) { status=s; }
-   public void setIvorn(String s) { ivorn=checkIvorn(s,true); }
+   public void setHipsId(String s) { hipsId=checkHipsId(s,true); }
    public void setLabel(String s)     { label=s; }
    public void setMaxNbThread(int max) { maxNbThread = max; }
    public void setFading(boolean fading) { this.fading = fading; }
@@ -273,15 +273,15 @@ public class Context {
       }
    }
    
-   private String addendum_did=null;
-   public void setAddendum(String addIvorn) { addendum_did=addIvorn; }
-   public void addAddendum(String addIvorn) throws Exception {
-      if( addIvorn.equals(ivorn) ) throw new Exception("Addendum_did identical to the original IVORN ["+ivorn+"]");
-      if( addendum_did==null ) addendum_did=addIvorn;
+   private String addendum_id=null;
+   public void setAddendum(String addId) { addendum_id=addId; }
+   public void addAddendum(String addId) throws Exception {
+      if( addId.equals(hipsId) ) throw new Exception("Addendum_id identical to the original HiPS ID ["+hipsId+"]");
+      if( addendum_id==null ) addendum_id=addId;
       else {
-         Tok tok = new Tok(addendum_did,"\t");
-         while( tok.hasMoreTokens() ) { if( tok.nextToken().equals(addIvorn) ) throw new Exception("Addendum_did already used  ["+addendum_did+"]"); }
-         addendum_did += "\t"+addIvorn;
+         Tok tok = new Tok(addendum_id,"\t");
+         while( tok.hasMoreTokens() ) { if( tok.nextToken().equals(addId) ) throw new Exception("Addendum_id already used  ["+addendum_id+"]"); }
+         addendum_id += "\t"+addId;
       }
    }
 
@@ -295,12 +295,12 @@ public class Context {
    }
 
 
-   /** Vérifie l'IVORN passé en paramètre, et s'il n'est pas bon le met en forme
-    * @param s ivorn proposée, null si générataion automatique
+   /** Vérifie l'ID passé en paramètre, et s'il n'est pas bon le met en forme
+    * @param s ID proposée, null si générataion automatique
     * @param verbose false pour n'avoir aucun message d'alerte
-    * @return l'ivorn canonique
+    * @return l'ID canonique
     */
-   public String checkIvorn(String s,boolean verbose) {
+   public String checkHipsId(String s,boolean verbose) {
 
       String auth,id;
       if( s==null || s.trim().length()==0 ) {
@@ -308,19 +308,22 @@ public class Context {
          s=getLabel()!=null?getLabel():"";
       }
 
-      if( s.startsWith("ivo://")) s=s.substring(6);
+      if( s.startsWith("ivo://")) {
+         if( verbose ) warning("ivo:// prefix not used for HiPS identifier => removed");
+         s=s.substring(6);
+      }
 
       // Check de l'authority
       int offset = s.indexOf('/');
       if( offset==-1) {
          auth="UNK.AUTH";
-         if( verbose ) warning("ivorn error => missing authority => assuming "+auth);
+         if( verbose ) warning("Id error => missing authority => assuming "+auth);
       } else {
          auth = s.substring(0,offset);
          s=s.substring(offset+1);
          if( auth.length()<3) {
             while( auth.length()<3) auth=auth+"_";
-            if( verbose ) warning("ivorn authority error => at least 3 characters are required => assuming "+auth);
+            if( verbose ) warning("Creator ID error => at least 3 characters are required => assuming "+auth);
          }
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -330,7 +333,7 @@ public class Context {
          }
          if( bug ) {
             auth=a.toString();
-            if( verbose ) warning("ivorn authority error => some characters are not allowed => assuming "+auth);
+            if( verbose ) warning("Creator ID error => some characters are not allowed => assuming "+auth);
          }
       }
 
@@ -340,7 +343,7 @@ public class Context {
 
       if( id.length()==0) {
          id="ID"+(System.currentTimeMillis()/1000);
-         if( verbose ) warning("ivorn error => missing ID => assuming "+id);
+         if( verbose ) warning("Id error => missing ID => assuming "+id);
       } else {
          StringBuilder a = new StringBuilder();
          boolean bug=false;
@@ -350,24 +353,26 @@ public class Context {
          }
          if( bug ) {
             id=a.toString();
-            if( verbose ) warning("ivorn identifier error => some characters are not allowed => assuming "+id);
+            if( verbose ) warning("Id identifier error => some characters are not allowed => assuming "+id);
          }
       }
 
       String mode = isCube() ? "C": "P";
 
-      return "ivo://"+auth+"/"+mode+"/"+id;
+      return auth+"/"+mode+"/"+id;
    }
 
-   /** retourne un label issu de l'iVORN */
-   public String getLabelFromIvorn() {
-      if( ivorn==null ) return null;
-      int offset = ivorn.indexOf('/',6);
+   /** retourne un label issu de de l'ID du HiPS */
+   public String getLabelFromHipsId() {
+      if( hipsId==null ) return null;
+      String s = hipsId;
+      if( s!=null && s.startsWith("ivo://") ) s=s.substring(6);
+      int offset = s.indexOf('/');
       if( offset==-1 ) return null;
-      String s = ivorn.substring(offset+1);
-      if( s.startsWith("P/") ) s=s.substring(2);
-      s=s.replace('/',' ');
-      return s;
+      String s1 = s.substring(offset+1);
+      if( s1.startsWith("P/") ) s1=s1.substring(2);
+      s1=s1.replace('/',' ');
+      return s1;
    }
 
    static public Polygon createPolygon(String r) throws Exception {
@@ -1158,7 +1163,7 @@ public class Context {
       String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime,true)+" ("
             +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime,true))+") "
             +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
-            +Util.getTemps(statNodeAvgTime)+"/node"
+//            +Util.getTemps(statNodeAvgTime)+"/node"
             +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
             //         +" using "+Util.getUnitDisk(usedMem)
             ;
@@ -1421,14 +1426,22 @@ public class Context {
    static private Astroframe AF_ICRS1 = new ICRS();
 
    /** Mémorisation d'une propriété à ajouter dans le fichier properties */
-   protected void setComment(String comment) { setPropriete("#","#"+comment); }
-      protected void setPropriete(String key, String value) {
+   protected void setComment(String comment) { setPropriete1("#","#"+comment,false); }
+   protected void insertPropriete(String key,String value) { setPropriete1(key,value,true); }
+   protected void setPropriete(String key, String value) { setPropriete1(key,value,false); }
+   
+   private void setPropriete1(String key, String value,boolean flagInsert) {
       if( keyAddProp==null ) {
          keyAddProp = new Vector<String>();
          valueAddProp = new Vector<String>();
       }
-      keyAddProp.addElement(key);
-      valueAddProp.addElement(value);
+      if( flagInsert ) {
+         keyAddProp.insertElementAt(key,0);
+         valueAddProp.insertElementAt(value,0);
+      } else {
+         keyAddProp.addElement(key);
+         valueAddProp.addElement(value);
+      }
    }
 
    private String INDEX =
@@ -1587,7 +1600,7 @@ public class Context {
 
 
       // Ajout de l'IVORN si besoin
-      if( ivorn==null ) setIvorn(null);
+      if( hipsId==null ) setHipsId(null);
 
       // Ajout de l'order si besoin
       int order = getOrder();
@@ -1595,8 +1608,15 @@ public class Context {
 
       //      loadProperties();
 
-      setPropriete(Constante.KEY_PUBLISHER_DID,ivorn);
-      if( addendum_did!=null ) setPropriete(Constante.KEY_ADDENDUM_DID,addendum_did);
+//      setPropriete(Constante.KEY_PUBLISHER_DID,hipsId);
+      int offset = hipsId.indexOf('/');
+      if( offset==-1 ) insertPropriete(Constante.KEY_OBS_ID,hipsId);
+      else {
+         insertPropriete(Constante.KEY_PUBLISHER_ID,"ivo://"+hipsId.substring(0,offset));
+         insertPropriete(Constante.KEY_OBS_ID,hipsId.substring(offset+1));
+      }
+      
+      if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
       setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
       setPropriete("#"+Constante.KEY_OBS_TITLE,"Dataset text title");
       setPropriete("#"+Constante.KEY_OBS_DESCRIPTION,"Dataset text description");
@@ -1619,9 +1639,9 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
       setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
 
-      // Y a-t-il un publisher indiqué ?
-      if( publisher!=null ) setPropriete(Constante.KEY_HIPS_PUBLISHER,publisher);
-      else setPropriete("#"+Constante.KEY_HIPS_PUBLISHER,"HiPS publisher (institute or person)");
+      // Y a-t-il un creator indiqué ?
+      if( creator!=null ) setPropriete(Constante.KEY_CREATOR,creator);
+      else setPropriete("#"+Constante.KEY_CREATOR,"HiPS creator (institute or person)");
 
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
@@ -1670,7 +1690,7 @@ public class Context {
 
       // Ajout du target et du radius par défaut
       if( target!=null ) {
-         int offset = target.indexOf(' ');
+         offset = target.indexOf(' ');
          setPropriete(Constante.KEY_HIPS_INITIAL_RA,  target.substring(0,offset));
          setPropriete(Constante.KEY_HIPS_INITIAL_DEC, target.substring(offset+1));
       }
@@ -1753,13 +1773,19 @@ public class Context {
    protected void writeHpxFinderProperties() throws Exception {
 
       // Ajout de l'IVORN si besoin
-      if( ivorn==null ) setIvorn(null);
+      if( hipsId==null ) setHipsId(null);
 
       MyProperties prop = new MyProperties();
       String label = getLabel()+"-meta";
-      String ivorn = getIvorn()+"/meta";
+      String finderHipxId = getHipsId()+"/meta";
 
-      prop.setProperty(Constante.KEY_PUBLISHER_DID,ivorn);
+//      prop.setProperty(Constante.KEY_PUBLISHER_DID,ivorn);
+      int offset = finderHipxId.indexOf('/');
+      if( offset==-1 ) prop.setProperty(Constante.KEY_OBS_ID,finderHipxId);
+      else {
+         prop.setProperty(Constante.KEY_OBS_ID,finderHipxId.substring(offset+1));
+         prop.setProperty(Constante.KEY_PUBLISHER_ID,"ivo://"+finderHipxId.substring(0,offset));
+      }
       prop.setProperty(Constante.KEY_OBS_COLLECTION, label);
       prop.setProperty(Constante.KEY_DATAPRODUCT_TYPE, "meta");
       prop.setProperty(Constante.KEY_HIPS_FRAME, getFrameName());
@@ -1807,8 +1833,8 @@ public class Context {
    }
 
    private void replaceKeys(MyProperties prop) {
+      replaceKey(prop,Constante.OLD_HIPS_PUBLISHER,Constante.KEY_CREATOR);
       replaceKey(prop,Constante.OLD_HIPS_BUILDER,Constante.KEY_HIPS_BUILDER);
-      replaceKey(prop,Constante.OLD_PUBLISHER_DID,Constante.KEY_PUBLISHER_DID);
       replaceKey(prop,Constante.OLD_OBS_COLLECTION,Constante.KEY_OBS_COLLECTION);
       replaceKey(prop,Constante.OLD_OBS_TITLE,Constante.KEY_OBS_TITLE);
       replaceKey(prop,Constante.OLD_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
@@ -1832,6 +1858,19 @@ public class Context {
 
       String s;
       // Certains champs seront en plus convertis
+      s = prop.getProperty(Constante.KEY_OBS_ID);
+      if( s==null ) {
+         s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+         if( s!=null ) {
+            int index = s.indexOf("/",6);
+            if( index>0 ) {
+               prop.insert(Constante.KEY_PUBLISHER_ID, s.substring(0,index));
+               prop.insert(Constante.KEY_OBS_ID, s.substring(index+1));
+               prop.remove(Constante.KEY_PUBLISHER_DID);
+            }
+         }
+      }
+      
       s = prop.getProperty(Constante.OLD_HIPS_CREATION_DATE);
       if( s!=null && prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null) {
          try {

@@ -85,12 +85,12 @@ public final class Words implements Runnable {
     * @param align le type d'alignement
     * @param computed s'agit-il d'un champ calculé ?
     */
-   protected Words(String tag) { this(tag,0,-1,LEFT); }
-   protected Words(String tag,int width) { this(tag,width,-1,LEFT); }
+   protected Words(String tag) { this(tag,null,0,-1,LEFT, false,Field.UNSORT); }
+   protected Words(String tag,int width) { this(tag,null,width,-1,LEFT, false,Field.UNSORT); }
    protected Words(String tag,int width,int precision,int align) {
-      this(tag, width, precision,align, false,Field.UNSORT);
+      this(tag, null,width, precision,align, false,Field.UNSORT);
    }
-   protected Words(String tag,int width,int precision,int align,boolean computed,int sort) {
+   protected Words(String tag,String defText,int width,int precision,int align,boolean computed,int sort) {
       this.width = width;
       this.precision = precision;
       this.align = align;
@@ -98,6 +98,7 @@ public final class Words implements Runnable {
       this.sort=sort;
       char [] a = tag.toCharArray();
       if( !(glu=tagGlu(a)) ) text=tag;
+      if( defText!=null ) text=defText;
       setRepere();
    }
 

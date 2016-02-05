@@ -268,7 +268,7 @@ public class PlanBGCat extends PlanBG {
             if( healpix.isLast() ) npixLength-=4;
 
             if( order==norder ) {
-               HealpixKeyCat h = (HealpixKeyCat)healpix;
+               HealpixKeyCat h = healpix;
                if( !moreDetails && !h.isReallyLast(v) ) moreDetails = true;
 
                nLoaded += h.nLoaded;

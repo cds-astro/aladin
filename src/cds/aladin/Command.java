@@ -146,7 +146,7 @@ public final class Command implements Runnable {
 
    // Liste des commandes scripts documentés
    static final String CMD[] = {
-      "addcol","backup","bitpix","blink","call","cm","collapse","conv","contour","coord","copy",
+      "addcol","backup","bitpix","blink","call","cm","cmoc","collapse","conv","contour","coord","copy",
       "cplane","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem","northup","match",
@@ -2046,7 +2046,7 @@ public final class Command implements Runnable {
                   a.view.setCurrentNumView(nview);
                   defaultView=-1;
                }
-               if( p.isCatalog() ) {
+               if( p.isCatalog() || p.type==Plan.TOOL ) {
                   a.view.selectAllInPlanWithoutFree(p,0);
                   a.mesure.mcanvas.repaint();
                }
@@ -2116,6 +2116,72 @@ public final class Command implements Runnable {
          a.match(0);
 
       } else a.switchMatch(mode==3);
+   }
+   
+   /** Execution de la commande "cmoc" pour la création d'un MOC */
+   protected String execCmocCmd(String param,String label) {
+      try {
+         
+         int order=-1;
+         int command=0; // 0-union, 1-inter, 2-diff, 3-comp
+         
+         // Extraction d'un éventuel paramètre -order=nn
+         int i = param.indexOf("-order=");
+         if( i>=0 ) {
+            int j=i+7;
+            for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            order = Integer.parseInt( param.substring(j,i));
+            param = i==param.length() ? "" : param.substring(i).trim();
+         }
+         
+         // Extraction d'un éventuel paramètre "commande"
+         // -inter[section], -union, -diff[erence], -comp[lement]
+         i=param.indexOf("-union"); 
+         if( i<0 ) { if( (i=param.indexOf("-inter"))>=0 ) command=1; }
+         if( i<0 ) { if( (i=param.indexOf("-diff"))>=0 ) command=2; }
+         if( i<0 ) { if( (i=param.indexOf("-comp"))>=0 ) command=3; }
+         if( i>=0 ) {
+            int j=i;
+            for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            param = i==param.length() ? "" : param.substring(i).trim();
+         }
+
+//         System.out.println("order="+order+" param=["+param+"]");
+         
+         Plan [] p = getPlan(param,2);
+            
+         int type = -1;
+         if( p.length>0 ) {
+            a.view.deSelect();
+            for( Plan p1 : p ) {
+               if( type==-1 ) type=p1.type;  // Initialisation du type de plan pris en compte (TOOL, CATALOG ou IMAGE, mais séparémment)
+               if( p1.type!=type ) throw new Exception("mixed source plane types are not authorized");
+               if( p1.type==Plan.TOOL ) a.view.selectAllInPlanWithoutFree(p1, 0);
+            }
+         }
+         
+         // Pour des objets
+         if( type==-1 || type==Plan.TOOL ) {
+            int n = a.createMocRegion(order);
+            Plan pMoc = a.calque.getPlan(n);
+            if( label!=null ) pMoc.setLabel(label);
+            
+         // Pour les MOCs
+         } if( type==Plan.ALLSKYMOC ) {
+            System.out.println("Je dois faire une commande "+command+" sur les plans MOCs passés en paramètre");
+            
+         // Pour des catalogues ou des images
+         } else {
+            if( order==-1 ) order=13;
+            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN);
+         }
+         a.calque.repaintAll();
+         
+         return "";
+      } catch( Exception e ) {
+         if( a.levelTrace>=3 ) e.printStackTrace();
+         return e.getMessage()!=null ? "cmoc error: "+e.getMessage() : "cmoc error";
+      }
    }
 
    /** réduction à une portion de l'image
@@ -2887,6 +2953,7 @@ public final class Command implements Runnable {
             || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);
       else if( cmd.equalsIgnoreCase("stc") )    execDrawCmd("draw",param);
       else if( findMoc(cmd) )                   execDrawCmd("draw","MOC "+cmd);
+      else if( cmd.equalsIgnoreCase("cmoc") )   return execCmocCmd(param,label);
       else if( cmd.equalsIgnoreCase("draw") )   execDrawCmd(cmd,param);
       else if( cmd.equalsIgnoreCase("rename") || cmd.equalsIgnoreCase("ren") ) {  // For compatibility
          try {

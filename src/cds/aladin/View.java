@@ -2772,7 +2772,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected void selectAllInPlanWithoutFree(Plan plan,int mode) {
       boolean flagSource=false;
       Iterator<Obj> it = plan.iterator();
-      if( plan.isCatalog() ) {
+      if( plan.isCatalog() || plan.type==Plan.TOOL ) {
          while( it.hasNext() ) {
             Obj o1 = it.next();
             if( o1 instanceof Source ) {
@@ -4675,6 +4675,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          aladin.grid.repaint();
          aladin.match.repaint();
          aladin.northup.repaint();
+         aladin.pix.repaint();
          aladin.oeil.repaint();
 
          // Ajustement de la configuration d'affichage en fonction de la position

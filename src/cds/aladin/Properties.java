@@ -507,7 +507,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
          if(((PlanBG)plan).id!=null ) PropPanel.addCouple(p,"Id: ", new JLabel(((PlanBG)plan).id), g,c);
 
-         s = pbg.getProperty(Constante.KEY_HIPS_PUBLISHER);
+         s = pbg.getProperty(Constante.KEY_CREATOR);
          if( s!=null ) PropPanel.addCouple(p,"HiPS publisher", new JLabel(s), g,c);
 
 

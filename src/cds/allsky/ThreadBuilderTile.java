@@ -123,8 +123,11 @@ final public class ThreadBuilderTile {
    
    private Object objRel = new Object();
 
-   private void checkMem(long nbProgen ) throws Exception {
+   private void checkMem(int nbProgen ) throws Exception {
       long rqMem = 4 * nbProgen * Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH*context.getNpixOrig();
+      checkMem(nbProgen,rqMem);
+   }
+   private void checkMem(int nbProgen, long rqMem ) throws Exception {
       rqMem += 2*tileSide*tileSide*context.getNpix();
       if( nbProgen>Constante.MAXOVERLAY ) {
          rqMem += 2*tileSide*tileSide*8;
@@ -173,6 +176,16 @@ final public class ThreadBuilderTile {
    private boolean isTheLastRunning() {
       return nbThreadRunning<=1;
    }
+   
+   /** Détermination de la mémoire requise pour ouvrir n fichiers originaux de downFiles à partir de la position deb */
+   protected long getReqMem(ArrayList<SrcFile> downFiles,int deb, int n) {
+      long mem=0L;
+      for( int i=0; i<n && deb<downFiles.size(); i++,deb++ ) {
+         SrcFile file = downFiles.get(deb);   
+         mem += file.cellMem;
+      }
+      return mem;
+   }
 
    //   static private long totalDelay=0L;
    //   static private long nRead=0L;
@@ -200,7 +213,10 @@ final public class ThreadBuilderTile {
          if( !context.live && (coaddMode==Mode.ADD || !mixing || n<Constante.MAXOVERLAY  || !requiredMem(mixing ? n : 1)) ) {
 
             statOnePass++;
-            checkMem(mixing ? n : 1);
+            long mem = getReqMem(downFiles, 0, n);
+            checkMem(mixing ? n : 1, mem);
+//            checkMem(mixing ? n : 1);
+            
             out = buildHealpix1(bt,order,npix_file,z,downFiles,0,n,null);
 
             // Trop de progéniteurs, on va travailler en plusieurs couches de peinture
@@ -208,7 +224,7 @@ final public class ThreadBuilderTile {
          } else {
 
             statMultiPass++;
-            checkMem(Constante.MAXOVERLAY);
+//            checkMem(Constante.MAXOVERLAY);
 
             // poids déjà calculés
             double [] weight = null;
@@ -217,6 +233,10 @@ final public class ThreadBuilderTile {
             for( int deb=0; deb<n; deb+=Constante.MAXOVERLAY ) {
                int fin = deb+Constante.MAXOVERLAY;
                if( fin>=n ) fin=n;
+               
+               long mem = getReqMem(downFiles,deb,n);
+               checkMem(n,mem);
+               
                f = buildHealpix1(bt,order,npix_file,z,downFiles,deb,fin,fWeight);
                if( f!=null ) {
                   if( out==null ) {
@@ -853,9 +873,7 @@ final public class ThreadBuilderTile {
 
 
    // Je fais au plus simple pour un simple test => il faudra utiliser une librairie JSON
-   private String nextPath(BufferedReader r) throws Exception {
-      String s = r.readLine();
-      if( s==null ) return null;
+   private String getPath(String s) throws Exception {
       if( s.charAt(0)!='{' ) return s;   // Ancien format : un path par ligne
       int o = s.indexOf("path");
       int o1 = s.indexOf(':',o);
@@ -863,6 +881,21 @@ final public class ThreadBuilderTile {
       int o3 = s.indexOf('"',o2+1);
       return s.substring(o2+1,o3);
    }
+
+   // Je fais au plus simple pour un simple test => il faudra utiliser une librairie JSON
+   private long getCellMem(String s) throws Exception {
+      int o = s.indexOf("cellmem");
+      if( s.charAt(0)=='{' && o>-1 ) {
+         int o1 = s.indexOf(':',o);
+         int o2 = s.indexOf('"',o1+1);
+         int o3 = s.indexOf('"',o2+1);
+         try { 
+            return Integer.parseInt( s.substring(o2+1,o3) ); 
+         } catch( Exception e ) {}
+      }
+      return Constante.ORIGCELLWIDTH*Constante.ORIGCELLWIDTH* (context.bitpixOrig==0?32:Math.abs(context.bitpixOrig)/8);   // Approximation en l'absence de l'info
+   }
+
 
    /**
     * Interroge les répertoires locaux HpxFinder pour obtenir une liste de
@@ -876,18 +909,21 @@ final public class ThreadBuilderTile {
    boolean askLocalFinder(BuilderTiles bt, ArrayList<SrcFile> downFiles, String path, int order, long npix, double blank) {
       String hpxfilename = path + cds.tools.Util.FS + Util.getFilePath("", order, npix);
       File f = new File(hpxfilename);
+      String line = null;
       String fitsfilename = null;
+      long cellMem;
       if (f.exists()) {
          BufferedReader reader = null;
          try {
             reader = new BufferedReader(new FileReader(f));
-            for( int n=0; (fitsfilename = nextPath(reader)) != null; n++) {
-
+            for( int n=0; (line = reader.readLine()) != null; n++) {
+               fitsfilename = getPath(line);
+               cellMem = getCellMem(line);
                try {
                   Fits fitsfile = new Fits();
                   fitsfile.setFilename(fitsfilename);
 
-                  SrcFile file = new SrcFile(fitsfilename);
+                  SrcFile file = new SrcFile(fitsfilename,cellMem);
                   file.fitsfile = fitsfile;
 
                   downFiles.add(file);
@@ -984,14 +1020,16 @@ final public class ThreadBuilderTile {
 
    class SrcFile {
       Fits fitsfile;
-      int isOpened=-1;   // numero du frame ouvert, -1 si aucun
+      long cellMem;       // Mémoire requise pour ouvrir une cellule du fichier (en octets)
+      int isOpened=-1;     // numero du frame ouvert, -1 si aucun
       String name=null;
       double blank;
       Polygon polygon=null;
       boolean flagRemoved=false;   // true si ce fichier est supprimé a posteriori
 
-      SrcFile(String name ) {
+      SrcFile(String name,long cellMem) {
          this.name=name;
+         this.cellMem=cellMem;
       }
 
       @Override

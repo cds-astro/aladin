@@ -20,10 +20,13 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
-import javax.swing.*;
+import javax.swing.JComponent;
 
 import cds.tools.Util;
 
@@ -100,10 +103,12 @@ abstract public class MyIcon extends JComponent implements
   /** On quitte le bouton du split*/
    public void mouseEntered(MouseEvent e) {
       if( aladin.inHelp ) { aladin.help.setText(Help()); return; }
-      Aladin.makeCursor(this,Aladin.HANDCURSOR);
+      Aladin.makeCursor(this, getMyCursor() );
       in = true;
       repaint();
    }
+   
+   public int getMyCursor() { return Aladin.HANDCURSOR ; }
    
    public void paintComponent(Graphics gr) {
       drawLogo(gr);

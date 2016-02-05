@@ -134,6 +134,9 @@ final public class MainPanel extends JPanel implements ActionListener {
                context.isInputFile=true;
             }
          }
+         
+         // dans le cas où l'utilisateur à effacer manuellement le nom du fichier en fin de path
+         if( !f.isFile() ) context.isInputFile=false;
 
          if( !flagIsMap ) {
             boolean found = context.findImgEtalon(path);

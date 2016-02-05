@@ -20,13 +20,40 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Checkbox;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Label;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.zip.CRC32;
 
 import javax.imageio.IIOImage;
@@ -34,7 +61,17 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 import cds.fits.Fits;
 import cds.fits.HeaderFits;
@@ -1938,7 +1975,8 @@ public final class Save extends JFrame implements ActionListener {
 
    protected boolean saveMoc(String filename, PlanMoc p, int format) {
       try {
-         HealpixMoc moc = p.getMoc();
+         HealpixMoc moc = (HealpixMoc)p.getMoc().clone();
+         moc.setMinLimitOrder(0);
          moc.write(filename, format);
          aladin.memoLastFile(filename);
       } catch( Exception e ) {

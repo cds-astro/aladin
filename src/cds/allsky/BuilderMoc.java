@@ -24,10 +24,7 @@ import static cds.tools.Util.FS;
 import java.io.File;
 import java.io.FileInputStream;
 
-import cds.aladin.Localisation;
 import cds.aladin.MyInputStream;
-import cds.aladin.PlanHealpix;
-import cds.aladin.PlanMoc;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.CDSHealpix;

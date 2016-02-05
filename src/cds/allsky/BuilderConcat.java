@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 
 import cds.aladin.HealpixProgen;
 import cds.aladin.MyProperties;
+import cds.aladin.PlanBG;
 import cds.fits.Fits;
 import cds.moc.HealpixMoc;
 import cds.tools.pixtools.Util;
@@ -209,20 +210,54 @@ public class BuilderConcat extends BuilderTiles {
       return false;
    }
 
-   /** Ajoute le Addendum_did aux propriétés, et génère une exception si déjà existant */
+   /** Ajoute le Addendum_id aux propriétés, et génère une exception si déjà existant */
    protected void addAddendum(String sourcePath, String targetPath) throws Exception {
-      String ivornTarget = loadProperty(targetPath,Constante.KEY_PUBLISHER_DID);
-      context.setIvorn(ivornTarget);
-      String addendum = loadProperty(targetPath,Constante.KEY_ADDENDUM_DID);
-      context.setAddendum(addendum);
+      
+      String targetHipsId = getHipsIdFromProperty(targetPath);
+      context.setHipsId(targetHipsId);
+      String addendumId = loadProperty(targetPath,Constante.KEY_ADDENDUM_ID);
+      context.setAddendum(addendumId);
 
-      String ivornSource = loadProperty(sourcePath,Constante.KEY_PUBLISHER_DID);
-      context.addAddendum(ivornSource);
-      context.info("Merging "+ivornSource+" into "+ivornTarget+"...");
+      String sourceHipsId = getHipsIdFromProperty(sourcePath);
+      context.addAddendum(sourceHipsId);
+      context.info("Merging "+sourceHipsId+" into "+targetHipsId+"...");
+
    }
+   
    
    /** Charge une valeur d'un mot clé d'un fichier de properties pour un répertoire particulier, null sinon */
    protected String loadProperty(String path,String key) throws Exception {
+      MyProperties prop = loadProperties(path);
+      if( prop==null ) return null;
+      return prop.getProperty(key);
+   }
+   
+   /** Détermine l'HiPS ID depuis un fichier properties */
+   protected String getHipsIdFromProperty(String path) throws Exception {
+      MyProperties prop = loadProperties(path);
+      
+      return PlanBG.getHiPSID(prop);
+      
+//      // Méthode post Markus' law
+//      String s = prop.getProperty(Constante.KEY_OBS_ID);
+//      if( s!=null ) {
+//         String s1 = prop.getProperty(Constante.KEY_CREATOR_ID);
+//         if( s1!=null ) s=s1+"/"+s;
+//         else s=null;
+//      }
+//      
+//      // Méthode pré Markus' law
+//      if( s==null ) s=prop.getProperty(Constante.KEY_PUBLISHER_DID);
+//      
+//      // Méthode d'origine
+//      if( s==null ) s=prop.getProperty(Constante.OLD_PUBLISHER_DID);
+//      
+//      if( s!=null && s.startsWith("ivo://") ) s=s.substring(6);
+//      return s;
+   }
+   
+   /** Charge les propriétés d'un fichier properties, retourne null si problème */
+   protected MyProperties loadProperties(String path) {
       FileInputStream in = null;
       try {
          String propFile = path+Util.FS+Constante.FILE_PROPERTIES;
@@ -233,9 +268,11 @@ public class BuilderConcat extends BuilderTiles {
             prop.load(in);
             in.close();
             in=null;
-            return prop.getProperty(key);
+            return prop;
          }
-       } finally { if( in!=null ) in.close(); }
+      } 
+      catch( Exception e ) {}
+      finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
       return null;
    }
 

@@ -73,6 +73,7 @@ public final class CreatObj implements Runnable {
       a.grid = new Grid(a);
       a.oeil = new Oeil(a);
       a.northup = new Northup(a);
+      a.pix = new Hdr(a);
 //      trace(1,"Creating Sync, Split, Grid, Wink logo");
 
       a.viewControl = new ViewControl(a);

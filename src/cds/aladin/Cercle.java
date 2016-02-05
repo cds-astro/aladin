@@ -70,11 +70,18 @@ public class Cercle extends Forme {
    @Override
    public String getObjType() { return "Circle"; }
 
-   /** Retourne le rayon */
+   /** Retourne le rayon en coordonnées de la vue courante */
    protected double getRayon(ViewSimple v) {
       double dy=o[1].yv[v.n]-o[0].yv[v.n];
       double dx=o[1].xv[v.n]-o[0].xv[v.n];
       return Math.sqrt(dx*dx + dy*dy);
+   }
+   
+   /** retourne le rayon en degrés */
+   public double getRadius() {
+      Coord c0 = new Coord(o[0].raj, o[0].dej);
+      Coord c1 = new Coord(o[1].raj, o[1].dej);
+      return Coord.getDist(c0, c1);
    }
 
    /** Test d'appartenance.

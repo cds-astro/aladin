@@ -597,8 +597,28 @@ public final class Util {
       g.setColor(Color.lightGray);
       g.drawLine(x+w-1,y+h-1,x,y+h-1); g.drawLine(x+w-1,y+h-1,x+w-1,y);
    }
+   
+   /** Tracage d'un logo cercle coupé en 2 verticalement de 12 pixels de diamètre */
+   static public void drawCirclePix(Graphics g,int x,int y) {
+      
+      // Demi cercle supérieur
+      g.drawLine(x-1,y-5,x+2,y-5);
+      g.drawLine(x-3,y-4,x-2,y-4);  g.drawLine(x+1,y-4,x+4,y-4);
+      g.drawLine(x-4,y-3,x-4,y-3);  g.drawLine(x+1,y-3,x+5,y-3);
+      g.drawLine(x-4,y-2,x-4,y-2);  g.drawLine(x+1,y-2,x+5,y-2);
+      g.drawLine(x-5,y-1,x-5,y-1);  g.drawLine(x+1,y-1,x+6,y-1);
+      g.drawLine(x-5,y,x-5,y);      g.drawLine(x+1,y,x+6,y);
+      
+      // Demi cercle inférieur
+      g.drawLine(x-5,y+1,x-5,y+1);  g.drawLine(x+1,y+1,x+6,y+1);
+      g.drawLine(x-5,y+2,x-5,y+2);  g.drawLine(x+1,y+2,x+6,y+2);
+      g.drawLine(x-4,y+3,x-4,y+3);  g.drawLine(x+1,y+3,x+5,y+3);
+      g.drawLine(x-4,y+4,x-4,y+4);  g.drawLine(x+1,y+4,x+5,y+4);
+      g.drawLine(x-3,y+5,x-2,y+5);  g.drawLine(x+1,y+5,x+4,y+5);
+      g.drawLine(x-1,y+6,x+2,y+6);
+   }
 
-   /** Tracade d'un joli petit cercle de 7 pixels de diamètre */
+   /** Tracage d'un joli petit cercle de 7 pixels de diamètre */
    static public void drawCircle8(Graphics g,int x,int y) {
       if( !(g instanceof Graphics2D) ) {
          g.drawOval(x-4, y-4, 8, 8);

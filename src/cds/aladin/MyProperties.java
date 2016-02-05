@@ -57,6 +57,17 @@ public class MyProperties extends Properties {
          }
       }
    }
+   
+   /** Insertion de la clé et de la valeur au début de l'enregistrement. 
+    * Suppression de l'ancienne valeur si nécessaire
+    * @param key
+    * @param value
+    */
+   public void insert(String key, String value) {
+      remove(key);
+      ConfigurationItem item = new ConfigurationItem(key, value);
+      prop.add(0,item);
+   }
 
    public void remove( String key ) {
       int i;

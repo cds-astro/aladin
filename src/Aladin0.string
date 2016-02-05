@@ -501,6 +501,8 @@ BKGD.fr	ciel
 #BKGDH.fr	Cliquer pour activer/désactiver le ciel d'arrière plan
 NORTHUPHELP	Turn the image North up, Est left
 NORTHUPHELP.fr	Oriente l'image le Nord en haut, l'Est à gauche
+PIXHELP	High Dynamic pixel Range
+PIXHELP.fr	HDR: visualisation de la dynamique complète des pixels
 
 # Tool.java - One line tool help
 HSELECT	View and object selector - click and drag with or without the Shift key

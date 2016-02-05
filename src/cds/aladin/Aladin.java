@@ -170,6 +170,7 @@ import cds.xml.XMLParser;
  * @beta    <LI> MOC improvements (Mocgen)
  * @beta    <LI> HiPS improvements :
  * @beta       <UL>
+ * @beta         <LI> Pix local cut/full dynamic button
  * @beta         <LI> properties display
  * @beta         <LI> Obscore vocabulary support
  * @beta         <LI> Hipsgen full multi-threading support
@@ -229,7 +230,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.003";
+   static public final    String VERSION = "v9.007";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -246,7 +247,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final String ALADINMAINSITE    = "aladin.u-strasbg.fr";
    static final String WELCOME           = "Bienvenue sur "+TITRE+
          " - "+getReleaseNumber();
-   static String COPYRIGHT         = "(c) 2015 Unistra/CNRS - by CDS - Distributed under GNU GPL v3";
+   static String COPYRIGHT         = "(c) 2016 Unistra/CNRS - by CDS - Distributed under GNU GPL v3";
 
    static protected String CACHE = ".aladin"; // Nom du répertoire cache
    static protected String CACHEDIR = null;   // Filename du répertoire cache, null si non encore
@@ -426,7 +427,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    Grid grid;                    // Gere le logo pour la grille
    Oeil oeil;                    // Gere le logo pour l'oeil
    Northup northup;              // Gère le logo pour le Nord en haut
-   ViewControl viewControl;	  // Gere le logo de controle des views
+   Hdr pix;                      // Gère le logo pour le passage en full dynamique
+   ViewControl viewControl;	     // Gere le logo de controle des views
    Tips urlStatus;               // Gere la ligne de l'info sur les URLs
    MyLabel memStatus;            // Gere la ligne de l'info sur l'usage de la mémoire
    Mesure mesure;                // Gere la "Frame of measurements"
@@ -2163,7 +2165,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       JPanel y = new JPanel( new FlowLayout(FlowLayout.CENTER,0,0));
       y.setBorder(BorderFactory.createEmptyBorder());
       y.add(grid);
-      if( !OUTREACH ) { y.add(oeil); y.add(northup); }
+      if( !OUTREACH ) { y.add(oeil); y.add(northup); y.add(pix); }
       y.add(viewControl);
       if( !OUTREACH ) y.add(match);
 
@@ -3848,20 +3850,26 @@ DropTargetListener, DragSourceListener, DragGestureListener
    }
    
    /**Creation d'un MOC à partir de tous les polygones sélectionnés */
-   protected void createMocRegion() {
+   protected int createMocRegion() { return createMocRegion(-1); }
+   protected int createMocRegion(int order) {
       HealpixMoc moc = new HealpixMoc();
       HashSet<Obj> set = new HashSet<Obj>();
       for( Obj o : view.vselobj ) {
          
-         // Ajout des cercles
-         if( o instanceof Repere ) {
-            if( !((Repere)o).hasRayon() ) continue;
+         // Ajout des cercles (Phot ou cercle)
+         if( o instanceof Repere || o instanceof Cercle) {
             try {
-               HealpixMoc m = createMocRegionCircle( (Repere)o );
+               double ra = o.getRa();
+               double de = o.getDec();
+               double radius =o.getRadius();
+               if( radius==0 ) continue;
+
+               HealpixMoc m = createMocRegionCircle( ra,de,radius,order );
                if( m==null || m.getSize()==0 ) continue;
                moc.add(m);
             } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
          }
+         
          
          // Ajout des polygones
          if( !(o instanceof Ligne) ) continue;
@@ -3870,7 +3878,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( set.contains(o) ) continue;
          set.add(o);
          try {
-            HealpixMoc m = createMocRegionPol( (Ligne)o );
+            HealpixMoc m = createMocRegionPol( (Ligne)o,order );
             if( m==null || m.getSize()==0 ) continue;
             moc.add(m);
          } catch( Exception e) { if( levelTrace>=3 ) e.printStackTrace(); }
@@ -3879,21 +3887,18 @@ DropTargetListener, DragSourceListener, DragGestureListener
       
       if( moc.getSize()==0 ) {
          warning("MOC creation error !\n",1);
-         return;
+         return -1;
       }
       
 
-      calque.newPlanMOC(moc,"Moc reg");
+      return calque.newPlanMOC(moc,"Moc reg");
 
    }
-   
-   /** Création d'un MOC à partir d'un cercle (Repere avec rayon) */
-   protected HealpixMoc createMocRegionCircle(Repere o) throws Exception {
+      
+   /** Création d'un MOC à partir d'un cercle (ra,dec,radius) */
+   protected HealpixMoc createMocRegionCircle(double ra, double de, double radius, int order) throws Exception {
       HealpixMoc m = new HealpixMoc();
-      double ra = o.getRa();
-      double de = o.getDec();
-      double radius = o.getRadius();
-      int order=getAppropriateOrder(radius);
+      if( order==-1 ) order=getAppropriateOrder(radius);
       
       long i=0;
       m.setCheckConsistencyFlag(false);
@@ -3911,13 +3916,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**Creation d'un MOC à partir du polygone sélectionné pour un de ses sommets
     * Tente de faire les deux sens d'orientation du polygone et ne garde que celui qui
     * fournit une surface inférieure à la moitié du ciel */
-   protected HealpixMoc createMocRegionPol(Ligne o) throws Exception {
+   protected HealpixMoc createMocRegionPol(Ligne o, int order) throws Exception {
       HealpixMoc moc=null;
 
       double maxSize=0;
       Coord c1=null;
       boolean first=true;
-      int order=0;
 
       for( int sens=0; sens<2; sens++ ) {
          ArrayList<Vec3> cooList = new ArrayList<Vec3>();
@@ -3944,7 +3948,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
             if( sens==0 ) {
                // L'ordre est déterminé automatiquement par la largeur du polygone
-               order=getAppropriateOrder(maxSize);
+               if( order==-1 ) order=getAppropriateOrder(maxSize);
                trace(2,"MocRegion generation:  maxRadius="+maxSize+"deg => order="+order);
                if( order<10 ) order=10;
                else if( order>29 ) order=29;

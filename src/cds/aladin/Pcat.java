@@ -659,7 +659,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
             //else if( tag!=null && flagArchive!=null && flagArchive.startsWith("spectrumavo/") ) tag="*"+tag;
 
 
-            String text = (refText != null) ? refText : value[i];
+            // DESORMAIS LE TEXTE FORCE EST MIS A LA VISUALISATION DES MESURES (A FAIRE)
+//            String text = (refText != null) ? refText : value[i];
+            String text = value[i];
 
             line.append("\t");
             if( tag != null ) {

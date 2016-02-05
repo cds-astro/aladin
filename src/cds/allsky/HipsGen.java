@@ -132,13 +132,15 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("cmBlue"))     { context.setRgbCmParam(val, 2);
       } else if (opt.equalsIgnoreCase("img"))        { context.setImgEtalon(val);
       } else if (opt.equalsIgnoreCase("fitskeys"))   { context.setIndexFitskey(val);
-      } else if (opt.equalsIgnoreCase("publisher"))  { context.setPublisher(val);
       } else if (opt.equalsIgnoreCase("status"))     { context.setStatus(val);
-      } else if (opt.equalsIgnoreCase("ivorn"))      { context.setIvorn(val);
       } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
       } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
       } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
       } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
+      } else if (opt.equalsIgnoreCase("publisher") || opt.equalsIgnoreCase("creator"))  {
+         context.setCreator(val);
+      } else if (opt.equalsIgnoreCase("ivorn") || opt.equalsIgnoreCase("id")) {
+         context.setHipsId(val);
 
       } else if (opt.equalsIgnoreCase("debug")) {
          if (Boolean.parseBoolean(val)) Context.setVerbose(4);
@@ -405,11 +407,11 @@ public class HipsGen {
       if( !flagRGB ) setDefaultFrame();
 
       // Positionnement du pubDid
-      if( context.ivorn==null && !flagConcat && !flagMirror ) {
-         String s = context.checkIvorn(null, false);
-         context.setIvorn(s);
-         context.warning("IVORN identifier is strongly recommended (parameter ivorn=xxx) => assuming "+s);
-         context.info("The IVORN can be modified after the process by editing the properties file)");
+      if( context.hipsId==null && !flagConcat && !flagMirror ) {
+         String s = context.checkHipsId(null, false);
+         context.setHipsId(s);
+         context.warning("HiPS identifier is strongly recommended (parameter id=authority/identifier) => assuming "+s);
+         context.info("The HiPS ID can be modified after the process by editing the properties file)");
       }
 
       // C'est parti
@@ -417,7 +419,10 @@ public class HipsGen {
          long t = System.currentTimeMillis();
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
-         else context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         else {
+            context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
+            context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
+         }
          
       } catch (Exception e) {
          e.printStackTrace();
@@ -488,7 +493,8 @@ public class HipsGen {
                   "Basic optional parameters:\n"+
                   "   out=dir            HiPS target directory (default $PWD+\""+Constante.HIPS+"\")" + "\n" +
                   "   label=name         Label of the survey (by default, input directory name)" + "\n"+
-                  "   publisher=name     Name of the person|institute who builds the HiPS" + "\n"+
+                  "   id=identifier      HiPS identifier (syntax: AUTHORITY-ID/internalID)" + "\n"+
+                  "   creator=name       Name of the person|institute who builds the HiPS" + "\n"+
                   "   status=xx          HiPS status (private|public clonable|clonableOnce|unclonable)\n" +
                   "                      (default: public clonableOnce)" +
                   "   hdu=n1,n2-n3,...|all  List of HDU numbers (0 is the primary HDU - default is 0)\n" +

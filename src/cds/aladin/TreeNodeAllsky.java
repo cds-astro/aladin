@@ -224,7 +224,6 @@ public class TreeNodeAllsky extends TreeNode {
          if( keyColor!=null ) color = new Boolean(keyColor);
       }
 
-      //      if( color ) inJPEG=true;
       if( !cat && !progen /* && (keyColor==null || !color)*/ ) {
          String format = prop.getProperty(Constante.KEY_HIPS_TILE_FORMAT);
          if( format==null ) format = prop.getProperty(Constante.OLD_HIPS_TILE_FORMAT);
@@ -246,6 +245,8 @@ public class TreeNodeAllsky extends TreeNode {
          }
          if( color ) truePixels=false;
       }
+      
+      if( color && !inJPEG && !inPNG) inJPEG=true;
 
       aladin.trace(4,toString1());
    }
@@ -358,6 +359,9 @@ public class TreeNodeAllsky extends TreeNode {
       if( url!=null && !url.startsWith("http") && !url.startsWith("ftp") ) useCache=false;
 
       if( copyright!=null || copyrightUrl!=null ) setCopyright(copyright);
+      
+      if( color && !inJPEG && !inPNG ) inJPEG=true;
+      
       setMoc();
 
       //      Aladin.trace(3,this.toString1());

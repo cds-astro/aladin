@@ -20,13 +20,25 @@
 
 package cds.xml;
 
-import java.util.*;
-import java.io.*;
+import java.io.EOFException;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.aladin.Save;
-import cds.astro.*;
+import cds.astro.Astrocoo;
+import cds.astro.Astroframe;
+import cds.astro.Astropos;
+import cds.astro.Astrotime;
+import cds.astro.Ecliptic;
+import cds.astro.FK4;
+import cds.astro.FK5;
+import cds.astro.Galactic;
+import cds.astro.ICRS;
+import cds.astro.Supergal;
+import cds.astro.Unit;
 import cds.fits.HeaderFits;
 import cds.tools.Util;
 
@@ -1310,6 +1322,7 @@ final public class TableParser implements XMLConsumer {
       //                  " resourcedSub="+(resourceSub==null?"null":resourceSub));
 
    }
+   
 
    /** Determine si le catalogue dispose de coord., ou de position XY en fonction
     * des valeurs nRA,nDE,nX et nY
@@ -1317,7 +1330,6 @@ final public class TableParser implements XMLConsumer {
     * d'un point de SED.
     */
    private void posChooser() {
-
 
       inAstroCoords=false;
 

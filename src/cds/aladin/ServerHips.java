@@ -198,7 +198,7 @@ public class ServerHips extends ServerTree  {
                // Positionnement des datasets dans le champ
                for( TreeNodeAllsky gSky : aladin.glu.vGluSky ) {
                   gSky.ok = set.contains(gSky.internalId);
-                  //               if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
+//                  if( !gSky.ok ) System.out.println(gSky.internalId+" is out");
                }
             }
 
@@ -227,10 +227,10 @@ public class ServerHips extends ServerTree  {
 
    }
 
-   // Extraction du suffixe de l'IVORN pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
+   // Extraction de l'obs_id de l'IVORN pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
    private String getId(String ivorn) {
-      if( ivorn.length()<6 ) return "";
-      int offset = ivorn.indexOf("/",6);
+      int start = ivorn.startsWith("ivo://") ? 6 : 0;
+      int offset = ivorn.indexOf("/",start);
       String id = ivorn.substring(offset+1);
       return id;
    }

@@ -256,6 +256,7 @@ public class Ligne extends Position {
       Ligne tmp = getFirstBout();
       raj=tmp.raj;
       dej=tmp.dej;
+      bout=3;
       projection(v);
    }
 

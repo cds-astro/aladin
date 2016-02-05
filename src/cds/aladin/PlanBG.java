@@ -186,6 +186,7 @@ public class PlanBG extends PlanImage {
    protected int frameOrigin=Localisation.ICRS; // Mode Healpix du survey (GAL, EQUATORIAL...)
    protected int frameDrawing=aladin!=null && aladin.configuration!=null ? aladin.configuration.getFrameDrawing() : 0;   // Frame de tracé, 0 si utilisation du repère général
    protected boolean local;
+   protected boolean live=false;       // True si le HiPS est un survey "live" => tester les dates de chaque losange individuellement et pas seulement globalement
    protected boolean loadMocNow=false; // Demande le chargement du MOC dès le début
    protected String pixelRange=null;   // Valeur du range si décrit dans le fichier properties "min max" (valeur physique, pas raw)
    protected String pixelCut=null;     // Valeur du cut si décrit dans le fichier properties "min max" (valeur physique, pas raw)
@@ -378,6 +379,23 @@ public class PlanBG extends PlanImage {
 
       return true;
    }
+   
+   // Détermination de l'identificateur du HiPs, méthode post Markus, pré-Markus, 
+   // et même encore avant
+   static public String getHiPSID(java.util.Properties prop) {
+      String s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+      if( s==null ) {
+         s = prop.getProperty(Constante.KEY_OBS_ID);
+         if( s!=null ) {
+            String s1 = prop.getProperty(Constante.KEY_PUBLISHER_ID);
+            if( s1!=null ) s=s1+"/"+s;
+            else s=null;
+         }
+      }
+      if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
+      if( s.startsWith("ivo://") ) s = s.substring(6);
+      return s;
+   }
 
    protected boolean scanProperties() {
       // Information supplémentaire par le fichier properties ?
@@ -437,10 +455,20 @@ public class PlanBG extends PlanImage {
          s = prop.getProperty(Constante.KEY_HIPS_PIXEL_CUT);
          if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_PIXEL_CUT);
          if( s!=null ) pixelCut = s;
-
-         s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
-         if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
-         id = s;
+         
+         // Détermination de l'identificateur du HiPs, méthode post Markus, pré-Markus, 
+         // et même encore avant
+         id = getHiPSID(prop);
+//         s = prop.getProperty(Constante.KEY_OBS_ID);
+//         if( s!=null ) {
+//            String s1 = prop.getProperty(Constante.KEY_CREATOR_ID);
+//            if( s1!=null ) s=s1+"/"+s;
+//            else s=null;
+//         }
+//         if( s==null ) s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+//         if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
+//         id = s;
+//         if( id.startsWith("ivo://") ) id = s.substring(6);
 
          s = prop.getProperty(Constante.KEY_HIPS_TILE_WIDTH);
          if( s!=null ) {
@@ -457,6 +485,9 @@ public class PlanBG extends PlanImage {
             }
          }
 
+         s = prop.getProperty(Constante.KEY_DATAPRODUCT_SUBTYPE);
+         if( s.indexOf("live")>=0 ) live=true;
+         
       } catch( Exception e ) { aladin.trace(3,"No properties file found ...");  return false; }
       return true;
 
@@ -1065,12 +1096,30 @@ public class PlanBG extends PlanImage {
             in=Util.openAnyStream(urlFile);
             prop.load(in);
          } finally { if( in!=null ) try { in.close(); } catch( Exception e ) {} }
+         
+         String s = getHiPSID(prop);
 
-         String s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
-         if( s==null ) s = prop.getProperty(Constante.OLD_OBS_COLLECTION);
-         if( s.startsWith("ivo://") ) s=s.substring(6);
+//         // identification du HiPS méthode post Markus'rule
+//         String s = prop.getProperty(Constante.KEY_OBS_ID);
+//         if( s!=null ) {
+//            String s1 = prop.getProperty(Constante.KEY_CREATOR_ID);
+//            if( s1!=null ) s = s1+"/"+s;
+//            else s=null;
+//         }
+//         
+//         // identification du HiPS méthode pré Markus' rule
+//         if( s==null ) s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+//         
+//         // Ancienne identification
+//         if( s==null ) s = prop.getProperty(Constante.OLD_PUBLISHER_DID);
+//         
+//         
+//         if( s.startsWith("ivo://") ) s=s.substring(6);
+         
          s = s.replace("/","_");
          s = s.replace("\\","_");
+         s = s.replace("?","_");
+         s = s.replace("#","_");
          cacheName = s;
       } catch( Exception e ) {
          cacheName = survey + version;

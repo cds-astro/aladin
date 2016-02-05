@@ -751,9 +751,12 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    // Exécution d'un cut localisé autour du réticule
    private void localcut() {
+      localcut(pimg);
+      resumeWidgets();
+   }
+   public void localcut(PlanImage pimg) {
       if( pimg instanceof PlanBG ) ((PlanBG)pimg).forceReload();
       else pimg.recut(0, 0, true);
-      resumeWidgets();
       aladin.view.repaintAll();
    }
 
