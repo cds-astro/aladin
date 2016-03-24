@@ -4553,6 +4553,9 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * mode 0x1 image, 0x2 overlay
     */
    protected void drawForeGround(Graphics g,int mode, boolean flagBordure) {
+      Rectangle clip = g.getClipBounds();
+      int m = isFullScreen()?0:2;
+      g.setClip(m, m, rv.width-2*m, rv.height-2*m);
       if( flagBordure && pref!=null && pref instanceof PlanBG ) {
          if( (mode&0x1)!=0 && pref.isPixel() || (mode&0x2)!=0 && pref.isOverlay() ) {
             ((PlanBG)pref).drawForeground(g, this);
@@ -4560,6 +4563,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       if( (mode&0x2)!=0 && aladin.getOrder()>=0) drawHealpixMouse(g);
+      g.setClip(clip);
 
    }
 
@@ -5240,36 +5244,40 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( !allsky ) {
          if(  seg.iso==Segment.ISODE && (a1*a2<0 || (a1*a2==0 && (a1>0 || a2>0))) ) {
             seg.labelMode=northUpDown?Segment.GAUCHE:Segment.HAUT;
-            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-            int i = seg.label.indexOf(' ');
-            seg.label = zeroSec(seg.label.substring(i+1));
+//            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
+//            int i = seg.label.indexOf(' ');
+//            seg.label = zeroSec(seg.label.substring(i+1));
+
+            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1,getProj().sym);
 
          } else if(  seg.iso==Segment.ISORA && (b1*b2<0 || (b1*b2==0 && (b1>0 || b2>0))) ) {
             seg.labelMode=northUpDown?Segment.HAUT:Segment.GAUCHE;
-            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-            int i = seg.label.indexOf(' ');
-            seg.label = zeroSec(seg.label.substring(0,i));
+//            seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
+//            int i = seg.label.indexOf(' ');
+//            seg.label = zeroSec(seg.label.substring(0,i));
+            
+            seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0,getProj().sym);
          }
       }
       grille.addElement(seg);
    }
 
-   /** Tronque les centièmes de secondes, voire les secondes afin que les labels
-    * de la grille ne soient pas trop longs */
-   private String zeroSec(String s) {
-      char a[]=s.toCharArray();
-      int flagDecimal=0;
-      int flagZero=0;
-
-      for( int i=a.length-1; i>0 && (a[i]<'1' || a[i]>'9'); i--) {
-         if( a[i]=='.') flagDecimal=i;
-         else if( a[i]=='0' ) flagZero=i;
-         else if( a[i]==':') return s.substring(0,i);
-      }
-      if( flagDecimal>0 ) return s.substring(0,flagDecimal);
-      if( flagZero>0 ) return s.substring(0,flagZero);
-      return s;
-   }
+//   /** Tronque les centièmes de secondes, voire les secondes afin que les labels
+//    * de la grille ne soient pas trop longs */
+//   private String zeroSec(String s) {
+//      char a[]=s.toCharArray();
+//      int flagDecimal=0;
+//      int flagZero=0;
+//
+//      for( int i=a.length-1; i>0 && (a[i]<'1' || a[i]>'9'); i--) {
+//         if( a[i]=='.') flagDecimal=i;
+//         else if( a[i]=='0' ) flagZero=i;
+//         else if( a[i]==':') return s.substring(0,i);
+//      }
+//      if( flagDecimal>0 ) return s.substring(0,flagDecimal);
+//      if( flagZero>0 ) return s.substring(0,flagZero);
+//      return s;
+//   }
 
 
    private Hashtable memoSeg; // Table de hachage de mémorisation des noeuds de la grille
@@ -5346,14 +5354,18 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          if( labelAllSky ) {
             if( seg.al2==rajc && seg.al1==rajc ) {
                seg.labelMode=Segment.MILIEURA;
-               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-               int i = seg.label.indexOf(' ');
-               seg.label = zeroSec(seg.label.substring(i+1));
+//               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
+//               int i = seg.label.indexOf(' ');
+//               seg.label = zeroSec(seg.label.substring(i+1));
+               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,1,getProj().sym);
             } else if( seg.del2==dejc && seg.del1==dejc ) {
                seg.labelMode=Segment.MILIEUDE;
-               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
-               int i = seg.label.indexOf(' ');
-               seg.label = zeroSec(seg.label.substring(0,i));
+//               seg.label = aladin.localisation.frameToString(seg.al1,seg.del1);
+//               int i = seg.label.indexOf(' ');
+//               seg.label = zeroSec(seg.label.substring(0,i));
+               seg.label = aladin.localisation.getGridLabel(seg.al1,seg.del1,0,getProj().sym);
+
+
             }
          }
 
@@ -6352,7 +6364,16 @@ g.drawString(s,10,100);
       proj = projLocal!=null ? projLocal : pref.projd;    // projLocal dans le cas d'un planBG
       //      proj = pref.projd;
       if( proj==null ) return null;
-
+      
+//      if( Command.longitude==-1 && !proj.sym ) {
+//         System.out.println("proj.setProjSym(true)");
+//         proj.setProjSym(true);
+//      }
+//      else if( Command.longitude==1 && proj.sym ) {
+//         System.out.println("proj.setProjSym(false)");
+//         proj.setProjSym(false);
+//      }
+      
       if( !northUp ) return proj;
 
       // Pour le cas NorthUP

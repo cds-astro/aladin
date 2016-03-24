@@ -533,6 +533,16 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Retourne le nombre de plans BG images actuellement utilises */
+   protected int getNbPlanImgBG() {
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].type==Plan.ALLSKYIMG && plan[i].flagOk) n++;
+      }
+      return n;
+   }
+
    /** Retourne le nombre de sources chargées dans l'ensemble des plans */
    protected long getNbSrc() {
       long n=0;
@@ -1842,7 +1852,8 @@ public class Calque extends JPanel implements Runnable {
 
 
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
-   protected int newPlanMoc(String label,Plan [] p,int res,double radius, double pixMin, double pixMax) {
+   protected int newPlanMoc(String label,Plan [] p,int res,double radius, 
+         double pixMin, double pixMax,double threeshold) {
       int n;
       PlanMoc pa;
 
@@ -1850,7 +1861,7 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax);
+      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax,threeshold);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;

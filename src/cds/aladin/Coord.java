@@ -20,7 +20,8 @@
 
 package cds.aladin;
 
-import cds.astro.*;
+import cds.astro.Astrocoo;
+import cds.astro.Coo;
 import cds.tools.Util;
 
 /**
@@ -97,6 +98,42 @@ public final class Coord {
     */
    public String getSexa() { return getSexa(""); }
    public String getSexa(String c) { return getSexa(al,del,c); }
+   
+   /** Retourne les coordonnées sous forme degrés planétaires
+    * ex: N 12.2345, E 1.6378*/
+   public String getDegPlanet(boolean longitudeCroissante) {
+      String lat = Util.myRound(Math.abs(del));
+      String latL = del<0 ? "S" : "N";
+      double al1 = al>180 ? al - 360 : al;
+      String lng = Util.myRound(Math.abs(al1));
+      String lngL = longitudeCroissante && al1<0 || !longitudeCroissante && al1>=0 ? "W" : "E";
+      return lat+" "+latL+", "+lng+" "+lngL;
+   }
+   
+   /** Retourne les coordonnées sous forme sexagésimal (degrés) planétaire
+    * ex: N 12°34'5.23", E 1°3'2.22" */
+   public String getSexaPlanet(boolean longitudeCroissante) {
+      String lat = getSexaD(del);
+      String latL = del<0 ? "S" : "N";
+      double al1 = al>180 ? al - 360 : al;
+      String lng = getSexaD(al1);
+      String lngL = longitudeCroissante && al1<0 || !longitudeCroissante && al1>=0 ? "W" : "E";
+      return lat+" "+latL+", "+lng+" "+lngL;
+   }
+   
+   /** Retourne un réel sous forme sexagésimal (degrés) planétaire
+    * ex: 12°3'21.5"
+    * @param x
+    * @return
+    */
+   public String getSexaD(double x) {
+      x = Math.abs(x);
+      int deg = (int)x;
+      double minx = (x - deg)*60.;
+      int min = (int)minx;
+      double secx = (minx - min)*60.;      
+      return deg+"°"+min+"'"+Util.myRound(secx)+"\"";
+   }
 
    public String toString() { return getSexa(); }
 

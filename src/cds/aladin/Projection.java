@@ -319,7 +319,7 @@ public final class Projection {
       if( label==null ) this.label = getName(modeCalib,t);
       this.coo = null;
    }
-
+   
    //   protected void modifyFrame(int nFrame) {
    //      if( nFrame==frame ) return;
    //      Coord c = new Coord(alphai,deltai);
@@ -329,6 +329,10 @@ public final class Projection {
    //      int nSystem= Localisation.FRAMEBISVAL[i];
    //      modify(label,modeCalib,c.al,c.del,rm,rm1,cx,cy,r,r1,rot,sym,t,nSystem);
    //   }
+
+   public void setProjSym(boolean sym) {
+      modify(label,modeCalib,alphai,deltai,rm,rm1,cx,cy,r,r1,rot,sym,t,system);
+   }
 
    protected void setProjCenter(double ra,double dec) {
       Coord c = new Coord(ra,dec);
@@ -750,6 +754,13 @@ public final class Projection {
       Coord coo = c.getProjCenter();
       return Localisation.frameToFrame(coo,frame,Localisation.ICRS);
    }
+   
+   
+//   protected Coord flip(Coord c) {
+//      if( Command.longitude==1 ) return c;
+//      Coord c1 = new Coord(-c.al,c.del);
+//      return c1;
+//   }
 
    // thomas, 19/11/2007
    /** S'agit-il d'une projection dans le sens direct */

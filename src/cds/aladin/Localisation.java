@@ -70,33 +70,35 @@ public class Localisation extends MyBox  {
    static final public int XY     = 11;
    static final public int XYNAT  = 12;
    static final public int XYLINEAR  = 13;
+   static final public int PLANET = 14;
+   static final public int PLANETD = 15;
 
    // Le label pour chaque repere (dans l'ordre des constantes ci-dessus)
    static final String [] REPERE = {
       "ICRS","ICRSd","Ecliptic","Gal","SGal",
       "J2000","J2000d","B1950","B1950d","B1900","B1875",
-      "XY Fits","XY image","XY linear"
+      "XY Fits","XY image","XY linear","Planet","Planet deg"
    };
 
    // Le mot clé RADECSYS Fits correspondant au système de coordonnée
    static final String [] RADECSYS = {
       "ICRS","ICRS",null,null,null,
       "FK5","FK5","FK4","FK4","FK4","FK4",
-      null,null,null,
+      null,null,null,null,null,
    };
 
    // Le préfixe du mot clé CTYPE1 Fits correspondant au système de coordonnée
    static final String [] CTYPE1 = {
       "RA---","RA---","ELON-","GLON-","SLON-",
       "RA---","RA---","RA---","RA---","RA---","RA---",
-      null,null,"SOLAR",
+      null,null,"SOLAR",null,null,
    };
 
    // Le préfixe du mot clé CTYPE2 Fits correspondant au système de coordonnée
    static final String [] CTYPE2 = {
       "DEC--","DEC--","ELAT-","GLAT-","SLAT-",
       "DEC--","DEC--","DEC--","DEC--","DEC--","DEC--",
-      null,null,"SOLAR",
+      null,null,"SOLAR",null,null,
    };
 
    // Les différents Frames possibles (mode AllSky)
@@ -353,7 +355,12 @@ public class Localisation extends MyBox  {
    }
 
    protected JComboBox createSimpleChoice() {
-      return new JComboBox(REPERE);
+//      return new JComboBox(REPERE);
+      JComboBox c = new JComboBox();
+      int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
+      for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
+      return c;
+      
    }
    protected JComboBox createChoice() {
       final JComboBox c = super.createChoice();
@@ -364,7 +371,8 @@ public class Localisation extends MyBox  {
       });
       c.setPrototypeDisplayValue(new Integer(100000));
       c.setFont(F);
-      for( int i=0; i<REPERE.length; i++ ) c.addItem(REPERE[i]);
+      int n = Aladin.BETA ? REPERE.length : REPERE.length-2;
+      for( int i=0; i<n; i++ ) c.addItem(REPERE[i]);
       //      else for( int i=0; i<REPERE.length-1; i++ ) c.addItem(REPERE[i]);
       c.setSelectedIndex(ICRS);
       previousFrame=ICRS;
@@ -426,7 +434,7 @@ public class Localisation extends MyBox  {
       return frame==GAL ? GAL :
              frame==ECLIPTIC ? ECLIPTIC :
              frame==SGAL ? SGAL :
-             (frame!=XY || frame!=XYNAT || frame!=XYLINEAR) ? ICRS : -1;
+             (frame!=XY || frame!=XYNAT || frame!=XYLINEAR || frame!=PLANET) ? ICRS : -1;
    }
 
    /** Insère le résultat d'une résolution Sésame dans le champ de commande avec le label
@@ -478,7 +486,11 @@ public class Localisation extends MyBox  {
             proj.getCoord(coo);
 
             if( Double.isNaN(coo.al) ) s="";
-            else if( frame==XYLINEAR ) {
+            else if( frame==PLANET ) {
+               s = coo.getSexaPlanet(proj.sym);
+            } else if( frame==PLANETD ) {
+               s = coo.getDegPlanet(proj.sym);
+            } else if( frame==XYLINEAR ) {
                if( !proj.isXYLinear() ) s=NOXYLINEAR;
                else s=Util.myRound(coo.al+"",4)+" : "+Util.myRound(coo.del+"",4);
             } else {
@@ -637,6 +649,7 @@ public class Localisation extends MyBox  {
    protected String frameToString(double al,double del) { return frameToString(al,del,Astrocoo.ARCSEC+1); }
    protected String frameToString(double al,double del,int precision) {
       int i = getFrame();
+      
       afs.setPrecision(precision);
       afs.set(al,del);
       try {
@@ -646,6 +659,60 @@ public class Localisation extends MyBox  {
       } catch( Exception e) { System.err.println(e); }
       return "";
    }
+   
+   /** Retourne le label pour la grille de coordonnées en fonction du frame courant,
+    * @param al
+    * @param del
+    * @param indice 0-premier élément de la coord, 1-deuxième élément
+    * @param longitudeCroissante
+    * @return
+    */
+   protected String getGridLabel(double al, double del, int indice, boolean longitudeCroissante) {
+      int i=getFrame();
+      String s;
+      int offset;
+      if( i==PLANET || i==PLANETD) {
+         if( i==PLANETD ) s = (new Coord(al,del)).getDegPlanet(longitudeCroissante);
+         else s = (new Coord(al,del)).getSexaPlanet(longitudeCroissante);
+         if( s.length()==0 ) return "";
+         offset = s.indexOf(',');
+         return  zeroSec( indice==1 ? s.substring(0,offset) : s.substring(offset+2) );
+         
+      } else {
+         s = frameToString(al,del);
+         if( s.length()==0 ) return "";
+         offset = s.indexOf(' ');
+         return zeroSec( indice==0 ? s.substring(0,offset) : s.substring(offset+1) );
+      }
+   }
+   
+   /** Gère le cas d'un suffixe N,S,E,W éventuel à la fin de la coordonnée */
+   private String zeroSec(String s) {
+      int n=s.length();
+      if( n==0 ) return s;
+      char c = s.charAt(n-1);
+      if( c!='N' && c!='S' && c!='E' && c!='W' ) return zeroSec1(s);
+      return zeroSec1( s.substring(0,n-2) ) + s.substring(n-2);
+   }
+   
+   /** Tronque les centièmes de secondes, voire les secondes afin que les labels
+    * de la grille ne soient pas trop longs */
+   private String zeroSec1(String s) {
+      char a[]=s.toCharArray();
+      int flagDecimal=0;
+      int flagZero=0;
+
+      for( int i=a.length-1; i>0 && (a[i]<'1' || a[i]>'9'); i--) {
+         if( a[i]=='.') flagDecimal=i;
+         else if( a[i]=='0' ) flagZero=i;
+         else if( a[i]==':') return s.substring(0,i);
+         else if( a[i]=='\'') return s.substring(0,i+1);
+            }
+      if( flagDecimal>0 ) return s.substring(0,flagDecimal);
+      if( flagZero>0 ) return s.substring(0,flagZero);
+      return s;
+   }
+
 
    /** Indication de la position d'une source.
     * (en fonction du repere courant)

@@ -235,25 +235,7 @@ public class BuilderConcat extends BuilderTiles {
    /** Détermine l'HiPS ID depuis un fichier properties */
    protected String getHipsIdFromProperty(String path) throws Exception {
       MyProperties prop = loadProperties(path);
-      
       return PlanBG.getHiPSID(prop);
-      
-//      // Méthode post Markus' law
-//      String s = prop.getProperty(Constante.KEY_OBS_ID);
-//      if( s!=null ) {
-//         String s1 = prop.getProperty(Constante.KEY_CREATOR_ID);
-//         if( s1!=null ) s=s1+"/"+s;
-//         else s=null;
-//      }
-//      
-//      // Méthode pré Markus' law
-//      if( s==null ) s=prop.getProperty(Constante.KEY_PUBLISHER_DID);
-//      
-//      // Méthode d'origine
-//      if( s==null ) s=prop.getProperty(Constante.OLD_PUBLISHER_DID);
-//      
-//      if( s!=null && s.startsWith("ivo://") ) s=s.substring(6);
-//      return s;
    }
    
    /** Charge les propriétés d'un fichier properties, retourne null si problème */

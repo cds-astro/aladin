@@ -1307,21 +1307,21 @@ public final class MyInputStream extends FilterInputStream {
    }
 
    /** Pour débugging: affichage en hexadécimal d'un octet */
-   //    private String HEX = "0123456789ABCDEF";
-   //    private String H(int b) {
-   //       return ""+HEX.charAt(b/16)+HEX.charAt(b%16);
-   //    }
+   private String HEX = "0123456789ABCDEF";
+   private String H(int b) {
+      return ""+HEX.charAt(b/16)+HEX.charAt(b%16);
+   }
 
    /** Pour du débugging : affichage de  */
-   //    private String ASC(byte buf[],int pos, int size) {
-   //       StringBuilder s = new StringBuilder();
-   //       for( int i=pos; i<pos+size  ; i++ ) {
-   //          char c = (char)buf[i];
-   //          s.append( !Character.isISOControl(c) ? c:'.');
-   //          if( i%80==0 && (size<80 || i>0) ) s.append("\n        ");
-   //       }
-   //       return s+"";
-   //    }
+   private String ASC(byte buf[],int pos, int size) {
+      StringBuilder s = new StringBuilder();
+      for( int i=pos; i<pos+size  ; i++ ) {
+         char c = (char)buf[i];
+         s.append( !Character.isISOControl(c) ? c:'.');
+         if( i%80==0 && (size<80 || i>0) ) s.append("\n        ");
+      }
+      return s+"";
+   }
 
 
    private String lz77Uncompress(byte [] tmp) throws Exception {
@@ -1699,10 +1699,10 @@ public final class MyInputStream extends FilterInputStream {
             try {
                while( offsetCache+i+2+size>=inCache ) loadInCache(8192);
             } catch( EOFException e ) { }
-            //if( Aladin.levelTrace==4 ) {
-            //   Aladin.trace(4,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
-            //   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-            //}
+            if( Aladin.levelTrace==6 ) {
+               Aladin.trace(6,"("+i+") Segment JPEG "+H(getValAt(i))+" "+H(getValAt(i+1))+" "+size+" octets : ");
+               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+            }
             if( mode==0xE1 ) {
                memoJpegAVMCalib(offsetCache+i+4,size-2);
 
@@ -1734,10 +1734,10 @@ public final class MyInputStream extends FilterInputStream {
                if( more ) while( offsetCache+i+8+size>=inCache ) loadInCache(8192);
                else if( offsetCache+i+8+size>=inCache ) encore=false;
             } catch( EOFException e ) { more=false; }
-            //if( Aladin.levelTrace==4 ) {
-            //   Aladin.trace(4,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
-            //   Aladin.trace(4,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
-            //}
+            if( Aladin.levelTrace==6 ) {
+               Aladin.trace(6,"("+i+") Segment PNG "+chunk+" "+size+" octets : ");
+               Aladin.trace(6,ASC(cache,offsetCache+i+8,size>128 ? 128 : size));
+            }
             if( chunk.equals("tEXt") ) {
                if( memoPNGCalib(offsetCache+i+8,size,false) ) return true;
 

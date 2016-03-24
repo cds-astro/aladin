@@ -91,6 +91,7 @@ MMOCHIPS Load the coverage (MOC) of the current survey
 MMOCLOAD Load a specifical catalog MOC...
 MMOCGEN Generate a MOC based on...
 MMOCGENIMG The current image...
+MMOCGENPROBA The current probability skymap...
 MMOCGENIMGS An image collection...
 MMOCGENCAT The selected catalog...
 MMOCGENPOL The selected drawing objects
@@ -201,6 +202,7 @@ MMOCHIPS.fr	Chargement de la couverture (MOC) du relevé courant
 MMOCLOAD.fr Chargement pour un catalogue spécifique...
 MMOCGEN.fr Génération d'un MOC à partir de...
 MMOCGENIMG.fr	L'image courante...
+MMOCGENPROBA.fr	La carte courante de probabilités...
 MMOCGENIMGS.fr	Une collection d'images...
 MMOCGENCAT.fr	Le catalogue sélectionné...
 MMOCGENPOL.fr Des objets sélectionnés
@@ -925,6 +927,7 @@ MOCFILTERINGIN	inside
 MOCFILTERINGOUT	outside
 MOCFILTERINGCAT Catalog plane
 MOCFILTERINGMOC MOC plane
+MOCFILTERINGPROBA Proba skymap
 
 MOCFILTERINGOP.fr	Filtre:
 MOCFILTERINGTITLE.fr	Filtrage par MOC
@@ -933,10 +936,12 @@ MOCFILTERINGIN.fr	intérieur
 MOCFILTERINGOUT.fr	extérieur
 MOCFILTERINGCAT.fr Plan catalogue
 MOCFILTERINGMOC.fr Plan MOC
+MOCFILTERINGPROBA.fr Carte de probabilité
 
 # FrameMocGenImg.java strings
 MOCGENOP	MOC generation:
 MOCGENTITLE	MOC generation
+MOCGENPROBAINFO	Specify a probability map,\n specify a threeshold ([0..1]) and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENIMGINFO	Specify image or an HEALPix map,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENIMGSINFO	Set the directory of your image collection,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
 MOCGENCATINFO	Specify a catalog,\n choose a MOC resolution and\npress the CREATE button to generate the resulting MOC.\n
@@ -944,6 +949,7 @@ MOCGENORDINFO	Specify a MOC,\n choose a new resolution and\npress the CREATE but
 
 MOCGENOP.fr	Génération de MOC:
 MOCGENTITLE.fr	Génération de MOC
+MOCGENPROBAINFO.fr	Désignez une carte de probabilité\nainsi que le seuil souhaité ([0..1])\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
 MOCGENIMGINFO.fr	Désignez une image ou une carte HEALPix\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
 MOCGENIMGSINFO.fr	Indiquez le répertoire de votre collection d'images,\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
 MOCGENCATINFO.fr	Désignez un catalogue\nainsi que la résolution souhaitée\npuis appuyez sur le bouton CREER pour générer le MOC résultant.
@@ -1100,7 +1106,7 @@ PROPASTRED	Astrometrical reduction
 PROPXYRED	XY to coordinates reduction
 PROPPROJ	Projection
 PROPNONE	-- none --
-PROPMETHOD	.method 
+PROPMETHOD	.projection 
 PROPFRAME	.frame
 PROPFLIPFLOP	Symmetry...
 PROPASSFOV	Associated FoVs
@@ -1122,7 +1128,7 @@ PROPSEGMENTDENSITY Number of segments
 PROPSCALINGFACTOR Scaling factor (for filters)
 PROPPOINTING Pointing centers
 PROPPOINTINGLABEL Export pointing centers
-PROPDEFCATPROJ	Used projection
+PROPDEFCATPROJ	Drawing method
 PROPOPACITY	Overlay opacity/transparency
 PROPOPACITYLEVEL	Opacity level
 PROPDENSITY	Density correction
@@ -1183,7 +1189,7 @@ PROPASTRED.fr	Réduction astrométrique
 PROPXYRED.fr	XY pour l'obtention des coord.
 PROPPROJ.fr	Projection
 PROPNONE.fr	-- aucune --
-PROPMETHOD.fr	.méthode 
+PROPMETHOD.fr	.projection 
 PROPFRAME.fr	.repère
 PROPFLIPFLOP.fr	Symétrie
 PROPASSFOV.fr	FoVs associés
@@ -1205,7 +1211,7 @@ PROPSEGMENTDENSITY.fr Nombre de segments
 PROPSCALINGFACTOR.fr Facteur d'échelle (pour les filtres)
 PROPPOINTING.fr Pointages
 PROPPOINTINGLABEL.fr Exporter les positions des pointages
-PROPDEFCATPROJ.fr	Projection utilisée
+PROPDEFCATPROJ.fr	Méthode d'affichage
 PROPOPACITY.fr	Niveau d'Opacité/Transparence
 PROPOPACITYLEVEL.fr	Niveau d'opacité
 PROPDENSITY.fr	Correction de la densité
@@ -2026,6 +2032,7 @@ MFASCSORT	Ascending sort
 MFADESCSORT	Descending sort
 MFCOPYGEN	Copy...
 MFCOPYVAL	Copy the selected value
+MFCOPYURL	Copy the link under the mouse pointer
 MFCOPYCOORD	Copy object coordinates
 MFCOPYMEASUREMENT	Copy object measurements (TSV)
 MFCOPYMEASUREMENT1	Copy object measurements (JSON)
@@ -2061,6 +2068,7 @@ MFASCSORT.fr	Trier sens ascendant
 MFADESCSORT.fr	Trier sens descendant
 MFCOPYGEN.fr	Copier...
 MFCOPYVAL.fr	Copier la valeur sélectionnée
+MFCOPYURL.fr	Copier le lien sous la souris
 MFCOPYCOORD.fr	Copier les coordonnées de l'objet
 MFCOPYMEASUREMENT.fr	Copier les mesures de l'objet (TSV)
 MFCOPYMEASUREMENT1.fr	Copier les mesures de l'objet (JSON)

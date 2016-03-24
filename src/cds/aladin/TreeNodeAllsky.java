@@ -122,10 +122,10 @@ public class TreeNodeAllsky extends TreeNode {
       if( description==null ) description = prop.getProperty(Constante.OLD_OBS_TITLE);
       verboseDescr = prop.getProperty(Constante.KEY_OBS_DESCRIPTION);
       if( verboseDescr==null ) verboseDescr = prop.getProperty(Constante.OLD_OBS_DESCRIPTION);
-      copyright = prop.getProperty(Constante.KEY_DATA_COPYRIGHT);
-      if( copyright==null ) copyright = prop.getProperty(Constante.OLD_DATA_COPYRIGHT);
-      copyrightUrl = prop.getProperty(Constante.KEY_DATA_COPYRIGHT_URL);
-      if( copyrightUrl==null ) copyrightUrl = prop.getProperty(Constante.OLD_DATA_COPYRIGHT_URL);
+      copyright = prop.getProperty(Constante.KEY_OBS_COPYRIGHT);
+      if( copyright==null ) copyright = prop.getProperty(Constante.OLD_OBS_COPYRIGHT);
+      copyrightUrl = prop.getProperty(Constante.KEY_OBS_COPYRIGHT_URL);
+      if( copyrightUrl==null ) copyrightUrl = prop.getProperty(Constante.OLD_OBS_COPYRIGHT_URL);
       useCache = !local && Boolean.parseBoolean( prop.getProperty(Constante.OLD_USECACHE,"True") );
       skyFraction = prop.getProperty(Constante.KEY_MOC_SKY_FRACTION);
 

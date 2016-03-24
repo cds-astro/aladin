@@ -77,8 +77,8 @@ public class FrameGlu extends JFrame implements KeyListener {
       { "-", "Full descript.", "VerboseDescr",  Constante.KEY_OBS_DESCRIPTION,"",     "Full data description (can be a long paragraph)" },
       { "-", "Web info",       "Doc.User",      "",                         "",           "Web page describing the data" },
       { "-", "Institute",      "Institute",     "",                         "",           "Institute/origin of the data" },
-      { "-", "Copyright",      "Copyright",     Constante.KEY_DATA_COPYRIGHT,  "",             "Copyright mention (ex: (c) Institute of ....)" },
-      { "-", "Web site",       "Copyright.url", Constante.KEY_DATA_COPYRIGHT_URL,"",           "Web link for copyright mention" },
+      { "-", "Copyright",      "Copyright",     Constante.KEY_OBS_COPYRIGHT,  "",             "Copyright mention (ex: (c) Institute of ....)" },
+      { "-", "Web site",       "Copyright.url", Constante.KEY_OBS_COPYRIGHT_URL,"",           "Web link for copyright mention" },
    };
 
 

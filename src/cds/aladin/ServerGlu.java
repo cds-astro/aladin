@@ -20,15 +20,26 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.InputStream;
-import java.net.*;
-import java.util.*;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Enumeration;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import cds.tools.Util;
 
@@ -501,6 +512,7 @@ public class ServerGlu extends Server implements Runnable {
    protected boolean is(String s) {
       return s.equalsIgnoreCase(actionName) || super.is(s);
    }
+   
 
    /** Retourne l'Item d'une JcomboBox qui contient la chaine "cr" (ou egalité stricte
     * dans le cas d'un numérique)

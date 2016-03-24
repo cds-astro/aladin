@@ -19,6 +19,8 @@
 
 package cds.aladin;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 import cds.moc.Healpix;
@@ -27,6 +29,7 @@ import cds.tools.pixtools.CDSHealpix;
 
 /** Generation d'un plan MOC à partir d'une liste de plans (Image, Catalogue ou map HEALPix) 
  * @author P.Fernique [CDS]
+ * @version 1.1 - mar 2016 - ajout probability sky map
  * @version 1.0 - nov 2012
  */
 public class PlanMocGen extends PlanMoc {
@@ -35,17 +38,20 @@ public class PlanMocGen extends PlanMoc {
    private double radius;   // Pour un plan catalogue, rayon autour de chaque source (en degres), sinon 0
    private double pixMin;   // Pour un plan Image ou map Healpix, valeur minimale des pixels retenus (sinon NaN)
    private double pixMax;   // Pour un plan Image ou map Healpix, valeur maximale des pixels retenus (sinon NaN)
+   private double threeshold;// Pour un plan Image Healpix, seuil max de l'intégration (sinon NaN)
    private int res;         // Résolution (ordre) demandée
    
    private double gapPourcent;  // Pourcentage de progression par plan (100 = tout est terminé)
    
-   protected PlanMocGen(Aladin aladin,String label,Plan[] p,int res,double radius,double pixMin,double pixMax) {
+   protected PlanMocGen(Aladin aladin,String label,Plan[] p,int res,double radius,
+         double pixMin,double pixMax,double threeshold) {
       super(aladin,null,null,label,p[0].co,30);
       this.p = p;
       this.res=res;
       this.radius=radius;
       this.pixMin=pixMin;
       this.pixMax=pixMax;
+      this.threeshold=threeshold;
       
       pourcent=0;
       gapPourcent = 100/p.length;
@@ -179,12 +185,13 @@ public class PlanMocGen extends PlanMoc {
       moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
                        p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
       frameOrigin = p.frameOrigin;
+      try { moc.setCheckConsistencyFlag(false); } catch(Exception e) {}
       
       // Nombre de losanges à traiter
       int n = (int)CDSHealpix.pow2(fileOrder); 
       n=12*n*n;
       
-      System.out.println("Nombre de losanges à traiter : "+n);
+//      System.out.println("Nombre de losanges à traiter : "+n);
       
       // Sans doute inutile car déjà fait
       try { p.createHealpixOrder(order); } catch( Exception e1 ) { e1.printStackTrace(); }
@@ -193,7 +200,7 @@ public class PlanMocGen extends PlanMoc {
       double incrPourcent = gapPourcent/n;
       
       for( int npixFile=0; npixFile<n; npixFile++ ) {
-         System.out.println("Traitement de "+npixFile);
+//         System.out.println("Traitement de "+npixFile);
          pourcent += incrPourcent;
          HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
          if( h==null ) continue;
@@ -233,7 +240,7 @@ public class PlanMocGen extends PlanMoc {
             
             // On remet immédiatement au propre le MOC uniquement si on a inséré
             // au-moins 1000 cellules (histoire de ne pas exploser la mémoire)
-            if( nb>1000 ) moc.checkAndFix();
+            if( nb>10000 ) moc.checkAndFix();
             
          } catch( Exception e ) {
             e.printStackTrace();
@@ -242,6 +249,7 @@ public class PlanMocGen extends PlanMoc {
       
       // Conversion en ICRS si nécessaire
       try {
+         moc.setCheckConsistencyFlag(true);
          moc=toReferenceFrame("C");
          frameOrigin=Localisation.ICRS;
       } catch( Exception e ) {
@@ -249,7 +257,144 @@ public class PlanMocGen extends PlanMoc {
       }
    }
    
+   /** Creation d'un plan Moc à partir d'un HiPS en prennant toutes les pixels qui représentent
+    * threeshold (sommation) de la totalité des pixels. On commence par les valeurs les plus grandes.
+    * Permet par exemple de créer un MOC à 10% (threeshold=0.1) pour des maps de probabilité
+    * issues de l'étude des ondes gravitationnelles.
+    */
+   private void addMocFromPlanBG(Plan p1,int res, double threeshold) throws Exception {
+      PlanBG p = (PlanBG)p1;
+      
+      // Détermination de l'ordre pixel (order) et tuiles (fileOrder)
+      int order = p.getTileOrder();
+      int z = (int)p.getZ();
+      
+      int divOrder=0;
+      int fileOrder = res - order;
+      
+      // L'ordre des tuiles ne peut être inférieur à 3
+      if( fileOrder<3 ) {
+         divOrder=(3-fileOrder)*2;
+         fileOrder=3;
+      }
+      
+      /// L'ordre des tuiles ne peut entrainer le dépassement de la résolution
+      // de la map HEALPix
+      if( fileOrder>p.getMaxFileOrder() ) {
+         fileOrder=p.getMaxFileOrder();
+         res = fileOrder+order;
+      }
+      
+      // On génère d'abord un MOC dans le système de référence de la map HEALPix
+      // on fera la conversion en ICRS à la fin du processus
+      moc.setCoordSys( p.frameOrigin==Localisation.GAL ? "G" : 
+                       p.frameOrigin==Localisation.ECLIPTIC ? "E" : "C");
+      frameOrigin = p.frameOrigin;
+      
+      // Nombre de losanges à traiter
+      int n = (int)CDSHealpix.pow2(fileOrder); 
+      n=12*n*n;
+      
+//      System.out.println("Nombre de losanges à traiter : "+n);
+      
+      // Sans doute inutile car déjà fait
+      try { p.createHealpixOrder(order); } catch( Exception e1 ) { e1.printStackTrace(); }
+      long nsize = CDSHealpix.pow2(order);
+      
+      double incrPourcent = gapPourcent/n;
+      
+      // Principe de l'algo: on parcours la map, pixel après pixel qu'on ajoute
+      // à la liste cumul en la triant immédiatement en ordre décroissant, 
+      // tout en calculant la somme.
+      //Dès qu'on dépasse le threeshold, l'insertion sera conditionnée au fait qu'il faut
+      // que le nouveau pixel soit plus petit que la dernière valeur de la liste 
+      // Et si oui, on va l'insérer, mais virer autant des pixels les plus petits que nécessaire
+      ArrayList<PixCum> list;
+      try {
+         list = new ArrayList<PixCum>((int)(n*nsize*nsize));
+      } catch( Exception e1 ) {
+         throw new Exception("Sorry ! too large probability sky map !");
+      }
+      double somme=0;
+      
+      for( int npixFile=0; npixFile<n; npixFile++ ) {
+         pourcent += incrPourcent;
+         HealpixKey h = p.getHealpixLowLevel(fileOrder,npixFile,z,HealpixKey.SYNC);
+         if( h==null ) continue;
+         
+         long min = nsize * nsize * npixFile;
+         try {
+            for( int y=0; y<h.height; y++ ) {
+               for( int x=0; x<h.width; x++ ) {
+                  try {
+                     int idx = y * h.width + x;
+                     double pixel = h.getPixel(idx,HealpixKey.NOW);
+                     
+                     // Pixel vide
+                     if( Double.isNaN( pixel ) || pixel==blank ) continue;
+                     
+                     long npix = min + p.xy2hpx(idx);
+                     list.add( new PixCum(npix,pixel) );
+                     somme += pixel;
+                     
+                  } catch( Exception e ) {
+                     e.printStackTrace();
+                  }
+               }
+            }
+         } catch( Exception e ) {
+            e.printStackTrace();
+         }
+      }
+      
+      Collections.sort(list);
+      
+      // Normalisation éventuelle
+      if( Math.abs(1-somme)>1e-8 ) {
+         for( PixCum pc : list ) pc.val/=somme;
+      }
+      
+      somme=0;
+      try {
+         // Remplissage du Moc
+         moc.setCheckConsistencyFlag(false);
+         int nb=0;
+         for( PixCum pc : list ) {
+            long npix = pc.npix;
+            somme += pc.val;
+            if( somme>threeshold ) break;
+            moc.add(res,npix>>>divOrder);
+            nb++;
+            if( nb>10000 ) { moc.checkAndFix(); nb=0; }
+         }
+
+         // Conversion en ICRS si nécessaire
+         moc.setCheckConsistencyFlag(true);
+         moc=toReferenceFrame("C");
+         frameOrigin=Localisation.ICRS;
+         
+      } catch( Exception e ) {
+         e.printStackTrace();
+      }
+   }
    
+   // Pour gérer un pixel Healpix
+   class PixCum implements Comparable {
+      long npix;   // indice dans la map
+      double val;  // valeur du pixel
+      
+      PixCum(long npix,double val) {
+         this.npix=npix;
+         this.val=val;
+      }
+
+      @Override
+      public int compareTo(Object o) {
+         return val == ((PixCum)o).val ? 0 : val < ((PixCum)o).val ? 1 : -1;
+      }
+   }
+   
+
    protected boolean waitForPlan() {
       try {
          moc = new HealpixMoc();
@@ -261,12 +406,14 @@ public class PlanMocGen extends PlanMoc {
          for( Plan p1 : p ) {
             if( p1.isCatalog() ) addMocFromCatalog(p1,radius);
             else if( p1.isImage() ) addMocFromImage(p1,pixMin,pixMax);
+            else if( p1 instanceof PlanBG && !Double.isNaN(threeshold) ) addMocFromPlanBG(p1,res,threeshold);
             else if( p1 instanceof PlanBG ) addMocFromPlanBG(p1,res,pixMin,pixMax);
          }
          moc.setCheckConsistencyFlag(true);
       } catch( Exception e ) {
          error=e.getMessage();
          if( aladin.levelTrace>=3 ) e.printStackTrace();
+         flagProcessing=false;
          return false;
       }
       flagProcessing=false;

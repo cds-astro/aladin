@@ -1713,8 +1713,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    /** Retourne true si le losange décrit par ses quatres coins se trouve
     * "derrière" le ciel */
-   protected boolean isBehindSky(PointD b[]) {
-      return (b[1].x-b[0].x)*(b[2].y-b[0].y) - (b[2].x-b[0].x)*(b[1].y-b[0].y) <=0;
+   protected boolean isBehindSky(PointD b[],ViewSimple v) {
+      double sgn = v.getProj().sym?-1:1;
+      return ((b[1].x-b[0].x)*(b[2].y-b[0].y) - (b[2].x-b[0].x)*(b[1].y-b[0].y))*sgn <= 0;
    }
 
    /** Retourne true si le losange décrit par ses quatres coins est trop
@@ -1760,7 +1761,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       PointD[] b = getProjViewCorners(v);
 
       nDraw++;
-
+      
       boolean out=false;
       if( b==null  || (out=isOutView(v,b)) ) {
          if( out ) nOut++;
@@ -1836,7 +1837,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
             } catch( Exception e ) { return 0; }
 
             // Test losange derrière le ciel
-            if( isBehindSky(b) ) {
+            if( isBehindSky(b,v) ) {
                if( drawFast ) return 0;
                resetTimer();
                return drawFils(g,v/*,redraw*/);

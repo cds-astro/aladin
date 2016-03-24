@@ -293,28 +293,51 @@ public class Context {
       scanFov = r.equalsIgnoreCase("true") || (polygon = createPolygon(r))!=null;
       if( scanFov ) info("FoV files associated to the original images");
    }
+   
+   // retourne l'identificateur du HiPS à partir des propriétés passées en paramètre
+   public String getIdFromProp(MyProperties prop) {
+      String s = prop.getProperty(Constante.KEY_CREATOR_DID);
+      if( s!=null ) return s;
+      s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+      if( s!=null ) return s;
+      s = prop.getProperty(Constante.KEY_OBS_ID);
+      if( s==null ) return null;
+      String creator = prop.getProperty(Constante.KEY_CREATOR_ID);
+      if( creator==null ) creator = prop.getProperty(Constante.KEY_PUBLISHER_ID);
+      if( creator==null ) creator="ivo://UNK.AUT";
+      return creator+"?"+s;
+   }
 
 
    /** Vérifie l'ID passé en paramètre, et s'il n'est pas bon le met en forme
-    * @param s ID proposée, null si générataion automatique
+    * @param s ID proposée, null si génération automatique
     * @param verbose false pour n'avoir aucun message d'alerte
     * @return l'ID canonique
     */
    public String checkHipsId(String s,boolean verbose) {
 
       String auth,id;
+      boolean flagQuestion=true;  // true si l'identificateur utilise un ? après l'authority ID, et non un /
+      
+      if( s==null && prop!=null )  s = getIdFromProp(prop);
+      
       if( s==null || s.trim().length()==0 ) {
          verbose=false;
          s=getLabel()!=null?getLabel():"";
       }
 
-      if( s.startsWith("ivo://")) {
-         if( verbose ) warning("ivo:// prefix not used for HiPS identifier => removed");
-         s=s.substring(6);
-      }
+      if( s.startsWith("ivo://")) s=s.substring(6);
 
       // Check de l'authority
       int offset = s.indexOf('/');
+      int offset1 = s.indexOf('?');
+      if( offset>=0 || offset1>=0) {
+         if( offset==-1 ) offset=s.length();
+         if( offset1==-1 ) offset1=s.length();
+         if( offset1<offset ) { offset=offset1; flagQuestion=true; }
+         else flagQuestion=false;
+      }
+      
       if( offset==-1) {
          auth="UNK.AUTH";
          if( verbose ) warning("Id error => missing authority => assuming "+auth);
@@ -359,16 +382,20 @@ public class Context {
 
       String mode = isCube() ? "C": "P";
 
-      return auth+"/"+mode+"/"+id;
+      return "ivo://"+auth+(flagQuestion?"?":"/")+mode+"/"+id;
    }
 
-   /** retourne un label issu de de l'ID du HiPS */
+   /** retourne un label issu de l'ID du HiPS */
    public String getLabelFromHipsId() {
       if( hipsId==null ) return null;
       String s = hipsId;
       if( s!=null && s.startsWith("ivo://") ) s=s.substring(6);
       int offset = s.indexOf('/');
-      if( offset==-1 ) return null;
+      int offset1 = s.indexOf('?');
+      if( offset==-1 && offset1==-1 ) return null;
+      if( offset==-1 ) offset=s.length();
+      if( offset1==-1 ) offset1=s.length();
+      offset = Math.min(offset1,offset);
       String s1 = s.substring(offset+1);
       if( s1.startsWith("P/") ) s1=s1.substring(2);
       s1=s1.replace('/',' ');
@@ -727,7 +754,21 @@ public class Context {
    }
 
    String justFindImgEtalon(String rootPath) {
-      if( isInputFile ) return rootPath;
+      MyInputStream in = null;
+      
+      if( isInputFile ) {
+         
+//         // Cas particulier d'une image couleur avec un fichier .hhh qui l'accompagne
+//         if( isColor() ) {
+//            String file = rootPath;
+//            int offset = file.lastIndexOf('.');
+//            if( offset!=-1 )  file = file.substring(0,offset);
+//            file += ".hhh";
+//            if( (new File(file).exists()) ) rootPath=file;
+//         }
+         
+         return rootPath;
+      }
 
       File main = new File(rootPath);
       String[] list = main.list();
@@ -747,7 +788,6 @@ public class Context {
 
          // essaye de lire l'entete fits du fichier
          // s'il n'y a pas eu d'erreur ça peut servir d'étalon
-         MyInputStream in = null;
          try {
             // cas particulier d'un survey couleur en JPEG ou PNG avec calibration externe
             if( path.endsWith(".hhh") ) return path;
@@ -1608,13 +1648,12 @@ public class Context {
 
       //      loadProperties();
 
-//      setPropriete(Constante.KEY_PUBLISHER_DID,hipsId);
-      int offset = hipsId.indexOf('/');
-      if( offset==-1 ) insertPropriete(Constante.KEY_OBS_ID,hipsId);
-      else {
-         insertPropriete(Constante.KEY_PUBLISHER_ID,"ivo://"+hipsId.substring(0,offset));
-         insertPropriete(Constante.KEY_OBS_ID,hipsId.substring(offset+1));
-      }
+      insertPropriete(Constante.KEY_CREATOR_DID,hipsId);
+      
+      // Y a-t-il un creator indiqué ?
+      if( creator!=null ) setPropriete(Constante.KEY_CREATOR,creator);
+      else setPropriete("#"+Constante.KEY_CREATOR,"HiPS creator (institute or person)");
+      setPropriete("#"+Constante.KEY_HIPS_COPYRIGHT,"Copyright mention of the HiPS");
       
       if( addendum_id!=null ) setPropriete(Constante.KEY_ADDENDUM_ID,addendum_id);
       setPropriete(Constante.KEY_OBS_COLLECTION,getLabel());
@@ -1624,11 +1663,11 @@ public class Context {
       setPropriete("#"+Constante.KEY_PROV_PROGENITOR,"Provenance of the original data (free text)");
       setPropriete("#"+Constante.KEY_BIB_REFERENCE,"Bibcode for bibliographic reference");
       setPropriete("#"+Constante.KEY_BIB_REFERENCE_URL,"URL to bibliographic reference");
-      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT,"Copyright mention");
-      setPropriete("#"+Constante.KEY_DATA_COPYRIGHT_URL,"URL to copyright page");
+      setPropriete("#"+Constante.KEY_OBS_COPYRIGHT,"Copyright mention of the original data");
+      setPropriete("#"+Constante.KEY_OBS_COPYRIGHT_URL,"URL to copyright page of the original data");
       setPropriete("#"+Constante.KEY_T_MIN,"Start time in MJD");
       setPropriete("#"+Constante.KEY_T_MAX,"Stop time in MJD");
-      setPropriete("#"+Constante.KEY_OBS_REGIME,"Waveband keyword (Radio IR optical UV EUV X-ray Gamma-ray)");
+      setPropriete("#"+Constante.KEY_OBS_REGIME,"Waveband keyword (Radio Infrared Optical UV X-ray Gamma-ray)");
       setPropriete("#"+Constante.KEY_EM_MIN,"Start in spectral coordinates in meters");
       setPropriete("#"+Constante.KEY_EM_MAX,"Stop in spectral coordinates in meters");
       //      setPropriete("#"+Constante.KEY_CLIENT_CATEGORY,"ex: Image/Gas-lines/Halpha/VTSS");
@@ -1639,16 +1678,13 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_VERSION, Constante.HIPS_VERSION);
       setPropriete(Constante.KEY_HIPS_RELEASE_DATE,getNow());
 
-      // Y a-t-il un creator indiqué ?
-      if( creator!=null ) setPropriete(Constante.KEY_CREATOR,creator);
-      else setPropriete("#"+Constante.KEY_CREATOR,"HiPS creator (institute or person)");
-
       setPropriete(Constante.KEY_HIPS_FRAME, getFrameName());
       setPropriete(Constante.KEY_HIPS_ORDER,order+"");
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
       // L'url
       setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
+      setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
       
       // le status du HiPS : par defaut "public master clonableOnce"
       String pub = Constante.PUBLIC;
@@ -1690,7 +1726,7 @@ public class Context {
 
       // Ajout du target et du radius par défaut
       if( target!=null ) {
-         offset = target.indexOf(' ');
+         int offset = target.indexOf(' ');
          setPropriete(Constante.KEY_HIPS_INITIAL_RA,  target.substring(0,offset));
          setPropriete(Constante.KEY_HIPS_INITIAL_DEC, target.substring(offset+1));
       }
@@ -1840,8 +1876,8 @@ public class Context {
       replaceKey(prop,Constante.OLD_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
       replaceKey(prop,Constante.OLD1_OBS_DESCRIPTION,Constante.KEY_OBS_DESCRIPTION);
       replaceKey(prop,Constante.OLD_OBS_ACK,Constante.KEY_OBS_ACK);
-      replaceKey(prop,Constante.OLD_DATA_COPYRIGHT,Constante.KEY_DATA_COPYRIGHT);
-      replaceKey(prop,Constante.OLD_DATA_COPYRIGHT_URL,Constante.KEY_DATA_COPYRIGHT_URL);
+      replaceKey(prop,Constante.OLD_OBS_COPYRIGHT,Constante.KEY_OBS_COPYRIGHT);
+      replaceKey(prop,Constante.OLD_OBS_COPYRIGHT_URL,Constante.KEY_OBS_COPYRIGHT_URL);
       replaceKey(prop,Constante.OLD_CUBE_DEPTH,Constante.KEY_CUBE_DEPTH);
       replaceKey(prop,Constante.OLD_CUBE_FIRSTFRAME,Constante.KEY_CUBE_FIRSTFRAME);
       replaceKey(prop,Constante.OLD_HIPS_RELEASE_DATE,Constante.KEY_HIPS_RELEASE_DATE);
@@ -1857,19 +1893,40 @@ public class Context {
       replaceKey(prop,Constante.OLD_HIPS_RGB_BLUE,Constante.KEY_HIPS_RGB_BLUE);
 
       String s;
+      
       // Certains champs seront en plus convertis
-      s = prop.getProperty(Constante.KEY_OBS_ID);
-      if( s==null ) {
-         s = prop.getProperty(Constante.KEY_PUBLISHER_DID);
+      
+      // On supprime toutes références au PUBLISHER, et on utilise le CREATOR
+      if( prop.getProperty(Constante.KEY_CREATOR_DID)==null ) {
+         s= prop.getProperty(Constante.KEY_PUBLISHER_DID);
          if( s!=null ) {
-            int index = s.indexOf("/",6);
-            if( index>0 ) {
-               prop.insert(Constante.KEY_PUBLISHER_ID, s.substring(0,index));
-               prop.insert(Constante.KEY_OBS_ID, s.substring(index+1));
-               prop.remove(Constante.KEY_PUBLISHER_DID);
+            prop.insert( Constante.KEY_CREATOR_DID, s);
+         } else {
+            s= prop.getProperty(Constante.KEY_CREATOR_ID);
+            if( s==null ) s= prop.getProperty(Constante.KEY_PUBLISHER_ID);
+            if( s==null ) s="ivo://UNK.AUT";
+            String obs_id = prop.getProperty(Constante.KEY_OBS_ID);
+            if( obs_id!=null ) {
+               String creator_did = s+"?"+obs_id;
+               prop.insert( Constante.KEY_CREATOR_DID, creator_did);
             }
          }
       }
+      prop.remove(Constante.KEY_PUBLISHER_DID);
+      prop.remove(Constante.KEY_PUBLISHER_ID);
+      
+//      s = prop.getProperty(Constante.KEY_OBS_ID);
+//      if( s==null ) {
+//         s = prop.getProperty(Constante.KEY_CREATOR_DID);
+//         if( s!=null ) {
+//            int index = s.indexOf("/",6);
+//            if( index>0 ) {
+//               prop.insert(Constante.KEY_CREATOR_DID, s.substring(0,index));
+//               prop.insert(Constante.KEY_OBS_ID, s.substring(index+1));
+//               prop.remove(Constante.KEY_PUBLISHER_ID);
+//            }
+//         }
+//      }
       
       s = prop.getProperty(Constante.OLD_HIPS_CREATION_DATE);
       if( s!=null && prop.getProperty(Constante.KEY_HIPS_CREATION_DATE)==null) {
@@ -2145,6 +2202,15 @@ public class Context {
    public long getMem() {
       return Runtime.getRuntime().maxMemory()-
             (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
+   }
+   
+   protected void updateHeader(Fits fits,int order,long npix) {
+      if( fits.headerFits==null ) return;
+      if( creator!=null) fits.headerFits.setKeyValue("ORIGIN", creator);
+      fits.headerFits.setKeyValue("CPYRIGHT", "See HiPS properties file");
+      fits.headerFits.setKeyValue("COMMENT", "HiPS FITS tile generated by Aladin/Hipsgen "+Aladin.VERSION);
+      fits.headerFits.setKeyValue("ORDER", ""+order);
+      fits.headerFits.setKeyValue("NPIX", ""+npix);
    }
 
 }

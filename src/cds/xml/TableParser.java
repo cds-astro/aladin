@@ -1323,6 +1323,9 @@ final public class TableParser implements XMLConsumer {
 
    }
    
+   
+   // Indique si on est déjà passé par posChooser()
+   private boolean flagPosChooser=false;
 
    /** Determine si le catalogue dispose de coord., ou de position XY en fonction
     * des valeurs nRA,nDE,nX et nY
@@ -1331,6 +1334,7 @@ final public class TableParser implements XMLConsumer {
     */
    private void posChooser() {
 
+      flagPosChooser=true;
       inAstroCoords=false;
 
       if( inSEDGroup ) {
@@ -1887,6 +1891,7 @@ final public class TableParser implements XMLConsumer {
       } else if( depth==6 && name.equalsIgnoreCase("TR")  )         consumeRecord(record,-1);
       else if( depth==6 && name.equalsIgnoreCase("STREAM") )      inEncode64=false;
       else if( depth==3 && name.equalsIgnoreCase("TABLE") )     {
+         if( !flagPosChooser ) posChooser();
          fieldSub=tableSub=null;
          consumer.endTable();
       }

@@ -277,23 +277,7 @@ public final class Words implements Runnable {
 
    private void callArchive1(Aladin aladin,Obj o) {
       String label = param;
-      boolean flagHttp = id.equals("Http");
-      String url=null;
-
-      // URL ou nom de fichier
-      if( flagHttp ) {
-         url = param;
-
-         // tag Glu
-      } else {
-         try { url = aladin.glu.getURL(id,param,flagHttp)+"";
-         if( url==null ) throw new Exception("Error during GLU resolution !"); }
-         catch( Exception e) {
-            aladin.warning(aladin,"URL error");
-            if( Aladin.levelTrace>=3 ) e.printStackTrace();
-            return;
-         }
-      }
+      String url=getURL(aladin);
 
       // Les noms basé sur une url son généralement trop long
       if( label.startsWith("http://") || label.startsWith("https://")
@@ -307,12 +291,27 @@ public final class Words implements Runnable {
       }
 
       aladin.calque.newPlan(url,label,"provided by the original archive server", o);
+   }
+   
+   /** Juste pour récupérer l'URL associée */
+   String getURL(Aladin aladin) {
+      if( id==null ) return "";
+      boolean flagHttp = id.equals("Http");
+      String url;
+      
+     // URL ou nom de fichier
+      if( flagHttp ) {
+         url = param;
 
-      //      String objet=Coord.getSexa(((Position)o).raj,((Position)o).dej,"s");
-      //      aladin.calque.newPlanImage(url,PlanImage.OTHER,
-      //                                 label,objet,param,
-      //                                 "provided by the original archive server",
-      //                                 PlanImage.UNKNOWN,PlanImage.UNDEF,
-      //                                 o);
+         // tag Glu
+      } else {
+         try { url = aladin.glu.getURL(id,param,flagHttp)+""; }
+         catch( Exception e) {
+            aladin.warning(aladin,"URL error");
+            if( Aladin.levelTrace>=3 ) e.printStackTrace();
+            return "";
+         }
+      }
+      return url;
    }
 }

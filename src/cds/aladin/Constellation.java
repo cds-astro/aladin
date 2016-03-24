@@ -56,7 +56,7 @@ public class Constellation {
       BufferedReader is = null;
       try {
          is = new BufferedReader(new InputStreamReader(
-                   Aladin.class.getResourceAsStream("/"+CONSTELLATION_FILE)));
+                   aladin.getClass().getResourceAsStream("/"+CONSTELLATION_FILE)));
          
          cstMap = new HashMap<String, ArrayList<Position>>();
          String s,oCst=null;

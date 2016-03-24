@@ -227,11 +227,13 @@ public class ServerHips extends ServerTree  {
 
    }
 
-   // Extraction de l'obs_id de l'IVORN pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
-   private String getId(String ivorn) {
-      int start = ivorn.startsWith("ivo://") ? 6 : 0;
-      int offset = ivorn.indexOf("/",start);
-      String id = ivorn.substring(offset+1);
+   // Extraction de l'obs_id de l'IVOID pour rester compatible avec la nomenclature interne de l'arbre (TreeNodeAllsky.internalId)
+   private String getId(String ivoid) {
+      int start = ivoid.startsWith("ivo://") ? 6 : 0;
+      int offset = ivoid.indexOf("/",start);
+      int offset1 = ivoid.indexOf("?",start);
+      if( offset1>0 ) offset = Math.min(offset,offset1);
+      String id = ivoid.substring(offset+1);
       return id;
    }
 

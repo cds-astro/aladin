@@ -846,7 +846,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne true s'il faut un slider de controle de la densité des sources (PlanBGCat) */
    protected boolean isSliderDensity() {
       String s = get(SLDENS);
-      return s!=null && s.equals("on");
+      return s!=null && !s.equals("off");
    }
 
    /** Retourne true s'il faut un slider de controle de cube */
@@ -1936,8 +1936,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          else remove(SLSIZE);
       }
       if( bxDens!=null ) {
-         if( !bxDens.isSelected() ) remove(SLDENS);
-         else set(SLDENS,"on");
+         if( !bxDens.isSelected() ) set(SLDENS,"off");
+         else remove(SLDENS);
       }
       if( bxCube!=null ) {
          if( !bxCube.isSelected() ) remove(SLCUBE);

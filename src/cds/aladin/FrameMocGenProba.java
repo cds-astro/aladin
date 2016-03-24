@@ -20,7 +20,6 @@
 
 package cds.aladin;
 
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -29,48 +28,56 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 /**
- * Gestion de la fenetre associee a la creation d'un MOC à partir d'un catalogue
+ * Gestion de la fenetre associee a la creation d'un MOC à partir d'une Map healpix de proba
  *
  * @author Pierre Fernique [CDS]
- * @version 1.0 : (nov 2011) Creation
+ * @version 1.0 : (mars 2016) Creation
  */
-public final class FrameMocGenCat extends FrameMocGenImg {
-
-   protected FrameMocGenCat(Aladin aladin) {
+public final class FrameMocGenProba extends FrameMocGenImg {
+   
+   protected FrameMocGenProba(Aladin aladin) {
       super(aladin);
    }
    
    protected void createChaine() {
       super.createChaine();
-      INFO  = a.chaine.getString("MOCGENCATINFO");
+      TITLE = a.chaine.getString("MOCGENTITLE");
+      INFO  = a.chaine.getString("MOCGENPROBAINFO");
+      PLANE = a.chaine.getString("MOCFILTERINGPROBA");
    }
 
-   protected boolean isPlanOk(Plan p) {
-      if( p.isCatalog() ) return true;
-      return false;
+   protected boolean isPlanOk(Plan p) { return p.type==Plan.ALLSKYIMG; }
+   
+   @Override
+   protected JPanel getAddPanel() {
+      GridBagConstraints c=new GridBagConstraints();
+      GridBagLayout g=new GridBagLayout();
+      c.fill=GridBagConstraints.BOTH;
+
+      JPanel p=new JPanel();
+      p.setLayout(g);
+      
+      addSpecifPanel(p,c,g);
+      
+      return p;
    }
    
-   private JTextField radius;
-   
-   protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) { 
+   protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) {
+      
       JPanel pp = new JPanel();
-      pp.add( new JLabel("Radius (in arcsec):") );
-      pp.add( radius=new JTextField(5));
+      pp.add( new JLabel("Probability threeshold : ") );
+      pp.add( threeshold=new JTextField(5));
       c.gridwidth=GridBagConstraints.REMAINDER;
       g.setConstraints(pp,c);
-      p.add(pp);
+      if( Aladin.BETA ) p.add(pp);      
    }
    
-   private double getRadius() throws Exception {
-      double x=0;
+   private double getThreeshold() throws Exception {
+      double x = Double.NaN;
       try {
-         String s = radius.getText().trim();
-         if( s.length()>0 ) x=Server.getAngle(s,Server.RADIUSs);
-      } catch( Exception e ) {
-         radius.setForeground(Color.red);
-         throw e;
-      }
-      radius.setForeground(Color.black);
+         String s = threeshold.getText().trim();
+         if( s.length()>0 ) x = Double.parseDouble(s);
+      } catch( Exception e ) {}
       return x;
    }
    
@@ -78,9 +85,9 @@ public final class FrameMocGenCat extends FrameMocGenImg {
    protected void submit() {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
-         int res=getOrder();
-         double radius = getRadius();
-         a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN);
+         int res= ((PlanBG)ps[0]).getMaxHealpixOrder();
+         double threeshold=getThreeshold();
+         a.calque.newPlanMoc("MOC "+threeshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threeshold);
          hide();
 
       } catch ( Exception e ) {

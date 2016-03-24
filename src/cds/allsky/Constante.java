@@ -69,10 +69,11 @@ public class Constante {
    static public final String OLD_TARGET                = "target";
    static public final String KEY_HIPS_TILE_WIDTH       = "hips_tile_width";
    static public final String OLD_HIPS_TILE_WIDTH       = "nside";
-   static public final String KEY_DATA_COPYRIGHT        = "obs_copyright";
-   static public final String OLD_DATA_COPYRIGHT        = "copyright";
-   static public final String KEY_DATA_COPYRIGHT_URL    = "obs_copyright_url";
-   static public final String OLD_DATA_COPYRIGHT_URL    = "copyrightUrl";
+   static public final String KEY_OBS_COPYRIGHT         = "obs_copyright";
+   static public final String OLD_OBS_COPYRIGHT         = "copyright";
+   static public final String KEY_OBS_COPYRIGHT_URL     = "obs_copyright_url";
+   static public final String OLD_OBS_COPYRIGHT_URL     = "copyrightUrl";
+   static public final String KEY_HIPS_COPYRIGHT        = "hips_copyright";
    static public final String KEY_OBS_ACK               = "obs_ack";
    static public final String KEY_PROV_PROGENITOR       = "prov_progenitor";
    static public final String KEY_HIPS_PROGENITOR_URL   = "hips_progenitor_url";
@@ -80,7 +81,9 @@ public class Constante {
    static public final String OLD_OBS_ACK               = "acknowledgement";
    static public final String KEY_HIPS_STATUS           = "hips_status";
    static public final String KEY_PUBLISHER_DID         = "publisher_did";
-   static public final String OLD_PUBLISHER_DID         = "id";
+   static public final String KEY_CREATOR_ID            = "creator_id";
+   static public final String KEY_CREATOR_DID           = "creator_did";
+   static public final String OLD_CREATOR_DID           = "id";
    static public final String KEY_OBS_COLLECTION        = "obs_collection";
    static public final String OLD_OBS_COLLECTION        = "label";
    static public final String KEY_OBS_TITLE             = "obs_title";
@@ -173,7 +176,7 @@ public class Constante {
    static public String SURVEY = HIPS;  // sous répertoire final contenant la hierarchie healpix
 
    static public final int ORDER           = 9;    // Taille des imagettes HEALPix
-   static public final int ORIGCELLWIDTH   = 1024; // Taille des cellules des images originales lors de la Hipselisation
+   static public final int ORIGCELLWIDTH   = 512;  // Taille des cellules des images originales lors de la Hipselisation
    static public final int GZIPMAXORDER    = 5;    // On gzippe les tiles que jusqu'au niveau 5
    static public final int MAXOVERLAY      = 10;   // Nombre max de recouvrement pris en compte
    static public final int DEFAULTMOCORDER = 8;    // MOC ORDER minimal

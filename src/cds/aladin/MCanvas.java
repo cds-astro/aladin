@@ -163,7 +163,7 @@ MouseWheelListener, Widget
    }
 
    JPopupMenu popMenu,popMenuTag;
-   JMenuItem menuTriA,menuTriD,menuCopyVal,menuCopyCoord,menuCopyMeasurement,menuCopyMeasurement1,
+   JMenuItem menuTriA,menuTriD,menuCopyVal,menuCopyURL,menuCopyCoord,menuCopyMeasurement,menuCopyMeasurement1,
    menuCopyAll,menuCopyAllAscii,
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
@@ -195,6 +195,8 @@ MouseWheelListener, Widget
       popMenu.addSeparator();
       popMenu.add( m=new JMenu(c.getString("MFCOPYGEN")));
       m.add( menuCopyVal=j=new JMenuItem(c.getString("MFCOPYVAL")));
+      j.addActionListener(this);
+      m.add( menuCopyURL=j=new JMenuItem(c.getString("MFCOPYURL")));
       j.addActionListener(this);
       m.add( menuCopyCoord=j=new JMenuItem(c.getString("MFCOPYCOORD")));
       j.addActionListener(this);
@@ -255,6 +257,7 @@ MouseWheelListener, Widget
       else if( src==menuCopyAllAscii ) aladin.copyToClipBoard(aladin.mesure.getText(true));
       else if( src==menuCopyCoord ) aladin.copyToClipBoard(aladin.mesure.getCurObjCoord());
       else if( src==menuCopyVal ) aladin.copyToClipBoard(aladin.mesure.getCurObjVal());
+      else if( src==menuCopyURL ) aladin.copyToClipBoard(aladin.mesure.getCurObjURL());
       else if( src==menuCopyMeasurement ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement(false));
       else if( src==menuCopyMeasurement1 ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement(true));
       else if( src==menuUnselect ) deselect(objSelect);
@@ -374,6 +377,7 @@ MouseWheelListener, Widget
       //      menuLoadImgs.setText( aladin.chaine.getString(tag ? "MFLOADIMGS1" : "MFLOADIMGS"));
       menuGoto.setEnabled(flag);
       menuCopyMeasurement.setEnabled(flag);
+      menuCopyURL.setEnabled( aladin.mesure.getCurObjURL().length()>0 );
       popMenu.show(this,x,y);
    }
 

@@ -2173,7 +2173,7 @@ public final class Command implements Runnable {
          // Pour des catalogues ou des images
          } else {
             if( order==-1 ) order=13;
-            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN);
+            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN,Double.NaN);
          }
          a.calque.repaintAll();
          
@@ -2778,6 +2778,7 @@ public final class Command implements Runnable {
          });
       }
    }
+   
    protected String exec(String s) { return exec(s,true,false); }
    protected String exec(String s1,boolean verbose,boolean flagOnlyFunction) {
       if( a.isFullScreen() && !a.fullScreen.isVisible() ) a.fullScreen.setVisible(true);

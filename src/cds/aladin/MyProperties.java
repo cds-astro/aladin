@@ -67,6 +67,7 @@ public class MyProperties extends Properties {
       remove(key);
       ConfigurationItem item = new ConfigurationItem(key, value);
       prop.add(0,item);
+      super.put(key,value);
    }
 
    public void remove( String key ) {

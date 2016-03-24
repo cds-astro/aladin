@@ -554,18 +554,17 @@ public final class FrameColorMap extends JFrame implements MouseListener {
    private JPanel createPanelPixelCut() {
       JPanel p = new JPanel( new BorderLayout(0,0));
       p.setBorder( BorderFactory.createEmptyBorder());
-      JTextField t;
 
-      pixelCutMinField=t=new JTextField( pimg.getPixelMinInfo() ,8);
+      pixelCutMinField=new JTextField( pimg.getPixelMinInfo() ,8);
       pixelCutMinField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) { if( e.getKeyCode()==KeyEvent.VK_ENTER ) changeCut(); }
       });
-      p.add(t,BorderLayout.WEST);
-      pixelCutMaxField=t=new JTextField( pimg.getPixelMaxInfo() ,8);
+      p.add(pixelCutMinField,BorderLayout.WEST);
+      pixelCutMaxField=new JTextField( pimg.getPixelMaxInfo() ,8);
       pixelCutMaxField.addKeyListener(new KeyAdapter() {
          public void keyReleased(KeyEvent e) { if(  e.getKeyCode()==KeyEvent.VK_ENTER ) changeCut(); }
       });
-      p.add(t,BorderLayout.EAST);
+      p.add(pixelCutMaxField,BorderLayout.EAST);
 
       // Le titre
       JPanel p1 = new JPanel();
@@ -1002,13 +1001,25 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    @Override
    public void mouseEntered(MouseEvent e) {
+      if( ignoreMouse(e) ) return;
       resumeWidgets();
    }
 
    @Override
    public void mouseExited(MouseEvent e) {
-      // TODO Auto-generated method stub
-
+      if( ignoreMouse(e) ) return;
+      if( pixelCutMinField!=null && pixelCutMaxField!=null ) {
+         String mins = pixelCutMinField.getText();
+         String maxs = pixelCutMaxField.getText();
+         if( !mins.equals(pimg.getPixelMinInfo()) || !maxs.equals(pimg.getPixelMaxInfo()) ) resumeWidgets();
+      } else resumeWidgets();
    }
+
+   private boolean ignoreMouse(MouseEvent e) {
+      int x = e.getX();
+      int y = e.getY();
+      return !( x<10 || y<30 || x>getWidth()-10 || y>getHeight()-10 );
+   }
+   
 }
 

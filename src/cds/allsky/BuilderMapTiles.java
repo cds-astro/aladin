@@ -193,7 +193,7 @@ public class BuilderMapTiles extends Builder {
 
       // Détermination automatique du order et de la taille de la tuile en fonction de la résolution initiale
       int tileWidth;
-      if( context.getOrder()==-1 ) {
+      if( context.getOrder()==-1) {
          tileWidth = 2*maxTileWidth;
          do {
             tileWidth /= 2;
@@ -203,9 +203,14 @@ public class BuilderMapTiles extends Builder {
          // Order explicite
       } else {
          maxOrder=context.getOrder();
-         tileWidth=maxTileWidth;
+//         tileWidth=maxTileWidth;
+         
+         long nbPix = 12*nside*nside;
+         long nbTiles = 12*CDSHealpix.pow2(maxOrder)*CDSHealpix.pow2(maxOrder);
+         long nbPixPerTile = nbPix/nbTiles;
+         tileWidth = (int)Math.sqrt(nbPixPerTile);
       }
-
+      
       long nsideFile = CDSHealpix.pow2(maxOrder);
 
       if( !flagSimpleLook ) context.info("HiPS maxOrder="+maxOrder+" tileWidth="+tileWidth);

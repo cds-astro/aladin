@@ -42,6 +42,7 @@ public class HipsGen {
    private boolean flagMode=false;
    private boolean flagConcat=false;
    private boolean flagMirror=false;
+   private boolean flagUpdate=false;
    private boolean flagMethod=false;
    private boolean flagRGB=false;
    private boolean flagAbort=false,flagPause=false,flagResume=false;
@@ -283,6 +284,7 @@ public class HipsGen {
                if( a==Action.FINDER ) a=Action.INDEX;     // Pour compatibilité
                if( a==Action.PROGEN ) a=Action.DETAILS;   // Pour compatibilité
                if( a==Action.MIRROR ) flagMirror=true;
+               if( a==Action.UPDATE ) flagUpdate=true;
                if( a==Action.CONCAT ) {
                   flagConcat=true;
                   if( !flagMode ) context.setMode(Mode.AVERAGE);
@@ -407,11 +409,9 @@ public class HipsGen {
       if( !flagRGB ) setDefaultFrame();
 
       // Positionnement du pubDid
-      if( context.hipsId==null && !flagConcat && !flagMirror ) {
+      if( context.hipsId==null && !flagConcat && !flagMirror && !flagUpdate) {
          String s = context.checkHipsId(null, false);
          context.setHipsId(s);
-         context.warning("HiPS identifier is strongly recommended (parameter id=authority/identifier) => assuming "+s);
-         context.info("The HiPS ID can be modified after the process by editing the properties file)");
       }
 
       // C'est parti
@@ -420,6 +420,10 @@ public class HipsGen {
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          else {
+            if( context.getHipsId().startsWith("ivo://UNK.AUT") ) {
+               context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
+              
+            }
             context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          }
@@ -586,6 +590,8 @@ public class HipsGen {
             "\n    java -jar "+launcher+" in=HiPS out=HiPStarget CONCAT => Concatenate HiPS to HiPStarget"
             //                         "\n    java -jar Aladin.jar -mocgenred=/MySkyRed redparam=sqrt blue=/MySkyBlue output=/RGB rgb  => compute a RGB all-sky"
             );
+      
+      System.out.println("\n(c) Unistra/CNRS 2016 - "+launcher+" based on Aladin "+Aladin.VERSION+" from CDS");
    }
 
    private void setConfigFile(String configfile) throws Exception {

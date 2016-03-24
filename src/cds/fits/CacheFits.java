@@ -353,7 +353,8 @@ public class CacheFits {
             statNbFree++;
             //            map.remove(key);
             try { remove(key); } catch( Exception e1 ) { }
-            if( totMem> mem/2L  ) { encore=false; break; }
+            if( totMem> mem/2L && map.size()<10000 ) { encore=false; break; }
+//            if( totMem> mem/2L ) { encore=false; break; }
          }
       }
 

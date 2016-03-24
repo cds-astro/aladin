@@ -931,6 +931,7 @@ public class BuilderTiles extends Builder {
       //      String filename = file+context.getTileExt();
       //      if( isColor ) out.writeCompressed(filename,0,0,null, context.MODE[ context.targetColorMode ]);
       //      else out.writeFITS(filename);
+      context.updateHeader(out,order,npix);
       write(file,out);
 
       long duree = System.currentTimeMillis() -t;
@@ -1008,6 +1009,7 @@ public class BuilderTiles extends Builder {
 
       long duree;
       if (out!=null) {
+         context.updateHeader(out,order,npix);
          write(file,out);
          duree = System.currentTimeMillis()-t;
          //         if( npix%10 == 0 || DEBUG ) Aladin.trace(4,Thread.currentThread().getName()+".createLeaveHpx("+order+"/"+npix+") "+coaddMode+" in "+duree+"ms");

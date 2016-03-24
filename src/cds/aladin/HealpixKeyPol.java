@@ -192,7 +192,7 @@ protected int loadFits(String filename) throws Exception {
       try {
          PointD[] b = getProjViewCorners(v);
          if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return 0;
-         if( isBehindSky(b) ) return 0;
+         if( isBehindSky(b,v) ) return 0;
 
          if( parente<8 && isTooLarge(b) ) {
             int  n=drawPolarisationFils(g,v,parente+1);

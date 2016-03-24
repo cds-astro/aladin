@@ -76,14 +76,17 @@ public class BuilderMirror extends BuilderTiles {
       // les propriétés distantes
       s = prop.getProperty(Constante.KEY_HIPS_ORDER);
       if( s==null ) s = prop.getProperty(Constante.OLD_HIPS_ORDER);
-      if( s==null ) throw new Exception("Order max unknown");
-      int o = Integer.parseInt(s) ;
+      if( s==null ) context.warning("No order specified in the remote HiPS properties file !");
+      int o = s==null ? -1 : Integer.parseInt(s) ;
       int paramO = context.getOrder();
       if( paramO ==-1 ) {
+         if( o==-1 ) throw new Exception("Order unknown !");
          context.setOrder(o);
       } else {
-         if( paramO>o ) throw new Exception("Order greater than the original");
-         else if( o!=paramO ) isPartial=true;
+         if( o!=-1 ) {
+            if( paramO>o ) throw new Exception("Order greater than the original");
+            else if( o!=paramO ) isPartial=true;
+         }
       }
 
       // Détermination des types de tuiles: si non précisé, récupéré
@@ -95,7 +98,7 @@ public class BuilderMirror extends BuilderTiles {
          Tok tok = new Tok(s);
          while( tok.hasMoreTokens() ) context.addTileType(tok.nextToken());
       } else {
-         if( !context.getTileTypes().equals(s) ) isPartial=true;
+         if( s!=null && !context.getTileTypes().equals(s) ) isPartial=true;
       }
       context.info("Mirroring tiles: "+context.getTileTypes()+"...");
 

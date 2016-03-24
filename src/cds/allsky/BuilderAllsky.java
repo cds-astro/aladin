@@ -221,6 +221,7 @@ final public class BuilderAllsky  extends Builder {
             int yLosange=npix/nbOutLosangeWidth;
             int xLosange=npix%nbOutLosangeWidth;
             int gap = in.width/outLosangeWidth;
+            if( gap<1 ) gap=1;
             for( int y=0; y<in.width/gap; y++ ) {
                for( int x=0; x<in.width/gap; x++ ) {
                   int p=in.getPixelRGB(x*gap,in.width-y*gap-1);

@@ -20,11 +20,21 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import cds.image.EPSGraphics;
 import cds.tools.Util;

@@ -699,6 +699,14 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       return mcanvas.sCourante.getValue(mcanvas.indiceCourant);
    }
 
+   /** Retourne l'URL courante sous la souris */
+   protected String getCurObjURL() {
+      if( mcanvas.sCourante==null || mcanvas.indiceCourant==-1 )return "";
+      String tag = mcanvas.sCourante.getCodedValue(mcanvas.indiceCourant);
+      Words w = new Words(tag);
+      return w.getURL(aladin);
+   }
+
    /**  Retourne les coordonnées de l'objet sous la souris */
    protected String getCurObjCoord() {
       Source s = mcanvas.objSelect;

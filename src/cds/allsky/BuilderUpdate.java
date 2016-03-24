@@ -36,5 +36,12 @@ public class BuilderUpdate extends Builder {
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
    }
 
-   public void validateContext() throws Exception { validateOutput(); }
+   public void validateContext() throws Exception {
+      validateOutput();
+      if( context.hipsId!=null ) context.setHipsId(context.hipsId);
+      else {
+         context.loadProperties();
+         context.setHipsId(null);
+      }
+   }
 }
