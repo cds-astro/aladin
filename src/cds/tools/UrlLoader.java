@@ -65,7 +65,7 @@ public class UrlLoader extends Thread {
       long t1 = System.currentTimeMillis();
 //      System.out.println("Pere en attente de résultat...");
       start();
-      while( isWaiting && System.currentTimeMillis()-t1 < timeout*100 ) {
+      while( isWaiting && System.currentTimeMillis()-t1 < timeout ) {
 //         System.out.println("Pere waiting..."+(System.currentTimeMillis()-t1));
          try { Thread.currentThread().sleep(100); } catch( Exception e) {}
       }

@@ -129,7 +129,27 @@ public abstract class Builder {
             int offset = output.lastIndexOf('/',n);
             output = output.substring(offset+1,n);
          } else {
-            output = (output==null?"":output) + Constante.HIPS;
+            
+            String id = context.getHipsId();
+            
+            // Pas d'id => On ajoute simplement le suffixe HiPS au répertoire d'origine
+            if( id==null ) {
+               output = (output==null?"":output) + Constante.HIPS;
+               
+            // Un Id => on l'utilise comme nom de répertoire cible (avec des _ à la place des / et ?)
+            } else {
+               output = context.getInputPath();
+               output = output.replace('\\', '/');
+               int n = output.length();
+               if( output.charAt(n-1)=='/' ) n--;
+               int offset = output.lastIndexOf('/',n);
+               output = output.substring(0,offset+1);
+               id = id.substring(6);
+               id = id.replace('/','_');
+               id = id.replace('?','_');
+               output = output+id;
+            }
+            
          }
          context.setOutputPath(output);
          context.info("the output directory will be "+output);

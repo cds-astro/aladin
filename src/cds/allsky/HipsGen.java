@@ -420,7 +420,8 @@ public class HipsGen {
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          else {
-            if( context.getHipsId().startsWith("ivo://UNK.AUT") ) {
+            String id = context.getHipsId();
+            if( id==null || id.startsWith("ivo://UNK.AUT") ) {
                context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
               
             }

@@ -3882,6 +3882,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    // Synchro sur les résolutions de sésame
    protected Synchro sesameSynchro = new Synchro(10000);
    protected boolean isSesameInProgress() { return !sesameSynchro.isReady(); }
+   
+   boolean first1=true;
 
    /** Resolution Sesame a proprement parle
     * @param objet le nom d'objet
@@ -3899,8 +3901,10 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       try {
          url = aladin.glu.getURL("openSesame",URLEncoder.encode(objet),true);
+         
+//         if( first1 ) { first1=false; throw new Exception(); }
 
-         UrlLoader urlLoader = new UrlLoader(url,3000);
+         UrlLoader urlLoader = new UrlLoader(url,nbSesameCheck<MAXSESAMECHECK ? 3000 : 10000 );
          String res = urlLoader.getData();
          StringTokenizer st = new StringTokenizer(res,"\n");
          while( st.hasMoreTokens() ) {
