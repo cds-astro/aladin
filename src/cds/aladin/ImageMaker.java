@@ -100,24 +100,21 @@ public class ImageMaker {
    }
 
    static public void main(String [] argv) {
-       int n=1;
-       long t0=0;
-       try {
+      long t0=0;
+      try {
 
-          Aladin aladin = createAladin();
-          t0 = System.currentTimeMillis();
+         Aladin aladin = createAladin();
+         t0 = System.currentTimeMillis();
 
-          for( int i=0; i<n; i++ ) {
-             FileOutputStream output = new FileOutputStream( new File("/Test"+i+".jpg"));
-             new ImageMaker(aladin,output, "M101 test", 15000,15000, "jpeg", new Coord(210.80242,+54.34875/*056.61431,+24.13817*/), 2);
-          }
+         FileOutputStream output = new FileOutputStream( new File("/Test.jpg"));
+         new ImageMaker(aladin,output, "M101 test", 1024,1024, "jpeg", new Coord(210.80242,+54.34875/*056.61431,+24.13817*/), 2);
 
-          long t1 =System.currentTimeMillis();
-          System.out.println("Image generated in "+(t1-t0)/n+"ms");
+         long t1 =System.currentTimeMillis();
+         System.out.println("Image generated in "+(t1-t0)+"ms");
 
-       }catch( Exception e ) {
-          e.printStackTrace();
-       }
+      }catch( Exception e ) {
+         e.printStackTrace();
+      }
        System.exit(0);
     }
 }

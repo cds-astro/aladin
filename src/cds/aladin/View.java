@@ -1296,7 +1296,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    
    /** retourne le nombre de vues */
    protected int getNbView() {
-      return aladin.viewControl.getNbView(modeView);
+      try {
+         return aladin.viewControl.getNbView(modeView);
+      } catch( Exception e ) {
+        return 1;           // Pour faire plaisir à ImageMaker
+      }
    }
 
    /** Retourne le nombre de vues sélectionnées */
