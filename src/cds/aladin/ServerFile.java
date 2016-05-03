@@ -320,9 +320,9 @@ public class ServerFile extends Server implements XMLConsumer {
             }
 
             // support FTP --> ça fonctionne avec par exemple une URL du type ftp://user:passwd@server/....
-            else if( is==null && f.startsWith("ftp://") ) {
+            else if( is==null && f.indexOf("ftp://")>=0  ) {
                u = new URL(getNameWithoutBrackets(f));
-               try { in = Util.openStream(u); } catch( Exception e ) { }
+               in = Util.openStream(u);
                mode="ftp";
             }
             // URL du type file://...

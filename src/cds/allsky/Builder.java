@@ -67,6 +67,7 @@ public abstract class Builder {
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);
          case UPDATE:    return new BuilderUpdate(context);
+         case PROP:      return new BuilderProp(context);
          case MIRROR:    return new BuilderMirror(context);
          default: break;
       }
@@ -117,8 +118,7 @@ public abstract class Builder {
    // Vérifie que le répertoire Output a été passé en paramètre, sinon essaye de le déduire
    // du répertoire Input en ajoutant le suffixe ALLSKY
    // S'il existe déjà, vérifie qu'il s'agit bien d'un répertoire utilisable
-   protected void validateOutput() throws Exception {
-      if( context.isValidateOutput() ) return;
+   protected void validateOutput() throws Exception { 
       String output = context.getOutputPath();
       if( output==null ) {
          output = context.getInputPath();
@@ -155,7 +155,7 @@ public abstract class Builder {
          context.info("the output directory will be "+output);
       }
       File f = new File(output);
-      if( f.exists() && (!f.isDirectory() || !f.canWrite() || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
+      if( f.exists() && (!f.isDirectory()  || !f.canRead())) throw new Exception("Ouput directory not available ["+output+"]");
       context.setValidateOutput(true);
    }
 

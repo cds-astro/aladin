@@ -22,7 +22,6 @@ package cds.aladin;
 import java.util.Enumeration;
 import java.util.Iterator;
 
-import cds.tools.Util;
 import cds.tools.VOApp;
 
 /**
@@ -102,19 +101,10 @@ public class PlanTool extends PlanCatalog {
             new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
    }
 
-   private void createTagLegende() {
-      setSourceRemovable(true);
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)", "X",      "Y" });
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.DATATYPE, new String[]{  "char","char",     "char",      "double", "double"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"", "",       ""});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.WIDTH,    new String[]{  "15",   "13",      "13",        "8",      "8"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.PRECISION,new String[]{  "",     "2",        "3",        "2",      "2"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.DESCRIPTION,
-            new String[]{  "Identifier",  "Right ascension",  "Declination", "Current image X axis (FITS convention)", "Current image Y axis (Fits Convention)" });
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.UCD,
-            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","" });
-
-   }
+//   private void createTagLegende() {
+//      setSourceRemovable(true);
+//      legTag = SourceTag.createTagLegende();
+//   }
 
    private void createPhotLegende() {
       setSourceRemovable(true);
@@ -156,31 +146,39 @@ public class PlanTool extends PlanCatalog {
    /** retourne true si le plan a des sources */
    protected boolean withSource() { return legPhot!=null; }
 
-   public Source addTag(PlanImage planBase,double ra, double dec) {
-      if( legTag==null ) createTagLegende();
-
-      String id = "Tag "+pcat.getNextID();
-      Coord c = new Coord(ra,dec);
-      planBase.projd.getXY(c);
-      String [] val = { id, c.getRA(), c.getDE(), Util.myRound(""+(c.x+0.5),4),Util.myRound(""+(planBase.naxis2-c.y+0.5)) };
-      Source o1 = addTag(id, ra, dec, val);
-      o1.setShape(Obj.PLUS);
-      o1.setTag(true);
-      aladin.view.newView(1);
-      return o1;
-   }
-
-   private Source addTag(String id,double ra, double dec, String [] value) {
-      StringBuffer s = new StringBuffer("<&_A>");
-      for( int i=0; i<value.length; i++ ) {
-         s.append("\t"+value[i]);
-      }
-      Source o = new Source(this,ra,dec,id,s.toString());
-      o.leg = legTag;
+   public SourceTag addTag(PlanImage planBase,double ra, double dec) {
+      SourceTag o = new SourceTag(this, planBase, ra,dec);
       pcat.setObjetFast(o);
+      aladin.view.newView(1);
+      setSourceRemovable(true);
       return o;
+
+      
+//      if( legTag==null ) createTagLegende();
+//
+//      String id = "Tag "+pcat.getNextID();
+//      Coord c = new Coord(ra,dec);
+//      planBase.projd.getXY(c);
+//      String [] val = { id, c.getRA(), c.getDE(), 
+//            Util.myRound(""+(c.x+0.5),4),Util.myRound(""+(planBase.naxis2-c.y+0.5)) };
+//      SourceTag o1 = addTag(id, ra, dec, val);
+//      o1.setShape(Obj.PLUS);
+//      o1.setTag(true);
+//      aladin.view.newView(1);
+//      return o1;
    }
 
+//   private SourceTag addTag(String id,double ra, double dec, String [] value) {
+//      StringBuffer s = new StringBuffer("<&_A>");
+//      for( int i=0; i<value.length; i++ ) {
+//         s.append("\t"+value[i]);
+//      }
+//      SourceTag o = new SourceTag(this,ra,dec,id,s.toString());
+//      o.leg = legTag;
+//      pcat.setObjetFast(o);
+//      return o;
+//   }
+   
    public Source addPhot(PlanImage planBase,double ra, double dec, double []iqe) {
       if( legPhot==null ) createPhotLegende();
 
@@ -222,6 +220,17 @@ public class PlanTool extends PlanCatalog {
    protected boolean movable=true; // True si les objets du plan peuvent être déplacés
 
    protected boolean isMovable() { return movable; }
+   
+   /** Retourne vrai si le plan tool contient au moins un objet SourceTag */
+   protected boolean hasTag() {
+      if( pcat==null ) return false;
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( o instanceof SourceTag ) return true;
+      }
+      return false;
+   }
 
    protected void setMovable(String v) throws Exception {
       if( v.equalsIgnoreCase("On") ) movable=true;

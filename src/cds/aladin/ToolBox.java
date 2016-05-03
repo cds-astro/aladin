@@ -562,7 +562,7 @@ SwingWidgetFinder, Widget {
       oc=-1;
       int i=getTool();
       showCurrentButton(-1);
-      if( i==ZOOM  ) {
+      if( i==ZOOM  || i==TAG ) {
          setMode(i,Tool.UP);
          setMode(SELECT,Tool.DOWN);
       }

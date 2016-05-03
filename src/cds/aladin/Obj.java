@@ -25,13 +25,9 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JLabel;
@@ -40,7 +36,6 @@ import javax.swing.JTextField;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.aladin.prop.Propable;
-import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Interface pour la manipulation d'un objet graphique affichable dans la vue
@@ -130,7 +125,10 @@ public abstract class Obj implements Propable{
       if( id!=null && id.length()>0 ) {
          final JLabel idL = new JLabel(id);
          PropAction updateId = new PropAction() {
-            public int action() { idL.setText(id); return PropAction.SUCCESS; }
+            public int action() { 
+               idL.setText(id);
+               return PropAction.SUCCESS;
+            }
          };
          propList.add( Prop.propFactory("id","Info","associated information",idL,updateId,null) );
       }

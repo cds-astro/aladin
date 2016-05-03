@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -1635,8 +1636,23 @@ public class Context {
 
    }
 
-   /** Création, ou mise à jour du fichier des Properties associées au survey */
-   protected void writePropertiesFile() throws Exception {
+   /** Création, ou mise à jour des fichiers meta associées au survey
+    */
+   protected void writeMetaFile() throws Exception {
+      writePropertiesFile(null);
+      
+      // On en profite pour écrire le fichier index.html
+      writeIndexHtml();
+
+      // Et metadata.fits
+      writeMetadataFits();
+
+    }
+   
+   /** Création, ou mise à jour du fichier des Properties associées au survey
+    * @param stream null pour l'écrire à l'emplacement prévu par défaut
+    */
+   protected void writePropertiesFile(OutputStream stream) throws Exception {
 
 
       // Ajout de l'IVORN si besoin
@@ -1796,13 +1812,8 @@ public class Context {
          k[i] = keyAddProp.get(i);
          v[i] = valueAddProp.get(i);
       }
-      updateProperties(k,v,true);
+      updateProperties(k,v,true,stream);
 
-      // On en profite pour écrire le fichier index.html
-      writeIndexHtml();
-
-      // Et metadata.fits
-      writeMetadataFits();
    }
 
    /** Ecriture du fichier des propriétés pour le HpxFinder */
@@ -1836,7 +1847,8 @@ public class Context {
       prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
       prop.add(Constante.OLD_OBS_COLLECTION,label);
       prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
-      prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
+      prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
+//    prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
       if( minOrder>3 ) prop.add(Constante.OLD_HIPS_ORDER_MIN, minOrder+"");
       prop.add(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
@@ -1990,9 +2002,13 @@ public class Context {
     * @param key liste des clés à mettre à jour
     * @param value liste des valuers associées
     * @param overwrite si false, ne peut modifier une clé/valeur déjà existante
+    * @param stream null pour écriture à l'endroit par défaut
     * @throws Exception
     */
    protected void updateProperties(String[] key, String[] value,boolean overwrite) throws Exception {
+      updateProperties(key,value,overwrite,null);
+   }
+   protected void updateProperties(String[] key, String[] value,boolean overwrite,OutputStream stream) throws Exception {
 
       waitingPropertieFile();
       try {
@@ -2002,7 +2018,7 @@ public class Context {
          prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
+            if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
             FileInputStream in = new FileInputStream(propFile);
             prop.load(in);
             in.close();
@@ -2059,7 +2075,8 @@ public class Context {
          prop.add("#","#____FOR_COMPATIBILITY_WITH_OLD_HIPS_CLIENTS____");
          prop.add(Constante.OLD_OBS_COLLECTION,getLabel());
          prop.add(Constante.OLD_HIPS_FRAME, getFrameCode() );
-         prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
+         prop.add(Constante.OLD_HIPS_ORDER,prop.getProperty(Constante.KEY_HIPS_ORDER) );
+//         prop.add(Constante.OLD_HIPS_ORDER,getOrder()+"" );
          String fmt = getAvailableTileFormats();
          if( fmt.length()>0 ) prop.add(Constante.OLD_HIPS_TILE_FORMAT,fmt);
          if( fmt.indexOf("fits")>=0 && cut!=null ) {
@@ -2073,21 +2090,24 @@ public class Context {
          }
          
          // Remplacement du précédent fichier
-         String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
-         File ftmp = new File(tmp);
-         if( ftmp.exists() ) ftmp.delete();
-         File dir = new File( getOutputPath() );
-         if( !dir.exists() && !dir.mkdir() ) throw new Exception("Cannot create output directory");
-         FileOutputStream out = null;
-         try {
-            out = new FileOutputStream(ftmp);
-            prop.store( out, null);
+         if( stream!=null ) prop.store( stream, null);
+         else {
+            String tmp = getOutputPath()+Util.FS+Constante.FILE_PROPERTIES+".tmp";
+            File ftmp = new File(tmp);
+            if( ftmp.exists() ) ftmp.delete();
+            File dir = new File( getOutputPath() );
+            if( !dir.exists() && !dir.mkdir() ) throw new Exception("Cannot create output directory");
+            FileOutputStream out = null;
+            try {
+               out = new FileOutputStream(ftmp);
+               prop.store( out, null);
 
 
-         } finally {  if( out!=null ) out.close(); }
+            } finally {  if( out!=null ) out.close(); }
 
-         if( f.exists() && !f.delete() ) throw new Exception("Propertie file locked ! (cannot delete)");
-         if( !ftmp.renameTo(new File(propFile)) ) throw new Exception("Propertie file locked ! (cannot rename)");
+            if( f.exists() && !f.delete() ) throw new Exception("Propertie file locked ! (cannot delete)");
+            if( !ftmp.renameTo(new File(propFile)) ) throw new Exception("Propertie file locked ! (cannot rename)");
+         }
 
       }
       finally { releasePropertieFile(); }
@@ -2101,7 +2121,7 @@ public class Context {
          prop = new MyProperties();
          File f = new File( propFile );
          if( f.exists() ) {
-            if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
+            if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
             FileInputStream in = new FileInputStream(propFile);
             prop.load(in);
             in.close();

@@ -76,7 +76,7 @@ final public class BuilderAllsky  extends Builder {
    private void postJob() throws Exception {
       validateLabel();
       validateBitpix();
-      context.writePropertiesFile();
+      context.writeMetaFile();
    }
 
    /** Création des fichiers Allsky.fits (true bitpix) et Allsky.jpg (8 bits) pour tout un niveau Healpix

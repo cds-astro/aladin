@@ -46,7 +46,8 @@ public class BuilderMirror extends BuilderTiles {
    private boolean isPartial=false;     // indique que la copie sera partielle (spatialement, order ou format des tuiles)
    private boolean isSmaller=false;     // indique que la copie concerne une zone spatial plus petite que l'original
    private boolean isUpdate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié
-   private long lastReleaseDate=0L;     // Date of last release date of the local copy
+   private boolean flagIsUpToDate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié et déjà à jour
+   private String dateRelease="";       // Date of last release date of the local copy
 
    public BuilderMirror(Context context) {
       super(context);
@@ -113,7 +114,8 @@ public class BuilderMirror extends BuilderTiles {
          } else {
             if( !context.getArea().equals(area)) {
                isSmaller=isPartial=true;
-               context.info("Partial spacial mirror => tile hierarchy will be locally recomputed");
+               context.setMocArea( area.intersection( context.getArea()) );
+               context.info("Partial spacial mirror");
             }
          }
       } finally{  if( in!=null ) in.close(); }
@@ -156,7 +158,9 @@ public class BuilderMirror extends BuilderTiles {
             String dLocal = localProp.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
             String dRemote = prop.getProperty(Constante.KEY_HIPS_RELEASE_DATE);
             if( dLocal!=null && dRemote!=null && dLocal.equals(dRemote) ) {
-               throw new Exception("Local copy already up-to-date ("+dLocal+") => "+context.getOutputPath());
+               dateRelease=dLocal;
+               flagIsUpToDate=true && !isSmaller && !isPartial;
+//               throw new Exception("Local copy already up-to-date ("+dLocal+") => "+context.getOutputPath());
             }
 
             // IL FAUDRAIT VERIFIER ICI QUE
@@ -167,39 +171,43 @@ public class BuilderMirror extends BuilderTiles {
 
             isUpdate=true;
             context.info("Updating a previous HiPS copy ["+context.getOutputPath()+"]...");
-            lastReleaseDate = Constante.getTime(dLocal);
 
          } finally{  if( in!=null ) in.close(); }
       }
    }
 
    public void run() throws Exception {
-      build();
+      if( flagIsUpToDate ) {
+         context.info("Local HiPS copy seems to be already up-to-date (same hips_release_date="+dateRelease+")");
+         context.info("Only the properties file will be updated");
+      } else {
+         build();
 
-      if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
-      if( !context.isTaskAborting() ) {
+         if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
+         if( !context.isTaskAborting() ) {
 
-         copyX(context.getInputPath()+"/index.html",context.getOutputPath()+"/index.html");
-         copyAllsky();
+            copyX(context.getInputPath()+"/index.html",context.getOutputPath()+"/index.html");
+            copyAllsky();
 
-         //  regeneration de la hierarchie si nécessaire
-         if( isSmaller ) {
-            b = new BuilderTree(context);
-            b.run();
-            b=null;
+            //  regeneration de la hierarchie si nécessaire
+            if( isSmaller ) {
+               b = new BuilderTree(context);
+               b.run();
+               b=null;
+            }
          }
+
+         // Nettoyage des vieilles tuiles (non remise à jour)
+         // CA NE VA PAS MARCHER CAR CERTAINES TUILES PEUVENT NE PAS AVOIR ETE MIS A JOUR SUR LE SERVEUR DISTANT
+         // BIEN QUE LA RELEASE DATE AIT EVOLUEE. ELLES SERONT ALORS SUPPRIMEES PAR ERREUR
+
+         //      if( isUpdate && !context.isTaskAborting()) {
+         //         b=new BuilderCleanDate(context);
+         //         ((BuilderCleanDate)b).setDate(lastReleaseDate);
+         //         b.run();
+         //         b=null;
+         //      }
       }
-
-      // Nettoyage des vieilles tuiles (non remise à jour)
-      // CA NE VA PAS MARCHER CAR CERTAINES TUILES PEUVENT NE PAS AVOIR ETE MIS A JOUR SUR LE SERVEUR DISTANT
-      // BIEN QUE LA RELEASE DATE AIT EVOLUEE. ELLES SERONT ALORS SUPPRIMEES PAR ERREUR
-
-      //      if( isUpdate && !context.isTaskAborting()) {
-      //         b=new BuilderCleanDate(context);
-      //         ((BuilderCleanDate)b).setDate(lastReleaseDate);
-      //         b.run();
-      //         b=null;
-      //      }
 
       // Maj des properties
       if( !context.isTaskAborting() ) {
@@ -235,6 +243,8 @@ public class BuilderMirror extends BuilderTiles {
             prop.store( out, null);
          } finally {  if( out!=null ) out.close(); }
       }
+      
+      
 
    }
 
@@ -245,6 +255,7 @@ public class BuilderMirror extends BuilderTiles {
 
    /** Demande d'affichage des stats via Task() */
    public void showStatistics() {
+      if( flagIsUpToDate ) return;
       long t = System.currentTimeMillis();
       long delai = t-lastTime;
       long lastCumulPerSec = delai>1000L && lastTime>0 ? lastCumul/(delai/1000L) : 0L;

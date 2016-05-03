@@ -395,6 +395,7 @@ public class HipsGen {
                else if( a==Action.MAPTILES ){ actions.add(i, Action.CLEANTILES);   i++; }
                else if( a==Action.JPEG )    { actions.add(i, Action.CLEANJPEG);    i++; }
                else if( a==Action.PNG )     { actions.add(i, Action.CLEANPNG);     i++; }
+               else if( a==Action.RGB )     { actions.add(i, Action.CLEAN);        i++; }
                else if( a==Action.CUBE )    { actions.add(i, Action.CLEAN);        i++; }
             }
          }
@@ -420,12 +421,14 @@ public class HipsGen {
          new Task(context,actions,true);
          if( context.isTaskAborting() ) context.abort("======================= (aborted after "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          else {
-            String id = context.getHipsId();
-            if( id==null || id.startsWith("ivo://UNK.AUT") ) {
-               context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
-              
+            if( !flagMirror ) {
+               String id = context.getHipsId();
+               if( id==null || id.startsWith("ivo://UNK.AUT") ) {
+                  context.warning("a valid HiPS IVOID identifier is strongly recommended => in the meantime, assuming "+context.getHipsId());
+
+               }
+               context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             }
-            context.info("Tip: Edit the \"properties\" file for describing your HiPS (full description, copyright, ...)");
             context.done("=================== THE END (done in "+Util.getTemps(System.currentTimeMillis()-t)+") =======================");
          }
          

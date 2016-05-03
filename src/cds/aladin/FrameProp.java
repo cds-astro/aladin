@@ -23,12 +23,8 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -107,7 +103,7 @@ public class FrameProp extends JFrame implements ActionListener {
        if( close.equals(what) ) dispose();
        else if( apply.equals(what) ) {
           try { 
-             System.out.println("actionPerformed apply on "+obj);
+//             System.out.println("actionPerformed apply on "+obj);
              if( propPanel.apply()==PropAction.SUCCESS ) {
                 aladin.view.newView(1);
                 aladin.calque.repaintAll();

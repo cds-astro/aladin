@@ -2338,8 +2338,16 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( aladin.frameProp==null ) return;
       aladin.frameProp.resume();
    }
+   
+   /** Edition des propriétés du dernier objets sélectionnés */
    protected void propSelectedObj() {
       Propable obj = getLastPropableObj();
+      if( obj==null ) return;
+      editPropObj(obj);
+   }
+
+   /** Edition des propriétés d'un objets */
+   protected void editPropObj(Propable obj) {
       if( obj==null ) return;
       if( aladin.frameProp==null ) aladin.frameProp = new FrameProp(aladin,obj);
       else aladin.frameProp.updateAndShow(obj);

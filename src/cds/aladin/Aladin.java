@@ -154,11 +154,13 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> Tags improvements
  * @beta    <LI> Probability sky map MOC extraction
  * @beta    <LI> Planetary HiPS (longitude inversion)
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> HiPS RGB -f flag
  * @beta    <LI> GLU watchdog timer (sesame mirrors)
  * @beta    <LI> Blink initial delay
  * @beta <UL>
@@ -184,7 +186,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.017";
+   static public final    String VERSION = "v9.019";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";

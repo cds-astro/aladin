@@ -2059,9 +2059,10 @@ MFCREATE	Create a new plane with these sources...
 MFLOADIMG	Load an image of this source
 MFLOADIMGS	Load an image for each source
 MFLOADIMGS1	Load an image for each tagged source in this table
-MFGOTOIMG	Show this source
+MFGOTOIMG	Focus on this source
 MFUNSELECT	Unselect this source (SHIFT click)
 MFDEL	Delete this source
+MFEDIT  Edit this source
 MTAGINFO	Check the boxes below for tagging the corresponding lines\nand by this way, to keep them in the measurement frame even if the associated sources will be deselected.
 
 MFASCSORT.fr	Trier sens ascendant
@@ -2096,9 +2097,10 @@ MFCREATE.fr	Créer un nouveau plan avec ces sources
 MFLOADIMG.fr	Charger une image de cette source
 MFLOADIMGS.fr	Charger une image pour chaque source
 MFLOADIMGS1.fr	Charger une image pour chaque source cochée dans cette table
-MFGOTOIMG.fr	Montrer cette source
+MFGOTOIMG.fr	Se centrer sur cette source
 MFUNSELECT.fr	Déselectionner cette source (MAJ clic)
 MFDEL.fr	Supprimer cette source
+MFEDIT.fr   Editer cette source
 MTAGINFO.fr	Cochez les cases ci-dessous correspondantes aux lignes\nque vous souhaitez marquer, et de ce fait, les conserver dans la fenêtre des mesures,\nmême quand les sources correspondances seront désélectionnées.
 
 

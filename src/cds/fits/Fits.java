@@ -1241,7 +1241,7 @@ final public class Fits {
       return isTransparent(pixMode);
    }
 
-   static protected boolean isTransparent(int pixMode) {
+   static public boolean isTransparent(int pixMode) {
       return pixMode == PIX_255 || pixMode == PIX_TRUE || pixMode == PIX_ARGB;
    }
 
@@ -1545,6 +1545,34 @@ final public class Fits {
             // setPix8(x+xCell,y+yCell,pixOut);
             setPixValInt(pix8, 8, (height - y - 1) * widthCell + (x + xCell),
                   pixOut);
+
+         }
+      }
+      return pix8;
+   }
+
+   public byte[] toPix8Int(double min, double max, int pixMode) {
+      int range = 256;
+      int gap = 0;
+      if( isTransparent(pixMode) ) {
+         gap = 2;
+         range -= gap;
+      }
+
+      byte[] pix8 = new byte[widthCell * heightCell * 4];
+      double r = range / (max - min);
+      range--;
+      int pixOut;
+
+      for( int y = 0; y < heightCell; y++ ) {
+         for( int x = 0; x < widthCell; x++ ) {
+            double pixIn = getPixelDouble(x + xCell, y + yCell);
+            if( isBlankPixel(pixIn) ) pixOut = 0;
+            else {
+               pixOut = ((gap + (pixIn <= min ? 0x00 : pixIn>Integer.MAX_VALUE ? Integer.MAX_VALUE
+                     : (int) (((pixIn - min) * r)))) );
+            }
+            setPixValInt(pix8, 32, (height - y - 1) * widthCell + (x + xCell), pixOut);
 
          }
       }
@@ -2163,7 +2191,7 @@ final public class Fits {
       }
    }
 
-   private int getPixValInt(byte[] t, int bitpix, int i) {
+   public  int getPixValInt(byte[] t, int bitpix, int i) {
       try {
          switch( bitpix ) {
             case 8:

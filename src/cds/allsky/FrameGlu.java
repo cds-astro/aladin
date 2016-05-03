@@ -231,7 +231,7 @@ public class FrameGlu extends JFrame implements KeyListener {
 
    private void updateProperties() {
       try {
-         context.writePropertiesFile();
+         context.writeMetaFile();
       } catch( Exception e ) { }
    }
 

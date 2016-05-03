@@ -24,7 +24,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.util.Enumeration;
@@ -430,6 +434,7 @@ MouseMotionListener, MouseListener, KeyListener
     * @param Sg La composante G de la palette à interpoler
     * @param Sb La composante B de la palette à interpoler
     * @param inverse	à true si l'on veut les couleurs inversées; à false pour la palette normale
+    * @param transp     true si la palette à sa première case utilisée pour la transparence
     * @param tr0 l'abscisse du 1er point de contrôle de la courbe en deux parties (cf. FrameCM)
     * @param tr1 l'abscisse du 2e point de contrôle de la courbe en deux parties (cf. FrameCM)
     * @param tr2 l'abscisse du 3e point de contrôle de la courbe en deux parties (cf. FrameCM)
@@ -438,20 +443,25 @@ MouseMotionListener, MouseListener, KeyListener
     * @author Pierre Fernique - 27/3/2009 réécriture complète parce que compliqué et bugué
     * @author Robin -- 09/07/2004
     */
-   static void interpolPalette(int[] Sr, int[] Sg, int[] Sb, boolean inverse,
+   static void interpolPalette(int[] Sr, int[] Sg, int[] Sb, boolean inverse, boolean transp,
          int tr0, int tr1, int tr2,int fct) {
 
-      double pas1 = 128./(tr1-tr0);
-      double pas2 = 128./(tr2-tr1);
+      double range = 256;
+      int gap=0;
+      if( transp ) { range=255; gap=1; }
+      
+      double mid = range/2;
+      double pas1 = mid/(tr1-tr0);
+      double pas2 = mid/(tr2-tr1);
 
       int max = Sr.length-1;
 
-      int [] fctGap = computeTransfertFct(fct);
+      int [] fctGap = computeTransfertFct(fct,transp);
 
-      for( int i=0; i<256; i++ ) {
+      for( int i=0; i<range; i++ ) {
          int j= i<tr0 ? 0 :
             i<tr1 ? (int)Math.round((i-tr0)*pas1) :
-               i<tr2 ? 128+(int)Math.round((i-tr1)*pas2) :
+               i<tr2 ? (int)(Math.round( mid + (i-tr1)*pas2)) :
                   max;
 
                j = fctGap[j];
@@ -460,9 +470,9 @@ MouseMotionListener, MouseListener, KeyListener
                else if( j<0 ) j=0;
                if( inverse ) j=max-j;
 
-               r[i]=(byte) (0xFF & Sr[ j ]);
-               g[i]=(byte) (0xFF & Sg[ j ]);
-               b[i]=(byte) (0xFF & Sb[ j ]);
+               r[i+gap]=(byte) (0xFF & Sr[ j ]);
+               g[i+gap]=(byte) (0xFF & Sg[ j ]);
+               b[i+gap]=(byte) (0xFF & Sb[ j ]);
       }
    }
 
@@ -545,7 +555,7 @@ MouseMotionListener, MouseListener, KeyListener
             gn[i] = (i-64)<<1;  if( gn[i]<0 ) gn[i]=0; else if( gn[i]>255 ) gn[i]=255;
             bl[i] = (i-128)<<1; if( bl[i]<0 ) bl[i]=0;
          }
-         interpolPalette(rd,gn,bl,inverse,tr0,tr1,tr2,fct);
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
 
          // S'il s'agit d'une table des couleurs A
       } else if( typeCM == PlanImage.CMA ) {
@@ -554,60 +564,61 @@ MouseMotionListener, MouseListener, KeyListener
             gn[i] = (i<64)?i<<2:(i<128)?255-((i-64)<<2):(i<192)?0:(i-192)<<2;
             bl[i] = (i<32)?0:(i<128)?((i-32)<<3)/3:(i<192)?255-((i-128)<<2):0;
          }
-         interpolPalette(rd,gn,bl,inverse,tr0,tr1,tr2,fct);
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
 
          // S'il s'agit d'une table des couleurs STERN SPECIAL -- #Robin - 02/07/2004
       } else if( typeCM == PlanImage.CMSTERN ) {
-         interpolPalette(SR,SG,SB,!(inverse),tr0,tr1,tr2,fct);
+         interpolPalette(SR,SG,SB,!(inverse),transp,tr0,tr1,tr2,fct);
 
          // S'il s'agit d'une table de couleurs "custom"
       } else if( typeCM>LAST_DEFAULT_CM_IDX ) {
          int idx = typeCM-LAST_DEFAULT_CM_IDX-1;
          MyColorMap myCM = (MyColorMap)customCM.elementAt(idx);
-         interpolPalette(myCM.getRed(),myCM.getGreen(),myCM.getBlue(),!(inverse),tr0,tr1,tr2,fct);
+         interpolPalette(myCM.getRed(),myCM.getGreen(),myCM.getBlue(),!(inverse),transp,tr0,tr1,tr2,fct);
 
          // Sinon table de niveaux de gris, en cas de trasnparence, on décale de 1
       } else {
          int gap = transp ? 1 : 0;
          for( i=gap; i<256; i++ ) rd[i]=gn[i]=bl[i]=i-gap;
-         interpolPalette(rd,gn,bl,inverse,tr0,tr1,tr2,fct);
+         interpolPalette(rd,gn,bl,inverse,transp,tr0,tr1,tr2,fct);
       }
 
       return transp ? new IndexColorModel(8,256,r,g,b,0) : new IndexColorModel(8,256,r,g,b);
    }
 
 
-   /** Modifie les indices des 256 entrées d'une table des couleurs pour tenir
+   /** Modifie les indices des 256 entrées (resp 255) d'une table des couleurs pour tenir
     * compte d'une fonction de transfert
     * @param fct le code de la fonction de transfert (PlanImage.LOG, .SQRT, .SQR)
     */
-   static private int [] computeTransfertFct(int fct) {
-      int [] r = new int[256];
+   static private int [] computeTransfertFct(int fct,boolean transp) {
+      int range = transp ? 255 : 256;
+      int [] r = new int[range];
 
       if( fct==PlanImage.LINEAR ) {
          for( int i=0; i<256; i++ ) r[i]=i;
          return r;
       }
 
-      double val[] = new double[256];
+      double val[] = new double[range];
       double min=Double.MAX_VALUE;
       double max=-min;
       double v;
-      for( int i=0; i<256; i++ ) {
+      for( int i=0; i<range; i++ ) {
          v = i;
          switch(fct) {
             case PlanImage.ASINH: val[i] = v = Math.log(v + Math.sqrt(Math.pow(v, 2.)+1)); break;
-            case PlanImage.LOG:   val[i] = v = Math.log(v/10+1); break;
+            case PlanImage.LOG:   val[i] = v = Math.log(v/10+1);  break;
             case PlanImage.SQRT:  val[i] = v = Math.sqrt(v/10.);  break;
             case PlanImage.SQR:   val[i] = v  = v*v;              break;
          }
          if( v<min ) min=v;
          if( v>max ) max=v;
       }
-      double x = 256/(max-min);
-      for( int i=0; i<256; i++ ) {
+      double x = range/(max-min);
+      for( int i=0; i<range; i++ ) {
          v = x*val[i] - min;
-         if( v>255 ) v=255;
+         if( v>=range ) v=range-1;
          else if( v<0 ) v=0;
          r[i] = (int)v;
       }
@@ -795,9 +806,9 @@ MouseMotionListener, MouseListener, KeyListener
          triangle[2]-=ox-triangle[1];
          int deltaY = y-oy;
          if( oy!=-1 && deltaY!=0 ) {
-            triangle[0]+=(int)( deltaY*fct );
+            triangle[0]+=deltaY*fct;
             if( triangle[0]>triangle[1]-5 ) triangle[0]=triangle[1]-5;
-            triangle[2]-= (int)( deltaY*fct) ;
+            triangle[2]-= deltaY*fct ;
             if( triangle[2]<triangle[1]+5 ) triangle[2]=triangle[1]+5;
          }
          oy=y;

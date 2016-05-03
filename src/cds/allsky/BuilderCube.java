@@ -36,7 +36,7 @@ public class BuilderCube extends Builder {
          bm.createMoc( context.getOutputPath() );
          context.moc=bm.moc;
       }
-      if( !context.isTaskAborting() ) context.writePropertiesFile();
+      if( !context.isTaskAborting() ) context.writeMetaFile();
    }
 
    // Pour les stats, retourne le nombre de formats de tuiles rencontrés et ou estimés
@@ -76,7 +76,7 @@ public class BuilderCube extends Builder {
             context.prop = new MyProperties();
             File f = new File( propFile );
             if( f.exists() ) {
-               if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
+               if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
                FileInputStream in = new FileInputStream(propFile);
                context.prop.load(in);
                in.close();

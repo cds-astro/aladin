@@ -168,7 +168,7 @@ MouseWheelListener, Widget
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
    /* menuLoadImg,menuLoadImgs,*/menuUnselect,
-   menuAddColumn,menuGoto,menuDel,menuTableInfo;
+   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit;
 
    // Cree le popup menu associe au View
    private void createPopupMenu() {
@@ -178,6 +178,8 @@ MouseWheelListener, Widget
       JMenuItem j;
       JMenu m;
       popMenu.add( menuUnselect=j=new JMenuItem(c.getString("MFUNSELECT")));
+      j.addActionListener(this);
+      popMenu.add( menuEdit=j=new JMenuItem(c.getString("MFEDIT")));
       j.addActionListener(this);
       popMenu.add( menuDel=j=new JMenuItem(c.getString("MFDEL")));
       j.addActionListener(this);
@@ -262,6 +264,7 @@ MouseWheelListener, Widget
       else if( src==menuCopyMeasurement1 ) aladin.copyToClipBoard(aladin.mesure.getCurObjMeasurement(true));
       else if( src==menuUnselect ) deselect(objSelect);
       else if( src==menuDel ) delete(objSelect);
+      else if( src==menuEdit ) edit(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
 
@@ -371,6 +374,7 @@ MouseWheelListener, Widget
       boolean flag = objSelect!=null;
       menuUnselect.setEnabled(flag);
       menuDel.setEnabled(objSelect!=null && objSelect.plan.isSourceRemovable());
+      menuEdit.setEnabled(objSelect!=null && objSelect instanceof SourceTag);
       menuCopyCoord.setEnabled(flag);
       //      menuLoadImg.setEnabled(flag);
       //      menuLoadImgs.setEnabled(aladin.mesure.nbSrc>1);
@@ -1103,6 +1107,12 @@ MouseWheelListener, Widget
          repaint();
       }
    }
+   
+   /** Edition d'une source (uniquement s'il s'agit d'une source editable (SourceTag) */
+   void edit(Source o) {
+      if( o==null || !(o instanceof SourceTag) ) return;
+      aladin.view.editPropObj(o);
+   }
 
    /** Suppression d'une source (uniquement pour les plan isSourceRemovable() */
    void delete(Source o) {
@@ -1629,6 +1639,7 @@ MouseWheelListener, Widget
 
    // Regeneration du plan image pour la fenetre des mesures
    public void paintComponent(Graphics gr) {
+      
       int j;
 
       // Positionnement du curseur apres le demarrage d'Aladin
@@ -1717,7 +1728,7 @@ MouseWheelListener, Widget
       Util.drawEdge(g,W,H);
 
       gr.drawImage(img,0,0,this);
-
+      
       if( aladin.view.zoomview.flagSED ) aladin.view.zoomview.repaint();
    }
 

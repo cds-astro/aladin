@@ -54,7 +54,7 @@ public class Constante {
    static public final String KEY_HIPS_DATA_RANGE       = "hips_data_range";
    static public final String OLD_HIPS_DATA_RANGE       = "pixelRange";
    static public final String OLD_HIPS_PUBLISHER        = "hips_publisher";
-   static public final String KEY_CREATOR               = "creator";
+   static public final String KEY_CREATOR               = "hips_creator";
    static public final String KEY_PUBLISHER_ID          = "publisher_id";
    static public final String KEY_OBS_ID                = "obs_id";
    static public final String KEY_CLIENT_CATEGORY       = "client_category";

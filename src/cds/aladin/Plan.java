@@ -390,7 +390,7 @@ public class Plan implements Runnable {
    /** Il s'agit d'un plan de type catalogue */
    protected boolean isCatalog() {
       return   type==CATALOG
-            || type==TOOL && (((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null)
+            || type==TOOL && (((PlanTool)this).legPhot!=null || ((PlanTool)this).hasTag())
             || type==ALLSKYCAT;
    }
 

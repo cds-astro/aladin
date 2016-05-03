@@ -19,27 +19,25 @@
 
 package cds.allsky;
 
-import java.io.File;
-
-/** Permet de nettoyer toutes les tuiles FITS ainsi que le Allsky.fits
- * @author Anaïs Oberto & Pierre Fernique [CDS]
+/** Permet de visualiser les properties maj d'un survey préalablement généré
+ * @author Pierre Fernique [CDS]
  */
-public class BuilderCleanFits extends BuilderClean  {
+public class BuilderProp extends Builder {
 
-   public BuilderCleanFits(Context context) { super(context); }
-   
-   public Action getAction() { return Action.CLEANFITS; }
-   
-   public boolean mustBeDeleted(File f) {
-      String name = f.getName();
-      if( name.equals("Allsky.fits") ) return true;
-      if( !name.endsWith(".fits") )    return false;
-      if( !name.startsWith("Npix") ) return false;
-      return true;
-   }
+   public BuilderProp(Context context) { super(context); }
+
+   public Action getAction() { return Action.PROP; }
 
    public void run() throws Exception {
-      deleteDirExceptIndex(new File(context.getOutputPath()));
-      context.writeMetaFile();
+      context.scriptCommand=null;
+      System.out.println();
+      context.writePropertiesFile(System.out);
+      System.out.println();
+   }
+
+   public void validateContext() throws Exception {
+      validateOutput();
+      context.loadProperties();
+      context.setHipsId(context.hipsId!=null && context.hipsId.startsWith("ivo://UNK.AUTH?") ? null : context.hipsId);
    }
 }

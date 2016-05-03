@@ -1655,7 +1655,7 @@ public class Calque extends JPanel implements Runnable {
    protected void updateTagPlane(Tag tag) {
 
       final PlanTool p = selectPlanTool();
-      final Source s = p.addTag( (PlanImage)aladin.view.getMouseView().pref, tag.raj, tag.dej);
+      final SourceTag s = p.addTag( (PlanImage)aladin.view.getMouseView().pref, tag.raj, tag.dej);
 
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {

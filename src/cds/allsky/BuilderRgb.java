@@ -181,7 +181,7 @@ public class BuilderRgb extends Builder {
       // détermination de la zone à calculer
       if( context.mocArea!=null ) context.moc = context.moc.intersection( context.mocArea );
 
-      context.writePropertiesFile();
+      context.writeMetaFile();
    }
 
    // Chargement d'un MOC, et par défaut, d'un MOC couvrant tout le ciel
@@ -246,7 +246,7 @@ public class BuilderRgb extends Builder {
       prop = new MyProperties();
       File f = new File( propFile );
       if( f.exists() ) {
-         if( !f.canRead() || !f.canWrite() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
+         if( !f.canRead() ) throw new Exception("Propertie file not available ! ["+propFile+"]");
          FileInputStream in = new FileInputStream(propFile);
          prop.load(in);
          in.close();
@@ -336,9 +336,11 @@ public class BuilderRgb extends Builder {
       statNbFile+=deltaNbFile;
       totalTime = System.currentTimeMillis()-startTime;
    }
+   
 
    public void build() throws Exception  {
       initStat();
+      
       for( int i=0; i<768; i++ ) {
          if( context.isTaskAborting() ) new Exception("Task abort !");
          // Si le fichier existe déjà on ne l'écrase pas
@@ -376,9 +378,6 @@ public class BuilderRgb extends Builder {
       boolean trouve=false;
       for( int c=0; !trouve && c<3; c++ ) {
          if( c==missing ) continue;
-// JE NE PASSE PLUS PAR L'EXISTENCE DU FICHIER CAR SI LES MAXORDER SONT DIFFERENTS, CA NE MARCHE PLUS
-//         String file = Util.getFilePath(inputs[c],order,npix)+".fits";
-//         trouve = new File(file).exists();
          trouve = moc[c].isIntersecting(order, npix);
       }
       if( !trouve ) return null;
@@ -596,38 +595,62 @@ public class BuilderRgb extends Builder {
 
       return fits;
    }
-
+   
    // génération du RGB à partir des composantes
    private void generateRGB(Fits [] out, int order, long npix, boolean leaf) throws Exception {
-      byte [][] pixx8 = new byte [3][];
-
-      // Passage en 8 bits pour chaque composante
-      for( int c=0; c<3; c++ ) {
-         if( c==missing || out[c]==null ) continue;
-         pixx8[c] = out[c].toPix8( pixelMin[c],pixelMax[c], tcm[c],
-               format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256);
+      
+      double gap=0;
+      double range=256;
+      if( Fits.isTransparent(format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256) ) {
+         range = 255;
+         gap = 1;
       }
 
       Fits rgb = new Fits(width,width,0);
-      int [] pix8 = new int[3];
-      for( int i=width*width-1; i>=0; i-- ) {
-         int tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
-         for( int c=0; c<3; c++ ) {
-            if( c==missing ) continue;
-            if( out[c]==null ) pix8[c]=0;
-            else {
-               pix8[c] = 0xFF & pixx8[c][i];
-               tot += pix8[c];
+      double [] pix = new double[3];
+      int i=0;
+      for( int y=0; y<width; y++ ) {
+         for( int x=0; x<width; x++,i++ ) {
+
+            double tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
+            for( int c=0; c<3; c++ ) {
+               if( c==missing || out[c]==null ) continue;
+               double v = out[c].getPixelDouble(x,width-y-1);
+               if( out[c].isBlankPixel(v) ) pix[c] = 0;
+               else {
+                  pix[c] = gap+ ( v< pixelMin[c] ? 0 : v> pixelMax[c] ? range-gap-1
+                        : range *( (v-pixelMin[c]) / (pixelMax[c] - pixelMin[c]) ) );
+                  tot += pix[c];
+               }
             }
+            if( missing!=-1 ) pix[missing] = tot/2;
+            
+            int pixel;
+            double[] pix8 = new double[3];
+            if( tot==0 ) pixel=0x00;
+            else {
+               pixel = 0xFF;
+               for( int c=0; c<3; c++ ) { 
+                  int itcm =  (int)Math.floor( pix[c] );
+                  if( tcm[c]==null ) pix8[c] = itcm;
+                  else if( itcm>=255 ) pix8[c] = tcm[c][255];
+                  else if( itcm<=gap ) pix8[c] = tcm[c][(int)gap];
+                  else {
+                     double d1 = pix[c] - itcm;
+                     if( d1==0 ) pix8[c] = tcm[c][ itcm ] & 0xFF;
+                     else {
+                        double d2 = 1-d1;
+                        double v1 = tcm[c][ itcm ] & 0xFF;
+                        double v2 = tcm[c][ itcm+1 ] & 0xFF;
+                        pix8[c] = (int)Math.round( v1*d2  + v2*d1 );
+                     }
+                  }
+                  pixel = (pixel<<8) | ((int)pix8[c] & 0xFF);
+               }
+            }
+
+            rgb.rgb[i]=pixel;
          }
-         if( missing!=-1 ) pix8[missing] = tot/2;
-         int pix;
-         if( tot==0 ) pix=0x00;
-         else {
-            pix = 0xFF;
-            for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
-         }
-         rgb.rgb[i]=pix;
       }
       String file="";
 
@@ -640,4 +663,54 @@ public class BuilderRgb extends Builder {
          updateStat(f);
       }
    }
+   
+   
+   // génération du RGB à partir des composantes
+//   private void generateRGB(Fits [] out, int order, long npix, boolean leaf) throws Exception {
+//      byte [][] pixx8 = new byte [3][];
+//
+//      // Passage en 8 bits pour chaque composante
+//      for( int c=0; c<3; c++ ) {
+//         if( c==missing || out[c]==null ) continue;
+//         pixx8[c] = out[c].toPix8( pixelMin[c],pixelMax[c], tcm[c],
+//               format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256);
+//      }
+//
+//      Fits rgb = new Fits(width,width,0);
+//      int [] pix8 = new int[3];
+//      for( int i=width*width-1; i>=0; i-- ) {
+//         
+//         int tot = 0;  // Pour faire la moyenne en cas d'une composante manquante
+//         for( int c=0; c<3; c++ ) {
+//            if( c==missing ) continue;
+//            if( out[c]==null ) pix8[c]=0;
+//            else {
+//               pix8[c] = 0xFF & pixx8[c][i];
+//               tot += pix8[c];
+//            }
+//         }
+//         if( missing!=-1 ) pix8[missing] = tot/2;
+//         int pix;
+//         if( tot==0 ) pix=0x00;
+//         else {
+//            pix = 0xFF;
+//            for( int c=0; c<3; c++ ) pix = (pix<<8) | pix8[c];
+//         }
+//         rgb.rgb[i]=pix;
+//      }
+//      String file="";
+//
+//      file = Util.getFilePath(output,order, npix)+Constante.TILE_EXTENSION[format];
+//      rgb.writeRGBPreview(file,Constante.TILE_MODE[format]);
+//      rgb.free();
+//
+//      if( leaf ) {
+//         File f = new File(file);
+//         updateStat(f);
+//      }
+//   }
+
 }
+
+
+
