@@ -596,7 +596,7 @@ MouseMotionListener, MouseListener, KeyListener
       int [] r = new int[range];
 
       if( fct==PlanImage.LINEAR ) {
-         for( int i=0; i<256; i++ ) r[i]=i;
+         for( int i=0; i<range; i++ ) r[i]=i;
          return r;
       }
 

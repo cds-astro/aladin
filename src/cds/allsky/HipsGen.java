@@ -90,6 +90,25 @@ public class HipsGen {
 
       reader.close();
    }
+   
+   
+   /** Retourne le paramètre qui remplace un paramètre devenu obsolète, null sinon */
+   private String obsolete(String s) {
+      if( s.equalsIgnoreCase("ivorn") )      return "id";
+      if( s.equalsIgnoreCase("input") )      return "in";
+      if( s.equalsIgnoreCase("output") )     return "out";
+      if( s.equalsIgnoreCase("pixel") )      return "mode";
+      if( s.equalsIgnoreCase("moc") )        return "region";
+      if( s.equalsIgnoreCase("blocking") )   return "partitioning";
+      if( s.equalsIgnoreCase("cutting") )    return "partitioning";
+      if( s.equalsIgnoreCase("polygon") )    return "fov";
+      if( s.equalsIgnoreCase("jpegMethod") ) return "method";
+      if( s.equalsIgnoreCase("dataCut") )    return "id";
+      if( s.equalsIgnoreCase("ivorn") )      return "pixelRange";
+      if( s.equalsIgnoreCase("histoPercent"))return "skyval";
+      if( s.equalsIgnoreCase("publisher") )  return "creator";
+      return null;
+   }
 
    /**
     * Affecte à un objet Context l'option de configuration donnée
@@ -107,6 +126,9 @@ public class HipsGen {
       val = val.replace("\'", "");
       val = val.replace("\"", "");
       System.out.println("OPTION: "+opt + "=" + val);
+      
+      String alt=obsolete(opt);
+      if( alt!=null ) context.warning("Obsoleted parameter, prefer \""+alt+"\"");
 
       // System.out.println(opt +" === " +val);
       if( opt.equalsIgnoreCase("h")) {
@@ -153,7 +175,6 @@ public class HipsGen {
          context.setOutputPath(val);
 
       } else if (opt.equalsIgnoreCase("mode") || opt.equalsIgnoreCase("pixel")) {
-         if (opt.equalsIgnoreCase("pixel") ) context.warning("Prefer \"mode\" instead of \"pixel\"");
          context.setMode(Mode.valueOf(val.toUpperCase()));
          flagMode=true;
 
@@ -190,7 +211,6 @@ public class HipsGen {
          }
 
       } else if ( opt.equalsIgnoreCase("jpegMethod") || opt.equalsIgnoreCase("method")) {
-         if( opt.equalsIgnoreCase("jpegMethod") ) context.warning("Prefer \"method\" instead of \""+opt+"\"");
          flagMethod=true;
          context.setMethod(val);
 
@@ -198,7 +218,6 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("pixelGood")) { context.setPixelGood(val);
       } else if (opt.equalsIgnoreCase("pixelCut")) { context.setPixelCut(val);
       } else if (opt.equalsIgnoreCase("pixelRange") || opt.equalsIgnoreCase("dataCut")) {
-         if (opt.equalsIgnoreCase("dataCut") ) context.warning("Prefer \"pixelRange\" instead of \"dataCut\"");
          context.setDataCut(val);
          //         context.setPixelGood(val);  // A VOIR S'IL FAUT LE LAISSER
       } else throw new Exception("Option unknown [" + opt + "]");
@@ -516,6 +535,7 @@ public class HipsGen {
                   "                      constant)" + "\n" +
                   "   fov=true|x1,y1..   Observed regions by files.fov or global polygon (in FITS convention)." + "\n" +
                   "   verbose=n          Debug information from -1 (nothing) to 4 (a lot)" + "\n"+
+                  "   -live              incremental HiPS (keep weight associated to each HiPS pixel)" + "\n"+
                   "   -f                 clear previous computations\n"+
                   "   -n                 Just print process information, but do not execute it.\n"+
                   "\n"+

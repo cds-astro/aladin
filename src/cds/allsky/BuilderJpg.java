@@ -132,6 +132,8 @@ public class BuilderJpg extends BuilderTiles {
       initStat();
       super.build();
    }
+   
+   protected void activateCache(long size,long sizeCache) { }
 
    protected Fits createLeaveHpx(ThreadBuilderTile hpx, String file,String path,int order,long npix, int z) throws Exception {
       Fits out = createLeaveJpg(file);

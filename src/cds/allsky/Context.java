@@ -1201,11 +1201,11 @@ public class Context {
 
       long nbTilesPerMin = (deltaNbTile*60000L)/deltaTime;
 
-      String s=statNbTile+"+"+statNbEmptyTile+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime,true)+" ("
-            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+"tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime,true))+") "
-            +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
+      String s=statNbTile+(statNbEmptyTile==0?"":"+"+statNbEmptyTile)+sNbCells+" tiles + "+statNodeTile+" nodes in "+Util.getTemps(totalTime,true)+" ("
+            +pourcentNbCells+(nbTilesPerMin<=0 ? "": " "+nbTilesPerMin+" tiles/mn EndsIn:"+Util.getTemps(tempsTotalEstime,true))+") "
+//            +Util.getTemps(statAvgTime)+"/tile ["+Util.getTemps(statMinTime)+" .. "+Util.getTemps(statMaxTime)+"] "
 //            +Util.getTemps(statNodeAvgTime)+"/node"
-            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads")
+            +(statNbThread==0 ? "":"by "+statNbThreadRunning+"/"+statNbThread+" threads")
             //         +" using "+Util.getUnitDisk(usedMem)
             ;
 
@@ -1267,11 +1267,31 @@ public class Context {
 
       stat(s);
    }
+   
+   // Demande d'affichage des stats (dans le TabJpeg)
+   protected void showRGBStat(int statNbFile, long cTime,int statNbThread,int statNbThreadRunning) {
+      long nbLowCells = getNbLowCells();
 
-   // Demande d'affichage des stats (dans le TabRgb)
-   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
-      if( statNbFile>0 ) showJpgStat(statNbFile, totalTime, 1, 1);
+      double pourcent = nbLowCells<=0 ? 0 : (double)statNbFile/nbLowCells;
+      long totalTime = (long)( cTime/pourcent );
+      long endsIn = totalTime-cTime;
+      String pourcentNbCells = nbLowCells==-1 ? "" :
+         (Math.round( ( (double)statNbFile/nbLowCells )*1000)/10.)+"%) ";
+
+      String s;
+      if( nbLowCells<=0 ) s = s=statNbFile+" tiles in "+Util.getTemps(cTime,true);
+      else s=statNbFile+"/"+nbLowCells+" tiles in "+Util.getTemps(cTime,true)+" ("
+            +pourcentNbCells+" endsIn:"+Util.getTemps(endsIn,true)
+            +(statNbThread==0 ? "":" by "+statNbThreadRunning+"/"+statNbThread+" threads");
+
+      stat(s);
    }
+
+
+//   // Demande d'affichage des stats (dans le TabRgb)
+//   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
+//      if( statNbFile>0 ) showJpgStat(statNbFile, totalTime, 1, 1);
+//   }
 
    protected Action action=null;      // Action en cours (voir Action)
    protected double progress=-1;       // Niveau de progression de l'action en cours, -1 si non encore active, =progressMax si terminée
@@ -1699,7 +1719,7 @@ public class Context {
       setPropriete(Constante.KEY_HIPS_TILE_WIDTH,CDSHealpix.pow2( getTileOrder())+"");
 
       // L'url
-      setPropriete("#"+Constante.KEY_HIPS_SERVICE_URL,"ex: http://yourHipsServer/"+label+"");
+      setPropriete("#"+Constante.KEY_HIPS_MASTER_URL,"ex: http://yourHipsServer/"+label+"");
       setPropriete(Constante.KEY_HIPS_STATUS,"public master clonableOnce");
       
       // le status du HiPS : par defaut "public master clonableOnce"
@@ -1730,7 +1750,7 @@ public class Context {
       //      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
       //            isMap() ? "none" : mode==Mode.ADD ? "add" :
       //               fading ? "border_fading" : mixing ? "mean" : "first");
-      setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, "mean");
+//      setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, jpegMethod.toString().toLowerCase());
 
 
       if( cut!=null ) {

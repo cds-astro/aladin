@@ -38,7 +38,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -47,12 +46,8 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
 import cds.aladin.Aladin;
-import cds.aladin.Chaine;
-import cds.aladin.Plan;
 import cds.aladin.PlanBG;
 import cds.aladin.PlanImage;
-import cds.aladin.Tool;
-import cds.aladin.ToolBox;
 import cds.aladin.prop.PropPanel;
 import cds.allsky.Context.JpegMethod;
 import cds.tools.Util;
@@ -357,7 +352,6 @@ public class TabJpg extends JPanel implements ActionListener {
    protected void setStat(String sTile,String sTime) {
       tileStat.setText(sTile);
       timeStat.setText(sTime);
-
    }
    
    public void setCutMin(String s) { tCutMin.setText(s); }

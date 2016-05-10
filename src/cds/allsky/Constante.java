@@ -93,6 +93,7 @@ public class Constante {
    static public final String OLD1_OBS_DESCRIPTION      = "descriptionVerbose";
    static public final String KEY_HIPS_TILE_FORMAT      = "hips_tile_format";
    static public final String KEY_HIPS_SERVICE_URL      = "hips_service_url";
+   static public final String KEY_HIPS_MASTER_URL       = "hips_master_url";
    static public final String KEY_HIPS_PIXEL_BITPIX     = "hips_pixel_bitpix";
    static public final String KEY_DATA_PIXEL_BITPIX     = "data_pixel_bitpix";
    static public final String KEY_HIPS_PROCESS_SAMPLING = "hips_sampling";

@@ -113,6 +113,19 @@ public class BuilderTiles extends Builder {
 
       build();
       
+      // Mise à jour des propriétés liées au traitement
+      if( !context.isColor() ) {
+         if( context.bitpix!=-1 ) context.setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,context.bitpix+"");
+         if( context.bitpixOrig!=-1 ) context.setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,context.bitpixOrig+"");
+         context.setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, context.isMap() ? "none" : "bilinear");
+         context.setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
+               context.skyvalName==null ? "none" : context.skyvalName.equals("true")?"hips_estimation":"fits_keyword");
+      }
+      context.setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
+            context.isMap() ? "none" : context.mode==Mode.ADD ? "add" :
+               context.fading ? "border_fading" : context.mixing ? "mean" : "first");
+      context.setPropriete(Constante.KEY_HIPS_PROCESS_HIERARCHY, context.getJpegMethod().toString().toLowerCase());
+      
       if( !context.isTaskAborting() ) { (new BuilderAllsky(context)).run(); context.info("ALLSKY file done"); }
       if( !context.isTaskAborting() ) { (b=new BuilderMoc(context)).run(); b=null; }
    }
@@ -409,12 +422,17 @@ public class BuilderTiles extends Builder {
    
    static final private Object objItem = new Object();
    
+   
+   protected int getBitpix0() { return context.getBitpix(); }
+   
    protected void build() throws Exception {
       this.ordermax = context.getOrder();
       long t = System.currentTimeMillis();
 
       HealpixMoc moc = new HealpixMoc();
-      moc.add( context.getRegion() );
+      HealpixMoc m = context.getRegion();
+      if( m==null ) m = new HealpixMoc("0/1-11");
+      moc.add( m );
       moc.setMocOrder(3);
       int depth = context.getDepth();
       fifo = new LinkedList<Item>();
@@ -428,7 +446,7 @@ public class BuilderTiles extends Builder {
       
       // Initialisation des variables
       isColor = context.isColor();
-      bitpix = context.getBitpix();
+      bitpix = getBitpix0();
       coaddMode = context.getMode();
       method = context.getJpegMethod();
 
@@ -461,9 +479,7 @@ public class BuilderTiles extends Builder {
       Aladin.trace(4,"BuildController.build(): Found "+nbProc+" processor(s) for "+size/(1024*1024)+"MB RAM => Launch "+nbThread+" thread(s)");
       context.info("Will use "+nbThread+" thread"+(nbThread>1?"s":""));
 
-      long sizeCache=2L*size/3L;
-      context.setCache(new CacheFits(sizeCache));
-      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
+      activateCache(size,2L*size/3L);
 
       // Lancement des threads de calcul
       launchThreadBuilderHpx(nbThread);
@@ -480,11 +496,17 @@ public class BuilderTiles extends Builder {
             context.info("Tile overlay stats : max overlays="+ThreadBuilderTile.statMaxOverlays+", " +
                   ThreadBuilderTile.statOnePass+" in one step, "+
                   ThreadBuilderTile.statMultiPass+" in multi steps");
-         Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
+         if( context.cacheFits!=null ) Aladin.trace(3,"Cache FITS status: "+ context.cacheFits);
          Aladin.trace(3,"Healpix survey build in "+cds.tools.Util.getTemps(System.currentTimeMillis()-t));
       }
 
-      context.cacheFits.reset();
+      if( context.cacheFits!=null ) context.cacheFits.reset();
+   }
+   
+   protected void activateCache(long size,long sizeCache) {
+      context.setCache(new CacheFits(sizeCache));
+      context.info("Available RAM: "+cds.tools.Util.getUnitDisk(size)+" => Cache size: "+cds.tools.Util.getUnitDisk(sizeCache));
+
    }
 
    /** Création d'un losange et de toute sa descendance si nécessaire.
@@ -910,27 +932,6 @@ public class BuilderTiles extends Builder {
          if( oldOut!=null ) out.mergeOnNaN(oldOut);
       }
 
-
-      //      if( !isColor && coaddMode!=Mode.REPLACETILE && coaddMode!=Mode.KEEPTILE ) {
-      //         Fits oldOut = findLeaf(file);
-      //         if( oldOut!=null ) {
-      //            if( coaddMode==Mode.AVERAGE ) out.coadd(oldOut,true);
-      //            else if( coaddMode==Mode.ADD ) out.coadd(oldOut,false);
-      //            else if( coaddMode==Mode.OVERWRITE ) out.mergeOnNaN(oldOut);
-      //            else if( coaddMode==Mode.KEEP ) {
-      //               // Dans le cas integer, si le losange déjà calculé n'a pas de BLANK indiqué, on utilisera
-      //               // celui renseigné par l'utilisateur, et sinon celui par défaut
-      //               if( oldOut.bitpix>0 && Double.isNaN(oldOut.blank)) oldOut.setBlank(blank);
-      //               oldOut.mergeOnNaN(out);
-      //               out=oldOut;
-      //               oldOut=null;
-      //            }
-      //         }
-      //      }
-
-      //      String filename = file+context.getTileExt();
-      //      if( isColor ) out.writeCompressed(filename,0,0,null, context.MODE[ context.targetColorMode ]);
-      //      else out.writeFITS(filename);
       context.updateHeader(out,order,npix);
       write(file,out);
 

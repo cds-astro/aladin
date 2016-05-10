@@ -481,7 +481,8 @@ public class BuilderIndex extends Builder {
 //      System.out.println();
       
       // On teste le rapport largeur/longeur du pixel si nécessaire
-      if( maxRatio>0 ) {
+      // sauf s'il n'y a qu'une i
+      if( maxRatio>0 && statNbFile>0 ) {
          double w = Coord.getDist(corner[0], corner[1])/fitsfile.width;
          double h = Coord.getDist(corner[1], corner[2])/fitsfile.height;
          //         System.out.println("w="+Coord.getUnit(w)+" h="+Coord.getUnit(h));

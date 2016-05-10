@@ -75,7 +75,7 @@ public class ContextGui extends Context {
          long statNodeAvgTime,long usedMem,long deltaTime,long deltaNbTile) {
 
       if( statNbTile==0 ) return;
-      ;
+      
       int tileSide = getTileSide();
       mainPanel.tabBuild.buildProgressPanel.setMemStat(statNbThreadRunning,statNbThread,cacheFits);
       //      mainPanel.tabBuild.buildProgressPanel.setTimeStat(totalTime,statNbTile+statNodeTile,(long)( Constante.SIDE*Constante.SIDE*getNpix()));
@@ -127,9 +127,21 @@ public class ContextGui extends Context {
    }
 
    // Demande d'affichage des stats (dans le TabRgb)
-   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
-      mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
+   protected void showRGBStat(int statNbFile, long totalTime,int statNbThread,int statNbThreadRunning) {
+      long nbLowCells = getNbLowCells();
+      long tempsTotalEstime = nbLowCells==0 ? 0 : statNbFile==0 ? 0 : (long)( nbLowCells*(totalTime/statNbFile)-totalTime);
+
+      String s1=statNbFile+" / "+nbLowCells+" tiles";
+      String s2=Util.getTemps(totalTime,true);
+      if( tempsTotalEstime>0 ) s2+=" - ends in "+Util.getTemps(tempsTotalEstime,true);
+
+      mainPanel.tabRgb.setStat(s1,s2);
+      setProgress(statNbFile, nbLowCells);
    }
+//   
+//   protected void showRgbStat(int statNbFile, long statSize, long totalTime) {
+//      mainPanel.tabRgb.setStat(statNbFile, statSize, totalTime);
+//   }
 
    private int lastShowAllSkyNorder3=-1;
    private PreviewThread previewThread=null;
