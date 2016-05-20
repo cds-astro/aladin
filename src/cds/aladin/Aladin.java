@@ -154,16 +154,23 @@ import cds.xml.XMLParser;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> MultiCCD image support
  * @beta    <LI> Tags improvements
  * @beta    <LI> Probability sky map MOC extraction
  * @beta    <LI> Planetary HiPS (longitude inversion)
  * @beta    <LI> Hipsgen improvements: HiPS color multithread code
+ * @beta    <LI> File dialog window multi-selections
+ * @beta    <LI> Copy-able propertie links
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
+ * @beta    <LI> Graphical object mouse selection over a HiPS
+ * @beta    <LI> HiPS catalog "ghost" source selection
+ * @beta    <LI> File dialog window directory selection on MacOs and Linux
  * @beta    <LI> HiPS RGB -f flag
  * @beta    <LI> GLU watchdog timer (sesame mirrors)
  * @beta    <LI> Blink initial delay
+ * @beta    <LI> HiPS cache cleaning
  * @beta <UL>
  * @beta </UL>
  *
@@ -187,7 +194,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.020";
+   static public final    String VERSION = "v9.022";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -476,7 +483,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    miPan,miGlass,miGlassTable,miPanel1,miPanel2c,miPanel2l,miPanel4,miPanel9,miPanel16,
    miImg,miOpen,miCat,miPlugs,miRsamp,miRGB,miMosaic,miBlink,
    miGrey,miFilter,miFilterB,miSelect,miSelectAll,miSelectTag,miTagSelect,miDetag,miSearch,
-   miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,
+   miUnSelect,miCut,miStatSurf,miTransp,miTranspon,miTag,miDist,miDraw,miTexte,miCrop,miCreateHpx,miCreateHpxRgb,
    miCopy,miHpxGrid,miHpxDump,
    miTableInfo,miClone,miPlotcat,miConcat,miExport,miExportEPS,miBackup, /* miHistory, */
    miInFold,miConv,miArithm,miMocHips,miMocPol,miMocGenImg,miMocGenProba,miMocGenCat,miMocOp,
@@ -544,7 +551,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    HEALPIXARITHM,/*ADD,SUB,MUL,DIV,*/
    CONV,NORM,BITPIX,PIXEXTR,HEAD,FLIP,TOPBOTTOM,RIGHTLEFT,SEARCH,ALADIN_IMG_SERVER,GLUTOOL,GLUINFO,
    REGISTER,UNREGISTER,BROADCAST,BROADCASTTABLE,BROADCASTIMAGE,SAMPPREFS,STARTINTERNALHUB,STOPINTERNALHUB,
-   HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,GETOBJ;
+   HPXCREATE,HPXDUMP,FOVEDITOR,HPXGENERATE,HPXGEN,HPXGENMAP,HPXGENRGB,GETOBJ;
    String JUNIT=PROTOPREFIX+"*** Aladin internal code tests ***";
 
    /** Retourne l'objet gérant les chaines */
@@ -941,6 +948,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       TRANSPON= chaine.getString("MTRANSPON");
       CROP    = chaine.getString("VWMCROP1");
       HPXGENERATE = chaine.getString("HPXGENERATE");
+      HPXGEN    = chaine.getString("HPXGEN");
+      HPXGENMAP = chaine.getString("HPXGENMAP");
+      HPXGENRGB = chaine.getString("HPXGENRGB");
       FOVEDITOR = chaine.getString("FOVEDITOR");
       HPXCREATE=chaine.getString("HPXCREATE");
       HPXGRID  =chaine.getString("HPXGRID");
@@ -1164,7 +1174,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
                {},{"?"+SIMBAD},{"?"+VIZIERSED},{"?"+AUTODIST},/*{"?"+TIP},{"?"+MSCROLL},{CEA_TOOLS},*/
                {}, {ROI}, {MBKM},{CMD+"|F5"},{MACRO},
                {},{VOTOOL,VOINFO}, {GLUTOOL,"-"}, {MPLUGS,PLUGINFO},
-               {},{HPXGENERATE},{HPXCREATE},
+               {},{HPXGEN, HPXGENERATE, HPXGENMAP, HPXCREATE, HPXGENRGB},
                { BETAPREFIX+"HEALPix mouse control","%No mouse NSIDE control","%Mouse NSIDE 2^0","%Mouse NSIDE 2^1","%Mouse NSIDE 2^2","%Mouse NSIDE 2^3","%Mouse NSIDE 2^4","%Mouse NSIDE 2^5","%Mouse NSIDE 2^6",
                   "%Mouse NSIDE 2^7","%Mouse NSIDE 2^8","%Mouse NSIDE 2^9","%Mouse NSIDE 2^10","%Mouse NSIDE 2^11",
                   "%Mouse NSIDE 2^12","%Mouse NSIDE 2^13","%Mouse NSIDE 2^14","%Mouse NSIDE 2^15","%Mouse NSIDE 2^16",
@@ -1786,6 +1796,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       else if( isMenu(m,TAG) )  miTexte   = ji;
       else if( isMenu(m,CROP) )   miCrop    = ji;
       else if( isMenu(m,HPXCREATE) ) miCreateHpx = ji;
+      else if( isMenu(m,HPXGENRGB) ) miCreateHpxRgb = ji;
       else if( isMenu(m,HPXDUMP) )   miHpxDump = ji;
       else if( isMenu(m,COPY) )   miCopy    = ji;
       else if( isMenu(m,TABLEINFO) ) miTableInfo = ji;
@@ -2452,6 +2463,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Mise à jour de la date de modif du répertoire cache afin qu'une autre session
     * ne puisse faire un nettoyage intempestif (toutes les minutes) */
    private void launchCacheUpdater() {
+      
+      // Suppression d'un éventuel vieux fichier "flag" signalant un nettoyage en cours
+      File ft = new File(Cache.getCacheDir()+Util.FS+"ScanRunning.bin");
+      if( ft.exists() ) ft.delete();
+      
       cacheUpdaterRunning=true;
       (updaterCache=new Thread("cacheUpdater"){
          @Override
@@ -3147,7 +3163,9 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,BITPIX) )  { updateBitpix();
       } else if( isMenu(s,PIXEXTR) )  { new FramePixelExtraction(this);
       } else if( isMenu(s,HEAD) )  { header();
-      } else if( isMenu(s,HPXGENERATE)){ buildAllsky();
+      } else if( isMenu(s,HPXGENERATE)){ buildHiPS();
+      } else if( isMenu(s,HPXGENMAP)){ buildHiPS();
+      } else if( isMenu(s,HPXGENRGB)){ buildHiPSRGB();
       } else if( isMenu(s,FOVEDITOR))  { buildFoV();
       } else if( isMenu(s,TOPBOTTOM) )  { flip(0);
       } else if( isMenu(s,RIGHTLEFT) )  { flip(1);
@@ -3796,7 +3814,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
     * @param size taille à couvrir (en degrés)
     * @return order HEALPix approprié
     */
-   private int getAppropriateOrder(double size) {
+   static public int getAppropriateOrder(double size) {
       int order = 4;
       if( size==0 ) order=HealpixMoc.MAXORDER;
       else {
@@ -4044,8 +4062,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**
     * Affiche la fenetre pour créer un allsky
     */
-   protected void buildAllsky() {
+   protected void buildHiPS() {
       FrameAllskyTool.display(this);
+   }
+
+   protected void buildHiPSRGB() {
+      FrameAllskyTool.display(this,true);
    }
 
    /**
@@ -4869,6 +4891,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          int nbPlanImg = calque.getNbPlanImg();
          int nbPlanMoc = calque.getNbPlanMoc();
          int nbPlanImgBG=  calque.getNbPlanImgBG();
+         int nbPlanHiPS4RGB = calque.getNbPlanImgHiPS4RGB();
          int nbPlanHealpix = calque.getNbPlanByClass(PlanHealpix.class);
          int nbPlanTranspImg = calque.getNbPlanTranspImg();
          int nbPlanImgWithoutBG = calque.getNbPlanImg(false);
@@ -5024,7 +5047,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
          if( miBitpix!=null ) miBitpix.setEnabled(hasPixels && !isCube);
          if( miPixExtr!=null ) miPixExtr.setEnabled(hasPixels && !isCube);
          if( miCopy!=null ) miCopy.setEnabled(hasPixels /* && !isCube */);
-         if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj );
+         if( miCreateHpx!=null ) miCreateHpx.setEnabled( hasProj && base!=null && base.isSimpleImage() );
+         if( miCreateHpxRgb!=null ) miCreateHpxRgb.setEnabled( nbPlanHiPS4RGB>1 );
          if( miHpxDump!=null ) miHpxDump.setEnabled(v!=null && v.pref!=null && isBG );
          if( miFlip!=null ) miFlip.setEnabled(hasImage && !isCube && !isBG);
          int syncMode=match.getMode();

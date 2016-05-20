@@ -27,7 +27,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import cds.allsky.Context;
 import cds.allsky.ContextGui;
 import cds.allsky.MainPanel;
 import cds.tools.Util;
@@ -76,9 +75,11 @@ public class FrameAllskyTool extends JFrame {
 		return p;
 	}
 
-	public static void display(Aladin aladin) {
+    public static void display(Aladin aladin) { display(aladin,false); }
+    public static void display(Aladin aladin, boolean flagRGB) {
 		if (aladin.frameAllsky == null) aladin.frameAllsky = new FrameAllskyTool(aladin);
 		aladin.frameAllsky.setVisible(true);
+		if( flagRGB ) aladin.frameAllsky.mainPanel.showRgbTab();
 	}
 
 	/** Fermeture de la fenêtre */
@@ -87,7 +88,7 @@ public class FrameAllskyTool extends JFrame {
 	}
 
 	public void export(PlanBG plan, String exportpath) {
-		((PlanBG)plan).setBitpix(-32);
+		plan.setBitpix(-32);
 		while (!plan.isSync()) {
 			try {
 				Thread.sleep(100);

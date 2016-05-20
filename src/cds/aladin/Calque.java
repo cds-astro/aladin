@@ -543,6 +543,17 @@ public class Calque extends JPanel implements Runnable {
       return n;
    }
 
+   /** Retourne le nombre de plans HiPS utilisable pour générer un HiPS RGB */
+   protected int getNbPlanImgHiPS4RGB() {
+      int n=0;
+      Plan [] plan = getPlans();
+      for( int i=0; i<plan.length; i++ ) {
+         if( plan[i].type==Plan.ALLSKYIMG && plan[i].flagOk
+               && ((PlanBG)plan[i]).isLocalAllSky() && !((PlanBG)plan[i]).isColored()) n++;
+      }
+      return n;
+   }
+
    /** Retourne le nombre de sources chargées dans l'ensemble des plans */
    protected long getNbSrc() {
       long n=0;
@@ -779,13 +790,14 @@ public class Calque extends JPanel implements Runnable {
             }
          }
       }
-      if( SwingUtilities.isEventDispatchThread() ) {
-         repaintAll();
-      } else {
-         SwingUtilities.invokeLater(new Runnable() {
-            public void run() { repaintAll(); }
-         });
-      }
+      repaintAll();
+//      if( SwingUtilities.isEventDispatchThread() ) {
+//         repaintAll();
+//      } else {
+//         SwingUtilities.invokeLater(new Runnable() {
+//            public void run() { repaintAll(); }
+//         });
+//      }
    }
 
    /** Libere tous les plans */
@@ -2444,16 +2456,17 @@ public class Calque extends JPanel implements Runnable {
       if( file!=null ) numext = getNumExt(file);
 
       unlock();
-
-      Vector v = new Vector();
+      
+      Vector<Plan> v = new Vector<Plan>();
       try {
          for( int nExt=0; !allFitsExt(numext); nExt++ )  {
             boolean keepIt = keepFitsExt(nExt,numext);  // Pour savoir s'il faut garder cette extension
             p=null;
             in.resetType();
             long type = in.getType();
+            if( (type & MyInputStream.EOF)!=0 ) break;
+            
             Aladin.trace(3,"MultiExtension "+nExt+" detect => "+MyInputStream.decodeType(type));
-
             if( (type & MyInputStream.FITS)!=0 /* || (type & MyInputStream.HPX)!=0 */ ) {
                PlanImage pi = null;
                if( (type&MyInputStream.CUBE)!=0 ) {
@@ -2474,28 +2487,30 @@ public class Calque extends JPanel implements Runnable {
                   if( pi.error==null || pi.error.equals("_END_XFITS_") ) pi.pixelsOriginIntoCache();
                   p = pi;
                }
+               
             } else if( (type & (MyInputStream.FITST|MyInputStream.FITSB))!=0 ) {
                if( (type & MyInputStream.RICE)!=0 ) {
                   p = new PlanImageRice(aladin,file,in,label,null,o,null,!keepIt,false,firstPlan);
                } else if( (type & MyInputStream.AIPSTABLE)!=0 ) {
                   Aladin.trace(3,"MEF AIPS CC table detected => ignored !");
-                  new PlanCatalog(aladin,"",in,true,false);  // Justess pour le manger
+                  new PlanCatalog(aladin,"",in,true,false);  // Justes pour le manger
                } else {
                   PlanCatalog pc = new PlanCatalog(aladin,""/*file*/,in,!keepIt,false);
                   if( pc.label.equals("") ) pc.setLabel(file);
                   p=pc;
                   if( /* aladin.OUTREACH && */ (pc.pcat.badRaDecDetection || pc.pcat.getCount()==0)
-                        && nExt>0 && v.size()>0 && ((Plan)v.elementAt(0)).isImage() ) {
+                        && nExt>0 && v.size()>0 && v.elementAt(0).isImage() ) {
                      p=null; // pour eviter les extensions DSS
                      aladin.command.printConsole("!!! Table MEF extension ignored => seems to be reduction information");
                   }
                }
+               
             } else {
                Aladin.trace(3,"One MEF extension not supported => ignored!");
                break;
             }
 
-            if( folder!=null ) folder.setPourcent(nExt);
+            folder.setPourcent(nExt);
 
             if( p!=null ) {
 
@@ -2504,8 +2519,11 @@ public class Calque extends JPanel implements Runnable {
                if( p.error!=null && p.error.equals("_END_XFITS_") ) break;
 
                if( keepIt ) {
+                  
+                  // Pour éviter de déborder la mémoire
+                  if( p.isImage() ) ((PlanImage)p).pixelsOriginIntoCache();
 
-                  p.askActive= true;
+                  p.askActive= p.isImage() ? false : true;
                   p.selected = false;
                   v.add(p);
 
@@ -2540,34 +2558,49 @@ public class Calque extends JPanel implements Runnable {
       }
 
       try { in.close(); } catch(Exception e) { e.printStackTrace(); }
+      
+      // Test MultiCCD
+      if( PlanMultiCCD.isMultiCCD(v) ) {
+         if( label.charAt(0)=='=' ) label=label.substring(1);
+         p = new PlanMultiCCD(aladin,label,v);
+         synchronized( pile ) {
+            int n = getIndex(folder);
+            plan[n]= p;
+         }
+         p.planReady(true);
+         select.repaint();
+         return;
+      }
 
       folder.planReady(true);
 
       // Aucun plan dans ce fits extension
       if( v.size()==0 ) return;
 
-      // Plan actif par défaut
-      p = (Plan)v.elementAt(0);
-      if( v.size()==1 ) {
-         if( label.charAt(0)=='=' ) label=label.substring(1);
-         //         p.label = label; // On récupère le label du folder
-         p.setLabel(label);// On récupère le label du folder
-      }
-      p.planReady(true);
-
       // On met tout ça dans la pile
       if( v.size()>1 ) {
          synchronized( pile ) {
-            Enumeration e = v.elements();
+            Enumeration<Plan> e = v.elements();
             while( e.hasMoreElements() ) {
                int n=getStackIndex();
-               plan[n] = (Plan)e.nextElement();
+               plan[n] = e.nextElement();
                plan[n].setLabel(plan[n].label);    // Pour s'assurer que son nom est unique dans la pile
-               if( folder!=null ) permute(plan[n],folder);
+               permute(plan[n],folder);
             }
          }
       }
-
+      
+      
+      // Plan actif par défaut
+      p = v.elementAt(0);
+      if( v.size()==1 ) {
+         if( label.charAt(0)=='=' ) label=label.substring(1);
+         p.setLabel(label);// On récupère le label du folder
+      }
+      p.doClose=true;
+      p.planReady(true);
+      
+      if( v.size()>6 ) aladin.calque.select.switchCollapseFolder( folder );
    }
 
    /**
@@ -3574,8 +3607,10 @@ public class Calque extends JPanel implements Runnable {
    /** Retourne le premier plan Image sélectionné, ou null si aucun */
    protected PlanImage getFirstSelectedPlanImage() {
       for( int i=0; i<plan.length; i++ ) {
-         if( plan[i].selected
-               && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) return (PlanImage)plan[i];
+         if( plan[i].selected && (plan[i].isImage() || plan[i].type==Plan.ALLSKYIMG) ) {
+            if( plan[i] instanceof PlanMultiCCD ) return ((PlanMultiCCD)plan[i]).getSelectedCCD();
+            return (PlanImage)plan[i];
+         }
       }
       return null;
    }
@@ -3802,9 +3837,21 @@ public class Calque extends JPanel implements Runnable {
 
       return i;
    }
-
+   
    /** Re-affichage de l'ensemble des composantes du calque. */
    public void repaintAll() {
+      if( SwingUtilities.isEventDispatchThread() ) {
+         repaintAll1();
+      } else {
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() { repaintAll1(); }
+         });
+      }
+   }
+
+
+   /** Re-affichage de l'ensemble des composantes du calque. */
+   private void repaintAll1() {
       if( select!=null  ) {
          select.repaint();
          zoom.zoomSliderReset();

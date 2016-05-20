@@ -125,6 +125,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import cds.aladin.Aladin;
 import cds.aladin.Forme;
@@ -1565,28 +1567,148 @@ public final class Util {
       //	   }
    }
 
-   /** Permet le choix d'un répertoire */
-   static public String dirBrowser(Component c,String currentDirectoryPath) {
-      JFileChooser fd = new JFileChooser(currentDirectoryPath);
-      //	   fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-      fd.setAcceptAllFileFilterUsed(false);
-      if (fd.showOpenDialog(c) == JFileChooser.APPROVE_OPTION) {
-         try {
-            return Util.concatDir(fd.getCurrentDirectory().getAbsolutePath(),fd.getSelectedFile().getName());
-         } catch( Exception e ) {
-            e.printStackTrace();
+
+   /** Ouverture de la fenêtre de sélection d'un ou plusieurs fichiers ou répertoires
+    * @param title le titre de la fenêtre
+    * @param initDir le répertoire d'initialisation
+    * @param field le champ à remplir avec le résultat
+    * @param mode 0 sans filtre, 1-filtre fits/Healpix, 2-tous les filtres, 3-uniquement la sélection des répertoires
+    * @return la liste des fichiers sélectionnés, null si annulation
+    */
+   static public String dirBrowser(String title,String initDir,JTextField field,int mode) {
+      if( Aladin.aladin.configuration.isLookAndFeelJava() ) return dirBrowserJava(title,initDir,field,mode);
+      else return dirBrowserNative(null,title,initDir,field);
+   }
+      
+   static public String dirBrowserJava(String title,String initDir,JTextField field,int mode) {
+      StringBuilder s = null;
+      
+      JFileChooser chooser = new JFileChooser();
+      chooser.setCurrentDirectory(new java.io.File(initDir==null?".":initDir));
+      chooser.setDialogTitle(title);
+      
+      if( mode==3 ) {
+         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+         
+      } else {
+
+         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+         if( mode>0 ) {
+            final FileFilter fitsFilter=  new FileNameExtensionFilter("Fits files (.fits ...)","fits","fit","ftz","fits.gz","ftz.gz","fz","fits.bz2");
+            final FileFilter hpxFilter=  new FileNameExtensionFilter("Hpx filter","hpx");
+
+            chooser.addChoosableFileFilter(  fitsFilter);
+
+            chooser.addChoosableFileFilter( new FileFilter() {
+               public String getDescription() { return "HEALPix Fits maps"; }
+               public boolean accept(File f) {
+                  if( f.isDirectory() ) return true;
+                  if( !(fitsFilter.accept(f) ||  hpxFilter.accept(f)) ) return false;
+                  MyInputStream in=null;
+                  try {
+                     in = new MyInputStream(new FileInputStream(f));
+                     if( (in.getType()&MyInputStream.HEALPIX)!=0) return true;
+                  } catch( Exception e ) { }
+                  finally { if( in!=null ) try { in.close(); } catch(Exception e) {} }
+                  return false;
+               }
+            });
+
+            if( mode>1  ) {
+               chooser.addChoosableFileFilter( new FileFilter() {
+                  public String getDescription() { return "Hierarchical Progressive Surveys (HiPS)"; }
+                  public boolean accept(File f) {
+                     if( !f.isDirectory() ) return false;
+                     File f1 = new File(f.getAbsolutePath()+FS+"Norder3");
+                     if( f1.isDirectory() ) return true;
+                     return false;
+                  }
+               });
+               chooser.addChoosableFileFilter( new FileFilter() {
+                  public String getDescription() { return "Fits cubes"; }
+                  public boolean accept(File f) {
+                     if( f.isDirectory() ) return true;
+                     if( !fitsFilter.accept(f) ) return false;
+                     MyInputStream in=null;
+                     try {
+                        in = new MyInputStream(new FileInputStream(f));
+                        if( (in.getType()&MyInputStream.CUBE)!=0 
+                              && (in.getType()&MyInputStream.RGB)==0) return true;
+                     } catch( Exception e ) { }
+                     finally { if( in!=null ) try { in.close(); } catch(Exception e) {} }
+                     return false;
+                  }
+               });
+               chooser.addChoosableFileFilter( new FileFilter() {
+                  public String getDescription() { return "Fits RGB images"; }
+                  public boolean accept(File f) {
+                     if( f.isDirectory() ) return true;
+                     if( !fitsFilter.accept(f) ) return false;
+                     MyInputStream in=null;
+                     try {
+                        in = new MyInputStream(new FileInputStream(f));
+                        if( (in.getType()&MyInputStream.RGB)!=0) return true;
+                     } catch( Exception e ) { }
+                     finally { if( in!=null ) try { in.close(); } catch(Exception e) {} }
+                     return false;
+                  }
+               });
+               chooser.addChoosableFileFilter( new FileFilter() {
+                  public String getDescription() { return "Multi-Order Coverage map (MOC)"; }
+                  public boolean accept(File f) {
+                     if( f.isDirectory() ) return true;
+                     MyInputStream in=null;
+                     try {
+                        in = new MyInputStream(new FileInputStream(f));
+                        if( (in.getType()&MyInputStream.HPXMOC)!=0 ) return true;
+                     } catch( Exception e ) { }
+                     finally { if( in!=null ) try { in.close(); } catch(Exception e) {} }
+                     return false;
+                  }
+               });
+
+               chooser.addChoosableFileFilter( new FileNameExtensionFilter("Jpeg or png images (.png, .jpg)","jpg","jpeg","png") );
+               chooser.addChoosableFileFilter( new FileNameExtensionFilter("XML tables (.xml, .vot, ...)","xml","vot") );
+               chooser.addChoosableFileFilter( new FileNameExtensionFilter("ASCII tables (.txt, .csv, .tbl)","txt","csv","tbl") );
+               chooser.addChoosableFileFilter( new FileNameExtensionFilter("Aladin scripts (.ajs)","ajs") );
+               chooser.addChoosableFileFilter( new FileNameExtensionFilter("Aladin stack backups (.aj)","aj") );
+
+               chooser.setMultiSelectionEnabled(true);
+            }
          }
       }
-      return null;
+
+      if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+         
+         // on va mettre à la queue leu leu tous les fichiers et répertoires
+         // sélectionnés, avec des guillemets et un espace sépareur si plus d'un
+         boolean first=true;
+         for( File f : chooser.getSelectedFiles() ) {
+            String file = f.getAbsolutePath();
+            if( s==null ) s = new StringBuilder(file); 
+            else {
+               if( first ) s = new StringBuilder(Q(s.toString()));
+               first=false;
+               s.append(" "+Q(file));
+            }
+         }
+         
+         // Si on ne sélectionne qu'un répertoire, il arrive par cette méthode uniquement !?
+         if( s==null && chooser.getSelectedFile()!=null ) s = new StringBuilder(chooser.getSelectedFile()+"");
+         
+         if( s!=null ) field.setText(s+"");
+      } 
+
+      return s==null ? null : s+"";
    }
 
+   static private String Q(String s) { return "\""+s+"\""; }
 
    private static final String DEFAULT_FILENAME = "-";
 
-   /** Ouverture de la fenêtre de sélection d'un fichier ou d'un répertoire
-    * Retourne null en cas d'annulation
-    */
-   static public String dirBrowser(Frame parent, String title,String initDir,JTextField field) {
+   // Sélection d'un fichier (FileDialog Native)
+   static public String dirBrowserNative(Frame parent, String title,String initDir,JTextField field) {
       FileDialog fd = new FileDialog(parent,title);
       if( initDir!=null ) fd.setDirectory(initDir);
 

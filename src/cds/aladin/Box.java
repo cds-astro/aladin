@@ -20,19 +20,16 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.util.Vector;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
-import cds.astro.Proj3;
-import cds.tools.Util;
 
 /**
 * Objet graphique representant une boite
@@ -151,7 +148,12 @@ public class Box extends Forme {
    
    // Retourne true si on se trouve sur la ligne i (de 1 à 4)
    private boolean inLigne(int i,ViewSimple v,double x,double y) {
-      return Ligne.inLigne(o[i-1].xv[v.n],o[i-1].yv[v.n],o[i].xv[v.n],o[i].yv[v.n],x,y,mouseDist(v));
+      PointD p1 = v.getViewCoordDble(o[i-1].xv[v.n],o[i-1].yv[v.n]);
+      PointD p2 = v.getViewCoordDble(o[i].xv[v.n],o[i].yv[v.n]);
+      PointD p = v.getViewCoordDble(x,y);
+      return Ligne.inLigne(p1.x,p1.y,p2.x,p2.y,p.x,p.y,mouseDist(v));
+
+      //      return Ligne.inLigne(o[i-1].xv[v.n],o[i-1].yv[v.n],o[i].xv[v.n],o[i].yv[v.n],x,y,mouseDist(v));
    }
    
    /** Test d'appartenance sur un des coins

@@ -41,13 +41,18 @@ public final class Tok {
    }
    
    /** Quote la chaine si c'est nécessaire (et backquote les " internes) */
-   static public String quote(String s) {
+   static public String quote(String s) { return quote(s,false); }
+   
+   /** Quote la chaine (et backquote les " internes) */
+   static public String quote(String s,boolean force) {
       int i;
       char a[] = s.toCharArray();
+      if( !force ) {
       for( i=0; i<a.length && !Character.isSpace(a[i]) && a[i]!=',' && a[i]!='\\' && a[i]!='\'' && a[i]!='"'; i++ );
       if( i==a.length ) return s;
+      }
       
-      StringBuffer s1 = new StringBuffer(a.length);
+      StringBuilder s1 = new StringBuilder(a.length);
       s1.append('"');
       for( i=0; i<a.length; i++ ) {
          if( a[i]=='"' || a[i]=='\\' ) s1.append('\\');

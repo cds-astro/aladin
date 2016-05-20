@@ -90,7 +90,7 @@ public class PlanFolder extends Plan {
     * contenus dans le folder (sans récursivité) ou null si aucun */
    protected String getStatusItems() {
       StringBuffer rep=null;
-      Plan p[] = aladin.calque.getFolderPlan((Plan)this,false);
+      Plan p[] = aladin.calque.getFolderPlan(this,false);
       for( int i=0; i<p.length; i++ ) {
          if( rep==null ) rep = new StringBuffer();
          rep.append("Item    "+Util.align("["+Plan.Tp[p[i].type]+"]",12)+p[i].label+"\n");

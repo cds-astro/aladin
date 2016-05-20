@@ -321,7 +321,7 @@ public class PlanMoc extends PlanBGCat {
             if( m!=null && !m.isIntersecting(order, p.getNpix())) continue;
             if( p.isOutView(v) ) continue;
 
-            boolean small = p.getDiag2(v)<25;
+            boolean small = p.getDiag2(v)<25 && isDrawingBorder();
 
             // Tracé en aplat avec demi-niveau d'opacité
             if( isDrawingFillIn() /* && !lowMoc */ && !small )  {

@@ -440,7 +440,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       }
 
       // Recherche du plan de reference
-      if( v==null || v.isFree() || !v.pref.isImage() || v.northUp ) {
+      if( v==null || v.isFree() || !v.pref.isImage() || v.northUp  ) {
 
          // L'image associe au zoom sera simplement le zoom vide lui-meme
          if( lastImgID!=-2 ) {
@@ -453,7 +453,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       } else {
          try {
             PlanImage pi = (PlanImage)v.pref;
-
+            
             // Dessin de l'image zoomee si cela n'a pas deja ete fait
             if( lastImgID!=pi.getImgID() || pi.pixelsZoom==null || pi.pixelsZoom.length!=w*h ) {
 

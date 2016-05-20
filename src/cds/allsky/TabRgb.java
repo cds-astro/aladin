@@ -383,7 +383,7 @@ public class TabRgb extends JPanel implements ActionListener {
 
    private void dirBrowser(JTextField dir) {
       String currentDirectoryPath = dir.getText().trim();
-      String path = Util.dirBrowser(null, "",currentDirectoryPath,dir);
+      String path = Util.dirBrowser("",currentDirectoryPath,dir,0);
       if( path==null ) return;
       actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
    }

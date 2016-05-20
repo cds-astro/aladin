@@ -434,7 +434,7 @@ MouseMotionListener, MouseListener, KeyListener
     * @param Sg La composante G de la palette à interpoler
     * @param Sb La composante B de la palette à interpoler
     * @param inverse	à true si l'on veut les couleurs inversées; à false pour la palette normale
-    * @param transp     true si la palette à sa première case utilisée pour la transparence
+    * @param transp     true si la palette a sa première case utilisée pour la transparence
     * @param tr0 l'abscisse du 1er point de contrôle de la courbe en deux parties (cf. FrameCM)
     * @param tr1 l'abscisse du 2e point de contrôle de la courbe en deux parties (cf. FrameCM)
     * @param tr2 l'abscisse du 3e point de contrôle de la courbe en deux parties (cf. FrameCM)
@@ -454,7 +454,8 @@ MouseMotionListener, MouseListener, KeyListener
       double pas1 = mid/(tr1-tr0);
       double pas2 = mid/(tr2-tr1);
 
-      int max = Sr.length-1;
+//      int max = Sr.length-1;
+      int max = (int)range-1;
 
       int [] fctGap = computeTransfertFct(fct,transp);
 
@@ -466,9 +467,9 @@ MouseMotionListener, MouseListener, KeyListener
 
                j = fctGap[j];
 
-               if( j>max ) j=max;
+               if( j>=Sr.length ) j=Sr.length-1;
                else if( j<0 ) j=0;
-               if( inverse ) j=max-j;
+               if( inverse ) j=Sr.length-j-1;
 
                r[i+gap]=(byte) (0xFF & Sr[ j ]);
                g[i+gap]=(byte) (0xFF & Sg[ j ]);
@@ -593,6 +594,7 @@ MouseMotionListener, MouseListener, KeyListener
     */
    static private int [] computeTransfertFct(int fct,boolean transp) {
       int range = transp ? 255 : 256;
+      
       int [] r = new int[range];
 
       if( fct==PlanImage.LINEAR ) {

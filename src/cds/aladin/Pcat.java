@@ -154,6 +154,9 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
    // Nécessaire pour les planBGCat qui possèdent autant de PlanObjet que de HealpixKeyCat
    protected Projection [] projpcat = new Projection[ViewControl.MAXVIEW];
+   
+   
+   protected void  resetDrawnInView(ViewSimple v) { drawnInViewSimple[v.n]=false; }
 
    /** Projection de tous les objets en fonction du plan de reference courant.
     * La projection n'est effective que si necessaire
@@ -1416,11 +1419,22 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
    protected Obj getObj(int index) { return index>=nb_o ? null : o[index]; }
 
    // Recupération d'un itérator sur les objets
-   protected Iterator<Obj> iterator() { return new PlanObjetIterator(); }
+   protected Iterator<Obj> iterator() { return new PlanObjetIterator(null); }
 
+   // Recupération d'un itérator sur les objets visibles dans la vue
+   protected Iterator<Obj> iterator(ViewSimple v) { return new PlanObjetIterator(v); }
+   
    class PlanObjetIterator implements Iterator<Obj> {
+      
       private int index=0;
-      public boolean hasNext() { return index<nb_o; }
+      boolean visible=true;
+      
+      PlanObjetIterator(ViewSimple v) {
+         index=0;
+         if( v!=null ) visible=drawnInViewSimple[v.n];
+         else visible=true;
+      }
+      public boolean hasNext() { return visible && index<nb_o; }
       public Obj next() { return o[index++]; }
       public void remove() { }
    }

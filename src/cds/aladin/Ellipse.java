@@ -20,13 +20,8 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Graphics;
 
-import cds.astro.Proj3;
 import cds.tools.Util;
 
 /**
@@ -147,6 +142,22 @@ public class Ellipse extends Forme {
    
    private boolean in1(ViewSimple v,double x, double y,boolean flagPerimetre) {
       if( !isVisible() ) return false;
+      
+      
+//      PointD p1 = v.getViewCoordDble(x, y);
+//      PointD p0 =v.getViewCoordDble(o[0].xv[v.n],o[0].yv[v.n]);
+//      double xc = Math.abs(p1.x-p0.x);
+//      double yc = Math.abs(p1.y-p0.y);
+//      double u  = Math.toRadians(angle)-Math.atan2(yc,xc);
+//      double len = Math.sqrt(xc*xc+yc*yc);
+//      
+//      double semiMA = getSemiMA(v)*v.zoom;
+//      double semiMI = getSemiMI(v)*v.zoom;
+//      double xp = semiMA*Math.cos(u);
+//      double yp = semiMI*Math.sin(u);
+//      double p = Math.sqrt(xp*xp+yp*yp);
+//      return flagPerimetre ? Math.abs(len-p)<mouseDist(v) : len<p;
+     
       double xc = Math.abs(x-o[0].xv[v.n]);
       double yc = Math.abs(y-o[0].yv[v.n]);
       double u  = Math.toRadians(angle)-Math.atan2(yc,xc);
@@ -157,9 +168,7 @@ public class Ellipse extends Forme {
       double xp = semiMA*Math.cos(u);
       double yp = semiMI*Math.sin(u);
       double p = Math.sqrt(xp*xp+yp*yp);
-//      System.out.println("xy=("+x+","+y+") u="+Math.toDegrees(u)+" len="+len+" p="+p+" semiMA="+semiMA+" semiMI="+semiMI);
       return flagPerimetre ? Math.abs(len-p)<3+9/v.getZoom() : len<p;
-//      return len<p;
    }
 
    /** Il faut que le centre de l'ellipse soit dans le rectangle pour retourner vrai */

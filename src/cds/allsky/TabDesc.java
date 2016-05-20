@@ -30,7 +30,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -41,7 +40,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
@@ -452,21 +450,11 @@ public class TabDesc extends JPanel implements ActionListener {
    
    private void dirBrowser(JTextField dir) {
       String currentDirectoryPath = dir.getText().trim();
-      String path = Util.dirBrowser(null, "",currentDirectoryPath,dir);
+      String path = Util.dirBrowser("",currentDirectoryPath,dir,1);
       if( path==null ) return;
       mainPanel.actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
    }
    
-//   private void dirBrowser(JTextField dir) {
-//      String currentDirectoryPath = dir.getText().trim();
-//      if( currentDirectoryPath.length()==0 ) currentDirectoryPath=defaultDirectory;
-//      if ( !(new File(currentDirectoryPath).exists()) )
-//    	  currentDirectoryPath = defaultDirectory;
-//      String s = Util.dirBrowser(this, currentDirectoryPath);
-//      if( s==null ) return;
-//      dir.setText(s);
-//      mainPanel.actionPerformed(new ActionEvent(dir, -1, "dirBrowser Action"));
-//   }
 
    public String getInputField() { return inputField.getText(); }
 

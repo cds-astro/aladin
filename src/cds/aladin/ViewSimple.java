@@ -2492,14 +2492,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             }
          }
       }
-
+      
       // Déplacement du repère
-      if( (tool==ToolBox.SELECT
-            || tool==ToolBox.PAN && (!flagClicAndDrag || e.getClickCount()>1) )
+      if( (tool==ToolBox.SELECT || tool==ToolBox.PAN && (!flagClicAndDrag || e.getClickCount()>1) )
             && flagMoveRepere && !isGrabIt() && !e.isShiftDown() && !isPlotView() ) {
          PointD p = vs.getPosition(x,y);
          vs.moveRepere(p.x,p.y,e.getClickCount()>1);
       }
+      
       flagMoveRepere=true;
       flagClicAndDrag=false;
 
@@ -3599,7 +3599,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
    // Pour pouvoir faire du copier/coller
    private Coord repCoord = new Coord();
-
+   
    /** Déplacement du repere courant dans toutes les vues en fonction
     *  de la position ximg,yimg (position dans l'image) */
    protected void moveRepere(double ximg,double yimg,boolean flagSync) {
@@ -3607,6 +3607,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       try {
          repCoord = new Coord();
          repCoord.x=ximg; repCoord.y=yimg;
+         
          getProj().getCoord(repCoord);
          if( Double.isNaN(repCoord.al) ) return;
          moveRepere(repCoord,flagSync);
@@ -3617,6 +3618,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     *  de la coordonnée passée en paramètre */
    protected void moveRepere(Coord repCoord,boolean flagSync) {
       if( isPlotView() ) return;
+      
+      // Si on change de CCD, le flagSync est forcé à true
+      if( pref instanceof PlanMultiCCD ) {
+         flagSync = ((PlanMultiCCD)pref).setRef(repCoord);
+      }
+
       String s = aladin.localisation.J2000ToString(repCoord.al,repCoord.del);
       
       // Affichage dans la console de la position HEALPIX
@@ -6044,10 +6051,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             // Le plan image de référence (le cas allsky est traité après)
             if( p==pref && p.isImage() ) {
                if( p.active ) {
-                  if( northUp || isProjSync() /* || isRolled() */ ) {
+                  
+                  if( p instanceof PlanMultiCCD ) ((PlanImage)p).draw(g,vs,dx,dy,1);
+                 
+                  else if( northUp || isProjSync() /* || isRolled() */ ) {
                      ((PlanImage)p).draw(g,vs,dx,dy,1);
 
                   } else {
+                     
+                     
                      double offsetX = imgDx;
                      double offsetY = imgDy;
                      if( pref.type == Plan.IMAGEHUGE ) {
@@ -6058,6 +6070,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                         margeX = dx+(int)Math.round(offsetX);
                         margeY = dy+(int)Math.round(offsetY);
                         g.drawImage(imgprep,margeX,margeY,this);
+                        
                      }
                   }
                }

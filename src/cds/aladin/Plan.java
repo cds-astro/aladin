@@ -2054,6 +2054,14 @@ public class Plan implements Runnable {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
+      
+      // Pour gérer le chargement des MultiCCD
+      if( isImage() && !doClose ) {
+         if( !ready && error==null )  { error = aladin.error; return; }
+         setPourcent(-1);
+         flagOk = ready;
+         return;
+      }
 
       aladin.endMsg();
 
@@ -2061,7 +2069,6 @@ public class Plan implements Runnable {
          if( error==null ) error = aladin.error;
          aladin.calque.select.repaint();
          aladin.toolBox.toolMode();
-
          return;
       }
 

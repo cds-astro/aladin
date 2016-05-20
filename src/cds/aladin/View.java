@@ -53,6 +53,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import cds.aladin.prop.Propable;
 import cds.tools.UrlLoader;
@@ -4676,12 +4677,32 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( aladin.isFullScreen() ) { aladin.fullScreen.repaint(); return; }
       repaintAll1(1);
    }
+   
+   
+   /** Re-affichage de l'ensemble des composantes du calque
+    * Pas bien sûr que cette indirection soit vraiment nécessaire,
+    * mais ça ne fera pas de mal
+    * RQ: si XMode est initialisé plusieurs fois, c'est de toute façon
+    * le dernier repaint qui gagne, donc pas vraiment d'importance
+    */
+   public void repaintAll1(int mode) {
+      if( SwingUtilities.isEventDispatchThread() ) {
+         repaintAllX(mode);
+      } else {
+         final int Xmode=mode;
+         SwingUtilities.invokeLater(new Runnable() {
+            public void run() { repaintAllX(Xmode); }
+         });
+      }
+   }
+
+
 
    /**
     *
     * @param mode 0 repaintAll, 1 - quickRepaintAll, 2- updateAll
     */
-   private void repaintAll1(int mode) {
+   private void repaintAllX(int mode) {
 
       if( aladin.NOGUI ) mode=1;        // Pour forcer le réaffichage car sinon pas d'appel à ViewSimple.paintComponent()
 

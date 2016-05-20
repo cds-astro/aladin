@@ -20,12 +20,9 @@
 
 package cds.aladin;
 
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -408,6 +405,15 @@ public final class Slide {
       a.calque.select.setSlideBlink(f);
    }
    
+   static protected void drawFolderExt(Graphics g, int ext, int dx,int dy, Color c ) {
+      g.setColor(c);
+      int x = dx+(frMin+frMax)/2 +1;
+      int y = dy+12;
+      String s=ext+"";
+      x -= g.getFontMetrics().stringWidth(s)/2;
+      g.drawString(s,x,y);
+   }
+   
    static protected void drawProportion(Graphics g,int x,int y, int width, int pourcent, Color c) {
       int w = (int)( (pourcent/100.) * width);
       g.setColor(c);
@@ -589,7 +595,7 @@ public final class Slide {
                g.drawLine(xc[1],yc[1],a-2,b-1);
                g.drawLine(a+2,b-1,xc[2],yc[2]);
             }
-                        
+            
             g.setColor(Color.yellow );
             g.fillPolygon(xf,yf,xf.length);
             g.setColor(colorBorder);
@@ -625,6 +631,9 @@ public final class Slide {
             case Plan.FILTER:      drawLogoFilter(g,dx,dy,p.active,false,Color.black,Color.black); break;
          }
          
+         // On dessine 4 CCD cote à cote
+         if( p instanceof PlanMultiCCD )  drawFolderExt(g, ((PlanMultiCCD)p).getSize(), dx, dy, Color.yellow );
+                     
          // Affichage de la checkbox
 //         if( p.type!=Plan.NO && mode!=DRAG && p.flagOk && !p.hasError()
 //               && !(p.isCatalog() && !p.hasObj())) {
@@ -698,7 +707,12 @@ public final class Slide {
            //le voyant d'état
             if( mode!=DRAG ) {
                p.status=0;
-               if( p.type==Plan.FOLDER && !p.isSync() ) { drawBlink(g,px,py-9);setBlink(true); p.status|=Plan.STATUS_INPROGRESS; }
+               if( p.type==Plan.FOLDER && !p.isSync() ) {
+                  drawBlink(g,px,py-9);
+                  setBlink(true);
+                  p.status|=Plan.STATUS_INPROGRESS;
+                  if( p.pourcent>0 ) drawFolderExt(g,(int)p.pourcent,0,dy,Color.gray);
+               }
                else if( p.isSimpleCatalog() || p.isImage()
                      || p instanceof PlanContour || p.type==Plan.FILTER
                      || p instanceof PlanBG ) {

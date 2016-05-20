@@ -822,25 +822,28 @@ public class HealpixKey implements Comparable<HealpixKey> {
          planBG.aladin.trace(4,"HealpixKey.loadJpeg("+filename+") => "+(typeColor==PNG?"PNG":"JPEG")+" "+(planBG.color?"color":" grey levels"));
       }
 
-      if( !planBG.color ) {
-         if( planBG.pixMode==-1 ) planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
-         pixels = getPixels(img);
-         planBG.setBufPixels8(pixels);
-         planBG.pixelMin   = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
-         planBG.pixelMax   = 255;
-         planBG.dataMin    = planBG.pixMode == PlanBG.PIX_255 ? 1 : 0;
-         planBG.dataMax    = 255;
-      } else {
-         if( planBG.pixMode==-1 ) planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
-         planBG.video = PlanImage.VIDEO_NORMAL;
-         rgb = getPixelsRGB(img);
-      }
+      if( !planBG.color ) pixels = getPixels(img);
+      else  rgb = getPixelsRGB(img);
 
-      if( this instanceof HealpixAllsky ) {
-         if( planBG.cm==null ) planBG.creatDefaultCM();
+      if( planBG.pixMode==-1 ) {
+         
+         if( !planBG.color ) {
+            planBG.pixMode = extCache==JPEG ? PlanBG.PIX_256 : PlanBG.PIX_255;
+            planBG.setBufPixels8(pixels);
+            planBG.pixelMin   = 0;
+            planBG.pixelMax   = 255;
+            planBG.dataMin    = 0;
+            planBG.dataMax    = 255;
+            
+         } else {
+            planBG.pixMode = typeColor==PNG ? PlanBG.PIX_ARGB : PlanBG.PIX_RGB;
+            planBG.video = PlanImage.VIDEO_NORMAL;
+         }
+
+         planBG.creatDefaultCM();
          planBG.colorPNG = typeColor==PNG;
       }
-
+      
       return n;
    }
 
@@ -1509,7 +1512,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
 
    /** Agrandissement du losange de val pixels dans toutes les directions */
-   private PointD [] grow(PointD [] b,double val) throws Exception {
+   static public PointD [] grow(PointD [] b,double val) throws Exception {
       int j=0;
       for( int i=0; i<4; i++ ) {
          if( b[i]==null ) j++;

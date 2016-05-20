@@ -149,7 +149,7 @@ public class PlanImage extends Plan {
    protected double dataMin,dataMax;  // Plus grande et plus petite valeur de pixel effectivement trouvée
    // (après suppression des pixels erronés) - sans prendre en compte BSACLE et BZERO
    protected double pixelMin,pixelMax;// Les min et max des cuts - sans prendre en compte BSACLE et BZERO
-   protected boolean isBlank;         // True s'il y a une valeur consideree comme BLANK
+   protected boolean isBlank=false;   // True s'il y a une valeur consideree comme BLANK
    protected double blank;            // La valeur BLANK si elle existe
    public double bZero;            // La valeur BZERO si elle existe
    public double bScale=1.;        // La valeur BSCALE si elle existe
@@ -169,8 +169,9 @@ public class PlanImage extends Plan {
    // (utile pour trouver la calibration d'une image JPEG ou RGB à partir des données du SIAP)
    protected ResourceNode imgNode;
 
-   protected Plan forPourcent;  // Sert uniquement dans le cas des MEF, dans le cas du chargement
-   // de la première extension (voir Calque.newFitsExt()
+   protected PlanMultiCCD planMultiCCD; // Sert à référencer l'image si elle fait partie d'un PlanMultiCCD, sinon null;
+   protected Plan forPourcent;          // Sert uniquement dans le cas des MEF, dans le cas du chargement
+                                        // de la première extension (voir Calque.newFitsExt()
 
    protected PlanImage(){}
 
@@ -486,17 +487,35 @@ public class PlanImage extends Plan {
     * @param p1 le plan à copier
     * @param copyPixels true si on doit copier les pixels (uniquement 8 bits)
     */
-   protected void copy(Plan p1) {
+   protected void copy(Plan p1) { copy(p1,false); }
+   protected void copy(Plan p1,boolean onlyRef) {
       super.copy(p1);
       PlanImage p = (PlanImage)p1;
 
-      // Attention, on ne duplique que les données 8 bits, les pixels originaux sont partagés
-      try {
-         if( pixels!=null  ) {
-            p.pixels = new byte[pixels.length];
-            System.arraycopy(pixels,0,p.pixels,0,pixels.length);
-         } else p.pixels = null;
-      } catch( Exception e ) { p.pixels = null; }
+      // Pas de copies réelles (voir PlanMultiCCD)
+      if( onlyRef ) {
+         p.pixels = pixels;
+         p.cmControl = cmControl;
+         p.cm = cm;
+
+      // Copies réelles
+      } else {
+
+         // Attention, on ne duplique que les données 8 bits, les pixels originaux sont partagés
+         try {
+            if( pixels!=null  ) {
+               p.pixels = new byte[pixels.length];
+               System.arraycopy(pixels,0,p.pixels,0,pixels.length);
+            } else p.pixels = null;
+         } catch( Exception e ) { p.pixels = null; }
+
+         System.arraycopy(cmControl,0,p.cmControl,0,3);
+         p.cm = CanvasColorMap.getCM(p.cmControl[0],p.cmControl[1],p.cmControl[2],
+               p.video==PlanImage.VIDEO_INVERSE,
+               p.typeCM, p.transfertFct,p.isTransparent());
+
+      }
+      
       p.pixMode=pixMode;
       p.pixelsOrigin=pixelsOrigin;
       p.projD = null;
@@ -530,10 +549,7 @@ public class PlanImage extends Plan {
       p.cacheOffset = cacheOffset;
       p.cacheFromOriginalFile = cacheFromOriginalFile;
       p.typeCM=typeCM;
-      System.arraycopy(cmControl,0,p.cmControl,0,3);
-      p.cm = CanvasColorMap.getCM(p.cmControl[0],p.cmControl[1],p.cmControl[2],
-            p.video==PlanImage.VIDEO_INVERSE,
-            p.typeCM, p.transfertFct,p.isTransparent());
+      p.opacityLevel=opacityLevel;
 
    }
 
@@ -857,6 +873,7 @@ public class PlanImage extends Plan {
       headerFits=null;
       setBufPixels8(null);
       pixelsOrigin=null;
+      pixMode=-1;
       removeFromCache();
       cacheFromOriginalFile=false;
       cacheID=null;
@@ -873,6 +890,8 @@ public class PlanImage extends Plan {
       forPourcent=null;
       if( image!=null ) image.flush();
       image=null;
+      forPourcent=null;
+      planMultiCCD=null;
       changeImgID();
       return true;
    }
@@ -1636,7 +1655,7 @@ public class PlanImage extends Plan {
       return true;
    }
 
-   private void setFmt() {
+   protected void setFmt() {
       try {
          long type=dis.getType();
          fmt = (type & MyInputStream.GZ)!=0?GFITS:
@@ -2995,6 +3014,8 @@ public class PlanImage extends Plan {
             buf = new byte[len];
             openCache();
             fCache.seek( cacheOffset );
+            
+            byte [] pixels = getBufPixels8();
 
             // Lecture par tranches
             while( offsetLoad<taille) {
@@ -3002,12 +3023,14 @@ public class PlanImage extends Plan {
                fCache.readFully(buf,0,len);
 
                // Normalisation de la tranche
-               to8bits(getBufPixels8(),offsetLoad/npix,buf,len/npix,bitpix,
+               to8bits(pixels,offsetLoad/npix,buf,len/npix,bitpix,
                      /*isBlank,blank,*/min,max,false);
 
                offsetLoad+=len;
                setPourcent(offsetLoad*100./taille);
             }
+            
+            setBufPixels8(pixels);
 
          } catch( Exception e ) { e.printStackTrace(); }
 
@@ -3022,6 +3045,8 @@ public class PlanImage extends Plan {
       }
 
       if( fmt!=JPEG ) invImageLine(width,height,getBufPixels8());
+      
+      
       changeImgID();
       resetHist();
       //       sendLog("RecutPixel","["+getLogInfo()+"]");
@@ -3131,26 +3156,31 @@ public class PlanImage extends Plan {
       // Lecture de l'entete Fits si ce n'est deja fait
       if( headerFits==null ) headerFits = new FrameHeaderFits(this,dis);
 
-      bitpix = headerFits.getIntFromHeader("BITPIX");
       naxis = headerFits.getIntFromHeader("NAXIS");
+      bitpix = headerFits.getIntFromHeader("BITPIX");
 
       // Il s'agit juste d'une entête FITS indiquant des EXTENSIONs
-      if( naxis<=1 && headerFits.getStringFromHeader("EXTEND")!=null ) {
+      if( naxis<=1 /* || headerFits.getStringFromHeader("EXTEND")!=null */ ) {
          error="_HEAD_XFITS_";
 
          // Je saute l'éventuel baratin de la première HDU
          if( naxis==1 ) {
             try {
                naxis1 = headerFits.getIntFromHeader("NAXIS1");
-               dis.skip(naxis1);
+               dis.skip(naxis1*Math.abs(bitpix)/8);
             } catch( Exception e ) { e.printStackTrace(); }
          }
 
          return false;
       }
+      
 
-      width = naxis1 = headerFits.getIntFromHeader("NAXIS1");
-      height = naxis2 = headerFits.getIntFromHeader("NAXIS2");
+      try {
+         width = naxis1 = headerFits.getIntFromHeader("NAXIS1");
+         height = naxis2 = headerFits.getIntFromHeader("NAXIS2");
+      } catch( Exception e1 ) {
+         if( aladin.levelTrace>=3 ) e1.printStackTrace();
+      }
 
       if (naxis <= 1 || width<=0 || height<=0) {
          error=aladin.error=ONEDIM;

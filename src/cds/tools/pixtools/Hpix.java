@@ -73,6 +73,7 @@ public final class Hpix extends MocCell {
    public void fill(Graphics g,ViewSimple v) {
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
+//      try { b=HealpixKey.grow(b,1); } catch( Exception e) {}
       
       // Taille max d'un segment => sinon sans doute passe derrière le ciel
       double maxSize=getMaxSize(v);
@@ -93,6 +94,7 @@ public final class Hpix extends MocCell {
    public void draw(Graphics g,ViewSimple v,boolean border) {
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
+      
       boolean drawnOk=true;
       
       // Taille max d'un segment => sinon sans doute passe derrière le ciel

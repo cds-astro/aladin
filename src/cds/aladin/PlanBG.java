@@ -509,6 +509,7 @@ public class PlanBG extends PlanImage {
 
       scanProperties();
       scanMetadata();
+      
 
       gluSky.reset();
    }
@@ -967,6 +968,7 @@ public class PlanBG extends PlanImage {
       return super.Free();
    }
    
+   protected void setFmt() { }
    
    private FrameHipsProperties frameHipsProperties = null;
    
@@ -1060,10 +1062,12 @@ public class PlanBG extends PlanImage {
       }
 
       // Juste pour mettre à jour l'histogramme des pixels
-      int size = pixelsOrigin.length/(Math.abs(bitpix)/8);
-      if( pixels==null || pixels.length!=size ) pixels = new byte[size];
-      to8bits(pixels, 0, pixelsOrigin, size, bitpix, pixelMin, pixelMax, false);
-      resetHist();
+      if( pixelsOrigin!=null ) {
+         int size = pixelsOrigin.length/(Math.abs(bitpix)/8);
+         if( pixels==null || pixels.length!=size ) pixels = new byte[size];
+         to8bits(pixels, 0, pixelsOrigin, size, bitpix, pixelMin, pixelMax, false);
+         resetHist();
+      }
 
       return true;
    }

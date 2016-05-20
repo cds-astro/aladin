@@ -59,7 +59,8 @@ public class Hdr extends MyIcon {
    public int getMyCursor() { 
       if( flagSwitch ) {
          Plan p = aladin.calque.getPlanBase();
-         if( ((PlanBG)p).hasDrawnSomething && System.currentTimeMillis()-tClick>500 ) {
+         if( p instanceof PlanBG && 
+               ((PlanBG)p).hasDrawnSomething && System.currentTimeMillis()-tClick>500 ) {
             flagSwitch=false;
          }
          else return Aladin.WAITCURSOR;

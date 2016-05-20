@@ -244,6 +244,11 @@ public class HealpixKeyCat extends HealpixKey {
       return nb;
    }
    
+   protected void resetDrawnInView(ViewSimple v) {
+      if( pcat==null || !pcat.hasObj() ) return;
+      pcat.resetDrawnInView(v);
+   }
+   
    // Retourne le nombre de sources
    private int getCounts() {
       if( getStatus()==READY && pcat!=null ) return pcat.getCount();

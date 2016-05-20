@@ -78,8 +78,8 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    // Les chaines statiques
    private String CMTITRE,CMREVERSE,CMLIMITS,CMERRORRANGE,CMRESET,CMLOCALCUT,CMCLOSE,
-   CMONVIEW,CMAPPLYALL,CMMETHODERGB/*,CMNOFULLPIXEL*/,CMMESSAGE,
-   CMPIXTOOL,CMPREVIEW,CMFULLFITS,CMLOCALCUTTIP,CMMESSAGE1,CMMESSAGE2,CMAPPLYALLTIP,CMMETHOD,
+   CMONVIEW,CMAPPLYALL,CMAPPLYCCD,CMMETHODERGB/*,CMNOFULLPIXEL*/,CMMESSAGE,
+   CMPIXTOOL,CMPREVIEW,CMFULLFITS,CMLOCALCUTTIP,CMMESSAGE1,CMMESSAGE2,CMAPPLYALLTIP,CMAPPLYCCDTIP,CMMETHOD,
    CMRESET1TIP,CMRESET2TIP,CMBACK,CMBACKTIP,CMNOCUT,CMNOCUTTIP,CMPREVIEWTIP,CMFULLFITSTIP,CMPIXTOOLTIP,CMONVIEWTIP;
 
    protected String CMCM,CMRANGE,CMRANGE1;
@@ -123,7 +123,9 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       CMNOCUTTIP = aladin.chaine.getString("CMNOCUTTIP");
       CMCLOSE = aladin.chaine.getString("CMCLOSE");
       CMAPPLYALL = aladin.chaine.getString("CMAPPLYALL");
+      CMAPPLYCCD = aladin.chaine.getString("CMAPPLYCCD");
       CMAPPLYALLTIP = aladin.chaine.getString("CMAPPLYALLTIP");
+      CMAPPLYCCDTIP = aladin.chaine.getString("CMAPPLYCCDTIP");
       CMMETHODERGB = aladin.chaine.getString("CMMETHODERGB");
       //      CMNOFULLPIXEL = aladin.chaine.getString("CMNOFULLPIXEL");
       CMMESSAGE = aladin.chaine.getString("CMMESSAGE");
@@ -360,7 +362,10 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
       if( localCutButton!=null ) localCutButton.setEnabled( fullPixel );
       if( getAllButton!=null )   getAllButton.setEnabled( fullPixel && !hasAll );
-      if( applyOnAll!=null )     applyOnAll.setEnabled( hasSeveralImg && fullPixel);
+      if( applyOnAll!=null )     applyOnAll.setEnabled( hasSeveralImg && fullPixel || pimg.planMultiCCD!=null );
+      
+      applyOnAll.setText(pimg.planMultiCCD!=null ? CMAPPLYCCD : CMAPPLYALL);
+      Util.toolTip(applyOnAll, pimg.planMultiCCD!=null ? CMAPPLYCCDTIP : CMAPPLYALLTIP, true);
 
       if( rFull!=null ) {
          rFull.setSelected( fullPixel );
@@ -819,7 +824,14 @@ public final class FrameColorMap extends JFrame implements MouseListener {
 
    // Application des choix courants sur toutes les autres images sélectionnées
    private void applyOnOtherImg() {
-      vimg = aladin.calque.getSelectedImagesWithPixels();
+      
+      // S'il s'agit d'un plan faisant parti d'un multiCCD, on applique sur tous les autres CCD
+      if( pimg.planMultiCCD!=null ) vimg = pimg.planMultiCCD.getCCD();
+      
+      // sinon, on applique sur les autres plans sélectionnés
+      else vimg = aladin.calque.getSelectedImagesWithPixels();
+      
+      // On ne travaile pas sur le plan lui-même
       vimg.remove(pimg);
 
       final String mins = pixelCutMinField.getText();

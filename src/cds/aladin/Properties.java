@@ -53,7 +53,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -451,18 +453,36 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             });
             addMouseListener(new MouseListener() {
                public void mouseReleased(MouseEvent e) {
+                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) return;
                   if( url!=null ) aladin.glu.showDocument(url);
                   else aladin.info(c,more1.replace("\\n","\n"));
                }
-               public void mousePressed(MouseEvent e)  { }
+               public void mousePressed(MouseEvent e)  { 
+                  if( (e.getModifiers() & java.awt.event.InputEvent.BUTTON3_MASK) !=0 ) {
+                     showPopMenu(e.getX(),e.getY());
+                  }
+               }
                public void mouseExited(MouseEvent e)   { Aladin.makeCursor(c,Aladin.DEFAULTCURSOR); }
                public void mouseEntered(MouseEvent e)  { }
                public void mouseClicked(MouseEvent e) { }
             });
          }
       }
+      
+      // Affiche le popup
+      private void showPopMenu(int x,int y) {
+         JPopupMenu popMenu = new JPopupMenu();
+         popMenu.setLightWeightPopupEnabled(false);
+         JMenuItem j=new JMenuItem(aladin.chaine.getString("MFCOPYURL"));
+         popMenu.add(j);
+         j.addActionListener( new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               aladin.copyToClipBoard(url);
+            }
+         });
+         popMenu.show(this,x,y);
+      }
    }
-
 
    /** Construction du panel des proprietes du plan courant.
     * @return Le panel des proprietes du plan courant
@@ -956,21 +976,6 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
          PropPanel.addSectionTitle(p, "HiPS properties", g, c);
          PropPanel.addCouple(p, "Best pixel resolution", new JLabel(pbg.getMaxResolution()), g, c);
          PropPanel.addCouple(p, "HEALPix NSide:",  new JLabel(CDSHealpix.pow2(res)+" (2^"+res+")"), g, c);
-         //         PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
-         //         if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
-         //         if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
-         //            //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
-         //            JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
-         //            bt.addActionListener(new ActionListener() {
-         //               public void actionPerformed(ActionEvent e) {
-         //                  pbg.switchFormat();
-         //                  showProp(true);
-         //                  aladin.view.repaintAll();
-         //
-         //               }
-         //            } );
-         //            PropPanel.addCouple(p,"",bt, g, c);
-         //         }
       }
 
       if( plan.type==Plan.ALLSKYMOC ) {
@@ -1051,19 +1056,15 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       if( plan instanceof PlanBG ) {
          final PlanBG pbg = (PlanBG) plan;
          PropPanel.addCouple(p, "Coord.sys.:", new JLabel(Localisation.getFrameName(pbg.frameOrigin)), g, c);
-         String s = Aladin.BETA ? pbg.getNetSpeed() : null;
-         if( s!=null ) {
-            JLabel lab = new JLabel(s);
-            if( s.indexOf("error")>=0 ) lab.setForeground(Color.red);
-            PropPanel.addCouple(p, "Avg net speed:", lab, g, c);
-         }
 
          if( plan.type==Plan.ALLSKYIMG ) {
+            int level = pbg.getMaxFileOrder();
+            PropPanel.addCouple(p, "Number of levels", new JLabel(level+""), g, c);
+            
             long ord = pbg.getTileOrder();
             PropPanel.addCouple(p, "Tile format", new JLabel(pbg.getFormat()), g, c);
             if( ord>0 ) PropPanel.addCouple(p, "Tile width:",  new JLabel((int)CDSHealpix.pow2(ord)+" pix (2^"+ord+")"), g, c);
             if( pbg.inFits && (pbg.inJPEG || pbg.inPNG) ) {
-               //            JButton bt = new JButton( pbg.truePixels ? "Switch to fast 8 bit pixel mode" : "Switch to (slow) true pixel mode");
                JButton bt = new JButton( pbg.isTruePixels() ? aladin.chaine.getString("ALLSKYSWJPEG") : aladin.chaine.getString("ALLSKYSWFITS") );
                bt.addActionListener(new ActionListener() {
                   public void actionPerformed(ActionEvent e) {
@@ -1077,6 +1078,12 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
             }
          }
 
+         String s = Aladin.BETA ? pbg.getNetSpeed() : null;
+         if( s!=null ) {
+            JLabel lab = new JLabel(s);
+            if( s.indexOf("error")>=0 ) lab.setForeground(Color.red);
+            PropPanel.addCouple(p, "Avg net speed:", lab, g, c);
+         }
 
 
          //         if( pbg.hasMoc() || pbg.hasHpxFinder() ) {

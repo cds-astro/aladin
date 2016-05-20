@@ -1097,7 +1097,14 @@ Runnable, SwingWidgetFinder, Widget {
     *  reaffichage des bordures des vues si nécessaire */
    private Plan lastPlanUnderMouse=null;
    protected void underMouse(Plan p) {
-      if( lastPlanUnderMouse==p || a.menuActivated() ) return;
+      if( a.menuActivated() ) return;
+      if( p instanceof PlanMultiCCD ) {
+         lastPlanUnderMouse=p;
+         a.calque.selectPlanUnderMouse(p);
+         a.view.repaintAll();
+         return;
+      }
+      if( lastPlanUnderMouse==p ) return;
       a.calque.selectPlanUnderMouse(p);
       if( lastPlanUnderMouse!=null && lastPlanUnderMouse.isImage() ) a.view.repaintAll();
       else a.view.paintBordure();

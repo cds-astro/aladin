@@ -107,14 +107,20 @@ public class Cercle extends Forme {
    @Override
    protected boolean in(ViewSimple v,double x, double y) {
       if( !isVisible() ) return false;
-      return inPerimetre(o[0].xv[v.n],o[0].yv[v.n],getRayon(v), x,y,3+9/v.getZoom());
+      
+      PointD p1 = v.getViewCoordDble(o[0].xv[v.n],o[0].yv[v.n]);
+      PointD p  = v.getViewCoordDble(x,y);
+      return inPerimetre(p1.x,p1.y,getRayon(v)*v.zoom, p.x,p.y,mouseDist(v));
+      
+//      return inPerimetre(o[0].xv[v.n],o[0].yv[v.n],getRayon(v), x,y,3+9/v.getZoom());
    }
 
    /** Test d'appartenance d'un point sur un cercle (à l pixels prêts ) */
    static protected boolean inPerimetre(double xc,double yc, double r, double x,double y,double l) {
       x -= xc;
       y -= yc;
-      return Math.abs(x*x + y*y - r*r) < l*l;
+      double d = Math.abs( Math.sqrt(x*x + y*y) - r );
+      return d < l;
    }
 
    /** Il faut que le centre du cercle soit dans le rectangle pour retourner vrai */

@@ -24,7 +24,6 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
@@ -146,6 +145,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    protected static String CACHE      = "HpxCacheSize";
    protected static String MAXCACHE   = "HpxMaxCacheSize";
    protected static String LOG        = "Log";
+   protected static String LOOKANDFEEL= "LookAndFeel";
    protected static String HELP       = "Wizard";
    protected static String SLEPOCH    = "SliderEpoch";
    protected static String SLSIZE     = "SliderSize";
@@ -162,6 +162,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
    static String NOTACTIVATED = "Not activated";
    static String ACTIVATED = "Activated";
+   static String JAVA = "Java";
+   static String OPSYS = "OperatingSystem";
 
    // Les labels des boutons
    static String TITLE,DEFDIR,DEFDIRH,LANGUE,LANGUEH,LANGCONTRIB,CSVCHAR,CSVCHARH,PIXB,/*PIXH,*/PIX8,PIXF,
@@ -169,7 +171,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    REGB,REGH,/*REGCL,REGMAN,*/APPLY,CLOSE,/*GLUTEST,GLUSTOP,*/BROWSE,FRAMEB,FRAMEALLSKYB,FRAMEH,OPALEVEL,
    PROJALLSKYB,PROJALLSKYH,FILTERB,FILTERH,FILTERN,FILTERY,SMBB,SMBH,TRANSB,TRANSH,
    IMGB,IMGH,IMGS,IMGC,MODE,MODEH,CACHES,CACHEH,CLEARCACHE,LOGS,LOGH,HELPS,HELPH,
-   SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/;
+   SLIDERS,SLIDERH,SLIDEREPOCH,SLIDERDENSITY,SLIDERCUBE,SLIDERSIZE,SLIDEROPAC,SLIDERZOOM/*,TAGCENTER,TAGCENTERH*/,
+   FILEDIALOG, FILEDIALOGHELP, FILEDIALOGJAVA, FILEDIALOGNATIVE;
 
    static private String CSVITEM[] = { "tab","|",";",",","tab |","tab | ;" };
    static private String CSVITEMLONG[];
@@ -201,6 +204,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    private JComboBox        cutChoice;            // Choix de l'autocut
    private JComboBox        fctChoice;            // Choix de la fonction de transfert
    private JComboBox        gluChoice;            // Pour la sélection du site GLU
+   private JComboBox        lfChoice;             // Pour la sélection du Look & Feel
    private JComboBox        langChoice;           // Pour la sélection de la langue
    private JComboBox        modeChoice;           // Pour la sélection du mode (astronomers | undergraduate)
    //   private JComboBox        smbChoice;            // Pour la sélection du mode Simbad pointer
@@ -296,6 +300,11 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       SLIDERCUBE = aladin.chaine.getString("SLIDERCUBE");
       SLIDEROPAC = aladin.chaine.getString("OPACITY");
       SLIDERZOOM = aladin.chaine.getString("ZOOM");
+      FILEDIALOG = aladin.chaine.getString("FILEDIALOG");
+      FILEDIALOGHELP = aladin.chaine.getString("FILEDIALOGHELP");
+      FILEDIALOGJAVA = aladin.chaine.getString("FILEDIALOGJAVA");
+      FILEDIALOGNATIVE = aladin.chaine.getString("FILEDIALOGNATIVE");
+      
 
       //      TAGCENTER = aladin.chaine.getString("UPTAGCENTER");
       //      TAGCENTERH = aladin.chaine.getString("UPTAGCENTERH");
@@ -873,6 +882,13 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       return s==null || s.equals(ACTIVATED);
    }
 
+   /** Retourne true si le mode Look & Feel est java (et non operating system) */
+   public boolean isLookAndFeelJava() {
+      String s = get(LOOKANDFEEL);
+      return s==null || s.equals(JAVA);
+   }
+
+
    /** Retourne le mode repéré dans le fichier de config */
    protected boolean isOutReach() {
       String s = get(MOD);
@@ -1371,6 +1387,14 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
          panel.add(b,BorderLayout.EAST);
          PropPanel.addCouple(this, p, l, REGH, panel, g, c, GridBagConstraints.EAST);
 
+         // Le Look&Feel des FileDialog
+         (l = new JLabel(FILEDIALOG)).setFont(l.getFont().deriveFont(Font.BOLD));
+         lfChoice = new JComboBox();
+         lfChoice.addItem(FILEDIALOGJAVA);
+         lfChoice.addItem(FILEDIALOGNATIVE);
+         lfChoice.addActionListener(this);
+         PropPanel.addCouple(this, p, l, FILEDIALOGHELP, lfChoice, g, c, GridBagConstraints.EAST);
+
          // Les logs
          if( Aladin.LOG ) {
             (l = new JLabel(LOGS)).setFont(l.getFont().deriveFont(Font.BOLD));
@@ -1431,6 +1455,10 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( s == null ) modeChoice.setSelectedIndex(0);
       else modeChoice.setSelectedItem(s);
       modeItem = modeChoice.getSelectedIndex();
+
+      s = get(LOOKANDFEEL);
+      if( s == null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
+      else lfChoice.setSelectedIndex(1);
 
       //      s = get(PIXEL);
       //      if( s == null || s.charAt(0)!='8' ) pixelChoice.setSelectedIndex(0);
@@ -1665,6 +1693,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
 
       s = get(HELP);
       if( s!=null && s.equals(ACTIVATED) ) remove(HELP);
+
+      s = get(LOOKANDFEEL);
+      if( s!=null && s.equals(JAVA) ) remove(LOOKANDFEEL);
 
       // On conserve l'état du pointeur Autodist, Simbad et du pointeur VizierSED
       if( !Aladin.OUTREACH ) {
@@ -1924,6 +1955,12 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       if( helpChoice!=null ) {
          if( helpChoice.getSelectedIndex()==1 ) set(HELP,(String)helpChoice.getSelectedItem());
          else remove(HELP);
+      }
+
+      // Pour le Look & Feel
+      if( lfChoice!=null ) {
+         if( lfChoice.getSelectedIndex()==1 ) set(LOOKANDFEEL,OPSYS);
+         else remove(LOOKANDFEEL);
       }
 
       // Les sliders de controle
@@ -2256,7 +2293,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
             || prop.equalsIgnoreCase("Proj") )    setProjAllsky(value);
       else throw new Exception("Unknown conf. propertie ["+prop+"]");
    }
-   private static final String DEFAULT_FILENAME = "-";
+   
+//   private static final String DEFAULT_FILENAME = "-";
 
    // Gestion des evenements
    public void actionPerformed(ActionEvent evt) {
@@ -2281,32 +2319,30 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       // Affichage du selecteur de répertoires
       else if( BROWSE.equals(what) ) {
 
-         //         CDSFileDialog fd = new CDSFileDialog(aladin);
-         //         aladin.setDefaultDirectory(fd);
-         //         String directory = fd.getDirectory();
-         //         aladin.memoDefaultDirectory(directory);
-         //         String d = fd.getFile();
-         //         System.out.println("J'ai sélectionné ["+d+"]");
-         //         if( d!=null ) dir.setText(d);
 
-         FileDialog fd = new FileDialog(aladin.dialog);
-         aladin.setDefaultDirectory(fd);
-
-         // (thomas) astuce pour permettre la selection d'un repertoire
-         // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
-         fd.setFile(DEFAULT_FILENAME);
-
-         fd.show();
-         String directory = fd.getDirectory();
-         aladin.memoDefaultDirectory(directory);
-         String name =  fd.getFile();
-         // si on n'a pas changé le nom, on a selectionne un repertoire
-         boolean isDir = false;
-         if( name!=null && name.equals(DEFAULT_FILENAME) ) {
-            name = "";
-            isDir = true;
-         }
-         if( (name!=null && name.length()>0) || isDir ) dir.setText(directory);
+//         FileDialog fd = new FileDialog(aladin.dialog);
+//         aladin.setDefaultDirectory(fd);
+//
+//         // (thomas) astuce pour permettre la selection d'un repertoire
+//         // (c'est pas l'ideal, mais je n'ai pas trouve de moyen plus propre en AWT)
+//         fd.setFile(DEFAULT_FILENAME);
+//
+//         fd.show();
+//         String directory = fd.getDirectory();
+//         aladin.memoDefaultDirectory(directory);
+//         String name =  fd.getFile();
+//         // si on n'a pas changé le nom, on a selectionne un repertoire
+//         boolean isDir = false;
+//         if( name!=null && name.equals(DEFAULT_FILENAME) ) {
+//            name = "";
+//            isDir = true;
+//         }
+//         if( (name!=null && name.length()>0) || isDir ) dir.setText(directory);
+//         
+         String initDir = dir.getText();
+         if( initDir.length()==0 ) initDir=null;
+         String path = Util.dirBrowser("", initDir, dir, 3);
+         if( path!=null ) aladin.memoDefaultDirectory(path);
       }
    }
 

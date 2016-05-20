@@ -211,7 +211,7 @@ public class Ligne extends Position {
          double x, double y, double l) {
 
       l = Math.sqrt(l);
-
+      
       // Verifie qu'on est pas en dehors de la boite contenant le segment
       if( (x2-x)*(x1-x)>l || (y2-y)*(y1-y)>l ) return false;
 
@@ -325,7 +325,13 @@ public class Ligne extends Position {
    protected boolean in(ViewSimple v,double x, double y) {
       if( !isVisible() ) return false;
       if( debligne==null ) return inBout(v,x,y);
-      return inLigne(debligne.xv[v.n],debligne.yv[v.n],xv[v.n],yv[v.n],x,y,mouseDist(v)) || inBout(v,x,y);
+      
+      PointD p1 = v.getViewCoordDble(debligne.xv[v.n],debligne.yv[v.n]);
+      PointD p2 = v.getViewCoordDble(xv[v.n],yv[v.n]);
+      PointD p = v.getViewCoordDble(x,y);
+      return inLigne(p1.x,p1.y,p2.x,p2.y,p.x,p.y,mouseDist(v)) || inBout(v,x,y);
+      
+//      return inLigne(debligne.xv[v.n],debligne.yv[v.n],xv[v.n],yv[v.n],x,y,mouseDist(v)) || inBout(v,x,y);
    }
 
    /** Test d'appartenance sur un bout
@@ -345,15 +351,25 @@ public class Ligne extends Position {
     */
    boolean nearArrow(ViewSimple v,double x, double y) {
       if( !isVisible() ) return false;
-      double ddx = x-xv[v.n];
-      double ddy = y-yv[v.n];
+      PointD p1 = v.getViewCoordDble(x, y);
+      PointD p2 = v.getViewCoordDble(xv[v.n], yv[v.n]);
+      
+      double ddx = p1.x-p2.x;
+      double ddy = p1.y-p2.y;
       double dist = mouseDist(v);
-      if( Ligne.isDebLigne(this) ) dist*=2;
       boolean rep = Math.sqrt(ddx*ddx + ddy*ddy)<=dist;
-      //      if( rep ) {
-      //         System.out.println("dist="+Math.sqrt(ddx*ddx + ddy*ddy)+" mouseDist="+mouseDist(v));
-      //      }
       return rep;
+
+      
+//      double ddx = x-xv[v.n];
+//      double ddy = y-yv[v.n];
+//      double dist = mouseDist(v);
+//      if( Ligne.isDebLigne(this) ) dist*=2;
+//      boolean rep = Math.sqrt(ddx*ddx + ddy*ddy)<=dist;
+//            if( rep ) {
+//               System.out.println("xyv=("+xv[v.n]+","+yv[v.n]+") dist="+Math.sqrt(ddx*ddx + ddy*ddy)+" mouseDist="+mouseDist(v));
+//            }
+//      return rep;
    }
 
    /** Test d'appartenance.

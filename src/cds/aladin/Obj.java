@@ -345,8 +345,9 @@ public abstract class Obj implements Propable{
 
    // Carré de la distance entre souris et objet
    protected final double mouseDist(ViewSimple v) {
-      double z = v.getZoom();
-      return z>0 ? 2/z : 1+6/z;
+//      double z = v.getZoom();
+//      return z>0 ? 2/z : 1+6/z;
+      return 10;
    }
    
    // Pixel Healpix order max (29)

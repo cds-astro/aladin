@@ -20,14 +20,12 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Composite;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.*;
-import java.net.*;
-import java.io.*;
-import java.util.*;
 
 import cds.tools.Util;
 
@@ -144,9 +142,20 @@ public class Pickle extends Arc {
                    : getAngle()-1<a1 && a1<1;
       }
       
+      // Sur le premier coté ?
+      PointD p1 = v.getViewCoordDble(o[1].xv[v.n],o[1].yv[v.n]);
+      PointD p2 = v.getViewCoordDble(o[2].xv[v.n],o[2].yv[v.n]);
+      PointD p = v.getViewCoordDble(x,y);
+      if( Ligne.inLigne(p1.x,p1.y,p2.x,p2.y,p.x,p.y,mouseDist(v)) ) return true;
+
+      // Sur le deuxième coté ?
+      p1 = v.getViewCoordDble(o[2].xv[v.n],o[2].yv[v.n]);
+      p2 = v.getViewCoordDble(o[4].xv[v.n],o[4].yv[v.n]);
+      return Ligne.inLigne(p1.x,p1.y,p2.x,p2.y,p.x,p.y,mouseDist(v));
+      
       // Sur un des cotés ?
-      return Ligne.inLigne(o[1].xv[v.n],o[1].yv[v.n], o[3].xv[v.n],o[3].yv[v.n], x,y,l)
-          || Ligne.inLigne(o[2].xv[v.n],o[2].yv[v.n], o[4].xv[v.n],o[4].yv[v.n], x,y,l);
+//      return Ligne.inLigne(o[1].xv[v.n],o[1].yv[v.n], o[3].xv[v.n],o[3].yv[v.n], x,y,l)
+//          || Ligne.inLigne(o[2].xv[v.n],o[2].yv[v.n], o[4].xv[v.n],o[4].yv[v.n], x,y,l);
    }
    
 

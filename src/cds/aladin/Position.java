@@ -420,9 +420,14 @@ public class Position extends Obj {
      * @param x,y le point a tester
      */
      protected boolean inBout(ViewSimple v, double x, double y) {
+        PointD p = v.getViewCoordDble(x, y);
+        PointD p1 = v.getViewCoordDble(xv[v.n], yv[v.n]);
         double d =  mouseDist(v);
-        d = d*d*4;
-        return (xv[v.n]-x) * (xv[v.n]-x) + (yv[v.n]-y) * (yv[v.n]-y) < d;
+        return p1.x*p1.x + p.x*p.y < d*d;
+        
+//        double d =  mouseDist(v);
+//        d = d*d*4;
+//        return (xv[v.n]-x) * (xv[v.n]-x) + (yv[v.n]-y) * (yv[v.n]-y) < d;
      }
 
   /** Test d'appartenance a l'objet
