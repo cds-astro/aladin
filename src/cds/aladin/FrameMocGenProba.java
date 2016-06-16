@@ -65,17 +65,17 @@ public final class FrameMocGenProba extends FrameMocGenImg {
    protected void addSpecifPanel(JPanel p,GridBagConstraints c,GridBagLayout g) {
       
       JPanel pp = new JPanel();
-      pp.add( new JLabel("Probability threeshold : ") );
-      pp.add( threeshold=new JTextField(5));
+      pp.add( new JLabel("Probability threshold : ") );
+      pp.add( threshold=new JTextField(5));
       c.gridwidth=GridBagConstraints.REMAINDER;
       g.setConstraints(pp,c);
       if( Aladin.BETA ) p.add(pp);      
    }
    
-   private double getThreeshold() throws Exception {
+   private double getThreshold() throws Exception {
       double x = Double.NaN;
       try {
-         String s = threeshold.getText().trim();
+         String s = threshold.getText().trim();
          if( s.length()>0 ) x = Double.parseDouble(s);
       } catch( Exception e ) {}
       return x;
@@ -86,8 +86,9 @@ public final class FrameMocGenProba extends FrameMocGenImg {
       try {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int res= ((PlanBG)ps[0]).getMaxHealpixOrder();
-         double threeshold=getThreeshold();
-         a.calque.newPlanMoc("MOC "+threeshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threeshold);
+         double threshold=getThreshold();
+         a.console.printCommand("cmoc -threshold="+threshold+" "+labelList(ps));
+         a.calque.newPlanMoc("MOC "+threshold+" "+ps[0].label,ps,res,0,Double.NaN,Double.NaN,threshold);
          hide();
 
       } catch ( Exception e ) {

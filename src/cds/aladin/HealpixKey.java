@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -62,6 +60,7 @@ import cds.fits.Fits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
+import healpix.essentials.FastMath;
 
 /**
  * Gère un losange Healpix pour un PlanBG
@@ -733,7 +732,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       byte [] buf;
       boolean local=true;
       long t1 = Util.getTime();
-      //       planBG.aladin.trace(4,"loadStream("+filename+")...");
+      planBG.aladin.trace(5,"HealpixKey.loadStream("+filename+")...");
       MyInputStream dis=null;
       boolean fastLoad = this instanceof HealpixAllsky;
 
@@ -1551,18 +1550,14 @@ public class HealpixKey implements Comparable<HealpixKey> {
       return b1;
    }
 
-   // Limite du rapport entre la largeur et la hauteur d'un losange healpix pour laquelle
-   // on ne tracera pas le losange
-   static final private double RAPPORT = 5;
-
-   private int drawFils(Graphics g, ViewSimple v/*,Vector<HealpixKey> redraw*/) { return drawFils(g,v,1/*,redraw*/); }
-   private int drawFils(Graphics g, ViewSimple v,int maxParente/*,Vector<HealpixKey> redraw*/) {
+   private int drawFils(Graphics g, ViewSimple v) { return drawFils(g,v,1); }
+   private int drawFils(Graphics g, ViewSimple v,int maxParente) {
       int n=0;
       int limitOrder = CDSHealpix.MAXORDER-10;
       if( width>1 && order<limitOrder && parente<maxParente ) {
          fils = getChild();
          if( fils!=null ) {
-            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente/*,redraw*/);
+            for( int i=0; i<4; i++ ) if( fils[i]!=null ) n+=fils[i].draw(g,v,maxParente);
          }
       }
       return n;
@@ -1727,8 +1722,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    static final double N = 150*150;
    static final double RAP=0.7;
 
-   protected boolean isTooLarge(PointD b[] ) throws Exception {
-
+   protected boolean mustBeDivided(PointD b[] ) throws Exception {
       if( planBG.DEBUGMODE ) return false;
       double d1,d2;
       if( (d1=dist(b,0,2))>M || (d2=dist(b,2,1))>M ) return true;
@@ -1738,6 +1732,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
       double rap = diag2>diag1 ? diag1/diag2 : diag2/diag1;
       return rap<RAP && (diag1>N || diag2>N);
+   }
+   
+   protected boolean isTooLarge(PointD b[], int N) throws Exception {
+      N *= N;
+      double d1,d2;
+      if( (d1=dist(b,0,2))>N || (d2=dist(b,2,1))>N ) return true;
+      if( d1==0 || d2==0 ) throw new Exception("Rhomb error");
+      double diag1 = dist(b,0,3);
+      double diag2 = dist(b,1,2);
+      if( diag1>N || diag2>N ) return true;
+      if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
+      return false;
    }
 
    static protected int nDraw = 0;
@@ -1754,103 +1760,122 @@ public class HealpixKey implements Comparable<HealpixKey> {
     * @return le nombre d'images (java) tracés
     */
 
-   private boolean flagSym;
-
+   protected boolean mayCrossTheSky(ViewSimple v) {
+      Projection proj = planBG.projd;
+      if( proj.t==Calib.TAN || proj.t==Calib.SIN || proj.t==Calib.STG ) return false;
+      return v.getTaille()> 45;
+   }
+   
    //   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1,planBG.redraw); }
-   protected int draw(Graphics g, ViewSimple v/*,Vector<HealpixKey> redraw*/) { return draw(g,v,-1/*,redraw*/); }
-   protected int draw(Graphics g, ViewSimple v,int maxParente/*,Vector<HealpixKey> redraw*/) {
+   protected int draw(Graphics g, ViewSimple v) { return draw(g,v,-1); }
+   protected int draw(Graphics g, ViewSimple v,int maxParente) {
       long t1 = Util.getTime(0);
       int n=0;  // nombre d'images java que l'on va tracer (valeur du return)
       PointD[] b = getProjViewCorners(v);
 
       nDraw++;
-      
+
+      // Le losange est-il totalement hors champ ?
       boolean out=false;
       if( b==null  || (out=isOutView(v,b)) ) {
          if( out ) nOut++;
          return 0;
       }
 
+      // Agrandissement du losange d'un pixel pour cacher les coutures
       try { b = grow(b, 1); } catch( Exception e ) {  }
-
-      // Détermination des triangles à tracer
-      double p1,p2;
-      boolean flagLosange=false;
-
-      flagSym = false;
-      
       boolean drawFast = planBG.mustDrawFast();
-      
+
+      // On a les 4 coins
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
 
-         // Test losange sur le bord du ciel
-         if( aDroite(b[0],b[1],b[2])*aDroite(b[3],b[1],b[2])>=0
-               || aDroite(b[1],b[0],b[3])*aDroite(b[2],b[0],b[3])>=0 ) {
+         // En cas de bord du ciel : méthode des triangles (plus rapide que par récursion),
+         // mais ne fonctionne bien que pour les ellipses (AITOFF et MOLDWEIDE)
+         boolean methodeTriangle = drawFast && (planBG.projd.t==Calib.AIT  || planBG.projd.t==Calib.MOL);
+         if( methodeTriangle && (aDroite(b[0],b[1],b[2])*aDroite(b[3],b[1],b[2])>=0
+               || aDroite(b[1],b[0],b[3])*aDroite(b[2],b[0],b[3])>=0) ) {
             double d12=dist(b,1,2);
             double d03=dist(b,0,3);
-            // CA NE FONCTIONNE PAS SI BIEN, MEME SI C'EST PLUS RAPIDE
-            //            boolean flagPatate = planBG.projd.t==Calib.AIT || planBG.projd.t==Calib.MOL;
-            boolean flagPatate=false;
-            flagSym=flagPatate;
+
+            double p1,p2;
             if( d12<d03 ) {
                p1 = distCentre(b[0],b[1],b[2]);
                p2 = distCentre(b[3],b[1],b[2]);
-
-               if( flagPatate ) {
-                  if( p1<p2 ) symetric(b[3],b[0],b[1],b[2]);
-                  else symetric(b[0],b[3],b[1],b[2]);
-               } else {
-                  if( p1<p2 ) b[3]=null;
-                  else b[0]=null;
-               }
+               if( p1<p2 ) b[3]=null;
+               else b[0]=null;
 
             } else {
                p1 = distCentre(b[1],b[0],b[3]);
                p2 = distCentre(b[2],b[0],b[3]);
-
-               if( flagPatate ) {
-                  if( p1<p2 ) symetric(b[2],b[1],b[0],b[3]);
-                  else symetric(b[1],b[2],b[0],b[3]);
-               } else {
-                  if( p1<p2 ) b[2]=null;
-                  else b[1]=null;
-               }
+               if( p1<p2 ) b[2]=null;
+               else b[1]=null;
             }
 
+         // Méthode par récursions (qui traite en même temps le bord du ciel)
          } else {
 
-
-            // Test losange trop grand,  A retracer
-            //            if( !drawFast && isTooLarge(b) ) {
-            //               if( parente==0 && maxParente==-1 ) redraw.add(this);
-            //               else if( (n=drawFils(g,v,maxParente,redraw))>0 ) {
-            //                  resetTimer();
-            //                  resetTimeAskRepaint();
-            //                  return n;
-            //               }
-            //            }
             try {
-               if( !drawFast && isTooLarge(b) ) {
+
+               boolean mayCrossTheSky = mayCrossTheSky(v);
+               boolean methodeRecursive = 
+                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
+                     planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
+                     || planBG.projd.t==Calib.CAR;
+               
+               // Methode récursive pour s'approcher du bord du ciel
+               if( methodeRecursive && isTooLarge(b,planBG.projd.t==Calib.ARC ? 100 : 150) ) {
                   resetTimer();
-                  int m = drawFils(g,v,8/*,redraw*/);
+                  int m = drawFils(g,v,drawFast?1:planBG.projd.t==Calib.ZEA?8:4);
+                  if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
 
-                  // Si aucun sous-losange n'a pu être dessiné, je trace tout de même le père
-                  if( m>0 ) return m;
+               // Méthode récursive pour dimiduer les déformations
+               } else {
+
+                  if( !drawFast && mustBeDivided(b)  ) {
+                     resetTimer();
+                     int m = drawFils(g,v,8);
+                     if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
+                  }
                }
-            } catch( Exception e ) { return 0; }
 
-            // Test losange derrière le ciel
-            if( isBehindSky(b,v) ) {
-               if( drawFast ) return 0;
-               resetTimer();
-               return drawFils(g,v/*,redraw*/);
-            }
+               // Les losanges trop grands sont simplement ignorés
+               if( mayCrossTheSky && isTooLarge(b,150) ) return 0;
+               if( planBG.projd.t==Calib.STG && isTooLarge(b,2*v.rv.width/3) ) return 0;
 
-            // Test dessin 1 losange plutôt que 2 triangles
-            if( (int)b[0].x==(int)(b[1].x+b[2].x-b[3].x)
-                  && (int)b[0].y == (int)(b[2].y+b[1].y-b[3].y) ) flagLosange=true;
+            } catch( Exception e ) { e.printStackTrace(); return 0; }
+
          }
       }
+
+      // Tratement spécifique pour les coins des poles
+      if( !drawFast && (maxParente==-1 || parente<maxParente) && hpix.isPoleCorner() ) {
+         if( (n=drawFils(g,v,parente+1))>0 ) return n;
+      }
+
+      // Dessin des fils si je n'ai pas tous les sommets
+      if( !drawFast && (b[0]==null || b[1]==null || b[2]==null || b[3]==null) ) {
+         if( (n=drawFils(g,v))>0 ) return n;
+      }
+
+      // Tracé effectif
+      n=drawRhomb(g,b);
+      
+      // Tracé des bords (débuging)
+      drawLosangeBorder(g,b);
+
+      long t2 = Util.getTime(0);
+      if( !allSky ) planBG.nbImgDraw++;
+      planBG.cumulTimeDraw += (t2-t1);
+
+      resetTimer();
+
+      return n;
+   }
+
+   // Tracé simple du losange en deux triangles complémentaires
+   private int  drawRhomb(Graphics g, PointD[] b) {
+      boolean flagLosange=false;
+      int n=0;
 
       int th=-1;     // sommet du premier triangle, -1 si non tracé
       int tb=-1;     // sommet du deuxième triangle, -1 si non tracé
@@ -1859,22 +1884,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
       else if( b[1]==null ) th=2;
       else if( b[2]==null ) tb=1;
       else { th=0; tb=3; }
-      
-      // Tratement spécifique pour les coins des poles
-      if( !drawFast && (maxParente==-1 || parente<maxParente) && hpix.isPoleCorner() ) {
-         if( (n=drawFils(g,v,parente+1))>0 ) return n;
-      }
 
-      // Dessin des fils
-      if( !drawFast && (b[0]==null || b[1]==null || b[2]==null || b[3]==null) ) {
-         if( (n=drawFils(g,v/*,redraw*/))>0 ) return n;
-      }
-      
       if( th==-1 && tb==-1 ) return 0;
+
+      // Test dessin 1 losange plutôt que 2 triangles
+      if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
+         if( (int)b[0].x==(int)(b[1].x+b[2].x-b[3].x)
+               && (int)b[0].y == (int)(b[2].y+b[1].y-b[3].y) ) flagLosange=true;
+      }
 
       Image img=null;
       try { img=createImage(); }
-      catch( Exception e ) {/* e.printStackTrace(); */ return 0; }
+      catch( Exception e ) { return 0; }
 
       Graphics2D g2d = (Graphics2D)g;
       float opacity = getFadingOpacity();
@@ -1895,16 +1916,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          g2d.setClip(clip);
       }
       if( parente>0 ) { pixels=null; rgb=null; }
-
-      drawLosangeBorder(g,b);
-
-      long t2 = Util.getTime(0);
-      if( !allSky ) planBG.nbImgDraw++;
-      planBG.cumulTimeDraw += (t2-t1);
-
-      resetTimer();
-      //      resetTimeAskRepaint();
-
+      
       if( opacity<1f ) planBG.updateFading(true);
 
       return n;
@@ -1967,7 +1979,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    public static  double dist(PointD [] b, int g, int d) {
       double dx=b[g].x-b[d].x;
       double dy=b[g].y-b[d].y;
-      return  dx*dx + dy*dy;
+      double size = dx*dx + dy*dy;
+      return size;
    }
 
    /** Tracé du triangle dont l'indice de l'angle dans le losange est "h"
@@ -2043,13 +2056,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
    //      PointD b [] = new PointD[4];
    //   }
 
-   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix
-    * => commandé par le menu Aladin.aladin.hpxCtrl */
-   final protected void drawLosangeBorder(Graphics g,PointD b1[]) {
+   /** Tracé du contour du losange et indication de son numéro et de son ordre Helapix */
+   final protected void drawLosangeBorder(Graphics g,PointD b1[]) { drawLosangeBorder(g,b1,false); }
+   final protected void drawLosangeBorder(Graphics g,PointD b1[], boolean force) {
       if( !planBG.ref ) return;
       int debugIn = planBG.isDebugIn(npix);
-//      if( debugIn==0 && !planBG.aladin.calque.hasHpxGrid() ) return;
-      if( debugIn==0 && planBG.aladin.levelTrace<6 ) return;
+      if( !force && debugIn==0 && planBG.aladin.levelTrace<6 ) return;
       PointD b [] = new PointD[4];
       int j=0;
       for( int i=0; i<4; i++ ) if( b1[i]!=null ) b[j++]=b1[i];
@@ -2071,17 +2083,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
       //         if( n<0 ) c = Color.blue;
       //         else c=new Color(n,n,0);
       //      }
-      g.setColor(flagSym ? Color.magenta : j==3?Color.red:c);
+      g.setColor( j==3?Color.red:c);
       g.drawPolygon(p);
 
-      //      if( j==4 ) drawNumber(g,b);
+//      if( j==4 ) drawNumber(g,b);
 
-      //      for( int i=0; i<4; i++ ) {
-      //         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
-      //         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
-      //         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
-      //         g.drawString(i+"", x,y+10);
-      //      }
+//      for( int i=0; i<4; i++ ) {
+//         j = i==0 ? 3 : i==1 ? 2 : i==2 ? 1 : 0;
+//         int x = (int)( b[i].x+ (b[j].x - b[i].x)/10. );
+//         int y = (int)( b[i].y+ (b[j].y - b[i].y)/10. );
+//         g.drawString(i+"", x,y+10);
+//      }
 
       //      if( st!=null ) {
       //         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -2239,137 +2251,9 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean isOutView(ViewSimple v) { return hpix.isOutView(v,null); }
    protected boolean isOutView(ViewSimple v,PointD []b) { return hpix.isOutView(v,b); }
 
-   //   /** Retourne true si le losange est à coup sûr hors de la vue - je teste
-   //    * uniquement les cas en-dessous, au-dessous, à droite ou à gauche */
-   //   protected boolean isOutView(ViewSimple v) { return isOutView(v,null); }
-   //
-   //   protected boolean isOutView(ViewSimple v,PointD []b) {
-   //      int w = v.getWidth();
-   //      int h = v.getHeight();
-   //      if( b==null ) b = getProjViewCorners(v);
-   //      if( b==null ) return true;
-   //      if( b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return false;
-   //
-   //      double minX,maxX,minY,maxY;
-   //      minX=maxX=b[0].x;
-   //      minY=maxY=b[0].y;
-   //      for( int i=1; i<4; i++ ) {
-   //         if( b[i].x<minX ) minX = b[i].x;
-   //         else if( b[i].x>maxX ) maxX = b[i].x;
-   //         if( b[i].y<minY ) minY = b[i].y;
-   //         else if( b[i].y>maxY ) maxY = b[i].y;
-   //      }
-   //
-   //      // Tout à droite ou tout à gauche
-   //      if( minX<0 && maxX<0 || minX>=w && maxX>=w ) return true;
-   //
-   //      // Au-dessus ou en dessous
-   //      if( minY<0 && maxY<0 || minY>=h && maxY>=h ) return true;
-   //
-   //      return false;  // Mais attention, ce n'est pas certain !!
-   //   }
-
-   //   private int oframe = -1;
-
-
-   //   protected Coord [] computeCorners() {
-   //      Coord [] corners;
-   //      try {
-   //         long nside = (long)Math.pow(2,order);
-   //         double [][] x = CDSHealpix.corners_nest(nside,npix);
-   //         corners = new Coord[4];
-   //         for( int i=0; i<x.length; i++ ) corners[i] = new Coord(x[i][0],x[i][1]);
-   //         corners = computeCornersToICRS(corners);
-   //      } catch( Exception e ) { return null; }
-   //      return corners;
-   //   }
-
-   //   protected Coord [] computeCornersToICRS(Coord [] corners) {
-   //      int frameOrigin = planBG!=null ? planBG.frameOrigin : Localisation.GAL;
-   //      if( frameOrigin!=Localisation.ICRS ) {
-   //         for( int i=0; i<4; i++ ) corners[i]=Localisation.frameToFrame(corners[i],frameOrigin,Localisation.ICRS);
-   //      }
-   //      return corners;
-   //   }
-
    final protected PointD[] getProjViewCorners(ViewSimple v) {
       return hpix.getProjViewCorners(v);
    }
-
-   //   private int nNull;
-   //
-   //   /**
-   //    * Retourne les coordonnées ra,de des 4 coins du losange dans la projection de
-   //    * la vue ou null si problème
-   //    */
-   //   final protected PointD[] getProjViewCorners(ViewSimple v) {
-   //      Projection proj;
-   //      if( (proj=v.getProj())==null || corners==null ) return null;
-   //      if( oiz==v.iz && vHashCode==v.hashCode() ) {
-   //         if( nNull>1 ) return null;
-   //         return coins;
-   //      }
-   //      nNull=0;
-   //
-   //      // On calcul les xy projection des 4 coins
-   //      for (int i = 0; i<4; i++) {
-   //         Coord c = corners[i];
-   //         proj.getXY(c);
-   //         if( Double.isNaN(c.x)) {
-   //            nNull++;
-   //            if( nNull>1 ) return null;
-   //            else { coins[i]=null; continue; }
-   //         }
-   //         if( coins[i]==null ) coins[i]=new PointD(c.x,c.y);
-   //         else { coins[i].x=c.x; coins[i].y=c.y; }
-   //      }
-   //
-   //      // On augmente d'un pixel écran pour couvrir les coutures
-   //      if( Aladin.macPlateform && Aladin.ISJVM15 ) {
-   //         double val = 2/v.zoom;
-   //         if( val>0.5 ) {
-   //            boolean aNull=false,cNull=false;
-   //            for( int i=0; i<2; i++ ) {
-   //               int a= i==1 ? 1 : 0;
-   //               int c= i==1 ? 2 : 3;
-   //               if( coins[a]==null ) {
-   //                  int d,g;
-   //                  if( a==0 || a==3 ) { d=1; g=2; }
-   //                  else { d=0; g=3; }
-   //                  coins[a] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
-   //                  val*=2;  // Les triangles doivent être encore un peu agrandis
-   //                  aNull=true;
-   //               } else if( coins[c]==null ) {
-   //                  int d,g;
-   //                  if( c==0 || c==3 ) { d=1; g=2; }
-   //                  else { d=0; g=3; }
-   //                  coins[c] = new PointD((coins[d].x+coins[g].x)/2,(coins[d].y+coins[g].y)/2);
-   //                  val*=2;
-   //                  cNull=true;
-   //               } else aNull=cNull=false;
-   //
-   //               double angle = Math.atan2(coins[c].y-coins[a].y, coins[c].x-coins[a].x);
-   //               double chouilla =val*Math.cos(angle);
-   //               coins[a].x-=chouilla;
-   //               coins[c].x+=chouilla;
-   //               chouilla = val*Math.sin(angle);
-   //               coins[a].y-=chouilla;
-   //               coins[c].y+=chouilla;
-   //               if( aNull ) coins[a]=null;
-   //               else if( cNull ) coins[c]=null;
-   //            }
-   //         }
-   //      }
-   //
-   //      // On calcule les xy de la vue
-   //      for( int i=0; i<4; i++ ) {
-   //         if( coins[i]!=null )  v.getViewCoordDble(coins[i],coins[i].x, coins[i].y);
-   //      }
-   //
-   //      oiz=v.iz;
-   //      vHashCode=v.hashCode();
-   //      return coins;
-   //   }
 
    HealpixKey [] getPixList() { return null; }
 

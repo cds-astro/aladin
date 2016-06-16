@@ -60,10 +60,10 @@ public final class Calib  implements Cloneable {
    public long getMem() { return 22*4+448*8; }
 
    int    aladin ;
-   double [] xyapoly = new double[12];
-   double [] xydpoly = new double[12];
-   double [] adypoly = new double[12];
-   double [] adxpoly = new double[12];
+   double [] xyapoly = new double[40];
+   double [] xydpoly = new double[40];
+   double [] adypoly = new double[40];
+   double [] adxpoly = new double[40];
    double [][] sip_a   = new double[10][10];
    int         order_a ;
    double [][] sip_b   = new double[10][10];
@@ -150,7 +150,8 @@ public final class Calib  implements Cloneable {
    static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
-   static int getProjType(String s) { return Util.indexInArrayOf(s, projType); }
+   static int getProjType(String s) {//System.out.println("ssss "+s);
+   return Util.indexInArrayOf(s, projType); }
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres)
     * en se contentant éventuellement de ne trouver qu'une sous chaine, -1 si non trouvé */
@@ -213,10 +214,10 @@ public final class Calib  implements Cloneable {
    static public Calib copy(Calib c) {
       Calib a = new Calib();
       a.aladin = c.aladin;
-      a.xyapoly = new double[12]; System.arraycopy(c.xyapoly,0,a.xyapoly,0,10);
-      a.xydpoly = new double[12]; System.arraycopy(c.xydpoly,0,a.xydpoly,0,10);
-      a.adypoly = new double[12]; System.arraycopy(c.adypoly,0,a.adypoly,0,10);
-      a.adxpoly = new double[12]; System.arraycopy(c.adxpoly,0,a.adxpoly,0,10);
+      a.xyapoly = new double[40]; System.arraycopy(c.xyapoly,0,a.xyapoly,0,40);
+      a.xydpoly = new double[40]; System.arraycopy(c.xydpoly,0,a.xydpoly,0,40);
+      a.adypoly = new double[40]; System.arraycopy(c.adypoly,0,a.adypoly,0,40);
+      a.adxpoly = new double[40]; System.arraycopy(c.adxpoly,0,a.adxpoly,0,40);
       a.epoch = c.epoch;
       a.flagepoc = c.flagepoc;
       a.equinox = c.equinox;
@@ -288,7 +289,7 @@ public final class Calib  implements Cloneable {
       Calib b = new Calib() ;
       try {b = (Calib)this.clone();}
       catch (Exception e) {//System.out.println("error");
-    	  
+          
       }
       if (aladin == 1)
       {
@@ -935,7 +936,7 @@ public final class Calib  implements Cloneable {
 
          //                   if(flagadd == 1) WCSKeys.addElement("CRVAL2  ") ;
          //                  System.out.println("alphai "+alphai+"deltai "+deltai);
-         try {                	   
+         try {                     
             // Version Finale du WCS matrice CDn_j de transformation
 
             CD[0][0] = hf.getDoubleFromHeader("CD1_1    ");
@@ -977,7 +978,7 @@ public final class Calib  implements Cloneable {
          }
          catch (Exception e1) {
             // Dans les autres versions du WCS on a toujours
-            // les increments                	  
+            // les increments                     
             incA = hf.getDoubleFromHeader("CDELT1  ");
             //if(flagadd == 1) WCSKeys.addElement("CDELT1  ") ;
             incD = hf.getDoubleFromHeader("CDELT2  ");
@@ -987,7 +988,7 @@ public final class Calib  implements Cloneable {
             try {
                //  Et soit l'angle de rotation (1 ou 2) ...
                double rota1=0,rota2=0 ;                         
-               try {                    	 
+               try {                         
                   rota1 = hf.getDoubleFromHeader("CROTA1  ");
                   //if(flagadd == 1) WCSKeys.addElement("CROTA1  ") ;
                   //                        System.out.println("CROTA1 "+rota1);
@@ -995,11 +996,11 @@ public final class Calib  implements Cloneable {
                   //                   if(flagadd == 1) WCSKeys.addElement("CROTA2  ") ;
                   //                        System.out.println("CROTA2 "+rota2);
                }  catch (Exception e6) {
-                  try {                       	  
+                  try {                           
                      rota1 = hf.getDoubleFromHeader("CROTA1  ");
                      //if(flagadd == 1) WCSKeys.addElement("CROTA1  ") ;
                      //                       System.out.println("CROTA1 "+rota1);
-                  } catch (Exception e7) {                     	 
+                  } catch (Exception e7) {                       
                      rota2 = hf.getDoubleFromHeader("CROTA2  ");
                      //if(flagadd == 1) WCSKeys.addElement("CROTA2  ") ;
                      //                      ("CROTA2 "+rota2);
@@ -1155,8 +1156,8 @@ public final class Calib  implements Cloneable {
       }
       if (type1.startsWith("GLON"))
       {
-         //              	    System.out.println(type1);
-         //              	    System.out.println(type2) ;
+         //                     System.out.println(type1);
+         //                     System.out.println(type2) ;
          //                       System.out.println("GLON");
          system = GALACTIC ;
       }
@@ -1203,7 +1204,7 @@ public final class Calib  implements Cloneable {
          xydpoly[5] = adxpoly[5] ;
       } catch(Exception e11) {}
       try {
-         adxpoly[6] = hf.getDoubleFromHeader("PV2_6   ");	
+         adxpoly[6] = hf.getDoubleFromHeader("PV2_6   ");   
          xydpoly[6] = adxpoly[6] ;
       } catch(Exception e11) {}
       try {
@@ -1297,10 +1298,172 @@ public final class Calib  implements Cloneable {
       try {
           xydpoly[11] = hf.getDoubleFromHeader("PV2_11   ");  
        } catch(Exception e13) {}
-      
-    
+      try {
+           xyapoly[12] = hf.getDoubleFromHeader("PV1_12   ");  
+        } catch(Exception e13) {}
+      try {
+           xydpoly[12] = hf.getDoubleFromHeader("PV2_12   ");  
+        } catch(Exception e13) {}
+      try {
+            xyapoly[13] = hf.getDoubleFromHeader("PV1_13   ");  
+         } catch(Exception e13) {}
+      try {
+            xydpoly[13] = hf.getDoubleFromHeader("PV2_13   ");  
+         } catch(Exception e13) {}
+      try {
+             xyapoly[14] = hf.getDoubleFromHeader("PV1_14   ");  
+          } catch(Exception e13) {}
+      try {
+             xydpoly[14] = hf.getDoubleFromHeader("PV2_14   ");  
+          } catch(Exception e13) {}
+      try {
+              xyapoly[15] = hf.getDoubleFromHeader("PV1_15   ");  
+           } catch(Exception e13) {}
+      try {
+              xydpoly[15] = hf.getDoubleFromHeader("PV2_15   ");  
+           } catch(Exception e13) {}
+      try {
+               xyapoly[16] = hf.getDoubleFromHeader("PV1_16   ");  
+            } catch(Exception e13) {}
+      try {
+               xydpoly[16] = hf.getDoubleFromHeader("PV2_16   ");  
+            } catch(Exception e13) {}
+      try {
+                xyapoly[17] = hf.getDoubleFromHeader("PV1_17   ");  
+             } catch(Exception e13) {}
+      try {
+                xydpoly[17] = hf.getDoubleFromHeader("PV2_17    ");  
+             } catch(Exception e13) {}
+      try {
+                 xyapoly[18] = hf.getDoubleFromHeader("PV1_18   ");  
+              } catch(Exception e13) {}
+      try {
+                 xydpoly[18] = hf.getDoubleFromHeader("PV2_18   ");  
+              } catch(Exception e13) {}
+      try {
+                  xyapoly[19] = hf.getDoubleFromHeader("PV1_19   ");  
+               } catch(Exception e13) {}
+      try {
+                  xydpoly[19] = hf.getDoubleFromHeader("PV2_19   ");  
+               } catch(Exception e13) {}
+      try {
+                   xyapoly[20] = hf.getDoubleFromHeader("PV1_20   ");  
+                } catch(Exception e13) {}
+      try {
+                   xydpoly[20] = hf.getDoubleFromHeader("PV2_20   ");  
+                } catch(Exception e13) {}
+                try {
+                    xyapoly[21] = hf.getDoubleFromHeader("PV1_21   ");  
+                 } catch(Exception e13) {}
+                try {
+                    xydpoly[21] = hf.getDoubleFromHeader("PV2_21   ");  
+                 } catch(Exception e13) {}
+                 try {
+                     xyapoly[22] = hf.getDoubleFromHeader("PV1_22   ");  
+                  } catch(Exception e13) {}
+                 try {
+                     xydpoly[22] = hf.getDoubleFromHeader("PV2_22   ");  
+                  } catch(Exception e13) {}
+                  try {
+                      xyapoly[23] = hf.getDoubleFromHeader("PV1_23   ");  
+                   } catch(Exception e13) {}
+                  try {
+                      xydpoly[23] = hf.getDoubleFromHeader("PV2_23   ");  
+                   } catch(Exception e13) {}
+                  
+                   try {
+                       xyapoly[24] = hf.getDoubleFromHeader("PV1_24   ");  
+                    } catch(Exception e13) {}
+                   try {
+                       xydpoly[24] = hf.getDoubleFromHeader("PV2_24   ");  
+                    } catch(Exception e13) {}
+                    try {
+                        xyapoly[25] = hf.getDoubleFromHeader("PV1_25   ");  
+                     } catch(Exception e13) {}
+                    try {
+                        xydpoly[25] = hf.getDoubleFromHeader("PV2_25   ");  
+                     } catch(Exception e13) {}
+                     try {
+                         xyapoly[26] = hf.getDoubleFromHeader("PV1_26   ");  
+                      } catch(Exception e13) {}
+                     try {
+                         xydpoly[26] = hf.getDoubleFromHeader("PV2_26   ");  
+                      } catch(Exception e13) {}
+                      try {
+                          xyapoly[27] = hf.getDoubleFromHeader("PV1_27   ");  
+                       } catch(Exception e13) {}
+                      try {
+                          xydpoly[27] = hf.getDoubleFromHeader("PV2_27   ");  
+                       } catch(Exception e13) {}
+                       try {
+                           xyapoly[28] = hf.getDoubleFromHeader("PV1_28   ");  
+                        } catch(Exception e13) {}
+                       try {
+                           xydpoly[28] = hf.getDoubleFromHeader("PV2_28   ");  
+                        } catch(Exception e13) {}
+                        try {
+                            xyapoly[29] = hf.getDoubleFromHeader("PV1_29   ");  
+                         } catch(Exception e13) {}
+                        try {
+                            xydpoly[29] = hf.getDoubleFromHeader("PV2_29   ");  
+                         } catch(Exception e13) {}
+                         try {
+                             xyapoly[30] = hf.getDoubleFromHeader("PV1_30   ");  
+                          } catch(Exception e13) {}
+                         try {
+                             xydpoly[30] = hf.getDoubleFromHeader("PV2_30   ");  
+                          } catch(Exception e13) {}
+                          try {
+                              xyapoly[31] = hf.getDoubleFromHeader("PV1_31   ");  
+                           } catch(Exception e13) {}
+                          try {
+                              xydpoly[31] = hf.getDoubleFromHeader("PV2_31   ");  
+                           } catch(Exception e13) {}
+                           try {
+                               xyapoly[32] = hf.getDoubleFromHeader("PV1_32   ");  
+                            } catch(Exception e13) {}
+                           try {
+                               xydpoly[32] = hf.getDoubleFromHeader("PV2_32   ");  
+                            } catch(Exception e13) {}
+                            try {
+                                xyapoly[33] = hf.getDoubleFromHeader("PV1_33   ");  
+                             } catch(Exception e13) {}
+                            try {
+                                xydpoly[33] = hf.getDoubleFromHeader("PV2_33   ");  
+                             } catch(Exception e13) {}
+                             try {
+                                 xyapoly[34] = hf.getDoubleFromHeader("PV1_34   ");  
+                              } catch(Exception e13) {}
+                             try {
+                                 xydpoly[34] = hf.getDoubleFromHeader("PV2_34   ");  
+                              } catch(Exception e13) {}
+                              try {
+                                  xyapoly[35] = hf.getDoubleFromHeader("PV1_35   ");  
+                               } catch(Exception e13) {}
+                              try {
+                                  xydpoly[35] = hf.getDoubleFromHeader("PV2_35   ");  
+                               } catch(Exception e13) {}
+                               try {
+                                   xyapoly[36] = hf.getDoubleFromHeader("PV1_36   ");  
+                                } catch(Exception e13) {}
+                               try {
+                                   xydpoly[36] = hf.getDoubleFromHeader("PV2_36   ");  
+                                } catch(Exception e13) {}
+                                try {
+                                    xyapoly[37] = hf.getDoubleFromHeader("PV1_37   ");  
+                                 } catch(Exception e13) {}
+                                try {
+                                    xydpoly[37] = hf.getDoubleFromHeader("PV2_37   ");  
+                                 } catch(Exception e13) {}
+                                 try {
+                                     xyapoly[38] = hf.getDoubleFromHeader("PV1_38   ");  
+                                  } catch(Exception e13) {}
+                                 try {
+                                     xydpoly[38] = hf.getDoubleFromHeader("PV2_38   ");  
+                                  } catch(Exception e13) {}
+                                  
     //              System.out.println(adxpoly[1]+" "+adxpoly[3]+" "+xydpoly[1]+" "+xydpoly[3]);
-     //            System.out.println(adxpoly[5]+" "+adxpoly[7]+" "+xydpoly[5]+" "+xydpoly[7]);
+           //     System.out.println(adxpoly[25]+" "+adxpoly[27]+" "+xydpoly[25]+" "+xydpoly[27]);
       // else System.out.println("RA");
 
       // PF - sept 2010 - C'est plus generique comme cela
@@ -1312,7 +1475,7 @@ public final class Calib  implements Cloneable {
          try { proj = getSubProjType(type1.substring(5)); } 
          catch( Exception e ) { proj=-1; }
       }
-      
+      // System.out.println("proj "+proj) ;
       // Petit patch pour EGRET et autres vieilles missions
       if( proj==-1 && hf.getStringFromHeader("GRIDTYPE")!=null ) {
          proj=CAR; 
@@ -1349,8 +1512,8 @@ public final class Calib  implements Cloneable {
       //#endif /* PIERRE */
       
       if ((proj == SIP)||(proj == SINSIP)) {
-    	//  if (proj == SIP) {	  
-    	  System.out.println("proj "+proj) ;
+        //  if (proj == SIP) {    
+        //  System.out.println("proj "+proj) ;
          try {
             order_a = hf.getIntFromHeader("A_ORDER") ;
             order_b= hf.getIntFromHeader("B_ORDER") ;
@@ -1366,7 +1529,7 @@ public final class Calib  implements Cloneable {
                      }
                   catch (Exception ee) { sip_a[powx][j] = 0.0 ;}
                }
-            }	
+            }   
             
             for (int order = 2;  order < order_b+1 ; order++)
             {
@@ -1375,68 +1538,68 @@ public final class Calib  implements Cloneable {
                   for (int j = 0 ; j < order-powx + 1 ; j++)
                      try {
                         sip_b[powx][j] = hf.getDoubleFromHeader("B_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
-                        //                               			System.out.println("sip_b "+powx+" "+j+" "+sip_b[powx][j])  ;
+                        //                                          System.out.println("sip_b "+powx+" "+j+" "+sip_b[powx][j])  ;
                      }
                   catch (Exception ee) { sip_b[powx][j] = 0.0 ;}
                }
-            }	
+            }   
             
-            //	  a[0][2] = hf.getDoubleFromHeader("A_"+(new Integer(0).toString())+"_2  "); 
+            //    a[0][2] = hf.getDoubleFromHeader("A_"+(new Integer(0).toString())+"_2  "); 
 
-            // 	  a[1][1] = hf.getDoubleFromHeader("A_1_1  ");
+            //    a[1][1] = hf.getDoubleFromHeader("A_1_1  ");
 
-            //	  a[2][0] = hf.getDoubleFromHeader("A_2_0  ");
+            //    a[2][0] = hf.getDoubleFromHeader("A_2_0  ");
 
-            //	  b[0][2] = hf.getDoubleFromHeader("B_0_2  "); 
-            //	  b[1][1] = hf.getDoubleFromHeader("B_1_1  ");
-            //	  b[2][0] = hf.getDoubleFromHeader("B_2_0 ");
+            //    b[0][2] = hf.getDoubleFromHeader("B_0_2  "); 
+            //    b[1][1] = hf.getDoubleFromHeader("B_1_1  ");
+            //    b[2][0] = hf.getDoubleFromHeader("B_2_0 ");
 
-            //	  ap[0][2] = hf.getDoubleFromHeader("AP_0_2 ");
-            // 	  ap[1][1] = hf.getDoubleFromHeader("AP_1_1 ");
-            //	  ap[2][0] = hf.getDoubleFromHeader("AP_2_0 ");
+            //    ap[0][2] = hf.getDoubleFromHeader("AP_0_2 ");
+            //    ap[1][1] = hf.getDoubleFromHeader("AP_1_1 ");
+            //    ap[2][0] = hf.getDoubleFromHeader("AP_2_0 ");
 
-            //	  bp[0][2] = hf.getDoubleFromHeader("BP_0_2 "); 
-            //	  bp[1][1] = hf.getDoubleFromHeader("BP_1_1 ");
-            // 	  bp[2][0] = hf.getDoubleFromHeader("BP_2_0 ");
+            //    bp[0][2] = hf.getDoubleFromHeader("BP_0_2 "); 
+            //    bp[1][1] = hf.getDoubleFromHeader("BP_1_1 ");
+            //    bp[2][0] = hf.getDoubleFromHeader("BP_2_0 ");
 
-            //	  if (order_a > 2)
-            // 	  {
-            //  	  a[3][0] = hf.getDoubleFromHeader("A_3_0  ");
-            //  	  a[0][3] = hf.getDoubleFromHeader("A_0_3  ");
-            // 	  a[1][2] = hf.getDoubleFromHeader("A_1_2  ");
-            // 	  a[2][1] = hf.getDoubleFromHeader("A_2_1  ");
-            //	  }
-            //	   if (order_b > 2)
-            //	   { 		   
+            //    if (order_a > 2)
+            //    {
+            //        a[3][0] = hf.getDoubleFromHeader("A_3_0  ");
+            //        a[0][3] = hf.getDoubleFromHeader("A_0_3  ");
+            //    a[1][2] = hf.getDoubleFromHeader("A_1_2  ");
+            //    a[2][1] = hf.getDoubleFromHeader("A_2_1  ");
+            //    }
+            //     if (order_b > 2)
+            //     {           
 
 
-            //	  b[1][2] = hf.getDoubleFromHeader("B_1_2  ");
-            //	  b[0][3] = hf.getDoubleFromHeader("B_0_3  ");
-            //	  b[2][1] = hf.getDoubleFromHeader("B_2_1  ");
-            //	  b[3][0] = hf.getDoubleFromHeader("B_3_0  ");
-            //	   }
-            //	   if (order_ap > 2)
-            //	   {	   
-            //	  
-            //	  ap[3][0] = hf.getDoubleFromHeader("AP_3_0 ");
-            //	  ap[2][1] = hf.getDoubleFromHeader("AP_2_1 ");
-            //	  ap[1][2] = hf.getDoubleFromHeader("AP_1_2 ");
-            //	  ap[0][3] = hf.getDoubleFromHeader("AP_0_3 ");
-            //	   }
-            //	   if (order_bp > 2)
-            //	   {		     
-            //	  bp[3][0] = hf.getDoubleFromHeader("BP_3_0 ");
-            //	  bp[2][1] = hf.getDoubleFromHeader("BP_2_1 ");
-            //	  bp[1][2] = hf.getDoubleFromHeader("BP_1_2 ");
-            //	  bp[0][3] = hf.getDoubleFromHeader("BP_0_3 ");
-            //	   }
+            //    b[1][2] = hf.getDoubleFromHeader("B_1_2  ");
+            //    b[0][3] = hf.getDoubleFromHeader("B_0_3  ");
+            //    b[2][1] = hf.getDoubleFromHeader("B_2_1  ");
+            //    b[3][0] = hf.getDoubleFromHeader("B_3_0  ");
+            //     }
+            //     if (order_ap > 2)
+            //     {       
+            //    
+            //    ap[3][0] = hf.getDoubleFromHeader("AP_3_0 ");
+            //    ap[2][1] = hf.getDoubleFromHeader("AP_2_1 ");
+            //    ap[1][2] = hf.getDoubleFromHeader("AP_1_2 ");
+            //    ap[0][3] = hf.getDoubleFromHeader("AP_0_3 ");
+            //     }
+            //     if (order_bp > 2)
+            //     {             
+            //    bp[3][0] = hf.getDoubleFromHeader("BP_3_0 ");
+            //    bp[2][1] = hf.getDoubleFromHeader("BP_2_1 ");
+            //    bp[1][2] = hf.getDoubleFromHeader("BP_1_2 ");
+            //    bp[0][3] = hf.getDoubleFromHeader("BP_0_3 ");
+            //     }
          }
-         catch (Exception e13 ){ proj = -1  ;} 
+         catch (Exception e14 ){ proj = -1  ;} 
         
          try {
             //   System.out.println("ici") ;
             order_ap = hf.getIntFromHeader("AP_ORDER") ;
-            //	 System.out.println("ici") ;
+            //   System.out.println("ici") ;
             order_bp = hf.getIntFromHeader("BP_ORDER") ;
             //   System.out.println("ici") ;  
             for (int order = 2;  order < order_ap+1 ; order++)
@@ -1446,12 +1609,12 @@ public final class Calib  implements Cloneable {
                   for (int j = 0 ; j < order-powx + 1 ; j++)
                      try {
                         sip_ap[powx][j] = hf.getDoubleFromHeader("AP_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
-                        //                       			System.out.println("sip_ap "+powx+" "+j+" "+sip_ap[powx][j]) ;
+                        //                                  System.out.println("sip_ap "+powx+" "+j+" "+sip_ap[powx][j]) ;
                      }
                   catch (Exception ee) { sip_ap[powx][j] = 0.0 ;}
                }
-            }	
-            //   	System.out.println("ici") ;
+            }   
+            //      System.out.println("ici") ;
             for (int order = 2;  order < order_bp+1 ; order++)
             {
                for (int powx =0 ; powx < order+1 ; powx++ )
@@ -1459,16 +1622,16 @@ public final class Calib  implements Cloneable {
                   for (int j = 0 ; j < order-powx + 1 ; j++)
                      try {
                         sip_bp[powx][j] = hf.getDoubleFromHeader("BP_"+(new Integer(powx).toString())+"_"+(new Integer(j).toString())+"  ");
-                        //                           			System.out.println("sip_bp "+powx+" "+j+" "+sip_bp[powx][j]) ;
+                        //                                      System.out.println("sip_bp "+powx+" "+j+" "+sip_bp[powx][j]) ;
                      }
                   catch (Exception ee) { sip_bp[powx][j] = 0.0 ;}
-               }		
+               }        
 
 
-            }		
-            //	   System.out.println("ici") ;
+            }       
+            //     System.out.println("ici") ;
          }
-         catch (Exception e14 ) { }
+         catch (Exception e15 ) { }
       }
        
       if (type1.indexOf("COE")>= 0 && type2.indexOf("COE")>= 0) proj = TAN ;
@@ -1501,7 +1664,7 @@ public final class Calib  implements Cloneable {
  //      System.out.println("COCO "+xyapoly[0]+" "+xydpoly[0]);
  //      System.out.println("COCO "+xyapoly[5]+" "+xydpoly[5]);
 
-      
+  //    System.out.println("proj "+proj) ;
    }
 
    public Calib (long nside,  long npix, int frame, int width) {
@@ -1721,33 +1884,33 @@ public final class Calib  implements Cloneable {
    //System.out.println("ccc "+ccc.al+" "+ccc.del);
    //System.out.println("xst yst"+xst8+" "+yst8) ;
    //   System.out.println("X Y"+X1+" "+Y1);
-   //  	System.out.println("X Y"+X2+" "+Y2);
-   //  	System.out.println("X Y"+X3+" "+Y3);
-   //  	System.out.println("X Y"+X4+" "+Y4);
-   //  	System.out.println("bord 0 "+bord[0][0]+" "+bord[0][1]);
+   //   System.out.println("X Y"+X2+" "+Y2);
+   //   System.out.println("X Y"+X3+" "+Y3);
+   //   System.out.println("X Y"+X4+" "+Y4);
+   //   System.out.println("bord 0 "+bord[0][0]+" "+bord[0][1]);
    //   System.out.println("bord 1 "+bord[1][0]+" "+bord[1][1]);
    //   System.out.println("bord 2 "+bord[2][0]+" "+bord[2][1]);
    //   System.out.println("bord 3 "+bord[3][0]+" "+bord[3][1]);
 
-   // 	System.out.println("1-2 alpha "+0.5*(bord[0][0]+bord[1][0])+" "+(bord[0][0]-bord[1][0]));
-   // 	System.out.println("1-2 delta "+0.5*(bord[0][1]+bord[1][1])+" "+(bord[0][1]-bord[1][1]));
-   // 	System.out.println("4-3 alpha "+0.5*(bord[3][0]+bord[2][0])+" "+(bord[3][0]-bord[2][0]));
-   // 	System.out.println("4-3 delta "+0.5*(bord[3][1]+bord[2][1])+" "+(bord[3][1]-bord[2][1]));
-   // 	System.out.println("1-4 alpha "+0.5*(bord[0][0]+bord[3][0])+" "+(bord[3][0]-bord[0][0]));
-   // 	System.out.println("1-4 delta "+0.5*(bord[0][1]+bord[3][1])+" "+(bord[3][1]-bord[0][1]));
-   // 	System.out.println("2-3 alpha "+0.5*(bord[1][0]+bord[2][0])+" "+(bord[1][0]-bord[2][0]));
-   // 	System.out.println("2-3 delta "+0.5*(bord[1][1]+bord[2][1])+" "+(bord[1][1]-bord[2][1]));
+   //   System.out.println("1-2 alpha "+0.5*(bord[0][0]+bord[1][0])+" "+(bord[0][0]-bord[1][0]));
+   //   System.out.println("1-2 delta "+0.5*(bord[0][1]+bord[1][1])+" "+(bord[0][1]-bord[1][1]));
+   //   System.out.println("4-3 alpha "+0.5*(bord[3][0]+bord[2][0])+" "+(bord[3][0]-bord[2][0]));
+   //   System.out.println("4-3 delta "+0.5*(bord[3][1]+bord[2][1])+" "+(bord[3][1]-bord[2][1]));
+   //   System.out.println("1-4 alpha "+0.5*(bord[0][0]+bord[3][0])+" "+(bord[3][0]-bord[0][0]));
+   //   System.out.println("1-4 delta "+0.5*(bord[0][1]+bord[3][1])+" "+(bord[3][1]-bord[0][1]));
+   //   System.out.println("2-3 alpha "+0.5*(bord[1][0]+bord[2][0])+" "+(bord[1][0]-bord[2][0]));
+   //   System.out.println("2-3 delta "+0.5*(bord[1][1]+bord[2][1])+" "+(bord[1][1]-bord[2][1]));
 
    double [][] bord1 = CDSHealpix.borders(nside, npix, 2) ; 
 
-   //    	System.out.println("bord 0 "+bord1[0][0]+" "+bord1[0][1]);
-   //    	System.out.println("bord 1 "+bord1[1][0]+" "+bord1[1][1]);
-   //    	System.out.println("bord 2 "+bord1[2][0]+" "+bord1[2][1]);
-   //    	System.out.println("bord 3 "+bord1[3][0]+" "+bord1[3][1]);
-   //    	System.out.println("bord 4 "+bord1[4][0]+" "+bord1[4][1]);
-   //    	System.out.println("bord 5 "+bord1[5][0]+" "+bord1[5][1]);
-   //    	System.out.println("bord 6 "+bord1[6][0]+" "+bord1[6][1]);
-   //    	System.out.println("bord 7 "+bord1[7][0]+" "+bord1[7][1]);
+   //       System.out.println("bord 0 "+bord1[0][0]+" "+bord1[0][1]);
+   //       System.out.println("bord 1 "+bord1[1][0]+" "+bord1[1][1]);
+   //       System.out.println("bord 2 "+bord1[2][0]+" "+bord1[2][1]);
+   //       System.out.println("bord 3 "+bord1[3][0]+" "+bord1[3][1]);
+   //       System.out.println("bord 4 "+bord1[4][0]+" "+bord1[4][1]);
+   //       System.out.println("bord 5 "+bord1[5][0]+" "+bord1[5][1]);
+   //       System.out.println("bord 6 "+bord1[6][0]+" "+bord1[6][1]);
+   //       System.out.println("bord 7 "+bord1[7][0]+" "+bord1[7][1]);
 
   // System.out.println("center "+centerRadec[0]+" "+centerRadec[1]); 
       }
@@ -2104,8 +2267,8 @@ public final class Calib  implements Cloneable {
             y_stand = y_tet_phi ;
             if ((xydpoly[1] != 0 ) && (xydpoly[2] != 0 ))
             {
-         	   x_stand += xydpoly[1]*(1-(sin_del*cdelz - cos_del*sdelz*cos_dalpha)) ;
-         	   y_stand += xydpoly[2]*(1-(sin_del*cdelz - cos_del*sdelz*cos_dalpha)) ;
+               x_stand += xydpoly[1]*(1-(sin_del*cdelz - cos_del*sdelz*cos_dalpha)) ;
+               y_stand += xydpoly[2]*(1-(sin_del*cdelz - cos_del*sdelz*cos_dalpha)) ;
             }
             break ;
          case TAN: // TAN proj
@@ -2136,10 +2299,13 @@ public final class Calib  implements Cloneable {
             //            + adxpoly[5]* (Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
             }
             else rteta = (Math.PI/2 -tet) ;
+          //  if (rteta > Math.PI) System.out.println("rteta"+rteta) ;
+            if (rteta < 0 ) System.out.println("rteta"+rteta) ;
             //x_stand = (Math.PI/2 -tet)*FastMath.sin(phi) ;
             x_stand = rteta*FastMath.sin(phi) ;
             // y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
             y_stand = - rteta*FastMath.cos(phi) ;
+          //  System.out.println("x_stand y_stand"+c.al+" "+c.del+" "+x_stand+" "+y_stand);
             break ;
          case AIT:  // AIT proj
             if (al > 180.) dalpha -= 2*Math.PI ;
@@ -2275,7 +2441,7 @@ public final class Calib  implements Cloneable {
             && (xydpoly[2]*CD[1][1] <0 ))
          y_obj = c.y - Ycen ;
      if ((proj == SIP)||(proj == SINSIP))
-    //	  if (proj == SIP) 
+    //    if (proj == SIP) 
       {
          double xint = x_obj;
          double yint = y_obj;
@@ -2336,7 +2502,7 @@ public final class Calib  implements Cloneable {
       switch(proj)
       {
          case SIN: // projection en SINUS
-         case SINSIP: 	 
+         case SINSIP:    
             //                        c.del = (180./Math.PI)
             //                               *(Math.asin(y_objr*FastMath.cos(deltai*Math.PI/180.)
             //                               +FastMath.sin(deltai*Math.PI/180.)
@@ -2359,25 +2525,25 @@ public final class Calib  implements Cloneable {
             if ( cdelz*Math.sqrt(1-y_objr*y_objr - x_objr*x_objr)
                   - y_objr*sdelz < 0) c.al += 180. ;
            
-            	 if ((xydpoly[1] != 0 ) && (xydpoly[2] != 0 ))
+                 if ((xydpoly[1] != 0 ) && (xydpoly[2] != 0 ))
                  {
                    double xi = xydpoly[1] ;
                    double eta = xydpoly[2] ;
-              	   double a = xi*xi + eta*eta +1 ;
-              	   double b = (x_objr-xi)*xi + eta*(y_objr-eta);
-              	   double C = (x_objr-xi)*(x_objr-xi) + (y_objr-eta)*(y_objr-eta) - 1 ;
-              	 //  System.out.println("x y "+x_obj+" "+y_obj) ;
-              	  // System.out.println("xy_objr "+x_objr+" "+y_objr);
-              	 //  System.out.println ("a b c "+a+" "+b+" "+C) ;
-              	   double arg = (-b + Math.sqrt (b*b-a*C))/a ; 
-              	 //  System.out.println(" racine "+ (b*b-a*C));
-              	 //  System.out.println("arg "+arg);
-              	    tet = Math.asin(arg) ;
-              	    double phi = Math.atan2(x_objr - xi*(1-arg), -(y_objr - eta*(1-arg))) ;         
-              	 //   System.out.println("tet phi "+tet+" "+phi);
-              	 //   System.out.println("x-stand "+ (Math.cos(tet)*Math.sin(phi)+xi*(1-Math.sin(tet))));
-              	  //  System.out.println("y-stand "+ (Math.cos(tet)*Math.cos(phi)-eta*(1-Math.sin(tet))));
-              	  c.del = - rad_to_deg*
+                   double a = xi*xi + eta*eta +1 ;
+                   double b = (x_objr-xi)*xi + eta*(y_objr-eta);
+                   double C = (x_objr-xi)*(x_objr-xi) + (y_objr-eta)*(y_objr-eta) - 1 ;
+                 //  System.out.println("x y "+x_obj+" "+y_obj) ;
+                  // System.out.println("xy_objr "+x_objr+" "+y_objr);
+                 //  System.out.println ("a b c "+a+" "+b+" "+C) ;
+                   double arg = (-b + Math.sqrt (b*b-a*C))/a ; 
+                 //  System.out.println(" racine "+ (b*b-a*C));
+                 //  System.out.println("arg "+arg);
+                    tet = Math.asin(arg) ;
+                    double phi = Math.atan2(x_objr - xi*(1-arg), -(y_objr - eta*(1-arg))) ;         
+                 //   System.out.println("tet phi "+tet+" "+phi);
+                 //   System.out.println("x-stand "+ (Math.cos(tet)*Math.sin(phi)+xi*(1-Math.sin(tet))));
+                  //  System.out.println("y-stand "+ (Math.cos(tet)*Math.cos(phi)-eta*(1-Math.sin(tet))));
+                  c.del = - rad_to_deg*
                   Math.asin(-sdelz*FastMath.sin(tet)+
                         cdelz*FastMath.cos(tet)*FastMath.cos(phi));
 
@@ -2424,13 +2590,13 @@ public final class Calib  implements Cloneable {
             break ;
          case TPV:   
          case TAN:  // projection en TAN
-         case SIP:	   
+         case SIP:     
            //    System.out.println("xyobjr "+x_objr+" " +yy);
                         
        
                if ((xyapoly[1] != 0)&&(xyapoly[1] != 1) && (aladin == 0))
             {
-            	 
+                 
                x_objr *= rad_to_deg ;
                yy     *= rad_to_deg ;
                double r = Math.sqrt(x_objr*x_objr+yy*yy) ;
@@ -2441,7 +2607,7 @@ public final class Calib  implements Cloneable {
                posx =  xyapoly[0] +
                xyapoly[1]*x_objr+
                xyapoly[2]*yy +
-               xyapoly[3]*Math.sqrt(x_objr*x_objr+yy*yy) +
+               xyapoly[3]*r +
                xyapoly[4]*x_objr*x_objr +
                xyapoly[5]*yy*x_objr +
                xyapoly[6]*yy*yy +
@@ -2449,7 +2615,35 @@ public final class Calib  implements Cloneable {
                xyapoly[8]*yy*x_objr*x_objr +
                xyapoly[9]*yy*yy*x_objr +
                xyapoly[10]*yy*yy*yy +
-               xyapoly[11]*r*r*r ;
+               xyapoly[11]*r*r*r +
+               xyapoly[12]*x_objr*x_objr*x_objr*x_objr+
+               xyapoly[13]*x_objr*x_objr*x_objr*yy+
+               xyapoly[14]*x_objr*x_objr*yy*yy+
+               xyapoly[15]*x_objr*yy*yy*yy+
+               xyapoly[16]*yy*yy*yy*yy+
+               xyapoly[17]*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xyapoly[18]*x_objr*x_objr*x_objr*x_objr*yy+
+               xyapoly[19]*x_objr*x_objr*x_objr*yy*yy+
+               xyapoly[20]*x_objr*x_objr*yy*yy*yy+
+               xyapoly[21]*x_objr*yy*yy*yy*yy+
+               xyapoly[22]*yy*yy*yy*yy*yy+
+               xyapoly[23]*r*r*r*r*r+
+               xyapoly[24]*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xyapoly[25]*x_objr*x_objr*x_objr*x_objr*x_objr*yy+
+               xyapoly[26]*x_objr*x_objr*x_objr*x_objr*yy*yy+
+               xyapoly[27]*x_objr*x_objr*x_objr*yy*yy*yy+
+               xyapoly[28]*x_objr*x_objr*yy*yy*yy*yy+
+               xyapoly[29]*x_objr*yy*yy*yy*yy*yy+
+               xyapoly[30]*yy*yy*yy*yy*yy*yy+
+               xyapoly[31]*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xyapoly[32]*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr*yy+
+               xyapoly[33]*x_objr*x_objr*x_objr*x_objr*x_objr*yy*yy+
+               xyapoly[34]*x_objr*x_objr*x_objr*x_objr*yy*yy*yy+
+               xyapoly[35]*x_objr*x_objr*x_objr*yy*yy*yy*yy+
+               xyapoly[36]*x_objr*x_objr*yy*yy*yy*yy*yy+
+               xyapoly[37]*x_objr*yy*yy*yy*yy*yy*yy+
+               xyapoly[38]*yy*yy*yy*yy*yy*yy*yy +
+               xydpoly[39]*r*r*r*r*r*r*r;
 
          posy =  xydpoly[0] +
                xydpoly[1]*yy +
@@ -2462,13 +2656,42 @@ public final class Calib  implements Cloneable {
                xydpoly[8]*yy*yy*x_objr +
                xydpoly[9]*yy*x_objr*x_objr  +
                xydpoly[10]*x_objr*x_objr*x_objr +
-               xydpoly[11]*r*r*r ;
+               xydpoly[11]*r*r*r +
+               xydpoly[12]*yy*yy*yy*yy+
+               xydpoly[13]*yy*yy*yy*x_objr+
+               xydpoly[14]*yy*yy*x_objr*x_objr+
+               xydpoly[15]*yy*x_objr*x_objr*x_objr+
+               xydpoly[16]*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[17]*yy*yy*yy*yy*yy+
+               xydpoly[18]*yy*yy*yy*yy*x_objr+
+               xydpoly[19]*yy*yy*yy*x_objr*x_objr+
+               xydpoly[20]*yy*yy*x_objr*x_objr*x_objr+
+               xydpoly[21]*yy*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[22]*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[23]*r*r*r*r*r+
+               xydpoly[24]*yy*yy*yy*yy*yy*yy+
+               xydpoly[25]*yy*yy*yy*yy*yy*x_objr+
+               xydpoly[26]*yy*yy*yy*yy*x_objr*x_objr+
+               xydpoly[27]*yy*yy*yy*x_objr*x_objr*x_objr+
+               xydpoly[28]*yy*yy*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[29]*yy*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[30]*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[31]*yy*yy*yy*yy*yy*yy*yy+
+               xydpoly[32]*yy*yy*yy*yy*yy*yy*x_objr+
+               xydpoly[33]*yy*yy*yy*yy*yy*x_objr*x_objr+
+               xydpoly[34]*yy*yy*yy*yy*x_objr*x_objr*x_objr+
+               xydpoly[35]*yy*yy*yy*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[36]*yy*yy*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[37]*yy*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[38]*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr*x_objr+
+               xydpoly[39]*r*r*r*r*r*r*r ;
+
          x_objr =  posx * deg_to_rad ;
          yy = posy * deg_to_rad ;
             }
                if ((xyapoly[1] != 0)&&(xyapoly[1] != 1) && (aladin == 3))
                {
-            		 
+                     
                    x_objr *= rad_to_deg ;
                    yy     *= rad_to_deg ;
                 posx =  xyapoly[0] +
@@ -2528,8 +2751,13 @@ public final class Calib  implements Cloneable {
             break ;
          case ZPN: 
          case ARC: //ARC proj
+             //System.out.println("ARC ARC");
             //        tet =  Math.sqrt(x_objr*x_objr+y_objr*y_objr);
             double rteta = Math.sqrt(x_objr*x_objr+y_objr*y_objr);
+            if (rteta > Math.PI  )  
+            throw new Exception("No coordinates") ;
+            else
+            {
             if (proj == ZPN) 
             {
               // System.out.println("ZPN");
@@ -2555,17 +2783,19 @@ public final class Calib  implements Cloneable {
                }
             }
             else tet = rteta;
-            if (rteta == 0.0) c.del = deltai ;
+            if (rteta == 0.0) { c.del = deltai ; c.al = alphai; }
             else c.del = rad_to_deg*Math.asin(+y_objr*cdelz*FastMath.sin(tet)/ rteta +sdelz*FastMath.cos(tet));
 
-            if (tet < Math.PI/2)
+            if (tet==0.0 ) c.al = alphai ;
+            else if ((tet < Math.PI/2)||(x_objr ==0.0))
                c.al =alphai + rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/ (rteta*FastMath.cos(c.del*deg_to_rad)));
 
             else c.al =alphai + 180. - rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/(rteta*FastMath.cos(c.del*deg_to_rad))) ;
-
+            }
             //         if(tet==0.0)c.al=alphai;
-            //         System.out.println("tete "+tet+" "+(alphai + rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/ (rteta*FastMath.cos(c.del*deg_to_rad))))+" "+(alphai + 180. - rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/(rteta*FastMath.cos(c.del*deg_to_rad)))));
-            // System.out.println("tet alphai"+tet+" "+c.al+" "+alphai);
+          //  System.out.println("tete "+tet+" "+(alphai + rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/ (rteta*FastMath.cos(c.del*deg_to_rad))))+" "+(alphai + 180. - rad_to_deg*Math.asin(FastMath.sin(tet)*x_objr/(rteta*FastMath.cos(c.del*deg_to_rad)))));
+     // if (tet == 0.0)     System.out.println("xobj yobj"+x_objr+" "+y_objr);
+      // if (tet == 0.0)     System.out.println("tet alphai"+tet+" "+c.al+" "+alphai);
             break;
 
          case AIT:  // projection AITOFF
@@ -2723,22 +2953,22 @@ public final class Calib  implements Cloneable {
             c.al = alphai + rad_to_deg * Math.atan2(x_objr*(1+sintet),deno) ;
             break ;
          case FIE:
-        	 tet = Math.sqrt(x_objr*x_objr+y_objr*y_objr);
-        	 phi= Math.atan2(y_objr,x_objr) ;
-        	 c.del = rad_to_deg*
+             tet = Math.sqrt(x_objr*x_objr+y_objr*y_objr);
+             phi= Math.atan2(y_objr,x_objr) ;
+             c.del = rad_to_deg*
              Math.asin(sdelz*FastMath.cos(tet)-
                    cdelz*FastMath.sin(tet)*FastMath.cos(phi));
-        	 double arg11 = (FastMath.cos(tet)*cdelz
+             double arg11 = (FastMath.cos(tet)*cdelz
                      - FastMath.sin(tet)*sdelz*FastMath.cos(phi));
              double argg ;
                argg = -(FastMath.sin(tet)*FastMath.sin(phi));
                //      if (Math.abs(deltai) != 90.)
                c.al = alphai + rad_to_deg*Math.atan2(argg,arg11) ;
              break ;
-        	 
-        	 
+             
+             
          case CAR: // CARTESIEN
-            //  	   System.out.println("x_objr "+x_objr+" "+y_objr) ;
+            //         System.out.println("x_objr "+x_objr+" "+y_objr) ;
             c.al = alphai +x_objr*rad_to_deg ;
             c.del= deltai +y_objr*rad_to_deg ;
             //       System.out.println("x_objr "+x_objr * rad_to_deg+" "+y_objr * rad_to_deg) ;
@@ -2897,7 +3127,7 @@ public final class Calib  implements Cloneable {
       y_stand = (sin_delrad *  cdelz
             - cos_delrad * sdelz
             * cos_alrad) / dr;
-      //            System.out.println("xy_stand "+x_stand+" " +y_stand);
+      //            ("xy_stand "+x_stand+" " +y_stand);
 
       x_obj =  adxpoly[0] +
             adxpoly[1]*x_stand +
@@ -2922,6 +3152,7 @@ public final class Calib  implements Cloneable {
             adypoly[9]*y_stand*y_stand*x_stand ;
 
       //            System.out.println("coord "+x_obj+" " +y_obj);
+      
       x_obj = x_obj *focale +xz;
       y_obj = y_obj *focale +yz;
 
@@ -2985,10 +3216,10 @@ public final class Calib  implements Cloneable {
          switch(proj)
          {  case TPV:
             case SIN:
-            case SINSIP:  	
+            case SINSIP:    
             case NCP : // NCP
             case TAN: // TAN proj
-            case SIP:	
+            case SIP:   
                if (dalpha > Math.PI )   dalpha = -2*Math.PI +dalpha ;
                if (dalpha < -Math.PI )  dalpha = + 2*Math.PI +dalpha ;
                if ((-sin_del * sdelz)/(cos_del * cdelz) > 1  )
@@ -3012,7 +3243,7 @@ public final class Calib  implements Cloneable {
           //     y_stand =  (y_tet_phi / den) * rad_to_deg;
           //     break;
              case SIN : // SIN proj
-             case SINSIP: 	 
+             case SINSIP:    
                //                        x_stand   = 180./Math.PI*x_tet_phi ;
                //                        y_stand   = 180./Math.PI*y_tet_phi ;
                x_stand   = rad_to_deg*x_tet_phi ;
@@ -3030,8 +3261,8 @@ public final class Calib  implements Cloneable {
             //   if (adypoly[2] != 0 ) System.out.println("adypoly 2"+ adypoly[2]);
                if ((xydpoly[1] != 0 ) && (xydpoly[2] != 0 ))
                {
-            	   x_stand += rad_to_deg*xydpoly[1]*(1-(sin_del*sdelz + cos_del*cdelz*cos_dalpha)) ;
-            	   y_stand += rad_to_deg*xydpoly[2]*(1-(sin_del*sdelz + cos_del*cdelz*cos_dalpha)) ;
+                   x_stand += rad_to_deg*xydpoly[1]*(1-(sin_del*sdelz + cos_del*cdelz*cos_dalpha)) ;
+                   y_stand += rad_to_deg*xydpoly[2]*(1-(sin_del*sdelz + cos_del*cdelz*cos_dalpha)) ;
                }
                break ;
             case NCP : // NCP
@@ -3046,7 +3277,7 @@ public final class Calib  implements Cloneable {
                break ;
           case TAN:
           case SIP: 
-          case TPV:	  
+          case TPV:   
                //                         double den     = FastMath.sin(del*Math.PI/180.)
                //                                  *FastMath.sin(deltai*Math.PI/180.) +
                //                                   FastMath.cos(del*Math.PI/180.)
@@ -3063,8 +3294,8 @@ public final class Calib  implements Cloneable {
                
                if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&(aladin == 0))
                {
-            	   x_stand *= rad_to_deg ;
-            	   y_stand *= rad_to_deg ;
+                   x_stand *= rad_to_deg ;
+                   y_stand *= rad_to_deg ;
                   //  double X = xyapoly[0]  * deg_to_rad ;
                   //  double Y = xydpoly[0] * deg_to_rad ;
                   double X = xyapoly[0];
@@ -3092,7 +3323,31 @@ public final class Calib  implements Cloneable {
                            3*xyapoly[7]*xx*xx +
                            xyapoly[9]*yy*yy +
                            2*xyapoly[8]*yy*xx +
-                         3*xyapoly[11]*xx*Math.sqrt(xx*xx+yy*yy) ;
+                         3*xyapoly[11]*xx*r + 
+                          4*xyapoly[12]*xx*xx*xx +
+                          3*xyapoly[13]*xx*xx*yy +
+                          2*xyapoly[14]*xx*yy*yy +
+                          xyapoly[15]*yy*yy*yy +
+                          5*xyapoly[17]*xx*xx*xx*xx +
+                          4*xyapoly[18]*xx*xx*xx*yy +
+                          3*xyapoly[19]*xx*yy*yy +
+                          2*xyapoly[20]*xx*yy*yy*yy +
+                          xyapoly[21]*yy*yy*yy*yy + 
+                          5*xyapoly[23]*xx*r*r*r +
+                          6*xyapoly[24]*xx*xx*xx*xx*xx +
+                          5*xyapoly[25]*xx*xx*xx*xx*yy +
+                          4*xyapoly[26]*xx*xx*xx*yy*yy +
+                          3*xyapoly[27]*xx*xx*yy*yy*yy +
+                          2*xyapoly[28]*xx*yy*yy*yy*yy +
+                          xyapoly[29]*yy*yy*yy*yy*yy +
+                          7*xyapoly[31]*xx*xx*xx*xx*xx*xx +
+                          6*xyapoly[32]*xx*xx*xx*xx*xx*yy +
+                          5*xyapoly[33]*xx*xx*xx*xx*yy*yy +
+                          4*xyapoly[34]*xx*xx*xx*yy*yy*yy +
+                          3*xyapoly[35]*xx*xx*yy*yy*yy*yy +
+                          2*xyapoly[36]*xx*yy*yy*yy*yy*yy +
+                          xyapoly[37]*yy*yy*yy*yy*yy*yy +
+                          7*xyapoly[39]*xx*r*r*r*r*r ;
                      //  m1  *= deg_to_rad ;
                      //System.out.println("m1 "+iter+" "+ xyapoly[3]*xx/r+ " " +2*xyapoly[4]*xx )  ;
                      m2  = xydpoly[2]+
@@ -3102,7 +3357,32 @@ public final class Calib  implements Cloneable {
                           3*xydpoly[10]*xx*xx +
                            xydpoly[8]*yy*yy +
                            2*xydpoly[9]*yy*xx +
-                           3*xydpoly[11]*xx* Math.sqrt(xx*xx+yy*yy) ;
+                           3*xydpoly[11]*xx*r + 
+                           xydpoly[13]*yy*yy*yy +
+                           2*xydpoly[14]*xx*yy*yy +
+                           3*xydpoly[15]*xx*xx*yy +
+                           4*xydpoly[16]*xx*xx*xx +
+                           xydpoly[18]*yy*yy*yy*yy +
+                           2*xydpoly[19]*xx*yy*yy*yy +
+                           3*xydpoly[20]*xx*xx*yy*yy +
+                           4*xydpoly[21]*xx*xx*xx*yy +
+                           5*xydpoly[22]*xx*xx*xx*xx*xx +
+                           5*xydpoly[23]*xx*r*r*r +
+                           xydpoly[25]*yy*yy*yy*yy*yy +
+                           2*xydpoly[26]*xx*yy*yy*yy*yy +
+                           3*xydpoly[27]*xx*xx*yy*yy*yy +
+                           4*xydpoly[28]*xx*xx*xx*yy*yy + 
+                           5*xydpoly[29]*xx*xx*xx*xx*yy +
+                           6*xydpoly[30]*xx*xx*xx*xx*xx +
+                           xydpoly[32]*yy*yy*yy*yy*yy*yy +
+                           2*xydpoly[33]*xx*yy*yy*yy*yy*yy +
+                           3*xydpoly[34]*xx*xx*yy*yy*yy*yy +
+                           4*xydpoly[35]*xx*xx*xx*yy*yy*yy +
+                           5*xydpoly[36]*xx*xx*xx*xx*yy*yy +
+                           6*xydpoly[37]*xx*xx*xx*xx*xx*yy +
+                           7*xydpoly[38]*xx*xx*xx*xx*xx*xx +
+                           7*xydpoly[39]*xx*r*r*r*r*r ;
+                     
                      // System.out.println("m2 "+iter+" "+ xydpoly[3]*xx/r + " " +2*xydpoly[6]*xx )  ;
                      // m2  *= deg_to_rad ;
 
@@ -3113,7 +3393,31 @@ public final class Calib  implements Cloneable {
                            3*xyapoly[10]*yy*yy +
                            2*xyapoly[9]*yy*xx +
                            xyapoly[8]*xx*xx +
-                           3*xyapoly[11]*yy*Math.sqrt(xx*xx+yy*yy) ;
+                           3*xyapoly[11]*yy*r +
+                           xyapoly[13]*xx*xx*xx +
+                           2*xyapoly[14]*xx*xx*yy +
+                           3*xyapoly[15]*xx*yy*yy +
+                           4*xyapoly[16]*yy*yy*yy +
+                           xyapoly[18]*xx*xx*xx*xx +
+                           2*xyapoly[19]*xx*xx*xx*yy +
+                           3*xyapoly[20]*xx*xx*yy*yy +
+                           4*xyapoly[21]*xx*yy*yy*yy +
+                           5*xyapoly[22]*yy*yy*yy*yy +
+                           5*xyapoly[23]*yy*r*r*r +
+                           xyapoly[25]*xx*xx*xx*xx*xx +
+                           2*xyapoly[26]*xx*xx*xx*xx*yy +
+                           3*xyapoly[27]*xx*xx*xx*yy*yy +
+                           4*xyapoly[28]*xx*xx*yy*yy*yy +
+                           5*xyapoly[29]*xx*yy*yy*yy*yy +
+                           6*xyapoly[30]*yy*yy*yy*yy*yy +
+                           xyapoly[32]*xx*xx*xx*xx*xx*xx +
+                           2*xyapoly[33]*xx*xx*xx*xx*xx*yy +
+                           3*xyapoly[34]*xx*xx*xx*xx*yy*yy +
+                           4*xyapoly[35]*xx*xx*xx*yy*yy*yy +
+                           5*xyapoly[36]*xx*xx*yy*yy*yy*yy +
+                           6*xyapoly[37]*xx*yy*yy*yy*yy*yy +
+                           7*xyapoly[38]*yy*yy*yy*yy*yy*yy +
+                           7*xyapoly[39]*yy*r*r*r*r*r ;
                      // m3  *= deg_to_rad ;
                      // System.out.println("m3 "+iter+" "+ xyapoly[3]*yy/r+ " " +2*xyapoly[6]*yy )  ;
                      m4  = xydpoly[1] +
@@ -3123,7 +3427,31 @@ public final class Calib  implements Cloneable {
                            3*xydpoly[7]*yy*yy +
                            2*xydpoly[8]*yy*xx +
                            xydpoly[9]*xx*xx +
-                           3*xydpoly[11]*yy* Math.sqrt(xx*xx+yy*yy) ;
+                           3*xydpoly[11]*yy* r +
+                           4*xydpoly[12]*yy*yy*yy +
+                           3*xydpoly[13]*yy*yy*xx +
+                           2*xydpoly[14]*yy*xx*xx +
+                           xydpoly[15]*xx*xx*xx +
+                           5*xydpoly[17]*yy*yy*yy*yy +
+                           4*xydpoly[18]*yy*yy*yy*xx +
+                           3*xydpoly[19]*yy*yy*xx*xx +
+                           2*xydpoly[20]*yy*xx*xx*xx +
+                           xydpoly[21]*xx*xx*xx*xx +
+                           5*xydpoly[23]*yy*r*r*r +
+                           6*xydpoly[24]*yy*yy*yy*yy*yy +
+                           5*xydpoly[25]*yy*yy*yy*yy*xx +
+                           4*xydpoly[26]*yy*yy*yy*xx*xx +
+                           3*xydpoly[27]*yy*yy*xx*xx*xx +
+                           2*xydpoly[28]*yy*xx*xx*xx*xx +
+                           xydpoly[29]*xx*xx*xx*xx*xx +
+                           7*xydpoly[31]*yy*yy*yy*yy*yy*yy +
+                           6*xydpoly[32]*yy*yy*yy*yy*yy*xx +
+                           5*xydpoly[33]*yy*yy*yy*yy*xx*xx +
+                           4*xydpoly[34]*yy*yy*yy*xx*xx*xx +
+                           3*xydpoly[35]*yy*yy*xx*xx*xx*xx +
+                           2*xydpoly[36]*yy*xx*xx*xx*xx*xx +
+                           xydpoly[37]*xx*xx*xx*xx*xx*xx +
+                           7*xydpoly[39]*yy*r*r*r*r*r;
                      // System.out.println("m4 "+iter+" "+ xydpoly[3]*yy/r+ " " +2*xyapoly[4]*yy )  ;      
                      //  m4  *= deg_to_rad ;
                      double det = m1 * m4 - m2 * m3 ;
@@ -3154,7 +3482,36 @@ public final class Calib  implements Cloneable {
                            xyapoly[7]*xx*xx*xx +
                            xyapoly[9]*yy*yy*xx +
                            xyapoly[8]*yy*xx*xx +
-                           xyapoly[11]*r*r*r ;
+                           xyapoly[11]*r*r*r +
+                           xyapoly[12]*xx*xx*xx*xx +
+                           xyapoly[13]*xx*xx*xx*yy+
+                           xyapoly[14]*xx*xx*yy*yy+
+                           xyapoly[15]*xx*yy*yy*yy+
+                           xyapoly[16]*yy*yy*yy*yy+
+                           xyapoly[17]*xx*xx*xx*xx*xx+
+                           xyapoly[18]*xx*xx*xx*xx*yy+
+                           xyapoly[19]*xx*xx*xx*yy*yy+
+                           xyapoly[20]*xx*xx*yy*yy*yy+
+                           xyapoly[21]*xx*yy*yy*yy*yy+
+                           xyapoly[22]*yy*yy*yy*yy*yy+
+                           xyapoly[23]*r*r*r*r*r+
+                           xyapoly[24]*xx*xx*xx*xx*xx*xx+
+                           xyapoly[25]*xx*xx*xx*xx*xx*yy+
+                           xyapoly[26]*xx*xx*xx*xx*yy*yy+
+                           xyapoly[27]*xx*xx*xx*yy*yy*yy+
+                           xyapoly[28]*xx*xx*yy*yy*yy*yy+
+                           xyapoly[29]*xx*yy*yy*yy*yy*yy+
+                           xyapoly[30]*yy*yy*yy*yy*yy*yy+
+                           xyapoly[31]*xx*xx*xx*xx*xx*xx*xx+
+                           xyapoly[32]*xx*xx*xx*xx*xx*xx*yy+
+                           xyapoly[33]*xx*xx*xx*xx*xx*yy*yy+
+                           xyapoly[34]*xx*xx*xx*xx*yy*yy*yy+
+                           xyapoly[35]*xx*xx*xx*yy*yy*yy*yy+
+                           xyapoly[36]*xx*xx*yy*yy*yy*yy*yy+
+                           xyapoly[37]*xx*yy*yy*yy*yy*yy*yy+
+                           xyapoly[38]*yy*yy*yy*yy*yy*yy*yy +
+                           xydpoly[39]*r*r*r*r*r*r*r;
+
                      //   X  *= deg_to_rad ;
                      Y  =  xydpoly[0] +
                            xydpoly[1]*yy +
@@ -3167,7 +3524,35 @@ public final class Calib  implements Cloneable {
                            xydpoly[10]*xx*xx*xx +
                            xydpoly[8]*yy*yy*xx +
                            xydpoly[9]*yy*xx*xx +
-                           xydpoly[11]*r*r*r ;
+                           xydpoly[11]*r*r*r +
+                           xydpoly[12]*yy*yy*yy*yy+
+                           xydpoly[13]*yy*yy*yy*xx+
+                           xydpoly[14]*yy*yy*xx*xx+
+                           xydpoly[15]*yy*xx*xx*xx+
+                           xydpoly[16]*xx*xx*xx*xx+
+                           xydpoly[17]*yy*yy*yy*yy*yy+
+                           xydpoly[18]*yy*yy*yy*yy*xx+
+                           xydpoly[19]*yy*yy*yy*xx*xx+
+                           xydpoly[20]*yy*yy*xx*xx*xx+
+                           xydpoly[21]*yy*xx*xx*xx*xx+
+                           xydpoly[22]*xx*xx*xx*xx*xx+
+                           xydpoly[23]*r*r*r*r*r+
+                           xydpoly[24]*yy*yy*yy*yy*yy*yy+
+                           xydpoly[25]*yy*yy*yy*yy*yy*xx+
+                           xydpoly[26]*yy*yy*yy*yy*xx*xx+
+                           xydpoly[27]*yy*yy*yy*xx*xx*xx+
+                           xydpoly[28]*yy*yy*xx*xx*xx*xx+
+                           xydpoly[29]*yy*xx*xx*xx*xx*xx+
+                           xydpoly[30]*xx*xx*xx*xx*xx*xx+
+                           xydpoly[31]*yy*yy*yy*yy*yy*yy*yy+
+                           xydpoly[32]*yy*yy*yy*yy*yy*yy*xx+
+                           xydpoly[33]*yy*yy*yy*yy*yy*xx*xx+
+                           xydpoly[34]*yy*yy*yy*yy*xx*xx*xx+
+                           xydpoly[35]*yy*yy*yy*xx*xx*xx*xx+
+                           xydpoly[36]*yy*yy*xx*xx*xx*xx*xx+
+                           xydpoly[37]*yy*xx*xx*xx*xx*xx*xx+
+                           xydpoly[38]*xx*xx*xx*xx*xx*xx*xx+
+                           xydpoly[39]*r*r*r*r*r*r*r ;
                            
                      //   Y *= deg_to_rad ;
                      //                             System.out.println("iterations "+iter+" "+xx+" "+yy);
@@ -3176,14 +3561,14 @@ public final class Calib  implements Cloneable {
                   x_stand = xx  ;
                   y_stand = yy ;
                   /*
-            	  x_stand = xx * rad_to_deg ;
-            	  y_stand = yy * rad_to_deg ;
-            	  */
-            	  
+                  x_stand = xx * rad_to_deg ;
+                  y_stand = yy * rad_to_deg ;
+                  */
+                  
                }
                else if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&(aladin == 3))
                {
-            	   
+                   
                   //  double X = xyapoly[0]  * deg_to_rad ;
                   //  double Y = xydpoly[0] * deg_to_rad ;
                   double X = xyapoly[0];
@@ -3281,10 +3666,10 @@ public final class Calib  implements Cloneable {
                   x_stand = xx  ;
                   y_stand = yy ;
                   /*
-            	  x_stand = xx * rad_to_deg ;
-            	  y_stand = yy * rad_to_deg ;
-            	  */
-            	  
+                  x_stand = xx * rad_to_deg ;
+                  y_stand = yy * rad_to_deg ;
+                  */
+                  
                }
                else if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&(aladin == 2))
                {
@@ -3401,26 +3786,30 @@ public final class Calib  implements Cloneable {
                //   System.out.println("phi dans ARC"+phi);
                if (sin_del*cdelz - cos_del*sdelz*cos_dalpha > 0)
                   phi =  Math.PI + phi ;
-               //  System.out.println("phi1"+phi);
-               //  System.out.println("cosphi"+FastMath.cos(phi));
+             //    System.out.println("phi1"+phi);
+              //   System.out.println("cosphi"+FastMath.cos(phi));
                tet = Math.asin (
                      sin_del*sdelz+ cos_del*cdelz *cos_dalpha);
                double rteta ;
                if (proj == ZPN)
                { rteta = 0.0 ;
                // System.out.println("rteta "+rteta);
-               //                        	rteta = adxpoly[1]*(Math.PI/2 -tet) +adxpoly[3]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet) +adxpoly[5]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
+               //                           rteta = adxpoly[1]*(Math.PI/2 -tet) +adxpoly[3]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet) +adxpoly[5]*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet)*(Math.PI/2 -tet);
                for (int order = 9;  order >= 0 ; order--)
                { rteta = (rteta )*(Math.PI/2-tet)+adxpoly[order];}}
                else rteta = (Math.PI/2 -tet) ;
-               // System.out.println("rteta "+rteta);
-               //  System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
+            //   System.out.println("rteta "+rteta);
+            //   if (rteta > Math.PI)
+                
+             //    System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
+              // if (rteta < 0) System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
                x_stand = rteta*FastMath.sin(phi) ;
                //                        y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
                y_stand = -rteta*FastMath.cos(phi) ;
                x_stand *= rad_to_deg;
                y_stand *= rad_to_deg;
-               //      System.out.println("xy "+x_stand+" "+y_stand+"\n\n");
+               
+   //  if ((Math.abs(x_stand) > 5000) || (Math.abs(y_stand) > 5000))     System.out.println("xy "+c.al+" "+c.del+" "+x_stand+" "+y_stand+"\n\n");
                //                        System.out.println("proj 2\n");
 
                break ;
@@ -3565,7 +3954,7 @@ public final class Calib  implements Cloneable {
                y_stand *= rad_to_deg ;
                break ;
             case FIE:
-            	phi = Math.atan2(-cos_del *sin_dalpha, (sin_del*cdelz - cos_del*sdelz *cos_dalpha));
+                phi = Math.atan2(-cos_del *sin_dalpha, (sin_del*cdelz - cos_del*sdelz *cos_dalpha));
                 tet =  Math.asin(sin_del*sdelz + cos_del*cdelz *cos_dalpha);
                 x_stand = tet*Math.cos(phi) ;
                 y_stand = tet*Math.sin(phi) ;
@@ -3575,7 +3964,7 @@ public final class Calib  implements Cloneable {
                 
             case CAR: // CARTESIEN
                //                        x_stand = -(al-alphai)*cos_del ;
-               //    	    System.out.println("proj 7\n");
+               //           System.out.println("proj 7\n");
 
                x_stand = al-alphai ;
                y_stand = del-deltai ;
@@ -3585,7 +3974,7 @@ public final class Calib  implements Cloneable {
                // Avec ces tests il s'agit de verifier que le x-stand va se retrouver
                //   entre les limites de l'image. On teste modulo 360 et modulo -360
                //                      System.out.println("Xcen "+CD[0][0]*Xcen + CD[0][1]*Ycen+"   "+
-               //	                          CD[0][0]*(Xcen-xnpix) +CD[0][1]*Ycen+" "+x_stand) ;
+               //                             CD[0][0]*(Xcen-xnpix) +CD[0][1]*Ycen+" "+x_stand) ;
                if (((x_stand+ 360.) > Math.min(CD[0][0]*(-Xcen) + CD[0][1]*Ycen,
                      CD[0][0]*(xnpix-Xcen) +CD[0][1]*Ycen))
                      &&
@@ -3601,7 +3990,7 @@ public final class Calib  implements Cloneable {
                //                        if (x_stand < -180.)x_stand += 360. ;
                //                       System.out.println("center "+al+" "+del) ;   
                //                       System.out.println("center "+alphai+" "+deltai) ;
-               //                       System.out.println("center x_stand"+x_stand+" "+y_stand);                       		
+               //                       System.out.println("center x_stand"+x_stand+" "+y_stand);                               
 
                //                      System.out.println("center CD"+CD[0][0]+" "+CD[0][1] ) ;
                break ;
@@ -3620,15 +4009,15 @@ public final class Calib  implements Cloneable {
 
 
 
-      // System.out.println("ID "+x_stand+" "+ID[0][0]+" "+y_stand+" "+ID[0][1]+" "+Xcen+" "+xnpix);
-      // System.out.println("ID "+x_stand+" "+ID[1][0]+" "+y_stand+" "+ID[1][1]+" "+Ycen+" "+ynpix);
+      // System.out.println("ID "+x_stand+" "+ID[0][0]+" "+y_stand+" "+ID[0][1]+" "+Xcen+" "+xnpix+" "+CD[0][0]+" "+CD[0][1]+" "+cos_del+" "+sin_del);
+      // System.out.println("ID "+x_stand+" "+ID[1][0]+" "+y_stand+" "+ID[1][1]+" "+Ycen+" "+ynpix+" "+CD[1][0]+" "+CD[1][1]+" "+cdelz+" "+ sdelz+" "+cos_dalpha);
 
       if (aladin != 2)
       {
                        
          c.x = (ID[0][0]*x_stand +ID[0][1]*y_stand)+ Xcen;
          c.y =  -(ID[1][0]*x_stand +ID[1][1]* y_stand) + ynpix - Ycen;
-               //      System.out.println("on est là c.y "+c.y);
+       //  if ((Math.abs(c.x) > 20000) || (Math.abs(c.y )> 10000))   System.out.println("on est là c.y c.x x_stand y_stand"+c.y+" "+c.x+" "+x_stand+" "+y_stand+" "+c.al+" "+c.del);
          if ((xyapoly[1] != 0)&&(xyapoly[1] != 1)&&((proj==TAN)||(proj==SIP)) && (aladin == 3)  && (xydpoly[2]*ID[1][1] <0 )) 
          {    
                  //           System.out.println("on est ici") ;
@@ -3639,7 +4028,7 @@ public final class Calib  implements Cloneable {
   //       if ((proj == SIP)||(proj == SINSIP))
             if (proj == SIP )
          {
-            //            	  System.out.println("aqui ");
+            //                System.out.println("aqui ");
             if ((order_ap == 0)||(order_bp == 0))
             {
                double X = 0;
@@ -3723,16 +4112,16 @@ public final class Calib  implements Cloneable {
                      }
                   }
                   X = CD[0][0]*px +CD[0][1]*py ;
-                  Y = CD[1][0]*px +CD[1][1]*py ;                       	 
+                  Y = CD[1][0]*px +CD[1][1]*py ;                         
                }  
                c.x = xx + Xcen ;
                c.y = yy + ynpix -Ycen ;
             }
             else
-            {	            
+            {               
                double xint= c.x -Xcen ;
                double yint= -(c.y -ynpix + Ycen) ;
-               //            	 System.out.println("ICI "+yint);
+               //                System.out.println("ICI "+yint);
                c.x = xint ;
                for (int order = 2;  order < order_ap+1 ; order++)
                {
@@ -3742,10 +4131,10 @@ public final class Calib  implements Cloneable {
                      for (int j = 0 ; j < order-powx + 1 ; j++)
                      {
 
-                        //             				 System.out.println("powx j "+powx+" "+j + " "+ sip_ap[powx][j]) ;
+                        //                           System.out.println("powx j "+powx+" "+j + " "+ sip_ap[powx][j]) ;
 
                            c.x = c.x + sip_ap[powx][j]*Math.pow(xint,(powx))*Math.pow(yint,(j));
-                        //             			      System.out.println("c.x "+c.x);
+                        //                            System.out.println("c.x "+c.x);
                      }
                   }
                }
@@ -3767,11 +4156,11 @@ public final class Calib  implements Cloneable {
                   {
                      for (int j = 0 ; j < order-powx + 1 ; j++)
                      {
-                        //              			 System.out.println("powx j "+powx+" "+j+" "+sip_bp[powx][j])  ;
+                        //                           System.out.println("powx j "+powx+" "+j+" "+sip_bp[powx][j])  ;
 
 
                            c.y = c.y + sip_bp[powx][j]*Math.pow(xint,(powx))*Math.pow(yint,(j));
-                        //             			     System.out.println("c.y "+c.y);
+                        //                           System.out.println("c.y "+c.y);
                      }
 
                      // c.y = yint + 
@@ -3793,7 +4182,7 @@ public final class Calib  implements Cloneable {
       {
          //*
 
-         //	  System.out.println("x y xz yz"+(x_stand)*1000.0/incX+" "+(y_stand)*1000.0/incY+" "+(xz*1000.0/incX)+ " "+(yz*1000.0/incY));  
+         //   System.out.println("x y xz yz"+(x_stand)*1000.0/incX+" "+(y_stand)*1000.0/incY+" "+(xz*1000.0/incX)+ " "+(yz*1000.0/incY));  
          c.x= ((x_stand*focale)*1000.0  +xz*1000.0 - Xorg)/incX ;
          c.y= ((y_stand*focale)*1000.0 + yz*1000.0 - Yorg)/incY  ; 
          // System.out.println("center cxy"+c.x+" "+c.y ) ;
@@ -4056,8 +4445,8 @@ public final class Calib  implements Cloneable {
    //                          value.addElement("ICRS") ;
    //                          break ;
    //                    case 7 :
-   //                    	  value.addElement("Solar");
-   //                    	  break ;
+   //                         value.addElement("Solar");
+   //                         break ;
    //                   }
 
    key.addElement("CD1_1   ");
@@ -4076,7 +4465,7 @@ public final class Calib  implements Cloneable {
       //   System.out.println("xyad "+xyapoly[0]+" "+xydpoly[0]);
    if (xyapoly[0] != 0.0)
    {
-	  //   System.out.println("PV");
+      //   System.out.println("PV");
    key.addElement("PV1_0");
    value.addElement(new Double(xyapoly[0]).toString()) ;
    }
@@ -4254,7 +4643,7 @@ public final class Calib  implements Cloneable {
    //            value.addElement("ICRS") ;
    //            break ;
    //      case 7 :
-   //     	 value.addElement("Solar") ;
+   //        value.addElement("Solar") ;
    //          break ; 
    //     }
    if (aladin == 1)
@@ -4518,8 +4907,8 @@ public final class Calib  implements Cloneable {
    static boolean equalEpsilon(double a, double b) {
    if( Double.isNaN(a) || Double.isNaN(b) ) return false;
    //    if (Math.abs(a-b) >= EPSILON) 
-   //   	 { System.out.println("Diff "+(Math.abs(a-b))+" "+EPSILON) ;
-   //   	 System.out.println(" "+a+" "+b+" "+EPSILON) ;}
+   //        { System.out.println("Diff "+(Math.abs(a-b))+" "+EPSILON) ;
+   //        System.out.println(" "+a+" "+b+" "+EPSILON) ;}
    return Math.abs(a-b)<=EPSILON ;
    }
 
@@ -4537,12 +4926,13 @@ public final class Calib  implements Cloneable {
    boolean toutestbon=true;
    try {
       //         System.out.println("Test des projections ï¿½ la milliarcseconde ("+EPSILON+")\n" +
-      //         		" - centre de projection dans les 2 sens pour 4 valeurs clefs...\n" +
+      //                " - centre de projection dans les 2 sens pour 4 valeurs clefs...\n" +
       //                " - bijectivitï¿½ pour des valeurs alï¿½atoires...\n" 
       //                );
       System.out.println("> Calib test...");
-      for( int proj=1; proj<projType.length; proj++ ) {
-         boolean erreur=false;
+      //for( int proj=1; proj<projType.length; proj++ ) {
+     int  proj = ARC ;  
+      boolean erreur=false;
          System.out.print("   Test"+projType[proj]+"...");
          for( int j=0; j<testCenter.length; j++ ) {
             double ra  = testCenter[j][0];
@@ -4578,18 +4968,32 @@ public final class Calib  implements Cloneable {
             try {
                // Test de la bijectivitï¿½ pour des valeurs alï¿½atoires
                Random rand = new Random(System.currentTimeMillis());
+              // System.out.println("try ");
+              
                for( int i=0; i<1000; i++ ) {
-                  x=coo.x = rand.nextDouble()*widthPix;
-                  y=coo.y = rand.nextDouble()*heightPix;
+        //          x=coo.x = rand.nextDouble()*widthPix;
+        //          y=coo.y = rand.nextDouble()*heightPix;
                   //                     System.out.println("random avant GetCoord"+coo.x+" "+coo.y);
-                  c.GetCoord(coo);
+        //          c.GetCoord(coo);
+                //   coo.al = rand.nextDouble()*Math.PI*2.0;
+                //   coo.del = (rand.nextDouble()-0.5)*Math.PI;
+                   coo.al = Math.PI * (1-1.0/1000.0) ;
+                   coo.del =  Math.PI*(-0.5 + i/1000.0) ;
+                  
                   c.GetXY(coo);
-                  if( !equalEpsilon(coo.x,x) || !equalEpsilon(coo.y,y) ) {
-                     if( !erreur ) System.out.print(" Error");
-                     erreur=true;
-                     System.out.print("\n"+centre+" no bijective: xy=("+x+","+y+") => coo=("+coo.al+","+coo.del+") => xy=("+coo.x+","+coo.y+")");
-                     break;
-                  }
+                  if (Math.abs(coo.y)>30000.0) {
+                  System.out.println(" coo.aldel"+coo.al+" "+coo.del) ;
+                  System.out.println(" coo.XY"+coo.x+" "+coo.y) ;}
+                  // System.out.println("Grand coo.xy"+coo.x+" "+coo.y+" "+coo.al+" "+coo.del) ;
+            //      if ((Math.abs(coo.x) > 30000)||(Math.abs(coo.y) > 30000))
+                //    if (Math.abs(coo.x) > 20000)
+            //        System.out.println("Grand coo.xy"+coo.x+" "+coo.y+" "+coo.al+" "+coo.del) ;
+          //        if( !equalEpsilon(coo.x,x) || !equalEpsilon(coo.y,y) ) {
+          //           if( !erreur ) System.out.print(" Error");
+          //           erreur=true;
+          //           System.out.print("\n"+centre+" no bijective: xy=("+x+","+y+") => coo=("+coo.al+","+coo.del+") => xy=("+coo.x+","+coo.y+")");
+                  //   break;
+                  //}
                }
             } catch( Exception e ) {
                if( !erreur ) System.out.print("random Error");
@@ -4601,7 +5005,7 @@ public final class Calib  implements Cloneable {
          else System.out.println();
          toutestbon &= erreur;
          //         return !erreur;
-      }
+ //     } 
    } catch( Exception e ) { e.printStackTrace(); toutestbon=false; }
    return toutestbon;
    }

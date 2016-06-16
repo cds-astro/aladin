@@ -153,7 +153,7 @@ public class TabRgb extends JPanel implements ActionListener {
       outputField.addKeyListener( new KeyAdapter() {
          public void keyReleased(KeyEvent e) { resumeWidgets(); }
       });
-      dirPanel.add(browse);
+      if( Aladin.aladin.configuration.isLookAndFeelJava() ) dirPanel.add(browse);
       c.gridwidth=GridBagConstraints.REMAINDER;
       pCenter.add(dirPanel,c);
 

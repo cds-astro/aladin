@@ -65,7 +65,7 @@ public final class FrameMocGenCat extends FrameMocGenImg {
       double x=0;
       try {
          String s = radius.getText().trim();
-         if( s.length()>0 ) x=Server.getAngle(s,Server.RADIUSs);
+         if( s.length()>0 ) x=Server.getAngleInArcmin(s,Server.RADIUSs)/60.;
       } catch( Exception e ) {
          radius.setForeground(Color.red);
          throw e;
@@ -80,6 +80,11 @@ public final class FrameMocGenCat extends FrameMocGenImg {
          Plan [] ps = new Plan[]{ getPlan(ch[0]) };
          int res=getOrder();
          double radius = getRadius();
+         String sRadius = "";
+         if( radius!=0 ) {
+            sRadius=" -radius="+Coord.getUnit(radius);
+         }
+         a.console.printCommand("cmoc -order="+res+sRadius+" "+labelList(ps));
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,radius,0,0,Double.NaN);
          hide();
 
@@ -87,9 +92,8 @@ public final class FrameMocGenCat extends FrameMocGenImg {
          if( a.levelTrace>=3 ) e.printStackTrace();
          Aladin.warning("MOC generation failed !");
       }
-
    }
-
+   
    @Override
    protected void adjustWidgets() { };
 }

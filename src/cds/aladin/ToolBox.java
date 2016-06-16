@@ -465,13 +465,6 @@ SwingWidgetFinder, Widget {
             // Suppression des objets selectionnes s'il y en a
             if( aladin.view.isDelSelObjet() ) { aladin.view.delSelObjet(); break; }
 
-            // Suppression de toutes les vues
-            //            else if( e.isShiftDown() && !aladin.view.isFree() && aladin.view.isMultiView() ) {
-            //               aladin.view.freeAll();
-            //               aladin.view.repaintAll();
-            //               aladin.localisation.setTextAffichage("");
-            //             }
-
             // Reset complet
             else if( e.isShiftDown() ) {
                aladin.reset();

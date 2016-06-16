@@ -20,14 +20,16 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
-import javax.swing.JRadioButton;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
 /**
  * Gestion de la fenetre associee a la creation d'un plan arithmétic
@@ -163,7 +165,10 @@ public final class FrameMocOperation extends FrameRGBBlink {
          String label = s.substring(0,3)+" "+pList[0].label+(pList.length==1?""
                :pList[1].label+(pList.length==2?"":"..."));
 
-         a.calque.newPlanMoc(label,pList,fct,0);
+         Plan [] ps = new Plan[ pList.length ];
+         for( int i=0; i<ps.length; i++ ) ps[i] = pList[i];
+         a.console.printCommand("cmoc -"+PlanMocAlgo.getOpName(fct)+" "+FrameMocGenImg.labelList(ps));
+                  a.calque.newPlanMoc(label,pList,fct,0);
          hide();
 
       } catch ( Exception e ) {
@@ -172,7 +177,7 @@ public final class FrameMocOperation extends FrameRGBBlink {
       }
 
    }
-
+   
    @Override
    protected void adjustWidgets() { };
 }

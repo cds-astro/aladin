@@ -164,14 +164,14 @@ public class WidgetControl {
    }
 
    // Retourne l'absisse courante du widget en coordonnée absolue du parent (origine HG)
-   private int getX() {
+   public int getX() {
       if( parent==null ) return x;
       if( aDroite()  ) return parent.getWidth()-x;
       return x;
    }
 
    // Retourne l'ordonnée courante du widget en coordonnée absolue du parent (origine HG)
-   private int getY() {
+   public int getY() {
       if( parent==null ) return y;
       if( enBas() ) return parent.getHeight()-y;
       return y;
@@ -222,6 +222,9 @@ public class WidgetControl {
       return flagMove || flagControl /* || isCollapsed && draggedDone */;
    }
 
+   /** True si le widget est affiché sous forme d'une icône */
+   public boolean isCollapsed() { return collapsable; }
+   
    /** True si la souris se trouve sur le widget (collapsé ou non).
     * Dans le cas où une entrée ou une sortie du widget est détectée
     * et que d'autre part le widget implante l'interface MouseListener, l'évènement

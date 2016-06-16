@@ -159,6 +159,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("target"))     { context.setTarget(val);
       } else if (opt.equalsIgnoreCase("targetRadius")){ context.setTargetRadius(val);
       } else if (opt.equalsIgnoreCase("label"))      { context.setLabel(val);
+      } else if (opt.equalsIgnoreCase("filter"))     { context.setFilter(val);
       } else if (opt.equalsIgnoreCase("hdu"))        { context.setHDU(val);
       } else if (opt.equalsIgnoreCase("publisher") || opt.equalsIgnoreCase("creator"))  {
          context.setCreator(val);
@@ -577,6 +578,7 @@ public class HipsGen {
                   "   cmRed              Colormap parameters for HiPS red component (min [mid] max [fct])\n" +
                   "   cmGreen            Colormap parameters for HiPS green component (min [mid] max [fct])\n" +
                   "   cmBlue             Colormap parameters for HiPS blue component (min [mid] max [fct])\n" +
+                  "   filter=gauss       Gaussian filter applied on the 3 input HiPS (RGB action)" + "\n" +
                   "   tileTypes          List of tile format to copy (MIRROR action)" + "\n" +
                   "   maxThread=nn       Max number of computing threads" + "\n" +
                   "   target=ra +dec     Default HiPS target (ICRS deg)" + "\n"+

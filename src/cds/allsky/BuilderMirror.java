@@ -48,6 +48,7 @@ public class BuilderMirror extends BuilderTiles {
    private boolean isUpdate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié
    private boolean flagIsUpToDate=false;      // true s'il s'agit d'une maj d'un HiPS déjà copié et déjà à jour
    private String dateRelease="";       // Date of last release date of the local copy
+   private boolean isLocal=false;       // true s'il s'agit d'une copie locale
 
    public BuilderMirror(Context context) {
       super(context);
@@ -58,6 +59,12 @@ public class BuilderMirror extends BuilderTiles {
    // Valide la cohérence des paramètres
    public void validateContext() throws Exception {
       validateOutput();
+      
+      // Détermination d'une éventuelle copie locale
+      String dir = context.getInputPath();
+      isLocal = !dir.startsWith("http://") && !dir.startsWith("https://") 
+            && !dir.startsWith("ftp://");
+      if( isLocal ) context.info("Local mirror copy");
 
       // Chargement des propriétés distantes
       prop = new MyProperties();
@@ -310,12 +317,17 @@ public class BuilderMirror extends BuilderTiles {
       try { return copy(fileIn,fileOut); } catch( Exception e) {};
       return 0;
    }
+   
+   private int copy(String fileIn, String fileOut) throws Exception {
+      if( isLocal ) return copyLocal(fileIn,fileOut);
+      return copyRemote(fileIn,fileOut);
+   }
 
    // Copie d'un fichier distant (url) vers un fichier local, uniquement si la copie locale évenutelle
    // et plus ancienne et/ou de taille différente à l'originale.
    // Vérifie si possible que la taille du fichier copié est correct.
    // Effectue 3 tentatives consécutives avant d'abandonner
-   private int copy(String fileIn, String fileOut) throws Exception {
+   private int copyRemote(String fileIn, String fileOut) throws Exception {
       File fOut;
       long lastModified;
       long size=-1;
@@ -384,6 +396,49 @@ public class BuilderMirror extends BuilderTiles {
       return buf==null ? 0 : buf.length;
 
    }
+   
+   // Copie d'un fichier local (path) vers un fichier local, uniquement si la copie évenutelle
+   // et plus ancienne et/ou de taille différente à l'originale.
+   private int copyLocal(String fileIn, String fileOut) throws Exception {
+      File fOut,fIn;
+      long lastModified;
+      long size=-1;
+      int n;
+
+      fIn = new File(fileIn);
+      lastModified = fIn.lastModified();
+      fOut = new File(fileOut);
+
+      // Si même taille et date antérieure ou égale => déjà fait
+      if( fOut.exists() && fOut.length()>0 ) {
+         size = fIn.length();
+         if( size==fOut.length() && lastModified<=fOut.lastModified() ) {
+            return 0;  // déjà fait
+         }
+      }
+
+      // Copie par bloc
+      size=0L;
+      RandomAccessFile f = null;
+      RandomAccessFile g = null;
+      byte [] buf=new byte[512];
+      try {
+         Util.createPath(fileOut);
+         f = new RandomAccessFile(fileOut, "rw");
+         g = new RandomAccessFile(fileIn, "r");
+         while( (n=g.read(buf))>0 ) { f.write(buf,0,n); size+=n; }
+         f.close(); f=null;
+         g.close(); g=null;
+      } finally { 
+         if( f!=null ) try{ f.close(); } catch( Exception e) {} 
+         if( g!=null ) try{ g.close(); } catch( Exception e) {} 
+      }
+      fOut.setLastModified(lastModified);
+
+      return (int)size;
+
+   }
+
 
    // Dans le cas d'un mirroir complet, on copie également les noeuds. En revanche pour un miroir partiel
    // on regénérera l'arborescence à la fin

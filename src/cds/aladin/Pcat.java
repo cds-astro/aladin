@@ -1040,8 +1040,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
 
          // Deux tentatives... cochonnerie de JAVA
          if( dis==null ) {
-            //            try { dis = new MyInputStream(u.openStream()); }
-            //            catch( Exception efirst ) { dis = new MyInputStream(u.openStream()); }
             try { dis =Util.openStream(u); }
             catch( Exception efirst ) { dis =Util.openStream(u); }
          }

@@ -152,25 +152,26 @@ public class BuilderTiles extends Builder {
          validateOrder(context.getOutputPath());
       }
 
+      //      if(  !context.isColor() ) {
+
+      String img = context.getImgEtalon();
+      if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
+
+      // mémorisation des cuts et blank positionnés manuellement
+      double [] memoCutOrig = context.getCutOrig();
+      boolean hasAlternateBlank = context.hasAlternateBlank();
+      double blankOrig = context.getBlankOrig();
+      int bitpixOrig = context.getBitpixOrig();
+
+      // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK ainsi que pour le setTarget
+      if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
+      context.info("Reference image: "+img);
+      try { context.setImgEtalon(img); }
+      catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
+
+
       // Image de référence en couleur => pas besoin de plus
       if(  !context.isColor() ) {
-
-         String img = context.getImgEtalon();
-         if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
-
-         // mémorisation des cuts et blank positionnés manuellement
-         double [] memoCutOrig = context.getCutOrig();
-         boolean hasAlternateBlank = context.hasAlternateBlank();
-         double blankOrig = context.getBlankOrig();
-         int bitpixOrig = context.getBitpixOrig();
-
-         // Image étalon à charger obligatoirement pour BSCALE, BZERO, BITPIX et BLANK
-         //      String img = context.getImgEtalon();
-         //      if( img==null ) img = context.justFindImgEtalon( context.getInputPath() );
-         if( img==null ) throw new Exception("No source image found in "+context.getInputPath());
-         context.info("Reference image: "+img);
-         try { context.setImgEtalon(img); }
-         catch( Exception e) { context.warning("Reference image problem ["+img+"] => "+e.getMessage()); }
 
 
          if( bitpixOrig==-1 ) {

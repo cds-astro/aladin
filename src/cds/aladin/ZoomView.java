@@ -556,7 +556,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
                }
                c = v.getCooCentre();
                if( c== null ) {
-//                  System.out.println("Gag ++ ");
+                  System.err.println("ZommView.drawHipsControl bug++ (v.getCooCenter() returns null ! => switch in SIN");
                   proj = v.pref.projd = new Projection("allsky",Projection.WCS,0,0,60*4,60*4,250,250,500,500,0,false,Calib.SIN,Calib.FK5);
                   v.pref.projd.frame = aladin.localisation.getFrame();
                   v.projLocal = v.pref.projd.copy();

@@ -1574,17 +1574,25 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    }
 
 
-   /** Libération des vues sélectionnées */
+   /** Libération des vues sélectionnées, à moins que la dernière vue soit
+    * synchronisée, auquelle cas, on ne supprime que celle-là 
+    */
    protected void freeSelected() {
       StringBuffer cmd = new StringBuffer();
-      for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
-         if( !viewSimple[i].selected ) continue;
-         cmd.append(" "+getIDFromNView(i));
-         viewSimple[i].free();
+      ViewSimple v = getLastClickView();
+      if( aladin.match.isProjSync() ) {
+         cmd.append(" "+getIDFromNView(v.n));
+         v.free();
+      } else {
+         for( int i=0; i<ViewControl.MAXVIEW; i++ ) {
+            if( !viewSimple[i].selected ) continue;
+            cmd.append(" "+getIDFromNView(i));
+            viewSimple[i].free();
+         }
+         viewMemo.freeSelected();
       }
       aladin.console.printCommand("rm "+cmd);
       sauvegarde();
-      viewMemo.freeSelected();
    }
 
    /** Libération des vues spécifiées */

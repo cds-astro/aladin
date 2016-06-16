@@ -361,7 +361,7 @@ public final class TreeView extends JFrame implements WindowListener, ActionList
       // on utilisera peut-etre une marque GLU
       URL url;
       // radius en degrés
-      double radiusDeg = Server.getAngle(radius,Server.RADIUS)/60.0;
+      double radiusDeg = Server.getAngleInArcmin(radius,Server.RADIUS)/60.0;
       try {
         if( server instanceof ServerAladin ) {
 			url = new URL("http://aladin.u-strasbg.fr/cgi-bin/nph-HTTP.cgi?out=qualifier&position="+URLEncoder.encode(getDeciCoord(target))+"&radius="+radiusDeg+"&mode=xml_votable");

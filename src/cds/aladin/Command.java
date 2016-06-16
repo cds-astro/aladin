@@ -100,35 +100,36 @@ public final class Command implements Runnable {
 
    static final String execHelp =
          "\n" +
-               "#PLANE:#                              #VIEW:#\n" +
-               "   @get servers [target] [radius]      @mview [1|2|4|9|16] [n]\n" +
-               "   @load filename                      @cview [-plot] [[x] v]\n" +
-               "   @select x1 [x2..]                   @select v1 [v2..]\n" +
-               "   @set [x1] [x2..] prop=value         @zoom ...\n" +
-               "   @hide|@show [x1] [x2..]              @northup|@unnorthup [v1] [v2..]\n" +
-               "   @mv|@copy x1 x2                      @thumbnail [radius]\n" +
-               "   @rm [x1] [x2..] | -all              @lock|@unlock [v1] [v2..]\n" +
-               "   @export [-fmt] x filename           @match [-scale] [v|x|off]\n" +
-               "                                      @mv|@copy v1 v2\n" +
-               "#IMAGE:#                                @rm [v1] [v2..] | -lock\n" +
-               "   @cm [x1|v1...] [colorMap...]        @save [-fmt] [-lk] [WxH] [filename]\n" +
-               "   @RGB|@RGBdiff [x1|v1...]             @coord|@object\n" +
+               "#PLANE:#                                   #VIEW:#\n" +
+               "   @get servers [target] [radius]           @mview [1|2|4|9|16] [n]\n" +
+               "   @load filename                           @cview [-plot] [[x] v]\n" +
+               "   @select x1 [x2..]                        @select v1 [v2..]\n" +
+               "   @set [x1] [x2..] prop=value              @zoom ...\n" +
+               "   @hide|@show [x1] [x2..]                   @northup|@unnorthup [v1] [v2..]\n" +
+               "   @mv|@copy x1 x2                           @thumbnail [radius]\n" +
+               "   @rm [x1] [x2..] | -all                   @lock|@unlock [v1] [v2..]\n" +
+               "   @export [-fmt] x filename                @match [-scale] [v|x|off]\n" +
+               "                                           @mv|@copy v1 v2\n" +
+               "#IMAGE:#                                     @rm [v1] [v2..] | -lock\n" +
+               "   @cm [x1|v1...] [colorMap...]             @save [-fmt] [-lk] [WxH] [file]\n" +
+               "   @RGB|@RGBdiff [x1|v1...]                  @coord|@object\n" +
                "   @blink|@mosaic [x1] [x2...]\n" +
-               "   @+ | @- | @* | @/ ...                #CATALOG:#\n" +
-               "   @norm [-cut] [x]                    @filter ...\n" +
-               "   @conv [x] ...                       @addcol ...\n" +
-               "   @kernel ...                         @xmatch x1 x2 [dist] ...\n" +
-               "   @resamp x1 x2 ...                   @cplane [name]\n" +
-               "   @crop [x|v] [[X,Y] WxH]             @search {expr|+|-}\n" +
-               "   @flipflop [x|v] [V|H]               @tag|@untag\n" +
-               "   @contour [nn] [nosmooth] [zoom]     @select -tag\n" +
+               "   @+ | @- | @* | @/ ...                     #CATALOG:#\n" +
+               "   @norm [-cut] [x]                         @filter ...\n" +
+               "   @conv [x] ...                            @addcol ...\n" +
+               "   @kernel ...                              @xmatch x1 x2 [dist] ...\n" +
+               "   @resamp x1 x2 ...                        @cplane [name]\n" +
+               "   @crop [x|v] [[X,Y] WxH]                  @search {expr|+|-}\n" +
+               "   @flipflop [x|v] [V|H]                    @tag|@untag\n" +
+               "   @contour [nn] [nosmooth] [zoom]          @select -tag\n" +
                "   @grey|@bitpix [-cut] [x] BITPIX\n" +
-               "  \n" +
-               "#GRAPHIC# #TOOL:#                       #FOLDER:#\n" +
-               "   @draw [color] fct(param)            @md [-localscope] [name]\n" +
-               "   @grid [on|off]                      @mv|@rm [name]\n" +
-               "   @reticle [on|off]                   @collapse|@expand [name]\n" +
-               "   @overlay [on|off]                   @show|@hide [name]\n" +
+               "                                         #FOLDER:#\n" +
+               "#GRAPHIC# #TOOL:#                              @md [-localscope] [name]\n" +
+               "   @draw [color] fct(param)                 @mv|@rm [name]\n" +
+               "   @grid [on|off]                           @collapse|@expand [name]\n" +
+               "   @reticle [on|off]\n" +
+               "   @overlay [on|off]                      #COVERAGE:#\n" +
+               "                                           @cmoc [-order=o] [x1|v1...]\n" +
                " \n" +
                "#MISCELLANEOUS:#\n" +
                "   @backup filename     @status       @sync       @demo [on|off|end]  @pause [nn]\n" +
@@ -860,7 +861,7 @@ public final class Command implements Runnable {
       if( s.endsWith("'") ) s = s.substring(0,s.length()-1)+"m";
       else if( s.endsWith("\"") ) s = s.substring(0,s.length()-1)+"s";
 
-      radius.append(""+Server.getAngle(s,Server.RADIUS));
+      radius.append(""+Server.getAngleInArcmin(s,Server.RADIUS));
       tX.append( new String(a,0,j));
       return true;
    }
@@ -2123,7 +2124,11 @@ public final class Command implements Runnable {
       try {
          
          int order=-1;
-         int command=0; // 0-union, 1-inter, 2-diff, 3-comp
+         double radius=0;
+         double thresHold=Double.NaN;
+         double pixMin=Double.NaN;
+         double pixMax=Double.NaN;
+         int command=PlanMocAlgo.UNION; 
          
          // Extraction d'un éventuel paramètre -order=nn
          int i = param.indexOf("-order=");
@@ -2134,20 +2139,48 @@ public final class Command implements Runnable {
             param = i==param.length() ? "" : param.substring(i).trim();
          }
          
-         // Extraction d'un éventuel paramètre "commande"
-         // -inter[section], -union, -diff[erence], -comp[lement]
-         i=param.indexOf("-union"); 
-         if( i<0 ) { if( (i=param.indexOf("-inter"))>=0 ) command=1; }
-         if( i<0 ) { if( (i=param.indexOf("-diff"))>=0 ) command=2; }
-         if( i<0 ) { if( (i=param.indexOf("-comp"))>=0 ) command=3; }
+         // Extraction d'un éventuel paramètre -threshold=0.x
+         i = param.indexOf("-threshold=");
          if( i>=0 ) {
-            int j=i;
+            int j=i+12;
             for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            thresHold = Double.parseDouble( param.substring(j,i));
             param = i==param.length() ? "" : param.substring(i).trim();
          }
-
-//         System.out.println("order="+order+" param=["+param+"]");
          
+         // Extraction d'un éventuel paramètre -radius=xxunit (par défaut en ARCSEC)
+         i = param.indexOf("-radius=");
+         if( i>=0 ) {
+            int j=i+8;
+            for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            radius = Server.getAngleInArcmin( param.substring(j,i),Server.RADIUSs );
+            param = i==param.length() ? "" : param.substring(i).trim();
+         }
+         
+         // Extraction d'un éventuel paramètre -pixelCut="min max"
+         i = param.indexOf("-pixelCut=");
+         if( i>=0 ) {
+            int j=i+10;
+            for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            for( ; i<param.length() && Character.isSpace( param.charAt(i) ); i++ );
+            for( ; i<param.length() && !Character.isSpace( param.charAt(i) ); i++ );
+            String c = Tok.unQuote( param.substring(j,i));
+            Tok tok = new Tok( c );
+            try { pixMin =  Double.parseDouble( tok.nextToken() ); } catch(Exception e) {}
+            try { pixMax =  Double.parseDouble( tok.nextToken() ); } catch(Exception e) {}
+            param = i==param.length() ? "" : param.substring(i).trim();
+         }
+         
+         // Extraction d'un éventuel paramètre "-union, -inter ..."
+         i = param.indexOf(' ');
+         if( i<0 ) i=param.length();
+         String opName = param.substring(0,i);
+         if( opName.startsWith("-") ) {
+            command = PlanMocAlgo.getOp(opName);
+            if( command>0 ) param=param.substring(i);
+         }
+         
+         // Récupération des plans concernés
          Plan [] p = getPlan(param,2);
             
          int type = -1;
@@ -2167,13 +2200,23 @@ public final class Command implements Runnable {
             if( label!=null ) pMoc.setLabel(label);
             
          // Pour les MOCs
-         } if( type==Plan.ALLSKYMOC ) {
-            System.out.println("Je dois faire une commande "+command+" sur les plans MOCs passés en paramètre");
+         } else if( type==Plan.ALLSKYMOC ) {
+            boolean flagCheckOrder = order==-1;
+            PlanMoc [] pList = new PlanMoc[p.length];
+            for( int j=0; j<p.length; j++ ) {
+               pList[j] = (PlanMoc)p[j];
+               if( flagCheckOrder && pList[j].getMocOrder()>order ) order=pList[j].getMocOrder();
+            }
+            a.calque.newPlanMoc(label, pList, command, order);
             
+         // Pour les cartes de probabilités
+         } else  if( !Double.isNaN(thresHold) && type==Plan.ALLSKYIMG ) {
+            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN,thresHold);
+           
          // Pour des catalogues ou des images
          } else {
             if( order==-1 ) order=13;
-            a.calque.newPlanMoc(label,p,order,0,Double.NaN,Double.NaN,Double.NaN);
+            a.calque.newPlanMoc(label,p,order,radius,pixMin,pixMax,Double.NaN);
          }
          a.calque.repaintAll();
          
@@ -2491,7 +2534,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("circle") ) {
 
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double r = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
                newobj = new Cercle(plan,c,r);
             } else {
                double r = parseDouble(p[2]);
@@ -2502,8 +2545,8 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("ellipse") ) {
             double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double semiMA = Server.getAngle(p[2],Server.RADIUSd)/60.;
-               double semiMI = Server.getAngle(p[3],Server.RADIUSd)/60.;
+               double semiMA = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
+               double semiMI = Server.getAngleInArcmin(p[3],Server.RADIUSd)/60.;
                newobj = new Ellipse(plan,c,semiMA,semiMI,angle);
             } else {
                double semiMA = parseDouble(p[2]);
@@ -2520,8 +2563,8 @@ public final class Command implements Runnable {
             }
             if( label==null ) try { label = p[5]; } catch( Exception e) {};
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUSd)/60.;
-               double h = Server.getAngle(p[3],Server.RADIUSd)/60.;
+               double w = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
+               double h = Server.getAngleInArcmin(p[3],Server.RADIUSd)/60.;
                newobj = new Box(plan,c,w,h,angle,label);
             } else {
                double w = parseDouble(p[2]);
@@ -2533,7 +2576,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("vector") ) {
             double angle = parseDouble(p[3]);
             if( drawMode==DRAWRADEC ) {
-               double w = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double w = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
                newobj = new Vecteur(plan,c,w,angle);
             } else {
                double w = parseDouble(p[2]);
@@ -2545,7 +2588,7 @@ public final class Command implements Runnable {
             double startAngle = parseDouble(p[3]);
             double angle   = parseDouble(p[4]);
             if( drawMode==DRAWRADEC ) {
-               double r = Server.getAngle(p[2],Server.RADIUSd)/60.;
+               double r = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
                newobj = new Arc(plan,c,r,startAngle,angle);
             } else {
                double r = parseDouble(p[2]);
@@ -2557,8 +2600,8 @@ public final class Command implements Runnable {
             double startAngle = parseDouble(p[4]);
             double angle   = parseDouble(p[5]);
             if( drawMode==DRAWRADEC ) {
-               double r1 = Server.getAngle(p[2],Server.RADIUSd)/60.;
-               double r2 = Server.getAngle(p[3],Server.RADIUSd)/60.;
+               double r1 = Server.getAngleInArcmin(p[2],Server.RADIUSd)/60.;
+               double r2 = Server.getAngleInArcmin(p[3],Server.RADIUSd)/60.;
                newobj = new Pickle(plan,c,r1,r2,startAngle,angle);
             } else {
                double r1 = parseDouble(p[2]);

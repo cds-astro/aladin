@@ -1865,7 +1865,7 @@ public class Calque extends JPanel implements Runnable {
 
    /** Crée un plan MOC à la résolution indiquée à partir d'une liste d'images et de catalogues. */
    protected int newPlanMoc(String label,Plan [] p,int res,double radius, 
-         double pixMin, double pixMax,double threeshold) {
+         double pixMin, double pixMax,double threshold) {
       int n;
       PlanMoc pa;
 
@@ -1873,7 +1873,7 @@ public class Calque extends JPanel implements Runnable {
 
       n=getStackIndex(label);
       label = prepareLabel(label);
-      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax,threeshold);
+      plan[n] = pa = new PlanMocGen(aladin,label,p,res,radius,pixMin,pixMax,threshold);
       if( isNewPlan(label) ) { n=bestPlace(n); pa.folder=0; }
       suiteNew(pa);
       return n;
@@ -3341,7 +3341,7 @@ public class Calque extends JPanel implements Runnable {
       double rad=-1;
       if( radius!=null && radius.length()>0 ) {
          try {
-            rad = Server.getAngle(radius, Server.RADIUS )/60.;
+            rad = Server.getAngleInArcmin(radius, Server.RADIUS )/60.;
          } catch( Exception e ) { e.printStackTrace(); }
       }
       else if( gSky!=null && gSky.getRadius()!=-1 ) rad=gSky.getRadius();

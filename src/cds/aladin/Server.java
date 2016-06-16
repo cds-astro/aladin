@@ -756,7 +756,7 @@ public void layout() {
     * @param modeRad l'unité par défaut
     * @return le rayon en arcmin
     */
-   static protected double getAngle(String r,int modeRad) {
+   static protected double getAngleInArcmin(String r,int modeRad) {
       double fct=1.0;		// Fct multiplicatif en fct de l'unite
 
 // System.out.println("getAngle["+r+"]");
@@ -817,13 +817,13 @@ public void layout() {
 
       // Le Champ est exprimé en Rayon (un seul paramètre)
       if( i<0 ) {
-         rm = getAngle(s,RADIUS); // Ca colle direct pour rm
+         rm = getAngleInArcmin(s,RADIUS); // Ca colle direct pour rm
          hm=wm = 2*rm;            // On prend la boite à l'extérieur du cercle pour hm,wm
 
       // Le Champ est exprimé en Rectangle (2 paramètres)
       } else {
-         wm = getAngle(s.substring(0,i),RADIUS);  // On récupère la largeur
-         hm = getAngle(s.substring(i+1),RADIUS);  // On récupère la hauteur
+         wm = getAngleInArcmin(s.substring(0,i),RADIUS);  // On récupère la largeur
+         hm = getAngleInArcmin(s.substring(i+1),RADIUS);  // On récupère la hauteur
          rm = Math.sqrt(wm*wm/4+hm*hm/4);         // On prend le cercle englobant la boite
       }
 

@@ -364,8 +364,10 @@ public final class FrameColorMap extends JFrame implements MouseListener {
       if( getAllButton!=null )   getAllButton.setEnabled( fullPixel && !hasAll );
       if( applyOnAll!=null )     applyOnAll.setEnabled( hasSeveralImg && fullPixel || pimg.planMultiCCD!=null );
       
-      applyOnAll.setText(pimg.planMultiCCD!=null ? CMAPPLYCCD : CMAPPLYALL);
-      Util.toolTip(applyOnAll, pimg.planMultiCCD!=null ? CMAPPLYCCDTIP : CMAPPLYALLTIP, true);
+      if( applyOnAll!=null ) {
+         applyOnAll.setText(pimg.planMultiCCD!=null ? CMAPPLYCCD : CMAPPLYALL);
+         Util.toolTip(applyOnAll, pimg.planMultiCCD!=null ? CMAPPLYCCDTIP : CMAPPLYALLTIP, true);
+      }
 
       if( rFull!=null ) {
          rFull.setSelected( fullPixel );

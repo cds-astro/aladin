@@ -398,7 +398,7 @@ public final class FrameNewCalib extends JFrame
 
   // Mise a jour du champ rm en fonction du champ xyS et r
    private void updaterm() {
-      double x = Server.getAngle(xyS.getText(),Server.RADIUS);
+      double x = Server.getAngleInArcmin(xyS.getText(),Server.RADIUS);
       if( r<=0 ) r=1024;
       rm = x*r;
    }

@@ -191,7 +191,7 @@ public class Zoom extends JPanel {
     * Le calcul est opéré sur la vue par défaut */
    protected double getNearestZoomFromRadius(String radius) {
       try {
-         double deg = Server.getAngle(radius, Server.RADIUS)/60.;
+         double deg = Server.getAngleInArcmin(radius, Server.RADIUS)/60.;
          ViewSimple v = aladin.view.getCurrentView();
          double pixelSize = v.getProj().getPixResDelta();
          double nbPixel = deg / pixelSize;

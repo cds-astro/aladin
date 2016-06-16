@@ -113,7 +113,7 @@ public class FrameMocGenImg extends FrameRGBBlink {
    
    JComboBox mocOrder;
    JTextField minRange,maxRange;
-   JTextField threeshold;
+   JTextField threshold;
    JCheckBox rangeCheckBox;
    
    @Override
@@ -204,6 +204,12 @@ public class FrameMocGenImg extends FrameRGBBlink {
          int res=getOrder();
          double pixMin=getMin();
          double pixMax=getMax();
+         
+         String pixelCut="";
+         if( !Double.isNaN(pixMin) || !Double.isNaN(pixMax) ) {
+            pixelCut = " -pixelCut=\""+pixMin+" "+pixMax+"\"";
+         }
+         a.console.printCommand("cmoc -order="+res+pixelCut+" "+labelList(ps));
          a.calque.newPlanMoc(ps[0].label+" MOC",ps,res,0,pixMin,pixMax,Double.NaN);
          hide();
 
@@ -213,6 +219,20 @@ public class FrameMocGenImg extends FrameRGBBlink {
       }
 
    }
+   
+   /** Construit une liste de noms de plans, évenutellement quotés afin
+    * de pouvoir afficher la commande script qui va bien
+    * @param ps liste des plans concernés
+    */
+   static protected String labelList(Plan [] ps) {
+      StringBuilder s = null;
+      for( Plan p : ps ) {
+         if( s==null ) s = new StringBuilder( Tok.quote(p.label) );
+         else  s.append(" "+Tok.quote(p.label));
+      }
+      return s.toString();
+   }
+
 
    @Override
    protected void adjustWidgets() { };

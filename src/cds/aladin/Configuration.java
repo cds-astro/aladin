@@ -163,7 +163,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    static String NOTACTIVATED = "Not activated";
    static String ACTIVATED = "Activated";
    static String JAVA = "Java";
-   static String OPSYS = "OperatingSystem";
+   static String OPSYS = "OS native";
 
    // Les labels des boutons
    static String TITLE,DEFDIR,DEFDIRH,LANGUE,LANGUEH,LANGCONTRIB,CSVCHAR,CSVCHARH,PIXB,/*PIXH,*/PIX8,PIXF,
@@ -855,7 +855,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne true s'il faut un slider de controle de la densité des sources (PlanBGCat) */
    protected boolean isSliderDensity() {
       String s = get(SLDENS);
-      return s!=null && !s.equals("off");
+      return s==null || !s.equals("off");
    }
 
    /** Retourne true s'il faut un slider de controle de cube */
@@ -885,7 +885,9 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
    /** Retourne true si le mode Look & Feel est java (et non operating system) */
    public boolean isLookAndFeelJava() {
       String s = get(LOOKANDFEEL);
-      return s==null || s.equals(JAVA);
+      if( s==null && Aladin.macPlateform ) return false;
+      if( s==null || s.equals(JAVA) ) return true;
+      return false;
    }
 
 
@@ -1457,7 +1459,8 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
       modeItem = modeChoice.getSelectedIndex();
 
       s = get(LOOKANDFEEL);
-      if( s == null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
+      if( s==null && Aladin.macPlateform )  lfChoice.setSelectedIndex(1);
+      if( s==null || s.equals(JAVA) ) lfChoice.setSelectedIndex(0);
       else lfChoice.setSelectedIndex(1);
 
       //      s = get(PIXEL);

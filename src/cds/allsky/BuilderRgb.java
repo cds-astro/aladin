@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import cds.aladin.CanvasColorMap;
+import cds.aladin.KernelList;
 import cds.aladin.MyProperties;
 import cds.aladin.PlanImage;
 import cds.aladin.Tok;
@@ -33,6 +34,7 @@ public class BuilderRgb extends BuilderTiles {
    private int maxOrder=-1;
    private String frame=null;
    private int missing=-1;
+   private boolean flagGauss;
    
    private int statNbFile;
 
@@ -206,6 +208,10 @@ public class BuilderRgb extends BuilderTiles {
 
       // détermination de la zone à calculer
       if( context.mocArea!=null ) context.moc = context.moc.intersection( context.mocArea );
+      
+      // Faut-il un filtre gaussien
+      if( context.gaussFilter ) context.info("Gauss filter activated...");
+      flagGauss = context.gaussFilter;
 
       context.writeMetaFile();
    }
@@ -391,13 +397,18 @@ public class BuilderRgb extends BuilderTiles {
    // génération du RGB à partir des composantes
    private Fits createLeaveRGB(Fits [] in) throws Exception {
       
+      // Application d'un filtre ?
+      if( flagGauss ) {
+         for( int i=0; i<3; i++ ) gaussian(in[i]);
+      }
+      
       double gap=0;
       double range=256;
       if( Fits.isTransparent(format==Constante.TILE_PNG ? Fits.PIX_255 : Fits.PIX_256) ) {
          range = 255;
          gap = 1;
       }
-
+      
       Fits rgb = new Fits(width,width,0);
       double [] pix = new double[3];
       int i=0;
@@ -447,6 +458,50 @@ public class BuilderRgb extends BuilderTiles {
 
       return rgb;
    }
+   
+   
+   static final double [] kernel = KernelList.createFastGaussienMatrix(2, 0.8);
+   
+   private void gaussian(Fits in) {
+      if( in==null ) return;
+      double [] inPixels = new double[in.width*in.height];
+      int x,y,i;
+      for( i=y=0; y<in.height; y++ ) {
+         for( x=0; x<in.width; x++ ) inPixels[i++] = in.getPixelDouble(x, y);
+      }
+      double [] outPixels = new double[ inPixels.length ];
+      convolveAndTranspose(kernel, inPixels, outPixels, in.width, in.height);
+      convolveAndTranspose(kernel, outPixels, inPixels, in.height, in.width);
+      for( i=y=0; y<in.height; y++ ) {
+         for( x=0; x<width; x++ ) in.setPixelDouble(x,y, inPixels[i++]);
+      }
+   }
+   
+   /**
+    * Calcul d'une convolution par une gaussienne en 2 passes (voir compute())
+    * @param gap Juste pour mettre à jour le pourcentage de progression en tenant compte du calcul précédent
+    */
+   protected void convolveAndTranspose(double [] k, double [] inPixels, double [] outPixels, int width, int height) {
+      int cols = k.length;
+      int cols2 = cols/2;
+      
+      for( int y=0; y<height; y++ ) {
+         int index = y;
+         int ioffset = y*width;
+         for( int x=0; x<width; x++ ) { 
+            double pixval=0;
+            for( int col=-cols2; col<=cols2; col++ ){
+               int ix = x+col;
+               if( ix<0 ) ix=0;
+               else if( ix>=width ) ix = width-1;
+               pixval += inPixels[ioffset+ix] * k[col+cols2];
+            }
+            outPixels[index] = pixval;
+            index+=height;
+         }
+      }
+   }
+
 
 
 

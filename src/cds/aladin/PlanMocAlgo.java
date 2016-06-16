@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
+import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /** Génération d'un MOC de manière algorythmique
@@ -39,8 +40,19 @@ public class PlanMocAlgo extends PlanMoc {
    static final int TOORDER      = 5;
    
    
-   static private final String [] FCT = { "union","inter","sub","diff","compl","ord" };
-   static private String getFct(int fct) { return FCT[fct]; }
+   static private final String [] OPERATION = { "union","inter","sub","diff","compl","ord" };
+   
+   /** Retourne le nom qui correspond à une opération */
+   static protected String getOpName(int op) { return OPERATION[op]; }
+   
+   /** Retourne le code de l'opération. Un tiret en préfixe peut être ou non présent
+    * @param s la chaine qui décrit l'opération
+    * @return le code de l'opération ou -1 si non trouvé
+    */
+   static int getOp(String s) {
+      if( s.startsWith("-") ) s=s.substring(1);
+      return Util.indexInArrayOf(s, OPERATION, true);
+   }
 
    /** Création d'un Plan MOC à partir d'une opération (op) et de plans MOCs (pList) 
     * Rq : méthode synchrone (pas de threading)
@@ -86,7 +98,7 @@ public class PlanMocAlgo extends PlanMoc {
       flagProcessing=false;
       if( moc.getSize()==0 ) {
          error="Empty MOC";
-         flagOk=false;
+         flagOk=true;
       }  else flagOk=true;
       setActivated(flagOk);
       aladin.calque.repaintAll();
@@ -139,8 +151,8 @@ public class PlanMocAlgo extends PlanMoc {
       flagProcessing=false;
       if( moc.getSize()==0 ) {
          error="Empty MOC";
-         flagOk=false;
-      }  else flagOk=true;
+         flagOk=true;
+      } else flagOk=true;
       setActivated(flagOk);
       aladin.calque.repaintAll();
 
@@ -154,7 +166,7 @@ public class PlanMocAlgo extends PlanMoc {
       if( op==TOORDER ) return p1.label+":"+order;
       String lab2= pList.length>1 ? pList[1].label : null;
       String lab3= pList.length>2 ? pList[2].label : null;
-      return p1.label + " "+ getFct(op) + (lab2==null ? " " : lab2 + (lab3==null?"":" ..."));
+      return p1.label + " "+ getOpName(op) + (lab2==null ? " " : lab2 + (lab3==null?"":" ..."));
    }
 }
 

@@ -45,7 +45,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 
 import cds.tools.Util;
 
@@ -1597,37 +1596,9 @@ Runnable, SwingWidgetFinder, Widget {
 
       lastYMax = y;
       if( a.configuration.isHelp() && beginnerHelp && nbPlanVisible<=4 ) drawBeginnerHelp( g, nbPlanVisible, y);
-
-      long t = System.currentTimeMillis();
-      if( t-300>ot ) {
-         ot=t;
-         SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-
-               // On met a jour la fenetre des proprietes en indiquant
-               // s'il y a ou non des plans en train d'etre charge
-               // afin d'eviter les clignotement de Properties
-               // intempestifs
-               Properties.majProp(slideBlink?1:0);
-
-               // On met a jour la fenetre de la table des couleurs
-               if( a.frameCM!=null ) a.frameCM.majCM();
-
-               // Activation ou desactivation des boutons du menu principal
-               // associes a la presence d'au moins un plan
-               a.setButtonMode();
-
-               // On met a jour la fenetre des contours
-               if( a.frameContour!=null ) a.frameContour.majContour();
-
-               // On met a jour la fenetre des RGB et des Blinks
-               if( a.frameRGB!=null )   a.frameRGB.maj();
-               if( a.frameBlink!=null ) a.frameBlink.maj();
-               if( a.frameArithm!=null && a.frameArithm.isVisible() ) a.frameArithm.maj();
-            }
-         });
-      }
-
+      
+      
+      a.resumeVariousThinks();
 
       // Reaffichage du status du plan sous la souris
       if( planIn!=null ) setInfo(planIn);
@@ -1636,9 +1607,7 @@ Runnable, SwingWidgetFinder, Widget {
       if( slideBlink ) startBlink();
    }
 
-   private long ot=0;
-
-   private boolean slideBlink=false;
+   protected boolean slideBlink=false;
 
    /** Spécifie si au dernier retraçage de la pile au-moins un plan est en clignotement */
    protected void setSlideBlink(boolean flag) { slideBlink=flag; }

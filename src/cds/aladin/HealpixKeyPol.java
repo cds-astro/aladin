@@ -21,8 +21,6 @@
 package cds.aladin;
 
 
-import healpix.essentials.FastMath;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -30,6 +28,7 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 
 import cds.tools.pixtools.CDSHealpix;
+import healpix.essentials.FastMath;
 
 /**
   * Gère un losange Healpix pour un PlanBG
@@ -194,7 +193,7 @@ protected int loadFits(String filename) throws Exception {
          if( b==null || b[0]==null || b[1]==null || b[2]==null || b[3]==null ) return 0;
          if( isBehindSky(b,v) ) return 0;
 
-         if( parente<8 && isTooLarge(b) ) {
+         if( parente<8 && mustBeDivided(b) ) {
             int  n=drawPolarisationFils(g,v,parente+1);
             resetTimer();
 //            resetTimeAskRepaint();

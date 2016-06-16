@@ -217,6 +217,7 @@ public class ServerMocQuery extends Server  {
        URL url;
        try {
            url = new URL(baseUrl);
+           aladin.trace(4,"ServerMocQuery.submitThread: url="+url);
        }
        catch(MalformedURLException mue) {
            defaultCursor();
@@ -229,7 +230,6 @@ public class ServerMocQuery extends Server  {
            Aladin.warning("No MOC selected !");
            return;
        }
-       MyInputStream mis;
        try {
            MultiPartPostOutputStream.setTmpDir(Aladin.CACHEDIR);
            String boundary = MultiPartPostOutputStream.createBoundary();

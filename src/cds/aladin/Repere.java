@@ -206,7 +206,7 @@ public class Repere extends Position {
 
    /** Positionne un rayon (avec possibilité d'une unité) */
    protected void setRadius(String r) {
-      radius = Server.getAngle(r,Server.RADIUS)/60.;
+      radius = Server.getAngleInArcmin(r,Server.RADIUS)/60.;
       //      setWithLabel(true);
    }
 

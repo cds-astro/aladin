@@ -20,14 +20,15 @@
 
 package cds.xml;
 
-import cds.aladin.*;
-import cds.tools.Util;
-
-import java.util.Stack;
-import java.util.Hashtable;
+import java.io.IOException;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Stack;
 import java.util.StringTokenizer;
-import java.io.*;
+
+import cds.aladin.Aladin;
+import cds.aladin.MyInputStream;
+import cds.tools.Util;
 
 /** XML parser.
  * Simple XML parser for well-formed XML documents in ASCII, without validation
@@ -140,6 +141,7 @@ public final class XMLParser {
       try { rep=xmlBeforeTag(); }
       catch( Exception e ) {
          if( Aladin.levelTrace>=3 ) System.out.println("XML parse error at line "+line);
+         if( Aladin.levelTrace>3 ) e.printStackTrace();
          throw e;
       }
       return rep;
@@ -265,19 +267,27 @@ public final class XMLParser {
    }
 
    static private final char EOF = 26;
+   
+//   int nn=0;
 
    /** Get the next character from the stream
-    *
     * @return char
     */
    private char xmlGetc() {
       if( offset>=max ) {
          try { max=dis.read(tmp); }
-         catch( IOException e ) { setError("Stream error: "+e); return EOF; }
+         catch( IOException e ) { 
+//            System.out.println("read "+nn+" bytes");
+            if( Aladin.levelTrace>3 ) e.printStackTrace();
+            setError("Stream error: "+e); return EOF;
+         }
          if( max==-1 ) return EOF;   // end of stream
          offset=0;
       }
-      return (char)tmp[offset++];
+      char c = (char)tmp[offset++];
+//      nn++;
+//      System.out.print(c);
+      return c;
    }
 
    /** Return true if the charater is a space (' ', '\t', '\n' or '\r')

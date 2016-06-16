@@ -118,6 +118,7 @@ public class Context {
    protected String redInfo;                 // Information de colormap lors de la génération d'un HIPS RGB (composante red)
    protected String greenInfo;               // Information de colormap lors de la génération d'un HIPS RGB (composante green)
    protected String blueInfo;                // Information de colormap lors de la génération d'un HIPS RGB (composante blue)
+   protected boolean gaussFilter=false;      // Filtrage gaussien lors de la génération d'un HiPS RGB (pour améliorer le rendu du fond)
 
    protected int order = -1;                 // Ordre maximal de la boule HEALPix à générer
    public int minOrder= -1;                  // Ordre minimal de la boule HEALPix à générer (valide uniquement pour les HiPS HpxFinder)
@@ -162,6 +163,7 @@ public class Context {
       tileTypes = null;
       outputRGB = null;
       redInfo=blueInfo=greenInfo=null;
+      gaussFilter = false;
       plansRGB = new String [3];
       cmsRGB = new String [3];
    }
@@ -250,6 +252,10 @@ public class Context {
    public void setTileOrder(int tileOrder) { this.tileOrder = tileOrder; }
    public void setFrame(int frame) { this.frame=frame; }
    public void setFrameName(String frame) { this.frame=getFrameVal(frame); }
+   public void setFilter(String s) throws Exception {
+      if( s.equalsIgnoreCase("gauss") )  gaussFilter=true;
+      else throw new Exception("Unknown filter ["+s+"] (=> only \"gauss\" are presently supported)");
+   }
    public void setSkyValName(String s ) {
       skyvalName=s;
       if( s==null ) return;
@@ -318,7 +324,7 @@ public class Context {
    public String checkHipsId(String s,boolean verbose) {
 
       String auth,id;
-      boolean flagQuestion=true;  // true si l'identificateur utilise un ? après l'authority ID, et non un /
+      boolean flagQuestion=false;  // true si l'identificateur utilise un ? après l'authority ID, et non un /
       
       if( s==null && prop!=null )  s = getIdFromProp(prop);
       
@@ -645,7 +651,7 @@ public class Context {
 
       } catch( Exception e ) { setDepth(1); }
 
-      // Il peut s'agit d'un fichier .hhh (sans pixel)
+      // Il peut s'agir d'un fichier .hhh (sans pixel)
       try { initCut(fitsfile); } catch( Exception e ) {
          Aladin.trace(4,"initFromImgEtalon :"+ e.getMessage());
       }
@@ -654,7 +660,9 @@ public class Context {
       // Positionnement initiale du HiPS par défaut
       if( target==null ) {
          Coord c = fitsfile.calib.getImgCenter();
-         setTarget(Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5));
+         String s = Util.round(c.al,5)+" "+(c.del>=0?"+":"")+Util.round(c.del,5);
+         setTarget(s);
+         info("setTarget => "+s);
          if( targetRadius==null ) {
             double r = Math.max( fitsfile.calib.getImgHeight(),fitsfile.calib.getImgWidth());
             setTargetRadius(Util.round(r,5)+"");

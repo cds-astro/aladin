@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -79,6 +77,7 @@ import cds.astro.AstroMath;
 import cds.moc.Healpix;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
+import healpix.essentials.FastMath;
 
 /**
  * Gestionnaire de la vue. Il s'agit d'afficher les plans acifs (voir
@@ -4560,6 +4559,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * mode 0x1 image, 0x2 overlay
     */
    protected void drawForeGround(Graphics g,int mode, boolean flagBordure) {
+      if( aladin.levelTrace==6 ) return;
       Rectangle clip = g.getClipBounds();
       int m = isFullScreen()?0:2;
       g.setClip(m, m, rv.width-2*m, rv.height-2*m);
@@ -4810,8 +4810,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    public  boolean isAllSky() {
       Projection proj;
       if( pref==null || !Projection.isOk(proj=getProj()) ) return false;
-      return getTailleDE()==proj.getDeMax()
-            || getTailleRA()==proj.getRaMax();
+      return getTailleDE()>=proj.getDeMax() || getTailleRA()>=proj.getRaMax();
+//      return getTailleDE()>=180 || getTailleRA()>=180;
    }
 
    /** Retourne la taille en degrés de la vue courante */
@@ -5575,24 +5575,30 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          boolean fullScreen = isFullScreen();
 
          // Détermination du pas en RA et en DE en fonction du champ de vue
-         int nb = fullScreen ? 6 : NBCELL[ViewControl.getLevel(aladin.view.getModeView())];
-         double rd = getTailleDE()*60.;
-         if( rd==0. || Double.isNaN(rd) ) rd=60*360.;
-         double pasd = goodPas(rd/nb,PASD)/60.;
-         double ra=getTailleRA()*60.;
-         if( Math.abs(cosd)<0.000001 ) ra=360*60;
-         else ra = rd/cosd;
+         double pasa, pasd;
+         if( isAllSky() ) {
+            pasa=30;
+            pasd=15;
+         } else {
+            int nb = fullScreen ? 6 : NBCELL[ViewControl.getLevel(aladin.view.getModeView())];
+            double rd = getTailleDE()*60.;
+            if( rd==0. || Double.isNaN(rd) ) rd=60*360.;
+            pasd = goodPas(rd/nb,PASD)/60.;
+            double ra=getTailleRA()*60.;
+            if( Math.abs(cosd)<0.000001 ) ra=360*60;
+            else ra = rd/cosd;
 
-         double pasa=0;
-         // Est-ce que un pole est proche du  champ de vue ?
-         c.al = 0; c.del = 90; c = aladin.localisation.frameToICRS(c);
-         boolean in1 = isInView(c.al,c.del,500);
-         c.al = 0; c.del = -90; c = aladin.localisation.frameToICRS(c);
-         boolean in2 = isInView(c.al,c.del,500);
-         if( in1 || in2 )  pasa=30;
-         else {
-            if( ra>360*60. ) ra=360*60.;
-            pasa = goodPas(ra/nb,PASA)/60.;
+            pasa=0;
+            // Est-ce que un pole est proche du  champ de vue ?
+            c.al = 0; c.del = 90; c = aladin.localisation.frameToICRS(c);
+            boolean in1 = isInView(c.al,c.del,500);
+            c.al = 0; c.del = -90; c = aladin.localisation.frameToICRS(c);
+            boolean in2 = isInView(c.al,c.del,500);
+            if( in1 || in2 )  pasa=30;
+            else {
+               if( ra>360*60. ) ra=360*60.;
+               pasa = goodPas(ra/nb,PASA)/60.;
+            }
          }
 
          // Est-ce que le Nord et sur le coté ?
@@ -6661,6 +6667,7 @@ g.drawString(s,10,100);
       if( fullScreen )  {
          //         aladin.fullScreen.drawMesures(g);
          //         aladin.fullScreen.showMesures();
+         aladin.resumeVariousThinks();
          aladin.fullScreen.drawIcons(g);
 
          //         drawOverlayControls(g);

@@ -326,7 +326,7 @@ public final class MyInputStream extends FilterInputStream {
 
          int c[] = new int[16];
          // On charge qq octets dans le tampon si nécessaire
-         if( inCache-offsetCache<c.length ) loadInCache(c.length);
+         if( inCache<c.length ) loadInCache(c.length);
 
          for( int i=0; i<c.length; i++ ) {
             c[i] = (cache[offsetCache+i]) & 0xFF;

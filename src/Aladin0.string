@@ -1666,11 +1666,11 @@ UPHELPH Switch on/off the beginner help. Help new Aladin users to discover progr
 #UPTAGCENTERH Activate this selector to automatically center tags ("Tag" tool button) on the barycentre of the closest object.
 UPSLIDERS	Control sliders
 UPSLIDERH	Add or remove interface control sliders
-FILEDIALOG Dialog look&feel
+FILEDIALOG File dialog style
 FILEDIALOGHELP Look&Feel of the file selector dialog window. 
 FILEDIALOGJAVA	Java library
 FILEDIALOGNATIVE	Operating system
-FILEDIALOG.fr Look&Feel
+FILEDIALOG.fr Style de fenêtres
 FILEDIALOGHELP.fr Rendu (Look&feel) des fenêtres de dialogue de sélection des fichiers et des répertoires.
 FILEDIALOGJAVA.fr Library Java
 FILEDIALOGNATIVE.fr Système d'exploitation

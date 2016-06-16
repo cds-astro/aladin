@@ -23,13 +23,6 @@ import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.ComboBoxModel;
-import javax.swing.ListModel;
-import javax.swing.MutableComboBoxModel;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
-
 import cds.tools.Util;
 
 /**
@@ -160,8 +153,8 @@ public class KernelList {
             if( i<0 ) cmd="fwhm";  // par défaut c'est la FWHM
             else cmd = s1.substring(0,i).trim();
             String value = s1.substring(i+1).trim();
-                 if( cmd.equalsIgnoreCase("fwhm") )   res[0] = Server.getAngle(value,Server.RADIUS)/60.;
-            else if( cmd.equalsIgnoreCase("sigma") )  res[1] = Server.getAngle(value,Server.RADIUS)/60.;
+                 if( cmd.equalsIgnoreCase("fwhm") )   res[0] = Server.getAngleInArcmin(value,Server.RADIUS)/60.;
+            else if( cmd.equalsIgnoreCase("sigma") )  res[1] = Server.getAngleInArcmin(value,Server.RADIUS)/60.;
             else if( cmd.equalsIgnoreCase("radius") ) res[2] = Integer.parseInt(value);
             else return null;
          }
@@ -208,7 +201,7 @@ public class KernelList {
       double [] p = computeGaussParam(fwhm,sigma,pixelRes,radius);
       fwhm=p[0]; sigma=p[1]; radius=(int)p[2];
       if( radius>Kernel.MAXRADIUS ) throw new Exception("Too large kernel [radius="+radius+"]");
-      String s = "fwhm="+Coord.getUnit(fwhm)+" sigma="+Coord.getUnit(sigma)+" pixel="+Coord.getUnit(pixelRes)+" radius="+radius;
+//      String s = "fwhm="+Coord.getUnit(fwhm)+" sigma="+Coord.getUnit(sigma)+" pixel="+Coord.getUnit(pixelRes)+" radius="+radius;
 //      Aladin.aladin.command.printConsole(s);
 //      Aladin.trace(4,"Kernel.createGaussienMatrix() fwhm="+Coord.getUnit(fwhm)+" sigma="+Coord.getUnit(sigma)+" pixelRes="+Coord.getUnit(pixelRes)+" radius="+radius);
       Kernel k = new Kernel();

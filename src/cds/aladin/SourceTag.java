@@ -79,7 +79,7 @@ public class SourceTag extends Source  {
       String y = " ";
       
       if( !(planBase instanceof PlanBG) ) {
-         plan.projd.getXY(c);
+         planBase.projd.getXY(c);
          x = Util.myRound(""+(c.x+0.5),4);
          y = Util.myRound(""+(planBase.naxis2-c.y+0.5));
       }

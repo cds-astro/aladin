@@ -2085,11 +2085,15 @@ final public class TableParser implements XMLConsumer {
       } else {
          while( cur<end && (sep=isColSep(ch[cur],cs))==0 && ch[cur]!=rs ) cur++;
       }
+      
+      // Dans le cas d'oubli du caractère de fin de ligne sur la dernière ligne
+      int plusUn = 0;
+      if( cur==end && cur>0 && ch[cur-1]!=rs ) plusUn=1;
 
       String value;
       if( excelCSV ) {
          if( cur-start>1 && ch[start]=='"' && ch[cur-1]=='"' ) value = getStringTrim(ch,start+1,cur-start-2);
-         else value = getStringTrim(ch,start,cur-start);
+         else value = getStringTrim(ch,start,cur-start+plusUn);
       } else {
 
          // Dans le cas d'un séparateur espace, on va shifter tous les blancs suivants
@@ -2098,7 +2102,7 @@ final public class TableParser implements XMLConsumer {
             while( cur<end && ch[cur]==' ' && ch[cur]!=rs ) cur++;
             cur--;
          }
-         value = getStringTrim(ch,start,cur-start);
+         value = getStringTrim(ch,start,cur-start+plusUn);
       }
 
       // s'il y a un séparateur avant la première valeur, on doit simplement l'ignorer
@@ -2109,8 +2113,8 @@ final public class TableParser implements XMLConsumer {
             String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" extra row value=\""+value+"\") => ignored\n";
             aladin.command.printConsole(s);
          } else record[row]=value;
-      }
-      else {
+         
+      } else {
          if( vRecord==null ) vRecord = new Vector<String>();
          vRecord.addElement(value);
       }
@@ -2133,9 +2137,19 @@ final public class TableParser implements XMLConsumer {
 
       // Extraction de chaque champ
       int un=0;
-      while( cur<end && ch[cur]!=rs ) { cur=getField(ch,cur+un,end,rs,cs,nbRecord); un=1; }
+      while( cur<end && ch[cur]!=rs ) { 
+         cur=getField(ch,cur+un,end,rs,cs,nbRecord); 
+         un=1; 
+      }
+      
+      // Dans le cas d'oubli du caractère de retour à la ligne sur la dernière ligne, et qu'en
+      // plus le dernier champ est vide
+      if( record!=null && row==record.length-1 && cur==end && cur>0 && ch[cur-1]!=rs ) {
+         System.out.println("dernier champ vide avec absence de retour à la ligne");
+         record[row++]="";
+      }
+      
       if( record!=null && row<record.length &&  !(row==1 && record[0].equals("[EOD]")) ) {
-         //         throw new Exception("Not aligned CSV catalog section\n(row="+row+"/"+record.length+" record "+nbRecord+")");
          String s = "Not aligned CSV catalog (record="+(nbRecord+1)+" missing rows nbRow="+row+"/"+record.length+") => ignored"
                + (filename!=null?filename:"");
          aladin.command.printConsole(s);

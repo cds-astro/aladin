@@ -19,7 +19,11 @@
 
 package cds.tools.pixtools;
 
-import healpix.essentials.*;
+import healpix.essentials.HealpixBase;
+import healpix.essentials.Pointing;
+import healpix.essentials.RangeSet;
+import healpix.essentials.Scheme;
+import healpix.essentials.Vec3;
 
 import java.util.ArrayList;
 
@@ -318,31 +322,31 @@ public final class CDSHealpix {
 
 
 
-   public static void main(String argv[]) {
-      try {
-         String survey="int gal 35-80 flux";
-         int order=2;
-         try { order = Integer.parseInt(argv[1]); }
-         catch( Exception e) {}
-         long nside = pow2( order );
-         long size = 12 * nside*nside;
-         double sideDeg = 1.1* Math.sqrt(2) * pixRes(nside)/3600;
-         String skyview = "java XXX -Duser.language=en Float Survey=\""+survey+"\" Projection=Sin Pixels=300 Sampler=NN Size="+sideDeg;
-         String batch   = "-cp Skyview.jar skyview.executive.Batch Skyview-batch.txt";
-         String jar     = "-jar Skyview.jar";
-         for( int pix = 0; pix< size; pix++ ) {
-            double [] polar = pix2ang_nest(nside, pix);
-            double [] radec = polarToRadec( polar );
-            if( pix==0 ) {
-               String s1 = skyview.replace("XXX",jar);
-               String s2 = skyview.replace("XXX",batch);
-               System.out.println("Test:    "+s1+" position=\""+radec[0]+" "+radec[1]+"\" output=Test");
-               System.out.println("Command: "+s2+"\n");
-            }
-            System.out.println("position=\""+radec[0]+" "+radec[1]+"\" output=Img"+pix);
-         }
-      } catch( Exception e) { e.printStackTrace(); }
-   }
+//   public static void main(String argv[]) {
+//      try {
+//         String survey="int gal 35-80 flux";
+//         int order=2;
+//         try { order = Integer.parseInt(argv[1]); }
+//         catch( Exception e) {}
+//         long nside = pow2( order );
+//         long size = 12 * nside*nside;
+//         double sideDeg = 1.1* Math.sqrt(2) * pixRes(nside)/3600;
+//         String skyview = "java XXX -Duser.language=en Float Survey=\""+survey+"\" Projection=Sin Pixels=300 Sampler=NN Size="+sideDeg;
+//         String batch   = "-cp Skyview.jar skyview.executive.Batch Skyview-batch.txt";
+//         String jar     = "-jar Skyview.jar";
+//         for( int pix = 0; pix< size; pix++ ) {
+//            double [] polar = pix2ang_nest(nside, pix);
+//            double [] radec = polarToRadec( polar );
+//            if( pix==0 ) {
+//               String s1 = skyview.replace("XXX",jar);
+//               String s2 = skyview.replace("XXX",batch);
+//               System.out.println("Test:    "+s1+" position=\""+radec[0]+" "+radec[1]+"\" output=Test");
+//               System.out.println("Command: "+s2+"\n");
+//            }
+//            System.out.println("position=\""+radec[0]+" "+radec[1]+"\" output=Img"+pix);
+//         }
+//      } catch( Exception e) { e.printStackTrace(); }
+//   }
 
 
 

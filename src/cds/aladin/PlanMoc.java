@@ -136,8 +136,7 @@ public class PlanMoc extends PlanBGCat {
       return moc1;
    }
 
-
-
+   protected int getMocOrder() { return moc.getMocOrder(); }
 
    /** Retourne le Moc */
    protected HealpixMoc getMoc() { return moc; }

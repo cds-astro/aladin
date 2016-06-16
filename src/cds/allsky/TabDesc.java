@@ -130,7 +130,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(inputField, c);
       c.gridx++;
-      pCenter.add(browseInput, c);
+      if( Aladin.aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseInput, c);
 
       // Répertoire destination
       c.insets.top = 1;
@@ -142,7 +142,7 @@ public class TabDesc extends JPanel implements ActionListener {
       c.gridx++;
       pCenter.add(outputField, c);
       c.gridx++;
-      pCenter.add(browseOutput, c);
+      if( Aladin.aladin.configuration.isLookAndFeelJava() ) pCenter.add(browseOutput, c);
       
       // Label
       c.insets.bottom = 20;
