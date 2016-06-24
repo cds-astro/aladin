@@ -1947,8 +1947,11 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       aladin.view.zoomview.repaint();
       return true;
    }
-
+   
+   protected boolean flagGoto=false;
+   
    public void gotoAnimation(final Coord from, final Coord to) {
+      
       final ViewSimple v = getCurrentView();
       if( v.locked || to==null ) return;
       final double zoom = v.zoom;
@@ -1960,12 +1963,13 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       int i=0;
       boolean encore=true;
       double fct=0;
+      flagGoto=true;
       while( encore ) {
 
          switch(mode) {
             case 0:
                if( z<0.1 ) i++;
-               if( z>0.05 ) z=z/1.05;
+               if( z>0.08 ) z=z/1.05;
                else mode=1;
                break;
             case 1:
@@ -1989,6 +1993,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          //                System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
          //                Util.pause(75);
       }
+      flagGoto=false;
       gotoThere(to,zoom,true);
    }
    //     }

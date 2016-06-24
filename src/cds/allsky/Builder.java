@@ -63,6 +63,7 @@ public abstract class Builder {
          case RGB:       return new BuilderRgb(context);
          case TREE:      return new BuilderTree(context);
          case CONCAT:    return new BuilderConcat(context);
+         case APPEND:    return new BuilderAppend(context);
          case CUBE:      return new BuilderCube(context);
          case DETAILS:   return new BuilderDetails(context);
          case MAPTILES:  return new BuilderMapTiles(context);

@@ -41,6 +41,7 @@ public enum Action {
    CLEANWEIGHT ("Delete all WEIGHT tiles"),
    CLEANDATE ("Delete all tiles older than a specifical date"),
    TREE      ("(Re)build HiPS tree structure from already existing tiles"),
+   APPEND    ("Append new images/cubes to an already existing HiPS"),
    CONCAT    ("Concatenate one HiPS to another HiPS"),
    CUBE      ("Create a HiPS cube based on a list of HiPS"),
    DETAILS   ("Adapt HiPS index for supporting the \"detail table\" facility"),

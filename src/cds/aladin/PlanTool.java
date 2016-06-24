@@ -71,35 +71,46 @@ public class PlanTool extends PlanCatalog {
       flagOk     = true;
       askActive  = true;
    }
-
-   public void updatePhotMan(Obj o) {
-      if( legPhotMan==null ) createPhotManuelLegende();
-
-      String [] val = { o.id, o.raj+"", o.dej+"", o.getRadius()+"", "","","","","","","" };
-      StringBuffer rep = new StringBuffer();
-      for( String s : val ) {
-         if( rep.length()>0 ) rep.append('\t');
-         rep.append(s);
+   
+   /** Retourne le SourcePhot associé à la mesure photométrique "Repere r", ou null si encore inconnue dans le planTool */
+   public SourcePhot getPhot(Repere r) {
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( !(o instanceof SourcePhot) ) continue;
+         if( ((SourcePhot)o).rep == r ) return (SourcePhot)o;
       }
-      o.id=rep.toString();
-      if( o instanceof Source ) ((Source)o).leg = legPhotMan;
-
-      pcat.setObjetFast(o);
-      aladin.view.newView(1);
+      return null;
    }
 
-   private void createPhotManuelLegende() {
-      setSourceRemovable(true);
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",    "arcmin^2","" });
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",  "10" });
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",     "2",     "2",     "2",     "2" });
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DESCRIPTION,
-            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
-      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UCD,
-            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
-   }
+//   public void updatePhotMan(Obj o) {
+//      if( legPhotMan==null ) createPhotManuelLegende();
+//
+//      String [] val = { o.id, o.raj+"", o.dej+"", o.getRadius()+"", "","","","","","","" };
+//      StringBuffer rep = new StringBuffer();
+//      for( String s : val ) {
+//         if( rep.length()>0 ) rep.append('\t');
+//         rep.append(s);
+//      }
+//      o.id=rep.toString();
+//      if( o instanceof Source ) ((Source)o).leg = legPhotMan;
+//
+//      pcat.setObjetFast(o);
+//      aladin.view.newView(1);
+//   }
+//
+//   private void createPhotManuelLegende() {
+//      setSourceRemovable(true);
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",    "arcmin^2","" });
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",  "10" });
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",     "2",     "2",     "2",     "2" });
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.DESCRIPTION,
+//            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
+//      legPhotMan = Legende.adjustDefaultLegende(legPhotMan,Legende.UCD,
+//            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
+//   }
 
 //   private void createTagLegende() {
 //      setSourceRemovable(true);
@@ -147,38 +158,21 @@ public class PlanTool extends PlanCatalog {
    protected boolean withSource() { return legPhot!=null; }
 
    public SourceTag addTag(PlanImage planBase,double ra, double dec) {
-      SourceTag o = new SourceTag(this, planBase, ra,dec);
+      SourceTag o = new SourceTag(this, planBase, ra,dec,null);
       pcat.setObjetFast(o);
       aladin.view.newView(1);
       setSourceRemovable(true);
       return o;
-
-      
-//      if( legTag==null ) createTagLegende();
-//
-//      String id = "Tag "+pcat.getNextID();
-//      Coord c = new Coord(ra,dec);
-//      planBase.projd.getXY(c);
-//      String [] val = { id, c.getRA(), c.getDE(), 
-//            Util.myRound(""+(c.x+0.5),4),Util.myRound(""+(planBase.naxis2-c.y+0.5)) };
-//      SourceTag o1 = addTag(id, ra, dec, val);
-//      o1.setShape(Obj.PLUS);
-//      o1.setTag(true);
-//      aladin.view.newView(1);
-//      return o1;
    }
 
-//   private SourceTag addTag(String id,double ra, double dec, String [] value) {
-//      StringBuffer s = new StringBuffer("<&_A>");
-//      for( int i=0; i<value.length; i++ ) {
-//         s.append("\t"+value[i]);
-//      }
-//      SourceTag o = new SourceTag(this,ra,dec,id,s.toString());
-//      o.leg = legTag;
-//      pcat.setObjetFast(o);
-//      return o;
-//   }
-   
+   public SourcePhot addPhotMan(PlanImage planBase,Repere rep) {
+      SourcePhot o = new SourcePhot(this, planBase, rep);
+      pcat.setObjetFast(o);
+      aladin.view.newView(1);
+      setSourceRemovable(true);
+      return o;
+   }
+
    public Source addPhot(PlanImage planBase,double ra, double dec, double []iqe) {
       if( legPhot==null ) createPhotLegende();
 

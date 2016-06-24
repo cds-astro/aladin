@@ -80,6 +80,7 @@ public class Context {
    public double bZeroOrig=0;                // Valeur BZERO d'origine
    public double bScaleOrig=1;               // Valeur BSCALE d'origine
    protected boolean bscaleBzeroOrigSet=false; // true si on a positionné
+   protected boolean flagNoInitEtalon=false;      // true => bloque la maj du cutOrig par estimation automatique
    protected double[] cutOrig;               // Valeurs cutmin,cutmax, datamin,datamax des images originales (valeurs raw)
    protected double[] pixelRangeCut;         // range et cut passé sur la ligne de commande (valeurs physiques)
    public double[] pixelGood=null;           // Plage des valeurs des pixels conservés (valeurs physiques)
@@ -166,6 +167,7 @@ public class Context {
       gaussFilter = false;
       plansRGB = new String [3];
       cmsRGB = new String [3];
+      flagNoInitEtalon=false;
    }
 
    // manipulation des chaines désignant le système de coordonnées (syntaxe longue et courte)
@@ -620,6 +622,7 @@ public class Context {
     * @throws Exception s'il y a une erreur à la lecture du fichier
     */
    protected void initFromImgEtalon() throws Exception {
+      
       // Déja fait ,
       if( lastImgEtalon!=null && lastImgEtalon.equals(imgEtalon)) return;
 
@@ -689,18 +692,21 @@ public class Context {
       if (h > 1024) { h = 1024; y=file.height/2 -512; }
       if (d > 1 ) { d = 1;  z=file.depth/2 - 1/2; }
       if( file.getFilename()!=null ) file.loadFITS(file.getFilename(), 0, x, y, z, w, h, d);
+      
+      if( !flagNoInitEtalon ) {
 
-      double[] cutOrig = file.findAutocutRange();
+         double[] cutOrig = file.findAutocutRange();
 
-      //       cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX... // J'HESITE DE FAIT !!!
+         //       cutOrig[2]=cutOrig[3]=0;  // ON NE MET PAS LE PIXELRANGE, TROP DANGEREUX... // J'HESITE DE FAIT !!!
 
-      // PLUTOT QUE DE NE PAS INITIALISER, ON VA DOUBLER LA TAILLE DE L'INTERVALLE
-      double rangeData   = cutOrig[3] - cutOrig[2];
-      double centerRange = cutOrig[2]/2 + cutOrig[3]/2;
-      if( !Double.isInfinite( centerRange-rangeData ) ) cutOrig[2] = centerRange-rangeData;
-      if( !Double.isInfinite( centerRange+rangeData ) ) cutOrig[3] = centerRange+rangeData;
+         // PLUTOT QUE DE NE PAS INITIALISER, ON VA DOUBLER LA TAILLE DE L'INTERVALLE
+         double rangeData   = cutOrig[3] - cutOrig[2];
+         double centerRange = cutOrig[2]/2 + cutOrig[3]/2;
+         if( !Double.isInfinite( centerRange-rangeData ) ) cutOrig[2] = centerRange-rangeData;
+         if( !Double.isInfinite( centerRange+rangeData ) ) cutOrig[3] = centerRange+rangeData;
 
-      setCutOrig(cutOrig);
+         setCutOrig(cutOrig);
+      }
    }
 
    static private int nbFiles;  // nombre de fichiers scannés
@@ -848,6 +854,20 @@ public class Context {
       } else {
          this.skyvalName = fieldName.toUpperCase();
       }
+   }
+   
+   /** Postionnement direct des valeurs du skyval, notamment pour un CONCAT
+    * @param s contient les 4 valeurs du cutOrig[]
+    * @throws Exception
+    */
+   public void setSkyValues(String s) throws Exception {
+      Tok tok = new Tok(s);
+      cutOrig = new double[4];
+      for( int i=0; tok.hasMoreTokens(); i++ ) {
+         try { cutOrig[i] = Double.parseDouble( tok.nextToken() );
+         } catch( Exception e) { throw new Exception("hips_skyval_values parsing error ["+s+"]"); }
+      }
+      flagNoInitEtalon=true;
    }
 
    public void setExpTime(String expTime) {
@@ -1750,10 +1770,6 @@ public class Context {
 
       if( fmt.indexOf("fits")>=0) {
          if( bitpix!=-1 ) setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,bitpix+"");
-         if( bitpixOrig!=-1 ) setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,bitpixOrig+"");
-         //         setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, isMap() ? "none" : "bilinear");
-         //         setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
-         //               skyvalName==null ? "none" : skyvalName.equals("true")?"hips_estimation":"fits_keyword");
       }
       //      setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
       //            isMap() ? "none" : mode==Mode.ADD ? "add" :

@@ -106,8 +106,8 @@ public class BuilderConcat extends BuilderTiles {
          context.info("Index MOC updated");
 
          // Faut-il lancer également une commande PROGEN
-         f = new File(outputPathIndex+Util.FS+"Norder"+(context.order-1));
-         if( f.isDirectory() ) {
+         f = new File(outputPathIndex+Util.FS+"metadata.xml");
+         if( f.exists() ) {
             BuilderDetails  b = new BuilderDetails(context);
             b.validateContext();
             b.run();

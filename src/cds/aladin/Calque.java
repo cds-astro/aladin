@@ -1662,6 +1662,24 @@ public class Calque extends JPanel implements Runnable {
          }
       });
    }
+   
+   /** Met à jour le plan "Tag" */
+   protected void updatePhotPlane(Repere rep) {
+
+      final PlanTool p = selectPlanTool();
+      final SourcePhot s = p.addPhotMan( (PlanImage)aladin.view.getMouseView().pref, rep);
+
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            Util.pause(100);
+            s.setSelected(true);
+            p.updateDedicatedFilter();
+            repaintAll();
+         }
+      });
+   }
+
+
 
    /** Met à jour le plan "Tag" */
    protected void updateTagPlane(Tag tag) {

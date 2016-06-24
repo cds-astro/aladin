@@ -2362,7 +2362,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( SCREEN.equals("full") ) {
          detach(false);
          fullScreen(0);
-      } else if( SCREEN.equals("cinema") ) {
+      } else if( isCinema() ) {
          detach(false);
          fullScreen(3);
       } else if( SCREEN.startsWith("preview") ) {
@@ -2372,6 +2372,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
          detach();
       }
       flagScreen=false;
+   }
+   
+   /** True si on est en mode cinema = planetarium) */
+   public boolean isCinema() {
+      return SCREEN!=null && SCREEN.equals("cinema");
    }
 
    /** Positionnement d'un message d'attente */

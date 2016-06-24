@@ -143,6 +143,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
       } else if (opt.equalsIgnoreCase("maxThread"))  { context.setMaxNbThread(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("skyval"))     { context.setSkyval(val);
+      } else if (opt.equalsIgnoreCase("skyvalues"))  { context.setSkyValues(val);
       } else if (opt.equalsIgnoreCase("exptime"))    { context.setExpTime(val);
       } else if (opt.equalsIgnoreCase("fading"))     { context.setFading(val); 
       } else if (opt.equalsIgnoreCase("mixing"))     { context.setMixing(val);
@@ -314,7 +315,7 @@ public class HipsGen {
                if( a==Action.RESUME ) flagResume=true;  // Bidouillage pour pouvoir remettre en route un skygen en pause
                actions.add(a);
             } catch (Exception e) {
-               context.error("Unknown skygen command ["+arg+"] !");
+               context.error("Unknown parameter ["+arg+"] !");
                return;
             }
          }
@@ -600,6 +601,7 @@ public class HipsGen {
             "   ALLSKY     "+Action.ALLSKY.doc() + "\n"+
             "   TREE       "+Action.TREE.doc() + "\n"+
             "   MAPTILES   "+Action.MAPTILES.doc() + "\n"+
+            "   APPEND     "+Action.APPEND.doc() + "\n"+
             "   CONCAT     "+Action.CONCAT.doc() + "\n"+
             "   CUBE       "+Action.CUBE.doc() + "\n"+
             "   GZIP       "+Action.GZIP.doc() + "\n"+

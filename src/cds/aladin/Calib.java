@@ -21,10 +21,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
-
-
 import java.awt.Dimension;
 import java.io.DataInputStream;
 import java.util.Random;
@@ -42,6 +38,7 @@ import cds.astro.Supergal;
 import cds.fits.HeaderFits;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
+import healpix.essentials.FastMath;
 
 //import healpix.newcore.FastMath;
 
@@ -144,10 +141,11 @@ public final class Calib  implements Cloneable {
    static public final int FIE = 13 ;
    static public final int TPV = 14 ;
    static public final int SINSIP = 15 ;
+   static public final int FEYE = 16 ;
 
    // Signature dans les mots clés FITS des différentes projections (l'indice dans le tableau doit correspondre
    // aux constantes statics ci-dessus
-   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", /*"SOL",*/ "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP" };
+   static final String[] projType = {"", "SIN", "TAN", "ARC", "AIT", "ZEA", "STG", "CAR", "NCP", "ZPN", "SOL", "MOL","TAN-SIP","FIE" , "TPV", "SIN-SIP","FEYE" };
 
    /** Retourne l'indice de la signature de la projection (code 3 lettres), -1 si non trouvé */
    static int getProjType(String s) {//System.out.println("ssss "+s);
@@ -2277,6 +2275,7 @@ public final class Calib  implements Cloneable {
             y_stand =  y_tet_phi / den ;
             break ;
          case ZPN:
+         case FEYE:
          case ARC: // Arc proj
             //                        System.out.println("al del"+al+" "+del);
             if((sin_del*cdelz- cos_del*sdelz *cos_dalpha)!=0)
@@ -2750,12 +2749,12 @@ public final class Calib  implements Cloneable {
             //                          System.out.println("c al del  "+c.al+" "+c.del);
             break ;
          case ZPN: 
+         case FEYE:
          case ARC: //ARC proj
              //System.out.println("ARC ARC");
             //        tet =  Math.sqrt(x_objr*x_objr+y_objr*y_objr);
             double rteta = Math.sqrt(x_objr*x_objr+y_objr*y_objr);
-            if (rteta > Math.PI  )  
-            throw new Exception("No coordinates") ;
+            if (rteta > Math.PI  )  throw new Exception("No coordinates") ;
             else
             {
             if (proj == ZPN) 
@@ -2783,6 +2782,7 @@ public final class Calib  implements Cloneable {
                }
             }
             else tet = rteta;
+            
             if (rteta == 0.0) { c.del = deltai ; c.al = alphai; }
             else c.del = rad_to_deg*Math.asin(+y_objr*cdelz*FastMath.sin(tet)/ rteta +sdelz*FastMath.cos(tet));
 
@@ -3774,6 +3774,7 @@ public final class Calib  implements Cloneable {
                //System.out.println("xystand"+x_stand+" "+y_stand);
                break ;
             case ZPN:
+            case FEYE:
             case ARC:
                // System.out.println("al del"+al+" "+del);
                if((sin_del*cdelz- cos_del*sdelz *cos_dalpha)!=0)
@@ -3803,6 +3804,13 @@ public final class Calib  implements Cloneable {
                 
              //    System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
               // if (rteta < 0) System.out.println("tet rteta "+(Math.PI/2 -tet)+" "+rteta);
+               
+               // PF - 21/06/2016
+               if( proj==FEYE && rteta>Math.toRadians(95) ) {
+                  y_stand=x_stand=Double.NaN;
+                  break;
+               }
+               
                x_stand = rteta*FastMath.sin(phi) ;
                //                        y_stand = -(Math.PI/2 -tet)*FastMath.cos(phi) ;
                y_stand = -rteta*FastMath.cos(phi) ;

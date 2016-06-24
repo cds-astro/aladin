@@ -3210,12 +3210,12 @@ public class PlanBG extends PlanImage {
       int chouilla = (int)( (v.getWidth()/800. -1)*6 );
       if( chouilla<0 ) chouilla=0;
 
-      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.FEYE || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
          projd.getXYNative(c);
          PointD center = v.getViewCoordDble(c.x, c.y);
          double signe = c.del<0?1:-1;
-         c.del = c.del + signe*( projd.t==Calib.SIN ? 89 : 179);
+         c.del = c.del + signe*( projd.t==Calib.SIN || projd.t==Calib.FEYE ? 89 : 179);
          projd.getXYNative(c);
          PointD haut = v.getViewCoordDble(c.x, c.y);
          double deltaY = haut.y-center.y;
@@ -3259,7 +3259,7 @@ public class PlanBG extends PlanImage {
          m=0;
          g.setStroke(new BasicStroke(2));
          g.setColor( new Color(210,220,255) );
-         if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+         if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.FEYE || projd.t==Calib.ZEA) {
             g.drawOval(x-m,y-m,(rayon+m)*2,(rayon+m)*2);
          } else if( projd.t==Calib.AIT || projd.t==Calib.MOL) {
             if( angle==0 ) g.drawOval(x-m,y-m,(grandAxe+m)*2,(rayon+m)*2);
@@ -3293,12 +3293,12 @@ public class PlanBG extends PlanImage {
 //      if( projd.t==Calib.TAN || projd.t==Calib.SIP ) g.fillRect(0,0,v.getWidth(),v.getHeight());
 //      else 
          
-      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.ZEA) {
+      if( projd.t==Calib.SIN || projd.t==Calib.ARC || projd.t==Calib.FEYE || projd.t==Calib.ZEA) {
          Coord c = projd.c.getProjCenter();
          projd.getXYNative(c);
          PointD center = v.getViewCoordDble(c.x, c.y);
          double signe = c.del<0?1:-1;
-         c.del = c.del + signe*( projd.t==Calib.SIN ? 89 : 179);
+         c.del = c.del + signe*( projd.t==Calib.SIN || projd.t==Calib.FEYE ? 89 : 179);
          projd.getXYNative(c);
          PointD haut = v.getViewCoordDble(c.x, c.y);
          double deltaY = haut.y-center.y;

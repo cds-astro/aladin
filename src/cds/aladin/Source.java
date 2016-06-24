@@ -85,7 +85,7 @@ public class Source extends Position implements Comparator {
    
    /** For plugin */
    protected Source() {}
-
+   
   /** Creation d'un objet source
    * @param plan plan d'appartenance de la ligne
    * @param raj,dej  coordonnees de l'objet

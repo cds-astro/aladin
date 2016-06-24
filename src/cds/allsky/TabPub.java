@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 import cds.aladin.Aladin;
 import cds.tools.Util;
@@ -107,29 +108,30 @@ public class TabPub extends JPanel implements ActionListener {
 	    c.gridx=0;
 	    c.gridwidth = 1;
 	    pCenter.add(url,c);
-	    c.gridx++;c.gridy++;
+	    c.gridy++;
 	    
-//	    // Export HPX
-//        JLabel titleHPX = new JLabel(Util.fold(getString("PUBMAPALLSKY"),80,true));
-//        titleHPX.setFont(titleHPX.getFont().deriveFont(Font.BOLD));
-//        titleHPX.setBorder(emptyBorder);
-//        pCenter.add(titleHPX,c);
-//        c.gridy++;
-//        c.gridwidth =GridBagConstraints.REMAINDER;// remplit toute la ligne
-//        pCenter.add(new JLabel(Util.fold(getString("PUBMAPINFOALLSKY"),80,true)),c);
-//        // barre de progression
-//        progressHpx.setStringPainted(true);
-//        c.fill = GridBagConstraints.HORIZONTAL;
-//        c.gridwidth = GridBagConstraints.REMAINDER;
-//        c.gridy++;c.gridx=0;
-//        JPanel pProgress = new JPanel(new BorderLayout());
-//        pProgress.setBorder(new EmptyBorder(5, 15, 5, 15));
-//        pProgress.add(progressHpx);
-//        pCenter.add(progressHpx,c);
-//        c.fill = GridBagConstraints.NONE;
-//        c.gridwidth=1;
-//        c.gridx=0;c.gridy++;
-//        pCenter.add(bExport,c);
+	    // Export HPX
+	    c.gridx=0;
+        JLabel titleHPX = new JLabel(Util.fold(getString("PUBMAPALLSKY"),80,true));
+        titleHPX.setFont(titleHPX.getFont().deriveFont(Font.BOLD));
+        titleHPX.setBorder(emptyBorder);
+        pCenter.add(titleHPX,c);
+        c.gridy++;
+        c.gridwidth =GridBagConstraints.REMAINDER;// remplit toute la ligne
+        pCenter.add(new JLabel(Util.fold(getString("PUBMAPINFOALLSKY"),80,true)),c);
+        // barre de progression
+        progressHpx.setStringPainted(true);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        c.gridy++;c.gridx=0;
+        JPanel pProgress = new JPanel(new BorderLayout());
+        pProgress.setBorder(new EmptyBorder(5, 15, 5, 15));
+        pProgress.add(progressHpx);
+        pCenter.add(progressHpx,c);
+        c.fill = GridBagConstraints.NONE;
+        c.gridwidth=1;
+        c.gridx=0;c.gridy++;
+        pCenter.add(bExport,c);
 
 	    
 	    // public

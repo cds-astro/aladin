@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -47,6 +45,7 @@ import javax.swing.JTextField;
 import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.tools.Util;
+import healpix.essentials.FastMath;
 
 /**
  * Objet graphique Tag/Label affichable dans la vue
@@ -602,7 +601,7 @@ public class Tag extends Position {
          clip.add(p1);
          clip.add(p2);
       }
-      if( hasLabel() ) {
+      if( hasLabel() && rect2!=null ) {
          p1 = new Point(p.x+rect2.x-sel,p.y+rect2.y-sel);
          p2 = new Point(p.x+rect2.x+rect2.width+sel,p.y+rect2.y+rect2.height+sel);
          clip.add(p1);

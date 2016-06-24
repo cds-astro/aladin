@@ -169,6 +169,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    Rectangle rselect;            // Rectangle de selection multiple (ou zoom)
    //   Rectangle orselect;           // Precedent rectangle de selection multiple (ou zoom)
    boolean flagDrag;             // Vrai si on drague la souris
+   boolean flagMoveDrag;        // Vrai si on a commencé un clic&drag pour un déplacement (et non une rotation)
    boolean quickInfo;             // Vrai si on doit rapidement réafficher les infos pixels et pos
    private boolean flagOnMovableObj; // True si on est en fullScreen et le pointeur sur un élément de FoV (voir mouseDrag)
    private boolean flagOnFirstLine; // True si on est sur un début de polyligne (lors de l'insertion d'une polyligne)
@@ -1065,7 +1066,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Rotation libre soit en appuyant CTRL, soit en pivotant la rose des vents
       int W=getNESize();
       boolean inNE = inNE(x,y);
-      if(  inNE || e.isControlDown() && pref instanceof PlanBG ) {
+      if(  !flagMoveDrag /* && (inNE */ || e.isControlDown() && pref instanceof PlanBG /*)*/ ) {
          int xc = inNE ? rv.width-W/2 : rv.width/2;;
          int yc = inNE ? rv.height-W/2 : rv.height/2;
          double a1 = Math.atan2(scrollY-yc,scrollX-xc);
@@ -1099,6 +1100,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          double deltaDe = cs.del-ct.del;
          //System.out.println("Changement de centre delta="+Coord.getUnit(deltaRa)+","+Coord.getUnit(deltaDe)  );
          proj.deltaProjCenter(deltaRa,deltaDe);
+         
 
          aladin.view.newView(1);
          aladin.view.setRepere(proj.getProjCenter());
@@ -1244,7 +1246,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       Dimension d = getPRefDimension();
       imgW=d.width;
       imgH=d.height;
-      
  
       // Calcul de la proportion (si l'image n'est pas carree)
       double W,H;
@@ -2005,11 +2006,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       }
 
       // Initialisation d'un clic-and-drag de la vue
-      if( tool==ToolBox.PAN
+      if( tool==ToolBox.PAN 
             //            || (fullScreen && !flagOnMovableObj && tool==ToolBox.SELECT) ) {
             ) {
          vs.scrollX=(int)Math.round(x); vs.scrollY=(int)Math.round(y);
          setScrollable(true);
+         flagMoveDrag = !inNE((int)x, (int)y);
          wasScrolling = vs.isScrolling();
          vs.initScroll();
          //         if( !fullScreen ) return;
@@ -2688,6 +2690,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( o.plan.type!=Plan.TOOL ) continue;
             ((PlanTool)(o.plan)).sendMesureObserver(o, false);
             aladin.console.printInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
+            
+            if(  o instanceof Repere ) {
+               aladin.calque.updatePhotPlane((Repere)o);
+            }
+
+
 
 
             //            System.out.println("Ici c'est parti !");
@@ -5115,7 +5123,13 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    // Retourne true si la coordonnée se trouve dans la rose des vents
    private boolean inNE(int x,int y) {
       if( !(pref instanceof PlanBG) ) return false;
-      if( !isFullScreen() && aladin.toolBox.getTool()!=ToolBox.PAN ) return false;
+      
+      if( rselect!=null ) return false;
+      int tool = aladin.toolBox.getTool();
+      if( tool!=ToolBox.PAN && tool!=ToolBox.SELECT ) return false;
+      
+//      if( !isFullScreen() && aladin.toolBox.getTool()!=ToolBox.PAN ) return false;
+      
       int L = (int)(getNESize()*1.5);
       int lX = rv.width-L;
       int lY = rv.height-L;
@@ -5727,12 +5741,12 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       Projection proj = getProj();
 
-      if( proj.t==Calib.SIN || proj.t==Calib.ARC || proj.t==Calib.ZEA ) {
+      if( proj.t==Calib.SIN || proj.t==Calib.ARC || proj.t==Calib.FEYE || proj.t==Calib.ZEA ) {
          Coord c = proj.c.getProjCenter();
          proj.getXYNative(c);
          PointD center = getViewCoordDble(c.x, c.y);
          double signe = c.del<0?1:-1;
-         c.del = c.del + signe*( proj.t==Calib.SIN ? 89.99 : 179.99);
+         c.del = c.del + signe*( proj.t==Calib.SIN || proj.t==Calib.SIN? 89.99 : 179.99);
          proj.getXYNative(c);
          PointD haut = getViewCoordDble(c.x, c.y);
          double deltaY = haut.y-center.y;
@@ -6193,7 +6207,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          drawTarget(g,dx,dy);
       }
 
-      if( !vs.isPlotView() )  {
+      if( !vs.isPlotView() && !aladin.isCinema())  {
 
         if( !proj.isXYLinear() && calque.flagOverlay ) {
             int x=vs.drawScale(g,vs,dx,dy);
@@ -6225,15 +6239,15 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                aladin.view.simRep.draw(g,vs,dx,dy);
             }
          }
+
+         // Tracé du rainbow
+         if( hasRainbow() ) rainbow.draw(g,this,dx,dy);
+         if( rainbowF!=null ) rainbowF.draw(g,this,dx,dy);
+
+
+         // Juste parce que le drawForeGround cache en partie
+         if( dx==0 ) drawBlinkControl(g);
       }
-
-      // Tracé du rainbow
-      if( hasRainbow() ) rainbow.draw(g,this,dx,dy);
-      if( rainbowF!=null ) rainbowF.draw(g,this,dx,dy);
-      
-
-      // Juste parce que le drawForeGround cache en partie
-      if( dx==0 ) drawBlinkControl(g);
 
       return flagDisplay;
    }
@@ -6513,6 +6527,7 @@ g.drawString(s,10,100);
 
    // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
    public void paintComponent(Graphics gr) {
+      
       try { paintComponent1(gr); }
       catch( Exception e ) {
          if( aladin.levelTrace>3 ) e.printStackTrace();
@@ -6531,8 +6546,9 @@ g.drawString(s,10,100);
       }
    }
 
+   
    // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
-   private void paintComponent1(Graphics gr) {
+   protected void paintComponent1(Graphics gr) {
       long t = Util.getTime();
 
       // Pour forcer le réaffichage total (dans le cas d'un save ou d'un print)
@@ -6567,7 +6583,7 @@ g.drawString(s,10,100);
       if( !Aladin.NOGUI ) rv = new Rectangle(0,0,getSize().width,getSize().height);
 
       PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
-
+      
       if( !getImgView(gr,pi) || isFree() ) {
          drawBackground(gr);
          drawBordure(gr);
@@ -6608,6 +6624,15 @@ g.drawString(s,10,100);
       if( !(flagDrag || quickInfo || quickBlink || modeGrabIt || flagBlinkControl || quickBordure ||
             view.newobj!=null && view.newobj instanceof Cote  ) ) {
          drawBackground(gbuf);
+         
+         // En mode animation, on force un recalcul juste avant l'affichage
+         if( view.flagGoto )  {
+            synchronized( this ) {
+               newView();
+               paintOverlays(gbuf,clip,0,0,false);
+            }
+         } else 
+            
          paintOverlays(gbuf,clip,0,0,false);
          //System.out.println("paint");
       }
@@ -6672,7 +6697,7 @@ g.drawString(s,10,100);
 
          //         drawOverlayControls(g);
 
-         if( aladin.fullScreen.getMode()!=FrameFullScreen.CINEMA ) {
+         if( !aladin.isCinema() ) {
             widgetInit();
             if( widgetControl!=null ) widgetControl.paint(g);
          }

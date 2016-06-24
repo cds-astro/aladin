@@ -1785,7 +1785,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       // Agrandissement du losange d'un pixel pour cacher les coutures
       try { b = grow(b, 1); } catch( Exception e ) {  }
       boolean drawFast = planBG.mustDrawFast();
-
+      
       // On a les 4 coins
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
 
@@ -1813,17 +1813,17 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
          // Méthode par récursions (qui traite en même temps le bord du ciel)
          } else {
-
+            
             try {
 
                boolean mayCrossTheSky = mayCrossTheSky(v);
                boolean methodeRecursive = 
-                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC ) ||
+                     ( planBG.projd.t==Calib.ZEA || (planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ) ||
                      planBG.projd.t==Calib.MOL || planBG.projd.t==Calib.AIT ) && mayCrossTheSky 
                      || planBG.projd.t==Calib.CAR;
                
                // Methode récursive pour s'approcher du bord du ciel
-               if( methodeRecursive && isTooLarge(b,planBG.projd.t==Calib.ARC ? 100 : 150) ) {
+               if( methodeRecursive && isTooLarge(b,planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ? 100 : 150) ) {
                   resetTimer();
                   int m = drawFils(g,v,drawFast?1:planBG.projd.t==Calib.ZEA?8:4);
                   if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père
@@ -1884,7 +1884,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       else if( b[1]==null ) th=2;
       else if( b[2]==null ) tb=1;
       else { th=0; tb=3; }
-
+      
       if( th==-1 && tb==-1 ) return 0;
 
       // Test dessin 1 losange plutôt que 2 triangles
@@ -1892,7 +1892,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
          if( (int)b[0].x==(int)(b[1].x+b[2].x-b[3].x)
                && (int)b[0].y == (int)(b[2].y+b[1].y-b[3].y) ) flagLosange=true;
       }
-
+      
       Image img=null;
       try { img=createImage(); }
       catch( Exception e ) { return 0; }
@@ -2033,7 +2033,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       tr.shear(sx,0);
 
       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-            planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || /*(!planBG.color || planBG.truePixels) &&*/ order-parente>=planBG.maxOrder
+            planBG.mustDrawFast() &&  order-parente<planBG.maxOrder || order-parente>=planBG.maxOrder
             ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR :
                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 

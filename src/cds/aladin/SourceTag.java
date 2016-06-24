@@ -42,36 +42,40 @@ import cds.tools.Util;
  */
 public class SourceTag extends Source  {
    
-   static private Legende legTag=null;
+   static protected Legende legende=null;
    
    /** Création ou maj d'une légende associée à un SourceTag */
-   static protected Legende createTagLegende() {
-      if( legTag!=null ) return legTag;
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.NAME,     new String[]{  "Label",  "RA (ICRS)","DE (ICRS)", "X",      "Y" });
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.DATATYPE, new String[]{  "char","char",     "char",      "double", "double"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"", "",       ""});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.WIDTH,    new String[]{  "15",   "13",      "13",        "8",      "8"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.PRECISION,new String[]{  "",     "2",        "3",        "2",      "2"});
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.DESCRIPTION,
+   static protected Legende createLegende() {
+      if( legende!=null ) return legende;
+      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "Label",  "RA (ICRS)","DE (ICRS)", "X",      "Y" });
+      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "char","char",     "char",      "double", "double"});
+      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"", "",       ""});
+      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "15",   "13",      "13",        "8",      "8"});
+      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "",     "2",        "3",        "2",      "2"});
+      legende = Legende.adjustDefaultLegende(legende,Legende.DESCRIPTION,
             new String[]{  "Identifier",  "Right ascension",  "Declination", "Current image X axis (FITS convention)", "Current image Y axis (Fits Convention)" });
-      legTag = Legende.adjustDefaultLegende(legTag,Legende.UCD,
+      legende = Legende.adjustDefaultLegende(legende,Legende.UCD,
             new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","" });
-      return legTag;
+      return legende;
    }
    
-   private PlanImage planBase;
+   protected PlanImage planBase;
    
-   public SourceTag(Plan plan, PlanImage planBase, double raj, double dej) {
+   public SourceTag(Plan plan, PlanImage planBase, double raj, double dej,String id) {
       super(plan,raj,dej,null,null);
       this.planBase = planBase;
-      setInfo(raj,dej,null);
+      setInfo(raj,dej,id);
+      suite();
+   }
+   
+   protected void suite() {
       setShape(Obj.PLUS);
       setTag(true);
       setWithLabel(true);
-      leg=createTagLegende();
+      leg=createLegende();
    }
    
-   private void setInfo(double raj, double dej,String id) {
+   protected void setInfo(double raj, double dej,String id) {
       Coord c = new Coord(raj,dej);
       if( id==null ) id = "Tag "+plan.pcat.getNextID();
       
@@ -168,7 +172,6 @@ public class SourceTag extends Source  {
          public void actionPerformed(ActionEvent e) { changeTagged.action(); plan.aladin.view.repaintAll(); }
       });
       propList.add( Prop.propFactory("tagged","Tagged","Check it to tag this object in the measurement panel",tagCheck,null,changeTagged) );
-
 
       return propList;
    }

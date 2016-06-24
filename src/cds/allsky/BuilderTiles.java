@@ -118,8 +118,17 @@ public class BuilderTiles extends Builder {
          if( context.bitpix!=-1 ) context.setPropriete(Constante.KEY_HIPS_PIXEL_BITPIX,context.bitpix+"");
          if( context.bitpixOrig!=-1 ) context.setPropriete(Constante.KEY_DATA_PIXEL_BITPIX,context.bitpixOrig+"");
          context.setPropriete(Constante.KEY_HIPS_PROCESS_SAMPLING, context.isMap() ? "none" : "bilinear");
-         context.setPropriete(Constante.KEY_HIPS_PROCESS_SKYVAL,
-               context.skyvalName==null ? "none" : context.skyvalName.equals("true")?"hips_estimation":"fits_keyword");
+         if( context.skyvalName!=null ) {
+            context.setPropriete(Constante.KEY_HIPS_SKYVAL,context.skyvalName);
+            StringBuilder s1 = null;
+            double cutOrig[] = context.getCutOrig();
+            for( int i=0; i<4; i++ ) {
+               double x = cutOrig[i];
+               if( s1==null ) s1 = new StringBuilder(""+x);
+               else s1.append(" "+x);
+            }
+            context.setPropriete(Constante.KEY_HIPS_SKYVAL_VALUE,s1.toString());
+         }
       }
       context.setPropriete(Constante.KEY_HIPS_PROCESS_OVERLAY,
             context.isMap() ? "none" : context.mode==Mode.ADD ? "add" :
