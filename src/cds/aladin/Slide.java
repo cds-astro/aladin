@@ -625,7 +625,9 @@ public final class Slide {
             case Plan.IMAGECUBE: 
             case Plan.IMAGEBLINK:  drawLogoImg(g,dx,dy,Color.black);                          break;
             case Plan.APERTURE:
-            case Plan.TOOL:        drawLogoTool(g,dx,dy,colorForeground);                     break;
+            case Plan.TOOL:        if( p.isCatalog() ) drawLogoCat(g,dx,dy,colorForeground);
+                                   drawLogoTool(g,dx,dy,colorForeground); 
+                                   break;
             case Plan.CATALOG:     if( p.isSED() ) drawLogoSED(g,dx,dy,colorForeground);
                                    else drawLogoCat(g,dx,dy,colorForeground);                 break;
             case Plan.FILTER:      drawLogoFilter(g,dx,dy,p.active,false,Color.black,Color.black); break;

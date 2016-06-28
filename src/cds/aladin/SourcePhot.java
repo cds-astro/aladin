@@ -21,57 +21,82 @@
 package cds.aladin;
 
 /**
- * Objet graphique correspondant a un tag Phot manuel sous forme de Source modifiable (avec des mesures associées)
+ * Objet graphique representant une mesure photométrique extraite automatiquement
  *
  * @author Pierre Fernique [CDS]
- * @version 1.0 : june 2016 - création
+ * @version 1.0 (juin 2016): Refonte complète depuis de code dispersé à droite, à gauche
  */
-public class SourcePhot extends SourceTag  {
+public class SourcePhot extends SourceTag {
    
-   protected Repere rep;
+   
+   static private final String FILTERNAME = "obj_elong";
+   static private final String FILTER     = "#Object elongation\nfilter "+FILTERNAME
+                                           +" { draw ellipse(${FWHM_X}/2,${FWHM_Y}/2,270-${Angle}) }";
+
+   static protected Legende legende=createLegende();
    
    /** Création ou maj d'une légende associée à un SourcePhot */
    static protected Legende createLegende() {
       if( legende!=null ) return legende;
-      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","Radius","Count",  "Sum",   "Mean",  "Sigma", "Area",  "Median" });
-      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","integer","double","double","double","double","double"});
-      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","arcmin","pixel",  "",      "",      "",      "arcmin^2","" });
-      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "10",    "10",     "10",    "10",    "10",    "10",      "" });
-      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",     "2",      "2",     "2",     "2",     "2",       "" });
+      legende = Legende.adjustDefaultLegende(legende,Legende.NAME,     new String[]{  "_RAJ2000","_DEJ2000","ID",  "Image",   "RA (ICRS)","DE (ICRS)","X",     "Y",      "FWHM_X", "FWHM_Y", "Angle",  "Peak",  "Background" });
+      legende = Legende.adjustDefaultLegende(legende,Legende.DATATYPE, new String[]{  "double",  "double",  "char","char",    "char",     "char",     "double","double", "double", "double", "double", "double","double" });
+      legende = Legende.adjustDefaultLegende(legende,Legende.UNIT,     new String[]{  "deg",     "deg",     "",    "",        "",         "",         "deg",   "",       "" ,       "",       "",       "",     ""});
+      legende = Legende.adjustDefaultLegende(legende,Legende.WIDTH,    new String[]{  "10",      "10",      "15",  "10",      "13",       "13",       "8",     "8",      "10",     "10",      "5",     "10",    "10"   });
+      legende = Legende.adjustDefaultLegende(legende,Legende.PRECISION,new String[]{  "6",       "6",       "",    "",        "2",        "3",        "2",     "2",      "2",      "2",       "0",     "3",     "3"   });
       legende = Legende.adjustDefaultLegende(legende,Legende.DESCRIPTION,
-            new String[]{  "Identifier",  "Right ascension",  "Declination","Radius","Pixel count","Sum of pixel values","Mean of pixel values","Sigma of pixel list","Area", "Median of pixel list" });
+            new String[]{  "RA","DEC", "Identifier",  "Reference image", "Right ascension",  "Declination",
+            "X image coordinate",     "Y image coordinate",
+            "X Full Width at Half Maximum", "Y Full Width at Half Maximum",
+            "Angle",  "Source peak",  "image background" });
       legende = Legende.adjustDefaultLegende(legende,Legende.UCD,
-            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main","","","","","","","" });
+            new String[]{  "pos.eq.ra;meta.main","pos.eq.dec;meta.main","meta.id;meta.main","","pos.eq.ra","pos.eq.dec",
+            "pos.cartesian.x;obs.field","pos.cartesian.y;obs.field",
+            "", "",
+            "pos.posAng;obs.field", "","instr.background;obs.field" });
+      legende.name="Pixel statistics";
+      hideRADECLegende(legende);
       return legende;
    }
    
-   public SourcePhot(Plan plan, PlanImage planBase, Repere rep) {
-      super(plan,planBase,rep.raj,rep.dej, rep.id );
-      this.rep = rep;
+   private double [] iqe = null;
+   
+   /** Creation à partir d'une position céleste
+    * @param plan plan d'appartenance
+    * @param v vue de référence qui déterminera le PlanBase
+    * @param c coordonnées
+    * @param id identificateur spécifique, ou null pour attribution automatique
+    */
+   protected SourcePhot(Plan plan,ViewSimple v, Coord c,double [] iqe ) {
+      super(plan,v,c,null);
+      this.iqe = iqe;
+      resumeMesures();
+      if( ((PlanTool)plan).findFilter(FILTERNAME)<0 ) {
+         ((PlanTool)plan).addFilter(FILTER);
+      }
+      ((PlanTool)plan).setFilter(-1);   // On n'allume pas le filtre
    }
    
+   /** Post-traitement lors de la création */
    protected void suite() {
-      leg=createLegende();
+      leg=legende;
+      setId();
+      setShape(Obj.RETICULE);
    }
-   
-   protected void setInfo(double raj, double dej,String info) {
+
+   /** (Re)énération de la ligne des infos (détermine les mesures associées) */
+   protected void resumeMesures() {
       Coord c = new Coord(raj,dej);
-      if( this.id==null ) this.id= "Phot "+plan.pcat.getNextID();
-      this.info = "<&_A>\t"+id+"\t"+c.getRA()+"\t"+c.getDE() +"\t"+get("Rad",info)+"\t"+get("Cnt",info)+"\t"
-                   +get("Sum",info)+"\t"+get("Avg",info)+"\t"+get("Sigma",info)+"\t"+get("Surf",info)+"\t"+get("Med",info);
+      info = "<_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+"\t"+c.getRA()+"\t"+c.getDE()
+             +"\t"+iqe[0]+"\t"+iqe[2]+"\t"+iqe[1]+"\t"+iqe[3]+"\t"+iqe[4]+"\t"+iqe[5]+"\t"+iqe[6];
    }
-   
-   // Extraction de la valeur repérée par son mot clé, sur une chaine au format
-   // Cnt 6446 / Sum 7221 / Sigma 0.4649 / Min 0.4734 / Avg 1.12 / Med 0.9713 / Max 3.274 / Rad 45.6" / Surf 1.818'²
-   private String get(String key,String info) {
-      int offset = info.indexOf(key+" ");
-      if( offset==-1 ) return " ";
-      int a = offset+key.length()+1;
-      int b = info.indexOf(' ',a);
-      if( b==-1 ) b=info.length();
-      return info.substring(a,b);
-   }
-   
 
+   /** Retourne le type d'objet */
+   public String getObjType() { return "Phot"; }
+
+   /** Positionne l'id par defaut */
+   void setId() {
+      id="Phot "+ nextIndice();
+   }
+   
+   protected int getL() { return super.getL()*3; }
 }
-

@@ -1507,7 +1507,7 @@ MouseWheelListener, Widget
    }
 
    protected void showSEDPoint(Source s) {
-      if( s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
+      if( s.leg!=null && s.leg.isSED() && aladin.view.zoomview.flagSED )  aladin.view.zoomview.setSED(s);
    }
 
 

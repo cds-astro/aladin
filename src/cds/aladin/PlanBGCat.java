@@ -65,6 +65,8 @@ public class PlanBGCat extends PlanBG {
       loadGenericLegende();
    }
    
+   protected boolean isCatalog() { return true; }
+   
    protected boolean isSync() {
       boolean isSync = super.isSync();
       isSync = isSync && (planFilter==null || planFilter.isSync() );

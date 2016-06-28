@@ -97,7 +97,7 @@ public class Plan implements Runnable {
       "Tool","Aperture","Folder","Filter",
       "Image FoV","In progress","ImageHuge",
       "HipsImage","HipsPolarisation","HipsCatalog",
-      "MOC","CubeColor","HipsFinder","HipsCube",
+      "MOC","CubeColor","HipsFinder","HipsCube"
    };
 
    protected int type;           // Type de plan: NO, IMAGE, CATALOG, TOOL, APERTURE,...
@@ -264,7 +264,7 @@ public class Plan implements Runnable {
    protected boolean isSED() {
       if( getCounts()==0 ) return false;
       Obj s = iterator().next();
-      return s instanceof Source && ((Source)s).leg.isSED();
+      return s instanceof Source && ((Source)s).leg!=null && ((Source)s).leg.isSED();
    }
 
    // Il s'agit d'un plan qui s'applique en overlay d'une image */
@@ -388,11 +388,7 @@ public class Plan implements Runnable {
    protected boolean isOnPixel(int xImg, int yImg) { return false; }
 
    /** Il s'agit d'un plan de type catalogue */
-   protected boolean isCatalog() {
-      return   type==CATALOG
-            || type==TOOL && (((PlanTool)this).legPhot!=null || ((PlanTool)this).hasTag())
-            || type==ALLSKYCAT;
-   }
+   protected boolean isCatalog() { return false; }
 
    /** Retourne true si le plan est un cube */
    protected boolean isCube() { return false; }
@@ -432,8 +428,7 @@ public class Plan implements Runnable {
 
    /** Il s'agit d'un plan catalogue non progressif */
    protected boolean isSimpleCatalog() {
-      return type==CATALOG || type==TOOL &&
-            ( ((PlanTool)this).legPhot!=null || ((PlanTool)this).legTag!=null);
+      return type==CATALOG || type==TOOL && isCatalog();
    }
 
    /** Retourne true si le plan catalogue peut effacer les sources individuellement */
@@ -1004,7 +999,7 @@ public class Plan implements Runnable {
    }
 
    /** Retourne l'indice du filter, ou -1 si non trouvé */
-   private int findFilter(String s ) {
+   protected int findFilter(String s ) {
       if( filters==null ) return -1;
       for( int i=0; i<filters.length; i++ ) {
          String fs = Server.getFilterDescription(filters[i]);
@@ -2156,6 +2151,7 @@ public class Plan implements Runnable {
     */
    protected boolean hasAssociatedFootprints() {
       Iterator<Obj> it = iterator();
+      if( it==null ) return false;
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;

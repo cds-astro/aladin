@@ -53,7 +53,7 @@ public class Source extends Position implements Comparator {
    static final int MDS = DS/2;      // demi-taille des poignees de selection
 //   static public int L = 3;          // demi-taille de la source
    
-   final protected int getL() {
+   protected int getL() {
       if( plan==null || plan.getScalingFactor()==1) return 3;
       return (int)( (2*plan.getScalingFactor()/3.)*3 );
    }
@@ -85,6 +85,14 @@ public class Source extends Position implements Comparator {
    
    /** For plugin */
    protected Source() {}
+   
+   /** For SourcePhot */
+   protected Source(Plan plan, ViewSimple v,double x, double y, double raj, double dej,int methode, String id) {
+      super(plan,v,x,y,raj,dej,methode,id);
+   }
+   
+   /** For SourcePhot */
+   protected Source(Plan plan) { super(plan); }
    
   /** Creation d'un objet source
    * @param plan plan d'appartenance de la ligne
@@ -516,6 +524,19 @@ public class Source extends Position implements Comparator {
       }
    }
 
+   // Tracage d'un réticule (ne sert que pour SourcePhot)
+   void drawReticule(Graphics g,Point p) {
+      int L = getL();
+      int m=4;
+      g.drawLine(p.x-L,p.y, p.x-m,p.y ); g.drawLine(p.x+m,p.y, p.x+L,p.y );
+      g.drawLine(p.x,p.y-L, p.x,p.y-m ); g.drawLine(p.x,p.y+m, p.x,p.y+L );
+      g.drawLine(p.x,p.y, p.x,p.y );
+      if( isWithLabel() ) {
+         setBox(g);
+         g.drawString(id,p.x+L-box.x/2,p.y-L+box.y/2);
+      }
+   }
+
    // Tracage d'une croix (45 degres)
    void drawCroix(Graphics g,Point p) {
       int L = getL();
@@ -669,7 +690,7 @@ public class Source extends Position implements Comparator {
       // si filtre==ON on n'affiche le rectangle vert encadrant la source
       // selectionnee que si la source a ete selectionnee
       boolean noInfluence = noFilterInfluence();
-      if( /* !plan.aladin.view.flagHighlight && */ isSelected() ) {
+      if( isSelected() ) {
 	  	//System.out.println("la source est selectionnee");
       	 if( noInfluence || iAmSelected ) {
             g.setColor( isTagged() ? Color.magenta : Color.green);
@@ -804,6 +825,8 @@ public class Source extends Position implements Comparator {
            case CIRCLE:       drawCircle(g,p);       break;
            case POINT:        drawPoint(g,p);        break;
            case DOT:          drawDot(g,p);          break;
+           
+           case RETICULE:     drawReticule(g, p);    break;
       	}
    }
 

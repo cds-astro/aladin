@@ -207,7 +207,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( flagSED ) return;
       if( flagHist ) { if( hist.mouseDragged(e) ) repaint(); return; }
       if( flagCut ) {
-         if( objCut instanceof Repere ) setFrameCube(e.getX());
+         if( objCut instanceof SourceStat ) setFrameCube(e.getX());
          return;
       }
       ViewSimple v = aladin.view.getCurrentView();
@@ -273,7 +273,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( flagSED ) { sed.mouseEnter(); return; }
 
       boolean resize = flagCut;
-      if( objCut instanceof Repere && ((Repere)objCut).hasRayon() ) resize=false;
+      if( objCut instanceof SourceStat ) resize=false;
       if( Ligne.isLigne(objCut) ) resize=false;
       Aladin.makeCursor(this,resize ?Aladin.RESIZECURSOR:Aladin.HANDCURSOR);
    }
@@ -333,7 +333,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
       if( flagSED ) { sed.mouseRelease(e.getX(), e.getY() ); return; }
 
       if( flagCut ) {
-         if( objCut instanceof Repere ) setFrameCube(e.getX());
+         if( objCut instanceof SourceStat ) setFrameCube(e.getX());
          flagdrag=false;
          return;
       }
@@ -939,7 +939,7 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
    /** Met à jour le SED si nécessaire, sinon le fait disparaitre */
    protected void resumeSED() {
       Source s = aladin.mesure.getFirstSrc();
-      if( (s==null || !s.leg.isSED()) && !flagSED ) return;
+      if( (s==null || s.leg==null || !s.leg.isSED()) && !flagSED ) return;
       setSED( s );
    }
 
@@ -1314,8 +1314,8 @@ implements  MouseWheelListener, MouseListener,MouseMotionListener,Widget {
          try {
             if( objCut instanceof Cote ) drawFWHM(gr);
             else {
-               if( objCut instanceof Repere ) {
-                  if( ((Repere)objCut).hasRayon() ) drawPixelCourant(gr);
+               if( objCut instanceof SourceStat ) {
+                  if( ((SourceStat)objCut).hasRayon() ) drawPixelCourant(gr);
                   else drawCubeFrame(gr);
                } else if( Ligne.isLigne(objCut) ) drawPixelCourant(gr);
             }

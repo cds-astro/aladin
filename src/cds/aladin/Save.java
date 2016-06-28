@@ -390,7 +390,8 @@ public final class Save extends JFrame implements ActionListener {
                break;
                //            case Plan.APERTURE:
             case Plan.TOOL:
-               res&= (tsvCb!=null && tsvCb.isSelected()) || !p.isCatalog() ? saveToolTSV(f,p) : saveCatVOTable(f,p,false);
+               if( p.isCatalog() )res&=saveCatalog(f,p,tsvCb.isSelected()? TSV : jsonCb!=null && jsonCb.isSelected() ? JSON : XML);
+               else res &=  saveToolTSV(f,p) ;
                break;
             case Plan.ALLSKYCAT:
             case Plan.CATALOG:
@@ -794,8 +795,6 @@ public final class Save extends JFrame implements ActionListener {
     */
    private void changeCatFormat() {
 
-      System.out.println("changeCatFormat");
-
       String newSuffix = tsvCb.isSelected() ? ".txt" : jsonCb!=null && jsonCb.isSelected() ? ".json" : ".xml";
 
       for( int i=0; i<listPlan.length; i++ ) {
@@ -1194,7 +1193,7 @@ public final class Save extends JFrame implements ActionListener {
       if( !p.isImage() && p.type!=Plan.FOLDER && p.type!=Plan.FILTER ) {
          append(CR+"     color=\""+Action.findColorName(p.c)+"\"");
       }
-      if( p.type==Plan.TOOL && ((PlanTool)p).withSource() ) append(CR+"     withsource=\"true\"");
+      if( p.type==Plan.TOOL && ((PlanTool)p).isCatalog() ) append(CR+"     withsource=\"true\"");
       if( !p.isSelectable() )   append(CR+"     selectable=\"false\"");
       if( p.isImage() ) {
          PlanImage pi = (PlanImage)p;
@@ -1351,8 +1350,9 @@ public final class Save extends JFrame implements ActionListener {
       if( o instanceof Tag )  return "taglabel";
       if( o instanceof Cote )   return "arrow";
       if( o instanceof Ligne )  return "line";
-      if( o instanceof Repere ) return "phot";
-      if( o instanceof Source ) return "source";
+      if( o instanceof Repere ) return "tag";
+      if( o instanceof SourceStat ) return "phot";
+      else if( o instanceof Source ) return "source";
       // if( o instanceof Pickle ) return "pickle";
       // if( o instanceof Arc )    return "arc";
       if( o instanceof Cercle ) return "circle";

@@ -19,8 +19,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
@@ -44,6 +42,7 @@ import java.util.zip.Inflater;
 import cds.image.Hdecomp;
 import cds.image.Iqefunc;
 import cds.tools.Util;
+import healpix.essentials.FastMath;
 
 /**
  * Plan dedie a une image (IMAGE)
@@ -2511,6 +2510,11 @@ public class PlanImage extends Plan {
 
       //      System.out.println("X="+param[0]+" Y="+param[2]);
       return param;
+   }
+   
+   /** Retourne true si la coordonnée est dans l'image */
+   protected boolean isIn(int x, int y) {
+      return x>=0 && x<width && y>=0 && y<=height;
    }
 
    /** Retourne la valeur du pixel en double au mieux. IL FAUT AVOIR ESSAYER DE CHARGER

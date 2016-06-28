@@ -1687,7 +1687,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    }
 
    private Position poignee=null;   // poignée d'une rotation en cours (après un mouseDown)
-   private Repere poigneePhot=null;  // poignée d'une extension de repère circulaire en cours (après un mouseDown)
+   private SourceStat poigneePhot=null;  // poignée d'une extension de repère circulaire en cours (après un mouseDown)
    private Tag poigneeTag=null; // poignée d'un changement d'ancrage pour un tag/label (après un mouseDown)
 
    /** teste si dans a liste des objet qui ont été sélectionné par la souris, parmi ceux qui
@@ -1719,14 +1719,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Teste si l'objet sous la souris est un Repere circulaire, non seulement sélectionné
     * mais pour lequel la position de la souris se trouve sur une des 4 poignées d'extensions (bas,haut,droite,gauche)
     * Si c'est le cas, mémorise cet objet dans poigneeRepere pour permettre sa manipulation via mouseDrag */
-   private Repere testPhot(ViewSimple vs,double x,double y,boolean withPoignee) {
+   private SourceStat testPhot(ViewSimple vs,double x,double y,boolean withPoignee) {
       Enumeration e = aladin.view.getSelectedObjet().elements();
       while( e.hasMoreElements() ) {
          Obj o = (Obj)e.nextElement();
-         if( !(o instanceof Repere) ) continue;
+         if( !(o instanceof SourceStat) ) continue;
          if( !o.plan.isMovable() ) continue;
          if( o instanceof Position && ((Position)o).plan.type == Plan.APERTURE ) continue;
-         Repere t = (Repere)o;
+         SourceStat t = (SourceStat)o;
          if( !t.isSelected() || !t.hasRayon() ) continue;
          if( withPoignee ) { if( !t.onPoignee(vs, x, y) ) continue; }
          else { if( !t.inside(vs,x,y) ) continue; }
@@ -2020,7 +2020,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       // Création automatique d'une vue associé au plan Draw ?
       if( isFree() ) {
          Plan pc = aladin.calque.getFirstSelectedPlan();
-         if( !aladin.toolBox.isForTool(tool) || pc==null || pc.type!=Plan.TOOL ) return/* false*/;
+         if( !aladin.toolBox.isForTool(tool) || pc==null || pc.type!=Plan.TOOL ) return;
          //         System.out.println("J'affecte à la vue "+this+" le plan TOOL "+pc);
          aladin.calque.setPlanRef(pc,vs.n);
       }
@@ -2328,6 +2328,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       mouseReleased1(e.getX(),e.getY(),e);
       if( createCoteDist() ) repaint();
    }
+   
    public void mouseReleased1(double x, double y,MouseEvent e) {
 
       //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
@@ -2539,27 +2540,36 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Cas du zoom => Rien a faire
       if( tool==ToolBox.ZOOM ) return;
-
-      // Le repere est insere
-      if( view.newobj instanceof Repere ) {
-
+      
+      // Le Phot est insere
+      if( view.newobj instanceof SourceStat ) {
          flagDrag=false;
-         Point p = getPosition((int)x,(int)y);
-         PointD pp = getPosition(x,y);
 
-         // Extraction d'une source par méthode IQE
-         if( !((Repere)view.newobj).hasRayon() && !(pref instanceof PlanImageBlink || pref instanceof PlanBG) ) {
-            double [] iqe = ((PlanImage)pref).getPixelStats(p);
-            if( iqe!=null ) {
-               pp.x = iqe[0]; pp.y = iqe[2];
-               view.extendClip(view.newobj);
-               view.newobj.setPosition(this,pp.x,pp.y);
-               iqe[2] = ((PlanImage)pref).height - iqe[2];
-               aladin.calque.updatePhotometryPlane( (Repere)view.newobj,iqe);
+         // Insertion d'un repère avec mesure de surface
+         if( ((SourceStat)view.newobj).hasRayon() ) {
+            view.newobj.setSelected(true);
+            addObjSurfMove(view.newobj);
+            
+         } else {
+            
+            Point p = getPosition((int)x,(int)y);
+            PointD pp = getPosition(x,y);
+
+            // Extraction d'une source par méthode IQE
+            if( !(pref instanceof PlanImageBlink || pref instanceof PlanBG) ) {
+               double [] iqe = ((PlanImage)pref).getPixelStats(p);
+               if( iqe!=null ) {
+                  pp.x = iqe[0]; pp.y = iqe[2];
+                  view.extendClip(view.newobj);
+                  view.newobj.setPosition(this,pp.x,pp.y);
+                  iqe[2] = ((PlanImage)pref).height - iqe[2];
+                  aladin.calque.updateToolCatPhotExtract( (SourceStat)view.newobj,iqe);
+               }
+               view.newobj = null;
             }
-            view.newobj = null;
          }
-
+         
+         // Insertion d'un repère avec mesure de surface
          if( view.newobj!=null ) {
 
             // Juste pour le spectre localisé pour un cube via un repere
@@ -2570,17 +2580,43 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                view.extendClip(view.newobj);
             }
 
-            // Insertion d'un repère avec mesure de surface
-            if( ((Repere)view.newobj).hasRayon() ) {
-               view.newobj.setSelected(true);
-               addObjSurfMove(view.newobj);
-
-            }
-            finNewObjet();
+//            if( ((SourcePhot)view.newobj).hasRayon() ) {
+//               view.newobj.setSelected(true);
+//               addObjSurfMove(view.newobj);
+//            }
          }
 
+         finNewObjet();
          view.newobj=null;
       }
+
+
+//      // Le repere est insere
+//      if( view.newobj!=null && view.newobj instanceof Repere ) {
+//
+//         flagDrag=false;
+//
+//         if( view.newobj!=null ) {
+//
+//            // Juste pour le spectre localisé pour un cube via un repere
+//            if( pref instanceof PlanImageBlink && !view.hasSelectedObj() ) {
+//               aladin.toolBox.setMode(ToolBox.PHOT,Tool.UP);
+//               aladin.toolBox.setMode(ToolBox.SELECT,Tool.DOWN);
+//               view.selectCote(view.newobj);
+//               view.extendClip(view.newobj);
+//            }
+//
+//            // Insertion d'un repère avec mesure de surface
+//            if( ((Repere)view.newobj).hasRayon() ) {
+//               view.newobj.setSelected(true);
+//               addObjSurfMove(view.newobj);
+//
+//            }
+//            finNewObjet();
+//         }
+//
+//         view.newobj=null;
+//      }
 
       // Traitement de la fin d'une selection multiple
       if( rselect!=null ) {
@@ -2676,7 +2712,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       if(  view.newobj!=null && view.newobj instanceof Tag ) {
          if( ((Tag)view.newobj).isReticle() ) {
-            aladin.calque.updateTagPlane((Tag)view.newobj);
+            aladin.calque.updateToolCatTag((Tag)view.newobj);
             view.newobj=null;
          } else ((Tag)view.newobj).setEditing(true);
       }
@@ -2690,25 +2726,6 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             if( o.plan.type!=Plan.TOOL ) continue;
             ((PlanTool)(o.plan)).sendMesureObserver(o, false);
             aladin.console.printInPad(o.getSexa()+" => "+o.getInfo()+"\n" );
-            
-            if(  o instanceof Repere ) {
-               aladin.calque.updatePhotPlane((Repere)o);
-            }
-
-
-
-
-            //            System.out.println("Ici c'est parti !");
-            //            ((PlanTool)(o.plan)).updatePhotMan(o);
-            //
-            //            SwingUtilities.invokeLater(new Runnable() {
-            //               public void run() {
-            //                  Util.pause(100);
-            //                  o.setSelected(true);
-            //                  o.plan.updateDedicatedFilter();
-            //                  aladin.calque.repaintAll();
-            //               }
-            //            });
          }
          objSurfMove=null;
       }
@@ -2725,10 +2742,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
       if( v.size()!=2 ) { view.coteDist=null; return oc!=view.coteDist; }
       Obj a = v.elementAt(0);
       Obj b = v.elementAt(1);
-      if( !(a instanceof Repere || a instanceof Source
-            || (a instanceof Tag && a.hasPhot())) ) return false;
-      if( !(b instanceof Repere || b instanceof Source
-            || (b instanceof Tag && b.hasPhot())) ) return false;
+      if( !(a instanceof Source || (a instanceof Tag && a.hasPhot())) ) return false;
+      if( !(b instanceof Source || (b instanceof Tag && b.hasPhot())) ) return false;
       view.coteDist = new CoteDist(a,b,getProjSyncView());
       aladin.status.setText(view.coteDist.id);
       aladin.console.printInPad(view.coteDist.id+"\n");
@@ -2970,7 +2985,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
          fixe = p;                // pour l'etape suivante
 
          double centerX=0,centerY=0,angle=0;
-
+         
          // S'agit-il d'une rotation => calcul de l'angle et du centre de la rotation
          // C'est assez tordu car dans le cas d'un Pickle ou d'un Arc, le centre de rotation
          // et le centre du cercle inscrit (voir Arc.rotatePosition() ), donc si on ne sélectionne
@@ -3030,7 +3045,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
                      && flagDragField==0 ) o.deltaRaDec(dra,dde);
                else o.deltaPosition(vs,dx,dy);
 
-               if( o instanceof Repere && ((Repere)o).hasRayon() && o.plan.isMovable()) {
+               if( o instanceof SourceStat && ((SourceStat)o).hasRayon() && o.plan.isMovable()) {
                   addObjSurfMove(o);
                }
 
@@ -3058,8 +3073,8 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       // Extension d'un repère pour avoir une surface circulaire (déjà tracé - poigneePhot!=null,
       // ou en cours de traçage - view.newobj!=null )
-      if( poigneePhot!=null || view.newobj!=null && view.newobj instanceof Repere ) {
-         Repere t = poigneePhot!=null ? poigneePhot : (Repere)view.newobj;
+      if( poigneePhot!=null || view.newobj!=null && view.newobj instanceof SourceStat ) {
+         SourceStat t = poigneePhot!=null ? poigneePhot : (SourceStat)view.newobj;
          view.extendClip(t);
          PointD p = getPosition((double)x,(double)y);
          double rayonView = Math.sqrt( Math.pow(fixev.x-x,2) + Math.pow(fixev.y-y,2) );
@@ -3302,8 +3317,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
             // Pas le même scope
             if( folder!=calque.getMyScopeFolder(allPlans,plan) ) continue;
 
-            boolean testOnMovable = fullScreen && (plan.type==Plan.APERTURE
-                  || plan.type==Plan.TOOL);
+            boolean testOnMovable = fullScreen && (plan.type==Plan.APERTURE || plan.type==Plan.TOOL);
 
 
             // Determination du nombre d'objet sous la souris

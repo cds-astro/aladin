@@ -20,22 +20,19 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JRadioButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.JRadioButton;
 
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
-import cds.tools.Util;
-import cds.tools.pixtools.CDSHealpix;
 
 /**
  * Gestion de la fenetre associeeau filtrage de sources par un MOC
@@ -131,47 +128,72 @@ public final class FrameMocFiltering extends FrameRGBBlink {
       return p;
    }
    
+   /** Création d'un plan catalogue contenant les sources d'une liste de plans catalogs, filtrées par un Moc */
+   protected PlanCatalog createPlane(String label,PlanMoc pMoc, Plan [] p, boolean lookIn) throws Exception {
+      Coord c = new Coord();
+      Healpix hpx = new Healpix();
+      HealpixMoc moc = pMoc.getMoc();
+      Vector<Obj> v = new Vector<Obj>();
+     
+      for( int i=0; i<p.length; i++ ) {
+         Plan pCat = p[i];
+         if( pCat==null ) continue;
+         if( label==null || label.length()==0 ) label=pCat.label;
+         else label=label+", "+pCat.label;
+         Iterator<Obj> it = pCat.iterator();
+         while( it.hasNext() ) {
+            Obj o = it.next();
+            if( !(o instanceof Source) ) continue;
+            c.al=o.getRa();
+            c.del=o.getDec();
+            if( Double.isNaN(c.al) ||  Double.isNaN(c.del) ) continue;
+            c=Localisation.frameToFrame(c,Localisation.ICRS, pMoc.frameOrigin);
+            boolean in = moc.contains(hpx, c.al, c.del);
+
+            if( lookIn==in ) v.add(o);
+         }
+      }
+
+      return a.calque.newPlanCatalogBySources(v,"Filter "+label,false);
+   }
    
    @Override
    protected void submit() {
       try {
+         StringBuilder list=null;
          String s=cbg.getSelection().getActionCommand();
          boolean lookIn = s.equals(IN);
 
          Plan pMoc = getPlan(ch[0]);
          if( pMoc.type!=Plan.ALLSKYMOC ) throw new Exception("Not a MOC");
-
-         Healpix hpx = new Healpix();
-         HealpixMoc moc = ((PlanMoc)pMoc).getMoc();
-         Vector v = new Vector();
-         String label="";
-         Coord c = new Coord();
          
+         // Détermination des plans concernés
+         String label="";
+         ArrayList<Plan> v = new ArrayList<Plan>();
          for( int i=1; i<ch.length; i++ ) {
             Plan pCat = getPlan(ch[i]);
             if( pCat==null ) continue;
             if( label.length()==0 ) label=pCat.label;
             else label=label+", "+pCat.label;
-            Iterator<Obj> it = pCat.iterator();
-            while( it.hasNext() ) {
-               Obj o = it.next();
-               c.al=o.getRa();
-               c.del=o.getDec();
-               c=Localisation.frameToFrame(c,Localisation.ICRS, ((PlanMoc)pMoc).frameOrigin);
-               boolean in = moc.contains(hpx, c.al, c.del);
-               if( lookIn==in ) v.add(o);
-            }
+            v.add(pCat);
+            
+            // Liste des plans concernés
+            if( list==null ) list = new StringBuilder( Tok.quote(pCat.label) );
+            else list.append(" "+Tok.quote(pCat.label) );
          }
-
-         PlanCatalog p = a.calque.newPlanCatalogBySources(v,"Filter "+label,false);
+         Plan [] plans = new Plan[ v.size() ];
+         v.toArray(plans);
+         
+         createPlane(label,(PlanMoc)pMoc,plans,lookIn);
          a.calque.repaintAll();
          hide();
+         
+         a.console.printCommand("ccat -uniq "+(!lookIn?"-out ":" ")+Tok.quote(pMoc.label)+(list.length()>0?" "+list.toString():""));
 
       } catch ( Exception e ) {
          if( a.levelTrace>=3 ) e.printStackTrace();
          Aladin.warning("Catalog filtering by MOC failed !");
       }
-
    }
 
    @Override

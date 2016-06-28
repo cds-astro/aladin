@@ -813,7 +813,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          Obj o = (Obj)e.nextElement();
 
          // On ne garde que les Sources et les Reperes (tags)
-         if( !(o instanceof Source) && !(o instanceof Repere) ) continue;
+         if( !(o instanceof Source) && !(o instanceof Repere || o instanceof Tag ) ) continue;
          Position s = (Position)o;
 
          // présent dans toutes les vues ?
@@ -2274,9 +2274,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       if( !hasSelectedObj() ) return false;
       Obj o = vselobj.get(0);
       if( o instanceof Ligne && ((Ligne)o).isPolygone() ) return true;
-      
-      // POUR LE MOMENT, ON NE PREND PAS EN COMPTE LE CERCLE
-      if( o instanceof Repere && ((Repere)o).hasRayon() )  return true;
+      if( o instanceof SourceStat && ((SourceStat)o).hasRayon() )  return true;
       
       return false;
    }
@@ -2309,7 +2307,8 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
    protected boolean hasMovableObj(Vector v) {
       Enumeration<Obj> e = v.elements();
       while( e.hasMoreElements() ) {
-         if( !(e.nextElement() instanceof Source) ) return true;
+         Obj o = e.nextElement();
+         if( !(o instanceof Source && !(o instanceof SourceTag)) ) return true;
       }
       return false;
    }
@@ -2376,7 +2375,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
       while( e.hasMoreElements() ) {
          Position p = (Position) e.nextElement();
-         if( p.plan.type==Plan.TOOL || p.plan.isSourceRemovable() ) return true;        // Appartient a un plan Tool
+         if( p.plan instanceof PlanTool || p.plan.isSourceRemovable() ) return true;        // Appartient a un plan Tool
       }
       return false;
    }

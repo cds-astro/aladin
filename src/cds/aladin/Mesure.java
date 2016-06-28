@@ -434,7 +434,7 @@ public final class Mesure extends JPanel implements Runnable,Iterable<Source>,Wi
       aladin.calque.zoom.zoomView.stopHist();
       aladin.calque.zoom.zoomView.resumeSED();
       aladin.console.setEnabledDumpButton(true);
-      if( s.leg.isSorted() ) { s.leg.clearSort(); mcanvas.reloadHead(); }
+      if( s.leg!=null && s.leg.isSorted() ) { s.leg.clearSort(); mcanvas.reloadHead(); }
       if( mcanvas.triTag!=Field.UNSORT ) mcanvas.triTag=Field.UNSORT;
    }
 

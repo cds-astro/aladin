@@ -34,9 +34,9 @@ import cds.tools.VOApp;
  */
 public class PlanTool extends PlanCatalog {
 
-   protected Legende legPhot    = null;
-   protected Legende legTag     = null;
-   protected Legende legPhotMan = null;
+//   protected Legende legPhot    = null;
+//   protected Legende legTag     = null;
+//   protected Legende legPhotMan = null;
 
    /** Creation d'un plan de type TOOL
     * @param label le nom du plan (dans la pile des plans)
@@ -72,17 +72,6 @@ public class PlanTool extends PlanCatalog {
       askActive  = true;
    }
    
-   /** Retourne le SourcePhot associé à la mesure photométrique "Repere r", ou null si encore inconnue dans le planTool */
-   public SourcePhot getPhot(Repere r) {
-      Iterator<Obj> it = iterator();
-      while( it.hasNext() ) {
-         Obj o = it.next();
-         if( !(o instanceof SourcePhot) ) continue;
-         if( ((SourcePhot)o).rep == r ) return (SourcePhot)o;
-      }
-      return null;
-   }
-
 //   public void updatePhotMan(Obj o) {
 //      if( legPhotMan==null ) createPhotManuelLegende();
 //
@@ -117,28 +106,28 @@ public class PlanTool extends PlanCatalog {
 //      legTag = SourceTag.createTagLegende();
 //   }
 
-   private void createPhotLegende() {
-      setSourceRemovable(true);
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","X",     "Y",      "FWHM_X", "FWHM_Y", "Angle",  "Peak",  "Background" });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","double", "double", "double", "double", "double","double" });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","",      "",       "",       "",       "deg",    "",      "" });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "8",    "8",      "10",     "10",      "5",      "10",    "10"   });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",    "2",      "2",      "2",       "0",      "3",     "3"   });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DESCRIPTION,
-            new String[]{  "Identifier",  "Right ascension",  "Declination",
-            "X image coordinate",     "Y image coordinate",
-            "X Full Width at Half Maximum", "Y Full Width at Half Maximum",
-            "Angle",  "Source peak",  "image background" });
-      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UCD,
-            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main",
-            "pos.cartesian.x;obs.field","pos.cartesian.y;obs.field",
-            "", "",
-            "pos.posAng;obs.field", "","instr.background;obs.field" });
-
-      addFilter("#Object elongation\nfilter obj_elong { draw ellipse(${FWHM_X}/2,${FWHM_Y}/2,270-${Angle}) }");
-      setFilter("obj_elong");
-
-   }
+//   private void createPhotLegende() {
+//      setSourceRemovable(true);
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.NAME,     new String[]{  "ID",  "RA (ICRS)","DE (ICRS)","X",     "Y",      "FWHM_X", "FWHM_Y", "Angle",  "Peak",  "Background" });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DATATYPE, new String[]{  "char","char",     "char",     "double","double", "double", "double", "double", "double","double" });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UNIT,     new String[]{  "char","\"h:m:s\"","\"h:m:s\"","",      "",       "",       "",       "deg",    "",      "" });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.WIDTH,    new String[]{  "15",   "13",      "13",       "8",    "8",      "10",     "10",      "5",      "10",    "10"   });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.PRECISION,new String[]{  "",     "2",        "3",       "2",    "2",      "2",      "2",       "0",      "3",     "3"   });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.DESCRIPTION,
+//            new String[]{  "Identifier",  "Right ascension",  "Declination",
+//            "X image coordinate",     "Y image coordinate",
+//            "X Full Width at Half Maximum", "Y Full Width at Half Maximum",
+//            "Angle",  "Source peak",  "image background" });
+//      legPhot = Legende.adjustDefaultLegende(legPhot,Legende.UCD,
+//            new String[]{  "meta.id;meta.main","pos.eq.ra;meta.main","pos.eq.dec;meta.main",
+//            "pos.cartesian.x;obs.field","pos.cartesian.y;obs.field",
+//            "", "",
+//            "pos.posAng;obs.field", "","instr.background;obs.field" });
+//
+//      addFilter("#Object elongation\nfilter obj_elong { draw ellipse(${FWHM_X}/2,${FWHM_Y}/2,270-${Angle}) }");
+//      setFilter("obj_elong");
+//
+//   }
 
    protected boolean Free() {
 
@@ -154,48 +143,45 @@ public class PlanTool extends PlanCatalog {
       return super.Free();
    }
 
-   /** retourne true si le plan a des sources */
-   protected boolean withSource() { return legPhot!=null; }
-
-   public SourceTag addTag(PlanImage planBase,double ra, double dec) {
-      SourceTag o = new SourceTag(this, planBase, ra,dec,null);
-      pcat.setObjetFast(o);
+   public SourceTag addTag(ViewSimple v,double ra, double dec) {
+      SourceTag o = new SourceTag(this, v, new Coord(ra,dec),null);
+      pcat.insertSource(o);
       aladin.view.newView(1);
       setSourceRemovable(true);
       return o;
    }
 
-   public SourcePhot addPhotMan(PlanImage planBase,Repere rep) {
-      SourcePhot o = new SourcePhot(this, planBase, rep);
-      pcat.setObjetFast(o);
+   public SourcePhot addPhot(ViewSimple v,double ra, double dec, double []iqe) {
+      SourcePhot o = new SourcePhot(this,v,new Coord(ra,dec), iqe);
+      pcat.insertSource(o);
       aladin.view.newView(1);
       setSourceRemovable(true);
       return o;
    }
-
-   public Source addPhot(PlanImage planBase,double ra, double dec, double []iqe) {
-      if( legPhot==null ) createPhotLegende();
-
-      String id = pcat.getNextID()+"/"+planBase.label;
-      Coord c = new Coord(ra,dec);
-      String [] val = { id, c.getRA(), c.getDE()+"", iqe[0]+"", iqe[2]+"",iqe[1]+"",iqe[3]+"",iqe[4]+"",iqe[5]+"",iqe[6]+"" };
-      Source o1 = addSource(id, ra, dec, val);
-      o1.setShape(Obj.PLUS);
-      aladin.view.newView(1);
-      return o1;
-   }
-
-   private Source addSource(String id,double ra, double dec, String [] value) {
-      StringBuffer s = new StringBuffer("<&_A>");
-      for( int i=0; i<value.length; i++ ) {
-         if( value[i].startsWith("http://") || value[i].startsWith("https://") ) s.append("\t<&Http "+value[i]+">");
-         else s.append("\t"+value[i]);
-      }
-      Source o = new Source(this,ra,dec,id,s.toString());
-      o.leg = legPhot;
-      pcat.setObjetFast(o);
-      return o;
-   }
+     
+      
+//      if( legPhot==null ) createPhotLegende();
+//
+//      String id = pcat.getNextID()+"/"+planBase.label;
+//      Coord c = new Coord(ra,dec);
+//      String [] val = { id, c.getRA(), c.getDE()+"", iqe[0]+"", iqe[2]+"",iqe[1]+"",iqe[3]+"",iqe[4]+"",iqe[5]+"",iqe[6]+"" };
+//      Source o1 = addSource(id, ra, dec, val);
+//      o1.setShape(Obj.PLUS);
+//      aladin.view.newView(1);
+//      return o1;
+//   }
+//
+//   private Source addSource(String id,double ra, double dec, String [] value) {
+//      StringBuffer s = new StringBuffer("<&_A>");
+//      for( int i=0; i<value.length; i++ ) {
+//         if( value[i].startsWith("http://") || value[i].startsWith("https://") ) s.append("\t<&Http "+value[i]+">");
+//         else s.append("\t"+value[i]);
+//      }
+//      Source o = new Source(this,ra,dec,id,s.toString());
+//      o.leg = legPhot;
+//      pcat.setObjetFast(o);
+//      return o;
+//   }
 
    /** Retourne la ligne d'informations concernant le plan dans le statut d'Aladin*/
    protected String getInfo() {
@@ -215,6 +201,11 @@ public class PlanTool extends PlanCatalog {
 
    protected boolean isMovable() { return movable; }
    
+   protected boolean isCatalog() {
+      if( hasTag() ) return true;
+      return false;
+   }
+   
    /** Retourne vrai si le plan tool contient au moins un objet SourceTag */
    protected boolean hasTag() {
       if( pcat==null ) return false;
@@ -222,6 +213,17 @@ public class PlanTool extends PlanCatalog {
       while( it.hasNext() ) {
          Obj o = it.next();
          if( o instanceof SourceTag ) return true;
+      }
+      return false;
+   }
+
+   /** Retourne vrai si le plan tool contient au moins un objet SourcePhot */
+   protected boolean hasPhot() {
+      if( pcat==null ) return false;
+      Iterator<Obj> it = iterator();
+      while( it.hasNext() ) {
+         Obj o = it.next();
+         if( o instanceof SourceStat ) return true;
       }
       return false;
    }

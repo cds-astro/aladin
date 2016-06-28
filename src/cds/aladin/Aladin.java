@@ -198,7 +198,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.030";
+   static public final    String VERSION = "v9.031";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3360,7 +3360,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Activation du CONCAT des objects depuis la JBar */
    protected void concat(boolean uniqTable) {
-      calque.newPlanCatalogByCatalogs(null,uniqTable);
+      String list = calque.newPlanCatalogByCatalogs(null,uniqTable);
+      if( list.length()>0 ) console.printCommand("ccat "+(uniqTable?"-uniq ":" ")+list);
    }
 
    /** Activation du COPY depuis la JBar */
@@ -3852,7 +3853,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       for( Obj o : view.vselobj ) {
          
          // Ajout des cercles (Phot ou cercle)
-         if( o instanceof Repere || o instanceof Cercle) {
+         if( o instanceof SourceStat || o instanceof Cercle) {
             try {
                double ra = o.getRa();
                double de = o.getDec();
@@ -6083,7 +6084,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       for( int i=0; i<leg.field.length; i++ ) {
          Field f = leg.field[i];
-         if( !f.visible ) continue;
+//         if( !f.visible ) continue;
          writeIndent(s,indent); writeBytes(s, "<FIELD");
          int j=0;
          j=writeAttribute(s,j,3,indent,"ID",f.ID==null?f.name:f.ID);
@@ -6178,7 +6179,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
       for( int i=0; st.hasMoreTokens(); i++ ) {
          Words w = new Words(st.nextToken());
-         if( !o.leg.isVisible(i) ) continue;
+//         if( !o.leg.isVisible(i) ) continue;
          if( i%5==0 && i>0 ) { writeBytes(s, "\n"); writeIndent(s,11); }
          writeBytes(s, "<TD>"+xmlEncode(getValue(w.getText()))+"</TD>");
       }

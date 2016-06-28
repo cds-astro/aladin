@@ -1335,7 +1335,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Propriété de déplacement des objets du plan
-      if( plan.type == Plan.TOOL && !(plan instanceof PlanContour) ) {
+      if( plan instanceof PlanTool && !(plan instanceof PlanContour) ) {
          JRadioButton r;
          cb = new ButtonGroup();
          JPanel bg = new JPanel();
@@ -1866,7 +1866,7 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
       }
 
       // Peut être le sélecteur de déplacement des objets dans le cas d'un plan tool
-      else if( src instanceof JRadioButton && plan.type==Plan.TOOL ) {
+      else if( src instanceof JRadioButton && plan instanceof PlanTool ) {
          String s = ((JRadioButton)src).getActionCommand();
          try { ((PlanTool)plan).setMovable(s); } catch( Exception e1 ) { }
       }

@@ -118,7 +118,7 @@ public final class Command implements Runnable {
                "   @norm [-cut] [x]                         @filter ...\n" +
                "   @conv [x] ...                            @addcol ...\n" +
                "   @kernel ...                              @xmatch x1 x2 [dist] ...\n" +
-               "   @resamp x1 x2 ...                        @cplane [name]\n" +
+               "   @resamp x1 x2 ...                        @ccat [-uniq] [x1...]\n" +
                "   @crop [x|v] [[X,Y] WxH]                  @search {expr|+|-}\n" +
                "   @flipflop [x|v] [V|H]                    @tag|@untag\n" +
                "   @contour [nn] [nosmooth] [zoom]          @select -tag\n" +
@@ -148,7 +148,7 @@ public final class Command implements Runnable {
    // Liste des commandes scripts documentés
    static final String CMD[] = {
       "addcol","backup","bitpix","blink","call","cm","cmoc","collapse","conv","contour","coord","copy",
-      "cplane","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
+      "ccat","cview","crop","demo","draw","expand","export","filter","moreonfilter","function",
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem","northup","match",
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
@@ -2119,6 +2119,72 @@ public final class Command implements Runnable {
       } else a.switchMatch(mode==3);
    }
    
+   /** Execution de la commande "ccat" pour la création d'un catalogue à partir
+    * 1) des sources sélectionnés        => cat
+    * 2) ou des catalogues spécifiés     => cat p1 p2 ...
+    * 3) filtré ou non par un plan MOC   => cat pmoc p1 p2 ...
+    */
+   protected void execCatCmd(String cmd,String param,String label) {
+      
+      // prise en compte de l'option -uniq
+      int i = param.indexOf("-uniq");
+      boolean uniqTable = i>=0;
+      if( uniqTable ) param = param.replace("-uniq","").trim();
+      
+      // prise en compte de l'option -out
+      i = param.indexOf("-out");
+      boolean lookIn = i<0;
+      if( !lookIn ) param = param.replace("-out","").trim();
+      
+      // Pour compatibilité avec l'ancienne commande: "cplane [plan_target]"
+      if( cmd.equalsIgnoreCase("cplane") && param.trim().length()>0 ) { label="="+param; param=""; }
+      
+      // Génération d'un plan catalogue à partir des sources sélectionnées
+      if( param.length()==0 ) {
+         a.calque.newPlanCatalogBySelectedObjet(label,uniqTable);
+         return;
+      }
+      
+      // Récupération de la liste des plans concernés
+      Plan [] plans = getPlan(param,2);
+      PlanMoc pMoc = null;
+      ArrayList<Plan> pcats = new ArrayList<Plan>();
+      for( Plan p : plans ) {
+         if( p.pcat!=null ) pcats.add(p);
+         else if( p instanceof PlanMoc ) {
+            if( pMoc!=null ) { printConsole("!!! execCatCmd error: only one MOC is authorized"); return; }
+            else pMoc=(PlanMoc)p;
+         } else { printConsole("!!! execCatCmd error: uncompatible catalog plane ["+p.label+"]"); return; }
+      }
+      plans = new Plan[ pcats.size() ];
+      pcats.toArray(plans);
+      
+      // Simple concaténation
+      if( pMoc==null ) {
+         try { a.calque.newPlanCatalogByCatalogs(plans,uniqTable); }
+         catch( Exception e ) {
+            printConsole("!!! execCatCmd error: MocFiltering error");
+            if( a.levelTrace>=3 ) e.printStackTrace();
+         }
+     
+      // Filtrage par Moc
+      } else {
+         
+         // Aucun plan catalogue => donc sur les objets sélectionnés => il faut créer un plan catalogue temporaire
+         if( plans.length==0 ) {
+            PlanCatalog pcat = a.calque.newPlanCatalogBySources( a.view.getSelectedObjet() , null ,uniqTable);
+            plans = new Plan[] { pcat };
+         }
+         
+         if( a.frameMocFiltering==null ) a.frameMocFiltering = new FrameMocFiltering(a);
+         try { a.frameMocFiltering.createPlane(label, pMoc, plans, lookIn); }
+         catch( Exception e ) {
+            printConsole("!!! execCatCmd error: MocFiltering error");
+            if( a.levelTrace>=3 ) e.printStackTrace();
+         }
+      }
+   }
+   
    /** Execution de la commande "cmoc" pour la création d'un MOC */
    protected String execCmocCmd(String param,String label) {
       try {
@@ -2461,7 +2527,7 @@ public final class Command implements Runnable {
          if( Aladin.levelTrace!=0 ) e.printStackTrace();
          return false;
       }
-
+      
       // Determination du plan TOOL, ou creation si necessaire
       // On essaye de reprendre le précédent si possible
       if( oPlan!=null && oPlan.type!=Plan.APERTURE && flagFoV ) oPlan=null; // Il faut passer à un plan FoV
@@ -2515,16 +2581,17 @@ public final class Command implements Runnable {
 
             // Commande phot(x,y,r)
          } else if( fct.equalsIgnoreCase("phot") ) {
-            Repere phot;
+            SourceStat phot;
             ViewSimple v = a.view.getCurrentView();
             try {
                if( drawMode==DRAWRADEC ) {
-                  newobj = phot = new Repere(plan,c);
+                  newobj = phot = new SourceStat(plan,v,c,null);
                   phot.setRadius( p[2] );
                } else {
-                  newobj = phot = new Repere(plan,v,x,y);
+                  newobj = phot = new SourceStat(plan,v,x,y,null);
                   phot.setRayon( v,parseDouble(p[2]) );
                }
+               phot.setLocked(true);
             } catch( Exception e ) {
                printConsole("!!! draw phot error: usage: draw phot(x,y,radius)");
                return false;
@@ -2991,7 +3058,8 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("new") )    a.windows();
       else if( cmd.equalsIgnoreCase("search") ) a.search.execute(param);
       else if( cmd.equalsIgnoreCase("createplane") || cmd.equalsIgnoreCase("cplane")
-            || cmd.equalsIgnoreCase("plane") )  a.calque.newPlanCatalogBySelectedObjet(label!=null?label:param,false);
+            || cmd.equalsIgnoreCase("plane") )  execCatCmd("cplane",param,label);
+      else if( cmd.equalsIgnoreCase("ccat") )    execCatCmd("ccat",param,label);
       else if( cmd.equalsIgnoreCase("thumbnail")
             || cmd.equalsIgnoreCase("createROI")
             || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);

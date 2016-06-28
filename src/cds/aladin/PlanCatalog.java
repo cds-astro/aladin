@@ -187,6 +187,8 @@ public class PlanCatalog extends Plan {
       FilterProperties.notifyNewPlan();
       return true;
    }
+   
+   protected boolean isCatalog() { return true; }
 
 
    protected String getDescription() {

@@ -201,7 +201,7 @@ SwingWidgetFinder, Widget {
                firstRepere=false;
                return null;
             }
-            Repere r = new Repere(plan,v,x,y);
+            SourceStat r = new SourceStat(plan,v,x,y,null);
             //            r.setWithLabel(true);
             return r;
          case DIST: return new Cote(plan,v,x,y);
@@ -535,11 +535,10 @@ SwingWidgetFinder, Widget {
       repaint();
    }
 
-   protected void newPlanTool() {
-      //      aladin.calque.newPlanTool(DRAWING+" "+(++NUMBERTOOL));
-      aladin.calque.selectPlanTool();
-      toolMode(false);
-   }
+//   protected void newPlanTool() {
+//      aladin.calque.selectPlanTool();
+//      toolMode(false);
+//   }
 
    // Gestion des curseurs
    private int oc=Aladin.DEFAULTCURSOR;

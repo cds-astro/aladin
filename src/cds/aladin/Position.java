@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -32,6 +30,7 @@ import java.io.OutputStream;
 
 import cds.aladin.Hist.HistItem;
 import cds.tools.Util;
+import healpix.essentials.FastMath;
 
 /**
  * Manipulation d'un objet graphique affichable dans la vue
@@ -89,7 +88,8 @@ public class Position extends Obj {
    */
 
    protected void createCacheXYVP() {
-      createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.type==Plan.X ? 0:plan.aladin.view.getNbView());
+//      createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.type==Plan.X ? 0:plan.aladin.view.getNbView());
+      createCacheXYVP( plan==null ? ViewControl.MAXVIEW : plan.aladin.view.getNbView());
    }
    protected void createCacheXYVP(int dim) {
      if( dim==0 ) return;
@@ -190,10 +190,16 @@ public class Position extends Obj {
       else flags &= ~WITHLABEL;
    }
 
-   /** Positionne le flag LABEL */
+   /** Positionne le flag STAT */
    protected final void setWithStat(boolean withStat) {
       if( withStat ) flags |= WITHSTAT;
       else flags &= ~WITHSTAT;
+   }
+
+   /** Positionne le flag LOCKED */
+   protected final void setLocked(boolean movable) {
+      if( movable ) flags |= LOCKED;
+      else flags &= ~LOCKED;
    }
 
    /** Retourne true si la source a le flag WITHLABEL positionné */
@@ -202,11 +208,13 @@ public class Position extends Obj {
    /** Retourne true si la source a le flag WITHSTAT positionné */
    final protected boolean isWithStat() { return (flags & WITHSTAT) !=0; }
 
+   /** Retourne true si la source a le flag LOCKED positionné */
+   final protected boolean isLocked() { return (flags & LOCKED) !=0; }
+
 
    protected void setCoord(ViewSimple v) {
       Coord c = new Coord();
       boolean ok=false;
-//      if( plan.type==Plan.TOOL && ((PlanTool)plan).lock() ) return;
 
       Projection proj;
       if( Projection.isOk(proj=v.getProj()) ) {
@@ -217,7 +225,7 @@ public class Position extends Obj {
          ok=true;
       }
 
-      if( !ok && plan.type==Plan.TOOL ) {
+      if( !ok && plan instanceof PlanTool ) {
         ((PlanTool)plan).setXYorig(true);
       }
 
@@ -309,7 +317,8 @@ public class Position extends Obj {
   /** Modification de la position (absolue)
    * @param x,y nouvelle position
    */
-   protected void setPosition(ViewSimple v,double x, double y) {
+   protected void setPosition(ViewSimple v,double x, double y) { setPosition1(v,x,y); }
+   protected void setPosition1(ViewSimple v,double x, double y) {
       // Positionnement d'un objet n'ayant que des positions x,y natives
       if( raj==Double.NaN ) {
          this.x = x;
@@ -324,7 +333,8 @@ public class Position extends Obj {
   /** Modification de la position en xy (relative)
    * @param dx,dy decalages
    */
-   protected void deltaPosition(ViewSimple v,double dx, double dy) {
+   protected void deltaPosition(ViewSimple v,double dx, double dy) { deltaPosition1(v,dx,dy); }
+   protected void deltaPosition1(ViewSimple v,double dx, double dy) {
       // Déplacement d'un objet n'ayant que des positions x,y natives
       if( raj==Double.NaN ) {
          x+= dx;
@@ -337,24 +347,12 @@ public class Position extends Obj {
   }
    
 
-   /** Application d'une rotation (relative)
-    * @param theta angle de rotation en radians
-    * @param x0,y0 centre de la rotation
-    */
-   protected void rotatePosition(ViewSimple v,double theta,double x0,double y0) {
-      double x = xv[v.n]-x0;
-      double y = yv[v.n]-y0;
-      double cost,sint;
-      xv[v.n] = x0+ x*(cost=FastMath.cos(theta)) - y*(sint=FastMath.sin(theta));
-      yv[v.n] = y0+ x*sint + y*cost;
-      setCoord(v);
-   }
-
    /** Modification de la position en ra,dec (relative)
     * C'EST BIZARRE, CA MARCHE MIEUX SANS TESTER LES DEPASSEMENT EN ra,dec
     * @param dra,dde decalages
     */
-    protected void deltaRaDec(double dra, double dde) {
+   protected void deltaRaDec(double dra, double dde) { deltaRaDec1(dra,dde); }
+   protected void deltaRaDec1(double dra, double dde) {
       raj+=dra;
       dej+=dde;
 //      if( dej>90.) { dej=180-dej; raj+=180.; }
@@ -367,6 +365,19 @@ public class Position extends Obj {
          ViewSimple v = view.viewSimple[i];
          if( !v.isFree() ) projection(v);
       }
+   }
+
+   /** Application d'une rotation (relative)
+    * @param theta angle de rotation en radians
+    * @param x0,y0 centre de la rotation
+    */
+   protected void rotatePosition(ViewSimple v,double theta,double x0,double y0) {
+      double x = xv[v.n]-x0;
+      double y = yv[v.n]-y0;
+      double cost,sint;
+      xv[v.n] = x0+ x*(cost=FastMath.cos(theta)) - y*(sint=FastMath.sin(theta));
+      yv[v.n] = y0+ x*sint + y*cost;
+      setCoord(v);
    }
 
   /** Modification de l'identificateur
@@ -718,9 +729,9 @@ public class Position extends Obj {
                 }
                 Util.drawStringOutline(g,"max",r.x,r.y,c1,c2);
                 Util.drawStringOutline(g,max,r.x+43,r.y,c1,c2);  r.y+=STATDY;
-                if( this instanceof Repere ) {
+                if( this instanceof SourceStat ) {
                    Util.drawStringOutline(g,"Rad",r.x,r.y,c1,c2);
-                   Util.drawStringOutline(g,Coord.getUnit( ((Repere)this).getRadius()),r.x+43,r.y,c1,c2); 
+                   Util.drawStringOutline(g,Coord.getUnit( ((SourceStat)this).getRadius()),r.x+43,r.y,c1,c2); 
                    r.y+=STATDY;
                 }
                 Util.drawStringOutline(g,"Surf",r.x,r.y,c1,c2);
@@ -730,15 +741,17 @@ public class Position extends Obj {
        }
 
        if( v.pref==plan.aladin.calque.getPlanBase() ) {
-          id="Cnt "+cnt+" / Sum "+sum
-               +" / Sigma "+sig
-               +" / Min "+min
-               +" / Avg "+avg
-               +(Double.isNaN(mediane)?"":" / Med "+med)
-               +" / Max "+max
-               + (this instanceof Repere ? " / Rad "+Coord.getUnit( ((Repere)this).getRadius()):"")
-               +" / Surf "+surf
-               ;
+          if( !(this instanceof SourceStat) ) {
+             id="Cnt "+cnt+" / Sum "+sum
+                   +" / Sigma "+sig
+                   +" / Min "+min
+                   +" / Avg "+avg
+                   +(Double.isNaN(mediane)?"":" / Med "+med)
+                   +" / Max "+max
+                   + (this instanceof SourceStat ? " / Rad "+Coord.getUnit( ((SourceStat)this).getRadius()):"")
+                   +" / Surf "+surf
+                   ;
+          }
           histOn();
        }
 //       status(plan.aladin);

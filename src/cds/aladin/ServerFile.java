@@ -399,8 +399,8 @@ public class ServerFile extends Server implements XMLConsumer {
                         label,null,f, origin,
                         PlanImage.UNKNOWN,PlanImage.UNDEF,
                         o,resNode);
-               } else
-                  n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
+                  
+               } else n=aladin.calque.newPlanImage(f,in,label,origin,o,resNode);
             }
             else if( (type & MyInputStream.FOV_ONLY) != 0 ) {
                // un nouveau plan sera créé sur la pile si la description contient les PARAM de position
@@ -731,7 +731,7 @@ public class ServerFile extends Server implements XMLConsumer {
             break;
          case Plan.APERTURE:
          case Plan.TOOL:
-            plan = ( new PlanTool(aladin));
+            plan = new PlanTool(aladin);
             if( (s=(String)atts.get("color"))!=null )  plan.c=Action.getColor(s);
             if( (s=(String)atts.get("withsource"))!=null )  flagCatalogSource=true;
             if( (s=(String)atts.get("xylock"))!=null ) {
@@ -1115,7 +1115,7 @@ public class ServerFile extends Server implements XMLConsumer {
       Source o = (leg!=null)?new Source(plan,ra,de,id,rec,leg): new Source(plan,ra,de,id,rec);
 
       // Cas particulier de sources dans un plan tool
-      if( leg!=null && typePlan==CATALOGTOOL && ((PlanTool)plan).legPhot==null ) ((PlanTool)plan).legPhot=leg;
+//      if( leg!=null && typePlan==CATALOGTOOL && ((PlanTool)plan).legPhot==null ) ((PlanTool)plan).legPhot=leg;
 
       plan.pcat.setObjetFast(o);
 
@@ -1160,7 +1160,7 @@ public class ServerFile extends Server implements XMLConsumer {
       if( typeTool.equals("tag") )        o = ( new Repere(plan) );   // Pour compatibilité avec les versions <7
       else if( typeTool.equals("text") )      o = ( new Tag(plan) );      // Pour compatibilité avec les versions <7
 
-      else if( typeTool.equals("phot") )      o = ( new Repere(plan) );
+      else if( typeTool.equals("phot") )      o = ( new SourceStat(plan) );
       else if( typeTool.equals("source") )    o = ( new Repere(plan) );
       else if( typeTool.equals("taglabel") )  o = ( new Tag(plan) );
       else if( typeTool.equals("line") )      o = ( new Ligne(plan) );

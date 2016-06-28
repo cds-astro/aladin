@@ -541,8 +541,7 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
                }
 
                if( f.type != null
-                     && (f.type.indexOf("hidden") >= 0 || f.type
-                     .indexOf("trigger") >= 0) ) {
+                     && (f.type.indexOf("hidden") >= 0 || f.type.indexOf("trigger") >= 0) ) {
                   hiddenField[i] = true;
                   f.visible=false;
                   //                  continue;
@@ -1187,6 +1186,24 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
       }
       o[i] = newobj;
       return i;
+   }
+   
+   /**Insertion de la source après la dernière source de même légende, sinon à la fin */
+   protected void insertSource(Source src) {
+      for( int i=nb_o-1; i>=0; i-- ) {
+         if( !(o[i] instanceof Source) ) continue;
+         
+         // On a trouvé ?
+         if( ((Source)o[i]).leg==src.leg ) {
+            System.out.println("Insertion après la position "+i);
+            int n = nextIndex();
+            for( int j=n; j>i+1; j--) o[j] = o[j-1];  // décalage
+            o[i+1] = src;
+            return;
+         }
+      }
+      
+      setObjetFast(src);
    }
 
    // Ajout d'un nouvel objet (non interractivement)

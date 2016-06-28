@@ -63,6 +63,8 @@ public abstract class Obj implements Propable{
    public static final int SOLIDCIRCLE   = 12;
    public static final int SOLIDRHOMB    = 13;
    public static final int SOLIDTRIANGLE = 14;
+   
+   public static final int RETICULE = 15;
 
    // Les constantes associees a "methode" lors de la creation
    protected static final int XY = 1;
@@ -77,6 +79,7 @@ public abstract class Obj implements Propable{
    static protected final byte WITHLABEL  = 1<<3;
    static protected final byte HIGHLIGHT  = 1<<4;
    static protected final byte WITHSTAT   = 1<<5;
+   static protected final byte LOCKED     = 1<<6;
 
    protected Plan   plan;       // Plan d'appartenance de l'objet
    
@@ -174,7 +177,7 @@ public abstract class Obj implements Propable{
    
    /** Provide photometric statistics for the area described by the object (only for circle and polygon)
     * @param ad AladinData describing an image with valid pixels
-    * @return { cnt,sum,sigma,surface_in_square_deg }
+    * @return { cnt,sum,sigma,surface_in_square_deg,min,max }
     * @throws Exception
     */
    public double[] getStatistics(AladinData ad) throws Exception {
