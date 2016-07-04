@@ -649,8 +649,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       // Affichage de la commande en cours de saisie
       if( command || form ) {
          int w=200, h=20;
-         int x = getWidth()/2-w/2;
-         int y = getHeight()/2-100-h/2;
+         int x = form ? getWidth()/2-w/2 : 10;
+         int y = form ? getHeight()/2-100-h/2 : 10;
          YC=y;
          g.setColor(Color.white);
          g.fillRect(x, y, w, h);

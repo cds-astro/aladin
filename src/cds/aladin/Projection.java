@@ -76,21 +76,9 @@ public final class Projection {
    protected Coord coo[];			// Liste de quadruplets pour methode QUADRUPLET de recalibration
 
    // Liste des projections comme elles apparaissent dans Aladin, et correspondances dans Calib
-//   static String [] alaProj            = {"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC", "Fisheye" };
    static String [] alaProj            = {"Sinus", "Tangential", "Aitoff", "Zenital equal area", "Stereographic", "Cartesian", "Mollweide", "Arc", "Fisheye" };
    static String [] alaProjToType      = {"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "FEYE" };
 
-   //          LORSQUE FRANCOIS AURA CORRIGE LES PROJECTIONS QUI MERDOIENT
-//   static {
-//      if( Aladin.PROTO ) {
-//         alaProj       = new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC", "NCP", "ZPN",  };
-//         alaProjToType = new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC", "NCP", "ZPN",  };
-//      } else {
-//         alaProj       =  new String[]{"SINUS", "TANGENTIAL", "AITOFF", "ZENITAL_EQUAL_AREA", "STEREOGRAPHIC", "CARTESIAN", "MOLLWEIDE", "ARC" };
-//         alaProjToType =  new String[]{"SIN",   "TAN",        "AIT",    "ZEA",                "STG",           "CAR",       "MOL",       "ARC"      };
-//
-//      }
-//   }
 
    /** Retourne l'indice de la signature de la projection (case insensitive, qu'il s'agisse de son nom complet
     * apparaissant dans Aladin, ou sa signature */
@@ -126,7 +114,7 @@ public final class Projection {
 
    protected double getRaMax() { return getRaMax(t); }
    static protected double getRaMax(int t) {
-      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP ? 180 :360;
+      return t==Calib.SIN || t==Calib.TAN || t==Calib.SIP || t==Calib.FEYE ? 180 :360;
    }
 
    protected double getDeMax() {

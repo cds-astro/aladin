@@ -1460,7 +1460,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
       if( (status==ERROR || status==LOADINGFROMNET) && parente==0  /* || npix==-1 */ ) return INLIFE;
 
       if( getCurrentLiveTime()<=time ) return INLIFE;     // En vie
-      if( getCurrentLiveTime()>time+2000 ) return DEATH;
+      if( getCurrentLiveTime()>time+ 3000 ) return DEATH;
       return MAYBEDEATH;
    }
 
@@ -1470,30 +1470,6 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected long getCurrentLiveTime() {
       return System.currentTimeMillis()-timer;
    }
-
-   //   /** Retourne le temps depuis la dernière demande de réaffichage (en ms) */
-   //   synchronized protected long getAskRepaintTime() {
-   //      if( timeAskRepaint==0 ) return 0;
-   //      return System.currentTimeMillis()-timeAskRepaint;
-   //   }
-
-
-   //   long timeAskRepaint=0;
-
-   //   /** Positionne le temps de demande de réaffichage forcé */
-   //   synchronized protected void setTimeAskRepaint(long t) {
-   //      if( fils!=null ) {
-   //         for( int i=0; i<4; i++ ) fils[i].setTimeAskRepaint(t);
-   //      }
-   //      if( timeAskRepaint!=0 ) return;
-   //      timeAskRepaint = t;
-   //   }
-
-   // /** Reset le timer d'une demande de réaffichage suite à un affichage réussi */
-   // synchronized protected void resetTimeAskRepaint() {
-   //    timeAskRepaint=0;
-   // }
-
 
    /** Force le losange a dépasser son temps de vie afin d'être rapidement testé */
    protected void setOld() {

@@ -160,7 +160,7 @@ import healpix.essentials.Vec3;
  * @beta    <LI> Tags improvements
  * @beta    <LI> Probability sky map MOC extraction
  * @beta    <LI> Planetary HiPS (longitude inversion)
- * @beta    <LI> Hipsgen improvements: HiPS color multithread code, local MIRROR
+ * @beta    <LI> Hipsgen improvements: HiPS color multithread code, local MIRROR, APPEND, MAP
  * @beta    <LI> File dialog window multi-selections
  * @beta    <LI> Copy-able propertie links
  * @beta </UL>
@@ -198,7 +198,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.031";
+   static public final    String VERSION = "v9.033";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3122,8 +3122,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
       } else if( isMenu(s,SELECTALL)){ selectAll();
       } else if( isMenu(s,UNSELECT)) { unSelect();
       } else if( isMenu(s,TABLEINFO))  { tableInfo(null);
-      } else if( isMenu(s,CLONE1))  { cloneObj(false);
-      } else if( isMenu(s,CLONE2))  { cloneObj(true);
+      } else if( isMenu(s,CLONE1))  { cloneObj(true);
+      } else if( isMenu(s,CLONE2))  { cloneObj(false);
       } else if( isMenu(s,PLOTCAT))  { createPlotCat();
       } else if( isMenu(s,CONCAT1)){ concat(true);
       } else if( isMenu(s,CONCAT2)){ concat(false);
@@ -3346,6 +3346,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** Activation du CLONE des objects depuis la JBar */
    protected void cloneObj(boolean uniqTable) {
       calque.newPlanCatalogBySelectedObjet(uniqTable);
+      console.printCommand("ccat"+(uniqTable?" -uniq ":""));
+
    }
 
    /** Création d'un graphe de nuage de points sur le plan Catalog sélectionné */
@@ -3360,7 +3362,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Activation du CONCAT des objects depuis la JBar */
    protected void concat(boolean uniqTable) {
-      String list = calque.newPlanCatalogByCatalogs(null,uniqTable);
+      String list = calque.newPlanCatalogByCatalogs(null,uniqTable,null);
       if( list.length()>0 ) console.printCommand("ccat "+(uniqTable?"-uniq ":" ")+list);
    }
 
@@ -6862,6 +6864,63 @@ DropTargetListener, DragSourceListener, DragGestureListener
       //      if( p instanceof PlanFov || p instanceof PlanField ) return true;
       //	   return false;
    }
+   
+   private boolean flagGoto=false;
+   
+   /** True if Aladin is moving on a target in animation mode */
+   public boolean isAnimated() { return flagGoto; }
+   
+   /**
+    * Launch the animation moving
+    * @param from initial position
+    * @param to target position
+    */
+   public void gotoAnimation(final Coord from, final Coord to) {
+      
+      final ViewSimple v = view.getCurrentView();
+      if( v.locked || to==null ) return;
+      final double zoom = v.zoom;
+      double z = v.zoom;
+      
+      double dist = Coord.getDist(from, to);
+      int n=(int) (dist);
+      int mode=0;
+      int i=0;
+      boolean encore=true;
+      double fct=0;
+      flagGoto=true;
+      while( encore ) {
+
+         switch(mode) {
+            case 0:
+               if( z<0.1 ) i++;
+               if( z>0.08 ) z=z/1.05;
+               else mode=1;
+               break;
+            case 1:
+               i++;
+               if( i>=n-3 ) mode=2;
+               break;
+            case 2:
+               if( z<0.1 && i<n ) i++;
+               if( z<zoom ) z=z*1.05;
+               if( z>=zoom ) {z=zoom; encore=false; }
+               break;
+
+         }
+         fct = i/(double)n;
+         Coord c = new Coord( from.al + (to.al-from.al)*fct,
+               from.del + (to.del-from.del)*fct);
+
+         int frameNumber = v.frameNumber;
+         view.gotoThere(c,z,true);
+         while( frameNumber==v.frameNumber ) Util.pause(3);
+      }
+      flagGoto=false;
+      view.gotoThere(to,zoom,true);
+   }
+
+
 
    /**
     * Create a new Aladin Image plane by plugin.

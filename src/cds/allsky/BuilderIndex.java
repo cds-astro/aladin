@@ -289,50 +289,6 @@ public class BuilderIndex extends Builder {
       } finally { if( out!=null ) out.close(); }
    }
 
-
-//   // Création si nécessaire du fichier passé en paramètre et ouverture en écriture
-//   private FileOutputStream openFile(String filename) throws Exception {
-//      File f = new File( filename/*.replaceAll(FS+FS, FS)*/ );
-//      if( !f.exists() ) {
-//         cds.tools.Util.createPath(filename);
-//         return new FileOutputStream(f);
-//      }
-//      return new FileOutputStream(f, true);
-//   }
-//
-//   // Insertion d'un nouveau fichier d'origine dans la tuile d'index repérée par out
-//   private void createAFile(FileOutputStream out, String filename, Coord center, String stc, String fitsVal)
-//         throws IOException {
-//
-//      // Détermination d'un nom de produit à partir du filename
-//      // 1.Suppression du path
-//      int o1 = filename.lastIndexOf('/');
-//      int o1b = filename.lastIndexOf('\\');
-//      if( o1b>o1 ) o1=o1b;
-//
-//      // 2.Suppression d'une extension ?
-//      int o2 = filename.lastIndexOf('.');
-//
-//      // 3.Suppression du suffixe [x,y-wxh] si nécessaire
-//      int o3 = filename.charAt(filename.length()-1)==']' ? filename.lastIndexOf('['):-1;
-//      if( o3>o2 ) o2=o3;
-//
-//      if( o2==-1 || o2<=o1 ) o2 = filename.length();
-//      String name = filename.substring(o1+1,o2);
-//
-//      if( fitsVal==null ) fitsVal="";
-//
-//      DataOutputStream dataoutputstream = null;
-//      try {
-//         dataoutputstream = new DataOutputStream(out);
-//         dataoutputstream.writeBytes(
-//               "{ \"name\": \""+name+"\", \"path\": \""+filename+"\", " +
-//                     "\"ra\": \""+center.al+"\", \"dec\": \""+center.del+"\", " +
-//                     "\"stc\": \""+stc+"\""+fitsVal+" }\n");
-//         dataoutputstream.flush();
-//      } finally { if( dataoutputstream!=null ) dataoutputstream.close(); }
-//   }
-
    // Pour chaque fichiers FITS, cherche la liste des losanges couvrant la
    // zone. Créé (ou complète) un fichier texte "d'index" contenant le chemin vers
    // les fichiers FITS

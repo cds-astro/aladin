@@ -6640,7 +6640,7 @@ g.drawString(s,10,100);
          drawBackground(gbuf);
          
          // En mode animation, on force un recalcul juste avant l'affichage
-         if( view.flagGoto )  {
+         if( aladin.isAnimated() )  {
             synchronized( this ) {
                newView();
                paintOverlays(gbuf,clip,0,0,false);

@@ -2979,7 +2979,7 @@ public class Calque extends JPanel implements Runnable {
     * @param uniqTable : true si concaténation dans une unique table homogène
     * @return la liste des labels des plans concernés
     */
-   protected String newPlanCatalogByCatalogs(Plan []pList,boolean uniqTable) {
+   protected String newPlanCatalogByCatalogs(Plan []pList,boolean uniqTable,String label) {
       StringBuilder list = null;
       Plan [] p = pList!=null ? pList : getPlans();
       Vector<Source> v = new Vector<Source>(100000);
@@ -2989,7 +2989,7 @@ public class Calque extends JPanel implements Runnable {
          
          // Liste des plans concernés
          if( list==null ) list = new StringBuilder( Tok.quote(p[i].label) );
-         else list.append(  Tok.quote(" "+p[i].label) );
+         else list.append( " "+Tok.quote(p[i].label) );
          
          Iterator<Obj> it = p[i].iterator();
          while( it.hasNext() ) {
@@ -2999,7 +2999,7 @@ public class Calque extends JPanel implements Runnable {
             v.addElement(s);
          }
       }
-      newPlanCatalogBySources(v, "Concat",uniqTable);
+      newPlanCatalogBySources(v, label ,uniqTable);
       repaintAll();
       
       return list==null ? "" : list.toString();
@@ -3009,18 +3009,23 @@ public class Calque extends JPanel implements Runnable {
     *  sélectionnées. Je sélectionne tous les nouveaux objets
     */
    protected void newPlanCatalogBySelectedObjet(boolean uniqTable) {newPlanCatalogBySelectedObjet("Select.src",uniqTable); }
-   protected void newPlanCatalogBySelectedObjet(String name,boolean uniqTable) {
+   protected void newPlanCatalogBySelectedObjet(String label,boolean uniqTable) {
       Vector v = aladin.view.getSelectedObjet();
-      PlanCatalog p = newPlanCatalogBySources(v, name,uniqTable);
+      PlanCatalog p = newPlanCatalogBySources(v, label,uniqTable);
       if( p!=null ) aladin.view.selectAllInPlan(p);
    }
 
-   protected PlanCatalog newPlanCatalogBySources(Vector vSources,String name,boolean uniqTable) {
+   protected PlanCatalog newPlanCatalogBySources(Vector vSources,String label,boolean uniqTable) {
       Source s, newSource;
       if( vSources==null ) return null;
-      int indice = newPlanCatalog();
-      PlanCatalog p = (PlanCatalog)plan[indice];
-      p.setLabel(name==null || name.length()==0?"New.cat":name);
+      
+      if( label==null || label.length()==0 ) label = "New.cat";
+      
+      int n=getStackIndex(label);
+      label = prepareLabel(label);
+      newPlanCatalog(n);
+      PlanCatalog p = (PlanCatalog)plan[n];
+      p.setLabel(label);
 
       // Cas simple et rapide
       if( !uniqTable ) {
@@ -3276,10 +3281,11 @@ public class Calque extends JPanel implements Runnable {
 
 
 // thomas
-  /** Cree un nouveau PlanCatalog vide
+  /** Cree un nouveau PlanCatalog vide, éventuellement à une place précise dans la stack (écrasement)
     */
-   protected int newPlanCatalog() {
-      int n=getStackIndex();
+   protected int newPlanCatalog() { return newPlanCatalog(-1); }
+   protected int newPlanCatalog(int n) {
+      if( n==-1 ) n=getStackIndex();
       plan[n] = new PlanCatalog(aladin);
 
       //	  // la projection est celle du plan de reference
@@ -3822,7 +3828,11 @@ public class Calque extends JPanel implements Runnable {
             try { n = Integer.parseInt(label.substring(2)); } catch( Exception e ) { n=-1; }
             n = plan.length-n;
          } else n=getIndexPlan(label.substring(1), 1);
-         if( n>=0 ) return n;
+         if( n>=0 ) {
+            // Désélection des sources du plan qui va être écrasé
+            if( plan[n].isCatalog() ) aladin.view.deSelect(plan[n]);
+            return n;
+         }
       }
 
       for( i=0; i<plan.length && plan[i].type==Plan.NO; i++ );

@@ -2124,7 +2124,7 @@ public final class Command implements Runnable {
     * 2) ou des catalogues spécifiés     => cat p1 p2 ...
     * 3) filtré ou non par un plan MOC   => cat pmoc p1 p2 ...
     */
-   protected void execCatCmd(String cmd,String param,String label) {
+   protected void execCcatCmd(String cmd,String param,String label) {
       
       // prise en compte de l'option -uniq
       int i = param.indexOf("-uniq");
@@ -2142,6 +2142,7 @@ public final class Command implements Runnable {
       // Génération d'un plan catalogue à partir des sources sélectionnées
       if( param.length()==0 ) {
          a.calque.newPlanCatalogBySelectedObjet(label,uniqTable);
+         a.calque.repaintAll();
          return;
       }
       
@@ -2161,7 +2162,7 @@ public final class Command implements Runnable {
       
       // Simple concaténation
       if( pMoc==null ) {
-         try { a.calque.newPlanCatalogByCatalogs(plans,uniqTable); }
+         try { a.calque.newPlanCatalogByCatalogs(plans,uniqTable,label); }
          catch( Exception e ) {
             printConsole("!!! execCatCmd error: MocFiltering error");
             if( a.levelTrace>=3 ) e.printStackTrace();
@@ -2177,12 +2178,21 @@ public final class Command implements Runnable {
          }
          
          if( a.frameMocFiltering==null ) a.frameMocFiltering = new FrameMocFiltering(a);
-         try { a.frameMocFiltering.createPlane(label, pMoc, plans, lookIn); }
-         catch( Exception e ) {
+         try {
+            PlanCatalog pcat = a.frameMocFiltering.createPlane(label, pMoc, plans, lookIn);
+            
+            // Il faut éventuellement en faire une table unique
+            if( uniqTable && plans.length>1 ) {
+               plans = new Plan[] { pcat };
+               a.calque.newPlanCatalogByCatalogs(plans,uniqTable,label);
+            }
+         } catch( Exception e ) {
             printConsole("!!! execCatCmd error: MocFiltering error");
             if( a.levelTrace>=3 ) e.printStackTrace();
          }
       }
+      
+      a.calque.repaintAll();
    }
    
    /** Execution de la commande "cmoc" pour la création d'un MOC */
@@ -3058,8 +3068,8 @@ public final class Command implements Runnable {
       else if( cmd.equalsIgnoreCase("new") )    a.windows();
       else if( cmd.equalsIgnoreCase("search") ) a.search.execute(param);
       else if( cmd.equalsIgnoreCase("createplane") || cmd.equalsIgnoreCase("cplane")
-            || cmd.equalsIgnoreCase("plane") )  execCatCmd("cplane",param,label);
-      else if( cmd.equalsIgnoreCase("ccat") )    execCatCmd("ccat",param,label);
+            || cmd.equalsIgnoreCase("plane") )  execCcatCmd("cplane",param,label);
+      else if( cmd.equalsIgnoreCase("ccat") )    execCcatCmd("ccat",param,label);
       else if( cmd.equalsIgnoreCase("thumbnail")
             || cmd.equalsIgnoreCase("createROI")
             || cmd.equalsIgnoreCase("ROI") )    execROICmd(param);

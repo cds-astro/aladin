@@ -134,12 +134,10 @@ public final class FrameMocFiltering extends FrameRGBBlink {
       Healpix hpx = new Healpix();
       HealpixMoc moc = pMoc.getMoc();
       Vector<Obj> v = new Vector<Obj>();
-     
+      
       for( int i=0; i<p.length; i++ ) {
          Plan pCat = p[i];
          if( pCat==null ) continue;
-         if( label==null || label.length()==0 ) label=pCat.label;
-         else label=label+", "+pCat.label;
          Iterator<Obj> it = pCat.iterator();
          while( it.hasNext() ) {
             Obj o = it.next();
@@ -154,7 +152,7 @@ public final class FrameMocFiltering extends FrameRGBBlink {
          }
       }
 
-      return a.calque.newPlanCatalogBySources(v,"Filter "+label,false);
+      return a.calque.newPlanCatalogBySources(v,label,false);
    }
    
    @Override

@@ -1904,7 +1904,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
          Coord c;
          if( !View.notCoord(target) ) c = new Coord(target);
          else c = sesame(target);
-         gotoAnimation(c1, c);
+         aladin.gotoAnimation(c1, c);
       } catch( Exception e ) { }
       return false;
    }
@@ -1948,56 +1948,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return true;
    }
    
-   protected boolean flagGoto=false;
-   
-   public void gotoAnimation(final Coord from, final Coord to) {
-      
-      final ViewSimple v = getCurrentView();
-      if( v.locked || to==null ) return;
-      final double zoom = v.zoom;
-      double z = v.zoom;
-
-      double dist = Coord.getDist(from, to);
-      int n=(int) (dist);
-      int mode=0;
-      int i=0;
-      boolean encore=true;
-      double fct=0;
-      flagGoto=true;
-      while( encore ) {
-
-         switch(mode) {
-            case 0:
-               if( z<0.1 ) i++;
-               if( z>0.08 ) z=z/1.05;
-               else mode=1;
-               break;
-            case 1:
-               i++;
-               if( i>=n-3 ) mode=2;
-               break;
-            case 2:
-               if( z<0.1 && i<n ) i++;
-               if( z<zoom ) z=z*1.05;
-               if( z>=zoom ) {z=zoom; encore=false; }
-               break;
-
-         }
-         fct = i/(double)n;
-         Coord c = new Coord( from.al + (to.al-from.al)*fct,
-               from.del + (to.del-from.del)*fct);
-
-         int frameNumber = v.frameNumber;
-         gotoThere(c,z,true);
-         while( frameNumber==v.frameNumber ) Util.pause(10);
-         //                System.out.println("gotoAnimation(...) i="+i+" z="+z+" c="+c);
-         //                Util.pause(75);
-      }
-      flagGoto=false;
-      gotoThere(to,zoom,true);
-   }
-   //     }
-
    /** Ajustement de toutes les vues (non ROI )
     *  afin que leur centre corresponde à la coordonnée
     *  passée en paramètre ( et que leur zoom s'accroisse du

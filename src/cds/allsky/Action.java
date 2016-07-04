@@ -26,6 +26,7 @@ public enum Action {
    JPEG      ("Build all preview tiles (JPEG) + Allsky.jpg"),
    PNG       ("Build all preview tiles (PNG) + Allsky.png"),
    MOC       ("(Re)build the MOC (MultiOrder Coverage map)"),
+   MAP       ("Build an HEALPix map from the HiPS tiles"),
    MOCINDEX  ("(Re)build the index MOC (MultiOrder Coverage map) in HpxFinder directory"),
    MOCHIGHT  ("Build a high resolution output coverage map (MOC order=pixelRes)"),
    ALLSKY    ("(Re)build all Allsky files + index.html"),

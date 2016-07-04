@@ -1990,7 +1990,7 @@ public class PlanImage extends Plan {
     * @param val la valeur du pixel
     * @return
     */
-   static final protected void setPixVal(byte[] t,int bitpix,int i,double val) {
+   static final public void setPixVal(byte[] t,int bitpix,int i,double val) {
       int c;
       long c1;
       switch(bitpix) {

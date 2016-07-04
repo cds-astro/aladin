@@ -138,6 +138,7 @@ public class HipsGen {
       } else if (opt.equalsIgnoreCase("order"))      { context.setOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("minOrder"))   { context.setMinOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("mocOrder"))   { context.setMocOrder(Integer.parseInt(val));
+      } else if (opt.equalsIgnoreCase("nside"))      { context.setMapNside(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("tileOrder"))  { context.setTileOrder(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("bitpix"))     { context.setBitpix(Integer.parseInt(val));
       } else if (opt.equalsIgnoreCase("frame"))      { context.setFrameName(val);
@@ -572,6 +573,7 @@ public class HipsGen {
                   "   tileOrder=nn       Specifical tile order - default "+Constante.ORDER + "\n" +
                   "   mocOrder=nn        Specifical HEALPix MOC order (only for MOC action) - by default " + "\n" +
                   "                      auto-adapted to the HiPS" + "\n" +
+                  "   nside=nn           HEALPix map NSIDE (only for MAP action) - by default 2048" + "\n" +
                   "   exptime=key        Fits key to use for adjusting variation of exposition" + "\n" +
                   "   inRed              HiPS red path component (RGB action)\n" +
                   "   inGreen            HiPS green path component (RGB action)\n" +
@@ -607,7 +609,8 @@ public class HipsGen {
             "   GZIP       "+Action.GZIP.doc() + "\n"+
             "   CLEANFITS  "+Action.CLEANFITS.doc() + "\n"+
             "   DETAILS    "+Action.DETAILS.doc() + "\n"+
-            "   MIRROR    "+Action.MIRROR.doc() + "\n"
+            "   MIRROR     "+Action.MIRROR.doc() + "\n"+
+            "   MAP        "+Action.MAP.doc() + "\n"
             );
       System.out.println("\nEx: java -jar "+launcher+" in=/MyImages    => Do all the job." +
             "\n    java -jar "+launcher+" in=/MyImages bitpix=16 pixelCut=\"-1 100 log\" => Do all the job" +

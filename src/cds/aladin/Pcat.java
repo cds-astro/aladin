@@ -1195,7 +1195,6 @@ public final class Pcat implements TableParserConsumer/* , VOTableConsumer */ {
          
          // On a trouvé ?
          if( ((Source)o[i]).leg==src.leg ) {
-            System.out.println("Insertion après la position "+i);
             int n = nextIndex();
             for( int j=n; j>i+1; j--) o[j] = o[j-1];  // décalage
             o[i+1] = src;

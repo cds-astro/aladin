@@ -70,6 +70,7 @@ public abstract class Builder {
          case UPDATE:    return new BuilderUpdate(context);
          case PROP:      return new BuilderProp(context);
          case MIRROR:    return new BuilderMirror(context);
+         case MAP:       return new BuilderMap(context);
          default: break;
       }
       throw new Exception("No builder associated to this action");

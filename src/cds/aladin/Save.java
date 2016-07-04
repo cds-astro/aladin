@@ -2528,7 +2528,7 @@ public final class Save extends JFrame implements ActionListener {
    }
 
    // génération de la première HDU d'un fichier FITS Healpix
-   private Vector generateHealpixHDU0(boolean flagColor) {
+   static public Vector generateHealpixHDU0(boolean flagColor) {
       Vector v = new Vector(100);
       v.addElement( getFitsLine("SIMPLE","T","conforms to FITS standard") );
       v.addElement( getFitsLine("BITPIX","8","array data type") );
@@ -2539,7 +2539,7 @@ public final class Save extends JFrame implements ActionListener {
    }
 
    // Génération de la deuxième HDU d'un fichier FITS Healpix
-   private Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int lenLine,int frame) {
+   static public Vector generateHealpixHDU1(int norder,int bitpix,boolean ring, int lenLine,int frame) {
       Vector v = new Vector(100);
       long nside = CDSHealpix.pow2(norder);
       long nbPix = 12*nside*nside;
@@ -2574,7 +2574,7 @@ public final class Save extends JFrame implements ActionListener {
     * @param taille du flux avant l'écriture
     * @return nouvelle taille du flux après écriture
     */
-   private int writeFitsLines(OutputStream f,Vector v,int size) throws Exception {
+   static public int writeFitsLines(OutputStream f,Vector v,int size) throws Exception {
       Enumeration e = v.elements();
       while( e.hasMoreElements() ) {
          byte [] b = (byte[])e.nextElement();
@@ -2865,7 +2865,7 @@ public final class Save extends JFrame implements ActionListener {
     * pour que cela fasse un multiple de 2880.
     * @param headSize taille actuelle de l'entête
     */
-   static protected byte [] getEndBourrage(int headSize) {
+   static public byte [] getEndBourrage(int headSize) {
       int size = 2880 - headSize%2880;
       if( size<3 ) size+=2880;
       byte [] b = new byte[size];

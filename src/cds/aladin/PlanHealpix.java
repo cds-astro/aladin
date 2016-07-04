@@ -457,6 +457,7 @@ public class PlanHealpix extends PlanBG {
       File tmp = new File(getCacheDir()+Util.FS+this.dirName);
 
       if( ! needProcessing(this.dirName, true) ) return;
+      cds.tools.Util.createPath(tmp+"");
       tmp.mkdir();
 
       int nside=0;
@@ -600,7 +601,6 @@ public class PlanHealpix extends PlanBG {
       hpxOrderGeneratedImgs = (int)log2(nbPixGeneratedImage);
       Aladin.trace(3, "hpxOrderGeneratedImgs: "+hpxOrderGeneratedImgs);
       createHealpixOrder(hpxOrderGeneratedImgs);
-
 
       newNSideImage = nsideImage;
       maxOrder = (int)log2(newNSideImage);

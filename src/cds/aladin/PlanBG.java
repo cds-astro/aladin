@@ -3197,7 +3197,7 @@ public class PlanBG extends PlanImage {
       g.setColor(Color.white);
       Stroke st = g.getStroke();
 
-      int epaisseur = 50;
+      int epaisseur = 200;
       g.setStroke(new BasicStroke(epaisseur));
 
       Projection projd = v.getProj().copy();
