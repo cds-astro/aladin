@@ -362,22 +362,38 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    
    /** Retourne le mode d'affichage courant WINDOW, WINDOW_HIDDEN, FULL ou CINEMA */
    protected int getMode() { return mode; }
+   
+   private int modeReticle=-1;
 
    /**  Passage en plein écran */
    private void full() {
+
       setUndecorated(true);
-      if( mode==FULL ) {
+      if( mode==FULL || (mode==CINEMA && aladin.winPlateform) ) {
          setLocation(0,0);
          setSize(Aladin.SCREENSIZE);
-      } else if( mode==CINEMA ) {
+         
+      } else {
+         
+         /* GraphicsDevice [] gds = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+         GraphicsDevice gd;
+         if( gds.length==2 ) gd = gds[1];
+         else  */ 
          GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
          gd.setFullScreenWindow(this);
       }
+      
+      if( mode==CINEMA ) {
+         modeReticle=aladin.calque.reticleMode;
+         aladin.calque.setReticle(0);
+      }
+      
    }
-
+   
    /** Passage en mode preview avec récupération de la position et de la
     * taille adéquate */
    private void window() {
+      if( modeReticle!=-1 ) aladin.calque.setReticle(modeReticle);
       Dimension d = aladin.f.getSize();
       if( d.width<10 || d.height<10 ) {
          Rectangle r = aladin.configuration.getWinLocation();
@@ -391,6 +407,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
    }
    
    public void processWindowEvent(WindowEvent e) {
+      if( modeReticle!=-1 ) aladin.calque.setReticle(modeReticle);
       if( e.getID() == WindowEvent.WINDOW_CLOSING ) {
 //         if( !full ) {
          if( mode!=FULL && mode!=CINEMA ) {
@@ -412,13 +429,11 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
 
    /** Fin du mode plein écran => réintégration de la vue dans son container originale */
    protected void end() {
-      if( mode==CINEMA ) return;
       
       viewSimple.aladin.fullScreen=null;
       viewSimple.setToolTipText(null);
       viewSimple.setBounds(bounds);
       aladin.view.adjustPanel();
-//      if( !full ) {
       if( mode!=FULL && mode!=CINEMA ) {
          aladin.toolBox.calcConf(500);   // juste pour remettre les choses en place
          aladin.f.setSize(getSize());
@@ -428,6 +443,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
 
       aladin.f.setVisible(true);
       aladin.calque.repaintAll();
+      
       memoCheck=null;
       currentPlan=null;
       dispose();
@@ -649,8 +665,8 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       // Affichage de la commande en cours de saisie
       if( command || form ) {
          int w=200, h=20;
-         int x = form ? getWidth()/2-w/2 : 10;
-         int y = form ? getHeight()/2-100-h/2 : 10;
+         int x = form && mode!=CINEMA ? getWidth()/2-w/2 : 10;
+         int y = form && mode!=CINEMA ? getHeight()/2-100-h/2 : 10;
          YC=y;
          g.setColor(Color.white);
          g.fillRect(x, y, w, h);
@@ -669,7 +685,7 @@ public final class FrameFullScreen extends JFrame implements ActionListener {
       }
 
       // Affichage du logo au-dessus de la commande si la pile est vide
-      if( form ) {
+      if( form && mode!=CINEMA ) {
          try {
             if( logo==null ) logo=aladin.getImagette("Aladin.png");
             else g.drawImage(logo,getWidth()/2-logo.getWidth(viewSimple)/2,

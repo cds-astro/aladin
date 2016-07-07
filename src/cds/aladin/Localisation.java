@@ -794,8 +794,6 @@ public class Localisation extends MyBox  {
    }
    public void keyTyped(KeyEvent e) { }
    public void keyReleased(KeyEvent e) { }
-   public void keyPressed(KeyEvent e) {
-      System.out.println("keyPressed : "+e);
-   }
+   public void keyPressed(KeyEvent e) { }
 
 }

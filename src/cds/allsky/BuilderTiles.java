@@ -223,13 +223,16 @@ public class BuilderTiles extends Builder {
       } else context.initParameters();
 
 
-      if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HEALPix survey");
+      if( !context.verifCoherence() ) throw new Exception("Uncompatible pre-existing HiPS survey");
       if( !context.isColor() && context.getBScale()==0 ) throw new Exception("Big bug => BSCALE=0 !! please contact CDS");
 
 
       // Info sur la méthode
       Mode m = context.getMode();
       if( !context.isColor() || m==Mode.KEEPTILE || m==Mode.REPLACETILE ) context.info("mode="+Mode.getExplanation(m));
+      
+      // Info sur le coordinate frame
+      context.info("HiPS coordinate frame => "+context.getFrameName());
    }
 
    long lastTime = 0L;

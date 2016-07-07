@@ -365,7 +365,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
     * @param sens 1:augmentation, -1:diminution
     * @param coo centre du zoom, null si Repere courant
     */
-   private void syncZoom(int sens,Coord coo,boolean flagPow2) {
+   protected void syncZoom(int sens,Coord coo,boolean flagPow2) {
       if( isFree() ) return;
       double nz = aladin.calque.zoom.getNextValue(zoom,sens,flagPow2);
       //      aladin.trace(4,"ViewSimple.syncZoom("+sens+","+(coo==null?null:aladin.localisation.frameToString(coo.al, coo.del))+") zoom="+zoom+" => nz="+nz);
@@ -4558,6 +4558,14 @@ DropTargetListener, DragSourceListener, DragGestureListener {
    /** Remplissage du fond suivant la bonne couleur */
    protected void drawBackground(Graphics g) {
       if( g==null ) return;
+      
+      
+      if( aladin.isCinema() ) {
+         aladin.makeCursor(this, aladin.BLANKCURSOR );
+         g.setColor(Color.black);
+         g.fillRect(0,0,getWidth(),getHeight());
+         return;
+      }
       try {
          if( pref!=null && pref.colorBackground!=null) {
             g.setColor(pref.colorBackground);
@@ -6538,6 +6546,18 @@ g.drawString(s,10,100);
       resetClip();
       quickInfo=flagDrag=quickBlink=flagBlinkControl=quickBordure=false;
    }
+   
+   protected int frameNumber=0;
+   
+   private Object lock = new Object();
+   private void incrFrameNumber() {
+      synchronized( lock ) { frameNumber++; }
+   }
+   
+   protected int getFrameNumber() {
+      synchronized( lock ) { return frameNumber; }
+   }
+
 
    // ATTENTION: gr peut être null dans le cas d'un print ou d'un NOGUI
    public void paintComponent(Graphics gr) {
@@ -6554,6 +6574,7 @@ g.drawString(s,10,100);
          }
       }
       finally {
+         incrFrameNumber();
          aladin.command.setSyncNeedRepaint(false);
          resetClip();
          aladin.view.setPaintTimer();
@@ -6577,7 +6598,8 @@ g.drawString(s,10,100);
 
       // Sablier d'attente de la cas du fullScreen
       if( fullScreen ) {
-         if( aladin.calque.waitingFirst() )  {
+         if( aladin.calque.waitingFirst() || aladin.isCinema() && aladin.calque.isFree() )  {
+            if( aladin.isCinema() ) drawBackground(gr);
             startSablier();
             drawSablier(gr);
             return;
@@ -6597,7 +6619,7 @@ g.drawString(s,10,100);
       if( !Aladin.NOGUI ) rv = new Rectangle(0,0,getSize().width,getSize().height);
 
       PlanImage pi = (PlanImage)( (!isFree() && pref.isImage() ) ? pref : null );
-      
+
       if( !getImgView(gr,pi) || isFree() ) {
          drawBackground(gr);
          drawBordure(gr);
@@ -6638,7 +6660,7 @@ g.drawString(s,10,100);
       if( !(flagDrag || quickInfo || quickBlink || modeGrabIt || flagBlinkControl || quickBordure ||
             view.newobj!=null && view.newobj instanceof Cote  ) ) {
          drawBackground(gbuf);
-         
+
          // En mode animation, on force un recalcul juste avant l'affichage
          if( aladin.isAnimated() )  {
             synchronized( this ) {
@@ -6646,8 +6668,8 @@ g.drawString(s,10,100);
                paintOverlays(gbuf,clip,0,0,false);
             }
          } else 
-            
-         paintOverlays(gbuf,clip,0,0,false);
+
+            paintOverlays(gbuf,clip,0,0,false);
          //System.out.println("paint");
       }
 
@@ -6661,12 +6683,12 @@ g.drawString(s,10,100);
          aladin.fullScreen.drawBlinkInfo(g);
 
          // Gestion d'un message d'accueil
-//         if( aladin.msgOn ) {
-//            aladin.help.setText( aladin.logo.Help());
-//            aladin.help.setSize(aladin.fullScreen.getSize());
-//            aladin.help.paintComponent(g);
-//            return ;
-//         }
+         //         if( aladin.msgOn ) {
+         //            aladin.help.setText( aladin.logo.Help());
+         //            aladin.help.setSize(aladin.fullScreen.getSize());
+         //            aladin.help.paintComponent(g);
+         //            return ;
+         //         }
       }
 
       // Un objet en cours ?
@@ -6724,10 +6746,7 @@ g.drawString(s,10,100);
       timeForPaint  = (Util.getTime() - t);
       //      System.out.println("ViewSimple paint "+timeForPaint+"ms");
 
-      frameNumber++;
    }
-
-   protected int frameNumber=0;
 
    private void drawHealpixMouse(Graphics g) {
       if( !(pref instanceof PlanBG) ) return;

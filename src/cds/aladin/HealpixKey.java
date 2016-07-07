@@ -1694,14 +1694,18 @@ public class HealpixKey implements Comparable<HealpixKey> {
 
    /** Retourne true si le losange décrit par ses quatres coins est trop
     * grand pour être tracé en une seule fois => subdivision */
-   static final double M = 280*280;
-   static final double N = 150*150;
+   static final double M = 220*220;
+//   static final double M = 150*150;
+//   static final double N = 150*150;
    static final double RAP=0.7;
 
    protected boolean mustBeDivided(PointD b[] ) throws Exception {
       if( planBG.DEBUGMODE ) return false;
-      double d1,d2;
-      if( (d1=dist(b,0,2))>M || (d2=dist(b,2,1))>M ) return true;
+      double d1,d2,m;
+      if( planBG.aladin.isAnimated() ) m = M*3;
+      else m=M;
+      double N = M; //1.42*1.42*m;
+      if( (d1=dist(b,0,2))>m || (d2=dist(b,2,1))>m ) return true;
       if( d1==0 || d2==0 ) throw new Exception("Rhomb error");
       double diag1 = dist(b,0,3);
       double diag2 = dist(b,1,2);
@@ -1711,6 +1715,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
    }
    
    protected boolean isTooLarge(PointD b[], int N) throws Exception {
+      if( planBG.aladin.isAnimated() ) N = N*3;
       N *= N;
       double d1,d2;
       if( (d1=dist(b,0,2))>N || (d2=dist(b,2,1))>N ) return true;

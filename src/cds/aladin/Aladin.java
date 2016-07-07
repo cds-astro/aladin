@@ -198,7 +198,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.033";
+   static public final    String VERSION = "v9.035";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -455,6 +455,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    ExtApp extApp = null;         // Application cooperative a Aladin
    String javaVersion;
    static boolean macPlateform = false; // Aladin est-il exécuté sur un Mac ?
+   static boolean winPlateform = false; // Aladin est-il exécuté sur un Windows ?
    private String lastDir=null;  // Le dernier répertoire utilisé
    private final long startTime = System.currentTimeMillis();  // Date de démarrage
    private long sizeCache=0L;    // Taille du cache disque pour les grosses images
@@ -636,7 +637,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    public void myInit() {
       if( SCREENSIZE==null ) SCREENSIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
-      setMacProperties();
+      setMacWinLinuxProperties();
 
       // set user-agent (see RFC 2616, User-Agent section)
       try {
@@ -2362,7 +2363,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       if( SCREEN.equals("full") ) {
          detach(false);
          fullScreen(0);
-      } else if( isCinema() ) {
+      } else if( SCREEN.equals("cinema") ) {
          detach(false);
          fullScreen(3);
       } else if( SCREEN.startsWith("preview") ) {
@@ -2376,7 +2377,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    
    /** True si on est en mode cinema = planetarium) */
    public boolean isCinema() {
-      return SCREEN!=null && SCREEN.equals("cinema");
+      return aladin.isFullScreen() && aladin.fullScreen.getMode()==FrameFullScreen.CINEMA;
    }
 
    /** Positionnement d'un message d'attente */
@@ -2801,17 +2802,16 @@ DropTargetListener, DragSourceListener, DragGestureListener
     *             1-fenêtre preview
     *             2-fenêtre preview mais démarre caché (très utile en mode applet
     *             3-plein écran mode cinéma (exclusif)
+    *             -1-mode normal
     */
    protected void fullScreen(int mode) {
-      if( fullScreen==null ) {
-//         boolean full = mode==0;
-//         boolean startHidden = mode==2;
+      if( mode!=-1 ) {
          
          int m = mode==0 ? FrameFullScreen.FULL : mode==3 ? FrameFullScreen.CINEMA
                : mode==2 ? FrameFullScreen.WINDOW_HIDDEN : FrameFullScreen.WINDOW;
          pan(false);
-//         fullScreen = new FrameFullScreen(this,view.getCurrentView(),full,startHidden);
          fullScreen = new FrameFullScreen(this,view.getCurrentView(),m);
+         
       } else {
          fullScreen.end();
          fullScreen=null;
@@ -4600,6 +4600,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static final int STRECHCURSOR  = 9;
    static final int JOINDRECURSOR = 10;
    static final int TAGCURSOR = 11;
+   static final int BLANKCURSOR = 12;
 
    /** Retourne le Frame parent */
    protected Frame getFrame(Component c) {
@@ -4695,29 +4696,51 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Curseurs pour la rotation des Apertures
     * et pour le déplacement d'un plan */
-   static private Cursor turnCursor=null,planCursor=null,joindreCursor=null,tagCursor=null;
+   static private Cursor turnCursor=null,planCursor=null,joindreCursor=null,tagCursor=null,blankCursor=null;
+
+   static private int BLANKCURSORDEF[][]={
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+         {0,0,0,0,0,0,0,0,0,0},
+      };
 
    static private int TURNCURSORDEF[][]={
-      {0,0,0,0,0,0,0,0,0,0},
-      {2,2,2,2,2,2,2,2,0,0},
-      {2,1,1,1,1,1,1,2,0,0},
-      {2,2,2,2,1,1,1,2,0,0},
-      {0,0,2,1,1,1,1,2,0,0},
-      {0,2,1,1,1,2,1,2,0,0},
-      {0,2,1,1,2,2,1,2,0,0},
-      {2,1,1,2,0,2,1,2,0,0},
-      {2,1,1,2,0,0,2,2,0,0},
-      {2,1,1,2,0,0,0,0,0,0},
-      {2,1,1,2,0,0,0,0,0,0},
-      {2,1,1,2,0,0,0,0,0,0},
-      {0,2,1,1,2,0,0,0,0,0},
-      {0,2,1,1,1,2,0,0,0,0},
-      {0,0,2,1,1,1,2,2,2,2},
-      {0,0,0,2,1,1,1,1,1,1},
-      {0,0,0,0,2,1,1,1,1,1},
-      {0,0,0,0,0,2,2,1,1,1},
-      {0,0,0,0,0,0,0,2,2,2},
-   };
+         {0,0,0,0,0,0,0,0,0,0},
+         {2,2,2,2,2,2,2,2,0,0},
+         {2,1,1,1,1,1,1,2,0,0},
+         {2,2,2,2,1,1,1,2,0,0},
+         {0,0,2,1,1,1,1,2,0,0},
+         {0,2,1,1,1,2,1,2,0,0},
+         {0,2,1,1,2,2,1,2,0,0},
+         {2,1,1,2,0,2,1,2,0,0},
+         {2,1,1,2,0,0,2,2,0,0},
+         {2,1,1,2,0,0,0,0,0,0},
+         {2,1,1,2,0,0,0,0,0,0},
+         {2,1,1,2,0,0,0,0,0,0},
+         {0,2,1,1,2,0,0,0,0,0},
+         {0,2,1,1,1,2,0,0,0,0},
+         {0,0,2,1,1,1,2,2,2,2},
+         {0,0,0,2,1,1,1,1,1,1},
+         {0,0,0,0,2,1,1,1,1,1},
+         {0,0,0,0,0,2,2,1,1,1},
+         {0,0,0,0,0,0,0,2,2,2},
+      };
 
    static private int PLANCURSORDEF[][]={
       {0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2},
@@ -4820,6 +4843,12 @@ DropTargetListener, DragSourceListener, DragGestureListener
       return tagCursor;
    }
 
+   /** Génération d'un curseur totalement transparent (pour le mode cinema) */
+   static private Cursor getBlankCursor() {
+      if( blankCursor==null ) blankCursor=createCursor(BLANKCURSORDEF);
+      return blankCursor;
+   }
+
    /** Construction d'un curseur sur mesure avec symétrie verticale */
    static private Cursor createCursor(int cursor[][]) {
       Cursor myCursor;
@@ -4876,6 +4905,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
          type==TURNCURSOR ? getTurnCursor() :
             type==JOINDRECURSOR ? getJoindreCursor() :
                type==TAGCURSOR? getTagCursor():
+                  type==BLANKCURSOR? getBlankCursor():
                   Cursor.getPredefinedCursor(
                         type==WAITCURSOR?Cursor.WAIT_CURSOR:
                            type==HANDCURSOR?Cursor.HAND_CURSOR:
@@ -5309,6 +5339,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
       a.splitH.setMesureHeight( a.configuration.getWinDivider() );
       a.offsetLocation();
+      
       a.f.setVisible(true);
       a.mesure.setReduced(true);
       //      trace(2,"Aladin window size: "+a.getWidth()+"x"+a.getHeight());
@@ -5317,10 +5348,11 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /**
     * Positionne des flags et des propriétés spécifiques au Mac
     */
-   static private void setMacProperties() {
+   static private void setMacWinLinuxProperties() {
       // propriété spécifique à Mac OS permettant de faire apparaitre les éléments de menu tout en haut (selon le L'n'F Mac)
       // (cf.	http://devworld.apple.com/documentation/Java/Conceptual/Java14Development/04-JavaUIToolkits/JavaUIToolkits.html#//apple_ref/doc/uid/TP40001901-209837)
       macPlateform = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+      winPlateform = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
       // we set the property only if it has not been set yet (by -Dprop=value at startup for instance)
       // for an applet, we keep the menu the standard way
       if( macPlateform && System.getProperty("apple.laf.useScreenMenuBar")==null && !isApplet() ) {
@@ -5436,7 +5468,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       USE_ACR = PROTO;
 
       // Création d'Aladin
-      setMacProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
+      setMacWinLinuxProperties(); // indispensable d'appeler cette méthode avant la création de l'objet Aladin !
       aladin = new Aladin();
       aladin.SCREEN = SCREEN;
       aladin.flagScreen = SCREEN!=null;
@@ -5659,6 +5691,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    public String execCommand(String cmd) {
       waitDialog();
+      
+      // Arrêt de l'animation en cours
+      while( isAnimated() ) stopAnimation();
+
       try { return command.execScript(cmd); }
       catch( Exception e ) {
          aladin.warning("Error: "+e,1);
@@ -5675,6 +5711,10 @@ DropTargetListener, DragSourceListener, DragGestureListener
     */
    public void execAsyncCommand(String cmd) {
       waitDialog();
+      
+      // Arrêt de l'animation en cours
+      while( isAnimated() ) stopAnimation();
+
       console.pushCmd(cmd);
    }
 
@@ -6870,26 +6910,58 @@ DropTargetListener, DragSourceListener, DragGestureListener
    /** True if Aladin is moving on a target in animation mode */
    public boolean isAnimated() { return flagGoto; }
    
+   public void stopAnimation() { flagGoto=false; }
+   
+   /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
+    * @param target Identificateur valide, ou coordonnées J2000
+    * @return true si ok
+    */
+   public void gotoAnimation(String target,String radius) {
+      try {
+         ViewSimple v = view.getCurrentView();
+         if( v.locked ) throw new Exception("Animation not authorized on locked view");
+         Coord c1 = v.getCooCentre();
+         double srcZoom = v.zoom;
+         Coord c;
+         if( !View.notCoord(target) ) c = new Coord(target);
+         else c = view.sesame(target);
+         
+         if( radius==null ) radius="30";
+         double trgZoom = calque.zoom.getNearestZoomFromRadius(v,radius );
+         
+         gotoAnimation1(v,c1,srcZoom, c, trgZoom);
+      } catch( Exception e ) {
+         if( levelTrace>=3 ) e.printStackTrace();
+      }
+   }
+   
+   private int DELAI=40;
+   
    /**
     * Launch the animation moving
     * @param from initial position
     * @param to target position
     */
-   public void gotoAnimation(final Coord from, final Coord to) {
+   private void gotoAnimation1(ViewSimple v, Coord from,double srcZoom,Coord to,double trgZoom ) {
       
-      final ViewSimple v = view.getCurrentView();
-      if( v.locked || to==null ) return;
-      final double zoom = v.zoom;
-      double z = v.zoom;
+      if( to==null ) to=from;
+      
+      System.out.println("gotoAnimation from "+from+"+/"+srcZoom+" to "+to+"/"+trgZoom+"...");
       
       double dist = Coord.getDist(from, to);
       int n=(int) (dist);
-      int mode=0;
+      int mode= dist<3/3600. ? 2: 0;
       int i=0;
       boolean encore=true;
       double fct=0;
+      double z=srcZoom;
+      
+//      int step = n;
+      
       flagGoto=true;
-      while( encore ) {
+      int modeReticule = calque.reticleMode;
+      calque.setReticle(0);
+      while( encore && flagGoto ) {
 
          switch(mode) {
             case 0:
@@ -6903,8 +6975,8 @@ DropTargetListener, DragSourceListener, DragGestureListener
                break;
             case 2:
                if( z<0.1 && i<n ) i++;
-               if( z<zoom ) z=z*1.05;
-               if( z>=zoom ) {z=zoom; encore=false; }
+               if( z<trgZoom ) z=z*1.05;
+               if( z>=trgZoom ) {z=trgZoom; encore=false; }
                break;
 
          }
@@ -6912,12 +6984,20 @@ DropTargetListener, DragSourceListener, DragGestureListener
          Coord c = new Coord( from.al + (to.al-from.al)*fct,
                from.del + (to.del-from.del)*fct);
 
-         int frameNumber = v.frameNumber;
+         int frameNumber = v.getFrameNumber();
          view.gotoThere(c,z,true);
-         while( frameNumber==v.frameNumber ) Util.pause(3);
+         if( isFullScreen() ) fullScreen.toFront();
+         long t = System.currentTimeMillis();
+         long t1=t;
+         while( flagGoto && (frameNumber==v.getFrameNumber() || t1-t<DELAI) ) {
+            Util.pause(4);
+            t1 = System.currentTimeMillis();
+            if( t1-t>3000 ) flagGoto=false;
+         }
       }
+      calque.setReticle(modeReticule);
       flagGoto=false;
-      view.gotoThere(to,zoom,true);
+      view.gotoThere(to,trgZoom,true);
    }
 
 

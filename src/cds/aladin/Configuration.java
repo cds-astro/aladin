@@ -749,7 +749,7 @@ implements Runnable, ActionListener, ItemListener, ChangeListener  {
     * en mode all-sky */
    protected int getProjAllsky() {
       if( Aladin.OUTREACH ) return Calib.SIN;
-      else if( aladin.isCinema() ) return Calib.FEYE;
+      else if( aladin.isCinema() ) return Calib.ARC;
       try {
          String proj = get(PROJALLSKY);
          int i= Projection.getAlaProjIndex(proj);

@@ -179,6 +179,9 @@ public class BuilderIndex extends Builder {
       
       // récupération du MOC de travail
       area = context.getArea();
+      
+      // info sur le coorsys frame
+      context.info("HiPS coordinate frame => "+context.getFrameName());
    }
 
    static public int calculateNSide(double pixsize) {

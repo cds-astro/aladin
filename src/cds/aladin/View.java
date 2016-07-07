@@ -1894,21 +1894,6 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       return gotoThere(Projection.isOk(p.projd)?c:p.co,0,true);
    }
 
-   /** Va montrer la position repéree par son identificateur ou sa coordonnée J2000
-    * @param target Identificateur valide, ou coordonnées J2000
-    * @return true si ok
-    */
-   public  boolean gotoThere(String target) {
-      try {
-         Coord c1 = getCurrentView().getCooCentre();
-         Coord c;
-         if( !View.notCoord(target) ) c = new Coord(target);
-         else c = sesame(target);
-         aladin.gotoAnimation(c1, c);
-      } catch( Exception e ) { }
-      return false;
-   }
-
    /** Va montrer la source
     * @param s la source à montrer
     * @return true si ok
@@ -1942,9 +1927,9 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
       v.setZoomRaDec(z,c.al,c.del);
 
       showSource();  // On force le réaffichage de la source blink en cas de vues bougées
-
       aladin.calque.zoom.newZoom();
       aladin.view.zoomview.repaint();
+
       return true;
    }
    
@@ -3340,6 +3325,7 @@ public class View extends JPanel implements Runnable,AdjustmentListener {
 
    /** Indique que les vues doivent être tracées le plus vite possible */
    protected boolean mustDrawFast() {
+      
       ViewSimple v = getCurrentView();
       if( v instanceof ViewSimpleStatic ) return true;
       

@@ -189,10 +189,11 @@ public class Zoom extends JPanel {
    /** Retourn le facteur de zoom le plus proche pour un angle donné.
     * L'angle est par défaut en ARCMIN, mais peut être suivi d'une unité
     * Le calcul est opéré sur la vue par défaut */
-   protected double getNearestZoomFromRadius(String radius) {
+   protected double getNearestZoomFromRadius(String radius) { return getNearestZoomFromRadius(null,radius); }
+   protected double getNearestZoomFromRadius(ViewSimple v, String radius) {
       try {
          double deg = Server.getAngleInArcmin(radius, Server.RADIUS)/60.;
-         ViewSimple v = aladin.view.getCurrentView();
+         if( v==null ) v = aladin.view.getCurrentView();
          double pixelSize = v.getProj().getPixResDelta();
          double nbPixel = deg / pixelSize;
          double viewSize = v.getWidth();
