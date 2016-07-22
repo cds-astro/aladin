@@ -6936,7 +6936,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
    
-   private int DELAI=10;
+   private int DELAI=30;
    
    /**
     * Launch the animation moving
@@ -6950,51 +6950,75 @@ DropTargetListener, DragSourceListener, DragGestureListener
       System.out.println("gotoAnimation from "+from+"+/"+srcZoom+" to "+to+"/"+trgZoom+"...");
       
       double dist = Coord.getDist(from, to);
-      int n=(int) (dist);
+      
+      Coord c = new Coord(from.al,from.del);
+      
+      int n=(int) (dist*1.5);
       int mode= dist<3/3600. ? 2: 0;
-      int i=0;
+//      
+      double i=0;
       boolean encore=true;
       double fct=0;
       double z=srcZoom;
       
 //      int step = n;
       
+      int m=0;
       flagGoto=true;
       int modeReticule = calque.reticleMode;
       calque.setReticle(0);
       while( encore && flagGoto ) {
+         if( v.isFree() || v.pref.isFree() ) break;
 
          switch(mode) {
             case 0:
-               if( z<0.1 ) i++;
-               if( z>0.08 ) z=z/1.05;
+               if( z<0.4 ) { i+=0.5; m++; }
+               if( z>0.08 ) z=z/1.02;
                else mode=1;
                break;
             case 1:
-               i++;
-               if( i>=n-3 ) mode=2;
+               if( i>=n ) mode=2;
+               else i++;
                break;
             case 2:
-               if( z<0.1 && i<n ) i++;
-               if( z<trgZoom ) z=z*1.05;
+               if( z<trgZoom ) z=z*1.02;
                if( z>=trgZoom ) {z=trgZoom; encore=false; }
                break;
 
          }
-         fct = i/(double)n;
-         Coord c = new Coord( from.al + (to.al-from.al)*fct,
+         fct = i/n;
+         c = new Coord( from.al + (to.al-from.al)*fct,
                from.del + (to.del-from.del)*fct);
+         
+         
+//         double dejaDist = Coord.getDist(from, c);
+//         
+//         if( z>=trgZoom && Coord.getDist(c,to)<1/60. ) break;
+//         
+//         if( mode==0 ) {
+//            if( dejaDist<dist/2 ) z /= 1.02;
+//            else mode=1;
+//         }
+//         if( mode==1) z *= 1.02;
+//         
+//         if( z<0.08 ) z=0.08;
+//         
+//         fct += 0.0001/z;
+//         if( fct>1 ) fct=1;
+//         
+//         c = new Coord( c.al + (to.al-c.al)*fct, c.del + (to.del-c.del)*fct);
 
          int frameNumber = v.getFrameNumber();
+         long t = System.currentTimeMillis();
          view.gotoThere(c,z,true);
          if( isFullScreen() ) fullScreen.toFront();
-         long t = System.currentTimeMillis();
          long t1=t;
-         while( flagGoto && (frameNumber==v.getFrameNumber() || t1-t<DELAI) ) {
-            Util.pause(4);
-            t1 = System.currentTimeMillis();
+         while( flagGoto && (frameNumber==v.getFrameNumber() || (t1=System.currentTimeMillis())-t<DELAI) ) {
             if( t1-t>3000 ) flagGoto=false;
+            Util.pause(4);
          }
+//         System.out.println("goto time: z="+z+" i="+i+"/"+n+" => "+(t1-t)+"ms");
+         System.out.println("goto time: z="+z+" => "+(t1-t)+"ms");
       }
       calque.setReticle(modeReticule);
       flagGoto=false;

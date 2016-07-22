@@ -3136,7 +3136,7 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1;
       statNbItems = nb/*+nb1*/;
-            aladin.trace(4,"Draw"+debug+(aladin.isAnimated()?" anim.":"")+" in "+statTime+"ms");
+//            aladin.trace(4,"Draw"+debug+(aladin.isAnimated()?" anim.":"")+" in "+statTime+"ms");
    }
 
    /** Ne marche que pour les cubes */
