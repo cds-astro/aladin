@@ -104,17 +104,27 @@ public class SourceStat extends SourceTag {
       setId();
       resumeMesures();
    }
+   
+   private int order=0;   // -1 max, 0 courant, ou explicite
+   
+   public void setOrder(String order) throws Exception {
+      if( order.equalsIgnoreCase("max") ) this.order=-1;
+      else this.order=Integer.parseInt(order);
+//      System.out.println("setOrder="+this.order);
+      resumeMesures();
+  }
 
    /** (Re)énération de la ligne des infos (détermine les mesures associées) */
    protected void resumeMesures() {
       double stat[] = null;
+      
       
       try { stat = getStatistics(planBase); }
       catch( Exception e ) { stat=null; }
       
       String cnt  = stat==null ? " " : ""+stat[0];
       String tot  = stat==null ? " " : ""+stat[1];
-      String avg  = stat!=null && stat[0]>0 ? Util.myRound( stat[1]/stat[0] ) : " ";;
+      String avg  = stat!=null && stat[0]>0 ? ""+stat[1]/stat[0] : " ";;
       String sig  = stat==null ? " " : ""+stat[2];
       String surf = stat==null ? " " : ""+stat[3]*3600;
       String rad  = ""+getRadius()*60;
@@ -123,7 +133,14 @@ public class SourceStat extends SourceTag {
       
       Coord c = new Coord(raj,dej);
       
-      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+planBase.label+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;
+      String nomPlan = planBase.label;
+      if( planBase instanceof PlanBG ) {
+         PlanBG pbg = (PlanBG)planBase;
+         int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
+         nomPlan=orderFile+"/"+nomPlan;
+      }
+      
+      info = "<&_A Phots>\t"+raj+"\t"+dej+"\t"+id+"\t"+nomPlan+"\t"+"\t"+c.getRA()+"\t"+c.getDE()+"\t"+cnt+"\t"+tot+"\t"+sig+"\t"+min+"\t"+avg+"\t"+max+"\t"+rad+"\t"+surf;
    }
    
    /** Retourne la liste des Propriétés éditables */
@@ -465,8 +482,10 @@ public class SourceStat extends SourceTag {
       // Cas d'une map HEALPix
       if( p.type==Plan.ALLSKYIMG ) {
          PlanBG pbg = (PlanBG)p;
-         int orderFile = pbg.getOrder();
-         //         if( pbg.maxOrder!=pbg.getOrder() ) return false;
+         int orderFile=order==-1 ? pbg.maxOrder : order==0 ?  pbg.getOrder() : order;
+//         int orderFile = pbg.maxOrder;
+//         int orderFile = pbg.getOrder();
+         
          long nsideFile = CDSHealpix.pow2(orderFile);
          long nsideLosange = CDSHealpix.pow2(pbg.getTileOrder());
          long nside = nsideFile * nsideLosange;

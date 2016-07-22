@@ -2630,7 +2630,7 @@ public class PlanBG extends PlanImage {
       if(  op<=0.1 ) return;
 
       resetFading();
-
+      
       if( g instanceof Graphics2D ) {
          Graphics2D g2d = (Graphics2D)g;
          Composite saveComposite = g2d.getComposite();
@@ -2923,7 +2923,7 @@ public class PlanBG extends PlanImage {
       boolean allKeyReady = false;
       boolean oneKeyReady = false;
       boolean allskyDrawn=false;           // true si on a déjà essayé de tracer un allsky
-      StringBuilder debug=new StringBuilder(" order="+max);
+      StringBuilder debug=new StringBuilder(" ");
       HealpixKey allsky = pixList.get( key(ALLSKYORDER,  -1, z) );
 
       if( z>0 ) debug.append(" z="+z);
@@ -3001,6 +3001,11 @@ public class PlanBG extends PlanImage {
          //         redraw.clear();
          HealpixKey healpix = null;
          int cmin = min<max && allKeyReady ? max : min<max-3 ? max-3 : min;
+         
+         // Petite accélération
+         if( aladin.isAnimated() ) {
+            if( cmin<max-1) { cmin=max-1; oneKeyReady=true; }
+         }
 
          if( max>=ALLSKYORDER )
             for( int order=cmin; order<=max || !oneKeyReady && order<=max+2 && order<=maxOrder; order++ ) {
@@ -3131,7 +3136,7 @@ public class PlanBG extends PlanImage {
       }
       statTimeDisplay = nbStat>0 ? totalStatTime/nbStat : -1;
       statNbItems = nb/*+nb1*/;
-      //      aladin.trace(4,"Draw"+debug+" in "+statTime+"ms");
+            aladin.trace(4,"Draw"+debug+(aladin.isAnimated()?" anim.":"")+" in "+statTime+"ms");
    }
 
    /** Ne marche que pour les cubes */
@@ -3676,50 +3681,51 @@ public class PlanBG extends PlanImage {
          loading= nb[HealpixKey.ASKING]>0 || nb[HealpixKey.TOBELOADFROMCACHE]>0
                || nb[HealpixKey.TOBELOADFROMNET]>0 || nb[HealpixKey.LOADINGFROMCACHE]>0
                || nb[HealpixKey.LOADINGFROMNET]>0;
-               purging= stillOnePurge || nb[HealpixKey.PURGING]>0;
+               
+         purging= stillOnePurge || nb[HealpixKey.PURGING]>0;
 
-               pourcent = n==0 ? -2 : n>=10 ? 1 : (10-n)*10.;
-               readyAfterDraw= n==0;
+         pourcent = n==0 ? -2 : n>=10 ? 1 : (10-n)*10.;
+         readyAfterDraw= n==0;
 
-               // Pour du debug
-               nbReady=nb[HealpixKey.READY];
+         // Pour du debug
+         nbReady=nb[HealpixKey.READY];
 
 
-               //                        System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
-               //                        for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
-               //                           if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
-               //                        }
-               //                        System.out.println();
+         //                        System.out.print("HealpixKey loader (loading="+loading+" purging="+purging+"): ");
+         //                        for( int i=0; i<HealpixKey.NBSTATUS; i++ ) {
+         //                           if( nb[i]>0 ) System.out.print(HealpixKey.STATUS[i]+"="+nb[i]+" ");
+         //                        }
+         //                        System.out.println();
 
-               if( detectServerError(nb) ) error="Server not available";
+         if( detectServerError(nb) ) error="Server not available";
 
-               // Eventuel arrêt du chargement en cours si priorité désormais plus faible
-               HealpixKey healpixMin=null,healpixNet=null;
-               int min = Integer.MAX_VALUE;
-               Enumeration<HealpixKey> e = pixList.elements();
-               while( e.hasMoreElements() ) {
-                  HealpixKey healpix = e.nextElement();
-                  int status = healpix.getStatus();
-                  if( status!=HealpixKey.TOBELOADFROMNET && status!=HealpixKey.LOADINGFROMNET ) continue;
-                  if( status==HealpixKey.LOADINGFROMNET ) healpixNet=healpix;
-                  if( healpix.priority<min ) {
-                     min=healpix.priority;
-                     healpixMin=healpix;
-                  }
-               }
+         // Eventuel arrêt du chargement en cours si priorité désormais plus faible
+         HealpixKey healpixMin=null,healpixNet=null;
+         int min = Integer.MAX_VALUE;
+         Enumeration<HealpixKey> e = pixList.elements();
+         while( e.hasMoreElements() ) {
+            HealpixKey healpix = e.nextElement();
+            int status = healpix.getStatus();
+            if( status!=HealpixKey.TOBELOADFROMNET && status!=HealpixKey.LOADINGFROMNET ) continue;
+            if( status==HealpixKey.LOADINGFROMNET ) healpixNet=healpix;
+            if( healpix.priority<min ) {
+               min=healpix.priority;
+               healpixMin=healpix;
+            }
+         }
 
-               if( healpixNet!=null && healpixNet!=healpixMin ) healpixNet.abort();
+         if( healpixNet!=null && healpixNet!=healpixMin ) healpixNet.abort();
 
-               if( nb[HealpixKey.TOBELOADFROMCACHE]>0 ) cacheLoader.wakeUp();
-               if( nb[HealpixKey.TOBELOADFROMNET]>0 )   netLoader.wakeUp();
+         if( nb[HealpixKey.TOBELOADFROMCACHE]>0 ) cacheLoader.wakeUp();
+         if( nb[HealpixKey.TOBELOADFROMNET]>0 )   netLoader.wakeUp();
 
-               // Pour faire blinker le plan
-               if( aladin.calque!=null && oLoading!=loading ) {
-                  oLoading=loading;
-                  aladin.calque.select.repaint();
-               }
+         // Pour faire blinker le plan
+         if( aladin.calque!=null && oLoading!=loading ) {
+            oLoading=loading;
+            aladin.calque.select.repaint();
+         }
 
-               if( perhapsOneDeath ) shouldRefresh();
+         if( perhapsOneDeath ) shouldRefresh();
 
       }
    }

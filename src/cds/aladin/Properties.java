@@ -27,7 +27,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -980,61 +979,56 @@ public class Properties extends JFrame implements ActionListener, ChangeListener
 
       if( plan.type==Plan.ALLSKYMOC ) {
          final PlanMoc pmoc = (PlanMoc)plan;
-         final Frame frameProp = this;
+//         final Frame frameProp = this;
          double cov = pmoc.getMoc().getCoverage();
          double degrad = Math.toDegrees(1.0);
          double skyArea = 4.*Math.PI*degrad*degrad;
-         final long mocSize = pmoc.getMoc().getSize();
+//         final long mocSize = pmoc.getMoc().getSize();
          PropPanel.addCouple(p,"Coverage: ",new JLabel(Util.round(cov*100, 3)+"% of sky => "+Coord.getUnit(skyArea*cov, false, true)+"^2"),g,c);
          PropPanel.addCouple(p,"Best MOC ang.res: ",new JLabel(Coord.getUnit(pmoc.getMoc().getAngularRes())
                +" (moc order="+pmoc.getMoc().getMocOrder()+")"),g,c);
 //         PropPanel.addCouple(p,"Size: ",new JLabel(mocSize+" cells - about "+Util.getUnitDisk(pmoc.getMoc().getMem())),g,c);
 
-         final JCheckBox b1 = new JCheckBox("borders");
+         final JCheckBox b1 = new JCheckBox("cell borders");
+         final JCheckBox b3 = new JCheckBox("perimeter");
+         
          b1.setSelected( pmoc.isDrawingBorder() );
          b1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setDrawingBorder(b1.isSelected()); aladin.calque.repaintAll(); }
+            public void actionPerformed(ActionEvent e) {
+               boolean a = b1.isSelected();
+               pmoc.setDrawingBorder(a);
+               if( a ) {
+                  pmoc.setDrawingPerimeter(!a);
+                  b3.setSelected(!a);
+               }
+              aladin.calque.repaintAll();
+            }
          });
+         b3.setSelected( pmoc.isDrawingPerimeter() );
+         b3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+               boolean a = b3.isSelected();
+               pmoc.setDrawingPerimeter(a);
+               if( a ) {
+                  pmoc.setDrawingBorder(!a);
+                  b1.setSelected(!a);
+              }
+               aladin.calque.repaintAll();
+            }
+         });
+         
          final JCheckBox b2a = new JCheckBox("fill in");
          b2a.setSelected( pmoc.isDrawingFillIn() );
          b2a.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { pmoc.setDrawingFillIn(b2a.isSelected()); aladin.calque.repaintAll(); }
+            public void actionPerformed(ActionEvent e) {
+               pmoc.setDrawingFillIn(b2a.isSelected());
+               aladin.calque.repaintAll();
+            }
          });
          JPanel p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-         //         final JCheckBox b2 = new JCheckBox("diagonals");
-         //         b2.setSelected( pmoc.isDrawingDiagonal() );
-         //         b2.addActionListener(new ActionListener() {
-         //            public void actionPerformed(ActionEvent e) { pmoc.setDrawingDiagonal(b2.isSelected()); aladin.calque.repaintAll(); }
-         //         });
+         p1.add(b1); p1.add(b3);
          p1.add(b1); p1.add(b2a);
-         //         p1.add(b2);
          PropPanel.addCouple(p,"Drawing method: ",p1,g,c);
-
-         //         boolean twoResMode = pmoc.getTwoResMode();
-         //         ButtonGroup bg = new ButtonGroup();
-         //         final JCheckBox b3 = new JCheckBox("on");
-         //         b3.setSelected(twoResMode);
-         //         b3.addActionListener(new ActionListener() {
-         //            public void actionPerformed(ActionEvent e) { pmoc.setTwoResMode(b3.isSelected()); aladin.calque.repaintAll(); }
-         //         });
-         //         JCheckBox b4 = new JCheckBox("off");
-         //         b4.setSelected(!twoResMode);
-         //         b4.addActionListener(new ActionListener() {
-         //            public void actionPerformed(ActionEvent e) {
-         //               if( mocSize>20000L ) {
-         //                  if( !aladin.confirmation(frameProp,"This MOC is quite big: the drawing process will be slow !\n continue ?") ) {
-         //                     b3.setSelected(true);
-         //                     return;
-         //                  }
-         //               }
-         //               pmoc.setTwoResMode(b3.isSelected());
-         //               aladin.calque.repaintAll();
-         //            }
-         //         });
-         //         p1 = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-         //         bg.add(b3); bg.add(b4);
-         //         p1.add(b3); p1.add(b4);
-         //         PropPanel.addCouple(p,"Adaptative resolution: ",p1,g,c);
 
       }
 

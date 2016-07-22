@@ -36,8 +36,6 @@ import cds.moc.MocCell;
  * @version 1.0 March 2011
  */
 public final class Hpix extends MocCell {
-   // Ordre des indices des coins, Bas -> Gauche -> Haut -> Droite
-   static final private int [] ORDRE = { 0,1,3,2 };
    
    private int frame;       // Le système de coordonnées (Localisation.GAL, Localisation.ECLIPTIC, Localisation.ICRS)
    
@@ -89,9 +87,16 @@ public final class Hpix extends MocCell {
       }
       g.fillPolygon(pol);
    }
+   // Ordre des indices des coins, Bas -> Gauche -> Haut -> Droite
+//   static final private int [] ORDRE = { 0,1,3,2 };
+   static final private int [] ORDRE = { 2,3,1,0 };
+
+   
+   private int borderMask = 0x0F;   // @border = W=0x1, N=0x2, S=0x4, E=0x8
+   public void setBorderMask(int borderMask) { this.borderMask=borderMask; }
    
    /** Trace les bords du losange, de sommet à sommet */
-   public void draw(Graphics g,ViewSimple v,boolean border) {
+   public void draw(Graphics g,ViewSimple v) {
       PointD [] b = getProjViewCorners(v);
       if( b==null ) return;
       
@@ -111,13 +116,15 @@ public final class Hpix extends MocCell {
       if( min==Double.MAX_VALUE ) min=0;
       
       if( drawnOk ) {
+         int mask=0;
          for( int i=0; i<4; i++ ) {
+            mask = i==0 ? 0x1 : mask<<1;
             int d = ORDRE[ i==0 ? 3 : i-1 ];
             int f = ORDRE[i];
             if( b[d]==null || b[f]==null ) { drawnOk=false; continue; }
             double dist =  Math.sqrt(HealpixKey.dist(b,d,f));
             if( dist>1 && min>0 && dist>6*min ) { drawnOk=false; continue; }
-            if( border ) g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
+            if( (borderMask&mask)!=0 ) g.drawLine((int)b[d].x,(int)b[d].y, (int)b[f].x,(int)b[f].y);
          }
       }
    }

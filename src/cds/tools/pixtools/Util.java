@@ -484,35 +484,35 @@ public class Util {
     * 				need to around floor or ceil
     * @return long ring number
     */
-   static public long RingNum(long nside, double z, boolean floor) {
-      long iring = 0;
-      /* equatorial region */
-      if (floor)
-         iring = (long) Math.floor(nside * (2.0 - 1.5 * z));
-      else
-         iring = (long) Math.ceil(nside * (2.0 - 1.5 * z));
-      /* north cap */
-      if (z > twothird) {
-         if (floor)
-            iring = (long) Math.floor(nside * Math.sqrt(3.0 * (1.0 - z)));
-         else
-            iring = (long) Math.ceil(nside * Math.sqrt(3.0 * (1.0 - z)));
-         if (iring == 0)
-            iring = 1;
-      }
-      /* south cap */
-      if (z < -twothird) {
-         if (floor)
-            iring = (long) Math.floor(nside * Math.sqrt(3.0 * (1.0 + z)));
-         else
-            iring = (long) Math.ceil(nside * Math.sqrt(3.0 * (1.0 + z)));
-
-         if (iring == 0)
-            iring = 1;
-         iring = 4 * nside - iring;
-      }
-      return iring;
-   }
+//   static public long RingNum(long nside, double z, boolean floor) {
+//      long iring = 0;
+//      /* equatorial region */
+//      if (floor)
+//         iring = (long) Math.floor(nside * (2.0 - 1.5 * z));
+//      else
+//         iring = (long) Math.ceil(nside * (2.0 - 1.5 * z));
+//      /* north cap */
+//      if (z > twothird) {
+//         if (floor)
+//            iring = (long) Math.floor(nside * Math.sqrt(3.0 * (1.0 - z)));
+//         else
+//            iring = (long) Math.ceil(nside * Math.sqrt(3.0 * (1.0 - z)));
+//         if (iring == 0)
+//            iring = 1;
+//      }
+//      /* south cap */
+//      if (z < -twothird) {
+//         if (floor)
+//            iring = (long) Math.floor(nside * Math.sqrt(3.0 * (1.0 + z)));
+//         else
+//            iring = (long) Math.ceil(nside * Math.sqrt(3.0 * (1.0 + z)));
+//
+//         if (iring == 0)
+//            iring = 1;
+//         iring = 4 * nside - iring;
+//      }
+//      return iring;
+//   }
 
 
    /**
@@ -597,4 +597,36 @@ public class Util {
       if(orderFrom>orderTo) throw new IllegalArgumentException("'orderFrom' must be smaller than 'orderTo'!");
       return ((++idx)<<((orderTo-orderFrom)<<1))-1;
    }
+   
+   
+   static private final long UN = 1L<<63;
+   
+   /** Returns the HEALPix NESTed number from x,y array coordinate (shuffle bit algorithm) */
+   public static long getHpxNestedNumber(int x, int y) {
+      long mask=0x1;
+      long res=0L;
+
+      for( int i=0; i<32; i++ ) {
+         res >>>= 1;
+         if( (mask&x)!=0 ) res |= UN;
+          res >>>= 1;
+         if( (mask&y)!=0 ) res |= UN;
+         mask <<= 1;
+      }
+      return res;
+   }
+   
+   /** Returns the binary representation of a long integer */
+   public static String bits(long a) {
+      StringBuilder res = new StringBuilder();
+      long mask = 1L<<63;
+      for( int i=0; i<64; i++ ) {
+         if( (mask&a)!=0 ) res.append('1');
+         else res.append('0');
+         mask >>>= 1;
+      }
+      return res.toString();
+   }
+   
+
 }

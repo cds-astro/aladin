@@ -339,6 +339,7 @@ public class Plan implements Runnable {
     */
    protected void setSourceType(int sourceType) {
       Iterator<Obj> it = iterator();
+      if( it==null ) return;
       while( it.hasNext() ) {
          Obj o = it.next();
          if( !(o instanceof Source) ) continue;

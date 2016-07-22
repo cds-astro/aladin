@@ -2617,6 +2617,7 @@ public final class Command implements Runnable {
          } else if( fct.equalsIgnoreCase("phot") ) {
             SourceStat phot;
             ViewSimple v = a.view.getCurrentView();
+           
             try {
                if( drawMode==DRAWRADEC ) {
                   newobj = phot = new SourceStat(plan,v,c,null);
@@ -2625,9 +2626,10 @@ public final class Command implements Runnable {
                   newobj = phot = new SourceStat(plan,v,x,y,null);
                   phot.setRayon( v,parseDouble(p[2]) );
                }
+               if( p.length>2 ) phot.setOrder(p[3]);
                phot.setLocked(true);
             } catch( Exception e ) {
-               printConsole("!!! draw phot error: usage: draw phot(x,y,radius)");
+               printConsole("!!! draw phot error: usage: draw phot(x,y,radius[,order|max])");
                return false;
             }
 
@@ -4833,12 +4835,8 @@ public final class Command implements Runnable {
    }
 
    private void hop() {
-      try {
-        a.calque.stack();
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-
+//      PlanMoc.PERIMETER = !PlanMoc.PERIMETER;
+//      System.out.println("Tracage perimetre MOC : "+PlanMoc.PERIMETER);
    }
 
 }

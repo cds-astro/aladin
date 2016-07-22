@@ -2333,7 +2333,7 @@ DropTargetListener, DragSourceListener, DragGestureListener {
 
       //      if( Aladin.levelTrace>=3 ) testConvertion(x,y);
 
-      if( pref!=null && pref instanceof PlanBG ) ((PlanBG)pref).resetDrawFastDetection();
+      calque.resetDrawFastDetection();
 
       if( hasCrop() ) {
          view.crop.endDrag(this);

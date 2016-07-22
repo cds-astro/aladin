@@ -1458,6 +1458,16 @@ public class Calque extends JPanel implements Runnable {
       if( p.selected )                type |= SELECTED;
       return type;
    }
+   
+   /** Remise à zéro de la mesure de vitesse de tracé de tous les plans HiPS.
+    * Permet de relancer l'évaluation du temps nécessaire au tracé afin d'en
+    * déterminer l'algorithme le plus adéquat à la situation (rapide ou précis)
+    */
+   protected void resetDrawFastDetection() {
+      for( Plan p : plan ) {
+         if( p instanceof PlanBG ) ((PlanBG)p).resetDrawFastDetection();
+      }
+   }
 
    /**
     * Retourne la liste des plans valides d'un certain type

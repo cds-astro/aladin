@@ -22,14 +22,17 @@ package cds.aladin;
 import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.Iterator;
 
+import cds.moc.Array;
 import cds.moc.Healpix;
 import cds.moc.HealpixMoc;
 import cds.moc.MocCell;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 import cds.tools.pixtools.Hpix;
+import healpix.essentials.HealpixBase;
 
 /**
  * Génération d'un plan MOC à partir d'un flux
@@ -37,18 +40,23 @@ import cds.tools.pixtools.Hpix;
  * doivent être surchargées "à vide".
  *
  * @author Pierre Fernique [CDS]
+ * @version 2.1 jul 2016 - Moc avec périmètre
  * @version 2.0 nov 2012 - remise en forme
  */
 public class PlanMoc extends PlanBGCat {
 
    // Mode de tracé
-   static final public int DRAW_BORDER   = 0x1;     // Tracé des bordures des cellules Healpix
-   static final public int DRAW_FILLIN   = 0x4;     // Remplissage avec aplat de demi-opacité
+   static final public int DRAW_BORDER   = 0x1;      // Tracé des bordures des cellules Healpix
+   static final public int DRAW_FILLIN   = 0x4;      // Remplissage avec aplat de demi-opacité
+   static final public int DRAW_PERIMETER     = 0x8; // Tracé du périmètres
 
    protected HealpixMoc moc = null;                 // Le MOC
    private int wireFrame=DRAW_BORDER | DRAW_FILLIN; // Mode de tracage par défaut
 
-   private Hpix[][] arrayHpix = null;      // Liste des cellules correspondant au MOC (pour chaque ordre)
+   private HealpixMoc [] arrayMoc =null;          // Le MOC à tous les ordres */
+   private ArrayList<Hpix> arrayHpix = null;      // Liste des cellules correspondant aux cellules tracés (order courant)
+   private ArrayList<Hpix> arrayPeri = null;      // Liste des cellules correspondant au périmètre tracé (ordre courant)
+   
    public PlanMoc(Aladin a) { super(a); }
 
    /** Création d'un Plan MOC à partir d'un MOC pré-éxistant */
@@ -63,7 +71,7 @@ public class PlanMoc extends PlanBGCat {
 
    protected PlanMoc(Aladin aladin, MyInputStream in, HealpixMoc moc, String label, Coord c, double radius) {
       super(aladin);
-      arrayHpix = new Hpix[CDSHealpix.MAXORDER+1][];
+      arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
       this.dis   = in;
       this.moc   = moc;
       useCache = false;
@@ -92,7 +100,8 @@ public class PlanMoc extends PlanBGCat {
       pm.moc = (HealpixMoc)moc.clone();
       pm.wireFrame=wireFrame;
       pm.gapOrder=gapOrder;
-      pm.arrayHpix = new Hpix[CDSHealpix.MAXORDER+1][];
+      pm.arrayHpix = arrayPeri = null;
+      pm.arrayMoc = new HealpixMoc[CDSHealpix.MAXORDER+1];
    }
 
    /** Changement de référentiel si nécessaire */
@@ -135,7 +144,149 @@ public class PlanMoc extends PlanBGCat {
       moc1.setCheckConsistencyFlag(true);
       return moc1;
    }
+   
+   /** Retourne le Moc.maxOrder réel, même pour les vieux MOCs dont le Norder est généralement
+    * faux */
+   private int getRealMaxOrder(HealpixMoc m) {
+      int nOrder = m.getMaxOrder();
+      if( nOrder<=0 ) return nOrder;
+      Array a;
+      while( ( (a=m.getArray(nOrder))==null || a.getSize()==0) && nOrder>0 ) nOrder--;
+      return nOrder;
+   }
+   
+   // POUR LE MOMENT ON N'UTILISE PAS ENCORE CETTE FONCTION
+   // Création du Pcat qui contient les lignes du périmètre du MOC
+//   private Pcat createPerimetre(ViewSimple v,HealpixMoc moc) throws Exception {
+//      Pcat pcat = new Pcat(this);
+//      ArrayList<double[]> a = getPerimeter(moc);
+//      Ligne oo=null;
+//
+//      for( int i=a.size()-1; i>=0; i-- ) {
+//         double [] c = a.get(i);
+//
+////         for( double [] c : a ) {
+//            if( c==null ) { oo=null; continue; }
+//         LigneConst o = new LigneConst(c[0], c[1], this, v, oo);
+//                  o.id = pcat.nb_o+"";
+//                  o.setWithLabel(true);
+//         pcat.setObjetFast(o);
+//         oo=o;
+//         }
+//         return pcat;
+//      }
+//   
+//   public ArrayList<double[]> getPerimeter(HealpixMoc moc) throws Exception {
+//      if( moc==null ) return null;
+//      int maxOrder = getRealMaxOrder(moc);
+//      ArrayList<double[]> a = new ArrayList<double[]>();
+//      if( maxOrder==-1 || moc.isAllSky() ) return a;
+//      HealpixMoc done = new HealpixMoc( moc.getCoordSys(), moc.getMinLimitOrder(),maxOrder );
+//      HealpixBase hpx= CDSHealpix.getHealpixBase(maxOrder);
+//
+//      Iterator<Long> it = moc.pixelIterator();
+//      while( it.hasNext() ) {
+//         long pix = it.next();
+//         parcoursBord(hpx,moc,done,a,maxOrder,pix,0,0);
+//         if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+//      }
+//
+//      return a;
+//   }
+//   
+//   private void parcoursBord(HealpixBase hpx, HealpixMoc moc, HealpixMoc done, ArrayList<double[]> a, 
+//         int maxOrder, long pix, int sens, int rec ) throws Exception {
+////      for( int i=0; i<rec; i++ ) System.out.print("  ");
+////      System.out.println(maxOrder+"/"+pix+" sens="+sens);
+//      if( done.isIntersecting(maxOrder,pix) ) return;
+//      
+//      if( rec>10000 ) return;
+////      if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+//      
+//      done.add(maxOrder,pix);
+//      
+//      long [] voisins = getVoisins(hpx,moc,maxOrder,pix);
+//      double [][] corners = null;
+//      for( int j=0; j<4; j++ ) {
+//         int i = (sens+j)%4;
+//         long voisin = voisins[i];
+//         if( voisin!=-1 ) continue;
+//         if( corners==null ) corners = getCorners(hpx,pix);
+//         
+//         boolean flagAdd=true;
+////         if( a.size()>1 ) {
+////            double [] bisCorner = a.get( a.size()-1 );
+////            double [] lastCorner = a.get( a.size()-2 );
+////            if( bisCorner==null && 
+////                  (lastCorner!=null && lastCorner[0]==corners[i][0] && lastCorner[1]==corners[i][1]) ) {
+////               a.remove(a.size()-1);
+////               flagAdd=false;
+////            }
+////         }
+//         if( flagAdd && a.size()>0 ) {
+//            double [] lastCorner = a.get( a.size()-1 );
+//            flagAdd = lastCorner==null || lastCorner[0]!=corners[i][0] || lastCorner[1]!=corners[i][1];
+//         }
+//         
+//         if( flagAdd ) a.add( corners[i]);
+//         a.add( corners[ i<3?i+1:0] );
+//         
+//         long nextVoisin = voisins[ i<3 ? i+1 : 0 ];
+//         if( nextVoisin!=-1 ) {
+//            
+//            long [] vVoisins = getVoisins(hpx,moc,maxOrder,nextVoisin);
+//            long nNextVoisin = vVoisins[i];
+//            if( nNextVoisin!=-1 ) {
+//               parcoursBord(hpx,moc,done,a,maxOrder,nNextVoisin,i==0?3:i-1,rec+1);
+//            }
+//            else parcoursBord(hpx,moc,done,a,maxOrder,nextVoisin,i,rec+1);
+//            if( a.size()>0 && a.get(a.size()-1)!=null ) a.add(null);
+//         }
+//      }
+//   }
+//   
+//   static final private int [] A = { 2, 1, 0, 3 };
+//
+//   // Retourne les coordonnées des 4 coins du pixel HEALPix indiqué
+//   // Ordre des coins => S, W, N, E
+//   private double [][] getCorners(HealpixBase hpx,long pix) throws Exception {
+//      Vec3[] tvec = hpx.boundaries(pix,1);   // N W S E
+//      double [][] corners = new double[tvec.length][2];
+//      for (int i=0; i<tvec.length; ++i) {
+//         Pointing pt = new Pointing(tvec[i]);
+//         int j=A[i];
+//         corners[j][0] = ra(pt);
+//         corners[j][1] = dec(pt);
+//      }
+//      return corners;
+//   }
+//   
+//   public static final double cPr = Math.PI / 180;
+//   static private double dec(Pointing ptg) { return (Math.PI*0.5 - ptg.theta) / cPr; }
+//   static private double ra(Pointing ptg) { return ptg.phi / cPr; }
 
+   // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'ils sont en dehors du MOC   
+   // Ordre des voisins => W, N, E, S
+   private long [] getVoisins(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+      long [] voisins = new long[4];
+      long [] neib = hpx.neighbours(npix);
+      for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
+         voisins[i] = moc.isIntersecting(maxOrder, neib[j]) ? neib[j] : -1;
+      }
+      return voisins;
+   }
+   
+   // Retourne la liste des numéros HEALPix des 4 voisins directs ou -1 s'il n'y en a pas du même ordre   
+   // Ordre des voisins => W, N, E, S
+   private long [] getVoisinsSameOrder(HealpixBase hpx, HealpixMoc moc, int maxOrder,long npix) throws Exception {
+      long [] voisins = new long[4];
+      long [] neib = hpx.neighbours(npix);
+      for( int i=0,j=0; i<voisins.length; i++, j+=2 ) {
+         voisins[i] = moc.isIn(maxOrder, neib[j]) ? neib[j] : -1;
+      }
+      return voisins;
+   }
+      
    protected int getMocOrder() { return moc.getMocOrder(); }
 
    /** Retourne le Moc */
@@ -151,6 +302,7 @@ public class PlanMoc extends PlanBGCat {
 
    public boolean isDrawingBorder() { return (wireFrame & DRAW_BORDER) !=0; }
    public boolean isDrawingFillIn() { return (wireFrame & DRAW_FILLIN) !=0; }
+   public boolean isDrawingPerimeter()   { return (wireFrame & DRAW_PERIMETER) !=0; }
 
    public void setDrawingBorder(boolean flag) {
       if( flag ) wireFrame |= DRAW_BORDER;
@@ -160,6 +312,11 @@ public class PlanMoc extends PlanBGCat {
    public void setDrawingFillIn(boolean flag) {
       if( flag ) wireFrame |= DRAW_FILLIN;
       else wireFrame &= ~DRAW_FILLIN;
+   }
+
+   public void setDrawingPerimeter(boolean flag) {
+      if( flag ) wireFrame |= DRAW_PERIMETER;
+      else wireFrame &= ~DRAW_PERIMETER;
    }
 
    protected boolean hasSources() { return false; }
@@ -182,7 +339,6 @@ public class PlanMoc extends PlanBGCat {
             if( aladin.levelTrace>=3 ) e.printStackTrace();
             return false;
          }
-
       }
 
       // Mémoristion de la position de la première cellule
@@ -221,12 +377,12 @@ public class PlanMoc extends PlanBGCat {
       long [] pix = getPixList(v,center,order);
 
       HealpixMoc m = new HealpixMoc();
+      m.setCheckConsistencyFlag(false);
       m.setCoordSys(moc.getCoordSys());
       for( int i=0; i<pix.length; i++ ) m.add(order,pix[i]);
-      m.sort();
+      m.setCheckConsistencyFlag(true);
       return m;
    }
-
 
    static int MAXGAPORDER=3;
    private int gapOrder=0;
@@ -236,11 +392,10 @@ public class PlanMoc extends PlanBGCat {
       if( Math.abs(gapOrder)>MAXGAPORDER ) return;
       this.gapOrder=gapOrder;
    }
-
-   // retourne/construit la liste des cellules "graphiques" correspondantes au MOC
+   
+   // retourne/construit la liste du MOC
    // à l'ordre courant (mode progressif)
-   private Hpix [] getHpixListProg(int order) {
-      //      int o = order;
+   private HealpixMoc getHealpixMocLow(int order,int gapOrder) {
 
       int mo = moc.getMaxOrder();
       if( mo<3 ) mo=3;
@@ -250,26 +405,19 @@ public class PlanMoc extends PlanBGCat {
       if( order<5 ) order=5;
       if( order>mo ) order=mo;
       //      System.out.println("getHpixListProg("+o+") => "+order);
-      if( arrayHpix[order]==null ) {
-         arrayHpix[order] = new Hpix[0];   // pour éviter de lancer plusieurs threads sur le meme calcul
+      if( arrayMoc[order]==null ) {
+         arrayMoc[order] = new HealpixMoc();   // pour éviter de lancer plusieurs threads sur le meme calcul
          final int myOrder = order;
          final int myMo=mo;
          (new Thread("PlanMoc building order="+order){
 
             public void run() {
-               Aladin.trace(4,"PlanMoc.getHpixListProg("+myOrder+") running...");
+               Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") running...");
                HealpixMoc mocLow = myOrder==myMo ? moc : (HealpixMoc)moc.clone();
                try { mocLow.setMocOrder(myOrder); }
                catch( Exception e ) { e.printStackTrace(); }
-               Hpix [] hpixLow = new Hpix[moc.getSize()];
-               int n=0;
-               Iterator<MocCell> it = mocLow.iterator();
-               while( it.hasNext() ) {
-                  MocCell h = it.next();
-                  hpixLow[n++] = new Hpix(h.order,h.npix,frameOrigin);
-               }
-               arrayHpix[myOrder] = hpixLow;
-               Aladin.trace(4,"PlanMoc.getHpixListProg("+myOrder+") done !");
+               arrayMoc[myOrder]=mocLow;
+               Aladin.trace(4,"PlanMoc.getHealpixMocLow("+myOrder+") done !");
                askForRepaint();
             }
 
@@ -277,15 +425,15 @@ public class PlanMoc extends PlanBGCat {
 
       }
       // peut être y a-t-il déjà un MOC de plus basse résolution déjà prêt
-      if( arrayHpix[order].length==0 ) {
+      if( arrayMoc[order].getSize()==0 ) {
          isLoading=true;
          int i=order;
-         for( ; i>=5 && (arrayHpix[i]==null || arrayHpix[i].length==0); i--);
+         for( ; i>=5 && (arrayMoc[i]==null || arrayMoc[i].getSize()==0); i--);
          if( i>=5 ) order=i;
       } else isLoading=false;
 
       lastOrderDrawn = order;
-      return arrayHpix[order];
+      return arrayMoc[order];
    }
 
    private boolean isLoading=false;
@@ -299,46 +447,135 @@ public class PlanMoc extends PlanBGCat {
    }
 
    protected double getCompletude() { return -1; }
-
+   
+   /** Retourne la liste des pixels HEALPix du périmètre d'un losange HEALPIX d'ordre plus petit */
+   static class Bord implements Iterator<Long> {
+      int order,bord,i;
+      public Bord(int order) { this.order=order; i=0; bord=0;}
+      public boolean hasNext() {
+         if( order<2 && i>0 ) return false;
+         return  bord<3 || bord==3 && i<order-1;
+      }
+      public Long next() {
+         long res = bord==0 ? cds.tools.pixtools.Util.getHpxNestedNumber(0,i) : bord==1 
+                            ? cds.tools.pixtools.Util.getHpxNestedNumber(i,order-1) : bord==2
+                            ? cds.tools.pixtools.Util.getHpxNestedNumber(order-1,order-i-1) 
+                            : cds.tools.pixtools.Util.getHpxNestedNumber(order-i-1,0);
+         if( (++i)>=order ) { bord++; i=1; }
+         return res;
+      }
+   }
+   
+   private long oiz=-1;
+   private boolean oFlagPeri;
+   private int oGapOrder;
+   
    // Tracé du MOC visible dans la vue
    protected void draw(Graphics g,ViewSimple v) {
+           
       long t1 = Util.getTime();
       g.setColor(c);
       int max = Math.min(maxOrder(v),maxOrder)+1;
-
+      
       try {
          HealpixMoc m = v.isAllSky() ? null : getViewMoc(v,max);
-         int order=0;
+         
          long t=0;
-         int i;
-         Hpix [] hpixList = getHpixListProg(max+ (v.isAllSky()?0:1));
-
-         for( i=0; i<hpixList.length; i++ ) {
-            Hpix p = hpixList[i];
-            if( p==null ) break;
-            order=p.getOrder();
-            if( m!=null && !m.isIntersecting(order, p.getNpix())) continue;
-            if( p.isOutView(v) ) continue;
-
-            boolean small = p.getDiag2(v)<25 && isDrawingBorder();
-
-            // Tracé en aplat avec demi-niveau d'opacité
-            if( isDrawingFillIn() /* && !lowMoc */ && !small )  {
-               if( g instanceof Graphics2D ) {
-                  Graphics2D g2d = (Graphics2D)g;
-                  Composite saveComposite = g2d.getComposite();
-                  try {
-                     g2d.setComposite( Util.getImageComposite(getOpacityLevel()/5f) );
-                     p.fill(g, v);
-                  } finally {
-                     g2d.setComposite(saveComposite);
-                  }
-               } else p.fill(g, v);
-            }
-
-            // Tracé des bords et|ou des diagonales
-            if( isDrawingBorder() )  p.draw(g, v, isDrawingBorder());
+         int myOrder = max+ (v.isAllSky()?0:1);
+         
+         t = System.currentTimeMillis();
+         
+         int drawingOrder = 0;
+         HealpixBase hpx=null;
+         HealpixMoc lowMoc = null;
+         boolean flagPeri = isDrawingPerimeter();
+         boolean flagBorder = isDrawingBorder();
+         boolean flagFill = isDrawingFillIn();
+         
+         int gapOrder = this.gapOrder;
+         if( mustDrawFast() ) {
+            gapOrder--;
          }
+         
+         // Génération des Hpix concernées par le champ de vue
+         if( oiz!=v.getIZ() || flagPeri!=oFlagPeri || gapOrder!=oGapOrder ) {
+            lowMoc = getHealpixMocLow(myOrder,gapOrder);
+            drawingOrder = getRealMaxOrder(lowMoc);
+            if( drawingOrder==-1 ) return;
+//            System.out.println("Récupération Hpix order "+drawingOrder);
+            hpx= CDSHealpix.getHealpixBase(drawingOrder);
+            ArrayList<Hpix> a1 = new ArrayList<Hpix>(10000);
+            ArrayList<Hpix> a2 = !flagPeri ? null : new ArrayList<Hpix>(10000);
+            Iterator<MocCell> it = lowMoc.iterator();
+            while( it.hasNext() ) {
+               MocCell c = it.next();
+               if( m!=null && !m.isIntersecting(c.order, c.npix)) continue;
+               Hpix p = new Hpix(c.order, c.npix, frameOrigin);
+               if( p.isOutView(v) ) continue;
+               a1.add(p);
+               
+               if( flagPeri )  {
+                  long [] vo = getVoisinsSameOrder(CDSHealpix.getHealpixBase(p.order), lowMoc, p.order, p.npix);
+                  if( vo[0]!=-1 && vo[1]!=-1 && vo[2]!=-1 && vo[3]!=-1 ) continue;
+
+//                  long deb = p.npix << 2*(drawingOrder-p.order);
+//                  long fin = (p.npix+1) << 2*(drawingOrder-p.order);
+//                  for( long pix=deb; pix<fin; pix++ ) {
+                     
+                  long base = p.npix << 2*(drawingOrder-p.order);
+                  Bord bord = new Bord((int)CDSHealpix.pow2(drawingOrder-p.order));
+                  while( bord.hasNext() ) {
+                     long b = bord.next();
+                     long pix = base | b;
+                     
+                     vo = getVoisins(hpx, lowMoc, drawingOrder, pix);
+                     int mask = (vo[0]==-1?0x1:0) | (vo[1]==-1?0x2:0) | (vo[2]==-1?0x4:0) | (vo[3]==-1?0x8:0);
+                     if( mask!=0 ) {
+                        Hpix p1 = new Hpix(drawingOrder, pix, frameOrigin);
+                        p1.setBorderMask(mask);
+                        a2.add(p1);
+                     }
+                  }
+               }
+
+            }
+            arrayHpix=a1;
+            arrayPeri=a2;
+            oiz=v.getIZ();
+            oFlagPeri=flagPeri;
+            oGapOrder=gapOrder;
+         }
+
+         // Tracé des Hpix concernés par le champ de vue
+         if( (flagBorder || flagFill) && arrayHpix!=null ) {
+            for( Hpix p : arrayHpix ) {
+               boolean small = p.getDiag2(v)<25 && isDrawingBorder();
+
+               // Tracé en aplat avec demi-niveau d'opacité
+               if( flagFill && !small )  {
+                  if( g instanceof Graphics2D ) {
+                     Graphics2D g2d = (Graphics2D)g;
+                     Composite saveComposite = g2d.getComposite();
+                     try {
+                        g2d.setComposite( Util.getImageComposite(getOpacityLevel()/5f) );
+                        p.fill(g, v);
+                     } finally {
+                        g2d.setComposite(saveComposite);
+                     }
+                  } else p.fill(g, v);
+               }
+
+               if( flagBorder )  p.draw(g, v);
+            }
+         }
+
+         // Tracé des périmètres
+         if( flagPeri && arrayPeri!=null ) {
+            for( Hpix p : arrayPeri ) p.draw(g,v);
+         }
+
+//         t1 = System.currentTimeMillis();
+//         System.out.println("draw " in "+(t1-t)+"ms"+(n>0 ? " => "+(double)n/(t1-t)+"/ms":"") );
 
          t = Util.getTime();
          statTimeDisplay = t-t1;

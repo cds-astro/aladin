@@ -23,12 +23,16 @@ package cds.aladin;
 import java.awt.Point;
 
 /**
- * Objet graphique pour une Ligne de constellation
+ * Objet graphique pour une Ligne de constellation et des périmètres des MOCs
  */
 public class LigneConst extends Ligne {
 
    protected LigneConst(double ra, double dec, LigneConst p) {
       super(ra, dec,null,null,p);
+   }
+   
+   protected LigneConst(double ra, double dec, Plan plan, ViewSimple v, Ligne debligne) {
+      super(ra,dec,plan,v,null,debligne);
    }
 
    protected boolean tooLarge(ViewSimple v,Point p1, Point p2) {
@@ -40,6 +44,22 @@ public class LigneConst extends Ligne {
    }
    
    public boolean hasPhot() { return false; }
+
+//   protected void drawID(Graphics g, ViewSimple v,Point p1,Point p2) {
+//      double dy=p2.y-p1.y;
+//      double dx=p2.x-p1.x;
+//      if( Math.sqrt(dy*dy + dx*dx)<20 && v.getTaille()>10 ) return; // trop petit
+//      int a = (p1.x+p2.x)/2;
+//      int b = (p1.y+p2.y)/2;
+//      g.setFont( Aladin.BOLD );
+//      String s = id;
+//      int x = a+3;
+//      int y = b+(dy*dx>0?-2:12);
+//      Color c = g.getColor();
+//      Color c1 = (c==Color.red || c==Color.blue) ? Color.white : Color.black;
+//      Util.drawStringOutline(g, s,x,y,c,c1);
+//      g.setColor(c);
+//   }
 
 
 }

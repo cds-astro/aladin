@@ -20,8 +20,6 @@
 
 package cds.aladin;
 
-import healpix.essentials.FastMath;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -39,6 +37,7 @@ import cds.aladin.prop.Prop;
 import cds.aladin.prop.PropAction;
 import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
+import healpix.essentials.FastMath;
 
 /**
  * Objet graphique pour une Ligne.
@@ -847,6 +846,7 @@ public class Ligne extends Position {
    }
 
    protected void drawID(Graphics g , ViewSimple v,Point p1,Point p2) { }
+
 
    /** Retourne la fin de la polyligne */
    protected Ligne getLastBout() {

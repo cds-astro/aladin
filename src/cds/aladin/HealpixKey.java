@@ -1702,7 +1702,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
    protected boolean mustBeDivided(PointD b[] ) throws Exception {
       if( planBG.DEBUGMODE ) return false;
       double d1,d2,m;
-      if( planBG.aladin.isAnimated() ) m = M*3;
+      boolean animated = planBG.aladin.isAnimated();
+      if( animated ) m = M*6;
       else m=M;
       double N = M; //1.42*1.42*m;
       if( (d1=dist(b,0,2))>m || (d2=dist(b,2,1))>m ) return true;
@@ -1710,12 +1711,12 @@ public class HealpixKey implements Comparable<HealpixKey> {
       double diag1 = dist(b,0,3);
       double diag2 = dist(b,1,2);
       if( diag2==0 || diag2==0 ) throw new Exception("Rhomb error");
-      double rap = diag2>diag1 ? diag1/diag2 : diag2/diag1;
+      double rap = animated ? 1 : diag2>diag1 ? diag1/diag2 : diag2/diag1;
       return rap<RAP && (diag1>N || diag2>N);
    }
    
    protected boolean isTooLarge(PointD b[], int N) throws Exception {
-      if( planBG.aladin.isAnimated() ) N = N*3;
+      if( planBG.aladin.isAnimated() ) N *=6;
       N *= N;
       double d1,d2;
       if( (d1=dist(b,0,2))>N || (d2=dist(b,2,1))>N ) return true;
@@ -1766,6 +1767,8 @@ public class HealpixKey implements Comparable<HealpixKey> {
       // Agrandissement du losange d'un pixel pour cacher les coutures
       try { b = grow(b, 1); } catch( Exception e ) {  }
       boolean drawFast = planBG.mustDrawFast();
+      boolean animated = planBG.aladin.isAnimated();
+
       
       // On a les 4 coins
       if( b[0]!=null && b[1]!=null && b[2]!=null && b[3]!=null ) {
@@ -1804,7 +1807,7 @@ public class HealpixKey implements Comparable<HealpixKey> {
                      || planBG.projd.t==Calib.CAR;
                
                // Methode récursive pour s'approcher du bord du ciel
-               if( methodeRecursive && isTooLarge(b,planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ? 100 : 150) ) {
+               if( methodeRecursive && isTooLarge(b, planBG.projd.t==Calib.ARC||planBG.projd.t==Calib.FEYE ? 100 : 150) ) {
                   resetTimer();
                   int m = drawFils(g,v,drawFast?1:planBG.projd.t==Calib.ZEA?8:4);
                   if( m>0 ) return m;   // si aucun fils n'est tracé, on tentera le père

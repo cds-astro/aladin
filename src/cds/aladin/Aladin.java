@@ -153,6 +153,7 @@ import healpix.essentials.Vec3;
  *
  * @beta <B>New features and performance improvements:</B>
  * @beta <UL>
+ * @beta    <LI> MOC perimeter drawing
  * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
  * @beta    <LI> Fullscreen mode improvements (global menu)
  * @beta    <LI> MOC script support (cmoc command)
@@ -198,7 +199,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.035";
+   static public final    String VERSION = "v9.036";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -6935,7 +6936,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
       }
    }
    
-   private int DELAI=40;
+   private int DELAI=10;
    
    /**
     * Launch the animation moving
