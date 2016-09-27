@@ -737,10 +737,8 @@ public final class Glu implements Runnable {
       char[] a = s.toCharArray();
       int i, j;
 
-      for( i = 0; i < a.length && (a[i] < '0' || a[i] > '9'); i++ )
-         ;
-      for( j = i + 1; j < a.length && a[j] >= '0' && a[j] <= '9'; j++ )
-         ;
+      for( i = 0; i < a.length && (a[i] < '0' || a[i] > '9'); i++ ) ;
+      for( j = i + 1; j < a.length && a[j] >= '0' && a[j] <= '9'; j++ ) ;
       return (j < a.length) ? new String(a, i, j - i) : "";
    }
 
@@ -1062,6 +1060,21 @@ public final class Glu implements Runnable {
       vGluCategory.addElement(new TreeNodeCategory(aladin,actionName,description,
             aladinTree,url,docUser,aladinUrlDemo));
    }
+   
+   
+   // Retourne la plus grande clé d'une hashtable (clés sur des entiers)
+   // -1 si problème.
+   private int hashSize(Hashtable h) {
+      int max = -1;
+      Enumeration e = h.keys();
+      while( e.hasMoreElements() ) {
+         try {
+            int n = Integer.parseInt( (String)e.nextElement() );
+            if( n>max ) max=n;
+         } catch( Exception e1 ) {}
+      }
+      return max;
+   }
 
    /**
     * Memorisation dans le Vecteur vGluServer des Serveurs definis au moyen du
@@ -1101,7 +1114,12 @@ public final class Glu implements Runnable {
       }
 
       if( paramDescription1 == null ) return;
-      int n = paramDescription1.size();
+            
+//      int n = paramDescription1.size();
+      int n = hashSize(paramDescription1);
+      int m = hashSize(paramDataType1); if( m>n ) n=m;
+      m = hashSize(paramValue1); if( m>n ) n=m;
+      
       String[] paramDescription = new String[n];
       for( i = 1; i <= n; i++ )
          paramDescription[i - 1] = (String) paramDescription1.get(i + "");

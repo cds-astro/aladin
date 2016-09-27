@@ -168,7 +168,7 @@ MouseWheelListener, Widget
    /* menuTag,menuUntag,*/menuTag1,menuUntag1,menuHelpTag,
    /*menuKeepTag,menuKeepUntag,*/menuCreateMulti,menuCreateUniq,
    /* menuLoadImg,menuLoadImgs,*/menuUnselect,
-   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit;
+   menuAddColumn,menuGoto,menuDel,menuTableInfo,menuEdit,menuCooToolbox;
 
    // Cree le popup menu associe au View
    private void createPopupMenu() {
@@ -230,6 +230,8 @@ MouseWheelListener, Widget
       j.addActionListener(this);
       popMenu.add( menuTableInfo=j=new JMenuItem(aladin.TABLEINFO));
       j.addActionListener(this);
+      popMenu.add( menuCooToolbox=j=new JMenuItem(aladin.COOTOOL));
+      j.addActionListener(this);
 
       add(popMenu);
    }
@@ -267,6 +269,7 @@ MouseWheelListener, Widget
       else if( src==menuEdit ) edit(objSelect);
       else if( src==menuTableInfo ) aladin.tableInfo(objSelect.plan);
       else if( src==menuAddColumn ) aladin.addCol(objSelect.plan);
+      else if( src==menuCooToolbox ) openCooToolbox(objSelect);
 
       // envoi via SAMP
       else if( src instanceof JMenuItem && ((JMenuItem)src).getActionCommand().equals(MBROADCASTSPECTRUM) ) {
@@ -1539,6 +1542,12 @@ MouseWheelListener, Widget
       // Petit nettoyage
       if( ow!=null ) ow.onMouse=false;
       repaint();
+   }
+   
+   /** Ouverture de l'outil de manipulation des coordonnées pour la source indiquée */
+   protected void openCooToolbox(Source o) {
+      if( aladin.frameCooTool==null ) aladin.frameCooTool = new FrameCooToolbox(aladin);
+      aladin.frameCooTool.setSource(o);
    }
 
    /** Désignation d'une ligne de mesure.

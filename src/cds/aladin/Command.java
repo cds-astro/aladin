@@ -152,7 +152,7 @@ public final class Command implements Runnable {
       "flipflop","get","grey","grid","help","hide","hist","info","kernel","list","load","lock",
       "macro","md","mem","northup","match",
       "mosaic","mv","norm","overlay","pause","print","quit","resamp","reset","reticle",
-      "RGB","RGBdiff","rm","save","scale","search","select","set","setconf","show",
+      "RGB","RGBdiff","rm","save",/*"scale",*/"search","select","set","setconf","show",
       "status",/*"stick",*/"sync","tag","thumbnail","trace","unlock",/* "unstick",*/
       "untag","xmatch","moreonxmatch","zoom","+","-","*","/","=",
    };

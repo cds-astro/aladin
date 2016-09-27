@@ -187,9 +187,9 @@ final public class Field {
          try { n = Integer.parseInt(width); }
          catch( Exception e) { n=0; }
       }
-      if( n==0 && arraysize!=null ) {
+      if( n==0 && arraysize!=null && datatype!=null && datatype.equals("A") ) {
          try {
-            if( !arraysize.endsWith("*") ) n = Integer.parseInt(arraysize);
+            if( !arraysize.endsWith("*")  ) n = Integer.parseInt(arraysize);
             else n = Integer.parseInt(arraysize.substring(0, arraysize.length()-1));
             if( n>20 ) n=0;
          } catch( Exception e) { n=0; }

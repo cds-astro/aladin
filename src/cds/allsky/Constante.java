@@ -136,6 +136,9 @@ public class Constante {
    static public final String KEY_BIB_REFERENCE_URL     = "bib_reference_url";
    static public final String KEY_MOC_SKY_FRACTION      = "moc_sky_fraction";
    static public final String KEY_ADDENDUM_ID           = "addendum_id";
+   static public final String KEY_HIPSGEN_DATE          = "hipsgen_date";
+   static public final String KEY_HIPSGEN_PARAMS        = "hipsgen_params";
+
 
    static public final String KEY_HIPS_RGB_RED          = "hips_rgb_red";
    static public final String OLD_HIPS_RGB_RED          = "red";

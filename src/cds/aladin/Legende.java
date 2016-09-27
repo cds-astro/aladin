@@ -384,6 +384,16 @@ public final class Legende extends AbstractTableModel  {
       Field f = field[i];
       return   (f.utype!=null?f.utype:"");
    }
+   
+   /** Retourne l'unitée associée au champ.
+    * @param i numero du champ
+    * @return l'unité, "" si erreur ou non decrit
+    */
+   protected String getUnit(int i) {
+      if( i>=field.length ) return null;
+      Field f = field[i];
+      return   (f.unit!=null?f.unit:"");
+   }
 
    protected int getPrecision(int i) {
       if( i>=field.length ) return -1;

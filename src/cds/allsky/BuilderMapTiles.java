@@ -33,7 +33,7 @@ import cds.tools.Util;
 import cds.tools.pixtools.CDSHealpix;
 
 /**
- * Permet de générer une arborescence de tuiles à partir d'une map Healpix C'EST PAS TERMINE !!!
+ * Permet de générer une arborescence de tuiles à partir d'une map Healpix 
  * @author Anaïs Oberto & Pierre Fernique [CDS]
  */
 public class BuilderMapTiles extends Builder {
@@ -304,17 +304,21 @@ public class BuilderMapTiles extends Builder {
       if( flagSimpleLook ) return;
 
       context.setBitpixOrig(bitpixOrig);
-      context.setBlankOrig(blankOrig);
+      if( bitpixOrig<0 && context.hasAlternateBlank() ) badData = context.getBlankOrig();
+      else context.setBlankOrig(blankOrig);
       context.setBZeroOrig(bzeroOrig);
       context.setBScaleOrig(bscaleOrig);
 
-      context.info("Original BITPIX=" + bitpixOrig + " BLANK=" + blankOrig + (bzeroOrig != 0 ? " BZERO=" + bzeroOrig : "")
+      context.info("Original BITPIX=" + bitpixOrig + " BLANK=" + blankOrig 
+            + (!Double.isNaN(badData) ? " BAD_DATA=" + badData : "")
+            + (bzeroOrig != 0 ? " BZERO=" + bzeroOrig : "")
             + (bscaleOrig != 1 ? " BSCALE=" + bscaleOrig : ""));
 
       double bscale = context.getBScale();
       double bzero = context.getBZero();
-      double blank = context.getBScale();
+      double blank = context.getBlank();
       int bitpix = context.getBitpix();
+      
       double[] pixelRangeCut = context.getPixelRangeCut();
       double[] cutOrig = null;
       double[] cut = null;

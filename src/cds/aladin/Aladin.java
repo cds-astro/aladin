@@ -156,8 +156,8 @@ import healpix.essentials.Vec3;
  * @beta    <LI> MOC perimeter drawing
  * @beta    <LI> Fisheye projection support (ARC) => planetarium usage
  * @beta    <LI> Fullscreen mode improvements (global menu)
- * @beta    <LI> MOC script support (cmoc command)
- * @beta    <LI> MultiCCD image support
+ * @beta    <LI> new script commands (cmoc, ccat, )
+ * @beta    <LI> MultiCCD FITS image support
  * @beta    <LI> Tags improvements
  * @beta    <LI> Probability sky map MOC extraction
  * @beta    <LI> Planetary HiPS (longitude inversion)
@@ -167,7 +167,9 @@ import healpix.essentials.Vec3;
  * @beta </UL>
  * @beta
  * @beta <B>Major fixed bugs:</B>
- * @beta    <LI> Fix to x,y tag coordinates in Huge FITS image
+ * @beta    <LI> Fix to BLANK wrong value in Hipsgen MAPTILES action
+ * @beta    <LI> Fix to radians unit support for table coordinates
+ * @beta    <LI> Fix to pmra and pmde detection
  * @beta    <LI> Fix to ZEA and ARC projection in HiPS context
  * @beta    <LI> Graphical object mouse selection over a HiPS
  * @beta    <LI> HiPS catalog "ghost" source selection
@@ -199,7 +201,7 @@ DropTargetListener, DragSourceListener, DragGestureListener
    static protected final String FULLTITRE   = "Aladin Sky Atlas";
 
    /** Numero de version */
-   static public final    String VERSION = "v9.036";
+   static public final    String VERSION = "v9.039";
    static protected final String AUTHORS = "P.Fernique, T.Boch, A.Oberto, F.Bonnarel";
    static protected final String OUTREACH_VERSION = "    *** UNDERGRADUATE MODE (based on "+VERSION+") ***";
    static protected final String BETA_VERSION     = "    *** BETA VERSION (based on "+VERSION+") ***";
@@ -3261,8 +3263,14 @@ DropTargetListener, DragSourceListener, DragGestureListener
 
    /** Exécution de l'inversion verticale ou horizontale du plan de base */
    protected void flip(int methode) {
-      try { flip(calque.getFirstSelectedSimpleImage(),methode); }
-      catch( Exception e) { e.printStackTrace(); }
+      try {
+         PlanImage p = calque.getFirstSelectedSimpleImage();
+         if( p==null ) {
+            Plan p1 = calque.getPlanBase();
+            if( p1!=null && p1 instanceof PlanImage ) p=(PlanImage)p1;
+         }
+         flip(p,methode);
+      } catch( Exception e) { e.printStackTrace(); }
    }
 
    /** Exécution de l'inversion verticale ou horizontale */

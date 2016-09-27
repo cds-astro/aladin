@@ -424,7 +424,6 @@ public class BuilderIndex extends Builder {
 //         System.out.print(" "+coo.al+" "+coo.del);
 
          cooList.add( context.ICRS2galIfRequired(coo.al, coo.del) );
-         
 
          // S'il s'agit d'une cellule, il faut également calculé le STC pour l'observation complète
          if( hasCell ) {
@@ -476,7 +475,9 @@ public class BuilderIndex extends Builder {
 
       long[] npixs;
       long nside = CDSHealpix.pow2(order);
-      double radius = Coord.getDist(center, new Coord(cooList.get(0)[0],cooList.get(0)[1]));
+//      Coord c1 = new Coord(cooList.get(0)[0],cooList.get(0)[1]);
+      Coord c1 = corner[0];
+      double radius = Coord.getDist(center,c1 );
       
       // Si le rayon est trop grand on préfèrera une requête pour cone pour
       // éviter le risque d'un polygone sphérique concave
@@ -484,9 +485,11 @@ public class BuilderIndex extends Builder {
          npixs = CDSHealpix.query_polygon(nside, cooList);
       } else {
          try {
-            npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
+            double cent[] = context.ICRS2galIfRequired(center.al, center.del);
+            npixs = CDSHealpix.query_disc(nside, cent[0], cent[1], radius);
+//            npixs = CDSHealpix.query_disc(nside, center.al, center.del, radius);
          } catch( Exception e ) {
-          throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
+          throw new Exception("BuilderIndex error in CDSHealpix.query_disc() order="+order+" center="+center+" corner="+c1+" radius="+radius+"deg file="+fitsfile.getFilename()+" => ignored");
          }
       }
       // pour chacun des losanges concernés

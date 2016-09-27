@@ -31,6 +31,7 @@ import java.util.Vector;
 import cds.aladin.Aladin;
 import cds.aladin.MyInputStream;
 import cds.aladin.MyProperties;
+import cds.aladin.Tok;
 import cds.allsky.Context.JpegMethod;
 import cds.moc.HealpixMoc;
 import cds.tools.Util;
@@ -273,8 +274,9 @@ public class HipsGen {
          }
          
          // Mémorisation de la commande
-         if( context.scriptCommand==null ) context.scriptCommand=arg;
-         else context.scriptCommand+=" "+arg;
+         String q = Tok.quote(arg);
+         if( context.scriptCommand==null ) context.scriptCommand=q;
+         else context.scriptCommand+=" "+q;
 
          // debug
          if (arg.equalsIgnoreCase("-debug") || arg.equalsIgnoreCase("-d")) Context.setVerbose(4);
@@ -489,12 +491,12 @@ public class HipsGen {
             if( s!=null && s.length()>0 ) frame=s;
 
             // pas de propriété hips_frame positionnée => galactic
-            else frame="galactic";
+            else frame=force?"equatorial":"galactic";
 
             // Pas trouvé ! si le HiPS existe déjà, alors c'est pas défaut du galactic
             // sinon de l'equatorial
          } else {
-            if( context.isExistingAllskyDir() ) frame="galactic";
+            if( context.isExistingAllskyDir() ) frame=force?"equatorial":"galactic";
             else frame="equatorial";
          }
       } catch( Exception e ) { }

@@ -499,7 +499,8 @@ public class Context {
       if (this.bitpix==-1) this.bitpix = bitpixO;
    }
    public void setBitpix(int bitpix) { this.bitpix = bitpix; }
-   public void setBlankOrig(double x) {  blankOrig = x; hasAlternateBlank=true; }
+   public void setBlankOrig(double x) {  
+      blankOrig = x; hasAlternateBlank=true; }
    public void setColor(String colorMode) {
       if( colorMode.equalsIgnoreCase("false")) return;
       bitpixOrig=0;

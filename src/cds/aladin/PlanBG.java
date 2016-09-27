@@ -1957,6 +1957,8 @@ public class PlanBG extends PlanImage {
    /** Change le format d'affichage truePixels (Fits) <=> 8bits (JPEG) */
    protected void switchFormat() {
       truePixels = !truePixels;
+      pixMode = truePixels ? PIX_TRUE : colorPNG ? PIX_255 : PIX_256;
+      restoreCM();
       forceReload();
       if( aladin.frameCM!=null ) aladin.frameCM.majCM(true);
    }

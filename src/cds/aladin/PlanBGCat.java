@@ -342,11 +342,10 @@ public class PlanBGCat extends PlanBG {
       aladin.view.repaintAll();
    }
    
-   // HONNETEMENT JE NE COMPRENDS PAS POURQUOI JE DOIS FAIRE CE REPAINT ICI
-//   protected void planReady(boolean ready) {
-//      super.planReady(ready);
-//      askForRepaint();
-//   }
+   protected void planReady(boolean ready) {
+      super.planReady(ready);
+      askForRepaint();
+   }
    
    /** Force le reset de l'influence des filtres sur ce plan */
    protected void updateFilter() {

@@ -75,10 +75,15 @@ final public class TableParser implements XMLConsumer {
    static final Astroframe AF_ICRS = new ICRS();
    static final Astroframe AF_ECLI = new Ecliptic();
 
-   // Différent format pour les coordonnées célestes
+   // Différents formats pour les coordonnées célestes
    static final public int FMT_UNKNOWN=0;
    static final public int FMT_DECIMAL=1;
    static final public int FMT_SEXAGESIMAL=2;
+   
+   // Différentes unités pour les coordonées célestes
+   static final public int UNIT_UNKNOWN=0;
+   static final public int UNIT_DEGREES=1;
+   static final public int UNIT_RADIANS=2;
 
    private TableParserConsumer consumer; // Référence au consumer
    private XMLParser xmlparser;	      // parser XML
@@ -118,6 +123,7 @@ final public class TableParser implements XMLConsumer {
    private String filename;           // Fichier d'origine s'il est connu
 
    private int format;                // Format des coordonnées (FMT_UNKOWN | FMT_DECIMAL | FMT_SEXAGESIMAL)
+   private int unit;                  // Unité des coordonnées (UNIT_UNKNOWN | UNIT_DEGREES | UNIT_RADIANS )
    //   private boolean flagSexa;	      // ture s'il s'agit de coordonnées sexagésimal
    //   private boolean knowFormat;	      // true si on a détecté le format des coordonnées
 
@@ -952,8 +958,9 @@ final public class TableParser implements XMLConsumer {
     */
    private void initTable() {
       nRA=nDEC=nPMRA=nPMDEC=nX=nY=-1;
-      qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=1000; // 1000 correspond au pire
+      qualRA=qualDEC=qualRA=qualDEC=qualX=qualY=qualPMRA=qualPMDEC=1000; // 1000 correspond au pire
       format = FMT_UNKNOWN;
+      unit = UNIT_UNKNOWN;
       //      flagSexa=false;	// Par défaut on suppose des coord. en degrés
       //      knowFormat=false; // Par défaut on ne connait pas le format des coord.
       nField=0;
@@ -1358,7 +1365,7 @@ final public class TableParser implements XMLConsumer {
             (qualRA==1000 || qualDEC==1000) && (nX==1000 || nY==1000));
       if( flagXY ) consumer.tableParserInfo("   -assuming XY positions (column "+(nX+1)+" for X and "+(nY+1)+" for Y)");
       else if( nRA>=0 ) {
-         consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal":" in degrees"))+
+         consumer.tableParserInfo("   -assuming RADEC"+(format==FMT_UNKNOWN?" " : (format==FMT_SEXAGESIMAL?" in sexagesimal": (unit==UNIT_RADIANS ? " in radians":" in degrees")))+
                " (column "+(nRA+1)+" for RA and "+(nDEC+1)+" for DEC)");
          if( nPMRA>=0 ) {
             consumer.tableParserInfo("   -Proper motion fields found"+
@@ -1415,6 +1422,12 @@ final public class TableParser implements XMLConsumer {
       String  sys = coosys.get(ref);
       if( ep==null ) ep=cooepoch.get(ref);
       if( eq==null ) eq=cooequinox.get(ref);
+      
+      // Gestion du système du calcul de l'année par défaut en fonction du système
+      char letter='J';
+      if( sys.indexOf("FK4")>=0 || sys.indexOf("B1950")>=0 ) letter='B';
+      if( ep!=null && ep.length()>1 && !Character.isDigit(ep.charAt(0)) ) ep = letter+ep;
+      if( eq!=null && eq.length()>1 && !Character.isDigit(eq.charAt(0)) ) eq = letter+eq;
 
       if( sys.indexOf("FK4")>=0 ) {
          if( eq==null ) srcAstroFrame = AF_FK4;
@@ -1435,7 +1448,9 @@ final public class TableParser implements XMLConsumer {
       }
       else if( sys.indexOf("SUPER_GALACTIC")>=0 || sys.indexOf("SGAL")>=0 ) srcAstroFrame = AF_SGAL;
       else if( sys.indexOf("GALACTIC")>=0 || sys.indexOf("GAL")>=0 )        srcAstroFrame = AF_GAL;
-      else if( sys.indexOf("ICRS")>=0 && ep!=null ) srcAstroFrame = new ICRS((new Astrotime(ep)).getJyr());
+      else if( sys.indexOf("ICRS")>=0 && ep!=null ) {
+         srcAstroFrame = new ICRS((new Astrotime(ep)).getJyr());
+      }
       else if( sys.indexOf("ICRS")<0 ) {
          String sref = coosys.get(sys);
 
@@ -1477,10 +1492,11 @@ final public class TableParser implements XMLConsumer {
     * @param ra La chaine de l'ascension droite
     * @param dec La chaine de la déclinaison
     * @param format Le format (FMT_UNKNOWN | FMT_DECIMAL | FMT_SEXAGESIMAL)
+    * @param unit Le code de l'unité (UNIT_UNKOWN | UNIT_RADIANS | UNTI_DEGRES)
     * @return le format trouvé (si FMT_UNKOWN en entrée)
     * @throws Exception
     */
-   static public int getRaDec(Astrocoo c, String ra, String dec, int format) throws Exception {
+   static public int getRaDec(Astrocoo c, String ra, String dec, int format,int unit) throws Exception {
 
       // Détermination du format si non spécifié
       if( format==FMT_UNKNOWN ) {
@@ -1506,8 +1522,18 @@ final public class TableParser implements XMLConsumer {
 
          // Parsing en décimal
       } else {
-         try { c.set( Double.parseDouble(ra), Double.parseDouble(dec)); }
-         catch( Exception e ) {
+         try { 
+            double rax = Double.parseDouble(ra);
+            double dex = Double.parseDouble(dec);
+
+            // Conversion éventuelle d'unités
+            if( unit==UNIT_RADIANS ) {
+               rax = Math.toDegrees(rax);
+               dex = Math.toDegrees(dex);
+            }
+
+            c.set( rax, dex);
+         } catch( Exception e ) {
             //            if( Aladin.levelTrace>=3 ) e.printStackTrace();
          }
       }
@@ -1742,6 +1768,7 @@ final public class TableParser implements XMLConsumer {
       // Cas vraiment particulier d'une colonne unique pour les coordonnées
       if( ucd.equals("pos.eq") ||  ucd.equals("pos.eq;meta.main") ) {
          nRA=nDEC = nField;
+         this.unit = getUnit(unit);
          format= unit.length()==0 ? FMT_UNKNOWN :
             unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
             validLastCoordSys();
@@ -1767,6 +1794,7 @@ final public class TableParser implements XMLConsumer {
       }
       if( qual>=0 && qualRA>qual ) {
          nRA=nField; qualRA=qual;
+         this.unit = getUnit(unit);
          format= unit.length()==0 ? FMT_UNKNOWN :
             unit.indexOf("h")>=0 && unit.indexOf("m")>=0 && unit.indexOf("s")>=0 ?FMT_SEXAGESIMAL : FMT_DECIMAL;
             validLastCoordSys();
@@ -1798,9 +1826,13 @@ final public class TableParser implements XMLConsumer {
 
       // Détection du PMRA et évaluation de la qualité de cette détection
       qual=-1;
-      if( ucd.equals("POS_PMRA") || ucd.equals("pos.pm;pos.eq.ra") ) {
+      if( ucd.equals("POS_PMRA_MAIN") || ucd.equals("pos.pm;pos.eq.ra;meta.main") ) {
          try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=0; }
          catch( Exception e ) { qual=1; }
+      }
+      else if( ucd.equals("POS_PMRA") || ucd.equals("pos.pm;pos.eq.ra") ) {
+         try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=100; }
+         catch( Exception e ) { qual=101; }
       }
       else if( (n=pmraName(name))>=0 ) {
          if( ucd.startsWith("pos.pm") ) qual=200+n;
@@ -1816,11 +1848,12 @@ final public class TableParser implements XMLConsumer {
             catch( Exception e ) { qual=700+n; }
          }
       }
-      if( qual>=0 &&  qualX>qual ) { nPMRA=nField; qualPMRA=qual; }
+      if( qual>=0 &&  qualPMRA>qual ) { nPMRA=nField; qualPMRA=qual; }
 
       // Détection du PMDE et évaluation de la qualité de cette détection
       qual=-1;
-      if( ucd.equals("POS_PMDE") || ucd.equals("pos.pm;pos.eq.dec") ) qual=0;
+      if( ucd.equals("POS_PMDE_MAIN") || ucd.equals("pos.pm;pos.eq.dec;meta.main") ) qual=0;
+      else if( ucd.equals("POS_PMDE") || ucd.equals("pos.pm;pos.eq.dec") ) qual=100;
       else if( (n=pmdecName(name))>=0 ) {
          if( ucd.startsWith("pos.pm") ) qual=200+n;
          try { (new Unit(unit)).convertTo(new Unit("mas/yr")); qual=300+n; }
@@ -1833,7 +1866,7 @@ final public class TableParser implements XMLConsumer {
             catch( Exception e ) { qual=700+n; }
          }
       }
-      if( qual>=0 &&  qualX>qual ) { nPMDEC=nField; qualPMDEC=qual; }
+      if( qual>=0 &&  qualPMDEC>qual ) { nPMDEC=nField; qualPMDEC=qual; }
 
 
       // Détection du X et évaluation de la qualité de cette détection
@@ -1969,6 +2002,14 @@ final public class TableParser implements XMLConsumer {
       consumer.setFilter(filter+filterRule+ (filter.length()>0 ? "\n}\n" : "") );
       filter=null;
    }
+   
+   /** Retourne le code de l'unité correspondant à la chaine passée en paramètre */
+   static public int getUnit(String s) {
+      if( s==null ) return UNIT_UNKNOWN;
+      if( Util.indexOfIgnoreCase(s, "RAD")>=0 ) return UNIT_RADIANS;
+      if( Util.indexOfIgnoreCase(s, "DEG")>=0 ) return UNIT_DEGREES;
+      return UNIT_UNKNOWN;
+   }
 
    /** Préparation et appel au consumer.setRecord(alpha,delta,rec[]) en calculant
     * les coordonnées en fonction des valeurs nRA,nDEC ou nX,nY suivant le flagXY ou non
@@ -2001,12 +2042,13 @@ final public class TableParser implements XMLConsumer {
                ra = s.substring(0,i).trim();
                dec= s.substring(i).trim();
             }
-            format = getRaDec(c,ra,dec,format);
+            
+            format = getRaDec(c,ra,dec,format,unit);
 
             //System.out.println("--> ["+t+"] knowFormat="+knowFormat+" flagSexa="+flagSexa);
             //System.out.println("rec=");
             //for( int w=0; w<rec.length; w++ ) System.out.println("   rec["+w+"]="+rec[w]);
-
+            
             // Changement de repere si nécessaire
             if( srcAstroFrame!=null ) {
                //               System.out.println("BEFORE c="+c);

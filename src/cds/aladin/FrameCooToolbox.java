@@ -20,12 +20,20 @@
 
 package cds.aladin;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import cds.aladin.prop.PropPanel;
 import cds.astro.Astrocoo;
@@ -237,10 +245,13 @@ public class FrameCooToolbox extends JFrame {
       int ndec  = leg.getDe();
       String sra = s.getValue(nra);
       String sdec= s.getValue(ndec);
+      
+      // On suppose que si RA est en RADIANS, DE aussi
+      int unit = TableParser.getUnit(leg.getUnit(nra));
      
       try {
          Astrocoo c = new Astrocoo();
-         TableParser.getRaDec(c, sra, sdec, TableParser.FMT_UNKNOWN);
+         TableParser.getRaDec(c, sra, sdec, TableParser.FMT_UNKNOWN, unit);
          ra = c.getLon();
          dec = c.getLat();
          
