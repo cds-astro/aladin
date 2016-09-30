@@ -78,7 +78,7 @@ public class TreeNodeAllsky extends TreeNode {
 
    /** Construction d'un TreeNodeAllSky à partir des infos qu'il est possible de glaner
     * à l'endroit indiqué, soit par exploration du répertoire, soit par le fichier Properties */
-   public TreeNodeAllsky(Aladin aladin,String pathOrUrl) {
+   public TreeNodeAllsky(Aladin aladin,String pathOrUrl) throws Exception {
       String s;
       this.aladin = aladin;
       local=!(pathOrUrl.startsWith("http:") || pathOrUrl.startsWith("https:") ||pathOrUrl.startsWith("ftp:"));
@@ -165,6 +165,8 @@ public class TreeNodeAllsky extends TreeNode {
       try { maxOrder = new Integer(s); }
       catch( Exception e ) {
          maxOrder = getMaxOrderByPath(pathOrUrl,local);
+         
+         if( maxOrder==-1 ) throw new Exception("Not an HiPS");
          if( maxOrder==-1 ) {
             aladin.trace(3,"No maxOrder found (even with scanning dir.) => assuming 11");
             maxOrder=11;

@@ -534,7 +534,10 @@ public class PlanBG extends PlanImage {
       maxOrder=3;
       useCache = false;
       this.label=label;
-      paramByTreeNode(new TreeNodeAllsky(aladin, url), c, radius);
+      TreeNodeAllsky gsky = null;
+      try { gsky= new TreeNodeAllsky(aladin, url); }
+      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      paramByTreeNode(gsky, c, radius);
       scanProperties();
       scanMetadata();
       aladin.trace(3,"AllSky local... frame="+Localisation.getFrameName(frameOrigin)+" "+this+(c!=null ? " around "+c:""));
@@ -555,7 +558,10 @@ public class PlanBG extends PlanImage {
       local = false;
       co=c;
       coRadius=radius;
-      paramByTreeNode(new TreeNodeAllsky(aladin, url),c,radius);
+      TreeNodeAllsky gsky = null;
+      try { gsky= new TreeNodeAllsky(aladin, url); }
+      catch( Exception e ) { if( aladin.levelTrace>=3 ) e.printStackTrace(); }
+      paramByTreeNode(gsky,c,radius);
       int n = url.length();
       if( url.endsWith("/") ) n--;
       survey = this.label!=null && this.label.length()>0 ? this.label : url.substring(url.lastIndexOf('/',n-1)+1,n);

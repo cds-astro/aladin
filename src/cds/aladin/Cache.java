@@ -20,11 +20,13 @@
 
 package cds.aladin;
 
-import java.net.*;
-import java.io.*;
-import java.util.*;
-
-import java.lang.reflect.Method;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import cds.tools.Util;
 
@@ -133,7 +135,7 @@ Aladin.trace(3,"Clear cache");
       
       // Tentative d'accès direct par le réseau
       try {
-         is = Util.openStream(url);
+         is = Util.openStream(url,true,3000);
          if( is==null ) throw new Exception("cache openStream error");
       } catch( Exception e ) {
          is=null;

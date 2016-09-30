@@ -184,6 +184,7 @@ public class ServerHips extends ServerTree  {
                }
 
                URL u = aladin.glu.getURL("MocServer", params, true);
+               
                Aladin.trace(4,"ServerHips.hipsUpdate: Contacting MocServer : "+u);
                in= new BufferedReader( new InputStreamReader( Util.openStream(u) ));
                String s;
@@ -282,6 +283,7 @@ public class ServerHips extends ServerTree  {
          dynTree=true;
          Aladin.trace(3,"Loading HiPS Tree definitions...");
          String params = "client_application=AladinDesktop"+(aladin.BETA?"*":"")+"&hips_service_url=*&fmt=glu&get=record";
+         
          String u = aladin.glu.getURL("MocServer", params, true).toString();
          InputStream in;
          try {
